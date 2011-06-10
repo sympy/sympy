@@ -65,7 +65,6 @@ def test_ang_vel():
         (sin(q3) * q2d + cos(q2) * cos(q3) * q1d) * F.x + (cos(q3) * q2d -
         sin(q3) * cos(q2) * q1d) * F.y + (q3d + sin(q2) * q1d) * F.z)
 
-
 def test_dcm():
     q0, q1, q2, q3, q4 = dynamicsymbols('q', 5)
     N = ReferenceFrame('N')
@@ -118,6 +117,68 @@ def test_Vector():
     assert dot(v4, A.x) == x - x**2
     assert dot(v4, A.y) == y - y**2
     assert dot(v4, A.z) == z - z**2
+
+def test_Vector_diffs():
+    ((q0, q1, q2, q3, q4), (q0d, q1d, q2d, q3d, q4d),
+            (q0dd, q1dd, q2dd, q3dd, q4dd)) = dynamicsymbols('q', 5, 2)
+    N = ReferenceFrame('N')
+    A = N.orientnew('A', 'Simple', q3, 3)
+    B = A.orientnew('B', 'Simple', q2, 1)
+    v1 = q2 * A.x + q3 * N.y
+    v2 = q3 * B.x + v1
+    v3 = v1.dt(B)
+    v4 = v2.dt(B)
+
+    assert v1.dt(N) == q2d * A.x + q2 * q3d * A.y + q3d * N.y
+    assert v1.dt(A) == q2d * A.x + q3 * q3d * N.x + q3d * N.y
+    assert v1.dt(B) == (q2d * A.x + q3 * q3d * N.x + q3d * N.y - q3 * cos(q3) *
+                        q2d * N.z)
+    assert v2.dt(N) == (q2d * A.x + (q2 + q3) * q3d * A.y + q3d * B.x + q3d *
+                        N.y)
+    assert v2.dt(A) == q2d * A.x + q3d * B.x + q3 * q3d * N.x + q3d * N.y
+    assert v2.dt(B) == (q2d * A.x + q3d * B.x + q3 * q3d * N.x + q3d * N.y -
+                        q3 * cos(q3) * q2d * N.z)
+    assert v3.dt(N) == (q2dd * A.x + q2d * q3d * A.y + (q3d**2 + q3 * q3dd) *
+                        N.x + q3dd * N.y + (q3 * sin(q3) * q2d * q3d -
+                        cos(q3) * q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert v3.dt(A) == (q2dd * A.x + (2 * q3d**2 + q3 * q3dd) * N.x + (q3dd -
+                        q3 * q3d**2) * N.y + (q3 * sin(q3) * q2d * q3d -
+                        cos(q3) * q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert v3.dt(B) == (q2dd * A.x - q3 * cos(q3) * q2d**2 * A.y + (2 *
+                        q3d**2 + q3 * q3dd) * N.x + (q3dd - q3 * q3d**2) *
+                        N.y + (2 * q3 * sin(q3) * q2d * q3d - 2 * cos(q3) *
+                        q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert v4.dt(N) == (q2dd * A.x + q3d * (q2d + q3d) * A.y + q3dd * B.x +
+                        (q3d**2 + q3 * q3dd) * N.x + q3dd * N.y + (q3 *
+                        sin(q3) * q2d * q3d - cos(q3) * q2d * q3d - q3 *
+                        cos(q3) * q2dd) * N.z)
+    assert v4.dt(A) == (q2dd * A.x + q3dd * B.x + (2 * q3d**2 + q3 * q3dd) *
+                        N.x + (q3dd - q3 * q3d**2) * N.y + (q3 * sin(q3) *
+                        q2d * q3d - cos(q3) * q2d * q3d - q3 * cos(q3) *
+                        q2dd) * N.z)
+    assert v4.dt(B) == (q2dd * A.x - q3 * cos(q3) * q2d**2 * A.y + q3dd * B.x +
+                        (2 * q3d**2 + q3 * q3dd) * N.x + (q3dd - q3 * q3d**2) *
+                        N.y + (2 * q3 * sin(q3) * q2d * q3d - 2 * cos(q3) *
+                        q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert v3.diff(q1d, N) == 0
+    assert v3.diff(q2d, N) == A.x - q3 * cos(q3) * N.z
+    assert v3.diff(q3d, N) == q3 * N.x + N.y
+    assert v3.diff(q1d, A) == 0
+    assert v3.diff(q2d, A) == A.x - q3 * cos(q3) * N.z
+    assert v3.diff(q3d, A) == q3 * N.x + N.y
+    assert v3.diff(q1d, B) == 0
+    assert v3.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
+    assert v3.diff(q3d, B) == q3 * N.x + N.y
+    assert v4.diff(q1d, N) == 0
+    assert v4.diff(q2d, N) == A.x - q3 * cos(q3) * N.z
+    assert v4.diff(q3d, N) == B.x + q3 * N.x + N.y
+    assert v4.diff(q1d, A) == 0
+    assert v4.diff(q2d, A) == A.x - q3 * cos(q3) * N.z
+    assert v4.diff(q3d, A) == B.x + q3 * N.x + N.y
+    assert v4.diff(q1d, B) == 0
+    assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
+    assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
+
 
 
 

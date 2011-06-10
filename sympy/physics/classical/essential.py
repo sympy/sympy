@@ -555,7 +555,8 @@ class Vector(object):
         check = True
         frame = self.args[0][1]
         for i, v in enumerate(frame):
-            check = check & (expand(self & v) == expand(other & v))
+            check = check & (trigsimp(expand(self & v), recursive=True) ==
+                             trigsimp(expand(other & v), recursive=True))
         return check
 
     def __mul__(self, other):
@@ -736,8 +737,8 @@ class Vector(object):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(Symbol('t')), otherframe)])
             else:
-                outvec += (Vector([(v[0].diff(Symbol('t')), otherframe)]) +
-                    v[1].ang_vel_in(otherframe) ^ Vector([v]))
+                outvec += (Vector([v]).dt(v[1]) -
+                    (Vector([v]) ^ v[1].ang_vel_in(otherframe)))
         return outvec
 
     def express(self, otherframe):
@@ -768,7 +769,11 @@ class Vector(object):
         outvec = Vector(self.args + [])
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
-                outvec += Vector([(otherframe.dcm(v[1]) * v[0], otherframe)])
+                temp = otherframe.dcm(v[1]) * v[0]
+                temp.simplify()
+                for i2, v2 in enumerate(temp):
+                    temp[i2] = trigsimp(v2, recursive=True)
+                outvec += Vector([(temp, otherframe)])
                 outvec -= Vector([v])
         return outvec
 
