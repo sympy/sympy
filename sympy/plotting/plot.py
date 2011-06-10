@@ -404,11 +404,7 @@ class ScreenShot:
         glReadPixels(0,0,size_x,size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
         from PIL import Image
         im = Image.frombuffer('RGBA',(size_x,size_y),image.raw, 'raw', 'RGBA', 0, 1)
-        try:
-            im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
-        except Exception as e:
-            print 'Exception while trying to save screenshot: %s' % e 
-                
+        im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
 
         self.flag = 0
         self.screenshot_requested = False
