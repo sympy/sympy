@@ -504,10 +504,10 @@ class Matrix(object):
 
     def cholesky(self):
         """
-        Returns the Cholesky Decomposition L of a Matrix A 
+        Returns the Cholesky Decomposition L of a Matrix A
         such that L * L.T = A
 
-        A must be a square, symmetric, positive-definite 
+        A must be a square, symmetric, positive-definite
         and non-singular matrix
 
         >>> from sympy.matrices import Matrix
@@ -530,8 +530,8 @@ class Matrix(object):
 
     def _cholesky(self):
         """
-        Helper function of cholesky. 
-        Without the error checks. 
+        Helper function of cholesky.
+        Without the error checks.
         To be used privately. """
         L = zeros((self.rows, self.rows))
         for i in xrange(self.rows):
@@ -544,9 +544,9 @@ class Matrix(object):
 
     def LDLdecomposition(self):
         """
-        Returns the LDL Decomposition (L,D) of matrix A, 
+        Returns the LDL Decomposition (L,D) of matrix A,
         such that L * D * L.T == A
-        This method eliminates the use of square root. 
+        This method eliminates the use of square root.
         Further this ensures that all the diagonal entries of L are 1.
         A must be a square, symmetric, positive-definite
         and non-singular matrix.
@@ -574,9 +574,9 @@ class Matrix(object):
 
     def _LDLdecomposition(self):
         """
-        Helper function of LDLdecomposition. 
-        Without the error checks. 
-        To be used privately. 
+        Helper function of LDLdecomposition.
+        Without the error checks.
+        To be used privately.
         """
         D = zeros((self.rows, self.rows))
         L = eye(self.rows)
@@ -606,7 +606,7 @@ class Matrix(object):
         """
         Helper function of function lower_triangular_solve.
         Without the error checks.
-        To be used privately. 
+        To be used privately.
         """
         X = zeros((self.rows, 1))
         for i in xrange(self.rows):
@@ -645,7 +645,7 @@ class Matrix(object):
         """
         Solves Ax = B using Cholesky decomposition,
         for a general square non-singular matrix.
-        For a non-square matrix with rows > cols, 
+        For a non-square matrix with rows > cols,
         the least squares solution is returned.
 
         """
@@ -661,7 +661,7 @@ class Matrix(object):
 
     def diagonal_solve(self, rhs):
         """
-        Solves Ax = B efficiently, where A is a diagonal Matrix, 
+        Solves Ax = B efficiently, where A is a diagonal Matrix,
         with non-zero diagonal entries.
         """
         if not self.is_diagonal:
@@ -672,7 +672,7 @@ class Matrix(object):
 
     def _diagonal_solve(self, rhs):
         """
-        Helper function of function diagonal_solve, 
+        Helper function of function diagonal_solve,
         without the error checks, to be used privately.
         """
         return Matrix(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
@@ -682,7 +682,7 @@ class Matrix(object):
         Solves Ax = B using LDL decomposition,
         for a general square and non-singular matrix.
 
-        For a non-square matrix with rows > cols, 
+        For a non-square matrix with rows > cols,
         the least squares solution is returned.
 
         """
