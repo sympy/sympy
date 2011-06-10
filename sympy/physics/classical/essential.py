@@ -57,7 +57,7 @@ class ReferenceFrame(object):
             raise TypeError('A ReferenceFrame must be supplied')
 
     def _check_vector(self, other):
-        if isintance(other, int):
+        if isinstance(other, int):
             if other == 0:
                 return
         if not isinstance(other, Vector):
@@ -216,7 +216,7 @@ class ReferenceFrame(object):
 
         >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
         >>> from sympy import symbols
-        >>> q1, q2, q3, q4 = symbols('q1 q2 q3 q4')
+        >>> q0, q1, q2, q3, q4 = symbols('q0 q1 q2 q3 q4')
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
 
@@ -656,7 +656,7 @@ class Vector(object):
             raise TypeError('A ReferenceFrame must be supplied')
 
     def _check_vector(self, other):
-        if isintance(other, int):
+        if isinstance(other, int):
             if other == 0:
                 return
         if not isinstance(other, Vector):
@@ -691,7 +691,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 2)
         >>> A.x.diff(t, N)
-        (-q1d*sin(q1)**2 - q1d*cos(q1)**2)*az>
+        (-q1d)*az>
 
         """
 
