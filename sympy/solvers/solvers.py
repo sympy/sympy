@@ -1,4 +1,4 @@
-﻿""" This module contain solvers for all kinds of equations:
+""" This module contain solvers for all kinds of equations:
 
     - algebraic, use solve()
 
@@ -309,7 +309,7 @@ def _solve(f, *symbols, **flags):
         for fi in f:
             symbols |= fi.free_symbols or set([Dummy('x')])
         symbols = list(symbols)
-        symbols.sort(key=Basic.sorted_key)
+        symbols.sort(key=Basic.sort_key)
 
     if len(symbols) == 1:
         if isinstance(symbols[0], (list, tuple, set)):
