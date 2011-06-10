@@ -1,5 +1,6 @@
 import operator
-from libmp import int_types, mpf_hash, bitcount, from_man_exp
+import sys
+from .libmp import int_types, mpf_hash, bitcount, from_man_exp, HASH_MODULUS
 
 new = object.__new__
 
@@ -47,14 +48,26 @@ class mpq(object):
     def __nonzero__(s):
         return bool(s._mpq_[0])
 
+    __bool__ = __nonzero__
+
     def __hash__(s):
         a, b = s._mpq_
-        if b == 1:
-            return hash(a)
-        # Power of two: mpf compatible hash
-        if not (b & (b-1)):
-            return mpf_hash(from_man_exp(a, 1-bitcount(b)))
-        return hash((a,b))
+        if sys.version >= "3.2":
+            inverse = pow(b, HASH_MODULUS-2, HASH_MODULUS)
+            if not inverse:
+                h = sys.hash_info.inf
+            else:
+                h = (abs(a) * inverse) % HASH_MODULUS
+            if a < 0: h = -h
+            if h == -1: h = -2
+            return h
+        else:
+            if b == 1:
+                return hash(a)
+            # Power of two: mpf compatible hash
+            if not (b & (b-1)):
+                return mpf_hash(from_man_exp(a, 1-bitcount(b)))
+            return hash((a,b))
 
     def __eq__(s, t):
         ttype = type(t)

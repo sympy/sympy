@@ -9,7 +9,8 @@ here from settings.py
 import math
 from bisect import bisect
 
-from backend import BACKEND, gmpy, sage, sage_utils, MPZ, MPZ_ONE, MPZ_ZERO
+from .backend import xrange
+from .backend import BACKEND, gmpy, sage, sage_utils, MPZ, MPZ_ONE, MPZ_ZERO
 
 def giant_steps(start, target, n=2):
     """
@@ -114,8 +115,8 @@ if BACKEND == 'gmpy' and 'bit_length' in dir(gmpy):
     bitcount = gmpy.bit_length
 
 # Used to avoid slow function calls as far as possible
-trailtable = map(trailing, range(256))
-bctable = map(bitcount, range(1024))
+trailtable = [trailing(n) for n in range(256)]
+bctable = [bitcount(n) for n in range(1024)]
 
 # TODO: speed up for bases 2, 4, 8, 16, ...
 
@@ -376,7 +377,7 @@ elif BACKEND == 'sage':
 
 def list_primes(n):
     n = n + 1
-    sieve = range(n)
+    sieve = list(xrange(n))
     sieve[:2] = [0, 0]
     for i in xrange(2, int(n**0.5)+1):
         if sieve[i]:
@@ -388,7 +389,54 @@ if BACKEND == 'sage':
     # Note: it is *VERY* important for performance that we convert
     # the list to Python ints.
     def list_primes(n):
-        return map(int, sage.primes(n+1))
+        return [int(_) for _ in sage.primes(n+1)]
+
+small_odd_primes = (3,5,7,11,13,17,19,23,29,31,37,41,43,47)
+small_odd_primes_set = set(small_odd_primes)
+
+def isprime(n):
+    """
+    Determines whether n is a prime number. A probabilistic test is
+    performed if n is very large. No special trick is used for detecting
+    perfect powers.
+
+        >>> sum(list_primes(100000))
+        454396537
+        >>> sum(n*isprime(n) for n in range(100000))
+        454396537
+
+    """
+    n = int(n)
+    if not n & 1:
+        return n == 2
+    if n < 50:
+        return n in small_odd_primes_set
+    for p in small_odd_primes:
+        if not n % p:
+            return False
+    m = n-1
+    s = trailing(m)
+    d = m >> s
+    def test(a):
+        x = pow(a,d,n)
+        if x == 1 or x == m:
+            return True
+        for r in xrange(1,s):
+            x = x**2 % n
+            if x == m:
+                return True
+        return False
+    # See http://primes.utm.edu/prove/prove2_3.html
+    if n < 1373653:
+        witnesses = [2,3]
+    elif n < 341550071728321:
+        witnesses = [2,3,5,7,11,13,17]
+    else:
+        witnesses = small_odd_primes
+    for a in witnesses:
+        if not test(a):
+            return False
+    return True
 
 def moebius(n):
     """
@@ -473,7 +521,7 @@ def eulernum(m, _cache={0:MPZ_ONE}):
         return f
     MAX = MAX_EULER_CACHE
     n = m
-    a = map(MPZ, [0,0,1,0,0,0])
+    a = [MPZ(_) for _ in [0,0,1,0,0,0]]
     for  n in range(1, m+1):
         for j in range(n+1, -1, -2):
             a[j+1] = (j-1)*a[j] + (j+1)*a[j+2]

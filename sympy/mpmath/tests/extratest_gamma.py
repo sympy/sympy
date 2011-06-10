@@ -19,12 +19,12 @@ def check(name, func, z, y):
         errcount += 1
         if raise_:
             raise
-        print
-        print name
-        print "EXCEPTION"
+        print()
+        print(name)
+        print("EXCEPTION")
         import traceback
         traceback.print_tb(sys.exc_info()[2])
-        print
+        print()
         return
     xre = x.real
     xim = x.imag
@@ -34,24 +34,24 @@ def check(name, func, z, y):
     err = 0
     if abs(xre-yre) > abs(yre)*tol:
         err = 1
-        print
-        print "Error! %s (re = %s, wanted %s, err=%s)" % (name, nstr(xre,10), nstr(yre,10), nstr(abs(xre-yre)))
+        print()
+        print("Error! %s (re = %s, wanted %s, err=%s)" % (name, nstr(xre,10), nstr(yre,10), nstr(abs(xre-yre))))
         errcount += 1
         if raise_:
             raise SystemExit
     if abs(xim-yim) > abs(yim)*tol:
         err = 1
-        print
-        print "Error! %s (im = %s, wanted %s, err=%s)" % (name, nstr(xim,10), nstr(yim,10), nstr(abs(xim-yim)))
+        print()
+        print("Error! %s (im = %s, wanted %s, err=%s)" % (name, nstr(xim,10), nstr(yim,10), nstr(abs(xim-yim))))
         errcount += 1
         if raise_:
             raise SystemExit
     if not err:
-        print "%s ok;" % name,
+        print("%s ok;" % name, end=' ')
 
 def testcase(case):
     z, result = case
-    print "Testing z =", z
+    print("Testing z =", z)
     mp.dps = 1010
     z = eval(z)
     mp.dps = maxdps + 50
@@ -69,12 +69,12 @@ def testcase(case):
         if dps > maxdps:
             break
         mp.dps = dps
-        print ("dps = %s" % dps),
+        print("dps = %s" % dps)
         check("gamma", gamma, z, gamma_val)
         check("rgamma", rgamma, z, rgamma_val)
         check("loggamma", loggamma, z, loggamma_val)
         check("factorial", factorial, z, factorial_val)
-        print
+        print()
         mp.dps = 15
 
 testcases = []
@@ -208,8 +208,8 @@ if __name__ == "__main__":
         t1 = clock()
         testcase(case)
         t2 = clock()
-        print "Test time:", t2-t1
-        print
+        print("Test time:", t2-t1)
+        print()
         tot_time += (t2-t1)
-    print "Total time:", tot_time
-    print "Errors:", errcount
+    print("Total time:", tot_time)
+    print("Errors:", errcount)
