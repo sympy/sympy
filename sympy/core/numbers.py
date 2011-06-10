@@ -8,6 +8,7 @@ from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
+from sympy.mpmath.ctx_mp import mpnumeric
 
 import decimal
 
@@ -1924,15 +1925,37 @@ I = S.ImaginaryUnit
 try:
     # fractions is only available for python 2.6+
     import fractions
+
     def sympify_fractions(f):
         return Rational(f.numerator, f.denominator)
+
     converter[fractions.Fraction] = sympify_fractions
 except ImportError:
     pass
 
+try:
+    import gmpy
+
+    def sympify_mpz(x):
+        return Integer(long(x))
+
+    def sympify_mpq(x):
+        return Rational(long(x.numer()), long(x.denom()))
+
+    converter[type(gmpy.mpz(1))] = sympify_mpz
+    converter[type(gmpy.mpq(1, 2))] = sympify_mpq
+except ImportError:
+    pass
+
+def sympify_mpmath(x):
+    return Expr._from_mpmath(x, x.context.prec)
+
+converter[mpnumeric] = sympify_mpmath
+
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))
     return real + S.ImaginaryUnit * imag
+
 converter[complex] = sympify_complex
 
 _intcache[0] = S.Zero

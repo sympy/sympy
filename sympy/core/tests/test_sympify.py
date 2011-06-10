@@ -1,9 +1,11 @@
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
-        Function, I, S, sqrt, srepr, Rational
+    Function, I, S, sqrt, srepr, Rational
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
 from sympy.utilities.pytest import XFAIL, raises
+
+from sympy import mpmath
 
 def test_439():
     v = sympify("exp(x)")
@@ -49,12 +51,45 @@ def test_sympify1():
     # ... or from high precision reals
     assert sympify('.1234567890123456', rational=1) == Rational(19290123283179,  156250000000000)
 
-    # sympify fractions.Fraction instances
+def test_sympify_Fraction():
     try:
         import fractions
-        assert sympify(fractions.Fraction(1, 2)) == Rational(1, 2)
     except ImportError:
         pass
+    else:
+        value = sympify(fractions.Fraction(101, 127))
+        assert value == Rational(101, 127) and type(value) is Rational
+
+def test_sympify_gmpy():
+    try:
+        import gmpy
+    except ImportError:
+        pass
+    else:
+        value = sympify(gmpy.mpz(1000001))
+        assert value == Integer(1000001) and type(value) is Integer
+
+        value = sympify(gmpy.mpq(101, 127))
+        assert value == Rational(101, 127) and type(value) is Rational
+
+def test_sympify_mpmath():
+    value = sympify(mpmath.mpf(1.0))
+    assert value == Float(1.0) and type(value) is Float
+
+    dps = mpmath.mp.dps
+
+    try:
+        mpmath.mp.dps = 12
+        assert sympify(mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) is True
+        assert sympify(mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) is False
+
+        mpmath.mp.dps = 6
+        assert sympify(mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) is True
+        assert sympify(mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
+    finally:
+        mpmath.mp.dps = dps
+
+    assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
 
 def test_sympify2():
     class A:
