@@ -57,6 +57,9 @@ class ReferenceFrame(object):
             raise TypeError('A ReferenceFrame must be supplied')
 
     def _check_vector(self, other):
+        if isintance(other, int):
+            if other == 0:
+                return
         if not isinstance(other, Vector):
             raise TypeError('A Vector must be supplied')
 
@@ -89,7 +92,7 @@ class ReferenceFrame(object):
         outlist.sort(key = len)
         if len(outlist) != 0:
             return outlist[0]
-        raise ValueError('No Common Frame')
+        raise ValueError('No Connecting Path Found')
 
     def ang_vel_in(self, otherframe):
         """Returns the angular velocity vector of the ReferenceFrame.
@@ -120,7 +123,6 @@ class ReferenceFrame(object):
         self._check_frame(otherframe)
         flist = self._dict_list(otherframe, 1)
         outvec = 0
-        # TODO double check the sign on this
         for i in range(len(flist) - 1):
             outvec += flist[i]._ang_vel_dict[flist[i + 1]]
         return outvec
@@ -654,6 +656,9 @@ class Vector(object):
             raise TypeError('A ReferenceFrame must be supplied')
 
     def _check_vector(self, other):
+        if isintance(other, int):
+            if other == 0:
+                return
         if not isinstance(other, Vector):
             raise TypeError('A Vector must be supplied')
 
