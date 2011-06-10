@@ -4,7 +4,7 @@ from sympy.polys.galoistools import (
     gf_degree, gf_strip, gf_trunc, gf_normal,
     gf_from_dict, gf_to_dict,
     gf_from_int_poly, gf_to_int_poly,
-    gf_neg, gf_add_ground, gf_sub_ground, gf_mul_ground, gf_exquo_ground,
+    gf_neg, gf_add_ground, gf_sub_ground, gf_mul_ground, gf_quo_ground,
     gf_add, gf_sub, gf_add_mul, gf_sub_mul, gf_mul, gf_sqr,
     gf_div, gf_rem, gf_quo, gf_exquo,
     gf_lshift, gf_rshift, gf_expand,
@@ -209,27 +209,27 @@ def test_gf_division():
     raises(ZeroDivisionError, "gf_div([1,2,3], [], 11, ZZ)")
     raises(ZeroDivisionError, "gf_rem([1,2,3], [], 11, ZZ)")
     raises(ZeroDivisionError, "gf_quo([1,2,3], [], 11, ZZ)")
-    raises(ZeroDivisionError, "gf_exquo([1,2,3], [], 11, ZZ)")
+    raises(ZeroDivisionError, "gf_quo([1,2,3], [], 11, ZZ)")
 
     assert gf_div([1], [1,2,3], 7, ZZ) == ([], [1])
-    assert gf_exquo([1], [1,2,3], 7, ZZ) == []
     assert gf_rem([1], [1,2,3], 7, ZZ) == [1]
+    assert gf_quo([1], [1,2,3], 7, ZZ) == []
 
     f, g, q, r = [5,4,3,2,1,0], [1,2,3], [5,1,0,6], [3,3]
 
     assert gf_div(f, g, 7, ZZ) == (q, r)
-    assert gf_exquo(f, g, 7, ZZ) == q
     assert gf_rem(f, g, 7, ZZ) == r
+    assert gf_quo(f, g, 7, ZZ) == q
 
-    raises(ExactQuotientFailed, "gf_quo(f, g, 7, ZZ)")
+    raises(ExactQuotientFailed, "gf_exquo(f, g, 7, ZZ)")
 
     f, g, q, r = [5,4,3,2,1,0], [1,2,3,0], [5,1,0], [6,1,0]
 
     assert gf_div(f, g, 7, ZZ) == (q, r)
-    assert gf_exquo(f, g, 7, ZZ) == q
     assert gf_rem(f, g, 7, ZZ) == r
+    assert gf_quo(f, g, 7, ZZ) == q
 
-    raises(ExactQuotientFailed, "gf_quo(f, g, 7, ZZ)")
+    raises(ExactQuotientFailed, "gf_exquo(f, g, 7, ZZ)")
 
     assert gf_quo([1,2,1], [1,1], 11, ZZ) == [1,1]
 

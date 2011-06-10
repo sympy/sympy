@@ -4,6 +4,7 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from expr import Expr
+from compatibility import all
 
 class Add(AssocOp):
 
@@ -193,6 +194,9 @@ class Add(AssocOp):
         else:
             return newseq, [], None
 
+    @classmethod
+    def class_key(cls):
+        return 3, 1, cls.__name__
 
     @cacheit
     def as_coeff_add(self, *deps):
@@ -210,12 +214,9 @@ class Add(AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    @cacheit
-    def as_coeff_mul(self, *deps):
-        # -2 + 2 * a -> -1, 2-2*a
-        if self.args[0].is_Rational and self.args[0].is_negative:
-            return S.NegativeOne, (-self,)
-        return Expr.as_coeff_mul(self, *deps)
+    # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
+    # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
+    # issue 2425.
 
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
@@ -276,10 +277,10 @@ class Add(AssocOp):
                      for i in r]), Mul(*denoms)
 
     def _eval_is_polynomial(self, syms):
-        for term in self.args:
-            if not term._eval_is_polynomial(syms):
-                return False
-        return True
+        return all(term._eval_is_polynomial(syms) for term in self.args)
+
+    def _eval_is_rational_function(self, syms):
+        return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')

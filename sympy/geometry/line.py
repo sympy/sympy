@@ -10,7 +10,7 @@ Segment
 """
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
-from sympy.core.numbers import Real, Rational
+from sympy.core.numbers import Float, Rational
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError

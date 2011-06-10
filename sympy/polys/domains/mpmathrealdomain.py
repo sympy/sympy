@@ -27,7 +27,7 @@ class MPmathRealDomain(RealDomain):
         """Convert SymPy's Integer to `dtype`. """
         b = a.evalf()
 
-        if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
+        if b.is_Float and b not in [S.Infinity, S.NegativeInfinity]:
             return MPmathRealType(b)
         else:
             raise CoercionFailed("expected Real object, got %s" % a)
@@ -57,7 +57,7 @@ class MPmathRealDomain(RealDomain):
         return MPmathRealType(int(a.numer())) / int(a.denom())
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return MPmathRealType(a)
 
     def from_RR_mpmath(K1, a, K0):

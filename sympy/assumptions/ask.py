@@ -1,11 +1,9 @@
 """Module for querying SymPy objects about assumptions."""
-import inspect
 from sympy.core import sympify
-from sympy.utilities.source import get_class
-from sympy.assumptions import global_assumptions, Predicate
-from sympy.assumptions.assume import eliminate_assume
 from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent
 from sympy.logic.inference import satisfiable
+from sympy.assumptions.assume import (global_assumptions, Predicate,
+        AppliedPredicate)
 
 class Q:
     """Supported ask keys."""
@@ -30,77 +28,61 @@ class Q:
     is_true = Predicate('is_true')
 
 
-def eval_predicate(predicate, expr, assumptions=True):
+
+def _extract_facts(expr, symbol):
     """
-    Evaluate predicate(expr) under the given assumptions.
+    Helper for ask().
 
-    This uses only direct resolution methods, not logical inference.
+    Extracts the facts relevant to the symbol from an assumption.
+    Returns None if there is nothing to extract.
     """
-    if not isinstance(predicate, Predicate):
-        return eval_predicate(Q.is_true, predicate(expr), assumptions)
-    res, _res = None, None
-    mro = inspect.getmro(type(expr))
-    for handler in predicate.handlers:
-        cls = get_class(handler)
-        for subclass in mro:
-            try:
-                eval = getattr(cls, subclass.__name__)
-            except AttributeError:
-                continue
-            res = eval(expr, assumptions)
-            if _res is None:
-                _res = res
-            elif res is None:
-                # since first resolutor was conclusive, we keep that value
-                res = _res
-            else:
-                # only check consistency if both resolutors have concluded
-                if _res != res:
-                    raise ValueError('incompatible resolutors')
-            break
-    return res
+    if not expr.has(symbol):
+        return None
+    if isinstance(expr, AppliedPredicate):
+        return expr.func
+    return expr.func(*filter(lambda x: x is not None,
+                [_extract_facts(arg, symbol) for arg in expr.args]))
 
-
-def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disable_preprocessing=False):
+def ask(proposition, assumptions=True, context=global_assumptions):
     """
     Method for inferring properties about objects.
 
     **Syntax**
 
-        * ask(expression, key)
+        * ask(proposition)
 
-        * ask(expression, key, assumptions)
+        * ask(proposition, assumptions)
 
-            where expression is any SymPy expression
+            where `proposition` is any boolean expression
 
     **Examples**
         >>> from sympy import ask, Q, pi
         >>> from sympy.abc import x, y
-        >>> ask(pi, Q.rational)
+        >>> ask(Q.rational(pi))
         False
-        >>> ask(x*y, Q.even, Q.even(x) & Q.integer(y))
+        >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
         True
-        >>> ask(x*y, Q.prime, Q.integer(x) &  Q.integer(y))
+        >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
         False
 
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
-        >> ask(x, Q.positive, Q.is_true(x > 0))
+        >> ask(Q.positive(x), Q.is_true(x > 0))
         It is however a work in progress and should be available before
         the official release
 
     """
-    expr = sympify(expr)
-    if isinstance(key, basestring):
-        key = getattr(Q, str(key))
     assumptions = And(assumptions, And(*context))
+    if isinstance(proposition, AppliedPredicate):
+        key, expr = proposition.func, sympify(proposition.arg)
+    else:
+        key, expr = Q.is_true, sympify(proposition)
 
     # direct resolution method, no logic
-    if not disable_preprocessing:
-        res = eval_predicate(key, expr, assumptions)
-        if res is not None:
-            return res
+    res = key(expr)._eval_ask(assumptions)
+    if res is not None:
+        return res
 
     if assumptions is True:
         return
@@ -108,60 +90,64 @@ def ask(expr, key=Q.is_true, assumptions=True, context=global_assumptions, disab
     if not expr.is_Atom:
         return
 
-    assumptions = eliminate_assume(assumptions, expr)
-    if assumptions is None or assumptions is True:
+    local_facts = _extract_facts(assumptions, expr)
+    if local_facts is None or local_facts is True:
         return
 
     # See if there's a straight-forward conclusion we can make for the inference
-    if not disable_preprocessing:
-        if assumptions.is_Atom:
-            if key in known_facts_dict[assumptions]:
-                return True
-            if Not(key) in known_facts_dict[assumptions]:
-                return False
-        elif assumptions.func is And:
-            for assum in assumptions.args:
-                if assum.is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return True
-                    if Not(key) in known_facts_dict[assum]:
-                        return False
-                elif assum.func is Not and assum.args[0].is_Atom:
-                    if key in known_facts_dict[assum]:
-                        return False
-                    if Not(key) in known_facts_dict[assum]:
-                        return True
-        elif (isinstance(key, Predicate) and
-                assumptions.func is Not and assumptions.args[0].is_Atom):
-            if assumptions.args[0] in known_facts_dict[key]:
-                return False
+    if local_facts.is_Atom:
+        if key in known_facts_dict[local_facts]:
+            return True
+        if Not(key) in known_facts_dict[local_facts]:
+            return False
+    elif local_facts.func is And:
+        for assum in local_facts.args:
+            if assum.is_Atom:
+                if key in known_facts_dict[assum]:
+                    return True
+                if Not(key) in known_facts_dict[assum]:
+                    return False
+            elif assum.func is Not and assum.args[0].is_Atom:
+                if key in known_facts_dict[assum]:
+                    return False
+                if Not(key) in known_facts_dict[assum]:
+                    return True
+    elif (isinstance(key, Predicate) and
+            local_facts.func is Not and local_facts.args[0].is_Atom):
+        if local_facts.args[0] in known_facts_dict[key]:
+            return False
 
     # Failing all else, we do a full logical inference
-    # If it's not consistent with the assumptions, then it can't be true
-    if not satisfiable(And(known_facts_cnf, assumptions, key)):
+    return ask_full_inference(key, local_facts)
+
+
+def ask_full_inference(proposition, assumptions):
+    """
+    Method for inferring properties about objects.
+
+    """
+    if not satisfiable(And(known_facts_cnf, assumptions, proposition)):
         return False
-
-    # If the negation is unsatisfiable, it is entailed
-    if not satisfiable(And(known_facts_cnf, assumptions, Not(key))):
+    if not satisfiable(And(known_facts_cnf, assumptions, Not(proposition))):
         return True
-
-    # Otherwise, we don't have enough information to conclude one way or the other
     return None
+
+
 
 def register_handler(key, handler):
     """Register a handler in the ask system. key must be a string and handler a
     class inheriting from AskHandler.
 
-        >>> from sympy.assumptions import register_handler, ask
+        >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler
         >>> class MersenneHandler(AskHandler):
         ...     # Mersenne numbers are in the form 2**n + 1, n integer
         ...     @staticmethod
         ...     def Integer(expr, assumptions):
         ...         import math
-        ...         return ask(math.log(expr + 1, 2), 'integer')
+        ...         return ask(Q.integer(math.log(expr + 1, 2)))
         >>> register_handler('mersenne', MersenneHandler)
-        >>> ask(7, 'mersenne')
+        >>> ask(Q.mersenne(7))
         True
 
     """
@@ -190,13 +176,12 @@ def compute_known_facts():
     fact_string += "\n)\n"
 
     # Compute the quick lookup for single facts
-    from sympy.abc import x
     mapping = {}
     for key in known_facts_keys:
         mapping[key] = set([key])
         for other_key in known_facts_keys:
             if other_key != key:
-                if ask(x, other_key, key(x), disable_preprocessing=True):
+                if ask_full_inference(other_key, key):
                     mapping[key].add(other_key)
     fact_string += "\n# -{ Known facts in compressed sets }-\n"
     fact_string += "known_facts_dict = {\n    "

@@ -3,7 +3,7 @@
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.assumptions import ask
+from sympy.assumptions import ask, Q
 from sympy.core import S, sympify
 from sympy.utilities import any
 
@@ -12,7 +12,7 @@ def _construct_simple(coeffs, opt):
     result, rationals, reals, algebraics = {}, False, False, False
 
     if opt.extension is True:
-        is_algebraic = lambda coeff: ask(coeff, 'algebraic')
+        is_algebraic = lambda coeff: ask(Q.algebraic(coeff))
     else:
         is_algebraic = lambda coeff: False
 
@@ -21,7 +21,7 @@ def _construct_simple(coeffs, opt):
         if coeff.is_Rational:
             if not coeff.is_Integer:
                 rationals = True
-        elif coeff.is_Real:
+        elif coeff.is_Float:
             if not algebraics:
                 reals = True
             else:
@@ -149,7 +149,7 @@ def _construct_composite(coeffs, opt):
         if coeff.is_Rational:
             if not coeff.is_Integer:
                 rationals = True
-        elif coeff.is_Real:
+        elif coeff.is_Float:
             reals = True
             break
 

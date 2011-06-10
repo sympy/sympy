@@ -1,4 +1,4 @@
-from sympy import symbols, DiracDelta, Heaviside, nan, oo, Real, sqrt, pi
+from sympy import symbols, DiracDelta, Heaviside, nan, oo, sqrt, pi
 x = symbols('x')
 
 def test_DiracDelta():

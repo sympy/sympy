@@ -180,9 +180,7 @@ class Printer(object):
 
     _global_settings = {}
 
-    _default_settings = {
-        "order": None,
-    }
+    _default_settings = {}
 
     emptyPrinter = str
     printmethod = None
@@ -205,7 +203,7 @@ class Printer(object):
                         raise TypeError("Unknown setting '%s'." % key)
 
         # _print_level is the number of times self._print() was recursively
-        # called. See StrPrinter._print_Real() for an example of usage
+        # called. See StrPrinter._print_Float() for an example of usage
         self._print_level = 0
 
     @classmethod

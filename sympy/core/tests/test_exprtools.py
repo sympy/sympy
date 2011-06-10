@@ -3,7 +3,7 @@
 from sympy.core.exprtools import (
     decompose_power, Factors, Term, _gcd_terms, gcd_terms)
 
-from sympy import S, Add, sin
+from sympy import S, Add, sin, Mul
 from sympy.abc import x, y, z, t
 
 def test_decompose_power():
@@ -68,6 +68,9 @@ def test_Term():
 
     assert a.mul(b) == Term(8, Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
 
+    assert Term((2*x + 2)**3) == Term(8, Factors({x + 1: 3}), Factors({}))
+    assert Term((2*x + 2)*(3*x + 6)**2) == Term(18, Factors({x + 1: 1, x + 2: 2}), Factors({}))
+
 def test_gcd_terms():
     f = 2*(x + 1)*(x + 4)/(5*x**2 + 5) + (2*x + 2)*(x + 5)/(x**2 + 1)/5 + (2*x + 2)*(x + 6)/(5*x**2 + 5)
 
@@ -77,6 +80,9 @@ def test_gcd_terms():
     assert gcd_terms(f) == (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
     assert gcd_terms(Add.make_args(f)) == (S(6)/5)*((1 + x)*(5 + x)/(1 + x**2))
 
+    assert gcd_terms((2*x + 2)**3 + (2*x + 2)**2) == 4*(x + 1)**2*(2*x + 3)
+
     assert gcd_terms(0) == 0
     assert gcd_terms(1) == 1
     assert gcd_terms(x) == x
+    assert gcd_terms(2 + 2*x) == Mul(2, 1 + x, evaluate=False)

@@ -14,14 +14,14 @@ class Ring(Domain):
 
     def exquo(self, a, b):
         """Exact quotient of `a` and `b`, implies `__floordiv__`.  """
-        return a // b
-
-    def quo(self, a, b):
-        """Quotient of `a` and `b`, implies `__floordiv__`. """
         if a % b:
             raise ExactQuotientFailed(a, b, self)
         else:
             return a // b
+
+    def quo(self, a, b):
+        """Quotient of `a` and `b`, implies `__floordiv__`. """
+        return a // b
 
     def rem(self, a, b):
         """Remainder of `a` and `b`, implies `__mod__`.  """

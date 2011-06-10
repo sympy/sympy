@@ -30,7 +30,6 @@ from sympy.polys.densearith import (
     dup_div, dmp_div,
     dup_rem, dmp_rem,
     dup_quo, dmp_quo,
-    dup_exquo, dmp_exquo,
     dup_prem, dmp_prem,
     dup_expand, dmp_expand,
     dup_add_mul, dup_sub_mul,
@@ -82,7 +81,7 @@ def dup_integrate(f, m, K):
         for j in xrange(1, m):
             n *= i+j+1
 
-        g.insert(0, K.exquo(c, K(n)))
+        g.insert(0, K.quo(c, K(n)))
 
     return g
 
@@ -534,7 +533,7 @@ def dup_monic(f, K):
     if K.is_one(lc):
         return f
     else:
-        return dup_quo_ground(f, lc, K)
+        return dup_exquo_ground(f, lc, K)
 
 @cythonized("u")
 def dmp_ground_monic(f, u, K):
@@ -567,7 +566,7 @@ def dmp_ground_monic(f, u, K):
     if K.is_one(lc):
         return f
     else:
-        return dmp_quo_ground(f, lc, u, K)
+        return dmp_exquo_ground(f, lc, u, K)
 
 def dup_content(f, K):
     """
@@ -661,7 +660,7 @@ def dup_primitive(f, K):
     if K.is_one(cont):
         return cont, f
     else:
-        return cont, dup_exquo_ground(f, cont, K)
+        return cont, dup_quo_ground(f, cont, K)
 
 @cythonized("u")
 def dmp_ground_primitive(f, u, K):
@@ -693,7 +692,7 @@ def dmp_ground_primitive(f, u, K):
     if K.is_one(cont):
         return cont, f
     else:
-        return cont, dmp_exquo_ground(f, cont, u, K)
+        return cont, dmp_quo_ground(f, cont, u, K)
 
 def dup_extract(f, g, K):
     """
@@ -717,8 +716,8 @@ def dup_extract(f, g, K):
     gcd = K.gcd(fc, gc)
 
     if not K.is_one(gcd):
-        f = dup_exquo_ground(f, gcd, K)
-        g = dup_exquo_ground(g, gcd, K)
+        f = dup_quo_ground(f, gcd, K)
+        g = dup_quo_ground(g, gcd, K)
 
     return gcd, f, g
 
@@ -745,8 +744,8 @@ def dmp_ground_extract(f, g, u, K):
     gcd = K.gcd(fc, gc)
 
     if not K.is_one(gcd):
-        f = dmp_exquo_ground(f, gcd, u, K)
-        g = dmp_exquo_ground(g, gcd, u, K)
+        f = dmp_quo_ground(f, gcd, u, K)
+        g = dmp_quo_ground(g, gcd, u, K)
 
     return gcd, f, g
 
@@ -978,7 +977,7 @@ def _dup_right_decompose(f, s, K):
             fc, gc = f[n+j-i], g[s-j]
             coeff += (i - r*j)*fc*gc
 
-        g[s-i] = K.exquo(coeff, i*r*lc)
+        g[s-i] = K.quo(coeff, i*r*lc)
 
     return dup_from_raw_dict(g, K)
 
@@ -1021,7 +1020,7 @@ def dup_decompose(f, K):
     """
     Computes functional decomposition of ``f`` in ``K[x]``.
 
-    Given an univariate polynomial ``f`` with coefficients in a field of
+    Given a univariate polynomial ``f`` with coefficients in a field of
     characteristic zero, returns list ``[f_1, f_2, ..., f_n]``, where::
 
               f = f_1 o f_2 o ... f_n = f_1(f_2(... f_n))

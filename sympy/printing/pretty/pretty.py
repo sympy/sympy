@@ -48,16 +48,8 @@ class PrettyPrinter(Printer):
         symb = pretty_symbol(e.name)
         return prettyForm(symb)
 
-    def _print_Pure(self, e):
-        if self._use_unicode:
-            symb = pretty_symbol(u"\u2118")
-        else:
-            symb = pretty_symbol('pure')
-
-        return prettyForm(symb)
-
-    def _print_Real(self, e):
-        # we will use StrPrinter's Real printer, but we need to handle the
+    def _print_Float(self, e):
+        # we will use StrPrinter's Float printer, but we need to handle the
         # full_prec ourselves, according to the self._print_level
         full_prec = self._settings["full_prec"]
         if  full_prec == "auto":
@@ -893,14 +885,6 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.left('RootSum'))
 
         return pform
-
-    def _print_Pure(self, e):
-        if self._use_unicode:
-            symb = pretty_symbol(u"\u2118")
-        else:
-            symb = pretty_symbol('pure')
-
-        return prettyForm(symb)
 
     def _print_FiniteField(self, expr):
         if self._use_unicode:

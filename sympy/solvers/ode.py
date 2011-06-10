@@ -202,6 +202,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
+from sympy.core.compatibility import any, all, minkey
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
@@ -216,8 +217,7 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols, all, any
-from sympy.utilities.iterables import minkey
+from sympy.utilities import numbered_symbols
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -226,7 +226,7 @@ from sympy.utilities.iterables import minkey
 # the list is better than one before it, fell free to modify the list.  Note
 # however that you can easily override the hint used in dsolve() for a specific ODE
 # (see the docstring).  In general, "_Integral" hints should be grouped
-# at the end of the list, unless there is a method that returns an unevaluatable
+# at the end of the list, unless there is a method that returns an unevaluable
 # integral most of the time (which should surely go near the end of the list
 # anyway).
 # "default", "all", "best", and "all_Integral" meta-hints should not be
@@ -479,12 +479,6 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
     return rv
-
-
-    if not isinstance(result, Basic):
-        result = sorted(result, key=Basic.sorted_key)
-
-    return result
 
 def classify_ode(eq, func, dict=False):
     """
@@ -933,7 +927,6 @@ def odesimp(eq, func, order, hint):
 
     return eq
 
-@vectorize(2)
 def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
     """
     Substitutes sol for func in ode and checks that the result is 0.
@@ -985,6 +978,9 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         (False, 2)
 
     """
+    if type(sol) in (tuple, list, set):
+        return type(sol)(map(lambda i: checkodesol(ode, func, i, order=order,
+            solve_for_func=solve_for_func), sol))
     if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
     x = func.args[0]
@@ -1304,7 +1300,6 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    from sympy.utilities import any
     constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
     endnumber + 1)]
     constantsymbols_set = set(constantsymbols)
@@ -1382,7 +1377,6 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             else:
                 return newexpr
 
-@vectorize(0)
 def constant_renumber(expr, symbolname, startnumber, endnumber):
     """
     Renumber arbitrary constants in expr.
@@ -1412,7 +1406,9 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         C1 + C2*x + C3*x
 
     """
-
+    if type(expr) in (set, list, tuple):
+        return type(expr)(map(lambda i: constant_renumber(i, symbolname=symbolname,
+            startnumber=startnumber, endnumber=endnumber), expr))
     global newstartnumber
     newstartnumber = 1
 
@@ -1422,7 +1418,6 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         newstartnumber maintains its values throughout recursive calls.
 
         """
-        from sympy.utilities import any
         constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
         endnumber + 1)]
         global newstartnumber
@@ -1890,7 +1885,7 @@ def _homogeneous_order(eq, *symbols):
 
     # These are all constants
     if type(eq) in (int, float) or eq.is_Number or eq.is_Integer or \
-    eq.is_Rational or eq.is_NumberSymbol or eq.is_Real:
+    eq.is_Rational or eq.is_NumberSymbol or eq.is_Float:
         return sympify(0)
 
     # Break the equation into additive parts
@@ -2237,11 +2232,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    f(x) == C1*exp(x*RootOf(_pure**5 + 10*_pure - 2, 0)) + \
-    C2*exp(x*RootOf(_pure**5 + 10*_pure - 2, 1)) + \
-    C3*exp(x*RootOf(_pure**5 + 10*_pure - 2, 2)) + \
-    C4*exp(x*RootOf(_pure**5 + 10*_pure - 2, 3)) + \
-    C5*exp(x*RootOf(_pure**5 + 10*_pure - 2, 4))
+    f(x) == C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) + \
+    C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) + \
+    C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) + \
+    C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) + \
+    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4))
 
     Note that because this method does not involve integration, there is
     no 'nth_linear_constant_coeff_homogeneous_Integral' hint.
@@ -2287,15 +2282,15 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
     # First, set up characteristic equation.
-    chareq = S.Zero
+    chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
         if type(i) == str or i < 0:
             pass
         else:
-            chareq += r[i]*S.Pure**i
+            chareq += r[i]*symbol**i
 
-    chareq = Poly(chareq, S.Pure)
+    chareq = Poly(chareq, symbol)
     chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
 
     # Create a dict root: multiplicity or charroots
@@ -2521,7 +2516,7 @@ def _undetermined_coefficients_match(expr, x):
         >>> from sympy.solvers.ode import _undetermined_coefficients_match
         >>> from sympy.abc import x
         >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
-        {'test': True, 'trialset': set([x*exp(x), exp(x), exp(-x)])}
+        {'test': True, 'trialset': set([x*exp(x), exp(-x), exp(x)])}
         >>> _undetermined_coefficients_match(log(x), x)
         {'test': False}
 
@@ -2810,4 +2805,3 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x)+C1)
-

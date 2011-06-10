@@ -10,7 +10,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy import (
-    S, symbols, sqrt, I, Rational, Real, Lambda, log, exp, tan,
+    S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan,
 )
 
 from sympy.utilities.pytest import raises
@@ -29,10 +29,10 @@ def test_RootOf___new__():
     assert RootOf(x + 1, 0) ==-1
     assert RootOf(x + 1,-1) ==-1
 
-    assert RootOf(x**2 + 2*x + 3, 0) == -1 + I*sqrt(2)
-    assert RootOf(x**2 + 2*x + 3, 1) == -1 - I*sqrt(2)
-    assert RootOf(x**2 + 2*x + 3,-1) == -1 - I*sqrt(2)
-    assert RootOf(x**2 + 2*x + 3,-2) == -1 + I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3, 0) == -1 - I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3, 1) == -1 + I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3,-1) == -1 + I*sqrt(2)
+    assert RootOf(x**2 + 2*x + 3,-2) == -1 - I*sqrt(2)
 
     r = RootOf(x**2 + 2*x + 3, 0, radicals=False)
     assert isinstance(r, RootOf) == True
@@ -88,8 +88,8 @@ def test_RootOf___new__():
 
     assert RootOf(Poly(x - y, x), 0) == y
 
-    assert RootOf(Poly(x**2 - y, x), 0) == +sqrt(y)
-    assert RootOf(Poly(x**2 - y, x), 1) == -sqrt(y)
+    assert RootOf(Poly(x**2 - y, x), 0) == -sqrt(y)
+    assert RootOf(Poly(x**2 - y, x), 1) ==  sqrt(y)
 
     assert RootOf(Poly(x**3 - y, x), 0) == y**Rational(1,3)
 
@@ -98,23 +98,8 @@ def test_RootOf___new__():
 
     assert RootOf(x**3 + x + 1, 0).is_commutative == True
 
-def test_RootOf___new___indices():
-    f = x**3 + x + 3
-    r0 = RootOf(f, 0)
-    r1 = RootOf(f, 1)
-    r2 = RootOf(f, 2)
-
-    assert RootOf(f) == [r0]
-
-    assert RootOf(f, (0,)) == [r0]
-    assert RootOf(f, (0,1)) == [r0, r1]
-    assert RootOf(f, (0,1,2)) == [r0, r1, r2]
-
-    assert RootOf(f, (-3,)) == [r0]
-    assert RootOf(f, (-3,-2)) == [r0, r1]
-    assert RootOf(f, (-3,-2,-1)) == [r0, r1, r2]
-
-    assert RootOf(f, True) == [r0, r1, r2]
+def test_RootOf_free_symbols():
+    assert RootOf(x**3 + x + 3, 0).free_symbols == set()
 
 def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 0) == RootOf(x**3 + x + 3, 0)) == True
@@ -122,6 +107,12 @@ def test_RootOf___eq__():
     assert (RootOf(x**3 + x + 3, 1) == RootOf(x**3 + x + 3, 1)) == True
     assert (RootOf(x**3 + x + 3, 1) == RootOf(x**3 + x + 3, 2)) == False
     assert (RootOf(x**3 + x + 3, 2) == RootOf(x**3 + x + 3, 2)) == True
+
+    assert (RootOf(x**3 + x + 3, 0) == RootOf(y**3 + y + 3, 0)) == True
+    assert (RootOf(x**3 + x + 3, 0) == RootOf(y**3 + y + 3, 1)) == False
+    assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 1)) == True
+    assert (RootOf(x**3 + x + 3, 1) == RootOf(y**3 + y + 3, 2)) == False
+    assert (RootOf(x**3 + x + 3, 2) == RootOf(y**3 + y + 3, 2)) == True
 
 def test_RootOf_is_real():
     assert RootOf(x**3 + x + 3, 0).is_real == True
@@ -136,20 +127,45 @@ def test_RootOf_is_complex():
 def test_RootOf_subs():
     assert RootOf(x**3 + x + 1, 0).subs(x, y) == RootOf(y**3 + y + 1, 0)
 
+def test_RootOf_diff():
+    assert RootOf(x**3 + x + 1, 0).diff(x) == 0
+    assert RootOf(x**3 + x + 1, 0).diff(y) == 0
+
 def test_RootOf_evalf():
     real = RootOf(x**3 + x + 3, 0).evalf(n=20)
 
-    assert real.epsilon_eq(Real("-1.2134116627622296341"))
+    assert real.epsilon_eq(Float("-1.2134116627622296341"))
 
     re, im = RootOf(x**3 + x + 3, 1).evalf(n=20).as_real_imag()
 
-    assert re.epsilon_eq(Real("0.60670583138111481707"))
-    assert im.epsilon_eq(Real("1.45061224918844152650"))
+    assert re.epsilon_eq( Float("0.60670583138111481707"))
+    assert im.epsilon_eq(-Float("1.45061224918844152650"))
 
     re, im = RootOf(x**3 + x + 3, 2).evalf(n=20).as_real_imag()
 
-    assert re.epsilon_eq( Real("0.60670583138111481707"))
-    assert im.epsilon_eq(-Real("1.45061224918844152650"))
+    assert re.epsilon_eq(Float("0.60670583138111481707"))
+    assert im.epsilon_eq(Float("1.45061224918844152650"))
+
+def test_RootOf_real_roots():
+    assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
+    assert Poly(x**5 + x + 1).real_roots(radicals=False) == [RootOf(x**3 - x**2 + 1, 0)]
+
+def test_RootOf_all_roots():
+    assert Poly(x**5 + x + 1).all_roots() == [
+        RootOf(x**3 - x**2 + 1, 0),
+        -S(1)/2 - 3**(S(1)/2)*I/2,
+        -S(1)/2 + 3**(S(1)/2)*I/2,
+        RootOf(x**3 - x**2 + 1, 1),
+        RootOf(x**3 - x**2 + 1, 2),
+    ]
+
+    assert Poly(x**5 + x + 1).all_roots(radicals=False) == [
+        RootOf(x**3 - x**2 + 1, 0),
+        RootOf(x**2 + x + 1, 0, radicals=False),
+        RootOf(x**2 + x + 1, 1, radicals=False),
+        RootOf(x**3 - x**2 + 1, 1),
+        RootOf(x**3 - x**2 + 1, 2),
+    ]
 
 def test_RootSum___new__():
     f = x**3 + x + 3
@@ -198,6 +214,20 @@ def test_RootSum___new__():
 
     assert RootSum(x**3 + a*x + a**3, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(a*x)))
     assert RootSum(a**3*x**3 + a*x + 1, tan, x) == RootSum(x**3 + x + 1, Lambda(x, tan(x/a)))
+
+def test_RootSum_free_symbols():
+    assert RootSum(x**3 + x + 3, Lambda(r, exp(r))).free_symbols == set()
+    assert RootSum(x**3 + x + 3, Lambda(r, exp(a*r))).free_symbols == set([a])
+    assert RootSum(x**3 + x + y, Lambda(r, exp(a*r)), x).free_symbols == set([a, y])
+
+def test_RootSum___eq__():
+    f = Lambda(x, exp(x))
+
+    assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 1, f)) == True
+    assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 1, f)) == True
+
+    assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 2, f)) == False
+    assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 2, f)) == False
 
 def test_RootSum_diff():
     f = x**3 + x + 3

@@ -6,7 +6,7 @@ from sympy.polys.polyoptions import build_options
 from sympy.core.exprtools import decompose_power
 
 from sympy.core import S, Add, Mul, Pow
-from sympy.assumptions import ask
+from sympy.assumptions import ask, Q
 from sympy.utilities import any
 
 import re
@@ -177,7 +177,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             return factor in opt.domain
     elif opt.extension is True:
         def _is_coeff(factor):
-            return ask(factor, 'algebraic')
+            return ask(Q.algebraic(factor))
     elif opt.greedy is not False:
         def _is_coeff(factor):
             return False
@@ -210,7 +210,12 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
         reprs.append(terms)
 
     if not gens:
-        raise GeneratorsNeeded("specify generators to give %s a meaning" % (exprs,))
+        if len(exprs) == 1:
+            arg = exprs[0]
+        else:
+            arg = (exprs,)
+
+        raise GeneratorsNeeded("specify generators to give %s a meaning" % arg)
 
     gens = _sort_gens(gens, opt=opt)
     k, indices = len(gens), {}

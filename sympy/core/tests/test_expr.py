@@ -1,9 +1,9 @@
-from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational, I, \
-    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly, Function, Derivative, Number, pi, var, \
-    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
-    radsimp, powsimp, simplify, together, separate, collect, factorial, \
-    apart, combsimp, factor, refine, cancel, invert, Tuple
+from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
+    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify,
+    WildFunction, Poly, Function, Derivative, Number, pi, var,
+    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
+    radsimp, powsimp, simplify, together, separate, collect, factorial,
+    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key)
 from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
@@ -104,7 +104,7 @@ f1_1 = F1_1()
 # basic sympy objects
 basic_objs = [
     Rational(2),
-    Real("1.3"),
+    Float("1.3"),
     x,
     y,
     pow(x,y)*y,
@@ -266,14 +266,14 @@ def test_is_polynomial():
     assert (2**x).is_polynomial(x) == False
     assert (2**x).is_polynomial(y) == True
 
-    assert (x**k).is_polynomial(x) == True
+    assert (x**k).is_polynomial(x) == False
     assert (x**k).is_polynomial(k) == False
     assert (x**x).is_polynomial(x) == False
     assert (k**k).is_polynomial(k) == False
-    assert (k**x).is_polynomial(k) == None
+    assert (k**x).is_polynomial(k) == False
 
-    assert (x**(-k)).is_polynomial(x) == None
-    assert ((2*x)**k).is_polynomial(x) == True
+    assert (x**(-k)).is_polynomial(x) == False
+    assert ((2*x)**k).is_polynomial(x) == False
 
     assert (x**2 + 3*x - 8).is_polynomial(x) == True
     assert (x**2 + 3*x - 8).is_polynomial(y) == True
@@ -622,7 +622,7 @@ def test_nonzero():
     assert bool(x*0)    == False
 
 def test_is_number():
-    assert Real(3.14).is_number == True
+    assert Float(3.14).is_number == True
     assert Integer(737).is_number == True
     assert Rational(3, 2).is_number == True
     assert Rational(8).is_number == True
@@ -947,15 +947,15 @@ def test_issue_2061():
 def test_as_coeff_Mul():
     Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
     Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
-    Real(5.0).as_coeff_Mul() == (Real(5.0), Integer(1))
+    Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
 
     (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
     (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
-    (Real(5.0)*x).as_coeff_Mul() == (Real(5.0), x)
+    (Float(5.0)*x).as_coeff_Mul() == (Float(5.0), x)
 
     (Integer(3)*x*y).as_coeff_Mul() == (Integer(3), x*y)
     (Rational(3, 4)*x*y).as_coeff_Mul() == (Rational(3, 4), x*y)
-    (Real(5.0)*x*y).as_coeff_Mul() == (Real(5.0), x*y)
+    (Float(5.0)*x*y).as_coeff_Mul() == (Float(5.0), x*y)
 
     (x).as_coeff_Mul() == (S.One, x)
     (x*y).as_coeff_Mul() == (S.One, x*y)
@@ -964,25 +964,25 @@ def test_expr_sorting():
     f, g = symbols('f,g', cls=Function)
 
     exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
-    assert sorted(exprs, key=Basic.sorted_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]
-    assert sorted(exprs, key=Basic.sorted_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [x + 1, x**2 + x + 1, x**3 + x**2 + x + 1]
-    assert sorted(exprs, key=Basic.sorted_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [S(4), x - 3*I/2, x + 3*I/2, x - 4*I + 1, x + 4*I + 1]
-    assert sorted(exprs, key=Basic.sorted_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
-    assert sorted(exprs, key=Basic.sorted_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [f(x), g(x), exp(x), sin(x), cos(x), factorial(x)]
-    assert sorted(exprs, key=Basic.sorted_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [Tuple(x, y), Tuple(x, z), Tuple(x, y, z)]
-    assert sorted(exprs, key=Basic.sorted_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)

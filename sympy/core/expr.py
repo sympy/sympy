@@ -2,16 +2,69 @@ from core import C
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin
-from decorators import _sympifyit
+from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from sympy.core.compatibility import all
+from sympy.core.compatibility import any, all
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
+    def sort_key(self, order=None):
+        # XXX: The order argument does not actually work
+        from sympy.core import S
+
+        def key_inner(arg):
+            if isinstance(arg, Basic):
+                return arg.sort_key(order=order)
+            elif hasattr(arg, '__iter__'):
+                return tuple(key_inner(arg) for arg in args)
+            else:
+                return arg
+
+        coeff, expr = self.as_coeff_Mul()
+        if expr.is_Pow:
+            expr, exp = expr.args
+        else:
+            expr, exp = expr, S.One
+
+        if expr.is_Atom:
+            if expr.is_Symbol:
+                args = (str(expr),)
+            else:
+                args = (expr,)
+        else:
+            if expr.is_Add:
+                args = expr.as_ordered_terms(order=order)
+            else:
+                args = expr.args
+
+            args = tuple(key_inner(arg) for arg in args)
+
+            if expr.is_Mul:
+                args = sorted(args)
+
+        args = (len(args), args)
+        exp = exp.sort_key(order=order)
+
+        return expr.class_key(), args, exp, coeff
+
+
     # ***************
     # * Arithmetics *
     # ***************
+
+    # Expr and its sublcasses use _op_priority to determine which object
+    # passed to a binary special method (__mul__, etc.) will handle the
+    # operation. In general, the 'call_highest_priority' decorator will choose
+    # the object with the highest _op_priority to handle the call.
+    # Custom subclasses that want to define their own binary special methods
+    # should set an _op_priority value that is higher than the default.
+    #
+    # **NOTE**:
+    # This is a temporary fix, and will eventually be replaced with
+    # something better and more powerful.  See issue 2411.
+    _op_priority = 10.0
+
     def __pos__(self):
         return self
     def __neg__(self):
@@ -20,42 +73,47 @@ class Expr(Basic, EvalfMixin):
         return C.Abs(self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         return Add(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__add__')
     def __radd__(self, other):
         return Add(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return Add(self, -other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
         return Add(other, -self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         return Mul(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
         return Mul(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rpow__')
     def __pow__(self, other):
         return Pow(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__pow__')
     def __rpow__(self, other):
         return Pow(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return Mul(self, Pow(other, S.NegativeOne))
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__div__')
     def __rdiv__(self, other):
         return Mul(other, Pow(self, S.NegativeOne))
 
@@ -106,11 +164,11 @@ class Expr(Basic, EvalfMixin):
     @staticmethod
     def _from_mpmath(x, prec):
         if hasattr(x, "_mpf_"):
-            return C.Real._new(x._mpf_, prec)
+            return C.Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
             re, im = x._mpc_
-            re = C.Real._new(re, prec)
-            im = C.Real._new(im, prec)*S.ImaginaryUnit
+            re = C.Float._new(re, prec)
+            im = C.Float._new(im, prec)*S.ImaginaryUnit
             return re+im
         else:
             raise TypeError("expected mpmath number (mpf or mpc)")
@@ -203,7 +261,7 @@ class Expr(Basic, EvalfMixin):
             _, ((re, im), monom, ncpart) = term
 
             monom = [ -m for m in monom_key(monom) ]
-            ncpart = tuple([ e.as_tuple_tree() for e in ncpart ])
+            ncpart = tuple([ e.sort_key(order=order) for e in ncpart ])
             coeff = ((bool(im), im), (re, im))
 
             return monom, ncpart, coeff
@@ -235,7 +293,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 ncpart.append(arg)
 
-        return sorted(cpart, key=lambda expr: Basic.sorted_key(expr, order=order)) + ncpart
+        return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
 
     def as_ordered_terms(self, order=None, data=False):
         """
@@ -250,8 +308,6 @@ class Expr(Basic, EvalfMixin):
         [sin(x)**2*cos(x), sin(x)**2, 1]
 
         """
-        from sympy.utilities import any
-
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
 
@@ -278,6 +334,7 @@ class Expr(Basic, EvalfMixin):
         """Transform an expression to a list of terms. """
         from sympy.core import Add, Mul, S
         from sympy.core.exprtools import decompose_power
+        from sympy.utilities import default_sort_key
 
         gens, terms = set([]), []
 
@@ -310,7 +367,7 @@ class Expr(Basic, EvalfMixin):
 
             terms.append((term, (coeff, cpart, ncpart)))
 
-        gens = sorted(gens, key=Basic.sorted_key)
+        gens = sorted(gens, key=default_sort_key)
 
         k, indices = len(gens), {}
 
@@ -494,8 +551,6 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + o*m*n).coeff(m*n, right=1)
         1
         """
-        from sympy.utilities.iterables import any
-
         x = sympify(x)
         if not x: # 0 or None
             return None
@@ -1052,8 +1107,8 @@ class Expr(Basic, EvalfMixin):
                     return None
                 else:
                     return quotient
-            elif self.is_Real:
-                if not quotient.is_Real:
+            elif self.is_Float:
+                if not quotient.is_Float:
                     return None
                 elif self.is_positive and quotient.is_negative:
                     return None
@@ -1141,8 +1196,8 @@ class Expr(Basic, EvalfMixin):
                     return None
                 else:
                     return sub
-            elif self.is_Real:
-                if not sub.is_Real:
+            elif self.is_Float:
+                if not sub.is_Float:
                     return None
                 elif self.is_positive and sub.is_negative:
                     return None
@@ -1216,6 +1271,142 @@ class Expr(Basic, EvalfMixin):
             # As a last resort, we choose the one with greater hash
             return hash(self) < hash(negative_self)
 
+    def _eval_is_polynomial(self, syms):
+        if self.free_symbols.intersection(syms) == set([]):
+            return True
+        return False
+
+    def is_polynomial(self, *syms):
+        """
+        Return True if self is a polynomial in syms and False otherwise.
+
+        This checks if self is an exact polynomial in syms.  This function
+        returns False for expressions that are "polynomials" with symbolic
+        exponents.  Thus, you should be able to apply polynomial algorithms to
+        expressions for which this returns True, and Poly(expr, *syms) should
+        work only if and only if expr.is_polynomial(*syms) returns True. The
+        polynomial does not have to be in expanded form.  If no symbols are
+        given, all free symbols in the expression will be used.
+
+        This is not part of the assumptions system.  You cannot do
+        Symbol('z', polynomial=True).
+
+        **Examples**
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> ((x**2 + 1)**4).is_polynomial(x)
+        True
+        >>> ((x**2 + 1)**4).is_polynomial()
+        True
+        >>> (2**x + 1).is_polynomial(x)
+        False
+
+
+        >>> n = Symbol('n', nonnegative=True, integer=True)
+        >>> (x**n + 1).is_polynomial(x)
+        False
+
+        This function does not attempt any nontrivial simplifications that may
+        result in an expression that does not appear to be a polynomial to
+        become one.
+
+        >>> from sympy import sqrt, factor, cancel
+        >>> y = Symbol('y', positive=True)
+        >>> a = sqrt(y**2 + 2*y + 1)
+        >>> a.is_polynomial(y)
+        False
+        >>> factor(a)
+        y + 1
+        >>> factor(a).is_polynomial(y)
+        True
+
+        >>> b = (y**2 + 2*y + 1)/(y + 1)
+        >>> b.is_polynomial(y)
+        False
+        >>> cancel(b)
+        y + 1
+        >>> cancel(b).is_polynomial(y)
+        True
+
+        See also .is_rational_function()
+
+        """
+        if syms:
+            syms = set(map(sympify, syms))
+        else:
+            syms = self.free_symbols
+
+        if syms.intersection(self.free_symbols) == set([]):
+            # constant polynomial
+            return True
+        else:
+            return self._eval_is_polynomial(syms)
+
+    def _eval_is_rational_function(self, syms):
+        if self.free_symbols.intersection(syms) == set([]):
+            return True
+        return False
+
+    def is_rational_function(self, *syms):
+        """
+        Test whether function is a ratio of two polynomials in the given
+        symbols, syms. When syms is not given, all free symbols will be used.
+        The rational function does not have to be in expanded or in any kind of
+        canonical form.
+
+        This function returns False for expressions that are "rational
+        functions" with symbolic exponents.  Thus, you should be able to call
+        .as_numer_denom() and apply polynomial algorithms to the result for
+        expressions for which this returns True.
+
+        This is not part of the assumptions system.  You cannot do
+        Symbol('z', rational_function=True).
+
+        Example:
+
+        >>> from sympy import Symbol, sin
+        >>> from sympy.abc import x, y
+
+        >>> (x/y).is_rational_function()
+        True
+
+        >>> (x**2).is_rational_function()
+        True
+
+        >>> (x/sin(y)).is_rational_function(y)
+        False
+
+        >>> n = Symbol('n', integer=True)
+        >>> (x**n + 1).is_rational_function(x)
+        False
+
+        This function does not attempt any nontrivial simplifications that may
+        result in an expression that does not appear to be a rational function
+        to become one.
+
+        >>> from sympy import sqrt, factor, cancel
+        >>> y = Symbol('y', positive=True)
+        >>> a = sqrt(y**2 + 2*y + 1)/y
+        >>> a.is_rational_function(y)
+        False
+        >>> factor(a)
+        (y + 1)/y
+        >>> factor(a).is_rational_function(y)
+        True
+
+        See also is_rational_function().
+
+        """
+        if syms:
+            syms = set(map(sympify, syms))
+        else:
+            syms = self.free_symbols
+
+        if syms.intersection(self.free_symbols) == set([]):
+            # constant rational function
+            return True
+        else:
+            return self._eval_is_rational_function(syms)
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
@@ -1764,7 +1955,7 @@ class Expr(Basic, EvalfMixin):
         return combsimp(self)
 
     def factor(self, *gens, **args):
-        """See the factor function in sympy.simplify"""
+        """See the factor() function in sympy.polys.polytools"""
         from sympy.polys import factor
         return factor(self, *gens, **args)
 
@@ -1807,8 +1998,7 @@ class AtomicExpr(Atom, Expr):
     def _eval_is_polynomial(self, syms):
         return True
 
-    @property
-    def is_number(self):
+    def _eval_is_rational_function(self, syms):
         return True
 
     def _eval_nseries(self, x, n, logx):

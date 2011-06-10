@@ -1,5 +1,5 @@
 from sympy import Lambda, Symbol, Function, Derivative, sqrt, \
-        log, exp, Rational, Real, sin, cos, acos, diff, I, re, im, \
+        log, exp, Rational, Float, sin, cos, acos, diff, I, re, im, \
         oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
@@ -133,6 +133,9 @@ def test_Lambda():
     p = x, y, z, t
     assert Lambda(p, t*(x+y+z))(*p) == t * (x + y + z)
 
+    assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
+    assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
+
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
     assert Lambda(x, 2*x) is not S.IdentityFunction
@@ -166,8 +169,8 @@ def test_function_comparable():
     assert sin(x).is_comparable == False
     assert cos(x).is_comparable == False
 
-    assert sin(Real('0.1')).is_comparable   == True
-    assert cos(Real('0.1')).is_comparable   == True
+    assert sin(Float('0.1')).is_comparable   == True
+    assert cos(Float('0.1')).is_comparable   == True
 
     assert sin(E).is_comparable     == True
     assert cos(E).is_comparable     == True
@@ -234,13 +237,13 @@ def test_suppressed_evaluation():
 def test_function_evalf():
     def eq(a,b,eps):
         return abs(a-b) < eps
-    assert eq(sin(1).evalf(15), Real("0.841470984807897"), 1e-13)
-    assert eq(sin(2).evalf(25), Real("0.9092974268256816953960199",25), 1e-23)
-    assert eq(sin(1+I).evalf(15), Real("1.29845758141598") + Real("0.634963914784736")*I, 1e-13)
-    assert eq(exp(1+I).evalf(15), Real("1.46869393991588") + Real("2.28735528717884239")*I, 1e-13)
-    assert eq(exp(-0.5+1.5*I).evalf(15), Real("0.0429042815937374") + Real("0.605011292285002")*I, 1e-13)
-    assert eq(log(pi+sqrt(2)*I).evalf(15), Real("1.23699044022052") + Real("0.422985442737893")*I, 1e-13)
-    assert eq(cos(100).evalf(15), Real("0.86231887228768"), 1e-13)
+    assert eq(sin(1).evalf(15), Float("0.841470984807897"), 1e-13)
+    assert eq(sin(2).evalf(25), Float("0.9092974268256816953960199",25), 1e-23)
+    assert eq(sin(1+I).evalf(15), Float("1.29845758141598") + Float("0.634963914784736")*I, 1e-13)
+    assert eq(exp(1+I).evalf(15), Float("1.46869393991588") + Float("2.28735528717884239")*I, 1e-13)
+    assert eq(exp(-0.5+1.5*I).evalf(15), Float("0.0429042815937374") + Float("0.605011292285002")*I, 1e-13)
+    assert eq(log(pi+sqrt(2)*I).evalf(15), Float("1.23699044022052") + Float("0.422985442737893")*I, 1e-13)
+    assert eq(cos(100).evalf(15), Float("0.86231887228768"), 1e-13)
 
 def test_extensibility_eval():
     class MyFunc(Function):
@@ -282,11 +285,11 @@ def test_doit():
 
 def test_evalf_default():
     from sympy.functions.special.gamma_functions import polygamma
-    assert type(sin(4.0)) == Real
-    assert type(re(sin(I + 1.0))) == Real
-    assert type(im(sin(I + 1.0))) == Real
+    assert type(sin(4.0)) == Float
+    assert type(re(sin(I + 1.0))) == Float
+    assert type(im(sin(I + 1.0))) == Float
     assert type(sin(4)) == sin
-    assert type(polygamma(2,4.0)) == Real
+    assert type(polygamma(2,4.0)) == Float
     assert type(sin(Rational(1,4))) == sin
 
 def test_issue2300():

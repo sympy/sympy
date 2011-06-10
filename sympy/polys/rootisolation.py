@@ -34,7 +34,7 @@ def dup_sturm(f, K):
     """
     Computes the Sturm sequence of ``f`` in ``F[x]``.
 
-    Given an univariate, square-free polynomial ``f(x)`` returns the
+    Given a univariate, square-free polynomial ``f(x)`` returns the
     associated Sturm sequence ``f_0(x), ..., f_n(x)`` defined by::
 
        f_0(x), f_1(x) = f(x), f'(x)
@@ -1523,19 +1523,13 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None, blackbox=F
 
             if N_L >= 1:
                 if N_L == 1 and _rectangle_small_p(a, b, eps):
-                    if not blackbox:
-                        roots.append((a, b))
-                    else:
-                        roots.append(ComplexInterval(a, b, I_L, Q_L, F1_L, F2_L, f1, f2, F))
+                    roots.append(ComplexInterval(a, b, I_L, Q_L, F1_L, F2_L, f1, f2, F))
                 else:
                     rectangles.append(D_L)
 
             if N_R >= 1:
                 if N_R == 1 and _rectangle_small_p(c, d, eps):
-                    if not blackbox:
-                        roots.append((c, d))
-                    else:
-                        roots.append(ComplexInterval(c, d, I_R, Q_R, F1_R, F2_R, f1, f2, F))
+                    roots.append(ComplexInterval(c, d, I_R, Q_R, F1_R, F2_R, f1, f2, F))
                 else:
                     rectangles.append(D_R)
         else:
@@ -1546,31 +1540,25 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None, blackbox=F
 
             if N_B >= 1:
                 if N_B == 1 and _rectangle_small_p(a, b, eps):
-                    if not blackbox:
-                        roots.append((a, b))
-                    else:
-                        roots.append(ComplexInterval(a, b, I_B, Q_B, F1_B, F2_B, f1, f2, F))
+                    roots.append(ComplexInterval(a, b, I_B, Q_B, F1_B, F2_B, f1, f2, F))
                 else:
                     rectangles.append(D_B)
 
             if N_U >= 1:
                 if N_U == 1 and _rectangle_small_p(c, d, eps):
-                    if not blackbox:
-                        roots.append((c, d))
-                    else:
-                        roots.append(ComplexInterval(c, d, I_U, Q_U, F1_U, F2_U, f1, f2, F))
+                    roots.append(ComplexInterval(c, d, I_U, Q_U, F1_U, F2_U, f1, f2, F))
                 else:
                     rectangles.append(D_U)
 
+    _roots, roots = sorted(roots, key=lambda r: (r.ax, r.ay)), []
+
+    for root in _roots:
+        roots.extend([root.conjugate(), root])
+
     if blackbox:
-        return sorted(roots, key=lambda r: (r.ax, r.ay))
-
-    _roots, roots = sorted(roots, key=operator.itemgetter(0)), []
-
-    for (u, v), (s, t) in _roots:
-        roots.extend([((u, v), (s, t)), ((u, -t), (s, -v))])
-
-    return roots
+        return roots
+    else:
+        return [ r.as_tuple() for r in roots ]
 
 def dup_isolate_all_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, blackbox=False):
     """Isolate real and complex roots of a square-free polynomial ``f``. """
@@ -1656,7 +1644,11 @@ class RealInterval(object):
         """Return the center of the real isolating interval. """
         return (self.a + self.b)/2
 
-    def __str__(self):
+    def as_tuple(self):
+        """Return tuple representation of real isolating interval. """
+        return (self.a, self.b)
+
+    def __repr__(self):
         return "(%s, %s)" % (self.a, self.b)
 
     def is_disjoint(self, other):
@@ -1752,7 +1744,11 @@ class ComplexInterval(object):
         """Return the center of the complex isolating interval. """
         return ((self.ax + self.bx)/2, (self.ay + self.by)/2)
 
-    def __str__(self):
+    def as_tuple(self):
+        """Return tuple representation of complex isolating interval. """
+        return ((self.ax, self.ay), (self.bx, self.by))
+
+    def __repr__(self):
         return "(%s, %s) x (%s, %s)" % (self.ax, self.bx, self.ay, self.by)
 
     def conjugate(self):

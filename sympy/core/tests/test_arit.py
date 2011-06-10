@@ -1,4 +1,4 @@
-from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Real, re, pi, \
+from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
         sympify, sqrt, Add, Mul, Pow, I, log, S
 from sympy.utilities.pytest import XFAIL
 
@@ -236,9 +236,9 @@ def test_power_expand():
     assert (A**(a+b)).expand() != A**(a+b)
 
 def test_real_mul():
-    Real(0) * pi * x == Real(0)
-    Real(1) * pi * x == pi * x
-    len((Real(2) * pi * x).args) == 3
+    Float(0) * pi * x == Float(0)
+    Float(1) * pi * x == pi * x
+    len((Float(2) * pi * x).args) == 3
 
 def test_ncmul():
     A = Symbol("A", commutative=False)
@@ -1118,22 +1118,23 @@ def test_suppressed_evaluation():
 
 
 def test_Add_as_coeff_mul():
-    assert (x+1).as_coeff_mul()   == ( 1, (x+1,) )
-    assert (x+2).as_coeff_mul()   == ( 1, (x+2,) )
-    assert (x+3).as_coeff_mul()   == ( 1, (x+3,) )
+    # Issue 2425.  These should all be (1, self)
+    assert (x + 1).as_coeff_mul()   == (1, (x + 1,) )
+    assert (x + 2).as_coeff_mul()   == (1, (x + 2,) )
+    assert (x + 3).as_coeff_mul()   == (1, (x + 3,) )
 
-    assert (x-1).as_coeff_mul()   == (-1, (1-x,) )
-    assert (x-2).as_coeff_mul()   == (-1, (2-x,) )
-    assert (x-3).as_coeff_mul()   == (-1, (3-x,) )
+    assert (x - 1).as_coeff_mul()   == (1, (x - 1,) )
+    assert (x - 2).as_coeff_mul()   == (1, (x - 2,) )
+    assert (x - 3).as_coeff_mul()   == (1, (x - 3,) )
 
     n = Symbol('n', integer=True)
-    assert (n+1).as_coeff_mul()   == ( 1, (n+1,) )
-    assert (n+2).as_coeff_mul()   == ( 1, (n+2,) )
-    assert (n+3).as_coeff_mul()   == ( 1, (n+3,) )
+    assert (n + 1).as_coeff_mul()   == (1, (n + 1,) )
+    assert (n + 2).as_coeff_mul()   == (1, (n + 2,) )
+    assert (n + 3).as_coeff_mul()   == (1, (n + 3,) )
 
-    assert (n-1).as_coeff_mul()   == (-1, (1-n,) )
-    assert (n-2).as_coeff_mul()   == (-1, (2-n,) )
-    assert (n-3).as_coeff_mul()   == (-1, (3-n,) )
+    assert (n - 1).as_coeff_mul()   == (1, (n - 1,) )
+    assert (n - 2).as_coeff_mul()   == (1, (n - 2,) )
+    assert (n - 3).as_coeff_mul()   == (1, (n - 3,) )
 
 def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + y).as_coeff_mul() == (1, (exp(x + y),))

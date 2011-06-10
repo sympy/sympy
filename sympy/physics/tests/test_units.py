@@ -1,6 +1,6 @@
-from sympy import Rational, Symbol, integrate
+from sympy import Rational, Symbol, integrate, pprint
 from sympy.physics.units import m, s, day, km, foot, meter, au, \
-        speed_of_light, minute
+        speed_of_light, minute, joule
 
 def test_units():
     assert (5*m/s * day) / km == 432
@@ -16,3 +16,6 @@ def test_units():
     t = Symbol('t')
     assert integrate(t*m/s,(t, 1*s, 5*s)) == 12*m*s
     assert (t * m/s).integrate((t, 1*s, 5*s)) == 12*m*s
+
+def test_issue_2466():
+    assert (m < s).is_Relational

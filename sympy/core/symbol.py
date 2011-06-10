@@ -68,6 +68,10 @@ class Symbol(AtomicExpr, Boolean):
     def _hashable_content(self):
         return (self.is_commutative, self.name)
 
+    def sort_key(self, order=None):
+        from sympy.core import S
+        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+
     def as_dummy(self):
         return Dummy(self.name, self.is_commutative, **self.assumptions0)
 
@@ -189,16 +193,6 @@ class Wild(Symbol):
     def __call__(self, *args, **assumptions):
         from sympy.core.function import WildFunction
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
-
-class Pure(Dummy):
-
-    def __new__(cls):
-        obj = Symbol.__xnew__(cls, 'pure')
-        obj.dummy_index = 0
-        return obj
-
-    def _hashable_content(self):
-        return Symbol._hashable_content(self) + (self.dummy_index,)
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")

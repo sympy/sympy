@@ -6,7 +6,7 @@ graphing functions using matplotlib.
 """
 
 from numpy import repeat, arange, empty, ndarray, array
-from sympy import Symbol, Basic, Real, Rational, I, sympify
+from sympy import Symbol, Basic, Rational, I, sympify
 
 def sample2d(f, x_args):
     """
@@ -52,7 +52,7 @@ def sample3d(f, x_args, y_args):
     try:
         f = sympify(f)
     except:
-        raise ValueError("f could not be interpretted as a SymPy function")
+        raise ValueError("f could not be interpreted as a SymPy function")
     try:
         x, x_min, x_max, x_n = x_args
         y, y_min, y_max, y_n = y_args

@@ -163,6 +163,9 @@ def test_simplify():
 
     assert simplify(A*B - B*A) == A*B - B*A
 
+    assert simplify(log(2) + log(3)) == log(6)
+    assert simplify(log(2*x) - log(2)) == log(x)
+
 def test_simplify_other():
     assert simplify(sin(x)**2 + cos(x)**2) == 1
     assert simplify(gamma(x + 1)/gamma(x)) == x
@@ -553,16 +556,6 @@ def test_logcombine_1():
     assert logcombine(Integral((sin(x**2)+cos(x**3))/x, x)+ (2+3*I)*log(x), \
         force=True) == log(x**2)+3*I*log(x) + \
         Integral((sin(x**2)+cos(x**3))/x, x)
-
-@XFAIL
-def test_logcombine_2():
-    # The same as one of the tests above, but with Rational(a, b) replaced with a/b.
-    # This fails because of a bug in matches.  See issue 1274.
-    x, y = symbols("x,y")
-    assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**(2/3)*y**(3/2)), \
-        force=True) == log(x**(1/(pi*x**(2/3)*y**(3/2)))*y**(-1/\
-        (pi*x**(2/3)*y**(3/2)))) + (x**4 + y**4)**(1/2)/(pi*x**(2/3)*y**(3/2)) + \
-        x**(1/3)/(pi*y**(1/2))
 
 def test_posify():
     from sympy import posify, Symbol, log

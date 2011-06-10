@@ -2,7 +2,7 @@
 
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polyerrors import ComputationFailed
+from sympy.polys.polyerrors import ComputationFailed, PolificationFailed
 from sympy.utilities import any, all, postfixes
 from sympy.utilities.iterables import minkey
 from sympy.simplify import rcollect

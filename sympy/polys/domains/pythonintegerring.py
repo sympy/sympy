@@ -28,7 +28,7 @@ class PythonIntegerRing(IntegerRing):
         """Convert SymPy's Integer to `dtype`. """
         if a.is_Integer:
             return PythonIntegerType(a.p)
-        elif a.is_Real and int(a) == a:
+        elif a.is_Float and int(a) == a:
             return PythonIntegerType(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
@@ -73,7 +73,7 @@ class PythonIntegerRing(IntegerRing):
             return PythonIntegerType(a.numer())
 
     def from_RR_sympy(K1, a, K0):
-        """Convert SymPy's `Real` to Python's `int`. """
+        """Convert SymPy's `Float` to Python's `int`. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:

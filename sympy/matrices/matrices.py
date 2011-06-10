@@ -502,6 +502,201 @@ class Matrix(object):
     def __repr__(self):
         return sstr(self)
 
+    def cholesky(self):
+        """
+        Returns the Cholesky Decomposition L of a Matrix A
+        such that L * L.T = A
+
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> A.cholesky()
+        [ 5, 0, 0]
+        [ 3, 3, 0]
+        [-1, 1, 3]
+        >>> A.cholesky() * A.cholesky().T
+        [25, 15, -5]
+        [15, 18,  0]
+        [-5,  0, 11]
+        """
+
+        if not self.is_square:
+            raise NonSquareMatrixError("Matrix must be square.")
+        if not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._cholesky()
+
+    def _cholesky(self):
+        """
+        Helper function of cholesky.
+        Without the error checks.
+        To be used privately. """
+        L = zeros((self.rows, self.rows))
+        for i in xrange(self.rows):
+            for j in xrange(i):
+                L[i, j] = (1 / L[j, j]) * (self[i, j] - sum(L[i, k] * L[j, k]
+                    for k in xrange(j)))
+            L[i, i] = (self[i, i] - sum(L[i, k] ** 2
+                for k in xrange(i))) ** (S(1)/2)
+        return L
+
+    def LDLdecomposition(self):
+        """
+        Returns the LDL Decomposition (L,D) of matrix A,
+        such that L * D * L.T == A
+        This method eliminates the use of square root.
+        Further this ensures that all the diagonal entries of L are 1.
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix.
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> L, D = A.LDLdecomposition()
+        >>> L
+        [   1,   0, 0]
+        [ 3/5,   1, 0]
+        [-1/5, 1/3, 1]
+        >>> D
+        [25, 0, 0]
+        [ 0, 9, 0]
+        [ 0, 0, 9]
+        >>> L * D * L.T * A.inv() == eye(A.rows)
+        True
+
+        """
+        if not self.is_square:
+            raise NonSquareMatrixException("Matrix must be square.")
+        if not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._LDLdecomposition()
+
+    def _LDLdecomposition(self):
+        """
+        Helper function of LDLdecomposition.
+        Without the error checks.
+        To be used privately.
+        """
+        D = zeros((self.rows, self.rows))
+        L = eye(self.rows)
+        for i in xrange(self.rows):
+            for j in xrange(i):
+                L[i, j] = (1 / D[j, j]) * (self[i, j] - sum(
+                    L[i, k] * L[j, k] * D[k, k] for k in xrange(j)))
+            D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k]
+                for k in xrange(i))
+        return L, D
+
+    def lower_triangular_solve(self, rhs):
+        """
+        Solves Ax = B, where A is a lower triangular matrix.
+
+        """
+
+        if not self.is_square:
+            raise NonSquareMatrixException("Matrix must be square.")
+        if rhs.rows != self.rows:
+            raise ShapeError("Matrices size mismatch.")
+        if not self.is_lower():
+            raise ValueError("Matrix must be lower triangular.")
+        return self._lower_triangular_solve(rhs)
+
+    def _lower_triangular_solve(self, rhs):
+        """
+        Helper function of function lower_triangular_solve.
+        Without the error checks.
+        To be used privately.
+        """
+        X = zeros((self.rows, 1))
+        for i in xrange(self.rows):
+            if self[i, i] == 0:
+                raise TypeError("Matrix must be non-singular.")
+            X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
+                for k in xrange(i))) / self[i, i]
+        return X
+
+    def upper_triangular_solve(self, rhs):
+        """
+        Solves Ax = B, where A is an upper triangular matrix.
+
+        """
+        if not self.is_square:
+            raise NonSquareMatrixException("Matrix must be square.")
+        if rhs.rows != self.rows:
+            raise TypeError("Matrix size mismatch.")
+        if not self.is_upper():
+            raise TypeError("Matrix is not upper triangular.")
+        return self._upper_triangular_solve(rhs)
+
+    def _upper_triangular_solve(self, rhs):
+        """
+        Helper function of function upper_triangular_solve.
+        Without the error checks, to be used privately. """
+        X = zeros((self.rows, 1))
+        for i in reversed(xrange(self.rows)):
+            if self[i, i] == 0:
+                raise ValueError("Matrix must be non-singular.")
+            X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
+                for k in xrange(i+1, self.rows))) / self[i, i]
+        return X
+
+    def cholesky_solve(self, rhs):
+        """
+        Solves Ax = B using Cholesky decomposition,
+        for a general square non-singular matrix.
+        For a non-square matrix with rows > cols,
+        the least squares solution is returned.
+
+        """
+        if self.is_symmetric():
+            L = self._cholesky()
+        elif self.rows >= self.cols:
+            L = (self.T * self)._cholesky()
+            rhs = self.T * rhs
+        else:
+            raise NotImplementedError("Under-determined System.")
+        Y = L._lower_triangular_solve(rhs)
+        return (L.T)._upper_triangular_solve(Y)
+
+    def diagonal_solve(self, rhs):
+        """
+        Solves Ax = B efficiently, where A is a diagonal Matrix,
+        with non-zero diagonal entries.
+        """
+        if not self.is_diagonal:
+            raise TypeError("Matrix should be diagonal")
+        if rhs.rows != self.rows:
+            raise TypeError("Size mis-match")
+        return self._diagonal_solve(rhs)
+
+    def _diagonal_solve(self, rhs):
+        """
+        Helper function of function diagonal_solve,
+        without the error checks, to be used privately.
+        """
+        return Matrix(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+
+    def LDLsolve(self, rhs):
+        """
+        Solves Ax = B using LDL decomposition,
+        for a general square and non-singular matrix.
+
+        For a non-square matrix with rows > cols,
+        the least squares solution is returned.
+
+        """
+        if self.is_symmetric():
+            L, D = self.LDLdecomposition()
+        elif self.rows >= self.cols:
+            L, D = (self.T * self).LDLdecomposition()
+            rhs = self.T * rhs
+        else:
+            raise NotImplementedError("Under-determined System.")
+        Y = L._lower_triangular_solve(rhs)
+        Z = D._diagonal_solve(Y)
+        return (L.T)._upper_triangular_solve(Z)
+
     def inv(self, method="GE", iszerofunc=_iszero, try_block_diag=False):
         """
         Calculates the matrix inverse.
@@ -2211,14 +2406,14 @@ class Matrix(object):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
-        >>> from sympy import Matrix, Real
+        >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
         >>> A.has(x)
         True
         >>> A.has(y)
         False
-        >>> A.has(Real)
+        >>> A.has(Float)
         True
         """
         return any(a.has(*patterns) for a in self.mat)
@@ -2630,7 +2825,7 @@ class SparseMatrix(Matrix):
             testval = sympify(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
-            if (i,j) in self.mat:
+            elif (i,j) in self.mat:
                 del self.mat[(i,j)]
 
     def row_del(self, k):

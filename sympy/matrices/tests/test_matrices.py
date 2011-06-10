@@ -591,6 +591,28 @@ def test_sparse_matrix():
     def zeros(n):
         return SparseMatrix(n,n,lambda i,j:0)
 
+    # test element assignment
+    a = SparseMatrix((
+        (1, 0),
+        (0, 1)
+    ))
+    a[0, 0] = 2
+    assert a == SparseMatrix((
+        (2, 0),
+        (0, 1)
+    ))
+    a[1, 0] = 5
+    assert a == SparseMatrix((
+        (2, 0),
+        (5, 1)
+    ))
+    a[1, 1] = 0
+    assert a == SparseMatrix((
+        (2, 0),
+        (5, 0)
+    ))
+    assert a.mat == {(0, 0): 2, (1, 0): 5}
+
     # test_multiplication
     a=SparseMatrix((
         (1, 2),
@@ -1560,3 +1582,51 @@ def test_hessenberg():
 
     A = Matrix([[3, 4, 1],[2, 4 ,5],[3, 1, 2]])
     assert not A.is_upper_hessenberg()
+
+def test_cholesky():
+    A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
+    assert A.cholesky() * A.cholesky().T == A
+    assert A.cholesky().is_lower()
+    assert A.cholesky() == Matrix([[5, 0, 0], [3, 3, 0], [-1, 1, 3]])
+
+def test_LDLdecomposition():
+    A = Matrix(((25,15,-5), (15,18,0), (-5,0,11)))
+    L, D = A.LDLdecomposition()
+    assert L * D * L.T == A
+    assert L.is_lower()
+    assert L == Matrix([[1, 0, 0], [ S(3)/5, 1, 0], [S(-1)/5, S(1)/3, 1]])
+    assert D.is_diagonal()
+    assert D == Matrix([[25, 0, 0], [0, 9, 0], [0, 0, 9]])
+
+def test_cholesky_solve():
+    A = Matrix([[2,3,5],
+                [3,6,2],
+                [8,3,6]])
+    x = Matrix(3,1,[3,7,5])
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
+    A = Matrix([[0,-1,2],
+                [5,10,7],
+                [8,3,4]])
+    x = Matrix(3,1,[-1,2,5])
+    b = A*x
+    soln = A.cholesky_solve(b)
+    assert soln == x
+
+def test_LDLsolve():
+    A = Matrix([[2,3,5],
+                [3,6,2],
+                [8,3,6]])
+    x = Matrix(3,1,[3,7,5])
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert soln == x
+    A = Matrix([[0,-1,2],
+                [5,10,7],
+                [8,3,4]])
+    x = Matrix(3,1,[-1,2,5])
+    b = A*x
+    soln = A.LDLsolve(b)
+    assert soln == x
+

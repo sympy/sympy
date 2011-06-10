@@ -3,7 +3,7 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
-from compatibility import any
+from compatibility import any, all
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -466,6 +466,11 @@ class Mul(AssocOp):
         #if e.has(Wild):
         #    return Mul(*[t**e for t in b])
 
+    @classmethod
+    def class_key(cls):
+        return 3, 0, cls.__name__
+
+
     def _eval_evalf(self, prec):
         return AssocOp._eval_evalf(self, prec).expand()
 
@@ -741,7 +746,7 @@ class Mul(AssocOp):
         if lhs == rhs:
             return S.One
         def check(l, r):
-            if l.is_Real and r.is_comparable:
+            if l.is_Float and r.is_comparable:
                 return Add(l, 0) == Add(r.evalf(), 0)
             return False
         if check(lhs, rhs) or check(rhs, lhs):
@@ -788,10 +793,10 @@ class Mul(AssocOp):
             return S.One, self
 
     def _eval_is_polynomial(self, syms):
-        for term in self.args:
-            if not term._eval_is_polynomial(syms):
-                return False
-        return True
+        return all(term._eval_is_polynomial(syms) for term in self.args)
+
+    def _eval_is_rational_function(self, syms):
+        return all(term._eval_is_rational_function(syms) for term in self.args)
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
     _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')

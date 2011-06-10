@@ -3,7 +3,7 @@
 from sympy.core import Symbol, Interval, Union
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S
-from sympy.assumptions import ask, AppliedPredicate
+from sympy.assumptions import ask, AppliedPredicate, Q
 from sympy.functions import re, im, Abs
 from sympy.logic import And, Or
 from sympy.polys import Poly
@@ -146,7 +146,7 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
     if not relational:
         return intervals
 
-    real = ask(gen, 'real', assume)
+    real = ask(Q.real(gen), assumptions=assume)
 
     def relationalize(gen):
         return Or(*[ i.as_relational(gen) for i in intervals ])
@@ -160,7 +160,7 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
 
 def reduce_abs_inequality(expr, rel, gen, assume=True):
     """Reduce an inequality with nested absolute values. """
-    if not ask(gen, 'real', assume):
+    if not ask(Q.real(gen), assumptions=assume):
         raise NotImplementedError("can't solve inequalities with absolute values of a complex variable")
 
     def bottom_up_scan(expr):

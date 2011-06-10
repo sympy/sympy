@@ -30,7 +30,7 @@ class GMPYRationalField(RationalField):
         """Convert SymPy's Integer to `dtype`. """
         if a.is_Rational and a.q != 0:
             return GMPYRationalType(a.p, a.q)
-        elif a.is_Real:
+        elif a.is_Float:
             from sympy.polys.domains import RR
             return GMPYRationalType(*RR.as_integer_ratio(a))
         else:
@@ -61,7 +61,7 @@ class GMPYRationalField(RationalField):
         return a
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return GMPYRationalType(*K0.as_integer_ratio(a))
 
     def from_RR_mpmath(K1, a, K0):
