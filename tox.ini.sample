@@ -16,7 +16,9 @@ envlist = py25, py26, py27, docs
 # Commands to be executed, it could be anything. The brackets are
 # important, as they allow us to call bin/test with arguments we
 # pass on through tox. Applies to all default environments.
-#  You can run multiple commands by putting them on subsequent lines
+# You can run multiple commands by putting them on subsequent lines
+# Note that you should use bin/test and bin/doctest rather than setup.py
+# test, because the latter does not work with [].
 commands = python bin/test []
     python bin/doctest []
 
@@ -29,7 +31,8 @@ commands = python bin/doctest []
 [testenv:py27-32]
 # basepython allows us to point to an arbitrary Python executable
 basepython=/Library/Frameworks/Python.framework/Versions/2.7/bin/python2.7
-commands = python setup.py test []
+commands = python bin/test []
+    python bin/doctest []
 
 # Example of testing with a dependancy.
 [testenv:py27-gmpy]
@@ -38,7 +41,8 @@ commands = python setup.py test []
 # Note that you have to provide the download link because
 # deps = gmpy will try to install gmpy2.
 deps = http://gmpy.googlecode.com/files/gmpy-1.14.zip
-commands = python setup.py test []
+commands = python bin/test []
+    python bin/doctest []
 
 # Usage:
 #  tox              # runs all defined environments
