@@ -62,13 +62,13 @@ class ReferenceFrame(object):
 
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
-        dcm2diff = otherframe.dcm(self)
+        dcm2diff = self.dcm(otherframe)
         diffed = dcm2diff.diff(Symbol('t'))
         angvelmat = diffed * dcm2diff.T
         w1 = trigsimp(expand(angvelmat[7]), recursive=True)
         w2 = trigsimp(expand(angvelmat[2]), recursive=True)
         w3 = trigsimp(expand(angvelmat[3]), recursive=True)
-        return Vector([(Matrix([w1, w2, w3]), self)])
+        return -Vector([(Matrix([w1, w2, w3]), self)])
 
     def _dict_list(self, other, num):
         """Creates a list from self to other using _dcm_dict. """
@@ -220,7 +220,7 @@ class ReferenceFrame(object):
 
         Now we have a choice of how to implement the orientation.  Simple is
         shown first. Simple takes in one value and one rotation axis. The
-        axis can be in 123 or XYZ.  
+        axis can be in 123 or XYZ.
 
         >>> B.orient(N, 'Simple', q1, '3')
         >>> B.orient(N, 'Simple', q1, 'X')
@@ -250,7 +250,7 @@ class ReferenceFrame(object):
         q3 = :math:`\lambda_z' sin(\frac{\theta}{2})`
         Euler does not take in a rotation order.
 
-        >>> B.orient(N, 'Euler', [q1, q2, q3, q4])
+        >>> B.orient(N, 'Euler', [q0, q1, q2, q3])
 
         Last is Axis. This is a rotation about an arbitrary, non-time-varying
         axis by some angle. The axis is supplied as a Vector.
@@ -344,7 +344,22 @@ class ReferenceFrame(object):
         self._dcm_dict.update({parent: parent_orient})
         parent._dcm_dict.update({self: parent_orient.T})
         # TODO double check the sign here
-        wvec = self._w_diff_dcm(parent)
+        if rot_type == 'EULER':
+            t = Symbol('t')
+            q0 = amounts[0]
+            q1 = amounts[1]
+            q2 = amounts[2]
+            q3 = amounts[3]
+            q0d = diff(q0, t)
+            q1d = diff(q1, t)
+            q2d = diff(q2, t)
+            q3d = diff(q3, t)
+            w1 = 2 * (q1d * q0 + q2d * q3 - q3d * q2 - q0d * q1)
+            w2 = 2 * (q2d * q0 + q3d * q1 - q1d * q3 - q0d * q2)
+            w3 = 2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3)
+            wvec = Vector([(Matrix([w1, w2, w3]), self)])
+        else:
+            wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
 

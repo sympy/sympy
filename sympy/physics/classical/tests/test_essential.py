@@ -54,6 +54,17 @@ def test_ang_vel():
     assert C.ang_vel_in(D) == (u0)*C.x + (u1)*C.y + (u2)*C.z + (-q4d)*D.y
     assert D.ang_vel_in(C) == (-u0)*C.x + (-u1)*C.y + (-u2)*C.z + (q4d)*D.y
 
+    E = N.orientnew('E', 'Euler', (q0, q1, q2, q3))
+    assert E.ang_vel_in(N) == (
+        2 * (q1d * q0 + q2d * q3 - q3d * q2 - q0d * q1) * E.x +
+        2 * (q2d * q0 + q3d * q1 - q1d * q3 - q0d * q2) * E.y +
+        2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3) * E.z)
+
+    F = N.orientnew('F', 'Body', (q1, q2, q3), '123')
+    assert F.ang_vel_in(N) == (
+        (sin(q3) * q2d + cos(q2) * cos(q3) * q1d) * F.x + (cos(q3) * q2d -
+        sin(q3) * cos(q2) * q1d) * F.y + (q3d + sin(q2) * q1d) * F.z)
+
 
 def test_dcm():
     q0, q1, q2, q3, q4 = dynamicsymbols('q', 5)
