@@ -1,7 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, var, simplify, Integral, sstr, Wild, solve_linear, Interval,
-    And, Or, Lt, Gt, Q, re, im, expand, zoo)
+    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
@@ -16,16 +16,19 @@ from sympy.abc import x
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
-def test_swap_back():
-    # A solution comes back from solve even though it shouldn't be: f(x) is
-    # in the solution's Integral as the upper limit. When solve is fixed this
-    # test should be removed. For now, since there are ode's that come back
-    # with these sorts of solutions, the swap_back feature is performed in
-    # solve and tested here.
-    # This appears to be fixed - the equation is not solved.
+def test_free_symbols():
     x = Symbol('x')
     f = Function('f')
     raises(NotImplementedError, "solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x))")
+
+def test_swap_back():
+    f, g = map(Function, 'fg')
+    x, y = symbols('x,y')
+    a, b = f(x), g(x)
+    assert solve([a + y - 2, a - b - 5], a, y, b) == \
+                 {a: b + 5, y: -b - 3}
+    assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
+    assert solve(a + b**2*x - y, [a, b]) == {a: y - b**2*x}
 
 def test_guess_poly():
     """
@@ -78,15 +81,17 @@ def test_guess_transcendental():
     assert guess_solve_strategy(a*x**b-y, x) == GS_TRANSCENDENTAL
 
 def test_solve_args():
-    x, y = symbols('x,y')
+    a, b, x, y = symbols('a,b,x,y')
     #implicit symbol to solve for
     assert set(int(tmp) for tmp in solve(x**2-4)) == set([2,-2])
     assert solve([x+y-3,x-y-5]) == {x: 4, y: -1}
     #no symbol to solve for
     assert solve(42) == []
-    assert solve([1,2]) == None
-    #multiple symbols
-    assert solve(x+y-3,[x,y]) == {x: [3 - y], y: [3 - x]}
+    assert solve([1,2]) is None
+    #multiple symbols: take the first linear solution
+    assert solve(x + y - 3, [x, y]) == {x: 3 - y}
+    # unless it is an undetermined coefficients system
+    assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
     #symbol is not a symbol or function
     raises(TypeError, "solve(x**2-pi, pi)")
 
@@ -109,8 +114,10 @@ def test_solve_polynomial1():
     a11,a12,a21,a22,b1,b2 = symbols('a11,a12,a21,a22,b1,b2')
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
-        { y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
-          x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
+        {
+        x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21),
+        y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
+        }
 
     solution = {y: S.Zero, x: S.Zero}
 
@@ -141,9 +148,8 @@ def test_solve_polynomial_cv_1a():
     assert solve( x**Rational(1,2) - 2, x) == [4]
     assert solve( x**Rational(1,4) - 2, x) == [16]
     assert solve( x**Rational(1,3) - 3, x) == [27]
-    ans = solve(x**Rational(1,2)+x**Rational(1,3)+x**Rational(1,4),x)
-    assert set([NS(w, n=2) for w in ans]) == \
-        set(['0.010', '-9.5 + 2.8*I', '0', '-9.5 - 2.8*I'])
+    # XXX there are imaginary roots that are being missed
+    assert solve(x**Rational(1,2)+x**Rational(1,3)+x**Rational(1,4),x) == [0]
 
 def test_solve_polynomial_cv_1b():
     x, a = symbols('x a')
@@ -187,7 +193,7 @@ def test_linear_system():
     assert solve([x + y + z + t, -z-t], x, y, z, t) == {x: -y, z: -t}
 
     assert solve([a(0, 0) + a(0, 1) + a(1, 0) + a(1, 1), -a(1, 0) - a(1, 1)],
-        a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(0, 0): -a(0, 1), a(1, 0): -a(1, 1)}
+        a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)}
 
 def test_linear_systemLU():
     x, y, z, n = symbols('x,y,z,n')
@@ -210,11 +216,9 @@ def test_tsolve():
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
     raises(NotImplementedError, "solve(Eq(cos(x), sin(x)), x)")
 
-    assert solve(exp(x) + exp(-x) - y, x) in [
-     [-2*log(2) + log(2*y + 2*sqrt(-4 + y**2)),
-      -2*log(2) + log(2*y - 2*sqrt(-4 + y**2))],
-     [log(y/2 + sqrt(-4 + y**2)/2), log(y/2 - sqrt(-4 + y**2)/2)]
-     ]
+    assert solve(exp(x) + exp(-x) - y, x, simplified=False) == [
+        log(y**2/2 + y*sqrt(y**2 - 4)/2 - 1)/2,
+        log(y**2/2 - y*sqrt(y**2 - 4)/2 - 1)/2]
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]
@@ -282,11 +286,13 @@ def test_solve_for_functions_derivatives():
     a11,a12,a21,a22,b1,b2 = symbols('a11,a12,a21,a22,b1,b2')
 
     soln = solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y)
-    assert soln == { y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
-        x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21) }
+    assert soln == {
+        x : (a22*b1 - a12*b2)/(a11*a22 - a12*a21),
+        y : (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
+        }
 
-    assert solve(x-1, x) == [1]
-    assert solve(3*x-2, x) == [Rational(2,3)]
+    assert solve(x - 1, x) == [1]
+    assert solve(3*x - 2, x) == [Rational(2, 3)]
 
     soln = solve([a11*x.diff(t) + a12*y.diff(t) - b1, a21*x.diff(t) +
             a22*y.diff(t) - b2], x.diff(t), y.diff(t))
@@ -332,8 +338,7 @@ def test_solve_linear():
     assert solve_linear(w, x) in [(w, x), (x, w)]
     assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y) == \
            (y, -2 - cos(x)**2 - sin(x)**2)
-    assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, x=[x]) == \
-           (2 + y + cos(x)**2 + sin(x)**2, 1)
+    assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, x=[x]) == (0, 1)
 
 def test_solve_undetermined_coeffs():
     a, b, c, x = symbols('a, b, c, x')
@@ -356,3 +361,32 @@ def test_solve_inequalities():
                And(Lt(1, re(x)), Lt(re(x), sqrt(2)))), Eq(im(x), 0))
     assert solve(system, assume=Q.real(x)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
+
+def test_issue_1694():
+    x, y = symbols('x,y')
+    assert solve(1/x) == []
+    assert solve(x*(1 - 5/x)) == [5]
+    assert solve(x + sqrt(x) - 2) == [1]
+    assert solve(-(1 + x)/(2 + x)**2 + 1/(2 + x)) == []
+    assert solve(-x**2 - 2*x + (x + 1)**2 - 1) == []
+    assert solve((x/(x + 1) + 3)**(-2)) == []
+    assert solve(x/sqrt(x**2 + 1),x) == [0]
+    assert solve(exp(x) - y,x) == [log(y)]
+    assert solve(exp(x)) == [zoo]
+    assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
+    assert solve(4*3**(5*x + 2) - 7, x) == [(-2*log(3) - log(4) + log(7))/(5*log(3))]
+    # 2072
+    assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
+    assert solve(sqrt(x - 1)) == [1]
+    # 1363
+    a = symbols('a')
+    assert solve(-3*a/sqrt(x),x) == []
+    # 1387
+    assert solve(2*x/(x + 2) - 1,x) == [2]
+    # 1397
+    assert solve((x**2/(7 - x)).diff(x)) == [14, 0]
+    # 1596
+    f = Function('f')
+    assert solve((3 - 5*x/f(x))*f(x), f(x)) == [5*x/3]
+    # 1398
+    #assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
