@@ -719,3 +719,96 @@ def rotate_right(x, y):
         return x
     y = len(x) - y % len(x)
     return x[y:] + x[:y]
+
+def partitions(n, m=None, k=None):
+    """Generate all partitions of integer n (>= 0).
+
+    Each partition is represented as a dictionary, mapping an integer
+    to the number of copies of that integer in the partition.  For example,
+    the first partition of 4 returned is {4: 1}: a single 4.
+
+    >>> from sympy.utilities.iterables import partitions
+    >>> for p in partitions(6, k=2):
+    ...     print p
+    {2: 3}
+    {1: 2, 2: 2}
+    {1: 4, 2: 1}
+    {1: 6}
+
+    Note that the _same_ dictionary object is returned each time.
+    This is for speed:  generating each partition goes quickly,
+    taking constant time independent of n.
+
+    >>> [p for p in partitions(6, k=2)]
+    [{1: 6}, {1: 6}, {1: 6}, {1: 6}]
+
+    If you want to build a list of the returned dictionaries then
+    make a copy of them:
+
+    >>> [p.copy() for p in partitions(6, k=2)]
+    [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
+
+    This has been modified from Tim Peter's version to allow for k and m
+    values:
+
+    code.activestate.com/recipes/218332-generator-for-integer-partitions/
+    """
+
+    if n < 0:
+        raise ValueError("n must be >= 0")
+    m = min(m or n, n)
+    if m < 1:
+        raise ValueError("maximum numbers in partition, m, must be > 0")
+    k = min(k or n, n)
+    if k < 1:
+        raise ValueError("maximum value in partition, k, must be > 0")
+
+    if m*k < n:
+        return
+
+    q, r = divmod(n, k)
+    ms = {k: q}
+    keys = [k]  # ms.keys(), from largest to smallest
+    if r:
+        ms[r] = 1
+        keys.append(r)
+    room = m - q - bool(r)
+    yield ms
+
+    while keys != [1]:
+        # Reuse any 1's.
+        if keys[-1] == 1:
+            del keys[-1]
+            reuse = ms.pop(1)
+            room += reuse
+        else:
+            reuse = 0
+
+        while 1:
+            # Let i be the smallest key larger than 1.  Reuse one
+            # instance of i.
+            i = keys[-1]
+            newcount = ms[i] = ms[i] - 1
+            reuse += i
+            if newcount == 0:
+                del keys[-1], ms[i]
+            room += 1
+
+
+            # Break the remainder into pieces of size i-1.
+            i -= 1
+            q, r = divmod(reuse, i)
+            need = q + bool(r)
+            if need > room:
+                if not keys:
+                    return
+                continue
+
+            ms[i] = q
+            keys.append(i)
+            if r:
+                ms[r] = 1
+                keys.append(r)
+            break
+        room -= need
+        yield ms
