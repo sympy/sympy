@@ -3,7 +3,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
-    separatevars, erf, rcollect, count_ops, combsimp)
+    separatevars, erf, rcollect, count_ops, combsimp, posify)
 from sympy.utilities import all
 from sympy.utilities.pytest import XFAIL
 
@@ -561,7 +561,6 @@ def test_logcombine_1():
         Integral((sin(x**2)+cos(x**3))/x, x)
 
 def test_posify():
-    from sympy import posify, Symbol, log
     from sympy.abc import x
 
     assert str(posify(
@@ -570,10 +569,19 @@ def test_posify():
         Symbol('n', negative=True))) == '(_x + n + p, {_x: x})'
 
     # log(1/x).expand() should be log(1/x) but it comes back as -log(x)
-    # when it is corrected, posify will allow the change to be made:
+    # when it is corrected, posify will allow the change to be made. The
+    # force=True option can do so as well when it is implemented.
     eq, rep = posify(1/x)
     assert log(eq).expand().subs(rep) == -log(x)
     assert str(posify([x, 1 + x])) == '([_x, _x + 1], {_x: x})'
+
+    x = symbols('x')
+    p = symbols('p', positive=True)
+    n = symbols('n', negative=True)
+    orig = [x, n, p]
+    modified, reps = posify(orig)
+    assert str(modified) == '[_x, n, p]'
+    assert [w.subs(reps) for w in modified] == orig
 
 def test_powdenest():
     from sympy import powdenest
