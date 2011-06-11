@@ -8,7 +8,7 @@
     [-1]
 """
 from solvers import solve, solve_linear_system, solve_linear_system_LU, \
-    solve_undetermined_coeffs, tsolve, nsolve, solve_linear
+    solve_undetermined_coeffs, tsolve, nsolve, solve_linear, checksol
 
 from recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 

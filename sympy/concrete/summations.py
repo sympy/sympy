@@ -297,7 +297,7 @@ def telescopic(L, R, (i, a, b)):
     if s is None:
         m = Dummy('m')
         try:
-            sol = solve(L.subs(i, i + m) + R, m)
+            sol = solve(L.subs(i, i + m) + R, m) or []
         except NotImplementedError:
             return None
         sol = [si for si in sol if si.is_Integer and
