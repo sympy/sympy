@@ -265,7 +265,7 @@ class IntegerPartition(Partition):
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([1,3,4], 8)
         >>> a.partition_array
-        [1, 3, 4]
+        [4, 3, 1]
         """
         return self.args[0]
 
@@ -280,7 +280,7 @@ class IntegerPartition(Partition):
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> a = IntegerPartition([1,3,4], 8)
         >>> a.conjugate
-        [3, 3, 3, 3]
+        [3, 2, 2, 1]
         """
         result = []
         j = len(self.partition_array)
@@ -292,6 +292,32 @@ class IntegerPartition(Partition):
                 j -= 1
                 if j == 0:
                     return result
+
+    @property
+    def conjugate_partition(self):
+        """
+        Computes the conjugate partition of itself.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import \
+        IntegerPartition
+        >>> a = IntegerPartition([6,3,3,2,1], 15)
+        >>> a.conjugate_partition
+        [5, 4, 3, 1, 1, 1]
+        >>> a = IntegerPartition([5,4,3,1,1,1], 15)
+        >>> a.conjugate_partition
+        [6, 3, 3, 2, 1]
+        """
+        j = 1
+        temp_arr = self.partition_array[:] + [0]
+        k = temp_arr[0]
+        b = [0] * (k)
+        while k > 0:
+            while k > temp_arr[j]:
+                b[k - 1] = j
+                k -= 1
+            j += 1
+        return b
 
     def __new__(cls, *args, **kw_args):
         """
@@ -307,6 +333,8 @@ class IntegerPartition(Partition):
 
         if not isinstance(partition, list) or sum(partition) != integer_rep:
             raise ValueError("The partition is not valid")
+
+        list.sort(args[0], key = lambda x: -x)
 
         obj = Basic.__new__(cls, *args, **kw_args)
         return obj
