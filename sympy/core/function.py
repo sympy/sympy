@@ -39,6 +39,7 @@ from numbers import Rational
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.utilities import all, any
+from sympy.core.compatibility import iterable
 
 from sympy import mpmath
 
@@ -1281,7 +1282,7 @@ def count_ops(expr, visual=False):
     elif type(expr) is dict:
         ops = [count_ops(k, visual=visual) +
                count_ops(v, visual=visual) for k, v in expr.iteritems()]
-    elif hasattr(expr, '__iter__'):
+    elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
     elif not isinstance(expr, Basic):
         ops = []

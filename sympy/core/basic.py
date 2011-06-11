@@ -4,7 +4,7 @@ from assumptions import AssumeMeths, make__get_assumption
 from cache import cacheit
 from core import BasicMeta, BasicType, C
 from sympify import _sympify, sympify, SympifyError
-from compatibility import any
+from compatibility import any, iterable
 from sympy.core.decorators import deprecated
 
 
@@ -548,7 +548,7 @@ class Basic(AssumeMeths):
                                     result.add(expr)
 
                 iter = expr.iter_basic_args()
-            elif isinstance(expr, (tuple, list)):
+            elif iterable(expr):
                 iter = expr.__iter__()
             else:
                 iter = []
@@ -726,7 +726,7 @@ class Basic(AssumeMeths):
             sequence = args[0]
             if isinstance(sequence, dict):
                 return self._subs_dict(sequence)
-            elif hasattr(sequence, '__iter__') or hasattr(sequence, '__getitem__'):
+            elif iterable(sequence):
                 return self._subs_list(sequence)
             else:
                 raise TypeError("Not an iterable container")
@@ -1165,7 +1165,7 @@ class Basic(AssumeMeths):
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
             else:
-                if isinstance(pattern[0], (tuple, list)):
+                if iterable(pattern[0]):
                     pattern = pattern[0]
 
                 pattern = [ p.__class__ for p in pattern if self.has(p) ]

@@ -13,6 +13,7 @@
 
 """
 
+from sympy.core.compatibility import iterable
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.numbers import ilcm
@@ -291,7 +292,7 @@ def _solve(f, *symbols, **flags):
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
-    bare_f = not isinstance(f, (list, tuple, set))
+    bare_f = not iterable(f)
     f, symbols = (sympified_list(w) for w in [f, symbols])
 
     for i, fi in enumerate(f):
