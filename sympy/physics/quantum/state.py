@@ -1,7 +1,7 @@
 """Dirac notation for states."""
 
 
-from sympy import Expr, Symbol
+from sympy import Expr, Symbol, Function, integrate, Lambda, oo, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import (
@@ -17,7 +17,8 @@ __all__ = [
     'Bra',
     'TimeDepState',
     'TimeDepBra',
-    'TimeDepKet'
+    'TimeDepKet',
+    'Wavefunction'
 ]
 
 
@@ -516,3 +517,54 @@ class TimeDepBra(TimeDepState, BraBase):
     @property
     def dual_class(self):
         return TimeDepKet
+
+class Wavefunction(Lambda, Function):
+    """Class for representations in continuous bases
+
+    Note: Just a demonstration for functions of one variable. Will need to be generalized.
+
+    Parameters
+    =============
+    Same constructor as Lambda
+    var: argument of the function
+    expr: the expression to be evaluated
+
+    Examples
+    ==============
+    Particle in a box
+    >> from sympy import Symbol, Piecewise, pi
+    >> from sympy.functions import sqrt, sin
+    >> from sympy.physics.quantum.state import Wavefunction
+    >> x = Symbol('x')
+    >> n = 1
+    >> L = 1
+    >> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
+    >> f = Wavefunction(x, g)
+    >> f.norm_constant
+    1
+    >> f.is_normalized
+    True
+    >> p = f.prob()
+    >> p(0)
+    0
+    >> p(L)
+    0
+    >> p(L/2)
+    0
+    >> p(0.85*L)
+    2*sin(0.85*pi)**2
+    >> N(p(0.85*L))
+    0.412214747707527
+    """
+
+    @property
+    def is_normalized(self):
+        return (self.norm_constant == 1.0)
+
+    @property
+    def norm_constant(self):
+        #NOTE: Only works with one variable right now; will have to be changed!
+        return 1/integrate(self.expr*conjugate(self.expr), (self.variables, -oo, oo))
+
+    def prob(self):
+        return Lambda(self.variables, self.expr*conjugate(self.expr))

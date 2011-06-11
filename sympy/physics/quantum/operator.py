@@ -11,7 +11,7 @@ TODO:
 
 from itertools import count
 
-from sympy import Expr, Symbol
+from sympy import Expr, Symbol, diff
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 
@@ -23,7 +23,8 @@ __all__ = [
     'Operator',
     'HermitianOperator',
     'UnitaryOperator',
-    'OuterProduct'
+    'OuterProduct',
+    'DifferentialOperator'
 ]
 
 #-----------------------------------------------------------------------------
@@ -373,3 +374,32 @@ class OuterProduct(Operator):
         k = self.ket._represent(**options)
         b = self.bra._represent(**options)
         return k*b
+
+class DifferentialOperator(Operator):
+    """ An operator for representing the differential operator, i.e. d/dx
+
+    TODO: Update printing functions to override those in operator
+
+    Examples
+    ==========
+
+    >>> from sympy import Symbol, Piecewise, pi
+    >>> from sympy.functions import sqrt, sin
+    >>> from sympy.physics.quantum.state import Wavefunction
+    >>> from sympy.physics.quantum.operator import DifferentialOperator
+    >>> from sympy.physics.quantum.qapply import qapply
+    >>> x = Symbol('x')
+    >>> L = 1
+    >>> n = 1
+    >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
+    >>> f = Wavefunction(x, g)
+    >>> d = DifferentialOperator(x)
+    >>> qapply(d*f)
+    Piecewise((0, x < 0), (0, 1 < x), (2**(1/2)*pi*cos(pi*x), True))
+
+    """
+
+    def _apply_operator_Wavefunction(self, func):
+        var = self.args[0]
+
+        return diff(func(var), var)
