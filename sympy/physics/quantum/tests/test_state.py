@@ -5,7 +5,7 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.state import (
     Ket, Bra, TimeDepKet, TimeDepBra,
-    KetBase, BraBase, StateBase
+    KetBase, BraBase, StateBase, Wavefunction
 )
 from sympy.physics.quantum.hilbert import HilbertSpace
 
@@ -133,3 +133,12 @@ def test_printing():
     assert pretty(Dagger(psi), use_unicode=True) == u'\u27e8\u03c8\u2758'
     assert latex(psi) == r"{\left|\psi\right\rangle }"
     assert latex(Dagger(psi)) == r"{\left\langle \psi\right|}"
+
+def test_wavefunction():
+    f = Wavefunction(x, x**2)
+    p = f.prob()
+
+    assert f.is_normalized == False
+    assert f.norm_constant == 0
+    assert f(10) == 100
+    assert p(10) == 10000

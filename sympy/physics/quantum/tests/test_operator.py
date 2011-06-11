@@ -4,9 +4,10 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
 from sympy.physics.quantum.operator import (
-    Operator, UnitaryOperator, HermitianOperator, OuterProduct
+    Operator, UnitaryOperator, HermitianOperator, OuterProduct, DifferentialOperator
 )
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.state import Ket, Bra, Wavefunction
+from sympy.physics.quantum.qapply import qapply
 
 class TestKet(Ket):
     @classmethod
@@ -118,3 +119,10 @@ def test_operator_dagger():
     assert Dagger(A*B) == Dagger(B)*Dagger(A)
     assert Dagger(A+B) == Dagger(A) + Dagger(B)
     assert Dagger(A**2) == Dagger(A)**2
+
+def test_differential_operator():
+    x = Symbol('x')
+    d = DifferentialOperator(x)
+    f = Wavefunction(x, x**2)
+
+    assert qapply(d*f) == 2*x
