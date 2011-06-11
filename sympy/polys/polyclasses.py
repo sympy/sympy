@@ -51,7 +51,8 @@ from sympy.polys.densebasic import (
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms, dmp_exclude,
-    dmp_slice_in, dmp_permute)
+    dmp_slice_in, dmp_permute,
+    dmp_to_tuple,)
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
@@ -159,7 +160,7 @@ class DMP(object):
         return "%s(%s, %s)" % (f.__class__.__name__, f.rep, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.rep), f.lev, f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom))
 
     def __getstate__(self):
         return (self.rep, self.lev, self.dom)
@@ -238,6 +239,14 @@ class DMP(object):
             rep[k] = f.dom.to_sympy(v)
 
         return rep
+
+    def to_tuple(f):
+        """
+        Convert `f` to a tuple representation with native coefficients.
+
+        This is needed for hashing.
+        """
+        return dmp_to_tuple(f.rep, f.lev)
 
     @classmethod
     def from_dict(cls, rep, lev, dom):
@@ -975,7 +984,8 @@ class DMF(object):
         return "%s((%s, %s), %s)" % (f.__class__.__name__, f.num, f.den, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.num), repr(f.den), f.lev, f.dom))
+        return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
+            dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
 
     def __getstate__(self):
         return (self.num, self.den, self.lev, self.dom)
@@ -1299,7 +1309,7 @@ class ANP(object):
         return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.mod, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.rep), f.mod, f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), dmp_to_tuple(f.mod, 0), f.dom))
 
     def __getstate__(self):
         return (self.rep, self.mod, self.dom)
@@ -1372,6 +1382,14 @@ class ANP(object):
     def to_sympy_list(f):
         """Convert `f` to a list representation with SymPy coefficients. """
         return [ f.dom.to_sympy(c) for c in f.rep ]
+
+    def to_tuple(f):
+        """
+        Convert `f` to a tuple representation with native coefficients.
+
+        This is needed for hashing.
+        """
+        return dmp_to_tuple(f.rep, 0)
 
     @classmethod
     def from_list(cls, rep, mod, dom):
