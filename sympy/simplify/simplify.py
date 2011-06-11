@@ -117,18 +117,29 @@ def separate(expr, deep=False, force=False):
 
        deep=True (default is False) will do separations inside functions.
 
-       force=True (default is False) will cause the expansion to ignore assumptions
-       about the base and exponent. When False, the expansion will only happen
-       if the base is non-negative or the exponent is an integer.
+       force=True (default is False) will cause the expansion to ignore
+       assumptions about the base and exponent. When False, the expansion will
+       only happen if the base is non-negative or the exponent is an integer.
 
        >>> from sympy.abc import x, y, z
        >>> from sympy import separate, sin, cos, exp
 
-       >>> separate((x*y)**2)
+       >>> (x*y)**2
        x**2*y**2
 
-       >>> separate((x*(y*z)**3)**2)
-       x**2*y**6*z**6
+       >>> (2*x)**y
+       (2*x)**y
+       >>> separate(_)
+       2**y*x**y
+
+       >>> separate((x*y)**z)
+       (x*y)**z
+       >>> separate((x*y)**z, force=True)
+       x**z*y**z
+       >>> separate(sin((x*y)**z))
+       sin((x*y)**z)
+       >>> separate(sin((x*y)**z), deep=True, force=True)
+       sin(x**z*y**z)
 
        >>> separate((2*sin(x))**y + (2*cos(x))**y)
        2**y*sin(x)**y + 2**y*cos(x)**y
@@ -140,13 +151,17 @@ def separate(expr, deep=False, force=False):
        2**y*cos(x)**y
 
        Notice that summations are left untouched. If this is not the
-       requested behavior, apply 'expand' to input expression before:
+       desired behavior, apply 'expand' to the expression:
 
        >>> separate(((x+y)*z)**2)
        z**2*(x + y)**2
+       >>> (((x+y)*z)**2).expand()
+       x**2*z**2 + 2*x*y*z**2 + y**2*z**2
 
        >>> separate((2*y)**(1+z))
        2**(z + 1)*y**(z + 1)
+       >>> ((2*y)**(1+z)).expand()
+       2*2**z*y*y**z
 
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
@@ -542,12 +557,18 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     other symbols or non-symbols will be returned keyed to the
     string 'coeff'.
 
+    If force=True, then power bases will only be separated if assumptions allow.
+
     Note: the order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
 
     Examples:
     >>> from sympy.abc import x, y, z, alpha
     >>> from sympy import separatevars, sin
+    >>> separatevars((x*y)**y)
+    (x*y)**y
+    >>> separatevars((x*y)**y, force=True)
+    x**y*y**y
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
     2*x**2*z*(sin(y) + 1)
 

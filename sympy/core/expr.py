@@ -1718,7 +1718,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import nsimplify
         return nsimplify(self, constants, tolerance, full)
 
-    def separate(self, deep=False, force=True):
+    def separate(self, deep=False, force=False):
         """See the separate function in sympy.simplify"""
         from sympy.simplify import separate
         return separate(self, deep)
