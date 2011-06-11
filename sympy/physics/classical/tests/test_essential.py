@@ -64,6 +64,9 @@ def test_ang_vel():
     assert F.ang_vel_in(N) == (
         (sin(q3) * q2d + cos(q2) * cos(q3) * q1d) * F.x + (cos(q3) * q2d -
         sin(q3) * cos(q2) * q1d) * F.y + (q3d + sin(q2) * q1d) * F.z)
+    G = N.orientnew('G', 'Axis', (q1, N.x + N.y))
+    assert G.ang_vel_in(N) == q1d * (N.x + N.y).unit
+    assert N.ang_vel_in(G) == -q1d * (N.x + N.y).unit
 
 def test_dcm():
     q0, q1, q2, q3, q4 = dynamicsymbols('q', 5)
