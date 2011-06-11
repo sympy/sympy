@@ -295,7 +295,7 @@ class ReferenceFrame(object):
 
         self._check_frame(parent)
         def _rot(axis, angle):
-            """Returns direction cosine matrix for simple axis 1,2,or 3 rotations """
+            """DCM for simple axis 1,2,or 3 rotations. """
             if axis == 1:
                 return Matrix([[1, 0, 0],
                     [0, cos(angle), -sin(angle)],
@@ -392,6 +392,9 @@ class ReferenceFrame(object):
             w2 = 2 * (q2d * q0 + q3d * q1 - q1d * q3 - q0d * q2)
             w3 = 2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3)
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
+        elif rot_type == 'AXIS':
+            thetad = (amounts[0]).diff(Symbol('t'))
+            wvec = thetad * amounts[1].express(parent).unit
         else:
             wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
