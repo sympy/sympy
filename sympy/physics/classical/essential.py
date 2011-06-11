@@ -94,8 +94,40 @@ class ReferenceFrame(object):
             return outlist[0]
         raise ValueError('No Connecting Path Found')
 
+    def ang_acc_in(self, otherframe):
+        """Returns the angular acceleration Vector of the ReferenceFrame.
+
+        Effectively returns the Vector:
+        :math:`^{N} \vec{\alpha} ^{B}`
+        which represent the angular acceleration of B in N, where B is self, and
+        N is otherframe.
+
+        Parameters
+        ==========
+        otherframe : ReferenceFrame
+            The ReferenceFrame which the angular acceleration is returned in.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> V = 10 * N.x
+        >>> A.set_ang_acc(N, V)
+        >>> A.ang_acc_in(N)
+        (10)*nx>
+
+        """
+
+        self._check_frame(otherframe)
+        if self._ang_acc_dict.has_key(otherframe):
+            return self._ang_acc_dict[otherframe]
+        else:
+            return self.ang_vel_in(otherframe).dt(otherframe)
+
     def ang_vel_in(self, otherframe):
-        """Returns the angular velocity vector of the ReferenceFrame.
+        """Returns the angular velocity Vector of the ReferenceFrame.
 
         Effectively returns the Vector:
         :math:`^{N} \vec{\omega} ^{B}`
@@ -364,6 +396,39 @@ class ReferenceFrame(object):
             wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
+
+    def set_ang_acc(self, otherframe, value):
+        """Define the angular acceleration Vector in a ReferenceFrame.
+
+        Defines the angular acceleration of this ReferenceFrame, in another.
+        Angular acceleration can be defined with respect to multiple different
+        ReferenceFrames. Care must be taken to not create loops which are
+        inconsistent.
+
+        Parameters
+        ==========
+        otherframe : ReferenceFrame
+            A ReferenceFrame to define the angular acceleration in
+        value : Vector
+            The Vector representing angular acceleration
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> V = 10 * N.x
+        >>> A.set_ang_acc(N, V)
+        >>> A.ang_acc_in(N)
+        (10)*nx>
+
+        """
+
+        self._check_vector(value)
+        self._check_frame(otherframe)
+        self._ang_acc_dict.update({otherframe: value})
+        otherframe._ang_acc_dict.update({self: -value})
 
     def set_ang_vel(self, otherframe, value):
         """Define the angular velocity vector in a ReferenceFrame.

@@ -97,7 +97,7 @@ class Point(object):
         """The velocity Vector of this Point in the ReferenceFrame.
 
         """
-        
+
         self._check_frame(frame)
         if not self._vel_dict.has_key(frame):
             raise ValueError('Velocity has not been defined in '
@@ -117,7 +117,7 @@ class Point(object):
         """The acceleration Vector of this Point in a ReferenceFrame.
 
         """
-         
+
         self._check_frame(frame)
         if not self._acc_dict.has_key(frame):
             raise ValueError('Acceleration has not been defined in '
