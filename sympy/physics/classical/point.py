@@ -11,11 +11,7 @@ class Point(object):
     """
 
     def __init__(self, name):
-        """Initialization of a Point object.  Takes in a name, sets
-        attributes to zero.
-
-        """
-
+        """Initialization of a Point object. """
         self.name = name
         self._pos_dict = {}
         self._vel_dict = {}
@@ -58,21 +54,52 @@ class Point(object):
             return outlist[0]
         raise ValueError('No Connecting Path Found')
 
-    def set_pos(self, value, point = None):
+    def set_pos(self, value, otherpoint):
         """Used to set the position of this point w.r.t. another point.
+
+        Parameters
+        ==========
+        value : Vector
+            The vector which defines the location of this point
+        point : Point
+            The other point which this point's location is defined relative to
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> p1 = Point('p1')
+        >>> p2 = Point('p2')
+        >>> p1.set_pos(10 * N.x, p2)
+        >>> p1.pos(p2)
+        (10)*nx>
 
         """
 
         self._check_vector(value)
-        self._check_point(point)
-        self._pos_dict.update({point: value})
-        point._pos_dict.update({self: -value})
+        self._check_point(otherpoint)
+        self._pos_dict.update({otherpoint: value})
+        otherpoint._pos_dict.update({self: -value})
 
-    def pos(self, otherpoint = None):
+    def pos(self, otherpoint):
         """Returns a Vector distance between this Point and the other Point.
 
-        If no other Point is given, the value of this Point's position is
-        returned.
+        Parameters
+        ==========
+        otherpoint : Point
+            The otherpoint we are locating this one relative to
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> p1 = Point('p1')
+        >>> p2 = Point('p2')
+        >>> p1.set_pos(10 * N.x, p2)
+        >>> p1.pos(p2)
+        (10)*nx>
 
         """
 
@@ -87,6 +114,23 @@ class Point(object):
     def set_vel(self, value, frame):
         """Sets the velocity Vector of this Point in a ReferenceFrame.
 
+        Parameters
+        ==========
+        value : Vector
+            The vector value of this point's velocity in the frame
+        frame : ReferenceFrame
+            The frame in which this point's velocity is defined
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> p1 = Point('p1')
+        >>> p1.set_vel(10 * N.x, N)
+        >>> p1.vel(N)
+        (10)*nx>
+
         """
 
         self._check_vector(value)
@@ -95,6 +139,21 @@ class Point(object):
 
     def vel(self, frame):
         """The velocity Vector of this Point in the ReferenceFrame.
+
+        Parameters
+        ==========
+        frame : ReferenceFrame
+            The frame in which the returned velocity vector will be defined in
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> p1 = Point('p1')
+        >>> p1.set_vel(10 * N.x, N)
+        >>> p1.vel(N)
+        (10)*nx>
 
         """
 
@@ -107,6 +166,23 @@ class Point(object):
     def set_acc(self, value, frame):
         """Used to set the acceleration of this Point in a ReferenceFrame.
 
+        Parameters
+        ==========
+        value : Vector
+            The vector value of this point's acceleration in the frame
+        frame : ReferenceFrame
+            The frame in which this point's acceleration is defined
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> p1 = Point('p1')
+        >>> p1.set_acc(10 * N.x, N)
+        >>> p1.acc(N)
+        (10)*nx>
+
         """
 
         self._check_vector(value)
@@ -115,6 +191,21 @@ class Point(object):
 
     def acc(self, frame):
         """The acceleration Vector of this Point in a ReferenceFrame.
+
+        Parameters
+        ==========
+        frame : ReferenceFrame
+            The frame in which the returned acceleration vector will be defined in
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> p1 = Point('p1')
+        >>> p1.set_acc(10 * N.x, N)
+        >>> p1.acc(N)
+        (10)*nx>
 
         """
 

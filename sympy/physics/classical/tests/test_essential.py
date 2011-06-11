@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, sin, cos
-from sympy.physics.classical.essential import Vector, ReferenceFrame
-from sympy.physics.classical.functions import dot, cross, dynamicsymbols
+from sympy.physics.classical import Vector, ReferenceFrame
+from sympy.physics.classical import dot, cross, dynamicsymbols
 
 phi, x, y, z = symbols('phi x y z')
 A = ReferenceFrame('A')
@@ -54,7 +54,7 @@ def test_ang_vel():
     assert C.ang_vel_in(D) == (u0)*C.x + (u1)*C.y + (u2)*C.z + (-q4d)*D.y
     assert D.ang_vel_in(C) == (-u0)*C.x + (-u1)*C.y + (-u2)*C.z + (q4d)*D.y
 
-    E = N.orientnew('E', 'Euler', (q0, q1, q2, q3))
+    E = N.orientnew('E', 'Quaternion', (q0, q1, q2, q3))
     assert E.ang_vel_in(N) == (
         2 * (q1d * q0 + q2d * q3 - q3d * q2 - q0d * q1) * E.x +
         2 * (q2d * q0 + q3d * q1 - q1d * q3 - q0d * q2) * E.y +

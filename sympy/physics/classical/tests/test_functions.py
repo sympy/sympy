@@ -2,10 +2,8 @@
 
 from sympy import symbols, Symbol, sin, cos
 
-from sympy.physics.classical.functions import (cross, dot, dynamicsymbols,
-        express)
-
-from sympy.physics.classical.essential import ReferenceFrame
+from sympy.physics.classical import (cross, dot, dynamicsymbols, express,
+                                     ReferenceFrame)
 
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 N = ReferenceFrame('N')

@@ -110,7 +110,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -142,7 +142,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -174,7 +174,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -213,7 +213,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -228,7 +228,7 @@ class ReferenceFrame(object):
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Defines the orientation of this frame relative to a parent frame.
 
-        Supported orientation types are Simple, Body, Space, Euler, Axis.
+        Supported orientation types are Simple, Body, Space, Quaternion, Axis.
         Examples show correct usage.
 
         Parameters
@@ -246,7 +246,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q0, q1, q2, q3, q4 = symbols('q0 q1 q2 q3 q4')
         >>> N = ReferenceFrame('N')
@@ -274,17 +274,17 @@ class ReferenceFrame(object):
 
         >>> B.orient(N, 'Space', [q1, q2, q3], '312')
 
-        Next is Euler. This orients the new ReferenceFrame with Euler
-        Parameters, defined as a finite rotation about
+        Next is Quaternion. This orients the new ReferenceFrame with
+        Quaternions, defined as a finite rotation about
         :math:`\vec{\hat \lambda}`, a unit vector, by some amount
         :math:`\theta`. This orientation is described by four parameters:
         q0 = :math:`cos(\frac{\theta}{2})`
         q1 = :math:`\lambda_x' sin(\frac{\theta}{2})`
         q2 = :math:`\lambda_y' sin(\frac{\theta}{2})`
         q3 = :math:`\lambda_z' sin(\frac{\theta}{2})`
-        Euler does not take in a rotation order.
+        Quaternion does not take in a rotation order.
 
-        >>> B.orient(N, 'Euler', [q0, q1, q2, q3])
+        >>> B.orient(N, 'Quaternion', [q0, q1, q2, q3])
 
         Last is Axis. This is a rotation about an arbitrary, non-time-varying
         axis by some angle. The axis is supplied as a Vector.
@@ -337,9 +337,9 @@ class ReferenceFrame(object):
             parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
                     Matrix([[0, -axis[2], axis[1]],[axis[2], 0, -axis[0]],
                         [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
-        elif rot_type == 'EULER':
+        elif rot_type == 'QUATERNION':
             if not rot_order == '':
-                raise TypeError('Euler orientation takes no rotation order')
+                raise TypeError('Quaternion orientation takes no rotation order')
             if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 4)):
                 raise TypeError('Amounts are a list or tuple of length 4')
             q0 = amounts[0]
@@ -378,7 +378,7 @@ class ReferenceFrame(object):
         self._dcm_dict.update({parent: parent_orient})
         parent._dcm_dict.update({self: parent_orient.T})
         # TODO double check the sign here
-        if rot_type == 'EULER':
+        if rot_type == 'QUATERNION':
             t = Symbol('t')
             q0 = amounts[0]
             q1 = amounts[1]
@@ -418,7 +418,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -451,7 +451,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -580,7 +580,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -640,7 +640,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
         >>> t = Symbol('t')
@@ -675,7 +675,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -751,8 +751,8 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
-        >>> from sympy.physics.classical.dynamicsymbol import DynamicSymbol
+        >>> from sympy.physics.classical import ReferenceFrame, Vector,\
+                DynamicSymbol
         >>> from sympy import Symbol
         >>> t = Symbol('t')
         >>> q1 = DynamicSymbol('q1')
@@ -788,8 +788,8 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
-        >>> from sympy.physics.classical.dynamicsymbol import DynamicSymbol
+        >>> from sympy.physics.classical import ReferenceFrame, Vector,\
+                DynamicSymbol
         >>> from sympy import Symbol
         >>> q1 = Symbol('q1')
         >>> u1 = DynamicSymbol('u1')
@@ -828,8 +828,8 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical.essential import ReferenceFrame, Vector
-        >>> from sympy.physics.classical.dynamicsymbol import DynamicSymbol
+        >>> from sympy.physics.classical import ReferenceFrame, Vector,\
+                DynamicSymbol
         >>> q1 = DynamicSymbol('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 2)
