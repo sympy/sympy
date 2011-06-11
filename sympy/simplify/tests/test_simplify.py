@@ -222,21 +222,22 @@ def test_separate():
     x, y, z = symbols('x,y,z')
 
     assert separate((x*y*z)**4) == x**4*y**4*z**4
-    assert separate((x*y*z)**x) == x**x*y**x*z**x
+    assert separate((x*y*z)**x).is_Pow
+    assert separate((x*y*z)**x, force=True) == x**x*y**x*z**x
     assert separate((x*(y*z)**2)**3) == x**3*y**6*z**6
 
-    assert separate((sin((x*y)**2)*y)**z) == sin((x*y)**2)**z*y**z
-    assert separate((sin((x*y)**2)*y)**z, deep=True) == sin(x**2*y**2)**z*y**z
+    assert separate((sin((x*y)**2)*y)**z).is_Pow
+    assert separate((sin((x*y)**2)*y)**z, force=True) == sin((x*y)**2)**z*y**z
+    assert separate((sin((x*y)**2)*y)**z, deep=True) == (sin(x**2*y**2)*y)**z
 
     assert separate(exp(x)**2) == exp(2*x)
     assert separate((exp(x)*exp(y))**2) == exp(2*x)*exp(2*y)
 
     assert separate((exp((x*y)**z)*exp(y))**2) == exp(2*(x*y)**z)*exp(2*y)
-    assert separate((exp((x*y)**z)*exp(y))**2, deep=True) == exp(2*x**z*y**z)*exp(2*y)
+    assert separate((exp((x*y)**z)*exp(y))**2, deep=True, force=True) == exp(2*x**z*y**z)*exp(2*y)
 
-def test_separate_X1():
-    x, y, z = map(Symbol, 'xyz')
-    assert separate((exp(x)*exp(y))**z) == exp(x*z)*exp(y*z)
+    assert separate((exp(x)*exp(y))**z).is_Pow
+    assert separate((exp(x)*exp(y))**z, force=True) == exp(x*z)*exp(y*z)
 
 def test_powsimp():
     x, y, z, n = symbols('x,y,z,n')
@@ -441,7 +442,16 @@ def test_separatevars():
     # 1759
     p=Symbol('p',positive=True)
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
-    assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y)*sqrt(1 + x)
+    assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y*(1 + x))
+    assert separatevars(sqrt(y*(p**2 + x*p**2)), force=True) == p*sqrt(y)*sqrt(1 + x)
+    # 1766
+    assert separatevars(sqrt(x*y)).is_Pow
+    assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
+
+@XFAIL
+def test_separation_by_factor():
+    x,y = symbols('x,y')
+    assert factor(sqrt(x*y), expand=False).is_Pow
 
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')
