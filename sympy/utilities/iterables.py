@@ -719,3 +719,98 @@ def rotate_right(x, y):
         return x
     y = len(x) - y % len(x)
     return x[y:] + x[:y]
+
+def multiset_partitions(multiset, m):
+    """
+    This is the algorithm for generating multiset partitions
+    as described by Knuth in TAOCP Vol 4.
+
+    Given a multiset, this algorithm visits all of its
+    m-partitions, that is, all partitions having exactly size m
+    using auxiliary arrays as described in the book.
+
+    Examples:
+    >>> from sympy.utilities.iterables import multiset_partitions
+    >>> list(multiset_partitions([1,2,3,4], 2))
+    [[[1, 2, 3], [4]], [[1, 3], [2, 4]], [[1], [2, 3, 4]], [[1, 2], \
+    [3, 4]], [[1, 2, 4], [3]], [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
+    >>> list(multiset_partitions([1,2,3,4], 1))
+    [[[1, 2, 3, 4]]]
+    >>> list(multiset_partitions([1,2,3,4], 4))
+    [[[1], [2], [3], [4]]]
+    """
+    cache = {}
+
+    def visit(n, a):
+        ps = [[] for i in xrange(m)]
+        for j in xrange(n):
+            ps[a[j + 1]].append(multiset[j])
+        if cache.has_key(str(ps)):
+            return None
+        cache[str(ps)] = 1
+        return ps
+
+    def f(m_arr, n_arr, sigma, n, a):
+        if m_arr <= 2:
+            yield visit(n, a)
+        else:
+            for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
+                yield v
+        if n_arr == m_arr + 1:
+            a[m_arr] = m_arr - 1
+            yield visit(n, a)
+            while a[n_arr] > 0:
+                a[n_arr] = a[n_arr] - 1
+                yield visit(n, a)
+        elif n_arr > m_arr + 1:
+            if (m_arr + sigma) % 2 == 1:
+                a[n_arr - 1] = m_arr - 1
+            else:
+                a[m_arr] = m_arr - 1
+            func = [f, b][(a[n_arr] + sigma) % 2]
+            for v in func(m_arr, n_arr - 1, 0, n, a):
+                if v is not None:
+                    yield v
+            while a[n_arr] > 0:
+                a[n_arr] = a[n_arr] - 1
+                func = [f, b][(a[n_arr] + sigma) % 2]
+                for v in func(m_arr, n_arr - 1, 0, n, a):
+                    if v is not None:
+                        yield v
+
+    def b(m_arr, n_arr, sigma, n, a):
+        if n_arr == m_arr + 1:
+            yield visit(n, a)
+            while a[n_arr] < m_arr - 1:
+                a[n_arr] = a[n_arr] + 1
+                yield visit(n, a)
+            a[m_arr] = 0
+            yield visit(n, a)
+        elif n_arr > m_arr + 1:
+            func = [f, b][(a[n_arr] + sigma) % 2]
+            for v in func(m_arr, n_arr - 1, 0, n, a):
+                if v is not None:
+                    yield v
+            while a[n_arr] < m_arr - 1:
+                a[n_arr] = a[n_arr] + 1
+                func = [f, b][(a[n_arr] + sigma) % 2]
+                for v in func(m_arr, n_arr - 1, 0, n, a):
+                    if v is not None:
+                        yield v
+            if (m_arr + sigma) % 2 == 1:
+                a[n_arr - 1] = 0
+            else:
+                a[m_arr] = 0
+        if m_arr <= 2:
+            yield visit(n, a)
+        else:
+            for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
+                if v is not None:
+                    yield v
+
+    n = len(multiset)
+    a = [0] * (n + 1)
+    for j in xrange(1, m + 1):
+        a[n - m + j] = j - 1
+    return f(m, n, 0, n, a)
+
