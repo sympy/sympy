@@ -5,7 +5,7 @@ __all__ = ['cross',
 
 from sympy.physics.classical.essential import Vector
 from sympy.physics.classical.dynamicsymbol import DynamicSymbol
-from sympy import sympify
+from sympy import sympify, symbols
 
 def cross(vec1, vec2):
     """Cross product convenience wrapper for Vector.cross(): \n"""
@@ -21,28 +21,9 @@ def dot(vec1, vec2):
     return vec1.dot(vec2)
 dot.__doc__ += Vector.dot.__doc__
 
-def dynamicsymbols(basename, count, diffno=0):
-    """Returns a list of DynamicSymbols, and a number of their time derivatives.
-    Needs a base name supplied, number of DynamicSymbols, and number of
-    time derivatives of the Dynamic Symbols.
-
-    """
-
-    sympify(basename)
-    outlist = []
-    for i in range(diffno + 1):
-        innerlist = []
-        tag = ''
-        for j in range(i):
-            tag += 'd'
-        for j in range(count):
-            innerlist.append(DynamicSymbol(basename + str(j) + tag))
-        outlist.append(innerlist)
-    try:
-        outlist[1]
-        return outlist
-    except:
-        return outlist[0]
+def dynamicsymbols(names):
+    """Wraps sympy.symbols to use DynamicSymbol. """
+    return symbols(names, cls=DynamicSymbol)
 
 def express(vec, frame):
     """Express convenience wrapper for Vector.express(): \n"""
