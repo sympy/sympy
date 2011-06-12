@@ -73,7 +73,9 @@ class Symbol(AtomicExpr, Boolean):
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
-        return Dummy(self.name, self.is_commutative, **self.assumptions0)
+        assumptions = self.assumptions0.copy()
+        assumptions.pop('commutative', None)
+        return Dummy(self.name, self.is_commutative, **assumptions)
 
     def __call__(self, *args):
         from function import Function
