@@ -1,7 +1,4 @@
-"""Tests for function.py"""
-
 from sympy import symbols, Symbol, sin, cos
-
 from sympy.physics.classical import (cross, dot, dynamicsymbols, express,
                                      ReferenceFrame)
 

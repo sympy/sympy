@@ -6,13 +6,14 @@ phi, x, y, z = symbols('phi x y z')
 A = ReferenceFrame('A')
 
 def test_ang_vel():
-    ((q0, q1, q2, q3, q4), (q0d, q1d, q2d, q3d, q4d)) = dynamicsymbols('q', 5, 1)
+    q1, q2, q3, q4, q1d, q2d, q3d, q4d = dynamicsymbols('q1 q2 q3 q4 q1d q2d \
+                                                        q3d q4d')
     N = ReferenceFrame('N')
     A = N.orientnew('A', 'Simple', q1, 3)
     B = A.orientnew('B', 'Simple', q2, 1)
     C = B.orientnew('C', 'Simple', q3, 2)
     D = N.orientnew('D', 'Simple', q4, 2)
-    u0, u1, u2 = dynamicsymbols('u', 3)
+    u0, u1, u2 = dynamicsymbols('u1 u2 u3')
     assert A.ang_vel_in(N) == (q1d)*A.z
     assert B.ang_vel_in(N) == (q2d)*B.x + (q1d)*A.z
     assert C.ang_vel_in(N) == (q3d)*C.y + (q2d)*B.x + (q1d)*A.z
@@ -54,6 +55,7 @@ def test_ang_vel():
     assert C.ang_vel_in(D) == (u0)*C.x + (u1)*C.y + (u2)*C.z + (-q4d)*D.y
     assert D.ang_vel_in(C) == (-u0)*C.x + (-u1)*C.y + (-u2)*C.z + (q4d)*D.y
 
+    q0, q0d = dynamicsymbols('q0 q0d')
     E = N.orientnew('E', 'Quaternion', (q0, q1, q2, q3))
     assert E.ang_vel_in(N) == (
         2 * (q1d * q0 + q2d * q3 - q3d * q2 - q0d * q1) * E.x +
@@ -69,7 +71,7 @@ def test_ang_vel():
     assert N.ang_vel_in(G) == -q1d * (N.x + N.y).unit
 
 def test_dcm():
-    q0, q1, q2, q3, q4 = dynamicsymbols('q', 5)
+    q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
     N = ReferenceFrame('N')
     A = N.orientnew('A', 'Simple', q1, 3)
     B = A.orientnew('B', 'Simple', q2, 1)
@@ -122,8 +124,8 @@ def test_Vector():
     assert dot(v4, A.z) == z - z**2
 
 def test_Vector_diffs():
-    ((q0, q1, q2, q3, q4), (q0d, q1d, q2d, q3d, q4d),
-            (q0dd, q1dd, q2dd, q3dd, q4dd)) = dynamicsymbols('q', 5, 2)
+    q1, q2, q3, q4, q1d, q2d, q3d, q4d, q1dd, q2dd, q3dd, q4dd = (
+        dynamicsymbols('q1 q2 q3 q4 q1d q2d q3d q4d q1dd q2dd q3dd q4dd'))
     N = ReferenceFrame('N')
     A = N.orientnew('A', 'Simple', q3, 3)
     B = A.orientnew('B', 'Simple', q2, 1)

@@ -1,4 +1,3 @@
-
 from sympy import Symbol, diff
 from sympy.physics.classical import DynamicSymbol
 
