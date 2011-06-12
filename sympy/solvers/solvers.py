@@ -559,7 +559,7 @@ def _solve(f, *symbols, **flags):
 
             for g in f:
 
-                poly = g.as_poly(*symbols, extension=True)
+                poly = g.as_poly(*symbols, **{'extension':True})
 
                 if poly is not None:
                     polys.append(poly)
