@@ -14,7 +14,7 @@ except ImportError:
 
 
 from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
-        symarray, symbols)
+        symarray, symbols, Integer)
 import sympy
 
 from sympy import mpmath
@@ -39,13 +39,13 @@ def test_systematic_basic():
     x = Symbol("x")
     y = Symbol("y")
     sympy_objs = [
-            Rational(2),
+            Rational(2, 3),
             Float("1.3"),
             x,
             y,
             pow(x,y)*y,
-            5,
-            5.5,
+            Integer(5),
+            Float(5.5),
             ]
     numpy_objs = [
             array([1]),
