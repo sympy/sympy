@@ -25,6 +25,8 @@ except ImportError:
 
 import sympy
 
+from sympy.utilities.pytest import XFAIL
+
 def check_expression(expr, var_symbols):
     """Does eval(expr) both in Sage and SymPy and does other checks."""
 
@@ -63,6 +65,10 @@ def test_basics():
 def test_complex():
     check_expression("I", "")
     check_expression("23+I*4", "x")
+
+@XFAIL
+def test_complex_fail():
+    # Sage doesn't properly implement _sympy_ on I
     check_expression("I*y", "y")
     check_expression("x+I*y", "x y")
 
