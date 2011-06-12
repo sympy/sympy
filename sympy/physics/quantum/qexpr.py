@@ -2,7 +2,6 @@
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import ordered_iter
 
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix,
@@ -55,7 +54,7 @@ def __qsympify_sequence_helper(seq):
        This function does the actual work.
     """
     #base case. If not a list, do Sympification
-    if not ordered_iter(seq):
+    if not isinstance(seq, (list, tuple, Tuple)):
         if isinstance(seq, Matrix):
             return seq
         elif isinstance(seq, basestring):

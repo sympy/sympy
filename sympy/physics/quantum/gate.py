@@ -17,7 +17,6 @@ import random
 
 from sympy import Mul, Pow, Integer, Matrix, Rational, Tuple, I, sqrt, Add
 from sympy.core.numbers import Number
-from sympy.core.compatibility import ordered_iter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.utilities.iterables import all
 
@@ -315,7 +314,7 @@ class CGate(Gate):
         # _eval_args has the right logic for the controls argument.
         controls = args[0]
         gate = args[1]
-        if not ordered_iter(controls, include=Tuple):
+        if not isinstance(controls, (list, tuple, Tuple)):
             controls = (controls,)
         controls = UnitaryOperator._eval_args(controls)
         _validate_targets_controls(chain(controls,gate.targets))
@@ -443,7 +442,7 @@ class UGate(Gate):
     @classmethod
     def _eval_args(cls, args):
         targets = args[0]
-        if not ordered_iter(targets, include=Tuple):
+        if not isinstance(targets, (list, tuple, Tuple)):
             targets = (targets,)
         targets = Gate._eval_args(targets)
         _validate_targets_controls(targets)

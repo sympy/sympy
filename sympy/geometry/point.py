@@ -7,7 +7,6 @@ Point
 """
 
 from sympy.core import S, sympify
-from sympy.core.compatibility import iterable
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -52,7 +51,7 @@ class Point(GeometryEntity):
 
     """
     def __new__(cls, *args, **kwargs):
-        if iterable(args[0]):
+        if isinstance(args[0], (tuple, list, set)):
             coords = tuple([sympify(x) for x in args[0]])
         else:
             coords = tuple([sympify(x) for x in args])
