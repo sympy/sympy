@@ -160,10 +160,6 @@ class Point(object):
         self._check_frame(fixedframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
-        if dist != 0:
-            if dist.dt(fixedframe) != 0:
-                raise ValueError('These vectors are not fixed in frame ' +
-                                 fixedframe.name + ', try a1pt instead')
         v = otherpoint.vel(outframe)
         a = otherpoint.acc(outframe)
         omega = fixedframe.ang_vel_in(outframe)
@@ -427,10 +423,6 @@ class Point(object):
         self._check_frame(fixedframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
-        if dist != 0:
-            if dist.dt(fixedframe) != 0:
-                raise ValueError('These vectors are not fixed in frame ' +
-                                 fixedframe.name + ', try v1pt instead')
         v = otherpoint.vel(outframe)
         omega = fixedframe.ang_vel_in(outframe)
         self.set_vel(v + (omega ^ dist), outframe)

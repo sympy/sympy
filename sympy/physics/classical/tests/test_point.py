@@ -16,11 +16,15 @@ def test_point_funcs():
     assert O.vel(N) == 0
     assert P.a1pt(O, N, B) == ((-25 * q + qdd) * B.x + (q2dd) * B.y +
                                (-10 * qd) * B.z)
+
+    B = N.orientnew('B', 'Simple', q, 3)
     O = Point('O')
     P = O.newpoint('P', 10 * B.x)
     O.set_vel(5 * N.x, N)
     assert O.vel(N) == 5 * N.x
     assert P.a2pt(O, N, B) == (-10 * qd**2) * B.x + (10 * qdd) * B.y
+
+    B.set_ang_vel(N, 5 * B.y)
     O = Point('O')
     P = O.newpoint('P', q * B.x)
     P.set_vel(qd * B.x + q2d * B.y, B)
