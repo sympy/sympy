@@ -64,31 +64,67 @@ class Point(object):
     def a1pt(self, otherpoint, outframe, interframe):
         """Sets the acceleration of this point with the 1-point theory.
 
+        The 1-point theory for point acceleration looks like this:
+
+        :math:`^{N} \vec{a} ^{P} = ^{B} \vec{a} ^{P} + ^{N} \vec{a} ^{O} +
+        ^{N} \vec{\alpha} ^{B} \times \vec{r} ^{OP} + ^{N} \vec{\omega} ^{B}
+        \times (^{N} \vec{\omega} ^{B} \times \vec{r} ^{OP}) + 2 ^{N}
+        \vec{\omega}^{B} \times ^{B} \vec{v} ^{P} `
+
+        where Q is a point fixed in B, P is a point moving in B, and B is
+        rotating in frame N.
+
+        Parameters
+        ==========
+        otherpoint : Point
+            The first point of the 1-point theory
+        outframe : ReferenceFrame
+            The frame we want this point's acceleration defined in
+        fixedframe : ReferenceFrame
+            The intermediate frame in this calculation
+
+        Examples
+        ========
+        >>> from sympy.physics.classical import Point, ReferenceFrame,\
+                DynamicSymbol
+        >>> q = DynamicSymbol('q')
+        >>> q2 = DynamicSymbol('q2')
+        >>> qd = DynamicSymbol('qd')
+        >>> q2d = DynamicSymbol('q2d')
+        >>> N = ReferenceFrame('N')
+        >>> B = ReferenceFrame('B')
+        >>> B.set_ang_vel(N, 5 * B.y)
+        >>> O = Point('O')
+        >>> P = O.newpoint('P', q * B.x)
+        >>> P.set_vel(qd * B.x + q2d * B.y, B)
+        >>> O.set_vel(0, N)
+        >>> P.a1pt(O, N, B)
+        Autodifferentiating velocity
+        Autodifferentiating velocity
+        (-25*q + qdd)*bx> + (q2dd)*by> + (-10*qd)*bz>
         """
 
         self._check_frame(outframe)
-        self._check_frame(fixedframe)
+        self._check_frame(interframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
-        if dist.dt(fixedframe) != 0:
-            raise ValueError('These vectors are not fixed in frame ' +
-                    fixedframe.name + ', try v1pt instead')
-        v = otherpoint.vel(outframe)
+        v = self.vel(interframe)
         a1 = otherpoint.acc(outframe)
         a2 = self.acc(interframe)
-        omega = fixedframe.ang_vel_in(outframe)
-        alpha = fixedframe.ang_acc_in(outframe)
-        self.set_acc(a2 + 2 * (omega ^ dist) + a1 + (alpha ^ dist) + (omega ^
-                (omega ^ dist)))
+        omega = interframe.ang_vel_in(outframe)
+        alpha = interframe.ang_acc_in(outframe)
+        self.set_acc(a2 + 2 * (omega ^ v) + a1 + (alpha ^ dist) + (omega ^
+                     (omega ^ dist)), outframe)
         return self.acc(outframe)
 
     def a2pt(self, otherpoint, outframe, fixedframe):
         """Sets the acceleration of this point with the 2-point theory.
 
-        The 2-point theory for point velocity looks like this:
+        The 2-point theory for point acceleration looks like this:
 
-        :math:`^{N} \vec{v} ^{P} = ^{N} \vec{v} ^{O} + ^{N} \vec{\omega} ^{B}
-         + ^{N} \vec{r} ^{OP}`
+        :math:`^{N} \vec{a} ^{P} = ^{N} \vec{a} ^{O} + ^{N} \vec{\alpha} ^{B}
+         \times \vec{r} ^{OP} + ^{N} \vec{\omega} ^{B} \times (
+         ^{N} \vec{\omega} ^{B} \times \vec{r} ^{OP})`
 
         where Q and P are both points fixed in frame B, which is rotating in
         frame N.
@@ -98,7 +134,7 @@ class Point(object):
         otherpoint : Point
             The first point of the 2-point theory
         outframe : ReferenceFrame
-            The frame we want this point's velocity defined in
+            The frame we want this point's acceleration defined in
         fixedframe : ReferenceFrame
             The frame in which both this point and the other point are fixed
 
@@ -114,8 +150,9 @@ class Point(object):
         >>> O = Point('O')
         >>> P = O.newpoint('P', 10 * B.x)
         >>> O.set_vel(5 * N.x, N)
-        >>> P.v2pt(O, N, B)
-        (5)*nx> + (10*qd)*by>
+        >>> P.a2pt(O, N, B)
+        Autodifferentiating velocity
+        (-10*qd**2)*bx> + (10*qdd)*by>
 
         """
 
@@ -123,14 +160,15 @@ class Point(object):
         self._check_frame(fixedframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
-        if dist.dt(fixedframe) != 0:
-            raise ValueError('These vectors are not fixed in frame ' +
-                             fixedframe.name + ', try v1pt instead')
+        if dist != 0:
+            if dist.dt(fixedframe) != 0:
+                raise ValueError('These vectors are not fixed in frame ' +
+                                 fixedframe.name + ', try a1pt instead')
         v = otherpoint.vel(outframe)
         a = otherpoint.acc(outframe)
         omega = fixedframe.ang_vel_in(outframe)
         alpha = fixedframe.ang_acc_in(outframe)
-        self.set_acc(a + (alpha ^ dist) + (omega ^ (omega ^ r)))
+        self.set_acc(a + (alpha ^ dist) + (omega ^ (omega ^ dist)), outframe)
         return self.acc(outframe)
 
     def acc(self, frame):
@@ -156,7 +194,10 @@ class Point(object):
         self._check_frame(frame)
         if not self._acc_dict.has_key(frame):
             print 'Autodifferentiating velocity'
-            return (self._vel_dict[frame]).dt(frame)
+            if self._vel_dict[frame] != 0:
+                return (self._vel_dict[frame]).dt(frame)
+            else:
+                return 0
         return self._acc_dict[frame]
 
     def newpoint(self, name, value):
@@ -175,8 +216,7 @@ class Point(object):
         >>> from sympy.physics.classical import ReferenceFrame, Point
         >>> N = ReferenceFrame('N')
         >>> P1 = Point('P1')
-        >>> P2 = P1.newpoint(P2, 10 * N.x)
-        P2
+        >>> P2 = P1.newpoint('P2', 10 * N.x)
 
         """
 
@@ -301,9 +341,9 @@ class Point(object):
         The 1-point theory for point velocity looks like this:
 
         :math:`^{N} \vec{v} ^{P} = ^{B} \vec{v} ^{P} + ^{N} \vec{v} ^{O} +
-        ^{N} \vec{\omega} ^{B} + ^{N} \vec{r} ^{OP}`
+        ^{N} \vec{\omega} ^{B} \times \vec{r} ^{OP}`
 
-        where Q is a point fixed in B, P is a point moving in V, and B is
+        where Q is a point fixed in B, P is a point moving in B, and B is
         rotating in frame N.
 
         Parameters
@@ -312,8 +352,8 @@ class Point(object):
             The first point of the 2-point theory
         outframe : ReferenceFrame
             The frame we want this point's velocity defined in
-        fixedframe : ReferenceFrame
-            The frame in which both this point and the other point are fixed
+        interframe : ReferenceFrame
+            The intermediate frame in this calculation
 
         Examples
         ========
@@ -325,13 +365,14 @@ class Point(object):
         >>> qd = DynamicSymbol('qd')
         >>> q2d = DynamicSymbol('q2d')
         >>> N = ReferenceFrame('N')
-        >>> B = N.orientnew('B', 'Simple', q, 3)
+        >>> B = ReferenceFrame('B')
+        >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
-        >>> P = O.newpoint('P', 10 * B.x + q2 * B.y)
-        >>> P.set_vel(q2d * B.y, B)
-        >>> O.set_vel(5 * N.x, N)
+        >>> P = O.newpoint('P', q * B.x)
+        >>> P.set_vel(qd * B.x + q2d * B.y, B)
+        >>> O.set_vel(0, N)
         >>> P.v1pt(O, N, B)
-        (5)*nx> + (q2d)*by>
+        (qd)*bx> + (q2d)*by> + (-5*q)*bz>
 
         """
 
@@ -351,7 +392,7 @@ class Point(object):
         The 2-point theory for point velocity looks like this:
 
         :math:`^{N} \vec{v} ^{P} = ^{N} \vec{v} ^{O} + ^{N} \vec{\omega} ^{B}
-         + ^{N} \vec{r} ^{OP}`
+         \times \vec{r} ^{OP}`
 
         where Q and P are both points fixed in frame B, which is rotating in
         frame N.
@@ -386,9 +427,10 @@ class Point(object):
         self._check_frame(fixedframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
-        if dist.dt(fixedframe) != 0:
-            raise ValueError('These vectors are not fixed in frame ' +
-                             fixedframe.name + ', try v1pt instead')
+        if dist != 0:
+            if dist.dt(fixedframe) != 0:
+                raise ValueError('These vectors are not fixed in frame ' +
+                                 fixedframe.name + ', try v1pt instead')
         v = otherpoint.vel(outframe)
         omega = fixedframe.ang_vel_in(outframe)
         self.set_vel(v + (omega ^ dist), outframe)
@@ -420,4 +462,6 @@ class Point(object):
                              ' defined in ReferenceFrame ' + frame.name)
         return self._vel_dict[frame]
 
-
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
