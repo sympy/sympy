@@ -19,6 +19,10 @@ import functions
 from functions import *
 __all__.extend(functions.__all__)
 
+import particle
+from particle import *
+__all__.extend(particle.__all__)
+
 import point
 from point import *
 __all__.extend(point .__all__)
