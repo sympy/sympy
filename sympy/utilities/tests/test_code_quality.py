@@ -73,7 +73,7 @@ def test_whitespace_and_exceptions():
     oldRaise = re.compile(r'raise(\s+\w+\s*,)')
 
     def test(fname):
-        file = open(fname, "rb") # without "b" the lines from all systems will appear to be \n terminated
+        file = open(fname, "rt") # without "t" the lines from all systems may appear to be \n terminated
         try:
             line = None # to flag the case where there were no lines in file
             for idx, line in enumerate(file):
