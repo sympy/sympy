@@ -613,6 +613,9 @@ class Vector(object):
     def __eq__(self, other):
         """Tests for equality.
 
+        It is very import to note that this is only as good as the SymPy
+        equality test; False does not always mean they are not equivalent
+        Vectors.
         If other is 0, and self is empty, returns True.
         If other is 0 and self is not empty, returns False.
         If none of the above, only accepts other as a Vector.
@@ -628,9 +631,9 @@ class Vector(object):
         check = True
         frame = self.args[0][1]
         for i, v in enumerate(frame):
-            check = check & (trigsimp(expand(self & v), recursive=True) ==
-                             trigsimp(expand(other & v), recursive=True))
-        return check
+            if expand((self - other) & v) != 0:
+                return False
+        return True
 
     def __mul__(self, other):
         """Multiplies the Vector by a sympifyable expression.

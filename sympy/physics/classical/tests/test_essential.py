@@ -96,6 +96,10 @@ def test_dcm():
         cos(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4))]])
 
 def test_Vector():
+    assert A.x != A.y
+    assert A.y != A.z
+    assert A.z != A.x
+
     v1 = x*A.x + y*A.y + z*A.z
     v2 = x**2*A.x + y**2*A.y + z**2*A.z
     v3 = v1 + v2
