@@ -1,5 +1,6 @@
 from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational
 from sympy.core.sympify import sympify, converter, SympifyError
+from sympy.core.compatibility import ordered_iter
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
@@ -90,7 +91,7 @@ class Matrix(object):
             for i in range(self.rows):
                 for j in range(self.cols):
                     self.mat.append(sympify(operation(i, j)))
-        elif len(args)==3 and isinstance(args[2], (list, tuple)):
+        elif len(args)==3 and ordered_iter(args[2]):
             self.rows=args[0]
             self.cols=args[1]
             mat = args[2]
@@ -121,7 +122,7 @@ class Matrix(object):
                     return
                 else:
                     raise NotImplementedError("Sympy supports just 1D and 2D matrices")
-            elif not isinstance(mat, (list, tuple, Matrix)):
+            elif not ordered_iter(mat, include=Matrix):
                 raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
             mat = []
             for row in args[0]:
@@ -131,7 +132,7 @@ class Matrix(object):
                     mat.append(row)
             self.rows = len(mat)
             if len(mat) != 0:
-                if not isinstance(mat[0], (list, tuple)):
+                if not ordered_iter(mat[0]):
                     self.cols = 1
                     self.mat = map(lambda i: sympify(i), mat)
                     return
@@ -154,7 +155,7 @@ class Matrix(object):
 
     def key2ij(self,key):
         """Converts key=(4,6) to 4,6 and ensures the key is correct."""
-        if not (isinstance(key,(list, tuple)) and len(key) == 2):
+        if not (ordered_iter(key) and len(key) == 2):
             raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
                     %repr(key))
         i,j=key
@@ -287,7 +288,7 @@ class Matrix(object):
                 if isinstance(value, Matrix):
                     self.copyin_matrix(key, value)
                     return
-                if isinstance(value, (list, tuple)):
+                if ordered_iter(value):
                     self.copyin_list(key, value)
                     return
             else:
@@ -365,8 +366,8 @@ class Matrix(object):
                 self[i+rlo, j+clo] = sympify(value[i,j])
 
     def copyin_list(self, key, value):
-        if not isinstance(value, (list, tuple)):
-            raise TypeError("`value` must have type list or tuple, not %s." % type(value))
+        if not ordered_iter(value):
+            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
         self.copyin_matrix(key, Matrix(value))
 
     def hash(self):
@@ -1391,8 +1392,8 @@ class Matrix(object):
     #            self[i,j] = self[i,j].eval()
 
     def cross(self, b):
-        if not isinstance(b, (list, tuple, Matrix)):
-            raise TypeError("`b` must be of type list, tuple, or Matrix, not %s." %
+        if not ordered_iter(b, include=Matrix):
+            raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows == 1 and self.cols == 3 or \
                 self.rows == 3 and self.cols == 1 ) and \
@@ -1405,8 +1406,8 @@ class Matrix(object):
                                (self[0]*b[1] - self[1]*b[0])))
 
     def dot(self, b):
-        if not isinstance(b, (list, tuple, Matrix)):
-            raise TypeError("`b` must be of type list, tuple, or Matrix, not %s." %
+        if not ordered_iter(b, include=Matrix):
+            raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         m = len(b)
         if len(self) != m:
@@ -2608,7 +2609,7 @@ def hessian(f, varlist):
     see: http://en.wikipedia.org/wiki/Hessian_matrix
     """
     # f is the expression representing a function f, return regular matrix
-    if isinstance(varlist, (list, tuple)):
+    if ordered_iter(varlist):
         m = len(varlist)
         if not m:
             raise ShapeError("`len(varlist)` must not be zero.")
@@ -2734,7 +2735,7 @@ class SparseMatrix(Matrix):
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
-                isinstance(args[1],int) and isinstance(args[2], (list, tuple)):
+                isinstance(args[1],int) and ordered_iter(args[2]):
             self.rows = args[0]
             self.cols = args[1]
             mat = args[2]
@@ -2757,7 +2758,7 @@ class SparseMatrix(Matrix):
                 mat = args[0]
             else:
                 mat = args
-            if not isinstance(mat[0], (list, tuple)):
+            if not ordered_iter(mat[0]):
                 mat = [ [element] for element in mat ]
             self.rows = len(mat)
             self.cols = len(mat[0])
@@ -2818,7 +2819,7 @@ class SparseMatrix(Matrix):
         if isinstance(key[0], slice) or isinstance(key[1], slice):
             if isinstance(value, Matrix):
                 self.copyin_matrix(key, value)
-            if isinstance(value, (list, tuple)):
+            if ordered_iter(value):
                 self.copyin_list(key, value)
         else:
             i,j=self.key2ij(key)
@@ -2993,7 +2994,7 @@ class SparseMatrix(Matrix):
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
-        if not isinstance(value, (list, tuple)):
+        if not ordered_iter(value):
             raise TypeError("`value` must be of type list or tuple.")
         self.copyin_matrix(key, SparseMatrix(value))
 
@@ -3034,8 +3035,8 @@ class SparseMatrix(Matrix):
         return SparseMatrix(_rows, _cols, newD)
 
     def cross(self, b):
-        if not isinstance(b, (list, tuple, Matrix)):
-            raise TypeError("`b` must be of type list, tuple, or Matrix, not %s." %
+        if not ordered_iter(b, include=Matrix):
+            raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows == 1 and self.cols == 3 or \
                 self.rows == 3 and self.cols == 1 ) and \

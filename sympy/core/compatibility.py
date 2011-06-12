@@ -119,3 +119,71 @@ except ImportError:
                 return True
         return False
 
+def iterable(i, exclude=(str, dict)):
+    """
+    Return a boolean indicating whether i is an iterable in the sympy sense.
+
+    When sympy is working with iterables, it is almost always assuming
+    that the iterable is not a string or a mapping, so those are excluded
+    by default. If you want a pure python definition, make exclude=None. To
+    exclude multiple items, pass them as a tuple.
+
+    See also: ordered_iter
+
+    Examples:
+
+    >>> from sympy.utilities.iterables import iterable
+    >>> from sympy import Tuple
+    >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
+    >>> for i in things:
+    ...     print iterable(i), type(i)
+    True <type 'list'>
+    True <type 'tuple'>
+    True <type 'set'>
+    True <class 'sympy.core.containers.Tuple'>
+    True <type 'generator'>
+    False <type 'dict'>
+    False <type 'str'>
+    False <type 'int'>
+
+    >>> iterable({}, exclude=None)
+    True
+    >>> iterable({}, exclude=str)
+    True
+    >>> iterable("no", exclude=str)
+    False
+
+    """
+    try:
+        iter(i)
+    except TypeError:
+        return False
+    if exclude:
+        return not isinstance(i, exclude)
+    return True
+
+def ordered_iter(i, include=None):
+    """
+    Return a boolean indicating whether i is an ordered iterable in the sympy
+    sense. If anything is iterable but doesn't have an index attribute, it
+    can be included in what is considered iterable by using the 'include'
+    keyword. If multiple items are to be included, pass them as a tuple.
+
+    See also: iterable
+
+    Examples:
+
+    >>> from sympy.utilities.iterables import ordered_iter
+    >>> from sympy import Tuple
+    >>> ordered_iter([])
+    True
+    >>> ordered_iter(set())
+    False
+    >>> ordered_iter(Tuple())
+    False
+    >>> ordered_iter(Tuple(), include=Tuple)
+    True
+
+    """
+    return (hasattr(i, 'index') and iterable(i) or
+            bool(include) and isinstance(i, include))
