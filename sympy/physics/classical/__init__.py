@@ -11,6 +11,10 @@ __all__ = []
 #    determine which names are imported when
 #    "from sympy.physics.classical import *" is done.
 
+import rigidbody
+from rigidbody import *
+__all__.extend(rigidbody.__all__)
+
 import dynamicsymbol
 from dynamicsymbol import *
 __all__.extend(dynamicsymbol.__all__)
@@ -19,13 +23,17 @@ import functions
 from functions import *
 __all__.extend(functions.__all__)
 
+import inertiadyadic
+from inertiadyadic import *
+__all__.extend(inertiadyadic.__all__)
+
 import particle
 from particle import *
 __all__.extend(particle.__all__)
 
 import point
 from point import *
-__all__.extend(point .__all__)
+__all__.extend(point.__all__)
 
 import essential
 from essential import *
