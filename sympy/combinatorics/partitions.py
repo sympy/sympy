@@ -206,6 +206,27 @@ class Partition(Basic):
             a += 1
         return rgs
 
+def from_RGS(rgs, superset):
+    """
+    Creates a set partition from a restricted growth string.
+
+    Examples:
+    >>> from sympy.combinatorics.partitions import *
+    >>> from_RGS([0,1,2,0,1],['a','b','c','d','e'])
+    Partition([['a', 'd'], ['b', 'e'], ['c']], \
+    ['a', 'b', 'c', 'd', 'e'])
+    >>> a = Partition([[1,4],[2],[3,5]], [1,2,3,4,5])
+    >>> from_RGS(a.RGS, a.partition_set)
+    Partition([[1, 4], [2], [3, 5]], [1, 2, 3, 4, 5])
+    """
+    max_elem = max(rgs) + 1
+    partition = [[] for i in xrange(max_elem)]
+    j = 0
+    for i in rgs:
+        partition[i].append(superset[j])
+        j += 1
+    return Partition(partition, superset)
+
 class IntegerPartition(Partition):
     """
     This class represents an abstract partition.
