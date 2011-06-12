@@ -2,6 +2,21 @@ from sympy import symbols, Matrix, sin, cos
 from sympy.physics.classical import (Vector, ReferenceFrame, dot, cross,
                                      dynamicsymbols, Point)
 
+def test_point_v1pts():
+    q, q2, qd, q2d, qdd, q2dd = dynamicsymbols('q q2 qd q2d qdd q2dd')
+    N = ReferenceFrame('N')
+    B = ReferenceFrame('B')
+
+
+def test_point_a1pts():
+    pass
+
+def test_point_v2pts():
+    pass
+
+def test_point_a2pts():
+    pass
+
 def test_point_funcs():
     q, q2, qd, q2d, qdd, q2dd = dynamicsymbols('q q2 qd q2d qdd q2dd')
     N = ReferenceFrame('N')
