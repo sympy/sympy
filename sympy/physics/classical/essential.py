@@ -18,6 +18,8 @@ class ReferenceFrame(object):
 
     def __init__(self, name=''):
         """init for ReferenceFrame. """
+        if not isinstance(name, str):
+            raise TypeError('Need to supply a valid name')
         self.name = name
         self._dcm_dict = {}
         self._ang_vel_dict = {}
@@ -92,7 +94,8 @@ class ReferenceFrame(object):
         outlist.sort(key = len)
         if len(outlist) != 0:
             return outlist[0]
-        raise ValueError('No Connecting Path Found')
+        raise ValueError('No Connecting Path found between ' + self.name +
+                         ' and ' + other.name)
 
     def ang_acc_in(self, otherframe):
         """Returns the angular acceleration Vector of the ReferenceFrame.
@@ -399,6 +402,7 @@ class ReferenceFrame(object):
             wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
+        return self.dcm(parent)
 
     def set_ang_acc(self, otherframe, value):
         """Define the angular acceleration Vector in a ReferenceFrame.
@@ -654,6 +658,9 @@ class Vector(object):
         for i, v in enumerate(newlist):
             newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1])
         return Vector(newlist)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __neg__(self):
         return self * -1

@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, sin, cos
-from sympy.physics.classical import Vector, ReferenceFrame
-from sympy.physics.classical import dot, cross, dynamicsymbols
+from sympy.physics.classical import (Vector, ReferenceFrame, dot, cross,
+                                     dynamicsymbols)
 
 phi, x, y, z = symbols('phi x y z')
 A = ReferenceFrame('A')
