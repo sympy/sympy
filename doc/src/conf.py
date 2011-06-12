@@ -34,15 +34,15 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2008, 2009, 2010 SymPy Development Team'
+copyright = '2008, 2009, 2010, 2011 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.6.7'
+version = '0.7.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.6.7'
+release = '0.7.0.rc1'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
