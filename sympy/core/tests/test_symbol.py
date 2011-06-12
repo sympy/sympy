@@ -113,6 +113,25 @@ def test_symbols():
     y = Symbol('y')
     z = Symbol('z')
 
+    assert symbols('xyz', each_char=True) == (x, y, z)
+    assert symbols('x y z', each_char=True) == symbols('x,y,z', each_char=True) == (x, y, z)
+    assert symbols('xyz', each_char=False) == Symbol('xyz')
+    x, y = symbols('x y', each_char=False, real=True)
+    assert x.is_real and y.is_real
+    assert 'each_char' not in x.assumptions0
+
+    x = Symbol('x')
+    y = Symbol('y')
+    assert symbols('x0:0', each_char=False) == ()
+    assert symbols('x0:1', each_char=False) == (Symbol('x0'),)
+    assert symbols('x0:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+    assert symbols('x:0', each_char=False) == ()
+    assert symbols('x:1', each_char=False) == (Symbol('x0'),)
+    assert symbols('x:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+    assert symbols('x1:1', each_char=False) == ()
+    assert symbols('x1:2', each_char=False) == (Symbol('x1'),)
+    assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
+
     assert symbols('') is None
 
     assert symbols('x') == x
