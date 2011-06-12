@@ -845,7 +845,7 @@ class Pow(Expr):
         return C.binomial(self.exp, n) * Pow(x, n)
 
     def _sage_(self):
-        return Pow(self.args[0]._sage_(), self.args[1]._sage_())
+        return self.args[0]._sage_()**self.args[1]._sage_()
 
 from add import Add
 from numbers import Integer
