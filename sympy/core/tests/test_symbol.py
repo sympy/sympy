@@ -113,9 +113,28 @@ def test_Wild_properties():
                 assert d == None
 
 def test_symbols():
+    w = Symbol('w')
     x = Symbol('x')
     y = Symbol('y')
     z = Symbol('z')
+
+    assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
+    assert symbols('xyz', each_char=True) == (x, y, z)
+    assert symbols('x y z', each_char=True) == symbols('x,y,z', each_char=True) == (x, y, z)
+    assert symbols('xyz', each_char=False) == Symbol('xyz')
+    a, b = symbols('x y', each_char=False, real=True)
+    assert a.is_real and b.is_real
+    assert 'each_char' not in a.assumptions0
+
+    assert symbols('x0:0', each_char=False) == ()
+    assert symbols('x0:1', each_char=False) == (Symbol('x0'),)
+    assert symbols('x0:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+    assert symbols('x:0', each_char=False) == ()
+    assert symbols('x:1', each_char=False) == (Symbol('x0'),)
+    assert symbols('x:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+    assert symbols('x1:1', each_char=False) == ()
+    assert symbols('x1:2', each_char=False) == (Symbol('x1'),)
+    assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
 
     assert symbols('x') == x
     assert symbols('x ') == x
@@ -156,7 +175,6 @@ def test_symbols():
     raises(ValueError, "symbols(('x', '', 'y', '', 'z'))")
 
     a, b = symbols('x,y', real=True)
-
     assert a.is_real and b.is_real
 
     x0 = Symbol('x0')
