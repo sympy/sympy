@@ -1,7 +1,9 @@
 from sympy import exp, symbols, sqrt, I, pi, Mul, Integer
 from sympy.matrices.matrices import Matrix
 
-from sympy.physics.quantum.gate import *
+from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
+        CNOT, IdentityGate, H, X, Y, S, T, Z, SwapGate, gate_simp, gate_sort,
+        CNotGate, TGate, HadamardGate, PhaseGate, UGate, CGate)
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.represent import represent

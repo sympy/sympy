@@ -2,7 +2,8 @@ from sympy import I, Matrix, symbols
 
 from sympy.physics.quantum import hbar, represent, Commutator
 from sympy.physics.quantum import qapply
-from sympy.physics.quantum.spin import *
+from sympy.physics.quantum.spin import (J2, Rotation, Jplus, JzKet, Jminus,
+        Jx, Jy, Jz)
 
 
 def test_represent():
