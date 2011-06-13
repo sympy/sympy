@@ -1,12 +1,12 @@
-from sympy.physics.quantum.qubit import *
-from sympy.physics.quantum.gate import *
-from sympy.physics.quantum.qft import *
-from sympy.physics.quantum.represent import *
-from sympy.physics.quantum.qapply import *
-from sympy import symbols, Rational
-from sympy.core.numbers import *
-from sympy.functions.elementary import *
-from sympy.physics.quantum.shor import *
+from sympy.physics.quantum.qubit import (measure_all, measure_partial,
+        matrix_to_qubit, qubit_to_matrix, IntQubit, IntQubitBra, QubitBra)
+from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, ZGate,
+        YGate, PhaseGate)
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.qapply import qapply
+from sympy import symbols, Rational, sqrt
+from sympy.core.numbers import Integer
+from sympy.physics.quantum.shor import Qubit
 from sympy.core.containers import Tuple
 from sympy.matrices.matrices import Matrix
 import random

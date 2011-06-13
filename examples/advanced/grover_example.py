@@ -3,7 +3,8 @@
 from sympy import pprint
 from sympy.physics.quantum import qapply
 from sympy.physics.quantum.qubit import IntQubit
-from sympy.physics.quantum.grover import *
+from sympy.physics.quantum.grover import (OracleGate, superposition_basis,
+        WGate, grover_iteration)
 
 def demo_vgate_app(v):
     for i in range(2**v.nqubits):
