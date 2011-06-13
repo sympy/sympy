@@ -223,7 +223,14 @@ def symbols(names, **args):
         >>> symbols(set(['a', 'b', 'c']))
         set([a, b, c])
 
-    If an iterable container is needed set ``seq`` argument to ``True``::
+    Each character in a multi-character string can be treated as a symbol name
+    if ``each_char`` is True:
+
+        >>> symbols('ab', each_char=True)
+        (a, b)
+
+    If an iterable container is needed for a single symbol, set the ``seq``
+    argument to ``True`` or terminate the symbol name with a comma::
 
         >>> symbols('x', seq=True)
         (x,)
@@ -276,14 +283,14 @@ def symbols(names, **args):
     """
     result = []
 
-    if args.pop('each_char', False):
-        names = tuple(names)
     if isinstance(names, basestring):
         names = _re_var_split.split(names)
 
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', False)
 
+        if args.pop('each_char', False) and len(names) == 1:
+            return symbols(tuple(names[0]), **args)
         for name in names:
             if not name:
                 continue
