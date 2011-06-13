@@ -2,7 +2,7 @@
 
 from sympy import sqrt, pprint
 from sympy.physics.quantum import qapply
-from sympy.physics.quantum.gate import *
+from sympy.physics.quantum.gate import H, X, Z, CNOT
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.circuitplot import circuit_plot
 from sympy.physics.quantum.grover import superposition_basis

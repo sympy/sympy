@@ -147,6 +147,9 @@ def test_implicit_imports():
     exclude = set([
         "%(sep)sthirdparty%(sep)s" % sepd,
         "%(sep)s__init__.py" % sepd,
+        "%(sep)sinteractive%(sep)ssession.py" % sepd,
+        # Taken from Python stdlib:
+        "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
         # these two should be fixed:
         "%(sep)smpmath%(sep)s" % sepd,
         "%(sep)splotting%(sep)s" % sepd,

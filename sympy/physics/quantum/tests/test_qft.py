@@ -1,6 +1,7 @@
-from sympy.physics.quantum.qft import *
-from sympy.physics.quantum.gate import *
-from sympy.physics.quantum.qubit import *
+from sympy.physics.quantum.qft import QFT, IQFT, RkGate
+from sympy.physics.quantum.gate import (ZGate, SwapGate, HadamardGate, CGate,
+        PhaseGate, TGate)
+from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qapply import qapply
 from sympy.matrices.matrices import Matrix, eye
