@@ -276,6 +276,8 @@ def symbols(names, **args):
     """
     result = []
 
+    if args.pop('each_char', False):
+        names = tuple(names)
     if isinstance(names, basestring):
         names = _re_var_split.split(names)
 
