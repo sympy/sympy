@@ -1,9 +1,10 @@
 """Implementation of :class:`RealDomain` class. """
 
-from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
+from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.groundtypes import SymPyRealType
 
-from sympy.polys.polyerrors import DomainError
+from sympy.polys.polyerrors import DomainError, CoercionFailed
 
 import math
 
@@ -14,6 +15,11 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
 
     is_Exact     = False
     is_Numerical = True
+
+    _convert_excludes = [
+        SymPyRealType('+inf'),
+        SymPyRealType('-inf'),
+    ]
 
     def as_integer_ratio(self, a, **args):
         """Convert real number to a (numer, denom) pair. """
@@ -110,3 +116,16 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
     def lcm(self, a, b):
         """Returns LCM of `a` and `b`. """
         return a*b
+
+    def to_sympy(self, a):
+        """Convert `a` to SymPy number. """
+        return SymPyRealType(a)
+
+    def from_sympy(self, a):
+        """Convert SymPy's number to `dtype`. """
+        b = a.evalf()
+
+        if b.is_Number and b not in self._convert_excludes:
+            return self.dtype(b)
+        else:
+            raise CoercionFailed("expected Number object, got %s" % a)
