@@ -33,6 +33,8 @@ message_gen_raise = "File contains generic exception: %s, line %s"
 message_old_raise = "File contains old style raise statement: %s, line %s, \"%s\""
 message_eof = "File does not end with a newline: %s, line %s"
 
+implicit_test_re = "^\s*(>>>)? from .* import .*\*"
+
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
     including the whitespace of docstring code samples."""
@@ -115,7 +117,7 @@ def test_implicit_imports():
         file = open(fname, "r")
         try:
             for idx, line in enumerate(file):
-                if re.match("^\s*(>>>)? from .* import .*\*",line):
+                if re.match(implicit_test_re, line):
                     assert False, message_implicit % (fname, idx+1)
         finally:
             file.close()
