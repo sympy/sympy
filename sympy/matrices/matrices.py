@@ -2603,6 +2603,7 @@ def randMatrix(r,c,min=0,max=99,seed=[]):
     return Matrix(r,c,lambda i,j: prng.randint(min,max))
 
 def randSymMatrix(r, c, min=0, max=99, seed=[]):
+    """Create random symmetric matrix r x c where r==c"""
     if seed == []:
         prng = random.Random()  # use system time
     else:
