@@ -558,7 +558,8 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     keys; if symbols are provided, then all those symbols will
     be used as keys, and any terms in the expression containing
     other symbols or non-symbols will be returned keyed to the
-    string 'coeff'.
+    string 'coeff'. (Passing None for symbols will return the
+    expression in a dictionary keyed to 'coeff'.)
 
     If force=True, then power bases will only be separated if assumptions allow.
 
@@ -600,7 +601,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     """
 
     if dict:
-        return _separatevars_dict(_separatevars(expr, force), *symbols)
+        return _separatevars_dict(_separatevars(expr, force), symbols)
     else:
         return _separatevars(expr, force)
 
@@ -662,11 +663,18 @@ def _separatevars(expr, force):
     else:
         return expr
 
-def _separatevars_dict(expr, *symbols):
+def _separatevars_dict(expr, symbols):
     if symbols:
         assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
+        symbols = list(symbols)
+    elif symbols is None:
+        return {'coeff': expr}
+    else:
+        symbols = list(expr.free_symbols)
+        if not symbols:
+            return None
 
-    ret = dict(((i, S.One) for i in symbols + ('coeff',)))
+    ret = dict(((i, S.One) for i in symbols + ['coeff']))
 
     for i in Mul.make_args(expr):
         expsym = i.free_symbols
