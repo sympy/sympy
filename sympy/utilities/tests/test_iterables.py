@@ -241,6 +241,9 @@ def test_multiset_partitions():
     [2, 4]], [[1], [2, 3, 4]], [[1, 2], [3, 4]], [[1, 2, 4], [3]], \
     [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
 
+    assert list(multiset_partitions([1,2,2], 2)) == [[[1, 2], [2]],
+                                                     [[1], [2, 2]]]
+
 def test_partitions():
     assert [p.copy() for p in partitions(6, k=2)] == [{2: 3}, \
     {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
