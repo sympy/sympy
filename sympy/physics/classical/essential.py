@@ -1,7 +1,215 @@
-__all__ = ['ReferenceFrame', 'Vector']
+__all__ = ['ReferenceFrame', 'Vector', 'Dyad']
 
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
 expand)
+
+class Dyad(object):
+    """A Dyad object.
+
+    See Kane's book
+
+    """
+
+    def __init__(self, inlist):
+        """
+        Just like Vector's init, you shouldn't call this.
+
+        """
+
+        self.args = []
+        while len(inlist) != 0:
+            added = 0
+            for i, v in enumerate(self.args):
+                if ((inlist[0][1].__str__() == self.args[i][1].__str__()) and
+                    (inlist[0][2].__str__() == self.args[i][2].__str__())):
+                    self.args[i] = (self.args[i][0] +
+                        inlist[0][0], inlist[0][1], inlist[0][2])
+                    inlist.remove(inlist[0])
+                    added = 1
+                    break
+            if added != 1:
+                self.args.append(inlist[0])
+                inlist.remove(inlist[0])
+        i = 0
+        # This code is to remove empty parts from the list
+        while i < len(self.args):
+            if self.args[i][0] == 0:
+                self.args.remove(self.args[i])
+                i -= 1
+            i += 1
+
+    def __str__(self):
+        """Printing method. """
+        ar = self.args
+        ol = []
+        for i, v in enumerate(ar):
+            if ar[i][0] == 1:
+                if len(ol) != 0:
+                    ol.append(' + ')
+                ol.append(ar[i][1].__str__() + ar[i][2].__str__())
+            elif ar[i][0] == -1:
+                if len(ol) != 0:
+                    ol.append(' ')
+                ol.append('- ' + ar[i][1].__str__() + ar[i][2].__str__())
+            elif ar[i][0] != 0:
+                if len(ol) != 0:
+                    ol.append(' + ')
+                ol.append('(' + `ar[i][0]` + ')*' + ar[i][1].__str__() +
+                        ar[i][2].__str__())
+        return ''.join(ol)
+
+    def __add__(self, other):
+        """The add operator for Dyad. """
+        if isinstance(other, int):
+            if other == 0:
+                return self
+        self._check_dyad(other)
+        return Dyad(self.args + other.args)
+
+    def __and__(self, other):
+        """The inner product operator for a Dyad and a Dyad or Vector
+
+        """
+
+        if isinstance(other, int):
+            if other == 0:
+                return 0
+        ol = 0
+        if isinstance(other, Dyad):
+            for i, v in enumerate(self.args):
+                for i2, v2 in enumerate(other.args):
+                    ol += v[0] * v2[0] * (v[2] & v2[1]) * (v[1] | v2[2])
+        elif isinstance(other, Vector):
+            for i, v in enumerate(self.args):
+                ol += v[0] * v[1] * (v[2] & other)
+        else:
+            raise TypeError('Need to supply a Vector or Dyad')
+        return ol
+
+    def __div__(self, other):
+        """Divides the Dyad by a sympifyable expression. """
+        return self.__mul__(1 / other)
+
+    def __mul__(self, other):
+        """Multiplies the Dyad by a sympifyable expression.
+
+        Parameters
+        ==========
+        other : Sympafiable
+            The scalar to multiply this Dyad with
+
+        Examples
+        ========
+
+        """
+
+        newlist = [v for v in self.args]
+        for i, v in enumerate(newlist):
+            newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1],
+                    newlist[i][2])
+        return Dyad(newlist)
+
+    def __rand__(self, other):
+        """The inner product operator for a Vector or Dyad, and a Dyad.
+
+        """
+
+        if isinstance(other, int):
+            if other == 0:
+                return 0
+        ol = 0
+        if isinstance(other, Vector):
+            for i, v in enumerate(self.args):
+                ol += v[0] * v[2] * (v[1] & other)
+        else:
+            raise TypeError('Need to supply a Vector or Dyad')
+        return ol
+
+    def __rsub__(self, other):
+        return (-1 * self) + other
+
+    def __rxor__(self, other):
+        """For a cross product in the form: Vector x Dyad
+
+        """
+
+        self._check_vector(other)
+        ol = 0
+        for i, v in enumerate(self.args):
+            ol += v[0] * ((other ^ v[1]) | v[2])
+        return ol
+
+    def __sub__(self, other):
+        """The subtraction operator. """
+        return self.__add__(other * -1)
+
+    def __xor__(self, other):
+        """For a cross product in the form: Dyad x Vector.
+
+        """
+
+        self._check_vector(other)
+        ol = 0
+        for i, v in enumerate(self.args):
+            ol += v[0] * (v[1] | (v[2] ^ other))
+        return ol
+
+    __repr__ = __str__
+    __radd__ = __add__
+    __rmul__ = __mul__
+    dot = __and__
+    cross = __and__
+
+    def _check_frame(self, other):
+        if not isinstance(other, ReferenceFrame):
+            raise TypeError('A ReferenceFrame must be supplied')
+
+    def _check_dyad(self, other):
+        if isinstance(other, int):
+            if other == 0:
+                return
+        if not isinstance(other, Dyad):
+            raise TypeError('A Dyad must be supplied')
+
+    def _check_vector(self, other):
+        if isinstance(other, int):
+            if other == 0:
+                return
+        if not isinstance(other, Vector):
+            raise TypeError('A Vector must be supplied')
+
+    def dt(self, frame):
+        pass
+
+    def express(self, frame1, frame2=None):
+        """Expresses this Dyad in alternate frame(s)
+
+        The first frame is the list side expression, the second frame is the
+        right side; if Dyad is in form ax>by>, you can express it in two
+        different frames. If no second frame is given, the Dyad is
+        expressed in only one frame.
+
+        Parameters
+        ==========
+        frame1 : ReferenceFrame
+            The frame to express the left side of the Dyad in
+        frame2 : ReferenceFrame
+            If provided, the frame to express the right side of the Dyad in
+
+        Examples
+        ========
+
+        """
+
+        self._check_frame(frame1)
+        self._check_frame(frame2)
+        if frame2 == None:
+            frame2 = frame1
+        ol = 0
+        for i, v in enumerate(self.args):
+            ol += v[0] + (v[1].express(frame1) | v[2].express(frame2))
+        return ol
+
 
 class ReferenceFrame(object):
     """A reference frame in classical mechanics.
@@ -503,8 +711,7 @@ class Vector(object):
     subscript_indices = "xyz"
 
     def __init__(self, inlist):
-        """
-        This is the constructor for the Vector class.
+        """This is the constructor for the Vector class.
         You shouldn't be calling this, it should only be used by other
         functions. You should be treating Vectors like you would with if you
         were doing the math by hand, and getting the first 3 from the
@@ -527,9 +734,8 @@ class Vector(object):
                 inlist.remove(inlist[0])
         i = 0
         # This code is to remove empty frames from the list
-        while i<len(self.args):
-            if ((self.args[i][0][0] == 0) & (self.args[i][0][1] == 0) &
-                (self.args[i][0][2] == 0)):
+        while i < len(self.args):
+            if self.args[i][0] == Matrix([0, 0, 0]):
                 self.args.remove(self.args[i])
                 i -= 1
             i += 1
@@ -550,7 +756,7 @@ class Vector(object):
                 elif ar[i][0][j] == -1:
                     if len(ol) != 0:
                         ol.append(' ')
-                    ol.append( '- ' + ar[i][1].name.lower() +
+                    ol.append('- ' + ar[i][1].name.lower() +
                               Vector.subscript_indices[j] + '>' )
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1,
@@ -666,6 +872,25 @@ class Vector(object):
 
     def __neg__(self):
         return self * -1
+
+    def __or__(self, other):
+        """Outer product"""
+        ol = 0
+        for i, v in enumerate(self.args):
+            for i2, v2 in enumerate(other.args):
+                ol += Dyad([[v[0][0] * v2[0][0], v[1].x, v2[1].x]])
+                ol += Dyad([[v[0][0] * v2[0][1], v[1].x, v2[1].y]])
+                ol += Dyad([[v[0][0] * v2[0][2], v[1].x, v2[1].z]])
+                ol += Dyad([[v[0][1] * v2[0][0], v[1].y, v2[1].x]])
+                ol += Dyad([[v[0][1] * v2[0][1], v[1].y, v2[1].y]])
+                ol += Dyad([[v[0][1] * v2[0][2], v[1].y, v2[1].z]])
+                ol += Dyad([[v[0][2] * v2[0][0], v[1].z, v2[1].x]])
+                ol += Dyad([[v[0][2] * v2[0][1], v[1].z, v2[1].y]])
+                ol += Dyad([[v[0][2] * v2[0][2], v[1].z, v2[1].z]])
+        return ol
+
+    def __rsub__(self, other):
+        return (-1 * self) + other
 
     def __sub__(self, other):
         """The subraction operator. """
