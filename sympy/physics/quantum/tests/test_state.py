@@ -135,7 +135,7 @@ def test_printing():
     assert latex(Dagger(psi)) == r"{\left\langle \psi\right|}"
 
 def test_wavefunction():
-    f = Wavefunction(x, x**2)
+    f = Wavefunction(x**2, x)
     p = f.prob()
 
     assert f.is_normalized == False

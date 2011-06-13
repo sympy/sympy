@@ -123,6 +123,6 @@ def test_operator_dagger():
 def test_differential_operator():
     x = Symbol('x')
     d = DifferentialOperator(x)
-    f = Wavefunction(x, x**2)
+    f = Wavefunction(x**2, x)
 
     assert qapply(d*f) == 2*x

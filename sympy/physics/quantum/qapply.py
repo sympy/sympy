@@ -12,7 +12,7 @@ from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.operator import OuterProduct
-from sympy.physics.quantum.state import KetBase, BraBase
+from sympy.physics.quantum.state import KetBase, BraBase, Wavefunction
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
@@ -109,7 +109,8 @@ def qapply_Mul(e, **options):
     lhs = args.pop()
 
     # Make sure we have two non-commutative objects before proceeding.
-    if rhs.is_commutative or lhs.is_commutative:
+    if (rhs.is_commutative and not isinstance(rhs, Wavefunction)) or \
+           (lhs.is_commutative and not isinstance(lhs, Wavefunction)):
         return e
 
     # For a Pow with an integer exponent, apply one of them and reduce the

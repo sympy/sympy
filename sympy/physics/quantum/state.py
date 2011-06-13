@@ -518,7 +518,7 @@ class TimeDepBra(TimeDepState, BraBase):
     def dual_class(self):
         return TimeDepKet
 
-class Wavefunction(Lambda, Function):
+class Wavefunction(Function):
     """Class for representations in continuous bases
 
     Note: Just a demonstration for functions of one variable. Will need to be generalized.
@@ -539,7 +539,7 @@ class Wavefunction(Lambda, Function):
     >> n = 1
     >> L = 1
     >> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
-    >> f = Wavefunction(x, g)
+    >> f = Wavefunction(g, x)
     >> f.norm_constant
     1
     >> f.is_normalized
@@ -557,6 +557,26 @@ class Wavefunction(Lambda, Function):
     0.412214747707527
     """
 
+    def __call__(self, *args):
+        var = self.variables
+
+        if len(args) != len(var):
+            raise NotImplementedError("Incorrect number of arguments to function!")
+
+        return self.expr.subs(tuple(zip(var, args)))
+
+    @classmethod
+    def eval(self, *args):
+        return None
+
+    @property
+    def variables(self):
+        return tuple(self._args[1:])
+
+    @property
+    def expr(self):
+        return self._args[0]
+
     @property
     def is_normalized(self):
         return (self.norm_constant == 1.0)
@@ -564,7 +584,7 @@ class Wavefunction(Lambda, Function):
     @property
     def norm_constant(self):
         #NOTE: Only works with one variable right now; will have to be changed!
-        return 1/integrate(self.expr*conjugate(self.expr), (self.variables, -oo, oo))
+        return 1/integrate(self.expr*conjugate(self.expr), (self.variables[0], -oo, oo))
 
     def prob(self):
-        return Lambda(self.variables, self.expr*conjugate(self.expr))
+        return Wavefunction(self.expr*conjugate(self.expr), *self.variables)

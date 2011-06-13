@@ -392,7 +392,7 @@ class DifferentialOperator(Operator):
     >>> L = 1
     >>> n = 1
     >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
-    >>> f = Wavefunction(x, g)
+    >>> f = Wavefunction(g, x)
     >>> d = DifferentialOperator(x)
     >>> qapply(d*f)
     Piecewise((0, x < 0), (0, 1 < x), (2**(1/2)*pi*cos(pi*x), True))
