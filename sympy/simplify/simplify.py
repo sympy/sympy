@@ -1654,18 +1654,6 @@ def combsimp(expr):
     binomial = C.binomial
     gamma = C.gamma
 
-    def as_coeff_Add(expr):
-        if expr.is_Add:
-            coeff, args = expr.args[0], expr.args[1:]
-
-            if coeff.is_Number:
-                if len(args) == 1:
-                    return coeff, args[0]
-                else:
-                    return coeff, expr._new_rawargs(*args)
-
-        return S.Zero, expr
-
     class rf(Function):
         @classmethod
         def eval(cls, a, b):
@@ -1686,21 +1674,23 @@ def combsimp(expr):
 
                     return 1/result
             else:
-                c, _b = as_coeff_Add(b)
+                if b.is_Add:
+                    c, _b = b.as_coeff_Add()
 
-                if c.is_Integer:
-                    if c > 0:
-                        return rf(a, _b)*rf(a+_b, c)
-                    elif c < 0:
-                        return rf(a, _b)/rf(a+_b+c, -c)
+                    if c.is_Integer:
+                        if c > 0:
+                            return rf(a, _b)*rf(a+_b, c)
+                        elif c < 0:
+                            return rf(a, _b)/rf(a+_b+c, -c)
 
-                c, _a = as_coeff_Add(a)
+                if a.is_Add:
+                    c, _a = a.as_coeff_Add()
 
-                if c.is_Integer:
-                    if c > 0:
-                        return rf(_a, b)*rf(_a+b, c)/rf(_a, c)
-                    elif c < 0:
-                        return rf(_a, b)*rf(_a+c, -c)/rf(_a+b+c, -c)
+                    if c.is_Integer:
+                        if c > 0:
+                            return rf(_a, b)*rf(_a+b, c)/rf(_a, c)
+                        elif c < 0:
+                            return rf(_a, b)*rf(_a+c, -c)/rf(_a+b+c, -c)
 
     expr = expr.replace(binomial,
         lambda n, k: rf((n-k+1).expand(), k.expand())/rf(1, k.expand()))
@@ -1715,15 +1705,15 @@ def combsimp(expr):
     def rule(n, k):
         coeff, rewrite = S.One, False
 
-        cn, _n = as_coeff_Add(n)
-        ck, _k = as_coeff_Add(k)
+        cn, _n = n.as_coeff_Add()
+        ck, _k = k.as_coeff_Add()
 
-        if cn.is_Integer and cn:
+        if _n and cn.is_Integer and cn:
             coeff *= rf(_n + 1, cn)/rf(_n - k + 1, cn)
             rewrite = True
             n = _n
 
-        if ck.is_Integer and ck:
+        if _k and ck.is_Integer and ck:
             coeff *= rf(n - ck - _k + 1, ck)/rf(_k + 1, ck)
             rewrite = True
             k = _k
