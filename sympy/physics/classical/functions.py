@@ -28,7 +28,7 @@ def dynamicsymbols(names):
 
 def express(vec, frame, frame2=None):
     """Express convenience wrapper for Vector.express(): \n"""
-    if not isinstance(vec1, (Vector, Dyad)):
+    if not isinstance(vec, (Vector, Dyad)):
         raise TypeError('Can only express Vectors')
     if isinstance(vec, Vector):
         return vec.express(frame)

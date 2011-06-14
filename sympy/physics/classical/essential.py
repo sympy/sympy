@@ -41,7 +41,8 @@ class Dyad(object):
         i = 0
         # This code is to remove empty parts from the list
         while i < len(self.args):
-            if self.args[i][0] == 0:
+            if ((self.args[i][0] == 0) | (self.args[i][1] == 0) | 
+                (self.args[i][2] == 0)):
                 self.args.remove(self.args[i])
                 i -= 1
             i += 1
@@ -126,6 +127,12 @@ class Dyad(object):
         Examples
         ========
 
+        >>> from sympy.physics.classical import ReferenceFrame, outer
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> 5 * d
+        (5)*nx>nx>
+
         """
 
         newlist = [v for v in self.args]
@@ -136,6 +143,22 @@ class Dyad(object):
 
     def __rand__(self, other):
         """The inner product operator for a Vector or Dyad, and a Dyad
+
+        This is for: Vector dot Dyad
+
+        Parameters
+        ==========
+        other : Vector
+            The vector we are dotting with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import ReferenceFrame, dot, outer
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> dot(N.x, d)
+        nx>
 
         """
 
@@ -156,6 +179,20 @@ class Dyad(object):
     def __rxor__(self, other):
         """For a cross product in the form: Vector x Dyad
 
+        Parameters
+        ==========
+        other : Vector
+            The Vector that we are crossing this Dyad with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import ReferenceFrame, outer, cross
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> cross(N.y, d)
+        - nz>nx>
+
         """
 
         self._check_vector(other)
@@ -170,6 +207,20 @@ class Dyad(object):
 
     def __xor__(self, other):
         """For a cross product in the form: Dyad x Vector.
+
+        Parameters
+        ==========
+        other : Vector
+            The Vector that we are crossing this Dyad with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import ReferenceFrame, outer, cross
+        >>> N = ReferenceFrame('N')
+        >>> d = outer(N.x, N.x)
+        >>> cross(d, N.y)
+        nx>nz>
 
         """
 
@@ -221,15 +272,24 @@ class Dyad(object):
         Examples
         ========
 
+        >>> from sympy.physics.classical import ReferenceFrame, outer,\
+                DynamicSymbol
+        >>> N = ReferenceFrame('N')
+        >>> q = DynamicSymbol('q')
+        >>> B = N.orientnew('B', 'Simple', q, 3)
+        >>> d = outer(N.x, N.x)
+        >>> d.express(B, N)
+        (cos(q))*bx>nx> + (-sin(q))*by>nx>
+
         """
 
-        self._check_frame(frame1)
-        self._check_frame(frame2)
         if frame2 == None:
             frame2 = frame1
+        self._check_frame(frame1)
+        self._check_frame(frame2)
         ol = 0
         for i, v in enumerate(self.args):
-            ol += v[0] + (v[1].express(frame1) | v[2].express(frame2))
+            ol += v[0] * (v[1].express(frame1) | v[2].express(frame2))
         return ol
 
     def dt(self, frame):
@@ -243,15 +303,24 @@ class Dyad(object):
         Examples
         ========
 
+        >>> from sympy.physics.classical import ReferenceFrame, outer,\
+                DynamicSymbol
+        >>> N = ReferenceFrame('N')
+        >>> q = DynamicSymbol('q')
+        >>> B = N.orientnew('B', 'Simple', q, 3)
+        >>> d = outer(N.x, N.x)
+        >>> d.dt(B)
+        (-qd)*ny>nx> + nx>(-qd)*ny>
+ 
         """
 
         self._check_frame(frame)
         t = Symbol('t')
         ol = 0
         for i, v in enumerate(self.args):
-            ol += (v[0].diff(t), v[1], v[2])
-            ol += (v[0], v[1].dt(frame), v[2])
-            ol += (v[0], v[1], v[2].dt(frame))
+            ol += Dyad([(v[0].diff(t), v[1], v[2])])
+            ol += Dyad([(v[0], v[1].dt(frame), v[2])])
+            ol += Dyad([(v[0], v[1], v[2].dt(frame))])
         return ol
 
 
