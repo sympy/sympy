@@ -553,6 +553,10 @@ def test_separatevars():
     assert separatevars(2*x+y, dict=True, symbols=()) is None
     assert separatevars(2*x+y, dict=True) is None
     assert separatevars(2*x+y, dict=True, symbols=None) == {'coeff': 2*x + y}
+    # 1709
+    n, m = symbols('n,m', commutative=False)
+    assert separatevars(m + n*m) == m + n*m
+    assert separatevars(x + x*n) == x*(1 + n)
 
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')

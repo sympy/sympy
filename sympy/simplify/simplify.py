@@ -663,8 +663,9 @@ def _separatevars(expr, force):
     # First try other expansion methods
     expr = expr.expand(mul=False, multinomial=False, force=force)
 
-    _expr = expr.expand(power_exp=False, deep=False, force=force)
-    _expr = factor(_expr, expand=False)
+    _expr = expr
+    if expr.is_commutative: # factor fails for nc
+        _expr = factor(_expr)
 
     if not _expr.is_Add:
         expr = _expr
@@ -673,25 +674,22 @@ def _separatevars(expr, force):
 
         nonsepar = sympify(0)
         # Find any common coefficients to pull out
-        commoncsetlist = []
-        for i in expr.args:
-            if i.is_Mul:
-                commoncsetlist.append(set(i.args))
-            else:
-                commoncsetlist.append(set((i,)))
-        commoncset = set(flatten(commoncsetlist))
-        commonc = sympify(1)
+        args = list(expr.args)
+        commonc = args[0].args_cnc()[0]
+        for i in args[1:]:
+            commonc &= i.args_cnc()[0]
+        commonc = Mul(*commonc)
+        if commonc == S.One:
+            return expr
 
-        for i in commoncsetlist:
-            commoncset = commoncset.intersection(i)
-        commonc = Mul(*commoncset)
-
+        commonc = commonc.as_coeff_Mul()[1] # ignore constants
         for i in expr.args:
             coe = i.extract_multiplicatively(commonc)
             if coe == None:
                 nonsepar += sympify(1)
             else:
                 nonsepar += coe
+
         if nonsepar == 0:
             return commonc
         else:
