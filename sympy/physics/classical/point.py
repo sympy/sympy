@@ -99,8 +99,6 @@ class Point(object):
         >>> P.set_vel(qd * B.x + q2d * B.y, B)
         >>> O.set_vel(0, N)
         >>> P.a1pt(O, N, B)
-        Autodifferentiating velocity
-        Autodifferentiating velocity
         (-25*q + qdd)*bx> + (q2dd)*by> + (-10*qd)*bz>
 
         """
@@ -152,7 +150,6 @@ class Point(object):
         >>> P = O.newpoint('P', 10 * B.x)
         >>> O.set_vel(5 * N.x, N)
         >>> P.a2pt(O, N, B)
-        Autodifferentiating velocity
         (-10*qd**2)*bx> + (10*qdd)*by>
 
         """
@@ -190,7 +187,6 @@ class Point(object):
 
         self._check_frame(frame)
         if not self._acc_dict.has_key(frame):
-            print 'Autodifferentiating velocity'
             if self._vel_dict[frame] != 0:
                 return (self._vel_dict[frame]).dt(frame)
             else:

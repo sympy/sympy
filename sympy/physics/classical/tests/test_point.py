@@ -26,17 +26,12 @@ def test_point_a1pts():
     P = O.newpoint('P', B.x)
     P.set_vel(0, B)
     O.set_vel(0, N)
-
-    N = ReferenceFrame('N')
-    B = ReferenceFrame('B')
-    B.set_ang_vel(N, 5 * B.y)
-    O = Point('O')
-    P = O.newpoint('P', q * B.x)
-    P.set_vel(qd * B.x + q2d * B.y, B)
-    O.set_vel(0, N)
-    P.a1pt(O, N, B)
-#    (-25*q + qdd)*bx> + (q2dd)*by> + (-10*qd)*bz>
-    pass
+    assert P.a1pt(O, N, B) ==  -(qd**2) * B.x + qdd * B.y
+    P.set_vel(q2d * B.z, B)
+    assert P.a1pt(O, N, B) == -(qd**2) * B.x + qdd * B.y + q2dd * B.z
+    O.set_vel(q2d * B.x, N)
+    assert P.a1pt(O, N, B) == ((q2dd - qd**2) * B.x + (q2d * qd + qdd) * B.y +
+                               q2dd * B.z)
 
 def test_point_v2pts():
     pass
