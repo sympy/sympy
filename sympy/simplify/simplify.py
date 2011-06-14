@@ -624,7 +624,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     If the expression is not really separable, or is only partially
     separable, separatevars will do the best it can to separate it.
 
-    >>> separatevars(x+x*y-3*(x**2))
+    >>> separatevars(x + x*y - 3*x**2)
     -x*(3*x - y - 1)
 
     If the expression is not separable then expr is returned unchanged
@@ -666,37 +666,48 @@ def _separatevars(expr, force):
     _expr = expr
     if expr.is_commutative: # factor fails for nc
         _expr = factor(_expr)
-
-    if not _expr.is_Add:
-        expr = _expr
-
-    if expr.is_Add:
-
-        nonsepar = sympify(0)
-        # Find any common coefficients to pull out
-        args = list(expr.args)
-        commonc = args[0].args_cnc()[0]
-        for i in args[1:]:
-            commonc &= i.args_cnc()[0]
-        commonc = Mul(*commonc)
-        if commonc == S.One:
-            return expr
-
-        commonc = commonc.as_coeff_Mul()[1] # ignore constants
-        for i in expr.args:
-            coe = i.extract_multiplicatively(commonc)
-            if coe == None:
-                nonsepar += sympify(1)
-            else:
-                nonsepar += coe
-
-        if nonsepar == 0:
-            return commonc
-        else:
-            return commonc*nonsepar
-
-    else:
+    if not expr.is_Add:
         return expr
+
+    # Find any common coefficients to pull out
+    args = list(expr.args)
+    commonc = args[0].args_cnc()[0]
+    for i in args[1:]:
+        commonc &= i.args_cnc()[0]
+    commonc = Mul(*commonc)
+    commonc = commonc.as_coeff_Mul()[1] # ignore constants
+
+    # pull them out
+    nonsepar = sympify(0)
+    for i in expr.args:
+        coe = i.extract_multiplicatively(commonc)
+        if coe == None:
+            nonsepar += sympify(1)
+        else:
+            nonsepar += coe
+
+    if not nonsepar:
+        return commonc
+    else:
+        if nonsepar.is_commutative: # factor fails for nc
+            _expr = nonsepar
+            if not force:
+                # factor will expand bases so we mask them off now
+                pows = [p for p in _expr.atoms(Pow) if not p.base.is_Atom]
+                dums = [Dummy(str(i)) for i in xrange(len(pows))]
+                _expr = _expr.subs(dict(zip(pows, dums)))
+
+            _expr = factor(_expr)
+
+            if not force:
+                # and restore them
+                _expr = _expr.subs(dict(zip(dums, pows)))
+
+            if not _expr.is_Add:
+                nonsepar = _expr
+
+        return commonc*nonsepar
+
 
 def _separatevars_dict(expr, symbols):
     if symbols:
