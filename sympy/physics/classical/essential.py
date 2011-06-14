@@ -1,7 +1,8 @@
 __all__ = ['ReferenceFrame', 'Vector', 'Dyad']
 
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
-expand)
+                   expand, S)
+from sympy.core.numbers import Zero
 
 class Dyad(object):
     """A Dyad object.
@@ -69,7 +70,7 @@ class Dyad(object):
 
     def __add__(self, other):
         """The add operator for Dyad. """
-        if isinstance(other, int):
+        if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return self
         self._check_dyad(other)
@@ -115,6 +116,19 @@ class Dyad(object):
     def __div__(self, other):
         """Divides the Dyad by a sympifyable expression. """
         return self.__mul__(1 / other)
+
+    def __eq__(self, other):
+        """Tests for equality. 
+
+        Is currently weak; needs stronger comparison testing
+
+        """
+
+        if isinstance(other, (int, type(Zero()))):
+            if (other == 0) & (self.args == []):
+                return True
+        self._check_dyad(other)
+        return set(self.args) == set(other.args)
 
     def __mul__(self, other):
         """Multiplies the Dyad by a sympifyable expression.
@@ -241,14 +255,14 @@ class Dyad(object):
             raise TypeError('A ReferenceFrame must be supplied')
 
     def _check_dyad(self, other):
-        if isinstance(other, int):
+        if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return
         if not isinstance(other, Dyad):
             raise TypeError('A Dyad must be supplied')
 
     def _check_vector(self, other):
-        if isinstance(other, int):
+        if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return
         if not isinstance(other, Vector):
@@ -310,7 +324,7 @@ class Dyad(object):
         >>> B = N.orientnew('B', 'Simple', q, 3)
         >>> d = outer(N.x, N.x)
         >>> d.dt(B)
-        (-qd)*ny>nx> + nx>(-qd)*ny>
+        (-qd)*ny>nx> + (-qd)*nx>ny>
  
         """
 
@@ -318,9 +332,9 @@ class Dyad(object):
         t = Symbol('t')
         ol = 0
         for i, v in enumerate(self.args):
-            ol += Dyad([(v[0].diff(t), v[1], v[2])])
-            ol += Dyad([(v[0], v[1].dt(frame), v[2])])
-            ol += Dyad([(v[0], v[1], v[2].dt(frame))])
+            ol += (v[0].diff(t) * (v[1] | v[2]))
+            ol += (v[0] * (v[1].dt(frame) | v[2]))
+            ol += (v[0] * (v[1] | v[2].dt(frame)))
         return ol
 
 
@@ -380,7 +394,7 @@ class ReferenceFrame(object):
             raise TypeError('A ReferenceFrame must be supplied')
 
     def _check_vector(self, other):
-        if isinstance(other, int):
+        if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return
         if not isinstance(other, Vector):
@@ -1008,9 +1022,50 @@ class Vector(object):
         
         """
 
+        if other == 0:
+            return 0
         ol = 0
         for i, v in enumerate(self.args):
             for i2, v2 in enumerate(other.args):
+                # it looks this way because if we are in the same frame and
+                # use the enumerate function on the same frame in a nested
+                # fashion, then bad things happen
+                ol += Dyad([(v[0][0] * v2[0][0], v[1].x, v2[1].x)])
+                ol += Dyad([(v[0][0] * v2[0][1], v[1].x, v2[1].y)])
+                ol += Dyad([(v[0][0] * v2[0][2], v[1].x, v2[1].z)])
+                ol += Dyad([(v[0][1] * v2[0][0], v[1].y, v2[1].x)])
+                ol += Dyad([(v[0][1] * v2[0][1], v[1].y, v2[1].y)])
+                ol += Dyad([(v[0][1] * v2[0][2], v[1].y, v2[1].z)])
+                ol += Dyad([(v[0][2] * v2[0][0], v[1].z, v2[1].x)])
+                ol += Dyad([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
+                ol += Dyad([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
+        return ol
+
+    def __ror__(self, other):
+        """Outer product between two Vectors.
+
+        A rank increasing operation, which returns a Dyad from two Vectors
+
+        Parameters
+        ==========
+        other : Vector
+            The Vector to take the outer product with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import ReferenceFrame, outer
+        >>> N = ReferenceFrame('N')
+        >>> outer(N.x, N.x)
+        nx>nx>
+        
+        """
+
+        if other == 0:
+            return 0
+        ol = 0
+        for i, v in enumerate(other.args):
+            for i2, v2 in enumerate(self.args):
                 # it looks this way because if we are in the same frame and
                 # use the enumerate function on the same frame in a nested
                 # fashion, then bad things happen
@@ -1096,7 +1151,7 @@ class Vector(object):
             raise TypeError('A ReferenceFrame must be supplied')
 
     def _check_vector(self, other):
-        if isinstance(other, int):
+        if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return
         if not isinstance(other, Vector):

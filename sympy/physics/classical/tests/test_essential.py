@@ -5,6 +5,37 @@ from sympy.physics.classical import (Vector, ReferenceFrame, dot, cross,
 phi, x, y, z = symbols('phi x y z')
 A = ReferenceFrame('A')
 
+def test_dyad():
+    d1 = A.x | A.x
+    d2 = A.y | A.y
+    d3 = A.x | A.y
+    assert d1 * 0 == 0
+    assert d1 * 2 == 2 * A.x | A.x
+    assert d1 & d2 == 0
+    assert d1 & A.x == A.x
+    assert d1 ^ A.x == 0
+    assert d1 ^ A.y == A.x | A.z
+    assert d1 ^ A.z == - A.x | A.y
+    assert d2 ^ A.x == - A.y | A.z
+    assert A.x ^ d1 == 0
+    assert A.y ^ d1 == - A.z | A.x
+    assert A.z ^ d1 == A.y | A.x
+    assert A.x & d1 == A.x
+    assert A.y & d1 == 0
+    assert A.y & d2 == A.y
+    assert d1 & d3 == A.x | A.y
+    assert d3 & d1 == 0
+    assert d1.dt(A) == 0
+    q, qd, qdd = dynamicsymbols('q qd qdd')
+    B = A.orientnew('B', 'Simple', q, 3)
+    assert d1.express(B) == d1.express(B, B)
+    assert d1.express(B) == ((cos(q)**2) * (B.x | B.x) + (-sin(q) * cos(q)) *
+            (B.x | B.y) + (-sin(q) * cos(q)) * (B.y | B.x) + (sin(q)**2) *
+            (B.y | B.y))
+    assert d1.express(B, A) == (cos(q)) * (B.x | A.x) + (-sin(q)) * (B.y | A.x)
+    assert d1.express(A, B) == (cos(q)) * (A.x | B.x) + (-sin(q)) * (A.x | B.y)
+    assert d1.dt(B) == (-qd) * (A.y | A.x) + (-qd) * (A.x | A.y)
+
 def test_ang_vel():
     q1, q2, q3, q4, q1d, q2d, q3d, q4d = dynamicsymbols('q1 q2 q3 q4 q1d q2d \
                                                         q3d q4d')
@@ -188,7 +219,3 @@ def test_Vector_diffs():
     assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
 
-
-
-
-    #TODO: Put some tests here, mew.
