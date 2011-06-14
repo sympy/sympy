@@ -420,8 +420,8 @@ def test_separable5():
                         ((1 - x)*(-x*exp(x) + exp(x))))
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
                             x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
-    sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
-    sol21 = Eq(f(x), log(-1/(C1 + exp(x))))
+    sol20 = Eq(-log(-1 + 3*f(x)**2)/6, C1 - x**2/2)
+    sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, hint='separable') == sol15
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
     assert dsolve(eq17, hint='separable') == sol17

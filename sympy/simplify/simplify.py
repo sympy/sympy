@@ -612,14 +612,14 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     >>> separatevars((x*y)**y, force=True)
     x**y*y**y
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
-    2*x**2*z*(sin(y) + 1)
+    x**2*z*(2*sin(y) + 2)
 
     >>> separatevars(2*x+y*sin(x))
     2*x + y*sin(x)
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, symbols=(x, y), dict=True)
-    {'coeff': 2*z, x: x**2, y: sin(y) + 1}
+    {'coeff': z, x: x**2, y: 2*sin(y) + 2}
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2, [x, y, alpha], dict=True)
-    {'coeff': 2*z, alpha: 1, x: x**2, y: sin(y) + 1}
+    {'coeff': z, alpha: 1, x: x**2, y: 2*sin(y) + 2}
 
     If the expression is not really separable, or is only partially
     separable, separatevars will do the best it can to separate it.
@@ -690,7 +690,7 @@ def _separatevars(expr, force):
     if not nonsepar:
         return commonc
     else:
-        if nonsepar.is_commutative: # factor fails for nc
+        if nonsepar.is_commutative and len(nonsepar.free_symbols) > 1: # factor fails for nc
             _expr = nonsepar
             if not force:
                 # factor will expand bases so we mask them off now
