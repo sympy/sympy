@@ -45,6 +45,10 @@ def test_as_dummy_nondummy():
     assert x1.is_commutative == False
     # assert x == x1.as_nondummy()
 
+    # issue 2446
+    x = Symbol('x', real=True, commutative=False)
+    assert x.as_dummy().assumptions0 == x.assumptions0
+
 def test_lt_gt():
     x, y = Symbol('x'), Symbol('y')
 
