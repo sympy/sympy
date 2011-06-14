@@ -358,19 +358,28 @@ class Add(AssocOp):
             return new
         if isinstance(old, FunctionClass):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
-        coeff_self, terms_self = self.as_coeff_add()
-        coeff_old, terms_old = old.as_coeff_add()
-        if terms_self == terms_old: # (2+a).subs(3+a,y) -> 2-3+y
-            return Add(new, coeff_self, -coeff_old)
+
+        coeff_self, terms_self = self.as_coeff_Add()
+        coeff_old, terms_old = old.as_coeff_Add()
+
+        if terms_self == terms_old:                 # (2+a).subs(3+a,y) -> 2-3+y
+            return  new + coeff_self - coeff_old
+        if terms_self == -terms_old:
+            return -new + coeff_self + coeff_old
+
         if old.is_Add:
-            if len(terms_old) < len(terms_self): # (a+b+c+d).subs(b+c,x) -> a+x+d
+            coeff_self, terms_self = self.as_coeff_add()
+            coeff_old, terms_old = old.as_coeff_add()
+
+            if len(terms_old) < len(terms_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
                 self_set = set(terms_self)
                 old_set = set(terms_old)
+
                 if old_set < self_set:
                     ret_set = self_set - old_set
                     return Add(new, coeff_self, -coeff_old, *[s._eval_subs(old, new) for s in ret_set])
-        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
+        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
     def removeO(self):
         args = [a for a in self.args if not a.is_Order]
