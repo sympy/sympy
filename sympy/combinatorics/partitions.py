@@ -315,6 +315,22 @@ class IntegerPartition(Partition):
                     return result
 
     @property
+    def is_SelfConjugate(self):
+        """
+        Checks if the conjugate of a partition equals itself.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> a = IntegerPartition([6,3,3,2,1], 15)
+        >>> a.is_SelfConjugate
+        False
+        >>> a = IntegerPartition([3,2,1], 6)
+        >>> a.is_SelfConjugate
+        True
+        """
+        return self.conjugate == self.partition_array
+
+    @property
     def conjugate_partition(self):
         """
         Computes the conjugate partition of itself.
