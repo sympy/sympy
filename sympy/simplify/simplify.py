@@ -644,6 +644,18 @@ def separatevars(expr, symbols=[], dict=False, force=False):
         return _separatevars(expr, force)
 
 def _separatevars(expr, force):
+
+    # don't destroy a Mul since much of the work may already be done
+    if expr.is_Mul:
+        args = list(expr.args)
+        changed = False
+        for i, a in enumerate(args):
+            args[i] = separatevars(a, force)
+            changed = changed or args[i] != a
+        if changed:
+            expr = Mul(*args)
+        return expr
+
     # get a Pow ready for expansion
     if expr.is_Pow:
         expr = Pow(separatevars(expr.base, force=force), expr.exp)
