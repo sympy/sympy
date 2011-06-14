@@ -296,12 +296,13 @@ def symbols(names, **args):
         if not names:
             raise ValueError('no symbols given')
 
+        names = _re_var_split.split(names)
+        if args.pop('each_char', False) and not as_seq and len(names) == 1:
+            return symbols(tuple(names[0]), **args)
+
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)
 
-        names = _re_var_split.split(names)
-        if args.pop('each_char', False) and len(names) == 1:
-            return symbols(tuple(names[0]), **args)
         for name in names:
             if not name:
                 raise ValueError('missing symbol')
