@@ -10,6 +10,8 @@ from source import source
 
 from decorator import threaded, xthreaded
 
+from runtests import test, doctest
+
 from cythonutils import cythonized
 from timeutils import timed
 
