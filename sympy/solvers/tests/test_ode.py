@@ -371,7 +371,7 @@ def test_separable2():
     sol8 = Eq(asinh(f(x)), C1 - log(log(x)))
     # integrate cannot handle the integral on the lhs (cos/tan)
     sol9str = "Integral(cos(_y)/tan(_y), (_y, f(x))) == C1 + Integral(-E*exp(x), x)"
-    sol10 = Eq(-log(-1 + sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
+    sol10 = Eq(log(-1 + sin(f(x))**2)/2, C1 + log(x**2 - a**2)/2)
     assert str(dsolve(eq6, hint='separable_Integral')) == sol6str
     assert dsolve(eq7, hint='separable', simplify=False) == sol7
     assert dsolve(eq8, hint='separable', simplify=False) == sol8

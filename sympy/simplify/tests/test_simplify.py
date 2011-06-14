@@ -533,6 +533,7 @@ def test_separatevars():
     assert separatevars((x*(y+1))**z).is_Pow # != x**z*(1 + y)**z
     assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
     assert separatevars(y / pi * exp(-(z - x) / cos(n))) == y * exp((x - z) / cos(n)) / pi
+    assert separatevars((x + y)*(x - y) + y**2 + 2*x + 1) == (x + 1)**2
     # 1759
     p=Symbol('p',positive=True)
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
