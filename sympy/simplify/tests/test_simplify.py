@@ -557,6 +557,9 @@ def test_separatevars():
     n, m = symbols('n,m', commutative=False)
     assert separatevars(m + n*m) == m + n*m
     assert separatevars(x + x*n) == x*(1 + n)
+    # 1811
+    f = Function('f')
+    assert separatevars(f(x) + x*f(x)) == f(x) + x*f(x)
 
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')
