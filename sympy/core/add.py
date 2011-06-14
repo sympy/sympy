@@ -214,6 +214,18 @@ class Add(AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
+    def as_coeff_Add(self):
+        """Efficiently extract the coefficient of a summation. """
+        coeff, args = self.args[0], self.args[1:]
+
+        if coeff.is_Number:
+            if len(args) == 1:
+                return coeff, args[0]
+            else:
+                return coeff, self._new_rawargs(*args)
+        else:
+            return S.Zero, self
+
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
     # issue 2425.
