@@ -6,7 +6,12 @@ expand)
 class Dyad(object):
     """A Dyad object.
 
-    See Kane's book
+    See:
+    Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
+
+    A more powerful way to represent a rigid body's inertia. While it is more
+    complex, by choosing Dyad components to be in body fixed basis vectors,
+    the resulting matrix is equivalent to the inertia tensor.
 
     """
 
@@ -70,7 +75,24 @@ class Dyad(object):
         return Dyad(self.args + other.args)
 
     def __and__(self, other):
-        """The inner product operator for a Dyad and a Dyad or Vector
+        """The inner product operator for a Dyad and a Dyad or Vector.
+
+        Parameters
+        ==========
+        other : Dyad or Vector
+            The other Dyad or Vector to take the inner product with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import ReferenceFrame, outer
+        >>> N = ReferenceFrame('N')
+        >>> D1 = outer(N.x, N.y)
+        >>> D2 = outer(N.y, N.y)
+        >>> D1.dot(D2)
+        nx>ny>
+        >>> D1.dot(N.y)
+        nx>
 
         """
 
@@ -113,7 +135,7 @@ class Dyad(object):
         return Dyad(newlist)
 
     def __rand__(self, other):
-        """The inner product operator for a Vector or Dyad, and a Dyad.
+        """The inner product operator for a Vector or Dyad, and a Dyad
 
         """
 
@@ -811,20 +833,22 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.classical import ReferenceFrame, Vector, dot
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> N.x & N.x
+        >>> dot(N.x, N.x)
         1
-        >>> N.x & N.y
+        >>> dot(N.x, N.y)
         0
         >>> A = N.orientnew('A', 'Simple', q1, 1)
-        >>> N.y & A.y
+        >>> dot(N.y, A.y)
         cos(q1)
 
         """
 
+        if isinstance(other, Dyad):
+            return NotImplemented
         self._check_vector(other)
         out = 0
         for i, v1 in enumerate(self.args):
@@ -896,7 +920,25 @@ class Vector(object):
         return self * -1
 
     def __or__(self, other):
-        """Outer product"""
+        """Outer product between two Vectors.
+
+        A rank increasing operation, which returns a Dyad from two Vectors
+
+        Parameters
+        ==========
+        other : Vector
+            The Vector to take the outer product with
+
+        Examples
+        ========
+
+        >>> from sympy.physics.classical import ReferenceFrame, outer
+        >>> N = ReferenceFrame('N')
+        >>> outer(N.x, N.x)
+        nx>nx>
+        
+        """
+
         ol = 0
         for i, v in enumerate(self.args):
             for i2, v2 in enumerate(other.args):
@@ -948,6 +990,8 @@ class Vector(object):
 
         """
 
+        if isinstance(other, Dyad):
+            return NotImplemented
         if isinstance(other, int):
             if other == 0:
                 return self * 0
@@ -992,8 +1036,18 @@ class Vector(object):
     __repr__ = __str__
     __radd__ = __add__
     __rmul__ = __mul__
-    dot = __and__
-    cross = __xor__
+
+    def dot(self, other):
+        return self & other
+    dot.__doc__ = __and__.__doc__
+
+    def cross(self, other):
+        return self ^ other
+    cross.__doc__ = __xor__.__doc__
+
+    def outer(self, other):
+        return self | other
+    outer.__doc__ = __or__.__doc__
 
     def diff(self, wrt, otherframe):
         """Takes the partial derivative, with respect to a value, in a frame.
