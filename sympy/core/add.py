@@ -537,7 +537,7 @@ class Add(AssocOp):
 
     def primitive(self):
         """
-        Divide ``self`` by the GCD of coefficients of ``self``.
+        Return ``(R, self/R)`` where ``R``` is the Rational GCD of ``self```.
 
         **Example**
 
@@ -553,27 +553,33 @@ class Add(AssocOp):
         (1, 2*x/3 + 4.1*y)
 
         """
-        terms = []
         cont = S.Zero
-
-        for term in self.args:
-            coeff = term.as_coeff_mul()[0]
-
-            if coeff.is_Rational:
-                cont = cont.gcd(coeff)
-
-                if cont is not S.One:
-                    terms.append(term)
-                    continue
-
+        terms = []
+        terms = [a.as_coeff_mul() for a in self.args]
+        for term in terms:
+            cont = cont.gcd(term[0])
+            if cont is not S.One:
+                continue
             return S.One, self
 
-        for i, term in enumerate(terms):
-            # XXX: this is extremely slow
-            terms[i] = term/cont
+        M = object.__new__(Mul)
+        rebuild = cont.q != 1
+        p, q = cont.p, cont.q
+        for i, (c, margs) in enumerate(terms):
+            c = Rational(c.p*q, c.q*p)
+            if c is S.One:
+                rebuild = True
+                terms[i] = M._new_rawargs(*margs)
+            else:
+                terms[i] = M._new_rawargs(c, *margs)
 
+        if rebuild:
+            # the ordering of terms may change if cont is not an Integer
+            # or if one of the coefficients vanishes so we use Add
+            return cont, Add(*terms)
         return cont, self._new_rawargs(*terms)
 
 from function import FunctionClass
 from mul import Mul
 from power import Pow
+from sympy.core.numbers import Rational
