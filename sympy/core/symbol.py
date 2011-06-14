@@ -8,6 +8,7 @@ from function import FunctionClass
 from sympy.logic.boolalg import Boolean
 
 import re
+import warnings
 
 class Symbol(AtomicExpr, Boolean):
     """
@@ -42,7 +43,6 @@ class Symbol(AtomicExpr, Boolean):
         """
 
         if 'dummy' in assumptions:
-            import warnings
             warnings.warn(
                     "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
                     "\nbe dropped in a future version of Sympy. Please use Dummy()"
@@ -223,12 +223,6 @@ def symbols(names, **args):
         >>> symbols(set(['a', 'b', 'c']))
         set([a, b, c])
 
-    Each character in a multi-character string can be treated as a symbol name
-    if ``each_char`` is True:
-
-        >>> symbols('ab', each_char=True)
-        (a, b)
-
     If an iterable container is needed for a single symbol, set the ``seq``
     argument to ``True`` or terminate the symbol name with a comma::
 
@@ -282,6 +276,10 @@ def symbols(names, **args):
 
     """
     result = []
+    if 'each_char' in args:
+        warnings.warn("The each_char option to symbols() and var() is "
+            "deprecated.  Separate symbol names by spaces or commas instead.",
+            DeprecationWarning)
 
     if isinstance(names, basestring):
         names = _re_var_split.split(names)

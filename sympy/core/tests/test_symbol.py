@@ -109,11 +109,22 @@ def test_Wild_properties():
                 assert d == None
 
 def test_symbols():
+    import warnings
+    # each_char is deprecated and emits a warning.
+
     w = Symbol('w')
     x = Symbol('x')
     y = Symbol('y')
     z = Symbol('z')
 
+    # First, test the warning
+    warnings.filterwarnings("error", "The each_char option to symbols\(\) and var\(\) is "
+        "deprecated.  Separate symbol names by spaces or commas instead.")
+    raises(DeprecationWarning, "symbols('xyz', each_char=True)")
+    raises(DeprecationWarning, "symbols('xyz', each_char=False)")
+    # now test the actual output
+    warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
+        "deprecated.  Separate symbol names by spaces or commas instead.")
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
     assert symbols('xyz', each_char=True) == (x, y, z)
     assert symbols('x y z', each_char=True) == symbols('x,y,z', each_char=True) == (x, y, z)
@@ -131,6 +142,13 @@ def test_symbols():
     assert symbols('x1:1', each_char=False) == ()
     assert symbols('x1:2', each_char=False) == (Symbol('x1'),)
     assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
+
+    # Keep testing reasonably thread safe, so reset the warning
+    warnings.filterwarnings("default", "The each_char option to symbols\(\) and var\(\) is "
+        "deprecated.  Separate symbol names by spaces or commas instead.")
+    # Note, in Python 2.6+, this can be done more nicely using the
+    # warnings.catch_warnings context manager.
+    # See http://docs.python.org/library/warnings#testing-warnings.
 
     assert symbols('') is None
     assert symbols('x') == x
