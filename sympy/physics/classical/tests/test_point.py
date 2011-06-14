@@ -6,9 +6,36 @@ def test_point_v1pts():
     q, q2, qd, q2d, qdd, q2dd = dynamicsymbols('q q2 qd q2d qdd q2dd')
     N = ReferenceFrame('N')
     B = ReferenceFrame('B')
-
+    B.set_ang_vel(N, qd * B.z)
+    O = Point('O')
+    P = O.newpoint('P', B.x)
+    P.set_vel(0, B)
+    O.set_vel(0, N)
+    assert P.v1pt(O, N, B) == qd * B.y
+    O.set_vel(N.x, N)
+    assert P.v1pt(O, N, B) == N.x + qd * B.y
+    P.set_vel(B.z, B)
+    assert P.v1pt(O, N, B) == B.z + N.x + qd * B.y
 
 def test_point_a1pts():
+    q, q2, qd, q2d, qdd, q2dd = dynamicsymbols('q q2 qd q2d qdd q2dd')
+    N = ReferenceFrame('N')
+    B = ReferenceFrame('B')
+    B.set_ang_vel(N, qd * B.z)
+    O = Point('O')
+    P = O.newpoint('P', B.x)
+    P.set_vel(0, B)
+    O.set_vel(0, N)
+
+    N = ReferenceFrame('N')
+    B = ReferenceFrame('B')
+    B.set_ang_vel(N, 5 * B.y)
+    O = Point('O')
+    P = O.newpoint('P', q * B.x)
+    P.set_vel(qd * B.x + q2d * B.y, B)
+    O.set_vel(0, N)
+    P.a1pt(O, N, B)
+#    (-25*q + qdd)*bx> + (q2dd)*by> + (-10*qd)*bz>
     pass
 
 def test_point_v2pts():

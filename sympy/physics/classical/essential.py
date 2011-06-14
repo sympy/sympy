@@ -13,6 +13,9 @@ class Dyad(object):
     def __init__(self, inlist):
         """
         Just like Vector's init, you shouldn't call this.
+        Stores a Dyad as a list of lists; the inner list has the measure
+        number and the two unit vectors; the outerlist holds each unique unit
+        vector pair.
 
         """
 
@@ -178,9 +181,6 @@ class Dyad(object):
         if not isinstance(other, Vector):
             raise TypeError('A Vector must be supplied')
 
-    def dt(self, frame):
-        pass
-
     def express(self, frame1, frame2=None):
         """Expresses this Dyad in alternate frame(s)
 
@@ -208,6 +208,28 @@ class Dyad(object):
         ol = 0
         for i, v in enumerate(self.args):
             ol += v[0] + (v[1].express(frame1) | v[2].express(frame2))
+        return ol
+
+    def dt(self, frame):
+        """Take the time derivative of this Dyad in a frame.
+
+        Parameters
+        ==========
+        frame : ReferenceFrame
+            The frame to take the time derivative in
+
+        Examples
+        ========
+
+        """
+
+        self._check_frame(frame)
+        t = Symbol('t')
+        ol = 0
+        for i, v in enumerate(self.args):
+            ol += (v[0].diff(t), v[1], v[2])
+            ol += (v[0], v[1].dt(frame), v[2])
+            ol += (v[0], v[1], v[2].dt(frame))
         return ol
 
 
@@ -878,15 +900,18 @@ class Vector(object):
         ol = 0
         for i, v in enumerate(self.args):
             for i2, v2 in enumerate(other.args):
-                ol += Dyad([[v[0][0] * v2[0][0], v[1].x, v2[1].x]])
-                ol += Dyad([[v[0][0] * v2[0][1], v[1].x, v2[1].y]])
-                ol += Dyad([[v[0][0] * v2[0][2], v[1].x, v2[1].z]])
-                ol += Dyad([[v[0][1] * v2[0][0], v[1].y, v2[1].x]])
-                ol += Dyad([[v[0][1] * v2[0][1], v[1].y, v2[1].y]])
-                ol += Dyad([[v[0][1] * v2[0][2], v[1].y, v2[1].z]])
-                ol += Dyad([[v[0][2] * v2[0][0], v[1].z, v2[1].x]])
-                ol += Dyad([[v[0][2] * v2[0][1], v[1].z, v2[1].y]])
-                ol += Dyad([[v[0][2] * v2[0][2], v[1].z, v2[1].z]])
+                # it looks this way because if we are in the same frame and
+                # use the enumerate function on the same frame in a nested
+                # fashion, then bad things happen
+                ol += Dyad([(v[0][0] * v2[0][0], v[1].x, v2[1].x)])
+                ol += Dyad([(v[0][0] * v2[0][1], v[1].x, v2[1].y)])
+                ol += Dyad([(v[0][0] * v2[0][2], v[1].x, v2[1].z)])
+                ol += Dyad([(v[0][1] * v2[0][0], v[1].y, v2[1].x)])
+                ol += Dyad([(v[0][1] * v2[0][1], v[1].y, v2[1].y)])
+                ol += Dyad([(v[0][1] * v2[0][2], v[1].y, v2[1].z)])
+                ol += Dyad([(v[0][2] * v2[0][0], v[1].z, v2[1].x)])
+                ol += Dyad([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
+                ol += Dyad([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
         return ol
 
     def __rsub__(self, other):

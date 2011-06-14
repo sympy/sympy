@@ -102,6 +102,7 @@ class Point(object):
         Autodifferentiating velocity
         Autodifferentiating velocity
         (-25*q + qdd)*bx> + (q2dd)*by> + (-10*qd)*bz>
+
         """
 
         self._check_frame(outframe)
