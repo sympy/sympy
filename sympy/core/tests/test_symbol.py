@@ -1,5 +1,5 @@
 from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols, Dummy, S)
+    sympify, symbols, Dummy, S, Function, flatten)
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -129,7 +129,9 @@ def test_symbols_each_char():
     warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
         "deprecated.  Separate symbol names by spaces or commas instead.")
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
+    assert all(w.is_Function for w in flatten(symbols(['wx', 'yz'], each_char=True, cls=Function)))
     assert symbols('xyz', each_char=True) == (x, y, z)
+    assert symbols('x,', each_char=True) == (x,)
     assert symbols('x y z', each_char=True) == symbols('x,y,z', each_char=True) == (x, y, z)
     assert symbols('xyz', each_char=False) == Symbol('xyz')
     a, b = symbols('x y', each_char=False, real=True)
