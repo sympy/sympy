@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, sin, cos
 from sympy.physics.classical import (cross, dot, dynamicsymbols, express,
-                                     ReferenceFrame)
+                                     ReferenceFrame, inertia, Dyad)
 
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 N = ReferenceFrame('N')
@@ -225,5 +225,17 @@ def test_express():
             cos(q2)*cos(q3)*A.z), C)
     assert C.x == express((cos(q3)*B.x - sin(q3)*B.z), C)
     assert C.z == express((sin(q3)*B.x + cos(q3)*B.z), C)
+
+def test_inertia():
+    N = ReferenceFrame('N')
+    ixx, iyy, izz = symbols('ixx iyy izz')
+    ixy, iyz, izx = symbols('ixy iyz izx')
+    assert inertia(N, ixx, iyy, izz) == (ixx * (N.x | N.x) + iyy *
+            (N.y | N.y) + izz * (N.z | N.z))
+    assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
+    assert inertia(N, ixx, iyy, izz, ixy, iyz, izx) == (ixx * (N.x | N.x) +
+            ixy * (N.x | N.y) + izx * (N.x | N.z) + ixy * (N.y | N.x) + iyy *
+            (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
+            N.y) + izz * (N.z | N.z))
 
 # Need to add tests for dynamicsymbols

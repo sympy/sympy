@@ -2,8 +2,7 @@ __all__ = ['RigidBody']
 
 from sympy import sympify
 from sympy.physics.classical.point import Point
-from sympy.physics.classical.essential import ReferenceFrame
-from sympy.physics.classical.inertiadyadic import InertiaDyadic
+from sympy.physics.classical.essential import ReferenceFrame, Dyad
 
 class RigidBody(object):
     """An idealized rigid body.
@@ -17,6 +16,7 @@ class RigidBody(object):
         self._mc = None
         self._mass = None
         self._inertia = None
+        self._inertia_point = None
 
     @property
     def frame(self):
@@ -48,14 +48,16 @@ class RigidBody(object):
 
     @property
     def inertia(self):
-        return self._inertia
+        return (self._inertia, self._inertia_point)
 
     @inertia.setter
     def inertia(self, I):
-        if not isinstance(I, InertiaDyadic):
-            raise TypeError("RigidBody central inertia must be a InertiaDyadic "
-                            "object.")
-        self._inertia = I
+        if not isinstance(I[0], Dyad):
+            raise TypeError("RigidBody inertia must be a Dyad object.")
+        if not isinstance(I[1], Point):
+            raise TypeError("RigidBody inertia must be about a Point.")
+        self._inertia = I[0]
+        self._inertia_point = I[1]
 
 if __name__ == "__main__":
     import doctest

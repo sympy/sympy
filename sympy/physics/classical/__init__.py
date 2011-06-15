@@ -23,10 +23,6 @@ import functions
 from functions import *
 __all__.extend(functions.__all__)
 
-import inertiadyadic
-from inertiadyadic import *
-__all__.extend(inertiadyadic.__all__)
-
 import particle
 from particle import *
 __all__.extend(particle.__all__)

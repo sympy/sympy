@@ -1019,7 +1019,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> outer(N.x, N.x)
         nx>nx>
-        
+
         """
 
         if other == 0:
@@ -1058,7 +1058,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> outer(N.x, N.x)
         nx>nx>
-        
+
         """
 
         if other == 0:
