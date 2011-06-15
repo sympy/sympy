@@ -1,7 +1,7 @@
 from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
     sympify, symbols, Dummy, S)
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_Symbol():
     a = Symbol("a")
@@ -108,7 +108,10 @@ def test_Wild_properties():
             else:
                 assert d == None
 
-def test_symbols():
+@XFAIL
+def test_symbols_each_char():
+    # XXX: Because of the way the warnings filters work, this will fail if it's
+    # run more than once in the same session.  See issue 2492.
     import warnings
     # each_char is deprecated and emits a warning.
 
@@ -149,6 +152,11 @@ def test_symbols():
     # Note, in Python 2.6+, this can be done more nicely using the
     # warnings.catch_warnings context manager.
     # See http://docs.python.org/library/warnings#testing-warnings.
+
+def test_symbols():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
     assert symbols('') is None
     assert symbols('x') == x

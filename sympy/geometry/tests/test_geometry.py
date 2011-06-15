@@ -585,7 +585,12 @@ def test_polygon():
     assert p2.distance(pt1) == Rational(3)/4
     assert p3.distance(pt2) == sqrt(2)/2
 
+@XFAIL
+def test_polygon_to_polygon():
     '''Polygon to Polygon'''
+    # XXX: Because of the way the warnings filters work, this will fail if it's
+    # run more than once in the same session.  See issue 2492.
+
     import warnings
     # p1.distance(p2) emits a warning
     # First, test the warning
