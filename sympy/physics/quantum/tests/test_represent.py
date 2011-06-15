@@ -167,5 +167,5 @@ def test_innerprod_represent():
         return True
 
 def test_operator_represent():
-    basis_kets = x_op._get_basis_kets(2)
+    basis_kets = x_op._get_basis_kets(1, 2)
     assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])

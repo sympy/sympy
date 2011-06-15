@@ -207,15 +207,14 @@ class HermitianOperator(Operator):
         else:
             return None
 
-    def _get_basis_kets(self, num):
+    def _get_basis_kets(self, start, num):
         if self.basis_ket() is None:
             return None
+
         ct = 0
         basis_kets = [0 for i in range(num)]
-        for state in self.basis_set:
-            if ct == num:
-                break
-            basis_kets[ct] = state
+        for i in range(start, start+num):
+            basis_kets[ct] = self.basis_ket()(str(self.label[0]).lower() + "_" + str(i))
             ct+=1
 
         return basis_kets

@@ -186,7 +186,7 @@ def rep_innerproduct(expr, **options):
 
     #Once we know the basis, try to get the basis kets and form an inner product
     if basis.basis_set is not None:
-        basis_kets = basis._get_basis_kets(2)
+        basis_kets = basis._get_basis_kets(1, 2)
 
         if isinstance(expr, BraBase):
             bra = expr
@@ -216,7 +216,7 @@ def rep_expectation(expr, **options):
     if basis is None and expr.basis_ket() is None:
         raise NotImplementedError("Could not get basis kets for this operator")
     elif basis is None:
-        basis_kets = expr._get_basis_kets(2)
+        basis_kets = expr._get_basis_kets(1, 2)
 
     bra = basis_kets[1].dual
     ket = basis_kets[0]
