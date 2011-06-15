@@ -253,42 +253,6 @@ def solve(f, *symbols, **flags):
     """
     A preprocessor to _solve.
     """
-
-    solution = _solve(f, *symbols, **flags)
-    return solution
-
-def _solve(f, *symbols, **flags):
-    """Solves equations and systems of equations.
-
-       Currently supported are univariate polynomial, transcendental
-       equations, piecewise combinations thereof and systems of linear
-       and polynomial equations.  Input is formed as a single expression
-       or an equation,  or an iterable container in case of an equation
-       system.  The type of output may vary and depends heavily on the
-       input. For more details refer to more problem specific functions.
-
-       By default all solutions are simplified to make the output more
-       readable. If this is not the expected behavior (e.g., because of
-       speed issues) set simplified=False in function arguments.
-
-       To solve equations and systems of equations like recurrence relations
-       or differential equations, use rsolve() or dsolve(), respectively.
-
-       >>> from sympy import I, solve
-       >>> from sympy.abc import x, y
-
-       Solve a polynomial equation:
-
-       >>> solve(x**4-1, x)
-       [1, -1, -I, I]
-
-       Solve a linear system:
-
-       >>> solve((x+5*y-2, -3*x+6*y-15), x, y)
-       {x: -3, y: 1}
-
-    """
-
     def sympified_list(w):
         return map(sympify, iff(isinstance(w,(list, tuple, set)), w, [w]))
     # make f and symbols into lists of sympified quantities
@@ -304,6 +268,9 @@ def _solve(f, *symbols, **flags):
             f[i] = fi.as_expr()
         elif isinstance(fi, bool) or fi.is_Relational:
             return reduce_inequalities(f, assume=flags.get('assume'))
+        # Any embedded piecewise functions need to be brought out to the
+        # top level so that the appropriate strategy gets selected.
+        f[i] = piecewise_fold(f[i])
 
     if not symbols:
         #get symbols from equations or supply dummy symbols since
@@ -345,23 +312,60 @@ def _solve(f, *symbols, **flags):
             raise TypeError('not a Symbol or a Function')
         symbols_new.append(s_new)
 
-        if symbol_swapped:
-            swap_back_dict = dict(zip(symbols_new, symbols))
+    if symbol_swapped:
+        swap_back_dict = dict(zip(symbols_new, symbols))
+        swap_dict = zip(symbols, symbols_new)
+        f = [fi.subs(swap_dict) for fi in f]
+        symbols = symbols_new
     # End code for handling of Function and Derivative instances
 
     if bare_f:
         f = f[0]
 
-        # Create a swap dictionary for storing the passed symbols to be solved
-        # for, so that they may be swapped back.
-        if symbol_swapped:
-            swap_dict = zip(symbols, symbols_new)
-            f = f.subs(swap_dict)
-            symbols = symbols_new
+    solution = _solve(f, *symbols, **flags)
 
-        # Any embedded piecewise functions need to be brought out to the
-        # top level so that the appropriate strategy gets selected.
-        f = piecewise_fold(f)
+    # Use swap_dict to ensure we return the same type as what was
+    # passed; this is not necessary in the poly-system case which
+    # only supports zero-dimensional systems
+    if symbol_swapped and type(solution) is dict:
+            solution = dict([(swap_back_dict[k],
+                          v.subs(swap_back_dict))
+                          for k, v in solution.iteritems()])
+    return solution
+
+def _solve(f, *symbols, **flags):
+    """Solves equations and systems of equations.
+
+       Currently supported are univariate polynomial, transcendental
+       equations, piecewise combinations thereof and systems of linear
+       and polynomial equations.  Input is formed as a single expression
+       or an equation,  or an iterable container in case of an equation
+       system.  The type of output may vary and depends heavily on the
+       input. For more details refer to more problem specific functions.
+
+       By default all solutions are simplified to make the output more
+       readable. If this is not the expected behavior (e.g., because of
+       speed issues) set simplified=False in function arguments.
+
+       To solve equations and systems of equations like recurrence relations
+       or differential equations, use rsolve() or dsolve(), respectively.
+
+       >>> from sympy import I, solve
+       >>> from sympy.abc import x, y
+
+       Solve a polynomial equation:
+
+       >>> solve(x**4-1, x)
+       [1, -1, -I, I]
+
+       Solve a linear system:
+
+       >>> solve((x+5*y-2, -3*x+6*y-15), x, y)
+       {x: -3, y: 1}
+
+    """
+
+    if not iterable(f):
 
         if len(symbols) != 1:
             soln = None
@@ -379,10 +383,6 @@ def _solve(f, *symbols, **flags):
                 if n.is_Symbol:
                     soln = {n: cancel(d)}
             if soln:
-                if symbol_swapped and isinstance(soln, dict):
-                    return dict([(swap_back_dict[k],
-                                  v.subs(swap_back_dict))
-                                  for k, v in soln.iteritems()])
                 return soln
 
         symbol = symbols[0]
@@ -550,18 +550,12 @@ def _solve(f, *symbols, **flags):
         if not f:
             return []
         else:
-            # Create a swap dictionary for storing the passed symbols to be
-            # solved for, so that they may be swapped back.
-            if symbol_swapped:
-                swap_dict = zip(symbols, symbols_new)
-                f = [fi.subs(swap_dict) for fi in f]
-                symbols = symbols_new
 
             polys = []
 
             for g in f:
 
-                poly = g.as_poly(*symbols, **{'extension':True})
+                poly = g.as_poly(*symbols, **{'extension': True})
 
                 if poly is not None:
                     polys.append(poly)
@@ -582,13 +576,6 @@ def _solve(f, *symbols, **flags):
 
                 # a dictionary of symbols: values or None
                 soln = solve_linear_system(matrix, *symbols, **flags)
-                # Use swap_dict to ensure we return the same type as what was
-                # passed; this is not necessary in the poly-system case which
-                # only supports zero-dimensional systems
-                if symbol_swapped and soln:
-                        soln = dict([(swap_back_dict[k],
-                                      v.subs(swap_back_dict))
-                                      for k, v in soln.iteritems()])
                 return soln
             else:
                 # a list of tuples, T, where T[i] [j] corresponds to the ith solution for symbols[j]
