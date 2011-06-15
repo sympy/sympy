@@ -334,6 +334,8 @@ def test_integrate_DiracDelta():
     assert integrate(DiracDelta(x),x) == Heaviside(x)
     assert integrate(DiracDelta(x) * f(x),x) == f(0) * Heaviside(x)
     assert integrate(DiracDelta(x) * f(x),(x,-oo,oo)) == f(0)
+    assert integrate(DiracDelta(-x) * f(x),(x,-oo,oo)) == f(0)
+    assert integrate(DiracDelta(-(x-1)) * f(x),(x,-oo,oo)) == f(1)
     assert integrate(DiracDelta(x) * f(x),(x,0,oo)) == f(0)/2
     assert integrate(DiracDelta(x**2+x-2),x) - \
            (Heaviside(-1 + x)/3 + Heaviside(2 + x)/3) == 0

@@ -104,6 +104,7 @@ def deltaintegrate(f, x):
                     fh = sympy.integrals.integrate(rest_mult,x)
                     return fh
             else:
+                dg = dg.simplify(x)
                 point = solve(dg.args[0],x)[0]
                 return (rest_mult.subs(x,point)*Heaviside(dg.args[0]))
     return None
