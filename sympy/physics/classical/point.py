@@ -96,8 +96,8 @@ class Point(object):
         >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
         >>> P = O.newpoint('P', q * B.x)
-        >>> P.set_vel(qd * B.x + q2d * B.y, B)
-        >>> O.set_vel(0, N)
+        >>> P.set_vel(B, qd * B.x + q2d * B.y)
+        >>> O.set_vel(N, 0)
         >>> P.a1pt(O, N, B)
         (-25*q + qdd)*bx> + (q2dd)*by> + (-10*qd)*bz>
 
@@ -112,8 +112,8 @@ class Point(object):
         a2 = self.acc(interframe)
         omega = interframe.ang_vel_in(outframe)
         alpha = interframe.ang_acc_in(outframe)
-        self.set_acc(a2 + 2 * (omega ^ v) + a1 + (alpha ^ dist) + (omega ^
-                     (omega ^ dist)), outframe)
+        self.set_acc(outframe, a2 + 2 * (omega ^ v) + a1 + (alpha ^ dist) +
+                (omega ^ (omega ^ dist)))
         return self.acc(outframe)
 
     def a2pt(self, otherpoint, outframe, fixedframe):
@@ -148,7 +148,7 @@ class Point(object):
         >>> B = N.orientnew('B', 'Simple', q, 3)
         >>> O = Point('O')
         >>> P = O.newpoint('P', 10 * B.x)
-        >>> O.set_vel(5 * N.x, N)
+        >>> O.set_vel(N, 5 * N.x)
         >>> P.a2pt(O, N, B)
         (-10*qd**2)*bx> + (10*qdd)*by>
 
@@ -162,7 +162,7 @@ class Point(object):
         a = otherpoint.acc(outframe)
         omega = fixedframe.ang_vel_in(outframe)
         alpha = fixedframe.ang_acc_in(outframe)
-        self.set_acc(a + (alpha ^ dist) + (omega ^ (omega ^ dist)), outframe)
+        self.set_acc(outframe, a + (alpha ^ dist) + (omega ^ (omega ^ dist)))
         return self.acc(outframe)
 
     def acc(self, frame):
@@ -179,7 +179,7 @@ class Point(object):
         >>> from sympy.physics.classical import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
-        >>> p1.set_acc(10 * N.x, N)
+        >>> p1.set_acc(N, 10 * N.x)
         >>> p1.acc(N)
         (10)*nx>
 
@@ -217,8 +217,8 @@ class Point(object):
             raise TypeError('Must supply a valid name')
         self._check_vector(value)
         p = Point(name)
-        p.set_pos(-value, self)
-        self.set_pos(-value, p)
+        p.set_pos(self, value)
+        self.set_pos(p, -value)
         return p
 
     def pos_from(self, otherpoint):
@@ -236,7 +236,7 @@ class Point(object):
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
-        >>> p1.set_pos(10 * N.x, p2)
+        >>> p1.set_pos(p2, 10 * N.x)
         >>> p1.pos_from(p2)
         (10)*nx>
 
@@ -248,7 +248,7 @@ class Point(object):
             outvec += plist[i]._pos_dict[plist[i + 1]]
         return outvec
 
-    def set_acc(self, value, frame):
+    def set_acc(self, frame, value):
         """Used to set the acceleration of this Point in a ReferenceFrame.
 
         Parameters
@@ -264,7 +264,7 @@ class Point(object):
         >>> from sympy.physics.classical import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
-        >>> p1.set_acc(10 * N.x, N)
+        >>> p1.set_acc(N, 10 * N.x)
         >>> p1.acc(N)
         (10)*nx>
 
@@ -274,7 +274,7 @@ class Point(object):
         self._check_frame(frame)
         self._acc_dict.update({frame: value})
 
-    def set_pos(self, value, otherpoint):
+    def set_pos(self, otherpoint, value):
         """Used to set the position of this point w.r.t. another point.
 
         Parameters
@@ -291,7 +291,7 @@ class Point(object):
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
-        >>> p1.set_pos(10 * N.x, p2)
+        >>> p1.set_pos(p2, 10 * N.x)
         >>> p1.pos_from(p2)
         (10)*nx>
 
@@ -302,7 +302,7 @@ class Point(object):
         self._pos_dict.update({otherpoint: value})
         otherpoint._pos_dict.update({self: -value})
 
-    def set_vel(self, value, frame):
+    def set_vel(self, frame, value):
         """Sets the velocity Vector of this Point in a ReferenceFrame.
 
         Parameters
@@ -318,7 +318,7 @@ class Point(object):
         >>> from sympy.physics.classical import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
-        >>> p1.set_vel(10 * N.x, N)
+        >>> p1.set_vel(N, 10 * N.x)
         >>> p1.vel(N)
         (10)*nx>
 
@@ -362,8 +362,8 @@ class Point(object):
         >>> B.set_ang_vel(N, 5 * B.y)
         >>> O = Point('O')
         >>> P = O.newpoint('P', q * B.x)
-        >>> P.set_vel(qd * B.x + q2d * B.y, B)
-        >>> O.set_vel(0, N)
+        >>> P.set_vel(B, qd * B.x + q2d * B.y)
+        >>> O.set_vel(N, 0)
         >>> P.v1pt(O, N, B)
         (qd)*bx> + (q2d)*by> + (-5*q)*bz>
 
@@ -376,7 +376,7 @@ class Point(object):
         v1 = self.vel(interframe)
         v2 = otherpoint.vel(outframe)
         omega = interframe.ang_vel_in(outframe)
-        self.set_vel(v1 + v2 + (omega ^ dist), outframe)
+        self.set_vel(outframe, v1 + v2 + (omega ^ dist))
         return self.vel(outframe)
 
     def v2pt(self, otherpoint, outframe, fixedframe):
@@ -410,7 +410,7 @@ class Point(object):
         >>> B = N.orientnew('B', 'Simple', q, 3)
         >>> O = Point('O')
         >>> P = O.newpoint('P', 10 * B.x)
-        >>> O.set_vel(5 * N.x, N)
+        >>> O.set_vel(N, 5 * N.x)
         >>> P.v2pt(O, N, B)
         (5)*nx> + (10*qd)*by>
 
@@ -422,7 +422,7 @@ class Point(object):
         dist = self.pos_from(otherpoint)
         v = otherpoint.vel(outframe)
         omega = fixedframe.ang_vel_in(outframe)
-        self.set_vel(v + (omega ^ dist), outframe)
+        self.set_vel(outframe, v + (omega ^ dist))
         return self.vel(outframe)
 
     def vel(self, frame):
@@ -439,7 +439,7 @@ class Point(object):
         >>> from sympy.physics.classical import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
-        >>> p1.set_vel(10 * N.x, N)
+        >>> p1.set_vel(N, 10 * N.x)
         >>> p1.vel(N)
         (10)*nx>
 

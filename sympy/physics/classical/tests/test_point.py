@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix, sin, cos
 from sympy.physics.classical import (Vector, ReferenceFrame, dot, cross,
-                                     dynamicsymbols, Point)
+                                     dynamicsymbols, Point, DynamicSymbol)
 
 def test_point_v1pts():
     q, q2, qd, q2d, qdd, q2dd = dynamicsymbols('q q2 qd q2d qdd q2dd')
@@ -9,12 +9,12 @@ def test_point_v1pts():
     B.set_ang_vel(N, qd * B.z)
     O = Point('O')
     P = O.newpoint('P', B.x)
-    P.set_vel(0, B)
-    O.set_vel(0, N)
+    P.set_vel(B, 0)
+    O.set_vel(N, 0)
     assert P.v1pt(O, N, B) == qd * B.y
-    O.set_vel(N.x, N)
+    O.set_vel(N, N.x)
     assert P.v1pt(O, N, B) == N.x + qd * B.y
-    P.set_vel(B.z, B)
+    P.set_vel(B, B.z)
     assert P.v1pt(O, N, B) == B.z + N.x + qd * B.y
 
 def test_point_a1pts():
@@ -24,20 +24,41 @@ def test_point_a1pts():
     B.set_ang_vel(N, qd * B.z)
     O = Point('O')
     P = O.newpoint('P', B.x)
-    P.set_vel(0, B)
-    O.set_vel(0, N)
+    P.set_vel(B, 0)
+    O.set_vel(N, 0)
     assert P.a1pt(O, N, B) ==  -(qd**2) * B.x + qdd * B.y
-    P.set_vel(q2d * B.z, B)
+    P.set_vel(B, q2d * B.z)
     assert P.a1pt(O, N, B) == -(qd**2) * B.x + qdd * B.y + q2dd * B.z
-    O.set_vel(q2d * B.x, N)
+    O.set_vel(N, q2d * B.x)
     assert P.a1pt(O, N, B) == ((q2dd - qd**2) * B.x + (q2d * qd + qdd) * B.y +
                                q2dd * B.z)
 
 def test_point_v2pts():
-    pass
+    q = DynamicSymbol('q')
+    qd = DynamicSymbol('qd')
+    N = ReferenceFrame('N')
+    B = N.orientnew('B', 'Simple', q, 3)
+    O = Point('O')
+    P = O.newpoint('P', 0)
+    O.set_vel(N, 0)
+    assert P.v2pt(O, N, B) == 0
+    P = O.newpoint('P', B.x)
+    assert P.v2pt(O, N, B) == (qd * B.z ^ B.x)
+    O.set_vel(N, N.x)
+    assert P.v2pt(O, N, B) == N.x + qd * B.y
 
 def test_point_a2pts():
-    pass
+    q = DynamicSymbol('q')
+    qd = DynamicSymbol('qd')
+    qdd = DynamicSymbol('qdd')
+    N = ReferenceFrame('N')
+    B = N.orientnew('B', 'Simple', q, 3)
+    O = Point('O')
+    P = O.newpoint('P', 0)
+    O.set_vel(N, 0)
+    assert P.a2pt(O, N, B) == 0
+    P.set_pos(O, B.x)
+    assert P.a2pt(O, N, B) == (-qd**2) * B.x + (qdd) * B.y
 
 def test_point_funcs():
     q, q2, qd, q2d, qdd, q2dd = dynamicsymbols('q q2 qd q2d qdd q2dd')
@@ -47,9 +68,9 @@ def test_point_funcs():
     O = Point('O')
     P = O.newpoint('P', q * B.x)
     assert P.pos_from(O) == q * B.x
-    P.set_vel(qd * B.x + q2d * B.y, B)
+    P.set_vel(B, qd * B.x + q2d * B.y)
     assert P.vel(B) == qd * B.x + q2d * B.y
-    O.set_vel(0, N)
+    O.set_vel(N, 0)
     assert O.vel(N) == 0
     assert P.a1pt(O, N, B) == ((-25 * q + qdd) * B.x + (q2dd) * B.y +
                                (-10 * qd) * B.z)
@@ -57,15 +78,15 @@ def test_point_funcs():
     B = N.orientnew('B', 'Simple', q, 3)
     O = Point('O')
     P = O.newpoint('P', 10 * B.x)
-    O.set_vel(5 * N.x, N)
+    O.set_vel(N, 5 * N.x)
     assert O.vel(N) == 5 * N.x
     assert P.a2pt(O, N, B) == (-10 * qd**2) * B.x + (10 * qdd) * B.y
 
     B.set_ang_vel(N, 5 * B.y)
     O = Point('O')
     P = O.newpoint('P', q * B.x)
-    P.set_vel(qd * B.x + q2d * B.y, B)
-    O.set_vel(0, N)
+    P.set_vel(B, qd * B.x + q2d * B.y)
+    O.set_vel(N, 0)
     assert P.v1pt(O, N, B) == qd * B.x + q2d * B.y - 5 * q * B.z
 
 def test_point_pos():
