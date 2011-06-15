@@ -618,12 +618,8 @@ def test_issue_1100():
 def test_issue_841():
     a,b,c,d = symbols('a:d', positive=True, bounded=True)
     assert integrate(exp(-x**2 + I*c*x), x) == sqrt(pi)*erf(x - I*c/2)*exp(-c**S(2)/4)/2
-    assert integrate(exp(a*x**2 + b*x + c), x) == I*sqrt(pi)*erf(-I*x*sqrt(a) - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
-    a,b,c,d = symbols('a:d', positive=True)
-    i = integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))
-    ans = sqrt(pi)*exp(d**2/a)*(1 + erf(oo - d/sqrt(a)))/(2*sqrt(a))
-    n, d = i.as_numer_denom()
-    assert terms_gcd(n, expand=False)/d == ans
+    assert integrate(exp(a*x**2 + b*x + c), x) == \
+          I*sqrt(pi)*erf(-I*x*sqrt(a) - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
 
 def test_issue_2314():
     # Note that this is not the same as testing ratint() becuase integrate()

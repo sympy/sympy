@@ -41,7 +41,156 @@ from sympy import SYMPY_DEBUG
 z = Dummy('z')
 def _create_lookup_table(table):
     """ Add formulae for the function -> meijerg lookup table. """
-    pass
+    def wild(n):
+        return Wild(n, exclude=[z])
+    p, q, a, b, c = map(wild, 'pqabc')
+    n = Wild('n', properties=[lambda x: x.is_Integer and x > 0])
+    t = p*z**q
+    def add(formula, an, ap, bm, bq, arg=t, fac=S(1), cond=True):
+        table.setdefault(_mytype(formula, z), []).append((formula,
+                                     [(fac, meijerg(an, ap, bm, bq, arg))], cond))
+    def addi(formula, inst, cond):
+        table.setdefault(_mytype(formula, z), []).append((formula, inst, cond))
+
+    def constant(a):
+        return [(a, meijerg([1], [], [], [0], z)),
+                (a, meijerg([], [1], [0], [], z))]
+    table[()] = [(a, constant(a), True)]
+
+    # [P], Section 8.
+
+    # Section 8.4.2
+    from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
+                       factorial, log, erf)
+    add(Heaviside(t - b)*(t - b)**(a-1), [a], [], [], [0], t/b,
+        gamma(a)*b**(a-1), And(b > 0))
+    add(Heaviside(b - t)*(b - t)**(a-1), [], [a], [0], [], t/b,
+        gamma(a)*b**(a-1), And(b > 0))
+    add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a))
+    add(abs(b - t)**(-a), [1 - a], [(1 - a)/2], [0], [(1 - a)/2], t/b,
+        pi/(gamma(a)*cos(pi*a/2))*abs(b)**(-a), re(a) < 1)
+    add((t**a - b**a)/(t - b), [0, a], [], [0, a], [], t/b,
+        b**(a-1)*sin(a*pi)/pi)
+
+    # 12
+    def A1(r, sign, nu): return pi**(-S(1)/2)*(-sign*nu/2)**(1-2*r)
+    def tmpadd(r, sgn):
+             # XXX the a**2 is bad for matching
+        add((sqrt(a**2 + t) + sgn*a)**b/(a**2+t)**r,
+            [(1 + b)/2, 1-2*r + b/2], [],
+            [(b - sgn*b)/2], [(b + sgn*b)/2], t/a**2,
+            a**(b-2*r)*A1(r, sgn, b))
+    tmpadd(0, 1)
+    tmpadd(0, -1)
+    tmpadd(S(1)/2, 1)
+    tmpadd(S(1)/2, -1)
+
+    # 13
+    def tmpadd(r, sgn):
+        add((sqrt(a + p*z**q) + sgn*sqrt(p)*z**(q/2))**b/(a + p*z**q)**r,
+            [1 - r + sgn*b/2], [1 - r - sgn*b/2], [0, S(1)/2], [],
+            p*z**q/a, a**(b/2 - r)*A1(r, sgn, b))
+    tmpadd(0, 1)
+    tmpadd(0, -1)
+    tmpadd(S(1)/2, 1)
+    tmpadd(S(1)/2, -1)
+    # (those after look obscure)
+
+    # Section 8.4.3
+    add(exp(-t), [], [], [0], [])
+
+    # TODO can do sin^n, sinh^n by expansion ... where?
+    # 8.4.4 (hyperbolic functions)
+    add(sinh(t), [], [1], [S(1)/2], [1, 0], t**2/4, pi**(S(3)/2))
+    add(cosh(t), [], [S(1)/2], [0], [S(1)/2, S(1)/2], t**2/4, pi**(S(3)/2))
+
+    # Section 8.4.5
+    # TODO can do t + a. but can also do by expansion... (XXX not really)
+    add(sin(t), [], [], [S(1)/2], [0], t**2/4, sqrt(pi))
+    add(cos(t), [], [], [0], [S(1)/2], t**2/4, sqrt(pi))
+
+    # Section 8.5.5
+    def make_log1(subs):
+        N = subs[n]
+        return [((-1)**N*factorial(N),
+                 meijerg([], [1]*(N + 1), [0]*(N + 1), [], t))]
+    def make_log2(subs):
+        N = subs[n]
+        return [(factorial(N),
+                 meijerg([1]*(N + 1), [], [], [0]*(N + 1), t))]
+    # TODO these only hold for positive p, and can be made more general
+    #      but who uses log(x)*Heaviside(a-x) anyway ...
+    # TODO also it would be nice to derive them recursively ...
+    addi(log(t)**n*Heaviside(1 - t), make_log1, True)
+    addi(log(t)**n*Heaviside(t - 1), make_log2, True)
+    def make_log3(subs):
+        return make_log1(subs) + make_log2(subs)
+    addi(log(t)**n, make_log3, True)
+    addi(log(t + a),
+         constant(log(a)) + [(S(1), meijerg([1, 1], [], [1], [0], t/a))],
+         True)
+    addi(log(abs(t - a)), constant(log(abs(a))) + \
+           [(pi, meijerg([1, 1], [S(1)/2], [1], [0, S(1)/2], t/a))],
+         True)
+    # TODO log(x)/(x+a) and log(x)/(x-1) can also be done. should they
+    #      be derivable?
+    # TODO further formulae in this section seem obscure
+
+    # Section 8.4.14
+    # TODO erfc
+    add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
+    # TODO exp(-x)*erf(I*x) does not work
+
+
+    ##### bessel-type functions #####
+    from sympy import besselj, bessely, besseli, besselk
+
+    # Section 8.4.19
+    add(besselj(a, t), [], [], [a/2], [-a/2], t**2/4)
+
+    # TODO all of the following should be derivable
+    add(sin(t)*besselj(a, t), [S(1)/4, S(3)/4], [], [(1+a)/2],
+        [-a/2, a/2, (1-a)/2], t**2, 1/sqrt(2))
+    add(cos(t)*besselj(a, t), [S(1)/4, S(3)/4], [], [a/2],
+        [-a/2, (1+a)/2, (1-a)/2], t**2, 1/sqrt(2))
+    add(besselj(a, t)**2, [S(1)/2], [], [a], [-a, 0], t**2, 1/sqrt(pi))
+    add(besselj(a, t)*besselj(b, t), [0, S(1)/2], [], [(a + b)/2],
+        [-(a+b)/2, (a - b)/2, (b - a)/2], t**2, 1/sqrt(pi))
+
+    # Section 8.4.20
+    add(bessely(a, t), [], [-(a+1)/2], [a/2, -a/2], [-(a+1)/2], t**2/4)
+
+    # TODO all of the following should be derivable
+    add(sin(t)*bessely(a, t), [S(1)/4, S(3)/4], [(1 - a - 1)/2],
+        [(1 + a)/2, (1 - a)/2], [(1 - a - 1)/2, (1 - 1 - a)/2, (1 - 1 + a)/2],
+        t**2, 1/sqrt(2))
+    add(cos(t)*bessely(a, t), [S(1)/4, S(3)/4], [(0 - a - 1)/2],
+        [(0 + a)/2, (0 - a)/2], [(0 - a - 1)/2, (1 - 0 - a)/2, (1 - 0 + a)/2],
+        t**2, 1/sqrt(2))
+    add(besselj(a, t)*bessely(b, t), [0, S(1)/2], [(a - b - 1)/2],
+        [(a + b)/2, (a - b)/2], [(a - b - 1)/2, -(a + b)/2, (b - a)/2],
+        t**2, 1/sqrt(pi))
+    addi(bessely(a, t)**2,
+         [(2/sqrt(pi), meijerg([], [S(1)/2, S(1)/2 - a], [0, a, -a],
+                               [S(1)/2 - a], t**2)),
+          (1/sqrt(pi), meijerg([S(1)/2], [], [a], [-a, 0], t**2))],
+         True)
+    addi(bessely(a, t)*bessely(b, t),
+         [(2/sqrt(pi), meijerg([], [0, S(1)/2, (1 - a - b)/2],
+                               [(a + b)/2, (a - b)/2, (b - a)/2, -(a + b)/2],
+                               [(1 - a - b)/2], t**2)),
+          (1/sqrt(pi), meijerg([0, S(1)/2], [], [(a + b)/2],
+                               [-(a + b)/2, (a - b)/2, (b - a)/2], t**2))],
+         True)
+
+    # Section 8.4.21 ?
+    # Section 8.4.22
+    add(besseli(a, t), [], [(1 + a)/2], [a/2], [-a/2, (1 + a)/2], t**2/4, pi)
+    # TODO many more formulas. should all be derivable
+
+    # Section 8.4.23
+    add(besselk(a, t), [], [], [a/2, -a/2], [], t**2/4, S(1)/2)
+    # TODO many more formulas. should all be derivable
 
 
 ####################################################################
