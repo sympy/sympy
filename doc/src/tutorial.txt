@@ -96,7 +96,7 @@ defined the symbols x, y, z and some other things:
 
     $ :input:`cd sympy`
     $ :input:`./bin/isympy`
-IPython console for SymPy 0.7.0.rc1 (Python 2.7.1) (ground types: gmpy)
+IPython console for SymPy 0.7.0.rc2 (Python 2.7.1) (ground types: gmpy)
 
 These commands were executed:
 >>> from __future__ import division

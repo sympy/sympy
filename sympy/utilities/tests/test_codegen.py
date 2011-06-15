@@ -57,7 +57,7 @@ def test_empty_c_code_with_comment():
     assert source[:82] == (
             "/******************************************************************************\n *"
             )
-          #   "                    Code generated with sympy 0.7.0-rc1                    "
+          #   "                    Code generated with sympy 0.7.0-rc2                    "
     assert source[158:] == (                                                              "*\n"
             " *                                                                            *\n"
             " *              See http://www.sympy.org/ for more information.               *\n"
@@ -440,7 +440,7 @@ def test_empty_f_code_with_header():
     assert source[:82] == (
             "!******************************************************************************\n!*"
             )
-          #   "                    Code generated with sympy 0.7.0.rc1                    "
+          #   "                    Code generated with sympy 0.7.0.rc2                    "
     assert source[158:] == (                                                              "*\n"
             "!*                                                                            *\n"
             "!*              See http://www.sympy.org/ for more information.               *\n"
