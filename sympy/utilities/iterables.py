@@ -924,3 +924,54 @@ def partitions(n, m=None, k=None):
             break
         room -= need
         yield ms
+
+def binary_partitions(n):
+    """
+    Generates the binary partition of n.
+
+    A binary partition consists only of numbers that are
+    powers of two. Each step reduces a 2**(k+1) to 2**k and
+    2**k. Thus 16 is converted to 8 and 8.
+
+    Reference: TAOCP 4, section 7.2.1.5, problem 64
+
+    Examples:
+    >>> from sympy.utilities.iterables import binary_partitions
+    >>> for i in binary_partitions(5):
+    ...     print i
+    ...
+    [4, 1]
+    [2, 2, 1]
+    [2, 1, 1, 1]
+    [1, 1, 1, 1, 1]
+    """
+    from math import ceil, log
+    pow = int(2 ** (ceil(log(n , 2))))
+    sum = 0
+    partition = []
+    while pow:
+        if sum+pow <= n:
+            partition.append(pow)
+            sum += pow
+        pow >>= 1
+
+    last_num = len(partition) - 1 - (n & 1)
+    while last_num >= 0:
+        yield partition
+        if partition[last_num] == 2:
+            partition[last_num] = 1
+            partition.append(1)
+            last_num -= 1
+            continue
+        partition.append(1)
+        partition[last_num] >>= 1
+        x = partition[last_num + 1] = partition[last_num]
+        last_num += 1
+        while x > 1:
+            if x <= len(partition) - last_num - 1:
+                del partition[-x+1:]
+                last_num += 1
+                partition[last_num] = x
+            else:
+                x >>= 1
+    yield [1]*n
