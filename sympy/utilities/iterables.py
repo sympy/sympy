@@ -833,7 +833,7 @@ def partitions(n, m=None, k=None):
     """Generate all partitions of integer n (>= 0).
 
     'm' limits the number of parts in the partition, e.g. if m=2 then
-        partitions containing only two numbers will be returned while
+        partitions will contain no more than 2 numbers, while
     'k' limits the numbers which may appear in the partition, e.g. k=2 will
         return partitions with no element greater than 2.
 
