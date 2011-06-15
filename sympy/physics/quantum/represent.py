@@ -160,9 +160,24 @@ def represent(expr, **options):
     if not isinstance(expr, Mul):
         raise TypeError('Mul expected, got: %r' % expr)
 
+    if options.has_key("index"):
+        options["index"] += 1
+    else:
+        options["index"] = 1
+
     result = represent(expr.args[-1], **options)
+    last_arg = expr.args[-1]
+
     for arg in reversed(expr.args[:-1]):
+        if isinstance(last_arg, Operator):
+            options["index"] += 1
+        elif isinstance(last_arg, BraBase) and isinstance(arg, KetBase):
+            options["index"] += 1
+
         result = represent(arg, **options)*result
+
+    #TODO: Collapse DiracDelta functions
+
     # All three matrix formats create 1 by 1 matrices when inner products of
     # vectors are taken. In these cases, we simply return a scalar.
     result = flatten_scalar(result)
@@ -184,9 +199,12 @@ def rep_innerproduct(expr, **options):
     elif basis is None:
         basis = (expr.basis_op())()
 
+    if not options.has_key("index"):
+        options["index"] = 1
+
     #Once we know the basis, try to get the basis kets and form an inner product
     if basis.basis_set is not None:
-        basis_kets = basis._get_basis_kets(1, 2)
+        basis_kets = basis._get_basis_kets(options["index"], 2)
 
         if isinstance(expr, BraBase):
             bra = expr
@@ -210,13 +228,16 @@ def rep_expectation(expr, **options):
 
     basis = options.pop('basis', None)
 
+    if not options.has_key("index"):
+        options["index"] = 1
+
     if not isinstance(expr, Operator):
         raise TypeError("The passed expression is not an operator")
 
     if basis is None and expr.basis_ket() is None:
         raise NotImplementedError("Could not get basis kets for this operator")
     elif basis is None:
-        basis_kets = expr._get_basis_kets(1, 2)
+        basis_kets = expr._get_basis_kets(options["index"], 2)
 
     bra = basis_kets[1].dual
     ket = basis_kets[0]

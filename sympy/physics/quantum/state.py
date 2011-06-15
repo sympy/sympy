@@ -69,7 +69,7 @@ class StateBase(QExpr):
             return None
         else:
             #Returns a default label corresponding to the labeling of its basis operator
-            return (self.basis_op().default_label().lower() + "_1")
+            return (self.basis_op().default_label().lower())
 
     def _represent_default_basis(self, **options):
         return self._represent(basis=(self.basis_op())())

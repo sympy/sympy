@@ -158,8 +158,8 @@ x_bra = XBra('x')
 x_op = XOp('X')
 
 def test_innerprod_represent():
-    assert rep_innerproduct(x_ket) == InnerProduct(XBra(), x_ket).doit()
-    assert rep_innerproduct(x_bra) == InnerProduct(x_bra, XKet()).doit()
+    assert rep_innerproduct(x_ket) == InnerProduct(XBra("x_1"), x_ket).doit()
+    assert rep_innerproduct(x_bra) == InnerProduct(x_bra, XKet("x_1")).doit()
 
     try:
         test = rep_innerproduct(x_op)

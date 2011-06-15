@@ -63,7 +63,7 @@ def test_hermitian():
     assert H.is_commutative == False
     assert Dagger(H).is_commutative == False
 
-    assert t_op._get_basis_kets(1, 1)[0] == t_ket
+    assert t_op._get_basis_kets(1, 1)[0] == TestKet("t_1")
 
 def test_unitary():
     U = UnitaryOperator('U')
