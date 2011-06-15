@@ -4,7 +4,6 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops)
 
-from sympy.core.compatibility import iterable
 from sympy.core.numbers import igcd
 from sympy.core.function import expand_log
 from sympy.core.compatibility import minkey
@@ -917,7 +916,7 @@ def posify(eq):
     ([_x, _x + 1], {_x: x})
     """
     eq = sympify(eq)
-    if iterable(eq):
+    if type(eq) in (list, set, tuple):
         f = type(eq)
         eq = list(eq)
         syms = set()

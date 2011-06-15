@@ -6,7 +6,6 @@ NOTE
 at present this is mainly needed for facts.py , feel free however to improve
 this stuff for general purpose.
 """
-from sympy.core.compatibility import iterable
 
 def fuzzy_bool(x):
     """Return True, False or None according to x.
@@ -23,7 +22,7 @@ def fuzzy_and(*args):
 
     If `a` is an iterable it must have more than one element."""
 
-    if (len(args) == 1 and iterable(args[0]) or
+    if (len(args) == 1 and hasattr(args[0], '__iter__') or
         len(args) > 2):
         if len(args) == 1:
             args = args[0]

@@ -3,7 +3,6 @@ from plot_interval import PlotInterval
 from plot_object import PlotObject
 from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
-from sympy.core.compatibility import ordered_iter
 
 class PlotMode(PlotObject):
     """
@@ -363,7 +362,7 @@ class PlotMode(PlotObject):
                     else:
                         intervals.append(i)
                 else:
-                    if ordered_iter(a, include=str):
+                    if isinstance(a, (str, list, tuple)):
                         raise ValueError(interpret_error % (str(a)))
                     try:
                         f = sympify(a)

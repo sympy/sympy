@@ -1,5 +1,4 @@
 from sympy.core import Expr, S, C, Mul, sympify
-from sympy.core.compatibility import ordered_iter
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 
@@ -30,7 +29,7 @@ class Product(Expr):
                 k = symbol.lhs
                 a = symbol.rhs.start
                 n = symbol.rhs.end
-            elif ordered_iter(symbol):
+            elif isinstance(symbol, (tuple, list)):
                 k, a, n = symbol
             else:
                 raise ValueError("Invalid arguments")

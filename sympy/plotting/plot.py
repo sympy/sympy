@@ -1,5 +1,4 @@
 from sympy import Integer
-from sympy.core.compatibility import ordered_iter
 
 from threading import RLock
 
@@ -291,7 +290,7 @@ class Plot(object):
         if isinstance(args, PlotObject):
             f = args
         else:
-            if (not ordered_iter(args)) or isinstance(args, GeometryEntity):
+            if (not isinstance(args, (list, tuple))) or isinstance(args, GeometryEntity):
                 args = [args]
             if len(args) == 0:
                 return # no arguments given
