@@ -347,10 +347,12 @@ def solve(f, *symbols, **flags):
                         >>> solve((a + b)*x - b**2 + 2, a, b)
                         [(-2**(1/2), 2**(1/2)), (2**(1/2), -2**(1/2))]
 
-                if there is no linear solution then a solution for first symbol
-                will be attempted
+                if there is no linear solution then the first successful
+                attempt for a nonlinear solution will be returned
                     >>> solve(x**2 - y**2, x, y)
                     [y, -y]
+                    >>> solve(x**2 - y**2/exp(x), x, y)
+                    [x*exp(x/2), -x*exp(x/2)]
 
             o iterable of one or more of the above
 
@@ -490,12 +492,25 @@ def _solve(f, *symbols, **flags):
                     soln = solve_undetermined_coeffs(f, symbols, ex)
                 except NotImplementedError:
                     pass
-            if soln is None:
-                n, d = solve_linear(f, x=symbols)
+            if not soln is None:
+                return soln
+            # find first successful solution
+            failed = []
+            for s in symbols:
+                n, d = solve_linear(f, x=[s])
                 if n.is_Symbol:
                     soln = {n: cancel(d)}
-            if soln:
-                return soln
+                    return soln
+                failed.append(s)
+            for s in failed:
+                try:
+                    soln = _solve(f, s, **flags)
+                    return soln
+                except NotImplementedError:
+                    pass
+            else:
+                msg = "No algorithms are implemented to solve equation %s"
+                raise NotImplementedError(msg % f)
 
         symbol = symbols[0]
 
