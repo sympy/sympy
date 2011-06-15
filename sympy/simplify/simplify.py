@@ -171,7 +171,7 @@ def separate(expr, deep=False, force=False):
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
     power_base=True, basic=False, multinomial=False, log=False, force=force)
 
-def collect(expr, syms, func=None, evaluate=True, exact=False):
+def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
     """
     Collect additive terms of an expression.
 
@@ -469,18 +469,30 @@ def collect(expr, syms, func=None, evaluate=True, exact=False):
         if expr.is_Mul:
             ret = 1
             for term in expr.args:
-                ret *= collect(term, syms, func, True, exact)
+                ret *= collect(term, syms, func, True, exact, distribute_order_term)
             return ret
         elif expr.is_Pow:
-            b = collect(expr.base, syms, func, True, exact)
+            b = collect(expr.base, syms, func, True, exact, distribute_order_term)
             return Pow(b, expr.exp)
 
-    summa = [separate(i) for i in Add.make_args(sympify(expr))]
-
     if hasattr(syms, '__iter__') or hasattr(syms, '__getitem__'):
-        syms = [separate(s) for s in syms]
+        syms = map(separate, syms)
     else:
-        syms = [separate(syms)]
+        syms = [ separate(syms) ]
+
+    expr = sympify(expr)
+    order_term = None
+
+    if distribute_order_term:
+        order_term = expr.getO()
+
+        if order_term is not None:
+            if order_term.has(*syms):
+                order_term = None
+            else:
+                expr = expr.removeO()
+
+    summa = map(separate, Add.make_args(expr))
 
     collected, disliked = {}, S.Zero
     for product in summa:
@@ -510,6 +522,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False):
                     index = make_expression(elems)
                 terms = separate(make_expression(terms))
                 index = separate(index)
+
                 if index in collected.keys():
                     collected[index] += terms
                 else:
@@ -523,11 +536,15 @@ def collect(expr, syms, func=None, evaluate=True, exact=False):
     if disliked is not S.Zero:
         collected[S.One] = disliked
 
+    if order_term is not None:
+        for key, val in collected.iteritems():
+            collected[key] = val + order_term
+
     if func is not None:
         collected = dict([ (key, func(val)) for key, val in collected.iteritems() ])
 
     if evaluate:
-        return Add(*[a*b for a, b in collected.iteritems()])
+        return Add(*[key*val for key, val in collected.iteritems()])
     else:
         return collected
 
