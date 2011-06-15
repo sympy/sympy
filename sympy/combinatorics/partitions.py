@@ -1,4 +1,5 @@
 from sympy.core import Basic, C
+from sympy.matrices import zeros
 
 import random
 
@@ -443,6 +444,35 @@ def random_integer_partition(n):
         n -= k
     list.sort(partition)
     return partition
+
+def RGS_generalized(m):
+    """
+    Computes the generalized unrestricted growth strings.
+
+    Examples:
+    >>> from sympy.combinatorics.partitions import \
+    RGS_generalized
+    >>> RGS_generalized(6)
+    [  1,   1,   1,  1,  1, 1, 1]
+    [  1,   2,   3,  4,  5, 6, 0]
+    [  2,   5,  10, 17, 26, 0, 0]
+    [  5,  15,  37, 77,  0, 0, 0]
+    [ 15,  52, 151,  0,  0, 0, 0]
+    [ 52, 203,   0,  0,  0, 0, 0]
+    [203,   0,   0,  0,  0, 0, 0]
+    """
+    d = zeros(m + 1)
+    for i in xrange(0, m + 1):
+        d[0, i] = 1
+
+    for i in xrange(1, m + 1):
+        for j in xrange(m):
+            if j <= m - i:
+                d[i, j] = j * d[i - 1, j] \
+                          + d[i - 1, j + 1]
+            else:
+                d[i, j] = 0
+    return d
 
 def RGS_enum(m):
     """
