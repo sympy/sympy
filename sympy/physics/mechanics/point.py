@@ -1,6 +1,6 @@
 __all__ = ['Point']
 
-from sympy.physics.classical.essential import Vector, ReferenceFrame
+from sympy.physics.mechanics.essential import Vector, ReferenceFrame
 
 class Point(object):
     """This object represents a point in a dynamic system.
@@ -85,7 +85,7 @@ class Point(object):
 
         Examples
         ========
-        >>> from sympy.physics.classical import Point, ReferenceFrame,\
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame,\
                 DynamicSymbol
         >>> q = DynamicSymbol('q')
         >>> q2 = DynamicSymbol('q2')
@@ -140,7 +140,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame,\
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame,\
                 DynamicSymbol
         >>> q = DynamicSymbol('q')
         >>> qd = DynamicSymbol('qd')
@@ -176,7 +176,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_acc(N, 10 * N.x)
@@ -206,7 +206,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Point
+        >>> from sympy.physics.mechanics import ReferenceFrame, Point
         >>> N = ReferenceFrame('N')
         >>> P1 = Point('P1')
         >>> P2 = P1.newpoint('P2', 10 * N.x)
@@ -232,7 +232,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
@@ -261,7 +261,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_acc(N, 10 * N.x)
@@ -287,7 +287,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
@@ -315,7 +315,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)
@@ -351,7 +351,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame,\
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame,\
                 DynamicSymbol
         >>> q = DynamicSymbol('q')
         >>> q2 = DynamicSymbol('q2')
@@ -402,7 +402,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame,\
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame,\
                 DynamicSymbol
         >>> q = DynamicSymbol('q')
         >>> qd = DynamicSymbol('qd')
@@ -436,7 +436,7 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)

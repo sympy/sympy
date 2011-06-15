@@ -5,8 +5,8 @@ __all__ = ['cross',
            'outer',
            'inertia']
 
-from sympy.physics.classical.essential import Vector, Dyad, ReferenceFrame
-from sympy.physics.classical.dynamicsymbol import DynamicSymbol
+from sympy.physics.mechanics.essential import Vector, Dyad, ReferenceFrame
+from sympy.physics.mechanics.dynamicsymbol import DynamicSymbol
 from sympy import sympify, symbols
 
 def cross(vec1, vec2):
@@ -71,7 +71,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     Examples
     ========
 
-    >>> from sympy.physics.classical import ReferenceFrame, inertia
+    >>> from sympy.physics.mechanics import ReferenceFrame, inertia
     >>> N = ReferenceFrame('N')
     >>> inertia(N, 1, 2, 3)
     nx>nx> + (2)*ny>ny> + (3)*nz>nz>

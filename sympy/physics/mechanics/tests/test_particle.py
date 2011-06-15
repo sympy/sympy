@@ -1,5 +1,5 @@
 from sympy import Symbol
-from sympy.physics.classical import Point, Particle
+from sympy.physics.mechanics import Point, Particle
 
 def test_particle():
     m = Symbol('m')

@@ -1,5 +1,5 @@
 from sympy import Symbol, diff
-from sympy.physics.classical import DynamicSymbol
+from sympy.physics.mechanics import DynamicSymbol
 
 def test_dynamicsymbol():
     x = DynamicSymbol('x')

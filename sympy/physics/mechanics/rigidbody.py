@@ -1,8 +1,8 @@
 __all__ = ['RigidBody']
 
 from sympy import sympify
-from sympy.physics.classical.point import Point
-from sympy.physics.classical.essential import ReferenceFrame, Dyad
+from sympy.physics.mechanics.point import Point
+from sympy.physics.mechanics.essential import ReferenceFrame, Dyad
 
 class RigidBody(object):
     """An idealized rigid body.

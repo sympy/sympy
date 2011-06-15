@@ -1,5 +1,5 @@
 from sympy import Symbol
-from sympy.physics.classical import Point, ReferenceFrame, Dyad, RigidBody
+from sympy.physics.mechanics import Point, ReferenceFrame, Dyad, RigidBody
 
 def test_rigidbody():
     m = Symbol('m')

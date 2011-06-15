@@ -87,7 +87,7 @@ class Dyad(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> D1 = outer(N.x, N.y)
         >>> D2 = outer(N.y, N.y)
@@ -141,7 +141,7 @@ class Dyad(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> 5 * d
@@ -168,7 +168,7 @@ class Dyad(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, dot, outer
+        >>> from sympy.physics.mechanics import ReferenceFrame, dot, outer
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> dot(N.x, d)
@@ -201,7 +201,7 @@ class Dyad(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, outer, cross
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> cross(N.y, d)
@@ -230,7 +230,7 @@ class Dyad(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, outer, cross
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer, cross
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> cross(d, N.y)
@@ -286,7 +286,7 @@ class Dyad(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, outer,\
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer,\
                 DynamicSymbol
         >>> N = ReferenceFrame('N')
         >>> q = DynamicSymbol('q')
@@ -317,7 +317,7 @@ class Dyad(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, outer,\
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer,\
                 DynamicSymbol
         >>> N = ReferenceFrame('N')
         >>> q = DynamicSymbol('q')
@@ -448,7 +448,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -480,7 +480,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -512,7 +512,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -551,7 +551,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -584,7 +584,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q0, q1, q2, q3, q4 = symbols('q0 q1 q2 q3 q4')
         >>> N = ReferenceFrame('N')
@@ -756,7 +756,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -789,7 +789,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -916,7 +916,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector, dot
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dot
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -981,7 +981,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
         >>> t = Symbol('t')
@@ -1015,7 +1015,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> outer(N.x, N.x)
         nx>nx>
@@ -1054,7 +1054,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, outer
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> outer(N.x, N.x)
         nx>nx>
@@ -1100,7 +1100,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
@@ -1188,7 +1188,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector,\
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
                 DynamicSymbol
         >>> from sympy import Symbol
         >>> t = Symbol('t')
@@ -1225,7 +1225,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector,\
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
                 DynamicSymbol
         >>> from sympy import Symbol
         >>> q1 = Symbol('q1')
@@ -1265,7 +1265,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.classical import ReferenceFrame, Vector,\
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
                 DynamicSymbol
         >>> q1 = DynamicSymbol('q1')
         >>> N = ReferenceFrame('N')

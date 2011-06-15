@@ -1,5 +1,5 @@
 from sympy import symbols, Matrix, sin, cos
-from sympy.physics.classical import (Vector, ReferenceFrame, dot, cross,
+from sympy.physics.mechanics import (Vector, ReferenceFrame, dot, cross,
                                      dynamicsymbols, Point, DynamicSymbol)
 
 def test_point_v1pts():
