@@ -38,7 +38,7 @@ from cache import cacheit
 from numbers import Rational
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
-from sympy.utilities import all, any
+from sympy.utilities import all, any, default_sort_key
 
 from sympy import mpmath
 
@@ -591,13 +591,18 @@ class Derivative(Expr):
     expr must define ._eval_derivative(symbol) method that returns
     the differentiation result. This function only needs to consider the
     non-trivial case where expr contains symbol and it should call the diff()
-    method interally (not _eval_derivative); Derivative should be the only
+    method internally (not _eval_derivative); Derivative should be the only
     one to call _eval_derivative.
+
+    If evaluate is set to True and the expression can not be evaluated, the
+    list of differentiation symbols will be sorted, that is, the expression is
+    assumed to have continuous derivatives up to the order asked.
 
     Examples:
 
     Derivative(Derivative(expr, x), y) -> Derivative(expr, x, y)
     Derivative(expr, x, 3)  -> Derivative(expr, x, x, x)
+    Derivative(f(x, y), y, x, evaluate=True) -> Derivative(f(x, y), x, y)
 
     """
 
@@ -662,6 +667,9 @@ class Derivative(Expr):
                  evaluate) and
             not isinstance(expr, Derivative)):
             symbols = list(symbolgen)
+            if evaluate:
+                #TODO: check if assumption of discontinuous derivatives exist
+                symbols.sort(key=default_sort_key)
             obj = Expr.__new__(cls, expr, *symbols, **assumptions)
             return obj
 
@@ -677,8 +685,12 @@ class Derivative(Expr):
                 expr = obj
 
         if not unevaluated_symbols:
+            if isinstance(expr, Derivative):
+                return Derivative(expr.args[0], *sorted(expr.args[1:],
+                    key=default_sort_key))
             return expr
 
+        unevaluated_symbols.sort(key=default_sort_key)
         return Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
 
     def _eval_derivative(self, s):

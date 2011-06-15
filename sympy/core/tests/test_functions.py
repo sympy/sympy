@@ -225,8 +225,14 @@ def test_deriv3():
 def test_func_deriv():
     f = Function('f')
     x = Symbol('x')
+    y = Symbol('y')
 
     assert f(x).diff(x) == Derivative(f(x), x)
+    # issue 1435
+    assert f(x, y).diff(x, y) - f(x, y).diff(y, x) == 0
+    assert Derivative(f(x, y), x, y).args[1:] == (x, y)
+    assert Derivative(f(x, y), y, x).args[1:] == (y, x)
+    assert (Derivative(f(x, y), x, y) - Derivative(f(x, y), y, x)).doit() == 0
 
 def test_suppressed_evaluation():
     a = sin(0, evaluate=False)
