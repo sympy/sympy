@@ -920,6 +920,20 @@ class asin(Function):
     Usage
     =====
       asin(x) -> Returns the arc sine of x (measured in radians)
+
+    Notes
+    ====
+        asin(x) will evaluate automatically in the cases
+        oo, -oo, 0, 1, -1
+
+    Examples
+    ========
+        >>> from sympy import asin, oo, pi
+        >>> asin(1)
+        pi/2
+        >>> asin(-1)
+        -pi/2
+
     """
 
     nargs = 1
@@ -1023,6 +1037,21 @@ class acos(Function):
     Usage
     =====
       acos(x) -> Returns the arc cosine of x (measured in radians)
+
+    Notes
+    =====
+        acos(x) will evaluate automatically in the cases
+        oo, -oo, 0, 1, -1
+
+    Examples
+    ========
+        >>> from sympy import acos, oo, pi
+        >>> acos(1)
+        0
+        >>> acos(0)
+        pi/2
+        >>> acos(oo)
+        (oo)*I
     """
 
     nargs = 1
@@ -1115,6 +1144,22 @@ class atan(Function):
     Usage
     =====
       atan(x) -> Returns the arc tangent of x (measured in radians)
+
+    Notes
+    =====
+        atan(x) will evaluate automatically in the cases
+        oo, -oo, 0, 1, -1
+
+    Examples
+    ========
+        >>> from sympy import atan, oo, pi
+        >>> atan(0)
+        0
+        >>> atan(1)
+        pi/4
+        >>> atan(oo)
+        pi/2
+
     """
 
     nargs = 1

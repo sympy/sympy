@@ -433,7 +433,14 @@ class StrPrinter(Printer):
 
 
 def sstr(expr, **settings):
-    """return expr in str form"""
+    """Returns the expression as a string.
+    Example:
+
+    >>> from sympy import symbols, Eq, sstr
+    >>> a, b = symbols('a b')
+    >>> sstr(Eq(a + b, 0))
+    'a + b == 0'
+    """
 
     p = StrPrinter(settings)
     s = p.doprint(expr)
