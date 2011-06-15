@@ -255,7 +255,6 @@ class DifferentialExtension(object):
                 raise NotImplementedError("Couldn't find an elementary " +
                     "transcendental extension for %s.  Try using a " % str(f) +
                     "manual extension with the extension flag.")
-                # TODO: Actually implement said extension flag
 
             # Pre-preparsing.
             #################
@@ -1378,10 +1377,8 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
     log(log(x))
     """
     f = S(f)
-    if extension:
-        raise NotImplementedError("Manual extensions are not supported yet.")
 
-    DE = DifferentialExtension(f, x, handle_first=handle_first)
+    DE = extension or DifferentialExtension(f, x, handle_first=handle_first)
     fa, fd = DE.fa, DE.fd
 
     result = S(0)
