@@ -146,6 +146,7 @@ def test_classify_ode():
         ('Bernoulli', 'Bernoulli_Integral')
     raises(ValueError, "classify_ode(x + f(x, y).diff(x).diff(y), f(x, y))")
     # 2077
+    k = Symbol('k')
     assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) +
                  2*f(x)/(k*f(x) + k*x*f(x)) +
                  x*f(x).diff(x)/(k*f(x) + k*x*f(x))
