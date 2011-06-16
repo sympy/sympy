@@ -198,7 +198,7 @@ class Partition(Basic):
         >>> a.RGS
         [0, 1, 2, 0, 2]
         """
-        rgs = [0] * self.partitions_set_size
+        rgs = [0] * self.partition_set_size
         a = 0
         for part in self.partition:
             for i in part:
@@ -375,6 +375,25 @@ class IntegerPartition(Partition):
         Examples:
         """
         raise NotImplementedError()
+
+    def ferrers_representation(self):
+        """
+        Prints the ferrer diagram of a partition.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import IntegerPartition
+        >>> a = IntegerPartition([3,2,1], 6)
+        >>> b = IntegerPartition([5,1,1], 7)
+        >>> print a.ferrers_representation()
+        ###
+        ##
+        #
+        >>> print b.ferrers_representation()
+        #####
+        #
+        #
+        """
+        return "\n".join(['#'*i for i in self.partition_array])
 
 def random_integer_partition(n):
     """
