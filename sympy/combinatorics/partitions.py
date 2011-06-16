@@ -126,8 +126,21 @@ class Partition(Basic):
         partition with a greater rank.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a.compare(b)
+        1
+        >>> a.compare(a)
+        0
+        >>> b.compare(a)
+        -1
         """
-        raise NotImplementedError()
+        if self.rank > other.rank:
+            return -1
+        elif self.rank < other.rank:
+            return 1
+        return 0
 
     def __eq__(self, other):
         """
