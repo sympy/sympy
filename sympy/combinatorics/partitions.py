@@ -147,6 +147,13 @@ class Partition(Basic):
         Checks for equality of two partitions.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a == b
+        False
+        >>> a == a
+        True
         """
         return self._compare(other) == 0
 
@@ -155,6 +162,13 @@ class Partition(Basic):
         Checks for inequality of two partitions.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a != b
+        True
+        >>> a != a
+        False
         """
         return self._compare(other) != 0
 
@@ -163,6 +177,11 @@ class Partition(Basic):
         Checks if a partition is greater than the other.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a > b
+        True
         """
         return self._compare(other) > 0
 
@@ -171,6 +190,11 @@ class Partition(Basic):
         Checks if a partition is less than the other.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a < b
+        False
         """
         return self._compare(other) < 0
 
@@ -180,6 +204,13 @@ class Partition(Basic):
         the other partition.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a >= a
+        True
+        >>> a >= b
+        True
         """
         return self == other or self > other
 
@@ -189,6 +220,13 @@ class Partition(Basic):
         the other partition.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> b = Partition([[1],[2,3],[4],[5]], [1,2,3,4,5])
+        >>> a <= a
+        True
+        >>> a <= b
+        False
         """
         return self == other or self < other
 
