@@ -746,23 +746,29 @@ def multiset_partitions(multiset, m):
         ps = [[] for i in xrange(m)]
         for j in xrange(n):
             ps[a[j + 1]].append(multiset[j])
-        if cache.has_key(str(ps)):
-            return None
-        cache[str(ps)] = 1
-        return ps
+        canonical = tuple(tuple(j) for j in ps)
+        if not cache.has_key(canonical):
+            cache[canonical] = 1
+            return ps
 
     def f(m_arr, n_arr, sigma, n, a):
         if m_arr <= 2:
-            yield visit(n, a)
+            v = visit(n, a)
+            if not v is None:
+                yield v
         else:
             for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
                 yield v
         if n_arr == m_arr + 1:
             a[m_arr] = m_arr - 1
-            yield visit(n, a)
+            v = visit(n, a)
+            if not v is None:
+                yield v
             while a[n_arr] > 0:
                 a[n_arr] = a[n_arr] - 1
-                yield visit(n, a)
+                v = visit(n, a)
+                if not v is None:
+                    yield v
         elif n_arr > m_arr + 1:
             if (m_arr + sigma) % 2 == 1:
                 a[n_arr - 1] = m_arr - 1
@@ -781,12 +787,18 @@ def multiset_partitions(multiset, m):
 
     def b(m_arr, n_arr, sigma, n, a):
         if n_arr == m_arr + 1:
-            yield visit(n, a)
+            v = visit(n, a)
+            if not v is None:
+                yield v
             while a[n_arr] < m_arr - 1:
                 a[n_arr] = a[n_arr] + 1
-                yield visit(n, a)
+                v = visit(n, a)
+                if not v is None:
+                    yield v
             a[m_arr] = 0
-            yield visit(n, a)
+            v = visit(n, a)
+            if not v is None:
+                yield v
         elif n_arr > m_arr + 1:
             func = [f, b][(a[n_arr] + sigma) % 2]
             for v in func(m_arr, n_arr - 1, 0, n, a):
@@ -803,7 +815,9 @@ def multiset_partitions(multiset, m):
             else:
                 a[m_arr] = 0
         if m_arr <= 2:
-            yield visit(n, a)
+            v = visit(n, a)
+            if not v is None:
+                yield v
         else:
             for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
                 if v is not None:
@@ -819,7 +833,7 @@ def partitions(n, m=None, k=None):
     """Generate all partitions of integer n (>= 0).
 
     'm' limits the number of parts in the partition, e.g. if m=2 then
-        partitions containing only two numbers will be returned while
+        partitions will contain no more than 2 numbers, while
     'k' limits the numbers which may appear in the partition, e.g. k=2 will
         return partitions with no element greater than 2.
 
