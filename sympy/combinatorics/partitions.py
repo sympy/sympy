@@ -1,4 +1,4 @@
-from sympy.core import Basic
+from sympy.core import Basic, C
 
 import random
 
@@ -443,3 +443,31 @@ def random_integer_partition(n):
         n -= k
     list.sort(partition)
     return partition
+
+def RGS_enum(m):
+    """
+    RGS_enum computes the total number of restricted growth strings
+    possible for a superset of size m.
+
+    Examples:
+    >>> from sympy.combinatorics.partitions import RGS_enum
+    >>> RGS_enum(4)
+    15
+    >>> RGS_enum(5)
+    52
+    >>> RGS_enum(6)
+    203
+    """
+    m += 1
+    if (m < 0):
+        return 0
+    elif (m == 0):
+        return 1
+    else:
+        b = [1] * (m)
+        for j in xrange(1, m):
+            for i in xrange(1, j):
+                b[j] += C.binomial(j - 1, i) * b[i]
+
+        nrgf = b[m - 1]
+    return nrgf
