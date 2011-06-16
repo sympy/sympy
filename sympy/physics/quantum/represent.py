@@ -5,8 +5,8 @@ TODO:
 * Document default basis functionality.
 """
 
-from sympy import Add, Mul, Pow, I, Expr
-from sympy.functions import conjugate
+from sympy import Add, Mul, Pow, I, Expr, oo
+from sympy.functions import conjugate, DiracDelta
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
@@ -16,11 +16,14 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixutils import flatten_scalar
 from sympy.physics.quantum.state import KetBase, BraBase
-from sympy.physics.quantum.operator import Operator
+from sympy.physics.quantum.operator import Operator, HermitianOperator
 from sympy.physics.quantum.qapply import qapply
 
 __all__ = [
-    'represent'
+    'represent',
+    'rep_innerproduct',
+    'rep_expectation',
+    'collapse_deltas'
 ]
 
 #-----------------------------------------------------------------------------
@@ -118,7 +121,7 @@ def represent(expr, **options):
                     return rep_innerproduct(expr, **options)
                 except NotImplementedError:
                     raise NotImplementedError(strerr)
-            elif isinstance(expr, Operator):
+            elif isinstance(expr, HermitianOperator):
                 try:
                     return rep_expectation(expr, **options)
                 except NotImplementedError:
@@ -165,22 +168,41 @@ def represent(expr, **options):
     else:
         options["index"] = 1
 
+    if not options.has_key("unities"):
+        options["unities"] = []
+
     result = represent(expr.args[-1], **options)
     last_arg = expr.args[-1]
 
     for arg in reversed(expr.args[:-1]):
         if isinstance(last_arg, Operator):
             options["index"] += 1
+            options["unities"].append(options["index"])
         elif isinstance(last_arg, BraBase) and isinstance(arg, KetBase):
             options["index"] += 1
+        elif isinstance(last_arg, KetBase) and isinstance(arg, Operator):
+            options["unities"].append(options["index"])
 
         result = represent(arg, **options)*result
+        last_arg = arg
 
     #TODO: Collapse DiracDelta functions
 
     # All three matrix formats create 1 by 1 matrices when inner products of
     # vectors are taken. In these cases, we simply return a scalar.
     result = flatten_scalar(result)
+
+    if not options.has_key("basis"):
+        arg = expr.args[-1]
+        if (isinstance(arg, KetBase) or isinstance (arg, BraBase)) and arg.basis_op() is not None:
+            options["basis"] = (arg.basis_op())()
+        elif isinstance(arg, HermitianOperator):
+            options["basis"] = arg
+
+    # If the result is expressed in a continuous basis, then we need to integrate over any unities
+    # that were inserted. As a start to this, we should collapse all of the delta functions by hand
+    result = collapse_deltas(result, **options)
+
     return result
 
 def rep_innerproduct(expr, **options):
@@ -238,8 +260,37 @@ def rep_expectation(expr, **options):
         raise NotImplementedError("Could not get basis kets for this operator")
     elif basis is None:
         basis_kets = expr._get_basis_kets(options["index"], 2)
+    else:
+        basis_kets = basis._get_basis_kets(options["index"], 2)
 
     bra = basis_kets[1].dual
     ket = basis_kets[0]
 
     return qapply(bra*expr*ket)
+
+def collapse_deltas(expr, **options):
+    if not isinstance(expr, Mul):
+        return expr
+
+    unities = options.pop("unities", [])
+
+    basis = options.pop("basis", None)
+
+    if basis is None:
+        raise NotImplementedError("Could not get basis set for operator")
+
+    kets = basis._get_basis_kets(unities)
+    labels = [k.label[0] for k in kets]
+    new_expr = expr
+
+    for label in labels:
+        for arg in expr.args:
+            if isinstance(arg, DiracDelta):
+                if label in arg.args[0].args or -label in arg.args[0].args:
+                    dirac_args = [(-a if isinstance(a, Mul) else a) for a in arg.args[0].args]
+                    coord = (dirac_args[0] if label == dirac_args[1] else -dirac_args[1])
+                    new_expr = new_expr.subs(label, coord)
+
+    new_args = [arg for arg in new_expr.args if not arg == oo]
+
+    return Mul(*new_args)

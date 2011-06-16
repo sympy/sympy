@@ -207,13 +207,21 @@ class HermitianOperator(Operator):
         else:
             return None
 
-    def _get_basis_kets(self, start, num):
+    def _get_basis_kets(self, *args):
         if self.basis_ket() is None:
             return None
 
+        index_list = []
+        if len(args) == 1:
+            index_list = args[0]
+        elif len(args) == 2:
+            index_list = range(args[0], args[0]+args[1])
+        else:
+            raise NotImplementedError("Wrong number of arguments!")
+
         ct = 0
-        basis_kets = [0 for i in range(num)]
-        for i in range(start, start+num):
+        basis_kets = [0 for i in range(len(index_list))]
+        for i in index_list:
             basis_kets[ct] = self.basis_ket()(str(self.label[0]).lower() + "_" + str(i))
             ct+=1
 
