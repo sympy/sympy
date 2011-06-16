@@ -376,6 +376,7 @@ def test_issue_1694():
     assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
     assert solve(4*3**(5*x + 2) - 7, x) == [(-2*log(3) - log(4) + log(7))/(5*log(3))]
     assert solve(x**2 - y**2/exp(x), x, y) == [x*exp(x/2), -x*exp(x/2)]
+    assert solve((x - 1)/(1 + 1/(x - 1))) == []
     # 2072
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
     assert solve(sqrt(x - 1)) == [1]

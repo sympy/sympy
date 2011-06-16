@@ -1,12 +1,10 @@
 """ This module contain solvers for all kinds of equations:
 
-    - algebraic, use solve()
+    - algebraic or transcendental, use solve()
 
     - recurrence, use rsolve()
 
     - differential, use dsolve()
-
-    - transcendental, use tsolve()
 
     - nonlinear (numerically), use nsolve()
       (you will need a good starting point)
@@ -19,7 +17,7 @@ from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.numbers import ilcm
 
 from sympy.functions import log, exp, LambertW
-from sympy.simplify import simplify, collect, powsimp
+from sympy.simplify import simplify, collect, powsimp, fraction
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together
 from sympy.functions.elementary.piecewise import piecewise_fold
@@ -39,13 +37,15 @@ from types import GeneratorType
 
 def denoms(eq, x=None):
     """Return (recursively) set of all denominators that appear in eq
-    that contain any symbol in x; if x is None (default) then all
+    that contain any symbol in iterable x; if x is None (default) then all
     denominators with symbols will be returned."""
     from sympy.utilities.iterables import preorder_traversal
 
-    if x is None:
+    if not x:
         x = eq.free_symbols
     dens = set()
+    if not x or not eq.has(*x):
+        return dens
     pt = preorder_traversal(eq)
     for e in pt:
         if e.is_Pow or e.func is exp:
@@ -382,9 +382,10 @@ def solve(f, *symbols, **flags):
                     [(-2, -2), (0, 2), (0, 2), (2, -2)]
 
                 Warning: there is a possibility of obtaining ambiguous results
-                if no symbols are given for a nonlinear system of equations or
+                if, for a nonlinear system of equations, symbols are not given or
                 are given as a set since the symbols are not presently reported
                 with the solution. A warning will be issued in this situation.
+
                     >>> solve([x - 2, x**2 + y])
                     <BLANKLINE>
                         For nonlinear systems of equations, symbols should be
@@ -552,6 +553,16 @@ def _solve(f, *symbols, **flags):
 
         symbol = symbols[0]
 
+        # build up solutions if f is a Mul
+        if f.is_Mul:
+            result = set()
+            dens = denoms(f, symbols)
+            for m in f.args:
+                soln = _solve(m, symbol, **flags)
+                result.update(set(soln))
+            result = [s for s in result if all(not checksol(den, {symbol: s}) for den in dens)]
+            return result
+
         # first see if it really depends on symbol and whether there
         # is a linear solution
         f_num, sol = solve_linear(f, x=symbols)
@@ -577,7 +588,7 @@ def _solve(f, *symbols, **flags):
 
         elif strategy == GS_RATIONAL:
             P, _ = f.as_numer_denom()
-            dens = denoms(f, x=symbols)
+            dens = denoms(f, symbols)
             try:
                 soln = _solve(P, symbol, **flags)
             except NotImplementedError:
@@ -695,8 +706,8 @@ def _solve(f, *symbols, **flags):
 
         # this is the fallback for not getting any other solution
         if result is False or strategy == GS_TRANSCENDENTAL:
-            soln = tsolve(f_num, symbol)
-            dens = denoms(f, x=symbols)
+            soln = _tsolve(f_num, symbol)
+            dens = denoms(f, symbols)
             if not dens:
                 result = soln
             else:
@@ -1046,10 +1057,14 @@ def _generate_patterns():
     ]
 
 def tsolve(eq, sym):
+    import warnings
+    warnings.warn("tsolve is deprecated, use solve.", DeprecationWarning)
+
+def _tsolve(eq, sym):
     """
     Solves a transcendental equation with respect to the given
-    symbol. Various equations containing mixed linear terms, powers,
-    and logarithms, can be solved.
+    symbol. Various equations containing powers and logarithms,
+    can be solved.
 
     Only a single solution is returned. This solution is generally
     not unique. In some cases, a complex solution may be returned
@@ -1072,14 +1087,6 @@ def tsolve(eq, sym):
         eq = eq.lhs - eq.rhs
     sym = sympify(sym)
     eq2 = eq.subs(sym, x)
-    # First see if the equation has a linear factor
-    # In that case, the other factor can contain x in any way (as long as it
-    # is finite), and we have a direct solution to which we add others that
-    # may be found for the remaining portion.
-    r = Wild('r')
-    m = eq2.match((a*x+b)*r)
-    if m and m[a]:
-        return [(-b/a).subs(m).subs(x, sym)] + solve(m[r], x)
     for p, sol in patterns:
         m = eq2.match(p)
         if m:
@@ -1090,7 +1097,7 @@ def tsolve(eq, sym):
                    sym in soln.free_symbols):
                 return [soln]
 
-    # let's also try to inverse the equation
+    # let's also try to invert the equation
     lhs = eq
     rhs = S.Zero
 
