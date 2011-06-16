@@ -39,7 +39,8 @@ from numbers import Rational
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.utilities import all, any, default_sort_key
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, ordered_iter
+from sympy.utilities.iterables import uniq
 
 from sympy import mpmath
 
@@ -513,7 +514,10 @@ functions are not supported.')
                 raise ArgumentIndexError(self, argindex)
         if not self.args[argindex-1].is_Symbol:
             # See issue 1525 and issue 1620
-            raise NotImplementedError("Cannot express derivatives evaluated at a point")
+            arg_dummy = C.Dummy('%i' % argindex)
+            return Subs(Derivative(
+                self.subs(self.args[argindex-1], arg_dummy),
+                arg_dummy), arg_dummy, self.args[argindex-1])
         return Derivative(self,self.args[argindex-1],evaluate=False)
 
     def _eval_as_leading_term(self, x):
@@ -728,7 +732,7 @@ class Derivative(Expr):
             return new
         if old in self.variables and not new.is_Symbol:
             # Issue 1620
-            raise NotImplementedError("Derivatives evaluated at a point are not yet implemented.")
+            return Subs(self, old, new)
         return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
 
     def matches(self, expr, repl_dict={}, evaluate=False):
@@ -855,6 +859,156 @@ class Lambda(Expr):
             return self.args[0] == self.args[1]
         else:
             return None
+
+class Subs(Expr):
+    """
+    Represents unevaluated substitutions of an expression.
+
+    `Subs(expr, x, x0)` receives 3 arguments: an expression, a variable or list
+    of distinct variables and a point or list of evaluation points
+    corresponding to those variables.
+
+    `Subs` objects are generally useful to represent unevaluated derivatives
+    calculated at a point.
+
+    The variables may be expressions, but they are subjected to the limitations
+    of subs(), so it is usually a good practice to use only symbols for
+    variables, since in that case there can be no ambiguity.
+
+    There's no automatic expansion - use the method .doit() to effect all
+    possible substitutions of the object and also of objects inside the
+    expression.
+
+    When evaluating derivatives at a point that is not a symbol, a Subs object
+    is returned. One is also able to calculate derivatives of Subs objects - in
+    this case the expression is always expanded (for the unevaluated form, use
+    Derivative()).
+
+    A simple example:
+    >>> from sympy import Subs, Function, sin
+    >>> from sympy.abc import x, y, z
+    >>> f = Function('f')
+    >>> e = Subs(f(x).diff(x), x, y)
+    >>> e.subs(y, 0)
+    Subs(D(f(_x), _x), Tuple(_x), Tuple(0))
+    >>> e.subs(f, sin).doit()
+    cos(y)
+
+    An example with several variables:
+    >>> Subs(f(x)*sin(y)+z, (x, y), (0, 1))
+    Subs(z + f(_x)*sin(_y), Tuple(_x, _y), Tuple(0, 1))
+    >>> _.doit()
+    z + f(0)*sin(1)
+
+    """
+    def __new__(cls, expr, variables, point, **assumptions):
+        if not ordered_iter(variables, Tuple):
+            variables = [variables]
+        variables = Tuple(*sympify(variables))
+
+        if uniq(variables) != variables:
+            repeated = repeated = [ v for v in set(variables)
+                                    if list(variables).count(v) > 1 ]
+            raise ValueError('cannot substitute expressions %s more than '
+                             'once.' % repeated)
+
+        if not ordered_iter(point, Tuple):
+            point = [point]
+        point = Tuple(*sympify(point))
+
+        if len(point) != len(variables):
+            raise ValueError('Number of point values must be the same as '
+                             'the number of variables.')
+
+        # it's necessary to use dummy variables internally
+        new_variables = Tuple(*[ arg.as_dummy() if arg.is_Symbol else
+            C.Dummy(str(arg)) for arg in variables ])
+        expr = sympify(expr).subs(tuple(zip(variables, new_variables)))
+
+        if expr.is_commutative:
+            assumptions['commutative'] = True
+
+        obj = Expr.__new__(cls, expr, new_variables, point, **assumptions)
+        return obj
+
+    def doit(self):
+        return self.expr.doit().subs(zip(self.variables, self.point))
+
+    def evalf(self):
+        return self.doit().evalf()
+
+    @property
+    def variables(self):
+        """The variables to be evaluated"""
+        return self._args[1]
+
+    @property
+    def expr(self):
+        """The expression on which the substitution operates"""
+        return self._args[0]
+
+    @property
+    def point(self):
+        """The values for which the variables are to be substituted"""
+        return self._args[2]
+
+    @property
+    def free_symbols(self):
+        return (self.expr.free_symbols - set(self.variables) |
+            set(self.point.free_symbols))
+
+    def __eq__(self, other):
+        if not isinstance(other, Subs):
+            return False
+        if (len(self.point) != len(other.point) or
+            self.free_symbols != other.free_symbols or
+            sorted(self.point) != sorted(other.point)):
+            return False
+
+        # non-repeated point args
+        selfargs = [ v[0] for v in sorted(zip(self.variables, self.point),
+            key = lambda v: v[1]) if self.point.args.count(v[1]) == 1 ]
+        otherargs = [ v[0] for v in sorted(zip(other.variables, other.point),
+            key = lambda v: v[1]) if other.point.args.count(v[1]) == 1 ]
+        # find repeated point values and subs each associated variable
+        # for a single symbol
+        selfrepargs = []
+        otherrepargs = []
+        if uniq(self.point) != self.point:
+            repeated = uniq([ v for v in self.point if
+                                self.point.args.count(v) > 1 ])
+            repswap = dict(zip(repeated, [ C.Dummy() for _ in
+                                            xrange(len(repeated)) ]))
+            selfrepargs = [ (self.variables[i], repswap[v]) for i, v in
+                            enumerate(self.point) if v in repeated ]
+            otherrepargs = [ (other.variables[i], repswap[v]) for i, v in
+                            enumerate(other.point) if v in repeated ]
+
+        return self.expr.subs(selfrepargs) == other.expr.subs(
+                tuple(zip(otherargs, selfargs))).subs(otherrepargs)
+
+    def __ne__(self, other):
+        return not(self == other)
+
+    def __hash__(self):
+        return super(Subs, self).__hash__()
+
+    def _hashable_content(self):
+        return tuple(sorted(self.point)) + tuple(sorted(self.free_symbols))
+
+    def _eval_subs(self, old, new):
+        if self == old:
+            return new
+        return Subs(self.expr.subs(old, new), self.variables,
+                    self.point.subs(old, new))
+
+    def _eval_derivative(self, s):
+        if s not in self.free_symbols:
+            return S.Zero
+        return Subs(self.expr.diff(s), self.variables, self.point).doit() \
+                + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
+                    self.variables, self.point).doit() for arg,
+                    point in zip(self.variables, self.point) ])
 
 
 def diff(f, *symbols, **kwargs):
