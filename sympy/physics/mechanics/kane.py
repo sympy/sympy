@@ -1,6 +1,6 @@
 __all__ = ['Kane']
 
-from sympy import Symbol, zeros, simplify
+from sympy import Symbol, zeros, simplify, expand
 from sympy.physics.mechanics.essential import ReferenceFrame
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.dynamicsymbol import DynamicSymbol
@@ -13,16 +13,16 @@ class Kane(object):
         """Supply the inertial frame. """
         self._inertial = frame
         self._us = None
-        self._uds = None
+        self._udots = None
         self._qs = None
-        self._qds = None
+        self._qdots = None
         self._kd = dict()
         self._time_varying = []
         self._forcelist = None
         self._bodylist = None
         self._fr = None
         self._frstar = None
-        self._udeps = []
+        self._uds = []
         self._dep_cons = []
 
     def _find_others(self, inlist, insyms):
@@ -60,7 +60,7 @@ class Kane(object):
         ol = []
         for i, v in enumerate(inlist):
             ol.append(v.diff(Symbol('t')))
-        self._uds = ol
+        self._udots = ol
 
     def kindiffeq(self, indict):
         if not isinstance(indict, dict):
@@ -71,7 +71,7 @@ class Kane(object):
         for i, v in enumerate(newlist):
             newlist[i] = DynamicSymbol(v.name[:-1])
         self._qs = newlist
-        self._qds = indict.keys()
+        self._qdots = indict.keys()
 
     def dependent_speeds(self, speedl, conl):
         if not isinstance(speedl, (list, tuple)):
@@ -80,17 +80,18 @@ class Kane(object):
         if not speedl.__len__() == conl.__len__():
             raise ValueError('There must be an equal number of dependent '
                              'speeds and constraints')
-        self._udeps = speedl
+        self._uds = speedl
         for i, v in enumerate(conl):
             conl[i] = v.subs(self._kd)
         self._dep_cons = conl
 
         uis = self._us[:]
-        uds = self._udeps[:]
-        oth = self._find_others(conl, uis + uds + self._qs + self._qds)
+        uds = self._uds[:]
+        oth = self._find_others(conl, uis + uds + self._qs + self._qdots)
         n = len(uis)
         m = len(uds)
         p = n - m
+        # puts independent speeds first
         for i, v in enumerate(uds):
             uis.remove(v)
         uis += udsv
@@ -124,14 +125,16 @@ class Kane(object):
         N = self._inertial
         self._forcelist = fl[:]
         uis = self._us
-        uds = self._udeps
+        uds = self._uds
         for i, v in enumerate(uds):
             uis.remove(v)
         uis += uds
         n = len(uis)
 
         FR = zeros((n, 1))
+        # goes through each Fr (where this loop's i is r)
         for i, v in enumerate(uis):
+            # does this for each force pair in list (pair is w)
             for j, w in enumerate(fl):
                 if isinstance(w[0], ReferenceFrame):
                     speed = w[0].ang_vel_in(N).subs(self._kd)
@@ -142,6 +145,7 @@ class Kane(object):
                 else:
                     raise TypeError('First entry in force pair is a point or'
                                     ' frame')
+        # for dependent speeds
         if len(uds) != 0:
             m = len(uds)
             p = n - m
@@ -159,43 +163,58 @@ class Kane(object):
         N = self._inertial
         self._bodylist = bl[:]
         uis = self._us
-        uds = self._udeps
+        uds = self._uds
         for i, v in enumerate(uds):
             uis.remove(v)
         uis += uds
         n = len(uis)
 
+        # Form R*, T* for each body or particle in the list
+        rsts = []
+        for i, v in enumerate(bl):
+            if isinstance(v, RigidBody):
+                om = v.frame.ang_vel_in(N).subs(self._kd)
+                ve = v.mc.vel(N).subs(self._kd)
+                if v.mass.diff(Symbol('t')) != 0:
+                    r = (v.mass * ve).dt(N)
+                else:
+                    r = v.mass * v.mc.acc(N).subs(self._kd)
+                I, p = v.inertia
+                if p != v.mc:
+                    pass
+                    #redefine I
+                if I.dt(v.frame) != 0:
+                    t = (I & om).diff(Symbol('t'), N)
+                else:
+                    t = ((v.frame.ang_acc_in(N).subs(self._kd) & I) +
+                         ((om ^ I) & om))
+            elif isinstance(v, Particle):
+                t = 0
+                ve = v.point.vel(N).subs(self._kd)
+                if v.mass.diff(Symbol('t')) != 0:
+                    r = (v.mass * ve).dt(N)
+                else:
+                    r = w.mass * v.point.acc(N).subs(self._kd)
+            else:
+                raise TypeError('The body list needs RigidBody or '
+                                'Particle as list elements')
+            rsts.append((r, t))
+
+        # Use R*, T* and partial velocities to form FR*
         FRSTAR = zeros((n, 1))
+        # goes through each Fr (where this loop's i is r)
         for i, v in enumerate(uis):
+            # does this for each body in the list (w)
             for j, w in enumerate(bl):
                 if isinstance(w, RigidBody):
                     om = w.frame.ang_vel_in(N).subs(self._kd)
                     ve = w.mc.vel(N).subs(self._kd)
-                    if w.mass.diff(Symbol('t')) != 0:
-                        r = (w.mass * ve).dt(N)
-                    else:
-                        r = w.mass * ve
-                    r = r & ve.diff(v, N)
-                    I, p = w.inertia
-                    if p != w.mc:
-                        pass
-                        #redefine I
-                    if I.dt(w.frame) != 0:
-                        t = (I & om).diff(Symbol('t'), N)
-                    else:
-                        t = ((w.frame.ang_acc_in(N).subs(self._kd) & I) +
-                             ((om ^ I) & om))
-                    t = t & om.diff(v, N)
+                    r = rsts[j][0] & ve.diff(v, N)
+                    t = rsts[j][1] & om.diff(v, N)
                     FRSTAR[i] -= (r + t)
                 elif isinstance(w, Particle):
-                    traspeed = w.mc.vel(N).subs(self._kd).diff(v)
-                    r = w.mass * w.mc.vel(N).subs(self._kd)
-                    r = r.diff(Symbol('t'))
-                    r = r & traspeed
-                    FRSTAR[i] -= traspeed & r
-                else:
-                    raise TypeError('The body list needs RigidBody or '
-                                    'Particle as list elements')
+                    ve = w.mc.vel(N).subs(self._kd)
+                    FRSTAR[i] -= rsts[j][0] & ve.diff(v, N)
         if len(uds) != 0:
             m = len(uds)
             p = n - m
@@ -208,8 +227,8 @@ class Kane(object):
 
     def mass_matrix(self):
         uis = self._us
-        udots = self._uds
-        uds = self._udeps
+        udots = self._udots
+        uds = self._uds
         for i, v in enumerate(uds):
             uis.remove(v)
         p = len(uis)
@@ -225,8 +244,8 @@ class Kane(object):
 
     def rhs(self):
         uis = self._us
-        udots = self._uds
-        uds = self._udeps
+        udots = self._udots
+        uds = self._uds
         for i, v in enumerate(uds):
             uis.remove(v)
         p = len(uis)
@@ -237,7 +256,7 @@ class Kane(object):
             for j in range(p):
                 zeroeq[i] -= MM[ii] * udots[j]
                 ii += 1
-            zeroeq[i] = -simplify(simplify(zeroeq[i]))
+            zeroeq[i] = -simplify(expand(zeroeq[i]))
         self._rhs = zeroeq
         return zeroeq
 

@@ -1,7 +1,7 @@
 __all__ = ['ReferenceFrame', 'Vector', 'Dyad']
 
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
-                   expand, S)
+                   expand, S, zeros)
 from sympy.core.numbers import Zero
 
 class Dyad(object):
@@ -118,7 +118,7 @@ class Dyad(object):
         return self.__mul__(1 / other)
 
     def __eq__(self, other):
-        """Tests for equality. 
+        """Tests for equality.
 
         Is currently weak; needs stronger comparison testing
 
@@ -127,6 +127,8 @@ class Dyad(object):
         if isinstance(other, (int, type(Zero()))):
             if (other == 0) & (self.args == []):
                 return True
+            elif other == 0:
+                return False
         self._check_dyad(other)
         return set(self.args) == set(other.args)
 
@@ -1217,8 +1219,12 @@ class Vector(object):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(wrt), otherframe)])
             else:
-                diffed = (Vector([v]).express(otherframe)).args[0][0].diff(wrt)
-                outvec += Vector([(diffed, otherframe)]).express(v[1])
+                if otherframe.dcm(v[1]).diff(wrt) == zeros((3, 3)):
+                    d = v[0].diff(wrt)
+                    outvec += Vector([(d, v[1])])
+                else:
+                    d = (Vector([v]).express(otherframe)).args[0][0].diff(wrt)
+                    outvec += Vector([(d, otherframe)]).express(v[1])
         return outvec
 
     def dt(self, otherframe):
@@ -1290,7 +1296,6 @@ class Vector(object):
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
                 temp = otherframe.dcm(v[1]) * v[0]
-                temp.simplify()
                 for i2, v2 in enumerate(temp):
                     temp[i2] = trigsimp(v2, recursive=True)
                 outvec += Vector([(temp, otherframe)])
