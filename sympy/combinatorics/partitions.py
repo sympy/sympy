@@ -184,6 +184,28 @@ class Partition(Basic):
         """
         raise NotImplementedError()
 
+    @property
+    def RGS(self):
+        """
+        Returns the restricted growth string of the partition.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3],[4,5]], [1,2,3,4,5])
+        >>> a.RGS
+        [0, 0, 1, 2, 2]
+        >>> a = Partition([[1,4],[2],[3,5]], [1,2,3,4,5])
+        >>> a.RGS
+        [0, 1, 2, 0, 2]
+        """
+        rgs = [0] * self.partitions_set_size
+        a = 0
+        for part in self.partition:
+            for i in part:
+                rgs[self.partition_set.index(i)] = a
+            a += 1
+        return rgs
+
 class IntegerPartition(Partition):
     """
     This class represents an abstract partition.
