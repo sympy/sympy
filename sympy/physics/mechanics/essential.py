@@ -155,6 +155,9 @@ class Dyad(object):
                     newlist[i][2])
         return Dyad(newlist)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __rand__(self, other):
         """The inner product operator for a Vector or Dyad, and a Dyad
 
@@ -1172,6 +1175,13 @@ class Vector(object):
     def outer(self, other):
         return self | other
     outer.__doc__ = __or__.__doc__
+
+    def subs(self, dictin):
+        """Substituion on the Vector with a dict."""
+        ov = 0
+        for i, v in enumerate(self.args):
+            ov += Vector([(v[0].subs(dictin), v[1])])
+        return ov
 
     def diff(self, wrt, otherframe):
         """Takes the partial derivative, with respect to a value, in a frame.

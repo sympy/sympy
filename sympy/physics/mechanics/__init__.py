@@ -11,6 +11,10 @@ __all__ = []
 #    determine which names are imported when
 #    "from sympy.physics.mechanics import *" is done.
 
+import kane
+from kane import *
+__all__.extend(kane.__all__)
+
 import rigidbody
 from rigidbody import *
 __all__.extend(rigidbody.__all__)
