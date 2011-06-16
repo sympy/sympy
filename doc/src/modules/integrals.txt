@@ -52,6 +52,15 @@ even a few nonelementary integrals (in particular, some integrals involving the 
 	      4
 
 
+Integral Transforms
+-------------------
+
+Sympy has special support for definite integrals, and integral transforms.
+
+.. autofunction:: sympy.integrals.transforms.mellin_transform
+.. autofunction:: sympy.integrals.transforms.inverse_mellin_transform
+
+
 Internals
 ---------
 
