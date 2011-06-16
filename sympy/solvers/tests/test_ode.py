@@ -145,6 +145,14 @@ def test_classify_ode():
     assert classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)) ==\
         ('Bernoulli', 'Bernoulli_Integral')
     raises(ValueError, "classify_ode(x + f(x, y).diff(x).diff(y), f(x, y))")
+    # 2077
+    assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) +
+                 2*f(x)/(k*f(x) + k*x*f(x)) +
+                 x*f(x).diff(x)/(k*f(x) + k*x*f(x))
+                 + z, f(x)) == ('separable',
+                                '1st_exact',
+                                'separable_Integral',
+                                '1st_exact_Integral')
 
 def test_ode_order():
     f = Function('f')
