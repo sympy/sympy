@@ -321,7 +321,8 @@ def test_division():
     assert ( -(1/x**2)).subs(x,-2) == -Rational(1,4)
 
 def test_add():
-    a, b, c, d, x = abc.a, abc.b, abc.c, abc.d, abc.x
+    a, b, c, d, x, y, t = symbols('a,b,c,d,x,y,t')
+
     assert (a**2 - b - c).subs(a**2 - b, d) in [d - c, a**2 - b - c]
     assert (a**2 - c).subs(a**2 - c, d) == d
     assert (a**2 - b - c).subs(a**2 - c, d) in [d - b, a**2 - b - c]
@@ -329,6 +330,11 @@ def test_add():
     assert (a**2 - b - sqrt(a)).subs(a**2 - sqrt(a), c) == c - b
     assert (a+b+exp(a+b)).subs(a+b,c) == c + exp(c)
     assert (c+b+exp(c+b)).subs(c+b,a) == a + exp(a)
+
+    assert ((x + 1)*y).subs(x + 1, t) == t*y
+    assert ((-x - 1)*y).subs(x + 1, t) == -t*y
+    assert ((x - 1)*y).subs(x + 1, t) == y*(t - 2)
+    assert ((-x + 1)*y).subs(x + 1, t) == y*(-t + 2)
 
     # this should work everytime:
     e = a**2 - b - c

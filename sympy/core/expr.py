@@ -1811,6 +1811,10 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
+    def as_coeff_Add(self):
+        """Efficiently extract the coefficient of a summation. """
+        return S.Zero, self
+
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################

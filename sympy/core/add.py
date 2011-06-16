@@ -214,6 +214,18 @@ class Add(AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
+    def as_coeff_Add(self):
+        """Efficiently extract the coefficient of a summation. """
+        coeff, args = self.args[0], self.args[1:]
+
+        if coeff.is_Number:
+            if len(args) == 1:
+                return coeff, args[0]
+            else:
+                return coeff, self._new_rawargs(*args)
+        else:
+            return S.Zero, self
+
     # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
     # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
     # issue 2425.
@@ -346,19 +358,28 @@ class Add(AssocOp):
             return new
         if isinstance(old, FunctionClass):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
-        coeff_self, terms_self = self.as_coeff_add()
-        coeff_old, terms_old = old.as_coeff_add()
-        if terms_self == terms_old: # (2+a).subs(3+a,y) -> 2-3+y
-            return Add(new, coeff_self, -coeff_old)
+
+        coeff_self, terms_self = self.as_coeff_Add()
+        coeff_old, terms_old = old.as_coeff_Add()
+
+        if terms_self == terms_old:                 # (2+a).subs(3+a,y) -> 2-3+y
+            return  new + coeff_self - coeff_old
+        if terms_self == -terms_old:
+            return -new + coeff_self + coeff_old
+
         if old.is_Add:
-            if len(terms_old) < len(terms_self): # (a+b+c+d).subs(b+c,x) -> a+x+d
+            coeff_self, terms_self = self.as_coeff_add()
+            coeff_old, terms_old = old.as_coeff_add()
+
+            if len(terms_old) < len(terms_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
                 self_set = set(terms_self)
                 old_set = set(terms_old)
+
                 if old_set < self_set:
                     ret_set = self_set - old_set
                     return Add(new, coeff_self, -coeff_old, *[s._eval_subs(old, new) for s in ret_set])
-        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
+        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
 
     def removeO(self):
         args = [a for a in self.args if not a.is_Order]
