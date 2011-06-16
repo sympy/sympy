@@ -609,6 +609,17 @@ class Mul(AssocOp):
         else:
             return S.One, self
 
+    def as_real_imag(self, deep=True):
+        other = []
+        coeff = S(1)
+        for a in self.args:
+            if a.is_real:
+                coeff *= a
+            else:
+                other.append(a)
+        m = Mul(*other)
+        return (coeff*C.re(m), coeff*C.im(m))
+
     @staticmethod
     def _expandsums(sums):
         """

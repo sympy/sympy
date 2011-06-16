@@ -133,3 +133,8 @@ def test_issue_1985():
 def test_issue_2137():
     assert (cos(1+I)**3).as_real_imag() == (-3*sin(1)**2*sinh(1)**2*cos(1)*cosh(1) +
         cos(1)**3*cosh(1)**3, -3*cos(1)**2*cosh(1)**2*sin(1)*sinh(1) + sin(1)**3*sinh(1)**3)
+
+def test_real_imag():
+    x = Symbol('x')
+    a = Symbol('a', real=True)
+    assert (2*a*x).as_real_imag() == (2*a*re(x), 2*a*im(x))
