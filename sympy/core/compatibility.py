@@ -179,9 +179,9 @@ def ordered_iter(i, include=None):
     True
     >>> ordered_iter(set())
     False
-    >>> ordered_iter(Tuple())
+    >>> ordered_iter('abc')
     False
-    >>> ordered_iter(Tuple(), include=Tuple)
+    >>> ordered_iter('abc', include=str)
     True
 
     """

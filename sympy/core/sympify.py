@@ -4,6 +4,7 @@ from types import NoneType
 from inspect import getmro
 
 from core import all_classes as sympy_classes
+from sympy.core.compatibility import iterable
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
@@ -107,7 +108,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if strict:
         raise SympifyError(a)
 
-    if isinstance(a, (list, tuple, set)):
+    if iterable(a):
         return type(a)([sympify(x, locals=locals, convert_xor=convert_xor, rational=rational) for x in a])
 
     # At this point we were given an arbitrary expression
