@@ -18,8 +18,6 @@ from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
 import sympy
 
 from sympy import mpmath
-mpmath.mp.dps = 16
-sin02 = mpmath.mpf("0.198669330795061215459412627")
 
 # first, systematically check, that all operations are implemented and don't
 # raise and exception
@@ -194,15 +192,21 @@ def test_issue629():
     assert (Float("0.5") + array([2*x, 0]) == array([2*x + Float("0.5"), Float("0.5")])).all()
 
 def test_lambdify():
-    x = Symbol("x")
-    f = lambdify(x, sin(x), "numpy")
-    prec = 1e-15
-    assert -prec < f(0.2) - sin02 < prec
+    dps = mpmath.mp.dps
     try:
-        f(x) # if this succeeds, it can't be a numpy function
-        assert False
-    except AttributeError:
-        pass
+        mpmath.mp.dps = 16
+        sin02 = mpmath.mpf("0.198669330795061215459412627")
+        x = Symbol("x")
+        f = lambdify(x, sin(x), "numpy")
+        prec = 1e-15
+        assert -prec < f(0.2) - sin02 < prec
+        try:
+            f(x) # if this succeeds, it can't be a numpy function
+            assert False
+        except AttributeError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 def test_lambdify_matrix():
     x = Symbol("x")
