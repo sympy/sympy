@@ -975,3 +975,31 @@ def binary_partitions(n):
             else:
                 x >>= 1
     yield [1]*n
+
+def uniq(seq):
+    '''
+    Remove repeated elements from an iterable, preserving order of first
+    appearance.
+
+    Returns a sequence of the same type of the input, or a list if the input
+    was not a sequence.
+
+    Examples:
+    --------
+    >>> from sympy.utilities.iterables import uniq
+    >>> uniq([1,4,1,5,4,2,1,2])
+    [1, 4, 5, 2]
+    >>> uniq((1,4,1,5,4,2,1,2))
+    (1, 4, 5, 2)
+    >>> uniq(x for x in (1,4,1,5,4,2,1,2))
+    [1, 4, 5, 2]
+
+    '''
+    from sympy.core.function import Tuple
+    seen = set()
+    result = (s for s in seq if not (s in seen or seen.add(s)))
+    if not hasattr(seq, '__getitem__'):
+        return list(result)
+    if isinstance(seq, Tuple):
+        return Tuple(*tuple(result))
+    return type(seq)(result)

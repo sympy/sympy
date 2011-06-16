@@ -4,7 +4,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    Sum, FF, ZZ, QQ, RR, O)
+    Sum, Subs, FF, ZZ, QQ, RR, O)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -161,9 +161,17 @@ Limit(x**2, x, 0)
 Limit(1/x, x, 0)
 Limit(sin(x)/x, x, 0)
 
+
 UNITS:
 
 joule => kg*m**2/s
+
+
+SUBS:
+
+Subs(f(x), x, ph**2)
+Subs(f(x).diff(x), x, 0)
+Subs(f(x).diff(x)/y, (x, y), (0, Rational(1, 2)))
 
 """
 
@@ -2385,3 +2393,58 @@ kg⋅m \n\
 """
     assert upretty(expr) == unicode_str
     assert pretty(expr) == ascii_str
+
+def test_pretty_Subs():
+    f = Function('f')
+    expr = Subs(f(x), x, ph**2)
+    ascii_str = \
+"""\
+(f(x))|     2\n\
+      |x=phi \
+"""
+    unicode_str = \
+u"""\
+(f(x))│   2\n\
+      │x=φ \
+"""
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
+
+    expr = Subs(f(x).diff(x), x, 0)
+    ascii_str = \
+"""\
+/d       \\|   \n\
+|--(f(x))||   \n\
+\\dx      /|x=0\
+"""
+    unicode_str = \
+u"""\
+⎛d       ⎞│   \n\
+⎜──(f(x))⎟│   \n\
+⎝dx      ⎠│x=0\
+"""
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
+
+    expr = Subs(f(x).diff(x)/y, (x, y), (0, Rational(1, 2)))
+    ascii_str = \
+"""\
+/d       \\|          \n\
+|--(f(x))||          \n\
+|dx      ||          \n\
+|--------||          \n\
+\\   y    /|x=0, y=1/2\
+"""
+    unicode_str = \
+u"""\
+⎛d       ⎞│          \n\
+⎜──(f(x))⎟│          \n\
+⎜dx      ⎟│          \n\
+⎜────────⎟│          \n\
+⎝   y    ⎠│x=0, y=1/2\
+"""
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
