@@ -173,83 +173,6 @@ def checksol(f, symbol, sol=None, **flags):
     # returns None if it can't conclude
     # TODO: improve solution testing
 
-# Codes for guess solve strategy
-GS_POLY = 0
-GS_RATIONAL = 1
-GS_POLY_CV_1 = 2 # can be converted to a polynomial equation via the change of variable y -> x**a, a real
-GS_POLY_CV_2 = 3 # can be converted to a polynomial equation multiplying on both sides by x**m
-                 # for example, x + 1/x == 0. Multiplying by x yields x**2 + x == 0
-GS_RATIONAL_CV_1 = 4 # can be converted to a rational equation via the change of variable y -> x**n
-GS_PIECEWISE = 5
-GS_TRANSCENDENTAL = 6
-
-def guess_solve_strategy(expr, symbol):
-    """
-    Tries to guess what approach should be used to solve a specific equation
-
-    Returns
-    =======
-       - -1: could not guess
-       - integer > 0: code representing certain type of equation. See GS_* fields
-         on this module for a complete list
-
-    Examples
-    ========
-    >>> from sympy import Symbol, Rational
-    >>> from sympy.solvers.solvers import guess_solve_strategy
-    >>> from sympy.abc import x
-    >>> guess_solve_strategy(x**2 + 1, x)
-    0
-    >>> guess_solve_strategy(x**Rational(1,2) + 1, x)
-    2
-
-    """
-    eq_type = -1
-    if expr.is_Add:
-        return max([guess_solve_strategy(i, symbol) for i in expr.args])
-
-    elif expr.is_Mul:
-        # check for rational functions
-        num, denom = expr.as_numer_denom()
-        if denom.has(symbol):
-            #we have a quotient
-            m = max(guess_solve_strategy(num, symbol), guess_solve_strategy(denom, symbol))
-            if m == GS_POLY:
-                return GS_RATIONAL
-            elif m == GS_POLY_CV_1:
-                return GS_RATIONAL_CV_1
-            else:
-                raise NotImplementedError
-        else:
-            return max([guess_solve_strategy(i, symbol) for i in expr.args])
-
-    elif expr.is_Symbol:
-        return GS_POLY
-
-    elif expr.is_Pow:
-        if expr.exp.has(symbol):
-            return GS_TRANSCENDENTAL
-        elif not expr.exp.has(symbol) and expr.base.has(symbol):
-            if expr.exp.is_Integer and expr.exp > 0:
-                eq_type = max(eq_type, GS_POLY)
-            elif expr.exp.is_Integer and expr.exp < 0:
-                eq_type = max(eq_type, GS_POLY_CV_2)
-            elif expr.exp.is_Rational:
-                eq_type = max(eq_type, GS_POLY_CV_1)
-            else:
-                return GS_TRANSCENDENTAL
-
-    elif expr.is_Piecewise:
-        return GS_PIECEWISE
-
-    elif expr.is_Function and expr.has(symbol):
-        return GS_TRANSCENDENTAL
-
-    elif not expr.has(symbol):
-        return GS_POLY
-
-    return eq_type
-
 def solve(f, *symbols, **flags):
     """
     Algebraically solves equations and systems of equations.
@@ -561,119 +484,8 @@ def _solve(f, *symbols, **flags):
                 soln = _solve(m, symbol, **flags)
                 result.update(set(soln))
             result = [s for s in result if all(not checksol(den, {symbol: s}) for den in dens)]
-            return result
 
-        # first see if it really depends on symbol and whether there
-        # is a linear solution
-        f_num, sol = solve_linear(f, x=symbols)
-        if not symbol in f_num.free_symbols:
-            return []
-        elif f_num.is_Symbol:
-            return [cancel(sol)]
-
-        strategy = guess_solve_strategy(f, symbol)
-        result = False # no solution was obtained
-
-        if strategy == GS_POLY:
-            poly = f.as_poly(symbol)
-            if poly is None:
-                msg = "Cannot solve equation %s for %s" % (f, symbol)
-            else:
-                # for cubics and quartics, if the flag wasn't set, DON'T do it
-                # by default since the results are quite long. Perhaps one could
-                # base this decision on a certain critical length of the roots.
-                if poly.degree() > 2:
-                    flags['simplified'] = flags.get('simplified', False)
-                result = roots(poly, cubics=True, quartics=True).keys()
-
-        elif strategy == GS_RATIONAL:
-            P, _ = f.as_numer_denom()
-            dens = denoms(f, symbols)
-            try:
-                soln = _solve(P, symbol, **flags)
-            except NotImplementedError:
-                msg = "Cannot solve equation %s for %s" % (P, symbol)
-                result = []
-            else:
-                if dens:
-                    # reject any result that makes any denom. affirmatively 0;
-                    # if in doubt, keep it
-                    result = [s for s in soln if all(not checksol(den, {symbol: s}) for den in dens)]
-                else:
-                    result = soln
-
-        elif strategy == GS_POLY_CV_1:
-            args = list(f.args)
-            if isinstance(f, Pow):
-                result = _solve(args[0], symbol, **flags)
-            elif isinstance(f, Add):
-                # we must search for a suitable change of variables
-                # collect exponents
-                exponents_denom = list()
-                for arg in args:
-                    if isinstance(arg, Pow):
-                        exponents_denom.append(arg.exp.q)
-                    elif isinstance(arg, Mul):
-                        for mul_arg in arg.args:
-                            if isinstance(mul_arg, Pow):
-                                exponents_denom.append(mul_arg.exp.q)
-                assert len(exponents_denom) > 0
-                if len(exponents_denom) == 1:
-                    m = exponents_denom[0]
-                else:
-                    # get the LCM of the denominators
-                    m = reduce(ilcm, exponents_denom)
-                # x -> y**m.
-                # we assume positive for simplification purposes
-                t = Dummy('t', positive=True)
-                f_ = f.subs(symbol, t**m)
-                if guess_solve_strategy(f_, t) != GS_POLY:
-                    msg = "Could not convert to a polynomial equation: %s" % f_
-                    result = []
-                else:
-                    soln = [s**m for s in _solve(f_, t)]
-                    # we might have introduced solutions from another branch
-                    # when changing variables; check and keep solutions
-                    # unless they definitely aren't a solution
-                    result = [s for s in soln if checksol(f, {symbol: s}) is not False]
-
-            elif isinstance(f, Mul):
-                result = []
-                for m in f.args:
-                    result.extend(_solve(m, symbol, **flags) or [])
-
-        elif strategy == GS_POLY_CV_2:
-            m = 0
-            args = list(f.args)
-            if isinstance(f, Add):
-                for arg in args:
-                    if isinstance(arg, Pow):
-                        m = min(m, arg.exp)
-                    elif isinstance(arg, Mul):
-                        for mul_arg in arg.args:
-                            if isinstance(mul_arg, Pow):
-                                m = min(m, mul_arg.exp)
-            elif isinstance(f, Mul):
-                for mul_arg in args:
-                    if isinstance(mul_arg, Pow):
-                        m = min(m, mul_arg.exp)
-
-            if m and m != 1:
-                f_ = simplify(f*symbol**(-m))
-                try:
-                    sols = _solve(f_, symbol)
-                except NotImplementedError:
-                    msg = 'Could not solve %s for %s' % (f_, symbol)
-                else:
-                    # we might have introduced unwanted solutions
-                    # when multiplying by x**-m; check and keep solutions
-                    # unless they definitely aren't a solution
-                    if sols:
-                        result = [s for s in sols if checksol(f, {symbol: s}) is not False]
-            else:
-                msg = 'CV_2 calculated %d but it should have been other than 0 or 1' % m
-
-        elif strategy == GS_PIECEWISE:
+        elif f.is_Piecewise:
             result = set()
             for expr, cond in f.args:
                 candidates = _solve(expr, *symbols)
@@ -698,28 +510,71 @@ def _solve(f, *symbols, **flags):
                     for candidate in candidates:
                         if bool(cond.subs(symbol, candidate)):
                             result.add(candidate)
+        else:
+            # first see if it really depends on symbol and whether there
+            # is a linear solution
+            f_num, sol = solve_linear(f, x=symbols)
+            if not symbol in f_num.free_symbols:
+                return []
+            elif f_num.is_Symbol:
+                return [cancel(sol)]
 
-            result = list(result)
-
-        elif strategy == -1:
-            raise ValueError('Could not parse expression %s' % f)
-
-        # this is the fallback for not getting any other solution
-        if result is False or strategy == GS_TRANSCENDENTAL:
-            soln = _tsolve(f_num, symbol)
+            result = False # no solution was obtained
             dens = denoms(f, symbols)
-            if not dens:
-                result = soln
+            poly = Poly(f_num)
+            if poly is None:
+                raise ValueError('could not convert %s to Poly' % f_num)
+            gens = [g for g in poly.gens if g.has(symbol)]
+            if len(gens) > 1:
+                be = [g.as_base_exp() for g in gens]
+                bases = set([i[0] for i in be])
+                if len(bases) == 1 and all([i[1].is_Rational for i in be]):
+                    m = reduce(ilcm, (i[1].q for i in be))
+                    p = Dummy('p', positive=True)
+                    cv = p**m
+                    fnew = f_num.subs(be[0][0], cv)
+                    poly = Poly(fnew, p)
+                    # for cubics and quartics, if the flag wasn't set, DON'T do it
+                    # by default since the results are quite long. Perhaps one could
+                    # base this decision on a certain critical length of the roots.
+                    if poly.degree() > 2:
+                        flags['simplified'] = flags.get('simplified', False)
+                    soln = roots(poly, cubics=True, quartics=True).keys()
+                    inversion = _solve(p - be[0][0], symbol, **flags)
+                    soln = [i.subs(p, s) for i in inversion for s in soln]
+                    result = [r for r in soln if checksol(f_num, {symbol: r}) is not False]
+            if len(gens) == 1:
+                if len(poly.gens) > 1:
+                    poly = Poly(poly, gens[0])
+                if not flags.pop('tsolve', False):
+                    # for cubics and quartics, if the flag wasn't set, DON'T do it
+                    # by default since the results are quite long. Perhaps one could
+                    # base this decision on a certain critical length of the roots.
+                    if poly.degree() > 2:
+                        flags['simplified'] = flags.get('simplified', False)
+                    soln = roots(poly, cubics=True, quartics=True).keys()
+                    gen = poly.gen
+                    if not gen == symbol:
+                        u = Dummy()
+                        flags['tsolve'] = True
+                        inversion = _solve(gen - u, symbol, **flags)
+                        soln = [i.subs(u, s) for i in inversion for s in soln]
+                    result = soln
+                else:
+                    result = _tsolve(poly.as_expr(), symbol)
             else:
-                # reject any result that makes any denom. affirmatively 0;
-                # if in doubt, keep it
-                result = [s for s in soln if all(not checksol(den, {symbol: s}) for den in dens)]
+                msg = 'multiple generators %s' % gens
 
         if result is False:
             raise NotImplementedError(msg + "\nNo algorithms are implemented to solve equation %s" % f)
 
-        if flags.get('simplified', True) and strategy != GS_RATIONAL:
+        if flags.get('simplified', True):
             result = map(simplify, result)
+
+        # reject any result that makes any denom. affirmatively 0;
+        # if in doubt, keep it
+        # XXX set simplify=False?
+        result = [s for s in result if all(not checksol(den, {symbol: s}) for den in dens)]
 
         return result
     else:
