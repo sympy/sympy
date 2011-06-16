@@ -1023,6 +1023,13 @@ def test_as_ordered_terms():
     assert ( 4 - 3*I).as_ordered_terms() == [ 4, -3*I]
     assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
 
+    f = x**2*y**2 + x*y**4 + y + 2
+
+    assert f.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
+    assert f.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
+    assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
+    assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
+
 def test_issue_1100():
     # first subs and limit gives NaN
     a = x/y

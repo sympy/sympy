@@ -257,10 +257,21 @@ class Expr(Basic, EvalfMixin):
 
         monom_key = monomial_key(order)
 
+        def neg(monom):
+            result = []
+
+            for m in monom:
+                if isinstance(m, tuple):
+                    result.append(neg(m))
+                else:
+                    result.append(-m)
+
+            return tuple(result)
+
         def key(term):
             _, ((re, im), monom, ncpart) = term
 
-            monom = [ -m for m in monom_key(monom) ]
+            monom = neg(monom_key(monom))
             ncpart = tuple([ e.sort_key(order=order) for e in ncpart ])
             coeff = ((bool(im), im), (re, im))
 
