@@ -607,14 +607,14 @@ Differential Equations
 In ``isympy``::
 
     >>> f(x).diff(x, x) + f(x)
-              2
-             d
-    f(x) + -----(f(x))
-           dx dx
+            2
+           d
+    f(x) + ---(f(x))
+             2
+           dx
 
     >>> dsolve(f(x).diff(x, x) + f(x), f(x))
     f(x) = C1*cos(x) + C2*sin(x)
-
 
 .. index:: equations; algebraic, solve
 
