@@ -106,6 +106,7 @@
 #      - Idx with step determined by function call
 
 from sympy.core import Expr, Basic, Tuple, Symbol, Integer, sympify, S
+from sympy.core.compatibility import ordered_iter
 
 class IndexException(Exception):
     pass
@@ -168,7 +169,7 @@ class IndexedBase(Expr):
             label = Symbol(label)
 
         obj = Expr.__new__(cls, label, **kw_args)
-        if isinstance(shape, (tuple, list)):
+        if ordered_iter(shape):
             obj._shape = Tuple(*shape)
         else:
             obj._shape = shape
@@ -185,7 +186,7 @@ class IndexedBase(Expr):
         return Expr._hashable_content(self) + (self._shape,)
 
     def __getitem__(self, indices, **kw_args):
-        if isinstance(indices, (tuple, list, Tuple)):
+        if ordered_iter(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
                 raise IndexException("Rank mismatch")
@@ -373,7 +374,7 @@ class Idx(Expr):
         if not label.is_integer:
             raise TypeError("Idx object requires an integer label")
 
-        elif isinstance(range, (tuple, list, Tuple)):
+        elif ordered_iter(range):
             assert len(range) == 2, "Idx got range tuple with wrong length"
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):
@@ -384,7 +385,7 @@ class Idx(Expr):
                 raise TypeError("Idx object requires an integer dimension")
             args = label, Tuple(S.Zero, range-S.One)
         elif range:
-            raise TypeError("range must be  tuple or integer sympy expression")
+            raise TypeError("range must be ordered iterable or integer sympy expression")
         else:
             args = label,
 
