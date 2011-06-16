@@ -1199,6 +1199,7 @@ def test_Add_primitive():
 
     assert (2*x/3 + 4*y/9).primitive() == (Rational(2, 9), 3*x + 2*y)
     assert (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
+    assert S.Zero.gcd(1.0) == 1 # the loop in primitive assumes this to be true
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)

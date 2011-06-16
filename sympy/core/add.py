@@ -555,29 +555,24 @@ class Add(AssocOp):
         """
         cont = S.Zero
         terms = []
-        terms = [a.as_coeff_mul() for a in self.args]
+        terms = [a.as_coeff_Mul() for a in self.args]
         for term in terms:
             cont = cont.gcd(term[0])
-            if cont is not S.One:
+            if cont != 1: # not S.One in case Float is ever handled
                 continue
             return S.One, self
 
         M = object.__new__(Mul)
-        rebuild = cont.q != 1
-        p, q = cont.p, cont.q
-        for i, (c, margs) in enumerate(terms):
-            c = Rational(c.p*q, c.q*p)
-            if c is S.One:
-                rebuild = True
-                terms[i] = M._new_rawargs(*margs)
+        for i, term in enumerate(terms):
+            c = term[0]/cont
+            if c == 1:  # not S.One in case Float is ever handled
+                terms[i] = term[1]
             else:
-                terms[i] = M._new_rawargs(c, *margs)
+                terms[i] = M._new_rawargs(c, term[1])
 
-        if rebuild:
-            # the ordering of terms may change if cont is not an Integer
-            # or if one of the coefficients vanishes so we use Add
-            return cont, Add(*terms)
-        return cont, self._new_rawargs(*terms)
+        # it would be better not to use Add, but since ordering may have
+        # changed, _new_rawargs cannot be used
+        return cont, Add(*terms)
 
 from function import FunctionClass
 from mul import Mul
