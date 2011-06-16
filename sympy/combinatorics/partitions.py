@@ -11,6 +11,8 @@ class Partition(Basic):
     union equals a given set.
     """
 
+    _rank = None
+
     def next(self):
         """
         Generates the next partition.
@@ -183,8 +185,15 @@ class Partition(Basic):
         Gets the rank of a partition.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3],[4,5]], [1,2,3,4,5])
+        >>> a.rank
+        13
         """
-        raise NotImplementedError()
+        if self._rank is not None:
+            return self._rank
+        self._rank = RGS_rank(self.RGS)
+        return self._rank
 
     @property
     def RGS(self):
