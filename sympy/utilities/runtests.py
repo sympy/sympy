@@ -135,6 +135,25 @@ def test(*paths, **kwargs):
 
     Run all tests in sympy/core and sympy/utilities:
     >> sympy.test("/core", "/util")
+
+    Run specific test from a file:
+    >> sympy.test("sympy/core/tests/test_basic.py", kw="test_equality")
+
+    Run the tests with verbose mode on:
+    >> sympy.test(verbose=True)
+
+    Don't sort the test output:
+    >> sympy.test(sort=False)
+
+    Turn on post-mortem pdb:
+    >> sympy.test(pdb=True)
+
+    Turn off colors:
+    >> sympy.test(colors=False)
+
+    The traceback verboseness can be set to "short" or "no" (default is "short")
+    >> sympy.test(tb='no')
+
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
