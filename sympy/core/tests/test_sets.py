@@ -436,6 +436,3 @@ def test_product_basic():
     raises(ValueError, "(Interval(-10,10)**2).subset(Interval(-5,5)**3)")
 
     assert square.subset(Interval(.2,.5)*FiniteSet(.5)) # segment in square
-
-
->>>>>>> f78fde9... Product Sets

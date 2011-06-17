@@ -2,7 +2,7 @@ from basic import Basic
 from singleton import Singleton, S
 from evalf import EvalfMixin
 from numbers import Float, Integer
-from sympify import _sympify, sympify
+from sympify import _sympify, sympify, SympifyError
 from sympy.mpmath import mpi, mpf
 from containers import Tuple
 
@@ -27,7 +27,7 @@ class Set(Basic):
         [0, 1] U [2, 3]
         >>> Interval(0, 1) + Interval(2, 3)
         [0, 1] U [2, 3]
-        >>> Interval(1,2, True, True) + FiniteSet(2,3)
+        >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
         (1, 2] U {3}
 
         Similarly it is possible to use the '-' operator for set
@@ -35,7 +35,7 @@ class Set(Basic):
 
         >>> Interval(0, 2) - Interval(0, 1)
         (1, 2]
-        >>> Interval(1,3) - FiniteSet(2)
+        >>> Interval(1, 3) - FiniteSet(2)
         [1, 2) U (2, 3]
 
         """
@@ -182,8 +182,9 @@ class Set(Basic):
 
     def __mul__(self, other):
         return ProductSet(self, other)
+
     def __pow__(self, exp):
-        if not isinstance(sympify(exp), Integer) and exp>=0:
+        if not sympify(exp).is_Integer and exp>=0:
             raise ValueError("%s: Exponent must be a positive Integer"%exp)
         return ProductSet([self]*exp)
 
@@ -222,8 +223,11 @@ class Set(Basic):
     def is_real(self):
         return False
     @property
-    def is_countable(self):
-        return None
+    def is_iterable(self):
+        return False
+    @property
+    def is_interval(self):
+        return False
     @property
     def is_FiniteSet(self):
         return False
@@ -231,16 +235,10 @@ class Set(Basic):
     def is_Interval(self):
         return False
     @property
-    def is_interval(self):
+    def is_ProductSet(self):
         return False
     @property
-    def is_iterable(self):
-        return False
-    @property
-    def is_product(self):
-        return False
-    @property
-    def is_union(self):
+    def is_Union(self):
         return False
 
 class RealSet(Set, EvalfMixin):
@@ -264,14 +262,14 @@ class ProductSet(Set):
     Examples:
         >>> from sympy import Interval, FiniteSet, ProductSet
 
-        >>> I = Interval(0, 5); S = FiniteSet(1,2,3)
+        >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
         >>> ProductSet(I, S)
         [0, 5] x {1, 2, 3}
 
-        >>> (2,2) in ProductSet(I, S)
+        >>> (2, 2) in ProductSet(I, S)
         True
 
-        >>> Interval(0,1) * Interval(0,1) # The unit square
+        >>> Interval(0, 1) * Interval(0, 1) # The unit square
         [0, 1] x [0, 1]
 
         >>> coin = FiniteSet('H','T')
@@ -289,11 +287,12 @@ class ProductSet(Set):
 
     def __new__(cls, *sets, **assumptions):
         def flatten(arg):
-            if isinstance(arg, Set) and not isinstance(arg, ProductSet):
-                return [arg]
-            if isinstance(arg,ProductSet):
-                return sum(map(flatten, arg.args), [])
-            if is_flattenable(arg) and not isinstance(arg,Set):
+            if isinstance(arg, Set):
+                if arg.is_ProductSet:
+                    return sum(map(flatten, arg.args), [])
+                else:
+                    return [arg]
+            elif is_flattenable(arg):
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         sets = flatten(list(sets))
@@ -309,29 +308,30 @@ class ProductSet(Set):
 
         >>> from sympy import Interval
 
-        >>> (2,3) in Interval(0,5) * Interval(0,5)
+        >>> (2, 3) in Interval(0, 5) * Interval(0, 5)
         True
 
-        >>> (10,10) in Interval(0,5) * Interval(0,5)
+        >>> (10, 10) in Interval(0, 5) * Interval(0, 5)
         False
 
         Passes operation on to constitent sets
         """
 
-        if len(element) != len(self.args):
+        if len(element) is not len(self.args):
             return False
-        return all(elem in set for elem, set in zip(element, self.sets))
+        from sympy.logic.boolalg import And
+        return And(*[set.contains(item) for set,item in zip(self.sets,element)])
 
     def _intersect(self, other):
-        if isinstance(other, Union):
+        if other.is_Union:
             return Union(self.intersect(set) for set in other.args)
-        if not isinstance(other, ProductSet):
+        if not other.is_ProductSet:
             raise TypeError("%s is not a Product Set."%str(other))
         if len(other.args) != len(self.args):
-            raise ValueError("Sets not the same size Left: %d, Right %d"
+            raise ValueError("Sets not the same size Left: %d, Right: %d"
                     %(len(self.args), len(other.args)))
-        return ProductSet(a.intersect(b) for a,b in
-                zip(self.sets, other.sets))
+        return ProductSet(a.intersect(b)
+                for a, b in zip(self.sets, other.sets))
 
     @property
     def sets(self):
@@ -343,15 +343,12 @@ class ProductSet(Set):
         # We need at least one of the sets to be complemented
         # Consider all 2^n combinations.
         # We can conveniently represent these options easily using a ProductSet
-        switch_sets = ProductSet([FiniteSet(set, set.complement)
-            for set in self.sets])
+        switch_sets = ProductSet(FiniteSet(set, set.complement)
+            for set in self.sets)
         product_sets = (ProductSet(*set) for set in switch_sets)
         # Union of all combinations but this one
         return Union(p for p in product_sets if p != self)
 
-    @property
-    def is_countable(self):
-        return all(set.is_countable for set in self.sets)
 
     @property
     def is_real(self):
@@ -376,8 +373,9 @@ class ProductSet(Set):
         return measure
 
     @property
-    def is_product(self):
+    def is_ProductSet(self):
         return True
+
 class RealSet(Set, EvalfMixin):
     """
     A set of real values
@@ -388,21 +386,18 @@ class RealSet(Set, EvalfMixin):
 
 class CountableSet(Set):
     """
-    Represents a set of countable numbers such as {1,2,3,4} or {1,2,3, ...}
+    Represents a set of countable numbers such as {1, 2, 3, 4} or {1, 2, 3, ...}
     """
     @property
     def _measure(self):
         return 0
+
     @property
     def is_iterable(self):
         return True
 
     def __iter__(self):
         raise NotImplementedError("Iteration not yet implemented")
-
-    @property
-    def is_countable(self):
-        return True
 
 class Interval(RealSet):
     """
@@ -575,8 +570,10 @@ class Interval(RealSet):
         # We use the logic module here so that this method is meaningful
         # when used with symbolic end points.
         from sympy.logic.boolalg import And
-
-        other = _sympify(other)
+        try:
+            other = _sympify(other)
+        except SympifyError:
+            return False
 
         if self.left_open:
             expr = other > self.start
@@ -672,11 +669,12 @@ class Union(Set):
         def flatten(arg):
             if arg == S.EmptySet:
                return []
-            if isinstance(arg,Union):
-                return sum(map(flatten, arg.args), [])
             if isinstance(arg, Set):
-                return [arg]
-            if is_flattenable(arg): # and not isinstance(arg,Set) (implicit)
+                if arg.is_Union:
+                    return sum(map(flatten, arg.args), [])
+                else:
+                    return [arg]
+            if is_flattenable(arg): # and not isinstance(arg, Set) (implicit)
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
@@ -707,7 +705,8 @@ class Union(Set):
             sets = other_sets + [real_union+other_finite]
         elif real_union.is_Interval: # Real part was just an Interval
             sets = [real_union] + other_sets + [other_finite]
-        elif isinstance(real_union, RealUnion): # Otherwise separate
+        # If is_RealUnion then separate
+        elif real_union.is_Union and real_union.is_real:
             intervals = [s for s in real_union.args if s.is_Interval]
             finite_set = sum([s for s in real_union.args if s.is_FiniteSet] +
                 [other_finite], S.EmptySet) # Join FiniteSet back together
@@ -739,16 +738,16 @@ class Union(Set):
 
     def _intersect(self, other):
         # Distributivity.
-        if isinstance(other, Interval):
+        if other.is_Interval:
             intersections = []
             for interval in self.args:
                 intersections.append(interval.intersect(other))
             return self.__class__(*intersections)
 
-        if isinstance(other, FiniteSet):
+        if other.is_FiniteSet:
             return other._intersect(self)
 
-        elif isinstance(other, Union):
+        elif other.is_Union:
             intersections = []
             for s in other.args:
                 intersections.append(self.intersect(s))
@@ -797,7 +796,7 @@ class Union(Set):
                     if newset not in sos)
 
             # Clear out sets with no measure
-            sets = [(sos,inter) for sos,inter in sets if inter.measure != 0]
+            sets = [(sos, inter) for sos, inter in sets if inter.measure != 0]
 
             # Clear out duplicates
             sos_list = []
@@ -821,13 +820,11 @@ class Union(Set):
         return Or(*[set.as_relational(symbol) for set in self.args])
 
     @property
-    def is_countable(self):
-        return all(arg.is_countable for arg in self.args)
-    @property
     def is_iterable(self):
         return all(arg.is_iterable for arg in self.args)
+
     @property
-    def is_union(self):
+    def is_Union(self):
         return True
 
 class RealUnion(Union, RealSet):
@@ -845,16 +842,17 @@ class RealUnion(Union, RealSet):
         args = list(args)
         for arg in args:
 
-            if arg == S.EmptySet:
-                continue
-            elif isinstance(arg, Union):
-                args += arg.args
-            elif isinstance(arg, FiniteSet):
-                finite_sets.append(arg)
-            elif isinstance(arg, Interval):
-                intervals.append(arg)
-            elif isinstance(arg, Set):
-                other_sets.append(arg)
+            if isinstance(arg, Set):
+                if arg == S.EmptySet:
+                    continue
+                elif arg.is_Union:
+                    args += arg.args
+                elif arg.is_FiniteSet:
+                    finite_sets.append(arg)
+                elif arg.is_Interval:
+                    intervals.append(arg)
+                else:
+                    other_sets.append(arg)
             elif is_flattenable(arg):
                 args += arg
             else:
@@ -937,7 +935,6 @@ class RealUnion(Union, RealSet):
     def _eval_evalf(self, prec):
         return RealUnion(set.evalf() for set in self.args)
 
-
     def __iter__(self):
         import itertools
         if all(set.is_iterable for set in self.args):
@@ -996,15 +993,15 @@ class FiniteSet(CountableSet):
     Examples:
         >>> from sympy import Symbol, FiniteSet, sets
 
-        >>> FiniteSet(1,2,3,4)
+        >>> FiniteSet(1, 2, 3, 4)
         {1, 2, 3, 4}
-        >>> 3 in FiniteSet(1,2,3,4)
+        >>> 3 in FiniteSet(1, 2, 3, 4)
         True
 
     """
     def __new__(cls, *args):
         def flatten(arg):
-            if is_flattenable(arg) and not isinstance(arg,Set):
+            if is_flattenable(arg):
                 return sum(map(flatten, arg), [])
             return [arg]
         args = flatten(list(args))
@@ -1042,17 +1039,17 @@ class FiniteSet(CountableSet):
 
         >>> FiniteSet(0, 1).union(FiniteSet(2, 3))
         {0, 1, 2, 3}
-        >>> FiniteSet(Symbol('x'), 1,2) + FiniteSet(2, 3)
+        >>> FiniteSet(Symbol('x'), 1, 2) + FiniteSet(2, 3)
         {1, 2, 3, x}
-        >>> Interval(1,2, True, True) + FiniteSet(2,3)
+        >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
         (1, 2] U {3}
 
         Similarly it is possible to use the '-' operator for set
         differences:
 
-        >>> FiniteSet(Symbol('x'), 1,2) - FiniteSet(2, 3)
+        >>> FiniteSet(Symbol('x'), 1, 2) - FiniteSet(2, 3)
         {1, x}
-        >>> Interval(1,2) - FiniteSet(2,3)
+        >>> Interval(1, 2) - FiniteSet(2, 3)
         [1, 2)
 
 
@@ -1060,7 +1057,7 @@ class FiniteSet(CountableSet):
 
         if other == S.EmptySet:
             return self
-        if isinstance(other, FiniteSet):
+        if other.is_FiniteSet:
             return FiniteSet(self.elements | other.elements)
         return Union(self, other) # Resort to default
 
@@ -1072,9 +1069,9 @@ class FiniteSet(CountableSet):
 
         >>> from sympy import FiniteSet
 
-        >>> 1 in FiniteSet(1,2)
+        >>> 1 in FiniteSet(1, 2)
         True
-        >>> 5 in FiniteSet(1,2)
+        >>> 5 in FiniteSet(1, 2)
         False
 
         """
@@ -1131,7 +1128,7 @@ class RealFiniteSet(FiniteSet, RealSet):
         between the elements of the set.
 
         >>> from sympy import FiniteSet
-        >>> FiniteSet(1,2,3).complement
+        >>> FiniteSet(1, 2, 3).complement
         (-oo, 1) U (1, 2) U (2, 3) U (3, oo)
 
 
@@ -1143,8 +1140,8 @@ class RealFiniteSet(FiniteSet, RealSet):
 
         intervals = [] # Build up a list of intervals between the elements
         intervals += [Interval(S.NegativeInfinity,sorted_elements[0],True,True)]
-        for a,b in zip(sorted_elements[0:-1], sorted_elements[1:]):
-            intervals.append(Interval(a,b, True, True)) # open intervals
+        for a, b in zip(sorted_elements[0:-1], sorted_elements[1:]):
+            intervals.append(Interval(a, b, True, True)) # open intervals
         intervals.append(Interval(sorted_elements[-1], S.Infinity, True, True))
         return Union(*intervals)
 

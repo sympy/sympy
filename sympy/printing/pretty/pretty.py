@@ -777,8 +777,9 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        return self._print_seq(p.sets, None, None, ' x ',
-                parenthesize = lambda set:set.is_union )
+        prod_char = u'\xd7'
+        return self._print_seq(p.sets, None, None, ' %s '%prod_char,
+                parenthesize = lambda set:set.is_Union )
 
     def _print_FiniteSet(self, s):
         if len(s) > 10:
@@ -817,7 +818,7 @@ class PrettyPrinter(Printer):
         union_delimiter = ' %s ' % pretty_atom('Union')
 
         return self._print_seq(u.args, None, None, union_delimiter,
-                parenthesize = lambda set:set.is_product)
+                parenthesize = lambda set:set.is_ProductSet)
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
             parenthesize = lambda x:False):
