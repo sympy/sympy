@@ -967,16 +967,16 @@ class Subs(Expr):
 
         # non-repeated point args
         selfargs = [ v[0] for v in sorted(zip(self.variables, self.point),
-            key = lambda v: v[1]) if self.point.args.count(v[1]) == 1 ]
+            key = lambda v: v[1]) if list(self.point.args).count(v[1]) == 1 ]
         otherargs = [ v[0] for v in sorted(zip(other.variables, other.point),
-            key = lambda v: v[1]) if other.point.args.count(v[1]) == 1 ]
+            key = lambda v: v[1]) if list(other.point.args).count(v[1]) == 1 ]
         # find repeated point values and subs each associated variable
         # for a single symbol
         selfrepargs = []
         otherrepargs = []
         if uniq(self.point) != self.point:
             repeated = uniq([ v for v in self.point if
-                                self.point.args.count(v) > 1 ])
+                                list(self.point.args).count(v) > 1 ])
             repswap = dict(zip(repeated, [ C.Dummy() for _ in
                                             xrange(len(repeated)) ]))
             selfrepargs = [ (self.variables[i], repswap[v]) for i, v in
