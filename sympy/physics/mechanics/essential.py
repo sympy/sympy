@@ -253,7 +253,7 @@ class Dyad(object):
     __radd__ = __add__
     __rmul__ = __mul__
     dot = __and__
-    cross = __and__
+    cross = __xor__
 
     def _check_frame(self, other):
         if not isinstance(other, ReferenceFrame):
@@ -837,10 +837,13 @@ class Vector(object):
         A 3 character string used for printing the basis vectors
         This needs to be changed as Vector.subscript_indices = "123", and not
         as SomeVectorInstance.subscript_indices = "xyz"
+    simp : Boolean
+        Let certain methods use trigsimp on their outputs
 
     """
 
     subscript_indices = "xyz"
+    simp = True
 
     def __init__(self, inlist):
         """This is the constructor for the Vector class.
@@ -944,7 +947,10 @@ class Vector(object):
                 out += ((v2[0].T)
                         * (v2[1].dcm(v1[1]))
                         * (v1[0]))[0]
-        return trigsimp(sympify(out), recursive=True)
+        if Vector.simp == True:
+            return trigsimp(sympify(out), recursive=True)
+        else:
+            return sympify(out)
 
     def __div__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
@@ -1113,9 +1119,9 @@ class Vector(object):
         nz>
         >>> A = N.orientnew('A', 'Simple', q1, 1)
         >>> A.x ^ N.y
-        (sin(q1))*ay> + (cos(q1))*az>
+        nz>
         >>> N.y ^ A.x
-        - nz>
+        (-sin(q1))*ay> + (-cos(q1))*az>
 
         """
 
@@ -1140,14 +1146,14 @@ class Vector(object):
                     mat[1][1] * mat[2][0]))
 
         outvec = Vector([])
-        ar = self.args # For brevity
+        ar = other.args # For brevity
         for i, v in enumerate(ar):
             tempx = v[1].x
             tempy = v[1].y
             tempz = v[1].z
-            tempm = ([[tempx, tempy, tempz], [Vector([ar[i]]) & tempx,
-                Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz],
-                [other & tempx, other & tempy, other & tempz]])
+            tempm = ([[tempx, tempy, tempz], [self & tempx, self & tempy,
+                self & tempz], [Vector([ar[i]]) & tempx,
+                Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz]])
             outvec += _det(tempm)
         return outvec
 
@@ -1263,8 +1269,8 @@ class Vector(object):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(Symbol('t')), otherframe)])
             else:
-                outvec += (Vector([v]).dt(v[1]) -
-                    (Vector([v]) ^ v[1].ang_vel_in(otherframe)))
+                outvec += (Vector([v]).dt(v[1]) +
+                    (v[1].ang_vel_in(otherframe) ^ Vector([v])))
         return outvec
 
     def express(self, otherframe):
@@ -1297,7 +1303,10 @@ class Vector(object):
             if v[1] != otherframe:
                 temp = otherframe.dcm(v[1]) * v[0]
                 for i2, v2 in enumerate(temp):
-                    temp[i2] = trigsimp(v2, recursive=True)
+                    if Vector.simp == True:
+                        temp[i2] = trigsimp(v2, recursive=True)
+                    else:
+                        temp[i2] = v2
                 outvec += Vector([(temp, otherframe)])
                 outvec -= Vector([v])
         return outvec

@@ -1,6 +1,6 @@
 __all__ = ['Kane']
 
-from sympy import Symbol, zeros, simplify, expand
+from sympy import Symbol, zeros, simplify, expand, Matrix
 from sympy.physics.mechanics.essential import ReferenceFrame
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.dynamicsymbol import DynamicSymbol
@@ -17,7 +17,6 @@ class Kane(object):
         self._qs = None
         self._qdots = None
         self._kd = dict()
-        self._time_varying = []
         self._forcelist = None
         self._bodylist = None
         self._fr = None
@@ -32,25 +31,26 @@ class Kane(object):
             oli = []
             try:
                 for i, v in enumerate(inexpr.args):
-                    oli.append(_deeper(v))
+                    oli += _deeper(v)
             except:
                 if isinstance(inexpr, DynamicSymbol):
-                    oli.append(inexpr)
+                    oli += inexpr
             return oli
 
         ol = []
         for i, v in enumerate(inlist):
             try:
                 for i2, v2 in enumerate(v.args):
-                    ol.append(_deeper(v2))
+                    ol += _deeper(v2)
             except:
                 if isinstance(v, DynamicSymbol):
-                    ol.append(inexpr)
-        seta = {} 
+                    ol += inexpr
+        seta = {}
         map(seta.__setitem__, ol, []) 
         ol = seta.keys()
         for i, v in enumerate(insyms):
-            ol.remove(v)
+            if ol.__contains__(v):
+                ol.remove(v)
         return ol
 
     def gen_speeds(self, inlist):
@@ -94,28 +94,29 @@ class Kane(object):
         # puts independent speeds first
         for i, v in enumerate(uds):
             uis.remove(v)
-        uis += udsv
+        uis += uds
         B = zeros((m, n))
         C = zeros((m, len(oth)))
 
         ii = 0
         for i1, v1 in enumerate(uds):
             for i2, v2 in enumerate(uis):
-                A[ii] = conl[i1].coeff(uis[i2])
+                B[ii] = conl[i1].diff(uis[i2])
                 ii += 1
         #REDO THIS PART BY SUBTRACTING THE ABOVE FROM conl[i]
         ii = 0
         for i1, v1 in enumerate(uds):
             for i2, v2 in enumerate(oth):
-                B[ii] = conl[i1].coeff(oth[i2])
+                C[ii] = conl[i1].diff(oth[i2])
                 ii += 1
         for i, v in enumerate(uds):
             uis.remove(v)
-        mr1 = B.extract([range(m)], [range(p)])
-        ml1 = B.extract([range(m)], [range(p, n)])
+        mr1 = B.extract(range(m), range(p))
+        ml1 = B.extract(range(m), range(p, n))
         mr2 = C * Matrix(oth)
-        self._Ars = ml1.inv() * mr1
-        self._Brs = ml1.inv() * mr2
+        ml1i = ml1.inverse_ADJ()
+        self._Ars = ml1i * mr1
+        self._Brs = ml1i * mr2
 
     def form_fr(self, fl):
         #dict is body, force
@@ -149,8 +150,8 @@ class Kane(object):
         if len(uds) != 0:
             m = len(uds)
             p = n - m
-            FRtilde = FR.extract([range(p), 0])
-            FRold = FR.extract([range(p, n), 0])
+            FRtilde = FR.extract(range(p), [0])
+            FRold = FR.extract(range(p, n), [0])
             FRtilde += self._Ars.T * FRold
             FR = FRtilde
 
@@ -218,8 +219,8 @@ class Kane(object):
         if len(uds) != 0:
             m = len(uds)
             p = n - m
-            FRSTARtilde = FRSTAR.extract([range(p), 0])
-            FRSTARold = FRSTAR.extract([range(p, n), 0])
+            FRSTARtilde = FRSTAR.extract(range(p), [0])
+            FRSTARold = FRSTAR.extract(range(p, n), [0])
             FRSTARtilde += self._Ars.T * FRSTARold
             FRSTAR = FRSTARtilde
         self._frstar = FRSTAR
@@ -234,6 +235,7 @@ class Kane(object):
         p = len(uis)
         zeroeq = self._fr + self._frstar
         MM = zeros((p, p))
+        # strange counter is because sympy matrix only has 1 index even if 2d
         ii = 0
         for i in range(p):
             for j in range(p):
@@ -251,6 +253,7 @@ class Kane(object):
         p = len(uis)
         zeroeq = self._fr + self._frstar
         MM = self._massmatrix
+        # strange counter is because sympy matrix only has 1 index even if 2d
         ii = 0
         for i in range(p):
             for j in range(p):
