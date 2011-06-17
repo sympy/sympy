@@ -8,7 +8,7 @@ from sympy.physics.quantum.cartesian import (
     XOp, PxOp, X, Px, XKet, XBra, PxKet, PxBra
 )
 
-x, y, x_1 = symbols('x,y,x_1')
+x, y, x_1, x_2, x_3 = symbols('x,y,x_1,x_2,x_3')
 px, py = symbols('px py')
 
 
@@ -24,6 +24,8 @@ def test_x():
     assert represent(XKet(x)) == DiracDelta(x-x_1)
     assert represent(XBra(x)) == DiracDelta(-x + x_1)
     assert XBra(x).position == x
+    assert represent(XOp()*XKet()) == x*DiracDelta(x-x_2)
+    assert represent(XOp()*XKet()*XBra('y')) == x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
 
 
 def test_p():

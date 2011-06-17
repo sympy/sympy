@@ -1,7 +1,7 @@
-from sympy import Matrix, I, Float, Integer, symbols
+from sympy import Matrix, I, Float, Integer, symbols, DiracDelta
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.represent import represent, rep_innerproduct, rep_expectation
+from sympy.physics.quantum.represent import represent, rep_innerproduct, rep_expectation, collapse_deltas
 from sympy.physics.quantum.state import Bra, Ket
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -169,3 +169,11 @@ def test_innerprod_represent():
 def test_operator_represent():
     basis_kets = x_op._get_basis_kets(1, 2)
     assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
+
+def test_collapse_deltas():
+    x, x_1, z = symbols('x,x_1,z')
+    f = x*x_1*DiracDelta(x-x_1)*DiracDelta(x_1-z)
+
+    d = collapse_deltas(f, **{"unities" : [1], "basis": XOp()})
+
+    assert d == x**2*DiracDelta(x-z)

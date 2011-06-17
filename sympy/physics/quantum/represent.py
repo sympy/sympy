@@ -110,6 +110,15 @@ def represent(expr, **options):
         >>> represent(up, basis=sz)
         [1]
         [0]
+
+        >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
+        >>> X = XOp()
+        >>> x = XKet()
+        >>> y = XBra('y')
+        >>> represent(X*x)
+        x*DiracDelta(x - x_2)
+        >>> represent(X*x*y)
+        x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
     """
     format = options.get('format', 'sympy')
     if isinstance(expr, QExpr):
@@ -186,8 +195,6 @@ def represent(expr, **options):
         result = represent(arg, **options)*result
         last_arg = arg
 
-    #TODO: Collapse DiracDelta functions
-
     # All three matrix formats create 1 by 1 matrices when inner products of
     # vectors are taken. In these cases, we simply return a scalar.
     result = flatten_scalar(result)
@@ -201,6 +208,7 @@ def represent(expr, **options):
 
     # If the result is expressed in a continuous basis, then we need to integrate over any unities
     # that were inserted. As a start to this, we should collapse all of the delta functions by hand
+    # TODO: Integrate any remaining unities after delta functions are collapsed?
     result = collapse_deltas(result, **options)
 
     return result
