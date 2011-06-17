@@ -5,7 +5,7 @@ from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Sy
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
-x,y,a,t = symbols('x,y,a,t')
+x,y,a,t,x_1,x_2,z = symbols('x,y,a,t,x_1,x_2,z')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -342,7 +342,10 @@ def test_integrate_DiracDelta():
     assert integrate(cos(x)*(DiracDelta(x)+DiracDelta(x**2-1))*sin(x)*(x-pi),x) - \
            (-pi*(cos(1)*Heaviside(-1 + x)*sin(1)/2 - cos(1)*Heaviside(1 + x)*sin(1)/2) + \
            cos(1)*Heaviside(1 + x)*sin(1)/2 + cos(1)*Heaviside(-1 + x)*sin(1)/2) == 0
-
+    assert integrate(x_2 * DiracDelta(x-x_2) * DiracDelta(x_2-x_1), (x_2, -oo, oo)) == \
+           x*DiracDelta(x-x_1)
+    assert integrate(x*y**2*z*DiracDelta(y-x)*DiracDelta(y-z)*DiracDelta(x-z), (y, -oo, oo)) \
+           == x**3*z*DiracDelta(x-z)**2
 
 def test_subs1():
     e = Integral(exp(x-y), x)
