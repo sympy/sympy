@@ -185,7 +185,7 @@ class polygamma(Function):
             if n < 2:
                 o = C.Order(1/z, x)
             else:
-                m = C.ceiling((n+1)/2)
+                m = C.ceiling((n+1)//2)
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
                 o = C.Order(1/z**(2*m), x)
@@ -198,7 +198,7 @@ class polygamma(Function):
             #    quite a long time!
             fac = gamma(N)
             e0 = fac + N*fac/(2*z)
-            m = C.ceiling((n+1)/2)
+            m = C.ceiling((n+1)//2)
             for k in range(1, m):
                 fac = fac*(2*k+N-1)*(2*k+N-2) / ((2*k)*(2*k-1))
                 e0 += bernoulli(2*k)*fac/z**(2*k)

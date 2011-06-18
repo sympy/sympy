@@ -747,7 +747,7 @@ def multiset_partitions(multiset, m):
         for j in xrange(n):
             ps[a[j + 1]].append(multiset[j])
         canonical = tuple(tuple(j) for j in ps)
-        if not cache.has_key(canonical):
+        if not canonical in cache:
             cache[canonical] = 1
             return ps
 

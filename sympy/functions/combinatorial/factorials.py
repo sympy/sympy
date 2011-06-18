@@ -2,6 +2,8 @@ from sympy.core import S, C, sympify, Function
 from sympy.ntheory import sieve
 from math import sqrt
 
+from sympy.core.compatibility import reduce
+
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 

@@ -7,7 +7,6 @@ TODO:
 * Implement rewrite logic for everything.
 * Test
 """
-
 from sympy import I, Symbol, S, Integer, Rational, Matrix, sqrt, sympify
 from sympy import exp, cos, sin, diff, factorial
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
@@ -357,8 +356,8 @@ class Rotation(UnitaryOperator):
         jpm = j+m
         jpmp = j+mp
         jmm = j-m
-        mpmm2 = (mp-m)/2
-        mpmp2 = (m+mp)/2
+        mpmm2 = (mp-m)//2
+        mpmp2 = (m+mp)//2
         result = (-1)**jmmp
         result *= 2**(-j)
         result *= sqrt(factorial(jpm)/(factorial(jmm)*factorial(jpmp)*factorial(jmmp)))

@@ -5,6 +5,8 @@
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
 
+from __future__ import division
+
 try:
     from numpy import array, matrix, ndarray
     import numpy

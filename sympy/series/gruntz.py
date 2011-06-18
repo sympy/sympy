@@ -123,6 +123,8 @@ from sympy.series.order import Order
 from sympy.simplify import powsimp
 from sympy import cacheit
 
+from sympy.core.compatibility import reduce
+
 O = Order
 
 def debug(func):

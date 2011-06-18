@@ -16,6 +16,8 @@ from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy
 from sympy.printing.str import StrPrinter
 
+from sympy.core.compatibility import reduce
+
 __all__ = [
     'Dagger',
     'KroneckerDelta',

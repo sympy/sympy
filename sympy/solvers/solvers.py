@@ -32,6 +32,8 @@ from sympy.mpmath import findroot
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
 
+from sympy.core.compatibility import reduce
+
 from warnings import warn
 
 def denoms(eq, x=None):

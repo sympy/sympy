@@ -7,6 +7,9 @@ Currently implemented methods:
 
 from sympy import Eq, Equality
 from sympy.simplify import simplify
+
+from sympy.core.compatibility import reduce
+
 import operator
 
 def pde_separate(eq, fun, sep, strategy='mul'):
