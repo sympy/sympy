@@ -53,6 +53,8 @@ def test_point():
     p4 = Point(1, 1)
 
     assert len(p1) == 1
+    assert p1 in p1
+    assert p1 not in p2
     assert p2[1] == y2
     assert (p3+p4) == p4
     assert (p2-p1) == Point(y1-x1, y2-x2)
