@@ -24,6 +24,8 @@ from sympy.core.multidimensional import vectorize
 from sympy.core.cache import Memoizer
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
+from sympy.core.compatibility import callable
+
 from sympy import symbols
 
 

@@ -7,6 +7,7 @@ from sympy.simplify import simplify as sympy_simplify
 from sympy.utilities import any, all
 from sympy.printing import sstr
 
+from sympy.core.compatibility import callable, reduce
 
 import random
 
@@ -2286,7 +2287,7 @@ class Matrix(object):
         self._eigenvects = self.eigenvects()
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:
-            if len(vects) <> multiplicity:
+            if len(vects) != multiplicity:
                 all_iscorrect = False
                 break
             elif reals_only and not eigenval.is_real:
@@ -2396,7 +2397,7 @@ class Matrix(object):
 
     def _jordan_split(self, algebraical, geometrical):
             "return a list which sum is equal to 'algebraical' and length is equal to 'geometrical'"
-            n1 = algebraical / geometrical
+            n1 = algebraical // geometrical
             res = [n1] * geometrical
             res[len(res)-1] += algebraical % geometrical
             assert sum(res) == algebraical

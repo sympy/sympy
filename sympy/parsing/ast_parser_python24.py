@@ -11,6 +11,8 @@ import symbol
 from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol
 
+from sympy.core.compatibility import callable
+
 _is_integer = re.compile(r'\A\d+(l|L)?\Z').match
 
 class SymPyTransformer(Transformer):

@@ -1,3 +1,5 @@
+from __future__ import division
+
 from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,

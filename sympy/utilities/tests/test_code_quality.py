@@ -1,3 +1,5 @@
+from sympy.core.compatibility import reduce
+
 from os import walk, sep, chdir, pardir
 from os.path import split, join, abspath, exists
 from glob import glob

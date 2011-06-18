@@ -223,7 +223,7 @@ class AndOr_Base(Logic):
         # canonicalize arguments
         # XXX do we always need this?
         # NB: this is needed to reduce number of &-nodes in beta-network
-        args = sorted(args)
+        args = sorted(args, key=hash)
 
         # now let's kill duplicate arguments, e.g. &(a,a,b) -> &(a,b)
         prev = None

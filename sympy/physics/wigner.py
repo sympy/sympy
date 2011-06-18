@@ -26,7 +26,6 @@ AUTHORS:
 - Jens Rasch (2009-05-31): updated to sage-4.0
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
-
 from sympy import Integer, pi, sqrt
 #from sage.rings.complex_number import ComplexNumber
 #from sage.rings.finite_rings.integer_mod import Mod
@@ -683,7 +682,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     if int(m_1) != m_1 or int(m_2) != m_2 or int(m_3) != m_3:
         raise ValueError("m values must be integer")
 
-    bigL = (l_1 + l_2 + l_3) / 2
+    bigL = (l_1 + l_2 + l_3) // 2
     a1 = l_1 + l_2 - l_3
     if a1 < 0:
         return 0

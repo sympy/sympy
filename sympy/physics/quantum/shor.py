@@ -7,7 +7,6 @@ Todo:
 * Update docstrings and reformat.
 * Remove print statements. We may want to think about a better API for this.
 """
-
 import math
 import random
 
@@ -148,7 +147,7 @@ def continued_fraction(x, y):
     """
     x = int(x)
     y = int(y)
-    temp = x/y
+    temp = x//y
     if temp*y == x:
         return [temp,]
 
