@@ -71,7 +71,7 @@ def test_doit():
 
 
 def test_printing():
-    from sympy import pretty, latex, srepr
+    from sympy import S, pretty, latex, srepr
     psi = Ket('psi')
     ip = Dagger(psi)*psi
     assert pretty(ip, use_unicode=True) == u'\u27e8\u03c8\u2758\u03c8\u27e9'
@@ -80,8 +80,9 @@ def test_printing():
     ip = Dagger(psi)*psi
     assert pretty(ip, use_unicode=True) == u'\u27e8\u03c8;t\u2758\u03c8;t\u27e9'
     assert latex(ip) == r"\left\langle \psi ; t \middle| \psi ; t \right\rangle"
-    jket = JzKet('1/2','1/2')
+    jket = JzKet(S(1)/2,S(1)/2)
     ip = Dagger(jket)*jket
     assert pretty(ip, use_unicode=True) == u'\u27e8z:1/2,1/2\u2758z:1/2,1/2\u27e9'
-    assert latex(ip) == r"\left\langle z:1/2,1/2 \middle| z:1/2,1/2 \right\rangle"
+    assert latex(ip) == r"\left\langle z:\frac{1}{2},\frac{1}{2} \middle| z:\frac{1}{2},\frac{1}{2} \right\rangle"
+    from sympy import Rational
     assert eval(srepr(ip)) == ip

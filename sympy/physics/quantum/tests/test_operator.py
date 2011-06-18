@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-from sympy import Symbol, Integer, Mul, Pow, pretty, latex, srepr
+from sympy import Symbol, Integer, Mul, Pow, pretty, latex, srepr, S
 
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
@@ -32,9 +32,10 @@ def test_operator():
     assert latex(A) == 'A'
     assert eval(srepr(A)) == A
 
-    D = Operator('D', Symbol('t'), '1/2')
+    D = Operator('D', Symbol('t'), S(1)/2)
     assert pretty(D) == u'Operator(D,t,1/2)'
-    assert latex(D) == 'Operator(D,t,1/2)'
+    assert latex(D) == r'Operator(D,t,\frac{1}{2})'
+    from sympy import Rational
     assert eval(srepr(D)) == D
 
 def test_operator_inv():
