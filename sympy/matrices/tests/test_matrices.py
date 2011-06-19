@@ -1,7 +1,7 @@
-from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational, wronskian, cos,
-    sin, exp, hessian, sqrt, zeros, ones, randMatrix, Poly, S, pi, E, I,
-    oo, trigsimp, Integer, block_diag, N, zeros, sympify, Pow, simplify,
-    Min, Max, Abs)
+from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational,
+    Float, wronskian, cos, sin, exp, hessian, sqrt, zeros, ones, randMatrix,
+    Poly, S, pi, E, I, oo, trigsimp, Integer, block_diag, N, zeros, sympify,
+    Pow, simplify, Min, Max, Abs)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
 
@@ -1751,7 +1751,8 @@ def test_condition_number():
 
     M = Matrix([[cos(x), sin(x)], [-sin(x), cos(x)]])
     Mc = M.condition_number()
-    assert all(Mc.subs(x,val)==1 for val in [.2, .5, .1, pi/2, pi, 7*pi/4 ])
+    assert all(Float(1.).epsilon_eq(Mc.subs(x, val).evalf()) for val in \
+            [Rational(1,5), Rational(1, 2), Rational(1, 10), pi/2, pi, 7*pi/4 ])
 
 def test_len():
     assert len(Matrix()) == 0
