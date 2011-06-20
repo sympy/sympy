@@ -14,6 +14,7 @@ It is based on the following paper:
 It is described in great(er) detail in the Sphinx documentation.
 """
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
+from sympy import SYMPY_DEBUG
 
 def add_formulae(formulae):
     """ Create our knowledge base.
@@ -185,6 +186,12 @@ def make_simp(z):
         c, numer, denom = poly(numer, z).cancel(poly(denom, z))
         return c * numer.as_expr() / denom.as_expr()
     return simp
+
+def debug(*args):
+    if SYMPY_DEBUG:
+        for a in args:
+            print a,
+        print
 
 
 class Mod1(object):
@@ -588,7 +595,7 @@ class Formula(object):
             if a == 0:
                 return False
         for b in self.indices.bq:
-            if b <= 0 and b.q == 1:
+            if b <= 0 and b.is_integer:
                 return False
         for e in [self.B, self.M, self.C]:
             if e is None:
@@ -1196,9 +1203,17 @@ def try_polynomial(ip, z):
     return res
 
 collection = None
-def _hyperexpand(ip, z, ops0=[]):
-    """ Try to find an expression for the hypergeometric function
-        `ip.ap`, `ip.bq`. """
+def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
+    """
+    Try to find an expression for the hypergeometric function
+    `ip.ap`, `ip.bq`.
+
+    The result is expressed in terms of a dummy variable z0. Then it
+    is multiplied by premult. Then ops0 is applied, using chainmult*t*d/dt
+    for the operator.
+
+    These latter parameters are all trickery to make _meijergexpand short.
+    """
     from sympy.simplify import powdenest, simplify
 
     # TODO
@@ -1216,19 +1231,21 @@ def _hyperexpand(ip, z, ops0=[]):
     if collection is None:
         collection = FormulaCollection()
 
-    ops = ops0[:]
+    debug('Trying to expand hypergeometric function corresponding to', ip)
 
     # First reduce order as much as possible.
-    nip, nops = reduce_order(ip)
-    ops += nops
-
-    # Our dummy variable
-    z0 = Dummy('z0')
+    nip, ops = reduce_order(ip)
+    if ops:
+        debug('  Reduced order to', nip)
+    else:
+        debug('  Could not reduce order.')
 
     # Now try polynomial cases
     res = try_polynomial(nip, z0)
     if res is not None:
+        debug('  Recognised polynomial.')
         p = apply_operators(res, ops, lambda f: z0*f.diff(z0))
+        p = apply_operators(p*premult, ops0, lambda f: chainmult*z0*f.diff(z0))
         return simplify(p).subs(z0, z)
 
     # Try to recognise a shifted sum.
@@ -1236,16 +1253,19 @@ def _hyperexpand(ip, z, ops0=[]):
     res = try_shifted_sum(nip, z0)
     if res != None:
         nip, nops, p = res
+        debug('  Recognised shifted sum, reducerd order to', nip)
         ops += nops
 
     # apply the plan for poly
     p = apply_operators(p, ops, lambda f: z0*f.diff(z0))
+    p = apply_operators(p*premult, ops0, lambda f: chainmult*z0*f.diff(z0))
     p = simplify(p).subs(z0, z)
 
     # Now try to find a formula
     f = collection.lookup_origin(nip)
 
     if f is None:
+        debug('  Could not find an origin.')
         # There is nothing we can do.
         return None
 
@@ -1255,8 +1275,11 @@ def _hyperexpand(ip, z, ops0=[]):
     # Now carry out the plan.
     C = apply_operators(f.C.subs(f.z, z0), ops,
                         make_derivative_operator(f.M.subs(f.z, z0), z0))
+    C = apply_operators(C*premult, ops0,
+                        make_derivative_operator(f.M.subs(f.z, z0)*chainmult, z0))
 
-    C = C.applyfunc(make_simp(f.z))
+    if premult == 1:
+        C = C.applyfunc(make_simp(z0))
     r = C*f.B.subs(f.z, z0)
     r = r[0].subs(z0, z) + p
 
@@ -1265,7 +1288,7 @@ def _hyperexpand(ip, z, ops0=[]):
     # return are under an "implicit suitable choice of branch" anyway.
     return powdenest(r, force=True)
 
-def _meijergexpand(iq, z, allow_hyper=False):
+def _meijergexpand(iq, z0, allow_hyper=False):
     """
     Try to find an expression for the Meijer G function specified
     by the IndexQuadruple `iq`. If `allow_hyper` is True, then returning
@@ -1275,7 +1298,16 @@ def _meijergexpand(iq, z, allow_hyper=False):
     """
     from sympy import hyper, Piecewise, meijerg, powdenest
     iq_ = iq
+    debug('Try to expand meijer G function corresponding to', iq)
+
+    # We will play games with analytic continuation - rather use a fresh symbol
+    z = Dummy('z')
+
     iq, ops = reduce_order_meijer(iq)
+    if ops:
+        debug('  Reduced order to', iq)
+    else:
+        debug('  Could not reduce order.')
 
     # TODO the following would be possible:
     # 1) Set up a collection of meijer g formulae.
@@ -1298,7 +1330,7 @@ def _meijergexpand(iq, z, allow_hyper=False):
                     return False
         return True
 
-    def do_slater(an, bm, ap, bq, z, sub):
+    def do_slater(an, bm, ap, bq, z, sub, t, chainmult):
         from sympy import gamma
         if not can_do(bm):
             return S(0), False
@@ -1314,24 +1346,33 @@ def _meijergexpand(iq, z, allow_hyper=False):
             for aj in ap: fac /= gamma(aj - bh)
             nap = [1 + bh - a for a in list(an) + list(ap)]
             nbq = [1 + bh - b for b in list(bo) + list(bq)]
-            harg = S(-1)**(len(ap) - len(bm))*z
-            hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops)
+
+            k = S(-1)**(len(ap) - len(bm))
+            harg = k*z
+            premult = (k*t)**(bh - sub)
+            hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
+                               t, premult, chainmult)
             if hyp is None:
-                hyp = hyper(nap, nbq, harg)
-            res += fac * z**(bh-sub) * hyp
+                hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
+                                      lambda f: premult*t*f.diff(t)).subs(t, z)
+            res += fac * hyp
 
         cond = len(an) + len(ap) < len(bm) + len(bq)
         if len(an) + len(ap) == len(bm) + len(bq):
             cond = abs(z) < 1
         return res, cond
 
-    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, 0)
+    t = Dummy('t')
+    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, 0, t, 1)
 
     def tr(l): return [-x for x in l]
-    slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap), 1/z, -1)
+    for op in ops:
+        op._poly = Poly(op._poly.subs(z, S(-1)**(len(iq.an) - len(iq.bq))/t), x)
+    slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
+                               1/z, -1, t, -1)
 
-    slater1 = powdenest(slater1, force = True)
-    slater2 = powdenest(slater2, force = True)
+    slater1 = powdenest(slater1.subs(z, z0), force=True)
+    slater2 = powdenest(slater2.subs(z, z0), force=True)
 
     if meijerg(iq.an, iq.ap, iq.bm, iq.bq, z).delta > 0:
         # The above condition means that the convergence region is connected.
@@ -1342,6 +1383,9 @@ def _meijergexpand(iq, z, allow_hyper=False):
         if cond2 is not False:
             cond2 = True
 
+    if not isinstance(cond1, bool): cond1 = cond1.subs(z, z0)
+    if not isinstance(cond2, bool): cond2 = cond2.subs(z, z0)
+
     if cond1 is True and not slater1.has(hyper):
         return slater1
     if cond2 is True and not slater2.has(hyper):
@@ -1351,7 +1395,9 @@ def _meijergexpand(iq, z, allow_hyper=False):
     # TODO it would be helpful to give conditions under which the integral
     #      is known to diverge.
     r =  Piecewise((slater1, cond1), (slater2, cond2),
-                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z), True))
+                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
+    if r.has(hyper) and not allow_hyper:
+        debug('  Could express using hypergeometric functions, but not allowed.')
     if not r.has(hyper) or allow_hyper:
         return r
 
@@ -1387,12 +1433,8 @@ def hyperexpand(f, allow_hyper=False):
         else:
             return r
     def do_meijer(ap, bq, z):
-        # _meijergexpand plays tricks with analytic continuation, this does
-        # not work well if the argument is not symbolic
-        z0 = Dummy('z')
-        r = _meijergexpand(IndexQuadruple(ap[0], ap[1], bq[0], bq[1]), z0,
+        r = _meijergexpand(IndexQuadruple(ap[0], ap[1], bq[0], bq[1]), z,
                            allow_hyper)
-        r = r.subs(z0, z)
         if not r.has(nan, zoo, oo, -oo):
             return r
     return f.replace(hyper, do_replace).replace(meijerg, do_meijer)
