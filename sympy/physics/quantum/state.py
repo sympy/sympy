@@ -81,22 +81,23 @@ class StateBase(QExpr):
     # Printing
     #-------------------------------------------------------------------------
 
-    def _print_contents(self, printer, *args):
-        label = self._print_label(printer, *args)
-        return '%s%s%s' % (self.lbracket, label, self.rbracket)
+    def _sympystr(self, printer, *args):
+        return "%s%s%s"%(self.lbracket,
+                         self._print_contents(printer, *args),
+                         self.rbracket)
 
-    def _print_contents_pretty(self, printer, *args):
+    def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
-        pform = self._print_label_pretty(printer, *args)
+        pform = self._print_contents_pretty(printer, *args)
         pform = prettyForm(*pform.left((self.lbracket_pretty)))
         pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
 
-    def _print_contents_latex(self, printer, *args):
-        label = self._print_label_latex(printer, *args)
+    def _latex(self, printer, *args):
+        contents = self._print_contents_latex(printer, *args)
         # The extra {} brackets are needed to get matplotlib's latex
         # rendered to render this properly.
-        return '{%s%s%s}' % (self.lbracket_latex, label, self.rbracket_latex)
+        return '{%s %s %s }' % (self.lbracket_latex, contents, self.rbracket_latex)
 
 
 class KetBase(StateBase):
@@ -112,7 +113,7 @@ class KetBase(StateBase):
     lbracket_pretty = prettyForm(_straight_bracket)
     rbracket_pretty = prettyForm(_rbracket)
     lbracket_latex = r'\left|'
-    rbracket_latex = r'\right\rangle '
+    rbracket_latex = r'\right\rangle'
 
     @property
     def dual_class(self):
@@ -185,7 +186,7 @@ class BraBase(StateBase):
     rbracket = '|'
     lbracket_pretty = prettyForm(_lbracket)
     rbracket_pretty = prettyForm(_straight_bracket)
-    lbracket_latex = r'\left\langle '
+    lbracket_latex = r'\left\langle'
     rbracket_latex = r'\right|'
 
     @property
@@ -399,7 +400,7 @@ class TimeDepState(StateBase):
     def _print_contents(self, printer, *args):
         label = self._print_label(printer, *args)
         time = self._print_time(printer, *args)
-        return '%s%s;%s%s' % (self.lbracket, label, time, self.rbracket)
+        return '%s;%s' % (label, time)
 
     def _print_contents_repr(self, printer, *args):
         label = self._print_label_repr(printer, *args)
@@ -408,20 +409,15 @@ class TimeDepState(StateBase):
 
     def _print_contents_pretty(self, printer, *args):
         pform = self._print_label_pretty(printer, *args)
-        pform = prettyForm(*pform.left((self.lbracket_pretty)))
         pform = prettyForm(*pform.right((';')))
         nextpform = self._print_time_pretty(printer, *args)
         pform = prettyForm(*pform.right((nextpform)))
-        pform = prettyForm(*pform.right((self.rbracket_pretty)))
         return pform
 
     def _print_contents_latex(self, printer, *args):
         label = self._print_label_latex(printer, *args)
         time = self._print_time_latex(printer, *args)
-        # The extra {} brackets are needed to get matplotlib's latex
-        # rendered to render this properly.
-        return '{%s%s;%s%s}' %\
-            (self.lbracket_latex, label, time, self.rbracket_latex)
+        return '%s ; %s' % (label, time)
 
 
 class TimeDepKet(TimeDepState, KetBase):
@@ -460,6 +456,8 @@ class TimeDepKet(TimeDepState, KetBase):
         <psi;t|
         >>> k.dual_class
         <class 'sympy.physics.quantum.state.TimeDepBra'>
+        >>> k.dual*k
+        <psi;t|psi;t>
     """
 
     @property

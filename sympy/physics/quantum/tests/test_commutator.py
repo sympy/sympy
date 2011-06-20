@@ -62,3 +62,12 @@ def test_eval_commutator():
     assert Comm(F,T).doit() == -1
     assert Comm(T,F).doit() == 1
     assert Comm(B,T).doit() == B*T - T*B
+
+
+def test_printing():
+    from sympy import pretty, latex, srepr
+    from sympy.physics.quantum.commutator import Commutator
+    c = Comm(A,B)
+    assert pretty(c) == '[A,B]'
+    assert latex(c) == r"\left[A,B\right]"
+    assert eval(srepr(c)) == c

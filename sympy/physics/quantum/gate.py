@@ -554,7 +554,16 @@ class IdentityGate(OneQubitGate):
 
     Examples
     --------
-
+    Apply on a qubit::
+        >>> from sympy.physics.quantum import qapply
+        >>> from sympy.physics.quantum.qubit import Qubit
+        >>> from sympy.physics.quantum.gate import IdentityGate
+        >>> q = Qubit('10101')
+        >>> g = IdentityGate(2)
+        >>> g*q
+        1(2)*|10101>
+        >>> qapply(g*q)
+        |10101>
     """
     gate_name = u'1'
     gate_name_latex = u'1'

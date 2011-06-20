@@ -1,4 +1,6 @@
-from sympy import I, symbols, Matrix
+# -*- encoding: utf-8 -*-
+
+from sympy import I, symbols, Matrix, Mul, Symbol, Integer
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -42,3 +44,11 @@ def test_tensor_product_commutator():
 
 def test_tensor_product_simp():
     assert tensor_product_simp(TP(A,B)*TP(B,C)) == TP(A*B,B*C)
+
+def test_tensor_product_print():
+    from sympy import pretty, latex, srepr
+    from sympy.physics.quantum.spin import JzOp, JxOp, JzKet, JyKet, Jz, Jx
+    pr = TP(Jz,Jx)*TP(JzKet(1,0),JyKet(1,1))
+    assert pretty(pr) == u"J ⨂ J ⋅❘z:1,0⟩⨂ ❘y:1,1⟩\n z   x                 "
+    assert latex(pr) == r"{J_z}\otimes {J_x} {{\left| z:1,0 \right\rangle }}\otimes {{\left| y:1,1 \right\rangle }}"
+    assert eval(srepr(pr)) == pr

@@ -160,7 +160,7 @@ class Operator(QExpr):
         raise NotImplementedError('matrix_elements is not defined')
 
     #-------------------------------------------------------------------------
-    # Printing
+    # Inverse
     #-------------------------------------------------------------------------
 
     def inverse(self):
@@ -234,7 +234,7 @@ class UnitaryOperator(Operator):
 
 
 class OuterProduct(Operator):
-    """An unevaluated outer product between a ket and kra.
+    """An unevaluated outer product between a ket and a bra.
 
     This constructs an outer product between any subclass of KetBase and
     BraBase as |a><b|. An OuterProduct inherits from Operator as they act as
@@ -337,6 +337,7 @@ class OuterProduct(Operator):
         return prettyForm(*pform.right(self.bra._pretty(printer, *args)))
 
     def _latex(self, printer, *args):
+        #TODO use \middle for the >< center part of the expression
         k = printer._print(self.ket, *args)
         b = printer._print(self.bra, *args)
         return k+b

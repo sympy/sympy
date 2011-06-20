@@ -1,4 +1,4 @@
-from sympy import I, Matrix, symbols
+from sympy import I, Matrix, symbols, Symbol, S
 
 from sympy.physics.quantum import hbar, represent, Commutator
 from sympy.physics.quantum import qapply
@@ -26,3 +26,10 @@ def test_j2():
     assert qapply(J2*JzKet(j,m)) == j**2*hbar**2*JzKet(j,m)+j*hbar**2*JzKet(j,m)
     assert J2.matrix_element(1,1,1,1) == 2*hbar**2
 
+def test_printing():
+    from sympy import pretty, latex, srepr
+    jket = JzKet(S(1)/2,S(1)/2)
+    assert pretty(jket, use_unicode=True) == u'\u2758z:1/2,1/2\u27e9'
+    assert latex(jket) == r"{\left| z:\frac{1}{2},\frac{1}{2} \right\rangle }"
+    from sympy import Rational
+    assert eval(srepr(jket)) == jket

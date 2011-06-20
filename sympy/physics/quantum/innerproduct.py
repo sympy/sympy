@@ -4,7 +4,7 @@
 from sympy import Expr, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.state import KetBase, BraBase, _lbracket
+from sympy.physics.quantum.state import KetBase, BraBase, _lbracket, _straight_bracket, _rbracket
 
 __all__ = [
     'InnerProduct'
@@ -104,13 +104,15 @@ class InnerProduct(Expr):
 
     def _pretty(self, printer, *args):
         pform = prettyForm(_lbracket)
-        pform = prettyForm(*pform.right(self.bra._print_label_pretty(printer, *args)))
-        return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
+        pform = prettyForm(*pform.right(self.bra._print_contents_pretty(printer, *args)))
+        pform = prettyForm(*pform.right(_straight_bracket))
+        pform = prettyForm(*pform.right(self.ket._print_contents_pretty(printer, *args)))
+        return prettyForm(*pform.right(_rbracket))
 
     def _latex(self, printer, *args):
-        bra_label = self.bra._print_label_latex(printer, *args)
-        ket = printer._print(self.ket, *args)
-        return r'\left\langle %s \right. %s' % (bra_label, ket)
+        bra = self.bra._print_contents_latex(printer, *args)
+        ket = self.ket._print_contents_latex(printer, *args)
+        return r'\left\langle %s \middle| %s \right\rangle' % (bra, ket)
 
     def doit(self, **hints):
         try:
