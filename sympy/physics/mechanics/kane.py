@@ -5,6 +5,7 @@ from sympy.physics.mechanics.essential import ReferenceFrame
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.dynamicsymbol import DynamicSymbol
 from sympy.physics.mechanics.rigidbody import RigidBody
+from sympy.physics.mechanics.particle import Particle
 
 class Kane(object):
     """Kane's method object. """
@@ -195,7 +196,7 @@ class Kane(object):
                 if v.mass.diff(Symbol('t')) != 0:
                     r = (v.mass * ve).dt(N)
                 else:
-                    r = w.mass * v.point.acc(N).subs(self._kd)
+                    r = v.mass * v.point.acc(N).subs(self._kd)
             else:
                 raise TypeError('The body list needs RigidBody or '
                                 'Particle as list elements')
@@ -214,7 +215,7 @@ class Kane(object):
                     t = rsts[j][1] & om.diff(v, N)
                     FRSTAR[i] -= (r + t)
                 elif isinstance(w, Particle):
-                    ve = w.mc.vel(N).subs(self._kd)
+                    ve = w.point.vel(N).subs(self._kd)
                     FRSTAR[i] -= rsts[j][0] & ve.diff(v, N)
         if len(uds) != 0:
             m = len(uds)
@@ -244,7 +245,7 @@ class Kane(object):
         self._massmatrix = MM
         return MM
 
-    def rhs(self):
+    def forcing(self):
         uis = self._us
         udots = self._udots
         uds = self._uds
@@ -260,7 +261,7 @@ class Kane(object):
                 zeroeq[i] -= MM[ii] * udots[j]
                 ii += 1
             zeroeq[i] = -simplify(expand(zeroeq[i]))
-        self._rhs = zeroeq
+        self._forcing = zeroeq
         return zeroeq
 
 if __name__ == "__main__":
