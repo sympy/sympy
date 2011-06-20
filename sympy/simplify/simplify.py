@@ -278,21 +278,21 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> f = Function('f') (x)
 
         >>> collect(a*D(f,x) + b*D(f,x), D(f,x))
-        (a + b)*D(f(x), x)
+        (a + b)*Derivative(f(x), x)
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), f)
-        (a + b)*D(f(x), x, x)
+        (a + b)*Derivative(f(x), x, x)
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
-        a*D(f(x), x, x) + b*D(f(x), x, x)
+        a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)
 
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f,x)
-        (a + b)*f(x) + (a + b)*D(f(x), x)
+        (a + b)*f(x) + (a + b)*Derivative(f(x), x)
 
         Or you can even match both derivative order and exponent at time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-        (a + b)*D(f(x), x, x)**2
+        (a + b)*Derivative(f(x), x, x)**2
 
 
     == Notes ==
