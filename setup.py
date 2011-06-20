@@ -78,6 +78,7 @@ modules = [
     'sympy.solvers',
     'sympy.statistics',
     'sympy.tensor',
+    'sympy.thirdparty',
     'sympy.utilities',
     'sympy.utilities.mathml',
     ]
