@@ -1,4 +1,4 @@
-from sympy import (Poly, Integer, factorial, Mul, Subs)
+from sympy import Poly, Integer, factorial, Mul, Subs
 
 
 def rseries(fct, x, pt, n):
