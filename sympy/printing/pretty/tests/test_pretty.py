@@ -1440,7 +1440,8 @@ dx            \
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = Derivative(log(x) + x**2, x, y, evaluate=False)
+    # Multiple symbols
+    expr = Derivative(log(x) + x**2, x, y)
     ascii_str_1 = \
 """\
    2              \n\
@@ -1472,8 +1473,7 @@ dy dx             \
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    # Multiple symbols
-    expr = Derivative(2*x*y, y, x, evaluate=False) + x**2
+    expr = Derivative(2*x*y, y, x) + x**2
     ascii_str_1 = \
 """\
    2             \n\
@@ -1505,6 +1505,66 @@ x  + ─────(2⋅x⋅y)\n\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
+    expr = Derivative(2*x*y, x, x)
+    ascii_str = \
+"""\
+  2       \n\
+ d        \n\
+---(2*x*y)\n\
+  2       \n\
+dx        \
+"""
+    ucode_str = \
+u"""\
+  2       \n\
+ d        \n\
+───(2⋅x⋅y)\n\
+  2       \n\
+dx        \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Derivative(2*x*y, x, 17)
+    ascii_str = \
+"""\
+ 17        \n\
+d          \n\
+----(2*x*y)\n\
+  17       \n\
+dx         \
+"""
+    ucode_str = \
+u"""\
+ 17        \n\
+d          \n\
+────(2⋅x⋅y)\n\
+  17       \n\
+dx         \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Derivative(2*x*y, x, x, y)
+    ascii_str = \
+"""\
+   3         \n\
+  d          \n\
+------(2*x*y)\n\
+     2       \n\
+dy dx        \
+"""
+    ucode_str = \
+u"""\
+   3         \n\
+  d          \n\
+──────(2⋅x⋅y)\n\
+     2       \n\
+dy dx        \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     # Greek letters
     alpha = Symbol('alpha')
     beta  = Function('beta')
@@ -1523,7 +1583,6 @@ dα      \
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-
 
 def test_pretty_integrals():
     expr = Integral(log(x), x)

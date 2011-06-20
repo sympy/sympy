@@ -1,16 +1,16 @@
-from sympy.core import S, C, Basic
+from sympy.core import S, C, Basic, Interval
+from sympy.utilities import group
+
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
-from stringpict import prettyForm, stringPict
-from sympy import Interval
 
+from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
         pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
-
 
 class PrettyPrinter(Printer):
     """Printer, which converts an expression into 2D ASCII-art figure."""
@@ -200,12 +200,15 @@ class PrettyPrinter(Printer):
 
     def _print_Derivative(self, deriv):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
-        syms = list(deriv.variables)
-        syms.reverse()
+        syms = list(reversed(deriv.variables))
         x = None
-        for sym in syms:
+
+        for sym, num in group(syms, multiple=False):
             s = self._print(sym)
             ds = prettyForm(*s.left('d'))
+
+            if num > 1:
+                ds = ds**prettyForm(str(num))
 
             if x is None:
                 x = ds
@@ -216,12 +219,14 @@ class PrettyPrinter(Printer):
         f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 
         pform = prettyForm('d')
+
         if len(syms) > 1:
-            pform = pform ** prettyForm(str(len(deriv.variables)))
+            pform = pform**prettyForm(str(len(syms)))
 
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
         pform = prettyForm(*stringPict.next(pform, f))
+
         return pform
 
     def _print_PDF(self, pdf):
