@@ -513,8 +513,8 @@ functions are not supported.')
             if not (1<=argindex<=nargs):
                 raise ArgumentIndexError(self, argindex)
         if not self.args[argindex-1].is_Symbol:
-            # See issue 1525 and issue 1620
-            arg_dummy = C.Dummy('%i' % argindex)
+            # See issue 1525 and issue 1620 and issue 2501
+            arg_dummy = C.Dummy('xi_%i' % argindex)
             return Subs(Derivative(
                 self.subs(self.args[argindex-1], arg_dummy),
                 arg_dummy), arg_dummy, self.args[argindex-1])
