@@ -144,6 +144,14 @@ class Expr(Basic, EvalfMixin):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmod__')
+    def __mod__(self, other):
+        return Mod(self, other)
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mod__')
+    def __rmod__(self, other):
+        return Mod(other, self)
 
     def __float__(self):
         result = self.evalf()
@@ -2306,6 +2314,7 @@ from mul import Mul
 from add import Add
 from power import Pow
 from function import Derivative, expand_mul
+from mod import Mod
 from sympify import sympify
 from symbol import Wild
 from exprtools import factor_terms
