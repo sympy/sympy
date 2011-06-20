@@ -120,6 +120,14 @@ class Expr(Basic, EvalfMixin):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmod__')
+    def __mod__(self, other):
+        return Mod(self, other)
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mod__')
+    def __rmod__(self, other):
+        return Mod(other, self)
 
     def __float__(self):
         result = self.evalf()
@@ -2018,6 +2026,7 @@ class AtomicExpr(Atom, Expr):
 from mul import Mul
 from add import Add
 from power import Pow
+from mod import Mod
 from function import Derivative
 from sympify import sympify
 from symbol import Wild

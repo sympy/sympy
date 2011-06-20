@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, sqrt, Add, Mul, Pow, I, log, S
+        sympify, sqrt, Add, Mul, Pow, Mod, I, log, S
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -1194,3 +1194,13 @@ def test_issue2361():
     u = 2*(1 + n)
     assert u.is_Mul
     assert (2 + u).args == (S(2), u)
+
+def test_Mod():
+    assert Mod(5, 3) == 2
+    assert Mod(-5, 3) == 1
+    assert Mod(5, -3) == -1
+    assert Mod(-5, -3) == -2
+    assert 5 % x == Mod(5, x)
+    assert x % 5 == Mod(x, 5)
+    assert x % y == Mod(x, y)
+    assert (x % y).subs({x: 5, y: 3}) == 2
