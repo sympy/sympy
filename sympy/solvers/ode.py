@@ -2107,10 +2107,11 @@ def ode_Liouville(eq, func, order, match):
         >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
         ... h(x)*diff(f(x),x), 0)
         >>> pprint(genform)
-                        2                      2
-                d                d            d
-        g(f(x))*--(f(x))  + h(x)*--(f(x)) + -----(f(x)) = 0
-                dx               dx         dx dx
+                        2                    2
+                d                d          d
+        g(f(x))*--(f(x))  + h(x)*--(f(x)) + ---(f(x)) = 0
+                dx               dx           2
+                                            dx
         >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
                                           f(x)
                   /                     /
