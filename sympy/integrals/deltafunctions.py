@@ -110,12 +110,6 @@ def deltaintegrate(f, x):
             else:
                 dg = dg.simplify(x)
                 point = solve(dg.args[0],x)[0]
-                delta_args = dg.args[0].args
-                heav = None
-                if -x in delta_args:
-                    heav = x-delta_args[0]
-                else:
-                    heav = dg.args[0]
-                return (rest_mult.subs(x,point)*Heaviside(heav))
+                return (rest_mult.subs(x,point)*Heaviside(x-point))
     return None
 
