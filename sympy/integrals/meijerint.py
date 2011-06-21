@@ -913,7 +913,7 @@ def _int0oo(g1, g2, x):
 ####################################################################
 
 _lookup_table = None
-def _rewrite_single(f, x):
+def _rewrite_single(f, x, recursive=True):
     """
     Try to rewrite f as a sum of single G functions of the form
     C*x**s*G(a*x**b), where b is a rational number and C is independent of x.
@@ -947,6 +947,7 @@ def _rewrite_single(f, x):
         else:
             raise NotImplementedError
 
+    f_ = f
     f = f.subs(x, z)
     t = _mytype(f, z)
     if t in _lookup_table:
@@ -966,9 +967,59 @@ def _rewrite_single(f, x):
                 return [(fac.subs(subs), 0, g.subs(subs).subs(z, x))
                         for (fac, g) in terms], cond
 
-    # TODO recursive mellin transform
+    # try recursive mellin transform
+    if not recursive:
+        return None
+    _debug('Trying recursive mellin transform method.')
+    from sympy.integrals.transforms import (mellin_transform,
+                                    inverse_mellin_transform, IntegralTransformError)
+    from sympy import Heaviside, Abs, oo, nan, zoo
+    s = Dummy('s')
+    f = f_
+    # to avoid infinite recursion, we have to force the two g functions case
+    def my_integrator(f, x):
+        from sympy import Integral, hyperexpand
+        r = _meijerint_definite_4(f, x, only_double=True)
+        if r is not None:
+            res, cond = r
+            return Piecewise((hyperexpand(res), cond),
+                             (Integral(f, (x, 0, oo)), True))
+        return Integral(f, (x, 0, oo))
+    try:
+        F, strip, _ = mellin_transform(f, x, s, integrator=my_integrator,
+                                       simplify=False, needeval=True)
+        g = inverse_mellin_transform(F, s, x, strip, as_meijerg=True, needeval=True)
+    except IntegralTransformError:
+        g = None
+    if g is None:
+        # We try to find an expression by analytic continuation. For this we have
+        # to make sure the integrand is actually analytic. Since the integration
+        # engine only knows how to deal with the functions in the lookup tables,
+        # the following is sufficient:
+        if not f.has(Heaviside, Abs):
+            try:
+                a = Dummy('a')
+                F, strip, _ = mellin_transform(f.subs(x, a*x), x, s,
+                                               integrator=my_integrator,
+                                               needeval=True)
+                g = inverse_mellin_transform(F, s, x, strip, as_meijerg=True,
+                                             needeval=True).subs(a, 1)
+            except IntegralTransformError:
+                g = None
+    if g is None or g.has(oo, nan, zoo):
+        _debug('Recursive mellin transform failed.')
+        return None
+    args = Add.make_args(g)
+    res = []
+    for f in args:
+        c, m = f.as_coeff_mul(x)
+        if len(m) > 1:
+            raise NotImplementedError('Unexpected form...')
+        res += [(c, 0, m[0])]
+    _debug('Recursive mellin transform worked.')
+    return res, True
 
-def _rewrite1(f, x):
+def _rewrite1(f, x, recursive=True):
     """
     Try to rewrite f using a (sum of) single G functions with argument a*x**b.
     Return fac, po, g such that f = fac*po*g, fac is independent of x
@@ -977,7 +1028,7 @@ def _rewrite1(f, x):
     Return None on failure.
     """
     fac, po, g = _split_mul(f, x)
-    g = _rewrite_single(g, x)
+    g = _rewrite_single(g, x, recursive)
     if g:
         return fac, po, g[0], g[1]
 
@@ -1228,7 +1279,7 @@ def _meijerint_definite_4(f, x, only_double=False):
     _debug('Integrating', f)
     # Try single G function.
     if not only_double:
-        gs = _rewrite1(f, x)
+        gs = _rewrite1(f, x, recursive=False)
         if gs is not None:
             fac, po, g, cond = gs
             _debug('Could rewrite as single G function:', fac, po, g)

@@ -56,6 +56,20 @@ def test_inflate():
     assert t([[a, y], [b]], [[c], [d]], x, 3)
     assert t([[a], [b]], [[c, y], [d]], 2*x**3, 3)
 
+def test_recursive():
+    from sympy import symbols
+    a, b, c = symbols('a b c', positive=True)
+    assert simplify(integrate(exp(-(x-a)**2)*exp(-(x-b)**2), (x, 0, oo))) \
+           == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*a + sqrt(2)/2*b)) \
+              *exp(-a**2/2 + a*b - b**2/2)
+    assert simplify(integrate(exp(-(x-a)**2)*exp(-(x-b)**2)*exp(c*x), (x, 0, oo))) \
+           == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*a + sqrt(2)/2*b + sqrt(2)/4*c)) \
+              *exp(-a**2/2 - b**2/2 + c**2/8 + a*b + a*c/2 + b*c/2)
+    assert simplify(integrate(exp(-(x-a-b-c)**2), (x, 0, oo))) \
+           == sqrt(pi)/2*(1 + erf(a + b + c))
+    assert simplify(integrate(exp(-(x+a+b+c)**2), (x, 0, oo))) \
+           == sqrt(pi)/2*(1 - erf(a + b + c))
+
 def test_meijerint():
     from sympy import symbols, expand, arg
     s, t, mu = symbols('s t mu', real=True)
