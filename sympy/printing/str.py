@@ -73,7 +73,7 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_Derivative(self, expr):
-        return 'D(%s)'%", ".join(map(self._print, expr.args))
+        return 'Derivative(%s)'%", ".join(map(self._print, expr.args))
 
     def _print_dict(self, expr):
         keys = expr.keys()

@@ -53,9 +53,9 @@ def test_ComplexInfinity():
     assert str(zoo) == "zoo"
 
 def test_Derivative():
-    assert str(Derivative(x, y)) == "D(x, y)"
-    assert str(Derivative(x**2, x, evaluate=False)) == "D(x**2, x)"
-    assert str(Derivative(x**2/y, x, y, evaluate=False)) == "D(x**2/y, x, y)"
+    assert str(Derivative(x, y)) == "Derivative(x, y)"
+    assert str(Derivative(x**2, x, evaluate=False)) == "Derivative(x**2, x)"
+    assert str(Derivative(x**2/y, x, y, evaluate=False)) == "Derivative(x**2/y, x, y)"
 
 def test_dict():
     assert str({1: 1+x}) == sstr({1: 1+x}) == "{1: x + 1}"

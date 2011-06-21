@@ -21,7 +21,7 @@ def idiff(eq, y, x, dep=None):
     >>> idiff(x + a + y, y, x)
     -1
     >>> idiff(x + a + y, y, x, [a])
-    -D(a, x) - 1
+    -Derivative(a, x) - 1
 
     """
     if not dep:
