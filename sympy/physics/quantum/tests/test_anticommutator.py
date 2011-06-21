@@ -52,12 +52,3 @@ def test_eval_commutator():
     assert AComm(F,T).doit() == 1
     assert AComm(T,F).doit() == 1
     assert AComm(B,T).doit() == B*T + T*B
-
-def test_printing():
-    from sympy import pretty, latex, srepr
-    from sympy.physics.quantum.anticommutator import AntiCommutator
-    ac = AComm(A,B)
-    assert pretty(ac) == '{A,B}'
-    assert latex(ac) == r"\left\{A,B\right\}"
-    assert eval(srepr(ac)) == ac
-

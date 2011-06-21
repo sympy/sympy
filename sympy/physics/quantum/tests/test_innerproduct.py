@@ -3,7 +3,6 @@ from sympy import I, Integer, Symbol
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.state import Bra, Ket, StateBase, TimeDepKet
-from sympy.physics.quantum.spin import JzKet, JzBra
 
 def test_innerproduct():
     k = Ket('k')
@@ -68,21 +67,3 @@ def test_doit():
     assert InnerProduct(b,f).doit() == I
     assert InnerProduct(Dagger(f),Dagger(b)).doit() == -I
     assert InnerProduct(Dagger(f),f).doit() == Integer(1)
-
-
-def test_printing():
-    from sympy import S, pretty, latex, srepr
-    psi = Ket('psi')
-    ip = Dagger(psi)*psi
-    assert pretty(ip, use_unicode=True) == u'\u27e8\u03c8\u2758\u03c8\u27e9'
-    assert latex(ip) == r"\left\langle \psi \middle| \psi \right\rangle"
-    psi = TimeDepKet('psi','t')
-    ip = Dagger(psi)*psi
-    assert pretty(ip, use_unicode=True) == u'\u27e8\u03c8;t\u2758\u03c8;t\u27e9'
-    assert latex(ip) == r"\left\langle \psi ; t \middle| \psi ; t \right\rangle"
-    jket = JzKet(S(1)/2,S(1)/2)
-    ip = Dagger(jket)*jket
-    assert pretty(ip, use_unicode=True) == u'\u27e8z:1/2,1/2\u2758z:1/2,1/2\u27e9'
-    assert latex(ip) == r"\left\langle z:\frac{1}{2},\frac{1}{2} \middle| z:\frac{1}{2},\frac{1}{2} \right\rangle"
-    from sympy import Rational
-    assert eval(srepr(ip)) == ip

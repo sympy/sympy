@@ -125,14 +125,3 @@ def test_bra_ket_dagger():
     k2 = Ket('k2')
     e = 2*I*k + x*k2
     assert Dagger(e) == conjugate(x)*Dagger(k2) - 2*I*Dagger(k)
-
-
-def test_printing():
-    from sympy import pretty, latex, srepr
-    psi = Ket('psi')
-    assert pretty(psi, use_unicode=True) == u'\u2758\u03c8\u27e9'
-    assert pretty(Dagger(psi), use_unicode=True) == u'\u27e8\u03c8\u2758'
-    assert latex(psi) == r"{\left| \psi \right\rangle }"
-    assert latex(Dagger(psi)) == r"{\left\langle \psi \right| }"
-    assert eval(srepr(psi)) == psi
-    assert eval(srepr(Dagger(psi))) == Dagger(psi)
