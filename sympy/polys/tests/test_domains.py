@@ -4,7 +4,7 @@ from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import (
-    ZZ, QQ, RR, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
+    ZZ, QQ, RR, FF, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
     RR_mpmath, RR_sympy, PolynomialRing, FractionField, EX)
 
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
@@ -605,6 +605,11 @@ def test_sympy_of_type():
     assert QQ_sympy().of_type(Rational(2))
     assert QQ_sympy().of_type(Rational(1, 2))
     assert QQ_sympy().of_type(Rational(3, 2))
+
+def test_FF_of_type():
+    assert FF(3).of_type(FF(3)(1)) is True
+    assert FF(5).of_type(FF(5)(3)) is True
+    assert FF(5).of_type(FF(7)(3)) is False
 
 def test___eq__():
     assert not QQ['x'] == ZZ['x']

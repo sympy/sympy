@@ -145,6 +145,8 @@ class ModularInteger(object):
     def invert(self):
         return self.__class__(self._invert(self.val))
 
+_modular_integer_cache = {}
+
 def ModularIntegerFactory(_mod, _dom=None, _sym=True):
     """Create custom class for specific integer modulus."""
     if _dom is None:
@@ -162,12 +164,19 @@ def ModularIntegerFactory(_mod, _dom=None, _sym=True):
     if not ok or _mod < 1:
         raise ValueError("modulus must be a positive integer, got %s" % _mod)
 
-    class cls(ModularInteger):
-        mod, dom, sym = _mod, _dom, _sym
+    key = _mod, _dom, _sym
 
-    if _sym:
-        cls.__name__ = "SymmetricModularIntegerMod%s" % _mod
-    else:
-        cls.__name__ = "ModularIntegerMod%s" % _mod
+    try:
+        cls = _modular_integer_cache[key]
+    except KeyError:
+        class cls(ModularInteger):
+            mod, dom, sym = _mod, _dom, _sym
+
+        if _sym:
+            cls.__name__ = "SymmetricModularIntegerMod%s" % _mod
+        else:
+            cls.__name__ = "ModularIntegerMod%s" % _mod
+
+        _modular_integer_cache[key] = cls
 
     return cls
