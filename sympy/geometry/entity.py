@@ -278,3 +278,6 @@ class GeometryEntity(tuple):
         if type(self) == type(other):
             return self == other
         raise NotImplementedError()
+
+from sympy.core.sympify import converter
+converter[GeometryEntity] = lambda x: x

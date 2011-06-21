@@ -32,6 +32,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including `None` (will leave them unchanged)
+       - lists, sets or tuples containing any of the above
 
     If the argument is already a type that sympy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -69,6 +70,19 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: True
+
+    To extend `sympify` to convert custom objects (not derived from `Basic`),
+    the static dictionary `convert` is provided. The custom converters are
+    usually added at import time, and will apply to all objects of the given
+    class or its derived classes.
+
+    For example, all geometry objects derive from `GeometryEntity` class, and
+    should not be altered by the converter, so we add the following after
+    defining that class:
+
+    >>> from sympy.core.sympify import converter
+    >>> from sympy.geometry.entity import GeometryEntity
+    >>> converter[GeometryEntity] = lambda x: x
 
     """
     try:

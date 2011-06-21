@@ -4,6 +4,7 @@ from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.geometry import Point, Line
 
 from sympy import mpmath
 
@@ -359,3 +360,9 @@ def test_issue1889_builtins():
 
     exp2 = sympify('C', vars)
     assert exp2 == C # Make sure it did not get mixed up with sympy.C
+
+def test_geometry():
+    p = sympify(Point(0, 1))
+    assert p == Point(0, 1) and type(p) == Point
+    L = sympify(Line(p, (1, 0)))
+    assert L == Line((0, 1), (1, 0)) and type(L) == Line
