@@ -1,7 +1,7 @@
 """Dirac notation for states."""
 
 
-from sympy import Expr, Symbol, Function, integrate, Lambda, oo, conjugate
+from sympy import Expr, Symbol, Function, integrate, Lambda, oo, conjugate, Tuple
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import (
@@ -539,7 +539,7 @@ class Wavefunction(Function):
     >> n = 1
     >> L = 1
     >> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
-    >> f = Wavefunction(g, x)
+    >> f = Wavefunction(g, (x, -oo, oo))
     >> f.norm_constant
     1
     >> f.is_normalized
@@ -557,7 +557,22 @@ class Wavefunction(Function):
     0.412214747707527
     """
 
-    def __call__(self, *args):
+    #Any passed tuples for coordinates and their bounds need to be converted to Tuples
+    #before Function's constructor is called, to avoid errors from calling is_Float
+    #in the constructor
+    def __new__(cls, *args, **options):
+        new_args = [None for i in args]
+        ct = 0
+        for arg in args:
+            if isinstance(arg, tuple):
+                new_args[ct] = Tuple(*arg)
+            else:
+                new_args[ct] = arg
+            ct+=1
+
+        return super(Function, cls).__new__(cls, *new_args, **options)
+
+    def __call__(self, *args, **options):
         var = self.variables
 
         if len(args) != len(var):
@@ -571,7 +586,14 @@ class Wavefunction(Function):
 
     @property
     def variables(self):
-        return tuple(self._args[1:])
+        var = [g[0] if isinstance(g, Tuple) else g for g in self._args[1:]]
+        return tuple(var)
+
+    @property
+    def limits(self):
+        limits = [(g[1], g[2]) if isinstance(g, Tuple) else (-oo, oo) \
+                  for g in self._args[1:]]
+        return dict(zip(self.variables, tuple(limits)))
 
     @property
     def expr(self):
@@ -583,8 +605,15 @@ class Wavefunction(Function):
 
     @property
     def norm_constant(self):
-        #NOTE: Only works with one variable right now; will have to be changed!
-        return 1/integrate(self.expr*conjugate(self.expr), (self.variables[0], -oo, oo))
+        exp = self.expr*conjugate(self.expr)
+        var = self.variables
+        limits = self.limits
+
+        for v in var:
+            curr_limits = limits[v]
+            exp = integrate(exp, (v, curr_limits[0], curr_limits[1]))
+
+        return 1/exp
 
     def prob(self):
         return Wavefunction(self.expr*conjugate(self.expr), *self.variables)
