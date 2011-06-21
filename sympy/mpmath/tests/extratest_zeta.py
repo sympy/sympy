@@ -14,17 +14,17 @@ def test_zetazero():
     (1048449116, 388858886.690745053)
     ]
     for n, v in cases:
-        print n, v,
+        print(n, v)
         t1 = clock()
         ok = zetazero(n).ae(complex(0.5,v))
         t2 = clock()
-        print "ok =", ok, ("(time = %s)" % round(t2-t1,3))
-    print "Now computing two huge zeros (this may take hours)"
-    print "Computing zetazero(8637740722917)"
+        print("ok =", ok, ("(time = %s)" % round(t2-t1,3)))
+    print("Now computing two huge zeros (this may take hours)")
+    print("Computing zetazero(8637740722917)")
     ok = zetazero(8637740722917).ae(complex(0.5,2124447368584.39296466152))
-    print "ok =", ok
+    print("ok =", ok)
     ok = zetazero(8637740722918).ae(complex(0.5,2124447368584.39298170604))
-    print "ok =", ok
+    print("ok =", ok)
 
 if __name__ == "__main__":
     try:

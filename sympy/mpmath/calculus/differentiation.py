@@ -1,4 +1,10 @@
-from calculus import defun
+from ..libmp.backend import xrange
+from .calculus import defun
+
+try:
+    iteritems = dict.iteritems
+except AttributeError:
+    iteritems = dict.items
 
 #----------------------------------------------------------------------------#
 #                                Differentiation                             #
@@ -171,7 +177,7 @@ def diff(ctx, f, x, n=1, **options):
     except TypeError:
         pass
     if partial:
-        x = map(ctx.convert, x)
+        x = [ctx.convert(_) for _ in x]
         return _partial_diff(ctx, f, x, orders, options)
     method = options.get('method', 'step')
     if n == 0 and method != 'quad' and not options.get('singular'):
@@ -241,7 +247,8 @@ def diffs(ctx, f, x, n=None, **options):
         >>> mp.dps = 15
         >>> nprint(list(diffs(cos, 1, 5)))
         [0.540302, -0.841471, -0.540302, 0.841471, 0.540302, -0.841471]
-        >>> for i, d in zip(range(6), diffs(cos, 1)): print i, d
+        >>> for i, d in zip(range(6), diffs(cos, 1)):
+        ...     print("%s %s" % (i, d))
         ...
         0 0.54030230586814
         1 -0.841470984807897
@@ -362,15 +369,15 @@ def dpoly(n, _cache={}):
     if not _cache:
         _cache[0] = {(0,):1}
     R = dpoly(n-1)
-    R = dict((c+(0,),v) for (c,v) in R.iteritems())
+    R = dict((c+(0,),v) for (c,v) in iteritems(R))
     Ra = {}
-    for powers, count in R.iteritems():
+    for powers, count in iteritems(R):
         powers1 = (powers[0]+1,) + powers[1:]
         if powers1 in Ra:
             Ra[powers1] += count
         else:
             Ra[powers1] = count
-    for powers, count in R.iteritems():
+    for powers, count in iteritems(R):
         if not sum(powers):
             continue
         for k,p in enumerate(powers):
@@ -433,7 +440,7 @@ def diffs_exp(ctx, fdiffs):
     i = 1
     while 1:
         s = ctx.mpf(0)
-        for powers, c in dpoly(i).iteritems():
+        for powers, c in iteritems(dpoly(i)):
             s += c*ctx.fprod(fn(k+1)**p for (k,p) in enumerate(powers) if p)
         yield s * f0
         i += 1

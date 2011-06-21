@@ -22,8 +22,35 @@ gmpy = None
 sage = None
 sage_utils = None
 
+try:
+    xrange
+    python3 = False
+except NameError:
+    python3 = True
+
 BACKEND = 'python'
-MPZ = long
+
+if not python3:
+    MPZ = long
+    xrange = xrange
+    basestring = basestring
+    from .exec_py2 import exec_
+else:
+    MPZ = int
+    xrange = range
+    basestring = str
+    from .exec_py3 import exec_
+
+# Define constants for calculating hash on Python 3.2.
+if sys.version >= "3.2":
+    HASH_MODULUS = sys.hash_info.modulus
+    if sys.hash_info.width == 32:
+        HASH_BITS = 31
+    else:
+        HASH_BITS = 61
+else:
+    HASH_MODULUS = None
+    HASH_BITS = None
 
 if 'MPMATH_NOGMPY' not in os.environ:
     try:
@@ -63,8 +90,13 @@ MPZ_TWO = MPZ(2)
 MPZ_THREE = MPZ(3)
 MPZ_FIVE = MPZ(5)
 
-if BACKEND == 'python':
-    int_types = (int, long)
-else:
-    int_types = (int, long, MPZ_TYPE)
-
+try:
+    if BACKEND == 'python':
+        int_types = (int, long)
+    else:
+        int_types = (int, long, MPZ_TYPE)
+except NameError:
+    if BACKEND == 'python':
+        int_types = (int,)
+    else:
+        int_types = (int, MPZ_TYPE)

@@ -1,4 +1,5 @@
 from bisect import bisect
+from ..libmp.backend import xrange
 
 class ODEMethods(object):
     pass
@@ -125,11 +126,11 @@ def odefun(ctx, F, x0, y0, tol=None, degree=None, method='taylor', verbose=False
         >>> mp.dps = 15; mp.pretty = True
         >>> f = odefun(lambda x, y: y, 0, 1)
         >>> for x in [0, 1, 2.5]:
-        ...     print f(x), exp(x)
+        ...     print((f(x), exp(x)))
         ...
-        1.0 1.0
-        2.71828182845905 2.71828182845905
-        12.1824939607035 12.1824939607035
+        (1.0, 1.0)
+        (2.71828182845905, 2.71828182845905)
+        (12.1824939607035, 12.1824939607035)
 
     The solution with high precision::
 
@@ -157,11 +158,11 @@ def odefun(ctx, F, x0, y0, tol=None, degree=None, method='taylor', verbose=False
 
         >>> f = odefun(lambda x, y: x*sin(y), 0, pi/2)
         >>> for x in [2, 5, 10]:
-        ...     print f(x), 2*atan(exp(mpf(x)**2/2))
+        ...     print((f(x), 2*atan(exp(mpf(x)**2/2))))
         ...
-        2.87255666284091 2.87255666284091
-        3.14158520028345 3.14158520028345
-        3.14159265358979 3.14159265358979
+        (2.87255666284091, 2.87255666284091)
+        (3.14158520028345, 3.14158520028345)
+        (3.14159265358979, 3.14159265358979)
 
     If `F` is independent of `y`, an ODE can be solved using direct
     integration. We can therefore obtain a reference solution with
@@ -197,7 +198,7 @@ def odefun(ctx, F, x0, y0, tol=None, degree=None, method='taylor', verbose=False
         >>> for x in [0, 1, 2.5, 10]:
         ...     nprint(f(x), 15)
         ...     nprint([cos(x), sin(x)], 15)
-        ...     print "---"
+        ...     print("---")
         ...
         [1.0, 0.0]
         [1.0, 0.0]
@@ -256,7 +257,7 @@ def odefun(ctx, F, x0, y0, tol=None, degree=None, method='taylor', verbose=False
         while 1:
             ser, xa, xb = series_data[-1]
             if verbose:
-                print "Computing Taylor series for [%f, %f]" % (xa, xb)
+                print("Computing Taylor series for [%f, %f]" % (xa, xb))
             y = mpolyval(ser, xb-xa)
             xa = xb
             ser, xb = ode_taylor(ctx, F, xb, y, tol_prec, degree)

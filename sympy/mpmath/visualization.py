@@ -3,7 +3,8 @@ Plotting (requires matplotlib)
 """
 
 from colorsys import hsv_to_rgb, hls_to_rgb
-from libmp import NoConvergence
+from .libmp import NoConvergence
+from .libmp.backend import xrange
 
 class VisualizationMethods(object):
     plot_ignore = (ValueError, ArithmeticError, ZeroDivisionError, NoConvergence)
@@ -95,9 +96,9 @@ def plot(ctx, f, xlim=[-5,5], ylim=None, points=200, file=None, dpi=None,
                 axes.plot(x, z, ':'+c, linewidth=3)
             else:
                 axes.plot(x, y, c, linewidth=3)
-    axes.set_xlim(map(float, xlim))
+    axes.set_xlim([float(_) for _ in xlim])
     if ylim:
-        axes.set_ylim(map(float, ylim))
+        axes.set_ylim([float(_) for _ in ylim])
     axes.set_xlabel('x')
     axes.set_ylabel('f(x)')
     axes.grid(True)
@@ -173,8 +174,8 @@ def cplot(ctx, f, re=[-5,5], im=[-5,5], points=2000, color=None,
                 v = (0.5, 0.5, 0.5)
             w[n,m] = v
         if verbose:
-            print n, "of", N
-    rea, reb, ima, imb = map(float, [rea, reb, ima, imb])
+            print(n, "of", N)
+    rea, reb, ima, imb = [float(_) for _ in [rea, reb, ima, imb]]
     axes.imshow(w, extent=(rea, reb, ima, imb), origin='lower')
     axes.set_xlabel('Re(z)')
     axes.set_ylabel('Im(z)')
