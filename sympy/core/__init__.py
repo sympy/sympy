@@ -12,6 +12,7 @@ from numbers import Number, Float, Rational, Integer, NumberSymbol,\
 from power import Pow, integer_nthroot
 from mul import Mul
 from add import Add
+from mod import Mod
 from relational import Rel, Eq, Ne, Lt, Le, Gt, Ge, \
     Equality, Inequality, Unequality, StrictInequality
 from multidimensional import vectorize
