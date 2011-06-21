@@ -42,7 +42,7 @@ class Dyad(object):
         i = 0
         # This code is to remove empty parts from the list
         while i < len(self.args):
-            if ((self.args[i][0] == 0) | (self.args[i][1] == 0) | 
+            if ((self.args[i][0] == 0) | (self.args[i][1] == 0) |
                 (self.args[i][2] == 0)):
                 self.args.remove(self.args[i])
                 i -= 1
@@ -159,6 +159,9 @@ class Dyad(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __neg__(self):
+        return self * -1
 
     def __rand__(self, other):
         """The inner product operator for a Vector or Dyad, and a Dyad
@@ -330,7 +333,7 @@ class Dyad(object):
         >>> d = outer(N.x, N.x)
         >>> d.dt(B)
         (-qd)*ny>nx> + (-qd)*nx>ny>
- 
+
         """
 
         self._check_frame(frame)

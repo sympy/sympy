@@ -33,8 +33,9 @@ class DynamicSymbol(Symbol):
     won't work in Sympy if :math:`\dot{q}}` is represented as a Derivative
     object.
 
-
     """
+
+    dlevel = 0
 
     @property
     def free_symbols(self):
@@ -42,7 +43,9 @@ class DynamicSymbol(Symbol):
 
     def _eval_derivative(self, s):
         if s == Symbol('t'):
-            return DynamicSymbol(self.name + 'd')
+            news = DynamicSymbol(self.name + 'd')
+            news.dlevel = self.dlevel + 1
+            return news
         elif self == s:
             return S.One
         else:

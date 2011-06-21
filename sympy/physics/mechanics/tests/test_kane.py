@@ -108,7 +108,7 @@ def test_rolling_disc():
 
     kd = dict({q1d: (u3/cos(q3)),
         q2d: (u1),
-        q3d: (u2 - u3*tan(q2))})
+        q3d: (u2 - u3 * tan(q2))})
 
     ForceList = [(Dmc, - m * g * Y.z)]
     BodyD = RigidBody()

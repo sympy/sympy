@@ -1,6 +1,6 @@
 __all__ = ['Kane']
 
-from sympy import Symbol, zeros, simplify, expand, Matrix
+from sympy import Symbol, zeros, simplify, Matrix, solve_linear_system_LU
 from sympy.physics.mechanics.essential import ReferenceFrame
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.dynamicsymbol import DynamicSymbol
@@ -14,7 +14,6 @@ class Kane(object):
         """Supply the inertial frame. """
         self._inertial = frame
         self._us = None
-        self._udots = None
         self._qs = None
         self._qdots = None
         self._kd = dict()
@@ -24,6 +23,9 @@ class Kane(object):
         self._frstar = None
         self._uds = []
         self._dep_cons = []
+        self._forcing = None
+        self._massmatrix = None
+        self._rhs = None
 
     def _find_others(self, inlist, insyms):
         """Finds all non-supplied DynamicSymbols in the list of expressions"""
@@ -58,10 +60,6 @@ class Kane(object):
         if not isinstance(inlist, (list, tuple)):
             raise TypeError('Generalized Speeds must be supplied in a list')
         self._us = inlist
-        ol = []
-        for i, v in enumerate(inlist):
-            ol.append(v.diff(Symbol('t')))
-        self._udots = ol
 
     def kindiffeq(self, indict):
         if not isinstance(indict, dict):
@@ -74,21 +72,22 @@ class Kane(object):
         self._qs = newlist
         self._qdots = indict.keys()
 
-    def dependent_speeds(self, speedl, conl):
-        if not isinstance(speedl, (list, tuple)):
+    def dependent_speeds(self, uds, conl):
+        if not isinstance(uds, (list, tuple)):
             raise TypeError('Dependent speeds and constraints must each be '
                             'provided in their own list')
-        if not speedl.__len__() == conl.__len__():
+        if not uds.__len__() == conl.__len__():
             raise ValueError('There must be an equal number of dependent '
                              'speeds and constraints')
-        self._uds = speedl
+        self._uds = uds
         for i, v in enumerate(conl):
             conl[i] = v.subs(self._kd)
         self._dep_cons = conl
+        uis = self._us
 
-        uis = self._us[:]
-        uds = self._uds[:]
+        # non coord/speed DynamicSymbols
         oth = self._find_others(conl, uis + uds + self._qs + self._qdots)
+
         n = len(uis)
         m = len(uds)
         p = n - m
@@ -96,28 +95,26 @@ class Kane(object):
         for i, v in enumerate(uds):
             uis.remove(v)
         uis += uds
+        self._us = uis
         B = zeros((m, n))
-        C = zeros((m, len(oth)))
-
+        C = zeros((m, 1))
+        uzeros = {}
+        for i, v in enumerate(uis):
+            uzeros.update({v: 0})
         ii = 0
         for i1, v1 in enumerate(uds):
             for i2, v2 in enumerate(uis):
                 B[ii] = conl[i1].diff(uis[i2])
                 ii += 1
-        #REDO THIS PART BY SUBTRACTING THE ABOVE FROM conl[i]
-        ii = 0
         for i1, v1 in enumerate(uds):
-            for i2, v2 in enumerate(oth):
-                C[ii] = conl[i1].diff(oth[i2])
-                ii += 1
-        for i, v in enumerate(uds):
-            uis.remove(v)
+                C[i1] = conl[i1].subs(uzeros)
         mr1 = B.extract(range(m), range(p))
         ml1 = B.extract(range(m), range(p, n))
-        mr2 = C * Matrix(oth)
+        self._depB = B
+        self._depC = C
         ml1i = ml1.inverse_ADJ()
         self._Ars = ml1i * mr1
-        self._Brs = ml1i * mr2
+        self._Brs = ml1i * C
 
     def form_fr(self, fl):
         #dict is body, force
@@ -128,9 +125,6 @@ class Kane(object):
         self._forcelist = fl[:]
         uis = self._us
         uds = self._uds
-        for i, v in enumerate(uds):
-            uis.remove(v)
-        uis += uds
         n = len(uis)
 
         FR = zeros((n, 1))
@@ -166,57 +160,94 @@ class Kane(object):
         self._bodylist = bl[:]
         uis = self._us
         uds = self._uds
-        for i, v in enumerate(uds):
-            uis.remove(v)
-        uis += uds
         n = len(uis)
-
+        udots = []
+        udotszero = {}
+        for i, v in enumerate(uis):
+            udots.append(v.diff(Symbol('t')))
+            udotszero.update({udots[i]: 0})
         # Form R*, T* for each body or particle in the list
+        MM = zeros((n, n))
+        nonMM = zeros((n, 1))
         rsts = []
+        partials = []
         for i, v in enumerate(bl):
             if isinstance(v, RigidBody):
                 om = v.frame.ang_vel_in(N).subs(self._kd)
+                alp = v.frame.ang_acc_in(N).subs(self._kd)
                 ve = v.mc.vel(N).subs(self._kd)
-                if v.mass.diff(Symbol('t')) != 0:
-                    r = (v.mass * ve).dt(N)
-                else:
-                    r = v.mass * v.mc.acc(N).subs(self._kd)
+                acc = v.mc.acc(N).subs(self._kd)
+                m = v.mass
                 I, p = v.inertia
                 if p != v.mc:
-                    pass
-                    #redefine I
-                if I.dt(v.frame) != 0:
-                    t = (I & om).diff(Symbol('t'), N)
-                else:
-                    t = ((v.frame.ang_acc_in(N).subs(self._kd) & I) +
-                         ((om ^ I) & om))
+                    # redefine I about mass center
+                    # have I S/O, want I S/S*
+                    # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
+                    f = v.frame
+                    d = v.mc.pos_from(p)
+                    I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
+                              (d & d) - (d | d))
+                templist = []
+                for j, w in enumerate(udots):
+                    templist.append(-m * acc.diff(w, N))
+                other = -m.diff(Symbol('t')) * ve - m * acc.subs(udotszero)
+                rs = (templist, other)
+                templist = []
+                for j, w in enumerate(udots):
+                    templist.append(-I & alp.diff(w, N))
+                other = -((I.dt(v.frame) & om) + (I & alp.subs(udotszero)) + (om
+                          ^ (I & om)))
+                ts = (templist, other)
+                tl1 = []
+                tl2 = []
+                for j, w in enumerate(uis):
+                    tl1.append(ve.diff(w, N))
+                    tl2.append(om.diff(w, N))
+                partials.append((tl1, tl2))
+
             elif isinstance(v, Particle):
-                t = 0
                 ve = v.point.vel(N).subs(self._kd)
-                if v.mass.diff(Symbol('t')) != 0:
-                    r = (v.mass * ve).dt(N)
-                else:
-                    r = v.mass * v.point.acc(N).subs(self._kd)
+                acc = v.point.acc(N).subs(self._kd)
+                m = v.mass
+                templist = []
+                for j, w in enumerate(udots):
+                    templist.append(-m * acc.diff(w, N))
+                other = -m.diff(Symbol('t')) * ve - m * acc.subs(udotszero)
+                rs = (templist, other)
+                ts = (udotszero.values(),0)
+                tl1 = []
+                tl2 = []
+                for j, w in enumerate(uis):
+                    tl1.append(ve.diff(w, N))
+                    tl2.append(0)
+                partials.append((tl1, tl2))
             else:
                 raise TypeError('The body list needs RigidBody or '
                                 'Particle as list elements')
-            rsts.append((r, t))
+            rsts.append((rs, ts))
 
         # Use R*, T* and partial velocities to form FR*
         FRSTAR = zeros((n, 1))
-        # goes through each Fr (where this loop's i is r)
-        for i, v in enumerate(uis):
-            # does this for each body in the list (w)
-            for j, w in enumerate(bl):
-                if isinstance(w, RigidBody):
-                    om = w.frame.ang_vel_in(N).subs(self._kd)
-                    ve = w.mc.vel(N).subs(self._kd)
-                    r = rsts[j][0] & ve.diff(v, N)
-                    t = rsts[j][1] & om.diff(v, N)
-                    FRSTAR[i] -= (r + t)
-                elif isinstance(w, Particle):
-                    ve = w.point.vel(N).subs(self._kd)
-                    FRSTAR[i] -= rsts[j][0] & ve.diff(v, N)
+        # does this for each body in the list
+        for i, v in enumerate(bl):
+            rs, ts = rsts[i]
+            vps, ops = partials[i]
+            ii = 0
+            for j, w in enumerate(rs[0]):
+                for k, x in enumerate(vps):
+                    MM[ii] += w & x
+                    ii += 1
+            ii = 0
+            for j, w in enumerate(ts[0]):
+                for k, x in enumerate(ops):
+                    MM[ii] += w & x
+                    ii += 1
+            for j, w in enumerate(vps):
+                nonMM[j] += w & rs[1]
+            for j, w in enumerate(ops):
+                nonMM[j] += w & ts[1]
+        FRSTAR = MM * Matrix(udots) + nonMM
+
         if len(uds) != 0:
             m = len(uds)
             p = n - m
@@ -225,46 +256,46 @@ class Kane(object):
             FRSTARtilde += self._Ars.T * FRSTARold
             FRSTAR = FRSTARtilde
         self._frstar = FRSTAR
+        self._massmatrix = -MM
         return FRSTAR
 
     def mass_matrix(self):
+        if (self._frstar == None) & (self._fr == None):
+            raise ValueError('Need to compute FR* first')
+        if len(self._uds) == 0:
+            return self._massmatrix
         uis = self._us
-        udots = self._udots
         uds = self._uds
-        for i, v in enumerate(uds):
-            uis.remove(v)
-        p = len(uis)
-        zeroeq = (self._fr + self._frstar).expand()
-        MM = zeros((p, p))
-        # strange counter is because sympy matrix only has 1 index even if 2d
-        ii = 0
-        for i in range(p):
-            for j in range(p):
-                MM[ii] = zeroeq[i].coeff(udots[j])
-                if MM[ii] == None:
-                    MM[ii] = 0
-                ii += 1
+        n = len(uis)
+        m = len(uds)
+        p = n - m
+        MM = self._massmatrix
+        MMi = MM.extract(range(p), range(n))
+        MMd = MM.extract(range(p, n), range(n))
+        MM = MMi + self._Ars.T * MMd
+        MM = Matrix([MM, self._depB])
         self._massmatrix = MM
         return MM
 
     def forcing(self):
+        if (self._frstar == None) & (self._fr == None):
+            raise ValueError('Need to compute FR* first')
+        t = Symbol('t')
         uis = self._us
-        udots = self._udots
         uds = self._uds
-        for i, v in enumerate(uds):
-            uis.remove(v)
-        p = len(uis)
-        zeroeq = (self._fr + self._frstar).expand()
-        MM = self._massmatrix
-        # strange counter is because sympy matrix only has 1 index even if 2d
-        ii = 0
-        for i in range(p):
-            for j in range(p):
-                zeroeq[i] -= MM[ii] * udots[j]
-                ii += 1
-            zeroeq[i] = -simplify(expand(zeroeq[i]))
-        self._forcing = zeroeq
-        return zeroeq
+        n = len(uis)
+        m = len(uds)
+        p = n - m
+        udotszero = {}
+        for i, v in enumerate(uis):
+            udotszero.update({v.diff(t): 0})
+        zeroeq = self._fr + self._frstar
+        zeroeq = zeroeq.subs(udotszero)
+        if len(self._uds) == 0:
+            return zeroeq
+        extra = - self._depB.diff(t) * Matrix(uis) - self._depC.diff(t)
+        self._forcing = None
+        return Matrix([zeroeq, extra])
 
 if __name__ == "__main__":
     import doctest
