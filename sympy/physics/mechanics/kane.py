@@ -47,7 +47,7 @@ class Kane(object):
                 if isinstance(v, DynamicSymbol):
                     ol += inexpr
         seta = {}
-        map(seta.__setitem__, ol, []) 
+        map(seta.__setitem__, ol, [])
         ol = seta.keys()
         for i, v in enumerate(insyms):
             if ol.__contains__(v):
@@ -234,13 +234,15 @@ class Kane(object):
         for i, v in enumerate(uds):
             uis.remove(v)
         p = len(uis)
-        zeroeq = self._fr + self._frstar
+        zeroeq = (self._fr + self._frstar).expand()
         MM = zeros((p, p))
         # strange counter is because sympy matrix only has 1 index even if 2d
         ii = 0
         for i in range(p):
             for j in range(p):
-                MM[ii] = zeroeq[i].diff(udots[j])
+                MM[ii] = zeroeq[i].coeff(udots[j])
+                if MM[ii] == None:
+                    MM[ii] = 0
                 ii += 1
         self._massmatrix = MM
         return MM
@@ -252,7 +254,7 @@ class Kane(object):
         for i, v in enumerate(uds):
             uis.remove(v)
         p = len(uis)
-        zeroeq = self._fr + self._frstar
+        zeroeq = (self._fr + self._frstar).expand()
         MM = self._massmatrix
         # strange counter is because sympy matrix only has 1 index even if 2d
         ii = 0
