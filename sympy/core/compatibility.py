@@ -119,7 +119,7 @@ except ImportError:
                 return True
         return False
 
-def iterable(i, exclude=(str, dict)):
+def iterable(i, exclude=(basestring, dict)):
     """
     Return a boolean indicating whether i is an iterable in the sympy sense.
 
