@@ -377,7 +377,7 @@ class Matrix(object):
     def copyin_list(self, key, value):
         if not ordered_iter(value):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
-        self.copyin_matrix(key, Matrix(value))
+        self.copyin_matrix(key, Matrix(value, type=self.type))
 
     def hash(self):
         """Compute a hash every time, because the matrix elements
@@ -450,7 +450,7 @@ class Matrix(object):
         return matrix_add(a,self)
 
     def __div__(self,a):
-        return self * (S.One/a)
+        return self * (self.one/a)
 
     def __truediv__(self,a):
         return self.__div__(a)
@@ -1869,14 +1869,14 @@ class Matrix(object):
             for k in range(n-1):
                 # look for a pivot in the current column
                 # and assume det == 0 if none is found
-                if M[k, k] == 0:
+                if M[k, k] == self.zero:
                     for i in range(k+1, n):
-                        if M[i, k] != 0:
+                        if M[i, k] != self.zero:
                             M.row_swap(i, k)
                             sign *= -1
                             break
                     else:
-                        return S.Zero
+                        return self.zero
 
                 # proceed with Bareis' fraction-free (FF)
                 # form of Gaussian elimination algorithm
@@ -1887,14 +1887,16 @@ class Matrix(object):
                         if k > 0:
                             D /= M[k-1, k-1]
 
-                        if D.is_Atom:
-                            M[i, j] = D
-                        else:
+                        try:
                             M[i, j] = cancel(D)
+                        except:
+                            M[i, j] = D
 
-            det = sign * M[n-1, n-1]
-
-        return det.expand()
+            det = self.type(sign) * M[n-1, n-1]
+        try:
+            return det.expand()
+        except:
+            return det
 
     def adjugate(self, method="berkowitz"):
         """
@@ -2062,10 +2064,10 @@ class Matrix(object):
             raise NonSquareMatrixError()
 
         A, N = self, self.rows
-        transforms = [self.zero] * (N-1)
+        transforms = [A.zero] * (N-1)
 
         for n in xrange(N, 1, -1):
-            T, k = zeros((n+1,n)), n - 1
+            T, k = A.zeros((n+1,n)), n - 1
 
             R, C = -A[k,:k], A[:k,k]
             A, a = A[:k,:k], -A[k,k]
@@ -2078,14 +2080,14 @@ class Matrix(object):
             for i, B in enumerate(items):
                 items[i] = (R * B)[0,0]
 
-            items = [ S.One, a ] + items
+            items = [ A.one, a ] + items
 
             for i in xrange(n):
                 T[i:,i] = items[:n-i+1]
 
             transforms[k-1] = T
 
-        polys = [ Matrix([S.One, -A[0,0]]) ]
+        polys = [ Matrix([A.one, -A[0,0]], type = A.type) ]
 
         for i, T in enumerate(transforms):
             polys.append(T * polys[i])
