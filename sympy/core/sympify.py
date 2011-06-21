@@ -85,6 +85,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     >>> converter[GeometryEntity] = lambda x: x
 
     """
+    from containers import Tuple
+
     try:
         cls = a.__class__
     except AttributeError:  #a is probably an old-style class object
@@ -121,8 +123,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if strict:
         raise SympifyError(a)
 
+    if isinstance(a, tuple):
+        return Tuple(*[sympify(x, locals=locals, convert_xor=convert_xor,
+            rational=rational) for x in a])
     if iterable(a):
-        return type(a)([sympify(x, locals=locals, convert_xor=convert_xor, rational=rational) for x in a])
+        return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+            rational=rational) for x in a])
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement
