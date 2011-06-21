@@ -1,5 +1,5 @@
 from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify
-from sympy import Integer, conjugate, pretty, latex
+from sympy import Integer, conjugate, pretty, latex, oo
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
@@ -137,8 +137,22 @@ def test_printing():
 def test_wavefunction():
     f = Wavefunction(x**2, x)
     p = f.prob()
+    lims = f.limits
 
     assert f.is_normalized == False
     assert f.norm_constant == 0
     assert f(10) == 100
     assert p(10) == 10000
+    assert lims[x] == (-oo, oo)
+
+    g = Wavefunction(x**2*y+y**2*x, (x, 0, 1), (y, 0, 2))
+    lims_g = g.limits
+
+    assert lims_g[x] == (0, 1)
+    assert lims_g[y] == (0, 2)
+    assert g.is_normalized == False
+    assert g.norm_constant == sqrt(1.0/(14.0/3.0))
+    assert g(2,4) == 48
+
+    h = Wavefunction(sqrt(5)*x**2, (x, 0, 1))
+    assert h.is_normalized == True

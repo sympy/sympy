@@ -1,7 +1,7 @@
 """Dirac notation for states."""
 
 
-from sympy import Expr, Symbol, Function, integrate, Lambda, oo, conjugate, Tuple
+from sympy import Expr, Symbol, Function, integrate, Lambda, oo, conjugate, Tuple, sqrt
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import (
@@ -613,7 +613,7 @@ class Wavefunction(Function):
             curr_limits = limits[v]
             exp = integrate(exp, (v, curr_limits[0], curr_limits[1]))
 
-        return 1/exp
+        return sqrt(1.0/exp)
 
     def prob(self):
         return Wavefunction(self.expr*conjugate(self.expr), *self.variables)
