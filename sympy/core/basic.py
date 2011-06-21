@@ -328,6 +328,22 @@ class Basic(AssumeMeths):
         # now both objects are from SymPy, so we can proceed to usual comparison
         return cmp(a.sort_key(), b.sort_key())
 
+    @classmethod
+    def fromiter(cls, args, **assumptions):
+        """
+        Create a new object from an iterable.
+
+        This is a convenience function that allows one to create objects from
+        any iterable, without having to convert to a list or tuple first.
+
+        Example:
+
+        >>> from sympy import Tuple
+        >>> Tuple.fromiter(i for i in xrange(5))
+        (0, 1, 2, 3, 4)
+
+        """
+        return cls(*tuple(args), **assumptions)
 
     @classmethod
     def class_key(cls):

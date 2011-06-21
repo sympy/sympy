@@ -22,6 +22,10 @@ def test_Tuple():
     assert Tuple(p, 1).subs(p, 0) == Tuple(0, 1)
     assert Tuple(p, Tuple(p, 1)).subs(p, 0) == Tuple(0, Tuple(0, 1))
 
+    assert Tuple.fromiter(t2) == Tuple(*t2)
+    assert Tuple.fromiter(x for x in xrange(4)) == Tuple(0, 1, 2, 3)
+    assert st2.fromiter(st2.args) == st2
+
 def test_Tuple_contains():
     t1, t2 = Tuple(1), Tuple(2)
     assert t1 in Tuple(1, 2, 3, t1, Tuple(t2))
