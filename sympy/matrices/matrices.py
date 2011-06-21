@@ -75,7 +75,7 @@ class Matrix(object):
     # TODO: investigate about __array_priority__
     __array_priority__ = 10.0
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         """
         Matrix can be constructed with values or a rule.
 
@@ -88,6 +88,9 @@ class Matrix(object):
         [0, 2]
 
         """
+        self.type = sympify
+        if 'type' in kwargs:
+            self.set_type(kwargs['type'])
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
             self.rows = int(args[0])
@@ -95,14 +98,14 @@ class Matrix(object):
             self.mat = []
             for i in range(self.rows):
                 for j in range(self.cols):
-                    self.mat.append(sympify(operation(i, j)))
+                    self.mat.append(self.type(operation(i, j)))
         elif len(args)==3 and ordered_iter(args[2]):
             self.rows=args[0]
             self.cols=args[1]
             mat = args[2]
             if len(mat) != len(self):
                 raise ValueError('List length should be equal to rows*columns')
-            self.mat = map(lambda i: sympify(i), mat)
+            self.mat = map(lambda i: self.type(i), mat)
         elif len(args) == 1:
             mat = args[0]
             if isinstance(mat, Matrix):
@@ -117,13 +120,13 @@ class Matrix(object):
                 arr = mat.__array__()
                 if len(arr.shape) == 2:
                     self.rows, self.cols = arr.shape[0], arr.shape[1]
-                    self.mat = map(lambda i: sympify(i), arr.ravel())
+                    self.mat = map(lambda i: self.type(i), arr.ravel())
                     return
                 elif len(arr.shape) == 1:
                     self.rows, self.cols = 1, arr.shape[0]
                     self.mat = [0]*self.cols
                     for i in xrange(len(arr)):
-                        self.mat[i] = sympify(arr[i])
+                        self.mat[i] = self.type(arr[i])
                     return
                 else:
                     raise NotImplementedError("Sympy supports just 1D and 2D matrices")
@@ -139,7 +142,7 @@ class Matrix(object):
             if len(mat) != 0:
                 if not ordered_iter(mat[0]):
                     self.cols = 1
-                    self.mat = map(lambda i: sympify(i), mat)
+                    self.mat = map(lambda i: self.type(i), mat)
                     return
                 self.cols = len(mat[0])
             else:
@@ -150,7 +153,7 @@ class Matrix(object):
                     raise ValueError("Input %s inconsistant to form a Matrix." %
                         args)
                 for i in xrange(self.cols):
-                    self.mat.append(sympify(mat[j][i]))
+                    self.mat.append(self.type(mat[j][i]))
         elif len(args) == 0:
             # Empty Matrix
             self.rows = self.cols = 0
@@ -188,14 +191,14 @@ class Matrix(object):
         a = [0]*len(self)
         for i in xrange(self.cols):
             a[i*self.rows:(i+1)*self.rows] = self.mat[i::self.cols]
-        return Matrix(self.cols,self.rows,a)
+        return Matrix(self.cols,self.rows,a, type=self.type)
 
     T = property(transpose,None,None,"Matrix transposition.")
 
     def conjugate(self):
         """By-element conjugation."""
         out = Matrix(self.rows,self.cols,
-                lambda i,j: self[i,j].conjugate())
+                lambda i,j: self[i,j].conjugate(), type=self.type)
         return out
 
     C = property(conjugate,None,None,"By-element conjugation.")
@@ -315,7 +318,7 @@ class Matrix(object):
                 if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
                     raise IndexError("Index out of range: a[%s]" % (key,))
                 else:
-                    self.mat[i*self.cols + j] = sympify(value)
+                    self.mat[i*self.cols + j] = self.type(value)
                     return
 
         else:
@@ -325,7 +328,7 @@ class Matrix(object):
             else:
                 k = a2idx(key)
                 if k is not None:
-                    self.mat[k] = sympify(value)
+                    self.mat[k] = self.type(value)
                     return
         raise IndexError("Invalid index: a[%s]"%repr(key))
 
@@ -368,7 +371,7 @@ class Matrix(object):
 
         for i in range(value.rows):
             for j in range(value.cols):
-                self[i+rlo, j+clo] = sympify(value[i,j])
+                self[i+rlo, j+clo] = self.type(value[i,j])
 
     def copyin_list(self, key, value):
         if not ordered_iter(value):
@@ -387,19 +390,20 @@ class Matrix(object):
     def __rmul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
-        out = Matrix(self.rows,self.cols,map(lambda i: a*i,self.mat))
+        a = self.type(a)
+        out = Matrix(self.rows,self.cols,map(lambda i: a * i, self.mat), type=self.type)
         return out
 
     def expand(self):
-        out = Matrix(self.rows,self.cols,map(lambda i: i.expand(), self.mat))
+        out = Matrix(self.rows,self.cols,map(lambda i: i.expand(), self.mat), type=self.type)
         return out
 
     def combine(self):
-        out = Matrix(self.rows,self.cols,map(lambda i: i.combine(),self.mat))
+        out = Matrix(self.rows,self.cols,map(lambda i: i.combine(),self.mat), type=self.type)
         return out
 
     def subs(self, *args):
-        out = Matrix(self.rows,self.cols,map(lambda i: i.subs(*args),self.mat))
+        out = Matrix(self.rows,self.cols,map(lambda i: i.subs(*args),self.mat), type=self.type)
         return out
 
     def __sub__(self,a):
@@ -408,7 +412,7 @@ class Matrix(object):
     def __mul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(self,a)
-        out = Matrix(self.rows,self.cols,map(lambda i: i*a,self.mat))
+        out = Matrix(self.rows,self.cols,map(lambda i: i*a,self.mat), type=self.type)
         return out
 
     def __pow__(self, num):
@@ -459,7 +463,7 @@ class Matrix(object):
         return matrix_add(self,b)
 
     def __neg__(self):
-        return -1*self
+        return self.type(-1) * self
 
     def __eq__(self, a):
         if not isinstance(a, (Matrix, Basic)):
@@ -588,7 +592,7 @@ class Matrix(object):
         L = eye(self.rows)
         for i in xrange(self.rows):
             for j in xrange(i):
-                L[i, j] = (1 / D[j, j]) * (self[i, j] - sum(
+                L[i, j] = (self.one / D[j, j]) * (self[i, j] - sum(
                     L[i, k] * L[j, k] * D[k, k] for k in xrange(j)))
             D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k]
                 for k in xrange(i))
@@ -616,7 +620,7 @@ class Matrix(object):
         """
         X = zeros((self.rows, 1))
         for i in xrange(self.rows):
-            if self[i, i] == 0:
+            if self[i, i] == self.zero:
                 raise TypeError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
                 for k in xrange(i))) / self[i, i]
@@ -641,7 +645,7 @@ class Matrix(object):
         Without the error checks, to be used privately. """
         X = zeros((self.rows, 1))
         for i in reversed(xrange(self.rows)):
-            if self[i, i] == 0:
+            if self[i, i] == self.zero:
                 raise ValueError("Matrix must be non-singular.")
             X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
                 for k in xrange(i+1, self.rows))) / self[i, i]
@@ -681,7 +685,7 @@ class Matrix(object):
         Helper function of function diagonal_solve,
         without the error checks, to be used privately.
         """
-        return Matrix(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+        return Matrix(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i], type=self.type)
 
     def LDLsolve(self, rhs):
         """
@@ -703,7 +707,7 @@ class Matrix(object):
         Z = D._diagonal_solve(Y)
         return (L.T)._upper_triangular_solve(Z)
 
-    def inv(self, method="GE", iszerofunc=_iszero, try_block_diag=False):
+    def inv(self, method="GE", iszerofunc=None, try_block_diag=False):
         """
         Calculates the matrix inverse.
 
@@ -953,7 +957,7 @@ class Matrix(object):
         outMat = [0]*outLines*outCols
         for i in xrange(outLines):
             outMat[i*outCols:(i+1)*outCols] = self.mat[(i+rlo)*self.cols+clo:(i+rlo)*self.cols+chi]
-        return Matrix(outLines,outCols,outMat)
+        return Matrix(outLines,outCols,outMat, type=self.type)
 
     def extract(self, rowsList, colsList):
         """
@@ -982,7 +986,7 @@ class Matrix(object):
             raise IndexError("Row indices out of range")
         if not all(j < cols for j in colsList):
             raise IndexError("Column indices out of range")
-        return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]])
+        return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]], type=self.type)
 
     def slice2bounds(self, key, defmax):
         """
@@ -1025,7 +1029,7 @@ class Matrix(object):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = Matrix(self.rows,self.cols,map(f,self.mat))
+        out = Matrix(self.rows,self.cols,map(f,self.mat), type=self.type)
         return out
 
     def evalf(self, prec=None, **options):
@@ -1051,7 +1055,7 @@ class Matrix(object):
         """
         if len(self) != _rows*_cols:
             print "Invalid reshape parameters %d %d" % (_rows, _cols)
-        return Matrix(_rows, _cols, lambda i,j: self.mat[i*_cols + j])
+        return Matrix(_rows, _cols, lambda i,j: self.mat[i*_cols + j], type=self.type)
 
     def print_nonzero (self, symb="X"):
         """
@@ -1084,7 +1088,7 @@ class Matrix(object):
             s += "]\n"
         print s
 
-    def LUsolve(self, rhs, iszerofunc=_iszero):
+    def LUsolve(self, rhs, iszerofunc=None):
         """
         Solve the linear system Ax = b for x.
         self is the coefficient matrix A and rhs is the right side b.
@@ -1096,7 +1100,7 @@ class Matrix(object):
         if rhs.rows != self.rows:
             raise ShapeError("`self` and `rhs` must have the same number of rows.")
 
-        A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
+        A, perm = self.LUdecomposition_Simple(iszerofunc=iszerofunc)
         n = self.rows
         b = rhs.permuteFwd(perm)
         # forward substitution, all diag entries are scaled to 1
@@ -1110,7 +1114,7 @@ class Matrix(object):
             b.row(i, lambda x,k: x / A[i,i])
         return b
 
-    def LUdecomposition(self, iszerofunc=_iszero):
+    def LUdecomposition(self, iszerofunc=None):
         """
         Returns the decomposition LU and the row swaps p.
 
@@ -1126,7 +1130,7 @@ class Matrix(object):
         [0, -3/2]
 
         """
-        combined, p = self.LUdecomposition_Simple(iszerofunc=_iszero)
+        combined, p = self.LUdecomposition_Simple(iszerofunc=iszerofunc)
         L = self.zeros(self.rows)
         U = self.zeros(self.rows)
         for i in range(self.rows):
@@ -1135,15 +1139,17 @@ class Matrix(object):
                     L[i,j] = combined[i,j]
                 else:
                     if i == j:
-                        L[i,i] = 1
+                        L[i,i] = self.one
                     U[i,j] = combined[i,j]
         return L, U, p
 
-    def LUdecomposition_Simple(self, iszerofunc=_iszero):
+    def LUdecomposition_Simple(self, iszerofunc=None):
         """
         Returns A comprised of L,U (L's diag entries are 1) and
         p which is the list of the row swaps (in order).
         """
+        if not iszerofunc:
+            iszerofunc = self._iszero
         if not self.is_square:
             raise NonSquareMatrixError()
         n = self.rows
@@ -1168,7 +1174,7 @@ class Matrix(object):
             if pivot != j: # row must be swapped
                 A.row_swap(pivot,j)
                 p.append([pivot,j])
-            scale = 1 / A[j,j]
+            scale = self.one / A[j,j]
             for i in range(j+1,n):
                 A[i,j] = A[i,j] * scale
         return A, p
@@ -1215,7 +1221,7 @@ class Matrix(object):
 
     def cofactorMatrix(self, method="berkowitz"):
         out = Matrix(self.rows, self.cols, lambda i,j:
-                self.cofactor(i, j, method))
+                self.cofactor(i, j, method), type=self.type)
         return out
 
     def minorEntry(self, i, j, method="berkowitz"):
@@ -1340,7 +1346,7 @@ class Matrix(object):
             # normalize it
             R[j,j] = tmp.norm()
             Q[:,j] = tmp / R[j,j]
-            if Q[:,j].norm() != 1:
+            if Q[:,j].norm() != self.one:
                 raise NotImplementedError("Could not normalize the vector %d." % j)
             for i in range(j):
                 R[i,j] = Q[:,i].dot(self[:,j])
@@ -1487,7 +1493,7 @@ class Matrix(object):
             # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
             # Note that while useful this is not mathematically a norm
             try:
-                return Pow( Add(*(abs(i)**ord for i in self.mat)), S(1)/ord )
+                return sum(abs(i)**ord for i in self.mat) ** (self.one/ord) 
             except:
                 raise ValueError("Expected order to be Number, Symbol, oo")
 
@@ -1554,13 +1560,13 @@ class Matrix(object):
     def zeros(self, dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
         n, m = _dims_to_nm( dims )
-        return Matrix(n,m,[S.Zero]*n*m)
+        return Matrix(n,m,[self.zero]*n*m, type=self.type)
 
     def eye(self, n):
         """Returns the identity matrix of size n."""
         tmp = self.zeros(n)
         for i in range(tmp.rows):
-            tmp[i,i] = S.One
+            tmp[i,i] = self.one
         return tmp
 
     @property
@@ -1622,7 +1628,7 @@ class Matrix(object):
         """
         for i in xrange(1, self.rows):
             for j in xrange(0, i):
-                if self[i,j] != 0:
+                if self[i,j] != self.zero:
                     return False
         return True
 
@@ -1658,7 +1664,7 @@ class Matrix(object):
         """
         for i in xrange(0, self.rows):
             for j in xrange(i+1, self.cols):
-                if self[i, j] != 0:
+                if self[i, j] != self.zero:
                     return False
         return True
 
@@ -1682,7 +1688,7 @@ class Matrix(object):
         """
         for i in xrange(2, self.rows):
             for j in xrange(0, i - 1):
-                if self[i,j] != 0:
+                if self[i,j] != self.zero:
                     return False
         return True
 
@@ -1706,7 +1712,7 @@ class Matrix(object):
         """
         for i in xrange(0, self.rows):
             for j in xrange(i + 2, self.cols):
-                if self[i, j] != 0:
+                if self[i, j] != self.zero:
                     return False
         return True
 
@@ -1810,7 +1816,7 @@ class Matrix(object):
         """
         for i in xrange(self.rows):
             for j in xrange(self.cols):
-                if i != j and self[i, j] != 0:
+                if i != j and self[i, j] != self.zero:
                     return False
         return True
 
@@ -1899,13 +1905,13 @@ class Matrix(object):
         return self.cofactorMatrix(method).T
 
 
-    def inverse_LU(self, iszerofunc=_iszero):
+    def inverse_LU(self, iszerofunc=None):
         """
         Calculates the inverse using LU decomposition.
         """
-        return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
+        return self.LUsolve(self.eye(self.rows), iszerofunc=iszerofunc)
 
-    def inverse_GE(self, iszerofunc=_iszero):
+    def inverse_GE(self, iszerofunc=None):
         """
         Calculates the inverse using Gaussian elimination.
         """
@@ -1932,7 +1938,7 @@ class Matrix(object):
 
         return self.adjugate()/d
 
-    def rref(self,simplified=False, iszerofunc=_iszero, simplify=sympy_simplify):
+    def rref(self,simplified=False, iszerofunc=None, simplify=sympy_simplify):
         """
         Take any matrix and return reduced row-echelon form and indices of pivot vars
 
@@ -1940,6 +1946,8 @@ class Matrix(object):
         To set a custom simplify function, use the simplify keyword argument.
         """
         # TODO: rewrite inverse_GE to use this
+        if not iszerofunc:
+            iszerofunc = self._iszero
         pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
@@ -2049,7 +2057,7 @@ class Matrix(object):
             raise NonSquareMatrixError()
 
         A, N = self, self.rows
-        transforms = [0] * (N-1)
+        transforms = [self.zero] * (N-1)
 
         for n in xrange(N, 1, -1):
             T, k = zeros((n+1,n)), n - 1
@@ -2178,13 +2186,13 @@ class Matrix(object):
             raise AttributeError("Matrix has no attribute %s." % attr)
 
     def integrate(self, *args):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].integrate(*args))
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].integrate(*args), type=self.type)
 
     def limit(self, *args):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].limit(*args))
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].limit(*args), type=self.type)
 
     def diff(self, *args):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].diff(*args))
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].diff(*args), type=self.type)
 
     def vec(self):
         """
@@ -2202,7 +2210,7 @@ class Matrix(object):
         [4]
 
         """
-        return Matrix(len(self), 1, self.transpose().mat)
+        return Matrix(len(self), 1, self.transpose().mat, type=self.type)
 
     def vech(self, diagonal=True, check_symmetry=True):
         """
@@ -2335,7 +2343,7 @@ class Matrix(object):
             if self._eigenvects == None:
                 self._eigenvects = self.eigenvects()
             diagvals = []
-            P = Matrix(self.rows, 0, [])
+            P = Matrix(self.rows, 0, [], type=self.type)
             for eigenval, multiplicity, vects in self._eigenvects:
                 for k in range(multiplicity):
                     diagvals.append(eigenval)
@@ -2525,6 +2533,18 @@ class Matrix(object):
         """
         return any(a.has(*patterns) for a in self.mat)
 
+    def set_type(self, type):
+        self.type = type
+        self.one = self.type(1)
+        self.zero = self.type(0)
+
+    def to_type(self, type):
+        self.set_type(type)
+        self = self.applyfunc(self.type)
+
+    def _iszero(self, x):
+        return x == self.zero
+
 def matrix_multiply(A, B):
     """
     Matrix product A*B.
@@ -2569,7 +2589,7 @@ def matrix_multiply(A, B):
                                         reduce(lambda k, l: k+l,
                                         map(lambda n, m: n*m,
                                         alst[i],
-                                        blst[j])))
+                                        blst[j])), type=A.type)
 
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
@@ -2585,7 +2605,7 @@ def matrix_multiply_elementwise(A, B):
         raise ShapeError()
     shape = A.shape
     return Matrix(shape[0], shape[1],
-        lambda i, j: A[i,j] * B[i, j])
+        lambda i, j: A[i,j] * B[i, j], type=A.type)
 
 def matrix_add(A,B):
     """Return A+B"""
@@ -2596,12 +2616,12 @@ def matrix_add(A,B):
     ret = [0]*A.shape[0]
     for i in xrange(A.shape[0]):
         ret[i] = map(lambda j,k: j+k, alst[i], blst[i])
-    return Matrix(ret)
+    return Matrix(ret, type=A.type)
 
-def zeros(dims):
+def zeros(dims, zero=S.Zero):
     """Create zero matrix of dimensions dims = (d1,d2)"""
     n, m = _dims_to_nm(dims)
-    return Matrix(n, m, [S.Zero]*m*n)
+    return Matrix(n, m, [zero]*m*n)
 
 def ones(dims):
     """Create all-one matrix of dimensions dims = (d1,d2)"""
@@ -2701,13 +2721,13 @@ def jordan_cell(eigenval, n):
     out[n-1, n-1] = eigenval
     return out
 
-def randMatrix(r,c,min=0,max=99,seed=[]):
+def randMatrix(r,c,min=0,max=99,seed=[], type=sympify):
     """Create random matrix r x c"""
     if seed == []:
         prng = random.Random()  # use system time
     else:
         prng = random.Random(seed)
-    return Matrix(r,c,lambda i,j: prng.randint(min,max))
+    return Matrix(r,c,lambda i,j: prng.randint(min,max), type=type)
 
 def hessian(f, varlist):
     """Compute Hessian matrix for a function f
@@ -2827,7 +2847,10 @@ del _matrix_sympify
 class SparseMatrix(Matrix):
     """Sparse matrix"""
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
+        self.type = sympify
+        if 'typify' in kwargs:
+            self.set_type(kwargs['type'])
         if len(args) == 3 and callable(args[2]):
             op = args[2]
             if not isinstance(args[0], (int, Integer)) or not isinstance(args[1], (int, Integer)):
@@ -2837,7 +2860,7 @@ class SparseMatrix(Matrix):
             self.mat = {}
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = sympify(op(i,j))
+                    value = self.type(op(i,j))
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
@@ -2848,7 +2871,7 @@ class SparseMatrix(Matrix):
             self.mat = {}
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = sympify(mat[i*self.cols+j])
+                    value = self.type(mat[i*self.cols+j])
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
@@ -2873,7 +2896,7 @@ class SparseMatrix(Matrix):
                 if len(mat[i]) != self.cols:
                     raise ValueError("All arguments must have the same length.")
                 for j in range(self.cols):
-                    value = sympify(mat[i][j])
+                    value = self.type(mat[i][j])
                     if value != 0:
                         self.mat[(i,j)] = value
 
@@ -2929,7 +2952,7 @@ class SparseMatrix(Matrix):
                 self.copyin_list(key, value)
         else:
             i,j=self.key2ij(key)
-            testval = sympify(value)
+            testval = self.type(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
             elif (i,j) in self.mat:
