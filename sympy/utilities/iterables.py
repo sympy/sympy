@@ -1017,3 +1017,33 @@ def uniq(seq):
     if isinstance(seq, Tuple):
         return Tuple(*tuple(result))
     return type(seq)(result)
+
+def generate_bell(n):
+    """
+    Generates the bell permutations.
+
+    Examples:
+    >>> from sympy.utilities.iterables import generate_bell
+    >>> list(generate_bell(3))
+    [(1, 3, 2), (3, 2, 1), (1, 2, 3), (2, 1, 3), (3, 1, 2)]
+    """
+    pi = [i + 1 for i in xrange(n)]
+    T = [0]
+    cache = {}
+    def gen(pi, T, t):
+        if t == (n - 1):
+            cache[tuple(pi)] = 1
+        else:
+            for i in T:
+                pi[i], pi[t+1] = pi[t+1], pi[i]
+                if tuple(pi) not in cache:
+                    cache[tuple(pi)] = 1
+                    gen(pi, T, t + 1)
+                pi[i], pi[t+1] = pi[t+1], pi[i]
+            T.append(t + 1)
+            if tuple(pi) not in cache:
+                cache[tuple(pi)] = 1
+            gen(pi, T, t + 1)
+            T.remove(t + 1)
+    gen(pi, T, 0)
+    return cache

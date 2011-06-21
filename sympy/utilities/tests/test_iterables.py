@@ -2,7 +2,8 @@ from sympy import symbols, Integral, Tuple, Dummy, Basic
 from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     flatten, group, take, subsets, variations, cartes, numbered_symbols,
     dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left,
-    rotate_right, multiset_partitions, partitions, binary_partitions)
+    rotate_right, multiset_partitions, partitions, binary_partitions,
+    generate_bell)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -265,3 +266,9 @@ def test_binary_partitions():
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
     assert len([j[:] for j in binary_partitions(16)]) == 36
+
+def test_bell_perm():
+    assert list(generate_bell(4)) == [(4, 1, 2, 3), (3, 4, 1, 2), (1, 2, 3, 4), \
+    (1, 3, 2, 4), (1, 2, 4, 3), (4, 2, 3, 1), (1, 4, 3, 2), (3, 2, 1, 4), (1, 4, 2, 3) \
+    , (2, 1, 3, 4), (4, 3, 2, 1), (4, 2, 1, 3), (4, 1, 3, 2), (3, 1, 2, 4), (2, 1, 4, 3)]
+    assert len(list(generate_bell(5))) == 52
