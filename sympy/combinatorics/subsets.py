@@ -78,8 +78,16 @@ class Subset(Basic):
         Generates the next gray code ordered subset.
 
         Examples:
+        >>> from sympy.combinatorics.subsets import *
+        >>> a = Subset([1,2],[1,2,3,4])
+        >>> a.next_graycode()
+        [1, 2, 4]
         """
-        raise NotImplementedError()
+        bin_list = get_bitlist_from_subset(self.subset, self.superset)
+        gc_iter = GrayCode(self.superset_size).\
+                  generate_bitlist(bin_list)
+        gc_iter = gc_iter.next()
+        return get_subset_from_bitlist(self.superset, gc_iter.next())
 
     def prev_graycode(self):
         """
