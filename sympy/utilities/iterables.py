@@ -1047,3 +1047,45 @@ def generate_bell(n):
             T.remove(t + 1)
     gen(pi, T, 0)
     return cache
+
+def generate_involutions(n):
+    """
+    Generates involutions.
+
+    An involution is a permutation that when multiplied
+    by itself equals the identity permutation. In this
+    implementation the involutions are generated using
+    Fixed Points.
+
+    Examples:
+    >>> from sympy.utilities.iterables import \
+    generate_involutions
+    >>> generate_involutions(3)
+    {(1, 2, 3): 1, (1, 3, 2): 1, (2, 1, 3): 1, (3, 2, 1): 1}
+    >>> len(generate_involutions(4))
+    10
+    """
+    pi = [i + 1 for i in xrange(n)]
+    F = [1]
+    cache = {}
+    def gen(pi, F, t):
+        if t == n:
+            cache[tuple(pi)] = 1
+        else:
+            for i in F:
+                pi[i - 1], pi[t] = pi[t], pi[i - 1]
+                if tuple(pi) not in cache:
+                    F.remove(i)
+                    cache[tuple(pi)] = 1
+                    gen(pi, F, t + 1)
+                    F.append(i)
+                    F.sort()
+                pi[i - 1], pi[t] = pi[t], pi[i - 1]
+            F.append(t + 1)
+            F.sort()
+            if tuple(pi) not in cache:
+                cache[tuple(pi)] = 1
+            gen(pi, F, t + 1)
+            F.remove(t + 1)
+    gen(pi, F, 1)
+    return cache
