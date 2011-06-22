@@ -234,4 +234,3 @@ def unrank_gray_code(k, n):
     ret_list = unrank(k, n)
     list.reverse(ret_list)
     return GrayCode(start = ret_list)
-
