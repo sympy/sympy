@@ -15,7 +15,7 @@ For n > 400 000 000 we apply the method of Turing, as complemented by
 Lehman, Brent and Trudgian  to find a suitable B.
 """
 
-from functions import defun
+from .functions import defun, defun_wrapped
 
 def find_rosser_block_zero(ctx, n):
     """for n<400 000 000 determines a block were one find our zero"""
@@ -150,7 +150,7 @@ def separate_my_zero(ctx, my_zero_number, zero_number_block, T, V, prec):
     t1 = T[k0]
     t0 = T[k0-1]
     ctx.prec = prec
-    r = ctx.findroot(ctx.siegelz, (t0,t1), solver ='illinois', verbose=False)
+    r = ctx.findroot(lambda x:ctx.siegelz(x), (t0,t1), solver ='illinois', verbose=False)
     return r
 
 def sure_number_block(ctx, n):
@@ -387,13 +387,7 @@ def zetazero(ctx, n, info=False, round=True):
         raise ValueError("n must be nonzero")
     wpinitial = ctx.prec
     try:
-        wpz = wpzeros(n * ctx.log(n))
-        if n < 15*10**8:
-            fp_tolerance = 0.0005
-        elif n <= 10**14:
-            fp_tolerance = 0.1
-        else:
-            fp_tolerance = 100
+        wpz, fp_tolerance = comp_fp_tolerance(ctx, n)
         ctx.prec = wpz
         if n < 400000000:
             my_zero_number, block, T, V =\
@@ -418,6 +412,158 @@ def zetazero(ctx, n, info=False, round=True):
     else:
         return v
 
+def gram_index(ctx, t):
+    if t > 10**13:
+        wp = 3*ctx.log(t, 10)
+    else:
+        wp = 0
+    prec = ctx.prec
+    try:
+        ctx.prec += wp
+        x0 = (t/(2*ctx.pi))*ctx.log(t/(2*ctx.pi))
+        h = ctx.findroot(lambda x:ctx.siegeltheta(t)-ctx.pi*x, x0)
+        h = int(h)
+    finally:
+        ctx.prec = prec
+    return(h)
+
+def count_to(ctx, t, T, V):
+    count = 0
+    vold = V[0]
+    told = T[0]
+    tnew = T[1]
+    k = 1
+    while tnew < t:
+        vnew = V[k]
+        if vold*vnew < 0:
+            count += 1
+        vold = vnew
+        k += 1
+        tnew = T[k]
+    a = ctx.siegelz(t)
+    if a*vold < 0:
+        count += 1
+    return count
+
+def comp_fp_tolerance(ctx, n):
+    wpz = wpzeros(n*ctx.log(n))
+    if n < 15*10**8:
+        fp_tolerance = 0.0005
+    elif n <= 10**14:
+        fp_tolerance = 0.1
+    else:
+        fp_tolerance = 100
+    return wpz, fp_tolerance
+
+@defun
+def nzeros(ctx, t):
+    r"""
+    Computes the number of zeros of the Riemann zeta function in
+    `(0,1) \times (0,t]`, usually denoted by `N(t)`.
+
+    **Examples**
+
+    The first zero has imaginary part between 14 and 15::
+
+        >>> from mpmath import *
+        >>> mp.dps = 15; mp.pretty = True
+        >>> nzeros(14)
+        0
+        >>> nzeros(15)
+        1
+        >>> zetazero(1)
+        (0.5 + 14.1347251417347j)
+
+    Some closely spaced zeros::
+
+        >>> nzeros(10**7)
+        21136125
+        >>> zetazero(21136125)
+        (0.5 + 9999999.32718175j)
+        >>> zetazero(21136126)
+        (0.5 + 10000000.2400236j)
+        >>> nzeros(545439823.215)
+        1500000001
+        >>> zetazero(1500000001)
+        (0.5 + 545439823.201985j)
+        >>> zetazero(1500000002)
+        (0.5 + 545439823.325697j)
+
+    This confirms the data given by J. van de Lune,
+    H. J. J. te Riele and D. T. Winter in 1986.
+    """
+    if t < 14.1347251417347:
+        return 0
+    x = gram_index(ctx, t)
+    k = int(ctx.floor(x))
+    wpinitial = ctx.prec
+    wpz, fp_tolerance = comp_fp_tolerance(ctx, k)
+    ctx.prec = wpz
+    a = ctx.siegelz(t)
+    if k == -1 and a < 0:
+        return 0
+    elif k == -1 and a > 0:
+        return 1
+    if k+2 < 400000000:
+        Rblock = find_rosser_block_zero(ctx, k+2)
+    else:
+        Rblock = search_supergood_block(ctx, k+2, fp_tolerance)
+    n1, n2 = Rblock[1]
+    if n2-n1 == 1:
+        b = Rblock[3][0]
+        if a*b > 0:
+            ctx.prec = wpinitial
+            return k+1
+        else:
+            ctx.prec = wpinitial
+            return k+2
+    my_zero_number,block, T, V = Rblock
+    zero_number_block = n2-n1
+    T, V, separated = separate_zeros_in_block(ctx,\
+                                              zero_number_block, T, V,\
+                                              limitloop=ctx.inf,\
+                                            fp_tolerance=fp_tolerance)
+    n = count_to(ctx, t, T, V)
+    ctx.prec = wpinitial
+    return n+n1+1
+
+@defun_wrapped
+def backlunds(ctx, t):
+    r"""
+    Computes the function
+    `S(t) = \operatorname{arg} \zeta(\frac{1}{2} + it) / \pi`.
+
+    See Titchmarsh Section 9.3 for details of the definition.
+
+    **Examples**
+
+        >>> from mpmath import *
+        >>> mp.dps = 15; mp.pretty = True
+        >>> backlunds(217.3)
+        0.16302205431184
+
+    Generally, the value is a small number. At Gram points it is an integer,
+    frequently equal to 0::
+
+        >>> chop(backlunds(grampoint(200)))
+        0.0
+        >>> backlunds(extraprec(10)(grampoint)(211))
+        1.0
+        >>> backlunds(extraprec(10)(grampoint)(232))
+        -1.0
+
+    The number of zeros of the Riemann zeta function up to height `t`
+    satisfies `N(t) = \theta(t)/\pi + 1 + S(t)` (see :func:nzeros` and
+    :func:`siegeltheta`)::
+
+        >>> t = 1234.55
+        >>> nzeros(t)
+        842
+        >>> siegeltheta(t)/pi+1+backlunds(t)
+        842.0
+
+    """
+    return ctx.nzeros(t)-1-ctx.siegeltheta(t)/ctx.pi
 
 
 """

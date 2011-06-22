@@ -1,6 +1,6 @@
-import calculus
+from . import calculus
 # XXX: hack to set methods
-import approximation
-import differentiation
-import extrapolation
-import polynomials
+from . import approximation
+from . import differentiation
+from . import extrapolation
+from . import polynomials

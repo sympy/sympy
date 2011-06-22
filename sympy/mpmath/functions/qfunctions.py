@@ -1,4 +1,4 @@
-from functions import defun, defun_wrapped
+from .functions import defun, defun_wrapped
 
 @defun
 def qp(ctx, a, q=None, n=None, **kwargs):
@@ -245,8 +245,8 @@ def qhyper(ctx, a_s, b_s, q, z, **kwargs):
     #a_s = [ctx._convert_param(a)[0] for a in a_s]
     #b_s = [ctx._convert_param(b)[0] for b in b_s]
     #q = ctx._convert_param(q)[0]
-    a_s = map(ctx.convert, a_s)
-    b_s = map(ctx.convert, b_s)
+    a_s = [ctx.convert(a) for a in a_s]
+    b_s = [ctx.convert(b) for b in b_s]
     q = ctx.convert(q)
     z = ctx.convert(z)
     r = len(a_s)

@@ -1,4 +1,5 @@
-from functions import defun, defun_wrapped
+from ..libmp.backend import xrange
+from .functions import defun, defun_wrapped
 
 @defun
 def gammaprod(ctx, a, b, _infsign=False):
