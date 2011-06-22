@@ -38,6 +38,7 @@ def residue(expr, x, x0):
     [2] M. Bronstein: Symbolic Integration I, Springer Verlag (2005)
 
     """
+    from sympy import collect
     expr = sympify(expr)
     if x0 != 0:
         expr = expr.subs(x, x+x0)
@@ -46,6 +47,7 @@ def residue(expr, x, x0):
     # fixed, see #1627:
     if s == 0:
         s = expr.series(x, 0, 6).removeO()
+    s = collect(s, x)
     if x0 != 0:
         s = s.subs(x, x-x0)
     a = Wild("r", exclude=[x])
