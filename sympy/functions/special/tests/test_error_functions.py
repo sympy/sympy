@@ -12,6 +12,7 @@ def test_erf():
 
     assert erf(-2) == -erf(2)
     assert erf(-x*y) == -erf(x*y)
+    assert erf(-x - y) == -erf(x + y)
 
 def test_erf_series():
     assert erf(x).series(x, 0, 7) == 2*x/sqrt(pi) - \

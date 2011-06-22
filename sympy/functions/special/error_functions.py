@@ -29,9 +29,8 @@ class erf(Function):
                 return S.Zero
             elif arg.is_negative:
                 return -cls(-arg)
-        elif arg.is_Mul:
-            if arg.as_coeff_mul()[0].is_negative:
-                return -cls(-arg)
+        elif arg.could_extract_minus_sign():
+            return -cls(-arg)
 
     @staticmethod
     @cacheit
