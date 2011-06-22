@@ -6,6 +6,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
+from sympy.functions.combinatorial.factorials import rf
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -84,6 +85,13 @@ class gamma(Function):
 
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if not (x0.is_Integer and x0 <= 0):
+            return super(gamma, self)._eval_nseries(x, n, logx)
+        t = self.args[0] - x0
+        return (gamma(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
 
 ###############################################################################

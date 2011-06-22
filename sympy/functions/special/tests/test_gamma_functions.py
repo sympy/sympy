@@ -48,6 +48,11 @@ def test_gamma():
 def test_gamma_series():
     assert gamma(x + 1).series(x, 0, 3) == \
         1 - x*EulerGamma + x**2*EulerGamma**2/2 + pi**2*x**2/12 + O(x**3)
+    assert gamma(x).series(x, -1, 3) == \
+        -1/x + EulerGamma - 1 + EulerGamma*x - EulerGamma**2*x/2 - pi**2*x/12 \
+        - x + EulerGamma*x**2 + EulerGamma*pi**2*x**2/12 - \
+        x**2*polygamma(2, 1)/6 + EulerGamma**3*x**2/6 - EulerGamma**2*x**2/2 \
+        - pi**2*x**2/12 - x**2 + O(x**3)
 
 def test_lowergamma():
     from sympy import meijerg
