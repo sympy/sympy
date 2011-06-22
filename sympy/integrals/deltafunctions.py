@@ -113,6 +113,9 @@ def deltaintegrate(f, x):
                     return fh
             else:
                 dg = dg.simplify(x)
+                if dg.is_Mul: # Take out any extracted factors
+                    dg, rest_mult_2 = change_mul(dg,x)
+                    rest_mult = rest_mult * rest_mult_2
                 point = solve(dg.args[0],x)[0]
                 return (rest_mult.subs(x,point)*Heaviside(x - point))
     return None
