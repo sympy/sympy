@@ -133,6 +133,66 @@ class Partition(Basic):
         obj = Basic.__new__(cls, *args, **kw_args)
         return obj
 
+    def __add__(self, other):
+        """
+        Routine to add partitions.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a.rank
+        1
+        >>> a = a + 3
+        >>> str(a)
+        '[[1], [2], [3]]'
+        >>> a.rank
+        4
+        >>> a = a + a
+        >>> str(a)
+        '[[1], [2, 3]]'
+        """
+        if isinstance(other, Partition):
+            if other.partition_set != self.partition_set:
+                raise ValueError("Partition sets are not equal.")
+            result = RGS_unrank((self.rank + other.rank) %
+                                RGS_enum(self.partition_set_size),
+                                self.partition_set_size)
+        elif isinstance(other, int):
+            result = RGS_unrank((self.rank + other) %
+                                RGS_enum(self.partition_set_size),
+                                self.partition_set_size)
+        return from_RGS(result, self.partition_set)
+
+    def __sub__(self, other):
+        """
+        Routine to add partitions.
+
+        Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3]],[1,2,3])
+        >>> a.rank
+        1
+        >>> a = a - 1
+        >>> str(a)
+        '[[1, 2, 3]]'
+        >>> a.rank
+        0
+        >>> a = a + Partition([[1,2],[3]],[1,2,3])
+        >>> str(a)
+        '[[1, 2], [3]]'
+        """
+        if isinstance(other, Partition):
+            if other.partition_set != self.partition_set:
+                raise ValueError("Partition sets are not equal.")
+            result = RGS_unrank((self.rank - other.rank) %
+                                RGS_enum(self.partition_set_size),
+                                self.partition_set_size)
+        elif isinstance(other, int):
+            result = RGS_unrank((self.rank - other) %
+                                RGS_enum(self.partition_set_size),
+                                self.partition_set_size)
+        return from_RGS(result, self.partition_set)
+
     def _compare(self, other):
         """
         Compares two partitions.
