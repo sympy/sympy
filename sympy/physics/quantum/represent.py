@@ -5,7 +5,7 @@ TODO:
 * Document default basis functionality.
 """
 
-from sympy import Add, Mul, Pow, I, Expr, oo
+from sympy import Add, Mul, Pow, I, Expr, oo, Symbol, integrate
 from sympy.functions import conjugate, DiracDelta
 
 from sympy.physics.quantum.dagger import Dagger
@@ -206,10 +206,7 @@ def represent(expr, **options):
         elif isinstance(arg, HermitianOperator):
             options["basis"] = arg
 
-    # If the result is expressed in a continuous basis, then we need to integrate over any unities
-    # that were inserted. As a start to this, we should collapse all of the delta functions by hand
-    # TODO: Integrate any remaining unities after delta functions are collapsed?
-    result = collapse_deltas(result, **options)
+    result = integrate_result(result, **options)
 
     return result
 
@@ -302,3 +299,25 @@ def collapse_deltas(expr, **options):
     new_args = [arg for arg in new_expr.args if not arg == oo]
 
     return Mul(*new_args)
+
+def integrate_result(result, **options):
+    basis = options.pop("basis", None)
+
+    if basis is None or not isinstance(result, Expr):
+        return result
+
+    unities = options.pop("unities", [])
+
+    if len(unities) == 0:
+        return result
+
+    kets = basis._get_basis_kets(unities)
+    coords = [k.label[0] for k in kets]
+
+    for coord in coords:
+        if coord in result.free_symbols:
+            start = basis.hilbert_space.interval.start
+            end = basis.hilbert_space.interval.end
+            result = integrate(result, (coord, start, end))
+
+    return result
