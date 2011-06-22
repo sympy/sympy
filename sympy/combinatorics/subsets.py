@@ -254,6 +254,22 @@ def unrank_binary(rank, superset):
     bin_list = [0] * (len(superset) - len(bin_list)) + bin_list
     return get_subset_from_bitlist(superset, bin_list)
 
+def unrank_graycode_subset(rank, superset):
+    """
+    Gets the gray code ordered subset of the
+    specified rank.
+
+    Examples:
+    >>> from sympy.combinatorics.subsets import unrank_graycode
+    >>> unrank_graycode(4, ['a','b','c'])
+    ['b', 'c']
+    >>> unrank_graycode(0, ['a','b','c'])
+    []
+    """
+    graycode_bitlist = unrank_gray_code(rank,
+                                        len(superset))._current
+    return get_subset_from_bitlist(superset, graycode_bitlist)
+
 def ksubsets(superset, k):
     """
     Finds the subsets of size k in lexicographic order.
