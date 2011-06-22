@@ -145,3 +145,35 @@ def gray_to_bin(bin_list):
         b += str(int(b[i-1] != bin_list[i]))
 
     return list(b)
+
+def get_subset_from_bitlist(super_set, bitlist):
+    """
+    Gets the subset defined by the bitlist.
+
+    Examples:
+    >>> from sympy.combinatorics.graycode import get_subset_from_bitlist
+    >>> get_subset_from_bitlist(['a','b','c','d'],['0','0','1','1'])
+    ['c', 'd']
+    """
+    if len(super_set) != len(bitlist):
+        raise ValueError("The sizes of the lists are not equal")
+    ret_set = super_set[:]
+    for i in xrange(len(bitlist)):
+        if bitlist[i] == '0':
+            ret_set.remove(super_set[i])
+    return ret_set
+
+def gray_code_subsets(gray_code_set):
+    """
+    Generates the subsets as enumerated by a Gray code.
+
+    This does not work with multisets.
+
+    Examples:
+    >>> from sympy.combinatorics.graycode import gray_code_subsets
+    >>> list(gray_code_subsets(['a','b','c']))
+    [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \
+    ['a', 'c'], ['a']]
+    """
+    return [get_subset_from_bitlist(gray_code_set, bitlist) for \
+            bitlist in list(GrayCode(len(gray_code_set)).generate_bitlist())]
