@@ -18,16 +18,32 @@ class Partition(Basic):
         Generates the next partition.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4,5]], [1,2,3,4,5])
+        >>> a.next()
+        Partition([[1, 2], [3, 4], [5]], [1, 2, 3, 4, 5])
         """
-        raise NotImplementedError()
+        current_rank = RGS_rank(self.RGS)
+        next_rgs = RGS_unrank((current_rank + 1) %
+                              RGS_enum(self.partition_set_size),
+                              self.partition_set_size)
+        return from_RGS(next_rgs, self.partition_set)
 
     def previous(self):
         """
         Generates the previous partition.
 
         Examples:
+        >>> from sympy.combinatorics.partitions import Partition
+        >>> a = Partition([[1,2],[3,4],[5]], [1,2,3,4,5])
+        >>> a.previous()
+        Partition([[1, 2], [3, 4, 5]], [1, 2, 3, 4, 5])
         """
-        raise NotImplementedError()
+        current_rank = RGS_rank(self.RGS)
+        next_rgs = RGS_unrank((current_rank - 1) %
+                              RGS_enum(self.partition_set_size),
+                              self.partition_set_size)
+        return from_RGS(next_rgs, self.partition_set)
 
     @property
     def size(self):
