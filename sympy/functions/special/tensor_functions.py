@@ -25,21 +25,13 @@ class Dij(Function):
         elif i.is_number and j.is_number:
             return S.Zero
 
-class Eijk(Function):
+def Eijk(*args, **kwargs):
     """
-    Represents the Levi-Civita symbol (antisymmetric symbol)
-    """
-    nargs = 3
+    Represent the Levi-Civita symbol.
 
-    @classmethod
-    def eval(cls, i, j, k):
-        i, j, k = map(sympify, (i, j, k))
-        if (i,j,k) in [(1,2,3), (2,3,1), (3,1,2)]:
-            return S.One
-        elif (i,j,k) in [(1,3,2), (3,2,1), (2,1,3)]:
-            return S.NegativeOne
-        elif i==j or j==k or k==i:
-            return S.Zero
+    This is just compatibility wrapper to LeviCivita().
+    """
+    return LeviCivita(*args, **kwargs)
 
 def prod(a):
     return reduce(operator.mul, a, 1)
