@@ -2,7 +2,8 @@
 
 def import_module(module, min_module_version=None, min_python_version=None,
         warn_not_installed=False, warn_old_version=True,
-        module_version_attr='__version__', module_version_attr_call_args=None):
+        module_version_attr='__version__', module_version_attr_call_args=None,
+        __import__kwargs={}):
     """
     Import and return a module if it is installed.
 
@@ -35,6 +36,11 @@ def import_module(module, min_module_version=None, min_python_version=None,
     Note that because of the way warnings are handled, a warning will be
     emitted for each module only once.
 
+    This function uses __import__() to import the module.  To pass additional
+    options to __import__(), use the __import__kwargs keyword argument.  For
+    example, to import a submodule A.B, you must pass a nonempty fromlist option
+    to __import__.  See the docstring of __import__().
+
     **Example**
 
     >>> from sympy.external import import_module
@@ -53,6 +59,11 @@ def import_module(module, min_module_version=None, min_python_version=None,
     ... module_version_attr='version', module_version_attr_call_args=(),
     ... warn_old_version=False)
 
+    >>> # To import a submodule, you must pass a nonempty fromlist to
+    >>> # __import__().  The values do not matter.
+    >>> p3 = import_module('mpl_toolkits.mplot3d',
+    ... __import__kwargs={'fromlist':['something']})
+
     """
     import warnings
 
@@ -68,7 +79,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
             return
 
     try:
-        mod = __import__(module)
+        mod = __import__(module, **__import__kwargs)
     except ImportError:
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
