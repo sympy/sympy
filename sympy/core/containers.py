@@ -108,3 +108,50 @@ def tuple_wrapper(method):
                 newargs.append(arg)
         return method(*newargs, **kw_args)
     return wrap_tuples
+
+class Dict(Basic):
+
+    def __new__(cls, d):
+        items = [Tuple(k,v) for k,v in d.items()]
+        obj = Basic.__new__(cls, *items)
+        obj._dict = d
+        return obj
+
+    def __getitem__(self, key):
+        return self._dict[key]
+    def __setitem__(self, key, value):
+        raise NotImplementedError("SymPy Dicts are Immutable")
+
+    def items(self):
+        return self.args
+    def iteritems(self):
+        return (arg for arg in self.args)
+
+    def keys(self):
+        return [k for k,v in self.items()]
+    def iterkeys(self):
+        return (k for k,v in self.iteritems())
+
+    def values(self):
+        return [v for k,v in self.items()]
+    def itervalues(self):
+        return (v for k,v in self.iteritems())
+
+    def __iter__(self):
+        return self.items.__iter__()
+    def __len__(self):
+        return len(self.items())
+    def __repr__(self):
+        return '{'+', '.join([str(k)+':'+str(v) for k,v in self.items()]) + '}'
+
+    def get(self, key, default):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def has_key(self, key):
+        return key in self.iterkeys()
+    def __contains__(self, key):
+        return self.has_key(key)
+
