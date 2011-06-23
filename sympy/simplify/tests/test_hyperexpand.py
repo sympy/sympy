@@ -364,6 +364,44 @@ def test_meijerg():
     assert set(niq.bq) == set([b3, b4])
     assert tn(apply_operators(g, ops, op), meijerg(an, ap, bm, bq, z), z)
 
+def test_meijerg_confluence():
+    def t(m, a, b):
+        from sympy import sympify, Piecewise
+        a, b = sympify([a, b])
+        m_ = m
+        m = hyperexpand(m)
+        if not m == Piecewise((a, abs(z) < 1), (b, abs(1/z) < 1), (m_, True)):
+            return False
+        if not (m.args[0].args[0] == a and m.args[1].args[0] == b):
+            return False
+        z0 = randcplx()/10
+        if abs(m.subs(z, z0).n() - a.subs(z, z0).n()).n() > 1e-10:
+            return False
+        if abs(m.subs(z, 1/z0).n() - b.subs(z, 1/z0).n()).n() > 1e-10:
+            return False
+        return True
+
+    assert t(meijerg([], [1, 1], [0, 0], [], z), -log(z), 0)
+    assert t(meijerg([], [3, 1], [0, 0], [], z), -z**2/4 + z - log(z)/2 - S(3)/4, 0)
+    assert t(meijerg([], [3, 1], [-1, 0], [], z),
+             z**2/12 -z/2 + log(z)/2 + S(1)/4 + 1/(6*z), 0)
+    assert t(meijerg([], [1, 1, 1, 1], [0, 0, 0, 0], [], z), -log(z)**3/6, 0)
+    assert t(meijerg([1, 1], [], [], [0, 0], z), 0, -log(1/z))
+    assert t(meijerg([1, 1], [2, 2], [1, 1], [0, 0], z),
+             -z*log(z) + 2*z, -log(1/z) + 2)
+    assert t(meijerg([S(1)/2], [1, 1], [0, 0], [S(3)/2], z), log(z)/2 - 1, 0)
+
+    def u(an, ap, bm, bq):
+        m = meijerg(an, ap, bm, bq, z)
+        m2 = hyperexpand(m, allow_hyper=True)
+        if m2.has(meijerg) and not (m2.is_Piecewise and len(m2.args) == 3):
+            return False
+        return tn(m, m2, z)
+    assert u([], [1], [0, 0], [])
+    assert u([1, 1], [], [], [0])
+    assert u([1, 1], [2, 2, 5], [1, 1, 6], [0, 0])
+    assert u([1, 1], [2, 2, 5], [1, 1, 6], [0])
+
 @tables
 def test_prudnikov_misc():
     assert can_do([1, (3 + I)/2, (3 - I)/2], [S(3)/2, 2])

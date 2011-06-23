@@ -218,6 +218,8 @@ class Mod1(object):
 
     def __eq__(self, other):
         from sympy import simplify
+        if not isinstance(other, Mod1):
+            return False
         if simplify(self.expr - other.expr).is_integer is True:
             return True
         return False
@@ -371,6 +373,44 @@ class IndexQuadruple(object):
         self.ap = tr(ap)
         self.bm = tr(bm)
         self.bq = tr(bq)
+
+    def compute_buckets(self):
+        """
+        Compute buckets for the fours sets of parameters.
+        We guarantee that any two equal Mod1 objects returned are actually the
+        same, and that the buckets are sorted by real part (an and bq
+        descendending, bm and ap ascending).
+
+        >>> from sympy.simplify.hyperexpand import IndexQuadruple
+        >>> from sympy.abc import y
+        >>> from sympy import S
+        >>> IndexQuadruple([1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3], [2], [y]).compute_buckets()
+        ({0: [3, 2, 1], 1/2: [3/2]}, {y + 1 % 1: [y, y + 1, y + 3], 0: [2]}, {0: [2]}, {y + 1 % 1: [y]})
+        """
+        mod1s = []
+        pan, pap, pbm, pbq = {}, {}, {}, {}
+        for dic, lis in [(pan, self.an), (pap, self.ap), (pbm, self.bm),
+                           (pbq, self.bq)]:
+            for x in lis:
+                m = Mod1(x)
+                if mod1s.count(m):
+                    i = mod1s.index(m)
+                    m = mod1s[i]
+                else:
+                    mod1s.append(m)
+                dic.setdefault(m, []).append(x)
+
+        for dic, flip in [(pan, True), (pap, False), (pbm, False), (pbq, True)]:
+            l = dic.items()
+            dic.clear()
+            for m, items in l:
+                x0 = items[0]
+                items.sort(key=lambda x: x-x0)
+                if flip:
+                    items.reverse()
+                dic[m] = items
+
+        return pan, pap, pbm, pbq
 
     def __str__(self):
         return 'IndexQuadruple(%s, %s, %s, %s)' % (self.an, self.ap,
@@ -1320,42 +1360,108 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     # TODO Also, we tend to create combinations of gamma functions that can be
     #      simplified.
 
-    def can_do(params):
+    def can_do(pbm, pap):
         """ Test if slater applies. """
-        # TODO this can use IndexQuadruple.compute_buckets when the latter
-        #      is implemented
-        for i, a in enumerate(params):
-            for j in range(i + 1, len(params)):
-                if Mod1(a) == Mod1(params[j]):
-                    return False
+        for i in pbm:
+            if len(pbm[i]) > 1:
+                l = 0
+                if i in pap:
+                    l = len(pap[i])
+                if l + 1 < len(pbm[i]):
+                   return False
         return True
 
-    def do_slater(an, bm, ap, bq, z, sub, t, chainmult):
-        from sympy import gamma
-        if not can_do(bm):
+    def do_slater(an, bm, ap, bq, z, t, chainmult, realz):
+        from sympy import gamma, residue, factorial, rf, expand_func
+        iq = IndexQuadruple(an, bm, ap, bq)
+        _, pbm, pap, _ = iq.compute_buckets()
+        if not can_do(pbm, pap):
             return S(0), False
 
         res = S(0)
-        for bh in bm:
-            fac = 1
-            bo = list(bm)
-            bo.remove(bh)
-            for bj in bo: fac *= gamma(bj - bh)
-            for aj in an: fac *= gamma(1 + bh - aj)
-            for bj in bq: fac /= gamma(1 + bh - bj)
-            for aj in ap: fac /= gamma(aj - bh)
-            nap = [1 + bh - a for a in list(an) + list(ap)]
-            nbq = [1 + bh - b for b in list(bo) + list(bq)]
+        for m in pbm:
+            if len(pbm[m]) == 1:
+                bh = pbm[m][0]
+                fac = 1
+                bo = list(bm)
+                bo.remove(bh)
+                for bj in bo: fac *= gamma(bj - bh)
+                for aj in an: fac *= gamma(1 + bh - aj)
+                for bj in bq: fac /= gamma(1 + bh - bj)
+                for aj in ap: fac /= gamma(aj - bh)
+                nap = [1 + bh - a for a in list(an) + list(ap)]
+                nbq = [1 + bh - b for b in list(bo) + list(bq)]
 
-            k = S(-1)**(len(ap) - len(bm))
-            harg = k*z
-            premult = (k*t)**(bh - sub)
-            hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                               t, premult, chainmult)
-            if hyp is None:
-                hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                      lambda f: premult*t*f.diff(t)).subs(t, z)
-            res += fac * hyp
+                k = S(-1)**(len(ap) - len(bm))
+                harg = k*z
+                premult = (k*t)**bh
+                hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
+                                   t, premult, chainmult)
+                if hyp is None:
+                    hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
+                                          lambda f: chainmult*t*f.diff(t)).subs(t, harg)
+                res += fac * hyp
+            else:
+                b_ = pbm[m][0]
+                ki = [bi - b_ for bi in pbm[m][1:]]
+                u = len(ki)
+                li = [ai - b_ for ai in pap[m][0:u+1]]
+                bo = list(bm)
+                for b in pbm[m]:
+                    bo.remove(b)
+                ao = list(ap)
+                for a in pap[m][:u]:
+                    ao.remove(a)
+                lu = li[-1]
+                di = [l - k for (l, k) in zip(li, ki)]
+
+                # We first work out the integrand:
+                s = Dummy('s')
+                integrand = z**s
+                for b in bm:
+                    integrand *= gamma(b - s)
+                for a in an:
+                    integrand *= gamma(1 - a + s)
+                for b in bq:
+                    integrand /= gamma(1 - b + s)
+                for a in ap:
+                    integrand /= gamma(a - s)
+
+                # Now sum the finitely many residues:
+                # XXX This speeds up some cases - is it a good idea?
+                integrand = expand_func(integrand)
+                for r in range(lu):
+                    resid = residue(integrand, s, b_ + r)
+                    resid = apply_operators(resid, ops, lambda f: realz*f.diff(realz))
+                    res -= resid
+
+                # Now the hypergeometric term.
+                au = b_ + lu
+                k = S(-1)**(len(ao) + len(bo) + 1)
+                harg = k*z
+                premult = (k*t)**au
+                nap = [1 + au - a for a in list(an) + list(ap)] + [1]
+                nbq = [1 + au - b for b in list(bm) + list(bq)]
+
+                hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
+                                   t, premult, chainmult)
+                if hyp is None:
+                    hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
+                                          lambda f: chainmult*t*f.diff(t)).subs(t, harg)
+
+                C = S(-1)**(lu)/factorial(lu)
+                for i in range(u):
+                    C *= S(-1)**di[i]/rf(lu - li[i] + 1, di[i])
+                for a in an:
+                    C *= gamma(1 - a + au)
+                for b in bo:
+                    C *= gamma(b - au)
+                for a in ao:
+                    C /= gamma(a - au)
+                for b in bq:
+                    C /= gamma(1 - b + au)
+
+                res += C*hyp
 
         cond = len(an) + len(ap) < len(bm) + len(bq)
         if len(an) + len(ap) == len(bm) + len(bq):
@@ -1363,13 +1469,13 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         return res, cond
 
     t = Dummy('t')
-    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, 0, t, 1)
+    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, t, 1, z)
 
-    def tr(l): return [-x for x in l]
+    def tr(l): return [1 - x for x in l]
     for op in ops:
         op._poly = Poly(op._poly.subs(z, S(-1)**(len(iq.an) - len(iq.bq))/t), x)
     slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
-                               1/z, -1, t, -1)
+                               1/z, t, -1, z)
 
     slater1 = powdenest(slater1.subs(z, z0), force=True)
     slater2 = powdenest(slater2.subs(z, z0), force=True)
