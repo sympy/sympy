@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """FEM library
 
 Demonstrates some simple finite element definitions, and computes a mass matrix

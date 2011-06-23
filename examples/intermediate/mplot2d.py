@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Matplotlib 2D plotting example
 
 Demonstrates plotting with matplotlib.

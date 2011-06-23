@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Quantum field theory example
 
 * http://en.wikipedia.org/wiki/Quantum_field_theory
