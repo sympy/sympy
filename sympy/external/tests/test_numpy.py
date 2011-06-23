@@ -5,10 +5,13 @@
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
 
-try:
-    from numpy import array, matrix, ndarray
-    import numpy
-except ImportError:
+
+from sympy.external import import_module
+
+numpy = import_module('numpy')
+if numpy:
+    array, matrix, ndarray = numpy.array, numpy.matrix, numpy.ndarray
+else:
     #py.test will not execute any tests now
     disabled = True
 
