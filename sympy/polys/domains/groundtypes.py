@@ -1,18 +1,17 @@
 """Ground types for various mathematical domains in SymPy. """
 
+from sympy.external import import_module
+
 HAS_GMPY = True
 
-try:
-    import gmpy
-except ImportError:
-    HAS_GMPY = False
-else:
-    try:
-        int(gmpy.mpz(2**256))
-    except OverflowError:
-        from warnings import warn
-        warn("gmpy library is too old, can't take advantage of it")
-        HAS_GMPY = False
+# Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
+# For example, int(gmpy.mpz(2**256)) would raise OverflowError.
+# See issue 1881.
+
+gmpy = import_module('gmpy', min_module_version='1.03',
+    module_version_attr='version', module_version_attr_call_args=())
+
+HAS_GMPY = bool(gmpy)
 
 from __builtin__ import (
     int     as PythonIntegerType,
