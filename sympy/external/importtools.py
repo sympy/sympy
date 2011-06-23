@@ -1,5 +1,7 @@
 """Tools to assist importing optional external modules."""
 
+import sys
+
 # Override these in the module to change the default warning behavior.
 # For example, you might set both to False before running the tests so that
 # warnings are not printed to the console, or set both to True for debugging.
@@ -94,8 +96,6 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     # Check Python first so we don't waste time importing a module we can't use
     if min_python_version:
-        import sys
-
         if sys.version_info < min_python_version:
             if warn_old_version:
                 warnings.warn("Python version is too old to use %s "
@@ -103,9 +103,28 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     UserWarning)
             return
 
-    try:
-        mod = __import__(module, **__import__kwargs)
-    except ImportError:
+    # This is needed for Python 2.4 compability, because in Python 2.4
+    # __import__() is a four-arg function (in 2.5+ all but the first arg are
+    # keyword arguments).
+    if sys.version_info[:2] <= (2, 4):
+        globals = __import__kwargs.get('globals', {})
+        locals = __import__kwargs.get('locals', {})
+        fromlist = __import__kwargs.get('fromlist', [])
+        try:
+            mod = __import__(module, globals, locals, fromlist)
+        except ImportError:
+            installed = False
+        else:
+            installed = True
+    else:
+        try:
+            mod = __import__(module, **__import__kwargs)
+        except ImportError:
+            installed = False
+        else:
+            installed = True
+
+    if not installed:
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
         return
