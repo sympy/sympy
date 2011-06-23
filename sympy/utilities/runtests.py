@@ -550,7 +550,7 @@ class SymPyTests(object):
                     if self._post_mortem:
                         pdb.post_mortem(tr)
                 elif t.__name__ == "Skipped":
-                    self._reporter.test_skip()
+                    self._reporter.test_skip(v)
                 elif t.__name__ == "XFail":
                     self._reporter.test_xfail()
                 elif t.__name__ == "XPass":
@@ -1177,9 +1177,12 @@ class PyTestReporter(Reporter):
         else:
             self.write(".", "Green")
 
-    def test_skip(self):
+    def test_skip(self, v):
         self._skipped += 1
         self.write("s", "Green")
+        if self._verbose:
+            self.write(" - ", "Green")
+            self.write(v.message, "Green")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
