@@ -585,6 +585,20 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_Lambda(self, e):
+        vars, expr = e.args
+        if self._use_unicode:
+            arrow = u' \u21a6 '
+        else:
+            arrow = ' -> '
+        if len(vars) == 1:
+            var_form = self._print(vars[0])
+        else:
+            var_form = self._print(tuple(vars))
+
+        return prettyForm(*stringPict.next(var_form, arrow, self._print(expr)), binding=8)
+
+
     def _print_gamma(self, e):
         if self._use_unicode:
             pform = self._print(e.args[0])

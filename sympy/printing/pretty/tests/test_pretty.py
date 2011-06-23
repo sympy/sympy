@@ -1265,6 +1265,32 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+def test_Lambda():
+    expr = Lambda(x, x+1)
+    assert pretty(expr) == "x -> x + 1"
+    assert upretty(expr) == u"x ↦ x + 1"
+
+    expr = Lambda(x, x**2)**2
+    ascii_str = \
+"""\
+         2
+/      2\\ \n\
+\\x -> x / \
+"""
+    ucode_str = \
+u"""\
+        2
+⎛     2⎞ \n\
+⎝x ↦ x ⎠ \
+"""
+
+
+    # S.IdentityFunction is a special case
+    expr = Lambda(y, y)
+    assert pretty(expr) == "x -> x"
+    assert upretty(expr) == u"x ↦ x"
+
+
 
 def test_pretty_sqrt():
     expr = sqrt(2)
@@ -2127,18 +2153,20 @@ RootSum⎝x  + 11⋅x - 2⎠\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = RootSum(x**5 + 11*x - 2, Lambda(z, z**2))
+    expr = RootSum(x**5 + 11*x - 2, Lambda(z, exp(z)))
 
     ascii_str = \
 """\
-       / 5                   /    2\\\\\n\
-RootSum\\x  + 11*x - 2, Lambda\\z, z //\
+       / 5                   z\\
+RootSum\\x  + 11*x - 2, z -> e /\
 """
     ucode_str = \
 u"""\
-       ⎛ 5              ⎛    2⎞⎞\n\
-RootSum⎝x  + 11⋅x - 2, Λ⎝z, z ⎠⎠\
+       ⎛ 5                  z⎞
+RootSum⎝x  + 11⋅x - 2, z ↦ ℯ ⎠\
 """
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_Boolean():
     expr = Not(x, evaluate=False)
