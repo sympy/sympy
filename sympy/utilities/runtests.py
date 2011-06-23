@@ -164,6 +164,11 @@ def test(*paths, **kwargs):
     r = PyTestReporter(verbose, tb, colors)
     t = SymPyTests(r, kw, post_mortem)
 
+    # Disable warnings for external modules
+    import sympy.external
+    sympy.external.importtools.WARN_OLD_VERSION = False
+    sympy.external.importtools.WARN_NOT_INSTALLED = False
+
     test_files = t.get_test_files('sympy')
     if len(paths) == 0:
         t._testfiles.extend(test_files)
@@ -226,6 +231,11 @@ def doctest(*paths, **kwargs):
                     "sympy/utilities/benchmarking.py", # needs py.test
                     ])
     blacklist = convert_to_native_paths(blacklist)
+
+    # Disable warnings for external modules
+    import sympy.external
+    sympy.external.importtools.WARN_OLD_VERSION = False
+    sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)

@@ -1,7 +1,25 @@
 """Tools to assist importing optional external modules."""
 
+# Override these in the module to change the default warning behavior.
+# For example, you might set both to False before running the tests so that
+# warnings are not printed to the console, or set both to True for debugging.
+
+WARN_NOT_INSTALLED = False
+WARN_OLD_VERSION = True
+
+def __sympy_debug():
+    # helper function from sympy/__init__.py
+    # We don't just import SYMPY_DEBUG from that file because we don't want to
+    # import all of sympy just to use this module.
+    import os
+    return eval(os.getenv('SYMPY_DEBUG', 'False'))
+
+if __sympy_debug():
+    WARN_OLD_VERSION = True
+    WARN_NOT_INSTALLED = True
+
 def import_module(module, min_module_version=None, min_python_version=None,
-        warn_not_installed=False, warn_old_version=True,
+        warn_not_installed=None, warn_old_version=None,
         module_version_attr='__version__', module_version_attr_call_args=None,
         __import__kwargs={}):
     """
@@ -34,7 +52,10 @@ def import_module(module, min_module_version=None, min_python_version=None,
     because of the min_module_version or min_python_version options.
 
     Note that because of the way warnings are handled, a warning will be
-    emitted for each module only once.
+    emitted for each module only once.  You can change the default warning
+    behavior by overriding the values of WARN_NOT_INSTALLED and WARN_OLD_VERSION
+    in sympy.external.importtools.  By default, WARN_NOT_INSTALLED is False and
+    WARN_OLD_VERSION is True.
 
     This function uses __import__() to import the module.  To pass additional
     options to __import__(), use the __import__kwargs keyword argument.  For
@@ -65,6 +86,10 @@ def import_module(module, min_module_version=None, min_python_version=None,
     ... __import__kwargs={'fromlist':['something']})
 
     """
+    if warn_old_version is None:
+        warn_old_version = WARN_OLD_VERSION
+    if warn_not_installed is None:
+        warn_not_installed = WARN_NOT_INSTALLED
     import warnings
 
     # Check Python first so we don't waste time importing a module we can't use
