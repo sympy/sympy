@@ -1192,7 +1192,7 @@ class PyTestReporter(Reporter):
         self.write("s", "Green")
         if self._verbose:
             self.write(" - ", "Green")
-            self.write(v.message, "Green")
+            self.write(str(v), "Green") # In Python 2.5+, use v.message
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
