@@ -11,7 +11,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
 
-from sympy.core.compatibility import callable, reduce
+from sympy.core.compatibility import callable, reduce, any, all
 
 import random
 
@@ -464,16 +464,20 @@ class Matrix(object):
     def __eq__(self, a):
         if not isinstance(a, (Matrix, Basic)):
             a = sympify(a)
-        if isinstance(a, Matrix):
-            return self.hash() == a.hash()
+        if isinstance(a, Matrix) and self.shape == a.shape:
+            return all(self[i, j] == a[i, j]
+                for i in xrange(self.rows)
+                for j in xrange(self.cols))
         else:
             return False
 
-    def __ne__(self,a):
+    def __ne__(self, a):
         if not isinstance(a, (Matrix, Basic)):
             a = sympify(a)
-        if isinstance(a, Matrix):
-            return self.hash() != a.hash()
+        if isinstance(a, Matrix) and self.shape == a.shape:
+            return any(self[i, j] != a[i, j]
+                for i in xrange(self.rows)
+                for j in xrange(self.cols))
         else:
             return True
 
