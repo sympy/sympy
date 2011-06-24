@@ -106,7 +106,7 @@
 #      - Idx with step determined by function call
 
 from sympy.core import Expr, Basic, Tuple, Symbol, Integer, sympify, S
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 
 class IndexException(Exception):
     pass
@@ -169,7 +169,7 @@ class IndexedBase(Expr):
             label = Symbol(label)
 
         obj = Expr.__new__(cls, label, **kw_args)
-        if ordered_iter(shape):
+        if is_sequence(shape):
             obj._shape = Tuple(*shape)
         else:
             obj._shape = shape
@@ -186,7 +186,7 @@ class IndexedBase(Expr):
         return Expr._hashable_content(self) + (self._shape,)
 
     def __getitem__(self, indices, **kw_args):
-        if ordered_iter(indices):
+        if is_sequence(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
                 raise IndexException("Rank mismatch")
@@ -374,7 +374,7 @@ class Idx(Expr):
         if not label.is_integer:
             raise TypeError("Idx object requires an integer label")
 
-        elif ordered_iter(range):
+        elif is_sequence(range):
             assert len(range) == 2, "Idx got range tuple with wrong length"
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):

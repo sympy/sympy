@@ -5,7 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import division
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 
 import inspect
 
@@ -309,7 +309,7 @@ def _imp_namespace(expr, namespace=None):
     if namespace is None:
         namespace = {}
     # tuples, lists, dicts are valid expressions
-    if ordered_iter(expr):
+    if is_sequence(expr):
         for arg in expr:
             _imp_namespace(arg, namespace)
         return namespace

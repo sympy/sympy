@@ -77,7 +77,7 @@ from StringIO import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -139,7 +139,7 @@ class Routine(object):
         """
         arg_list = []
 
-        if ordered_iter(expr):
+        if is_sequence(expr):
             if not expr:
                 raise ValueError("No expression given")
             expressions = Tuple(*expr)

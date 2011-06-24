@@ -6,7 +6,7 @@ from util import strided_range, billboard_matrix
 from util import get_direction_vectors
 from util import dot_product, vec_sub, vec_mag
 from sympy.core import S
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 
 class PlotAxes(PlotObject):
 
@@ -33,7 +33,7 @@ class PlotAxes(PlotObject):
         stride = kwargs.pop('stride', 0.25)
         try: stride = eval(stride)
         except: pass
-        if ordered_iter(stride):
+        if is_sequence(stride):
             assert len(stride) == 3
             self._stride = stride
         else:
