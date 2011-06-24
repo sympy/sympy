@@ -467,7 +467,7 @@ class ReferenceFrame(object):
         """
 
         self._check_frame(otherframe)
-        if self._ang_acc_dict.has_key(otherframe):
+        if otherframe in self._ang_acc_dict:
             return self._ang_acc_dict[otherframe]
         else:
             return self.ang_vel_in(otherframe).dt(otherframe)

@@ -186,7 +186,7 @@ class Point(object):
         """
 
         self._check_frame(frame)
-        if not self._acc_dict.has_key(frame):
+        if not (frame in self._acc_dict):
             if self._vel_dict[frame] != 0:
                 return (self._vel_dict[frame]).dt(frame)
             else:
@@ -446,7 +446,7 @@ class Point(object):
         """
 
         self._check_frame(frame)
-        if not self._vel_dict.has_key(frame):
+        if not (frame in self._vel_dict):
             raise ValueError('Velocity of point ' + self.name + ' has not been'
                              ' defined in ReferenceFrame ' + frame.name)
         return self._vel_dict[frame]
