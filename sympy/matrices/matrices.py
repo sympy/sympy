@@ -3147,6 +3147,9 @@ class SparseMatrix(Matrix):
         return M
 
     def _lil_row_major(self):
+        """
+        Returns the row-based list of list structure of the given matrix
+        """
         n = self.rows
         keys = sorted(self.mat.keys())
         lil = [[] for x in xrange(n)]
@@ -3171,6 +3174,7 @@ class SparseMatrix(Matrix):
             return self.scalar_multiply(other)
 
     def multiply(A, B):
+        "Fast multiplication exploiting the sparsity of the matrix."
         rows1 = A._lil_row_major()
         rows2 = B._lil_row_major()
         Cdict = {}
@@ -3185,6 +3189,7 @@ class SparseMatrix(Matrix):
         return SparseMatrix(A.rows, B.cols, Cdict)
 
     def scalar_multiply(matrix, scalar):
+        "Scalar element-wise multiplication"
         C = SparseMatrix(matrix.rows, matrix.cols, {})
         for i in matrix.mat:
             C.mat[i] = scalar * matrix.mat[i]
@@ -3195,6 +3200,10 @@ class SparseMatrix(Matrix):
         return self * other
 
     def _lower_row_nonzero_structure(self):
+        """
+        Algorithm to determine the lower triangular non-zero structure,
+        in row-based list of list form.
+        """
         n = self.rows
         NZlist = [[]] * n
         keys = sorted(self.mat.keys())
@@ -3212,6 +3221,13 @@ class SparseMatrix(Matrix):
         return NZlist
 
     def liupc(self):
+        """
+        Liu's algorithm,
+        for pre-determination of the Elimination Tree of the given matrix,
+        used in row-based symbolic cholesky factorization.
+        Reference: Symbolic Sparse Cholesky Factorization using Elimination Trees, Jeroen Van Grondelle (1999)
+        Link: <link>
+        """
         R = self._lower_row_nonzero_structure()
         parent = [None] * self.rows
         virtual = [None] * self.rows
@@ -3227,6 +3243,12 @@ class SparseMatrix(Matrix):
         return R, parent
 
     def row_structure_symbolic_cholesky(self):
+        """
+        Symbolic cholesky factorization,
+        for pre-determination of the non-zero structure of the cholesky factor.
+        Reference: Symbolic Sparse Cholesky Factorization using Elimination Trees, Jeroen Van Grondelle (1999)
+        Link: <link>
+        """
         import copy
         R, parent = self.liupc()
         Lrow = copy.deepcopy(R)
@@ -3240,6 +3262,10 @@ class SparseMatrix(Matrix):
         return Lrow
 
     def _cholesky_sparse(self):
+        """
+        Algorithm for numeric cholesky factization, exploiting the sparsity of the given matrix,
+        <to add>
+        """
         Crowstruc = self.row_structure_symbolic_cholesky()
         C = self.zeros(self.rows)
         for row in Crowstruc:
@@ -3272,6 +3298,10 @@ class SparseMatrix(Matrix):
         return C
 
     def _LDL_sparse(self):
+        """
+        Algorithm for numeric LDL factization, exploiting the sparsity of the given matrix,
+        <to add>
+        """
         Lrowstruc = self.row_structure_symbolic_cholesky()
         L = self.eye(self.rows)
         D = SparseMatrix(self.rows, self.cols, {})
@@ -3306,6 +3336,10 @@ class SparseMatrix(Matrix):
         return L, D
 
     def _lower_triangular_solve(self, rhs):
+        """
+        Fast algorithm for solving a triangular system,
+        exploiting the sparsity of the given matrix.
+        """
         rows = self._lil_row_major()
         X = DOKMatrix(rhs.rows, 1, rhs.mat)
         for i in xrange(self.rows):
@@ -3318,6 +3352,10 @@ class SparseMatrix(Matrix):
         return X
 
     def _upper_triangular_solve(self, rhs):
+        """
+        Fast algorithm for solving a triangular system,
+        exploiting the sparsity of the given matrix.
+        """
         rows = self._lil_row_major()
         X = DOKMatrix(rhs.rows, 1, rhs.mat)
         for i in reversed(xrange(self.rows)):
@@ -3330,19 +3368,13 @@ class SparseMatrix(Matrix):
         return X
 
     def _diagonal_solve(self, rhs):
+        "Diagonal solve."
         return DOKMatrix(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
     
     def _cholesky_solve(self, rhs):
         L = self._cholesky()
         Y = L._lower_triangular_solve(rhs)
-        X = L.T._upper_triangular_solve(Y)
-        return X
-
-    def _cholesky_solve(self, rhs):
-        L = self._cholesky()
-        Y = L._lower_triangular_solve(rhs)
-        X = L.T._upper_triangular_solve(Y)
-        return X
+        return L.T._upper_triangular_solve(Y)
 
     def _LDL_solve(self, rhs):
         L, D = self._LDL_sparse()
