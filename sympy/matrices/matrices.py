@@ -2858,7 +2858,9 @@ class SparseMatrix(Matrix):
             self.mat = {}
             # manual copy, copy.deepcopy() doesn't work
             for key in args[2].keys():
-                self.mat[key] = args[2][key]
+                val = args[2][key]
+                if val!=0:
+                    self.mat[key] = val
         else:
             if len(args) == 1:
                 mat = args[0]
