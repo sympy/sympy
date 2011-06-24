@@ -41,38 +41,39 @@ def test_multiplicity():
     assert multiplicity(1, 1) == 1
 
 def test_perfect_power():
-    assert perfect_power(0) == None
-    assert perfect_power(1) == None
-    assert perfect_power(2) == None
-    assert perfect_power(3) == None
+    assert perfect_power(0) is False
+    assert perfect_power(1) is False
+    assert perfect_power(2) is False
+    assert perfect_power(3) is False
     assert perfect_power(4) == (2, 2)
-    assert perfect_power(14) == None
+    assert perfect_power(14) is False
     assert perfect_power(25) == (5, 2)
-    assert perfect_power(22) == None
-    assert perfect_power(22, [2]) == None
+    assert perfect_power(22) is False
+    assert perfect_power(22, [2]) is False
     assert perfect_power(137**(3*5*13)) == (137, 3*5*13)
-    assert perfect_power(137**(3*5*13) + 1) == None
-    assert perfect_power(137**(3*5*13) - 1) == None
+    assert perfect_power(137**(3*5*13) + 1) is False
+    assert perfect_power(137**(3*5*13) - 1) is False
     assert perfect_power(103005006004**7) == (103005006004, 7)
-    assert perfect_power(103005006004**7+1) == None
-    assert perfect_power(103005006004**7-1) == None
+    assert perfect_power(103005006004**7+1) is False
+    assert perfect_power(103005006004**7-1) is False
     assert perfect_power(103005006004**12) == (103005006004, 12)
-    assert perfect_power(103005006004**12+1) == None
-    assert perfect_power(103005006004**12-1) == None
+    assert perfect_power(103005006004**12+1) is False
+    assert perfect_power(103005006004**12-1) is False
     assert perfect_power(2**10007) == (2, 10007)
-    assert perfect_power(2**10007+1) == None
-    assert perfect_power(2**10007-1) == None
+    assert perfect_power(2**10007+1) is False
+    assert perfect_power(2**10007-1) is False
     assert perfect_power((9**99 + 1)**60) == (9**99 + 1, 60)
-    assert perfect_power((9**99 + 1)**60+1) == None
-    assert perfect_power((9**99 + 1)**60-1) == None
+    assert perfect_power((9**99 + 1)**60+1) is False
+    assert perfect_power((9**99 + 1)**60-1) is False
     assert perfect_power((10**40000)**2, big=False) == (10**40000, 2)
     assert perfect_power(10**100000) == (10, 100000)
     assert perfect_power(10**100001) == (10, 100001)
-    assert perfect_power(13**4, [3, 5]) == None
-    assert perfect_power(3**4, [3, 10], factor=0) == None
+    assert perfect_power(13**4, [3, 5]) is False
+    assert perfect_power(3**4, [3, 10], factor=0) is False
     assert perfect_power(3**3*5**3) == (15, 3)
-    assert perfect_power(2**3*5**5) == None
-    assert perfect_power(2*13**4) == None
+    assert perfect_power(2**3*5**5) is False
+    assert perfect_power(2*13**4) is False
+    assert perfect_power(2**5*3**3) is False
 
 def test_isprime():
     s = Sieve()
@@ -367,11 +368,16 @@ def test_hex_pi_nth_digits():
     assert pi_hex_digits(10000) == '68ac8fcfb8016c'
 
 def test_crt():
-    assert crt([2, 3, 5], [0, 0, 0]) == 0
-    assert crt([2, 3, 5], [1, 1, 1]) == 1
+    def mcrt(m, v, r, symmetric=False):
+        assert crt(m, v, symmetric) == r
+        mm, e, s = crt1(m)
+        assert crt2(m, v, mm, e, s, symmetric) == r
 
-    assert crt([2, 3, 5], [-1, -1, -1], True) == -1
-    assert crt([2, 3, 5], [-1, -1, -1], False) == 2*3*5 - 1
+    mcrt([2, 3, 5], [0, 0, 0], 0)
+    mcrt([2, 3, 5], [1, 1, 1], 1)
+
+    mcrt([2, 3, 5], [-1, -1, -1], -1, True)
+    mcrt([2, 3, 5], [-1, -1, -1], 2*3*5 - 1, False)
 
 
 def test_binomial_coefficients_list():

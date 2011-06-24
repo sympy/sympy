@@ -1,77 +1,64 @@
-import warnings
-from sympy.core.sympify import sympify
-from sympy.core.relational import Relational
+from sympy.core.decorators import wraps
 
-def threaded(**flags):
-    """Call a function on all elements of composite objects.
 
-       This decorator is intended to make it uniformly possible  to apply
-       functions to all elements of composite or iterable objects or just
-       to expressions. Currently supported, so called, threadable classes
-       are Add, Matrix, Relational and all other which implement __iter__
-       attribute.  If the input expression is not of this type,  then the
-       function will be applied to this object, as to a singleton.
+def threaded_factory(func, use_add):
+    """A factory for ``threaded`` decorators. """
+    from sympy.core import sympify, Add
+    from sympy.matrices import Matrix
 
-       Functions which will use this decorator must have the following
-       signature:
+    @wraps(func)
+    def threaded_func(expr, *args, **kwargs):
+        if isinstance(expr, Matrix):
+            return expr.applyfunc(lambda f: func(f, *args, **kwargs))
+        elif hasattr(expr, '__iter__'):
+            return expr.__class__([ func(f, *args, **kwargs) for f in expr ])
+        else:
+            expr = sympify(expr)
 
-          @threaded()
-          def function(expr, *args, **kwargs):
+            if use_add and expr.is_Add:
+                return expr.__class__(*[ func(f, *args, **kwargs) for f in expr.args ])
+            elif expr.is_Relational:
+                return expr.__class__(func(expr.lhs, *args, **kwargs),
+                                      func(expr.rhs, *args, **kwargs))
+            else:
+                return func(expr, *args, **kwargs)
 
-       where 'expr' is obligatory threadable object (listed above). Other
-       arguments, if available, are transferred without any change. As an
-       example see functions in sympy.simplify module.
+    return threaded_func
 
-       By default threading is done on elements of Add instance. To avoid
-       this behavior set 'use_add' flag  with False in keyword arguments
-       (see integrate() for details), e.g:
+def threaded(func):
+    """Apply ``func`` to sub--elements of an object, including :class:`Add`.
 
-          @threaded(use_add=False)
+       This decorator is intended to make it uniformly possible to apply a
+       function to all elements of composite objects, e.g. matrices, lists,
+       tuples and other iterable containers, or just expressions.
+
+       This version of :func:`threaded` decorator allows threading over
+       elements of :class:`Add` class. If this behavior is not desirable
+       use :func:`xthreaded` decorator.
+
+       Functions using this decorator must have the following signature::
+
+          @threaded
           def function(expr, *args, **kwargs):
 
     """
-    from sympy.matrices import Matrix
+    return threaded_factory(func, True)
 
-    use_add = flags.get('use_add', True)
+def xthreaded(func):
+    """Apply ``func`` to sub--elements of an object, excluding :class:`Add`.
 
-    def threaded_proxy(func):
-        def threaded_decorator(expr, *args, **kwargs):
-            if isinstance(expr, Matrix):
-                return expr.applyfunc(lambda f: func(f, *args, **kwargs))
-            elif isinstance(expr, bool):
-                return expr
-            elif hasattr(expr, '__iter__'):
-                return expr.__class__([ func(f, *args, **kwargs) for f in expr ])
-            else:
-                expr = sympify(expr)
+       This decorator is intended to make it uniformly possible to apply a
+       function to all elements of composite objects, e.g. matrices, lists,
+       tuples and other iterable containers, or just expressions.
 
-                if isinstance(expr, Relational):
-                    lhs = func(expr.lhs, *args, **kwargs)
-                    rhs = func(expr.rhs, *args, **kwargs)
-                    return Relational(lhs, rhs, expr.rel_op)
-                elif expr.is_Add and use_add:
-                    from sympy.core.add import Add
-                    return Add(*[ func(f, *args, **kwargs) for f in expr.args ])
-                else:
-                    return func(expr, *args, **kwargs)
+       This version of :func:`threaded` decorator disallows threading over
+       elements of :class:`Add` class. If this behavior is not desirable
+       use :func:`threaded` decorator.
 
-        threaded_decorator.__doc__  = func.__doc__
-        threaded_decorator.__name__ = func.__name__
+       Functions using this decorator must have the following signature::
 
-        return threaded_decorator
+          @xthreaded
+          def function(expr, *args, **kwargs):
 
-    return threaded_proxy
-
-
-def deprecated(func):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used."""
-    def new_func(*args, **kwargs):
-        warnings.warn("Call to deprecated function %s." % func.__name__,
-                      category=DeprecationWarning)
-        return func(*args, **kwargs)
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
-    new_func.__dict__.update(func.__dict__)
-    return new_func
+    """
+    return threaded_factory(func, False)

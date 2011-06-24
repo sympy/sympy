@@ -5,6 +5,8 @@
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
 
+from __future__ import division
+
 try:
     from numpy import array, matrix, ndarray
     import numpy
@@ -13,7 +15,7 @@ except ImportError:
     disabled = True
 
 
-from sympy import (Rational, Symbol, list2numpy, sin, Real, Matrix, lambdify,
+from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
         symarray, symbols)
 import sympy
 
@@ -40,7 +42,7 @@ def test_systematic_basic():
     y = Symbol("y")
     sympy_objs = [
             Rational(2),
-            Real("1.3"),
+            Float("1.3"),
             x,
             y,
             pow(x,y)*y,
@@ -189,9 +191,9 @@ def test_Matrix_array():
 def test_issue629():
     x = Symbol("x")
     assert (Rational(1,2)*array([2*x, 0]) == array([x, 0])).all()
-    assert (Rational(1,2)+array([2*x, 0]) == array([2*x+Rational(1,2), Rational(1,2)])).all()
-    assert (Real("0.5")*array([2*x, 0]) == array([Real("1.0")*x, 0])).all()
-    assert (Real("0.5")+array([2*x, 0]) == array([2*x+Real("0.5"), Real("0.5")])).all()
+    assert (Rational(1,2) + array([2*x, 0]) == array([2*x + Rational(1,2), Rational(1,2)])).all()
+    assert (Float("0.5")*array([2*x, 0]) == array([Float("1.0")*x, 0])).all()
+    assert (Float("0.5") + array([2*x, 0]) == array([2*x + Float("0.5"), Float("0.5")])).all()
 
 def test_lambdify():
     x = Symbol("x")
@@ -210,7 +212,7 @@ def test_lambdify_matrix():
     assert (f(1) == matrix([[1,2],[1,2]])).all()
 
 def test_lambdify_matrix_multi_input():
-    x,y,z=sympy.symbols('x,y,z')
+    x,y,z = symbols('x,y,z')
     M=sympy.Matrix([[x**2, x*y, x*z],
                     [y*x, y**2, y*z],
                     [z*x, z*y, z**2]])
@@ -249,7 +251,7 @@ def test_symarray():
     import numpy as np
     import numpy.testing as npt
 
-    syms = symbols('_0 _1 _2')
+    syms = symbols('_0,_1,_2')
     s1 = symarray("", 3)
     s2 = symarray("", 3)
     npt.assert_array_equal (s1, np.array(syms, dtype=object))
@@ -259,19 +261,19 @@ def test_symarray():
     b = symarray('b', 3)
     assert not(a[0] is b[0])
 
-    asyms = symbols('a_0 a_1 a_2')
+    asyms = symbols('a_0,a_1,a_2')
     npt.assert_array_equal (a, np.array(asyms, dtype=object))
 
     # Multidimensional checks
     a2d = symarray('a', (2,3))
     assert a2d.shape == (2,3)
-    a00, a12 = symbols('a_0_0, a_1_2')
+    a00, a12 = symbols('a_0_0,a_1_2')
     assert a2d[0,0] is a00
     assert a2d[1,2] is a12
 
     a3d = symarray('a', (2,3,2))
     assert a3d.shape == (2,3,2)
-    a000, a120, a121 = symbols('a_0_0_0, a_1_2_0 a_1_2_1')
+    a000, a120, a121 = symbols('a_0_0_0,a_1_2_0,a_1_2_1')
     assert a3d[0,0,0] is a000
     assert a3d[1,2,0] is a120
     assert a3d[1,2,1] is a121

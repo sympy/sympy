@@ -1,15 +1,16 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from sympy.core import S, Add, Mul, Symbol, Rational, sympify
+from sympy.core import Add, Mul, Symbol, Rational, sympify, Dummy, symbols
+from sympy.core.singleton import S
 
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyutils import _analyze_gens
 
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.densebasic import (
-    dmp_zero, dmp_one, dup_from_raw_dict,
-    dmp_normal, dmp_raise, dmp_ground
+    dmp_zero, dmp_one, dmp_ground, dmp_normal,
+    dup_from_raw_dict, dmp_raise, dup_random
 )
 
 from sympy.polys.densearith import (
@@ -20,7 +21,7 @@ from sympy.polys.factortools import (
     dup_zz_cyclotomic_poly
 )
 
-from sympy.polys.algebratools import ZZ
+from sympy.polys.domains import ZZ
 
 from sympy.ntheory import nextprime
 
@@ -33,9 +34,9 @@ def swinnerton_dyer_poly(n, x=None, **args):
         raise ValueError("can't generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
-        x = sympify(x)
+        x, cls = sympify(x), Poly
     else:
-        x = Symbol('x', dummy=True)
+        x, cls = Dummy('x'), PurePoly
 
     p, elts = 2, [[x, -2**Rational(1,2)],
                   [x,  2**Rational(1,2)]]
@@ -60,22 +61,22 @@ def swinnerton_dyer_poly(n, x=None, **args):
     if not args.get('polys', False):
         return Mul(*poly).expand()
     else:
-        return Poly(Mul(*poly))
+        return PurePoly(Mul(*poly), x)
 
 def cyclotomic_poly(n, x=None, **args):
     """Generates cyclotomic polynomial of order `n` in `x`. """
     if n <= 0:
         raise ValueError("can't generate cyclotomic polynomial of order %s" % n)
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = Symbol('x', dummy=True)
+    poly = DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ)
 
-    poly = Poly(DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ), x)
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
 
     if not args.get('polys', False):
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 
@@ -94,6 +95,44 @@ def symmetric_poly(n, *gens, **args):
         return poly
     else:
         return Poly(poly, *gens)
+
+def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
+    """Return a polynomial of degree ``n`` with coefficients in ``[inf, sup]``. """
+    poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
+
+    if not polys:
+        return poly.as_expr()
+    else:
+        return poly
+
+@cythonized("n,i,j")
+def interpolating_poly(n, x, X='x', Y='y'):
+    """Construct Lagrange interpolating polynomial for ``n`` data points. """
+    if isinstance(X, str):
+        X = symbols("%s:%s" % (X, n))
+
+    if isinstance(Y, str):
+        Y = symbols("%s:%s" % (Y, n))
+
+    coeffs = []
+
+    for i in xrange(0, n):
+        numer = []
+        denom = []
+
+        for j in xrange(0, n):
+            if i == j:
+                continue
+
+            numer.append(x    - X[j])
+            denom.append(X[i] - X[j])
+
+        numer = Mul(*numer)
+        denom = Mul(*denom)
+
+        coeffs.append(numer/denom)
+
+    return Add(*[ coeff*y for coeff, y in zip(coeffs, Y) ])
 
 @cythonized("n,i")
 def fateman_poly_F_1(n):

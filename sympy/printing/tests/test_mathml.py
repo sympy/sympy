@@ -7,10 +7,11 @@ from xml.dom.minidom import parseString
 from sympy.utilities.pytest import raises
 
 x = Symbol('x')
+y = Symbol('y')
 mp = MathMLPrinter()
 
 def test_printmethod():
-    assert mp.doprint(1+x) == '<apply><plus/><cn>1</cn><ci>x</ci></apply>'
+    assert mp.doprint(1+x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
 
 def test_mathml_core():
     mml_1 = mp._print(1+x)
@@ -99,8 +100,7 @@ def test_mathml_add():
     mml = mp._print(x**5 - x**4 + x)
     assert mml.childNodes[0].nodeName == 'plus'
     assert mml.childNodes[1].childNodes[0].nodeName == 'minus'
-    assert mml.childNodes[1].childNodes[1].nodeName == 'ci'
-    assert mml.childNodes[2].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[1].childNodes[1].nodeName == 'apply'
 
 def test_mathml_Rational():
     mml_1 = mp._print(Rational(1,1))
@@ -304,5 +304,31 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
 
+def test_mathml_order():
+    expr = x**3 + x**2*y + 3*x*y**3 + y**4
+
+    mp = MathMLPrinter({'order': 'lex'})
+    mml = mp._print(expr)
+
+    assert mml.childNodes[1].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[1].childNodes[1].childNodes[0].data == 'x'
+    assert mml.childNodes[1].childNodes[2].childNodes[0].data == '3'
+
+    assert mml.childNodes[4].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[4].childNodes[1].childNodes[0].data == 'y'
+    assert mml.childNodes[4].childNodes[2].childNodes[0].data == '4'
+
+    mp = MathMLPrinter({'order': 'rev-lex'})
+    mml = mp._print(expr)
+
+    assert mml.childNodes[1].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[1].childNodes[1].childNodes[0].data == 'y'
+    assert mml.childNodes[1].childNodes[2].childNodes[0].data == '4'
+
+    assert mml.childNodes[4].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[4].childNodes[1].childNodes[0].data == 'x'
+    assert mml.childNodes[4].childNodes[2].childNodes[0].data == '3'
+
 def test_settings():
     raises(TypeError, 'mathml(Symbol("x"), method="garbage")')
+

@@ -14,7 +14,6 @@ def test_structure():
     assert b21.args == (b2, b1)
     assert tuple(b21.iter_basic_args()) == b21.args
     assert b21.func(*b21.args) == b21
-    assert b21.new(*b21.args) == b21
     assert bool(b1)
 
 def test_equality():
@@ -61,6 +60,9 @@ def test_subs():
 
 def test_atoms():
     assert b21.atoms() == set()
+
+def test_free_symbols_empty():
+    assert b21.free_symbols == set()
 
 def test_doit():
     assert b21.doit() == b21

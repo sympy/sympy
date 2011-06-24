@@ -1,3 +1,5 @@
+from ..libmp.backend import xrange
+
 # TODO: should use diagonalization-based algorithms
 
 class MatrixCalculusMethods:

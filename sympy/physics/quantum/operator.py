@@ -62,7 +62,7 @@ class Operator(QExpr):
         >>> B = Operator('B')
         >>> C = 2*A*A + I*B
         >>> C
-        I*B + 2*A**2
+        2*A**2 + I*B
 
     Operators don't commute::
 
@@ -77,7 +77,7 @@ class Operator(QExpr):
 
         >>> e = (A+B)**3
         >>> e.expand()
-        A**2*B + B**2*A + A*B**2 + B*A**2 + A**3 + B**3 + A*B*A + B*A*B
+        A*B*A + A*B**2 + A**2*B + A**3 + B*A*B + B*A**2 + B**2*A + B**3
 
     Operator inverses are handle symbolically::
 
@@ -194,6 +194,22 @@ class HermitianOperator(Operator):
     def _eval_dagger(self):
         return self
 
+    def _eval_inverse(self):
+        if isinstance(self, UnitaryOperator):
+            return self
+        else:
+            return Operator._eval_inverse(self)
+
+    def _eval_power(self, exp):
+        if isinstance(self, UnitaryOperator):
+            if exp == -1:
+                return Operator._eval_power(self, exp)
+            elif abs(exp) % 2 == 0:
+                return self*(Operator._eval_inverse(self))
+            else:
+                return self
+        else:
+            return Operator._eval_power(self, exp)
 
 class UnitaryOperator(Operator):
     """A unitary operator that satisfies U*Dagger(U) == 1.

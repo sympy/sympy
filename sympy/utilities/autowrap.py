@@ -438,10 +438,10 @@ def ufuncify(args, expr, **kwargs):
     [2.  5.  10.]
 
     """
-    y = C.IndexedBase(C.Symbol('y', dummy=True))
-    x = C.IndexedBase(C.Symbol('x', dummy=True))
-    m = C.Symbol('m', dummy=True, integer=True)
-    i = C.Symbol('i', dummy=True, integer=True)
+    y = C.IndexedBase(C.Dummy('y'))
+    x = C.IndexedBase(C.Dummy('x'))
+    m = C.Dummy('m', integer=True)
+    i = C.Dummy('i', integer=True)
     i = C.Idx(i, m)
     l = C.Lambda(args, expr)
     f = implemented_function('f', l)

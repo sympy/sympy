@@ -1,8 +1,10 @@
+from basic import Basic
 from core import C
 from sympify import sympify
 from singleton import S
 from expr import Expr, AtomicExpr
 from cache import cacheit
+from function import FunctionClass
 from sympy.logic.boolalg import Boolean
 
 import re
@@ -14,7 +16,7 @@ class Symbol(AtomicExpr, Boolean):
 
     You can override the default assumptions in the constructor::
        >>> from sympy import symbols
-       >>> A,B = symbols('AB', commutative = False)
+       >>> A,B = symbols('A,B', commutative = False)
        >>> bool(A*B != B*A)
        True
        >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
@@ -28,26 +30,27 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
 
-    def __new__(cls, name, commutative=True, dummy=False,
-                **assumptions):
-        """if dummy == True, then this Symbol is totally unique, i.e.::
+    def __new__(cls, name, commutative=True, **assumptions):
+        """Symbols are identified by name and assumptions::
 
         >>> from sympy import Symbol
-        >>> bool(Symbol("x") == Symbol("x")) == True
+        >>> Symbol("x") == Symbol("x")
         True
-
-        but with the dummy variable ::
-
-        >>> bool(Symbol("x", dummy = True) == Symbol("x", dummy = True)) == True
+        >>> Symbol("x", real=True) == Symbol("x", real=False)
         False
 
         """
 
-        # XXX compatibility stuff
-        if dummy==True:
-            return Dummy(name, commutative=commutative, **assumptions)
-        else:
-            return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
+        if 'dummy' in assumptions:
+            import warnings
+            warnings.warn(
+                    "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
+                    "\nbe dropped in a future version of Sympy. Please use Dummy()"
+                    "\nor symbols(..., cls=Dummy) to create dummy symbols.",
+                    DeprecationWarning)
+            if assumptions.pop('dummy'):
+                return Dummy(name, commutative, **assumptions)
+        return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
         assert isinstance(name, str),`type(name)`
@@ -65,8 +68,14 @@ class Symbol(AtomicExpr, Boolean):
     def _hashable_content(self):
         return (self.is_commutative, self.name)
 
+    def sort_key(self, order=None):
+        from sympy.core import S
+        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+
     def as_dummy(self):
-        return Dummy(self.name, self.is_commutative, **self.assumptions0)
+        assumptions = self.assumptions0.copy()
+        assumptions.pop('commutative', None)
+        return Dummy(self.name, self.is_commutative, **assumptions)
 
     def __call__(self, *args):
         from function import Function
@@ -87,48 +96,44 @@ class Symbol(AtomicExpr, Boolean):
     def is_number(self):
         return False
 
+    @property
+    def free_symbols(self):
+        return set([self])
+
 class Dummy(Symbol):
-    """Dummy Symbol
+    """Dummy symbols are each unique, identified by an internal count index ::
 
-       use this through Symbol:
+    >>> from sympy import Dummy
+    >>> bool(Dummy("x") == Dummy("x")) == True
+    False
 
-       >>> from sympy import Symbol
-       >>> x1 = Symbol('x', dummy=True)
-       >>> x2 = Symbol('x', dummy=True)
-       >>> bool(x1 == x2)
-       False
+    If a name is not supplied then a string value of the count index will be
+    used. This is useful when a temporary variable is needed and the name
+    of the variable used in the expression is not important. ::
+    >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
+    >>> Dummy()          # used here to make sure that the doctest passes.
+    _0
 
     """
 
-    dummycount = 0
+    _count = 0
 
     __slots__ = ['dummy_index']
 
-    def __new__(cls, name, commutative=True, **assumptions):
+    is_Dummy = True
+
+    def __new__(cls, name=None, commutative=True, **assumptions):
+        if name is None:
+            name = str(Dummy._count)
+
         obj = Symbol.__xnew__(cls, name, commutative=commutative, **assumptions)
 
-        Dummy.dummycount += 1
-        obj.dummy_index = Dummy.dummycount
+        Dummy._count += 1
+        obj.dummy_index = Dummy._count
         return obj
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
-
-
-class Temporary(Dummy):
-    """
-    Indexed dummy symbol.
-    """
-
-    __slots__ = []
-
-    def __new__(cls, **assumptions):
-        obj = Dummy.__new__(cls, 'T%i' % Dummy.dummycount, **assumptions)
-        return obj
-
-    def __getnewargs__(self):
-        return ()
-
 
 class Wild(Symbol):
     """
@@ -136,6 +141,8 @@ class Wild(Symbol):
     """
 
     __slots__ = ['exclude', 'properties']
+
+    is_Wild = True
 
     def __new__(cls, name, exclude=None, properties=None, **assumptions):
         if type(exclude) is list:
@@ -189,110 +196,203 @@ class Wild(Symbol):
         from sympy.core.function import WildFunction
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
+_re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
+_re_var_scope = re.compile(r"^(.):(.)$")
+_re_var_split = re.compile(r"\s|,")
 
-def symbols(*names, **kwargs):
+def symbols(names, **args):
     """
-    Return a list of symbols with names taken from 'names'
-    argument, which can be a string, then each character
-    forms a separate symbol, or a sequence of strings.
+    Transform strings into instances of :class:`Symbol` class.
 
-    >>> from sympy import symbols
-    >>> x, y, z = symbols('xyz')
+    :func:`symbols` function returns a sequence of symbols with names taken
+    from ``names`` argument, which can be a comma or whitespace delimited
+    string, or a sequence of strings::
 
-    Please note that this syntax is deprecated and will be dropped in a
-    future version of sympy. Use comma or whitespace separated characters
-    instead. Currently the old behavior is standard, this can be changed
-    using the 'each_char' keyword:
+        >>> from sympy import symbols, Function
 
-    >>> symbols('xyz', each_char=False)
-    xyz
+        >>> x, y, z = symbols('x,y,z')
+        >>> a, b, c = symbols('a b c')
 
-    All newly created symbols have assumptions set accordingly
-    to 'kwargs'. Main intention behind this function is to
-    simplify and shorten examples code in doc-strings.
+    The type of output is dependent on the properties of input arguments::
 
-    >>> a = symbols('a', integer=True)
-    >>> a.is_integer
-    True
-    >>> xx, yy, zz = symbols('xx', 'yy', 'zz', real=True)
-    >>> xx.is_real and yy.is_real and zz.is_real
-    True
+        >>> x = symbols('x')
+        >>> (x,) = symbols('x,')
+
+        >>> symbols(('a', 'b', 'c'))
+        (a, b, c)
+        >>> symbols(['a', 'b', 'c'])
+        [a, b, c]
+        >>> symbols(set(['a', 'b', 'c']))
+        set([a, b, c])
+
+    If an iterable container is needed set ``seq`` argument to ``True``::
+
+        >>> symbols('x', seq=True)
+        (x,)
+
+    To cut on typing, range syntax is supported co create indexed symbols::
+
+        >>> symbols('x:10')
+        (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)
+
+        >>> symbols('x5:10')
+        (x5, x6, x7, x8, x9)
+
+        >>> symbols('x5:10,y:5')
+        (x5, x6, x7, x8, x9, y0, y1, y2, y3, y4)
+
+        >>> symbols(('x5:10', 'y:5'))
+        ((x5, x6, x7, x8, x9), (y0, y1, y2, y3, y4))
+
+    To cut on typing even more, lexicographic range syntax is supported::
+
+        >>> symbols('x:z')
+        (x, y, z)
+
+        >>> symbols('a:d,x:z')
+        (a, b, c, d, x, y, z)
+
+        >>> symbols(('a:d', 'x:z'))
+        ((a, b, c, d), (x, y, z))
+
+    All newly created symbols have assumptions set accordingly to ``args``::
+
+        >>> a = symbols('a', integer=True)
+        >>> a.is_integer
+        True
+
+        >>> x, y, z = symbols('x,y,z', real=True)
+        >>> x.is_real and y.is_real and z.is_real
+        True
+
+    Despite its name, :func:`symbols` can create symbol--like objects of
+    other type, for example instances of Function or Wild classes. To
+    achieve this, set ``cls`` keyword argument to the desired type::
+
+        >>> symbols('f,g,h', cls=Function)
+        (f, g, h)
+
+        >>> type(_[0])
+        <class 'sympy.core.function.UndefinedFunction'>
 
     """
-    # use new behavior if space or comma in string
-    if not 'each_char' in kwargs and len(names) == 1 and \
-    isinstance(names[0], str) and (' ' in names[0] or ',' in names[0]):
-        kwargs['each_char'] = False
-    if not kwargs.pop("each_char", True):
-        # the new way:
-        s = names[0]
-        if not isinstance(s, list):
-            s = re.split('\s|,', s)
-        res = []
-        for t in s:
-            # skip empty strings
-            if not t:
+    result = []
+
+    if isinstance(names, basestring):
+        names = _re_var_split.split(names)
+
+        cls = args.pop('cls', Symbol)
+        seq = args.pop('seq', False)
+
+        for name in names:
+            if not name:
                 continue
-            sym = Symbol(t, **kwargs)
-            res.append(sym)
-        res = tuple(res)
-        if len(res) == 0:   # var('')
-            res = None
-        elif len(res) == 1: # var('x')
-            res = res[0]
-                            # otherwise var('a b ...')
-        return res
+
+            if ':' not in name:
+                symbol = cls(name, **args)
+                result.append(symbol)
+                continue
+
+            match = _re_var_range.match(name)
+
+            if match is not None:
+                name, start, end = match.groups()
+
+                if not start:
+                    start = 0
+                else:
+                    start = int(start)
+
+                for i in xrange(start, int(end)):
+                    symbol = cls("%s%i" % (name, i), **args)
+                    result.append(symbol)
+
+                seq = True
+                continue
+
+            match = _re_var_scope.match(name)
+
+            if match is not None:
+                start, end = match.groups()
+
+                for name in xrange(ord(start), ord(end)+1):
+                    symbol = cls(chr(name), **args)
+                    result.append(symbol)
+
+                seq = True
+                continue
+
+            raise ValueError("'%s' is not a valid symbol range specification" % name)
+
+        if not seq and len(result) <= 1:
+            if not result:
+                return None
+            elif names[-1]:
+                return result[0]
+
+        return tuple(result)
     else:
-        # this is the old, deprecated behavior:
-        if len(names) == 1:
-            result = [ Symbol(name, **kwargs) for name in names[0] ]
-        else:
-            result = [ Symbol(name, **kwargs) for name in names ]
-        if len(result) == 1:
-            return result[0]
-        else:
-            return result
+        for name in names:
+            syms = symbols(name, **args)
 
-def var(*names, **kwargs):
+            if syms is not None:
+                result.append(syms)
+
+        return type(names)(result)
+
+def var(names, **args):
     """
-    Create symbols and inject them into global namespace.
+    Create symbols and inject them into the global namespace.
 
-    This calls symbols() with the same arguments and puts the results into
-    global namespace. Unlike symbols(), it uses each_char=False by default
-    for compatibility reasons.
+    This calls :func:`symbols` with the same arguments and puts the results
+    into the *global* namespace. It's recommended not to use :func:`var` in
+    library code, where :func:`symbols` has to be used::
 
-    NOTE: The new variable is both returned and automatically injected into
-    the parent's *global* namespace.  It's recommended not to use "var" in
-    library code, it is better to use symbols() instead.
+        >>> from sympy import var
 
-    >>> from sympy import var
-    >>> var('m')
-    m
-    >>> var('n xx yy zz')
-    (n, xx, yy, zz)
-    >>> n
-    n
-    >>> var('x y', real=True)
-    (x, y)
-    >>> x.is_real and y.is_real
-    True
+        >>> var('x')
+        x
+        >>> x
+        x
+
+        >>> var('a,ab,abc')
+        (a, ab, abc)
+        >>> abc
+        abc
+
+        >>> var('x,y', real=True)
+        (x, y)
+        >>> x.is_real and y.is_real
+        True
+
+    See :func:`symbol` documentation for more details on what kinds of
+    arguments can be passed to :func:`var`.
 
     """
-    import inspect
-    frame = inspect.currentframe().f_back
+    def traverse(symbols, frame):
+        """Recursively inject symbols to the global namespace. """
+        for symbol in symbols:
+            if isinstance(symbol, Basic):
+                frame.f_globals[symbol.name] = symbol
+            elif isinstance(symbol, FunctionClass):
+                frame.f_globals[symbol.__name__] = symbol
+            else:
+                traverse(symbol, frame)
+
+    from inspect import currentframe
+    frame = currentframe().f_back
+
     try:
-        kwargs['each_char'] = False
-        s = symbols(*names, **kwargs)
-        if s is None:
-            return s
-        if isinstance(s, Symbol):
-            s_list = [s]
-        else:
-            s_list = s
-        for t in s_list:
-            frame.f_globals[t.name] = t
-        return s
+        syms = symbols(names, **args)
+
+        if syms is not None:
+            if isinstance(syms, Basic):
+                frame.f_globals[syms.name] = syms
+            elif isinstance(syms, FunctionClass):
+                frame.f_globals[syms.__name__] = syms
+            else:
+                traverse(syms, frame)
     finally:
-        # we should explicitly break cyclic dependencies as stated in inspect
-        # doc
-        del frame
+        del frame # break cyclic dependencies as stated in inspect docs
+
+    return syms

@@ -8,9 +8,9 @@
 
        >>> from __future__ import division
        >>> from sympy import *
-       >>> x, y, z, t = symbols("x y z t")
-       >>> k, m, n = symbols("k m n", integer=True)
-       >>> f, g, h = map(Function, 'fgh')
+       >>> x, y, z, t = symbols('x y z t')
+       >>> k, m, n = symbols('k m n', integer=True)
+       >>> f, g, h = symbols('f g h', cls=Function)
 
    So starting 'isympy' is equivalent to starting Python (or IPython)
    and executing the above commands by hand.  It is intended for easy
@@ -58,56 +58,43 @@ sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
-# some longer messages
-
-long_message = """\
-These commands were executed:
->>> from __future__ import division
->>> from sympy import *
->>> x, y, z, t = symbols('x y z t')
->>> k, m, n = symbols('k m n', integer=True)
->>> f, g, h = map(Function, 'fgh')
-
-Documentation can be found at http://sympy.org/
-"""
-
-no_ipython = """\
-Couldn't locate IPython. Having IPython installed is greatly recommended.
-See http://ipython.scipy.org for more details.  If you use Debian/Ubuntu,
-just install the 'ipython' package and start isympy again.
-"""
-
-from sympy.interactive import init_session
-
 def main():
-    from sympy import __version__ as sympy_version
-    py_version = "%d.%d.%d" % sys.version_info[:3]
-
     from optparse import OptionParser
 
     usage = 'usage: isympy [options] -- [ipython options]'
-    parser = OptionParser(usage, version=sympy_version)
+    parser = OptionParser(usage)
 
     parser.add_option(
         '-c', '--console',
         dest='console',
         action='store',
         default=None,
-        help='select type of interactive session: IPython | Python')
+        choices=['ipython', 'python'],
+        help='select type of interactive session: ipython | python')
 
     parser.add_option(
         '-p', '--pretty',
         dest='pretty',
         action='store',
-        default="any",
-        help='setup pretty printing: Unicode | ASCII | any | no')
+        default=None,
+        choices=['unicode', 'ascii', 'no'],
+        help='setup pretty printing: unicode | ascii | no')
+
+    parser.add_option(
+        '-t', '--types',
+        dest='types',
+        action='store',
+        default=None,
+        choices=['gmpy', 'python', 'sympy'],
+        help='setup ground types: gmpy | python | sympy')
 
     parser.add_option(
         '-o', '--order',
         dest='order',
         action='store',
-        default='old',
-        help='setup terms ordering: old | [rev-]lex, [rev-]grlex, [rev-]grevlex')
+        default=None,
+        choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'old'],
+        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old')
 
     parser.add_option(
         '-q', '--quiet',
@@ -123,7 +110,20 @@ def main():
         default=False,
         help='use the doctest format for output (you can just copy and paste it)')
 
+    parser.add_option(
+        '-C', '--no-cache',
+        dest='cache',
+        action='store_false',
+        default=True,
+        help='disable caching mechanism')
+
     (options, ipy_args) = parser.parse_args()
+
+    if not options.cache:
+        os.environ['SYMPY_USE_CACHE'] = 'no'
+
+    if options.types:
+        os.environ['SYMPY_GROUND_TYPES'] = options.types
 
     if options.doctest:
         options.pretty = 'no'
@@ -132,47 +132,31 @@ def main():
     session = options.console
 
     if session is not None:
-        session = session.lower()
+        ipython = session == 'ipython'
+    else:
+        ipython = None
 
     args = {
-        'argv'         : ipy_args,
         'pretty_print' : True,
         'use_unicode'  : None,
         'order'        : None,
+        'argv'         : ipy_args,
     }
 
-    pretty = options.pretty.lower()
+    if options.pretty == 'unicode':
+        args['use_unicode'] = True
+    elif options.pretty == 'ascii':
+        args['use_unicode'] = False
+    elif options.pretty == 'no':
+        args['pretty_print'] = False
 
-    if pretty != 'any':
-        if pretty == 'unicode':
-            args['use_unicode'] = True
-        else:
-            args['use_unicode'] = False
+    if options.order is not None:
+        args['order'] = options.order
 
-            if pretty != 'ascii':
-                if pretty == 'no':
-                    args['pretty_print'] = False
-                else:
-                    raise ValueError("Unknown pretty" \
-                        " printing setup: " + options.pretty)
+    args['quiet'] = options.quiet
 
-    order = options.order.lower()
-
-    if order != 'old':
-        args['order'] = order
-
-    if not options.quiet:
-        args['message'] = long_message
-
-    try:
-        init_session(session, **args)
-    except ValueError:
-        try:
-            init_session('ipython', **args)
-        except ImportError:
-            print no_ipython
-            init_session('python', **args)
+    from sympy.interactive import init_session
+    init_session(ipython, **args)
 
 if __name__ == "__main__":
     main()
-

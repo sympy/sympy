@@ -6,6 +6,45 @@ NOTE
 at present this is mainly needed for facts.py , feel free however to improve
 this stuff for general purpose.
 """
+from sympy.core.compatibility import iterable
+
+def fuzzy_bool(x):
+    """Return True, False or None according to x.
+
+    Whereas bool(x) returns True or False, fuzzy_bool allows
+    for the None value.
+    """
+    if x is None:
+        return None
+    return bool(x)
+
+def fuzzy_and(*args):
+    """Return True (all True), False (any False) or None.
+
+    If `a` is an iterable it must have more than one element."""
+
+    if (len(args) == 1 and iterable(args[0]) or
+        len(args) > 2):
+        if len(args) == 1:
+            args = args[0]
+        rv = True
+        i = 0
+        for ai in args:
+            ai = fuzzy_bool(ai)
+            if ai is False:
+                return False
+            if rv: # this will stop updating if a None is ever trapped
+                rv = ai
+            i += 1
+        if i < 2:
+            raise ValueError('iterables must have 2 or more elements')
+        return rv
+
+    a, b = [fuzzy_bool(i) for i in args]
+    if a is True and b is True:
+        return True
+    elif a is False or b is False:
+        return False
 
 def fuzzy_not(v):
     """'not' in fuzzy logic"""
@@ -184,7 +223,7 @@ class AndOr_Base(Logic):
         # canonicalize arguments
         # XXX do we always need this?
         # NB: this is needed to reduce number of &-nodes in beta-network
-        args = sorted(args)
+        args = sorted(args, key=hash)
 
         # now let's kill duplicate arguments, e.g. &(a,a,b) -> &(a,b)
         prev = None

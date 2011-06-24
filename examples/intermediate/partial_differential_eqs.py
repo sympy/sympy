@@ -8,10 +8,10 @@ from sympy import symbols, Eq, Function, pde_separate, pprint, sin, cos, latex
 from sympy import Derivative as D
 
 def main():
-    r, phi, theta = symbols("r phi theta")
+    r, phi, theta = symbols("r,phi,theta")
     Xi = Function('Xi')
     R, Phi, Theta, u = map(Function, ['R', 'Phi', 'Theta', 'u'])
-    C1, C2 = symbols('C1 C2')
+    C1, C2 = symbols('C1,C2')
 
     pprint ("Separation of variables in Laplace equation in spherical coordinates")
     pprint ("Laplace equation in spherical coordinates:")

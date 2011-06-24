@@ -2,7 +2,6 @@
 
 from core import BasicMeta, Registry
 from sympify import sympify
-from basic import Basic
 
 class SingletonRegistry(Registry):
     """
@@ -24,7 +23,7 @@ class Singleton(BasicMeta):
     Metaclass for singleton classes.
 
     A singleton class has only one instance which is returned every time the
-    class is instanciated. Additionally, this instance can be accessed through
+    class is instantiated. Additionally, this instance can be accessed through
     the global registry object S as S.<class_name>.
 
     Example::

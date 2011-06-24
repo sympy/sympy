@@ -2,6 +2,12 @@ import sympy.mpmath
 from sympy.mpmath import *
 from sympy.mpmath.libmp import *
 import random
+import sys
+
+try:
+    long = long
+except NameError:
+    long = int
 
 def test_type_compare():
     assert mpf(2) == mpc(2,0)
@@ -141,6 +147,9 @@ def test_hash():
     assert hash(mp.mpq(1,1)) == hash(1)
     assert hash(mp.mpq(5,1)) == hash(5)
     assert hash(mp.mpq(1,2)) == hash(0.5)
+    if sys.version >= "3.2":
+        assert hash(mpf(1))*2**2000 == hash(2**2000)
+        assert hash(mpf(1))/2**2000 == hash(mpq(1,2**2000))
 
 # Advanced rounding test
 def test_add_rounding():
@@ -159,7 +168,7 @@ def test_almost_equal():
 def test_arithmetic_functions():
     import operator
     ops = [(operator.add, fadd), (operator.sub, fsub), (operator.mul, fmul),
-        (operator.div, fdiv)]
+        (operator.truediv, fdiv)]
     a = mpf(0.27)
     b = mpf(1.13)
     c = mpc(0.51+2.16j)
@@ -390,8 +399,8 @@ def test_isnan_etc():
     assert isnormal(mpq((0,1))) == False
     assert isint(3) == True
     assert isint(0) == True
-    assert isint(3L) == True
-    assert isint(0L) == True
+    assert isint(long(3)) == True
+    assert isint(long(0)) == True
     assert isint(mpf(3)) == True
     assert isint(mpf(0)) == True
     assert isint(mpf(-3)) == True

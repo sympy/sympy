@@ -9,7 +9,7 @@ ordering_of_classes = [
     # singleton numbers
     'Zero', 'One','Half','Infinity','NaN','NegativeOne','NegativeInfinity',
     # numbers
-    'Integer','Rational','Real',
+    'Integer','Rational','Float',
     # singleton symbols
     'Exp1','Pi','ImaginaryUnit',
     # symbols
@@ -30,7 +30,6 @@ ordering_of_classes = [
     'ApplyFloor', 'ApplyCeiling',
     'ApplyRe','ApplyIm', 'ApplyArg',
     'ApplySqrt','ApplySign',
-    'ApplyMrvLog',
     'ApplyGamma','ApplyLowerGamma','ApplyUpperGamma','ApplyPolyGamma',
     'ApplyErf',
     'ApplyChebyshev','ApplyChebyshev2',
@@ -40,11 +39,11 @@ ordering_of_classes = [
     'Floor', 'Ceiling',
     'Re', 'Im', 'Arg',
     'Conjugate',
-    'Exp','Log','MrvLog',
+    'Exp','Log',
     'Sin','Cos','Tan','Cot','ASin','ACos','ATan','ACot',
     'Sinh','Cosh','Tanh','Coth','ASinh','ACosh','ATanh','ACoth',
     'RisingFactorial','FallingFactorial',
-    'Factorial','Binomial',
+    'factorial','binomial',
     'Gamma','LowerGamma','UpperGamma','PolyGamma',
     'Erf',
     # special polynomials
@@ -53,10 +52,6 @@ ordering_of_classes = [
     'Function','WildFunction',
     # anonymous functions
     'Lambda',
-    # operators
-    'FDerivative','FApply',
-    # composition of functions
-    'FPow', 'Composition',
     # Landau O symbol
     'Order',
     # relational operations
@@ -117,8 +112,6 @@ C = ClassRegistry()
 
 
 class BasicMeta(BasicType):
-
-    keep_sign = False
 
     def __init__(cls, *args, **kws):
         setattr(C, cls.__name__, cls)
@@ -216,7 +209,7 @@ class BasicMeta(BasicType):
                 continue    # no ._derived_premises is ok
 
             for k,v in base_derived_premises.iteritems():
-                if not cls.__dict__.has_key('is_'+k):
+                if ('is_'+k) not in cls.__dict__:
                     is_k = make__get_assumption(cls.__name__, k)
                     setattr(cls, 'is_'+k, property(is_k))
 

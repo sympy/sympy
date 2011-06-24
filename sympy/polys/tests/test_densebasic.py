@@ -13,6 +13,7 @@ from sympy.polys.densebasic import (
     dup_copy, dmp_copy,
     dup_normal, dmp_normal,
     dup_convert, dmp_convert,
+    dup_from_sympy, dmp_from_sympy,
     dup_nth, dmp_nth, dmp_ground_nth,
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
@@ -31,19 +32,21 @@ from sympy.polys.densebasic import (
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms, dmp_apply_pairs,
+    dup_slice, dmp_slice, dmp_slice_in,
+    dup_random,
 )
 
 from sympy.polys.specialpolys import (
     f_0, f_1, f_2, f_3, f_4, f_5, f_6
 )
 
-from sympy.polys.polyclasses import (
-    DUP, DMP
-)
+from sympy.polys.polyclasses import DMP
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ
 
+from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
+from sympy.utilities import all
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0
@@ -211,6 +214,18 @@ def test_dmp_convert():
     assert dmp_convert(f, 1, K0, K1) == \
         [[ZZ(1)],[ZZ(2)],[],[ZZ(3)]]
 
+def test_dup_from_sympy():
+    assert dup_from_sympy([S(1), S(2)], ZZ) == \
+        [ZZ(1), ZZ(2)]
+    assert dup_from_sympy([S(1)/2, S(3)], QQ) == \
+        [QQ(1, 2), QQ(3, 1)]
+
+def test_dmp_from_sympy():
+    assert dmp_from_sympy([[S(1), S(2)], [S(0)]], 1, ZZ) == \
+        [[ZZ(1), ZZ(2)], []]
+    assert dmp_from_sympy([[S(1)/2, S(2)]], 1, QQ) == \
+        [[QQ(1, 2), QQ(2, 1)]]
+
 def test_dup_nth():
     assert dup_nth([1,2,3], 0, ZZ) == 3
     assert dup_nth([1,2,3], 1, ZZ) == 2
@@ -322,6 +337,9 @@ def test_dup_from_to_dict():
     assert dup_to_raw_dict([]) == {}
     assert dup_to_dict([]) == {}
 
+    assert dup_to_raw_dict([], ZZ, zero=True) == {0: ZZ(0)}
+    assert dup_to_dict([], ZZ, zero=True) == {(0,): ZZ(0)}
+
     f = [3,0,0,2,0,0,0,0,8]
     g = {8: 3, 5: 2, 0: 8}
     h = {(8,): 3, (5,): 2, (0,): 8}
@@ -347,6 +365,9 @@ def test_dup_from_to_dict():
 def test_dmp_from_to_dict():
     assert dmp_from_dict({}, 1, ZZ) == [[]]
     assert dmp_to_dict([[]], 1) == {}
+
+    assert dmp_to_dict([], 0, ZZ, zero=True) == {(0,): ZZ(0)}
+    assert dmp_to_dict([[]], 1, ZZ, zero=True) == {(0,0): ZZ(0)}
 
     f = [[3],[],[],[2],[],[],[],[],[8]]
     g = {(8,0): 3, (5,0): 2, (0,0): 8}
@@ -569,6 +590,16 @@ def test_dmp_list_terms():
     assert dmp_list_terms([[1],[2,4],[3,5,0]], 1, ZZ) == \
         [((2, 0), 1), ((1, 1), 2), ((1, 0), 4), ((0, 2), 3), ((0, 1), 5)]
 
+    f = [[2, 0, 0, 0], [1, 0, 0], []]
+
+    assert dmp_list_terms(f, 1, ZZ, order='lex') == [((2, 3), 2), ((1, 2), 1)]
+    assert dmp_list_terms(f, 1, ZZ, order='grlex') == [((2, 3), 2), ((1, 2), 1)]
+
+    f = [[2, 0, 0, 0], [1, 0, 0, 0, 0, 0], []]
+
+    assert dmp_list_terms(f, 1, ZZ, order='lex') == [((2, 3), 2), ((1, 5), 1)]
+    assert dmp_list_terms(f, 1, ZZ, order='grlex') == [((1, 5), 1), ((2, 3), 2)]
+
 def test_dmp_apply_pairs():
     h = lambda a, b: a*b
 
@@ -582,3 +613,41 @@ def test_dmp_apply_pairs():
     assert dmp_apply_pairs([[1,2],[3]], [[4],[5,6]], h, [], 1, ZZ) == [[8],[18]]
     assert dmp_apply_pairs([[1],[2,3]], [[4,5],[6]], h, [], 1, ZZ) == [[5],[18]]
 
+def test_dup_slice():
+    f = [1, 2, 3, 4]
+
+    assert dup_slice(f, 0, 0, ZZ) == []
+    assert dup_slice(f, 0, 1, ZZ) == [4]
+    assert dup_slice(f, 0, 2, ZZ) == [3,4]
+    assert dup_slice(f, 0, 3, ZZ) == [2,3,4]
+    assert dup_slice(f, 0, 4, ZZ) == [1,2,3,4]
+
+    assert dup_slice(f, 0, 4, ZZ) == f
+    assert dup_slice(f, 0, 9, ZZ) == f
+
+    assert dup_slice(f, 1, 0, ZZ) == []
+    assert dup_slice(f, 1, 1, ZZ) == []
+    assert dup_slice(f, 1, 2, ZZ) == [3,0]
+    assert dup_slice(f, 1, 3, ZZ) == [2,3,0]
+    assert dup_slice(f, 1, 4, ZZ) == [1,2,3,0]
+
+def test_dup_random():
+    f = dup_random(0, -10, 10, ZZ)
+
+    assert dup_degree(f) == 0
+    assert all([ -10 <= c <= 10 for c in f ])
+
+    f = dup_random(1, -20, 20, ZZ)
+
+    assert dup_degree(f) == 1
+    assert all([ -20 <= c <= 20 for c in f ])
+
+    f = dup_random(2, -30, 30, ZZ)
+
+    assert dup_degree(f) == 2
+    assert all([ -30 <= c <= 30 for c in f ])
+
+    f = dup_random(3, -40, 40, ZZ)
+
+    assert dup_degree(f) == 3
+    assert all([ -40 <= c <= 40 for c in f ])

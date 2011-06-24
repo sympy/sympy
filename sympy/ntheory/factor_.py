@@ -201,24 +201,26 @@ def multiplicity(p, n):
 
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
-    Return ``(a, b)`` such that ``n`` == ``a**b`` if ``n`` is a
-    perfect power; otherwise return ``None``.
+    Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a
+    perfect power; otherwise return ``False``.
 
     By default, the base is recursively decomposed and the exponents
-    collected so the largest possible ``b`` is sought. If ``big=False``
-    then the smallest possible ``b`` (thus prime) will  be chosen.
+    collected so the largest possible ``e`` is sought. If ``big=False``
+    then the smallest possible ``e`` (thus prime) will  be chosen.
 
-    If ``candidates`` are given, they are assumed to be sorted and
-    the first one that is larger than the computed maximum will signal
+    If ``candidates`` for exponents are given, they are assumed to be sorted
+    and the first one that is larger than the computed maximum will signal
     failure for the routine.
 
     If ``factor=True`` then simultaneous factorization of n is attempted
-    since finding a factor indicates the only possible root for n.
+    since finding a factor indicates the only possible root for n. This
+    is True by default since only a few small factors will be tested in
+    the course of searching for the perfect power.
     """
 
     n = int(n)
     if n < 3:
-        return None
+        return False
     logn = math.log(n, 2)
     max_possible = int(logn) + 2 # only check values less than this
     not_square = n % 10 in [2, 3, 7, 8] # squares cannot end in 2, 3, 7, 8
@@ -226,67 +228,71 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         candidates = primerange(2 + not_square, max_possible)
 
     afactor = 2 + n % 2
-    for b in candidates:
-        if b < 3:
-            if b == 1 or b == 2 and not_square:
+    for e in candidates:
+        if e < 3:
+            if e == 1 or e == 2 and not_square:
                 continue
-        if b > max_possible:
-            return
+        if e > max_possible:
+            return False
 
         # see if there is a factor present
         if factor:
             if n % afactor == 0:
                 # find what the potential power is
                 if afactor == 2:
-                    b = trailing(n)
+                    e = trailing(n)
                 else:
-                    b = multiplicity(afactor, n)
+                    e = multiplicity(afactor, n)
                 # if it's a trivial power we are done
-                if b == 1:
-                    return
+                if e == 1:
+                    return False
 
                 # maybe the bth root of n is exact
-                r, exact = integer_nthroot(n, b)
+                r, exact = integer_nthroot(n, e)
                 if not exact:
                     # then remove this factor and check to see if
-                    # any of b's factors are a common exponent; if
+                    # any of e's factors are a common exponent; if
                     # not then it's not a perfect power
-                    n //= afactor**b
-                    m = perfect_power(n, candidates=primefactors(b), big=big)
-                    if not m:
-                        return
+                    n //= afactor**e
+                    m = perfect_power(n, candidates=primefactors(e), big=big)
+                    if m is False:
+                        return False
                     else:
                         r, m = m
                         # adjust the two exponents so the bases can
                         # be combined
-                        g = igcd(m, b)
+                        g = igcd(m, e)
+                        if g == 1:
+                            return False
                         m //= g
-                        b //= g
-                        r, b = r**m*afactor**b, g
+                        e //= g
+                        r, e = r**m*afactor**e, g
                 if not big:
-                    b0 = primefactors(b)
-                    if len(b0) > 1 or b0[0] != b:
-                        b0 = b0[0]
-                        r, b = r**(b//b0), b0
-                return r, b
+                    e0 = primefactors(e)
+                    if len(e0) > 1 or e0[0] != e:
+                        e0 = e0[0]
+                        r, e = r**(e//e0), e0
+                return r, e
             else:
                 # get the next factor ready for the next pass through the loop
                 afactor = nextprime(afactor)
 
         # Weed out downright impossible candidates
-        if logn/b < 40:
-            a = 2.0**(logn/b)
-            if abs(int(a + 0.5) - a) > 0.01:
+        if logn/e < 40:
+            b = 2.0**(logn/e)
+            if abs(int(b + 0.5) - b) > 0.01:
                 continue
 
-        # now see if the plausible b makes a perfect power
-        r, exact = integer_nthroot(n, b)
+        # now see if the plausible e makes a perfect power
+        r, exact = integer_nthroot(n, e)
         if exact:
             if big:
                 m = perfect_power(r, big=big, factor=factor)
-                if m:
-                    r, b = m[0], b*m[1]
-            return int(r), b
+                if m is not False:
+                    r, e = m[0], e*m[1]
+            return int(r), e
+    else:
+        return False
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     """Use Pollard's rho method to try to extract a nontrivial factor
@@ -585,7 +591,7 @@ def _check_termination(factors, n,
     # since we've already been factoring there is no need to do
     # simultaneous factoring with the power check
     p = perfect_power(n, factor=False)
-    if p:
+    if p is not False:
         base, exp = p
         if limitp1:
             limit = limitp1 - 1

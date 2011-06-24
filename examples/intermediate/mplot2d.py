@@ -6,6 +6,7 @@ Demonstrates plotting with matplotlib.
 
 from sample import sample
 from sympy import Basic, log, pi, sqrt, sin, Symbol
+from sympy.core.compatibility import ordered_iter
 
 def mplot2d(f, var, show=True):
     """
@@ -20,7 +21,7 @@ def mplot2d(f, var, show=True):
     except ImportError:
         raise ImportError("Matplotlib is required to use mplot2d.")
 
-    if not isinstance(f, (tuple, list)):
+    if not ordered_iter(f):
         f = [f,]
 
     for f_i in f:

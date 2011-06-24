@@ -46,7 +46,7 @@ class fibonacci(Function):
         >>> [fibonacci(x) for x in range(11)]
         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
         >>> fibonacci(5, Symbol('t'))
-        1 + 3*t**2 + t**4
+        t**4 + 3*t**2 + 1
 
     Mathematical description
     ========================
@@ -205,7 +205,7 @@ class bernoulli(Function):
     @staticmethod
     def _calc_bernoulli(n):
         s = 0
-        a = int(C.Binomial(n+3, n-6))
+        a = int(C.binomial(n+3, n-6))
         for j in xrange(1, n//6+1):
             s += a * bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
@@ -215,7 +215,7 @@ class bernoulli(Function):
             s = -Rational(n+3, 6) - s
         else:
             s = Rational(n+3, 3) - s
-        return s / C.Binomial(n+3, n)
+        return s / C.binomial(n+3, n)
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
@@ -256,7 +256,7 @@ class bernoulli(Function):
                 else:
                     n, result = int(n), []
                     for k in xrange(n + 1):
-                        result.append(C.Binomial(n, k)*cls(k)*sym**(n-k))
+                        result.append(C.binomial(n, k)*cls(k)*sym**(n-k))
                     return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
@@ -290,7 +290,7 @@ class bell(Function):
         >>> bell(30)
         846749014511809332450147
         >>> bell(4, Symbol('t'))
-        t + 7*t**2 + 6*t**3 + t**4
+        t**4 + 6*t**3 + 7*t**2 + t
 
     Mathematical description
     ========================
@@ -405,13 +405,14 @@ class harmonic(Function):
     # order and store it in a dictionary
     _functions = {}
 
+    nargs = (1, 2)
+
     @classmethod
     def eval(cls, n, m=None):
         if m is None:
             m = S.One
         if n == oo:
-            from sympy.functions.special.zeta_functions import zeta
-            return zeta(m)
+            return C.zeta(m)
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
             if n == 0:
                 return S.Zero

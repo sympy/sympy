@@ -1,36 +1,84 @@
-from sympy.core.symbol import Symbol
+"""Algorithms for computing symbolic roots of polynomials. """
+
+from sympy.core.symbol import Dummy
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core import Expr, S
+from sympy.core import S, I, Basic
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, igcd
 
-from sympy.ntheory import divisors
-from sympy.functions import exp, sqrt
+from sympy.ntheory import divisors, isprime, nextprime
+from sympy.functions import exp, sqrt, re, im
 
-from sympy.polys import (
-    Poly, cancel, PolynomialError, GeneratorsNeeded,
-)
+from sympy.polys.polytools import Poly, cancel, factor, gcd_list
+from sympy.polys.specialpolys import cyclotomic_poly
+from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
+
+from sympy.simplify import simplify
+from sympy.utilities import all, default_sort_key
+
+from sympy.core.compatibility import reduce
+
+import math
 
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
-    return [-f.nth(0)/f.nth(1)]
+    r = -f.nth(0)/f.nth(1)
+    dom = f.get_domain()
+
+    if not dom.is_Numerical:
+        if dom.is_Composite:
+            r = factor(r)
+        else:
+            r = simplify(r)
+
+    return [r]
 
 def roots_quadratic(f):
     """Returns a list of roots of a quadratic polynomial."""
     a, b, c = f.all_coeffs()
+    dom = f.get_domain()
+
+    def _simplify(expr):
+        if dom.is_Composite:
+            return factor(expr)
+        else:
+            return simplify(expr)
 
     if c is S.Zero:
-        return [c, -b/a]
+        r0, r1 = S.Zero, -b/a
 
-    d = sqrt((b**2).expand() - 4*a*c)
+        if not dom.is_Numerical:
+            r1 = _simplify(r1)
+    elif b is S.Zero:
+        r = -c/a
 
-    roots = [
-        (-b + d)/(2*a),
-        (-b - d)/(2*a),
-    ]
+        if not dom.is_Numerical:
+            R = sqrt(_simplify(r))
+        else:
+            R = sqrt(r)
 
-    return roots
+        r0 =  R
+        r1 = -R
+    else:
+        d = b**2 - 4*a*c
+
+        if dom.is_Numerical:
+            D = sqrt(d)
+
+            r0 = (-b + D) / (2*a)
+            r1 = (-b - D) / (2*a)
+        else:
+            D = sqrt(_simplify(d))
+            A = 2*a
+
+            E = _simplify(-b/A)
+            F = D/A
+
+            r0 = E + F
+            r1 = E - F
+
+    return sorted([r0, r1], key=default_sort_key)
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
@@ -71,49 +119,47 @@ def roots_cubic(f):
     return soln
 
 def roots_quartic(f):
-    r"""Returns a list of roots of a quartic polynomial.
+    r"""
+    Returns a list of roots of a quartic polynomial.
 
-       There are many references for solving quartic expressions available [1-5].
-       This reviewer has found that many of them require one to select from among
-       2 or more possible sets of solutions and that some solutions work when one
-       is searching for real roots but don't work when searching for complex roots
-       (though this is not always stated clearly). The following routine has been
-       tested and found to be correct for 0, 2 or 4 complex roots.
+    There are many references for solving quartic expressions available [1-5].
+    This reviewer has found that many of them require one to select from among
+    2 or more possible sets of solutions and that some solutions work when one
+    is searching for real roots but don't work when searching for complex roots
+    (though this is not always stated clearly). The following routine has been
+    tested and found to be correct for 0, 2 or 4 complex roots.
 
-       The quasisymmetric case solution [6] looks for quartics that have the form
-       `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
+    The quasisymmetric case solution [6] looks for quartics that have the form
+    `x**4 + A*x**3 + B*x**2 + C*x + D = 0` where `(C/A)**2 = D`.
 
-       Although there is a general solution, simpler results can be obtained for
-       certain values of the coefficients. In all cases, 4 roots are returned:
+    Although there is a general solution, simpler results can be obtained for
+    certain values of the coefficients. In all cases, 4 roots are returned:
 
-         1) `f = c + a*(a**2/8 - b/2) == 0`
-         2) `g = d - a*(a*(3*a**2/256 - b/16) + c/4) = 0`
-         3) if `f != 0` and `g != 0` and `p = -d + a*c/4 - b**2/12` then
-           a) `p == 0`
-           b) `p != 0`
+      1) `f = c + a*(a**2/8 - b/2) == 0`
+      2) `g = d - a*(a*(3*a**2/256 - b/16) + c/4) = 0`
+      3) if `f != 0` and `g != 0` and `p = -d + a*c/4 - b**2/12` then
+        a) `p == 0`
+        b) `p != 0`
 
-       Example::
+    **Examples**
 
-           >>> from sympy import Poly, symbols, I
-           >>> from sympy.polys.polyroots import roots_quartic
+        >>> from sympy import Poly, symbols, I
+        >>> from sympy.polys.polyroots import roots_quartic
 
-           >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
+        >>> r = roots_quartic(Poly('x**4-6*x**3+17*x**2-26*x+20'))
 
-           >>> # 4 complex roots: 1+-I*sqrt(3), 2+-I
-           >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
-           ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + I', '2.0 - 1.0*I']
+        >>> # 4 complex roots: 1+-I*sqrt(3), 2+-I
+        >>> sorted(str(tmp.evalf(n=2)) for tmp in r)
+        ['1.0 + 1.7*I', '1.0 - 1.7*I', '2.0 + 1.0*I', '2.0 - 1.0*I']
 
-       References
-       ==========
+    **References**
 
-       .. [1] http://mathforum.org/dr.math/faq/faq.cubic.equations.html
-       .. [2] http://en.wikipedia.org/wiki/Quartic_function#
-                     Summary_of_Ferrari.27s_method
-       .. [3] http://planetmath.org/encyclopedia/
-                     GaloisTheoreticDerivationOfTheQuarticFormula.html
-       .. [4] http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
-       .. [5] http://www.albmath.org/files/Math_5713.pdf
-       .. [6] http://www.statemaster.com/encyclopedia/Quartic-equation
+    1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
+    2. http://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
+    3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+    4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+    5. http://www.albmath.org/files/Math_5713.pdf
+    6. http://www.statemaster.com/encyclopedia/Quartic-equation
 
     """
     _, a, b, c, d = f.monic().all_coeffs()
@@ -168,6 +214,7 @@ def roots_quartic(f):
                 root = sqrt(-(arg1 + s*arg2))
                 for t in [-1, 1]:
                     ans.append((s*w - t*root)/2 - aon4)
+
     return ans
 
 def roots_binomial(f):
@@ -186,14 +233,83 @@ def roots_binomial(f):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
-    return roots
+    return sorted(roots, key=default_sort_key)
+
+def _inv_totient_estimate(m):
+    """
+    Find ``(L, U)`` such that ``L <= phi^-1(m) <= U``.
+
+    **Examples**
+
+    >>> from sympy.polys.polyroots import _inv_totient_estimate
+
+    >>> _inv_totient_estimate(192)
+    (192, 840)
+    >>> _inv_totient_estimate(400)
+    (400, 1750)
+
+    """
+    primes = [ d + 1 for d in divisors(m) if isprime(d + 1) ]
+
+    a, b = 1, 1
+
+    for p in primes:
+        a *= p
+        b *= p - 1
+
+    L = m
+    U = int(math.ceil(m*(float(a)/b)))
+
+    P = p = 2
+    primes = []
+
+    while P <= U:
+        p = nextprime(p)
+        primes.append(p)
+        P *= p
+
+    P //= p
+    b = 1
+
+    for p in primes[:-1]:
+        b *= p - 1
+
+    U = int(math.ceil(m*(float(P)/b)))
+
+    return L, U
+
+def roots_cyclotomic(f, factor=False):
+    """Compute roots of cyclotomic polynomials. """
+    L, U = _inv_totient_estimate(f.degree())
+
+    for n in xrange(L, U+1):
+        g = cyclotomic_poly(n, f.gen, polys=True)
+
+        if f == g:
+            break
+    else: # pragma: no cover
+        raise RuntimeError("failed to find index of a cyclotomic polynomial")
+
+    roots = []
+
+    if not factor:
+        for k in xrange(1, n+1):
+            if igcd(k, n) == 1:
+                roots.append(exp(2*k*S.Pi*I/n).expand(complex=True))
+    else:
+        g = Poly(f, extension=(-1)**Rational(1, n))
+
+        for h, _ in g.factor_list()[1]:
+            roots.append(-h.TC())
+
+    return sorted(roots, key=default_sort_key)
 
 def roots_rational(f):
     """Returns a list of rational roots of a polynomial."""
     domain = f.get_domain()
 
     if domain.is_QQ:
-        _, f = f.ground_to_ring()
+        _, f = f.clear_denoms()
     elif domain.is_ZZ:
         f = f.set_domain('QQ')
     else:
@@ -217,61 +333,170 @@ def roots_rational(f):
             if not f.eval(-zero):
                 zeros.append(-zero)
 
-    return zeros
+    return sorted(zeros, key=default_sort_key)
+
+def _integer_basis(poly):
+    """Compute coefficient basis for a polynomial over integers. """
+    monoms, coeffs = zip(*poly.terms())
+
+    monoms, = zip(*monoms)
+    coeffs = map(abs, coeffs)
+
+    if coeffs[0] < coeffs[-1]:
+        coeffs = list(reversed(coeffs))
+    else:
+        return None
+
+    monoms = monoms[:-1]
+    coeffs = coeffs[:-1]
+
+    divs = reversed(divisors(gcd_list(coeffs))[1:])
+
+    try:
+        div = divs.next()
+    except StopIteration:
+        return None
+
+    while True:
+        for monom, coeff in zip(monoms, coeffs):
+            if coeff % div**monom != 0:
+                try:
+                    div = divs.next()
+                except StopIteration:
+                    return None
+                else:
+                    break
+        else:
+            return div
+
+def preprocess_roots(poly):
+    """Try to get rid of symbolic coefficients from ``poly``. """
+    coeff = S.One
+
+    try:
+        _, poly = poly.clear_denoms(convert=True)
+    except DomainError:
+        return coeff, poly
+
+    poly = poly.primitive()[1]
+    poly = poly.retract()
+
+    if poly.get_domain().is_Poly and all(c.is_monomial for c in poly.rep.coeffs()):
+        poly = poly.inject()
+
+        strips = zip(*poly.monoms())
+        gens = list(poly.gens[1:])
+
+        base, strips = strips[0], strips[1:]
+
+        for gen, strip in zip(gens, strips):
+            reverse = False
+
+            if strip[0] < strip[-1]:
+                strip = reversed(strip)
+                reverse = True
+
+            ratio = None
+
+            for a, b in zip(base, strip):
+                if not a and not b:
+                    continue
+                elif not a or not b:
+                    break
+                elif b % a != 0:
+                    break
+                else:
+                    _ratio = b // a
+
+                    if ratio is None:
+                        ratio = _ratio
+                    elif ratio != _ratio:
+                        break
+            else:
+                if reverse:
+                    ratio = -ratio
+
+                poly = poly.eval(gen, 1)
+                coeff *= gen**(-ratio)
+                gens.remove(gen)
+
+        if gens:
+            poly = poly.eject(*gens)
+
+    if poly.is_univariate and poly.get_domain().is_ZZ:
+        basis = _integer_basis(poly)
+
+        if basis is not None:
+            n = poly.degree()
+
+            def func((k,), coeff):
+                return coeff//basis**(n-k)
+
+            poly = poly.termwise(func)
+            coeff *= basis
+
+    return coeff, poly
 
 def roots(f, *gens, **flags):
-    """Computes symbolic roots of a univariate polynomial.
+    """
+    Computes symbolic roots of a univariate polynomial.
 
-       Given a univariate polynomial f with symbolic coefficients (or
-       a list of the polynomial's coefficients), returns a dictionary
-       with its roots and their multiplicities.
+    Given a univariate polynomial f with symbolic coefficients (or
+    a list of the polynomial's coefficients), returns a dictionary
+    with its roots and their multiplicities.
 
-       Only roots expressible via radicals will be returned.  To get
-       a complete set of roots use RootOf class or numerical methods
-       instead. By default cubic and quartic formulas are used in
-       the algorithm. To disable them because of unreadable output
-       set `cubics=False` or `quartics=False` respectively.
+    Only roots expressible via radicals will be returned.  To get
+    a complete set of roots use RootOf class or numerical methods
+    instead. By default cubic and quartic formulas are used in
+    the algorithm. To disable them because of unreadable output
+    set `cubics=False` or `quartics=False` respectively.
 
-       To get roots from a specific domain set the `filter` flag with
-       one of the following specifiers: Z, Q, R, I, C. By default all
-       roots are returned (this is equivalent to setting `filter='C'`).
+    To get roots from a specific domain set the `filter` flag with
+    one of the following specifiers: Z, Q, R, I, C. By default all
+    roots are returned (this is equivalent to setting `filter='C'`).
 
-       By default a dictionary is returned giving a compact result in
-       case of multiple roots.  However to get a tuple containing all
-       those roots set the `multiple` flag to True.
+    By default a dictionary is returned giving a compact result in
+    case of multiple roots.  However to get a tuple containing all
+    those roots set the `multiple` flag to True.
 
-       Examples
-       ========
+    **Examples**
 
-           >>> from sympy import Poly, roots
-           >>> from sympy.abc import x, y
+    >>> from sympy import Poly, roots
+    >>> from sympy.abc import x, y
 
-           >>> roots(x**2 - 1, x)
-           {1: 1, -1: 1}
+    >>> roots(x**2 - 1, x)
+    {-1: 1, 1: 1}
 
-           >>> p = Poly(x**2-1, x)
-           >>> roots(p)
-           {1: 1, -1: 1}
+    >>> p = Poly(x**2-1, x)
+    >>> roots(p)
+    {-1: 1, 1: 1}
 
-           >>> p = Poly(x**2-y, x, y)
+    >>> p = Poly(x**2-y, x, y)
 
-           >>> roots(Poly(p, x))
-           {y**(1/2): 1, -y**(1/2): 1}
+    >>> roots(Poly(p, x))
+    {-y**(1/2): 1, y**(1/2): 1}
 
-           >>> roots(x**2 - y, x)
-           {y**(1/2): 1, -y**(1/2): 1}
+    >>> roots(x**2 - y, x)
+    {-y**(1/2): 1, y**(1/2): 1}
 
-           >>> roots([1, 0, -1])
-           {1: 1, -1: 1}
+    >>> roots([1, 0, -1])
+    {-1: 1, 1: 1}
 
     """
-    multiple = flags.get('multiple', False)
+    flags = dict(flags)
+
+    auto = flags.pop('auto', True)
+    cubics = flags.pop('cubics', True)
+    quartics = flags.pop('quartics', True)
+    multiple = flags.pop('multiple', False)
+    filter = flags.pop('filter', None)
+    predicate = flags.pop('predicate', None)
 
     if isinstance(f, list):
         if gens:
             raise ValueError('redundant generators given')
 
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
 
         poly, i = {}, len(f)-1
 
@@ -291,8 +516,6 @@ def roots(f, *gens, **flags):
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-        f, x = f.to_field(), f.gen
-
     def _update_dict(result, root, k):
         if root in result:
             result[root] += k
@@ -301,24 +524,21 @@ def roots(f, *gens, **flags):
 
     def _try_decompose(f):
         """Find roots using functional decomposition. """
-        factors = f.decompose()
-        result, g = {}, factors[0]
+        factors, roots = f.decompose(), []
 
-        for h, i in g.sqf_list()[1]:
-            for r in _try_heuristics(h):
-                _update_dict(result, r, i)
+        for root in _try_heuristics(factors[0]):
+            roots.append(root)
 
         for factor in factors[1:]:
-            last, result = result.copy(), {}
+            previous, roots = list(roots), []
 
-            for last_r, i in last.iteritems():
-                g = factor - Poly(last_r, x)
+            for root in previous:
+                g = factor - Poly(root, f.gen)
 
-                for h, j in g.sqf_list()[1]:
-                    for r in _try_heuristics(h):
-                        _update_dict(result, r, i*j)
+                for root in _try_heuristics(g):
+                    roots.append(root)
 
-        return result
+        return roots
 
     def _try_heuristics(f):
         """Find roots using formulas and some tricks. """
@@ -335,9 +555,9 @@ def roots(f, *gens, **flags):
 
         result = []
 
-        for i in [S(-1), S(1)]:
-            if f.eval(i).expand().is_zero:
-                f = f.exquo(Poly(x-1, x))
+        for i in [-1, 1]:
+            if not f.eval(i):
+                f = f.quo(Poly(f.gen - i, f.gen))
                 result.append(i)
                 break
 
@@ -347,53 +567,59 @@ def roots(f, *gens, **flags):
             result += map(cancel, roots_linear(f))
         elif n == 2:
             result += map(cancel, roots_quadratic(f))
-        elif n == 3 and flags.get('cubics', True):
+        elif f.is_cyclotomic:
+            result += roots_cyclotomic(f)
+        elif n == 3 and cubics:
             result += roots_cubic(f)
-        elif n == 4 and flags.get('quartics', True):
+        elif n == 4 and quartics:
             result += roots_quartic(f)
 
         return result
 
-    if f.is_monomial == 1:
-        if f.is_ground:
-            if multiple:
-                return []
-            else:
-                return {}
-        else:
-            result = { S(0) : f.degree() }
+    (k,), f = f.terms_gcd()
+
+    if not k:
+        zeros = {}
     else:
-        (k,), f = f.terms_gcd()
+        zeros = {S(0) : k}
 
-        if not k:
-            zeros = {}
-        else:
-            zeros = { S(0) : k }
+    coeff, f = preprocess_roots(f)
 
-        result = {}
+    if auto and f.get_domain().has_Ring:
+        f = f.to_field()
 
-        if f.length() == 2:
-            if f.degree() == 1:
-                result[cancel(roots_linear(f)[0])] = 1
-            else:
-                for r in roots_binomial(f):
-                    _update_dict(result, r, 1)
+    result = {}
+
+    if not f.is_ground:
+        if not f.get_domain().is_Exact:
+            for r in f.nroots():
+                _update_dict(result, r, 1)
+        elif f.degree() == 1:
+            result[roots_linear(f)[0]] = 1
         elif f.degree() == 2:
             for r in roots_quadratic(f):
-                _update_dict(result, cancel(r), 1)
+                _update_dict(result, r, 1)
+        elif f.length() == 2:
+            for r in roots_binomial(f):
+                _update_dict(result, r, 1)
         else:
-            _, factors = Poly(f.as_basic()).factor_list()
+            _, factors = Poly(f.as_expr()).factor_list()
 
             if len(factors) == 1 and factors[0][1] == 1:
-                result = _try_decompose(f)
+                for root in _try_decompose(f):
+                    _update_dict(result, root, 1)
             else:
                 for factor, k in factors:
-                    for r in _try_heuristics(Poly(factor, x, field=True)):
+                    for r in _try_heuristics(Poly(factor, f.gen, field=True)):
                         _update_dict(result, r, k)
 
-        result.update(zeros)
+    if coeff is not S.One:
+        _result, result, = result, {}
 
-    filter = flags.get('filter', None)
+        for root, k in _result.iteritems():
+            result[coeff*root] = k
+
+    result.update(zeros)
 
     if filter not in [None, 'C']:
         handlers = {
@@ -412,8 +638,6 @@ def roots(f, *gens, **flags):
             if not query(zero):
                 del result[zero]
 
-    predicate = flags.get('predicate', None)
-
     if predicate is not None:
         for zero in dict(result).iterkeys():
             if not predicate(zero):
@@ -427,21 +651,24 @@ def roots(f, *gens, **flags):
         for zero, k in result.iteritems():
             zeros.extend([zero]*k)
 
-        return zeros
+        return sorted(zeros, key=default_sort_key)
 
 def root_factors(f, *gens, **args):
-    """Returns all factors of a univariate polynomial.
+    """
+    Returns all factors of a univariate polynomial.
 
-       Examples
-       ========
+    **Examples**
 
-           >>> from sympy.abc import x, y
-           >>> from sympy.polys.polyroots import root_factors
+    >>> from sympy.abc import x, y
+    >>> from sympy.polys.polyroots import root_factors
 
-           >>> root_factors(x**2-y, x)
-           [x - y**(1/2), x + y**(1/2)]
+    >>> root_factors(x**2-y, x)
+    [x - y**(1/2), x + y**(1/2)]
 
     """
+    args = dict(args)
+    filter = args.pop('filter', None)
+
     F = Poly(f, *gens, **args)
 
     if not F.is_Poly:
@@ -452,10 +679,7 @@ def root_factors(f, *gens, **args):
 
     x = F.gens[0]
 
-    if 'multiple' in args:
-        del args['multiple']
-
-    zeros = roots(F, **args)
+    zeros = roots(F, filter=filter)
 
     if not zeros:
         factors = [F]
@@ -466,257 +690,11 @@ def root_factors(f, *gens, **args):
             factors, N = factors + [Poly(x-r, x)]*n, N + n
 
         if N < F.degree():
-            g = reduce(lambda p,q: p*q, factors)
-            factors.append(f.exquo(g))
+            G = reduce(lambda p,q: p*q, factors)
+            factors.append(F.quo(G))
 
     if not isinstance(f, Poly):
-        return [ f.as_basic() for f in factors ]
+        return [ f.as_expr() for f in factors ]
     else:
         return factors
 
-def number_of_real_roots(f, *gens, **args):
-    """Returns the number of distinct real roots of `f` in `(inf, sup]`.
-
-       Examples
-       ========
-
-           >>> from sympy import Poly
-           >>> from sympy.abc import x, y
-
-           >>> from sympy.polys.polyroots import number_of_real_roots
-
-           >>> f = Poly(x**2 - 1, x)
-
-           Count real roots in the (-oo, oo) interval:
-
-           >>> number_of_real_roots(f)
-           2
-
-           Count real roots in the (0, 2) interval:
-
-           >>> number_of_real_roots(f, inf=0, sup=2)
-           1
-
-           Count real roots in the (2, oo) interval:
-
-           >>> number_of_real_roots(f, inf=2)
-           0
-
-       References
-       ==========
-
-       .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer
-           Algebra Systems and Algorithms for Algebraic Computation,
-           Academic Press, London, 1988, pp. 124-128
-    """
-
-    def sign_changes(seq):
-        count = 0
-
-        for i in xrange(1, len(seq)):
-            if (seq[i-1] < 0 and seq[i] >= 0) or \
-               (seq[i-1] > 0 and seq[i] <= 0):
-                count += 1
-
-        return count
-
-    F = Poly(f, *gens, **args)
-
-    if not F.is_Poly:
-        return 0
-
-    if F.is_multivariate:
-        raise ValueError('multivariate polynomials not supported')
-
-    if F.degree() < 1:
-        return 0
-
-    inf = args.get('inf', None)
-
-    if inf is not None:
-        inf = sympify(inf)
-
-        if not inf.is_number:
-            raise ValueError("Not a number: %s" % inf)
-        elif abs(inf) is S.Infinity:
-            inf = None
-
-    sup = args.get('sup', None)
-
-    if sup is not None:
-        sup = sympify(sup)
-
-        if not sup.is_number:
-            raise ValueError("Not a number: %s" % sup)
-        elif abs(sup) is S.Infinity:
-            sup = None
-
-    sturm = F.sturm()
-
-    if inf is None:
-        signs_inf = sign_changes([ s.LC()*(-1)**s.degree() for s in sturm ])
-    else:
-        signs_inf = sign_changes([ s.eval(inf) for s in sturm ])
-
-    if sup is None:
-        signs_sup = sign_changes([ s.LC() for s in sturm ])
-    else:
-        signs_sup = sign_changes([ s.eval(sup) for s in sturm ])
-
-    return abs(signs_inf - signs_sup)
-
-_exact_roots_cache = {}
-
-def _exact_roots(f):
-    if f in _exact_roots_cache:
-        zeros = _exact_roots_cache[f]
-    else:
-        exact, zeros = roots(f), []
-
-        for zero, k in exact.iteritems():
-            zeros += [zero]*k
-
-        _exact_roots_cache[f] = zeros
-
-    return zeros
-
-class RootOf(Expr):
-    """Represents n-th root of a univariate polynomial. """
-
-    def __new__(cls, f, index):
-        if isinstance(f, RootsOf):
-            f = f.poly
-        elif not isinstance(f, Poly):
-            raise PolynomialError("%s is not a polynomial" % f)
-
-        if f.is_multivariate:
-            raise ValueError('multivariate polynomial')
-
-        if index < 0 or index >= f.degree():
-            raise IndexError("Index must be in [0, %d] range" % (f.degree()-1))
-        else:
-            exact = _exact_roots(f)
-
-            if index < len(exact):
-                return exact[index]
-            else:
-                index = sympify(index)
-                return Expr.__new__(cls, f, index)
-
-    @property
-    def poly(self):
-        return self._args[0]
-
-    @property
-    def index(self):
-        return self._args[1]
-
-    def atoms(self, *args, **kwargs):
-        return self.poly.atoms(*args, **kwargs)
-
-class RootsOf(Expr):
-    """Represents all roots of a univariate polynomial.
-
-       >>> from sympy import roots, RootsOf
-       >>> from sympy.abc import x, y
-
-       >>> roots = RootsOf(x**2 + 2, x)
-
-       >>> list(roots.roots())
-       [I*2**(1/2), -I*2**(1/2)]
-
-    """
-
-    def __new__(cls, f, x=None):
-        if not isinstance(f, Poly):
-            f = Poly(f, x)
-        elif x is not None:
-            raise SymbolsError("Redundant symbols were given")
-
-        if f.is_multivariate:
-            raise ValueError('multivariate polynomial')
-
-        return Expr.__new__(cls, f)
-
-    @property
-    def poly(self):
-        return self._args[0]
-
-    @property
-    def count(self):
-        return self.poly.degree()
-
-    def roots(self):
-        """Iterates over all roots: exact and formal. """
-        exact = _exact_roots(self.poly)
-
-        for root in exact:
-            yield root
-
-        for j in range(len(exact), self.count):
-            yield RootOf(self.poly, j)
-
-    def exact_roots(self):
-        """Iterates over exact roots only. """
-        exact = _exact_roots(self.poly)
-
-        for root in exact:
-            yield root
-
-    def formal_roots(self):
-        """Iterates over formal roots only. """
-        exact = _exact_roots(self.poly)
-
-        for j in range(len(exact), self.count):
-            yield RootOf(self.poly, j)
-
-    def __call__(self, index):
-        return RootOf(self.poly, index)
-
-    def atoms(self, *args, **kwargs):
-        return self.poly.atoms(*args, **kwargs)
-
-
-class RootSum(Expr):
-    """Represents a sum of all roots of a univariate polynomial. """
-
-    def __new__(cls, f, *args, **flags):
-        if not hasattr(f, '__call__'):
-            raise TypeError("%s is not a callable object" % f)
-
-        roots = RootsOf(*args)
-
-        if not flags.get('evaluate', True):
-            return Expr.__new__(cls, f, roots)
-        else:
-            if roots.count == 0:
-                return S.Zero
-            else:
-                result = []
-
-                for root in roots.exact_roots():
-                    result.append(f(root))
-
-                if len(result) < roots.count:
-                    result.append(Expr.__new__(cls, f, roots))
-
-                return Add(*result)
-
-    @property
-    def function(self):
-        return self._args[0]
-
-    @property
-    def roots(self):
-        return self._args[1]
-
-    def doit(self, **hints):
-        if not hints.get('roots', True):
-            return self
-        else:
-            result = S.Zero
-
-            for root in self.roots.roots():
-                result += self.function(root)
-
-            return result

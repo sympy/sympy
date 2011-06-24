@@ -3,7 +3,7 @@ This module contains query handlers responsible for calculus queries:
 infinitesimal, bounded, etc.
 """
 from sympy.logic.boolalg import conjuncts
-from sympy.assumptions import Q, ask, Assume
+from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 
 class AskInfinitesimalHandler(CommonHandler):
@@ -32,9 +32,9 @@ class AskInfinitesimalHandler(CommonHandler):
             return AskInfinitesimalHandler._number(expr, assumptions)
         result = False
         for arg in expr.args:
-            if ask(arg, Q.infinitesimal, assumptions):
+            if ask(Q.infinitesimal(arg), assumptions):
                 result = True
-            elif ask(arg, Q.bounded, assumptions):
+            elif ask(Q.bounded(arg), assumptions):
                 continue
             else: break
         else:
@@ -61,13 +61,13 @@ class AskBoundedHandler(CommonHandler):
 
     Example of usage:
 
-    >>> from sympy import Symbol, Assume, Q
+    >>> from sympy import Symbol, Q
     >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
     >>> from sympy.abc import x
     >>> a = AskBoundedHandler()
-    >>> a.Symbol(x, Assume(x, Q.positive))
+    >>> a.Symbol(x, Q.positive(x))
     False
-    >>> a.Symbol(x, Assume(x, Q.bounded))
+    >>> a.Symbol(x, Q.bounded(x))
     True
 
     """
@@ -79,17 +79,17 @@ class AskBoundedHandler(CommonHandler):
 
         Example:
 
-        >>> from sympy import Symbol, Assume, Q
+        >>> from sympy import Symbol, Q
         >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
         >>> from sympy.abc import x
         >>> a = AskBoundedHandler()
-        >>> a.Symbol(x, Assume(x, Q.positive))
+        >>> a.Symbol(x, Q.positive(x))
         False
-        >>> a.Symbol(x, Assume(x, Q.bounded))
+        >>> a.Symbol(x, Q.bounded(x))
         True
 
         """
-        if Assume(expr, 'bounded') in conjuncts(assumptions):
+        if Q.bounded(expr) in conjuncts(assumptions):
             return True
         return False
 
@@ -102,7 +102,7 @@ class AskBoundedHandler(CommonHandler):
         """
         result = True
         for arg in expr.args:
-            _bounded = ask(arg, Q.bounded, assumptions)
+            _bounded = ask(Q.bounded(arg), assumptions)
             if _bounded: continue
             elif _bounded is None: return
             elif _bounded is False:
@@ -119,10 +119,11 @@ class AskBoundedHandler(CommonHandler):
         Bounded ** Unbounded -> Unbounded if base > 1
         Bounded ** Unbounded -> Unbounded if base < 1
         """
-        base_bounded = ask(expr.base, Q.bounded, assumptions)
-        if not base_bounded: return base_bounded
-        if ask(expr.exp, Q.bounded, assumptions) \
-            and base_bounded: return True
+        base_bounded = ask(Q.bounded(expr.base), assumptions)
+        if not base_bounded:
+            return base_bounded
+        if ask(Q.bounded(expr.exp), assumptions) and base_bounded:
+            return True
         if base_bounded and expr.base.is_number:
             # We need to implement relations for this
             if abs(expr.base) > 1:
@@ -131,7 +132,7 @@ class AskBoundedHandler(CommonHandler):
 
     @staticmethod
     def log(expr, assumptions):
-        return ask(expr.args[0], Q.bounded, assumptions)
+        return ask(Q.bounded(expr.args[0]), assumptions)
 
     exp = log
 

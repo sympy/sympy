@@ -13,13 +13,13 @@ SymPy runs under the `Python Programming Language
 differently than they do in other, independent computer algebra systems
 like Maple or Mathematica.  These are some of the gotchas and pitfalls
 that you may encounter when using SymPy.  See also the `FAQ
-<http://wiki.sympy.org/wiki/FAQ>`_, the :ref:`Tutorial<tutorial>`, the
+<https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`Tutorial<tutorial>`, the
 remainder of the SymPy Docs, and the `official Python Tutorial
 <http://docs.python.org/tutorial/>`_.
 
 If you are already familiar with C or Java, you might also want to look
 this `4 minute Python tutorial
-<http://www.nerdparadise.com/tech/coding/python/4minutes/>`_.
+<http://www.nerdparadise.com/tech/python/4minutecrashcourse/>`_.
 
 Ignore ``#doctest: +SKIP`` in the examples.  That has to do with
 internal testing of the examples.
@@ -63,13 +63,13 @@ equation reduces to 0.
     >>> simplify((x + 1)**2 - (x**2 + 2*x + 1))
     0
     >>> simplify(sin(2*x) - 2*sin(x)*cos(x))
-    -2*cos(x)*sin(x) + sin(2*x)
+    -2*sin(x)*cos(x) + sin(2*x)
     >>> expand(sin(2*x) - 2*sin(x)*cos(x), trig=True)
     0
 
 .. note::
 
-    See also `Why does SymPy say that two equal expressions are unequal? <http://wiki.sympy.org/wiki/FAQ#Why_does_SymPy_say_that_two_equal_expressions_are_unequal.3F>`_ in the FAQ.
+    See also `Why does SymPy say that two equal expressions are unequal? <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 
 Variables
@@ -87,12 +87,12 @@ Consider the following:
     >>> a = Symbol('a') # Create a Symbol named a, that is also stored in the variable "a"
     >>> b = a + 1       # Create another object, b, that refers to 'a'
     >>> print b
-    1 + a
+    a + 1
     >>> a = 4           # a now points to the literal integer 4, not Symbol('a')
     >>> print a
     4
     >>> b               # But b is still pointing at Symbol('a')
-    1 + a
+    a + 1
 
 Changing quantity :obj:`a` does not change :obj:`b`; you are not working
 with a set of simultaneous equations. It might be helpful to remember
@@ -165,7 +165,7 @@ If you define a circular relationship, you will get a
 
 
 .. note::
-    See also `Why doesn't changing one variable change another that depends on it? <http://wiki.sympy.org/wiki/FAQ#Why_doesn.27t_changing_one_variable_change_another_that_depends_it.3F>`_ in the FAQ.
+    See also `Why doesn't changing one variable change another that depends on it? <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 .. _symbols:
 
@@ -257,7 +257,7 @@ all built-in names and to autocomplete.  Also, see `this page
 trick for getting tab completion in the regular Python console.
 
 .. note::
-    See also `What is the best way to create symbols? <http://wiki.sympy.org/wiki/FAQ#What_is_the_best_way_to_create_symbols.3F.7C>`_ in the FAQ.
+    See also `What is the best way to create symbols? <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
 
 .. _symbolic-expressions:
 
@@ -278,10 +278,10 @@ to a Python expression.  Use the :func:`sympify` function, or just
     6.2000000000000002
     >>> type(6.2)
     <type 'float'>
-    >>> S(6.2) # SymPy Real has no such problems because of arbitrary precision.
+    >>> S(6.2) # SymPy Float has no such problems because of arbitrary precision.
     6.20000000000000
     >>> type(S(6.2))
-    <class 'sympy.core.numbers.Real'>
+    <class 'sympy.core.numbers.Float'>
 
 If you include numbers in a SymPy expression, they will be sympified
 automatically, but there is one gotcha you should be aware of.  If you
@@ -376,7 +376,7 @@ demonstrates how this works::
 	    print 'original =', expr
 	    expr_modified = expr.subs({x:a, y:b})
 	    print 'modified = ', expr_modified
-	    
+
 	if __name__ == "__main__":
 	    main()
 
@@ -417,12 +417,12 @@ In :command:`isympy`, with the :command:`ipython` shell::
     ...
     TypeError: unsupported operand type(s) for ^: 'Add' and 'int'
     >>> (x+1)**2
-    (1 + x)**2
+    (x + 1)**2
     >>> pprint(3 - x**(2*x)/(x + 1))
-          2*x
-         x
-    3 - -----
-        1 + x
+        2*x
+       x
+    - ----- + 3
+      x + 1
 
 
 Inverse Trig Functions
@@ -465,7 +465,7 @@ Example:
     >>> print a
     [2, 1]
     >>> print solve(x**2+2*x-1,x) # Some functions return lists
-    [-1 + 2**(1/2), -1 - 2**(1/2)]
+    [-1 + 2**(1/2), -2**(1/2) - 1]
 
 
 .. note::

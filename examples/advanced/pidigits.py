@@ -5,7 +5,7 @@ Example shows arbitrary precision using mpmath with the
 computation of the digits of pi.
 """
 
-from sympy.mpmath import libmpf
+from sympy.mpmath import libmp, pi
 from sympy.mpmath import functions as mpf_funs
 
 import math
@@ -36,7 +36,7 @@ def display_fraction(digits, skip=0, colwidth=10, columns=5):
 def calculateit(func, base, n, tofile):
     """Writes first n base-digits of a mpmath function to file"""
     prec = 100
-    intpart = libmpf.numeral(3, base)
+    intpart = libmp.numeral(3, base)
     if intpart == 0:
         skip = 0
     else:
@@ -48,8 +48,8 @@ def calculateit(func, base, n, tofile):
     step1_time = clock() - t
     print "Step 2 of 2: converting to specified base..."
     t = clock()
-    d = libmpf.bin_to_radix(a.man, -a.exp, base, n)
-    d = libmpf.numeral(d, base, n)
+    d = libmp.bin_to_radix(a.man, -a.exp, base, n)
+    d = libmp.numeral(d, base, n)
     step2_time = clock() - t
     print "\nWriting output...\n"
     if tofile:
@@ -71,14 +71,14 @@ def interactive():
     tofile = raw_input("Output to file? (enter a filename, or just press enter\nto print directly to the screen) \n> ")
     if tofile:
         tofile = open(tofile, "w")
-    calculateit(mpf_funs.pi, base, digits, tofile)
+    calculateit(pi, base, digits, tofile)
 
 def main():
     """A non-interactive runner"""
     base = 16
     digits = 500
     tofile = None
-    calculateit(mpf_funs.pi, base, digits, tofile)
+    calculateit(pi, base, digits, tofile)
 
 if __name__ == "__main__":
     interactive()

@@ -205,7 +205,6 @@ def doctest(*paths, **kwargs):
                     "sympy/galgebra/latex_ex.py", # needs numpy
                     "sympy/conftest.py", # needs py.test
                     "sympy/utilities/benchmarking.py", # needs py.test
-                    "doc/src/modules/polys", # very time consuming
                     ])
     blacklist = convert_to_native_paths(blacklist)
 
@@ -275,9 +274,10 @@ def doctest(*paths, **kwargs):
                 continue
             old_displayhook = sys.displayhook
             try:
-                out = sympytestfile(txt_file, module_relative=False,
-                        optionflags=pdoctest.ELLIPSIS | \
-                        pdoctest.NORMALIZE_WHITESPACE)
+                # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
+                #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
+                out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
+                    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
             finally:
                 # make sure we return to the original displayhook in case some
                 # doctest has changed that
@@ -1029,7 +1029,9 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:   %s  (%s)\n\n" % (executable, python_version))
+        self.write("executable:   %s  (%s)\n" % (executable, python_version))
+        from sympy.polys.domains import GROUND_TYPES
+        self.write("ground types: %s\n\n" % GROUND_TYPES)
         self._t_start = clock()
 
     def finish(self):
@@ -1131,45 +1133,45 @@ class PyTestReporter(Reporter):
 
     def test_xfail(self):
         self._xfailed += 1
-        self.write("f")
+        self.write("f", "Green")
 
     def test_xpass(self, fname):
         self._xpassed.append((self._active_file, fname))
-        self.write("X")
+        self.write("X", "Green")
 
     def test_fail(self, exc_info):
         self._failed.append((self._active_file, self._active_f, exc_info))
-        self.write("F")
+        self.write("F", "Red")
         self._active_file_error = True
 
     def doctest_fail(self, name, error_msg):
         # the first line contains "******", remove it:
         error_msg = "\n".join(error_msg.split("\n")[1:])
         self._failed_doctest.append((name, error_msg))
-        self.write("F")
+        self.write("F", "Red")
         self._active_file_error = True
 
     def test_pass(self):
         self._passed += 1
         if self._verbose:
-            self.write("ok")
+            self.write("ok", "Green")
         else:
-            self.write(".")
+            self.write(".", "Green")
 
     def test_skip(self):
         self._skipped += 1
-        self.write("s")
+        self.write("s", "Green")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
-        self.write("E")
+        self.write("E", "Red")
         self._active_file_error = True
 
     def import_error(self, filename, exc_info):
         self._exceptions.append((filename, None, exc_info))
         rel_name = filename[len(self._root_dir)+1:]
         self.write(rel_name)
-        self.write("[?]   Failed to import")
+        self.write("[?]   Failed to import", "Red")
         if self._colors:
             self.write(" ")
             self.write("[FAIL]", "Red", align="right")

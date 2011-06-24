@@ -395,7 +395,7 @@ def matrix_to_qubit(matrix):
         if element != 0.0:
             # Form Qubit array; 0 in bit-locations where i is 0, 1 in
             # bit-locations where i is 1
-            qubit_array = [1 if i&(1<<x) else 0 for x in range(nqubits)]
+            qubit_array = [int(i & (1<<x) != 0) for x in range(nqubits)]
             qubit_array.reverse()
             result = result + element*cls(*qubit_array)
 
@@ -412,7 +412,6 @@ def qubit_to_matrix(qubit, format='sympy'):
     This function is the inverse of ``matrix_to_qubit`` and is a shorthand
     for ``represent(qubit)``.
     """
-    from sympy.physics.quantum.gate import Z
     return represent(qubit, format=format)
 
 
@@ -421,7 +420,7 @@ def qubit_to_matrix(qubit, format='sympy'):
 #-----------------------------------------------------------------------------
 
 
-def measure_all(qubit, format='sympy'):
+def measure_all(qubit, format='sympy', normalize=True):
     """Perform an ensemble measurement of all qubits.
 
     Parameters
@@ -444,12 +443,12 @@ def measure_all(qubit, format='sympy'):
 
         >>> from sympy.physics.quantum.qubit import Qubit, measure_all
         >>> from sympy.physics.quantum.gate import H, X, Y, Z
-        >>> from sympy.physics.quantum.applyops import apply_operators
+        >>> from sympy.physics.quantum.qapply import qapply
 
         >>> c = H(0)*H(1)*Qubit('00')
         >>> c
         H(0)*H(1)*|00>
-        >>> q = apply_operators(c)
+        >>> q = qapply(c)
         >>> measure_all(q)
         [(|00>, 1/4), (|01>, 1/4), (|10>, 1/4), (|11>, 1/4)]
     """
@@ -457,7 +456,10 @@ def measure_all(qubit, format='sympy'):
 
     if format == 'sympy':
         results = []
-        m = m.normalized()
+
+        if normalize:
+            m = m.normalized()
+
         size = max(m.shape) # Max of shape to account for bra or ket
         nqubits = int(math.log(size)/math.log(2))
         for i in range(size):
@@ -472,7 +474,7 @@ def measure_all(qubit, format='sympy'):
         )
 
 
-def measure_partial(qubit, bits, format='sympy'):
+def measure_partial(qubit, bits, format='sympy', normalize=True):
     """Perform a partial ensemble measure on the specifed qubits.
 
     Parameters
@@ -497,12 +499,12 @@ def measure_partial(qubit, bits, format='sympy'):
 
         >>> from sympy.physics.quantum.qubit import Qubit, measure_partial
         >>> from sympy.physics.quantum.gate import H, X, Y, Z
-        >>> from sympy.physics.quantum.applyops import apply_operators
+        >>> from sympy.physics.quantum.qapply import qapply
 
         >>> c = H(0)*H(1)*Qubit('00')
         >>> c
         H(0)*H(1)*|00>
-        >>> q = apply_operators(c)
+        >>> q = qapply(c)
         >>> measure_partial(q, (0,))
         [(2**(1/2)*|00>/2 + 2**(1/2)*|10>/2, 1/2), (2**(1/2)*|01>/2 + 2**(1/2)*|11>/2, 1/2)]
     """
@@ -512,7 +514,9 @@ def measure_partial(qubit, bits, format='sympy'):
         bits = (int(bits),)
 
     if format == 'sympy':
-        m = m.normalized()
+        if normalize:
+            m = m.normalized()
+
         possible_outcomes = _get_possible_outcomes(m, bits)
 
         # Form output from function.
@@ -526,8 +530,13 @@ def measure_partial(qubit, bits, format='sympy'):
             # If the output has a chance, append it to output with found
             # probability.
             if prob_of_outcome != 0:
+                if normalize:
+                    next_matrix = matrix_to_qubit(outcome.normalized())
+                else:
+                    next_matrix = matrix_to_qubit(outcome)
+
                 output.append((
-                    matrix_to_qubit(outcome.normalized()),
+                    next_matrix,
                     prob_of_outcome
                 ))
 
@@ -679,30 +688,3 @@ def measure_all_oneshot(qubit, format='sympy'):
         raise NotImplementedError(
             "This function can't handle non-sympy matrix formats yet"
         )
-
-
-def measure_partial_oneshot_sparse(state, qubit, format='sympy'):
-    """A sparse form of partial, oneshot measurement."""
-    import random
-    state = state.expand()
-    prob1 = 0
-    #Go through each item in the add and grab its probability
-    #This will be used to determine probability of getting a 1
-    if isinstance(state, (Mul, Qbit)):
-        return state
-    for item in state.args:
-        if item.args[-1][qbit] == 1:
-            prob1 += Mul(*item.args[0:-1])*Mul(*item.args[0:-1]).conjugate()
-    if prob1 < random.random():
-        choice = 0
-    else:
-        choice = 1
-    result = 0
-    for item in state.args:
-        if item.args[-1][qbit] == choice:
-            result = result + item
-    if choice:
-        result = result/sqrt(prob1)
-    else:
-        result = result/sqrt(1-prob1)
-    return result.expand()

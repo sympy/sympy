@@ -80,9 +80,12 @@ PythonPrinter
 
 This class implements Python printing. Usage::
 
-    In [1]: print_python(5*x**3 + sin(x))
+    >>> from sympy import print_python, sin
+    >>> from sympy.abc import x
+
+    >>> print_python(5*x**3 + sin(x))
     x = Symbol('x')
-    e = sin(x) + 5*x**3
+    e = 5*x**3 + sin(x)
 
 fcode
 -----
@@ -103,23 +106,24 @@ Two basic examples:
     >>> from sympy import *
     >>> x = symbols("x")
     >>> fcode(sqrt(1-x**2))
-    '      sqrt(1 - x**2)'
+    '      sqrt(-x**2 + 1)'
     >>> fcode((3 + 4*I)/(1 - conjugate(x)))
-    '      (cmplx(3,4))/(1 - conjg(x))'
+    '      (cmplx(3,4))/(-conjg(x) + 1)'
 
 An example where line wrapping is required:
 
     >>> expr = sqrt(1-x**2).series(x,n=20).removeO()
     >>> print fcode(expr)
-          1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 - 21*x**
-         @ 12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
+          -715*x**18/65536 - 429*x**16/32768 - 33*x**14/2048 - 21*x**12/1024
+         @ - 7*x**10/256 - 5*x**8/128 - x**6/16 - x**4/8 - x**2/2 + 1
 
 In case of line wrapping, it is handy to include the assignment so that lines
 are wrapped properly when the assignment part is added.
 
     >>> print fcode(expr, assign_to="var")
-          var = 1 - x**2/2 - x**4/8 - x**6/16 - 5*x**8/128 - 7*x**10/256 -
-         @ 21*x**12/1024 - 33*x**14/2048 - 429*x**16/32768 - 715*x**18/65536
+          var = -715*x**18/65536 - 429*x**16/32768 - 33*x**14/2048 - 21*x**
+         @ 12/1024 - 7*x**10/256 - 5*x**8/128 - x**6/16 - x**4/8 - x**2/2 +
+         @ 1
 
 For piecewise functions, the assign_to option is mandatory:
 
@@ -164,19 +168,19 @@ function.
     >>> print fcode(x - pi**2 - E)
           parameter (E = 2.71828182845905d0)
           parameter (pi = 3.14159265358979d0)
-          x - E - pi**2
+          x - pi**2 - E
     >>> print fcode(x - pi**2 - E, precision=25)
           parameter (E = 2.718281828459045235360287d0)
           parameter (pi = 3.141592653589793238462643d0)
-          x - E - pi**2
+          x - pi**2 - E
     >>> print fcode(N(x - pi**2, 25))
-          -9.869604401089358618834491d0 + x
+          x - 9.869604401089358618834491d0
 
 When some functions are not part of the Fortran standard, it might be desirable
 to introduce the names of user-defined functions in the Fortran expression.
 
     >>> print fcode(1 - gamma(x)**2, user_functions={gamma: 'mygamma'})
-          1 - mygamma(x)**2
+          -mygamma(x)**2 + 1
 
 However, when the user_functions argument is not provided, fcode attempts to
 use a reasonable default and adds a comment to inform the user of the issue.
@@ -184,7 +188,7 @@ use a reasonable default and adds a comment to inform the user of the issue.
     >>> print fcode(1 - gamma(x)**2)
     C     Not Fortran:
     C     gamma(x)
-          1 - gamma(x)**2
+          -gamma(x)**2 + 1
 
 By default the output is human readable code, ready for copy and paste. With the
 option ``human=False``, the return value is suitable for post-processing with
@@ -194,9 +198,9 @@ be defined as 'Fortran parameters', (ii) a list functions that can not be
 translated in pure Fortran and (iii) a string of Fortran code. A few examples:
 
     >>> fcode(1 - gamma(x)**2, human=False)
-    (set(), set([gamma(x)]), '      1 - gamma(x)**2')
+    (set(), set([gamma(x)]), '      -gamma(x)**2 + 1')
     >>> fcode(1 - sin(x)**2, human=False)
-    (set(), set(), '      1 - sin(x)**2')
+    (set(), set(), '      -sin(x)**2 + 1')
     >>> fcode(x - pi**2, human=False)
     (set([(pi, '3.14159265358979d0')]), set(), '      x - pi**2')
 

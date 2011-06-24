@@ -2,11 +2,17 @@
 
 from sympy.polys.monomialtools import (
     monomials, monomial_count,
+    monomial_lex_key, monomial_grlex_key, monomial_grevlex_key, monomial_key,
     monomial_lex_cmp, monomial_grlex_cmp, monomial_grevlex_cmp, monomial_cmp,
-    monomial_mul, monomial_div, monomial_gcd, monomial_lcm, monomial_max, monomial_min,
+    monomial_mul, monomial_div,
+    monomial_gcd, monomial_lcm,
+    monomial_max, monomial_min,
+    Monomial,
 )
 
-from sympy.abc import x, y
+from sympy.polys.polyerrors import ExactQuotientFailed
+
+from sympy.abc import x, y, z
 from sympy.utilities.pytest import raises
 
 def test_monomials():
@@ -28,6 +34,25 @@ def test_monomials():
 def test_monomial_count():
     assert monomial_count(2, 2) == 6
     assert monomial_count(2, 3) == 10
+
+def test_monomial_lex_key():
+    assert monomial_lex_key((1,2,3)) == (1,2,3)
+
+def test_monomial_grlex_key():
+    assert monomial_grlex_key((1,2,3)) == (6, (1,2,3))
+
+def test_monomial_grevlex_key():
+    assert monomial_grevlex_key((1,2,3)) == (6, (3,2,1))
+
+def test_monomial_key():
+    assert monomial_key() == monomial_lex_key
+
+    assert monomial_key('lex') == monomial_lex_key
+    assert monomial_key('grlex') == monomial_grlex_key
+    assert monomial_key('grevlex') == monomial_grevlex_key
+
+    raises(ValueError, "monomial_key('foo')")
+    raises(ValueError, "monomial_key(1)")
 
 def test_monomial_lex_cmp():
     assert monomial_lex_cmp((1,2,3), (1,2,3)) == 0
@@ -99,3 +124,24 @@ def test_monomial_max():
 def test_monomial_min():
     assert monomial_min((3,4,5), (0,5,1), (6,3,9)) == (0,3,1)
 
+def test_Monomial():
+    assert Monomial(1, 2, 3).data == (1, 2, 3)
+
+    m, n = Monomial(3, 4, 1), Monomial(1, 2, 0)
+
+    assert m*n == Monomial(4, 6, 1)
+    assert m/n == Monomial(2, 2, 1)
+
+    assert m.gcd(n) == Monomial(1, 2, 0)
+    assert m.lcm(n) == Monomial(3, 4, 1)
+
+    a, b, c = [ Monomial(*monom) for monom in [(3,4,5), (0,5,1), (6,3,9)] ]
+
+    assert Monomial.max(a, b, c) == Monomial(6, 5, 9)
+    assert Monomial.min(a, b, c) == Monomial(0, 3, 1)
+
+    n = Monomial(5, 2, 0)
+
+    raises(ExactQuotientFailed, "m / n")
+
+    assert n.as_expr(x, y, z) == x**5*y**2

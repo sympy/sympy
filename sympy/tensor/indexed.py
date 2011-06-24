@@ -65,14 +65,14 @@
     >>> M[i, j].shape
     Tuple(m, n)
     >>> M[i, j].ranges
-    [Tuple(0, -1 + m), Tuple(0, -1 + n)]
+    [Tuple(0, m - 1), Tuple(0, n - 1)]
 
     The above can be compared with the following:
 
     >>> A[i, 2, j].shape
     Tuple(dim1, 2*dim1, dim2)
     >>> A[i, 2, j].ranges
-    [Tuple(0, -1 + m), None, Tuple(0, -1 + n)]
+    [Tuple(0, m - 1), None, Tuple(0, n - 1)]
 
     To analyze the structure of indexed expressions, you can use the methods
     get_indices() and get_contraction_structure():
@@ -106,6 +106,7 @@
 #      - Idx with step determined by function call
 
 from sympy.core import Expr, Basic, Tuple, Symbol, Integer, sympify, S
+from sympy.core.compatibility import ordered_iter
 
 class IndexException(Exception):
     pass
@@ -168,7 +169,7 @@ class IndexedBase(Expr):
             label = Symbol(label)
 
         obj = Expr.__new__(cls, label, **kw_args)
-        if isinstance(shape, (tuple, list)):
+        if ordered_iter(shape):
             obj._shape = Tuple(*shape)
         else:
             obj._shape = shape
@@ -185,7 +186,8 @@ class IndexedBase(Expr):
         return Expr._hashable_content(self) + (self._shape,)
 
     def __getitem__(self, indices, **kw_args):
-        if isinstance(indices, tuple):
+        if ordered_iter(indices):
+            # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
                 raise IndexException("Rank mismatch")
             return Indexed(self, *indices, **kw_args)
@@ -342,7 +344,7 @@ class Idx(Expr):
     2) Only dimension specified, lower bound defaults to 0
 
     >>> idx = Idx(i, n); idx.lower, idx.upper
-    (0, -1 + n)
+    (0, n - 1)
     >>> idx = Idx(i, 4); idx.lower, idx.upper
     (0, 3)
     >>> idx = Idx(i, oo); idx.lower, idx.upper
@@ -357,8 +359,7 @@ class Idx(Expr):
     there:
 
     >>> idx = Idx(2, n); idx.lower, idx.upper
-    (0, -1 + n)
-
+    (0, n - 1)
 
     """
 
@@ -373,7 +374,7 @@ class Idx(Expr):
         if not label.is_integer:
             raise TypeError("Idx object requires an integer label")
 
-        elif isinstance(range, (tuple, list, Tuple)):
+        elif ordered_iter(range):
             assert len(range) == 2, "Idx got range tuple with wrong length"
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):
@@ -384,7 +385,7 @@ class Idx(Expr):
                 raise TypeError("Idx object requires an integer dimension")
             args = label, Tuple(S.Zero, range-S.One)
         elif range:
-            raise TypeError("range must be  tuple or integer sympy expression")
+            raise TypeError("range must be ordered iterable or integer sympy expression")
         else:
             args = label,
 

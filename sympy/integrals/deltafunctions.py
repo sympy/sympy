@@ -36,7 +36,10 @@ def change_mul(node,x):
     for arg in node.args:
         if arg.func == DiracDelta and arg.is_simple(x) \
                 and (len(arg.args) <= 1 or arg.args[1]==0):
-            dirac = arg
+            if dirac is None:
+                dirac = arg
+            else:
+                new_args.append(arg)
         else:
             new_args.append(change_mul(arg,x))
     if not dirac:#we didn't find any simple dirac
@@ -99,12 +102,14 @@ def deltaintegrate(f, x):
                 return fh
         else:#no expansion performed, try to extract a simple DiracDelta term
             dg, rest_mult = change_mul(f,x)
+
             if not dg:
                 if rest_mult:
                     fh = sympy.integrals.integrate(rest_mult,x)
                     return fh
             else:
+                dg = dg.simplify(x)
                 point = solve(dg.args[0],x)[0]
-                return (rest_mult.subs(x,point)*Heaviside(dg.args[0]))
+                return (rest_mult.subs(x,point)*Heaviside(x - point))
     return None
 

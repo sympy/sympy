@@ -27,7 +27,10 @@ def test_maxima_functions():
     assert parse_maxima('limit((1+1/x)^x,x,inf)') == E
     assert parse_maxima('limit(sqrt(-x)/x,x,0,minus)') == -oo
     assert parse_maxima('diff(x^x, x)') == x**x*(1 + log(x))
-    assert parse_maxima('sum(k, k, 1, n)') == (n**2 +n)/2
+    assert parse_maxima('sum(k, k, 1, n)', name_dict=dict(
+                n=Symbol('n',integer=True),
+                k=Symbol('k',integer=True)
+                )) == (n**2 +n)/2
     assert parse_maxima('product(k, k, 1, n)',
             name_dict=dict(
                 n=Symbol('n',integer=True),

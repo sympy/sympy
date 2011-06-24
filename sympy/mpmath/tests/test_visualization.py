@@ -11,11 +11,11 @@ def test_axes():
         import matplotlib
         version = matplotlib.__version__.split("-")[0]
         version = version.split(".")[:2]
-        if map(int, version) < [0,99]:
+        if [int(_) for _ in version] < [0,99]:
             raise ImportError
         import pylab
     except ImportError:
-        print "\nSkipping test (pylab not available or too old version)\n"
+        print("\nSkipping test (pylab not available or too old version)\n")
         return
     fig = pylab.figure()
     axes = fig.add_subplot(111)

@@ -14,7 +14,7 @@ which is  available in Basic class. Here is simple example involving a
 polynomial:
 
     >>> from sympy import *
-    >>> n, k = symbols('nk')
+    >>> n, k = symbols('n,k')
     >>> (n**2 + 1).is_hypergeometric(n)
     True
 
@@ -75,6 +75,6 @@ minimal degree. Otherwise is will return `None` to say that sequence is not
 hypergeometric:
 
     >>> hypersimp(factorial(2*n), n)
-    2 + 6*n + 4*n**2
+    4*n**2 + 6*n + 2
     >>> hypersimp(factorial(n**2), n)
 

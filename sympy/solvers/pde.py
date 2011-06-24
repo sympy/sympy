@@ -7,6 +7,9 @@ Currently implemented methods:
 
 from sympy import Eq, Equality
 from sympy.simplify import simplify
+
+from sympy.core.compatibility import reduce
+
 import operator
 
 def pde_separate(eq, fun, sep, strategy='mul'):
@@ -94,7 +97,7 @@ def pde_separate_add(eq, fun, sep):
 
     >>> eq = Eq(D(u(x, t), x), E**(u(x, t))*D(u(x, t), t))
     >>> pde_separate_add(eq, u(x, t), [X(x), T(t)])
-    [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
+    [exp(-X(x))*Derivative(X(x), x), exp(T(t))*Derivative(T(t), t)]
 
     """
     return pde_separate(eq, fun, sep, strategy='add')
@@ -117,7 +120,7 @@ def pde_separate_mul(eq, fun, sep):
 
     >>> eq = Eq(D(u(x, y), x, 2), D(u(x, y), y, 2))
     >>> pde_separate_mul(eq, u(x, y), [X(x), Y(y)])
-    [D(X(x), x, x)/X(x), D(Y(y), y, y)/Y(y)]
+    [Derivative(X(x), x, x)/X(x), Derivative(Y(y), y, y)/Y(y)]
 
     """
     return pde_separate(eq, fun, sep, strategy='mul')

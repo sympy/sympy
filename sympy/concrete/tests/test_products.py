@@ -1,7 +1,7 @@
 from sympy import (symbols, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational)
 
-a, k, n = symbols('akn', integer=True)
+a, k, n = symbols('a,k,n', integer=True)
 
 def test_simple_products():
     assert product(2, (k, a, n)) == 2**(n-a+1)

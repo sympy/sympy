@@ -1,9 +1,10 @@
 from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify
+    I, S, erf, tan, asin, asinh, acos, acosh, Function, Derivative, diff, simplify, \
+    LambertW
 from sympy.integrals.risch import heurisch, components
 from sympy.utilities.pytest import XFAIL, skip
 
-x, y, z = symbols('xyz')
+x, y, z = symbols('x,y,z')
 f = Function('f')
 
 def test_components():
@@ -32,7 +33,6 @@ def test_heurisch_polynomials():
 def test_heurisch_fractions():
     assert heurisch(1/x, x) == log(x)
     assert heurisch(1/(2 + x), x) == log(x + 2)
-    return
     assert heurisch(1/(x+sin(y)), x) == log(x+sin(y))
 
     # Up to a constant, where C = 5*pi*I/12, Mathematica gives identical
@@ -196,11 +196,26 @@ def test_pmint_erf():
 
     assert heurisch(f, x) == g
 
+def test_pmint_lambertw():
+    g = (x**2 + (LambertW(x)*x)**2 - LambertW(x)*x**2)/(x*LambertW(x))
+    assert simplify(heurisch(LambertW(x), x) - g) == 0
 
 # TODO: convert the rest of PMINT tests:
-# - Airy
-# - Bessel
-# - Whittaker
-# - LambertW
+# Airy functions
+# f = (x - AiryAi(x)*AiryAi(1, x)) / (x**2 - AiryAi(x)**2)
+# g = Rational(1,2)*ln(x + AiryAi(x)) + Rational(1,2)*ln(x - AiryAi(x))
+# f = x**2 * AiryAi(x)
+# g = -AiryAi(x) + AiryAi(1, x)*x
+
+# Bessel functions
+# f = BesselJ(nu + 1, x) / BesselJ(nu, x)
+# g = nu*ln(x) - ln(BesselJ(nu, x))
+# f = (nu * BesselJ(nu, x) / x) - BesselJ(nu + 1, x)
+# g = BesselJ(nu, x)
+
+# Whittaker functions
+# f = WhittakerW(mu + 1, nu, x) / (WhittakerW(mu, nu, x) * x)
+# g = x/2 - mu*ln(x) - ln(WhittakerW(mu, nu, x))
+
 # - Wright omega
 

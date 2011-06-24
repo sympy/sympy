@@ -19,7 +19,7 @@ except:
     disabled = True
 
 from sympy import symbols, sin, cos
-x,y = symbols('xy')
+x,y = symbols('x,y')
 
 def test_import():
     from sympy import Plot

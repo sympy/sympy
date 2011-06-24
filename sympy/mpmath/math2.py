@@ -273,7 +273,12 @@ def loggamma(x):
             re = z
             im = 0.0
         refloor = floor(re)
-        imsign = cmp(im, 0)
+        if im == 0.0:
+            imsign = 0
+        elif im < 0.0:
+            imsign = -1
+        else:
+            imsign = 1
         return (-pi*1j)*abs(refloor)*(1-abs(imsign)) + logpi - \
             log(sinpi(z-refloor)) - loggamma(z) + 1j*pi*refloor*imsign
     if x == 1.0 or x == 2.0:

@@ -28,7 +28,7 @@ from sympy.core.sympify import SympifyError
 
 try:
     from ast import parse, NodeTransformer, Call, Name, Load, \
-            fix_missing_locations, Str
+            fix_missing_locations, Str, Tuple
     ast_enabled = True
 except ImportError:
     ast_enabled = False
@@ -47,7 +47,7 @@ if ast_enabled:
                 return fix_missing_locations(Call(Name('Integer', Load()),
                         [node], [], None, None))
             elif isinstance(node.n, float):
-                return fix_missing_locations(Call(Name('Real', Load()),
+                return fix_missing_locations(Call(Name('Float', Load()),
                     [node], [], None, None))
             return node
 
@@ -65,13 +65,9 @@ if ast_enabled:
                     [Str(node.id)], [], None, None))
 
         def visit_Lambda(self, node):
-            if len(node.args.args) == 0:
-                args = [Str("x")]
-            else:
-                args = node.args.args
-            args = [self.visit(arg) for arg in args]
+            args = [self.visit(arg) for arg in node.args.args]
             body = self.visit(node.body)
-            n = Call(Name('Lambda', Load()), args + [body], [], None, None)
+            n = Call(Name('Lambda', Load()), [Tuple(args, Load()), body], [], None, None)
             return fix_missing_locations(n)
 
 def parse_expr(s, local_dict):

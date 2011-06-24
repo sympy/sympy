@@ -1,7 +1,9 @@
-from sympy import limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, \
-        atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo
+from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
+                   atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
+                   tan, cot, integrate, Sum, sign)
+
 from sympy.abc import x, y, z
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.iterables import cartes
 
 def test_basic1():
@@ -16,9 +18,17 @@ def test_basic1():
     assert limit(-exp(x), x, oo) == -oo
     assert limit(exp(x)/x, x, oo) == oo
     assert limit(1/x - exp(-x), x, oo) == 0
-    assert limit(x+1/x, x, oo) == oo
-    assert limit(x-x**2, x, oo) == -oo
-
+    assert limit(x + 1/x, x, oo) == oo
+    assert limit(x - x**2, x, oo) == -oo
+    assert limit((1 + x)**(1 + sqrt(2)),x,0) == 1
+    assert limit((1 + x)**oo, x, 0) == oo
+    assert limit((1 + x)**oo, x, 0, dir='-') == 0
+    assert limit((1 + x + y)**oo, x, 0, dir='-') == (1 + y)**(oo)
+    assert limit(y/x/log(x), x, 0) == -y*oo
+    assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
+    raises(NotImplementedError, 'limit(Sum(1/x, (x, 1, y)) - log(y), y, oo)')
+    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
+    assert limit(gamma(1/x + 3), x, oo) == 2
 
     # approaching 0
     # from dir="+"
@@ -33,6 +43,7 @@ def test_basic1():
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == zoo
+    assert limit((1 + cos(x))**oo, x, 0) == oo
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
@@ -53,6 +64,7 @@ def test_basic4():
     assert limit(2*x + y*x, x, 1) == 2+y
     assert limit(2*x**8 + y*x**(-3), x, -2) == 512 - y/8
     assert limit(sqrt(x + 1) - sqrt(x), x, oo)==0
+    assert integrate(1/(x**3+1),(x,0,oo)) == 2*pi*sqrt(3)/9
 
 def test_issue786():
     assert limit(x*y + x*z, z, 2) == x*y+2*x
@@ -217,7 +229,56 @@ def test_issue2085():
     assert limit(atan(x), x, oo) == pi/2
     assert limit(gamma(x), x, oo) == oo
     assert limit(cos(x)/x, x, oo) == 0
+    assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
 @XFAIL
-def test_issue2085_unresolved():
-    assert limit(gamma(x), x, 1/2) == sqrt(pi) # Raises AssertionError
+def test_issue2130():
+    assert limit((1+y)**(1/y) - S.Exp1, y, 0) == 0
+
+def test_issue1447():
+    # using list(...) so py.test can recalculate values
+    from sympy import sign
+    tests = list(cartes([cot, tan],
+                        [-pi/2, 0, pi/2, pi, 3*pi/2],
+                        ['-', '+']))
+    results = (0, 0, -oo, oo, 0, 0, -oo, oo, 0, 0,
+               oo, -oo, 0, 0, oo, -oo, 0, 0, oo, -oo)
+    assert len(tests) == len(results)
+    for i, (args, res) in enumerate(zip(tests, results)):
+        f, l, d= args
+        eq=f(x)
+        try:
+            assert limit(eq, x, l, dir=d) == res
+        except AssertionError:
+            if 0: # change to 1 if you want to see the failing tests
+                print
+                print i, res, eq, l, d, limit(eq, x, l, dir=d)
+            else:
+                assert None
+
+def test_issue835():
+    assert limit((1 + x**log(3))**(1/x), x, 0) == 1
+    assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
+
+def test_newissue():
+    assert limit(exp(1/sin(x))/exp(cot(x)), x, 0) == 1
+
+def test_extended_real_line():
+    assert limit(x - oo, x, oo) == -oo
+    assert limit(oo - x, x, -oo) == oo
+    assert limit(x**2/(x-5) - oo, x, oo) == -oo
+    assert limit(1/(x+sin(x)) - oo, x, 0) == -oo
+    assert limit(x - oo + 1/x, x, oo) == -oo
+    assert limit(x - oo + 1/x, x, 0) == -oo
+    assert limit(oo/x, x, oo) == oo
+
+@XFAIL
+def test_order_oo():
+    from sympy import C
+    x = Symbol('x', positive=True, bounded=True)
+    assert C.Order(x)*oo != C.Order(1, x)
+    assert limit(oo/(x**2 - 4), x, oo) == oo
+
+def test_issue2337():
+    raises(NotImplementedError, 'limit(exp(x*y), x, oo)')
+    raises(NotImplementedError, 'limit(exp(-x*y), x, oo)')

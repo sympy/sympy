@@ -3,20 +3,20 @@
 from sympy.polys.densearith import (
     dup_mul_ground, dmp_mul_ground,
     dup_pow, dmp_pow,
-    dmp_expand,
-)
+    dmp_expand)
 
 from sympy.polys.densebasic import (
     dup_degree, dmp_degree,
     dup_normal, dmp_normal,
     dup_from_raw_dict, dup_to_raw_dict,
     dmp_from_dict, dmp_to_dict,
-    dmp_nest, dmp_raise,
-)
+    dmp_nest, dmp_raise)
 
 from sympy.polys.densetools import (
-    dup_primitive, dup_sqf_p, dmp_eval_tail,
-)
+    dup_primitive, dmp_eval_tail)
+
+from sympy.polys.sqfreetools import (
+    dup_sqf_p)
 
 from sympy.polys.factortools import (
     dup_trial_division, dmp_trial_division,
@@ -29,21 +29,19 @@ from sympy.polys.factortools import (
     dmp_zz_wang_lead_coeffs,
     dmp_zz_wang_hensel_lifting,
     dup_zz_diophantine, dmp_zz_diophantine,
-    dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
+    dup_zz_cyclotomic_p, dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
     dup_zz_factor, dup_zz_factor_sqf, dmp_zz_factor,
     dup_ext_factor, dmp_ext_factor,
     dup_factor_list, dmp_factor_list,
-)
+    dup_factor_list_include, dmp_factor_list_include)
 
 from sympy.polys.specialpolys import (
-    f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2,
-)
+    f_1, f_2, f_3, f_4, f_5, f_6, w_1, w_2)
 
+from sympy.polys.polyconfig import setup
 from sympy.polys.polyerrors import DomainError
-
 from sympy.polys.polyclasses import DMP, DMF, ANP
-
-from sympy.polys.algebratools import ZZ, QQ, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import nextprime, sin, sqrt, I
 
@@ -99,6 +97,33 @@ def test_dup_zz_irreducible_p():
 
     assert dup_zz_irreducible_p([3, 2, 6, 8, 10], ZZ) == True
     assert dup_zz_irreducible_p([3, 2, 6, 8, 14], ZZ) == True
+
+def test_dup_zz_cyclotomic_p():
+    assert dup_zz_cyclotomic_p([1,-1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,-1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1,1,1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,0,0,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,0,1,0,0,1], ZZ) == True
+
+    assert dup_zz_cyclotomic_p([], ZZ) == False
+    assert dup_zz_cyclotomic_p([1], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 0], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 2], ZZ) == False
+    assert dup_zz_cyclotomic_p([3, 1], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 0, -1], ZZ) == False
+
+    f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
+    assert dup_zz_cyclotomic_p(f, ZZ) == False
+
+    g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
+    assert dup_zz_cyclotomic_p(g, ZZ) == True
+
+    assert dup_zz_cyclotomic_p([QQ(1),QQ(1),QQ(1)], QQ) == True
+    assert dup_zz_cyclotomic_p([QQ(1,2),QQ(1),QQ(1)], QQ) == False
 
 def test_dup_zz_cyclotomic_poly():
     assert dup_zz_cyclotomic_poly(1, ZZ) == [1,-1]
@@ -237,8 +262,11 @@ def test_dup_zz_factor():
 
     f = dup_from_raw_dict({10:1, 0:-1}, ZZ)
 
-    F_0 = dup_zz_factor(f, ZZ, cyclotomic=True)
-    F_1 = dup_zz_factor(f, ZZ, cyclotomic=False)
+    setup('USE_CYCLOTOMIC_FACTOR', True)
+    F_0 = dup_zz_factor(f, ZZ)
+
+    setup('USE_CYCLOTOMIC_FACTOR', False)
+    F_1 = dup_zz_factor(f, ZZ)
 
     assert F_0 == F_1 == \
         (1, [([1,-1], 1),
@@ -246,14 +274,21 @@ def test_dup_zz_factor():
              ([1,-1, 1,-1, 1], 1),
              ([1, 1, 1, 1, 1], 1)])
 
+    setup('USE_CYCLOTOMIC_FACTOR')
+
     f = dup_from_raw_dict({10:1, 0:1}, ZZ)
 
-    F_0 = dup_zz_factor(f, ZZ, cyclotomic=True)
-    F_1 = dup_zz_factor(f, ZZ, cyclotomic=False)
+    setup('USE_CYCLOTOMIC_FACTOR', True)
+    F_0 = dup_zz_factor(f, ZZ)
+
+    setup('USE_CYCLOTOMIC_FACTOR', False)
+    F_1 = dup_zz_factor(f, ZZ)
 
     assert F_0 == F_1 == \
         (1, [([1, 0, 1], 1),
              ([1, 0, -1, 0, 1, 0, -1, 0, 1], 1)])
+
+    setup('USE_CYCLOTOMIC_FACTOR')
 
 def test_dmp_zz_wang():
     p = ZZ(nextprime(dmp_zz_mignotte_bound(w_1, 2, ZZ)))
@@ -535,41 +570,57 @@ def test_dup_factor_list():
     assert dup_factor_list([], ZZ['y']) == (DMP([],ZZ), [])
     assert dup_factor_list([], QQ['y']) == (DMP([],QQ), [])
 
-    assert dup_factor_list([], ZZ, include=True) == [([], 1)]
+    assert dup_factor_list_include([], ZZ) == [([], 1)]
 
     assert dup_factor_list([ZZ(7)], ZZ) == (ZZ(7), [])
     assert dup_factor_list([QQ(1,7)], QQ) == (QQ(1,7), [])
     assert dup_factor_list([DMP([ZZ(7)],ZZ)], ZZ['y']) == (DMP([ZZ(7)],ZZ), [])
     assert dup_factor_list([DMP([QQ(1,7)],QQ)], QQ['y']) == (DMP([QQ(1,7)],QQ), [])
 
-    assert dup_factor_list([ZZ(7)], ZZ, include=True) == [([ZZ(7)], 1)]
+    assert dup_factor_list_include([ZZ(7)], ZZ) == [([ZZ(7)], 1)]
 
     assert dup_factor_list([ZZ(1),ZZ(2),ZZ(1)], ZZ) == \
         (ZZ(1), [([ZZ(1), ZZ(1)], 2)])
     assert dup_factor_list([QQ(1,2),QQ(1),QQ(1,2)], QQ) == \
         (QQ(1,2), [([QQ(1),QQ(1)], 2)])
 
-    assert dup_factor_list([ZZ(1),ZZ(2),ZZ(1)], ZZ, include=True) == \
+    assert dup_factor_list_include([ZZ(1),ZZ(2),ZZ(1)], ZZ) == \
         [([ZZ(1), ZZ(1)], 2)]
+
+    K = FF(2)
+
+    assert dup_factor_list([K(1),K(0),K(1)], K) == \
+        (K(1), [([K(1), K(1)], 2)])
 
     assert dup_factor_list([RR(1.0),RR(2.0),RR(1.0)], RR) == \
         (RR(1.0), [([RR(1.0),RR(1.0)], 2)])
     assert dup_factor_list([RR(2.0),RR(4.0),RR(2.0)], RR) == \
         (RR(2.0), [([RR(1.0),RR(1.0)], 2)])
 
+
     f = [DMP([ZZ(4),ZZ(0)],ZZ),DMP([ZZ(4),ZZ(0),ZZ(0)],ZZ),DMP([],ZZ)]
 
     assert dup_factor_list(f, ZZ['y']) == \
-        (DMP([ZZ(4)],ZZ), [([DMP([ZZ(1)],ZZ),DMP([],ZZ)], 1),
-                           ([DMP([ZZ(1),ZZ(0)],ZZ)], 1),
+        (DMP([ZZ(4)],ZZ), [([DMP([ZZ(1),ZZ(0)],ZZ)], 1),
+                           ([DMP([ZZ(1)],ZZ),DMP([],ZZ)], 1),
                            ([DMP([ZZ(1)],ZZ),DMP([ZZ(1),ZZ(0)],ZZ)], 1)])
+
 
     f = [DMP([QQ(1,2),QQ(0)],ZZ),DMP([QQ(1,2),QQ(0),QQ(0)],ZZ),DMP([],ZZ)]
 
     assert dup_factor_list(f, QQ['y']) == \
-        (DMP([QQ(1,2)],QQ), [([DMP([QQ(1)],QQ),DMP([],QQ)], 1),
-                             ([DMP([QQ(1),QQ(0)],QQ)], 1),
+        (DMP([QQ(1,2)],QQ), [([DMP([QQ(1),QQ(0)],QQ)], 1),
+                             ([DMP([QQ(1)],QQ),DMP([],QQ)], 1),
                              ([DMP([QQ(1)],QQ),DMP([QQ(1),QQ(0)],QQ)], 1)])
+
+    K = QQ.algebraic_field(I)
+    h = [QQ(1,1), QQ(0,1), QQ(1,1)]
+
+    f = [ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]
+
+    assert dup_factor_list(f, K) == \
+        (ANP([QQ(1,1)], h, QQ), [([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ)], 2),
+                                 ([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ)], 1)])
 
     raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
 
@@ -579,14 +630,14 @@ def test_dmp_factor_list():
     assert dmp_factor_list([[]], 1, ZZ['y']) == (DMP([],ZZ), [])
     assert dmp_factor_list([[]], 1, QQ['y']) == (DMP([],QQ), [])
 
-    assert dmp_factor_list([[]], 1, ZZ, include=True) == [([[]], 1)]
+    assert dmp_factor_list_include([[]], 1, ZZ) == [([[]], 1)]
 
     assert dmp_factor_list([[ZZ(7)]], 1, ZZ) == (ZZ(7), [])
     assert dmp_factor_list([[QQ(1,7)]], 1, QQ) == (QQ(1,7), [])
     assert dmp_factor_list([[DMP([ZZ(7)],ZZ)]], 1, ZZ['y']) == (DMP([ZZ(7)],ZZ), [])
     assert dmp_factor_list([[DMP([QQ(1,7)],QQ)]], 1, QQ['y']) == (DMP([QQ(1,7)],QQ), [])
 
-    assert dmp_factor_list([[ZZ(7)]], 1, ZZ, include=True) == [([[ZZ(7)]], 1)]
+    assert dmp_factor_list_include([[ZZ(7)]], 1, ZZ) == [([[ZZ(7)]], 1)]
 
     f, g = [ZZ(1),ZZ(2),ZZ(1)], [ZZ(1),ZZ(1)]
 
@@ -609,20 +660,20 @@ def test_dmp_factor_list():
     f = [[ZZ(4),ZZ(0)],[ZZ(4),ZZ(0),ZZ(0)],[]]
 
     assert dmp_factor_list(f, 1, ZZ) == \
-        (ZZ(4), [([[ZZ(1)],[]], 1),
-                 ([[ZZ(1),ZZ(0)]], 1),
+        (ZZ(4), [([[ZZ(1),ZZ(0)]], 1),
+                 ([[ZZ(1)],[]], 1),
                  ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)])
 
-    assert dmp_factor_list(f, 1, ZZ, include=True) == \
-        [([[ZZ(4)],[]], 1),
-         ([[ZZ(1),ZZ(0)]], 1),
+    assert dmp_factor_list_include(f, 1, ZZ) == \
+        [([[ZZ(4),ZZ(0)]], 1),
+         ([[ZZ(1)],[]], 1),
          ([[ZZ(1)],[ZZ(1),ZZ(0)]], 1)]
 
     f = [[QQ(1,2),QQ(0)],[QQ(1,2),QQ(0),QQ(0)],[]]
 
     assert dmp_factor_list(f, 1, QQ) == \
-        (QQ(1,2), [([[QQ(1)],[]], 1),
-                   ([[QQ(1),QQ(0)]], 1),
+        (QQ(1,2), [([[QQ(1),QQ(0)]], 1),
+                   ([[QQ(1)],[]], 1),
                    ([[QQ(1)],[QQ(1),QQ(0)]], 1)])
 
     f = [[RR(2.0)],[],[-RR(8.0),RR(0.0),RR(0.0)]]
@@ -634,16 +685,19 @@ def test_dmp_factor_list():
     f = [[DMP([ZZ(4),ZZ(0)],ZZ)],[DMP([ZZ(4),ZZ(0),ZZ(0)],ZZ)],[DMP([],ZZ)]]
 
     assert dmp_factor_list(f, 1, ZZ['y']) == \
-        (DMP([ZZ(4)],ZZ), [([[DMP([ZZ(1)],ZZ)],[]], 1),
-                           ([[DMP([ZZ(1),ZZ(0)],ZZ)]], 1),
+        (DMP([ZZ(4)],ZZ), [([[DMP([ZZ(1),ZZ(0)],ZZ)]], 1),
+                           ([[DMP([ZZ(1)],ZZ)],[]], 1),
                            ([[DMP([ZZ(1)],ZZ)],[DMP([ZZ(1),ZZ(0)],ZZ)]], 1)])
 
     f = [[DMP([QQ(1,2),QQ(0)],ZZ)],[DMP([QQ(1,2),QQ(0),QQ(0)],ZZ)],[DMP([],ZZ)]]
 
     assert dmp_factor_list(f, 1, QQ['y']) == \
-        (DMP([QQ(1,2)],QQ), [([[DMP([QQ(1)],QQ)],[]], 1),
-                             ([[DMP([QQ(1),QQ(0)],QQ)]], 1),
+        (DMP([QQ(1,2)],QQ), [([[DMP([QQ(1),QQ(0)],QQ)]], 1),
+                             ([[DMP([QQ(1)],QQ)],[]], 1),
                              ([[DMP([QQ(1)],QQ)],[DMP([QQ(1),QQ(0)],QQ)]], 1)])
 
+    K = FF(2)
+
+    raises(DomainError, "dmp_factor_list([[K(1)],[],[K(1),K(0),K(0)]], 1, K)")
     raises(DomainError, "dmp_factor_list([[EX(sin(1))]], 1, EX)")
 

@@ -14,7 +14,7 @@ that's a long journey.
 """
 
 from sympy import Basic,exp,Symbol,sin,Rational,I,Mul, Matrix, \
-    ones, sqrt, pprint, simplify, trim, Eq, sympify
+    ones, sqrt, pprint, simplify, Eq, sympify
 
 from sympy.physics import msigma, mgamma
 
@@ -108,7 +108,7 @@ def main():
     M = M[0]
     assert isinstance(M, Basic)
     #print M
-    #print trim(M)
+    #print simplify(M)
 
     d=Symbol("d", real=True) #d=E+m
 

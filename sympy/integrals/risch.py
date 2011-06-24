@@ -1,7 +1,12 @@
-from sympy.core import Add, Mul, Symbol, Wild, S, C, sympify, Rational
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.basic import C, sympify
+from sympy.core.numbers import Rational, I, pi
+from sympy.core.singleton import S
 
-from sympy.functions import exp, sin , cos , tan , cot , asin
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh
+from sympy.functions import exp, sin , cos , tan , cot , asin, acos, atan
+from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
@@ -9,6 +14,8 @@ from sympy.solvers import solve
 from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
 from sympy.polys.polyroots import root_factors
+
+from sympy.core.compatibility import reduce
 
 def components(f, x):
     """Returns a set of all functional components of the given expression
@@ -21,7 +28,7 @@ def components(f, x):
        >>> from sympy.integrals.risch import components
 
        >>> components(sin(x)*cos(x)**2, x)
-       set([x, cos(x), sin(x)])
+       set([x, sin(x), cos(x)])
 
     """
     result = set()
@@ -61,7 +68,7 @@ def _symbols(name, n):
         _symbols_cache[name] = lsyms
 
     while len(lsyms) < n:
-        lsyms.append( Symbol('%s%i' % (name, len(lsyms)), dummy=True) )
+        lsyms.append( Dummy('%s%i' % (name, len(lsyms))) )
 
     return lsyms[:n]
 
@@ -111,7 +118,7 @@ def heurisch(f, x, **kwargs):
        >>> from sympy.abc import x, y
 
        >>> heurisch(y*tan(x), x)
-       y*log(1 + tan(x)**2)/2
+       y*log(tan(x)**2 + 1)/2
 
        See Manuel Bronstein's "Poor Man's Integrator":
 
@@ -169,6 +176,7 @@ def heurisch(f, x, **kwargs):
         if not hints:
             a = Wild('a', exclude=[x])
             b = Wild('b', exclude=[x])
+            c = Wild('c', exclude=[x])
 
             for g in set(terms):
                 if g.is_Function:
@@ -177,6 +185,25 @@ def heurisch(f, x, **kwargs):
 
                         if M is not None:
                             terms.add(erf(sqrt(-M[a])*x))
+
+                        M = g.args[0].match(a*x**2 + b*x + c)
+
+                        if M is not None:
+                            if M[a].is_positive:
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                          erf(-sqrt(-M[a])*x + M[b]/(2*sqrt(-M[a]))))
+                            elif M[a].is_negative:
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                          erf(sqrt(-M[a])*x - M[b]/(2*sqrt(-M[a]))))
+
+                        M = g.args[0].match(a*log(x)**2)
+
+                        if M is not None:
+                            if M[a].is_positive:
+                                terms.add(-I*erf(I*(sqrt(M[a])*log(x)+1/(2*sqrt(M[a])))))
+                            if M[a].is_negative:
+                                terms.add(erf(sqrt(-M[a])*log(x)-1/(2*sqrt(-M[a]))))
+
                 elif g.is_Pow:
                     if g.exp.is_Rational and g.exp.q == 2:
                         M = g.base.match(a*x**2 + b)
@@ -186,6 +213,16 @@ def heurisch(f, x, **kwargs):
                                 terms.add(asinh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
                                 terms.add(asin(sqrt(-M[a]/M[b])*x))
+
+                        M = g.base.match(a*x**2 - b)
+
+                        if M is not None and M[b].is_positive:
+                            if M[a].is_positive:
+                                terms.add(acosh(sqrt(M[a]/M[b])*x))
+                            elif M[a].is_negative:
+                                terms.add((-M[b]/2*sqrt(-M[a])*\
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2-M[b]))))
+
         else:
             terms |= set(hints)
 
@@ -207,7 +244,11 @@ def heurisch(f, x, **kwargs):
     diffs = [ substitute(cancel(g.diff(x))) for g in terms ]
 
     denoms = [ g.as_numer_denom()[1] for g in diffs ]
-    denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
+    try:
+        denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
+    except PolynomialError:
+        # lcm can fail with this. See issue 1418.
+        return None
 
     numers = [ cancel(denom * g) for g in diffs ]
 
@@ -221,7 +262,7 @@ def heurisch(f, x, **kwargs):
 
             if derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
-                return deflation(c)*gcd(q, q.diff(y)).as_basic()
+                return deflation(c)*gcd(q, q.diff(y)).as_expr()
         else:
             return p
 
@@ -233,7 +274,7 @@ def heurisch(f, x, **kwargs):
             if derivation(y) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
 
-                q = q.as_basic()
+                q = q.as_expr()
 
                 h = gcd(q, derivation(q), y)
                 s = quo(h, gcd(q, q.diff(y), y), y)
@@ -271,9 +312,12 @@ def heurisch(f, x, **kwargs):
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
     s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
-    a, b, c = [ p.as_poly(*V).total_degree() for p in [s, P, Q] ]
+    polified = [ p.as_poly(*V) for p in [s, P, Q] ]
+    if None in polified:
+        return
+    a, b, c = [ p.total_degree() for p in polified ]
 
-    poly_denom = (s * v_split[0] * deflation(v_split[1])).as_basic()
+    poly_denom = (s * v_split[0] * deflation(v_split[1])).as_expr()
 
     def exponent(g):
         if g.is_Pow:
@@ -342,7 +386,7 @@ def heurisch(f, x, **kwargs):
 
         h = F - derivation(candidate) / denom
 
-        numer = h.as_numer_denom()[0].expand()
+        numer = h.as_numer_denom()[0].expand(force=True)
 
         equations = {}
 
@@ -379,7 +423,7 @@ def heurisch(f, x, **kwargs):
                 antideriv = antideriv.subs(coeff, S.Zero)
 
         antideriv = antideriv.subs(rev_mapping)
-        antideriv = cancel(antideriv).expand()
+        antideriv = cancel(antideriv).expand(force=True)
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]

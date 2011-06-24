@@ -17,14 +17,20 @@ from sympy.polys.groebnertools import (
 )
 
 from sympy.polys.monomialtools import (
-    monomial_lex_cmp as O_lex,
-    monomial_grlex_cmp as O_grlex,
-    monomial_grevlex_cmp as O_grevlex,
+    monomial_lex_key as O_lex,
+    monomial_grlex_key as O_grlex,
+    monomial_grevlex_key as O_grevlex,
 )
 
-from sympy.polys.algebratools import ZZ, QQ
+from sympy.polys.polyerrors import (
+    ExactQuotientFailed, DomainError,
+)
 
-from sympy.utilities.pytest import raises
+from sympy.polys.domains import ZZ, QQ
+
+from sympy import S, Symbol, symbols, groebner
+
+from sympy.utilities.pytest import raises, skip, XFAIL
 
 def test_sdp_LC():
     assert sdp_LC([], QQ) == QQ(0)
@@ -239,113 +245,222 @@ def test_sdp_groebner():
 
     assert sdp_groebner((f, g), 1, O_grlex, QQ) == [a, b, c]
 
-    f = sdp_from_dict({(2,0,0): -1, (0,1,0): 1}, O_lex)
-    g = sdp_from_dict({(3,0,0): -1, (0,0,1): 1}, O_lex)
+    f = sdp_from_dict({(2,0,0): -QQ(1), (0,1,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(3,0,0): -QQ(1), (0,0,1): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(2,0,0): 1, (0,1,0): -1}, O_lex),
-        sdp_from_dict({(1,1,0): 1, (0,0,1): -1}, O_lex),
-        sdp_from_dict({(1,0,1): 1, (0,2,0): -1}, O_lex),
-        sdp_from_dict({(0,3,0): 1, (0,0,2): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(2,0,0): QQ(1), (0,1,0): -QQ(1)}, O_lex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, O_lex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,3,0): QQ(1), (0,0,2): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -1, (0,1,0): 1}, O_grlex)
-    g = sdp_from_dict({(3,0,0): -1, (0,0,1): 1}, O_grlex)
+    f = sdp_from_dict({(2,0,0): -QQ(1), (0,1,0): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(3,0,0): -QQ(1), (0,0,1): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(0,3,0): 1, (0,0,2): -1}, O_grlex),
-        sdp_from_dict({(2,0,0): 1, (0,1,0): -1}, O_grlex),
-        sdp_from_dict({(1,1,0): 1, (0,0,1): -1}, O_grlex),
-        sdp_from_dict({(1,0,1): 1, (0,2,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(0,3,0): QQ(1), (0,0,2): -QQ(1)}, O_grlex),
+        sdp_from_dict({(2,0,0): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -1, (0,0,1): 1}, O_lex)
-    g = sdp_from_dict({(3,0,0): -1, (0,1,0): 1}, O_lex)
+    f = sdp_from_dict({(2,0,0): -QQ(1), (0,0,1): QQ(1)}, O_lex)
+    g = sdp_from_dict({(3,0,0): -QQ(1), (0,1,0): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(2,0,0): 1, (0,0,1): -1}, O_lex),
-        sdp_from_dict({(1,1,0): 1, (0,0,2): -1}, O_lex),
-        sdp_from_dict({(1,0,1): 1, (0,1,0): -1}, O_lex),
-        sdp_from_dict({(0,2,0): 1, (0,0,3): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(2,0,0): QQ(1), (0,0,1): -QQ(1)}, O_lex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, O_lex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,2,0): QQ(1), (0,0,3): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -1, (0,0,1): 1}, O_grlex)
-    g = sdp_from_dict({(3,0,0): -1, (0,1,0): 1}, O_grlex)
+    f = sdp_from_dict({(2,0,0): -QQ(1), (0,0,1): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(3,0,0): -QQ(1), (0,1,0): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(0,0,3): 1, (0,2,0): -1}, O_grlex),
-        sdp_from_dict({(2,0,0): 1, (0,0,1): -1}, O_grlex),
-        sdp_from_dict({(1,1,0): 1, (0,0,2): -1}, O_grlex),
-        sdp_from_dict({(1,0,1): 1, (0,1,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(0,0,3): QQ(1), (0,2,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(2,0,0): QQ(1), (0,0,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -1, (1,0,0): 1}, O_lex)
-    g = sdp_from_dict({(0,3,0): -1, (0,0,1): 1}, O_lex)
+    f = sdp_from_dict({(0,2,0): -QQ(1), (1,0,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(0,3,0): -QQ(1), (0,0,1): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(1,0,0): 1, (0,2,0): -1}, O_lex),
-        sdp_from_dict({(0,3,0): 1, (0,0,1): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(1,0,0): QQ(1), (0,2,0): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,3,0): QQ(1), (0,0,1): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -1, (1,0,0): 1}, O_grlex)
-    g = sdp_from_dict({(0,3,0): -1, (0,0,1): 1}, O_grlex)
+    f = sdp_from_dict({(0,2,0): -QQ(1), (1,0,0): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(0,3,0): -QQ(1), (0,0,1): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(2,0,0): 1, (0,1,1): -1}, O_grlex),
-        sdp_from_dict({(1,1,0): 1, (0,0,1): -1}, O_grlex),
-        sdp_from_dict({(0,2,0): 1, (1,0,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(2,0,0): QQ(1), (0,1,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,2,0): QQ(1), (1,0,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -1, (1,0,0): 1}, O_lex)
-    g = sdp_from_dict({(0,0,3): -1, (0,1,0): 1}, O_lex)
+    f = sdp_from_dict({(0,0,2): -QQ(1), (1,0,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(0,0,3): -QQ(1), (0,1,0): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(1,0,0): 1, (0,0,2): -1}, O_lex),
-        sdp_from_dict({(0,1,0): 1, (0,0,3): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(1,0,0): QQ(1), (0,0,2): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,1,0): QQ(1), (0,0,3): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -1, (1,0,0): 1}, O_grlex)
-    g = sdp_from_dict({(0,0,3): -1, (0,1,0): 1}, O_grlex)
+    f = sdp_from_dict({(0,0,2): -QQ(1), (1,0,0): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(0,0,3): -QQ(1), (0,1,0): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(2,0,0): 1, (0,1,1): -1}, O_grlex),
-        sdp_from_dict({(1,0,1): 1, (0,1,0): -1}, O_grlex),
-        sdp_from_dict({(0,0,2): 1, (1,0,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(2,0,0): QQ(1), (0,1,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,0,2): QQ(1), (1,0,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -1, (0,0,1): 1}, O_lex)
-    g = sdp_from_dict({(0,3,0): -1, (1,0,0): 1}, O_lex)
+    f = sdp_from_dict({(0,2,0): -QQ(1), (0,0,1): QQ(1)}, O_lex)
+    g = sdp_from_dict({(0,3,0): -QQ(1), (1,0,0): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(1,0,0): 1, (0,1,1): -1}, O_lex),
-        sdp_from_dict({(0,2,0): 1, (0,0,1): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(1,0,0): QQ(1), (0,1,1): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,2,0): QQ(1), (0,0,1): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -1, (0,0,1): 1}, O_grlex)
-    g = sdp_from_dict({(0,3,0): -1, (1,0,0): 1}, O_grlex)
+    f = sdp_from_dict({(0,2,0): -QQ(1), (0,0,1): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(0,3,0): -QQ(1), (1,0,0): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(0,0,3): 1, (2,0,0): -1}, O_grlex),
-        sdp_from_dict({(1,1,0): 1, (0,0,2): -1}, O_grlex),
-        sdp_from_dict({(0,2,0): 1, (0,0,1): -1}, O_grlex),
-        sdp_from_dict({(0,1,1): 1, (1,0,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(0,0,3): QQ(1), (2,0,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,2,0): QQ(1), (0,0,1): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,1,1): QQ(1), (1,0,0): -QQ(1)}, O_grlex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -1, (0,1,0): 1}, O_lex)
-    g = sdp_from_dict({(0,0,3): -1, (1,0,0): 1}, O_lex)
+    f = sdp_from_dict({(0,0,2): -QQ(1), (0,1,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(0,0,3): -QQ(1), (1,0,0): QQ(1)}, O_lex)
 
-    assert sdp_groebner((f, g), 2, O_lex, ZZ) == [
-        sdp_from_dict({(1,0,0): 1, (0,0,3): -1}, O_lex),
-        sdp_from_dict({(0,1,0): 1, (0,0,2): -1}, O_lex),
+    assert sdp_groebner((f, g), 2, O_lex, QQ) == [
+        sdp_from_dict({(1,0,0): QQ(1), (0,0,3): -QQ(1)}, O_lex),
+        sdp_from_dict({(0,1,0): QQ(1), (0,0,2): -QQ(1)}, O_lex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -1, (0,1,0): 1}, O_grlex)
-    g = sdp_from_dict({(0,0,3): -1, (1,0,0): 1}, O_grlex)
+    f = sdp_from_dict({(0,0,2): -QQ(1), (0,1,0): QQ(1)}, O_grlex)
+    g = sdp_from_dict({(0,0,3): -QQ(1), (1,0,0): QQ(1)}, O_grlex)
 
-    assert sdp_groebner((f, g), 2, O_grlex, ZZ) == [
-        sdp_from_dict({(0,3,0): 1, (2,0,0): -1}, O_grlex),
-        sdp_from_dict({(1,0,1): 1, (0,2,0): -1}, O_grlex),
-        sdp_from_dict({(0,1,1): 1, (1,0,0): -1}, O_grlex),
-        sdp_from_dict({(0,0,2): 1, (0,1,0): -1}, O_grlex),
+    assert sdp_groebner((f, g), 2, O_grlex, QQ) == [
+        sdp_from_dict({(0,3,0): QQ(1), (2,0,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,1,1): QQ(1), (1,0,0): -QQ(1)}, O_grlex),
+        sdp_from_dict({(0,0,2): QQ(1), (0,1,0): -QQ(1)}, O_grlex),
+    ]
+
+    f = sdp_from_dict({(2,2): QQ(4), (1,1): QQ(4), (0,0): QQ(1)}, O_lex)
+    g = sdp_from_dict({(2,0): QQ(1), (0,2): QQ(1), (0,0):-QQ(1)}, O_lex)
+
+    assert sdp_groebner((f, g), 1, O_lex, QQ) == [
+        sdp_from_dict({(1,0): QQ(1,1), (0,7): QQ(-4,1), (0,5): QQ(8,1), (0,3): QQ(-7,1), (0,1): QQ(3,1)}, O_lex),
+        sdp_from_dict({(0,8): QQ(1,1), (0,6): QQ(-2,1), (0,4): QQ(3,2), (0,2): QQ(-1,2), (0,0): QQ(1,16)}, O_lex),
+    ]
+
+    raises(DomainError, "sdp_groebner([], 1, O_lex, ZZ)")
+
+def test_benchmark_minpoly():
+    x, y, z = symbols('x,y,z')
+
+    I = [x**3+x+1, y**2+y+1, (x+y)*z-(x**2+y)]
+
+    assert groebner(I, x, y, z, order='lex') == [
+        -975 + 2067*x + 6878*z - 11061*z**2 + 6062*z**3 - 1065*z**4 + 155*z**5,
+        -308 + 159*y + 1043*z - 1161*z**2 + 523*z**3 - 91*z**4 + 12*z**5,
+        13 - 46*z + 89*z**2 - 82*z**3 + 41*z**4 - 7*z**5 + z**6,
+    ]
+
+    assert groebner(I, x, y, z, order='lex', field=True) == [
+        -S(25)/53 + x + 6878*z/2067 - 3687*z**2/689 + 6062*z**3/2067 - 355*z**4/689 + 155*z**5/2067,
+        -S(308)/159 + y + 1043*z/159 - 387*z**2/53 + 523*z**3/159 - 91*z**4/159 + 4*z**5/53,
+        13 - 46*z + 89*z**2 - 82*z**3 + 41*z**4 - 7*z**5 + z**6,
+    ]
+
+@XFAIL
+def test_benchmark_coloring():
+    skip('takes too much time')
+
+    V = range(1, 12+1)
+    E = [(1,2),(2,3),(1,4),(1,6),(1,12),(2,5),(2,7),(3,8),(3,10),
+         (4,11),(4,9),(5,6),(6,7),(7,8),(8,9),(9,10),(10,11),
+         (11,12),(5,12),(5,9),(6,10),(7,11),(8,12),(3,4)]
+
+    V = [Symbol('x' + str(i)) for i in V]
+    E = [(V[i-1], V[j-1]) for i, j in E]
+
+    x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = V
+
+    I3 = [x**3 - 1 for x in V]
+    Ig = [x**2 + x*y + y**2 for x, y in E]
+
+    I = I3 + Ig
+
+    assert groebner(I[:-1], V, order='lex') == [
+        x1 + x11 + x12,
+        x2 - x11,
+        x3 - x12,
+        x4 - x12,
+        x5 + x11 + x12,
+        x6 - x11,
+        x7 - x12,
+        x8 + x11 + x12,
+        x9 - x11,
+        x10 + x11 + x12,
+        x11**2 + x11*x12 + x12**2,
+        x12**3 - 1,
+    ]
+
+    assert groebner(I, V, order='lex') == [1]
+
+def test_benchmark_katsura_3():
+    x0, x1, x2 = symbols('x:3')
+
+    I = [x0 + 2*x1 + 2*x2 - 1,
+         x0**2 + 2*x1**2 + 2*x2**2 - x0,
+         2*x0*x1 + 2*x1*x2 - x1]
+
+    assert groebner(I, x0, x1, x2, order='lex') == [
+        -7 + 7*x0 + 8*x2 + 158*x2**2 - 420*x2**3,
+        7*x1 + 3*x2 - 79*x2**2 + 210*x2**3,
+        x2 + x2**2 - 40*x2**3 + 84*x2**4,
+    ]
+
+    assert groebner(I, x0, x1, x2, order='grlex') == [
+        7*x1 + 3*x2 - 79*x2**2 + 210*x2**3,
+        -x1 + x2 - 3*x2**2 + 5*x1**2,
+        -x1 - 4*x2 + 10*x1*x2 + 12*x2**2,
+        -1 + x0 + 2*x1 + 2*x2,
+    ]
+
+def test_benchmark_katsura_4():
+    x0, x1, x2, x3 = symbols('x:4')
+
+    I = [x0 + 2*x1 + 2*x2 + 2*x3 - 1,
+         x0**2 + 2*x1**2 + 2*x2**2 + 2*x3**2 - x0,
+         2*x0*x1 + 2*x1*x2 + 2*x2*x3 - x1,
+         x1**2 + 2*x0*x2 + 2*x1*x3 - x2]
+
+    assert groebner(I, x0, x1, x2, x3, order='lex') == [
+        5913075*x0 - 159690237696*x3**7 + 31246269696*x3**6 + 27439610544*x3**5 - 6475723368*x3**4 - 838935856*x3**3 + 275119624*x3**2 + 4884038*x3 - 5913075,
+        1971025*x1 - 97197721632*x3**7 + 73975630752*x3**6 - 12121915032*x3**5 - 2760941496*x3**4 + 814792828*x3**3 - 1678512*x3**2 - 9158924*x3,
+        5913075*x2 + 371438283744*x3**7 - 237550027104*x3**6 + 22645939824*x3**5 + 11520686172*x3**4 - 2024910556*x3**3 - 132524276*x3**2 + 30947828*x3,
+        128304*x3**8 - 93312*x3**7 + 15552*x3**6 + 3144*x3**5 - 1120*x3**4 + 36*x3**3 + 15*x3**2 - x3,
+    ]
+
+    assert groebner(I, x0, x1, x2, x3, order='grlex') == [
+        393*x1 - 4662*x2**2 + 4462*x2*x3 - 59*x2 + 224532*x3**4 - 91224*x3**3 - 678*x3**2 + 2046*x3,
+        -x1 + 196*x2**3 - 21*x2**2 + 60*x2*x3 - 18*x2 - 168*x3**3 + 83*x3**2 - 9*x3,
+        -6*x1 + 1134*x2**2*x3 - 189*x2**2 - 466*x2*x3 + 32*x2 - 630*x3**3 + 57*x3**2 + 51*x3,
+        33*x1 + 63*x2**2 + 2268*x2*x3**2 - 188*x2*x3 + 34*x2 + 2520*x3**3 - 849*x3**2 + 3*x3,
+        7*x1**2 - x1 - 7*x2**2 - 24*x2*x3 + 3*x2 - 15*x3**2 + 5*x3,
+        14*x1*x2 - x1 + 14*x2**2 + 18*x2*x3 - 4*x2 + 6*x3**2 - 2*x3,
+        14*x1*x3 - x1 + 7*x2**2 + 32*x2*x3 - 4*x2 + 27*x3**2 - 9*x3,
+        x0 + 2*x1 + 2*x2 + 2*x3 - 1,
     ]
 

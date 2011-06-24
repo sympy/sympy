@@ -20,5 +20,8 @@ Contents
 .. toctree::
     :maxdepth: 3
 
+    basics.txt
     wester.txt
+    reference.txt
+    literature.txt
 

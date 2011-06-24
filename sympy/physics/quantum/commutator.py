@@ -40,8 +40,8 @@ class Commutator(Expr):
 
         >>> from sympy import symbols
         >>> from sympy.physics.quantum import Commutator, Dagger
-        >>> x, y = symbols('xy')
-        >>> A, B, C = symbols('ABC', commutative=False)
+        >>> x, y = symbols('x,y')
+        >>> A, B, C = symbols('A,B,C', commutative=False)
 
     Create some commutators and use ``doit`` to multiply them out.
 
@@ -58,7 +58,7 @@ class Commutator(Expr):
     Scalar constants are factored out::
 
         >>> Commutator(3*x*A,x*y*B)
-        3*y*x**2*[A,B]
+        3*x**2*y*[A,B]
 
     Using ``expand(commutator=True)``, the standard commutator expansion rules
     can be applied::

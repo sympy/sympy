@@ -197,14 +197,14 @@ class CCodePrinter(CodePrinter):
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, basestring):
-           code_lines = self.indent_code(code.splitlines())
-           return '\n'.join(code_lines)
+           code_lines = self.indent_code(code.splitlines(True))
+           return ''.join(code_lines)
 
         tab = "   "
         inc_token = ('{', '(', '{\n', '(\n')
         dec_token = ('}', ')')
 
-        code = [ line.lstrip() for line in code ]
+        code = [ line.lstrip(' \t') for line in code ]
 
         from sympy.utilities.iterables import any  # 2.4 support
         increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
@@ -213,7 +213,7 @@ class CCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if not line:
+            if line == '' or line == '\n':
                 pretty.append(line)
                 continue
             level -= decrease[n]

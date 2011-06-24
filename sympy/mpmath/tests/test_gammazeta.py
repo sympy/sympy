@@ -350,6 +350,15 @@ def test_polygamma():
     assert psi0(-100.5).ae(4.615124601338064)
     assert psi0(3+0j).ae(psi0(3))
     assert psi0(-100+3j).ae(4.6106071768714086321+3.1117510556817394626j)
+    assert isnan(psi(2,mpc(0,inf)))
+    assert isnan(psi(2,mpc(0,nan)))
+    assert isnan(psi(2,mpc(0,-inf)))
+    assert isnan(psi(2,mpc(1,inf)))
+    assert isnan(psi(2,mpc(1,nan)))
+    assert isnan(psi(2,mpc(1,-inf)))
+    assert isnan(psi(2,mpc(inf,inf)))
+    assert isnan(psi(2,mpc(nan,nan)))
+    assert isnan(psi(2,mpc(-inf,-inf)))
 
 def test_polygamma_high_prec():
     mp.dps = 100
@@ -642,6 +651,15 @@ def test_rs_zeta():
     assert ae(fp.zeta(0.75+100000j, derivative=2), -9.214314279161977266 + 35.07290795337967899j)
     assert ae(fp.zeta(0.75+100000j, derivative=3), 110.61331857820103469 - 236.87847130518129926j)
     assert ae(fp.zeta(0.75+100000j, derivative=4), -1054.334275898559401 + 1769.9177890161596383j)
+
+def test_siegelz():
+    mp.dps = 15
+    assert siegelz(100000).ae(5.87959246868176504171)
+    assert siegelz(100000, derivative=2).ae(-54.1172711010126452832)
+    assert siegelz(100000, derivative=3).ae(-278.930831343966552538)
+    assert siegelz(100000+j,derivative=1).ae(678.214511857070283307-379.742160779916375413j)
+
+
 
 def test_zeta_near_1():
     # Test for a former bug in mpf_zeta and mpc_zeta

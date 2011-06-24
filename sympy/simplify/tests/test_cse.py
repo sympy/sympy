@@ -2,8 +2,9 @@ import itertools
 
 from sympy import Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse
 from sympy.simplify import cse_main, cse_opts
+from sympy.utilities.pytest import XFAIL
 
-w,x,y,z = symbols('wxyz')
+w,x,y,z = symbols('w,x,y,z')
 x0,x1,x2 = list(itertools.islice(cse_main.numbered_symbols(), 0, 3))
 negone = sympify(-1)
 
@@ -63,15 +64,15 @@ def test_nested_substitution():
     # Substitution within a substitution.
     e = Add(Pow(w*x+y,2), sqrt(w*x+y))
     substs, reduced = cse([e], optimizations=[])
-    assert substs == [(x0, w*x), (x1, x0+y)]
-    assert reduced == [sqrt(x1) + x1**2]
+    assert substs == [(x0, w*x+y)]
+    assert reduced == [sqrt(x0) + x0**2]
 
 def test_subtraction_opt():
     # Make sure subtraction is optimized.
     e = (x-y)*(z-y) + exp((x-y)*(z-y))
     substs, reduced = cse([e], optimizations=[(cse_opts.sub_pre,cse_opts.sub_post)])
-    assert substs == [(x0, z-y), (x1, x-y), (x2, x0*x1)]
-    assert reduced == [x2 + exp(x2)]
+    assert substs == [(x0, (x - y)*(z - y))]
+    assert reduced == [x0 + exp(x0)]
 
 def test_multiple_expressions():
     e1 = (x+y)*z
@@ -79,3 +80,39 @@ def test_multiple_expressions():
     substs, reduced = cse([e1, e2], optimizations=[])
     assert substs == [(x0, x+y)]
     assert reduced == [x0*z, x0*w]
+    l = [w*x*y + z, w*y]
+    substs, reduced = cse(l)
+    rsubsts, _ = cse(reversed(l))
+    assert substs == rsubsts
+    assert reduced == [z + x*x0, x0]
+    l = [w*x*y, w*x*y + z, w*y]
+    substs, reduced = cse(l)
+    rsubsts, _ = cse(reversed(l))
+    assert substs == rsubsts
+    assert reduced == [x1, x1 + z, x0]
+    l = [(x - z)*(y - z), x - z, y - z]
+    substs, reduced = cse(l)
+    rsubsts, _ = cse(reversed(l))
+    substitutions = [
+        [(x0, x - z), (x1, y - z)],
+        [(x0, y - z), (x1, x - z)],
+    ]
+    assert substs in substitutions
+    assert rsubsts in substitutions
+    assert reduced == [x0*x1, x0, x1]
+    l = [w*y + w + x + y + z, w*x*y]
+    assert cse(l) == ([(x0, w*y)], [w + x + x0 + y + z, x*x0])
+    assert cse([x + y, x + y + z]) == ([(x0, x + y)], [x0, z + x0])
+    assert cse([x + y, x + z]) == ([], [x + y, x + z])
+    assert cse([x*y, x + x*y , x*y*z + 3]) == \
+           ([(x0, x*y)], [x0, x + x0, 3 + x0*z])
+    A, B, C = symbols('A B C', commutative=False)
+    l = [A*B*C, A*C]
+    assert cse(l) == ([], l)
+    l = [A*B*C, A*B]
+    assert cse(l) == ([(x0, A*B)], [x0*C, x0])
+
+@XFAIL
+def test_powers():
+    assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
+

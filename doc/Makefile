@@ -46,13 +46,8 @@ html: $(SPHINXBUILDpy)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
 	cp -r src/pics _build/html/
 	cp -r src/figures _build/html/
-	cp -r src/spt-patches _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in _build/html."
-
-spt-printable:
-	mkdir -p _build/html/
-	$(RST2HTML) src/sympy-patches-tutorial.txt > _build/html/spt-printable.html
 
 htmlapi: $(SPHINXBUILDpy)
 	mkdir -p api/.static

@@ -1,8 +1,9 @@
-from sympy import Symbol, symbols, sympify
+from sympy import Symbol, sympify
 from plot_interval import PlotInterval
 from plot_object import PlotObject
 from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
+from sympy.core.compatibility import ordered_iter
 
 class PlotMode(PlotObject):
     """
@@ -242,16 +243,7 @@ class PlotMode(PlotObject):
         ModeSubclass._init_mode().
         """
         def symbols_list(symbol_str):
-            """
-            symbols() doesn't behave exactly
-            like I need. I need a list even
-            when len(str) == 1 or 0.
-            """
-            if len(symbol_str) == 0:
-                return []
-            if len(symbol_str) == 1:
-                return [Symbol(symbol_str)]
-            return symbols(symbol_str)
+            return [ Symbol(s) for s in symbol_str ]
 
         # Convert the vars strs into
         # lists of symbols.
@@ -371,7 +363,7 @@ class PlotMode(PlotObject):
                     else:
                         intervals.append(i)
                 else:
-                    if isinstance(a, (str, list, tuple)):
+                    if ordered_iter(a, include=str):
                         raise ValueError(interpret_error % (str(a)))
                     try:
                         f = sympify(a)

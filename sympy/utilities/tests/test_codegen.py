@@ -1,6 +1,6 @@
 from StringIO import StringIO
 
-from sympy.core import symbols, Eq, pi, Catalan, Lambda
+from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
     InOutArgument
@@ -74,7 +74,7 @@ def test_empty_c_header():
     assert source == "#ifndef PROJECT__FILE__H\n#define PROJECT__FILE__H\n#endif\n"
 
 def test_simple_c_code():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = CCodeGen()
@@ -103,7 +103,7 @@ def test_numbersymbol_c_code():
     assert source == expected
 
 def test_c_code_argument_order():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = x + y
     routine = Routine("test", expr, argument_sequence=[z, x, y])
     code_gen = CCodeGen()
@@ -118,7 +118,7 @@ def test_c_code_argument_order():
     assert source == expected
 
 def test_simple_c_header():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = CCodeGen()
@@ -132,7 +132,7 @@ def test_simple_c_header():
     assert source == expected
 
 def test_simple_c_codegen():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = (x+y)*z
     result = codegen(("test", (x+y)*z), "C", "file", header=False, empty=False)
     expected = [
@@ -151,7 +151,7 @@ def test_simple_c_codegen():
     assert result == expected
 
 def test_multiple_results_c():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr1 = (x+y)*z
     expr2 = (x-y)*z
     routine = Routine(
@@ -222,7 +222,7 @@ def test_ansi_math1_codegen():
 def test_ansi_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
     from sympy import atan2, N
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x,y)),
         ("test_pow", x**y),
@@ -244,7 +244,7 @@ def test_ansi_math2_codegen():
 
 def test_complicated_codegen():
     from sympy import sin, cos, tan, N
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
@@ -255,40 +255,42 @@ def test_complicated_codegen():
         '#include "file.h"\n#include <math.h>\n'
         'double test1(double x, double y, double z) {\n'
         '   return '
-        '7*pow(cos(y), 6)*sin(x) + '
-        '7*pow(cos(y), 6)*tan(z) + '
+        'pow(sin(x), 7) + '
         '7*pow(sin(x), 6)*cos(y) + '
         '7*pow(sin(x), 6)*tan(z) + '
-        '7*pow(tan(z), 6)*cos(y) + '
-        '7*pow(tan(z), 6)*sin(x) + '
-        '42*pow(cos(y), 5)*sin(x)*tan(z) + '
+        '21*pow(sin(x), 5)*pow(cos(y), 2) + '
         '42*pow(sin(x), 5)*cos(y)*tan(z) + '
-        '42*pow(tan(z), 5)*cos(y)*sin(x) + '
-        '105*pow(cos(y), 2)*pow(sin(x), 4)*tan(z) + '
-        '105*pow(cos(y), 2)*pow(tan(z), 4)*sin(x) + '
-        '105*pow(cos(y), 4)*pow(sin(x), 2)*tan(z) + '
-        '105*pow(cos(y), 4)*pow(tan(z), 2)*sin(x) + '
-        '105*pow(sin(x), 2)*pow(tan(z), 4)*cos(y) + '
-        '105*pow(sin(x), 4)*pow(tan(z), 2)*cos(y) + '
-        '140*pow(cos(y), 3)*pow(sin(x), 3)*tan(z) + '
-        '140*pow(cos(y), 3)*pow(tan(z), 3)*sin(x) + '
-        '140*pow(sin(x), 3)*pow(tan(z), 3)*cos(y) + '
-        '21*pow(cos(y), 5)*pow(sin(x), 2) + '
-        '21*pow(cos(y), 5)*pow(tan(z), 2) + '
         '21*pow(sin(x), 5)*pow(tan(z), 2) + '
-        '210*pow(cos(y), 2)*pow(sin(x), 3)*pow(tan(z), 2) + '
-        '210*pow(cos(y), 3)*pow(sin(x), 2)*pow(tan(z), 2) + '
-        '35*pow(cos(y), 4)*pow(sin(x), 3) + '
-        '35*pow(cos(y), 4)*pow(tan(z), 3) + '
+        '35*pow(sin(x), 4)*pow(cos(y), 3) + '
+        '105*pow(sin(x), 4)*pow(cos(y), 2)*tan(z) + '
+        '105*pow(sin(x), 4)*cos(y)*pow(tan(z), 2) + '
         '35*pow(sin(x), 4)*pow(tan(z), 3) + '
-        '210*pow(cos(y), 2)*pow(sin(x), 2)*pow(tan(z), 3) + '
-        '35*pow(cos(y), 3)*pow(sin(x), 4) + '
-        '35*pow(cos(y), 3)*pow(tan(z), 4) + '
+        '35*pow(sin(x), 3)*pow(cos(y), 4) + '
+        '140*pow(sin(x), 3)*pow(cos(y), 3)*tan(z) + '
+        '210*pow(sin(x), 3)*pow(cos(y), 2)*pow(tan(z), 2) + '
+        '140*pow(sin(x), 3)*cos(y)*pow(tan(z), 3) + '
         '35*pow(sin(x), 3)*pow(tan(z), 4) + '
-        '21*pow(cos(y), 2)*pow(sin(x), 5) + '
-        '21*pow(cos(y), 2)*pow(tan(z), 5) + '
+        '21*pow(sin(x), 2)*pow(cos(y), 5) + '
+        '105*pow(sin(x), 2)*pow(cos(y), 4)*tan(z) + '
+        '210*pow(sin(x), 2)*pow(cos(y), 3)*pow(tan(z), 2) + '
+        '210*pow(sin(x), 2)*pow(cos(y), 2)*pow(tan(z), 3) + '
+        '105*pow(sin(x), 2)*cos(y)*pow(tan(z), 4) + '
         '21*pow(sin(x), 2)*pow(tan(z), 5) + '
-        'pow(cos(y), 7) + pow(sin(x), 7) + pow(tan(z), 7);\n'
+        '7*sin(x)*pow(cos(y), 6) + '
+        '42*sin(x)*pow(cos(y), 5)*tan(z) + '
+        '105*sin(x)*pow(cos(y), 4)*pow(tan(z), 2) + '
+        '140*sin(x)*pow(cos(y), 3)*pow(tan(z), 3) + '
+        '105*sin(x)*pow(cos(y), 2)*pow(tan(z), 4) + '
+        '42*sin(x)*cos(y)*pow(tan(z), 5) + '
+        '7*sin(x)*pow(tan(z), 6) + '
+        'pow(cos(y), 7) + '
+        '7*pow(cos(y), 6)*tan(z) + '
+        '21*pow(cos(y), 5)*pow(tan(z), 2) + '
+        '35*pow(cos(y), 4)*pow(tan(z), 3) + '
+        '35*pow(cos(y), 3)*pow(tan(z), 4) + '
+        '21*pow(cos(y), 2)*pow(tan(z), 5) + '
+        '7*cos(y)*pow(tan(z), 6) + '
+        'pow(tan(z), 7);\n'
         '}\n'
         'double test2(double x, double y, double z) {\n'
         '   return cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))));\n'
@@ -326,7 +328,7 @@ def test_loops_c():
             '   }\n'
             '   for (int i=0; i<m; i++){\n'
             '      for (int j=0; j<n; j++){\n'
-            '         y[i] = %(rhs)s + y[i];\n'
+            '         y[i] = y[i] + %(rhs)s;\n'
             '      }\n'
             '   }\n'
             '}\n'
@@ -346,7 +348,10 @@ def test_loops_c():
 
 def test_dummy_loops_c():
     from sympy.tensor import IndexedBase, Idx
-    i, m = symbols('i m', integer=True, dummy=True)
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
@@ -389,7 +394,7 @@ def test_partial_loops_c():
             '   }\n'
             '   for (int i=o; i<%(upperi)s; i++){\n'
             '      for (int j=0; j<n; j++){\n'
-            '         y[i] = %(rhs)s + y[i];\n'
+            '         y[i] = y[i] + %(rhs)s;\n'
             '      }\n'
             '   }\n'
             '}\n'
@@ -409,7 +414,7 @@ def test_partial_loops_c():
 
 def test_output_arg_c():
     from sympy import sin, cos, Equality
-    x, y, z = symbols("xyz")
+    x, y, z = symbols("x,y,z")
     r = Routine("foo", [Equality(y, sin(x)), cos(x)])
     c = CCodeGen()
     result = c.write([r], "test", header=False, empty=False)
@@ -441,7 +446,7 @@ def test_empty_f_code_with_header():
             "!*              See http://www.sympy.org/ for more information.               *\n"
             "!*                                                                            *\n"
             "!*                       This file is part of 'project'                       *\n"
-            "!******************************************************************************\n\n"
+            "!******************************************************************************\n"
             )
 
 def test_empty_f_header():
@@ -450,7 +455,7 @@ def test_empty_f_header():
     assert source == ""
 
 def test_simple_f_code():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = FCodeGen()
@@ -481,7 +486,7 @@ def test_numbersymbol_f_code():
     assert source == expected
 
 def test_f_code_argument_order():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = x + y
     routine = Routine("test", expr, argument_sequence=[z, x, y])
     code_gen = FCodeGen()
@@ -498,7 +503,7 @@ def test_f_code_argument_order():
     assert source == expected
 
 def test_simple_f_header():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = (x+y)*z
     routine = Routine("test", expr)
     code_gen = FCodeGen()
@@ -516,7 +521,7 @@ def test_simple_f_header():
     assert source == expected
 
 def test_simple_f_codegen():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr = (x+y)*z
     result = codegen(("test", (x+y)*z), "F95", "file", header=False, empty=False)
     expected = [
@@ -541,7 +546,7 @@ def test_simple_f_codegen():
     assert result == expected
 
 def test_multiple_results_f():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     expr1 = (x+y)*z
     expr2 = (x-y)*z
     routine = Routine(
@@ -733,7 +738,7 @@ def test_intrinsic_math_codegen():
 def test_intrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
     from sympy import atan2, N
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x,y)),
         ("test_pow", x**y),
@@ -777,7 +782,7 @@ def test_intrinsic_math2_codegen():
 
 def test_complicated_codegen_f95():
     from sympy import sin, cos, tan, N
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x)+cos(y)+tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x+y+z))))))))),
@@ -790,21 +795,21 @@ def test_complicated_codegen_f95():
             'REAL*8, intent(in) :: x\n'
             'REAL*8, intent(in) :: y\n'
             'REAL*8, intent(in) :: z\n'
-            'test1 = 7*cos(y)**6*sin(x) + 7*cos(y)**6*tan(z) + 7*sin(x)**6*cos(y) + 7 &\n'
-            '      *sin(x)**6*tan(z) + 7*tan(z)**6*cos(y) + 7*tan(z)**6*sin(x) + 42* &\n'
-            '      cos(y)**5*sin(x)*tan(z) + 42*sin(x)**5*cos(y)*tan(z) + 42*tan(z) &\n'
-            '      **5*cos(y)*sin(x) + 105*cos(y)**2*sin(x)**4*tan(z) + 105*cos(y)** &\n'
-            '      2*tan(z)**4*sin(x) + 105*cos(y)**4*sin(x)**2*tan(z) + 105*cos(y) &\n'
-            '      **4*tan(z)**2*sin(x) + 105*sin(x)**2*tan(z)**4*cos(y) + 105*sin(x &\n'
-            '      )**4*tan(z)**2*cos(y) + 140*cos(y)**3*sin(x)**3*tan(z) + 140*cos( &\n'
-            '      y)**3*tan(z)**3*sin(x) + 140*sin(x)**3*tan(z)**3*cos(y) + 21*cos( &\n'
-            '      y)**5*sin(x)**2 + 21*cos(y)**5*tan(z)**2 + 21*sin(x)**5*tan(z)**2 &\n'
-            '      + 210*cos(y)**2*sin(x)**3*tan(z)**2 + 210*cos(y)**3*sin(x)**2*tan &\n'
-            '      (z)**2 + 35*cos(y)**4*sin(x)**3 + 35*cos(y)**4*tan(z)**3 + 35*sin &\n'
-            '      (x)**4*tan(z)**3 + 210*cos(y)**2*sin(x)**2*tan(z)**3 + 35*cos(y) &\n'
-            '      **3*sin(x)**4 + 35*cos(y)**3*tan(z)**4 + 35*sin(x)**3*tan(z)**4 + &\n'
-            '      21*cos(y)**2*sin(x)**5 + 21*cos(y)**2*tan(z)**5 + 21*sin(x)**2* &\n'
-            '      tan(z)**5 + cos(y)**7 + sin(x)**7 + tan(z)**7\n'
+            'test1 = sin(x)**7 + 7*sin(x)**6*cos(y) + 7*sin(x)**6*tan(z) + 21*sin(x) &\n'
+            '      **5*cos(y)**2 + 42*sin(x)**5*cos(y)*tan(z) + 21*sin(x)**5*tan(z) &\n'
+            '      **2 + 35*sin(x)**4*cos(y)**3 + 105*sin(x)**4*cos(y)**2*tan(z) + &\n'
+            '      105*sin(x)**4*cos(y)*tan(z)**2 + 35*sin(x)**4*tan(z)**3 + 35*sin( &\n'
+            '      x)**3*cos(y)**4 + 140*sin(x)**3*cos(y)**3*tan(z) + 210*sin(x)**3* &\n'
+            '      cos(y)**2*tan(z)**2 + 140*sin(x)**3*cos(y)*tan(z)**3 + 35*sin(x) &\n'
+            '      **3*tan(z)**4 + 21*sin(x)**2*cos(y)**5 + 105*sin(x)**2*cos(y)**4* &\n'
+            '      tan(z) + 210*sin(x)**2*cos(y)**3*tan(z)**2 + 210*sin(x)**2*cos(y) &\n'
+            '      **2*tan(z)**3 + 105*sin(x)**2*cos(y)*tan(z)**4 + 21*sin(x)**2*tan &\n'
+            '      (z)**5 + 7*sin(x)*cos(y)**6 + 42*sin(x)*cos(y)**5*tan(z) + 105* &\n'
+            '      sin(x)*cos(y)**4*tan(z)**2 + 140*sin(x)*cos(y)**3*tan(z)**3 + 105 &\n'
+            '      *sin(x)*cos(y)**2*tan(z)**4 + 42*sin(x)*cos(y)*tan(z)**5 + 7*sin( &\n'
+            '      x)*tan(z)**6 + cos(y)**7 + 7*cos(y)**6*tan(z) + 21*cos(y)**5*tan( &\n'
+            '      z)**2 + 35*cos(y)**4*tan(z)**3 + 35*cos(y)**3*tan(z)**4 + 21*cos( &\n'
+            '      y)**2*tan(z)**5 + 7*cos(y)*tan(z)**6 + tan(z)**7\n'
             'end function\n'
             'REAL*8 function test2(x, y, z)\n'
             'implicit none\n'
@@ -839,7 +844,8 @@ def test_complicated_codegen_f95():
 def test_loops():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    n,m = symbols('n m', integer=True)
+
+    n, m = symbols('n,m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
     i = Idx('i', m)
     j = Idx('j', n)
@@ -863,7 +869,7 @@ def test_loops():
             'end do\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
-            '      y(i) = %(rhs)s + y(i)\n'
+            '      y(i) = y(i) + %(rhs)s\n'
             '   end do\n'
             'end do\n'
             'end subroutine\n'
@@ -886,7 +892,10 @@ def test_loops():
 
 def test_dummy_loops_f95():
     from sympy.tensor import IndexedBase, Idx
-    i, m = symbols('i m', integer=True, dummy=True)
+    # the following line could also be
+    # [Dummy(s, integer=True) for s in 'im']
+    # or [Dummy(integer=True) for s in 'im']
+    i, m = symbols('i m', integer=True, cls=Dummy)
     x = IndexedBase('x')
     y = IndexedBase('y')
     i = Idx(i, m)
@@ -910,8 +919,9 @@ def test_dummy_loops_f95():
 def test_loops_InOut():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
-    i,j,n,m = symbols('i j n m', integer=True)
-    A,x,y = symbols('A x y')
+
+    i,j,n,m = symbols('i,j,n,m', integer=True)
+    A,x,y = symbols('A,x,y')
     A = IndexedBase(A)[Idx(i, m), Idx(j, n)]
     x = IndexedBase(x)[Idx(j, n)]
     y = IndexedBase(y)[Idx(i, m)]
@@ -932,7 +942,7 @@ def test_loops_InOut():
             'INTEGER*4 :: j\n'
             'do i = 1, m\n'
             '   do j = 1, n\n'
-            '      y(i) = %(rhs)s + y(i)\n'
+            '      y(i) = y(i) + %(rhs)s\n'
             '   end do\n'
             'end do\n'
             'end subroutine\n'
@@ -986,7 +996,7 @@ def test_partial_loops_f():
             'end do\n'
             'do i = %(ilow)s, %(iup)s\n'
             '   do j = 1, n\n'
-            '      y(i) = %(rhs)s + y(i)\n'
+            '      y(i) = y(i) + %(rhs)s\n'
             '   end do\n'
             'end do\n'
             'end subroutine\n'
@@ -1001,7 +1011,7 @@ def test_partial_loops_f():
 
 def test_output_arg_f():
     from sympy import sin, cos, Equality
-    x, y, z = symbols("xyz")
+    x, y, z = symbols("x,y,z")
     r = Routine("foo", [Equality(y, sin(x)), cos(x)])
     c = FCodeGen()
     result = c.write([r], "test", header=False, empty=False)
@@ -1042,7 +1052,19 @@ def test_inline_function():
     assert code == expected
 
 def test_check_case():
-    x, X = symbols('xX')
+    x, X = symbols('x,X')
     raises(CodeGenError, "codegen(('test', x*X), 'f95', 'prefix')")
 
+def test_check_case_false_positive():
+    # The upper case/lower case exception should not be triggered by Sympy
+    # objects that differ only because of assumptions.  (It may be useful to
+    # have a check for that as well, but here we only want to test against
+    # false positives with respect to case checking.)
+    x1 = symbols('x')
+    x2 = symbols('x', my_assumption=True)
+    try:
+        codegen(('test', x1*x2), 'f95', 'prefix')
+    except CodeGenError, e:
+        if e.args[0][0:21] == "Fortran ignores case.":
+            raise AssertionError("This exception should not be raised!")
 

@@ -1,4 +1,4 @@
-from sympy import Real
+from sympy import Float
 
 from sympy.physics.quantum.constants import hbar
 
@@ -9,4 +9,4 @@ def test_hbar():
     assert hbar.is_negative == False
     assert hbar.is_irrational == True
 
-    assert hbar.evalf() == Real(1.05457162e-34)
+    assert hbar.evalf() == Float(1.05457162e-34)

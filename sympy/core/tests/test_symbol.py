@@ -1,5 +1,5 @@
 from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols)
+    sympify, symbols, Dummy, S)
 
 from sympy.utilities.pytest import raises
 
@@ -7,8 +7,8 @@ def test_Symbol():
     a = Symbol("a")
     x1 = Symbol("x")
     x2 = Symbol("x")
-    xdummy1 = Symbol("x", dummy=True)
-    xdummy2 = Symbol("x", dummy=True)
+    xdummy1 = Dummy("x")
+    xdummy2 = Dummy("x")
 
     assert a != x1
     assert a != x2
@@ -17,7 +17,20 @@ def test_Symbol():
     assert xdummy1 != xdummy2
 
     assert Symbol("x") == Symbol("x")
-    assert Symbol("x", dummy=True) != Symbol("x", dummy=True)
+    assert Dummy("x") != Dummy("x")
+    d = symbols('d', cls=Dummy)
+    assert isinstance(d, Dummy)
+    c,d = symbols('c,d', cls=Dummy)
+    assert isinstance(c, Dummy)
+    assert isinstance(d, Dummy)
+    raises(TypeError, 'Symbol()')
+
+def test_Dummy():
+    assert Dummy() != Dummy()
+    Dummy._count = 0
+    d1 = Dummy()
+    Dummy._count = 0
+    assert d1 == Dummy()
 
 def test_as_dummy_nondummy():
     x = Symbol('x')
@@ -31,6 +44,10 @@ def test_as_dummy_nondummy():
     assert x1 != x
     assert x1.is_commutative == False
     # assert x == x1.as_nondummy()
+
+    # issue 2446
+    x = Symbol('x', real=True, commutative=False)
+    assert x.as_dummy().assumptions0 == x.assumptions0
 
 def test_lt_gt():
     x, y = Symbol('x'), Symbol('y')
@@ -96,13 +113,81 @@ def test_Wild_properties():
                 assert d == None
 
 def test_symbols():
-    x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
-    assert symbols('x') == Symbol('x')
-    assert symbols('xyz') == [x, y, z]
-    assert symbols('x y z') == symbols('x,y,z') == (x, y, z)
-    assert symbols('xyz', each_char=False) == Symbol('xyz')
-    x, y = symbols('x y', each_char=False, real=True)
-    assert x.is_real and y.is_real
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+
+    assert symbols('') is None
+
+    assert symbols('x') == x
+    assert symbols('x,') == (x,)
+    assert symbols('x ') == (x,)
+
+    assert symbols('x,y,z') == (x, y, z)
+    assert symbols('x y z') == (x, y, z)
+
+    assert symbols('x,y,z,') == (x, y, z)
+    assert symbols('x y z ') == (x, y, z)
+
+    xyz = Symbol('xyz')
+    abc = Symbol('abc')
+
+    assert symbols('xyz') == xyz
+    assert symbols('xyz,') == (xyz,)
+    assert symbols('xyz,abc') == (xyz, abc)
+
+    assert symbols(('xyz',)) == (xyz,)
+    assert symbols(('xyz,',)) == ((xyz,),)
+    assert symbols(('x,y,z,',)) == ((x, y, z),)
+    assert symbols(('xyz', 'abc')) == (xyz, abc)
+    assert symbols(('xyz,abc',)) == ((xyz, abc),)
+    assert symbols(('xyz,abc', 'x,y,z')) == ((xyz, abc), (x, y, z))
+
+    assert symbols(('x', 'y', 'z')) == (x, y, z)
+    assert symbols(['x', 'y', 'z']) == [x, y, z]
+    assert symbols(set(['x', 'y', 'z'])) == set([x, y, z])
+
+    assert symbols('x,,y,,z') == (x, y, z)
+    assert symbols(('x', '', 'y', '', 'z')) == (x, y, z)
+
+    a, b = symbols('x,y', real=True)
+
+    assert a.is_real and b.is_real
+
+    x0 = Symbol('x0')
+    x1 = Symbol('x1')
+    x2 = Symbol('x2')
+
+    y0 = Symbol('y0')
+    y1 = Symbol('y1')
+
+    assert symbols('x0:0') == ()
+    assert symbols('x0:1') == (x0,)
+    assert symbols('x0:2') == (x0, x1)
+    assert symbols('x0:3') == (x0, x1, x2)
+
+    assert symbols('x:0') == ()
+    assert symbols('x:1') == (x0,)
+    assert symbols('x:2') == (x0, x1)
+    assert symbols('x:3') == (x0, x1, x2)
+
+    assert symbols('x1:1') == ()
+    assert symbols('x1:2') == (x1,)
+    assert symbols('x1:3') == (x1, x2)
+
+    assert symbols('x1:3,x,y,z') == (x1, x2, x, y, z)
+
+    assert symbols('x:3,y:2') == (x0, x1, x2, y0, y1)
+    assert symbols(('x:3', 'y:2')) == ((x0, x1, x2), (y0, y1))
+
+    a = Symbol('a')
+    b = Symbol('b')
+    c = Symbol('c')
+    d = Symbol('d')
+
+    assert symbols('x:z') == (x, y, z)
+    assert symbols('a:d,x:z') == (a, b, c, d, x, y, z)
+    assert symbols(('a:d', 'x:z')) == ((a, b, c, d), (x, y, z))
 
 def test_call():
     f = Symbol('f')

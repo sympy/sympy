@@ -15,9 +15,9 @@ import anticommutator
 from anticommutator import *
 __all__.extend(anticommutator.__all__)
 
-import applyops
-from applyops import *
-__all__.extend(applyops.__all__)
+import qapply as qapmod
+from qapply import *
+__all__.extend(qapmod.__all__)
 
 import commutator
 from commutator import *

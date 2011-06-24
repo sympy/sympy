@@ -6,9 +6,6 @@
    hypergeometric terms, or combinations of hypergeometric term which
    are pairwise dissimilar.
 
-   Main function on this module is rsolve(), which is not implemented
-   yet, see issue #1271 for more info on this.
-
    rsolve_X functions were meant as a low level interface for rsolve()
    which would use Mathematica's syntax.
 
@@ -34,10 +31,10 @@
     >>> n = Symbol('n', integer=True)
 
     >>> rsolve_poly([-1, 1], 4*n**3, n)
-    C0 + n**2 - 2*n**3 + n**4
+    C0 + n**4 - 2*n**3 + n**2
 
     >>> bernoulli(4, n)
-    -1/30 + n**2 - 2*n**3 + n**4
+    n**4 - 2*n**3 + n**2 - 1/30
 
    For the sake of completeness, f(n) can be:
 
@@ -46,12 +43,18 @@
     [3] a hypergeometric function  -> rsolve_hyper
 """
 
-from sympy.core import S,  Rational, Symbol, Wild, Equality, Add, Mul, sympify
+from sympy.core.singleton import S
+from sympy.core.numbers import Rational
+from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.relational import Equality
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar
 from sympy.solvers import solve, solve_undetermined_coeffs
-from sympy.polys import Poly, exquo, gcd, lcm, roots, resultant
-from sympy.functions import Binomial, FallingFactorial
+from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
+from sympy.functions import binomial, FallingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
 
@@ -89,7 +92,7 @@ def rsolve_poly(coeffs, f, n, **hints):
        >>> n = Symbol('n', integer=True)
 
        >>> rsolve_poly([-1, 1], 4*n**3, n)
-       C0 + n**2 - 2*n**3 + n**4
+       C0 + n**4 - 2*n**3 + n**2
 
        For more information on implemented algorithms refer to:
 
@@ -120,7 +123,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in xrange(0, r+1):
         for j in xrange(i, r+1):
-            polys[i] += coeffs[j]*Binomial(j, i)
+            polys[i] += coeffs[j]*binomial(j, i)
 
         if not polys[i].is_zero:
             (exp,), coeff = polys[i].LT()
@@ -137,7 +140,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     d, b = int(d), int(b)
 
-    x = Symbol('x', dummy=True)
+    x = Dummy('x')
 
     degree_poly = S.Zero
 
@@ -178,7 +181,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             y += C[i] * n**i
 
         for i in xrange(0, r+1):
-            E += coeffs[i].as_basic()*y.subs(n, n+i)
+            E += coeffs[i].as_expr()*y.subs(n, n+i)
 
         solutions = solve_undetermined_coeffs(E-f, C, n)
 
@@ -227,8 +230,8 @@ def rsolve_poly(coeffs, f, n, **hints):
 
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
-                    B = Binomial(k, i+j)
-                    D = delta(polys[j].as_basic(), k)
+                    B = binomial(k, i+j)
+                    D = delta(polys[j].as_expr(), k)
 
                     alpha[i] += I[k]*B*D
 
@@ -378,13 +381,13 @@ def rsolve_ratio(coeffs, f, n, **hints):
     A, B = coeffs[r], coeffs[0]
     A = A.subs(n, n-r).expand()
 
-    h = Symbol('h', dummy=True)
+    h = Dummy('h')
 
     res = resultant(A, B.subs(n, n+h), n)
 
     if not res.is_polynomial(h):
         p, q = res.as_numer_denom()
-        res = exquo(p, q, h)
+        res = quo(p, q, h)
 
     nni_roots = roots(res, h, filter='Z',
         predicate=lambda r: r >= 0).keys()
@@ -397,8 +400,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
         for i in xrange(int(max(nni_roots)), -1, -1):
             d = gcd(A, B.subs(n, n+i), n)
 
-            A = exquo(A, d, n)
-            B = exquo(B, d.subs(n, n-i), n)
+            A = quo(A, d, n)
+            B = quo(B, d.subs(n, n-i), n)
 
             C *= Mul(*[ d.subs(n, n-j) for j in xrange(0, i+1) ])
 
@@ -407,8 +410,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
         for i in range(0, r+1):
             g = gcd(coeffs[i], denoms[i], n)
 
-            numers[i] = exquo(coeffs[i], g, n)
-            denoms[i] = exquo(denoms[i], g, n)
+            numers[i] = quo(coeffs[i], g, n)
+            denoms[i] = quo(denoms[i], g, n)
 
         for i in xrange(0, r+1):
             numers[i] *= Mul(*(denoms[:i] + denoms[i+1:]))
@@ -522,7 +525,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     else:
         result = S.Zero
 
-    Z = Symbol('Z', dummy=True)
+    Z = Dummy('Z')
 
     p, q = coeffs[0], coeffs[r].subs(n, n-r+1)
 
@@ -551,7 +554,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
             a = Mul(*[ A.subs(n, n+j) for j in xrange(0, i) ])
             b = Mul(*[ B.subs(n, n+j) for j in xrange(i, r) ])
 
-            poly = exquo(coeffs[i]*a*b, D, n)
+            poly = quo(coeffs[i]*a*b, D, n)
             polys.append(poly.as_poly(n))
 
             if not poly.is_zero:
@@ -622,10 +625,10 @@ def rsolve(f, y, init=None):
        >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
 
        >>> rsolve(f, y(n))
-       C0*gamma(1 + n) + C1*2**n
+       2**n*C1 + C0*n!
 
        >>> rsolve(f, y(n), { y(0):0, y(1):3 })
-       -3*gamma(1 + n) + 3*2**n
+       3*2**n - 3*n!
 
     """
     if isinstance(f, Equality):
@@ -693,9 +696,9 @@ def rsolve(f, y, init=None):
     if common is not S.One:
         for k, coeff in h_part.iteritems():
             numer, denom = coeff.as_numer_denom()
-            h_part[k] = numer*exquo(common, denom, n)
+            h_part[k] = numer*quo(common, denom, n)
 
-        i_part = i_numer*exquo(common, i_denom, n)
+        i_part = i_numer*quo(common, i_denom, n)
 
     K_min = min(h_part.keys())
 

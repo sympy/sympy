@@ -1,10 +1,9 @@
 """This module implements tools for integrating rational functions. """
 
 from sympy import S, Symbol, symbols, I, log, atan, \
-    resultant, roots, collect, solve, RootSum, Lambda, cancel
+    resultant, roots, collect, solve, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
-from sympy.polys.polyroots import number_of_real_roots
 
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.
@@ -16,7 +15,7 @@ def ratint(f, x, **flags):
        >>> from sympy.abc import x
 
        >>> ratint(36/(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2), x)
-       -4*log(1 + x) + 4*log(-2 + x) - (6 + 12*x)/(1 - x**2)
+       (12*x + 6)/(x**2 - 1) + 4*log(x - 2) - 4*log(x + 1)
 
        References
        ==========
@@ -30,17 +29,15 @@ def ratint(f, x, **flags):
     else:
         p, q = f
 
-    p, q = Poly(p, x), Poly(q, x)
+    p, q = Poly(p, x, composite=False), Poly(q, x, composite=False)
 
-    c, p, q = p.cancel(q)
+    coeff, p, q = p.cancel(q)
     poly, p = p.div(q)
 
-    poly = poly.to_field()
-
-    result = c*poly.integrate(x).as_basic()
+    result = poly.integrate(x).as_expr()
 
     if p.is_zero:
-        return result
+        return coeff*result
 
     g, h = ratint_ratpart(p, q, x)
 
@@ -51,13 +48,13 @@ def ratint(f, x, **flags):
 
     q, r = P.div(Q)
 
-    result += g + q.integrate(x).as_basic()
+    result += g + q.integrate(x).as_expr()
 
     if not r.is_zero:
         symbol = flags.get('symbol', 't')
 
         if not isinstance(symbol, Symbol):
-            t = Symbol(symbol, dummy=True)
+            t = Dummy(symbol)
         else:
             t = symbol
 
@@ -85,7 +82,7 @@ def ratint(f, x, **flags):
 
         if not real:
             for h, q in L:
-                eps += RootSum(Lambda(t, t*log(h.as_basic())), q)
+                eps += RootSum(q, Lambda(t, t*log(h.as_expr())), quadratic=True)
         else:
             for h, q in L:
                 R = log_to_real(h, q, x, t)
@@ -93,11 +90,11 @@ def ratint(f, x, **flags):
                 if R is not None:
                     eps += R
                 else:
-                    eps += RootSum(Lambda(t, t*log(h.as_basic())), q)
+                    eps += RootSum(q, Lambda(t, t*log(h.as_expr())), quadratic=True)
 
         result += eps
 
-    return result
+    return coeff*result
 
 def ratint_ratpart(f, g, x):
     """Horowitz-Ostrogradsky algorithm.
@@ -116,23 +113,23 @@ def ratint_ratpart(f, g, x):
     m = v.degree()
     d = g.degree()
 
-    A_coeffs = [ Symbol('a' + str(n-i), dummy=True) for i in xrange(0, n) ]
-    B_coeffs = [ Symbol('b' + str(m-i), dummy=True) for i in xrange(0, m) ]
+    A_coeffs = [ Dummy('a' + str(n-i)) for i in xrange(0, n) ]
+    B_coeffs = [ Dummy('b' + str(m-i)) for i in xrange(0, m) ]
 
     C_coeffs = A_coeffs + B_coeffs
 
     A = Poly(A_coeffs, x, domain=ZZ[C_coeffs])
     B = Poly(B_coeffs, x, domain=ZZ[C_coeffs])
 
-    H = f - A.diff()*v + A*(u.diff()*v).exquo(u) - B*u
+    H = f - A.diff()*v + A*(u.diff()*v).quo(u) - B*u
 
     result = solve(H.coeffs(), C_coeffs)
 
-    A = A.as_basic().subs(result)
-    B = B.as_basic().subs(result)
+    A = A.as_expr().subs(result)
+    B = B.as_expr().subs(result)
 
-    rat_part = cancel(A/u.as_basic(), x)
-    log_part = cancel(B/v.as_basic(), x)
+    rat_part = cancel(A/u.as_expr(), x)
+    log_part = cancel(B/v.as_expr(), x)
 
     return rat_part, log_part
 
@@ -152,11 +149,12 @@ def ratint_logpart(f, g, x, t=None):
     """
     f, g = Poly(f, x), Poly(g, x)
 
-    t = t or Symbol('t', dummy=True)
+    t = t or Dummy('t')
     a, b = g, f - g.diff()*Poly(t, x)
 
     R = subresultants(a, b)
-    res = Poly(resultant(a, b), t)
+
+    res = Poly(resultant(a, b), t, composite=False)
 
     R_map, H = {}, []
 
@@ -184,13 +182,13 @@ def ratint_logpart(f, g, x, t=None):
             _include_sign(c, h_lc_sqf)
 
             for a, j in h_lc_sqf:
-                h = h.exquo(Poly(a.gcd(q)**j, x))
+                h = h.quo(Poly(a.gcd(q)**j, x))
 
             inv, coeffs = h_lc.invert(q), [S(1)]
 
             for coeff in h.coeffs()[1:]:
                 T = (inv*coeff).rem(q)
-                coeffs.append(T.as_basic())
+                coeffs.append(T.as_expr())
 
             h = Poly(dict(zip(h.monoms(), coeffs)), x)
 
@@ -212,14 +210,17 @@ def log_to_atan(f, g):
     if f.degree() < g.degree():
         f, g = -g, f
 
+    f = f.to_field()
+    g = g.to_field()
+
     p, q = f.div(g)
 
     if q.is_zero:
-        return 2*atan(p.as_basic())
+        return 2*atan(p.as_expr())
     else:
         s, t, h = g.gcdex(-f)
-        u = (f*s+g*t).exquo(h)
-        A = 2*atan(u.as_basic())
+        u = (f*s+g*t).quo(h)
+        A = 2*atan(u.as_expr())
 
         return A + log_to_atan(s, t)
 
@@ -235,10 +236,10 @@ def log_to_real(h, q, x, t):
                              a | q(a) = 0
 
     """
-    u, v = symbols('u v')
+    u, v = symbols('u,v')
 
-    H = h.as_basic().subs({t:u+I*v}).expand()
-    Q = q.as_basic().subs({t:u+I*v}).expand()
+    H = h.as_expr().subs({t:u+I*v}).expand()
+    Q = q.as_expr().subs({t:u+I*v}).expand()
 
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)
@@ -250,7 +251,7 @@ def log_to_real(h, q, x, t):
 
     R_u = roots(R, filter='R')
 
-    if len(R_u) != number_of_real_roots(R):
+    if len(R_u) != R.count_roots():
         return None
 
     result = S(0)
@@ -259,7 +260,7 @@ def log_to_real(h, q, x, t):
         C = Poly(c.subs({u:r_u}), v)
         R_v = roots(C, filter='R')
 
-        if len(R_v) != number_of_real_roots(C):
+        if len(R_v) != C.count_roots():
             return None
 
         for r_v in R_v:
@@ -274,17 +275,17 @@ def log_to_real(h, q, x, t):
             A = Poly(a.subs({u:r_u, v:r_v}), x)
             B = Poly(b.subs({u:r_u, v:r_v}), x)
 
-            AB = (A**2 + B**2).as_basic()
+            AB = (A**2 + B**2).as_expr()
 
             result += r_u*log(AB) + r_v*log_to_atan(A, B)
 
     R_q = roots(q, filter='R')
 
-    if len(R_q) != number_of_real_roots(q):
+    if len(R_q) != q.count_roots():
         return None
 
     for r in R_q.iterkeys():
-        result += r*log(h.as_basic().subs(t, r))
+        result += r*log(h.as_expr().subs(t, r))
 
     return result
 

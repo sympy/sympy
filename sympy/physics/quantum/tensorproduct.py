@@ -157,7 +157,9 @@ class TensorProduct(Expr):
         for i in range(length):
             if isinstance(self.args[i], (Add, Mul)):
                 s = s + '\\left('
-            s = s + printer._print(self.args[i], *args)
+            # The extra {} brackets are needed to get matplotlib's latex
+            # rendered to render this properly.
+            s = s + '{' + printer._print(self.args[i], *args) + '}'
             if isinstance(self.args[i], (Add, Mul)):
                 s = s + '\\right)'
             if i != length-1:

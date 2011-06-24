@@ -204,7 +204,7 @@ class FCodePrinter(CodePrinter):
                 self._not_supported.add(expr)
         return "%s(%s)" % (name, self.stringify(expr.args, ", "))
 
-    _print_Factorial = _print_Function
+    _print_factorial = _print_Function
 
     def _print_ImaginaryUnit(self, expr):
         # purpose: print complex numbers nicely in Fortran.
@@ -245,8 +245,8 @@ class FCodePrinter(CodePrinter):
         p, q = int(expr.p), int(expr.q)
         return "%d.0d0/%d.0d0" % (p, q)
 
-    def _print_Real(self, expr):
-        printed = CodePrinter._print_Real(self, expr)
+    def _print_Float(self, expr):
+        printed = CodePrinter._print_Float(self, expr)
         e = printed.find('e')
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e+1:])
@@ -330,29 +330,26 @@ class FCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
         if isinstance(code, basestring):
-            code_lines = self.indent_code(code.splitlines())
-            return '\n'.join(code_lines)
+            code_lines = self.indent_code(code.splitlines(True))
+            return ''.join(code_lines)
 
         free = self._settings['source_format'] == 'free'
-        code = [ line.lstrip() for line in code ]
+        code = [ line.lstrip(' \t') for line in code ]
 
         inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
-        dec_keyword = ('end ', 'enddo', 'end\n', 'else')
+        dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
 
-        increase = [ int(reduce(lambda x, y: x or line.startswith(y),
-                                inc_keyword, False)) \
-                     for line in code ]
-        decrease = [ int(reduce(lambda x, y: x or line.startswith(y),
-                                dec_keyword, False)) \
-                     for line in code ]
-        continuation = [ line.endswith('&') for line in code ]
+        from sympy.utilities.iterables import any  # 2.4 support
+        increase = [ int(any(map(line.startswith, inc_keyword))) for line in code ]
+        decrease = [ int(any(map(line.startswith, dec_keyword))) for line in code ]
+        continuation = [ int(any(map(line.endswith, ['&', '&\n']))) for line in code ]
 
         level = 0
         cont_padding = 0
         tabwidth = 3
         new_code = []
         for i, line in enumerate(code):
-            if not line:
+            if line == '' or line == '\n':
                 new_code.append(line)
                 continue
             level -= decrease[i]
@@ -399,7 +396,7 @@ def fcode(expr, **settings):
                             [default='fixed']
 
        >>> from sympy import fcode, symbols, Rational, pi, sin
-       >>> x, tau = symbols(["x", "tau"])
+       >>> x, tau = symbols('x,tau')
        >>> fcode((2*tau)**Rational(7,2))
        '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
        >>> fcode(sin(x), assign_to="s")

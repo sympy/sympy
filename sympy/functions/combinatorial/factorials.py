@@ -2,11 +2,16 @@ from sympy.core import S, C, sympify, Function
 from sympy.ntheory import sieve
 from math import sqrt
 
+from sympy.core.compatibility import reduce
+
+class CombinatorialFunction(Function):
+    """Base class for combinatorial functions. """
+
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
 
-class Factorial(Function):
+class factorial(CombinatorialFunction):
     """Implementation of factorial function over nonnegative integers.
        For the sake of convenience and simplicity of procedures using
        this function it is defined for negative integers and returns
@@ -47,6 +52,12 @@ class Factorial(Function):
     """
 
     nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return C.gamma(self.args[0] + 1)*C.polygamma(0, self.args[0] + 1)
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     _small_swing = [
         1,1,1,3,3,15,5,35,35,315,63,693,231,3003,429,6435,6435,109395,
@@ -126,24 +137,19 @@ class Factorial(Function):
 
                     return C.Integer(result)
 
-        if n.is_integer:
-            if n.is_negative:
-                return S.Zero
-        else:
-            return C.gamma(n+1)
+        if n.is_negative:
+            return S.Zero
 
-
-    @classmethod    # ?
-    def _eval_rewrite_as_gamma(self, arg):
-        return C.gamma(1 + arg)
+    def _eval_rewrite_as_gamma(self, n):
+        return C.gamma(n + 1)
 
     def _eval_is_integer(self):
         return self.args[0].is_integer
 
-class MultiFactorial(Function):
+class MultiFactorial(CombinatorialFunction):
     pass
 
-class Factorial2(Function):
+class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
 
     The double facotrial is defined for integers >= -1 as
@@ -157,11 +163,12 @@ class Factorial2(Function):
     >>> var('n')
     n
     >>> factorial2(n + 1)
-    (1 + n)!!
+    (n + 1)!!
     >>> factorial2(5)
     15
     >>> factorial2(-1)
     1
+
     """
     nargs = 1
 
@@ -170,7 +177,7 @@ class Factorial2(Function):
         if arg.is_Number:
             if arg == S.Zero or arg == S.NegativeOne:
                 return S.One
-            return Factorial2(arg - 2)*arg
+            return factorial2(arg - 2)*arg
 
     def _sympystr(self, p):
         if self.args[0].is_Atom:
@@ -178,14 +185,11 @@ class Factorial2(Function):
         else:
             return "(%s)!!" % p.doprint(self.args[0])
 
-factorial   = Factorial
-factorial2  = Factorial2
-
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################
 ###############################################################################
 
-class RisingFactorial(Function):
+class RisingFactorial(CombinatorialFunction):
     """Rising factorial (also called Pochhammer symbol) is a double valued
        function arising in concrete mathematics, hypergeometric functions
        and series expansions. It is defined by
@@ -248,7 +252,7 @@ class RisingFactorial(Function):
     def _eval_rewrite_as_gamma(self, x, k):
         return C.gamma(x + k) / C.gamma(x)
 
-class FallingFactorial(Function):
+class FallingFactorial(CombinatorialFunction):
     """Falling factorial (related to rising factorial) is a double valued
        function arising in concrete mathematics, hypergeometric functions
        and series expansions. It is defined by
@@ -288,8 +292,6 @@ class FallingFactorial(Function):
             elif k is S.Zero:
                 return S.One
             else:
-                result = S.One
-
                 if k.is_positive:
                     if x is S.Infinity:
                         return S.Infinity
@@ -319,7 +321,7 @@ ff = FallingFactorial
 ########################### BINOMIAL COEFFICIENTS #############################
 ###############################################################################
 
-class Binomial(Function):
+class binomial(CombinatorialFunction):
     """Implementation of the binomial coefficient. It can be defined
        in two ways depending on its desired interpretation:
 
@@ -362,75 +364,86 @@ class Binomial(Function):
        -5/128
 
        >>> binomial(n, 3)
-       n*(1 - n)*(2 - n)/6
+       n*(n - 2)*(n - 1)/6
 
     """
 
     nargs = 2
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
+            n, k = self.args
+            return binomial(n, k)*(C.polygamma(0, n + 1) - C.polygamma(0, n - k + 1))
+        elif argindex == 2:
+            # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
+            n, k = self.args
+            return binomial(n, k)*(C.polygamma(0, n - k + 1) - C.polygamma(0, k + 1))
+        else:
+            raise ArgumentIndexError(self, argindex)
+
     @classmethod
-    def eval(cls, r, k):
-        r, k = map(sympify, (r, k))
+    def eval(cls, n, k):
+        n, k = map(sympify, (n, k))
 
         if k.is_Number:
-            if k is S.Zero:
-                return S.One
-            elif k.is_Integer:
-                if k.is_negative:
+            if k.is_Integer:
+                if k < 0:
                     return S.Zero
-                else:
-                    if r.is_Integer and r.is_nonnegative:
-                        r, k = int(r), int(k)
+                elif k == 0 or n == k:
+                    return S.One
+                elif n.is_Integer and n >= 0:
+                    n, k = int(n), int(k)
 
-                        if k > r:
-                            return S.Zero
-                        elif k > r // 2:
-                            k = r - k
+                    if k > n:
+                        return S.Zero
+                    elif k > n // 2:
+                        k = n - k
 
-                        M, result = int(sqrt(r)), 1
+                    M, result = int(sqrt(n)), 1
 
-                        for prime in sieve.primerange(2, r+1):
-                            if prime > r - k:
+                    for prime in sieve.primerange(2, n+1):
+                        if prime > n - k:
+                            result *= prime
+                        elif prime > n // 2:
+                            continue
+                        elif prime > M:
+                            if n % prime < k % prime:
                                 result *= prime
-                            elif prime > r // 2:
-                                continue
-                            elif prime > M:
-                                if r % prime < k % prime:
-                                    result *= prime
-                            else:
-                                R, K = r, k
-                                exp = a = 0
+                        else:
+                            N, K = n, k
+                            exp = a = 0
 
-                                while R > 0:
-                                    a = int((R % prime) < (K % prime + a))
-                                    R, K = R // prime, K // prime
-                                    exp = a + exp
+                            while N > 0:
+                                a = int((N % prime) < (K % prime + a))
+                                N, K = N // prime, K // prime
+                                exp = a + exp
 
-                                if exp > 0:
-                                    result *= prime**exp
+                            if exp > 0:
+                                result *= prime**exp
 
-                        return C.Integer(result)
-                    else:
-                        result = r - k + 1
+                    return C.Integer(result)
+                else:
+                    result = n - k + 1
 
-                        for i in xrange(2, k+1):
-                            result *= r-k+i
-                            result /= i
+                    for i in xrange(2, k+1):
+                        result *= n-k+i
+                        result /= i
 
-                        return result
-
-        if k.is_integer:
-            if k.is_negative:
-                return S.Zero
+                    return result
+        elif k.is_negative:
+            return S.Zero
         else:
-            return C.gamma(r+1)/(C.gamma(r-k+1)*C.gamma(k+1))
+            d = n - k
 
+            if d.is_Integer:
+                return cls.eval(n, d)
 
-    def _eval_rewrite_as_gamma(self, r, k):
-        return C.gamma(r+1) / (C.gamma(r-k+1)*C.gamma(k+1))
+    def _eval_rewrite_as_factorial(self, n, k):
+        return C.factorial(n)/(C.factorial(k)*C.factorial(n - k))
+
+    def _eval_rewrite_as_gamma(self, n, k):
+        return C.gamma(n + 1)/(C.gamma(k + 1)*C.gamma(n - k + 1))
 
     def _eval_is_integer(self):
         return self.args[0].is_integer and self.args[1].is_integer
-
-
-binomial = Binomial

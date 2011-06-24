@@ -36,7 +36,10 @@ class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space
     It is used as base class for And, Or, Not, etc.
     """
-    pass
+    is_Boolean = True
+
+    def __call__(self, *args):
+        return self.func(*[arg(*args) for arg in self.args])
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -84,6 +87,9 @@ class Not(BooleanFunction):
     """Logical Not function (negation)
 
     Note: De Morgan rules applied automatically"""
+
+    is_Not = True
+
     @classmethod
     def eval(cls, *args):
         if len(args) > 1:
@@ -126,10 +132,14 @@ class Implies(BooleanFunction):
     """
     @classmethod
     def eval(cls, *args):
-        if len(args) != 2:
-            raise ValueError, "%d operand(s) used for an Implies (pairs are required): %s" % (len(args), str(args))
+        try:
+            A, B = args
+        except ValueError:
+            raise ValueError("%d operand(s) used for an Implies (pairs are required): %s" % (len(args), str(args)))
+        if A is True or A is False or B is True or B is False:
+            return Or(Not(A), B)
         else:
-            return Or(Not(args[0]), args[1])
+            return Basic.__new__(cls, *args)
 
 class Equivalent(BooleanFunction):
     """Equivalence relation.
@@ -148,6 +158,31 @@ class Equivalent(BooleanFunction):
             argset.discard(False)
             return Nor(*argset)
         return Basic.__new__(cls, *set(args))
+
+class ITE(BooleanFunction):
+    """
+    If then else clause.
+
+    ITE(A, B, C) evaluates and returns the result of B if A is true
+    else it returns the result of C
+
+    Example:
+    >>> from sympy.logic.boolalg import ITE, And, Xor, Or
+    >>> from sympy.abc import x,y,z
+    >>> x = True
+    >>> y = False
+    >>> z = True
+    >>> ITE(x,y,z)
+    False
+    >>> ITE(Or(x, y), And(x, z), Xor(z, x))
+    True
+    """
+    @classmethod
+    def eval(cls, *args):
+        args = list(args)
+        if len(args) == 3:
+            return Or(And(args[0], args[1]), And(Not(args[0]), args[2]))
+        raise ValueError("ITE expects 3 arguments, but got %d: %s" % (len(args), str(args)))
 
 ### end class definitions. Some useful methods
 
@@ -329,11 +364,16 @@ def to_int_repr(clauses, symbols):
         True
 
     """
+
+    # Convert the symbol list into a dict
+    symbols = dict(zip(symbols, xrange(1, len(symbols) + 1)))
+
     def append_symbol(arg, symbols):
         if arg.func is Not:
-            return -(symbols.index(arg.args[0])+1)
+            return -symbols[arg.args[0]]
         else:
-            return symbols.index(arg)+1
+            return symbols[arg]
 
     return [set(append_symbol(arg, symbols) for arg in Or.make_args(c)) \
                                                             for c in clauses]
+

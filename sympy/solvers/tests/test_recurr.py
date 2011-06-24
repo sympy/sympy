@@ -2,8 +2,8 @@ from sympy import Function, symbols, S, sqrt, rf, factorial
 from sympy.solvers.recurr import rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper
 
 y = Function('y')
-n, k = symbols('nk', integer=True)
-C0, C1, C2 = symbols('C0', 'C1', 'C2')
+n, k = symbols('n,k', integer=True)
+C0, C1, C2 = symbols('C0,C1,C2')
 
 def test_rsolve_poly():
     assert rsolve_poly([-1, -1, 1], 0, n) == 0
@@ -21,20 +21,28 @@ def test_rsolve_ratio():
         -2*n**3-11*n**2-18*n-9, 2*n**3+13*n**2+22*n+8], 0, n)
 
     assert solution in [
-            (-3*C1 + 2*C1*n)/(-2 + 2*n**2),
-            ( 3*C1 - 2*C1*n)/( 2 - 2*n**2),
-            (-3*C2 + 2*C2*n)/(-2 + 2*n**2),
-            ( 3*C2 - 2*C2*n)/( 2 - 2*n**2),
-                         ]
+                  C1*((-2*n + 3)/(n**2 - 1))/3,
+        (S(1)/2)*(C1*(-3 + 2*n)/(-1 + n**2)),
+        (S(1)/2)*(C1*( 3 - 2*n)/( 1 - n**2)),
+        (S(1)/2)*(C2*(-3 + 2*n)/(-1 + n**2)),
+        (S(1)/2)*(C2*( 3 - 2*n)/( 1 - n**2)),
+    ]
 
 def test_rsolve_hyper():
-    assert rsolve_hyper([-1, -1, 1], 0, n) == C0*(S.Half + S.Half*sqrt(5))**n + C1*(S.Half - S.Half*sqrt(5))**n
+    assert rsolve_hyper([-1, -1, 1], 0, n) in [
+        C0*(S.Half - S.Half*sqrt(5))**n + C1*(S.Half + S.Half*sqrt(5))**n,
+        C1*(S.Half - S.Half*sqrt(5))**n + C0*(S.Half + S.Half*sqrt(5))**n,
+    ]
 
-    assert rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) in [C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n),
-                                                       C1*rf(sqrt(2), n) + C0*rf(-sqrt(2), n)]
+    assert rsolve_hyper([n**2-2, -2*n-1, 1], 0, n) in [
+        C0*rf(sqrt(2), n) + C1*rf(-sqrt(2), n),
+        C1*rf(sqrt(2), n) + C0*rf(-sqrt(2), n),
+    ]
 
-    assert rsolve_hyper([n**2-k, -2*n-1, 1], 0, n) in [C0*rf(sqrt(k), n) + C1*rf(-sqrt(k), n),
-                                                       C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n)]
+    assert rsolve_hyper([n**2-k, -2*n-1, 1], 0, n) in [
+        C0*rf(sqrt(k), n) + C1*rf(-sqrt(k), n),
+        C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n),
+    ]
 
     assert rsolve_hyper([2*n*(n+1), -n**2-3*n+2, n-1], 0, n) == C0*factorial(n) + C1*2**n
 
@@ -72,12 +80,13 @@ def test_rsolve_bulk():
 
 def test_rsolve():
     f = y(n+2) - y(n+1) - y(n)
-    g = C0*(S.Half + S.Half*sqrt(5))**n \
-      + C1*(S.Half - S.Half*sqrt(5))**n
     h = sqrt(5)*(S.Half + S.Half*sqrt(5))**n \
       - sqrt(5)*(S.Half - S.Half*sqrt(5))**n
 
-    assert rsolve(f, y(n)) == g
+    assert rsolve(f, y(n)) in [
+        C0*(S.Half - S.Half*sqrt(5))**n + C1*(S.Half + S.Half*sqrt(5))**n,
+        C1*(S.Half - S.Half*sqrt(5))**n + C0*(S.Half + S.Half*sqrt(5))**n,
+    ]
 
     assert rsolve(f, y(n), [      0,      5 ]) == h
     assert rsolve(f, y(n), {   0 :0,   1 :5 }) == h

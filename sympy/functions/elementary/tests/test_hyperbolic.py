@@ -1,15 +1,16 @@
-from sympy import symbols, Symbol, sinh, nan, oo, pi, asinh, acosh, log, sqrt, \
+from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sqrt, \
         coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
         Integer, O, exp
 
 from sympy.utilities.pytest import XFAIL
 
 def test_sinh():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
     assert sinh(nan) == nan
+    assert sinh(zoo) == nan
 
     assert sinh(oo) == oo
     assert sinh(-oo) == -oo
@@ -66,11 +67,12 @@ def test_sinh():
     assert sinh(k*pi*I/2) == sin(k*pi/2)*I
 
 def test_cosh():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
     assert cosh(nan) == nan
+    assert cosh(zoo) == nan
 
     assert cosh(oo) == oo
     assert cosh(-oo) == oo
@@ -127,11 +129,12 @@ def test_cosh():
     assert cosh(k*pi) == cosh(k*pi)
 
 def test_tanh():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
     assert tanh(nan) == nan
+    assert tanh(zoo) == nan
 
     assert tanh(oo) == 1
     assert tanh(-oo) == -1
@@ -188,11 +191,12 @@ def test_tanh():
     assert tanh(k*pi*I/2) == tan(k*pi/2)*I
 
 def test_coth():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     k = Symbol('k', integer=True)
 
     assert coth(nan) == nan
+    assert coth(zoo) == nan
 
     assert coth(oo) == 1
     assert coth(-oo) == -1
@@ -205,18 +209,18 @@ def test_coth():
     assert coth(x) == coth(x)
     assert coth(-x) == -coth(x)
 
-    assert coth(pi*I) == -cot(pi)*I
+    assert coth(pi*I) == -I*cot(pi)
     assert coth(-pi*I) == cot(pi)*I
 
     assert coth(2**1024 * E) == coth(2**1024 * E)
     assert coth(-2**1024 * E) == -coth(2**1024 * E)
 
-    assert coth(pi*I) == -cot(pi)*I
-    assert coth(-pi*I) == cot(pi)*I
-    assert coth(2*pi*I) == -cot(2*pi)*I
-    assert coth(-2*pi*I) == cot(2*pi)*I
-    assert coth(-3*10**73*pi*I) == cot(3*10**73*pi)*I
-    assert coth(7*10**103*pi*I) == -cot(7*10**103*pi)*I
+    assert coth(pi*I) == -I*cot(pi)
+    assert coth(-pi*I) == I*cot(pi)
+    assert coth(2*pi*I) == -I*cot(2*pi)
+    assert coth(-2*pi*I) == I*cot(2*pi)
+    assert coth(-3*10**73*pi*I) == I*cot(3*10**73*pi)
+    assert coth(7*10**103*pi*I) == -I*cot(7*10**103*pi)
 
     assert coth(pi*I/2) == 0
     assert coth(-pi*I/2) == 0
@@ -249,7 +253,7 @@ def test_coth():
     assert coth(k*pi*I) == -cot(k*pi)*I
 
 def test_asinh():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert asinh(x) == asinh(x)
     assert asinh(-x) == -asinh(x)
     assert asinh(nan) == nan
@@ -268,19 +272,10 @@ def test_asinh():
     assert asinh(I*oo) == oo
     assert asinh(-I *oo) == -oo
 
-def test_asinh_series():
-    x = Symbol('x')
-    assert asinh(x).series(x, 0, 8) == \
-                x - x**3/6 + 3*x**5/40 - 5*x**7/112 + O(x**8)
-    t5 = asinh(x).taylor_term(5, x)
-    assert t5 == 3*x**5/40
-    assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
+    assert asinh(zoo) == zoo
 
-@XFAIL
-# not yet implemented cases which should live in test_asinh
-def test_asinh_noimpl():
-    assert asinh(I *(sqrt(3) - 1)/(2**(3/2))) == pi*I/12
-    assert asinh(-I *(sqrt(3) - 1)/(2**(3/2))) == -pi*I/12
+    assert asinh(I *(sqrt(3) - 1)/(2**(S(3)/2))) == pi*I/12
+    assert asinh(-I *(sqrt(3) - 1)/(2**(S(3)/2))) == -pi*I/12
 
     assert asinh(I*(sqrt(5)-1)/4) == pi*I/10
     assert asinh(-I*(sqrt(5)-1)/4) == -pi*I/10
@@ -288,6 +283,13 @@ def test_asinh_noimpl():
     assert asinh(I*(sqrt(5)+1)/4) == 3*pi*I/10
     assert asinh(-I*(sqrt(5)+1)/4) == -3*pi*I/10
 
+def test_asinh_series():
+    x = Symbol('x')
+    assert asinh(x).series(x, 0, 8) == \
+                x - x**3/6 + 3*x**5/40 - 5*x**7/112 + O(x**8)
+    t5 = asinh(x).taylor_term(5, x)
+    assert t5 == 3*x**5/40
+    assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
 
 def test_acosh():
     # TODO please write more tests  -- see #652
@@ -299,29 +301,8 @@ def test_acosh():
     assert acosh(Rational(1,2))  == I*pi/3
     assert acosh(Rational(-1,2)) == 2*pi*I/3
 
+    assert acosh(zoo) == oo
 
-@XFAIL
-def test_acosh_infinities():
-    assert acosh(oo) == oo
-    assert acosh(-oo) == oo + I*pi
-    assert acosh(I*oo) == oo + I*pi/2
-    assert acosh(-I*oo) == oo - I*pi/2
-
-
-
-def test_acosh_series():
-    x = Symbol('x')
-    assert acosh(x).series(x, 0, 8) == \
-            -I*x + pi*I/2 - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 + O(x**8)
-    t5 = acosh(x).taylor_term(5, x)
-    assert t5 == - 3*I*x**5/40
-    assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
-
-
-
-@XFAIL
-# not yet implemented cases which should live in test_acosh
-def test_acosh_noimpl():
     assert acosh(I) == log(I*(1+sqrt(2)))
     assert acosh(-I) == log(-I*(1+sqrt(2)))
     assert acosh((sqrt(3)-1)/(2*sqrt(2))) == 5*pi*I/12
@@ -338,6 +319,21 @@ def test_acosh_noimpl():
     assert acosh(-(1+sqrt(3))/(2*sqrt(2))) == 11*I*pi/12
     assert acosh((sqrt(5)+1)/4) == I*pi/5
     assert acosh(-(sqrt(5)+1)/4) == 4*I*pi/5
+
+
+def test_acosh_infinities():
+    assert acosh(oo) == oo
+    assert acosh(-oo) == oo
+    assert acosh(I*oo) == oo
+    assert acosh(-I*oo) == oo
+
+def test_acosh_series():
+    x = Symbol('x')
+    assert acosh(x).series(x, 0, 8) == \
+            -I*x + pi*I/2 - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 + O(x**8)
+    t5 = acosh(x).taylor_term(5, x)
+    assert t5 == - 3*I*x**5/40
+    assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
 
 
 # TODO please write more tests -- see #652
@@ -358,17 +354,11 @@ def test_atanh():
     assert atanh(I*oo) == I*pi/2
     assert atanh(-I*oo) == -I*pi/2
 
+    assert atanh(zoo) == nan
+
     #properties
     assert atanh(-x) == -atanh(x)
 
-@XFAIL
-def test_atanh_infinities():
-    assert atanh(oo) == -I*pi/2
-    assert atanh(-oo) == I*pi/2
-
-@XFAIL
-# not yet implemented cases which should live in test_atanh
-def test_atanh_noimpl():
     assert atanh(I/sqrt(3)) == I*pi/6
     assert atanh(-I/sqrt(3)) == -I*pi/6
     assert atanh(I*sqrt(3)) == I*pi/3
@@ -379,12 +369,13 @@ def test_atanh_noimpl():
     assert atanh(-I*(1+sqrt(2))) == -3*pi*I/8
     assert atanh(I*sqrt(5+2*sqrt(5))) == 2*I*pi/5
     assert atanh(-I*sqrt(5+2*sqrt(5))) == -2*I*pi/5
-    assert atanh(I*(2+sqrt(3))) == 5*pi*I/5
-    assert atanh(-I*(2+sqrt(3))) == -5*pi*I/5
     assert atanh(I*(2-sqrt(3))) == pi*I/12
     assert atanh(I*(sqrt(3)-2)) == -pi*I/12
     assert atanh(oo) == -I*pi/2
 
+def test_atanh_infinities():
+    assert atanh(oo) == -I*pi/2
+    assert atanh(-oo) == I*pi/2
 
 # TODO please write more tests -- see #652
 def test_acoth():
@@ -405,13 +396,11 @@ def test_acoth():
     assert acoth(-oo) == 0
     assert acoth(I*oo) == 0
     assert acoth(-I*oo) == 0
+    assert acoth(zoo) == 0
 
     #properties
     assert acoth(-x) == -acoth(x)
 
-@XFAIL
-# not yet implemented cases which should live in test_acoth
-def test_acoth_noimpl():
     assert acoth(I/sqrt(3)) == -I*pi/3
     assert acoth(-I/sqrt(3)) == I*pi/3
     assert acoth(I*sqrt(3)) == -I*pi/6
@@ -427,20 +416,27 @@ def test_acoth_noimpl():
     assert acoth(I*(2-sqrt(3))) == -5*pi*I/12
     assert acoth(I*(sqrt(3)-2)) == 5*pi*I/12
 
-
 def test_simplifications():
     x = Symbol('x')
     assert sinh(asinh(x)) == x
     assert sinh(acosh(x)) == sqrt(x-1) * sqrt(x+1)
     assert sinh(atanh(x)) == x/sqrt(1-x**2)
+    assert sinh(acoth(x)) == 1/(sqrt(x-1) * sqrt(x+1))
 
     assert cosh(asinh(x)) == sqrt(1+x**2)
     assert cosh(acosh(x)) == x
     assert cosh(atanh(x)) == 1/sqrt(1-x**2)
+    assert cosh(acoth(x)) == x/(sqrt(x-1) * sqrt(x+1))
 
     assert tanh(asinh(x)) == x/sqrt(1+x**2)
     assert tanh(acosh(x)) == sqrt(x-1) * sqrt(x+1) / x
     assert tanh(atanh(x)) == x
+    assert tanh(acoth(x)) == 1/x
+
+    assert coth(asinh(x)) == sqrt(1+x**2)/x
+    assert coth(acosh(x)) == x/(sqrt(x-1) * sqrt(x+1))
+    assert coth(atanh(x)) == 1/x
+    assert coth(acoth(x)) == x
 
 def test_issue1037():
     assert cosh(asinh(Integer(3)/2)) == sqrt(Integer(13)/4)

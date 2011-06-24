@@ -1,6 +1,7 @@
 from basic import Basic
 from singleton import Singleton, S
 from evalf import EvalfMixin
+from numbers import Float
 from sympify import _sympify
 from sympy.mpmath import mpi, mpf
 
@@ -144,7 +145,7 @@ class Set(Basic):
         if isinstance(other, Set):
             return self.intersect(other) == other
         else:
-            raise ValueError, "Unknown argument '%s'" % other
+            raise ValueError("Unknown argument '%s'" % other)
 
     @property
     def measure(self):
@@ -184,7 +185,8 @@ class Set(Basic):
         return result
 
     def _eval_subs(self, old, new):
-        if self == old: return new
+        if self == old:
+            return new
         new_args = []
         for arg in self.args:
             if arg == old:
@@ -230,15 +232,14 @@ class Interval(Set, EvalfMixin):
           'mpi' interval instance
     """
 
-    def __new__(cls, start, end,
-                left_open=False, right_open=False, **assumptions):
+    def __new__(cls, start, end, left_open=False, right_open=False):
 
         start = _sympify(start)
         end = _sympify(end)
 
         # Only allow real intervals (use symbols with 'is_real=True').
         if not start.is_real or not end.is_real:
-            raise ValueError, "Only real intervals are supported"
+            raise ValueError("Only real intervals are supported")
 
         # Make sure that the created interval will be valid.
         if end.is_comparable and start.is_comparable:
@@ -254,8 +255,7 @@ class Interval(Set, EvalfMixin):
         if end == S.Infinity:
             right_open = True
 
-        return Basic.__new__(cls, start, end,
-                             left_open, right_open, **assumptions)
+        return Basic.__new__(cls, start, end, left_open, right_open)
 
     @property
     def start(self):
@@ -271,7 +271,7 @@ class Interval(Set, EvalfMixin):
         """
         return self._args[0]
 
-    _inf = start
+    _inf = left = start
 
     @property
     def end(self):
@@ -287,7 +287,7 @@ class Interval(Set, EvalfMixin):
         """
         return self._args[1]
 
-    _sup = end
+    _sup = right = end
 
     @property
     def left_open(self):
@@ -401,6 +401,50 @@ class Interval(Set, EvalfMixin):
 
         return is_comparable
 
+    @property
+    def is_point(self):
+        """Return ``True`` if the left endpoint equals the right endpoint. """
+        return self.start == self.end
+
+    @property
+    def is_left_unbounded(self):
+        """Return ``True`` if the left endpoint is negative infinity. """
+        return self.left is S.NegativeInfinity or self.left == Float("-inf")
+
+    @property
+    def is_right_unbounded(self):
+        """Return ``True`` if the right endpoint is positive infinity. """
+        return self.right is S.Infinity or self.right == Float("+inf")
+
+    def as_relational(self, symbol):
+        """Rewrite an interval in terms of inequalities and logic operators. """
+        from sympy.core.relational import Eq, Lt, Le
+        from sympy.logic.boolalg import And
+
+        if self.is_point:
+            return Eq(symbol, self.start)
+        else:
+            if not self.is_left_unbounded:
+                if self.left_open:
+                    left = Lt(self.start, symbol)
+                else:
+                    left = Le(self.start, symbol)
+
+            if not self.is_right_unbounded:
+                if self.right_open:
+                    right = Lt(symbol, self.right)
+                else:
+                    right = Le(symbol, self.right)
+
+            if self.is_left_unbounded and self.is_right_unbounded:
+                return True # XXX: Contained(symbol, Floats)
+            elif self.is_left_unbounded:
+                return right
+            elif self.is_right_unbounded:
+                return left
+            else:
+                return And(left, right)
+
 class Union(Set):
     """
     Represents a union of sets as a Set.
@@ -419,7 +463,7 @@ class Union(Set):
 
     """
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         intervals, other_sets = [], []
         for arg in args:
             if isinstance(arg, EmptySet):
@@ -435,7 +479,7 @@ class Union(Set):
                 other_sets.append(arg)
 
             else:
-                raise ValueError, "Unknown argument '%s'" % arg
+                raise ValueError("Unknown argument '%s'" % arg)
 
         # Any non-empty sets at all?
         if len(intervals) == 0 and len(other_sets) == 0:
@@ -486,7 +530,7 @@ class Union(Set):
         elif len(intervals) == 0 and len(other_sets) == 1:
             return other_sets[0]
 
-        return Basic.__new__(cls, *(intervals + other_sets), **assumptions)
+        return Basic.__new__(cls, *(intervals + other_sets))
 
     @property
     def _inf(self):
@@ -578,3 +622,4 @@ class EmptySet(Set):
 
     def _contains(self, other):
         return False
+

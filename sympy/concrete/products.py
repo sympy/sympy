@@ -1,4 +1,5 @@
 from sympy.core import Expr, S, C, Mul, sympify
+from sympy.core.compatibility import ordered_iter
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 
@@ -29,7 +30,7 @@ class Product(Expr):
                 k = symbol.lhs
                 a = symbol.rhs.start
                 n = symbol.rhs.end
-            elif isinstance(symbol, (tuple, list)):
+            elif ordered_iter(symbol):
                 k, a, n = symbol
             else:
                 raise ValueError("Invalid arguments")
@@ -88,7 +89,6 @@ class Product(Expr):
             poly = term.as_poly(k)
 
             A = B = Q = S.One
-            C_= poly.LC()
 
             all_roots = roots(poly, multiple=True)
 
@@ -121,7 +121,7 @@ class Product(Expr):
             if not exclude:
                 return None
             else:
-                A, B = Mul(*exclude), Mul(*include)
+                A, B = Mul(*exclude), term._new_rawargs(*include)
                 return A * Product(B, (k, a, n))
         elif term.is_Pow:
             if not term.base.has(k):

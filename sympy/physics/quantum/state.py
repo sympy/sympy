@@ -25,6 +25,27 @@ __all__ = [
 # States, bras and kets.
 #-----------------------------------------------------------------------------
 
+# LIGHT VERTICAL BAR
+_straight_bracket = u"\u2758"
+
+# MATHEMATICAL LEFT ANGLE BRACKET
+_lbracket = u"\u27E8"
+_rbracket = u"\u27E9"
+
+# Other options for unicode printing of <, > and | for Dirac notation.
+
+# VERTICAL LINE
+# _straight_bracket = u"\u007C"
+
+# LEFT-POINTING ANGLE BRACKET
+# _lbracket = u"\u2329"
+# _rbracket = u"\u232A"
+
+# LEFT ANGLE BRACKET
+# _lbracket = u"\u3008"
+# _rbracket = u"\u3009"
+
+
 class StateBase(QExpr):
     """Abstract base class for general abstract states in quantum mechanics.
 
@@ -73,7 +94,9 @@ class StateBase(QExpr):
 
     def _print_contents_latex(self, printer, *args):
         label = self._print_label_latex(printer, *args)
-        return '%s%s%s' % (self.lbracket_latex, label, self.rbracket_latex)
+        # The extra {} brackets are needed to get matplotlib's latex
+        # rendered to render this properly.
+        return '{%s%s%s}' % (self.lbracket_latex, label, self.rbracket_latex)
 
 
 class KetBase(StateBase):
@@ -86,8 +109,8 @@ class KetBase(StateBase):
 
     lbracket = '|'
     rbracket = '>'
-    lbracket_pretty = prettyForm(u'\u2758')
-    rbracket_pretty = prettyForm(u'\u27E9')
+    lbracket_pretty = prettyForm(_straight_bracket)
+    rbracket_pretty = prettyForm(_rbracket)
     lbracket_latex = r'\left|'
     rbracket_latex = r'\right\rangle '
 
@@ -160,8 +183,8 @@ class BraBase(StateBase):
 
     lbracket = '<'
     rbracket = '|'
-    lbracket_pretty = prettyForm(u'\u27E8')
-    rbracket_pretty = prettyForm(u'\u2758')
+    lbracket_pretty = prettyForm(_lbracket)
+    rbracket_pretty = prettyForm(_straight_bracket)
     lbracket_latex = r'\left\langle '
     rbracket_latex = r'\right|'
 
@@ -241,11 +264,11 @@ class Ket(State, KetBase):
         >>> k0 = Ket(0)
         >>> k1 = Ket(1)
         >>> 2*I*k0 - 4*k1
-        -4*|1> + 2*I*|0>
+        2*I*|0> - 4*|1>
 
     Compound labels are passed as tuples::
 
-        >>> n, m = symbols('nm')
+        >>> n, m = symbols('n,m')
         >>> k = Ket(n,m)
         >>> k
         |nm>
@@ -300,7 +323,7 @@ class Bra(State, BraBase):
     Like Kets, Bras can have compound labels and be manipulated in a similar
     manner::
 
-        >>> n, m = symbols('nm')
+        >>> n, m = symbols('n,m')
         >>> b = Bra(n,m) - I*Bra(m,n)
         >>> b
         -I*<mn| + <nm|
@@ -308,7 +331,7 @@ class Bra(State, BraBase):
     Symbols in a Bra can be substituted using ``.subs``::
 
         >>> b.subs(n,m)
-        -I*<mm| + <mm|
+        <mm| - I*<mm|
 
     References
     ==========
@@ -395,7 +418,9 @@ class TimeDepState(StateBase):
     def _print_contents_latex(self, printer, *args):
         label = self._print_label_latex(printer, *args)
         time = self._print_time_latex(printer, *args)
-        return '%s%s;%s%s' %\
+        # The extra {} brackets are needed to get matplotlib's latex
+        # rendered to render this properly.
+        return '{%s%s;%s%s}' %\
             (self.lbracket_latex, label, time, self.rbracket_latex)
 
 

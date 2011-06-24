@@ -210,7 +210,7 @@ def main():
     #print curvature(Rmn)
     print "-"*40
     print "Solve Einstein's equations:"
-    e = e.subs(nu(r), -lam(r))
+    e = e.subs(nu(r), -lam(r)).doit()
     l =  dsolve(e, lam(r))
     pprint(l)
     metric = gdd.subs(lam(r), l).subs(nu(r),-l)#.combine()

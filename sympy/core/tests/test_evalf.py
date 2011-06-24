@@ -3,7 +3,7 @@ from sympy.core.evalf import PrecisionExhausted, complex_accuracy
 from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
     fibonacci, Integral, oo, E, atan, log, integrate, floor, ceiling, \
     factorial, binomial, Sum, zeta, Catalan, Pow, GoldenRatio, sympify, \
-    sstr, Function
+    sstr, Function, Eq, Mul, Pow, Derivative
 
 from sympy.mpmath.libmp.libmpf import from_float
 
@@ -187,6 +187,8 @@ def test_evalf_divergent_series():
     raises(ValueError, 'Sum(n**2, (n, 1, oo)).evalf()')
     raises(ValueError, 'Sum(2**n, (n, 1, oo)).evalf()')
     raises(ValueError, 'Sum((-2)**n, (n, 1, oo)).evalf()')
+    raises(ValueError, 'Sum((2*n+3)/(3*n**2+4), (n,0, oo)).evalf()')
+    raises(ValueError, 'Sum((0.5*n**3)/(n**4+1),(n,0,oo)).evalf()')
 
 def test_evalf_py_methods():
     assert abs(float(pi+1) - 4.1415926535897932) < 1e-10
@@ -217,3 +219,17 @@ def test_implemented_function_evalf():
     assert str(f(2)) == "f(2)"
     assert f(2).evalf() == 3
     assert f(x).evalf() == f(x)
+    del f._imp_     # XXX: due to caching _imp_ would influence all other tests
+
+def test_evaluate_false():
+    for no in [[], 0, False, None]:
+        assert Add(3, 2, evaluate=no).is_Add
+        assert Mul(3, 2, evaluate=no).is_Mul
+        assert Pow(3, 2, evaluate=no).is_Pow
+    assert Pow(y, 2, evaluate=True) - Pow(y, 2, evaluate=True) == 0
+
+def test_evalf_relational():
+    assert Eq(x/5, y/10).evalf() == Eq(0.2*x, 0.1*y)
+
+def test_issue_2387():
+    assert not cos(sqrt(0.5 + I)).n().is_Function

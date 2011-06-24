@@ -11,6 +11,8 @@ import symbol
 from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol
 
+from sympy.core.compatibility import callable
+
 _is_integer = re.compile(r'\A\d+(l|L)?\Z').match
 
 class SymPyTransformer(Transformer):
@@ -32,15 +34,15 @@ class SymPyTransformer(Transformer):
             n = Const(complex(number), lineno)
             return CallFunc(Name('sympify'), [n])
         n = Const(number, lineno)
-        return CallFunc(Name('Real'), [n])
+        return CallFunc(Name('Float'), [n])
 
     def atom_name(self, nodelist):
         name, lineno = nodelist[0][1:]
 
-        if self.local_dict.has_key(name):
+        if name in self.local_dict:
             name_obj = self.local_dict[name]
             return Const(name_obj, lineno=lineno)
-        elif self.global_dict.has_key(name):
+        elif name in self.global_dict:
             name_obj = self.global_dict[name]
 
             if isinstance(name_obj, (Basic, type)) or callable(name_obj):
@@ -65,17 +67,12 @@ class SymPyTransformer(Transformer):
 
         assert not defaults,`defaults` # sympy.Lambda does not support optional arguments
 
-        if len(names) == 0:
-            argument = ['x']
-        else:
-            argument = names
-
         def convert(x):
             return CallFunc(Name('sympify'), [Const(x)])
 
-        argument = [ convert(arg) for arg in argument ]
+        argument = [convert(arg) for arg in names]
 
-        return CallFunc(Name('Lambda'), argument + [code])
+        return CallFunc(Name('Lambda'), [CallFunc(Name('Tuple'), argument), code])
 
 
 class SymPyParser:

@@ -11,50 +11,50 @@ is ask():
 Querying
 ========
 
-ask's optional second argument should be a boolean
-expression involving assumptions about objects in expr. Valid values include:
+ask's optional second argument should be a boolean expression involving
+assumptions about objects in expr. Valid values include:
 
-    * Assume(x, Q.integer)
-    * Assume(x, Q.positive)
-    * Assume(x, Q.integer) & Assume(x, Q.positive)
+    * Q.integer(x)
+    * Q.positive(x)
+    * Q.integer(x) & Q.positive(x)
     * etc.
 
-Q is a class in sympy.assumptions holding valid assumptions.
+Q is a class in sympy.assumptions holding known predicates.
 
 See documentation for the logic module for a complete list of valid boolean
 expressions.
 
 You can also define global assumptions so you don't have to pass that argument
-each time to function ask(). This is done calling register_global_assumptions()
-from module sympy.assumptions. You can then clear global assumptions with
-clean_global_assumptions()
+each time to function ask(). This is done by using the global_assumptions
+object from module sympy.assumptions. You can then clear global assumptions
+with global_assumptions.clear()::
 
      >>> from sympy import *
      >>> x = Symbol('x')
-     >>> global_assumptions.add(Assume(x, Q.positive))
-     >>> ask(x, Q.positive)
+     >>> global_assumptions.add(Q.positive(x))
+     >>> ask(Q.positive(x))
      True
      >>> global_assumptions.clear()
 
 
-Supported queries
-=================
+Supported predicates
+====================
 
 bounded
 -------
 
-Test that a function is bounded with respect to it's variables. For example,
+Test that a function is bounded with respect to its variables. For example,
 sin(x) is a bounded functions, but exp(x) is not.
 
 Examples::
 
     >>> from sympy import *
     >>> x = Symbol('x')
-    >>> ask(exp(x), Q.bounded)
+    >>> ask(Q.bounded(exp(x)))
     False
-    >>> ask(exp(x), Q.bounded , Assume(x, Q.bounded))
+    >>> ask(Q.bounded(exp(x)) , Q.bounded(x))
     True
-    >>> ask(sin(x), Q.bounded)
+    >>> ask(Q.bounded(sin(x)))
     True
 
 
@@ -67,12 +67,12 @@ commutative except otherwise stated.
 Examples::
 
     >>> from sympy import *
-    >>> x, y = symbols('x y')
-    >>> ask(x, Q.commutative)
+    >>> x, y = symbols('x,y')
+    >>> ask(Q.commutative(x))
     True
-    >>> ask(x, Q.commutative, Assume(x, Q.commutative, False))
+    >>> ask(Q.commutative(x), ~Q.commutative(x))
     False
-    >>> ask(x*y, Q.commutative, Assume(x, Q.commutative, False))
+    >>> ask(Q.commutative(x*y), ~Q.commutative(x))
     False
 
 
@@ -84,12 +84,12 @@ Test that expression belongs to the field of complex numbers.
 Examples::
 
     >>> from sympy import *
-    >>> ask(2, Q.complex)
+    >>> ask(Q.complex(2))
     True
-    >>> ask(I, Q.complex)
+    >>> ask(Q.complex(I))
     True
-    >>> x, y = symbols('x y')
-    >>> ask(x+I*y, Q.complex, Assume(x, Q.real) & Assume(y, Q.real))
+    >>> x, y = symbols('x,y')
+    >>> ask(Q.complex(x+I*y), Q.real(x) & Q.real(y))
     True
 
 
@@ -102,10 +102,10 @@ can be written in the form 2*n, n integer.
 Examples::
 
     >>> from sympy import *
-    >>> ask(2, Q.even)
+    >>> ask(Q.even(2))
     True
     >>> n = Symbol('n')
-    >>> ask(2*n, Q.even, Assume(n, Q.integer))
+    >>> ask(Q.even(2*n), Q.integer(n))
     True
 
 
@@ -118,27 +118,27 @@ numbers union {Infinity, -Infinity}.
 Examples::
 
     >>> from sympy import *
-    >>> ask(oo, Q.extended_real)
+    >>> ask(Q.extended_real(oo))
     True
-    >>> ask(2, Q.extended_real)
+    >>> ask(Q.extended_real(2))
     True
-    >>> ask(x, Q.extended_real, Assume(x, Q.real))
+    >>> ask(Q.extended_real(x), Q.real(x))
     True
 
 
 imaginary
 ---------
 
-Test that an expression belongs to the field of imaginary numbers, that is,
+Test that an expression belongs to the set of imaginary numbers, that is,
  it can be written as x*I, where x is real and I is the imaginary unit.
 
 Examples::
 
     >>> from sympy import *
-    >>> ask(2*I, Q.imaginary)
+    >>> ask(Q.imaginary(2*I))
     True
     >>> x = Symbol('x')
-    >>> ask(x*I, Q.imaginary, Assume(x, Q.real))
+    >>> ask(Q.imaginary(x*I), Q.real(x))
     True
 
 
@@ -150,29 +150,29 @@ Test that an expression is equivalent to an infinitesimal number.
 Examples::
 
     >>> from sympy import *
-    >>> ask(1/oo, Q.infinitesimal)
+    >>> ask(Q.infinitesimal(1/oo))
     True
-    >>> x, y = symbols('x y')
-    >>> ask(2*x, Q.infinitesimal, Assume(x, Q.infinitesimal))
+    >>> x, y = symbols('x,y')
+    >>> ask(Q.infinitesimal(2*x), Q.infinitesimal(x))
     True
-    >>> ask(x*y, Q.infinitesimal, Assume(x, Q.infinitesimal) & Assume(y, Q.bounded))
+    >>> ask(Q.infinitesimal(x*y), Q.infinitesimal(x) & Q.bounded(y))
     True
 
 
 integer
 -------
 
-Test that an expression belongs to the field of integer numbers.
+Test that an expression belongs to the set of integer numbers.
 
 Examples::
 
     >>> from sympy import *
-    >>> ask(2, Q.integer)
+    >>> ask(Q.integer(2))
     True
-    >>> ask(sqrt(2), Q.integer)
+    >>> ask(Q.integer(sqrt(2)))
     False
     >>> x = Symbol('x')
-    >>> ask(x/2, Q.integer, Assume(x, Q.even))
+    >>> ask(Q.integer(x/2), Q.even(x))
     True
 
 
@@ -184,11 +184,11 @@ Test that an expression represents an irrational number.
 Examples::
 
      >>> from sympy import *
-     >>> ask(pi, Q.irrational)
+     >>> ask(Q.irrational(pi))
      True
-     >>> ask(sqrt(2), Q.irrational)
+     >>> ask(Q.irrational(sqrt(2)))
      True
-     >>> ask(x*sqrt(2), Q.irrational, Assume(x, Q.rational))
+     >>> ask(Q.irrational(x*sqrt(2)), Q.rational(x))
      True
 
 
@@ -200,12 +200,12 @@ Test that an expression represents a rational number.
 Examples::
 
      >>> from sympy import *
-     >>> ask(Rational(3, 4), Q.rational)
+     >>> ask(Q.rational(Rational(3, 4)))
      True
-     >>> x, y = symbols('x y')
-     >>> ask(x/2, Q.rational, Assume(x, Q.integer))
+     >>> x, y = symbols('x,y')
+     >>> ask(Q.rational(x/2), Q.integer(x))
      True
-     >>> ask(x/y, Q.rational, Assume(x, Q.integer) & Assume(y, Q.integer))
+     >>> ask(Q.rational(x/y), Q.integer(x) & Q.integer(y))
      True
 
 
@@ -217,17 +217,17 @@ Test that an expression is less (strict) than zero.
 Examples::
 
      >>> from sympy import *
-     >>> ask(0.3, Q.negative)
+     >>> ask(Q.negative(0.3))
      False
      >>> x = Symbol('x')
-     >>> ask(-x, Q.negative, Assume(x, Q.positive))
+     >>> ask(Q.negative(-x), Q.positive(x))
      True
 
 Remarks
 ^^^^^^^
 negative numbers are defined as real numbers that are not zero nor positive, so
-complex numbers (with nontrivial imaginary coefficients) will return False 
-in this ask. The same applies to ask positive.
+complex numbers (with nontrivial imaginary coefficients) will return False
+for this predicate. The same applies to Q.positive.
 
 
 positive
@@ -238,10 +238,10 @@ Test that a given expression is greater (strict) than zero.
 Examples::
 
      >>> from sympy import *
-     >>> ask(0.3, Q.positive)
+     >>> ask(Q.positive(0.3))
      True
      >>> x = Symbol('x')
-     >>> ask(-x, Q.positive, Assume(x, Q.negative))
+     >>> ask(Q.positive(-x), Q.negative(x))
      True
 
 Remarks
@@ -257,10 +257,10 @@ Test that an expression represents a prime number.
 Examples::
 
     >>> from sympy import *
-    >>> ask(13, Q.prime)
+    >>> ask(Q.prime(13))
     True
 
-Remarks: Use sympy.ntheory.isprime for efficiently test numeric values.
+Remarks: Use sympy.ntheory.isprime to test numeric values efficiently.
 
 
 real
@@ -271,10 +271,10 @@ Test that an expression belongs to the field of real numbers.
 Examples::
 
     >>> from sympy import *
-    >>> ask(sqrt(2), Q.real)
+    >>> ask(Q.real(sqrt(2)))
     True
-    >>> x, y = symbols('x y')
-    >>> ask(x*y, Q.real, Assume(x, Q.real) & Assume(y, Q.real))
+    >>> x, y = symbols('x,y')
+    >>> ask(Q.real(x*y), Q.real(x) & Q.real(y))
     True
 
 
@@ -286,10 +286,10 @@ Test that an expression represents an odd number.
 Examples::
 
     >>> from sympy import *
-    >>> ask(3, Q.odd)
+    >>> ask(Q.odd(3))
     True
     >>> n = Symbol('n')
-    >>> ask(2*n + 1, Q.odd, Assume(n, Q.integer))
+    >>> ask(Q.odd(2*n + 1), Q.integer(n))
     True
 
 
@@ -302,7 +302,7 @@ Examples::
 
      >>> from sympy import *
      >>> x = Symbol('x')
-     >>> ask(x, Q.nonzero, Assume(x, Q.positive) | Assume(x, Q.negative))
+     >>> ask(Q.nonzero(x), Q.positive(x) | Q.negative(x))
      True
 
 
@@ -362,7 +362,7 @@ to accept this type (and return True)
     ...         return True
     >>> a = MyType()
     >>> register_handler('prime', MyAskHandler)
-    >>> ask(a, Q.prime)
+    >>> ask(Q.prime(a))
     True
 
 

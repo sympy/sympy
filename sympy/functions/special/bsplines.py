@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, sympify, expand
+from sympy.core import S, sympify, expand
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.functions.elementary.piecewise import ExprCondPair
 from sympy.core.sets import Interval
@@ -44,7 +44,7 @@ def bspline_basis(d, knots, n, x, close=True):
     Here is an example of a cubic B-spline:
 
         >>> bspline_basis(3, range(5), 0, x)
-        Piecewise((x**3/6, [0, 1)), (2/3 - 2*x + 2*x**2 - x**3/2, [1, 2)), (-22/3 + 10*x - 4*x**2 + x**3/2, [2, 3)), (32/3 - 8*x + 2*x**2 - x**3/6, [3, 4]), (0, True))
+        Piecewise((x**3/6, [0, 1)), (-x**3/2 + 2*x**2 - 2*x + 2/3, [1, 2)), (x**3/2 - 4*x**2 + 10*x - 22/3, [2, 3)), (-x**3/6 + 2*x**2 - 8*x + 32/3, [3, 4]), (0, True))
 
     By repeating knot points, you can introduce discontinuities in the
     B-splines and their derivatives:
@@ -52,7 +52,7 @@ def bspline_basis(d, knots, n, x, close=True):
         >>> d = 1
         >>> knots = [0,0,2,3,4]
         >>> bspline_basis(d, knots, 0, x)
-        Piecewise((1 - x/2, [0, 2]), (0, True))
+        Piecewise((-x/2 + 1, [0, 2]), (0, True))
 
     It is quite time consuming to construct and evaluate B-splines. If you
     need to evaluate a B-splines many times, it is best to lambdify them
@@ -119,9 +119,8 @@ def bspline_basis_set(d, knots, x):
         >>> knots = range(5)
         >>> splines = bspline_basis_set(d, knots, x)
         >>> splines
-        [Piecewise((x**2/2, [0, 1)), (-3/2 + 3*x - x**2, [1, 2)), (9/2 - 3*x + x**2/2, [2, 3]), (0, True)), Piecewise((1/2 - x + x**2/2, [1, 2)), (-11/2 + 5*x - x**2, [2, 3)), (8 - 4*x + x**2/2, [3, 4]), (0, True))]
+        [Piecewise((x**2/2, [0, 1)), (-x**2 + 3*x - 3/2, [1, 2)), (x**2/2 - 3*x + 9/2, [2, 3]), (0, True)), Piecewise((x**2/2 - x + 1/2, [1, 2)), (-x**2 + 5*x - 11/2, [2, 3)), (x**2/2 - 4*x + 8, [3, 4]), (0, True))]
     """
-    splines = []
     n_splines = len(knots)-d-1
     return [bspline_basis(d, knots, i, x) for i in range(n_splines)]
 
