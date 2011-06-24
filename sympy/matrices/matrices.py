@@ -3209,8 +3209,8 @@ class SparseMatrix(Matrix):
         Lrow = copy.deepcopy(R)
         for k in xrange(self.rows):
             for _, j in R[k]:
-                while j and j != k:
-                    if (k, j) not in Lrow[k]:
+                while j != k:
+                    if j and (k, j) not in Lrow[k]:
                         Lrow[k].append((k, j))
                         Lrow[k].sort()
                     j = parent[j]
