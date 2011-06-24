@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Basic example
 
 Demonstrates how to create symbols and print some algebra operations.

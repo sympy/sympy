@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Differential equations example
 
 Demonstrates solving 1st and 2nd degree linear ordinary differential equations.

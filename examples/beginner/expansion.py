@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Expansion Example
 
 Demonstrates how to expand expressions.

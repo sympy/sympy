@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Applying perturbation theory to calculate the ground state energy
 of the infinite 1D box of width $a$ with a perturbation

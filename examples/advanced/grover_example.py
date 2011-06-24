@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Grover's quantum search algorithm example."""
 
 from sympy import pprint

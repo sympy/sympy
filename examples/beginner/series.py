@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Series example
 
 Demonstrates series.

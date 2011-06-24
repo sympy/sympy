@@ -164,6 +164,11 @@ def test(*paths, **kwargs):
     r = PyTestReporter(verbose, tb, colors)
     t = SymPyTests(r, kw, post_mortem)
 
+    # Disable warnings for external modules
+    import sympy.external
+    sympy.external.importtools.WARN_OLD_VERSION = False
+    sympy.external.importtools.WARN_NOT_INSTALLED = False
+
     test_files = t.get_test_files('sympy')
     if len(paths) == 0:
         t._testfiles.extend(test_files)
@@ -226,6 +231,11 @@ def doctest(*paths, **kwargs):
                     "sympy/utilities/benchmarking.py", # needs py.test
                     ])
     blacklist = convert_to_native_paths(blacklist)
+
+    # Disable warnings for external modules
+    import sympy.external
+    sympy.external.importtools.WARN_OLD_VERSION = False
+    sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
@@ -550,7 +560,7 @@ class SymPyTests(object):
                     if self._post_mortem:
                         pdb.post_mortem(tr)
                 elif t.__name__ == "Skipped":
-                    self._reporter.test_skip()
+                    self._reporter.test_skip(v)
                 elif t.__name__ == "XFail":
                     self._reporter.test_xfail()
                 elif t.__name__ == "XPass":
@@ -1177,9 +1187,12 @@ class PyTestReporter(Reporter):
         else:
             self.write(".", "Green")
 
-    def test_skip(self):
+    def test_skip(self, v):
         self._skipped += 1
         self.write("s", "Green")
+        if self._verbose:
+            self.write(" - ", "Green")
+            self.write(str(v), "Green") # In Python 2.5+, use v.message
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

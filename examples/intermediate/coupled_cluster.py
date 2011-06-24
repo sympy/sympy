@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Calculates the Coupled-Cluster energy- and amplitude equations
 See 'An Introduction to Coupled Cluster Theory' by

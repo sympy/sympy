@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Plotting Examples
 

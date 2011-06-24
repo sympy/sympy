@@ -25,16 +25,12 @@ nice plot in the end.
 """
 
 import sys
+from sympy.external import import_module
 
-try:
-    import numpy as np
-except ImportError:
+np = import_module('numpy')
+if not np:
     sys.exit("Cannot import numpy. Exiting.")
-try:
-    import pylab
-except ImportError:
-    pylab = None
-    print "Couldn't import pylab"
+pylab = import_module('pylab', warn_not_installed=True)
 
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.autowrap import autowrap, ufuncify

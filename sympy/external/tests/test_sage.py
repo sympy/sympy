@@ -17,9 +17,10 @@ import os
 import re
 import sys
 
-try:
-    import sage.all as sage
-except ImportError:
+from sympy.external import import_module
+
+sage = import_module('sage.all', __import__kwargs={'fromlist':['all']})
+if not sage:
     #py.test will not execute any tests now
     disabled = True
 

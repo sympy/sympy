@@ -46,6 +46,7 @@ modules = [
     'sympy.assumptions.handlers',
     'sympy.concrete',
     'sympy.core',
+    'sympy.external',
     'sympy.functions',
     'sympy.functions.combinatorial',
     'sympy.functions.elementary',
@@ -199,6 +200,7 @@ tests = [
     'sympy.assumptions.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
+    'sympy.external.tests',
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
     'sympy.functions.special.tests',
@@ -222,7 +224,6 @@ tests = [
     'sympy.solvers.tests',
     'sympy.statistics.tests',
     'sympy.tensor.tests',
-    'sympy.test_external',
     'sympy.utilities.tests',
     ]
 
