@@ -33,8 +33,12 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_list,
 )
 
+from sympy.polys.distributedpolys import (
+    sdp_from_dict, sdp_div,
+)
+
 from sympy.polys.groebnertools import (
-    sdp_from_dict, sdp_div, sdp_groebner,
+    sdp_groebner,
 )
 
 from sympy.polys.monomialtools import (
