@@ -35,6 +35,7 @@ from sympy.solvers.inequalities import reduce_inequalities
 from sympy.core.compatibility import reduce
 
 from warnings import warn
+from types import GeneratorType
 
 def denoms(eq, x=None):
     """Return (recursively) set of all denominators that appear in eq
@@ -403,8 +404,6 @@ def solve(f, *symbols, **flags):
           dsolve() for solving differential equations
 
     """
-    from types import GeneratorType
-
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
@@ -503,16 +502,13 @@ def solve(f, *symbols, **flags):
     # see issue 2405 for logic in how Polys chooses ordering and
     # for discussion of what to return see http://groups.google.com/group/sympy
     #                           Apr 18, 2011 posting 'using results from solve'
-    else:
-        if (not ordered_symbols and
-            len(symbols) > 1 and
-            ordered_iter(solution) and
-            ordered_iter(solution[0]) and
-            any(len(set(s)) > 1 for s in solution)):
-            msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
-                   '\n\tgiven as a list so as to avoid ambiguity in the results.' +
-                   '\n\tsolve sorted the symbols as %s')
-            print msg % str(bool(symbol_swapped) and list(zip(*swap_dict)[0]) or symbols)
+    elif (not ordered_symbols and len(symbols) > 1 and solution and
+          ordered_iter(solution) and ordered_iter(solution[0]) and
+          any(len(set(s)) > 1 for s in solution)):
+        msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
+               '\n\tgiven as a list so as to avoid ambiguity in the results.' +
+               '\n\tsolve sorted the symbols as %s')
+        print msg % str(bool(symbol_swapped) and list(zip(*swap_dict)[0]) or symbols)
     #
     # done
     ###########################################################################
