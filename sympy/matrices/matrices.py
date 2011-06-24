@@ -3305,6 +3305,39 @@ class SparseMatrix(Matrix):
                                     
         return L, D
 
+    def _lower_triangular_solve(self, rhs):
+        rows = self._lil_row_major()
+        X = DOKMatrix(rhs.rows, 1, rhs.mat)
+        for i in xrange(self.rows):
+            for key in rows[i]:
+                if key[1] < i:
+                    X[i, 0] -= self[key] * X[key[1], 0]
+                else:
+                    break
+            X[i, 0] /= self[i, i]
+        return X
+
+    def _upper_triangular_solve(self, rhs):
+        rows = self._lil_row_major()
+        X = DOKMatrix(rhs.rows, 1, rhs.mat)
+        for i in reversed(xrange(self.rows)):
+            for key in reversed(rows[i]):
+                if key[1] > i:
+                    X[i, 0] -= self[key] * X[key[1], 0]
+                else:
+                    break
+            X[i, 0] /= self[i, i]
+        return X
+
+    def _diagonal_solve(self, rhs):
+        return DOKMatrix(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+    
+    def _cholesky_solve(self, rhs):
+        L = self._cholesky()
+        Y = L._lower_triangular_solve(rhs)
+        X = L.T._upper_triangular_solve(Y)
+        return X
+
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
