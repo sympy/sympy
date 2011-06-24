@@ -1,7 +1,8 @@
 """Dirac notation for states."""
 
 
-from sympy import Expr, Symbol, Function, integrate, Lambda, oo, conjugate, Tuple, sqrt
+from sympy import Expr, Symbol, Function, integrate
+from sympy import Lambda, oo, conjugate, Tuple, sqrt
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import (
@@ -539,7 +540,7 @@ class Wavefunction(Function):
     >> n = 1
     >> L = 1
     >> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
-    >> f = Wavefunction(g, (x, -oo, oo))
+    >> f = Wavefunction(g, x)
     >> f.norm_constant
     1
     >> f.is_normalized
@@ -549,12 +550,31 @@ class Wavefunction(Function):
     0
     >> p(L)
     0
-    >> p(L/2)
+    >> p(0.5)
     0
     >> p(0.85*L)
     2*sin(0.85*pi)**2
     >> N(p(0.85*L))
     0.412214747707527
+
+    Additionally, you can specify the bounds of the function and the indices in a different way.
+    >> from sympy import symbols, pi
+    >> from sympy.functions import sqrt, sin
+    >> from sympy.physics.quantum.state import Wavefunction
+    >> x, L = symbols('x,L', real=True)
+    >> n = symbols('n', integer=True)
+    >> g = sqrt(2/L)*sin(n*pi*x/L)
+    >> f = Wavefunction(g, (x, 0, L))
+    >> f.norm_constant
+    1
+    >> f(L+1)
+    0
+    >> f(-1)
+    0
+    >> f(0.85)
+    2**(1/2)*(1/L)**(1/2)*sin(0.85*pi*n/L)
+    >> f(0.85, n=1, L=1)
+    2**(1/2)*sin(0.85*pi)
     """
 
     #Any passed tuples for coordinates and their bounds need to be converted to Tuples
@@ -578,7 +598,23 @@ class Wavefunction(Function):
         if len(args) != len(var):
             raise NotImplementedError("Incorrect number of arguments to function!")
 
-        return self.expr.subs(tuple(zip(var, args)))
+        ct = 0
+        #If the passed value is outside the specified bounds, return 0
+        for v in var:
+            lower,upper = self.limits[v]
+            if args[ct] < lower or args[ct] > upper:
+                return 0
+            ct+=1
+
+        expr = self.expr
+
+        #Allows user to make a call like f(2, 4, m=1, n=1)
+        for symbol in list(expr.free_symbols):
+            if str(symbol) in options.keys():
+                val = options[str(symbol)]
+                expr = expr.subs(symbol, val)
+
+        return expr.subs(tuple(zip(var, args)))
 
     @classmethod
     def eval(self, *args):
@@ -613,7 +649,7 @@ class Wavefunction(Function):
             curr_limits = limits[v]
             exp = integrate(exp, (v, curr_limits[0], curr_limits[1]))
 
-        return sqrt(1.0/exp)
+        return sqrt(1/exp)
 
     def prob(self):
         return Wavefunction(self.expr*conjugate(self.expr), *self.variables)

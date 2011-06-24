@@ -1,5 +1,5 @@
 from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify
-from sympy import Integer, conjugate, pretty, latex, oo
+from sympy import Integer, conjugate, pretty, latex, oo, sin, pi
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
@@ -135,6 +135,9 @@ def test_printing():
     assert latex(Dagger(psi)) == r"{\left\langle \psi\right|}"
 
 def test_wavefunction():
+    x, L = symbols('x,L', real=True)
+    n = symbols('n', integer=True)
+
     f = Wavefunction(x**2, x)
     p = f.prob()
     lims = f.limits
@@ -145,14 +148,19 @@ def test_wavefunction():
     assert p(10) == 10000
     assert lims[x] == (-oo, oo)
 
-    g = Wavefunction(x**2*y+y**2*x, (x, 0, 1), (y, 0, 2))
+    g = Wavefunction(x**2*y+y**2*x, (x, 0, 3), (y, 0, 5))
     lims_g = g.limits
 
-    assert lims_g[x] == (0, 1)
-    assert lims_g[y] == (0, 2)
+    assert lims_g[x] == (0, 3)
+    assert lims_g[y] == (0, 5)
     assert g.is_normalized == False
-    assert g.norm_constant == sqrt(1.0/(14.0/3.0))
     assert g(2,4) == 48
 
     h = Wavefunction(sqrt(5)*x**2, (x, 0, 1))
     assert h.is_normalized == True
+
+    piab = Wavefunction(sin(n*pi*x/L), (x, 0, L))
+    assert piab.norm_constant == sqrt(2/L)
+    assert piab(L+1) == 0
+    assert piab(0.5) == sin(0.5*n*pi/L)
+    assert piab(0.5, n=1, L=1) == sin(0.5*pi)
