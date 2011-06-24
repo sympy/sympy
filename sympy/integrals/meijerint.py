@@ -29,6 +29,7 @@ from sympy.core import oo, S, pi
 from sympy.core.function import expand, expand_mul
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest
 from sympy.logic.boolalg import And, Or
@@ -287,6 +288,40 @@ def _get_coeff_exp(expr, x):
     else:
         raise ValueError('expr not of form a*x**b: %s' % expr)
 
+def _exponents(expr, x):
+    """
+    Find the exponents of `x` in `expr`.
+
+    >>> from sympy.integrals.meijerint import _exponents
+    >>> from sympy.abc import x, y
+    >>> from sympy import sin
+    >>> _exponents(x, x)
+    set([1])
+    >>> _exponents(x**2, x)
+    set([2])
+    >>> _exponents(x**2 + x, x)
+    set([1, 2])
+    >>> _exponents(x**3*sin(x + x**y) + 1/x, x)
+    set([-1, 1, 3, y])
+    """
+    def _exponents_(expr, x, res):
+        if expr == x:
+            res.update([1])
+            return
+        if expr.is_Pow and expr.base == x:
+            res.update([expr.exp])
+            return
+        for arg in expr.args:
+            _exponents_(arg, x, res)
+    res = set()
+    _exponents_(expr, x, res)
+    return res
+
+def _functions(expr, x):
+    """ Find the types of functions in expr, to estimate the complexity. """
+    from sympy import Function
+    return set(e.func for e in expr.atoms(Function) if e.has(x))
+
 def _expand_power_base(f):
     """ Expand (3*x)**y to 3**y*x**y. """
     return expand(f, power_base=True, mul=False, power_exp=False,
@@ -382,6 +417,51 @@ def _flip_g(g):
     def tr(l): return [1 - a for a in l]
     return meijerg(tr(g.bm), tr(g.bother), tr(g.an), tr(g.aother), 1/g.argument)
 
+def _inflate_fox_h(g, a):
+    r"""
+    Let d denote the integrand in the definition of the G function `g`.
+    Consider the function H which is defined in the same way, but with
+    integrand d/Gamma(a*s) (contour conventions as usual).
+
+    If a is rational, the function H can be written as C*G, for a constant C
+    and a G-function G.
+
+    This function returns C, G.
+    """
+    if a < 0:
+        return _inflate_fox_h(_flip_g(g), -a)
+    p = S(a.p)
+    q = S(a.q)
+    # We use the substitution s->qs, i.e. inflate g by q. We are left with an
+    # extra factor of Gamma(p*s), for which we use Gauss' multiplication
+    # theorem.
+    D, g = _inflate_g(g, q)
+    z = g.argument
+    D /= (2*pi)**((1-p)/2)*p**(-S(1)/2)
+    z /= p**p
+    bs = [(n+1)/p for n in range(p)]
+    return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
+
+_dummies = {}
+def _dummy(name, token, expr, **kwargs):
+    """
+    Return a dummy. This will return the same dummy if the same token+name is
+    requested more than once, and it is not already in expr.
+    This is for being cache-friendly.
+    """
+    d = _dummy_(name, token, **kwargs)
+    if expr.has(d):
+        return Dummy(name, **kwargs)
+    return d
+def _dummy_(name, token, **kwargs):
+    """
+    Return a dummy associated to name and token. Same effect as declaring
+    it globally.
+    """
+    global _dummies
+    if not (name, token) in _dummies:
+        _dummies[(name, token)] = Dummy(name, **kwargs)
+    return _dummies[(name, token)]
 
 def _powdenest(f, force=True):
     """ Like powdenest(f, force=True), but does not turn arg(x) into 0. """
@@ -389,6 +469,12 @@ def _powdenest(f, force=True):
     from sympy import Function, arg
     myarg = Function('arg')
     return powdenest(f.subs(arg, myarg), force=force).subs(myarg, arg)
+
+def _is_analytic(f, x):
+    """ Check if f(x), when expressed using G functions on the positive reals,
+        will in fact agree with the G functions almost everywhere """
+    from sympy import Heaviside, Abs
+    return not any(expr.has(x) for expr in f.atoms(Heaviside, Abs))
 
 ####################################################################
 # Now the "backbone" functions to do actual integration.
@@ -908,11 +994,141 @@ def _int0oo(g1, g2, x):
     return meijerg(a1, a2, b1, b2, omega/eta)/eta
 
 
+def _rewrite_inversion(fac, po, g, x):
+    """ Absorb `po` == x**s into g. """
+    _, s = _get_coeff_exp(po, x)
+    a, b = _get_coeff_exp(g.argument, x)
+    def tr(l): return [t + s/b for t in l]
+    return (_powdenest(fac/a**(s/b), force=True),
+            meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother), g.argument))
+
+def _check_antecedents_inversion(g, x):
+    """ Check antecedents for the laplace inversion integral. """
+    from sympy import re, im, Or, And, Eq, exp, I, Add, nan, Ne
+    _debug('Checking antecedents for inversion:')
+    z = g.argument
+    _, e = _get_coeff_exp(z, x)
+    if e < 0:
+        _debug('  Flipping G.')
+        # We want to assume that argument gets large as |x| -> oo
+        return _check_antecedents_inversion(_flip_g(g), x)
+
+    def statement_half(a, b, c, z, plus):
+        coeff, exponent = _get_coeff_exp(z, x)
+        a *= exponent
+        b *= coeff**c
+        c *= exponent
+        conds = []
+        wp = b*exp(I*re(c)*pi/2)
+        wm = b*exp(-I*re(c)*pi/2)
+        if plus:
+            w = wp
+        else:
+            w = wm
+        conds += [And(Or(Eq(b, 0), re(c) <= 0), re(a) <= -1)]
+        conds += [And(Ne(b, 0), Eq(im(c), 0), re(c) > 0, re(w) < 0)]
+        conds += [And(Ne(b, 0), Eq(im(c), 0), re(c) > 0, re(w) <= 0,
+                      re(a) <= -1)]
+        return Or(*conds)
+    def statement(a, b, c, z):
+        """ Provide a convergence statement for z**a * exp(b*z**c),
+             c/f sphinx docs. """
+        return And(statement_half(a, b, c, z, True),
+                   statement_half(a, b, c, z, False))
+
+    # Notations from [L], section 5.7-10
+    m, n, p, q = S([len(g.bm), len(g.an), len(g.ap), len(g.bq)])
+    tau = m + n - p
+    nu = q - m - n
+    rho = (tau - nu)/2
+    sigma = q - p
+    if sigma == 1:
+        epsilon = S(1)/2
+    elif sigma > 1:
+        epsilon = 1
+    else:
+        epsilon = nan
+    theta = ((1 - sigma)/2 + Add(*g.bq) - Add(*g.ap))/sigma
+    delta = g.delta
+    _debug('  m=%s, n=%s, p=%s, q=%s, tau=%s, nu=%s, rho=%s, sigma=%s' % (
+            m, n, p, q, tau, nu, rho, sigma))
+    _debug('  epsilon=%s, theta=%s, delta=%s' % (epsilon, theta, delta))
+
+    # First check if the computation is valid.
+    if not (g.delta >= e/2 or (p >= 1 and p >= q)):
+        _debug('  Computation not valid for these parameters.')
+        return False
+
+    # Now check if the inversion integral exists.
+
+    # Test "condition A"
+    for a in g.an:
+        for b in g.bm:
+            if (a - b).is_integer and a > b:
+                _debug('  Not a valid G function.')
+                return False
+
+    # There are two cases. If p >= q, we can directly use a slater expansion
+    # like [L], 5.2 (11). Note in particular that the asymptotics of such an
+    # expansion even hold when some of the parameters differ by integers, i.e.
+    # the formula itself would not be valid! (b/c G functions are cts. in their
+    # parameters)
+    # When p < q, we need to use the theorems of [L], 5.10.
+
+    if p >= q:
+        _debug('  Using asymptotic slater expansion.')
+        return And(*[statement(a - 1, 0, 0, z) for a in g.an])
+
+    def E(z): return And(*[statement(a - 1, 0, z) for a in g.an])
+    def H(z): return statement(theta, -sigma, 1/sigma, z)
+    def Hp(z): return statement_half(theta, -sigma, 1/sigma, z, True)
+    def Hm(z): return statement_half(theta, -sigma, 1/sigma, z, False)
+
+    # [L], section 5.10
+    conds = []
+    # Theorem 1
+    conds += [And(1 <= n, p < q, 1 <= m, rho*pi - delta >= pi/2, delta > 0,
+                  E(z*exp(I*pi*(nu + 1))))]
+    # Theorem 2, statements (2) and (3)
+    conds += [And(p + 1 <= m, m + 1 <= q, delta > 0, delta < pi/2, n == 0,
+                  (m - p + 1)*pi - delta >= pi/2,
+                  Hp(z*exp(I*pi*(q-m))), Hm(z*exp(-I*pi*(q-m))))]
+    # Theorem 2, statement (5)
+    conds += [And(p < q, m == q, n == 0, delta > 0,
+                  (sigma + epsilon)*pi - delta >= pi/2, H(z))]
+    # Theorem 3, statements (6) and (7)
+    conds += [And(Or(And(p <= q - 2, 1 <= tau, tau <= sigma/2),
+                     And(p + 1 <= m + n, m + n <= (p + q)/2)),
+                  delta > 0, delta < pi/2, (tau + 1)*pi - delta >= pi/2,
+                  Hp(z*exp(I*pi*nu)), Hm(z*exp(-I*pi*nu)))]
+    # Theorem 4, statements (10) and (11)
+    conds += [And(p < q, 1 <= m, rho > 0, delta > 0, delta + rho*pi < pi/2,
+                  (tau + epsilon)*pi - delta >= pi/2,
+                  Hp(z*exp(I*pi*nu)), Hm(z*exp(-I*pi*nu)))]
+    # Trivial case
+    conds += [m == 0]
+
+    # TODO
+    # Theorem 5 is quite general
+    # Theorem 6 contains special cases for q=p+1
+
+    return Or(*conds)
+
+def _int_inversion(g, x, t):
+    """
+    Compute the laplace inversion integral, assuming the formula applies.
+    """
+    b, a = _get_coeff_exp(g.argument, x)
+    C, g = _inflate_fox_h(meijerg(g.an, g.aother, g.bm, g.bother, b/t**a), -a)
+    return C/t*g
+
+
 ####################################################################
 # Finally, the real meat.
 ####################################################################
 
 _lookup_table = None
+@cacheit
 def _rewrite_single(f, x, recursive=True):
     """
     Try to rewrite f as a sum of single G functions of the form
@@ -973,9 +1189,20 @@ def _rewrite_single(f, x, recursive=True):
     _debug('Trying recursive mellin transform method.')
     from sympy.integrals.transforms import (mellin_transform,
                                     inverse_mellin_transform, IntegralTransformError)
-    from sympy import Heaviside, Abs, oo, nan, zoo
-    s = Dummy('s')
+    from sympy import oo, nan, zoo, simplify
+    def my_imt(F, s, x, strip):
+        """ Calling simplify() all the time is slow and not helpful, since
+            most of the time it only factors things in a way that has to be
+            un-done anyway. But sometimes it can remove apparent poles. """
+        # XXX should this be in inverse_mellin_transform?
+        try:
+            return inverse_mellin_transform(F, s, x, strip,
+                                            as_meijerg=True, needeval=True)
+        except ValueError:
+            return inverse_mellin_transform(simplify(F), s, x, strip,
+                                            as_meijerg=True, needeval=True)
     f = f_
+    s = _dummy('s', 'rewrite-single', f)
     # to avoid infinite recursion, we have to force the two g functions case
     def my_integrator(f, x):
         from sympy import Integral, hyperexpand
@@ -988,22 +1215,20 @@ def _rewrite_single(f, x, recursive=True):
     try:
         F, strip, _ = mellin_transform(f, x, s, integrator=my_integrator,
                                        simplify=False, needeval=True)
-        g = inverse_mellin_transform(F, s, x, strip, as_meijerg=True, needeval=True)
+        g = my_imt(F, s, x, strip)
     except IntegralTransformError:
         g = None
     if g is None:
-        # We try to find an expression by analytic continuation. For this we have
-        # to make sure the integrand is actually analytic. Since the integration
-        # engine only knows how to deal with the functions in the lookup tables,
-        # the following is sufficient:
-        if not f.has(Heaviside, Abs):
+        # We try to find an expression by analytic continuation.
+        # (also if the dummy is already in the expression, there is no point in
+        #  putting in another one)
+        a = _dummy_('a', 'rewrite-single')
+        if not f.has(a) and _is_analytic(f, x):
             try:
-                a = Dummy('a')
                 F, strip, _ = mellin_transform(f.subs(x, a*x), x, s,
                                                integrator=my_integrator,
-                                               needeval=True)
-                g = inverse_mellin_transform(F, s, x, strip, as_meijerg=True,
-                                             needeval=True).subs(a, 1)
+                                               needeval=True, simplify=False)
+                g = my_imt(F, s, x, strip).subs(a, 1)
             except IntegralTransformError:
                 g = None
     if g is None or g.has(oo, nan, zoo):
@@ -1044,6 +1269,8 @@ def _rewrite2(f, x):
     l = _mul_as_two_parts(g)
     if not l:
         return None
+    l.sort(key=lambda p: (len(_exponents(p[0], x)) + len(_exponents(p[1], x)),
+                          len(_functions(p[0], x)) + len(_functions(p[1], x))))
     for fac1, fac2 in l:
         g1 = _rewrite_single(fac1, x)
         g2 = _rewrite_single(fac2, x)
@@ -1082,7 +1309,9 @@ def meijerint_indefinite(f, x):
         #   (or a similar expression with 1 and 0 exchanged ... pick the one
         #    which yields a well-defined function)
         # [R, section 5]
-        t = Dummy('t')
+        # (Note that this dummy will immediately go away again, so we
+        #  can safely pass S(1) for `expr`.)
+        t = _dummy('t', 'meijerint-indefinite', S(1))
         def tr(p): return [a + rho + 1 for a in p]
         if any(b.is_integer and b <= 0 for b in tr(g.bm)):
             r = -meijerg(tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
@@ -1229,7 +1458,7 @@ def _meijerint_definite_2(f, x):
     # _meijerint_definite_3 for (2) and (3) combined.
 
     # use a positive dummy - we integrate from 0 to oo
-    dummy = Dummy('x', positive=True)
+    dummy = _dummy('x', 'meijerint-definite2', f, positive=True)
     f = f.subs(x, dummy)
     x = dummy
 
@@ -1314,3 +1543,81 @@ def _meijerint_definite_4(f, x, only_double=False):
             _debug('But cond is always False.')
         else:
             return res, cond
+
+def meijerint_inversion(f, x, t):
+    """
+    Compute the inverse laplace transform
+    :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
+    for real c larger than the real part of all singularities of f.
+    Note that `t` is always assumed real and positive.
+
+    Return None if the integral does not exist or could not be evaluated.
+    """
+    from sympy import I, Integral, exp, expand, log, Add, Mul, Heaviside
+    f_ = f
+    c = Dummy('c')
+    _debug('Laplace-inverting', f)
+    if not _is_analytic(f, x):
+        _debug('But expression is not analytic.')
+        return None
+    # We filter out exponentials here. If we are given an Add this will not
+    # work, but the calling code will take care of that.
+    shift = 0
+    if f.is_Mul:
+        args = list(f.args)
+        newargs = []
+        exponentials = []
+        while args:
+            arg = args.pop()
+            if isinstance(arg, exp):
+                arg2 = expand(arg)
+                if arg2.is_Mul:
+                    args += arg2.args
+                    continue
+                try:
+                    a, b = _get_coeff_exp(arg.args[0], x)
+                except ValueError:
+                    b = 0
+                if b == 1:
+                    exponentials.append(a)
+                else:
+                    newargs.append(arg)
+            elif arg.is_Pow:
+                arg2 = expand(arg)
+                if arg2.is_Mul:
+                    args += arg2.args
+                    continue
+                if not arg.base.has(x):
+                    try:
+                        a, b = _get_coeff_exp(arg.exp, x)
+                    except ValueError:
+                        b = 0
+                    if b == 1:
+                       exponentials.append(a*log(arg.base))
+                newargs.append(arg)
+            else:
+                newargs.append(arg)
+        shift = Add(*exponentials)
+        f = Mul(*newargs)
+    gs = _rewrite1(f, x)
+    if gs is not None:
+        fac, po, g, cond = gs
+        _debug('Could rewrite as single G function:', fac, po, g)
+        res = S(0)
+        for C, s, f in g:
+            C, f = _rewrite_inversion(fac*C, po*x**s, f, x)
+            res += C*_int_inversion(f, x, t)
+            cond = And(cond, _check_antecedents_inversion(f, x))
+        cond = _compute_branch(cond)
+        if cond is False:
+            _debug('But cond is always False.')
+        else:
+            _debug('Result before branch substitution:', res)
+            res = _compute_branch(hyperexpand(res))
+            if not res.has(Heaviside):
+                res *= Heaviside(t)
+            res = res.subs(t, t + shift)
+            if not isinstance(cond, bool):
+                cond = cond.subs(t, t + shift)
+            return Piecewise((res, cond),
+                             (Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)), True))

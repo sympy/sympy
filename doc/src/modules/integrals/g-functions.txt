@@ -1,0 +1,114 @@
+The Inverse Laplace Transform of a G-function
+*********************************************
+
+The inverse laplace transform of a Meijer G-function can be expressed as
+another G-function. This is a fairly versatile method for computing this
+transform. However, I could not find the details in the literature, so I work
+them out here. In [Luke1969], section 5.6.3, there is a formula for the inverse
+Laplace transform of a G-function of argument `bz`, and convergence conditions
+are also given. However, we need a formula for argument `bz^a` for rational `a`.
+
+We are asked to compute
+
+.. math ::
+    f(t) = \frac{1}{2\pi i} \int_{c-i\infty}^{c+i\infty} e^{zt} G(bz^a) \mathrm{d}z,
+
+for positive real `t`. Three questions arise:
+
+1. When does this integral converge?
+2. How can we compute the integral?
+3. When is our computation valid?
+
+.. [Luke1969] The Special Functions and Their Approximations, Volume 1
+
+
+How to compute the integral
+===========================
+
+We shall work formally for now. Denote by `\Delta(s)` the product of gamma
+functions appearing in the definition of `G`, so that
+
+.. math :: G(z) = \frac{1}{2\pi i} \int_L \Delta(s) z^s \mathrm{d}s.
+
+Thus
+
+.. math ::
+    f(t) = \frac{1}{(2\pi i)^2} \int_{c - i\infty}^{c + i\infty} \int_L
+                  e^{zt} \Delta(s) b^s z^{as} \mathrm{d}s \mathrm{d}z.
+
+We interchange the order of integration to get
+
+.. math ::
+    f(t) = \frac{1}{2\pi i} \int_L b^s \Delta(s)
+          \int_{c-i\infty}^{c+i\infty} e^{zt} z^{as} \frac{\mathrm{d}z}{2\pi i}
+                \mathrm{d}s.
+
+The inner integral is easily seen to be
+`\frac{1}{\Gamma(-as)} \frac{1}{t^{1+as}}`. (Using Cauchy's theorem and Jordan's
+lemma deform the contour to run from `-\infty` to `-\infty`, encircling `0` once
+in the negative sense. For `as` real and greater than one,
+this contour can be pushed onto
+the negative real axis and the integral is recognised as a product of a sine and
+a gamma function. The formula is then proved using the functional equation of the
+gamma function, and extended to the entire domain of convergence of the original
+integral by appealing to analytic continuation.)
+Hence we find
+
+.. math ::
+  f(t) = \frac{1}{t} \frac{1}{2\pi i} \int_L \Delta(s) \frac{1}{\Gamma(-as)}
+                \left(\frac{b}{t^a}\right)^s \mathrm{d}s,
+
+which is a so-called Fox H function (of argument `\frac{b}{t^a}`). For rational
+`a`, this can be expressed as a Meijer G-function using the gamma function
+multiplication theorem.
+
+When this computation is valid
+==============================
+
+There are a number of obstacles in this computation. Interchange of integrals
+is only valid if all integrals involved are absolutely convergent. In
+particular the inner integral has to converge. Also, for our identification of
+the final integral as a Fox H / Meijer G-function to be correct, the poles of
+the newly obtained gamma function must be separated properly.
+
+It is easy to check that the inner integal converges absolutely for
+`Re(as) < -1`. Thus the contour `L` has to run left of the line `Re(as) = -1`.
+Under this condition, the poles of the newly-introduced gamma function are
+separated properly.
+
+It remains to observe that the Meijer G-function is an analytic, unbranched
+function of its parameters, and of the coefficient `b`. Hence so is `f(t)`.
+Thus the final computation remains valid as long as the initial integral
+converges, and if there exists a changed set of parameters where the computation
+is valid. If we assume w.l.o.g. that `a > 0`, then the latter condition is
+fulfilled if `G` converges along contours (2) or (3) of [Luke1969],
+section 5.2, i.e. either `\delta >= \frac{a}{2}` or `p \ge 1, p \ge q`.
+
+When the integral exists
+========================
+
+Using [Luke1969], section 5.10, for any given meijer G-function we can find a
+dominant term of the form `z^a e^{bz^c}` (although this expression might not be
+the best possible, because of cancellation).
+
+We must thus investigate
+
+.. math :: \lim_{T \to \infty} \int_{c-iT}^{c+iT}
+                     e^{zt} z^a e^{bz^c} \mathrm{d}z.
+
+(This principal value integral is the exact statement used in the Laplace
+inversion theorem.) We write `z = c + i \tau`. Then
+`arg(z) \to \pm \frac{\pi}{2}`, and so `e^{zt} \sim e^{it \tau}` (where `\sim`
+shall always mean ``asymptotically equivalent up to a positive real
+multiplicative constant''). Also
+`z^{x + iy} \sim |\tau|^x e^{i y \log{|\tau|}} e^{\pm x i \frac{\pi}{2}}.`
+
+Set `\omega_{\pm} = b e^{\pm i Re(c) \frac{\pi}{2}}`. We have three cases:
+
+1. `b=0` or `Re(c) \le 0`.
+   In this case the integral converges if `Re(a) \le -1`.
+2. `b \ne 0`, `Im(c) = 0`, `Re(c) > 0`.
+   In this case the integral converges if `Re(\omega_{\pm}) < 0`.
+3. `b \ne 0`, `Im(c) = 0`, `Re(c) > 0`, `Re(\omega_{\pm}) \le 0`, and at least
+   one of `Re(\omega_{\pm}) = 0`.
+   Here the same condition as in (1) applies.

@@ -2,10 +2,10 @@ from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
                    hyperexpand, exp, simplify, sqrt, pi, erf)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
-         meijerint_definite)
+         meijerint_definite, meijerint_inversion)
 from sympy.utilities.randtest import (test_numerically,
          random_complex_number as randcplx)
-from sympy.abc import x, y, a, b, c, d
+from sympy.abc import x, y, a, b, c, d, s, t
 
 def test_rewrite_single():
     def t(expr, c, m):
@@ -120,6 +120,20 @@ def test_meijerint():
     assert meijerint_definite(exp(-abs(2*x-3)), x, -oo, oo) == (1, True)
     assert meijerint_definite(exp(-((x-mu)/sigma)**2/2)/sqrt(2*pi*sigma**2),
                               x, -oo, oo) == (1, True)
+
+def test_inversion():
+    from sympy import piecewise_fold, besselj, sqrt, I, sin, cos
+    def inv(f): return piecewise_fold(meijerint_inversion(f, s, t))
+    assert inv(1/(s**2 + 1)) == sin(t)
+    assert inv(s/(s**2 + 1)) == cos(t)
+    i = inv(exp(-s)/s)
+    assert i.args[0].args[0] == 0 and i.args[1].args[0] == 1
+    assert inv(1/sqrt(1 + s**2)) == besselj(0, t)
+
+    # Test some antcedents checking.
+    assert meijerint_inversion(sqrt(s)/sqrt(1 + s**2), s, t) is None
+    assert inv(exp(s**2)) is None
+    assert meijerint_inversion(exp(-s**2), s, t) is None
 
 def test_lookup_table():
     from random import uniform, randrange

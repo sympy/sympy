@@ -7,6 +7,8 @@ from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
 from sympy.core import S
 
+from sympy.integrals.meijerint import _dummy
+
 ##########################################################################
 # Helpers / Utilities
 ##########################################################################
@@ -211,7 +213,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     from sympy import re, Max, Min
     # We use a fresh dummy, because assumptions on s might drop conditions on
     # convergence of the integral.
-    s = Dummy('s')
+    s = _dummy('s', 'mellin-transform', f)
     F = integrator(x**(s-1) * f, x)
 
     if not F.has(Integral):
