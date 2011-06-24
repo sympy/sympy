@@ -7,7 +7,10 @@ class DynamicSymbol(Symbol):
 
     DynamicSymbol behaves just like Symbol, except when it is differentitated
     with respect to Symbol('t'), in which case  another DynamicSymbol is
-    returned.
+    returned. The new DynamicSymbol has a 'd' appended to the end of its name,
+    to represent "time derivative", with one 'd' per level of differentiation.
+    To avoid confusion, it is reccommended that DynamicSymbols are not given
+    base names which end in 'd'.
 
     >>> t, x = symbols('t x')
     >>> y = DynamicSymbol('y')
@@ -35,17 +38,13 @@ class DynamicSymbol(Symbol):
 
     """
 
-    dlevel = 0
-
     @property
     def free_symbols(self):
         return set([Symbol('t'), self])
 
     def _eval_derivative(self, s):
         if s == Symbol('t'):
-            news = DynamicSymbol(self.name + 'd')
-            news.dlevel = self.dlevel + 1
-            return news
+            return DynamicSymbol(self.name + 'd')
         elif self == s:
             return S.One
         else:

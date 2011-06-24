@@ -1,4 +1,4 @@
-from sympy import Symbol, diff
+from sympy import Symbol, diff, sin, cos, exp, sqrt
 from sympy.physics.mechanics import DynamicSymbol
 
 def test_dynamicsymbol():
@@ -20,3 +20,6 @@ def test_dynamicsymbol():
             8 * x * xd)
     assert diff(4 * x**2 + 3 * xd + x * y, xd) == 3
     assert diff(4 * x**2 + 3 * xd + x * y, xdd) == 0
+    assert diff(sin(x), t) == xd * cos(x)
+    assert diff(exp(x), t) == xd * exp(x)
+    assert diff(sqrt(x), t) == xd / (2 * sqrt(x))

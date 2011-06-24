@@ -8,6 +8,7 @@ class Dyad(object):
     """A Dyad object.
 
     See:
+    http://en.wikipedia.org/wiki/Dyadic_tensor
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
     A more powerful way to represent a rigid body's inertia. While it is more
@@ -359,8 +360,8 @@ class ReferenceFrame(object):
 
     """
 
-    def __init__(self, name=''):
-        """init for ReferenceFrame. """
+    def __init__(self, name):
+        """ReferenceFrame's need a name which defines its basis vectors."""
         if not isinstance(name, str):
             raise TypeError('Need to supply a valid name')
         self.name = name

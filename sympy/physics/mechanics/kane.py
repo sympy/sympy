@@ -8,10 +8,71 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.particle import Particle
 
 class Kane(object):
-    """Kane's method object. """
+    """Kane's method object.
+
+    This object is used to do the "book-keeping" as you go through and form
+    equations of motion in the way Kane presents in:
+    Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
+
+    A simple example for a one degree of freedom translational
+    spring-mass-damper follows
+
+    Example
+    =======
+
+    In this example, we first need to do the kinematics.
+    This involves creating generalized speeds and coordinates and their
+    derivatives.
+    Then we create a point and set its velocity in a frame.
+
+    >>> q, qd, u, ud = dynamicsymbols('q qd u ud')
+    >>> m, c, k = symbols('m c k')
+    >>> N = ReferenceFrame('N')
+    >>> P = Point('P')
+    >>> P.set_vel(N, u * N.x)
+
+    Next we need to arrange/store information in the way the Kane requires.
+    The kinematic differential equations need to be stored in a dict.
+    A list of forces/torques must be constructed, where each entry in the list
+    is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where the Vectors
+    represent the Force or Torque.
+    Next a particle needs to be created, and it needs to have a point and mass
+    assigned to it.
+    Finally, a list of all bodies and particles needs to be created.
+
+    >>> kd = {qd: u}
+    >>> FL = [(P, (-k * q - c * u) * N.x)]
+    >>> pa = Particle()
+    >>> pa.mass = m
+    >>> pa.point = P
+    >>> BL = [pa]
+
+    Finally we can generate the equations of motion.
+    First we create the Kane object and supply an inertial frame.
+    Next we pass it the generalized speeds.
+    Then we pass it the kinematic differential equation dict.
+    Next we form FR* and FR to complete: Fr + Fr* = 0.
+    We have the equations of motion at this point.
+    It makes sense to rearrnge them though, so we calculate the mass matrix and
+    the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is
+    the mass matrix, udot is a vector of the time derivatives of the
+    generalized speeds, and forcing is a vector representing "forcing" terms.
+
+    >>> KM = Kane(N)
+    >>> KM.gen_speeds([u])
+    >>> KM.kindiffeq(kd)
+    >>> frstar = KM.form_frstar(BL)
+    >>> fr = KM.form_fr(FL)
+    >>> MM = KM.mass_matrix()
+    >>> forcing = KM.forcing()
+    >>> rhs = MM.inv() * forcing
+    >>> rhs
+    [(-q*k - u*c)/m]
+
+    """
 
     def __init__(self, frame):
-        """Supply the inertial frame. """
+        """Supply the inertial frame for Kane initialization. """
         self._inertial = frame
         self._us = None
         self._qs = None
@@ -28,7 +89,7 @@ class Kane(object):
         self._rhs = None
 
     def _find_others(self, inlist, insyms):
-        """Finds all non-supplied DynamicSymbols in the list of expressions"""
+        """Finds all non-supplied DynamicSymbols in the list of expressions."""
 
         def _deeper(inexpr):
             oli = []
@@ -57,11 +118,13 @@ class Kane(object):
         return ol
 
     def gen_speeds(self, inlist):
+        """Supply all the generalized speeds in a list. """
         if not isinstance(inlist, (list, tuple)):
             raise TypeError('Generalized Speeds must be supplied in a list')
         self._us = inlist
 
     def kindiffeq(self, indict):
+        """Supply all the kinematic differential equations in a dict form. """
         if not isinstance(indict, dict):
             raise TypeError('Kinematic Differential Equations must be '
                             'supplied in a dictionary')
@@ -73,6 +136,12 @@ class Kane(object):
         self._qdots = indict.keys()
 
     def dependent_speeds(self, uds, conl):
+        """This is used to when dealing with systems with motion constraints.
+
+        There will be much more documentation for this in the future.
+
+        """
+
         if not isinstance(uds, (list, tuple)):
             raise TypeError('Dependent speeds and constraints must each be '
                             'provided in their own list')
@@ -117,7 +186,19 @@ class Kane(object):
         self._Brs = ml1i * C
 
     def form_fr(self, fl):
-        #dict is body, force
+        """Form the generalized active force.
+
+        Computes the vector of the generalized active force vector.
+        Used to compute E.o.M. in the form Fr + Fr* = 0.
+
+        Parameters
+        ==========
+        fl : list
+            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
+            tuples which represent the force at a point or torque on a frame.
+
+        """
+
         if not isinstance(fl, (list, tuple)):
             raise TypeError('Forces must be supplied in a list of: lists or '
                             'tuples.')
@@ -154,6 +235,18 @@ class Kane(object):
         return FR
 
     def form_frstar(self, bl):
+        """Form the generalized inertia force.
+
+        Computes the vector of the generalized inertia force vector.
+        Used to compute E.o.M. in the form Fr + Fr* = 0.
+
+        Parameters
+        ==========
+        bl : list
+            A list of all RigidBody's and Point's in the system.
+
+        """
+
         if not isinstance(bl, (list, tuple)):
             raise TypeError('Bodies must be supplied in a list.')
         N = self._inertial
@@ -260,6 +353,18 @@ class Kane(object):
         return FRSTAR
 
     def mass_matrix(self):
+        """Computes the system's mass matrix.
+
+        The mass matrix for the system represents a generalized m, in a
+        multibody interpretation of f = m a.
+
+        When working this way, the E.o.M. in the form: [MM] udot = forcing,
+        where MM is the mass matrix, udot is a vector of the time derivatives
+        of the generalized speeds, and forcing is a vector representing
+        various "forcing" terms.
+
+        """
+
         if (self._frstar == None) & (self._fr == None):
             raise ValueError('Need to compute FR* first')
         if len(self._uds) == 0:
@@ -278,6 +383,18 @@ class Kane(object):
         return MM
 
     def forcing(self):
+        """Computes the system's forcing terms
+
+        The mass matrix for the system represents a generalized f, in a
+        multibody interpretation of f = m a.
+
+        When working this way, the E.o.M. in the form: [MM] udot = forcing,
+        where MM is the mass matrix, udot is a vector of the time derivatives
+        of the generalized speeds, and forcing is a vector representing
+        various "forcing" terms.
+
+        """
+
         if (self._frstar == None) & (self._fr == None):
             raise ValueError('Need to compute FR* first')
         t = Symbol('t')
@@ -299,4 +416,13 @@ class Kane(object):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    from sympy import symbols
+    from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
+                                         Particle, Kane)
+    global_dict = {'symbols': symbols,
+                   'dynamicsymbols': dynamicsymbols,
+                   'ReferenceFrame': ReferenceFrame,
+                   'Point': Point,
+                   'Particle': Particle,
+                   'Kane': Kane}
+    doctest.testmod(globs=global_dict)

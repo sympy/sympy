@@ -7,7 +7,32 @@ from sympy.physics.mechanics.essential import ReferenceFrame, Dyad
 class RigidBody(object):
     """An idealized rigid body.
 
+    This is essentially a container which holds the various components which
+    describe a rigid body: mass, point, reference frame, and inertia.
+
+    Attributes
+    ==========
+    mass : Sympifyable
+        The body's mass
+    inertia : (Dyad, Point)
+        The body's inertia about a point; stored in a tuple as shown above
+    point : Point
+        The point which represents the mass center of the rigid body
+    frame : ReferenceFrame
+        The ReferenceFrame which the rigid body is fixed in
+
+    Example
+    =======
+
+    >>> m = Symbol('m')
+    >>> A = ReferenceFrame('A')
+    >>> P = Point('P')
+    >>> I = Dyad([])
     >>> B = RigidBody()
+    >>> B.mass = m
+    >>> B.frame = A
+    >>> B.cm = P
+    >>> B.inertia = (I, B.cm)
 
     """
 
@@ -61,4 +86,11 @@ class RigidBody(object):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    from sympy import Symbol
+    from sympy.physics.mechanics import ReferenceFrame, Dyad, Point, RigidBody
+    global_dict = {'Symbol': Symbol,
+                   'ReferenceFrame': ReferenceFrame,
+                   'Dyad': Dyad,
+                   'Point': Point,
+                   'RigidBody': RigidBody}
+    doctest.testmod(globs=global_dict)
