@@ -209,10 +209,13 @@ class Set(Basic):
     def is_real(self):
         return False
     @property
-    def is_finite(self):
+    def is_countable(self):
+        return None
+    @property
+    def is_FiniteSet(self):
         return False
     @property
-    def is_interval(self):
+    def is_Interval(self):
         return False
 
 class RealSet(Set, EvalfMixin):
@@ -233,6 +236,10 @@ class CountableSet(Set):
 
     def __iter__(self):
         raise NotImplementedError("Iteration not yet implemented")
+
+    @property
+    def is_countable(self):
+        return True
 
 class Interval(RealSet):
     """
@@ -439,7 +446,7 @@ class Interval(RealSet):
 
         return is_comparable
     @property
-    def is_interval(self):
+    def is_Interval(self):
         return True
 
     @property
@@ -510,7 +517,7 @@ class Union(Set):
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
-        if len(args)==0:
+        if len(args) == 0:
             return S.EmptySet
 
         # Only real parts? Return a RealUnion
@@ -519,9 +526,9 @@ class Union(Set):
 
         # Lets find and merge real elements if we have them
         # Separate into finite, real and other sets
-        finite_set = sum([s for s in args if s.is_finite], S.EmptySet)
+        finite_set = sum([s for s in args if s.is_FiniteSet], S.EmptySet)
         real_sets = [s for s in args if s.is_real]
-        other_sets = [s for s in args if not s.is_finite and not s.is_real]
+        other_sets = [s for s in args if not s.is_FiniteSet and not s.is_real]
 
         # Separate finite_set into real and other part
         real_finite = RealFiniteSet(i for i in finite_set if i.is_real)
@@ -532,13 +539,13 @@ class Union(Set):
 
         if not real_union: # Real part was empty
             sets = other_sets + [other_finite]
-        elif real_union.is_finite: # Real part was just a FiniteSet
+        elif real_union.is_FiniteSet: # Real part was just a FiniteSet
             sets = other_sets + [real_union+other_finite]
-        elif real_union.is_interval: # Real part was just an Interval
+        elif real_union.is_Interval: # Real part was just an Interval
             sets = [real_union] + other_sets + [other_finite]
         elif isinstance(real_union, RealUnion): # Otherwise separate
-            intervals = [s for s in real_union.args if s.is_interval]
-            finite_set = sum([s for s in real_union.args if s.is_finite] +
+            intervals = [s for s in real_union.args if s.is_Interval]
+            finite_set = sum([s for s in real_union.args if s.is_FiniteSet] +
                 [other_finite], S.EmptySet) # Join FiniteSet back together
             sets = intervals + [finite_set] + other_sets
 
@@ -547,7 +554,7 @@ class Union(Set):
 
         # If a single set is left over, don't create a new Union object but
         # rather return the single set.
-        if len(sets)==1:
+        if len(sets) == 1:
             return sets[0]
 
         return Basic.__new__(cls, *sets)
@@ -711,7 +718,7 @@ class RealUnion(Union, RealSet):
 
         # If a single set is left over, don't create a new Union object but
         # rather return the single set.
-        if len(sets)==1:
+        if len(sets) == 1:
             return sets[0]
 
         return Basic.__new__(cls, *sets)
@@ -789,7 +796,7 @@ class FiniteSet(CountableSet):
         # Turn tuples into Tuples
         args = [Tuple(*arg) if arg.__class__ is tuple else arg for arg in args]
 
-        if len(args)==0:
+        if len(args) == 0:
             return EmptySet()
 
         if all(arg.is_real and arg.is_number for arg in args):
@@ -879,7 +886,7 @@ class FiniteSet(CountableSet):
         return Or(*[Eq(symbol, elem) for elem in self])
 
     @property
-    def is_finite(self):
+    def is_FiniteSet(self):
         return True
 
     @property
