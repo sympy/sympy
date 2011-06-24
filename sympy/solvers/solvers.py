@@ -380,11 +380,31 @@ def solve(f, *symbols, **flags):
                     >>> solve([x**2 + y -2, y**2 - 4], x, y)
                     [(-2, -2), (0, 2), (0, 2), (2, -2)]
 
+                Warning: there is a possibility of obtaining ambiguous results
+                if no symbols are given for a nonlinear system of equations or
+                are given as a set since the symbols are not presently reported
+                with the solution. A warning will be issued in this situation.
+                    >>> solve([x - 2, x**2 + y])
+                    <BLANKLINE>
+                        For nonlinear systems of equations, symbols should be
+                        given as a list so as to avoid ambiguity in the results.
+                        solve sorted the symbols as [x, y]
+                    [(2, -4)]
+
+                    >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
+                    <BLANKLINE>
+                        For nonlinear systems of equations, symbols should be
+                        given as a list so as to avoid ambiguity in the results.
+                        solve sorted the symbols as [x, f(x)]
+                    [(2, -4)]
+
        See also:
           rsolve() for solving recurrence relationships
           dsolve() for solving differential equations
 
     """
+    from types import GeneratorType
+
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
@@ -392,6 +412,12 @@ def solve(f, *symbols, **flags):
     def sympified_list(w):
         return map(sympify, iff(iterable(w), w, [w]))
     bare_f = not iterable(f)
+    ordered_symbols = (symbols and
+                       symbols[0] and
+                       (isinstance(symbols[0], Symbol) or
+                        ordered_iter(symbols[0], include=GeneratorType)
+                       )
+                      )
     f, symbols = (sympified_list(w) for w in [f, symbols])
 
     # preprocess equation(s)
@@ -415,9 +441,10 @@ def solve(f, *symbols, **flags):
         symbols = set([])
         for fi in f:
             symbols |= fi.free_symbols or set([Dummy()])
+        ordered_symbols = False
     elif len(symbols) == 1 and iterable(symbols[0]):
         symbols = symbols[0]
-    if not ordered_iter(symbols):
+    if not ordered_symbols:
         # we do this to make the results returned canonical in case f
         # contains a system of nonlinear equations; all other cases should
         # be unambiguous
@@ -471,6 +498,21 @@ def solve(f, *symbols, **flags):
     if symbol_swapped and type(solution) is dict:
             solution = dict([(swap_back_dict[k], v.subs(swap_back_dict))
                               for k, v in solution.iteritems()])
+    # warn if ambiguous results are being obtained
+    # XXX agree on how to make this unambiguous
+    # see issue 2405 for logic in how Polys chooses ordering and
+    # for discussion of what to return see http://groups.google.com/group/sympy
+    #                           Apr 18, 2011 posting 'using results from solve'
+    else:
+        if (not ordered_symbols and
+            len(symbols) > 1 and
+            ordered_iter(solution) and
+            ordered_iter(solution[0]) and
+            any(len(set(s)) > 1 for s in solution)):
+            msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
+                   '\n\tgiven as a list so as to avoid ambiguity in the results.' +
+                   '\n\tsolve sorted the symbols as %s')
+            print msg % str(bool(symbol_swapped) and list(zip(*swap_dict)[0]) or symbols)
     #
     # done
     ###########################################################################

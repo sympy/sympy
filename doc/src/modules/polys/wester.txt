@@ -401,7 +401,7 @@ From the above we can easily find all solutions of the system of polynomial
 equations. Or we can use :func:`solve` to achieve this in a more systematic
 way::
 
-    >>> solve([f, s**2 + c**2 - 1])
+    >>> solve([f, s**2 + c**2 - 1], c, s)
     [(-1, 0), (0, -1), (0, 1), (1, 0)]
 
 Multivariate factoring over algebraic numbers
