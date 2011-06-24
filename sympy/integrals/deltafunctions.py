@@ -1,6 +1,7 @@
 import sympy
 from sympy.functions import DiracDelta, Heaviside
 from sympy.solvers import solve
+from sympy.utilities.misc import default_sort_key
 
 def change_mul(node,x):
     """change_mul(node,x)
@@ -33,7 +34,10 @@ def change_mul(node,x):
         return node
     new_args = []
     dirac = None
-    for arg in node.args:
+    sorted_args = list(node.args)
+    sorted_args.sort(key=default_sort_key)
+
+    for arg in sorted_args:
         if arg.func == DiracDelta and arg.is_simple(x) \
                 and (len(arg.args) <= 1 or arg.args[1]==0):
             if dirac is None:
@@ -44,12 +48,12 @@ def change_mul(node,x):
             new_args.append(change_mul(arg,x))
     if not dirac:#we didn't find any simple dirac
         new_args = []
-        for arg in node.args:
+        for arg in sorted_args:
             if arg.func == DiracDelta:
                 new_args.append(arg.simplify(x))
             else:
                 new_args.append(change_mul(arg,x))
-        if tuple(new_args) != node.args:
+        if tuple(new_args) != sorted_args:
             nnode = node.__class__(*new_args).expand()
         else:#if the node didn't change there is nothing to do
             nnode = None
