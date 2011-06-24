@@ -3076,28 +3076,44 @@ class SparseMatrix(Matrix):
         lil[keys[-1][0]] = keys[start:]
         return lil
 
+    def __mul__(self, other):
+        if isinstance(other, SparseMatrix):
+            return self.multiply(other)
+        elif isinstance(other, Matrix):
+            return self.toMatrix() * other
+        else:
+            return self.scalar_multiply(other)
+
+    def multiply(A, B):
+        rows1 = A._lil_row_major()
+        rows2 = B._lil_row_major()
+        Cdict = {}
+        for k in xrange(A.rows):
+            for _, j in rows1[k]:
+                for _, n  in rows2[j]:
+                    temp = A.mat[k, j] * B.mat[j, n]
+                    if (k, n) in Cdict:
+                        Cdict[k, n] += temp
+                    else:
+                        Cdict[k, n] = temp
+        return SparseMatrix(A.rows, B.cols, Cdict)
+
+    def scalar_multiply(matrix, scalar):
+        C = SparseMatrix(matrix.rows, matrix.cols, {})
+        for i in matrix.mat:
+            C.mat[i] = scalar * matrix.mat[i]
+        return C
+
+    def __rmul__(self, other):
+        assert not isinstance(other, (Matrix, SparseMatrix))
+        return self * other
+
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
         if not ordered_iter(value):
             raise TypeError("`value` must be of type list or tuple.")
         self.copyin_matrix(key, SparseMatrix(value))
-
-    def multiply(self,b):
-        """Returns self*b """
-
-        def dotprod(a,b,i,j):
-            if a.cols != b.rows:
-                raise ShapeError("`self.cols` must equal `b.rows`.")
-            r=0
-            for x in range(a.cols):
-                r+=a[i,x]*b[x,j]
-            return r
-
-        r = SparseMatrix(self.rows, b.cols, lambda i,j: dotprod(self,b,i,j))
-        if r.rows == 1 and r.cols ==1:
-            return r[0,0]
-        return r
 
     def submatrix(self, keys):
         if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
