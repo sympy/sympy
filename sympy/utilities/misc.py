@@ -42,3 +42,12 @@ def default_sort_key(item):
     # [1, x, x**2]
 
     return sympify(item).sort_key()
+
+import sys
+size = getattr(sys, "maxint", None)
+if size is None: #Python 3 doesn't have maxint
+    size = sys.maxsize
+if size > 2**32:
+    ARCH = "64-bit"
+else:
+    ARCH = "32-bit"
