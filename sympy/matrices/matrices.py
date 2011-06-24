@@ -3060,6 +3060,22 @@ class SparseMatrix(Matrix):
             M[i] += other[i]
         return M
 
+    def _lil_row_major(self):
+        n = self.rows
+        keys = sorted(self.mat.keys())
+        lil = [[] for x in xrange(n)]
+        if not keys:
+            return lil
+        k = 0
+        start = 0
+        for i in xrange(len(keys)):
+            if keys[i][0] > k:
+                lil[k] = keys[start:i]
+                start = i
+                k = keys[i][0]
+        lil[keys[-1][0]] = keys[start:]
+        return lil
+
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
