@@ -128,7 +128,7 @@ def iterable(i, exclude=(basestring, dict)):
     by default. If you want a pure python definition, make exclude=None. To
     exclude multiple items, pass them as a tuple.
 
-    See also: ordered_iter
+    See also: is_sequence
 
     Examples:
 
@@ -162,26 +162,36 @@ def iterable(i, exclude=(basestring, dict)):
         return not isinstance(i, exclude)
     return True
 
-def ordered_iter(i, include=None):
+def is_sequence(i, include=None):
     """
-    Return a boolean indicating whether i is an ordered iterable in the sympy
-    sense. If anything is iterable but doesn't have an index attribute, it
-    can be included in what is considered iterable by using the 'include'
-    keyword. If multiple items are to be included, pass them as a tuple.
+    Return a boolean indicating whether i is a sequence in the sympy
+    sense. If anything that fails the test below should be included as
+    being a sequence for your application, set 'include' to that object's
+    type; multiple types should be passed as a tuple of types.
+
+    Note: although generators can generate a sequence, they often need special
+    handling to make sure their elements are captured before the generator is
+    exhausted, so these are not included by default in the definition of a
+    sequence.
 
     See also: iterable
 
     Examples:
 
-    >>> from sympy.utilities.iterables import ordered_iter
-    >>> from sympy import Tuple
-    >>> ordered_iter([])
+    >>> from sympy.utilities.iterables import is_sequence
+    >>> from types import GeneratorType
+    >>> is_sequence([])
     True
-    >>> ordered_iter(set())
+    >>> is_sequence(set())
     False
-    >>> ordered_iter('abc')
+    >>> is_sequence('abc')
     False
-    >>> ordered_iter('abc', include=str)
+    >>> is_sequence('abc', include=str)
+    True
+    >>> generator = (c for c in 'abc')
+    >>> is_sequence(generator)
+    False
+    >>> is_sequence(generator, include=(str, GeneratorType))
     True
 
     """

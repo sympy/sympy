@@ -2,7 +2,7 @@ from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
                         oo, Tuple, Dummy, Equality, Interval)
 
 from sympy.core.symbol import Dummy
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
@@ -55,7 +55,7 @@ def _process_limits(*symbols):
         if isinstance(V, Symbol):
             limits.append(Tuple(V))
             continue
-        elif ordered_iter(V, Tuple):
+        elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
             if V[0].is_Symbol:
                 newsymbol = V[0]
@@ -869,7 +869,7 @@ def line_integrate(field, curve, vars):
         raise ValueError("Expecting function specifying field as first argument.")
     if not isinstance(curve, Curve):
         raise ValueError("Expecting Curve entity as second argument.")
-    if not ordered_iter(vars):
+    if not is_sequence(vars):
         raise ValueError("Expecting ordered iterable for variables.")
     if len(curve.functions) != len(vars):
         raise ValueError("Field variable size does not match curve dimension.")

@@ -1,7 +1,7 @@
 from sympy import Matrix, Tuple, symbols, sympify, Basic
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises
-from sympy.core.compatibility import all, ordered_iter, iterable
+from sympy.core.compatibility import all, is_sequence, iterable
 
 def test_Tuple():
     t = (1, 2, 3, 4)
@@ -68,12 +68,12 @@ def test_tuple_wrapper():
     assert wrap_tuples_and_return((p, 1)) == (Tuple(p, 1),)
     assert wrap_tuples_and_return(1, (p, 2), 3) == (1, Tuple(p, 2), 3)
 
-def test_iterable_ordered_iter():
+def test_iterable_is_sequence():
     ordered = [list(), tuple(), Tuple(), Matrix([[]])]
     unordered = [set()]
     not_sympy_iterable = [{}, '', u'']
-    assert all(ordered_iter(i) for i in ordered)
-    assert all(not ordered_iter(i) for i in unordered)
+    assert all(is_sequence(i) for i in ordered)
+    assert all(not is_sequence(i) for i in unordered)
     assert all(iterable(i) for i in ordered + unordered)
     assert all(not iterable(i) for i in not_sympy_iterable)
     assert all(iterable(i, exclude=None) for i in not_sympy_iterable)
