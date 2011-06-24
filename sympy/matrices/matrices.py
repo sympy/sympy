@@ -3108,6 +3108,117 @@ class SparseMatrix(Matrix):
         assert not isinstance(other, (Matrix, SparseMatrix))
         return self * other
 
+    def _lower_row_nonzero_structure(self):
+        n = self.rows
+        NZlist = [[]] * n
+        keys = sorted(self.mat.keys())
+        k = 0
+        startset = False
+        for i in xrange(len(keys)):
+            if startset and (keys[i][0] > k or keys[i][1] > keys[i][0]):
+                NZlist[k] = keys[start:i]
+                startset = False
+            k = keys[i][0]
+            if not startset and keys[i][1] <= keys[i][0] and keys[i][0] == k and not NZlist[k]:
+                start = i
+                startset = True
+        NZlist[keys[start][0]] = keys[start:]
+        return NZlist
+
+    def liupc(self):
+        R = self._lower_row_nonzero_structure()
+        parent = [None] * self.rows
+        virtual = [None] * self.rows
+        for j in xrange(self.rows):
+            for i, (_,r) in enumerate(R[j][:-1]):
+                while virtual[r] and virtual[r] < j:
+                    t = virtual[r]
+                    virtual[r] = j
+                    r = t
+                if not virtual[r]:
+                    virtual[r] = j
+                    parent[r] = j
+        return R, parent
+
+    def row_structure_symbolic_cholesky(self):
+        import copy
+        R, parent = self.liupc()
+        Lrow = copy.deepcopy(R)
+        for k in xrange(self.rows):
+            for _, j in R[k]:
+                while j and j != k:
+                    if (k, j) not in Lrow[k]:
+                        Lrow[k].append((k, j))
+                        Lrow[k].sort()
+                    j = parent[j]
+        return Lrow
+
+    def _cholesky_sparse(self):
+        Crowstruc = self.row_structure_symbolic_cholesky()
+        C = self.zeros(self.rows)
+        for row in Crowstruc:
+            for i, j in row:
+                if i != j:
+                    C[i, j] = self[i, j]
+                    summ = 0
+                    for p1 in Crowstruc[i]:
+                        if p1[1] < j:
+                            for p2 in Crowstruc[j]:
+                                if p2[1] < j:
+                                    if p1[1] == p2[1]:
+                                        summ += C[p1] * C[p2]
+                                else:
+                                    break
+                            else:
+                                break
+                    C[i, j] -= summ
+                    C[i, j] /= C[j, j]
+                else:
+                    C[j, j] = self[j, j]
+                    summ = 0
+                    for _, k in Crowstruc[j]:
+                        if k < j:
+                            summ += C[j, k] ** 2
+                        else:
+                            break
+                    C[j, j] -= summ
+                    C[j, j] = sqrt(C[j, j])
+        return C
+
+    def _LDL_sparse(self):
+        Lrowstruc = self.row_structure_symbolic_cholesky()
+        L = self.eye(self.rows)
+        D = SparseMatrix(self.rows, self.cols, {})
+        
+        for row in Lrowstruc:
+            for i, j in row:
+                if i != j:
+                    L[i, j] = self[i, j]
+                    summ = 0
+                    for p1 in Lrowstruc[i]:
+                        if p1[1] < j:
+                            for p2 in Lrowstruc[j]:
+                                if p2[1] < j:
+                                    if p1[1] == p2[1]:
+                                        summ += L[p1] * L[p2] * D[p1[1], p1[1]]
+                                else:
+                                    break
+                        else:
+                            break
+                    L[i, j] -= summ
+                    L[i, j] /= D[j, j]
+                elif i == j:
+                    D[i, i] = self[i, i]
+                    summ = 0
+                    for _, k in Lrowstruc[i]:
+                        if k < i:
+                            summ += L[i, k]**2 * D[k, k]
+                        else:
+                            break
+                    D[i, i] -= summ
+                                    
+        return L, D
+
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
