@@ -3338,6 +3338,18 @@ class SparseMatrix(Matrix):
         X = L.T._upper_triangular_solve(Y)
         return X
 
+    def _cholesky_solve(self, rhs):
+        L = self._cholesky()
+        Y = L._lower_triangular_solve(rhs)
+        X = L.T._upper_triangular_solve(Y)
+        return X
+
+    def _LDL_solve(self, rhs):
+        L, D = self._LDL_sparse()
+        Z = L._lower_triangular_solve(rhs)
+        Y = D._diagonal_solve(Z)
+        return L.T._upper_triangular_solve(Y)
+
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
