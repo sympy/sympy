@@ -94,6 +94,11 @@ def test_trigsimp3():
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
+def test_trigsimp_issue_2515():
+    x = Symbol('x')
+    assert trigsimp(x*cos(x)*tan(x)) == x*sin(x)
+    assert trigsimp(-sin(x)+cos(x)*tan(x)) == 0
+
 @XFAIL
 def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
