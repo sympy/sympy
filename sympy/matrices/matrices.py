@@ -2579,6 +2579,29 @@ class Matrix(object):
         return C
 
     def LDLdecomposition(self):
+        """
+        Returns the LDL Decomposition (L,D) of matrix A,
+        such that L * D * L.T == A
+        This method eliminates the use of square root.
+        Further this ensures that all the diagonal entries of L are 1.
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix.
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> L, D = A.LDLdecomposition()
+        >>> L
+        [   1,   0, 0]
+        [ 3/5,   1, 0]
+        [-1/5, 1/3, 1]
+        >>> D
+        [25, 0, 0]
+        [ 0, 9, 0]
+        [ 0, 0, 9]
+        >>> L * D * L.T == A
+        True
+
+        """
         from sympy.core.numbers import nan, oo
         if not self.is_symmetric():
             raise Exception('LDL decomposition applies only to symmetric matrices.')
