@@ -646,13 +646,15 @@ class Derivative(Expr):
         while i < len(symbols) - 1: # process up to final Integer
             s, count = symbols[i: i+2]
             iwas = i
-            if s.is_Symbol or isinstance(s, Expr):
-                if count.is_Symbol or isinstance(s, Expr):
-                    count = 1
-                    i += 1
-                elif count.is_Integer:
+            if s.is_Symbol or (isinstance(s, Expr) and not s.is_Number):
+                # We need to test the more specific case of count being an
+                # Integer first.
+                if count.is_Integer:
                     count = int(count)
                     i += 2
+                elif count.is_Symbol or isinstance(count, Expr):
+                    count = 1
+                    i += 1
 
             if i == iwas: # didn't get an update because of bad input
                 raise ValueError('Derivative expects Symbol [, Integer] args but got %s, %s' % (s, count))
@@ -669,13 +671,21 @@ class Derivative(Expr):
         # Now handle symbols that are not symbols by temporarily making them
         # Symbols, doing the derivative and then subbing back.
         back_subs = []
+        forward_subs = []
         for i in range(len(symbol_count)):
             s, count = symbol_count[i]
             if not s.is_Symbol:
                 new_s = C.Symbol('symbol_subs_%i' % i)
-                expr = expr.subs(s, new_s)
-                symbol_count[i] = (new_s, count)
+                forward_subs.append((s, new_s))
                 back_subs.append((new_s, s))
+                symbol_count[i] = (new_s, count)
+        if back_subs and forward_subs:
+            symbols = []
+            for s, count in symbol_count:
+                symbols.append(s)
+                symbols.append(sympify(count))
+            obj = Expr.__new__(cls, expr.subs(forward_subs), *symbols, **assumptions)
+            return obj.subs(back_subs).doit()
 
         evaluate = assumptions.pop('evaluate', False)
 
@@ -701,7 +711,7 @@ class Derivative(Expr):
                 #TODO: check if assumption of discontinuous derivatives exist
                 symbols.sort(key=default_sort_key)
             obj = Expr.__new__(cls, expr, *symbols, **assumptions)
-            return obj.subs(back_subs)
+            return obj
 
         # compute the derivative now
         unevaluated_symbols = []
@@ -718,11 +728,11 @@ class Derivative(Expr):
             if isinstance(expr, Derivative):
                 return Derivative(expr.args[0], *sorted(expr.args[1:],
                     key=default_sort_key))
-            return expr.subs(back_subs)
+            return expr
 
         unevaluated_symbols.sort(key=default_sort_key)
         obj = Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
-        return obj.subs(back_subs)
+        return obj
 
     def _eval_derivative(self, s):
         if s not in self.variables:
