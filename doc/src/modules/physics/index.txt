@@ -13,4 +13,5 @@ Contents
     :maxdepth: 3
 
     units.txt
+    mechanics/index.txt
     quantum/index.txt
