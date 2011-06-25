@@ -73,6 +73,8 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
+from sympy.polys import lgroebner, lpoly
+
 class Poly(Expr):
     """Generic class for representing polynomial expressions. """
 
@@ -5297,13 +5299,31 @@ def groebner(F, *gens, **args):
     else:
         raise DomainError("can't compute a Groebner basis over %s" % domain)
 
-    for i, poly in enumerate(polys):
-        poly = poly.set_domain(opt.domain).rep.to_dict()
-        polys[i] = sdp_from_dict(poly, opt.order)
+    if opt.domain == QQ:
+        for i, poly in enumerate(polys):
+            poly = poly.set_domain(opt.domain).rep.to_dict()
+            polys[i] = poly
 
-    level = len(gens)-1
+        if not polys:
+            return polys
+        ngens = len(polys[0].keys())
+        lp = lpoly.LPoly(['X%d'%i for i in range(ngens)], opt.domain, opt.order)
+        for i in range(len(polys)):
+            p = lpoly.Poly(lp)
+            for k,v in polys[i].items():
+                p[k] = v
+            polys[i] = p
+        level = len(opt.gens)-1
+        G = lgroebner.groebner_basis(polys)
+    else:
+        for i, poly in enumerate(polys):
+            poly = poly.set_domain(opt.domain).rep.to_dict()
+            polys[i] = sdp_from_dict(poly, opt.order)
 
-    G = sdp_groebner(polys, level, opt.order, opt.domain)
+        level = len(gens)-1
+
+        G = sdp_groebner(polys, level, opt.order, opt.domain)
+
     G = [ Poly._from_dict(dict(g), opt) for g in G ]
 
     if not domain.has_Field:
