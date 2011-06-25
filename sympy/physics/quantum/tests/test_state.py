@@ -1,4 +1,4 @@
-from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify
+from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify, S
 from sympy import Integer, conjugate, pretty, latex, oo, sin, pi
 
 from sympy.physics.quantum.dagger import Dagger
@@ -148,13 +148,15 @@ def test_wavefunction():
     assert p(10) == 10000
     assert lims[x] == (-oo, oo)
 
-    g = Wavefunction(x**2*y+y**2*x, (x, 0, 3), (y, 0, 5))
+    g = Wavefunction(x**2*y+y**2*x, (x, 0, 1), (y, 0, 2))
     lims_g = g.limits
 
-    assert lims_g[x] == (0, 3)
-    assert lims_g[y] == (0, 5)
+    assert lims_g[x] == (0, 1)
+    assert lims_g[y] == (0, 2)
     assert g.is_normalized == False
-    assert g(2,4) == 48
+    assert g.norm_constant == 42**(S(1)/2)/14
+    assert g(2,4) == 0
+    assert g(1,1) == 2
 
     h = Wavefunction(sqrt(5)*x**2, (x, 0, 1))
     assert h.is_normalized == True
