@@ -646,8 +646,8 @@ class Derivative(Expr):
         while i < len(symbols) - 1: # process up to final Integer
             s, count = symbols[i: i+2]
             iwas = i
-            if s.is_Symbol:
-                if count.is_Symbol:
+            if s.is_Symbol or isinstance(s, Expr):
+                if count.is_Symbol or isinstance(s, Expr):
                     count = 1
                     i += 1
                 elif count.is_Integer:
@@ -665,6 +665,17 @@ class Derivative(Expr):
         # is no good way to unambiguously print this.
         if all_zero:
             return expr
+
+        # Now handle symbols that are not symbols by temporarily making them
+        # Symbols, doing the derivative and then subbing back.
+        back_subs = []
+        for i in range(len(symbol_count)):
+            s, count = symbol_count[i]
+            if not s.is_Symbol:
+                new_s = C.Symbol('symbol_subs_%i' % i)
+                expr = expr.subs(s, new_s)
+                symbol_count[i] = (new_s, count)
+                back_subs.append((new_s, s))
 
         evaluate = assumptions.pop('evaluate', False)
 
@@ -690,7 +701,7 @@ class Derivative(Expr):
                 #TODO: check if assumption of discontinuous derivatives exist
                 symbols.sort(key=default_sort_key)
             obj = Expr.__new__(cls, expr, *symbols, **assumptions)
-            return obj
+            return obj.subs(back_subs)
 
         # compute the derivative now
         unevaluated_symbols = []
@@ -707,10 +718,11 @@ class Derivative(Expr):
             if isinstance(expr, Derivative):
                 return Derivative(expr.args[0], *sorted(expr.args[1:],
                     key=default_sort_key))
-            return expr
+            return expr.subs(back_subs)
 
         unevaluated_symbols.sort(key=default_sort_key)
-        return Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
+        obj = Expr.__new__(cls, expr, *unevaluated_symbols, **assumptions)
+        return obj.subs(back_subs)
 
     def _eval_derivative(self, s):
         if s not in self.variables:
