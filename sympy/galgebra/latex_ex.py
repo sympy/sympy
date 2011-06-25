@@ -15,6 +15,8 @@ import sympy.galgebra.GA
 #import sympy.galgebra.OGA
 import numpy
 
+from sympy.core.compatibility import cmp_to_key
+
 def debug(txt):
     sys.stderr.write(txt+'\n')
     return
@@ -138,10 +140,10 @@ class LatexPrinter(Printer):
                          'varpi','pi','rho','varrho','varsigma','sigma','tau','upsilon',\
                          'varphi','phi','chi','psi','omega','Gamma','Delta','Theta',\
                          'Lambda','Xi','Pi','Sigma','Upsilon','Phi','Psi','Omega','partial',\
-                         'nabla','eta'),len_cmp)
+                         'nabla','eta'),key=cmp_to_key(len_cmp))
 
     accent_keys = sorted(('hat','check','dot','breve','acute','ddot','grave','tilde',\
-                          'mathring','bar','vec','bm','prm','abs'),len_cmp)
+                          'mathring','bar','vec','bm','prm','abs'),key=cmp_to_key(len_cmp))
 
     greek_cnt = 0
     greek_dict = {}

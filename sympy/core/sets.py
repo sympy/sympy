@@ -486,7 +486,7 @@ class Union(Set):
             return S.EmptySet
 
         # Sort intervals according to their infimum
-        intervals.sort(lambda i, j: cmp(i.start, j.start))
+        intervals.sort(key=lambda i: i.start)
 
         # Merge comparable overlapping intervals
         i = 0
