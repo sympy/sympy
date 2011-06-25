@@ -116,7 +116,8 @@ def _analyze_gens(gens):
 
 def _sort_factors(factors, **args):
     """Sort low-level factors in increasing 'complexity' order. """
-    def order_if_multiple_key((f, n)):
+    def order_if_multiple_key(factor):
+        (f, n) = factor
         return (len(f), n, f)
 
     def order_no_multiple_key(f):
