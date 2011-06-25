@@ -99,7 +99,7 @@ class Point(object):
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.a1pt(O, N, B)
-        (-25*q + qdd)*bx> + (q2dd)*by> + (-10*qd)*bz>
+        (-25*q + qdd)*B.x + (q2dd)*B.y + (-10*qd)*B.z
 
         """
 
@@ -150,7 +150,7 @@ class Point(object):
         >>> P = O.newpoint('P', 10 * B.x)
         >>> O.set_vel(N, 5 * N.x)
         >>> P.a2pt(O, N, B)
-        (-10*qd**2)*bx> + (10*qdd)*by>
+        (-10*qd**2)*B.x + (10*qdd)*B.y
 
         """
 
@@ -181,7 +181,7 @@ class Point(object):
         >>> p1 = Point('p1')
         >>> p1.set_acc(N, 10 * N.x)
         >>> p1.acc(N)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -238,7 +238,7 @@ class Point(object):
         >>> p2 = Point('p2')
         >>> p1.set_pos(p2, 10 * N.x)
         >>> p1.pos_from(p2)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -266,7 +266,7 @@ class Point(object):
         >>> p1 = Point('p1')
         >>> p1.set_acc(N, 10 * N.x)
         >>> p1.acc(N)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -293,7 +293,7 @@ class Point(object):
         >>> p2 = Point('p2')
         >>> p1.set_pos(p2, 10 * N.x)
         >>> p1.pos_from(p2)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -320,7 +320,7 @@ class Point(object):
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)
         >>> p1.vel(N)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -365,7 +365,7 @@ class Point(object):
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.v1pt(O, N, B)
-        (qd)*bx> + (q2d)*by> + (-5*q)*bz>
+        (qd)*B.x + (q2d)*B.y + (-5*q)*B.z
 
         """
 
@@ -412,7 +412,7 @@ class Point(object):
         >>> P = O.newpoint('P', 10 * B.x)
         >>> O.set_vel(N, 5 * N.x)
         >>> P.v2pt(O, N, B)
-        (5)*nx> + (10*qd)*by>
+        (5)*N.x + (10*qd)*B.y
 
         """
 
@@ -441,7 +441,7 @@ class Point(object):
         >>> p1 = Point('p1')
         >>> p1.set_vel(N, 10 * N.x)
         >>> p1.vel(N)
-        (10)*nx>
+        (10)*N.x
 
         """
 

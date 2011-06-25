@@ -57,16 +57,16 @@ class Dyad(object):
             if ar[i][0] == 1:
                 if len(ol) != 0:
                     ol.append(' + ')
-                ol.append(ar[i][1].__str__() + ar[i][2].__str__())
+                ol.append('(' + `ar[i][1]` + '|' + `ar[i][2]` + ')')
             elif ar[i][0] == -1:
                 if len(ol) != 0:
                     ol.append(' ')
-                ol.append('- ' + ar[i][1].__str__() + ar[i][2].__str__())
+                ol.append('- (' + `ar[i][1]` + '|' + `ar[i][2]` + ')')
             elif ar[i][0] != 0:
                 if len(ol) != 0:
                     ol.append(' + ')
-                ol.append('(' + `ar[i][0]` + ')*' + ar[i][1].__str__() +
-                        ar[i][2].__str__())
+                ol.append('(' + `ar[i][0]` + ')*(' + `ar[i][1]` + '|' +
+                        `ar[i][2]` + ')')
         return ''.join(ol)
 
     def __add__(self, other):
@@ -93,9 +93,9 @@ class Dyad(object):
         >>> D1 = outer(N.x, N.y)
         >>> D2 = outer(N.y, N.y)
         >>> D1.dot(D2)
-        nx>ny>
+        (N.x|N.y)
         >>> D1.dot(N.y)
-        nx>
+        N.x
 
         """
 
@@ -148,7 +148,7 @@ class Dyad(object):
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> 5 * d
-        (5)*nx>nx>
+        (5)*(N.x|N.x)
 
         """
 
@@ -181,7 +181,7 @@ class Dyad(object):
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> dot(N.x, d)
-        nx>
+        N.x
 
         """
 
@@ -214,7 +214,7 @@ class Dyad(object):
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> cross(N.y, d)
-        - nz>nx>
+        - (N.z|N.x)
 
         """
 
@@ -243,7 +243,7 @@ class Dyad(object):
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> cross(d, N.y)
-        nx>nz>
+        (N.x|N.z)
 
         """
 
@@ -281,7 +281,7 @@ class Dyad(object):
         """Expresses this Dyad in alternate frame(s)
 
         The first frame is the list side expression, the second frame is the
-        right side; if Dyad is in form ax>by>, you can express it in two
+        right side; if Dyad is in form A.x|B.y, you can express it in two
         different frames. If no second frame is given, the Dyad is
         expressed in only one frame.
 
@@ -302,7 +302,7 @@ class Dyad(object):
         >>> B = N.orientnew('B', 'Simple', q, 3)
         >>> d = outer(N.x, N.x)
         >>> d.express(B, N)
-        (cos(q))*bx>nx> + (-sin(q))*by>nx>
+        (cos(q))*(B.x|N.x) + (-sin(q))*(B.y|N.x)
 
         """
 
@@ -333,7 +333,7 @@ class Dyad(object):
         >>> B = N.orientnew('B', 'Simple', q, 3)
         >>> d = outer(N.x, N.x)
         >>> d.dt(B)
-        (-qd)*ny>nx> + (-qd)*nx>ny>
+        (-qd)*(N.y|N.x) + (-qd)*(N.x|N.y)
 
         """
 
@@ -463,7 +463,7 @@ class ReferenceFrame(object):
         >>> V = 10 * N.x
         >>> A.set_ang_acc(N, V)
         >>> A.ang_acc_in(N)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -495,7 +495,7 @@ class ReferenceFrame(object):
         >>> V = 10 * N.x
         >>> A.set_ang_vel(N, V)
         >>> A.ang_vel_in(N)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -771,7 +771,7 @@ class ReferenceFrame(object):
         >>> V = 10 * N.x
         >>> A.set_ang_acc(N, V)
         >>> A.ang_acc_in(N)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -804,7 +804,7 @@ class ReferenceFrame(object):
         >>> V = 10 * N.x
         >>> A.set_ang_vel(N, V)
         >>> A.ang_vel_in(N)
-        (10)*nx>
+        (10)*N.x
 
         """
 
@@ -838,7 +838,7 @@ class Vector(object):
     Attributes
     ==========
     subscript_indices : str
-        A 3 character string used for printing the basis vectors
+        A 3 character string used for advanced printing of the basis vectors
         This needs to be changed as Vector.subscript_indices = "123", and not
         as SomeVectorInstance.subscript_indices = "xyz"
     simp : Boolean
@@ -881,6 +881,7 @@ class Vector(object):
 
     def __str__(self):
         """Printing method. """
+        str_ind = 'xyz'
         ar = self.args # just to shorten things
         ol = [] # output list, to be concatenated to a string
         for i, v in enumerate(ar):
@@ -889,22 +890,19 @@ class Vector(object):
                 if ar[i][0][j] == 1:
                     if len(ol) != 0:
                         ol.append(' + ')
-                    ol.append( ar[i][1].name.lower() +
-                              Vector.subscript_indices[j] + '>' )
+                    ol.append(`ar[i][1]` + '.' + str_ind[j])
                 # if the coef of the basis vector is -1, we skip the 1
                 elif ar[i][0][j] == -1:
                     if len(ol) != 0:
                         ol.append(' ')
-                    ol.append('- ' + ar[i][1].name.lower() +
-                              Vector.subscript_indices[j] + '>' )
+                    ol.append('- ' + `ar[i][1]` + '.' + str_ind[j])
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1,
                     # we wrap it in parentheses, for readability.
                     if len(ol) != 0:
                         ol.append(' + ')
-                    ol.append('(' + `ar[i][0][j]` + ')*' +
-                              ar[i][1].name.lower() +
-                              Vector.subscript_indices[j] + '>' )
+                    ol.append('(' + `ar[i][0][j]` + ')*' + `ar[i][1]` +
+                              '.' + str_ind[j])
         return ''.join(ol)
 
     def __add__(self, other):
@@ -1002,7 +1000,7 @@ class Vector(object):
         >>> t = Symbol('t')
         >>> V = 10 * t * N.x
         >>> print V
-        (10*t)*nx>
+        (10*t)*N.x
 
         """
 
@@ -1033,7 +1031,7 @@ class Vector(object):
         >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> outer(N.x, N.x)
-        nx>nx>
+        (N.x|N.x)
 
         """
 
@@ -1072,7 +1070,7 @@ class Vector(object):
         >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> N = ReferenceFrame('N')
         >>> outer(N.x, N.x)
-        nx>nx>
+        (N.x|N.x)
 
         """
 
@@ -1120,12 +1118,12 @@ class Vector(object):
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
         >>> N.x ^ N.y
-        nz>
+        N.z
         >>> A = N.orientnew('A', 'Simple', q1, 1)
         >>> A.x ^ N.y
-        nz>
+        N.z
         >>> N.y ^ A.x
-        (-sin(q1))*ay> + (-cos(q1))*az>
+        (-sin(q1))*A.y + (-cos(q1))*A.z
 
         """
 
@@ -1218,7 +1216,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 2)
         >>> A.x.diff(t, N)
-        (-q1d)*az>
+        (-q1d)*A.z
 
         """
 
@@ -1263,7 +1261,7 @@ class Vector(object):
         >>> A.x.dt(N) == 0
         True
         >>> v.dt(N)
-        (u1d)*nx>
+        (u1d)*N.x
 
         """
 
@@ -1297,7 +1295,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 2)
         >>> A.x.express(N)
-        (cos(q1))*nx> + (-sin(q1))*nz>
+        (cos(q1))*N.x + (-sin(q1))*N.z
 
         """
 

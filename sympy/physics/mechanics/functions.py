@@ -74,7 +74,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     >>> from sympy.physics.mechanics import ReferenceFrame, inertia
     >>> N = ReferenceFrame('N')
     >>> inertia(N, 1, 2, 3)
-    nx>nx> + (2)*ny>ny> + (3)*nz>nz>
+    (N.x|N.x) + (2)*(N.y|N.y) + (3)*(N.z|N.z)
 
     """
 
