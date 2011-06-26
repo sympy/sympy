@@ -3255,7 +3255,7 @@ class SparseMatrix(Matrix):
         exploiting the sparsity of the given matrix.
         """
         rows = self._lil_row_major()
-        X = DOKMatrix(rhs.rows, 1, rhs.mat)
+        X = SparseMatrix(rhs.rows, 1, rhs.mat)
         for i in xrange(self.rows):
             for key in rows[i]:
                 if key[1] < i:
@@ -3271,7 +3271,7 @@ class SparseMatrix(Matrix):
         exploiting the sparsity of the given matrix.
         """
         rows = self._lil_row_major()
-        X = DOKMatrix(rhs.rows, 1, rhs.mat)
+        X = SparseMatrix(rhs.rows, 1, rhs.mat)
         for i in reversed(xrange(self.rows)):
             for key in reversed(rows[i]):
                 if key[1] > i:
@@ -3283,14 +3283,20 @@ class SparseMatrix(Matrix):
 
     def _diagonal_solve(self, rhs):
         "Diagonal solve."
-        return DOKMatrix(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+        return SparseMatrix(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
     
     def _cholesky_solve(self, rhs):
+        if not self.is_symmetric():
+            rhs = self.T * rhs
+            self = self.T * self
         L = self._cholesky()
         Y = L._lower_triangular_solve(rhs)
         return L.T._upper_triangular_solve(Y)
 
     def _LDL_solve(self, rhs):
+        if not self.is_symmetric():
+            rhs = self.T * rhs
+            self = self.T * self
         L, D = self._LDL_sparse()
         Z = L._lower_triangular_solve(rhs)
         Y = D._diagonal_solve(Z)
@@ -3461,6 +3467,48 @@ class SparseMatrix(Matrix):
             A.mat[i, j + A.cols] = B.mat[i, j]
         A.cols += B.cols
         return A
+
+    def inv(self, method="LDL"):
+        """
+        Returns the inverse of the given matrix using
+        Cholesky decomposition or LDL decomposition,
+        as specified by user.
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((3,0,2),(0,0,1),(1,2,0)))
+        >>> A
+        [3, 0, 2]
+        [0, 0, 1]
+        [1, 2, 0]
+        >>> A.inv()
+        [ 1/3, -2/3,   0]
+        [-1/6,  1/3, 1/2]
+        [   0,    1,   0]
+        >>> A.inv() * A
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+
+        """
+        if method == "LDL":
+            solve = self._LDL_solve
+        elif method == "CH":
+            solve = self._cholesky_solve
+        I = self.eye(self.rows)
+        return vecs2matrix([solve(I[:,i]) for i in xrange(I.cols)])
+
+
+def vecs2matrix(vecs):
+    """
+    Utility function.
+    Strings together a list of vectors to form a Matrix
+    """
+    A = vecs[0]
+    for vec in vecs[1:]:
+        A = A.join_rows(vec)
+    return A
+    
+    
 
 
 def list2numpy(l):
