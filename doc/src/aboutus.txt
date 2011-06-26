@@ -132,6 +132,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Óscar Nájera: better Laguerre polynomial generator
 #. Mario Pernici: faster algorithm for computing Groebner bases
 #. Sam Magura: Improvements to Plot.saveimage
+#. Stefan Krastanov: Make Pyglet an external dependency
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
