@@ -71,6 +71,7 @@ printing.
 - Python
 - ...
 """
+from __future__ import with_statement
 
 import os
 from StringIO import StringIO
@@ -438,9 +439,8 @@ class CodeGen(object):
         if to_files:
             for dump_fn in self.dump_fns:
                 filename = "%s.%s" % (prefix, dump_fn.extension)
-                f = file(filename, "w")
-                dump_fn(self, routines, f, prefix, header, empty)
-                f.close()
+                with open(filename, "w") as f:
+                    dump_fn(self, routines, f, prefix, header, empty)
         else:
             result = []
             for dump_fn in self.dump_fns:
