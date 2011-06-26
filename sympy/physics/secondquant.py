@@ -1778,7 +1778,7 @@ class Commutator(Function):
         #
         # Canonical ordering of arguments
         #
-        if cmp(a, b) > 0:
+        if a > b:
             return S.NegativeOne*cls(b, a)
 
 

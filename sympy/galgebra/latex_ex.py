@@ -15,7 +15,7 @@ import sympy.galgebra.GA
 #import sympy.galgebra.OGA
 import numpy
 
-from sympy.core.compatibility import cmp_to_key
+from sympy.core.compatibility import cmp_to_key, cmp
 
 def debug(txt):
     sys.stderr.write(txt+'\n')

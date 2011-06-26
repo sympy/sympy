@@ -229,3 +229,10 @@ def cmp_to_key(mycmp):
         def __ne__(self, other):
             return mycmp(self.obj, other.obj) != 0
     return K
+
+try:
+    import __builtin__
+    cmp = __builtin__.cmp
+except AttributeError:
+    def cmp(a,b):
+        return (a > b) - (a < b)

@@ -8,6 +8,8 @@ from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.utilities import all, any, cythonized
 
+from sympy.core.compatibility import cmp
+
 def monomials(variables, degree):
     r"""
     Generate a set of monomials of the given total degree or less.

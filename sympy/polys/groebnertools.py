@@ -1,6 +1,6 @@
 """Sparse distributed multivariate polynomials and Groebner bases. """
 
-from sympy.core.compatibility import minkey
+from sympy.core.compatibility import minkey, cmp
 
 from sympy.polys.monomialtools import (
     monomial_mul,

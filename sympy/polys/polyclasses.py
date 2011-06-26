@@ -1,5 +1,7 @@
 """OO layer for several polynomial representations. """
 
+from sympy.core.compatibility import cmp
+
 class GenericPoly(object):
     """Base class for low-level polynomial representations. """
 

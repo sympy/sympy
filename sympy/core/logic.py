@@ -6,7 +6,7 @@ NOTE
 at present this is mainly needed for facts.py , feel free however to improve
 this stuff for general purpose.
 """
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, cmp
 
 def fuzzy_bool(x):
     """Return True, False or None according to x.
