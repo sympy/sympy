@@ -34,6 +34,8 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 from sympy.core.compatibility import reduce
 
+from sympy.assumptions import Q, ask
+
 from warnings import warn
 from types import GeneratorType
 
@@ -172,6 +174,63 @@ def checksol(f, symbol, sol=None, **flags):
         print("Warning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
+
+def check_assumptions(expr, **assumptions):
+    """Checks whether expression `expr` satisfies all assumptions.
+
+    `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
+
+    Examples:
+    ---------
+
+       >>> from sympy import Symbol, pi, I, exp
+       >>> from sympy.solvers import check_assumptions
+
+       >>> check_assumptions(-5, integer=True)
+       True
+       >>> check_assumptions(pi, real=True, integer=False)
+       True
+       >>> check_assumptions(pi, real=True, negative=True)
+       False
+       >>> check_assumptions(exp(I*pi/7), real=False)
+       True
+
+       >>> x = Symbol('x', real=True, positive=True)
+       >>> check_assumptions(2*x + 1, real=True, positive=True)
+       True
+       >>> check_assumptions(-2*x - 5, real=True, positive=True)
+       False
+
+       `None` is returned if check_assumptions() could not conclude.
+
+       >>> check_assumptions(2*x - 1, real=True, positive=True)
+       >>> z = Symbol('z')
+       >>> check_assumptions(z, real=True)
+    """
+    if not isinstance(expr, Basic):
+        expr = sympify(expr)
+
+    result = True
+    for key, expected in assumptions.iteritems():
+        if expected is None:
+            continue
+        assert isinstance(expected, bool), 'Argument %s=%s is incorrect. \
+                                            A boolean is expected.' %(key, expected)
+        if hasattr(Q, key):
+            test = ask(getattr(Q, key)(expr))
+            if test == expected:
+                continue
+            elif test is not None:
+                return False
+        # ask() can not conclude. Try using old assumption system.
+        # XXX: remove this once transition to new assumption system is finished.
+        test = getattr(expr, 'is_' + key, None)
+        if test == expected:
+            continue
+        elif test is not None:
+            return False
+        result = None # Can not conclude, unless an other test fails.
+    return result
 
 # Codes for guess solve strategy
 GS_POLY = 0
@@ -509,9 +568,31 @@ def solve(f, *symbols, **flags):
                '\n\tgiven as a list so as to avoid ambiguity in the results.' +
                '\n\tsolve sorted the symbols as %s')
         print msg % str(bool(symbol_swapped) and list(zip(*swap_dict)[0]) or symbols)
+
+    # Get assumptions about symbols, to filter solutions.
+    # Note that if assumptions about a solution can't be verified, it is still returned.
+    # XXX: Currently, there are some cases which are not handled,
+    # see issue 2098 comment 13: http://code.google.com/p/sympy/issues/detail?id=2098#c13.
+    if type(solution) is list and solution:
+        if type(solution[0]) is tuple and len(solution[0]) == len(symbols):
+            filtered = []
+            for s in solution:
+                if all(check_assumptions(val, **symb.assumptions0) is not False
+                       for symb, val in zip(symbols, s)):
+                   filtered.append(s)
+            solution = filtered
+        elif len(symbols) == 1:
+            solution = [s for s in solution if check_assumptions(s, **symbols[0].assumptions0) is not False]
+    elif type(solution) is dict:
+        for symb, val in solution.copy().iteritems():
+            if check_assumptions(val, **symb.assumptions0) is False: # not None nor True
+                solution = None
+                break
+
     #
     # done
     ###########################################################################
+
     return solution
 
 def _solve(f, *symbols, **flags):
