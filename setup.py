@@ -45,7 +45,7 @@ if sys.version_info[:2] < (2,4):
 # $ for i in `find * -name __init__.py |rev |cut -f 2- -d '/' |rev \
 #   |egrep -v "^sympy$|thirdparty" `;do echo "'${i//\//.}',"; done |sort
 =======
-# $ for i in `find * -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$|thirdparty/" `; do echo "'${i//\//.}',"; done | sort
+# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$|thirdparty/" `; do echo "'${i//\//.}',"; done | sort
 >>>>>>> Stashed changes
 modules = [
     'sympy.assumptions',
