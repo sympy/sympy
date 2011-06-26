@@ -3200,8 +3200,7 @@ class SparseMatrix(Matrix):
 
     def _cholesky_sparse(self):
         """
-        Algorithm for numeric cholesky factization, exploiting the sparsity of the given matrix,
-        <to add>
+        Algorithm for numeric cholesky factization, exploiting the sparsity of the given matrix.
         """
         Crowstruc = self.row_structure_symbolic_cholesky()
         C = self.zeros(self.rows)
@@ -3236,8 +3235,7 @@ class SparseMatrix(Matrix):
 
     def _LDL_sparse(self):
         """
-        Algorithm for numeric LDL factization, exploiting the sparsity of the given matrix,
-        <to add>
+        Algorithm for numeric LDL factization, exploiting the sparsity of the given matrix.
         """
         Lrowstruc = self.row_structure_symbolic_cholesky()
         L = self.eye(self.rows)
@@ -3325,6 +3323,21 @@ class SparseMatrix(Matrix):
         Y = D._diagonal_solve(Z)
         return L.T._upper_triangular_solve(Y)
 
+    def solve(self, rhs, method='LDL'):
+        if not self.is_square():
+            if self.rows < self.cols:
+                raise ValueError('Under-determined system.')
+            elif self.rows > self.cols:
+                raise('Over-determined system. Use .solve_least_squares function')
+        else:
+            if method == 'LDL':
+                return self._LDL_solve(rhs)
+            elif method == 'CH':
+                return self._cholesky_solve(rhs)
+
+    def solve_least_squares(self, rhs, method='LDL'):
+        return (self.T * self).solve(self.T * rhs, method=method)
+
     def is_symmetric(self):
         if not self.is_square():
             return False
@@ -3352,7 +3365,7 @@ class SparseMatrix(Matrix):
 
     def cholesky(self):
         """
-        Returns the Cholesky Decomposition L of a Matrix A
+        Returns the Cholesky Decomposition L of a matrix A
         such that L * L.T = A
 
         A must be a square, symmetric, positive-definite
