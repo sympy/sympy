@@ -121,9 +121,9 @@ def test_solve_polynomial1():
 
     solution = {y: S.Zero, x: S.Zero}
 
-    assert solve((x-y, x+y),  x, y ) == solution
-    assert solve((x-y, x+y), (x, y)) == solution
-    assert solve((x-y, x+y), [x, y]) == solution
+    assert solve((x - y, x+y),  x, y ) == solution
+    assert solve((x - y, x+y), (x, y)) == solution
+    assert solve((x - y, x+y), [x, y]) == solution
 
     assert solve( x**3 - 15*x - 4, x) == [-2 + 3**Rational(1,2),
                                            4,
@@ -176,12 +176,12 @@ def test_solve_rational():
 def test_linear_system():
     x, y, z, t, n, a = symbols('x,y,z,t,n,a')
 
-    assert solve([x-1, x-y, x-2*y, y-1], [x,y]) is None
+    assert solve([x - 1, x - y, x - 2*y, y - 1], [x,y]) is None
 
-    assert solve([x-1, x-y, x-2*y, x-1], [x,y]) is None
-    assert solve([x-1, x-1, x-y, x-2*y], [x,y]) is None
+    assert solve([x - 1, x - y, x - 2*y, x - 1], [x,y]) is None
+    assert solve([x - 1, x - 1, x - y, x - 2*y], [x,y]) is None
 
-    assert solve([x+5*y-2, -3*x+6*y-15], x, y) == {x: -3, y: 1}
+    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == {x: -3, y: 1}
 
     M = Matrix([[0,0,n*(n+1),(n+1)**2,0],
                 [n+1,n+1,-2*n-1,-(n+1),0],
@@ -190,7 +190,7 @@ def test_linear_system():
     assert solve_linear_system(M, x, y, z, t) == \
            {y: 0, z: t*(-n - 1)/n, x: t*(-n - 1)/n}
 
-    assert solve([x + y + z + t, -z-t], x, y, z, t) == {x: -y, z: -t}
+    assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
     assert solve([a(0, 0) + a(0, 1) + a(1, 0) + a(1, 1), -a(1, 0) - a(1, 1)],
         a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)}
@@ -391,3 +391,14 @@ def test_issue_1694():
     assert solve((3 - 5*x/f(x))*f(x), f(x)) == [5*x/3]
     # 1398
     #assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
+
+def test_issue_2098():
+    x = Symbol('x', real=True)
+    assert solve(x**2 + 1, x) == []
+    n = Symbol('n', integer=True, positive=True)
+    assert solve((n - 1)*(n + 2)*(2*n - 1), n) == [1]
+    x = Symbol('x', positive=True)
+    y = Symbol('y')
+    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) is None
+    assert solve((x + y)*n - y**2 + 2, x, y) == [(2**(S(1)/2), -2**(S(1)/2))]
+    # This solution must not appear: (-2**(1/2), 2**(1/2))
