@@ -3434,6 +3434,34 @@ class SparseMatrix(Matrix):
             tmp[i,i] = 1
         return tmp
 
+    def join_rows(A, B):
+        """
+        Returns [A B], i.e. A with B augmented row-wise.
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((1,0,1),(0,1,0),(1,1,0)))
+        >>> A
+        [1, 0, 1]
+        [0, 1, 0]
+        [1, 1, 0]
+        >>> B = SparseMatrix(((1,0,0),(0,1,0),(0,0,1)))
+        >>> B
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        >>> A.join_rows(B)
+        [1, 0, 1, 1, 0, 0]
+        [0, 1, 0, 0, 1, 0]
+        [1, 1, 0, 0, 0, 1]
+        """
+        if not A.rows == B.rows:
+            raise ValueError("Matrix size mis-match")
+        A = A[:, :]
+        for i, j in B.mat:
+            A.mat[i, j + A.cols] = B.mat[i, j]
+        A.cols += B.cols
+        return A
+
 
 def list2numpy(l):
     """Converts python list of SymPy expressions to a NumPy array."""
