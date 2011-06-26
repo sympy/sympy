@@ -2958,7 +2958,7 @@ class SparseMatrix(Matrix):
         >>> A.clone() is A
         False
         """
-        return Matrix(self.rows, self.cols, self.mat)
+        return SparseMatrix(self.rows, self.cols, self.mat)
 
     def row_del(self, k):
         newD = {}
