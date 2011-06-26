@@ -4,10 +4,10 @@ from sympy.core.compatibility import ordered_iter
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
-from sympy.thirdparty import import_thirdparty
-pyglet = import_thirdparty("pyglet")
-
-from pyglet.gl import *
+try:
+    from pyglet.gl import *
+except:
+    raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
 from plot_object import PlotObject
 from plot_axes import PlotAxes

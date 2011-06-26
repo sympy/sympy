@@ -4,6 +4,9 @@
 import sys
 import os
 
+#    XXX The pyglet library was the only one, but it's now an external dependency.
+#    The infrastructure is left for future reference.
+
 def import_thirdparty(lib):
     """
     Imports a thirdparty package "lib" by setting all paths correctly.
