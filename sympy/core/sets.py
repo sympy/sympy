@@ -217,6 +217,10 @@ class Set(Basic):
     @property
     def is_Interval(self):
         return False
+    @property
+    def is_interval(self):
+        return False
+
 
 class RealSet(Set, EvalfMixin):
     """
@@ -447,6 +451,10 @@ class Interval(RealSet):
         return is_comparable
     @property
     def is_Interval(self):
+        return True
+
+    @property
+    def is_interval(self):
         return True
 
     @property
@@ -771,6 +779,13 @@ class EmptySet(Set):
     def __iter__(self):
         return iter([])
 
+    @property
+    def is_interval(self):
+        return True
+
+    def is_countable(self):
+        return True
+
 class FiniteSet(CountableSet):
     """
     Represents a finite set of discrete numbers
@@ -892,6 +907,10 @@ class FiniteSet(CountableSet):
     @property
     def is_real(self):
         return all(el.is_real for el in self)
+
+    @property
+    def is_interval(self):
+        return len(self) == 1 and self.is_real
 
 class RealFiniteSet(FiniteSet, RealSet):
     """
