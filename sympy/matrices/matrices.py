@@ -827,7 +827,7 @@ class Matrix(object):
             raise ShapeError("`self` and `rhs` must have the same number of rows.")
 
         newmat = self.zeros((self.rows, self.cols + rhs.cols))
-        newmat[:,:self.cols] = self[:,:]
+        newmat[:,:self.cols] = self.clone()
         newmat[:,self.cols:] = rhs
         return newmat
 
@@ -849,7 +849,7 @@ class Matrix(object):
             raise ShapeError("`self` and `bott` must have the same number of columns.")
 
         newmat = self.zeros((self.rows+bott.rows, self.cols))
-        newmat[:self.rows,:] = self[:,:]
+        newmat[:self.rows,:] = self.clone()
         newmat[self.rows:,:] = bott
         return newmat
 
@@ -879,7 +879,7 @@ class Matrix(object):
 
         newmat = self.zeros((self.rows + mti.rows, self.cols))
         newmat[:pos,:] = self[:pos,:]
-        newmat[pos:pos+mti.rows,:] = mti[:,:]
+        newmat[pos:pos+mti.rows,:] = mti.clone()
         newmat[pos+mti.rows:,:] = self[pos:,:]
         return newmat
 
@@ -910,7 +910,7 @@ class Matrix(object):
 
         newmat = self.zeros((self.rows, self.cols + mti.cols))
         newmat[:,:pos] = self[:,:pos]
-        newmat[:,pos:pos+mti.cols] = mti[:,:]
+        newmat[:,pos:pos+mti.cols] = mti.clone()
         newmat[:,pos+mti.cols:] = self[:,pos:]
         return newmat
 
@@ -1147,7 +1147,7 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
         n = self.rows
-        A = self[:,:]
+        A = self.clone()
         p = []
         # factorization
         for j in range(n):
@@ -1188,7 +1188,7 @@ class Matrix(object):
               Vol 2, no. 1, pp. 67-80, 2008.
         """
         n, m = self.rows, self.cols
-        U, L, P = self[:,:], eye(n), eye(n)
+        U, L, P = self.clone(), eye(n), eye(n)
         DD = zeros(n) # store it smarter since it's just diagonal
         oldpivot = 1
 
@@ -1521,20 +1521,20 @@ class Matrix(object):
         return v * (self.dot(v) / v.dot(v))
 
     def permuteBkwd(self, perm):
-        copy = self[:,:]
+        copy = self.clone()
         for i in range(len(perm)-1, -1, -1):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
 
     def permuteFwd(self, perm):
-        copy = self[:,:]
+        copy = self.clone()
         for i in range(len(perm)):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
 
     def delRowCol(self, i, j):
         # used only for cofactors, makes a copy
-        M = self[:,:]
+        M = self.clone()
         M.row_del(i)
         M.col_del(j)
         return M
@@ -1815,7 +1815,17 @@ class Matrix(object):
         return True
 
     def clone(self):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j])
+        """
+        Syntactic sugar to copy a matrix efficiently.
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(((1,2,3),(3,4,5),(7,8,0)))
+        >>> A.clone() == A
+        True
+        >>> A.clone() is A
+        False
+        """
+        return Matrix(self.rows, self.cols, self.mat)
 
     def det(self, method="bareis"):
         """
@@ -1846,7 +1856,7 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        M, n = self[:,:], self.rows
+        M, n = self.clone(), self.rows
 
         if n == 1:
             det = M[0, 0]
@@ -1940,7 +1950,7 @@ class Matrix(object):
         To set a custom simplify function, use the simplify keyword argument.
         """
         # TODO: rewrite inverse_GE to use this
-        pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
+        pivots, r = 0, self.clone()        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
             if pivots == r.rows:
@@ -2937,6 +2947,19 @@ class SparseMatrix(Matrix):
             elif (i,j) in self.mat:
                 del self.mat[(i,j)]
 
+    def clone(self):
+        """
+        Syntactic sugar to copy a matrix efficiently.
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((1,0,0),(3,4,0),(7,8,0)))
+        >>> A.clone() == A
+        True
+        >>> A.clone() is A
+        False
+        """
+        return Matrix(self.rows, self.cols, self.mat)
+
     def row_del(self, k):
         newD = {}
         for (i,j) in self.mat.keys():
@@ -3055,7 +3078,7 @@ class SparseMatrix(Matrix):
     def add(self, other):
         if self.shape != other.shape:
             raise ShapeError()
-        M = SparseMatrix(self.rows, self.cols, self.mat) # self[:,:] should be as fast as this
+        M = self.clone() # self[:,:] should be as fast as this
         for i in other.mat:
             M[i] += other[i]
         return M
