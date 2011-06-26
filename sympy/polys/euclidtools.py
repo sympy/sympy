@@ -405,7 +405,7 @@ def dup_prs_resultant(f, g, K):
     s, i = 1, 1
     p, q = K.one, K.one
 
-    for b, d in zip(B, D)[:-1]:
+    for b, d in list(zip(B, D))[:-1]:
         du = dup_degree(R[i-1])
         dv = dup_degree(R[i  ])
         dw = dup_degree(R[i+1])
@@ -582,7 +582,7 @@ def dmp_prs_resultant(f, g, u, K):
     p = dmp_one(v, K)
     q = dmp_one(v, K)
 
-    for b, d in zip(B, D)[:-1]:
+    for b, d in list(zip(B, D))[:-1]:
         du = dmp_degree(R[i-1], u)
         dv = dmp_degree(R[i  ], u)
         dw = dmp_degree(R[i+1], u)
