@@ -2525,92 +2525,6 @@ class Matrix(object):
         """
         return any(a.has(*patterns) for a in self.mat)
 
-    def is_symmetric(self):
-        if not self.is_square():
-            return False
-        return all(self[i, j] == self[j, i] for i, j in self.mat.keys())
-
-    def is_square(self):
-        return self.rows == self.cols
-
-    def has(self, *patterns):
-        """
-        Test whether any subexpression matches any of the patterns.
-
-        Examples:
-        >>> from sympy import SparseMatrix, Float
-        >>> from sympy.abc import x, y
-        >>> A = SparseMatrix(((1, x), (0.2, 3)))
-        >>> A.has(x)
-        True
-        >>> A.has(y)
-        False
-        >>> A.has(Float)
-        True
-        """
-        return any(self[key].has(*patterns) for key in self.mat)
-
-    def cholesky(self):
-        """
-        Returns the Cholesky Decomposition L of a Matrix A
-        such that L * L.T = A
-
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
-        >>> A.cholesky()
-        [ 5, 0, 0]
-        [ 3, 3, 0]
-        [-1, 1, 3]
-        >>> A.cholesky() * A.cholesky().T
-        [25, 15, -5]
-        [15, 18,  0]
-        [-5,  0, 11]
-        """
-
-        from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
-            raise Exception('Cholesky decomposition applies only to symmetric matrices.')
-        C = self._cholesky_sparse()
-        if C.has(nan) or C.has(oo):
-            raise Exception('Cholesky decomposition applies only to positive-definite matrices')
-        return C
-
-    def LDLdecomposition(self):
-        """
-        Returns the LDL Decomposition (L,D) of matrix A,
-        such that L * D * L.T == A
-        This method eliminates the use of square root.
-        Further this ensures that all the diagonal entries of L are 1.
-        A must be a square, symmetric, positive-definite
-        and non-singular matrix.
-
-        >>> from sympy.matrices import SparseMatrix
-        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
-        >>> L, D = A.LDLdecomposition()
-        >>> L
-        [   1,   0, 0]
-        [ 3/5,   1, 0]
-        [-1/5, 1/3, 1]
-        >>> D
-        [25, 0, 0]
-        [ 0, 9, 0]
-        [ 0, 0, 9]
-        >>> L * D * L.T == A
-        True
-
-        """
-        from sympy.core.numbers import nan, oo
-        if not self.is_symmetric():
-            raise Exception('LDL decomposition applies only to symmetric matrices.')
-        L, D = self._LDL_sparse()
-        if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
-            raise Exception('LDL decomposition applies only to positive-definite matrices')
-        return L, D
-        
-
 def matrix_multiply(A, B):
     """
     Matrix product A*B.
@@ -3381,6 +3295,91 @@ class SparseMatrix(Matrix):
         Z = L._lower_triangular_solve(rhs)
         Y = D._diagonal_solve(Z)
         return L.T._upper_triangular_solve(Y)
+
+    def is_symmetric(self):
+        if not self.is_square():
+            return False
+        return all(self[i, j] == self[j, i] for i, j in self.mat.keys())
+
+    def is_square(self):
+        return self.rows == self.cols
+
+    def has(self, *patterns):
+        """
+        Test whether any subexpression matches any of the patterns.
+
+        Examples:
+        >>> from sympy import SparseMatrix, Float
+        >>> from sympy.abc import x, y
+        >>> A = SparseMatrix(((1, x), (0.2, 3)))
+        >>> A.has(x)
+        True
+        >>> A.has(y)
+        False
+        >>> A.has(Float)
+        True
+        """
+        return any(self[key].has(*patterns) for key in self.mat)
+
+    def cholesky(self):
+        """
+        Returns the Cholesky Decomposition L of a Matrix A
+        such that L * L.T = A
+
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> A.cholesky()
+        [ 5, 0, 0]
+        [ 3, 3, 0]
+        [-1, 1, 3]
+        >>> A.cholesky() * A.cholesky().T
+        [25, 15, -5]
+        [15, 18,  0]
+        [-5,  0, 11]
+        """
+
+        from sympy.core.numbers import nan, oo
+        if not self.is_symmetric():
+            raise Exception('Cholesky decomposition applies only to symmetric matrices.')
+        C = self._cholesky_sparse()
+        if C.has(nan) or C.has(oo):
+            raise Exception('Cholesky decomposition applies only to positive-definite matrices')
+        return C
+
+    def LDLdecomposition(self):
+        """
+        Returns the LDL Decomposition (L,D) of matrix A,
+        such that L * D * L.T == A
+        This method eliminates the use of square root.
+        Further this ensures that all the diagonal entries of L are 1.
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix.
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> L, D = A.LDLdecomposition()
+        >>> L
+        [   1,   0, 0]
+        [ 3/5,   1, 0]
+        [-1/5, 1/3, 1]
+        >>> D
+        [25, 0, 0]
+        [ 0, 9, 0]
+        [ 0, 0, 9]
+        >>> L * D * L.T == A
+        True
+
+        """
+        from sympy.core.numbers import nan, oo
+        if not self.is_symmetric():
+            raise Exception('LDL decomposition applies only to symmetric matrices.')
+        L, D = self._LDL_sparse()
+        if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
+            raise Exception('LDL decomposition applies only to positive-definite matrices')
+        return L, D
 
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
