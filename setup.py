@@ -41,8 +41,12 @@ if sys.version_info[:2] < (2,4):
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
+<<<<<<< Updated upstream
 # $ for i in `find * -name __init__.py |rev |cut -f 2- -d '/' |rev \
 #   |egrep -v "^sympy$|thirdparty" `;do echo "'${i//\//.}',"; done |sort
+=======
+# $ for i in `find * -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$|thirdparty/" `; do echo "'${i//\//.}',"; done | sort
+>>>>>>> Stashed changes
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
