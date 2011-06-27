@@ -389,7 +389,7 @@ def preprocess_roots(poly):
 
         base, strips = strips[0], strips[1:]
 
-        for gen, strip in zip(gens, strips):
+        for gen, strip in zip(list(gens), strips):
             reverse = False
 
             if strip[0] < strip[-1]:

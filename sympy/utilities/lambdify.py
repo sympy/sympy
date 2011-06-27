@@ -200,7 +200,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     if use_imps:
         namespaces.append(_imp_namespace(expr))
     # Check for dict before iterating
-    if isinstance(modules, dict) or not hasattr(modules, '__iter__'):
+    if isinstance(modules, (dict, str)) or not hasattr(modules, '__iter__'):
         namespaces.append(modules)
     else:
         namespaces += list(modules)
