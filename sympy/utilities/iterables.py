@@ -131,7 +131,7 @@ def postorder_traversal(node):
         for arg in node.args:
             for subtree in postorder_traversal(arg):
                 yield subtree
-    elif hasattr(node, "__iter__"):
+    elif iterable(node):
         for item in node:
             for subtree in postorder_traversal(item):
                 yield subtree
@@ -177,7 +177,7 @@ class preorder_traversal(object):
             for arg in node.args:
                 for subtree in self._preorder_traversal(arg):
                     yield subtree
-        elif hasattr(node, "__iter__"):
+        elif iterable(node):
             for item in node:
                 for subtree in self._preorder_traversal(item):
                     yield subtree
