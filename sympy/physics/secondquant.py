@@ -2604,6 +2604,7 @@ def _get_ordered_dummies(mul, verbose = False):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
         other_dums = reduce(lambda x, y: x | y,
                 [ fac_dum[fac] for fac in dumstruct ])
+        fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()
         other_dums.remove(d)
