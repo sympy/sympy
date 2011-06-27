@@ -194,39 +194,6 @@ class HermitianOperator(Operator):
     H
     """
 
-    @classmethod
-    def basis_ket(self):
-        """Return the class corresponding to the basis ket of this operator. """
-        return None
-
-    @property
-    def basis_set(self):
-        """ Return a generator for the basis kets of this operator """
-        if self.basis_ket() is not None:
-            return (self.basis_ket()(str(self.label[0]).lower() + "_" + str(i)) for i in count(1))
-        else:
-            return None
-
-    def _get_basis_kets(self, *args):
-        if self.basis_ket() is None:
-            return None
-
-        index_list = []
-        if len(args) == 1:
-            index_list = args[0]
-        elif len(args) == 2:
-            index_list = range(args[0], args[0]+args[1])
-        else:
-            raise NotImplementedError("Wrong number of arguments!")
-
-        ct = 0
-        basis_kets = [0 for i in range(len(index_list))]
-        for i in index_list:
-            basis_kets[ct] = self.basis_ket()(str(self.label[0]).lower() + "_" + str(i))
-            ct+=1
-
-        return basis_kets
-
     def _eval_dagger(self):
         return self
 

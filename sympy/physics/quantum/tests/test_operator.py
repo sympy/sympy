@@ -8,6 +8,7 @@ from sympy.physics.quantum.operator import (
 )
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.represent import enumerate_states
 
 class TestKet(Ket):
     @classmethod
@@ -15,10 +16,6 @@ class TestKet(Ket):
         return TestOp
 
 class TestOp(HermitianOperator):
-    @classmethod
-    def basis_ket(self):
-        return TestKet
-
     @classmethod
     def default_label(self):
         return "T"
@@ -62,8 +59,6 @@ def test_hermitian():
     assert H.inv() != H
     assert H.is_commutative == False
     assert Dagger(H).is_commutative == False
-
-    assert t_op._get_basis_kets(1, 1)[0] == TestKet("t_1")
 
 def test_unitary():
     U = UnitaryOperator('U')

@@ -1,9 +1,17 @@
 from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
 from sympy.physics.quantum.operator import Operator
-from sympy.physics.quantum.state import StateBase
+from sympy.physics.quantum.state import StateBase, KetBase, BraBase
 
-#state_mapping stores the mappings between states and their associated operators or sets
-#of operators. This should be updated when new classes are written!
+__all__ = [
+    'operator_to_state',
+    'state_to_operator'
+]
+
+#state_mapping stores the mappings between states and their associated operators or tuples
+#of operators. This should be updated when new classes are written! Entries are of the form
+# PxKet : PxOp or something like 3DKet : (ROp, ThetaOp, PhiOp)
+
+# TODO: Update dict with full list of state : operator pairs
 
 state_mapping = { PxKet : PxOp,
                   XKet : XOp }
@@ -12,7 +20,7 @@ rev_mapping = dict((v,k) for k,v in state_mapping.iteritems())
 
 def operator_to_state(arg, **options):
     """ operator_to_state
-    
+
     A global function for mapping operator classes to their associated states.
     It takes either an Operator or a set of operators and returns the state associated
     with these.
@@ -39,7 +47,7 @@ def operator_to_state(arg, **options):
     >>> operator_to_state(PxOp())
     <class 'sympy.physics.quantum.cartesian.PxKet'>
     """
-    
+
     if not (isinstance(arg, Operator) or issubclass(arg, Operator) or isinstance(arg, set)):
         raise NotImplementedError("Argument is not an Operator or a set!")
 
@@ -70,9 +78,9 @@ def operator_to_state(arg, **options):
 
 def state_to_operator(arg, **options):
     """ state_to_operator
-    
+
     A global function for mapping state classes to their associated operators or sets of operators.
-    It takes either a state class or instance. 
+    It takes either a state class or instance.
 
     This function can handle both instances of a given state or just the class itself
     (i.e. both XKet() and XKet)
@@ -96,7 +104,7 @@ def state_to_operator(arg, **options):
     >>> state_to_operator(PxKet())
     <class 'sympy.physics.quantum.cartesian.PxOp'>
     """
-    
+
     if not (isinstance(arg, StateBase) or issubclass(arg, StateBase)):
         raise NotImplementedError("Argument is not a state!")
 
@@ -104,6 +112,8 @@ def state_to_operator(arg, **options):
         ret = state_mapping[arg]
     elif type(arg) in state_mapping:
         ret = state_mapping[type(arg)]
+    elif isinstance(arg, BraBase) and arg.dual_class in state_mapping:
+        ret = state_mapping[arg.dual_class]
     else:
         ret = None
 
