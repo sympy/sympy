@@ -1,6 +1,6 @@
 """Abstract tensor product."""
 
-from sympy import Expr, Add, Mul, Matrix, Pow
+from sympy import Expr, Add, Mul, Matrix, Pow, sympify
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError, split_commutative_parts
@@ -112,7 +112,7 @@ class TensorProduct(Expr):
                 cp, ncp = split_commutative_parts(arg)
                 ncp = Mul(*ncp)
             else:
-                if arg.is_commutative:
+                if sympify(arg).is_commutative:
                     cp = [arg]; ncp = 1
                 else:
                     cp = []; ncp = arg
@@ -122,6 +122,15 @@ class TensorProduct(Expr):
 
     def _eval_dagger(self):
         return TensorProduct(*[Dagger(i) for i in self.args])
+
+    def _eval_rewrite(self, pattern, rule, **hints):
+        sargs = self.args
+        if hints.pop('coupled',None) is True:
+            from sympy.physics.quantum.spin import couple_state
+            terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs]
+            return couple_state(*terms)
+        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs]
+        return TensorProduct(*terms).expand(tensorproduct=True)
 
     def _sympystr(self, printer, *args):
         from sympy.printing.str import sstr
@@ -190,7 +199,7 @@ class TensorProduct(Expr):
             return self
 
     def expand(self, **hints):
-        tp = TensorProduct(*[item.expand(**hints) for item in self.args])
+        tp = TensorProduct(*[sympify(item).expand(**hints) for item in self.args])
         return Expr.expand(tp, **hints)
 
 

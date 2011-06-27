@@ -169,7 +169,13 @@ def represent(expr, **options):
         return represent(base, **options)**exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
-        return TensorProduct(*new_args)
+        if options.get('coupled') is True:
+            from sympy.physics.quantum.spin import couple_vect
+            j1 = expr.args[0].j
+            j2 = expr.args[1].j
+            return couple_vect(TensorProduct(*new_args), j1, j2)
+        else:
+            return TensorProduct(*new_args)
     elif isinstance(expr, Dagger):
         return Dagger(represent(expr.args[0], **options))
     elif isinstance(expr, Commutator):

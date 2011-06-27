@@ -5,14 +5,14 @@ Todo:
 """
 
 
-from sympy import Add, Mul, Pow
+from sympy import Add, Mul, Pow, sympify
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.operator import OuterProduct
-from sympy.physics.quantum.state import KetBase, BraBase, Wavefunction
+from sympy.physics.quantum.operator import OuterProduct, Operator
+from sympy.physics.quantum.state import State, KetBase, BraBase, Wavefunction
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
 
@@ -109,8 +109,8 @@ def qapply_Mul(e, **options):
     lhs = args.pop()
 
     # Make sure we have two non-commutative objects before proceeding.
-    if (rhs.is_commutative and not isinstance(rhs, Wavefunction)) or \
-           (lhs.is_commutative and not isinstance(lhs, Wavefunction)):
+    if (sympify(rhs).is_commutative and not isinstance(rhs, Wavefunction)) or \
+           (sympify(lhs).is_commutative and not isinstance(lhs, Wavefunction)):
         return e
 
     # For a Pow with an integer exponent, apply one of them and reduce the
@@ -135,6 +135,11 @@ def qapply_Mul(e, **options):
             )
         else:
             return qapply(e._new_rawargs(*args)*comm*rhs, **options)
+
+    # Apply tensor products of operators to states
+    if isinstance(lhs, TensorProduct) and any([isinstance(arg,Operator) for arg in lhs.args]) and isinstance(rhs, TensorProduct):
+        result = TensorProduct(*[qapply(lhs.args[n]*rhs.args[n], **options) for n in range(len(lhs.args))]).expand(tensorproduct=True)
+        return qapply_Mul(e._new_rawargs(*args), **options)*result
 
     # Now try to actually apply the operator and build an inner product.
     try:

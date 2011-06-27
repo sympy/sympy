@@ -426,7 +426,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             if not sympify(index_expr.subs(sub_dep).subs(sub_2)).is_number:
                 continue
             cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt,1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
-        if cg_index.count(None) == 0:
+        if all(i is not None for i in cg_index):
             min_lt = min(*[ abs(term[2]) for term in cg_index ])
             indicies = [ term[0] for term in cg_index]
             indicies.sort()

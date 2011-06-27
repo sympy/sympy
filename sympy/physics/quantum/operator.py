@@ -166,6 +166,16 @@ class Operator(QExpr):
     def matrix_element(self, *args):
         raise NotImplementedError('matrix_elements is not defined')
 
+    def _apply_operator_TensorProduct(self, tp, **options):
+        result = 0
+        for n in range(len(tp.args)):
+            arg = []
+            arg.extend(tp.args[:n])
+            arg.append(self._apply_operator(tp.args[n]))
+            arg.extend(tp.args[n+1:])
+            result += tp.__class__(*arg)
+        return result.expand()
+
     #-------------------------------------------------------------------------
     # Printing
     #-------------------------------------------------------------------------
