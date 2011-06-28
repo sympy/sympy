@@ -437,7 +437,7 @@ def critical_pair(f, g, u, O, K):
 
     A critical pair is a tuple (um, f, vm, g), where um and vm are
     terms such that um * f - vm * g is the S-polynomial of f and g (so,
-    wlog um * f > vm * g). 
+    wlog um * f > vm * g).
     For performance sake, a critical pair is represented as a tuple
     (Sign(um * f), um, f, Sign(vm * g), vm, g), since um * f creates
     a new, relatively expensive object in memory, whereas Sign(um *
@@ -483,8 +483,8 @@ def cp_cmp(c, d, O):
         corresponds to vm_c * g_c and vm_d * g_d)
 
     c == d iff both lbp comparisons above evaluate to 0
-    
-    c > d otherwise 
+
+    c > d otherwise
     """
     c0 = lbp(c[0], [], Num(c[2]))
     d0 = lbp(d[0], [], Num(d[2]))
