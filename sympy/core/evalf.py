@@ -876,8 +876,10 @@ def evalf_sum(expr, prec, options):
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
         re, im, re_acc, im_acc = evalf(s, prec2, options)
-        re_acc = max(re_acc, -err)
-        im_acc = max(im_acc, -err)
+        if re_acc is None:
+            re_acc = -err
+        if im_acc is None:
+            im_acc = -err
         return re, im, re_acc, im_acc
 
 
