@@ -1,4 +1,5 @@
-from sympy import symbols, Matrix, sin, cos, tan, expand
+from sympy import (symbols, Matrix, sin, cos, tan, expand,
+                   solve_linear_system_LU)
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, Kane, inertia, Particle)
 
@@ -11,7 +12,7 @@ def test_one_dof():
     P = Point('P')
     P.set_vel(N, u * N.x)
 
-    kd = {qd: u}
+    kd = [qd - u]
     FL = [(P, (-k * q - c * u) * N.x)]
     pa = Particle()
     pa.mass = m
@@ -19,12 +20,13 @@ def test_one_dof():
     BL = [pa]
 
     KM = Kane(N)
-    KM.gen_speeds([u])
+    KM.coords([q])
+    KM.speeds([u])
     KM.kindiffeq(kd)
-    KM.form_frstar(BL)
     KM.form_fr(FL)
-    MM = KM.mass_matrix()
-    forcing = KM.forcing()
+    KM.form_frstar(BL)
+    MM = KM.mass_matrix
+    forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
 
@@ -41,7 +43,7 @@ def test_two_dof():
     P2 = Point('P2')
     P1.set_vel(N, u1 * N.x)
     P2.set_vel(N, (u1 + u2) * N.x)
-    kd = {q1d: u1, q2d: u2}
+    kd = [q1d - u1, q2d - u2]
 
     # Now we create the list of forces, then assign properties to each
     # particle, then create a list of all particles.
@@ -59,12 +61,13 @@ def test_two_dof():
     # relevant information, and form Fr & Fr*. Then we calculate the mass
     # matrix and forcing terms, and finally solve for the udots.
     KM = Kane(N)
-    KM.gen_speeds([u1, u2])
+    KM.coords([q1, q2])
+    KM.speeds([u1, u2])
     KM.kindiffeq(kd)
-    KM.form_frstar(BL)
     KM.form_fr(FL)
-    MM = KM.mass_matrix()
-    forcing = KM.forcing()
+    KM.form_frstar(BL)
+    MM = KM.mass_matrix
+    forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
@@ -76,7 +79,7 @@ def test_pend():
     N = ReferenceFrame('N')
     P = Point('P')
     P.set_vel(N, -l * u * sin(q) * N.x + l * u * cos(q) * N.y)
-    kd = {qd: u}
+    kd = [qd - u]
 
     FL = [(P, m * g * N.x)]
     pa = Particle()
@@ -85,12 +88,13 @@ def test_pend():
     BL = [pa]
 
     KM = Kane(N)
-    KM.gen_speeds([u])
+    KM.coords([q])
+    KM.speeds([u])
     KM.kindiffeq(kd)
     KM.form_fr(FL)
     KM.form_frstar(BL)
-    MM = KM.mass_matrix()
-    forcing = KM.forcing()
+    MM = KM.mass_matrix
+    forcing = KM.forcing
     rhs = MM.inv() * forcing
     rhs.simplify()
     assert expand(rhs[0]) == expand(-g / l * sin(q))
@@ -133,9 +137,7 @@ def test_rolling_disc():
 
     # Kinematic differential equations; how the generalized coordinate time
     # derivatives relate to generalized speeds.
-    kd = dict({q1d: (u3/cos(q3)),
-        q2d: (u1),
-        q3d: (u2 - u3 * tan(q2))})
+    kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
 
     # Creation of the force list; it is the gravitational force at the mass
     # center of the disc. Then we create the disc by assigning a Point to the
@@ -156,13 +158,17 @@ def test_rolling_disc():
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
     KM = Kane(N)
-    KM.gen_speeds([u1, u2, u3])
+    KM.coords([q1, q2, q3])
+    KM.speeds([u1, u2, u3])
     KM.kindiffeq(kd)
     fr = KM.form_fr(ForceList)
     frstar = KM.form_frstar(BodyList)
-    MM = KM.mass_matrix()
-    forcing = KM.forcing()
+    MM = KM.mass_matrix
+    forcing = KM.forcing
     rhs = MM.inv() * forcing
+    sub_dict = solve_linear_system_LU(Matrix([KM._k_kqdot.T,
+        -(KM._k_ku*Matrix(KM._u) + KM._f_k).T]).T, KM._qdot)
+    rhs = rhs.subs(sub_dict)
     assert rhs.expand() == Matrix([(10*u2*u3*r - 5*u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
 
