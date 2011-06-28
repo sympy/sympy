@@ -2110,39 +2110,38 @@ def ode_Bernoulli(eq, func, order, match):
 
 def ode_Riccati_special_minus2(eq, func, order, match):
     r"""
-    Solves the special case (alpha = -2) of Riccati differential equations.
+    The general Riccati equation has the form dy/dx = f(x)*y**2 + g(x)*y + h(x).
+    While it does not have a general solution [1], the "special" form,
+    dy/dx = a*y**2 - b*x**c, does have solutions in many cases [2]. This routine
+    returns a solution for a*dy/dx = b*y**2 + c*y/x + d/x**2 that is obtained by
+    using a suitable change of variables to reduce it to the special form and is
+    valid when neither a nor b are zero and either c or d is zero.
 
-    These are equations of the form a*dy/dx + b*y**2 + c*y/x + d/x**2,
-    where a, b, c, d are constants: a != 0, b != 0, and c or d != 0.
-    First, we should divide the whole equation by a, because it's not zero.
-    The substitution u = y + b/(2*c) will transform an equation of this
-    form into the special Riccati equation du/dx + a1*u**2 + b1/x**2, which can
-    be transformed into a homogeneous equation with inverse transformation
-    z = 1/y. The general solution is then:
+    >>> from sympy.abc import x, y, a, b, c, d
+    >>> from sympy.solvers.ode import dsolve, checkodesol
+    >>> from sympy import pprint, Function
+    >>> f = Function('f')
+    >>> y = f(x)
+    >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
+    >>> sol = dsolve(genform, y)
+    >>> pprint(sol)
+             /                                 /        __________________      \\
+            |           __________________    |       /                2        ||
+            |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
+           -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
+            \                                 \                 2*a             //
+    f(x) = -----------------------------------------------------------------------
+                                            2*b*x
 
-           1
-     _____________
-               c
-     x*f(x) + ___
-              2*b
-           /                                                  /
-          |                      1                           | 1
-      a*  |       ________________________________ dy = C1 + | _ dx
-          |                  2                  2            | x
-          |                 y *(-4*d - 2*a*c + c )          /
-          |       b - a*y - ______________________
-          |                          4*b
-         /
+    >>> checkodesol(genform, y, sol, order=1)[0]
+    True
 
-    or after integration:
-                                                    _________________
-                      ________________             /                2
-                     /               2     /      V  4*b*d - (a - c)  *log(x) \
-            a - c - V 4*b*d - (a - c)  *tan|C1 + ___________________________  |
-                                           \                  2*a             /
-    f(x) =  __________________________________________________________________
-                                      2*b*x
+    References:
+    [1] http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+    [2] http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+        http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
     """
+
     x = func.args[0]
     f = func.func
     r = match # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
