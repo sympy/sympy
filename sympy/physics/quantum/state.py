@@ -590,8 +590,6 @@ class Wavefunction(Function):
                 new_args[ct] = Tuple(*arg)
             else:
                 new_args[ct] = arg
-
-            setattr(new_args[ct], 'is_commutative', False)
             ct+=1
 
         return super(Function, cls).__new__(cls, *new_args, **options)
@@ -619,6 +617,13 @@ class Wavefunction(Function):
                 expr = expr.subs(symbol, val)
 
         return expr.subs(tuple(zip(var, args)))
+
+    @property
+    def is_commutative(self):
+        """
+        Override Function's is_commutative so that order is preserved in represented expressions
+        """
+        return False
 
     @classmethod
     def eval(self, *args):
