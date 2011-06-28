@@ -9,7 +9,7 @@ See the webpage for more information and documentation:
 
     http://code.google.com/p/sympy/"""
 
-__version__ = "0.7.0.rc2"
+__version__ = "0.7.0"
 
 import sys
 import warnings
