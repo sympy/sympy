@@ -744,29 +744,6 @@ def trigsimp(expr, deep=False, recursive=False):
     else:
         result = trigsimp_nonrecursive(expr, deep)
 
-    # do some final simplifications like sin/cos -> tan:
-    a,b,c = map(Wild, 'abc')
-    matchers = (
-            (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
-            (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
-            (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
-            (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
-            (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
-    )
-    for pattern, simp in matchers:
-        res = result.match(pattern)
-        if res is not None:
-            # if c is missing or zero, do nothing:
-            if (not c in res) or res[c] == 0:
-                continue
-            # if "a" contains the argument of sin/cos "b", skip the
-            # simplification:
-            if res[a].has(res[b]):
-                continue
-            # simplify and finish:
-            result = simp.subs(res)
-            break
-
     return result
 
 
@@ -801,10 +778,33 @@ def trigsimp_nonrecursive(expr, deep=False):
         if deep:
             return expr.func(trigsimp_nonrecursive(expr.args[0], deep))
     elif expr.is_Mul:
+        # do some simplifications like sin/cos -> tan:
+        a,b,c = map(Wild, 'abc')
+        matchers = (
+                (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
+                (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
+                (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
+                (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
+                (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
+        )
+        for pattern, simp in matchers:
+            res = expr.match(pattern)
+            if res is not None:
+                # if c is missing or zero, do nothing:
+                if (not c in res) or res[c] == 0:
+                    continue
+                # if "a" contains any of sin("b"), cos("b"), tan("b") or cot("b),
+                # skip the simplification:
+                if res[a].has(cos(res[b]), sin(res[b]), tan(res[b]), cot(res[b])):
+                    continue
+                # simplify and finish:
+                expr = simp.subs(res)
+                break
+        if not expr.is_Mul:
+            return trigsimp_nonrecursive(expr, deep)
         ret = S.One
         for x in expr.args:
             ret *= trigsimp_nonrecursive(x, deep)
-
         return ret
     elif expr.is_Pow:
         return Pow(trigsimp_nonrecursive(expr.base, deep),

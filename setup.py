@@ -41,8 +41,7 @@ if sys.version_info[:2] < (2,4):
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find * -name __init__.py |rev |cut -f 2- -d '/' |rev \
-#   |egrep -v "^sympy$|thirdparty" `;do echo "'${i//\//.}',"; done |sort
+# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$|thirdparty/" `; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
@@ -227,31 +226,6 @@ tests = [
     'sympy.utilities.tests',
     ]
 
-# update the following list from:
-# http://pyglet.googlecode.com/svn/trunk/setup.py
-# (whenever we update pyglet in sympy)
-# try ./setup.py sdist to see if it works
-pyglet_packages=[
-        'pyglet',
-        'pyglet.app',
-        'pyglet.font',
-        'pyglet.gl',
-        'pyglet.graphics',
-        'pyglet.image',
-        'pyglet.image.codecs',
-        'pyglet.media',
-        'pyglet.media.drivers',
-        'pyglet.media.drivers.directsound',
-        'pyglet.media.drivers.openal',
-        'pyglet.text',
-        'pyglet.text.formats',
-        'pyglet.window',
-        'pyglet.window.carbon',
-        'pyglet.window.win32',
-        'pyglet.window.xlib',
-]
-pyglet_packages = ["sympy.thirdparty.pyglet." + s for s in pyglet_packages]
-
 setup(
       name = 'sympy',
       version = sympy.__version__,
@@ -260,7 +234,7 @@ setup(
       author_email = 'sympy@googlegroups.com',
       license = 'BSD',
       url = 'http://code.google.com/p/sympy',
-      packages = ['sympy'] + modules + tests + pyglet_packages,
+      packages = ['sympy'] + modules + tests,
       scripts = ['bin/isympy'],
       ext_modules = [],
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },

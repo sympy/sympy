@@ -10,9 +10,7 @@ def preview(expr, output='png', viewer=None, euler=True):
        This will generate LaTeX representation of the given expression
        and compile it using available TeX distribution. Then it will
        run appropriate viewer for the given output format or use the
-       user defined one. If you prefer not to use external viewer
-       then you can use combination of 'png' output and 'pyglet'
-       viewer. By default png output is generated.
+       user defined one. By default png output is generated.
 
        By default pretty Euler fonts are used for typesetting (they
        were used to typeset the well known "Concrete Mathematics"
@@ -103,11 +101,6 @@ def preview(expr, output='png', viewer=None, euler=True):
                      \end{document}
                  """
 
-    if viewer == "pyglet":
-        # import pyglet before we change the current dir, because after that it
-        # would fail:
-        from sympy.thirdparty import import_thirdparty
-        pyglet = import_thirdparty("pyglet")
     tmp = tempfile.mktemp()
 
     tex = open(tmp + ".tex", "w")
@@ -143,8 +136,11 @@ def preview(expr, output='png', viewer=None, euler=True):
     src = "%s.%s" % (tmp, output)
 
     if viewer == "pyglet":
-        from pyglet import window, image, gl
-        from pyglet.window import key
+        try:
+            from pyglet import window, image, gl
+            from pyglet.window import key
+        except:
+            raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
         if output == "png":
             from pyglet.image.codecs.png import PNGImageDecoder
