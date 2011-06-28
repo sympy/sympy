@@ -107,6 +107,11 @@ class Logic(object):
         else:
             return a.args != b.args
 
+    def __lt__(cls, other):
+        if cls.__cmp__(other) == -1:
+            return True
+        return False
+
 
     def __cmp__(a, b):
         if type(a) is not type(b):
