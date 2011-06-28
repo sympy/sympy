@@ -5281,6 +5281,17 @@ def groebner(F, *gens, **args):
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grevlex')
     [x**3 - 2*x**2, -x**2 + 2*y**2, x*y - 2*y]
 
+    By default, an improved implementation of the Buchberger algorithm
+    is used. Optionally, an implementation of the F5B algorithm can
+    be used. The algorithm can be changed with the `setup` function
+    from sympy.polys.polyconfig:
+
+    >>> from sympy.polys.polyconfig import setup
+    >>> groebner([x**2 - x - 1, (2*x - 1) * y - (x**10 - (1-x)**10)], x, y, order='lex') # default
+    >>> setup('GB_METHOD', 'f5b')
+    >>> groebner([x**2 - x - 1, (2*x - 1) * y - (x**10 - (1-x)**10)], x, y, order='lex') # f5b
+    >>> setup('GB_METHOD', 'buchberger') # back to the default algorithm
+
     **References**
 
     1. [Buchberger01]_
