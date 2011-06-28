@@ -346,8 +346,8 @@ def test_integrate_DiracDelta():
            x*DiracDelta(x - x_1)
     assert integrate(x*y**2*z*DiracDelta(y - x)*DiracDelta(y - z)*DiracDelta(x - z), (y, -oo, oo)) \
            == x**3*z*DiracDelta(x - z)**2
-    assert integrate((x+1) * DiracDelta(2*x), (x, -oo, oo)) == S(1)/2
-    assert integrate((x+1) * DiracDelta(2*x/3+4/S(9)), (x, -oo, oo)) == S(1)/2
+    assert integrate((x+1)*DiracDelta(2*x), (x, -oo, oo)) == S(1)/2
+    assert integrate((x+1)*DiracDelta(2*x/3 + 4/S(9)), (x, -oo, oo)) == S(1)/2
 
 def test_subs1():
     e = Integral(exp(x-y), x)

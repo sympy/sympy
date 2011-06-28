@@ -1,5 +1,6 @@
 import sympy
 from sympy.functions import DiracDelta, Heaviside
+from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.utilities.misc import default_sort_key
 
@@ -12,21 +13,22 @@ def change_mul(node, x):
        If no simple DiracDelta expression was found, then all the DiracDelta
        expressions are simplified (using DiracDelta.simplify).
 
-       Return: (dirac, nnode)
+       Return: (dirac, new node)
        Where:
-       dirac is a simple DiracDelta expression. None if no simple expression has been found
-       nnode is a new node where all the DiracDelta expressions where simplified,
-       and finally the node was expanded. if nnode is None, means that no DiracDelta expression
-       could be simplified
+         o dirac is either a simple DiracDelta expression or None (if no simple expression was found);
+         o new node is either a simplified DiracDelta expressions or None (if it could not be simplified).
 
        Examples
        --------
 
-       >>change_mul(x*y*DiracDelta(x)*cos(x),x)
-       (DiracDelta(x),x*y*cos(x))
-       >>change_mul(x*y*DiracDelta(x**2-1)*cos(x),x)
-       (None, x*y*cos(x),x*y*DiracDelta(1 + x)*cos(x)/2 + x*y*DiracDelta(-1 + x)*cos(x)/2)
-       >>change_mul(x*y*DiracDelta(cos(x))*cos(x),x)
+       >>> from sympy import DiracDelta, cos
+       >>> from sympy.integrals.deltafunctions import change_mul
+       >>> from sympy.abc import x, y
+       >>> change_mul(x*y*DiracDelta(x)*cos(x),x)
+       (DiracDelta(x), x*y*cos(x))
+       >>> change_mul(x*y*DiracDelta(x**2-1)*cos(x),x)
+       (None, x*y*cos(x)*DiracDelta(x - 1)/2 + x*y*cos(x)*DiracDelta(x + 1)/2)
+       >>> change_mul(x*y*DiracDelta(cos(x))*cos(x),x)
        (None, None)
 
     """
@@ -46,16 +48,16 @@ def change_mul(node, x):
                 new_args.append(arg)
         else:
             new_args.append(change_mul(arg, x))
-    if not dirac:#we didn't find any simple dirac
+    if not dirac: # there was no simple dirac
         new_args = []
         for arg in sorted_args:
             if arg.func == DiracDelta:
                 new_args.append(arg.simplify(x))
             else:
                 new_args.append(change_mul(arg, x))
-        if tuple(new_args) != sorted_args:
+        if new_args != sorted_args:
             nnode = node.__class__(*new_args).expand()
-        else:#if the node didn't change there is nothing to do
+        else: #if the node didn't change there is nothing to do
             nnode = None
         return (None, nnode)
     return (dirac, node.func(*new_args))
