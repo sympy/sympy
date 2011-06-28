@@ -374,6 +374,35 @@ def get_basis(expr, **options):
         return None
 
 def enumerate_states(*args, **options):
+    """
+    Handles indexing of states passed to it.
+
+    Operates in two different modes:
+
+    1) Two arguments are passed to it. The first is the base state which is to be indexed, and the
+    second argument is a list of indices to append.
+
+    2) Three arguments are passed. The first is again the base state to be indexed. The second is the
+    start index for counting. The final argument is the number of kets you wish to receive.
+
+    Parameters
+    =============
+
+    args: list
+    See list of operation mode above for explanation
+
+    Examples
+    =============
+    >>> from sympy.physics.quantum.cartesian import XBra, XKet
+    >>> from sympy.physics.quantum.represent import enumerate_states
+    >>> test = XKet('foo')
+    >>> enumerate_states(test, 1, 3)
+    [|foo_1>, |foo_2>, |foo_3>]
+    >>> test2 = XBra('bar')
+    >>> enumerate_states(test2, [4, 5, 10])
+    [<bar_4|, <bar_5|, <bar_10|]
+    """
+
     state = args[0]
 
     if not isinstance(state, StateBase):
@@ -391,7 +420,7 @@ def enumerate_states(*args, **options):
     enum_states = [0 for i in range(len(index_list))]
     ct = 0
     for i in index_list:
-        label = state.label
+        label = state.args
         new_label = [str(lab) + "_" + str(i) for lab in label]
         enum_states[ct] = state_class(*new_label, **options)
         ct+=1
