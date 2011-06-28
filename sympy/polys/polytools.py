@@ -5288,8 +5288,10 @@ def groebner(F, *gens, **args):
 
     >>> from sympy.polys.polyconfig import setup
     >>> groebner([x**2 - x - 1, (2*x - 1) * y - (x**10 - (1-x)**10)], x, y, order='lex') # default
+    [x**2 - x - 1, y - 55]
     >>> setup('GB_METHOD', 'f5b')
     >>> groebner([x**2 - x - 1, (2*x - 1) * y - (x**10 - (1-x)**10)], x, y, order='lex') # f5b
+    [x**2 - x - 1, y - 55]
     >>> setup('GB_METHOD', 'buchberger') # back to the default algorithm
 
     **References**
