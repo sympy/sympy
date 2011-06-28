@@ -1,18 +1,19 @@
-from sympy import Expr, Symbol
+from sympy import Expr, Symbol, Eq
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import any, all, reduce
-
-class ShapeError(Exception):
-    pass
+from sympy.matrices import ShapeError
 
 class MatrixExpr(Expr):
 
     _op_priority = 11.0
 
     is_Matrix = True
+
+
+    # The following is adapted from the core Expr object
 
     def __neg__(self):
         return MatMul(S.NegativeOne, self)
@@ -51,22 +52,26 @@ class MatrixExpr(Expr):
     def __pow__(self, other):
         if other == -S.One:
             return Inverse(self)
+        raise NotImplementedError()
         return MatPow(self, other)
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
-        return NotImplementedError("Matrix Power not defined")
+        raise NotImplementedError("Matrix Power not defined")
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
+        raise NotImplementedError()
         return MatMul(self, Pow(other, S.NegativeOne))
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
+        raise NotImplementedError()
         return MatMul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
+
 
     @property
     def n(self):
@@ -74,6 +79,10 @@ class MatrixExpr(Expr):
     @property
     def m(self):
         return self.shape[1]
+
+    @property
+    def is_square(self):
+        return Eq(self.n, self.m)
 
 class MatrixSymbol(MatrixExpr, Symbol):
     def __new__(cls, name, n, m, **assumptions):
@@ -85,6 +94,13 @@ class MatrixSymbol(MatrixExpr, Symbol):
         return(self.name, self.shape)
 
 def matrixify(expr):
+    """
+    Mul.flatten is useful but always returns Muls. This is a quick fix to ensure
+    that at least the outer class is a Matrix Expression.
+    I expect that this will break for complex expression trees.
+
+    Internal use only
+    """
     if not (expr.is_Mul or expr.is_Add):
         return expr
     while not expr.is_Matrix and any(arg.is_Matrix for arg in expr.args):
@@ -96,3 +112,6 @@ def matrixify(expr):
 
 from matmul import MatMul
 from matadd import MatAdd
+from inverse import Inverse
+from transpose import Transpose
+
