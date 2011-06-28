@@ -542,12 +542,13 @@ def f5_single_reduction(f, B, u, O, K):
     be f5-reducible, e.g.:
 
     >>> from sympy.polys.groebnertools import *
+    >>> from sympy import QQ
     >>> f = lbp(sig((1,1,1),4), [((1, 0, 0), QQ(1))], 3)
     >>> g = lbp(sig((0, 0, 0), 2), [((1, 0, 0), QQ(1))], 2)
     >>> sdp_rem(Polyn(f), [Polyn(g)], 2, O_lex, QQ)
     []
     >>> f5_single_reduction(f, [g], 2, O_lex, QQ)
-    (((1, 1, 1), 4), [((1, 0, 0), 1)], 3)
+    (((1, 1, 1), 4), [((1, 0, 0), 1/1)], 3)
     """
     if Polyn(f) == []:
         return f
