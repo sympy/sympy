@@ -70,6 +70,7 @@ class Basic(object):
     is_Equality = False
     is_Boolean = False
     is_Not = False
+    is_Matrix = False
 
     @property
     @deprecated

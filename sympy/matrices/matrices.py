@@ -74,6 +74,8 @@ class Matrix(object):
     # TODO: investigate about __array_priority__
     __array_priority__ = 10.0
 
+    is_Matrix = True
+
     def __init__(self, *args):
         """
         Matrix can be constructed with values or a rule.
