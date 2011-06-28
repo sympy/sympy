@@ -41,8 +41,8 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
     algorithms for Groebner bases. The choice of algorithm can be
     changed via
 
-    >>>> from sympy.polys.polyconfig import setup
-    >>>> setup('GB_METHOD', 'method')
+    >>> from sympy.polys.polyconfig import setup
+    >>> setup('GB_METHOD', 'method')
 
     where 'method' can be 'buchberger' or 'f5b'. If an unknown method
     is provided, the default Buchberger algorithm will be used.
@@ -347,7 +347,14 @@ def sig_cmp(u, v, O):
     """
     Compare two signatures by extending the term order to K[X]^n.
 
-    (u < v)
+    u < v iff
+        - the index of v is greater than the index of u
+    or
+        - the index of v is equal to the index of u and u[0] < v[0] w.r.t. O
+
+    u == v iff u[0] == v[0] and u[1] == v[1]
+
+    u > v otherwise
     """
     if u[1] > v[1]:
         return -1
@@ -362,6 +369,9 @@ def sig_cmp(u, v, O):
 def sig_mult(s, m):
     """
     Multiply a signature by a monomial.
+
+    The product of a signature (m, i) and a monomial n is defined as
+    (m * t, i).
     """
     return sig(monomial_mul(s[0], m), s[1])
 
@@ -371,6 +381,9 @@ def sig_mult(s, m):
 def lbp_sub(f, g, u, O, K):
     """
     Subtract labeled polynomial g from f.
+
+    The signature and number of the difference of f and g are signature
+    and number of the maximum of f and g, w.r.t. lbp_cmp.
     """
     if sig_cmp(Sign(f), Sign(g), O) == -1:
         max_poly = g
@@ -385,6 +398,9 @@ def lbp_sub(f, g, u, O, K):
 def lbp_mul_term(f, cx, u, O, K):
     """
     Multiply a labeled polynomial with a term.
+
+    The product of a labeled polynomial (s, p, k) by a monomial is
+    defined as (m * s, m * p, k).
     """
     return lbp(sig_mult(Sign(f), cx[0]), sdp_mul_term(Polyn(f), cx, u, O, K), Num(f))
 
@@ -394,7 +410,14 @@ def lbp_cmp(f, g, O):
     Compare two labeled polynomials. This relation is not
     antisymmetric.
 
-    (f < g)
+    f < g iff
+        - Sign(f) < Sign(g)
+    or
+        - Sign(f) == Sign(g) and Num(f) > Num(g)
+
+    f == g iff Sign(f) == Sign(g) and Num(f) == Num(g)
+
+    f > g otherwise
     """
     if sig_cmp(Sign(f), Sign(g), O) == -1:
         return -1
@@ -411,6 +434,15 @@ def lbp_cmp(f, g, O):
 def critical_pair(f, g, u, O, K):
     """
     Compute the critical pair corresponding to two labeled polynomials.
+
+    A critical pair is a tuple (um, f, vm, g), where um and vm are
+    terms such that um * f - vm * g is the S-polynomial of f and g (so,
+    wlog um * f > vm * g). 
+    For performance sake, a critical pair is represented as a tuple
+    (Sign(um * f), um, f, Sign(vm * g), vm, g), since um * f creates
+    a new, relatively expensive object in memory, whereas Sign(um *
+    f) and um are lightweight and f (in the tuple) is a reference to
+    an already existing object in memory.
     """
     ltf = sdp_LT(Polyn(f), u, K)
     ltg = sdp_LT(Polyn(g), u, K)
@@ -442,7 +474,17 @@ def cp_cmp(c, d, O):
     Compare two critical pairs c and d. This relation is not
     antisymmetric.
 
-    (c < d)
+    c < d iff
+        - lbp(c[0], _, Num(c[2]) < lbp(d[0], _, Num(d[2])) (this
+        corresponds to um_c * f_c and um_d * f_d)
+    or
+        - lbp(c[0], _, Num(c[2]) >< lbp(d[0], _, Num(d[2])) and
+        lbp(c[3], _, Num(c[5])) < lbp(d[3], _, Num(d[5])) (this
+        corresponds to vm_c * g_c and vm_d * g_d)
+
+    c == d iff both lbp comparisons above evaluate to 0
+    
+    c > d otherwise 
     """
     c0 = lbp(c[0], [], Num(c[2]))
     d0 = lbp(d[0], [], Num(d[2]))
@@ -463,6 +505,8 @@ def cp_cmp(c, d, O):
 def s_poly(cp, u, O, K):
     """
     Compute the S-polynomial of a critical pair.
+
+    The S-polynomial of a critical pair cp is cp[1] * cp[2] - cp[4] * cp[5].
     """
     return lbp_sub(lbp_mul_term(cp[2], cp[1], u, O, K), lbp_mul_term(cp[5], cp[4], u, O, K), u, O, K)
 
@@ -493,6 +537,17 @@ def f5_single_reduction(f, B, u, O, K):
     the leading term lg of g divides the leading term lf of f and
     the signature of lf/lg * g is less than the signature of f. If
     such a g exists, the function returns f - lf/lg * g.
+
+    A polynomial that is reducible in the usual sense (sdp_rem) need not
+    be f5-reducible, e.g.:
+
+    >>> from sympy.polys.groebnertools import *
+    >>> f = lbp(sig((1,1,1),4), [((1, 0, 0), QQ(1))], 3)
+    >>> g = lbp(sig((0, 0, 0), 2), [((1, 0, 0), QQ(1))], 2)
+    >>> sdp_rem(Polyn(f), [Polyn(g)], 2, O_lex, QQ)
+    []
+    >>> f5_single_reduction(f, [g], 2, O_lex, QQ)
+    (((1, 1, 1), 4), [((1, 0, 0), 1)], 3)
     """
     if Polyn(f) == []:
         return f
@@ -591,6 +646,7 @@ def f5b(F, u, O, K, gens='', verbose=False):
         uf = lbp(cp[0], [], Num(cp[2]))
         vg = lbp(cp[3], [], Num(cp[5]))
 
+        # discard redundant critical pairs:
         if is_rewritable_or_comparable(uf, B, u, K):
             continue
         if is_rewritable_or_comparable(vg, B, u, K):
@@ -673,7 +729,7 @@ def red_groebner(G, u, O, K):
         if not any([monomial_div(sdp_LM(f0, u), sdp_LM(f, u)) is not None for f in F + H]):
             H.append(f0)
 
-    # By Becker, Weispfenning, p. 217: H is Groebner basis of the ideal generated by G.
+    # Becker, Weispfenning, p. 217: H is Groebner basis of the ideal generated by G.
     return reduction(H, u, O, K)
 
 
@@ -690,6 +746,7 @@ def is_groebner(G, u, O, K):
 
     return True
 
+
 def is_minimal(G, u, O, K):
     """
     Checks if G is a minimal Groebner basis.
@@ -698,12 +755,13 @@ def is_minimal(G, u, O, K):
     for i, g in enumerate(G):
         if sdp_LC(g, K) != K.one:
             return False
-        
+
         for h in G[:i] + G[i + 1:]:
             if monomial_div(sdp_LM(g, u), sdp_LM(h, u)) is not None:
                 return False
 
     return True
+
 
 def is_reduced(G, u, O, K):
     """
@@ -720,4 +778,3 @@ def is_reduced(G, u, O, K):
                     return False
 
     return True
-
