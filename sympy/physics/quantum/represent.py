@@ -331,7 +331,7 @@ def integrate_result(orig_expr, result, **options):
 
     Examples
     ==========
-    >>> from sympy import symbols
+    >>> from sympy import symbols, DiracDelta
     >>> from sympy.physics.quantum.represent import integrate_result
     >>> from sympy.physics.quantum.cartesian import XOp, XKet
     >>> x_ket = XKet()
@@ -405,7 +405,7 @@ def get_basis(expr, **options):
     Examples:
     ===========
     >>> from sympy.physics.quantum.represent import get_basis
-    >>> from sympy.physics.quantum.cartesian import XOp, XKet
+    >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
     >>> x = XKet()
     >>> X = XOp()
     >>> get_basis(x)

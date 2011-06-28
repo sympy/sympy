@@ -533,7 +533,7 @@ class Wavefunction(Function):
     Examples
     ==============
     Particle in a box
-    >>> from sympy import Symbol, Piecewise, pi
+    >>> from sympy import Symbol, Piecewise, pi, N
     >>> from sympy.functions import sqrt, sin
     >>> from sympy.physics.quantum.state import Wavefunction
     >>> x = Symbol('x')
@@ -551,7 +551,7 @@ class Wavefunction(Function):
     >>> p(L)
     0
     >>> p(0.5)
-    0
+    2
     >>> p(0.85*L)
     2*sin(0.85*pi)**2
     >>> N(p(0.85*L))
@@ -667,6 +667,7 @@ class Wavefunction(Function):
         >>> f.limits
         {x: (-oo, oo)}
         >>> f = Wavefunction(x**2 + y**2, x, (y, -1, 2))
+        >>> f.limits
         {x: (-oo, oo), y: (-1, 2)}
         """
         limits = [(g[1], g[2]) if isinstance(g, Tuple) else (-oo, oo) \
