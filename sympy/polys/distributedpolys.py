@@ -22,6 +22,7 @@ from sympy.polys.polyerrors import (
 from sympy.utilities import any, all
 from operator import itemgetter
 
+
 def sdp_LC(f, K):
     """Returns the leading coeffcient of `f`. """
     if not f:
@@ -32,7 +33,7 @@ def sdp_LC(f, K):
 def sdp_LM(f, u):
     """Returns the leading monomial of `f`. """
     if not f:
-        return (0,)*(u+1)
+        return (0,) * (u + 1)
     else:
         return f[0][0]
 
@@ -41,7 +42,7 @@ def sdp_LT(f, u, K):
     if f:
         return f[0]
     else:
-        return (0,)*(u+1), K.zero
+        return (0,) * (u + 1), K.zero
 
 def sdp_del_LT(f):
     """Removes the leading from `f`. """
@@ -88,7 +89,7 @@ def sdp_one_p(f, u, K):
 
 def sdp_one(u, K):
     """Returns a multivariate one in `K[X]`. """
-    return (((0,)*(u+1), K.one),)
+    return (((0,) * (u + 1), K.one),)
 
 def sdp_term_p(f):
     """Returns True if `f` has a single term or is zero. """
@@ -118,7 +119,7 @@ def sdp_add_term(f, term, u, O, K):
     if cmp(O(M), O(monoms[-1])) < 0:
         return f + [(M, c)]
 
-    lo, hi = 0, len(monoms)-1
+    lo, hi = 0, len(monoms) - 1
 
     while lo <= hi:
         i = (lo + hi) // 2
@@ -128,16 +129,16 @@ def sdp_add_term(f, term, u, O, K):
             coeff = f[i][1] + c
 
             if not coeff:
-                return f[:i] + f[i+1:]
+                return f[:i] + f[i + 1:]
             else:
-                return f[:i] + [(M, coeff)] + f[i+1:]
+                return f[:i] + [(M, coeff)] + f[i + 1:]
         else:
             if j > 0:
                 hi = i - 1
             else:
                 lo = i + 1
     else:
-        return f[:i] + [(M, c)] + f[i+1:]
+        return f[:i] + [(M, c)] + f[i + 1:]
 
 def sdp_sub_term(f, term, u, O, K):
     """Sub a single term using bisection method. """
@@ -155,7 +156,7 @@ def sdp_sub_term(f, term, u, O, K):
     if cmp(O(M), O(monoms[-1])) < 0:
         return f + [(M, -c)]
 
-    lo, hi = 0, len(monoms)-1
+    lo, hi = 0, len(monoms) - 1
 
     while lo <= hi:
         i = (lo + hi) // 2
@@ -165,16 +166,16 @@ def sdp_sub_term(f, term, u, O, K):
             coeff = f[i][1] - c
 
             if not coeff:
-                return f[:i] + f[i+1:]
+                return f[:i] + f[i + 1:]
             else:
-                return f[:i] + [(M, coeff)] + f[i+1:]
+                return f[:i] + [(M, coeff)] + f[i + 1:]
         else:
             if j > 0:
                 hi = i - 1
             else:
                 lo = i + 1
     else:
-        return f[:i] + [(M, -c)] + f[i+1:]
+        return f[:i] + [(M, -c)] + f[i + 1:]
 
 def sdp_mul_term(f, term, u, O, K):
     """Multiply a distributed polynomial by a term. """
@@ -186,7 +187,7 @@ def sdp_mul_term(f, term, u, O, K):
         if K.is_one(c):
             return [ (monomial_mul(f_M, M), f_c) for f_M, f_c in f ]
         else:
-            return [ (monomial_mul(f_M, M), f_c*c) for f_M, f_c in f ]
+            return [ (monomial_mul(f_M, M), f_c * c) for f_M, f_c in f ]
 
 def sdp_add(f, g, u, O, K):
     """Add distributed polynomials in `K[X]`. """
@@ -241,7 +242,7 @@ def sdp_mul(f, g, u, O, K):
     for fm, fc in f:
         for gm, gc in g:
             monom = monomial_mul(fm, gm)
-            coeff = fc*gc
+            coeff = fc * gc
 
             if monom in h:
                 coeff += h[monom]
@@ -261,7 +262,7 @@ def sdp_sqr(f, u, O, K):
     for fm, fc in f:
         for Fm, Fc in f:
             monom = monomial_mul(fm, Fm)
-            coeff = fc*Fc
+            coeff = fc * Fc
 
             if monom in h:
                 coeff += h[monom]
@@ -286,7 +287,7 @@ def sdp_pow(f, n, u, O, K):
     g = sdp_one(u, K)
 
     while True:
-        n, m = n//2, n
+        n, m = n // 2, n
 
         if m & 1:
             g = sdp_mul(g, f, u, O, K)
@@ -469,7 +470,7 @@ def sdp_lcm(f, g, u, O, K):
     if K.is_one(lcm):
         h = [ (m[1:], c)     for m, c in H[0] ]
     else:
-        h = [ (m[1:], c*lcm) for m, c in H[0] ]
+        h = [ (m[1:], c * lcm) for m, c in H[0] ]
 
     return sdp_sort(h, O)
 
@@ -488,7 +489,6 @@ def sdp_gcd(f, g, u, O, K):
         if K.is_one(gcd):
             return h
         else:
-            return [ (m, c*gcd) for m, c in h ]
+            return [ (m, c * gcd) for m, c in h ]
     else:
         return sdp_monic(h, K)
-
