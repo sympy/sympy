@@ -370,7 +370,8 @@ class DifferentialOperator(Operator):
     >>> d = DifferentialOperator(x)
     >>> qapply(d*f)
     Piecewise((0, x < 0), (0, 1 < x), (2**(1/2)*pi*cos(pi*x), True))
-
+    >>> d.is_commutative
+    False
     """
 
     #-------------------------------------------------------------------------

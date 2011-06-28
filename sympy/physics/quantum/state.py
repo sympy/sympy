@@ -575,6 +575,8 @@ class Wavefunction(Function):
     2**(1/2)*(1/L)**(1/2)*sin(0.85*pi*n/L)
     >> f(0.85, n=1, L=1)
     2**(1/2)*sin(0.85*pi)
+    >> f.is_commutative
+    False
     """
 
     #Any passed tuples for coordinates and their bounds need to be converted to Tuples
@@ -588,6 +590,8 @@ class Wavefunction(Function):
                 new_args[ct] = Tuple(*arg)
             else:
                 new_args[ct] = arg
+
+            setattr(new_args[ct], 'is_commutative', False)
             ct+=1
 
         return super(Function, cls).__new__(cls, *new_args, **options)
