@@ -49,6 +49,10 @@ class PxOp(HermitianOperator):
     """1D cartesian momentum operator."""
 
     @classmethod
+    def default_label(self):
+        return "Px"
+
+    @classmethod
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
@@ -107,6 +111,10 @@ class XBra(Bra):
 
 class PxKet(Ket):
     """1D cartesian momentum eigenket."""
+
+    @classmethod
+    def basis_op(self):
+        return PxOp
 
     @property
     def dual_class(self):

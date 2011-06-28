@@ -633,7 +633,7 @@ class Wavefunction(Function):
     def variables(self):
         """
         Return the free coordinates which were passed to the constructor
-        
+
         Examples
         =========
         >>> from sympy.physics.quantum.state import Wavefunction
