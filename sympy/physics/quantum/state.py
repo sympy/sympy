@@ -66,10 +66,10 @@ class StateBase(QExpr):
 
     @classmethod
     def default_label(self):
+        """Returns a default label corresponding to the labeling of its basis operator"""
         if self.basis_op() is None:
             return None
         else:
-            #Returns a default label corresponding to the labeling of its basis operator
             return (self.basis_op().default_label().lower())
 
     def _represent_default_basis(self, **options):
@@ -533,49 +533,49 @@ class Wavefunction(Function):
     Examples
     ==============
     Particle in a box
-    >> from sympy import Symbol, Piecewise, pi
-    >> from sympy.functions import sqrt, sin
-    >> from sympy.physics.quantum.state import Wavefunction
-    >> x = Symbol('x')
-    >> n = 1
-    >> L = 1
-    >> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
-    >> f = Wavefunction(g, x)
-    >> f.norm_constant
+    >>> from sympy import Symbol, Piecewise, pi
+    >>> from sympy.functions import sqrt, sin
+    >>> from sympy.physics.quantum.state import Wavefunction
+    >>> x = Symbol('x')
+    >>> n = 1
+    >>> L = 1
+    >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
+    >>> f = Wavefunction(g, x)
+    >>> f.norm_constant
     1
-    >> f.is_normalized
+    >>> f.is_normalized
     True
-    >> p = f.prob()
-    >> p(0)
+    >>> p = f.prob()
+    >>> p(0)
     0
-    >> p(L)
+    >>> p(L)
     0
-    >> p(0.5)
+    >>> p(0.5)
     0
-    >> p(0.85*L)
+    >>> p(0.85*L)
     2*sin(0.85*pi)**2
-    >> N(p(0.85*L))
+    >>> N(p(0.85*L))
     0.412214747707527
 
     Additionally, you can specify the bounds of the function and the indices in a different way.
-    >> from sympy import symbols, pi
-    >> from sympy.functions import sqrt, sin
-    >> from sympy.physics.quantum.state import Wavefunction
-    >> x, L = symbols('x,L', real=True)
-    >> n = symbols('n', integer=True)
-    >> g = sqrt(2/L)*sin(n*pi*x/L)
-    >> f = Wavefunction(g, (x, 0, L))
-    >> f.norm_constant
+    >>> from sympy import symbols, pi
+    >>> from sympy.functions import sqrt, sin
+    >>> from sympy.physics.quantum.state import Wavefunction
+    >>> x, L = symbols('x,L', real=True)
+    >>> n = symbols('n', integer=True)
+    >>> g = sqrt(2/L)*sin(n*pi*x/L)
+    >>> f = Wavefunction(g, (x, 0, L))
+    >>> f.norm_constant
     1
-    >> f(L+1)
+    >>> f(L+1)
     0
-    >> f(-1)
+    >>> f(-1)
     0
-    >> f(0.85)
+    >>> f(0.85)
     2**(1/2)*(1/L)**(1/2)*sin(0.85*pi*n/L)
-    >> f(0.85, n=1, L=1)
+    >>> f(0.85, n=1, L=1)
     2**(1/2)*sin(0.85*pi)
-    >> f.is_commutative
+    >>> f.is_commutative
     False
     """
 
@@ -631,25 +631,109 @@ class Wavefunction(Function):
 
     @property
     def variables(self):
+        """
+        Return the free coordinates which were passed to the constructor
+        
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Wavefunction
+        >>> from sympy import symbols
+        >>> x,y = symbols('x,y')
+        >>> f = Wavefunction(x*y, x, y)
+        >>> f.variables
+        (x, y)
+        >>> g = Wavefunction(x*y, x)
+        >>> g.variables
+        (x,)
+        """
         var = [g[0] if isinstance(g, Tuple) else g for g in self._args[1:]]
         return tuple(var)
 
     @property
     def limits(self):
+        """
+        Return the limits of the coordinates passed to the constructor.
+        If no limits are specified, defaults to (-oo, oo)
+
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Wavefunction
+        >>> from sympy import symbols
+        >>> x, y = symbols('x, y')
+        >>> f = Wavefunction(x**2, (x, 0, 1))
+        >>> f.limits
+        {x: (0, 1)}
+        >>> f = Wavefunction(x**2, x)
+        >>> f.limits
+        {x: (-oo, oo)}
+        >>> f = Wavefunction(x**2 + y**2, x, (y, -1, 2))
+        {x: (-oo, oo), y: (-1, 2)}
+        """
         limits = [(g[1], g[2]) if isinstance(g, Tuple) else (-oo, oo) \
                   for g in self._args[1:]]
         return dict(zip(self.variables, tuple(limits)))
 
     @property
     def expr(self):
+        """
+        Return the functional form of the Wavefunction
+
+        Examples
+        =========
+        >>> from sympy.physics.quantum.state import Wavefunction
+        >>> from sympy import symbols
+        >>> x, y = symbols('x, y')
+        >>> f = Wavefunction(x**2, x)
+        >>> f.expr
+        x**2
+        """
         return self._args[0]
 
     @property
     def is_normalized(self):
+        """
+        Returns true if the Wavefunction is properly normalized
+
+        Examples
+        =========
+        >>> from sympy import symbols, pi
+        >>> from sympy.functions import sqrt, sin
+        >>> from sympy.physics.quantum.state import Wavefunction
+        >>> x, L = symbols('x,L', real=True)
+        >>> n = symbols('n', integer=True)
+        >>> g = sqrt(2/L)*sin(n*pi*x/L)
+        >>> f = Wavefunction(g, (x, 0, L))
+        >>> f.is_normalized
+        True
+        """
+
         return (self.norm_constant == 1.0)
 
     @property
     def norm_constant(self):
+        """
+        Return the normalization of the specified functional form.
+
+        This function integrates over the coordinates passed to the constructor of the Wavefunction,
+        with the bounds specified.
+
+        Examples
+        =========
+        >>> from sympy import symbols, pi
+        >>> from sympy.functions import sqrt, sin
+        >>> from sympy.physics.quantum.state import Wavefunction
+        >>> x, L = symbols('x,L', real=True)
+        >>> n = symbols('n', integer=True)
+        >>> g = sqrt(2/L)*sin(n*pi*x/L)
+        >>> f = Wavefunction(g, (x, 0, L))
+        >>> f.norm_constant
+        1
+        >>> g = sin(n*pi*x/L)
+        >>> f = Wavefunction(g, (x, 0, L))
+        >>> f.norm_constant
+        2**(1/2)*(1/L)**(1/2)
+        """
+
         exp = self.expr*conjugate(self.expr)
         var = self.variables
         limits = self.limits
@@ -661,4 +745,20 @@ class Wavefunction(Function):
         return sqrt(1/exp)
 
     def prob(self):
+        """
+        Return the absolute magnitude of the functional form |psi(x)|^2
+
+        Examples
+        =========
+        >>> from sympy import symbols, pi
+        >>> from sympy.functions import sqrt, sin
+        >>> from sympy.physics.quantum.state import Wavefunction
+        >>> x, L = symbols('x,L', real=True)
+        >>> n = symbols('n', integer=True)
+        >>> g = sin(n*pi*x/L)
+        >>> f = Wavefunction(g, (x, 0, L))
+        >>> f.prob()
+        Wavefunction(sin(pi*n*x/L)**2, x)
+        """
+
         return Wavefunction(self.expr*conjugate(self.expr), *self.variables)
