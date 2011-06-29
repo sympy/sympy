@@ -11,6 +11,9 @@ from sympy.utilities.lambdify import implemented_function
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
 
+#FIXME-py3k: Many AssertionErrors here, perhaps related to unicode;
+#FIXME-py3k: some are just due to an extra space at the end of the string
+
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
        this wrapper returns the contents of that stream as a string. This

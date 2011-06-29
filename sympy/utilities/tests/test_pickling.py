@@ -32,6 +32,7 @@ from sympy import symbols
 def check(a, check_attr = True):
     """ Check that pickling and copying round-trips.
     """
+    #FIXME-py3k: Add support for protocol 3.
     for protocol in [0, 1, 2, copy.copy, copy.deepcopy]:
         if callable(protocol):
             if isinstance(a, BasicType):
@@ -215,9 +216,10 @@ from sympy.matrices.matrices import Matrix, SparseMatrix
 
 def test_matrices():
     for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
+        #FIXME-py3k: This raises sympy.matrices.matrices.ShapeError
         check(c)
 
-#================== ntheorie ====================
+#================== ntheory =====================
 from sympy.ntheory.generate import Sieve
 
 def test_ntheory():
@@ -364,6 +366,9 @@ def test_printing():
     for c in (LatexPrinter, LatexPrinter(), MathMLPrinter,
               PrettyPrinter, prettyForm, stringPict, stringPict("a"),
               Printer, Printer(), PythonPrinter, PythonPrinter()):
+        #FIXME-py3k: sympy/printing/printer.py", line 220, in order
+        #FIXME-py3k: return self._settings['order']
+        #FIXME-py3k: KeyError: 'order'
         check(c)
 
 @XFAIL

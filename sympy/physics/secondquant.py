@@ -1601,6 +1601,7 @@ class FixedBosonicBasis(BosonicBasis):
         exec cmd
         if self.n_particles==1:
             result = [(item,) for item in result]
+        #FIXME-py3k: UnboundLocalError: local variable 'result' referenced before assignment
         self.particle_locations = result
 
     def _build_states(self):
