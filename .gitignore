@@ -3,6 +3,8 @@
 *.sw[op]
 tags
 
+MANIFEST
+
 my/
 dist/
 build/
