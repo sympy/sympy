@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Substitution example
 
 Demonstrates substitution.

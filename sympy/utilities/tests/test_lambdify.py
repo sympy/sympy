@@ -6,10 +6,6 @@ from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
 import math, sympy
 
-# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
-mpmath.mp.dps = 50
-sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
-
 x,y,z = symbols('x,y,z')
 
 #================== Test different arguments ==============
@@ -72,43 +68,70 @@ def test_bad_args():
         pass
 
 #================== Test different modules ================
+
+# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
+
 def test_sympy_lambda():
-    f = lambdify(x, sin(x), "sympy")
-    assert f(x) is sin(x)
-    prec = 1e-15
-    assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        # arctan is in numpy module and should not be available
-        f = lambdify(x, arctan(x), "sympy")
-        assert False
-    except NameError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "sympy")
+        assert f(x) == sin(x)
+        prec = 1e-15
+        assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
+        try:
+            # arctan is in numpy module and should not be available
+            f = lambdify(x, arctan(x), "sympy")
+            assert False
+        except NameError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 def test_math_lambda():
-    f = lambdify(x, sin(x), "math")
-    prec = 1e-15
-    assert -prec < f(0.2) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        f(x) # if this succeeds, it can't be a python math function
-        assert False
-    except ValueError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "math")
+        prec = 1e-15
+        assert -prec < f(0.2) - sin02 < prec
+        try:
+            f(x) # if this succeeds, it can't be a python math function
+            assert False
+        except ValueError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 def test_mpmath_lambda():
-    f = lambdify(x, sin(x), "mpmath")
-    prec = 1e-49 # mpmath precision is around 50 decimal places
-    assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        f(x) # if this succeeds, it can't be a mpmath function
-        assert False
-    except TypeError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "mpmath")
+        prec = 1e-49 # mpmath precision is around 50 decimal places
+        assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
+        try:
+            f(x) # if this succeeds, it can't be a mpmath function
+            assert False
+        except TypeError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 @XFAIL
 def test_number_precision():
-    f = lambdify(x, sin02, "mpmath")
-    prec = 1e-49 # mpmath precision is around 50 decimal places
-    assert -prec < f(0) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
+    try:
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin02, "mpmath")
+        prec = 1e-49 # mpmath precision is around 50 decimal places
+        assert -prec < f(0) - sin02 < prec
+    finally:
+        mpmath.mp.dps = dps
 
 #================== Test Translations =====================
 # We can only check if all translated functions are valid. It has to be checked

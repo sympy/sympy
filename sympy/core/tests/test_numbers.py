@@ -11,7 +11,7 @@ def test_integers_cache():
     python_int = 2**65 + 3175259
 
     while python_int in _intcache or hash(python_int) in _intcache:
-        value += 1
+        python_int += 1
 
     sympy_int = Integer(python_int)
 

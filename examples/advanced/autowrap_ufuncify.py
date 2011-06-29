@@ -16,9 +16,10 @@ fortran compiler.
 
 import sys
 
-try:
-    import numpy as np
-except ImportError:
+from sympy.external import import_module
+
+np = import_module('numpy')
+if not np:
     sys.exit("Cannot import numpy. Exiting.")
 
 import sympy.mpmath as mpmath

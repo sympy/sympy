@@ -1,11 +1,17 @@
 #!/usr/bin/env python
+
 """Matplotlib 3D plotting example
 
 Demonstrates plotting with matplotlib.
 """
 
-from sympy import Basic, sin, Symbol
+import sys
+
 from sample import sample
+
+from sympy import sin, Symbol
+from sympy.external import import_module
+
 
 def mplot3d(f, var1, var2, show=True):
     """
@@ -15,14 +21,12 @@ def mplot3d(f, var1, var2, show=True):
     import warnings
     warnings.filterwarnings("ignore", "Could not match \S")
 
-    try:
-        import pylab as p
-        import mpl_toolkits.mplot3d as p3
-    except ImportError:
-        try:
-            import matplotlib.axes3d as p3 # older matplotlib
-        except ImportError:
-            raise ImportError("Matplotlib is required to use mplot3d.")
+    p = import_module('pylab')
+    # Try newer version first
+    p3 = import_module('mpl_toolkits.mplot3d',
+        __import__kwargs={'fromlist':['something']}) or import_module('matplotlib.axes3d')
+    if not p or not p3:
+        sys.exit("Matplotlib is required to use mplot3d.")
 
     x, y, z = sample(f, var1, var2)
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Pi digits example
 
 Example shows arbitrary precision using mpmath with the

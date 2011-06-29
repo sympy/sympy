@@ -5,9 +5,10 @@
 # Python (without scipy). Here we test everything, that a user may need when
 # using SymPy with SciPy
 
-try:
-    import scipy
-except ImportError:
+from sympy.external import import_module
+
+scipy = import_module('scipy')
+if not scipy:
     #py.test will not execute any tests now
     disabled = True
 

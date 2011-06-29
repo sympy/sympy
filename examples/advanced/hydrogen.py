@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 This example shows how to work with the Hydrogen radial wavefunctions.
 """

@@ -63,10 +63,9 @@ def make_report(source_dir, report_dir, use_cache=False):
     else:
         cov.erase()
         cov.start()
-        from sympy.utilities.runtests import test
-        test(source_dir)
-        #from sympy.utilities.runtests import doctest
-        #doctest()        #coverage doesn't play well with doctests
+        import sympy
+        sympy.test(source_dir)
+        #sympy.doctest()        #coverage doesn't play well with doctests
         cov.stop()
         cov.save()
 

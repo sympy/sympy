@@ -78,6 +78,7 @@ def _import(module, reload="False"):
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
+    # TODO: rewrite this using import_module from sympy.external
     if not module in MODULES:
         raise NameError("This module can't be used for lambdification.")
     namespace, translations, import_commands = MODULES[module]
