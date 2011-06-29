@@ -545,8 +545,8 @@ class WignerD(AtomicExpr):
             raise ValueError('6 parameters expected, got %s' % args)
         evaluate = hints.get('evaluate', False)
         if evaluate:
-            return Expr.__new__(cls, *args)._eval_wignerd()
-        return Expr.__new__(cls, *args, **{'evaluate': False})
+            return AtomicExpr.__new__(cls, *args)._eval_wignerd()
+        return AtomicExpr.__new__(cls, *args, **{'evaluate': False})
 
     @property
     def j(self):
