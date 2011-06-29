@@ -44,13 +44,8 @@ get_complex = re.compile(r'^\(?(?P<re>[\+\-]?\d*\.?\d*(e[\+\-]?\d+)?)??'
                          r'(?P<im>[\+\-]?\d*\.?\d*(e[\+\-]?\d+)?j)?\)?$')
 
 
-try:
-    from sage.libs.mpmath.ext_main import Context as BaseMPContext
-    # pickle hack
-    import sage.libs.mpmath.ext_main as _mpf_module
-except ImportError:
-    from .ctx_mp_python import PythonMPContext as BaseMPContext
-    from . import ctx_mp_python as _mpf_module
+from .ctx_mp_python import PythonMPContext as BaseMPContext
+from . import ctx_mp_python as _mpf_module
 
 from .ctx_mp_python import _mpf, _mpc, mpnumeric
 

@@ -7,21 +7,21 @@
 
 from __future__ import division
 
-try:
-    from numpy import array, matrix, ndarray
-    import numpy
-except ImportError:
+from sympy.external import import_module
+
+numpy = import_module('numpy')
+if numpy:
+    array, matrix, ndarray = numpy.array, numpy.matrix, numpy.ndarray
+else:
     #py.test will not execute any tests now
     disabled = True
 
 
 from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
-        symarray, symbols)
+        symarray, symbols, Integer)
 import sympy
 
 from sympy import mpmath
-mpmath.mp.dps = 16
-sin02 = mpmath.mpf("0.198669330795061215459412627")
 
 # first, systematically check, that all operations are implemented and don't
 # raise and exception
@@ -41,13 +41,13 @@ def test_systematic_basic():
     x = Symbol("x")
     y = Symbol("y")
     sympy_objs = [
-            Rational(2),
+            Rational(2, 3),
             Float("1.3"),
             x,
             y,
             pow(x,y)*y,
-            5,
-            5.5,
+            Integer(5),
+            Float(5.5),
             ]
     numpy_objs = [
             array([1]),
@@ -196,15 +196,21 @@ def test_issue629():
     assert (Float("0.5") + array([2*x, 0]) == array([2*x + Float("0.5"), Float("0.5")])).all()
 
 def test_lambdify():
-    x = Symbol("x")
-    f = lambdify(x, sin(x), "numpy")
-    prec = 1e-15
-    assert -prec < f(0.2) - sin02 < prec
+    dps = mpmath.mp.dps
     try:
-        f(x) # if this succeeds, it can't be a numpy function
-        assert False
-    except AttributeError:
-        pass
+        mpmath.mp.dps = 16
+        sin02 = mpmath.mpf("0.198669330795061215459412627")
+        x = Symbol("x")
+        f = lambdify(x, sin(x), "numpy")
+        prec = 1e-15
+        assert -prec < f(0.2) - sin02 < prec
+        try:
+            f(x) # if this succeeds, it can't be a numpy function
+            assert False
+        except AttributeError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 def test_lambdify_matrix():
     x = Symbol("x")

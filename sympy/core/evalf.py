@@ -28,8 +28,8 @@ LG10 = math.log(10,2)
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
 # passing these to mpmath functions or returning them in final results.
-INF = 1e1000
-MINUS_INF = -1e1000
+INF = float(mpmath_inf)
+MINUS_INF = float(-mpmath_inf)
 
 # ~= 100 digits. Real men set this to INF.
 DEFAULT_MAXPREC = 333

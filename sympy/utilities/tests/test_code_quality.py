@@ -35,7 +35,7 @@ message_gen_raise = "File contains generic exception: %s, line %s"
 message_old_raise = "File contains old style raise statement: %s, line %s, \"%s\""
 message_eof = "File does not end with a newline: %s, line %s"
 
-implicit_test_re = "^\s*(>>> )?from .* import .*\*"
+implicit_test_re = re.compile('^\s*(>>> )?from .* import .*\*')
 
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
@@ -127,10 +127,9 @@ def test_implicit_imports_regular_expression():
             ">>> from sympy.somewhere import *",
             ]
     for c in candidates_ok:
-        assert re.match(implicit_test_re, c) is None
+        assert implicit_test_re.search(c) is None
     for c in candidates_fail:
-        assert re.match(implicit_test_re, c) is not None
-
+        assert implicit_test_re.search(c) is not None
 
 def test_implicit_imports():
     """
@@ -141,7 +140,7 @@ def test_implicit_imports():
         file = open(fname, "r")
         try:
             for idx, line in enumerate(file):
-                if re.match(implicit_test_re, line):
+                if implicit_test_re.search(line):
                     assert False, message_implicit % (fname, idx+1)
         finally:
             file.close()
@@ -158,4 +157,3 @@ def test_implicit_imports():
     ])
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
-

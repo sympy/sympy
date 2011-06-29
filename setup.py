@@ -32,7 +32,6 @@ from distutils.core import Command
 import sys
 
 import sympy
-from sympy.utilities.runtests import test, doctest
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2,4):
@@ -47,6 +46,7 @@ modules = [
     'sympy.assumptions.handlers',
     'sympy.concrete',
     'sympy.core',
+    'sympy.external',
     'sympy.functions',
     'sympy.functions.combinatorial',
     'sympy.functions.elementary',
@@ -79,6 +79,7 @@ modules = [
     'sympy.solvers',
     'sympy.statistics',
     'sympy.tensor',
+    'sympy.thirdparty',
     'sympy.utilities',
     'sympy.utilities.mathml',
     ]
@@ -159,10 +160,10 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        if test():
+        if sympy.test():
             # all regular tests run successfuly, so let's also run doctests
             # (if some regular test fails, the doctests are not run)
-            doctest()
+            sympy.doctest()
 
 
 class run_benchmarks(Command):
@@ -199,6 +200,7 @@ tests = [
     'sympy.assumptions.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
+    'sympy.external.tests',
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
     'sympy.functions.special.tests',
@@ -222,7 +224,6 @@ tests = [
     'sympy.solvers.tests',
     'sympy.statistics.tests',
     'sympy.tensor.tests',
-    'sympy.test_external',
     'sympy.utilities.tests',
     ]
 

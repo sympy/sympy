@@ -1,6 +1,6 @@
 from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros
 from sympy.functions.special.bessel import fn
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, skip
 
 def test_fn():
     x, z = symbols("x z")
@@ -53,7 +53,7 @@ def test_jn_zeros_mpmath():
     try:
         from mpmath import besseljzero
     except ImportError:
-        return
+        skip("Cannot import mpmath.besseljzero.")
     zeros = lambda n, k: jn_zeros(n, k, method='mpmath')
     assert eq(zeros(0, 4), [3.141592, 6.283185, 9.424777, 12.566370])
     assert eq(zeros(1, 4), [4.493409, 7.725251, 10.904121, 14.066193])

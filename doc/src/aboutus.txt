@@ -132,6 +132,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Thomas Wiecki: Fix Sum.diff
 #. Óscar Nájera: better Laguerre polynomial generator
 #. Mario Pernici: faster algorithm for computing Groebner bases
+#. Benjamin McDonald: Fix bug in geometry
 #. Sam Magura: Improvements to Plot.saveimage
 #. Stefan Krastanov: Make Pyglet an external dependency
 #. Bradley Froehle: Fix shell command to generate modules in setup.py

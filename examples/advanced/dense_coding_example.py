@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Demonstration of quantum dense coding."""
 
 from sympy import sqrt, pprint
