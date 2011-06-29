@@ -21,7 +21,8 @@ def test_postorder_traversal():
 
     expr = Piecewise((x,x<1),(x**2,True))
     assert list(postorder_traversal(expr)) == [
-        x, x, 1, x < 1, ExprCondPair(x, x < 1), x, 2, x**2, True,
+        x, x, 1, x < 1, ExprCondPair(x, x < 1), x, 2, x**2,
+        ExprCondPair.true_sentinel,
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
     ]
     assert list(preorder_traversal(Integral(x**2, (x, 0, 1)))) == [
@@ -42,7 +43,7 @@ def test_preorder_traversal():
     expr = Piecewise((x,x<1),(x**2,True))
     assert list(preorder_traversal(expr)) == [
         Piecewise((x, x < 1), (x**2, True)), ExprCondPair(x, x < 1), x, x < 1,
-        x, 1, ExprCondPair(x**2, True), x**2, x, 2, True
+        x, 1, ExprCondPair(x**2, True), x**2, x, 2, ExprCondPair.true_sentinel
     ]
     assert list(postorder_traversal(Integral(x**2, (x, 0, 1)))) == [
         x, 2, x**2, x, 0, 1, Tuple(x, 0, 1),
