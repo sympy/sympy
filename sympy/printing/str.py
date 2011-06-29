@@ -92,6 +92,7 @@ class StrPrinter(Printer):
             items.append(item)
 
         return "{%s}"%", ".join(items)
+    _print_Dict = _print_dict
 
     def _print_Dummy(self, expr):
         return '_' + expr.name
@@ -477,6 +478,7 @@ class StrPrinter(Printer):
             return "(%s,)"%self._print(expr[0])
         else:
             return "(%s)"%self.stringify(expr, ", ")
+    _print_Tuple = _print_tuple
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
