@@ -3,6 +3,7 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyad']
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
                    expand, S, zeros)
 from sympy.core.numbers import Zero
+from sympy.physics.mechanics.dynamicsymbol import DynamicSymbol
 
 class Dyad(object):
     """A Dyad object.
@@ -338,7 +339,7 @@ class Dyad(object):
         """
 
         self._check_frame(frame)
-        t = Symbol('t')
+        t = DynamicSymbol._t
         ol = 0
         for i, v in enumerate(self.args):
             ol += (v[0].diff(t) * (v[1] | v[2]))
@@ -412,7 +413,7 @@ class ReferenceFrame(object):
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
         dcm2diff = self.dcm(otherframe)
-        diffed = dcm2diff.diff(Symbol('t'))
+        diffed = dcm2diff.diff(DynamicSymbol._t)
         angvelmat = diffed * dcm2diff.T
         w1 = trigsimp(expand(angvelmat[7]), recursive=True)
         w2 = trigsimp(expand(angvelmat[2]), recursive=True)
@@ -726,7 +727,7 @@ class ReferenceFrame(object):
         parent._dcm_dict.update({self: parent_orient.T})
         # TODO double check the sign here
         if rot_type == 'QUATERNION':
-            t = Symbol('t')
+            t = DynamicSymbol._t
             q0 = amounts[0]
             q1 = amounts[1]
             q2 = amounts[2]
@@ -740,7 +741,7 @@ class ReferenceFrame(object):
             w3 = 2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3)
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
-            thetad = (amounts[0]).diff(Symbol('t'))
+            thetad = (amounts[0]).diff(DynamicSymbol._t)
             wvec = thetad * amounts[1].express(parent).unit
         else:
             wvec = self._w_diff_dcm(parent)
@@ -997,10 +998,10 @@ class Vector(object):
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector
         >>> from sympy import Symbol
         >>> N = ReferenceFrame('N')
-        >>> t = Symbol('t')
-        >>> V = 10 * t * N.x
+        >>> b = Symbol('b')
+        >>> V = 10 * b * N.x
         >>> print V
-        (10*t)*N.x
+        (10*b)*N.x
 
         """
 
@@ -1187,7 +1188,21 @@ class Vector(object):
     outer.__doc__ = __or__.__doc__
 
     def subs(self, dictin):
-        """Substituion on the Vector with a dict."""
+        """Substituion on the Vector, with a dict.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> from sympy import Symbol
+        >>> N = ReferenceFrame('N')
+        >>> s = Symbol('s')
+        >>> a = N.x * s
+        >>> a.subs({s: 2})
+        (2)*N.x
+
+        """
+
         ov = 0
         for i, v in enumerate(self.args):
             ov += Vector([(v[0].subs(dictin), v[1])])
@@ -1269,7 +1284,7 @@ class Vector(object):
         self._check_frame(otherframe)
         for i,v in enumerate(self.args):
             if v[1] == otherframe:
-                outvec += Vector([(v[0].diff(Symbol('t')), otherframe)])
+                outvec += Vector([(v[0].diff(DynamicSymbol._t), otherframe)])
             else:
                 outvec += (Vector([v]).dt(v[1]) +
                     (v[1].ang_vel_in(otherframe) ^ Vector([v])))

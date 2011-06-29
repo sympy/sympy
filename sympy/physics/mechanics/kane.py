@@ -35,6 +35,9 @@ class Kane(object):
     derivatives.
     Then we create a point and set its velocity in a frame.
 
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+    >>> from sympy.physics.mechanics import Point, Particle, Kane
     >>> q, qd, u, ud = dynamicsymbols('q qd u ud')
     >>> m, c, k = symbols('m c k')
     >>> N = ReferenceFrame('N')
@@ -72,13 +75,13 @@ class Kane(object):
     >>> KM.coords([q])
     >>> KM.speeds([u])
     >>> KM.kindiffeq(kd)
-    >>> frstar = KM.form_frstar(BL)
     >>> fr = KM.form_fr(FL)
-    >>> MM = KM.mass_matrix()
-    >>> forcing = KM.forcing()
+    >>> frstar = KM.form_frstar(BL)
+    >>> MM = KM.mass_matrix
+    >>> forcing = KM.forcing
     >>> rhs = MM.inv() * forcing
     >>> rhs
-    [(-q*k - u*c)/m]
+    [-(q*k + u*c)/m]
 
     """
 
@@ -147,7 +150,7 @@ class Kane(object):
         if not isinstance(inlist, (list, tuple)):
             raise TypeError('Generalized coords. must be supplied in a list')
         self._q = inlist
-        self._qdot = [diff(i, Symbol('t')) for i in inlist]
+        self._qdot = [diff(i, DynamicSymbol._t) for i in inlist]
 
     def speeds(self, inlist):
         """Supply all the generalized speeds in a list.
@@ -165,7 +168,7 @@ class Kane(object):
         if not isinstance(inlist, (list, tuple)):
             raise TypeError('Generalized speeds must be supplied in a list')
         self._u = inlist
-        self._udot = [diff(i, Symbol('t')) for i in inlist]
+        self._udot = [diff(i, DynamicSymbol._t) for i in inlist]
 
     def kindiffeq(self, kdeqs):
         """Supply all the kinematic differential equations in a list.
@@ -227,8 +230,8 @@ class Kane(object):
         self._k_nh = (coneq - self._f_nh).jacobian(u)
         if diffconeq == None:
             self._k_dnh = self._k_nh
-            self._f_dnh = (self._k_nh.diff(Symbol('t')) * Matrix(u) +
-                           self._f_nh.diff(Symbol('t')))
+            self._f_dnh = (self._k_nh.diff(DynamicSymbol._t) * Matrix(u) +
+                           self._f_nh.diff(DynamicSymbol._t))
         else:
             self._f_dnh = diffconeq.subs(udotzero)
             self._k_dnh = (diffconeq - self._f_dnh).jacobian(udot)
@@ -357,7 +360,7 @@ class Kane(object):
                 templist = []
                 for j, w in enumerate(udot):
                     templist.append(-m * acc.diff(w, N))
-                other = -m.diff(Symbol('t')) * ve - m * acc
+                other = -m.diff(DynamicSymbol._t) * ve - m * acc
                 rs = (templist, other)
                 templist = []
                 for j, w in enumerate(udot):
@@ -378,7 +381,7 @@ class Kane(object):
                 templist = []
                 for j, w in enumerate(udot):
                     templist.append(-m * acc.diff(w, N))
-                other = -m.diff(Symbol('t')) * ve - m * acc
+                other = -m.diff(DynamicSymbol._t) * ve - m * acc
                 rs = (templist, other)
                 ts = ([0] * len(u), 0)
                 tl1 = []
@@ -445,15 +448,7 @@ class Kane(object):
             raise ValueError('Need to compute Fr, Fr* first')
         return -Matrix([self._f_d, self._f_dnh])
 
+
 if __name__ == "__main__":
     import doctest
-    from sympy import symbols
-    from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
-                                         Particle, Kane)
-    global_dict = {'symbols': symbols,
-                   'dynamicsymbols': dynamicsymbols,
-                   'ReferenceFrame': ReferenceFrame,
-                   'Point': Point,
-                   'Particle': Particle,
-                   'Kane': Kane}
-    doctest.testmod(globs=global_dict)
+    doctest.testmod()

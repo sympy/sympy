@@ -8,8 +8,13 @@ class Particle(object):
 
     Particles have a non-zero mass and lack spatial extension; they take up no
     space.
-
-    >>> p = Particle()
+    >>> from sympy.physics.mechanics import Particle, Point
+    >>> from sympy import Symbol
+    >>> po = Point('po')
+    >>> pa = Particle()
+    >>> m = Symbol('m')
+    >>> pa.mass = m
+    >>> pa.point = po
 
     """
 

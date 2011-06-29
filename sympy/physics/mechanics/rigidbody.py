@@ -24,10 +24,13 @@ class RigidBody(object):
     Example
     =======
 
+    >>> from sympy import Symbol
+    >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
+    >>> from sympy.physics.mechanics import outer
     >>> m = Symbol('m')
     >>> A = ReferenceFrame('A')
     >>> P = Point('P')
-    >>> I = Dyad([])
+    >>> I = outer (A.x, A.x)
     >>> B = RigidBody()
     >>> B.mass = m
     >>> B.frame = A
@@ -86,11 +89,4 @@ class RigidBody(object):
 
 if __name__ == "__main__":
     import doctest
-    from sympy import Symbol
-    from sympy.physics.mechanics import ReferenceFrame, Dyad, Point, RigidBody
-    global_dict = {'Symbol': Symbol,
-                   'ReferenceFrame': ReferenceFrame,
-                   'Dyad': Dyad,
-                   'Point': Point,
-                   'RigidBody': RigidBody}
-    doctest.testmod(globs=global_dict)
+    doctest.testmod()

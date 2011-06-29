@@ -12,6 +12,11 @@ class DynamicSymbol(Symbol):
     To avoid confusion, it is reccommended that DynamicSymbols are not given
     base names which end in 'd'.
 
+    Examples
+    ========
+
+    >>> from sympy import symbols, diff
+    >>> from sympy.physics.mechanics import DynamicSymbol
     >>> t, x = symbols('t x')
     >>> y = DynamicSymbol('y')
     >>> diff(2*x + 3*y, t)
@@ -38,12 +43,14 @@ class DynamicSymbol(Symbol):
 
     """
 
+    _t = Symbol('t')
+
     @property
     def free_symbols(self):
-        return set([Symbol('t'), self])
+        return set([DynamicSymbol._t, self])
 
     def _eval_derivative(self, s):
-        if s == Symbol('t'):
+        if s == DynamicSymbol._t:
             return DynamicSymbol(self.name + 'd')
         elif self == s:
             return S.One
@@ -52,8 +59,4 @@ class DynamicSymbol(Symbol):
 
 if __name__ == "__main__":
     import doctest
-    from sympy import symbols, diff
-    global_dict = {'symbols': symbols,
-                   'diff' : diff,
-                   'DynamicSymbol': DynamicSymbol}
-    doctest.testmod(globs=global_dict)
+    doctest.testmod()

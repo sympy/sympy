@@ -90,3 +90,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     ol += sympify(iyz) * (frame.z | frame.y)
     ol += sympify(izz) * (frame.z | frame.z)
     return ol
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
