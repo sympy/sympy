@@ -1971,7 +1971,21 @@ def combsimp(expr):
     the resulting rising factorial to cancel. Rising factorials with
     the second argument being an integer are expanded into polynomial
     forms and finally all other rising factorial are rewritten in terms
-    more familiar binomials and factorials.
+    more familiar functions. If the initial expression contained any
+    combinatorial functions, the result is expressed using binomial
+    coefficients and gamma functions. If the initial expression consisted
+    of gamma functions alone, the result is expressed in terms of gamma
+    functions.
+
+    If the result is expressed using gamma functions, the following three
+    additional steps are performed:
+
+    1. Reduce the number of gammas by applying the reflection theorem
+       gamma(x)*gamma(1-x) == pi/sin(pi*x).
+    2. Reduce the number of gammas by applying the multiplication theorem
+       gamma(x)*gamma(x+1/n)*...*gamma(x+(n-1)/n) == C*gamma(n*x).
+    3. Reduce the number of prefactors by absorbing them into gammas, where
+       possible.
 
     All transformation rules can be found (or was derived from) here:
 
@@ -1994,6 +2008,22 @@ def combsimp(expr):
     factorial = C.factorial
     binomial = C.binomial
     gamma = C.gamma
+
+    # as a rule of thumb, if the expression contained gammas initially, it
+    # probably makes sense to retain them
+    as_gamma = not expr.has(factorial, binomial)
+
+    def as_coeff_Add(expr):
+        if expr.is_Add:
+            coeff, args = expr.args[0], expr.args[1:]
+
+            if coeff.is_Number:
+                if len(args) == 1:
+                    return coeff, args[0]
+                else:
+                    return coeff, expr._new_rawargs(*args)
+
+        return S.Zero, expr
 
     class rf(Function):
         @classmethod
@@ -2040,8 +2070,12 @@ def combsimp(expr):
     expr = expr.replace(gamma,
         lambda n: rf(1, (n-1).expand()))
 
-    expr = expr.replace(rf,
-        lambda a, b: binomial(a+b-1, b)*factorial(b))
+    if as_gamma:
+        expr = expr.replace(rf,
+            lambda a, b: gamma(a + b)/gamma(a))
+    else:
+        expr = expr.replace(rf,
+            lambda a, b: binomial(a+b-1, b)*factorial(b))
 
     def rule(n, k):
         coeff, rewrite = S.One, False
@@ -2063,6 +2097,195 @@ def combsimp(expr):
             return coeff*binomial(n, k)
 
     expr = expr.replace(binomial, rule)
+
+    def rule_gamma(expr):
+        """ Simplify products of gamma functions further. """
+        from itertools import count
+        from sympy.core.compatibility import permutations
+        if expr.is_Atom:
+            return expr
+        args = [rule_gamma(x) for x in expr.args]
+        if not expr.is_Mul:
+            return expr.func(*args)
+        numer_gammas = []
+        denom_gammas = []
+        numer_others = []
+        denom_others = []
+        newargs = list(args[:])
+        while newargs:
+            arg = newargs.pop()
+            if arg.is_Pow and arg.exp.is_Integer:
+                if arg.exp == -1:
+                    if isinstance(arg.base, gamma):
+                        denom_gammas.append(arg.base.args[0])
+                    else:
+                        denom_others.append(arg.base)
+                    continue
+                n = abs(arg.exp)
+                if arg.exp < 0:
+                    arg = 1/arg.base
+                else:
+                    arg = arg.base
+                for _ in range(n):
+                    newargs.append(arg)
+            elif isinstance(arg, gamma):
+                numer_gammas.append(arg.args[0])
+            else:
+                numer_others.append(arg)
+
+        # Try to reduce the number of gamma factors by applying the
+        # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
+        for l, numer, denom in [(numer_gammas, numer_others, denom_others),
+                                (denom_gammas, denom_others, numer_others)]:
+            newl = []
+            while l:
+                t = l.pop()
+                append = True
+                for i in range(len(l)):
+                    g = l[i]
+                    n = simplify(t + g - 1)
+                    if not n.is_Integer or t.is_integer:
+                        continue
+                    append = False
+                    numer.append(S.Pi)
+                    denom.append(C.sin(S.Pi*t))
+                    l.pop(i)
+                    if n > 0:
+                        for k in range(n):
+                            numer.append(1 - t + k)
+                    else:
+                        for k in range(-n):
+                            denom.append(-t - k)
+                    break
+                if append:
+                    newl.append(t)
+            l += newl
+
+        # Try to reduce the number of gamma factors by applying the
+        # multiplication theorem.
+        for l, numer, denom in [(numer_gammas, numer_others, denom_others),
+                                (denom_gammas, denom_others, numer_others)]:
+            changed = True
+            while changed:
+                newl = []
+                changed = False
+                differences = {}
+                differences2 = {}
+                # differences maps pairs (g1, g2) of indices to their rational
+                # difference mod 1: l[g2] - l[g1] % 1
+                # (if difference is not rational, no entry)
+                # differences2 maps g1 to dicts rational -> g2, so that
+                # differences2[g1][r] is a list of g2 with g2-g1 % 1 = r
+                # (we store indices instead of arguments in order to have unique
+                #  tokens)
+                for g1, g2 in permutations(range(len(l)), 2):
+                    r = simplify(l[g2] - l[g1])
+                    if r.is_Rational:
+                        differences[(g1, g2)] = r % 1
+                        differences2.setdefault(g1, {}).setdefault(r % 1, []).append(g2)
+                diffs = differences.items()
+                diffs.sort(key=lambda x:x[1])
+                erased = set()
+                # erased keeps track of keys we erased ...
+                for (idx1, idx2), d in diffs:
+                    if d.p != 1 or d <= 0 or idx1 in erased:
+                        continue
+                    others = []
+                    for u in range(1, d.q):
+                        x = S(u)/d.q
+                        if not x in differences2[idx1]:
+                            break
+                        for idx2 in differences2[idx1][x]:
+                            if not idx2 in erased:
+                                others.append(idx2)
+                                break
+                    if len(others) != d.q - 1:
+                        continue
+                    erased.add(idx1)
+                    for o in others: erased.add(o)
+                    changed = True
+                    # If we arrive here, we found something to apply the theorem
+                    # to: idx1, *others.
+                    # We need to
+                    # 1) convert all the gamma functions to have the right
+                    #    argument (could be off by an integer)
+                    # 2) append the factors corresponding to the theorem
+                    # 3) append the new gamma function
+                    # (1)
+                    for u in others:
+                        n = simplify(l[u] - l[idx1] - differences[(idx1, u)])
+                        if n > 0:
+                            for k in range(n):
+                                numer.append(l[u] - k - 1)
+                        if n < 0:
+                            for k in range(-n):
+                                denom.append(l[u] - k)
+                    # (2)
+                    numer.append((2*S.Pi)**(S(d.q - 1)/2)*d.q**(S(1)/2-d.q*l[idx1]))
+                    # (3)
+                    newl.append(l[idx1]*d.q)
+                for idx in range(len(l)):
+                    if not idx in erased:
+                        newl.append(l[idx])
+                while l: l.pop()
+                l += newl # Note l is empty before this
+
+        # Try to absorb factors into the gammas
+        for to, numer, denom in [(numer_gammas, numer_others, denom_others),
+                                 (denom_gammas, denom_others, numer_others)]:
+            newl = []
+            while to:
+                g = to.pop()
+                cont = True
+                while cont:
+                    cont = False
+                    def find_fuzzy(l, x):
+                        for y in l:
+                            # XXX we want some simplification (e.g. cancel or
+                            # simplify) but no matter what it's slow.
+                            a = len(cancel(x/y).free_symbols)
+                            b = len(x.free_symbols)
+                            c = len(y.free_symbols)
+                            # TODO is there a better heuristic?
+                            if a == 0 and (b > 0 or c > 0):
+                                return y
+                    y = find_fuzzy(numer, g)
+                    if y is not None:
+                        numer.remove(y)
+                        if y != g:
+                            numer.append(y/g)
+                        g += 1
+                        cont = True
+                    y = find_fuzzy(numer, 1/(g-1))
+                    if y is not None:
+                        numer.remove(y)
+                        if y != 1/(g-1):
+                            numer.append((g-1)*y)
+                        g -= 1
+                        cont = True
+                    y = find_fuzzy(denom, 1/g)
+                    if y is not None:
+                        denom.remove(y)
+                        if y != 1/g:
+                            denom.append(y*g)
+                        g += 1
+                        cont = True
+                    y = find_fuzzy(denom, g - 1)
+                    if y is not None:
+                        denom.remove(y)
+                        if y != g - 1:
+                            numer.append((g-1)/y)
+                        g -= 1
+                        cont = True
+                newl.append(g)
+            to += newl
+
+        return C.Mul(*[gamma(g) for g in numer_gammas]) \
+             / C.Mul(*[gamma(g) for g in denom_gammas]) \
+             * C.Mul(*numer_others) / C.Mul(*denom_others)
+
+    # (for some reason we cannot use Basic.replace in this case)
+    expr = rule_gamma(expr)
 
     return factor(expr)
 

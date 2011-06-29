@@ -887,3 +887,30 @@ def test_fraction_expand():
     eq = (x + y)*y/x
     assert eq.expand(frac=True) == fraction_expand(eq) == (x*y + y**2)/x
     assert eq.expand() == y + y**2/x
+
+def test_combsimp_gamma():
+    from sympy.abc import x, y
+    assert combsimp(gamma(x)) == gamma(x)
+    assert combsimp(gamma(x+1)/x) == gamma(x)
+    assert combsimp(gamma(x)/(x-1)) == gamma(x-1)
+    assert combsimp(x*gamma(x)) == gamma(x + 1)
+    assert combsimp((x+1)*gamma(x+1)) == gamma(x + 2)
+    assert combsimp(gamma(x+y)*(x+y)) == gamma(x + y + 1)
+    assert combsimp(x/gamma(x+1)) == 1/gamma(x)
+    assert combsimp((x+1)**2/gamma(x+2)) == (x + 1)/gamma(x + 1)
+    assert combsimp(x*gamma(x) + gamma(x+3)/(x+2)) == gamma(x+1) + gamma(x+2)
+
+    assert combsimp(gamma(2*x)*x) == gamma(2*x + 1)/2
+    assert combsimp(gamma(2*x)/(x - S(1)/2)) == 2*gamma(2*x - 1)
+
+    assert combsimp(gamma(x)*gamma(1-x)) == pi/sin(pi*x)
+    assert combsimp(gamma(x)*gamma(-x)) == -pi/(x*sin(pi*x))
+    assert combsimp(1/gamma(x+3)/gamma(1-x)) == sin(pi*x)/(pi*x*(x+1)*(x+2))
+
+    assert simplify(combsimp(gamma(x)*gamma(x+S(1)/2)*gamma(y)/gamma(x+y))) \
+           == 2**(-2*x + 1)*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
+    assert combsimp(1/gamma(x)/gamma(x-S(1)/3)/gamma(x+S(1)/3)) == \
+           3**(3*x + S(1)/2)/(18*pi*gamma(3*x - 1))
+    assert simplify(gamma(S(1)/2 + x/2)*gamma(1 + x/2)/gamma(1+x)/sqrt(pi)*2**x) \
+           == 1
+    assert combsimp(gamma(S(-1)/4)*gamma(S(-3)/4)) == 16*sqrt(2)*pi/3
