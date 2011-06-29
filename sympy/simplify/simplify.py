@@ -391,8 +391,8 @@ def collect(expr, syms, evaluate=True, exact=False):
 
     def parse_expression(terms, pattern):
         """Parse terms searching for a pattern.
-        terms is a list of tuples as returned by parse_terms
-        pattern is an expression
+        terms is a list of tuples as returned by parse_terms;
+        pattern is an expression treated as a product of factors
         """
         pattern = Mul.make_args(pattern)
 
@@ -403,11 +403,19 @@ def collect(expr, syms, evaluate=True, exact=False):
         else:
             pattern = [parse_term(elem) for elem in pattern]
 
+            terms = terms[:] # need a copy
             elems, common_expo, has_deriv = [], None, False
 
             for elem, e_rat, e_sym, e_ord in pattern:
 
+                if elem.is_Number:
+                    # a constant is a match for everything
+                    continue
+
                 for j in range(len(terms)):
+                    if terms[j] is None:
+                        continue
+
                     term, t_rat, t_sym, t_ord = terms[j]
 
                     # keeping track of whether one of the terms had
@@ -415,10 +423,6 @@ def collect(expr, syms, evaluate=True, exact=False):
                     # the expression later
                     if t_ord is not None:
                         has_deriv= True
-
-                    if elem.is_Number:
-                        # a constant is a match for everything
-                        break
 
                     if (term.match(elem) is not None and \
                             (t_sym == e_sym or t_sym is not None and \
@@ -447,14 +451,15 @@ def collect(expr, syms, evaluate=True, exact=False):
                         # found common term so remove it from the expression
                         # and try to match next element in the pattern
                         elems.append(terms[j])
-                        del terms[j]
+                        terms[j] = None
 
                         break
 
                 else:
                     # pattern element not found
                     return None
-            return terms, elems, common_expo, has_deriv
+
+            return filter(None, terms), elems, common_expo, has_deriv
 
     if evaluate:
         if expr.is_Mul:
@@ -474,7 +479,6 @@ def collect(expr, syms, evaluate=True, exact=False):
         syms = [separate(syms)]
 
     collected, disliked = {}, S.Zero
-
     for product in summa:
         terms = [parse_term(i) for i in Mul.make_args(product)]
 
@@ -500,7 +504,6 @@ def collect(expr, syms, evaluate=True, exact=False):
                             index **= elem[2]
                 else:
                     index = make_expression(elems)
-
                 terms = separate(make_expression(terms))
                 index = separate(index)
                 if index in collected.keys():
