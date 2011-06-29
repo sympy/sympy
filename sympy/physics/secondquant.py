@@ -1587,21 +1587,17 @@ class FixedBosonicBasis(BosonicBasis):
         self._build_states()
 
     def _build_particle_locations(self):
-        tup = ["i"+str(i) for i in range(self.n_particles)]
+        tup = ["i%i" % i for i in range(self.n_particles)]
         first_loop = "for i0 in range(%i)" % self.n_levels
         other_loops = ''
-        for i in range(len(tup)-1):
-            temp = "for %s in range(%s + 1) " % (tup[i+1],tup[i])
+        for cur, prev in zip(tup[1:], tup):
+            temp = "for %s in range(%s + 1) " % (cur, prev)
             other_loops = other_loops + temp
-        var = "("
-        for i in tup[:-1]:
-            var = var + i + ","
-        var = var + tup[-1] + ")"
-        cmd = "result = [%s %s %s]" % (var, first_loop, other_loops)
-        exec cmd
-        if self.n_particles==1:
+        tup_string = "(%s)" % ", ".join(tup)
+        list_comp = "[%s %s %s]" % (tup_string, first_loop, other_loops)
+        result = eval(list_comp)
+        if self.n_particles == 1:
             result = [(item,) for item in result]
-        #FIXME-py3k: UnboundLocalError: local variable 'result' referenced before assignment
         self.particle_locations = result
 
     def _build_states(self):
