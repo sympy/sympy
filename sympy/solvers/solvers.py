@@ -207,8 +207,7 @@ def check_assumptions(expr, **assumptions):
        >>> z = Symbol('z')
        >>> check_assumptions(z, real=True)
     """
-    if not isinstance(expr, Basic):
-        expr = sympify(expr)
+    expr = sympify(expr)
 
     result = True
     for key, expected in assumptions.iteritems():
@@ -225,7 +224,7 @@ def check_assumptions(expr, **assumptions):
         # ask() can not conclude. Try using old assumption system.
         # XXX: remove this once transition to new assumption system is finished.
         test = getattr(expr, 'is_' + key, None)
-        if test == expected:
+        if test is expected:
             continue
         elif test is not None:
             return False
