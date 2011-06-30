@@ -1,7 +1,7 @@
 """Dirac notation for states."""
 
 
-from sympy import Expr, Symbol, Function, integrate
+from sympy import Expr, Symbol, Function, integrate, Expr
 from sympy import Lambda, oo, conjugate, Tuple, sqrt
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -569,6 +569,8 @@ class Wavefunction(Function):
     1
     >>> f(L+1)
     0
+    >>> f(L-1)
+    2**(1/2)*(1/L)**(1/2)*sin(pi*n*(L - 1)/L)
     >>> f(-1)
     0
     >>> f(0.85)
@@ -604,8 +606,15 @@ class Wavefunction(Function):
         #If the passed value is outside the specified bounds, return 0
         for v in var:
             lower,upper = self.limits[v]
+
+            #Do the comparison to limits only if the passed symbol is actually
+            #a symbol present in the limits; Had problems with a comparison of x > L
+            if isinstance(args[ct], Expr) and not (lower in args[ct].free_symbols or upper in args[ct].free_symbols):
+                continue
+
             if args[ct] < lower or args[ct] > upper:
                 return 0
+
             ct+=1
 
         expr = self.expr

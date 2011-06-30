@@ -120,4 +120,4 @@ def test_differential_operator():
     d = DifferentialOperator(x)
     f = Wavefunction(x**2, x)
 
-    assert qapply(d*f) == 2*x
+    assert qapply(d*f) == Wavefunction(2*x, x)

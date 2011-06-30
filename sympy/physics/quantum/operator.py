@@ -14,6 +14,7 @@ from itertools import count
 from sympy import Expr, Symbol, diff
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.state import Wavefunction
 
 from sympy.physics.quantum.qexpr import (
     QExpr, dispatch_method
@@ -357,22 +358,30 @@ class DifferentialOperator(Operator):
     Examples
     ==========
 
-    >>> from sympy import Symbol, Piecewise, pi
+    >>> from sympy import symbols, Piecewise, pi
     >>> from sympy.functions import sqrt, sin
     >>> from sympy.physics.quantum.state import Wavefunction
     >>> from sympy.physics.quantum.operator import DifferentialOperator
     >>> from sympy.physics.quantum.qapply import qapply
-    >>> x = Symbol('x')
-    >>> L = 1
-    >>> n = 1
-    >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
-    >>> f = Wavefunction(g, x)
+    >>> x, L = symbols('x, L', real=True)
+    >>> n = symbols('n', integer=True)
+    >>> g = sqrt(2/L)*sin(n*pi*x/L)
+    >>> f = Wavefunction(g, (x, 0, L))
     >>> d = DifferentialOperator(x)
     >>> qapply(d*f)
-    Piecewise((0, x < 0), (0, 1 < x), (2**(1/2)*pi*cos(pi*x), True))
+    Wavefunction(2**(1/2)*pi*n*(1/L)**(1/2)*cos(pi*n*x/L)/L, Tuple(x, 0, L))
     >>> d.is_commutative
     False
     """
+
+
+    def _apply_operator_Wavefunction(self, func):
+        #TODO: Generalize to more complex operators
+
+        var = self.args[0]
+        wf_vars = func.args[1:]
+
+        return Wavefunction(diff(func(var), var), *wf_vars)
 
     #-------------------------------------------------------------------------
     # Printing
@@ -398,8 +407,3 @@ class DifferentialOperator(Operator):
         return '\\frac\{d\}\{%s\}' % (
             self._print_label_latex(printer, *args)
         )
-
-    def _apply_operator_Wavefunction(self, func):
-        var = self.args[0]
-
-        return diff(func(var), var)
