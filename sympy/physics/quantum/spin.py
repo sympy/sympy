@@ -574,11 +574,11 @@ class WignerD(AtomicExpr):
 
     def _latex(self, printer, *args):
         if self.alpha == 0 and self.gamma == 0:
-            return r'd^{%s}_{%s, %s}\right( %s \left)' % \
-                ( printer._print(self.j), printer._print(self.m), printer._print(self.mp), \
+            return r'd^{%s}_{%s,%s}\left(%s\right)' % \
+                ( printer._print(self.j), printer._print(self.m), printer._print(self.mp),
                 printer._print(self.beta) )
-        return r'D^{%s}_{%s, %s}\right( %s, %s, %s \left)' % \
-            ( printer._print(self.j), printer._print(self.m), printer._print(self.mp), \
+        return r'D^{%s}_{%s,%s}\left(%s,%s,%s\right)' % \
+            ( printer._print(self.j), printer._print(self.m), printer._print(self.mp),
             printer._print(self.alpha), printer._print(self.beta), printer._print(self.gamma) )
 
     def _pretty(self, printer, *args):
