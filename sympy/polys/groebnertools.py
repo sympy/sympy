@@ -338,7 +338,7 @@ def sig(monomial, index):
 
 
 def lbp(signature, polynomial, number):
-    return (signature, sdp_strip(polynomial), number)
+    return (signature, polynomial, number)
 
 # signature functions
 
@@ -359,8 +359,8 @@ def sig_cmp(u, v, O):
     if u[1] > v[1]:
         return -1
     if u[1] == v[1]:
-        if u[0] == v[0]:
-            return 0
+        #if u[0] == v[0]:
+        #    return 0
         if cmp(O(u[0]), O(v[0])) < 0:
             return -1
     return 1
@@ -385,7 +385,7 @@ def lbp_sub(f, g, u, O, K):
     The signature and number of the difference of f and g are signature
     and number of the maximum of f and g, w.r.t. lbp_cmp.
     """
-    if sig_cmp(Sign(f), Sign(g), O) == -1:
+    if sig_cmp(Sign(f), Sign(g), O) < 0:
         max_poly = g
     else:
         max_poly = f
@@ -424,8 +424,8 @@ def lbp_cmp(f, g, O):
     if Sign(f) == Sign(g):
         if Num(f) > Num(g):
             return -1
-        if Num(f) == Num(g):
-            return 0
+        #if Num(f) == Num(g):
+        #    return 0
     return 1
 
 # algorithm and helper functions
@@ -489,16 +489,20 @@ def cp_cmp(c, d, O):
     c0 = lbp(c[0], [], Num(c[2]))
     d0 = lbp(d[0], [], Num(d[2]))
 
-    if lbp_cmp(c0, d0, O) == -1:
+    r = lbp_cmp(c0, d0, O)
+
+    if r == -1:
         return -1
-    if lbp_cmp(c0, d0, O) == 0:
+    if r == 0:
         c1 = lbp(c[3], [], Num(c[5]))
         d1 = lbp(d[3], [], Num(d[5]))
 
-        if lbp_cmp(c1, d1, O) == -1:
+        r = lbp_cmp(c1, d1, O)
+
+        if r == -1:
             return -1
-        if lbp_cmp(c1, d1, O) == 0:
-            return 0
+        #if r == 0:
+        #    return 0
     return 1
 
 
@@ -511,20 +515,21 @@ def s_poly(cp, u, O, K):
     return lbp_sub(lbp_mul_term(cp[2], cp[1], u, O, K), lbp_mul_term(cp[5], cp[4], u, O, K), u, O, K)
 
 
-def is_rewritable_or_comparable(f, B, u, K):
+#def is_rewritable_or_comparable(f, B, u, K):
+def is_rewritable_or_comparable(sign, num, B, u, K):
     """
     Check if a labeled polynomial f is rewritable or comparable by B.
     """
     for h in B:
         # comparable
-        if Sign(f)[1] < Sign(h)[1]:
-            if monomial_div(Sign(f)[0], sdp_LM(Polyn(h), u)) is not None:
+        if sign[1] < Sign(h)[1]:
+            if monomial_divides(sign[0], sdp_LM(Polyn(h), u)):
                 return True
 
         # rewritable
-        if Sign(f)[1] == Sign(h)[1]:
-            if Num(f) < Num(h):
-                if monomial_div(Sign(f)[0], Sign(h)[0]) is not None:
+        if sign[1] == Sign(h)[1]:
+            if num < Num(h):
+                if monomial_divides(sign[0], Sign(h)[0]):
                     return True
     return False
 
@@ -560,12 +565,12 @@ def f5_single_reduction(f, B, u, O, K):
 
     for g in B:
         if Polyn(g) != []:
-            t = term_div(sdp_LT(Polyn(f), u, K), sdp_LT(Polyn(g), u, K), K)
-            if t is not None:
-                gp = lbp_mul_term(g, t, u, O, K)
-                if sig_cmp(Sign(gp), Sign(f), O) == -1:
+            if monomial_divides(sdp_LM(Polyn(f), u), sdp_LM(Polyn(g), u)):
+                t = term_div(sdp_LT(Polyn(f), u, K), sdp_LT(Polyn(g), u, K), K)
+                if sig_cmp(sig_mult(Sign(g), t[0]), Sign(f), O) == -1:
+                    gp = lbp_mul_term(g, t, u, O, K)
                     # The following check need not be done and is in general slower than without.
-                    #if not is_rewritable_or_comparable(gp, B, u, K):
+                    #if not is_rewritable_or_comparable(Sign(gp), Num(gp), B, u, K):
                     return lbp_sub(f, gp, u, O, K)
     return f
 
@@ -580,9 +585,24 @@ def f5_reduce(f, B, u, O, K):
     if Polyn(f) == []:
         return f
 
+    if K.has_Field:
+        term_div = _term_ff_div
+    else:
+        term_div = _term_rr_div
+
     while True:
         g = f
-        f = f5_single_reduction(f, B, u, O, K)
+
+        for h in B:
+            if Polyn(h) != []:
+                if monomial_divides(sdp_LM(Polyn(f), u), sdp_LM(Polyn(h), u)):
+                    t = term_div(sdp_LT(Polyn(f), u, K), sdp_LT(Polyn(h), u, K), K)
+                    if sig_cmp(sig_mult(Sign(h), t[0]), Sign(f), O) < 0:
+                        hp = lbp_mul_term(h, t, u, O, K)
+                        f = lbp_sub(f, hp, u, O, K)
+                        break
+
+        #f = f5_single_reduction(f, B, u, O, K)
         if g == f:
             return f
 
@@ -632,9 +652,11 @@ def f5b(F, u, O, K, gens='', verbose=False):
 
     # basis
     B = [lbp(sig((0,) * (u + 1), i + 1), F[i], i + 1) for i in xrange(len(F))]
+    B.sort(key=lambda f: O(sdp_LM(Polyn(f), u)), reverse=True)
 
     # critical pairs
     CP = [critical_pair(B[i], B[j], u, O, K) for i in xrange(len(B)) for j in xrange(i + 1, len(B))]
+    CP.sort(lambda c, d: cp_cmp(c, d, O), reverse=True)
 
     k = len(B)
 
@@ -648,24 +670,24 @@ def f5b(F, u, O, K, gens='', verbose=False):
         vg = lbp(cp[3], [], Num(cp[5]))
 
         # discard redundant critical pairs:
-        if is_rewritable_or_comparable(uf, B, u, K):
+        if is_rewritable_or_comparable(cp[0], Num(cp[2]), B, u, K):
             continue
-        if is_rewritable_or_comparable(vg, B, u, K):
+        if is_rewritable_or_comparable(cp[3], Num(cp[5]), B, u, K):
             continue
 
         s = s_poly(cp, u, O, K)
 
         p = f5_reduce(s, B, u, O, K)
 
-        p = lbp(Sign(p), Polyn(p), k + 1)
+        p = lbp(Sign(p), sdp_monic(Polyn(p), K), k + 1)
 
         if Polyn(p) != []:
             # remove old critical pairs, that become redundant when adding p:
             indices = []
             for i, cp in enumerate(CP):
-                if is_rewritable_or_comparable(lbp(cp[0], [], Num(cp[2])), [p], u, K):
+                if is_rewritable_or_comparable(cp[0], Num(cp[2]), [p], u, K):
                     indices.append(i)
-                elif is_rewritable_or_comparable(lbp(cp[3], [], Num(cp[5])), [p], u, K):
+                elif is_rewritable_or_comparable(cp[3], Num(cp[5]), [p], u, K):
                     indices.append(i)
 
             for i in reversed(indices):
@@ -675,16 +697,27 @@ def f5b(F, u, O, K, gens='', verbose=False):
             for g in B:
                 if Polyn(g) != []:
                     cp = critical_pair(p, g, u, O, K)
-                    if is_rewritable_or_comparable(lbp(cp[0], [], Num(cp[2])), [p], u, K):
+                    if is_rewritable_or_comparable(cp[0], Num(cp[2]), [p], u, K):
                         continue
-                    elif is_rewritable_or_comparable(lbp(cp[3], [], Num(cp[5])), [p], u, K):
+                    elif is_rewritable_or_comparable(cp[3], Num(cp[5]), [p], u, K):
                         continue
+
                     CP.append(cp)
 
             # sort (other sorting methods/selection strategies were not as successful)
             CP.sort(lambda c, d: cp_cmp(c, d, O), reverse=True)
-            B.append(p)
-            B.sort(key=lambda f: O(sdp_LM(Polyn(f), u)), reverse=True)
+            #B.append(p)
+            #B.sort(key=lambda f: O(sdp_LM(Polyn(f), u)), reverse=True)
+
+            # insert into B:
+            m = sdp_LM(Polyn(p), u)
+            if cmp(m, sdp_LM(Polyn(B[-1]), u)) <= 0:
+                B.append(p)
+            else:
+                for i, q in enumerate(B):
+                    if cmp(m, sdp_LM(Polyn(q), u)) > 0:
+                        B.insert(i, p)
+                        break
 
             k += 1
 
@@ -727,7 +760,7 @@ def red_groebner(G, u, O, K):
     while F:
         f0 = F.pop()
 
-        if not any([monomial_div(sdp_LM(f0, u), sdp_LM(f, u)) is not None for f in F + H]):
+        if not any([monomial_divides(sdp_LM(f0, u), sdp_LM(f, u)) for f in F + H]):
             H.append(f0)
 
     # Becker, Weispfenning, p. 217: H is Groebner basis of the ideal generated by G.
@@ -758,7 +791,7 @@ def is_minimal(G, u, O, K):
             return False
 
         for h in G[:i] + G[i + 1:]:
-            if monomial_div(sdp_LM(g, u), sdp_LM(h, u)) is not None:
+            if monomial_divides(sdp_LM(g, u), sdp_LM(h, u)):
                 return False
 
     return True
@@ -775,7 +808,17 @@ def is_reduced(G, u, O, K):
 
         for term in g:
             for h in G[:i] + G[i + 1:]:
-                if monomial_div(term[0], sdp_LM(h, u)) is not None:
+                if monomial_divides(term[0], sdp_LM(h, u)):
                     return False
+
+    return True
+
+def monomial_divides(m1, m2):
+    """
+    Returns True if m2 divides m1, False otherwise. Does not create the quotient.
+    """
+    for i in xrange(len(m1)):
+        if m1[i] < m2[i]:
+            return False
 
     return True
