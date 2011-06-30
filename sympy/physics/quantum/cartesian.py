@@ -31,10 +31,6 @@ class XOp(HermitianOperator):
         return ("X",)
 
     @classmethod
-    def basis_ket(self):
-        return XKet
-
-    @classmethod
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
@@ -67,10 +63,6 @@ Px = PxOp('Px')
 class XKet(Ket):
     """1D cartesian position eigenket."""
 
-    @classmethod
-    def default_args(self):
-        return ("x",)
-
     @property
     def dual_class(self):
         return XBra
@@ -96,10 +88,6 @@ class XKet(Ket):
 class XBra(Bra):
     """1D cartesian position eigenbra."""
 
-    @classmethod
-    def default_args(self):
-        return ("x",)
-
     @property
     def dual_class(self):
         return XKet
@@ -111,10 +99,6 @@ class XBra(Bra):
 
 class PxKet(Ket):
     """1D cartesian momentum eigenket."""
-
-    @classmethod
-    def default_args(self):
-        return ("px",)
 
     @property
     def dual_class(self):
@@ -140,10 +124,6 @@ class PxKet(Ket):
 
 class PxBra(Bra):
     """1D cartesian momentum eigenbra."""
-
-    @classmethod
-    def default_args(self):
-        return ("px",)
 
     @property
     def dual_class(self):

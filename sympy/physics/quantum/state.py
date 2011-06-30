@@ -70,11 +70,32 @@ class StateBase(QExpr):
         """
         Returns a default label corresponding to the labeling of its basis operator
 
-        To be overidden in subclasses
+        Uses the default labels of the basis operators to determine its own labeling
+        Note that since this is a classmethod, many times state_to_operators will return classes rather than instances.
+        But, since the operators' default_args will also be a classmethod, this won't make a difference for our implementation.
         """
 
-        return None
+        from operatorset import state_to_operators
+        ops = state_to_operators(self)
 
+        if ops is None:
+            return None
+        else:
+            if isinstance(ops, set):
+                new_args = []
+                #Loop accounts for the fact that each operator may have multiple default labels
+                for op in ops:
+                    def_args = op.default_args()
+                    if len(def_args) != 1:
+                        arg = tuple([str(arg).lower() for arg in def_args])
+                    else:
+                        arg = str(def_args[0]).lower()
+
+                    new_args.append(arg)
+
+                return tuple(new_args)
+            else:
+                return tuple([str(arg).lower() for arg in ops.default_args()])
 
     def _represent_default_basis(self, **options):
         return self._represent(basis=(self.operators)())
