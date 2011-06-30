@@ -12,6 +12,26 @@ from sympy.physics.quantum.hilbert import HilbertSpace
 
 x,y,t = symbols('x,y,t')
 
+class TestKet(Ket):
+    @classmethod
+    def default_args(self):
+        return ("test",)
+
+class TestKetMultipleLabels(Ket):
+    @classmethod
+    def default_args(self):
+        return ("r", "theta", "phi")
+
+class TestTimeDepKet(TimeDepKet):
+    @classmethod
+    def default_args(self):
+        return ("test", "t")
+
+class TestTimeDepKetMultipleLabels(TimeDepKet):
+    @classmethod
+    def default_args(self):
+        return ("r", "theta", "phi", "t")
+
 def test_ket():
     k = Ket('0')
 
@@ -36,6 +56,12 @@ def test_ket():
     assert k.dual_class == Bra
     assert k.dual == Bra(x,y)
     assert k.subs(x,y) == Ket(y,y)
+
+    k = TestKet()
+    assert k == TestKet("test")
+
+    k = TestKetMultipleLabels()
+    assert k == TestKetMultipleLabels("r", "theta", "phi")
 
 
 def test_bra():
@@ -92,6 +118,16 @@ def test_time_dep_ket():
     k = TimeDepKet(x, 0.5)
     assert k.label == (x,)
     assert k.args == (x,sympify(0.5))
+
+    k = TestTimeDepKet()
+    assert k.label == (Symbol("test"),)
+    assert k.time == Symbol("t")
+    assert k == TestTimeDepKet("test", "t")
+
+    k = TestTimeDepKetMultipleLabels()
+    assert k.label == (Symbol("r"), Symbol("theta"), Symbol("phi"))
+    assert k.time == Symbol("t")
+    assert k == TestTimeDepKetMultipleLabels("r", "theta", "phi", "t")
 
 
 def test_time_dep_bra():
