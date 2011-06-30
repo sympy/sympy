@@ -12,8 +12,8 @@ from sympy.physics.quantum.represent import enumerate_states
 
 class TestKet(Ket):
     @classmethod
-    def basis_op(self):
-        return TestOp
+    def default_args(self):
+        return ("t",)
 
 class TestOp(HermitianOperator):
     @classmethod

@@ -68,8 +68,8 @@ class XKet(Ket):
     """1D cartesian position eigenket."""
 
     @classmethod
-    def basis_op(self):
-        return XOp
+    def default_args(self):
+        return ("x",)
 
     @property
     def dual_class(self):
@@ -97,8 +97,8 @@ class XBra(Bra):
     """1D cartesian position eigenbra."""
 
     @classmethod
-    def basis_op(self):
-        return XOp
+    def default_args(self):
+        return ("x",)
 
     @property
     def dual_class(self):
@@ -113,8 +113,8 @@ class PxKet(Ket):
     """1D cartesian momentum eigenket."""
 
     @classmethod
-    def basis_op(self):
-        return PxOp
+    def default_args(self):
+        return ("px",)
 
     @property
     def dual_class(self):
@@ -140,6 +140,10 @@ class PxKet(Ket):
 
 class PxBra(Bra):
     """1D cartesian momentum eigenbra."""
+
+    @classmethod
+    def default_args(self):
+        return ("px",)
 
     @property
     def dual_class(self):
