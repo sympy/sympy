@@ -376,3 +376,13 @@ def test_derivative_numerically():
     from random import random
     z0 = random() + I*random()
     assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
+
+def test_fdiff_argument_index_error():
+    from sympy.core.function import ArgumentIndexError
+    class myfunc(Function):
+        nargs = 1
+        def fdiff(self, idx):
+            raise ArgumentIndexError
+    mf = myfunc(x)
+    assert mf.diff(x) == Derivative(mf, x)
+    raises(ValueError, 'myfunc(x, x)')

@@ -162,6 +162,12 @@ class Function(Application, Expr):
         if cls is Function:
             return UndefinedFunction(*args)
 
+        if cls.nargs is not None:
+            if (isinstance(cls.nargs, tuple) and len(args) not in cls.nargs) \
+               or (not isinstance(cls.nargs, tuple) and cls.nargs != len(args)):
+               raise ValueError('Function %s expects %s argument(s), got %s.' % (
+                                 cls, cls.nargs, len(args)))
+
         args = map(sympify, args)
         evaluate = options.pop('evaluate', True)
         if evaluate:
@@ -277,9 +283,11 @@ class Function(Application, Expr):
             da = a.diff(s)
             if da is S.Zero:
                 continue
-            if isinstance(self.func, FunctionClass):
+            try:
                 df = self.fdiff(i)
-                l.append(df * da)
+            except ArgumentIndexError:
+                df = Function.fdiff(self, i)
+            l.append(df * da)
         return Add(*l)
 
     def _eval_is_commutative(self):
