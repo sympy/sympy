@@ -65,12 +65,12 @@ class StateBase(QExpr):
         return None
 
     @classmethod
-    def default_label(self):
+    def default_args(self):
         """Returns a default label corresponding to the labeling of its basis operator"""
         if self.basis_op() is None:
             return None
         else:
-            return (self.basis_op().default_label().lower())
+            return tuple([str(arg).lower() for arg in self.basis_op().default_args()])
 
     def _represent_default_basis(self, **options):
         return self._represent(basis=(self.basis_op())())

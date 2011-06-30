@@ -116,7 +116,7 @@ class QExpr(Expr):
         # First compute args and call Expr.__new__ to create the instance
         args = cls._eval_args(args)
         if len(args) == 0:
-            args = cls._eval_args([cls.default_label()])
+            args = cls._eval_args(list(cls.default_args()))
         inst = Expr.__new__(cls, *args, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
@@ -151,7 +151,7 @@ class QExpr(Expr):
         This must be a tuple, rather than a Tuple.
         """
         if len(self.args) == 0: # If there is no label specified, return the default
-            return self._eval_args([self.default_label()])
+            return self._eval_args(list(self.default_args()))
         else:
             return self.args
 
@@ -160,14 +160,13 @@ class QExpr(Expr):
         return True
 
     @classmethod
-    def default_label(self):
-        """If no label is specified, then this will be set to be the default value.
+    def default_args(self):
+        """If no arguments are specified, then this will return a default set of arguments to be run through the constructor.
 
-        Should be a string. Will be qsympified upon evaluation of label.
-        Convention should be capital letter for operators.
-        Should be overidden by subclasses to specify the default labels for kets and operators
+        Should be a tuple of arguments.
+        Should be overidden by subclasses to specify the default arguments for kets and operators
         """
-        return ""
+        return (None,)
 
     #-------------------------------------------------------------------------
     # _eval_* methods

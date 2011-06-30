@@ -3,8 +3,8 @@ from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import StateBase, KetBase, BraBase
 
 __all__ = [
-    'operator_to_state',
-    'state_to_operator'
+    'operators_to_state',
+    'state_to_operators'
 ]
 
 #state_mapping stores the mappings between states and their associated operators or tuples
@@ -18,8 +18,8 @@ state_mapping = { PxKet : PxOp,
 
 rev_mapping = dict((v,k) for k,v in state_mapping.iteritems())
 
-def operator_to_state(arg, **options):
-    """ operator_to_state
+def operators_to_state(arg, **options):
+    """ operators_to_state
 
     A global function for mapping operator classes to their associated states.
     It takes either an Operator or a set of operators and returns the state associated
@@ -37,14 +37,14 @@ def operator_to_state(arg, **options):
     Examples
     ===========
     >>> from sympy.physics.quantum.cartesian import XOp, PxOp
-    >>> from sympy.physics.quantum.operatorset import operator_to_state
-    >>> operator_to_state(XOp)
+    >>> from sympy.physics.quantum.operatorset import operators_to_state
+    >>> operators_to_state(XOp)
     <class 'sympy.physics.quantum.cartesian.XKet'>
-    >>> operator_to_state(XOp())
+    >>> operators_to_state(XOp())
     <class 'sympy.physics.quantum.cartesian.XKet'>
-    >>> operator_to_state(PxOp)
+    >>> operators_to_state(PxOp)
     <class 'sympy.physics.quantum.cartesian.PxKet'>
-    >>> operator_to_state(PxOp())
+    >>> operators_to_state(PxOp())
     <class 'sympy.physics.quantum.cartesian.PxKet'>
     """
 
@@ -76,8 +76,8 @@ def operator_to_state(arg, **options):
         else:
             return None
 
-def state_to_operator(arg, **options):
-    """ state_to_operator
+def state_to_operators(arg, **options):
+    """ state_to_operators
 
     A global function for mapping state classes to their associated operators or sets of operators.
     It takes either a state class or instance.
@@ -94,14 +94,14 @@ def state_to_operator(arg, **options):
     Examples
     ===========
     >>> from sympy.physics.quantum.cartesian import XKet, PxKet
-    >>> from sympy.physics.quantum.operatorset import state_to_operator
-    >>> state_to_operator(XKet)
+    >>> from sympy.physics.quantum.operatorset import state_to_operators
+    >>> state_to_operators(XKet)
     <class 'sympy.physics.quantum.cartesian.XOp'>
-    >>> state_to_operator(XKet())
+    >>> state_to_operators(XKet())
     <class 'sympy.physics.quantum.cartesian.XOp'>
-    >>> state_to_operator(PxKet)
+    >>> state_to_operators(PxKet)
     <class 'sympy.physics.quantum.cartesian.PxOp'>
-    >>> state_to_operator(PxKet())
+    >>> state_to_operators(PxKet())
     <class 'sympy.physics.quantum.cartesian.PxOp'>
     """
 

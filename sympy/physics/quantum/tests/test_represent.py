@@ -16,7 +16,7 @@ from sympy.physics.quantum.matrixutils import (
 )
 from sympy.physics.quantum.cartesian import XKet, XOp, XBra
 from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.operatorset import operator_to_state
+from sympy.physics.quantum.operatorset import operators_to_state
 
 from sympy.external import import_module
 from sympy.utilities.pytest import skip
@@ -170,7 +170,7 @@ def test_innerprod_represent():
         return True
 
 def test_operator_represent():
-    basis_kets = enumerate_states((operator_to_state(x_op))(), 1, 2)
+    basis_kets = enumerate_states((operators_to_state(x_op))(), 1, 2)
     assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
 
 def test_enumerate_states():

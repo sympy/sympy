@@ -17,8 +17,8 @@ class TestKet(Ket):
 
 class TestOp(HermitianOperator):
     @classmethod
-    def default_label(self):
-        return "T"
+    def default_args(self):
+        return ("T",)
 
 t_ket = TestKet()
 t_op = TestOp()
@@ -40,7 +40,7 @@ def test_operator():
     assert (A*(B+C)).expand() == A*B + A*C
     assert ((A+B)**2).expand() == A**2 + A*B + B*A + B**2
 
-    assert t_op.label[0] == Symbol(t_op.default_label())
+    assert t_op.label[0] == Symbol(t_op.default_args()[0])
 
 
 def test_operator_inv():

@@ -27,8 +27,8 @@ class XOp(HermitianOperator):
     """1D cartesian position operator."""
 
     @classmethod
-    def default_label(self):
-        return "X"
+    def default_args(self):
+        return ("X",)
 
     @classmethod
     def basis_ket(self):
@@ -49,8 +49,8 @@ class PxOp(HermitianOperator):
     """1D cartesian momentum operator."""
 
     @classmethod
-    def default_label(self):
-        return "Px"
+    def default_args(self):
+        return ("Px",)
 
     @classmethod
     def _eval_hilbert_space(self, args):

@@ -18,7 +18,7 @@ from sympy.physics.quantum.matrixutils import flatten_scalar
 from sympy.physics.quantum.state import KetBase, BraBase, StateBase
 from sympy.physics.quantum.operator import Operator, HermitianOperator
 from sympy.physics.quantum.qapply import qapply
-from sympy.physics.quantum.operatorset import operator_to_state, state_to_operator
+from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
 
 __all__ = [
     'represent',
@@ -244,7 +244,7 @@ def rep_innerproduct(expr, **options):
     if isinstance(basis, BraBase):
         basis = basis.dual
     elif isinstance(basis, Operator):
-        basis = (operator_to_state(basis))()
+        basis = (operators_to_state(basis))()
 
     if not "index" in options:
         options["index"] = 1
@@ -296,14 +296,14 @@ def rep_expectation(expr, **options):
     if not isinstance(expr, Operator):
         raise TypeError("The passed expression is not an operator")
 
-    if basis is None and operator_to_state(expr) is None:
+    if basis is None and operators_to_state(expr) is None:
         raise NotImplementedError("Could not get basis kets for this operator")
     elif basis is None:
-        basis_state = operator_to_state(expr)
+        basis_state = operators_to_state(expr)
         basis_kets = enumerate_states(basis_state(), options["index"], 2)
     else:
         if isinstance(basis, Operator):
-            basis = (operator_to_state(basis))()
+            basis = (operators_to_state(basis))()
         basis_kets = enumerate_states(basis, options["index"], 2)
 
     bra = basis_kets[1].dual
@@ -350,7 +350,7 @@ def integrate_result(orig_expr, result, **options):
         if (isinstance(arg, KetBase) or isinstance (arg, BraBase)):
             options["basis"] = (arg.__class__)()
         elif isinstance(arg, Operator):
-            state_class = operator_to_state(arg)
+            state_class = operators_to_state(arg)
             options["basis"] = (state_class() if state_class is not None else None)
 
     basis = options.pop("basis", None)
@@ -369,7 +369,7 @@ def integrate_result(orig_expr, result, **options):
     for coord in coords:
         if coord in result.free_symbols:
             #TODO: Add support for sets of operators
-            basis_op = (state_to_operator(basis))()
+            basis_op = (state_to_operators(basis))()
             start = basis_op.hilbert_space.interval.start
             end = basis_op.hilbert_space.interval.end
             result = integrate(result, (coord, start, end))
@@ -424,13 +424,13 @@ def get_basis(expr, **options):
         if isinstance(expr, StateBase):
             return expr.__class__()
         elif isinstance(expr, Operator):
-            state_class = operator_to_state(expr)
+            state_class = operators_to_state(expr)
             return (state_class() if state_class is not None else None)
         else:
             return None
     elif (isinstance(basis, Operator) or \
           (not isinstance(basis, StateBase) and issubclass(basis, Operator))):
-        state_class = operator_to_state(basis)
+        state_class = operators_to_state(basis)
         return (state_class() if state_class is not None else None)
     elif isinstance(basis, StateBase):
         return basis
