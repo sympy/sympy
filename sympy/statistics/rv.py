@@ -15,6 +15,8 @@ class Domain(Basic):
         raise NotImplementedError()
 
 class PSpace(Basic):
+    is_finite = None
+    is_continuous = None
     @property
     def domain(self):
         return self.args[0]
@@ -73,8 +75,8 @@ class ProductPSpace(PSpace):
 
         if all(space.is_finite for space in spaces):
             cls = ProductFinitePSpace
-        #if all(space.is_continuous for space in spaces):
-        #    cls = ContinuousProductPSpace
+        if all(space.is_continuous for space in spaces):
+            cls = ContinuousProductPSpace
 
         obj = Basic.__new__(cls, symbols, spaces)
         obj.rs_space_dict = rs_space_dict
@@ -153,6 +155,10 @@ def random_symbols(expr):
 
 def pspace(expr):
     rvs = random_symbols(expr)
+    # If only one space present
+    if all(rv.pspace == rvs[0].pspace for rv in rvs):
+        return rvs[0].pspace
+    # Otherwise make a product space
     return ProductPSpace(*[rv.pspace for rv in rvs])
 
 def sumsets(sets):
