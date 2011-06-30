@@ -217,7 +217,7 @@ def check_assumptions(expr, **assumptions):
                                             A boolean is expected.' %(key, expected)
         if hasattr(Q, key):
             test = ask(getattr(Q, key)(expr))
-            if test == expected:
+            if test is expected:
                 continue
             elif test is not None:
                 return False
@@ -573,7 +573,7 @@ def solve(f, *symbols, **flags):
     # XXX: Currently, there are some cases which are not handled,
     # see issue 2098 comment 13: http://code.google.com/p/sympy/issues/detail?id=2098#c13.
     if type(solution) is list and solution:
-        if type(solution[0]) is tuple and len(solution[0]) == len(symbols):
+        if type(solution[0]) is tuple:
             filtered = []
             for s in solution:
                 if all(check_assumptions(val, **symb.assumptions0) is not False
@@ -583,7 +583,7 @@ def solve(f, *symbols, **flags):
         elif len(symbols) == 1:
             solution = [s for s in solution if check_assumptions(s, **symbols[0].assumptions0) is not False]
     elif type(solution) is dict:
-        for symb, val in solution.copy().iteritems():
+        for symb, val in solution.iteritems():
             if check_assumptions(val, **symb.assumptions0) is False: # not None nor True
                 solution = None
                 break
