@@ -1,6 +1,6 @@
 """Bessel type functions"""
 
-from sympy import S, pi
+from sympy import S, pi, I
 from sympy.core import sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos
@@ -114,6 +114,17 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z):
         return sqrt(2*z/pi) * jn(nu - S('1/2'), self.argument)
 
+    @classmethod
+    def eval(cls, nu, z):
+        if nu.is_Integer:
+            if nu < 0:
+                return S(-1)**nu*besselj(-nu, z)
+            if z.could_extract_minus_sign():
+                return S(-1)**nu*besselj(nu, -z)
+            newz = z.extract_multiplicatively(I)
+            if newz: # NOTE we don't want to change the function if z==0
+                return I**(nu)*besseli(nu, newz)
+
 class bessely(BesselBase):
     r"""
     Bessel function of the second kind.
@@ -148,6 +159,12 @@ class bessely(BesselBase):
     def _eval_rewrite_as_yn(self, nu, z):
         return sqrt(2*z/pi) * yn(nu - S('1/2'), self.argument)
 
+    @classmethod
+    def eval(cls, nu, z):
+        if nu.is_Integer:
+            if nu < 0:
+                return S(-1)**nu*bessely(-nu, z)
+
 class besseli(BesselBase):
     r"""
     Modified Bessel function of the first kind.
@@ -177,6 +194,13 @@ class besseli(BesselBase):
 
     _a = -S.One
     _b = S.One
+
+    @classmethod
+    def eval(cls, nu, z):
+        if nu.is_Integer:
+            newz = z.extract_multiplicatively(I)
+            if newz: # NOTE we don't want to change the function if z==0
+                return I**(-nu)*besselj(nu, -newz)
 
 class besselk(BesselBase):
     r"""

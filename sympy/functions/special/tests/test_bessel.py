@@ -76,3 +76,18 @@ def test_jn_zeros():
     assert eq(jn_zeros(2, 4), [5.763459, 9.095011, 12.322940, 15.514603])
     assert eq(jn_zeros(3, 4), [6.987932, 10.417118, 13.698023, 16.923621])
     assert eq(jn_zeros(4, 4), [8.182561, 11.704907, 15.039664, 18.301255])
+
+def test_bessel_eval():
+    from sympy import I
+    assert besselj(-4, z) == besselj(4, z)
+    assert besselj(-3, z) == -besselj(3, z)
+
+    assert bessely(-2, z) == bessely(2, z)
+    assert bessely(-1, z) == -bessely(1, z)
+
+    assert besselj(0, -z) == besselj(0, z)
+    assert besselj(1, -z) == -besselj(1, z)
+
+    assert besseli(0, I*z) == besselj(0, z)
+    assert besseli(1, I*z) == I*besselj(1, z)
+    assert besselj(3, I*z) == -I*besseli(3, z)
