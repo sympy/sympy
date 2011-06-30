@@ -347,11 +347,7 @@ def integrate_result(orig_expr, result, **options):
 
     if not "basis" in options:
         arg = orig_expr.args[-1]
-        if (isinstance(arg, KetBase) or isinstance (arg, BraBase)):
-            options["basis"] = (arg.__class__)()
-        elif isinstance(arg, Operator):
-            state_class = operators_to_state(arg)
-            options["basis"] = (state_class() if state_class is not None else None)
+        options["basis"] = get_basis(arg, **options)
 
     basis = options.pop("basis", None)
 
@@ -421,8 +417,10 @@ def get_basis(expr, **options):
     basis = options.pop("basis", None)
 
     if basis is None:
-        if isinstance(expr, StateBase):
+        if isinstance(expr, KetBase):
             return expr.__class__()
+        elif isinstance(expr, BraBase):
+            return expr.dual_class()
         elif isinstance(expr, Operator):
             state_class = operators_to_state(expr)
             return (state_class() if state_class is not None else None)
