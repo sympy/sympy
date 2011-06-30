@@ -884,6 +884,8 @@ class Vector(object):
         """Printing method. """
         str_ind = 'xyz'
         ar = self.args # just to shorten things
+        if len(ar) == 0:
+            return `0`
         ol = [] # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
