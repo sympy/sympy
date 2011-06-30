@@ -1,6 +1,6 @@
-from rv import Domain, ProductDomain, PSpace, random_symbols
+from rv import Domain, ProductDomain, PSpace, random_symbols, ProductPSpace
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import integrate, S, Interval, Dummy, FiniteSet
+from sympy import integrate, S, Interval, Dummy, FiniteSet, Mul
 
 oo = S.Infinity
 
@@ -26,22 +26,26 @@ class SingleContinuousDomain(ContinuousDomain):
         sym, val = tuple(other)[0]
         return self.symbol == sym and val in self.set
 
-    def integrate(self, expr):
+    def integrate(self, expr, variables=None):
+        assert not variables or frozenset(variables) == frozenset(self.symbols)
         return integrate(expr, (self.symbol, self.set)) # assumes only intervals
 
 class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 
-    def integrate(self, expr):
+    def integrate(self, expr, variables=None):
+        variables = variables or self.symbols
         for domain in domains:
-            expr = domain.integrate(expr)
+            expr = domain.integrate(expr, variables & domain.symbols)
         return expr
 
 class ContinuousPSpace(PSpace):
     is_continuous = True
 
-    def integrate(self, expr):
-        expr = expr.subs({rv:rv.symbol for rv in self.values})
-        return self.domain.integrate(self.density * expr)
+    def integrate(self, expr, rvs=None):
+        rvs = rvs or self.values
+        expr = expr.subs({rv:rv.symbol for rv in rvs})
+        domain_symbols = frozenset(rv.symbol for rv in rvs)
+        return self.domain.integrate(self.density * expr, domain_symbols)
 
     def computeDensity(self, expr):
         z = Dummy('z', real=True)
@@ -56,4 +60,9 @@ class SingleContinuousPSpace(ContinuousPSpace):
     @property
     def value(self):
         return tuple(self.values)[0]
+
+class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
+    @property
+    def density(self):
+        return Mul(*[space.density for space in self.spaces])
 

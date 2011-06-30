@@ -1926,7 +1926,8 @@ def count_ops(expr, visual=False):
                     ops.append(o*(len(a.args) - 1))
                 else:
                     ops.append(o)
-            args.extend(a.args)
+            if not a.is_Symbol:
+                args.extend(a.args)
 
     elif type(expr) is dict:
         ops = [count_ops(k, visual=visual) +
