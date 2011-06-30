@@ -950,7 +950,11 @@ class Mul(AssocOp):
         for t in self.args:
             a = t.is_irrational
             if a:
-                return True
+                others = list(self.args)
+                others.remove(t)
+                if all(x.is_rational is True for x in others):
+                    return True
+                return None
             if a is None:
                 return
         return False

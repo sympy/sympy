@@ -314,8 +314,14 @@ class Add(AssocOp):
     def _eval_is_irrational(self):
         for t in self.args:
             a = t.is_irrational
-            if a: return True
-            if a is None: return
+            if a:
+                others = list(self.args)
+                others.remove(t)
+                if all(x.is_rational is True for x in others):
+                    return True
+                return None
+            if a is None:
+                return
         return False
 
     def _eval_is_positive(self):
