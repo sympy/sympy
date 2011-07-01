@@ -17,7 +17,10 @@ from sympy.polys.groebnertools import (
     cp_key,
     is_rewritable_or_comparable,
     Sign,
+    Polyn,
     Num,
+    s_poly,
+    f5_reduce,
 )
 
 from sympy.polys.monomialtools import (
@@ -422,3 +425,16 @@ def test_is_rewritable_or_comparable():
     B = [lbp(sig((0, 0, 0, 0), 3), [((0, 1, 1, 0), QQ(10,3)), ((0, 1, 0, 1), QQ(4,3)), ((0, 0, 2, 0), QQ(4,1)), ((0, 0, 1, 1), QQ(22,3)), ((0, 0, 0, 2), QQ(4,1)), ((0, 1, 0, 0), QQ(-1,3)), ((0, 0, 1, 0), QQ(-4,3)), ((0, 0, 0, 1), QQ(-4,3))], 3)]
     # comparable:
     assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) == True
+
+def test_f5_reduce():
+    # katsura3 with lex
+    F = [(((0, 0, 0), 1), [((1, 0, 0), QQ(1,1)), ((0, 1, 0), QQ(2,1)), ((0, 0, 1), QQ(2,1)), ((0, 0, 0), QQ(-1,1))], 1), (((0, 0, 0), 2), [((0, 2, 0), QQ(6,1)), ((0, 1, 1), QQ(8,1)), ((0, 1, 0), QQ(-2,1)), ((0, 0, 2), QQ(6,1)), ((0, 0, 1), QQ(-2,1))], 2), (((0, 0, 0), 3), [((0, 1, 1), QQ(10,3)), ((0, 1, 0), QQ(-1,3)), ((0, 0, 2), QQ(4,1)), ((0, 0, 1), QQ(-4,3))], 3), (((0, 0, 1), 2), [((0, 1, 0), QQ(1,1)), ((0, 0, 3), QQ(30,1)), ((0, 0, 2), QQ(-79,7)), ((0, 0, 1), QQ(3,7))], 4), (((0, 0, 2), 2), [((0, 0, 4), QQ(1,1)), ((0, 0, 3), QQ(-10,21)), ((0, 0, 2), QQ(1,84)), ((0, 0, 1), QQ(1,84))], 5)]
+
+    cp = critical_pair(F[0], F[1], 2, O_lex, QQ)
+    s = s_poly(cp, 2, O_lex, QQ)
+
+    assert f5_reduce(s, F, 2, O_lex, QQ) == (((0, 2, 0), 1), [], 1)
+
+    s = lbp(sig(Sign(s)[0], 100), Polyn(s), Num(s))
+    assert f5_reduce(s, F, 2, O_lex, QQ) == s
+
