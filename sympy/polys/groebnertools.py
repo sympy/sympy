@@ -352,8 +352,6 @@ def sig_cmp(u, v, O):
     or
         - the index of v is equal to the index of u and u[0] < v[0] w.r.t. O
 
-    u == v iff u[0] == v[0] and u[1] == v[1]
-
     u > v otherwise
     """
     if u[1] > v[1]:
@@ -419,15 +417,12 @@ def lbp_mul_term(f, cx, u, O, K):
 
 def lbp_cmp(f, g, O):
     """
-    Compare two labeled polynomials. This relation is not
-    antisymmetric.
+    Compare two labeled polynomials.
 
     f < g iff
         - Sign(f) < Sign(g)
     or
         - Sign(f) == Sign(g) and Num(f) > Num(g)
-
-    f == g iff Sign(f) == Sign(g) and Num(f) == Num(g)
 
     f > g otherwise
     """
@@ -456,7 +451,7 @@ def critical_pair(f, g, u, O, K):
 
     A critical pair is a tuple (um, f, vm, g), where um and vm are
     terms such that um * f - vm * g is the S-polynomial of f and g (so,
-    wlog um * f > vm * g).
+    wlog assume um * f > vm * g).
     For performance sake, a critical pair is represented as a tuple
     (Sign(um * f), um, f, Sign(vm * g), vm, g), since um * f creates
     a new, relatively expensive object in memory, whereas Sign(um *
@@ -490,8 +485,7 @@ def critical_pair(f, g, u, O, K):
 
 def cp_cmp(c, d, O):
     """
-    Compare two critical pairs c and d. This relation is not
-    antisymmetric.
+    Compare two critical pairs c and d.
 
     c < d iff
         - lbp(c[0], _, Num(c[2]) < lbp(d[0], _, Num(d[2])) (this
@@ -500,8 +494,6 @@ def cp_cmp(c, d, O):
         - lbp(c[0], _, Num(c[2]) >< lbp(d[0], _, Num(d[2])) and
         lbp(c[3], _, Num(c[5])) < lbp(d[3], _, Num(d[5])) (this
         corresponds to vm_c * g_c and vm_d * g_d)
-
-    c == d iff both lbp comparisons above evaluate to 0
 
     c > d otherwise
     """
@@ -541,10 +533,18 @@ def s_poly(cp, u, O, K):
     return lbp_sub(lbp_mul_term(cp[2], cp[1], u, O, K), lbp_mul_term(cp[5], cp[4], u, O, K), u, O, K)
 
 
-#def is_rewritable_or_comparable(f, B, u, K):
 def is_rewritable_or_comparable(sign, num, B, u, K):
     """
-    Check if a labeled polynomial f is rewritable or comparable by B.
+    Check if a labeled polynomial is redundant by checking if its
+    signature and number imply rewritability or comparability.
+
+    (sign, num) is comparable if there exists a labeled polynomial
+    h in B, such that sign[1] (the index) is less than Sign(h)[1]
+    and sign[0] is divisible by the leading monomial of h.
+
+    (sign, num) is rewritable if there exists a labeled polynomial
+    h in B, such thatsign[1] is equal to Sign(h)[1], num < Num(h)
+    and sign[0] is divisible by Sign(h)[0].
     """
     for h in B:
         # comparable
@@ -560,53 +560,28 @@ def is_rewritable_or_comparable(sign, num, B, u, K):
     return False
 
 
-def f5_single_reduction(f, B, u, O, K):
+def f5_reduce(f, B, u, O, K):
     """
-    Perform a single F5-reduction of a labeled polynomial f by B.
+    F5-reduce a labeled polynomial f by B.
 
-    Searches for a labeled polynomial g in B, such that g is non-zero,
-    the leading term lg of g divides the leading term lf of f and
-    the signature of lf/lg * g is less than the signature of f. If
-    such a g exists, the function returns f - lf/lg * g.
+    Continously searches for non-zero labeled polynomial h in B, such
+    that the leading term lt_h of h divides the leading term lt_f of
+    f and Sign(lt_h * h) < Sign(f). If such a labeled polynomial h is
+    found, f gets replaced by f - lt_f / lt_h * h. If no such h can be
+    found or f is 0, f is no further F5-reducible and f gets returned.
 
-    A polynomial that is reducible in the usual sense (sdp_rem) need not
-    be f5-reducible, e.g.:
+    A polynomial that is reducible in the usual sense (sdp_rem)
+    need not be F5-reducible, e.g.:
 
-    >>> from sympy.polys.groebnertools import *
+    >>> from sympy.polys.groebnertools import lbp, sig, f5_reduce, Polyn, O_lex
+    >>> from sympy.polys.distributedpolys import sdp_rem
     >>> from sympy import QQ
     >>> f = lbp(sig((1,1,1),4), [((1, 0, 0), QQ(1))], 3)
     >>> g = lbp(sig((0, 0, 0), 2), [((1, 0, 0), QQ(1))], 2)
     >>> sdp_rem(Polyn(f), [Polyn(g)], 2, O_lex, QQ)
     []
-    >>> f5_single_reduction(f, [g], 2, O_lex, QQ)
+    >>> f5_reduce(f, [g], 2, O_lex, QQ)
     (((1, 1, 1), 4), [((1, 0, 0), 1/1)], 3)
-    """
-    if Polyn(f) == []:
-        return f
-
-    if K.has_Field:
-        term_div = _term_ff_div
-    else:
-        term_div = _term_rr_div
-
-    for g in B:
-        if Polyn(g) != []:
-            if monomial_divides(sdp_LM(Polyn(f), u), sdp_LM(Polyn(g), u)):
-                t = term_div(sdp_LT(Polyn(f), u, K), sdp_LT(Polyn(g), u, K), K)
-                if sig_cmp(sig_mult(Sign(g), t[0]), Sign(f), O) == -1:
-                    gp = lbp_mul_term(g, t, u, O, K)
-                    # The following check need not be done and is in general slower than without.
-                    #if not is_rewritable_or_comparable(Sign(gp), Num(gp), B, u, K):
-                    return lbp_sub(f, gp, u, O, K)
-    return f
-
-
-def f5_reduce(f, B, u, O, K):
-    """
-    F5-reduce a labeled polynomial f by B.
-
-    Calls f5_single_reduction until the labeled polynomial doesn't
-    change anymore, which means that it can't be f5-reduced further.
     """
     if Polyn(f) == []:
         return f
@@ -624,12 +599,13 @@ def f5_reduce(f, B, u, O, K):
                 if monomial_divides(sdp_LM(Polyn(f), u), sdp_LM(Polyn(h), u)):
                     t = term_div(sdp_LT(Polyn(f), u, K), sdp_LT(Polyn(h), u, K), K)
                     if sig_cmp(sig_mult(Sign(h), t[0]), Sign(f), O) < 0:
+                        # The following check need not be done and is in general slower than without.
+                        #if not is_rewritable_or_comparable(Sign(gp), Num(gp), B, u, K):
                         hp = lbp_mul_term(h, t, u, O, K)
                         f = lbp_sub(f, hp, u, O, K)
                         break
 
-        #f = f5_single_reduction(f, B, u, O, K)
-        if g == f:
+        if g == f or Polyn(f) == []:
             return f
 
 
@@ -637,10 +613,18 @@ def f5b(F, u, O, K, gens='', verbose=False):
     """
     Computes a reduced Groebner basis for the ideal generated by F.
 
-    Implementation of the F5B algorithm by Yao Sun and Dingkang
-    Wang. The algorithm is similar to Buchberger's algorithm, except
-    that it checks if critical pairs are redundant and discards them
-    when they are.
+    f5b is an implementation of the F5B algorithm by Yao Sun and
+    Dingkang Wang. Similarly to Buchberger's algorithm, the algorithm
+    proceeds by computing critical pairs, computing the S-polynomial,
+    reducing it and adjoining the reduced S-polynomial if it is not 0.
+
+    Unlike Buchberger's algorithm, each polynomial contains additional
+    information, namely a signature and a number. The signature
+    specifies the path of computation (i.e. from which polynomial in
+    the original basis was it derived and how), the number says when
+    the polynomial was added to the basis.  With this information it
+    is (often) possible to decide if an S-polynomial will reduce to
+    0 and can be discarded.
 
     Optimizations include: Reducing the generators before computing
     a Groebner basis, removing redundant critical pairs when a new
@@ -691,10 +675,6 @@ def f5b(F, u, O, K, gens='', verbose=False):
     while len(CP):
         cp = CP.pop()
 
-        # the actual polynomial isn't needed for rewritable and comparable checks:
-        uf = lbp(cp[0], [], Num(cp[2]))
-        vg = lbp(cp[3], [], Num(cp[5]))
-
         # discard redundant critical pairs:
         if is_rewritable_or_comparable(cp[0], Num(cp[2]), B, u, K):
             continue
@@ -733,7 +713,7 @@ def f5b(F, u, O, K, gens='', verbose=False):
             # sort (other sorting methods/selection strategies were not as successful)
             CP.sort(key=lambda cp: cp_key(cp, O), reverse=True)
 
-            # insert into B:
+            # insert p into B:
             m = sdp_LM(Polyn(p), u)
             if cmp(m, sdp_LM(Polyn(B[-1]), u)) <= 0:
                 B.append(p)
@@ -753,7 +733,7 @@ def f5b(F, u, O, K, gens='', verbose=False):
         print("%d reductions to zero" % reductions_to_zero)
 
     # reduce Groebner basis:
-    H = [sdp_strip(sdp_monic(Polyn(g), K)) for g in B]
+    H = [sdp_monic(Polyn(g), K) for g in B]
     H = red_groebner(H, u, O, K)
 
     return sorted(H, key=lambda f: O(sdp_LM(f, u)), reverse=True)
@@ -840,7 +820,8 @@ def is_reduced(G, u, O, K):
 
 def monomial_divides(m1, m2):
     """
-    Returns True if m2 divides m1, False otherwise. Does not create the quotient.
+    Returns True if m2 divides m1, False otherwise. Does not create
+    the quotient. Does not check if both are have the same length.
     """
     for i in xrange(len(m1)):
         if m1[i] < m2[i]:
