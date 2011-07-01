@@ -1066,27 +1066,25 @@ def generate_involutions(n):
     10
     """
     pi = range(n)
-    F = [1]
+    F = [0]
     cache = set()
     def gen(pi, F, t):
         if t == n:
             cache.add(tuple(pi))
         else:
-            for j, i in enumerate(F):
+            for j, Fi in enumerate(F):
                 pi[j], pi[t] = pi[t], pi[j]
                 if tuple(pi) not in cache:
-                    F.remove(i)
+                    F.remove(Fi)
                     cache.add(tuple(pi))
                     gen(pi, F, t + 1)
-                    F.append(i)
-                    F.sort()
+                    F.insert(j, Fi)
                 pi[j], pi[t] = pi[t], pi[j]
             F.append(t + 1)
-            F.sort()
             if tuple(pi) not in cache:
                 cache.add(tuple(pi))
             gen(pi, F, t + 1)
-            F.remove(t + 1)
+            F.pop()
     gen(pi, F, 1)
     return sorted(cache)
 
