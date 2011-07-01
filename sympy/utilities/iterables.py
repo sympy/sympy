@@ -1075,8 +1075,8 @@ def generate_involutions(n):
             for j in xrange(len(F)):
                 P[j], P[t] = P[t], P[j]
                 if tuple(P) not in cache:
-                    Fj = F.pop(j)
                     cache.add(tuple(P))
+                    Fj = F.pop(j)
                     gen(P, F, t + 1)
                     F.insert(j, Fj)
                 P[j], P[t] = P[t], P[j]

@@ -270,16 +270,20 @@ def test_binary_partitions():
     assert len([j[:] for j in binary_partitions(16)]) == 36
 
 def test_bell_perm():
-    assert list(generate_bell(4)) == [(4, 1, 2, 3), (3, 4, 1, 2), (1, 2, 3, 4), \
-    (1, 3, 2, 4), (1, 2, 4, 3), (4, 2, 3, 1), (1, 4, 3, 2), (3, 2, 1, 4), (1, 4, 2, 3) \
-    , (2, 1, 3, 4), (4, 3, 2, 1), (4, 2, 1, 3), (4, 1, 3, 2), (3, 1, 2, 4), (2, 1, 4, 3)]
-    assert len(list(generate_bell(5))) == 52
+    assert len(list(generate_bell([0, 1, 2, 3, 4, 5]))) == [1, 2, 5, 15, 52, 203]
+    assert list(generate_bell(4)) == [(1, 2, 3, 4), (1, 2, 4, 3), (1, 3, 2, 4),
+                                      (1, 4, 2, 3), (1, 4, 3, 2), (2, 1, 3, 4),
+                                      (2, 1, 4, 3), (3, 1, 2, 4), (3, 2, 1, 4),
+                                      (3, 4, 1, 2), (4, 1, 2, 3), (4, 1, 3, 2),
+                                      (4, 2, 1, 3), (4, 2, 3, 1), (4, 3, 2, 1)]
 
 def test_involutions():
-    assert len(generate_involutions(10)) == 9496
-    assert generate_involutions(4) == {(2, 1, 3, 4): 1, (1, 3, 2, 4): 1, \
-    (3, 4, 1, 2): 1, (4, 2, 3, 1): 1, (1, 4, 3, 2): 1, (1, 2, 4, 3): 1, \
-    (4, 3, 2, 1): 1, (2, 1, 4, 3): 1, (3, 2, 1, 4): 1, (1, 2, 3, 4): 1}
+    assert [len(generate_involutions(n)) for n in range(1, 7)] == [1, 2, 4, 10, 26, 76]
+    assert generate_involutions(4) == [(0, 1, 2, 3), (0, 1, 3, 2),
+                                       (0, 2, 1, 3), (0, 3, 2, 1),
+                                       (1, 0, 2, 3), (2, 1, 0, 3),
+                                       (3, 0, 2, 1), (3, 1, 0, 2),
+                                       (3, 1, 2, 0), (3, 2, 1, 0)]
 
 def test_derangements():
     assert len(list(generate_derangements([0, 1, 2, 3, 4, 5]))) == 265
