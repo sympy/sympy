@@ -63,6 +63,10 @@ Px = PxOp('Px')
 class XKet(Ket):
     """1D cartesian position eigenket."""
 
+    @classmethod
+    def default_args(self):
+        return ("x",)
+
     @property
     def dual_class(self):
         return XBra
@@ -78,15 +82,12 @@ class XKet(Ket):
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return exp(-I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
 
-    #def _represent_default_basis(self, **options):
-        #return self._represent_XOp(None, **options)
-
-    #def _represent_XOp(self, basis, **options):
-        #return self.position
-
-
 class XBra(Bra):
     """1D cartesian position eigenbra."""
+
+    @classmethod
+    def default_args(self):
+        return ("x",)
 
     @property
     def dual_class(self):
@@ -99,6 +100,10 @@ class XBra(Bra):
 
 class PxKet(Ket):
     """1D cartesian momentum eigenket."""
+
+    @classmethod
+    def default_args(self):
+        return ("px",)
 
     @property
     def dual_class(self):
@@ -124,6 +129,10 @@ class PxKet(Ket):
 
 class PxBra(Bra):
     """1D cartesian momentum eigenbra."""
+
+    @classmethod
+    def default_args(self):
+        return ("px",)
 
     @property
     def dual_class(self):

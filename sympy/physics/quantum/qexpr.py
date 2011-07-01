@@ -116,7 +116,7 @@ class QExpr(Expr):
         # First compute args and call Expr.__new__ to create the instance
         args = cls._eval_args(args)
         if len(args) == 0:
-            args = cls._eval_args(list(cls.default_args()))
+            args = cls._eval_args(tuple(cls.default_args()))
         inst = Expr.__new__(cls, *args, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
@@ -163,10 +163,10 @@ class QExpr(Expr):
     def default_args(self):
         """If no arguments are specified, then this will return a default set of arguments to be run through the constructor.
 
-        Should be a tuple of arguments.
+        NOTE: Any classes that override this MUST return a tuple of arguments.
         Should be overidden by subclasses to specify the default arguments for kets and operators
         """
-        return (None,)
+        raise NotImplementedError("No default arguments for this class!")
 
     #-------------------------------------------------------------------------
     # _eval_* methods

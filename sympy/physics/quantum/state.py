@@ -4,6 +4,7 @@
 from sympy import Expr, Symbol, Function, integrate, Expr
 from sympy import Lambda, oo, conjugate, Tuple, sqrt
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.physics.quantum.operator import Operator
 
 from sympy.physics.quantum.qexpr import (
     QExpr, dispatch_method
@@ -59,43 +60,18 @@ class StateBase(QExpr):
     instead use State.
     """
 
+    @classmethod
+    def _operators_to_state(self, ops, **options):
+        raise NotImplementedError("Cannot map operators to states in this class. Method not implemented!")
+
+    def _state_to_operators(self, op_classes, **options):
+        raise NotImplementedError("Cannot map this state to operators. Method not implemented!")
+
     @property
     def operators(self):
         """Return the operator(s) that this state is an eigenstate of"""
         from operatorset import state_to_operators #import internally to avoid circular import errors
         return state_to_operators(self)
-
-    @classmethod
-    def default_args(self):
-        """
-        Returns a default label corresponding to the labeling of its basis operator
-
-        Uses the default labels of the basis operators to determine its own labeling
-        Note that since this is a classmethod, many times state_to_operators will return classes rather than instances.
-        But, since the operators' default_args will also be a classmethod, this won't make a difference for our implementation.
-        """
-
-        from operatorset import state_to_operators
-        ops = state_to_operators(self)
-
-        if ops is None:
-            return None
-        else:
-            if isinstance(ops, set):
-                new_args = []
-                #Loop accounts for the fact that each operator may have multiple default labels
-                for op in ops:
-                    def_args = op.default_args()
-                    if len(def_args) != 1:
-                        arg = tuple([str(arg).lower() for arg in def_args])
-                    else:
-                        arg = str(def_args[0]).lower()
-
-                    new_args.append(arg)
-
-                return tuple(new_args)
-            else:
-                return tuple([str(arg).lower() for arg in ops.default_args()])
 
     def _represent_default_basis(self, **options):
         return self._represent(basis=(self.operators)())

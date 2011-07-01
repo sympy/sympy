@@ -14,7 +14,6 @@ from itertools import count
 from sympy import Expr, Symbol, diff
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.state import Wavefunction
 
 from sympy.physics.quantum.qexpr import (
     QExpr, dispatch_method
@@ -377,6 +376,7 @@ class DifferentialOperator(Operator):
 
     def _apply_operator_Wavefunction(self, func):
         #TODO: Generalize to more complex operators
+        from sympy.physics.quantum.state import Wavefunction
 
         var = self.args[0]
         wf_vars = func.args[1:]
