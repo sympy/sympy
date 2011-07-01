@@ -51,13 +51,13 @@ def operators_to_state(operators, **options):
     >>> from sympy.physics.quantum.cartesian import XOp, PxOp
     >>> from sympy.physics.quantum.operatorset import operators_to_state
     >>> operators_to_state(XOp)
-    <class 'sympy.physics.quantum.cartesian.XKet'>
+    |x>
     >>> operators_to_state(XOp())
-    <class 'sympy.physics.quantum.cartesian.XKet'>
+    |x>
     >>> operators_to_state(PxOp)
-    <class 'sympy.physics.quantum.cartesian.PxKet'>
+    |px>
     >>> operators_to_state(PxOp())
-    <class 'sympy.physics.quantum.cartesian.PxKet'>
+    |px>
     """
 
     if not (isinstance(operators, Operator) or issubclass(operators, Operator) or isinstance(operators, set)):
@@ -135,13 +135,13 @@ def state_to_operators(state, **options):
     >>> from sympy.physics.quantum.cartesian import XKet, PxKet
     >>> from sympy.physics.quantum.operatorset import state_to_operators
     >>> state_to_operators(XKet)
-    <class 'sympy.physics.quantum.cartesian.XOp'>
+    X
     >>> state_to_operators(XKet())
-    <class 'sympy.physics.quantum.cartesian.XOp'>
+    X
     >>> state_to_operators(PxKet)
-    <class 'sympy.physics.quantum.cartesian.PxOp'>
+    Px
     >>> state_to_operators(PxKet())
-    <class 'sympy.physics.quantum.cartesian.PxOp'>
+    Px
     """
 
     if not (isinstance(state, StateBase) or issubclass(state, StateBase)):

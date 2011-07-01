@@ -2,8 +2,8 @@ from sympy.physics.quantum.operatorset import operators_to_state, state_to_opera
 from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
 
 def test_op_to_state():
-    assert operators_to_state(XOp) == XKet
-    assert operators_to_state(PxOp) == PxKet
+    assert operators_to_state(XOp) == XKet()
+    assert operators_to_state(PxOp) == PxKet()
 
     exception = False
     try:
@@ -14,8 +14,8 @@ def test_op_to_state():
     return exception
 
 def test_state_to_op():
-    assert state_to_operators(XKet) == XOp
-    assert state_to_operators(PxKet) == PxOp
+    assert state_to_operators(XKet) == XOp()
+    assert state_to_operators(PxKet) == PxOp()
 
     exception = False
     try:

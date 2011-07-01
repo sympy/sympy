@@ -64,6 +64,13 @@ class XKet(Ket):
     """1D cartesian position eigenket."""
 
     @classmethod
+    def _operators_to_state(self, op, **options):
+        return self.__new__(self, str(op.label[0]).lower(), **options)
+
+    def _state_to_operators(self, op_class, **options):
+        return op_class.__new__(op_class, str(self.label[0]).upper(), **options)
+
+    @classmethod
     def default_args(self):
         return ("x",)
 
@@ -100,6 +107,15 @@ class XBra(Bra):
 
 class PxKet(Ket):
     """1D cartesian momentum eigenket."""
+
+    @classmethod
+    def _operators_to_state(self, op, **options):
+        return self.__new__(self, str(op.label[0]).lower(), **options)
+
+    def _state_to_operators(self, op_class, **options):
+        lab = str(self.label[0])
+        lab = lab[0].upper() + lab[1:]
+        return op_class.__new__(op_class, lab, **options)
 
     @classmethod
     def default_args(self):

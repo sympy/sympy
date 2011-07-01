@@ -244,7 +244,10 @@ def rep_innerproduct(expr, **options):
     if isinstance(basis, BraBase):
         basis = basis.dual
     elif isinstance(basis, Operator):
-        basis = (operators_to_state(basis))()
+        basis = operators_to_state(basis)
+
+        if basis is not None and not isinstance(basis, StateBase):
+            basis = basis()
 
     if not "index" in options:
         options["index"] = 1
@@ -300,10 +303,14 @@ def rep_expectation(expr, **options):
         raise NotImplementedError("Could not get basis kets for this operator")
     elif basis is None:
         basis_state = operators_to_state(expr)
-        basis_kets = enumerate_states(basis_state(), options["index"], 2)
+        if basis_state is not None and not isinstance(basis_state, StateBase):
+            basis_state = basis_state()
+        basis_kets = enumerate_states(basis_state, options["index"], 2)
     else:
         if isinstance(basis, Operator):
-            basis = (operators_to_state(basis))()
+            basis = operators_to_state(basis)
+            if basis is not None and not isinstance(basis, StateBase):
+                basis = basis()
         basis_kets = enumerate_states(basis, options["index"], 2)
 
     bra = basis_kets[1].dual
@@ -365,7 +372,7 @@ def integrate_result(orig_expr, result, **options):
     for coord in coords:
         if coord in result.free_symbols:
             #TODO: Add support for sets of operators
-            basis_op = (state_to_operators(basis))()
+            basis_op = state_to_operators(basis)
             start = basis_op.hilbert_space.interval.start
             end = basis_op.hilbert_space.interval.end
             result = integrate(result, (coord, start, end))
@@ -422,14 +429,19 @@ def get_basis(expr, **options):
         elif isinstance(expr, BraBase):
             return expr.dual_class()
         elif isinstance(expr, Operator):
-            state_class = operators_to_state(expr)
-            return (state_class() if state_class is not None else None)
+            state_inst = operators_to_state(expr)
+            return (state_inst if state_inst is not None else None)
         else:
             return None
     elif (isinstance(basis, Operator) or \
           (not isinstance(basis, StateBase) and issubclass(basis, Operator))):
-        state_class = operators_to_state(basis)
-        return (state_class() if state_class is not None else None)
+        state = operators_to_state(basis)
+        if state is None:
+            return None
+        elif isinstance(state, StateBase):
+            return state
+        else:
+            return state()
     elif isinstance(basis, StateBase):
         return basis
     elif issubclass(basis, StateBase):
