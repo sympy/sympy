@@ -4,6 +4,9 @@ from sympy.statistics import (Die, Bernoulli, Coin, P, E, var, covar, skewness,
         Density)
 
 oo = S.Infinity
+def BayesTest(A,B):
+    assert P(A, B) == P(And(A, B)) / P(B)
+    assert P(A, B) == P(B, A) * P(A) / P(B)
 
 def test_dice():
     d1,d2,d3 = Die(6), Die(6), Die(6)
@@ -39,6 +42,14 @@ def test_dice():
     assert Density(X+Y) == Density(Y+Z) != Density(X+X)
     d = Density(2*X+Y**Z)
     assert d[S(22)] == S.One/108 and d[S(4100)]==S.One/216 and S(3130) not in d
+
+def test_dice_bayes():
+    d1,d2,d3 = Die(6), Die(6), Die(6)
+    X,Y,Z = d1.value, d2.value, d3.value
+
+    BayesTest(X>3, X+Y<5)
+    BayesTest(Eq(X-Y, Z), Z>Y)
+    BayesTest(X>3, X>2)
 
 def test_bernoulli():
     p, a, b = symbols('p a b')
