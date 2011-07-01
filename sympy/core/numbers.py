@@ -887,8 +887,6 @@ class Rational(Number):
 
     def _sage_(self):
         import sage.all as sage
-        #XXX: fixme, this should work:
-        #return sage.Integer(self[0])/sage.Integer(self[1])
         return sage.Integer(self.p)/sage.Integer(self.q)
 
 # int -> Integer
@@ -1551,6 +1549,10 @@ class NegativeInfinity(RationalConstant):
     def _as_mpf_val(self, prec):
         return mlib.fninf
 
+    def _sage_(self):
+        import sage.all as sage
+        return -(sage.oo)
+
     def __gt__(a, b):
         return False
 
@@ -1566,7 +1568,6 @@ class NegativeInfinity(RationalConstant):
 
     def __le__(a, b):
         return True
-
 
 class NaN(RationalConstant):
     __metaclass__ = Singleton
