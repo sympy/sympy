@@ -50,8 +50,12 @@ def test_gamma_series():
         1 - x*EulerGamma + x**2*EulerGamma**2/2 + pi**2*x**2/12 + O(x**3)
 
 def test_lowergamma():
+    from sympy import meijerg
     assert lowergamma(x, y).diff(y) == y**(x-1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
+    assert lowergamma(x, y).diff(x) == \
+           gamma(x)*polygamma(0, x) - uppergamma(x, y)*log(y) \
+           + meijerg([], [1, 1], [0, 0, x], [], y)
 
     assert lowergamma(S.Half, x) == sqrt(pi)*erf(sqrt(x))
     assert not lowergamma(S.Half - 3, x).has(lowergamma)
@@ -63,9 +67,13 @@ def test_lowergamma():
               lowergamma(S.Half - 3, x), x)
 
 def test_uppergamma():
+    from sympy import meijerg
     assert uppergamma(4, 0) == 6
     assert uppergamma(x, y).diff(y) == -y**(x-1)*exp(-y)
     assert td(uppergamma(randcplx(), y), y)
+    assert uppergamma(x, y).diff(x) == \
+           uppergamma(x, y)*log(y) + meijerg([], [1, 1], [0, 0, x], [], y)
+    assert td(uppergamma(x, randcplx()), x)
 
     assert uppergamma(S.Half, x) == sqrt(pi)*(1 - erf(sqrt(x)))
     assert not uppergamma(S.Half - 3, x).has(uppergamma)

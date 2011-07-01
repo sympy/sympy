@@ -130,9 +130,15 @@ class lowergamma(Function):
     nargs = 2
 
     def fdiff(self, argindex=2):
+        from sympy import meijerg
         if argindex == 2:
             a, z = self.args
             return C.exp(-z)*z**(a-1)
+        elif argindex == 1:
+            a, z = self.args
+            return gamma(a)*digamma(a) - log(z)*uppergamma(a, z) \
+                   + meijerg([], [1, 1], [0, 0, a], [], z)
+
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -205,9 +211,13 @@ class uppergamma(Function):
     nargs = 2
 
     def fdiff(self, argindex=2):
+        from sympy import meijerg
         if argindex == 2:
             a, z = self.args
             return -C.exp(-z)*z**(a-1)
+        elif argindex == 1:
+            a, z = self.args
+            return uppergamma(a, z)*log(z) + meijerg([], [1, 1], [0, 0, a], [], z)
         else:
             raise ArgumentIndexError(self, argindex)
 
