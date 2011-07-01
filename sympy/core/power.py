@@ -565,7 +565,7 @@ class Pow(Expr):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_func(self, deep=True, **hints):
         sargs, terms = self.args, []
