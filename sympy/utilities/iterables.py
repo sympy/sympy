@@ -1025,28 +1025,28 @@ def generate_bell(n):
     Examples:
     >>> from sympy.utilities.iterables import generate_bell
     >>> list(generate_bell(3))
-    [(1, 3, 2), (3, 2, 1), (1, 2, 3), (2, 1, 3), (3, 1, 2)]
+    [(1, 2, 3), (1, 3, 2), (2, 1, 3), (3, 1, 2), (3, 2, 1)]
     """
     pi = [i + 1 for i in xrange(n)]
     T = [0]
-    cache = {}
+    cache = set()
     def gen(pi, T, t):
         if t == (n - 1):
-            cache[tuple(pi)] = 1
+            cache.add(tuple(pi))
         else:
             for i in T:
                 pi[i], pi[t+1] = pi[t+1], pi[i]
                 if tuple(pi) not in cache:
-                    cache[tuple(pi)] = 1
+                    cache.add(tuple(pi))
                     gen(pi, T, t + 1)
                 pi[i], pi[t+1] = pi[t+1], pi[i]
             T.append(t + 1)
             if tuple(pi) not in cache:
-                cache[tuple(pi)] = 1
+                cache.add(tuple(pi))
             gen(pi, T, t + 1)
             T.remove(t + 1)
     gen(pi, T, 0)
-    return cache
+    return sorted(cache)
 
 def generate_involutions(n):
     """
@@ -1061,34 +1061,33 @@ def generate_involutions(n):
     >>> from sympy.utilities.iterables import \
     generate_involutions
     >>> generate_involutions(3)
-    {(1, 2, 3): 1, (1, 3, 2): 1, (2, 1, 3): 1, (3, 2, 1): 1}
+    [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
     >>> len(generate_involutions(4))
     10
     """
-    pi = [i + 1 for i in xrange(n)]
-    F = [1]
-    cache = {}
-    def gen(pi, F, t):
+    P = range(n) # the items of the permutation
+    F = [0] # the fixed points {is this right??}
+    cache = set()
+    def gen(P, F, t):
         if t == n:
-            cache[tuple(pi)] = 1
+            cache.add(tuple(P))
         else:
-            for i in F:
-                pi[i - 1], pi[t] = pi[t], pi[i - 1]
-                if tuple(pi) not in cache:
-                    F.remove(i)
-                    cache[tuple(pi)] = 1
-                    gen(pi, F, t + 1)
-                    F.append(i)
-                    F.sort()
-                pi[i - 1], pi[t] = pi[t], pi[i - 1]
-            F.append(t + 1)
-            F.sort()
-            if tuple(pi) not in cache:
-                cache[tuple(pi)] = 1
-            gen(pi, F, t + 1)
-            F.remove(t + 1)
-    gen(pi, F, 1)
-    return cache
+            for j in xrange(len(F)):
+                P[j], P[t] = P[t], P[j]
+                if tuple(P) not in cache:
+                    cache.add(tuple(P))
+                    Fj = F.pop(j)
+                    gen(P, F, t + 1)
+                    F.insert(j, Fj)
+                P[j], P[t] = P[t], P[j]
+            t += 1
+            F.append(t)
+            if tuple(P) not in cache:
+                cache.add(tuple(P))
+            gen(P, F, t)
+            F.pop()
+    gen(P, F, 1)
+    return sorted(cache)
 
 def generate_derangements(perm):
     """
