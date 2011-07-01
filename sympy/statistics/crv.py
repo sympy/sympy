@@ -1,7 +1,7 @@
 from rv import Domain, ProductDomain, PSpace, random_symbols, ProductPSpace
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import integrate, S, Interval, Dummy, FiniteSet, Mul
-
+from sympy.solvers.inequalities import reduce_poly_inequalities
 oo = S.Infinity
 
 class ContinuousDomain(Domain):
@@ -50,6 +50,26 @@ class ContinuousPSpace(PSpace):
     def computeDensity(self, expr):
         z = Dummy('z', real=True)
         return z, self.integrate(DiracDelta(expr - z))
+
+    def P(self, condition):
+        domain = self.where(condition)
+        rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
+        # Integrate out all other random variables
+        z, pdf = self.computeDensity(rv)
+        # Integrate out this last variable over the special domain
+        return integrate(pdf, (z, domain.set))
+
+    def where(self, condition):
+        rvs = frozenset(random_symbols(condition))
+        if not (len(rvs)==1 and rvs.issubset(self.values)):
+            raise NotImplementedError(
+                    "Multiple continuous random variables not supported")
+        rv = tuple(rvs)[0]
+        interval = reduce_poly_inequalities([[condition]], rv, relational=False)
+        return SingleContinuousDomain(rv.symbol, interval)
+
+
+
 
 class SingleContinuousPSpace(ContinuousPSpace):
     def __new__(cls, symbol, density, set=Interval(-oo, oo)):
