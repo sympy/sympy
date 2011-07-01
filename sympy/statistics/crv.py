@@ -1,10 +1,21 @@
 from rv import Domain, ProductDomain, PSpace, random_symbols, ProductPSpace
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import integrate, S, Interval, Dummy, FiniteSet, Mul
+from sympy import S, Interval, Dummy, FiniteSet, Mul, Integral
 from sympy.solvers.inequalities import reduce_poly_inequalities
+from sympy import integrate as sympy_integrate
 oo = S.Infinity
 
+
+def integrate(*args, **kwargs):
+    lazy = kwargs.get('lazy', False)
+    if not lazy:
+        return sympy_integrate(*args)
+    else:
+        return Integral(*args)
+
+
 class ContinuousDomain(Domain):
+    is_continuous = True
     pass
 
 class SingleContinuousDomain(ContinuousDomain):
@@ -26,38 +37,66 @@ class SingleContinuousDomain(ContinuousDomain):
         sym, val = tuple(other)[0]
         return self.symbol == sym and val in self.set
 
-    def integrate(self, expr, variables=None):
-        assert not variables or frozenset(variables) == frozenset(self.symbols)
-        return integrate(expr, (self.symbol, self.set)) # assumes only intervals
+    def integrate(self, expr, variables=None, **kwargs):
+        if variables is None:
+            variables = self.symbols
+        if not variables:
+            return expr
+        assert frozenset(variables) == frozenset(self.symbols)
+        # assumes only intervals
+        return integrate(expr, (self.symbol, self.set), **kwargs)
 
 class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 
-    def integrate(self, expr, variables=None):
-        variables = variables or self.symbols
-        for domain in domains:
-            expr = domain.integrate(expr, variables & domain.symbols)
+    def integrate(self, expr, variables=None, **kwargs):
+        if variables is None:
+            variables = self.symbols
+        for domain in self.domains:
+            domain_vars = frozenset(variables) & frozenset(domain.symbols)
+            if domain_vars:
+                expr = domain.integrate(expr, domain_vars, **kwargs)
         return expr
 
 class ContinuousPSpace(PSpace):
     is_continuous = True
 
-    def integrate(self, expr, rvs=None):
-        rvs = rvs or self.values
+    def integrate(self, expr, rvs=None, **kwargs):
+        if rvs == None:
+            rvs = self.values
+        else:
+            rvs = frozenset(rvs)
+        expr_rvs = frozenset(random_symbols(expr)) & rvs
+
+        # Marginalize out every random variables that aren't in the expression
+        # or aren't in the input list - marginalize every ignored variable
+        inactive_rvs = self.values - expr_rvs # integrated rvs not in expr
+        density = self.domain.integrate(self.density,
+                {rv.symbol for rv in inactive_rvs}, **kwargs)
+
         expr = expr.subs({rv:rv.symbol for rv in rvs})
-        domain_symbols = frozenset(rv.symbol for rv in rvs)
-        return self.domain.integrate(self.density * expr, domain_symbols)
 
-    def computeDensity(self, expr):
+        # Now integrate over rvs found both in the expr and input rvs
+        domain_symbols = frozenset(rv.symbol for rv in expr_rvs)
+
+        return self.domain.integrate(density * expr, domain_symbols, **kwargs)
+
+    def compute_density(self, expr, **kwargs):
+        if expr in self.values:
+            # Marginalize all other random symbols out of the density
+            density = self.domain.integrate(self.density, {rs.symbol
+                for rs in self.values - frozenset((expr,))},  **kwargs)
+            return expr.symbol, density
+
         z = Dummy('z', real=True)
-        return z, self.integrate(DiracDelta(expr - z))
+        return z, self.integrate(DiracDelta(expr - z), **kwargs)
 
-    def P(self, condition):
+    def P(self, condition, **kwargs):
         domain = self.where(condition)
         rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
         # Integrate out all other random variables
-        z, pdf = self.computeDensity(rv)
+        z, pdf = self.compute_density(rv, **kwargs)
         # Integrate out this last variable over the special domain
-        return integrate(pdf, (z, domain.set))
+        return integrate(pdf, (z, domain.set), **kwargs)
 
     def where(self, condition):
         rvs = frozenset(random_symbols(condition))
@@ -68,6 +107,17 @@ class ContinuousPSpace(PSpace):
         interval = reduce_poly_inequalities([[condition]], rv, relational=False)
         return SingleContinuousDomain(rv.symbol, interval)
 
+    def conditional_space(self, condition, normalize=True, **kwargs):
+        condition = condition.subs({rv:rv.symbol for rv in self.values})
+        if condition.is_Equality:
+            domain = self.domain
+            density = self.density * DiracDelta(condition.lhs-condition.rhs)
+            if normalize:
+                density = density / domain.integrate(density, **kwargs)
+        else:
+            NotImplementedError("Only Equality conditions supported")
+
+        return ContinuousPSpace(domain, density)
 
 
 

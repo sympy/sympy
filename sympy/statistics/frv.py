@@ -13,6 +13,7 @@ class CountableDomain(Domain):
         other in self.__iter__()
 
 class FiniteDomain(CountableDomain):
+    is_finite = True
     def __new__(cls, elements):
         elements = FiniteSet(*elements)
         symbols = FiniteSet(sym for sym, val in elements)
@@ -111,7 +112,7 @@ class FinitePSpace(PSpace):
         assert all(r.symbol in self.symbols for r in random_symbols(condition))
         return ConditionalFiniteDomain(condition, self.domain)
 
-    def computeDensity(self, expr):
+    def compute_density(self, expr):
         expr = expr.subs({rs:rs.symbol for rs in self.values})
         d = {}
         for elem in self.domain:

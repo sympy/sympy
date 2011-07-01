@@ -3,6 +3,8 @@ from sympy.core.sets import FiniteSet
 
 class Domain(Basic):
     is_ProductDomain = False
+    is_finite = False
+    is_continuous = False
     def __new__(cls, symbols, *args):
         symbols = FiniteSet(*symbols)
         return Basic.__new__(cls, symbols, *args)
@@ -31,7 +33,7 @@ class PSpace(Basic):
         return self.domain.symbols
     def where(self, condition):
         raise NotImplementedError()
-    def computeDensity(self, expr):
+    def compute_density(self, expr):
         raise NotImplementedError()
     def sample(self):
         raise NotImplementedError()
@@ -99,11 +101,11 @@ class ProductPSpace(PSpace):
     def values(self):
         return sumsets(space.values for space in self.spaces)
 
-    def integrate(self, expr, rvs=None):
+    def integrate(self, expr, rvs=None, **kwargs):
         rvs = rvs or self.values
         rvs = frozenset(rvs)
         for space in self.spaces:
-            expr = space.integrate(expr, rvs & space.values)
+            expr = space.integrate(expr, rvs & space.values, **kwargs)
         return expr
 
     @property
@@ -135,7 +137,12 @@ class ProductDomain(Domain):
         for domain in domains2:
             for symbol in domain.symbols:
                 sym_domain_dict[symbol] = domain
-
+        if all(domain.is_finite for domain in domains2):
+            from sympy.statistics.frv import ProductFiniteDomain
+            cls = ProductFiniteDomain
+        if all(domain.is_continuous for domain in domains2):
+            from sympy.statistics.crv import ProductContinuousDomain
+            cls = ProductContinuousDomain
         obj = Domain.__new__(cls, symbols, domains2)
         obj.sym_domain_dict = sym_domain_dict
         return obj
@@ -195,7 +202,7 @@ def rs_swap(a,b):
         d[rsa] = [rsb for rsb in b if rsa.symbol==rsb.symbol][0]
     return d
 
-def E(expr, given=None):
+def E(expr, given=None, **kwargs):
     rvs = random_symbols(expr)
     if not rvs:
         return expr
@@ -203,38 +210,40 @@ def E(expr, given=None):
         space = pspace(expr)
     else:
         fullspace = pspace(expr+given)
-        space = fullspace.conditional_space(given)
+        space = fullspace.conditional_space(given, **kwargs)
         # Swap the random symbols in the expression
-        expr.subs(rs_swap(fullspace.values, space.values))
-    return space.integrate(expr, rvs)
+        swapdict = rs_swap(fullspace.values, space.values)
+        expr = expr.subs(swapdict)
+        rvs = [swapdict[rv] for rv in rvs]
+    return space.integrate(expr, **kwargs)
 
 
-def P(condition, given=None):
+def P(condition, given=None, **kwargs):
     if given == None:
         space = pspace(condition)
     else:
         fullspace = pspace(condition+given)
-        space = fullspace.conditional_space(given)
+        space = fullspace.conditional_space(given, **kwargs)
         # Swap the random symbols in the expression
-        condition.subs(rs_swap(fullspace.values, space.values))
-    return space.P(condition)
+        condition = condition.subs(rs_swap(fullspace.values, space.values))
+    return space.P(condition, **kwargs)
 
-def Density(expr, given=None):
+def Density(expr, given=None, **kwargs):
     if given == None:
         space = pspace(expr)
     else:
         fullspace = pspace(expr+given)
-        space = fullspace.conditional_space(given)
+        space = fullspace.conditional_space(given, **kwargs)
         # Swap the random symbols in the expression
-        expr.subs(rs_swap(fullspace.values, space.values))
-    return space.computeDensity(expr)
+        expr = expr.subs(rs_swap(fullspace.values, space.values))
+    return space.compute_density(expr, **kwargs)
 
-def Where(condition, given=None):
+def Where(condition, given=None, **kwargs):
     if given == None:
         space = pspace(condition)
     else:
         fullspace = pspace(condition+given)
-        space = fullspace.conditional_space(given)
+        space = fullspace.conditional_space(given, **kwargs)
         # Swap the random symbols in the expression
-        condition.subs(rs_swap(fullspace.values, space.values))
-    return space.where(condition)
+        condition = condition.subs(rs_swap(fullspace.values, space.values))
+    return space.where(condition, **kwargs)
