@@ -3,7 +3,8 @@ from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     flatten, group, take, subsets, variations, cartes, numbered_symbols,
     dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left,
     rotate_right, multiset_partitions, partitions, binary_partitions,
-    generate_bell, generate_involutions)
+    generate_bell, generate_involutions, generate_derangements,
+    unrestricted_necklace)
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
@@ -279,3 +280,24 @@ def test_involutions():
     assert generate_involutions(4) == {(2, 1, 3, 4): 1, (1, 3, 2, 4): 1, \
     (3, 4, 1, 2): 1, (4, 2, 3, 1): 1, (1, 4, 3, 2): 1, (1, 2, 4, 3): 1, \
     (4, 3, 2, 1): 1, (2, 1, 4, 3): 1, (3, 2, 1, 4): 1, (1, 2, 3, 4): 1}
+
+def test_derangements():
+    assert len(list(generate_derangements([0, 1, 2, 3, 4, 5]))) == 265
+    assert list(generate_derangements([0, 1, 2, 3])) == [[1, 0, 3, 2], \
+    [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], [2, 3, 0, 1], [2, 3, 1, 0], \
+    [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
+    assert list(generate_derangements([0, 1, 2, 2])) == [[2, 2, 0, 1], \
+                                                        [2, 2, 1, 0]]
+
+def test_unrestricted_necklaces():
+    assert [i[:] for i in unrestricted_necklace(4, 5)] == [[0, 0, 0, 0], \
+    [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], [0, 0, 4, 0], [0, 1, 1, 1], \
+    [0, 1, 2, 1], [0, 1, 3, 1], [0, 1, 4, 1], [0, 2, 2, 2], [0, 2, 3, 2], \
+    [0, 2, 4, 2], [0, 3, 3, 3], [0, 3, 4, 3], [0, 4, 4, 4]]
+    assert [i[:] for i in unrestricted_necklace(6, 3)] == [[0, 0, 0, 0, 0, 0],\
+    [0, 0, 0, 1, 0, 0], [0, 0, 0, 2, 0, 0], [0, 0, 1, 0, 1, 0], \
+    [0, 0, 1, 1, 0, 1], [0, 0, 1, 2, 0, 1], [0, 0, 2, 0, 2, 0], \
+    [0, 0, 2, 1, 0, 2], [0, 0, 2, 2, 0, 2], [0, 1, 1, 1, 1, 1], \
+    [0, 1, 1, 2, 1, 1], [0, 1, 2, 1, 2, 1], [0, 1, 2, 2, 1, 2], \
+    [0, 2, 2, 2, 2, 2]]
+    assert len(list(unrestricted_necklace(20, 2))) == 111

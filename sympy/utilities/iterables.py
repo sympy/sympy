@@ -2,7 +2,7 @@ from sympy.core import Basic, C
 from sympy.core.compatibility import minkey, iff, all, any #for backwards compatibility
 from sympy.core.compatibility import ordered_iter, iterable #logically, they belong here
 
-import random
+import random, itertools
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -1089,3 +1089,62 @@ def generate_involutions(n):
             F.remove(t + 1)
     gen(pi, F, 1)
     return cache
+
+def generate_derangements(perm):
+    """
+    Routine to generate derangements.
+
+    TODO: This will be rewritten to use the
+    ECO operator approach once the permutations
+    branch is in master.
+
+    Examples:
+    >>> from sympy.utilities.iterables import generate_derangements
+    >>> list(generate_derangements([0,1,2]))
+    [[1, 2, 0], [2, 0, 1]]
+    >>> list(generate_derangements([0,1,2,3]))
+    [[1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], \
+    [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], \
+    [3, 2, 1, 0]]
+    >>> list(generate_derangements([0,1,1]))
+    []
+    """
+    indices = range(len(perm))
+    p = itertools.permutations(indices)
+    for rv in \
+            uniq(tuple(perm[i] for i in idx) \
+                 for idx in p if all(perm[k] != \
+                                     perm[idx[k]] for k in xrange(len(perm)))):
+        yield list(rv)
+
+def unrestricted_necklace(n, k):
+    """
+    A routine to generate unrestriced necklaces.
+
+    Here n is the length of the necklace and k - 1
+    is the maximum permissible element in the
+    generated necklaces.
+
+    Examples:
+    >>> from sympy.utilities.iterables import unrestricted_necklace
+    >>> [i[:] for i in unrestricted_necklace(3, 2)]
+    [[0, 0, 0], [0, 1, 1]]
+    >>> [i[:] for i in unrestricted_necklace(4, 4)]
+    [[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], \
+    [0, 1, 1, 1], [0, 1, 2, 1], [0, 1, 3, 1], [0, 2, 2, 2], \
+    [0, 2, 3, 2], [0, 3, 3, 3]]
+    """
+    a = [0] * n
+    def gen(t, p):
+        if (t > n - 1):
+            if (n % p == 0):
+                yield a
+        else:
+            a[t] = a[t - p]
+            for necklace in gen(t + 1, p):
+                yield necklace
+            for j in xrange(a[t - p] + 1, k):
+                a[t] = j
+                for necklace in gen(t + 1, t):
+                    yield necklace
+    return gen(1, 1)
