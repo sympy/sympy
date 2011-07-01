@@ -1,10 +1,10 @@
 from __future__ import division
-from sympy import S, sqrt, symbols
+from sympy import S, sqrt, Sum, symbols
 from sympy.physics.quantum.cg import Wigner3j, CG, cg_simp
 from sympy.physics.quantum.kronecker import KroneckerDelta
 
 
-def test_cg_simp():
+def test_cg_simp_add():
     j, m1, m1p, m2, m2p = symbols('j m1 m1p m2 m2p')
     # Test Varshalovich 8.7.1 Eq 1
     a = CG(S(1)/2,S(1)/2,0,0,S(1)/2,S(1)/2)
@@ -95,6 +95,22 @@ def test_cg_simp():
     c = CG(S(1)/2,m1,S(1)/2,m2,1,-1)*CG(S(1)/2,m1p,S(1)/2,m2p,1,-1)
     d = CG(S(1)/2,m1,S(1)/2,m2,0,0)*CG(S(1)/2,m1p,S(1)/2,m2p,0,0)
     assert cg_simp(a+b+c+d) == KroneckerDelta(m1,m1p)*KroneckerDelta(m2,m2p)"""
+
+def test_cg_simp_sum():
+    x, a, b, c, cp, alpha, beta, gamma, gammap = symbols('x a b c cp alpha beta gamma gammap')
+    # Varshalovich 8.7.1 Eq 1
+    assert cg_simp(x * Sum(CG(a,alpha,b,0,a,alpha), (alpha,-a,a))) == x*(2*a+1)*KroneckerDelta(b,0)
+    assert cg_simp(x * Sum(CG(a,alpha,b,0,a,alpha), (alpha,-a,a))+CG(1,0,1,0,1,0)) == x*(2*a+1)*KroneckerDelta(b,0)+CG(1,0,1,0,1,0)
+    assert cg_simp(2 * Sum(CG(1,alpha,0,0,1,alpha), (alpha,-1,1))) == 6
+    # Varshalovich 8.7.1 Eq 2
+    assert cg_simp(x*Sum((-1)**(a-alpha) * CG(a,alpha,a,-alpha,c,0), (alpha,-a,a))) == x*sqrt(2*a+1)*KroneckerDelta(c,0)
+    assert cg_simp(3*Sum((-1)**(2-alpha) * CG(2,alpha,2,-alpha,0,0), (alpha,-2,2))) == 3*sqrt(5)
+    # Varshalovich 8.7.2 Eq 4
+    assert cg_simp(Sum(CG(a,alpha,b,beta,c,gamma)*CG(a,alpha,b,beta,cp,gammap),(alpha,-a,a),(beta,-b,b))) == KroneckerDelta(c,cp)*KroneckerDelta(gamma,gammap)
+    assert cg_simp(Sum(CG(a,alpha,b,beta,c,gamma)*CG(a,alpha,b,beta,c,gammap),(alpha,-a,a),(beta,-b,b))) == KroneckerDelta(gamma,gammap)
+    assert cg_simp(Sum(CG(a,alpha,b,beta,c,gamma)*CG(a,alpha,b,beta,cp,gamma),(alpha,-a,a),(beta,-b,b))) == KroneckerDelta(c,cp)
+    assert cg_simp(Sum(CG(a,alpha,b,beta,c,gamma)**2,(alpha,-a,a),(beta,-b,b))) == 1
+    assert cg_simp(Sum(CG(2,alpha,1,beta,2,gamma)*CG(2,alpha,1,beta,2,gammap), (alpha,-2,2), (beta,-1,1))) == KroneckerDelta(gamma,gammap)
 
 def test_doit():
     assert Wigner3j(1/2,-1/2,1/2,1/2,0,0).doit() == -sqrt(2)/2

@@ -4,8 +4,8 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from sympy import AtomicExpr, Add, Mul, Pow, S, sqrt, Sum, sympify
-from sympy.printing.pretty.stringpict import prettyForm
+from sympy import Expr, Add, Function, Mul, Pow, S, sqrt, Sum, symbols, sympify, Wild
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.kronecker import KroneckerDelta
 from sympy.physics.wigner import wigner_3j, clebsch_gordan
@@ -21,7 +21,7 @@ __all__ = [
 # CG Coefficients
 #-----------------------------------------------------------------------------
 
-class Wigner3j(AtomicExpr):
+class Wigner3j(Expr):
     """Class for the Wigner-3j symbols
 
     Wigner 3j-symbols are coefficients determined by the coupling of
@@ -213,7 +213,10 @@ class CG(Wigner3j):
         return s
 
     def _latex(self, printer, *args):
-        return r'C^{%s,%s}_{%s,%s,%s,%s}' % (self.j3, self.m3, self.j1, self.m1, self.j2, self.m2)
+        return r'C^{%s,%s}_{%s,%s,%s,%s}' % \
+            (printer._print(self.j3), printer._print(self.m3),
+            printer._print(self.j1), printer._print(self.m1),
+            printer._print(self.j2), printer._print(self.m2))
 
 
 def cg_simp(e):
@@ -282,6 +285,8 @@ def _cg_simp_add(e):
                 for term in arg.args:
                     if isinstance(term, Pow) and sympify(term.exp).is_number:
                         [ terms.append(term.base) for _ in range(term.exp) ]
+                    elif isinstance(term, Sum):
+                        terms.append(_cg_simp_sum(term))
                     else:
                         terms.append(term)
             elif isinstance(arg, Pow):
@@ -384,11 +389,47 @@ def _cg_simp_add(e):
         i += 1
     return Add(*[Mul(*i) for i in cg_part])+Add(*other_part)
 
-
 #TODO: Implement symbolic simplification of Sum objects
 def _cg_simp_sum(e):
+    e = _check_varsh_sum_871_1(e)
+    e = _check_varsh_sum_871_2(e)
+    e = _check_varsh_sum_872_4(e)
     return e
 
+def _check_varsh_sum_871_1(e):
+    a = Wild('a')
+    alpha = symbols('alpha')
+    b = Wild('b')
+    match = e.match(Sum(CG(a,alpha,b,0,a,alpha),(alpha,-a,a)))
+    if not match is None and len(match) == 2:
+        return (2*match.get(a)+1)*KroneckerDelta(match.get(b),0)
+    return e
+
+def _check_varsh_sum_871_2(e):
+    a = Wild('a')
+    alpha = symbols('alpha')
+    c = Wild('c')
+    match = e.match(Sum((-1)**(a-alpha)*CG(a,alpha,a,-alpha,c,0),(alpha,-a,a)))
+    if not match is None and len(match) == 2:
+        return sqrt(2*match.get(a)+1)*KroneckerDelta(match.get(c),0)
+    return e
+
+def _check_varsh_sum_872_4(e):
+    a = Wild('a')
+    alpha = Wild('alpha')
+    b = Wild('b')
+    beta = Wild('beta')
+    c = Wild('c')
+    cp = Wild('cp')
+    gamma = Wild('gamma')
+    gammap = Wild('gammap')
+    match1 = e.match(Sum(CG(a,alpha,b,beta,c,gamma)*CG(a,alpha,b,beta,cp,gammap),(alpha,-a,a),(beta,-b,b)))
+    if not match1 is None and len(match1) == 8:
+        return KroneckerDelta(match1.get(c),match1.get(cp))*KroneckerDelta(match1.get(gamma),match1.get(gammap))
+    match2 = e.match(Sum(CG(a,alpha,b,beta,c,gamma)**2,(alpha,-a,a),(beta,-b,b)))
+    if not match2 is None and len(match2) == 6:
+        return 1
+    return e
 
 def _check_871_1(cg1, cg2, sign1, sign2):
     cg1 = cg1[0]
