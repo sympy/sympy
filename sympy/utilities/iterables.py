@@ -1061,26 +1061,26 @@ def generate_involutions(n):
     >>> from sympy.utilities.iterables import \
     generate_involutions
     >>> generate_involutions(3)
-    [(1, 2, 3), (1, 3, 2), (2, 1, 3), (3, 2, 1)]
+    [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
     >>> len(generate_involutions(4))
     10
     """
-    pi = range(1, n + 1)
+    pi = range(n)
     F = [1]
     cache = set()
     def gen(pi, F, t):
         if t == n:
             cache.add(tuple(pi))
         else:
-            for i in F:
-                pi[i - 1], pi[t] = pi[t], pi[i - 1]
+            for j, i in enumerate(F):
+                pi[j], pi[t] = pi[t], pi[j]
                 if tuple(pi) not in cache:
                     F.remove(i)
                     cache.add(tuple(pi))
                     gen(pi, F, t + 1)
                     F.append(i)
                     F.sort()
-                pi[i - 1], pi[t] = pi[t], pi[i - 1]
+                pi[j], pi[t] = pi[t], pi[j]
             F.append(t + 1)
             F.sort()
             if tuple(pi) not in cache:
