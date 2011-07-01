@@ -366,6 +366,18 @@ def sig_cmp(u, v, O):
     return 1
 
 
+def sig_key(s, O):
+    """
+    Key for comparing two signatures.
+
+    s = (m, k), t = (n, l)
+
+    s < t iff [k > l] or [k == l and m < n]
+    s > t otherwise
+    """
+    return (-s[1], O(s[0]))
+
+
 def sig_mult(s, m):
     """
     Multiply a signature by a monomial.
@@ -427,6 +439,13 @@ def lbp_cmp(f, g, O):
         #if Num(f) == Num(g):
         #    return 0
     return 1
+
+
+def lbp_key(f, O):
+    """
+    Key for comparing two labeled polynomials.
+    """
+    return (sig_key(Sign(f), O), -Num(f))
 
 # algorithm and helper functions
 
@@ -504,6 +523,13 @@ def cp_cmp(c, d, O):
         #if r == 0:
         #    return 0
     return 1
+
+
+def cp_key(c, O):
+    """
+    Key for comparing critical pairs.
+    """
+    return (lbp_key(lbp(c[0], [], Num(c[2])), O), lbp_key(lbp(c[3], [], Num(c[5])), O))
 
 
 def s_poly(cp, u, O, K):
@@ -656,7 +682,7 @@ def f5b(F, u, O, K, gens='', verbose=False):
 
     # critical pairs
     CP = [critical_pair(B[i], B[j], u, O, K) for i in xrange(len(B)) for j in xrange(i + 1, len(B))]
-    CP.sort(lambda c, d: cp_cmp(c, d, O), reverse=True)
+    CP.sort(key=lambda cp: cp_key(cp, O), reverse=True)
 
     k = len(B)
 
@@ -705,9 +731,7 @@ def f5b(F, u, O, K, gens='', verbose=False):
                     CP.append(cp)
 
             # sort (other sorting methods/selection strategies were not as successful)
-            CP.sort(lambda c, d: cp_cmp(c, d, O), reverse=True)
-            #B.append(p)
-            #B.sort(key=lambda f: O(sdp_LM(Polyn(f), u)), reverse=True)
+            CP.sort(key=lambda cp: cp_key(cp, O), reverse=True)
 
             # insert into B:
             m = sdp_LM(Polyn(p), u)
@@ -812,6 +836,7 @@ def is_reduced(G, u, O, K):
                     return False
 
     return True
+
 
 def monomial_divides(m1, m2):
     """
