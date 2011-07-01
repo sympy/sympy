@@ -12,3 +12,6 @@ class NormalPSpace(SingleContinuousPSpace):
         obj.mean = mean
         obj.variance = var
         return obj
+
+def Normal(mean, variance, symbol=None):
+    return NormalPSpace(mean, variance, symbol).value
