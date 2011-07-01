@@ -402,3 +402,6 @@ def test_issue_2098():
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) is None
     assert solve((x + y)*n - y**2 + 2, x, y) == [(2**(S(1)/2), -2**(S(1)/2))]
     # This solution must not appear: (-2**(1/2), 2**(1/2))
+    y = Symbol('y', positive=True)
+    assert solve(x**2 - y**2/exp(x), x, y) == [x*exp(x/2)]
+    # This solution must not appear: -x*exp(x/2)

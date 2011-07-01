@@ -580,8 +580,12 @@ def solve(f, *symbols, **flags):
                        for symb, val in zip(symbols, s)):
                    filtered.append(s)
             solution = filtered
-        elif len(symbols) == 1:
-            solution = [s for s in solution if check_assumptions(s, **symbols[0].assumptions0) is not False]
+        else:
+            if len(symbols) != 1: # find which one was solved for
+                symbols = list(f.free_symbols - set.union(*(s.free_symbols for s in solution)))
+            if len(symbols) == 1:
+                solution = [s for s in solution
+                              if check_assumptions(s, **symbols[0].assumptions0) is not False]
     elif type(solution) is dict:
         for symb, val in solution.iteritems():
             if check_assumptions(val, **symb.assumptions0) is False: # not None nor True
