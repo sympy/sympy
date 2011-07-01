@@ -1065,27 +1065,28 @@ def generate_involutions(n):
     >>> len(generate_involutions(4))
     10
     """
-    pi = range(n)
-    F = [0]
+    P = range(n) # the items of the permutation
+    F = [0] # the fixed points {is this right??}
     cache = set()
-    def gen(pi, F, t):
+    def gen(P, F, t):
         if t == n:
-            cache.add(tuple(pi))
+            cache.add(tuple(P))
         else:
-            for j, Fi in enumerate(F):
-                pi[j], pi[t] = pi[t], pi[j]
-                if tuple(pi) not in cache:
-                    F.remove(Fi)
-                    cache.add(tuple(pi))
-                    gen(pi, F, t + 1)
-                    F.insert(j, Fi)
-                pi[j], pi[t] = pi[t], pi[j]
-            F.append(t + 1)
-            if tuple(pi) not in cache:
-                cache.add(tuple(pi))
-            gen(pi, F, t + 1)
+            for j in xrange(len(F)):
+                P[j], P[t] = P[t], P[j]
+                if tuple(P) not in cache:
+                    Fj = F.pop(j)
+                    cache.add(tuple(P))
+                    gen(P, F, t + 1)
+                    F.insert(j, Fj)
+                P[j], P[t] = P[t], P[j]
+            t += 1
+            F.append(t)
+            if tuple(P) not in cache:
+                cache.add(tuple(P))
+            gen(P, F, t)
             F.pop()
-    gen(pi, F, 1)
+    gen(P, F, 1)
     return sorted(cache)
 
 def generate_derangements(perm):
