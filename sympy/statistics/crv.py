@@ -81,6 +81,7 @@ class ContinuousPSpace(PSpace):
         return self.domain.integrate(density * expr, domain_symbols, **kwargs)
 
     def compute_density(self, expr, **kwargs):
+        # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
             density = self.domain.integrate(self.density, {rs.symbol
@@ -91,12 +92,23 @@ class ContinuousPSpace(PSpace):
         return z, self.integrate(DiracDelta(expr - z), **kwargs)
 
     def P(self, condition, **kwargs):
-        domain = self.where(condition)
-        rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
-        # Integrate out all other random variables
-        z, pdf = self.compute_density(rv, **kwargs)
-        # Integrate out this last variable over the special domain
-        return integrate(pdf, (z, domain.set), **kwargs)
+        # Univariate case can be handled by where
+        try:
+            domain = self.where(condition)
+            rv = [rv for rv in self.values if rv.symbol == domain.symbol][0]
+            # Integrate out all other random variables
+            z, pdf = self.compute_density(rv, **kwargs)
+            # Integrate out this last variable over the special domain
+            return integrate(pdf, (z, domain.set), **kwargs)
+        # Other cases can be turned into univariate case
+        # by computing a density handled by density computation
+        except NotImplementedError:
+            expr = condition.lhs - condition.rhs
+            val, density = self.compute_density(expr, **kwargs)
+            # Turn problem into univariate case
+            space = SingleContinuousPSpace(val, density)
+            return space.P(condition.__class__(space.value, 0))
+
 
     def where(self, condition):
         rvs = frozenset(random_symbols(condition))
