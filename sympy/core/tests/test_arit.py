@@ -209,6 +209,9 @@ def test_expand():
     assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
     # issue 2383
     assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
+    # issue 2506 (2)
+    assert (cos(x+y)**2).expand(trig=True) == \
+      sin(x)**2*sin(y)**2 - 2*sin(x)*sin(y)*cos(x)*cos(y) + cos(x)**2*cos(y)**2
 
     # Check that this isn't too slow
     x = Symbol('x')
