@@ -373,16 +373,16 @@ def test_sig_key():
     s2 = sig((1,) * 3, 4)
     s3 = sig((2,) * 3, 2)
 
-    assert cmp(sig_key(s1, O_lex), sig_key(s2, O_lex)) == 1
-    assert cmp(sig_key(s2, O_lex), sig_key(s3, O_lex)) == -1
+    assert sig_key(s1, O_lex) > sig_key(s2, O_lex)
+    assert sig_key(s2, O_lex) < sig_key(s3, O_lex)
 
 def test_lbp_key():
     p1 = lbp(sig((0,) * 4, 3), [], 12)
     p2 = lbp(sig((0,) * 4, 4), [], 13)
     p3 = lbp(sig((0,) * 4, 4), [], 12)
 
-    assert cmp(lbp_key(p1, O_lex), lbp_key(p2, O_lex)) == 1
-    assert cmp(lbp_key(p2, O_lex), lbp_key(p3, O_lex)) == -1
+    assert lbp_key(p1, O_lex) > lbp_key(p2, O_lex)
+    assert lbp_key(p2, O_lex) < lbp_key(p3, O_lex)
 
 def test_critical_pair():
     # from cyclic4 with grlex
@@ -406,12 +406,12 @@ def test_cp_key():
     cp1 = critical_pair(p1, q1, 3, O_grlex, QQ)
     cp2 = critical_pair(p2, q2, 3, O_grlex, QQ)
 
-    assert cmp(cp_key(cp1, O_grlex), cp_key(cp2, O_grlex)) == -1
+    assert cp_key(cp1, O_grlex) < cp_key(cp2, O_grlex)
 
     cp1 = critical_pair(p1, p2, 3, O_grlex, QQ)
     cp2 = critical_pair(q1, q2, 3, O_grlex, QQ)
 
-    assert cmp(cp_key(cp1, O_grlex), cp_key(cp2, O_grlex)) == -1
+    assert cp_key(cp1, O_grlex) < cp_key(cp2, O_grlex)
 
 def test_is_rewritable_or_comparable():
     # from katsura4 with grlex
