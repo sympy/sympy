@@ -72,23 +72,14 @@ class Add(AssocOp):
 
             # Mul([...])
             elif o.is_Mul:
-                c = o.args[0]
+                c, s = o.as_coeff_Mul()
 
                 # 3*...
                 if c.is_Number:
                     # unevaluated 2-arg Mul
-                    if len(o.args) == 2 and o.args[1].is_Add and o.args[1].is_commutative:
-                        seq.extend([c*a for a in o.args[1].args])
+                    if s.is_Add and s.is_commutative:
+                        seq.extend([c*a for a in s.args])
                         continue
-
-                    if c is S.One:
-                        s = o
-                    else:
-                        s = o.as_two_terms()[1]
-
-                else:
-                    c = S.One
-                    s = o
 
             # everything else
             else:
