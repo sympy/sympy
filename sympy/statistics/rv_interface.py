@@ -1,4 +1,4 @@
-from rv import P, E, Density, Where#, sample
+from rv import P, E, Density, Where, Given#, sample
 from sympy import sqrt
 
 def variance(X, given=None):

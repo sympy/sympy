@@ -202,48 +202,50 @@ def rs_swap(a,b):
         d[rsa] = [rsb for rsb in b if rsa.symbol==rsb.symbol][0]
     return d
 
-def E(expr, given=None, **kwargs):
-    rvs = random_symbols(expr)
-    if not rvs:
+def Given(expr, given=None, **kwargs):
+    if given is None:
         return expr
-    if given == None:
-        space = pspace(expr)
-    else:
-        fullspace = pspace(expr+given)
-        space = fullspace.conditional_space(given, **kwargs)
-        # Swap the random symbols in the expression
-        swapdict = rs_swap(fullspace.values, space.values)
-        expr = expr.subs(swapdict)
-        rvs = [swapdict[rv] for rv in rvs]
-    return space.integrate(expr, **kwargs)
+
+    # Get full probability space of both the expression and the condition
+    fullspace = pspace(expr+given)
+    # Build new space given the condition
+    space = fullspace.conditional_space(given, **kwargs)
+    # Dictionary to swap out RandomSymbols in expr with new RandomSymbols
+    # That point to the new conditional space
+    swapdict = rs_swap(fullspace.values, space.values)
+    # Swap
+    expr = expr.subs(swapdict)
+    return expr
+
+def E(expr, given=None, **kwargs):
+    if not random_symbols(expr): # expr isn't random?
+        return expr
+    if given is not None: # If there is a condition
+        return E(Given(expr, given), **kwargs) # Create new expr and recompute E
+    # Otherwise case is simple, pass work off to the ProbabilitySpace
+    return pspace(expr).integrate(expr, **kwargs)
 
 
 def P(condition, given=None, **kwargs):
-    if given == None:
-        space = pspace(condition)
-    else:
-        fullspace = pspace(condition+given)
-        space = fullspace.conditional_space(given, **kwargs)
-        # Swap the random symbols in the expression
-        condition = condition.subs(rs_swap(fullspace.values, space.values))
-    return space.P(condition, **kwargs)
+    if given is not None: # If there is a condition
+        # Recompute on new conditional expr
+        return P(Given(condition, given), **kwargs)
+
+    # Otherwise pass work off to the ProbabilitySpace
+    return pspace(condition).P(condition, **kwargs)
 
 def Density(expr, given=None, **kwargs):
-    if given == None:
-        space = pspace(expr)
-    else:
-        fullspace = pspace(expr+given)
-        space = fullspace.conditional_space(given, **kwargs)
-        # Swap the random symbols in the expression
-        expr = expr.subs(rs_swap(fullspace.values, space.values))
-    return space.compute_density(expr, **kwargs)
+    if given is not None: # If there is a condition
+        # Recompute on new conditional expr
+        return Density(Given(expr, given), **kwargs)
+
+    # Otherwise pass work off to the ProbabilitySpace
+    return pspace(expr).compute_density(expr, **kwargs)
 
 def Where(condition, given=None, **kwargs):
-    if given == None:
-        space = pspace(condition)
-    else:
-        fullspace = pspace(condition+given)
-        space = fullspace.conditional_space(given, **kwargs)
-        # Swap the random symbols in the expression
-        condition = condition.subs(rs_swap(fullspace.values, space.values))
-    return space.where(condition, **kwargs)
+    if given is not None: # If there is a condition
+        # Recompute on new conditional expr
+        return Where(Given(condition, given), **kwargs)
+
+    # Otherwise pass work off to the ProbabilitySpace
+    return pspace(condition).where(condition, **kwargs)
