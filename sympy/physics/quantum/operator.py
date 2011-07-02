@@ -96,6 +96,9 @@ class Operator(QExpr):
     [2] http://en.wikipedia.org/wiki/Observable
     """
 
+    @classmethod
+    def default_args(self):
+        return ("O",)
     #-------------------------------------------------------------------------
     # Printing
     #-------------------------------------------------------------------------

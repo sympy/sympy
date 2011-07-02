@@ -63,6 +63,8 @@ def test_ket():
     k = TestKetMultipleLabels()
     assert k == TestKetMultipleLabels("r", "theta", "phi")
 
+    assert Ket() == Ket('psi')
+
 
 def test_bra():
     b = Bra('0')
@@ -89,6 +91,7 @@ def test_bra():
     assert b.dual == Ket(x,y)
     assert b.subs(x,y) == Bra(y,y)
 
+    assert Bra() == Bra('psi')
 
 def test_ops():
     k0 = Ket(0)
@@ -129,6 +132,7 @@ def test_time_dep_ket():
     assert k.time == Symbol("t")
     assert k == TestTimeDepKetMultipleLabels("r", "theta", "phi", "t")
 
+    assert TimeDepKet() == TimeDepKet("psi", "t")
 
 def test_time_dep_bra():
     b = TimeDepBra(0,t)
@@ -149,6 +153,7 @@ def test_time_dep_bra():
     assert k.label == (x,)
     assert k.args == (x,sympify(0.5))
 
+    assert TimeDepBra() == TimeDepBra("psi", "t")
 
 def test_bra_ket_dagger():
     x = symbols('x',complex=True)

@@ -42,6 +42,8 @@ def test_operator():
 
     assert t_op.label[0] == Symbol(t_op.default_args()[0])
 
+    assert Operator() == Operator("O")
+
 
 def test_operator_inv():
     A = Operator('A')

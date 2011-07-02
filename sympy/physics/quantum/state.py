@@ -134,6 +134,10 @@ class KetBase(StateBase):
     rbracket_latex = r'\right\rangle '
 
     @classmethod
+    def default_args(self):
+        return ("psi",)
+
+    @classmethod
     def dual_class(self):
         return BraBase
 
@@ -396,6 +400,10 @@ class TimeDepState(StateBase):
     #-------------------------------------------------------------------------
     # Initialization
     #-------------------------------------------------------------------------
+
+    @classmethod
+    def default_args(self):
+        return ("psi", "t")
 
     #-------------------------------------------------------------------------
     # Properties
