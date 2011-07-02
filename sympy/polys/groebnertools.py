@@ -359,7 +359,7 @@ def sig_cmp(u, v, O):
     if u[1] == v[1]:
         #if u[0] == v[0]:
         #    return 0
-        if cmp(O(u[0]), O(v[0])) < 0:
+        if O(u[0]) < O(v[0]):
             return -1
     return 1
 
@@ -715,11 +715,11 @@ def f5b(F, u, O, K, gens='', verbose=False):
 
             # insert p into B:
             m = sdp_LM(Polyn(p), u)
-            if cmp(m, sdp_LM(Polyn(B[-1]), u)) <= 0:
+            if O(m) <= O(sdp_LM(Polyn(B[-1]), u)):
                 B.append(p)
             else:
                 for i, q in enumerate(B):
-                    if cmp(m, sdp_LM(Polyn(q), u)) > 0:
+                    if O(m) > O(sdp_LM(Polyn(q), u)):
                         B.insert(i, p)
                         break
 

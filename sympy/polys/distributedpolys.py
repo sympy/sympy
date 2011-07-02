@@ -114,18 +114,17 @@ def sdp_add_term(f, term, u, O, K):
 
     monoms = sdp_monoms(f)
 
-    if cmp(O(M), O(monoms[ 0])) > 0:
+    if O(M) > O(monoms[ 0]):
         return [(M, c)] + f
-    if cmp(O(M), O(monoms[-1])) < 0:
+    if O(M) < O(monoms[-1]):
         return f + [(M, c)]
 
     lo, hi = 0, len(monoms) - 1
 
     while lo <= hi:
         i = (lo + hi) // 2
-        j = cmp(O(M), O(monoms[i]))
 
-        if not j:
+        if O(M) == O(monoms[i]):
             coeff = f[i][1] + c
 
             if not coeff:
@@ -133,7 +132,7 @@ def sdp_add_term(f, term, u, O, K):
             else:
                 return f[:i] + [(M, coeff)] + f[i + 1:]
         else:
-            if j > 0:
+            if O(M) > O(monoms[i]):
                 hi = i - 1
             else:
                 lo = i + 1
@@ -151,18 +150,17 @@ def sdp_sub_term(f, term, u, O, K):
 
     monoms = sdp_monoms(f)
 
-    if cmp(O(M), O(monoms[ 0])) > 0:
+    if O(M) > O(monoms[ 0]):
         return [(M, -c)] + f
-    if cmp(O(M), O(monoms[-1])) < 0:
+    if O(M) < O(monoms[-1]):
         return f + [(M, -c)]
 
     lo, hi = 0, len(monoms) - 1
 
     while lo <= hi:
         i = (lo + hi) // 2
-        j = cmp(O(M), O(monoms[i]))
 
-        if not j:
+        if O(M) == O(monoms[i]):
             coeff = f[i][1] - c
 
             if not coeff:
@@ -170,7 +168,7 @@ def sdp_sub_term(f, term, u, O, K):
             else:
                 return f[:i] + [(M, coeff)] + f[i + 1:]
         else:
-            if j > 0:
+            if O(M) > O(monoms[i]):
                 hi = i - 1
             else:
                 lo = i + 1
