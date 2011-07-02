@@ -1027,25 +1027,25 @@ def generate_bell(n):
     >>> list(generate_bell(3))
     [(1, 2, 3), (1, 3, 2), (2, 1, 3), (3, 1, 2), (3, 2, 1)]
     """
-    pi = [i + 1 for i in xrange(n)]
+    P = [i + 1 for i in xrange(n)]
     T = [0]
     cache = set()
-    def gen(pi, T, t):
+    def gen(P, T, t):
         if t == (n - 1):
-            cache.add(tuple(pi))
+            cache.add(tuple(P))
         else:
             for i in T:
-                pi[i], pi[t+1] = pi[t+1], pi[i]
-                if tuple(pi) not in cache:
-                    cache.add(tuple(pi))
-                    gen(pi, T, t + 1)
-                pi[i], pi[t+1] = pi[t+1], pi[i]
+                P[i], P[t+1] = P[t+1], P[i]
+                if tuple(P) not in cache:
+                    cache.add(tuple(P))
+                    gen(P, T, t + 1)
+                P[i], P[t+1] = P[t+1], P[i]
             T.append(t + 1)
-            if tuple(pi) not in cache:
-                cache.add(tuple(pi))
-            gen(pi, T, t + 1)
+            if tuple(P) not in cache:
+                cache.add(tuple(P))
+            gen(P, T, t + 1)
             T.remove(t + 1)
-    gen(pi, T, 0)
+    gen(P, T, 0)
     return sorted(cache)
 
 def generate_involutions(n):
