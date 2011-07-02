@@ -2,7 +2,7 @@ from sympy.core import Basic, C
 from sympy.core.compatibility import minkey, iff, all, any #for backwards compatibility
 from sympy.core.compatibility import ordered_iter, iterable #logically, they belong here
 
-import random
+import random, itertools
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -1017,3 +1017,133 @@ def uniq(seq):
     if isinstance(seq, Tuple):
         return Tuple(*tuple(result))
     return type(seq)(result)
+
+def generate_bell(n):
+    """
+    Generates the bell permutations.
+
+    Examples:
+    >>> from sympy.utilities.iterables import generate_bell
+    >>> list(generate_bell(3))
+    [(1, 2, 3), (1, 3, 2), (2, 1, 3), (3, 1, 2), (3, 2, 1)]
+    """
+    pi = [i + 1 for i in xrange(n)]
+    T = [0]
+    cache = set()
+    def gen(pi, T, t):
+        if t == (n - 1):
+            cache.add(tuple(pi))
+        else:
+            for i in T:
+                pi[i], pi[t+1] = pi[t+1], pi[i]
+                if tuple(pi) not in cache:
+                    cache.add(tuple(pi))
+                    gen(pi, T, t + 1)
+                pi[i], pi[t+1] = pi[t+1], pi[i]
+            T.append(t + 1)
+            if tuple(pi) not in cache:
+                cache.add(tuple(pi))
+            gen(pi, T, t + 1)
+            T.remove(t + 1)
+    gen(pi, T, 0)
+    return sorted(cache)
+
+def generate_involutions(n):
+    """
+    Generates involutions.
+
+    An involution is a permutation that when multiplied
+    by itself equals the identity permutation. In this
+    implementation the involutions are generated using
+    Fixed Points.
+
+    Examples:
+    >>> from sympy.utilities.iterables import \
+    generate_involutions
+    >>> generate_involutions(3)
+    [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
+    >>> len(generate_involutions(4))
+    10
+    """
+    P = range(n) # the items of the permutation
+    F = [0] # the fixed points {is this right??}
+    cache = set()
+    def gen(P, F, t):
+        if t == n:
+            cache.add(tuple(P))
+        else:
+            for j in xrange(len(F)):
+                P[j], P[t] = P[t], P[j]
+                if tuple(P) not in cache:
+                    cache.add(tuple(P))
+                    Fj = F.pop(j)
+                    gen(P, F, t + 1)
+                    F.insert(j, Fj)
+                P[j], P[t] = P[t], P[j]
+            t += 1
+            F.append(t)
+            if tuple(P) not in cache:
+                cache.add(tuple(P))
+            gen(P, F, t)
+            F.pop()
+    gen(P, F, 1)
+    return sorted(cache)
+
+def generate_derangements(perm):
+    """
+    Routine to generate derangements.
+
+    TODO: This will be rewritten to use the
+    ECO operator approach once the permutations
+    branch is in master.
+
+    Examples:
+    >>> from sympy.utilities.iterables import generate_derangements
+    >>> list(generate_derangements([0,1,2]))
+    [[1, 2, 0], [2, 0, 1]]
+    >>> list(generate_derangements([0,1,2,3]))
+    [[1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], \
+    [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], \
+    [3, 2, 1, 0]]
+    >>> list(generate_derangements([0,1,1]))
+    []
+    """
+    indices = range(len(perm))
+    p = itertools.permutations(indices)
+    for rv in \
+            uniq(tuple(perm[i] for i in idx) \
+                 for idx in p if all(perm[k] != \
+                                     perm[idx[k]] for k in xrange(len(perm)))):
+        yield list(rv)
+
+def unrestricted_necklace(n, k):
+    """
+    A routine to generate unrestriced necklaces.
+
+    Here n is the length of the necklace and k - 1
+    is the maximum permissible element in the
+    generated necklaces.
+
+    Examples:
+    >>> from sympy.utilities.iterables import unrestricted_necklace
+    >>> [i[:] for i in unrestricted_necklace(3, 2)]
+    [[0, 0, 0], [0, 1, 1]]
+    >>> [i[:] for i in unrestricted_necklace(4, 4)]
+    [[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], \
+    [0, 1, 1, 1], [0, 1, 2, 1], [0, 1, 3, 1], [0, 2, 2, 2], \
+    [0, 2, 3, 2], [0, 3, 3, 3]]
+    """
+    a = [0] * n
+    def gen(t, p):
+        if (t > n - 1):
+            if (n % p == 0):
+                yield a
+        else:
+            a[t] = a[t - p]
+            for necklace in gen(t + 1, p):
+                yield necklace
+            for j in xrange(a[t - p] + 1, k):
+                a[t] = j
+                for necklace in gen(t + 1, t):
+                    yield necklace
+    return gen(1, 1)
