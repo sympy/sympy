@@ -9,6 +9,11 @@ from compatibility import reduce
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
+    # This determines if it is allowed to take derivatives wrt this type of
+    # object. Subclasses such as Symbol should set this to True to enable
+    # derivatives wrt them.
+    _diff_wrt = False
+
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work
         from sympy.core import S

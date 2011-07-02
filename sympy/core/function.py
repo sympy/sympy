@@ -156,6 +156,9 @@ class Function(Application, Expr):
 
     """
 
+    # Allow derivatives wrt functions.
+    _diff_wrt = True
+
     @cacheit
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
@@ -526,7 +529,7 @@ functions are not supported.')
                 nargs = self.nargs
             if not (1<=argindex<=nargs):
                 raise ArgumentIndexError(self, argindex)
-        if not self.args[argindex-1].is_Symbol:
+        if not self.args[argindex-1]._diff_wrt:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
             return Subs(Derivative(
@@ -627,6 +630,9 @@ class Derivative(Expr):
 
     is_Derivative   = True
 
+    # Allow derivatives wrt derivatives.
+    _diff_wrt = True
+
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)
 
@@ -641,25 +647,29 @@ class Derivative(Expr):
         if not symbols[-1].is_Integer or len(symbols) == 1:
             symbols.append(S.One)
         symbol_count = []
+        non_symbol_count = []
         all_zero = True
         i = 0
         while i < len(symbols) - 1: # process up to final Integer
             s, count = symbols[i: i+2]
             iwas = i
-            if s.is_Symbol or (isinstance(s, Expr) and not s.is_Number):
+            if s._diff_wrt:
                 # We need to test the more specific case of count being an
                 # Integer first.
                 if count.is_Integer:
                     count = int(count)
                     i += 2
-                elif count.is_Symbol or isinstance(count, Expr):
+                elif count._diff_wrt:
                     count = 1
                     i += 1
 
             if i == iwas: # didn't get an update because of bad input
                 raise ValueError('Derivative expects Symbol [, Integer] args but got %s, %s' % (s, count))
 
-            symbol_count.append((s, count))
+            if s.is_Symbol:
+                symbol_count.append((s, count))
+            else:
+                non_symbol_count.append((s, count))
             if all_zero and not count == 0:
                 all_zero = False
 
@@ -668,26 +678,28 @@ class Derivative(Expr):
         if all_zero:
             return expr
 
+        evaluate = assumptions.pop('evaluate', False)
+
         # Now handle symbols that are not symbols by temporarily making them
         # Symbols, doing the derivative and then subbing back.
-        back_subs = []
-        forward_subs = []
-        for i in range(len(symbol_count)):
-            s, count = symbol_count[i]
-            if not s.is_Symbol:
-                new_s = C.Symbol('symbol_subs_%i' % i)
-                forward_subs.append((s, new_s))
-                back_subs.append((new_s, s))
-                symbol_count[i] = (new_s, count)
-        if back_subs and forward_subs:
-            symbols = []
-            for s, count in symbol_count:
-                symbols.append(s)
-                symbols.append(sympify(count))
-            obj = Expr.__new__(cls, expr.subs(forward_subs), *symbols, **assumptions)
-            return obj.subs(back_subs).doit()
-
-        evaluate = assumptions.pop('evaluate', False)
+        if non_symbol_count:
+            if evaluate:
+                back_subs = []
+                forward_subs = []
+                non_symbols = []
+                for i in range(len(non_symbol_count)):
+                    s, count = non_symbol_count[i]
+                    new_s = C.Symbol('symbol_subs_%i' % i)
+                    forward_subs.append((s, new_s))
+                    back_subs.append((new_s, s))
+                    non_symbol_count[i] = (new_s, count)
+                    non_symbols.append(new_s)
+                    non_symbols.append(sympify(count))
+                assumptions['evaluate'] = True
+                obj = Derivative(expr.subs(forward_subs), *non_symbols, **assumptions)
+                expr = obj.subs(back_subs)
+            else:
+                symbol_count = symbol_count + non_symbol_count
 
         # look for a quick exit if there are symbols that are not in the free symbols
         if evaluate:

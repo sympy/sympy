@@ -31,6 +31,9 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
 
+    # Allow derivatives wrt symbols.
+    _diff_wrt = True
+
     def __new__(cls, name, commutative=True, **assumptions):
         """Symbols are identified by name and assumptions::
 
