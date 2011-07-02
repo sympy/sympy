@@ -743,7 +743,7 @@ class SpinState(State):
 
     def _eval_innerproduct_JzBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
-        if not issubclass(bra.dual_class, self.__class__):
+        if not issubclass(bra.dual_class(), self.__class__):
             result *= self._represent_JzOp(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.m, bra.m)
@@ -756,7 +756,7 @@ class JxKet(SpinState, Ket):
     See JzKet for the usage of spin eigenstates.
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return JxBra
 
@@ -779,7 +779,7 @@ class JxBra(SpinState, Bra):
     See JzKet for the usage of spin eigenstates.
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return JxKet
 
@@ -790,7 +790,7 @@ class JyKet(SpinState, Ket):
     See JzKet for the usage of spin eigenstates.
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return JyBra
 
@@ -813,7 +813,7 @@ class JyBra(SpinState, Bra):
     See JzKet for the usage of spin eigenstates.
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return JyKet
 
@@ -872,7 +872,7 @@ class JzKet(SpinState, Ket):
 
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return JzBra
 
@@ -895,6 +895,6 @@ class JzBra(SpinState, Bra):
     See the JzKet for the usage of spin eigenstates.
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return JzKet

@@ -239,7 +239,7 @@ def rep_innerproduct(expr, **options):
         raise TypeError("expr passed is not a Bra or Ket")
 
     #If the basis is not specified, simply use default states of the same class as expr
-    basis = options.pop('basis', (expr.__class__() if isinstance(expr, KetBase) else expr.dual_class()))
+    basis = options.pop('basis', (expr.__class__() if isinstance(expr, KetBase) else (expr.dual_class())()))
 
     if isinstance(basis, BraBase):
         basis = basis.dual
@@ -427,7 +427,7 @@ def get_basis(expr, **options):
         if isinstance(expr, KetBase):
             return expr.__class__()
         elif isinstance(expr, BraBase):
-            return expr.dual_class()
+            return (expr.dual_class())()
         elif isinstance(expr, Operator):
             state_inst = operators_to_state(expr)
             return (state_inst if state_inst is not None else None)

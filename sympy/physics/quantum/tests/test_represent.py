@@ -27,7 +27,7 @@ Avec = Matrix([[1],[I]])
 
 class AKet(Ket):
 
-    @property
+    @classmethod
     def dual_class(self):
         return ABra
 
@@ -40,7 +40,7 @@ class AKet(Ket):
 
 class ABra(Bra):
 
-    @property
+    @classmethod
     def dual_class(self):
         return AKet
 

@@ -83,9 +83,9 @@ class StateBase(QExpr):
     @property
     def dual(self):
         """Return the dual state of this one."""
-        return self.dual_class._new_rawargs(self.hilbert_space, *self.args)
+        return self.dual_class()._new_rawargs(self.hilbert_space, *self.args)
 
-    @property
+    @classmethod
     def dual_class(self):
         """Return the class used to construt the dual."""
         raise NotImplementedError(
@@ -133,7 +133,7 @@ class KetBase(StateBase):
     lbracket_latex = r'\left|'
     rbracket_latex = r'\right\rangle '
 
-    @property
+    @classmethod
     def dual_class(self):
         return BraBase
 
@@ -206,7 +206,19 @@ class BraBase(StateBase):
     lbracket_latex = r'\left\langle '
     rbracket_latex = r'\right|'
 
-    @property
+    @classmethod
+    def _operators_to_state(self, ops, **options):
+        state = self.dual_class().operators_to_state(ops, **options)
+        return state.dual
+
+    def _state_to_operators(self, op_classes, **options):
+        return self.dual._state_to_operators(op_classes, **options)
+
+    @classmethod
+    def default_args(self):
+        return self.dual_class().default_args()
+
+    @classmethod
     def dual_class(self):
         return KetBase
 
@@ -274,7 +286,7 @@ class Ket(State, KetBase):
 
         >>> k.dual
         <psi|
-        >>> k.dual_class
+        >>> k.dual_class()
         <class 'sympy.physics.quantum.state.Bra'>
 
     Take a linear combination of two kets::
@@ -297,7 +309,7 @@ class Ket(State, KetBase):
     [1] http://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return Bra
 
@@ -334,7 +346,7 @@ class Bra(State, BraBase):
 
         >>> b.dual
         |psi>
-        >>> b.dual_class
+        >>> b.dual_class()
         <class 'sympy.physics.quantum.state.Ket'>
 
     Like Kets, Bras can have compound labels and be manipulated in a similar
@@ -356,7 +368,7 @@ class Bra(State, BraBase):
     [1] http://en.wikipedia.org/wiki/Bra-ket_notation
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return Ket
 
@@ -475,11 +487,11 @@ class TimeDepKet(TimeDepState, KetBase):
 
         >>> k.dual
         <psi;t|
-        >>> k.dual_class
+        >>> k.dual_class()
         <class 'sympy.physics.quantum.state.TimeDepBra'>
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return TimeDepBra
 
@@ -516,7 +528,7 @@ class TimeDepBra(TimeDepState, BraBase):
         |psi;t>
     """
 
-    @property
+    @classmethod
     def dual_class(self):
         return TimeDepKet
 

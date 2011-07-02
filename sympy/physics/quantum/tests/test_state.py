@@ -53,7 +53,7 @@ def test_ket():
     assert k.hilbert_space == HilbertSpace()
     assert k.is_commutative == False
 
-    assert k.dual_class == Bra
+    assert k.dual_class() == Bra
     assert k.dual == Bra(x,y)
     assert k.subs(x,y) == Ket(y,y)
 
@@ -85,7 +85,7 @@ def test_bra():
     assert b.hilbert_space == HilbertSpace()
     assert b.is_commutative == False
 
-    assert b.dual_class == Ket
+    assert b.dual_class() == Ket
     assert b.dual == Ket(x,y)
     assert b.subs(x,y) == Bra(y,y)
 
@@ -110,7 +110,7 @@ def test_time_dep_ket():
     assert k.args == (Integer(0),t)
     assert k.time == t
 
-    assert k.dual_class == TimeDepBra
+    assert k.dual_class() == TimeDepBra
     assert k.dual == TimeDepBra(0,t)
 
     assert k.subs(t,2) == TimeDepKet(0,2)
@@ -142,7 +142,7 @@ def test_time_dep_bra():
     assert b.args == (Integer(0),t)
     assert b.time == t
 
-    assert b.dual_class == TimeDepKet
+    assert b.dual_class() == TimeDepKet
     assert b.dual == TimeDepKet(0,t)
 
     k = TimeDepBra(x, 0.5)

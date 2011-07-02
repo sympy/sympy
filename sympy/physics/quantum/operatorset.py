@@ -155,8 +155,8 @@ def state_to_operators(state, **options):
             ret = state_mapping[state]
     elif type(state) in state_mapping:
         ret = _get_ops(state, _tuple_to_set(state_mapping[type(state)]), **options)
-    elif isinstance(state, BraBase) and state.dual_class in state_mapping:
-        ret = _get_ops(state, _tuple_to_set(state_mapping[state.dual_class]))
+    elif (isinstance(state, BraBase) or issubclass(state, BraBase)) and state.dual_class() in state_mapping:
+        ret = _get_ops(state, _tuple_to_set(state_mapping[state.dual_class()]))
     else:
         ret = None
 

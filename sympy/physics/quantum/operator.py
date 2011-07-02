@@ -305,7 +305,7 @@ class OuterProduct(Operator):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
-        if not ket.dual_class == bra.__class__:
+        if not ket.dual_class() == bra.__class__:
             raise TypeError(
                 'ket and bra are not dual classes: %r, %r' % \
                 (ket.__class__, bra.__class__)

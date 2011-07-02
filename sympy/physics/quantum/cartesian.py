@@ -74,7 +74,7 @@ class XKet(Ket):
     def default_args(self):
         return ("x",)
 
-    @property
+    @classmethod
     def dual_class(self):
         return XBra
 
@@ -96,7 +96,7 @@ class XBra(Bra):
     def default_args(self):
         return ("x",)
 
-    @property
+    @classmethod
     def dual_class(self):
         return XKet
 
@@ -121,7 +121,7 @@ class PxKet(Ket):
     def default_args(self):
         return ("px",)
 
-    @property
+    @classmethod
     def dual_class(self):
         return PxBra
 
@@ -150,7 +150,7 @@ class PxBra(Bra):
     def default_args(self):
         return ("px",)
 
-    @property
+    @classmethod
     def dual_class(self):
         return PxKet
 
