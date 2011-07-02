@@ -2541,15 +2541,27 @@ class Matrix(object):
         return any(a.has(*patterns) for a in self.mat)
 
     def set_domain(self, domain):
+        '''
+        Sets the domain of the given matrix to 'domain'
+        Does NOT convert elements to 'domain'.
+        '''
         self.domain = domain
         self.one = self.domain(1)
         self.zero = self.domain(0)
 
     def to_domain(self, domain):
+        '''
+        Sets the domain of the matrix to 'domain' and
+        converts all the elements to domain
+        '''
         self.set_domain(domain)
         self = self.applyfunc(self.domain)
 
     def _iszero(self, x):
+        '''
+        A Matrix object specific zero equivalence test.
+        self.zero here is the zero element of the domain of the matrix
+        '''
         return x == self.zero
 
 def matrix_multiply(A, B):
