@@ -88,10 +88,10 @@ class Matrix(object):
         [0, 2]
 
         """
-        self.type = sympify
-        if 'type' in kwargs:
-            self.type = kwargs['type']
-        self.set_type(self.type)
+        self.domain = S
+        if 'domain' in kwargs:
+            self.domain = kwargs['domain']
+        self.set_domain(self.domain)
         if len(args) == 3 and callable(args[2]):
             operation = args[2]
             self.rows = int(args[0])
@@ -99,14 +99,14 @@ class Matrix(object):
             self.mat = []
             for i in range(self.rows):
                 for j in range(self.cols):
-                    self.mat.append(self.type(operation(i, j)))
+                    self.mat.append(self.domain(operation(i, j)))
         elif len(args)==3 and ordered_iter(args[2]):
             self.rows=args[0]
             self.cols=args[1]
             mat = args[2]
             if len(mat) != len(self):
                 raise ValueError('List length should be equal to rows*columns')
-            self.mat = map(lambda i: self.type(i), mat)
+            self.mat = map(lambda i: self.domain(i), mat)
         elif len(args) == 1:
             mat = args[0]
             if isinstance(mat, Matrix):
@@ -121,18 +121,18 @@ class Matrix(object):
                 arr = mat.__array__()
                 if len(arr.shape) == 2:
                     self.rows, self.cols = arr.shape[0], arr.shape[1]
-                    self.mat = map(lambda i: self.type(i), arr.ravel())
+                    self.mat = map(lambda i: self.domain(i), arr.ravel())
                     return
                 elif len(arr.shape) == 1:
                     self.rows, self.cols = 1, arr.shape[0]
                     self.mat = [0]*self.cols
                     for i in xrange(len(arr)):
-                        self.mat[i] = self.type(arr[i])
+                        self.mat[i] = self.domain(arr[i])
                     return
                 else:
                     raise NotImplementedError("Sympy supports just 1D and 2D matrices")
             elif not ordered_iter(mat, include=Matrix):
-                raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
+                raise TypeError("Matrix constructor doesn't accept %s as input" % str(domain(mat)))
             mat = []
             for row in args[0]:
                 if isinstance(row, Matrix):
@@ -143,7 +143,7 @@ class Matrix(object):
             if len(mat) != 0:
                 if not ordered_iter(mat[0]):
                     self.cols = 1
-                    self.mat = map(lambda i: self.type(i), mat)
+                    self.mat = map(lambda i: self.domain(i), mat)
                     return
                 self.cols = len(mat[0])
             else:
@@ -154,7 +154,7 @@ class Matrix(object):
                     raise ValueError("Input %s inconsistant to form a Matrix." %
                         args)
                 for i in xrange(self.cols):
-                    self.mat.append(self.type(mat[j][i]))
+                    self.mat.append(self.domain(mat[j][i]))
         elif len(args) == 0:
             # Empty Matrix
             self.rows = self.cols = 0
@@ -192,14 +192,14 @@ class Matrix(object):
         a = [0]*len(self)
         for i in xrange(self.cols):
             a[i*self.rows:(i+1)*self.rows] = self.mat[i::self.cols]
-        return Matrix(self.cols,self.rows,a, type=self.type)
+        return Matrix(self.cols,self.rows,a, domain=self.domain)
 
     T = property(transpose,None,None,"Matrix transposition.")
 
     def conjugate(self):
         """By-element conjugation."""
         out = Matrix(self.rows,self.cols,
-                lambda i,j: self[i,j].conjugate(), type=self.type)
+                lambda i,j: self[i,j].conjugate(), domain=self.domain)
         return out
 
     C = property(conjugate,None,None,"By-element conjugation.")
@@ -319,7 +319,7 @@ class Matrix(object):
                 if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
                     raise IndexError("Index out of range: a[%s]" % (key,))
                 else:
-                    self.mat[i*self.cols + j] = self.type(value)
+                    self.mat[i*self.cols + j] = self.domain(value)
                     return
 
         else:
@@ -329,7 +329,7 @@ class Matrix(object):
             else:
                 k = a2idx(key)
                 if k is not None:
-                    self.mat[k] = self.type(value)
+                    self.mat[k] = self.domain(value)
                     return
         raise IndexError("Invalid index: a[%s]"%repr(key))
 
@@ -372,12 +372,12 @@ class Matrix(object):
 
         for i in range(value.rows):
             for j in range(value.cols):
-                self[i+rlo, j+clo] = self.type(value[i,j])
+                self[i+rlo, j+clo] = self.domain(value[i,j])
 
     def copyin_list(self, key, value):
         if not ordered_iter(value):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
-        self.copyin_matrix(key, Matrix(value, type=self.type))
+        self.copyin_matrix(key, Matrix(value, domain=self.domain))
 
     def hash(self):
         """Compute a hash every time, because the matrix elements
@@ -391,20 +391,20 @@ class Matrix(object):
     def __rmul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(a,self)
-        a = self.type(a)
-        out = Matrix(self.rows,self.cols,map(lambda i: a * i, self.mat), type=self.type)
+        a = self.domain(a)
+        out = Matrix(self.rows,self.cols,map(lambda i: a * i, self.mat), domain=self.domain)
         return out
 
     def expand(self):
-        out = Matrix(self.rows,self.cols,map(lambda i: i.expand(), self.mat), type=self.type)
+        out = Matrix(self.rows,self.cols,map(lambda i: i.expand(), self.mat), domain=self.domain)
         return out
 
     def combine(self):
-        out = Matrix(self.rows,self.cols,map(lambda i: i.combine(),self.mat), type=self.type)
+        out = Matrix(self.rows,self.cols,map(lambda i: i.combine(),self.mat), domain=self.domain)
         return out
 
     def subs(self, *args):
-        out = Matrix(self.rows,self.cols,map(lambda i: i.subs(*args),self.mat), type=self.type)
+        out = Matrix(self.rows,self.cols,map(lambda i: i.subs(*args),self.mat), domain=self.domain)
         return out
 
     def __sub__(self,a):
@@ -413,7 +413,7 @@ class Matrix(object):
     def __mul__(self,a):
         if hasattr(a, "__array__") and a.shape != ():
             return matrix_multiply(self,a)
-        out = Matrix(self.rows,self.cols,map(lambda i: i*a,self.mat), type=self.type)
+        out = Matrix(self.rows,self.cols,map(lambda i: i*a,self.mat), domain=self.domain)
         return out
 
     def __pow__(self, num):
@@ -464,7 +464,7 @@ class Matrix(object):
         return matrix_add(self,b)
 
     def __neg__(self):
-        return self.type(-1) * self
+        return self.domain(-1) * self
 
     def __eq__(self, a):
         if not isinstance(a, (Matrix, Basic)):
@@ -690,7 +690,7 @@ class Matrix(object):
         Helper function of function diagonal_solve,
         without the error checks, to be used privately.
         """
-        return Matrix(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i], type=self.type)
+        return Matrix(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i], domain=self.domain)
 
     def LDLsolve(self, rhs):
         """
@@ -962,7 +962,7 @@ class Matrix(object):
         outMat = [0]*outLines*outCols
         for i in xrange(outLines):
             outMat[i*outCols:(i+1)*outCols] = self.mat[(i+rlo)*self.cols+clo:(i+rlo)*self.cols+chi]
-        return Matrix(outLines,outCols,outMat, type=self.type)
+        return Matrix(outLines,outCols,outMat, domain=self.domain)
 
     def extract(self, rowsList, colsList):
         """
@@ -991,7 +991,7 @@ class Matrix(object):
             raise IndexError("Row indices out of range")
         if not all(j < cols for j in colsList):
             raise IndexError("Column indices out of range")
-        return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]], type=self.type)
+        return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]], domain=self.domain)
 
     def slice2bounds(self, key, defmax):
         """
@@ -1034,7 +1034,7 @@ class Matrix(object):
         if not callable(f):
             raise TypeError("`f` must be callable.")
 
-        out = Matrix(self.rows,self.cols,map(f,self.mat), type=self.type)
+        out = Matrix(self.rows,self.cols,map(f,self.mat), domain=self.domain)
         return out
 
     def evalf(self, prec=None, **options):
@@ -1060,7 +1060,7 @@ class Matrix(object):
         """
         if len(self) != _rows*_cols:
             print "Invalid reshape parameters %d %d" % (_rows, _cols)
-        return Matrix(_rows, _cols, lambda i,j: self.mat[i*_cols + j], type=self.type)
+        return Matrix(_rows, _cols, lambda i,j: self.mat[i*_cols + j], domain=self.domain)
 
     def print_nonzero (self, symb="X"):
         """
@@ -1226,7 +1226,7 @@ class Matrix(object):
 
     def cofactorMatrix(self, method="berkowitz"):
         out = Matrix(self.rows, self.cols, lambda i,j:
-                self.cofactor(i, j, method), type=self.type)
+                self.cofactor(i, j, method), domain=self.domain)
         return out
 
     def minorEntry(self, i, j, method="berkowitz"):
@@ -1565,7 +1565,7 @@ class Matrix(object):
     def zeros(self, dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
         n, m = _dims_to_nm( dims )
-        return Matrix(n,m,[self.zero]*n*m, type=self.type)
+        return Matrix(n,m,[self.zero]*n*m, domain=self.domain)
 
     def eye(self, n):
         """Returns the identity matrix of size n."""
@@ -1892,7 +1892,7 @@ class Matrix(object):
                         except:
                             M[i, j] = D
 
-            det = self.type(sign) * M[n-1, n-1]
+            det = self.domain(sign) * M[n-1, n-1]
         try:
             return det.expand()
         except:
@@ -2087,7 +2087,7 @@ class Matrix(object):
 
             transforms[k-1] = T
 
-        polys = [ Matrix([A.one, -A[0,0]], type = A.type) ]
+        polys = [ Matrix([A.one, -A[0,0]], domain = A.domain) ]
 
         for i, T in enumerate(transforms):
             polys.append(T * polys[i])
@@ -2193,13 +2193,13 @@ class Matrix(object):
             raise AttributeError("Matrix has no attribute %s." % attr)
 
     def integrate(self, *args):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].integrate(*args), type=self.type)
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].integrate(*args), domain=self.domain)
 
     def limit(self, *args):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].limit(*args), type=self.type)
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].limit(*args), domain=self.domain)
 
     def diff(self, *args):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].diff(*args), type=self.type)
+        return Matrix(self.rows, self.cols, lambda i, j: self[i, j].diff(*args), domain=self.domain)
 
     def vec(self):
         """
@@ -2217,7 +2217,7 @@ class Matrix(object):
         [4]
 
         """
-        return Matrix(len(self), 1, self.transpose().mat, type=self.type)
+        return Matrix(len(self), 1, self.transpose().mat, domain=self.domain)
 
     def vech(self, diagonal=True, check_symmetry=True):
         """
@@ -2350,7 +2350,7 @@ class Matrix(object):
             if self._eigenvects == None:
                 self._eigenvects = self.eigenvects()
             diagvals = []
-            P = Matrix(self.rows, 0, [], type=self.type)
+            P = Matrix(self.rows, 0, [], domain=self.domain)
             for eigenval, multiplicity, vects in self._eigenvects:
                 for k in range(multiplicity):
                     diagvals.append(eigenval)
@@ -2540,14 +2540,14 @@ class Matrix(object):
         """
         return any(a.has(*patterns) for a in self.mat)
 
-    def set_type(self, type):
-        self.type = type
-        self.one = self.type(1)
-        self.zero = self.type(0)
+    def set_domain(self, domain):
+        self.domain = domain
+        self.one = self.domain(1)
+        self.zero = self.domain(0)
 
-    def to_type(self, type):
-        self.set_type(type)
-        self = self.applyfunc(self.type)
+    def to_domain(self, domain):
+        self.set_domain(domain)
+        self = self.applyfunc(self.domain)
 
     def _iszero(self, x):
         return x == self.zero
@@ -2596,7 +2596,7 @@ def matrix_multiply(A, B):
                                         reduce(lambda k, l: k+l,
                                         map(lambda n, m: n*m,
                                         alst[i],
-                                        blst[j])), type=A.type)
+                                        blst[j])), domain=A.domain)
 
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
@@ -2612,7 +2612,7 @@ def matrix_multiply_elementwise(A, B):
         raise ShapeError()
     shape = A.shape
     return Matrix(shape[0], shape[1],
-        lambda i, j: A[i,j] * B[i, j], type=A.type)
+        lambda i, j: A[i,j] * B[i, j], domain=A.domain)
 
 def matrix_add(A,B):
     """Return A+B"""
@@ -2623,7 +2623,7 @@ def matrix_add(A,B):
     ret = [0]*A.shape[0]
     for i in xrange(A.shape[0]):
         ret[i] = map(lambda j,k: j+k, alst[i], blst[i])
-    return Matrix(ret, type=A.type)
+    return Matrix(ret, domain=A.domain)
 
 def zeros(dims, zero=S.Zero):
     """Create zero matrix of dimensions dims = (d1,d2)"""
@@ -2728,13 +2728,13 @@ def jordan_cell(eigenval, n):
     out[n-1, n-1] = eigenval
     return out
 
-def randMatrix(r,c,min=0,max=99,seed=[], type=sympify):
+def randMatrix(r,c,min=0,max=99,seed=[], domain=S):
     """Create random matrix r x c"""
     if seed == []:
         prng = random.Random()  # use system time
     else:
         prng = random.Random(seed)
-    return Matrix(r,c,lambda i,j: prng.randint(min,max), type=type)
+    return Matrix(r,c,lambda i,j: prng.randint(min,max), domain=domain)
 
 def hessian(f, varlist):
     """Compute Hessian matrix for a function f
@@ -2855,10 +2855,10 @@ class SparseMatrix(Matrix):
     """Sparse matrix"""
 
     def __init__(self, *args, **kwargs):
-        self.type = sympify
+        self.domain = S
         if 'typify' in kwargs:
-            self.type = kwargs['type']
-        self.set_type(self.type)
+            self.domain = kwargs['domain']
+        self.set_domain(self.domain)
         if len(args) == 3 and callable(args[2]):
             op = args[2]
             if not isinstance(args[0], (int, Integer)) or not isinstance(args[1], (int, Integer)):
@@ -2868,7 +2868,7 @@ class SparseMatrix(Matrix):
             self.mat = {}
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = self.type(op(i,j))
+                    value = self.domain(op(i,j))
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
@@ -2879,7 +2879,7 @@ class SparseMatrix(Matrix):
             self.mat = {}
             for i in range(self.rows):
                 for j in range(self.cols):
-                    value = self.type(mat[i*self.cols+j])
+                    value = self.domain(mat[i*self.cols+j])
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
@@ -2904,7 +2904,7 @@ class SparseMatrix(Matrix):
                 if len(mat[i]) != self.cols:
                     raise ValueError("All arguments must have the same length.")
                 for j in range(self.cols):
-                    value = self.type(mat[i][j])
+                    value = self.domain(mat[i][j])
                     if value != 0:
                         self.mat[(i,j)] = value
 
@@ -2960,7 +2960,7 @@ class SparseMatrix(Matrix):
                 self.copyin_list(key, value)
         else:
             i,j=self.key2ij(key)
-            testval = self.type(value)
+            testval = self.domain(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
             elif (i,j) in self.mat:
