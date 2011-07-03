@@ -162,6 +162,7 @@ def test_Subs():
     y = Symbol('y')
     z = Symbol('z')
     f = Function('f')
+    g = Function('g')
 
     assert Subs(f(x), x, 0).doit() == f(0)
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
@@ -204,6 +205,8 @@ def test_Subs():
     assert e1 + e2 == 2*e1
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
+    assert Derivative(f(x),x).subs(x,g(x)) == Derivative(f(g(x)),g(x))
+
 
 @XFAIL
 def test_Subs2():
@@ -440,6 +443,8 @@ def test_diff_wrt():
         Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x) +\
         Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x)
     assert f(sin(x)).diff(x) == Derivative(f(sin(x)),sin(x))*cos(x)
+
+    assert diff(f(g(x)),g(x)) == Derivative(f(g(x)),g(x))
 
 def test_klein_gordon_lagrangian():
     x = Symbol('x')

@@ -862,7 +862,10 @@ class Derivative(Expr):
     def _eval_subs(self, old, new):
         if self==old:
             return new
-        if old in self.variables and not new.is_Symbol:
+        # Subs should only be used in situations where new is not a valid
+        # variable for differentiating wrt. Previously, Subs was used for
+        # anything that was not a Symbol, but that was too broad.
+        if old in self.variables and not new._diff_wrt:
             # Issue 1620
             return Subs(self, old, new)
         return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
