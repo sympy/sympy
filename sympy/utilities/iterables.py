@@ -1022,6 +1022,13 @@ def generate_bell(n):
     """
     Generates the bell permutations.
 
+    In a Bell permutation, each cycle is a decreasing
+    sequence of integers.
+
+    Reference:
+    [1] Generating involutions, derangements, andrelatives by ECO
+        V. Vajnovszki, DMTCS vol. 12:1, 2010, 109–122
+
     Examples:
     >>> from sympy.utilities.iterables import generate_bell
     >>> list(generate_bell(3))
@@ -1056,6 +1063,13 @@ def generate_involutions(n):
     by itself equals the identity permutation. In this
     implementation the involutions are generated using
     Fixed Points.
+
+    Alternatively, an involution can be considered as
+    a permutation that does not contain any cycles with
+    a length that is greater than two.
+
+    Reference:
+    http://mathworld.wolfram.com/PermutationInvolution.html
 
     Examples:
     >>> from sympy.utilities.iterables import \
@@ -1123,6 +1137,9 @@ def unrestricted_necklace(n, k):
     Here n is the length of the necklace and k - 1
     is the maximum permissible element in the
     generated necklaces.
+
+    Reference:
+    http://mathworld.wolfram.com/Necklace.html
 
     Examples:
     >>> from sympy.utilities.iterables import unrestricted_necklace
