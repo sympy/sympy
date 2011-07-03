@@ -10,8 +10,11 @@ class Expr(Basic, EvalfMixin):
     __slots__ = []
 
     # This determines if it is allowed to take derivatives wrt this type of
-    # object. Subclasses such as Symbol should set this to True to enable
-    # derivatives wrt them.
+    # object. Subclasses such as Symbol, Function and Derivative should set
+    # this to True to enable derivatives wrt them. The implementation in
+    # Derivative separates the Symbol and non-Symbol diff_wrt=True variables
+    # and temporarily converts the non-Symbol vars in Symbols when performing
+    # the differentiation.
     _diff_wrt = False
 
     def sort_key(self, order=None):

@@ -1,7 +1,7 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma,
-        Tuple, Dummy)
+        Tuple, Dummy, Eq)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
 from sympy.core.function import PoleError
@@ -412,10 +412,53 @@ def test_diff_wrt():
     x = Symbol('x')
     f = Function('f')
     g = Function('g')
+    h = Function('h')
+    fx = f(x)
+    dfx = diff(f(x),x)
+    ddfx = diff(f(x),x,x)
+
+    assert diff(sin(fx)+fx**2, fx) == cos(fx)+2*fx
+    assert diff(sin(dfx)+dfx**2, dfx) == cos(dfx)+2*dfx
+    assert diff(sin(ddfx)+ddfx**2, ddfx) == cos(ddfx)+2*ddfx
+    assert diff(fx**2, dfx) == 0
+    assert diff(fx**2, ddfx) == 0
+    assert diff(dfx**2, fx) == 0
+    assert diff(dfx**2, ddfx) == 0
+    assert diff(ddfx**2, dfx) == 0
+
+    assert diff(fx*dfx*ddfx, fx) == dfx*ddfx
+    assert diff(fx*dfx*ddfx, dfx) == fx*ddfx
+    assert diff(fx*dfx*ddfx, ddfx) == fx*dfx
 
     assert diff(f(x), x).diff(f(x)) == 0
     assert (sin(f(x)) - cos(diff(f(x), x))).diff(f(x)) == cos(f(x))
-    assert f(g(x)).diff(x) == \
+
+    # Chain rule cases
+    assert f(g(x)).diff(x) ==\
         Derivative(f(g(x)),g(x))*Derivative(g(x),x)
+    assert diff(f(g(x),h(x)),x) ==\
+        Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x) +\
+        Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x)
     assert f(sin(x)).diff(x) == Derivative(f(sin(x)),sin(x))*cos(x)
 
+def test_klein_gordon_lagrangian():
+    x = Symbol('x')
+    t = Symbol('t')
+    m = Symbol('m')
+    phi = Function('phi')(x,t)
+
+    L = -(diff(phi,t)**2 - diff(phi,x)**2 - m**2*phi**2)/2
+    eqna = Eq(diff(L,phi) - diff(L,diff(phi,x),x) - diff(L,diff(phi,t),t), 0)
+    eqnb = Eq(diff(phi,t,t) - diff(phi,x,x) + m**2*phi, 0)
+    assert eqna == eqnb
+
+def test_sho_lagrangian():
+    t = Symbol('t')
+    m = Symbol('m')
+    k = Symbol('k')
+    x = Function('x')(t)
+
+    L = m*diff(x,t)**2/2 - k*x**2/2
+    eqna = Eq(diff(L,x), diff(L,diff(x,t),t))
+    eqnb = Eq(-k*x, m*diff(x,t,t))
+    assert eqna == eqnb

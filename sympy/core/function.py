@@ -620,12 +620,37 @@ class Derivative(Expr):
     list of differentiation symbols will be sorted, that is, the expression is
     assumed to have continuous derivatives up to the order asked.
 
-    Examples:
+    This class also allows derivatives wrt non-Symbols that have _diff_wrt
+    set to True, such as Function and Derivative. When a derivative wrt a non-
+    Symbol is attempts, the non-Symbol is termporarily converted to a Symbol
+    while the differentiation is performed.
 
-    Derivative(Derivative(expr, x), y) -> Derivative(expr, x, y)
-    Derivative(expr, x, 3)  -> Derivative(expr, x, x, x)
-    Derivative(f(x, y), y, x, evaluate=True) -> Derivative(f(x, y), x, y)
+    Examples
+    ========
 
+    Some basic examples:
+
+        >>> from sympy import Derivative, Symbol, Function
+        >>> f = Function('f')
+        >>> g = Function('g')
+        >>> x = Symbol('x')
+        >>> y = Symbol('y')
+
+        >>> Derivative(x**2, x, evaluate=True)
+        2*x
+        >>> Derivative(Derivative(f(x,y), x), y)
+        Derivative(f(x, y), x, y)
+        >>> Derivative(f(x), x, 3)
+        Derivative(f(x), x, x, x)
+        >>> Derivative(f(x, y), y, x, evaluate=True)
+        Derivative(f(x, y), x, y)
+
+    Now some derivatives wrt functions:
+
+        >>> Derivative(f(x)**2, f(x), evaluate=True)
+        2*f(x)
+        >>> Derivative(f(g(x)), x, evaluate=True)
+        Derivative(f(g(x)), g(x))*Derivative(g(x), x)
     """
 
     is_Derivative   = True
