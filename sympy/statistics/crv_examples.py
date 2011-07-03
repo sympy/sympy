@@ -4,14 +4,15 @@ from crv import SingleContinuousPSpace
 class NormalPSpace(SingleContinuousPSpace):
     _count = 0
     _name = 'x'
-    def __new__(cls, mean, var, symbol = None):
+    def __new__(cls, mean, std, symbol = None):
 
         x = symbol or cls.create_symbol()
-        pdf = exp(-(x-mean)**2 / (2*var)) / (sqrt(2*pi*var))
+        pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         obj.mean = mean
-        obj.variance = var
+        obj.std = std
+        obj.variance = std**2
         return obj
 
-def Normal(mean, variance, symbol=None):
-    return NormalPSpace(mean, variance, symbol).value
+def Normal(mean, std, symbol=None):
+    return NormalPSpace(mean, std, symbol).value
