@@ -462,3 +462,11 @@ def test_sho_lagrangian():
     eqna = Eq(diff(L,x), diff(L,diff(x,t),t))
     eqnb = Eq(-k*x, m*diff(x,t,t))
     assert eqna == eqnb
+
+def test_straight_line():
+    x = Symbol('x')
+    f = Function('f')(x)
+
+    L = sqrt(1 + diff(f,x)**2)
+    assert diff(L,f) == 0
+    assert diff(L, diff(f,x)) == diff(f,x)/sqrt(1 + diff(f,x)**2)
