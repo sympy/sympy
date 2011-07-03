@@ -8,13 +8,34 @@ class Domain(Basic):
     def __new__(cls, symbols, *args):
         symbols = FiniteSet(*symbols)
         return Basic.__new__(cls, symbols, *args)
+
     @property
     def symbols(self):
         return self.args[0]
+    @property
+    def set(self):
+        return self.args[1]
+
     def __contains__(self, other):
         raise NotImplementedError()
     def integrate(self, expr):
         raise NotImplementedError()
+
+class SingleDomain(Domain):
+    def __new__(cls, symbol, set):
+        assert symbol.is_Symbol
+        symbols = FiniteSet(symbol)
+        return Domain.__new__(cls, symbols, set)
+
+    @property
+    def symbol(self):
+        return tuple(self.symbols)[0]
+
+    def __contains__(self, other):
+        if len(other)!=1:
+            return False
+        sym, val = tuple(other)[0]
+        return self.symbol == sym and val in self.set
 
 class PSpace(Basic):
     is_finite = None
