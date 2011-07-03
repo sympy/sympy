@@ -178,6 +178,24 @@ def gray_to_bin(bin_list):
 
     return list(b)
 
+def bin_to_gray(bin_list):
+    """
+    Convert from binary coding to gray coding.
+
+    We assume big endian encoding.
+
+    Examples:
+    >>> from sympy.combinatorics.graycode import bin_to_gray
+    >>> bin_to_gray(['1','1','1'])
+    ['1', '0', '0']
+    """
+    b = bin_list[0]
+    for i in xrange(0, len(bin_list) - 1):
+        b += str(int(bin_list[i]) ^ int(b[i - 1]))
+
+    return list(b)
+
+
 def get_subset_from_bitlist(super_set, bitlist):
     """
     Gets the subset defined by the bitlist.
