@@ -247,8 +247,6 @@ def test_deriv1():
     g = Function('g')
     x = Symbol('x')
 
-    # assert f(g(x)).diff(x) == Derivative(g(x), x)*Subs(Derivative(f(x), x),
-    #         Tuple(x), Tuple(g(x)))
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
     assert (f(2*x)**3).diff(x) == 6*f(2*x)**2*Subs(Derivative(f(x), x), Tuple(x),
@@ -257,8 +255,6 @@ def test_deriv1():
     assert f(2+x).diff(x) == Subs(Derivative(f(x), x), Tuple(x), Tuple(x + 2))
     assert f(2+3*x).diff(x) == 3*Subs(Derivative(f(x), x), Tuple(x),
             Tuple(3*x + 2))
-    # assert f(sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), Tuple(x),
-    #         Tuple(sin(x)))
     assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(Derivative(f(x), x),
             Tuple(x), Tuple(3*sin(x)))
 
@@ -386,7 +382,7 @@ def test_fdiff_argument_index_error():
     assert mf.diff(x) == Derivative(mf, x)
     raises(ValueError, 'myfunc(x, x)')
 
-def test_functional_deriv():
+def test_deriv_wrt_function():
     t = Symbol('t')
     xfunc = Function('x')
     yfunc = Function('y')
@@ -396,6 +392,7 @@ def test_functional_deriv():
     y = yfunc(t)
     yd = diff(y, t)
     ydd = diff(yd, t)
+
     assert diff(x, t) == xd
     assert diff(2 * x + 4, t) == 2 * xd
     assert diff(2 * x + 4 + y, t) == 2 * xd + yd
@@ -410,4 +407,15 @@ def test_functional_deriv():
     assert diff(sin(x), t) == xd * cos(x)
     assert diff(exp(x), t) == xd * exp(x)
     assert diff(sqrt(x), t) == xd / (2 * sqrt(x))
+
+def test_diff_wrt():
+    x = Symbol('x')
+    f = Function('f')
+    g = Function('g')
+
+    assert diff(f(x), x).diff(f(x)) == 0
+    assert (sin(f(x)) - cos(diff(f(x), x))).diff(f(x)) == cos(f(x))
+    assert f(g(x)).diff(x) == \
+        Derivative(f(g(x)),g(x))*Derivative(g(x),x)
+    assert f(sin(x)).diff(x) == Derivative(f(sin(x)),sin(x))*cos(x)
 
