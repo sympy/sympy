@@ -101,6 +101,18 @@ class StrPrinter(Printer):
     def _print_factorial(self, expr):
         return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
 
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        try:
+            printset = sorted(printset)
+        except:  pass
+        return '{' + ', '.join(self._print(el) for el in printset) + '}'
+
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)"%self.stringify(expr.args, ", ")
 
@@ -418,6 +430,9 @@ class StrPrinter(Printer):
 
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)"%(expr.a, expr.b)
+
+    def _print_Union(self, expr):
+        return ' U '.join(self._print(set) for set in expr.args)
 
     def _print_Unit(self, expr):
         return expr.abbrev
