@@ -65,7 +65,7 @@ from sympy.mpmath import (
 )
 
 from sympy.utilities import (
-    any, all, group,
+    any, all, group, flatten,
 )
 
 from sympy.ntheory import isprime
@@ -5318,7 +5318,7 @@ def groebner(F, *gens, **args):
         poly = poly.set_domain(opt.domain).rep.to_dict()
         polys[i] = sdp_from_dict(poly, opt.order)
 
-    level = len(gens)-1
+    level = len(flatten(gens)) - 1
 
     G = sdp_groebner(polys, level, opt.order, opt.domain)
     G = [ Poly._from_dict(dict(g), opt) for g in G ]
