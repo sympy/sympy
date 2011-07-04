@@ -96,6 +96,8 @@ def test_euler_gamma():
 def test_oo():
     assert sympy.sympify(sage.oo) == sympy.oo
     assert sage.oo == sage.SR(sympy.oo)
+    assert sympy.sympify(-sage.oo) == -sympy.oo
+    assert -sage.oo == sage.SR(-sympy.oo)
 
 def test_NaN():
     assert sympy.sympify(sage.NaN) == sympy.nan
