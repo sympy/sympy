@@ -4,7 +4,7 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from sympy import Expr, Add, Function, Mul, Pow, S, sqrt, Sum, symbols, sympify, Wild
+from sympy import Expr, Add, Function, Mul, Pow, sqrt, Sum, symbols, sympify, Wild
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.kronecker import KroneckerDelta
@@ -53,29 +53,33 @@ class Wigner3j(Expr):
 
     [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
     """
+    def __new__(cls, j1, m1, j2, m2, j3, m3):
+        j1,m1,j2,m2,j3,m3 = map(sympify, (j1,m1,j2,m2,j3,m3))
+        return Expr.__new__(cls, j1, m1, j2, m2, j3, m3)
+
     @property
     def j1(self):
-        return S(self.args[0])
+        return self.args[0]
 
     @property
     def m1(self):
-        return S(self.args[1])
+        return self.args[1]
 
     @property
     def j2(self):
-        return S(self.args[2])
+        return self.args[2]
 
     @property
     def m2(self):
-        return S(self.args[3])
+        return self.args[3]
 
     @property
     def j3(self):
-        return S(self.args[4])
+        return self.args[4]
 
     @property
     def m3(self):
-        return S(self.args[5])
+        return self.args[5]
 
     @property
     def is_symbolic(self):
@@ -469,7 +473,7 @@ def _cg_list(arg_list):
             cg.append(term)
         elif isinstance(term, Pow):
             terms = []
-            if isinstance(term.base, CG) and S(term.exp).is_number:
+            if isinstance(term.base, CG) and sympify(term.exp).is_number:
                 [ cg.append(term.base) for i in range(term.exp) ]
         else:
             coeff *= term
