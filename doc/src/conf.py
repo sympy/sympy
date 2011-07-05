@@ -12,10 +12,9 @@
 # serve to show the default value.
 
 import sys
-import os
 
 # If your extensions are in another directory, add it here.
-sys.path.extend(['../sympy', 'ext', os.path.abspath('.')])
+sys.path.extend(['../sympy', 'ext'])
 
 # General configuration
 # ---------------------
