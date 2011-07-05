@@ -77,10 +77,10 @@ def test_cg_simp_add():
     assert cg_simp(-6*a+6*b) == -6*sqrt(2)*KroneckerDelta(j,0)
     assert cg_simp(-4*c+4*d-4*e) == -4*sqrt(3)*KroneckerDelta(j,0)
     # Test Varshalovich 8.7.2 Eq 9
-    a = CG(S(1)/2,S(1)/2,S(1)/2,-S(1)/2,1,0)*CG(S(1)/2,S(1)/2,S(1)/2,-S(1)/2,1,0)
-    b = CG(S(1)/2,S(1)/2,S(1)/2,-S(1)/2,0,0)*CG(S(1)/2,S(1)/2,S(1)/2,-S(1)/2,0,0)
-    c = CG(1,0,1,1,1,1)*CG(1,0,1,1,1,1)
-    d = CG(1,0,1,1,2,1)*CG(1,0,1,1,2,1)
+    a = CG(S(1)/2,S(1)/2,S(1)/2,-S(1)/2,1,0)**2
+    b = CG(S(1)/2,S(1)/2,S(1)/2,-S(1)/2,0,0)**2
+    c = CG(1,0,1,1,1,1)**2
+    d = CG(1,0,1,1,2,1)**2
     assert cg_simp(a+b) == 1
     assert cg_simp(c+d) == 1
     assert cg_simp(a+b+c+d) == 2
