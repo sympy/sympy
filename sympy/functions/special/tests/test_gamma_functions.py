@@ -74,6 +74,8 @@ def test_lowergamma():
     assert tn(lowergamma(S.Half - 3, x, evaluate=False),
               lowergamma(S.Half - 3, x), x)
 
+    assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
+
 def test_uppergamma():
     from sympy import meijerg
     assert uppergamma(4, 0) == 6
@@ -91,6 +93,8 @@ def test_uppergamma():
               uppergamma(S.Half + 3, x), x)
     assert tn(uppergamma(S.Half - 3, x, evaluate=False),
               uppergamma(S.Half - 3, x), x)
+
+    assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
 
 def test_polygamma():
 
