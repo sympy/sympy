@@ -924,13 +924,13 @@ class Subs(Expr):
     >>> f = Function('f')
     >>> e = Subs(f(x).diff(x), x, y)
     >>> e.subs(y, 0)
-    Subs(Derivative(f(_x), _x), Tuple(_x), Tuple(0))
+    Subs(Derivative(f(_x), _x), (_x,), (0,))
     >>> e.subs(f, sin).doit()
     cos(y)
 
     An example with several variables:
     >>> Subs(f(x)*sin(y)+z, (x, y), (0, 1))
-    Subs(z + f(_x)*sin(_y), Tuple(_x, _y), Tuple(0, 1))
+    Subs(z + f(_x)*sin(_y), (_x, _y), (0, 1))
     >>> _.doit()
     z + f(0)*sin(1)
 

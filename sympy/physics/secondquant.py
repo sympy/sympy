@@ -162,9 +162,9 @@ class AntiSymmetricTensor(TensorSymbol):
     >>> i, j = symbols('i j', below_fermi=True)
     >>> a, b = symbols('a b', above_fermi=True)
     >>> AntiSymmetricTensor('v', (a, i), (b, j))
-    AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+    AntiSymmetricTensor(v, (a, i), (b, j))
     >>> AntiSymmetricTensor('v', (i, a), (b, j))
-    -AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+    -AntiSymmetricTensor(v, (a, i), (b, j))
 
     As you can see, the indices are automatically sorted to a canonical form.
 
@@ -234,7 +234,7 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i,j', below_fermi=True)
         >>> a, b = symbols('a,b', above_fermi=True)
         >>> AntiSymmetricTensor('v', (a, i), (b, j))
-        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        AntiSymmetricTensor(v, (a, i), (b, j))
         >>> AntiSymmetricTensor('v', (a, i), (b, j)).symbol
         v
 
@@ -253,9 +253,9 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i,j', below_fermi=True)
         >>> a, b = symbols('a,b', above_fermi=True)
         >>> AntiSymmetricTensor('v', (a, i), (b, j))
-        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        AntiSymmetricTensor(v, (a, i), (b, j))
         >>> AntiSymmetricTensor('v', (a, i), (b, j)).upper
-        Tuple(a, i)
+        (a, i)
 
 
         """
@@ -273,9 +273,9 @@ class AntiSymmetricTensor(TensorSymbol):
         >>> i, j = symbols('i,j', below_fermi=True)
         >>> a, b = symbols('a,b', above_fermi=True)
         >>> AntiSymmetricTensor('v', (a, i), (b, j))
-        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        AntiSymmetricTensor(v, (a, i), (b, j))
         >>> AntiSymmetricTensor('v', (a, i), (b, j)).lower
-        Tuple(b, j)
+        (b, j)
 
         """
         return self.args[2]
@@ -1214,7 +1214,7 @@ class FermionState(FockState):
         >>> p = Symbol('p')
 
         >>> FKet([]).up(a)
-        FockStateFermionKet(Tuple(a))
+        FockStateFermionKet((a,))
 
         A creator acting on vacuum below fermi vanishes
         >>> FKet([]).up(i)
@@ -1266,7 +1266,7 @@ class FermionState(FockState):
         >>> FKet([]).down(i)
         0
         >>> FKet([],4).down(i)
-        FockStateFermionKet(Tuple(i))
+        FockStateFermionKet((i,))
 
         """
         present = i in self.args[0]

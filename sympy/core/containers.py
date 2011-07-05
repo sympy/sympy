@@ -20,9 +20,9 @@ class Tuple(Basic):
     >>> from sympy.core.containers import Tuple
     >>> a, b, c, d = symbols('a b c d')
     >>> Tuple(a, b, c)[1:]
-    Tuple(b, c)
+    (b, c)
     >>> Tuple(a, b, c).subs(a, d)
-    Tuple(d, b, c)
+    (d, b, c)
 
     """
 
@@ -87,7 +87,7 @@ def tuple_wrapper(method):
     The decorated function g sees only the Tuple argument:
 
     >>> g(0, (1, 2), 3)
-    (0, Tuple(1, 2), 3)
+    (0, (1, 2), 3)
 
     """
     def wrap_tuples(*args, **kw_args):
