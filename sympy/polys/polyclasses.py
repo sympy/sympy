@@ -495,7 +495,7 @@ class DMP(object):
 
     def total_degree(f):
         """Returns the total degree of `f`. """
-        return sum(dmp_degree_list(f.rep, f.lev))
+        return max([sum(m) for m in f.monoms()])
 
     def LC(f):
         """Returns the leading coefficent of `f`. """
