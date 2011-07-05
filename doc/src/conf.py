@@ -24,7 +24,7 @@ sys.path.extend(['../sympy', 'ext'])
 extensions = ['sphinx.ext.autodoc', 'mathjax']
 
 # MathJax file, which is free to use.  See https://bitbucket.org/kevindunn/sphinx-extension-mathjax/wiki/Home
-mathjax_path = 'http://mathjax.connectmv.com/MathJax.js'
+mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
