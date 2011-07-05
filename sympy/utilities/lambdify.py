@@ -183,6 +183,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     implementations in other namespaces, unless the ``use_imps`` input
     parameter is False.
     """
+    from sympy.core.symbol import Symbol
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
         # Use either numpy (if available) or python.math where possible.
@@ -210,10 +211,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         buf = _get_namespace(m)
         namespace.update(buf)
 
-    if hasattr(expr, "atoms") :
+    if hasattr(expr, "atoms"):
         #Try if you can extract symbols from the expression.
         #Move on if expr.atoms in not implemented.
-        syms = expr.atoms()
+        syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
 
