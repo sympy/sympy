@@ -1,4 +1,7 @@
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
+                       MeijerShiftA, MeijerShiftB, MeijerShiftC, MeijerShiftD,
+                       MeijerUnShiftA, MeijerUnShiftB, MeijerUnShiftC,
+                       MeijerUnShiftD,
                        ReduceOrder, reduce_order, apply_operators,
                        devise_plan, make_derivative_operator, Formula,
                        hyperexpand, IndexPair, IndexQuadruple,
@@ -132,6 +135,33 @@ def test_formulae():
         deriv2 = formula.M * formula.B
         for d1, d2 in zip(deriv1, deriv2):
             assert tn(d1.subs(rep), d2.subs(rep), z)
+
+def test_meijerg_formulae():
+    from sympy.simplify.hyperexpand import MeijerFormulaCollection
+    formulae = MeijerFormulaCollection().formulae
+    for sig in formulae:
+        for formula in formulae[sig]:
+          g = meijerg(formula.indices.an, formula.indices.ap,
+                      formula.indices.bm, formula.indices.bq,
+                      formula.z)
+          rep = {}
+          for sym in formula.symbols:
+              rep[sym] = randcplx()
+
+          # first test if the closed-form is actually correct
+          g = g.subs(rep)
+          closed_form = formula.closed_form.subs(rep)
+          z = formula.z
+          assert tn(g, closed_form, z)
+          #print closed_form
+
+          # now test the computed matrix
+          cl = (formula.C * formula.B)[0].subs(rep)
+          assert tn(closed_form, cl, z)
+          deriv1 = z*formula.B.diff(z)
+          deriv2 = formula.M * formula.B
+          for d1, d2 in zip(deriv1, deriv2):
+              assert tn(d1.subs(rep), d2.subs(rep), z)
 
 def op(f): return z*f.diff(z)
 
@@ -302,6 +332,16 @@ def test_meijerg_expand():
                   (z*(1 - 1/z**2)/2, abs(1/z) < 1),
                   (meijerg([0, 2], [], [], [-1, 1], z), True))
 
+def test_meijerg_lookup():
+    from sympy import uppergamma
+    assert hyperexpand(meijerg([a], [], [b, a], [], z)) == \
+           z**b*exp(z)*gamma(-a + b + 1)*uppergamma(a - b, z)
+    assert hyperexpand(meijerg([0], [], [0, 0], [], z)) == \
+           exp(z)*uppergamma(0, z)
+    assert can_do_meijer([a], [], [b, a+1], [])
+    assert can_do_meijer([a], [], [b+2, a], [])
+    assert can_do_meijer([a], [], [b-2, a], [])
+
 @XFAIL
 def test_meijerg_expand_fail():
     # These basically test hyper([], [1/2 - a, 1/2 + 1, 1/2], z),
@@ -351,6 +391,34 @@ def test_meijerg():
     assert niq.bm == (b1,)
     assert set(niq.bq) == set([b3, b4])
     assert tn(apply_operators(g, ops, op), meijerg(an, ap, bm, bq, z), z)
+
+def test_meijerg_shift_operators():
+    # carefully set up the parameters. XXX this still fails sometimes
+    a1, a2 = map(lambda _: randcplx() - 5*I, range(2))
+    b1, b2 = map(lambda _: randcplx() + 5*I, range(2))
+    b3, b4, b5, a3, a4, a5 = map(lambda _: randcplx(), range(6))
+    g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
+
+    assert tn(MeijerShiftA(b1).apply(g, op),
+              meijerg([a1], [a3, a4], [b1 + 1], [b3, b4], z), z)
+    assert tn(MeijerShiftB(a1).apply(g, op),
+              meijerg([a1 - 1], [a3, a4], [b1], [b3, b4], z), z)
+    assert tn(MeijerShiftC(b3).apply(g, op),
+              meijerg([a1], [a3, a4], [b1], [b3 + 1, b4], z), z)
+    assert tn(MeijerShiftD(a3).apply(g, op),
+              meijerg([a1], [a3 - 1, a4], [b1], [b3, b4], z), z)
+
+    s = MeijerUnShiftA([a1], [a3, a4], [b1], [b3, b4], 0, z)
+    assert tn(s.apply(g, op), meijerg([a1], [a3, a4], [b1 - 1], [b3, b4], z), z)
+
+    s = MeijerUnShiftC([a1], [a3, a4], [b1], [b3, b4], 0, z)
+    assert tn(s.apply(g, op), meijerg([a1], [a3, a4], [b1], [b3 - 1, b4], z), z)
+
+    s = MeijerUnShiftB([a1], [a3, a4], [b1], [b3, b4], 0, z)
+    assert tn(s.apply(g, op), meijerg([a1 + 1], [a3, a4], [b1], [b3, b4], z), z)
+
+    s = MeijerUnShiftD([a1], [a3, a4], [b1], [b3, b4], 0, z)
+    assert tn(s.apply(g, op), meijerg([a1], [a3 + 1, a4], [b1], [b3, b4], z), z)
 
 def test_meijerg_confluence():
     def t(m, a, b):
