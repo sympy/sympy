@@ -126,13 +126,17 @@ def represent(expr, **options):
 
     format = options.get('format', 'sympy')
     if isinstance(expr, QExpr):
+        options['replace_none'] = False
+        temp_basis = get_basis(expr, **options)
+        if temp_basis is not None:
+            options['basis'] = temp_basis
         try:
             return expr._represent(**options)
         except NotImplementedError as strerr:
             #If no _represent_FOO method exists, map to the appropriate basis state and try
             #the other methods of representation
+            options['replace_none'] = True
             options['basis'] = get_basis(expr, **options)
-
             if isinstance(expr, (KetBase, BraBase)):
                 try:
                     return rep_innerproduct(expr, **options)
@@ -239,7 +243,8 @@ def rep_innerproduct(expr, **options):
         raise TypeError("expr passed is not a Bra or Ket")
 
     #If the basis is not specified, simply use default states of the same class as expr
-    basis = options.pop('basis', (expr.__class__() if isinstance(expr, KetBase) else (expr.dual_class())()))
+    basis = options.pop('basis', (_make_default(expr.__class__) if isinstance(expr, KetBase) \
+                                  else _make_default(expr.dual_class())))
 
     if isinstance(basis, BraBase):
         basis = basis.dual
@@ -247,7 +252,10 @@ def rep_innerproduct(expr, **options):
         basis = operators_to_state(basis)
 
         if basis is not None and not isinstance(basis, StateBase):
-            basis = basis()
+            basis = _make_default(basis)
+
+    if not isinstance(basis, StateBase):
+        raise NotImplementedError("Can't form this representation!")
 
     if not "index" in options:
         options["index"] = 1
@@ -304,13 +312,13 @@ def rep_expectation(expr, **options):
     elif basis is None:
         basis_state = operators_to_state(expr)
         if basis_state is not None and not isinstance(basis_state, StateBase):
-            basis_state = basis_state()
+            basis_state = _make_default(basis_state)
         basis_kets = enumerate_states(basis_state, options["index"], 2)
     else:
         if isinstance(basis, Operator):
             basis = operators_to_state(basis)
             if basis is not None and not isinstance(basis, StateBase):
-                basis = basis()
+                basis = _make_default(basis)
         basis_kets = enumerate_states(basis, options["index"], 2)
 
     bra = basis_kets[1].dual
@@ -352,6 +360,7 @@ def integrate_result(orig_expr, result, **options):
     if not isinstance(result, Expr):
         return result
 
+    options['replace_none'] = True
     if not "basis" in options:
         arg = orig_expr.args[-1]
         options["basis"] = get_basis(arg, **options)
@@ -396,6 +405,8 @@ def get_basis(expr, **options):
     If expr is an operator, then it is mapped to the corresponding state.
     If it is neither, then we cannot obtain the basis state.
 
+    If the basis cannot be mapped, then it is not changed.
+
     This will be called from within represent, and represent will only pass QExpr's.
 
     TODO (?): Support for Muls and other types of expressions?
@@ -422,12 +433,16 @@ def get_basis(expr, **options):
     """
 
     basis = options.pop("basis", None)
+    replace_none = options.pop("replace_none", True)
+
+    if basis is None and not replace_none:
+        return None
 
     if basis is None:
         if isinstance(expr, KetBase):
-            return expr.__class__()
+            return _make_default(expr.__class__)
         elif isinstance(expr, BraBase):
-            return (expr.dual_class())()
+            return _make_default((expr.dual_class()))
         elif isinstance(expr, Operator):
             state_inst = operators_to_state(expr)
             return (state_inst if state_inst is not None else None)
@@ -441,13 +456,21 @@ def get_basis(expr, **options):
         elif isinstance(state, StateBase):
             return state
         else:
-            return state()
+            return _make_default(state)
     elif isinstance(basis, StateBase):
         return basis
     elif issubclass(basis, StateBase):
-        return basis()
+        return _make_default(basis)
     else:
         return None
+
+def _make_default(expr):
+    try:
+        expr = expr()
+    except Exception:
+        return expr
+
+    return expr
 
 def enumerate_states(*args, **options):
     """

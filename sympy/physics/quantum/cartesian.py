@@ -5,7 +5,7 @@ from sympy import exp
 from sympy import Interval, DiracDelta
 from sympy import Symbol
 
-from sympy.physics.quantum.operator import HermitianOperator
+from sympy.physics.quantum.operator import HermitianOperator, DifferentialOperator
 from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
@@ -40,6 +40,21 @@ class XOp(HermitianOperator):
     def _apply_operator_XKet(self, ket):
         return ket.position*ket
 
+    def _represent_PxKet(self, basis, **options):
+        mom = basis.momentum
+        if "index" in options:
+            index = options["index"]
+        else:
+            index = 1
+
+        symbol1 = Symbol(str(mom) + "_" + str(index))
+        symbol2 = Symbol(str(mom) + "_" + str(index+1))
+
+        d = DifferentialOperator(symbol1)
+        delta = DiracDelta(symbol1 - symbol2)
+
+        return I*hbar*(d*delta)
+
 
 class PxOp(HermitianOperator):
     """1D cartesian momentum operator."""
@@ -55,6 +70,20 @@ class PxOp(HermitianOperator):
     def _apply_operator_PxKet(self, ket):
         return ket.momentum*ket
 
+    def _represent_XKet(self, basis, **options):
+        pos = basis.position
+        if "index" in options:
+            index = options["index"]
+        else:
+            index = 1
+
+        symbol1 = Symbol(str(pos) + "_" + str(index))
+        symbol2 = Symbol(str(pos) + "_" + str(index+1))
+
+        d = DifferentialOperator(symbol1)
+        delta = DiracDelta(symbol1 - symbol2)
+
+        return -I*hbar*(d*delta)
 
 X = XOp('X')
 Px = PxOp('Px')
@@ -135,13 +164,6 @@ class PxKet(Ket):
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return DiracDelta(self.momentum-bra.momentum)
-
-    def _represent_default_basis(self, **options):
-        return self._represent_PxOp(None, **options)
-
-    def _represent_PxOp(self, basis, **options):
-        return self.momentum
-
 
 class PxBra(Bra):
     """1D cartesian momentum eigenbra."""

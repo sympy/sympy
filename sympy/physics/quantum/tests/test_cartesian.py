@@ -7,9 +7,10 @@ from sympy.physics.quantum import Commutator, hbar
 from sympy.physics.quantum.cartesian import (
     XOp, PxOp, X, Px, XKet, XBra, PxKet, PxBra
 )
+from sympy.physics.quantum.operator import DifferentialOperator
 
 x, y, x_1, x_2, x_3 = symbols('x,y,x_1,x_2,x_3')
-px, py = symbols('px py')
+px, py, px_1, px_2 = symbols('px py px_1 px_2')
 
 
 def test_x():
@@ -27,6 +28,12 @@ def test_x():
     assert represent(XOp()*XKet()) == x*DiracDelta(x-x_2)
     assert represent(XOp()*XKet()*XBra('y')) == x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
 
+    rep_p = represent(XOp(), basis = PxOp)
+    assert rep_p == hbar*I*DiracDelta(px_1 - px_2)*DifferentialOperator(px_1)
+    assert rep_p == represent(XOp(), basis = PxOp())
+    assert rep_p == represent(XOp(), basis = PxKet)
+    assert rep_p == represent(XOp(), basis = PxKet())
+
 
 def test_p():
     assert Px.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
@@ -36,4 +43,10 @@ def test_p():
     assert (Dagger(PxKet(py))*PxKet(px)).doit() == DiracDelta(px-py)
     assert (XBra(x)*PxKet(px)).doit() ==\
         exp(I*x*px/hbar)/sqrt(2*pi*hbar)
-    assert represent(PxKet(px)) == px
+    assert represent(PxKet(px)) == DiracDelta(px-px_1)
+
+    rep_x = represent(PxOp(), basis = XOp)
+    assert rep_x == -hbar*I*DiracDelta(x_1 - x_2)*DifferentialOperator(x_1)
+    assert rep_x == represent(PxOp(), basis = XOp())
+    assert rep_x == represent(PxOp(), basis = XKet)
+    assert rep_x == represent(PxOp(), basis = XKet())
