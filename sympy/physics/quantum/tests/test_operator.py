@@ -1,4 +1,4 @@
-from sympy import Symbol, Integer, Mul
+from sympy import Symbol, Integer, Mul, Function, Derivative, diff
 
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
@@ -121,5 +121,25 @@ def test_differential_operator():
     x = Symbol('x')
     d = DifferentialOperator(x)
     f = Wavefunction(x**2, x)
-
     assert qapply(d*f) == Wavefunction(2*x, x)
+    assert d.expr == None
+    assert d.function == None
+    assert d.order == 1
+    assert d.variable == x
+    assert diff(d, x) == DifferentialOperator((x, 2))
+
+    d = DifferentialOperator((x, 2))
+    f = Wavefunction(x**3, x)
+    assert qapply(d*f) == Wavefunction(6*x, x)
+    assert d.order == 2
+    assert d.expr == None
+    assert d.function == None
+    assert d.variable == x
+    assert diff(d, x) == DifferentialOperator((x, 3))
+
+    f = Function('f')
+    d = DifferentialOperator(1/x*Derivative(f(x), x), (f, x))
+    assert d.expr == 1/x*Derivative(f(x), x)
+    assert d.function == f
+    assert d.variable == x
+    assert diff(d, x) == DifferentialOperator(Derivative(1/x*Derivative(f(x), x), x), (f, x))
