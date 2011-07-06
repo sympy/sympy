@@ -1769,7 +1769,7 @@ class Expr(Basic, EvalfMixin):
         elif not symbols:
             return self
         x = sympify(symbols[0])
-        assert x.is_Symbol, `x`
+        assert x.is_Symbol, repr(x)
         if not self.has(x):
             return self
         obj = self._eval_as_leading_term(x)

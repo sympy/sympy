@@ -7,7 +7,7 @@ from sympify import _sympify, sympify, SympifyError
 from compatibility import any, iterable
 from sympy.core.decorators import deprecated
 
-from sympy.core.compatibility import callable, reduce
+from sympy.core.compatibility import callable, reduce, cmp
 
 
 class Basic(AssumeMeths):

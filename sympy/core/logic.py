@@ -6,7 +6,7 @@ NOTE
 at present this is mainly needed for facts.py , feel free however to improve
 this stuff for general purpose.
 """
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, cmp
 
 def fuzzy_bool(x):
     """Return True, False or None according to x.
@@ -106,6 +106,11 @@ class Logic(object):
             return True
         else:
             return a.args != b.args
+
+    def __lt__(cls, other):
+        if cls.__cmp__(other) == -1:
+            return True
+        return False
 
 
     def __cmp__(a, b):

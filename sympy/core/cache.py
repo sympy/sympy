@@ -171,7 +171,7 @@ class MemoizerArg:
             raise ValueError('%s %s-th argument must be of type %r but got %r' % (func_src, index, self.allowed_types, obj))
         if isinstance(index, str):
             raise ValueError('%s %r keyword argument must be of type %r but got %r' % (func_src, index, self.allowed_types, obj))
-        raise NotImplementedError(`index,type(index)`)
+        raise NotImplementedError(repr((index,type(index))))
 
 class Memoizer:
     """ Memoizer function decorator generator.

@@ -1,5 +1,7 @@
 """OO layer for several polynomial representations. """
 
+from sympy.core.compatibility import cmp
+
 class GenericPoly(object):
     """Base class for low-level polynomial representations. """
 
@@ -888,7 +890,7 @@ class DMP(object):
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__lt__(g)
+        return F.__lt__(G)
 
     def __le__(f, g):
         _, _, _, F, G = f.unify(g)
@@ -1274,6 +1276,22 @@ class DMF(object):
 
         return True
 
+    def __lt__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__lt__(G)
+
+    def __le__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
 
@@ -1316,15 +1334,6 @@ class ANP(object):
 
     def __getnewargs__(self):
         return (self.rep, self.mod, self.dom)
-
-    def __cmp__(f, g):
-        """Make sorting deterministic. """
-        k = len(f.rep) - len(g.rep)
-
-        if not k:
-            return cmp(f.rep, g.rep)
-        else:
-            return k
 
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
@@ -1534,6 +1543,21 @@ class ANP(object):
         except UnificationFailed:
             return True
 
+    def __lt__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__lt__(G)
+
+    def __le__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return bool(f.rep)
-

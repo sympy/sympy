@@ -2,6 +2,8 @@
 
 from assumptions import AssumeMeths, make__get_assumption
 
+from sympy.core.compatibility import cmp
+
 # used for canonical ordering of symbolic sequences
 # via __cmp__ method:
 # FIXME this is *so* irrelevant and outdated!

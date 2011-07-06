@@ -71,6 +71,8 @@ from sympy.core.exprtools import decompose_power
 from sympy.polys.monomialtools import monomial_key
 from sympy.core.basic import BasicMeta
 
+from sympy.core.compatibility import cmp_to_key
+
 class Printer(object):
     """Generic printer
 
@@ -255,6 +257,6 @@ class Printer(object):
         order = order or self.order
 
         if order == 'old':
-            return sorted(Add.make_args(expr), Basic._compare_pretty)
+            return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
         else:
             return expr.as_ordered_terms(order=order)

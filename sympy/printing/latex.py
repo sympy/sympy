@@ -11,6 +11,8 @@ from sympy import Interval
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
+from sympy.core.compatibility import cmp_to_key
+
 import re, warnings
 
 class LatexPrinter(Printer):
@@ -649,7 +651,7 @@ class LatexPrinter(Printer):
         items = []
 
         keys = expr.keys()
-        keys.sort(Basic.compare_pretty)
+        keys.sort(key=cmp_to_key(Basic.compare_pretty))
         for key in keys:
             val = expr[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))

@@ -8,6 +8,8 @@ from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
         pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek
 
+from sympy.core.compatibility import cmp_to_key
+
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
 pprint_try_use_unicode = pretty_try_use_unicode
@@ -846,7 +848,7 @@ class PrettyPrinter(Printer):
         items = []
 
         keys = d.keys()
-        keys.sort( Basic.compare_pretty )
+        keys.sort( key=cmp_to_key(Basic.compare_pretty) )
 
         for k in keys:
             K = self._print(k)
@@ -859,7 +861,7 @@ class PrettyPrinter(Printer):
 
     def __print_set(self, set_):
         items = list(set_)
-        items.sort( Basic.compare_pretty )
+        items.sort( key=cmp_to_key(Basic.compare_pretty) )
 
         s = self._print_seq(items, '(', ')')
         s = prettyForm(*stringPict.next(type(set_).__name__, s))

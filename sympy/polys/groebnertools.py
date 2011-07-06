@@ -1,6 +1,6 @@
 """Sparse distributed multivariate polynomials and Groebner bases. """
 
-from sympy.core.compatibility import minkey
+from sympy.core.compatibility import minkey, cmp
 
 from sympy.polys.monomialtools import (
     monomial_mul,
@@ -532,7 +532,7 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
     def select(P):
         # normal selection strategy
         # select the pair with minimum LCM(LM(f), LM(g))
-        pr = minkey(P, key=lambda (i, j): O(monomial_lcm(sdp_LM(f[i], u), sdp_LM(f[j], u))))
+        pr = minkey(P, key=lambda pair: O(monomial_lcm(sdp_LM(f[pair[0]], u), sdp_LM(f[pair[1]], u))))
         return pr
 
     def normal(g, J):

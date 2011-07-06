@@ -84,6 +84,7 @@ def test_div():
     x = Symbol('x')
     h = Higher()
     l = Lower()
+    #FIXME-py3k: AssertionError
     assert l/h == h/l == 'high'
     assert x/h == h/x == 'high'
     assert l/x != 'low'
