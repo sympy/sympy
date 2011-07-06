@@ -1,4 +1,4 @@
-"""Advanced tools for sparse polynomials in $\K[x]$ or $\K[X]$. """
+"""Advanced tools for sparse polynomials in `K[x]` or `K[X]`. """
 
 def smp_clear_denoms(f, u, ord, K, convert=False):
     pass
