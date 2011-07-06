@@ -874,7 +874,7 @@ class Matrix(object):
         [2, 3, 4]
 
         """
-        if pos is 0:
+        if pos == 0:
             return mti.col_join(self)
 
         if self.cols != mti.cols:
@@ -905,7 +905,7 @@ class Matrix(object):
         [2, 0, 3, 4]
 
         """
-        if pos is 0:
+        if pos == 0:
             return mti.row_join(self)
 
         if self.rows != mti.rows:

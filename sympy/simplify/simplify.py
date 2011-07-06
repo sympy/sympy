@@ -1212,7 +1212,7 @@ def powsimp(expr, deep=False, combine='all', force=False):
         if combine in ('exp', 'all'):
             # Collect base/exp data, while maintaining order in the
             # non-commutative parts of the product
-            if combine is 'all' and deep and any((t.is_Add for t in expr.args)):
+            if combine == 'all' and deep and any((t.is_Add for t in expr.args)):
                 # Once we get to 'base', there is no more 'exp', so we need to
                 # distribute here.
                 return powsimp(expand_mul(expr, deep=False), deep, combine, force)
@@ -1263,7 +1263,7 @@ def powsimp(expr, deep=False, combine='all', force=False):
                             c_powers[b] -= e
 
             newexpr = Mul(*([newexpr] + [Pow(b, e) for b, e in c_powers.iteritems()]))
-            if combine is 'exp':
+            if combine == 'exp':
                 return Mul(newexpr, Mul(*nc_part))
             else:
                 # combine is 'all', get stuff ready for 'base'
