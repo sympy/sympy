@@ -444,7 +444,7 @@ class AlgebraicNumber(Expr):
         return obj
 
     def __eq__(a, b):
-        if not b.is_AlgebraicNumber:
+        if not getattr(b, 'is_AlgebraicNumber', False):
             try:
                 b = to_number_field(b, a)
             except (NotAlgebraic, IsomorphismFailed):

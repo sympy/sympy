@@ -303,7 +303,7 @@ class PlotModeBase(PlotMode):
     @synchronized
     def _set_style(self, v):
         if v is None: return
-        if v is '':
+        if v == '':
             step_max = 0
             for i in self.intervals:
                 if i.v_steps is None: continue
