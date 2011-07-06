@@ -5,7 +5,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     WildFunction, Poly, Function, Derivative, Number, pi, var,
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
     radsimp, powsimp, simplify, together, separate, collect, factorial,
-    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key)
+    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key, DiracDelta)
 from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
@@ -448,6 +448,12 @@ def test_as_independent():
 
     # issue 2380
     assert (3*x).as_independent(Symbol) == (3, x)
+
+    # issue 2549
+    assert (n1*x*y).as_independent(x) == (n1*y, x)
+    assert ((x + n1)*(x - y)).as_independent(x) == (1, (x + n1)*(x - y))
+    assert ((x + n1)*(x - y)).as_independent(y) == (x + n1, x - y)
+    assert (DiracDelta(x - n1)*DiracDelta(x - y)).as_independent(x) == (1, DiracDelta(x - n1)*DiracDelta(x - y))
 
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')

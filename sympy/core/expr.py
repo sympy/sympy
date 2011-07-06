@@ -843,6 +843,8 @@ class Expr(Basic, EvalfMixin):
             (1, n1*n2*n3)
             >>> (n1*n2*n3).as_independent(n2)
             (n1, n2*n3)
+            >>> ((x-n1)*(x-y)).as_independent(x)
+            (1, (x - y)*(x - n1))
 
           -- self is anything else:
             >>> (sin(x)).as_independent(x)
@@ -920,8 +922,11 @@ class Expr(Basic, EvalfMixin):
         depend = d.pop(True, [])
         indep = d.pop(False, [])
         if func is Add or not ndeps:
-            return (func(*(indep + nc)),
-                    func(*depend))
+            d = sift(nc, lambda x: x.has(*deps))
+            nc_indep = d.pop(False, [])
+            nc_dep = d.pop(True, [])
+            return (func(*(indep + nc_indep)),
+                    func(*(depend + nc_dep)))
         else:
             for i, n in enumerate(nc):
                 if n.has(*ndeps):
