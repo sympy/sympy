@@ -494,7 +494,7 @@ class CodeGen(object):
             code_lines = ''.join(self._get_header() + [code_lines])
 
         if code_lines:
-            print >> f, code_lines,
+            f.write(code_lines)
 
 class CodeGenError(Exception):
     pass
@@ -855,7 +855,7 @@ class FCodeGen(CodeGen):
         # declaration of the function prototypes
         for routine in routines:
             prototype  = self.get_interface(routine)
-            print >> f, prototype,
+            f.write(prototype)
         if empty: print >> f
     dump_h.extension = interface_extension
 
