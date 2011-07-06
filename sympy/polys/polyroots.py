@@ -389,7 +389,7 @@ def preprocess_roots(poly):
 
         base, strips = strips[0], strips[1:]
 
-        for gen, strip in zip(gens, strips):
+        for gen, strip in zip(list(gens), strips):
             reverse = False
 
             if strip[0] < strip[-1]:
@@ -429,8 +429,8 @@ def preprocess_roots(poly):
         if basis is not None:
             n = poly.degree()
 
-            def func((k,), coeff):
-                return coeff//basis**(n-k)
+            def func(k, coeff):
+                return coeff//basis**(n-k[0])
 
             poly = poly.termwise(func)
             coeff *= basis

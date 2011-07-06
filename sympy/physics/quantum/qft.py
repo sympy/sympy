@@ -163,6 +163,7 @@ class QFT(Fourier):
             circuit = HadamardGate(level)*circuit
             for i in range(level-start):
                 circuit = CGate(level-i-1, RkGate(level, i+2))*circuit
+        #FIXME-py3k: TypeError: 'Rational' object cannot be interpreted as an integer
         for i in range((finish-start)/2):
             circuit = SwapGate(i+start, finish-i-1)*circuit
         return circuit

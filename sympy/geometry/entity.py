@@ -7,6 +7,8 @@ GeometryEntity
 
 """
 
+from sympy.core.compatibility import cmp
+
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
     "Point",

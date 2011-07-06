@@ -202,7 +202,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import any, all, minkey, iterable
+from sympy.core.compatibility import any, all, minkey, iterable, cmp_to_key
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
@@ -1459,7 +1459,8 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 # that to make sure that term ordering is not dependent on
                 # the indexed value of C
                 C_1 = [(ci, S.One) for ci in constantsymbols]
-                sortedargs.sort(Basic._compare_pretty, key=lambda x: x.subs(C_1))
+                sortedargs.sort(key=cmp_to_key(lambda x, y:\
+                               Basic._compare_pretty(x.subs(C_1), y.subs(C_1))))
                 return expr.func(*[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in sortedargs])
 

@@ -20,8 +20,7 @@ def get_class(lookup_view):
     class Basic located in module sympy.core
     """
     if isinstance(lookup_view, str):
-        # Bail early for non-ASCII strings (they can't be functions).
-        lookup_view = lookup_view.encode('ascii')
+        lookup_view = lookup_view
         mod_name, func_name = get_mod_func(lookup_view)
         if func_name != '':
             lookup_view = getattr(__import__(mod_name, {}, {}, ['']), func_name)

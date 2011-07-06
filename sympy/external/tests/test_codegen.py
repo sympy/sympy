@@ -179,9 +179,9 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         })
 
     if language == "F95":
-        f = file("main.f90", "w")
+        f = open("main.f90", "w")
     elif language == "C":
-        f = file("main.c", "w")
+        f = open("main.c", "w")
     else:
         raise NotImplemented(
                 "FIXME: filename extension unknown for language: %s"%language)

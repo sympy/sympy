@@ -1,5 +1,6 @@
 from facts import FactRules
 
+from sympy.core.compatibility import cmp
 
 class CycleDetected(Exception):
     """(internal) used to detect cycles when evaluating assumptions
@@ -295,6 +296,8 @@ class AssumeMeths(object):
             if self.is_comparable:
                 v = self.evalf()
 
+                #FIXME-py3k: this fails for complex numbers, when we define cmp
+                #FIXME-py3k: as (a>b) - (a<b)
                 c = cmp(v, 0)
                 a = self._real_cmp0_table[k][c]
 

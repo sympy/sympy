@@ -638,10 +638,9 @@ class LinearEntity(GeometryEntity):
 
         """
         from random import randint
-        from sys import maxint
 
         # The lower and upper
-        lower, upper = -maxint - 1, maxint
+        lower, upper = -2**32 - 1, 2**32
 
         if self.slope is S.Infinity:
             if isinstance(self, Ray):

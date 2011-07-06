@@ -11,6 +11,8 @@ from sympy.mpmath.libmp import prec_to_dps
 
 from sympy.polys.polyerrors import PolynomialError
 
+from sympy.core.compatibility import cmp_to_key
+
 class StrPrinter(Printer):
     printmethod = "_sympystr"
     _default_settings = {
@@ -77,7 +79,7 @@ class StrPrinter(Printer):
 
     def _print_dict(self, expr):
         keys = expr.keys()
-        keys.sort( Basic.compare_pretty )
+        keys.sort( key=cmp_to_key(Basic.compare_pretty) )
 
         items = []
         for key in keys:
@@ -149,7 +151,7 @@ class StrPrinter(Printer):
             return "Lambda((%s), %s" % (arg_string, expr)
 
     def _print_LatticeOp(self, expr):
-        args = sorted(expr.args, cmp=expr._compare_pretty)
+        args = sorted(expr.args, key=cmp_to_key(expr._compare_pretty))
         return expr.func.__name__ + "(%s)"%", ".join(self._print(arg) for arg in args)
 
     def _print_Limit(self, expr):
@@ -379,7 +381,7 @@ class StrPrinter(Printer):
 
     def __print_set(self, expr):
         items = list(expr)
-        items.sort( Basic.compare_pretty )
+        items.sort( key=cmp_to_key(Basic.compare_pretty) )
 
         args = ', '.join(self._print(item) for item in items)
         if args:

@@ -1587,19 +1587,16 @@ class FixedBosonicBasis(BosonicBasis):
         self._build_states()
 
     def _build_particle_locations(self):
-        tup = ["i"+str(i) for i in range(self.n_particles)]
+        tup = ["i%i" % i for i in range(self.n_particles)]
         first_loop = "for i0 in range(%i)" % self.n_levels
         other_loops = ''
-        for i in range(len(tup)-1):
-            temp = "for %s in range(%s + 1) " % (tup[i+1],tup[i])
+        for cur, prev in zip(tup[1:], tup):
+            temp = "for %s in range(%s + 1) " % (cur, prev)
             other_loops = other_loops + temp
-        var = "("
-        for i in tup[:-1]:
-            var = var + i + ","
-        var = var + tup[-1] + ")"
-        cmd = "result = [%s %s %s]" % (var, first_loop, other_loops)
-        exec cmd
-        if self.n_particles==1:
+        tup_string = "(%s)" % ", ".join(tup)
+        list_comp = "[%s %s %s]" % (tup_string, first_loop, other_loops)
+        result = eval(list_comp)
+        if self.n_particles == 1:
             result = [(item,) for item in result]
         self.particle_locations = result
 
@@ -1778,7 +1775,7 @@ class Commutator(Function):
         #
         # Canonical ordering of arguments
         #
-        if cmp(a, b) > 0:
+        if a > b:
             return S.NegativeOne*cls(b, a)
 
 
@@ -2604,6 +2601,7 @@ def _get_ordered_dummies(mul, verbose = False):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
         other_dums = reduce(lambda x, y: x | y,
                 [ fac_dum[fac] for fac in dumstruct ])
+        fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()
         other_dums.remove(d)
