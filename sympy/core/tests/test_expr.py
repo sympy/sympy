@@ -5,7 +5,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     WildFunction, Poly, Function, Derivative, Number, pi, var,
     NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
     radsimp, powsimp, simplify, together, separate, collect, factorial,
-    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key)
+    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key, DiracDelta)
 from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
@@ -435,7 +435,7 @@ def test_as_independent():
     assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
 
     # issue 1804 = 1766b
-    n1, n2 = symbols('n1 n2', commutative=False)
+    n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
     assert (n1 + n1*n2).as_independent(n2) == (n1, n1*n2)
     assert (n2*n1 + n1*n2).as_independent(n2) == (0, n1*n2 + n2*n1)
     assert (n1*n2*n1).as_independent(n2) == (n1, n2*n1)
@@ -448,6 +448,17 @@ def test_as_independent():
 
     # issue 2380
     assert (3*x).as_independent(Symbol) == (3, x)
+
+    # issue 2549
+    assert (n1*x*y).as_independent(x) == (n1*y, x)
+    assert ((x + n1)*(x - y)).as_independent(x) == (1, (x + n1)*(x - y))
+    assert ((x + n1)*(x - y)).as_independent(y) == (x + n1, x - y)
+    assert (DiracDelta(x - n1)*DiracDelta(x - y)).as_independent(x) == (1, DiracDelta(x - n1)*DiracDelta(x - y))
+    assert (x*y*n1*n2*n3).as_independent(n2) == (x*y*n1, n2*n3)
+    assert (x*y*n1*n2*n3).as_independent(n1) == (x*y, n1*n2*n3)
+    assert (x*y*n1*n2*n3).as_independent(n3) == (x*y*n1*n2, n3)
+    assert (DiracDelta(x - n1)*DiracDelta(y - n1)*DiracDelta(x - n2)).as_independent(y) == \
+           (DiracDelta(x - n1), DiracDelta(y - n1)*DiracDelta(x - n2))
 
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')
