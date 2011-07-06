@@ -446,14 +446,13 @@ def test_diff_wrt():
 
     assert diff(f(g(x)),g(x)) == Derivative(f(g(x)),g(x))
 
-@XFAIL
 def test_diff_wrt_not_allowed():
     x = Symbol('x')
     y = Symbol('y')
 
-    assert diff(sin(x**2),x**2) == cos(x**2)
-    assert diff(exp(x*y)),x*y == exp(x*y)
-    assert diff(1+x,1+x) == 1
+    raises(ValueError, 'diff(sin(x**2),x**2)')
+    raises(ValueError, 'diff(exp(x*y)),x*y')
+    raises(ValueError, 'diff(1+x,1+x)')
 
 def test_klein_gordon_lagrangian():
     x = Symbol('x')
