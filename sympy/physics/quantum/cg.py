@@ -4,7 +4,7 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from sympy import Expr, Add, Function, Mul, Pow, sqrt, Sum, symbols, sympify, Wild, expand
+from sympy import Add, expand, Eq, Expr, Function, Mul, Piecewise, Pow, sqrt, Sum, symbols, sympify, Wild
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.kronecker import KroneckerDelta
@@ -331,11 +331,10 @@ def _check_varsh_872_9(term_list):
     sign = lt/abs(lt)
     # Note: there are some weird evaluation issues with max and pattern matching
     # The following expression is equivalent to:
-    #build_expr = a+b+1-max(abs(a-b),abs(alpha+beta))
-    # but this expression can have some strange evaluation problems, as well
+    # build_expr = a+b+1-max(abs(a-b),abs(alpha+beta))
     x = abs(a-b)
     y = abs(alpha+beta)
-    build_expr = a+b+1-(x*(1+cmp(x,y)) + y*(1+cmp(y,x)))/2
+    build_expr = a+b+1-Piecewise((x,x>y),(0,Eq(x,y)),(y,y>x))
     index_expr = a+b-c
     return _check_cg_simp(expr, simp, sign, lt, term_list, (a,alpha,b,beta,c,gamma,lt), (a,alpha,b,beta), build_expr, index_expr)
 
@@ -424,7 +423,7 @@ def _check_cg(cg_term, expr, length, sign=None):
             raise TypeError('sign must be a tuple')
         if not sign[0] == (sign[1]).subs(matches):
             return
-    if len(matches) == length:# and sign1 == sign2.subs(matches):
+    if len(matches) == length:
         return matches
 
 def _cg_simp_sum(e):
@@ -467,7 +466,6 @@ def _check_varsh_sum_872_4(e):
     if not match2 is None and len(match2) == 6:
         return 1
     return e
-
 
 def _cg_list(term):
     if isinstance(term, CG):
