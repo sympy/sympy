@@ -450,7 +450,7 @@ def test_diff_wrt():
 def test_diff_wrt_not_allowed():
     x = Symbol('x')
     y = Symbol('y')
-    
+
     assert diff(sin(x**2),x**2) == cos(x**2)
     assert diff(exp(x*y)),x*y == exp(x*y)
     assert diff(1+x,1+x) == 1
