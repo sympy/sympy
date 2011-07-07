@@ -921,15 +921,12 @@ class Expr(Basic, EvalfMixin):
         d = sift(args, lambda x: x.has(*deps))
         depend = d.pop(True, [])
         indep = d.pop(False, [])
-        if func is Add or not ndeps:
-            d = sift(nc, lambda x: x.has(*deps))
-            nc_indep = d.pop(False, [])
-            nc_dep = d.pop(True, [])
-            return (func(*(indep + nc_indep)),
-                    func(*(depend + nc_dep)))
+        if func is Add:
+            return (func(*(indep + nc)),
+                    func(*depend))
         else:
             for i, n in enumerate(nc):
-                if n.has(*ndeps):
+                if n.has(*ndeps) or n.has(*deps):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)

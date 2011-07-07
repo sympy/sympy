@@ -457,6 +457,8 @@ def test_as_independent():
     assert (x*y*n1*n2*n3).as_independent(n2) == (x*y*n1, n2*n3)
     assert (x*y*n1*n2*n3).as_independent(n1) == (x*y, n1*n2*n3)
     assert (x*y*n1*n2*n3).as_independent(n3) == (x*y*n1*n2, n3)
+    assert (DiracDelta(x - n1)*DiracDelta(y - n1)*DiracDelta(x - n2)).as_independent(y) == \
+           (DiracDelta(x - n1), DiracDelta(y - n1)*DiracDelta(x - n2))
 
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')
