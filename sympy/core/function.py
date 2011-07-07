@@ -622,7 +622,7 @@ class Derivative(Expr):
 
     This class also allows derivatives wrt non-Symbols that have _diff_wrt
     set to True, such as Function and Derivative. When a derivative wrt a non-
-    Symbol is attempts, the non-Symbol is termporarily converted to a Symbol
+    Symbol is attempted, the non-Symbol is termporarily converted to a Symbol
     while the differentiation is performed.
 
     Examples
