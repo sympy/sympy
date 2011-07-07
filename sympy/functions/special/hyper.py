@@ -30,10 +30,17 @@ class TupleParametersBase(Function):
     """ Base class that takes care of differentiation, when some of
         the arguments are actually tuples. """
     def _eval_derivative(self, s):
-        if self.args[0].has(s) or self.args[1].has(s):
-            raise NotImplementedError('differentiation with respect to ' \
-                                      'a parameter')
-        return self.fdiff(3)*self.args[2].diff(s)
+        from sympy import Derivative
+        try:
+            res = 0
+            if self.args[0].has(s) or self.args[1].has(s):
+                for i, p in enumerate(self._diffargs):
+                    m = self._diffargs[i].diff(s)
+                    if m != 0:
+                        res += self.fdiff((1, i))*m
+            return res + self.fdiff(3)*self.args[2].diff(s)
+        except (ArgumentIndexError, NotImplementedError):
+            return Derivative(self, s)
 
     # This is not deduced automatically since there are Tuples as arguments.
     is_commutative = True
@@ -185,6 +192,10 @@ class hyper(TupleParametersBase):
     def bq(self):
         """ Denominator parameters of the hypergeometric function. """
         return self.args[1]
+
+    @property
+    def _diffargs(self):
+        return self.ap + self.bq
 
     @property
     def eta(self):
@@ -399,7 +410,7 @@ class meijerg(TupleParametersBase):
 
     def fdiff(self, argindex=3):
         if argindex != 3:
-            raise ArgumentIndexError(self, argindex)
+            return self._diff_wrt_parameter(argindex[1])
         if len(self.an) >= 1:
             a = list(self.an)
             a[0] -= 1
@@ -412,6 +423,94 @@ class meijerg(TupleParametersBase):
             return 1/self.argument * (self.bm[0]*self - G)
         else:
             return S.Zero
+
+    def _diff_wrt_parameter(self, idx):
+        # Differentiation wrt a parameter can only be done in very special
+        # cases. In particular, if we want to differentiate with respect to
+        # `a`, all other gamma factors have to reduce to rational functions.
+        #
+        # Let MT denote mellin transform. Suppose T(-s) is the gamma factor
+        # appearing in the definition of G. Then
+        #
+        #   MT(log(z)G(z)) = d/ds T(s) = d/da T(s) + ...
+        #
+        # Thus d/da G(z) = log(z)G(z) - ...
+        # The ... can be evaluated as a G function under the above conditions,
+        # the formula being most easily derived by using
+        #
+        # d  Gamma(s + n)    Gamma(s + n) / 1    1                1     \
+        # -- ------------ =  ------------ | - + ----  + ... + --------- |
+        # ds Gamma(s)        Gamma(s)     \ s   s + 1         s + n - 1 /
+        #
+        # which follows from the difference equation of the digamma function.
+        # (There is a similar equation for -n instead of +n).
+
+        # We first figure out how to pair the parameters.
+        from sympy.simplify.hyperexpand import Mod1
+        from sympy import log
+        an = list(self.an)
+        ap = list(self.aother)
+        bm = list(self.bm)
+        bq = list(self.bother)
+        if idx < len(an):
+            an.pop(idx)
+        else:
+            idx -= len(an)
+            if idx < len(ap):
+                ap.pop(idx)
+            else:
+                idx -= len(ap)
+                if idx < len(bm):
+                    bm.pop(idx)
+                else:
+                    bq.pop(idx - len(bm))
+        pairs1 = []
+        pairs2 = []
+        for l1, l2, pairs in [(an, bq, pairs1), (ap, bm, pairs2)]:
+            while l1:
+                x = l1.pop()
+                found = None
+                for i, y in enumerate(l2):
+                    if Mod1(x) == Mod1(y):
+                        found = i
+                        break
+                if found is None:
+                    raise NotImplementedError('Derivative not expressible ' \
+                                              'as G-function?')
+                y = l2[i]
+                l2.pop(i)
+                pairs.append((x, y))
+
+        # Now build the result.
+        res = log(self.argument)*self
+
+        for a, b in pairs1:
+            sign = 1
+            n = a - b
+            base = b
+            if n < 0:
+                sign = -1
+                n = b - a
+                base = a
+            for k in range(n):
+                res -= sign*meijerg(self.an + (base + k + 1,), self.aother,
+                                    self.bm, self.bother + (base + k + 0,),
+                                    self.argument)
+
+        for a, b in pairs2:
+            sign = 1
+            n = b - a
+            base = a
+            if n < 0:
+                sign = -1
+                n = a - b
+                base = b
+            for k in range(n):
+                res -= sign*meijerg(self.an, self.aother + (base + k + 1,),
+                                    self.bm + (base + k + 0,), self.bother,
+                                    self.argument)
+
+        return res
 
     def _eval_expand_func(self, deep=True, **hints):
         from sympy import hyperexpand
@@ -451,6 +550,10 @@ class meijerg(TupleParametersBase):
     def bother(self):
         """ Second set of denominator parameters. """
         return self.args[1][1]
+
+    @property
+    def _diffargs(self):
+        return self.ap + self.bq
 
     @property
     def nu(self):
