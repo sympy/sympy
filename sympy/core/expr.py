@@ -908,25 +908,18 @@ class Expr(Basic, EvalfMixin):
         else:
             if func is Add:
                 args = list(self.args)
-                nc = ndeps = []
-                func = Add
             else:
                 args, nc = self.args_cnc()
-                d = sift(deps, lambda w: bool(getattr(w, 'is_commutative', True)))
-                ndeps = d.pop(False, [])
-                deps = d.pop(True, [])
-                func = Mul
 
-        # do commutative terms
         d = sift(args, lambda x: x.has(*deps))
         depend = d.pop(True, [])
         indep = d.pop(False, [])
-        if func is Add:
-            return (func(*(indep + nc)),
-                    func(*depend))
-        else:
+        if func is Add: # all terms were treated as commutative
+            return (Add(*indep),
+                    Add(*depend))
+        else: # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
-                if n.has(*ndeps) or n.has(*deps):
+                if n.has(*deps):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
