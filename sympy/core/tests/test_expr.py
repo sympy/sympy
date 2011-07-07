@@ -435,7 +435,7 @@ def test_as_independent():
     assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
 
     # issue 1804 = 1766b
-    n1, n2 = symbols('n1 n2', commutative=False)
+    n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
     assert (n1 + n1*n2).as_independent(n2) == (n1, n1*n2)
     assert (n2*n1 + n1*n2).as_independent(n2) == (0, n1*n2 + n2*n1)
     assert (n1*n2*n1).as_independent(n2) == (n1, n2*n1)
@@ -454,6 +454,9 @@ def test_as_independent():
     assert ((x + n1)*(x - y)).as_independent(x) == (1, (x + n1)*(x - y))
     assert ((x + n1)*(x - y)).as_independent(y) == (x + n1, x - y)
     assert (DiracDelta(x - n1)*DiracDelta(x - y)).as_independent(x) == (1, DiracDelta(x - n1)*DiracDelta(x - y))
+    assert (x*y*n1*n2*n3).as_independent(n2) == (x*y*n1, n2*n3)
+    assert (x*y*n1*n2*n3).as_independent(n1) == (x*y, n1*n2*n3)
+    assert (x*y*n1*n2*n3).as_independent(n3) == (x*y*n1*n2, n3)
 
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')
