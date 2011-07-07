@@ -356,6 +356,35 @@ where `C` designates the factor in the residue independent of `t`.
 all the `l_u` etc back to `a_* - b_*`, but doing so is going to require more
 notation still and is not helpful for computation.)
 
+Extending The Hypergeometric Tables
+***********************************
+
+Adding new formulae to the tables is straightforward. At the top of the file
+``sympy/simplify/hyperexpand.py``, there is a function called
+:func:`add_formulae`. Nested in it are defined two helpers,
+``add(ap, bq, res)`` and ``addb(ap, bq, B, C, M)``, as well as dummys
+``a``, ``b``, ``c``, and ``z``.
+
+The first step in adding a new formula is by using ``add(ap, bq, res)``. This
+declares ``hyper(ap, bq, z) == res``. Here ``ap`` and ``bq`` may use the
+dummys ``a``, ``b``, and ``c`` as free symbols. For example the well-known formula
+`\sum_0^\infty \frac{(-a)_n z^n}{n!} = (1-z)^a` is declared by the following
+line: ``add((-a, ), (), (1-z)**a)``.
+
+From the information provided, the matrices `B`, `C` and `M` will be computed,
+and the formula is now available when expanding hypergeometric functions.
+Next the test file ``sympy/simplify/tests/test_hyperexpand.py`` should be run,
+in particular the test :func:`test_formulae`. This will test the newly added
+formula numerically. If it fails, there is (presumably) a typo in what was
+entered.
+
+Since all newly-added formulae are probably relatively complicated, chances
+are that the automatically computed basis is rather suboptimal (there is no
+good way of testing this, other than observing very messy output). In this
+case the matrices `B`, `C` and `M` should be computed by hand. Then the helper
+``addb`` can be used to declare a hypergeometric formula with hand-computed
+basis.
+
 Implemented Hypergeometric Formulae
 ***********************************
 
