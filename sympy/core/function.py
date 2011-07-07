@@ -156,8 +156,20 @@ class Function(Application, Expr):
 
     """
 
-    # Allow derivatives wrt functions.
-    _diff_wrt = True
+    @property
+    def _diff_wrt(self):
+        """Allow derivatives wrt functions.
+
+        Examples
+        ========
+
+            >>> from sympy import Function, Symbol
+            >>> f = Function('f')
+            >>> x = Symbol('x')
+            >>> f(x)._diff_wrt
+            True
+        """
+        return True
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -622,7 +634,7 @@ class Derivative(Expr):
 
     This class also allows derivatives wrt non-Symbols that have _diff_wrt
     set to True, such as Function and Derivative. When a derivative wrt a non-
-    Symbol is attempted, the non-Symbol is termporarily converted to a Symbol
+    Symbol is attempted, the non-Symbol is temporarily converted to a Symbol
     while the differentiation is performed.
 
     Examples
@@ -655,8 +667,25 @@ class Derivative(Expr):
 
     is_Derivative   = True
 
-    # Allow derivatives wrt derivatives.
-    _diff_wrt = True
+    @property
+    def _diff_wrt(self):
+        """Allow derivatives wrt Derivatives if it contains a function.
+
+        Examples
+        ========
+
+            >>> from sympy import Function, Symbol, Derivative
+            >>> f = Function('f')
+            >>> x = Symbol('x')
+            >>> Derivative(f(x),x)._diff_wrt
+            True
+            >>> Derivative(x**2,x)._diff_wrt
+            False
+        """
+        if self.expr.is_Function:
+            return True
+        else:
+            return False
 
     def __new__(cls, expr, *symbols, **assumptions):
         expr = sympify(expr)

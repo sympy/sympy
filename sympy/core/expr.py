@@ -9,13 +9,26 @@ from compatibility import reduce
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
-    # This determines if it is allowed to take derivatives wrt this type of
-    # object. Subclasses such as Symbol, Function and Derivative should set
-    # this to True to enable derivatives wrt them. The implementation in
-    # Derivative separates the Symbol and non-Symbol diff_wrt=True variables
-    # and temporarily converts the non-Symbol vars in Symbols when performing
-    # the differentiation.
-    _diff_wrt = False
+    @property
+    def _diff_wrt(self):
+        """Is it allowed to take derivative wrt to this instance.
+
+        This determines if it is allowed to take derivatives wrt this object.
+        Subclasses such as Symbol, Function and Derivative should return True
+        to enable derivatives wrt them. The implementation in Derivative
+        separates the Symbol and non-Symbol _diff_wrt=True variables and
+        temporarily converts the non-Symbol vars in Symbols when performing
+        the differentiation.
+
+        Examples
+        ========
+
+            >>> from sympy import Expr
+            >>> e = Expr()
+            >>> e._diff_wrt
+            False
+        """
+        return False
 
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work

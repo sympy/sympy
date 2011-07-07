@@ -1,7 +1,7 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma,
-        Tuple, Dummy, Eq)
+        Tuple, Dummy, Eq, Expr)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
 from sympy.core.function import PoleError
@@ -411,6 +411,16 @@ def test_deriv_wrt_function():
     assert diff(exp(x), t) == xd * exp(x)
     assert diff(sqrt(x), t) == xd / (2 * sqrt(x))
 
+def test_diff_wrt_value():
+    x = Symbol('x')
+    f = Function('f')
+
+    assert Expr()._diff_wrt == False
+    assert x._diff_wrt == True
+    assert f(x)._diff_wrt == True
+    assert Derivative(f(x),x)._diff_wrt == True
+    assert Derivative(x**2,x)._diff_wrt == False
+
 def test_diff_wrt():
     x = Symbol('x')
     f = Function('f')
@@ -435,6 +445,8 @@ def test_diff_wrt():
 
     assert diff(f(x), x).diff(f(x)) == 0
     assert (sin(f(x)) - cos(diff(f(x), x))).diff(f(x)) == cos(f(x))
+
+    assert diff(sin(fx), fx, x) == diff(sin(fx), x, fx)
 
     # Chain rule cases
     assert f(g(x)).diff(x) ==\
