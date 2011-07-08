@@ -71,6 +71,10 @@ def test_union():
     assert FiniteSet(['ham']) + FiniteSet(['eggs']) == FiniteSet('ham', 'eggs')
     assert FiniteSet(1,2,3) + S.EmptySet == FiniteSet(1,2,3)
 
+    assert FiniteSet(1,2,3) & FiniteSet(2,3,4) == FiniteSet(2,3)
+    assert FiniteSet(1,2,3) | FiniteSet(2,3,4) == FiniteSet(1,2,3,4)
+
+
     # Test that Intervals and FiniteSets play nicely
     assert Interval(1,3) + FiniteSet(2) == Interval(1,3)
     assert Interval(1,3, True,True) + FiniteSet(3) == Interval(1,3, True,False)
