@@ -174,6 +174,12 @@ class Set(Basic):
     def __add__(self, other):
         return self.union(other)
 
+    def __or__(self, other):
+        return self.union(other)
+
+    def __and__(self, other):
+        return self.intersect(other)
+
     def __sub__(self, other):
         return self.intersect(other.complement)
 
