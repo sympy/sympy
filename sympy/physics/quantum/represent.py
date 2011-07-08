@@ -16,7 +16,7 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixutils import flatten_scalar
 from sympy.physics.quantum.state import KetBase, BraBase, StateBase
-from sympy.physics.quantum.operator import Operator, HermitianOperator
+from sympy.physics.quantum.operator import Operator, HermitianOperator, OuterProduct
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
 
@@ -125,7 +125,7 @@ def represent(expr, **options):
     """
 
     format = options.get('format', 'sympy')
-    if isinstance(expr, QExpr):
+    if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
         options['replace_none'] = False
         temp_basis = get_basis(expr, **options)
         if temp_basis is not None:
@@ -137,6 +137,7 @@ def represent(expr, **options):
             #the other methods of representation
             options['replace_none'] = True
             options['basis'] = get_basis(expr, **options)
+
             if isinstance(expr, (KetBase, BraBase)):
                 try:
                     return rep_innerproduct(expr, **options)
@@ -175,13 +176,13 @@ def represent(expr, **options):
         return A*B + B*A
     elif isinstance(expr, InnerProduct):
         return represent(Mul(expr.bra,expr.ket), **options)
-    elif not isinstance(expr, Mul):
+    elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format == 'numpy' or format == 'scipy.sparse':
             return _sympy_to_scalar(expr)
         return expr
 
-    if not isinstance(expr, Mul):
+    if not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
         raise TypeError('Mul expected, got: %r' % expr)
 
     if "index" in options:

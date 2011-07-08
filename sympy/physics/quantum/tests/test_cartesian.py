@@ -27,7 +27,8 @@ def test_x():
     assert XBra(x).position == x
     assert represent(XOp()*XKet()) == x*DiracDelta(x-x_2)
     assert represent(XOp()*XKet()*XBra('y')) == x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-    assert represent(XBra("x_prime")*XKet()) == DiracDelta(x - x_prime)
+    assert represent(XBra("y")*XKet()) == DiracDelta(x - y)
+    assert represent(XKet()*XBra()) == DiracDelta(x - x_2) * DiracDelta(x_1 - x)
 
     rep_p = represent(XOp(), basis = PxOp)
     assert rep_p == hbar*I*DiracDelta(px_1 - px_2)*DifferentialOperator(px_1)
