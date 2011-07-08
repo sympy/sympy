@@ -27,6 +27,7 @@ def test_x():
     assert XBra(x).position == x
     assert represent(XOp()*XKet()) == x*DiracDelta(x-x_2)
     assert represent(XOp()*XKet()*XBra('y')) == x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
+    assert represent(XBra("x_prime")*XKet()) == DiracDelta(x - x_prime)
 
     rep_p = represent(XOp(), basis = PxOp)
     assert rep_p == hbar*I*DiracDelta(px_1 - px_2)*DifferentialOperator(px_1)
@@ -34,6 +35,7 @@ def test_x():
     assert rep_p == represent(XOp(), basis = PxKet)
     assert rep_p == represent(XOp(), basis = PxKet())
 
+    assert represent(XOp()*PxKet(), basis = PxKet) == hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
 
 def test_p():
     assert Px.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
@@ -50,3 +52,5 @@ def test_p():
     assert rep_x == represent(PxOp(), basis = XOp())
     assert rep_x == represent(PxOp(), basis = XKet)
     assert rep_x == represent(PxOp(), basis = XKet())
+
+    assert represent(PxOp()*XKet(), basis=XKet) == -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)

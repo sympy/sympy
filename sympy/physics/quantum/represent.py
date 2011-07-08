@@ -203,6 +203,8 @@ def represent(expr, **options):
             options["index"] += 1
         elif isinstance(last_arg, KetBase) and isinstance(arg, Operator):
             options["unities"].append(options["index"])
+        elif isinstance(last_arg, KetBase) and isinstance(arg, BraBase):
+            options["unities"].append(options["index"])
 
         result = represent(arg, **options)*result
         last_arg = arg
@@ -364,6 +366,8 @@ def integrate_result(orig_expr, result, **options):
     if not "basis" in options:
         arg = orig_expr.args[-1]
         options["basis"] = get_basis(arg, **options)
+    elif not isinstance(options["basis"], StateBase):
+        options["basis"] = get_basis(orig_expr, **options)
 
     basis = options.pop("basis", None)
 
