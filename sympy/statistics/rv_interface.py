@@ -62,7 +62,7 @@ def covariance(X, Y, given=None):
     return E( (X-E(X, given)) * (Y-E(Y, given)), given )
 covar = covariance
 
-def skewness(X, given):
+def skewness(X, given=None):
 
     mu = E(X, given)
     sigma = std(X, given)

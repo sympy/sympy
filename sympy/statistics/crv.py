@@ -122,6 +122,8 @@ class ContinuousPSpace(PSpace):
 
 
 class SingleContinuousPSpace(ContinuousPSpace):
+    _count = 0
+    _name = 'x'
     def __new__(cls, symbol, density, set=Interval(-oo, oo)):
         assert symbol.is_Symbol
         domain = SingleContinuousDomain(symbol, set)
