@@ -1,11 +1,11 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
-                   hyperexpand, exp, simplify, sqrt, pi, erf)
+                   hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
 from sympy.utilities.randtest import (test_numerically,
          random_complex_number as randcplx)
-from sympy.abc import x, y, a, b, c, d, s, t
+from sympy.abc import x, y, a, b, c, d, s, t, z
 
 def test_rewrite_single():
     def t(expr, c, m):
@@ -21,6 +21,16 @@ def test_rewrite_single():
     t(x**2 + y*x**2, y + 1, x**2)
     tn(x**2 + x)
     tn(x**y)
+
+    def u(expr, x):
+        from sympy import Add, exp, exp_polar
+        r = _rewrite_single(expr, x)
+        e = Add(*[res[0]*res[2] for res in r[0]]).replace(exp_polar, exp) # XXX Hack?
+        assert test_numerically(e, expr, x)
+
+    u(exp(-x)*sin(x), x)
+    u(exp(-x)*sin(x)*cos(x), x)
+    u(exp(x)*sin(x), x)
 
 def test_rewrite1():
     assert _rewrite1(x**3*meijerg([a], [b], [c], [d], x**2 + y*x**2)*5, x) \
@@ -57,7 +67,7 @@ def test_inflate():
     assert t([[a], [b]], [[c, y], [d]], 2*x**3, 3)
 
 def test_recursive():
-    from sympy import symbols
+    from sympy import symbols, exp_polar
     a, b, c = symbols('a b c', positive=True)
     assert simplify(integrate(exp(-(x-a)**2)*exp(-(x-b)**2), (x, 0, oo))) \
            == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*a + sqrt(2)/2*b)) \
@@ -110,8 +120,8 @@ def test_meijerint():
     # Test substitutions to change limits
     assert meijerint_definite(exp(x), x, -oo, 2) == (exp(2), True)
     assert expand(meijerint_definite(exp(x), x, 0, I)[0]) == exp(I) - 1
-    assert meijerint_definite(exp(-x), x, 0, x)[0] == \
-           (1/x - exp(-x)/x)*exp(I*arg(x))*abs(x)
+    assert expand(meijerint_definite(exp(-x), x, 0, x)[0]) == \
+           1 - exp(-exp(I*arg(x))*abs(x))
 
     # Test -oo to oo
     assert meijerint_definite(exp(-x**2), x, -oo, oo) == (sqrt(pi), True)
@@ -120,6 +130,67 @@ def test_meijerint():
     assert meijerint_definite(exp(-abs(2*x-3)), x, -oo, oo) == (1, True)
     assert meijerint_definite(exp(-((x-mu)/sigma)**2/2)/sqrt(2*pi*sigma**2),
                               x, -oo, oo) == (1, True)
+
+    # Test one of the extra conditions for 2 g-functinos
+    assert meijerint_definite(exp(-x)*sin(x), x, 0, oo) == (S(1)/2, True)
+
+    # Test a bug
+    def res(n): return (1/(1+x**2)).diff(x, n).subs(x,1)*(-1)**n
+    for n in range(6):
+       assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == res(n)
+
+    # Test trigexpand:
+    assert integrate(exp(-x)*sin(x + a), (x, 0, oo), meijerg=True) == \
+           sin(a)/2 + cos(a)/2
+
+def test_bessel():
+    from sympy import besselj, Heaviside, besseli, polar_lift, exp_polar
+    assert integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
+                     meijerg=True, conds='none') == \
+           2*sin(pi*a/2 - pi*b/2)/(pi*(a-b)*(a+b))
+    assert integrate(besselj(a, z)*besselj(a, z)/z, (z, 0, oo),
+                     meijerg=True, conds='none') == 1/(2*a)
+
+    # TODO more orthogonality integrals
+
+    # TODO there is actually a lot to improve here, this example is a good
+    #      stress-test
+    # (the original integral is not recognised, the convergence conditions are
+    #  wrong, and the result can be simplified to besselj(y, z))
+    assert simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2))*Heaviside(x**2-1),
+                              (x, 0, oo), meijerg=True, conds='none')
+                    *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2-y))) == \
+        2**(y)*4**(-y/2)*z**(-y - 1)*(z**2)**((y+1)/2)*besseli(y, polar_lift(I)*z)*exp_polar(-I*pi*y/2)
+
+    # Werner Rosenheinrich
+    # SOME INDEFINITE INTEGRALS OF BESSEL FUNCTIONS
+
+    assert integrate(x*besselj(0, x), x, meijerg=True) == x*besselj(1, x)
+    assert integrate(x*besseli(0, x), x, meijerg=True) == x*besseli(1, x)
+    # TODO can do higher powers, but come out as high order ... should they be
+    #      reduced to order 0, 1?
+    assert integrate(besselj(1, x), x, meijerg=True) == -besselj(0, x)
+    assert integrate(besselj(1, x)**2/x, x, meijerg=True) == \
+           -(besselj(0, x)**2 + besselj(1, x)**2)/2
+    # TODO more besseli when tables are extended or recursive mellin works
+    assert integrate(besselj(0, x)**2/x**2, x, meijerg=True) == \
+           -2*x*besselj(0, x)**2 - 2*x*besselj(1, x)**2 \
+           + 2*besselj(0, x)*besselj(1, x) - besselj(0, x)**2/x
+    assert integrate(besselj(0, x)*besselj(1, x), x, meijerg=True) == \
+           -besselj(0, x)**2/2
+    assert integrate(x**2*besselj(0, x)*besselj(1, x), x, meijerg=True) == \
+           x**2*besselj(1, x)**2/2
+    assert integrate(besselj(0, x)*besselj(1, x)/x, x, meijerg=True) == \
+           x*besselj(0, x)**2 + x*besselj(1, x)**2 - besselj(0, x)*besselj(1, x)
+    # TODO how does besselj(0, a*x)*besselj(0, b*x) work?
+    # TODO how does besselj(0, x)**2*besselj(1, x)**2 work?
+    # TODO sin(x)*besselj(0, x) etc come out a mess
+    # TODO can x*log(x)*besselj(0, x) be done?
+    # TODO how does besselj(1, x)*besselj(0, x+a) work?
+    # TODO more indefinite integrals when struve functions etc are implemented
+
+    # test a substitution
+    assert integrate(besselj(1, x**2)*x, x, meijerg=True) == -besselj(0, x**2)/2
 
 def test_inversion():
     from sympy import piecewise_fold, besselj, sqrt, I, sin, cos, Heaviside
@@ -136,7 +207,7 @@ def test_inversion():
 
 def test_lookup_table():
     from random import uniform, randrange
-    from sympy import Add
+    from sympy import Add, unpolarify, exp_polar, exp
     from sympy.integrals.meijerint import z as z_dummy
     table = {}
     _create_lookup_table(table)
@@ -151,11 +222,25 @@ def test_lookup_table():
                     subs[a] = uniform(1.5, 3.5)
             if not isinstance(terms, list):
                 terms = terms(subs)
+
+            # First test that hyperexpand can do this.
             expanded = [hyperexpand(g) for (_, g) in terms]
             assert all (x.is_Piecewise or not x.has(meijerg) for x in expanded)
-            expanded = Add(*[f*x for ((f, _), x) in zip(terms, expanded)])
-            r = min(abs(formula.subs(subs).n()), abs(expanded.subs(subs).n()))
+
+            # Now test that the meijer g-function is indeed as advertised.
+            expanded = Add(*[f*x for (f, x) in terms])
+            a, b = formula.n(subs=subs), expanded.n(subs=subs)
+            r = min(abs(a), abs(b))
             if r < 1:
-                assert abs(formula.subs(subs).n() - expanded.subs(subs).n()) <= 1e-10
+                assert abs(a - b).n() <= 1e-10
             else:
-                assert abs(formula.subs(subs).n() - expanded.subs(subs).n())/r <= 1e-10
+                assert (abs(a - b)/r).n() <= 1e-10
+
+def test_branch_bug():
+    from sympy import powdenest, lowergamma
+    # TODO combsimp cannot prove that the factor is unity
+    assert powdenest(integrate(erf(x**3), x, meijerg=True).diff(x), polar=True) \
+           == 2*erf(x**3)*gamma(S(2)/3)/3/gamma(S(5)/3)
+    assert integrate(erf(x**3), x, meijerg=True) == \
+           2*x*erf(x**3)*gamma(S(2)/3)/(3*gamma(S(5)/3)) \
+           - 2*gamma(S(2)/3)*lowergamma(S(2)/3, x**6)/(3*sqrt(pi)*gamma(S(5)/3))

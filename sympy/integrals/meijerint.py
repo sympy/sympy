@@ -62,7 +62,8 @@ def _create_lookup_table(table):
 
     # Section 8.4.2
     from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
-                       factorial, log, erf)
+                       factorial, log, erf, polar_lift)
+    # TODO this needs more polar_lift (c/f entry for exp)
     add(Heaviside(t - b)*(t - b)**(a-1), [a], [], [], [0], t/b,
         gamma(a)*b**(a-1), And(b > 0))
     add(Heaviside(b - t)*(b - t)**(a-1), [], [a], [0], [], t/b,
@@ -98,7 +99,7 @@ def _create_lookup_table(table):
     # (those after look obscure)
 
     # Section 8.4.3
-    add(exp(-t), [], [], [0], [])
+    add(exp(polar_lift(-1)*t), [], [], [0], [])
 
     # TODO can do sin^n, sinh^n by expansion ... where?
     # 8.4.4 (hyperbolic functions)
@@ -218,46 +219,6 @@ def _mytype(f, x):
         res.sort()
         return tuple(res)
 
-# We need to keep track of branches. This argument dummy represent pi.
-# We e.g. replace -x by exp(I*argument_dummy)*x. At the end of the day we
-# substitute back pi.
-argument_dummy = Dummy('pi2', real=True)
-def _compute_branch(expr):
-    if isinstance(expr, bool):
-        return expr
-    # TODO this should be avoided where possible
-    expr = expr.rewrite('unbranched').subs(argument_dummy, pi)
-    if isinstance(expr, bool):
-        return expr
-    return expr.rewrite('branched', deep=True)
-
-def _add_branch_marker(c):
-    """
-    Add a 'branch marker' to c.
-
-    >>> from sympy.integrals.meijerint import _add_branch_marker as abm
-    >>> from sympy.abc import x, y
-    >>> from sympy import I
-    >>> abm(x)
-    x
-    >>> abm(x*y)
-    x*y
-    >>> abm(-x)
-    x*exp(_pi2*I)
-    >>> abm(-x*y)
-    x*y*exp(_pi2*I)
-    >>> abm(I*x)
-    x*exp(_pi2*I/2)
-    >>> abm(-I*x)
-    x*exp(-_pi2*I/2)
-    """
-    from sympy import arg, exp, I, Mul
-    coeff, m = c.as_coeff_mul(*c.free_symbols)
-    m = Mul(*m)
-    pimult = arg(coeff)/pi
-    c = abs(coeff)*exp(I*argument_dummy*pimult)*m
-    return c
-
 def _get_coeff_exp(expr, x):
     """
     When expr is known to be of the form c*x**b, with c and/or b possibly 1,
@@ -275,7 +236,7 @@ def _get_coeff_exp(expr, x):
     (1, 3)
     """
     from sympy import powsimp
-    (c, m) = powsimp(expr).as_coeff_mul(x)
+    (c, m) = _expand_power_base(powsimp(expr)).as_coeff_mul(x)
     if not m:
         return c, S(0)
     [m] = m
@@ -406,9 +367,9 @@ def _inflate_g(g, n):
     v = S(len(g.ap) - len(g.bq))
     C = n**(1 + g.nu + v/2)
     C /= (2*pi)**((n - 1)*g.delta)
-    arg = _add_branch_marker(g.argument)**n * n**(n*v)
     return C, meijerg(inflate(g.an, n), inflate(g.aother, n),
-                      inflate(g.bm, n), inflate(g.bother, n), arg)
+                      inflate(g.bm, n), inflate(g.bother, n),
+                      g.argument**n * n**(n*v))
 
 def _flip_g(g):
     """ Turn the G function into one of inverse argument
@@ -463,22 +424,40 @@ def _dummy_(name, token, **kwargs):
         _dummies[(name, token)] = Dummy(name, **kwargs)
     return _dummies[(name, token)]
 
-def _powdenest(f, force=True):
-    """ Like powdenest(f, force=True), but does not turn arg(x) into 0. """
-    # XXX should this be in powdenest?
-    from sympy import Function, arg
-    myarg = Function('arg')
-    return powdenest(f.subs(arg, myarg), force=force).subs(myarg, arg)
-
 def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
         will in fact agree with the G functions almost everywhere """
     from sympy import Heaviside, Abs
     return not any(expr.has(x) for expr in f.atoms(Heaviside, Abs))
 
+def _eval_cond(cond):
+    """ Re-evaluate the conditions. """
+    # XXX is there a better way?
+    from sympy.core.relational import Relational
+    def tr(expr):
+        if expr.rel_op == '<':
+            return expr.lhs < expr.rhs
+        else:
+            return expr
+    if isinstance(cond, bool):
+        return cond
+    return cond.replace(lambda x: x.is_Relational, tr)
+
 ####################################################################
 # Now the "backbone" functions to do actual integration.
 ####################################################################
+
+def _my_principal_branch(expr, period, full_pb=False):
+    """ Bring expr nearer to its principal branch by removing superfluous
+        factors.
+        This function does *not* guarantee to yield the principal branch,
+        to avoid introducing opaque principal_branch() objects,
+        unless full_pb=True. """
+    from sympy import principal_branch
+    res = principal_branch(expr, period)
+    if not full_pb:
+        res = res.replace(principal_branch, lambda x, y: x)
+    return res
 
 def _rewrite_saxena_1(fac, po, g, x):
     """
@@ -488,12 +467,14 @@ def _rewrite_saxena_1(fac, po, g, x):
     """
     _, s = _get_coeff_exp(po, x)
     a, b = _get_coeff_exp(g.argument, x)
+    period = g.get_period()
 
     # We substitute t = x**b.
     C = fac/(abs(b)*a**((s+1)/b - 1))
     # Absorb a factor of (at)**((1 + s)/b - 1).
     def tr(l): return [a + (1 + s)/b - 1 for a in l]
-    return C, meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother), a*x)
+    return C, meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother),
+                      _my_principal_branch(a, period)*x)
 
 def _check_antecedents_1(g, x, helper=False):
     """
@@ -620,7 +601,7 @@ def _int0oo_1(g, x):
     gamma(-a)*gamma(c + 1)/(y*gamma(-d)*gamma(b + 1))
     """
     # See [L, section 5.6.1]. Note that s=1.
-    from sympy import gamma, combsimp
+    from sympy import gamma, combsimp, unpolarify
     eta, _ = _get_coeff_exp(g.argument, x)
     res = 1/eta
     # XXX TODO we should reduce order first
@@ -632,9 +613,9 @@ def _int0oo_1(g, x):
         res /= gamma(1 - b - 1)
     for a in g.aother:
         res /= gamma(a + 1)
-    return combsimp(res)
+    return combsimp(unpolarify(res))
 
-def _rewrite_saxena(fac, po, g1, g2, x):
+def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     """
     Rewrite the integral fac*po*g1*g2 from 0 to oo in terms of G functions
     with argument c*x.
@@ -655,6 +636,13 @@ def _rewrite_saxena(fac, po, g1, g2, x):
     meijerg(((), ()), ((m/2,), (-m/2,)), t/4)
     """
     from sympy.core.numbers import ilcm
+
+    def pb(g):
+        a, b = _get_coeff_exp(g.argument, x)
+        per = g.get_period()
+        return meijerg(g.an, g.aother, g.bm, g.bother,
+                       _my_principal_branch(a, per, full_pb)*x**b)
+
     _, s = _get_coeff_exp(po, x)
     _, b1 = _get_coeff_exp(g1.argument, x)
     _, b2 = _get_coeff_exp(g2.argument, x)
@@ -673,6 +661,8 @@ def _rewrite_saxena(fac, po, g1, g2, x):
 
     C1, g1 = _inflate_g(g1, r1)
     C2, g2 = _inflate_g(g2, r2)
+    g1 = pb(g1)
+    g2 = pb(g2)
 
     fac *= C1*C2
     a1, b = _get_coeff_exp(g1.argument, x)
@@ -686,7 +676,7 @@ def _rewrite_saxena(fac, po, g1, g2, x):
     g1 = meijerg(tr(g1.an), tr(g1.aother), tr(g1.bm), tr(g1.bother), a1*x)
     g2 = meijerg(g2.an, g2.aother, g2.bm, g2.bother, a2*x)
 
-    return _powdenest(fac, force=True), g1, g2
+    return powdenest(fac, polar=True), g1, g2
 
 def _check_antecedents(g1, g2, x):
     """ Return a condition under which the integral theorem applies. """
@@ -890,7 +880,7 @@ def _check_antecedents(g1, g2, x):
     # Let's short-circuit if this worked ...
     # the rest is corner-cases and terrible to read.
     r = Or(*conds)
-    if _compute_branch(r) is not False:
+    if _eval_cond(r) is not False:
         return r
 
     conds += [And(m + n > p, Eq(t, 0), Eq(phi, 0), s > 0, bstar > 0, cstar < 0,
@@ -999,7 +989,7 @@ def _rewrite_inversion(fac, po, g, x):
     _, s = _get_coeff_exp(po, x)
     a, b = _get_coeff_exp(g.argument, x)
     def tr(l): return [t + s/b for t in l]
-    return (_powdenest(fac/a**(s/b), force=True),
+    return (powdenest(fac/a**(s/b), polar=True),
             meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother), g.argument))
 
 def _check_antecedents_inversion(g, x):
@@ -1138,6 +1128,7 @@ def _rewrite_single(f, x, recursive=True):
     Returns a list of tuples (C, s, G) and a condition cond.
     Returns None on failure.
     """
+    from sympy import polarify, unpolarify
     global _lookup_table
     if not _lookup_table:
         _lookup_table = {}
@@ -1156,13 +1147,6 @@ def _rewrite_single(f, x, recursive=True):
             return None
         return [(1, 0, meijerg(f.an, f.aother, f.bm, f.bother, coeff*m))], True
 
-    from sympy.core.relational import Relational
-    def tr(expr):
-        if expr.rel_op == '<':
-            return expr.lhs < expr.rhs
-        else:
-            raise NotImplementedError
-
     f_ = f
     f = f.subs(x, z)
     t = _mytype(f, z)
@@ -1171,12 +1155,14 @@ def _rewrite_single(f, x, recursive=True):
         for formula, terms, cond in l:
             subs = f.match(formula)
             if subs:
+                subs_ = {}
+                for fro, to in subs.items():
+                    subs_[fro] = unpolarify(polarify(to, subs=False),
+                                            exponents_only=True)
+                subs = subs_
                 if not isinstance(cond, bool):
-                    cond = cond.subs(subs)
-                if not isinstance(cond, bool):
-                    # XXX is there a better way?
-                    cond = cond.replace(lambda x: x.is_Relational, tr)
-                if cond is False:
+                    cond = unpolarify(cond.subs(subs))
+                if _eval_cond(cond) is False:
                     continue
                 if not isinstance(terms, list):
                     terms = terms(subs)
@@ -1189,7 +1175,7 @@ def _rewrite_single(f, x, recursive=True):
     _debug('Trying recursive mellin transform method.')
     from sympy.integrals.transforms import (mellin_transform,
                                     inverse_mellin_transform, IntegralTransformError)
-    from sympy import oo, nan, zoo, simplify
+    from sympy import oo, nan, zoo, simplify, cancel
     def my_imt(F, s, x, strip):
         """ Calling simplify() all the time is slow and not helpful, since
             most of the time it only factors things in a way that has to be
@@ -1199,7 +1185,7 @@ def _rewrite_single(f, x, recursive=True):
             return inverse_mellin_transform(F, s, x, strip,
                                             as_meijerg=True, needeval=True)
         except ValueError:
-            return inverse_mellin_transform(simplify(F), s, x, strip,
+            return inverse_mellin_transform(simplify(cancel(expand(F))), s, x, strip,
                                             as_meijerg=True, needeval=True)
     f = f_
     s = _dummy('s', 'rewrite-single', f)
@@ -1241,7 +1227,7 @@ def _rewrite_single(f, x, recursive=True):
         if len(m) > 1:
             raise NotImplementedError('Unexpected form...')
         res += [(c, 0, m[0])]
-    _debug('Recursive mellin transform worked.')
+    _debug('Recursive mellin transform worked:', g)
     return res, True
 
 def _rewrite1(f, x, recursive=True):
@@ -1286,6 +1272,7 @@ def meijerint_indefinite(f, x):
     """
     from sympy import Integral
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
+
     gs = _rewrite1(f, x)
     if gs is None:
         # Note: the code that calls us will do expand() and try again
@@ -1321,12 +1308,12 @@ def meijerint_indefinite(f, x):
 
         # now substitute back
         # Note: we really do want to powers of x to combine.
-        res += fac_*_powdenest(r.subs(t, a*x**b), force=True)
+        res += fac_*powdenest(r.subs(t, a*x**b), polar=True)
 
     # This multiplies out superfluous powers of x we created, and chops off
     # constants (e.g. x*(exp(x)/x - 1/x) -> exp(x))
-    res = _compute_branch(Add(*expand_mul(res).as_coeff_add(x)[1]))
-    return Piecewise((res, _compute_branch(cond)), (Integral(f, x), True))
+    res = _my_unpolarify(Add(*expand_mul(res).as_coeff_add(x)[1]))
+    return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 def meijerint_definite(f, x, a, b):
     """
@@ -1396,11 +1383,11 @@ def meijerint_definite(f, x, a, b):
                 continue
             res1, cond1 = res1
             res2, cond2 = res2
-            cond = _compute_branch(And(cond1, cond2))
+            cond = (And(cond1, cond2))
             if cond is False:
                 _debug('  But combined condition is always false.')
                 continue
-            res = _compute_branch(hyperexpand(res1 + res2))
+            res = res1 + res2
             return res, cond
         return
 
@@ -1416,10 +1403,7 @@ def meijerint_definite(f, x, a, b):
 
     _debug('Changed limits to', a, b)
     _debug('Changed function to', f)
-    res = _meijerint_definite_2(f, x)
-    if res is not None:
-        res, cond = res
-        return _compute_branch(hyperexpand(res)), cond
+    return _meijerint_definite_2(f, x)
 
 def _guess_expansion(f, x):
     """ Try to guess sensible rewritings for integrand f(x). """
@@ -1494,6 +1478,9 @@ def _meijerint_definite_3(f, x):
             if c is not False:
                 return res, c
 
+def _my_unpolarify(f):
+    from sympy import unpolarify
+    return _eval_cond(unpolarify(f))
 def _meijerint_definite_4(f, x, only_double=False):
     """
     Try to integrate f dx from zero to infinity.
@@ -1519,30 +1506,32 @@ def _meijerint_definite_4(f, x, only_double=False):
                 C, f = _rewrite_saxena_1(fac*C, po*x**s, f, x)
                 res += C*_int0oo_1(f, x)
                 cond = And(cond, _check_antecedents_1(f, x))
-            cond = _compute_branch(cond)
+            cond = _my_unpolarify(cond)
             if cond is False:
                 _debug('But cond is always False.')
             else:
-                return res, cond
+                return _my_unpolarify(hyperexpand(res)), cond
 
     # Try two G functions.
     gs = _rewrite2(f, x)
     if gs is not None:
-        fac, po, g1, g2, cond = gs
-        _debug('Could rewrite as two G functions:', fac, po, g1, g2)
-        res = S(0)
-        for C1, s1, f1 in g1:
-            for C2, s2, f2 in g2:
-                C, f1_, f2_ = _rewrite_saxena(fac*C1*C2, po*x**(s1 + s2), f1, f2, x)
-                _debug('Saxena subst for yielded:', C, f1_, f2_)
-                cond = And(cond, _check_antecedents(f1_, f2_, x))
-                res += C*_int0oo(f1_, f2_, x)
-        _debug('Result before branch substitutions is:', res)
-        cond = _compute_branch(cond)
-        if cond is False:
-            _debug('But cond is always False.')
-        else:
-            return res, cond
+        for full_pb in [False, True]:
+            fac, po, g1, g2, cond = gs
+            _debug('Could rewrite as two G functions:', fac, po, g1, g2)
+            res = S(0)
+            for C1, s1, f1 in g1:
+                for C2, s2, f2 in g2:
+                    C, f1_, f2_ = _rewrite_saxena(fac*C1*C2, po*x**(s1 + s2),
+                                                  f1, f2, x, full_pb)
+                    _debug('Saxena subst for yielded:', C, f1_, f2_)
+                    cond = And(cond, _check_antecedents(f1_, f2_, x))
+                    res += C*_int0oo(f1_, f2_, x)
+            _debug('Result before branch substitutions is:', res)
+            cond = _my_unpolarify(cond)
+            if cond is False:
+                _debug('But cond is always False (full_pb=%s).' % full_pb)
+            else:
+                return _my_unpolarify(hyperexpand(res)), cond
 
 def meijerint_inversion(f, x, t):
     """
@@ -1555,6 +1544,9 @@ def meijerint_inversion(f, x, t):
     """
     from sympy import I, Integral, exp, expand, log, Add, Mul, Heaviside
     f_ = f
+    t_ = t
+    t = Dummy('t', polar=True) # We don't want sqrt(t**2) = abs(t) etc
+    f = f.subs(t_, t)
     c = Dummy('c')
     _debug('Laplace-inverting', f)
     if not _is_analytic(f, x):
@@ -1599,6 +1591,7 @@ def meijerint_inversion(f, x, t):
                 newargs.append(arg)
         shift = Add(*exponentials)
         f = Mul(*newargs)
+
     gs = _rewrite1(f, x)
     if gs is not None:
         fac, po, g, cond = gs
@@ -1608,16 +1601,16 @@ def meijerint_inversion(f, x, t):
             C, f = _rewrite_inversion(fac*C, po*x**s, f, x)
             res += C*_int_inversion(f, x, t)
             cond = And(cond, _check_antecedents_inversion(f, x))
-        cond = _compute_branch(cond)
+        cond = _my_unpolarify(cond)
         if cond is False:
             _debug('But cond is always False.')
         else:
             _debug('Result before branch substitution:', res)
-            res = _compute_branch(hyperexpand(res))
+            res = _my_unpolarify(hyperexpand(res))
             if not res.has(Heaviside):
                 res *= Heaviside(t)
             res = res.subs(t, t + shift)
             if not isinstance(cond, bool):
                 cond = cond.subs(t, t + shift)
-            return Piecewise((res, cond),
-                             (Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)), True))
+            return Piecewise((res.subs(t, t_), cond),
+                             (Integral(f_*exp(x*t), (x, c - oo*I, c + oo*I)).subs(t, t_), True))
