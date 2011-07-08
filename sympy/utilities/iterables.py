@@ -1048,8 +1048,7 @@ def generate_bell(n):
                     gen(P, T, t + 1)
                 P[i], P[t+1] = P[t+1], P[i]
             T.append(t + 1)
-            if tuple(P) not in cache:
-                cache.add(tuple(P))
+            cache.add(tuple(P))
             gen(P, T, t + 1)
             T.remove(t + 1)
     gen(P, T, 0)
@@ -1096,8 +1095,7 @@ def generate_involutions(n):
                 P[j], P[t] = P[t], P[j]
             t += 1
             F.append(t)
-            if tuple(P) not in cache:
-                cache.add(tuple(P))
+            cache.add(tuple(P))
             gen(P, F, t)
             F.pop()
     gen(P, F, 1)
