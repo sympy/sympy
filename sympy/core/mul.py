@@ -956,7 +956,7 @@ class Mul(AssocOp):
             """
 
             (c, nc) = (dict(), list())
-            for (i, a) in enumerate(Mul.make_args(eq) or [eq]): # remove or [eq] after 2114 accepted
+            for (i, a) in enumerate(Mul.make_args(eq)):
                 a = powdenest(a)
                 (b, e) = a.as_base_exp()
                 if not e is S.One:
@@ -1021,7 +1021,7 @@ class Mul(AssocOp):
             c[co_xmul] = S.One
             old_c.pop(co_old)
 
-        # Do bunch of quick tests to see whether we can succeed:
+        # Do some quick tests to see whether we can succeed:
         # 1) check for more non-commutative or 2) commutative terms
         # 3) ... unmatched non-commutative bases
         # 4) ... unmatched commutative terms
