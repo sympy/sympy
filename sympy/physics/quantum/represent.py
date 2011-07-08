@@ -484,6 +484,8 @@ def enumerate_states(*args, **options):
     2) Three arguments are passed. The first is again the base state to be indexed. The second is the
     start index for counting. The final argument is the number of kets you wish to receive.
 
+    Tries to call state._enumerate_state. If this fails, returns an empty list
+
     Parameters
     =============
 
@@ -504,24 +506,22 @@ def enumerate_states(*args, **options):
 
     state = args[0]
 
+    if not (len(args) == 2 or len(args) == 3):
+        raise NotImplementedError("Wrong number of arguments!")
+
     if not isinstance(state, StateBase):
         raise TypeError("First argument is not a state!")
 
-    state_class = state.__class__
-    index_list = []
-    if len(args) == 2:
-        index_list = args[1]
-    elif len(args) == 3:
-        index_list = range(args[1], args[1]+args[2])
+    if len(args) == 3:
+        num_states = args[2]
+        options['start_index'] = args[1]
     else:
-        raise NotImplementedError("Wrong number of arguments!")
+        num_states = len(args[1])
+        options['index_list'] = args[1]
 
-    enum_states = [0 for i in range(len(index_list))]
-    ct = 0
-    for i in index_list:
-        label = state.args
-        new_label = [str(lab) + "_" + str(i) for lab in label]
-        enum_states[ct] = state_class(*new_label, **options)
-        ct+=1
+    try:
+        ret = state._enumerate_state(num_states, **options)
+    except NotImplementedError:
+        ret = []
 
-    return enum_states
+    return ret

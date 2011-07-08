@@ -112,6 +112,9 @@ class XKet(Ket):
         """The position of the state."""
         return self.label[0]
 
+    def _enumerate_state(self, num_states, **options):
+        return _enumerate_continuous_1D(self, num_states, **options)
+
     def _eval_innerproduct_XBra(self, bra, **hints):
         return DiracDelta(self.position-bra.position)
 
@@ -159,6 +162,9 @@ class PxKet(Ket):
         """The momentum of the state."""
         return self.label[0]
 
+    def _enumerate_state(self, *args, **options):
+        return _enumerate_continuous_1D(self, *args, **options)
+
     def _eval_innerproduct_XBra(self, bra, **hints):
         return exp(I*self.momentum*bra.position/hbar)/sqrt(2*pi*hbar)
 
@@ -180,3 +186,21 @@ class PxBra(Bra):
     def momentum(self):
         """The momentum of the state."""
         return self.label[0]
+
+def _enumerate_continuous_1D(*args, **options):
+    state = args[0]
+    num_states = args[1]
+    state_class = state.__class__
+    index_list = options.pop('index_list', [])
+
+    if len(index_list) == 0:
+        start_index = options.pop('start_index', 1)
+        index_list = range(start_index, start_index + num_states)
+
+    enum_states = [0 for i in range(len(index_list))]
+
+    for i, ind in enumerate(index_list):
+        label = state.args[0]
+        enum_states[i] = state_class(str(label) + "_" + str(ind), **options)
+
+    return enum_states
