@@ -1,7 +1,7 @@
-from rv import P, E, Density, Where, Given#, sample
+from rv import P, E, Density, Where, Given, pspace#, sample
 from sympy import sqrt
 
-def variance(X, given=None):
+def variance(X, given=None, **kwargs):
     """Variance of a random expression.
 
     Expectation of (X-E(X))**2
@@ -18,11 +18,11 @@ def variance(X, given=None):
     p*(-p + 1)
 
     """
-    return E(X**2, given) - E(X, given)**2
+    return E(X**2, given, **kwargs) - E(X, given, **kwargs)**2
 var = variance
 
 
-def standard_deviation(X, given=None):
+def standard_deviation(X, given=None, **kwargs):
     """Standard Deviation of a random expression.
 
     Square root of the Expectation of (X-E(X))**2
@@ -35,10 +35,10 @@ def standard_deviation(X, given=None):
     (-p**2 + p)**(1/2)
 
     """
-    return sqrt(variance(X, given))
+    return sqrt(variance(X, given, **kwargs))
 std = standard_deviation
 
-def covariance(X, Y, given=None):
+def covariance(X, Y, given=None, **kwargs):
     """Covariance of two random expressions.
 
     The expectation that the two variables will rise and fall together
@@ -59,12 +59,20 @@ def covariance(X, Y, given=None):
     1/lambda
     """
 
-    return E( (X-E(X, given)) * (Y-E(Y, given)), given )
+    return E( (X-E(X, given, **kwargs)) * (Y-E(Y, given, **kwargs)),
+            given, **kwargs)
 covar = covariance
 
-def skewness(X, given=None):
+def skewness(X, given=None, **kwargs):
 
-    mu = E(X, given)
-    sigma = std(X, given)
-    return E( ((X-mu)/sigma) ** 3 , given)
+    mu = E(X, given, **kwargs)
+    sigma = std(X, given, **kwargs)
+    return E( ((X-mu)/sigma) ** 3 , given, **kwargs)
 
+def dependent(a, b):
+    a_symbols = pspace(b).symbols
+    b_symbols = pspace(a).symbols
+    return len(a_symbols.intersect(b_symbols)) != 0
+
+def independent(a, b):
+    return not dependent(a, b)

@@ -7,7 +7,7 @@ oo = S.Infinity
 class NormalPSpace(SingleContinuousPSpace):
     def __new__(cls, mean, std, symbol = None):
 
-        x = symbol or cls.create_symbol()
+        x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf)
         obj.mean = mean
@@ -21,7 +21,7 @@ def Normal(mean, std, symbol=None):
 
 class ExponentialPSpace(SingleContinuousPSpace):
     def __new__(cls, rate, symbol=None):
-        x = symbol or cls.create_symbol()
+        x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = rate * exp(-rate*x)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
         obj.rate = rate
@@ -35,7 +35,7 @@ class ParetoPSpace(SingleContinuousPSpace):
         assert xm>0, "Xm must be positive"
         assert alpha>0, "Alpha must be positive"
 
-        x = symbol or cls.create_symbol()
+        x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = alpha * xm**alpha / x**(alpha+1)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(xm, oo))
         obj.xm = xm
@@ -54,7 +54,7 @@ class BetaPSpace(SingleContinuousPSpace):
         alpha, beta = sympify(alpha), sympify(beta)
         lazy = alpha.is_Symbol or beta.is_Symbol
 
-        x = symbol or cls.create_symbol()
+        x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(alpha-1) * (1-x)**(beta-1)
         pdf = pdf / integrate(pdf, (x, 0,1), lazy=lazy)
 
@@ -71,7 +71,7 @@ class GammaPSpace(SingleContinuousPSpace):
         assert k>0, "k must be positive"
         assert theta>0, "theta must be positive"
 
-        x = symbol or cls.create_symbol()
+        x = symbol or SingleContinuousPSpace.create_symbol()
         pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))

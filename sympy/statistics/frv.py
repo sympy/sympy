@@ -1,8 +1,8 @@
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or)
 from sympy.core.sets import FiniteSet
-from rv import (Domain, PSpace, ProductPSpace, ProductDomain, random_symbols,
-        sumsets)
+from rv import (Domain,  ProductDomain, ConditionalDomain, PSpace,
+        ProductPSpace, random_symbols, sumsets)
 import itertools
 from sympy.core.containers import Dict
 
@@ -63,18 +63,7 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
     def elements(self):
         return FiniteSet(iter(self))
 
-class ConditionalFiniteDomain(ProductFiniteDomain):
-    def __new__(cls, condition, fulldomain):
-        condition = condition.subs({rs:rs.symbol
-            for rs in random_symbols(condition)})
-        return Domain.__new__(cls, fulldomain.symbols, fulldomain, condition)
-
-    @property
-    def fulldomain(self):
-        return self.args[1]
-    @property
-    def condition(self):
-        return self.args[2]
+class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
     def _test(self, elem):
         val = self.condition.subs(dict(elem))
@@ -86,6 +75,10 @@ class ConditionalFiniteDomain(ProductFiniteDomain):
 
     def __iter__(self):
         return (elem for elem in self.fulldomain if self._test(elem))
+
+    @property
+    def set(self):
+        return FiniteSet(elem for elem in self.fulldomain if elem in self)
 
 #=============================================
 #=========  Probability Space  ===============
@@ -110,7 +103,7 @@ class FinitePSpace(PSpace):
 
     def where(self, condition):
         assert all(r.symbol in self.symbols for r in random_symbols(condition))
-        return ConditionalFiniteDomain(condition, self.domain)
+        return ConditionalFiniteDomain(self.domain, condition)
 
     def compute_density(self, expr):
         expr = expr.subs({rs:rs.symbol for rs in self.values})

@@ -1,7 +1,7 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And)
+        symbols, simplify, Eq, cos, And, Tuple)
 from sympy.statistics import (Die, Bernoulli, Coin, P, E, var, covar, skewness,
-        Density)
+        Density, Given, independent, dependent)
 
 oo = S.Infinity
 def BayesTest(A,B):
@@ -9,8 +9,7 @@ def BayesTest(A,B):
     assert P(A, B) == P(B, A) * P(A) / P(B)
 
 def test_dice():
-    d1,d2,d3 = Die(6), Die(6), Die(6)
-    X,Y,Z = d1.value, d2.value, d3.value
+    X, Y, Z= Die(6), Die(6), Die(6)
     a,b = symbols('a b')
 
     assert E(X) == 3+S.Half
@@ -44,8 +43,7 @@ def test_dice():
     assert d[S(22)] == S.One/108 and d[S(4100)]==S.One/216 and S(3130) not in d
 
 def test_dice_bayes():
-    d1,d2,d3 = Die(6), Die(6), Die(6)
-    X,Y,Z = d1.value, d2.value, d3.value
+    X, Y, Z = Die(6), Die(6), Die(6)
 
     BayesTest(X>3, X+Y<5)
     BayesTest(Eq(X-Y, Z), Z>Y)
@@ -53,16 +51,24 @@ def test_dice_bayes():
 
 def test_bernoulli():
     p, a, b = symbols('p a b')
-    B = Bernoulli(p, a, b, symbol='B')
-    X = B.value
+    X = Bernoulli(p, a, b, symbol='B')
 
     assert E(X) == a*p + b*(-p+1)
     assert Density(X)[a] == p
     assert Density(X)[b] == 1-p
 
-    B = Bernoulli(p, 1, 0, symbol='B')
-    X = B.value
+    X = Bernoulli(p, 1, 0, symbol='B')
+
     assert E(X) == p
     assert var(X) == -p**2 + p
     E(a*X+b) == a*E(X)+b
     var(a*X+b) == a**2 * var(X)
+
+def test_dependence():
+    X, Y = Die(), Die()
+    assert independent(X, 2*Y)
+    assert not dependent(X, 2*Y)
+    assert dependent(X, Y+X)
+
+    XX, YY = Given(Tuple(X, Y), X+Y>5) # Create a dependency
+    assert dependent(XX, YY)

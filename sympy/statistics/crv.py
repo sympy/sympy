@@ -1,5 +1,5 @@
-from rv import (Domain, SingleDomain, ProductDomain, PSpace, random_symbols,
-        ProductPSpace)
+from rv import (Domain, SingleDomain, ConditionalDomain, ProductDomain, PSpace,
+        random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import S, Interval, Dummy, FiniteSet, Mul, Integral
 from sympy.solvers.inequalities import reduce_poly_inequalities
@@ -17,7 +17,9 @@ def integrate(*args, **kwargs):
 
 class ContinuousDomain(Domain):
     is_continuous = True
-    pass
+
+    def as_boolean(self):
+        return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in self])
 
 class SingleContinuousDomain(ContinuousDomain, SingleDomain):
     def __new__(cls, symbol, set):
@@ -45,6 +47,38 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
                 expr = domain.integrate(expr, domain_vars, **kwargs)
         return expr
 
+class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
+
+
+    def integrate(self, expr, variables=None, **kwargs):
+        # Extract the full integral
+        fullintegral = self.fulldomain.integrate(expr, variables, lazy=True)
+        # separate into integrand and limits
+        integrand, limits = fullintegral.function, fullintegral.limits
+
+        conditions = [self.condition]
+        while conditions:
+            cond = conditions.pop()
+            if cond.is_Boolean:
+                if cond.is_And:
+                    conditions.extend(cond.args)
+                elif cond.is_Or:
+                    raise NotImplementedError("Or not implemented here")
+            elif cond.is_Relational:
+                if cond.is_Equality:
+                    # Add the appropriate Delta to the integrand
+                    integrand *= DiracDelta(cond.lhs-cond.rhs)
+                else:
+                    raise NotImplementedError(
+                            "Inequalities not yet implemented")
+            else:
+                raise ValueError(
+                        "Condition %s is not a relational or Boolean"%cond)
+
+        return integrate(integrand, *limits, **kwargs)
+
+
+
 class ContinuousPSpace(PSpace):
     is_continuous = True
 
@@ -53,20 +87,13 @@ class ContinuousPSpace(PSpace):
             rvs = self.values
         else:
             rvs = frozenset(rvs)
-        expr_rvs = frozenset(random_symbols(expr)) & rvs
-
-        # Marginalize out every random variables that aren't in the expression
-        # or aren't in the input list - marginalize every ignored variable
-        inactive_rvs = self.values - expr_rvs # integrated rvs not in expr
-        density = self.domain.integrate(self.density,
-                {rv.symbol for rv in inactive_rvs}, **kwargs)
 
         expr = expr.subs({rv:rv.symbol for rv in rvs})
 
-        # Now integrate over rvs found both in the expr and input rvs
-        domain_symbols = frozenset(rv.symbol for rv in expr_rvs)
+        domain_symbols = frozenset(rv.symbol for rv in rvs)
 
-        return self.domain.integrate(density * expr, domain_symbols, **kwargs)
+        return self.domain.integrate(self.density * expr,
+                domain_symbols, **kwargs)
 
     def compute_density(self, expr, **kwargs):
         # Common case Density(X) where X in self.values
@@ -105,17 +132,17 @@ class ContinuousPSpace(PSpace):
                     "Multiple continuous random variables not supported")
         rv = tuple(rvs)[0]
         interval = reduce_poly_inequalities([[condition]], rv, relational=False)
+        interval = interval.intersect(self.domain.set)
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
+
         condition = condition.subs({rv:rv.symbol for rv in self.values})
-        if condition.is_Equality:
-            domain = self.domain
-            density = self.density * DiracDelta(condition.lhs-condition.rhs)
-            if normalize:
-                density = density / domain.integrate(density, **kwargs)
-        else:
-            NotImplementedError("Only Equality conditions supported")
+
+        domain = ConditionalContinuousDomain(self.domain, condition)
+        density = self.density
+        if normalize:
+            density = density / domain.integrate(density, **kwargs)
 
         return ContinuousPSpace(domain, density)
 

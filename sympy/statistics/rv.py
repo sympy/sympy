@@ -1,4 +1,4 @@
-from sympy import Basic, S, Expr, Symbol
+from sympy import Basic, S, Expr, Symbol, Tuple
 from sympy.core.sets import FiniteSet
 
 class Domain(Basic):
@@ -36,6 +36,19 @@ class SingleDomain(Domain):
             return False
         sym, val = tuple(other)[0]
         return self.symbol == sym and val in self.set
+
+class ConditionalDomain(Domain):
+    def __new__(cls, fulldomain, condition):
+        condition = condition.subs({rs:rs.symbol
+            for rs in random_symbols(condition)})
+        return Domain.__new__(cls, fulldomain.symbols, fulldomain, condition)
+
+    @property
+    def fulldomain(self):
+        return self.args[1]
+    @property
+    def condition(self):
+        return self.args[2]
 
 class PSpace(Basic):
     is_finite = None
@@ -172,6 +185,11 @@ class ProductDomain(Domain):
     def domains(self):
         return self.args[1]
 
+    @property
+    def set(self):
+        raise NotImplementedError("Product Sets not implemented")
+        # return ProductSet(domain.set for domain in self.domains)
+
     def __contains__(self, other):
         # Split event into each subdomain
         for domain in self.domains:
@@ -228,7 +246,7 @@ def Given(expr, given=None, **kwargs):
         return expr
 
     # Get full probability space of both the expression and the condition
-    fullspace = pspace(expr+given)
+    fullspace = pspace(Tuple(expr, given))
     # Build new space given the condition
     space = fullspace.conditional_space(given, **kwargs)
     # Dictionary to swap out RandomSymbols in expr with new RandomSymbols
@@ -241,8 +259,9 @@ def Given(expr, given=None, **kwargs):
 def E(expr, given=None, **kwargs):
     if not random_symbols(expr): # expr isn't random?
         return expr
+    # Create new expr and recompute E
     if given is not None: # If there is a condition
-        return E(Given(expr, given), **kwargs) # Create new expr and recompute E
+        return E(Given(expr, given, **kwargs), **kwargs)
     # Otherwise case is simple, pass work off to the ProbabilitySpace
     return pspace(expr).integrate(expr, **kwargs)
 
@@ -250,7 +269,7 @@ def E(expr, given=None, **kwargs):
 def P(condition, given=None, **kwargs):
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
-        return P(Given(condition, given), **kwargs)
+        return P(Given(condition, given, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(condition).P(condition, **kwargs)
@@ -258,7 +277,7 @@ def P(condition, given=None, **kwargs):
 def Density(expr, given=None, **kwargs):
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
-        return Density(Given(expr, given), **kwargs)
+        return Density(Given(expr, given, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(expr).compute_density(expr, **kwargs)
@@ -266,7 +285,7 @@ def Density(expr, given=None, **kwargs):
 def Where(condition, given=None, **kwargs):
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
-        return Where(Given(condition, given), **kwargs)
+        return Where(Given(condition, given, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(condition).where(condition, **kwargs)
