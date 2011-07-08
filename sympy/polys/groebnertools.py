@@ -337,14 +337,14 @@ def lbp(signature, polynomial, number):
 
 def sig_cmp(u, v, O):
     """
-    Compare two signatures by extending the term order to K[X]^n.
+    Compare two signatures by extending the term order to `K[X]^n`.
 
-    u < v iff
-        - the index of v is greater than the index of u
+    `u < v` if
+        `v[1] > u[1]`
     or
-        - the index of v is equal to the index of u and u[0] < v[0] w.r.t. O
+        `v[1] == u[1]` and  `u[0] < v[0]` w.r.t. `O`
 
-    u > v otherwise
+    `u > v` otherwise
     """
     if u[1] > v[1]:
         return -1
@@ -360,10 +360,14 @@ def sig_key(s, O):
     """
     Key for comparing two signatures.
 
-    s = (m, k), t = (n, l)
+    `s = (m, k), t = (n, l)`
 
-    s < t iff [k > l] or [k == l and m < n]
-    s > t otherwise
+    `s < t` if
+        `k > l`
+    or
+        `k == l` and `m < n`
+
+    `s > t` otherwise
     """
     return (-s[1], O(s[0]))
 
@@ -372,8 +376,8 @@ def sig_mult(s, m):
     """
     Multiply a signature by a monomial.
 
-    The product of a signature (m, i) and a monomial n is defined as
-    (m * t, i).
+    The product of a signature `(m, i)` and a monomial `m` is defined as
+    `(m * t, i)`.
     """
     return sig(monomial_mul(s[0], m), s[1])
 
@@ -382,10 +386,11 @@ def sig_mult(s, m):
 
 def lbp_sub(f, g, u, O, K):
     """
-    Subtract labeled polynomial g from f.
+    Subtract labeled polynomial `g` from `f`.
 
-    The signature and number of the difference of f and g are signature
-    and number of the maximum of f and g, w.r.t. lbp_cmp.
+    The signature and number of the difference of `f` and `g`
+    are signature and number of the maximum of `f` and `g`
+    w.r.t. `lbp_cmp`.
     """
     if sig_cmp(Sign(f), Sign(g), O) < 0:
         max_poly = g
@@ -401,8 +406,8 @@ def lbp_mul_term(f, cx, u, O, K):
     """
     Multiply a labeled polynomial with a term.
 
-    The product of a labeled polynomial (s, p, k) by a monomial is
-    defined as (m * s, m * p, k).
+    The product of a labeled polynomial `(s, p, k)` by a monomial is
+    defined as `(m * s, m * p, k)`.
     """
     return lbp(sig_mult(Sign(f), cx[0]), sdp_mul_term(Polyn(f), cx, u, O, K), Num(f))
 
@@ -411,12 +416,12 @@ def lbp_cmp(f, g, O):
     """
     Compare two labeled polynomials.
 
-    f < g iff
-        - Sign(f) < Sign(g)
+    `f < g` if
+        `Sign(f) < Sign(g)`
     or
-        - Sign(f) == Sign(g) and Num(f) > Num(g)
+        `Sign(f) == Sign(g)` and `Num(f) > Num(g)`
 
-    f > g otherwise
+    `f > g` otherwise
     """
     if sig_cmp(Sign(f), Sign(g), O) == -1:
         return -1
@@ -430,7 +435,7 @@ def lbp_cmp(f, g, O):
 
 def lbp_key(f, O):
     """
-    Key for comparing two labeled polynomials.
+    Key for comparing two labeled polynomials. See `lbp_cmp`.
     """
     return (sig_key(Sign(f), O), -Num(f))
 
@@ -441,14 +446,14 @@ def critical_pair(f, g, u, O, K):
     """
     Compute the critical pair corresponding to two labeled polynomials.
 
-    A critical pair is a tuple (um, f, vm, g), where um and vm are
-    terms such that um * f - vm * g is the S-polynomial of f and g (so,
-    wlog assume um * f > vm * g).
+    A critical pair is a tuple `(um, f, vm, g)`, where um and vm are
+    terms such that `um * f - vm * g` is the S-polynomial of `f` and
+    `g` (so, wlog assume `um * f > vm * g`).
     For performance sake, a critical pair is represented as a tuple
-    (Sign(um * f), um, f, Sign(vm * g), vm, g), since um * f creates
-    a new, relatively expensive object in memory, whereas Sign(um *
-    f) and um are lightweight and f (in the tuple) is a reference to
-    an already existing object in memory.
+    `(Sign(um * f), um, f, Sign(vm * g), vm, g)`, since `um * f`
+    creates a new, relatively expensive object in memory, whereas
+    `Sign(um * f)` and `um` are lightweight and `f` (in the tuple)
+    is a reference to an already existing object in memory.
     """
     ltf = sdp_LT(Polyn(f), u, K)
     ltg = sdp_LT(Polyn(g), u, K)
@@ -479,15 +484,15 @@ def cp_cmp(c, d, O):
     """
     Compare two critical pairs c and d.
 
-    c < d iff
-        - lbp(c[0], _, Num(c[2]) < lbp(d[0], _, Num(d[2])) (this
-        corresponds to um_c * f_c and um_d * f_d)
+    `c < d` if
+        `lbp(c[0], _, Num(c[2]) < lbp(d[0], _, Num(d[2]))` (this
+        corresponds to `um_c * f_c` and `um_d * f_d`)
     or
-        - lbp(c[0], _, Num(c[2]) >< lbp(d[0], _, Num(d[2])) and
-        lbp(c[3], _, Num(c[5])) < lbp(d[3], _, Num(d[5])) (this
-        corresponds to vm_c * g_c and vm_d * g_d)
+        `lbp(c[0], _, Num(c[2]) >< lbp(d[0], _, Num(d[2]))` and
+        `lbp(c[3], _, Num(c[5])) < lbp(d[3], _, Num(d[5]))` (this
+        corresponds to `vm_c * g_c` and `vm_d * g_d`)
 
-    c > d otherwise
+    `c > d` otherwise
     """
     c0 = lbp(c[0], [], Num(c[2]))
     d0 = lbp(d[0], [], Num(d[2]))
@@ -511,7 +516,7 @@ def cp_cmp(c, d, O):
 
 def cp_key(c, O):
     """
-    Key for comparing critical pairs.
+    Key for comparing critical pairs. See `cp_cmp`.
     """
     return (lbp_key(lbp(c[0], [], Num(c[2])), O), lbp_key(lbp(c[3], [], Num(c[5])), O))
 
@@ -520,7 +525,7 @@ def s_poly(cp, u, O, K):
     """
     Compute the S-polynomial of a critical pair.
 
-    The S-polynomial of a critical pair cp is cp[1] * cp[2] - cp[4] * cp[5].
+    The S-polynomial of a critical pair `cp` is `cp[1] * cp[2] - cp[4] * cp[5]`.
     """
     return lbp_sub(lbp_mul_term(cp[2], cp[1], u, O, K), lbp_mul_term(cp[5], cp[4], u, O, K), u, O, K)
 
@@ -530,13 +535,13 @@ def is_rewritable_or_comparable(sign, num, B, u, K):
     Check if a labeled polynomial is redundant by checking if its
     signature and number imply rewritability or comparability.
 
-    (sign, num) is comparable if there exists a labeled polynomial
-    h in B, such that sign[1] (the index) is less than Sign(h)[1]
-    and sign[0] is divisible by the leading monomial of h.
+    `(sign, num)` is comparable if there exists a labeled polynomial
+    `h \in B`, such that `sign[1]` (the index) is less than `Sign(h)[1]`
+    and `sign[0]` is divisible by the leading monomial of `h`.
 
-    (sign, num) is rewritable if there exists a labeled polynomial
-    h in B, such thatsign[1] is equal to Sign(h)[1], num < Num(h)
-    and sign[0] is divisible by Sign(h)[0].
+    `(sign, num)` is rewritable if there exists a labeled polynomial
+    `h \in B`, such that `sign[1]` is equal to `Sign(h)[1]`, `num < Num(h)`
+    and `sign[0]` is divisible by `Sign(h)[0]`.
     """
     for h in B:
         # comparable
@@ -554,15 +559,15 @@ def is_rewritable_or_comparable(sign, num, B, u, K):
 
 def f5_reduce(f, B, u, O, K):
     """
-    F5-reduce a labeled polynomial f by B.
+    F5-reduce a labeled polynomial `f` by `B`.
 
-    Continously searches for non-zero labeled polynomial h in B, such
-    that the leading term lt_h of h divides the leading term lt_f of
-    f and Sign(lt_h * h) < Sign(f). If such a labeled polynomial h is
-    found, f gets replaced by f - lt_f / lt_h * h. If no such h can be
-    found or f is 0, f is no further F5-reducible and f gets returned.
+    Continously searches for non-zero labeled polynomial `h` in `B`, such
+    that the leading term `lt_h` of h divides the leading term `lt_f` of
+    `f` and `Sign(lt_h * h) < Sign(f)`. If such a labeled polynomial `h` is
+    found, `f` gets replaced by `f - lt_f / lt_h * h`. If no such `h` can be
+    found or `f` is `0`, `f` is no further F5-reducible and gets returned.
 
-    A polynomial that is reducible in the usual sense (sdp_rem)
+    A polynomial that is reducible in the usual sense (`sdp_rem`)
     need not be F5-reducible, e.g.:
 
     >>> from sympy.polys.groebnertools import lbp, sig, f5_reduce, Polyn, O_lex
@@ -603,7 +608,7 @@ def f5_reduce(f, B, u, O, K):
 
 def f5b(F, u, O, K, gens='', verbose=False):
     """
-    Computes a reduced Groebner basis for the ideal generated by F.
+    Computes a reduced Groebner basis for the ideal generated by `F`.
 
     f5b is an implementation of the F5B algorithm by Yao Sun and
     Dingkang Wang. Similarly to Buchberger's algorithm, the algorithm
@@ -765,7 +770,10 @@ def red_groebner(G, u, O, K):
 
 def is_groebner(G, u, O, K):
     """
-    Check if G is a Groebner basis.
+    Check if `G` is a Groebner basis.
+
+    By Buchberger's criterion `G` is a Groebner basis if and only if
+    every S-polynomial of two elements in `G` reduces to `0`.
     """
     for i in xrange(len(G)):
         for j in xrange(i + 1, len(G)):
@@ -779,7 +787,12 @@ def is_groebner(G, u, O, K):
 
 def is_minimal(G, u, O, K):
     """
-    Checks if G is a minimal Groebner basis.
+    Checks if `G` is a minimal Groebner basis.
+
+    A Groebner basis is called minimal if the leading coefficient of
+    every polynomial is 1 and the leading term `lt_g` of a polynomial
+    `g \in G` does not lie in the ideal generated by the leading terms of
+    `G - \{g\}`.
     """
     G.sort(key=lambda g: O(sdp_LM(g, u)))
     for i, g in enumerate(G):
@@ -795,7 +808,11 @@ def is_minimal(G, u, O, K):
 
 def is_reduced(G, u, O, K):
     """
-    Checks if G is a reduced Groebner basis.
+    Checks if `G` is a reduced Groebner basis.
+
+    A Grobner basis is called reduced if it is minimal and for every
+    polynomial `g \in G` no term of g is divisible by a leading term of
+    a polynomial in `G - \{g\}`.
     """
     G.sort(key=lambda g: O(sdp_LM(g, u)))
     for i, g in enumerate(G):
@@ -814,6 +831,9 @@ def monomial_divides(m1, m2):
     """
     Returns True if m2 divides m1, False otherwise. Does not create
     the quotient. Does not check if both are have the same length.
+
+    This function is intended to be used instead of monomial_div
+    when the quotient isn't needed.
     """
     for i in xrange(len(m1)):
         if m1[i] < m2[i]:
