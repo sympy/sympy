@@ -55,3 +55,4 @@ def test_p():
     assert rep_x == represent(PxOp(), basis = XKet())
 
     assert represent(PxOp()*XKet(), basis=XKet) == -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)
+    assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == -hbar*I*DiracDelta(x-y)*DifferentialOperator(x)

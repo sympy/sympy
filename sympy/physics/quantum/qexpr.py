@@ -288,7 +288,7 @@ class QExpr(Expr):
         # than str(). See L1072 of basic.py.
         # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
         else:
             args = self.args
 
