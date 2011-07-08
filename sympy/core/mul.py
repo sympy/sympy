@@ -792,6 +792,21 @@ class Mul(AssocOp):
         else:
             return S.One, self
 
+    def as_base_exp(self):
+        e1 = None
+        bases = []
+        nc = 0
+        for m in self.args:
+            b, e = m.as_base_exp()
+            if not b.is_commutative:
+                nc += 1
+            if e1 is None:
+                e1 = e
+            elif e != e1 or nc > 1:
+                return self, S.One
+            bases.append(b)
+        return Mul(*bases), e1
+
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
 
@@ -941,6 +956,7 @@ class Mul(AssocOp):
 
         if self == old:
             return new
+
 
         def fallback():
             """Return this value when partial subs has failed."""
