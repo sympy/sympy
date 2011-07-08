@@ -1026,15 +1026,15 @@ def generate_bell(n):
     sequence of integers.
 
     Reference:
-    [1] Generating involutions, derangements, andrelatives by ECO
-        V. Vajnovszki, DMTCS vol. 12:1, 2010, 109–122
+    [1] Generating involutions, derangements, and relatives by ECO
+        Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
     Examples:
     >>> from sympy.utilities.iterables import generate_bell
     >>> list(generate_bell(3))
-    [(1, 2, 3), (1, 3, 2), (2, 1, 3), (3, 1, 2), (3, 2, 1)]
+    [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 0, 1), (2, 1, 0)]
     """
-    P = [i + 1 for i in xrange(n)]
+    P = [i for i in xrange(n)]
     T = [0]
     cache = set()
     def gen(P, T, t):
