@@ -271,7 +271,7 @@ def test_binary_partitions():
 
 def test_bell_perm():
     assert [len(generate_bell(i)) for i in xrange(1, 7)] == [1, 2, 5, 15, 52, 203]
-    print list(generate_bell(4)) == [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3),
+    assert list(generate_bell(4)) == [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3),
                                      (0, 3, 1, 2), (0, 3, 2, 1), (1, 0, 2, 3),
                                      (1, 0, 3, 2), (2, 0, 1, 3), (2, 1, 0, 3),
                                      (2, 3, 0, 1), (3, 0, 1, 2), (3, 0, 2, 1),
