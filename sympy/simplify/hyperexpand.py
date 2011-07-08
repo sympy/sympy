@@ -2028,6 +2028,16 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     if not isinstance(cond1, bool): cond1 = cond1.subs(z, z0)
     if not isinstance(cond2, bool): cond2 = cond2.subs(z, z0)
 
+    if cond1 is True and cond2 is True and not slater1.has(hyper) and \
+       not slater2.has(hyper):
+        # If both are possible and free of unevaluated terms, return the
+        # simpler one.
+        from sympy import count_ops
+        if count_ops(slater1) > count_ops(slater2):
+            return slater2
+        else:
+            return slater1
+
     if cond1 is True and not slater1.has(hyper):
         return slater1
     if cond2 is True and not slater2.has(hyper):
