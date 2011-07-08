@@ -41,17 +41,13 @@ class XOp(HermitianOperator):
         return ket.position*ket
 
     def _represent_PxKet(self, basis, **options):
-        mom = basis.momentum
-        if "index" in options:
-            index = options["index"]
-        else:
-            index = 1
+        index = options.pop("index", 1)
 
-        symbol1 = Symbol(str(mom) + "_" + str(index))
-        symbol2 = Symbol(str(mom) + "_" + str(index+1))
-
-        d = DifferentialOperator(symbol1)
-        delta = DiracDelta(symbol1 - symbol2)
+        states = basis._enumerate_state(2, start_index = index)
+        coord1 = states[0].momentum
+        coord2 = states[1].momentum
+        d = DifferentialOperator(coord1)
+        delta = DiracDelta(coord1 - coord2)
 
         return I*hbar*(d*delta)
 
@@ -71,17 +67,13 @@ class PxOp(HermitianOperator):
         return ket.momentum*ket
 
     def _represent_XKet(self, basis, **options):
-        pos = basis.position
-        if "index" in options:
-            index = options["index"]
-        else:
-            index = 1
+        index = options.pop("index", 1)
 
-        symbol1 = Symbol(str(pos) + "_" + str(index))
-        symbol2 = Symbol(str(pos) + "_" + str(index+1))
-
-        d = DifferentialOperator(symbol1)
-        delta = DiracDelta(symbol1 - symbol2)
+        states = basis._enumerate_state(2, start_index = index)
+        coord1 = states[0].position
+        coord2 = states[1].position
+        d = DifferentialOperator(coord1)
+        delta = DiracDelta(coord1 - coord2)
 
         return -I*hbar*(d*delta)
 
