@@ -147,7 +147,7 @@ def test_simplify():
     A = Matrix([[2*k-m*w**2, -k], [-k, k-m*w**2]]).inv()
 
     assert simplify((A*Matrix([0,f]))[1]) == \
-        (f*(2*k - m*w**2))/(k**2 - 3*k*m*w**2 + m**2*w**4)
+        f/(-k**2/(2*k - m*w**2) + k - m*w**2)
 
     a, b, c, d, e, f, g, h, i = symbols('a,b,c,d,e,f,g,h,i')
 
@@ -194,7 +194,11 @@ def test_simplify_ratio():
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
         (1 + E)*exp(-Rational(3, 2))
-    assert simplify(exp(1)+exp(-exp(1))) == (1 + exp(1 + E))*exp(-E)
+
+def test_issue_2553():
+    assert simplify(E + exp(-E)) == E + exp(-E)
+    n = symbols('n', commutative=False)
+    assert simplify(n + n**(-n)) == n + n**(-n)
 
 def test_simplify_fail1():
     x = Symbol('x')
@@ -491,7 +495,7 @@ def test_hypersimp():
 
     assert hypersimp(1/factorial(k), k) == 1/(k + 1)
 
-    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k**2+2*k+1)
+    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k**2 + 2*k + 1)
 
     assert hypersimp(binomial(n, k), k) == (n-k)/(k+1)
     assert hypersimp(binomial(n+1, k), k) == (n-k+1)/(k+1)
@@ -503,7 +507,7 @@ def test_hypersimp():
     assert hypersimp(term, k) == (2*k - 1)/(3 + 11*k + 12*k**2 + 4*k**3)/2
 
     term = binomial(n, k)*(-1)**k/factorial(k)
-    assert hypersimp(term, k) == (k - n)/(k**2+2*k+1)
+    assert hypersimp(term, k) == (k - n)/(k**2 + 2*k + 1)
 
 def test_nsimplify():
     x = Symbol("x")

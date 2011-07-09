@@ -217,8 +217,8 @@ def test_tsolve():
     raises(NotImplementedError, "solve(Eq(cos(x), sin(x)), x)")
 
     assert solve(exp(x) + exp(-x) - y, x, simplified=False) == [
-        log(y**2/2 + y*sqrt(y**2 - 4)/2 - 1)/2,
-        log(y**2/2 - y*sqrt(y**2 - 4)/2 - 1)/2]
+        log((y/2 + sqrt(y**2 - 4)/2)**2)/2,
+        log((y/2 - sqrt(y**2 - 4)/2)**2)/2]
     assert solve(exp(x)-3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]
@@ -228,10 +228,11 @@ def test_tsolve():
     assert solve(4*3**(5*x+2)-7, x) == [(-2*log(3) - 2*log(2) + log(7))/(5*log(3))]
     assert solve(x+2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(3*x+5+2**(-5*x+3), x) in [
-        [Rational(-5, 3) + LambertW(log(2**(-10240*2**Rational(1, 3)/3)))/(5*log(2))],
-        [-Rational(5,3) + LambertW(-10240*2**Rational(1, 3)*log(2)/3)/(5*log(2))],
-        [(-25*log(2) + 3*LambertW(-10240*2**Rational(1, 3)*log(2)/3))/(15*log(2))],
-        [-((25*log(2) - 3*LambertW(-10240*2**Rational(1, 3)*log(2)/3)))/(15*log(2))],
+        [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2)))],
+        [Rational(-5, 3) + LambertW(log(2**(-10240*2**(Rational(1, 3))/3)))/(5*log(2))],
+        [-Rational(5,3) + LambertW(-10240*2**Rational(1,3)*log(2)/3)/(5*log(2))],
+        [(-25*log(2) + 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2))],
+        [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3)))/(15*log(2))],
         [-(25*log(2) - 3*LambertW(log(2**(-10240*2**Rational(1, 3)/3))))/(15*log(2))],
         [(25*log(2) - 3*LambertW(log(2**(-10240*2**Rational(1, 3)/3))))/(-15*log(2))]
         ]

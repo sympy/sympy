@@ -1428,7 +1428,7 @@ def hypersimp(f, k):
     g = powsimp(g, deep=True, combine='exp')
 
     if g.is_rational_function(k):
-        return simplify(g)
+        return simplify(g, ratio=S.Infinity)
     else:
         return None
 
@@ -1597,10 +1597,10 @@ def simplify(expr, ratio=1.7):
             ... "1/((1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3))")
 
        Since ``simplify(root)`` would result in a slightly longer expression,
-       root is returned inchanged instead::
+       root is returned unchanged instead::
 
-            >>> simplify(root, ratio=1) is root
-            True
+           >>> simplify(root, ratio=1) == root
+           True
 
        If ``ratio=oo``, simplify will be applied anyway::
 
@@ -1630,10 +1630,25 @@ def simplify(expr, ratio=1.7):
 
     original_expr = expr
 
-    if expr.is_commutative is False:
-        return together(powsimp(expr))
+    def shorter(*choices):
+        '''Return the choice that has the fewest ops. In case of a tie,
+        the expression listed first is selected.'''
+        if len(set(choices)) == 1:
+            return choices[0]
+        return min(choices, key=count_ops)
 
-    expr = together(cancel(powsimp(expr)).expand(), deep=True)
+    if expr.is_commutative is False:
+        expr = powsimp(expr)
+        if ratio is S.Infinity:
+            return expr
+        return shorter(together(expr), expr)
+
+    expr1 = cancel(powsimp(expr))
+    expr2 = together(expr1.expand(), deep=True)
+    if ratio is S.Infinity:
+        expr = expr2
+    else:
+        expr = shorter(expr2, expr1, expr)
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
@@ -1642,8 +1657,7 @@ def simplify(expr, ratio=1.7):
         expr = trigsimp(expr)
 
     if expr.has(C.log):
-        expr = min([expand_log(expr, deep=True), logcombine(expr)],
-                       key=count_ops)
+        expr = shorter(expand_log(expr, deep=True), logcombine(expr))
 
     if expr.has(C.CombinatorialFunction, gamma):
         expr = combsimp(expr)
