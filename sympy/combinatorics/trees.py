@@ -135,6 +135,34 @@ class Graph(Basic):
     def k_nearest_neighbours(self):
         return nx.k_nearest_neighbours(self.graph)
 
+    @property
+    def dfs_edges(self):
+        return nx.dfs_edges(self.graph)
+
+    @property
+    def dfs_tree(self):
+        return nx.dfs_tree(self.graph)
+
+    @proerty
+    def dfs_predecessors(self):
+        return nx.dfs_predecessors(self.graph)
+
+    @property
+    def dfs_successors(self):
+        return nx.dfs_successors(self.graph)
+
+    @property
+    def dfs_preorder_nodes(self):
+        return nx.dfs_preorder_nodes(self.graph)
+
+    @property
+    def dfs_postorder_nodes(self):
+        return nx.dfs_postorder_nodes(self.graph)
+
+    @property
+    def dfs_labeled_edges(self):
+        return nx.dfs_labeled_edges(self.graph)
+
     def __mul__(self, other):
         return Graph(nx.cartesian_product(self.graph, other.graph))
 
