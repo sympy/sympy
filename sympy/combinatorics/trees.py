@@ -135,6 +135,21 @@ class Graph(Basic):
     def k_nearest_neighbours(self):
         return nx.k_nearest_neighbours(self.graph)
 
+    def __mul__(self, other):
+        return Graph(nx.cartesian_product(self.graph, other.graph))
+
+    def __add__(self, other):
+        return Graph(nx.union(self.graph, other.graph))
+
+    def __inv__(self):
+        return Graph(nx.complement(self.graph))
+
+    def __sub__(self, other):
+        return Graph(nx.difference(self.graph, other.graph))
+
+    def __div__(self, other):
+        return Graph(nx.intersection(self.graph, other.graph))
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
