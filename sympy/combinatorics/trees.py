@@ -107,6 +107,34 @@ class Graph(Basic):
     def to_dict_of_dicts(self):
         return nx.to_dict_of_dicts(self.graph)
 
+    @property
+    def average_neighbour_degree(self):
+        return nx.average_neighbour_degree(self.graph)
+
+    @property
+    def average_neighbour_in_degree(self):
+        return nx.average_neighbour_in_degree(self.graph)
+
+    @property
+    def average_neighbour_out_degree(self):
+        return nx.average_neighbour_out_degree(self.graph)
+
+    @property
+    def average_degree_connectivity(self):
+        return nx.average_degree_connectivity(self.graph)
+
+    @property
+    def average_in_degree_connectivity(self):
+        return nx.average_in_degree_connectivity(self.graph)
+
+    @property
+    def averate_out_degree_connectivity(self):
+        return nx.averate_out_degree_connectivity(self.graph)
+
+    @property
+    def k_nearest_neighbours(self):
+        return nx.k_nearest_neighbours(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
