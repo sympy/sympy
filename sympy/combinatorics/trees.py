@@ -163,6 +163,34 @@ class Graph(Basic):
     def dfs_labeled_edges(self):
         return nx.dfs_labeled_edges(self.graph)
 
+    @property
+    def bfs_edges(self):
+        return nx.bfs_edges(self.graph)
+
+    @property
+    def bfs_tree(self):
+        return nx.bfs_tree(self.graph)
+
+    @property
+    def bfs_successors(self):
+        return nx.bfs_successors(self.graph)
+
+    @property
+    def bfs_predecessors(self):
+        return nx.bfs_predecessors(self.graph)
+
+    @property
+    def shortest_path(self):
+        return nx.shortest_path(self.graph)
+
+    @property
+    def shortest_path_length(self):
+        return nx.shortest_path_length(self.graph)
+
+    @property
+    def average_shortest_path_length(self):
+        return nx.average_shortest_path_length(self.graph)
+
     def __mul__(self, other):
         return Graph(nx.cartesian_product(self.graph, other.graph))
 
