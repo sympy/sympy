@@ -191,6 +191,20 @@ class Graph(Basic):
     def average_shortest_path_length(self):
         return nx.average_shortest_path_length(self.graph)
 
+    @property
+    def floyd_warshall(self):
+        return nx.floyd_warshall(self.graph)
+
+    @property
+    def floyd_warshall_predecessor_and_distance(self):
+        return nx.floyd_warshall_predecessor_and_distance(self.graph)
+
+    def astar_path(self, source, target):
+        return nx.astar_path(self.graph, source, target)
+
+    def astar_path_length(self, source, target):
+        return nx.astar_path_length(self.graph, path, target)
+
     def __mul__(self, other):
         return Graph(nx.cartesian_product(self.graph, other.graph))
 
