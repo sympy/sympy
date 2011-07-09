@@ -74,6 +74,14 @@ class Graph(Basic):
     def n(self):
         return nx.number_of_edges(self.graph)
 
+    @property
+    def node_iter(self):
+        return nx.node_iter(self.graph)
+
+    @property
+    def edge_iter(self):
+        return nx.edge_iter(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
