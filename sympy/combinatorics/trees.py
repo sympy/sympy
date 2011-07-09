@@ -1,5 +1,6 @@
 from sympy.core import Basic
 from sympy.matrices import Matrix
+from numpy.matlib import matrix
 
 import networkx as nx
 
@@ -82,11 +83,16 @@ class Graph(Basic):
     def edge_iter(self):
         return nx.edge_iter(self.graph)
 
+    def from_sympy_matrix(self, mat):
+        return nx.from_numpy_matrix(matrix(mat))
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
         """
         ret_obj = Basic.__new__(cls, *args, **kw_args)
+        if isinstance(args[0], nx.Graph):
+            ret_obj._g = args[0]
         graph_type = kw_args['graph_type']
 
         if graph_type == 'star':
