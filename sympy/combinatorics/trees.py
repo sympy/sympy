@@ -94,6 +94,10 @@ class Graph(Basic):
     def to_edge_list(self):
         return nx.to_edgelist(self.graph)
 
+    @property
+    def to_dict_of_dicts(self):
+        return nx.to_dict_of_dicts(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
