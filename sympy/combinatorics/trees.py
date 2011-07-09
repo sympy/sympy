@@ -1,5 +1,7 @@
 from sympy.core import Basic
 from sympy.matrices import Matrix
+from sympy.abc import x
+
 from numpy.matlib import matrix
 
 import networkx as nx
@@ -50,6 +52,18 @@ class Graph(Basic):
     @property
     def adjacency_spectrum(self):
         return Matrix(nx.adjacency_spectrum(self.graph))
+
+    @property
+    def spectral_eigenvector(self):
+        return self.adjacency_matrix.eigenvects()
+
+    @property
+    def spectral_eigenvalues(self):
+        return self.adjacency_matrix.berkowitz_eigenvals()
+
+    @property
+    def spectral_polynomial(self):
+        return self.adjacency_matrix.berkowitz_charpoly(x)
 
     @property
     def degree(self):
