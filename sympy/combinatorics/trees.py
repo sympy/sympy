@@ -86,6 +86,14 @@ class Graph(Basic):
     def from_sympy_matrix(self, mat):
         return nx.from_numpy_matrix(matrix(mat))
 
+    @property
+    def to_dict_of_lists(self):
+        return nx.to_dict_of_lists(self.graph)
+
+    @property
+    def to_edge_list(self):
+        return nx.to_edgelist(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
