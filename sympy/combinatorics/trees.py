@@ -86,6 +86,15 @@ class Graph(Basic):
     def from_sympy_matrix(self, mat):
         return nx.from_numpy_matrix(matrix(mat))
 
+    def from_dict_of_dicts(self, d):
+        return Graph(nx.from_dict_of_dicts(d))
+
+    def from_edge_list(self, e):
+        return Graph(nx.from_edgelist(e))
+
+    def from_dict_of_lists(self, l):
+        return Graph(nx.from_dict_of_lists(l))
+
     @property
     def to_dict_of_lists(self):
         return nx.to_dict_of_lists(self.graph)
@@ -105,6 +114,7 @@ class Graph(Basic):
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         if isinstance(args[0], nx.Graph):
             ret_obj._g = args[0]
+            return ret_obj
         graph_type = kw_args['graph_type']
 
         if graph_type == 'star':
