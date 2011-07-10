@@ -316,6 +316,13 @@ class Graph(Basic):
     def intersection_array(self):
         return nx.intersection_array(self.graph)
 
+    def cycle_basis(self):
+        return nx.cycle_basis(self.graph)
+
+    @property
+    def simple_cycles(self):
+        return nx.simple_cycles(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
