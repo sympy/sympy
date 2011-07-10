@@ -230,6 +230,21 @@ class Graph(Basic):
     def mst_edges(self):
         return self.mst.edges()
 
+    def maximal_independent_set(self, nodes):
+        return nx.maximal_independent_set(self.graph, nodes)
+
+    @property
+    def pagerank(self):
+        return nx.pagerank(self.graph)
+
+    @property
+    def hub_matrix(self):
+        return Matrix(nx.hub_matrix(self.graph))
+
+    @property
+    def authority_matrix(self):
+        return Matrix(nx.authority_matrix(self.graph))
+
     def __mul__(self, other):
         return Graph(nx.cartesian_product(self.graph, other.graph))
 
