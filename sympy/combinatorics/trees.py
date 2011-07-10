@@ -273,6 +273,33 @@ class Graph(Basic):
         """
         return nx.faster_could_be_isomorphic(self.graph, other.graph)
 
+    def is_isolate(self, node):
+        return nx.is_isolate(self.graph, node)
+
+    @property
+    def isolates(self):
+        return nx.isolates(self.graph)
+
+    @property
+    def center(self):
+        return nx.center(self.graph)
+
+    @property
+    def diameter(self):
+        return nx.diameter(self.graph)
+
+    @property
+    def eccentricity(self):
+        return nx.eccentricity(self.graph)
+
+    @property
+    def periphery(self):
+        return nx.periphery(self.graph)
+
+    @property
+    def radius(self):
+        return nx.radius(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
