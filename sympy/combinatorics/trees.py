@@ -245,6 +245,42 @@ class Graph(Basic):
     def authority_matrix(self):
         return Matrix(nx.authority_matrix(self.graph))
 
+    @property
+    def is_attracting_component(self):
+        return nx.is_attracting_component(self.graph)
+
+    @property
+    def number_attracting_components(self):
+        return nx.number_attracting_components(self.graph)
+
+    @property
+    def attracting_components(self):
+        return nx.attracting_components(self.graph)
+
+    @property
+    def attracting_component_subgraphs(self):
+        return nx.attracting_component_subgraphs(self.graph)
+
+    @property
+    def triangles(self):
+        return nx.triangles(self.graph)
+
+    @property
+    def transitivity(self):
+        return nx.transitivity(self.graph)
+
+    @property
+    def clustering(self):
+        return nx.clustering(self.graph)
+
+    @property
+    def average_clustering(self):
+        return nx.average_clustering(self.graph)
+
+    @property
+    def square_clustering(self):
+        return nx.square_clustering(self.graph)
+
     def __mul__(self, other):
         return Graph(nx.cartesian_product(self.graph, other.graph))
 
