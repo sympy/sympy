@@ -300,6 +300,22 @@ class Graph(Basic):
     def radius(self):
         return nx.radius(self.graph)
 
+    @property
+    def is_eulerian(self):
+        return nx.is_eulerian(self.graph)
+
+    @property
+    def eulerian_circuit(self):
+        return nx.eulerian_circuit(self.graph)
+
+    @property
+    def is_distance_regular(self):
+        return nx.is_distance_regular(self.graph)
+
+    @property
+    def intersection_array(self):
+        return nx.intersection_array(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
