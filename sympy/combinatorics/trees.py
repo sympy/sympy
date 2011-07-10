@@ -16,6 +16,7 @@ class Graph(Basic):
 
     _g = None
     _graph_type = 'undefined'
+    _mst = None
 
     @property
     def graph(self):
@@ -218,6 +219,16 @@ class Graph(Basic):
 
     def astar_path_length(self, source, target):
         return nx.astar_path_length(self.graph, path, target)
+
+    @property
+    def mst(self):
+        if self._mst is None:
+            self._mst = nx.minimum_spanning_tree(self.graph)
+        return self._mst
+
+    @property
+    def mst_edges(self):
+        return self.mst.edges()
 
     def __mul__(self, other):
         return Graph(nx.cartesian_product(self.graph, other.graph))
