@@ -4,7 +4,7 @@ from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left,
     rotate_right, multiset_partitions, partitions, binary_partitions,
     generate_bell, generate_involutions, generate_derangements,
-    unrestricted_necklace)
+    unrestricted_necklace, generate_oriented_forest)
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
@@ -305,3 +305,12 @@ def test_unrestricted_necklaces():
     [0, 1, 1, 2, 1, 1], [0, 1, 2, 1, 2, 1], [0, 1, 2, 2, 1, 2], \
     [0, 2, 2, 2, 2, 2]]
     assert len(list(unrestricted_necklace(20, 2))) == 111
+
+def test_generate_oriented_forest():
+    assert list(generate_oriented_forest(5)) == [[0, 1, 2, 3, 4], \
+    [0, 1, 2, 3, 3], [0, 1, 2, 3, 2], [0, 1, 2, 3, 1], [0, 1, 2, 3, 0], \
+    [0, 1, 2, 2, 2], [0, 1, 2, 2, 1], [0, 1, 2, 2, 0], [0, 1, 2, 1, 2], \
+    [0, 1, 2, 1, 1], [0, 1, 2, 1, 0], [0, 1, 2, 0, 1], [0, 1, 2, 0, 0], \
+    [0, 1, 1, 1, 1], [0, 1, 1, 1, 0], [0, 1, 1, 0, 1], [0, 1, 1, 0, 0], \
+    [0, 1, 0, 1, 0], [0, 1, 0, 0, 0], [0, 0, 0, 0, 0]]
+    assert len(list(generate_oriented_forest(10))) == 1842
