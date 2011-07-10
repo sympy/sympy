@@ -323,6 +323,21 @@ class Graph(Basic):
     def simple_cycles(self):
         return nx.simple_cycles(self.graph)
 
+    @property
+    def is_connected(self):
+        return nx.is_connected(self.graph)
+
+    @property
+    def number_connected_components(self):
+        return nx.number_connected_components(self.graph)
+
+    @property
+    def connected_components(self):
+        return nx.connected_components(self.graph)
+
+    def node_connected_component(self):
+        return nx.node_connected_component(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
