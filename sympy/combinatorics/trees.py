@@ -418,6 +418,22 @@ class Graph(Basic):
     def weakly_connected_components_subgraphs(self):
         return nx.weakly_connected_components_subgraphs(self.graph)
 
+    @property
+    def cliques(self):
+        return nx.find_cliques(self.graph)
+
+    @property
+    def maximal_clique(self):
+        return nx.make_max_clique_graph(self.graph)
+
+    @property
+    def make_clique_bipartite(self):
+        return nx.make_clique_bipartite(self.graph)
+
+    @property
+    def graph_clique(self):
+        return nx.graph_clique_number(self.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
