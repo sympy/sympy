@@ -300,13 +300,21 @@ def solve(f, *symbols, **flags):
                 []
 
             o when no symbol is given then all free symbols will be used
-              and sorted with default_sort_key and the result will be the
-              same as above as if those symbols had been supplied
+              and sorted with default_sort_key; the result will the same as
+              if the user had provided those symbols. A univariate equation
+              will always return a list of solutions; otherwise, a list of
+              mappings showing unambiguously the variable that was solved for
+              will be returned unless an 'undetermined coefficients' situation
+              is detected (see below).
 
                 >>> solve(x - 3)
                 [3]
                 >>> solve(x**2 - y**2)
-                [y, -y]
+                [{x: y}, {x: -y}]
+                >>> solve(z**2*x**2 - z**2*y**2)
+                [{x: y}, {x: -y}]
+                >>> solve(z**2*x - z**2*y**2)
+                [{x: y**2}]
 
             o when a Function or Derivative is given as a symbol, it is isolated
               algebraically and an implicit solution may be obtained
@@ -321,9 +329,9 @@ def solve(f, *symbols, **flags):
 
                 when there is a linear solution
                     >>> solve(x - y**2, x, y)
-                    {x: y**2}
+                    [{x: y**2}]
                     >>> solve(x**2 - y, x, y)
-                    {y: x**2}
+                    [{y: x**2}]
 
                 when undetermined coefficients are identified
                     that are linear
@@ -337,9 +345,9 @@ def solve(f, *symbols, **flags):
                 if there is no linear solution then the first successful
                 attempt for a nonlinear solution will be returned
                     >>> solve(x**2 - y**2, x, y)
-                    [y, -y]
+                    [{x: y}, {x: -y}]
                     >>> solve(x**2 - y**2/exp(x), x, y)
-                    [x*exp(x/2), -x*exp(x/2)]
+                    [{y: x*exp(x/2)}, {y: -x*exp(x/2)}]
 
             o iterable of one or more of the above
 
@@ -367,33 +375,18 @@ def solve(f, *symbols, **flags):
                     >>> solve([x**2 + y -2, y**2 - 4], x, y)
                     [(-2, -2), (0, 2), (0, 2), (2, -2)]
 
-                Warning: there is a possibility of obtaining ambiguous results
-                if no symbols are given for a nonlinear system of equations or
-                are given as a set since the symbols are not presently reported
-                with the solution. A warning will be issued in this situation.
+                Warning:
+                If no symbols are given for a nonlinear system of equations or
+                are given as a set, the solution tuples will contain values for
+                the symbols as if the symbols had been sorted with sort_key. In
+                the following examples, the solution for x appears first in the
+                tuple:
                     >>> solve([x - 2, x**2 + y])
-                    <BLANKLINE>
-                        For nonlinear systems of equations, symbols should be
-                        given as a list so as to avoid ambiguity in the results.
-                        solve sorted the symbols as [x, y]
                     [(2, -4)]
-
                     >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
-                    <BLANKLINE>
-                        For nonlinear systems of equations, symbols should be
-                        given as a list so as to avoid ambiguity in the results.
-                        solve sorted the symbols as [x, f(x)]
                     [(2, -4)]
 
-                If two variables (or more) don't appear in the result, the assumptions
-                can't be checked.
-                    >>> solve(z**2*x**2 - z**2*y**2/exp(x), x, y, z, warning=True)
-                    <BLANKLINE>
-                        Warning: assumptions can't be checked
-                        (can't find for which variable equation was solved).
-                    [x*exp(x/2), -x*exp(x/2)]
-
-                Presently, assumptions aren't checked either when `solve()` input
+                Presently, assumptions aren't checked when `solve()` input
                 involves relationals or bools.
 
        See also:
@@ -487,34 +480,18 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     # Restore original Functions and Derivatives if a dictionary is returned.
     # This is not necessary for
-    #   - the single equation, single unknown case
+    #   - the single univariate equation case
     #     since the symbol will have been removed from the solution;
     #   - the nonlinear poly_system since that only support zero-dimensional
     #     systems and those results come back as a list
-    if symbol_swapped and type(solution) is dict:
+    if symbol_swapped:
+        if type(solution) is dict:
             solution = dict([(swap_back_dict[k], v.subs(swap_back_dict))
                               for k, v in solution.iteritems()])
-    # warn if ambiguous results are being obtained
-    # XXX agree on how to make this unambiguous
-    # see issue 2405 for logic in how Polys chooses ordering and
-    # for discussion of what to return see http://groups.google.com/group/sympy
-    #                           Apr 18, 2011 posting 'using results from solve'
-    elif (not ordered_symbols and
-          len(symbols) > 1 and
-          solution and
-          is_sequence(solution) and
-          is_sequence(solution[0]) and
-          any(len(set(s)) > 1 for s in solution)
-         ):
-        msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
-               '\n\tgiven as a list so as to avoid ambiguity in the results.' +
-               '\n\tsolve sorted the symbols as %s')
-        if symbol_swapped:
-            from itertools import izip
-            tmp = izip(*swap_dict) # separate for the benefit of 2to3
-            print msg % list(tmp.next())
-        else:
-            print msg % symbols
+        elif solution and type(solution) is list and type(solution[0]) is dict:
+            for i, sol in enumerate(solution):
+                solution[i] = dict([(swap_back_dict[k], v.subs(swap_back_dict))
+                              for k, v in sol.iteritems()])
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still returned.
@@ -538,8 +515,7 @@ def solve(f, *symbols, **flags):
                         filtered.append(sol)
                     if not full_check:
                         unchecked.append(sol)
-                solution = filtered
-            else:
+            elif not isinstance(solution[0], dict):
                 if len(symbols) != 1: # find which one was solved for
                     symbols = list(f.free_symbols - set.union(*(s.free_symbols for s in solution)))
                 if len(symbols) == 1:
@@ -549,11 +525,19 @@ def solve(f, *symbols, **flags):
                             unchecked.append(sol)
                         if test is not False: # None or True
                             filtered.append(sol)
-                    solution = filtered
                 else:
                     if warn:
                         print("\n\tWarning: assumptions can't be checked"
                               "\n\t(can't find for which variable equation was solved).")
+            else:
+                for s in solution:
+                    v = s.values()[0]
+                    assumptions = s.keys()[0].assumptions0
+                    if check_assumptions(v, **assumptions):
+                        filtered.append(s)
+                    else:
+                        unchecked.append(s)
+            solution = filtered
             if warn and unchecked:
                 print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
                       + '\n\t' + ', '.join(str(s) for s in unchecked))
@@ -607,15 +591,17 @@ def _solve(f, *symbols, **flags):
             for s in symbols:
                 n, d = solve_linear(f, x=[s])
                 if n.is_Symbol:
-                    soln = {n: cancel(d)}
-                    return soln
+                    return [{n: cancel(d)}]
                 failed.append(s)
             for s in failed:
                 try:
                     soln = _solve(f, s, **flags)
-                    return soln
                 except NotImplementedError:
-                    pass
+                    continue
+                if soln:
+                    return [{s: sol} for sol in soln]
+                else:
+                    return soln
             else:
                 msg = "No algorithms are implemented to solve equation %s"
                 raise NotImplementedError(msg % f)

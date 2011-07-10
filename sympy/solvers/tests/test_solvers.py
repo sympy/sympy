@@ -25,7 +25,7 @@ def test_swap_back():
     assert solve([a + y - 2, a - b - 5], a, y, b) == \
                  {a: b + 5, y: -b - 3}
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
-    assert solve(a + b**2*x - y, [a, b]) == {a: y - b**2*x}
+    assert solve(a + b**2*x - y, [a, b]) == [{a: y - b**2*x}]
 
 def guess_solve_strategy(eq, symbol):
     try:
@@ -93,7 +93,7 @@ def test_solve_args():
     assert solve(42) == []
     assert solve([1,2]) is None
     #multiple symbols: take the first linear solution
-    assert solve(x + y - 3, [x, y]) == {x: 3 - y}
+    assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
     # unless it is an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
     #symbol is not a symbol or function
@@ -366,7 +366,7 @@ def test_solve_inequalities():
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 
 def test_issue_1694():
-    x, y = symbols('x,y')
+    x, y, z = symbols('x,y,z')
     assert solve(1/x) == []
     assert solve(x*(1 - 5/x)) == [5]
     assert solve(x + sqrt(x) - 2) == [1]
@@ -380,8 +380,9 @@ def test_issue_1694():
     eq= 4*3**(5*x + 2) - 7
     ans = solve(eq, x)
     assert len(ans) == 5 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
-    assert solve(log(x**2) - y**2/exp(x), x, y) == [-sqrt(exp(x)*log(x**2)),
-                                                     sqrt(exp(x)*log(x**2))]
+    assert solve(log(x**2) - y**2/exp(x), x, y) == [{y: -sqrt(exp(x)*log(x**2))},
+                                                    {y: sqrt(exp(x)*log(x**2))}]
+    assert solve(x**2*z**2 - z**2*y**2) == [{x: y}, {x: -y}]
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     raises(NotImplementedError, 'solve(log(x) - exp(x), x)')
     # 2072
@@ -408,11 +409,11 @@ def test_issue_2098():
     x = Symbol('x', positive=True)
     y = Symbol('y')
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) is None
+    # The solution following should not contain (-sqrt(2), sqrt(2))
     assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
-    # This solution must not appear: (-sqrt(2), sqrt(2))
     y = Symbol('y', positive=True)
-    assert solve(x**2 - y**2/exp(x), x, y) == [x*exp(x/2)]
-    # This solution must not appear: -x*exp(x/2)
+    # The solution following should not contain {y: -x*exp(x/2)}
+    assert solve(x**2 - y**2/exp(x), x, y) == [{y: x*exp(x/2)}]
 
 @XFAIL
 def test_2098_ambiguous():
