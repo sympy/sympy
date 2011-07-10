@@ -260,6 +260,19 @@ class Graph(Basic):
     def __div__(self, other):
         return Graph(nx.intersection(self.graph, other.graph))
 
+    def __mod__(self, other):
+        return nx.is_isomorphic(self.graph, other.graph)
+
+    def is_isomorphic(self, other):
+        return self % other
+
+    def could_be_isomorphic(self, other):
+        """
+        Isomorphism checks are expensive and sometimes we just need
+        to know if two graphs are definitely NOT isomorphic.
+        """
+        return nx.faster_could_be_isomorphic(self.graph, other.graph)
+
     def __new__(cls, *args, **kw_args):
         """
         The arguments given are graph type and parameters.
