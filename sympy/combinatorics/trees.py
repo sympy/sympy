@@ -158,7 +158,7 @@ class Graph(Basic):
     def dfs_tree(self):
         return nx.dfs_tree(self.graph)
 
-    @proerty
+    @property
     def dfs_predecessors(self):
         return nx.dfs_predecessors(self.graph)
 
@@ -365,6 +365,22 @@ class Graph(Basic):
     @property
     def condensation(self):
         return nx.condensation(self.graph)
+
+    @property
+    def is_weakly_connected(self):
+        return nx.is_weakly_connected(self.graph)
+
+    @property
+    def number_weakly_connected_components(self):
+        return nx.number_weakly_connected_components(self.graph)
+
+    @property
+    def weakly_connected_components(self):
+        return nx.weakly_connected_components(self.graph)
+
+    @property
+    def weakly_connected_components_subgraphs(self):
+        return nx.weakly_connected_components_subgraphs(self.graph)
 
     def __new__(cls, *args, **kw_args):
         """
