@@ -335,8 +335,36 @@ class Graph(Basic):
     def connected_components(self):
         return nx.connected_components(self.graph)
 
-    def node_connected_component(self):
-        return nx.node_connected_component(self.graph)
+    def node_connected_component(self, n):
+        return nx.node_connected_component(self.graph, n)
+
+    @property
+    def is_strongly_connected(self):
+        return nx.is_strongly_connected(self.graph)
+
+    @property
+    def number_of_strongly_connected_components(self):
+        return nx.number_strongly_connected_components(self.graph)
+
+    @property
+    def strongly_connected_components(self):
+        return nx.strongly_connected_components(self.graph)
+
+    @property
+    def strongly_connected_component_subgraphs(self):
+        return nx.strongly_connected_component_subgraphs(self.graph)
+
+    @property
+    def strongly_connected_components_recursive(self):
+        return nx.strongly_connected_components_recursive(self.graph)
+
+    @property
+    def kosaraju_strongly_connected_components(self):
+        return nx.kosaraju_strongly_connected_components(self.graph)
+
+    @property
+    def condensation(self):
+        return nx.condensation(self.graph)
 
     def __new__(cls, *args, **kw_args):
         """
