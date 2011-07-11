@@ -13,6 +13,10 @@ class CountableDomain(Domain):
         other in self.__iter__()
 
 class FiniteDomain(CountableDomain):
+    """
+    A domain with discrete finite support.
+    Represented using a FiniteSet
+    """
     is_finite = True
     def __new__(cls, elements):
         elements = FiniteSet(*elements)
@@ -79,6 +83,9 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     @property
     def set(self):
         return FiniteSet(elem for elem in self.fulldomain if elem in self)
+
+    def as_boolean(self):
+        return FiniteDomain.as_boolean(self)
 
 #=============================================
 #=========  Probability Space  ===============

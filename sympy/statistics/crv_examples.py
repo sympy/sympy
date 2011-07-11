@@ -16,6 +16,26 @@ class NormalPSpace(SingleContinuousPSpace):
         return obj
 
 def Normal(mean, std, symbol=None):
+    """
+    Create a Continuous Random Varible with a Normal Distribution
+    Returns a RandomSymbol
+
+    >>> from sympy.statistics import Normal, Density, E, std
+    >>> from sympy import Symbol
+
+    >>> X = Normal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
+    >>> Density(X)
+    (x, 2**(1/2)*exp(-x**2/2)/(2*pi**(1/2)))
+
+    >>> E(2*X + 1)
+    1
+
+    >>> std(2*X + 1)
+    2
+
+    """
+
+
     return NormalPSpace(mean, std, symbol).value
 
 
@@ -28,6 +48,24 @@ class ExponentialPSpace(SingleContinuousPSpace):
         return obj
 
 def Exponential(rate, symbol=None):
+    """
+    Create a Continuous Random Varible with an Exponential Distribution
+    Returns a RandomSymbol
+
+    >>> from sympy.statistics import Exponential, Density, E, std
+    >>> from sympy import Symbol
+
+    >>> X = Exponential(rate=10, symbol=Symbol('x')) # Decay rate equals 10
+    >>> Density(X)
+    (x, 10*exp(-10*x))
+
+    >>> E(X)
+    1/10
+
+    >>> std(X)
+    1/10
+
+    """
     return ExponentialPSpace(rate, symbol).value
 
 class ParetoPSpace(SingleContinuousPSpace):

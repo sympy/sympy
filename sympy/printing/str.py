@@ -99,6 +99,16 @@ class StrPrinter(Printer):
     def _print_Dict(self, expr):
         return self._print_dict(expr)
 
+    def _print_Domain(self, d):
+        try:
+            return 'Domain: '+self._print(d.as_boolean())
+        except:
+            try:
+                return ('Domain: ' + self._print(d.symbols) + ' in ' +
+                        self._print(d.set))
+            except:
+                return 'Domain on ' + self._print(d.symbols)
+
     def _print_Dummy(self, expr):
         return '_' + expr.name
 

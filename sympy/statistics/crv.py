@@ -1,7 +1,7 @@
 from rv import (Domain, SingleDomain, ConditionalDomain, ProductDomain, PSpace,
         random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import S, Interval, Dummy, FiniteSet, Mul, Integral
+from sympy import S, Interval, Dummy, FiniteSet, Mul, Integral, And
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy import integrate as sympy_integrate
 oo = S.Infinity
@@ -35,6 +35,10 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
         assert frozenset(variables) == frozenset(self.symbols)
         # assumes only intervals
         return integrate(expr, (self.symbol, self.set), **kwargs)
+
+    def as_boolean(self):
+        return self.set.as_relational(self.symbol)
+
 
 class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 

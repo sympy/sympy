@@ -1,7 +1,11 @@
-from sympy import Basic, S, Expr, Symbol, Tuple
+from sympy import Basic, S, Expr, Symbol, Tuple, And
 from sympy.core.sets import FiniteSet
 
 class Domain(Basic):
+    """
+    Represents a set of variables and the values which they can take
+    """
+
     is_ProductDomain = False
     is_finite = False
     is_continuous = False
@@ -22,6 +26,9 @@ class Domain(Basic):
         raise NotImplementedError()
 
 class SingleDomain(Domain):
+    """
+    A single variable and its domain
+    """
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
         symbols = FiniteSet(symbol)
@@ -38,6 +45,9 @@ class SingleDomain(Domain):
         return self.symbol == sym and val in self.set
 
 class ConditionalDomain(Domain):
+    """
+    A Domain with an attached condition
+    """
     def __new__(cls, fulldomain, condition):
         condition = condition.subs({rs:rs.symbol
             for rs in random_symbols(condition)})
@@ -50,7 +60,19 @@ class ConditionalDomain(Domain):
     def condition(self):
         return self.args[2]
 
+    def as_boolean(self):
+        return And(self.fulldomain.as_boolean(), self.condition)
+
 class PSpace(Basic):
+    """
+    A Probability Space
+
+    Probability Spaces encode processes that equal different values
+    probabalistically. These underly Random Symbols which occur in SymPy
+    expressions and contain the mechanics to evaluate statistical statements.
+
+    """
+
     is_finite = None
     is_continuous = None
     @property
@@ -85,6 +107,13 @@ class PSpace(Basic):
                 real=True, finite=True, bounded=True)
 
 class RandomSymbol(Symbol):
+    """
+    Random Symbols represent ProbabilitySpaces in SymPy Expressions
+    In principle they can take on any value that their symbol can take on
+    within the associated PSpace with probability determined by the PSpace
+    Density.
+    """
+
     is_bounded=True
     is_finite=True
     def __new__(cls, *args):
@@ -107,6 +136,12 @@ class RandomSymbol(Symbol):
 
 
 class ProductPSpace(PSpace):
+    """
+    A probability space resulting from the merger of two independent probability
+    spaces.
+
+    Often created using the function, pspace
+    """
 
     def __new__(cls, *spaces):
         from sympy.statistics.frv import ProductFinitePSpace
@@ -115,14 +150,14 @@ class ProductPSpace(PSpace):
         for space in spaces:
             for value in space.values:
                 rs_space_dict[value] = space
-        symbols = frozenset((val.symbol for val in rs_space_dict.keys()))
+        symbols = FiniteSet(val.symbol for val in rs_space_dict.keys())
 
         if all(space.is_finite for space in spaces):
             cls = ProductFinitePSpace
         if all(space.is_continuous for space in spaces):
             cls = ProductContinuousPSpace
 
-        obj = Basic.__new__(cls, symbols, spaces)
+        obj = Basic.__new__(cls, symbols, FiniteSet(*spaces))
         obj.rs_space_dict = rs_space_dict
 
         return obj
@@ -150,6 +185,9 @@ class ProductPSpace(PSpace):
         raise NotImplementedError("Density not available for ProductSpaces")
 
 class ProductDomain(Domain):
+    """
+    A domain resulting from the merger of two independent domains
+    """
     is_ProductDomain = True
     def __new__(cls, *domains):
 
@@ -202,12 +240,15 @@ class ProductDomain(Domain):
         # All subevents passed
         return True
 
+    def as_boolean(self):
+        return And(*[domain.as_boolean() for domain in self.domains])
 
 def is_random(x):
     return isinstance(x, RandomSymbol)
-def is_random_expr(expr):
-    return any(is_random(sym) for sym in expr.free_symbols)
 def random_symbols(expr):
+    """
+    Returns all RandomSymbols within a SymPy Expression
+    """
     try:
         return [s for s in expr.free_symbols if is_random(s)]
     except:
@@ -215,6 +256,17 @@ def random_symbols(expr):
 
 
 def pspace(expr):
+    """
+    Returns the underlying Probability Space of a random expression
+    >>> from sympy.statistics import pspace, Normal
+    >>> from sympy.statistics.rv import ProductPSpace
+    >>> X, Y = Normal(0, 1), Normal(0, 1)
+    >>> pspace(2*X + 1) == X.pspace
+    True
+
+    For internal use.
+    """
+
     rvs = random_symbols(expr)
     if not rvs:
         return None
@@ -225,6 +277,9 @@ def pspace(expr):
     return ProductPSpace(*[rv.pspace for rv in rvs])
 
 def sumsets(sets):
+    """
+    Union of sets
+    """
     return reduce(frozenset.union, sets, frozenset())
 
 def rs_swap(a,b):
@@ -242,6 +297,19 @@ def rs_swap(a,b):
     return d
 
 def Given(expr, given=None, **kwargs):
+    """
+    From a random expression and a condition on that expression creates a new
+    probability space from the condition and returns the same expression on that
+    conditional probability space.
+
+    >>> from sympy.statistics import Given, Density, Die
+    >>> X = Die(6)
+    >>> Y = Given(X, X>3)
+    >>> Density(Y)
+    {4: 1/3, 5: 1/3, 6: 1/3}
+
+    """
+
     if given is None:
         return expr
 
@@ -257,6 +325,21 @@ def Given(expr, given=None, **kwargs):
     return expr
 
 def E(expr, given=None, **kwargs):
+    """
+    Returns the expected value of a random expression (optionally given a
+    condition)
+
+    >>> from sympy.statistics import E, Die
+    >>> X = Die(6)
+    >>> E(X)
+    7/2
+    >>> E(2*X + 1)
+    8
+
+    >>> E(X, X>3) # Expectation of X given that it is above 3
+    5
+    """
+
     if not random_symbols(expr): # expr isn't random?
         return expr
     # Create new expr and recompute E
@@ -267,6 +350,21 @@ def E(expr, given=None, **kwargs):
 
 
 def P(condition, given=None, **kwargs):
+    """
+    Probability that a condition is true, optionally given a second condition
+
+    >>> from sympy.statistics import P, Die
+    >>> from sympy import Eq
+    >>> X, Y = Die(6), Die(6)
+    >>> P(X>3)
+    1/2
+    >>> P(Eq(X, 5), X>2) # Probability that X == 5 given that X > 2
+    1/4
+    >>> P(X>Y)
+    5/12
+
+    """
+
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
         return P(Given(condition, given, **kwargs), **kwargs)
@@ -275,6 +373,30 @@ def P(condition, given=None, **kwargs):
     return pspace(condition).P(condition, **kwargs)
 
 def Density(expr, given=None, **kwargs):
+    """
+    Probability Density of a random expression, optionally given a second
+    condition
+
+    This density will take on different forms for different types of probability
+    spaces.
+    Discrete RV's produce Dicts
+    Continuous RV's produce a Tuple with expression representing the PDF and
+    a symbol designating the active variable
+
+    >>> from sympy.statistics import Density, Die, Normal
+    >>> from sympy import Symbol
+
+    >>> D = Die(6)
+    >>> X = Normal(0, 1, symbol=Symbol('x'))
+
+    >>> Density(D)
+    {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
+    >>> Density(2*D)
+    {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
+    >>> Density(X)
+    (x, 2**(1/2)*exp(-x**2/2)/(2*pi**(1/2)))
+
+    """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
         return Density(Given(expr, given, **kwargs), **kwargs)
@@ -283,6 +405,24 @@ def Density(expr, given=None, **kwargs):
     return pspace(expr).compute_density(expr, **kwargs)
 
 def Where(condition, given=None, **kwargs):
+    """
+    Returns the domain where a condition is True
+
+    >>> from sympy.statistics import Where, Die, Normal
+    >>> from sympy import symbols, And
+
+    >>> x, a, b = symbols('x a b')
+    >>> D1, D2 = Die(6, symbol=a), Die(6, symbol=b)
+    >>> X = Normal(0, 1, symbol=x)
+
+    >>> Where(X**2<1)
+    Domain: And(-1 < x, x < 1)
+
+    >>> Where(And(D1<=D2 , D2<3))
+    Domain: Or(And(a == 1, b == 1), And(a == 1, b == 2), And(a == 2, b == 2))
+
+
+    """
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
         return Where(Given(condition, given, **kwargs), **kwargs)
