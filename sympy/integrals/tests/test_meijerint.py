@@ -122,13 +122,12 @@ def test_meijerint():
                               x, -oo, oo) == (1, True)
 
 def test_inversion():
-    from sympy import piecewise_fold, besselj, sqrt, I, sin, cos
+    from sympy import piecewise_fold, besselj, sqrt, I, sin, cos, Heaviside
     def inv(f): return piecewise_fold(meijerint_inversion(f, s, t))
-    assert inv(1/(s**2 + 1)) == sin(t)
-    assert inv(s/(s**2 + 1)) == cos(t)
-    i = inv(exp(-s)/s)
-    assert i.args[0].args[0] == 0 and i.args[1].args[0] == 1
-    assert inv(1/sqrt(1 + s**2)) == besselj(0, t)
+    assert inv(1/(s**2 + 1)) == sin(t)*Heaviside(t)
+    assert inv(s/(s**2 + 1)) == cos(t)*Heaviside(t)
+    assert inv(exp(-s)/s) == Heaviside(t - 1)
+    assert inv(1/sqrt(1 + s**2)) == besselj(0, t)*Heaviside(t)
 
     # Test some antcedents checking.
     assert meijerint_inversion(sqrt(s)/sqrt(1 + s**2), s, t) is None

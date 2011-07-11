@@ -1,7 +1,7 @@
 from sympy.integrals.transforms import (mellin_transform,
-                                        inverse_mellin_transform)
+    inverse_mellin_transform, laplace_transform, inverse_laplace_transform)
 from sympy import (gamma, exp, oo, Heaviside, symbols, re, factorial, pi,
-                   cos, S, And)
+                   cos, S, And, sin)
 from sympy.abc import x, s, a
 nu, beta, rho = symbols('nu beta rho')
 
@@ -98,3 +98,58 @@ def test_inverse_mellin_transform():
     assert simp_pows(IMT(gamma(s)*gamma(rho-s)/gamma(rho), s, x, (0, None))) \
            == (1/(x + 1))**rho
     # TODO when better combsimp is in place, test abs(1-x)**(-rho)
+
+def test_laplace_transform():
+    LT = laplace_transform
+    a, b, c, = symbols('a b c', positive=True)
+    t = symbols('t')
+
+    # basic tests from wikipedia
+
+    assert LT((t-a)**b*exp(-c*(t-a))*Heaviside(t-a), t, s) \
+           == ((s + c)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
+    assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), 0, True)
+    assert LT(Heaviside(t), t, s) == (1/s, 0, True)
+    assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, 0, True)
+    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), 0, True)
+
+    assert LT((exp(2*t)-1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
+           == exp(-b)/(s**2 - 1)
+
+    assert LT(exp(t), t, s)[0:2] == (1/(s-1), 1)
+    assert LT(exp(2*t), t, s)[0:2] == (1/(s-2), 2)
+    assert LT(exp(a*t), t, s)[0:2] == (1/(s-a), a)
+
+    # TODO more basic functions when tables are extended
+
+def test_inverse_laplace_transform():
+    from sympy import expand, sinh, cosh, besselj
+    ILT = inverse_laplace_transform
+    a, b, c, = symbols('a b c', positive=True)
+    t = symbols('t')
+
+    def simp_hyp(expr):
+        return expand(expand(expr).rewrite(sin))
+
+    # just test inverses of all of the above
+    assert ILT(1/s, s, t) == Heaviside(t)
+    assert ILT(1/s**2, s, t) == t*Heaviside(t)
+    assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/factorial(4)
+    assert ILT(exp(-a*s)/s, s, t) == Heaviside(t-a)
+    assert ILT(exp(-a*s)/(s+b), s, t) == exp(a*b - b*t)*Heaviside(t - a)
+    assert ILT(a/(s**2 + a**2), s, t) == sin(a*t)*Heaviside(t)
+    assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
+    # TODO is there a way around simp_hyp?
+    assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
+    assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)
+    assert ILT(a/((s+b)**2 + a**2), s, t) == exp(-b*t)*sin(a*t)*Heaviside(t)
+    assert ILT((s+b)/((s+b)**2 + a**2), s, t) == exp(-b*t)*cos(a*t)*Heaviside(t)
+    # TODO sinh/cosh shifted come out a mess. also delayed trig is a mess
+    # TODO should this simplify further?
+    assert ILT(exp(-a*s)/s**b, s, t) == \
+      (-1)**(b + 1)*(a - t)**(b - 1)*Heaviside(t - a)/gamma(b)
+
+    assert ILT(exp(-a*s)/sqrt(1 + s**2), s, t) == \
+        Heaviside(t - a)*besselj(0, a - t) # note: besselj(0, x) is even
+
+    # TODO everything from the direct transforms

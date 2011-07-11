@@ -802,3 +802,267 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     (-x**2 + 1)*Heaviside(-x + 1)/(2*x)
     """
     return InverseMellinTransform(F, s, x, strip[0], strip[1]).doit(**hints)
+
+
+##########################################################################
+# Laplace Transform
+##########################################################################
+
+@_noconds
+def _laplace_transform(f, t, s, simplify=True):
+    """ The backend function for laplace transforms. """
+    from sympy import (re, Max, exp, pi, Abs, Min, periodic_argument as arg,
+                       cos, Wild, symbols)
+    F = integrate(exp(-s*t) * f, (t, 0, oo))
+
+    if not F.has(Integral):
+        return _simplify(F, simplify), -oo, True
+
+    if not F.is_Piecewise:
+        raise IntegralTransformError('Laplace', f, 'could not compute integral')
+
+    F, cond = F.args[0]
+    if F.has(Integral):
+        raise IntegralTransformError('Laplace', f, 'integral in unexpected form')
+
+    a = -oo
+    aux = True
+    conds = conjuncts(to_cnf(cond))
+    u = Dummy('u', real=True)
+    p, q, w1, w2, w3 = symbols('p q w1 w2 w3', cls=Wild, exclude=[s])
+    for c in conds:
+        a_ = oo
+        aux_ = []
+        for d in disjuncts(c):
+            m = d.match(abs(arg((s + w3)**p*q, w1)) < w2)
+            if m:
+                if m[q] > 0 and m[w2]/m[p] == pi/2:
+                    d = re(s + m[w3]) > 0
+            m = d.match(0 < cos(abs(arg(s, q)))*abs(s) - p)
+            if m:
+                d = re(s) > m[p]
+            d_ = d.replace(re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
+            if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
+               or d_.has(s) or not d_.has(t):
+                aux_ += [d]
+                continue
+            soln = _solve_inequality(d_, t)
+            if not soln.is_Relational or \
+               (soln.rel_op != '<' and soln.rel_op != '<='):
+                aux_ += [d]
+                continue
+            if soln.lhs == t:
+                raise IntegralTransformError('Laplace', f,
+                                     'convergence not in half-plane?')
+            else:
+                a_ = Min(soln.lhs, a_)
+        if a_ != oo:
+            a = Max(a_, a)
+        else:
+            aux = And(aux, Or(*aux_))
+
+    return _simplify(F, simplify), a, aux
+
+class LaplaceTransform(IntegralTransform):
+    """
+    Class representing unevaluated laplace transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute laplace transforms, see the :func:`laplace_transform`
+    docstring.
+    """
+
+    _name = 'Laplace'
+
+    def _compute_transform(self, f, t, s, **hints):
+        return _laplace_transform(f, t, s, **hints)
+
+    def _as_integral(self, f, t, s):
+        from sympy import Integral, exp
+        return Integral(f*exp(-s*t), (t, 0, oo))
+
+    """
+    Class representing unevaluated laplace transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+    For how to compute laplace transforms, see the :func:`laplace_transform`
+    docstring.
+    """
+    def _collapse_extra(self, extra):
+        from sympy import And, Max
+        conds = []
+        planes = []
+        for plane, cond in extra:
+            conds.append(cond)
+            planes.append(plane)
+        cond = And(*conds)
+        plane = Max(*planes)
+        if cond is False:
+            raise IntegralTransformError('Laplace', None, 'No combined convergence.')
+        return plane, cond
+
+def laplace_transform(f, t, s, **hints):
+    r"""
+    Compute the Laplace Transform `F(s)` of `f(t)`,
+
+    .. math :: F(s) = \int_0^\infty e^{-st} f(t) \mathrm{d}t.
+
+    For all "sensible" functions, this converges absolutely in a
+    half plane  `a < Re(s)`.
+
+    This function returns (F, a, cond)
+    where `F` is the laplace transform of `f`, `Re(s) > a` is the half-plane
+    of convergence, and cond are auxiliary convergence conditions.
+
+    If the integral cannot be computed in closed form, this function returns
+    an unevaluated LaplaceTransform object.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.transforms.IntegralTransform.doit`. If ``noconds=True``,
+    only `F` will be returned (i.e. not ``cond``, and also not the plane ``a``).
+
+    >>> from sympy.integrals import laplace_transform
+    >>> from sympy.abc import t, s, a
+    >>> laplace_transform(t**a, t, s)[0:2]
+    (s**(-a - 1)*gamma(a + 1), 0)
+    """
+    return LaplaceTransform(f, t, s).doit(**hints)
+
+@_noconds_(True)
+def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
+    """ The backend function for inverse laplace transforms. """
+    from sympy import exp, Heaviside, log, expand_complex, Integral, Piecewise
+    from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
+    # There are two strategies we can try:
+    # 1) Use inverse mellin transforms - related by a simple change of variables.
+    # 2) Use the inversion integral.
+
+    t = Dummy('t', real=True)
+    def pw_simp(*args):
+        """ Simplify a piecewise expression from hyperexpand. """
+        # XXX we break modularity here!
+        if len(args) != 3:
+            return Piecewise(*args)
+        arg = args[2].args[0].argument
+        coeff, exponent = _get_coeff_exp(arg, t)
+        e1 = args[0].args[0]
+        e2 = args[1].args[0]
+        return Heaviside(1/abs(coeff) - t**exponent)*e1 \
+             + Heaviside(t**exponent - 1/abs(coeff))*e2
+
+    try:
+        f, cond = inverse_mellin_transform(F, s, exp(-t), (None, oo),
+                                           needeval=True, noconds=False)
+    except IntegralTransformError:
+        f = None
+    if f is None:
+        f = meijerint_inversion(F, s, t)
+        if f is None:
+            raise IntegralTransformError('Inverse Laplace', f, '')
+        if f.is_Piecewise:
+            f, cond = f.args[0]
+            if f.has(Integral):
+                raise IntegralTransformError('Inverse Laplace', f,
+                                     'inversion integral of unrecognised form.')
+        else:
+            cond = True
+        f = f.replace(Piecewise, pw_simp)
+
+    if f.is_Piecewise:
+        # many of the functions called below can't work with piecewise
+        # (b/c it has a bool in args)
+        return f.subs(t, t_), cond
+
+    u = Dummy('u')
+    def simp_heaviside(arg):
+        a = arg.subs(exp(-t), u)
+        if a.has(t):
+            return Heaviside(arg)
+        rel = _solve_inequality(a > 0, u)
+        if rel.lhs == u:
+            k = log(rel.rhs)
+            return Heaviside(t + k)
+        else:
+            k = log(rel.lhs)
+            return Heaviside(-(t + k))
+    f = f.replace(Heaviside, simp_heaviside)
+
+    def simp_exp(arg):
+        return expand_complex(exp(arg))
+    f = f.replace(exp, simp_exp)
+
+    # TODO it would be nice to fix cosh and sinh ... simplify messes these
+    #      exponentials up
+
+    return _simplify(f.subs(t, t_), simplify), cond
+
+class InverseLaplaceTransform(IntegralTransform):
+    """
+    Class representing unevaluated inverse laplace transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute inverse laplace transforms, see the
+    :func:`inverse_laplace_transform` docstring.
+    """
+
+    nargs = 4
+
+    _name = 'Inverse Laplace'
+    _none_sentinel = Dummy('None')
+    _c = Dummy('c')
+
+    def __new__(cls, F, s, x, plane, **opts):
+        if plane is None:
+            plane = InverseLaplaceTransform._none_sentinel
+        return IntegralTransform.__new__(cls, F, s, x, plane, **opts)
+
+    @property
+    def fundamental_plane(self):
+        plane = self.args[3]
+        if plane is InverseLaplaceTransform._none_sentinel:
+            plane = None
+        return plane
+
+    def _compute_transform(self, F, s, t, **hints):
+        return _inverse_laplace_transform(F, s, t, self.fundamental_plane, **hints)
+
+    def _as_integral(self, F, s, t):
+        from sympy import I, Integral, exp
+        c = self.__class__._c
+        return Integral(exp(s*t)*F, (s, c - I*oo, c + I*oo))
+
+def inverse_laplace_transform(F, s, t, plane=None, **hints):
+    r"""
+    Compute the inverse laplace transform of `F(s)`, defined as
+
+    .. math :: f(t) = \int_{c-i\infty}^{c+i\infty} e^{st} F(s) \mathrm{d}s,
+
+    for `c` so large that `F(s)` has no singularites in the
+    half-plane `Re(s) > c-\epsilon`.
+
+    The plane can be specified by
+    argument ``plane``, but will be inferred if passed as None.
+
+    Under certain regularity conditions, this recovers `f(t)` from its
+    Laplace Transform `F(s)`, for non-negative `t`, and vice
+    versa.
+
+    If the integral cannot be computed in closed form, this function returns
+    an unevaluated InverseLaplaceTransform object.
+
+    Note that this function will always assume `t` to be real,
+    regardless of the sympy assumption on `t`.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.transforms.IntegralTransform.doit`.
+
+    >>> from sympy.integrals.transforms import inverse_laplace_transform
+    >>> from sympy import exp, Symbol
+    >>> from sympy.abc import s, t
+    >>> a = Symbol('a', positive=True)
+    >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
+    Heaviside(-a + t)
+    """
+    return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
