@@ -46,6 +46,8 @@ def residue(expr, x, x0):
     # TODO: this sometimes helps, but the series expansion should rather be
     # fixed, see #1627:
     if s == 0:
+        s = expr.series(x, 0, 1).removeO()
+    if s == 0:
         s = expr.series(x, 0, 6).removeO()
     s = collect(s, x)
     if x0 != 0:
