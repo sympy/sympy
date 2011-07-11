@@ -1,15 +1,7 @@
-"""Quantum mechanical angular momemtum.
-
-TODO:
-* Improve the algorithm for the Wigner D-Function.
-* Fix printing of Wigner D-Function.
-* Implement inner products using Wigner D-Function.
-* Implement rewrite logic for everything.
-* Test
-"""
+"""Quantum mechanical angular momemtum."""
 
 from sympy import (
-        binomial, cos, diff, exp, factorial, I, Integer, Matrix, N, pi,
+        AtomicExpr, binomial, cos, diff, exp, factorial, I, Integer, Matrix, N, pi,
         Rational, S, sin, sqrt, Symbol, sympify, simplify
 )
 from sympy.matrices.matrices import zeros
@@ -40,7 +32,8 @@ __all__ = [
     'JxBra',
     'JyKet',
     'JyBra',
-    'Rotation'
+    'Rotation',
+    'WignerD'
 ]
 
 def m_values(j):
@@ -388,21 +381,11 @@ class Rotation(UnitaryOperator):
     def D(cls, j, m, mp, alpha, beta, gamma):
         """Wigner D-function.
 
-        The Wigner D-function gives the matrix elements of the rotation
-        operator in the jm-representation. For the Euler angles alpha, beta,
-        gamma, the the D-function is defined such that:
-        <j,m| R(alpha,beta,gamma) |j',m'> = delta_jj' * D(j, m, m', alpha, beta, gamma)
-        Where the rotation operator is as defined by the Rotation class.
-
-        The Wigner D-function defined in this way gives:
-        D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)
-        Where d is the Wigner small-d function, which is given by Rotation.d.
-
-        Note that to evaluate the D-function, the j, m and mp parameters must
-        be integer or half integer numbers.
+        Returns an instance of the WignerD class. See the corresponding
+        docstring for more information on the Wigner-D matrix.
 
         Parameters
-        ==========
+        ===========
 
         j : Number
             Total angular momentum
@@ -420,35 +403,28 @@ class Rotation(UnitaryOperator):
         Examples
         ========
 
-        Evaluate the matrix elements of a simple rotation:
+        Return the Wigner-D matrix element for a defined rotation, both
+        numerical and symbolic:
 
             >>> from sympy.physics.quantum.spin import Rotation
-            >>> from sympy import pi
-            >>> Rotation.D(1, 1, 0, pi, pi/2, 0)
-            2**(1/2)/2
+            >>> from sympy import pi, symbols
+            >>> alpha, beta, gamma = symbols('alpha beta gamma')
+            >>> Rotation.D(1, 1, 0,pi, pi/2,-pi)
+            WignerD(1, 1, 0, pi, pi/2, -pi)
 
-        References
-        ==========
-
-        [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
         """
-        result = exp(-I*m*alpha)*exp(-I*mp*gamma)
-        result *= cls.d(j, m, mp, beta)
-        return result
+        return WignerD(j,m,mp,alpha,beta,gamma)
 
     @classmethod
     def d(cls, j, m, mp, beta):
         """Wigner small-d function.
 
-        The Wigner small-d function gives the component of the Wigner
-        D-function that is determined by the second Euler angle. That is the
-        Wigner D-function is:
-        D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)
-        Where d is the small-d function. The Wigner D-function is given by
-        Rotation.D.
+        Roturns an instance of cthe WignerD class with the alpha and gamma
+        angles given as 0. See the corresponding docstring for more
+        information on the Wigner small-d matrix.
 
         Parameters
-        ==========
+        ===========
 
         j : Number
             Total angular momentum
@@ -462,51 +438,17 @@ class Rotation(UnitaryOperator):
         Examples
         ========
 
-        Evaluate the matrix elements of a simple rotation
+        Return the Wigner-D matrix element for a defined rotation, both
+        numerical and symbolic:
 
             >>> from sympy.physics.quantum.spin import Rotation
-            >>> from sympy import pi
+            >>> from sympy import pi, symbols
+            >>> beta = symbols('beta')
             >>> Rotation.d(1, 1, 0, pi/2)
-            -2**(1/2)/2
+            WignerD(1, 1, 0, 0, pi/2, 0)
 
-        References
-        ==========
-
-        [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
         """
-        j = sympify(j)
-        m = sympify(m)
-        mp = sympify(mp)
-        beta = sympify(beta)
-        r = 0
-        if beta == pi/2:
-            # Varshalovich Equation (5), Section 4.16, page 113, setting
-            # alpha=gamma=0.
-            for k in range(2*j+1):
-                if k > j+mp or k > j-m or k < mp-m:
-                    continue
-                r += (-S(1))**k * binomial(j+mp, k) * binomial(j-mp, k+m-mp)
-            r *= (-S(1))**(m-mp) / 2**j * sqrt(factorial(j+m) * \
-                    factorial(j-m) / (factorial(j+mp) * factorial(j-mp)))
-        else:
-            # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
-            # beta1=beta2=pi/2, and we get alpha=gamma=pi/2 and beta=phi+pi,
-            # then we use the Eq. (1), Section 4.4. page 79, to simplify:
-            # d(j, m, mp, beta+pi) = (-1)**(j-mp) * d(j, m, -mp, beta)
-            # This happens to be almost the same as in Eq.(10), Section 4.16,
-            # except that we need to substitute -mp for mp.
-            size, mvals = m_values(j)
-            for mpp in mvals:
-                r += Rotation.d(j, m, mpp, pi/2) * (cos(-mpp*beta)+I*sin(-mpp*beta)) * \
-                    Rotation.d(j, mpp, -mp, pi/2)
-            # Empirical normalization factor so results match Varshalovich
-            # Tables 4.3-4.12
-            # Note that this exact normalization does not follow from the
-            # above equations
-            r = r * I**(2*j-m-mp) * (-1)**(2*m)
-            # Finally, simplify the whole expression
-            r = simplify(r)
-        return r
+        return WignerD(j,m,mp,0,beta,0)
 
     def matrix_element(self, j, m, jp, mp):
         result = self.__class__.D(
@@ -530,6 +472,192 @@ class Rotation(UnitaryOperator):
 
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
+
+
+class WignerD(AtomicExpr):
+    """Wigner-D function
+
+    The Wigner D-function gives the matrix elements of the rotation
+    operator in the jm-representation. For the Euler angles alpha, beta,
+    gamma, the the D-function is defined such that:
+    <j,m| R(alpha,beta,gamma) |j',m'> = delta_jj' * D(j, m, m', alpha, beta, gamma)
+    Where the rotation operator is as defined by the Rotation class.
+
+    The Wigner D-function defined in this way gives:
+    D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)
+    Where d is the Wigner small-d function, which is given by Rotation.d.
+
+    The Wigner small-d function gives the component of the Wigner
+    D-function that is determined by the second Euler angle. That is the
+    Wigner D-function is:
+    D(j, m, m', alpha, beta, gamma) = exp(-i*m*alpha) * d(j, m, m', beta) * exp(-i*m'*gamma)
+    Where d is the small-d function. The Wigner D-function is given by
+    Rotation.D.
+
+    Note that to evaluate the D-function, the j, m and mp parameters must
+    be integer or half integer numbers.
+
+    Parameters
+    ==========
+
+    j : Number
+        Total angular momentum
+    m : Number
+        Eigenvalue of angular momentum along axis after rotation
+    mp : Number
+        Eigenvalue of angular momentum along rotated axis
+    alpha : Number, Symbol
+        First Euler angle of rotation
+    beta : Number, Symbol
+        Second Euler angle of rotation
+    gamma : Number, Symbol
+        Third Euler angle of rotation
+
+    Examples
+    ========
+
+    Evaluate the Wigner-D matrix elements of a simple rotation:
+
+        >>> from sympy.physics.quantum.spin import Rotation
+        >>> from sympy import pi
+        >>> rot = Rotation.D(1, 1, 0, pi, pi/2, 0)
+        >>> rot
+        WignerD(1, 1, 0, pi, pi/2, 0)
+        >>> rot.doit()
+        2**(1/2)/2
+
+    Evaluate the Wigner-d matrix elements of a simple rotation
+
+        >>> rot = Rotation.d(1, 1, 0, pi/2)
+        >>> rot
+        WignerD(1, 1, 0, 0, pi/2, 0)
+        >>> rot.doit()
+        -2**(1/2)/2
+
+    References
+    ==========
+
+    [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    """
+
+    def __new__(cls, *args, **hints):
+        if not len(args) == 6:
+            raise ValueError('6 parameters expected, got %s' % args)
+        evaluate = hints.get('evaluate', False)
+        if evaluate:
+            return AtomicExpr.__new__(cls, *args)._eval_wignerd()
+        return AtomicExpr.__new__(cls, *args, **{'evaluate': False})
+
+    @property
+    def j(self):
+        return self.args[0]
+
+    @property
+    def m(self):
+        return self.args[1]
+
+    @property
+    def mp(self):
+        return self.args[2]
+
+    @property
+    def alpha(self):
+        return self.args[3]
+
+    @property
+    def beta(self):
+        return self.args[4]
+
+    @property
+    def gamma(self):
+        return self.args[5]
+
+    def _latex(self, printer, *args):
+        if self.alpha == 0 and self.gamma == 0:
+            return r'd^{%s}_{%s,%s}\left(%s\right)' % \
+                ( printer._print(self.j), printer._print(self.m), printer._print(self.mp),
+                printer._print(self.beta) )
+        return r'D^{%s}_{%s,%s}\left(%s,%s,%s\right)' % \
+            ( printer._print(self.j), printer._print(self.m), printer._print(self.mp),
+            printer._print(self.alpha), printer._print(self.beta), printer._print(self.gamma) )
+
+    def _pretty(self, printer, *args):
+        top = printer._print(self.j)
+
+        bot = printer._print(self.m)
+        bot = prettyForm(*bot.right(','))
+        bot = prettyForm(*bot.right(printer._print(self.mp)))
+
+        pad = max(top.width(), bot.width())
+        top = prettyForm(*top.left(' '))
+        bot = prettyForm(*bot.left(' '))
+        if pad > top.width():
+            top = prettyForm(*top.right(' ' * (pad-top.width())))
+        if pad > bot.width():
+            bot = prettyForm(*bot.right(' ' * (pad-bot.width())))
+
+        if self.alpha == 0 and self.gamma == 0:
+            args = printer._print(self.beta)
+
+            s = stringPict('d' + ' '*pad)
+        else:
+            args = printer._print(self.alpha)
+            args = prettyForm(*args.right(','))
+            args = prettyForm(*args.right(printer._print(self.beta)))
+            args = prettyForm(*args.right(','))
+            args = prettyForm(*args.right(printer._print(self.gamma)))
+
+            s = stringPict('D' + ' '*pad)
+
+        args = prettyForm(*args.parens())
+        s = prettyForm(*s.above(top))
+        s = prettyForm(*s.below(bot))
+        s = prettyForm(*s.right(args))
+        return s
+
+    def doit(self, **hints):
+        hints['evaluate'] = True
+        return WignerD(*self.args, **hints)
+
+    def _eval_wignerd(self):
+        j = sympify(self.j)
+        m = sympify(self.m)
+        mp = sympify(self.mp)
+        alpha = sympify(self.alpha)
+        beta = sympify(self.beta)
+        gamma = sympify(self.gamma)
+        if not j.is_number:
+            raise ValueError("j parameter must be numerical to evaluate, got %s", j)
+        r = 0
+        if beta == pi/2:
+            # Varshalovich Equation (5), Section 4.16, page 113, setting
+            # alpha=gamma=0.
+            for k in range(2*j+1):
+                if k > j+mp or k > j-m or k < mp-m:
+                    continue
+                r += (-S(1))**k * binomial(j+mp, k) * binomial(j-mp, k+m-mp)
+            r *= (-S(1))**(m-mp) / 2**j * sqrt(factorial(j+m) * \
+                    factorial(j-m) / (factorial(j+mp) * factorial(j-mp)))
+        else:
+            # Varshalovich Equation(5), Section 4.7.2, page 87, where we set
+            # beta1=beta2=pi/2, and we get alpha=gamma=pi/2 and beta=phi+pi,
+            # then we use the Eq. (1), Section 4.4. page 79, to simplify:
+            # d(j, m, mp, beta+pi) = (-1)**(j-mp) * d(j, m, -mp, beta)
+            # This happens to be almost the same as in Eq.(10), Section 4.16,
+            # except that we need to substitute -mp for mp.
+            size, mvals = m_values(j)
+            for mpp in mvals:
+                r += Rotation.d(j, m, mpp, pi/2).doit() * (cos(-mpp*beta)+I*sin(-mpp*beta)) * \
+                    Rotation.d(j, mpp, -mp, pi/2).doit()
+            # Empirical normalization factor so results match Varshalovich
+            # Tables 4.3-4.12
+            # Note that this exact normalization does not follow from the
+            # above equations
+            r = r * I**(2*j-m-mp) * (-1)**(2*m)
+            # Finally, simplify the whole expression
+            r = simplify(r)
+        r *= exp(-I*m*alpha)*exp(-I*mp*gamma)
+        return r
 
 
 Jx = JxOp('J')
@@ -570,7 +698,7 @@ class SpinState(State):
         size, mvals = m_values(j)
         result = zeros((size,1))
         for p in range(size):
-            result[p,0] = Rotation.D(self.j, mvals[p], self.m, alpha, beta, gamma)
+            result[p,0] = Rotation.D(self.j, mvals[p], self.m, alpha, beta, gamma).doit()
         return result
 
     def _eval_rewrite_as_Jx(self, *args):
