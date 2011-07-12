@@ -78,6 +78,7 @@ def test_Min():
     assert Min(x, Min(y, z)) == Min(z, y, x)
     assert Min(x, Max(y, -oo)) == Min(x, y)
     assert Min(p, oo, n,  p, p, p_) == n
+    assert Min(p_, n_, p) == n_
     assert Min(n, oo, -7, p,  p, 2) == Min(n, -7)
     assert Min(2, x, p, n, oo, n_,  p, 2, -2, -2) == Min(-2, x, n, n_)
     assert Min(0, x, 1, y) == Min(0, x, y)
