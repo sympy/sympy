@@ -2246,9 +2246,6 @@ def test_pprint():
     sso = sys.stdout
     sys.stdout = fd
     try:
-        #FIXME-py3k: sympy/printing/pretty/stringpict.py", line 286, in terminal_width
-        #FIXME-py3k: curses.setupterm()
-        #FIXME-py3k: io.UnsupportedOperation: fileno
         pprint(pi, use_unicode=False)
     finally:
         sys.stdout = sso
