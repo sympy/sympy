@@ -1642,16 +1642,14 @@ def try_polynomial(ip, z):
     return res
 
 collection = None
-def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
+def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     """
     Try to find an expression for the hypergeometric function
     `ip.ap`, `ip.bq`.
 
     The result is expressed in terms of a dummy variable z0. Then it
-    is multiplied by premult. Then ops0 is applied, using chainmult*t*d/dt
-    for the operator.
-
-    These latter parameters are all trickery to make _meijergexpand short.
+    is multiplied by premult. Then ops0 is applied.
+    premult must be a*z**prem for some a independent of z.
     """
     from sympy.simplify import powdenest, simplify
 
@@ -1684,7 +1682,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
     if res is not None:
         debug('  Recognised polynomial.')
         p = apply_operators(res, ops, lambda f: z0*f.diff(z0))
-        p = apply_operators(p*premult, ops0, lambda f: chainmult*z0*f.diff(z0))
+        p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
         return simplify(p).subs(z0, z)
 
     # Try to recognise a shifted sum.
@@ -1697,7 +1695,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
 
     # apply the plan for poly
     p = apply_operators(p, ops, lambda f: z0*f.diff(z0))
-    p = apply_operators(p*premult, ops0, lambda f: chainmult*z0*f.diff(z0))
+    p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
     p = simplify(p).subs(z0, z)
 
     # Now try to find a formula
@@ -1714,12 +1712,14 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, chainmult=1):
     # Now carry out the plan.
     C = apply_operators(f.C.subs(f.z, z0), ops,
                         make_derivative_operator(f.M.subs(f.z, z0), z0))
-    C = apply_operators(C*premult, ops0,
-                        make_derivative_operator(f.M.subs(f.z, z0)*chainmult, z0))
+    from sympy import eye
+    C = apply_operators(C, ops0,
+                        make_derivative_operator(f.M.subs(f.z, z0)
+                                                 + prem*eye(f.M.shape[0]), z0))
 
     if premult == 1:
         C = C.applyfunc(make_simp(z0))
-    r = C*f.B.subs(f.z, z0)
+    r = C*f.B.subs(f.z, z0)*premult
     r = r[0].subs(z0, z) + p
 
     # This will simpliy things like sqrt(-z**2) to i*z.
@@ -1884,7 +1884,8 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         C = C.applyfunc(make_simp(z))
         r = C*f.B.subs(f.z, z)
         r = r[0].subs(z, z0)
-        return r
+        # XXX XXX this is bad .. kills abs(x) etc
+        return powdenest(r, force=True)
 
     debug("  Could not find a direct formula. Trying slater's theorem.")
 
@@ -1907,7 +1908,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                    return False
         return True
 
-    def do_slater(an, bm, ap, bq, z, t, chainmult, realz):
+    def do_slater(an, bm, ap, bq, z):
         from sympy import gamma, residue, factorial, rf, expand_func
         iq = IndexQuadruple(an, bm, ap, bq)
         _, pbm, pap, _ = iq.compute_buckets()
@@ -1932,10 +1933,10 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 harg = k*z
                 premult = (k*t)**bh
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                                   t, premult, chainmult)
+                                   t, premult, bh)
                 if hyp is None:
                     hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                          lambda f: chainmult*t*f.diff(t)).subs(t, harg)
+                                          lambda f: t*f.diff(t)).subs(t, harg)
                 res += fac * hyp
             else:
                 b_ = pbm[m][0]
@@ -1968,7 +1969,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 integrand = expand_func(integrand)
                 for r in range(lu):
                     resid = residue(integrand, s, b_ + r)
-                    resid = apply_operators(resid, ops, lambda f: realz*f.diff(realz))
+                    resid = apply_operators(resid, ops, lambda f: z*f.diff(z))
                     res -= resid
 
                 # Now the hypergeometric term.
@@ -1980,10 +1981,10 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 nbq = [1 + au - b for b in list(bm) + list(bq)]
 
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                                   t, premult, chainmult)
+                                   t, premult, au)
                 if hyp is None:
                     hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                          lambda f: chainmult*t*f.diff(t)).subs(t, harg)
+                                          lambda f: t*f.diff(t)).subs(t, harg)
 
                 C = S(-1)**(lu)/factorial(lu)
                 for i in range(u):
@@ -2005,16 +2006,18 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         return res, cond
 
     t = Dummy('t')
-    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, t, 1, z)
+    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z)
 
     def tr(l): return [1 - x for x in l]
     for op in ops:
-        op._poly = Poly(op._poly.subs(z, S(-1)**(len(iq.an) - len(iq.bq))/t), x)
+        op._poly = Poly(op._poly.subs({z: 1/t, x: -x}), x)
     slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
-                               1/z, t, -1, z)
+                               t)
 
     slater1 = powdenest(slater1.subs(z, z0), force=True)
-    slater2 = powdenest(slater2.subs(z, z0), force=True)
+    slater2 = powdenest(slater2.subs(t, 1/z0), force=True)
+    if not isinstance(cond2, bool):
+        cond2 = cond2.subs(t, 1/z0)
 
     if meijerg(iq.an, iq.ap, iq.bm, iq.bq, z).delta > 0:
         # The above condition means that the convergence region is connected.
