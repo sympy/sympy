@@ -62,9 +62,9 @@ def check(a, check_attr = True):
 #================== core =========================
 
 def test_core_basic():
-    for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicMeta("test"),
-              BasicType, BasicType("test"), ClassRegistry, ClassRegistry(),
-              SingletonRegistry, SingletonRegistry()):
+    for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicType,
+              ClassRegistry, ClassRegistry(), SingletonRegistry,
+              SingletonRegistry()):
         check(c)
 
 def test_core_symbol():

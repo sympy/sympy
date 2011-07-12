@@ -546,7 +546,8 @@ def test_logcombine_1():
     assert logcombine(b*log(z)-log(w)) == log(z**b/w)
     assert logcombine(log(x)*log(z)) == log(x)*log(z)
     assert logcombine(log(w)*log(x)) == log(w)*log(x)
-    assert logcombine(cos(-2*log(z)+b*log(w))) == cos(log(w**b/z**2))
+    assert logcombine(cos(-2*log(z)+b*log(w))) in [cos(log(w**b/z**2)),
+                                                   cos(log(z**2/w**b))]
     assert logcombine(log(log(x)-log(y))-log(z), force=True) == \
         log(log((x/y)**(1/z)))
     assert logcombine((2+I)*log(x), force=True) == I*log(x)+log(x**2)

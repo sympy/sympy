@@ -125,9 +125,9 @@ def test_solve_polynomial1():
     assert solve((x - y, x+y), (x, y)) == solution
     assert solve((x - y, x+y), [x, y]) == solution
 
-    assert solve( x**3 - 15*x - 4, x) == [-2 + 3**Rational(1,2),
-                                           4,
-                                           -2 - 3**Rational(1,2) ]
+    assert set(solve(x**3 - 15*x - 4, x)) == set([-2 + 3**Rational(1,2),
+                                           S(4),
+                                           -2 - 3**Rational(1,2) ])
 
     assert sorted(solve((x**2 - 1)**2 - a, x)) == \
            sorted([(1 + a**S.Half)**S.Half, -(1 + a**S.Half)**S.Half,
