@@ -1,4 +1,5 @@
 from sympy.core.decorators import wraps
+from sympy.core.compatibility import iterable
 
 
 def threaded_factory(func, use_add):
@@ -10,7 +11,7 @@ def threaded_factory(func, use_add):
     def threaded_func(expr, *args, **kwargs):
         if isinstance(expr, Matrix):
             return expr.applyfunc(lambda f: func(f, *args, **kwargs))
-        elif hasattr(expr, '__iter__'):
+        elif iterable(expr):
             return expr.__class__([ func(f, *args, **kwargs) for f in expr ])
         else:
             expr = sympify(expr)
