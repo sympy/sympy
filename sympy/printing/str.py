@@ -166,6 +166,9 @@ class StrPrinter(Printer):
         return "%s%s, %s%s" % \
                (left, self._print(i.start), self._print(i.end), right)
 
+    def _print_Inverse(self, I):
+        return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
+
     def _print_Lambda(self, obj):
         args, expr = obj.args
         if len(args) == 1:
@@ -462,6 +465,9 @@ class StrPrinter(Printer):
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
+
+    def _print_Transpose(self, T):
+        return "%s'" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
 
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)"%(expr.a, expr.b)

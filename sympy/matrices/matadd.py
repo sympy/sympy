@@ -20,4 +20,8 @@ class MatAdd(MatrixExpr, Add):
     def shape(self):
         return self.args[0].shape
 
+    def _check_shape(self):
+        return (all(arg.shape == self.args[0].shape for arg in self.args) and
+                all(arg._check_shape() for arg in self.args))
+
 

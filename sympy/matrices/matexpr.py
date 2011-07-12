@@ -11,6 +11,8 @@ class MatrixExpr(Expr):
     _op_priority = 11.0
 
     is_Matrix = True
+    is_Identity = False
+    is_Inverse = False
 
 
     # The following is adapted from the core Expr object
@@ -84,6 +86,13 @@ class MatrixExpr(Expr):
     def is_square(self):
         return Eq(self.n, self.m)
 
+    def subs(self, *args):
+        ex = matrixify(Basic.subs(self, *args))
+        #if ex.is_Matrix and not ex._check_shape():
+#            raise ShapeError("Substituted expression invalid")
+        return ex
+
+
 class MatrixSymbol(MatrixExpr, Symbol):
     def __new__(cls, name, n, m, **assumptions):
         obj = Symbol.__new__(cls, name, False, **assumptions)
@@ -92,6 +101,18 @@ class MatrixSymbol(MatrixExpr, Symbol):
 
     def _hashable_content(self):
         return(self.name, self.shape)
+
+    def _check_shape(self):
+        return True
+
+class Identity(MatrixSymbol):
+    is_Identity = True
+    def __new__(cls, n):
+        return MatrixSymbol.__new__(cls, "I", n,n)
+
+
+
+
 
 def matrixify(expr):
     """
@@ -114,4 +135,5 @@ from matmul import MatMul
 from matadd import MatAdd
 from inverse import Inverse
 from transpose import Transpose
-
+from transpose import Transpose
+from inverse import Inverse

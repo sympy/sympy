@@ -2,6 +2,7 @@ from matexpr import MatrixExpr, ShapeError
 from sympy import Basic
 
 class Inverse(MatrixExpr):
+    is_Inverse = True
 
     def __new__(cls, mat):
 
@@ -14,11 +15,17 @@ class Inverse(MatrixExpr):
             except:
                 pass
 
-        if isinstance(mat, Inverse):
+        if mat.is_Inverse:
             return mat.arg
 
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s"%mat)
+
+        if mat.is_Mul:
+            try:
+                return MatMul(*[Inverse(arg) for arg in mat.args[::-1]])
+            except ShapeError:
+                pass
 
         return Basic.__new__(cls, mat)
 
@@ -30,4 +37,4 @@ class Inverse(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
-
+from matmul import MatMul
