@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
-        Matrix, Lambda, exp, Integral, oo)
+        Matrix, Lambda, exp, Integral, oo, I)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
@@ -66,6 +66,13 @@ def test_bad_args():
         assert False
     except TypeError:
         pass
+
+def test_atoms():
+    # Non-Symbol atoms should not be pulled out from the expression namespace
+    f = lambdify(x, pi + x, {"pi": 3.14})
+    assert f(0) == 3.14
+    f = lambdify(x, I + x, {"I": 1j})
+    assert f(1) == 1 + 1j
 
 #================== Test different modules ================
 

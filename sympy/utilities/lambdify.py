@@ -15,6 +15,15 @@ MPMATH = {}
 NUMPY = {}
 SYMPY = {}
 
+# Default namespaces, letting us define translations that can't be defined
+# by simple variable maps, like I => 1j
+# These are separate from the names above because the above names are modified
+# throughout this file, whereas these should remain unmodified.
+MATH_DEFAULT = {}
+MPMATH_DEFAULT = {}
+NUMPY_DEFAULT = {"I": 1j}
+SYMPY_DEFAULT = {}
+
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
     "Abs":"fabs",
@@ -60,10 +69,10 @@ NUMPY_TRANSLATIONS = {
 
 # Available modules:
 MODULES = {
-    "math":(MATH, MATH_TRANSLATIONS, ("from math import *",)),
-    "mpmath":(MPMATH, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
-    "numpy":(NUMPY, NUMPY_TRANSLATIONS, ("from numpy import *",)),
-    "sympy":(SYMPY, {}, ("from sympy.functions import *",
+    "math":(MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
+    "mpmath":(MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
+    "numpy":(NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("from numpy import *",)),
+    "sympy":(SYMPY, SYMPY_DEFAULT, {}, ("from sympy.functions import *",
                          "from sympy.matrices import Matrix",
                          "from sympy import Integral, pi, oo, nan, zoo, E, I",
                          "from sympy.utilities.iterables import iff"))
@@ -81,12 +90,13 @@ def _import(module, reload="False"):
     # TODO: rewrite this using import_module from sympy.external
     if not module in MODULES:
         raise NameError("This module can't be used for lambdification.")
-    namespace, translations, import_commands = MODULES[module]
+    namespace, namespace_default, translations, import_commands = MODULES[module]
     # Clear namespace or exit
-    if namespace:
+    if namespace != namespace_default:
         # The namespace was already generated, don't do it again if not forced.
         if reload:
             namespace.clear()
+            namespace.update(namespace_default)
         else:
             return
 
@@ -183,6 +193,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     implementations in other namespaces, unless the ``use_imps`` input
     parameter is False.
     """
+    from sympy.core.symbol import Symbol
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
         # Use either numpy (if available) or python.math where possible.
@@ -210,10 +221,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         buf = _get_namespace(m)
         namespace.update(buf)
 
-    if hasattr(expr, "atoms") :
+    if hasattr(expr, "atoms"):
         #Try if you can extract symbols from the expression.
         #Move on if expr.atoms in not implemented.
-        syms = expr.atoms()
+        syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
 
