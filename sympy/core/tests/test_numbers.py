@@ -54,7 +54,6 @@ def test_mod():
 
     a = Float('2.6')
 
-    #FIXME-py3k: TypeError: type Float doesn't define __round__ method
     assert round(a % Float('0.2'), 15) == 0.2
     assert round(a % 2, 15) == 0.6
     assert round(a % 0.5, 15) == 0.1
