@@ -31,6 +31,10 @@ def test_rewrite():
     assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S(1)/2, z)
     assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S(1)/2, z)
 
+def test_expand():
+    assert expand_func(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert expand_func(bessely(S(1)/2, z)) == -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+
 def test_fn():
     x, z = symbols("x z")
     assert fn(1, z) == 1/z**2

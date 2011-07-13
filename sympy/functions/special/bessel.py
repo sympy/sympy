@@ -125,6 +125,11 @@ class besselj(BesselBase):
             if newz: # NOTE we don't want to change the function if z==0
                 return I**(nu)*besseli(nu, newz)
 
+    def _eval_expand_func(self, deep=False, **hints):
+        if self.order.is_Rational and self.order.q == 2:
+            return self.rewrite(jn)._eval_expand_func(deep, **hints)
+        return self
+
 class bessely(BesselBase):
     r"""
     Bessel function of the second kind.
@@ -164,6 +169,11 @@ class bessely(BesselBase):
         if nu.is_Integer:
             if nu < 0:
                 return S(-1)**nu*bessely(-nu, z)
+
+    def _eval_expand_func(self, deep=False, **hints):
+        if self.order.is_Rational and self.order.q == 2:
+            return self.rewrite(yn)._eval_expand_func(deep, **hints)
+        return self
 
 class besseli(BesselBase):
     r"""
