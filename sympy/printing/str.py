@@ -244,6 +244,11 @@ class StrPrinter(Printer):
         else:
             return sign + '*'.join(a_str) + "/(%s)"%'*'.join(b_str)
 
+    def _print_MatMul(self, expr):
+        return '*'.join([self.parenthesize(arg, precedence(expr))
+            for arg in expr.args])
+
+
     def _print_NaN(self, expr):
         return 'nan'
 
@@ -357,6 +362,11 @@ class StrPrinter(Printer):
             if e.startswith('(Rational'):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC), e[1:-1])
         return '%s**%s' % (self.parenthesize(expr.base, PREC), e)
+
+    def _print_MatPow(self, expr):
+        PREC = precedence(expr)
+        return '%s**%s'%(self.parenthesize(expr.base, PREC),
+                         self.parenthesize(expr.exp, PREC))
 
     def _print_Integer(self, expr):
         return str(expr.p)

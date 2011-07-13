@@ -14,6 +14,7 @@ class MatrixExpr(Expr):
     is_Identity = False
     is_Inverse = False
 
+    is_commutative = False
 
     # The following is adapted from the core Expr object
 
@@ -54,7 +55,6 @@ class MatrixExpr(Expr):
     def __pow__(self, other):
         if other == -S.One:
             return Inverse(self)
-        raise NotImplementedError()
         return MatPow(self, other)
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__pow__')
@@ -131,9 +131,15 @@ def matrixify(expr):
             expr = MatAdd(*expr.args)
     return expr
 
+def matsimp(expr):
+    if all(mat.is_Identity for mat in new):
+        new = [new[0]]
+    else:
+        new = [mat for mat in new if not mat.is_Identity] # clear ident
+
+
 from matmul import MatMul
 from matadd import MatAdd
-from inverse import Inverse
-from transpose import Transpose
+from matpow import MatPow
 from transpose import Transpose
 from inverse import Inverse

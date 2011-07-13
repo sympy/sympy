@@ -1,7 +1,8 @@
 from matexpr import MatrixExpr, ShapeError
+from matpow import MatPow
 from sympy import Basic
 
-class Inverse(MatrixExpr):
+class Inverse(MatPow):
     is_Inverse = True
 
     def __new__(cls, mat):
@@ -27,7 +28,7 @@ class Inverse(MatrixExpr):
             except ShapeError:
                 pass
 
-        return Basic.__new__(cls, mat)
+        return MatPow.__new__(cls, mat, -1)
 
     @property
     def arg(self):
@@ -35,6 +36,6 @@ class Inverse(MatrixExpr):
 
     @property
     def shape(self):
-        return self.arg.shape[::-1]
+        return self.arg.shape
 
 from matmul import MatMul

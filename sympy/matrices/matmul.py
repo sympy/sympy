@@ -14,38 +14,19 @@ class MatMul(MatrixExpr, Mul):
                 raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
         expr = matrixify(Mul.__new__(cls, *args))
-        nonmatrices = [arg for arg in expr.args if not arg.is_Matrix]
-        matrices = [arg for arg in expr.args if arg.is_Matrix]
 
-        old = []
-        new = matrices
-        while(new != old):
-            passnext=False
-            old = new
-            new = []
-            # Flattening logic
-            for i, mat in enumerate(old):
-                if passnext:
-                    passnext=False
-                    continue
-                if (mat.is_Inverse): # Cancel inverses if easy
-                    if(i+1<len(old) and mat.arg == old[i+1]):
-                        new.append(Identity(mat.n)) # add Id
-                        passnext = True
-                    elif i>0 and mat.arg == old[i-1]:
-                        new.pop() # remove i-1 from the new list
-                        new.append(Identity(mat.n)) # add Id
-                    else:
-                        new.append(mat) # Pass through
+        # Clear out Identities
+        nonmats = [M for M in expr.args if not M.is_Matrix] # scalars
+        mats = [M for M in expr.args if M.is_Matrix] # matrices
+        if any(M.is_Identity for M in mats): # Any identities around?
+            newmats = [M for M in mats if not M.is_Identity] # clear out
+            if len(newmats)==0: # Did we lose everything?
+                newmats = [Identity(expr.n)] # put just one back in
 
-                else:
-                    new.append(mat) # Pass through
-            if all(mat.is_Identity for mat in new):
-                new = [new[0]]
-            else:
-                new = [mat for mat in new if not mat.is_Identity] # clear ident
+            if mats != newmats: # Removed some I's but not everything?
+                return MatMul(*(nonmats+newmats)) # Repeat with simpler expr
 
-        return matrixify(Mul.__new__(cls, *(nonmatrices+new)))
+        return expr
 
     @property
     def shape(self):
