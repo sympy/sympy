@@ -27,22 +27,39 @@ from operator import itemgetter
 from sympy.polys.polyconfig import query
 
 
-def sdp_groebner(f, u, O, K, gens='', verbose=False):
+def sdp_groebner(f, u, O, K, method='', gens='', verbose=False):
     """
     Wrapper around the (default) improved Buchberger and other
     algorithms for Groebner bases. The choice of algorithm can be
-    changed via
+    changed either via the ``method`` flag:
+
+    >>> from sympy import QQ
+    >>> from sympy.polys.groebnertools import sdp_groebner
+    >>> from sympy.polys.monomialtools import monomial_key
+    >>> f = [((1,), QQ(1)), ((0,), QQ(1))]  # x + 1
+    >>> g = [((1,), QQ(1)), ((0,), QQ(2))]  # x + 2
+    >>> sdp_groebner([f, g], 0, monomial_key('lex'), QQ)
+    [[((0,), 1/1)]]
+
+    or globally with ``setup`` if no ``method`` parameter is provided:
 
     >>> from sympy.polys.polyconfig import setup
     >>> setup('GB_METHOD', 'method')
 
-    where 'method' can be 'buchberger' or 'f5b'. If an unknown method
-    is provided, the default Buchberger algorithm will be used.
-
+    where 'method' (resp. ``method``) can be 'buchberger' or 'f5b'. If
+    an unknown method is provided, the default Buchberger algorithm
+    will be used.
     """
-    if query('GB_METHOD') == 'buchberger':
+    if method == '':  # happens in sdp_lcm
+        if query('GB_METHOD') == 'buchberger':
+            return buchberger(f, u, O, K, gens, verbose)
+        elif query('GB_METHOD') == 'f5b':
+            return f5b(f, u, O, K, gens, verbose)
+        else:
+            return buchberger(f, u, O, K, gens, verbose)
+    if method == 'buchberger':
         return buchberger(f, u, O, K, gens, verbose)
-    elif query('GB_METHOD') == 'f5b':
+    elif method == 'f5b':
         return f5b(f, u, O, K, gens, verbose)
     else:
         return buchberger(f, u, O, K, gens, verbose)
