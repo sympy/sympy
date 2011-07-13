@@ -1,5 +1,5 @@
-from matexpr import MatrixExpr, ShapeError, matrixify
-from sympy.core import Add
+from matexpr import MatrixExpr, ShapeError, matrixify, ZeroMatrix
+from sympy import Add, S
 
 class MatAdd(MatrixExpr, Add):
 
@@ -14,7 +14,19 @@ class MatAdd(MatrixExpr, Add):
                 raise ShapeError("Matrices %s and %s are not aligned"%(A,B))
 
         expr = Add.__new__(cls, *args)
-        return matrixify(expr)
+        if expr == S.Zero:
+            return ZeroMatrix(*args[0].shape)
+        expr = matrixify(expr)
+
+        # Clear out Identities
+        if any(M.is_Zero for M in expr.args): # Any zeros around?
+            newargs = [M for M in expr.args if not M.is_Zero] # clear out
+            if len(newargs)==0: # Did we lose everything?
+                return ZeroMatrix(*args[0].shape)
+            if expr.args != newargs: # Removed some 0's but not everything?
+                return MatAdd(*newargs) # Repeat with simpler expr
+
+        return expr
 
     @property
     def shape(self):

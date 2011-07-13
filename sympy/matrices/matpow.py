@@ -6,7 +6,7 @@ class MatPow(MatrixExpr, Pow):
 
     def __new__(cls, b, e):
         e = _sympify(e)
-        if e is S.One:
+        if e is S.One or b.is_Zero:
             return b
         elif not b.is_square:
             raise ShapeError("Power of non-square matrix %s"%b)

@@ -1,4 +1,4 @@
-from matexpr import MatrixExpr, ShapeError, matrixify, Identity
+from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
 from sympy.core import Mul
 
 class MatMul(MatrixExpr, Mul):
@@ -14,6 +14,9 @@ class MatMul(MatrixExpr, Mul):
                 raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
         expr = matrixify(Mul.__new__(cls, *args))
+
+        if any(arg.is_Matrix and arg.is_Zero for arg in expr.args):
+            return ZeroMatrix(*expr.shape)
 
         # Clear out Identities
         nonmats = [M for M in expr.args if not M.is_Matrix] # scalars

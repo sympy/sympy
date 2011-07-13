@@ -13,6 +13,7 @@ class MatrixExpr(Expr):
     is_Matrix = True
     is_Identity = False
     is_Inverse = False
+    is_Zero = False
 
     is_commutative = False
 
@@ -108,11 +109,12 @@ class MatrixSymbol(MatrixExpr, Symbol):
 class Identity(MatrixSymbol):
     is_Identity = True
     def __new__(cls, n):
-        return MatrixSymbol.__new__(cls, "I", n,n)
+        return MatrixSymbol.__new__(cls, "I", n, n)
 
-
-
-
+class ZeroMatrix(MatrixSymbol):
+    is_Zero = True
+    def __new__(cls, n, m):
+        return MatrixSymbol.__new__(cls, "0", n, m)
 
 def matrixify(expr):
     """
