@@ -66,7 +66,13 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
     except ImportError:
         _init_python_printing(stringify_func)
     else:
-        ip = IPython.ipapi.get()
+        if IPython.__version__ >= '0.11':
+            try:
+                ip = get_ipython()
+            except NameError:
+                ip = None
+        else:
+            ip = IPython.ipapi.get()
 
         if ip is not None:
             _init_ipython_printing(ip, stringify_func)

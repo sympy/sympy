@@ -66,8 +66,17 @@ def _make_message(ipython=True, quiet=False, source=None):
 
 def _init_ipython_session(argv=[]):
     """Construct new IPython session. """
-    from IPython.Shell import make_IPython
-    return make_IPython(argv)
+    import IPython
+    if IPython.__version__ >= '0.11':
+        from IPython.frontend.terminal import ipapp
+        # use an app to parse the command line, and init config
+        app = ipapp.TerminalIPythonApp()
+        app.initialize(argv)
+        
+        return app.shell
+    else:
+        from IPython.Shell import make_IPython
+        return make_IPython(argv)
 
 def _init_python_session():
     """Construct new Python session. """
@@ -117,16 +126,31 @@ def init_session(ipython=None, pretty_print=True, order=None,
             if ipython is not True:
                 print no_ipython
                 ip = _init_python_session()
+                mainloop = ip.interact
             else:
                 raise RuntimeError("IPython is not available on this system")
         else:
-            ip = IPython.ipapi.get()
             ipython = True
+            if IPython.__version__ >= '0.11':
+                try:
+                    ip = get_ipython()
+                except NameError:
+                    ip = None
+            else:
+                ip = IPython.ipapi.get()
+                mainloop = ip.interact
 
             if ip is not None:
                 ip, in_ipython = ip.IP, True
             else:
                 ip = _init_ipython_session(argv)
+
+            if IPython.__version__ >= '0.11':
+                # runsource is gone, use run_cell instead, which doesn't
+                # take a symbol arg.  The second arg is `store_history`,
+                # and False means don't add the line to IPython's history.
+                ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
+                mainloop = ip.mainloop
 
     _preexec_source = preexec_source
 
@@ -136,7 +160,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     message = _make_message(ipython, quiet, _preexec_source)
 
     if not in_ipython:
-        ip.interact(message)
+        mainloop(message)
         sys.exit('Exiting ...')
     else:
         ip.write(message)
