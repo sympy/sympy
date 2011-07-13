@@ -9,6 +9,8 @@ from sympy.polys.polyerrors import (
     FlagError,
 )
 
+from sympy.polys.polyconfig import query
+
 import sympy.polys
 
 import re
@@ -685,6 +687,32 @@ class Symbols(Flag):
             return iter(symbols)
         else:
             raise OptionError("expected an iterator or iterable container, got %s" % symbols)
+
+class Method(Flag):
+    """``method`` flag for groebner function. """
+
+    __metaclass__ = OptionType
+
+    option = 'method'
+
+    @classmethod
+    def default(cls):
+        # This is a bit ugly. The problem is that ``sdp_groebner``
+        # is used in ``sdp_lcm``, so ``sdp_groebner`` should query the
+        # globally selected method from polyconfig.py.
+        return ''
+
+    @classmethod
+    def preprocess(cls, method):
+        if isinstance(method, str):
+            if method == 'buchberger':
+                return 'buchberger'
+            elif method == 'f5b':
+                return 'f5b'
+            else:
+                raise OptionError("'%s' is not a valid value 'method' option" % method)
+        else:
+            raise OptionError("'method' must a string, got %s" % method)
 
 def build_options(gens, args=None):
     """Construct options from keyword arguments or ... options. """
