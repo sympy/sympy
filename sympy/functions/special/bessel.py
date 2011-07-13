@@ -309,6 +309,8 @@ class SphericalBesselBase(BesselBase):
     def _eval_expand_func(self, deep=False, **hints):
         if self.order.is_Integer:
             return self._expand()
+        else:
+            return self
 
     def _eval_evalf(self, prec):
         return self._rewrite()._eval_evalf(prec)

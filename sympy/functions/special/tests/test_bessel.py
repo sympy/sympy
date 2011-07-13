@@ -54,11 +54,14 @@ def test_jn():
     assert mjn(6, z) == (-1/z + 10395/z**7 - 4725/z**5 + 210/z**3)*sin(z) + \
                 (-10395/z**6 + 1260/z**4 - 21/z**2)*cos(z)
 
+    assert expand_func(jn(n, z)) == jn(n, z)
+
 def test_yn():
     z = symbols("z")
     assert myn(0, z) == -cos(z)/z
     assert myn(1, z) == -cos(z)/z**2-sin(z)/z
     assert myn(2, z) == -((3/z**3-1/z)*cos(z)+(3/z**2)*sin(z))
+    assert expand_func(yn(n, z)) == yn(n, z)
 
 def test_sympify_yn():
     assert S(15) in myn(3, pi).atoms()
