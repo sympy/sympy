@@ -1,4 +1,5 @@
 from sympy.core import Basic
+from sympy.functions import floor
 
 class Prufer(Basic):
     """
@@ -12,6 +13,7 @@ class Prufer(Basic):
     _prufer_repr = None
     _tree_repr = None
     _nodes = None
+    _rank = None
 
     @property
     def prufer_repr(self):
@@ -28,6 +30,12 @@ class Prufer(Basic):
     @property
     def nodes(self):
         return self._nodes
+
+    @property
+    def rank(self):
+        if self._rank is None:
+            self._rank = self.prufer_rank()
+        return self._rank
 
     @staticmethod
     def to_prufer(tree, n):
@@ -89,6 +97,39 @@ class Prufer(Basic):
             d[y] -= 1
             tree.append([x, y])
         return tree
+
+    def prufer_rank(self):
+        """
+        Computes the rank of a Prufer sequence.
+
+        Examples:
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a.rank
+        0
+        """
+        r = 0
+        p = 1
+        for i in xrange(self.nodes - 3, -1, -1):
+            r = r + p*self.prufer_repr[i]
+            p = p*self.nodes
+        return r
+
+    @classmethod
+    def unrank(self, rank, n):
+        """
+        Finds the unranked Prufer sequence.
+
+        Examples:
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> Prufer.unrank(0, 4)
+        Prufer([0, 0])
+        """
+        L = [0] * (n - 2)
+        for i in xrange(n - 3, -1, -1):
+            L[i] = rank % n + 1
+            rank = int(floor((rank - L[i] + 1)/n))
+        return Prufer(map(lambda x: x - 1, L))
 
     def __new__(cls, *args, **kw_args):
         """
