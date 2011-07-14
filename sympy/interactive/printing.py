@@ -22,6 +22,15 @@ def _init_python_printing(stringify_func):
 def _init_ipython_printing(ip, stringify_func):
     """Setup printing in IPython interactive session. """
 
+    def pretty_print(arg, p=None, cycle=None):
+        """pretty printer that accepts pretty's arg format."""
+        out = stringify_func(arg)
+
+        if '\n' in out:
+            print
+
+        print out
+
     def result_display(self, arg):
         """IPython's pretty-printer display hook.
 
@@ -31,18 +40,28 @@ def _init_ipython_printing(ip, stringify_func):
 
         """
         if self.rc.pprint:
-            out = stringify_func(arg)
-
-            if '\n' in out:
-                print
-
-            print out
+            pretty_print(arg)
         else:
             print repr(arg)
 
-    ip.set_hook('result_display', result_display)
+    import IPython
+    if IPython.__version__ >= '0.11':
+        formatter = ip.display_formatter.formatters['text/plain']
+        # caller that fits pretty's call pattern:
 
-def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=None, no_global=False):
+        # use this instead to *always* use the sympy printer
+        # formatter.for_type(object, pretty_print)
+        # this loads pretty printing for objects that inherit from Basic or Matrix:
+        formatter.for_type_by_name(
+            'sympy.core.basic', 'Basic', pretty_print
+        )
+        formatter.for_type_by_name(
+            'sympy.matrices.matrices', 'Matrix', pretty_print
+        )
+    else:
+        ip.set_hook('result_display', result_display_10)
+
+def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=None, no_global=False, ip=None):
     """Initializes pretty-printer depending on the environment. """
     from sympy.printing.printer import Printer
 
@@ -61,14 +80,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
         else:
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
-    try:
-        import IPython
-    except ImportError:
-        _init_python_printing(stringify_func)
+    if ip is not None and ip.__module__.startswith('IPython'):
+        _init_ipython_printing(ip, stringify_func)
     else:
-        ip = IPython.ipapi.get()
-
-        if ip is not None:
-            _init_ipython_printing(ip, stringify_func)
-        else:
-            _init_python_printing(stringify_func)
+        _init_python_printing(stringify_func)
