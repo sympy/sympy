@@ -73,8 +73,9 @@ class gamma(Function):
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
             if coeff and coeff.q != 1:
-                tail = (C.Rational(1, coeff.q),) + tail
-                coeff = floor(coeff)
+                intpart = floor(coeff)
+                tail = (coeff - intpart,) + tail
+                coeff = intpart
             tail = arg._new_rawargs(*tail, **dict(reeval=False))
             return gamma(tail)*C.RisingFactorial(tail, coeff)
 

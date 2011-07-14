@@ -45,6 +45,9 @@ def test_gamma():
     assert expand_func(gamma(x - Rational(1, 2))) == \
         gamma(Rational(1, 2) + x)/(x - Rational(1, 2))
 
+    # Test a bug:
+    assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
+
 def test_gamma_series():
     assert gamma(x + 1).series(x, 0, 3) == \
         1 - x*EulerGamma + x**2*EulerGamma**2/2 + pi**2*x**2/12 + O(x**3)
