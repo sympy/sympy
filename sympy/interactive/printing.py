@@ -30,7 +30,7 @@ def _init_ipython_printing(ip, stringify_func):
             print
 
         print out
-    
+
     def result_display(self, arg):
         """IPython's pretty-printer display hook.
 
@@ -43,12 +43,12 @@ def _init_ipython_printing(ip, stringify_func):
             pretty_print(arg)
         else:
             print repr(arg)
-    
+
     import IPython
     if IPython.__version__ >= '0.11':
         formatter = ip.display_formatter.formatters['text/plain']
         # caller that fits pretty's call pattern:
-        
+
         # use this instead to *always* use the sympy printer
         # formatter.for_type(object, pretty_print)
         # this loads pretty printing for objects that inherit from Basic or Matrix:
@@ -58,7 +58,6 @@ def _init_ipython_printing(ip, stringify_func):
         formatter.for_type_by_name(
             'sympy.matrices.matrices', 'Matrix', pretty_print
         )
-        
     else:
         ip.set_hook('result_display', result_display_10)
 
@@ -80,8 +79,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
             stringify_func = lambda expr: _stringify_func(expr, order=order, use_unicode=use_unicode, wrap_line=wrap_line)
         else:
             stringify_func = lambda expr: _stringify_func(expr, order=order)
-    
-    if ip.__module__.startswith('IPython'):
+
+    if ip is not None and ip.__module__.startswith('IPython'):
         _init_ipython_printing(ip, stringify_func)
     else:
         _init_python_printing(stringify_func)

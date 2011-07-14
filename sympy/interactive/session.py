@@ -71,8 +71,9 @@ def _init_ipython_session(argv=[]):
         from IPython.frontend.terminal import ipapp
         # use an app to parse the command line, and init config
         app = ipapp.TerminalIPythonApp()
+        # don't draw IPython banner during initialization:
+        app.display_banner = False
         app.initialize(argv)
-        
         return app.shell
     else:
         from IPython.Shell import make_IPython
