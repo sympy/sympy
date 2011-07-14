@@ -138,10 +138,12 @@ def init_session(ipython=None, pretty_print=True, order=None,
                     ip = None
             else:
                 ip = IPython.ipapi.get()
+                if ip:
+                    ip = ip.IP
                 mainloop = ip.interact
 
             if ip is not None:
-                ip, in_ipython = ip.IP, True
+                in_ipython = True
             else:
                 ip = _init_ipython_session(argv)
 
@@ -155,7 +157,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
     _preexec_source = preexec_source
 
     ip.runsource(_preexec_source, symbol='exec')
-    init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode)
+    init_printing(pretty_print=pretty_print, order=order, use_unicode=use_unicode, ip=ip)
 
     message = _make_message(ipython, quiet, _preexec_source)
 
