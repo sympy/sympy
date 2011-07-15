@@ -1,5 +1,5 @@
 from sympy import (
-    Symbol, Set, Union, Interval, oo, S,
+    Symbol, Set, Union, Interval, oo, S, sympify, nan,
     Inequality, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float, FiniteSet
 )
 from sympy.mpmath import mpi
@@ -133,6 +133,14 @@ def test_complement():
     X = Interval(1,3)+FiniteSet(5)
     assert X.intersect(X.complement) == S.EmptySet
 
+    square = Interval(0,1) * Interval(0,1)
+    notsquare = square.complement
+
+    assert all(pt in square for pt in [(0,0), (.5,.5), (1,0), (1,1)])
+    assert not any(pt in notsquare for pt in [(0,0), (.5,.5), (1,0), (1,1)])
+    assert not any(pt in square for pt in [(-1,0), (1.5,.5), (10,10)])
+    assert all(pt in notsquare for pt in [(-1,0), (1.5,.5), (10,10)])
+
 
 def test_intersect():
     x = Symbol('x')
@@ -189,6 +197,18 @@ def test_measure():
     assert FiniteSet(1,2,oo,a,-oo,-5).measure == 0
 
     assert S.EmptySet.measure == 0
+
+    square = Interval(0,10) * Interval(0,10)
+    offsetsquare = Interval(5,15) * Interval(5,15)
+    band = Interval(-oo,oo) * Interval(2,4)
+
+    assert square.measure == offsetsquare.measure == 100
+    assert (square + offsetsquare).measure == 175 # there is some overlap
+    assert (square - offsetsquare).measure == 75
+    assert (square * FiniteSet(1,2,3)).measure == 0
+    assert (square.intersect(band)).measure == 20
+    assert (square + band).measure == oo
+    assert (band * FiniteSet(1,2,3)).measure == nan
 
 def test_subset():
     assert Interval(0, 2).subset(Interval(0, 1)) == True
@@ -323,7 +343,40 @@ def test_finite_basic():
     assert FiniteSet(x, 1, 5).inf == Min(x,1)
 
     # Ensure a variety of types can exist in a FiniteSet
-    S = FiniteSet((1,2), Float, A, -5, x, 'eggs', x**2, FiniteSet)
+    S = FiniteSet((1,2), Float, A, -5, x, 'eggs', x**2, Interval)
+
+def test_product_basic():
+    H,T = 'H', 'T'
+    unit_line = Interval(0,1)
+    d6 = FiniteSet(1,2,3,4,5,6)
+    d4 = FiniteSet(1,2,3,4)
+    coin = FiniteSet(H, T)
+
+    square = unit_line * unit_line
+
+    assert (0,0) in square
+    assert (H, T) in coin ** 2
+    assert (.5,.5,.5) in square * unit_line
+    assert (H, 3, 3) in coin * d6* d6
+    HH, TT = sympify(H), sympify(T)
+    assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
+
+    assert (d6*d6).subset(d4*d4)
+
+    inf, neginf = S.Infinity, S.NegativeInfinity
+    assert square.complement == Union(
+       Interval(0,1) * (Interval(neginf,0,True,True)+Interval(1,inf,True,True)),
+       (Interval(neginf,0,True,True)+Interval(1,inf,True,True))*Interval(0,1),
+       ((Interval(neginf,0,True,True) + Interval(1,inf, True, True))
+                * (Interval(neginf,0,True,True) + Interval(1,inf, True,True))))
+
+
+
+    assert (Interval(-10,10)**3).subset(Interval(-5,5)**3)
+    assert not (Interval(-5,5)**3).subset(Interval(-10,10)**3)
+    raises(ValueError, "(Interval(-10,10)**2).subset(Interval(-5,5)**3)")
+
+    assert square.subset(Interval(.2,.5)*FiniteSet(.5)) # segment in square
 
 def test_real():
     x = Symbol('x', real=True)
@@ -359,3 +412,27 @@ def test_supinf():
     assert FiniteSet(5,1,x,y,S.Infinity, S.NegativeInfinity).sup == S.Infinity
     assert FiniteSet(5,1,x,y,S.Infinity, S.NegativeInfinity).inf == S.NegativeInfinity
     assert FiniteSet('Ham', 'Eggs').sup == Max('Ham', 'Eggs')
+
+def test_product_basic():
+    H,T = 'H', 'T'
+    unit_line = Interval(0,1)
+    d6 = FiniteSet(1,2,3,4,5,6)
+    d4 = FiniteSet(1,2,3,4)
+    coin = FiniteSet(H, T)
+
+    square = unit_line * unit_line
+
+    assert (0,0) in square
+    assert (H, T) in coin ** 2
+    assert (.5,.5,.5) in square * unit_line
+    assert (H, 3, 3) in coin * d6* d6
+    HH, TT = sympify(H), sympify(T)
+    assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
+
+    assert (d6*d6).subset(d4*d4)
+
+    assert (Interval(-10,10)**3).subset(Interval(-5,5)**3)
+    assert not (Interval(-5,5)**3).subset(Interval(-10,10)**3)
+    raises(ValueError, "(Interval(-10,10)**2).subset(Interval(-5,5)**3)")
+
+    assert square.subset(Interval(.2,.5)*FiniteSet(.5)) # segment in square
