@@ -1,0 +1,41 @@
+from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
+        symbols, simplify, Eq, cos, And, Tuple)
+from sympy.statistics import (Die, Normal, Exponential , P, E, var, covar,
+        skewness, Density, Given, independent, dependent, Where, pspace,
+        random_symbols)
+from sympy.statistics.rv import ProductPSpace
+
+def test_where():
+    X, Y = Die(), Die()
+    Z = Normal(0, 1)
+
+    assert Where(Z**2<=1).set == Interval(-1, 1)
+    assert Where(Z**2<1).as_boolean() == And(Z.symbol<1, Z.symbol>-1)
+    assert len(Where(X<3).set) == 2
+    assert (X.symbol, 1) in Where(X<3).set
+
+def test_random_symbols():
+    X, Y = Normal(0,1), Normal(0,1)
+
+    assert set(random_symbols(2*X+1)) == set((X,))
+    assert set(random_symbols(2*X+Y)) == set((X,Y))
+    assert set(random_symbols(2*X+Y.symbol)) == set((X,))
+    assert set(random_symbols(2)) == set()
+
+def test_pspace():
+    X, Y = Normal(0,1), Normal(0,1)
+
+    assert pspace(X) == X.pspace
+    assert pspace(2*X+1) == X.pspace
+    #assert pspace(2*X+Y) == ProductPSpace(Y.pspace, X.pspace)
+
+def test_rs_swap():
+    x, y = symbols('x y')
+    X = Normal(0, 1, symbol=x)
+    Y = Exponential(1, symbol=y)
+
+    XX = Normal(0, 2, symbol=x)
+    YY = Normal(0, 3, symbol=y)
+
+    expr = 2*X+Y
+    assert expr.subs(rs_swap((X,Y), (YY,XX))) == 2*XX+YY
