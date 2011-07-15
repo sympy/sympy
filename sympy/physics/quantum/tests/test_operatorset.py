@@ -1,32 +1,38 @@
-from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
-from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet, XBra
+from sympy.physics.quantum.operatorset import (
+    operators_to_state, state_to_operators
+)
+
+from sympy.physics.quantum.cartesian import (
+    XOp, XKet, PxOp, PxKet, XBra, PxBra
+)
+
+from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.operator import Operator
+
+from sympy.utilities.pytest import raises
 
 def test_op_to_state():
     assert operators_to_state(XOp) == XKet()
     assert operators_to_state(PxOp) == PxKet()
+    assert operators_to_state(Operator) == Ket()
+
     assert state_to_operators(operators_to_state(XOp("Q"))) == XOp("Q")
     assert state_to_operators(operators_to_state(XOp())) == XOp()
 
-    exception = False
-    try:
-        operators_to_state(XKet)
-    except NotImplementedError:
-        exception = True
-
-    return exception
+    raises(NotImplementedError, 'operators_to_state(XKet)')
 
 def test_state_to_op():
     assert state_to_operators(XKet) == XOp()
     assert state_to_operators(PxKet) == PxOp()
+    assert state_to_operators(XBra) == XOp()
+    assert state_to_operators(PxBra) == PxOp()
+    assert state_to_operators(Ket) == Operator()
+    assert state_to_operators(Bra) == Operator()
+
     assert operators_to_state(state_to_operators(XKet("test"))) == XKet("test")
     assert operators_to_state(state_to_operators(XBra("test"))) == XKet("test")
     assert operators_to_state(state_to_operators(XKet())) == XKet()
     assert operators_to_state(state_to_operators(XBra())) == XKet()
 
-    exception = False
-    try:
-        state_to_operators(XOp)
-    except NotImplementedError:
-        exception = True
+    raises(NotImplementedError, 'state_to_operators(XOp)')
 
-    return exception
