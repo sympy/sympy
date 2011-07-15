@@ -1,5 +1,5 @@
 from sympy import I, symbols, sqrt, Add, Mul, Rational, Pow, Symbol, sympify, S
-from sympy import Integer, conjugate, pretty, latex, oo, sin, pi
+from sympy import Integer, conjugate, pretty, latex, oo, sin, pi, diff
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
@@ -8,7 +8,7 @@ from sympy.physics.quantum.state import (
     KetBase, BraBase, StateBase, Wavefunction
 )
 from sympy.physics.quantum.hilbert import HilbertSpace
-
+from sympy.utilities.pytest import raises
 
 x,y,t = symbols('x,y,t')
 
@@ -184,10 +184,14 @@ def test_wavefunction():
     lims = f.limits
 
     assert f.is_normalized == False
-    assert f.norm_constant == 0
+    assert f.norm == oo
     assert f(10) == 100
     assert p(10) == 10000
     assert lims[x] == (-oo, oo)
+    assert diff(f, x) == Wavefunction(2*x, x)
+    raises(NotImplementedError, 'f.normalize()')
+    assert conjugate(f) == Wavefunction(conjugate(f.expr), x)
+    assert conjugate(f) == Dagger(f)
 
     g = Wavefunction(x**2*y+y**2*x, (x, 0, 1), (y, 0, 2))
     lims_g = g.limits
@@ -195,15 +199,28 @@ def test_wavefunction():
     assert lims_g[x] == (0, 1)
     assert lims_g[y] == (0, 2)
     assert g.is_normalized == False
-    assert g.norm_constant == 42**(S(1)/2)/14
+    assert g.norm == 42**(S(1)/2)/3
     assert g(2,4) == 0
     assert g(1,1) == 2
+    assert diff(diff(g, x), y) == Wavefunction(2*x + 2*y, (x, 0, 1), (y, 0, 2))
+    assert conjugate(g) == Wavefunction(conjugate(g.expr), *g.args[1:])
+    assert conjugate(g) == Dagger(g)
 
     h = Wavefunction(sqrt(5)*x**2, (x, 0, 1))
     assert h.is_normalized == True
+    assert h.normalize() == h
+    assert conjugate(h) == Wavefunction(conjugate(h.expr), (x, 0, 1))
+    assert conjugate(h) == Dagger(h)
 
     piab = Wavefunction(sin(n*pi*x/L), (x, 0, L))
-    assert piab.norm_constant == sqrt(2/L)
+    assert piab.norm == sqrt(L/2)
     assert piab(L+1) == 0
     assert piab(0.5) == sin(0.5*n*pi/L)
     assert piab(0.5, n=1, L=1) == sin(0.5*pi)
+    assert piab.normalize() == \
+           Wavefunction(2**(S(1)/2)/L**(S(1)/2)*sin(n*pi*x/L), (x, 0, L))
+    assert conjugate(piab) == Wavefunction(conjugate(piab.expr), (x, 0, L))
+    assert conjugate(piab) == Dagger(piab)
+
+    k = Wavefunction(x**2, 'x')
+    assert type(k.variables[0]) == Symbol
