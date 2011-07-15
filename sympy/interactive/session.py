@@ -141,7 +141,6 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 ip = IPython.ipapi.get()
                 if ip:
                     ip = ip.IP
-                mainloop = ip.interact
 
             if ip is not None:
                 in_ipython = True
@@ -154,6 +153,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 # and False means don't add the line to IPython's history.
                 ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
                 mainloop = ip.mainloop
+            else:
+                mainloop = ip.interact
 
     _preexec_source = preexec_source
 
