@@ -347,6 +347,13 @@ class Float(Number):
         return Number.__mod__(self, other)
 
     @_sympifyit('other', NotImplemented)
+    def __rmod__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
+        return Number.__rmod__(self, other)
+
+    @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if (other is S.NaN) or (self is NaN):
             return S.NaN
@@ -651,6 +658,14 @@ class Rational(Number):
         if isinstance(other, Float):
             return self.evalf() % other
         return Number.__mod__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rmod__(self, other):
+        if isinstance(other, Rational):
+            return Rational.__mod__(other, self)
+        if isinstance(other, Float):
+            return other % self.evalf()
+        return Number.__rmod__(self, other)
 
     # TODO reorder
     @_sympifyit('other', NotImplemented)
@@ -999,14 +1014,6 @@ class Integer(Rational):
         else:
             return Integer(-self.p)
 
-    def __mod__(self, other):
-        if isinstance(other, Integer) or not isinstance(other, Rational):
-            return Integer(self.p % other)
-        return Rational.__mod__(self, other)
-
-    def __rmod__(self, other):
-        return Integer(other % self.p)
-
     def __divmod__(self, other):
         return divmod(self.p, other.p)
 
@@ -1052,6 +1059,20 @@ class Integer(Rational):
         elif isinstance(b, Integer):
             return Integer(b.p * a.p)
         return Rational.__mul__(a, b)
+
+    def __mod__(a, b):
+        if isinstance(b, (int, long)):
+            return Integer(a.p % b)
+        elif isinstance(b, Integer):
+            return Integer(a.p % b.p)
+        return Rational.__mod__(a, b)
+
+    def __rmod__(a, b):
+        if isinstance(b, (int, long)):
+            return Integer(b % a.p)
+        elif isinstance(b, Integer):
+            return Integer(b.p % a.p)
+        return Rational.__rmod__(a, b)
 
     def __eq__(a, b):
         if isinstance(b, (int, long)):
