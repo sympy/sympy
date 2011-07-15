@@ -1119,6 +1119,7 @@ class Matrix(object):
         Returns the decomposition LU and the row swaps p.
 
         Example:
+
         >>> from sympy import Matrix
         >>> a = Matrix([[4, 3], [6, 3]])
         >>> L, U, _ = a.LUdecomposition()
@@ -1293,8 +1294,10 @@ class Matrix(object):
         """
         Return Q,R where A = Q*R, Q is orthogonal and R is upper triangular.
 
-        Examples::
-        This is the example from wikipedia
+        Examples
+
+        This is the example from wikipedia::
+
         >>> from sympy import Matrix, eye
         >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
         >>> Q, R = A.QRdecomposition()
@@ -1600,6 +1603,7 @@ class Matrix(object):
         Check if matrix is an upper triangular matrix.
 
         Example:
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -1635,6 +1639,7 @@ class Matrix(object):
         Check if matrix is a lower triangular matrix.
 
         Example:
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -1674,6 +1679,7 @@ class Matrix(object):
         below the first subdiagonal.
 
         Example:
+
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
         >>> a
@@ -1698,6 +1704,7 @@ class Matrix(object):
         above the first superdiagonal.
 
         Example:
+
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
         >>> a
@@ -2134,7 +2141,9 @@ class Matrix(object):
         return out
 
     def singular_values(self):
-        """Compute the singular values of a Matrix
+        """
+        Compute the singular values of a Matrix
+
         >>> from sympy import Matrix, Symbol, eye
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
@@ -2156,7 +2165,9 @@ class Matrix(object):
         return vals
 
     def condition_number(self):
-        """Returns the condition number of a matrix.
+        """
+        Returns the condition number of a matrix.
+
         This is the maximum singular value divided by the minimum singular value
 
         >>> from sympy import Matrix, S
@@ -2517,6 +2528,7 @@ class Matrix(object):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
+
         >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
