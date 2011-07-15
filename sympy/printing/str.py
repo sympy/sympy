@@ -68,6 +68,9 @@ class StrPrinter(Printer):
         l = [self._print(o) for o in expr.args]
         return expr.__class__.__name__ + "(%s)"%", ".join(l)
 
+    def _print_BlockMatrix(self, B):
+        return self._print(B.mat)
+
     def _print_Catalan(self, expr):
         return 'Catalan'
 

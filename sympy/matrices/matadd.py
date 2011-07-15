@@ -18,6 +18,9 @@ class MatAdd(MatrixExpr, Add):
             return ZeroMatrix(*args[0].shape)
         expr = matrixify(expr)
 
+        if expr.is_Mul:
+            return MatMul(*expr.args)
+
         # Clear out Identities
         if any(M.is_Zero for M in expr.args): # Any zeros around?
             newargs = [M for M in expr.args if not M.is_Zero] # clear out
@@ -37,3 +40,4 @@ class MatAdd(MatrixExpr, Add):
                 all(arg._check_shape() for arg in self.args))
 
 
+from matmul import MatMul

@@ -14,6 +14,7 @@ class MatrixExpr(Expr):
     is_Identity = False
     is_Inverse = False
     is_Zero = False
+    is_BlockMatrix = False
 
     is_commutative = False
 
