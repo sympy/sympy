@@ -22,17 +22,12 @@ def _init_python_printing(stringify_func):
 def _init_ipython_printing(ip, stringify_func):
     """Setup printing in IPython interactive session. """
 
-    def pretty_print(arg, p=None, cycle=None):
-        """pretty printer that accepts pretty's arg format."""
-        out = stringify_func(arg)
-
-        if '\n' in out:
-            print
-
-        print out
+    def pretty_print(arg, p, cycle):
+        """caller for pretty, for use in IPython 0.11"""
+        p.text(stringify_func(arg))
 
     def result_display(self, arg):
-        """IPython's pretty-printer display hook.
+        """IPython's pretty-printer display hook, for use in IPython 0.10
 
            This function was adapted from:
 
@@ -40,17 +35,22 @@ def _init_ipython_printing(ip, stringify_func):
 
         """
         if self.rc.pprint:
-            pretty_print(arg)
+            out = stringify_func(arg)
+
+            if '\n' in out:
+                print
+
+            print out
         else:
             print repr(arg)
 
     import IPython
     if IPython.__version__ >= '0.11':
         formatter = ip.display_formatter.formatters['text/plain']
-        # caller that fits pretty's call pattern:
 
-        # use this instead to *always* use the sympy printer
-        # formatter.for_type(object, pretty_print)
+        for cls in (object, tuple, list, set, frozenset, dict, str):
+            formatter.for_type(cls, pretty_print)
+
         # this loads pretty printing for objects that inherit from Basic or Matrix:
         formatter.for_type_by_name(
             'sympy.core.basic', 'Basic', pretty_print

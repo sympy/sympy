@@ -120,6 +120,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
 
     if ipython is False:
         ip = _init_python_session()
+        mainloop = ip.interact
     else:
         try:
             import IPython
