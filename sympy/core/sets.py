@@ -1014,7 +1014,7 @@ class FiniteSet(CountableSet):
         if len(args) == 0:
             return EmptySet()
 
-        if all(arg.is_real and arg.is_number for arg in args):
+        if all([arg.is_real and arg.is_number for arg in args]):
             cls = RealFiniteSet
 
         elements = frozenset(map(sympify, args))
@@ -1027,7 +1027,7 @@ class FiniteSet(CountableSet):
 
     def _intersect(self, other):
         if isinstance(other, self.__class__):
-            return self.__class__(self.elements & other.elements)
+            return self.__class__(*(self.elements & other.elements))
         return self.__class__(el for el in self if el in other)
 
     def union(self, other):
@@ -1058,7 +1058,7 @@ class FiniteSet(CountableSet):
         if other == S.EmptySet:
             return self
         if other.is_FiniteSet:
-            return FiniteSet(self.elements | other.elements)
+            return FiniteSet(*(self.elements | other.elements))
         return Union(self, other) # Resort to default
 
     def _contains(self, other):
@@ -1160,4 +1160,4 @@ def is_flattenable(obj):
     """
     Checks that an argument to a Set constructor  should be flattened
     """
-    return obj.__class__ in [list, set, frozenset, genclass]
+    return obj.__class__ in [list, set, genclass]
