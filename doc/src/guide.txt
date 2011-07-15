@@ -519,7 +519,7 @@ get your patch accepted.
 .. _SympyDevelopment:   http://code.google.com/p/sympy/wiki/SympyDevelopment
 
 Please read our excellent `SymPy Patches Tutorial
-<https://github.com/sympy/sympy/wiki/Development-workflow>` at our
+<https://github.com/sympy/sympy/wiki/Development-workflow>`_ at our
 wiki for a guide on how to write patches to SymPy, how to work with Git,
 and how to make your life easier as you get started with SymPy.
 
