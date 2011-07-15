@@ -96,16 +96,16 @@ defined the symbols x, y, z and some other things:
 
     $ :input:`cd sympy`
     $ :input:`./bin/isympy`
-IPython console for SymPy 0.7.0-git (Python 2.7.1) (ground types: gmpy)
+    IPython console for SymPy 0.7.0-git (Python 2.7.1) (ground types: gmpy)
 
-These commands were executed:
->>> from __future__ import division
->>> from sympy import *
->>> x, y, z, t = symbols('x y z t')
->>> k, m, n = symbols('k m n', integer=True)
->>> f, g, h = symbols('f g h', cls=Function)
+    These commands were executed:
+    >>> from __future__ import division
+    >>> from sympy import *
+    >>> x, y, z, t = symbols('x y z t')
+    >>> k, m, n = symbols('k m n', integer=True) 
+    >>> f, g, h = symbols('f g h', cls=Function)
 
-Documentation can be found at http://www.sympy.org
+    Documentation can be found at http://www.sympy.org
 
     In [1]: input:`(1/cos(x)).series(x, 0, 10)`
     Out[1]:
