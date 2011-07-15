@@ -819,7 +819,7 @@ Geometric Derivative
 ====================
 
 If :math:`F` is a multivector field that is a function of a vector
-:math:`x = x^{i}\bm{\gamma}_{i}` (we are using the summation convention that
+:math:`x = x^{i}\mathbf{\gamma}_{i}` (we are using the summation convention that
 pairs of subscripts and superscripts are summed over the dimension of the vector
 space) then the geometric derivative :math:`\nabla F` is given by (in this
 section the summation convention is used):
@@ -828,25 +828,25 @@ section the summation convention is used):
   :nowrap:
 
   \begin{equation*}
-    \nabla F = \bm{\gamma}^{i}\bfrac{\partial F}{\partial x^{i}}
+    \nabla F = {\gamma}^{i}\bfrac{\partial F}{\partial x^{i}}
   \end{equation*}
 
 
 If :math:`F_{R}` is a grade-:math:`R` multivector and
-:math:`F_{R} = F_{R}^{i_{1}\dots i_{R}}\bm{\gamma}_{i_{1}}\W\dots\W \bm{\gamma}_{i_{R}}`
+:math:`F_{R} = F_{R}^{i_{1}\dots i_{R}}{\gamma}_{i_{1}}\W\dots\W {\gamma}_{i_{R}}`
 then
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-    \nabla F_{R} = \bfrac{\partial F_{R}^{i_{1}\dots i_{R}}}{\partial x^{j}}\bm{\gamma}^{j}\lp\bm{\gamma}_{i_{1}}\W
-                 \dots\W \bm{\gamma}_{i_{R}} \rp
+    \nabla F_{R} = \bfrac{\partial F_{R}^{i_{1}\dots i_{R}}}{\partial x^{j}}{\gamma}^{j}\lp{\gamma}_{i_{1}}\W
+                 \dots\W {\gamma}_{i_{R}} \rp
   \end{equation*}
 
 
 Note that
-:math:`\bm{\gamma}^{j}\lp\bm{\gamma}_{i_{1}}\W\dots\W \bm{\gamma}_{i_{R}} \rp`
+:math:`{\gamma}^{j}\lp{\gamma}_{i_{1}}\W\dots\W {\gamma}_{i_{R}} \rp`
 can only contain grades :math:`R-1` and :math:`R+1` so that :math:`\nabla F_{R}`
 also can only contain those grades. For a grade-:math:`R` multivector
 :math:`F_{R}` the inner (div) and  outer (curl) derivatives are defined as
@@ -875,29 +875,29 @@ just the sum of the inner and outer  dervatives of each grade of the multivector
 function.
 
 Curvilinear coordinates are derived from a vector function
-:math:`x(\bm{\theta})` where
-:math:`\bm{\theta} = \lp\theta_{1},\dots,\theta_{N}\rp` where the number of
+:math:`x({\theta})` where
+:math:`{\theta} = \lp\theta_{1},\dots,\theta_{N}\rp` where the number of
 coordinates is equal to the dimension of the  vector space.  In the case of
-3-dimensional spherical coordinates :math:`\bm{\theta} = \lp r,\theta,\phi \rp`
-and the coordinate generating function :math:`x(\bm{\theta})` is
+3-dimensional spherical coordinates :math:`{\theta} = \lp r,\theta,\phi \rp`
+and the coordinate generating function :math:`x({\theta})` is
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  x =  r \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{x}}}+ r \sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{y}}}+ r \cos\left({\theta}\right){\bm{{\gamma}_{z}}}
+  x =  r \cos\left({\phi}\right) \sin\left({\theta}\right){{{\gamma}_{x}}}+ r \sin\left({\phi}\right) \sin\left({\theta}\right){{{\gamma}_{y}}}+ r \cos\left({\theta}\right){{{\gamma}_{z}}}
   \end{equation*}
 
 
 A coordinate frame is derived from :math:`x` by
-:math:`\bm{e}_{i} = \pdiff{x}{\theta^{i}}`.  The following show the frame for
+:math:`{e}_{i} = \pdiff{x}{\theta^{i}}`.  The following show the frame for
 spherical coordinates.
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{r} = \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{y}}}+\cos\left({\theta}\right){\bm{{\gamma}_{z}}}
+  {e}_{r} = \cos\left({\phi}\right) \sin\left({\theta}\right){{{\gamma}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){{{\gamma}_{y}}}+\cos\left({\theta}\right){{{\gamma}_{z}}}
   \end{equation*}
 
 
@@ -907,7 +907,7 @@ spherical coordinates.
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\bm{{\gamma}_{x}}}+r \cos\left({\theta}\right) \sin\left({\phi}\right){\bm{{\gamma}_{y}}} - r \sin\left({\theta}\right){\bm{{\gamma}_{z}}}
+  {e}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){{{\gamma}_{x}}}+r \cos\left({\theta}\right) \sin\left({\phi}\right){{{\gamma}_{y}}} - r \sin\left({\theta}\right){{{\gamma}_{z}}}
   \end{equation*}
 
 
@@ -917,7 +917,7 @@ spherical coordinates.
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{{\phi}} =  - r \sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{x}}}+r \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{y}}}
+  {e}_{{\phi}} =  - r \sin\left({\phi}\right) \sin\left({\theta}\right){{{\gamma}_{x}}}+r \cos\left({\phi}\right) \sin\left({\theta}\right){{{\gamma}_{y}}}
   \end{equation*}
 
 
@@ -928,19 +928,19 @@ define a normalized frame by
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{i} = \bfrac{\bm{e}_{i}}{\sqrt{\abs{\bm{e}_{i}^{2}}}} = \bfrac{\bm{e}_{i}}{\abs{\bm{e}_{i}}}
+  {\hat{e}}_{i} = \bfrac{{e}_{i}}{\sqrt{\abs{{e}_{i}^{2}}}} = \bfrac{{e}_{i}}{\abs{{e}_{i}}}
   \end{equation*}
 
 
-This works for all :math:`\bm{e}_{i}^{2} \neq 0` since we have defined
-:math:`\abs{\bm{e}_{i}} = \sqrt{\abs{\bm{e}_{i}^{2}}}`.   For spherical
+This works for all :math:`{e}_{i}^{2} \neq 0` since we have defined
+:math:`\abs{{e}_{i}} = \sqrt{\abs{{e}_{i}^{2}}}`.   For spherical
 coordinates the normalized frame vectors are
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{r} =  \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{\gamma}_{y}}}+\cos\left({\theta}\right){\bm{{\gamma}_{z}}}
+  {\hat{e}}_{r} =  \cos\left({\phi}\right) \sin\left({\theta}\right){{{\gamma}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){{{\gamma}_{y}}}+\cos\left({\theta}\right){{{\gamma}_{z}}}
   \end{equation*}
 
 
@@ -950,7 +950,7 @@ coordinates the normalized frame vectors are
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\bm{{\gamma}_{x}}}+\cos\left({\theta}\right) \sin\left({\phi}\right){\bm{{\gamma}_{y}}}- \sin\left({\theta}\right){\bm{{\gamma}_{z}}}
+  {\hat{e}}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){{{\gamma}_{x}}}+\cos\left({\theta}\right) \sin\left({\phi}\right){{{\gamma}_{y}}}- \sin\left({\theta}\right){{{\gamma}_{z}}}
   \end{equation*}
 
 
@@ -960,7 +960,7 @@ coordinates the normalized frame vectors are
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{{\phi}} = - \sin\left({\phi}\right){\bm{{\gamma}_{x}}}+\cos\left({\phi}\right){\bm{{\gamma}_{y}}}
+  {\hat{e}}_{{\phi}} = - \sin\left({\phi}\right){{{\gamma}_{x}}}+\cos\left({\phi}\right){{{\gamma}_{y}}}
   \end{equation*}
 
 
@@ -970,17 +970,17 @@ The geometric derivative in curvilinear coordinates is given by
   :nowrap:
 
   \begin{align*}
-    \nabla F_{R} & =  \bm{\gamma}^{i}\pdiff{}{x^{i}}\lp F_{R}^{i_{1}\dots i_{R}}
-                     \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp  \\
-                   & =  \bm{e^{j}}\pdiff{}{\theta^{j}}\lp F_{R}^{i_{1}\dots i_{R}}
-                     \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp  \\
+    \nabla F_{R} & =  {\gamma}^{i}\pdiff{}{x^{i}}\lp F_{R}^{i_{1}\dots i_{R}}
+                     {\hat{e}}_{i_{1}}\W\dots\W{\hat{e}}_{i_{R}}\rp  \\
+                   & =  {e^{j}}\pdiff{}{\theta^{j}}\lp F_{R}^{i_{1}\dots i_{R}}
+                     {\hat{e}}_{i_{1}}\W\dots\W{\hat{e}}_{i_{R}}\rp  \\
                    & =   \lp\pdiff{}{\theta^{j}} F_{R}^{i_{1}\dots i_{R}}\rp
-                     \bm{e^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp+
-                     F_{R}^{i_{1}\dots i_{R}}\bm{e^{j}}
-                     \pdiff{}{\theta^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp \\
+                     {e^{j}}\lp{\hat{e}}_{i_{1}}\W\dots\W{\hat{e}}_{i_{R}}\rp+
+                     F_{R}^{i_{1}\dots i_{R}}{e^{j}}
+                     \pdiff{}{\theta^{j}}\lp{\hat{e}}_{i_{1}}\W\dots\W{\hat{e}}_{i_{R}}\rp \\
                    & =   \lp\pdiff{}{\theta^{j}} F_{R}^{i_{1}\dots i_{R}}\rp
-                     \bm{e^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp+
-                     F_{R}^{i_{1}\dots i_{R}}C\lbrc \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rbrc
+                     {e^{j}}\lp{\hat{e}}_{i_{1}}\W\dots\W{\hat{e}}_{i_{R}}\rp+
+                     F_{R}^{i_{1}\dots i_{R}}C\lbrc {\hat{e}}_{i_{1}}\W\dots\W{\hat{e}}_{i_{R}}\rbrc
   \end{align*}
 
 
@@ -990,8 +990,8 @@ where
   :nowrap:
 
   \begin{equation*}
-  C\lbrc \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rbrc  = \bm{e^{j}}\pdiff{}{\theta^{j}}
-                                                              \lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp
+  C\lbrc {\hat{e}}_{i_{1}}\W\dots\W{\hat{e}}_{i_{R}}\rbrc  = {e^{j}}\pdiff{}{\theta^{j}}
+                                                              \lp{\hat{e}}_{i_{1}}\W\dots\W{\hat{e}}_{i_{R}}\rp
   \end{equation*}
 
 
@@ -1002,7 +1002,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{r}\rbrc =  \frac{2}{r}
+  C\lbrc{\hat{e}}_{r}\rbrc =  \frac{2}{r}
   \end{equation*}
 
 
@@ -1012,8 +1012,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\theta}\rbrc =  \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
-                                +\frac{1}{r}\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{\theta}
+  C\lbrc{\hat{e}}_{\theta}\rbrc =  \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
+                                +\frac{1}{r}{\hat{e}}_{r}\W{\hat{e}}_{\theta}
   \end{equation*}
 
 
@@ -1023,7 +1023,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\phi}\rbrc = \frac{1}{r}{\bm{\bm{\hat{e}}_{r}}}\W\bm{\hat{e}}_{{\phi}}+ \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\bm{\hat{e}}_{{\theta}}\W\bm{\hat{e}}_{{\phi}}
+  C\lbrc{\hat{e}}_{\phi}\rbrc = \frac{1}{r}{{{\hat{e}}_{r}}}\W{\hat{e}}_{{\phi}}+ \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}{\hat{e}}_{{\theta}}\W{\hat{e}}_{{\phi}}
   \end{equation*}
 
 
@@ -1034,7 +1034,7 @@ spherical coordinate system they are
 
   \begin{equation*}
   C\lbrc\hat{e}_{r}\W\hat{e}_{\theta}\rbrc =  - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
-                                        \bm{\hat{e}}_{r}+\frac{1}{r}\bm{\hat{e}}_{{\theta}}
+                                        {\hat{e}}_{r}+\frac{1}{r}{\hat{e}}_{{\theta}}
   \end{equation*}
 
 
@@ -1044,8 +1044,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{\phi}\rbrc = \frac{1}{r}\bm{\hat{e}}_{{\phi}}
-                      - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{{\theta}}\W\bm{\hat{e}}_{{\phi}}
+  C\lbrc{\hat{e}}_{r}\W{\hat{e}}_{\phi}\rbrc = \frac{1}{r}{\hat{e}}_{{\phi}}
+                      - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}{\hat{e}}_{r}\W{\hat{e}}_{{\theta}}\W{\hat{e}}_{{\phi}}
   \end{equation*}
 
 
@@ -1055,8 +1055,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}\rbrc =  \frac{2}{r}\bm{\hat{e}}_{r}\W
-                                                \bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}
+  C\lbrc{\hat{e}}_{\theta}\W{\hat{e}}_{\phi}\rbrc =  \frac{2}{r}{\hat{e}}_{r}\W
+                                                {\hat{e}}_{\theta}\W{\hat{e}}_{\phi}
   \end{equation*}
 
 
@@ -1066,7 +1066,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_r\W\bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}\rbrc = 0
+  C\lbrc{\hat{e}}_r\W{\hat{e}}_{\theta}\W{\hat{e}}_{\phi}\rbrc = 0
   \end{equation*}
 
 
@@ -1668,25 +1668,25 @@ real equation are explined  in Doran and Lasenby [Lasenby,pp281-283].
   \end{equation*}
 
 
-:math:`\bm{\psi}` is 8-component real spinor (even multi-vector)
+:math:`{\psi}` is 8-component real spinor (even multi-vector)
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  {}\bm{{\psi}} =  {{\psi}}+ {{\psi}^{tx}}{\gamma}_{t}{\gamma}_{x}+ {{\psi}^{ty}}{\gamma}_{t}{\gamma}_{y}+ {{\psi}^{xy}}{\gamma}_{x}{\gamma}_{y}+ {{\psi}^{tz}}{\gamma}_{t}{\gamma}_{z}+ {{\psi}^{xz}}{\gamma}_{x}{\gamma}_{z}+ {{\psi}^{yz}}{\gamma}_{y}{\gamma}_{z}+ {{\psi}^{txyz}}{\gamma}_{t}{\gamma}_{x}{\gamma}_{y}{\gamma}_{z}
+  {}{{\psi}} =  {{\psi}}+ {{\psi}^{tx}}{\gamma}_{t}{\gamma}_{x}+ {{\psi}^{ty}}{\gamma}_{t}{\gamma}_{y}+ {{\psi}^{xy}}{\gamma}_{x}{\gamma}_{y}+ {{\psi}^{tz}}{\gamma}_{t}{\gamma}_{z}+ {{\psi}^{xz}}{\gamma}_{x}{\gamma}_{z}+ {{\psi}^{yz}}{\gamma}_{y}{\gamma}_{z}+ {{\psi}^{txyz}}{\gamma}_{t}{\gamma}_{x}{\gamma}_{y}{\gamma}_{z}
   \end{equation*}
 
 
 Dirac equation in terms of real geometric algebra/calculus
-:math:`\lp\nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi} = m\bm{\psi}\gamma_{t}\rp`
+:math:`\lp\nabla {\psi} I \sigma_{z}-eA{\psi} = m{\psi}\gamma_{t}\rp`
 Spin measured with respect to :math:`z` axis
 
 .. math::
   :nowrap:
 
   \begin{align*}
-  \nabla \bm{\psi} I \sigma_{z}-eA\bm{\psi}-m\bm{\psi}\gamma_{t} & =    \left(-e {A^{y}} {{\psi}^{ty}} -m {{\psi}} -\partial_{z} {{\psi}^{txyz}} -\partial_{y} {{\psi}^{tx}} -e {A^{z}} {{\psi}^{tz}} -e {A^{x}} {{\psi}^{tx}} + \partial_{x} {{\psi}^{ty}} -e {A^{t}} {{\psi}} + \partial_{t} {{\psi}^{xy}}\right){\gamma}_{t} \\ & + \left(-e {A^{y}} {{\psi}^{xy}} + \partial_{z} {{\psi}^{yz}} -e {A^{z}} {{\psi}^{xz}} -e {A^{t}} {{\psi}^{tx}} + m {{\psi}^{tx}} -\partial_{x} {{\psi}^{xy}} + \partial_{y} {{\psi}} -e {A^{x}} {{\psi}} -\partial_{t} {{\psi}^{ty}}\right){\gamma}_{x} \\ & + \left(-e {A^{y}} {{\psi}} + e {A^{x}} {{\psi}^{xy}} -e {A^{t}} {{\psi}^{ty}} -\partial_{x} {{\psi}} + \partial_{t} {{\psi}^{tx}} -\partial_{z} {{\psi}^{xz}} -e {A^{z}} {{\psi}^{yz}} + m {{\psi}^{ty}} -\partial_{y} {{\psi}^{xy}}\right){\gamma}_{y} \\ & + \left(-\partial_{z} {{\psi}^{xy}} + e {A^{x}} {{\psi}^{xz}} -e {A^{t}} {{\psi}^{tz}} -\partial_{x} {{\psi}^{yz}} + \partial_{y} {{\psi}^{xz}} + e {A^{y}} {{\psi}^{yz}} + \partial_{t} {{\psi}^{txyz}} + m {{\psi}^{tz}} -e {A^{z}} {{\psi}}\right){\gamma}_{z} \\ & + \left(\partial_{y} {{\psi}^{ty}} -e {A^{y}} {{\psi}^{tx}} + e {A^{x}} {{\psi}^{ty}} + \partial_{z} {{\psi}^{tz}} -e {A^{z}} {{\psi}^{txyz}} + \partial_{x} {{\psi}^{tx}} -e {A^{t}} {{\psi}^{xy}} -\partial_{t} {{\psi}} -m {{\psi}^{xy}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{y} \\ & + \left(-\partial_{y} {{\psi}^{tz}} + \partial_{x} {{\psi}^{txyz}} -e {A^{t}} {{\psi}^{xz}} + e {A^{x}} {{\psi}^{tz}} + e {A^{y}} {{\psi}^{txyz}} + \partial_{z} {{\psi}^{ty}} -m {{\psi}^{xz}} -e {A^{z}} {{\psi}^{tx}} -\partial_{t} {{\psi}^{yz}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{z} \\ & + \left(-e {A^{t}} {{\psi}^{yz}} -\partial_{z} {{\psi}^{tx}} + \partial_{x} {{\psi}^{tz}} -m {{\psi}^{yz}} + \partial_{y} {{\psi}^{txyz}} + \partial_{t} {{\psi}^{xz}} -e {A^{z}} {{\psi}^{ty}} -e {A^{x}} {{\psi}^{txyz}} + e {A^{y}} {{\psi}^{tz}}\right){\gamma}_{t}{\gamma}_{y}{\gamma}_{z} \\ & + \left(\partial_{z} {{\psi}} + e {A^{y}} {{\psi}^{xz}} + m {{\psi}^{txyz}} -\partial_{t} {{\psi}^{tz}} -\partial_{x} {{\psi}^{xz}} -e {A^{x}} {{\psi}^{yz}} -e {A^{t}} {{\psi}^{txyz}} -\partial_{y} {{\psi}^{yz}} -e {A^{z}} {{\psi}^{xy}}\right){\gamma}_{x}{\gamma}_{y}{\gamma}_{z}\end{align*}
+  \nabla {\psi} I \sigma_{z}-eA{\psi}-m{\psi}\gamma_{t} & =    \left(-e {A^{y}} {{\psi}^{ty}} -m {{\psi}} -\partial_{z} {{\psi}^{txyz}} -\partial_{y} {{\psi}^{tx}} -e {A^{z}} {{\psi}^{tz}} -e {A^{x}} {{\psi}^{tx}} + \partial_{x} {{\psi}^{ty}} -e {A^{t}} {{\psi}} + \partial_{t} {{\psi}^{xy}}\right){\gamma}_{t} \\ & + \left(-e {A^{y}} {{\psi}^{xy}} + \partial_{z} {{\psi}^{yz}} -e {A^{z}} {{\psi}^{xz}} -e {A^{t}} {{\psi}^{tx}} + m {{\psi}^{tx}} -\partial_{x} {{\psi}^{xy}} + \partial_{y} {{\psi}} -e {A^{x}} {{\psi}} -\partial_{t} {{\psi}^{ty}}\right){\gamma}_{x} \\ & + \left(-e {A^{y}} {{\psi}} + e {A^{x}} {{\psi}^{xy}} -e {A^{t}} {{\psi}^{ty}} -\partial_{x} {{\psi}} + \partial_{t} {{\psi}^{tx}} -\partial_{z} {{\psi}^{xz}} -e {A^{z}} {{\psi}^{yz}} + m {{\psi}^{ty}} -\partial_{y} {{\psi}^{xy}}\right){\gamma}_{y} \\ & + \left(-\partial_{z} {{\psi}^{xy}} + e {A^{x}} {{\psi}^{xz}} -e {A^{t}} {{\psi}^{tz}} -\partial_{x} {{\psi}^{yz}} + \partial_{y} {{\psi}^{xz}} + e {A^{y}} {{\psi}^{yz}} + \partial_{t} {{\psi}^{txyz}} + m {{\psi}^{tz}} -e {A^{z}} {{\psi}}\right){\gamma}_{z} \\ & + \left(\partial_{y} {{\psi}^{ty}} -e {A^{y}} {{\psi}^{tx}} + e {A^{x}} {{\psi}^{ty}} + \partial_{z} {{\psi}^{tz}} -e {A^{z}} {{\psi}^{txyz}} + \partial_{x} {{\psi}^{tx}} -e {A^{t}} {{\psi}^{xy}} -\partial_{t} {{\psi}} -m {{\psi}^{xy}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{y} \\ & + \left(-\partial_{y} {{\psi}^{tz}} + \partial_{x} {{\psi}^{txyz}} -e {A^{t}} {{\psi}^{xz}} + e {A^{x}} {{\psi}^{tz}} + e {A^{y}} {{\psi}^{txyz}} + \partial_{z} {{\psi}^{ty}} -m {{\psi}^{xz}} -e {A^{z}} {{\psi}^{tx}} -\partial_{t} {{\psi}^{yz}}\right){\gamma}_{t}{\gamma}_{x}{\gamma}_{z} \\ & + \left(-e {A^{t}} {{\psi}^{yz}} -\partial_{z} {{\psi}^{tx}} + \partial_{x} {{\psi}^{tz}} -m {{\psi}^{yz}} + \partial_{y} {{\psi}^{txyz}} + \partial_{t} {{\psi}^{xz}} -e {A^{z}} {{\psi}^{ty}} -e {A^{x}} {{\psi}^{txyz}} + e {A^{y}} {{\psi}^{tz}}\right){\gamma}_{t}{\gamma}_{y}{\gamma}_{z} \\ & + \left(\partial_{z} {{\psi}} + e {A^{y}} {{\psi}^{xz}} + m {{\psi}^{txyz}} -\partial_{t} {{\psi}^{tz}} -\partial_{x} {{\psi}^{xz}} -e {A^{x}} {{\psi}^{yz}} -e {A^{t}} {{\psi}^{txyz}} -\partial_{y} {{\psi}^{yz}} -e {A^{z}} {{\psi}^{xy}}\right){\gamma}_{x}{\gamma}_{y}{\gamma}_{z}\end{align*}
 
 
 
@@ -1726,7 +1726,7 @@ Gradient of Scalar Function :math:`\psi`
   :nowrap:
 
   \begin{equation*}
-  \nabla\psi =  \partial_{r} {{\psi}}{}\bm{e}_{r}+\frac{1 \partial_{{\theta}} {{\psi}}}{r}{}\bm{e}_{{\theta}}+\frac{1 \partial_{{\phi}} {{\psi}}}{r \operatorname{sin}\left({\theta}\right)}{}\bm{e}_{{\phi}}
+  \nabla\psi =  \partial_{r} {{\psi}}{}{e}_{r}+\frac{1 \partial_{{\theta}} {{\psi}}}{r}{}{e}_{{\theta}}+\frac{1 \partial_{{\phi}} {{\psi}}}{r \operatorname{sin}\left({\theta}\right)}{}{e}_{{\phi}}
   \end{equation*}
 
 
@@ -1736,7 +1736,7 @@ Div and Curl of Vector Function :math:`A`
   :nowrap:
 
   \begin{equation*}
-  A =  {A^{r}}{}\bm{e}_{r}+ {A^{{\theta}}}{}\bm{e}_{{\theta}}+ {A^{{\phi}}}{}\bm{e}_{{\phi}}
+  A =  {A^{r}}{}{e}_{r}+ {A^{{\theta}}}{}{e}_{{\theta}}+ {A^{{\phi}}}{}{e}_{{\phi}}
   \end{equation*}
 
 
@@ -1756,7 +1756,7 @@ Div and Curl of Vector Function :math:`A`
   :nowrap:
 
   \begin{align*}
-  -I\lp\nabla \W A\rp & =   \left(\frac{\partial_{{\theta}} {A^{{\phi}}}}{r} + \frac{{A^{{\phi}}} \operatorname{cos}\left({\theta}\right)}{r \operatorname{sin}\left({\theta}\right)} -\frac{\partial_{{\phi}} {A^{{\theta}}}}{r \operatorname{sin}\left({\theta}\right)}\right){}\bm{e}_{r} \\ & - \left(\frac{{A^{{\phi}}}}{r} + \partial_{r} {A^{{\phi}}} -\frac{\partial_{{\phi}} {A^{r}}}{r \operatorname{sin}\left({\theta}\right)}\right){}\bm{e}_{{\theta}} \\ & + \left(\frac{{A^{{\theta}}}}{r} + \partial_{r} {A^{{\theta}}} -\frac{\partial_{{\theta}} {A^{r}}}{r}\right){}\bm{e}_{{\phi}}\end{align*}
+  -I\lp\nabla \W A\rp & =   \left(\frac{\partial_{{\theta}} {A^{{\phi}}}}{r} + \frac{{A^{{\phi}}} \operatorname{cos}\left({\theta}\right)}{r \operatorname{sin}\left({\theta}\right)} -\frac{\partial_{{\phi}} {A^{{\theta}}}}{r \operatorname{sin}\left({\theta}\right)}\right){}{e}_{r} \\ & - \left(\frac{{A^{{\phi}}}}{r} + \partial_{r} {A^{{\phi}}} -\frac{\partial_{{\phi}} {A^{r}}}{r \operatorname{sin}\left({\theta}\right)}\right){}{e}_{{\theta}} \\ & + \left(\frac{{A^{{\theta}}}}{r} + \partial_{r} {A^{{\theta}}} -\frac{\partial_{{\theta}} {A^{r}}}{r}\right){}{e}_{{\phi}}\end{align*}
 
 
 ``End Program Output``
