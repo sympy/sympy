@@ -449,15 +449,15 @@ def roots(f, *gens, **flags):
     a complete set of roots use RootOf class or numerical methods
     instead. By default cubic and quartic formulas are used in
     the algorithm. To disable them because of unreadable output
-    set `cubics=False` or `quartics=False` respectively.
+    set ``cubics=False`` or ``quartics=False`` respectively.
 
-    To get roots from a specific domain set the `filter` flag with
+    To get roots from a specific domain set the ``filter`` flag with
     one of the following specifiers: Z, Q, R, I, C. By default all
-    roots are returned (this is equivalent to setting `filter='C'`).
+    roots are returned (this is equivalent to setting ``filter='C'``).
 
     By default a dictionary is returned giving a compact result in
     case of multiple roots.  However to get a tuple containing all
-    those roots set the `multiple` flag to True.
+    those roots set the ``multiple`` flag to True.
 
     **Examples**
 

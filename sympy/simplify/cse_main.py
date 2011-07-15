@@ -10,14 +10,14 @@ import cse_opts
 
 # (preprocessor, postprocessor) pairs which are commonly useful. They should
 # each take a sympy expression and return a possibly transformed expression.
-# When used in the function `cse()`, the target expressions will be transformed
+# When used in the function ``cse()``, the target expressions will be transformed
 # by each of the preprocessor functions in order. After the common
 # subexpressions are eliminated, each resulting expression will have the
 # postprocessor functions transform them in *reverse* order in order to undo the
 # transformation if necessary. This allows the algorithm to operate on
 # a representation of the expressions that allows for more optimization
 # opportunities.
-# `None` can be used to specify no transformation for either the preprocessor or
+# ``None`` can be used to specify no transformation for either the preprocessor or
 # postprocessor.
 
 cse_optimizations = list(cse_opts.default_optimizations)
@@ -77,12 +77,12 @@ def cse(exprs, symbols=None, optimizations=None):
         The expressions to reduce.
     symbols : infinite iterator yielding unique Symbols
         The symbols used to label the common subexpressions which are pulled
-        out. The `numbered_symbols` generator is useful. The default is a stream
+        out. The ``numbered_symbols`` generator is useful. The default is a stream
         of symbols of the form "x0", "x1", etc. This must be an infinite
         iterator.
     optimizations : list of (callable, callable) pairs, optional
         The (preprocessor, postprocessor) pairs. If not provided,
-        `sympy.simplify.cse.cse_optimizations` is used.
+        ``sympy.simplify.cse.cse_optimizations`` is used.
 
     Returns:
 
