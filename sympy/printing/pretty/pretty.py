@@ -6,7 +6,7 @@ from sympy.printing.str import sstr
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
-        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek
+        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U
 
 from sympy.core.compatibility import cmp_to_key
 
@@ -564,6 +564,159 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('{',''))
         return D
 
+    def _hprint_vec(self, v):
+        D = None
+
+        for a in v:
+            p = a
+            if D is None:
+                D = p
+            else:
+                D = prettyForm(*D.right(', '))
+                D = prettyForm(*D.right(p))
+        if D is None:
+            D = stringPict(' ')
+
+        return D
+
+    def _hprint_vseparator(self, p1, p2):
+        tmp = prettyForm(*p1.right(p2))
+        sep = stringPict(vobj('|', tmp.height()), baseline=tmp.baseline)
+        return prettyForm(*p1.right(sep, p2))
+
+    def _print_hyper(self, e):
+        # FIXME refactor Matrix, Piecewise, and this into a tabular environment
+        ap = [self._print(a) for a in e.ap]
+        bq = [self._print(b) for b in e.bq]
+
+        P = self._print(e.argument)
+
+        # Drawing result - first create the ap, bq vectors
+        D = None
+        for v in [ap, bq]:
+            D_row = self._hprint_vec(v)
+            if D is None:
+                D = D_row       # first row in a picture
+            else:
+                D = prettyForm(*D.below(' '))
+                D = prettyForm(*D.below(D_row))
+
+        # make sure that the argument `z' is centred vertically
+        D.baseline = D.height()/2
+
+        # insert horizontal separator
+        P = prettyForm(*P.left(' '))
+        D = prettyForm(*D.right(' '))
+
+        # insert separating `|`
+        D = self._hprint_vseparator(D, P)
+
+        # add parens
+        D = prettyForm(*D.parens('(', ')'))
+
+        # create the F symbol
+        above = D.height()/2 - 1
+        below = D.height() - above - 1
+
+        if self._use_unicode:
+            pic = (2, 0, 2, u'\u250c\u2500\n\u251c\u2500\n\u2575')
+        else:
+            pic = ((3, 0, 3, ' _\n|_\n|\n'))
+
+        add = 0
+        sz, t, b, img = pic
+        F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
+                       baseline = above + sz)
+        add = (sz+1)/2
+
+        F = prettyForm(*F.left(self._print(len(e.ap))))
+        F = prettyForm(*F.right(self._print(len(e.bq))))
+        F.baseline = above + add
+
+        D = prettyForm(*F.right(' ', D))
+
+        return D
+
+    def _print_meijerg(self, e):
+        # FIXME refactor Matrix, Piecewise, and this into a tabular environment
+
+        v = {}
+        v[(0, 0)] = [self._print(a) for a in e.an]
+        v[(0, 1)] = [self._print(a) for a in e.aother]
+        v[(1, 0)] = [self._print(b) for b in e.bm]
+        v[(1, 1)] = [self._print(b) for b in e.bother]
+
+        P = self._print(e.argument)
+
+        vp = {}
+        for idx in v:
+            vp[idx] = self._hprint_vec(v[idx])
+
+        for i in range(2):
+            maxw = max(vp[(0, i)].width(), vp[(1, i)].width())
+            for j in range(2):
+                s = vp[(j, i)]
+                left = (maxw - s.width()) // 2
+                right = maxw - left - s.width()
+                s = prettyForm(*s.left(' ' * left))
+                s = prettyForm(*s.right(' ' * right))
+                vp[(j, i)] = s
+
+        D1 = prettyForm(*vp[(0, 0)].right('  ', vp[(0, 1)]))
+        D1 = prettyForm(*D1.below(' '))
+        D2 = prettyForm(*vp[(1, 0)].right('  ', vp[(1, 1)]))
+        D  = prettyForm(*D1.below(D2))
+
+        # make sure that the argument `z' is centred vertically
+        D.baseline = D.height()/2
+
+        # insert horizontal separator
+        P = prettyForm(*P.left(' '))
+        D = prettyForm(*D.right(' '))
+
+        # insert separating `|`
+        D = self._hprint_vseparator(D, P)
+
+        # add parens
+        D = prettyForm(*D.parens('(', ')'))
+
+        # create the G symbol
+        above = D.height()/2 - 1
+        below = D.height() - above - 1
+
+        if self._use_unicode:
+            pic = (3, 0, 3, 1,
+                   u'\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
+        else:
+            pic = (3, 0, 3, 1, ' __\n/__\n\_|')
+
+        add = 0
+        sz, t, b, add, img = pic
+        F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
+                       baseline = above + sz)
+
+        pp = self._print(len(e.ap))
+        pq = self._print(len(e.bq))
+        pm = self._print(len(e.bm))
+        pn = self._print(len(e.an))
+        pu = prettyForm(*pm.right(', ', pn))
+        pl = prettyForm(*pp.right(', ', pq))
+
+        ht = F.baseline - above - 2
+        if ht > 0:
+            pu = prettyForm(*pu.below('\n'*ht))
+        p = prettyForm(*pu.below(pl))
+
+        F.baseline = above
+        F = prettyForm(*F.right(p))
+
+        F.baseline = above + add
+
+        D = prettyForm(*F.right(' ', D))
+
+        return D
+
+
     def _print_exp(self, e):
         base = prettyForm(pretty_atom('Exp1', 'e'))
         return base ** self._print(e.args[0])
@@ -592,6 +745,26 @@ class PrettyPrinter(Printer):
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
             pform = prettyForm(*pform.left(greek['gamma'][1]))
+            return pform
+        else:
+            return self._print_Function(e)
+
+    def _print_uppergamma(self, e):
+        if self._use_unicode:
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek['gamma'][1]))
+            return pform
+        else:
+            return self._print_Function(e)
+
+    def _print_lowergamma(self, e):
+        if self._use_unicode:
+            pform = self._print(e.args[0])
+            pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
+            pform = prettyForm(*pform.parens())
+            pform = prettyForm(*pform.left(greek['gamma'][0]))
             return pform
         else:
             return self._print_Function(e)
