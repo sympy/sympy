@@ -318,6 +318,26 @@ def test_powsimp():
     assert powsimp(eq).exp == eq.exp == 2*a/3 # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
     assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
 
+def test_powsimp_polar():
+    from sympy import polar_lift, exp_polar
+    x, y, z = symbols('x y z')
+    p, q, r = symbols('p q r', polar=True)
+
+    assert (polar_lift(-1))**(2*x) == exp_polar(2*pi*I*x)
+    assert powsimp(p**x * q**x) == (p*q)**x
+    assert p**x * (1/p)**x == 1
+    assert (1/p)**x == p**(-x)
+
+    assert exp_polar(x)*exp_polar(y) == exp_polar(x)*exp_polar(y)
+    assert powsimp(exp_polar(x)*exp_polar(y)) == exp_polar(x+y)
+    assert powsimp(exp_polar(x)*exp_polar(y)*p**x*p**y) == (p*exp_polar(1))**(x + y)
+    assert powsimp(exp_polar(x)*exp_polar(y)*p**x*p**y, combine='exp') \
+           == exp_polar(x+y)*p**(x+y)
+    assert powsimp(exp_polar(x)*exp_polar(y)*exp_polar(2)*sin(x)+sin(y)+p**x*p**y) \
+           == p**(x+y) + sin(x)*exp_polar(2+x+y) + sin(y)
+    assert powsimp(sin(exp_polar(x)*exp_polar(y))) == sin(exp_polar(x)*exp_polar(y))
+    assert powsimp(sin(exp_polar(x)*exp_polar(y)), deep=True) == sin(exp_polar(x+y))
+
 def test_powsimp_nc():
     x, y, z = symbols('x,y,z')
     A, B, C = symbols('A B C', commutative=False)
@@ -914,3 +934,45 @@ def test_combsimp_gamma():
     assert simplify(gamma(S(1)/2 + x/2)*gamma(1 + x/2)/gamma(1+x)/sqrt(pi)*2**x) \
            == 1
     assert combsimp(gamma(S(-1)/4)*gamma(S(-3)/4)) == 16*sqrt(2)*pi/3
+
+def test_unpolarify():
+    from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,
+                       principal_branch)
+    from sympy import gamma, erf, sin, tanh, uppergamma, Eq, Ne
+    from sympy.abc import x
+    p = exp_polar(7*I) + 1
+    u = exp(7*I) + 1
+
+    assert unpolarify(p) == u
+    assert unpolarify(p**2) == u**2
+    assert unpolarify(p**x) == p**x
+    assert unpolarify(p*x) == u*x
+    assert unpolarify(p + x) == u + x
+    assert unpolarify(sqrt(sin(p))) == sqrt(sin(u))
+
+    # Test reduction to principal branch 2*pi.
+    t = principal_branch(x, 2*pi)
+    assert unpolarify(t) == x
+    assert unpolarify(sqrt(t)) == sqrt(t)
+
+    # Test exponents_only.
+    assert unpolarify(p**p, exponents_only=True) == p**u
+    assert unpolarify(uppergamma(x, p**p)) == uppergamma(x, p**u)
+
+    # Test functions.
+    assert unpolarify(sin(p)) == sin(u)
+    assert unpolarify(tanh(p)) == tanh(u)
+    assert unpolarify(gamma(p)) == gamma(u)
+    assert unpolarify(erf(p)) == erf(u)
+    assert unpolarify(uppergamma(x, p)) == uppergamma(x, p)
+
+    assert unpolarify(uppergamma(sin(p), sin(p + exp_polar(0)))) == \
+           uppergamma(sin(u), sin(u + 1))
+    assert unpolarify(uppergamma(polar_lift(0), 2*exp_polar(0))) == uppergamma(0, 2)
+
+    assert unpolarify(Eq(p, 0)) == Eq(u, 0)
+    assert unpolarify(Ne(p, 0)) == Ne(u, 0)
+    assert unpolarify(polar_lift(x) > 0) == (x > 0)
+
+    # Test bools
+    assert unpolarify(True) is True

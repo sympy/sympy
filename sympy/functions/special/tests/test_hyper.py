@@ -38,6 +38,11 @@ def test_hyper():
     # differentiation wrt parameters is not supported
     assert hyper([z], [], z).diff(z) == Derivative(hyper([z], [], z), z)
 
+    # hyper is unbranched wrt parameters
+    from sympy import polar_lift
+    assert hyper([polar_lift(z)], [polar_lift(k)], polar_lift(x)) == \
+           hyper([z], [k], polar_lift(x))
+
 def test_expand_func():
     # evaluation at 1 of Gauss' hypergeometric function:
     from sympy.abc import a, b, c
@@ -122,6 +127,11 @@ def test_meijer():
 
     assert meijerg([z, z], [], [], [], z).diff(z) == \
            Derivative(meijerg([z, z], [], [], [], z), z)
+
+    # meijerg is unbranched wrt parameters
+    from sympy import polar_lift as pl
+    assert meijerg([pl(a1)], [pl(a2)], [pl(b1)], [pl(b2)], pl(z)) == \
+           meijerg([a1], [a2], [b1], [b2], pl(z))
 
 def test_meijerg_derivative():
     assert meijerg([], [1, 1], [0, 0, x], [], z).diff(x) == \

@@ -13,6 +13,8 @@ from sympy.core.mul import Mul
 def _make_tuple(v):
     """
     Turn an iterable argument V into a Tuple.
+    Also unpolarify, since both hypergeometric and meijer g-functions are
+    unbranched in their parameters.
 
     Examples:
     >>> from sympy.functions.special.hyper import _make_tuple as mt
@@ -24,7 +26,8 @@ def _make_tuple(v):
     >>> mt((7, 8, 9))
     (7, 8, 9)
     """
-    return Tuple(*[sympify(x) for x in v])
+    from sympy import unpolarify
+    return Tuple(*[unpolarify(sympify(x)) for x in v])
 
 class TupleParametersBase(Function):
     """ Base class that takes care of differentiation, when some of

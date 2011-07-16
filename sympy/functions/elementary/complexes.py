@@ -35,6 +35,7 @@ class re(Function):
     nargs = 1
 
     is_real = True
+    unbranched = True # implicitely works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -114,6 +115,7 @@ class im(Function):
     nargs = 1
 
     is_real = True
+    unbranched = True # implicitely works on the projection to C
 
     @classmethod
     def eval(cls, arg):
@@ -392,6 +394,73 @@ class conjugate(Function):
 
     def _eval_derivative(self, x):
         return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
+
+###############################################################################
+############### HANDLING OF POLAR NUMBERS #####################################
+###############################################################################
+
+class polar_lift(Function):
+    """
+    Lift argument to the riemann surface of the logarithm, using the
+    standard branch.
+
+    >>> from sympy import Symbol, polar_lift
+    >>> p = Symbol('p', polar=True)
+    >>> x = Symbol('x')
+    >>> polar_lift(4)
+    4*exp_polar(0)
+    >>> polar_lift(-4)
+    4*exp_polar(I*pi)
+    >>> polar_lift(-I)
+    exp_polar(-I*pi/2)
+    >>> polar_lift(I + 2)
+    polar_lift(2 + I)
+
+    >>> polar_lift(4*x)
+    4*polar_lift(x)
+    >>> polar_lift(4*p)
+    4*p
+    """
+
+    nargs = 1
+
+    is_polar = True
+    is_comparable = False # Cannot be evalf'd.
+
+    @classmethod
+    def eval(cls, arg):
+        from sympy import exp_polar, pi, I, arg as argument
+        if arg.is_number:
+            ar = argument(arg)
+            #if not ar.has(argument) and not ar.has(atan):
+            if ar in (0, pi/2, -pi/2, pi):
+               return exp_polar(I*ar)*abs(arg)
+
+        if arg.is_Mul:
+            args = arg.args
+        else:
+            args = [arg]
+        included = []
+        excluded = []
+        positive = []
+        for arg in args:
+            if arg.is_polar:
+                included += [arg]
+            elif arg.is_positive:
+                positive += [arg]
+            else:
+                excluded += [arg]
+        if len(excluded) < len(args):
+            if excluded:
+                return Mul(*(included + positive))*polar_lift(Mul(*excluded))
+            elif included:
+                return Mul(*(included + positive))
+            else:
+                return Mul(*positive)*exp_polar(0)
+
+    def _eval_evalf(self, prec):
+        """ Careful! any evalf of polar numbers is flaky """
+        return self.args[0]._eval_evalf(prec)
 
 # /cyclic/
 from sympy.core import basic as _

@@ -1,6 +1,6 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-        sin, cos, sinh, cosh)
+        sin, cos, sinh, cosh, exp_polar)
 
 def test_exp_values():
 
@@ -281,3 +281,7 @@ def test_as_numer_denom():
     assert exp(-2).as_numer_denom() == (1, exp(2))
     assert exp(n).as_numer_denom() == (exp(n), 1)
     assert exp(-n).as_numer_denom() == (1, exp(n))
+
+def test_polar():
+    assert abs(exp_polar(I*4)) == 1
+    assert exp_polar(I*10).n() == exp_polar(I*10)

@@ -20,9 +20,10 @@ from combinatorial.factorials import binomial, factorial2
 from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell, euler, catalan
 
 from elementary.miscellaneous import sqrt, root, Min, Max, Id, real_root
-from elementary.complexes import re, im, sign, Abs, conjugate, arg
+from elementary.complexes import (re, im, sign, Abs, conjugate, arg,
+                      polar_lift)
 from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan, atan2
-from elementary.exponential import exp, log, LambertW
+from elementary.exponential import exp_polar, exp, log, LambertW
 from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
 from elementary.integers import floor, ceiling
 from elementary.piecewise import Piecewise, piecewise_fold

@@ -19,21 +19,10 @@ from sympy.ntheory import multiplicity, perfect_power
 # log(x(1+p)), this *has* to be expanded to log(x)+log(1+p) if x.is_positive and
 # p.is_positive.]
 
-class exp(Function):
-    """
-    The exponential function, :math:`e^x`.
-    """
+class ExpBase(Function):
 
     nargs = 1
-
-    def fdiff(self, argindex=1):
-        """
-        Returns the first derivative of this function.
-        """
-        if argindex == 1:
-            return self
-        else:
-            raise ArgumentIndexError(self, argindex)
+    unbranched = True
 
     def inverse(self, argindex=1):
         """
@@ -58,6 +47,101 @@ class exp(Function):
         if c.is_negative:
             return S.One, exp(-self.args[0])
         return self, S.One
+
+    def as_base_exp(self):
+        """
+        Returns the 2-tuple (base, exponent).
+        """
+        return self.func(1), Mul(*self.args)
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+        if arg.is_unbounded:
+            if arg.is_negative: return True
+            if arg.is_positive: return False
+        if arg.is_bounded:
+            return True
+    def _eval_is_zero(self):
+        return (self.args[0] is S.NegativeInfinity)
+
+    def _eval_power(b, e):
+        """exp(b[0])**e -> exp(b[0]*e)"""
+        return b.func(b.args[0] * e)
+
+    def _eval_expand_power_exp(self, deep=True, **hints):
+        if deep:
+            arg = self.args[0].expand(deep=deep, **hints)
+        else:
+            arg = self.args[0]
+        if arg.is_Add and arg.is_commutative:
+            expr = 1
+            for x in arg.args:
+                if deep:
+                    x = x.expand(deep=deep, **hints)
+                expr *= self.func(x)
+            return expr
+        return self.func(arg)
+
+class exp_polar(ExpBase):
+    r"""
+    Represent a 'polar number' (see g-function Sphinx documentation).
+
+    ``exp_polar`` represents the function
+    `Exp: \mathbb{C} \rightarrow \mathcal{S}`, sending the complex number
+    `z = a + bi` to the polar number `r = exp(a), \theta = b`. It is one of
+    the main functions to construct polar numbers.
+
+    >>> from sympy import exp_polar, pi, I, exp
+
+    The main difference is that polar numbers don't "wrap around" at `2 \pi`:
+
+    >>> exp(2*pi*I)
+    1
+    >>> exp_polar(2*pi*I)
+    exp_polar(2*I*pi)
+
+    apart from that they behave mostly like classical complex numbers:
+
+    >>> exp_polar(2)*exp_polar(3)
+    exp_polar(5)
+
+    **See also:** :class:`polar_lift`, :func:`powsimp`.
+    """
+
+    is_polar = True
+    is_comparable = False # cannot be evalf'd
+    is_real = False
+
+    def _eval_evalf(self, prec):
+        """ Careful! any evalf of polar numbers is flaky """
+        from sympy import im, pi
+        i = im(self.args[0])
+        if i <= -pi or i > pi:
+            return self # cannot evalf for this argument
+        return exp(self.args[0])._eval_evalf(prec)
+
+    def as_base_exp(self):
+        # XXX exp_polar(0) is special!
+        if self.args[0] == 0:
+            return self, S(1)
+        return ExpBase.as_base_exp(self)
+
+class exp(ExpBase):
+    """
+    The exponential function, :math:`e^x`.
+    """
+
+    def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
+        if argindex == 1:
+            return self
+        else:
+            raise ArgumentIndexError(self, argindex)
 
     @classmethod
     def eval(cls, arg):
@@ -186,15 +270,6 @@ class exp(Function):
         cos, sin = C.cos(im), C.sin(im)
         return (exp(re)*cos, exp(re)*sin)
 
-    def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
-
-    def as_base_exp(self):
-        """
-        Returns the 2-tuple (base, exponent).
-        """
-        return S.Exp1, Mul(*self.args)
-
     def _eval_subs(self, old, new):
         if self == old:
             return new
@@ -243,20 +318,6 @@ class exp(Function):
         if self.args[0].is_real:
             return True
 
-    def _eval_is_bounded(self):
-        arg = self.args[0]
-        if arg.is_unbounded:
-            if arg.is_negative: return True
-            if arg.is_positive: return False
-        if arg.is_bounded:
-            return True
-    def _eval_is_zero(self):
-        return (self.args[0] is S.NegativeInfinity)
-
-    def _eval_power(b, e):
-        """exp(b[0])**e -> exp(b[0]*e)"""
-        return exp(b.args[0] * e)
-
     def _eval_lseries(self, x):
         s = self.args[0]
         yield exp(s.subs(x, 0))
@@ -303,20 +364,6 @@ class exp(Function):
         if C.Order(1,x).contains(arg):
             return S.One
         return exp(arg)
-
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
-        if arg.is_Add and arg.is_commutative:
-            expr = 1
-            for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
-                expr *= self.func(x)
-            return expr
-        return self.func(arg)
 
     def _eval_rewrite_as_sin(self, arg):
         I = S.ImaginaryUnit
