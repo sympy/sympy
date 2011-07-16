@@ -4,8 +4,14 @@ from sympy import Add, S
 class MatAdd(MatrixExpr, Add):
 
     def __new__(cls, *args):
+
+        args = map(matrixify, args)
+
+        args = [arg for arg in args if arg!=0]
+
         if not all(arg.is_Matrix for arg in args):
             raise ValueError("Mix of Matrix and Scalar symbols")
+
 
         # Check that the shape of the args is consistent
         A = args[0]
@@ -22,8 +28,9 @@ class MatAdd(MatrixExpr, Add):
             return MatMul(*expr.args)
 
         # Clear out Identities
-        if any(M.is_Zero for M in expr.args): # Any zeros around?
-            newargs = [M for M in expr.args if not M.is_Zero] # clear out
+        # Any zeros around?
+        if expr.is_Add and any(M.is_ZeroMatrix for M in expr.args):
+            newargs = [M for M in expr.args if not M.is_ZeroMatrix] # clear out
             if len(newargs)==0: # Did we lose everything?
                 return ZeroMatrix(*args[0].shape)
             if expr.args != newargs: # Removed some 0's but not everything?

@@ -1,4 +1,4 @@
-from sympy import Expr, Symbol, Eq
+from sympy import Expr, Symbol, Eq, Mul, Add
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
@@ -13,7 +13,8 @@ class MatrixExpr(Expr):
     is_Matrix = True
     is_Identity = False
     is_Inverse = False
-    is_Zero = False
+    is_Transpose = False
+    is_ZeroMatrix = False
     is_BlockMatrix = False
 
     is_commutative = False
@@ -94,11 +95,17 @@ class MatrixExpr(Expr):
 #            raise ShapeError("Substituted expression invalid")
         return ex
 
+    def eval_transpose(self):
+        raise NotImplementedError()
+
+    def eval_inverse(self):
+        raise NotImplementedError()
+
 
 class MatrixSymbol(MatrixExpr, Symbol):
-    def __new__(cls, name, n, m, **assumptions):
-        obj = Symbol.__new__(cls, name, False, **assumptions)
-        obj.shape = (n,m)
+    is_commutative = False
+    def __new__(cls, name, n, m):
+        obj = Basic.__new__(cls, name, n, m)
         return obj
 
     def _hashable_content(self):
@@ -107,15 +114,26 @@ class MatrixSymbol(MatrixExpr, Symbol):
     def _check_shape(self):
         return True
 
+    @property
+    def shape(self):
+        return self.args[1:3]
+
+    @property
+    def name(self):
+        return self.args[0]
+
 class Identity(MatrixSymbol):
     is_Identity = True
     def __new__(cls, n):
         return MatrixSymbol.__new__(cls, "I", n, n)
 
 class ZeroMatrix(MatrixSymbol):
-    is_Zero = True
+    is_ZeroMatrix = True
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
+
+def matrix_symbols(expr):
+    return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
 def matrixify(expr):
     """
@@ -125,21 +143,23 @@ def matrixify(expr):
 
     Internal use only
     """
-    if not (expr.is_Mul or expr.is_Add):
+    if len(matrix_symbols(expr))==0: # No matrix symbols present
         return expr
-    while not expr.is_Matrix and any(arg.is_Matrix for arg in expr.args):
-        if expr.is_Mul:
-            expr = MatMul(*expr.args)
-        if expr.is_Add:
-            expr = MatAdd(*expr.args)
-    return expr
+
+    class_dict = {Mul:MatMul, Add:MatAdd, MatMul:MatMul, MatAdd:MatAdd}
+
+    if expr.__class__ not in class_dict.keys():
+        return expr
+
+    args = map(matrixify, expr.args) # recursively call down the tree
+
+    return Basic.__new__(class_dict[expr.__class__], *args)
 
 def matsimp(expr):
     if all(mat.is_Identity for mat in new):
         new = [new[0]]
     else:
         new = [mat for mat in new if not mat.is_Identity] # clear ident
-
 
 from matmul import MatMul
 from matadd import MatAdd

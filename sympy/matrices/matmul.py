@@ -14,8 +14,14 @@ class MatMul(MatrixExpr, Mul):
                 raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
         expr = matrixify(Mul.__new__(cls, *args))
+        if expr.is_Add:
+            return MatAdd(*expr.args)
+        if expr.is_Pow:
+            return MatPow(*expr.args)
+        if not expr.is_Mul:
+            return expr
 
-        if any(arg.is_Matrix and arg.is_Zero for arg in expr.args):
+        if any(arg.is_Matrix and arg.is_ZeroMatrix for arg in expr.args):
             return ZeroMatrix(*expr.shape)
 
         # Clear out Identities
@@ -43,4 +49,6 @@ class MatMul(MatrixExpr, Mul):
                 return False
         return all(mat._check_shape() for mat in matrices)
 
+from matadd import MatAdd
+from matpow import MatPow
 from inverse import Inverse

@@ -2,7 +2,7 @@ from matexpr import MatrixExpr, ShapeError
 from sympy import Basic
 
 class Transpose(MatrixExpr):
-
+    is_Transpose = True
     def __new__(cls, mat):
 
         if not mat.is_Matrix:
