@@ -357,190 +357,110 @@ class DifferentialOperator(Operator):
     """
     An operator for representing the differential operator, i.e. d/dx
 
-    There are a few different ways to initialize the DifferentialOperator
-
-    1) With one argument, a symbol or string to be sympified: this represents the variable to differentiate with respect to
-    2) With one argument, a tuple of 1) plus an integer: the tuple gives the variable to differentiate with
-    as well as the order of the derivative to take
-    3) With two arguments, an expression and a tuple: the expression is an arbitary expression involving a function.
-    The tuple gives the function which we should replace with the Wavefunction, and the variable that function is evaluated
-    with in the first argument (see examples below and tests for demonstration)
-
     Examples
-    ==========
+    ========
 
-    The very basic way of defining a DifferentialOperator.
-    >>> from sympy import symbols, Piecewise, pi
-    >>> from sympy.functions import sqrt, sin
-    >>> from sympy.physics.quantum.state import Wavefunction
+    You can define a completely arbitrary expression and specify where the Wavefunction is to be substituted
+    >>> from sympy import Derivative, Function, Symbol
     >>> from sympy.physics.quantum.operator import DifferentialOperator
+    >>> from sympy.physics.quantum.state import Wavefunction
     >>> from sympy.physics.quantum.qapply import qapply
-    >>> x, L = symbols('x, L', real=True)
-    >>> n = symbols('n', integer=True)
-    >>> g = sqrt(2/L)*sin(n*pi*x/L)
-    >>> f = Wavefunction(g, (x, 0, L))
-    >>> d = DifferentialOperator(x)
-    >>> qapply(d*f)
-    Wavefunction(2**(1/2)*pi*n*(1/L)**(1/2)*cos(pi*n*x/L)/L, Tuple(x, 0, L))
-    >>> d.is_commutative
-    False
-
-    You can also define the order of the derivative
-    >>> d = DifferentialOperator((x, 2))
-    >>> d.order
-    2
-    >>> w = Wavefunction(x**2, x)
-    >>> qapply(d*w)
-    Wavefunction(2, x)
-
-    You can also define a completely arbitrary expression and specify where the Wavefunction is to be substituted
-    >>> from sympy import Derivative, Function
     >>> f = Function('f')
-    >>> d = DifferentialOperator(1/x*Derivative(f(x), x), (f, x))
+    >>> x = Symbol('x')
+    >>> d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))
     >>> w = Wavefunction(x**2, x)
     >>> d.function
-    f
-    >>> d.variable
-    x
+    f(x)
+    >>> d.variables
+    set([x])
     >>> qapply(d*w)
     Wavefunction(2, x)
+
     """
 
     @property
-    def order(self):
+    def variables(self):
         """
-        Returns the order of the derivative to be taken
+        Returns the variables with which the function
+        in the specified arbitrary expression is evaluated
 
         Examples
-        =========
-        >>> from sympy.physics.quantum.operator import DifferentialOperator
-        >>> d = DifferentialOperator('x')
-        >>> d.order
-        1
-        >>> d = DifferentialOperator(('x', 2))
-        >>> d.order
-        2
-        """
+        ========
 
-        last_arg = self.args[-1]
-        if isinstance(last_arg, (tuple, Tuple)):
-            if isinstance(last_arg[-1], Integer):
-                return last_arg[-1]
-            else:
-                return 1
-        else:
-            return 1
-
-    @property
-    def variable(self):
-        """
-        Returns the variable to differentiate with respect to, or the variable with which the function
-        in the specified arbitrary expression is evaluated (depending on the way the object is initialized)
-
-        Examples
-        =========
         >>> from sympy.physics.quantum.operator import DifferentialOperator
         >>> from sympy import Symbol, Function, Derivative
         >>> x = Symbol('x')
         >>> f = Function('f')
-        >>> d = DifferentialOperator((x, 2))
-        >>> d.variable
-        x
-        >>> d = DifferentialOperator(1/x*Derivative(f(x), x), (f, x))
-        >>> d.variable
-        x
+        >>> d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))
+        >>> d.variables
+        set([x])
         """
 
-        last_arg = self.args[-1]
-        if isinstance(last_arg, (tuple, Tuple)):
-            if isinstance(last_arg[0], (Function, UndefinedFunction)):
-                return last_arg[1]
-            else:
-                return last_arg[0]
-        else:
-            return last_arg
+        return self.args[-1].free_symbols
 
     @property
     def function(self):
         """
-        Returns the function which is to be replaced with the Wavefunction, if applicable
+        Returns the function which is to be replaced with the Wavefunction
 
         Examples
-        =========
+        ========
+
         >>> from sympy.physics.quantum.operator import DifferentialOperator
         >>> from sympy import Function, Symbol, Derivative
         >>> x = Symbol('x')
         >>> f = Function('f')
-        >>> d = DifferentialOperator(x)
+        >>> d = DifferentialOperator(Derivative(f(x), x), f(x))
         >>> d.function
-        >>> d = DifferentialOperator(Derivative(f(x), x), (f, x))
-        >>> d.function
-        f
+        f(x)
+
         """
 
-        last_arg = self.args[-1]
-        if isinstance(last_arg, (tuple, Tuple)):
-            if isinstance(last_arg[0], (Function, UndefinedFunction)):
-                return last_arg[0]
-            else:
-                return None
-        else:
-            return None
+        return self.args[-1]
 
     @property
     def expr(self):
         """
-        Returns the arbitary expression which is to have the Wavefunction substituted into it, if applicable
+        Returns the arbitary expression which is to have the
+        Wavefunction substituted into it
 
         Examples
-        =========
+        ========
+
         >>> from sympy.physics.quantum.operator import DifferentialOperator
         >>> from sympy import Function, Symbol, Derivative
         >>> x = Symbol('x')
         >>> f = Function('f')
-        >>> d = DifferentialOperator(x)
-        >>> d.expr
-        >>> d = DifferentialOperator(Derivative(f(x), x), (f, x))
+        >>> d = DifferentialOperator(Derivative(f(x), x), f(x))
         >>> d.expr
         Derivative(f(x), x)
+
         """
-        if len(self.args) > 1:
-            return self.args[0]
-        else:
-            return None
+
+        return self.args[0]
 
     @property
     def free_symbols(self):
         """
-        Return the free symbols of the expression. (Override default behavior, which is to try to call
-        free_symbols on all of the arguments; calling free_symbols doesn't work on Tuple if it has a function in it)
+        Return the free symbols of the expression.
         """
-        if self.expr is not None:
-            return self.expr.free_symbols
-        else:
-            return self.args[0].free_symbols
+
+        return self.expr.free_symbols
 
     def _apply_operator_Wavefunction(self, func):
         from sympy.physics.quantum.state import Wavefunction
-        var = self.variable
+        var = self.variables
         wf_vars = func.args[1:]
 
-        if self.function is not None:
-            f = self.function
-            new_expr = self.expr.subs(f(var), func.expr)
-            new_expr = new_expr.doit()
-        else:
-            order = self.order
-            new_expr = diff(func(var), var, order)
+        f = self.function
+        new_expr = self.expr.subs(f, func(*var))
+        new_expr = new_expr.doit()
 
         return Wavefunction(new_expr, *wf_vars)
 
     def _eval_derivative(self, symbol):
-        if symbol == self.variable and self.expr is None:
-            return DifferentialOperator((self.variable, self.order+1))
-        elif self.expr is not None:
-            new_expr = Derivative(self.expr, symbol)
-            return DifferentialOperator(new_expr, self.args[-1])
+        new_expr = Derivative(self.expr, symbol)
+        return DifferentialOperator(new_expr, self.args[-1])
 
     #-------------------------------------------------------------------------
     # Printing

@@ -119,27 +119,26 @@ def test_operator_dagger():
 
 def test_differential_operator():
     x = Symbol('x')
-    d = DifferentialOperator(x)
-    f = Wavefunction(x**2, x)
-    assert qapply(d*f) == Wavefunction(2*x, x)
-    assert d.expr == None
-    assert d.function == None
-    assert d.order == 1
-    assert d.variable == x
-    assert diff(d, x) == DifferentialOperator((x, 2))
-
-    d = DifferentialOperator((x, 2))
-    f = Wavefunction(x**3, x)
-    assert qapply(d*f) == Wavefunction(6*x, x)
-    assert d.order == 2
-    assert d.expr == None
-    assert d.function == None
-    assert d.variable == x
-    assert diff(d, x) == DifferentialOperator((x, 3))
-
     f = Function('f')
-    d = DifferentialOperator(1/x*Derivative(f(x), x), (f, x))
+    d = DifferentialOperator(Derivative(f(x), x), f(x))
+    g = Wavefunction(x**2, x)
+    assert qapply(d*g) == Wavefunction(2*x, x)
+    assert d.expr == Derivative(f(x), x)
+    assert d.function == f(x)
+    assert d.variables == set([x])
+    assert diff(d, x) == DifferentialOperator(Derivative(f(x), x, 2), f(x))
+
+    d = DifferentialOperator(Derivative(f(x), x, 2), f(x))
+    g = Wavefunction(x**3, x)
+    assert qapply(d*g) == Wavefunction(6*x, x)
+    assert d.expr == Derivative(f(x), x, 2)
+    assert d.function == f(x)
+    assert d.variables == set([x])
+    assert diff(d, x) == DifferentialOperator(Derivative(f(x), x, 3), f(x))
+
+    d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))
     assert d.expr == 1/x*Derivative(f(x), x)
-    assert d.function == f
-    assert d.variable == x
-    assert diff(d, x) == DifferentialOperator(Derivative(1/x*Derivative(f(x), x), x), (f, x))
+    assert d.function == f(x)
+    assert d.variables == set([x])
+    assert diff(d, x) == \
+           DifferentialOperator(Derivative(1/x*Derivative(f(x), x), x), f(x))
