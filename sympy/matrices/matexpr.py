@@ -1,4 +1,4 @@
-from sympy import Expr, Symbol, Eq, Mul, Add
+from sympy import Expr, Symbol, Eq, Mul, Add, expand, sympify, Tuple
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
@@ -160,6 +160,30 @@ def matsimp(expr):
         new = [new[0]]
     else:
         new = [mat for mat in new if not mat.is_Identity] # clear ident
+
+def linear_factors(expr, *syms):
+    expr = matrixify(expand(expr))
+    d = {}
+    if expr.is_Add:
+        for sym in syms:
+            total_factor = 0
+            for arg in expr.args:
+                factor = arg.coeff(sym)
+                if not factor:
+                    factor = 0
+                factor = sympify(factor)
+                if not factor.is_Matrix:
+                    factor = Identity(sym.n)*factor
+                total_factor += factor
+            d[sym] = total_factor
+    elif expr.is_Mul:
+        for sym in syms:
+            d[sym] = expr.coeff(sym)
+
+    if any(sym in matrix_symbols(Tuple(*d.values())) for sym in syms):
+        raise ValueError("Expression not linear in symbols")
+
+    return d
 
 from matmul import MatMul
 from matadd import MatAdd
