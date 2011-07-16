@@ -148,5 +148,4 @@ pngmath_latex_preamble =  '\\usepackage{amsmath}\n'+\
               '\\usepackage{bm}\n'+\
               '\\usepackage{amsfonts}\n'+\
               '\\usepackage{amssymb}\n'+\
-              '\\setlength{\\parindent}{0pt}\n'+\
-
+              '\\setlength{\\parindent}{0pt}\n'
