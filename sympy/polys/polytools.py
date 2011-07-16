@@ -56,10 +56,6 @@ from sympy.polys.polycontext import (
     register_context,
 )
 
-from sympy.mpmath import (
-    polyroots as npolyroots,
-)
-
 from sympy.utilities import (
     any, all, group,
 )
@@ -67,6 +63,7 @@ from sympy.utilities import (
 from sympy.ntheory import isprime
 
 import sympy.polys
+import sympy.mpmath
 
 from sympy.polys.domains import FF, QQ
 from sympy.polys.constructor import construct_domain
@@ -2891,7 +2888,7 @@ class Poly(Expr):
         else:
             return group(roots, multiple=False)
 
-    def nroots(f, maxsteps=50, cleanup=True, error=False):
+    def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
         """
         Compute numerical approximations of roots of ``f``.
 
@@ -2900,8 +2897,10 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 - 3).nroots()
+        >>> Poly(x**2 - 3).nroots(n=15)
         [-1.73205080756888, 1.73205080756888]
+        >>> Poly(x**2 - 3).nroots(n=30)
+        [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
         """
         if f.is_multivariate:
@@ -2910,19 +2909,27 @@ class Poly(Expr):
         if f.degree() <= 0:
             return []
 
+        coeffs = [ coeff.evalf(n=n).as_real_imag() for coeff in f.all_coeffs() ]
+
+        dps = sympy.mpmath.mp.dps
+        sympy.mpmath.mp.dps = n
+
         try:
-            coeffs = [ complex(c) for c in f.all_coeffs() ]
-        except ValueError:
-            raise DomainError("numerical domain expected, got %s" % f.rep.dom)
+            try:
+                coeffs = [ sympy.mpmath.mpc(*coeff) for coeff in coeffs ]
+            except TypeError:
+                raise DomainError("numerical domain expected, got %s" % f.rep.dom)
 
-        result = npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
+            result = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
 
-        if error:
-            roots, error = result
-        else:
-            roots, error = result, None
+            if error:
+                roots, error = result
+            else:
+                roots, error = result, None
 
-        roots = map(sympify, sorted(roots, key=lambda r: (r.real, r.imag)))
+            roots = map(sympify, sorted(roots, key=lambda r: (r.real, r.imag)))
+        finally:
+            sympy.mpmath.mp.dps = dps
 
         if error is not None:
             return roots, sympify(error)
@@ -5096,7 +5103,7 @@ def real_roots(f, multiple=True):
 
     return F.real_roots(multiple=multiple)
 
-def nroots(f, maxsteps=50, cleanup=True, error=False):
+def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
     """
     Compute numerical approximations of roots of ``f``.
 
@@ -5105,8 +5112,10 @@ def nroots(f, maxsteps=50, cleanup=True, error=False):
     >>> from sympy import nroots
     >>> from sympy.abc import x
 
-    >>> nroots(x**2 - 3)
+    >>> nroots(x**2 - 3, n=15)
     [-1.73205080756888, 1.73205080756888]
+    >>> nroots(x**2 - 3, n=30)
+    [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
     """
     try:
@@ -5114,7 +5123,7 @@ def nroots(f, maxsteps=50, cleanup=True, error=False):
     except GeneratorsNeeded:
         raise PolynomialError("can't compute numerical roots of %s, not a polynomial" % f)
 
-    return F.nroots(maxsteps=maxsteps, cleanup=cleanup, error=error)
+    return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup, error=error)
 
 def ground_roots(f, *gens, **args):
     """
