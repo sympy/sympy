@@ -2208,22 +2208,35 @@ def test_nroots():
 
     assert Poly(0.2*x + 0.1).nroots() == [-0.5]
 
-    roots = Poly(x**5 + x + 1).nroots()
-    eps = Float("10e-12")
+    roots = nroots(x**5 + x + 1, n=5)
+    eps = Float("1e-5")
 
-    assert re(roots[0]).epsilon_eq(-0.754877666246693, eps) and roots[0].is_real
-    # XXX: assert im(roots[0]).epsilon_eq(-0.000000000000000, eps) -> 'Zero' object has no attribute 'epsilon_eq'
-    assert re(roots[1]).epsilon_eq(-0.500000000000000, eps)
-    assert im(roots[1]).epsilon_eq(-0.866025403784439, eps)
-    assert re(roots[2]).epsilon_eq(-0.500000000000000, eps)
-    assert im(roots[2]).epsilon_eq(+0.866025403784439, eps)
-    assert re(roots[3]).epsilon_eq(+0.877438833123346, eps)
-    assert im(roots[3]).epsilon_eq(-0.744861766619744, eps)
-    assert re(roots[4]).epsilon_eq(+0.877438833123346, eps)
-    assert im(roots[4]).epsilon_eq(+0.744861766619744, eps)
+    assert re(roots[0]).epsilon_eq(-0.75487, eps) is True
+    assert im(roots[0]) ==  0.0
+    assert re(roots[1]) == -0.5
+    assert im(roots[1]).epsilon_eq(-0.86602, eps) is True
+    assert re(roots[2]) == -0.5
+    assert im(roots[2]).epsilon_eq(+0.86602, eps) is True
+    assert re(roots[3]).epsilon_eq(+0.87743, eps) is True
+    assert im(roots[3]).epsilon_eq(-0.74486, eps) is True
+    assert re(roots[4]).epsilon_eq(+0.87743, eps) is True
+    assert im(roots[4]).epsilon_eq(+0.74486, eps) is True
 
-    raises(DomainError, "Poly(x+y, x).nroots()")
-    raises(MultivariatePolynomialError, "Poly(x+y).nroots()")
+    eps = Float("1e-6")
+
+    assert re(roots[0]).epsilon_eq(-0.75487, eps) is False
+    assert im(roots[0]) ==  0.0
+    assert re(roots[1]) == -0.5
+    assert im(roots[1]).epsilon_eq(-0.86602, eps) is False
+    assert re(roots[2]) == -0.5
+    assert im(roots[2]).epsilon_eq(+0.86602, eps) is False
+    assert re(roots[3]).epsilon_eq(+0.87743, eps) is False
+    assert im(roots[3]).epsilon_eq(-0.74486, eps) is False
+    assert re(roots[4]).epsilon_eq(+0.87743, eps) is False
+    assert im(roots[4]).epsilon_eq(+0.74486, eps) is False
+
+    raises(DomainError, "Poly(x + y, x).nroots()")
+    raises(MultivariatePolynomialError, "Poly(x + y).nroots()")
 
     assert nroots(x**2 - 1) == [-1.0, 1.0]
 
