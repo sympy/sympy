@@ -446,6 +446,9 @@ class StrPrinter(Printer):
         else:
             return "(%s)"%self.stringify(expr, ", ")
 
+    def _print_Tuple(self, expr):
+        return self._print_tuple(expr)
+
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)"%(expr.a, expr.b)
 

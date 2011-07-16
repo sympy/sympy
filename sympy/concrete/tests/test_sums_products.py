@@ -227,3 +227,23 @@ def test_eval_diff():
     assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
            Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == \
            24
+
+def test_hypersum():
+    from sympy import simplify, sin, hyper
+    assert simplify(summation(x**n/fac(n), (n, 1, oo))) == -1 + exp(x)
+    assert summation((-1)**n * x**(2*n) / fac(2*n), (n, 0, oo)) == cos(x)
+    assert simplify(summation((-1)**n*x**(2*n+1)/factorial(2*n+1),
+                              (n, 3, oo))) \
+           == -x + sin(x) + x**3/6 - x**5/120
+
+    # TODO to get this without hyper need to improve hyperexpand
+    assert summation(1/(n+2)**3, (n, 1, oo)) == \
+           hyper([3, 3, 3, 1], [4, 4, 4], 1)/27
+
+    s = summation(x**n*n, (n, -oo, 0))
+    assert s.is_Piecewise
+    assert s.args[0].args[0] == -1/(x*(1-1/x)**2)
+    assert s.args[0].args[1] == (abs(1/x) < 1)
+
+def test_issue_1071():
+    assert summation(1/factorial(k), (k, 0, oo)) == E

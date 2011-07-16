@@ -33,7 +33,8 @@ access any SymPy module, or use this contens:
    assumptions.txt
    rewriting.txt
    series.txt
-   simplify.txt
+   simplify/simplify.txt
+   simplify/hyperexpand.txt
    statistics.txt
    solvers/ode.txt
    solvers/solvers.txt

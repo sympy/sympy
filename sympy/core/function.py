@@ -33,6 +33,7 @@ from core import BasicMeta, C
 from basic import Basic
 from singleton import S
 from expr import Expr, AtomicExpr
+from decorators import _sympifyit
 
 from cache import cacheit
 from numbers import Rational
@@ -43,6 +44,7 @@ from sympy.core.compatibility import iterable, ordered_iter
 from sympy.utilities.iterables import uniq
 
 from sympy import mpmath
+import sympy.mpmath.libmp as mlib
 
 class PoleError(Exception):
     pass
@@ -160,6 +162,12 @@ class Function(Application, Expr):
         if cls is Function:
             return UndefinedFunction(*args)
 
+        if cls.nargs is not None:
+            if (isinstance(cls.nargs, tuple) and len(args) not in cls.nargs) \
+               or (not isinstance(cls.nargs, tuple) and cls.nargs != len(args)):
+               raise ValueError('Function %s expects %s argument(s), got %s.' % (
+                                 cls, cls.nargs, len(args)))
+
         args = map(sympify, args)
         evaluate = options.pop('evaluate', True)
         if evaluate:
@@ -167,8 +175,10 @@ class Function(Application, Expr):
             if evaluated is not None:
                 return evaluated
         result = super(Application, cls).__new__(cls, *args, **options)
-        if evaluate and any([cls._should_evalf(a) for a in args]):
-            return result.evalf()
+        pr = max(cls._should_evalf(a) for a in args)
+        pr2 = min(cls._should_evalf(a) for a in args)
+        if evaluate and pr2 > 0:
+            return result.evalf(mlib.libmpf.prec_to_dps(pr))
         return result
 
     @classmethod
@@ -181,11 +191,13 @@ class Function(Application, Expr):
         This function is used by __new__.
         """
         if arg.is_Float:
-            return True
+            return arg._prec
         if not arg.is_Add:
-            return False
+            return -1
         re, im = arg.as_real_imag()
-        return re.is_Float or im.is_Float
+        l = [a._prec for a in [re, im] if a.is_Float]
+        l.append(-1)
+        return max(l)
 
     @classmethod
     def class_key(cls):
@@ -271,9 +283,11 @@ class Function(Application, Expr):
             da = a.diff(s)
             if da is S.Zero:
                 continue
-            if isinstance(self.func, FunctionClass):
+            try:
                 df = self.fdiff(i)
-                l.append(df * da)
+            except ArgumentIndexError:
+                df = Function.fdiff(self, i)
+            l.append(df * da)
         return Add(*l)
 
     def _eval_is_commutative(self):
@@ -715,6 +729,26 @@ class Derivative(Expr):
         hints['evaluate'] = True
         return Derivative(expr, *self.variables, **hints)
 
+    @_sympifyit('z0', NotImplementedError)
+    def doit_numerically(self, z0):
+        """
+        Evaluate the derivative at z numerically.
+
+        When we can represent derivatives at a point, this should be folded
+        into the normal evalf. For now, we need a special method.
+        """
+        from sympy import mpmath
+        from sympy.core.expr import Expr
+        if len(self.free_symbols) != 1 or len(self.variables) != 1:
+            raise NotImplementedError('partials and higher order derivatives')
+        z = list(self.free_symbols)[0]
+        def eval(x):
+            f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
+            f0 = f0.evalf(mlib.libmpf.prec_to_dps(mpmath.mp.prec))
+            return f0._to_mpmath(mpmath.mp.prec)
+        return Expr._from_mpmath(mpmath.diff(eval, z0._to_mpmath(mpmath.mp.prec)),
+                                 mpmath.mp.prec)
+
     @property
     def expr(self):
         return self._args[0]
@@ -890,13 +924,13 @@ class Subs(Expr):
     >>> f = Function('f')
     >>> e = Subs(f(x).diff(x), x, y)
     >>> e.subs(y, 0)
-    Subs(Derivative(f(_x), _x), Tuple(_x), Tuple(0))
+    Subs(Derivative(f(_x), _x), (_x,), (0,))
     >>> e.subs(f, sin).doit()
     cos(y)
 
     An example with several variables:
     >>> Subs(f(x)*sin(y)+z, (x, y), (0, 1))
-    Subs(z + f(_x)*sin(_y), Tuple(_x, _y), Tuple(0, 1))
+    Subs(z + f(_x)*sin(_y), (_x, _y), (0, 1))
     >>> _.doit()
     z + f(0)*sin(1)
 

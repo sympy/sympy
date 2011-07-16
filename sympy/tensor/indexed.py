@@ -52,9 +52,9 @@
     >>> dim1, dim2 = symbols('dim1 dim2', integer=True)
     >>> A = IndexedBase('A', shape=(dim1, 2*dim1, dim2))
     >>> A.shape
-    Tuple(dim1, 2*dim1, dim2)
+    (dim1, 2*dim1, dim2)
     >>> A[i, j, 3].shape
-    Tuple(dim1, 2*dim1, dim2)
+    (dim1, 2*dim1, dim2)
 
     If an IndexedBase object has no shape information, it is assumed that the
     array is as large as the ranges of it's indices:
@@ -63,16 +63,16 @@
     >>> i = Idx('i', m)
     >>> j = Idx('j', n)
     >>> M[i, j].shape
-    Tuple(m, n)
+    (m, n)
     >>> M[i, j].ranges
-    [Tuple(0, m - 1), Tuple(0, n - 1)]
+    [(0, m - 1), (0, n - 1)]
 
     The above can be compared with the following:
 
     >>> A[i, 2, j].shape
-    Tuple(dim1, 2*dim1, dim2)
+    (dim1, 2*dim1, dim2)
     >>> A[i, 2, j].ranges
-    [Tuple(0, m - 1), None, Tuple(0, n - 1)]
+    [(0, m - 1), None, (0, n - 1)]
 
     To analyze the structure of indexed expressions, you can use the methods
     get_indices() and get_contraction_structure():
@@ -156,10 +156,10 @@ class IndexedBase(Expr):
     >>> i = Idx('i', m)
     >>> j = Idx('j', n)
     >>> A[i, j].shape
-    Tuple(m, n)
+    (m, n)
     >>> B = IndexedBase('B', shape=(o, p))
     >>> B[i, j].shape
-    Tuple(o, p)
+    (o, p)
 
     """
     is_commutative = False
@@ -263,9 +263,9 @@ class Indexed(Expr):
         >>> A = IndexedBase('A', shape=(n, n))
         >>> B = IndexedBase('B')
         >>> A[i, j].shape
-        Tuple(n, n)
+        (n, n)
         >>> B[i, j].shape
-        Tuple(m, m)
+        (m, m)
         """
         if self.base.shape:
             return self.base.shape

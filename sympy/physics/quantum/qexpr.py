@@ -43,7 +43,7 @@ def _qsympify_sequence(seq):
 
     >>> from sympy.physics.quantum.qexpr import _qsympify_sequence
     >>> _qsympify_sequence((1,2,[3,4,[1,]]))
-    (1, 2, Tuple(3, 4, Tuple(1)))
+    (1, 2, (3, 4, (1,)))
 
     """
 
