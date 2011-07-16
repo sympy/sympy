@@ -1725,7 +1725,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     # This will simpliy things like sqrt(-z**2) to i*z.
     # It would be wrong under certain choices of branch, but all results we
     # return are under an "implicit suitable choice of branch" anyway.
-    return powdenest(r, force=True)
+    return powdenest(r, polar=True)
 
 def devise_plan_meijer(fro, to, z):
     """
@@ -1884,8 +1884,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         C = C.applyfunc(make_simp(z))
         r = C*f.B.subs(f.z, z)
         r = r[0].subs(z, z0)
-        # XXX XXX this is bad .. kills abs(x) etc
-        return powdenest(r, force=True)
+        return powdenest(r, polar=True)
 
     debug("  Could not find a direct formula. Trying slater's theorem.")
 
@@ -2014,8 +2013,8 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
                                t)
 
-    slater1 = powdenest(slater1.subs(z, z0), force=True)
-    slater2 = powdenest(slater2.subs(t, 1/z0), force=True)
+    slater1 = powdenest(slater1.subs(z, z0), polar=True)
+    slater2 = powdenest(slater2.subs(t, 1/z0), polar=True)
     if not isinstance(cond2, bool):
         cond2 = cond2.subs(t, 1/z0)
 
