@@ -528,8 +528,7 @@ class Add(AssocOp):
         """
         Divide ``self`` by the GCD of coefficients of ``self``.
 
-        Example
-        =======
+        **Example**
 
         >>> from sympy.abc import x, y
 
