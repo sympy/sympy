@@ -79,7 +79,7 @@ class Basic(AssumeMeths):
     @property
     @deprecated
     def is_Real(self):  # pragma: no cover
-        """Deprecated alias for is_Float"""
+        """Deprecated alias for ``is_Float``"""
         return self.is_Float
 
     def __new__(cls, *args, **assumptions):
@@ -123,7 +123,7 @@ class Basic(AssumeMeths):
     @property
     def assumptions0(self):
         """
-        Return object `type` assumptions.
+        Return object ``type`` assumptions.
 
         For example:
 
@@ -277,17 +277,19 @@ class Basic(AssumeMeths):
         """
         Is a > b in the sense of ordering in printing?
 
-        yes ..... return 1
-        no ...... return -1
-        equal ... return 0
+        ::
+
+          yes ..... return 1
+          no ...... return -1
+          equal ... return 0
 
         Strategy:
 
         It uses Basic.compare as a fallback, but improves it in many cases,
         like x**3, x**4, O(x**3) etc. In those simple cases, it just parses the
-        expression and returns the "sane" ordering such as:
+        expression and returns the "sane" ordering such as::
 
-        1 < x < x**2 < x**3 < O(x**4) etc.
+          1 < x < x**2 < x**3 < O(x**4) etc.
 
         Example:
 
@@ -469,7 +471,7 @@ class Basic(AssumeMeths):
            and number symbols like I and pi. It is possible to request
            atoms of any type, however, as demonstrated below.
 
-           Examples::
+           Examples:
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
@@ -477,9 +479,9 @@ class Basic(AssumeMeths):
            set([1, 2, I, pi, x, y])
 
            If one or more types are given, the results will contain only
-           those types of atoms::
+           those types of atoms.
 
-           Examples::
+           Examples:
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -497,15 +499,15 @@ class Basic(AssumeMeths):
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
 
-           The type can be given implicitly, too::
+           The type can be given implicitly, too:
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
            set([x, y])
 
            Be careful to check your assumptions when using the implicit option
-           since S(1).is_Integer = True but type(S(1)) is One, a special type
-           of sympy atom, while type(S(2)) is type Integer and will find all
-           integers in an expression::
+           since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
+           of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
+           integers in an expression:
 
            >>> from sympy import S
            >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
@@ -517,7 +519,7 @@ class Basic(AssumeMeths):
            Finally, arguments to atoms() can select more than atomic atoms: any
            sympy type (loaded in core/__init__.py) can be listed as an argument
            and those types of "atoms" as found in scanning the arguments of the
-           expression recursively::
+           expression recursively:
 
            >>> from sympy import Function, Mul
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
@@ -584,7 +586,7 @@ class Basic(AssumeMeths):
 
     @property
     def is_number(self):
-        """Returns True if 'self' is a number.
+        """Returns ``True`` if 'self' is a number.
 
            >>> from sympy import log, Integral
            >>> from sympy.abc import x, y
@@ -674,7 +676,7 @@ class Basic(AssumeMeths):
         return iter(self.args)
 
     def as_poly(self, *gens, **args):
-        """Converts `self` to a polynomial or returns `None`.
+        """Converts ``self`` to a polynomial or returns ``None``.
 
            >>> from sympy import Poly, sin
            >>> from sympy.abc import x, y
@@ -835,6 +837,7 @@ class Basic(AssumeMeths):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
+
         >>> from sympy import sin, S
         >>> from sympy.abc import x, y, z
         >>> (x**2 + sin(x*y)).has(z)
@@ -847,6 +850,7 @@ class Basic(AssumeMeths):
         Note that ``expr.has(*patterns)`` is exactly equivalent to
         ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
         returned when the list of patterns is empty.
+
         >>> x.has()
         False
 
@@ -875,7 +879,7 @@ class Basic(AssumeMeths):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
-        If map=True then also return the mapping {old: new} where `old``
+        If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
         value for it.
 
@@ -1035,11 +1039,12 @@ class Basic(AssumeMeths):
         Helper method for match() - switches the pattern and expr.
 
         Can be used to solve linear equations:
-          >>> from sympy import Symbol, Wild, Integer
-          >>> a,b = map(Symbol, 'ab')
-          >>> x = Wild('x')
-          >>> (a+b*x).matches(Integer(0))
-          {x_: -a/b}
+
+        >>> from sympy import Symbol, Wild, Integer
+        >>> a,b = map(Symbol, 'ab')
+        >>> x = Wild('x')
+        >>> (a+b*x).matches(Integer(0))
+        {x_: -a/b}
 
         """
         if evaluate:
@@ -1070,8 +1075,8 @@ class Basic(AssumeMeths):
 
         Wild symbols match all.
 
-        Return None when expression (self) does not match
-        with pattern. Otherwise return a dictionary such that
+        Return ``None`` when expression (self) does not match
+        with pattern. Otherwise return a dictionary such that::
 
           pattern.subs(self.match(pattern)) == self
 

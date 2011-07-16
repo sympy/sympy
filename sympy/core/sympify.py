@@ -31,7 +31,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - any object defined in sympy (except matrices [TODO])
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
-       - booleans, including `None` (will leave them unchanged)
+       - booleans, including ``None`` (will leave them unchanged)
 
     If the argument is already a type that sympy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -59,7 +59,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     SympifyError: SympifyError: "could not parse u'x***2'"
 
 
-    If the option `strict` is set to `True`, only the types for which an
+    If the option ``strict`` is set to ``True``, only the types for which an
     explicit conversion has been defined are converted. In the other
     cases, a SympifyError is raised.
 
