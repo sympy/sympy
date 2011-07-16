@@ -124,8 +124,10 @@ def get_abs(expr, prec, options):
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
         return libmp.mpc_abs((re, im), prec), None, re_acc, None
-    else:
+    elif re:
         return mpf_abs(re), None, re_acc, None
+    else:
+        return None, None, None, None
 
 def get_complex_part(expr, no, prec, options):
     """no = 0 for real part, no = 1 for imaginary part"""
@@ -134,7 +136,8 @@ def get_complex_part(expr, no, prec, options):
     while 1:
         res = evalf(expr, workprec, options)
         value, accuracy = res[no::2]
-        if (not value) or accuracy >= prec:
+        # XXX is the last one correct? Consider re((1+I)**2).n()
+        if (not value) or accuracy >= prec or -value[2] > prec:
             return value, None, accuracy, None
         workprec += max(30, 2**i)
         i += 1
@@ -952,6 +955,7 @@ def _create_evalf_table():
     }
 
 def evalf(x, prec, options):
+    from sympy import re as re_, im as im_
     try:
         rf = evalf_table[x.func]
         r = rf(x, prec, options)
@@ -961,7 +965,22 @@ def evalf(x, prec, options):
             # Fall back to ordinary evalf if possible
             if 'subs' in options:
                 x = x.subs(options['subs'])
-            r = x._eval_evalf(prec)._mpf_, None, prec, None
+            re, im = x._eval_evalf(prec).as_real_imag()
+            if re.has(re_) or im.has(im_):
+                raise NotImplementedError
+            if re == 0:
+                re = None
+                reprec = None
+            else:
+                re = re._to_mpmath(prec, allow_ints=False)._mpf_
+                reprec = prec
+            if im == 0:
+                im = None
+                imprec = None
+            else:
+                im = im._to_mpmath(prec, allow_ints=False)._mpf_
+                imprec = prec
+            r = re, im, reprec, imprec
         except AttributeError:
             raise NotImplementedError
     if options.get("verbose"):
@@ -1072,8 +1091,10 @@ class EvalfMixin(object):
                 if not re:
                     re = fzero
                 return make_mpc((re, im))
-            else:
+            elif re:
                 return make_mpf(re)
+            else:
+                return make_mpf(fzero)
         except NotImplementedError:
             v = self._eval_evalf(prec)
             if v is None:
