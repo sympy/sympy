@@ -1574,6 +1574,60 @@ class Expr(Basic, EvalfMixin):
             # As a last resort, we choose the one with greater value of .sort_key()
             return self.sort_key() < negative_self.sort_key()
 
+    def extract_branch_factor(self):
+        """
+        Try to write self as exp_polar(2*pi*I*n)*z in a nice way.
+        Return (z, n).
+
+        >>> from sympy import exp_polar, I, pi
+        >>> from sympy.abc import x, y
+        >>> exp_polar(I*pi).extract_branch_factor()
+        (exp_polar(I*pi), 0)
+        >>> exp_polar(2*I*pi).extract_branch_factor()
+        (1, 1)
+        >>> exp_polar(-pi*I).extract_branch_factor()
+        (exp_polar(I*pi), -1)
+        >>> exp_polar(3*pi*I + x).extract_branch_factor()
+        (exp_polar(x + I*pi), 1)
+        >>> (y*exp_polar(-5*pi*I)*exp_polar(3*pi*I + 2*pi*x)).extract_branch_factor()
+        (y*exp_polar(2*pi*x), -1)
+        >>> exp_polar(-I*pi/2).extract_branch_factor()
+        (exp_polar(-I*pi/2), 0)
+        """
+        from sympy import exp_polar, pi, I, ceiling, Add
+        n = S(0)
+        res = S(1)
+        if self.is_Mul:
+            args = self.args
+        else:
+            args = [self]
+        exps = []
+        for arg in args:
+            if arg.func is exp_polar:
+                exps += [arg.args[0]]
+            else:
+                res *= arg
+        piimult = S(0)
+        extras = []
+        while exps:
+            exp = exps.pop()
+            if exp.is_Add:
+                exps += exp.args
+                continue
+            if exp.is_Mul:
+                coeff = exp.as_coefficient(pi*I)
+                if coeff is not None:
+                    piimult += coeff
+                    continue
+            extras += [exp]
+        coeff, tail = piimult.as_coeff_add()
+        branchfact = ceiling(coeff/2-S(1)/2)*2
+        n += branchfact/2
+        newexp = pi*I*Add(*((coeff - branchfact, ) + tail)) + Add(*extras)
+        if newexp != 0:
+            res *= exp_polar(newexp)
+        return res, n
+
     def _eval_is_polynomial(self, syms):
         if self.free_symbols.intersection(syms) == set([]):
             return True
