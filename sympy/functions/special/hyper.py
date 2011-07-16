@@ -47,8 +47,8 @@ class hyper(TupleParametersBase):
     :math:`b_q`. It also has an argument :math:`z`. The series definition is
 
     .. math ::
-        {}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
-                     \middle| z \right)
+        {}_pF_q\left.\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+                     \right| z \right)
         = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}
                             \frac{z^n}{n!},
 
@@ -265,9 +265,9 @@ class meijerg(TupleParametersBase):
     vectors):
 
     .. math ::
-        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \dots, a_n & a_{n+1}, \dots, a_p \\
+        G_{p,q}^{m,n} \left.\left(\begin{matrix}a_1, \dots, a_n & a_{n+1}, \dots, a_p \\
                                         b_1, \dots, b_m & b_{m+1}, \dots, b_q
-                          \end{matrix} \middle| z \right).
+                          \end{matrix} \right| z \right).
 
     However, in sympy the four parameter vectors are always available
     separately (see examples), so that there is no need to keep track of the

@@ -108,15 +108,15 @@ def test_hyper_printing():
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
                          (0,1), Tuple(1, 2, 3/pi),z)) == \
-             r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
+             r'{G_{4, 5}^{2, 3}\left.\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \right| {z} \right)}'
     assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(),z)) == \
-             r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
+             r'{G_{1, 1}^{1, 0}\left.\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \right| {z} \right)}'
     assert latex(hyper((x, 2), (3,), z)) == \
-               r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
-               r'\\ 3 \end{matrix}\middle| {z} \right)}'
+               r'{{}_{2}F_{1}\left.\left(\begin{matrix} x, 2 ' \
+               r'\\ 3 \end{matrix}\right| {z} \right)}'
     assert latex(hyper(Tuple(), Tuple(1), z)) == \
-               r'{{}_{0}F_{1}\left(\begin{matrix}  ' \
-               r'\\ 1 \end{matrix}\middle| {z} \right)}'
+               r'{{}_{0}F_{1}\left.\left(\begin{matrix}  ' \
+               r'\\ 1 \end{matrix}\right| {z} \right)}'
 
 def test_latex_bessel():
     from sympy.functions.special.bessel import (besselj, bessely, besseli,

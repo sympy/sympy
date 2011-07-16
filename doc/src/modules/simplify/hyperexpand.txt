@@ -13,8 +13,8 @@ Most of it is based on the papers [Roach1996]_ and [Roach1997]_.
 Recall that the hypergeometric function is (initially) defined as
 
 .. math ::
-    {}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
-                     \middle| z \right)
+    {}_pF_q\left.\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+                     \right| z \right)
         = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}
                             \frac{z^n}{n!}.
 
@@ -46,29 +46,30 @@ Incrementing and decrementing indices
 
 Suppose `a_i \ne 0`. Set `A(a_i) =
 \frac{z}{a_i}\frac{\mathrm{d}}{dz}+1`. It is then easy to show that
-`A(a_i) {}_p F_q\left({a_p \atop b_q} \middle| z \right) = {}_p F_q\left({a_p +
-e_i \atop b_q} \middle| z \right)`, where `e_i` is the i-th unit vector.
+`A(a_i) {}_p F_q\left.\left({a_p \atop b_q} \right| z \right) =
+{}_p F_q\left.\left({a_p + e_i \atop b_q} \right| z \right)`,
+where `e_i` is the i-th unit vector.
 Similarly for `b_j \ne 1` we set `B(b_j) = \frac{z}{b_j-1}
-\frac{\mathrm{d}}{dz}+1` and find `B(b_j) {}_p F_q\left({a_p \atop b_q}
-\middle| z \right) = {}_p F_q\left({a_p \atop b_q - e_i} \middle| z \right)`.
+\frac{\mathrm{d}}{dz}+1` and find `B(b_j) {}_p F_q\left.\left({a_p \atop b_q}
+\right| z \right) = {}_p F_q\left.\left({a_p \atop b_q - e_i} \right| z \right)`.
 Thus we can increment upper and decrement lower indices at will, as long as we
 don't go through zero. The `A(a_i)` and `B(b_j)` are called shift
 operators.
 
-It is also easy to show that `\frac{\mathrm{d}}{dz} {}_p F_q\left({a_p
-\atop b_q} \middle| z \right) = \frac{a_1 \dots a_p}{b_1 \dots b_q} {}_p
-F_q\left({a_p + 1 \atop b_q + 1} \middle| z \right)`, where `a_p + 1` is
+It is also easy to show that `\frac{\mathrm{d}}{dz} {}_p F_q\left.\left({a_p
+\atop b_q} \right| z \right) = \frac{a_1 \dots a_p}{b_1 \dots b_q} {}_p
+F_q\left.\left({a_p + 1 \atop b_q + 1} \right| z \right)`, where `a_p + 1` is
 the vector `a_1 + 1, a_2 + 1, \dots` and similarly for `b_q + 1`.
 Combining this with the shift operators,  we arrive at one form of the
 Hypergeometric differential equation: `\left[ \frac{\mathrm{d}}{dz}
 \prod_{j=1}^q B(b_j) - \frac{a_1 \dots a_p}{(b_1-1) \dots (b_q-1)}
-\prod_{i=1}^p A(a_i) \right] {}_p F_q\left({a_p \atop b_q} \middle| z \right) =
+\prod_{i=1}^p A(a_i) \right] {}_p F_q\left.\left({a_p \atop b_q} \right| z \right) =
 0`. This holds if all shift operators are defined, i.e. if no `a_i = 0`
 and no `b_j = 1`. Clearing denominators and multiplying through by z we
 arrive at the following equation: `\left[ z\frac{\mathrm{d}}{dz}
 \prod_{j=1}^q \left(z\frac{\mathrm{d}}{dz} + b_j-1 \right) - z \prod_{i=1}^p
-\left( z\frac{\mathrm{d}}{\mathrm{d}z} + a_i \right) \right] {}_p F_q\left({a_p
-\atop b_q} \middle| z\right) = 0`. Even though our derivation does not show it,
+\left( z\frac{\mathrm{d}}{\mathrm{d}z} + a_i \right) \right] {}_p F_q\left.\left({a_p
+\atop b_q} \right| z\right) = 0`. Even though our derivation does not show it,
 it can be checked that this equation holds whenever the `{}_p F_q` is
 defined.
 
@@ -76,11 +77,11 @@ Notice that, under suitable conditions on `a_I, b_J`, each of the
 operators `A(a_i)`, `B(b_j)` and
 `z\frac{\mathrm{d}}{\mathrm{d}z}` can be expressed in terms of `A(a_I)` or
 `B(b_J)`. Our next aim is to write the Hypergeometric differential
-equation as follows: `[X A(a_I) - r] {}_p F_q\left({a_p \atop b_q}
-\middle| z\right) = 0`, for some operator `X` and some constant `r`
+equation as follows: `[X A(a_I) - r] {}_p F_q\left.\left({a_p \atop b_q}
+\right| z\right) = 0`, for some operator `X` and some constant `r`
 to be determined. If
-`r \ne 0`, then we can write this as `\frac{-1}{r} X {}_p F_q\left({a_p +
-e_I \atop b_q} \middle| z\right) = {}_p F_q\left({a_p \atop b_q} \middle|
+`r \ne 0`, then we can write this as `\frac{-1}{r} X {}_p F_q\left.\left({a_p +
+e_I \atop b_q} \right| z\right) = {}_p F_q\left.\left({a_p \atop b_q} \right|
 z\right)`, and so `\frac{-1}{r}X` undoes the shifting of `A(a_I)`,
 whence it will be called an inverse-shift operator.
 
@@ -117,8 +118,8 @@ Reduction of Order
 ==================
 
 Notice that, quite trivially, if `a_I = b_J`, we have `{}_p
-F_q\left({a_p \atop b_q} \middle| z \right) = {}_{p-1} F_{q-1}\left({a_p^*
-\atop b_q^*} \middle| z \right)`, where `a_p^*` means `a_p` with
+F_q\left.\left({a_p \atop b_q} \right| z \right) = {}_{p-1} F_{q-1}\left.\left({a_p^*
+\atop b_q^*} \right| z \right)`, where `a_p^*` means `a_p` with
 `a_I` omitted, and similarly for `b_q^*`. We call this reduction of
 order.
 
@@ -130,11 +131,11 @@ we find:
 
   If `a_I - b_J \in \mathbb{Z}_{>0}`, then there exists a polynomial
   `p(n) = p_0 + p_1 n + \dots` (of degree `a_I - b_J`) such
-  that `\frac{(a_I)_n}{(b_J)_n} = p(n)` and `{}_p F_q\left({a_p
-  \atop b_q} \middle| z \right) = \left(p_0 + p_1
+  that `\frac{(a_I)_n}{(b_J)_n} = p(n)` and `{}_p F_q\left.\left({a_p
+  \atop b_q} \right| z \right) = \left(p_0 + p_1
   z\frac{\mathrm{d}}{\mathrm{d}z} + p_2
-  \left(z\frac{\mathrm{d}}{\mathrm{d}z}\right)^2 + \dots \right) {}_{p-1}
-  F_{q-1}\left({a_p^* \atop b_q^*} \middle| z \right)`.
+  \left.\left(z\frac{\mathrm{d}}{\mathrm{d}z}\right)^2 + \dots \right) {}_{p-1}
+  F_{q-1}\left({a_p^* \atop b_q^*} \right| z \right)`.
 
 Thus any set of parameters `a_p, b_q` is reachable from a set of
 parameters `c_r, d_s` where `c_i - d_j \in \mathbb{Z}` implies
@@ -215,7 +216,7 @@ we store a vector `B` of `N` functions, a matrix `M` and a
 vector `C` (the latter two with entries in `\mathbb{C}(z)`), with
 the following properties:
 
-* `{}_r F_s\left({a_r^0 \atop b_s^0} \middle| z \right) = C B`
+* `{}_r F_s\left.\left({a_r^0 \atop b_s^0} \right| z \right) = C B`
 * `z\frac{\mathrm{d}}{\mathrm{d}z} B = M B`.
 
 Then we can compute as many derivatives as we want and we will always end up
@@ -346,10 +347,10 @@ where the `*` means to omit the terms we treated specially.
 We thus arrive at
 
 .. math ::
-    F(z) = C \times {}_{p+1}F_{q}\left(
+    F(z) = C \times {}_{p+1}F_{q}\left.\left(
         \begin{matrix} 1, (1 + l_u - l_i), (1 + l_u + b - a_i)^* \\
                        1 + l_u, (1 + l_u - k_i), (1 + l_u + b - b_i)^*
-        \end{matrix} \middle| (-1)^{p-m-n} z\right),
+        \end{matrix} \right| (-1)^{p-m-n} z\right),
 
 where `C` designates the factor in the residue independent of `t`.
 (This result can also be written in slightly simpler form by converting
