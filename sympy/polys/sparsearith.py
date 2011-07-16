@@ -1,4 +1,4 @@
-"""Arithmetics of sparse polynomials in $\K[x]$ or $\K[X]$. """
+"""Arithmetics of sparse polynomials in `K[x]` or `K[X]`. """
 
 def sup_add_ground(f, coeff, K):
     pass
