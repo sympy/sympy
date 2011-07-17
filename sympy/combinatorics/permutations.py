@@ -663,7 +663,7 @@ class Permutation(Basic):
 
         The inversion vector consists of elements whose value
         indicates the number of elements in the permutation
-        that are greater than it and lie on its left hand side.
+        that are lesser than it and lie on its right hand side.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
