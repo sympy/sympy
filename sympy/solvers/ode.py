@@ -202,7 +202,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import any, all, iterable, cmp_to_key
+from sympy.core.compatibility import iterable, cmp_to_key
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq

@@ -6,7 +6,7 @@ from sympy.core.basic import C
 
 from sympy.polys.polyerrors import ExactQuotientFailed
 
-from sympy.utilities import all, any, cythonized
+from sympy.utilities import cythonized
 
 from sympy.core.compatibility import cmp
 

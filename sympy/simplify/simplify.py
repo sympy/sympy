@@ -8,7 +8,7 @@ from sympy.core.compatibility import iterable
 from sympy.core.numbers import igcd
 from sympy.core.function import expand_log
 
-from sympy.utilities import all, any, flatten
+from sympy.utilities import flatten
 from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse

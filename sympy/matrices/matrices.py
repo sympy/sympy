@@ -5,13 +5,12 @@ from sympy.core.compatibility import is_sequence
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
-from sympy.utilities import any, all
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
 
-from sympy.core.compatibility import callable, reduce, any, all
+from sympy.core.compatibility import callable, reduce
 
 import random
 

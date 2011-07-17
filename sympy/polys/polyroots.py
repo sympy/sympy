@@ -15,7 +15,7 @@ from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
 
 from sympy.simplify import simplify
-from sympy.utilities import all, default_sort_key
+from sympy.utilities import default_sort_key
 
 from sympy.core.compatibility import reduce
 

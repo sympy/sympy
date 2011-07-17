@@ -15,7 +15,6 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed, DomainError,
 )
 
-from sympy.utilities import any, all
 from operator import itemgetter
 
 def sdp_LC(f, K):

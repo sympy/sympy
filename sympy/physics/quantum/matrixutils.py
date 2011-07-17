@@ -2,7 +2,6 @@
 
 from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import matrices
-from sympy.core.compatibility import all
 from sympy.external import import_module
 
 __all__ = [

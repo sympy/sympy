@@ -1,5 +1,4 @@
 from sympy.core import (Expr, S, C, sympify, Wild, Dummy, Derivative)
-from sympy.core.compatibility import any
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.concrete.gosper import gosper_sum
 from sympy.polys import apart, PolynomialError

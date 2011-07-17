@@ -4,7 +4,7 @@ from singleton import S
 from evalf import EvalfMixin
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from sympy.core.compatibility import any, all, reduce
+from sympy.core.compatibility import reduce
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []

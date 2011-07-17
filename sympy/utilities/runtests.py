@@ -21,7 +21,6 @@ import linecache
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest # avoid clashing with our doctest() function
-from sympy.utilities import any
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
 import random
@@ -82,8 +81,6 @@ def get_sympy_dir():
                         os.path.isdir(sympy_dir.lower()) and
                         os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
-
-from sympy.utilities import any, all
 
 def isgeneratorfunction(object):
     """

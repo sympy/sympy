@@ -57,7 +57,7 @@ from sympy.polys.polycontext import (
 )
 
 from sympy.utilities import (
-    any, all, group,
+    group,
 )
 
 from sympy.ntheory import isprime

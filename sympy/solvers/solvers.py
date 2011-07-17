@@ -24,7 +24,6 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together
 from sympy.functions.elementary.piecewise import piecewise_fold
 
-from sympy.utilities import any, all
 from sympy.utilities.iterables import iff
 from sympy.utilities.lambdify import lambdify
 from sympy.mpmath import findroot
