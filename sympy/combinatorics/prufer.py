@@ -9,6 +9,9 @@ class Prufer(Basic):
     a length of n - 2.
     Prufer sequences were first used by Heinz Prufer to give a
     proof of Cayley's formula.
+
+    Reference:
+    [1] http://mathworld.wolfram.com/LabeledTree.html
     """
     _prufer_repr = None
     _tree_repr = None
