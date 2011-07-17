@@ -2,7 +2,7 @@ from sympy.core import Basic, C
 from sympy.core.compatibility import minkey, iff, all, any #for backwards compatibility
 from sympy.core.compatibility import ordered_iter, iterable #logically, they belong here
 
-import random, itertools
+import random
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -1121,7 +1121,7 @@ def generate_derangements(perm):
     []
     """
     indices = range(len(perm))
-    p = itertools.permutations(indices)
+    p = variations(indices, len(indices))
     for rv in \
             uniq(tuple(perm[i] for i in idx) \
                  for idx in p if all(perm[k] != \
