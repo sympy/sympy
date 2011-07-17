@@ -223,10 +223,9 @@ class Permutation(Basic):
         >>> p*(~p) == Permutation([0,1,2,3])
         True
         """
-        self_form = self.array_form
         inv_form = [0] * self.size
         for i in xrange(self.size):
-            inv_form[self_form[i]] = i
+            inv_form[self.array_form[i]] = i
         return Permutation(inv_form)
 
     def __call__(self, arg):
