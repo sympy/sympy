@@ -273,7 +273,8 @@ class Permutation(Basic):
         """
         return set(self.array_form)
 
-    def unrank_nonlex(self, r):
+    @classmethod
+    def unrank_nonlex(self, n, r):
         """
         This is a linear time unranking algorithm that does not
         respect lexicographic order [3].
@@ -282,17 +283,14 @@ class Permutation(Basic):
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
-        >>> p.unrank_nonlex(5)
+        >>> Permutation.unrank_nonlex(4, 5)
         Permutation([2, 0, 3, 1])
 
         Consider in the cyclic form
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([[0,1],[2,3]])
-        >>> p.unrank_nonlex(5)
-        Permutation([2, 0, 3, 1])
+        >>> Permutation.unrank_nonlex(6, 2)
+        Permutation([1, 5, 3, 4, 0, 2])
         """
-        n = self.size
         id_perm = [i for i in xrange(n)]
         while n > 1:
             id_perm[n-1],id_perm[r % n] = id_perm[r % n], id_perm[n-1]

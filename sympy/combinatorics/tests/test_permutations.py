@@ -56,7 +56,7 @@ def test_Permutation():
 
     assert p.rank_nonlex() == 14830
     assert q.rank_nonlex() == 8441
-    assert q.unrank_nonlex(41) == Permutation([4, 2, 3, 5, 1, 0, 6])
+    assert Permutation.unrank_nonlex(7, 41) == Permutation([4, 2, 3, 5, 1, 0, 6])
 
     assert q.rank == 870
     assert p.rank == 1964
