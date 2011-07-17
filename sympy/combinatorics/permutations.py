@@ -554,6 +554,10 @@ class Permutation(Basic):
 
     @property
     def cycles(self):
+        """
+        Returns the number of cycles that the permutation
+        has been decomposed into.
+        """
         return len(self.cyclic_form)
 
     @property
