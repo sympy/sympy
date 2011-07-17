@@ -870,6 +870,18 @@ def josephus(m, n, s = 1):
     prisoners, frequency of removal and desired number of
     survivors.
 
+    There are people standing in a circle waiting to be executed.
+    After the first person is executed, certain number of people
+    are skipped and another person is executed. Then again, people
+    are skipped and a person is executed. The elimination proceeds
+    around the circle (which is becoming smaller and smaller as the
+    executed people are removed), until only the last person
+    remains, who is given freedom.
+
+    References:
+    [1] http://en.wikipedia.org/wiki/Flavius_Josephus
+    [2] http://en.wikipedia.org/wiki/Josephus_problem
+
     Examples:
     >>> from sympy.combinatorics.permutations import josephus
     >>> josephus(3, 40, 1)
