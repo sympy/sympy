@@ -798,6 +798,9 @@ class Permutation(Basic):
         >>> q = josephus(4, 5, 2)
         >>> p.get_adjacency_distance(q)
         3
+        >>> r = Permutation([0, 2, 1, 4, 3])
+        >>> p.get_adjacency_distance(r)
+        4
         """
         if self.size != other.size:
             raise ValueError("The permutations must be of the same size")
