@@ -482,7 +482,7 @@ class Permutation(Basic):
     @property
     def min(self):
         """
-        The minimum element moved by the permutation
+        The minimum element moved by the permutation.
 
         Example:
         >>> from sympy.combinatorics.permutations import Permutation
