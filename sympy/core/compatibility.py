@@ -32,60 +32,6 @@ def iff(condition, result1, result2):
     else:
         return rv
 
-try:
-    from __builtins__ import all
-except ImportError:
-    def all(iterable):
-        """
-        Return True if all elements are set to True. This
-        function does not support predicates explicitly,
-        but this behavior can be simulated easily using
-        list comprehension.
-
-        >>> from sympy import all
-        >>> all( [True, True, True] )
-        True
-        >>> all( [True, False, True] )
-        False
-        >>> all( [ x % 2 == 0 for x in [2, 6, 8] ] )
-        True
-        >>> all( [ x % 2 == 0 for x in [2, 6, 7] ] )
-        False
-
-        NOTE: Starting from Python 2.5 this a built-in.
-        """
-        for item in iterable:
-            if not item:
-                return False
-        return True
-
-try:
-    from __builtins__ import all
-except ImportError:
-    def any(iterable):
-        """
-        Return True if at least one element is set to True.
-        This function does not support predicates explicitly,
-        but this behavior can be simulated easily using
-        list comprehension.
-
-        >>> from sympy import any
-        >>> any( [False, False, False] )
-        False
-        >>> any( [False, True, False] )
-        True
-        >>> any( [ x % 2 == 1 for x in [2, 6, 8] ] )
-        False
-        >>> any( [ x % 2 == 1 for x in [2, 6, 7] ] )
-        True
-
-        NOTE: Starting from Python 2.5 this a built-in.
-        """
-        for item in iterable:
-            if item:
-                return True
-        return False
-
 def iterable(i, exclude=(basestring, dict)):
     """
     Return a boolean indicating whether i is an iterable in the sympy sense.

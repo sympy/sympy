@@ -7,7 +7,6 @@ from sympy.core.exprtools import decompose_power
 
 from sympy.core import S, Add, Mul, Pow
 from sympy.assumptions import ask, Q
-from sympy.utilities import any
 
 import re
 

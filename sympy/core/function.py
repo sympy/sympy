@@ -39,7 +39,7 @@ from cache import cacheit
 from numbers import Rational
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
-from sympy.utilities import all, any, default_sort_key
+from sympy.utilities import default_sort_key
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.utilities.iterables import uniq
 

@@ -7,7 +7,7 @@ from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
-from sympy.utilities import xthreaded, flatten, any, all
+from sympy.utilities import xthreaded, flatten
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
 from sympy.functions import Piecewise, sign

@@ -24,7 +24,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.utilities import (
-    any, all, numbered_symbols, variations, lambdify,
+    numbered_symbols, variations, lambdify,
 )
 
 from sympy.ntheory import sieve

@@ -12,7 +12,7 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError)
 
 from sympy.utilities import (
-    all, any, numbered_symbols, take)
+    numbered_symbols, take)
 
 from sympy.core import S, Basic, Add, Mul
 
