@@ -212,8 +212,8 @@ class Permutation(Basic):
         """
         Finds the invert of a permutation.
 
-        An invert of a permutation when multiplied by it
-        results in the identity permutation.
+        A permutation multiplied by its invert equals
+        the identity permutation.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
