@@ -767,11 +767,7 @@ class SymPyDocTestFinder(DocTestFinder):
                             valname = '%s.%s' % (name, rawname)
                             self._find(tests, val, valname, module, source_lines, globs, seen)
                         except ValueError, msg:
-                            if "invalid option" in msg.args[0]:
-                                # +SKIP raises ValueError in Python 2.4
-                                pass
-                            else:
-                                raise
+                            raise
                         except:
                             pass
 
