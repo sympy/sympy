@@ -703,6 +703,8 @@ class Permutation(Basic):
         Examples:
         >>> from sympy.combinatorics.permutations import josephus
         >>> p = josephus(3,6,1)
+        >>> p
+        Permutation([2, 5, 3, 1, 4, 0])
         >>> p.get_precedence_matrix()
         [0, 0, 0, 0, 0, 0]
         [1, 0, 0, 0, 1, 0]
