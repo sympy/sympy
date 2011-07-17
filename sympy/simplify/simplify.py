@@ -7,7 +7,6 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 from sympy.core.compatibility import iterable
 from sympy.core.numbers import igcd
 from sympy.core.function import expand_log
-from sympy.core.compatibility import minkey
 
 from sympy.utilities import all, any, flatten
 from sympy.functions import gamma, exp, sqrt, log
@@ -1634,7 +1633,7 @@ def simplify(expr, ratio=1.7):
         expr = trigsimp(expr)
 
     if expr.has(C.log):
-        expr = minkey([expand_log(expr, deep=True), logcombine(expr)],
+        expr = min([expand_log(expr, deep=True), logcombine(expr)],
                        key=count_ops)
 
     if expr.has(C.CombinatorialFunction, gamma):

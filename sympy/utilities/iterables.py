@@ -1,5 +1,5 @@
 from sympy.core import Basic, C
-from sympy.core.compatibility import minkey, iff, all, any #for backwards compatibility
+from sympy.core.compatibility import iff, all, any #for backwards compatibility
 from sympy.core.compatibility import is_sequence, iterable #logically, they belong here
 
 import random
