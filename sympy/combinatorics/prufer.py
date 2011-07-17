@@ -140,6 +140,9 @@ class Prufer(Basic):
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
         >>> a.prufer_repr
         [0, 0]
+        >>> b = Prufer([1, 3])
+        >>> b.tree_repr
+        [[2, 1], [1, 3], [3, 0]]
         """
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         if isinstance(args[0][0], list):
