@@ -821,7 +821,10 @@ class Permutation(Basic):
         >>> from sympy.combinatorics.permutations import Permutation, josephus
         >>> p = Permutation([0, 3, 1, 2, 4])
         >>> q = josephus(4, 5, 2)
+        >>> r = Permutation([3, 1, 4, 0, 2])
         >>> p.get_positional_distance(q)
+        12
+        >>> p.get_positional_distance(r)
         12
         """
         if self.size != other.size:
