@@ -112,6 +112,31 @@ class Permutation(Basic):
     def size(self):
         return len(self.array_form)
 
+    def __new__(cls, *args, **kw_args):
+        """
+        Constructor for the Permutation object.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2])
+        >>> p
+        Permutation([0, 1, 2])
+        >>> q = Permutation([[0,1],[2]])
+        >>> q
+        Permutation([[0, 1], [2]])
+        """
+        ret_obj = Basic.__new__(cls, *args, **kw_args)
+        temp = args[0][:]
+        if type(temp[0]) is list:
+            ret_obj._cyclic_form = args[0]
+            temp = reduce(lambda x, y: x + y, temp, [])
+        else:
+            ret_obj._array_form = args[0]
+        temp.sort()
+        if temp != list(xrange(len(temp))):
+            raise ValueError("Invalid permutation.")
+        return ret_obj
+
     def __add__(self, other):
         """
         Routine for addition of permutations.
