@@ -103,26 +103,12 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     UserWarning)
             return
 
-    # This is needed for Python 2.4 compability, because in Python 2.4
-    # __import__() is a four-arg function (in 2.5+ all but the first arg are
-    # keyword arguments).
-    if sys.version_info[:2] <= (2, 4):
-        globals = __import__kwargs.get('globals', {})
-        locals = __import__kwargs.get('locals', {})
-        fromlist = __import__kwargs.get('fromlist', [])
-        try:
-            mod = __import__(module, globals, locals, fromlist)
-        except ImportError:
-            installed = False
-        else:
-            installed = True
+    try:
+        mod = __import__(module, **__import__kwargs)
+    except ImportError:
+        installed = False
     else:
-        try:
-            mod = __import__(module, **__import__kwargs)
-        except ImportError:
-            installed = False
-        else:
-            installed = True
+        installed = True
 
     if not installed:
         if warn_not_installed:
