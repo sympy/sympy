@@ -356,6 +356,10 @@ class Permutation(Basic):
         """
         Computes the parity of a permutation.
 
+        The parity of a permutation reflects the parity of the
+        number of inversions in the permutation, i.e., the
+        number of pairs of x and y such that x > y but p[x] < p[y].
+
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([0,1,2,3])
