@@ -202,7 +202,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import any, all, minkey, iterable, cmp_to_key
+from sympy.core.compatibility import any, all, iterable, cmp_to_key
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
@@ -447,7 +447,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                 failedhints[i] = detail
             else:
                 retdict[i] = sol
-        retdict['best'] = minkey(retdict.values(), key=lambda x:
+        retdict['best'] = min(retdict.values(), key=lambda x:
             ode_sol_simplicity(x, func, trysolving=not simplify))
         if hint == 'best':
             return retdict['best']
@@ -1172,12 +1172,9 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
     This function is designed to be passed to min as the key argument,
     such as min(listofsolutions, key=lambda i: ode_sol_simplicity(i, f(x))).
-    Note that as long as SymPy supports Python 2.4, you must use the minkey()
-    function in sympy/utilities/iterables.py to emulate this behavior.
 
         >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
         >>> from sympy.solvers.ode import ode_sol_simplicity
-        >>> from sympy.utilities.iterables import minkey
         >>> x, C1 = symbols('x,C1')
         >>> f = Function('f')
 
@@ -1195,7 +1192,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
         >>> eq2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
         >>> ode_sol_simplicity(eq1, f(x))
         23
-        >>> minkey([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
+        >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
         x/tan(f(x)/(2*x)) == C1
 
     """
@@ -1658,7 +1655,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     if simplify:
         sol1 = odesimp(sol1, func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
         sol2 = odesimp(sol2, func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
-    return minkey([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
+    return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
         trysolving=not simplify))
 
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
