@@ -75,11 +75,10 @@ class Add(AssocOp):
                 c, s = o.as_coeff_Mul()
 
                 # 3*...
-                if c.is_Number:
-                    # unevaluated 2-arg Mul
-                    if s.is_Add and s.is_commutative:
-                        seq.extend([c*a for a in s.args])
-                        continue
+                # unevaluated 2-arg Mul
+                if c.is_Number and s.is_Add:
+                    seq.extend([c*a for a in s.args])
+                    continue
 
             # everything else
             else:
