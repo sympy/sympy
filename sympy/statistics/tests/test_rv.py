@@ -3,7 +3,7 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
 from sympy.statistics import (Die, Normal, Exponential , P, E, var, covar,
         skewness, Density, Given, independent, dependent, Where, pspace,
         random_symbols)
-from sympy.statistics.rv import ProductPSpace
+from sympy.statistics.rv import ProductPSpace, rs_swap
 
 def test_where():
     X, Y = Die(), Die()
@@ -12,7 +12,7 @@ def test_where():
     assert Where(Z**2<=1).set == Interval(-1, 1)
     assert Where(Z**2<1).as_boolean() == And(Z.symbol<1, Z.symbol>-1)
     assert len(Where(X<3).set) == 2
-    assert (X.symbol, 1) in Where(X<3).set
+    assert frozenset(((X.symbol, 1), )) in Where(X<3).set
 
 def test_random_symbols():
     X, Y = Normal(0,1), Normal(0,1)

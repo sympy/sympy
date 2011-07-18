@@ -92,7 +92,7 @@ class ContinuousPSpace(PSpace):
         else:
             rvs = frozenset(rvs)
 
-        expr = expr.subs({rv:rv.symbol for rv in rvs})
+        expr = expr.subs(dict((rv, rv.symbol) for rv in rvs))
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
@@ -103,8 +103,8 @@ class ContinuousPSpace(PSpace):
         # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
-            density = self.domain.integrate(self.density, {rs.symbol
-                for rs in self.values - frozenset((expr,))},  **kwargs)
+            density = self.domain.integrate(self.density, set(rs.symbol
+                for rs in self.values - frozenset((expr,))),  **kwargs)
             return expr.symbol, density
 
         z = Dummy('z', real=True)
@@ -141,7 +141,7 @@ class ContinuousPSpace(PSpace):
 
     def conditional_space(self, condition, normalize=True, **kwargs):
 
-        condition = condition.subs({rv:rv.symbol for rv in self.values})
+        condition = condition.subs(dict((rv,rv.symbol) for rv in self.values))
 
         domain = ConditionalContinuousDomain(self.domain, condition)
         density = self.density

@@ -98,7 +98,8 @@ class FinitePSpace(PSpace):
 
     is_finite = True
     def __new__(cls, domain, density):
-        density = {sympify(key):sympify(val) for key, val in density.items()}
+        density = dict((sympify(key), sympify(val))
+                for key, val in density.items())
         public_density = Dict(density)
 
         obj = PSpace.__new__(cls, domain, public_density)
@@ -113,7 +114,7 @@ class FinitePSpace(PSpace):
         return ConditionalFiniteDomain(self.domain, condition)
 
     def compute_density(self, expr):
-        expr = expr.subs({rs:rs.symbol for rs in self.values})
+        expr = expr.subs(dict(((rs, rs.symbol) for rs in self.values)))
         d = {}
         for elem in self.domain:
             val = expr.subs(dict(elem))
@@ -123,7 +124,7 @@ class FinitePSpace(PSpace):
 
     def integrate(self, expr, rvs=None):
         rvs = rvs or self.values
-        expr = expr.subs({rs:rs.symbol for rs in rvs})
+        expr = expr.subs(dict((rs, rs.symbol) for rs in rvs))
         return sum(expr.subs(dict(elem)) * self.prob_of(elem)
                 for elem in self.domain)
 
@@ -135,8 +136,8 @@ class FinitePSpace(PSpace):
     def conditional_space(self, condition):
         domain = self.where(condition)
         prob = self.P(condition)
-        density = {key: val / prob
-                for key, val in self._density.items() if key in domain}
+        density = dict((key, val / prob)
+                for key, val in self._density.items() if key in domain)
         return FinitePSpace(domain, density)
 
 class SingleFinitePSpace(FinitePSpace):

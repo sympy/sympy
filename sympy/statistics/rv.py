@@ -49,8 +49,8 @@ class ConditionalDomain(Domain):
     A Domain with an attached condition
     """
     def __new__(cls, fulldomain, condition):
-        condition = condition.subs({rs:rs.symbol
-            for rs in random_symbols(condition)})
+        condition = condition.subs(dict((rs,rs.symbol)
+            for rs in random_symbols(condition)))
         return Domain.__new__(cls, fulldomain.symbols, fulldomain, condition)
 
     @property
