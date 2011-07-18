@@ -87,7 +87,10 @@ class Piecewise(Function):
                     " Relational, Number or Set" % (pair.cond, cond_type))
             newargs.append(pair)
 
-        r = cls.eval(*newargs)
+        if options.pop('evaluate', True):
+            r = cls.eval(*newargs)
+        else:
+            r = None
 
         if r is None:
             return Basic.__new__(cls, *newargs, **options)
