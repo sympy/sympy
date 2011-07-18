@@ -588,7 +588,12 @@ def solve(f, *symbols, **flags):
         msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
                '\n\tgiven as a list so as to avoid ambiguity in the results.' +
                '\n\tsolve sorted the symbols as %s')
-        print msg % str(bool(symbol_swapped) and list(zip(*swap_dict)[0]) or symbols)
+        if symbol_swapped:
+            from itertools import izip
+            tmp = izip(*swap_dict) # separate for the benefit of 2to3
+            print msg % list(tmp.next())
+        else:
+            print msg % symbols
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still returned.
