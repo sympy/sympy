@@ -239,7 +239,6 @@ class Kane(object):
         o = len(u) # number of generalized speeds
         m = len(udep) # number of motion constraints
         p = o - m # number of independent speeds
-        # puts independent speeds first
         B = self._k_nh.extract(range(m), range(o))
         C = self._f_nh.extract(range(m), [0])
 
@@ -247,8 +246,18 @@ class Kane(object):
         ml1 = B.extract(range(m), range(p, o))
         self._depB = B
         self._depC = C
-        ml1i = ml1.inverse_ADJ()
-        self._Ars = ml1i * mr1
+        temp1 = Matrix(m, m, lambda i, j: Symbol('x' + str(j + m * i)))
+        temp2 = Matrix(m, p, lambda i, j: Symbol('y' + str(j + m * i)))
+        temp3 = []
+        for i in range(p):
+            temp3.append(temp1.LUsolve(temp2.extract(range(m), [i])))
+        temp3 = Matrix([i.T for i in temp3]).T
+        temp3.simplify()
+        temp3 = temp3.subs(dict(zip(temp1, ml1))).subs(dict(zip(temp2, mr1)))
+        self._Ars = -temp3
+
+        #ml1i = ml1.inverse_ADJ()
+        #self._Ars = ml1i * mr1
 
     def form_fr(self, fl):
         """Form the generalized active force.
