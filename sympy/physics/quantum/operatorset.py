@@ -21,6 +21,10 @@ from sympy.physics.quantum.state import (
     StateBase, KetBase, BraBase, Ket, Bra
 )
 
+from sympy.physics.quantum.spin import (
+    JxOp, JyOp, JzOp, J2Op, JxKet, JyKet, JzKet
+)
+
 __all__ = [
     'operators_to_state',
     'state_to_operators'
@@ -34,11 +38,14 @@ __all__ = [
 # TODO: Update dict with full list of state : operator pairs
 # (including spin)
 
-state_mapping = { Ket : Operator,
+state_mapping = { JxKet : (J2Op, JxOp),
+                  JyKet : (J2Op, JyOp),
+                  JzKet : (J2Op, JzOp),
+                  Ket : Operator,
                   PxKet : PxOp,
                   XKet : XOp }
 
-rev_mapping = dict((v,k) for k,v in state_mapping.iteritems())
+op_mapping = dict((v,k) for k,v in state_mapping.iteritems())
 
 def operators_to_state(operators, **options):
     """ Returns the eigenstate of the given operator or set of operators
@@ -95,48 +102,48 @@ def operators_to_state(operators, **options):
     """
 
     if not (isinstance(operators, Operator) \
-            or issubclass(operators, Operator) or isinstance(operators, set)):
+            or isinstance(operators, set) or issubclass(operators, Operator)):
         raise NotImplementedError("Argument is not an Operator or a set!")
 
     if isinstance(operators, set):
         for s in operators:
-            if not isinstance(operators, Operator) \
-                   or issubclass(operators, Operator):
+            if not (isinstance(s, Operator) \
+                   or issubclass(s, Operator)):
                 raise NotImplementedError("Set is not all Operators!")
 
         ops = tuple(operators)
 
-        if ops in rev_mapping: #ops is a list of classes in this case
+        if ops in op_mapping: #ops is a list of classes in this case
             #Try to get an object from default instances of the
             #operators...if this fails, return the class
             try:
                 op_instances = [op() for op in ops]
-                ret = _get_state(rev_mapping[ops], op_instances, **options)
+                ret = _get_state(op_mapping[ops], op_instances, **options)
             except NotImplementedError:
-                ret = rev_mapping[ops]
+                ret = op_mapping[ops]
 
             return ret
         else:
             tmp = [type(o) for o in ops]
             classes = tuple(tmp)
 
-            if classes in rev_mapping:
-                ret = _get_state(rev_mapping[classes], ops, **options)
+            if classes in op_mapping:
+                ret = _get_state(op_mapping[classes], ops, **options)
             else:
                 ret = None
 
             return ret
     else:
-        if operators in rev_mapping:
+        if operators in op_mapping:
             try:
                 op_instance = operators()
-                ret = _get_state(rev_mapping[operators], op_instance, **options)
+                ret = _get_state(op_mapping[operators], op_instance, **options)
             except NotImplementedError:
-                ret = rev_mapping[operators]
+                ret = op_mapping[operators]
 
             return ret
-        elif type(operators) in rev_mapping:
-            return _get_state(rev_mapping[type(operators)], operators, **options)
+        elif type(operators) in op_mapping:
+            return _get_state(op_mapping[type(operators)], operators, **options)
         else:
             return None
 
@@ -252,7 +259,7 @@ def _get_ops(state_inst, op_classes, **options):
         ret = state_inst._state_to_operators(op_classes, **options)
     except NotImplementedError:
         if isinstance(op_classes, (set, tuple)):
-            ret = map(lambda x: _make_default(x), op_classes)
+            ret = tuple(map(lambda x: _make_default(x), op_classes))
         else:
             ret = _make_default(op_classes)
 

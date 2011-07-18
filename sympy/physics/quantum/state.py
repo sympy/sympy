@@ -62,9 +62,29 @@ class StateBase(QExpr):
 
     @classmethod
     def _operators_to_state(self, ops, **options):
+        """ Returns the eigenstate instance for the passed operators.
+
+        This method should be overridden in subclasses. It will handle
+        being passed either an Operator instance or set of Operator
+        instances. It should return the corresponding state INSTANCE
+        or simply raise a NotImplementedError. See cartesian.py for an
+        example.
+        """
+
         raise NotImplementedError("Cannot map operators to states in this class. Method not implemented!")
 
     def _state_to_operators(self, op_classes, **options):
+        """ Returns the operators which this state instance is an
+        eigenstate of.
+
+        This method should be overridden in subclasses. It will be
+        called on state instances and be passed the operator classes
+        that we wish to make into instances. The state instance will
+        then transform the classes appropriately, or raise a
+        NotImplementedError if it cannot return operator
+        instances. See cartesian.py for examples,
+        """
+
         raise NotImplementedError("Cannot map this state to operators. Method not implemented!")
 
     @property

@@ -7,7 +7,6 @@ from sympy import (
 from sympy.matrices.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
-from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.operator import (
     HermitianOperator, Operator, UnitaryOperator
@@ -715,6 +714,7 @@ class SpinState(State):
         return self._rewrite_basis(Jz, JzKet, *args)
 
     def _rewrite_basis(self, basis, evect_cls, *args):
+        from sympy.physics.quantum.represent import represent
         j = self.j
         size, mvals = m_values(j)
         result = 0
