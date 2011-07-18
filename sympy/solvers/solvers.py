@@ -508,7 +508,8 @@ def solve(f, *symbols, **flags):
         msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
                '\n\tgiven as a list so as to avoid ambiguity in the results.' +
                '\n\tsolve sorted the symbols as %s')
-        print msg % str(bool(symbol_swapped) and list(zip(*swap_dict)[0]) or symbols)
+        from itertools import izip
+        print msg % str(bool(symbol_swapped) and list(izip(*swap_dict).next()) or symbols)
     #
     # done
     ###########################################################################
