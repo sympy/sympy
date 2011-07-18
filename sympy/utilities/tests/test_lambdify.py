@@ -173,12 +173,6 @@ def test_sqrt():
     assert f(4) == 2.0
     assert abs(f(2) - 1.414) < 0.001
     assert f(6.25) == 2.5
-    try:
-    #FIXME-py3k: In Python 3, sqrt(-1) is a ValueError but (-1)**(1/2) isn't
-    #FIXME-py3k: (previously both were). Change the test, or check Py version?
-        f(-1)
-        assert False
-    except ValueError: pass
 
 def test_trig():
     f = lambdify([x], [cos(x),sin(x)])
