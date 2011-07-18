@@ -38,9 +38,9 @@ __all__ = [
 # TODO: Update dict with full list of state : operator pairs
 # (including spin)
 
-state_mapping = { JxKet : (J2Op, JxOp),
-                  JyKet : (J2Op, JyOp),
-                  JzKet : (J2Op, JzOp),
+state_mapping = { JxKet : frozenset((J2Op, JxOp)),
+                  JyKet : frozenset((J2Op, JyOp)),
+                  JzKet : frozenset((J2Op, JzOp)),
                   Ket : Operator,
                   PxKet : PxOp,
                   XKet : XOp }
@@ -111,7 +111,8 @@ def operators_to_state(operators, **options):
                    or issubclass(s, Operator)):
                 raise NotImplementedError("Set is not all Operators!")
 
-        ops = tuple(operators)
+        #ops = tuple(operators)
+        ops = frozenset(operators)
 
         if ops in op_mapping: #ops is a list of classes in this case
             #Try to get an object from default instances of the
@@ -125,7 +126,7 @@ def operators_to_state(operators, **options):
             return ret
         else:
             tmp = [type(o) for o in ops]
-            classes = tuple(tmp)
+            classes = frozenset(tmp)
 
             if classes in op_mapping:
                 ret = _get_state(op_mapping[classes], ops, **options)
@@ -213,26 +214,26 @@ def state_to_operators(state, **options):
         state_inst = _make_default(state)
         try:
             ret = _get_ops(state_inst, \
-                           _tuple_to_set(state_mapping[state]), **options)
+                           _make_set(state_mapping[state]), **options)
         except (NotImplementedError, TypeError):
             ret = state_mapping[state]
     elif type(state) in state_mapping:
         ret = _get_ops(state, \
-                       _tuple_to_set(state_mapping[type(state)]), **options)
+                       _make_set(state_mapping[type(state)]), **options)
     elif isinstance(state, BraBase) and state.dual_class() in state_mapping:
         ret = _get_ops(state, \
-                       _tuple_to_set(state_mapping[state.dual_class()]))
+                       _make_set(state_mapping[state.dual_class()]))
     elif issubclass(state, BraBase) and state.dual_class() in state_mapping:
         state_inst = _make_default(state)
         try:
             ret = _get_ops(state_inst, \
-                           _tuple_to_set(state_mapping[state.dual_class()]))
+                           _make_set(state_mapping[state.dual_class()]))
         except (NotImplementedError, TypeError):
             ret = state_mapping[state.dual_class()]
     else:
         ret = None
 
-    return _tuple_to_set(ret)
+    return _make_set(ret)
 
 def _make_default(expr):
     try:
@@ -258,7 +259,7 @@ def _get_ops(state_inst, op_classes, **options):
     try:
         ret = state_inst._state_to_operators(op_classes, **options)
     except NotImplementedError:
-        if isinstance(op_classes, (set, tuple)):
+        if isinstance(op_classes, (set, tuple, frozenset)):
             ret = tuple(map(lambda x: _make_default(x), op_classes))
         else:
             ret = _make_default(op_classes)
@@ -268,8 +269,8 @@ def _get_ops(state_inst, op_classes, **options):
 
     return ret
 
-def _tuple_to_set(ops):
-    if isinstance(ops, tuple):
+def _make_set(ops):
+    if isinstance(ops, (tuple, list, frozenset)):
         return set(ops)
     else:
         return ops

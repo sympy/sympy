@@ -871,7 +871,7 @@ class Wavefunction(Function):
         >>> g = sin(n*pi*x/L)
         >>> f = Wavefunction(g, (x, 0, L))
         >>> f.normalize()
-        Wavefunction(2**(1/2)*sin(pi*n*x/L)/L**(1/2), Tuple(x, 0, L))
+        Wavefunction(2**(1/2)*sin(pi*n*x/L)/L**(1/2), (x, 0, L))
 
         """
         const = self.norm
