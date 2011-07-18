@@ -511,7 +511,7 @@ class Rational(Number):
     Note that p and q return integers (not sympy Integers) so some care
     is needed when using them in expressions:
 
-    >>> r.p/r.q
+    >>> r.p//r.q
     0
 
     """
