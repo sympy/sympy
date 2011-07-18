@@ -1,5 +1,6 @@
 from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
-        pi, arg, conjugate, expand, exp, sin, cos, Function, Abs
+        pi, arg, conjugate, expand, exp, sin, cos, Function, Abs, zoo
+from sympy.utilities.pytest import XFAIL
 
 def test_re():
     x, y = symbols('x,y')
@@ -205,3 +206,66 @@ def test_derivatives_issue1658():
     x = Symbol('x', real=True)
     assert Abs(f(x)).diff(x).subs(f(x), 1+I*x).doit() == x/sqrt(1 + x**2)
     assert arg(f(x)).diff(x).subs(f(x), 1+I*x**2).doit() == 2*x/(1+x**4)
+
+def test_periodic_argument():
+    from sympy import (periodic_argument, unbranched_argument, oo,
+                       principal_branch, polar_lift)
+    x = Symbol('x')
+
+    def tn(a, b):
+        from sympy.utilities.randtest import test_numerically
+        from sympy import Dummy
+        return test_numerically(a, b, Dummy('x'))
+
+    assert unbranched_argument(2 + I) == periodic_argument(2 + I, oo)
+    assert unbranched_argument(1 + x) == periodic_argument(1 + x, oo)
+    assert tn(unbranched_argument((1+I)**2), pi/2)
+    assert tn(unbranched_argument((1-I)**2), -pi/2)
+    assert tn(periodic_argument((1+I)**2, 3*pi), pi/2)
+    assert tn(periodic_argument((1-I)**2, 3*pi), -pi/2)
+
+    assert unbranched_argument(principal_branch(x, pi)) \
+           == periodic_argument(x, pi)
+
+    assert unbranched_argument(polar_lift(2 + I)) == unbranched_argument(2 + I)
+    assert periodic_argument(polar_lift(2 + I), 2*pi) \
+           == periodic_argument(2 + I, 2*pi)
+    assert periodic_argument(polar_lift(2 + I), 3*pi) \
+           == periodic_argument(2 + I, 3*pi)
+    assert periodic_argument(polar_lift(2 + I), pi) \
+           == periodic_argument(polar_lift(2 + I), pi)
+
+@XFAIL
+def test_principal_branch_fail():
+    # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
+    assert tn(principal_branch((1 + I)**2, pi/2), 0)
+
+def test_principal_branch():
+    from sympy import principal_branch, polar_lift, exp_polar
+    p = Symbol('p', positive=True)
+    x = Symbol('x')
+    neg = Symbol('x', negative=True)
+
+    assert principal_branch(polar_lift(x), p) == principal_branch(x, p)
+    assert principal_branch(polar_lift(2 + I), p) == principal_branch(2 + I, p)
+    assert principal_branch(2*x, p) == 2*principal_branch(x, p)
+    assert principal_branch(1, pi) == exp_polar(0)
+    assert principal_branch(-1, 2*pi) == exp_polar(I*pi)
+    assert principal_branch(-1, pi) == exp_polar(0)
+    assert principal_branch(exp_polar(3*pi*I)*x, 2*pi) == \
+           principal_branch(exp_polar(I*pi)*x, 2*pi)
+    assert principal_branch(neg*exp_polar(pi*I), 2*pi) == neg*exp_polar(-I*pi)
+
+    def tn(a, b):
+        from sympy.utilities.randtest import test_numerically
+        from sympy import Dummy
+        return test_numerically(a, b, Dummy('x'))
+    assert tn(principal_branch((1 + I)**2, 2*pi), 2*I)
+    assert tn(principal_branch((1 + I)**2, 3*pi), 2*I)
+    assert tn(principal_branch((1 + I)**2, 1*pi), 2*I)
+
+    # test argument sanitization
+    assert principal_branch(x, I).func is principal_branch
+    assert principal_branch(x, -4).func is principal_branch
+    assert principal_branch(x, -oo).func is principal_branch
+    assert principal_branch(x, zoo).func is principal_branch

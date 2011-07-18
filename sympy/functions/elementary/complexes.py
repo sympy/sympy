@@ -404,7 +404,7 @@ class polar_lift(Function):
     Lift argument to the riemann surface of the logarithm, using the
     standard branch.
 
-    >>> from sympy import Symbol, polar_lift
+    >>> from sympy import Symbol, polar_lift, I
     >>> p = Symbol('p', polar=True)
     >>> x = Symbol('x')
     >>> polar_lift(4)
@@ -461,6 +461,165 @@ class polar_lift(Function):
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
         return self.args[0]._eval_evalf(prec)
+
+class periodic_argument(Function):
+    """
+    Represent the argument on a quotient of the riemann surface of the
+    logarithm. That is, given a period P, always return a value in
+    (-P/2, P/2], by using exp(P*I) == 1.
+
+    >>> from sympy import exp, exp_polar, periodic_argument, unbranched_argument
+    >>> from sympy import I, pi
+    >>> unbranched_argument(exp(5*I*pi))
+    pi
+    >>> unbranched_argument(exp_polar(5*I*pi))
+    5*pi
+    >>> periodic_argument(exp_polar(5*I*pi), 2*pi)
+    pi
+    >>> periodic_argument(exp_polar(5*I*pi), 3*pi)
+    -pi
+    >>> periodic_argument(exp_polar(5*I*pi), pi)
+    0
+    """
+
+    nargs = 2
+
+    @classmethod
+    def _getunbranched(cls, ar):
+       from sympy import exp_polar, log
+       if ar.is_Mul:
+           args = ar.args
+       else:
+           args = [ar]
+       unbranched = 0
+       for a in args:
+           if not a.is_polar:
+               unbranched += arg(a)
+           elif a.func is exp_polar:
+               unbranched += a.args[0].as_real_imag()[1]
+           elif a.is_Pow:
+               re, im = a.exp.as_real_imag()
+               unbranched += re*unbranched_argument(a.base) + im*log(abs(a.base))
+           else:
+               return None
+       return unbranched
+
+    @classmethod
+    def eval(cls, ar, period):
+       # Our strategy is to evaluate the argument on the riemann surface of the
+       # logarithm, and then reduce.
+       # NOTE evidently this means it is a rather bad idea to use this with
+       # period != 2*pi and non-polar numbers.
+       from sympy import ceiling, oo, atan2, atan, polar_lift, pi
+       if not period.is_positive:
+           return None
+       if period == oo and isinstance(ar, principal_branch):
+           return periodic_argument(*ar.args)
+       if ar.func is polar_lift and period >= 2*pi:
+           return periodic_argument(ar.args[0], period)
+       unbranched = cls._getunbranched(ar)
+       if unbranched is None:
+           return None
+       if unbranched.has(periodic_argument, atan2, arg, atan):
+           return None
+       if period == oo:
+           return unbranched
+       if period != oo:
+            n = ceiling(unbranched/period - S(1)/2)*period
+            if not n.has(ceiling):
+                return unbranched - n
+
+    def _eval_evalf(self, prec):
+        from sympy import ceiling, oo
+        z, period = self.args
+        if period == oo:
+            unbranched = periodic_argument._getunbranched(z)
+            if unbranched is None:
+                return self
+            return unbranched._eval_evalf(prec)
+        ub = periodic_argument(z, oo)._eval_evalf(prec)
+        return (ub - ceiling(ub/period - S(1)/2)*period)._eval_evalf(prec)
+
+def unbranched_argument(arg):
+    from sympy import oo
+    return periodic_argument(arg, oo)
+
+class principal_branch(Function):
+    """
+    Represent a polar number reduced to its principal branch on a quotient
+    of the riemann surface of the logarithm.
+
+    This is a function of two arguments. The first argument is a polar
+    number `z`, and the second one a positive real number of infinity, `p`.
+    The result is "z mod exp_polar(I*p)".
+
+    >>> from sympy import exp_polar, principal_branch, oo, I, pi
+    >>> from sympy.abc import z
+    >>> principal_branch(z, oo)
+    z
+    >>> principal_branch(exp_polar(2*pi*I)*3, 2*pi)
+    3*exp_polar(0)
+    >>> principal_branch(exp_polar(2*pi*I)*3*z, 2*pi)
+    3*principal_branch(z, 2*pi)
+    """
+
+    nargs = 2
+    is_polar = True
+    is_comparable = False # cannot always be evalf'd
+
+    @classmethod
+    def eval(self, x, period):
+        from sympy import oo, exp_polar, I, Mul, polar_lift, Symbol
+        if isinstance(x, polar_lift):
+            return principal_branch(x.args[0], period)
+        if period == oo:
+            return x
+        ub = periodic_argument(x, oo)
+        barg = periodic_argument(x, period)
+        if ub != barg and not ub.has(periodic_argument) \
+           and not barg.has(periodic_argument):
+            pl = polar_lift(x)
+            def mr(expr):
+                if not isinstance(expr, Symbol):
+                    return polar_lift(expr)
+                return expr
+            pl = pl.replace(polar_lift, mr)
+            if not pl.has(polar_lift):
+                res = exp_polar(I*(barg - ub))*pl
+                if not res.is_polar and not res.has(exp_polar):
+                    res *= exp_polar(0)
+                return res
+
+        if not x.free_symbols:
+           c, m = x, ()
+        else:
+           c, m = x.as_coeff_mul(*x.free_symbols)
+        others = []
+        for y in m:
+            if y.is_positive:
+                c *= y
+            else:
+                others += [y]
+        m = tuple(others)
+        arg = periodic_argument(c, period)
+        if arg.has(periodic_argument):
+            return None
+        if arg.is_number and (unbranched_argument(c) != arg or \
+                              (arg == 0 and m != () and c != 1)):
+            if arg == 0:
+                return abs(c)*principal_branch(Mul(*m), period)
+            return principal_branch(exp_polar(I*arg)*Mul(*m), period)*abs(c)
+        if arg.is_number and ((abs(arg) < period/2) is True or arg == period/2) \
+           and m == ():
+            return exp_polar(arg*I)*abs(c)
+
+    def _eval_evalf(self, prec):
+        from sympy import exp, pi, I
+        z, period = self.args
+        p = periodic_argument(z, period)._eval_evalf(prec)
+        if abs(p) > pi or p == -pi:
+            return self # Cannot evalf for this argument.
+        return (abs(z)*exp(I*p))._eval_evalf(prec)
 
 # /cyclic/
 from sympy.core import basic as _
