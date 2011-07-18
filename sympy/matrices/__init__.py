@@ -10,4 +10,4 @@ from matrices import (Matrix, SparseMatrix, zeros, ones, eye, diag,
 from matexpr import *
 from transpose import Transpose
 from inverse import Inverse
-from blockmatrix import BlockMatrix
+from blockmatrix import BlockMatrix, BlockDiagMatrix

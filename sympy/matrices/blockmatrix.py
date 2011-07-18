@@ -1,9 +1,9 @@
-from matexpr import MatrixExpr
+from matexpr import MatrixExpr, ZeroMatrix
 from matmul import MatMul
 from matadd import MatAdd
 from matpow import MatPow
 from transpose import Transpose
-from matrices import Matrix
+from matrices import Matrix, eye
 from sympy import Tuple, Basic
 
 class BlockMatrix(MatrixExpr):
@@ -71,6 +71,21 @@ class BlockMatrix(MatrixExpr):
 
     def __getitem__(self, *args):
         return self.mat.__getitem__(*args)
+
+def BlockDiagMatrix(mats):
+    data_matrix = eye(len(mats))
+    for i, mat in enumerate(mats):
+        data_matrix[i,i] = mat
+
+    for r in range(len(mats)):
+        for c in range(len(mats)):
+            if r == c:
+                continue
+            n = mats[r].n
+            m = mats[c].m
+            data_matrix[r, c] = ZeroMatrix(n, m)
+
+    return BlockMatrix(data_matrix)
 
 def block_collapse(expr):
     if not expr.is_Matrix or (not expr.is_Add and not expr.is_Mul
