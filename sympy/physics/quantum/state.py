@@ -581,8 +581,8 @@ class Wavefunction(Function):
            The expression representing the functional form of the w.f.
 
     coords : Symbol or tuple
-           The coordinates to be integrated over, and their bounds  
-    
+           The coordinates to be integrated over, and their bounds
+
     Examples
     ========
 
@@ -782,7 +782,6 @@ class Wavefunction(Function):
         """
         Return the expression which is the functional form of the
         Wavefunction
-    
 
         Examples
         ========

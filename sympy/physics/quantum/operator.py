@@ -357,10 +357,29 @@ class DifferentialOperator(Operator):
     """
     An operator for representing the differential operator, i.e. d/dx
 
+    It is initialized by passing two arguments. The first is an
+    arbitrary expression that involves a function, such as
+    Derivative(f(x), x). The second is the function (e.g. f(x)) which
+    we are to replace with the Wavefunction that this
+    DifferentialOperator is applied to.
+
+    Parameters
+    ==========
+
+    expr : Expr
+           The arbitrary expression which the appropriate Wavefunction
+           is to be substituted into
+
+    func : Expr
+           A function (e.g. f(x)) which is to be replaced with the
+           appropriate Wavefunction when this DifferentialOperator is applied
+
     Examples
     ========
 
-    You can define a completely arbitrary expression and specify where the Wavefunction is to be substituted
+    You can define a completely arbitrary expression and specify where
+    the Wavefunction is to be substituted
+
     >>> from sympy import Derivative, Function, Symbol
     >>> from sympy.physics.quantum.operator import DifferentialOperator
     >>> from sympy.physics.quantum.state import Wavefunction
@@ -372,7 +391,7 @@ class DifferentialOperator(Operator):
     >>> d.function
     f(x)
     >>> d.variables
-    set([x])
+    (x,)
     >>> qapply(d*w)
     Wavefunction(2, x)
 
@@ -393,10 +412,15 @@ class DifferentialOperator(Operator):
         >>> f = Function('f')
         >>> d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))
         >>> d.variables
-        set([x])
+        (x,)
+        >>> y = Symbol('y')
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
+                                     Derivative(f(x, y), y), f(x, y))
+        >>> d.variables
+        (x, y)
         """
 
-        return self.args[-1].free_symbols
+        return self.args[-1].args
 
     @property
     def function(self):
@@ -413,7 +437,11 @@ class DifferentialOperator(Operator):
         >>> d = DifferentialOperator(Derivative(f(x), x), f(x))
         >>> d.function
         f(x)
-
+        >>> y = Symbol('y')
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
+                                     Derivative(f(x, y), y), f(x, y))
+        >>> d.function
+        f(x, y)
         """
 
         return self.args[-1]
@@ -434,7 +462,11 @@ class DifferentialOperator(Operator):
         >>> d = DifferentialOperator(Derivative(f(x), x), f(x))
         >>> d.expr
         Derivative(f(x), x)
-
+        >>> y = Symbol('y')
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
+                                     Derivative(f(x, y), y), f(x, y))
+        >>> d.expr
+        Derivative(f(x, y), x) + Derivative(f(x, y), y)
         """
 
         return self.args[0]
@@ -480,8 +512,3 @@ class DifferentialOperator(Operator):
         )
         pform = prettyForm(*pform.right((label_pform)))
         return pform
-
-    def _print_contents_latex(self, printer, *args):
-        return '\\frac\{d\}\{%s\}' % (
-            self._print_label_latex(printer, *args)
-        )
