@@ -74,6 +74,8 @@ from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
 
+from sympy.core.compatibility import iterable
+
 class Poly(Expr):
     """Generic class for representing polynomial expressions. """
 
@@ -88,7 +90,7 @@ class Poly(Expr):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if hasattr(rep, '__iter__'):
+        if iterable(rep, exclude=str):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
