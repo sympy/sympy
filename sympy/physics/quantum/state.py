@@ -570,13 +570,25 @@ class TimeDepBra(TimeDepState, BraBase):
 class Wavefunction(Function):
     """Class for representations in continuous bases
 
+    This class takes an expression and coordinates in its
+    constructor. It can be used to easily calculate normalizations and
+    probabilities.
+
     Parameters
     ==========
 
+    expr : Expr
+           The expression representing the functional form of the w.f.
+
+    coords : Symbol or tuple
+           The coordinates to be integrated over, and their bounds  
+    
     Examples
     ========
 
-    Particle in a box
+    Particle in a box, specifying bounds in the more primitive way of
+    using Piecewise
+
     >>> from sympy import Symbol, Piecewise, pi, N
     >>> from sympy.functions import sqrt, sin
     >>> from sympy.physics.quantum.state import Wavefunction
@@ -602,7 +614,8 @@ class Wavefunction(Function):
     0.412214747707527
 
     Additionally, you can specify the bounds of the function and the
-    indices in a different way.
+    indices in a more compact way.
+
     >>> from sympy import symbols, pi, diff
     >>> from sympy.functions import sqrt, sin
     >>> from sympy.physics.quantum.state import Wavefunction
@@ -706,7 +719,8 @@ class Wavefunction(Function):
     @property
     def is_commutative(self):
         """
-        Override Function's is_commutative so that order is preserved in represented expressions
+        Override Function's is_commutative so that order is preserved
+        in represented expressions
         """
         return False
 
@@ -717,7 +731,7 @@ class Wavefunction(Function):
     @property
     def variables(self):
         """
-        Return the free coordinates which were passed to the constructor
+        Return the coordinates which the wavefunction depends on
 
         Examples
         ========
@@ -739,7 +753,7 @@ class Wavefunction(Function):
     @property
     def limits(self):
         """
-        Return the limits of the coordinates passed to the constructor.
+        Return the limits of the coordinates which the w.f. depends on
         If no limits are specified, defaults to (-oo, oo)
 
         Examples
@@ -766,7 +780,9 @@ class Wavefunction(Function):
     @property
     def expr(self):
         """
-        Return the functional form of the Wavefunction
+        Return the expression which is the functional form of the
+        Wavefunction
+    
 
         Examples
         ========
@@ -809,7 +825,7 @@ class Wavefunction(Function):
         """
         Return the normalization of the specified functional form.
 
-        This function integrates over the coordinates passed to the constructor of the Wavefunction,
+        This function integrates over the coordinates of the Wavefunction,
         with the bounds specified.
 
         Examples
@@ -843,7 +859,7 @@ class Wavefunction(Function):
 
     def normalize(self):
         """
-        Return the normalized wavefunction
+        Return a normalized version of the Wavefunction
 
         Examples
         ========
@@ -868,7 +884,7 @@ class Wavefunction(Function):
 
     def prob(self):
         """
-        Return the absolute magnitude of the functional form |psi(x)|^2
+        Return the absolute magnitude of the w.f., |psi(x)|^2
 
         Examples
         ========
