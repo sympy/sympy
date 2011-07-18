@@ -127,10 +127,15 @@ class Identity(MatrixSymbol):
     def __new__(cls, n):
         return MatrixSymbol.__new__(cls, "I", n, n)
 
+    def transpose(self):
+        return self
+
 class ZeroMatrix(MatrixSymbol):
     is_ZeroMatrix = True
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
+    def transpose(self):
+        return ZeroMatrix(self.m, self.n)
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
@@ -164,6 +169,10 @@ def matsimp(expr):
 def linear_factors(expr, *syms):
     expr = matrixify(expand(expr))
     d = {}
+    if expr.is_Matrix and expr.is_Symbol:
+        if expr in syms:
+            d[expr] = Identity(expr.n)
+
     if expr.is_Add:
         for sym in syms:
             total_factor = 0
@@ -178,7 +187,13 @@ def linear_factors(expr, *syms):
             d[sym] = total_factor
     elif expr.is_Mul:
         for sym in syms:
-            d[sym] = expr.coeff(sym)
+            factor = expr.coeff(sym)
+            if not factor:
+                factor = 0
+            factor = sympify(factor)
+            if not factor.is_Matrix:
+                factor = Identity(sym.n)*factor
+            d[sym] = factor
 
     if any(sym in matrix_symbols(Tuple(*d.values())) for sym in syms):
         raise ValueError("Expression not linear in symbols")

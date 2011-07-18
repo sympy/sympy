@@ -10,6 +10,11 @@ class Inverse(MatPow):
         if not mat.is_Matrix:
             return mat**(-1)
 
+        try:
+            return mat.eval_inverse()
+        except (AttributeError, NotImplementedError):
+            pass
+
         if hasattr(mat, 'inv'):
             try:
                 return mat.inv()

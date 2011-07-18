@@ -3,6 +3,7 @@ from matmul import MatMul
 from matadd import MatAdd
 from matpow import MatPow
 from transpose import Transpose
+from inverse import Inverse
 from matrices import Matrix, eye
 from sympy import Tuple, Basic, sympify
 
@@ -61,15 +62,40 @@ class BlockMatrix(MatrixExpr):
     def eval_transpose(self):
         # Flip all the individual matrices
         matrices = [Transpose(matrix) for matrix in self.mat.mat]
-        # Flip the block shape
-        return BlockMatrix(
-                Matrix(self.blockshape[1], self.blockshape[0], matrices))
+        # Make a copy
+        mat = Matrix(self.blockshape[0], self.blockshape[1], matrices)
+        # Transpose the block structure
+        mat = mat.transpose()
+        return BlockMatrix(mat)
 
     def transpose(self):
         return self.eval_transpose()
 
+    def eval_inverse(self):
+        # Inverse of size one block matrix is easy
+        if len(self.mat.mat)==1:
+            mat = Matrix(1, 1, (Inverse(self.mat[0]), ))
+            return BlockMatrix(mat)
+        else:
+            raise NotImplementedError()
+
+    def inverse(self):
+        return Inverse(self)
+
     def __getitem__(self, *args):
         return self.mat.__getitem__(*args)
+
+    @property
+    def is_Identity(self):
+        if self.blockshape[0] != self.blockshape[1]:
+            return False
+        for i in range(self.blockshape[0]):
+            for j in range(self.blockshape[1]):
+                if i==j and not self.mat[i,j].is_Identity:
+                    return False
+                if i!=j and not self.mat[i,j].is_ZeroMatrix:
+                    return False
+        return True
 
 def BlockDiagMatrix(mats):
     data_matrix = eye(len(mats))
@@ -88,26 +114,45 @@ def BlockDiagMatrix(mats):
 
 def block_collapse(expr):
     if not expr.is_Matrix or (not expr.is_Add and not expr.is_Mul
-            and not expr.is_Transpose and not expr.is_Pow):
+            and not expr.is_Transpose and not expr.is_Pow
+            and not expr.is_Inverse):
         return expr
 
     if expr.is_Transpose:
         return Transpose(block_collapse(expr.arg))
 
+    if expr.is_Inverse:
+        return Inverse(block_collapse(expr.arg))
+
     # Recurse on the subargs
-    newargs = map(block_collapse, expr.args)
-    if tuple(newargs) != expr.args:
-        expr = expr.__class__(*newargs)
+    args = list(expr.args)
+    for i in range(len(args)):
+        arg = args[i]
+        newarg = block_collapse(arg)
+        while(newarg != arg): # Repeat until no new changes
+            arg = newarg
+            newarg = block_collapse(arg)
+        args[i] = newarg
+
+    if tuple(args) != expr.args:
+        expr = expr.__class__(*args)
 
     # Turn  -[X, Y] into [-X, -Y]
-    if (expr.is_Mul and len(expr.args)==2 and expr.args[0]==-1
+    if (expr.is_Mul and len(expr.args)==2 and not expr.args[0].is_Matrix
             and expr.args[1].is_BlockMatrix):
-        return BlockMatrix((-1)*expr.args[1].mat)
+        return BlockMatrix(expr.args[0]*expr.args[1].mat)
 
     if expr.is_Add:
         nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]
         blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
+        if not blocks:
+            return MatAdd(*nonblocks)
         block = reduce(lambda a,b: a._blockadd(b), blocks[1:], blocks[0])
+        if block.blockshape == (1,1):
+            # Bring all the non-blocks into the block_matrix
+            mat = Matrix(1, 1, (block[0,0] + MatAdd(*nonblocks), ))
+            return BlockMatrix(mat)
+
         return MatAdd(*(nonblocks+[block]))
 
     if expr.is_Mul:

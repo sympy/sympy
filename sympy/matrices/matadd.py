@@ -46,5 +46,4 @@ class MatAdd(MatrixExpr, Add):
         return (all(arg.shape == self.args[0].shape for arg in self.args) and
                 all(arg._check_shape() for arg in self.args))
 
-
 from matmul import MatMul
