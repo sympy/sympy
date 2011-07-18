@@ -225,7 +225,7 @@ class Abs(Function):
     the argument::
 
         >>> type(abs(-1))
-        <type 'int'>
+        <... 'int'>
         >>> type(abs(S.NegativeOne))
         <class 'sympy.core.numbers.One'>
 
