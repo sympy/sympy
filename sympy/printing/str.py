@@ -69,6 +69,8 @@ class StrPrinter(Printer):
         return expr.__class__.__name__ + "(%s)"%", ".join(l)
 
     def _print_BlockMatrix(self, B):
+        if B.mat.shape == (1, 1):
+            self._print(B.mat[0,0])
         return self._print(B.mat)
 
     def _print_Catalan(self, expr):

@@ -4,7 +4,7 @@ from matadd import MatAdd
 from matpow import MatPow
 from transpose import Transpose
 from matrices import Matrix, eye
-from sympy import Tuple, Basic
+from sympy import Tuple, Basic, sympify
 
 class BlockMatrix(MatrixExpr):
     is_BlockMatrix = True
@@ -12,9 +12,8 @@ class BlockMatrix(MatrixExpr):
         if not isinstance(mat, Matrix):
             mat = Matrix(mat)
         data = Tuple(*mat.mat)
-        if len(data) == 1:
-            return mat[0,0]
-        obj = Basic.__new__(cls, data, Tuple(*mat.shape))
+        shape = Tuple(*sympify(mat.shape))
+        obj = Basic.__new__(cls, data, shape)
         obj.mat = mat
         return obj
 

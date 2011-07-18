@@ -519,6 +519,8 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_BlockMatrix(self, B):
+        if B.mat.shape == (1,1):
+            return self._print(B.mat[0,0])
         return self._print(B.mat)
 
     def _print_Piecewise(self, pexpr):
