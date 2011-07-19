@@ -1,11 +1,12 @@
-from matexpr import MatrixExpr, ZeroMatrix
+from matexpr import MatrixExpr, ZeroMatrix, Identity
 from matmul import MatMul
 from matadd import MatAdd
 from matpow import MatPow
 from transpose import Transpose
 from inverse import Inverse
 from matrices import Matrix, eye
-from sympy import Tuple, Basic, sympify
+from sympy import Tuple, Basic, sympify, FiniteSet
+from sympy.utilities.iterables import iterable
 
 class BlockMatrix(MatrixExpr):
     is_BlockMatrix = True
@@ -96,6 +97,9 @@ class BlockMatrix(MatrixExpr):
                 if i!=j and not self.mat[i,j].is_ZeroMatrix:
                     return False
         return True
+    @property
+    def is_structurally_symmetric(self):
+        return self.rowblocksizes == self.colblocksizes
 
 def BlockDiagMatrix(mats):
     data_matrix = eye(len(mats))
@@ -113,6 +117,12 @@ def BlockDiagMatrix(mats):
     return BlockMatrix(data_matrix)
 
 def block_collapse(expr):
+
+    if expr.__class__ in [tuple, list, set, frozenset]:
+        return expr.__class__([block_collapse(arg) for arg in expr])
+    if expr.__class__ in [Tuple, FiniteSet]:
+        return expr.__class__(*[block_collapse(arg) for arg in expr])
+
     if not expr.is_Matrix or (not expr.is_Add and not expr.is_Mul
             and not expr.is_Transpose and not expr.is_Pow
             and not expr.is_Inverse):
@@ -152,6 +162,15 @@ def block_collapse(expr):
             # Bring all the non-blocks into the block_matrix
             mat = Matrix(1, 1, (block[0,0] + MatAdd(*nonblocks), ))
             return BlockMatrix(mat)
+        # Add identities to the blocks as block identities
+        for i, mat in enumerate(nonblocks):
+            c, M = mat.as_coeff_Mul()
+            if M.is_Identity and block.is_structurally_symmetric:
+                block_id = BlockDiagMatrix(
+                        [c*Identity(k) for k in block.rowblocksizes])
+                nonblocks.pop(i)
+                block = block._blockadd(block_id)
+
 
         return MatAdd(*(nonblocks+[block]))
 
