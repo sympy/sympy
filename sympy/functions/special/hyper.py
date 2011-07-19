@@ -515,6 +515,47 @@ class meijerg(TupleParametersBase):
 
         return res
 
+    def get_period(self):
+        """
+        Return a number P such that G(x*exp(I*P)) == G(x).
+
+        >>> from sympy.functions.special.hyper import meijerg
+        >>> from sympy.abc import z
+        >>> from sympy import pi, S
+
+        >>> meijerg([1], [], [], [], z).get_period()
+        2*pi
+        >>> meijerg([pi], [], [], [], z).get_period()
+        oo
+        >>> meijerg([1, 2], [], [], [], z).get_period()
+        oo
+        >>> meijerg([1,1], [2], [1, S(1)/2, S(1)/3], [1], z).get_period()
+        12*pi
+        """
+        # This follows from slater's theorem.
+        from sympy import oo, ilcm, pi, Min
+        from sympy.simplify.hyperexpand import Mod1
+        def compute(l):
+            # first check that no two differ by an integer
+            for i, b in enumerate(l):
+                if not b.is_Rational:
+                    return oo
+                for j in range(i + 1, len(l)):
+                    if Mod1(b) == Mod1(l[j]):
+                        return oo
+            return reduce(ilcm, (x.q for x in l), 1)
+        beta = compute(self.bm)
+        alpha = compute(self.an)
+        p, q = len(self.ap), len(self.bq)
+        if p == q:
+            if beta == oo or alpha == oo:
+                return oo
+            return 2*pi*ilcm(alpha, beta)
+        elif p < q:
+            return 2*pi*beta
+        else:
+            return 2*pi*alpha
+
     def _eval_expand_func(self, deep=True, **hints):
         from sympy import hyperexpand
         return hyperexpand(self)

@@ -151,3 +151,11 @@ def test_meijerg_derivative():
     assert td(meijerg([x, a + 1], [], [], [a], y), x)
     b = S(3)/2
     assert td(meijerg([a + 2], [b], [b - 3, x], [a], y), x)
+
+def test_meijerg_period():
+    assert meijerg([], [1], [0], [], x).get_period() == 2*pi
+    assert meijerg([1], [], [], [0], x).get_period() == 2*pi
+    assert meijerg([], [], [0], [], x).get_period() == 2*pi # exp(x)
+    assert meijerg([], [], [0], [S(1)/2], x).get_period() == 2*pi # cos(sqrt(x))
+    assert meijerg([], [], [S(1)/2], [0], x).get_period() == 4*pi # sin(sqrt(x))
+    assert meijerg([1, 1], [], [1], [0], x).get_period() == oo # log(1 + x)
