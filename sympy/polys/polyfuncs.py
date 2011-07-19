@@ -11,8 +11,7 @@ from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError)
 
-from sympy.utilities import (
-    numbered_symbols, take)
+from sympy.utilities import numbered_symbols, take
 
 from sympy.core import S, Basic, Add, Mul
 
