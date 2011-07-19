@@ -222,7 +222,6 @@ def doctest(*paths, **kwargs):
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
-                    "sympy/thirdparty/pyglet", # segfaults
                     "doc/src/modules/mpmath", # needs to be fixed upstream
                     "sympy/mpmath", # needs to be fixed upstream
                     "doc/src/modules/plotting.txt", # generates live plots
