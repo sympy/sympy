@@ -5,12 +5,15 @@ import tempfile
 from latex import latex
 
 def preview(expr, output='png', viewer=None, euler=True):
-    """View expression in PNG, DVI, PostScript or PDF form.
+    """View expression or LaTeX markup in PNG, DVI, PostScript or
+       PDF form.
 
-       This will generate LaTeX representation of the given expression
-       and compile it using available TeX distribution. Then it will
-       run appropriate viewer for the given output format or use the
-       user defined one. By default png output is generated.
+       If the expr argument is an expression, it will be exported to
+       LaTeX and then compiled using available the TeX distribution.
+       The first argument, 'expr', may also be a LaTeX string.
+       The function will then run the appropriate viewer for the given
+       output format or use the user defined one. By default png
+       output is generated.
 
        By default pretty Euler fonts are used for typesetting (they
        were used to typeset the well known "Concrete Mathematics"
@@ -104,10 +107,16 @@ def preview(expr, output='png', viewer=None, euler=True):
                      \end{document}
                  """
 
+    if isinstance(expr, str):
+        latex_string = expr
+    else:
+        latex_string = latex(expr, mode='inline')  
+
+
     tmp = tempfile.mktemp()
 
     tex = open(tmp + ".tex", "w")
-    tex.write(format % latex(expr, mode='inline'))
+    tex.write(format % latex_string)
     tex.close()
 
     cwd = os.getcwd()
