@@ -553,7 +553,7 @@ class Formula(object):
             raise TypeError('Cannot instantiate other number of parameters')
 
         from sympy import solve
-        from itertools import permutations, product
+        from sympy.core.compatibility import permutations, product
         res = []
         our_params = list(self.indices.ap) + list(self.indices.bq)
         for na in permutations(ap):
