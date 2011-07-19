@@ -6,7 +6,7 @@ from threading import RLock
 # it is sufficient to import "pyglet" here once
 try:
     from pyglet.gl import *
-except:
+except ImportError:
     raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
 from plot_object import PlotObject
