@@ -34,13 +34,13 @@ from basic import Basic
 from singleton import S
 from expr import Expr, AtomicExpr
 from decorators import _sympifyit
-
+from compatibility import iterable,is_sequence
 from cache import cacheit
 from numbers import Rational
+
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.utilities import default_sort_key
-from sympy.core.compatibility import iterable, is_sequence
 from sympy.utilities.iterables import uniq
 
 from sympy import mpmath

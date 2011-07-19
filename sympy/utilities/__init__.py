@@ -1,6 +1,6 @@
 """Some utilities that may help.
 """
-from iterables import (iff, flatten, group, take, subsets,
+from iterables import (flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, dict_merge,
     postorder_traversal, preorder_traversal, interactive_traversal,
     prefixes, postfixes, sift, topological_sort)

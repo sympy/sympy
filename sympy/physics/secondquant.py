@@ -10,7 +10,6 @@ from sympy import (
     zeros, Pow, I, S, Symbol, Tuple, Dummy
 )
 
-from sympy.utilities import iff
 from sympy.core.sympify import sympify
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy
@@ -1347,7 +1346,7 @@ class FermionState(FockState):
         return len([ i for i in list if  cls._only_below_fermi(i)])
 
     def _negate_holes(self,list):
-        return tuple([ iff(i<=self.fermi_level, -i, i) for i in list ])
+        return tuple([ -i if i<=self.fermi_level else i for i in list ])
 
     def __repr__(self):
         if self.fermi_level:

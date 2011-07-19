@@ -1,36 +1,12 @@
 """
-Reimplementations of constructs introduced in Python 2.5 for compatibility with
-Python 2.4
+Reimplementations of constructs introduced in later versions of Python than we
+support.
 """
-#XXX: When we drop Python 2.4 support, replace minkey, iff, all, and any
-# with their builtin equivalents.
-def iff(condition, result1, result2):
-    """
-    Return result1 if condition else result2
 
-    This is a replacement for the conditional if statement that is part of
-    python 2.5+. If the condition must should not be called unless the
-    condition is met, then wrap the result in a lambda; it will be called
-    to return the result:
-
-    >>> from sympy import iff
-    >>> x = 0.5
-    >>> iff(x == 0, x, lambda: 1/x)
-    2.0
-    >>> x = 0
-    >>> iff(x == 0, x, lambda: 1/x)
-    0
-    """
-
-    if condition:
-        rv = result1
-    else:
-        rv = result2
-    # XXX this is fragile; is there a better way to tell if it's a lambda?
-    if '<lambda>' in str(rv):
-        return rv()
-    else:
-        return rv
+# These are in here because telling if something is an iterable just by calling
+# hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
+# particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
+# I think putting them here also makes it easier to use them in the core.
 
 def iterable(i, exclude=(basestring, dict)):
     """
