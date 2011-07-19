@@ -762,19 +762,32 @@ class LatexPrinter(Printer):
         tex = self._print(terms[0])
 
         for term in terms[1:]:
-            coeff = term.as_coeff_mul()[0]
+            coeff, M = term.as_coeff_Mul()
 
             if coeff >= 0:
                 tex += " +"
+            else:
+                tex += " -"
 
-            tex += " " + self._print(term)
+            tex += " " + self._print(M)
 
         return tex
 
     def _print_MatMul(self, expr):
-        tex = ""
+        coeff, tail = expr.as_coeff_Mul()
+
+        if not coeff.is_negative:
+            tex = ""
+        else:
+            coeff = -coeff
+            tex = "- "
+
+        if not tail.is_Mul:
+            return tex + self._print(tail)
+
         separator = " "
-        args = expr.args
+
+        args = tail.args
         for term in args:
             pretty = self._print(term)
 
