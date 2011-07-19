@@ -847,7 +847,7 @@ class Polygon(GeometryEntity):
         if isinstance(o, Polygon):
             return self == o
         elif isinstance(o, Segment):
-            return o in self.sides
+            return any(o in s for s in self.sides)
         elif isinstance(o, Point):
             if o in self.vertices:
                 return True
