@@ -110,7 +110,7 @@ def preview(expr, output='png', viewer=None, euler=True):
     if isinstance(expr, str):
         latex_string = expr
     else:
-        latex_string = latex(expr, mode='inline')  
+        latex_string = latex(expr, mode='inline')
 
 
     tmp = tempfile.mktemp()
