@@ -101,6 +101,14 @@ class MatrixExpr(Expr):
     def eval_inverse(self):
         raise NotImplementedError()
 
+    @property
+    def T(self):
+        return Transpose(self)
+
+    @property
+    def I(self):
+        return Inverse(self)
+
 
 class MatrixSymbol(MatrixExpr, Symbol):
     is_commutative = False

@@ -747,6 +747,60 @@ class LatexPrinter(Printer):
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
 
+    def _print_BlockMatrix(self, expr):
+        return self._print(expr.mat)
+
+    def _print_Transpose(self, expr):
+        mat = expr.arg
+        if mat.is_Add or mat.is_Mul:
+            return r"\left(%s\right)^T"%self._print(mat)
+        else:
+            return "%s^T"%self._print(mat)
+
+    def _print_MatAdd(self, expr):
+        terms = expr.args
+        tex = self._print(terms[0])
+
+        for term in terms[1:]:
+            coeff = term.as_coeff_mul()[0]
+
+            if coeff >= 0:
+                tex += " +"
+
+            tex += " " + self._print(term)
+
+        return tex
+
+    def _print_MatMul(self, expr):
+        tex = ""
+        separator = " "
+        args = expr.args
+        for term in args:
+            pretty = self._print(term)
+
+            if term.is_Add:
+                term_tex = (r"\left(%s\right)" % pretty)
+            else:
+                term_tex = str(pretty)
+
+            tex += separator
+            tex += term_tex
+
+        return tex[1:]
+
+    def _print_MatPow(self, expr):
+        base, exp = expr.base, expr.exp
+        if base.is_Add or base.is_Mul:
+            return r"\left(%s\right)^{%s}"%(self._print(base), self._print(exp))
+        else:
+            return "%s^{%s}"%(self._print(base), self._print(exp))
+
+    def _print_ZeroMatrix(self, Z):
+        return r"\bold{0}"
+
+    def _print_Identity(self, I):
+        return r"\mathbb{I}"
+
     def _print_tuple(self, expr):
         return r"\begin{pmatrix}%s\end{pmatrix}" % \
             r", & ".join([ self._print(i) for i in expr ])
