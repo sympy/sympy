@@ -154,6 +154,10 @@ def test_abs_properties():
     assert Abs(q).is_positive == True
     assert Abs(q).is_zero == False
 
+def test_abs():
+    a = Symbol('a', positive=True)
+    assert abs(I*(1 + a)**2) == (1 + a)**2
+
 def test_arg():
     assert arg(0) == nan
     assert arg(1) == 0

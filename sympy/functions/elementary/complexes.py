@@ -299,7 +299,8 @@ class Abs(Function):
         if coeff is not S.One:
             return cls(coeff) * cls(Mul(*terms))
         if arg.is_real is False:
-            return sqrt( (arg * arg.conjugate()).expand() )
+            from sympy import expand_mul
+            return sqrt( expand_mul(arg * arg.conjugate()) )
         if arg.is_Pow:
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:
