@@ -1,4 +1,9 @@
-"""Operators and states for 1D cartesian position and momentum."""
+"""Operators and states for 1D cartesian position and momentum.
+
+TODO:
+1) Add 3D classes to mappings in operatorset.py
+
+"""
 
 from sympy import I, S, sqrt, pi
 from sympy import exp
@@ -6,7 +11,7 @@ from sympy import Interval, DiracDelta
 from sympy import Symbol
 
 from sympy.physics.quantum.operator import HermitianOperator, DifferentialOperator
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.state import Ket, Bra, State
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
 
@@ -20,8 +25,15 @@ __all__ = [
     'XKet',
     'XBra',
     'PxKet',
-    'PxBra'
+    'PxBra',
+    'PositionState3D',
+    'PositionKet3D',
+    'PositionBra3D'
 ]
+
+#-------------------------------------------------------------------------
+# Position operators
+#-------------------------------------------------------------------------
 
 class XOp(HermitianOperator):
     """1D cartesian position operator."""
@@ -40,6 +52,9 @@ class XOp(HermitianOperator):
     def _apply_operator_XKet(self, ket):
         return ket.position*ket
 
+    def _apply_operator_PositionKet3D(self, ket):
+        return ket.position_x*ket
+
     def _represent_PxKet(self, basis, **options):
         index = options.pop("index", 1)
 
@@ -51,6 +66,37 @@ class XOp(HermitianOperator):
 
         return I*hbar*(d*delta)
 
+class YOp(HermitianOperator):
+    """ Y cartesian coordinate operator (for 2D or 3D systems) """
+
+    @classmethod
+    def default_args(self):
+        return ("Y",)
+
+    @classmethod
+    def _eval_hilbert_space(self, args):
+        return L2(Interval(S.NegativeInfinity, S.Infinity))
+
+    def _apply_operator_PositionKet3D(self, ket):
+        return ket.position_y*ket
+
+class ZOp(HermitianOperator):
+    """ Z cartesian coordinate operator (for 3D systems) """
+
+    @classmethod
+    def default_args(self):
+        return ("Z",)
+
+    @classmethod
+    def _eval_hilbert_space(self, args):
+        return L2(Interval(S.NegativeInfinity, S.Infinity))
+
+    def _apply_operator_PositionKet3D(self, ket):
+        return ket.position_z*ket
+
+#-------------------------------------------------------------------------
+# Momentum operators
+#-------------------------------------------------------------------------
 
 class PxOp(HermitianOperator):
     """1D cartesian momentum operator."""
@@ -78,18 +124,24 @@ class PxOp(HermitianOperator):
         return -I*hbar*(d*delta)
 
 X = XOp('X')
+Y = YOp('Y')
+Z = ZOp('Z')
 Px = PxOp('Px')
 
+#-------------------------------------------------------------------------
+# Position eigenstates
+#-------------------------------------------------------------------------
 
 class XKet(Ket):
     """1D cartesian position eigenket."""
 
     @classmethod
     def _operators_to_state(self, op, **options):
-        return self.__new__(self, str(op.label[0]).lower(), **options)
+        return self.__new__(self, *_lowercase_labels(op.label), **options)
 
     def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, str(self.label[0]).upper(), **options)
+        return op_class.__new__(op_class, \
+                                *_uppercase_labels(self.label), **options)
 
     @classmethod
     def default_args(self):
@@ -129,17 +181,71 @@ class XBra(Bra):
         """The position of the state."""
         return self.label[0]
 
+class PositionState3D(State):
+    """ Base class for 3D cartesian position eigenstates """
+
+    @classmethod
+    def _operators_to_state(self, op, **options):
+        return self.__new__(self, *_lowercase_labels(op.label), **options)
+
+    def _state_to_operators(self, op_class, **options):
+        return op_class.__new__(op_class, \
+                                *_uppercase_labels(self.label), **options)
+
+    @classmethod
+    def default_args(self):
+        return ("x", "y", "z")
+
+    @property
+    def position_x(self):
+        """ The x coordinate of the state """
+        return self.label[0]
+
+    @property
+    def position_y(self):
+        """ The y coordinate of the state """
+        return self.label[1]
+
+    @property
+    def position_z(self):
+        """ The z coordinate of the state """
+        return self.label[2]
+
+class PositionKet3D(Ket, PositionState3D):
+    """ 3D cartesian position eigenket """
+
+    def _eval_innerproduct_PositionBra3D(self, bra, **options):
+        x_diff = self.position_x - bra.position_x
+        y_diff = self.position_y - bra.position_y
+        z_diff = self.position_z - bra.position_z
+
+        return DiracDelta(x_diff)*DiracDelta(y_diff)*DiracDelta(z_diff)
+
+    @classmethod
+    def dual_class(self):
+        return PositionBra3D
+
+class PositionBra3D(Bra, PositionState3D):
+    """ 3D cartesian position eigenbra """
+
+    @classmethod
+    def dual_class(self):
+        return PositionKet3D
+
+#-------------------------------------------------------------------------
+# Momentum eigenstates
+#-------------------------------------------------------------------------
+
 class PxKet(Ket):
     """1D cartesian momentum eigenket."""
 
     @classmethod
     def _operators_to_state(self, op, **options):
-        return self.__new__(self, str(op.label[0]).lower(), **options)
+        return self.__new__(self, *_lowercase_labels(op.label), **options)
 
     def _state_to_operators(self, op_class, **options):
-        lab = str(self.label[0])
-        lab = lab[0].upper() + lab[1:]
-        return op_class.__new__(op_class, lab, **options)
+        return op_class.__new__(op_class, \
+                                *_uppercase_labels(self.label), **options)
 
     @classmethod
     def default_args(self):
@@ -179,6 +285,10 @@ class PxBra(Bra):
         """The momentum of the state."""
         return self.label[0]
 
+#-------------------------------------------------------------------------
+# Global helper functions
+#-------------------------------------------------------------------------
+
 def _enumerate_continuous_1D(*args, **options):
     state = args[0]
     num_states = args[1]
@@ -196,3 +306,13 @@ def _enumerate_continuous_1D(*args, **options):
         enum_states[i] = state_class(str(label) + "_" + str(ind), **options)
 
     return enum_states
+
+def _lowercase_labels(label):
+    new_args = [str(arg).lower() for arg in label]
+
+    return new_args
+
+def _uppercase_labels(label):
+    new_args = [str(arg)[0].upper() + str(arg)[1:] for arg in label]
+
+    return new_args
