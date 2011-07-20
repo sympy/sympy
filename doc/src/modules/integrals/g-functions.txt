@@ -1,3 +1,153 @@
+Computing Integrals using Meijer G-Functions
+********************************************
+
+This text aims do describe in some detail the steps (and subtleties) involved
+in using Meijer G-functions for computing definite and indefinite integrals.
+We shall ignore proofs completely.
+
+Overview
+========
+
+The algorithm to compute `\int f(x) \mathrm{d}x` or
+`\int_0^\infty f(x) \mathrm{d}x` generally consists of three steps:
+
+1. Rewrite the integrand using Meijer G-functions (one or sometimes two).
+2. Apply an integration theorem, to get the answer (usually expressed as another
+   G-function).
+3. Expand the result in named special functions.
+
+Step (3) is implemented in the function hyperexpand (q.v.). Steps (1) and (2)
+are described below. Morever, G-functions are usually branched. Thus our treatment
+of branched functions is described first.
+
+Some other integrals (e.g. `\int_{-\infty}^\infty`) can also be computed by first
+recasting them into one of the above forms. There is a lot of choice involved
+here, and the algorithm is heuristic at best.
+
+Polar Numbers and Branched Functions
+====================================
+
+Both Meijer G-Functions and Hypergeometric functions are typically branched
+(possible branchpoints being `0`, `\pm 1`, `\infty`). This is not very important
+when e.g. expanding a single hypergeometric function into named special functions,
+since sorting out the branches can be left to the human user. However this
+algorithm manipulates and transforms G-functions, and to do this correctly it needs
+at least some crude understanding of the branchings involved.
+
+To begin, we consider the set
+`\mathcal{S} = \{(r, \theta) : r > 0, \theta \in \mathbb{R}\}`. We have a map
+`p: \mathcal{S}: \rightarrow \mathbb{C}-\{0\}, (r, \theta) \mapsto r e^{i \theta}`.
+Decreeing this to be a local biholomorphism gives `\mathcal{S}` both a topology
+and a complex structure. This Riemann Surface is usually referred to as the
+Riemann Surface of the logarithm, for the following reason:
+We can define maps
+`Exp: \mathbb{C} \rightarrow \mathcal{S}, Exp(x + i y) = (exp(x), y)` and
+`Log: \mathcal{S} \rightarrow \mathbb{C}, (e^x, y) \mapsto x + iy`.
+These can be shown to be both holomorphic, and are indeed mutual inverses.
+
+We also sometimes formally attach a point "zero" to `\mathcal{S}` and denote the
+resulting object `\mathcal{S}_0`. Notably there is no complex structure
+defined near `0`. A fundamental system of neighbourhoods is given by
+`\{Exp(z) : Re(z) < k\}`, this at least defines a topology. Elements of
+`\mathcal{S}_0` shall be called polar numbers.
+We further define functions
+`Arg: \mathcal{S} \rightarrow \mathbb{R}, (r, \theta) \mapsto \theta` and
+`|.|: \mathcal{S}_0 \rightarrow \mathbb{R}_{>0}, (r, \theta) \mapsto r`.
+These have evident meaning and are both continuous everywhere.
+
+Using these maps many operations can be extended from `\mathbb{C}` to
+`\mathcal{S}`. We define `Exp(a) Exp(b) = Exp(a + b)` for `a, b \in \mathbb{C}`,
+also for `a \in \mathcal{S}` and `b \in \mathbb{C}` we define
+`a^b = Exp(b Log(a))`.
+It can be checked easily that using these definitions, many algebraic properties
+holding for positive reals (e.g. `(ab)^c = a^c b^c`) which hold in `\mathbb{C}`
+only for some numbers (because of branch cuts) hold indeed for all polar numbers.
+
+As one peculiarity it should be mentioned that addition of polar numbers is not
+usually defined. However, formal sums of polar numbers can be used to express
+branching behaviour. For example, consider the functions `F(z) = \sqrt{1 + z}`
+and `G(a, b) = \sqrt{a + b}`, where `a, b, z` are polar numbers.
+The general rule is that functions of a single polar variable are defined in
+such a way that they are continuous on circles, and agree with the usual
+definition for positive reals. Thus if `S(z)` denotes the standard branch of
+the square root function on `\mathbb{C}`, we are forced to define
+
+.. math:: F(z) = \begin{cases}
+    S(p(z)) &: |z| < 1 \\
+    S(p(z)) &: -\pi < Arg(z) + 4\pi n \le \pi \text{ for some } n \in \mathbb{Z} \\
+    -S(p(z)) &: \text{else}
+   \end{cases}.
+
+(We are omitting `|z| = 1` here, this does not matter for integration.)
+Finally we define `G(a, b) = \sqrt{a}F(b/a)`.
+
+Table Lookups and Inverse Mellin Transforms
+===========================================
+
+Suppose we are given an integrand `f(x)` and are trying to rewrite it as a
+single G-function. To do this, we first split `f(x)` into the form `x^s g(x)`
+(where `g(x)` is supposed to be simpler than `f(x)`). This is because multiplicative
+powers can be absorbed into the G-function later. This splitting is done by
+``_split_mul(f, x)``. Then we assemble a tuple of functions that occur in
+`f` (e.g. if `f(x) = e^x \cos{x}`, we would assemble the tuple `(\cos, \exp)`).
+This is done by the function ``_mytype(f, x)``. Next we index a lookup table
+(created using ``_create_lookup_table()``) with this tuple. This (hopefully)
+yields a list of Meijer G-function formulae involving these functions, we then
+pattern-match all of them. If one fits, we were successful, otherwise not and we
+have to try something else.
+
+Suppose now we want to rewrite as a product of two G-functions. To do this,
+we (try to) find all inequivalent ways of splitting `f(x)` into a product
+`f_1(x) f_2(x)`. 
+We could try these splittings in any order, but it is often a good idea to
+minimise (a) the number of powers occuring in `f_i(x)` and (b) the number of
+different functions occuring in `f_i(x)`. Thus given e.g.
+`f(x) = \sin{x}\, e^{x} \sin{2x}` we should try `f_1(x) = \sin{x}\, \sin{2x}`,
+`f_2(x) = e^{x}` first.
+All of this is done by the function ``_mul_as_two_parts(f)``.
+
+Finally, we can try a recursive Mellin transform technique. Since the Meijer
+G-function is defined essentially as a certain inverse mellin transform,
+if we want to write a function `f(x)` as a G-function, we can compute its mellin
+transform `F(s)`. If `F(s)` is in the right form, the G-function expression
+can be read off. This technique generalises many standard rewritings, e.g.
+`e^{ax} e^{bx} = e^{(a + b) x}`.
+
+One twist is that some functions don't have mellin transforms, even though they
+can be written as G-functions. This is true for example for `f(x) = e^x \sin{x}`
+(the function grows too rapidly to have a mellin transform). However if the function
+is recognised to be analytic, then we can try to compute the mellin-transform of
+`f(ax)` for a parameter `a`, and deduce the G-function expression by analytic
+continuation. (Checking for analyticity is easy. Since we can only deal with a
+certain subset of functions anyway, we only have to filter out those which are
+not analyitc.)
+
+The function ``_rewrite_single`` does the table lookup and recursive mellin
+transform. The functions ``_rewrite1`` and ``_rewrite2`` respectively use
+above-mentioned helpers and ``_rewrite_single`` to rewrite their argument as
+respectively one or two G-functions.
+
+Applying the Integral Theorems
+==============================
+
+If the integrand has been recast into G-functions, evaluating the integral is
+relatively easy. We first do some substitutions to reduce e.g. the exponent
+of the argument of the G-function to unity (see ``_rewrite_saxena_1`` and
+``_rewrite_saxena``, respectively, for one or two G-functions). Next we go through
+a list of conditions under which the integral theorem applies. It can fail for
+basically two reasons: either the integral does not exist, or the manipulations
+in deriving the theorem may not be allowed (for more details, see this [BlogPost]_).
+
+Sometimes this can be remedied by reducing the argument of the G-functions
+involved. For example it is clear that the G-function representing `e^z`
+is satisfies `G(Exp(2 \pi i)z) = G(z)` for all `z \in \mathcal{S}`. The function
+``meijerg.get_period()`` can be used to discover this, and the function
+``principal_branch(z, period)`` in ``functions/elementary/complexes.py`` can
+be used to exploit the information. This is done transparently by the
+integration code.
+
+.. [BlogPost] http://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/
+
 The Inverse Laplace Transform of a G-function
 *********************************************
 
@@ -18,8 +168,6 @@ for positive real `t`. Three questions arise:
 1. When does this integral converge?
 2. How can we compute the integral?
 3. When is our computation valid?
-
-.. [Luke1969] The Special Functions and Their Approximations, Volume 1
 
 
 How to compute the integral
@@ -99,8 +247,8 @@ We must thus investigate
 (This principal value integral is the exact statement used in the Laplace
 inversion theorem.) We write `z = c + i \tau`. Then
 `arg(z) \to \pm \frac{\pi}{2}`, and so `e^{zt} \sim e^{it \tau}` (where `\sim`
-shall always mean ``asymptotically equivalent up to a positive real
-multiplicative constant''). Also
+shall always mean "asymptotically equivalent up to a positive real
+multiplicative constant"). Also
 `z^{x + iy} \sim |\tau|^x e^{i y \log{|\tau|}} e^{\pm x i \frac{\pi}{2}}.`
 
 Set `\omega_{\pm} = b e^{\pm i Re(c) \frac{\pi}{2}}`. We have three cases:
@@ -112,3 +260,17 @@ Set `\omega_{\pm} = b e^{\pm i Re(c) \frac{\pi}{2}}`. We have three cases:
 3. `b \ne 0`, `Im(c) = 0`, `Re(c) > 0`, `Re(\omega_{\pm}) \le 0`, and at least
    one of `Re(\omega_{\pm}) = 0`.
    Here the same condition as in (1) applies.
+
+Implemented G-Function Formulae
+*******************************
+
+An important part of the algorithm is a table expressing various functions
+as Meijer G-functions. This is essentially a table of Mellin Transforms in
+disguise. The following automatically generated table shows the formulae
+currently implemented in SymPy. An entry "generated" means that the
+corresponding G-function has a variable number of parameters.
+This table is intended to shrink in future, when the algorithm's capabilities
+of deriving new formulae improve. Of course it has to grow whenever a new class
+of special functions is to be dealt with.
+
+.. automodule:: sympy.integrals.meijerint_doc
