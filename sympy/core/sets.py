@@ -360,8 +360,8 @@ class ProductSet(Set):
 
     def __iter__(self):
         if self.is_iterable:
-            import itertools
-            return itertools.product(*self.sets)
+            from sympy.core.compatibility import product
+            return product(*self.sets)
         else:
             raise TypeError("Not all constituent sets are iterable")
 
