@@ -1393,6 +1393,79 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+def test_pretty_lambda():
+    expr = Lambda(x, x)
+    ascii_str = \
+"""\
+Lambda(x, x)\
+"""
+    ucode_str = \
+u"""\
+Λ(x, x)\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Lambda(x, x**2)
+    ascii_str = \
+"""\
+      /    2\\\n\
+Lambda\\x, x /\
+"""
+    ucode_str = \
+u"""\
+ ⎛    2⎞\n\
+Λ⎝x, x ⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Lambda(x, x**2)**2
+    ascii_str = \
+"""\
+      2       \n\
+       /    2\\\n\
+Lambda \\x, x /\
+"""
+    ucode_str = \
+u"""\
+ 2       \n\
+  ⎛    2⎞\n\
+Λ ⎝x, x ⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Lambda((x, y), x)
+    ascii_str = \
+"""\
+Lambda((x, y), x)\
+"""
+    ucode_str = \
+u"""\
+Λ((x, y), x)\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Lambda((x, y), x**2)
+    ascii_str = \
+"""\
+      /         2\\\n\
+Lambda\\(x, y), x /\
+"""
+    ucode_str = \
+u"""\
+ ⎛         2⎞\n\
+Λ⎝(x, y), x ⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_derivatives():
     # Simple
@@ -2127,18 +2200,20 @@ RootSum⎝x  + 11⋅x - 2⎠\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = RootSum(x**5 + 11*x - 2, Lambda(z, z**2))
-
+    expr = RootSum(x**5 + 11*x - 2, Lambda(z, exp(z)))
     ascii_str = \
 """\
-       / 5                   /    2\\\\\n\
-RootSum\\x  + 11*x - 2, Lambda\\z, z //\
+       / 5                   /    z\\\\\n\
+RootSum\\x  + 11*x - 2, Lambda\\z, e //\
 """
     ucode_str = \
 u"""\
-       ⎛ 5              ⎛    2⎞⎞\n\
-RootSum⎝x  + 11⋅x - 2, Λ⎝z, z ⎠⎠\
+       ⎛ 5              ⎛    z⎞⎞\n\
+RootSum⎝x  + 11⋅x - 2, Λ⎝z, ℯ ⎠⎠\
 """
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_Boolean():
     expr = Not(x, evaluate=False)
