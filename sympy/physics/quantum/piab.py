@@ -38,7 +38,7 @@ class PIABKet(Ket):
     def _eval_hilbert_space(cls, args):
         return L2(Interval(S.NegativeInfinity,S.Infinity))
 
-    @property
+    @classmethod
     def dual_class(self):
         return PIABBra
 
@@ -62,7 +62,7 @@ class PIABBra(Bra):
     def _eval_hilbert_space(cls, label):
         return L2(Interval(S.NegativeInfinity,S.Infinity))
 
-    @property
+    @classmethod
     def dual_class(self):
         return PIABKet
 

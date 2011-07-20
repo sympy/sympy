@@ -169,7 +169,7 @@ class Qubit(QubitState, Ket):
     """
 
 
-    @property
+    @classmethod
     def dual_class(self):
         return QubitBra
 
@@ -219,7 +219,7 @@ class QubitBra(QubitState, Bra):
     See ``Qubit`` for examples.
 
     """
-    @property
+    @classmethod
     def dual_class(self):
         return Qubit
 
@@ -317,7 +317,7 @@ class IntQubit(IntQubitState, Qubit):
         >>> Qubit(q)
         |101>
     """
-    @property
+    @classmethod
     def dual_class(self):
         return IntQubitBra
 
@@ -325,7 +325,7 @@ class IntQubit(IntQubitState, Qubit):
 class IntQubitBra(IntQubitState, QubitBra):
     """A qubit bra that store integers as binary numbers in qubit values."""
 
-    @property
+    @classmethod
     def dual_class(self):
         return IntQubit
 

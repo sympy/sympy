@@ -115,6 +115,8 @@ class QExpr(Expr):
 
         # First compute args and call Expr.__new__ to create the instance
         args = cls._eval_args(args)
+        if len(args) == 0:
+            args = cls._eval_args(tuple(cls.default_args()))
         inst = Expr.__new__(cls, *args, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
@@ -148,11 +150,23 @@ class QExpr(Expr):
 
         This must be a tuple, rather than a Tuple.
         """
-        return self.args
+        if len(self.args) == 0: # If there is no label specified, return the default
+            return self._eval_args(list(self.default_args()))
+        else:
+            return self.args
 
     @property
     def is_symbolic(self):
         return True
+
+    @classmethod
+    def default_args(self):
+        """If no arguments are specified, then this will return a default set of arguments to be run through the constructor.
+
+        NOTE: Any classes that override this MUST return a tuple of arguments.
+        Should be overidden by subclasses to specify the default arguments for kets and operators
+        """
+        raise NotImplementedError("No default arguments for this class!")
 
     #-------------------------------------------------------------------------
     # _eval_* methods
@@ -274,7 +288,7 @@ class QExpr(Expr):
         # than str(). See L1072 of basic.py.
         # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
         else:
             args = self.args
 
@@ -335,15 +349,19 @@ class QExpr(Expr):
 
         # If we get a matrix representation, convert it to the right format.
         format = options.get('format', 'sympy')
-        if format == 'sympy' and not isinstance(result, Matrix):
-            result = to_sympy(result)
-        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
-            result = to_numpy(result)
-        elif format == 'scipy.sparse' and\
-            not isinstance(result, scipy_sparse_matrix):
-            result = to_scipy_sparse(result)
+        result = self._format_represent(result, format)
         return result
 
+    def _format_represent(self, result, format):
+        if format == 'sympy' and not isinstance(result, Matrix):
+            return to_sympy(result)
+        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
+            return to_numpy(result)
+        elif format == 'scipy.sparse' and\
+        not isinstance(result, scipy_sparse_matrix):
+            return to_scipy_sparse(result)
+
+        return result
 
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
