@@ -1,0 +1,92 @@
+============================
+Mechanics: Masses & Inertias
+============================
+
+This document will briefy describe how to represent masses and inertias in
+:mod:`mechanics` and the ``RigidBody`` and ``Particle`` classes.
+
+It is assumed that the reader is familiar with the basics of these topics, such
+as finding the mass center for a system of particles, the inertia tensor, and
+how to manipulate the inertia tensor.
+
+Dyad
+====
+
+In :mod:`mechanics`, dyadics are used to represent inertias [see Kane 1985,
+http://en.wikipedia.org/wiki/Dyadic_product]. The dyadic, or outer, product
+between two vectors returns a new quantity which represents the juxtaposition
+of these two vectors. For example:
+
+.. math::
+  \mathbf{\hat{a_x}} \otimes \mathbf{\hat{a_x}} &= \mathbf{\hat{a_x}}
+  \mathbf{\hat{a_x}}\\
+  \mathbf{\hat{a_x}} \otimes \mathbf{\hat{a_y}} &= \mathbf{\hat{a_x}}
+  \mathbf{\hat{a_y}}\\
+
+Note that the order is significant.
+Some additional properties of the outer product operation are:
+
+.. math::
+  (x \mathbf{v}) \otimes \mathbf{w} &= \mathbf{v} \otimes (x \mathbf{w}) = w
+  (\mathbf{v} \otimes \mathbf{w})\\
+  \mathbf{v} \otimes (\mathbf{w} + \mathbf{u}) &= \mathbf{v} \otimes \mathbf{w}
+  + \mathbf{v} \otimes \mathbf{u}\\
+  (\mathbf{v} + \mathbf{w}) \otimes \mathbf{u} &= \mathbf{v} \otimes \mathbf{u}
+  + \mathbf{w} \otimes \mathbf{u}\\
+
+Just as with a vector, which can be represented as
+:math:`\begin{bmatrix}a\\b\\c\end{bmatrix}` or :math:`a \mathbf{\hat{i}} +
+b \mathbf{\hat{j}} + c \mathbf{\hat{k}}` when dealing with one frame, a dyadic
+could be represented as:
+
+.. math::
+  \begin{bmatrix}
+  a_{11} & a_{12} & a_{13} \\
+  a_{21} & a_{22} & a_{23} \\
+  a_{31} & a_{32} & a_{33} 
+  \end{bmatrix}\\
+  \textnormal{or:}\\
+  a_{11} \mathbf{\hat{a_x}}\mathbf{\hat{a_x}} +
+  a_{12} \mathbf{\hat{a_x}}\mathbf{\hat{a_y}} +
+  a_{13} \mathbf{\hat{a_x}}\mathbf{\hat{a_z}} +
+  a_{21} \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} +
+  a_{22} \mathbf{\hat{a_y}}\mathbf{\hat{a_y}} +
+  a_{23} \mathbf{\hat{a_y}}\mathbf{\hat{a_z}} +
+  a_{31} \mathbf{\hat{a_z}}\mathbf{\hat{a_x}} +
+  a_{32} \mathbf{\hat{a_z}}\mathbf{\hat{a_y}} +
+  a_{33} \mathbf{\hat{a_z}}\mathbf{\hat{a_z}}\\
+
+Just as before with vectors, the later representation makes it possible to have
+the dyadic defined in multiple frames. In fact, the two components of each term
+in the dyadic need not be the same frame; the following is valid:
+
+.. math::
+  \mathbf{\hat{a_x}} \otimes \mathbf{\hat{b_y}} = \mathbf{\hat{a_x}}
+  \mathbf{\hat{b_y}}
+
+Dyadics can also be crossed and dotted with vectors; again, order matters:
+
+  \mathbf{\hat{a_x}}\mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_x}} &=
+  \mathbf{\hat{a_x}}\\
+  \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_x}} &=
+  \mathbf{\hat{a_a}}\\
+  \mathbf{\hat{a_x}}\mathbf{\hat{a_y}} \cdot \mathbf{\hat{a_x}} &= 0\\
+  \mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_x}}\mathbf{\hat{a_x}} &=
+  \mathbf{\hat{a_x}}\\
+  \mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_x}}\mathbf{\hat{a_y}} &=
+  \mathbf{\hat{a_y}}\\
+  \mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} &= 0\\
+  \mathbf{\hat{a_x}} \times \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} &=
+  \mathbf{\hat{a_z}}\mathbf{\hat{a_x}}
+  \mathbf{\hat{a_x}} \times \mathbf{\hat{a_x}}\mathbf{\hat{a_x}} &= 0\\
+  \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} \times \mathbf{\hat{a_z}} &=
+  - \mathbf{\hat{a_y}}\mathbf{\hat{a_y}}\\
+
+One can also take the time derivative of dyadics or express them in different
+frames.
+
+
+
+
+
+
