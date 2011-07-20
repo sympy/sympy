@@ -239,7 +239,7 @@ except AttributeError:
 
 try:
     from itertools import product
-except ImportError:
+except ImportError: # Python 2.5
     def product(*args, **kwds):
         # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
         # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
@@ -252,7 +252,7 @@ except ImportError:
 
 try:
     from itertools import permutations
-except ImportError:
+except ImportError: # Python 2.5
     def permutations(iterable, r=None):
         # permutations('ABCD', 2) --> AB AC AD BA BC BD CA CB CD DA DB DC
         # permutations(range(3)) --> 012 021 102 120 201 210
