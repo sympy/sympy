@@ -143,7 +143,6 @@ def represent(expr, **options):
             #appropriate basis state and try
             #the other methods of representation
             options['replace_none'] = True
-            options['basis'] = get_basis(expr, **options)
 
             if isinstance(expr, (KetBase, BraBase)):
                 try:
@@ -256,19 +255,7 @@ def rep_innerproduct(expr, **options):
     if not isinstance(expr, (KetBase, BraBase)):
         raise TypeError("expr passed is not a Bra or Ket")
 
-    # If the basis is not specified, simply use default states of the
-    # same class as expr
-    basis = options.pop('basis', (_make_default(expr.__class__) \
-                                  if isinstance(expr, KetBase) \
-                                  else _make_default(expr.dual_class())))
-
-    if isinstance(basis, BraBase):
-        basis = basis.dual
-    elif isinstance(basis, Operator):
-        basis = operators_to_state(basis)
-
-        if basis is not None and not isinstance(basis, StateBase):
-            basis = _make_default(basis)
+    basis = get_basis(expr, **options)
 
     if not isinstance(basis, StateBase):
         raise NotImplementedError("Can't form this representation!")
@@ -315,27 +302,18 @@ def rep_expectation(expr, **options):
 
     """
 
-    basis = options.pop('basis', None)
-
     if not "index" in options:
         options["index"] = 1
 
     if not isinstance(expr, Operator):
         raise TypeError("The passed expression is not an operator")
 
-    if basis is None and operators_to_state(expr) is None:
+    basis_state = get_basis(expr, **options)
+
+    if basis_state is None or not isinstance(basis_state, StateBase):
         raise NotImplementedError("Could not get basis kets for this operator")
-    elif basis is None:
-        basis_state = operators_to_state(expr)
-        if basis_state is not None and not isinstance(basis_state, StateBase):
-            basis_state = _make_default(basis_state)
-        basis_kets = enumerate_states(basis_state, options["index"], 2)
-    else:
-        if isinstance(basis, Operator):
-            basis = operators_to_state(basis)
-            if basis is not None and not isinstance(basis, StateBase):
-                basis = _make_default(basis)
-        basis_kets = enumerate_states(basis, options["index"], 2)
+
+    basis_kets = enumerate_states(basis_state, options["index"], 2)
 
     bra = basis_kets[1].dual
     ket = basis_kets[0]
@@ -525,7 +503,7 @@ def enumerate_states(*args, **options):
     ==========
 
     args : list
-        See list of operation mode above for explanation
+        See list of operation modes above for explanation
 
     Examples
     ========
