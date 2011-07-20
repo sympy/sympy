@@ -15,7 +15,10 @@ TODO List:
 """
 
 
-from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
+from sympy.physics.quantum.cartesian import (
+    XOp, YOp, ZOp, XKet, PxOp, PxKet, PositionKet3D
+)
+
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import (
     StateBase, KetBase, BraBase, Ket, Bra
@@ -35,13 +38,13 @@ __all__ = [
 #classes are written! Entries are of the form PxKet : PxOp or
 #something like 3DKet : (ROp, ThetaOp, PhiOp)
 
-# TODO: Update dict with full list of state : operator pairs
-# (including spin)
-
+#frozenset is used so that the reverse mapping can be made
+#(regular sets are not hashable because they are mutable
 state_mapping = { JxKet : frozenset((J2Op, JxOp)),
                   JyKet : frozenset((J2Op, JyOp)),
                   JzKet : frozenset((J2Op, JzOp)),
                   Ket : Operator,
+                  PositionKet3D : frozenset((XOp, YOp, ZOp)),
                   PxKet : PxOp,
                   XKet : XOp }
 
@@ -119,7 +122,7 @@ def operators_to_state(operators, **options):
             #operators...if this fails, return the class
             try:
                 op_instances = [op() for op in ops]
-                ret = _get_state(op_mapping[ops], op_instances, **options)
+                ret = _get_state(op_mapping[ops], set(op_instances), **options)
             except NotImplementedError:
                 ret = op_mapping[ops]
 

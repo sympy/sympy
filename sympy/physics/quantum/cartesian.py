@@ -19,8 +19,12 @@ from sympy.physics.quantum.hilbert import L2
 
 __all__ = [
     'XOp',
+    'YOp',
+    'ZOp',
     'PxOp',
     'X',
+    'Y',
+    'Z',
     'Px',
     'XKet',
     'XBra',
@@ -137,11 +141,11 @@ class XKet(Ket):
 
     @classmethod
     def _operators_to_state(self, op, **options):
-        return self.__new__(self, *_lowercase_labels(op.label), **options)
+        return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
         return op_class.__new__(op_class, \
-                                *_uppercase_labels(self.label), **options)
+                                *_uppercase_labels(self), **options)
 
     @classmethod
     def default_args(self):
@@ -186,11 +190,11 @@ class PositionState3D(State):
 
     @classmethod
     def _operators_to_state(self, op, **options):
-        return self.__new__(self, *_lowercase_labels(op.label), **options)
+        return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
         return op_class.__new__(op_class, \
-                                *_uppercase_labels(self.label), **options)
+                                *_uppercase_labels(self), **options)
 
     @classmethod
     def default_args(self):
@@ -241,11 +245,11 @@ class PxKet(Ket):
 
     @classmethod
     def _operators_to_state(self, op, **options):
-        return self.__new__(self, *_lowercase_labels(op.label), **options)
+        return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
         return op_class.__new__(op_class, \
-                                *_uppercase_labels(self.label), **options)
+                                *_uppercase_labels(self), **options)
 
     @classmethod
     def default_args(self):
@@ -307,12 +311,17 @@ def _enumerate_continuous_1D(*args, **options):
 
     return enum_states
 
-def _lowercase_labels(label):
-    new_args = [str(arg).lower() for arg in label]
+def _lowercase_labels(ops):
+    if not isinstance(ops, set):
+        ops = [ops]
 
-    return new_args
+    return [str(arg.label[0]).lower() for arg in ops]
 
-def _uppercase_labels(label):
-    new_args = [str(arg)[0].upper() + str(arg)[1:] for arg in label]
+def _uppercase_labels(ops):
+    if not isinstance(ops, set):
+        ops = [ops]
+
+    new_args = [str(arg.label[0])[0].upper() + \
+                str(arg.label[0])[1:] for arg in ops]
 
     return new_args
