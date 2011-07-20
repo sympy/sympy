@@ -76,23 +76,25 @@ def add_formulae(formulae):
 
     from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
                        atanh, besseli, gamma, erf, pi, sin, besselj)
+    from sympy import polar_lift, exp_polar
 
     # 0F0
     add((), (), exp(z))
 
     # 1F0
-    add((-a, ), (), (1-z)**a)
+    add((-a, ), (), (1+exp_polar(-I*pi)*z)**a)
 
     # 2F1
     addb((a, a - S.Half), (2*a,),
-         Matrix([2**(2*a-1)*(1 + sqrt(1-z))**(1-2*a),
-                 2**(2*a-1)*(1 + sqrt(1-z))**(-2*a)]),
+         Matrix([2**(2*a-1)*(1 + sqrt(1+exp_polar(-I*pi)*z))**(1-2*a),
+                 2**(2*a-1)*(1 + sqrt(1+exp_polar(-I*pi)*z))**(-2*a)]),
          Matrix([[1, 0]]),
          Matrix([[(a-S.Half)*z/(1-z), (S.Half-a)*z/(1-z)],
                  [a/(1-z), a*(z-2)/(1-z)]]))
-    addb((1, 1), (2,),
-         Matrix([log(1 - z), 1]), Matrix([[-1/z, 0]]),
+    addb((1, 1), (2,), # it is not particularly obvious, but this is the cts. branch
+         Matrix([log(1 + exp_polar(-I*pi)*z), 1]), Matrix([[-1/z, 0]]),
          Matrix([[0, z/(z - 1)], [0, 0]]))
+    # TODO branching
     addb((S.Half, 1), (S('3/2'),),
          Matrix([log((1 + sqrt(z))/(1 - sqrt(z)))/sqrt(z), 1]),
          Matrix([[S(1)/2, 0]]),
@@ -101,6 +103,7 @@ def add_formulae(formulae):
          Matrix([asin(sqrt(z))/sqrt(z), 1/sqrt(1 - z)]),
          Matrix([[1, 0]]),
          Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
+    # TODO branching
     addb((-a, S.Half - a), (S.Half,),
          Matrix([(1 + sqrt(z))**(2*a) + (1 - sqrt(z))**(2*a),
                  sqrt(z)*(1 + sqrt(z))**(2*a-1)
@@ -112,11 +115,13 @@ def add_formulae(formulae):
     # Integrals and Series: More Special Functions, Vol. 3,.
     # Gordon and Breach Science Publisher
     add([a, -a], [S.Half], cos(2*a*asin(sqrt(z))))
+    # TODO branching
     addb([1, 1], [3*S.Half],
          Matrix([asin(sqrt(z))/sqrt(z*(1-z)), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
     # 3F2
+    # TODO branching
     addb([-S.Half, 1, 1], [S.Half, 2],
          Matrix([sqrt(z)*atanh(sqrt(z)), log(1 - z), 1]),
          Matrix([[-S(2)/3, -S(1)/(3*z), S(2)/3]]),
@@ -124,6 +129,7 @@ def add_formulae(formulae):
                  [0, 0, z/(z - 1)],
                  [0, 0, 0]]))
     # actually the formula for 3/2 is much nicer ...
+    # TODO branching
     addb([-S.Half, 1, 1], [2, 2],
          Matrix([sqrt(1 - z), log(sqrt(1 - z)/2 + S.Half), 1]),
          Matrix([[S(4)/9 - 16/(9*z), 4/(3*z), 16/(9*z)]]),
@@ -144,7 +150,7 @@ def add_formulae(formulae):
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
          Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
-                 a/(2*a - 1)*(-z)**(-a)*lowergamma(a, -z), a/(2*a - 1)*exp(z)]),
+                 a/(2*a - 1)*(polar_lift(-1)*z)**(-a)*lowergamma(a, polar_lift(-1)*z), a/(2*a - 1)*exp(z)]),
          Matrix([[1, -1, 0]]),
          Matrix([[-S.Half, 0, 1], [0, -a, 1], [0, 0, z]]))
 
@@ -159,6 +165,7 @@ def add_formulae(formulae):
     x = 4*z**(S(1)/4)
     def fp(a,z): return besseli(a, x) + besselj(a, x)
     def fm(a,z): return besseli(a, x) - besselj(a, x)
+    # TODO branching
     addb([], [S.Half, a, a+S.Half],
          Matrix([fp(2*a - 1, z), fm(2*a, z)*z**(S(1)/4),
                  fm(2*a - 1, z)*sqrt(z), fp(2*a, z)*z**(S(3)/4)])
@@ -764,7 +771,7 @@ class FormulaCollection(object):
         >>> f.lookup_origin(IndexPair((), ())).closed_form
         exp(_z)
         >>> f.lookup_origin(IndexPair([1], ())).closed_form
-        1/(-_z + 1)
+        1/(_z*exp_polar(-I*pi) + 1)
 
         >>> from sympy import S
         >>> f.lookup_origin(IndexPair([S('1/4'), S('3/4 + 4')], [S.Half])).closed_form
@@ -1651,7 +1658,8 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
-    from sympy.simplify import powdenest, simplify
+    from sympy.simplify import powdenest, simplify, polarify
+    z = polarify(z, subs=False)
 
     # TODO
     # The following would be possible:
@@ -1725,7 +1733,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     # This will simpliy things like sqrt(-z**2) to i*z.
     # It would be wrong under certain choices of branch, but all results we
     # return are under an "implicit suitable choice of branch" anyway.
-    return powdenest(r, polar=True)
+    return powdenest(r, polar=True) # This unpolarifies!
 
 def devise_plan_meijer(fro, to, z):
     """
@@ -1908,7 +1916,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         return True
 
     def do_slater(an, bm, ap, bq, z):
-        from sympy import gamma, residue, factorial, rf, expand_func
+        from sympy import gamma, residue, factorial, rf, expand_func, polar_lift
         iq = IndexQuadruple(an, bm, ap, bq)
         _, pbm, pap, _ = iq.compute_buckets()
         if not can_do(pbm, pap):
@@ -1928,9 +1936,11 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 nap = [1 + bh - a for a in list(an) + list(ap)]
                 nbq = [1 + bh - b for b in list(bo) + list(bq)]
 
-                k = S(-1)**(len(ap) - len(bm))
+                k = polar_lift(S(-1)**(len(ap) - len(bm)))
                 harg = k*z
-                premult = (k*t)**bh
+                # NOTE even though k "is" +-1, this has to be t/k instead of
+                #      t*k ... we are using polar numbers for consistency!
+                premult = (t/k)**bh
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
                                    t, premult, bh)
                 if hyp is None:
@@ -1973,9 +1983,9 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
                 # Now the hypergeometric term.
                 au = b_ + lu
-                k = S(-1)**(len(ao) + len(bo) + 1)
+                k = polar_lift(S(-1)**(len(ao) + len(bo) + 1))
                 harg = k*z
-                premult = (k*t)**au
+                premult = (t/k)**au
                 nap = [1 + au - a for a in list(an) + list(ap)] + [1]
                 nbq = [1 + au - b for b in list(bm) + list(bq)]
 

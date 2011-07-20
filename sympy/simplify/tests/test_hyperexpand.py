@@ -6,7 +6,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        devise_plan, make_derivative_operator, Formula,
                        hyperexpand, IndexPair, IndexQuadruple,
                        reduce_order_meijer)
-from sympy import hyper, I, S, meijerg, Piecewise
+from sympy import hyper, I, S, meijerg, Piecewise, exp_polar
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
 from sympy.utilities.randtest import test_numerically as tn
@@ -14,7 +14,14 @@ from sympy.utilities.pytest import XFAIL, skip, slow
 from random import randrange
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi)
+                   gamma, sqrt, pi, erf)
+
+def test_branch_bug():
+    assert hyperexpand(hyper((-S(1)/3, S(1)/2), (S(2)/3, S(3)/2), -z)) == \
+           -z**S('1/3')*lowergamma(exp_polar(I*pi)/3, z)/5 \
+           + sqrt(pi)*erf(sqrt(z))/(5*sqrt(z))
+    assert hyperexpand(meijerg([S(7)/6, 1], [], [S(2)/3], [S(1)/6, 0], z)) == \
+           2*z**S('2/3')*(2*sqrt(pi)*erf(sqrt(z))/sqrt(z) - 2*lowergamma(S(2)/3, z)/z**S('2/3'))*gamma(S(2)/3)/gamma(S(5)/3)
 
 def test_hyperexpand():
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
@@ -72,7 +79,7 @@ def test_hyperexpand_bases():
     assert hyperexpand(hyper([2], [a], z)) == \
   a + z**(-a + 1)*(-a**2 + 3*a + z*(a - 1) - 2)*exp(z)*lowergamma(a - 1, z) - 1
     # TODO [a+1, a-S.Half], [2*a]
-    assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(-z + 1)/z**2
+    assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(exp_polar(-I*pi)*z + 1)/z**2
     assert hyperexpand(hyper([S.Half, 2], [S(3)/2], z)) == \
       -1/(2*z - 2) + log((sqrt(z) + 1)/(-sqrt(z) + 1))/(4*sqrt(z))
     assert hyperexpand(hyper([S(1)/2, S(1)/2], [S(5)/2], z)) == \
@@ -96,7 +103,7 @@ def test_hyperexpand_parametric():
     assert hyperexpand(hyper([a, S(1)/2 + a], [S(1)/2], z)) \
         == (1 + sqrt(z))**(-2*a)/2 + (1 - sqrt(z))**(-2*a)/2
     assert hyperexpand(hyper([a, -S(1)/2 + a], [2*a], z)) \
-        == 2**(2*a - 1)*(sqrt(-z + 1) + 1)**(-2*a + 1)
+        == 2**(2*a - 1)*((exp_polar(-I*pi)*z + 1)**(S(1)/2) + 1)**(-2*a + 1)
 
 def test_shifted_sum():
     from sympy import simplify
@@ -120,21 +127,24 @@ def test_formulae():
         for n, sym in enumerate(formula.symbols):
             rep[sym] = randcplx(n)
 
-        #print h, closed_form
+        # NOTE hyperexpand returns truly branched functions. We know we are
+        #      on the main sheet, but numerical evaluation can still go wrong
+        #      (e.g. if exp_polar cannot be evalf'd).
+        #      Just replace all exp_polar by exp, this usually works.
 
         # first test if the closed-form is actually correct
         h = h.subs(rep)
         closed_form = formula.closed_form.subs(rep)
         z = formula.z
-        assert tn(h, closed_form, z)
+        assert tn(h, closed_form.replace(exp_polar, exp), z)
 
         # now test the computed matrix
         cl = (formula.C * formula.B)[0].subs(rep)
-        assert tn(closed_form, cl, z)
+        assert tn(closed_form.replace(exp_polar, exp), cl.replace(exp_polar, exp), z)
         deriv1 = z*formula.B.diff(z)
         deriv2 = formula.M * formula.B
         for d1, d2 in zip(deriv1, deriv2):
-            assert tn(d1.subs(rep), d2.subs(rep), z)
+            assert tn(d1.subs(rep).replace(exp_polar, exp), d2.subs(rep).replace(exp_polar, exp), z)
 
 def test_meijerg_formulae():
     from sympy.simplify.hyperexpand import MeijerFormulaCollection
@@ -272,9 +282,17 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
     (at random values) and returns False if the test fails.
     Else it returns True.
     """
+    from sympy import unpolarify, expand
     r = hyperexpand(meijerg(a1, a2, b1, b2, z))
     if r.has(meijerg):
         return False
+    # NOTE hyperexpand() returns a truly branched function, whereas numerical
+    #      evaluation only works on the main branch. Since we are evaluating on
+    #      the main branch, this should not be a problem, but expressions like
+    #      exp_polar(I*pi/2*x)**a are evaluated incorrectly. We thus have to get
+    #      rid of them. The expand heuristically does this...
+    r = unpolarify(expand(r, force=True, power_base=True, power_exp=False,
+                          mul=False, log=False, multinomial=False, basic=False))
 
     if not numeric:
         return True

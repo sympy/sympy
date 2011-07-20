@@ -145,7 +145,7 @@ class hyper(TupleParametersBase):
 
     >>> from sympy.abc import a
     >>> hyperexpand(hyper([-a], [], x))
-    (-x + 1)**a
+    (x*exp_polar(-I*pi) + 1)**a
 
     See Also
     ========
@@ -370,7 +370,7 @@ class meijerg(TupleParametersBase):
     >>> from sympy import hyperexpand
     >>> from sympy.abc import a, b, c
     >>> hyperexpand(meijerg([a], [], [c], [b], x), allow_hyper=True)
-    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,), (-b + c + 1,), -x)/gamma(-b + c + 1)
+    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,), (-b + c + 1,), x*exp_polar(I*pi))/gamma(-b + c + 1)
 
     Thus the Meijer G-function also subsumes many named functions as special
     cases. You can use expand_func or hyperexpand to (try to) rewrite a
