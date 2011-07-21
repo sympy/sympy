@@ -23,12 +23,18 @@ from sympy.external import import_module
 
 sage = import_module('sage.all', __import__kwargs={'fromlist':['all']})
 if not sage:
-    #py.test will not execute any tests now
+    #bin/test will not execute any tests now
     disabled = True
 
 if sys.version_info[0] == 3:
     # Sage does not support Python 3 currently
     disabled = True
+
+def setup_module(module):
+    """py.test support"""
+    if getattr(module, 'disabled', False):
+        import pytest
+        pytest.skip("Sage isn't available.")
 
 import sympy
 
