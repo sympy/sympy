@@ -4,7 +4,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
     Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan,
     cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
-    FallingFactorial)
+    FallingFactorial, polylog, lerchphi)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -155,6 +155,10 @@ def test_latex_functions():
     assert latex(zeta(x, y)**2) == r"\zeta^{2}\left(x, y\right)"
     assert latex(dirichlet_eta(x)) == r"\eta\left(x\right)"
     assert latex(dirichlet_eta(x)**2) == r"\eta^{2}\left(x\right)"
+    assert latex(polylog(x, y)) == r"\operatorname{Li}_{x}\left(y\right)"
+    assert latex(polylog(x, y)**2) == r"\operatorname{Li}_{x}^{2}\left(y\right)"
+    assert latex(lerchphi(x, y, n)) == r"\Phi\left(x, y, n\right)"
+    assert latex(lerchphi(x, y, n)**2) == r"\Phi^{2}\left(x, y, n\right)"
 
 def test_hyper_printing():
     from sympy import pi, Tuple

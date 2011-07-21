@@ -1,9 +1,13 @@
-from sympy import Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log, zoo
+from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
+                   zoo, expand_func, polylog, lerchphi)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, test_numerically as tn)
+from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
 a = Symbol('a')
+z = Symbol('z')
+s = Symbol('s')
 
 def test_zeta_eval():
 
@@ -68,9 +72,51 @@ def test_rewriting():
     assert tn(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
     assert tn(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
 
+    assert zeta(x, a).rewrite(lerchphi) == lerchphi(1, x, a)
+    assert polylog(s, z).rewrite(lerchphi) == lerchphi(z, s, 1)*z
+
 def test_derivatives():
     from sympy import Derivative
     assert zeta(x, a).diff(x) == Derivative(zeta(x, a), x)
     assert zeta(x, a).diff(a) == -x*zeta(x + 1, a)
+    assert lerchphi(z, s, a).diff(z) == (lerchphi(z, s-1, a) - a*lerchphi(z, s, a))/z
+    assert lerchphi(z, s, a).diff(a) == -s*lerchphi(z, s+1, a)
+    assert polylog(s, z).diff(z) == polylog(s - 1, z)/z
+
     b = randcplx()
+    c = randcplx()
     assert td(zeta(b, x), x)
+    assert td(polylog(b, z), z)
+    assert td(lerchphi(c, b, x), x)
+    assert td(lerchphi(x, b, c), x)
+
+def myexpand(func, target):
+    expanded = expand_func(func)
+    if target is not None and expanded != target:
+        return False
+
+    subs = {}
+    for a in func.free_symbols:
+        subs[a] = randcplx()
+
+    return abs(func.subs(subs).n() - expanded.subs(subs)).n() < 1e-10
+
+def test_polylog_expansion():
+    from sympy import factor, log
+    assert polylog(s, 0) == 0
+    assert polylog(s, 1) == zeta(s)
+    assert polylog(s, -1) == dirichlet_eta(s)
+
+    assert myexpand(polylog(1, z), -log(1 - z))
+    assert myexpand(polylog(0, z), z/(1 - z))
+    assert myexpand(polylog(-1, z), z**2/(1 - z)**2 + z/(1 - z))
+    assert myexpand(polylog(-5, z), None)
+
+@XFAIL
+def test_lerchphi_expansion_fail():
+    # XXX mpmath problem
+    assert myexpand(lerchphi(1, s, a), zeta(s, a))
+
+def test_lerchphi_expansion():
+    assert myexpand(lerchphi(z, s, 1), polylog(s, z)/z)
+    # TODO more

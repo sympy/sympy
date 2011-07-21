@@ -515,6 +515,8 @@ Riemann Zeta and Related Functions
 
 .. autoclass:: zeta
 .. autoclass:: dirichlet_eta
+.. autoclass:: polylog
+.. autoclass:: lerchphi
 
 Hypergeometric Functions
 ------------------------

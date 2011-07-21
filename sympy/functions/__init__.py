@@ -32,7 +32,7 @@ from elementary.piecewise import Piecewise, piecewise_fold
 from special.error_functions import erf
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, \
          loggamma, digamma, trigamma, beta
-from special.zeta_functions import dirichlet_eta, zeta
+from special.zeta_functions import dirichlet_eta, zeta, lerchphi, polylog
 from special.spherical_harmonics import Ylm, Zlm
 from special.tensor_functions import Eijk, LeviCivita, KroneckerDelta
 from special.delta_functions import DiracDelta, Heaviside

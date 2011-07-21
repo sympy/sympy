@@ -730,6 +730,19 @@ class LatexPrinter(Printer):
             return r"\zeta^{%s}%s" % (self._print(exp), tex)
         return r"\zeta%s" % tex
 
+    def _print_lerchphi(self, expr, exp=None):
+        tex = r"\left(%s, %s, %s\right)" % tuple(map(self._print, expr.args))
+        if exp is None:
+            return r"\Phi%s" % tex
+        return r"\Phi^{%s}%s" % (self._print(exp), tex)
+
+    def _print_polylog(self, expr, exp=None):
+        s, z = map(self._print, expr.args)
+        tex = r"\left(%s\right)" % z
+        if exp is None:
+            return r"\operatorname{Li}_{%s}%s" % (s, tex)
+        return r"\operatorname{Li}_{%s}^{%s}%s" % (s, self._print(exp), tex)
+
     def _print_Rational(self, expr):
         if expr.q != 1:
             sign = ""
