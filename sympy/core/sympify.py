@@ -13,7 +13,9 @@ class SympifyError(ValueError):
         if self.base_exc is None:
             return "SympifyError: %r" % (self.expr,)
 
-        return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
+        return ("Sympify of expression '%s' failed, because of exception being "
+            "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
+            str(self.base_exc)))
 
 
 converter = {}
@@ -127,8 +129,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         return Tuple(*[sympify(x, locals=locals, convert_xor=convert_xor,
             rational=rational) for x in a])
     if iterable(a):
-        return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
-            rational=rational) for x in a])
+        try:
+            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+                rational=rational) for x in a])
+        except TypeError:
+            # Not all iterables are rebuildable with their type.
+            pass
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement
