@@ -138,7 +138,7 @@ def represent(expr, **options):
             options['basis'] = temp_basis
         try:
             return expr._represent(**options)
-        except NotImplementedError as strerr:
+        except NotImplementedError, strerr:
             #If no _represent_FOO method exists, map to the
             #appropriate basis state and try
             #the other methods of representation
