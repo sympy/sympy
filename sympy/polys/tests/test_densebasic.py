@@ -46,7 +46,6 @@ from sympy.polys.domains import ZZ, QQ
 
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
-from sympy.utilities import all
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0

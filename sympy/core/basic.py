@@ -4,11 +4,8 @@ from assumptions import AssumeMeths, make__get_assumption
 from cache import cacheit
 from core import BasicMeta, BasicType, C
 from sympify import _sympify, sympify, SympifyError
-from compatibility import any, iterable
+from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
-
-from sympy.core.compatibility import callable, reduce, cmp
-
 
 class Basic(AssumeMeths):
     """

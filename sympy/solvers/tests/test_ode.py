@@ -5,7 +5,6 @@ from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
     Equality, solve, O, LambertW, Dummy)
 from sympy.abc import x, y, z
-from sympy.core.compatibility import all
 from sympy.solvers.ode import ode_order, homogeneous_order, \
     _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
 from sympy.utilities.pytest import XFAIL, skip, raises

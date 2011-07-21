@@ -17,8 +17,6 @@ from sympy.polys.specialpolys import (
     dmp_fateman_poly_F_3,
 )
 
-from sympy.utilities import all, any
-
 from sympy.abc import x, y, z
 
 def test_swinnerton_dyer_poly():
