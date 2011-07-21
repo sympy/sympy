@@ -15,7 +15,6 @@ def test_zeta():
     assert zeta(1, -7) == zoo
     assert zeta(1, x) == zoo
 
-    assert zeta(2, 0) == pi**2/6
     assert zeta(2, 1) == pi**2/6
 
     assert zeta(2) == pi**2/6
@@ -43,8 +42,6 @@ def test_zeta():
 
     assert zeta(-4, 3) == -17
     assert zeta(-4, -8) == 8772
-
-    assert zeta(0, 0) == -Rational(1, 2)
 
     assert zeta(0, 1) == -Rational(1, 2)
     assert zeta(0, -1) == Rational(1, 2)

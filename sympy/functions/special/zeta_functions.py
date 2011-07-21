@@ -12,14 +12,18 @@ class zeta(Function):
     nargs = (1, 2)
 
     @classmethod
-    def eval(cls, z, a=S.One):
-        z, a = map(sympify, (z, a))
+    def eval(cls, z, a_=None):
+        if a_ is None:
+            z, a = map(sympify, (z, 1))
+        else:
+            z, a = map(sympify, (z, a_))
 
         if a.is_Number:
             if a is S.NaN:
                 return S.NaN
-            elif a is S.Zero:
+            elif a is S.One and a_ is not None:
                 return cls(z)
+            # TODO Should a == 0 return S.NaN as well?
 
         if z.is_Number:
             if z is S.NaN:
