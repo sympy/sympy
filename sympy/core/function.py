@@ -637,6 +637,114 @@ class Derivative(Expr):
     Symbol is attempted, the non-Symbol is temporarily converted to a Symbol
     while the differentiation is performed.
 
+    Note that this may seem strange, that Derivative allows things like
+    f(g(x)).diff(g(x)), or even f(cos(x)).diff(cos(x)).  The motivation for
+    allowing this syntax is to make it easier to work with variational calculus
+    (i.e., the Euler-Lagrange method).  The best way to understand this is that
+    the action of derivative with respect to a non-Symbol is defined by the
+    above description:  the object is substituted for a Symbol and the
+    derivative is taken with respect to that.  This action is only allowed for
+    objects for which this can be done unambiguously, for example Function and
+    Derivative objects.  Note that this leads to what may appear to be
+    mathematically inconsistent results.  For example::
+
+        >>> from sympy import cos, sin, sqrt
+        >>> from sympy.abc import x
+        >>> (2*cos(x)).diff(cos(x))
+        2
+        >>> (2*sqrt(1 - sin(x)**2)).diff(cos(x))
+        0
+
+    This appears wrong because in fact 2*cos(x) and 2*sqrt(1 - sin(x)**2) are
+    identically equal.  However this is the wrong way to think of this.  Think
+    of it instead as if we have something like this::
+
+        >>> from sympy.abc import c, s
+        >>> def F(u):
+        ...     return 2*u
+        ...
+        >>> def G(u):
+        ...     return 2*sqrt(1 - u**2)
+        ...
+        >>> F(cos(x))
+        2*cos(x)
+        >>> G(sin(x))
+        2*(-sin(x)**2 + 1)**(1/2)
+        >>> F(c).diff(c)
+        2
+        >>> F(c).diff(c)
+        2
+        >>> G(s).diff(c)
+        0
+        >>> G(sin(x)).diff(cos(x))
+        0
+
+    Here, the Symbols c and s act just like the functions cos(x) and sin(x),
+    respectively. Think of 2*cos(x) as f(c).subs(c, cos(x)) (or f(c) *at*
+    c = cos(x)) and 2*sqrt(1 - sin(x)**2) as g(s).subs(s, sin(x)) (or g(s) *at*
+    s = sin(x)), where f(u) == 2*u and g(u) == 2*sqrt(1 - u**2).  Here, we
+    define the function first and evaluate it at the function, but we can
+    actually unambiguously do this in reverse in SymPy, because
+    expr.subs(Function, Symbol) is well-defined:  just structurally replace the
+    function everywhere it appears in the expression.
+
+    This is actually the same notational convenience used in the Euler-Lagrange
+    method when one says F(t, f(t), f'(t)).diff(f(t)).  What is actually meant
+    is that the expression in question is represented by some F(t, u, v) at
+    u = f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means
+    F(t, u, v).diff(u) at u = f(t).
+
+    We do not allow to take derivative with respect to expressions where this
+    is not so well defined.  For example, we do not allow expr.diff(x*y)
+    because there are multiple ways of structurally defining where x*y appears
+    in an expression, some of which may surprise the reader (for example, a
+    very strict definition would have that (x*y*z).diff(x*y) == 0).
+
+        >>> from sympy.abc import x, y, z
+        >>> (x*y*z).diff(x*y)
+        Traceback (most recent call last):
+        ...
+        ValueError: Derivative expects Symbol [, Integer] args but got x*y, 1
+
+    Note that this definition also fits in nicely with the definition of the
+    chain rule.  Note how the chain rule in SymPy is defined using unevaluated
+    Subs objects::
+
+        >>> from sympy import symbols, Function
+        >>> f, g = symbols('f g', cls=Function)
+        >>> f(2*g(x)).diff(x)
+        2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (2*g(x),))
+
+    This says that the derivative of f(2*g(x)) with respect to x is
+    2*g(x).diff(x) times f(u).diff(u) at u = 2*g(x).  Note that this last part
+    is exactly the same as our definition of a derivative with respect to a
+    function given above, except the derivative is at a non-Function 2*g(x).
+    If we instead computed f(g(x)).diff(x), we would be able to express the Subs
+    as simply f(g(x)).diff(g(x)).  Therefore, SymPy does this when it's
+    possible::
+
+        >>> f(g(x)).diff(x)
+        Derivative(f(g(x)), g(x))*Derivative(g(x), x)
+
+    Finally, note that, to be consistent with variational calculus, and to
+    ensure that the definition of substituting a Function for a Symbol in an
+    expression is well-defined, derivatives of functions are assumed to not be
+    related to the function.  In other words, we have::
+
+        >>> from sympy import diff
+        >>> diff(f(x), x).diff(f(x))
+        0
+
+    The same is actually true for derivatives of different orders::
+
+        >>> diff(f(x), x, 2).diff(diff(f(x), x, 1))
+        0
+        >>> diff(f(x), x, 1).diff(diff(f(x), x, 2))
+        0
+
+    Note, any class can allow derivatives to be taken with respect to itself.
+    See the docstring of Expr._diff_wrt.
+
     Examples
     ========
 
@@ -1223,9 +1331,10 @@ def diff(f, *symbols, **kwargs):
     Note that ``diff(sin(x))`` syntax is meant only for convenience
     in interactive sessions and should be avoided in library code.
 
-    See Also
-    http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    **See Also**
 
+    - http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    - The docstring of Derivative.
     """
     kwargs.setdefault('evaluate', True)
     return Derivative(f, *symbols, **kwargs)

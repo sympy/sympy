@@ -20,6 +20,11 @@ class Expr(Basic, EvalfMixin):
         temporarily converts the non-Symbol vars in Symbols when performing
         the differentiation.
 
+        Note, see the docstring of Derivative for how this should work
+        mathematically.  In particular, note that expr.subs(yourclass, Symbol)
+        should be well-defined on a structural level, or this will lead to
+        inconsistent results.
+
         Examples
         ========
 
@@ -27,6 +32,11 @@ class Expr(Basic, EvalfMixin):
             >>> e = Expr()
             >>> e._diff_wrt
             False
+            >>> class MyClass(Expr):
+            ...     _diff_wrt = True
+            ...
+            >>> (2*MyClass()).diff(MyClass())
+            2
         """
         return False
 
