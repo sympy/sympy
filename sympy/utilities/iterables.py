@@ -1,6 +1,6 @@
 from sympy.core import Basic, C
-from sympy.core.compatibility import is_sequence, iterable #logically, they belong here
-
+from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
+from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
 import random
 
 def flatten(iterable, levels=None, cls=None):
@@ -297,36 +297,7 @@ def interactive_traversal(expr):
 
     return _interactive_traversal(expr, 0)
 
-def cartes(*seqs):
-    """Return Cartesian product (combinations) of items from iterable
-    sequences, seqs, as a generator.
-
-    Examples::
-    >>> from sympy import Add, Mul
-    >>> from sympy.abc import x, y
-    >>> from sympy.utilities.iterables import cartes
-    >>> do=list(cartes([Mul, Add], [x, y], [2]))
-    >>> for di in do:
-    ...     print di[0](*di[1:])
-    ...
-    2*x
-    2*y
-    x + 2
-    y + 2
-    >>>
-
-    >>> list(cartes([1, 2], [3, 4, 5]))
-    [[1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]]
-    """
-
-    if not seqs:
-        yield []
-    else:
-        for item in seqs[0]:
-            for subitem in cartes(*seqs[1:]):
-                yield [item] + subitem
-
-def variations(seq, n, repetition=False):
+def variations(seq, n=None, repetition=False):
     """Returns a generator of the variations (size n) of the list `seq` (size N).
     `repetition` controls whether items in seq can appear more than once;
 
@@ -351,17 +322,15 @@ def variations(seq, n, repetition=False):
         [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1]]
 
 
-    Reference:
-        http://code.activestate.com/recipes/190465/
     """
+    from sympy.core.compatibility import permutations
 
-    if n == 0:
-        yield []
+    if not repetition:
+        for i in permutations(seq, n):
+            yield list(i)
     else:
-        if not repetition:
-            for i in xrange(len(seq)):
-                for cc in variations(seq[:i] + seq[i + 1:], n - 1, False):
-                    yield [seq[i]] + cc
+        if n == 0:
+            yield []
         else:
             for i in xrange(len(seq)):
                 for cc in variations(seq, n - 1, True):
@@ -401,36 +370,17 @@ def subsets(seq, k=None, repetition=False):
            >>> list(subsets([0, 1], 3, repetition=True))
            [[0, 0, 0], [0, 0, 1], [0, 1, 1], [1, 1, 1]]
        """
-
-    if type(seq) is not list:
-        seq = list(seq)
-    if k == 0:
-        yield []
-    elif k is None:
-        yield []
-        for k in range(1, len(seq) + 1):
-            for s in subsets(seq, k, repetition=repetition):
-                yield list(s)
+    if k is None:
+        for k in range(len(seq) + 1):
+            for i in subsets(seq, k, repetition):
+                yield i
     else:
         if not repetition:
-            for i in xrange(len(seq)):
-                for cc in subsets(seq[i + 1:], k - 1, False):
-                    yield [seq[i]] + cc
+            for i in combinations(seq, k):
+                yield list(i)
         else:
-            nmax = len(seq) - 1
-            indices = [0] * k
-            yield seq[:1] * k
-            while 1:
-                indices[-1] += 1
-                if indices[-1] > nmax:
-                    #find first digit that can be incremented
-                    for j in range(-2, -k - 1, -1):
-                        if indices[j] < nmax:
-                            indices[j:] = [indices[j] + 1] * -j
-                            break # increment and copy to the right
-                    else:
-                        break # we didn't for-break so we are done
-                yield [seq[li] for li in indices]
+            for i in combinations_with_replacement(seq, k):
+                yield list(i)
 
 def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     """

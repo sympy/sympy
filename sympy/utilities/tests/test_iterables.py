@@ -163,8 +163,8 @@ def test_variations():
 
 def test_cartes():
     assert list(cartes([1, 2], [3, 4, 5])) == \
-           [[1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]]
-    assert list(cartes()) == [[]]
+           [(1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5)]
+    assert list(cartes()) == [()]
 
 def test_numbered_symbols():
     s = numbered_symbols(cls=Dummy)
