@@ -7,7 +7,7 @@ Curve
 """
 
 from sympy.core import sympify, C, Symbol
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.point import Point
 from entity import GeometryEntity
@@ -55,9 +55,9 @@ class Curve(GeometryEntity):
 
     def __new__(cls, function, limits):
         fun = sympify(function)
-        if not ordered_iter(fun) or len(fun) != 2:
+        if not is_sequence(fun) or len(fun) != 2:
             raise ValueError("Function argument should be (x(t), y(t)) but got %s" % str(function))
-        if not ordered_iter(limits) or len(limits) != 3:
+        if not is_sequence(limits) or len(limits) != 3:
             raise ValueError("Limit argument should be (t, tmin, tmax) but got %s" % str(limits))
         return GeometryEntity.__new__(cls, tuple(sympify(fun)), tuple(sympify(limits)))
 

@@ -3,7 +3,7 @@ from plot_mode import PlotMode
 from threading import Thread, Event, RLock
 from color_scheme import ColorScheme
 from sympy.core import S
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 from time import sleep
 
 from sympy.core.compatibility import callable
@@ -326,7 +326,7 @@ class PlotModeBase(PlotMode):
     def _set_color(self, v):
         try:
             if v is not None:
-                if ordered_iter(v):
+                if is_sequence(v):
                     v = ColorScheme(*v)
                 else: v = ColorScheme(v)
             if repr(v) == repr(self._color): return

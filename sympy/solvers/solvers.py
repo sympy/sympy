@@ -13,7 +13,7 @@
 
 """
 
-from sympy.core.compatibility import iterable, ordered_iter
+from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.numbers import ilcm
@@ -414,7 +414,7 @@ def solve(f, *symbols, **flags):
     ordered_symbols = (symbols and
                        symbols[0] and
                        (isinstance(symbols[0], Symbol) or
-                        ordered_iter(symbols[0], include=GeneratorType)
+                        is_sequence(symbols[0], include=GeneratorType)
                        )
                       )
     f, symbols = (sympified_list(w) for w in [f, symbols])
@@ -502,9 +502,13 @@ def solve(f, *symbols, **flags):
     # see issue 2405 for logic in how Polys chooses ordering and
     # for discussion of what to return see http://groups.google.com/group/sympy
     #                           Apr 18, 2011 posting 'using results from solve'
-    elif (not ordered_symbols and len(symbols) > 1 and solution and
-          ordered_iter(solution) and ordered_iter(solution[0]) and
-          any(len(set(s)) > 1 for s in solution)):
+    elif (not ordered_symbols and
+          len(symbols) > 1 and
+          solution and
+          is_sequence(solution) and
+          is_sequence(solution[0]) and
+          any(len(set(s)) > 1 for s in solution)
+         ):
         msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
                '\n\tgiven as a list so as to avoid ambiguity in the results.' +
                '\n\tsolve sorted the symbols as %s')
