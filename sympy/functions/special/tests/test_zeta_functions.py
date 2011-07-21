@@ -1,8 +1,11 @@
 from sympy import Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log, zoo
+from sympy.utilities.randtest import (test_derivative_numerically as td,
+                      random_complex_number as randcplx, test_numerically as tn)
 
 x = Symbol('x')
+a = Symbol('a')
 
-def test_zeta():
+def test_zeta_eval():
 
     assert zeta(nan) == nan
     assert zeta(x, nan) == nan
@@ -51,10 +54,23 @@ def test_zeta():
 
     assert zeta(3).evalf(20).epsilon_eq(Float("1.2020569031595942854",20), 1e-19)
 
-def test_dirichlet_eta():
+def test_dirichlet_eta_eval():
 
     assert dirichlet_eta(0) == Rational(1,2)
     assert dirichlet_eta(-1) == Rational(1,4)
     assert dirichlet_eta(1) == log(2)
     assert dirichlet_eta(2) == pi**2/12
     assert dirichlet_eta(4) == pi**4*Rational(7,720)
+
+def test_rewriting():
+    assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
+    assert zeta(x).rewrite(dirichlet_eta) == dirichlet_eta(x)/(1 - 2**(1 - x))
+    assert tn(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
+    assert tn(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
+
+def test_derivatives():
+    from sympy import Derivative
+    assert zeta(x, a).diff(x) == Derivative(zeta(x, a), x)
+    assert zeta(x, a).diff(a) == -x*zeta(x + 1, a)
+    b = randcplx()
+    assert td(zeta(b, x), x)

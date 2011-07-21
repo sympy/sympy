@@ -715,6 +715,21 @@ class LatexPrinter(Printer):
             tex = r"{%s}^{%s}" % (tex, self._print(exp))
         return tex
 
+    def _print_dirichlet_eta(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"\eta^{%s}%s" % (self._print(exp), tex)
+        return r"\eta%s" % tex
+
+    def _print_zeta(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"\left(%s, %s\right)" % tuple(map(self._print, expr.args))
+        else:
+            tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"\zeta^{%s}%s" % (self._print(exp), tex)
+        return r"\zeta%s" % tex
+
     def _print_Rational(self, expr):
         if expr.q != 1:
             sign = ""
