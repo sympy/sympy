@@ -1,4 +1,4 @@
-from sympy import Matrix, Tuple, symbols
+from sympy import Matrix, Tuple, symbols, sympify, Basic
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import all, ordered_iter, iterable
@@ -6,9 +6,9 @@ from sympy.core.compatibility import all, ordered_iter, iterable
 def test_Tuple():
     t = (1, 2, 3, 4)
     st =  Tuple(*t)
-    assert set(t) == set(st)
+    assert set(sympify(t)) == set(st)
     assert len(t) == len(st)
-    assert set(t[:2]) == set(st[:2])
+    assert set(sympify(t[:2])) == set(st[:2])
     assert isinstance(st[:], Tuple)
     assert st == Tuple(1, 2, 3, 4)
     assert st.func(*st.args) == st
@@ -17,6 +17,15 @@ def test_Tuple():
     st2 = Tuple(*t2)
     assert st2.atoms() == set(t2)
     assert st == st2.subs({p:1, q:2, r:3, s:4})
+    # issue 2406
+    assert all([ isinstance(arg, Basic) for arg in st.args ])
+    assert Tuple(p, 1).subs(p, 0) == Tuple(0, 1)
+    assert Tuple(p, Tuple(p, 1)).subs(p, 0) == Tuple(0, Tuple(0, 1))
+
+    assert Tuple(t2) == Tuple(Tuple(*t2))
+    assert Tuple.fromiter(t2) == Tuple(*t2)
+    assert Tuple.fromiter(x for x in xrange(4)) == Tuple(0, 1, 2, 3)
+    assert st2.fromiter(st2.args) == st2
 
 def test_Tuple_contains():
     t1, t2 = Tuple(1), Tuple(2)
