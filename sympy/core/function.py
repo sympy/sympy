@@ -40,7 +40,7 @@ from numbers import Rational
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.utilities import all, any, default_sort_key
-from sympy.core.compatibility import iterable, ordered_iter
+from sympy.core.compatibility import iterable, is_sequence
 from sympy.utilities.iterables import uniq
 
 from sympy import mpmath
@@ -936,7 +936,7 @@ class Subs(Expr):
 
     """
     def __new__(cls, expr, variables, point, **assumptions):
-        if not ordered_iter(variables, Tuple):
+        if not is_sequence(variables, Tuple):
             variables = [variables]
         variables = Tuple(*sympify(variables))
 
@@ -946,7 +946,7 @@ class Subs(Expr):
             raise ValueError('cannot substitute expressions %s more than '
                              'once.' % repeated)
 
-        if not ordered_iter(point, Tuple):
+        if not is_sequence(point, Tuple):
             point = [point]
         point = Tuple(*sympify(point))
 
