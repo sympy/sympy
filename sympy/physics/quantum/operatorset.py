@@ -1,14 +1,12 @@
-""" A module for mapping operators to their corresponding eigenstates
-and vice versa
+""" A module for mapping operators to their corresponding eigenstates and vice
+versa
 
-It contains a global dictionary with eigenstate-operator pairings.
-If a new state-operator pair is created, this dictionary should be
-updated as well.
+It contains a global dictionary with eigenstate-operator pairings.  If a new
+state-operator pair is created, this dictionary should be updated as well.
 
-It also contains functions operators_to_state and state_to_operators
-for mapping between the two. These can handle both classes and
-instances of operators and states. See the individual function
-descriptions for details.
+It also contains functions operators_to_state and state_to_operators for mapping
+between the two. These can handle both classes and instances of operators and
+states. See the individual function descriptions for details.
 
 TODO List:
 - Update the dictionary with a complete list of state-operator pairs
@@ -27,17 +25,16 @@ __all__ = [
     'state_to_operators'
 ]
 
-#state_mapping stores the mappings between states and their associated
-#operators or tuples of operators. This should be updated when new
-#classes are written! Entries are of the form PxKet : PxOp or
-#something like 3DKet : (ROp, ThetaOp, PhiOp)
+#state_mapping stores the mappings between states and their associated operators
+#or tuples of operators. This should be updated when new classes are written!
+#Entries are of the form PxKet : PxOp or something like 3DKet : (ROp, ThetaOp,
+#PhiOp)
 
 #frozenset is used so that the reverse mapping can be made
 #(regular sets are not hashable because they are mutable
 state_mapping = { JxKet : frozenset((J2Op, JxOp)),
                   JyKet : frozenset((J2Op, JyOp)),
                   JzKet : frozenset((J2Op, JzOp)),
-                  Ket : Operator,
                   PositionKet3D : frozenset((XOp, YOp, ZOp)),
                   PxKet : PxOp,
                   XKet : XOp }
@@ -45,28 +42,30 @@ state_mapping = { JxKet : frozenset((J2Op, JxOp)),
 op_mapping = dict((v,k) for k,v in state_mapping.iteritems())
 
 def operators_to_state(operators, **options):
-    """ Returns the eigenstate of the given operator or set of operators
+    """ Returns the eigenstate of the given operator or set of commuting
+    operators
 
-    A global function for mapping operator classes to their associated
-    states. It takes either an Operator or a set of operators and
-    returns the state associated with these.
+    A global function for mapping operator classes to their associated states.
+    It takes either an Operator or a set of operators and returns the state
+    associated with these.
 
-    This function can handle both instances of a given operator or
-    just the class itself (i.e. both XOp() and XOp)
+    This function can handle both instances of a given operator or just the
+    class itself (i.e. both XOp() and XOp)
 
     There are multiple use cases to consider:
 
-    1) A class or set of classes is passed: First, we try to
-    instantiate default instances for these operators. If this fails,
-    then the class is simply returned. If we succeed in instantiating
-    default instances, then we try to call state._operators_to_state
-    on the operator instances. If this fails, the class is returned.
-    Otherwise, the instance returned by _operators_to_state is returned.
+    1) A class or set of classes is passed: First, we try to instantiate default
+    instances for these operators. If this fails, then the eigenstate class is
+    simply returned. If we succeed in instantiating default instances, then we
+    try to call state._operators_to_state on the operator instances. If this
+    fails, we try to instantiate a default instance of the eigenstate
+    class. Finally, if we cannot return a default instance of the eigenstate
+    class, the class is returned.
 
     2) An instance or set of instances is passed: In this case,
-    state._operators_to_state is called on the instances passed. If
-    this fails, a state class is returned. If the method returns an
-    instance, that instance is returned.
+    state._operators_to_state is called on the instances passed. If this fails,
+    we try to instantiate a default instance of the eigenstate class. Finally,
+    if we cannot get a default instance, the eigenstate class is returned.
 
     In both cases, if the operator class or set does not exist in the
     state_mapping dictionary, None is returned.
@@ -74,9 +73,15 @@ def operators_to_state(operators, **options):
     Parameters
     ==========
 
-    arg: Operator or set
-         The class or instance of the operator or set of operators
+    operators : Operator or set
+         The class or instance of the operator or set of commuting operators
          to be mapped to a state
+
+    Returns
+    =======
+
+    state : Ket class or instance
+         The eigenstate of the given operator or set of commuting operators
 
     Examples
     ========
@@ -146,39 +151,48 @@ def operators_to_state(operators, **options):
             return None
 
 def state_to_operators(state, **options):
-    """ Returns the operator or set of operators corresponding to the
+    """ Returns the operator or set of commuting operators corresponding to the
     given eigenstate
 
-    A global function for mapping state classes to their associated
-    operators or sets of operators. It takes either a state class
-    or instance.
+    A global function for mapping state classes to their associated operator or
+    complete set of commuting operators. It takes either a state class or
+    instance.
 
-    This function can handle both instances of a given state or just
-    the class itself (i.e. both XKet() and XKet)
+    This function can handle both instances of a given state or just the class
+    itself (i.e. both XKet() and XKet)
 
     There are multiple use cases to consider:
 
-    1) A state class is passed: In this case, we first try
-    instantiating a default instance of the class. If this succeeds,
-    then we try to call state._state_to_operators on that instance.
-    If the creation of the default instance or if the calling of
-    _state_to_operators fails, then either an operator class or set of
-    operator classes is returned. Otherwise, the appropriate
-    operator instances are returned.
+    1) A state class is passed: In this case, we first try instantiating a
+    default instance of the class. If this succeeds, then we try to call
+    state._state_to_operators on that instance.  If the creation of the default
+    instance or if the calling of _state_to_operators fails, we try to
+    instantiate default instances of the associated operator or set of commuting
+    operators. Finally, if this fails, the operator class or set of classes is
+    returned.
 
-    2) A state instance is returned: Here, state._state_to_operators
-    is called for the instance. If this fails, then a class or set of
-    operator classes is returned. Otherwise, the instances are returned.
+    2) A state instance is passed Here, state._state_to_operators is called
+    for the instance. If this fails, then we attempt to create default instances
+    of the operator or set of commuting operators. Finally, if this fails, the
+    operator class or set of classes is returned.
 
-    In either case, if the state's class does not exist in
-    state_mapping, None is returned.
+    In either case, if the state's class does not exist in state_mapping, None
+    is returned.
 
     Parameters
     ==========
 
-    arg: StateBase class or instance (or subclasses)
+    state : StateBase class or instance (or subclasses)
          The class or instance of the state to be mapped to an
          operator or set of operators
+
+    Returns
+    =======
+
+    operators : Operator or set of commuting Operators
+         The single operator or set of commuting operators that the given state
+         is an eigenstate of (if no instances can be instantiated, the classes
+         will be returned)
 
     Examples
     ========
