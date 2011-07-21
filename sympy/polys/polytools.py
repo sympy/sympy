@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy,
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
 
 from sympy.core.sympify import (
@@ -2904,7 +2904,8 @@ class Poly(Expr):
 
         """
         if f.is_multivariate:
-            raise MultivariatePolynomialError("can't compute numerical roots of %s" % f)
+            raise MultivariatePolynomialError("can't compute numerical roots "
+                                              "of %s" % f)
 
         if f.degree() <= 0:
             return []
@@ -5200,7 +5201,7 @@ def cancel(f, *gens, **args):
 
     f = sympify(f)
 
-    if type(f) is not tuple:
+    if not isinstance(f, (tuple, Tuple)):
         if f.is_Number:
             return f
         else:
@@ -5211,14 +5212,14 @@ def cancel(f, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed, exc:
-        if type(f) is not tuple:
+        if not isinstance(f, (tuple, Tuple)):
             return f
         else:
             return S.One, p, q
 
     c, P, Q = F.cancel(G)
 
-    if type(f) is not tuple:
+    if not isinstance(f, (tuple, Tuple)):
         return c*(P.as_expr()/Q.as_expr())
     else:
         if not opt.polys:
