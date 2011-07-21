@@ -11,7 +11,6 @@ import random
 import math
 from primetest import isprime
 from generate import sieve, primerange, nextprime
-from sympy.utilities.iterables import iff
 from sympy.core.singleton import S
 
 from operator import abs

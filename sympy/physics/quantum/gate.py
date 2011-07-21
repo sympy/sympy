@@ -19,7 +19,6 @@ from sympy import Mul, Pow, Integer, Matrix, Rational, Tuple, I, sqrt, Add
 from sympy.core.numbers import Number
 from sympy.core.compatibility import is_sequence
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
-from sympy.utilities.iterables import all
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator

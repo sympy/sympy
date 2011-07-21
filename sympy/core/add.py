@@ -4,7 +4,6 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from expr import Expr
-from compatibility import all
 
 class Add(AssocOp):
 

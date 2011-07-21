@@ -3,7 +3,7 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
-from compatibility import any, all, cmp_to_key
+from compatibility import cmp_to_key
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"

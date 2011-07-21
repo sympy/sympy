@@ -24,8 +24,6 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together
 from sympy.functions.elementary.piecewise import piecewise_fold
 
-from sympy.utilities import any, all
-from sympy.utilities.iterables import iff
 from sympy.utilities.lambdify import lambdify
 from sympy.mpmath import findroot
 
@@ -409,7 +407,7 @@ def solve(f, *symbols, **flags):
     # a dictionary of results will be returned.
     ###########################################################################
     def sympified_list(w):
-        return map(sympify, iff(iterable(w), w, [w]))
+        return map(sympify, w if iterable(w) else [w])
     bare_f = not iterable(f)
     ordered_symbols = (symbols and
                        symbols[0] and

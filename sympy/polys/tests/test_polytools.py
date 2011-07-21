@@ -52,7 +52,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
     S, Integer, Rational, Float, Mul, symbols, sqrt, exp,
-    sin, expand, oo, I, pi, re, im, RootOf, all, Eq, Tuple)
+    sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
 from sympy.utilities.pytest import raises, XFAIL
 

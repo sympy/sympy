@@ -7,7 +7,6 @@ from sympy.assumptions import ask, AppliedPredicate, Q
 from sympy.functions import re, im, Abs
 from sympy.logic import And, Or
 from sympy.polys import Poly
-from sympy.utilities import all
 
 def interval_evalf(interval):
     """Proper implementation of evalf() on Interval. """

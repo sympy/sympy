@@ -31,8 +31,6 @@ class GenericPoly(object):
         else:
             return factors
 
-from sympy.utilities import any, all
-
 from sympy.polys.densebasic import (
     dmp_validate,
     dup_normal, dmp_normal,
