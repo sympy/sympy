@@ -27,7 +27,7 @@ class LatexPrinter(Printer):
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
         "mat_str": "smallmatrix",
-        "mat_delim": "(",
+        "mat_delim": "[",
     }
 
     def __init__(self, settings=None):
