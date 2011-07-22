@@ -47,9 +47,9 @@ You can also use the standard Python functions ``float()``, ``complex()`` to
 convert SymPy expressions to regular Python numbers:
 
     >>> float(pi)
-    3.14159265359
+    3.1415926535...
     >>> complex(pi+E*I)
-    (3.14159265359+2.71828182846j)
+    (3.1415926535...+2.7182818284...j)
 
 
 If these functions are used, failure to evaluate the expression to an explicit
@@ -126,9 +126,9 @@ subtracting these numbers from each other erroneously results in a complete
 cancellation:
 
     >>> float(GoldenRatio**1000/sqrt(5))
-    4.34665576869e+208
+    4.34665576869...e+208
     >>> float(fibonacci(1000))
-    4.34665576869e+208
+    4.34665576869...e+208
     >>> float(fibonacci(1000)) - float(GoldenRatio**1000/sqrt(5))
     0.0
 
