@@ -237,7 +237,7 @@ class DMP(object):
         """Convert `f` to a dict representation with SymPy coefficients. """
         rep = dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
-        for k, v in rep.iteritems():
+        for k, v in rep.items():
             rep[k] = f.dom.to_sympy(v)
 
         return rep
@@ -257,7 +257,7 @@ class DMP(object):
 
     @classmethod
     def from_monoms_coeffs(cls, monoms, coeffs, lev, dom):
-        return DMP(dict(zip(monoms, coeffs)), dom, lev)
+        return DMP(dict(list(zip(monoms, coeffs))), dom, lev)
 
     def to_ring(f):
         """Make the ground domain a field. """
@@ -595,7 +595,7 @@ class DMP(object):
         """Computes subresultant PRS sequence of `f` and `g`. """
         lev, dom, per, F, G = f.unify(g)
         R = dmp_subresultants(F, G, lev, dom)
-        return map(per, R)
+        return list(map(per, R))
 
     def resultant(f, g):
         """Computes resultant of `f` and `g` via PRS. """
@@ -663,7 +663,7 @@ class DMP(object):
     def decompose(f):
         """Computes functional decomposition of `f`. """
         if not f.lev:
-            return map(f.per, dup_decompose(f.rep, f.dom))
+            return list(map(f.per, dup_decompose(f.rep, f.dom)))
         else:
             raise ValueError('univariate polynomial expected')
 
@@ -677,7 +677,7 @@ class DMP(object):
     def sturm(f):
         """Computes the Sturm sequence of `f`. """
         if not f.lev:
-            return map(f.per, dup_sturm(f.rep, f.dom))
+            return list(map(f.per, dup_sturm(f.rep, f.dom)))
         else:
             raise ValueError('univariate polynomial expected')
 
@@ -781,12 +781,12 @@ class DMP(object):
     @property
     def is_linear(f):
         """Returns `True` if `f` is linear in all its variables. """
-        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+        return all([ sum(monom) <= 1 for monom in list(dmp_to_dict(f.rep, f.lev, f.dom).keys()) ])
 
     @property
     def is_quadratic(f):
         """Returns `True` if `f` is quadratic in all its variables. """
-        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+        return all([ sum(monom) <= 2 for monom in list(dmp_to_dict(f.rep, f.lev, f.dom).keys()) ])
 
     @property
     def is_monomial(f):
@@ -904,7 +904,7 @@ class DMP(object):
         _, _, _, F, G = f.unify(g)
         return F.__ge__(G)
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not dmp_zero_p(f.rep, f.lev)
 
 def init_normal_DMF(num, den, lev, dom):
@@ -1292,7 +1292,7 @@ class DMF(object):
         _, _, _, F, G = f.frac_unify(g)
         return F.__ge__(G)
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not dmp_zero_p(f.num, f.lev)
 
 def init_normal_ANP(rep, mod, dom):
@@ -1379,7 +1379,7 @@ class ANP(object):
         """Convert `f` to a dict representation with SymPy coefficients. """
         rep = dmp_to_dict(f.rep, 0, f.dom)
 
-        for k, v in rep.iteritems():
+        for k, v in rep.items():
             rep[k] = f.dom.to_sympy(v)
 
         return rep
@@ -1402,7 +1402,7 @@ class ANP(object):
 
     @classmethod
     def from_list(cls, rep, mod, dom):
-        return ANP(dup_strip(map(dom.convert, rep)), mod, dom)
+        return ANP(dup_strip(list(map(dom.convert, rep))), mod, dom)
 
     def neg(f):
         return f.per(dup_neg(f.rep, f.dom))
@@ -1559,5 +1559,5 @@ class ANP(object):
         _, _, F, G, _ = f.unify(g)
         return F.__ge__(G)
 
-    def __nonzero__(f):
+    def __bool__(f):
         return bool(f.rep)

@@ -12,7 +12,7 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from pretty_symbology import hobj, vobj, xsym, pretty_use_unicode
+from .pretty_symbology import hobj, vobj, xsym, pretty_use_unicode
 
 class stringPict(object):
     """An ASCII picture.
@@ -54,7 +54,7 @@ class stringPict(object):
         #convert everything to stringPicts
         objects = []
         for arg in args:
-            if isinstance(arg, basestring): arg = stringPict(arg)
+            if isinstance(arg, str): arg = stringPict(arg)
             objects.append(arg)
 
         #make a list of pictures, with equal height and baseline
@@ -110,7 +110,7 @@ class stringPict(object):
         #convert everything to stringPicts; keep LINE
         objects = []
         for arg in args:
-            if arg is not stringPict.LINE and isinstance(arg, basestring):
+            if arg is not stringPict.LINE and isinstance(arg, str):
                 arg = stringPict(arg)
             objects.append(arg)
 
@@ -324,7 +324,7 @@ class stringPict(object):
         return str.join('\n', self.picture)
 
     def __unicode__(self):
-        return unicode.join(u'\n', self.picture)
+        return str.join('\n', self.picture)
 
     def __repr__(self):
         return "stringPict(%r,%d)"%('\n'.join(self.picture), self.baseline)
@@ -347,13 +347,13 @@ class prettyForm(stringPict):
     ADD  this is an addition: parenthesize if multiplied or powered
     NEG  this is a negative number: optimize if added, parenthesize if multiplied or powered
     """
-    ATOM, FUNC, DIV, POW, MUL, ADD, NEG = range(7)
+    ATOM, FUNC, DIV, POW, MUL, ADD, NEG = list(range(7))
 
-    def __init__(self, s, baseline=0, binding=0, unicode=None):
+    def __init__(self, s, baseline=0, binding=0, str=None):
         """Initialize from stringPict and binding power."""
         stringPict.__init__(self, s, baseline)
         self.binding = binding
-        self.unicode = unicode or s
+        self.str = str or s
 
     def __add__(self, *others):
         """Make a pretty addition.
@@ -401,7 +401,7 @@ class prettyForm(stringPict):
             if arg.binding > prettyForm.MUL: arg = stringPict(*arg.parens())
             result.append(arg)
         len_res = len(result)
-        for i in xrange(len_res):
+        for i in range(len_res):
             if i < len_res-1 and result[i] == '-1' and result[i+1] == xsym('*'):
                 # substitute -1 by -, like in -1*x -> -x
                 result.pop(i)

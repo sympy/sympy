@@ -13,13 +13,13 @@ gmpy = import_module('gmpy', min_module_version='1.03',
 
 HAS_GMPY = bool(gmpy)
 
-from __builtin__ import (
+from builtins import (
     int     as PythonIntegerType,
     float   as PythonRealType,
     complex as PythonComplexType,
 )
 
-from pythonrationaltype import PythonRationalType
+from .pythonrationaltype import PythonRationalType
 
 def python_factorial(n):
     from sympy.functions.combinatorial.factorials import factorial

@@ -33,7 +33,7 @@ def F(x):
     return(Fx)
 
 def make_vector(a,n = 3):
-    if type(a) == types.StringType:
+    if type(a) == bytes:
         sym_str = ''
         for i in range(n):
             sym_str += a+str(i)+' '

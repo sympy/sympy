@@ -15,6 +15,7 @@ from sympy.functions import exp
 from sympy.core import C
 
 from sympy.core.compatibility import reduce
+from functools import reduce
 
 class IndexConformanceException(Exception):
     pass
@@ -37,7 +38,7 @@ def _remove_repeated(inds):
             sum_index[i] += 1
         else:
             sum_index[i] = 0
-    inds = filter(lambda x: not sum_index[x], inds)
+    inds = [x for x in inds if not sum_index[x]]
     return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
 
 def _get_indices_Mul(expr, return_dummies=False):
@@ -56,10 +57,10 @@ def _get_indices_Mul(expr, return_dummies=False):
     """
 
     junk, factors = expr.as_coeff_mul()
-    inds = map(get_indices, factors)
-    inds, syms = zip(*inds)
+    inds = list(map(get_indices, factors))
+    inds, syms = list(zip(*inds))
 
-    inds = map(list, inds)
+    inds = list(map(list, inds))
     inds = reduce(lambda x, y: x + y, inds)
     inds, dummies = _remove_repeated(inds)
 
@@ -148,15 +149,15 @@ def _get_indices_Add(expr):
 
     """
 
-    inds = map(get_indices, expr.args)
-    inds, syms = zip(*inds)
+    inds = list(map(get_indices, expr.args))
+    inds, syms = list(zip(*inds))
 
     # allow broadcast of scalars
-    non_scalars = filter(lambda x: x != set(), inds)
+    non_scalars = [x for x in inds if x != set()]
     if not non_scalars:
         return set(), {}
 
-    if not all(map(lambda x: x == non_scalars[0], non_scalars[1:])):
+    if not all([x == non_scalars[0] for x in non_scalars[1:]]):
         raise IndexConformanceException("Indices are not consistent: %s"%expr)
     if not reduce(lambda x, y: x!=y or y, syms):
         symmetries = syms[0]

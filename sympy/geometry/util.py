@@ -32,7 +32,7 @@ def idiff(eq, y, x, dep=None):
     f = dict([(s, Function(s.name)(x)) for s in eq.atoms(Symbol) if s != x and s in dep])
     dydx = Function(y.name)(x).diff(x)
     return solve(eq.subs(f).diff(x), dydx)[0].subs(
-        [(b, a) for a, b in f.iteritems()])
+        [(b, a) for a, b in f.items()])
 
 def _symbol(s, matching_symbol=None):
     """Return s if s is a Symbol, else return either a new Symbol (real=True)
@@ -60,7 +60,7 @@ def _symbol(s, matching_symbol=None):
     name defined elsewhere as a result of different assumptions.
 
     """
-    if isinstance(s, basestring):
+    if isinstance(s, str):
         if matching_symbol and matching_symbol.name == s:
             return matching_symbol
         return Symbol(s, real=True)
@@ -115,7 +115,7 @@ def intersection(*entities):
     [Point(-5**(1/2)/5 + 1, 2*5**(1/2)/5 + 1), Point(5**(1/2)/5 + 1, -2*5**(1/2)/5 + 1)]
 
     """
-    from entity import GeometryEntity
+    from .entity import GeometryEntity
 
     if len(entities) <= 1:
         return []
@@ -171,10 +171,10 @@ def convex_hull(*args):
     Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))
 
     """
-    from entity import GeometryEntity
-    from point import Point
-    from line import Segment
-    from polygon import Polygon
+    from .entity import GeometryEntity
+    from .point import Point
+    from .line import Segment
+    from .polygon import Polygon
 
     p = set()
     for e in args:

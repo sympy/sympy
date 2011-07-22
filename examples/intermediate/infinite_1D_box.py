@@ -22,7 +22,7 @@ def X_n(n, a, x):
     ``x``
         x coordinate.
     """
-    n, a, x = map(S, [n, a, x])
+    n, a, x = list(map(S, [n, a, x]))
     C = sqrt(2 / a)
     return C * sin(pi * n * x / a)
 
@@ -72,35 +72,35 @@ def energy_corrections(perturbation, n, a=10, mass=0.5):
            + Vnm(n, n+1, a)**2/(E_n(n, a, mass) - E_n(n+1, a, mass))).evalf())
 
 def main():
-    print
-    print "Applying perturbation theory to calculate the ground state energy"
-    print "of the infinite 1D box of width $a$ with a perturbation"
-    print "which is linear in $x$, up to second order in perturbation."
-    print
+    print()
+    print("Applying perturbation theory to calculate the ground state energy")
+    print("of the infinite 1D box of width $a$ with a perturbation")
+    print("which is linear in $x$, up to second order in perturbation.")
+    print()
 
     x, _a = var("x _a")
     perturbation = .1 * x / _a
 
     E1 = energy_corrections(perturbation, 1)
-    print "Energy for first term (n=1):"
-    print "E_1^{(0)} = ", E1[0]
-    print "E_1^{(1)} = ", E1[1]
-    print "E_1^{(2)} = ", E1[2]
-    print
+    print("Energy for first term (n=1):")
+    print("E_1^{(0)} = ", E1[0])
+    print("E_1^{(1)} = ", E1[1])
+    print("E_1^{(2)} = ", E1[2])
+    print()
 
     E2 = energy_corrections(perturbation, 2)
-    print "Energy for second term (n=2):"
-    print "E_2^{(0)} = ", E2[0]
-    print "E_2^{(1)} = ", E2[1]
-    print "E_2^{(2)} = ", E2[2]
-    print
+    print("Energy for second term (n=2):")
+    print("E_2^{(0)} = ", E2[0])
+    print("E_2^{(1)} = ", E2[1])
+    print("E_2^{(2)} = ", E2[2])
+    print()
 
     E3 = energy_corrections(perturbation, 3)
-    print "Energy for third term (n=3):"
-    print "E_3^{(0)} = ", E3[0]
-    print "E_3^{(1)} = ", E3[1]
-    print "E_3^{(2)} = ", E3[2]
-    print
+    print("Energy for third term (n=3):")
+    print("E_3^{(0)} = ", E3[0])
+    print("E_3^{(1)} = ", E3[1])
+    print("E_3^{(2)} = ", E3[2])
+    print()
 
 
 if __name__ == "__main__":

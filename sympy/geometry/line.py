@@ -14,9 +14,9 @@ from sympy.core.numbers import Float, Rational
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
-from entity import GeometryEntity
-from point import Point
-from util import _symbol
+from .entity import GeometryEntity
+from .point import Point
+from .util import _symbol
 
 class LinearEntity(GeometryEntity):
     """An abstract base class for all linear entities (line, ray and segment)

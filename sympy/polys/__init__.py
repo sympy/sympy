@@ -1,6 +1,6 @@
 """Polynomial manipulation algorithms and algebraic objects. """
 
-from polytools import (
+from .polytools import (
     Poly, PurePoly, poly,
     poly_from_expr,
     parallel_poly_from_expr,
@@ -28,15 +28,15 @@ from polytools import (
     reduced, groebner,
 )
 
-from polyfuncs import (
+from .polyfuncs import (
     symmetrize, horner, interpolate, viete,
 )
 
-from rationaltools import (
+from .rationaltools import (
     together,
 )
 
-from polyerrors import (
+from .polyerrors import (
     OperationNotSupported,
     ExactQuotientFailed,
     ComputationFailed,
@@ -51,7 +51,7 @@ from polyerrors import (
     DomainError,
 )
 
-from numberfields import (
+from .numberfields import (
     minimal_polynomial, minpoly,
     primitive_element, primelt,
     field_isomorphism,
@@ -60,27 +60,27 @@ from numberfields import (
     isolate,
 )
 
-from monomialtools import (
+from .monomialtools import (
     Monomial, monomials, monomial_count,
 )
 
-from rootoftools import (
+from .rootoftools import (
     RootOf, RootSum,
 )
 
-from polyroots import (
+from .polyroots import (
     roots,
 )
 
-from domains import (
+from .domains import (
     FF, GF, ZZ, QQ, RR, EX,
 )
 
-from constructor import (
+from .constructor import (
     construct_domain,
 )
 
-from specialpolys import (
+from .specialpolys import (
     swinnerton_dyer_poly,
     interpolating_poly,
     cyclotomic_poly,
@@ -88,7 +88,7 @@ from specialpolys import (
     random_poly,
 )
 
-from orthopolys import (
+from .orthopolys import (
     chebyshevt_poly,
     chebyshevu_poly,
     hermite_poly,
@@ -96,10 +96,10 @@ from orthopolys import (
     laguerre_poly,
 )
 
-from partfrac import (
+from .partfrac import (
     apart,
 )
 
-from polyoptions import Options
-import polycontext as ctx
+from .polyoptions import Options
+from . import polycontext as ctx
 

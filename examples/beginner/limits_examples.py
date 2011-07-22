@@ -11,7 +11,7 @@ def sqrt3(x):
     return x**Rational(1, 3)
 
 def show(computed, correct):
-    print "computed:", computed, "correct:", correct
+    print("computed:", computed, "correct:", correct)
 
 def main():
     x = Symbol("x")

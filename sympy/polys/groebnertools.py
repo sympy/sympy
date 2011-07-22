@@ -65,7 +65,7 @@ def sdp_normal(f, K):
 
 def sdp_from_dict(f, O):
     """Make a distributed polynomial from a dictionary. """
-    return sdp_sort(f.items(), O)
+    return sdp_sort(list(f.items()), O)
 
 def sdp_to_dict(f):
     """Make a dictionary from a distributed polynomial. """
@@ -372,7 +372,7 @@ def sdp_div(f, G, u, O, K):
     2. [Ajwa95]_
 
     """
-    Q, r = [ [] for _ in xrange(len(G)) ], []
+    Q, r = [ [] for _ in range(len(G)) ], []
 
     if K.has_Field:
         term_div = _term_ff_div
@@ -694,12 +694,12 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
     Gr = sorted(Gr, key=lambda f: O(sdp_LM(f, u)), reverse=True)
 
     if verbose:
-        print 'reductions_to_zero = %d' % reductions_to_zero
+        print('reductions_to_zero = %d' % reductions_to_zero)
 
     return Gr
 
 def sdp_str(f, gens):
-    if isinstance(gens, basestring):
+    if isinstance(gens, str):
         gens = gens.split(',')
     ngens = len(gens)
     z = (0,)*ngens

@@ -1694,7 +1694,7 @@ def test_compose():
     g = x**4 - 2*x + 9
     h = x**3 + 5*x
 
-    F, G, H = map(Poly, (f, g, h))
+    F, G, H = list(map(Poly, (f, g, h)))
 
     assert G.compose(H) == F
     assert compose(g, h) == f
@@ -1785,7 +1785,7 @@ def test_sqf():
 
     p = x**4 + x**3 - x - 1
 
-    F, G, H, P = map(Poly, (f, g, h, p))
+    F, G, H, P = list(map(Poly, (f, g, h, p)))
 
     assert F.sqf_part() == P
     assert sqf_part(f) == p
@@ -1847,7 +1847,7 @@ def test_factor():
     v = x - 1
     w = x**2 + x + 1
 
-    F, U, V, W = map(Poly, (f, u, v, w))
+    F, U, V, W = list(map(Poly, (f, u, v, w)))
 
     assert F.factor_list() == (1, [(U, 1), (V, 2), (W, 1)])
     assert factor_list(f) == (1, [(u, 1), (v, 2), (w, 1)])

@@ -57,7 +57,7 @@ def model_to_screen(x,y,z):
     return float(mx.value),float(my.value),float(mz.value)
 
 def vec_subs(a,b):
-    return tuple(a[i]-b[i] for i in xrange(len(a)))
+    return tuple(a[i]-b[i] for i in range(len(a)))
 
 def billboard_matrix():
     """
@@ -81,7 +81,7 @@ def create_bounds():
 
 def update_bounds(b, v):
     if v is None: return
-    for axis in xrange(3):
+    for axis in range(3):
         b[axis][0] = min([b[axis][0], v[axis]])
         b[axis][1] = max([b[axis][1], v[axis]])
 
@@ -95,7 +95,7 @@ def rinterpolate(a_min, a_max, a_value):
     return (a_value - a_min) / float(a_range)
 
 def interpolate_color(color1, color2, ratio):
-    return tuple(interpolate(color1[i], color2[i], ratio) for i in xrange(3))
+    return tuple(interpolate(color1[i], color2[i], ratio) for i in range(3))
 
 def scale_value(v, v_min, v_len):
     return (v-v_min)/v_len
@@ -108,7 +108,7 @@ def scale_value_list(flist):
 def strided_range(r_min, r_max, stride, max_steps=50):
     o_min, o_max = r_min, r_max
     if abs(r_min-r_max) < 0.001: return []
-    try: xrange(int(r_min-r_max))
+    try: range(int(r_min-r_max))
     except: return []
     assert r_min < r_max
     r_min_s = (r_min % stride)
@@ -120,7 +120,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
     r_steps = int( (r_max-r_min) / stride )
     if max_steps and r_steps > max_steps:
         return strided_range(o_min, o_max, stride*2)
-    return [r_min] + list( r_min+e*stride for e in xrange(1, r_steps+1) ) + [r_max]
+    return [r_min] + list( r_min+e*stride for e in range(1, r_steps+1) ) + [r_max]
 
 def parse_option_string(s):
     if not isinstance(s, str):
@@ -138,10 +138,10 @@ def parse_option_string(s):
     return options
 
 def dot_product(v1, v2):
-    return sum(v1[i]*v2[i] for i in xrange(3))
+    return sum(v1[i]*v2[i] for i in range(3))
 
 def vec_sub(v1, v2):
-    return tuple(v1[i]-v2[i] for i in xrange(3))
+    return tuple(v1[i]-v2[i] for i in range(3))
 
 def vec_mag(v):
-    return sum(v[i]**2 for i in xrange(3))**(0.5)
+    return sum(v[i]**2 for i in range(3))**(0.5)

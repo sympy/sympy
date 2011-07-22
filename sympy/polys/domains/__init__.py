@@ -1,43 +1,43 @@
 """Implementation of mathematical domains. """
 
-from domain import Domain
-from ring import Ring
-from field import Field
+from .domain import Domain
+from .ring import Ring
+from .field import Field
 
-from simpledomain import SimpleDomain
-from compositedomain import CompositeDomain
-from characteristiczero import CharacteristicZero
+from .simpledomain import SimpleDomain
+from .compositedomain import CompositeDomain
+from .characteristiczero import CharacteristicZero
 
-from finitefield import FiniteField
-from integerring import IntegerRing
-from rationalfield import RationalField
-from realdomain import RealDomain
+from .finitefield import FiniteField
+from .integerring import IntegerRing
+from .rationalfield import RationalField
+from .realdomain import RealDomain
 
-from pythonfinitefield import PythonFiniteField
-from sympyfinitefield import SymPyFiniteField
-from gmpyfinitefield import GMPYFiniteField
+from .pythonfinitefield import PythonFiniteField
+from .sympyfinitefield import SymPyFiniteField
+from .gmpyfinitefield import GMPYFiniteField
 
-from pythonintegerring import PythonIntegerRing
-from sympyintegerring import SymPyIntegerRing
-from gmpyintegerring import GMPYIntegerRing
+from .pythonintegerring import PythonIntegerRing
+from .sympyintegerring import SymPyIntegerRing
+from .gmpyintegerring import GMPYIntegerRing
 
-from pythonrationalfield import PythonRationalField
-from sympyrationalfield import SymPyRationalField
-from gmpyrationalfield import GMPYRationalField
+from .pythonrationalfield import PythonRationalField
+from .sympyrationalfield import SymPyRationalField
+from .gmpyrationalfield import GMPYRationalField
 
-from sympyrealdomain import SymPyRealDomain
-from pythonrealdomain import PythonRealDomain
-from mpmathrealdomain import MPmathRealDomain
+from .sympyrealdomain import SymPyRealDomain
+from .pythonrealdomain import PythonRealDomain
+from .mpmathrealdomain import MPmathRealDomain
 
-from pythoncomplexdomain import PythonComplexDomain
-from mpmathcomplexdomain import MPmathComplexDomain
+from .pythoncomplexdomain import PythonComplexDomain
+from .mpmathcomplexdomain import MPmathComplexDomain
 
-from algebraicfield import AlgebraicField
+from .algebraicfield import AlgebraicField
 
-from polynomialring import PolynomialRing
-from fractionfield import FractionField
+from .polynomialring import PolynomialRing
+from .fractionfield import FractionField
 
-from expressiondomain import ExpressionDomain
+from .expressiondomain import ExpressionDomain
 
 FF_python = PythonFiniteField
 FF_sympy = SymPyFiniteField
@@ -58,9 +58,9 @@ RR_mpmath = MPmathRealDomain
 CC_python = PythonComplexDomain
 CC_mpmath = MPmathComplexDomain
 
-from pythonrationaltype import PythonRationalType
+from .pythonrationaltype import PythonRationalType
 
-from groundtypes import HAS_GMPY
+from .groundtypes import HAS_GMPY
 
 def _getenv(key, default=None):
     from os import getenv

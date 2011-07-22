@@ -16,6 +16,7 @@ from sympy.polys import quo, gcd, lcm, \
 from sympy.polys.polyroots import root_factors
 
 from sympy.core.compatibility import reduce
+from functools import reduce
 
 def components(f, x):
     """Returns a set of all functional components of the given expression
@@ -159,10 +160,10 @@ def heurisch(f, x, **kwargs):
     rewrite = kwargs.pop('rewrite', False)
 
     if rewrite:
-        for candidates, rule in rewritables.iteritems():
+        for candidates, rule in rewritables.items():
             f = f.rewrite(candidates, rule)
     else:
-        for candidates in rewritables.iterkeys():
+        for candidates in rewritables.keys():
             if f.has(*candidates):
                 break
         else:
@@ -231,11 +232,11 @@ def heurisch(f, x, **kwargs):
 
     V = _symbols('x', len(terms))
 
-    mapping = dict(zip(terms, V))
+    mapping = dict(list(zip(terms, V)))
 
     rev_mapping = {}
 
-    for k, v in mapping.iteritems():
+    for k, v in mapping.items():
         rev_mapping[v] = k
 
     def substitute(expr):
@@ -309,9 +310,9 @@ def heurisch(f, x, **kwargs):
     u_split = splitter(denom)
     v_split = splitter(Q)
 
-    polys = list(v_split) + [ u_split[0] ] + special.keys()
+    polys = list(v_split) + [ u_split[0] ] + list(special.keys())
 
-    s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
+    s = u_split[0] * Mul(*[ k for k, v in special.items() if v ])
     polified = [ p.as_poly(*V) for p in [s, P, Q] ]
     if None in polified:
         return
@@ -398,7 +399,7 @@ def heurisch(f, x, **kwargs):
             else:
                 equations[dependent] = coeff
 
-        solution = solve(equations.values(), *coeffs)
+        solution = solve(list(equations.values()), *coeffs)
 
         if solution is not None:
             return (solution, candidate, coeffs)

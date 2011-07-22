@@ -25,7 +25,7 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
         """Convert real number to a (numer, denom) pair. """
         v, n = math.frexp(a) # XXX: hack, will work only for floats
 
-        for i in xrange(300):
+        for i in range(300):
             if v != math.floor(v):
                 v, n = 2*v, n-1
             else:

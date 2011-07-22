@@ -317,7 +317,7 @@ class And(AndOr_Base):
 
     def dbg_expand(self):
         global expand_lvl
-        print '%sexpand %s' % (' '*expand_lvl, self)
+        print('%sexpand %s' % (' '*expand_lvl, self))
 
         expand_lvl += 1
         try:

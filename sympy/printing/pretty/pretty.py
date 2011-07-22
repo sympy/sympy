@@ -4,8 +4,8 @@ from sympy.utilities import group
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
 
-from stringpict import prettyForm, stringPict
-from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
+from .stringpict import prettyForm, stringPict
+from .pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
         pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U
 
 from sympy.core.compatibility import cmp_to_key
@@ -111,7 +111,7 @@ class PrettyPrinter(Printer):
             if arg.is_Boolean and not arg.is_Not:
                 pform = prettyForm(*pform.parens())
 
-            return prettyForm(*pform.left(u"\u00ac "))
+            return prettyForm(*pform.left("\u00ac "))
         else:
             return self._print_Function(e)
 
@@ -128,50 +128,50 @@ class PrettyPrinter(Printer):
             if arg.is_Boolean and not arg.is_Not:
                 pform_arg = prettyForm(*pform_arg.parens())
 
-            pform = prettyForm(*pform.right(u' %s ' % char))
+            pform = prettyForm(*pform.right(' %s ' % char))
             pform = prettyForm(*pform.right(pform_arg))
 
         return pform
 
     def _print_And(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u2227")
+            return self.__print_Boolean(e, "\u2227")
         else:
             return self._print_Function(e)
 
     def _print_Or(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u2228")
+            return self.__print_Boolean(e, "\u2228")
         else:
             return self._print_Function(e)
 
     def _print_Xor(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u22bb")
+            return self.__print_Boolean(e, "\u22bb")
         else:
             return self._print_Function(e)
 
     def _print_Nand(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u22bc")
+            return self.__print_Boolean(e, "\u22bc")
         else:
             return self._print_Function(e)
 
     def _print_Nor(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u22bd")
+            return self.__print_Boolean(e, "\u22bd")
         else:
             return self._print_Function(e)
 
     def _print_Implies(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u2192")
+            return self.__print_Boolean(e, "\u2192")
         else:
             return self._print_Function(e)
 
     def _print_Equivalent(self, e):
         if self._use_unicode:
-            return self.__print_Boolean(e, u"\u2261")
+            return self.__print_Boolean(e, "\u2261")
         else:
             return self._print_Function(e)
 
@@ -357,7 +357,7 @@ class PrettyPrinter(Printer):
               lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
             if more:
                 lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
-            for i in reversed(range(1, d)):
+            for i in reversed(list(range(1, d))):
               lines.append('%s/%s' % (' '*i, ' '*(w - i)))
             lines.append("/" + "_"*(w - 1) + ',')
             return d, h + more, lines
@@ -525,16 +525,16 @@ class PrettyPrinter(Printer):
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i,j].width() for i in xrange(len_args)]) \
-                    for j in xrange(2)]
+        maxw = [max([P[i,j].width() for i in range(len_args)]) \
+                    for j in range(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.
         # drawing result
         D = None
 
-        for i in xrange(len_args):
+        for i in range(len_args):
             D_row = None
-            for j in xrange(2):
+            for j in range(2):
                 p = P[i,j]
                 assert p.width() <= maxw[j]
 
@@ -619,7 +619,7 @@ class PrettyPrinter(Printer):
         below = D.height() - above - 1
 
         if self._use_unicode:
-            pic = (2, 0, 2, u'\u250c\u2500\n\u251c\u2500\n\u2575')
+            pic = (2, 0, 2, '\u250c\u2500\n\u251c\u2500\n\u2575')
         else:
             pic = ((3, 0, 3, ' _\n|_\n|\n'))
 
@@ -686,7 +686,7 @@ class PrettyPrinter(Printer):
 
         if self._use_unicode:
             pic = (3, 0, 3, 1,
-                   u'\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
+                   '\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
         else:
             pic = (3, 0, 3, 1, ' __\n/__\n\_|')
 
@@ -849,13 +849,13 @@ class PrettyPrinter(Printer):
 
         # Convert to pretty forms. Add parens to Add instances if there
         # is more than one term in the numer/denom
-        for i in xrange(0, len(a)):
+        for i in range(0, len(a)):
             if a[i].is_Add and len(a) > 1:
                 a[i] = prettyForm(*self._print(a[i]).parens())
             else:
                 a[i] = self._print(a[i])
 
-        for i in xrange(0, len(b)):
+        for i in range(0, len(b)):
             if b[i].is_Add and len(b) > 1:
                 b[i] = prettyForm(*self._print(b[i]).parens())
             else:
@@ -950,7 +950,7 @@ class PrettyPrinter(Printer):
             return self.emptyPrinter(expr)
 
     def _print_ProductSet(self, p):
-        prod_char = u'\xd7'
+        prod_char = '\xd7'
         return self._print_seq(p.sets, None, None, ' %s '%prod_char,
                 parenthesize = lambda set:set.is_Union )
 
@@ -958,7 +958,7 @@ class PrettyPrinter(Printer):
         if len(s) > 10:
             # Take ten elements from the set at random
             q = iter(s)
-            printset = [q.next() for i in xrange(10)]
+            printset = [next(q) for i in range(10)]
             printset.append('...')
         else:
             printset = s
@@ -1027,7 +1027,7 @@ class PrettyPrinter(Printer):
     def _print_dict(self, d):
         items = []
 
-        keys = d.keys()
+        keys = list(d.keys())
         keys.sort( key=cmp_to_key(Basic.compare_pretty) )
 
         for k in keys:
@@ -1075,7 +1075,7 @@ class PrettyPrinter(Printer):
 
     def _print_FiniteField(self, expr):
         if self._use_unicode:
-            form = u'\u2124_%d'
+            form = '\u2124_%d'
         else:
             form = 'GF(%d)'
 
@@ -1083,25 +1083,25 @@ class PrettyPrinter(Printer):
 
     def _print_IntegerRing(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\u2124')
+            return prettyForm('\u2124')
         else:
             return prettyForm('ZZ')
 
     def _print_RationalField(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\u211A')
+            return prettyForm('\u211A')
         else:
             return prettyForm('QQ')
 
     def _print_RealDomain(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\u211D')
+            return prettyForm('\u211D')
         else:
             return prettyForm('RR')
 
     def _print_ComplexDomain(self, expr):
         if self._use_unicode:
-            return prettyForm(u'\u2102')
+            return prettyForm('\u2102')
         else:
             return prettyForm('CC')
 
@@ -1163,7 +1163,7 @@ def pretty_print(expr, **settings):
 
     pprint is just a shortcut for this function
     """
-    print pretty(expr, **settings)
+    print(pretty(expr, **settings))
 
 pprint = pretty_print
 

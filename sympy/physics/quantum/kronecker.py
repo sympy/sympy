@@ -88,7 +88,7 @@ class KroneckerDelta(Function):
         pform = printer._print(self.args[0], *args)
         pform = prettyForm(*pform.right((prettyForm(','))))
         pform = prettyForm(*pform.right((printer._print(self.args[1], *args))))
-        a = stringPict(u'\u03b4')
+        a = stringPict('\u03b4')
         b = pform
         top = stringPict(*b.left(' '*a.width()))
         bot = stringPict(*a.right(' '*b.width()))

@@ -33,7 +33,7 @@ def fix_file(filename):
         fromfile=filename, tofile=filename+".new", lineterm="")
     import sys
     for l in d:
-        print l
+        print(l)
 
 
 for x in get_files_mpmath():

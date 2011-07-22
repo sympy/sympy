@@ -1,7 +1,8 @@
 from sympy import Basic, Symbol, symbols, lambdify
-from util import interpolate, rinterpolate, create_bounds, update_bounds
+from .util import interpolate, rinterpolate, create_bounds, update_bounds
 
 from sympy.core.compatibility import callable
+import collections
 
 class ColorGradient(object):
     colors = [0.4,0.4,0.4], [0.9,0.9,0.9]
@@ -13,8 +14,8 @@ class ColorGradient(object):
             self.intervals = [0.0, 1.0]
         elif len(args) > 0:
             assert len(args) % 2 == 0
-            self.colors = [args[i] for i in xrange(1, len(args), 2)]
-            self.intervals = [args[i] for i in xrange(0, len(args), 2)]
+            self.colors = [args[i] for i in range(1, len(args), 2)]
+            self.intervals = [args[i] for i in range(0, len(args), 2)]
         assert len(self.colors) == len(self.intervals)
 
     def copy(self):
@@ -46,7 +47,7 @@ class ColorScheme(object):
         self.args = args
         self.f, self.gradient = None, ColorGradient()
 
-        if len(args) == 1 and not isinstance(args[0],Basic) and callable(args[0]):
+        if len(args) == 1 and not isinstance(args[0],Basic) and isinstance(args[0], collections.Callable):
             self.f = args[0]
         elif len(args) == 1 and isinstance(args[0], str):
             if args[0] in default_color_schemes:
@@ -117,7 +118,7 @@ class ColorScheme(object):
 
         if gargs:
             try: gradient = ColorGradient(*gargs)
-            except Exception, ex:
+            except Exception as ex:
                 raise ValueError(("Could not initialize a gradient "
                                   "with arguments %s. Inner "
                                   "exception: %s") % (gargs, str(ex)))
@@ -155,7 +156,7 @@ class ColorScheme(object):
         # when vars are given explicitly, any vars
         # not given are marked 'unbound' as to not
         # be accidentally used in an expression
-        vars = [Symbol('unbound%i'%(i)) for i in xrange(1,6)]
+        vars = [Symbol('unbound%i'%(i)) for i in range(1,6)]
         # interpret as t
         if len(args) == 1:
             vars[3] = args[0]
@@ -189,22 +190,22 @@ class ColorScheme(object):
         return atoms, lists
 
     def _test_color_function(self):
-        if not callable(self.f):
+        if not isinstance(self.f, collections.Callable):
             raise ValueError("Color function is not callable.")
         try:
             result = self.f(0,0,0,0,0)
             assert len(result) == 3
-        except TypeError, te:
+        except TypeError as te:
             raise ValueError("Color function needs to accept x,y,z,u,v, "
                              "as arguments even if it doesn't use all of them.")
-        except AssertionError, ae:
+        except AssertionError as ae:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
-        except Exception, ie:
+        except Exception as ie:
             pass # color function probably not valid at 0,0,0,0,0
 
     def __call__(self, x,y,z,u,v):
         try:    return self.f(x,y,z,u,v)
-        except Exception, e:
+        except Exception as e:
             #print e
             return None
 
@@ -216,10 +217,10 @@ class ColorScheme(object):
         """
         bounds = create_bounds()
         cverts = list()
-        if callable(set_len): set_len(len(u_set)*2)
+        if isinstance(set_len, collections.Callable): set_len(len(u_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             if verts[_u] is None:
                 cverts.append(None)
             else:
@@ -230,16 +231,16 @@ class ColorScheme(object):
                     c = list(c)
                     update_bounds(bounds, c)
                 cverts.append(c)
-            if callable(inc_pos): inc_pos()
+            if isinstance(inc_pos, collections.Callable): inc_pos()
         # scale and apply gradient
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             if cverts[_u] is not None:
-                for _c in xrange(3):
+                for _c in range(3):
                     # scale from [f_min, f_max] to [0,1]
                     cverts[_u][_c] = rinterpolate(bounds[_c][0], bounds[_c][1], cverts[_u][_c])
                 # apply gradient
                 cverts[_u] = self.gradient(*cverts[_u])
-            if callable(inc_pos): inc_pos()
+            if isinstance(inc_pos, collections.Callable): inc_pos()
         return cverts
 
     def apply_to_surface(self, verts, u_set, v_set, set_len=None, inc_pos=None):
@@ -250,12 +251,12 @@ class ColorScheme(object):
         """
         bounds = create_bounds()
         cverts = list()
-        if callable(set_len): set_len(len(u_set)*len(v_set)*2)
+        if isinstance(set_len, collections.Callable): set_len(len(u_set)*len(v_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
-        for _u in xrange(len(u_set)):
+        for _u in range(len(u_set)):
             column = list()
-            for _v in xrange(len(v_set)):
+            for _v in range(len(v_set)):
                 if verts[_u][_v] is None:
                     column.append(None)
                 else:
@@ -266,18 +267,18 @@ class ColorScheme(object):
                         c = list(c)
                         update_bounds(bounds, c)
                     column.append(c)
-                if callable(inc_pos): inc_pos()
+                if isinstance(inc_pos, collections.Callable): inc_pos()
             cverts.append(column)
         # scale and apply gradient
-        for _u in xrange(len(u_set)):
-            for _v in xrange(len(v_set)):
+        for _u in range(len(u_set)):
+            for _v in range(len(v_set)):
                 if cverts[_u][_v] is not None:
                     # scale from [f_min, f_max] to [0,1]
-                    for _c in xrange(3):
+                    for _c in range(3):
                         cverts[_u][_v][_c] = rinterpolate(bounds[_c][0], bounds[_c][1], cverts[_u][_v][_c])
                     # apply gradient
                     cverts[_u][_v] = self.gradient(*cverts[_u][_v])
-                if callable(inc_pos): inc_pos()
+                if isinstance(inc_pos, collections.Callable): inc_pos()
         return cverts
 
     def str_base(self): return ", ".join(str(a) for a in self.args)

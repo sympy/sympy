@@ -6,7 +6,7 @@ from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 
-class IdentityFunction(Lambda):
+class IdentityFunction(Lambda, metaclass=Singleton):
     """The identity function
 
     >>> from sympy import Id, Symbol
@@ -14,7 +14,6 @@ class IdentityFunction(Lambda):
     >>> Id(x)
     x
     """
-    __metaclass__ = Singleton
     __slots__ = []
     nargs = 1
     def __new__(cls):

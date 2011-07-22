@@ -41,7 +41,7 @@ def swinnerton_dyer_poly(n, x=None, **args):
     p, elts = 2, [[x, -2**Rational(1,2)],
                   [x,  2**Rational(1,2)]]
 
-    for i in xrange(2, n+1):
+    for i in range(2, n+1):
         p, _elts = nextprime(p), []
 
         neg_sqrt = -p**Rational(1,2)
@@ -116,11 +116,11 @@ def interpolating_poly(n, x, X='x', Y='y'):
 
     coeffs = []
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         numer = []
         denom = []
 
-        for j in xrange(0, n):
+        for j in range(0, n):
             if i == j:
                 continue
 
@@ -137,7 +137,7 @@ def interpolating_poly(n, x, X='x', Y='y'):
 @cythonized("n,i")
 def fateman_poly_F_1(n):
     """Fateman's GCD benchmark: trivial GCD """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n+1) ]
+    Y = [ Symbol('y_' + str(i)) for i in range(0, n+1) ]
 
     y_0, y_1 = Y[0], Y[1]
 
@@ -156,12 +156,12 @@ def dmp_fateman_poly_F_1(n, K):
     """Fateman's GCD benchmark: trivial GCD """
     u = [K(1), K(0)]
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         u = [dmp_one(i, K), u]
 
     v = [K(1), K(0), K(0)]
 
-    for i in xrange(0, n):
+    for i in range(0, n):
         v = [dmp_one(i, K), dmp_zero(i), v]
 
     m = n-1
@@ -184,7 +184,7 @@ def dmp_fateman_poly_F_1(n, K):
 @cythonized("n,i")
 def fateman_poly_F_2(n):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n+1) ]
+    Y = [ Symbol('y_' + str(i)) for i in range(0, n+1) ]
 
     y_0 = Y[0]
 
@@ -202,7 +202,7 @@ def dmp_fateman_poly_F_2(n, K):
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     u = [K(1), K(0)]
 
-    for i in xrange(0, n-1):
+    for i in range(0, n-1):
         u = [dmp_one(i, K), u]
 
     m = n-1
@@ -221,7 +221,7 @@ def dmp_fateman_poly_F_2(n, K):
 @cythonized("n,i")
 def fateman_poly_F_3(n):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
-    Y = [ Symbol('y_' + str(i)) for i in xrange(0, n+1) ]
+    Y = [ Symbol('y_' + str(i)) for i in range(0, n+1) ]
 
     y_0 = Y[0]
 
@@ -239,7 +239,7 @@ def dmp_fateman_poly_F_3(n, K):
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
     u = dup_from_raw_dict({n+1: K.one}, K)
 
-    for i in xrange(0, n-1):
+    for i in range(0, n-1):
         u = dmp_add_term([u], dmp_one(i, K), n+1, i+1, K)
 
     v = dmp_add_term(u, dmp_ground(K(2), n-2), 0, n, K)

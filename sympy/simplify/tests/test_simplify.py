@@ -203,7 +203,7 @@ def test_simplify_fail1():
     assert simplify(e) == 1 / (-2*y)
 
 def test_fraction():
-    x, y, z = map(Symbol, 'xyz')
+    x, y, z = list(map(Symbol, 'xyz'))
 
     assert fraction(Rational(1, 2)) == (1, 2)
 

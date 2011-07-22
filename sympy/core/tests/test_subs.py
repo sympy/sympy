@@ -78,7 +78,7 @@ def test_subbug2():
 
 def test_dict():
     x = Symbol('x')
-    a,b,c = map(Wild, 'abc')
+    a,b,c = list(map(Wild, 'abc'))
 
     f = 3*cos(4*x)
     r = f.match(a*cos(b*x))
@@ -147,7 +147,7 @@ def test_subs_dict1():
 
 def test_subs_dict2():
     x = Symbol('x')
-    a,b,c = map(Wild, 'abc')
+    a,b,c = list(map(Wild, 'abc'))
 
     f = 3*cos(4*x)
     r = f.match(a*cos(b*x))
@@ -339,8 +339,8 @@ def test_subs_issue910():
     assert (I*Symbol("a")).subs(1, 2) == I*Symbol("a")
 
 def test_functions_subs():
-    x, y = map(Symbol, 'xy')
-    f, g = map(Function, 'fg')
+    x, y = list(map(Symbol, 'xy'))
+    f, g = list(map(Function, 'fg'))
     l = Lambda((x, y), sin(x) + y)
     assert (g(y, x)+cos(x)).subs(g, l) == sin(y) + x + cos(x)
     assert (f(x)**2).subs(f, sin) == sin(x)**2

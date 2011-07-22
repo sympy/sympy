@@ -366,7 +366,7 @@ class SparsePoly(GenericPoly):
         """Compute subresultant PRS sequence of $f$ and $g$. """
         lev, ord, dom, per, F, G = f.unify(g)
         R = smp_subresultants(F, G, lev, ord, dom)
-        return map(per, R)
+        return list(map(per, R))
 
     def resultant(f, g):
         """Compute resultant of $f$ and $g$. """
@@ -446,11 +446,11 @@ class SparsePoly(GenericPoly):
 
     def decompose(f):
         """Computes functional decomposition of $f$. """
-        return map(f.per, smp_decompose(f.rep, f.lev, f.ord, f.dom))
+        return list(map(f.per, smp_decompose(f.rep, f.lev, f.ord, f.dom)))
 
     def sturm(f):
         """Computes the Sturm sequence of $f$. """
-        return map(f.per, smp_sturm(f.rep, f.lev, f.ord, f.dom))
+        return list(map(f.per, smp_sturm(f.rep, f.lev, f.ord, f.dom)))
 
     def sqf_norm(f):
         """Compute square-free norm of $f$. """
@@ -589,5 +589,5 @@ class SparsePoly(GenericPoly):
     def __ne__(f, g):
         return not f.__eq__(g)
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not f.is_zero

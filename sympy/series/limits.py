@@ -1,5 +1,5 @@
 from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
-from gruntz import gruntz
+from .gruntz import gruntz
 from sympy.functions import sign, tan, cot
 
 def limit(e, z, z0, dir="+"):

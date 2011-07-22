@@ -261,7 +261,7 @@ def dup_zz_zassenhaus(f, K):
     gamma = int(ceil(2*log(C, 2)))
     bound = int(2*gamma*log(gamma))
 
-    for p in xrange(3, bound+1):
+    for p in range(3, bound+1):
         if not isprime(p) or b % p == 0:
             continue
 
@@ -326,7 +326,7 @@ def dup_zz_irreducible_p(f, K):
     if e_fc:
         e_ff = factorint(int(e_fc))
 
-        for p in e_ff.iterkeys():
+        for p in e_ff.keys():
             if (lc % p) and (tc % p**2):
                 return True
 
@@ -373,10 +373,10 @@ def dup_zz_cyclotomic_p(f, K, irreducible=False):
     n = dup_degree(f)
     g, h = [], []
 
-    for i in xrange(n, -1, -2):
+    for i in range(n, -1, -2):
         g.insert(0, f[i])
 
-    for i in xrange(n-1, -1, -2):
+    for i in range(n-1, -1, -2):
         h.insert(0, f[i])
 
     g = dup_sqr(dup_strip(g), K)
@@ -410,7 +410,7 @@ def dup_zz_cyclotomic_poly(n, K):
     """Efficiently generate n-th cyclotomic polnomial. """
     h = [K.one,-K.one]
 
-    for p, k in factorint(n).iteritems():
+    for p, k in factorint(n).items():
         h = dup_quo(dup_inflate(h, p, K), h, K)
         h = dup_inflate(h, p**(k-1), K)
 
@@ -420,11 +420,11 @@ def dup_zz_cyclotomic_poly(n, K):
 def _dup_cyclotomic_decompose(n, K):
     H = [[K.one,-K.one]]
 
-    for p, k in factorint(n).iteritems():
+    for p, k in factorint(n).items():
         Q = [ dup_quo(dup_inflate(h, p, K), h, K) for h in H ]
         H.extend(Q)
 
-        for i in xrange(1, k):
+        for i in range(1, k):
             Q = [ dup_inflate(q, p, K) for q in Q ]
             H.extend(Q)
 
@@ -639,7 +639,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
         c = dmp_one(v, K)
         d = dup_LC(h, K)*cs
 
-        for i in reversed(xrange(len(E))):
+        for i in reversed(range(len(E))):
             k, e, (t, _) = 0, E[i], T[i]
 
             while not (d % e):
@@ -745,7 +745,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
 
             T = dup_zz_diophantine(F, n-i, p, K)
 
-            for j, (s, t) in enumerate(zip(S, T)):
+            for j, (s, t) in enumerate(list(zip(S, T))):
                 t = dup_mul_ground(t, coeff, K)
                 S[j] = dup_trunc(dup_add(s, t, K), p, K)
     else:
@@ -774,7 +774,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
         m = dmp_nest([K.one, -a], n, K)
         M = dmp_one(n, K)
 
-        for k in xrange(0, d):
+        for k in range(0, d):
             if dmp_zero_p(c, u):
                 break
 
@@ -788,7 +788,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
                 for i, t in enumerate(T):
                     T[i] = dmp_mul(dmp_raise(t, 1, v, K), M, u, K)
 
-                for i, (s, t) in enumerate(zip(S, T)):
+                for i, (s, t) in enumerate(list(zip(S, T))):
                     S[i] = dmp_add(s, t, u, K)
 
                 for t, b in zip(T, B):
@@ -813,12 +813,12 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
     d = max(dmp_degree_list(f, u)[1:])
 
-    for j, s, a in zip(xrange(2, n+2), S, A):
+    for j, s, a in zip(range(2, n+2), S, A):
         G, w = list(H), j-1
 
         I, J = A[:j-2], A[j-1:]
 
-        for i, (h, lc) in enumerate(zip(H, LC)):
+        for i, (h, lc) in enumerate(list(zip(H, LC))):
             lc = dmp_ground_trunc(dmp_eval_tail(lc, J, v, K), p, w-1, K)
             H[i] = [lc] + dmp_raise(h[1:], 1, w-1, K)
 
@@ -829,7 +829,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
         dj = dmp_degree_in(s, w, w)
 
-        for k in xrange(0, dj):
+        for k in range(0, dj):
             if dmp_zero_p(c, w):
                 break
 
@@ -840,7 +840,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
                 C = dmp_quo_ground(C, K.factorial(k+1), w-1, K)
                 T = dmp_zz_diophantine(G, C, I, d, p, w-1, K)
 
-                for i, (h, t) in enumerate(zip(H, T)):
+                for i, (h, t) in enumerate(list(zip(H, T))):
                     h = dmp_add_mul(h, dmp_raise(t, 1, w-1, K), M, w, K)
                     H[i] = dmp_ground_trunc(h, p, w, K)
 
@@ -914,8 +914,8 @@ def dmp_zz_wang(f, u, K, mod=None):
     eez_mod_step = query('EEZ_MODULUS_STEP')
 
     while len(configs) < eez_num_configs:
-        for _ in xrange(eez_num_tries):
-            A = [ K(randint(-mod, mod)) for _ in xrange(u) ]
+        for _ in range(eez_num_tries):
+            A = [ K(randint(-mod, mod)) for _ in range(u) ]
 
             if tuple(A) not in history:
                 history.add(tuple(A))

@@ -36,6 +36,7 @@ from sympy.core.compatibility import reduce
 
 from warnings import warn
 from types import GeneratorType
+from functools import reduce
 
 def denoms(eq, x=None):
     """Return (recursively) set of all denominators that appear in eq
@@ -121,7 +122,7 @@ def checksol(f, symbol, sol=None, **flags):
     if not f:
         return True
 
-    if not f.has(*sol.keys()):
+    if not f.has(*list(sol.keys())):
         return False
 
     attempt = -1
@@ -169,7 +170,7 @@ def checksol(f, symbol, sol=None, **flags):
             return False
 
     if flags.get('warning', False):
-        print("Warning: could not verify solution %s." % sol)
+        print(("Warning: could not verify solution %s." % sol))
     # returns None if it can't conclude
     # TODO: improve solution testing
 
@@ -409,7 +410,7 @@ def solve(f, *symbols, **flags):
     # a dictionary of results will be returned.
     ###########################################################################
     def sympified_list(w):
-        return map(sympify, iff(iterable(w), w, [w]))
+        return list(map(sympify, iff(iterable(w), w, [w])))
     bare_f = not iterable(f)
     ordered_symbols = (symbols and
                        symbols[0] and
@@ -470,8 +471,8 @@ def solve(f, *symbols, **flags):
         symbols_new.append(s_new)
 
     if symbol_swapped:
-        swap_back_dict = dict(zip(symbols_new, symbols))
-        swap_dict = zip(symbols, symbols_new)
+        swap_back_dict = dict(list(zip(symbols_new, symbols)))
+        swap_dict = list(zip(symbols, symbols_new))
         f = [fi.subs(swap_dict) for fi in f]
         symbols = symbols_new
 
@@ -496,7 +497,7 @@ def solve(f, *symbols, **flags):
     #     systems and those results come back as a list
     if symbol_swapped and type(solution) is dict:
             solution = dict([(swap_back_dict[k], v.subs(swap_back_dict))
-                              for k, v in solution.iteritems()])
+                              for k, v in solution.items()])
     # warn if ambiguous results are being obtained
     # XXX agree on how to make this unambiguous
     # see issue 2405 for logic in how Polys chooses ordering and
@@ -508,8 +509,8 @@ def solve(f, *symbols, **flags):
         msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
                '\n\tgiven as a list so as to avoid ambiguity in the results.' +
                '\n\tsolve sorted the symbols as %s')
-        from itertools import izip
-        print msg % str(bool(symbol_swapped) and list(izip(*swap_dict).next()) or symbols)
+        
+        print(msg % str(bool(symbol_swapped) and list(next(izip(*swap_dict))) or symbols))
     #
     # done
     ###########################################################################
@@ -574,7 +575,7 @@ def _solve(f, *symbols, **flags):
                 # base this decision on a certain critical length of the roots.
                 if poly.degree() > 2:
                     flags['simplified'] = flags.get('simplified', False)
-                result = roots(poly, cubics=True, quartics=True).keys()
+                result = list(roots(poly, cubics=True, quartics=True).keys())
 
         elif strategy == GS_RATIONAL:
             P, _ = f.as_numer_denom()
@@ -709,7 +710,7 @@ def _solve(f, *symbols, **flags):
             raise NotImplementedError(msg + "\nNo algorithms are implemented to solve equation %s" % f)
 
         if flags.get('simplified', True) and strategy != GS_RATIONAL:
-            result = map(simplify, result)
+            result = list(map(simplify, result))
 
         return result
     else:
@@ -886,7 +887,7 @@ def solve_linear_system(system, *symbols, **flags):
         if not matrix[i, i]:
             # there is no pivot in current column
             # so try to find one in other columns
-            for k in xrange(i+1, m):
+            for k in range(i+1, m):
                 if matrix[i, k]:
                     break
             else:
@@ -908,7 +909,7 @@ def solve_linear_system(system, *symbols, **flags):
         # divide all elements in the current row by the pivot
         matrix.row(i, lambda x, _: x * pivot_inv)
 
-        for k in xrange(i+1, matrix.rows):
+        for k in range(i+1, matrix.rows):
             if matrix[k, i]:
                 coeff = matrix[k, i]
 
@@ -933,7 +934,7 @@ def solve_linear_system(system, *symbols, **flags):
             content = matrix[k, m]
 
             # run back-substitution for variables
-            for j in xrange(k+1, m):
+            for j in range(k+1, m):
                 content -= matrix[k, j]*solutions[syms[j]]
 
             if simplified:
@@ -953,11 +954,11 @@ def solve_linear_system(system, *symbols, **flags):
             content = matrix[k, m]
 
             # run back-substitution for variables
-            for j in xrange(k+1, i):
+            for j in range(k+1, i):
                 content -= matrix[k, j]*solutions[syms[j]]
 
             # run back-substitution for parameters
-            for j in xrange(i, m):
+            for j in range(i, m):
                 content -= matrix[k, j]*syms[j]
 
             if simplified:
@@ -999,7 +1000,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     equ = cancel(equ).as_numer_denom()[0]
 
-    system = collect(equ.expand(), sym, evaluate=False).values()
+    system = list(collect(equ.expand(), sym, evaluate=False).values())
 
     if not any([ equ.has(sym) for equ in system ]):
         # consecutive powers in the input expressions have
@@ -1240,13 +1241,13 @@ def nsolve(*args, **kwargs):
         raise NotImplementedError('need at least as many equations as variables')
     verbose = kwargs.get('verbose', False)
     if verbose:
-        print 'f(x):'
-        print f
+        print('f(x):')
+        print(f)
     # derive Jacobian
     J = f.jacobian(fargs)
     if verbose:
-        print 'J(x):'
-        print J
+        print('J(x):')
+        print(J)
     # create functions
     f = lambdify(fargs, f.T, modules)
     J = lambdify(fargs, J, modules)

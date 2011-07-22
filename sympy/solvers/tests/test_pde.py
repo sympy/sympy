@@ -6,7 +6,7 @@ from sympy.utilities.pytest import raises
 def test_pde_separate_add():
     x, y, z, t = symbols("x,y,z,t")
     c = Symbol("C", real=True)
-    F, T, X, Y, Z, u = map(Function, 'FTXYZu')
+    F, T, X, Y, Z, u = list(map(Function, 'FTXYZu'))
 
     eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
     res = pde_separate_add(eq, u(x, t), [X(x), T(t)])
@@ -16,7 +16,7 @@ def test_pde_separate_mul():
     x, y, z, t = symbols("x,y,z,t")
     c = Symbol("C", real=True)
     Phi = Function('Phi')
-    F, R, T, X, Y, Z, u = map(Function, 'FRTXYZu')
+    F, R, T, X, Y, Z, u = list(map(Function, 'FRTXYZu'))
     r, theta, z = symbols('r,theta,z')
 
     # Something simple :)

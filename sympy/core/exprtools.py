@@ -62,7 +62,7 @@ class Factors(object):
             factors = {}
 
         self.factors = factors
-        self.gens = frozenset(factors.keys())
+        self.gens = frozenset(list(factors.keys()))
 
     def __hash__(self):
         return hash((tuple(self.factors), self.gens))
@@ -71,13 +71,13 @@ class Factors(object):
         return "Factors(%s)" % self.factors
 
     def as_expr(self):
-        return Mul(*[ factor**exp for factor, exp in self.factors.iteritems() ])
+        return Mul(*[ factor**exp for factor, exp in self.factors.items() ])
 
     def normal(self, other):
         self_factors = dict(self.factors)
         other_factors = dict(other.factors)
 
-        for factor, self_exp in self.factors.iteritems():
+        for factor, self_exp in self.factors.items():
             try:
                 other_exp = other.factors[factor]
             except KeyError:
@@ -101,7 +101,7 @@ class Factors(object):
     def mul(self, other):
         factors = dict(self.factors)
 
-        for factor, exp in other.factors.iteritems():
+        for factor, exp in other.factors.items():
             if factor in factors:
                 exp = factors[factor] + exp
 
@@ -116,7 +116,7 @@ class Factors(object):
     def div(self, other):
         quo, rem = dict(self.factors), {}
 
-        for factor, exp in other.factors.iteritems():
+        for factor, exp in other.factors.items():
             if factor in quo:
                 exp = quo[factor] - exp
 
@@ -146,7 +146,7 @@ class Factors(object):
             factors = {}
 
             if other:
-                for factor, exp in self.factors.iteritems():
+                for factor, exp in self.factors.items():
                     factors[factor] = exp*other
 
             return Factors(factors)
@@ -156,7 +156,7 @@ class Factors(object):
     def gcd(self, other):
         factors = {}
 
-        for factor, exp in self.factors.iteritems():
+        for factor, exp in self.factors.items():
             if factor in other.factors:
                 exp = min(exp, other.factors[factor])
                 factors[factor] = exp
@@ -166,7 +166,7 @@ class Factors(object):
     def lcm(self, other):
         factors = dict(self.factors)
 
-        for factor, exp in other.factors.iteritems():
+        for factor, exp in other.factors.items():
             if factor in factors:
                 exp = max(exp, factors[factor])
 
@@ -333,7 +333,7 @@ def _gcd_terms(terms):
         else:
             return terms[0], S.One, S.One
 
-    terms = map(Term, terms)
+    terms = list(map(Term, terms))
     cont = terms[0]
 
     for term in terms[1:]:

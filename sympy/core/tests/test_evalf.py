@@ -164,9 +164,9 @@ def test_evalf_integer_parts():
     raises(PrecisionExhausted, "b.evalf(maxn=500)")
     assert b.evalf(chop=True) == 3
     assert int(floor(factorial(50)/E,evaluate=False).evalf()) == \
-        11188719610782480504630258070757734324011354208865721592720336800L
+        11188719610782480504630258070757734324011354208865721592720336800
     assert int(ceiling(factorial(50)/E,evaluate=False).evalf()) == \
-        11188719610782480504630258070757734324011354208865721592720336801L
+        11188719610782480504630258070757734324011354208865721592720336801
     assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1,2))).evalf(1000)) == fibonacci(999)
     assert int(floor((GoldenRatio**1000 / sqrt(5) + Rational(1,2))).evalf(1000)) == fibonacci(1000)
 

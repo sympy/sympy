@@ -330,7 +330,7 @@ class Monomial(object):
         elif n > 0:
             data = self.data
 
-            for i in xrange(1, n):
+            for i in range(1, n):
                 data = monomial_mul(data, self.data)
 
             return Monomial(*data)

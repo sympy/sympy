@@ -2,7 +2,7 @@
 
 from inspect import getmro
 
-from core import all_classes as sympy_classes
+from .core import all_classes as sympy_classes
 from sympy.core.compatibility import iterable
 
 class SympifyError(ValueError):
@@ -97,7 +97,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     except AttributeError:
         pass
 
-    if not isinstance(a, basestring):
+    if not isinstance(a, str):
         for coerce in (float, int):
             try:
                 return sympify(coerce(a))
@@ -119,8 +119,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     # and try to parse it. If it fails, then we have no luck and
     # return an exception
     try:
-        a = unicode(a)
-    except Exception, exc:
+        a = str(a)
+    except Exception as exc:
         raise SympifyError(a, exc)
 
     from sympy.parsing.sympy_parser import parse_expr, TokenError

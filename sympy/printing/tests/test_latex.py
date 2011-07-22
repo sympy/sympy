@@ -49,8 +49,8 @@ def test_latex_Float():
     assert latex(-1.0*oo) == r"- \infty"
 
 def test_latex_symbols():
-    Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
-    mass, volume = map(Symbol, ('mass', 'volume'))
+    Gamma, lmbda, rho = list(map(Symbol, ('Gamma', 'lambda', 'rho')))
+    mass, volume = list(map(Symbol, ('mass', 'volume')))
     assert latex(Gamma + lmbda) == r"\Gamma + \lambda"
     assert latex(Gamma * lmbda) == r"\Gamma \lambda"
     assert latex(Symbol('q21')) == r"q_{21}"

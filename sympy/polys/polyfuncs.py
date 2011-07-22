@@ -48,7 +48,7 @@ def symmetrize(F, *gens, **args):
 
     try:
         F, opt = parallel_poly_from_expr(F, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         result = []
 
         for expr in exc.exprs:
@@ -71,12 +71,12 @@ def symmetrize(F, *gens, **args):
     polys, symbols = [], opt.symbols
     gens, dom = opt.gens, opt.domain
 
-    for i in xrange(0, len(gens)):
+    for i in range(0, len(gens)):
         poly = symmetric_poly(i+1, gens, polys=True)
-        polys.append((symbols.next(), poly.set_domain(dom)))
+        polys.append((next(symbols), poly.set_domain(dom)))
 
-    indices = range(0, len(gens) - 1)
-    weights = range(len(gens), 0, -1)
+    indices = list(range(0, len(gens) - 1))
+    weights = list(range(len(gens), 0, -1))
 
     result = []
 
@@ -165,7 +165,7 @@ def horner(f, *gens, **args):
 
     try:
         F, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         return exc.expr
 
     form, gen = S.Zero, F.gen
@@ -203,12 +203,12 @@ def interpolate(data, x):
     n = len(data)
 
     if isinstance(data, dict):
-        X, Y = zip(*data.items())
+        X, Y = list(zip(*list(data.items())))
     else:
         if isinstance(data[0], tuple):
-            X, Y = zip(*data)
+            X, Y = list(zip(*data))
         else:
-            X = range(1, n+1)
+            X = list(range(1, n+1))
             Y = list(data)
 
     poly = interpolating_poly(n, x, X, Y)
@@ -237,7 +237,7 @@ def viete(f, roots=None, *gens, **args):
 
     try:
         f, opt = poly_from_expr(f, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         raise ComputationFailed('viete', 1, exc)
 
     if f.is_multivariate:

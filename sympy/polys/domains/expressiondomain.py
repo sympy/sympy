@@ -95,7 +95,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __rne__(f, g):
             return f.__class__(g).ex != f.ex
 
-        def __nonzero__(f):
+        def __bool__(f):
             return f.ex != 0
 
     dtype = Expression

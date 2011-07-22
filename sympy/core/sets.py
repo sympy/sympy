@@ -1,10 +1,10 @@
-from basic import Basic
-from singleton import Singleton, S
-from evalf import EvalfMixin
-from numbers import Float, Integer
-from sympify import _sympify, sympify, SympifyError
+from .basic import Basic
+from .singleton import Singleton, S
+from .evalf import EvalfMixin
+from .numbers import Float, Integer
+from .sympify import _sympify, sympify, SympifyError
 from sympy.mpmath import mpi, mpf
-from containers import Tuple
+from .containers import Tuple
 
 
 class Set(Basic):
@@ -289,11 +289,11 @@ class ProductSet(Set):
         def flatten(arg):
             if isinstance(arg, Set):
                 if arg.is_ProductSet:
-                    return sum(map(flatten, arg.args), [])
+                    return sum(list(map(flatten, arg.args)), [])
                 else:
                     return [arg]
             elif is_flattenable(arg):
-                return sum(map(flatten, arg), [])
+                return sum(list(map(flatten, arg)), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         sets = flatten(list(sets))
 
@@ -671,11 +671,11 @@ class Union(Set):
                return []
             if isinstance(arg, Set):
                 if arg.is_Union:
-                    return sum(map(flatten, arg.args), [])
+                    return sum(list(map(flatten, arg.args)), [])
                 else:
                     return [arg]
             if is_flattenable(arg): # and not isinstance(arg, Set) (implicit)
-                return sum(map(flatten, arg), [])
+                return sum(list(map(flatten, arg)), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
         if len(args) == 0:
@@ -942,7 +942,7 @@ class RealUnion(Union, RealSet):
         else:
             raise TypeError("Not all constituent sets are iterable")
 
-class EmptySet(Set):
+class EmptySet(Set, metaclass=Singleton):
     """
     Represents the empty set. The empty set is available as a singleton
     as S.EmptySet.
@@ -957,8 +957,6 @@ class EmptySet(Set):
         EmptySet()
 
     """
-
-    __metaclass__ = Singleton
 
     def _intersect(self, other):
         return S.EmptySet
@@ -1002,12 +1000,12 @@ class FiniteSet(CountableSet):
     def __new__(cls, *args):
         def flatten(arg):
             if is_flattenable(arg):
-                return sum(map(flatten, arg), [])
+                return sum(list(map(flatten, arg)), [])
             return [arg]
         args = flatten(list(args))
 
         # Sympify Arguments
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         # Turn tuples into Tuples
         args = [Tuple(*arg) if arg.__class__ is tuple else arg for arg in args]
 
@@ -1017,7 +1015,7 @@ class FiniteSet(CountableSet):
         if all([arg.is_real and arg.is_number for arg in args]):
             cls = RealFiniteSet
 
-        elements = frozenset(map(sympify, args))
+        elements = frozenset(list(map(sympify, args)))
         obj = Basic.__new__(cls, *elements)
         obj.elements = elements
         return obj
@@ -1155,7 +1153,7 @@ class RealFiniteSet(FiniteSet, RealSet):
     def _eval_evalf(self, prec):
         return FiniteSet(elem.evalf(prec) for elem in self)
 
-genclass = (1 for i in xrange(2)).__class__
+genclass = (1 for i in range(2)).__class__
 def is_flattenable(obj):
     """
     Checks that an argument to a Set constructor  should be flattened

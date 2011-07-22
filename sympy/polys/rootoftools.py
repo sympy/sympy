@@ -246,7 +246,7 @@ class RootOf(Expr):
             else:
                 cache[factor] = [root]
 
-        for factor, roots in cache.iteritems():
+        for factor, roots in cache.items():
             _reals_cache[factor] = roots
 
         return reals
@@ -271,7 +271,7 @@ class RootOf(Expr):
             else:
                 cache[factor] = [root]
 
-        for factor, roots in cache.iteritems():
+        for factor, roots in cache.items():
             _complexes_cache[factor] = roots
 
         return complexes
@@ -344,7 +344,7 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in xrange(0, reals_count):
+        for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         return roots
@@ -360,14 +360,14 @@ class RootOf(Expr):
 
         roots = []
 
-        for index in xrange(0, reals_count):
+        for index in range(0, reals_count):
             roots.append(cls._reals_index(reals, index))
 
         complexes = cls._get_complexes(factors)
         complexes = cls._complexes_sorted(complexes)
         complexes_count = cls._count_roots(complexes)
 
-        for index in xrange(0, complexes_count):
+        for index in range(0, complexes_count):
             roots.append(cls._complexes_index(complexes, index))
 
         return roots
@@ -459,7 +459,7 @@ class RootOf(Expr):
                 if self.is_real:
                     x0 = mpf(str(interval.center))
                 else:
-                    x0 = mpc(*map(str, interval.center))
+                    x0 = mpc(*list(map(str, interval.center)))
 
                 try:
                     root = findroot(func, x0)
@@ -598,14 +598,14 @@ class RootSum(Expr):
         except GeneratorsNeeded:
             p, p_coeff = None, (p,)
         else:
-            p_monom, p_coeff = zip(*p.terms())
+            p_monom, p_coeff = list(zip(*p.terms()))
 
         try:
             q = Poly(q, domain=domain, expand=False)
         except GeneratorsNeeded:
             q, q_coeff = None, (q,)
         else:
-            q_monom, q_coeff = zip(*q.terms())
+            q_monom, q_coeff = list(zip(*q.terms()))
 
         coeffs, mapping = symmetrize(p_coeff + q_coeff, formal=True)
         formulas, values = viete(poly, roots), []
@@ -622,12 +622,12 @@ class RootSum(Expr):
         q_coeff = coeffs[n:]
 
         if p is not None:
-            p = Poly(dict(zip(p_monom, p_coeff)), *p.gens).as_expr()
+            p = Poly(dict(list(zip(p_monom, p_coeff))), *p.gens).as_expr()
         else:
             (p,) = p_coeff
 
         if q is not None:
-            q = Poly(dict(zip(q_monom, q_coeff)), *q.gens).as_expr()
+            q = Poly(dict(list(zip(q_monom, q_coeff))), *q.gens).as_expr()
         else:
             (q,) = q_coeff
 
@@ -654,7 +654,7 @@ class RootSum(Expr):
 
     def doit(self, **hints):
         if hints.get('roots', True):
-            return Add(*map(self.fun, self.poly.all_roots()))
+            return Add(*list(map(self.fun, self.poly.all_roots())))
         else:
             return self
 

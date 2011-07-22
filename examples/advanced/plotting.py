@@ -16,6 +16,7 @@ from sympy import sin, cos, pi, sqrt, exp
 from sympy.core.compatibility import callable
 
 from time import sleep, clock
+import collections
 
 def main():
     x,y,z = symbols('x,y,z')
@@ -121,12 +122,12 @@ def main():
         start = clock()
         p[4] = x**2+y**2, [100], [100], 'style=solid'
         p.wait_for_calculations()
-        print "lambda-based calculation took %s seconds." % (clock()-start)
+        print("lambda-based calculation took %s seconds." % (clock()-start))
 
         start = clock()
         p[4] = x**2+y**2, [100], [100], 'style=solid; use_sympy_eval'
         p.wait_for_calculations()
-        print "sympy substitution-based calculation took %s seconds." % (clock()-start)
+        print("sympy substitution-based calculation took %s seconds." % (clock()-start))
 
     @example_wrapper
     def gradient_vectors():
@@ -186,7 +187,7 @@ def main():
         s =  ("\nPlot p has been created. Useful commands: \n"
               "    help(p), p[1] = x**2, print p, p.clear() \n\n"
               "Available examples (see source in plotting.py):\n\n")
-        for i in xrange(len(examples)):
+        for i in range(len(examples)):
             s += "(%i) %s\n" % (i, examples[i].__name__)
         s += "\n"
         s += "e.g. >>> example(2)\n"
@@ -194,17 +195,17 @@ def main():
         return s
 
     def example(i):
-        if callable(i):
+        if isinstance(i, collections.Callable):
             p.clear()
             i()
         elif i >= 0 and i < len(examples):
             p.clear()
             examples[i]()
-        else: print "Not a valid example.\n"
-        print p
+        else: print("Not a valid example.\n")
+        print(p)
 
     example(0) # 0 - 15 are defined above
-    print help_str()
+    print(help_str())
 
 if __name__ == "__main__":
     main()

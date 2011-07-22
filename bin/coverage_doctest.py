@@ -74,7 +74,7 @@ def parse_file(file, verbose=False):
             q0 += k
             q1 = file[q0+3:].find('"""')
             if q1 == -1:
-                print "ERROR: Error parsing %s" % function_name
+                print("ERROR: Error parsing %s" % function_name)
             else:
                 q1 += q0 + 3
                 # the docstring is now between q0:q1
@@ -100,30 +100,30 @@ def coverage(filename, file, verbose=False):
         indirect_doctest = parse_file(file, verbose)
     num_functions = len(missing_docstring + missing_doctest + has_doctest)
     if num_functions == 0:
-        print "No functions in %s" % filename
+        print("No functions in %s" % filename)
         return
-    print '-'*70
-    print filename
+    print('-'*70)
+    print(filename)
     score = 100 * float(len(has_doctest)) / num_functions
     score = int(score)
 
     if missing_docstring:
-        print "\nMissing documentation:\n\t * %s\n" % \
-                ('\n\t * '.join(missing_docstring))
+        print("\nMissing documentation:\n\t * %s\n" % \
+                ('\n\t * '.join(missing_docstring)))
     if missing_doctest:
-        print "\nMissing doctests:\n\t * %s\n" % \
-                ('\n\t * '.join(missing_doctest))
+        print("\nMissing doctests:\n\t * %s\n" % \
+                ('\n\t * '.join(missing_doctest)))
 
     if indirect_doctest:
-        print "\nIndirect doctest (function name doesn't occur in doctests):\n"\
-                "\t * %s\n"%('\n\t * '.join(indirect_doctest))
-        print 'Use "# indirect doctest" in the docstring to surpress this ' \
-                'warning'
+        print("\nIndirect doctest (function name doesn't occur in doctests):\n"\
+                "\t * %s\n"%('\n\t * '.join(indirect_doctest)))
+        print('Use "# indirect doctest" in the docstring to surpress this ' \
+                'warning')
 
-    print "SCORE %s: %s%% (%s of %s)" % (filename, score,
-            len(has_doctest), num_functions)
+    print("SCORE %s: %s%% (%s of %s)" % (filename, score,
+            len(has_doctest), num_functions))
 
-    print '-'*70
+    print('-'*70)
 
 
 
@@ -136,7 +136,7 @@ def go(file, verbose=False, exact=True):
         not exact and ('test_' in file or 'bench_' in file):
             return
     if not os.path.exists(file):
-        print "File %s does not exist."%file
+        print("File %s does not exist."%file)
         sys.exit(1)
     f = open(file).read()
     coverage(file, f, verbose)

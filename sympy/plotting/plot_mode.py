@@ -1,7 +1,7 @@
 from sympy import Symbol, sympify
-from plot_interval import PlotInterval
-from plot_object import PlotObject
-from util import parse_option_string
+from .plot_interval import PlotInterval
+from .plot_object import PlotObject
+from .util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 from sympy.core.compatibility import ordered_iter
 
@@ -227,7 +227,7 @@ class PlotMode(PlotObject):
                 # also set that.
                 PlotMode._mode_default_map[d][i] = cls
 
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError( ("Failed to register "
                               "plot mode %s. Reason: %s")
                                % (name, (str(e))) )

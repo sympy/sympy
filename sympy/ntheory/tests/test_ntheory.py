@@ -165,10 +165,10 @@ def test_generate():
     assert mr(1, [2]) == False
 
     func = lambda i: (i**2 + 1) % 51
-    assert cycle_length(func, 4).next() == (6, 2)
+    assert next(cycle_length(func, 4)) == (6, 2)
     assert list(cycle_length(func, 4, values=True)) == \
            [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
-    assert cycle_length(func, 4, nmax=5).next() == (5, None)
+    assert next(cycle_length(func, 4, nmax=5)) == (5, None)
     assert list(cycle_length(func, 4, nmax=5, values=True)) == \
            [17, 35, 2, 5, 26]
 
@@ -208,7 +208,7 @@ def multiproduct(seq=(), start=1):
     if not seq:
         return start
     if isinstance(seq, dict):
-        seq = seq.iteritems()
+        seq = iter(seq.items())
     units = start
     multi = []
     for base, exp in seq:
@@ -236,7 +236,7 @@ def test_factorint():
     assert factorint(64015937) == {7993:1, 8009:1}
     assert factorint(2**(2**6) + 1) == {274177:1, 67280421310721:1}
     assert multiproduct(factorint(fac(200))) == fac(200)
-    for b, e in factorint(fac(150)).items():
+    for b, e in list(factorint(fac(150)).items()):
         assert e == fac_multiplicity(150, b)
     assert factorint(103005006059**7) == {103005006059:7}
     assert factorint(31337**191) == {31337:191}
@@ -267,7 +267,7 @@ def test_factorint():
     assert factorint(13*17*19, limit=15) == {13: 1, 17*19: 1}
     assert factorint(1951*15013*15053, limit=2000) == {225990689: 1, 1951: 1}
     assert factorint(primorial(17)+1, use_pm1=0) == \
-           {19026377261L: 1, 3467: 1, 277: 1, 105229: 1}
+           {19026377261: 1, 3467: 1, 277: 1, 105229: 1}
     # when prime b is closer than approx sqrt(8*p) to prime p then they are
     # "close" and have a trivial factorization
     a=nextprime(2**2**8) # 78 digits
@@ -485,9 +485,9 @@ def test_visual_io():
     # test reevaluation
     no = dict(evaluate=False)
     assert sm({4: 2}, visual=False) == sm(16)
-    assert sm(Mul(*[Pow(k, v, **no) for k, v in {4: 2, 2: 6}.items()], **no),
+    assert sm(Mul(*[Pow(k, v, **no) for k, v in list({4: 2, 2: 6}.items())], **no),
               visual=False) == sm(2**10)
 
     assert fi({4: 2}, visual=False) == fi(16)
-    assert fi(Mul(*[Pow(k, v, **no) for k, v in {4: 2, 2: 6}.items()], **no),
+    assert fi(Mul(*[Pow(k, v, **no) for k, v in list({4: 2, 2: 6}.items())], **no),
               visual=False) == fi(2**10)

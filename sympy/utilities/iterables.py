@@ -49,7 +49,7 @@ def flatten(iterable, levels=None, cls=None):
             raise ValueError("expected non-negative number of levels, got %s" % levels)
 
     if cls is None:
-        reducible = lambda x: hasattr(x, "__iter__") and not isinstance(x, basestring)
+        reducible = lambda x: hasattr(x, "__iter__") and not isinstance(x, str)
     else:
         reducible = lambda x: isinstance(x, cls)
 
@@ -202,8 +202,8 @@ class preorder_traversal(object):
         """
         self._skip_flag = True
 
-    def next(self):
-        return self._pt.next()
+    def __next__(self):
+        return next(self._pt)
 
     def __iter__(self):
         return self
@@ -221,16 +221,16 @@ def interactive_traversal(expr):
     END = '\033[0m'
 
     def cprint(*args):
-        print "".join(map(str, args)) + END
+        print("".join(map(str, args)) + END)
 
     def _interactive_traversal(expr, stage):
         if stage > 0:
-            print
+            print()
 
         cprint("Current expression (stage ", BYELLOW, stage, END, "):")
-        print BCYAN
+        print(BCYAN)
         pprint(expr)
-        print END
+        print(END)
 
         if isinstance(expr, Basic):
             if expr.is_Add:
@@ -252,7 +252,7 @@ def interactive_traversal(expr):
         for i, arg in enumerate(args):
             cprint(GREEN, "[", BGREEN, i, GREEN, "] ", BLUE, type(arg), END)
             pprint(arg)
-            print
+            print()
 
         if n_args == 1:
             choices = '0'
@@ -260,10 +260,10 @@ def interactive_traversal(expr):
             choices = '0-%d' % (n_args-1)
 
         try:
-            choice = raw_input("Your choice [%s,f,l,r,d,?]: " % choices)
+            choice = input("Your choice [%s,f,l,r,d,?]: " % choices)
         except EOFError:
             result = expr
-            print
+            print()
         else:
             if choice == '?':
                 cprint(RED, "%s - select subexpression with the given index" % choices)
@@ -360,11 +360,11 @@ def variations(seq, n, repetition=False):
         yield []
     else:
         if not repetition:
-            for i in xrange(len(seq)):
+            for i in range(len(seq)):
                 for cc in variations(seq[:i] + seq[i + 1:], n - 1, False):
                     yield [seq[i]] + cc
         else:
-            for i in xrange(len(seq)):
+            for i in range(len(seq)):
                 for cc in variations(seq, n - 1, True):
                     yield [seq[i]] + cc
 
@@ -414,7 +414,7 @@ def subsets(seq, k=None, repetition=False):
                 yield list(s)
     else:
         if not repetition:
-            for i in xrange(len(seq)):
+            for i in range(len(seq)):
                 for cc in subsets(seq[i + 1:], k - 1, False):
                     yield [seq[i]] + cc
         else:
@@ -482,11 +482,11 @@ def capture(func):
     >>> 'hello' in capture(foo) # foo, not foo()
     True
     """
-    import StringIO
+    import io
     import sys
 
     stdout = sys.stdout
-    sys.stdout = file = StringIO.StringIO()
+    sys.stdout = file = io.StringIO()
     func()
     sys.stdout = stdout
     return file.getvalue()
@@ -534,7 +534,7 @@ def sift(expr, keyfunc):
 
 def take(iter, n):
     """Return ``n`` items from ``iter`` iterator. """
-    return [ value for _, value in zip(xrange(n), iter) ]
+    return [ value for _, value in zip(range(n), iter) ]
 
 def dict_merge(*dicts):
     """Merge dictionaries into a single dictionary. """
@@ -560,7 +560,7 @@ def prefixes(seq):
     """
     n = len(seq)
 
-    for i in xrange(n):
+    for i in range(n):
         yield seq[:i+1]
 
 def postfixes(seq):
@@ -578,7 +578,7 @@ def postfixes(seq):
     """
     n = len(seq)
 
-    for i in xrange(n):
+    for i in range(n):
         yield seq[n-i-1:]
 
 def topological_sort(graph, key=None):
@@ -743,8 +743,8 @@ def multiset_partitions(multiset, m):
     cache = {}
 
     def visit(n, a):
-        ps = [[] for i in xrange(m)]
-        for j in xrange(n):
+        ps = [[] for i in range(m)]
+        for j in range(n):
             ps[a[j + 1]].append(multiset[j])
         canonical = tuple(tuple(j) for j in ps)
         if not canonical in cache:
@@ -825,7 +825,7 @@ def multiset_partitions(multiset, m):
 
     n = len(multiset)
     a = [0] * (n + 1)
-    for j in xrange(1, m + 1):
+    for j in range(1, m + 1):
         a[n - m + j] = j - 1
     return f(m, n, 0, n, a)
 
@@ -1034,7 +1034,7 @@ def generate_bell(n):
     >>> list(generate_bell(3))
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 0, 1), (2, 1, 0)]
     """
-    P = [i for i in xrange(n)]
+    P = [i for i in range(n)]
     T = [0]
     cache = set()
     def gen(P, T, t):
@@ -1078,14 +1078,14 @@ def generate_involutions(n):
     >>> len(generate_involutions(4))
     10
     """
-    P = range(n) # the items of the permutation
+    P = list(range(n)) # the items of the permutation
     F = [0] # the fixed points {is this right??}
     cache = set()
     def gen(P, F, t):
         if t == n:
             cache.add(tuple(P))
         else:
-            for j in xrange(len(F)):
+            for j in range(len(F)):
                 P[j], P[t] = P[t], P[j]
                 if tuple(P) not in cache:
                     cache.add(tuple(P))
@@ -1120,12 +1120,12 @@ def generate_derangements(perm):
     >>> list(generate_derangements([0,1,1]))
     []
     """
-    indices = range(len(perm))
+    indices = list(range(len(perm)))
     p = variations(indices, len(indices))
     for rv in \
             uniq(tuple(perm[i] for i in idx) \
                  for idx in p if all(perm[k] != \
-                                     perm[idx[k]] for k in xrange(len(perm)))):
+                                     perm[idx[k]] for k in range(len(perm)))):
         yield list(rv)
 
 def unrestricted_necklace(n, k):
@@ -1157,7 +1157,7 @@ def unrestricted_necklace(n, k):
             a[t] = a[t - p]
             for necklace in gen(t + 1, p):
                 yield necklace
-            for j in xrange(a[t - p] + 1, k):
+            for j in range(a[t - p] + 1, k):
                 a[t] = j
                 for necklace in gen(t + 1, t):
                     yield necklace
@@ -1184,20 +1184,20 @@ def generate_oriented_forest(n):
     [[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0], \
     [0, 1, 1, 1], [0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 0, 0], [0, 0, 0, 0]]
     """
-    P = range(-1, n)
+    P = list(range(-1, n))
     while True:
         yield P[1:]
         if P[n] > 0:
             P[n] = P[P[n]]
         else:
-            for p in xrange(n - 1, 0, -1):
+            for p in range(n - 1, 0, -1):
                 if P[p] != 0:
                     target = P[p] - 1
-                    for q in xrange(p - 1, 0, -1):
+                    for q in range(p - 1, 0, -1):
                         if P[q] == target:
                             break
                     offset = p - q
-                    for i in xrange(p, n + 1):
+                    for i in range(p, n + 1):
                         P[i] = P[i - offset]
                     break
             else:

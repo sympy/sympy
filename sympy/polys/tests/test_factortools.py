@@ -194,7 +194,7 @@ def test_dup_zz_factor():
 
     f = [1,0,0,1,1]
 
-    for i in xrange(0, 20):
+    for i in range(0, 20):
         assert dup_zz_factor(f, ZZ) == (1, [(f, 1)])
 
     assert dup_zz_factor([1,2,2], ZZ) == \
@@ -304,7 +304,7 @@ def test_dmp_zz_wang():
     K = [k_1, k_2, k_3, k_4]
     E = [e_1, e_2, e_3, e_4]
 
-    T = zip(T, K)
+    T = list(zip(T, K))
 
     A = [ZZ(-14), ZZ(3)]
 
@@ -333,7 +333,7 @@ def test_dmp_zz_wang():
 
     assert dmp_zz_wang_lead_coeffs(w_1, T, cs, E, H, A, 2, ZZ) == (w_1, H, LC)
 
-    H_1 = [ dmp_normal(t, 0, ZZ) for t in [[44L,42L,1L],[126L,-9L,28L],[187L,0L,-23L]] ]
+    H_1 = [ dmp_normal(t, 0, ZZ) for t in [[44,42,1],[126,-9,28],[187,0,-23]] ]
     H_2 = [ dmp_normal(t, 1, ZZ) for t in [[[-4,-12],[-3,0],[1]],[[-9,0],[-9],[-2,0]],[[1,0,-9],[],[1,-9]]] ]
     H_3 = [ dmp_normal(t, 1, ZZ) for t in [[[-4,-12],[-3,0],[1]],[[-9,0],[-9],[-2,0]],[[1,0,-9],[],[1,-9]]] ]
 

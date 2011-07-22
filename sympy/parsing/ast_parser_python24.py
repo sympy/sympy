@@ -12,6 +12,7 @@ from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol
 
 from sympy.core.compatibility import callable
+import collections
 
 _is_integer = re.compile(r'\A\d+(l|L)?\Z').match
 
@@ -28,7 +29,7 @@ class SymPyTransformer(Transformer):
         n = Transformer.atom_number(self, nodelist)
         number, lineno = nodelist[0][1:]
         if _is_integer(number):
-            n = Const(long(number), lineno)
+            n = Const(int(number), lineno)
             return CallFunc(Name('Integer'), [n])
         if number.endswith('j'):
             n = Const(complex(number), lineno)
@@ -45,7 +46,7 @@ class SymPyTransformer(Transformer):
         elif name in self.global_dict:
             name_obj = self.global_dict[name]
 
-            if isinstance(name_obj, (Basic, type)) or callable(name_obj):
+            if isinstance(name_obj, (Basic, type)) or isinstance(name_obj, collections.Callable):
                 return Const(name_obj, lineno=lineno)
         elif name in ['True', 'False']:
             return Const(eval(name), lineno=lineno)
@@ -65,7 +66,7 @@ class SymPyTransformer(Transformer):
         lineno = nodelist[1][2]
         code = self.com_node(nodelist[-1])
 
-        assert not defaults,`defaults` # sympy.Lambda does not support optional arguments
+        assert not defaults,repr(defaults) # sympy.Lambda does not support optional arguments
 
         def convert(x):
             return CallFunc(Name('sympify'), [Const(x)])
@@ -78,7 +79,7 @@ class SymPyTransformer(Transformer):
 class SymPyParser:
     def __init__(self, local_dict={}): #Contents of local_dict change, but it has proper effect only in global scope
         global_dict = {}
-        exec 'from sympy import *' in global_dict
+        exec('from sympy import *', global_dict)
 
         self.r_transformer = SymPyTransformer(local_dict, global_dict)
         self.local_dict = local_dict

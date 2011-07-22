@@ -9,7 +9,7 @@ x, y = symbols('x,y')
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
 ENV = {}
-exec "from sympy import *" in ENV
+exec("from sympy import *", ENV)
 
 def sT(expr, string):
     """

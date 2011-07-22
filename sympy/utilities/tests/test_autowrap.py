@@ -4,7 +4,7 @@
 import os
 import tempfile
 import shutil
-from StringIO import StringIO
+from io import StringIO
 
 from sympy.utilities.autowrap import autowrap, binary_function, CythonCodeWrapper,\
         ufuncify

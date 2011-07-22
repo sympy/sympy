@@ -1,2 +1,2 @@
-from dimacs import load_file
+from .dimacs import load_file
 

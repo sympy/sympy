@@ -22,7 +22,7 @@ def test_free_symbols():
     raises(NotImplementedError, "solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x))")
 
 def test_swap_back():
-    f, g = map(Function, 'fg')
+    f, g = list(map(Function, 'fg'))
     x, y = symbols('x,y')
     a, b = f(x), g(x)
     assert solve([a + y - 2, a - b - 5], a, y, b) == \

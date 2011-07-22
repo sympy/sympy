@@ -2,4 +2,4 @@
 SymPy statistics module
 """
 
-from distributions import Normal, Uniform
+from .distributions import Normal, Uniform

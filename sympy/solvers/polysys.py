@@ -27,7 +27,7 @@ def solve_poly_system(seq, *gens, **args):
     """
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed as exc:
         raise ComputationFailed('solve_poly_system', len(seq), exc)
 
     if len(polys) == len(opt.gens) == 2:
@@ -60,8 +60,8 @@ def solve_biquadratic(f, g, opt):
     p = Poly(p, x, expand=False)
     q = q.ltrim(-1)
 
-    p_roots = [ rcollect(expr, y) for expr in roots(p).keys() ]
-    q_roots = roots(q).keys()
+    p_roots = [ rcollect(expr, y) for expr in list(roots(p).keys()) ]
+    q_roots = list(roots(q).keys())
 
     solutions = []
 
@@ -130,7 +130,7 @@ def solve_generic(polys, opt):
     def solve_reduced_system(system, gens, entry=False):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
-            zeros = roots(system[0], gens[-1]).keys()
+            zeros = list(roots(system[0], gens[-1]).keys())
             return [ (zero,) for zero in zeros ]
 
         basis = groebner(system, gens, polys=True)
@@ -141,7 +141,7 @@ def solve_generic(polys, opt):
             else:
                 return None
 
-        univariate = filter(is_univariate, basis)
+        univariate = list(filter(is_univariate, basis))
 
         if len(univariate) == 1:
             f = univariate.pop()
@@ -151,7 +151,7 @@ def solve_generic(polys, opt):
         gens = f.gens
         gen = gens[-1]
 
-        zeros = roots(f.ltrim(gen)).keys()
+        zeros = list(roots(f.ltrim(gen)).keys())
 
         if not zeros:
             return []
@@ -235,7 +235,7 @@ def solve_triangulated(polys, *gens, **args):
         _solutions = set([])
 
         for values, dom in solutions:
-            H, mapping = [], zip(vars, values)
+            H, mapping = [], list(zip(vars, values))
 
             for g in G:
                 _vars = (var,) + vars

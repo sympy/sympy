@@ -58,7 +58,7 @@ def __qsympify_sequence_helper(seq):
     if not ordered_iter(seq):
         if isinstance(seq, Matrix):
             return seq
-        elif isinstance(seq, basestring):
+        elif isinstance(seq, str):
             return Symbol(seq)
         else:
             return sympify(seq)
@@ -84,7 +84,7 @@ class QExpr(Expr):
     __slots__ = ['hilbert_space']
 
     # The separator used in printing the label.
-    _label_separator = u''
+    _label_separator = ''
 
     def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.

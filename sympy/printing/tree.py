@@ -87,4 +87,4 @@ def print_tree(node):
 
     See also: tree()
     """
-    print tree(node)
+    print(tree(node))

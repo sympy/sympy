@@ -13,11 +13,11 @@ def main():
     b = sympy.Symbol('b')
     e = (a + b)**5
 
-    print
+    print()
     pprint(e)
-    print '\n'
+    print('\n')
     pprint(e.expand())
-    print
+    print()
 
 if __name__ == "__main__":
     main()

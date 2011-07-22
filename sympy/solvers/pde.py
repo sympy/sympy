@@ -11,6 +11,7 @@ from sympy.simplify import simplify
 from sympy.core.compatibility import reduce
 
 import operator
+from functools import reduce
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive

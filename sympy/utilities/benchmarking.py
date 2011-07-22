@@ -51,7 +51,7 @@ class Timer(timeit.Timer):
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
        #exec code in globals(), ns      -- original timeit code
-        exec code in globals, ns    #   -- we use caller-provided globals instead
+        exec(code, globals, ns)    #   -- we use caller-provided globals instead
         self.inner = ns["inner"]
 
 
@@ -70,14 +70,14 @@ class Function(py.__.test.item.Function):
         src = '\n'.join( src.splitlines()[1:] )
 
         # extract benchmark title
-        if target.func_doc is not None:
-            self.benchtitle = target.func_doc
+        if target.__doc__ is not None:
+            self.benchtitle = target.__doc__
         else:
             self.benchtitle = src.splitlines()[0].strip()
 
 
         # XXX we ignore args
-        timer = Timer(src, globals=target.func_globals)
+        timer = Timer(src, globals=target.__globals__)
 
         if self.name.startswith('timeit_'):
             # from IPython.Magic.magic_timeit

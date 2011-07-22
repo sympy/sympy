@@ -212,15 +212,15 @@ def test_issue2084():
                oo, oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3),
                0, 0, 0, 0, 0, 0, 0, 0)
     assert len(tests) == len(results)
-    for i, (args, res) in enumerate(zip(tests, results)):
+    for i, (args, res) in enumerate(list(zip(tests, results))):
         y, s, e, d = args
         eq=y**(s*e)
         try:
             assert limit(eq, x, 0, dir=d) == res
         except AssertionError:
             if 0: # change to 1 if you want to see the failing tests
-                print
-                print i, res, eq, d, limit(eq, x, 0, dir=d)
+                print()
+                print(i, res, eq, d, limit(eq, x, 0, dir=d))
             else:
                 assert None
 
@@ -244,15 +244,15 @@ def test_issue1447():
     results = (0, 0, -oo, oo, 0, 0, -oo, oo, 0, 0,
                oo, -oo, 0, 0, oo, -oo, 0, 0, oo, -oo)
     assert len(tests) == len(results)
-    for i, (args, res) in enumerate(zip(tests, results)):
+    for i, (args, res) in enumerate(list(zip(tests, results))):
         f, l, d= args
         eq=f(x)
         try:
             assert limit(eq, x, l, dir=d) == res
         except AssertionError:
             if 0: # change to 1 if you want to see the failing tests
-                print
-                print i, res, eq, l, d, limit(eq, x, l, dir=d)
+                print()
+                print(i, res, eq, l, d, limit(eq, x, l, dir=d))
             else:
                 assert None
 

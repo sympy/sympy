@@ -100,8 +100,8 @@ ContStr = group(r"[uU]?[rR]?'[^\n'\\]*(?:\\.[^\n'\\]*)*" +
 PseudoExtras = group(r'\\\r?\n', Comment, Triple)
 PseudoToken = Whitespace + group(PseudoExtras, Number, Funny, ContStr, Name)
 
-tokenprog, pseudoprog, single3prog, double3prog = map(
-    re.compile, (Token, PseudoToken, Single3, Double3))
+tokenprog, pseudoprog, single3prog, double3prog = list(map(
+    re.compile, (Token, PseudoToken, Single3, Double3)))
 endprogs = {"'": re.compile(Single), '"': re.compile(Double),
             "'''": single3prog, '"""': double3prog,
             "r'''": single3prog, 'r"""': double3prog,
@@ -151,8 +151,8 @@ class StopTokenizing(Exception): pass
 def printtoken(type, token, srow_scol, erow_ecol, line): # for testing
     srow, scol = srow_scol
     erow, ecol = erow_ecol
-    print "%d,%d-%d,%d:\t%s\t%s" % \
-        (srow, scol, erow, ecol, tok_name[type], repr(token))
+    print("%d,%d-%d,%d:\t%s\t%s" % \
+        (srow, scol, erow, ecol, tok_name[type], repr(token)))
 
 def tokenize(readline, tokeneater=printtoken):
     """

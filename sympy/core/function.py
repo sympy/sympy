@@ -29,14 +29,14 @@ Example:
     (x,)
 
 """
-from core import BasicMeta, C
-from basic import Basic
-from singleton import S
-from expr import Expr, AtomicExpr
-from decorators import _sympifyit
+from .core import BasicMeta, C
+from .basic import Basic
+from .singleton import S
+from .expr import Expr, AtomicExpr
+from .decorators import _sympifyit
 
-from cache import cacheit
-from numbers import Rational
+from .cache import cacheit
+from .numbers import Rational
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.utilities import all, any, default_sort_key
@@ -54,14 +54,13 @@ class ArgumentIndexError(ValueError):
         return ("Invalid operation with argument number %s for Function %s" %
                         (self.args[1], self.args[0]))
 
-class FunctionClass(BasicMeta):
+class FunctionClass(BasicMeta, metaclass=BasicMeta):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
     Use Function('<function name>' [ , signature ]) to create
     undefined function classes.
     """
-    __metaclass__ = BasicMeta
 
     _new = type.__new__
 
@@ -71,14 +70,13 @@ class FunctionClass(BasicMeta):
     def __contains__(self, obj):
         return (self == obj)
 
-class Application(Basic):
+class Application(Basic, metaclass=FunctionClass):
     """
     Base class for applied functions.
 
     Instances of Application represent the result of applying an application of
     any type to any object.
     """
-    __metaclass__ = FunctionClass
     __slots__ = []
 
     is_Function = True
@@ -87,7 +85,7 @@ class Application(Basic):
 
     @cacheit
     def __new__(cls, *args, **options):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
 
         # these lines should be refactored
         for opt in ["nargs", "dummy", "comparable", "noncommutative", "commutative"]:
@@ -168,7 +166,7 @@ class Function(Application, Expr):
                raise ValueError('Function %s expects %s argument(s), got %s.' % (
                                  cls, cls.nargs, len(args)))
 
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         evaluate = options.pop('evaluate', True)
         if evaluate:
             evaluated = cls.eval(*args)
@@ -398,7 +396,7 @@ functions are not supported.')
         arg = self.args[0]
         l = []
         g = None
-        for i in xrange(n+2):
+        for i in range(n+2):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -560,7 +558,7 @@ class AppliedUndef(Function):
     Base class for expressions resulting from the application of an undefined function.
     """
     def __new__(cls, *args, **options):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         result = Expr.__new__(cls, *args, **options)
         result.nargs = len(args)
         return result
@@ -677,7 +675,7 @@ class Derivative(Expr):
         # We make a generator so as to only generate a symbol when necessary.
         # If a high order of derivative is requested and the expr becomes 0
         # after a few differentiations, then we won't need the other symbols
-        symbolgen = (s for s, count in symbol_count for i in xrange(count))
+        symbolgen = (s for s, count in symbol_count for i in range(count))
 
         if expr.is_commutative:
             assumptions['commutative'] = True
@@ -767,7 +765,7 @@ class Derivative(Expr):
         if old in self.variables and not new.is_Symbol:
             # Issue 1620
             return Subs(self, old, new)
-        return Derivative(*map(lambda x: x._eval_subs(old, new), self.args))
+        return Derivative(*[x._eval_subs(old, new) for x in self.args])
 
     def matches(self, expr, repl_dict={}, evaluate=False):
         if self in repl_dict:
@@ -966,7 +964,7 @@ class Subs(Expr):
         return obj
 
     def doit(self):
-        return self.expr.doit().subs(zip(self.variables, self.point))
+        return self.expr.doit().subs(list(zip(self.variables, self.point)))
 
     def evalf(self):
         return self.doit().evalf()
@@ -1011,8 +1009,8 @@ class Subs(Expr):
         if uniq(self.point) != self.point:
             repeated = uniq([ v for v in self.point if
                                 list(self.point.args).count(v) > 1 ])
-            repswap = dict(zip(repeated, [ C.Dummy() for _ in
-                                            xrange(len(repeated)) ]))
+            repswap = dict(list(zip(repeated, [ C.Dummy() for _ in
+                                            range(len(repeated)) ])))
             selfrepargs = [ (self.variables[i], repswap[v]) for i, v in
                             enumerate(self.point) if v in repeated ]
             otherrepargs = [ (other.variables[i], repswap[v]) for i, v in
@@ -1481,7 +1479,7 @@ def count_ops(expr, visual=False):
 
     elif type(expr) is dict:
         ops = [count_ops(k, visual=visual) +
-               count_ops(v, visual=visual) for k, v in expr.iteritems()]
+               count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
     elif not isinstance(expr, Basic):
@@ -1505,5 +1503,5 @@ def count_ops(expr, visual=False):
 
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
-from sympify import sympify
-from add    import Add
+from .sympify import sympify
+from .add    import Add

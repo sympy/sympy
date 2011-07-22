@@ -16,6 +16,7 @@ from sympy.physics.quantum.gate import Gate, HadamardGate
 from sympy.physics.quantum.qubit import IntQubit
 
 from sympy.core.compatibility import callable
+import collections
 
 __all__ = [
     'OracleGate',
@@ -82,8 +83,8 @@ class OracleGate(Gate):
         |3>
     """
 
-    gate_name = u'V'
-    gate_name_latex = u'V'
+    gate_name = 'V'
+    gate_name_latex = 'V'
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -100,7 +101,7 @@ class OracleGate(Gate):
         sub_args = UnitaryOperator._eval_args(sub_args)
         if not sub_args[0].is_Integer:
            raise TypeError('Integer expected, got: %r' % sub_args[0])
-        if not callable(args[1]):
+        if not isinstance(args[1], collections.Callable):
            raise TypeError('Callable expected, got: %r' % args[1])
         sub_args = UnitaryOperator._eval_args(tuple(range(args[0])))
         return (sub_args, args[1])
@@ -175,8 +176,8 @@ class WGate(Gate):
 
     """
 
-    gate_name = u'W'
-    gate_name_latex = u'W'
+    gate_name = 'W'
+    gate_name_latex = 'W'
 
     @classmethod
     def _eval_args(cls, args):
@@ -188,7 +189,7 @@ class WGate(Gate):
         args = UnitaryOperator._eval_args(args)
         if not args[0].is_Integer:
            raise TypeError('Integer expected, got: %r' % args[0])
-        return tuple(reversed(range(args[0])))
+        return tuple(reversed(list(range(args[0]))))
 
     #-------------------------------------------------------------------------
     # Apply

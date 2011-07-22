@@ -126,7 +126,7 @@ class Options(dict):
             args = dict(args)
             args['gens'] = gens
 
-        for option, value in args.iteritems():
+        for option, value in args.items():
             try:
                 cls = self.__options__[option]
             except KeyError:
@@ -140,7 +140,7 @@ class Options(dict):
             if value is not None:
                 self[option] = cls.preprocess(value)
 
-        for option in self.keys():
+        for option in list(self.keys()):
             cls = self.__options__[option]
 
             for require_option in cls.requires:
@@ -160,7 +160,7 @@ class Options(dict):
         if cls.__order__ is None:
             vertices, edges = [], set([])
 
-            for name, option in cls.__options__.iteritems():
+            for name, option in cls.__options__.items():
                 vertices.append(name)
 
                 for _name in option.after:
@@ -178,10 +178,10 @@ class Options(dict):
         """Clone ``self`` and update specified options. """
         obj = dict.__new__(self.__class__)
 
-        for option, value in self.iteritems():
+        for option, value in self.items():
             obj[option] = value
 
-        for option, value in updates.iteritems():
+        for option, value in updates.items():
             obj[option] = value
 
         return obj
@@ -196,7 +196,7 @@ class Options(dict):
     def args(self):
         args = {}
 
-        for option, value in self.iteritems():
+        for option, value in self.items():
             if value is not None and option != 'gens':
                 cls = self.__options__[option]
 
@@ -209,7 +209,7 @@ class Options(dict):
     def options(self):
         options = {}
 
-        for option, cls in self.__options__.iteritems():
+        for option, cls in self.__options__.items():
             if not issubclass(cls, Flag):
                 options[option] = getattr(self, option)
 
@@ -219,16 +219,14 @@ class Options(dict):
     def flags(self):
         flags = {}
 
-        for option, cls in self.__options__.iteritems():
+        for option, cls in self.__options__.items():
             if issubclass(cls, Flag):
                 flags[option] = getattr(self, option)
 
         return flags
 
-class Expand(BooleanOption):
+class Expand(BooleanOption, metaclass=OptionType):
     """``expand`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'expand'
 
@@ -239,10 +237,8 @@ class Expand(BooleanOption):
     def default(cls):
         return True
 
-class Gens(Option):
+class Gens(Option, metaclass=OptionType):
     """``gens`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'gens'
 
@@ -269,10 +265,8 @@ class Gens(Option):
 
         return tuple(gens)
 
-class Wrt(Option):
+class Wrt(Option, metaclass=OptionType):
     """``wrt`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'wrt'
 
@@ -297,10 +291,8 @@ class Wrt(Option):
         else:
             raise OptionError("invalid argument for 'wrt' option")
 
-class Sort(Option):
+class Sort(Option, metaclass=OptionType):
     """``sort`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'sort'
 
@@ -320,10 +312,8 @@ class Sort(Option):
         else:
             raise OptionError("invalid argument for 'sort' option")
 
-class Order(Option):
+class Order(Option, metaclass=OptionType):
     """``order`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'order'
 
@@ -338,29 +328,24 @@ class Order(Option):
     def preprocess(cls, order):
         return sympy.polys.monomialtools.monomial_key(order)
 
-class Field(BooleanOption):
+class Field(BooleanOption, metaclass=OptionType):
     """``field`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'field'
 
     requires = []
     excludes = ['domain', 'split', 'gaussian']
 
-class Greedy(BooleanOption):
+class Greedy(BooleanOption, metaclass=OptionType):
     """``greedy`` option to polynomial manipulation functions. """
-    __metaclass__ = OptionType
 
     option = 'greedy'
 
     requires = []
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
-class Composite(BooleanOption):
+class Composite(BooleanOption, metaclass=OptionType):
     """ """
-
-    __metaclass__ = OptionType
 
     option = 'composite'
 
@@ -371,10 +356,8 @@ class Composite(BooleanOption):
     requires = []
     excludes = ['domain', 'split', 'gaussian', 'extension', 'modulus', 'symmetric']
 
-class Domain(Option):
+class Domain(Option, metaclass=OptionType):
     """``domain`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'domain'
 
@@ -413,7 +396,7 @@ class Domain(Option):
             if r is not None:
                 ground, gens = r.groups()
 
-                gens = map(sympify, gens.split(','))
+                gens = list(map(sympify, gens.split(',')))
 
                 if ground in ['Z', 'ZZ']:
                     return sympy.polys.domains.ZZ.poly_ring(*gens)
@@ -425,7 +408,7 @@ class Domain(Option):
             if r is not None:
                 ground, gens = r.groups()
 
-                gens = map(sympify, gens.split(','))
+                gens = list(map(sympify, gens.split(',')))
 
                 if ground in ['Z', 'ZZ']:
                     return sympy.polys.domains.ZZ.frac_field(*gens)
@@ -435,7 +418,7 @@ class Domain(Option):
             r = cls._re_algebraic.match(domain)
 
             if r is not None:
-                gens = map(sympify, r.groups()[1].split(','))
+                gens = list(map(sympify, r.groups()[1].split(',')))
                 return sympy.polys.domains.QQ.algebraic_field(*gens)
 
             raise OptionError('expected a valid domain specification, got %s' % domain)
@@ -446,10 +429,8 @@ class Domain(Option):
                 (set(options['domain'].gens) & set(options['gens'])):
             raise GeneratorsError("ground domain and generators interferes together")
 
-class Split(BooleanOption):
+class Split(BooleanOption, metaclass=OptionType):
     """``split`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'split'
 
@@ -461,10 +442,8 @@ class Split(BooleanOption):
         if 'split' in options:
             raise NotImplementedError("'split' option is not implemented yet")
 
-class Gaussian(BooleanOption):
+class Gaussian(BooleanOption, metaclass=OptionType):
     """``gaussian`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'gaussian'
 
@@ -477,10 +456,8 @@ class Gaussian(BooleanOption):
             options['extension'] = set([S.ImaginaryUnit])
             Extension.postprocess(options)
 
-class Extension(Option):
+class Extension(Option, metaclass=OptionType):
     """``extension`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'extension'
 
@@ -509,10 +486,8 @@ class Extension(Option):
         if 'extension' in options and options['extension'] is not True:
             options['domain'] = sympy.polys.domains.QQ.algebraic_field(*options['extension'])
 
-class Modulus(Option):
+class Modulus(Option, metaclass=OptionType):
     """``modulus`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'modulus'
 
@@ -535,20 +510,16 @@ class Modulus(Option):
             symmetric = options.get('symmetric', True)
             options['domain'] = sympy.polys.domains.FF(modulus, symmetric)
 
-class Symmetric(BooleanOption):
+class Symmetric(BooleanOption, metaclass=OptionType):
     """``symmetric`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'symmetric'
 
     requires = ['modulus']
     excludes = ['greedy', 'domain', 'split', 'gaussian', 'extension']
 
-class Strict(BooleanOption):
+class Strict(BooleanOption, metaclass=OptionType):
     """``strict`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'strict'
 
@@ -556,10 +527,8 @@ class Strict(BooleanOption):
     def default(cls):
         return True
 
-class Repr(Option):
+class Repr(Option, metaclass=OptionType):
     """``repr`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'repr'
 
@@ -581,10 +550,8 @@ class Repr(Option):
         else:
             raise OptionError("'repr' must a string or a class, got %s" % repr)
 
-class Auto(BooleanOption, Flag):
+class Auto(BooleanOption, Flag, metaclass=OptionType):
     """``auto`` flag to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'auto'
 
@@ -599,10 +566,8 @@ class Auto(BooleanOption, Flag):
         if ('domain' in options or 'field' in options) and 'auto' not in options:
             options['auto'] = False
 
-class Frac(BooleanOption, Flag):
+class Frac(BooleanOption, Flag, metaclass=OptionType):
     """``auto`` option to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'frac'
 
@@ -610,10 +575,8 @@ class Frac(BooleanOption, Flag):
     def default(cls):
         return False
 
-class Formal(BooleanOption, Flag):
+class Formal(BooleanOption, Flag, metaclass=OptionType):
     """``formal`` flag to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'formal'
 
@@ -621,17 +584,13 @@ class Formal(BooleanOption, Flag):
     def default(cls):
         return False
 
-class Polys(BooleanOption, Flag):
+class Polys(BooleanOption, Flag, metaclass=OptionType):
     """``polys`` flag to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'polys'
 
-class Include(BooleanOption, Flag):
+class Include(BooleanOption, Flag, metaclass=OptionType):
     """``include`` flag to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'include'
 
@@ -639,10 +598,8 @@ class Include(BooleanOption, Flag):
     def default(cls):
         return False
 
-class All(BooleanOption, Flag):
+class All(BooleanOption, Flag, metaclass=OptionType):
     """``all`` flag to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'all'
 
@@ -650,10 +607,8 @@ class All(BooleanOption, Flag):
     def default(cls):
         return False
 
-class Gen(Flag):
+class Gen(Flag, metaclass=OptionType):
     """``gen`` flag to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'gen'
 
@@ -668,10 +623,8 @@ class Gen(Flag):
         else:
             raise OptionError("invalid argument for 'gen' option")
 
-class Symbols(Flag):
+class Symbols(Flag, metaclass=OptionType):
     """``symbols`` flag to polynomial manipulation functions. """
-
-    __metaclass__ = OptionType
 
     option = 'symbols'
 
@@ -717,7 +670,7 @@ def allowed_flags(args, flags):
     """
     flags = set(flags)
 
-    for arg in args.iterkeys():
+    for arg in args.keys():
         try:
             if Options.__options__[arg].is_Flag and not arg in flags:
                 raise FlagError("'%s' flag is not allowed in this context" % arg)

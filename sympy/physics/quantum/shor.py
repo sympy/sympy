@@ -75,7 +75,7 @@ class CMod(Gate):
         outarray = list(qubits.args[0][0:self.t])
 
         # Place out in low memory
-        for i in reversed(range(self.t)):
+        for i in reversed(list(range(self.t))):
             outarray.append((out>>i)&1)
 
         return Qubit(*outarray)
@@ -93,14 +93,14 @@ def shor(N):
     """
     a = random.randrange(N-2)+2
     if igcd(N,a) != 1:
-        print "got lucky with rand"
+        print("got lucky with rand")
         return igcd(N,a)
-    print "a= ",a
-    print "N= ",N
+    print("a= ",a)
+    print("N= ",N)
     r = period_find(a,N)
-    print "r= ",r
+    print("r= ",r)
     if r%2 == 1:
-        print "r is not even, begin again"
+        print("r is not even, begin again")
         shor(N)
     answer = (igcd(a**(r/2)-1, N), igcd(a**(r/2)+1, N))
     return answer
@@ -116,7 +116,7 @@ def arr(num, t):
     [0, 1, 0, 1]
     """
     binary_array = []
-    for i in reversed(range(t)):
+    for i in reversed(list(range(t))):
         binary_array.append((num>>i)&1)
     return binary_array
 
@@ -181,20 +181,20 @@ def period_find(a, N):
     circuit = CMod(t,a,N)*circuit
     #will measure first half of register giving one of the a**k%N's
     circuit = qapply(circuit)
-    print "controlled Mod'd"
+    print("controlled Mod'd")
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i)
         # circuit = measure(i)*circuit
     # circuit = qapply(circuit)
-    print "measured 1"
+    print("measured 1")
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
     circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint = True)
-    print "QFT'd"
+    print("QFT'd")
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i+t)
         # circuit = measure(i+t)*circuit
     # circuit = qapply(circuit)
-    print circuit
+    print(circuit)
     if isinstance(circuit, Qubit):
         register = circuit
     elif isinstance(circuit, Mul):
@@ -202,7 +202,7 @@ def period_find(a, N):
     else:
         register = circuit.args[-1].args[-1]
 
-    print register
+    print(register)
     n = 1
     answer = 0
     for i in range(len(register)/2):
@@ -212,6 +212,6 @@ def period_find(a, N):
         raise OrderFindingException("Order finder returned 0. Happens with chance %f" % epsilon)
     #turn answer into r using continued fractions
     g = getr(answer, 2**t, N)
-    print g
+    print(g)
     return g
 

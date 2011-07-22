@@ -4,11 +4,11 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.solvers import solve
-from entity import GeometryEntity
-from point import Point
-from ellipse import Circle
-from line import Line, Segment, Ray
-from util import _symbol
+from .entity import GeometryEntity
+from .point import Point
+from .ellipse import Circle
+from .line import Line, Segment, Ray
+from .util import _symbol
 
 from sympy.core.compatibility import all
 
@@ -142,7 +142,7 @@ class Polygon(GeometryEntity):
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = [x for x in nodup if x is not None]
 
         if len(vertices) > 3:
             rv = GeometryEntity.__new__(cls, *vertices, **kwargs)
@@ -166,7 +166,7 @@ class Polygon(GeometryEntity):
             for i, si in enumerate(sides):
                 pts = si[0], si[1]
                 ai = si.arbitrary_point(hit)
-                for j in xrange(i):
+                for j in range(i):
                     sj = sides[j]
                     if sj[0] not in pts and sj[1] not in pts:
                         aj = si.arbitrary_point(hit)
@@ -174,7 +174,7 @@ class Polygon(GeometryEntity):
                         if tx.is_number and 0 <= tx <= 1:
                             ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
                             if (tx or ty) and ty.is_number and 0 <= ty <= 1:
-                                print ai, aj
+                                print(ai, aj)
                                 raise GeometryError("Polygon has intersecting sides.")
 
         return rv
@@ -199,7 +199,7 @@ class Polygon(GeometryEntity):
 
         """
         area = 0
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             pi = self[i - 1]
             pii = self[i]
             area += pi[0]*pii[1] - pii[0]*pi[1]
@@ -241,7 +241,7 @@ class Polygon(GeometryEntity):
         cw = isright(self[-1], self[0], self[1])
 
         ret = {}
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             a, b, c = self[i-2], self[i-1], self[i]
             ang = Line.angle_between(Line(b, a), Line(b, c))
             if cw ^ isright(a, b, c):
@@ -267,7 +267,7 @@ class Polygon(GeometryEntity):
         17**(1/2) + 7
         """
         p = 0
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             p += Point.distance(self[i - 1], self[i])
         return simplify(p)
 
@@ -326,7 +326,7 @@ class Polygon(GeometryEntity):
         """
         A = 1/(6*self.area)
         cx, cy = 0, 0
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             pi = self[i - 1]
             pii = self[i]
             v = pi[0]*pii[1] - pii[0]*pi[1]
@@ -366,7 +366,7 @@ class Polygon(GeometryEntity):
 
         """
         res = []
-        for i in xrange(-len(self), 0):
+        for i in range(-len(self), 0):
             res.append(Segment(self[i], self[i + 1]))
         return res
 
@@ -398,7 +398,7 @@ class Polygon(GeometryEntity):
 
         # Determine orientation of points
         cw = isright(self[-2], self[-1], self[0])
-        for i in xrange(1, len(self)):
+        for i in range(1, len(self)):
             if cw ^ isright(self[i - 2], self[i - 1], self[i]):
                 return False
 
@@ -457,7 +457,7 @@ class Polygon(GeometryEntity):
         # polygon closure is assumed in the following test but Polygon removes duplicate pts so
         # the last point has to be added so all sides are computed. Using Polygon.sides is
         # not good since Segments are unordered.
-        indices = range(-len(self), 1)
+        indices = list(range(-len(self), 1))
 
         if self.is_convex():
             orientation = None
@@ -798,11 +798,11 @@ class Polygon(GeometryEntity):
         # vertices to match all points of o
         n = len(self)
         o0 = o[0]
-        for i0 in xrange(n):
+        for i0 in range(n):
             if self[i0] == o0:
-                if all(self[(i0 + i) % n] == o[i] for i in xrange(1, n)):
+                if all(self[(i0 + i) % n] == o[i] for i in range(1, n)):
                     return True
-                if all(self[(i0 - i) % n] == o[i] for i in xrange(1, n)):
+                if all(self[(i0 - i) % n] == o[i] for i in range(1, n)):
                     return True
         return False
 
@@ -1230,7 +1230,7 @@ class RegularPolygon(Polygon):
         [Point(5, 0), Point(0, 5), Point(-5, 0), Point(0, -5)]
 
         """
-        return [self[i] for i in xrange(len(self))]
+        return [self[i] for i in range(len(self))]
 
     def __getitem__(self, k):
         """
@@ -1333,7 +1333,7 @@ class Triangle(Polygon):
                 nodup.pop(i + 1)
             i += 1
 
-        vertices = filter(lambda x: x is not None, nodup)
+        vertices = [x for x in nodup if x is not None]
 
         if len(vertices) == 3:
             return GeometryEntity.__new__(cls, *vertices, **kwargs)

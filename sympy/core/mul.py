@@ -1,9 +1,9 @@
-from basic import Basic, C
-from singleton import S
-from operations import AssocOp
-from cache import cacheit
-from logic import fuzzy_not
-from compatibility import any, all, cmp_to_key
+from .basic import Basic, C
+from .singleton import S
+from .operations import AssocOp
+from .cache import cacheit
+from .logic import fuzzy_not
+from .compatibility import any, all, cmp_to_key
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -192,11 +192,11 @@ class Mul(AssocOp):
         for b, e in c_powers:
             co = e.as_coeff_mul()
             common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
-        for b, d in common_b.items():
-            for di, li in d.items():
+        for b, d in list(common_b.items()):
+            for di, li in list(d.items()):
                 d[di] = Add(*li)
-        for b, e in common_b.items():
-            for t, c in e.items():
+        for b, e in list(common_b.items()):
+            for t, c in list(e.items()):
                 new_c_powers.append((b,c*Mul(*t)))
         c_powers = new_c_powers
 
@@ -206,11 +206,11 @@ class Mul(AssocOp):
         for b, e in num_exp:
             co = e.as_coeff_mul()
             common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
-        for b, d in common_b.items():
-            for di, li in d.items():
+        for b, d in list(common_b.items()):
+            for di, li in list(d.items()):
                 d[di] = Add(*li)
-        for b, e in common_b.items():
-            for t, c in e.items():
+        for b, e in list(common_b.items()):
+            for t, c in list(e.items()):
                 new_num_exp.append((b,c*Mul(*t)))
         num_exp = new_num_exp
 
@@ -244,21 +244,21 @@ class Mul(AssocOp):
                             # e.g.  x:6  for  ... * 2  * 3  * ...
         for b, e in num_exp:
             inv_exp_dict.setdefault(e, []).append(b)
-        for e, b in inv_exp_dict.items():
+        for e, b in list(inv_exp_dict.items()):
             inv_exp_dict[e] = Mul(*b)
-        c_part.extend([Pow(b, e) for e, b in inv_exp_dict.iteritems() if e])
+        c_part.extend([Pow(b, e) for e, b in inv_exp_dict.items() if e])
 
         # b, e -> e, b
         # {(1/5, [1/3]), (1/2, [1/12, 1/4]} -> {(1/3, [1/5, 1/2])}
         comb_e = {}
-        for b, e in pnum_rat.iteritems():
+        for b, e in pnum_rat.items():
             comb_e.setdefault(Add(*e), []).append(b)
         del pnum_rat
         # process them, reducing exponents to values less than 1
         # and updating coeff if necessary else adding them to
         # num_rat for further processing
         num_rat = []
-        for e, b in comb_e.iteritems():
+        for e, b in comb_e.items():
             b = Mul(*b)
             if e.q == 1:
                 coeff *= Pow(b, e)
@@ -314,7 +314,7 @@ class Mul(AssocOp):
             i += 1
 
         # combine bases of the new powers
-        for e, b in pnew.iteritems():
+        for e, b in pnew.items():
             pnew[e] = Mul(*b)
 
         # see if there is a base with matching coefficient
@@ -329,7 +329,7 @@ class Mul(AssocOp):
                     coeff *= c
                     assert p.is_Pow and p.base is S.NegativeOne
                     neg1e = p.args[1]
-                for e, b in pnew.iteritems():
+                for e, b in pnew.items():
                     if e == neg1e and b.is_positive:
                         pnew[e] = -b
                         break
@@ -337,7 +337,7 @@ class Mul(AssocOp):
                     c_part.append(p)
 
         # add all the pnew powers
-        c_part.extend([Pow(b, e) for e, b in pnew.iteritems()])
+        c_part.extend([Pow(b, e) for e, b in pnew.items()])
 
         # oo, -oo
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
@@ -649,7 +649,7 @@ class Mul(AssocOp):
     def _eval_derivative(self, s):
         terms = list(self.args)
         factors = []
-        for i in xrange(len(terms)):
+        for i in range(len(terms)):
             t = terms[i].diff(s)
             if t is S.Zero:
                 continue
@@ -1052,7 +1052,7 @@ class Mul(AssocOp):
             cdid = None
         else:
             rat = []
-            for (b, old_e) in old_c.items():
+            for (b, old_e) in list(old_c.items()):
                 c_e = c[b]
                 rat.append(ndiv(c_e, old_e))
                 if not rat[-1]:
@@ -1144,7 +1144,7 @@ class Mul(AssocOp):
                 # failed so we rebuild them after attempting a partial
                 # subs on them
 
-                failed.extend(range(i, len(nc)))
+                failed.extend(list(range(i, len(nc))))
                 for i in failed:
                     nc[i] = rejoin(*nc[i]).subs(old, new)
 
@@ -1194,7 +1194,7 @@ class Mul(AssocOp):
             s *= x._sage_()
         return s
 
-from numbers import Rational, igcd
-from power import Pow
-from sympify import sympify
-from add import Add
+from .numbers import Rational, igcd
+from .power import Pow
+from .sympify import sympify
+from .add import Add

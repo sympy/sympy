@@ -4,6 +4,7 @@ from os import walk, sep, chdir, pardir
 from os.path import split, join, abspath, exists
 from glob import glob
 import re
+from functools import reduce
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -58,7 +59,7 @@ def check_directory_tree(base_path, file_check, exclusions=set()):
         return
     for root, dirs, files in walk(base_path):
         for fname in glob(join(root, "*.py")):
-            if filter(lambda ex: ex in fname, exclusions):
+            if [ex for ex in exclusions if ex in fname]:
                 continue
             file_check(fname)
 

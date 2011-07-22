@@ -1,8 +1,8 @@
 from pyglet.gl import *
-from managed_window import ManagedWindow
+from .managed_window import ManagedWindow
 
-from plot_camera import PlotCamera
-from plot_controller import PlotController
+from .plot_camera import PlotCamera
+from .plot_controller import PlotController
 
 from time import clock
 
@@ -82,10 +82,10 @@ class PlotWindow(ManagedWindow):
         should_update_caption = (clock()-self.last_caption_update >
                                  self.caption_update_interval)
 
-        if len(self.plot._functions.values()) == 0:
+        if len(list(self.plot._functions.values())) == 0:
             self.drawing_first_object = True
 
-        for r in self.plot._functions.itervalues():
+        for r in self.plot._functions.values():
             if self.drawing_first_object:
                 self.camera.set_rot_preset(r.default_rot_preset)
                 self.drawing_first_object = False

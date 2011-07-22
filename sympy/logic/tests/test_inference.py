@@ -42,13 +42,13 @@ def test_unit_clause():
     assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
 def test_unit_clause_int_repr():
-    assert find_unit_clause_int_repr(map(set, [[1]]), {}) == (1, True)
-    assert find_unit_clause_int_repr(map(set, [[1], [-1]]), {}) == (1, True)
+    assert find_unit_clause_int_repr(list(map(set, [[1]])), {}) == (1, True)
+    assert find_unit_clause_int_repr(list(map(set, [[1], [-1]])), {}) == (1, True)
     assert find_unit_clause_int_repr([set([1,2])], {1: True}) == (2, True)
     assert find_unit_clause_int_repr([set([1,2])], {2: True}) == (1, True)
-    assert find_unit_clause_int_repr(map(set, [[1,2,3], [2, -3], [1, -2]]), {1: True}) == \
+    assert find_unit_clause_int_repr(list(map(set, [[1,2,3], [2, -3], [1, -2]])), {1: True}) == \
         (2, False)
-    assert find_unit_clause_int_repr(map(set, [[1, 2, 3], [3, -3], [1, 2]]), {1: True}) == \
+    assert find_unit_clause_int_repr(list(map(set, [[1, 2, 3], [3, -3], [1, 2]])), {1: True}) == \
         (2, True)
 #    assert find_unit_clause([A | B | C, B | ~C, A ], {}) == (A, True)
 
@@ -59,7 +59,7 @@ def test_unit_propagate():
 
 def test_unit_propagate_int_repr():
     assert unit_propagate_int_repr([set([1, 2])], 1) == []
-    assert unit_propagate_int_repr(map(set, [[1, 2], [-1, 3], [-3, 2], [1]]), 1) == \
+    assert unit_propagate_int_repr(list(map(set, [[1, 2], [-1, 3], [-3, 2], [1]])), 1) == \
         [set([3]), set([-3, 2])]
 
 def test_dpll():

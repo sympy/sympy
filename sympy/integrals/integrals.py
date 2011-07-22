@@ -253,7 +253,7 @@ class Integral(Expr):
         reps = {}
         f = self.function
         limits = list(self.limits)
-        for i in xrange(-1, -len(limits) - 1, -1):
+        for i in range(-1, -len(limits) - 1, -1):
             xab = list(limits[i])
             if len(xab) == 1:
                 xab = xab*2
@@ -699,7 +699,7 @@ class Integral(Expr):
                     limits[i] = Tuple(l[0], l[0])
 
         dummies = set()
-        for i in xrange(-1, -len(limits) - 1, -1):
+        for i in range(-1, -len(limits) - 1, -1):
             xab = limits[i]
             if not dummies.intersection(old_atoms):
                 limits[i] = Tuple(xab[0],

@@ -62,7 +62,7 @@ def test_tuple_wrapper():
 def test_iterable_ordered_iter():
     ordered = [list(), tuple(), Tuple(), Matrix([[]])]
     unordered = [set()]
-    not_sympy_iterable = [{}, '', u'']
+    not_sympy_iterable = [{}, '', '']
     assert all(ordered_iter(i) for i in ordered)
     assert all(not ordered_iter(i) for i in unordered)
     assert all(iterable(i) for i in ordered + unordered)

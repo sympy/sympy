@@ -148,7 +148,7 @@ class TensorProduct(Expr):
                 )
             pform = prettyForm(*pform.right(next_pform))
             if i != length-1:
-                pform = prettyForm(*pform.right(u'\u2a02' + u' '))
+                pform = prettyForm(*pform.right('\u2a02' + ' '))
         return pform
 
     def _latex(self, printer, *args):

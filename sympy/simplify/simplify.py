@@ -20,6 +20,7 @@ from sympy.polys import (Poly, together, reduced, cancel, factor,
 from sympy.core.compatibility import reduce
 
 import sympy.mpmath as mpmath
+from functools import reduce
 
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
@@ -459,7 +460,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                     # pattern element not found
                     return None
 
-            return filter(None, terms), elems, common_expo, has_deriv
+            return [_f for _f in terms if _f], elems, common_expo, has_deriv
 
     if evaluate:
         if expr.is_Mul:
@@ -484,12 +485,12 @@ def collect(expr, syms, evaluate=True, exact=False):
 
         for symbol in syms:
             if SYMPY_DEBUG:
-                print "DEBUG: parsing of expression %s with symbol %s " % (str(terms), str(symbol))
+                print("DEBUG: parsing of expression %s with symbol %s " % (str(terms), str(symbol)))
 
             result = parse_expression(terms, symbol)
 
             if SYMPY_DEBUG:
-                print "DEBUG: returned %s" %  str(result)
+                print("DEBUG: returned %s" %  str(result))
 
             if result is not None:
                 terms, elems, common_expo, has_deriv = result
@@ -506,7 +507,7 @@ def collect(expr, syms, evaluate=True, exact=False):
                     index = make_expression(elems)
                 terms = separate(make_expression(terms))
                 index = separate(index)
-                if index in collected.keys():
+                if index in list(collected.keys()):
                     collected[index] += terms
                 else:
                     collected[index] = terms
@@ -520,7 +521,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         collected[S.One] = disliked
 
     if evaluate:
-        return Add(*[a*b for a, b in collected.iteritems()])
+        return Add(*[a*b for a, b in collected.items()])
     else:
         return collected
 
@@ -622,14 +623,14 @@ def _separatevars(expr, force):
     if not force:
         # factor will expand bases so we mask them off now
         pows = [p for p in _expr.atoms(Pow) if p.base.is_Mul]
-        dums = [Dummy(str(i)) for i in xrange(len(pows))]
-        _expr = _expr.subs(dict(zip(pows, dums)))
+        dums = [Dummy(str(i)) for i in range(len(pows))]
+        _expr = _expr.subs(dict(list(zip(pows, dums))))
 
     _expr = factor(_expr, expand=False)
 
     if not force:
         # and retore them
-        _expr = _expr.subs(dict(zip(dums, pows)))
+        _expr = _expr.subs(dict(list(zip(dums, pows))))
 
 
 
@@ -782,7 +783,7 @@ def trigsimp_nonrecursive(expr, deep=False):
             return expr.func(trigsimp_nonrecursive(expr.args[0], deep))
     elif expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
-        a,b,c = map(Wild, 'abc')
+        a,b,c = list(map(Wild, 'abc'))
         matchers = (
                 (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
                 (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
@@ -816,7 +817,7 @@ def trigsimp_nonrecursive(expr, deep=False):
         # TODO this needs to be faster
 
         # The types of trig functions we are looking for
-        a,b,c = map(Wild, 'abc')
+        a,b,c = list(map(Wild, 'abc'))
         matchers = (
             (a*sin(b)**2, a - a*cos(b)**2),
             (a*tan(b)**2, a*(1/cos(b))**2 - a),
@@ -880,7 +881,7 @@ def radsimp(expr):
 
     """
     n,d = fraction(expr)
-    a,b,c = map(Wild, 'abc')
+    a,b,c = list(map(Wild, 'abc'))
     r = d.match(a+b*sqrt(c))
     if r is not None:
         a = r[a]
@@ -930,15 +931,15 @@ def posify(eq):
             syms = syms.union(e.atoms(C.Symbol))
         reps = {}
         for s in syms:
-            reps.update(dict((v, k) for k, v in posify(s)[1].items()))
+            reps.update(dict((v, k) for k, v in list(posify(s)[1].items())))
         for i, e in enumerate(eq):
             eq[i] = e.subs(reps)
-        return f(eq), dict([(r,s) for s, r in reps.iteritems()])
+        return f(eq), dict([(r,s) for s, r in reps.items()])
 
     reps = dict([(s, Dummy(s.name, positive=True))
                  for s in eq.atoms(Symbol) if s.is_positive is None])
     eq = eq.subs(reps)
-    return eq, dict([(r,s) for s, r in reps.iteritems()])
+    return eq, dict([(r,s) for s, r in reps.items()])
 
 def powdenest(eq, force=False):
     """
@@ -1242,11 +1243,11 @@ def powsimp(expr, deep=False, combine='all', force=False):
                         nc_part.append(term)
 
             # add up exponents of common bases
-            for b, e in c_powers.iteritems():
+            for b, e in c_powers.items():
                 c_powers[b] = Add(*e)
 
             # check for base and inverted base pairs
-            be = c_powers.items()
+            be = list(c_powers.items())
             skip = set() # skip if we already saw them
             for b, e in be:
                 if b in skip:
@@ -1263,7 +1264,7 @@ def powsimp(expr, deep=False, combine='all', force=False):
                             e = c_powers.pop(binv)
                             c_powers[b] -= e
 
-            newexpr = Mul(*([newexpr] + [Pow(b, e) for b, e in c_powers.iteritems()]))
+            newexpr = Mul(*([newexpr] + [Pow(b, e) for b, e in c_powers.items()]))
             if combine is 'exp':
                 return Mul(newexpr, Mul(*nc_part))
             else:
@@ -1306,7 +1307,7 @@ def powsimp(expr, deep=False, combine='all', force=False):
 
             # Pull out numerical coefficients from exponent if assumptions allow
             # e.g., 2**(2*x) => 4**x
-            for i in xrange(len(c_powers)):
+            for i in range(len(c_powers)):
                 b, e = c_powers[i]
                 if not (b.is_nonnegative or e.is_integer or force):
                     continue
@@ -1371,11 +1372,11 @@ def powsimp(expr, deep=False, combine='all', force=False):
             c_part = []
             if combine == 'all':
                 #...joining the exponents
-                for b, e in c_powers.iteritems():
+                for b, e in c_powers.items():
                     c_part.append(Pow(b, Add(*e)))
             else:
                 #...joining nothing
-                for b, e in c_powers.iteritems():
+                for b, e in c_powers.items():
                     for ei in e:
                         c_part.append(Pow(b, ei))
 
@@ -1435,7 +1436,7 @@ def hypersimilar(f, g, k):
        For more information see hypersimp().
 
     """
-    f, g = map(sympify, (f, g))
+    f, g = list(map(sympify, (f, g)))
 
     h = (f/g).rewrite(gamma)
     h = h.expand(func=True, basic=False)
@@ -1504,12 +1505,12 @@ def combsimp(expr):
                 n, result = int(b), S.One
 
                 if n > 0:
-                    for i in xrange(0, n):
+                    for i in range(0, n):
                         result *= a + i
 
                     return result
                 else:
-                    for i in xrange(1, -n+1):
+                    for i in range(1, -n+1):
                         result *= a - i
 
                     return 1/result
@@ -1644,7 +1645,7 @@ def simplify(expr, ratio=1.7):
     numer, denom = expr.as_numer_denom()
 
     if denom.is_Add:
-        a, b, c = map(Wild, 'abc')
+        a, b, c = list(map(Wild, 'abc'))
 
         r = denom.match(a + b*c**S.Half)
 
@@ -1863,8 +1864,7 @@ def _logcombine(expr, force=False):
                     argslist *= _logcombine(i.args[0], force)
                 else:
                     notlogs += i
-            elif i.is_Mul and any(map(lambda t: getattr(t,'func', False)==log,\
-            i.args)):
+            elif i.is_Mul and any([getattr(t,'func', False)==log for t in i.args]):
                 largs = _getlogargs(i)
                 assert len(largs) != 0
                 loglargs = 1
@@ -1914,7 +1914,7 @@ def _logcombine(expr, force=False):
              expr.args[1:], 1)
 
     if expr.is_Function:
-        return expr.func(*map(lambda t: _logcombine(t, force), expr.args))
+        return expr.func(*[_logcombine(t, force) for t in expr.args])
 
     if expr.is_Pow:
         return _logcombine(expr.args[0], force)**\

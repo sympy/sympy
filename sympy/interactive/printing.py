@@ -2,7 +2,7 @@
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
-    import __builtin__, sys
+    import builtins, sys
 
     def displayhook(arg):
         """Python's pretty-printer display hook.
@@ -13,9 +13,9 @@ def _init_python_printing(stringify_func):
 
         """
         if arg is not None:
-            __builtin__._ = None
-            print stringify_func(arg)
-            __builtin__._ = arg
+            builtins._ = None
+            print(stringify_func(arg))
+            builtins._ = arg
 
     sys.displayhook = displayhook
 
@@ -38,11 +38,11 @@ def _init_ipython_printing(ip, stringify_func):
             out = stringify_func(arg)
 
             if '\n' in out:
-                print
+                print()
 
-            print out
+            print(out)
         else:
-            print repr(arg)
+            print(repr(arg))
 
     import IPython
     if IPython.__version__ >= '0.11':

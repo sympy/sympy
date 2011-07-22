@@ -3,7 +3,7 @@ from sympy.core.numbers import Rational, Float
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function, ArgumentIndexError
-from miscellaneous import sqrt
+from .miscellaneous import sqrt
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################

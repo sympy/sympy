@@ -18,10 +18,10 @@ from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
 import math
 
-from sympify import sympify
-from core import C
-from singleton import S
-from containers import Tuple
+from .sympify import sympify
+from .core import C
+from .singleton import S
+from .containers import Tuple
 
 LG10 = math.log(10,2)
 
@@ -328,7 +328,7 @@ def evalf_add(v, prec, options):
             accuracy = complex_accuracy((re, im, re_acc, im_acc))
             if accuracy >= target_prec:
                 if options.get('verbose'):
-                    print "ADD: wanted", target_prec, "accurate bits, got", re_acc, im_acc
+                    print("ADD: wanted", target_prec, "accurate bits, got", re_acc, im_acc)
                 return re, im, re_acc, im_acc
             else:
                 diff = target_prec - accuracy
@@ -338,7 +338,7 @@ def evalf_add(v, prec, options):
                 prec = prec + max(10+2**i, diff)
                 options['maxprec'] = min(oldmaxprec, 2*prec)
                 if options.get('verbose'):
-                    print "ADD: restarting with prec", prec
+                    print("ADD: restarting with prec", prec)
             i += 1
     finally:
         options['maxprec'] = oldmaxprec
@@ -400,7 +400,7 @@ def evalf_mul(v, prec, options):
             im, xim_acc = add_terms([(C, acc), (D, acc)], prec, target_prec)
 
         if options.get('verbose'):
-            print "MUL: wanted", target_prec, "accurate bits, got", acc
+            print("MUL: wanted", target_prec, "accurate bits, got", acc)
         # multiply by i
         if direction & 1:
             return mpf_neg(im), re, acc, acc
@@ -564,8 +564,8 @@ def evalf_trig(v, prec, options):
         accuracy = (xprec - xsize) - gap
         if accuracy < prec:
             if options.get('verbose'):
-                print "SIN/COS", accuracy, "wanted", prec, "gap", gap
-                print to_str(y,10)
+                print("SIN/COS", accuracy, "wanted", prec, "gap", gap)
+                print(to_str(y,10))
             if xprec > options.get('maxprec', DEFAULT_MAXPREC):
                 return y, None, accuracy, None
             xprec += gap
@@ -964,10 +964,10 @@ def evalf(x, prec, options):
         except AttributeError:
             raise NotImplementedError
     if options.get("verbose"):
-        print "### input", x
-        print "### output", to_str(r[0] or fzero, 50)
-        print "### raw", r#r[0], r[2]
-        print
+        print("### input", x)
+        print("### output", to_str(r[0] or fzero, 50))
+        print("### raw", r)#r[0], r[2]
+        print()
     if options.get("chop"):
         r = chop_parts(r, prec)
     if options.get("strict"):

@@ -124,8 +124,8 @@ def run_examples(windowed=False):
     if windowed:
         examples += WINDOWED_EXAMPLES
     for example in examples:
-        print "="*79
-        print "Running: ", example
+        print("="*79)
+        print("Running: ", example)
         try:
             mod = load_example_module(example)
             mod.main()
@@ -134,17 +134,17 @@ def run_examples(windowed=False):
             traceback.print_exc()
             fail.append(example)
     if success:
-        print >> sys.stderr, "SUCCESSFUL: "
+        print("SUCCESSFUL: ", file=sys.stderr)
         for example in success:
-            print >> sys.stderr, "  -", example
+            print("  -", example, file=sys.stderr)
     else:
-        print >> sys.stderr, "NO SUCCESSFUL EXAMPLES"
+        print("NO SUCCESSFUL EXAMPLES", file=sys.stderr)
     if fail:
-        print >> sys.stderr, "FAILED: "
+        print("FAILED: ", file=sys.stderr)
         for example in fail:
-            print >> sys.stderr, "  -", example
+            print("  -", example, file=sys.stderr)
     else:
-        print >> sys.stderr, "NO FAILED EXAMPLES"
+        print("NO FAILED EXAMPLES", file=sys.stderr)
 
 
 def main (*args, **kws):
@@ -157,13 +157,13 @@ def main (*args, **kws):
             if opt_key == '-w':
                 use_windowed = True
             elif opt_key == "-h":
-                print __doc__
+                print(__doc__)
                 sys.exit(0)
             else:
-                raise getopt.GetoptError, "option %s not processed" % opt_key
-    except getopt.GetoptError, message:
-        print >> sys.stderr, message
-        print >> sys.stderr, "Use -h option for usage.\n"
+                raise getopt.GetoptError("option %s not processed" % opt_key)
+    except getopt.GetoptError as message:
+        print(message, file=sys.stderr)
+        print("Use -h option for usage.\n", file=sys.stderr)
         sys.exit(1)
 
     run_examples(use_windowed)

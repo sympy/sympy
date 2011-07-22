@@ -1,5 +1,5 @@
 from pyglet.gl import *
-from plot_mode_base import PlotModeBase
+from .plot_mode_base import PlotModeBase
 from sympy.core import S
 
 class PlotCurve(PlotModeBase):
@@ -21,13 +21,13 @@ class PlotCurve(PlotModeBase):
             try: _e = evaluate(t)   # calculate vertex
             except: _e = None
             if _e is not None: # update bounding box
-                for axis in xrange(3):
+                for axis in range(3):
                     b[axis][0] = min([b[axis][0], _e[axis]])
                     b[axis][1] = max([b[axis][1], _e[axis]])
             self.verts.append(_e)
             self._calculating_verts_pos += 1.0
 
-        for axis in xrange(3):
+        for axis in range(3):
             b[axis][2] = b[axis][1] - b[axis][0]
             if b[axis][2] == 0.0: b[axis][2] = 1.0
 
@@ -49,7 +49,7 @@ class PlotCurve(PlotModeBase):
     def draw_verts(self, use_cverts):
         def f():
             glBegin(GL_LINE_STRIP)
-            for t in xrange( len(self.t_set) ):
+            for t in range( len(self.t_set) ):
                 p = self.verts[t]
                 if p is None:
                     glEnd()

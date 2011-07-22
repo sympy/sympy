@@ -123,7 +123,7 @@ def test_mathml_constants():
     mml = mp._print(pi)
     assert mml.nodeName == 'pi'
 
-    assert mathml(GoldenRatio) == u'<cn>\u03c6</cn>'
+    assert mathml(GoldenRatio) == '<cn>\u03c6</cn>'
 
     mml = mathml(EulerGamma)
     assert mml == '<eulergamma/>'

@@ -6,7 +6,7 @@ import difflib
 from sympy import Basic, Mul, Add
 from sympy.utilities.iterables import preorder_traversal, numbered_symbols, any
 
-import cse_opts
+from . import cse_opts
 
 # (preprocessor, postprocessor) pairs which are commonly useful. They should
 # each take a sympy expression and return a possibly transformed expression.
@@ -125,7 +125,7 @@ def cse(exprs, symbols=None, optimizations=None):
         # all i up to this index have op count <= the current op count
         # so check that subtree is not yet present from this index down
         # (if necessary) to zero.
-        for i in xrange(index_to_insert - 1, -1, -1):
+        for i in range(index_to_insert - 1, -1, -1):
             if to_eliminate_ops_count[i] == ops_count and \
                subtree == to_eliminate[i]:
                 return # already have it
@@ -154,8 +154,8 @@ def cse(exprs, symbols=None, optimizations=None):
     # process adds - any adds that weren't repeated might contain
     # subpatterns that are repeated, e.g. x+y+z and x+y have x+y in common
     adds = [set(a.args) for a in adds]
-    for i in xrange(len(adds)):
-        for j in xrange(i + 1, len(adds)):
+    for i in range(len(adds)):
+        for j in range(i + 1, len(adds)):
             com = adds[i].intersection(adds[j])
             if len(com) > 1:
                 insert(Add(*com))
@@ -163,7 +163,7 @@ def cse(exprs, symbols=None, optimizations=None):
                 # remove this set of symbols so it doesn't appear again
                 adds[i] = adds[i].difference(com)
                 adds[j] = adds[j].difference(com)
-                for k in xrange(j + 1, len(adds)):
+                for k in range(j + 1, len(adds)):
                     if not com.difference(adds[k]):
                         adds[k] = adds[k].difference(com)
 
@@ -175,10 +175,10 @@ def cse(exprs, symbols=None, optimizations=None):
     sm = difflib.SequenceMatcher()
 
     muls = [a.args_cnc() for a in muls]
-    for i in xrange(len(muls)):
+    for i in range(len(muls)):
         if muls[i][1]:
             sm.set_seq1(muls[i][1])
-        for j in xrange(i + 1, len(muls)):
+        for j in range(i + 1, len(muls)):
             # the commutative part in common
             ccom = muls[i][0].intersection(muls[j][0])
 
@@ -210,7 +210,7 @@ def cse(exprs, symbols=None, optimizations=None):
             # identified as a subexpr which would not be right.
             if not ncom:
                 muls[i][0] = muls[i][0].difference(ccom)
-                for k in xrange(j, len(muls)):
+                for k in range(j, len(muls)):
                     if not ccom.difference(muls[k][0]):
                         muls[k][0] = muls[k][0].difference(ccom)
 
@@ -218,7 +218,7 @@ def cse(exprs, symbols=None, optimizations=None):
     replacements = []
     reduced_exprs = list(exprs)
     for i, subtree in enumerate(to_eliminate):
-        sym = symbols.next()
+        sym = next(symbols)
         replacements.append((sym, subtree))
         # Make the substitution in all of the target expressions.
         for j, expr in enumerate(reduced_exprs):

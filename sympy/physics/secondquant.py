@@ -17,6 +17,7 @@ from sympy.core.symbol import Dummy
 from sympy.printing.str import StrPrinter
 
 from sympy.core.compatibility import reduce
+from functools import reduce
 
 __all__ = [
     'Dagger',
@@ -1109,7 +1110,7 @@ class FockState(Expr):
           Element 0 is the state that was occupied first, element i
           is the i'th occupied state.
         """
-        occupations = map(sympify, occupations)
+        occupations = list(map(sympify, occupations))
         obj = Basic.__new__(cls, Tuple(*occupations), commutative=False)
         return obj
 
@@ -1177,7 +1178,7 @@ class FermionState(FockState):
     fermi_level=0
 
     def __new__(cls, occupations, fermi_level=0):
-        occupations = map(sympify,occupations)
+        occupations = list(map(sympify,occupations))
         if len(occupations) >1:
             try:
                 (occupations,sign) = _sort_anticommuting_fermions(occupations, key=hash)
@@ -2060,7 +2061,7 @@ class NO(Expr):
 
         """
         ops = self.args[0].args
-        iter = xrange(len(ops)-1, -1, -1)
+        iter = range(len(ops)-1, -1, -1)
         for i in iter:
             if ops[i].is_q_annihilator:
                 yield i
@@ -2088,7 +2089,7 @@ class NO(Expr):
         """
 
         ops = self.args[0].args
-        iter = xrange(0, len(ops))
+        iter = range(0, len(ops))
         for i in iter:
             if ops[i].is_q_creator:
                 yield i
@@ -2213,11 +2214,11 @@ def _sort_anticommuting_fermions(string1, key=sqkey):
 
     verified = False
     sign = 0
-    rng = range(len(string1)-1)
-    rev = range(len(string1)-3,-1,-1)
+    rng = list(range(len(string1)-1))
+    rev = list(range(len(string1)-3,-1,-1))
 
     keys = list(map(key, string1))
-    key_val = dict(zip(keys, string1))
+    key_val = dict(list(zip(keys, string1)))
 
     while not verified:
         verified = True
@@ -2481,14 +2482,14 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         subsdict = {}
         for d in ordered:
             if d.assumptions0.get('below_fermi'):
-                subsdict[d] = i.next()
+                subsdict[d] = next(i)
             elif d.assumptions0.get('above_fermi'):
-                subsdict[d] = a.next()
+                subsdict[d] = next(a)
             else:
-                subsdict[d] = p.next()
+                subsdict[d] = next(p)
         subslist = []
         final_subs = []
-        for k, v in subsdict.iteritems():
+        for k, v in subsdict.items():
             if k == v:
                 continue
             if v in subsdict:
@@ -2586,7 +2587,7 @@ def _get_ordered_dummies(mul, verbose = False):
     fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
     fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
     all_dums = list(reduce(
-        lambda x, y: x | y, fac_dum.values(), set()))
+        lambda x, y: x | y, list(fac_dum.values()), set()))
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
@@ -2610,7 +2611,7 @@ def _get_ordered_dummies(mul, verbose = False):
             masked_facs = [ fac.replace(dum_repr[d2], mask[d2])
                     for fac in masked_facs ]
         all_masked = [ fac.replace(dum_repr[d], mask[d]) for fac in masked_facs ]
-        masked_facs = dict(zip(dumstruct, masked_facs))
+        masked_facs = dict(list(zip(dumstruct, masked_facs)))
 
         # dummies for which the ordering cannot be determined
         if len(set(all_masked)) < len(all_masked):
@@ -2618,7 +2619,7 @@ def _get_ordered_dummies(mul, verbose = False):
             return mask[d], tuple(all_masked) # positions are ambiguous
 
         # sort factors according to fully masked strings
-        keydict = dict(zip(dumstruct, all_masked))
+        keydict = dict(list(zip(dumstruct, all_masked)))
         dumstruct.sort(key=lambda x: keydict[x])
         all_masked.sort()
 
@@ -2649,12 +2650,12 @@ def _get_ordered_dummies(mul, verbose = False):
                         break
                     pos_val.append(facpos)
         return (mask[d], tuple(all_masked), pos_val[0], pos_val[-1])
-    dumkey = dict(zip(all_dums, map(key, all_dums)))
+    dumkey = dict(list(zip(all_dums, list(map(key, all_dums)))))
     result = sorted(all_dums, key=lambda x: dumkey[x])
-    if len(set(dumkey.itervalues())) < len(dumkey):
+    if len(set(dumkey.values())) < len(dumkey):
         # We have ambiguities
         unordered = {}
-        for d, k in dumkey.iteritems():
+        for d, k in dumkey.items():
             if k in unordered:
                 unordered[k].add(d)
             else:
@@ -2703,7 +2704,7 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
     stored_counter = __symbol_factory.counter
     subslist = []
     for d in [ d for d in ordered if d in all_ordered ]:
-        nondum = __symbol_factory.next()
+        nondum = next(__symbol_factory)
         subslist.append((d, nondum))
     newterm = term.subs(subslist)
     neworder = _get_ordered_dummies(newterm)
@@ -2734,7 +2735,7 @@ class _SymbolFactory(object):
     def counter(self):
         return self._counter
 
-    def next(self):
+    def __next__(self):
         s = Symbol("%s%i" % (self._label, self._counter))
         self._counter += 1
         return s
@@ -2925,7 +2926,7 @@ class PermutationOperator(Expr):
     """
     is_commutative = True
     def __new__(cls, i,j):
-        i,j = map(sympify,(i,j))
+        i,j = list(map(sympify,(i,j)))
         if (i>j):
             obj =  Basic.__new__(cls,j,i)
         else:

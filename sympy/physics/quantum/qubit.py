@@ -55,7 +55,7 @@ class QubitState(State):
             return args[0].qubit_values
 
         # Turn strings into tuple of strings
-        if len(args) == 1 and isinstance(args[0], basestring):
+        if len(args) == 1 and isinstance(args[0], str):
             args = tuple(args[0])
 
         args = sympify(args)
@@ -237,7 +237,7 @@ class IntQubitState(QubitState):
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
             rvalues = reversed(
-                range(int(math.ceil(math.log(args[0], 2)+.01)+.001))
+                list(range(int(math.ceil(math.log(args[0], 2)+.01)+.001)))
             )
             qubit_values = [(args[0]>>i)&1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
@@ -245,7 +245,7 @@ class IntQubitState(QubitState):
         # on which it is expressed, so IntQubit(0,5) == |00000>.
         elif len(args) == 2 and args[1] > 1:
             #TODO Raise error if there are not enough bits
-            qubit_values = [(args[0]>>i)&1 for i in reversed(range(args[1]))]
+            qubit_values = [(args[0]>>i)&1 for i in reversed(list(range(args[1])))]
             return QubitState._eval_args(qubit_values)
         else:
             return QubitState._eval_args(args)

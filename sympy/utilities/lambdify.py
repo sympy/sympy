@@ -3,7 +3,7 @@ This module provides convenient functions to transform sympy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from __future__ import division
+
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import ordered_iter
 
@@ -103,12 +103,12 @@ def _import(module, reload="False"):
     # It's possible that numpy is not available.
     for import_command in import_commands:
         try:
-            exec import_command in {}, namespace
+            exec(import_command, {}, namespace)
         except ImportError:
             raise ImportError("Can't import %s with command %s" % (module, import_command))
 
     # Add translated names to namespace
-    for sympyname, translation in translations.iteritems():
+    for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
 
 def lambdify(args, expr, modules=None, printer=None, use_imps=True):
@@ -326,7 +326,7 @@ def _imp_namespace(expr, namespace=None):
             _imp_namespace(arg, namespace)
         return namespace
     elif isinstance(expr, dict):
-        for key, val in expr.items():
+        for key, val in list(expr.items()):
             # functions can be in dictionary keys
             _imp_namespace(key, namespace)
             _imp_namespace(val, namespace)
@@ -382,7 +382,7 @@ def implemented_function(symfunc, implementation):
     # Delayed import to avoid circular imports
     from sympy.core.function import UndefinedFunction
     # if name, create anonymous function to hold implementation
-    if isinstance(symfunc, basestring):
+    if isinstance(symfunc, str):
         symfunc = UndefinedFunction(symfunc)
     # We need to attach as a method because symfunc will be a class
     symfunc._imp_ = staticmethod(implementation)

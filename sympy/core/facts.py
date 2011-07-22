@@ -50,7 +50,7 @@ http://en.wikipedia.org/wiki/List_of_rules_of_inference
 
 
 
-from logic import fuzzy_not, name_not, Logic, And, Not
+from .logic import fuzzy_not, name_not, Logic, And, Not
 
 def list_populate(l, item, skipif=None):
     """update list with an item, but only if it is not already there"""
@@ -122,7 +122,7 @@ def deduce_alpha_implications(implications):
     #print 'D:', res
 
     # let's see if the result is consistent
-    for a, impl in res.iteritems():
+    for a, impl in res.items():
         na = name_not(a)
         if na in impl:
             raise ValueError('implications are inconsistent: %s -> %s %s' % (a, na, impl))
@@ -161,7 +161,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
 
     x_impl = {}
 
-    for x in alpha_implications.keys():
+    for x in list(alpha_implications.keys()):
         x_impl[x] = (alpha_implications[x][:], [])
 
     # let's ensure that every beta-rule has appropriate entry (maybe even
@@ -188,7 +188,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
         for bidx, (bcond,bimpl) in enumerate(beta_rules):
             assert isinstance(bcond, And)
 
-            for x, (ximpls, bb) in x_impl.iteritems():
+            for x, (ximpls, bb) in x_impl.items():
                 # A: x -> a     B: &(...) -> x      (non-informative)
                 if x == bimpl:  # XXX bimpl may become a list
                     continue
@@ -289,7 +289,7 @@ def rules_2prereq(rules):
     """
 
     prereq = {}
-    for a, impl in rules.iteritems():
+    for a, impl in rules.items():
         for i in impl:
             pa = prereq.setdefault(i,[])
             pa.append(a)
@@ -328,7 +328,7 @@ def split_rules_tt_tf_ft_ff(rules):
     tf = {}
     ft = {}
 
-    for k,impl in rules.iteritems():
+    for k,impl in rules.items():
         # k is not not-name
         if k[:1] != '!':
             for i in impl:
@@ -358,7 +358,7 @@ def split_rules_tt_tf_ft_ff(rules):
 
     # FF is related to TT
     ff = {}
-    for k,impl in tt.iteritems():
+    for k,impl in tt.items():
         for i in impl:
             I = ff.setdefault(i,[])
             I.append(k)
@@ -421,22 +421,22 @@ class Prover(object):
         self._rules_seen  = set()
 
     def print_proved(self, title='proved rules'):
-        print '\n--- %s ---' % title
+        print('\n--- %s ---' % title)
         for a,b in self.proved_rules:
-            print '%s\t->  %s' % (a,b)
+            print('%s\t->  %s' % (a,b))
 
-        print '   - - - - -   '
-        print
+        print('   - - - - -   ')
+        print()
 
 
     def print_beta(self, title='proved rules (beta)'):
-        print '\n --- %s ---' % title
+        print('\n --- %s ---' % title)
 
         for n, (a,b) in enumerate(self.rules_beta):
-            print '[#%i]  %s\t->  %s' % (n,a,b)
+            print('[#%i]  %s\t->  %s' % (n,a,b))
 
-        print '   - - - - -   '
-        print
+        print('   - - - - -   ')
+        print()
 
 
     def split_alpha_beta(self):
@@ -502,7 +502,7 @@ class Prover(object):
         # this is the core of processing
         try:
             self._process_rule(a, b)
-        except TautologyDetected, t:
+        except TautologyDetected as t:
             #print 'Tautology:  %s -> %s   (%s)' % (t.args[0], t.args[1], t.args[2])
             pass
 
@@ -620,7 +620,7 @@ class Prover(object):
 
     def dbg_process_rule_2(a, b):
         global dbg_level
-        print '%s%s\t->  %s' % (' '*(2*dbg_level), a, b)
+        print('%s%s\t->  %s' % (' '*(2*dbg_level), a, b))
         dbg_level += 1
 
         try:
@@ -681,7 +681,7 @@ class FactRules:
     def __init__(self, rules):
         """Compile rules into internal lookup tables"""
 
-        if isinstance(rules, basestring):
+        if isinstance(rules, str):
             rules = rules.splitlines()
 
         # --- parse and process rules ---
@@ -718,28 +718,28 @@ class FactRules:
         impl_ab = apply_beta_to_alpha_route(impl_a, P.rules_beta)
 
         if 0:
-            print '\n --- ALPHA-CHAINS (I) ---'
+            print('\n --- ALPHA-CHAINS (I) ---')
 
-            for a,b in impl_a.iteritems():
-                print '%s\t->  α(%2i):%s' % (a,len(b),b)
+            for a,b in impl_a.items():
+                print('%s\t->  α(%2i):%s' % (a,len(b),b))
 
-            print '   - - - - -   '
-            print
+            print('   - - - - -   ')
+            print()
 
         if 0:
-            print '\n --- ALPHA-CHAINS (II) ---'
+            print('\n --- ALPHA-CHAINS (II) ---')
 
-            for a,(b,bb) in impl_ab.iteritems():
-                print '%s\t->  α(%2i):%s  β(%s)' % (a,len(b),b, ' '.join(str(x) for x in bb))
+            for a,(b,bb) in impl_ab.items():
+                print('%s\t->  α(%2i):%s  β(%s)' % (a,len(b),b, ' '.join(str(x) for x in bb)))
 
-            print '   - - - - -   '
-            print
+            print('   - - - - -   ')
+            print()
 
 
         # extract defined fact names
         self.defined_facts = set()
 
-        for k in impl_ab.keys():
+        for k in list(impl_ab.keys()):
             if k[:1] == '!':
                 k = k[1:]
 
@@ -750,14 +750,14 @@ class FactRules:
 
         # now split each rule into four logic chains
         # (removing betaidxs from impl_ab view) (XXX is this needed?)
-        impl_ab_ = dict( (k,impl)  for k, (impl,betaidxs) in impl_ab.iteritems())
+        impl_ab_ = dict( (k,impl)  for k, (impl,betaidxs) in impl_ab.items())
         rel_tt, rel_tf, rel_ft, rel_ff = split_rules_tt_tf_ft_ff(impl_ab_)
 
         # XXX merge me with split_rules_tt_tf_ft_ff ?
         rel_tbeta = {}
         rel_fbeta = {}
 
-        for k, (impl,betaidxs) in impl_ab.iteritems():
+        for k, (impl,betaidxs) in impl_ab.items():
             if k[:1] == '!':
                 rel_xbeta = rel_fbeta
                 k         = name_not(k)
@@ -779,9 +779,9 @@ class FactRules:
 
         # build rels (forward chains)
         K = set (rel_tt.keys())
-        K.update(rel_tf.keys())
-        K.update(rel_ff.keys())
-        K.update(rel_ft.keys())
+        K.update(list(rel_tf.keys()))
+        K.update(list(rel_ff.keys()))
+        K.update(list(rel_ft.keys()))
 
         rels = {}
         empty= ()
@@ -803,7 +803,7 @@ class FactRules:
         prereq = {}
         for rel in [rel_tt, rel_tf, rel_ff, rel_ft]:
             rel_prereq = rules_2prereq(rel)
-            for k,pitems in rel_prereq.iteritems():
+            for k,pitems in rel_prereq.items():
                 kp = prereq.setdefault(k,[])
                 for p in pitems:
                     list_populate(kp, p)
@@ -853,7 +853,7 @@ class FactRules:
                     new_facts[k] = v
 
         if type(facts) is dict:
-            fseq = facts.iteritems()
+            fseq = iter(facts.items())
         else:
             fseq = facts
 

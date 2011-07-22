@@ -11,7 +11,7 @@ from sympy.core.compatibility import iterable
 from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
-from entity import GeometryEntity
+from .entity import GeometryEntity
 
 
 class Point(GeometryEntity):
@@ -187,13 +187,13 @@ class Point(GeometryEntity):
             return (not Point.is_collinear(*points))
 
         try:
-            from ellipse import Circle
+            from .ellipse import Circle
             c = Circle(points[0], points[1], points[2])
             for point in points[3:]:
                 if point not in c:
                     return False
             return True
-        except GeometryError, e:
+        except GeometryError as e:
             # Circle could not be created, because of collinearity of the
             # three points passed in, hence they are not concyclic.
             return False

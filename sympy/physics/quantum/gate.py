@@ -119,8 +119,8 @@ class Gate(UnitaryOperator):
 
     _label_separator = ','
 
-    gate_name = u'G'
-    gate_name_latex = u'G'
+    gate_name = 'G'
+    gate_name_latex = 'G'
 
     #-------------------------------------------------------------------------
     # Initialization/creation
@@ -268,7 +268,7 @@ class Gate(UnitaryOperator):
         return '%s(%s)' % (self.gate_name, label)
 
     def _print_contents_pretty(self, printer, *args):
-        a = stringPict(unicode(self.gate_name))
+        a = stringPict(str(self.gate_name))
         b = self._print_label_pretty(printer, *args)
         return self._print_subscript_pretty(a, b)
 
@@ -300,8 +300,8 @@ class CGate(Gate):
 
     """
 
-    gate_name = u'C'
-    gate_name_latex = u'C'
+    gate_name = 'C'
+    gate_name_latex = 'C'
 
     # The values this class controls for.
     control_value = Integer(1)
@@ -402,7 +402,7 @@ class CGate(Gate):
     def _print_contents_pretty(self, printer, *args):
         controls = self._print_sequence_pretty(self.controls, ',', printer, *args)
         gate = printer._print(self.gate)
-        gate_name = stringPict(unicode(self.gate_name))
+        gate_name = stringPict(str(self.gate_name))
         first = self._print_subscript_pretty(gate_name, controls)
         gate = self._print_parens_pretty(gate)
         final = prettyForm(*first.right((gate)))
@@ -433,8 +433,8 @@ class UGate(Gate):
         target qubits and U is a unitary matrix with dimension of
         len(targets).
     """
-    gate_name = u'U'
-    gate_name_latex = u'U'
+    gate_name = 'U'
+    gate_name_latex = 'U'
 
     #-------------------------------------------------------------------------
     # Initialization
@@ -496,7 +496,7 @@ class UGate(Gate):
 
     def _print_contents_pretty(self, printer, *args):
         targets = self._print_sequence_pretty(self.targets, ',', printer, *args)
-        gate_name = stringPict(unicode(self.gate_name))
+        gate_name = stringPict(str(self.gate_name))
         return self._print_subscript_pretty(gate_name, targets)
 
     def _print_contents_latex(self, printer, *args):
@@ -556,8 +556,8 @@ class IdentityGate(OneQubitGate):
     --------
 
     """
-    gate_name = u'1'
-    gate_name_latex = u'1'
+    gate_name = '1'
+    gate_name_latex = '1'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('eye2', format)
@@ -581,8 +581,8 @@ class HadamardGate(OneQubitGate):
     --------
 
     """
-    gate_name = u'H'
-    gate_name_latex = u'H'
+    gate_name = 'H'
+    gate_name_latex = 'H'
 
     def get_target_matrix(self, format='sympy'):
         if _normalized:
@@ -621,8 +621,8 @@ class XGate(HermitianOperator, OneQubitGate):
     --------
 
     """
-    gate_name = u'X'
-    gate_name_latex = u'X'
+    gate_name = 'X'
+    gate_name_latex = 'X'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('X', format)
@@ -658,8 +658,8 @@ class YGate(HermitianOperator, OneQubitGate):
     --------
 
     """
-    gate_name = u'Y'
-    gate_name_latex = u'Y'
+    gate_name = 'Y'
+    gate_name_latex = 'Y'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Y', format)
@@ -686,8 +686,8 @@ class ZGate(HermitianOperator, OneQubitGate):
     --------
 
     """
-    gate_name = u'Z'
-    gate_name_latex = u'Z'
+    gate_name = 'Z'
+    gate_name_latex = 'Z'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('Z', format)
@@ -714,8 +714,8 @@ class PhaseGate(OneQubitGate):
     --------
 
     """
-    gate_name = u'S'
-    gate_name_latex = u'S'
+    gate_name = 'S'
+    gate_name_latex = 'S'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('S', format)
@@ -742,8 +742,8 @@ class TGate(OneQubitGate):
     --------
 
     """
-    gate_name = u'T'
-    gate_name_latex = u'T'
+    gate_name = 'T'
+    gate_name_latex = 'T'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('T', format)
@@ -785,7 +785,7 @@ class CNotGate(CGate, TwoQubitGate):
 
     """
     gate_name = 'CNOT'
-    gate_name_latex = u'CNOT'
+    gate_name_latex = 'CNOT'
 
     #-------------------------------------------------------------------------
     # Initialization
@@ -890,7 +890,7 @@ class SwapGate(TwoQubitGate):
 
     """
     gate_name = 'SWAP'
-    gate_name_latex = u'SWAP'
+    gate_name_latex = 'SWAP'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)
@@ -1060,7 +1060,7 @@ def gate_simp(circuit):
         return circuit
 
     # Iterate through each element in circuit, simplify if possible.
-    for i in xrange(len(circuit_args)):
+    for i in range(len(circuit_args)):
         # H,X,Y or Z squared is 1.
         # T**2 = S, S**2 = Z
         if isinstance(circuit_args[i], Pow):
@@ -1129,7 +1129,7 @@ def gate_sort(circuit):
     while changes:
         changes = False
         circ_array = circuit.args
-        for i in xrange(len(circ_array)-1):
+        for i in range(len(circ_array)-1):
             # Go through each element and switch ones that are in wrong order
             if isinstance(circ_array[i], (Gate, Pow)) and\
                isinstance(circ_array[i+1], (Gate, Pow)):
@@ -1181,9 +1181,9 @@ def random_circuit(ngates, nqubits, gate_space=(X, Y, Z, S, T, H, CNOT, SWAP)):
         Repeating gate classes multiple times in this tuple will increase
         the frequency they appear in the random circuit.
     """
-    qubit_space = range(nqubits)
+    qubit_space = list(range(nqubits))
     result = []
-    for i in xrange(ngates):
+    for i in range(ngates):
         g = random.choice(gate_space)
         if g == CNotGate or g == SwapGate:
             qubits = random.sample(qubit_space,2)

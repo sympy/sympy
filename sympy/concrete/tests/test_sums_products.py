@@ -4,7 +4,7 @@ from sympy import (S, Symbol, Sum, oo, Float, Rational, summation, pi, cos,
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
-a, b, c, d, m, k, x, y = map(Symbol, 'abcdmkxy')
+a, b, c, d, m, k, x, y = list(map(Symbol, 'abcdmkxy'))
 n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():

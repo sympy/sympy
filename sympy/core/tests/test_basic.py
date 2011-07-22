@@ -74,9 +74,7 @@ def test_S():
 def test_Singleton():
     global instanciated
     instanciated = 0
-    class MySingleton(Basic):
-        __metaclass__ = Singleton
-
+    class MySingleton(Basic, metaclass=Singleton):
         def __new__(cls):
             global instanciated
             instanciated += 1

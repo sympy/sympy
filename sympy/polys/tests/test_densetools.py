@@ -192,7 +192,7 @@ def test_dmp_eval_in():
     assert dmp_eval_in(f_6,-2, 2, 3, ZZ) == dmp_swap(dmp_eval(dmp_swap(f_6, 0, 2, 3, ZZ),-2, 3, ZZ), 0, 1, 2, ZZ)
     assert dmp_eval_in(f_6, 7, 2, 3, ZZ) == dmp_swap(dmp_eval(dmp_swap(f_6, 0, 2, 3, ZZ), 7, 3, ZZ), 0, 1, 2, ZZ)
 
-    f = [[[45L]], [[]], [[]], [[-9L], [-1L], [], [3L, 0L, 10L, 0L]]]
+    f = [[[45]], [[]], [[]], [[-9], [-1], [], [3, 0, 10, 0]]]
 
     assert dmp_eval_in(f, -2, 2, 2, ZZ) == \
         [[45], [], [], [-9, -1, 0, -44]]

@@ -47,7 +47,7 @@ class FCodePrinter(CodePrinter):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
         assign_to = self._settings['assign_to']
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, str):
             self._settings['assign_to'] = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("FCodePrinter cannot assign to object of type %s"%
@@ -95,8 +95,8 @@ class FCodePrinter(CodePrinter):
         close_lines = []
         for i in indices:
             # fortran arrays start at 1 and end at dimension
-            var, start, stop = map(self._print,
-                    [i.label, i.lower+1, i.upper+1])
+            var, start, stop = list(map(self._print,
+                    [i.label, i.lower+1, i.upper+1]))
             open_lines.append("do %s = %s, %s" % (var, start, stop))
             close_lines.append("end do")
         return open_lines, close_lines
@@ -329,7 +329,7 @@ class FCodePrinter(CodePrinter):
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
-        if isinstance(code, basestring):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -416,5 +416,5 @@ def print_fcode(expr, **settings):
 
        See fcode for the meaning of the optional arguments.
     """
-    print fcode(expr, **settings)
+    print(fcode(expr, **settings))
 

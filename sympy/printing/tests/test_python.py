@@ -93,7 +93,7 @@ def test_python_functions():
     assert python(sin(x)**2) == "x = Symbol('x')\ne = sin(x)**2"
 
     # Conjugates
-    a, b = map(Symbol, 'ab')
+    a, b = list(map(Symbol, 'ab'))
     #assert python( conjugate(a+b*I) ) == '_     _\na - I*b'
     #assert python( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '
 

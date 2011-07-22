@@ -26,11 +26,11 @@ __all__ = [
 #-----------------------------------------------------------------------------
 
 # LIGHT VERTICAL BAR
-_straight_bracket = u"\u2758"
+_straight_bracket = "\u2758"
 
 # MATHEMATICAL LEFT ANGLE BRACKET
-_lbracket = u"\u27E8"
-_rbracket = u"\u27E9"
+_lbracket = "\u27E8"
+_rbracket = "\u27E9"
 
 # Other options for unicode printing of <, > and | for Dirac notation.
 

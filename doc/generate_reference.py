@@ -59,17 +59,17 @@ class Parser(object):
         modules is just the name, like "sympy", i.e. without a path.
         """
 
-        print "Generating API documentation ... (this may take a while)"
+        print("Generating API documentation ... (this may take a while)")
         sys.path.insert(0, importpath)
         m = __import__(module)
         self.main_module = module
         self.handle_module(m)
-        print "  saving..."
+        print("  saving...")
         for x in self.modules:
             if x.startswith(module):
                 f = open(outdir+x+".txt", "w")
                 f.write(self.modules[x])
-        print "API generated in %s." % (outdir)
+        print("API generated in %s." % (outdir))
 
 
     def handle_module(self, mod):
@@ -94,7 +94,7 @@ class Parser(object):
         s += ".. module:: %s\n\n" % mname
         if hasattr(mod, __file__):
             s += "filename: %s\n" % mod.__file__
-        for x in mod.__dict__.values():
+        for x in list(mod.__dict__.values()):
             if isinstance(x, types.ModuleType):
                 self.handle_module(x)
             elif x is None:
@@ -108,7 +108,7 @@ class Parser(object):
             elif hasattr(x, "__class__"):
                 s += self.handle_class(x)
             else:
-                print "  Ignored:", type(x), x
+                print("  Ignored:", type(x), x)
         self.modules[mod.__name__] = s
 
     def handle_class(self, cls):
@@ -126,7 +126,7 @@ class Parser(object):
         #    s += "\n"
 
         if hasattr(cls, "__dict__"):
-            for x in cls.__dict__.values():
+            for x in list(cls.__dict__.values()):
                 if isinstance(x, types.ModuleType):
                     self.handle_module(x)
                 elif str(type(x)) == "<type 'classobj'>":
@@ -145,7 +145,7 @@ class Parser(object):
                     # ignore nested classes
                     pass
                 else:
-                    print "    Ignored in class:", type(x), x
+                    print("    Ignored in class:", type(x), x)
 
         return s
 

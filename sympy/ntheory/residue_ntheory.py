@@ -1,6 +1,6 @@
 from sympy.core.numbers import igcd
-from primetest import isprime
-from factor_ import factorint
+from .primetest import isprime
+from .factor_ import factorint
 
 
 def totient_(n):
@@ -9,7 +9,7 @@ def totient_(n):
     if n < 1:
         raise ValueError("n must be a positive integer")
     tot = 0
-    for x in xrange(1, n):
+    for x in range(1, n):
         if igcd(x, n) == 1:
             tot += 1
     return tot
@@ -27,9 +27,9 @@ def n_order(a, n):
     order = 1
     if a > n:
         a = a % n
-    for p, e in factors.iteritems():
+    for p, e in factors.items():
         exponent = group_order
-        for f in xrange(0, e + 1):
+        for f in range(0, e + 1):
             if (a ** (exponent)) % n != 1:
                 order *= p ** (e - f + 1)
                 break

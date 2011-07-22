@@ -44,7 +44,7 @@ class CodePrinter(StrPrinter):
                 openloop_d, closeloop_d = self._get_loop_opening_ending(indices)
 
                 for term in d[dummies]:
-                    if term in d and not ([f.keys() for f in d[term]]
+                    if term in d and not ([list(f.keys()) for f in d[term]]
                             == [[None] for f in d[term]]):
                         # If one factor in the term has it's own internal
                         # contractions, those must be computed first.
@@ -67,8 +67,7 @@ class CodePrinter(StrPrinter):
                         if assign_to is None:
                             raise AssignmentError("need assignment variable for loops")
                         if term.has(assign_to):
-                            raise(ValueError("FIXME: lhs present in rhs,\
-                                this is undefined in CCodePrinter"))
+                            raise ValueError
 
                         lines.extend(openloop)
                         lines.extend(openloop_d)

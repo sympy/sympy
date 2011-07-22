@@ -13,4 +13,4 @@ than a given minimum version, the function will return None.  Otherwise, it will
 return the library.  See the docstring of import_module() for more information.
 """
 
-from importtools import import_module
+from .importtools import import_module

@@ -190,8 +190,8 @@ def make_simp(z):
 def debug(*args):
     if SYMPY_DEBUG:
         for a in args:
-            print a,
-        print
+            print(a, end=' ')
+        print()
 
 
 class Mod1(object):
@@ -269,8 +269,7 @@ class IndexPair(object):
         if oabuckets is not None:
             for parametric, buckets in [(oaparametric, oabuckets),
                                         (obparametric, obbuckets)]:
-                parametric += filter(lambda x: isinstance(x, Mod1),
-                                     buckets.keys())
+                parametric += [x for x in list(buckets.keys()) if isinstance(x, Mod1)]
 
         for params, bucket, oparametric in [(self.ap, abuckets, oaparametric),
                                             (self.bq, bbuckets, obparametric)]:
@@ -331,13 +330,13 @@ class IndexPair(object):
 
         gamma = 0
         if S(0) in abuckets:
-            gamma = len(filter(lambda x: x < 0, abuckets[S(0)]))
+            gamma = len([x for x in abuckets[S(0)] if x < 0])
 
         def tr(bucket):
-            bucket = bucket.items()
+            bucket = list(bucket.items())
             if not any(isinstance(x[0], Mod1) for x in bucket):
                 bucket.sort(key=lambda x: x[0])
-            bucket = tuple(map(lambda x: (x[0], len(x[1])), bucket))
+            bucket = tuple([(x[0], len(x[1])) for x in bucket])
             return bucket
 
         return (gamma, tr(abuckets), tr(bbuckets))
@@ -350,12 +349,12 @@ class IndexPair(object):
 
         gt0 = lambda x: (x > 0) is True
         if S(0) in abuckets and (not S(0) in oabuckets or
-             len(filter(gt0, abuckets[S(0)])) != len(filter(gt0, oabuckets[S(0)]))):
+             len(list(filter(gt0, abuckets[S(0)]))) != len(list(filter(gt0, oabuckets[S(0)])))):
             return -1
 
         diff = 0
         for bucket, obucket in [(abuckets, oabuckets), (bbuckets, obbuckets)]:
-            for mod in set(bucket.keys() + obucket.keys()):
+            for mod in set(list(bucket.keys()) + list(obucket.keys())):
                 if (not mod in bucket) or (not mod in obucket) \
                    or len(bucket[mod]) != len(obucket[mod]):
                     return -1
@@ -405,7 +404,7 @@ class IndexQuadruple(object):
                 dic.setdefault(m, []).append(x)
 
         for dic, flip in [(pan, True), (pap, False), (pbm, False), (pbq, True)]:
-            l = dic.items()
+            l = list(dic.items())
             dic.clear()
             for m, items in l:
                 x0 = items[0]
@@ -466,14 +465,14 @@ class Formula(object):
         """
         from sympy.matrices import Matrix, eye, zeros
 
-        afactors = map(lambda a: x + a, self.indices.ap)
-        bfactors = map(lambda b: x + b - 1, self.indices.bq)
+        afactors = [x + a for a in self.indices.ap]
+        bfactors = [x + b - 1 for b in self.indices.bq]
         expr = x*Mul(*bfactors) - self.z*Mul(*afactors)
         poly = Poly(expr, x)
 
         n = poly.degree() - 1
         b = [closed_form]
-        for _ in xrange(n):
+        for _ in range(n):
             b.append(self.z*b[-1].diff(self.z))
 
         self.B = Matrix(b)
@@ -486,11 +485,11 @@ class Formula(object):
         self.M = m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])
 
     def __init__(self, ap, bq, z, res, symbols, B=None, C=None, M=None):
-        ap = Tuple(*map(expand, sympify(ap)))
-        bq = Tuple(*map(expand, sympify(bq)))
+        ap = Tuple(*list(map(expand, sympify(ap))))
+        bq = Tuple(*list(map(expand, sympify(bq))))
         z  = sympify(z)
         res = sympify(res)
-        symbols = filter(lambda x: ap.has(x) or bq.has(x), sympify(symbols))
+        symbols = [x for x in sympify(symbols) if ap.has(x) or bq.has(x)]
 
         self.z  = z
         self.symbols = symbols
@@ -569,7 +568,7 @@ class Formula(object):
                     repl[a] = (solve(our_params[i] - all_params[i], a)[0], d)
                 for change in product(*[(-1, 0, 1)]*len(self.symbols)):
                     rep = {}
-                    for i, a in zip(change, repl.keys()):
+                    for i, a in zip(change, list(repl.keys())):
                         rep[a] = repl[a][0] + i*repl[a][1]
                     res.append(Formula(self.indices.ap.subs(rep),
                                        self.indices.bq.subs(rep),
@@ -797,7 +796,7 @@ class UnShiftA(Operator):
 
     def __init__(self, ap, bq, i, z):
         """ Note: i counts from zero! """
-        ap, bq, i = map(sympify, [ap, bq, i])
+        ap, bq, i = list(map(sympify, [ap, bq, i]))
 
         self._ap = ap
         self._bq = bq
@@ -841,7 +840,7 @@ class UnShiftB(Operator):
 
     def __init__(self, ap, bq, i, z):
         """ Note: i counts from zero! """
-        ap, bq, i = map(sympify, [ap, bq, i])
+        ap, bq, i = list(map(sympify, [ap, bq, i]))
 
         self._ap = ap
         self._bq = bq
@@ -898,7 +897,7 @@ class ReduceOrder(Operator):
         self = Operator.__new__(cls)
 
         p = S(1)
-        for k in xrange(n):
+        for k in range(n):
             p *= (x + bj + k)/(bj + k)
 
         self._poly = Poly(p, x)
@@ -921,7 +920,7 @@ class ReduceOrder(Operator):
         self = Operator.__new__(cls)
 
         p = S(1)
-        for k in xrange(n):
+        for k in range(n):
             p *= (sign*x + a + k)
 
         self._poly = Poly(p, x)
@@ -958,7 +957,7 @@ def _reduce_order(ap, bq, gen, key):
     operators = []
     for a in ap:
         op = None
-        for i in xrange(len(bq)):
+        for i in range(len(bq)):
             op = gen(a, bq[i])
             if op is not None:
                 bq.pop(i)
@@ -1080,15 +1079,15 @@ def devise_plan(ip, nip, z):
     abuckets, bbuckets = ip.compute_buckets()
     nabuckets, nbbuckets = nip.compute_buckets(abuckets, bbuckets)
 
-    if len(abuckets.keys()) != len(nabuckets.keys()) or \
-       len(bbuckets.keys()) != len(nbbuckets.keys()):
+    if len(list(abuckets.keys())) != len(list(nabuckets.keys())) or \
+       len(list(bbuckets.keys())) != len(list(nbbuckets.keys())):
         raise ValueError('%s not reachable from %s' % (ip, nip))
 
     ops = []
 
     def do_shifts(fro, to, inc, dec):
         ops = []
-        for i in xrange(len(fro)):
+        for i in range(len(fro)):
             if to[i] - fro[i] > 0:
                 sh = inc
                 ch = 1
@@ -1113,7 +1112,7 @@ def devise_plan(ip, nip, z):
                          lambda p, i: UnShiftB(nal + aother, p + bother, i, z),
                          lambda p, i: ShiftB(p[i]))
 
-    for r in set(abuckets.keys() + bbuckets.keys()):
+    for r in set(list(abuckets.keys()) + list(bbuckets.keys())):
         al = ()
         nal = ()
         bk = ()
@@ -1134,7 +1133,7 @@ def devise_plan(ip, nip, z):
 
         def others(dic, key):
             l = []
-            for k, value in dic.iteritems():
+            for k, value in dic.items():
                 if k != key:
                     l += list(dic[k])
             return l
@@ -1191,11 +1190,11 @@ def try_shifted_sum(ip, z):
     nbq = list(ip.bq)
     nbq.remove(k)
     k -= 1
-    nap = map(lambda x: x - k, nap)
-    nbq = map(lambda x: x - k, nbq)
+    nap = [x - k for x in nap]
+    nbq = [x - k for x in nbq]
 
     ops = []
-    for n in xrange(r - 1):
+    for n in range(r - 1):
         ops.append(ShiftA(n + 1))
     ops.reverse()
 
@@ -1208,7 +1207,7 @@ def try_shifted_sum(ip, z):
     ops += [MultOperator(fac)]
 
     p = 0
-    for n in xrange(k):
+    for n in range(k):
         m = z**n/factorial(n)
         for a in nap:
             m *= rf(a, n)
@@ -1227,8 +1226,8 @@ def try_polynomial(ip, z):
     b0 = list(bbuckets.get(S(0), []))
     a0.sort()
     b0.sort()
-    al0 = filter(lambda x: x <= 0, a0)
-    bl0 = filter(lambda x: x <= 0, b0)
+    al0 = [x for x in a0 if x <= 0]
+    bl0 = [x for x in b0 if x <= 0]
 
     if bl0:
         return oo
@@ -1238,7 +1237,7 @@ def try_polynomial(ip, z):
     a = al0[-1]
     fac = 1
     res = S(1)
-    for n in xrange(-a):
+    for n in range(-a):
        fac *= z
        fac /= n + 1
        for a in ip.ap: fac *= a + n

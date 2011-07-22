@@ -561,7 +561,7 @@ def test_dmp_content():
 
     f, g, F = [ZZ(3),ZZ(2),ZZ(1)], [ZZ(1)], []
 
-    for i in xrange(0, 5):
+    for i in range(0, 5):
         g = dup_mul(g, f, ZZ)
         F.insert(0, g)
 
@@ -577,7 +577,7 @@ def test_dmp_primitive():
 
     f, g, F = [ZZ(3),ZZ(2),ZZ(1)], [ZZ(1)], []
 
-    for i in xrange(0, 5):
+    for i in range(0, 5):
         g = dup_mul(g, f, ZZ)
         F.insert(0, g)
 

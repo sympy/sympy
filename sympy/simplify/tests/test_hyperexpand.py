@@ -155,7 +155,7 @@ def test_plan():
     raises(KeyError,
            'devise_plan(IndexPair([2], []), IndexPair([S("1/2")], []), z)')
 
-    a1, a2, b1 = map(lambda _: randcplx(), range(3))
+    a1, a2, b1 = [randcplx() for _ in range(3)]
     b1 += 2*I
     h = hyper([a1], [b1], z)
 
@@ -186,7 +186,7 @@ def test_plan_derivatives():
     tn(apply_operators(f.C, ops, deriv)[0], h2, z)
 
 def test_reduction_operators():
-    a1, a2, b1 = map(lambda _: randcplx(), range(3))
+    a1, a2, b1 = [randcplx() for _ in range(3)]
     h = hyper([a1], [b1], z)
 
     assert ReduceOrder(2, 0) is None
@@ -211,7 +211,7 @@ def test_reduction_operators():
     assert tn(apply_operators(h, ops, op), hyper(ap, bq, z), z)
 
 def test_shift_operators():
-    a1, a2, b1, b2, b3 = map(lambda _: randcplx(), range(5))
+    a1, a2, b1, b2, b3 = [randcplx() for _ in range(5)]
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, 'ShiftA(0)')
@@ -224,7 +224,7 @@ def test_shift_operators():
     assert tn(ShiftB(b3).apply(h, op), hyper((a1, a2), (b1, b2, b3 - 1), z), z)
 
 def test_ushift_operators():
-    a1, a2, b1, b2, b3 = map(lambda _: randcplx(), range(5))
+    a1, a2, b1, b2, b3 = [randcplx() for _ in range(5)]
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, 'UnShiftA((1,), (), 0, z)')
@@ -332,9 +332,9 @@ def test_meijerg():
     # carefully set up the parameters.
     # NOTE: this used to fail sometimes. I believe it is fixed, but if you
     #       hit an inexplicable test failure here, please let me know the seed.
-    a1, a2 = map(lambda _: randcplx() - 5*I, range(2))
-    b1, b2 = map(lambda _: randcplx() + 5*I, range(2))
-    b3, b4, b5, a3, a4, a5 = map(lambda _: randcplx(), range(6))
+    a1, a2 = [randcplx() - 5*I for _ in range(2)]
+    b1, b2 = [randcplx() + 5*I for _ in range(2)]
+    b3, b4, b5, a3, a4, a5 = [randcplx() for _ in range(6)]
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert ReduceOrder.meijer_minus(3, 4) is None

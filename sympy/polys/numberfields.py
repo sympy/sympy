@@ -56,7 +56,7 @@ def minimal_polynomial(ex, x=None, **args):
         x, cls = Dummy('x'), PurePoly
 
     def update_mapping(ex, exp, base=None):
-        a = generator.next()
+        a = next(generator)
         symbols[ex] = a
 
         if base is not None:
@@ -126,8 +126,8 @@ def minimal_polynomial(ex, x=None, **args):
     elif ex.is_Rational and ex.q != 0:
         result = ex.q*x - ex.p
     else:
-        F = [x - bottom_up_scan(ex)] + mapping.values()
-        G = groebner(F, symbols.values() + [x], order='lex')
+        F = [x - bottom_up_scan(ex)] + list(mapping.values())
+        G = groebner(F, list(symbols.values()) + [x], order='lex')
 
         _, factors = factor_list(G[-1])
 
@@ -181,7 +181,7 @@ def primitive_element(extension, x=None, **args):
     F, Y = [], []
 
     for ext in extension:
-        y = generator.next()
+        y = next(generator)
 
         if ext.is_Poly:
             if ext.is_univariate:
@@ -202,7 +202,7 @@ def primitive_element(extension, x=None, **args):
 
         H, g = G[:-1], cls(G[-1], x, domain='QQ')
 
-        for i, (h, y) in enumerate(zip(H, Y)):
+        for i, (h, y) in enumerate(list(zip(H, Y))):
             try:
                 H[i] = Poly(y - h, x, domain='QQ').all_coeffs() # XXX: composite=False
             except CoercionFailed: # pragma: no cover
@@ -261,11 +261,11 @@ def field_isomorphism_pslq(a, b):
 
     n, m, prev = 100, b.minpoly.degree(), None
 
-    for i in xrange(1, 5):
+    for i in range(1, 5):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [1, B] + [ B**i for i in xrange(2, m) ] + [A]
+        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
 
         dps, mp.dps = mp.dps, n
         coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)

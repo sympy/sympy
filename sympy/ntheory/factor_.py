@@ -9,8 +9,8 @@ from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
 import random
 import math
-from primetest import isprime
-from generate import sieve, primerange, nextprime
+from .primetest import isprime
+from .generate import sieve, primerange, nextprime
 from sympy.utilities.iterables import iff
 from sympy.core.singleton import S
 
@@ -119,7 +119,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     if type(n) is not tuple:
         rv = (m, sorted([(f,
                             tuple([M] + list(smoothness(f + m))))
-                            for f, M in [i for i in facs.items()]],
+                            for f, M in [i for i in list(facs.items())]],
                             key=lambda x: (x[1][k], x[0])))
     else:
         rv = n
@@ -561,7 +561,7 @@ def _trial(factors, n, candidates, verbose=False):
     value of ``n`` and a flag indicating whether any factors were found.
     """
     if verbose:
-        factors0 = factors.keys()
+        factors0 = list(factors.keys())
     nfactors = len(factors)
     for d in candidates:
         if n % d == 0:
@@ -570,7 +570,7 @@ def _trial(factors, n, candidates, verbose=False):
             factors[d] = m
     if verbose:
         for k in sorted(set(factors).difference(set(factors0))):
-            print factor_msg % (k, factors[k])
+            print(factor_msg % (k, factors[k]))
     return int(n), len(factors) != nfactors
 
 def _check_termination(factors, n,
@@ -586,7 +586,7 @@ def _check_termination(factors, n,
     """
 
     if verbose:
-        print 'Check for termination'
+        print('Check for termination')
 
     # since we've already been factoring there is no need to do
     # simultaneous factoring with the power check
@@ -603,9 +603,9 @@ def _check_termination(factors, n,
                                use_rho,
                                use_pm1,
                                verbose=False)
-        for b, e in facs.items():
+        for b, e in list(facs.items()):
             if verbose:
-                print factor_msg % (b, e)
+                print(factor_msg % (b, e))
             factors[b] = exp*e
         raise StopIteration
 
@@ -868,12 +868,12 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                      visual=False)
     elif isinstance(n, Mul):
         factordict = dict([(int(k), int(v)) for k, v in
-                           n.as_powers_dict().items()])
+                           list(n.as_powers_dict().items())])
     elif isinstance(n, dict):
         factordict = n
     if factordict and (isinstance(n, Mul) or isinstance(n, dict)):
         # check it
-        for k in factordict.keys():
+        for k in list(factordict.keys()):
             if isprime(k):
                 continue
             e = factordict.pop(k)
@@ -884,7 +884,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                            use_pm1=use_pm1,
                            verbose=verbose,
                            visual=False)
-            for k, v in d.items():
+            for k, v in list(d.items()):
                 if k in factordict:
                     factordict[k] += v*e
                 else:
@@ -930,10 +930,10 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     if verbose:
         sn = str(n)
         if len(sn) > 50:
-            print 'Factoring %s' % sn[:5] + \
-                  '..(%i other digits)..' % (len(sn) - 10) + sn[-5:]
+            print('Factoring %s' % sn[:5] + \
+                  '..(%i other digits)..' % (len(sn) - 10) + sn[-5:])
         else:
-            print 'Factoring', n
+            print('Factoring', n)
 
     if use_trial:
         # this is the preliminary factorization for small factors
@@ -941,18 +941,18 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         fail_max = 600
         small = min(small, limit or small)
         if verbose:
-            print trial_int_msg % (2, small, fail_max)
+            print(trial_int_msg % (2, small, fail_max))
         n, next_p = _factorint_small(factors, n, small, fail_max)
     else:
         next_p = 2
     if factors and verbose:
         for k in sorted(factors):
-            print factor_msg % (k, factors[k])
+            print(factor_msg % (k, factors[k]))
     if next_p == 0:
         if n > 1:
             factors[int(n)] = 1
         if verbose:
-            print complete_msg
+            print(complete_msg)
         return factors
 
     # continue with more advanced factorization methods
@@ -963,7 +963,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     try:
         if limit and next_p > limit:
             if verbose:
-                print 'Exceeded limit:', limit
+                print('Exceeded limit:', limit)
 
             _check_termination(factors, n,
                                            limit,
@@ -994,7 +994,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                 a  += 1
             if fermat:
                 if verbose:
-                    print fermat_msg
+                    print(fermat_msg)
                 if limit:
                     limit -= 1
                 for r in [a - b, a + b]:
@@ -1017,7 +1017,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     except StopIteration:
         if verbose:
-            print complete_msg
+            print(complete_msg)
         return factors
 
     # these are the limits for trial division which will
@@ -1038,7 +1038,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             # Trial division
             if use_trial:
                 if verbose:
-                    print trial_msg % (low, high_)
+                    print(trial_msg % (low, high_))
                 ps = sieve.primerange(low, high_)
                 n, found_trial = _trial(factors, n, ps, verbose)
                 if found_trial:
@@ -1053,7 +1053,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
             if high > limit:
                 if verbose:
-                    print 'Exceeded limit:', limit
+                    print('Exceeded limit:', limit)
                 if n > 1:
                     factors[int(n)] = 1
                 raise StopIteration
@@ -1066,7 +1066,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     # Pollard p-1
                     if use_pm1:
                         if verbose:
-                            print (pm1_msg % (high_root, high_))
+                            print((pm1_msg % (high_root, high_)))
                         c = pollard_pm1(n, B=high_root, seed=high_)
                         if c:
                             # factor it and let _trial do the update
@@ -1088,7 +1088,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                     if use_rho:
                         max_steps = high_root
                         if verbose:
-                            print (rho_msg % (1, max_steps, high_))
+                            print((rho_msg % (1, max_steps, high_)))
                         c = pollard_rho(n, retries=1, max_steps=max_steps, \
                                            seed=high_)
                         if c:
@@ -1109,7 +1109,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
         except StopIteration:
             if verbose:
-                print complete_msg
+                print(complete_msg)
             return factors
 
         low, high = high, high*2
@@ -1162,7 +1162,7 @@ def _divisors(n):
             yield 1
         else :
             pows = [1]
-            for j in xrange(factordict[ps[n]]):
+            for j in range(factordict[ps[n]]):
                 pows.append(pows[-1] * ps[n])
             for q in rec_gen(n + 1):
                 for p in pows:
@@ -1222,7 +1222,7 @@ def divisor_count(n):
     n = abs(n)
     if n == 0:
         return 0
-    return Mul(*[v+1 for k, v in factorint(n).items() if k > 1])
+    return Mul(*[v+1 for k, v in list(factorint(n).items()) if k > 1])
 
 def totient(n):
     """Calculate the Euler totient function phi(n)
@@ -1238,6 +1238,6 @@ def totient(n):
         raise ValueError("n must be a positive integer")
     factors = factorint(n)
     t = 1
-    for p, k in factors.iteritems():
+    for p, k in factors.items():
         t *= (p-1) * p**(k-1)
     return t

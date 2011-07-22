@@ -254,7 +254,7 @@ def test_extract():
     m = Matrix(4, 3, lambda i, j: i*3 + j)
     assert m.extract([0,1,3],[0,1]) == Matrix(3,2,[0,1,3,4,9,10])
     assert m.extract([0,3],[0,0,2]) == Matrix(2,3,[0,0,2,9,9,11])
-    assert m.extract(range(4),range(3)) == m
+    assert m.extract(list(range(4)),list(range(3))) == m
     raises(IndexError, 'm.extract([4], [0])')
     raises(IndexError, 'm.extract([0], [3])')
 
@@ -1178,14 +1178,14 @@ def test_vec():
     m = Matrix([ [1,3], [2,4] ])
     m_vec = m.vec()
     assert m_vec.cols == 1
-    for i in xrange(4):
+    for i in range(4):
         assert m_vec[i] == i + 1
 
 def test_vech():
     m = Matrix([ [1,2], [2,3] ])
     m_vech = m.vech()
     assert m_vech.cols == 1
-    for i in xrange(3):
+    for i in range(3):
         assert m_vech[i] == i + 1
     m_vech = m.vech(diagonal=False)
     assert m_vech[0] == 2
@@ -1292,13 +1292,13 @@ def test_creation_args():
     """
     raises(ValueError, 'zeros((3, -1))')
     raises(ValueError, 'zeros((1, 2, 3, 4))')
-    assert zeros(3L) == zeros(3)
+    assert zeros(3) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
     assert zeros(3.) == zeros(3)
-    assert eye(3L) == eye(3)
+    assert eye(3) == eye(3)
     assert eye(Integer(3)) == eye(3)
     assert eye(3.) == eye(3)
-    assert ones((3L, Integer(4))) == ones((3, 4))
+    assert ones((3, Integer(4))) == ones((3, 4))
     raises(TypeError, 'Matrix(1, 2)')
 
 def test_diagonal_symmetrical():

@@ -37,8 +37,8 @@ __all__ = [
 class RkGate(OneQubitGate):
     """This is the R_k gate of the QTF."""
 
-    gate_name = u'Rk'
-    gate_name_latex = u'R'
+    gate_name = 'Rk'
+    gate_name_latex = 'R'
 
     def __new__(cls, *args, **old_assumptions):
         if len(args) != 2:
@@ -132,7 +132,7 @@ class Fourier(Gate):
 
     @property
     def targets(self):
-        return range(self.label[0],self.label[1])
+        return list(range(self.label[0],self.label[1]))
 
     @property
     def min_qubits(self):
@@ -151,15 +151,15 @@ class Fourier(Gate):
 class QFT(Fourier):
     """The forward quantum Fourier transform."""
 
-    gate_name = u'QFT'
-    gate_name_latex = u'QFT'
+    gate_name = 'QFT'
+    gate_name_latex = 'QFT'
 
     def decompose(self):
         """Decomposes QFT into elementary gates."""
         start = self.label[0]
         finish = self.label[1]
         circuit = 1
-        for level in reversed(range(start, finish)):
+        for level in reversed(list(range(start, finish))):
             circuit = HadamardGate(level)*circuit
             for i in range(level-start):
                 circuit = CGate(level-i-1, RkGate(level, i+2))*circuit
@@ -181,8 +181,8 @@ class QFT(Fourier):
 class IQFT(Fourier):
     """The inverse quantum Fourier transform."""
 
-    gate_name = u'IQFT'
-    gate_name_latex = u'{QFT^{-1}}'
+    gate_name = 'IQFT'
+    gate_name_latex = '{QFT^{-1}}'
 
     def decompose(self):
         """Decomposes IQFT into elementary gates."""
@@ -192,7 +192,7 @@ class IQFT(Fourier):
         for i in range((finish-start)//2):
             circuit = SwapGate(i+start, finish-i-1)*circuit
         for level in range(start, finish):
-            for i in reversed(range(level-start)):
+            for i in reversed(list(range(level-start))):
                 circuit = CGate(level-i-1, RkGate(level, -i-2))*circuit
             circuit = HadamardGate(level)*circuit
         return circuit

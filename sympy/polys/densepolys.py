@@ -367,7 +367,7 @@ class DensePoly(GenericPoly):
         """Compute subresultant PRS sequence of $f$ and $g$. """
         lev, dom, per, F, G = f.unify(g)
         R = dmp_subresultants(F, G, lev, dom)
-        return map(per, R)
+        return list(map(per, R))
 
     def resultant(f, g):
         """Compute resultant of $f$ and $g$. """
@@ -447,11 +447,11 @@ class DensePoly(GenericPoly):
 
     def decompose(f):
         """Computes functional decomposition of $f$. """
-        return map(f.per, dmp_decompose(f.rep, f.lev, f.dom))
+        return list(map(f.per, dmp_decompose(f.rep, f.lev, f.dom)))
 
     def sturm(f):
         """Computes the Sturm sequence of $f$. """
-        return map(f.per, dmp_sturm(f.rep, f.lev, f.dom))
+        return list(map(f.per, dmp_sturm(f.rep, f.lev, f.dom)))
 
     def sqf_norm(f):
         """Computes square-free norm of $f$. """
@@ -600,5 +600,5 @@ class DensePoly(GenericPoly):
     def __ne__(f, g):
         return not f.__eq__(g)
 
-    def __nonzero__(f):
+    def __bool__(f):
         return not f.is_zero

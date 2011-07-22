@@ -64,7 +64,7 @@ class SpinOpBase(object):
         return self.args[0]
 
     def _print_contents(self, printer, *args):
-        return '%s%s' % (unicode(self.name), self._coord)
+        return '%s%s' % (str(self.name), self._coord)
 
     # def _sympyrepr(self, printer, *args):
     #     return '%s(%s)' % (
@@ -72,12 +72,12 @@ class SpinOpBase(object):
     #
 
     def _print_contents_pretty(self, printer, *args):
-        a = stringPict(unicode(self.name))
+        a = stringPict(str(self.name))
         b = stringPict(self._coord)
         return self._print_subscript_pretty(a, b)
 
     def _print_contents_latex(self, printer, *args):
-        return r'%s_%s' % ((unicode(self.name), self._coord))
+        return r'%s_%s' % ((str(self.name), self._coord))
 
     def _represent_base(self, basis, **options):
         j = options.get('j', Rational(1,2))
@@ -372,7 +372,7 @@ class Rotation(UnitaryOperator):
         return printer._print('R', *args)
 
     def _print_operator_name_pretty(self, printer, *args):
-        return prettyForm(u"\u211B" + u" ")
+        return prettyForm("\u211B" + " ")
 
     def _eval_inverse(self):
         return Rotation(-self.gamma, -self.beta, -self.alpha)

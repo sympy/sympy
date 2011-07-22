@@ -39,7 +39,7 @@ def test_nsolve():
         root = nsolve((f1, f2, f3), (x, y, z), x0)
         assert mnorm(F(*root),1) <= 1.e-8
         return root
-    assert map(round, getroot((1, 1, 1))) == [2.0, 1.0, 0.0]
+    assert list(map(round, getroot((1, 1, 1)))) == [2.0, 1.0, 0.0]
     assert nsolve([Eq(f1), Eq(f2), Eq(f3)], [x, y, z], (1, 1, 1)) # just see that it works
     a = Symbol('a')
     assert nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3).ae(

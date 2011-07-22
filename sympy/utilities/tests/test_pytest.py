@@ -10,13 +10,13 @@ def test_raises():
     try:
         raises(My, "1+1")
         assert False
-    except Exception, e:
+    except Exception as e:
         assert str(e) == "DID NOT RAISE"
 
     try:
         raises(My, "raise My2('my text123')")
         assert False
-    except My2, e:
+    except My2 as e:
         assert str(e) == "my text123"
 
     raises(TypeError, 'raises("oops", ValueError)')

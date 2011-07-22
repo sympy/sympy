@@ -46,7 +46,7 @@ def R_nl(n, l, nu, r):
     1.00000000000000
 
     """
-    n, l, nu, r = map(S, [n, l, nu, r])
+    n, l, nu, r = list(map(S, [n, l, nu, r]))
 
     # formula uses n >= 1 (instead of nodal n >= 0)
     n = n + 1

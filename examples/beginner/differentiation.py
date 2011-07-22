@@ -13,17 +13,17 @@ def main():
     b = sympy.Symbol('b')
     e = (a + 2*b)**5
 
-    print
+    print()
     pprint(e)
-    print
+    print()
     pprint(e.diff(a))
-    print
+    print()
     pprint(e.diff(b))
-    print
+    print()
     pprint(e.diff(b).diff(a, 3))
-    print
+    print()
     pprint(e.expand().diff(b).diff(a, 3))
-    print
+    print()
 
 if __name__ == "__main__":
     main()

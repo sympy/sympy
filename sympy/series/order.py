@@ -94,7 +94,7 @@ class Order(Expr):
             return S.NaN
 
         if symbols:
-            symbols = map(sympify, symbols)
+            symbols = list(map(sympify, symbols))
             if not all(isinstance(s, Symbol) for s in symbols):
                 raise NotImplementedError('Order at points other than 0 not supported.')
         else:

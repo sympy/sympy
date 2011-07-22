@@ -165,7 +165,7 @@ class IndexedBase(Expr):
     is_commutative = False
 
     def __new__(cls, label, shape=None, **kw_args):
-        if isinstance(label, basestring):
+        if isinstance(label, str):
             label = Symbol(label)
 
         obj = Expr.__new__(cls, label, **kw_args)
@@ -228,7 +228,7 @@ class Indexed(Expr):
 
     def __new__(cls, base, *args, **kw_args):
         if not args: raise IndexException("Indexed needs at least one index")
-        if isinstance(base, (basestring, Symbol)):
+        if isinstance(base, (str, Symbol)):
             base = IndexedBase(base)
         elif not isinstance(base, IndexedBase):
             raise TypeError("Indexed expects string, Symbol or IndexedBase as base")
@@ -292,7 +292,7 @@ class Indexed(Expr):
         return ranges
 
     def _sympystr(self, p):
-        indices = map(p.doprint, self.indices)
+        indices = list(map(p.doprint, self.indices))
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
 
 
@@ -367,9 +367,9 @@ class Idx(Expr):
 
     def __new__(cls, label, range=None, **kw_args):
 
-        if isinstance(label, basestring):
+        if isinstance(label, str):
             label = Symbol(label, integer=True)
-        label, range = map(sympify, (label, range))
+        label, range = list(map(sympify, (label, range)))
 
         if not label.is_integer:
             raise TypeError("Idx object requires an integer label")

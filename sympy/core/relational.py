@@ -1,6 +1,6 @@
-from expr import Expr
-from evalf import EvalfMixin
-from sympify import _sympify
+from .expr import Expr
+from .evalf import EvalfMixin
+from .sympify import _sympify
 
 def Rel(a, b, op):
     """
@@ -164,7 +164,7 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return lhs == rhs
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.lhs.compare(self.rhs)==0
 
 class Unequality(Relational):
@@ -177,7 +177,7 @@ class Unequality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return lhs != rhs
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.lhs.compare(self.rhs)!=0
 
 class StrictInequality(Relational):
@@ -190,7 +190,7 @@ class StrictInequality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return lhs < rhs
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.lhs.compare(self.rhs)==-1
 
 class Inequality(Relational):
@@ -203,5 +203,5 @@ class Inequality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return lhs <= rhs
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.lhs.compare(self.rhs)<=0

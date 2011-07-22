@@ -3,7 +3,7 @@ A Printer for generating readable representation of most sympy classes.
 """
 
 from sympy.core import S, Rational, Pow, Basic
-from printer import Printer
+from .printer import Printer
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 import sympy.mpmath.libmp as mlib
@@ -78,7 +78,7 @@ class StrPrinter(Printer):
         return 'Derivative(%s)'%", ".join(map(self._print, expr.args))
 
     def _print_dict(self, expr):
-        keys = expr.keys()
+        keys = list(expr.keys())
         keys.sort( key=cmp_to_key(Basic.compare_pretty) )
 
         items = []
@@ -107,7 +107,7 @@ class StrPrinter(Printer):
         if len(s) > 10:
             #take ten elements from the set at random
             q = iter(s)
-            printset = [q.next() for i in xrange(10)]
+            printset = [next(q) for i in range(10)]
         else:
             printset = s
         try:
@@ -144,7 +144,7 @@ class StrPrinter(Printer):
         if len(s) > 10:
             #take ten elements from the set at random
             q = iter(s)
-            printset = [q.next() for i in xrange(10)]
+            printset = [next(q) for i in range(10)]
         else:
             printset = s
         try:
@@ -228,8 +228,8 @@ class StrPrinter(Printer):
         if len(a)==0:
             a = [S.One]
 
-        a_str = map(lambda x:self.parenthesize(x, precedence(expr)), a)
-        b_str = map(lambda x:self.parenthesize(x, precedence(expr)), b)
+        a_str = [self.parenthesize(x, precedence(expr)) for x in a]
+        b_str = [self.parenthesize(x, precedence(expr)) for x in b]
 
         if len(b)==0:
             return sign + '*'.join(a_str)

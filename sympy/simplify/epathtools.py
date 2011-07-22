@@ -194,11 +194,11 @@ class EPath(object):
 
                 if span is not None:
                     if type(span) == slice:
-                        indices = range(*span.indices(len(args)))
+                        indices = list(range(*span.indices(len(args))))
                     else:
                         indices = [span]
                 else:
-                    indices = xrange(len(args))
+                    indices = range(len(args))
 
                 for i in indices:
                     try:

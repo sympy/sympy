@@ -6,7 +6,7 @@
     They are supposed to work seamlessly within the Sympy framework.
 """
 
-from basic import Basic
+from .basic import Basic
 
 class Tuple(Basic):
     """

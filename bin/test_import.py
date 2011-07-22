@@ -4,4 +4,4 @@ path_hack()
 t = clock()
 import sympy
 t = clock()-t
-print t
+print(t)

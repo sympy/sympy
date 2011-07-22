@@ -28,12 +28,12 @@ def import_thirdparty(lib):
         finally:
             del sys.path[0]
         return m
-    import __builtin__
-    old_import = __builtin__.__import__
-    __builtin__.__import__ = new_import
+    import builtins
+    old_import = builtins.__import__
+    builtins.__import__ = new_import
     try:
         m = __import__(lib)
     finally:
-        __builtin__.__import__ = old_import
+        builtins.__import__ = old_import
 
     return m

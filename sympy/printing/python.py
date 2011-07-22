@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import sympy
-from repr import ReprPrinter
-from str import StrPrinter
+from .repr import ReprPrinter
+from .str import StrPrinter
 
 # A list of classes that should be printed using StrPrinter
 STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity",
@@ -60,4 +60,4 @@ def python(expr, **settings):
 
 def print_python(expr, **settings):
     """Print output of python() function"""
-    print python(expr, **settings)
+    print(python(expr, **settings))

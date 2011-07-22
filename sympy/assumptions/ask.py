@@ -40,8 +40,7 @@ def _extract_facts(expr, symbol):
         return None
     if isinstance(expr, AppliedPredicate):
         return expr.func
-    return expr.func(*filter(lambda x: x is not None,
-                [_extract_facts(arg, symbol) for arg in expr.args]))
+    return expr.func(*[x for x in [_extract_facts(arg, symbol) for arg in expr.args] if x is not None])
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -185,7 +184,7 @@ def compute_known_facts():
                     mapping[key].add(other_key)
     fact_string += "\n# -{ Known facts in compressed sets }-\n"
     fact_string += "known_facts_dict = {\n    "
-    fact_string += ",\n    ".join(["%s: %s" % item for item in mapping.items()])
+    fact_string += ",\n    ".join(["%s: %s" % item for item in list(mapping.items())])
     fact_string += "\n}\n"
     return fact_string
 
@@ -212,7 +211,7 @@ _handlers_dict = {
     'algebraic'      : ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
     'is_true'        : ['sympy.assumptions.handlers.TautologicalHandler']
 }
-for name, value in _handlers_dict.iteritems():
+for name, value in _handlers_dict.items():
     register_handler(name, value[0])
 
 

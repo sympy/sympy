@@ -1,4 +1,4 @@
-from StringIO import StringIO
+from io import StringIO
 
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
@@ -39,7 +39,7 @@ def test_Routine_argument_order():
             InOutArgument, InputArgument, InputArgument ]
 
     from sympy.tensor import IndexedBase, Idx
-    A, B = map(IndexedBase, ['A', 'B'])
+    A, B = list(map(IndexedBase, ['A', 'B']))
     m = symbols('m', integer=True)
     i = Idx('i', m)
     r = Routine('test', Eq(A[i], B[i]), argument_sequence=[B, A, m])
@@ -846,7 +846,7 @@ def test_loops():
     from sympy import symbols
 
     n, m = symbols('n,m', integer=True)
-    A, x, y = map(IndexedBase, 'Axy')
+    A, x, y = list(map(IndexedBase, 'Axy'))
     i = Idx('i', m)
     j = Idx('j', n)
 
@@ -1030,7 +1030,7 @@ def test_inline_function():
     from sympy.tensor import IndexedBase, Idx
     from sympy import symbols
     n,m = symbols('n m', integer=True)
-    A, x, y = map(IndexedBase, 'Axy')
+    A, x, y = list(map(IndexedBase, 'Axy'))
     i = Idx('i', m)
     j = Idx('j', n)
     p = FCodeGen()
@@ -1064,7 +1064,7 @@ def test_check_case_false_positive():
     x2 = symbols('x', my_assumption=True)
     try:
         codegen(('test', x1*x2), 'f95', 'prefix')
-    except CodeGenError, e:
+    except CodeGenError as e:
         if e.args[0][0:21] == "Fortran ignores case.":
             raise AssertionError("This exception should not be raised!")
 

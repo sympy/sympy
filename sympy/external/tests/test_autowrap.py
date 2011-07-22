@@ -57,7 +57,7 @@ def runtest_autowrap_trace(language, backend):
 
 def runtest_autowrap_matrix_vector(language, backend):
     has_module('numpy')
-    A, x, y = map(IndexedBase, ['A', 'x', 'y'])
+    A, x, y = list(map(IndexedBase, ['A', 'x', 'y']))
     n, m = symbols('n m', integer=True)
     i = Idx('i', m)
     j = Idx('j', n)
@@ -72,7 +72,7 @@ def runtest_autowrap_matrix_vector(language, backend):
 
 def runtest_autowrap_matrix_matrix(language, backend):
     has_module('numpy')
-    A, B, C = map(IndexedBase, ['A', 'B', 'C'])
+    A, B, C = list(map(IndexedBase, ['A', 'B', 'C']))
     n, m, d = symbols('n m d', integer=True)
     i = Idx('i', m)
     j = Idx('j', n)

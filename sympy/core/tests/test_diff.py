@@ -35,7 +35,7 @@ def test_diff2():
     n3 = Rational(3)
     n2 = Rational(2)
     n6 = Rational(6)
-    x,c = map(Symbol, 'xc')
+    x,c = list(map(Symbol, 'xc'))
 
     e = n3*(-n2 + x**n2)*cos(x) + x*(-n6 + x**n2)*sin(x)
     assert e == 3*(-2 + x**2)*cos(x) + x*(-6 + x**2)*sin(x)
@@ -49,7 +49,7 @@ def test_diff2():
     assert e.diff(x) == 2*exp(x**2) + 4*x**2*exp(x**2)
 
 def test_diff3():
-    a,b,c = map(Symbol, 'abc')
+    a,b,c = list(map(Symbol, 'abc'))
     p = Rational(5)
     e = a*b + sin(b**p)
     assert e == a*b + sin(b**5)

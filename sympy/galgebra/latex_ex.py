@@ -4,7 +4,7 @@ import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')
 
-import os,types,StringIO
+import os,types,io
 
 from sympy.core import S, C, Basic, Symbol, Mul
 from sympy.printing.printer import Printer
@@ -133,7 +133,7 @@ class LatexPrinter(Printer):
                 'atanh':'Tanh^{-1}','acoth':'Coth^{-1}',\
                 'sqrt':'sqrt','exp':'exp','log':'ln'}
 
-    fct_dict_keys = fct_dict.keys()
+    fct_dict_keys = list(fct_dict.keys())
 
     greek_keys = sorted(('alpha','beta','gamma','delta','varepsilon','epsilon','zeta',\
                          'vartheta','theta','iota','kappa','lambda','mu','nu','xi',\
@@ -181,7 +181,7 @@ class LatexPrinter(Printer):
         """
         Generate LaTeX strings for multivector bases
         """
-        if type(sympy.galgebra.GA.MV.basislabel_lst) == types.IntType:
+        if type(sympy.galgebra.GA.MV.basislabel_lst) == int:
             sys.stderr.write('MV.setup() must be executed before LatexPrinter.format()!\n')
             sys.exit(1)
         LatexPrinter.latexbasis_lst = [['']]
@@ -239,7 +239,7 @@ class LatexPrinter(Printer):
         LatexPrinter.Basic__str__ = Basic.__str__
         LatexPrinter.MV__str__    = sympy.galgebra.GA.MV.__str__
         LatexPrinter.stdout = sys.stdout
-        sys.stdout = StringIO.StringIO()
+        sys.stdout = io.StringIO()
         Basic.__str__ = LaTeX
         sympy.galgebra.GA.MV.__str__ = LaTeX
         return
@@ -312,7 +312,7 @@ class LatexPrinter(Printer):
     def replace_greek_tokens(name_str):
         if name_str.find('@') == -1:
             return(name_str)
-        for token in LatexPrinter.greek_dict.keys():
+        for token in list(LatexPrinter.greek_dict.keys()):
             name_str = name_str.replace(token,'{\\'+LatexPrinter.greek_dict[token]+'}')
         LatexPrinter.greek_cnt  = 0
         LatexPrinter.greek_dict = {}
@@ -820,8 +820,8 @@ class LatexPrinter(Printer):
         line_lst = []
         first_flg = True
         for grade in expr.mv:
-            if type(grade) != types.IntType:
-                if type(grade) != types.IntType:
+            if type(grade) != int:
+                if type(grade) != int:
                     ibase = 0
                     for base in grade:
                         if base != 0:
@@ -953,7 +953,7 @@ class LatexPrinter(Printer):
     def _print_dict(self, expr):
         items = []
 
-        keys = expr.keys()
+        keys = list(expr.keys())
         keys.sort(Basic.compare_pretty)
         for key in keys:
             val = expr[key]
@@ -1003,7 +1003,7 @@ def LaTeX(expr, inline=True):
 
 def print_LaTeX(expr):
     """Prints LaTeX representation of the given expression."""
-    print LaTeX(expr)
+    print(LaTeX(expr))
 
 def Format(fmt='1 1 1 1'):
     LatexPrinter.format_str(fmt)
@@ -1028,7 +1028,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
     nline = len(body_lst)
     iline = 0
     i = iter(body_lst)
-    line = i.next()
+    line = next(i)
 
     while True:
         if '$' in line: #Inline math expression(s)
@@ -1036,7 +1036,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
                 line += '\\newline \n'
             body += line
             try:
-                line = i.next()
+                line = next(i)
             except StopIteration:
                 break
 
@@ -1060,7 +1060,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
                 line = process_equals(line)
                 body += line
                 try:
-                    line = i.next()
+                    line = next(i)
                 except StopIteration:
                     break
 
@@ -1086,7 +1086,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
                 line = process_equals(line)
                 body += line
                 try:
-                    line = i.next()
+                    line = next(i)
                 except StopIteration:
                     break
 
@@ -1101,7 +1101,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
             line = process_equals(line)
             body += line
             try:
-                line = i.next()
+                line = next(i)
             except StopIteration:
                 break
             while eqnarray_flg:
@@ -1117,7 +1117,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
                 line = process_equals(line)
                 body += line
                 try:
-                    line = i.next()
+                    line = next(i)
                 except StopIteration:
                     break
 
@@ -1133,7 +1133,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
             line = process_equals(line)
             body += line
             try:
-                line = i.next()
+                line = next(i)
             except StopIteration:
                 break
     body = LatexPrinter.preamble+body+LatexPrinter.postscript

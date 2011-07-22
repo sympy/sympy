@@ -58,7 +58,7 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
         except PolynomialError:
             raise CoercionFailed("can't convert %s to type %s" % (a, self))
 
-        for k, v in rep.iteritems():
+        for k, v in rep.items():
             rep[k] = self.dom.from_sympy(v)
 
         return self(rep)
@@ -113,7 +113,7 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
             if K1.dom != K0.dom:
                 coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
 
-            return K1(dict(zip(monoms, coeffs)))
+            return K1(dict(list(zip(monoms, coeffs))))
 
     def from_FractionField(K1, a, K0):
         """

@@ -121,12 +121,12 @@ def _test_rational_new(cls):
     # These look odd, but are similar to int():
     assert cls(0.9) is S.Zero
     assert cls('1') is S.One
-    assert cls(u'-1') is S.NegativeOne
+    assert cls('-1') is S.NegativeOne
 
     i = Integer(10)
     assert _strictly_equal(i, cls('10'))
-    assert _strictly_equal(i, cls(u'10'))
-    assert _strictly_equal(i, cls(10L))
+    assert _strictly_equal(i, cls('10'))
+    assert _strictly_equal(i, cls(10))
     assert _strictly_equal(i, cls(10.5))
     assert _strictly_equal(i, cls(i))
 
@@ -231,15 +231,15 @@ def test_Float():
     assert (S(.3) == S(.5)) is False
     x_str = Float((0, '13333333333333', -52, 53))
     x2_str = Float((0, '26666666666666', -53, 53))
-    x_hex = Float((0, 0x13333333333333L, -52, 53))
-    x_dec = Float((0, 5404319552844595L, -52, 53))
-    x2_hex = Float((0, 0x13333333333333L*2, -53, 53))
+    x_hex = Float((0, 0x13333333333333, -52, 53))
+    x_dec = Float((0, 5404319552844595, -52, 53))
+    x2_hex = Float((0, 0x13333333333333*2, -53, 53))
     assert x_str == x_hex == x_dec == x2_hex == Float(1.2)
     # x2_str and 1.2 are superficially the same
     assert str(x2_str) == str(Float(1.2))
     # but are different at the mpf level
-    assert Float(1.2)._mpf_ == (0, 5404319552844595L, -52, 53)
-    assert x2_str._mpf_ == (0, 10808639105689190L, -53, 53)
+    assert Float(1.2)._mpf_ == (0, 5404319552844595, -52, 53)
+    assert x2_str._mpf_ == (0, 10808639105689190, -53, 53)
 
     # do not automatically evalf
     def teq(a):

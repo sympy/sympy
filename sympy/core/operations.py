@@ -1,8 +1,8 @@
-from core import C
-from expr import Expr
-from sympify import _sympify, sympify
-from cache import cacheit
-from compatibility import all, cmp
+from .core import C
+from .expr import Expr
+from .sympify import _sympify, sympify
+from .cache import cacheit
+from .compatibility import all, cmp
 
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/
@@ -29,7 +29,7 @@ class AssocOp(Expr):
         if len(args) == 0:
             return cls.identity
 
-        args = map(_sympify, args)
+        args = list(map(_sympify, args))
         if len(args) == 1:
             return args[0]
 
@@ -208,7 +208,7 @@ class AssocOp(Expr):
         """
         # apply repl_dict to pattern to eliminate fixed wild parts
         if evaluate:
-            return self.subs(repl_dict.items()).matches(expr, repl_dict)
+            return self.subs(list(repl_dict.items())).matches(expr, repl_dict)
 
         # handle simple patterns
         if self == expr:
@@ -221,8 +221,8 @@ class AssocOp(Expr):
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
         wild_part = []
         exact_part = []
-        from function import WildFunction
-        from symbol import Wild
+        from .function import WildFunction
+        from .symbol import Wild
         for p in self.args:
             if p.has(Wild, WildFunction) and (not p in expr):
                 # not all Wild should stay Wilds, for example:
@@ -243,7 +243,7 @@ class AssocOp(Expr):
             for w in reversed(wild_part):
                 d1 = w.matches(last_op, repl_dict)
                 if d1 is not None:
-                    d2 = self.subs(d1.items()).matches(expr, d1)
+                    d2 = self.subs(list(d1.items())).matches(expr, d1)
                     if d2 is not None:
                         return d2
 

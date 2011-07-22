@@ -232,7 +232,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
         for coeff, term in terms:
             monom = [0]*k
 
-            for base, exp in term.iteritems():
+            for base, exp in term.items():
                 monom[indices[base]] = exp
 
             monom = tuple(monom)
@@ -300,7 +300,7 @@ def expr_from_dict(rep, *gens):
     """Convert a multinomial form into an expression. """
     result = []
 
-    for monom, coeff in rep.iteritems():
+    for monom, coeff in rep.items():
         term = [coeff]
 
         for g, m in zip(gens, monom):
@@ -318,10 +318,10 @@ def _dict_reorder(rep, gens, new_gens):
     """Reorder levels using dict representation. """
     gens = list(gens)
 
-    monoms = rep.keys()
-    coeffs = rep.values()
+    monoms = list(rep.keys())
+    coeffs = list(rep.values())
 
-    new_monoms = [ [] for _ in xrange(len(rep)) ]
+    new_monoms = [ [] for _ in range(len(rep)) ]
 
     for gen in new_gens:
         try:
@@ -333,4 +333,4 @@ def _dict_reorder(rep, gens, new_gens):
             for new_M in new_monoms:
                 new_M.append(0)
 
-    return map(tuple, new_monoms), coeffs
+    return list(map(tuple, new_monoms)), coeffs

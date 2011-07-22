@@ -1,10 +1,10 @@
-from core import C
-from basic import Basic
-from singleton import S
-from operations import AssocOp
-from cache import cacheit
-from expr import Expr
-from compatibility import all
+from .core import C
+from .basic import Basic
+from .singleton import S
+from .operations import AssocOp
+from .cache import cacheit
+from .expr import Expr
+from .compatibility import all
 
 class Add(AssocOp):
 
@@ -105,7 +105,7 @@ class Add(AssocOp):
         # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []
         noncommutative = False
-        for s,c in terms.items():
+        for s,c in list(terms.items()):
             # 0*s
             if c is S.Zero:
                 continue
@@ -263,7 +263,7 @@ class Add(AssocOp):
         for n,d in [f.as_numer_denom() for f in self.args]:
             numers.append(n)
             denoms.append(d)
-        r = xrange(len(numers))
+        r = range(len(numers))
         return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
                      for i in r]), Mul(*denoms)
 
@@ -565,5 +565,5 @@ class Add(AssocOp):
 
         return cont, self._new_rawargs(*terms)
 
-from function import FunctionClass
-from mul import Mul
+from .function import FunctionClass
+from .mul import Mul

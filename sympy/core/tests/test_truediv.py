@@ -1,4 +1,4 @@
-from __future__ import division
+
 
 #this module tests that sympy works with true division turned on
 

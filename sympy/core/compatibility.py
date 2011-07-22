@@ -119,7 +119,7 @@ except ImportError:
                 return True
         return False
 
-def iterable(i, exclude=(basestring, dict)):
+def iterable(i, exclude=(str, dict)):
     """
     Return a boolean indicating whether i is an iterable in the sympy sense.
 
@@ -231,8 +231,8 @@ def cmp_to_key(mycmp):
     return K
 
 try:
-    import __builtin__
-    cmp = __builtin__.cmp
+    import builtins
+    cmp = builtins.cmp
 except AttributeError:
     def cmp(a,b):
         return (a > b) - (a < b)

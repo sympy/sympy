@@ -14,10 +14,10 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
 from sympy.solvers import solve_poly_system, solve
-from entity import GeometryEntity
-from point import Point
-from line import LinearEntity, Line
-from util import _symbol, idiff
+from .entity import GeometryEntity
+from .point import Point
+from .line import LinearEntity, Line
+from .util import _symbol, idiff
 
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
@@ -107,7 +107,7 @@ class Ellipse(GeometryEntity):
         else:
             center = Point(center)
 
-        if len(filter(None, (hradius, vradius, eccentricity))) != 2:
+        if len([_f for _f in (hradius, vradius, eccentricity) if _f]) != 2:
             raise ValueError('Exactly two arguments of "hradius", '\
                 '"vradius", and "eccentricity" must not be None."')
 
@@ -718,7 +718,7 @@ class Ellipse(GeometryEntity):
         """
         def dot(p1, p2):
             sum = 0
-            for ind in xrange(len(p1.args)):
+            for ind in range(len(p1.args)):
                 sum += p1[ind] * p2[ind]
             return simplify(sum)
 
@@ -929,7 +929,7 @@ class Circle(Ellipse):
             args = [Point(a) for a in args]
             if Point.is_collinear(*args):
                 raise GeometryError("Cannot construct a circle from three collinear points")
-            from polygon import Triangle
+            from .polygon import Triangle
             t = Triangle(*args)
             c = t.circumcenter
             r = t.circumradius
@@ -1082,4 +1082,4 @@ class Circle(Ellipse):
 
         return Ellipse.intersection(self, o)
 
-from polygon import Polygon
+from .polygon import Polygon

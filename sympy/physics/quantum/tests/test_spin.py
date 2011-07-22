@@ -1,4 +1,4 @@
-from __future__ import division
+
 from sympy import cos, exp, I, Matrix, pi, S, sin, sqrt, symbols
 
 from sympy.physics.quantum import hbar, represent, Commutator, InnerProduct

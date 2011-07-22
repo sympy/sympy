@@ -28,7 +28,7 @@ def psi_n(n, x, m, omega):
     """
 
     # sympify arguments
-    n, x, m, omega = map(S, [n, x, m, omega])
+    n, x, m, omega = list(map(S, [n, x, m, omega]))
     nu = m * omega / hbar
     # normalization coefficient
     C =  (nu/pi)**(S(1)/4) * sqrt(1/(2**n*factorial(n)))

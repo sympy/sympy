@@ -1,6 +1,6 @@
 """ The core's core. """
 
-from assumptions import AssumeMeths, make__get_assumption
+from .assumptions import AssumeMeths, make__get_assumption
 
 from sympy.core.compatibility import cmp
 
@@ -107,7 +107,7 @@ class ClassRegistry(Registry):
         Registry.__delattr__(self, name)
         # The same class could have different names, so make sure
         # it's really gone from C before removing it from all_classes.
-        if cls not in self.__class__.__dict__.itervalues():
+        if cls not in iter(self.__class__.__dict__.values()):
             all_classes.remove(cls)
 
 C = ClassRegistry()
@@ -123,7 +123,7 @@ class BasicMeta(BasicType):
         # initialize default_assumptions dictionary
         default_assumptions = {}
 
-        for k,v in cls.__dict__.iteritems():
+        for k,v in cls.__dict__.items():
             if not k.startswith('is_'):
                 continue
 
@@ -132,7 +132,7 @@ class BasicMeta(BasicType):
                 continue
 
             k = k[3:]
-            if isinstance(v,(bool,int,long,type(None))):
+            if isinstance(v,(bool,int,type(None))):
                 if v is not None:
                     v = bool(v)
                 default_assumptions[k] = v
@@ -147,7 +147,7 @@ class BasicMeta(BasicType):
             except AttributeError:
                 continue    # no ._default_premises is ok
 
-            for k,v in base_premises.iteritems():
+            for k,v in base_premises.items():
 
                 # if an assumption is already present in child, we should ignore base
                 # e.g. Integer.is_integer=T, but Rational.is_integer=F (for speed)
@@ -190,14 +190,14 @@ class BasicMeta(BasicType):
         # first we need to collect derived premises
         derived_premises = {}
 
-        for k,v in xass.iteritems():
+        for k,v in xass.items():
             if k not in default_assumptions:
                 derived_premises[k] = v
 
         cls._derived_premises = derived_premises
 
 
-        for k,v in xass.iteritems():
+        for k,v in xass.items():
             assert v == cls.__dict__.get('is_'+k, v),  (cls,k,v)
             # NOTE: this way Integer.is_even = False (inherited from Rational)
             # NOTE: the next code blocks add 'protection-properties' to overcome this
@@ -210,7 +210,7 @@ class BasicMeta(BasicType):
             except AttributeError:
                 continue    # no ._derived_premises is ok
 
-            for k,v in base_derived_premises.iteritems():
+            for k,v in base_derived_premises.items():
                 if ('is_'+k) not in cls.__dict__:
                     is_k = make__get_assumption(cls.__name__, k)
                     setattr(cls, 'is_'+k, property(is_k))

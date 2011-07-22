@@ -62,7 +62,7 @@ When is this module NOT the best approach?
        need the binaries for another project.
 
 """
-from __future__ import with_statement
+
 
 import sys
 import os
@@ -168,7 +168,7 @@ def %(name)s():
         with open('%s.py' % self.module_name, 'w') as f:
             printed = ", ".join([str(res.expr) for res in routine.result_variables])
             # convert OutputArguments to return value like f2py
-            inargs = filter(lambda x: not isinstance(x, OutputArgument), routine.arguments)
+            inargs = [x for x in routine.arguments if not isinstance(x, OutputArgument)]
             retvals = []
             for val in routine.result_variables:
                 if isinstance(val, Result):
@@ -176,12 +176,12 @@ def %(name)s():
                 else:
                     retvals.append(val.result_var)
 
-            print >> f, DummyWrapper.template % {
+            print(DummyWrapper.template % {
                     'name': routine.name,
                     'expr': printed,
                     'args': ", ".join([str(arg.name) for arg in inargs]),
                     'retvals': ", ".join([str(val) for val in retvals])
-                    }
+                    }, file=f)
 
     def _process_files(self, routine):
         return
@@ -221,7 +221,7 @@ setup(
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
         with open('setup.py', 'w') as f:
-            print >> f, CythonCodeWrapper.setup_template % {'args': ", ".join(ext_args)}
+            print(CythonCodeWrapper.setup_template % {'args': ", ".join(ext_args)}, file=f)
 
     @classmethod
     def _get_wrapped_function(cls, mod):
@@ -254,30 +254,30 @@ setup(
             routine.name = origname
 
             # declare
-            print >> f, 'cdef extern from "%s.h":' % prefix
-            print >> f, '   %s' % prototype
-            if empty: print >> f
+            print('cdef extern from "%s.h":' % prefix, file=f)
+            print('   %s' % prototype, file=f)
+            if empty: print(file=f)
 
             # wrap
             ret, args_py = self._split_retvals_inargs(routine.arguments)
             args_c = ", ".join([str(a.name) for a in routine.arguments])
-            print >> f, "def %s_c(%s):" % (routine.name,
-                    ", ".join(self._declare_arg(arg) for arg in args_py))
+            print("def %s_c(%s):" % (routine.name,
+                    ", ".join(self._declare_arg(arg) for arg in args_py)), file=f)
             for r in ret:
                 if not r in args_py:
-                    print >> f, "   cdef %s" % self._declare_arg(r)
+                    print("   cdef %s" % self._declare_arg(r), file=f)
             rets = ", ".join([str(r.name) for r in ret])
             if routine.results:
                 call = '   return %s(%s)' % (routine.name, args_c)
                 if rets:
-                    print >> f, call + ', ' + rets
+                    print(call + ', ' + rets, file=f)
                 else:
-                    print >> f, call
+                    print(call, file=f)
             else:
-                print >> f, '   %s(%s)' % (routine.name, args_c)
-                print >> f, '   return %s' % rets
+                print('   %s(%s)' % (routine.name, args_c), file=f)
+                print('   return %s' % rets, file=f)
 
-            if empty: print >> f
+            if empty: print(file=f)
     dump_pyx.extension = "pyx"
 
     def _split_retvals_inargs(self, args):
@@ -368,7 +368,7 @@ def autowrap(expr, language='F95', backend='f2py', tempdir=None, args=None, flag
     code_wrapper = CodeWrapperClass(code_generator, tempdir, flags, verbose)
     try:
         routine  = Routine('autofunc', expr, args)
-    except CodeGenArgumentListError, e:
+    except CodeGenArgumentListError as e:
         # if all missing arguments are for pure output, we simply attach them
         # at the end and try again, because the wrappers will silently convert
         # them to return values anyway.

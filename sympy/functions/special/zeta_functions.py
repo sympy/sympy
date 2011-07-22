@@ -10,7 +10,7 @@ class zeta(Function):
 
     @classmethod
     def eval(cls, z, a=S.One):
-        z, a = map(sympify, (z, a))
+        z, a = list(map(sympify, (z, a)))
 
         if a.is_Number:
             if a is S.NaN:

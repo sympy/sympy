@@ -38,7 +38,7 @@ class CCodePrinter(CodePrinter):
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
-        for k,v in userfuncs.items():
+        for k,v in list(userfuncs.items()):
             if not isinstance(v, tuple):
                 userfuncs[k] = (lambda *x: True, v)
         self.known_functions.update(userfuncs)
@@ -56,7 +56,7 @@ class CCodePrinter(CodePrinter):
 
     def doprint(self, expr, assign_to=None):
 
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, str):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("CCodePrinter cannot assign to object of type %s"%
@@ -138,7 +138,7 @@ class CCodePrinter(CodePrinter):
         inds = [ i.label for i in expr.indices ]
         elem = S.Zero
         offset = S.One
-        for i in reversed(range(expr.rank)):
+        for i in reversed(list(range(expr.rank))):
             elem += offset*inds[i]
             offset *= dims[i]
         return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
@@ -196,7 +196,7 @@ class CCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, basestring):
+        if isinstance(code, str):
            code_lines = self.indent_code(code.splitlines(True))
            return ''.join(code_lines)
 
@@ -253,4 +253,4 @@ def ccode(expr, assign_to=None, **settings):
 
 def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""
-    print ccode(expr, **settings)
+    print(ccode(expr, **settings))

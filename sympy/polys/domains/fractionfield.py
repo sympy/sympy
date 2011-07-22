@@ -59,10 +59,10 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         num, _ = dict_from_basic(p, gens=self.gens)
         den, _ = dict_from_basic(q, gens=self.gens)
 
-        for k, v in num.iteritems():
+        for k, v in num.items():
             num[k] = self.dom.from_sympy(v)
 
-        for k, v in den.iteritems():
+        for k, v in den.items():
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()
@@ -112,7 +112,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
             if K1.dom != K0.dom:
                 coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
 
-            return K1(dict(zip(monoms, coeffs)))
+            return K1(dict(list(zip(monoms, coeffs))))
 
     def from_FractionField(K1, a, K0):
         """
@@ -147,7 +147,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
                 ncoeffs = [ K1.dom.convert(c, K0.dom) for c in ncoeffs ]
                 dcoeffs = [ K1.dom.convert(c, K0.dom) for c in dcoeffs ]
 
-            return K1((dict(zip(nmonoms, ncoeffs)), dict(zip(dmonoms, dcoeffs))))
+            return K1((dict(list(zip(nmonoms, ncoeffs))), dict(list(zip(dmonoms, dcoeffs)))))
 
     def get_ring(self):
         """Returns a ring associated with `self`. """

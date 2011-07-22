@@ -99,7 +99,7 @@ class SATSolver(object):
         """Set up the variable data structures needed."""
         self.sentinels = {}
         self.occurrence_count = {}
-        for i in xrange(1, len(variables)+1):
+        for i in range(1, len(variables)+1):
             self.sentinels[i] = set()
             self.sentinels[-i] = set()
             self.occurrence_count[i] = 0
@@ -322,7 +322,7 @@ class SATSolver(object):
         """Decay the VSIDS scores for every literal."""
         # We divide every literal score by 2 for a decay factor
         #  Note: This doesn't change the heap property
-        for lit in self.lit_scores.keys():
+        for lit in list(self.lit_scores.keys()):
             self.lit_scores[lit] /= 2.0
 
     def vsids_calculate(self):

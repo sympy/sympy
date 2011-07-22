@@ -2,6 +2,7 @@ import operator
 from sympy.core.compatibility import reduce
 from sympy.core.function import Function
 from sympy.core import sympify, S, Integer
+from functools import reduce
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -19,7 +20,7 @@ class Dij(Function):
 
     @classmethod
     def eval(cls, i, j=0):
-        i, j = map(sympify, (i, j))
+        i, j = list(map(sympify, (i, j)))
         if i == j:
             return S.One
         elif i.is_number and j.is_number:
@@ -41,8 +42,8 @@ def eval_levicivita(*args):
     from sympy import factorial
     n = len(args)
     return prod(
-        prod(args[j] - args[i] for j in xrange(i + 1, n))
-        / factorial(i) for i in xrange(n))
+        prod(args[j] - args[i] for j in range(i + 1, n))
+        / factorial(i) for i in range(n))
     # converting factorial(i) to int is slightly faster
 
 class LeviCivita(Function):

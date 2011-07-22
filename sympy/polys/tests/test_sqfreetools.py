@@ -73,13 +73,13 @@ def test_dup_sqf():
         (1, [([1,0], 2), ([1,0,2], 3)])
 
     K = FF(2)
-    f = map(K, [1,0,1])
+    f = list(map(K, [1,0,1]))
 
     assert dup_sqf_list(f, K) == \
         (K(1), [([K(1),K(1)], 2)])
 
     K = FF(3)
-    f = map(K, [1,0,0,2,0,0,2,0,0,1,0])
+    f = list(map(K, [1,0,0,2,0,0,2,0,0,1,0]))
 
     assert dup_sqf_list(f, K) == \
         (K(1), [([K(1), K(0)], 1),
@@ -87,7 +87,7 @@ def test_dup_sqf():
                 ([K(1), K(2)], 6)])
 
     f = [1,0,0,1]
-    g = map(K, f)
+    g = list(map(K, f))
 
     assert dup_sqf_part(f, ZZ) == f
     assert dup_sqf_part(g, K) == [K(1), K(1)]

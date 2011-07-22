@@ -1008,7 +1008,7 @@ def test_type_extensibility():
 
 def test_compute_known_facts():
     ns = {}
-    exec 'from sympy.logic.boolalg import And, Or, Not' in globals(), ns
-    exec compute_known_facts() in globals(), ns
+    exec('from sympy.logic.boolalg import And, Or, Not', globals(), ns)
+    exec(compute_known_facts(), globals(), ns)
     assert ns['known_facts_cnf'] == known_facts_cnf
     assert ns['known_facts_dict'] == known_facts_dict

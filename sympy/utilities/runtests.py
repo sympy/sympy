@@ -38,7 +38,7 @@ def _indent(s, indent=4):
     If the string `s` is Unicode, it is encoded using the stdout
     encoding and the `backslashreplace` error handler.
     """
-    if isinstance(s, unicode):
+    if isinstance(s, str):
         s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
@@ -97,7 +97,7 @@ def isgeneratorfunction(object):
     """
     CO_GENERATOR = 0x20
     if (inspect.isfunction(object) or inspect.ismethod(object)) and \
-        object.func_code.co_flags & CO_GENERATOR:
+        object.__code__.co_flags & CO_GENERATOR:
         return True
     return False
 
@@ -325,21 +325,21 @@ def doctest(*paths, **kwargs):
                     msg = 'txt doctests start'
                     lhead = '='*((80 - len(msg))//2 - 1)
                     rhead = '='*(79 - len(msg) - len(lhead) - 1)
-                    print ' '.join([lhead, msg, rhead])
-                    print
+                    print(' '.join([lhead, msg, rhead]))
+                    print()
                 # use as the id, everything past the first 'sympy'
                 file_id = txt_file[txt_file.find('sympy') + len('sympy') + 1:]
-                print file_id, # get at least the name out so it is know who is being tested
+                print(file_id, end=' ') # get at least the name out so it is know who is being tested
                 wid = 80 - len(file_id) - 1 #update width
                 test_file = '[%s]' % (tested)
                 report = '[%s]' % (txtfailed or 'OK')
-                print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
+                print(''.join([test_file,' '*(wid-len(test_file)-len(report)), report]))
 
         # the doctests for *py will have printed this message already if there was
         # a failure, so now only print it if there was intervening reporting by
         # testing the *txt as evidenced by first_report no longer being True.
         if not first_report and failed:
-            print
+            print()
             print("DO *NOT* COMMIT!")
     return not failed
 
@@ -504,7 +504,7 @@ class SymPyTests(object):
             try:
                 self.test_file(f)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 break
         return self._reporter.finish()
 
@@ -515,7 +515,7 @@ class SymPyTests(object):
         gl = {'__file__':filename}
         random.seed(self._seed)
         try:
-            execfile(filename, gl)
+            exec(compile(open(filename).read(), filename, 'exec'), gl)
         except (ImportError, SyntaxError):
             self._reporter.import_error(filename, sys.exc_info())
             return
@@ -529,7 +529,7 @@ class SymPyTests(object):
             # we need to filter only those functions that begin with 'test_'
             # that are defined in the testing file or in the file where
             # is defined the XFAIL decorator
-            funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
+            funcs = [gl[f] for f in list(gl.keys()) if f.startswith("test_") and
                                                  (inspect.isfunction(gl[f])
                                                     or inspect.ismethod(gl[f])) and
                                                  (inspect.getsourcefile(gl[f]) == filename or
@@ -625,14 +625,14 @@ class SymPyDocTests(object):
             try:
                 self.test_file(f)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 break
         return self._reporter.finish()
 
     def test_file(self, filename):
 
         import unittest
-        from StringIO import StringIO
+        from io import StringIO
 
         rel_name = filename[len(self._root_dir)+1:]
         module = rel_name.replace(os.sep, '.')[:-3]
@@ -737,7 +737,7 @@ class SymPyDocTestFinder(DocTestFinder):
         add them to `tests`.
         """
         if self._verbose:
-            print 'Finding tests in %s' % name
+            print('Finding tests in %s' % name)
 
         # If we've already processed this object, then ignore it.
         if id(obj) in seen:
@@ -757,7 +757,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Look for tests in a module's contained objects.
         if inspect.ismodule(obj) and self._recurse:
-            for rawname, val in obj.__dict__.items():
+            for rawname, val in list(obj.__dict__.items()):
                 # Recurse to functions & classes.
                 if inspect.isfunction(val) or inspect.isclass(val):
                     in_module = self._from_module(module, val)
@@ -771,7 +771,7 @@ class SymPyDocTestFinder(DocTestFinder):
                         try:
                             valname = '%s.%s' % (name, rawname)
                             self._find(tests, val, valname, module, source_lines, globs, seen)
-                        except ValueError, msg:
+                        except ValueError as msg:
                             if "invalid option" in msg.args[0]:
                                 # +SKIP raises ValueError in Python 2.4
                                 pass
@@ -782,14 +782,14 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Look for tests in a module's __test__ dictionary.
         if inspect.ismodule(obj) and self._recurse:
-            for valname, val in getattr(obj, '__test__', {}).items():
-                if not isinstance(valname, basestring):
+            for valname, val in list(getattr(obj, '__test__', {}).items()):
+                if not isinstance(valname, str):
                     raise ValueError("SymPyDocTestFinder.find: __test__ keys "
                                      "must be strings: %r" %
                                      (type(valname),))
                 if not (inspect.isfunction(val) or inspect.isclass(val) or
                         inspect.ismethod(val) or inspect.ismodule(val) or
-                        isinstance(val, basestring)):
+                        isinstance(val, str)):
                     raise ValueError("SymPyDocTestFinder.find: __test__ values "
                                      "must be strings, functions, methods, "
                                      "classes, or modules: %r" %
@@ -800,12 +800,12 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Look for tests in a class's contained objects.
         if inspect.isclass(obj) and self._recurse:
-            for valname, val in obj.__dict__.items():
+            for valname, val in list(obj.__dict__.items()):
                 # Special handling for staticmethod/classmethod.
                 if isinstance(val, staticmethod):
                     val = getattr(obj, valname)
                 if isinstance(val, classmethod):
-                    val = getattr(obj, valname).im_func
+                    val = getattr(obj, valname).__func__
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
@@ -829,7 +829,7 @@ class SymPyDocTestFinder(DocTestFinder):
         """
         # Extract the object's docstring.  If it doesn't have one,
         # then return None (no test for this object).
-        if isinstance(obj, basestring):
+        if isinstance(obj, str):
             docstring = obj
         else:
             try:
@@ -837,7 +837,7 @@ class SymPyDocTestFinder(DocTestFinder):
                     docstring = ''
                 else:
                     docstring = obj.__doc__
-                    if not isinstance(docstring, basestring):
+                    if not isinstance(docstring, str):
                         docstring = str(docstring)
             except (TypeError, AttributeError):
                 docstring = ''

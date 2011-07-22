@@ -27,7 +27,7 @@ extensions = []
 for module in compiled_modules:
     source_file = os.path.join(source_root, *module.split('.')) + ".py"
 
-    print("Compiling module %s ..." % module)
+    print(("Compiling module %s ..." % module))
     result = compile(source_file)
 
     if result.c_file is None:

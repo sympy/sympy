@@ -131,7 +131,7 @@ def test_line():
     assert simplify(l3.equation()) in (x-x1, x1-x)
 
     assert l2.arbitrary_point() in l2
-    for ind in xrange(0, 5):
+    for ind in range(0, 5):
         assert l3.random_point() in l3
 
     # Orthogonality
@@ -419,10 +419,10 @@ def test_ellipse():
 def test_ellipse_random_point():
     e3 = Ellipse(Point(0, 0), y1, y1)
     rx, ry = Symbol('rx'), Symbol('ry')
-    for ind in xrange(0, 5):
+    for ind in range(0, 5):
         r = e3.random_point()
         # substitution should give zero*y1**2
-        assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)
+        assert e3.equation(rx, ry).subs(list(zip((rx, ry), r.args))
                                         ).n(3).as_coeff_Mul()[0] < 1e-10
 
 def test_polygon():
@@ -553,9 +553,9 @@ def test_polygon():
     assert altitudes[p3] == s1[2]
 
     # Ensure
-    assert len(intersection(*bisectors.values())) == 1
-    assert len(intersection(*altitudes.values())) == 1
-    assert len(intersection(*m.values())) == 1
+    assert len(intersection(*list(bisectors.values()))) == 1
+    assert len(intersection(*list(altitudes.values()))) == 1
+    assert len(intersection(*list(m.values()))) == 1
 
     # Distance
     p1 = Polygon(

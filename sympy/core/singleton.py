@@ -1,7 +1,7 @@
 """Singleton mechanism"""
 
-from core import BasicMeta, Registry
-from sympify import sympify
+from .core import BasicMeta, Registry
+from .sympify import sympify
 
 class SingletonRegistry(Registry):
     """

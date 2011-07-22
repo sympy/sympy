@@ -2,7 +2,7 @@ import os
 import time
 import tempfile
 
-from latex import latex
+from .latex import latex
 
 def preview(expr, output='png', viewer=None, euler=True):
     """View expression in PNG, DVI, PostScript or PDF form.

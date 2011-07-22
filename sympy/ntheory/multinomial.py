@@ -3,7 +3,7 @@ def binomial_coefficients(n):
     C_kn are binomial coefficients and n=k1+k2."""
     d = {(0, n):1, (n, 0):1}
     a = 1
-    for k in xrange(1, n//2+1):
+    for k in range(1, n//2+1):
         a = (a * (n-k+1))//k
         d[k, n-k] = d[n-k, k] = a
     return d
@@ -14,7 +14,7 @@ def binomial_coefficients_list(n):
     """
     d = [1] * (n+1)
     a = 1
-    for k in xrange(1, n//2+1):
+    for k in range(1, n//2+1):
         a = (a * (n-k+1))//k
         d[k] = d[n-k] = a
     return d
@@ -56,11 +56,11 @@ def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
     r_get = r.get
     r_update = r.update
     l = [0] * (n*(m-1)+1)
-    l[0] = r.items()
-    for k in xrange(1, n*(m-1)+1):
+    l[0] = list(r.items())
+    for k in range(1, n*(m-1)+1):
         d = {}
         d_get = d.get
-        for i in xrange(1, min(m,k+1)):
+        for i in range(1, min(m,k+1)):
             nn = (n+1)*i-k
             if not nn:
                 continue
@@ -77,7 +77,7 @@ def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
                         d[tt] = cc
                     else:
                         del d[tt]
-        r1 = [(t, c//k) for (t, c) in d.iteritems()]
+        r1 = [(t, c//k) for (t, c) in d.items()]
         l[k] = r1
         r_update(r1)
     return r

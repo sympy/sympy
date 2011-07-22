@@ -91,7 +91,7 @@ class Domain(object):
                 if type(a) is int:
                     return K1(a)
 
-                if type(a) is long:
+                if type(a) is int:
                     return K1(a)
 
                 if K1.is_Numerical and getattr(a, 'is_ground', False):

@@ -3,6 +3,7 @@ from sympy.ntheory import sieve
 from math import sqrt
 
 from sympy.core.compatibility import reduce
+from functools import reduce
 
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
@@ -240,14 +241,14 @@ class RisingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x+i), xrange(0, int(k)), 1)
+                        return reduce(lambda r, i: r*(x+i), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(int(k))+1), 1)
+                        return 1/reduce(lambda r, i: r*(x-i), range(1, abs(int(k))+1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         return C.gamma(x + k) / C.gamma(x)
@@ -301,14 +302,14 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x-i), xrange(0, int(k)), 1)
+                        return reduce(lambda r, i: r*(x-i), range(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(int(k))+1), 1)
+                        return 1/reduce(lambda r, i: r*(x+i), range(1, abs(int(k))+1), 1)
 
 
     def _eval_rewrite_as_gamma(self, x, k):
@@ -384,7 +385,7 @@ class binomial(CombinatorialFunction):
 
     @classmethod
     def eval(cls, n, k):
-        n, k = map(sympify, (n, k))
+        n, k = list(map(sympify, (n, k)))
 
         if k.is_Number:
             if k.is_Integer:
@@ -426,7 +427,7 @@ class binomial(CombinatorialFunction):
                 else:
                     result = n - k + 1
 
-                    for i in xrange(2, k+1):
+                    for i in range(2, k+1):
                         result *= n-k+i
                         result /= i
 

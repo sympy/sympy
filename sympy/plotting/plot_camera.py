@@ -1,8 +1,8 @@
 from pyglet.gl import *
-from plot_rotation import get_spherical_rotatation
-from util import get_model_matrix
-from util import screen_to_model, model_to_screen
-from util import vec_subs
+from .plot_rotation import get_spherical_rotatation
+from .util import get_model_matrix
+from .util import screen_to_model, model_to_screen
+from .util import vec_subs
 
 class PlotCamera(object):
 

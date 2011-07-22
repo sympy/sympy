@@ -1,13 +1,14 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
-from sympy_tokenize import \
+from .sympy_tokenize import \
     generate_tokens, untokenize, TokenError, NUMBER, STRING, NAME, OP
 
 from keyword import iskeyword
-from StringIO import StringIO
+from io import StringIO
 import re
 
 from sympy.core.basic import Basic
+import collections
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
@@ -65,7 +66,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
             elif name in global_dict:
                 obj = global_dict[name]
 
-                if isinstance(obj, (Basic, type)) or callable(obj):
+                if isinstance(obj, (Basic, type)) or isinstance(obj, collections.Callable):
                     result.append((NAME, name))
                     continue
 
@@ -105,7 +106,7 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
         local_dict = {}
 
     global_dict = {}
-    exec 'from sympy import *' in global_dict
+    exec('from sympy import *', global_dict)
 
     code = _transform(s.strip(), local_dict, global_dict, rationalize, convert_xor)
     expr = eval(code, global_dict, local_dict) # take local objects in preference

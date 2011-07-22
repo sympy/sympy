@@ -10,8 +10,8 @@ from sympy.core import sympify, C, Symbol
 from sympy.core.compatibility import ordered_iter
 from sympy.geometry.exceptions import GeometryError
 from sympy.geometry.point import Point
-from entity import GeometryEntity
-from util import _symbol
+from .entity import GeometryEntity
+from .util import _symbol
 
 class Curve(GeometryEntity):
     """A curve in space.

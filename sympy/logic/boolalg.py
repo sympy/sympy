@@ -93,7 +93,7 @@ class Not(BooleanFunction):
     @classmethod
     def eval(cls, *args):
         if len(args) > 1:
-            return map(cls, args)
+            return list(map(cls, args))
         arg = args[0]
         if type(arg) is bool:
             return not arg
@@ -242,10 +242,10 @@ def distribute_and_over_or(expr):
         else:
             return expr
         rest = Or(*[a for a in expr.args if a is not conj])
-        return And(*map(distribute_and_over_or,
-                   [Or(c, rest) for c in conj.args]))
+        return And(*list(map(distribute_and_over_or,
+                   [Or(c, rest) for c in conj.args])))
     elif expr.func is And:
-        return And(*map(distribute_and_over_or, expr.args))
+        return And(*list(map(distribute_and_over_or, expr.args)))
     else:
         return expr
 
@@ -331,7 +331,7 @@ def eliminate_implications(expr):
     expr = sympify(expr)
     if expr.is_Atom:
         return expr     ## (Atoms are unchanged.)
-    args = map(eliminate_implications, expr.args)
+    args = list(map(eliminate_implications, expr.args))
     if expr.func is Implies:
         a, b = args[0], args[-1]
         return (~a) | b
@@ -366,7 +366,7 @@ def to_int_repr(clauses, symbols):
     """
 
     # Convert the symbol list into a dict
-    symbols = dict(zip(symbols, xrange(1, len(symbols) + 1)))
+    symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
 
     def append_symbol(arg, symbols):
         if arg.func is Not:

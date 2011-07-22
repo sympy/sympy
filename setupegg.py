@@ -1,3 +1,3 @@
 import setuptools
 
-execfile('setup.py')
+exec(compile(open('setup.py').read(), 'setup.py', 'exec'))

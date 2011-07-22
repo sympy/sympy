@@ -1,10 +1,10 @@
-from core import C
-from sympify import converter, sympify, _sympify, SympifyError
-from basic import Basic
-from singleton import S, Singleton
-from expr import Expr, AtomicExpr
-from decorators import _sympifyit, deprecated
-from cache import cacheit, clear_cache
+from .core import C
+from .sympify import converter, sympify, _sympify, SympifyError
+from .basic import Basic
+from .singleton import S, Singleton
+from .expr import Expr, AtomicExpr
+from .decorators import _sympifyit, deprecated
+from .cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
@@ -131,7 +131,7 @@ class Number(AtomicExpr):
     def __new__(cls, *obj):
         if len(obj)==1:
             obj=obj[0]
-        if isinstance(obj, (int, long)):
+        if isinstance(obj, int):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
@@ -289,7 +289,7 @@ class Float(Number):
 
     def __new__(cls, num, prec=15):
         prec = mlib.libmpf.dps_to_prec(prec)
-        if isinstance(num, (int, long)):
+        if isinstance(num, int):
             return Integer(num)
         if isinstance(num, (str, decimal.Decimal)):
             _mpf_ = mlib.from_str(str(num), prec, rnd)
@@ -298,7 +298,7 @@ class Float(Number):
                 # it's a hexadecimal (coming from a pickled object)
                 # assume that it is in standard form
                 num = list(num)
-                num[1] = long(num[1], 16)
+                num[1] = int(num[1], 16)
                 _mpf_ = tuple(num)
             else:
                 _mpf_ = mpmath.mpf(
@@ -515,7 +515,7 @@ class Rational(Number):
         if q is None:
             if isinstance(p, Rational):
                return p
-            if isinstance(p, basestring):
+            if isinstance(p, str):
                 try:
                     # we might have a Float
                     neg_pow, digits, expt = decimal.Decimal(p).as_tuple()
@@ -816,11 +816,11 @@ class Rational(Number):
                               use_rho=use_rho,
                               use_pm1=use_pm1,
                               verbose=verbose).copy()
-        for p, e in factorint(self.q, limit=limit,
+        for p, e in list(factorint(self.q, limit=limit,
                               use_trial=use_trial,
                               use_rho=use_rho,
                               use_pm1=use_pm1,
-                              verbose=verbose).items():
+                              verbose=verbose).items()):
             try: f[p] += -e
             except KeyError: f[p] = -e
 
@@ -829,7 +829,7 @@ class Rational(Number):
 
     def gcd(self, other):
         """Compute greatest common divisor of input arguments. """
-        if type(other) in (int, long):
+        if type(other) in (int, int):
             p = igcd(self.p, other)
 
             if self.is_Integer:
@@ -859,7 +859,7 @@ class Rational(Number):
 
     def lcm(self, other):
         """Compute least common multiple of input arguments. """
-        if type(other) in (int, long):
+        if type(other) in (int, int):
             return Integer(ilcm(self.p, other))
         else:
             other = _sympify(other)
@@ -904,23 +904,23 @@ def _intcache_printinfo():
     nmiss= _intcache_misses
 
     if nhit == 0 and nmiss == 0:
-        print
-        print 'Integer cache statistic was not collected'
+        print()
+        print('Integer cache statistic was not collected')
         return
 
     miss_ratio = float(nmiss) / (nhit+nmiss)
 
-    print
-    print 'Integer cache statistic'
-    print '-----------------------'
-    print
-    print '#items: %i' % len(ints)
-    print
-    print ' #hit   #miss               #total'
-    print
-    print '%5i   %5i (%7.5f %%)   %5i'    % (nhit, nmiss, miss_ratio*100, nhit+nmiss)
-    print
-    print ints
+    print()
+    print('Integer cache statistic')
+    print('-----------------------')
+    print()
+    print('#items: %i' % len(ints))
+    print()
+    print(' #hit   #miss               #total')
+    print()
+    print('%5i   %5i (%7.5f %%)   %5i'    % (nhit, nmiss, miss_ratio*100, nhit+nmiss))
+    print()
+    print(ints)
 
 _intcache_hits   = 0
 _intcache_misses = 0
@@ -1016,84 +1016,84 @@ class Integer(Rational):
 
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return Integer(a.p + b)
         elif isinstance(b, Integer):
             return Integer(a.p + b.p)
         return Rational.__add__(a, b)   # a,b -not- b,a
 
     def __radd__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return Integer(b + a.p)
         elif isinstance(b, Integer):
             return Integer(b.p + a.p)
         return Rational.__add__(a, b)
 
     def __sub__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return Integer(a.p - b)
         elif isinstance(b, Integer):
             return Integer(a.p - b.p)
         return Rational.__sub__(a, b)
 
     def __rsub__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return Integer(b - a.p)
         elif isinstance(b, Integer):
             return Integer(b.p - a.p)
         return Rational.__rsub__(a, b)
 
     def __mul__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return Integer(a.p * b)
         elif isinstance(b, Integer):
             return Integer(a.p * b.p)
         return Rational.__mul__(a, b)
 
     def __rmul__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return Integer(b * a.p)
         elif isinstance(b, Integer):
             return Integer(b.p * a.p)
         return Rational.__mul__(a, b)
 
     def __eq__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return (a.p == b)
         elif isinstance(b, Integer):
             return (a.p == b.p)
         return Rational.__eq__(a, b)
 
     def __ne__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return (a.p != b)
         elif isinstance(b, Integer):
             return (a.p != b.p)
         return Rational.__ne__(a, b)
 
     def __gt__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return (a.p >  b)
         elif isinstance(b, Integer):
             return (a.p >  b.p)
         return Rational.__gt__(a, b)
 
     def __lt__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return (a.p <  b)
         elif isinstance(b, Integer):
             return (a.p <  b.p)
         return Rational.__lt__(a, b)
 
     def __ge__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return (a.p >= b)
         elif isinstance(b, Integer):
             return (a.p >= b.p)
         return Rational.__ge__(a, b)
 
     def __le__(a, b):
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return (a.p <= b)
         elif isinstance(b, Integer):
             return (a.p <= b.p)
@@ -1194,7 +1194,7 @@ class Integer(Rational):
         sqr_int = 1
         sqr_gcd = 0
         sqr_dict = {}
-        for prime, exponent in dict.items():
+        for prime, exponent in list(dict.items()):
             exponent *= e.p
             # remove multiples of e.q, e.g. (2**12)**(1/10) -> 2*(2**2)**(1/10)
             div_e, div_m = divmod(exponent, e.q)
@@ -1209,14 +1209,14 @@ class Integer(Rational):
                 else:
                     sqr_dict[prime] = div_m
         # identify gcd of remaining powers
-        for p, ex in sqr_dict.iteritems():
+        for p, ex in sqr_dict.items():
             if sqr_gcd == 0:
                 sqr_gcd = ex
             else:
                 sqr_gcd = igcd(sqr_gcd, ex)
                 if sqr_gcd == 1:
                     break
-        for k, v in sqr_dict.iteritems():
+        for k, v in sqr_dict.items():
             sqr_int *= k**(v//sqr_gcd)
         if sqr_int == b and out_int == 1 and out_rad == 1:
             result = None
@@ -1253,7 +1253,7 @@ class Integer(Rational):
 
     def gcdex(a, b):
         """Extended Euclidean Algorithm. """
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             return tuple(map(Integer, igcdex(int(a), b)))
         else:
             b = _sympify(b)
@@ -1265,7 +1265,7 @@ class Integer(Rational):
 
     def invert(a, b):
         """Invert `a` modulo `b`, if possible. """
-        if isinstance(b, (int, long)):
+        if isinstance(b, int):
             a = int(a)
         else:
             b = _sympify(b)
@@ -1283,7 +1283,7 @@ class Integer(Rational):
             raise ZeroDivisionError("zero divisor")
 
 # Add sympify converters
-converter[int] = converter[long] = Integer
+converter[int] = converter[int] = Integer
 
 class RationalConstant(Rational):
     """
@@ -1304,9 +1304,7 @@ class IntegerConstant(Integer):
         return AtomicExpr.__new__(cls)
 
 
-class Zero(IntegerConstant):
-    __metaclass__ = Singleton
-
+class Zero(IntegerConstant, metaclass=Singleton):
     p = 0
     q = 1
     is_positive = False
@@ -1346,12 +1344,10 @@ class Zero(IntegerConstant):
         # Order(0,x) -> 0
         return self
 
-    def __nonzero__(self):
+    def __bool__(self):
         return False
 
-class One(IntegerConstant):
-    __metaclass__ = Singleton
-
+class One(IntegerConstant, metaclass=Singleton):
     p = 1
     q = 1
 
@@ -1377,9 +1373,7 @@ class One(IntegerConstant):
     def factors():
         return {1: 1}
 
-class NegativeOne(IntegerConstant):
-    __metaclass__ = Singleton
-
+class NegativeOne(IntegerConstant, metaclass=Singleton):
     p = -1
     q = 1
 
@@ -1417,9 +1411,7 @@ class NegativeOne(IntegerConstant):
                     return b ** q * b ** (e - q)
         return
 
-class Half(RationalConstant):
-    __metaclass__ = Singleton
-
+class Half(RationalConstant, metaclass=Singleton):
     p = 1
     q = 2
 
@@ -1430,9 +1422,7 @@ class Half(RationalConstant):
         return S.Half
 
 
-class Infinity(RationalConstant):
-    __metaclass__ = Singleton
-
+class Infinity(RationalConstant, metaclass=Singleton):
     p = 1
     q = 0
 
@@ -1503,9 +1493,7 @@ class Infinity(RationalConstant):
     __rmod__ = __mod__
 oo = S.Infinity
 
-class NegativeInfinity(RationalConstant):
-    __metaclass__ = Singleton
-
+class NegativeInfinity(RationalConstant, metaclass=Singleton):
     p = -1
     q = 0
 
@@ -1573,9 +1561,7 @@ class NegativeInfinity(RationalConstant):
     def __le__(a, b):
         return True
 
-class NaN(RationalConstant):
-    __metaclass__ = Singleton
-
+class NaN(RationalConstant, metaclass=Singleton):
     p = 0
     q = 0
 
@@ -1606,8 +1592,7 @@ class NaN(RationalConstant):
         return sage.NaN
 nan = S.NaN
 
-class ComplexInfinity(AtomicExpr):
-    __metaclass__ = Singleton
+class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     is_commutative = True
     is_comparable = None
     is_bounded = False
@@ -1641,9 +1626,7 @@ class ComplexInfinity(AtomicExpr):
                     return S.Zero
 zoo = S.ComplexInfinity
 
-class NumberSymbol(AtomicExpr):
-    __metaclass__ = Singleton
-
+class NumberSymbol(AtomicExpr, metaclass=Singleton):
     is_commutative = True
     is_comparable = True
     is_bounded = True
@@ -1737,9 +1720,7 @@ class NumberSymbol(AtomicExpr):
         return super(NumberSymbol, self).__hash__()
 
 
-class Exp1(NumberSymbol):
-    __metaclass__ = Singleton
-
+class Exp1(NumberSymbol, metaclass=Singleton):
     is_real = True
     is_positive = True
     is_negative = False # XXX Forces is_negative/is_nonnegative
@@ -1768,10 +1749,7 @@ class Exp1(NumberSymbol):
         return sage.e
 E = S.Exp1
 
-class Pi(NumberSymbol):
-    __metaclass__ = Singleton
-
-
+class Pi(NumberSymbol, metaclass=Singleton):
     is_real = True
     is_positive = True
     is_negative = False
@@ -1797,9 +1775,7 @@ class Pi(NumberSymbol):
         return sage.pi
 pi = S.Pi
 
-class GoldenRatio(NumberSymbol):
-    __metaclass__ = Singleton
-
+class GoldenRatio(NumberSymbol, metaclass=Singleton):
     is_real = True
     is_positive = True
     is_negative = False
@@ -1823,9 +1799,7 @@ class GoldenRatio(NumberSymbol):
         import sage.all as sage
         return sage.golden_ratio
 
-class EulerGamma(NumberSymbol):
-    __metaclass__ = Singleton
-
+class EulerGamma(NumberSymbol, metaclass=Singleton):
     is_real = True
     is_positive = True
     is_negative = False
@@ -1847,9 +1821,7 @@ class EulerGamma(NumberSymbol):
         import sage.all as sage
         return sage.euler_gamma
 
-class Catalan(NumberSymbol):
-    __metaclass__ = Singleton
-
+class Catalan(NumberSymbol, metaclass=Singleton):
     is_real = True
     is_positive = True
     is_negative = False
@@ -1870,9 +1842,7 @@ class Catalan(NumberSymbol):
         import sage.all as sage
         return sage.catalan
 
-class ImaginaryUnit(AtomicExpr):
-    __metaclass__ = Singleton
-
+class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     is_commutative = True
     is_imaginary = True
     is_bounded = True
@@ -1941,10 +1911,10 @@ try:
     import gmpy
 
     def sympify_mpz(x):
-        return Integer(long(x))
+        return Integer(int(x))
 
     def sympify_mpq(x):
-        return Rational(long(x.numer()), long(x.denom()))
+        return Rational(int(x.numer()), int(x.denom()))
 
     converter[type(gmpy.mpz(1))] = sympify_mpz
     converter[type(gmpy.mpq(1, 2))] = sympify_mpq
@@ -1957,7 +1927,7 @@ def sympify_mpmath(x):
 converter[mpnumeric] = sympify_mpmath
 
 def sympify_complex(a):
-    real, imag = map(sympify, (a.real, a.imag))
+    real, imag = list(map(sympify, (a.real, a.imag)))
     return real + S.ImaginaryUnit * imag
 
 converter[complex] = sympify_complex
@@ -1966,9 +1936,9 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
-from function import FunctionClass
-from power import Pow, integer_nthroot
-from mul import Mul
+from .function import FunctionClass
+from .power import Pow, integer_nthroot
+from .mul import Mul
 Mul.identity = One()
-from add import Add
+from .add import Add
 Add.identity = Zero()

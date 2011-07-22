@@ -11,20 +11,20 @@ try:
     # and we still want SymPy to be fully functional under Python2.4
     if sys.hexversion < 0x02050000:
         unicodedata_missing = {
-            'GREEK SUBSCRIPT SMALL LETTER BETA' : u'\u1d66',
-            'GREEK SUBSCRIPT SMALL LETTER GAMMA': u'\u1d67',
-            'GREEK SUBSCRIPT SMALL LETTER RHO'  : u'\u1d68',
-            'GREEK SUBSCRIPT SMALL LETTER PHI'  : u'\u1d69',
-            'GREEK SUBSCRIPT SMALL LETTER CHI'  : u'\u1d6a',
+            'GREEK SUBSCRIPT SMALL LETTER BETA' : '\u1d66',
+            'GREEK SUBSCRIPT SMALL LETTER GAMMA': '\u1d67',
+            'GREEK SUBSCRIPT SMALL LETTER RHO'  : '\u1d68',
+            'GREEK SUBSCRIPT SMALL LETTER PHI'  : '\u1d69',
+            'GREEK SUBSCRIPT SMALL LETTER CHI'  : '\u1d6a',
 
-            'LATIN SUBSCRIPT SMALL LETTER A'    : u'\u2090',
-            'LATIN SUBSCRIPT SMALL LETTER E'    : u'\u2091',
-            'LATIN SUBSCRIPT SMALL LETTER I'    : u'\u1d62',
-            'LATIN SUBSCRIPT SMALL LETTER O'    : u'\u2092',
-            'LATIN SUBSCRIPT SMALL LETTER R'    : u'\u1d63',
-            'LATIN SUBSCRIPT SMALL LETTER U'    : u'\u1d64',
-            'LATIN SUBSCRIPT SMALL LETTER V'    : u'\u1d65',
-            'LATIN SUBSCRIPT SMALL LETTER X'    : u'\u2093',
+            'LATIN SUBSCRIPT SMALL LETTER A'    : '\u2090',
+            'LATIN SUBSCRIPT SMALL LETTER E'    : '\u2091',
+            'LATIN SUBSCRIPT SMALL LETTER I'    : '\u1d62',
+            'LATIN SUBSCRIPT SMALL LETTER O'    : '\u2092',
+            'LATIN SUBSCRIPT SMALL LETTER R'    : '\u1d63',
+            'LATIN SUBSCRIPT SMALL LETTER U'    : '\u1d64',
+            'LATIN SUBSCRIPT SMALL LETTER V'    : '\u1d65',
+            'LATIN SUBSCRIPT SMALL LETTER X'    : '\u2093',
         }
     else:
         unicodedata_missing = {}
@@ -70,8 +70,8 @@ def pretty_use_unicode(flag = None):
 
     if flag and warnings:
         # print warnings (if any) on first unicode usage
-        print "I: pprint -- we are going to use unicode, but there are following problems:"
-        print warnings
+        print("I: pprint -- we are going to use unicode, but there are following problems:")
+        print(warnings)
         warnings = ''
 
     use_unicode_prev = _use_unicode
@@ -85,12 +85,12 @@ def pretty_try_use_unicode():
         symbols = []
 
         # see, if we can represent greek alphabet
-        for g,G in greek.itervalues():
+        for g,G in greek.values():
             symbols.append(g)
             symbols.append(G)
 
         # and atoms
-        symbols += atoms_table.values()
+        symbols += list(atoms_table.values())
 
         for s in symbols:
             if s is None:
@@ -115,7 +115,7 @@ def pretty_try_use_unicode():
 def xstr(*args):
     """call str or unicode depending on current mode"""
     if _use_unicode:
-        return unicode(*args)
+        return str(*args)
     else:
         return str(*args)
 
@@ -124,7 +124,7 @@ def fixup_tables():
     # python2.4 unicodedata lacks some definitions
 
     for d in sub, sup:
-        for k in d.keys():
+        for k in list(d.keys()):
             if d[k] is None:
                 del d[k]
 

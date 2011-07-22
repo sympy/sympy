@@ -1,10 +1,11 @@
-from core import C
-from basic import Basic, Atom
-from singleton import S
-from evalf import EvalfMixin
-from decorators import _sympifyit, call_highest_priority
-from cache import cacheit
+from .core import C
+from .basic import Basic, Atom
+from .singleton import S
+from .evalf import EvalfMixin
+from .decorators import _sympifyit, call_highest_priority
+from .cache import cacheit
 from sympy.core.compatibility import any, all, reduce
+from functools import reduce
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
@@ -390,7 +391,7 @@ class Expr(Basic, EvalfMixin):
         for term, (coeff, cpart, ncpart) in terms:
             monom = [0]*k
 
-            for base, exp in cpart.iteritems():
+            for base, exp in cpart.items():
                 monom[indices[base]] = exp
 
             result.append((term, (coeff, tuple(monom), ncpart)))
@@ -584,7 +585,7 @@ class Expr(Basic, EvalfMixin):
             if not l1 or not l2:
                 return []
             n = min(len(l1), len(l2))
-            for i in xrange(n):
+            for i in range(n):
                 if l1[i] != l2[i]:
                     return l1[:i]
             return l1[:]
@@ -628,7 +629,7 @@ class Expr(Basic, EvalfMixin):
             if not first:
                 l.reverse()
                 sub.reverse()
-            for i in xrange(0, len(l) - n + 1):
+            for i in range(0, len(l) - n + 1):
                 if all(l[i + j] == sub[j] for j in range(n)):
                     break
             else:
@@ -704,7 +705,7 @@ class Expr(Basic, EvalfMixin):
                 if not ii is None:
                     if not right:
                         gcdc = co[0][0]
-                        for i in xrange(1, len(co)):
+                        for i in range(1, len(co)):
                             gcdc = gcdc.intersection(co[i][0])
                             if not gcdc:
                                 break
@@ -1136,7 +1137,7 @@ class Expr(Basic, EvalfMixin):
                     return None
             return Add(*newargs)
         elif self.is_Mul:
-            for i in xrange(len(self.args)):
+            for i in range(len(self.args)):
                 newargs = list(self.args)
                 del(newargs[i])
                 tmp = self._new_rawargs(*newargs).extract_multiplicatively(c)
@@ -1271,7 +1272,7 @@ class Expr(Basic, EvalfMixin):
                 num, den = self.as_numer_denom()
                 args = Mul.make_args(num) + Mul.make_args(den)
                 arg_signs = [arg.could_extract_minus_sign() for arg in args]
-                negative_args = filter(None, arg_signs)
+                negative_args = [_f for _f in arg_signs if _f]
                 return len(negative_args) % 2 == 1
 
             # As a last resort, we choose the one with greater hash
@@ -1822,7 +1823,7 @@ class Expr(Basic, EvalfMixin):
     ###################################################################################
 
     def diff(self, *symbols, **assumptions):
-        new_symbols = map(sympify, symbols) # e.g. x, 2, y, z
+        new_symbols = list(map(sympify, symbols)) # e.g. x, 2, y, z
         assumptions.setdefault("evaluate", True)
         return Derivative(self, *new_symbols, **assumptions)
 
@@ -1870,7 +1871,7 @@ class Expr(Basic, EvalfMixin):
            log=log, multinomial=multinomial, basic=basic)
 
         expr = self
-        for hint, use_hint in hints.iteritems():
+        for hint, use_hint in hints.items():
             if use_hint:
                 func = getattr(expr, '_eval_expand_'+hint, None)
                 if func is not None:
@@ -2010,9 +2011,9 @@ class AtomicExpr(Atom, Expr):
     def _eval_nseries(self, x, n, logx):
         return self
 
-from mul import Mul
-from add import Add
-from power import Pow
-from function import Derivative
-from sympify import sympify
-from symbol import Wild
+from .mul import Mul
+from .add import Add
+from .power import Pow
+from .function import Derivative
+from .sympify import sympify
+from .symbol import Wild

@@ -4,7 +4,7 @@ SymPy core decorators.
 The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
-from sympify import SympifyError, sympify
+from .sympify import SympifyError, sympify
 import warnings
 
 try:
@@ -59,9 +59,9 @@ def __sympifyit(func, arg, retval=None):
     """
 
     # we support f(a,b) only
-    assert func.func_code.co_argcount
+    assert func.__code__.co_argcount
     # only b is _sympified
-    assert func.func_code.co_varnames[1] == arg
+    assert func.__code__.co_varnames[1] == arg
 
     if retval is None:
         @wraps(func)

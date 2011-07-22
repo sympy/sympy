@@ -34,7 +34,7 @@ def configure():
     """Initialized configuration of polys module. """
     from os import getenv
 
-    for key, default in _default_config.items():
+    for key, default in list(_default_config.items()):
         value = getenv('SYMPY_' + key)
 
         if value is not None:

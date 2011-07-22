@@ -28,29 +28,29 @@ def __sympy_debug():
 SYMPY_DEBUG = __sympy_debug()
 
 from sympy.core import *
-from logic import *
-from assumptions import *
-from polys import *
-from series import *
-from functions import *
-from ntheory import *
-from concrete import *
-from simplify import *
-from solvers import *
-from matrices import *
-from geometry import *
-from utilities import *
-from integrals import *
-from tensor import *
-from parsing import *
+from .logic import *
+from .assumptions import *
+from .polys import *
+from .series import *
+from .functions import *
+from .ntheory import *
+from .concrete import *
+from .simplify import *
+from .solvers import *
+from .matrices import *
+from .geometry import *
+from .utilities import *
+from .integrals import *
+from .tensor import *
+from .parsing import *
 # This module is slow to import:
 #from physics import units
-from plotting import Plot, textplot
-from printing import pretty, pretty_print, pprint, pprint_use_unicode, \
+from .plotting import Plot, textplot
+from .printing import pretty, pretty_print, pprint, pprint_use_unicode, \
     pprint_try_use_unicode, print_gtk, print_tree
-from printing import ccode, fcode, latex, preview
-from printing import python, print_python, srepr, sstr, sstrrepr
-from interactive import init_session, init_printing
+from .printing import ccode, fcode, latex, preview
+from .printing import python, print_python, srepr, sstr, sstrrepr
+from .interactive import init_session, init_printing
 
 evalf._create_evalf_table()
 

@@ -1,16 +1,18 @@
 """Base class for all the objects in SymPy"""
 
-from assumptions import AssumeMeths, make__get_assumption
-from cache import cacheit
-from core import BasicMeta, BasicType, C
-from sympify import _sympify, sympify, SympifyError
-from compatibility import any, iterable
+from .assumptions import AssumeMeths, make__get_assumption
+from .cache import cacheit
+from .core import BasicMeta, BasicType, C
+from .sympify import _sympify, sympify, SympifyError
+from .compatibility import any, iterable
 from sympy.core.decorators import deprecated
 
 from sympy.core.compatibility import callable, reduce, cmp
+import collections
+from functools import reduce
 
 
-class Basic(AssumeMeths):
+class Basic(AssumeMeths, metaclass=BasicMeta):
     """
     Base class for all objects in sympy.
 
@@ -44,8 +46,6 @@ class Basic(AssumeMeths):
 
 
     """
-
-    __metaclass__ = BasicMeta
 
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
@@ -169,7 +169,7 @@ class Basic(AssumeMeths):
 
     # here is what we do instead:
     for k in AssumeMeths._assume_defined:
-        exec "is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k)
+        exec("is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k))
     del k
 
     # NB: there is no need in protective __setattr__
@@ -801,7 +801,7 @@ class Basic(AssumeMeths):
 
         """
         if isinstance(sequence, dict):
-            sequence = sequence.items()
+            sequence = list(sequence.items())
 
         subst = []
 
@@ -868,7 +868,7 @@ class Basic(AssumeMeths):
             else:
                 return lambda w: p.matches(w) is not None
 
-        patterns = map(sympify, patterns)
+        patterns = list(map(sympify, patterns))
         return any(search(self, _match(p)) for p in patterns)
 
     def replace(self, query, value, map=False):
@@ -930,7 +930,7 @@ class Basic(AssumeMeths):
 
             if isinstance(value, type):
                 _value = lambda expr, result: value(*expr.args)
-            elif callable(value):
+            elif isinstance(value, collections.Callable):
                 _value = lambda expr, result: value(*expr.args)
             else:
                 raise TypeError("given a type, replace() expects another type or a callable")
@@ -939,14 +939,14 @@ class Basic(AssumeMeths):
 
             if isinstance(value, Basic):
                 _value = lambda expr, result: value.subs(result)
-            elif callable(value):
-                _value = lambda expr, result: value(**dict([ (str(key)[:-1], val) for key, val in result.iteritems() ]))
+            elif isinstance(value, collections.Callable):
+                _value = lambda expr, result: value(**dict([ (str(key)[:-1], val) for key, val in result.items() ]))
             else:
                 raise TypeError("given an expression, replace() expects another expression or a callable")
-        elif callable(query):
+        elif isinstance(query, collections.Callable):
             _query = query
 
-            if callable(value):
+            if isinstance(value, collections.Callable):
                 _value = lambda expr, result: value(expr)
             else:
                 raise TypeError("given a callable, replace() expects another callable")

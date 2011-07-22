@@ -5,7 +5,7 @@ from sympy.utilities.pytest import XFAIL
 
 def test_symbol():
     x = Symbol('x')
-    a,b,c,p,q = map(Wild, 'abcpq')
+    a,b,c,p,q = list(map(Wild, 'abcpq'))
 
     e = x
     assert e.match(x) == {}
@@ -18,8 +18,8 @@ def test_symbol():
     assert e.match(e+1) == None
 
 def test_add():
-    x,y,a,b,c = map(Symbol, 'xyabc')
-    p,q,r = map(Wild, 'pqr')
+    x,y,a,b,c = list(map(Symbol, 'xyabc'))
+    p,q,r = list(map(Wild, 'pqr'))
 
     e = a+b
     assert e.match(p+b) == {p: a}
@@ -47,8 +47,8 @@ def test_add():
 
 
 def test_power():
-    x,y,a,b,c = map(Symbol, 'xyabc')
-    p,q,r = map(Wild, 'pqr')
+    x,y,a,b,c = list(map(Symbol, 'xyabc'))
+    p,q,r = list(map(Wild, 'pqr'))
 
     e = (x+y)**a
     assert e.match(p**q) == {p: x+y, q: a}
@@ -91,8 +91,8 @@ def test_match_exclude():
     assert e.match(p*x+q*y+r) == {p: 4, q: 5, r: 6}
 
 def test_mul():
-    x,y,a,b,c = map(Symbol, 'xyabc')
-    p,q = map(Wild, 'pq')
+    x,y,a,b,c = list(map(Symbol, 'xyabc'))
+    p,q = list(map(Wild, 'pq'))
 
     e = 4*x
     assert e.match(p*x) == {p: 4}
@@ -115,8 +115,8 @@ def test_mul():
     assert e.match(I*p) == {p: Poly(x, x)}
 
 def test_complex():
-    a,b,c = map(Symbol, 'abc')
-    x,y = map(Wild, 'xy')
+    a,b,c = list(map(Symbol, 'abc'))
+    x,y = list(map(Wild, 'xy'))
 
     (1+I).match(x+I) == {x : 1}
     (a+I).match(x+I) == {x : a}
@@ -144,8 +144,8 @@ def test_functions_X1():
     assert f.match(p*g(q*x)) == {p: 1, g: cos, q: 5}
 
 def test_interface():
-    x,y = map(Symbol, 'xy')
-    p,q = map(Wild, 'pq')
+    x,y = list(map(Symbol, 'xy'))
+    p,q = list(map(Wild, 'pq'))
 
     assert (x+1).match(p+1) == {p: x}
     assert (x*3).match(p*3) == {p: x}
@@ -157,8 +157,8 @@ def test_interface():
     assert (x*y+1).match(p*q) in [{p:1, q:1+x*y}, {p:1+x*y, q:1}]
 
 def test_derivative1():
-    x,y = map(Symbol, 'xy')
-    p,q = map(Wild, 'pq')
+    x,y = list(map(Symbol, 'xy'))
+    p,q = list(map(Wild, 'pq'))
 
     f = Function('f',nargs=1)
     fd = Derivative(f(x), x)
@@ -215,13 +215,13 @@ def test_match_deriv_bug1():
     assert e.match( (p*t2).expand() ) == {p: -Rational(1)/2}
 
 def test_match_bug2():
-    x,y = map(Symbol, 'xy')
-    p,q,r = map(Wild, 'pqr')
+    x,y = list(map(Symbol, 'xy'))
+    p,q,r = list(map(Wild, 'pqr'))
     res = (x+y).match(p+q+r)
     assert (p+q+r).subs(res) == x+y
 
 def test_match_bug3():
-    x,a,b = map(Symbol, 'xab')
+    x,a,b = list(map(Symbol, 'xab'))
     p = Wild('p')
     assert (b*x*exp(a*x)).match(x*exp(p*x)) == None
 
@@ -276,7 +276,7 @@ def test_match_polynomial():
     assert (eq-3*x**2).match(pattern) == {a: 4, b: 0, c: 2, d: 1}
 
 def test_exclude():
-    x,y,a = map(Symbol, 'xya')
+    x,y,a = list(map(Symbol, 'xya'))
     p = Wild('p', exclude=[1,x])
     q = Wild('q', exclude=[x])
     r = Wild('r', exclude=[sin,y])
@@ -298,7 +298,7 @@ def test_exclude():
     assert e.match(r + p*sin(q)) == {r: cos(x), p: 5, q: y}
 
 def test_floats():
-    a,b = map(Wild, 'ab')
+    a,b = list(map(Wild, 'ab'))
 
     e = cos(0.12345, evaluate=False)**2
     r = e.match(a*cos(b)**2)

@@ -71,7 +71,7 @@ class ModularInteger(object):
     def __ne__(self, other):
         return not isinstance(other, ModularInteger) or self.val != other.val
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.val)
 
 def ModularIntegerFactory(_mod, _dom, _sym):

@@ -192,7 +192,7 @@ class Printer(object):
 
         self._settings = self._default_settings.copy()
 
-        for key, val in self._global_settings.iteritems():
+        for key, val in self._global_settings.items():
             if key in self._default_settings:
                 self._settings[key] = val
 
@@ -211,7 +211,7 @@ class Printer(object):
     @classmethod
     def set_global_settings(cls, **settings):
         """Set system-wide printing settings. """
-        for key, val in settings.iteritems():
+        for key, val in settings.items():
             if val is not None:
                 cls._global_settings[key] = val
 

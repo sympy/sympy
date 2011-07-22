@@ -9,15 +9,15 @@ try:
 except:
     raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
-from plot_object import PlotObject
-from plot_axes import PlotAxes
-from plot_window import PlotWindow
-from plot_mode import PlotMode
-import plot_modes
+from .plot_object import PlotObject
+from .plot_axes import PlotAxes
+from .plot_window import PlotWindow
+from .plot_mode import PlotMode
+from . import plot_modes
 
 from time import sleep
 from os import getcwd, listdir
-from util import parse_option_string
+from .util import parse_option_string
 
 from sympy.geometry.entity import GeometryEntity
 
@@ -343,7 +343,7 @@ class Plot(object):
         """
         Allows iteration of the function list.
         """
-        return self._functions.itervalues()
+        return iter(self._functions.values())
 
     def __repr__(self):
         return str(self)
@@ -389,7 +389,7 @@ class ScreenShot:
         self.invisibleMode = False
         self.flag = 0
 
-    def __nonzero__(self):
+    def __bool__(self):
         if self.screenshot_requested:
             return 1
         return 0
@@ -431,7 +431,7 @@ class ScreenShot:
 
         if self.outfile is None:
             self.outfile=self._create_unique_path()
-            print self.outfile
+            print(self.outfile)
 
     def _create_unique_path(self):
         cwd = getcwd()

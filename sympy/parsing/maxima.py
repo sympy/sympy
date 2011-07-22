@@ -47,7 +47,7 @@ def parse_maxima(str, globals=None, name_dict={}):
     str = str.strip()
     str = str.rstrip('; ')
 
-    for k,v in sub_dict.items():
+    for k,v in list(sub_dict.items()):
         str = v.sub(k, str)
 
     assign_var = None

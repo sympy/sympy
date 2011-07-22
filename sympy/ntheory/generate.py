@@ -4,7 +4,7 @@ Generating and counting primes.
 
 import random
 from bisect import bisect
-from primetest import isprime
+from .primetest import isprime
 from sympy.core.numbers import integer_nthroot
 
 
@@ -14,7 +14,7 @@ from array import array as _array
 
 def _arange(a, b):
     ar = _array('l', [0]*(b-a))
-    for i, e in enumerate(xrange(a, b)):
+    for i, e in enumerate(range(a, b)):
         ar[i] = e
     return ar
 
@@ -50,7 +50,7 @@ class Sieve:
             # Start counting at a multiple of p, offsetting
             # the index to account for the new sieve's base index
             startindex = (-begin) % p
-            for i in xrange(startindex, len(newsieve), p):
+            for i in range(startindex, len(newsieve), p):
                 newsieve[i] = 0
 
         # Merge the sieves

@@ -1,4 +1,4 @@
-from str import StrPrinter
+from .str import StrPrinter
 
 def _find_first_symbol(expr):
     for atom in expr.atoms():

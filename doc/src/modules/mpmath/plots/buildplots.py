@@ -10,7 +10,7 @@ except ImportError:
 for f in glob.glob("*.py"):
     if "buildplots" in f or os.path.exists(f[:-3]+".png"):
         continue
-    print "Processing", f
+    print("Processing", f)
     code = open(f).readlines()
     code = ["from mpmath import *; mp.dps=5"] + code
     for i in range(len(code)):
@@ -25,4 +25,4 @@ for f in glob.glob("*.py"):
             l = l[:-1] + (", dpi=45, file='%s.png')" % f[:-3])
             code[i] = l
     code = "\n".join(code)
-    exec code
+    exec(code)

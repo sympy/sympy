@@ -27,6 +27,7 @@ from sympy.core.cache import Memoizer
 from sympy.core.compatibility import callable
 
 from sympy import symbols
+import collections
 
 
 def check(a, check_attr = True):
@@ -34,7 +35,7 @@ def check(a, check_attr = True):
     """
     #FIXME-py3k: Add support for protocol 3.
     for protocol in [0, 1, 2, copy.copy, copy.deepcopy]:
-        if callable(protocol):
+        if isinstance(protocol, collections.Callable):
             if isinstance(a, BasicType):
                 # Classes can't be copied, but that's okay.
                 return
