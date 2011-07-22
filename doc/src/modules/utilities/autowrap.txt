@@ -12,7 +12,7 @@ routine that calculates a matrix-vector product.
 
 >>> from sympy.utilities.autowrap import autowrap
 >>> from sympy import symbols, IndexedBase, Idx, Eq
->>> A, x, y = map(IndexedBase, ['A', 'x', 'y'])
+>>> A, x, y = list(map(IndexedBase, ['A', 'x', 'y']))
 >>> m, n = symbols('m n', integer=True)
 >>> i = Idx('i', m)
 >>> j = Idx('j', n)
@@ -84,3 +84,4 @@ backend-dependent details.
 
 .. autoclass:: CythonCodeWrapper
    :members:
+

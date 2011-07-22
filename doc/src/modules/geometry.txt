@@ -111,7 +111,7 @@ An in-depth example: Pappus' Theorem
     ...    t = Symbol('t', real=True)
     ...    ap = l.arbitrary_point()
     ...    return Point(ap[0].subs(t, val), ap[1].subs(t, val))
-    ...
+    ... 
     >>> p11 = subs_point(l1, 5)
     >>> p12 = subs_point(l1, 6)
     >>> p13 = subs_point(l1, 11)
@@ -131,7 +131,7 @@ An in-depth example: Pappus' Theorem
     >>> pp2 = intersection(ll2, ll5)[0]
     >>> pp3 = intersection(ll4, ll6)[0]
     >>>
-    >>> print Point.is_collinear(pp1, pp2, pp3)
+    >>> print(Point.is_collinear(pp1, pp2, pp3))
     True
 
 Miscellaneous Notes
@@ -161,7 +161,7 @@ cannot be guaranteed. For example, consider the following code:
 
     >>> from sympy import *
     >>> from sympy.geometry import *
-    >>> x,y,z = map(Symbol, 'xyz')
+    >>> x,y,z = list(map(Symbol, 'xyz'))
     >>> p1,p2,p3 = Point(x, y), Point(y, z), Point(2*x*y, y)
     >>> Point.is_collinear(p1, p2, p3)
     False
@@ -188,3 +188,4 @@ Geometry Visualization
 The plotting module is capable of plotting geometric entities. See
 `Plotting Geometric Entities <https://github.com/sympy/sympy/wiki/Plotting-Module>`_ in
 the plotting module entry.
+

@@ -345,10 +345,10 @@ Here it's how to define a derivative of the function::
     >>> from sympy import Function, sympify, cos
     >>> class my_function(Function):
     ...     nargs = 1
-    ...
+    ... 
     ...     def fdiff(self, argindex = 1):
     ...         return cos(self.args[0])
-    ...
+    ... 
     ...     @classmethod
     ...     def eval(cls, arg):
     ...         arg = sympify(arg)
@@ -378,10 +378,10 @@ Let's try some more complicated example. Let's define the derivative in terms of
 
     >>> class what_am_i(Function):
     ...     nargs = 1
-    ...
+    ... 
     ...     def fdiff(self, argindex = 1):
     ...         return 1-what_am_i(self.args[0])**2
-    ...
+    ... 
     ...     @classmethod
     ...     def eval(cls, arg):
     ...         arg = sympify(arg)
@@ -529,4 +529,5 @@ Improving the docs
 
 Please see :ref:`the documentation <module-docs>` how to fix and improve
 SymPy's documentation. All contribution is very welcome.
+
 

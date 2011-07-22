@@ -41,7 +41,7 @@ For example:
 
     >>> from sympy.abc import x, y
     >>> a = x - y
-    >>> print a
+    >>> print(a)
     x - y
 
 Double Equals Signs
@@ -86,10 +86,10 @@ Consider the following:
     >>> from sympy import Symbol
     >>> a = Symbol('a') # Create a Symbol named a, that is also stored in the variable "a"
     >>> b = a + 1       # Create another object, b, that refers to 'a'
-    >>> print b
+    >>> print(b)
     a + 1
     >>> a = 4           # a now points to the literal integer 4, not Symbol('a')
-    >>> print a
+    >>> print(a)
     4
     >>> b               # But b is still pointing at Symbol('a')
     a + 1
@@ -104,14 +104,14 @@ it to.
     >>> from sympy import var
     >>> r, t, d = var('rate time short_life')
     >>> d = r*t
-    >>> print d
+    >>> print(d)
     rate*time
     >>> r=80
     >>> t=2
-    >>> print d         # We haven't changed d, only r and t
+    >>> print(d)         # We haven't changed d, only r and t
     rate*time
     >>> d=r*t
-    >>> print d         # Now d is using the current values of r and t
+    >>> print(d)         # Now d is using the current values of r and t
     160
 
 
@@ -120,9 +120,9 @@ functions.  Use the ``def`` operator.  Indent the body of the function.
 See the Python docs for more information on defining functions.
 
     >>> c, d = var('c d')
-    >>> print c
+    >>> print(c)
     c
-    >>> print d
+    >>> print(d)
     d
     >>> def ctimesd():
     ...     """
@@ -133,7 +133,7 @@ See the Python docs for more information on defining functions.
     >>> ctimesd()
     c*d
     >>> c = 2
-    >>> print c
+    >>> print(c)
     2
     >>> ctimesd()
     2*d
@@ -188,11 +188,11 @@ assigned before you can use them.  For example:
 If you use :command:`isympy`, it runs the following commands for you,
 giving you some default Symbols and Functions.
 
-    >>> from __future__ import division
+    >>> 
     >>> from sympy import *
     >>> x, y, z, t = symbols('x y z t')
     >>> k, m, n = symbols('k m n', integer=True)
-    >>> f, g, h = map(Function, 'fgh')
+    >>> f, g, h = list(map(Function, 'fgh'))
 
 You can also import common symbol names from :mod:`sympy.abc`.
 
@@ -297,7 +297,7 @@ to them.  The solution is to :func:`sympify` one of the numbers, or use
     ``<number>/<number>``) in it, you will not get the same result.
 
     >>> x = Symbol('x')
-    >>> print solve(x**2-2,x)
+    >>> print(solve(x**2-2,x))
     [-2**(1/2), 2**(1/2)]
     >>> [-2**(1/2), 2**(1/2)] # If we just copy and paste, the expression is evaluated by Python #doctest: +SKIP
     [-1.41421356237, 1.41421356237]
@@ -318,7 +318,7 @@ __future__ import division`` to prevent the ``/`` sign from performing
 
     >>> 1/2 # in regular python, this defaults to integer division, which truncates the fractional part #doctest: +SKIP
     0
-    >>> from __future__ import division
+    >>> 
     >>> from sympy import *
     >>> 1/2 # This uses regular division, but it still evaluates to a python float #doctest: +SKIP
     0.5
@@ -462,9 +462,9 @@ Example:
     >>> a[0] # This is the first item
     x
     >>> a[0] = 2 # You can change values of lists after they have been created
-    >>> print a
+    >>> print(a)
     [2, 1]
-    >>> print solve(x**2+2*x-1,x) # Some functions return lists
+    >>> print(solve(x**2+2*x-1,x)) # Some functions return lists
     [-1 + 2**(1/2), -2**(1/2) - 1]
 
 
@@ -612,4 +612,5 @@ from SymPy 0.6.5:
         """
         expr = Poly.cancel(powsimp(expr))
         return powsimp(together(expr.expand()), combine='exp', deep=True)
+
 

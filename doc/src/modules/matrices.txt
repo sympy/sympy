@@ -49,7 +49,7 @@ and then use it to make the identity matrix:
     ...             return 1
     ...     else:
     ...             return 0
-    ...
+    ... 
     >>> Matrix(4, 4, f)
     [1  0  0  0]
     [          ]
@@ -436,8 +436,8 @@ them - one normalized and one not:
 Let's take a look at the vectors:
 
     >>> for i in out1:
-    ...     print i
-    ...
+    ...     print(i)
+    ... 
     [2]
     [3]
     [5]
@@ -448,8 +448,8 @@ Let's take a look at the vectors:
     [-1551/706]
     [ -423/706]
     >>> for i in out2:
-    ...      print i
-    ...
+    ...      print(i)
+    ... 
     [  38**(1/2)/19]
     [3*38**(1/2)/38]
     [5*38**(1/2)/38]
@@ -484,3 +484,4 @@ Matrix Class Reference
 ----------------------
 .. autoclass:: Matrix
    :members:
+

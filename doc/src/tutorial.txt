@@ -99,7 +99,7 @@ defined the symbols x, y, z and some other things:
 IPython console for SymPy 0.7.0-git (Python 2.7.1) (ground types: gmpy)
 
 These commands were executed:
->>> from __future__ import division
+>>> 
 >>> from sympy import *
 >>> x, y, z, t = symbols('x y z t')
 >>> k, m, n = symbols('k m n', integer=True)
@@ -153,7 +153,7 @@ integer division, and that's why::
 
 You can however do::
 
-  >>> from __future__ import division
+  >>> 
 
   >>> 1/2 #doctest: +SKIP
   0.5
@@ -686,7 +686,7 @@ substitutions, as follows::
 
 If the match is unsuccessful, it returns ``None``::
 
-    >>> print (x+1).match(p**x)
+    >>> print((x+1).match(p**x))
     None
 
 One can also use the exclude parameter of the ``Wild`` class to ensure that
@@ -694,11 +694,11 @@ certain things do not show up in the result::
 
     >>> x = Symbol('x')
     >>> p = Wild('p', exclude=[1,x])
-    >>> print (x+1).match(x+p) # 1 is excluded
+    >>> print((x+1).match(x+p)) # 1 is excluded
     None
-    >>> print (x+1).match(p+1) # x is excluded
+    >>> print((x+1).match(p+1)) # x is excluded
     None
-    >>> print (x+1).match(x+2+p) # -1 is not excluded
+    >>> print((x+1).match(x+2+p)) # -1 is not excluded
     {p_: -1}
 
 .. _printing-tutorial:
@@ -714,11 +714,11 @@ This is what ``str(expression)`` returns and it looks like this:
 
     >>> from sympy import Integral
     >>> from sympy.abc import x
-    >>> print x**2
+    >>> print(x**2)
     x**2
-    >>> print 1/x
+    >>> print(1/x)
     1/x
-    >>> print Integral(x**2, x)
+    >>> print(Integral(x**2, x))
     Integral(x**2, x)
     >>>
 
@@ -787,13 +787,13 @@ Tip: To make the pretty printing default in the python interpreter, use::
     >>> from sympy.printing.python import python
     >>> from sympy import Integral
     >>> from sympy.abc import x
-    >>> print python(x**2)
+    >>> print(python(x**2))
     x = Symbol('x')
     e = x**2
-    >>> print python(1/x)
+    >>> print(python(1/x))
     x = Symbol('x')
     e = 1/x
-    >>> print python(Integral(x**2, x))
+    >>> print(python(Integral(x**2, x)))
     x = Symbol('x')
     e = Integral(x**2, x)
 
@@ -823,9 +823,9 @@ Tip: To make the pretty printing default in the python interpreter, use::
     >>> from sympy.printing.mathml import mathml
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
-    >>> print mathml(x**2)
+    >>> print(mathml(x**2))
     <apply><power/><ci>x</ci><cn>2</cn></apply>
-    >>> print mathml(1/x)
+    >>> print(mathml(1/x))
     <apply><power/><ci>x</ci><cn>-1</cn></apply>
 
 **Pyglet**
@@ -865,3 +865,4 @@ Now it's time to learn more about SymPy. Go through the
 Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
 that contains a lot of useful examples, tutorials, cookbooks that we and our
 users contributed and we encourage you to edit it.
+
