@@ -25,6 +25,8 @@ from doctest import DocTestFinder, DocTestRunner
 import re as pre
 import random
 
+from sympy.core.cache import clear_cache
+
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
 # it here to make utf8 files work in Python 2.5.
@@ -504,6 +506,7 @@ class SymPyTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
+        clear_cache()
         name = "test%d" % self._count
         name = os.path.splitext(os.path.basename(filename))[0]
         self._count += 1
@@ -625,6 +628,7 @@ class SymPyDocTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
+        clear_cache()
 
         import unittest
         from StringIO import StringIO
