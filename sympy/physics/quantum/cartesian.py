@@ -5,8 +5,8 @@ TODO:
 
 """
 
-from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
-
+from sympy import (DiracDelta, Derivative, exp, Function, I, Interval,
+                   pi, S, sqrt, Symbol)
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
 from sympy.physics.quantum.operator import DifferentialOperator, HermitianOperator
@@ -60,7 +60,8 @@ class XOp(HermitianOperator):
         states = basis._enumerate_state(2, start_index = index)
         coord1 = states[0].momentum
         coord2 = states[1].momentum
-        d = DifferentialOperator(coord1)
+        f = Function('f')
+        d = DifferentialOperator(Derivative(f(coord1), coord1), f(coord1))
         delta = DiracDelta(coord1 - coord2)
 
         return I*hbar*(d*delta)
@@ -117,7 +118,8 @@ class PxOp(HermitianOperator):
         states = basis._enumerate_state(2, start_index = index)
         coord1 = states[0].position
         coord2 = states[1].position
-        d = DifferentialOperator(coord1)
+        f = Function('f')
+        d = DifferentialOperator(Derivative(f(coord1), coord1), f(coord1))
         delta = DiracDelta(coord1 - coord2)
 
         return -I*hbar*(d*delta)
@@ -184,12 +186,30 @@ class PositionState3D(State):
     """ Base class for 3D cartesian position eigenstates """
 
     @classmethod
-    def _operators_to_state(self, op, **options):
-        return self.__new__(self, *_lowercase_labels(op), **options)
+    def _operators_to_state(self, ops, **options):
+        if not isinstance(ops, set) or len(ops) != 3:
+            raise TypeError("This is not the set of commuting operators expected!")
 
-    def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, \
-                                *_uppercase_labels(self), **options)
+        op_list = list(ops)
+        order = [XOp, YOp, ZOp]
+        op_list.sort(lambda a, b: _class_cmp(order, a, b))
+        return self.__new__(self, *_lowercase_labels(op_list), **options)
+
+    def _state_to_operators(self, op_classes, **options):
+        if not isinstance(op_classes, set) or len(op_classes) != 3:
+            raise TypeError("This is not the set of commuting operators expected!")
+
+        op_list = list(op_classes)
+        order = [XOp, YOp, ZOp]
+        op_list.sort(lambda a, b: _class_cmp(order, a, b, is_class=True))
+
+        labs = _uppercase_labels(self)
+        op_insts = [None for op in op_list]
+
+        for i, cls in enumerate(op_list):
+            op_insts[i] = cls.__new__(cls, labs[i], **options)
+
+        return set(op_insts)
 
     @classmethod
     def default_args(self):
@@ -307,16 +327,33 @@ def _enumerate_continuous_1D(*args, **options):
     return enum_states
 
 def _lowercase_labels(ops):
-    if not isinstance(ops, set):
+    if not isinstance(ops, list):
         ops = [ops]
 
     return [str(arg.label[0]).lower() for arg in ops]
 
-def _uppercase_labels(ops):
-    if not isinstance(ops, set):
-        ops = [ops]
-
-    new_args = [str(arg.label[0])[0].upper() + \
-                str(arg.label[0])[1:] for arg in ops]
+def _uppercase_labels(state):
+    new_args = [str(lab)[0].upper() + \
+                str(lab)[1:] for lab in state.label]
 
     return new_args
+
+def _class_cmp(ordering, a, b, **options):
+    ordering = list(ordering)
+
+    is_class = options.pop("is_class", False)
+
+    if not is_class:
+        a = a.__class__
+        b = b.__class__
+
+    try:
+        ind1 = ordering.index(a)
+        ind2 = ordering.index(b)
+    except ValueError:
+        raise TypeError("Expected Operators for this eigenstate not found!")
+
+    if ind1 < ind2:
+        return -1
+    else:
+        return 1

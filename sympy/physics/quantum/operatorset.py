@@ -128,7 +128,7 @@ def operators_to_state(operators, **options):
             classes = frozenset(tmp)
 
             if classes in op_mapping:
-                ret = _get_state(op_mapping[classes], ops, **options)
+                ret = _get_state(op_mapping[classes], set(ops), **options)
             else:
                 ret = None
 
