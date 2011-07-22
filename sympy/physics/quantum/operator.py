@@ -9,7 +9,9 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from sympy import Derivative, Expr
+from sympy import (Add, Derivative, diff, expand, Expr, Function,
+                   Integer, Symbol, Tuple)
+from sympy.core.function import UndefinedFunction
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -492,9 +494,30 @@ class DifferentialOperator(Operator):
         new_expr = Derivative(self.expr, symbol)
         return DifferentialOperator(new_expr, self.args[-1])
 
+    def _eval_expand_diffop(self, **hints):
+        exp = expand(self.expr)
+
+        if exp.is_Add:
+            add_args = exp.args
+            args = map(lambda x: DifferentialOperator(x, self.function), \
+                       add_args)
+
+            return Add(*args)
+        else:
+            return DifferentialOperator(exp, self.function)
+
     #-------------------------------------------------------------------------
     # Printing
     #-------------------------------------------------------------------------
+
+    def _print_operator_name(self, printer, *args):
+        return printer._print(self.__class__.__name__, *args)
+
+    def _print_operator_name_latex(self, printer, *args):
+        return printer._print(self.__class__.__name__[0], *args)
+
+    def _print_operator_name_pretty(self, printer, *args):
+        return prettyForm(self.__class__.__name__[0])
 
     def _print_contents(self, printer, *args):
         return '%s(%s)' % (

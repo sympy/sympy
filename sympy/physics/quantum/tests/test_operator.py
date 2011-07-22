@@ -1,11 +1,11 @@
-from sympy import (Derivative, diff, Function, Integer, Mul, pi, sin, Symbol,
+from sympy import (Derivative, diff, expand, Function, Integer, Mul, pi, sin, Symbol,
                    symbols)
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
-from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
-                                            HermitianOperator, OuterProduct,
-                                            DifferentialOperator)
+from sympy.physics.quantum.operator import (DifferentialOperator,
+                                            HermitianOperator, Operator,
+                                            OuterProduct, UnitaryOperator)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
 
@@ -173,3 +173,11 @@ def test_differential_operator():
     assert diff(d, th) == \
            DifferentialOperator(Derivative(d.expr, th), f(r, th))
     assert qapply(d*w) == Wavefunction(3*sin(th), r, (th, 0, pi))
+
+    d = DifferentialOperator((x+y)**2*Derivative(f(x), x), f(x))
+    exp = expand(d, diffop=True)
+    first_term = DifferentialOperator(x**2*Derivative(f(x), x), f(x))
+    sec_term = DifferentialOperator(2*x*y*Derivative(f(x), x), f(x))
+    third_term = DifferentialOperator(y**2*Derivative(f(x), x), f(x))
+
+    assert exp == first_term + sec_term + third_term
