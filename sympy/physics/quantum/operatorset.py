@@ -97,10 +97,7 @@ def operators_to_state(operators, **options):
     |px>
     >>> operators_to_state(PxOp())
     |px>
-    >>> operators_to_state(Operator)
-    |psi>
-    >>> operators_to_state(Operator())
-    |psi>
+
     """
 
     if not (isinstance(operators, Operator) \
@@ -212,10 +209,7 @@ def state_to_operators(state, **options):
     Px
     >>> state_to_operators(XBra)
     X
-    >>> state_to_operators(Ket)
-    O
-    >>> state_to_operators(Bra)
-    O
+
     """
 
     if not (isinstance(state, StateBase) or issubclass(state, StateBase)):
