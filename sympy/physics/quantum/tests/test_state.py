@@ -1,13 +1,10 @@
-from sympy import (Add, conjugate, diff, I, Integer, latex, Mul, oo, pi, Pow,
-                   pretty, Rational, sin, sqrt, Symbol, symbols, sympify)
+from sympy import (Add, conjugate, diff, expand, I, Integer, latex, Mul, oo, pi,
+                   Pow, pretty, Rational, sin, sqrt, Symbol, symbols, sympify)
 from sympy.utilities.pytest import raises
-
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr
-from sympy.physics.quantum.state import (
-    Ket, Bra, TimeDepKet, TimeDepBra,
-    KetBase, BraBase, StateBase, Wavefunction
-)
+from sympy.physics.quantum.state import (Bra, BraBase, Ket, KetBase,
+                                         TimeDepKet, TimeDepBra, Wavefunction)
 from sympy.physics.quantum.hilbert import HilbertSpace
 
 x, y, t = symbols('x,y,t')
@@ -224,3 +221,8 @@ def test_wavefunction():
 
     k = Wavefunction(x**2, 'x')
     assert type(k.variables[0]) == Symbol
+
+    j = Wavefunction((x+y)**2, x, y)
+    e = expand(j, wavefunction=True)
+    assert e == Wavefunction(x**2, x, y) + Wavefunction(2*x*y, x, y) \
+           + Wavefunction(y**2, x, y)
