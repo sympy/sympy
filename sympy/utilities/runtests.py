@@ -309,7 +309,7 @@ def doctest(*paths, **kwargs):
             try:
                 # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
                 #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
-                out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
+                out = sympytestfile(txt_file, module_relative=False, encoding=None,
                     optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE \
                               | pdoctest.IGNORE_EXCEPTION_DETAIL)
             finally:
@@ -436,7 +436,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    text, filename = pdoctest._load_testfile(filename, package, module_relative)
+    text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
