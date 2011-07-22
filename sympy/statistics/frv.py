@@ -6,18 +6,13 @@ from rv import (Domain,  ProductDomain, ConditionalDomain, PSpace,
 import itertools
 from sympy.core.containers import Dict
 
-class CountableDomain(Domain):
-    def __iter__(self):
-        raise NotImplementedError()
-    def __contains__(self, other):
-        other in self.__iter__()
-
-class FiniteDomain(CountableDomain):
+class FiniteDomain(Domain):
     """
     A domain with discrete finite support.
     Represented using a FiniteSet
+
     """
-    is_finite = True
+    is_Finite = True
     def __new__(cls, elements):
         elements = FiniteSet(*elements)
         symbols = FiniteSet(sym for sym, val in elements)
@@ -91,12 +86,9 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 #=========  Probability Space  ===============
 #=============================================
 
-class FiniteDensity(Dict):
-    pass
-
 class FinitePSpace(PSpace):
 
-    is_finite = True
+    is_Finite = True
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
                 for key, val in density.items())

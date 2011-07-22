@@ -83,7 +83,6 @@ class ParetoPSpace(SingleContinuousPSpace):
 def Pareto(xm, alpha, symbol=None):
     return ParetoPSpace(xm, alpha, symbol).value
 
-
 class BetaPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
         assert alpha>0, "Alpha must be positive"

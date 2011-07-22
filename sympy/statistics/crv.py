@@ -6,17 +6,23 @@ from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy import integrate as sympy_integrate
 oo = S.Infinity
 
-
 def integrate(*args, **kwargs):
+    """
+    Wrap around sympy integrate function to include a lazy flag
+    if lazy==True then just return the Integral object
+    """
     lazy = kwargs.get('lazy', False)
     if not lazy:
         return sympy_integrate(*args)
     else:
         return Integral(*args)
 
-
 class ContinuousDomain(Domain):
-    is_continuous = True
+    """
+    A domain with continuous support.
+    Represented using symbols and Intervals
+    """
+    is_Continuous = True
 
     def as_boolean(self):
         return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in self])
@@ -84,7 +90,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
 
 
 class ContinuousPSpace(PSpace):
-    is_continuous = True
+    is_Continuous = True
 
     def integrate(self, expr, rvs=None, **kwargs):
         if rvs == None:
