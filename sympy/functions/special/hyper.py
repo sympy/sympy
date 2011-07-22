@@ -35,6 +35,9 @@ class TupleParametersBase(Function):
                                       'a parameter')
         return self.fdiff(3)*self.args[2].diff(s)
 
+    # This is not deduced automatically since there are Tuples as arguments.
+    is_commutative = True
+
 class hyper(TupleParametersBase):
     r"""
     The (generalized) hypergeometric function is defined by a series where
