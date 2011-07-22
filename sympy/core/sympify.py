@@ -32,6 +32,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including `None` (will leave them unchanged)
+       - lists, sets or tuples containing any of the above
 
     If the argument is already a type that sympy understands, it will do
     nothing but return that value. This can be used at the beginning of a
@@ -70,7 +71,22 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...
     SympifyError: SympifyError: True
 
+    To extend `sympify` to convert custom objects (not derived from `Basic`),
+    the static dictionary `convert` is provided. The custom converters are
+    usually added at import time, and will apply to all objects of the given
+    class or its derived classes.
+
+    For example, all geometry objects derive from `GeometryEntity` class, and
+    should not be altered by the converter, so we add the following after
+    defining that class:
+
+    >>> from sympy.core.sympify import converter
+    >>> from sympy.geometry.entity import GeometryEntity
+    >>> converter[GeometryEntity] = lambda x: x
+
     """
+    from containers import Tuple
+
     try:
         cls = a.__class__
     except AttributeError:  #a is probably an old-style class object
@@ -107,8 +123,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     if strict:
         raise SympifyError(a)
 
+    if isinstance(a, tuple):
+        return Tuple(*[sympify(x, locals=locals, convert_xor=convert_xor,
+            rational=rational) for x in a])
     if iterable(a):
-        return type(a)([sympify(x, locals=locals, convert_xor=convert_xor, rational=rational) for x in a])
+        return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+            rational=rational) for x in a])
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement

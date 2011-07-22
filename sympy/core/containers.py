@@ -7,6 +7,7 @@
 """
 
 from basic import Basic
+from sympify import sympify
 
 class Tuple(Basic):
     """
@@ -25,6 +26,11 @@ class Tuple(Basic):
     (d, b, c)
 
     """
+
+    def __new__(cls, *args, **assumptions):
+        args = [ sympify(arg) for arg in args ]
+        obj = Basic.__new__(cls, *args, **assumptions)
+        return obj
 
     def __getitem__(self,i):
         if isinstance(i,slice):

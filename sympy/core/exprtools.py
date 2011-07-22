@@ -8,6 +8,7 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.coreerrors import NonCommutativeExpression
+from sympy.core.containers import Tuple
 
 def decompose_power(expr):
     """
@@ -324,7 +325,7 @@ class Term(object):
 
 def _gcd_terms(terms):
     """Helper function for :func:`gcd_terms`. """
-    if isinstance(terms, Basic):
+    if isinstance(terms, Basic) and not isinstance(terms, Tuple):
         terms = Add.make_args(terms)
 
     if len(terms) <= 1:
