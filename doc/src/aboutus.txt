@@ -137,6 +137,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Stefan Krastanov: Make Pyglet an external dependency
 #. Bradley Froehle: Fix shell command to generate modules in setup.py
 #. Min Ragan-Kelley: Fix isympy to work with IPython 0.11
+#. Emma Hogan: Fixes to the documentation
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
