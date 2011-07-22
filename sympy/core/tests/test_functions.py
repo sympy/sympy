@@ -488,6 +488,10 @@ def test_sho_lagrangian():
     eqnb = Eq(-k*x, m*diff(x,t,t))
     assert eqna == eqnb
 
+    assert diff(L,x,t) == diff(L,t,x)
+    assert diff(L,diff(x,t),t) == m*diff(x,t,2)
+    assert diff(L,t,diff(x,t)) == -k*x + m*diff(x,t,2)
+
 def test_straight_line():
     x = Symbol('x')
     f = Function('f')(x)
@@ -495,3 +499,42 @@ def test_straight_line():
     L = sqrt(1 + diff(f,x)**2)
     assert diff(L,f) == 0
     assert diff(L, diff(f,x)) == diff(f,x)/sqrt(1 + diff(f,x)**2)
+
+def test_sort_variable():
+    vsort = Derivative._sort_variables
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    f = Function('f')
+    g = Function('g')
+    h = Function('h')
+
+    assert vsort((x,y,z)) == [x, y, z]
+    assert vsort((h(x),g(x),f(x))) == [f(x), g(x), h(x)]
+    assert vsort((z,y,x,h(x),g(x),f(x))) == [x, y, z, f(x), g(x), h(x)]
+    assert vsort((x,f(x),y,f(y))) == [x, f(x), y, f(y)]
+    assert vsort((y,x,g(x),f(x),z,h(x),y,x)) ==\
+        [x, y, f(x), g(x), z, h(x), x, y]
+    assert vsort((z,y,f(x),x,f(x),g(x))) == [y, z, f(x), x, f(x), g(x)]
+    assert vsort((z,y,f(x),x,f(x),g(x),z,z,y,x)) ==\
+        [y, z, f(x), x, f(x), g(x), x, y, z, z]
+
+def test_unhandled():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    f = Function('f')
+    g = Function('g')
+    h = Function('h')
+
+    class MyExpr(Expr):
+        def _eval_derivative(self, s):
+            if not s.name.startswith('diff_wrt'):
+                return self
+            else:
+                return None
+
+    expr = MyExpr(x,y,z)
+    assert diff(expr,x,y,f(x),z) == Derivative(expr,f(x),z)
+    assert diff(expr,f(x),x) == Derivative(expr,f(x),x)
+
