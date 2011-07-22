@@ -14,7 +14,7 @@ from sympy.utilities.pytest import XFAIL, skip, slow
 from random import randrange
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi, erf)
+                   gamma, sqrt, pi, erf, exp_polar)
 
 def test_branch_bug():
     assert hyperexpand(hyper((-S(1)/3, S(1)/2), (S(2)/3, S(3)/2), -z)) == \
@@ -34,7 +34,8 @@ def test_hyperexpand():
     assert hyperexpand(hyper([S('1/2'), S('1/2')], [S('3/2')], z**2)*z) \
            == asin(z)
 
-def can_do(ap, bq, numerical=True):
+def can_do(ap, bq, numerical=True, div=1):
+    from sympy import exp_polar, exp
     r = hyperexpand(hyper(ap, bq, z))
     if r.has(hyper):
         return False
@@ -44,8 +45,8 @@ def can_do(ap, bq, numerical=True):
 
     repl = {}
     for n, a in enumerate(r.free_symbols - set([z])):
-        repl[a] = randcplx(n)
-    return tn(hyper(ap, bq, z).subs(repl), r.subs(repl), z)
+        repl[a] = randcplx(n)/div
+    return tn(hyper(ap, bq, z).subs(repl), r.replace(exp_polar, exp).subs(repl), z)
 
 def test_roach():
     # Kelly B. Roach.  Meijer G Function Representations.
@@ -481,6 +482,45 @@ def test_meijerg_confluence():
     assert u([1, 1], [], [], [0])
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0, 0])
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0])
+
+def test_lerchphi():
+    from sympy import combsimp, exp_polar, polylog, log, lerchphi
+    assert hyperexpand(hyper([1, a], [a + 1], z)/a) == lerchphi(z, 1, a)
+    assert hyperexpand(hyper([1, a, a], [a + 1, a + 1], z)/a**2) == lerchphi(z, 2, a)
+    assert hyperexpand(hyper([1, a, a, a], [a + 1, a + 1, a + 1], z)/a**3) == \
+           lerchphi(z, 3, a)
+    assert hyperexpand(hyper([1] + [a]*10, [a + 1]*10, z)/a**10) \
+           == lerchphi(z, 10, a)
+    assert combsimp(hyperexpand(meijerg([0, 1-a], [], [0], [-a],
+                    exp_polar(-I*pi)*z))) == \
+           lerchphi(z, 1, a)
+    assert combsimp(hyperexpand(meijerg([0, 1-a, 1-a], [], [0], [-a, -a],
+                    exp_polar(-I*pi)*z))) == \
+           lerchphi(z, 2, a)
+    assert combsimp(hyperexpand(meijerg([0, 1-a, 1-a, 1-a], [], [0], [-a, -a, -a],
+                    exp_polar(-I*pi)*z))) == \
+           lerchphi(z, 3, a)
+
+    assert hyperexpand(z*hyper([1, 1], [2], z)) == -log(1 + exp_polar(-I*pi)*z)
+    assert hyperexpand(z*hyper([1, 1, 1], [2, 2], z)) == polylog(2, z)
+    assert hyperexpand(z*hyper([1, 1, 1, 1], [2, 2, 2], z)) == polylog(3, z)
+
+    assert hyperexpand(hyper([1, a, 1 + S(1)/2], [a + 1, S(1)/2], z)) == \
+           -2*a/(z - 1) + (-2*a**2 + a)*lerchphi(z, 1, a)
+
+    # Now numerical tests. These make sure reductions etc are carried out
+    # correctly
+
+    # a rational function (polylog at negative integer order)
+    assert can_do([2, 2, 2], [1, 1])
+
+    # NOTE these contain log(1-x) etc ... better make sure we have |z| < 1
+    # reduction of order for polylog
+    assert can_do([1, 1, 1, b + 5], [2, 2, b], div=10)
+
+    # reduction of order for lerchphi
+    # XXX lerchphi in mpmath is flaky
+    assert can_do([1, a, a, a, b + 5], [a + 1, a + 1, a + 1, b], numerical=False)
 
 @slow
 def test_prudnikov_misc():

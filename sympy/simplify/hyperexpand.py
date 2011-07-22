@@ -1648,6 +1648,150 @@ def try_polynomial(ip, z):
         res += fac
     return res
 
+def try_lerchphi(nip):
+    """
+    Try to find an expression for IndexPair `nip` in terms of Lerch
+    Transcendents.
+
+    Return None if no such expression can be found.
+    """
+    # This is actually quite simple, and is described in Roach's paper,
+    # section 18.
+    # We don't need to implement the reduction to polylog here, this
+    # is handled by expand_func.
+    from sympy import (expand_func, lerchphi, apart, Dummy, rf, Poly, Matrix,
+                       zeros, Add)
+
+    # First we need to figure out if the summation coefficient is a rational
+    # function of the summation index, and construct that rational function.
+    abuckets, bbuckets = nip.compute_buckets()
+    # Update all the keys in bbuckets to be the same Mod1 objects as abuckets.
+    akeys = abuckets.keys()
+    bkeys = []
+    for key in bbuckets.keys():
+        new = key
+        for a in akeys:
+            if a == key:
+                new = a
+                break
+        bkeys += [(new, key)]
+    bb = {}
+    for new, key in bkeys:
+        bb[new] = bbuckets[key]
+    bbuckets = bb
+
+    paired = {}
+    for key, value in abuckets.items():
+        if key != 0 and not key in bbuckets:
+            return None
+        bvalue = bbuckets.get(key, [])
+        paired[key] = (list(value), list(bvalue))
+        bbuckets.pop(key, None)
+    if bbuckets != {}:
+        return None
+    if not S(0) in abuckets:
+        return None
+    aints, bints = paired[S(0)]
+    # Account for the additional n! in denominator
+    paired[S(0)] = (aints, bints + [1])
+
+    t = Dummy('t')
+    numer = S(1)
+    denom = S(1)
+    for key, (avalue, bvalue) in paired.items():
+        if len(avalue) != len(bvalue):
+            return None
+        # Note that since order has been reduced fully, all the b are
+        # bigger than all the a they differ from by an integer. In particular
+        # if there are any negative b left, this function is not well-defined.
+        for a, b in zip(avalue, bvalue):
+            if a > b:
+                k = a - b
+                numer *= rf(b + t, k)
+                denom *= rf(b, k)
+            else:
+                k = b - a
+                numer *= rf(a, k)
+                denom *= rf(a + t, k)
+
+    # Now do a partial fraction decomposition.
+    # We assemble two structures: a list monomials of pairs (a, b) representing
+    # a*t**b (b a non-negative integer), and a dict terms, where terms[a] = [(b, c)]
+    # means that there is a term b/(t-a)**c.
+    part = apart(numer/denom, t)
+    args = Add.make_args(part)
+    monomials = []
+    terms = {}
+    for arg in args:
+        numer, denom = arg.as_numer_denom()
+        if not denom.has(t):
+            p = Poly(numer, t)
+            assert p.is_monomial
+            ((b,), a) = p.LT()
+            monomials += [(a/denom, b)]
+            continue
+        if numer.has(t):
+            raise NotImplementedError('Need partial fraction decomposition' \
+                                      ' with linear denominators')
+        indep, [dep] = denom.as_coeff_mul(t)
+        n = 1
+        if dep.is_Pow:
+            n = dep.exp
+            dep = dep.base
+        if dep == t:
+            a == 0
+        elif dep.is_Add:
+            a, tmp = dep.as_independent(t)
+            b = 1
+            if tmp != t:
+                b, _ = tmp.as_independent(t)
+            if dep != b*t + a:
+                raise NotImplementedError('unrecognised form %s' % dep)
+            a /= b
+            indep *= b
+        else:
+            raise NotImplementedError('unrecognised form of partial fraction')
+        terms.setdefault(a, []).append((numer/indep, n))
+
+    # Now that we have this information, assemble our formula. All the
+    # monomials yield rational functions and go into one basis element.
+    # The terms[a] are related by differentiation. If the largest exponent is
+    # n, we need lerchphi(z, k, a) for k = 1, 2, ..., n.
+    # deriv maps a basis to its derivative, expressed as a C(z)-linear combination
+    # of other basis elements.
+    deriv = {}
+    coeffs = {}
+    z = Dummy('z')
+    monomials.sort(key=lambda x: x[1])
+    mon = {0: 1/(1-z)}
+    if monomials:
+        for k in range(monomials[-1][1]):
+            mon[k + 1] = z*mon[k].diff(z)
+    for a, n in monomials:
+        coeffs.setdefault(S(1), []).append(a*mon[n])
+    for a, l in terms.items():
+        for c, k in l:
+            coeffs.setdefault(lerchphi(z, k, a), []).append(c)
+        l.sort(key=lambda x: x[1])
+        for k in range(2, l[-1][1] + 1):
+            deriv[lerchphi(z, k, a)] = [(-a, lerchphi(z, k, a)),
+                                        (1, lerchphi(z, k-1, a))]
+        deriv[lerchphi(z, 1, a)] = [(-a, lerchphi(z, 1, a)),
+                                    (1/(1 - z), S(1))]
+    trans = {}
+    for n, b in enumerate([S(1)] + deriv.keys()):
+        trans[b] = n
+    basis = [expand_func(b) for (b, _) in sorted(trans.items(), key=lambda x:x[1])]
+    B = Matrix(basis)
+    C = Matrix([[0]*len(B)])
+    for b, c in coeffs.items():
+        C[trans[b]] = Add(*c)
+    M = zeros(len(B))
+    for b, l in deriv.items():
+        for c, b2 in l:
+            M[trans[b], trans[b2]] = c
+    return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+
 collection = None
 def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     """
@@ -1666,11 +1810,6 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     # 1) Partial simplification (i.e. return a simpler hypergeometric function,
     #    even if we cannot express it in terms of named special functions).
     # 2) PFD Duplication (see Kelly Roach's paper)
-    # 3) If the coefficients are a rational function of n (numerator parameters
-    #    k, a1, ..., an, denominator parameters a1+k1, a2+k2, ..., an+kn, where
-    #    k, k1, ..., kn are integers) then result can be expressed using Lerch
-    #    transcendent. Under certain conditions, this simplifies to polylogs
-    #    or even zeta functions. C/f Kelly Roach's paper.
 
     global collection
     if collection is None:
@@ -1706,13 +1845,19 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
     p = simplify(p).subs(z0, z)
 
-    # Now try to find a formula
+    # Try to find a formula in our collection
     f = collection.lookup_origin(nip)
+
+    # Now try a lerch phi formula
+    if f is None:
+        f = try_lerchphi(nip)
 
     if f is None:
         debug('  Could not find an origin.')
         # There is nothing we can do.
         return None
+
+    debug('  Found an origin:', f.closed_form, f.indices)
 
     # We need to find the operators that convert f into (nap, nbq).
     ops += devise_plan(nip, f.indices, z0)
