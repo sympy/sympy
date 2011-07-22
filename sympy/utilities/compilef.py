@@ -298,8 +298,8 @@ def frange(*args, **kwargs):
     >>> frange('lambda x: sqrt(x)', 1, 4) # doctest: +ELLIPSIS
     <__main__.c_double_Array_3 object at ...>
     >>> for i in _:
-    ...     print i
-    ...
+    ...     print(i)
+    ... 
     1.0
     1.41421356237
     1.73205080757
@@ -595,4 +595,5 @@ if __name__ == '__main__':
         print()
     print('Running benchmark...')
     benchmark()
+
 

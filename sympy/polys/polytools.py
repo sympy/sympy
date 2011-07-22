@@ -826,7 +826,8 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> def func((k,), coeff):
+        >>> def func(xxx_todo_changeme, coeff):
+        ...     (k,) = xxx_todo_changeme
         ...     return coeff//10**(2-k)
 
         >>> Poly(x**2 + 20*x + 400).termwise(func)
@@ -5165,7 +5166,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
     (x**2 - x + 1)**2
 
     >>> R_f = [ (r**2).expand() for r in roots(f) ]
-    >>> R_g = roots(g).keys()
+    >>> R_g = list(roots(g).keys())
 
     >>> set(R_f) == set(R_g)
     True
@@ -5401,3 +5402,4 @@ def poly(expr, *gens, **args):
     opt = options.build_options(gens, args)
 
     return _poly(expr, opt)
+

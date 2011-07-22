@@ -401,7 +401,7 @@ def fcode(expr, **settings):
        '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
        >>> fcode(sin(x), assign_to="s")
        '      s = sin(x)'
-       >>> print fcode(pi)
+       >>> print(fcode(pi))
              parameter (pi = 3.14159265358979d0)
              pi
 
@@ -417,4 +417,5 @@ def print_fcode(expr, **settings):
        See fcode for the meaning of the optional arguments.
     """
     print(fcode(expr, **settings))
+
 

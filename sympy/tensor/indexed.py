@@ -33,7 +33,7 @@
     >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols
     >>> M = IndexedBase('M')
-    >>> i, j = map(Idx, ['i', 'j'])
+    >>> i, j = list(map(Idx, ['i', 'j']))
     >>> M[i, j]
     M[i, j]
 
@@ -213,7 +213,7 @@ class Indexed(Expr):
 
     >>> from sympy.tensor import Indexed, IndexedBase, Idx
     >>> from sympy import symbols
-    >>> i, j = map(Idx, ['i', 'j'])
+    >>> i, j = list(map(Idx, ['i', 'j']))
     >>> Indexed('A', i, j)
     A[i, j]
 
@@ -415,3 +415,4 @@ class Idx(Expr):
 
     def _sympystr(self, p):
         return p.doprint(self.label)
+

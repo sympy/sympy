@@ -29,8 +29,8 @@ class Singleton(BasicMeta):
     Example::
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
-        >>> class MySingleton(Basic):
-        ...     __metaclass__ = Singleton
+        >>> class MySingleton(Basic, metaclass=Singleton):
+        ...     pass
         >>> Basic() is Basic()
         False
         >>> MySingleton() is MySingleton()
@@ -72,3 +72,4 @@ class Singleton(BasicMeta):
         def __getnewargs__(self):
             return ()
         cls.__getnewargs__ = __getnewargs__
+

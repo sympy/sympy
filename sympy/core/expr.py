@@ -1482,7 +1482,7 @@ class Expr(Basic, EvalfMixin):
             If `n=None` then an iterator of the series terms will be returned.
 
             >>> term=cos(x).series(n=None)
-            >>> [term.next() for i in range(2)]
+            >>> [next(term) for i in range(2)]
             [1, -x**2/2]
 
             For `dir=+` (default) the series is calculated from the right and
@@ -2017,3 +2017,4 @@ from .power import Pow
 from .function import Derivative
 from .sympify import sympify
 from .symbol import Wild
+

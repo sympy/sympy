@@ -23,7 +23,7 @@ Example:
     >>> from sympy.abc import x
     >>> f(x)
     f(x)
-    >>> print sympy.srepr(f(x).func)
+    >>> print(sympy.srepr(f(x).func))
     Function('f')
     >>> f(x).args
     (x,)
@@ -1505,3 +1505,4 @@ def count_ops(expr, visual=False):
 
 from .sympify import sympify
 from .add    import Add
+

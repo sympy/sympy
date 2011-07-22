@@ -148,7 +148,7 @@ class Sum(Expr):
             >>> s
             -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
-            >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
+            >>> print(sstr((s.evalf(), e.evalf()), full_prec=True))
             (1.26629073187416, 0.0175000000000000)
 
         The endpoints may be symbolic:
@@ -498,3 +498,4 @@ def eval_sum_direct(expr, limits):
         for j in range(a, b+1):
             s += expr
     return s
+

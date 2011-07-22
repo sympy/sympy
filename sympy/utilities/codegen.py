@@ -921,17 +921,17 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
     >>> from sympy.abc import x, y, z
     >>> [(c_name, c_code), (h_name, c_header)] = \\
     ...     codegen(("f", x+y*z), "C", "test", header=False, empty=False)
-    >>> print c_name
+    >>> print(c_name)
     test.c
-    >>> print c_code,
+    >>> print(c_code, end=' ')
     #include "test.h"
     #include <math.h>
     double f(double x, double y, double z) {
       return x + y*z;
     }
-    >>> print h_name
+    >>> print(h_name)
     test.h
-    >>> print c_header,
+    >>> print(c_header, end=' ')
     #ifndef PROJECT__TEST__H
     #define PROJECT__TEST__H
     double f(double x, double y, double z);
@@ -954,3 +954,4 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
 
     # Write the code.
     return code_gen.write(routines, prefix, to_files, header, empty)
+

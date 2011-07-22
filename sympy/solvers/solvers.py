@@ -1187,7 +1187,7 @@ def nsolve(*args, **kwargs):
     >>> x2 = Symbol('x2')
     >>> f1 = 3 * x1**2 - 2 * x2**2 - 1
     >>> f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
-    >>> print nsolve((f1, f2), (x1, x2), (-1, 1))
+    >>> print(nsolve((f1, f2), (x1, x2), (-1, 1)))
     [-1.19287309935246]
     [ 1.27844411169911]
 
@@ -1254,3 +1254,4 @@ def nsolve(*args, **kwargs):
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
     return x
+

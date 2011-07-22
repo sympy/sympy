@@ -193,7 +193,7 @@ class preorder_traversal(object):
         >>> from sympy.abc import x, y, z
         >>> pt = preorder_traversal((x+y*z)*z)
         >>> for i in pt:
-        ...     print i
+        ...     print(i)
         ...     if i == x+y*z:
         ...             pt.skip()
         z*(x + y*z)
@@ -308,8 +308,8 @@ def cartes(*seqs):
     >>> from sympy.utilities.iterables import cartes
     >>> do=list(cartes([Mul, Add], [x, y], [2]))
     >>> for di in do:
-    ...     print di[0](*di[1:])
-    ...
+    ...     print(di[0](*di[1:]))
+    ... 
     2*x
     2*y
     x + 2
@@ -477,8 +477,8 @@ def capture(func):
 
     >>> from sympy.utilities.iterables import capture
     >>> def foo():
-    ...     print 'hello world!'
-    ...
+    ...     print('hello world!')
+    ... 
     >>> 'hello' in capture(foo) # foo, not foo()
     True
     """
@@ -506,7 +506,7 @@ def sift(expr, keyfunc):
     >>> from sympy.abc import x, y
     >>> from sympy import sqrt, exp
 
-    >>> sift(range(5), lambda x: x%2)
+    >>> sift(list(range(5)), lambda x: x%2)
     {0: [0, 2, 4], 1: [1, 3]}
 
     It is possible that some keys are not present, in which case you should
@@ -521,7 +521,7 @@ def sift(expr, keyfunc):
     >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
     ... lambda x: x.as_base_exp()[0])
     {E: [exp(x)], x: [x**(1/2), x**2], y: [y**(2*x)]}
-    >>> _.keys()
+    >>> list(_.keys())
     [E, x, y]
 
     """
@@ -846,7 +846,7 @@ def partitions(n, m=None, k=None):
     Maximum key (number in partition) limited with k (in this case, 2):
 
     >>> for p in partitions(6, k=2):
-    ...     print p
+    ...     print(p)
     {2: 3}
     {1: 2, 2: 2}
     {1: 4, 2: 1}
@@ -855,8 +855,8 @@ def partitions(n, m=None, k=None):
     Maximum number of parts in partion limited with m (in this case, 2):
 
     >>> for p in partitions(6, m=2):
-    ...     print p
-    ...
+    ...     print(p)
+    ... 
     {6: 1}
     {1: 1, 5: 1}
     {2: 1, 4: 1}
@@ -952,8 +952,8 @@ def binary_partitions(n):
     Examples:
     >>> from sympy.utilities.iterables import binary_partitions
     >>> for i in binary_partitions(5):
-    ...     print i
-    ...
+    ...     print(i)
+    ... 
     [4, 1]
     [2, 2, 1]
     [2, 1, 1, 1]
@@ -1202,3 +1202,4 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+

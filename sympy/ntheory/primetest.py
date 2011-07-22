@@ -205,9 +205,9 @@ def _mr_safe_helper(_s):
 
     e.g.
     >>> from sympy.ntheory.primetest import _mr_safe_helper
-    >>> print _mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])")
+    >>> print(_mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])"))
      # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
-    >>> print _mr_safe_helper('return mr(n, [2, 379215, 457083754])')
+    >>> print(_mr_safe_helper('return mr(n, [2, 379215, 457083754])'))
      # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]
     """
 
@@ -240,3 +240,4 @@ def _mr_safe_helper(_s):
 
     _r = [int(_x) for _x in _s.split('[')[1].split(']')[0].split(',')]
     return _info(_r)
+

@@ -46,7 +46,7 @@ def _get_indices_Mul(expr, return_dummies=False):
 
     >>> from sympy.tensor.index_methods import _get_indices_Mul
     >>> from sympy.tensor.indexed import IndexedBase, Idx
-    >>> i, j, k = map(Idx, ['i', 'j', 'k'])
+    >>> i, j, k = list(map(Idx, ['i', 'j', 'k']))
     >>> x = IndexedBase('x')
     >>> y = IndexedBase('y')
     >>> _get_indices_Mul(x[i, k]*y[j, k])
@@ -105,7 +105,7 @@ def _get_indices_Pow(expr):
     >>> from sympy import Pow, exp, IndexedBase, Idx
     >>> A = IndexedBase('A')
     >>> x = IndexedBase('x')
-    >>> i, j, k = map(Idx, ['i', 'j', 'k'])
+    >>> i, j, k = list(map(Idx, ['i', 'j', 'k']))
     >>> _get_indices_Pow(exp(A[i, j]*x[j]))
     (set([i]), {})
     >>> _get_indices_Pow(Pow(x[i], x[i]))
@@ -141,7 +141,7 @@ def _get_indices_Add(expr):
 
     >>> from sympy.tensor.index_methods import _get_indices_Add
     >>> from sympy.tensor.indexed import IndexedBase, Idx
-    >>> i, j, k = map(Idx, ['i', 'j', 'k'])
+    >>> i, j, k = list(map(Idx, ['i', 'j', 'k']))
     >>> x = IndexedBase('x')
     >>> y = IndexedBase('y')
     >>> _get_indices_Add(x[i] + x[k]*y[i, k])
@@ -179,7 +179,7 @@ def get_indices(expr):
     >>> from sympy.tensor.index_methods import get_indices
     >>> from sympy import symbols
     >>> from sympy.tensor import IndexedBase, Idx
-    >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
+    >>> x, y, A = list(map(IndexedBase, ['x', 'y', 'A']))
     >>> i, j, a, z = symbols('i j a z', integer=True)
 
     The indices of the total expression is determined, Repeated indices imply a
@@ -294,8 +294,8 @@ def get_contraction_structure(expr):
     >>> from sympy.tensor.index_methods import get_contraction_structure
     >>> from sympy import symbols
     >>> from sympy.tensor import IndexedBase, Idx
-    >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
-    >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])
+    >>> x, y, A = list(map(IndexedBase, ['x', 'y', 'A']))
+    >>> i, j, k, l = list(map(Idx, ['i', 'j', 'k', 'l']))
     >>> get_contraction_structure(x[i]*y[i] + A[j, j])
     {(i,): set([x[i]*y[i]]), (j,): set([A[j, j]])}
     >>> get_contraction_structure(x[i]*y[j])
@@ -425,3 +425,4 @@ def get_contraction_structure(expr):
         return {None: set([expr])}
     raise NotImplementedError(
             "FIXME: No specialized handling of type %s"%type(expr))
+

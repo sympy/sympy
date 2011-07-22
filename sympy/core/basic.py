@@ -679,13 +679,13 @@ class Basic(AssumeMeths, metaclass=BasicMeta):
            >>> from sympy import Poly, sin
            >>> from sympy.abc import x, y
 
-           >>> print (x**2 + x*y).as_poly()
+           >>> print((x**2 + x*y).as_poly())
            Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print (x**2 + x*y).as_poly(x, y)
+           >>> print((x**2 + x*y).as_poly(x, y))
            Poly(x**2 + x*y, x, y, domain='ZZ')
 
-           >>> print (x**2 + sin(y)).as_poly(x, y)
+           >>> print((x**2 + sin(y)).as_poly(x, y))
            None
 
         """
@@ -1036,7 +1036,7 @@ class Basic(AssumeMeths, metaclass=BasicMeta):
 
         Can be used to solve linear equations:
           >>> from sympy import Symbol, Wild, Integer
-          >>> a,b = map(Symbol, 'ab')
+          >>> a,b = list(map(Symbol, 'ab'))
           >>> x = Wild('x')
           >>> (a+b*x).matches(Integer(0))
           {x_: -a/b}
@@ -1212,3 +1212,4 @@ class Atom(Basic):
     def sort_key(self, order=None):
         from sympy.core import S
         return self.class_key(), (1, (self,)), S.One.sort_key(), S.One
+

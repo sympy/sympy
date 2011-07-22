@@ -317,7 +317,7 @@ class jn(SphericalBesselBase):
 
         >>> from sympy import Symbol, jn, sin, cos, expand_func
         >>> z = Symbol("z")
-        >>> print jn(0, z).expand(func=True)
+        >>> print(jn(0, z).expand(func=True))
         sin(z)/z
         >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
         True
@@ -362,7 +362,7 @@ class yn(SphericalBesselBase):
 
         >>> from sympy import Symbol, yn, sin, cos, expand_func
         >>> z = Symbol("z")
-        >>> print expand_func(yn(0, z))
+        >>> print(expand_func(yn(0, z)))
         -cos(z)/z
         >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
         True
@@ -449,3 +449,4 @@ def jn_zeros(n, k, method="sympy"):
         root = solver(f, root+pi)
         roots.append(root)
     return roots
+

@@ -63,7 +63,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     If visual=True then an annotated string will be returned:
 
-        >>> print smoothness_p(21477639576571, visual=1)
+        >>> print(smoothness_p(21477639576571, visual=1))
         p**i=4410317**1 has p-1 B=1787, B-pow=1787
         p**i=4869863**1 has p-1 B=2434931, B-pow=2434931
 
@@ -317,8 +317,8 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
         >>> n=16843009
         >>> F=lambda x:(2048*pow(x,2,n) + 32767) % n
         >>> for s in range(5):
-        ...     cycle_length(F, s).next()
-        ...
+        ...     next(cycle_length(F, s))
+        ... 
         (2489, 42)
         (78, 120)
         (1482, 99)
@@ -334,10 +334,10 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
             >>> x=2
             >>> for i in range(7):
             ...     x=(x**2+12)%17
-            ...     print x,
-            ...
+            ...     print(x, end=' ')
+            ... 
             16 13 11 14 4 11 14
-            >>> cycle_length(lambda x: (x**2+12)%17, 2).next()
+            >>> next(cycle_length(lambda x: (x**2+12)%17, 2))
             (3, 2)
             >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=1))
             [16, 13, 11, 14, 4]
@@ -477,7 +477,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
         >>> from sympy.utilities import flatten
         >>> from sympy.ntheory.factor_ import smoothness_p, factorint
-        >>> print smoothness_p(21477639576571, visual=1)
+        >>> print(smoothness_p(21477639576571, visual=1))
         p**i=4410317**1 has p-1 B=1787, B-pow=1787
         p**i=4869863**1 has p-1 B=2434931, B-pow=2434931
 
@@ -744,8 +744,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
         >>> factors = factorint(12345678910111213141516)
         >>> for base, exp in sorted(factors.items()):
-        ...     print base, exp
-        ...
+        ...     print(base, exp)
+        ... 
         2 2
         2507191691 1
         1231026625769 1
@@ -778,7 +778,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         >>> from sympy.ntheory import isprime
         >>> a = 1407633717262338957430697921446883
         >>> f = factorint(a, limit=10000)
-        >>> f == {991: 1, 202916782076162456022877024859L: 1, 7: 1}
+        >>> f == {991: 1, 202916782076162456022877024859: 1, 7: 1}
         True
         >>> isprime(max(f))
         False
@@ -819,7 +819,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         >>> visual = factorint(1764, visual=True); pprint(visual)
          2  2  2
         2 *3 *7
-        >>> print factorint(visual)
+        >>> print(factorint(visual))
         {2: 2, 3: 2, 7: 2}
 
     If you want to send a number to be factored in a partially factored form
@@ -1230,3 +1230,4 @@ def totient(n):
     for p, k in factors.items():
         t *= (p-1) * p**(k-1)
     return t
+

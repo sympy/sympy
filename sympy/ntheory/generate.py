@@ -329,7 +329,7 @@ def cycle_length(f, x0, nmax=None, values=False):
 
     and given a seed of 2 and the mu and lambda terms calculated:
 
-        >>> cycle_length(func, 4).next()
+        >>> next(cycle_length(func, 4))
         (6, 2)
 
     We can see what is meant by looking at the output:
@@ -345,7 +345,7 @@ def cycle_length(f, x0, nmax=None, values=False):
     If a sequence is suspected of being longer than you might wish, ``nmax``
     can be used to exit early (in which mu will be returned as None:
 
-        >>> cycle_length(func, 4, nmax = 4).next()
+        >>> next(cycle_length(func, 4, nmax = 4))
         (4, None)
         >>> [ni for ni in cycle_length(func, 4, nmax = 4, values=True)]
         [17, 35, 2, 5]
@@ -387,3 +387,4 @@ def cycle_length(f, x0, nmax=None, values=False):
         if mu:
             mu -= 1
         yield lam, mu
+

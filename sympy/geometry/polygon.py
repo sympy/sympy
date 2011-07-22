@@ -192,7 +192,7 @@ class Polygon(GeometryEntity):
         Examples
         --------
         >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> p1, p2, p3, p4 = list(map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)]))
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.area
         3
@@ -223,7 +223,7 @@ class Polygon(GeometryEntity):
         Examples
         --------
         >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> p1, p2, p3, p4 = list(map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)]))
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.angles[p1]
         pi/2
@@ -261,7 +261,7 @@ class Polygon(GeometryEntity):
         Examples
         --------
         >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> p1, p2, p3, p4 = list(map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)]))
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.perimeter
         17**(1/2) + 7
@@ -293,11 +293,11 @@ class Polygon(GeometryEntity):
         Examples
         --------
         >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> p1, p2, p3, p4 = list(map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)]))
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.vertices
         (Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
-        >>> print poly[0]
+        >>> print(poly[0])
         Point(0, 0)
 
         """
@@ -318,7 +318,7 @@ class Polygon(GeometryEntity):
         Examples
         --------
         >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> p1, p2, p3, p4 = list(map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)]))
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.centroid
         Point(31/18, 11/18)
@@ -357,7 +357,7 @@ class Polygon(GeometryEntity):
         Examples
         --------
         >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> p1, p2, p3, p4 = list(map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)]))
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.sides
         [Segment(Point(0, 0), Point(1, 0)),
@@ -384,7 +384,7 @@ class Polygon(GeometryEntity):
         Examples
         --------
         >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> p1, p2, p3, p4 = list(map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)]))
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.is_convex()
         True
@@ -580,9 +580,9 @@ class Polygon(GeometryEntity):
         Examples
         --------
         >>> from sympy import Point, Polygon
-        >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
+        >>> p1, p2, p3, p4 = list(map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)]))
         >>> poly1 = Polygon(p1, p2, p3, p4)
-        >>> p5, p6, p7 = map(Point, [(3, 2), (1, -1), (0, 2)])
+        >>> p5, p6, p7 = list(map(Point, [(3, 2), (1, -1), (0, 2)]))
         >>> poly2 = Polygon(p5, p6, p7)
         >>> poly1.intersection(poly2)
         [Point(2/3, 0), Point(9/5, 1/5), Point(7/3, 1), Point(1/3, 1)]
@@ -1241,7 +1241,7 @@ class RegularPolygon(Polygon):
 
         Note that iteration and indexing do not give the same results.
         >>> for ri in r:
-        ...     print ri
+        ...     print(ri)
         Point(0, 0)
         1
         3
@@ -1761,3 +1761,4 @@ class Triangle(Polygon):
     #def excircles(self):
     #    """Returns a list of the three excircles for this triangle."""
     #    pass
+

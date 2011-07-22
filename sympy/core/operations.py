@@ -267,7 +267,7 @@ class AssocOp(Expr):
         Return a sequence of elements `args` such that cls(*args) == expr
 
         >>> from sympy import Symbol, Mul, Add
-        >>> x, y = map(Symbol, 'xy')
+        >>> x, y = list(map(Symbol, 'xy'))
 
         >>> Mul.make_args(x*y)
         (x, y)
@@ -354,7 +354,7 @@ class LatticeOp(AssocOp):
         Return a sequence of elements `args` such that cls(*args) == expr
 
         >>> from sympy import Symbol, Mul, Add
-        >>> x, y = map(Symbol, 'xy')
+        >>> x, y = list(map(Symbol, 'xy'))
 
         >>> Mul.make_args(x*y)
         (x, y)
@@ -376,3 +376,4 @@ class LatticeOp(AssocOp):
     @staticmethod
     def _compare_pretty(a, b):
         return cmp(str(a), str(b))
+

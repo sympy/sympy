@@ -94,7 +94,7 @@ def represent(expr, **options):
         >>> class SzUpKet(Ket):
         ...     def _represent_SzOp(self, basis, **options):
         ...         return Matrix([1,0])
-        ...
+        ... 
         >>> class SzOp(Operator):
         ...     pass
         ...
@@ -149,3 +149,4 @@ def represent(expr, **options):
     # vectors are taken. In these cases, we simply return a scalar.
     result = flatten_scalar(result)
     return result
+

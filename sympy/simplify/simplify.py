@@ -874,7 +874,7 @@ def radsimp(expr):
         >>> from sympy import radsimp, sqrt, Symbol
         >>> radsimp(1/(2+sqrt(2)))
         -2**(1/2)/2 + 1
-        >>> x,y = map(Symbol, 'xy')
+        >>> x,y = list(map(Symbol, 'xy'))
         >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
         >>> radsimp(e)
         2**(1/2)*x + 2**(1/2)*y
@@ -1921,3 +1921,4 @@ def _logcombine(expr, force=False):
         _logcombine(expr.args[1], force)
 
     return expr
+

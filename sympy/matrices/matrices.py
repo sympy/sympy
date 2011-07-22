@@ -347,7 +347,7 @@ class Matrix(object):
         Return the Matrix converted in a python list.
 
         >>> from sympy import Matrix
-        >>> m=Matrix(3, 3, range(9))
+        >>> m=Matrix(3, 3, list(range(9)))
         >>> m
         [0, 1, 2]
         [3, 4, 5]
@@ -1434,7 +1434,7 @@ class Matrix(object):
         >>> import sympy
         >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
         >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> print A.multiply_elementwise(B)
+        >>> print(A.multiply_elementwise(B))
         [  0, 10, 200]
         [300, 40,   5]
         """
@@ -1463,16 +1463,16 @@ class Matrix(object):
         >>> from sympy import Matrix, var, trigsimp, cos, sin
         >>> x = var('x', real=True)
         >>> v = Matrix([cos(x), sin(x)])
-        >>> print trigsimp( v.norm() )
+        >>> print(trigsimp( v.norm() ))
         1
-        >>> print v.norm(10)
+        >>> print(v.norm(10))
         (sin(x)**10 + cos(x)**10)**(1/10)
         >>> A = Matrix([[1,1], [1,1]])
-        >>> print A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
+        >>> print(A.norm(2))# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
         2
-        >>> print A.norm(-2) # Inverse spectral norm (smallest singular value)
+        >>> print(A.norm(-2)) # Inverse spectral norm (smallest singular value)
         0
-        >>> print A.norm() # Frobenius Norm
+        >>> print(A.norm()) # Frobenius Norm
         2
         """
 
@@ -2031,13 +2031,13 @@ class Matrix(object):
 
            >>> p, q, r = M.berkowitz()
 
-           >>> print p # 1 x 1 M's sub-matrix
+           >>> print(p) # 1 x 1 M's sub-matrix
            (1, -x)
 
-           >>> print q # 2 x 2 M's sub-matrix
+           >>> print(q) # 2 x 2 M's sub-matrix
            (1, -x, -y)
 
-           >>> print r # 3 x 3 M's sub-matrix
+           >>> print(r) # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
@@ -2140,7 +2140,7 @@ class Matrix(object):
         >>> from sympy import Matrix, Symbol, eye
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
-        >>> print A.singular_values()
+        >>> print(A.singular_values())
         [1, (x**2 + 1)**(1/2), 0]
         """
         # Compute eigenvalues of A.H A
@@ -2163,7 +2163,7 @@ class Matrix(object):
 
         >>> from sympy import Matrix, S
         >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
-        >>> print A.condition_number()
+        >>> print(A.condition_number())
         100
         """
 
@@ -2583,7 +2583,7 @@ def matrix_multiply_elementwise(A, B):
     >>> import sympy
     >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
     >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
-    >>> print sympy.matrices.matrix_multiply_elementwise(A, B)
+    >>> print(sympy.matrices.matrix_multiply_elementwise(A, B))
     [  0, 10, 200]
     [300, 40,   5]
     """
@@ -3272,3 +3272,4 @@ def _separate_eig_results(res):
     eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
     eigvects = flatten([item[2] for item in res])
     return eigvals, eigvects
+

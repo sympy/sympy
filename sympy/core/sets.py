@@ -273,7 +273,7 @@ class ProductSet(Set):
         [0, 1] x [0, 1]
 
         >>> coin = FiniteSet('H','T')
-        >>> for pair in coin**2: print pair
+        >>> for pair in coin**2: print(pair)
         (H, H)
         (H, T)
         (T, H)
@@ -1159,3 +1159,4 @@ def is_flattenable(obj):
     Checks that an argument to a Set constructor  should be flattened
     """
     return obj.__class__ in [list, set, genclass]
+

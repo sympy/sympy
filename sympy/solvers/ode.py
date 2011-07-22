@@ -1519,7 +1519,7 @@ def ode_order(expr, func):
     **Examples**
         >>> from sympy import Function, ode_order
         >>> from sympy.abc import x
-        >>> f, g = map(Function, ['f', 'g'])
+        >>> f, g = list(map(Function, ['f', 'g']))
         >>> ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
         ... f(x).diff(x), f(x))
         2
@@ -1563,7 +1563,7 @@ def ode_1st_exact(eq, func, order, match):
 
         >>> from sympy import Function, Eq, Integral, symbols, pprint
         >>> x, y, t, x0, y0, C1= symbols('x,y,t,x0,y0,C1')
-        >>> P, Q, F= map(Function, ['P', 'Q', 'F'])
+        >>> P, Q, F= list(map(Function, ['P', 'Q', 'F']))
         >>> pprint(Eq(Eq(F(x, y), Integral(P(t, y), (t, x0, x)) +
         ... Integral(Q(x0, t), (t, y0, y))), C1))
                     x                y
@@ -1685,7 +1685,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
 
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
-        >>> f, g, h = map(Function, ['f', 'g', 'h'])
+        >>> f, g, h = list(map(Function, ['f', 'g', 'h']))
         >>> genform = g(f(x)/x) + h(f(x)/x)*f(x).diff(x)
         >>> pprint(genform)
          /f(x)\    /f(x)\ d
@@ -1765,7 +1765,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
     >>> from sympy import Function, dsolve, pprint
     >>> from sympy.abc import x
-    >>> f, g, h = map(Function, ['f', 'g', 'h'])
+    >>> f, g, h = list(map(Function, ['f', 'g', 'h']))
     >>> genform = g(x/f(x)) + h(x/f(x))*f(x).diff(x)
     >>> pprint(genform)
      / x  \    / x  \ d
@@ -1991,7 +1991,7 @@ def ode_1st_linear(eq, func, order, match):
 
         >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
         >>> from sympy.abc import x
-        >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
+        >>> f, P, Q = list(map(Function, ['f', 'P', 'Q']))
         >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x))
         >>> pprint(genform)
                     d
@@ -2043,7 +2043,7 @@ def ode_Bernoulli(eq, func, order, match):
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, n
-        >>> f, P, Q = map(Function, ['f', 'P', 'Q'])
+        >>> f, P, Q = list(map(Function, ['f', 'P', 'Q']))
         >>> genform = Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)**n)
         >>> pprint(genform)
                     d                n
@@ -2159,7 +2159,7 @@ def ode_Liouville(eq, func, order, match):
     d^2y/dx^2 + g(y)*(dy/dx)**2 + h(x)*dy/dx.  The general solution is::
         >>> from sympy import Function, dsolve, Eq, pprint, diff
         >>> from sympy.abc import x
-        >>> f, g, h = map(Function, ['f', 'g', 'h'])
+        >>> f, g, h = list(map(Function, ['f', 'g', 'h']))
         >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
         ... h(x)*diff(f(x),x), 0)
         >>> pprint(genform)
@@ -2816,7 +2816,7 @@ def ode_separable(eq, func, order, match):
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x
-        >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
+        >>> a, b, c, d, f = list(map(Function, ['a', 'b', 'c', 'd', 'f']))
         >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
         >>> pprint(genform)
                      d
@@ -2859,3 +2859,4 @@ def ode_separable(eq, func, order, match):
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x)+C1)
+
