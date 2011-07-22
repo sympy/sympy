@@ -20,9 +20,9 @@ def gosper_normal(f, g, n, polys=True):
     where ``Z`` is an arbitrary constant and ``A``, ``B``, ``C`` are
     monic polynomials in ``n`` with the following properties:
 
-    1. $\gcd(A(n), B(n+h)) = 1 \forall h \in \mathbb{N}$
-    2. $\gcd(B(n), C(n+1)) = 1$
-    3. $\gcd(A(n), C(n)) = 1$
+    1. `\gcd(A(n), B(n+h)) = 1 \forall h \in \mathbb{N}`
+    2. `\gcd(B(n), C(n+1)) = 1`
+    3. `\gcd(A(n), C(n)) = 1`
 
     This normal form, or rational factorization in other words, is a
     crucial step in Gosper's algorithm and in solving of difference
@@ -86,8 +86,8 @@ def gosper_term(f, n):
 
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and $f_k$ doesn't depend on $n$. Returns a hypergeometric
-    term $g_n$ such that $g_{n+1} - g_n = f_n$.
+    and `f_k` doesn't depend on `n`. Returns a hypergeometric
+    term `g_n` such that `g_{n+1} - g_n = f_n`.
 
     **Examples**
 
@@ -161,8 +161,8 @@ def gosper_sum(f, k):
 
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and $f(n)$ doesn't depend on $n$, returns $g_{n} - g(0)$ where
-    $g_{n+1} - g_n = f_n$, or ``None`` if $s_n$ can not be expressed
+    and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where
+    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` can not be expressed
     in closed form as a sum of hypergeometric terms.
 
     **Examples**
