@@ -77,10 +77,25 @@ class lerchphi(Function):
     >>> expand_func(lerchphi(1, s, a))
     zeta(s, a)
 
+    More generally, if :math:`z` is a root of unity, the Lerch transcendent
+    reduces to a sum of Hurwitz zeta functions:
+
+    >>> expand_func(lerchphi(-1, s, a))
+    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, a/2 + 1/2)
+
     If :math:`a=1`, the Lerch transcendent reduces to the polylogarithm:
 
     >>> expand_func(lerchphi(z, s, 1))
     polylog(s, z)/z
+
+    More generally, if :math:`a` is rational, the Lerch transcendent reduces
+    to a sum of polylogarithms:
+
+    >>> from sympy import S
+    >>> expand_func(lerchphi(z, s, S(1)/2))
+    2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) - polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))
+    >>> expand_func(lerchphi(z, s, S(3)/2))
+    -2**s/z + 2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) - polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))/z
 
     The derivatives with respect to :math:`z` and :math:`a` can be computed in
     closed form:
@@ -94,15 +109,69 @@ class lerchphi(Function):
     nargs = 3
 
     def _eval_expand_func(self, **hints):
-        # TODO much more possible here
+        from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
         if hints.get('deep', False):
             z, s, a = map(lambda x: x._eval_expand_func(**hints), self.args)
         else:
             z, s, a = self.args
         if z == 1:
             return zeta(s, a)
-        if a == 1:
-            return polylog(s, z)/z
+        if s.is_Integer and s <= 0:
+            t = Dummy('t')
+            p = Poly((t + a)**(-s), t)
+            start = 1/(1 - t)
+            res = S(0)
+            for c in reversed(p.all_coeffs()):
+                res += c*start
+                start = t*start.diff(t)
+            return res.subs(t, z)
+
+        if a.is_Rational:
+            # See section 18 of
+            #   Kelly B. Roach.  Hypergeometric Function Representations.
+            #   In: Proceedings of the 1997 International Symposium on Symbolic and
+            #   Algebraic Computation, pages 205-211, New York, 1997. ACM.
+            # TODO should something be polarified here?
+            add = S(0)
+            mul = S(1)
+            # First reduce a to the interaval (0, 1]
+            if a > 1:
+                n = floor(a)
+                if n == a:
+                    n -= 1
+                a -= n
+                mul = z**(-n)
+                add = Add(*[-z**(k - n)/(a + k)**s for k in xrange(n)])
+            elif a <= 0:
+                n = floor(-a) + 1
+                a += n
+                mul = z**n
+                add = Add(*[z**(n - 1 - k)/(a - k - 1)**s for k in xrange(n)])
+
+            m, n = S([a.p, a.q])
+            zet = exp_polar(2*pi*I/n)
+            root = z**(1/n)
+            return add + mul*n**(s-1)*Add(
+                *[polylog(s, zet**k*root)._eval_expand_func(**hints) \
+                   / (unpolarify(zet)**k*root)**m for k in xrange(n)])
+
+        # TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed
+        if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [1, -1, I, -I]:
+            # TODO reference?
+            if z == 1:
+                p, q = S([1, 1])
+            elif z == -1:
+                p, q = S([1, 2])
+            elif z == I:
+                p, q = S([1, 4])
+            elif z == -I:
+                p, q = S([-1, 4])
+            else:
+                arg = z.args[0]/(2*pi*I)
+                p, q = S([arg.p, arg.q])
+            return Add(*[exp(2*pi*I*k*p/q)/q**s*zeta(s, (k + a)/q) \
+                         for k in xrange(q)])
+
         return lerchphi(z, s, a)
 
     def fdiff(self, argindex=1):
@@ -113,6 +182,17 @@ class lerchphi(Function):
             return (lerchphi(z, s-1, a) - a*lerchphi(z, s, a))/z
         else:
             raise ArgumentIndexError
+
+    def _eval_rewrite_helper(self, z, s, a, target):
+        res = self._eval_expand_func()
+        if res.has(target):
+            return res
+        else:
+            return self
+    def _eval_rewrite_as_zeta(self, z, s, a):
+        return self._eval_rewrite_helper(z, s, a, zeta)
+    def _eval_rewrite_as_polylog(self, z, s, a):
+        return self._eval_rewrite_helper(z, s, a, polylog)
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
@@ -168,7 +248,7 @@ class polylog(Function):
     >>> from sympy import expand_func
     >>> from sympy.abc import z
     >>> expand_func(polylog(1, z))
-    -log(-z + 1)
+    -log(z*exp_polar(-I*pi) + 1)
     >>> expand_func(polylog(0, z))
     z/(-z + 1)
 
@@ -205,13 +285,13 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import log, expand_mul, Dummy
+        from sympy import log, expand_mul, Dummy, exp_polar, I
         if hints.get('deep', False):
             s, z = map(lambda x: x._eval_expand_func(**hints), self.args)
         else:
             s, z = self.args
         if s == 1:
-            return -log(1 - z)
+            return -log(1 + exp_polar(-I*pi)*z)
         if s.is_Integer and s <= 0:
             u = Dummy('u')
             start = u/(1 - u)

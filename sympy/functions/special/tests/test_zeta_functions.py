@@ -1,5 +1,6 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
-                   zoo, expand_func, polylog, lerchphi)
+                   zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I, exp_polar,
+                   polar_lift)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, test_numerically as tn)
 from sympy.utilities.pytest import XFAIL
@@ -75,6 +76,9 @@ def test_rewriting():
     assert zeta(x, a).rewrite(lerchphi) == lerchphi(1, x, a)
     assert polylog(s, z).rewrite(lerchphi) == lerchphi(z, s, 1)*z
 
+    assert lerchphi(1, x, a).rewrite(zeta) == zeta(x, a)
+    assert z*lerchphi(z, s, 1).rewrite(polylog) == polylog(s, z)
+
 def test_derivatives():
     from sympy import Derivative
     assert zeta(x, a).diff(x) == Derivative(zeta(x, a), x)
@@ -94,12 +98,15 @@ def myexpand(func, target):
     expanded = expand_func(func)
     if target is not None and expanded != target:
         return False
+    if expanded == func:
+        return False
 
     subs = {}
     for a in func.free_symbols:
         subs[a] = randcplx()
 
-    return abs(func.subs(subs).n() - expanded.subs(subs)).n() < 1e-10
+    return abs(func.subs(subs).n()
+               - expanded.replace(exp_polar, exp).subs(subs)).n() < 1e-10
 
 def test_polylog_expansion():
     from sympy import factor, log
@@ -107,7 +114,7 @@ def test_polylog_expansion():
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == dirichlet_eta(s)
 
-    assert myexpand(polylog(1, z), -log(1 - z))
+    assert myexpand(polylog(1, z), -log(1 + exp_polar(-I*pi)*z))
     assert myexpand(polylog(0, z), z/(1 - z))
     assert myexpand(polylog(-1, z), z**2/(1 - z)**2 + z/(1 - z))
     assert myexpand(polylog(-5, z), None)
@@ -119,4 +126,24 @@ def test_lerchphi_expansion_fail():
 
 def test_lerchphi_expansion():
     assert myexpand(lerchphi(z, s, 1), polylog(s, z)/z)
-    # TODO more
+
+    # direct summation
+    assert myexpand(lerchphi(z, -1, a), a/(1 - z) + z/(1 - z)**2)
+    assert myexpand(lerchphi(z, -3, a), None)
+
+    # polylog reduction
+    assert myexpand(lerchphi(z, s, S(1)/2),
+                    2**(s-1)*(polylog(s, sqrt(z))/sqrt(z) \
+                              - polylog(s, polar_lift(-1)*sqrt(z))/sqrt(z)))
+    assert myexpand(lerchphi(z, s, 2), -1/z + polylog(s, z)/z**2)
+    assert myexpand(lerchphi(z, s, S(3)/2), None)
+    assert myexpand(lerchphi(z, s, S(7)/3), None)
+    assert myexpand(lerchphi(z, s, -S(1)/3), None)
+    assert myexpand(lerchphi(z, s, -S(5)/2), None)
+
+    # hurwitz zeta reduction
+    assert myexpand(lerchphi(-1, s, a),
+                    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, (a+1)/2))
+    assert myexpand(lerchphi(I, s, a), None)
+    assert myexpand(lerchphi(-I, s, a), None)
+    assert myexpand(lerchphi(exp(2*I*pi/5), s, a), None)
