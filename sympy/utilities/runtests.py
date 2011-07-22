@@ -40,8 +40,10 @@ def _indent(s, indent=4):
     If the string `s` is Unicode, it is encoded using the stdout
     encoding and the `backslashreplace` error handler.
     """
-    if isinstance(s, unicode):
-        s = s.encode(pdoctest._encoding, 'backslashreplace')
+    # After a 2to3 run the below code is bogus, so wrap it with a version check
+    if sys.version_info[0] < 3:
+        if isinstance(s, unicode):
+            s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
