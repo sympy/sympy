@@ -405,3 +405,12 @@ def test_issue_2098():
     y = Symbol('y', positive=True)
     assert solve(x**2 - y**2/exp(x), x, y) == [x*exp(x/2)]
     # This solution must not appear: -x*exp(x/2)
+
+@XFAIL
+def test_2098_ambiguous():
+    # this is a case where the solution is univariate and which variable
+    # was solved for cannot easily be determined by inspection of the free
+    # symbols alone. solve should return an unambiguous result like
+    # [{y: x*exp(x/2)}, {y: -x*exp(x/2)}]
+    x, y, z = symbols('x y z', positive=True)
+    assert solve(z**2*x**2 - z**2*y**2/exp(x), x, y, z) == [x*exp(x/2)]
