@@ -1,6 +1,4 @@
-from sympy.combinatorics.permutations import (Permutation, josephus,
-                                              from_inversion_vector,
-                                              unrank_lex)
+from sympy.combinatorics.permutations import Permutation
 
 def test_Permutation():
     p = Permutation([2,5,1,6,3,0,4])
@@ -32,9 +30,9 @@ def test_Permutation():
     assert p.inversion_vector == [2, 4, 1, 3, 1, 0]
     assert q.inversion_vector == [3, 1, 2, 2, 0, 1]
 
-    assert from_inversion_vector(p.inversion_vector) == p
-    assert from_inversion_vector(q.inversion_vector).array_form == \
-          q.array_form
+    assert Permutation.from_inversion_vector(p.inversion_vector) == p
+    assert Permutation.from_inversion_vector(q.inversion_vector).array_form\
+           == q.array_form
 
     s = Permutation([0])
 
@@ -115,11 +113,11 @@ def test_Permutation():
     assert p.get_positional_distance(q) == 8
 
 def test_josephus():
-    assert josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
-    assert josephus(1, 5, 1).is_Identity
+    assert Permutation.josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
+    assert Permutation.josephus(1, 5, 1).is_Identity
 
 def test_unrank_lex():
-    assert unrank_lex(5, 10).rank == 10
-    assert unrank_lex(15, 225).rank == 225
-    assert unrank_lex(10, 0).is_Identity
-    assert unrank_lex(4, 23).array_form == [0, 3, 2, 1]
+    assert Permutation.unrank_lex(5, 10).rank == 10
+    assert Permutation.unrank_lex(15, 225).rank == 225
+    assert Permutation.unrank_lex(10, 0).is_Identity
+    assert Permutation.unrank_lex(4, 23).array_form == [0, 3, 2, 1]

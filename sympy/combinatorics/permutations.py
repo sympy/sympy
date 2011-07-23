@@ -165,7 +165,7 @@ class Permutation(Basic):
             val = self.inversion_vector[i] + other.inversion_vector[i]
             val = val % (self.size - i)
             result_inv.append(val)
-        return from_inversion_vector(result_inv)
+        return Permutation.from_inversion_vector(result_inv)
 
     def __sub__(self, other):
         """
@@ -194,7 +194,7 @@ class Permutation(Basic):
             val = self.inversion_vector[i] - other.inversion_vector[i]
             val = val % (self.size - i)
             result_inv.append(val)
-        return from_inversion_vector(result_inv)
+        return Permutation.from_inversion_vector(result_inv)
 
     def __mul__(self, other):
         """
@@ -698,7 +698,7 @@ class Permutation(Basic):
         >>> p.rank_trotterjohnson
         3
 
-        >>> from sympy.combinatorics.permutations import *
+        >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([2, 3, 1, 0])
         >>> a.rank_trotterjohnson
         13
@@ -727,8 +727,8 @@ class Permutation(Basic):
         distance between two permutations.
 
         Examples:
-        >>> from sympy.combinatorics.permutations import josephus
-        >>> p = josephus(3,6,1)
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation.josephus(3,6,1)
         >>> p
         Permutation([2, 5, 3, 1, 4, 0])
         >>> p.get_precedence_matrix()
@@ -786,8 +786,8 @@ class Permutation(Basic):
         matrix of p.
 
         Examples:
-        >>> from sympy.combinatorics.permutations import josephus
-        >>> p = josephus(3,6,1)
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation.josephus(3,6,1)
         >>> p.get_adjacency_matrix()
         [0, 0, 0, 0, 0, 0]
         [0, 0, 0, 0, 1, 0]
@@ -821,9 +821,9 @@ class Permutation(Basic):
         of Operational Research, 86, pp 473-490. (1999)
 
         Examples:
-        >>> from sympy.combinatorics.permutations import Permutation, josephus
+        >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([0, 3, 1, 2, 4])
-        >>> q = josephus(4, 5, 2)
+        >>> q = Permutation.josephus(4, 5, 2)
         >>> p.get_adjacency_distance(q)
         3
         >>> r = Permutation([0, 2, 1, 4, 3])
@@ -849,9 +849,9 @@ class Permutation(Basic):
         Computes the positional distance between two permutations.
 
         Examples:
-        >>> from sympy.combinatorics.permutations import Permutation, josephus
+        >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([0, 3, 1, 2, 4])
-        >>> q = josephus(4, 5, 2)
+        >>> q = Permutation.josephus(4, 5, 2)
         >>> r = Permutation([3, 1, 4, 0, 2])
         >>> p.get_positional_distance(q)
         12
@@ -864,109 +864,112 @@ class Permutation(Basic):
         other_array = other.array_form
         return sum([abs(perm_array[i] - other_array[i]) for i in xrange(self.size)])
 
-def josephus(m, n, s = 1):
-    """
-    Computes the Josephus permutation for a given number of
-    prisoners, frequency of removal and desired number of
-    survivors.
+    @classmethod
+    def josephus(self, m, n, s = 1):
+        """
+        Computes the Josephus permutation for a given number of
+        prisoners, frequency of removal and desired number of
+        survivors.
 
-    There are people standing in a circle waiting to be executed.
-    After the first person is executed, certain number of people
-    are skipped and another person is executed. Then again, people
-    are skipped and a person is executed. The elimination proceeds
-    around the circle (which is becoming smaller and smaller as the
-    executed people are removed), until only the last person
-    remains, who is given freedom.
+        There are people standing in a circle waiting to be executed.
+        After the first person is executed, certain number of people
+        are skipped and another person is executed. Then again, people
+        are skipped and a person is executed. The elimination proceeds
+        around the circle (which is becoming smaller and smaller as the
+        executed people are removed), until only the last person
+        remains, who is given freedom.
 
-    References:
-    [1] http://en.wikipedia.org/wiki/Flavius_Josephus
-    [2] http://en.wikipedia.org/wiki/Josephus_problem
+        References:
+        [1] http://en.wikipedia.org/wiki/Flavius_Josephus
+        [2] http://en.wikipedia.org/wiki/Josephus_problem
 
-    Examples:
-    >>> from sympy.combinatorics.permutations import josephus
-    >>> josephus(3, 40, 1)
-    Permutation([2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, \
-    38, 1, 6, 10, 15, 19, 24, 28, 33, 37, 3, 9, 16, 22, 30, 36, \
-    4, 13, 25, 34, 7, 21, 39, 18, 0, 31, 12, 27])
-    """
-    from collections import deque
-    m -= 1
-    if s <= 0:
-        s = 1
-    Q = deque([i for i in xrange(n)])
-    perm = []
-    while len(Q) > s:
-        for dp in xrange(m):
-            Q.append(Q.popleft())
-        perm.append(Q.popleft())
-    perm.extend(list(Q))
-    return Permutation(perm)
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.josephus(3, 40, 1)
+        Permutation([2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, \
+        38, 1, 6, 10, 15, 19, 24, 28, 33, 37, 3, 9, 16, 22, 30, 36, \
+        4, 13, 25, 34, 7, 21, 39, 18, 0, 31, 12, 27])
+        """
+        from collections import deque
+        m -= 1
+        if s <= 0:
+            s = 1
+        Q = deque([i for i in xrange(n)])
+        perm = []
+        while len(Q) > s:
+            for dp in xrange(m):
+                Q.append(Q.popleft())
+            perm.append(Q.popleft())
+        perm.extend(list(Q))
+        return Permutation(perm)
 
-def from_inversion_vector(inversion):
-    """
-    Calculates the permutation from the inversion
-    vector.
+    @classmethod
+    def from_inversion_vector(self, inversion):
+        """
+        Calculates the permutation from the inversion
+        vector.
 
-    Examples:
-    >>> from sympy.combinatorics.permutations import from_inversion_vector
-    >>> from_inversion_vector([3,2,1,0,0])
-    Permutation([3, 2, 1, 0, 4, 5])
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.from_inversion_vector([3,2,1,0,0])
+        Permutation([3, 2, 1, 0, 4, 5])
 
-    >>> from sympy.combinatorics.permutations import Permutation
-    >>> a = Permutation([3,5,1,4,2,0,7,6])
-    >>> from sympy.combinatorics.permutations import from_inversion_vector
-    >>> from_inversion_vector(a.inversion_vector) == a
-    True
-    """
-    size = len(inversion) + 1
-    N = [i for i in xrange(size)]
-    perm = []
-    try:
-        for k in xrange(size - 1):
-            val = N[inversion[k]]
-            perm.append(val)
-            N.remove(val)
-    except IndexError:
-        raise ValueError("The inversion vector is not valid")
-    perm.extend(N)
-    return Permutation(perm)
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([3,5,1,4,2,0,7,6])
+        >>> Permutation.from_inversion_vector(a.inversion_vector) == a
+        True
+        """
+        size = len(inversion) + 1
+        N = [i for i in xrange(size)]
+        perm = []
+        try:
+            for k in xrange(size - 1):
+                val = N[inversion[k]]
+                perm.append(val)
+                N.remove(val)
+        except IndexError:
+            raise ValueError("The inversion vector is not valid")
+        perm.extend(N)
+        return Permutation(perm)
 
-def random_permutation(n):
-    """
-    Generates a random permutation.
+    @classmethod
+    def random_permutation(self, n):
+        """
+        Generates a random permutation.
 
-    Uses the underlying Python psuedo-random
-    number generator.
+        Uses the underlying Python psuedo-random
+        number generator.
 
-    Examples:
-    >>> from sympy.combinatorics.permutations import random_permutation
-    >>> a = random_permutation(5)
-    >>> (a*(~a)).is_Identity
-    True
-    """
-    perm_array = [i for i in xrange(n)]
-    random.shuffle(perm_array)
-    return Permutation(perm_array)
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation.random_permutation(5)
+        >>> (a*(~a)).is_Identity
+        True
+        """
+        perm_array = [i for i in xrange(n)]
+        random.shuffle(perm_array)
+        return Permutation(perm_array)
 
-def unrank_lex(size, rank):
-    """
-    Lexicographic permutation unranking.
+    @classmethod
+    def unrank_lex(self, size, rank):
+        """
+        Lexicographic permutation unranking.
 
-    Examples:
-    >>> from sympy.combinatorics.permutations import *
-    >>> a = unrank_lex(5,10)
-    >>> a.rank
-    10
-    >>> a
-    Permutation([0, 2, 4, 1, 3])
-    """
-    perm_array = [0] * size
-    perm_array[size - 1] = 1
-    for i in xrange(size - 1):
-        d = (rank % int(factorial(i + 1))) / int(factorial(i))
-        rank = rank - d*int(factorial(i))
-        perm_array[size - i - 1] = d + 1
-        for j in xrange(size - i, size):
-            if perm_array[j] > d:
-                perm_array[j] += 1
-    return Permutation(perm_array)
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation.unrank_lex(5,10)
+        >>> a.rank
+        10
+        >>> a
+        Permutation([0, 2, 4, 1, 3])
+        """
+        perm_array = [0] * size
+        perm_array[size - 1] = 1
+        for i in xrange(size - 1):
+            d = (rank % int(factorial(i + 1))) / int(factorial(i))
+            rank = rank - d*int(factorial(i))
+            perm_array[size - i - 1] = d + 1
+            for j in xrange(size - i, size):
+                if perm_array[j] > d:
+                    perm_array[j] += 1
+        return Permutation(perm_array)
