@@ -227,14 +227,14 @@ def check_assumptions(expr, **assumptions):
                 continue
             elif test is not None:
                 return False
-        # ask() can not conclude. Try using old assumption system.
+        # ask() can't conclude. Try using old assumption system.
         # XXX: remove this once transition to new assumption system is finished.
         test = getattr(expr, 'is_' + key, None)
         if test is expected:
             continue
         elif test is not None:
             return False
-        result = None # Can not conclude, unless an other test fails.
+        result = None # Can't conclude, unless an other test fails.
     return result
 
 # Codes for guess solve strategy
@@ -346,7 +346,7 @@ def solve(f, *symbols, **flags):
                                   order 3 or greater)
                 - ``warning``, when True, will warn every time a solution can
                                not be checked, or assumptions about a variable
-                               can not be verified for a solution.
+                               can't be verified for a solution.
 
         The output varies according to the input and can be seen by example:
 
@@ -467,12 +467,15 @@ def solve(f, *symbols, **flags):
                     [(2, -4)]
 
                 If two variables (or more) don't appear in the result, the assumptions
-                can not be checked.
+                can't be checked.
                     >>> solve(z**2*x**2 - z**2*y**2/exp(x), x, y, z, warning=True)
                     <BLANKLINE>
-                        Warning: assumptions can not be checked
-                        (can not find for which variable equation was solved).
+                        Warning: assumptions can't be checked
+                        (can't find for which variable equation was solved).
                     [x*exp(x/2), -x*exp(x/2)]
+
+                Presently, assumptions aren't checked either when `solve()` input
+                involves relationals or bools.
 
        See also:
           rsolve() for solving recurrence relationships
@@ -621,10 +624,10 @@ def solve(f, *symbols, **flags):
                     solution = filtered
                 else:
                     if warn:
-                        print("\n\tWarning: assumptions can not be checked "
-                              "\n\t(can not find for which variable equation was solved).")
+                        print("\n\tWarning: assumptions can't be checked "
+                              "\n\t(cannot find for which variable equation was solved).")
             if warn and unchecked:
-                print('\n\tWarning: assumptions concerning following solution(s) can not be checked:'\
+                print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
                       + '\n\t' + ', '.join(str(s) for s in unchecked))
 
     elif type(solution) is dict:
@@ -638,7 +641,7 @@ def solve(f, *symbols, **flags):
                 break
 
         if warn and not full_check:
-            print("\n\tWarning: assumptions concerning solution can not be checked.")
+            print("\n\tWarning: assumptions concerning solution can't be checked.")
     elif isinstance(solution, (Relational, And, Or)):
         assert len(symbols) == 1
         if warn and symbols[0].assumptions0:
