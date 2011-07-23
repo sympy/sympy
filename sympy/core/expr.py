@@ -1442,7 +1442,7 @@ class Expr(Basic, EvalfMixin):
 
         which graphically looks like this::
 
-               \
+               |
               .|.         . .
              . | \      .     .
             ---+----------------------
