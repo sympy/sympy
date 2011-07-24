@@ -2301,8 +2301,10 @@ def test_groebner():
 
     F = [x*y - 2*y, 2*y**2 - x**2]
 
-    assert groebner(F, order='grevlex') == \
+    assert groebner(F, x, y, order='grevlex') == \
         [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
+    assert groebner(F, y, x, order='grevlex') == \
+        [x**3 - 2*x**2, -x**2 + 2*y**2, x*y - 2*y]
     assert groebner(F, order='grevlex', field=True) == \
         [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
 

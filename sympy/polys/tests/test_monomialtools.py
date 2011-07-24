@@ -99,6 +99,10 @@ def test_monomial_grevlex_cmp():
     assert monomial_grevlex_cmp((0,2,3), (1,2,2)) == -1
     assert monomial_grevlex_cmp((1,1,3), (1,2,2)) == -1
 
+    assert monomial_grevlex_cmp((0,1,1), (0,0,2)) == 1
+    assert monomial_grevlex_cmp((0,3,1), (2,2,1)) == -1
+
+
 def test_monomial_cmp():
     assert monomial_cmp('lex') == monomial_lex_cmp
     assert monomial_cmp('grlex') == monomial_grlex_cmp
