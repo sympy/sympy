@@ -10,6 +10,7 @@ from sympy.utilities.iterables import iterable
 
 class BlockMatrix(MatrixExpr):
     is_BlockMatrix = True
+    is_BlockDiagMatrix = False
     def __new__(cls, mat):
         if not isinstance(mat, Matrix):
             mat = Matrix(mat)
@@ -72,10 +73,19 @@ class BlockMatrix(MatrixExpr):
     def transpose(self):
         return self.eval_transpose()
 
-    def eval_inverse(self):
-        # Inverse of size one block matrix is easy
-        if len(self.mat.mat)==1:
+    def eval_inverse(self, expand=False):
+        # Inverse of one by one block matrix is easy
+        if self.blockshape==(1,1):
             mat = Matrix(1, 1, (Inverse(self.mat[0]), ))
+            return BlockMatrix(mat)
+        # Inverse of a two by two block matrix is known
+        elif expand and self.blockshape==(2,2):
+            # Cite: The Matrix Cookbook Section 9.1.3
+            A11, A12, A21, A22 = self[0,0], self[0,1], self[1,0], self[1,1]
+            C1 = A11 - A12*Inverse(A22)*A21
+            C2 = A22 - A21*Inverse(A11)*A12
+            mat = Matrix([[Inverse(C1), Inverse(-A11)*A12*Inverse(C2)],
+                [-Inverse(C2)*A21*Inverse(A11), Inverse(C2)]])
             return BlockMatrix(mat)
         else:
             raise NotImplementedError()
@@ -101,20 +111,51 @@ class BlockMatrix(MatrixExpr):
     def is_structurally_symmetric(self):
         return self.rowblocksizes == self.colblocksizes
 
-def BlockDiagMatrix(mats):
-    data_matrix = eye(len(mats))
-    for i, mat in enumerate(mats):
-        data_matrix[i,i] = mat
+class BlockDiagMatrix(BlockMatrix):
+    is_BlockDiagMatrix = True
+    def __new__(cls, *mats):
+        data_matrix = eye(len(mats))
+        for i, mat in enumerate(mats):
+            data_matrix[i,i] = mat
 
-    for r in range(len(mats)):
-        for c in range(len(mats)):
-            if r == c:
-                continue
-            n = mats[r].n
-            m = mats[c].m
-            data_matrix[r, c] = ZeroMatrix(n, m)
+        for r in range(len(mats)):
+            for c in range(len(mats)):
+                if r == c:
+                    continue
+                n = mats[r].n
+                m = mats[c].m
+                data_matrix[r, c] = ZeroMatrix(n, m)
 
-    return BlockMatrix(data_matrix)
+        shape = Tuple(*sympify(mat.shape))
+        data = Tuple(*data_matrix.mat)
+        obj = Basic.__new__(cls, data, shape, Tuple(*mats))
+        obj.mat = data_matrix
+        return obj
+
+    @property
+    def diag(self):
+        return self.args[2]
+
+    def eval_inverse(self):
+        return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
+
+    def _blockmul(self, other):
+        if  (other.is_Matrix and other.is_BlockDiagMatrix and
+                self.blockshape[1] == other.blockshape[0] and
+                self.colblocksizes == other.rowblocksizes):
+            return BlockDiagMatrix(*[a*b for a, b in zip(self.diag,other.diag)])
+        else:
+            return BlockMatrix._blockmul(self, other)
+
+    def _blockadd(self, other):
+
+        if  (other.is_Matrix and other.is_BlockDiagMatrix and
+                self.blockshape == other.blockshape and
+                self.rowblocksizes == other.rowblocksizes and
+                self.colblocksizes == other.colblocksizes):
+            return BlockDiagMatrix(*[a+b for a, b in zip(self.diag,other.diag)])
+        else:
+            return BlockMatrix._blockadd(self, other)
 
 def block_collapse(expr):
 

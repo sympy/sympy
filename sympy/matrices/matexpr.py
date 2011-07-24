@@ -66,8 +66,7 @@ class MatrixExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        raise NotImplementedError()
-        return MatMul(self, Pow(other, S.NegativeOne))
+        return MatMul(self, other**S.NegativeOne)
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):

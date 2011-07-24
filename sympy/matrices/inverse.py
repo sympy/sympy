@@ -5,13 +5,13 @@ from sympy import Basic
 class Inverse(MatPow):
     is_Inverse = True
 
-    def __new__(cls, mat):
+    def __new__(cls, mat, **kwargs):
 
         if not mat.is_Matrix:
             return mat**(-1)
 
         try:
-            return mat.eval_inverse()
+            return mat.eval_inverse(**kwargs)
         except (AttributeError, NotImplementedError):
             pass
 
@@ -23,6 +23,9 @@ class Inverse(MatPow):
 
         if mat.is_Inverse:
             return mat.arg
+
+        if mat.is_Identity:
+            return mat
 
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s"%mat)
