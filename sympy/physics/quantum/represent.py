@@ -23,7 +23,7 @@ __all__ = [
     'rep_innerproduct',
     'rep_expectation',
     'integrate_result',
-    'get_basis',
+    'get_basis_state',
     'enumerate_states'
 ]
 
@@ -133,7 +133,7 @@ def represent(expr, **options):
     format = options.get('format', 'sympy')
     if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
         options['replace_none'] = False
-        temp_basis = get_basis(expr, **options)
+        temp_basis = get_basis_state(expr, **options)
         if temp_basis is not None:
             options['basis'] = temp_basis
         try:
@@ -173,13 +173,13 @@ def represent(expr, **options):
     elif isinstance(expr, Dagger):
         return Dagger(represent(expr.args[0], **options))
     elif isinstance(expr, Commutator):
-        A = represent(expr.args[0], **options)
-        B = represent(expr.args[1], **options)
-        return A*B - B*A
+        A = expr.args[0]
+        B = expr.args[1]
+        return represent(A*B, **options) - represent(B*A, **options)
     elif isinstance(expr, AntiCommutator):
-        A = represent(expr.args[0], **options)
-        B = represent(expr.args[1], **options)
-        return A*B + B*A
+        A = expr.args[0]
+        B = expr.args[1]
+        return represent(A*B, **options) + represent(B*A, **options)
     elif isinstance(expr, InnerProduct):
         return represent(Mul(expr.bra,expr.ket), **options)
     elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
@@ -255,7 +255,7 @@ def rep_innerproduct(expr, **options):
     if not isinstance(expr, (KetBase, BraBase)):
         raise TypeError("expr passed is not a Bra or Ket")
 
-    basis = get_basis(expr, **options)
+    basis = get_basis_state(expr, **options)
 
     if not isinstance(basis, StateBase):
         raise NotImplementedError("Can't form this representation!")
@@ -308,7 +308,7 @@ def rep_expectation(expr, **options):
     if not isinstance(expr, Operator):
         raise TypeError("The passed expression is not an operator")
 
-    basis_state = get_basis(expr, **options)
+    basis_state = get_basis_state(expr, **options)
 
     if basis_state is None or not isinstance(basis_state, StateBase):
         raise NotImplementedError("Could not get basis kets for this operator")
@@ -366,9 +366,9 @@ def integrate_result(orig_expr, result, **options):
     options['replace_none'] = True
     if not "basis" in options:
         arg = orig_expr.args[-1]
-        options["basis"] = get_basis(arg, **options)
+        options["basis"] = get_basis_state(arg, **options)
     elif not isinstance(options["basis"], StateBase):
-        options["basis"] = get_basis(orig_expr, **options)
+        options["basis"] = get_basis_state(orig_expr, **options)
 
     basis = options.pop("basis", None)
 
@@ -393,7 +393,7 @@ def integrate_result(orig_expr, result, **options):
 
     return result
 
-def get_basis(expr, **options):
+def get_basis_state(expr, **options):
     """
     Returns a basis state instance corresponding to the basis
     specified in options=s. If no basis is specified, the function
@@ -429,17 +429,17 @@ def get_basis(expr, **options):
     Examples
     ========
 
-    >>> from sympy.physics.quantum.represent import get_basis
+    >>> from sympy.physics.quantum.represent import get_basis_state
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
     >>> x = XKet()
     >>> X = XOp()
-    >>> get_basis(x)
+    >>> get_basis_state(x)
     |x>
-    >>> get_basis(X)
+    >>> get_basis_state(X)
     |x>
-    >>> get_basis(x, basis=PxOp())
+    >>> get_basis_state(x, basis=PxOp())
     |px>
-    >>> get_basis(x, basis=PxKet)
+    >>> get_basis_state(x, basis=PxKet)
     |px>
 
     """
