@@ -1,7 +1,7 @@
 """Polynomial manipulation algorithms and algebraic objects. """
 
 from polytools import (
-    Poly, poly,
+    Poly, PurePoly, poly,
     poly_from_expr,
     parallel_poly_from_expr,
     degree, degree_list,
@@ -22,13 +22,18 @@ from polytools import (
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
     intervals, refine_root, count_roots,
-    real_roots, nroots,
+    real_roots, nroots, ground_roots,
+    nth_power_roots_poly,
     cancel,
     reduced, groebner,
 )
 
 from polyfuncs import (
-    symmetrize, horner, interpolate,
+    symmetrize, horner, interpolate, viete,
+)
+
+from rationaltools import (
+    together,
 )
 
 from polyerrors import (

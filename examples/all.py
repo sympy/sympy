@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """all.py
 
 Runs all the examples for testing purposes and reports success and failure

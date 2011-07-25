@@ -95,10 +95,7 @@ class Domain(object):
                     return K1(a)
 
                 if K1.is_Numerical and getattr(a, 'is_ground', False):
-                    r = a.rep
-                    for i in xrange(a.lev + 1):
-                        r = r[0]
-                    return K1.convert(r)
+                    return K1.convert(a.LC())
 
                 a = sympify(a)
 
@@ -167,7 +164,7 @@ class Domain(object):
         return None
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return None
 
     def from_RR_mpmath(K1, a, K0):
@@ -269,7 +266,7 @@ class Domain(object):
                         else:
                             return K1.__class__(K1.dom, *gens)
             elif K1.is_Algebraic:
-                raise UnificationFailed("can't unify %s with %s" % (K0, K1))
+                return K0.__class__(K1.unify(K0.dom), *K0.gens)
             else:
                 if K0.has_Field:
                     if K0.dom == K1:
@@ -281,7 +278,7 @@ class Domain(object):
                         return K0.__class__(K1, *K0.gens)
         elif K0.is_Algebraic:
             if K1.is_Composite:
-                raise UnificationFailed("can't unify %s with %s" % (K0, K1))
+                return K1.__class__(K0.unify(K1.dom), *K1.gens)
             elif K1.is_Algebraic:
                 raise NotImplementedError("unification of different algebraic extensions")
             elif K1.is_ZZ or K1.is_QQ:
@@ -492,4 +489,3 @@ class Domain(object):
     def characteristic(self):
         """Return the characteristic of this domain. """
         raise NotImplementedError('characteristic()')
-

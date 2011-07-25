@@ -30,7 +30,7 @@ class AskCommutativeHandler(CommonHandler):
     @staticmethod
     def Basic(expr, assumptions):
         for arg in expr.args:
-            if not ask(arg, Q.commutative, assumptions):
+            if not ask(Q.commutative(arg), assumptions):
                 return False
         return True
 
@@ -50,12 +50,12 @@ class TautologicalHandler(AskHandler):
         return expr
 
     @staticmethod
-    def Assume(expr, assumptions):
-        return ask(expr.expr, expr.key, assumptions)
+    def AppliedPredicate(expr, assumptions):
+        return ask(expr, assumptions)
 
     @staticmethod
     def Not(expr, assumptions):
-        value = ask(expr.args[0], Q.is_true, assumptions=assumptions)
+        value = ask(expr.args[0], assumptions=assumptions)
         if value in (True, False):
             return not value
         else:
@@ -66,7 +66,7 @@ class TautologicalHandler(AskHandler):
     def Or(expr, assumptions):
         result = False
         for arg in expr.args:
-            p = ask(arg, Q.is_true, assumptions=assumptions)
+            p = ask(arg, assumptions=assumptions)
             if p == True:
                 return True
             if p == None:
@@ -77,7 +77,7 @@ class TautologicalHandler(AskHandler):
     def And(expr, assumptions):
         result = True
         for arg in expr.args:
-            p = ask(arg, Q.is_true, assumptions=assumptions)
+            p = ask(arg, assumptions=assumptions)
             if p == False:
                 return False
             if p == None:
@@ -87,15 +87,15 @@ class TautologicalHandler(AskHandler):
     @staticmethod
     def Implies(expr, assumptions):
         p, q = expr.args
-        return ask(~p | q, Q.is_true, assumptions=assumptions)
+        return ask(~p | q, assumptions=assumptions)
 
     @staticmethod
     def Equivalent(expr, assumptions):
         p, q = expr.args
-        pt = ask(p, Q.is_true, assumptions=assumptions)
+        pt = ask(p, assumptions=assumptions)
         if pt == None:
             return None
-        qt = ask(q, Q.is_true, assumptions=assumptions)
+        qt = ask(q, assumptions=assumptions)
         if qt == None:
             return None
         return pt == qt

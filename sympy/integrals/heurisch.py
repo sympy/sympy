@@ -1,12 +1,12 @@
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.symbol import Symbol, Wild
-from sympy.core.basic import S, C, sympify
-from sympy.core.numbers import Rational
+from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.basic import C, sympify
+from sympy.core.numbers import Rational, I, pi
+from sympy.core.singleton import S
 
-from sympy.functions import exp, sin , cos , tan , cot , asin
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh
-
+from sympy.functions import exp, sin , cos , tan , cot , asin, acos, atan
+from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
@@ -15,20 +15,19 @@ from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
 from sympy.polys.polyroots import root_factors
 
-from sympy.utilities.iterables import make_list
-
 def components(f, x):
-    """Returns a set of all functional components of the given expression
-       which includes symbols, function applications and compositions and
-       non-integer powers. Fractional powers are collected with with
-       minimal, positive exponents.
+    """
+    Returns a set of all functional components of the given expression
+    which includes symbols, function applications and compositions and
+    non-integer powers. Fractional powers are collected with with
+    minimal, positive exponents.
 
-       >>> from sympy import cos, sin
-       >>> from sympy.abc import x, y
-       >>> from sympy.integrals.heurisch import components
+    >>> from sympy import cos, sin
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.heurisch import components
 
-       >>> components(sin(x)*cos(x)**2, x)
-       set([x, cos(x), sin(x)])
+    >>> components(sin(x)*cos(x)**2, x)
+    set([x, sin(x), cos(x)])
 
     """
     result = set()
@@ -68,77 +67,78 @@ def _symbols(name, n):
         _symbols_cache[name] = lsyms
 
     while len(lsyms) < n:
-        lsyms.append( Symbol('%s%i' % (name, len(lsyms)), dummy=True) )
+        lsyms.append( Dummy('%s%i' % (name, len(lsyms))) )
 
     return lsyms[:n]
 
 
 def heurisch(f, x, **kwargs):
-    """Compute indefinite integral using heuristic Risch algorithm.
+    """
+    Compute indefinite integral using heuristic Risch algorithm.
 
-       This is a heuristic approach to indefinite integration in finite
-       terms using the extended heuristic (parallel) Risch algorithm, based
-       on Manuel Bronstein's "Poor Man's Integrator".
+    This is a heuristic approach to indefinite integration in finite
+    terms using the extended heuristic (parallel) Risch algorithm, based
+    on Manuel Bronstein's "Poor Man's Integrator".
 
-       The algorithm supports various classes of functions including
-       transcendental elementary or special functions like Airy,
-       Bessel, Whittaker and Lambert.
+    The algorithm supports various classes of functions including
+    transcendental elementary or special functions like Airy,
+    Bessel, Whittaker and Lambert.
 
-       Note that this algorithm is not a decision procedure. If it isn't
-       able to compute the antiderivative for a given function, then this is
-       not a proof that such a functions does not exist.  One should use
-       recursive Risch algorithm in such case.  It's an open question if
-       this algorithm can be made a full decision procedure.
+    Note that this algorithm is not a decision procedure. If it isn't
+    able to compute the antiderivative for a given function, then this is
+    not a proof that such a functions does not exist.  One should use
+    recursive Risch algorithm in such case.  It's an open question if
+    this algorithm can be made a full decision procedure.
 
-       This is an internal integrator procedure. You should use toplevel
-       'integrate' function in most cases,  as this procedure needs some
-       preprocessing steps and otherwise may fail.
+    This is an internal integrator procedure. You should use toplevel
+    'integrate' function in most cases,  as this procedure needs some
+    preprocessing steps and otherwise may fail.
 
-       Specification
-       ============
+    Specification
+    ============
 
-         heurisch(f, x, rewrite=False, hints=None)
+     heurisch(f, x, rewrite=False, hints=None)
 
-           where
-             f : expression
-             x : symbol
+       where
+         f : expression
+         x : symbol
 
-             rewrite -> force rewrite 'f' in terms of 'tan' and 'tanh'
-             hints   -> a list of functions that may appear in anti-derivate
+         rewrite -> force rewrite 'f' in terms of 'tan' and 'tanh'
+         hints   -> a list of functions that may appear in anti-derivate
 
-              - hints = None          --> no suggestions at all
-              - hints = [ ]           --> try to figure out
-              - hints = [f1, ..., fn] --> we know better
+          - hints = None          --> no suggestions at all
+          - hints = [ ]           --> try to figure out
+          - hints = [f1, ..., fn] --> we know better
 
-       Examples
-       ========
+    Examples
+    ========
 
-       >>> from sympy import tan
-       >>> from sympy.integrals.heurisch import heurisch
-       >>> from sympy.abc import x, y
+    >>> from sympy import tan
+    >>> from sympy.integrals.heurisch import heurisch
+    >>> from sympy.abc import x, y
 
-       >>> heurisch(y*tan(x), x)
-       y*log(1 + tan(x)**2)/2
+    >>> heurisch(y*tan(x), x)
+    y*log(tan(x)**2 + 1)/2
 
-       See Manuel Bronstein's "Poor Man's Integrator":
+    See Manuel Bronstein's "Poor Man's Integrator":
 
-       [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
-       For more information on the implemented algorithm refer to:
+    For more information on the implemented algorithm refer to:
 
-       [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
-           Method and its Implementation in Maple, Proceedings of
-           ISSAC'89, ACM Press, 212-217.
+    [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
+       Method and its Implementation in Maple, Proceedings of
+       ISSAC'89, ACM Press, 212-217.
 
-       [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
-           Proceedings of EUROCAM'82, LNCS 144, Springer, 144-157.
+    [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
+       Proceedings of EUROCAM'82, LNCS 144, Springer, 144-157.
 
-       [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
-           Use of Tangents, SIGSAM Bulletin 16 (1982), 3-6.
+    [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
+       Use of Tangents, SIGSAM Bulletin 16 (1982), 3-6.
 
-       [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
-           Algorithm (II), ACM Transactions on Mathematical
-           Software 11 (1985), 356-362.
+    [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
+       Algorithm (II), ACM Transactions on Mathematical
+       Software 11 (1985), 356-362.
 
     """
     f = sympify(f)
@@ -176,6 +176,7 @@ def heurisch(f, x, **kwargs):
         if not hints:
             a = Wild('a', exclude=[x])
             b = Wild('b', exclude=[x])
+            c = Wild('c', exclude=[x])
 
             for g in set(terms):
                 if g.is_Function:
@@ -184,6 +185,25 @@ def heurisch(f, x, **kwargs):
 
                         if M is not None:
                             terms.add(erf(sqrt(-M[a])*x))
+
+                        M = g.args[0].match(a*x**2 + b*x + c)
+
+                        if M is not None:
+                            if M[a].is_positive:
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                          erf(-sqrt(-M[a])*x + M[b]/(2*sqrt(-M[a]))))
+                            elif M[a].is_negative:
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                          erf(sqrt(-M[a])*x - M[b]/(2*sqrt(-M[a]))))
+
+                        M = g.args[0].match(a*log(x)**2)
+
+                        if M is not None:
+                            if M[a].is_positive:
+                                terms.add(-I*erf(I*(sqrt(M[a])*log(x)+1/(2*sqrt(M[a])))))
+                            if M[a].is_negative:
+                                terms.add(erf(sqrt(-M[a])*log(x)-1/(2*sqrt(-M[a]))))
+
                 elif g.is_Pow:
                     if g.exp.is_Rational and g.exp.q == 2:
                         M = g.base.match(a*x**2 + b)
@@ -193,6 +213,16 @@ def heurisch(f, x, **kwargs):
                                 terms.add(asinh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
                                 terms.add(asin(sqrt(-M[a]/M[b])*x))
+
+                        M = g.base.match(a*x**2 - b)
+
+                        if M is not None and M[b].is_positive:
+                            if M[a].is_positive:
+                                terms.add(acosh(sqrt(M[a]/M[b])*x))
+                            elif M[a].is_negative:
+                                terms.add((-M[b]/2*sqrt(-M[a])*\
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2-M[b]))))
+
         else:
             terms |= set(hints)
 
@@ -227,24 +257,24 @@ def heurisch(f, x, **kwargs):
 
     def deflation(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
             if derivation(p) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
-                return deflation(c)*gcd(q, q.diff(y)).as_basic()
+                return deflation(c)*gcd(q, q.diff(y)).as_expr()
         else:
             return p
 
     def splitter(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
             if derivation(y) is not S.Zero:
                 c, q = p.as_poly(y).primitive()
 
-                q = q.as_basic()
+                q = q.as_expr()
 
                 h = gcd(q, derivation(q), y)
                 s = quo(h, gcd(q, q.diff(y), y), y)
@@ -282,9 +312,12 @@ def heurisch(f, x, **kwargs):
     polys = list(v_split) + [ u_split[0] ] + special.keys()
 
     s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
-    a, b, c = [ p.as_poly(*V).total_degree() for p in [s, P, Q] ]
+    polified = [ p.as_poly(*V) for p in [s, P, Q] ]
+    if None in polified:
+        return
+    a, b, c = [ p.total_degree() for p in polified ]
 
-    poly_denom = (s * v_split[0] * deflation(v_split[1])).as_basic()
+    poly_denom = (s * v_split[0] * deflation(v_split[1])).as_expr()
 
     def exponent(g):
         if g.is_Pow:
@@ -353,11 +386,11 @@ def heurisch(f, x, **kwargs):
 
         h = F - derivation(candidate) / denom
 
-        numer = h.as_numer_denom()[0].expand()
+        numer = h.as_numer_denom()[0].expand(force=True)
 
         equations = {}
 
-        for term in make_list(numer, Add):
+        for term in Add.make_args(numer):
             coeff, dependent = term.as_independent(*V)
 
             if dependent in equations:
@@ -390,7 +423,7 @@ def heurisch(f, x, **kwargs):
                 antideriv = antideriv.subs(coeff, S.Zero)
 
         antideriv = antideriv.subs(rev_mapping)
-        antideriv = cancel(antideriv).expand()
+        antideriv = cancel(antideriv).expand(force=True)
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]

@@ -17,10 +17,23 @@ import and declare our first Matrix object:
     [1  0]
     [    ]
     [0  1]
+    >>> Matrix((
+    ...   Matrix((
+    ...     (1, 0, 0),
+    ...     (0, 0, 0)
+    ...   )),
+    ...   (0, 0, -1)
+    ... ))
+    [1  0  0 ]
+    [        ]
+    [0  0  0 ]
+    [        ]
+    [0  0  -1]
 
 This is the standard manner one creates a matrix, i.e. with a list of
-appropriately-sizes lists. SymPy also supports more advanced methods of matrix
-creation including a single list of values and dimension inputs:
+appropriately-sizes lists and/or matrices. SymPy also supports more advanced
+methods of matrix creation including a single list of values and dimension
+inputs:
 
     >>> Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     [1  2  3]
@@ -435,17 +448,17 @@ Let's take a look at the vectors:
     [-1551/706]
     [ -423/706]
     >>> for i in out2:
-    ...      print i #doctest: +SKIP
+    ...      print i
     ...
-    [2*(1/38)**(1/2)]
-    [3*(1/38)**(1/2)]
-    [5*(1/38)**(1/2)]
-    [(23/19)*19**(1/2)*(1/353)**(1/2)]
-    [(63/19)*19**(1/2)*(1/353)**(1/2)]
-    [ -47/19*19**(1/2)*(1/353)**(1/2)]
-    [(12/353)*706**(1/2)]
-    [ -11/706*706**(1/2)]
-    [  -3/706*706**(1/2)]
+    [  38**(1/2)/19]
+    [3*38**(1/2)/38]
+    [5*38**(1/2)/38]
+    [ 23*6707**(1/2)/6707]
+    [ 63*6707**(1/2)/6707]
+    [-47*6707**(1/2)/6707]
+    [ 12*706**(1/2)/353]
+    [-11*706**(1/2)/706]
+    [ -3*706**(1/2)/706]
 
 We can spot-check their orthogonality with dot() and their normality with
 norm():

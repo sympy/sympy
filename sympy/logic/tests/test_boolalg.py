@@ -1,6 +1,6 @@
 from sympy.logic.boolalg import to_cnf, eliminate_implications, distribute_and_over_or, \
-    compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean
-from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent
+    compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean, is_cnf
+from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, ITE
 from sympy.utilities.pytest import raises, XFAIL
 
 def test_overloading():
@@ -157,7 +157,7 @@ see http://en.wikipedia.org/wiki/Boolean_algebra_(structure)
 """
 
 def test_commutative():
-    """Test for commutativity of And and Or"""
+    """Test for commutivity of And and Or"""
     A, B = map(Boolean, symbols('A,B'))
 
     assert A & B == B & A
@@ -194,21 +194,19 @@ def test_eliminate_implications():
 
 def test_conjuncts():
     A, B, C = map(Boolean, symbols('A,B,C'))
-
-    assert set(conjuncts(A & B & C)) == set([A, B, C])
-    assert set(conjuncts((A | B) & C)) == set([A | B, C])
-    assert conjuncts(A) == [A]
-    assert conjuncts(True) == [True]
-    assert conjuncts(False) == [False]
+    assert conjuncts(A & B & C) == set([A, B, C])
+    assert conjuncts((A | B) & C) == set([A | B, C])
+    assert conjuncts(A) == set([A])
+    assert conjuncts(True) == set([True])
+    assert conjuncts(False) == set([False])
 
 def test_disjuncts():
     A, B, C = map(Boolean, symbols('A,B,C'))
-
-    assert set(disjuncts(A | B | C)) == set([A, B, C])
-    assert disjuncts((A | B) & C) == [(A | B) & C]
-    assert disjuncts(A) == [A]
-    assert disjuncts(True) == [True]
-    assert disjuncts(False) == [False]
+    assert disjuncts(A | B | C) == set([A, B, C])
+    assert disjuncts((A | B) & C) == set([(A | B) & C])
+    assert disjuncts(A) == set([A])
+    assert disjuncts(True) == set([True])
+    assert disjuncts(False) == set([False])
 
 def test_distribute():
     A, B, C = map(Boolean, symbols('A,B,C'))
@@ -246,8 +244,24 @@ def test_to_int_repr():
     assert sorted_recursive(to_int_repr([x | y, z | ~x], [x, y, z])) == \
                                             sorted_recursive([[1, 2], [3, -1]])
 
-def test_fuzzy_not():
-    assert fuzzy_not(False) == True
-    assert fuzzy_not(True) == False
-    assert fuzzy_not(None) == None
+def test_is_cnf():
+    x, y, z = symbols('x,y,z')
+    assert is_cnf(x | y | z) == True
+    assert is_cnf(x & y & z) == True
+    assert is_cnf((x | y) & z) == True
+    assert is_cnf((x & y) | z) == False
 
+def test_ITE():
+    A, B, C = map(Boolean, symbols('A,B,C'))
+    assert ITE(True, False, True) == False
+    assert ITE(True, True, False) == True
+    assert ITE(False, True, False) == False
+    assert ITE(False, False, True) == True
+
+    A = True
+    assert ITE(A, B, C) == B
+    A = False
+    assert ITE(A, B, C) == C
+    B = True
+    assert ITE(And(A, B), B, C) == C
+    assert ITE(Or(A, False), And(B, True), False) == False

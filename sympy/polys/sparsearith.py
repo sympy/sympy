@@ -143,4 +143,3 @@ def sup_reduced(f, G, K):
 
 def smp_reduced(f, G, u, ord, K):
     pass
-

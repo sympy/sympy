@@ -1,8 +1,10 @@
 from sympy import (
-    Symbol, Set, Union, Interval, oo, S, Inequality,
-    max_, min_, raises, And, Or, Eq, Le, Lt, Real,
+    Symbol, Set, Union, Interval, oo, S,
+    Inequality, Max, Min, And, Or, Eq, Le, Lt, Float,
 )
 from sympy.mpmath import mpi
+
+from sympy.utilities.pytest import raises
 
 def test_interval_arguments():
     assert Interval(0, oo) == Interval(0, oo, False, True)
@@ -27,8 +29,8 @@ def test_interval_arguments():
 def test_interval_symbolic_end_points():
     a = Symbol('a', real=True)
 
-    assert Union(Interval(0, a), Interval(0, 3)).sup == max_(a, 3)
-    assert Union(Interval(a, 0), Interval(-3, 0)).inf == min_(-3, a)
+    assert Union(Interval(0, a), Interval(0, 3)).sup == Max(a, 3)
+    assert Union(Interval(a, 0), Interval(-3, 0)).inf == Min(-3, a)
 
     assert Interval(0, a).contains(1) == Inequality(1, a)
 
@@ -191,15 +193,15 @@ def test_Interval_is_point():
 def test_Interval_is_left_unbounded():
     assert Interval(3, 4).is_left_unbounded == False
     assert Interval(-oo, 3).is_left_unbounded == True
-    assert Interval(Real("-inf"), 3).is_left_unbounded == True
+    assert Interval(Float("-inf"), 3).is_left_unbounded == True
 
 def test_Interval_is_right_unbounded():
     assert Interval(3, 4).is_right_unbounded == False
     assert Interval(3, oo).is_right_unbounded == True
-    assert Interval(3, Real("+inf")).is_right_unbounded == True
+    assert Interval(3, Float("+inf")).is_right_unbounded == True
 
 def test_Interval_as_relational():
-    x = Symbol('x', real=True)
+    x = Symbol('x')
 
     assert Interval(3, 3).as_relational(x) == Eq(x, 3)
 
@@ -215,6 +217,4 @@ def test_Interval_as_relational():
     assert Interval(-2, oo, left_open=True).as_relational(x) == Lt(-2, x)
 
     assert Interval(-oo, oo).as_relational(x) == True
-
-    raises(ValueError, "Interval(-1, 2).as_relational(Symbol('x'))")
 

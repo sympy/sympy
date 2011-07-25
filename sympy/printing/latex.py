@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Basic, Add, Wild, var
+from sympy.core import S, C, Basic, Add, Mul, Wild, var
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
@@ -18,10 +18,8 @@ class LatexPrinter(Printer):
 
     _default_settings = {
         "order": None,
-        "descending": False,
         "mode": "plain",
         "itex": False,
-        "mainvar": None,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "mul_symbol": None,
@@ -31,13 +29,13 @@ class LatexPrinter(Printer):
     }
 
     def __init__(self, settings=None):
-        if settings is not None and settings.has_key('inline') and not settings['inline']:
+        if settings is not None and 'inline' in settings and not settings['inline']:
             # Change to "good" defaults for inline=False
             settings['mat_str'] = 'bmatrix'
             settings['mat_delim'] = None
         Printer.__init__(self, settings)
 
-        if self._settings.has_key('inline'):
+        if ('inline') in self._settings:
             warnings.warn("'inline' is deprecated, please use 'mode'. "
                 "'mode' can be one of 'inline', 'plain', 'equation', or "
                 "'equation*'.")
@@ -45,12 +43,12 @@ class LatexPrinter(Printer):
                 self._settings['mode'] = 'inline'
             else:
                 self._settings['mode'] = 'equation*'
-        if self._settings.has_key('mode'):
+        if 'mode' in self._settings:
             valid_modes = ['inline', 'plain', 'equation', \
                             'equation*']
             if self._settings['mode'] not in valid_modes:
-                raise ValueError, "'mode' must be one of 'inline', 'plain', " \
-                    "'equation' or 'equation*'"
+                raise ValueError("'mode' must be one of 'inline', 'plain', " \
+                    "'equation' or 'equation*'")
 
         mul_symbol_table = {
             None : r" ",
@@ -124,62 +122,30 @@ class LatexPrinter(Printer):
         else:
             return expr
 
-    def _print_Add(self, expr):
-        args = list(expr.args)
+    def _print_Add(self, expr, order=None):
+        terms = self._as_ordered_terms(expr, order=order)
+        tex = self._print(terms[0])
 
-        if self._settings['mainvar'] is not None:
-            mainvar = self._settings['mainvar']
-            if type(mainvar) == str:
-                mainvar = var(mainvar)
+        for term in terms[1:]:
+            coeff = term.as_coeff_mul()[0]
 
-            def compare_exponents(a, b):
-                p1, p2 = Wild("p1"), Wild("p2")
-                r_a = a.match(p1 * mainvar**p2)
-                r_b = b.match(p1 * mainvar**p2)
-                if r_a is None and r_b is None:
-                    c = Basic._compare_pretty(a,b)
-                    return c
-                elif r_a is not None:
-                    if r_b is None:
-                        return 1
-                    else:
-                        c = Basic.compare(r_a[p2], r_b[p2])
-                        if c!=0:
-                            return c
-                        else:
-                            c = Basic._compare_pretty(a,b)
-                            return c
-                elif r_b is not None and r_a is None:
-                    return -1
+            if coeff >= 0:
+                tex += " +"
 
-            args.sort(compare_exponents)
-        else:
-            args.sort(Basic._compare_pretty)
-        if self._settings['descending']:
-            args.reverse()
-
-        tex = str(self._print(args[0]))
-
-        for term in args[1:]:
-            coeff = term.as_coeff_terms()[0]
-
-            if coeff.is_negative:
-                tex += r" %s" % self._print(term)
-            else:
-                tex += r" + %s" % self._print(term)
+            tex += " " + self._print(term)
 
         return tex
 
-    def _print_Real(self, expr):
+    def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
         str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
-        seperator = r" \times "
+        separator = r" \times "
 
         if self._settings['mul_symbol'] is not None:
-            seperator = self._settings['mul_symbol_latex']
+            separator = self._settings['mul_symbol_latex']
 
         if 'e' in str_real:
             (mant, exp) = str_real.split('e')
@@ -187,16 +153,16 @@ class LatexPrinter(Printer):
             if exp[0] == '+':
                 exp = exp[1:]
 
-            return r"%s%s10^{%s}" % (mant, seperator, exp)
+            return r"%s%s10^{%s}" % (mant, separator, exp)
         elif str_real == "+inf":
             return r"\infty"
         elif str_real == "-inf":
-            return r"- \intfy"
+            return r"- \infty"
         else:
             return str_real
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_terms()
+        coeff, tail = expr.as_coeff_Mul()
 
         if not coeff.is_negative:
             tex = ""
@@ -204,15 +170,21 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(C.Mul(*terms))
-        seperator = self._settings['mul_symbol_latex']
+        numer, denom = fraction(tail)
+        separator = self._settings['mul_symbol_latex']
 
-        def convert(terms):
-            if not terms.is_Mul:
-                return str(self._print(terms))
+        def convert(expr):
+            if not expr.is_Mul:
+                return str(self._print(expr))
             else:
                 _tex = last_term_tex = ""
-                for term in terms.args:
+
+                if self.order != 'old':
+                    args = expr.as_ordered_factors()
+                else:
+                    args = expr.args
+
+                for term in args:
                     pretty = self._print(term)
 
                     if term.is_Add:
@@ -222,12 +194,12 @@ class LatexPrinter(Printer):
 
                     # between two digits, \times must always be used,
                     # to avoid confusion
-                    if seperator == " " and \
+                    if separator == " " and \
                             re.search("[0-9][} ]*$", last_term_tex) and \
                             re.match("[{ ]*[-+0-9]", term_tex):
                         _tex += r" \times "
                     elif _tex:
-                        _tex += seperator
+                        _tex += separator
 
                     _tex += term_tex
                     last_term_tex = term_tex
@@ -244,11 +216,11 @@ class LatexPrinter(Printer):
 
                 # between two digits, \times must always be used, to avoid
                 # confusion
-                if seperator == " " and re.search("[0-9][} ]*$", tex) and \
+                if separator == " " and re.search("[0-9][} ]*$", tex) and \
                         re.match("[{ ]*[-+0-9]", _tex):
                     tex +=  r" \times " + _tex
                 else:
-                    tex += seperator + _tex
+                    tex += separator + _tex
             else:
                 tex += _tex
 
@@ -340,16 +312,16 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Derivative(self, expr):
-        dim = len(expr.symbols)
+        dim = len(expr.variables)
 
         if dim == 1:
             tex = r"\frac{\partial}{\partial %s}" % \
-                self._print(expr.symbols[0])
+                self._print(expr.variables[0])
         else:
             multiplicity, i, tex = [], 1, ""
-            current = expr.symbols[0]
+            current = expr.variables[0]
 
-            for symbol in expr.symbols[1:]:
+            for symbol in expr.variables[1:]:
                 if symbol == current:
                     i = i + 1
                 else:
@@ -374,16 +346,20 @@ class LatexPrinter(Printer):
     def _print_Integral(self, expr):
         tex, symbols = "", []
 
-        for symbol, limits in reversed(expr.limits):
+        for lim in reversed(expr.limits):
+            symbol = lim[0]
             tex += r"\int"
 
-            if limits is not None:
+            if len(lim) > 1:
                 if self._settings['mode'] in ['equation','equation*'] \
                    and not self._settings['itex']:
                     tex += r"\limits"
 
-                tex += "_{%s}^{%s}" % (self._print(limits[0]),
-                                       self._print(limits[1]))
+                if len(lim) == 3:
+                    tex += "_{%s}^{%s}" % (self._print(lim[1]),
+                                           self._print(lim[2]))
+                if len(lim) == 2:
+                    tex += "^{%s}" % (self._print(lim[1]))
 
             symbols.insert(0, "d%s" % self._print(symbol))
 
@@ -452,7 +428,7 @@ class LatexPrinter(Printer):
             return name % ",".join(args)
 
     def _print_Poly(self, expr):
-        return self._print(expr.as_basic())
+        return self._print(expr.as_expr())
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
@@ -470,7 +446,7 @@ class LatexPrinter(Printer):
         else:
             return tex
 
-    def _print_abs(self, expr, exp=None):
+    def _print_Abs(self, expr, exp=None):
         tex = r"\lvert{%s}\rvert" % self._print(expr.args[0])
 
         if exp is not None:
@@ -514,7 +490,7 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{\Gamma}%s" % tex
 
-    def _print_Factorial(self, expr, exp=None):
+    def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
         if self._needs_brackets(x):
             tex = r"\left(%s\right)!" % self._print(x)
@@ -526,7 +502,7 @@ class LatexPrinter(Printer):
         else:
             return tex
 
-    def _print_Binomial(self, expr, exp=None):
+    def _print_binomial(self, expr, exp=None):
         tex = r"{{%s}\choose{%s}}" % (self._print(expr[0]),
                                       self._print(expr[1]))
 
@@ -779,3 +755,4 @@ def latex(expr, **settings):
 def print_latex(expr, **settings):
     """Prints LaTeX representation of the given expression."""
     print latex(expr, **settings)
+

@@ -28,16 +28,48 @@ Elliptic arguments
 .. autofunction:: mpmath.taufrom(**kwargs)
 
 
-Elliptic integrals
+Legendre elliptic integrals
 ...................................................
 
 :func:`ellipk`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.ellipk(x, **kwargs)
+.. autofunction:: mpmath.ellipk(m, **kwargs)
+
+:func:`ellipf`
+^^^^^^^^^^^^^^
+.. autofunction:: mpmath.ellipf(phi, m)
 
 :func:`ellipe`
 ^^^^^^^^^^^^^^
-.. autofunction:: mpmath.ellipe(x, **kwargs)
+.. autofunction:: mpmath.ellipe(*args)
+
+:func:`ellippi`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.ellippi(*args)
+
+
+Carlson symmetric elliptic integrals
+...................................................
+
+:func:`elliprf`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.elliprf(x, y, z)
+
+:func:`elliprc`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.elliprc(x, y, pv=True)
+
+:func:`elliprj`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.elliprj(x, y, z, p)
+
+:func:`elliprd`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.elliprd(x, y, z)
+
+:func:`elliprg`
+^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.elliprg(x, y, z)
 
 
 Jacobi theta functions

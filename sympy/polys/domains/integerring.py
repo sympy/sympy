@@ -22,6 +22,10 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         from sympy.polys.domains import QQ
         return QQ
 
+    def algebraic_field(self, *extension):
+        """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
+        return self.get_field().algebraic_field(*extension)
+
     def from_AlgebraicField(K1, a, K0):
         """Convert a `ANP` object to `dtype`. """
         if a.is_ground:
@@ -29,5 +33,4 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
 
     def log(self, a, b):
         """Returns b-base logarithm of `a`. """
-        return self.dtype(math.log(a, b))
-
+        return self.dtype(math.log(int(a), b))

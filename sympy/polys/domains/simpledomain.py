@@ -10,4 +10,3 @@ class SimpleDomain(Domain):
     def inject(self, *gens):
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
-

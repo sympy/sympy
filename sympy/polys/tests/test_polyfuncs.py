@@ -1,8 +1,15 @@
-"""Tests for high--level polynomials manipulation functions. """
+"""Tests for high-level polynomials manipulation functions. """
 
 from sympy.polys.polyfuncs import (
-    symmetrize, horner, interpolate,
+    symmetrize, horner, interpolate, viete,
 )
+
+from sympy.polys.polyerrors import (
+    MultivariatePolynomialError,
+)
+
+from sympy import symbols
+from sympy.utilities.pytest import raises
 
 from sympy.abc import a, b, c, d, e, x, y, z
 
@@ -13,6 +20,9 @@ def test_symmetrize():
     s1 = x + y + z
     s2 = x*y + x*z + y*z
     s3 = x*y*z
+
+    assert symmetrize(1) == (1, 0)
+    assert symmetrize(1, formal=True) == (1, 0, [])
 
     assert symmetrize(x) == (x, 0)
     assert symmetrize(x + 1) == (x + 1, 0)
@@ -29,7 +39,17 @@ def test_symmetrize():
     assert symmetrize(x**2 - y**2) == (-2*x*y + (x + y)**2, -2*y**2)
 
     assert symmetrize(x**3 + y**2 + a*x**2 + b*y**3, x, y) == \
-        (-3*x*y*(x + y) - 2*a*x*y + a*(x + y)**2 + (x + y)**3, y**2*(1 - a) - y**3*(1 - b))
+        (-3*x*y*(x + y) - 2*a*x*y + a*(x + y)**2 + (x + y)**3, y**2*(1 - a) + y**3*(b - 1))
+
+    U = [u0, u1, u2] = symbols('u:3')
+
+    assert symmetrize(x + 1, x, y, z, formal=True, symbols=U) == \
+        (u0 + 1, -y - z, [(u0, x + y + z), (u1, x*y + x*z + y*z), (u2, x*y*z)])
+
+    assert symmetrize([1, 2, 3]) == [(1, 0), (2, 0), (3, 0)]
+    assert symmetrize([1, 2, 3], formal=True) == ([(1, 0), (2, 0), (3, 0)], [])
+
+    assert symmetrize([x + y, x - y]) == [(x + y, 0), (x + y, -2*y)]
 
 def test_horner():
     assert horner(0) == 0
@@ -52,4 +72,14 @@ def test_interpolate():
     assert interpolate([(1, 1), (2, 4), (3, 9)], x) == x**2
     assert interpolate([(1, 2), (2, 5), (3, 10)], x) == 1 + x**2
     assert interpolate({1: 2, 2: 5, 3: 10}, x) == 1 + x**2
+
+def test_viete():
+    r1, r2 = symbols('r1, r2')
+
+    assert viete(a*x**2 + b*x + c, [r1, r2], x) == [(r1 + r2, -b/a), (r1*r2, c/a)]
+
+    raises(ValueError, "viete(1, [], x)")
+    raises(ValueError, "viete(x**2 + 1, [r1])")
+
+    raises(MultivariatePolynomialError, "viete(x + y, [r1])")
 

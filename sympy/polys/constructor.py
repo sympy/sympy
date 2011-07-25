@@ -3,7 +3,7 @@
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.assumptions import ask
+from sympy.assumptions import ask, Q
 from sympy.core import S, sympify
 from sympy.utilities import any
 
@@ -12,7 +12,7 @@ def _construct_simple(coeffs, opt):
     result, rationals, reals, algebraics = {}, False, False, False
 
     if opt.extension is True:
-        is_algebraic = lambda coeff: ask(coeff, 'algebraic')
+        is_algebraic = lambda coeff: ask(Q.algebraic(coeff))
     else:
         is_algebraic = lambda coeff: False
 
@@ -21,7 +21,7 @@ def _construct_simple(coeffs, opt):
         if coeff.is_Rational:
             if not coeff.is_Integer:
                 rationals = True
-        elif coeff.is_Real:
+        elif coeff.is_Float:
             if not algebraics:
                 reals = True
             else:
@@ -65,10 +65,10 @@ def _construct_algebraic(coeffs, opt):
         if coeff.is_Rational:
             coeff = (None, 0, QQ.from_sympy(coeff))
         else:
-            a, _ = coeff.as_coeff_factors()
+            a = coeff.as_coeff_add()[0]
             coeff -= a
 
-            b, _ = coeff.as_coeff_terms()
+            b = coeff.as_coeff_mul()[0]
             coeff /= b
 
             exts.add(coeff)
@@ -121,50 +121,64 @@ def _construct_composite(coeffs, opt):
     if opt.field:
         fractions = True
     else:
-        fractions, monom = False, (0,)*n
+        fractions, zeros = False, (0,)*n
 
         for denom in denoms:
-            if len(denom) > 1 or monom not in denom:
+            if len(denom) > 1 or zeros not in denom:
                 fractions = True
                 break
+
+    coeffs = set([])
+
+    if not fractions:
+        for numer, denom in zip(numers, denoms):
+            denom = denom[zeros]
+
+            for monom, coeff in numer.iteritems():
+                coeff /= denom
+                coeffs.add(coeff)
+                numer[monom] = coeff
+    else:
+        for numer, denom in zip(numers, denoms):
+            coeffs.update(numer.values())
+            coeffs.update(denom.values())
+
+    rationals, reals = False, False
+
+    for coeff in coeffs:
+        if coeff.is_Rational:
+            if not coeff.is_Integer:
+                rationals = True
+        elif coeff.is_Float:
+            reals = True
+            break
+
+    if reals:
+        ground = RR
+    elif rationals:
+        ground = QQ
+    else:
+        ground = ZZ
 
     result = []
 
     if not fractions:
-        rationals = False
+        domain = ground.poly_ring(*gens)
 
-        for i, denom in enumerate(denoms):
-            coeff = denom[monom]
-            denoms[i] = coeff
+        for numer in numers:
+            for monom, coeff in numer.iteritems():
+                numer[monom] = ground.from_sympy(coeff)
 
-            if coeff is not S.One:
-                rationals = True
-
-        if not rationals:
-            domain = ZZ.poly_ring(*gens)
-
-            for numer in numers:
-                for monom, coeff in numer.iteritems():
-                    numer[monom] = ZZ.from_sympy(coeff)
-
-                result.append(domain(numer))
-        else:
-            domain = QQ.poly_ring(*gens)
-
-            for numer, denom in zip(numers, denoms):
-                for monom, coeff in numer.iteritems():
-                    numer[monom] = QQ.from_sympy(coeff/denom)
-
-                result.append(domain(numer))
+            result.append(domain(numer))
     else:
-        domain = ZZ.frac_field(*gens)
+        domain = ground.frac_field(*gens)
 
         for numer, denom in zip(numers, denoms):
             for monom, coeff in numer.iteritems():
-                numer[monom] = ZZ.from_sympy(coeff)
+                numer[monom] = ground.from_sympy(coeff)
 
             for monom, coeff in denom.iteritems():
-                denom[monom] = ZZ.from_sympy(coeff)
+                denom[monom] = ground.from_sympy(coeff)
 
             result.append(domain((numer, denom)))
 
@@ -183,10 +197,13 @@ def construct_domain(obj, **args):
     """Construct a minimal domain for the list of coefficients. """
     opt = build_options(args)
 
-    if isinstance(obj, dict):
-        monoms, coeffs = zip(*obj.items())
+    if hasattr(obj, '__iter__'):
+        if isinstance(obj, dict):
+            monoms, coeffs = zip(*obj.items())
+        else:
+            coeffs = obj
     else:
-        coeffs = obj
+        coeffs = [obj]
 
     coeffs = map(sympify, coeffs)
     result = _construct_simple(coeffs, opt)
@@ -207,8 +224,10 @@ def construct_domain(obj, **args):
         else:
             domain, coeffs = _construct_expression(coeffs, opt)
 
-    if isinstance(obj, dict):
-        return domain, dict(zip(monoms, coeffs))
+    if hasattr(obj, '__iter__'):
+        if isinstance(obj, dict):
+            return domain, dict(zip(monoms, coeffs))
+        else:
+            return domain, coeffs
     else:
-        return domain, coeffs
-
+        return domain, coeffs[0]

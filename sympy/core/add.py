@@ -1,12 +1,19 @@
-from basic import Basic, S, C
+from core import C
+from basic import Basic
+from singleton import S
 from operations import AssocOp
 from cache import cacheit
+from expr import Expr
+from compatibility import all
 
 class Add(AssocOp):
 
     __slots__ = []
 
     is_Add = True
+
+    #identity = S.Zero
+    # cyclic import, so defined in numbers.py
 
     @classmethod
     def flatten(cls, seq):
@@ -38,9 +45,23 @@ class Add(AssocOp):
                 order_factors = [o]+[o1 for o1 in order_factors if not o.contains(o1)]
                 continue
 
-            # 3
+            # 3 or NaN
             elif o.is_Number:
-                coeff += o
+                if o is S.NaN or coeff is S.ComplexInfinity and o.is_bounded is False:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
+                if coeff.is_Number:
+                    coeff += o
+                    if coeff is S.NaN:
+                        # we know for sure the result will be nan
+                        return [S.NaN], [], None
+                continue
+
+            elif o is S.ComplexInfinity:
+                if coeff.is_bounded is False:
+                    # we know for sure the result will be nan
+                    return [S.NaN], [], None
+                coeff = S.ComplexInfinity
                 continue
 
             # Add([...])
@@ -55,6 +76,11 @@ class Add(AssocOp):
 
                 # 3*...
                 if c.is_Number:
+                    # unevaluated 2-arg Mul
+                    if len(o.args) == 2 and o.args[1].is_Add and o.args[1].is_commutative:
+                        seq.extend([c*a for a in o.args[1].args])
+                        continue
+
                     if c is S.One:
                         s = o
                     else:
@@ -109,15 +135,28 @@ class Add(AssocOp):
 
             noncommutative = noncommutative or not s.is_commutative
 
-        # nan
-        if coeff is S.NaN:
-            # we know for sure the result will be nan
-            return [S.NaN], [], None
-
         # oo, -oo
-        elif (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
-            newseq = [f for f in newseq if not f.is_real]
-
+        if coeff is S.Infinity:
+            newseq = [f for f in newseq if not (f.is_nonnegative or f.is_real and
+                                                (f.is_bounded or
+                                                 f.is_finite or
+                                                 f.is_infinitesimal))]
+        elif coeff is S.NegativeInfinity:
+            newseq = [f for f in newseq if not (f.is_nonpositive or f.is_real and
+                                                (f.is_bounded or
+                                                 f.is_finite or
+                                                 f.is_infinitesimal))]
+        if coeff is S.ComplexInfinity:
+            # zoo might be
+            #   unbounded_real + bounded_im
+            #   bounded_real + unbounded_im
+            #   unbounded_real + unbounded_im
+            # addition of a bounded real or imaginary number won't be able to
+            # change the zoo nature; if unbounded a NaN condition could result if
+            # the unbounded symbol had sign opposite of the unbounded portion of zoo,
+            # e.g. unbounded_real - unbounded_real
+            newseq = [c for c in newseq if not (c.is_bounded and
+                                                c.is_real is not None)]
 
         # process O(x)
         if order_factors:
@@ -155,35 +194,42 @@ class Add(AssocOp):
         else:
             return newseq, [], None
 
+    @classmethod
+    def class_key(cls):
+        return 3, 1, cls.__name__
 
     @cacheit
-    def as_coeff_factors(self, x=None):
-        if x is not None:
+    def as_coeff_add(self, *deps):
+        if deps:
             l1 = []
             l2 = []
             for f in self.args:
-                if f.has(x):
+                if f.has(*deps):
                     l2.append(f)
                 else:
                     l1.append(f)
-            return Add(*l1), tuple(l2)
-        coeff = self.args[0]
-        if coeff.is_Number:
-            return coeff, self.args[1:]
+            return self._new_rawargs(*l1), tuple(l2)
+        coeff, notrat = self.args[0].as_coeff_add()
+        if not coeff is S.Zero:
+            return coeff, notrat + self.args[1:]
         return S.Zero, self.args
+
+    # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
+    # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
+    # issue 2425.
 
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
 
-    def _eval_nseries(self, x, x0, n):
-        terms = [t.nseries(x, x0, n) for t in self.args]
+    def _eval_nseries(self, x, n, logx):
+        terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
         return Add(*terms)
 
     def _matches_simple(self, expr, repl_dict):
         # handle (w+3).matches('x+5') -> {w: x+2}
-        coeff, factors = self.as_coeff_factors()
-        if len(factors)==1:
-            return factors[0].matches(expr - coeff, repl_dict)
+        coeff, terms = self.as_coeff_add()
+        if len(terms)==1:
+            return terms[0].matches(expr - coeff, repl_dict)
         return
 
     matches = AssocOp._matches_commutative
@@ -201,9 +247,25 @@ class Add(AssocOp):
 
     @cacheit
     def as_two_terms(self):
+        """Return head and tail of self.
+
+        This is the most efficient way to get the head and tail of an
+        expression.
+
+        - if you want only the head, use self.args[0];
+        - if you want to process the arguments of the tail then use
+          self.as_coef_add() which gives the head and a tuple containing
+          the arguments of the tail when treated as an Add.
+        - if you want the coefficient when self is treated as a Mul
+          then use self.as_coeff_mul()[0]
+
+        >>> from sympy.abc import x, y
+        >>> (3*x*y).as_two_terms()
+        (3, x*y)
+        """
         if len(self.args) == 1:
             return S.Zero, self
-        return self.args[0], Add(*self.args[1:])
+        return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
         numers, denoms = [],[]
@@ -211,20 +273,14 @@ class Add(AssocOp):
             numers.append(n)
             denoms.append(d)
         r = xrange(len(numers))
-        return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:])) for i in r]),Mul(*denoms)
-
-    def count_ops(self, symbolic=True):
-        if symbolic:
-            return Add(*[t.count_ops(symbolic) for t in self.args]) + \
-                Symbol('ADD') * (len(self.args) - 1)
-        return Add(*[t.count_ops(symbolic) for t in self.args]) + \
-            (len(self.args) - 1)
+        return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
+                     for i in r]), Mul(*denoms)
 
     def _eval_is_polynomial(self, syms):
-        for term in self.args:
-            if not term._eval_is_polynomial(syms):
-                return False
-        return True
+        return all(term._eval_is_polynomial(syms) for term in self.args)
+
+    def _eval_is_rational_function(self, syms):
+        return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
@@ -238,7 +294,7 @@ class Add(AssocOp):
         if not l:
             return False
         if l[0].is_odd:
-            return Add(*l[1:]).is_even
+            return self._new_rawargs(*l[1:]).is_even
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -248,8 +304,7 @@ class Add(AssocOp):
         return False
 
     def _eval_is_positive(self):
-        c = self.args[0]
-        r = Add(*self.args[1:])
+        c, r = self.as_two_terms()
         if c.is_positive and r.is_positive:
             return True
         if c.is_unbounded:
@@ -268,8 +323,7 @@ class Add(AssocOp):
             return False
 
     def _eval_is_negative(self):
-        c = self.args[0]
-        r = Add(*self.args[1:])
+        c, r = self.as_two_terms()
         if c.is_negative and r.is_negative:
             return True
         if c.is_unbounded:
@@ -287,30 +341,33 @@ class Add(AssocOp):
         if c.is_nonnegative and r.is_nonnegative:
             return False
 
-    def as_coeff_terms(self, x=None):
-        # -2 + 2 * a -> -1, 2-2*a
-        if self.args[0].is_Number and self.args[0].is_negative:
-            return -S.One,(-self,)
-        return S.One,(self,)
-
     def _eval_subs(self, old, new):
         if self == old:
             return new
-        from function import FunctionClass
         if isinstance(old, FunctionClass):
             return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
-        coeff_self, factors_self = self.as_coeff_factors()
-        coeff_old, factors_old = old.as_coeff_factors()
-        if factors_self == factors_old: # (2+a).subs(3+a,y) -> 2-3+y
+        coeff_self, terms_self = self.as_coeff_add()
+        coeff_old, terms_old = old.as_coeff_add()
+        if terms_self == terms_old: # (2+a).subs(3+a,y) -> 2-3+y
             return Add(new, coeff_self, -coeff_old)
         if old.is_Add:
-            if len(factors_old) < len(factors_self): # (a+b+c+d).subs(b+c,x) -> a+x+d
-                self_set = set(factors_self)
-                old_set = set(factors_old)
+            if len(terms_old) < len(terms_self): # (a+b+c+d).subs(b+c,x) -> a+x+d
+                self_set = set(terms_self)
+                old_set = set(terms_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
                     return Add(new, coeff_self, -coeff_old, *[s._eval_subs(old, new) for s in ret_set])
         return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+
+
+    def removeO(self):
+        args = [a for a in self.args if not a.is_Order]
+        return self._new_rawargs(*args)
+
+    def getO(self):
+        args = [a for a in self.args if a.is_Order]
+        if args:
+            return self._new_rawargs(*args)
 
     @cacheit
     def extract_leading_order(self, *symbols):
@@ -345,49 +402,34 @@ class Add(AssocOp):
             lst = new_lst
         return tuple(lst)
 
+    def as_real_imag(self, deep=True):
+        sargs, terms = self.args, []
+        re_part, im_part = [], []
+        for term in sargs:
+            re, im = term.as_real_imag(deep=deep)
+            re_part.append(re)
+            im_part.append(im)
+        return (self.func(*re_part), self.func(*im_part))
+
     def _eval_as_leading_term(self, x):
-        coeff, factors = self.as_coeff_factors(x)
+        # TODO this does not need to call nseries!
+        coeff, terms = self.collect(x).as_coeff_add(x)
         has_unbounded = bool([f for f in self.args if f.is_unbounded])
         if has_unbounded:
-            if isinstance(factors, Basic):
-                factors = factors.args
-            factors = [f for f in factors if not f.is_bounded]
-        if coeff is not S.Zero:
-            o = C.Order(x)
-        else:
-            o = C.Order(factors[0]*x,x)
+            if isinstance(terms, Basic):
+                terms = terms.args
+            terms = [f for f in terms if not f.is_bounded]
         n = 1
-        s = self.nseries(x, 0, n)
+        s = self.nseries(x, n=n).collect(x) # could be 1/x + 1/(y*x)
         while s.is_Order:
             n +=1
-            s = self.nseries(x, 0, n)
+            s = self.nseries(x, n=n)
         if s.is_Add:
             s = s.removeO()
         if s.is_Add:
             lst = s.extract_leading_order(x)
             return Add(*[e for (e,f) in lst])
         return s.as_leading_term(x)
-
-    def _eval_power(self, other):
-        #         n          n          n
-        # (-3 + y)   ->  (-1)  * (3 - y)
-        # similar to Mul.flatten()
-        if Basic.keep_sign:
-            return None
-
-        c, t = self.as_coeff_terms()
-        if c.is_negative and not other.is_integer:
-            if c is not S.NegativeOne:
-                coeff = (-c) ** other
-                assert len(t) == 1, 't'
-                b = -t[0]
-                return coeff*b**other
-        elif c is not S.One:
-            coeff = c ** other
-            assert len(t) == 1, 't'
-            b = t[0]
-            return coeff*b**other
-        return
 
     def _eval_conjugate(self):
         return Add(*[t.conjugate() for t in self.args])
@@ -400,7 +442,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_power_exp(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -410,7 +452,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_power_base(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -420,7 +462,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_mul(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -430,7 +472,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_multinomial(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -440,7 +482,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_log(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -450,7 +492,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_complex(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -460,7 +502,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_trig(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -470,7 +512,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_func(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -480,7 +522,7 @@ class Add(AssocOp):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def __neg__(self):
         return Add(*[-t for t in self.args])
@@ -491,9 +533,46 @@ class Add(AssocOp):
             s += x._sage_()
         return s
 
-    def as_Add(self):
-        """Returns `self` as it was `Add` instance. """
-        return list(self.args)
 
+    def primitive(self):
+        """
+        Divide ``self`` by the GCD of coefficients of ``self``.
+
+        Example
+        =======
+
+        >>> from sympy.abc import x, y
+
+        >>> (2*x + 4*y).primitive()
+        (2, x + 2*y)
+
+        >>> (2*x/3 + 4*y/9).primitive()
+        (2/9, 3*x + 2*y)
+
+        >>> (2*x/3 + 4.1*y).primitive()
+        (1, 2*x/3 + 4.1*y)
+
+        """
+        terms = []
+        cont = S.Zero
+
+        for term in self.args:
+            coeff = term.as_coeff_mul()[0]
+
+            if coeff.is_Rational:
+                cont = cont.gcd(coeff)
+
+                if cont is not S.One:
+                    terms.append(term)
+                    continue
+
+            return S.One, self
+
+        for i, term in enumerate(terms):
+            # XXX: this is extremely slow
+            terms[i] = term/cont
+
+        return cont, self._new_rawargs(*terms)
+
+from function import FunctionClass
 from mul import Mul
-from symbol import Symbol

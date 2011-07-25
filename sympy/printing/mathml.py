@@ -41,6 +41,7 @@ class MathMLPrinter(Printer):
             'Pow': 'power',
             'Symbol': 'ci',
             'Integral': 'int',
+            'Sum': 'sum',
             'sin': 'sin',
             'cos': 'cos',
             'tan': 'tan',
@@ -53,7 +54,11 @@ class MathMLPrinter(Printer):
             'atanh': 'arctanh',
             'acot': 'arccot',
             'atan2': 'arctan',
-            'log': 'ln'
+            'log': 'ln',
+            'Equality': 'eq',
+            'Unequality': 'neq',
+            'StrictInequality': 'lt',
+            'Inequality': 'leq'
         }
 
         for cls in e.__class__.__mro__:
@@ -65,7 +70,7 @@ class MathMLPrinter(Printer):
         return n.lower()
 
     def _print_Mul(self, expr):
-        coeff, terms  = expr.as_coeff_terms()
+        coeff, terms  = expr.as_coeff_mul()
 
         if coeff.is_negative:
             x = self.dom.createElement('apply')
@@ -82,6 +87,9 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(denom))
             return x
 
+        if self.order != 'old':
+            terms = expr._new_rawargs(*terms).as_ordered_factors()
+
         if coeff == 1 and len(terms) == 1:
             return self._print(terms[0])
         x = self.dom.createElement('apply')
@@ -92,17 +100,12 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(term))
         return x
 
-    # This is complicated because we attempt to order then results in order of Basic._compare_pretty
-    # and use minus instead of negative
-    def _print_Add(self, e):
-        args = list(e.args)
-        args.sort(Basic._compare_pretty)
+    def _print_Add(self, expr, order=None):
+        args = self._as_ordered_terms(expr, order=order)
         lastProcessed = self._print(args[0])
-        args.pop(0)
-        plusNodes = list()
-        for i in range(0,len(args)):
-            arg = args[i]
-            coeff, terms = arg.as_coeff_terms()
+        plusNodes = []
+        for arg in args[1:]:
+            coeff, _ = arg.as_coeff_mul()
             if(coeff.is_negative):
                 #use minus
                 x = self.dom.createElement('apply')
@@ -203,12 +206,16 @@ class MathMLPrinter(Printer):
             bvar_elem.appendChild(self._print(limits[0][0]))
             x.appendChild(bvar_elem)
 
-            if limits[0][1]:
+            if len(limits[0]) == 3:
                 low_elem = self.dom.createElement('lowlimit')
-                low_elem.appendChild(self._print(limits[0][1][0]))
+                low_elem.appendChild(self._print(limits[0][1]))
                 x.appendChild(low_elem)
                 up_elem = self.dom.createElement('uplimit')
-                up_elem.appendChild(self._print(limits[0][1][1]))
+                up_elem.appendChild(self._print(limits[0][2]))
+                x.appendChild(up_elem)
+            if len(limits[0]) == 2:
+                up_elem = self.dom.createElement('uplimit')
+                up_elem.appendChild(self._print(limits[0][1]))
                 x.appendChild(up_elem)
             if len(limits) == 1:
                 x.appendChild(self._print(e.function))
@@ -219,6 +226,11 @@ class MathMLPrinter(Printer):
         limits = list(e.limits)
         limits.reverse()
         return lime_recur(limits)
+
+    def _print_Sum(self, e):
+        # Printer can be shared because Sum and Integral have the
+        # same internal representation.
+        return self._print_Integral(e)
 
     def _print_Symbol(self, sym):
         ci = self.dom.createElement(self.mathml_tag(sym))
@@ -296,7 +308,7 @@ class MathMLPrinter(Printer):
         x.appendChild(self.dom.createElement(self.mathml_tag(e)))
 
         x_1 = self.dom.createElement('bvar')
-        for sym in e.symbols:
+        for sym in e.variables:
             x_1.appendChild(self._print(sym))
 
         x.appendChild(x_1)
@@ -322,6 +334,13 @@ class MathMLPrinter(Printer):
         x.appendChild(x_1)
         for arg in e.args:
             x.appendChild(self._print(arg))
+        return x
+
+    def _print_Relational(self, e):
+        x = self.dom.createElement('apply')
+        x.appendChild(self.dom.createElement(self.mathml_tag(e)))
+        x.appendChild(self._print(e.lhs))
+        x.appendChild(self._print(e.rhs))
         return x
 
     def _print_list(self, seq):
@@ -351,14 +370,15 @@ def print_mathml(expr, **settings):
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
         <plus/>
-        <cn>
-                1
-        </cn>
         <ci>
                 x
         </ci>
+        <cn>
+                1
+        </cn>
     </apply>
 
     """
     s = MathMLPrinter(settings)
     print s._print(sympify(expr)).toprettyxml(encoding="utf-8")
+

@@ -19,8 +19,7 @@ def dup_add_term(f, c, i, K):
     """
     Add ``c*x**i`` to ``f`` in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_add_term
@@ -50,8 +49,7 @@ def dmp_add_term(f, c, i, u, K):
     """
     Add ``c(x_2..x_u)*x_0**i`` to ``f`` in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_add_term
@@ -87,8 +85,7 @@ def dup_sub_term(f, c, i, K):
     """
     Subtract ``c*x**i`` from ``f`` in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sub_term
@@ -118,8 +115,7 @@ def dmp_sub_term(f, c, i, u, K):
     """
     Subtract ``c(x_2..x_u)*x_0**i`` from ``f`` in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sub_term
@@ -155,8 +151,7 @@ def dup_mul_term(f, c, i, K):
     """
     Multiply ``f`` by ``c*x**i`` in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_mul_term
@@ -177,8 +172,7 @@ def dmp_mul_term(f, c, i, u, K):
     """
     Multiply ``f`` by ``c(x_2..x_u)*x_0**i`` in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_mul_term
@@ -206,8 +200,7 @@ def dup_add_ground(f, c, K):
     """
     Add an element of the ground domain to ``f``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_add_ground
@@ -224,8 +217,7 @@ def dmp_add_ground(f, c, u, K):
     """
     Add an element of the ground domain to ``f``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_add_ground
@@ -242,8 +234,7 @@ def dup_sub_ground(f, c, K):
     """
     Subtract an element of the ground domain from ``f``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sub_ground
@@ -260,8 +251,7 @@ def dmp_sub_ground(f, c, u, K):
     """
     Subtract an element of the ground domain from ``f``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sub_ground
@@ -278,8 +268,7 @@ def dup_mul_ground(f, c, K):
     """
     Multiply ``f`` by a constant value in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_mul_ground
@@ -300,8 +289,7 @@ def dmp_mul_ground(f, c, u, K):
     """
     Multiply ``f`` by a constant value in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_mul_ground
@@ -323,66 +311,18 @@ def dup_quo_ground(f, c, K):
     """
     Quotient by a constant in ``K[x]``.
 
-    Example
-    =======
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densearith import dup_quo_ground
-
-    >>> f = QQ.map([1, 0, 2])
-
-    >>> dup_quo_ground(f, QQ(2), QQ)
-    [1/2, 0/1, 1/1]
-
-    """
-    if not c:
-        raise ZeroDivisionError('polynomial division')
-    if not f:
-        return f
-
-    return [ K.quo(cf, c) for cf in f ]
-
-@cythonized("u,v")
-def dmp_quo_ground(f, c, u, K):
-    """
-    Quotient by a constant in ``K[X]``.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densearith import dmp_quo_ground
-
-    >>> f = QQ.map([[1, 0], [2], []])
-
-    >>> dmp_quo_ground(f, QQ(2), 1, QQ)
-    [[1/2, 0/1], [1/1], []]
-
-    """
-    if not u:
-        return dup_quo_ground(f, c, K)
-
-    v = u-1
-
-    return [ dmp_quo_ground(cf, c, v, K) for cf in f ]
-
-def dup_exquo_ground(f, c, K):
-    """
-    Exact quotient by a constant in ``K[x]``.
-
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densearith import dup_exquo_ground
+    >>> from sympy.polys.densearith import dup_quo_ground
 
     >>> f = ZZ.map([3, 0, 2])
     >>> g = QQ.map([3, 0, 2])
 
-    >>> dup_exquo_ground(f, ZZ(2), ZZ)
+    >>> dup_quo_ground(f, ZZ(2), ZZ)
     [1, 0, 1]
 
-    >>> dup_exquo_ground(g, QQ(2), QQ)
+    >>> dup_quo_ground(g, QQ(2), QQ)
     [3/2, 0/1, 1/1]
 
     """
@@ -397,24 +337,68 @@ def dup_exquo_ground(f, c, K):
         return [ cf // c for cf in f ]
 
 @cythonized("u,v")
-def dmp_exquo_ground(f, c, u, K):
+def dmp_quo_ground(f, c, u, K):
     """
-    Exact quotient by a constant in ``K[X]``.
+    Quotient by a constant in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densearith import dmp_exquo_ground
+    >>> from sympy.polys.densearith import dmp_quo_ground
 
     >>> f = ZZ.map([[2, 0], [3], []])
     >>> g = QQ.map([[2, 0], [3], []])
 
-    >>> dmp_exquo_ground(f, ZZ(2), 1, ZZ)
+    >>> dmp_quo_ground(f, ZZ(2), 1, ZZ)
     [[1, 0], [1], []]
 
-    >>> dmp_exquo_ground(g, QQ(2), 1, QQ)
+    >>> dmp_quo_ground(g, QQ(2), 1, QQ)
     [[1/1, 0/1], [3/2], []]
+
+    """
+    if not u:
+        return dup_quo_ground(f, c, K)
+
+    v = u-1
+
+    return [ dmp_quo_ground(cf, c, v, K) for cf in f ]
+
+def dup_exquo_ground(f, c, K):
+    """
+    Exact quotient by a constant in ``K[x]``.
+
+    **Examples**
+
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.densearith import dup_exquo_ground
+
+    >>> f = QQ.map([1, 0, 2])
+
+    >>> dup_exquo_ground(f, QQ(2), QQ)
+    [1/2, 0/1, 1/1]
+
+    """
+    if not c:
+        raise ZeroDivisionError('polynomial division')
+    if not f:
+        return f
+
+    return [ K.exquo(cf, c) for cf in f ]
+
+@cythonized("u,v")
+def dmp_exquo_ground(f, c, u, K):
+    """
+    Exact quotient by a constant in ``K[X]``.
+
+    **Examples**
+
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.densearith import dmp_exquo_ground
+
+    >>> f = QQ.map([[1, 0], [2], []])
+
+    >>> dmp_exquo_ground(f, QQ(2), 1, QQ)
+    [[1/2, 0/1], [1/1], []]
 
     """
     if not u:
@@ -429,8 +413,7 @@ def dup_lshift(f, n, K):
     """
     Efficiently multiply ``f`` by ``x**n`` in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_lshift
@@ -451,8 +434,7 @@ def dup_rshift(f, n, K):
     """
     Efficiently divide ``f`` by ``x**n`` in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_rshift
@@ -473,8 +455,7 @@ def dup_abs(f, K):
     """
     Make all coefficients positive in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_abs
@@ -492,8 +473,7 @@ def dmp_abs(f, u, K):
     """
     Make all coefficients positive in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_abs
@@ -515,8 +495,7 @@ def dup_neg(f, K):
     """
     Negate a polynomial in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_neg
@@ -534,8 +513,7 @@ def dmp_neg(f, u, K):
     """
     Negate a polynomial in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_neg
@@ -558,8 +536,7 @@ def dup_add(f, g, K):
     """
     Add dense polynomials in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_add
@@ -596,8 +573,7 @@ def dmp_add(f, g, u, K):
     """
     Add dense polynomials in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_add
@@ -641,8 +617,7 @@ def dup_sub(f, g, K):
     """
     Subtract dense polynomials in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sub
@@ -679,8 +654,7 @@ def dmp_sub(f, g, u, K):
     """
     Subtract dense polynomials in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sub
@@ -723,8 +697,7 @@ def dup_add_mul(f, g, h, K):
     """
     Returns ``f + g*h`` where ``f, g, h`` are in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_add_mul
@@ -744,8 +717,7 @@ def dmp_add_mul(f, g, h, u, K):
     """
     Returns ``f + g*h`` where ``f, g, h`` are in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_add_mul
@@ -764,8 +736,7 @@ def dup_sub_mul(f, g, h, K):
     """
     Returns ``f - g*h`` where ``f, g, h`` are in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sub_mul
@@ -785,8 +756,7 @@ def dmp_sub_mul(f, g, h, u, K):
     """
     Returns ``f - g*h`` where ``f, g, h`` are in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sub_mul
@@ -806,8 +776,7 @@ def dup_mul(f, g, K):
     """
     Multiply dense polynomials in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_mul
@@ -845,8 +814,7 @@ def dmp_mul(f, g, u, K):
     """
     Multiply dense polynomials in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_mul
@@ -891,8 +859,7 @@ def dup_sqr(f, K):
     """
     Square dense polynomials in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_sqr
@@ -933,8 +900,7 @@ def dmp_sqr(f, u, K):
     """
     Square dense polynomials in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_sqr
@@ -981,10 +947,9 @@ def dmp_sqr(f, u, K):
 @cythonized("n,m")
 def dup_pow(f, n, K):
     """
-    Raise ``f`` to the ``n``--th power in ``K[x]``.
+    Raise ``f`` to the ``n``-th power in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_pow
@@ -1018,10 +983,9 @@ def dup_pow(f, n, K):
 @cythonized("u,n,m")
 def dmp_pow(f, n, u, K):
     """
-    Raise ``f`` to the ``n``--th power in ``K[X]``.
+    Raise ``f`` to the ``n``-th power in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_pow
@@ -1060,10 +1024,9 @@ def dmp_pow(f, n, u, K):
 @cythonized("df,dg,dr,N,j")
 def dup_pdiv(f, g, K):
     """
-    Polynomial pseudo--division in ``K[x]``.
+    Polynomial pseudo-division in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_pdiv
@@ -1114,10 +1077,9 @@ def dup_pdiv(f, g, K):
 @cythonized("df,dg,dr,N,j")
 def dup_prem(f, g, K):
     """
-    Polynomial pseudo--remainder in ``K[x]``.
+    Polynomial pseudo-remainder in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_prem
@@ -1159,10 +1121,9 @@ def dup_prem(f, g, K):
 
 def dup_pquo(f, g, K):
     """
-    Polynomial pseudo--quotient in ``K[x]``.
+    Polynomial exact pseudo-quotient in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_pquo
@@ -1177,24 +1138,16 @@ def dup_pquo(f, g, K):
     >>> g = ZZ.map([2, -4])
 
     >>> dup_pquo(f, g, ZZ)
-    Traceback (most recent call last):
-    ...
-    ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
+    [2, 4]
 
     """
-    q, r = dup_pdiv(f, g, K)
-
-    if not r:
-        return q
-    else:
-        raise ExactQuotientFailed(f, g)
+    return dup_pdiv(f, g, K)[0]
 
 def dup_pexquo(f, g, K):
     """
-    Polynomial exact pseudo-quotient in ``K[X]``.
+    Polynomial pseudo-quotient in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_pexquo
@@ -1209,18 +1162,24 @@ def dup_pexquo(f, g, K):
     >>> g = ZZ.map([2, -4])
 
     >>> dup_pexquo(f, g, ZZ)
-    [2, 4]
+    Traceback (most recent call last):
+    ...
+    ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
 
     """
-    return dup_pdiv(f, g, K)[0]
+    q, r = dup_pdiv(f, g, K)
+
+    if not r:
+        return q
+    else:
+        raise ExactQuotientFailed(f, g)
 
 @cythonized("u,df,dg,dr,N,j")
 def dmp_pdiv(f, g, u, K):
     """
     Polynomial pseudo-division in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_pdiv
@@ -1277,8 +1236,7 @@ def dmp_prem(f, g, u, K):
     """
     Polynomial pseudo-remainder in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_prem
@@ -1326,10 +1284,9 @@ def dmp_prem(f, g, u, K):
 
 def dmp_pquo(f, g, u, K):
     """
-    Polynomial pseudo-quotient in ``K[X]``.
+    Polynomial exact pseudo-quotient in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_pquo
@@ -1342,24 +1299,16 @@ def dmp_pquo(f, g, u, K):
     [[2], []]
 
     >>> dmp_pquo(f, h, 1, ZZ)
-    Traceback (most recent call last):
-    ...
-    ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []]
+    [[2], [2, -2]]
 
     """
-    q, r = dmp_pdiv(f, g, u, K)
-
-    if dmp_zero_p(r, u):
-        return q
-    else:
-        raise ExactQuotientFailed(f, g)
+    return dmp_pdiv(f, g, u, K)[0]
 
 def dmp_pexquo(f, g, u, K):
     """
-    Polynomial exact pseudo-quotient in ``K[X]``.
+    Polynomial pseudo-quotient in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_pexquo
@@ -1372,18 +1321,24 @@ def dmp_pexquo(f, g, u, K):
     [[2], []]
 
     >>> dmp_pexquo(f, h, 1, ZZ)
-    [[2], [2, -2]]
+    Traceback (most recent call last):
+    ...
+    ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []]
 
     """
-    return dmp_pdiv(f, g, u, K)[0]
+    q, r = dmp_pdiv(f, g, u, K)
+
+    if dmp_zero_p(r, u):
+        return q
+    else:
+        raise ExactQuotientFailed(f, g)
 
 @cythonized("df,dg,dr,j")
 def dup_rr_div(f, g, K):
     """
     Univariate division with remainder over a ring.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_rr_div
@@ -1433,8 +1388,7 @@ def dmp_rr_div(f, g, u, K):
     """
     Multivariate division with remainder over a ring.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_rr_div
@@ -1489,8 +1443,7 @@ def dup_ff_div(f, g, K):
     """
     Polynomial division with remainder over a field.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densearith import dup_ff_div
@@ -1540,8 +1493,7 @@ def dmp_ff_div(f, g, u, K):
     """
     Polynomial division with remainder over a field.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densearith import dmp_ff_div
@@ -1595,8 +1547,7 @@ def dup_div(f, g, K):
     """
     Polynomial division with remainder in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dup_div
@@ -1623,8 +1574,7 @@ def dup_rem(f, g, K):
     """
     Returns polynomial remainder in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dup_rem
@@ -1646,24 +1596,47 @@ def dup_rem(f, g, K):
 
 def dup_quo(f, g, K):
     """
-    Returns polynomial quotient in ``K[x]``.
+    Returns exact polynomial quotient in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dup_quo
-
-    >>> f = ZZ.map([1, 0, -1])
-    >>> g = ZZ.map([1, -1])
-
-    >>> dup_quo(f, g, ZZ)
-    [1, 1]
 
     >>> f = ZZ.map([1, 0, 1])
     >>> g = ZZ.map([2, -4])
 
     >>> dup_quo(f, g, ZZ)
+    []
+
+    >>> f = QQ.map([1, 0, 1])
+    >>> g = QQ.map([2, -4])
+
+    >>> dup_quo(f, g, QQ)
+    [1/2, 1/1]
+
+    """
+    return dup_div(f, g, K)[0]
+
+def dup_exquo(f, g, K):
+    """
+    Returns polynomial quotient in ``K[x]``.
+
+    **Examples**
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densearith import dup_exquo
+
+    >>> f = ZZ.map([1, 0, -1])
+    >>> g = ZZ.map([1, -1])
+
+    >>> dup_exquo(f, g, ZZ)
+    [1, 1]
+
+    >>> f = ZZ.map([1, 0, 1])
+    >>> g = ZZ.map([2, -4])
+
+    >>> dup_exquo(f, g, ZZ)
     Traceback (most recent call last):
     ...
     ExactQuotientFailed: [2, -4] does not divide [1, 0, 1]
@@ -1676,38 +1649,12 @@ def dup_quo(f, g, K):
     else:
         raise ExactQuotientFailed(f, g)
 
-def dup_exquo(f, g, K):
-    """
-    Returns exact polynomial quotient in ``K[x]``.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densearith import dup_exquo
-
-    >>> f = ZZ.map([1, 0, 1])
-    >>> g = ZZ.map([2, -4])
-
-    >>> dup_exquo(f, g, ZZ)
-    []
-
-    >>> f = QQ.map([1, 0, 1])
-    >>> g = QQ.map([2, -4])
-
-    >>> dup_exquo(f, g, QQ)
-    [1/2, 1/1]
-
-    """
-    return dup_div(f, g, K)[0]
-
 @cythonized("u")
 def dmp_div(f, g, u, K):
     """
     Polynomial division with remainder in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dmp_div
@@ -1735,8 +1682,7 @@ def dmp_rem(f, g, u, K):
     """
     Returns polynomial remainder in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densearith import dmp_rem
@@ -1759,22 +1705,46 @@ def dmp_rem(f, g, u, K):
 @cythonized("u")
 def dmp_quo(f, g, u, K):
     """
+    Returns exact polynomial quotient in ``K[X]``.
+
+    **Examples**
+
+    >>> from sympy.polys.domains import ZZ, QQ
+    >>> from sympy.polys.densearith import dmp_quo
+
+    >>> f = ZZ.map([[1], [1, 0], []])
+    >>> g = ZZ.map([[2], [2]])
+
+    >>> dmp_quo(f, g, 1, ZZ)
+    [[]]
+
+    >>> f = QQ.map([[1], [1, 0], []])
+    >>> g = QQ.map([[2], [2]])
+
+    >>> dmp_quo(f, g, 1, QQ)
+    [[1/2], [1/2, -1/2]]
+
+    """
+    return dmp_div(f, g, u, K)[0]
+
+@cythonized("u")
+def dmp_exquo(f, g, u, K):
+    """
     Returns polynomial quotient in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densearith import dmp_quo
+    >>> from sympy.polys.densearith import dmp_exquo
 
     >>> f = ZZ.map([[1], [1, 0], []])
     >>> g = ZZ.map([[1], [1, 0]])
     >>> h = ZZ.map([[2], [2]])
 
-    >>> dmp_quo(f, g, 1, ZZ)
+    >>> dmp_exquo(f, g, 1, ZZ)
     [[1], []]
 
-    >>> dmp_quo(f, h, 1, ZZ)
+    >>> dmp_exquo(f, h, 1, ZZ)
     Traceback (most recent call last):
     ...
     ExactQuotientFailed: [[2], [2]] does not divide [[1], [1, 0], []]
@@ -1787,38 +1757,11 @@ def dmp_quo(f, g, u, K):
     else:
         raise ExactQuotientFailed(f, g)
 
-@cythonized("u")
-def dmp_exquo(f, g, u, K):
-    """
-    Returns exact polynomial quotient in ``K[X]``.
-
-    Example
-    =======
-
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densearith import dmp_exquo
-
-    >>> f = ZZ.map([[1], [1, 0], []])
-    >>> g = ZZ.map([[2], [2]])
-
-    >>> dmp_exquo(f, g, 1, ZZ)
-    [[]]
-
-    >>> f = QQ.map([[1], [1, 0], []])
-    >>> g = QQ.map([[2], [2]])
-
-    >>> dmp_exquo(f, g, 1, QQ)
-    [[1/2], [1/2, -1/2]]
-
-    """
-    return dmp_div(f, g, u, K)[0]
-
 def dup_max_norm(f, K):
     """
     Returns maximum norm of a polynomial in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_max_norm
@@ -1839,8 +1782,7 @@ def dmp_max_norm(f, u, K):
     """
     Returns maximum norm of a polynomial in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_max_norm
@@ -1862,8 +1804,7 @@ def dup_l1_norm(f, K):
     """
     Returns l1 norm of a polynomial in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_l1_norm
@@ -1884,8 +1825,7 @@ def dmp_l1_norm(f, u, K):
     """
     Returns l1 norm of a polynomial in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_l1_norm
@@ -1907,8 +1847,7 @@ def dup_expand(polys, K):
     """
     Multiply together several polynomials in ``K[x]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dup_expand
@@ -1936,8 +1875,7 @@ def dmp_expand(polys, u, K):
     """
     Multiply together several polynomials in ``K[X]``.
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densearith import dmp_expand

@@ -20,7 +20,7 @@ def literal_symbol(literal):
     else:
         return literal
 
-def satisfiable(expr, algorithm="dpll"):
+def satisfiable(expr, algorithm="dpll2"):
     """Check satisfiability of a propositional sentence.
     Returns a model when it succeeds
 
@@ -36,6 +36,9 @@ def satisfiable(expr, algorithm="dpll"):
     expr = to_cnf(expr)
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
+        return dpll_satisfiable(expr)
+    elif algorithm == "dpll2":
+        from sympy.logic.algorithms.dpll2 import dpll_satisfiable
         return dpll_satisfiable(expr)
     raise NotImplementedError
 
@@ -96,7 +99,7 @@ def pl_true(expr, model={}):
             return None
         return pt == qt
     else:
-        raise ValueError, "Illegal operator in logic expression" + str(expr)
+        raise ValueError("Illegal operator in logic expression" + str(expr))
 
 
 class KB(object):
@@ -140,3 +143,4 @@ class PropKB(KB):
         for c in conjuncts(to_cnf(sentence)):
             if c in self.clauses:
                 self.clauses.remove(c)
+

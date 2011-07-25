@@ -147,4 +147,3 @@ def test_propKB_tolerant():
     kb = PropKB()
     A, B, C = symbols('A,B,C')
     assert kb.ask(B) == False
-

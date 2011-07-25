@@ -1,4 +1,4 @@
-"""Implementaton of :class:`PythonRationalField` class. """
+"""Implementation of :class:`PythonRationalField` class. """
 
 from sympy.polys.domains.rationalfield import RationalField
 
@@ -9,7 +9,7 @@ from sympy.polys.domains.groundtypes import SymPyRationalType
 from sympy.polys.polyerrors import CoercionFailed
 
 class PythonRationalField(RationalField):
-    """Rational field based on Python Fraction class. """
+    """Rational field based on Python rational number type. """
 
     dtype = PythonRationalType
     zero  = dtype(0)
@@ -27,7 +27,7 @@ class PythonRationalField(RationalField):
         """Convert SymPy's Rational to `dtype`. """
         if a.is_Rational and a.q != 0:
             return PythonRationalType(a.p, a.q)
-        elif a.is_Real:
+        elif a.is_Float:
             from sympy.polys.domains import RR
             return PythonRationalType(*RR.as_integer_ratio(a))
         else:
@@ -59,7 +59,7 @@ class PythonRationalField(RationalField):
                                   PythonIntegerType(a.denom()))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return PythonRationalType(*K0.as_integer_ratio(a))
 
     def from_RR_mpmath(K1, a, K0):
@@ -73,4 +73,3 @@ class PythonRationalField(RationalField):
     def denom(self, a):
         """Returns denominator of `a`. """
         return a.denominator
-

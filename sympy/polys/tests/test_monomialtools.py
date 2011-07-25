@@ -13,7 +13,7 @@ from sympy.polys.monomialtools import (
 from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.abc import x, y, z
-from sympy import raises
+from sympy.utilities.pytest import raises
 
 def test_monomials():
     assert sorted(monomials([], 0)) == [1]
@@ -144,5 +144,4 @@ def test_Monomial():
 
     raises(ExactQuotientFailed, "m / n")
 
-    assert n.as_basic(x, y, z) == x**5*y**2
-
+    assert n.as_expr(x, y, z) == x**5*y**2

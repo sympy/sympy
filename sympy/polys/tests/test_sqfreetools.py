@@ -1,4 +1,4 @@
-"""Tests for square--free decomposition algorithms and related tools. """
+"""Tests for square-free decomposition algorithms and related tools. """
 
 from sympy.polys.sqfreetools import (
     dup_sqf_p, dmp_sqf_p,
@@ -29,9 +29,9 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.domains import FF, ZZ, QQ
 
-from sympy import raises
-
 from sympy.abc import x
+
+from sympy.utilities.pytest import raises
 
 def test_dup_sqf():
     assert dup_sqf_part([], ZZ) == []
@@ -135,6 +135,9 @@ def test_dmp_sqf():
     assert dup_sqf_list([], ZZ) == (ZZ(0), [])
     assert dup_sqf_list_include([], ZZ) == [([], 1)]
 
+    assert dmp_sqf_list([[ZZ(3)]], 1, ZZ) == (ZZ(3), [])
+    assert dmp_sqf_list_include([[ZZ(3)]], 1, ZZ) == [([[ZZ(3)]], 1)]
+
     f = [-1,1,0,0,1,-1]
 
     assert dmp_sqf_list(f, 0, ZZ) == \
@@ -149,12 +152,12 @@ def test_dmp_sqf():
     assert dmp_sqf_list_include(f, 1, ZZ) == \
         [([[-1],[-1],[-1],[-1]], 1), ([[1],[-1]], 2)]
 
+    K = FF(2)
+
     f = [[-1], [2], [-1]]
 
     assert dmp_sqf_list_include(f, 1, ZZ) == \
         [([[-1]], 1), ([[1], [-1]], 2)]
-
-    K = FF(2)
 
     raises(DomainError, "dmp_sqf_list([[K(1), K(0), K(1)]], 1, K)")
 
@@ -168,4 +171,3 @@ def test_dup_gff_list():
     assert dup_gff_list(g, ZZ) == [([1, -5, 4], 1), ([1, -5, 4], 2), ([1, 0], 3)]
 
     raises(ValueError, "dup_gff_list([], ZZ)")
-

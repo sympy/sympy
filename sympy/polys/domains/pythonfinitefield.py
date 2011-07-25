@@ -8,4 +8,3 @@ class PythonFiniteField(FiniteField):
 
     dom = PythonIntegerRing()
     alias = 'FF_python'
-

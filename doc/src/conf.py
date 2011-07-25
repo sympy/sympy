@@ -14,14 +14,14 @@
 import sys
 
 # If your extensions are in another directory, add it here.
-sys.path.append('../sympy')
+sys.path.extend(['../sympy', 'ext'])
 
 # General configuration
 # ---------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath', 'math_dollar']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
@@ -34,15 +34,15 @@ master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2008, 2009, 2010 SymPy Development Team'
+copyright = '2008, 2009, 2010, 2011 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.6.7'
+version = '0.7.0'
 # The full version, including alpha/beta/rc tags.
-release = '0.6.7'
+release = '0.7.0'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:

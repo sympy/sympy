@@ -1,9 +1,10 @@
-from sympy import Add, Basic, S, Symbol, Wild,  Real, Integer, Rational,  \
-    sin, cos, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly, Function, Derivative, Number, pi, var, \
-    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
-    radsimp, powsimp, simplify, together, separate, collect, \
-    apart, combsimp, factor, refine, cancel, invert
+from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
+    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify,
+    WildFunction, Poly, Function, Derivative, Number, pi, var,
+    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
+    radsimp, powsimp, simplify, together, separate, collect, factorial,
+    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key)
+from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
 
@@ -94,7 +95,7 @@ class F1_1(DummyNumber):
     def __float__(self):
         return self.number
 
-x,y,z,t = symbols('x,y,z,t')
+x,y,z,t,n = symbols('x,y,z,t,n')
 
 i5 = I5()
 f1_1 = F1_1()
@@ -103,7 +104,7 @@ f1_1 = F1_1()
 # basic sympy objects
 basic_objs = [
     Rational(2),
-    Real("1.3"),
+    Float("1.3"),
     x,
     y,
     pow(x,y)*y,
@@ -168,7 +169,11 @@ def test_relational_noncommutative():
 def test_basic_nostr():
     for obj in basic_objs:
         for op in ['+','-','*','/','**']:
-            raises(TypeError, "obj %s '1'" % op)
+            if obj == 2 and op == '*':
+                if hasattr(int, '__index__'): # Python 2.5+ (PEP 357)
+                    assert obj * '1' == '11'
+            else:
+                raises(TypeError, "obj %s '1'" % op)
 
 def test_leadterm():
     assert (3+2*x**(log(3)/log(2)-1)).leadterm(x) == (3,0)
@@ -204,43 +209,39 @@ def test_as_leading_term2():
 
 def test_as_leading_term3():
     assert (2+pi+x).as_leading_term(x) == 2 + pi
-    assert (2*x+pi*x+x**2).as_leading_term(x) == 2*x + pi*x
+    assert (2*x+pi*x+x**2).as_leading_term(x) == (2+pi)*x
 
 def test_atoms():
-   assert sorted(list(x.atoms())) == [x]
-   assert sorted(list((1+x).atoms())) == sorted([1, x])
+    assert sorted(list(x.atoms())) == [x]
+    assert sorted(list((1+x).atoms())) == sorted([1, x])
 
-   assert sorted(list((1+2*cos(x)).atoms(Symbol))) == [x]
-   assert sorted(list((1+2*cos(x)).atoms(Symbol,Number))) == sorted([1, 2, x])
+    assert sorted(list((1+2*cos(x)).atoms(Symbol))) == [x]
+    assert sorted(list((1+2*cos(x)).atoms(Symbol,Number))) == sorted([1, 2, x])
 
-   assert sorted(list((2*(x**(y**x))).atoms())) == sorted([2, x, y])
+    assert sorted(list((2*(x**(y**x))).atoms())) == sorted([2, x, y])
 
-   assert sorted(list(Rational(1,2).atoms())) == [S.Half]
-   assert sorted(list(Rational(1,2).atoms(Symbol))) == []
+    assert sorted(list(Rational(1,2).atoms())) == [S.Half]
+    assert sorted(list(Rational(1,2).atoms(Symbol))) == []
 
-   assert sorted(list(sin(oo).atoms(oo))) == [oo]
+    assert sorted(list(sin(oo).atoms(oo))) == [oo]
 
-   assert sorted(list(Poly(0, x).atoms())) == [S.Zero]
-   assert sorted(list(Poly(1, x).atoms())) == [S.One]
+    assert sorted(list(Poly(0, x).atoms())) == [S.Zero]
+    assert sorted(list(Poly(1, x).atoms())) == [S.One]
 
-   assert sorted(list(Poly(x, x).atoms())) == [x]
-   assert sorted(list(Poly(x, x, y).atoms())) == [x]
-   assert sorted(list(Poly(x + y, x, y).atoms())) == sorted([x, y])
-   assert sorted(list(Poly(x + y, x, y, z).atoms())) == sorted([x, y])
-   assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == sorted([t, x, y])
+    assert sorted(list(Poly(x, x).atoms())) == [x]
+    assert sorted(list(Poly(x, x, y).atoms())) == [x]
+    assert sorted(list(Poly(x + y, x, y).atoms())) == sorted([x, y])
+    assert sorted(list(Poly(x + y, x, y, z).atoms())) == sorted([x, y])
+    assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == sorted([t, x, y])
 
-   I = S.ImaginaryUnit
-   assert list((I*pi).atoms(NumberSymbol)) == [pi]
-   assert sorted((I*pi).atoms(NumberSymbol, I)) == \
-          sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
+    I = S.ImaginaryUnit
+    assert list((I*pi).atoms(NumberSymbol)) == [pi]
+    assert sorted((I*pi).atoms(NumberSymbol, I)) == \
+           sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
 
-   I = S.ImaginaryUnit
-   assert list((I*pi).atoms(NumberSymbol)) == [pi]
-   assert sorted((I*pi).atoms(NumberSymbol, I)) == \
-          sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
 
-   assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
-   assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
+    assert exp(exp(x)).atoms(exp) == set([exp(exp(x)), exp(x)])
+    assert (1 + x*(2 + y)+exp(3 + z)).atoms(Add) == set(
                                                    [1 + x*(2 + y)+exp(3 + z),
                                                     2 + y,
                                                     3 + z])
@@ -265,14 +266,14 @@ def test_is_polynomial():
     assert (2**x).is_polynomial(x) == False
     assert (2**x).is_polynomial(y) == True
 
-    assert (x**k).is_polynomial(x) == True
+    assert (x**k).is_polynomial(x) == False
     assert (x**k).is_polynomial(k) == False
     assert (x**x).is_polynomial(x) == False
     assert (k**k).is_polynomial(k) == False
-    assert (k**x).is_polynomial(k) == None
+    assert (k**x).is_polynomial(k) == False
 
-    assert (x**(-k)).is_polynomial(x) == None
-    assert ((2*x)**k).is_polynomial(x) == True
+    assert (x**(-k)).is_polynomial(x) == False
+    assert ((2*x)**k).is_polynomial(x) == False
 
     assert (x**2 + 3*x - 8).is_polynomial(x) == True
     assert (x**2 + 3*x - 8).is_polynomial(y) == True
@@ -293,7 +294,7 @@ def test_is_polynomial():
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
 
 def test_is_rational_function():
-    x,y = symbols('x,y')
+    x,y = symbols('x y')
 
     assert Integer(1).is_rational_function() == True
     assert Integer(1).is_rational_function(x) == True
@@ -349,7 +350,7 @@ def test_SAGE3():
     assert e == ('mys', x, o)
 
 def test_len():
-    x, y, z = symbols("x,y,z")
+    x, y, z = symbols("x y z")
     e = x*y
     assert len(e.args) == 2
     e = x+y+z
@@ -395,9 +396,24 @@ def test_as_numer_denom():
     assert (-oo).as_numer_denom() == (-1, 0)
     assert zoo.as_numer_denom() == (zoo, 1)
     assert (-zoo).as_numer_denom() == (zoo, 1)
-    assert (1/x).as_numer_denom() == (1, x)
+
     assert x.as_numer_denom() == (x, 1)
+    assert (1/x).as_numer_denom() == (1, x)
     assert (x/y).as_numer_denom() == (x, y)
+    assert (x/2).as_numer_denom() == (x, 2)
+    assert (x*y/z).as_numer_denom() == (x*y, z)
+    assert (x/(y*z)).as_numer_denom() == (x, y*z)
+    assert Rational(1, 2).as_numer_denom() == (1, 2)
+    assert (1/y**2).as_numer_denom() == (1, y**2)
+    assert (x/y**2).as_numer_denom() == (x, y**2)
+    assert ((x**2+1)/y).as_numer_denom() == (x**2+1, y)
+    assert (x*(y+1)/y**7).as_numer_denom() == (x*(y+1), y**7)
+    assert (x**-2).as_numer_denom() == (1, x**2)
+    n = symbols('n', negative=True)
+    assert (x**n).as_numer_denom() == (x**n, 1)
+    assert sqrt(1/n).as_numer_denom() == (I, sqrt(-n))
+    n = Symbol('0 or neg', nonpositive=True)
+    assert ((x/n)**-S.Half).as_numer_denom() == (1, (x/n)**S.Half)
 
 def test_as_independent():
     assert (2*x*sin(x)+y+x).as_independent(x) == (y, x + 2*x*sin(x))
@@ -416,6 +432,21 @@ def test_as_independent():
     assert (2*sin(x)).as_independent(x) == (2, sin(x))
     assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
 
+    # issue 1804 = 1766b
+    n1, n2 = symbols('n1 n2', commutative=False)
+    assert (n1 + n1*n2).as_independent(n2) == (n1, n1*n2)
+    assert (n2*n1 + n1*n2).as_independent(n2) == (0, n1*n2 + n2*n1)
+    assert (n1*n2*n1).as_independent(n2) == (n1, n2*n1)
+    assert (n1*n2*n1).as_independent(n1) == (1, n1*n2*n1)
+
+    assert (3*x).as_independent(x, as_Add=True) == (0, 3*x)
+    assert (3*x).as_independent(x, as_Add=False) == (3, x)
+    assert (3+x).as_independent(x, as_Add=True) == (3, x)
+    assert (3+x).as_independent(x, as_Add=False) == (1, 3 + x)
+
+    # issue 2380
+    assert (3*x).as_independent(Symbol) == (3, x)
+
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')
 
@@ -431,7 +462,6 @@ def test_subs_dict():
     assert expr._subs_dict(seq) == c + a*b*sin(d*e)
 
 def test_subs_list():
-    x,y = symbols('x,y')
 
     assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
     assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
@@ -440,16 +470,77 @@ def test_subs_list():
     assert (x+y)._subs_list([(y, x**2), (x, 3)]) == 12
 
 def test_call():
-    a,b,c,d,e = symbols('a,b,c,d,e')
+    # Unlike what used to be the case, the following should NOT work.
+    # See issue 1927.
 
-    assert sin(x)({ x : 1, sin(x) : 2}) == 2
+    raises(TypeError, "sin(x)({ x : 1, sin(x) : 2})")
+    raises(TypeError, "sin(x)(1)")
 
-    expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
+def test_replace():
+    f = log(sin(x)) + tan(sin(x**2))
 
-    assert expr({ sqrt(sin(2*x)) : a, cos(2*x) : b, sin(2*x) : c, x : d, exp(x) : e}) == c + a*b*sin(d*e)
+    assert f.replace(sin, cos) == log(cos(x)) + tan(cos(x**2))
+    assert f.replace(sin, lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
 
-def test_has():
-    x, y = symbols("x,y")
+    a = Wild('a')
+
+    assert f.replace(sin(a), cos(a)) == log(cos(x)) + tan(cos(x**2))
+    assert f.replace(sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
+
+    g = 2*sin(x**3)
+
+    assert g.replace(lambda expr: expr.is_Number, lambda expr: expr**2) == 4*sin(x**9)
+
+    assert cos(x).replace(cos, sin, map=True) == (sin(x), {cos(x): sin(x)})
+    assert sin(x).replace(cos, sin) == sin(x)
+
+    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y) == sin(x)
+
+def test_find():
+    expr = (x + y + 2 + sin(3*x))
+
+    assert expr.find(lambda u: u.is_Integer) == set([S(2), S(3)])
+    assert expr.find(lambda u: u.is_Symbol) == set([x, y])
+
+    assert expr.find(lambda u: u.is_Integer, group=True) == {S(2): 1, S(3): 1}
+    assert expr.find(lambda u: u.is_Symbol, group=True) == {x: 2, y: 1}
+
+    assert expr.find(Integer) == set([S(2), S(3)])
+    assert expr.find(Symbol) == set([x, y])
+
+    assert expr.find(Integer, group=True) == {S(2): 1, S(3): 1}
+    assert expr.find(Symbol, group=True) == {x: 2, y: 1}
+
+    a = Wild('a')
+
+    expr = sin(sin(x)) + sin(x) + cos(x) + x
+
+    assert expr.find(lambda u: type(u) is sin) == set([sin(x), sin(sin(x))])
+    assert expr.find(lambda u: type(u) is sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
+
+    assert expr.find(sin(a)) == set([sin(x), sin(sin(x))])
+    assert expr.find(sin(a), group=True) == {sin(x): 2, sin(sin(x)): 1}
+
+    assert expr.find(sin) == set([sin(x), sin(sin(x))])
+    assert expr.find(sin, group=True) == {sin(x): 2, sin(sin(x)): 1}
+
+def test_count():
+    expr = (x + y + 2 + sin(3*x))
+
+    assert expr.count(lambda u: u.is_Integer) == 2
+    assert expr.count(lambda u: u.is_Symbol) == 3
+
+    assert expr.count(Integer) == 2
+    assert expr.count(Symbol) == 3
+
+    a = Wild('a')
+
+    assert expr.count(sin) == 1
+    assert expr.count(sin(a)) == 1
+    assert expr.count(lambda u: type(u) is sin) == 1
+
+def test_has_any():
+    x,y,z,t,u = symbols('x y z t u')
     f = Function("f")
     g = Function("g")
     p = Wild('p')
@@ -474,77 +565,45 @@ def test_has():
     assert not (x**2).has(Wild)
     assert (2*p).has(Wild)
 
-def test_has_any_symbols():
-    x,y,z,t,u = symbols('x,y,z,t,u')
-
     i = Integer(4400)
 
-    assert i.has_any_symbols(x) == False
+    assert i.has(x) is False
 
-    assert (i*x**i).has_any_symbols(x) == True
-    assert (i*y**i).has_any_symbols(x) == False
-    assert (i*y**i).has_any_symbols(x, y) == True
+    assert (i*x**i).has(x)
+    assert (i*y**i).has(x) is False
+    assert (i*y**i).has(x, y)
 
     expr = x**2*y + sin(2**t + log(z))
 
-    assert expr.has_any_symbols(u) == False
+    assert expr.has(u) is False
 
-    assert expr.has_any_symbols(x) == True
-    assert expr.has_any_symbols(y) == True
-    assert expr.has_any_symbols(z) == True
-    assert expr.has_any_symbols(t) == True
+    assert expr.has(x)
+    assert expr.has(y)
+    assert expr.has(z)
+    assert expr.has(t)
 
-    assert expr.has_any_symbols(x, y, z, t) == True
-    assert expr.has_any_symbols(x, y, z, t, u)  == True
+    assert expr.has(x, y, z, t)
+    assert expr.has(x, y, z, t, u)
 
     from sympy.physics.units import m, s
 
-    assert (x*m/s).has_any_symbols(x) == True
-    assert (x*m/s).has_all_symbols(x) == True
-
-    assert (x*m/s).has_any_symbols(y, z) == False
-    assert (x*m/s).has_all_symbols(x, y) == False
+    assert (x*m/s).has(x)
+    assert (x*m/s).has(y, z) is False
 
     poly = Poly(x**2 + x*y*sin(z), x, y, t)
 
-    assert poly.has_any_symbols(x) == True
-    assert poly.has_any_symbols(x, y, z) == True
-    assert poly.has_any_symbols(x, y, z, t) == True
+    assert poly.has(x)
+    assert poly.has(x, y, z)
+    assert poly.has(x, y, z, t)
 
-    assert poly.has_all_symbols(x, y, z) == True
-    assert poly.has_all_symbols(x, y, z, t) == False
+    assert FockState((x, y)).has(x)
 
-def test_has_all_symbols():
-    x,y,z,t,u = symbols('x,y,z,t,u')
-
-    i = Integer(4400)
-
-    assert i.has_all_symbols(x) == False
-
-    assert (i*x**i).has_all_symbols(x) == True
-    assert (i*y**i).has_all_symbols(x) == False
-
-    expr = x**2*y + sin(2**t + log(z))
-
-    assert expr.has_all_symbols(y, z, t) == True
-    assert expr.has_all_symbols(x, z, t) == True
-    assert expr.has_all_symbols(x, y, t) == True
-    assert expr.has_all_symbols(x, y, z) == True
-
-    assert expr.has_all_symbols(y, u, t) == False
-    assert expr.has_all_symbols(x, z, u) == False
-    assert expr.has_all_symbols(u, y, z) == False
-
-    assert expr.has_all_symbols(x, y, z, t) == True
-    assert expr.has_all_symbols(x, y, z, t, u) == False
-
-def test_as_poly_basic():
-    x, y = symbols('x,y')
+def test_as_poly_as_expr():
 
     f = x**2 + 2*x*y
 
-    assert f.as_poly().as_basic() == f
-    assert f.as_poly(x, y).as_basic() == f
+    assert f.as_poly().as_expr() == f
+    assert f.as_poly(x, y).as_expr() == f
 
     assert (f + sin(x)).as_poly(x, y) is None
 
@@ -563,10 +622,7 @@ def test_nonzero():
     assert bool(x*0)    == False
 
 def test_is_number():
-    x, y = symbols('x,y')
-    g = WildFunction('g')
-
-    assert Real(3.14).is_number == True
+    assert Float(3.14).is_number == True
     assert Integer(737).is_number == True
     assert Rational(3, 2).is_number == True
     assert Rational(8).is_number == True
@@ -579,8 +635,16 @@ def test_is_number():
     assert (8+log(2)).is_number == True
     assert (2 + log(x)).is_number == False
     assert (8+log(2)+x).is_number == False
-    assert (2*g).is_number == False
     assert (1+x**2/x-x).is_number == True
+    assert Tuple(Integer(1)).is_number == False
+    assert Add(2, x).is_number == False
+    assert Mul(3, 4).is_number == True
+    assert Pow(log(2), 2).is_number == True
+    assert oo.is_number == True
+    g = WildFunction('g')
+    assert g.is_number == False
+    assert (2*g).is_number == False
+    assert (x**2).subs(x, 3).is_number == True
 
     # test extensibility of .is_number
     # on subinstances of Basic
@@ -589,19 +653,42 @@ def test_is_number():
     a = A()
     assert a.is_number == False
 
-
-# TODO write more tests for as_coeff_factors
-def test_as_coeff_factors():
+def test_as_coeff_add():
     x = Symbol('x')
+    y = Symbol('y')
 
-    assert     x .as_coeff_factors() == ( 0, (x,))
-    assert (-1+x).as_coeff_factors() == (-1, (x,))
-    assert ( 2+x).as_coeff_factors() == ( 2, (x,))
-    assert ( 1+x).as_coeff_factors() == ( 1, (x,))
+    assert S(2).as_coeff_add() == (2, ())
+    assert S(3.0).as_coeff_add() == (0, (S(3.0),))
+    assert S(-3.0).as_coeff_add() == (0, (S(-3.0),))
+    assert     x .as_coeff_add() == ( 0, (x,))
+    assert (-1+x).as_coeff_add() == (-1, (x,))
+    assert ( 2+x).as_coeff_add() == ( 2, (x,))
+    assert ( 1+x).as_coeff_add() == ( 1, (x,))
+    assert (x + y).as_coeff_add(y) == (x, (y,))
+    assert (3*x).as_coeff_add(y) == (3*x, ())
+    # don't do expansion
+    e = (x + y)**2
+    assert e.as_coeff_add(y) == (0, (e,))
 
+def test_as_coeff_mul():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    assert S(2).as_coeff_mul() == (2, ())
+    assert S(3.0).as_coeff_mul() == (1, (S(3.0),))
+    assert S(-3.0).as_coeff_mul() == (-1, (S(3.0),))
+    assert     x .as_coeff_mul() == ( 1, (x,))
+    assert (-x).as_coeff_mul() == (-1, (x,))
+    assert (2*x).as_coeff_mul() == (2, (x,))
+    assert (x*y).as_coeff_mul(y) == (x, (y,))
+    assert (3 + x).as_coeff_mul(y) == (3 + x, ())
+    # don't do expansion
+    e = exp(x + y)
+    assert e.as_coeff_mul(y) == (1, (e,))
+    e = 2**(x + y)
+    assert e.as_coeff_mul(y) == (1, (e,))
 
 def test_as_coeff_exponent():
-    x, y = symbols("x,y")
     assert (3*x**4).as_coeff_exponent(x) == (3, 4)
     assert (2*x**3).as_coeff_exponent(x) == (2, 3)
     assert (4*x**2).as_coeff_exponent(x) == (4, 2)
@@ -622,7 +709,6 @@ def test_as_coeff_exponent():
     assert fx.as_coeff_exponent(f(x)) == (fx ,0)
 
 def test_extractions():
-    x, y = symbols("x,y")
     n = Symbol("n", integer=True)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) == None
@@ -657,6 +743,14 @@ def test_extractions():
            ((-x-y)/(y-x)).could_extract_minus_sign() == False # is_Mul even case
 
 def test_coeff():
+    from sympy.abc import x, y, z
+    from sympy import sqrt
+
+    assert (x+1).coeff(x+1) == 1
+    assert (3*x).coeff(0) == None
+    assert (z*(1+x)*x**2).coeff(1+x) == z*x**2
+    assert (1+2*x*x**(1+x)).coeff(x*x**(1+x)) == 2
+    assert (1+2*x**(y+z)).coeff(x**(y+z)) == 2
     assert (3+2*x+4*x**2).coeff(1) == None
     assert (3+2*x+4*x**2).coeff(-1) == None
     assert (3+2*x+4*x**2).coeff(x) == 2
@@ -664,23 +758,67 @@ def test_coeff():
     assert (3+2*x+4*x**2).coeff(x**3) == None
 
     assert (-x/8 + x*y).coeff(x) == -S(1)/8 + y
-    assert (-x/8 + x*y).coeff(-x) == S(1)/8 - y
-    assert (-x/8 + x*y).coeff(2*x) == -S(1)/16 + y/2
-    assert (x/8 + x*y).coeff(2*y*x) == S(1)/2
-    assert (x/8 + x*y).coeff(y*x/2) == 2
+    assert (-x/8 + x*y).coeff(-x) == S(1)/8
+    assert (4*x).coeff(2*x) == None
+    assert (2*x).coeff(2*x) == 1
+
+    n1, n2 = symbols('n1 n2', commutative=False)
+    assert (n1*n2).coeff(n1) == 1
+    assert (n1*n2).coeff(n2) == n1
+    assert (n1*n2 + x*n1).coeff(n1) == 1 # 1*n1*(n2+x)
+    assert (n2*n1 + x*n1).coeff(n1) == n2 + x
+    assert (n2*n1 + x*n1**2).coeff(n1) == n2
+    assert (n1**x).coeff(n1) == None
+    assert (n1*n2 + n2*n1).coeff(n1) == None
+    assert (2*(n1+n2)*n2).coeff(n1+n2, right=1) == n2
+    assert (2*(n1+n2)*n2).coeff(n1+n2, right=0) == 2
 
     f = Function('f')
     assert (2*f(x) + 3*f(x).diff(x)).coeff(f(x)) == 2
 
+    expr = z*(x+y)**2
+    expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
+    assert expr.coeff(z) == (x+y)**2
+    assert expr.coeff(x+y) == None
+    assert expr2.coeff(z) == (x+y)**2 + (2*x + 2*y)**2
+
+    assert (x + y + 3*z).coeff(1) == x + y
+    assert (-x + 2*y).coeff(-1) == x
+    assert (x - 2*y).coeff(-1) == 2*y
+    assert (3 + 2*x + 4*x**2).coeff(1) == None
+    assert (-x - 2*y).coeff(2) == -y
+    assert (x + sqrt(2)*x).coeff(sqrt(2)) == x
+    assert (3 + 2*x + 4*x**2).coeff(x) ==  2
+    assert (3 + 2*x + 4*x**2).coeff(x**2) == 4
+    assert (3 + 2*x + 4*x**2).coeff(x**3) == None
+    assert (z*(x + y)**2).coeff((x+y)**2) == z
+    assert (z*(x + y)**2).coeff(x+y) == None
+    assert (2 + 2*x + (x+1)*y).coeff(x+1) == y
+
+    n, m, o, l = symbols('n m o l', commutative=False)
+    assert n.coeff(n) ==  1
+    assert y.coeff(n) == None
+    assert (3*n).coeff(n) == 3
+    assert (2 + n).coeff(x*m) == None
+    assert (2*x*n*m).coeff(x) == 2*n*m
+    assert (2 + n).coeff(x*m*n + y) == None
+    assert (2*x*n*m).coeff(3*n) == None
+    assert (n*m + m*n*m).coeff(n) == 1 + m
+    assert (n*m + m*n*m).coeff(n, right=True) == m # = (1 + m)*n*m
+    assert (n*m + m*n).coeff(n) == None
+    assert (n*m + o*m*n).coeff(m*n) == o
+    assert (n*m + o*m*n).coeff(m*n, right=1) == 1
+    assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n # = n*m*(n + 1)
+
 def test_coeff2():
-    var('r,kappa')
+    r, kappa = symbols('r, kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
     assert g.coeff((psi(r).diff(r))) == 2/r
 
 def test_coeff2_0():
-    var('r,kappa')
+    r, kappa = symbols('r, kappa')
     psi = Function("psi")
     g = 1/r**2 * (2*r*psi(r).diff(r, 1) + r**2 * psi(r).diff(r, 2))
     g = g.expand()
@@ -688,22 +826,14 @@ def test_coeff2_0():
     assert g.coeff(psi(r).diff(r, 2)) == 1
 
 def test_coeff_expand():
-    x, y, z = symbols('x,y,z')
     expr = z*(x+y)**2
     expr2 = z*(x+y)**2 + z*(2*x + 2*y)**2
-    assert expr.coeff(z) == 2*x*y + x**2 + y**2
-    assert expr.coeff(z, expand=False) == (x+y)**2
-    assert expr2.coeff(z) == 10*x*y + 5*x**2 + 5*y**2
-    assert expr2.coeff(z, expand=False) == (x+y)**2 + (2*x + 2*y)**2
+    assert expr.coeff(z) == (x+y)**2
+    assert expr2.coeff(z) == (x+y)**2 + (2*x + 2*y)**2
 
 def test_integrate():
     assert x.integrate(x) == x**2/2
     assert x.integrate((x, 0, 1)) == S(1)/2
-
-def test_count_ops():
-    f = (x*y + 3/y)**(3 + 2)
-    assert f.count_ops() == Symbol('ADD') + 2*Symbol('MUL') + 2*Symbol('POW')
-    assert f.count_ops(symbolic=False) == 5
 
 def test_contains():
     f = (x*y + 3/y)**(3 + 2)
@@ -720,33 +850,11 @@ def test_contains():
     assert g in p
     assert not h in p
 
-def test_as_Something():
-    assert x.as_Add() == [x]
-    assert x.as_Mul() == [x]
-    assert x.as_Pow() == (x, S.One)
-
-    assert (x*y*z).as_Add() == [x*y*z]
-    assert sorted((x*y*z).as_Mul()) == [x, y, z]
-    assert (x*y*z).as_Pow() == (x*y*z, S.One)
-
-    assert sorted((x+y+z).as_Add()) == [x, y, z]
-    assert (x+y+z).as_Mul() == [x+y+z]
-    assert (x+y+z).as_Pow() == (x+y+z, S.One)
-
-    assert ((x+y)**z).as_Add() == [(x+y)**z]
-    assert ((x+y)**z).as_Mul() == [(x+y)**z]
-    assert ((x+y)**z).as_Pow() == (x+y, z)
-
-def test_Basic_keep_sign():
-    Basic.keep_sign = True
-    assert Mul(x - 1, x + 1) == (x - 1)*(x + 1)
-    assert (1/(x - 1)).as_coeff_terms()[0] == +1
-
-    clear_cache()
-
-    Basic.keep_sign = False
-    assert Mul(x - 1, x + 1) == -(1 - x)*(1 + x)
-    assert (1/(x - 1)).as_coeff_terms()[0] == -1
+def test_as_base_exp():
+    assert x.as_base_exp() == (x, S.One)
+    assert (x*y*z).as_base_exp() == (x*y*z, S.One)
+    assert (x+y+z).as_base_exp() == (x+y+z, S.One)
+    assert ((x+y)**z).as_base_exp() == (x+y, z)
 
 def test_issue1864():
     assert hasattr(Mul(x, y), "is_commutative")
@@ -773,3 +881,155 @@ def test_action_verbs():
     assert refine(sqrt(x**2)) == sqrt(x**2).refine()
     assert cancel((x**2+5*x+6)/(x+2)) == ((x**2+5*x+6)/(x+2)).cancel()
 
+def test_as_powers_dict():
+    assert x.as_powers_dict() == {x: 1}
+    assert (x**y*z).as_powers_dict() == {x: y, z: 1}
+    assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
+
+def test_new_rawargs():
+    x, y = symbols('x,y')
+    n = Symbol('n', commutative=False)
+    a = object.__new__(Add)
+    assert 2 + x == a._new_rawargs(*[S(2), x])
+    assert x == a._new_rawargs(*[x])
+    assert 0 == a._new_rawargs()
+    assert 0 == a._new_rawargs(*[])
+    assert a._new_rawargs(x).is_commutative
+    assert a._new_rawargs(x, y).is_commutative
+    assert a._new_rawargs(x, n).is_commutative is False
+    assert a._new_rawargs(x, y, n).is_commutative is False
+    a = x + n
+    assert a.is_commutative is False
+    assert a._new_rawargs(x).is_commutative
+    assert a._new_rawargs(x, y).is_commutative
+    assert a._new_rawargs(x, n).is_commutative is False
+    assert a._new_rawargs(x, y, n).is_commutative is False
+    m = object.__new__(Mul)
+    assert 2*x == m._new_rawargs(*[S(2), x])
+    assert x == m._new_rawargs(*[x])
+    assert 1 == m._new_rawargs()
+    assert 1 == m._new_rawargs(*[])
+    assert m._new_rawargs(x).is_commutative
+    assert m._new_rawargs(x, y).is_commutative
+    assert m._new_rawargs(x, n).is_commutative is False
+    assert m._new_rawargs(x, y, n).is_commutative is False
+    m = x*n
+    assert m.is_commutative is False
+    assert m._new_rawargs(x).is_commutative
+    assert m._new_rawargs(n).is_commutative is False
+    assert m._new_rawargs(x, y).is_commutative
+    assert m._new_rawargs(x, n).is_commutative is False
+    assert m._new_rawargs(x, y, n).is_commutative is False
+
+    assert m._new_rawargs(x, n, reeval=False).is_commutative is False
+    assert m._new_rawargs(S.One) is S.One
+
+def test_2127():
+    assert Add(evaluate=False) == 0
+    assert Mul(evaluate=False) == 1
+    assert Mul(x+y, evaluate=False).is_Add
+
+def test_symbols():
+    # symbols should return the free symbols of an object
+    assert S(1).free_symbols == set()
+    assert (x).free_symbols == set([x])
+    assert Integral(x, (x, 1, y)).free_symbols == set([y])
+    assert (-Integral(x, (x, 1, y))).free_symbols == set([y])
+
+def test_issue2201():
+    x = Symbol('x', commutative=False)
+    assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
+
+def test_issue_2061():
+    assert sqrt(-1.0*x) == 1.0*I*sqrt(x)
+    assert sqrt(1.0*x) == 1.0*sqrt(x)
+
+def test_as_coeff_Mul():
+    Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
+    Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
+    Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
+
+    (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
+    (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
+    (Float(5.0)*x).as_coeff_Mul() == (Float(5.0), x)
+
+    (Integer(3)*x*y).as_coeff_Mul() == (Integer(3), x*y)
+    (Rational(3, 4)*x*y).as_coeff_Mul() == (Rational(3, 4), x*y)
+    (Float(5.0)*x*y).as_coeff_Mul() == (Float(5.0), x*y)
+
+    (x).as_coeff_Mul() == (S.One, x)
+    (x*y).as_coeff_Mul() == (S.One, x*y)
+
+def test_expr_sorting():
+    f, g = symbols('f,g', cls=Function)
+
+    exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [x + 1, x**2 + x + 1, x**3 + x**2 + x + 1]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [S(4), x - 3*I/2, x + 3*I/2, x - 4*I + 1, x + 4*I + 1]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [f(x), g(x), exp(x), sin(x), cos(x), factorial(x)]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [Tuple(x, y), Tuple(x, z), Tuple(x, y, z)]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+def test_as_ordered_factors():
+    f, g = symbols('f,g', cls=Function)
+
+    assert x.as_ordered_factors() == [x]
+    assert (2*x*x**n*sin(x)*cos(x)).as_ordered_factors() == [Integer(2), x, x**n, sin(x), cos(x)]
+
+    args = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+    expr = Mul(*args)
+
+    assert expr.as_ordered_factors() == args
+
+    A, B = symbols('A,B', commutative=False)
+
+    assert (A*B).as_ordered_factors() == [A, B]
+    assert (B*A).as_ordered_factors() == [B, A]
+
+def test_as_ordered_terms():
+    f, g = symbols('f,g', cls=Function)
+
+    assert x.as_ordered_terms() == [x]
+    assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
+
+    args = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
+    expr = Add(*args)
+
+    assert expr.as_ordered_terms() == args
+
+    assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
+
+    assert ( 2 + 3*I).as_ordered_terms() == [ 2,  3*I]
+    assert (-2 + 3*I).as_ordered_terms() == [-2,  3*I]
+    assert ( 2 - 3*I).as_ordered_terms() == [ 2, -3*I]
+    assert (-2 - 3*I).as_ordered_terms() == [-2, -3*I]
+
+    assert ( 4 + 3*I).as_ordered_terms() == [ 4,  3*I]
+    assert (-4 + 3*I).as_ordered_terms() == [-4,  3*I]
+    assert ( 4 - 3*I).as_ordered_terms() == [ 4, -3*I]
+    assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
+
+def test_issue_1100():
+    # first subs and limit gives NaN
+    a = x/y
+    assert a._eval_interval(x, 0, oo)._eval_interval(y, oo, 0) is S.NaN
+    # second subs and limit gives NaN
+    assert a._eval_interval(x, 0, oo)._eval_interval(y, 0, oo) is S.NaN
+    # difference gives S.NaN
+    a = x - y
+    assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
+    raises(ValueError, 'x._eval_interval(x, None, None)')

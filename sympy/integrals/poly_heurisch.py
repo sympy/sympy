@@ -1,8 +1,11 @@
+# XXX: This file has fallen out of date with heurisch.py
+
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol, Wild
-from sympy.core.basic import S, C, sympify
+from sympy.core.basic import C, sympify
 from sympy.core.numbers import Rational
+from sympy.core.singleton import S
 
 from sympy.functions import exp, sin , cos , tan , cot , asin
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh
@@ -15,20 +18,19 @@ from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError, Poly
 from sympy.polys.polyroots import root_factors
 
-from sympy.utilities.iterables import make_list
-
 def components(f, x):
-    """Returns a set of all functional components of the given expression
-       which includes symbols, function applications and compositions and
-       non-integer powers. Fractional powers are collected with with
-       minimal, positive exponents.
+    """
+    Returns a set of all functional components of the given expression
+    which includes symbols, function applications and compositions and
+    non-integer powers. Fractional powers are collected with with
+    minimal, positive exponents.
 
-       >>> from sympy import cos, sin
-       >>> from sympy.abc import x, y
-       >>> from sympy.integrals.poly_heurisch import components
+    >>> from sympy import cos, sin
+    >>> from sympy.abc import x, y
+    >>> from sympy.integrals.poly_heurisch import components
 
-       >>> components(sin(x)*cos(x)**2, x)
-       set([x, cos(x), sin(x)])
+    >>> components(sin(x)*cos(x)**2, x)
+    set([x, sin(x), cos(x)])
 
     """
     result = set()
@@ -119,7 +121,7 @@ def heurisch(f, x, **kwargs):
     >>> from sympy.abc import x, y
 
     >>> heurisch(y*tan(x), x)
-    y*log(1 + tan(x)**2)/2
+    y*log(tan(x)**2 + 1)/2
 
     See Manuel Bronstein's "Poor Man's Integrator":
 
@@ -236,7 +238,7 @@ def heurisch(f, x, **kwargs):
 
     def deflation(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
             if derivation(p) != Zero:
@@ -248,7 +250,7 @@ def heurisch(f, x, **kwargs):
 
     def splitter(p):
         for y in V:
-            if not p.has_any_symbols(y):
+            if not p.has(y):
                 continue
 
             if derivation(y) != Zero:
@@ -352,12 +354,12 @@ def heurisch(f, x, **kwargs):
         for i, poly in enumerate(irreducibles):
             if poly.has(*V):
                 log_coeffs.append(B[i])
-                log_part.append(log_coeffs[-1] * log(poly.as_basic()))
+                log_part.append(log_coeffs[-1] * log(poly.as_expr()))
                 poly_log_part.append(poly.as_poly(*V))
 
         coeffs = poly_coeffs + log_coeffs
 
-        candidate = poly_part.as_basic()/poly_denom.as_basic() + Add(*log_part)
+        candidate = poly_part.as_expr()/poly_denom.as_expr() + Add(*log_part)
 
         ppart_numer_d = poly_denom*derivation(poly_part) - \
             poly_part*derivation(poly_denom)
@@ -390,7 +392,7 @@ def heurisch(f, x, **kwargs):
 
         equations = {}
 
-        for term in make_list(numer.as_basic(), Add):
+        for term in Add.make_args(numer.as_expr()):
             coeff, dependent = term.as_independent(*V)
 
             if dependent in equations:

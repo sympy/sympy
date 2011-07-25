@@ -1,5 +1,7 @@
 """Implementation of :class:`AlgebraicField` class. """
 
+from sympy.core import sympify
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -24,9 +26,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         from sympy.polys.numberfields import to_number_field
 
-        self.ext = to_number_field(ext)
-        self.mod = self.ext.minpoly.rep
-
+        self.ext  = to_number_field(ext)
+        self.mod  = self.ext.minpoly.rep
         self.dom  = dom
 
         self.gens = (self.ext,)
@@ -59,10 +60,14 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         else:
             return True
 
+    def algebraic_field(self, *extension):
+        """Returns an algebraic field, i.e. `QQ(alpha, ...)`. """
+        return AlgebraicField(self.dom, *((self.ext,) + extension))
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         from sympy.polys.numberfields import AlgebraicNumber
-        return AlgebraicNumber(self.ext, a).as_basic()
+        return AlgebraicNumber(self.ext, a).as_expr()
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
@@ -103,7 +108,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_mpmath(K1, a, K0):
@@ -137,4 +142,3 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def denom(self, a):
         """Returns denominator of `a`. """
         return self.one
-

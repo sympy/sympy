@@ -3,8 +3,7 @@
 from sympy.polys.polyoptions import (
     Options, Expand, Gens, Wrt, Sort, Order, Field, Greedy, Domain,
     Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
-    Frac, Formal, Polys, Include, Monic, All, Gen,
-)
+    Frac, Formal, Polys, Include, All, Gen, Symbols)
 
 from sympy.polys.monomialtools import monomial_lex_key
 
@@ -12,7 +11,8 @@ from sympy.polys.domains import FF, GF, ZZ, QQ, RR, EX
 
 from sympy.polys.polyerrors import OptionError, GeneratorsError
 
-from sympy import Integer, I, sqrt, raises
+from sympy import Integer, Symbol, I, sqrt
+from sympy.utilities.pytest import raises
 from sympy.abc import x, y, z
 
 def test_Options_clone():
@@ -52,7 +52,10 @@ def test_Gens_preprocess():
     assert Gens.preprocess((x, y, z)) == (x, y, z)
     assert Gens.preprocess(((x, y, z),)) == (x, y, z)
 
+    a = Symbol('a', commutative=False)
+
     raises(GeneratorsError, "Gens.preprocess((x, x, y))")
+    raises(GeneratorsError, "Gens.preprocess((x, y, a))")
 
 def test_Gens_postprocess():
     opt = {'gens': (x, y)}
@@ -61,12 +64,18 @@ def test_Gens_postprocess():
     assert opt == {'gens': (x, y)}
 
 def test_Wrt_preprocess():
-    Wrt.preprocess(x) == ['x']
-    Wrt.preprocess('x,y') == ['x', 'y']
-    Wrt.preprocess('x y') == ['x', 'y']
-    Wrt.preprocess('x, y') == ['x', 'y']
-    Wrt.preprocess([x, y]) == ['x', 'y']
+    assert Wrt.preprocess(x) == ['x']
+    assert Wrt.preprocess('') == []
+    assert Wrt.preprocess(' ') == []
+    assert Wrt.preprocess('x,y') == ['x', 'y']
+    assert Wrt.preprocess('x y') == ['x', 'y']
+    assert Wrt.preprocess('x, y') == ['x', 'y']
+    assert Wrt.preprocess('x , y') == ['x', 'y']
+    assert Wrt.preprocess(' x, y') == ['x', 'y']
+    assert Wrt.preprocess(' x,  y') == ['x', 'y']
+    assert Wrt.preprocess([x, y]) == ['x', 'y']
 
+    raises(OptionError, "Wrt.preprocess(',')")
     raises(OptionError, "Wrt.preprocess(0)")
 
 def test_Wrt_postprocess():
@@ -197,7 +206,7 @@ def test_Split_preprocess():
     raises(OptionError, "Split.preprocess(x)")
 
 def test_Split_postprocess():
-    raises(NotImplementedError, "Split.postprocess({})")
+    raises(NotImplementedError, "Split.postprocess({'split': True})")
 
 def test_Gaussian_preprocess():
     assert Gaussian.preprocess(False) is False
@@ -376,21 +385,6 @@ def test_Include_postprocess():
 
     assert opt == {'include': True}
 
-def test_Monic_preprocess():
-    assert Monic.preprocess(False) is False
-    assert Monic.preprocess(True) is True
-
-    assert Monic.preprocess(0) is False
-    assert Monic.preprocess(1) is True
-
-    raises(OptionError, "Monic.preprocess(x)")
-
-def test_Monic_postprocess():
-    opt = {'monic': True}
-    Monic.postprocess(opt)
-
-    assert opt == {'monic': True}
-
 def test_All_preprocess():
     assert All.preprocess(False) is False
     assert All.preprocess(True) is True
@@ -400,7 +394,7 @@ def test_All_preprocess():
 
     raises(OptionError, "All.preprocess(x)")
 
-def test_Monic_postprocess():
+def test_All_postprocess():
     opt = {'all': True}
     All.postprocess(opt)
 
@@ -414,4 +408,13 @@ def test_Gen_postprocess():
     Gen.postprocess(opt)
 
     assert opt == {'gen': x}
+
+def test_Symbols_preprocess():
+    raises(OptionError, "Symbols.preprocess(x)")
+
+def test_Symbols_postprocess():
+    opt = {'symbols': [x, y, z]}
+    Symbols.postprocess(opt)
+
+    assert opt == {'symbols': [x, y, z]}
 

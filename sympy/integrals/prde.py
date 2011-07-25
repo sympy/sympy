@@ -200,7 +200,7 @@ def constant_system(A, u, DE):
 
     for j in range(A.cols):
         for i in range(A.rows):
-            if A[i, j].has_any_symbols(*DE.T):
+            if A[i, j].has(*DE.T):
                 # This assumes that const(F(t0, ..., tn) == const(K) == F
                 Ri = A[i, :]
                 # Rm+1; m = A.rows
@@ -598,11 +598,11 @@ def is_deriv_k(fa, fd, DE):
         raise NotImplementedError("Nonelementary extensions not supported " +
             "in the structure theorems.")
 
-    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_basic() for i in DE.E_K]
-    L_part = [DE.D[i].as_basic() for i in DE.L_K]
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K]
+    L_part = [DE.D[i].as_expr() for i in DE.L_K]
 
     lhs = Matrix([E_part + L_part])
-    rhs = Matrix([dfa.as_basic()/dfd.as_basic()])
+    rhs = Matrix([dfa.as_expr()/dfd.as_expr()])
 
     A, u = constant_system(lhs, rhs, DE)
 
@@ -627,7 +627,7 @@ def is_deriv_k(fa, fd, DE):
                 # and also sqrt(x**2 + 2*x + 1) != x + 1
                 icoeff, iterms = sqf_list(i)
                 l.append(Mul(*([Pow(icoeff,j)] + [Pow(b, e*j) for b, e in iterms])))
-            const = cancel(fa.as_basic()/fd.as_basic()/Mul(*l))
+            const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l))
 
             return (ans, result, const)
 
@@ -701,11 +701,11 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         raise NotImplementedError("Nonelementary extensions not supported " +
             "in the structure theorems.")
 
-    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_basic() for i in DE.E_K]
-    L_part = [DE.D[i].as_basic() for i in DE.L_K]
+    E_part = [DE.D[i].quo(Poly(DE.T[i], DE.T[i])).as_expr() for i in DE.E_K]
+    L_part = [DE.D[i].as_expr() for i in DE.L_K]
 
     lhs = Matrix([E_part + L_part])
-    rhs = Matrix([dfa.as_basic()/dfd.as_basic()])
+    rhs = Matrix([dfa.as_expr()/dfd.as_expr()])
 
     A, u = constant_system(lhs, rhs, DE)
     if not all(derivation(i, DE, basic=True).is_zero for i in u) or not A:
@@ -728,7 +728,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             # exp(f) will be the same as result up to a multiplicative
             # constant.  We now find the log of that constant.
             argterms = DE.E_args + [DE.T[i] for i in DE.L_K]
-            const = cancel(fa.as_basic()/fd.as_basic() -
+            const = cancel(fa.as_expr()/fd.as_expr() -
                 Add(*[Mul(i, j/n) for i, j in zip(argterms, u)]))
 
             return (ans, result, n, const)
@@ -777,7 +777,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto'):
 
     # TODO: finish writing this and write tests
 
-    p = cancel(fa.as_basic()/fd.as_basic() - residue_reduce_derivation(H, DE, z))
+    p = cancel(fa.as_expr()/fd.as_expr() - residue_reduce_derivation(H, DE, z))
 
     p = p.as_poly(DE.t)
     if p is None:

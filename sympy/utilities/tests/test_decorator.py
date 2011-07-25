@@ -1,8 +1,9 @@
-from sympy.utilities.decorator import threaded, xthreaded, wraps
+from sympy.utilities.decorator import threaded, xthreaded
 
 from sympy import symbols, Eq, Matrix
 
 from sympy.abc import x, y
+from sympy.core.decorators import wraps
 
 def test_threaded():
     @threaded
@@ -40,10 +41,9 @@ def test_wraps():
     my_func.is_my_func = True
 
     new_my_func = threaded(my_func)
-    new_my_func = wraps(my_func, new_my_func)
+    new_my_func = wraps(my_func)(new_my_func)
 
     assert new_my_func.__name__ == 'my_func'
     assert new_my_func.__doc__ == 'My function. '
     assert hasattr(new_my_func, 'is_my_func')
     assert new_my_func.is_my_func is True
-

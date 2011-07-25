@@ -58,46 +58,36 @@ RR_mpmath = MPmathRealDomain
 CC_python = PythonComplexDomain
 CC_mpmath = MPmathComplexDomain
 
-from groundtypes import HAS_FRACTION, HAS_GMPY
+from pythonrationaltype import PythonRationalType
+
+from groundtypes import HAS_GMPY
 
 def _getenv(key, default=None):
     from os import getenv
     return getenv(key, default)
 
-GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'gmpy').lower()
+GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
 
-if GROUND_TYPES == 'python':  # XXX: needs 2.6 or better (at least for now)
-    FF = FF_python
-    ZZ = ZZ_python()
-
-    if HAS_FRACTION:
-        QQ = QQ_python()
-    elif HAS_GMPY:
-        QQ = QQ_gmpy()
-        GROUND_TYPES = 'python/gmpy'
-    else:
-        QQ = QQ_sympy()
-        GROUND_TYPES = 'python/sympy'
-elif GROUND_TYPES == 'sympy': # XXX: this is *very* slow, guess why ;)
-    FF = FF_sympy
-    ZZ = ZZ_sympy()
-    QQ = QQ_sympy()
-elif GROUND_TYPES == 'gmpy':  # XXX: should be fine? sorry, but no, try -Qnew, damn
+if GROUND_TYPES == 'auto':
     if HAS_GMPY:
-        FF = FF_gmpy
-        ZZ = ZZ_gmpy()
-        QQ = QQ_gmpy()
+        GROUND_TYPES = 'gmpy'
     else:
-        FF = FF_python
-        ZZ = ZZ_python()
+        GROUND_TYPES = 'python'
 
-        if HAS_FRACTION:
-            QQ = QQ_python()
-            GROUND_TYPES = 'python'
-        else:
-            QQ = QQ_sympy()
-            GROUND_TYPES = 'python/sympy'
-else:
+if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
+    from warnings import warn
+    warn("gmpy library is not installed, switching to 'python' ground types")
+    GROUND_TYPES = 'python'
+
+_GROUND_TYPES_MAP = {
+    'gmpy': (FF_gmpy, ZZ_gmpy(), QQ_gmpy()),
+    'sympy': (FF_sympy, ZZ_sympy(), QQ_sympy()),
+    'python': (FF_python, ZZ_python(), QQ_python()),
+}
+
+try:
+    FF, ZZ, QQ = _GROUND_TYPES_MAP[GROUND_TYPES]
+except KeyError:
     raise ValueError("invalid ground types: %s" % GROUND_TYPES)
 
 GF = FF

@@ -1,7 +1,7 @@
 from basic import Basic
-from singleton import SingletonMeta, S
+from singleton import Singleton, S
 from evalf import EvalfMixin
-from numbers import Real
+from numbers import Float
 from sympify import _sympify
 from sympy.mpmath import mpi, mpf
 
@@ -58,7 +58,7 @@ class Set(Basic):
 
         As a shortcut it is possible to use the '~' or '-' operators:
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1).complement
         Union((-oo, 0), (1, oo))
@@ -79,7 +79,7 @@ class Set(Basic):
         """
         The infimum of 'self'.
 
-        >>> ##
+        >>> from sympy import Interval, Union
 
         >>> Interval(0, 1).inf
         0
@@ -97,7 +97,7 @@ class Set(Basic):
     def sup(self):
         """ The supremum of 'self'.
 
-        >>> ##
+        >>> from sympy import Interval, Union
 
         >>> Interval(0, 1).sup
         1
@@ -145,14 +145,14 @@ class Set(Basic):
         if isinstance(other, Set):
             return self.intersect(other) == other
         else:
-            raise ValueError, "Unknown argument '%s'" % other
+            raise ValueError("Unknown argument '%s'" % other)
 
     @property
     def measure(self):
         """
         The (Lebesgue) measure of 'self'.
 
-        >>> ##
+        >>> from sympy import Interval, Union
 
         >>> Interval(0, 1).measure
         1
@@ -185,7 +185,8 @@ class Set(Basic):
         return result
 
     def _eval_subs(self, old, new):
-        if self == old: return new
+        if self == old:
+            return new
         new_args = []
         for arg in self.args:
             if arg == old:
@@ -231,15 +232,14 @@ class Interval(Set, EvalfMixin):
           'mpi' interval instance
     """
 
-    def __new__(cls, start, end,
-                left_open=False, right_open=False, **assumptions):
+    def __new__(cls, start, end, left_open=False, right_open=False):
 
         start = _sympify(start)
         end = _sympify(end)
 
         # Only allow real intervals (use symbols with 'is_real=True').
         if not start.is_real or not end.is_real:
-            raise ValueError, "Only real intervals are supported"
+            raise ValueError("Only real intervals are supported")
 
         # Make sure that the created interval will be valid.
         if end.is_comparable and start.is_comparable:
@@ -255,8 +255,7 @@ class Interval(Set, EvalfMixin):
         if end == S.Infinity:
             right_open = True
 
-        return Basic.__new__(cls, start, end,
-                             left_open, right_open, **assumptions)
+        return Basic.__new__(cls, start, end, left_open, right_open)
 
     @property
     def start(self):
@@ -264,7 +263,7 @@ class Interval(Set, EvalfMixin):
         The left end point of 'self'. This property takes the same value as the
         'inf' property.
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1).start
         0
@@ -280,7 +279,7 @@ class Interval(Set, EvalfMixin):
         The right end point of 'self'. This property takes the same value as the
         'sup' property.
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1).end
         1
@@ -295,7 +294,7 @@ class Interval(Set, EvalfMixin):
         """
         True if 'self' is left-open.
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1, left_open=True).left_open
         True
@@ -310,7 +309,7 @@ class Interval(Set, EvalfMixin):
         """
         True if 'self' is right-open.
 
-        >>> ##
+        >>> from sympy import Interval
 
         >>> Interval(0, 1, right_open=True).right_open
         True
@@ -410,20 +409,17 @@ class Interval(Set, EvalfMixin):
     @property
     def is_left_unbounded(self):
         """Return ``True`` if the left endpoint is negative infinity. """
-        return self.left is S.NegativeInfinity or self.left == Real("-inf")
+        return self.left is S.NegativeInfinity or self.left == Float("-inf")
 
     @property
     def is_right_unbounded(self):
         """Return ``True`` if the right endpoint is positive infinity. """
-        return self.right is S.Infinity or self.right == Real("+inf")
+        return self.right is S.Infinity or self.right == Float("+inf")
 
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
         from sympy.core.relational import Eq, Lt, Le
         from sympy.logic.boolalg import And
-
-        if not symbol.is_real:
-            raise ValueError("only real intervals are supported")
 
         if self.is_point:
             return Eq(symbol, self.start)
@@ -441,7 +437,7 @@ class Interval(Set, EvalfMixin):
                     right = Le(symbol, self.right)
 
             if self.is_left_unbounded and self.is_right_unbounded:
-                return True # XXX: Contained(symbol, Reals)
+                return True # XXX: Contained(symbol, Floats)
             elif self.is_left_unbounded:
                 return right
             elif self.is_right_unbounded:
@@ -467,7 +463,7 @@ class Union(Set):
 
     """
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         intervals, other_sets = [], []
         for arg in args:
             if isinstance(arg, EmptySet):
@@ -483,7 +479,7 @@ class Union(Set):
                 other_sets.append(arg)
 
             else:
-                raise ValueError, "Unknown argument '%s'" % arg
+                raise ValueError("Unknown argument '%s'" % arg)
 
         # Any non-empty sets at all?
         if len(intervals) == 0 and len(other_sets) == 0:
@@ -534,28 +530,28 @@ class Union(Set):
         elif len(intervals) == 0 and len(other_sets) == 1:
             return other_sets[0]
 
-        return Basic.__new__(cls, *(intervals + other_sets), **assumptions)
+        return Basic.__new__(cls, *(intervals + other_sets))
 
     @property
     def _inf(self):
-        # We use min_ so that sup is meaningful in combination with symbolic
+        # We use Min so that sup is meaningful in combination with symbolic
         # interval end points.
-        from sympy.functions.elementary.miscellaneous import min_
+        from sympy.functions.elementary.miscellaneous import Min
 
         inf = self.args[0].inf
         for set in self.args[1:]:
-            inf = min_(inf, set.inf)
+            inf = Min(inf, set.inf)
         return inf
 
     @property
     def _sup(self):
-        # We use max_ so that sup is meaningful in combination with symbolic
+        # We use Max so that sup is meaningful in combination with symbolic
         # end points.
-        from sympy.functions.elementary.miscellaneous import max_
+        from sympy.functions.elementary.miscellaneous import Max
 
         sup = self.args[0].sup
         for set in self.args[1:]:
-            sup = max_(sup, set.sup)
+            sup = Max(sup, set.sup)
         return sup
 
     def _intersect(self, other):
@@ -611,7 +607,7 @@ class EmptySet(Set):
 
     """
 
-    __metaclass__ = SingletonMeta
+    __metaclass__ = Singleton
 
     def _intersect(self, other):
         return S.EmptySet

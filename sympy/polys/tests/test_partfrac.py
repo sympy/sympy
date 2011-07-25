@@ -6,8 +6,9 @@ from sympy.polys.partfrac import (
     apart,
 )
 
-from sympy import S, Poly, raises, E, pi, Matrix, Eq
-from sympy.abc import x, y, a, b
+from sympy import S, Poly, E, pi, Matrix, Eq
+from sympy.utilities.pytest import raises
+from sympy.abc import x, y, a, b, c
 
 def test_apart():
     assert apart(1) == 1
@@ -28,27 +29,29 @@ def test_apart():
     assert apart(f, full=False) == g
     assert apart(f, full=True) == g
 
-    raises(NotImplementedError, "apart(1/(x + 1)/(y + 2))")
-
-    assert apart((E*x+2)/(x-pi)*(x-1), x) in [
-        2 - E + E*pi + E*x - 1/(x - pi)*( 2 - 2*pi + E*pi - E*pi**2),
-        2 - E + E*pi + E*x + 1/(x - pi)*(-2 + 2*pi - E*pi + E*pi**2),
-    ]
-
-    M = Matrix(2, 2, lambda i, j: 1/(x - (i+1))/(x - (1-j)))
-
-    assert apart(M) in [
-        Matrix([
-            [(x - 1)**(-2),         -1/x - 1/(1 - x)          ],
-            [1/(1 - x) - 1/(2 - x), -S.Half/x - S.Half/(2 - x)],
-        ]),
-        Matrix([
-            [(x - 1)**(-2),          -1/x + 1/(x - 1)          ],
-            [-1/(x - 1) + 1/(x - 2), -S.Half/x + S.Half/(x - 2)],
-        ]),
-    ]
+    assert apart((E*x+2)/(x-pi)*(x-1), x) == \
+        2 - E + E*pi + E*x + (E*pi + 2)*(pi - 1)/(x - pi)
 
     assert apart(Eq((x**2 + 1)/(x + 1), x), x) == Eq(x - 1 + 2/(x + 1), x)
+
+    raises(NotImplementedError, "apart(1/(x + 1)/(y + 2))")
+
+def test_apart_matrix():
+    M = Matrix(2, 2, lambda i, j: 1/(x + i + 1)/(x + j))
+
+    assert apart(M) == Matrix([
+        [1/x - 1/(x + 1),            (x + 1)**(-2)        ],
+        [1/(2*x) - (S(1)/2)/(x + 2), 1/(x + 1) - 1/(x + 2)],
+    ])
+
+def test_apart_symbolic():
+    f = a*x**4 + (2*b + 2*a*c)*x**3 + (4*b*c - a**2 + a*c**2)*x**2 + (-2*a*b + 2*b*c**2)*x - b**2
+    g = a**2*x**4 + (2*a*b + 2*c*a**2)*x**3 + (4*a*b*c + b**2 + a**2*c**2)*x**2 + (2*c*b**2 + 2*a*b*c**2)*x + b**2*c**2
+
+    assert apart(f/g, x) == 1/a - 1/(x + c)**2 - b**2/(a*(a*x + b)**2)
+
+    assert apart(1/((x + a)*(x + b)*(x + c)), x) == \
+        1/((a - c)*(b - c)*(c + x)) - 1/((a - b)*(b - c)*(b + x)) + 1/((a - b)*(a - c)*(a + x))
 
 def test_apart_undetermined_coeffs():
     p = Poly(2*x - 3)
@@ -67,8 +70,6 @@ def test_apart_full_decomposition():
     p = Poly(1, x)
     q = Poly(x**5 + 1, x)
 
-    assert str(apart_full_decomposition(p, q)) in [
-        "RootSum(x**4 - x**3 + x**2 - x + 1, Lambda(_a, -1/5/(x - _a)*_a)) + 1/(5*(1 + x))",
-        "RootSum(x**4 - x**3 + x**2 - x + 1, Lambda(_a, -_a/(5*(x - _a)))) + 1/(5*(1 + x))",
-    ]
+    assert apart_full_decomposition(p, q) == \
+        (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 - x + 1)) + (S(1)/5)/(x + 1)
 

@@ -6,7 +6,7 @@ import sys
 
 import os,types,StringIO
 
-from sympy.core import S, C, Basic, Symbol
+from sympy.core import S, C, Basic, Symbol, Mul
 from sympy.printing.printer import Printer
 from sympy.simplify import fraction
 import re as regrep
@@ -400,7 +400,7 @@ class LatexPrinter(Printer):
         tex = str(self._print(expr.args[0]))
 
         for term in expr.args[1:]:
-            coeff = term.as_coeff_terms()[0]
+            coeff = term.as_coeff_mul()[0]
 
             if coeff.is_negative:
                 tex += r" %s" % self._print(term)
@@ -410,7 +410,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_terms()
+        coeff, tail = expr.as_two_terms()
 
         if not coeff.is_negative:
             tex = ""
@@ -418,7 +418,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(C.Mul(*terms))
+        numer, denom = fraction(tail)
 
         def convert(terms):
             product = []
@@ -502,17 +502,17 @@ class LatexPrinter(Printer):
                               self._print(expr.exp))
 
     def _print_Derivative(self, expr):
-        dim = len(expr.symbols)
+        dim = len(expr.variables)
 
         if dim == 1:
             if LatexPrinter.fmt_dict['pdiff'] == 1:
-                tex = r'\partial_{%s}' % self._print(expr.symbols[0])
+                tex = r'\partial_{%s}' % self._print(expr.variables[0])
             else:
-                tex = r"\frac{\partial}{\partial %s}" % self._print(expr.symbols[0])
+                tex = r"\frac{\partial}{\partial %s}" % self._print(expr.variables[0])
         else:
             multiplicity, i, tex = [], 1, ""
-            current = expr.symbols[0]
-            for symbol in expr.symbols[1:]:
+            current = expr.variables[0]
+            for symbol in expr.variables[1:]:
                 if symbol == current:
                     i = i + 1
                 else:
@@ -658,7 +658,7 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{\Gamma}%s" % tex
 
-    def _print_Factorial(self, expr, exp=None):
+    def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
         if self._needs_brackets(x):
             tex = r"\left(%s\right)!" % self._print(x)
@@ -670,7 +670,7 @@ class LatexPrinter(Printer):
         else:
             return tex
 
-    def _print_Binomial(self, expr, exp=None):
+    def _print_binomial(self, expr, exp=None):
         tex = r"{{%s}\choose{%s}}" % (self._print(expr[0]),
                                       self._print(expr[1]))
 
@@ -870,8 +870,8 @@ class LatexPrinter(Printer):
         line_lst = []
         first_flg = True
         for grade in expr.mv:
-            if type(grade) != None:
-                if type(grade) != None:
+            if type(grade) is not None:
+                if type(grade) is not None:
                     ibase = 0
                     for base in grade:
                         if base != 0:
@@ -1142,16 +1142,16 @@ def xdvi(filename='tmplatex.tex',debug=False):
     latex_str = None
     xdvi_str  = None
 
-    if find_executable('latex') != None:
+    if find_executable('latex') is not None:
         latex_str = 'latex'
 
-    if find_executable('xdvi') != None:
+    if find_executable('xdvi') is not None:
         xdvi_str = 'xdvi'
 
-    if find_executable('yap') != None:
+    if find_executable('yap') is not None:
         xdvi_str = 'yap'
 
-    if latex_str != None and xdvi_str != None:
+    if latex_str is not None and xdvi_str is not None:
         if debug: #Display latex excution output for debugging purposes
             os.system(latex_str+' '+filename[:-4])
         else: #Works for Linux don't know about Windows

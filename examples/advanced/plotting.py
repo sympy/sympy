@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Plotting Examples
 
@@ -201,22 +202,8 @@ def main():
         else: print "Not a valid example.\n"
         print p
 
-    #ding_dong_surface()
-    mirrored_saddles()
-    #parametric_spiral()
-    #multistep_gradient()
-    #gradient_vectors()
-    #example(0)
+    example(0) # 0 - 15 are defined above
     print help_str()
-
-    #def profile_plotting():
-        #import cProfile
-        #from pstats import Stats
-        #cProfile.run("p.append(1, 'mode=polar')", 'plot.profile2')
-        #cProfile.run("p.append(x**2+y**2)", 'plot.profile2')
-        #s = Stats('plot.profile2')
-        #s.sort_stats('cumulative').print_stats(20)
 
 if __name__ == "__main__":
     main()
-

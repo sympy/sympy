@@ -22,7 +22,24 @@ except ImportError:
     USE_PYTEST = False
 
 def raises(ExpectedException, code):
-    assert isinstance(code, str)
+    """
+    Tests that ``code`` raises the exception ``ExpectedException``.
+
+    Does nothing if the right exception is raised, otherwise raises an
+    AssertionError.
+
+    Example:
+
+    >>> from sympy.utilities.pytest import raises
+    >>> raises(ZeroDivisionError, "1/0")
+    >>> raises(ZeroDivisionError, "1/2")
+    Traceback (most recent call last):
+    ...
+    AssertionError: DID NOT RAISE
+
+    """
+    if not isinstance(code, str):
+        raise TypeError('raises() expects a code string for the 2nd argument.')
     frame = sys._getframe(1)
     loc = frame.f_locals.copy()
     try:

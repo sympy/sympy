@@ -46,4 +46,3 @@ class Field(Ring):
             return 1/a
         else:
             raise NotReversible('zero is not reversible')
-

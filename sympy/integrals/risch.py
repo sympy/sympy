@@ -24,11 +24,11 @@ will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
 from __future__ import with_statement
-from sympy.core.basic import S
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 
 from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
@@ -69,9 +69,9 @@ def integer_powers(exprs, index=True):
     >>> from sympy.abc import x
     >>> from sympy.integrals.risch import integer_powers
     >>> integer_powers([x, x/2, x**2 + 1, 2*x/3], index=True)
-    [(x/6, [(0, 6), (1, 3), (3, 4)]), (1 + x**2, [(2, 1)])]
+    [(x/6, [(0, 6), (1, 3), (3, 4)]), (x**2 + 1, [(2, 1)])]
     >>> integer_powers([x, x/2, x**2 + 1, 2*x/3], index=False)
-    [(x/6, [(x, 6), (x/2, 3), (2*x/3, 4)]), (1 + x**2, [(1 + x**2, 1)])]
+    [(x/6, [(x, 6), (x/2, 3), (2*x/3, 4)]), (x**2 + 1, [(x**2 + 1, 1)])]
 
     We can see how this relates to the example at the beginning of the
     docstring.  It chose x/6 as the first base term.  Then, the element 0 (x)
@@ -269,11 +269,11 @@ class DifferentialExtension(object):
             # with y).  To avoid all manner of future problems, the sets should
             # be ordered in some canonical, platform independent way.
             exps = filter(lambda i: i.exp.is_rational_function(*self.T) and
-                i.exp.has_any_symbols(*self.T), self.newf.atoms(exp))
+                i.exp.has(*self.T), self.newf.atoms(exp))
             # 2**x
             pows = filter(lambda i: i.exp.is_rational_function(*self.T) and
-                i.exp.has_any_symbols(*self.T), self.newf.atoms(Pow))
-            numpows = filter(lambda i: not i.base.has_any_symbols(*self.T),
+                i.exp.has(*self.T), self.newf.atoms(Pow))
+            numpows = filter(lambda i: not i.base.has(*self.T),
                 pows)
             sympows = filter(lambda i: i.base.is_rational_function(*self.T) and
                 not i.exp.is_Integer, list(set(pows) - set(numpows)))
@@ -327,7 +327,7 @@ class DifferentialExtension(object):
                 exps.append(newterm)
 
             logs = filter(lambda i: i.args[0].is_rational_function(*self.T) and
-                i.args[0].has_any_symbols(*self.T), self.newf.atoms(log))
+                i.args[0].has(*self.T), self.newf.atoms(log))
             symlogs = filter(lambda i: i.has(*self.T) and i.args[0].is_Pow and
                 i.args[0].base.is_rational_function(*self.T) and
                 not i.args[0].exp.is_Integer, self.newf.atoms(log))
@@ -463,7 +463,7 @@ class DifferentialExtension(object):
                     arga*derivation(Poly(argd, self.t), self))
                 dargd = argd**2
                 darga, dargd = darga.cancel(dargd, include=True)
-                darg = darga.as_basic()/dargd.as_basic()
+                darg = darga.as_expr()/dargd.as_expr()
                 self.t = self.ts.next()
                 self.T.append(self.t)
                 self.E_args.append(arg)
@@ -514,12 +514,12 @@ class DifferentialExtension(object):
                 darga = (argd*derivation(Poly(arga, self.t), self) -
                     arga*derivation(Poly(argd, self.t), self))
                 dargd = argd**2
-                darg = darga.as_basic()/dargd.as_basic()
+                darg = darga.as_expr()/dargd.as_expr()
                 self.t = self.ts.next()
                 self.T.append(self.t)
                 self.L_args.append(arg)
                 self.L_K.append(len(self.T) - 1)
-                self.D.append(cancel(darg.as_basic()/arg).as_poly(self.t,
+                self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
                     expand=False))
                 i = Symbol('i', dummy=True)
                 self.Tfuncs = self.Tfuncs + [Lambda(i, log(arg.subs(self.x, i)))]
@@ -642,13 +642,13 @@ def gcdex_diophantine(a, b, c):
     # XXX: Bettter name?
 
     s, g = a.half_gcdex(b)
-    q = c.quo(g) # Inexact division means c is not in (a, b)
+    q = c.exquo(g) # Inexact division means c is not in (a, b)
     s = q*s
 
     if not s.is_zero and b.degree() >= b.degree():
         q, s = s.div(b)
 
-    t = (c - s*a).quo(b)
+    t = (c - s*a).exquo(b)
 
     return (s, t)
 
@@ -664,8 +664,8 @@ def frac_in(f, t, **kwargs):
     cancel = kwargs.pop('cancel', False)
     if type(f) is tuple:
         fa, fd = f
-        f = fa.as_basic()/fd.as_basic()
-    fa, fd = f.as_basic().as_numer_denom()
+        f = fa.as_expr()/fd.as_expr()
+    fa, fd = f.as_expr().as_numer_denom()
     fa, fd = fa.as_poly(t, **kwargs), fd.as_poly(t, **kwargs)
     if cancel:
         fa, fd = fa.cancel(fd, include=True)
@@ -691,7 +691,7 @@ def as_poly_1t(p, t, z):
     >>> p1 = random_poly(x, 10, -10, 10)
     >>> p2 = random_poly(x, 10, -10, 10)
     >>> p = p1 + p2.subs(x, 1/x)
-    >>> as_poly_1t(p, x, z).as_basic().subs(z, 1/x) == p
+    >>> as_poly_1t(p, x, z).as_expr().subs(z, 1/x) == p
     True
     """
     pa, pd = frac_in(p, t, cancel=True)
@@ -704,7 +704,7 @@ def as_poly_1t(p, t, z):
     one_t_part = pa.slice(0, d + 1) # requires polys11
     r = pd.degree() - pa.degree()
     t_part = pa - one_t_part
-    t_part = t_part.to_field().quo(pd)
+    t_part = t_part.to_field().exquo(pd)
     # Compute the negative degree parts.  Also requires polys11.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
         **{'domain':one_t_part.domain})
@@ -754,10 +754,10 @@ def derivation(p, DE, coefficientD=False, basic=False):
     for d, v in zip(D, T):
         pv = p.as_poly(v)
         if pv is None or basic:
-            pv = p.as_basic()
+            pv = p.as_expr()
 
         if basic:
-            r += d.as_basic()*pv.diff(v)
+            r += d.as_expr()*pv.diff(v)
         else:
             r += (d*pv.diff(v)).as_poly(t)
 
@@ -807,20 +807,20 @@ def splitfactor(p, DE, coefficientD=False, z=None):
     if p.is_zero:
         return (p, One)
 
-    if not p.has_any_symbols(DE.t):
+    if not p.has(DE.t):
         s = p.as_poly(*kinv).gcd(Dp.as_poly(*kinv)).as_poly(DE.t)
-        n = p.quo(s)
+        n = p.exquo(s)
         return (n, s)
 
     if not Dp.is_zero:
         h = p.gcd(Dp).to_field()
         g = p.gcd(p.diff(DE.t)).to_field()
-        s = h.quo(g)
+        s = h.exquo(g)
 
         if s.degree(DE.t) == 0:
             return (p, One)
 
-        q_split = splitfactor(p.quo(s), DE, coefficientD=coefficientD)
+        q_split = splitfactor(p.exquo(s), DE, coefficientD=coefficientD)
 
         return (q_split[0], q_split[1]*s)
     else:
@@ -852,7 +852,7 @@ def splitfactor_sqf(p, DE, coefficientD=False, z=None):
             coefficientD=coefficientD).as_poly(*kkinv)).as_poly(DE.t)
         pi = Poly(pi, DE.t)
         Si = Poly(Si, DE.t)
-        Ni = pi.quo(Si)
+        Ni = pi.exquo(Si)
         if not Si.is_one:
             S.append((Si, i))
         if not Ni.is_one:
@@ -908,7 +908,7 @@ def hermite_reduce(a, d, DE):
         if i < 2:
             continue
 
-        u = d.quo(v**i)
+        u = d.exquo(v**i)
         for j in range(i - 1, 0, -1):
             udv = u*derivation(v, DE)
             b, c = gcdex_diophantine(udv.as_poly(DE.t), v.as_poly(DE.t),
@@ -972,7 +972,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     """
     # TODO: Use log_to_atan() from rationaltools.py
     # If r = residue_reduce(...), then the logarithmic part is given by:
-    # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_basic()).subs(z,
+    # sum([RootSum(a[0].as_poly(z), lambda i: i*log(a[1].as_expr()).subs(z,
     # i)).subs(t, log(x)) for a in r[0]])
 
     z = z or Symbol('z', dummy=True)
@@ -1013,7 +1013,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
             h_lc_sqf = h_lc.sqf_list_include(all=True)
 
             for a, j in h_lc_sqf:
-                h = Poly(h, DE.t, field=True).quo(Poly(gcd(a, s**j, *kkinv),
+                h = Poly(h, DE.t, field=True).exquo(Poly(gcd(a, s**j, *kkinv),
                     DE.t))
 
             s = Poly(s, z).monic()
@@ -1024,13 +1024,13 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 
                 for coeff in h.coeffs()[1:]:
                     L = reduced(inv*coeff, [s])[1]
-                    coeffs.append(L.as_basic())
+                    coeffs.append(L.as_expr())
 
                 h = Poly(dict(zip(h.monoms(), coeffs)), DE.t)
 
             H.append((s, h))
 
-    b = all([not cancel(i.as_basic()).has_any_symbols(DE.t, z) for i, _ in Np])
+    b = all([not cancel(i.as_expr()).has(DE.t, z) for i, _ in Np])
 
     return (H, b)
 
@@ -1042,7 +1042,7 @@ def residue_reduce_to_basic(H, DE, z):
     i = Symbol('i', dummy=True)
     s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
 
-    return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_basic()).subs(
+    return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
         {z: i}).subs(s))) for a in H))
 
 def residue_reduce_derivation(H, DE, z):
@@ -1050,12 +1050,12 @@ def residue_reduce_derivation(H, DE, z):
     Computes the derivation of an expression returned by residue_reduce().
 
     In general, this is a rational function in t, so this returns an
-    as_basic() result.
+    as_expr() result.
     """
     # TODO: verify that this is correct for multiple extensions
     i = Symbol('i', dummy=True)
     return S(sum((RootSum(a[0].as_poly(z), Lambda(i, i*derivation(a[1],
-        DE).as_basic().subs(z, i)/a[1].as_basic().subs(z, i))) for a in H)))
+        DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H)))
 
 def integrate_primitive_polynomial(p, DE):
     """
@@ -1070,7 +1070,7 @@ def integrate_primitive_polynomial(p, DE):
 
     Zero = Poly(0, DE.t)
 
-    if not p.has_any_symbols(DE.t):
+    if not p.has(DE.t):
         return (Zero, p, True)
 
     Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
@@ -1089,7 +1089,7 @@ def integrate_primitive_polynomial(p, DE):
 
     m = p.degree(DE.t)
     q0 = c[0].as_poly(DE.t)*Poly(DE.t**(m + 1)/(m + 1), DE.t) + \
-        (ba.as_basic()/bd.as_basic()).as_poly(DE.t)*Poly(DE.t**m, DE.t)
+        (ba.as_expr()/bd.as_expr()).as_poly(DE.t)*Poly(DE.t**m, DE.t)
 
     # TODO: Rewrite this non-recursively
     # c.f. risch_integrate(log(x)**1001, x)
@@ -1117,27 +1117,27 @@ def integrate_primitive(a, d, DE):
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
-        i = cancel(a.as_basic()/d.as_basic() - (g1[1]*derivation(g1[0], DE) -
-            g1[0]*derivation(g1[0], DE)).as_basic()/(g1[1]**2).as_basic() -
+        i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
+            g1[0]*derivation(g1[0], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
         i = Integral(cancel(i).subs(s), DE.x)
-        return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
+        return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), i, b)
 
     # h - Dg2 + r
-    p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
-        DE, z) + r[0].as_basic()/r[1].as_basic())
+    p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
+        DE, z) + r[0].as_expr()/r[1].as_expr())
     p = p.as_poly(DE.t)
 
     q, i, b = integrate_primitive_polynomial(p, DE)
 
-    ret = ((g1[0].as_basic()/g1[1].as_basic() + q.as_basic()).subs(s) +
+    ret = ((g1[0].as_expr()/g1[1].as_expr() + q.as_expr()).subs(s) +
         residue_reduce_to_basic(g2, DE, z))
     if not b:
         # TODO: This does not do the right thing when b is False
-        i = Integral(cancel(i.as_basic()).subs(s), DE.x)
+        i = Integral(cancel(i.as_expr()).subs(s), DE.x)
     else:
-        i = cancel(i.as_basic())
+        i = cancel(i.as_expr())
 
     return (ret, i, b)
 
@@ -1152,7 +1152,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     from sympy.integrals.rde import rischDE
 
     t1 = DE.t
-    dtt = DE.d.quo(Poly(DE.t, DE.t))
+    dtt = DE.d.exquo(Poly(DE.t, DE.t))
     qa = Poly(0, DE.t)
     qd = Poly(1, DE.t)
     b = True
@@ -1207,29 +1207,29 @@ def integrate_hyperexponential(a, d, DE):
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
-        i = cancel(a.as_basic()/d.as_basic() - (g1[1]*derivation(g1[0], DE) -
-            g1[0]*derivation(g1[0], DE)).as_basic()/(g1[1]**2).as_basic() -
+        i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
+            g1[0]*derivation(g1[0], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
         i = Integral(cancel(i.subs(s)), DE.x)
-        return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
+        return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), i, b)
 
     # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
     # h - Dg2 + r
-    p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
-        DE, z) + r[0].as_basic()/r[1].as_basic())
+    p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
+        DE, z) + r[0].as_expr()/r[1].as_expr())
     pp = as_poly_1t(p, DE.t, z)
 
     qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
 
     i = pp.nth(0, 0)
 
-    ret = ((g1[0].as_basic()/g1[1].as_basic() + qa.as_basic()/
-        qd.as_basic()).subs(s) + residue_reduce_to_basic(g2, DE, z))
+    ret = ((g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
+        qd.as_expr()).subs(s) + residue_reduce_to_basic(g2, DE, z))
 
     if not b:
-        i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_basic()/\
-            (qd**2).as_basic()
+        i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
+            (qd**2).as_expr()
         i = Integral(cancel(i).subs(s), DE.x)
 
     return (ret, i, b)
@@ -1245,8 +1245,8 @@ def integrate_hypertangent_polynomial(p, DE):
     """
     # XXX: Make sure that sqrt(-1) is not in k.
     q, r = polynomial_reduce(p, DE)
-    a = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
-    c = Poly(r.nth(1)/(2*a.as_basic()), DE.t)
+    a = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
+    c = Poly(r.nth(1)/(2*a.as_expr()), DE.t)
     return (q, c)
 
 def integrate_nonlinear_no_specials(a, d, DE):
@@ -1274,13 +1274,13 @@ def integrate_nonlinear_no_specials(a, d, DE):
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
-        return ((g1[0].as_basic()/g1[1].as_basic()).subs(s) +
+        return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), b)
 
     # Because f has no specials, this should be a polynomial in t, or else
     # there is a bug.
-    p = cancel(h[0].as_basic()/h[1].as_basic() - residue_reduce_derivation(g2,
-        DE, z).as_basic() + r[0].as_basic()/r[1].as_basic()).as_poly(DE.t)
+    p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
+        DE, z).as_expr() + r[0].as_expr()/r[1].as_expr()).as_poly(DE.t)
     q1, q2 = polynomial_reduce(p, DE)
 
     if q2.has(DE.t):
@@ -1288,7 +1288,7 @@ def integrate_nonlinear_no_specials(a, d, DE):
     else:
         b = True
 
-    ret = (cancel(g1[0].as_basic()/g1[1].as_basic() + q1.as_basic()).subs(s) +
+    ret = (cancel(g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()).subs(s) +
         residue_reduce_to_basic(g2, DE, z))
     return (ret, b)
 
@@ -1330,13 +1330,13 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
 
     >>> pprint(risch_integrate((2*log(x)**2 - log(x) - x**2)/(log(x)**3 -
     ... x**2*log(x)), x))
+                                             /
+                                            |
+      log(-x + log(x))   log(x + log(x))    |   1
+    - ---------------- + --------------- +  | ------ dx
+             2                  2           | log(x)
+                                            |
                                            /
-                                          |
-    log(x + log(x))   log(-x + log(x))    |   1
-    --------------- - ---------------- +  | ------ dx
-           2                 2            | log(x)
-                                          |
-                                         /
 
     This means that it has proven that the integral of 1/log(x) is
     nonelementary.  This function is also known as the logarithmic integral,
@@ -1396,7 +1396,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
         elif case == 'base':
             # XXX: We can't call ratint() directly here because it doesn't
             # handle polynomials correctly.
-            ans = integrate(fa.as_basic()/fd.as_basic(), DE.x)
+            ans = integrate(fa.as_expr()/fd.as_expr(), DE.x)
             b = False
             i = S(0)
         else:

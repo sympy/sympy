@@ -10,4 +10,3 @@ class CharacteristicZero(Domain):
     def characteristic(self):
         """Return the characteristic of this domain. """
         return 0
-

@@ -29,4 +29,3 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
         """Convert a `ANP` object to `dtype`. """
         if a.is_ground:
             return K1.convert(a.LC(), K0.dom)
-

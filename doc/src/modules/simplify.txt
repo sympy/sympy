@@ -15,10 +15,6 @@ separate
 --------
 .. autofunction:: separate
 
-together
---------
-.. autofunction:: together
-
 radsimp
 -------
 .. autofunction:: radsimp
@@ -58,18 +54,6 @@ nsimplify
 Rewrite
 =======
 .. module:: sympy.simplify.rewrite
-
-cancel
-------
-.. autofunction:: cancel
-
-trim
-----
-.. autofunction:: trim
-
-.. apart
-.. -----
-.. .. autofunction:: apart
 
 Square Root Denest
 ==================

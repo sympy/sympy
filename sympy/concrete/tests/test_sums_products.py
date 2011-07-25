@@ -1,62 +1,60 @@
-from sympy import (Symbol, Sum, oo, Real, Rational, sum, pi, cos, zeta,
-Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma, Function, Integral, Product, product)
-from sympy.concrete.summations import getab
-from sympy.concrete.sums_products import Sum2
-from sympy.utilities.pytest import XFAIL
+from sympy import (S, Symbol, Sum, oo, Float, Rational, summation, pi, cos,
+    zeta, exp, log, factorial, sqrt, E, sympify, binomial, harmonic, Catalan,
+    EulerGamma, Function, Integral, Product, product, nan, diff, Derivative)
+from sympy.concrete.summations import telescopic
+from sympy.utilities.pytest import XFAIL, raises
 
-a, b, c, d, m, k = map(Symbol, 'abcdmk')
+a, b, c, d, m, k, x, y = map(Symbol, 'abcdmkxy')
 n = Symbol('n', integer=True)
 
-def test_builtin_sums():
-    assert sum([]) == 0
-
-    assert sum([], 1) == 1
-    assert sum([], start=1) == 1
-
-    assert sum([1,2,3,4]) == 10
-
-    assert sum([1,2,3,4], 1) == 11
-    assert sum([1,2,3,4], start=1) == 11
-
 def test_arithmetic_sums():
-    assert sum(1, (n, a, b)) == b-a+1
-    assert sum(1, (n, 1, 10)) == 10
-    assert sum(2*n, (n, 0, 10**10)) == 100000000010000000000
-    assert sum(4*n*m, (n, a, 1), (m, 1, d)).expand() == \
+    assert summation(1, (n, a, b)) == b-a+1
+    assert summation(1, (n, 1, 10)) == 10
+    assert summation(2*n, (n, 0, 10**10)) == 100000000010000000000
+    assert summation(4*n*m, (n, a, 1), (m, 1, d)).expand() == \
         2*d + 2*d**2 + a*d + a*d**2 - d*a**2 - a**2*d**2
-    assert sum(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
+    assert summation(cos(n), (n, -2, 1)) == cos(-2)+cos(-1)+cos(0)+cos(1)
 
 def test_polynomial_sums():
-    assert sum(n**2, (n, 3, 8)) == 199
-    assert sum(n, (n, a, b)) == \
+    assert summation(n**2, (n, 3, 8)) == 199
+    assert summation(n, (n, a, b)) == \
         ((a+b)*(b-a+1)/2).expand()
-    assert sum(n**2, (n, 1, b)) == \
+    assert summation(n**2, (n, 1, b)) == \
         ((2*b**3+3*b**2+b)/6).expand()
-    assert sum(n**3, (n, 1, b)) == \
+    assert summation(n**3, (n, 1, b)) == \
         ((b**4+2*b**3+b**2)/4).expand()
-    assert sum(n**6, (n, 1, b)) == \
+    assert summation(n**6, (n, 1, b)) == \
         ((6*b**7+21*b**6+21*b**5-7*b**3+b)/42).expand()
 
 def test_geometric_sums():
-    assert sum(pi**n, (n, 0, b)) == (1-pi**(b+1)) / (1-pi)
-    assert sum(2 * 3**n, (n, 0, b)) == 3**(b+1) - 1
-    assert sum(Rational(1,2)**n, (n, 1, oo)) == 1
-    assert sum(2**n, (n, 0, b)) == 2**(b+1) - 1
-    assert sum(2**n, (n, 1, oo)) == oo
-    assert sum(2**(-n), (n, 1, oo)) == 1
-    assert sum(3**(-n), (n, 4, oo)) == Rational(1,54)
-    assert sum(2**(-4*n+3), (n, 1, oo)) == Rational(8,15)
-    assert sum(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
+    assert summation(pi**n, (n, 0, b)) == (1-pi**(b+1)) / (1-pi)
+    assert summation(2 * 3**n, (n, 0, b)) == 3**(b+1) - 1
+    assert summation(Rational(1,2)**n, (n, 1, oo)) == 1
+    assert summation(2**n, (n, 0, b)) == 2**(b+1) - 1
+    assert summation(2**n, (n, 1, oo)) == oo
+    assert summation(2**(-n), (n, 1, oo)) == 1
+    assert summation(3**(-n), (n, 4, oo)) == Rational(1,54)
+    assert summation(2**(-4*n+3), (n, 1, oo)) == Rational(8,15)
+    assert summation(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
+
+def test_harmonic_sums():
+    assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
+    assert summation(1/k, (k, 1, n)) == harmonic(n)
+    assert summation(n/k, (k, 1, n)) == n*harmonic(n)
+    assert summation(1/k, (k, 5, n)) == harmonic(n) - harmonic(4)
 
 def test_composite_sums():
     f = Rational(1,2)*(7 - 6*n + Rational(1,7)*n**3)
-    s = sum(f, (n, a, b))
+    s = summation(f, (n, a, b))
     assert not isinstance(s, Sum)
     A = 0
     for i in range(-3, 5):
         A += f.subs(n, i)
     B = s.subs(a,-3).subs(b,4)
     assert A == B
+
+def test_hypergeometric_sums():
+    assert summation(binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
 
 fac = factorial
 
@@ -177,23 +175,32 @@ def test_telescopic_sums():
     assert Sum(cos(k)-cos(k+3),(k,1,n)).doit() == -cos(1 + n) - cos(2 + n) - \
                                            cos(3 + n) + cos(1) + cos(2) + cos(3)
 
+    # dummy variable shouldn't matter
+    assert telescopic(1/m, -m/(1+m),(m, n-1, n)) == \
+           telescopic(1/k, -k/(1+k),(k, n-1, n))
+
+    assert Sum(1/x/(x - 1), (x, a, b)).doit() == 1/(-1 + a) - 1/b
+
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
     assert s == Sum(*s.args)
+    raises(ValueError, 'Sum(x, x)')
+    raises(ValueError, 'Sum(x, (x, 1))')
 
 def test_Sum_limit_subs():
-    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b,2)
+    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
+    assert Sum(a, (a, Sum(b, (b, 1, 2)), 4)).subs(Sum(b, (b, 1, 2)), c) == \
+           Sum(a, (a, c, 4))
 
-def test_Sum2():
-    x = Symbol('x')
-    y = Symbol('y')
-    assert Sum2(x**y, (x, 1, 3)) == 1 + 2**y + 3**y
+@XFAIL
+def test_issue2166():
+    assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 def test_Sum_doit():
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit(deep = False) == \
         3*Integral(a**2)
-    assert sum(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
+    assert summation(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
@@ -201,3 +208,22 @@ def test_Product_doit():
         6*Integral(a**2)**3
     assert product(n*Integral(a**2), (n, 1, 3)) == 6*Integral(a**2)**3
 
+def test_Sum_interface():
+    assert isinstance(Sum(0, (n, 0, 2)), Sum)
+    assert Sum(nan, (n, 0, 2)) is nan
+    assert Sum(nan, (n, 0, oo)) is nan
+    assert Sum(0, (n, 0, 2)).doit() == 0
+    assert isinstance(Sum(0, (n, 0, oo)), Sum)
+    assert Sum(0, (n, 0, oo)).doit() == 0
+    raises(ValueError, "Sum(1)")
+    raises(ValueError, "summation(1)")
+
+def test_eval_diff():
+    assert Sum(x, (x, 1, 2)).diff(x) == 0
+    assert Sum(x*y, (x, 1, 2)).diff(x) == 0
+    assert Sum(x*y, (y, 1, 2)).diff(x) == Sum(y, (y, 1, 2))
+    e = Sum(x*y, (x, 1, a))
+    assert e.diff(a) == Derivative(e, a)
+    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
+           Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == \
+           24

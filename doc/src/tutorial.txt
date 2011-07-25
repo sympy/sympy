@@ -20,7 +20,7 @@ to know more, read the
 :ref:`SymPy User's Guide <guide>`,
 :ref:`SymPy Modules Reference <module-docs>`.
 or the `sources
-<http://git.sympy.org/?p=sympy.git;a=tree;hb=HEAD>`_ directly.
+<https://github.com/sympy/sympy/>`_ directly.
 
 First Steps with SymPy
 ======================
@@ -94,19 +94,20 @@ defined the symbols x, y, z and some other things:
 
 .. parsed-literal::
 
-    $ :input:`cd sympy-0.5.12`
-    $ :input:`bin/isympy`
-    Python 2.4.4 console for SymPy 0.5.12-hg. These commands were executed:
-    >>> from __future__ import division
-    >>> from sympy import *
-    >>> x, y, z = symbols('x,y,z')
-    >>> k, m, n = symbols('k,m,n', integer=True)
-    >>> f = Function("f")
+    $ :input:`cd sympy`
+    $ :input:`./bin/isympy`
+IPython console for SymPy 0.7.0 (Python 2.7.1) (ground types: gmpy)
 
-    Documentation can be found at http://sympy.org/
+These commands were executed:
+>>> from __future__ import division
+>>> from sympy import *
+>>> x, y, z, t = symbols('x y z t')
+>>> k, m, n = symbols('k m n', integer=True)
+>>> f, g, h = symbols('f g h', cls=Function)
 
+Documentation can be found at http://www.sympy.org
 
-    In [1]: :input:`(1/cos(x)).series(x, 0, 10)`
+    In [1]: input:`(1/cos(x)).series(x, 0, 10)`
     Out[1]:
          2      4       6        8
         x    5*x    61*x    277*x
@@ -122,7 +123,7 @@ defined the symbols x, y, z and some other things:
 Using SymPy as a calculator
 ---------------------------
 
-Sympy has three built-in numeric types: Real, Rational and Integer.
+Sympy has three built-in numeric types: Float, Rational and Integer.
 
 The Rational class represents a rational number as a pair of two Integers: the numerator and the denominator, so Rational(1,2) represents 1/2, Rational(5,2) 5/2 and so on.
 
@@ -200,64 +201,65 @@ Then you can play with them::
     (x + y)**2
 
     >>> ((x+y)**2).expand()
-    2*x*y + x**2 + y**2
+    x**2 + 2*x*y + y**2
 
 And substitute them for other symbols or numbers using ``subs(old, new)``::
 
     >>> ((x+y)**2).subs(x, 1)
-    (1 + y)**2
+    (y + 1)**2
 
     >>> ((x+y)**2).subs(x, y)
     4*y**2
+
+For the remainder of the tutorial, we assume that we have run::
+
+    >>> import sys
+    >>> oldhook = sys.displayhook
+    >>> sys.displayhook = pprint
+
+So that things pretty print.  See the :ref:`printing-tutorial` section below.  If you have a unicode font installed, your output may look a litte different (it will look slightly nicer).
 
 Algebra
 =======
 
 For partial fraction decomposition, use ``apart(expr, x)``::
 
-    In [1]: 1/( (x+2)*(x+1) )
-    Out[1]:
+    >>> 1/( (x+2)*(x+1) )
            1
-    ───────────────
-    (2 + x)*(1 + x)
+    ---------------
+    (x + 1)*(x + 2)
 
-    In [2]: apart(1/( (x+2)*(x+1) ), x)
-    Out[2]:
-      1       1
-    ───── - ─────
-    1 + x   2 + x
+    >>> apart(1/( (x+2)*(x+1) ), x)
+        1       1
+    - ----- + -----
+      x + 2   x + 1
 
-    In [3]: (x+1)/(x-1)
-    Out[3]:
-    -(1 + x)
-    ────────
-     1 - x
+    >>> (x+1)/(x-1)
+    x + 1
+    -----
+    x - 1
 
-    In [4]: apart((x+1)/(x-1), x)
-    Out[4]:
+    >>> apart((x+1)/(x-1), x)
           2
-    1 - ─────
-        1 - x
+    1 + -----
+        x - 1
 
 To combine things back together, use ``together(expr, x)``::
 
-    In [7]: together(1/x + 1/y + 1/z)
-    Out[7]:
+    >>> together(1/x + 1/y + 1/z)
     x*y + x*z + y*z
-    ───────────────
+    ---------------
          x*y*z
 
-    In [8]: together(apart((x+1)/(x-1), x), x)
-    Out[8]:
-    -1 - x
-    ──────
-    1 - x
+    >>> together(apart((x+1)/(x-1), x), x)
+    x + 1
+    -----
+    x - 1
 
-    In [9]: together(apart(1/( (x+2)*(x+1) ), x), x)
-    Out[9]:
+    >>> together(apart(1/( (x+2)*(x+1) ), x), x)
            1
-    ───────────────
-    (2 + x)*(1 + x)
+    ---------------
+    (x + 1)*(x + 2)
 
 
 .. index:: calculus
@@ -292,7 +294,7 @@ you can also calculate the limit at infinity::
 
 for some non-trivial examples on limits, you can read the test file
 `test_demidovich.py
-<http://git.sympy.org/?p=sympy.git;a=blob;f=sympy/series/tests/test_demidovich.py>`_
+<https://github.com/sympy/sympy/blob/master/sympy/series/tests/test_demidovich.py>`_
 
 .. index:: differentiation, diff
 
@@ -309,12 +311,14 @@ You can differentiate any SymPy expression using ``diff(func, var)``. Examples::
     2*cos(2*x)
 
     >>> diff(tan(x), x)
-    1 + tan(x)**2
+       2
+    tan (x) + 1
 
 You can check, that it is correct by::
 
     >>> limit((tan(x+y)-tan(x))/y, y, 0)
-    1 + tan(x)**2
+       2
+    tan (x) + 1
 
 Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
 
@@ -340,9 +344,15 @@ Use ``.series(var, point, order)``::
     >>> from sympy import *
     >>> x = Symbol('x')
     >>> cos(x).series(x, 0, 10)
-    1 - x**2/2 + x**4/24 - x**6/720 + x**8/40320 + O(x**10)
+         2    4     6      8
+        x    x     x      x
+    1 - -- + -- - --- + ----- + O(x**10)
+        2    24   720   40320
     >>> (1/cos(x)).series(x, 0, 10)
-    1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
+         2      4       6        8
+        x    5*x    61*x    277*x
+    1 + -- + ---- + ----- + ------ + O(x**10)
+        2     24     720     8064
 
 Another simple example::
 
@@ -382,18 +392,23 @@ matching::
 You can integrate elementary functions::
 
     >>> integrate(6*x**5, x)
-    x**6
+     6
+    x
     >>> integrate(sin(x), x)
     -cos(x)
     >>> integrate(log(x), x)
-    -x + x*log(x)
+    x*log(x) - x
     >>> integrate(2*x + sinh(x), x)
-    cosh(x) + x**2
+     2
+    x  + cosh(x)
 
 Also special functions are handled easily::
 
     >>> integrate(exp(-x**2)*erf(x), x)
-    pi**(1/2)*erf(x)**2/4
+      ____    2
+    \/ pi *erf (x)
+    --------------
+          4
 
 It is possible to compute definite integral::
 
@@ -423,9 +438,11 @@ Complex numbers
     >>> from sympy import Symbol, exp, I
     >>> x = Symbol("x")
     >>> exp(I*x).expand()
-    exp(I*x)
+     I*x
+    e
     >>> exp(I*x).expand(complex=True)
-    I*exp(-im(x))*sin(re(x)) + cos(re(x))*exp(-im(x))
+       -im(x)               -im(x)
+    I*e      *sin(re(x)) + e      *cos(re(x))
     >>> x = Symbol("x", real=True)
     >>> exp(I*x).expand(complex=True)
     I*sin(x) + cos(x)
@@ -435,172 +452,152 @@ Functions
 
 **trigonometric**::
 
-    In [1]: sin(x+y).expand(trig=True)
-    Out[1]: cos(x)*sin(y) + cos(y)*sin(x)
+    >>> sin(x+y).expand(trig=True)
+    sin(x)*cos(y) + sin(y)*cos(x)
 
-    In [2]: cos(x+y).expand(trig=True)
-    Out[2]: cos(x)*cos(y) - sin(x)*sin(y)
+    >>> cos(x+y).expand(trig=True)
+    -sin(x)*sin(y) + cos(x)*cos(y)
 
-    In [3]: sin(I*x)
-    Out[3]: ⅈ*sinh(x)
+    >>> sin(I*x)
+    I*sinh(x)
 
-    In [4]: sinh(I*x)
-    Out[4]: ⅈ*sin(x)
+    >>> sinh(I*x)
+    I*sin(x)
 
-    In [5]: asinh(I)
-    Out[5]:
-    π*ⅈ
-    ───
+    >>> asinh(I)
+    I*pi
+    ----
      2
 
-    In [6]: asinh(I*x)
-    Out[6]: ⅈ*asin(x)
+    >>> asinh(I*x)
+    I*asin(x)
 
-    In [15]: sin(x).series(x, 0, 10)
-    Out[15]:
+    >>> sin(x).series(x, 0, 10)
          3     5     7       9
         x     x     x       x
-    x - ── + ─── - ──── + ────── + O(x**10)
+    x - -- + --- - ---- + ------ + O(x**10)
         6    120   5040   362880
 
-    In [16]: sinh(x).series(x, 0, 10)
-    Out[16]:
+    >>> sinh(x).series(x, 0, 10)
          3     5     7       9
         x     x     x       x
-    x + ── + ─── + ──── + ────── + O(x**10)
+    x + -- + --- + ---- + ------ + O(x**10)
         6    120   5040   362880
 
-    In [17]: asin(x).series(x, 0, 10)
-    Out[17]:
+    >>> asin(x).series(x, 0, 10)
          3      5      7       9
         x    3*x    5*x    35*x
-    x + ── + ──── + ──── + ───── + O(x**10)
+    x + -- + ---- + ---- + ----- + O(x**10)
         6     40    112     1152
 
-    In [18]: asinh(x).series(x, 0, 10)
-    Out[18]:
+    >>> asinh(x).series(x, 0, 10)
          3      5      7       9
         x    3*x    5*x    35*x
-    x - ── + ──── - ──── + ───── + O(x**10)
+    x - -- + ---- - ---- + ----- + O(x**10)
         6     40    112     1152
 
 
 **spherical harmonics**::
 
-    In [1]: from sympy.abc import theta, phi
+    >>> from sympy.abc import theta, phi
 
-    In [2]: Ylm(1, 0, theta, phi)
-    Out[2]:
-      ⎽⎽⎽
-    ╲╱ 3 *cos(θ)
-    ────────────
-          ⎽⎽⎽
-      2*╲╱ π
+    >>> Ylm(1, 0, theta, phi)
+      ___
+    \/ 3 *cos(theta)
+    ----------------
+            ____
+        2*\/ pi
 
-    In [3]: Ylm(1, 1, theta, phi)
-    Out[3]:
-       ⎽⎽⎽           ⅈ*φ
-    -╲╱ 6 *│sin(θ)│*ℯ
-    ────────────────────
-              ⎽⎽⎽
-          4*╲╱ π
+    >>> Ylm(1, 1, theta, phi)
+       ___  I*phi
+    -\/ 6 *e     *sin(theta)
+    ------------------------
+                ____
+            4*\/ pi
 
-    In [4]: Ylm(2, 1, theta, phi)
-    Out[4]:
-       ⎽⎽⎽⎽                  ⅈ*φ
-    -╲╱ 30 *│sin(θ)│*cos(θ)*ℯ
-    ────────────────────────────
-                  ⎽⎽⎽
-              4*╲╱ π
+    >>> Ylm(2, 1, theta, phi)
+       ____  I*phi
+    -\/ 30 *e     *sin(theta)*cos(theta)
+    ------------------------------------
+                      ____
+                  4*\/ pi
 
 **factorials and gamma function**::
 
-    In [1]: x = Symbol("x")
+    >>> x = Symbol("x")
 
-    In [2]: y = Symbol("y", integer=True)
+    >>> y = Symbol("y", integer=True)
 
-    In [3]: factorial(x)
-    Out[3]: Γ(1 + x)
+    >>> factorial(x)
+    x!
 
-    In [4]: factorial(y)
-    Out[4]: y!
+    >>> factorial(y)
+    y!
 
-    In [5]: factorial(x).series(x, 0, 3)
-    Out[5]:
-                        2           2    2  2
-                       x *EulerGamma    π *x
-    1 - x*EulerGamma + ────────────── + ───── + O(x**3)
-                             2            12
+    >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
+                         2  2             2  2
+                       pi *x    EulerGamma *x
+    1 - EulerGamma*x + ------ + -------------- + O(x**3)
+                         12           2
 
 **zeta function**::
 
-    In [18]: zeta(4, x)
-    Out[18]: ζ(4, x)
+    >>> zeta(4, x)
+    zeta(4, x)
 
-    In [19]: zeta(4, 1)
-    Out[19]:
-     4
-    π
-    ──
-    90
+    >>> zeta(4, 1)
+      4
+    pi
+    ---
+     90
 
-    In [20]: zeta(4, 2)
-    Out[20]:
-          4
-         π
-    -1 + ──
-         90
+    >>> zeta(4, 2)
+           4
+         pi
+    -1 + ---
+          90
 
-    In [21]: zeta(4, 3)
-    Out[21]:
-            4
-      17   π
-    - ── + ──
-      16   90
+    >>> zeta(4, 3)
+             4
+      17   pi
+    - -- + ---
+      16    90
 
 
 **polynomials**::
 
-    In [1]: chebyshevt(2, x)
-    Out[1]:
-            2
-    -1 + 2*x
+    >>> chebyshevt(2, x)
+       2
+    2*x  - 1
 
-    In [2]: chebyshevt(4, x)
-    Out[2]:
-           2      4
-    1 - 8*x  + 8*x
+    >>> chebyshevt(4, x)
+       4      2
+    8*x  - 8*x  + 1
 
-    In [3]: legendre(2, x)
-    Out[3]:
-              2
-           3*x
-    -1/2 + ────
-            2
+    >>> legendre(2, x)
+       2
+    3*x    1
+    ---- - -
+     2     2
 
-    In [4]: legendre(8, x)
-    Out[4]:
-               2         4         6         8
-     35   315*x    3465*x    3003*x    6435*x
-    ─── - ────── + ─────── - ─────── + ───────
-    128     32        64        32       128
+    >>> legendre(8, x)
+          8         6         4        2
+    6435*x    3003*x    3465*x    315*x     35
+    ------- - ------- + ------- - ------ + ---
+      128        32        64       32     128
 
-    In [5]: assoc_legendre(2, 1, x)
-    Out[5]:
-            ⎽⎽⎽⎽⎽⎽⎽⎽
-           ╱      2
-    -3*x*╲╱  1 - x
+    >>> assoc_legendre(2, 1, x)
+            __________
+           /    2
+    -3*x*\/  - x  + 1
 
-    In [6]: assoc_legendre(2, 2, x)
-    Out[6]:
-           2
-    3 - 3*x
+    >>> assoc_legendre(2, 2, x)
+         2
+    - 3*x  + 3
 
-    In [7]: hermite(3, x)
-    Out[7]:
-               3
-    -12*x + 8*x
-
+    >>> hermite(3, x)
+       3
+    8*x  - 12*x
 
 .. index:: equations; differential, diff, dsolve
 
@@ -609,15 +606,14 @@ Differential Equations
 
 In ``isympy``::
 
-    In [4]: f(x).diff(x, x) + f(x)
-    Out[4]:
-       2
-      d
-    ─────(f(x)) + f(x)
-    dx dx
+    >>> f(x).diff(x, x) + f(x)
+              2
+             d
+    f(x) + -----(f(x))
+           dx dx
 
-    In [5]: dsolve(f(x).diff(x, x) + f(x), f(x))
-    Out[5]: C₁*sin(x) + C₂*cos(x)
+    >>> dsolve(f(x).diff(x, x) + f(x), f(x))
+    f(x) = C1*cos(x) + C2*sin(x)
 
 
 .. index:: equations; algebraic, solve
@@ -627,11 +623,11 @@ Algebraic equations
 
 In ``isympy``::
 
-    In [7]: solve(x**4 - 1, x)
-    Out[7]: [ⅈ, 1, -1, -ⅈ]
+    >>> solve(x**4 - 1, x)
+    [1, -1, -I, I]
 
-    In [8]: solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
-    Out[8]: {y: 1, x: -3}
+    >>> solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
+    {x: -3, y: 1}
 
 
 .. index:: linear algebra
@@ -648,8 +644,9 @@ Matrices are created as instances from the Matrix class::
 
     >>> from sympy import Matrix
     >>> Matrix([[1,0], [0,1]])
-    [1, 0]
-    [0, 1]
+    [1  0]
+    [    ]
+    [0  1]
 
 you can also put Symbols in it::
 
@@ -657,12 +654,14 @@ you can also put Symbols in it::
     >>> y = Symbol('y')
     >>> A = Matrix([[1,x], [y,1]])
     >>> A
-    [1, x]
-    [y, 1]
+    [1  x]
+    [    ]
+    [y  1]
 
     >>> A**2
-    [1 + x*y,     2*x]
-    [    2*y, 1 + x*y]
+    [x*y + 1    2*x  ]
+    [                ]
+    [  2*y    x*y + 1]
 
 For more information an examples with Matrices, see the LinearAlgebraTutorial.
 
@@ -679,11 +678,11 @@ substitutions, as follows::
     >>> x = Symbol('x')
     >>> p = Wild('p')
     >>> (5*x**2).match(p*x**2)
-    {p_: 5}
+    {p: 5}
 
     >>> q = Wild('q')
     >>> (x**2).match(p*x**q)
-    {p_: 1, q_: 2}
+    {p: 1, q: 2}
 
 If the match is unsuccessful, it returns ``None``::
 
@@ -728,9 +727,10 @@ This is what ``str(expression)`` returns and it looks like this:
 
 This is a nice ascii-art printing produced by a ``pprint`` function:
 
+    >>> sys.displayhook = oldhook
     >>> from sympy import Integral, pprint
     >>> from sympy.abc import x
-    >>> pprint(x**2) #doctest: +NORMALIZE_WHITESPACE
+    >>> pprint(x**2)
      2
     x
     >>> pprint(1/x)
@@ -745,9 +745,16 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
      |
     /
 
+If you have a unicode font installed, it should use unicode pretty printing by default.  You can override this using the `use_unicode` option.:
+
+    >>> pprint(Integral(x**2, x), use_unicode=True)
+    ⌠
+    ⎮  2
+    ⎮ x  dx
+    ⌡
 
 See also the wiki `Pretty Printing
-<http://wiki.sympy.org/wiki/Pretty_Printing>`_ for more examples of a nice
+<https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ for more examples of a nice
 unicode printing.
 
 Tip: To make the pretty printing default in the python interpreter, use::
@@ -773,7 +780,6 @@ Tip: To make the pretty printing default in the python interpreter, use::
      | x  dx
      |
     /
-
 
 **Python printing**
 
@@ -858,4 +864,3 @@ Now it's time to learn more about SymPy. Go through the
 Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
 that contains a lot of useful examples, tutorials, cookbooks that we and our
 users contributed and we encourage you to edit it.
-

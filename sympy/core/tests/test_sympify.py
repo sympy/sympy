@@ -1,8 +1,9 @@
-from sympy import Symbol, exp, Integer, Real, sin, cos, log, Poly, Lambda, \
-        Function, I, S, sqrt,  raises, srepr
+from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
+        Function, I, S, sqrt, srepr, Rational
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
+from sympy.utilities.pytest import XFAIL, raises
 
 def test_439():
     v = sympify("exp(x)")
@@ -15,6 +16,45 @@ def test_sympify1():
     assert sympify("x") == Symbol("x")
     assert sympify("   x") == Symbol("x")
     assert sympify("   x   ") == Symbol("x")
+    # 1778
+    n1 = Rational(1, 2)
+    assert sympify('--.5') == n1
+    assert sympify('-1/2') == -n1
+    assert sympify('-+--.5') == -n1
+    assert sympify('-.[3]') == Rational(-1, 3)
+    assert sympify('.[3]') == Rational(1, 3)
+    assert sympify('+.[3]') == Rational(1, 3)
+    assert sympify('+0.[3]*10**-2') == Rational(1, 300)
+    assert sympify('.[052631578947368421]') == Rational(1, 19)
+    assert sympify('.0[526315789473684210]') == Rational(1, 19)
+    # options to make reals into rationals
+    assert sympify('1.22[345]', rational=1) == \
+           1 + Rational(22, 100) + Rational(345, 99900)
+    assert sympify('2/2.6', rational=1) == Rational(10, 13)
+    assert sympify('2.6/2', rational=1) == Rational(13, 10)
+    assert sympify('2.6e2/17', rational=1) == Rational(260, 17)
+    assert sympify('2.6e+2/17', rational=1) == Rational(260, 17)
+    assert sympify('2.6e-2/17', rational=1) == Rational(26, 17000)
+    assert sympify('2.1+3/4', rational=1) == Rational(21, 10) + Rational(3, 4)
+    assert sympify('2.234456', rational=1) == Rational(279307, 125000)
+    assert sympify('2.234456e23', rational=1) == 223445600000000000000000
+    assert sympify('2.234456e-23', rational=1) == Rational(279307, 12500000000000000000000000000)
+    assert sympify('-2.234456e-23', rational=1) == Rational(-279307, 12500000000000000000000000000)
+    assert sympify('12345678901/17', rational=1) == Rational(12345678901, 17)
+    assert sympify('1/.3 + x', rational=1) == Rational(10, 3) + x
+    # make sure longs in fractions work
+    assert sympify('222222222222/11111111111') == Rational(222222222222, 11111111111)
+    # ... even if they come from repetend notation
+    assert sympify('1/.2[123456789012]') == Rational(333333333333, 70781892967)
+    # ... or from high precision reals
+    assert sympify('.1234567890123456', rational=1) == Rational(19290123283179,  156250000000000)
+
+    # sympify fractions.Fraction instances
+    try:
+        import fractions
+        assert sympify(fractions.Fraction(1, 2)) == Rational(1, 2)
+    except ImportError:
+        pass
 
 def test_sympify2():
     class A:
@@ -35,11 +75,27 @@ def test_sympify3():
     raises(SympifyError, "_sympify('x**3')")
     raises(SympifyError, "_sympify('1/2')")
 
+def test_sympify_keywords():
+    raises(SympifyError, "sympify('if')")
+    raises(SympifyError, "sympify('for')")
+    raises(SympifyError, "sympify('while')")
+    raises(SympifyError, "sympify('lambda')")
+
+def test_sympify_float():
+    assert sympify("1e-64") != 0
+    assert sympify("1e-20000") != 0
+
 def test_sympify_bool():
     """Test that sympify accepts boolean values
     and that output leaves them unchanged"""
     assert sympify(True) == True
     assert sympify(False)== False
+
+def test_sympyify_iterables():
+    ans = [Rational(3, 10), Rational(1, 5)]
+    assert sympify(['.3', '.2'], rational=1) == ans
+    assert sympify(set(['.3', '.2']), rational=1) == set(ans)
+    assert sympify(tuple(['.3', '.2']), rational=1) == tuple(ans)
 
 def test_sympify4():
     class A:
@@ -88,17 +144,18 @@ def test_bug496():
     a_ = sympify("a_")
     _a = sympify("_a")
 
+@XFAIL
 def test_lambda():
     x = Symbol('x')
-    assert sympify('lambda : 1') == Lambda(x, 1)
+    assert sympify('lambda : 1') == Lambda((), 1)
     assert sympify('lambda x: 2*x') == Lambda(x, 2*x)
     assert sympify('lambda x, y: 2*x+y') == Lambda([x, y], 2*x+y)
 
+def test_lambda_raises():
     raises(SympifyError, "_sympify('lambda : 1')")
 
 def test_sympify_raises():
     raises(SympifyError, 'sympify("fx)")')
-
 
 def test__sympify():
     x = Symbol('x')
@@ -108,8 +165,8 @@ def test__sympify():
     assert _sympify(x)      is x
     assert _sympify(f)      is f
     assert _sympify(1)      == Integer(1)
-    assert _sympify(0.5)    == Real("0.5")
-    assert _sympify(1+1j)   == 1 + I
+    assert _sympify(0.5)    == Float("0.5")
+    assert _sympify(1+1j)   == 1.0 + I*1.0
 
     class A:
         def _sympy_(self):
@@ -131,20 +188,20 @@ def test_sympifyit():
     def add(a, b):
         return a+b
 
-    assert add(x, 1)    == x+1
-    assert add(x, 0.5)  == x+Real('0.5')
-    assert add(x, y)    == x+y
+    assert add(x, 1) == x + 1
+    assert add(x, 0.5) == x + Float('0.5')
+    assert add(x, y) == x + y
 
-    assert add(x, '1')  == NotImplemented
+    assert add(x, '1') == NotImplemented
 
 
     @_sympifyit('b')
     def add_raises(a, b):
         return a+b
 
-    assert add_raises(x, 1)     == x+1
-    assert add_raises(x, 0.5)   == x+Real('0.5')
-    assert add_raises(x, y)     == x+y
+    assert add_raises(x, 1) == x + 1
+    assert add_raises(x, 0.5) == x + Float('0.5')
+    assert add_raises(x, y) == x + y
 
     raises(SympifyError, "add_raises(x, '1')")
 
@@ -174,7 +231,7 @@ def test_int_float():
             return 1
 
         def _sympy_(self):
-            return Real(1.1)
+            return Float(1.1)
 
     class I5(object):
         def __int__(self):
@@ -183,7 +240,7 @@ def test_int_float():
     class I5b(object):
         """
         This class implements both __int__() and __float__(), so it will be
-        treated as Real in SymPy. One could change this behavior, by using
+        treated as Float in SymPy. One could change this behavior, by using
         float(a) == int(a), but deciding that integer-valued floats represent
         exact numbers is arbitrary and often not correct, so we do not do it.
         If, in the future, we decide to do it anyway, the tests for I5b need to
@@ -218,7 +275,7 @@ def test_int_float():
     assert sympify(i5) == 5
     assert isinstance(sympify(i5), Integer)
     assert sympify(i5b) == 5
-    assert isinstance(sympify(i5b), Real)
+    assert isinstance(sympify(i5b), Float)
     assert sympify(i5c) == 5
     assert isinstance(sympify(i5c), Integer)
     assert abs(sympify(f1_1) - 1.1) < 1e-5
@@ -228,13 +285,12 @@ def test_int_float():
     assert _sympify(i5) == 5
     assert isinstance(_sympify(i5), Integer)
     assert _sympify(i5b) == 5
-    assert isinstance(_sympify(i5b), Real)
+    assert isinstance(_sympify(i5b), Float)
     assert _sympify(i5c) == 5
     assert isinstance(_sympify(i5c), Integer)
     assert abs(_sympify(f1_1) - 1.1) < 1e-5
     assert abs(_sympify(f1_1b) - 1.1) < 1e-5
     assert abs(_sympify(f1_1c) - 1.1) < 1e-5
-
 
 def test_issue1034():
     a = sympify('Integer(4)')
@@ -243,28 +299,28 @@ def test_issue1034():
     assert a.is_Integer
 
 def test_issue883():
-    a = [3,2.0]
-    assert sympify(a) == [Integer(3), Real(2.0)]
-    assert sympify(tuple(a)) == (Integer(3), Real(2.0))
-    assert sympify(set(a)) == set([Integer(3), Real(2.0)])
+    a = [3, 2.0]
+    assert sympify(a) == [Integer(3), Float(2.0)]
+    assert sympify(tuple(a)) == (Integer(3), Float(2.0))
+    assert sympify(set(a)) == set([Integer(3), Float(2.0)])
 
 def test_S_sympify():
     assert S(1)/2 == sympify(1)/2
     assert (-2)**(S(1)/2) == sqrt(2)*I
 
 def test_issue1689():
-    assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Real(1.0))
-    assert srepr(Real(1)) != srepr(Real(1.0))
+    assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Float(1.0))
+    assert srepr(Float(1)) != srepr(Float(1.0))
 
 def test_issue1699_None():
-    assert S(None) == None
+    assert S(None) is None
 
-def test_issue1889_Builtins():
+def test_issue1889_builtins():
     C = Symbol('C')
     vars = {}
     vars['C'] = C
     exp1 = sympify('C')
-    assert( exp1 == C )	# Make sure it did not get mixed up with sympy.C
+    assert exp1 == C # Make sure it did not get mixed up with sympy.C
 
     exp2 = sympify('C', vars)
-    assert( exp2 == C ) # Make sure it did not get mixed up with sympy.C
+    assert exp2 == C # Make sure it did not get mixed up with sympy.C

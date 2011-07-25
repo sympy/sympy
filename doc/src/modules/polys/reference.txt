@@ -1,0 +1,152 @@
+.. _polys-reference:
+
+=========================================
+Polynomials Manipulation Module Reference
+=========================================
+
+Basic polynomial manipulation functions
+=======================================
+
+.. currentmodule:: sympy.polys.polytools
+
+.. autofunction:: degree
+.. autofunction:: degree_list
+.. autofunction:: LC
+.. autofunction:: LM
+.. autofunction:: LT
+.. autofunction:: pdiv
+.. autofunction:: prem
+.. autofunction:: pquo
+.. autofunction:: pexquo
+.. autofunction:: div
+.. autofunction:: rem
+.. autofunction:: quo
+.. autofunction:: exquo
+.. autofunction:: half_gcdex
+.. autofunction:: gcdex
+.. autofunction:: invert
+.. autofunction:: subresultants
+.. autofunction:: resultant
+.. autofunction:: discriminant
+.. autofunction:: terms_gcd
+.. autofunction:: cofactors
+.. autofunction:: gcd
+.. autofunction:: gcd_list
+.. autofunction:: lcm
+.. autofunction:: lcm_list
+.. autofunction:: trunc
+.. autofunction:: monic
+.. autofunction:: content
+.. autofunction:: primitive
+.. autofunction:: compose
+.. autofunction:: decompose
+.. autofunction:: sturm
+.. autofunction:: gff_list
+.. autofunction:: gff
+.. autofunction:: sqf_norm
+.. autofunction:: sqf_part
+.. autofunction:: sqf_list
+.. autofunction:: sqf
+.. autofunction:: factor_list
+.. autofunction:: factor
+.. autofunction:: intervals
+.. autofunction:: refine_root
+.. autofunction:: count_roots
+.. autofunction:: real_roots
+.. autofunction:: nroots
+.. autofunction:: ground_roots
+.. autofunction:: cancel
+.. autofunction:: reduced
+.. autofunction:: groebner
+
+.. autoclass:: Poly
+   :members:
+
+Extra polynomial manipulation functions
+=======================================
+
+.. currentmodule:: sympy.polys.polyfuncs
+
+.. autofunction:: symmetrize
+.. autofunction:: horner
+.. autofunction:: interpolate
+.. autofunction:: viete
+
+Domain constructors
+===================
+
+.. currentmodule:: sympy.polys.constructor
+
+.. autofunction:: construct_domain
+
+Algebraic number fields
+=======================
+
+.. currentmodule:: sympy.polys.numberfields
+
+.. autofunction:: minimal_polynomial
+.. autofunction:: primitive_element
+.. autofunction:: field_isomorphism
+.. autofunction:: to_number_field
+.. autofunction:: isolate
+.. autoclass:: AlgebraicNumber
+
+Monomials encoded as tuples
+===========================
+
+.. currentmodule:: sympy.polys.monomialtools
+
+.. autoclass:: Monomial
+.. autofunction:: monomials
+.. autofunction:: monomial_count
+
+Formal manipulation of roots of polynomials
+===========================================
+
+.. currentmodule:: sympy.polys.rootoftools
+
+.. autoclass:: RootOf
+.. autoclass:: RootSum
+
+Symbolic root-finding algorithms
+================================
+
+.. currentmodule:: sympy.polys.polyroots
+
+.. autofunction:: roots
+
+Special polynomials
+===================
+
+.. currentmodule:: sympy.polys.specialpolys
+
+.. autofunction:: swinnerton_dyer_poly
+.. autofunction:: interpolating_poly
+.. autofunction:: cyclotomic_poly
+.. autofunction:: symmetric_poly
+.. autofunction:: random_poly
+
+Orthogonal polynomials
+======================
+
+.. currentmodule:: sympy.polys.orthopolys
+
+.. autofunction:: chebyshevt_poly
+.. autofunction:: chebyshevu_poly
+.. autofunction:: hermite_poly
+.. autofunction:: legendre_poly
+.. autofunction:: laguerre_poly
+
+Manipulation of rational functions
+==================================
+
+.. currentmodule:: sympy.polys.rationaltools
+
+.. autofunction:: together
+
+Partial fraction decomposition
+==============================
+
+.. currentmodule:: sympy.polys.partfrac
+
+.. autofunction:: apart

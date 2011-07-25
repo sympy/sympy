@@ -82,10 +82,9 @@ import os
 import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
-try:
-    import numpy
-except ImportError:
-    numpy = None
+from sympy.external import import_module
+
+numpy = import_module('numpy')
 
 libtccpath = './libtcc.so'
 dps = 17 # decimal places of float precision
@@ -390,7 +389,7 @@ def evalonarray(lambdastr, array, length=None, **kwargs):
         pointer = array
         assert isinstance(length,  int) and not length < 0
     else:
-        raise ValueError,  'array type not recognized'
+        raise ValueError('array type not recognized')
     # generate code
     code = """
 # include <math.h>
@@ -527,12 +526,10 @@ def benchmark():
         print 'compile time (including sympy overhead): %f s' % (time() - start)
         pf = lambdify(var, f, 'math')
         psyf = None
-        try:
-            import psyco
+        psyco = import_module('psyco')
+        if psyco:
             psyf = lambdify(var, f, 'math')
             psyco.bind(psyf)
-        except ImportError:
-            pass
         code = '''for x in (i/1000. for i in range(1000)):
         f(%s)''' % ('x,'*len(var)).rstrip(',')
         t1 = Timer(code, 'from __main__ import cf as f')
@@ -572,10 +569,9 @@ def benchmark():
     print 'in 3 runs including full compile time'
     t4 = Timer("frange('lambda x: %s', 0, %i)" % (fstr, times),
                'from __main__ import frange')
-    try:
-        import numpy
-    except ImportError:
-        numpy = None
+
+    numpy = import_module('numpy')
+
     print 'frange:        %.4f %.4f %.4f' % tuple(t4.repeat(3, 1))
     if numpy:
         t5 = Timer('x = arange(%i); result = %s' % (times, fstr),
@@ -599,3 +595,4 @@ if __name__ == '__main__':
         print
     print 'Running benchmark...'
     benchmark()
+

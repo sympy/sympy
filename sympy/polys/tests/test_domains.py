@@ -1,25 +1,20 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
+from sympy import S, sqrt, sin, oo, all, Poly, Integer, Rational
+from sympy.abc import x, y, z
+
 from sympy.polys.domains import (
-    ZZ, QQ, RR, CC, PolynomialRing, FractionField, EX, ZZ_sympy, QQ_sympy
+    ZZ, QQ, RR, PolynomialRing, FractionField, EX,
+    PythonRationalType as Q, ZZ_sympy, QQ_sympy
 )
-
-from sympy.polys.polyclasses import (
-    DMP, DMF
-)
-
 from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsNeeded,
     GeneratorsError,
     DomainError,
 )
-
-from sympy import S, sqrt, sin, oo, raises, all, Integer, Rational, I, Real
-
-from sympy.abc import x, y, z
-
-from sympy.utilities.pytest import XFAIL
+from sympy.polys.polyclasses import DMP, DMF
+from sympy.utilities.pytest import raises, XFAIL
 
 ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
 
@@ -177,6 +172,18 @@ def test_Domain__unify():
     assert QQ.frac_field('x','y').unify(ZZ.poly_ring('x','z')) == EX # QQ.frac_field('x','y','z')
     assert QQ.frac_field('x','y').unify(QQ.poly_ring('x','z')) == QQ.frac_field('x','y','z')
 
+    alg = QQ.algebraic_field(sqrt(5))
+
+    assert alg.unify(alg['x','y']) == alg['x','y']
+    assert alg['x','y'].unify(alg) == alg['x','y']
+
+    assert alg.unify(alg.frac_field('x','y')) == alg.frac_field('x','y')
+    assert alg.frac_field('x','y').unify(alg) == alg.frac_field('x','y')
+
+    ext = QQ.algebraic_field(sqrt(7))
+
+    raises(NotImplementedError, "alg.unify(ext)")
+
     raises(UnificationFailed, "ZZ.poly_ring('x','y').unify(ZZ, gens=('y', 'z'))")
     raises(UnificationFailed, "ZZ.unify(ZZ.poly_ring('x','y'), gens=('y', 'z'))")
 
@@ -313,6 +320,8 @@ def test_Domain__contains__():
     assert (x**2 + y**2 in QQ[x,y]) == True
     assert (x**2 + y**2 in RR[x,y]) == True
 
+    assert (S(3)/2*x/(y + 1) - z in QQ[x, y, z]) == False
+
 def test_Domain_get_ring():
     assert ZZ.has_assoc_Ring == True
     assert QQ.has_assoc_Ring == True
@@ -348,24 +357,22 @@ def test_Domain_get_field():
     assert EX.has_assoc_Field == True
     assert ZZ.has_assoc_Field == True
     assert QQ.has_assoc_Field == True
+    assert RR.has_assoc_Field == False
     assert ALG.has_assoc_Field == True
     assert ZZ[x].has_assoc_Field == True
     assert QQ[x].has_assoc_Field == True
     assert ZZ[x,y].has_assoc_Field == True
     assert QQ[x,y].has_assoc_Field == True
 
-    assert RR.has_assoc_Field == False
-
     assert EX.get_field() == EX
     assert ZZ.get_field() == QQ
     assert QQ.get_field() == QQ
+    raises(DomainError, "RR.get_field()")
     assert ALG.get_field() == ALG
     assert ZZ[x].get_field() == ZZ.frac_field(x)
     assert QQ[x].get_field() == QQ.frac_field(x)
     assert ZZ[x,y].get_field() == ZZ.frac_field(x,y)
     assert QQ[x,y].get_field() == QQ.frac_field(x,y)
-
-    raises(DomainError, "RR.get_field()")
 
 def test_Domain_get_exact():
     assert EX.get_exact() == EX
@@ -392,9 +399,9 @@ def test_PolynomialRing__init():
 def test_PolynomialRing_from_FractionField():
     x = DMF(([1, 0, 1], [1, 1]), ZZ)
     y = DMF(([1, 0, 1], [1]), ZZ)
+
     assert ZZ['x'].from_FractionField(x, ZZ['x']) is None
-    assert ZZ['x'].from_FractionField(y, ZZ['x']) == \
-        DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
+    assert ZZ['x'].from_FractionField(y, ZZ['x']) == DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
 
 def test_FractionField__init():
     raises(GeneratorsNeeded, "ZZ.frac_field()")
@@ -409,6 +416,189 @@ def test_CC_to_from_sympy():
     assert CC.to_sympy(1+2j) == S.One + S(2)*I
     assert CC.to_sympy(2j) == S(2)*I
 
+def test_inject():
+    assert ZZ.inject(x, y, z) == ZZ[x, y, z]
+    assert ZZ[x].inject(y, z) == ZZ[x, y, z]
+    assert ZZ.frac_field(x).inject(y, z) == ZZ.frac_field(x, y, z)
+    raises(GeneratorsError, "ZZ[x].inject(x)")
+
+def test_Domain_map():
+    seq = ZZ.map([1, 2, 3, 4])
+
+    assert all([ ZZ.of_type(elt) for elt in seq ])
+
+    seq = ZZ.map([[1, 2, 3, 4]])
+
+    assert all([ ZZ.of_type(elt) for elt in seq[0] ]) and len(seq) == 1
+
+def test_Domain___eq__():
+    assert (ZZ[x,y] == ZZ[x,y]) is True
+    assert (QQ[x,y] == QQ[x,y]) is True
+
+    assert (ZZ[x,y] == QQ[x,y]) is False
+    assert (QQ[x,y] == ZZ[x,y]) is False
+
+    assert (ZZ.frac_field(x,y) == ZZ.frac_field(x,y)) is True
+    assert (QQ.frac_field(x,y) == QQ.frac_field(x,y)) is True
+
+    assert (ZZ.frac_field(x,y) == QQ.frac_field(x,y)) is False
+    assert (QQ.frac_field(x,y) == ZZ.frac_field(x,y)) is False
+
+def test_Domain__algebraic_field():
+    alg = ZZ.algebraic_field(sqrt(2))
+    assert alg.ext.minpoly == Poly(x**2 - 2)
+    assert alg.dom == QQ
+
+    alg = QQ.algebraic_field(sqrt(2))
+    assert alg.ext.minpoly == Poly(x**2 - 2)
+    assert alg.dom == QQ
+
+    alg = alg.algebraic_field(sqrt(3))
+    assert alg.ext.minpoly == Poly(x**4 - 10*x**2 + 1)
+    assert alg.dom == QQ
+
+def test_PolynomialRing__from_FractionField():
+    f = DMF(([1, 0, 1], [1, 1]), ZZ)
+    g = DMF(([1, 0, 1], [1]), ZZ)
+
+    assert ZZ[x].from_FractionField(f, ZZ[x]) is None
+    assert ZZ[x].from_FractionField(g, ZZ[x]) == DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
+
+def test_PythonRationalType__init__():
+    assert Q(0).p == 0
+    assert Q(0).q == 1
+    assert Q(0, 1).p == 0
+    assert Q(0, 1).q == 1
+    assert Q(0,-1).p == 0
+    assert Q(0,-1).q == 1
+
+    assert Q(1).p == 1
+    assert Q(1).q == 1
+    assert Q(1, 1).p == 1
+    assert Q(1, 1).q == 1
+    assert Q(-1,-1).p == 1
+    assert Q(-1,-1).q == 1
+
+    assert Q(-1).p == -1
+    assert Q(-1).q ==  1
+    assert Q(-1, 1).p == -1
+    assert Q(-1, 1).q ==  1
+    assert Q( 1,-1).p == -1
+    assert Q( 1,-1).q ==  1
+
+    assert Q(1, 2).p == 1
+    assert Q(1, 2).q == 2
+    assert Q(3, 4).p == 3
+    assert Q(3, 4).q == 4
+
+    assert Q(2, 2).p == 1
+    assert Q(2, 2).q == 1
+    assert Q(2, 4).p == 1
+    assert Q(2, 4).q == 2
+
+def test_PythonRationalType__hash__():
+    assert hash(Q(0)) == hash(0)
+    assert hash(Q(1)) == hash(1)
+    assert hash(Q(117)) == hash(117)
+
+def test_PythonRationalType__int__():
+    assert int(Q(-1, 4)) == 0
+    assert int(Q( 1, 4)) == 0
+    assert int(Q(-5, 4)) == -1
+    assert int(Q( 5, 4)) ==  1
+
+def test_PythonRationalType__float__():
+    assert float(Q(-1, 2)) == -0.5
+    assert float(Q( 1, 2)) ==  0.5
+
+def test_PythonRationalType__abs__():
+    assert abs(Q(-1, 2)) == Q(1, 2)
+    assert abs(Q( 1, 2)) == Q(1, 2)
+
+def test_PythonRationalType__pos__():
+    assert +Q(-1, 2) == Q(-1, 2)
+    assert +Q( 1, 2) == Q( 1, 2)
+
+def test_PythonRationalType__neg__():
+    assert -Q(-1, 2) == Q( 1, 2)
+    assert -Q( 1, 2) == Q(-1, 2)
+
+def test_PythonRationalType__add__():
+    assert Q(-1, 2) + Q( 1, 2) == Q(0)
+    assert Q( 1, 2) + Q(-1, 2) == Q(0)
+
+    assert Q(1, 2) + Q(1, 2) == Q(1)
+    assert Q(1, 2) + Q(3, 2) == Q(2)
+    assert Q(3, 2) + Q(1, 2) == Q(2)
+    assert Q(3, 2) + Q(3, 2) == Q(3)
+
+    assert 1 + Q(1, 2) == Q(3, 2)
+    assert Q(1, 2) + 1 == Q(3, 2)
+
+def test_PythonRationalType__sub__():
+    assert Q(-1, 2) - Q( 1, 2) == Q(-1)
+    assert Q( 1, 2) - Q(-1, 2) == Q( 1)
+
+    assert Q(1, 2) - Q(1, 2) == Q( 0)
+    assert Q(1, 2) - Q(3, 2) == Q(-1)
+    assert Q(3, 2) - Q(1, 2) == Q( 1)
+    assert Q(3, 2) - Q(3, 2) == Q( 0)
+
+    assert 1 - Q(1, 2) == Q( 1, 2)
+    assert Q(1, 2) - 1 == Q(-1, 2)
+
+def test_PythonRationalType__mul__():
+    assert Q(-1, 2) * Q( 1, 2) == Q(-1, 4)
+    assert Q( 1, 2) * Q(-1, 2) == Q(-1, 4)
+
+    assert Q(1, 2) * Q(1, 2) == Q(1, 4)
+    assert Q(1, 2) * Q(3, 2) == Q(3, 4)
+    assert Q(3, 2) * Q(1, 2) == Q(3, 4)
+    assert Q(3, 2) * Q(3, 2) == Q(9, 4)
+
+    assert 2 * Q(1, 2) == Q(1)
+    assert Q(1, 2) * 2 == Q(1)
+
+def test_PythonRationalType__div__():
+    assert Q(-1, 2) / Q( 1, 2) == Q(-1)
+    assert Q( 1, 2) / Q(-1, 2) == Q(-1)
+
+    assert Q(1, 2) / Q(1, 2) == Q(1)
+    assert Q(1, 2) / Q(3, 2) == Q(1, 3)
+    assert Q(3, 2) / Q(1, 2) == Q(3)
+    assert Q(3, 2) / Q(3, 2) == Q(1)
+
+    assert 2 / Q(1, 2) == Q(4)
+    assert Q(1, 2) / 2 == Q(1, 4)
+
+    raises(ZeroDivisionError, "Q(1, 2) / Q(0)")
+    raises(ZeroDivisionError, "Q(1, 2) / 0")
+
+def test_PythonRationalType__pow__():
+    assert Q(1)**10 == Q(1)
+    assert Q(2)**10 == Q(1024)
+
+    assert Q(1)**(-10) == Q(1)
+    assert Q(2)**(-10) == Q(1, 1024)
+
+def test_PythonRationalType__eq__():
+    assert (Q(1, 2) == Q(1, 2)) is True
+    assert (Q(1, 2) != Q(1, 2)) is False
+
+    assert (Q(1, 2) == Q(1, 3)) is False
+    assert (Q(1, 2) != Q(1, 3)) is True
+
+def test_PythonRationalType__lt_le_gt_ge__():
+    assert (Q(1, 2) <  Q(1, 4)) is False
+    assert (Q(1, 2) <= Q(1, 4)) is False
+    assert (Q(1, 2) >  Q(1, 4)) is True
+    assert (Q(1, 2) >= Q(1, 4)) is True
+
+    assert (Q(1, 4) <  Q(1, 2)) is True
+    assert (Q(1, 4) <= Q(1, 2)) is True
+    assert (Q(1, 4) >  Q(1, 2)) is False
+    assert (Q(1, 4) >= Q(1, 2)) is False
+
 def test_sympy_of_type():
     assert ZZ_sympy().of_type(Integer(1))
     assert ZZ_sympy().of_type(Integer(0))
@@ -422,30 +612,6 @@ def test_sympy_of_type():
     assert QQ_sympy().of_type(Rational(1, 2))
     assert QQ_sympy().of_type(Rational(3, 2))
 
-def test_inject():
-    assert ZZ.inject(x, y, z) == ZZ[x, y, z]
-    assert ZZ[x].inject(y, z) == ZZ[x, y, z]
-    raises(GeneratorsError, "ZZ[x].inject(x)")
-
-def test_Domain_map():
-    seq = ZZ.map([1, 2, 3, 4])
-
-    assert all([ ZZ.of_type(elt) for elt in seq ])
-
-    seq = ZZ.map([[1, 2, 3, 4]])
-
-    assert all([ ZZ.of_type(elt) for elt in seq[0] ]) and len(seq) == 1
-
-def test_Domain___eq__():
-    assert ZZ[x,y] == ZZ[x,y]
-    assert QQ[x,y] == QQ[x,y]
-
-    assert not ZZ[x,y] == QQ[x,y]
-    assert not QQ[x,y] == ZZ[x,y]
-
-    assert ZZ.frac_field(x,y) == ZZ.frac_field(x,y)
-    assert QQ.frac_field(x,y) == QQ.frac_field(x,y)
-
-    assert not ZZ.frac_field(x,y) == QQ.frac_field(x,y)
-    assert not QQ.frac_field(x,y) == ZZ.frac_field(x,y)
-
+def test___eq__():
+    assert not QQ['x'] == ZZ['x']
+    assert not QQ.frac_field(x) == ZZ.frac_field(x)

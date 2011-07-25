@@ -1,14 +1,17 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, raises
+    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 
+from sympy.utilities.pytest import raises
+
 x = Symbol('x')
+y = Symbol('y')
 mp = MathMLPrinter()
 
 def test_printmethod():
-    assert mp.doprint(1+x) == '<apply><plus/><cn>1</cn><ci>x</ci></apply>'
+    assert mp.doprint(1+x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
 
 def test_mathml_core():
     mml_1 = mp._print(1+x)
@@ -69,6 +72,15 @@ def test_mathml_integrals():
     assert mml_1.childNodes[3].nodeName == 'uplimit'
     assert mml_1.childNodes[4].toxml() == mp._print(integrand).toxml()
 
+def test_mathml_sums():
+    summand = x
+    mml_1 = mp._print(Sum(summand, (x, 1, 10)))
+    assert mml_1.childNodes[0].nodeName == 'sum'
+    assert mml_1.childNodes[1].nodeName == 'bvar'
+    assert mml_1.childNodes[2].nodeName == 'lowlimit'
+    assert mml_1.childNodes[3].nodeName == 'uplimit'
+    assert mml_1.childNodes[4].toxml() == mp._print(summand).toxml()
+
 def test_mathml_tuples():
     mml_1 = mp._print([2])
     assert mml_1.nodeName == 'list'
@@ -88,8 +100,7 @@ def test_mathml_add():
     mml = mp._print(x**5 - x**4 + x)
     assert mml.childNodes[0].nodeName == 'plus'
     assert mml.childNodes[1].childNodes[0].nodeName == 'minus'
-    assert mml.childNodes[1].childNodes[1].nodeName == 'ci'
-    assert mml.childNodes[2].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[1].childNodes[1].nodeName == 'apply'
 
 def test_mathml_Rational():
     mml_1 = mp._print(Rational(1,1))
@@ -153,6 +164,40 @@ def test_mathml_trig():
 
     mml = mp._print(acosh(x))
     assert mml.childNodes[0].nodeName == 'arccosh'
+
+def test_mathml_relational():
+    mml_1 = mp._print(Eq(x,1))
+    assert mml_1.nodeName == 'apply'
+    assert mml_1.childNodes[0].nodeName == 'eq'
+    assert mml_1.childNodes[1].nodeName == 'ci'
+    assert mml_1.childNodes[1].childNodes[0].nodeValue == 'x'
+    assert mml_1.childNodes[2].nodeName == 'cn'
+    assert mml_1.childNodes[2].childNodes[0].nodeValue == '1'
+
+    mml_2 = mp._print(Ne(1,x))
+    assert mml_2.nodeName == 'apply'
+    assert mml_2.childNodes[0].nodeName == 'neq'
+    assert mml_2.childNodes[1].nodeName == 'cn'
+    assert mml_2.childNodes[1].childNodes[0].nodeValue == '1'
+    assert mml_2.childNodes[2].nodeName == 'ci'
+    assert mml_2.childNodes[2].childNodes[0].nodeValue == 'x'
+
+    mml_3 = mp._print(Ge(1,x))
+    assert mml_3.nodeName == 'apply'
+    assert mml_3.childNodes[0].nodeName == 'leq'
+    assert mml_3.childNodes[1].nodeName == 'ci'
+    assert mml_3.childNodes[1].childNodes[0].nodeValue == 'x'
+    assert mml_3.childNodes[2].nodeName == 'cn'
+    assert mml_3.childNodes[2].childNodes[0].nodeValue == '1'
+
+    mml_4 = mp._print(Lt(1,x))
+    assert mml_4.nodeName == 'apply'
+    assert mml_4.childNodes[0].nodeName == 'lt'
+    assert mml_4.childNodes[1].nodeName == 'cn'
+    assert mml_4.childNodes[1].childNodes[0].nodeValue == '1'
+    assert mml_4.childNodes[2].nodeName == 'ci'
+    assert mml_4.childNodes[2].childNodes[0].nodeValue == 'x'
+
 
 def test_c2p():
     """This tests some optional routines that depend on libxslt1 (which is optional)"""
@@ -259,5 +304,31 @@ def test_symbol():
     assert mml.childNodes[0].childNodes[1].childNodes[2].childNodes[0].nodeValue == 'a'
     del mml
 
+def test_mathml_order():
+    expr = x**3 + x**2*y + 3*x*y**3 + y**4
+
+    mp = MathMLPrinter({'order': 'lex'})
+    mml = mp._print(expr)
+
+    assert mml.childNodes[1].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[1].childNodes[1].childNodes[0].data == 'x'
+    assert mml.childNodes[1].childNodes[2].childNodes[0].data == '3'
+
+    assert mml.childNodes[4].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[4].childNodes[1].childNodes[0].data == 'y'
+    assert mml.childNodes[4].childNodes[2].childNodes[0].data == '4'
+
+    mp = MathMLPrinter({'order': 'rev-lex'})
+    mml = mp._print(expr)
+
+    assert mml.childNodes[1].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[1].childNodes[1].childNodes[0].data == 'y'
+    assert mml.childNodes[1].childNodes[2].childNodes[0].data == '4'
+
+    assert mml.childNodes[4].childNodes[0].nodeName == 'power'
+    assert mml.childNodes[4].childNodes[1].childNodes[0].data == 'x'
+    assert mml.childNodes[4].childNodes[2].childNodes[0].data == '3'
+
 def test_settings():
     raises(TypeError, 'mathml(Symbol("x"), method="garbage")')
+

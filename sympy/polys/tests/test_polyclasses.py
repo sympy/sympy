@@ -13,7 +13,7 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed,
 )
 
-from sympy import raises
+from sympy.utilities.pytest import raises
 
 def test_DMP___init__():
     f = DMP([[0],[],[0,1,2],[3]], ZZ)
@@ -81,9 +81,9 @@ def test_DMP_arithmetics():
     f = DMP([[2],[2,0]], ZZ)
 
     assert f.mul_ground(2) == DMP([[4],[4,0]], ZZ)
-    assert f.exquo_ground(2) == DMP([[1],[1,0]], ZZ)
+    assert f.quo_ground(2) == DMP([[1],[1,0]], ZZ)
 
-    raises(ExactQuotientFailed, 'f.quo_ground(3)')
+    raises(ExactQuotientFailed, 'f.exquo_ground(3)')
 
     f = DMP([[-5]], ZZ)
     g = DMP([[5]], ZZ)
@@ -133,10 +133,10 @@ def test_DMP_arithmetics():
     r = DMP([[8,0,0]], ZZ)
 
     assert f.pdiv(g) == (q, r)
-    assert f.pexquo(g) == q
+    assert f.pquo(g) == q
     assert f.prem(g) == r
 
-    raises(ExactQuotientFailed, 'f.pquo(g)')
+    raises(ExactQuotientFailed, 'f.pexquo(g)')
 
     f = DMP([[1],[],[1,0,0]], ZZ)
     g = DMP([[1],[-1,0]], ZZ)
@@ -145,14 +145,14 @@ def test_DMP_arithmetics():
     r = DMP([[2,0,0]], ZZ)
 
     assert f.div(g) == (q, r)
-    assert f.exquo(g) == q
+    assert f.quo(g) == q
     assert f.rem(g) == r
 
     assert divmod(f, g) == (q, r)
     assert f // g == q
     assert f % g == r
 
-    raises(ExactQuotientFailed, 'f.quo(g)')
+    raises(ExactQuotientFailed, 'f.exquo(g)')
 
 def test_DMP_functionality():
     f = DMP([[1],[2,0],[1,0,0]], ZZ)
@@ -253,13 +253,11 @@ def test_DMP_functionality():
     raises(ValueError, "f.sturm()")
 
 def test_DMP_exclude():
-    assert DMP([[[[[[[[[[[[[[[[[[[[[[[[[[1]], [[]]]]]]]]]]]]]]]]]]]]]]]]]],
-    ZZ).exclude() == \
-        ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-        19, 20, 21, 22, 24, 25], DMP([1, 0], ZZ))
+    f = [[[[[[[[[[[[[[[[[[[[[[[[[[1]], [[]]]]]]]]]]]]]]]]]]]]]]]]]]
+    J = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25]
 
+    assert DMP(f, ZZ).exclude() == (J, DMP([1, 0], ZZ))
     assert DMP([[1], [1, 0]], ZZ).exclude() == ([], DMP([[1], [1, 0]], ZZ))
-
 
 def test_DMF__init__():
     f = DMF(([[0],[],[0,1,2],[3]], [[1,2,3]]), ZZ)
@@ -331,6 +329,20 @@ def test_DMF__init__():
     assert f.den == [[1]]
     assert f.lev == 1
     assert f.dom == ZZ
+
+    f = DMF(([[QQ(1)],[QQ(2)]], [[-QQ(3)],[QQ(4)]]), QQ)
+
+    assert f.num == [[-QQ(1)],[-QQ(2)]]
+    assert f.den == [[QQ(3)],[-QQ(4)]]
+    assert f.lev == 1
+    assert f.dom == QQ
+
+    f = DMF(([[QQ(1,5)],[QQ(2,5)]], [[-QQ(3,7)],[QQ(4,7)]]), QQ)
+
+    assert f.num == [[-QQ(7)],[-QQ(14)]]
+    assert f.den == [[QQ(15)],[-QQ(20)]]
+    assert f.lev == 1
+    assert f.dom == QQ
 
     raises(ValueError, "DMF(([1], [[1]]), ZZ)")
     raises(ZeroDivisionError, "DMF(([1], []), ZZ)")
@@ -476,3 +488,12 @@ def test_ANP_arithmetics():
 
     assert a.quo(a) == a.mul(a.pow(-1)) == a*a**(-1) == ANP(1, mod, QQ)
 
+def test___hash__():
+    # Issue 2472
+    # Make sure int vs. long doesn't affect hashing with Python ground types
+    assert DMP([[1, 2], [3]], ZZ) == DMP([[1l, 2l], [3l]], ZZ)
+    assert hash(DMP([[1, 2], [3]], ZZ)) == hash(DMP([[1l, 2l], [3l]], ZZ))
+    assert DMF(([[1, 2], [3]], [[1]]), ZZ) == DMF(([[1L, 2L], [3L]], [[1L]]), ZZ)
+    assert hash(DMF(([[1, 2], [3]], [[1]]), ZZ)) == hash(DMF(([[1L, 2L], [3L]], [[1L]]), ZZ))
+    assert ANP([1, 1], [1, 0, 1], ZZ) == ANP([1l, 1l], [1l, 0l, 1l], ZZ)
+    assert hash(ANP([1, 1], [1, 0, 1], ZZ)) == hash(ANP([1l, 1l], [1l, 0l, 1l], ZZ))

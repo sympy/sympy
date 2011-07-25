@@ -1,4 +1,4 @@
-from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Real, \
+from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Float, \
         Rational, exp, I, Integer, diff, Mul, var, oo, S, Add, Poly
 from sympy.utilities.pytest import XFAIL
 
@@ -9,6 +9,7 @@ def test_symbol():
 
     e = x
     assert e.match(x) == {}
+    assert e.matches(x) == {}
     assert e.match(a) == {a: x}
 
     e = Rational(5)
@@ -165,7 +166,7 @@ def test_derivative1():
     assert fd.match(p) == {p: fd}
     assert (fd+1).match(p+1) == {p: fd}
     assert (fd).match(fd) == {}
-    assert (3*fd).match(p*fd) != None
+    assert (3*fd).match(p*fd) is not None
     p = Wild("p", exclude=[x])
     q = Wild("q", exclude=[x])
     assert (3*fd-1).match(p*fd + q) == {p: 3, q: -1}
@@ -208,7 +209,7 @@ def test_match_deriv_bug1():
 
     e = diff(l(x), x)/x - diff(diff(n(x), x), x)/2 - \
         diff(n(x), x)**2/4 + diff(n(x), x)*diff(l(x), x)/4
-    e = e.subs(n(x), -l(x))
+    e = e.subs(n(x), -l(x)).doit()
     t = x*exp(-l(x))
     t2 = t.diff(x, x)/t
     assert e.match( (p*t2).expand() ) == {p: -Rational(1)/2}
@@ -299,9 +300,9 @@ def test_exclude():
 def test_floats():
     a,b = map(Wild, 'ab')
 
-    e = cos(0.12345)**2
+    e = cos(0.12345, evaluate=False)**2
     r = e.match(a*cos(b)**2)
-    assert r == {a: 1, b: Real(0.12345)}
+    assert r == {a: 1, b: Float(0.12345)}
 
 def test_Derivative_bug1():
     f = Function("f")

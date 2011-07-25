@@ -6,12 +6,10 @@ combinatorial polynomials.
 
 """
 
-from sympy.core.basic import S, C
+from sympy.core.basic import C
+from sympy.core.singleton import S
 from sympy.core import Rational
 from sympy.core.function import Function
-
-from sympy.functions.combinatorial.factorials import factorial
-
 
 from sympy.polys.orthopolys import (
     chebyshevt_poly,
@@ -21,7 +19,7 @@ from sympy.polys.orthopolys import (
     legendre_poly,
 )
 
-_x = C.Symbol('x', dummy=True)
+_x = C.Dummy('x')
 
 class PolynomialSequence(Function):
     """Polynomial sequence with one index and n >= 0. """
@@ -56,7 +54,7 @@ class chebyshevt(PolynomialSequence):
         >>> chebyshevt(1, x)
         x
         >>> chebyshevt(2, x)
-        -1 + 2*x**2
+        2*x**2 - 1
 
     References
     ==========
@@ -86,7 +84,7 @@ class chebyshevu(PolynomialSequence):
         >>> chebyshevu(1, x)
         2*x
         >>> chebyshevu(2, x)
-        -1 + 4*x**2
+        4*x**2 - 1
 
     """
 
@@ -163,7 +161,7 @@ class legendre(PolynomialSequence):
         >>> legendre(1, x)
         x
         >>> legendre(2, x)
-        -1/2 + 3*x**2/2
+        3*x**2/2 - 1/2
 
     References
     ==========
@@ -194,7 +192,7 @@ class assoc_legendre(Function):
         >>> assoc_legendre(1,0, x)
         x
         >>> assoc_legendre(1,1, x)
-        -(1 - x**2)**(1/2)
+        -(-x**2 + 1)**(1/2)
 
     References
     ==========
@@ -206,7 +204,7 @@ class assoc_legendre(Function):
     @classmethod
     def calc(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
-        return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_basic()
+        return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_expr()
 
     @classmethod
     def eval(cls, n, m, x):
@@ -214,7 +212,7 @@ class assoc_legendre(Function):
             assoc = cls.calc(int(n), abs(int(m)))
 
             if m < 0:
-                assoc *= (-1)**(-m) * (C.Factorial(n + m)/C.Factorial(n - m))
+                assoc *= (-1)**(-m) * (C.factorial(n + m)/C.factorial(n - m))
 
             return assoc.subs(_x, x)
 
@@ -244,7 +242,7 @@ class hermite(PolynomialSequence):
         >>> hermite(1, x)
         2*x
         >>> hermite(2, x)
-        -2 + 4*x**2
+        4*x**2 - 2
 
     References
     ==========
@@ -253,46 +251,43 @@ class hermite(PolynomialSequence):
 
     _ortho_poly = staticmethod(hermite_poly)
 
-#----------------------------------------------------------------------------
-# Laguerre polynomials
-#
-
 def laguerre_l(n, alpha, x):
     """
     Returns the generalized Laguerre polynomial.
 
-    n     ... 0, 1, 2, 3, ...
-    alpha ... any symbol (alpha=0 gives regular Laguerre polynomials)
+    ``n`` : ``int``
+        Degree of Laguerre polynomial. Must be ``n >= 0``.
 
-    Examples::
+    ``alpha`` : ``Expr``
+        Arbitrary expression. For ``alpha=0`` regular Laguerre
+        polynomials will be generated.
 
-    >>> from sympy import laguerre_l, var
-    >>> var("alpha, x")
-    (alpha, x)
-    >>> laguerre_l(0, alpha, x)
-    1
-    >>> laguerre_l(1, alpha, x)
-    1 + alpha - x
-    >>> laguerre_l(2, alpha, x)
-    (1 + alpha)*(2 + alpha)/2 - x*(2 + alpha) + x**2/2
+    **Examples**
 
-    If you set alpha=0, you get regular Laguerre polynomials::
+    To construct generalized Laguerre polynomials issue::
 
-    >>> laguerre_l(1, 0, x)
-    1 - x
-    >>> laguerre_l(2, 0, x)
-    1 - 2*x + x**2/2
-    >>> laguerre_l(3, 0, x)
-    1 - 3*x + 3*x**2/2 - x**3/6
-    >>> laguerre_l(4, 0, x)
-    1 - 4*x + 3*x**2 - 2*x**3/3 + x**4/24
+        >>> from sympy import laguerre_l, var
+        >>> var("alpha, x")
+        (alpha, x)
+
+        >>> laguerre_l(0, alpha, x)
+        1
+        >>> laguerre_l(1, alpha, x)
+        alpha - x + 1
+        >>> laguerre_l(2, alpha, x)
+        alpha**2/2 + 3*alpha/2 + x**2/2 + x*(-alpha - 2) + 1
+
+    If you set ``alpha=0``, you get regular Laguerre polynomials::
+
+        >>> laguerre_l(1, 0, x)
+        -x + 1
+        >>> laguerre_l(2, 0, x)
+        x**2/2 - 2*x + 1
+        >>> laguerre_l(3, 0, x)
+        -x**3/6 + 3*x**2/2 - 3*x + 1
+        >>> laguerre_l(4, 0, x)
+        x**4/24 - 2*x**3/3 + 3*x**2 - 4*x + 1
 
     """
-    n, alpha, x = S(n), S(alpha), S(x)
-    r = 0
-    for m in range(n+1):
-        c = 1
-        for i in range(m+1, n+1):
-            c *= alpha+i
-        r += (-1)**m * c * x**m/(factorial(m)*factorial(n-m))
-    return r
+    return laguerre_poly(n, x, alpha)
+

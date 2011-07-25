@@ -1,6 +1,7 @@
 # Tests for var are in their own file, because var pollutes global namespace.
 
-from sympy import Symbol, var, raises, Function, FunctionClass
+from sympy import Symbol, var, Function, FunctionClass
+from sympy.utilities.pytest import raises
 
 # make z1 with call-depth = 1
 def make_z1():
@@ -43,11 +44,10 @@ def test_var():
     assert z2 == Symbol("z2")
 
 def test_var_return():
-    v1 = var('')
+    raises(ValueError, "var('')")
     v2 = var('q')
     v3 = var('q p')
 
-    assert v1 == None
     assert v2 == Symbol('q')
     assert v3 == (Symbol('q'), Symbol('p'))
 
@@ -72,4 +72,3 @@ def test_var_cls():
 
     assert isinstance(g, FunctionClass)
     assert isinstance(h, FunctionClass)
-

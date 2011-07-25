@@ -30,6 +30,14 @@ class SpecialFunctions(object):
         self.mpq_3_4 = self._mpq((3,4))
         self.mpq_7_4 = self._mpq((7,4))
         self.mpq_5_4 = self._mpq((5,4))
+        self.mpq_1_3 = self._mpq((1,3))
+        self.mpq_2_3 = self._mpq((2,3))
+        self.mpq_4_3 = self._mpq((4,3))
+        self.mpq_1_6 = self._mpq((1,6))
+        self.mpq_5_6 = self._mpq((5,6))
+        self.mpq_5_3 = self._mpq((5,3))
+
+        self._misc_const_cache = {}
 
         self._aliases.update({
             'phase' : 'arg',
@@ -292,76 +300,170 @@ def degrees(ctx, x):
 def radians(ctx, x):
     return x * ctx.degree
 
-@defun_wrapped
-def lambertw(ctx, z, k=0):
-    k = int(k)
-    if ctx.isnan(z):
-        return z
-    ctx.prec += 20
-    mag = ctx.mag(z)
-    # Start from fp approximation
-    if ctx is ctx._mp and abs(mag) < 900 and abs(k) < 10000 and \
-        abs(z+0.36787944117144) > 0.01:
-        w = ctx._fp.lambertw(z, k)
+def _lambertw_special(ctx, z, k):
+    # W(0,0) = 0; all other branches are singular
+    if not z:
+        if not k:
+            return z
+        return ctx.ninf + z
+    if z == ctx.inf:
+        if k == 0:
+            return z
+        else:
+            return z + 2*k*ctx.pi*ctx.j
+    if z == ctx.ninf:
+        return (-z) + (2*k+1)*ctx.pi*ctx.j
+    # Some kind of nan or complex inf/nan?
+    return ctx.ln(z)
+
+import math
+import cmath
+
+def _lambertw_approx_hybrid(z, k):
+    imag_sign = 0
+    if hasattr(z, "imag"):
+        x = float(z.real)
+        y = z.imag
+        if y:
+            imag_sign = (-1) ** (y < 0)
+        y = float(y)
     else:
-        absz = abs(z)
-        # We must be extremely careful near the singularities at -1/e and 0
-        u = ctx.exp(-1)
-        if absz <= u:
-            if not z:
-                # w(0,0) = 0; for all other branches we hit the pole
-                if not k:
-                    return z
-                return ctx.ninf
-            if not k:
-                w = z
-            # For small real z < 0, the -1 branch aves roughly like log(-z)
-            elif k == -1 and not ctx.im(z) and ctx.re(z) < 0:
-                w = ctx.ln(-z)
-            # Use a simple asymptotic approximation.
-            else:
-                w = ctx.ln(z)
-                # The branches are roughly logarithmic. This approximation
-                # gets better for large |k|; need to check that this always
-                # works for k ~= -1, 0, 1.
-                if k: w += k * 2*ctx.pi*ctx.j
-        elif k == 0 and ctx.im(z) and absz <= 0.7:
-            # Both the W(z) ~= z and W(z) ~= ln(z) approximations break
-            # down around z ~= -0.5 (converging to the wrong branch), so patch
-            # with a constant approximation (adjusted for sign)
-            if abs(z+0.5) < 0.1:
-                if ctx.im(z) > 0:
-                    w = ctx.mpc(0.7+0.7j)
+        x = float(z)
+        y = 0.0
+        imag_sign = 0
+    # hack to work regardless of whether Python supports -0.0
+    if not y:
+        y = 0.0
+    z = complex(x,y)
+    if k == 0:
+        if -4.0 < y < 4.0 and -1.0 < x < 2.5:
+            if imag_sign:
+                # Taylor series in upper/lower half-plane
+                if y > 1.00: return (0.876+0.645j) + (0.118-0.174j)*(z-(0.75+2.5j))
+                if y > 0.25: return (0.505+0.204j) + (0.375-0.132j)*(z-(0.75+0.5j))
+                if y < -1.00: return (0.876-0.645j) + (0.118+0.174j)*(z-(0.75-2.5j))
+                if y < -0.25: return (0.505-0.204j) + (0.375+0.132j)*(z-(0.75-0.5j))
+            # Taylor series near -1
+            if x < -0.5:
+                if imag_sign >= 0:
+                    return (-0.318+1.34j) + (-0.697-0.593j)*(z+1)
                 else:
-                    w = ctx.mpc(0.7-0.7j)
+                    return (-0.318-1.34j) + (-0.697+0.593j)*(z+1)
+            # return real type
+            r = -0.367879441171442
+            if (not imag_sign) and x > r:
+                z = x
+            # Singularity near -1/e
+            if x < -0.2:
+                return -1 + 2.33164398159712*(z-r)**0.5 - 1.81218788563936*(z-r)
+            # Taylor series near 0
+            if x < 0.5: return z
+            # Simple linear approximation
+            return 0.2 + 0.3*z
+        if (not imag_sign) and x > 0.0:
+            L1 = math.log(x); L2 = math.log(L1)
+        else:
+            L1 = cmath.log(z); L2 = cmath.log(L1)
+    elif k == -1:
+        # return real type
+        r = -0.367879441171442
+        if (not imag_sign) and r < x < 0.0:
+            z = x
+        if (imag_sign >= 0) and y < 0.1 and -0.6 < x < -0.2:
+            return -1 - 2.33164398159712*(z-r)**0.5 - 1.81218788563936*(z-r)
+        if (not imag_sign) and -0.2 <= x < 0.0:
+            L1 = math.log(-x)
+            return L1 - math.log(-L1)
+        else:
+            if imag_sign == -1 and (not y) and x < 0.0:
+                L1 = cmath.log(z) - 3.1415926535897932j
             else:
-                w = z
-        else:
-            if z == ctx.inf:
-                if k == 0:
-                    return z
-                else:
-                    return z + 2*k*ctx.pi*ctx.j
-            if z == ctx.ninf:
-                return (-z) + (2*k+1)*ctx.pi*ctx.j
-            # Simple asymptotic approximation as above
-            w = ctx.ln(z)
-            if k:
-                w += k * 2*ctx.pi*ctx.j
-    # Use Halley iteration to solve w*exp(w) = z
-    two = ctx.mpf(2)
-    weps = ctx.ldexp(ctx.eps, 15)
-    for i in xrange(100):
-        ew = ctx.exp(w)
-        wew = w*ew
-        wewz = wew-z
-        wn = w - wewz/(wew+ew-(w+two)*wewz/(two*w+two))
-        if abs(wn-w) < weps*abs(wn):
-            return wn
-        else:
-            w = wn
-    ctx.warn("Lambert W iteration failed to converge for %s" % z)
-    return wn
+                L1 = cmath.log(z) - 6.2831853071795865j
+            L2 = cmath.log(L1)
+    return L1 - L2 + L2/L1 + L2*(L2-2)/(2*L1**2)
+
+def _lambertw_series(ctx, z, k, tol):
+    """
+    Return rough approximation for W_k(z) from an asymptotic series,
+    sufficiently accurate for the Halley iteration to converge to
+    the correct value.
+    """
+    magz = ctx.mag(z)
+    if (-10 < magz < 900) and (-1000 < k < 1000):
+        # Near the branch point at -1/e
+        if magz < 1 and abs(z+0.36787944117144) < 0.05:
+            if k == 0 or (k == -1 and ctx._im(z) >= 0) or \
+                         (k == 1  and ctx._im(z) < 0):
+                delta = ctx.sum_accurately(lambda: [z, ctx.exp(-1)])
+                cancellation = -ctx.mag(delta)
+                ctx.prec += cancellation
+                # Use series given in Corless et al.
+                p = ctx.sqrt(2*(ctx.e*z+1))
+                ctx.prec -= cancellation
+                u = {0:ctx.mpf(-1), 1:ctx.mpf(1)}
+                a = {0:ctx.mpf(2), 1:ctx.mpf(-1)}
+                if k != 0:
+                    p = -p
+                s = ctx.zero
+                # The series converges, so we could use it directly, but unless
+                # *extremely* close, it is better to just use the first few
+                # terms to get a good approximation for the iteration
+                for l in xrange(max(2,cancellation)):
+                    if l not in u:
+                        a[l] = ctx.fsum(u[j]*u[l+1-j] for j in xrange(2,l))
+                        u[l] = (l-1)*(u[l-2]/2+a[l-2]/4)/(l+1)-a[l]/2-u[l-1]/(l+1)
+                    term = u[l] * p**l
+                    s += term
+                    if ctx.mag(term) < -tol:
+                        return s, True
+                    l += 1
+                ctx.prec += cancellation//2
+                return s, False
+        if k == 0 or k == -1:
+            return _lambertw_approx_hybrid(z, k), False
+    if k == 0:
+        if magz < -1:
+            return z*(1-z), False
+        L1 = ctx.ln(z)
+        L2 = ctx.ln(L1)
+    elif k == -1 and (not ctx._im(z)) and (-0.36787944117144 < ctx._re(z) < 0):
+        L1 = ctx.ln(-z)
+        return L1 - ctx.ln(-L1), False
+    else:
+        # This holds both as z -> 0 and z -> inf.
+        # Relative error is O(1/log(z)).
+        L1 = ctx.ln(z) + 2j*ctx.pi*k
+        L2 = ctx.ln(L1)
+    return L1 - L2 + L2/L1 + L2*(L2-2)/(2*L1**2), False
+
+@defun
+def lambertw(ctx, z, k=0):
+    z = ctx.convert(z)
+    k = int(k)
+    if not ctx.isnormal(z):
+        return _lambertw_special(ctx, z, k)
+    prec = ctx.prec
+    ctx.prec += 20 + ctx.mag(k or 1)
+    wp = ctx.prec
+    tol = wp - 5
+    w, done = _lambertw_series(ctx, z, k, tol)
+    if not done:
+        # Use Halley iteration to solve w*exp(w) = z
+        two = ctx.mpf(2)
+        for i in xrange(100):
+            ew = ctx.exp(w)
+            wew = w*ew
+            wewz = wew-z
+            wn = w - wewz/(wew+ew-(w+two)*wewz/(two*w+two))
+            if ctx.mag(wn-w) <= ctx.mag(wn) - tol:
+                w = wn
+                break
+            else:
+                w = wn
+        if i == 100:
+            ctx.warn("Lambert W iteration failed to converge for z = %s" % z)
+    ctx.prec = prec
+    return +w
 
 @defun_wrapped
 def bell(ctx, n, x=1):

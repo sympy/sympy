@@ -113,4 +113,3 @@ def smp_linear_p(f, u, ord, K):
 
 def smp_homogeneous_p(f, u, ord, K):
     pass
-

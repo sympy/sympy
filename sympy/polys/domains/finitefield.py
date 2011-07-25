@@ -61,7 +61,7 @@ class FiniteField(Field, SimpleDomain):
         """Convert SymPy's Integer to SymPy's `Integer`. """
         if a.is_Integer:
             return self.dtype(self.dom.dtype(int(a)))
-        elif a.is_Real and int(a) == a:
+        elif a.is_Float and int(a) == a:
             return self.dtype(self.dom.dtype(int(a)))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
@@ -106,7 +106,7 @@ class FiniteField(Field, SimpleDomain):
             return K1.from_ZZ_gmpy(a.numer())
 
     def from_RR_sympy(K1, a, K0=None):
-        """Convert SymPy's `Real` to `dtype`. """
+        """Convert SymPy's `Float` to `dtype`. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:

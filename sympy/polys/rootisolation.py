@@ -34,14 +34,13 @@ def dup_sturm(f, K):
     """
     Computes the Sturm sequence of ``f`` in ``F[x]``.
 
-    Given an univariate, square-free polynomial ``f(x)`` returns the
+    Given a univariate, square-free polynomial ``f(x)`` returns the
     associated Sturm sequence ``f_0(x), ..., f_n(x)`` defined by::
 
        f_0(x), f_1(x) = f(x), f'(x)
        f_n = -rem(f_{n-2}(x), f_{n-1}(x))
 
-    Example
-    =======
+    **Examples**
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rootisolation import dup_sturm
@@ -51,12 +50,9 @@ def dup_sturm(f, K):
     >>> dup_sturm(f, QQ)
     [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
 
-    References
-    ==========
+    **References**
 
-    .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
-    Systems and Algorithms for Algebraic Computation, Academic Press, London,
-    1988, pp. 124-128
+    1. [Davenport88]_
 
     """
     if not (K.has_Field or not K.is_Exact):
@@ -1132,7 +1128,7 @@ def _reverse_intervals(intervals):
 
 def _winding_number(T, field):
     """Compute the winding number of the input polynomial, i.e. the number of roots. """
-    return int(sum([ field(*_values[t][i]) for t, i in T ]) / 2)
+    return int(sum([ field(*_values[t][i]) for t, i in T ]) / field(2))
 
 def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
     """Count all roots in [u + v*I, s + t*I] rectangle using Collins-Krandick algorithm. """
@@ -1208,8 +1204,10 @@ def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
 
     return _winding_number(T, F)
 
-def _vertical_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F):
+def _vertical_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
     """Vertical bisection step in Collins-Krandick root isolation algorithm. """
+    (u, v), (s, t) = a, b
+
     I_L1, I_L2, I_L3, I_L4 = I
     Q_L1, Q_L2, Q_L3, Q_L4 = Q
 
@@ -1312,8 +1310,10 @@ def _vertical_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F):
 
     return D_L, D_R
 
-def _horizontal_bisection(N, (u, v), (s, t), I, Q, F1, F2, f1, f2, F):
+def _horizontal_bisection(N, a, b, I, Q, F1, F2, f1, f2, F):
     """Horizontal bisection step in Collins-Krandick root isolation algorithm. """
+    (u, v), (s, t) = a, b
+
     I_L1, I_L2, I_L3, I_L4 = I
     Q_L1, Q_L2, Q_L3, Q_L4 = Q
 
@@ -1428,8 +1428,10 @@ def _depth_first_select(rectangles):
 
     return rectangles.pop(j)
 
-def _rectangle_small_p((u, v), (s, t), eps):
+def _rectangle_small_p(a, b, eps):
     """Return ``True`` if the given rectangle is small enough. """
+    (u, v), (s, t) = a, b
+
     if eps is not None:
         return s - u < eps and t - v < eps
     else:
@@ -1521,19 +1523,13 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None, blackbox=F
 
             if N_L >= 1:
                 if N_L == 1 and _rectangle_small_p(a, b, eps):
-                    if not blackbox:
-                        roots.append((a, b))
-                    else:
-                        roots.append(ComplexInterval(a, b, I_L, Q_L, F1_L, F2_L, f1, f2, F))
+                    roots.append(ComplexInterval(a, b, I_L, Q_L, F1_L, F2_L, f1, f2, F))
                 else:
                     rectangles.append(D_L)
 
             if N_R >= 1:
                 if N_R == 1 and _rectangle_small_p(c, d, eps):
-                    if not blackbox:
-                        roots.append((c, d))
-                    else:
-                        roots.append(ComplexInterval(c, d, I_R, Q_R, F1_R, F2_R, f1, f2, F))
+                    roots.append(ComplexInterval(c, d, I_R, Q_R, F1_R, F2_R, f1, f2, F))
                 else:
                     rectangles.append(D_R)
         else:
@@ -1544,31 +1540,25 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None, blackbox=F
 
             if N_B >= 1:
                 if N_B == 1 and _rectangle_small_p(a, b, eps):
-                    if not blackbox:
-                        roots.append((a, b))
-                    else:
-                        roots.append(ComplexInterval(a, b, I_B, Q_B, F1_B, F2_B, f1, f2, F))
+                    roots.append(ComplexInterval(a, b, I_B, Q_B, F1_B, F2_B, f1, f2, F))
                 else:
                     rectangles.append(D_B)
 
             if N_U >= 1:
                 if N_U == 1 and _rectangle_small_p(c, d, eps):
-                    if not blackbox:
-                        roots.append((c, d))
-                    else:
-                        roots.append(ComplexInterval(c, d, I_U, Q_U, F1_U, F2_U, f1, f2, F))
+                    roots.append(ComplexInterval(c, d, I_U, Q_U, F1_U, F2_U, f1, f2, F))
                 else:
                     rectangles.append(D_U)
 
+    _roots, roots = sorted(roots, key=lambda r: (r.ax, r.ay)), []
+
+    for root in _roots:
+        roots.extend([root.conjugate(), root])
+
     if blackbox:
-        return sorted(roots, key=lambda r: (r.ax, r.ay))
-
-    _roots, roots = sorted(roots, key=operator.itemgetter(0)), []
-
-    for (u, v), (s, t) in _roots:
-        roots.extend([((u, v), (s, t)), ((u, -t), (s, -v))])
-
-    return roots
+        return roots
+    else:
+        return [ r.as_tuple() for r in roots ]
 
 def dup_isolate_all_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, blackbox=False):
     """Isolate real and complex roots of a square-free polynomial ``f``. """
@@ -1654,7 +1644,11 @@ class RealInterval(object):
         """Return the center of the real isolating interval. """
         return (self.a + self.b)/2
 
-    def __str__(self):
+    def as_tuple(self):
+        """Return tuple representation of real isolating interval. """
+        return (self.a, self.b)
+
+    def __repr__(self):
         return "(%s, %s)" % (self.a, self.b)
 
     def is_disjoint(self, other):
@@ -1750,7 +1744,11 @@ class ComplexInterval(object):
         """Return the center of the complex isolating interval. """
         return ((self.ax + self.bx)/2, (self.ay + self.by)/2)
 
-    def __str__(self):
+    def as_tuple(self):
+        """Return tuple representation of complex isolating interval. """
+        return ((self.ax, self.ay), (self.bx, self.by))
+
+    def __repr__(self):
         return "(%s, %s) x (%s, %s)" % (self.ax, self.bx, self.ay, self.by)
 
     def conjugate(self):
@@ -1818,4 +1816,3 @@ class ComplexInterval(object):
     def refine(self):
         """Perform one step of complex root refinement algorithm. """
         return self._inner_refine()
-

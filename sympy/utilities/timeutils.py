@@ -25,4 +25,3 @@ def timed(func, setup=None):
         order = 3
 
     return (number, time, time*_scales[order], _units[order])
-

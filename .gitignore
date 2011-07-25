@@ -1,13 +1,17 @@
-*.patch
-*.rej
 *.pyc
 *.pyo
-*.swp
+*.sw[op]
 tags
 
 my/
 dist/
 build/
+
+tox.ini
+.tox/
+
+.coverage
+covhtml/
 
 doc/_build/
 doc/sphinx/

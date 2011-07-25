@@ -1,26 +1,28 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
-from sympy.core import S, sympify, Symbol, Function, Lambda
-from sympy.polys import Poly, RootSum, cancel, parallel_poly_from_expr
+from sympy.polys import Poly, RootSum, cancel, factor
+from sympy.polys.polytools import parallel_poly_from_expr
+
+from sympy.core import S, Add, sympify, Symbol, Function, Lambda, Dummy
 from sympy.utilities import numbered_symbols, take, threaded
 
 @threaded
 def apart(f, x=None, full=False):
-    """Compute partial fraction decomposition of a rational function.
+    """
+    Compute partial fraction decomposition of a rational function.
 
-       Given a rational function ``f`` compute partial fraction decomposition
-       of ``f``. Two algorithms are available: one is based on undetermined
-       coefficients method and the other is Bronstein's full partial fraction
-       decomposition algorithm.
+    Given a rational function ``f`` compute partial fraction decomposition
+    of ``f``. Two algorithms are available: one is based on undetermined
+    coefficients method and the other is Bronstein's full partial fraction
+    decomposition algorithm.
 
-       Examples
-       ========
+    **Examples**
 
-           >>> from sympy.polys.partfrac import apart
-           >>> from sympy.abc import x, y
+    >>> from sympy.polys.partfrac import apart
+    >>> from sympy.abc import x, y
 
-           >>> apart(y/(x+2)/(x+1), x)
-           y/(1 + x) - y/(2 + x)
+    >>> apart(y/(x + 2)/(x + 1), x)
+    -y/(x + 2) + y/(x + 1)
 
     """
     f = sympify(f)
@@ -30,18 +32,15 @@ def apart(f, x=None, full=False):
     else:
         P, Q = f.as_numer_denom()
 
-    if x is None:
-        gens = ()
-    else:
-        gens = (x,)
-
-    (P, Q), opt = parallel_poly_from_expr((P, Q), *gens)
+    (P, Q), opt = parallel_poly_from_expr((P, Q), x)
 
     if P.is_multivariate:
         raise NotImplementedError("multivariate partial fraction decomposition")
 
     common, P, Q = P.cancel(Q)
-    poly_part, P = P.div(Q)
+
+    poly, P = P.div(Q, auto=True)
+    P, Q = P.rat_clear_denoms(Q)
 
     if Q.degree() <= 1:
         partial = P/Q
@@ -51,11 +50,16 @@ def apart(f, x=None, full=False):
         else:
             partial = apart_full_decomposition(P, Q)
 
-    return common*(poly_part.as_basic() + partial)
+    terms = S.Zero
+
+    for term in Add.make_args(partial):
+        terms += factor(term)
+
+    return common*(poly.as_expr() + terms)
 
 def apart_undetermined_coeffs(P, Q):
     """Partial fractions via method of undetermined coefficients. """
-    X = numbered_symbols(dummy=True)
+    X = numbered_symbols(cls=Dummy)
     partial, symbols = [], []
 
     _, factors = Q.factor_list()
@@ -64,7 +68,7 @@ def apart_undetermined_coeffs(P, Q):
         n, q = f.degree(), Q
 
         for i in xrange(1, k+1):
-            coeffs, q = take(X, n), q.exquo(f)
+            coeffs, q = take(X, n), q.quo(f)
             partial.append((coeffs, q, f, i))
             symbols.extend(coeffs)
 
@@ -86,40 +90,38 @@ def apart_undetermined_coeffs(P, Q):
     solution = solve(system, symbols)
 
     for h, f, k in partial:
-        h = h.as_basic().subs(solution)
-        result += h/f.as_basic()**k
+        h = h.as_expr().subs(solution)
+        result += h/f.as_expr()**k
 
     return result
 
 def apart_full_decomposition(P, Q):
-    """Bronstein's full partial fraction decomposition algorithm.
+    """
+    Bronstein's full partial fraction decomposition algorithm.
 
-       Given a univariate rational function ``f``, performing only GCD
-       operations over the algebraic closure of the initial ground domain
-       of definition, compute full partial fraction decomposition with
-       fractions having linear denominators.
+    Given a univariate rational function ``f``, performing only GCD
+    operations over the algebraic closure of the initial ground domain
+    of definition, compute full partial fraction decomposition with
+    fractions having linear denominators.
 
-       Note that no factorization of the initial denominator of ``f`` is
-       performed. The final decomposition is formed in terms of a sum of
-       :class:`RootSum` instances.
+    Note that no factorization of the initial denominator of ``f`` is
+    performed. The final decomposition is formed in terms of a sum of
+    :class:`RootSum` instances.
 
-       References
-       ==========
+    **References**
 
-       .. [Bronstein93] M. Bronstein, B. Salvy, Full partial fraction
-           decomposition of rational functions, Proceedings ISSAC '93,
-           ACM Press, Kiev, Ukraine, 1993, pp. 157-160.
+    1. [Bronstein93]_
 
     """
     f, x, U = P/Q, P.gen, []
 
     u = Function('u')(x)
-    a = Symbol('a', dummy=True)
+    a = Dummy('a')
 
     partial = S(0)
 
     for d, n in Q.sqf_list_include(all=True):
-        b = d.as_basic()
+        b = d.as_expr()
         U += [ u.diff(x, n-1) ]
 
         h = cancel(f*b**n) / u**n
@@ -144,12 +146,12 @@ def apart_full_decomposition(P, Q):
             Q = Poly(Q, x)
 
             G = P.gcd(d)
-            D = d.exquo(G)
+            D = d.quo(G)
 
             B, g = Q.half_gcdex(D)
-            b = (P * B.exquo(g)).rem(D)
+            b = (P * B.quo(g)).rem(D)
 
-            numer = b.as_basic()
+            numer = b.as_expr()
             denom = (x-a)**(n-j)
 
             expr = numer.subs(x, a) / denom
@@ -157,4 +159,3 @@ def apart_full_decomposition(P, Q):
             partial += RootSum(D, Lambda(a, expr))
 
     return partial
-

@@ -9,7 +9,7 @@ ordering_of_classes = [
     # singleton numbers
     'Zero', 'One','Half','Infinity','NaN','NegativeOne','NegativeInfinity',
     # numbers
-    'Integer','Rational','Real',
+    'Integer','Rational','Float',
     # singleton symbols
     'Exp1','Pi','ImaginaryUnit',
     # symbols
@@ -30,7 +30,6 @@ ordering_of_classes = [
     'ApplyFloor', 'ApplyCeiling',
     'ApplyRe','ApplyIm', 'ApplyArg',
     'ApplySqrt','ApplySign',
-    'ApplyMrvLog',
     'ApplyGamma','ApplyLowerGamma','ApplyUpperGamma','ApplyPolyGamma',
     'ApplyErf',
     'ApplyChebyshev','ApplyChebyshev2',
@@ -40,11 +39,11 @@ ordering_of_classes = [
     'Floor', 'Ceiling',
     'Re', 'Im', 'Arg',
     'Conjugate',
-    'Exp','Log','MrvLog',
+    'Exp','Log',
     'Sin','Cos','Tan','Cot','ASin','ACos','ATan','ACot',
     'Sinh','Cosh','Tanh','Coth','ASinh','ACosh','ATanh','ACoth',
     'RisingFactorial','FallingFactorial',
-    'Factorial','Binomial',
+    'factorial','binomial',
     'Gamma','LowerGamma','UpperGamma','PolyGamma',
     'Erf',
     # special polynomials
@@ -53,10 +52,6 @@ ordering_of_classes = [
     'Function','WildFunction',
     # anonymous functions
     'Lambda',
-    # operators
-    'FDerivative','FApply',
-    # composition of functions
-    'FPow', 'Composition',
     # Landau O symbol
     'Order',
     # relational operations
@@ -68,18 +63,58 @@ class BasicType(type):
     pass
 
 
+class Registry(object):
+    """
+    Base class for registry objects.
+
+    Registries map a name to an object using attribute notation. Registry
+    classes behave singletonically: all their instances share the same state,
+    which is stored in the class object.
+
+    All subclasses should set `__slots__ = []`.
+    """
+    __slots__ = []
+
+    def __setattr__(self, name, obj):
+        setattr(self.__class__, name, obj)
+
+    def __delattr__(self, name):
+        delattr(self.__class__, name)
+
+#A set containing all sympy class objects, kept in sync with C
+all_classes = set()
+
+class ClassRegistry(Registry):
+    """
+    Namespace for SymPy classes
+
+    This is needed to avoid problems with cyclic imports.
+    To get a SymPy class, use `C.<class_name>` e.g. `C.Rational`, `C.Add`.
+
+    For performance reasons, this is coupled with a set `all_classes` holding
+    the classes, which should not be modified directly.
+    """
+    __slots__ = []
+
+    def __setattr__(self, name, cls):
+        Registry.__setattr__(self, name, cls)
+        all_classes.add(cls)
+
+    def __delattr__(self, name):
+        cls = getattr(self, name)
+        Registry.__delattr__(self, name)
+        # The same class could have different names, so make sure
+        # it's really gone from C before removing it from all_classes.
+        if cls not in self.__class__.__dict__.itervalues():
+            all_classes.remove(cls)
+
+C = ClassRegistry()
+
+
 class BasicMeta(BasicType):
 
-    classnamespace = {}
-    all_classes = set()
-    singleton = {}
-
-    keep_sign = False
-
     def __init__(cls, *args, **kws):
-        n = cls.__name__
-        BasicMeta.all_classes.add(cls)
-        BasicMeta.classnamespace[n] = cls
+        setattr(C, cls.__name__, cls)
 
         # --- assumptions ---
 
@@ -99,8 +134,6 @@ class BasicMeta(BasicType):
                 if v is not None:
                     v = bool(v)
                 default_assumptions[k] = v
-                #print '  %r <-- %s' % (k,v)
-
 
         # XXX maybe we should try to keep ._default_premises out of class ?
         # XXX __slots__ in class ?
@@ -130,11 +163,6 @@ class BasicMeta(BasicType):
         # extensions of class default assumptions each time on instance
         # creation -- we keep it prededuced already.
         cls.default_assumptions = xass
-
-        #print '\t(%2i)  %s' % (len(default_assumptions), default_assumptions)
-        #print '\t(%2i)  %s' % (len(xass), xass)
-
-
 
         # let's store new derived assumptions back into class.
         # this will result in faster access to this attributes.
@@ -181,8 +209,7 @@ class BasicMeta(BasicType):
                 continue    # no ._derived_premises is ok
 
             for k,v in base_derived_premises.iteritems():
-                if not cls.__dict__.has_key('is_'+k):
-                    #print '%s -- overriding: %s' % (cls.__name__, k)
+                if ('is_'+k) not in cls.__dict__:
                     is_k = make__get_assumption(cls.__name__, k)
                     setattr(cls, 'is_'+k, property(is_k))
 
@@ -225,29 +252,6 @@ class BasicMeta(BasicType):
             return True
         return False
 
-BasicMeta.all_classes.add(BasicMeta)
+C.BasicMeta = BasicMeta
 
-class ClassesRegistry:
-    """Namespace for SymPy classes
 
-       This is needed to avoid problems with cyclic imports.
-       To get a SymPy class you do this:
-
-         C.<class_name>
-
-       e.g.
-
-         C.Rational
-         C.Add
-    """
-
-    def __getattr__(self, name):
-        try:
-            cls = BasicMeta.classnamespace[name]
-        except KeyError:
-            raise AttributeError("No SymPy class '%s'" % name)
-
-        setattr(self, name, cls)
-        return cls
-
-C = ClassesRegistry()

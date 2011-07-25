@@ -5,7 +5,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
 from sympy.polys.polyclasses import DMP
-from sympy.polys.polyerrors import GeneratorsNeeded, GeneratorsError
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError, CoercionFailed
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
 class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
@@ -53,7 +53,10 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        rep, _ = dict_from_basic(a, gens=self.gens)
+        try:
+            rep, _ = dict_from_basic(a, gens=self.gens)
+        except PolynomialError:
+            raise CoercionFailed("can't convert %s to type %s" % (a, self))
 
         for k, v in rep.iteritems():
             rep[k] = self.dom.from_sympy(v)
@@ -92,6 +95,11 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
+    def from_AlgebraicField(K1, a, K0):
+        """Convert a `ANP` object to `dtype`. """
+        if K1.dom == K0:
+            return K1(a)
+
     def from_PolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         if K1.gens == K0.gens:
@@ -108,7 +116,26 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
             return K1(dict(zip(monoms, coeffs)))
 
     def from_FractionField(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
+        """
+        Convert a ``DMF`` object to ``DMP``.
+
+        **Examples**
+
+        >>> from sympy.polys.polyclasses import DMP, DMF
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.abc import x
+
+        >>> f = DMF(([ZZ(1), ZZ(1)], [ZZ(1)]), ZZ)
+        >>> K = ZZ.frac_field(x)
+
+        >>> F = ZZ[x].from_FractionField(f, K)
+
+        >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
+        True
+        >>> type(F)
+        <class 'sympy.polys.polyclasses.DMP'>
+
+        """
         if a.denom().is_one:
             return K1.from_PolynomialRing(a.numer(), K0)
 
@@ -124,13 +151,6 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
     def frac_field(self, *gens):
         """Returns a fraction field, i.e. `K(X)`. """
         raise NotImplementedError('nested domains not allowed')
-
-    def inject(self, *gens):
-        """Inject generators into this domain. """
-        if not (set(self.gens) & set(gens)):
-            return self.__class__(self.dom, *(self.gens + gens))
-        else:
-            raise GeneratorsError("common generators in %s and %s" % (self.gens, gens))
 
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """
@@ -163,4 +183,3 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
     def factorial(self, a):
         """Returns factorial of `a`. """
         return self.dtype(self.dom.factorial(a))
-

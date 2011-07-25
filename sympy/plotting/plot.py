@@ -448,4 +448,3 @@ class ScreenShot:
                 break
             i+=1
         return path
-

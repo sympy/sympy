@@ -134,6 +134,13 @@ def test_hash():
     # Check that overflow doesn't assign equal hashes to large numbers
     assert hash(mpf('1e1000')) != hash('1e10000')
     assert hash(mpc(100,'1e1000')) != hash(mpc(200,'1e1000'))
+    from sympy.mpmath.rational import mpq
+    assert hash(mp.mpq(1,3))
+    assert hash(mp.mpq(0,1)) == 0
+    assert hash(mp.mpq(-1,1)) == hash(-1)
+    assert hash(mp.mpq(1,1)) == hash(1)
+    assert hash(mp.mpq(5,1)) == hash(5)
+    assert hash(mp.mpq(1,2)) == hash(0.5)
 
 # Advanced rounding test
 def test_add_rounding():
@@ -412,3 +419,18 @@ def test_isnan_etc():
     assert isint(mpq((0,4))) == True
     assert isint(mpq((1,1))) == True
     assert isint(mpq((-1,1))) == True
+    assert mp.isnpint(0) == True
+    assert mp.isnpint(1) == False
+    assert mp.isnpint(-1) == True
+    assert mp.isnpint(-1.1) == False
+    assert mp.isnpint(-1.0) == True
+    assert mp.isnpint(mp.mpq(1,2)) == False
+    assert mp.isnpint(mp.mpq(-1,2)) == False
+    assert mp.isnpint(mp.mpq(-3,1)) == True
+    assert mp.isnpint(mp.mpq(0,1)) == True
+    assert mp.isnpint(mp.mpq(1,1)) == False
+    assert mp.isnpint(0+0j) == True
+    assert mp.isnpint(-1+0j) == True
+    assert mp.isnpint(-1.1+0j) == False
+    assert mp.isnpint(-1+0.1j) == False
+    assert mp.isnpint(0+0.1j) == False

@@ -3,7 +3,7 @@
 from types import NoneType
 from inspect import getmro
 
-from core import BasicMeta
+from core import all_classes as sympy_classes
 
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
@@ -15,16 +15,15 @@ class SympifyError(ValueError):
 
         return "Sympify of expression '%s' failed, because of exception being raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__, str(self.base_exc))
 
-sympy_classes = BasicMeta.all_classes
 
 converter = {}
 
-def sympify(a, locals=None, convert_xor=True, strict=False):
+def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
     Converts an arbitrary expression to a type that can be used inside sympy.
 
     For example, it will convert python ints into instance of sympy.Rational,
-    floats into instances of sympy.Real, etc. It is also able to coerce symbolic
+    floats into instances of sympy.Float, etc. It is also able to coerce symbolic
     expressions which inherit from Basic. This can be useful in cooperation
     with SAGE.
 
@@ -51,6 +50,14 @@ def sympify(a, locals=None, convert_xor=True, strict=False):
     True
     >>> sympify("2e-45").is_real
     True
+
+    If the expression could not be converted, a SympifyError is raised.
+
+    >>> sympify("x***2")
+    Traceback (most recent call last):
+    ...
+    SympifyError: SympifyError: "could not parse u'x***2'"
+
 
     If the option `strict` is set to `True`, only the types for which an
     explicit conversion has been defined are converted. In the other
@@ -101,7 +108,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False):
         raise SympifyError(a)
 
     if isinstance(a, (list, tuple, set)):
-        return type(a)([sympify(x) for x in a])
+        return type(a)([sympify(x, locals=locals, convert_xor=convert_xor, rational=rational) for x in a])
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement
@@ -116,13 +123,14 @@ def sympify(a, locals=None, convert_xor=True, strict=False):
     except Exception, exc:
         raise SympifyError(a, exc)
 
-    if locals is None:
-        locals = {}
-    if convert_xor:
-        a = a.replace('^','**')
+    from sympy.parsing.sympy_parser import parse_expr, TokenError
 
-    import ast_parser
-    return ast_parser.parse_expr(a, locals)
+    try:
+        expr = parse_expr(a, locals or {}, rational, convert_xor)
+    except (TokenError, SyntaxError):
+        raise SympifyError('could not parse %r' % a)
+
+    return expr
 
 def _sympify(a):
     """Short version of sympify for internal usage for __add__ and __eq__
@@ -140,7 +148,7 @@ def _sympify(a):
        >>> from sympy import Symbol
        >>> from sympy.abc import x
        >>> x + 1
-       1 + x
+       x + 1
 
        >>> x + '1'
        Traceback (most recent call last):

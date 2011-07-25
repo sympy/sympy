@@ -1,8 +1,10 @@
-from sympy.core.basic import S, C
-from sympy.core.function import Function, Derivative
+from sympy.core import S, C
+from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
-
-from sympy.utilities.iterables import make_list, iff
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core import Add, Mul
+from sympy.core.relational import Eq
+from sympy.utilities.iterables import iff
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -31,7 +33,6 @@ class re(Function):
        2
 
     """
-
     nargs = 1
 
     is_real = True
@@ -47,7 +48,7 @@ class re(Function):
         else:
 
             included, reverted, excluded = [], [], []
-            arg = make_list(arg, C.Add)
+            arg = Add.make_args(arg)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -60,13 +61,16 @@ class re(Function):
                     included.append(term)
 
             if len(arg) != len(included):
-                a, b, c = map(lambda xs: C.Add(*xs),
+                a, b, c = map(lambda xs: Add(*xs),
                     [included, reverted, excluded])
 
                 return cls(a) - im(b) + c
 
     def _eval_conjugate(self):
         return self
+
+    def as_real_imag(self, deep=True):
+        return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):
 #        if deep:
@@ -75,8 +79,6 @@ class re(Function):
         return self.args[0].as_real_imag()[0]
 
     def _eval_derivative(self, x):
-        if not self.has(x):
-            return S.Zero
         return re(Derivative(self.args[0], x, **{'evaluate': True}))
 
 class im(Function):
@@ -117,7 +119,7 @@ class im(Function):
             return -im(arg.args[0])
         else:
             included, reverted, excluded = [], [], []
-            arg = make_list(arg, C.Add)
+            arg = Add.make_args(arg)
             for term in arg:
                 coeff = term.as_coefficient(S.ImaginaryUnit)
 
@@ -130,7 +132,7 @@ class im(Function):
                     included.append(term)
 
             if len(arg) != len(included):
-                a, b, c = map(lambda xs: C.Add(*xs),
+                a, b, c = map(lambda xs: Add(*xs),
                     [included, reverted, excluded])
 
                 return cls(a) + re(b) + c
@@ -138,14 +140,15 @@ class im(Function):
     def _eval_conjugate(self):
         return self
 
+    def as_real_imag(self, deep=True):
+        return (self, S.Zero)
+
     def _eval_expand_complex(self, deep=True, **hints):
 #        if deep:
 #            return self.args[0].expand(deep, **hints).as_real_imag()[1]
         return self.args[0].as_real_imag()[1]
 
     def _eval_derivative(self, x):
-        if not self.has(x):
-            return S.Zero
         return im(Derivative(self.args[0], x, **{'evaluate': True}))
 
 ###############################################################################
@@ -171,17 +174,17 @@ class sign(Function):
         if arg.is_Function:
             if arg.func is sign: return arg
         if arg.is_Mul:
-            c, args = arg.as_coeff_terms()
+            c, args = arg.as_coeff_mul()
             unk = []
             is_neg = c.is_negative
             for ai in args:
-                if ai.is_negative == None:
+                if ai.is_negative is None:
                     unk.append(ai)
                 elif ai.is_negative:
                     is_neg = not is_neg
             if c is S.One and len(unk) == len(args):
                 return None
-            return iff(is_neg, S.NegativeOne, S.One) * cls(C.Mul(*unk))
+            return iff(is_neg, S.NegativeOne, S.One) * cls(arg._new_rawargs(*unk))
 
     is_bounded = True
 
@@ -194,20 +197,39 @@ class sign(Function):
     def _eval_is_zero(self):
         return (self.args[0] is S.Zero)
 
-class abs(Function):
-    """Return the absolute value of the argument. This is an extension of the built-in
-    function abs to accept symbolic values
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sgn(self.args[0]._sage_())
+
+class Abs(Function):
+    """Return the absolute value of the argument.
+
+    This is an extension of the built-in function abs() to accept symbolic
+    values.  If you pass a SymPy expression to the built-in abs(), it will
+    pass it automatically to Abs().
 
     Examples
 
-        >>> from sympy import abs, Symbol
-        >>> abs(-1)
+        >>> from sympy import Abs, Symbol, S
+        >>> Abs(-1)
         1
         >>> x = Symbol('x', real=True)
-        >>> abs(-x)
-        abs(x)
-        >>> abs(x**2)
+        >>> Abs(-x)
+        Abs(x)
+        >>> Abs(x**2)
         x**2
+        >>> abs(-x) # The Python built-in
+        Abs(x)
+
+    Note that the Python built-in will return either an Expr or int depending on
+    the argument::
+
+        >>> type(abs(-1))
+        <type 'int'>
+        >>> type(abs(S.NegativeOne))
+        <class 'sympy.core.numbers.One'>
+
+    Abs will always return a sympy object.
 
     """
 
@@ -229,9 +251,9 @@ class abs(Function):
         if arg.is_zero:     return arg
         if arg.is_positive: return arg
         if arg.is_negative: return -arg
-        coeff, terms = arg.as_coeff_terms()
+        coeff, terms = arg.as_coeff_mul()
         if coeff is not S.One:
-            return cls(coeff) * cls(C.Mul(*terms))
+            return cls(coeff) * cls(Mul(*terms))
         if arg.is_real is False:
             return sqrt( (arg * arg.conjugate()).expand() )
         if arg.is_Pow:
@@ -255,22 +277,25 @@ class abs(Function):
                 return self.args[0]**other
         return
 
-    def nseries(self, x, x0, n):
+    def _eval_nseries(self, x, n, logx):
         direction = self.args[0].leadterm(x)[0]
-        return sign(direction)*self.args[0].nseries(x, x0, n)
+        s = self.args[0]._eval_nseries(x, n=n, logx=logx)
+        when = Eq(direction, 0)
+        return Piecewise(
+                         ((s.subs(direction, 0)), when),
+                         (sign(direction)*s, True),
+                         )
 
     def _sage_(self):
         import sage.all as sage
         return sage.abs_symbolic(self.args[0]._sage_())
 
     def _eval_derivative(self, x):
-        if not self.has(x):
-            return S.Zero
         if self.args[0].is_real:
             return Derivative(self.args[0], x, **{'evaluate': True}) * sign(self.args[0])
         return (re(self.args[0]) * re(Derivative(self.args[0], x,
             **{'evaluate': True})) + im(self.args[0]) * im(Derivative(self.args[0],
-                x, **{'evaluate': True}))) / abs(self.args[0])
+                x, **{'evaluate': True}))) / Abs(self.args[0])
 
 class arg(Function):
     """Returns the argument (in radians) of a complex number"""
@@ -292,8 +317,6 @@ class arg(Function):
 
     def _eval_derivative(self, t):
         x, y = re(self.args[0]), im(self.args[0])
-        if not self.has(t):
-            return S.Zero
         return (x * Derivative(y, t, **{'evaluate': True}) - y *
                 Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
 
@@ -319,11 +342,9 @@ class conjugate(Function):
         return self.args[0]
 
     def _eval_derivative(self, x):
-        if not self.has(x):
-            return S.Zero
         return conjugate(Derivative(self.args[0], x, **{'evaluate': True}))
 
 # /cyclic/
 from sympy.core import basic as _
-_.abs_ = abs
+_.abs_ = Abs
 del _

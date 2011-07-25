@@ -1,12 +1,12 @@
 """Computational algebraic number field theory. """
 
 from sympy import (
-    S, Expr, I, Integer, Rational, Real,
-    Symbol, Add, Mul, sympify, Q, ask,
+    S, Expr, I, Integer, Rational, Float,
+    Symbol, Add, Mul, sympify, Q, ask, Dummy,
 )
 
 from sympy.polys.polytools import (
-    Poly, sqf_norm, invert, factor_list, groebner,
+    Poly, PurePoly, sqf_norm, invert, factor_list, groebner,
 )
 
 from sympy.polys.polyutils import (
@@ -31,16 +31,29 @@ from sympy.ntheory import sieve
 from sympy.mpmath import pslq, mp
 
 def minimal_polynomial(ex, x=None, **args):
-    """Computes the minimal polynomial of an algebraic number. """
-    generator = numbered_symbols('a', dummy=True)
+    """
+    Computes the minimal polynomial of an algebraic number.
+
+    **Example**
+
+    >>> from sympy import minimal_polynomial, sqrt
+    >>> from sympy.abc import x
+
+    >>> minimal_polynomial(sqrt(2), x)
+    x**2 - 2
+    >>> minimal_polynomial(sqrt(2) + sqrt(3), x)
+    x**4 - 10*x**2 + 1
+
+    """
+    generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
 
     ex = sympify(ex)
 
     if x is not None:
-        x = sympify(x)
+        x, cls = sympify(x), Poly
     else:
-        x = S.Pure
+        x, cls = Dummy('x'), PurePoly
 
     def update_mapping(ex, exp, base=None):
         a = generator.next()
@@ -49,7 +62,7 @@ def minimal_polynomial(ex, x=None, **args):
         if base is not None:
             mapping[ex] = a**exp + base
         else:
-            mapping[ex] = exp.as_basic(a)
+            mapping[ex] = exp.as_expr(a)
 
         return a
 
@@ -69,13 +82,13 @@ def minimal_polynomial(ex, x=None, **args):
         elif ex.is_Pow:
             if ex.exp.is_Rational:
                 if ex.exp < 0 and ex.base.is_Add:
-                    coeff, terms = ex.base.as_coeff_factors()
+                    coeff, terms = ex.base.as_coeff_add()
                     elt, _ = primitive_element(terms, polys=True)
 
                     alg = ex.base - coeff
 
                     # XXX: turn this into eval()
-                    inverse = invert(elt.gen + coeff, elt).as_basic()
+                    inverse = invert(elt.gen + coeff, elt).as_expr()
                     base = inverse.subs(elt.gen, alg).expand()
 
                     if ex.exp == -1:
@@ -107,7 +120,7 @@ def minimal_polynomial(ex, x=None, **args):
 
     if ex.is_AlgebraicNumber:
         if not polys:
-            return ex.minpoly.as_basic(x)
+            return ex.minpoly.as_expr(x)
         else:
             return ex.minpoly.replace(x)
     elif ex.is_Rational and ex.q != 0:
@@ -128,7 +141,7 @@ def minimal_polynomial(ex, x=None, **args):
                 raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
 
     if polys:
-        return Poly(result, x, field=True)
+        return cls(result, x, field=True)
     else:
         return result
 
@@ -145,25 +158,25 @@ def primitive_element(extension, x=None, **args):
         raise ValueError("can't compute primitive element for empty extension")
 
     if x is not None:
-        x = sympify(x)
+        x, cls = sympify(x), Poly
     else:
-        x = S.Pure
+        x, cls = Dummy('x'), PurePoly
 
     if not args.get('ex', False):
         extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
 
-        g, coeffs = extension[0].minpoly, [1]
+        g, coeffs = extension[0].minpoly.replace(x), [1]
 
         for ext in extension[1:]:
             s, _, g = sqf_norm(g, x, extension=ext)
             coeffs = [ s*c for c in coeffs ] + [1]
 
         if not args.get('polys', False):
-            return g.as_basic(), coeffs
+            return g.as_expr(), coeffs
         else:
-            return g, coeffs
+            return cls(g), coeffs
 
-    generator = numbered_symbols('y', dummy=True)
+    generator = numbered_symbols('y', cls=Dummy)
 
     F, Y = [], []
 
@@ -172,7 +185,7 @@ def primitive_element(extension, x=None, **args):
 
         if ext.is_Poly:
             if ext.is_univariate:
-                f = ext.as_basic(y)
+                f = ext.as_expr(y)
             else:
                 raise ValueError("expected minimal polynomial, got %s" % ext)
         else:
@@ -185,13 +198,13 @@ def primitive_element(extension, x=None, **args):
 
     for coeffs in coeffs_generator(len(Y)):
         f = x - sum([ c*y for c, y in zip(coeffs, Y)])
-        G = groebner(F + [f], Y + [x], order='lex')
+        G = groebner(F + [f], Y + [x], order='lex', field=True)
 
-        H, g = G[:-1], Poly(G[-1], x, domain='QQ')
+        H, g = G[:-1], cls(G[-1], x, domain='QQ')
 
         for i, (h, y) in enumerate(zip(H, Y)):
             try:
-                H[i] = Poly(y - h, x, domain='QQ').all_coeffs()
+                H[i] = Poly(y - h, x, domain='QQ').all_coeffs() # XXX: composite=False
             except CoercionFailed: # pragma: no cover
                 break # G is not a triangular set
         else:
@@ -202,7 +215,7 @@ def primitive_element(extension, x=None, **args):
     _, g = g.clear_denoms()
 
     if not args.get('polys', False):
-        return g.as_basic(), coeffs, H
+        return g.as_expr(), coeffs, H
     else:
         return g, coeffs, H
 
@@ -410,7 +423,7 @@ class AlgebraicNumber(Expr):
         else:
             rep = DMP.from_list([1, 0], 0, dom)
 
-            if ask(root, Q.negative):
+            if ask(Q.negative(root)):
                 rep = -rep
 
         alias = args.get('alias')
@@ -439,20 +452,13 @@ class AlgebraicNumber(Expr):
             a.minpoly.all_coeffs() == b.minpoly.all_coeffs()
 
     def __ne__(a, b):
-        if not b.is_AlgebraicNumber:
-            try:
-                b = to_number_field(b, a)
-            except (NotAlgebraic, IsomorphismFailed):
-                return True
-
-        return a.rep != b.rep or \
-            a.minpoly.all_coeffs() != b.minpoly.all_coeffs()
+        return not a.__eq__(b)
 
     def __hash__(self):
         return super(AlgebraicNumber, self).__hash__()
 
     def _eval_evalf(self, prec):
-        return self.as_basic()._evalf(prec)
+        return self.as_expr()._evalf(prec)
 
     @property
     def is_aliased(self):
@@ -467,11 +473,11 @@ class AlgebraicNumber(Expr):
             if self.alias is not None:
                 return Poly.new(self.rep, self.alias)
             else:
-                return Poly.new(self.rep, Symbol('x', dummy=True))
+                return PurePoly.new(self.rep, Dummy('x'))
 
-    def as_basic(self, x=None):
+    def as_expr(self, x=None):
         """Create a Basic expression from `self`. """
-        return self.as_poly(x or self.root).as_basic().expand()
+        return self.as_poly(x or self.root).as_expr().expand()
 
     def coeffs(self):
         """Returns all SymPy coefficients of an algebraic number. """
@@ -502,7 +508,7 @@ def isolate(alg, eps=None, fast=False):
 
     if alg.is_Rational:
         return (alg, alg)
-    elif not ask(alg, Q.real):
+    elif not ask(Q.real(alg)):
         raise NotImplementedError("complex algebraic numbers are not supported")
 
     from sympy.printing.lambdarepr import LambdaPrinter
@@ -540,4 +546,3 @@ def isolate(alg, eps=None, fast=False):
         a, b = poly.refine_root(a, b, eps=eps, fast=fast)
 
     return (a, b)
-

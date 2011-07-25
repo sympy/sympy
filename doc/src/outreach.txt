@@ -47,21 +47,18 @@ Here we list blog/news/magazines mentioning SymPy that we know of.
 
 * `Using Python to Solve Optimization Problems <http://blogs.nyu.edu/blogs/agc282/zia/2008/11/using_python_to_solve_optimiza.html>`_, November 28, 2008
 * `Softwarová sklizeň <http://www.root.cz/clanky/softwarova-sklizen-10-9-2008/#sympy>`_ (Czech), September 10, 2008
-* `Intégration de sympy <http://wxgeo.free.fr/wordpress/?p=55>`_ (French), August 29, 2008
+* `Intégration de sympy <http://wxgeo.free.fr/wordpress/index.php/2008/08/29/integration-de-sympy/>`_ (French), August 29, 2008
 * `Python inside LaTeX <http://thewikiblog.appspot.com/blog/python-inside-latex>`_, July 22, 2008
 * `Playing with SymPy <http://stochastix.wordpress.com/2008/07/05/playing-with-sympy/>`_, July 5, 2008
-* `Polish developers awarded by Google <http://poland-for-foreigners.blogspot.com/2008/04/polish-developers-awarded-by-google.html>`_, April 25, 2008
-* `open source symbolic algebra <http://elusiveat.livejournal.com/261142.html>`_, April 24, 2008
 * `Teaching mathematics: programming or CAS? <http://amca01.wordpress.com/2008/04/10/teaching-mathematics-programming-or-cas/>`_, April 10, 2008
-* `You may take away my mathematica license but you may never take my freedom <http://www.metarz.net/blog/?p=92>`_, April 2, 2008
 * `Notes from PyCon 2008 <http://quantum_mc.blogspot.com/2008/03/notes-from-pycon-2008.html>`_, March 19, 2008
 * `cython and sympy <http://duhctaep.blogspot.com/2008/01/cython-and-sympy.html>`_, January 27, 2008
-* `CAS and Python <http://scottkirkwood.blogspot.com/2007/12/cas-and-python.html>`_, December 23, 2007
+* `CAS and Python <http://www.scottkirkwood.com/2007/12/cas-and-python.html>`_, December 23, 2007
 * `Limitless Supplies of Algebra Exercises <http://unsymptomatictoo.blogspot.com/2007/12/limitless-supplies-of-algebra-exercises.html>`_, December 7, 2007
-* `Python Magazine <http://pymag.phparch.com/>`_, Volume 1, Issue 11, November 2007
+* `Python Magazine <http://pythonmagazine.com/>`_, Volume 1, Issue 11, November 2007
 * Penguin.cz: `Zajímavé programy 55 <http://www.penguin.cz/novinky-view.php?id=1149>`_ (Czech), October 2007
 * Penguin.cz: `Zajímavé programy 50 <http://www.penguin.cz/novinky-view.php?id=1142>`_ (Czech), July 2007
 * `If you want your computer to do your derivatives... <http://mulled-mead.livejournal.com/52019.html>`_, March 2007
 
-See our `wiki page <http://wiki.sympy.org/wiki/SymPy_in_the_news>`_ for an
+See our `wiki page <https://github.com/sympy/sympy/wiki/SymPy-in-the-news>`_ for an
 uptodate list.

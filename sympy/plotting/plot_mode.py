@@ -394,4 +394,3 @@ def var_count_error(is_independent, is_plotting):
     else: n, s = PlotMode._d_var_max, "dependent"
     return ("%s with more than %i %s variables "
             "is not supported.") % (v, n, s)
-

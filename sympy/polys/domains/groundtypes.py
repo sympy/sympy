@@ -1,18 +1,17 @@
 """Ground types for various mathematical domains in SymPy. """
 
-HAS_FRACTION = True
-
-try:
-    import fractions
-except ImportError:
-    HAS_FRACTION = False
+from sympy.external import import_module
 
 HAS_GMPY = True
 
-try:
-    import gmpy
-except ImportError:
-    HAS_GMPY = False
+# Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
+# For example, int(gmpy.mpz(2**256)) would raise OverflowError.
+# See issue 1881.
+
+gmpy = import_module('gmpy', min_module_version='1.03',
+    module_version_attr='version', module_version_attr_call_args=())
+
+HAS_GMPY = bool(gmpy)
 
 from __builtin__ import (
     int     as PythonIntegerType,
@@ -20,24 +19,20 @@ from __builtin__ import (
     complex as PythonComplexType,
 )
 
-if HAS_FRACTION:
-    from fractions import (
-        Fraction as PythonRationalType,
-    )
-else:
-    class PythonRationalType(object):
-        def __init__(self, obj):
-            pass
+from pythonrationaltype import PythonRationalType
+
+def python_factorial(n):
+    from sympy.functions.combinatorial.factorials import factorial
+    return int(factorial(n))
 
 from sympy.core.numbers import (
-    ifactorial as python_factorial,
     igcdex     as python_gcdex,
     igcd       as python_gcd,
     ilcm       as python_lcm,
 )
 
 from sympy import (
-    Real     as SymPyRealType,
+    Float     as SymPyRealType,
     Integer  as SymPyIntegerType,
     Rational as SymPyRationalType,
 )
@@ -81,4 +76,3 @@ from sympy.mpmath.libmp.libmpf import isqrt
 
 def python_sqrt(a):
     return int(isqrt(a))
-

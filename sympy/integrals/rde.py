@@ -264,8 +264,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     else:
         dc = cQ.degree(DE.t)
 
-    alpha = cancel(-b.as_poly(DE.t).LC().as_basic()/
-        a.as_poly(DE.t).LC().as_basic())
+    alpha = cancel(-b.as_poly(DE.t).LC().as_expr()/
+        a.as_poly(DE.t).LC().as_expr())
 
     if case == 'base':
         n = max(0, dc - max(db, da - 1))
@@ -304,7 +304,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                     aa, z = A
                     if aa == 1:
                         beta = -(a*derivation(z, DE).as_poly(t1) +
-                            b*z.as_poly(t1)).LC()/(z.as_basic()*a.LC())
+                            b*z.as_poly(t1)).LC()/(z.as_expr()*a.LC())
                         betaa, betad = frac_in(beta, DE.t)
                         try:
                             (za, zd), m = limited_integrate(betaa, betad,
@@ -534,7 +534,7 @@ def cancel_primitive(b, c, n, DE):
         with DecrementLevel(DE):
             a2a, a2d = frac_in(c.LC(), DE.t)
             sa, sd = rischDE(ba, bd, a2a, a2d, DE)
-        stm = Poly(sa.as_basic()/sd.as_basic()*DE.t**m, DE.t, expand=False)
+        stm = Poly(sa.as_expr()/sd.as_expr()*DE.t**m, DE.t, expand=False)
         q += stm
         n = m - 1
         c -= b*stm + derivation(stm, DE)
@@ -553,7 +553,7 @@ def cancel_exp(b, c, n, DE):
     """
     from sympy.integrals.prde import parametric_log_deriv
 
-    eta = DE.d.quo(Poly(DE.t, DE.t)).as_basic()
+    eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
 
     with DecrementLevel(DE):
         etaa, etad = frac_in(eta, DE.t)
@@ -582,7 +582,7 @@ def cancel_exp(b, c, n, DE):
         if n < m:
             raise NonElementaryIntegralException
         # a1 = b + m*Dt/t
-        a1 = b.as_basic()
+        a1 = b.as_expr()
         with DecrementLevel(DE):
             # TODO: Write a dummy function that does this idiom
             a1a, a1d = frac_in(a1, DE.t)
@@ -592,7 +592,7 @@ def cancel_exp(b, c, n, DE):
             a2a, a2d = frac_in(c.LC(), DE.t)
 
             sa, sd = rischDE(a1a, a1d, a2a, a2d, DE)
-        stm = Poly(sa.as_basic()/sd.as_basic()*DE.t**m, DE.t, expand=False)
+        stm = Poly(sa.as_expr()/sd.as_expr()*DE.t**m, DE.t, expand=False)
         q += stm
         n = m - 1
         c -= b*stm + derivation(stm, DE) # deg(c) becomes smaller

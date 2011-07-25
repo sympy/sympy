@@ -16,7 +16,7 @@ SYMPY = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "abs":"fabs",
+    "Abs":"fabs",
     "ceiling":"ceil",
     "E":"e",
     "ln":"log",
@@ -51,8 +51,8 @@ NUMPY_TRANSLATIONS = {
     "im":"imag",
     "ln":"log",
     "Matrix":"matrix",
-    "max_":"amax",
-    "min_":"amin",
+    "Max":"amax",
+    "Min":"amin",
     "oo":"inf",
     "re":"real",
 }
@@ -64,7 +64,7 @@ MODULES = {
     "numpy":(NUMPY, NUMPY_TRANSLATIONS, ("from numpy import *",)),
     "sympy":(SYMPY, {}, ("from sympy.functions import *",
                          "from sympy.matrices import Matrix",
-                         "from sympy import Integral",
+                         "from sympy import Integral, pi, oo, nan, zoo, E, I",
                          "from sympy.utilities.iterables import iff"))
 }
 
@@ -77,6 +77,7 @@ def _import(module, reload="False"):
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
+    # TODO: rewrite this using import_module from sympy.external
     if not module in MODULES:
         raise NameError("This module can't be used for lambdification.")
     namespace, translations, import_commands = MODULES[module]
@@ -99,7 +100,7 @@ def _import(module, reload="False"):
     for sympyname, translation in translations.iteritems():
         namespace[sympyname] = namespace[translation]
 
-def lambdify(args, expr, modules=None, use_imps=True, printer=None):
+def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -147,7 +148,14 @@ def lambdify(args, expr, modules=None, use_imps=True, printer=None):
         Attention: There are naming differences between numpy and sympy. So if
                    you simply take the numpy module, e.g. sympy.atan will not be
                    translated to numpy.arctan. Use the modified module instead
-                   by passing the string "numpy".
+                   by passing the string "numpy":
+
+        >> f = lambdify((x,y), tan(x*y), "numpy")
+        >> f(1, 2)
+        -2.18503986326
+        >> from numpy import array
+        >> f(array([1, 2, 3]), array([2, 3, 5]))
+        [-2.18503986 -0.29100619 -0.8559934 ]
 
     (3) Use own dictionaries:
         >> def my_cool_function(x): ...
@@ -360,10 +368,10 @@ def implemented_function(symfunc, implementation):
     5
     """
     # Delayed import to avoid circular imports
-    from sympy.core.function import FunctionClass, Function
+    from sympy.core.function import UndefinedFunction
     # if name, create anonymous function to hold implementation
     if isinstance(symfunc, basestring):
-        symfunc = FunctionClass(Function, symfunc)
+        symfunc = UndefinedFunction(symfunc)
     # We need to attach as a method because symfunc will be a class
     symfunc._imp_ = staticmethod(implementation)
     return symfunc

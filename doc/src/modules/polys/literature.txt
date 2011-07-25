@@ -1,0 +1,73 @@
+.. _polys-literature:
+
+==========
+Literature
+==========
+
+The following is a non-comprehensive list of publications that were used as
+a theoretical foundation for implementing polynomials manipulation module.
+
+.. [Kozen89] D. Kozen, S. Landau, Polynomial decomposition algorithms,
+    Journal of Symbolic Computation 7 (1989), pp. 445-456
+
+.. [Liao95] Hsin-Chao Liao,  R. Fateman, Evaluation of the heuristic
+    polynomial GCD, International Symposium on Symbolic and Algebraic
+    Computation (ISSAC), ACM Press, Montreal, Quebec, Canada, 1995,
+    pp. 240--247
+
+.. [Gathen99] J. von zur Gathen, J. Gerhard, Modern Computer Algebra,
+    First Edition, Cambridge University Press, 1999
+
+.. [Weisstein09] Eric W. Weisstein, Cyclotomic Polynomial, From MathWorld - A
+    Wolfram Web Resource, http://mathworld.wolfram.com/CyclotomicPolynomial.html
+
+.. [Wang78] P. S. Wang, An Improved Multivariate Polynomial Factoring
+    Algorithm, Math. of Computation 32, 1978, pp. 1215--1231
+
+.. [Geddes92] K. Geddes, S. R. Czapor, G. Labahn, Algorithms for
+    Computer Algebra, Springer, 1992
+
+.. [Monagan93] Michael Monagan, In-place Arithmetic for Polynomials
+    over Z_n, Proceedings of DISCO '92, Springer-Verlag LNCS, 721,
+    1993, pp. 22--34
+
+.. [Kaltofen98] E. Kaltofen, V. Shoup, Subquadratic-time Factoring of
+    Polynomials over Finite Fields, Mathematics of Computation, Volume
+    67, Issue 223, 1998, pp. 1179--1197
+
+.. [Shoup95] V. Shoup, A New Polynomial Factorization Algorithm and
+    its Implementation, Journal of Symbolic Computation, Volume 20,
+    Issue 4, 1995, pp. 363--397
+
+.. [Gathen92] J. von zur Gathen, V. Shoup, Computing Frobenius Maps
+    and Factoring Polynomials, ACM Symposium on Theory of Computing,
+    1992, pp. 187--224
+
+.. [Shoup91] V. Shoup, A Fast Deterministic Algorithm for Factoring
+    Polynomials over Finite Fields of Small Characteristic, In Proceedings
+    of International Symposium on Symbolic and Algebraic Computation, 1991,
+    pp. 14--21
+
+.. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties and
+    Algorithms, Springer, Second Edition, 1997
+
+.. [Ajwa95] I.A. Ajwa, Z. Liu, P.S. Wang, Groebner Bases Algorithm,
+    http://citeseer.ist.psu.edu/ajwa95grbner.html, 1995
+
+.. [Bose03] N.K. Bose, B. Buchberger, J.P. Guiver, Multidimensional
+    Systems Theory and Applications, Springer, 2003
+
+.. [Giovini91] A. Giovini, T. Mora, "One sugar cube, please" or
+    Selection strategies in Buchberger algorithm, ISSAC '91, ACM
+
+.. [Bronstein93] M. Bronstein, B. Salvy, Full partial fraction
+    decomposition of rational functions, Proceedings ISSAC '93,
+    ACM Press, Kiev, Ukraine, 1993, pp. 157--160
+
+.. [Buchberger01] B. Buchberger, Groebner Bases: A Short Introduction for
+    Systems Theorists,  In: R. Moreno-Diaz,  B. Buchberger,
+    J. L. Freire, Proceedings of EUROCAST'01, February, 2001
+
+.. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
+    Systems and Algorithms for Algebraic Computation, Academic Press, London,
+    1988, pp. 124--128

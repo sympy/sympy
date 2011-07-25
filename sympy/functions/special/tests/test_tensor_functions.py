@@ -16,4 +16,3 @@ def test_Eijk():
     assert Eijk(1, 3, 1) == 0
     assert Eijk(1, x, x) == 0
     assert Eijk(x, y, x) == 0
-

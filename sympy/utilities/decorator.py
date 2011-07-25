@@ -1,11 +1,13 @@
-import warnings
+from sympy.core.decorators import wraps
+
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify, Add
     from sympy.matrices import Matrix
 
-    def threaded_decorator(expr, *args, **kwargs):
+    @wraps(func)
+    def threaded_func(expr, *args, **kwargs):
         if isinstance(expr, Matrix):
             return expr.applyfunc(lambda f: func(f, *args, **kwargs))
         elif hasattr(expr, '__iter__'):
@@ -21,7 +23,7 @@ def threaded_factory(func, use_add):
             else:
                 return func(expr, *args, **kwargs)
 
-    return threaded_decorator
+    return threaded_func
 
 def threaded(func):
     """Apply ``func`` to sub--elements of an object, including :class:`Add`.
@@ -40,7 +42,7 @@ def threaded(func):
           def function(expr, *args, **kwargs):
 
     """
-    return wraps(func, threaded_factory(func, True))
+    return threaded_factory(func, True)
 
 def xthreaded(func):
     """Apply ``func`` to sub--elements of an object, excluding :class:`Add`.
@@ -59,28 +61,4 @@ def xthreaded(func):
           def function(expr, *args, **kwargs):
 
     """
-    return wraps(func, threaded_factory(func, False))
-
-def deprecated(func):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used."""
-    def new_func(*args, **kwargs):
-        warnings.warn("Call to deprecated function %s." % func.__name__,
-                      category=DeprecationWarning)
-        return func(*args, **kwargs)
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
-    new_func.__dict__.update(func.__dict__)
-    return new_func
-
-def wraps(old_func, new_func):
-    """Copy private data from ``old_func`` to ``new_func``. """
-    new_func.__dict__.update(old_func.__dict__)
-
-    new_func.__module__ = old_func.__module__
-    new_func.__name__   = old_func.__name__
-    new_func.__doc__    = old_func.__doc__
-
-    return new_func
-
+    return threaded_factory(func, False)

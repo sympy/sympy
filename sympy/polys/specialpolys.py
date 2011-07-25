@@ -1,8 +1,9 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-from sympy.core import S, Add, Mul, Symbol, Rational, sympify, symbols
+from sympy.core import Add, Mul, Symbol, Rational, sympify, Dummy, symbols
+from sympy.core.singleton import S
 
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyutils import _analyze_gens
 
 from sympy.polys.polyclasses import DMP
@@ -33,9 +34,9 @@ def swinnerton_dyer_poly(n, x=None, **args):
         raise ValueError("can't generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
-        x = sympify(x)
+        x, cls = sympify(x), Poly
     else:
-        x = Symbol('x', dummy=True)
+        x, cls = Dummy('x'), PurePoly
 
     p, elts = 2, [[x, -2**Rational(1,2)],
                   [x,  2**Rational(1,2)]]
@@ -60,22 +61,22 @@ def swinnerton_dyer_poly(n, x=None, **args):
     if not args.get('polys', False):
         return Mul(*poly).expand()
     else:
-        return Poly(Mul(*poly))
+        return PurePoly(Mul(*poly), x)
 
 def cyclotomic_poly(n, x=None, **args):
     """Generates cyclotomic polynomial of order `n` in `x`. """
     if n <= 0:
         raise ValueError("can't generate cyclotomic polynomial of order %s" % n)
 
-    if x is not None:
-        x = sympify(x)
-    else:
-        x = Symbol('x', dummy=True)
+    poly = DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ)
 
-    poly = Poly.new(DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ), x)
+    if x is not None:
+        poly = Poly.new(poly, x)
+    else:
+        poly = PurePoly.new(poly, Dummy('x'))
 
     if not args.get('polys', False):
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 
@@ -100,7 +101,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
 
     if not polys:
-        return poly.as_basic()
+        return poly.as_expr()
     else:
         return poly
 
@@ -108,10 +109,10 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
 def interpolating_poly(n, x, X='x', Y='y'):
     """Construct Lagrange interpolating polynomial for ``n`` data points. """
     if isinstance(X, str):
-        X = symbols("%s:%s" % (xn, n))
+        X = symbols("%s:%s" % (X, n))
 
     if isinstance(Y, str):
-        Y = symbols("%s:%s" % (yn, n))
+        Y = symbols("%s:%s" % (Y, n))
 
     coeffs = []
 

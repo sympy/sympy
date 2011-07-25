@@ -32,14 +32,14 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __hash__(self):
             return hash((self.__class__.__name__, self.ex))
 
-        def as_basic(f):
+        def as_expr(f):
             return f.ex
 
         def numer(f):
-            return EX(f.ex.as_numer_denom()[0])
+            return f.ex.as_numer_denom()[0]
 
         def denom(f):
-            return EX(f.ex.as_numer_denom()[1])
+            return f.ex.as_numer_denom()[1]
 
         def simplify(f, ex):
             return f.__class__(ex.cancel())
@@ -113,7 +113,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
-        return a.as_basic()
+        return a.as_expr()
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
@@ -144,7 +144,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         return K1(K0.to_sympy(a))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return K1(K0.to_sympy(a))
 
     def from_RR_mpmath(K1, a, K0):
@@ -173,19 +173,19 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
     def is_positive(self, a):
         """Returns True if `a` is positive. """
-        return a.ex.as_coeff_terms()[0].is_positive
+        return a.ex.as_coeff_mul()[0].is_positive
 
     def is_negative(self, a):
         """Returns True if `a` is negative. """
-        return a.ex.as_coeff_terms()[0].is_negative
+        return a.ex.as_coeff_mul()[0].is_negative
 
     def is_nonpositive(self, a):
         """Returns True if `a` is non-positive. """
-        return a.ex.as_coeff_terms()[0].is_nonpositive
+        return a.ex.as_coeff_mul()[0].is_nonpositive
 
     def is_nonnegative(self, a):
         """Returns True if `a` is non-negative. """
-        return a.ex.as_coeff_terms()[0].is_nonnegative
+        return a.ex.as_coeff_mul()[0].is_nonnegative
 
     def numer(self, a):
         """Returns numerator of `a`. """
@@ -194,5 +194,3 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     def denom(self, a):
         """Returns denominator of `a`. """
         return a.denom()
-
-EX = ExpressionDomain()

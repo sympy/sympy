@@ -1,5 +1,6 @@
-from sympy import Symbol, log, sqrt, Rational as R, raises
+from sympy import Symbol, log, sqrt, Rational as R
 
+from sympy.utilities.pytest import raises
 from sympy.abc import x, y
 
 def test_expand_no_log():
@@ -55,4 +56,3 @@ def test_expand_modulus():
 
     raises(ValueError, "((x + y)**11).expand(modulus=0)")
     raises(ValueError, "((x + y)**11).expand(modulus=x)")
-

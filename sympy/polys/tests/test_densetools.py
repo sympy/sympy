@@ -29,12 +29,13 @@ from sympy.polys.densetools import (
     dup_decompose,
     dmp_lift,
     dup_sign_variations,
-    dup_revert,
+    dup_revert, dmp_revert,
 )
 
 from sympy.polys.polyclasses import DMP, ANP
 
 from sympy.polys.polyerrors import (
+    MultivariatePolynomialError,
     ExactQuotientFailed,
     NotReversible,
     DomainError,
@@ -49,9 +50,11 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.domains import FF, ZZ, QQ, EX
 
-from sympy import raises, I, sin
+from sympy import I, sin
 
 from sympy.abc import x
+
+from sympy.utilities.pytest import raises
 
 def test_dup_integrate():
     assert dup_integrate([], 1, QQ) == []
@@ -229,6 +232,14 @@ def test_dup_revert():
     assert dup_revert(f, 8, QQ) == g
 
     raises(NotReversible, "dup_revert([QQ(1), QQ(0)], 3, QQ)")
+
+def test_dmp_revert():
+    f = [-QQ(1,720),QQ(0),QQ(1,24),QQ(0),-QQ(1,2),QQ(0),QQ(1)]
+    g = [QQ(61,720),QQ(0),QQ(5,24),QQ(0), QQ(1,2),QQ(0),QQ(1)]
+
+    assert dmp_revert(f, 8, 0, QQ) == g
+
+    raises(MultivariatePolynomialError, "dmp_revert([[1]], 2, 1, QQ)")
 
 def test_dup_trunc():
     assert dup_trunc([1,2,3,4,5,6], ZZ(3), ZZ) == [1, -1, 0, 1, -1, 0]
@@ -543,10 +554,11 @@ def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
     assert dmp_clear_denoms([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
 
+    assert dmp_clear_denoms([QQ(3),QQ(1),QQ(0)], 0, QQ, ZZ, convert=True) == (ZZ(1), [ZZ(3),ZZ(1),ZZ(0)])
+    assert dmp_clear_denoms([QQ(1),QQ(1,2),QQ(0)], 0, QQ, ZZ, convert=True) == (ZZ(2), [ZZ(2),ZZ(1),ZZ(0)])
+
     assert dmp_clear_denoms([[QQ(3)],[QQ(1)],[]], 1, QQ, ZZ, convert=True) == (ZZ(1), [[QQ(3)],[QQ(1)],[]])
     assert dmp_clear_denoms([[QQ(1)],[QQ(1,2)],[]], 1, QQ, ZZ, convert=True) == (ZZ(2), [[QQ(2)],[QQ(1)],[]])
 
     assert dmp_clear_denoms([[EX(7)]], 1, EX) == (EX(1), [[EX(7)]])
     assert dmp_clear_denoms([[EX(sin(x)/x), EX(0)]], 1, EX) == (EX(x), [[EX(sin(x)), EX(0)]])
-
-

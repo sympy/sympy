@@ -22,7 +22,7 @@
 
 apt-get -y install git-core python2.4
 cd /tmp
-git clone git://git.sympy.org/sympy.git
+git clone git://github.com/sympy/sympy.git
 cd sympy
 python2.4 setup.py sdist
 cd dist

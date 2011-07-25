@@ -8,4 +8,3 @@ class GMPYFiniteField(FiniteField):
 
     dom = GMPYIntegerRing()
     alias = 'FF_gmpy'
-

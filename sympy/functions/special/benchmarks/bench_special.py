@@ -5,4 +5,3 @@ x,y = symbols('x,y')
 
 def timeit_Ylm_xy():
     Ylm(1,1, x,y)
-

@@ -13,4 +13,3 @@ def timeit_C_lookup():
 
 def timeit_Symbol_eq_xy():
     x == y
-

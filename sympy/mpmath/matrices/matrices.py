@@ -400,41 +400,177 @@ class _matrix(object):
         s += self._toliststr(avoid_type=True) + ')'
         return s
 
-    def __getitem__(self, key):
-        if type(key) is int:
-            # only sufficent for vectors
-            if self.__rows == 1:
-                key = (0, key)
-            elif self.__cols == 1:
-                key = (key, 0)
-            else:
-                raise IndexError('insufficient indices for matrix')
+    def __get_element(self, key):
+        '''
+        Fast extraction of the i,j element from the matrix
+            This function is for private use only because is unsafe:
+                1. Does not check on the value of key it expects key to be a integer tuple (i,j)
+                2. Does not check bounds
+        '''
         if key in self.__data:
             return self.__data[key]
         else:
-            if key[0] >= self.__rows or key[1] >= self.__cols:
-                raise IndexError('matrix index out of range')
             return self.ctx.zero
 
-    def __setitem__(self, key, value):
-        if type(key) is int:
-            # only sufficent for vectors
-            if self.__rows == 1:
-                key = (0, key)
-            elif self.__cols == 1:
-                key = (key, 0)
-            else:
-                raise IndexError('insufficient indices for matrix')
-        if key[0] >= self.__rows or key[1] >= self.__cols:
-            raise IndexError('matrix index out of range')
-        value = self.ctx.convert(value)
+    def __set_element(self, key, value):
+        '''
+        Fast assignment of the i,j element in the matrix
+            This function is unsafe:
+                1. Does not check on the value of key it expects key to be a integer tuple (i,j)
+                2. Does not check bounds
+                3. Does not check the value type
+        '''
         if value: # only store non-zeros
             self.__data[key] = value
         elif key in self.__data:
             del self.__data[key]
-        # TODO: maybe do this better, if the performance impact is significant
+
+
+    def __getitem__(self, key):
+        '''
+            Getitem function for mp matrix class with slice index enabled
+            it allows the following assingments
+            scalar to a slice of the matrix
+         B = A[:,2:6]
+        '''
+        # Convert vector to matrix indexing
+        if isinstance(key, int) or isinstance(key,slice):
+            # only sufficent for vectors
+            if self.__rows == 1:
+                key = (0, key)
+            elif self.__cols == 1:
+                key = (key, 0)
+            else:
+                raise IndexError('insufficient indices for matrix')
+
+        if isinstance(key[0],slice) or isinstance(key[1],slice):
+
+            #Rows
+            if isinstance(key[0],slice):
+                #Check bounds
+                if (key[0].start >= 0 or key[0].start is None) and \
+                    (key[0].stop <= self.__rows+1 or key[0].stop is None):
+                    # Generate indices
+                    rows = xrange(*key[0].indices(self.__rows))
+                else:
+                    raise IndexError('Row index out of bounds')
+            else:
+                # Single row
+                rows = [key[0]]
+
+            # Columns
+            if isinstance(key[1],slice):
+                # Check bounds
+                if (key[1].start >= 0 or key[1].start is None) and \
+                    (key[1].stop <= self.__cols+1 or key[1].stop is None):
+                    # Generate indices
+                    columns = xrange(*key[1].indices(self.__cols))
+                else:
+                    raise IndexError('Column index out of bounds')
+
+            else:
+                # Single column
+                columns = [key[1]]
+
+            # Create matrix slice
+            m = self.ctx.matrix(len(rows),len(columns))
+
+            # Assign elements to the output matrix
+            for i,x in enumerate(rows):
+                for j,y in enumerate(columns):
+                    m.__set_element((i,j),self.__get_element((x,y)))
+
+            return m
+
+        else:
+            # single element extraction
+            if key[0] >= self.__rows or key[1] >= self.__cols:
+                raise IndexError('matrix index out of range')
+            if key in self.__data:
+                return self.__data[key]
+            else:
+                return self.ctx.zero
+
+    def __setitem__(self, key, value):
+        # setitem function for mp matrix class with slice index enabled
+        # it allows the following assingments
+        #  scalar to a slice of the matrix
+        # A[:,2:6] = 2.5
+        #  submatrix to matrix (the value matrix should be the same size as the slice size)
+        # A[3,:] = B   where A is n x m  and B is n x 1
+
+        # Convert vector to matrix indexing
+        if isinstance(key, int) or isinstance(key,slice):
+            # only sufficent for vectors
+            if self.__rows == 1:
+                key = (0, key)
+            elif self.__cols == 1:
+                key = (key, 0)
+            else:
+                raise IndexError('insufficient indices for matrix')
+
+        # Slice indexing
+        if isinstance(key[0],slice) or isinstance(key[1],slice):
+
+            # Rows
+            if isinstance(key[0],slice):
+                # Check bounds
+                if (key[0].start >= 0 or key[0].start is None) and \
+                    (key[0].stop <= self.__rows+1 or key[0].stop is None):
+                    # generate row indices
+                    rows = xrange(*key[0].indices(self.__rows))
+                else:
+                    raise IndexError('Row index out of bounds')
+            else:
+                # Single row
+                rows = [key[0]]
+
+            # Columns
+            if isinstance(key[1],slice):
+                # Check bounds
+                if (key[1].start >= 0 or key[1].start is None) and \
+                    (key[1].stop <= self.__cols+1 or key[1].stop is None):
+                    # Generate column indices
+                    columns = xrange(*key[1].indices(self.__cols))
+                else:
+                    raise IndexError('Column index out of bounds')
+
+            else:
+                # Single column
+                columns = [key[1]]
+
+
+            # Assign slice with a scalar
+            if isinstance(value,self.ctx.matrix):
+                # Assign elements to matrix if input and output dimensions match
+                if len(rows) == value.rows and len(columns) == value.cols:
+                    for i,x in enumerate(rows):
+                        for j,y in enumerate(columns):
+                            self.__set_element( (x,y),value.__get_element((i,j)))
+                else:
+                    raise ValueError('Dimensions do not match')
+            else:
+                # Assign slice with scalars
+                value = self.ctx.convert(value)
+                for index in ((a, b) for a in rows for b in columns):
+                    self.__set_element( index ,value)
+
+        else:
+            # Single element assingment
+            # Check bounds
+            if key[0] >= self.__rows or key[1] >= self.__cols:
+                raise IndexError('matrix index out of range')
+            # Convert and store value
+            value = self.ctx.convert(value)
+            if value: # only store non-zeros
+                self.__data[key] = value
+            elif key in self.__data:
+                del self.__data[key]
+
         if self._LU:
             self._LU = None
+        return
+
 
     def __iter__(self):
         for i in xrange(self.__rows):
@@ -538,9 +674,6 @@ class _matrix(object):
     def __eq__(self, other):
         return self.__rows == other.__rows and self.__cols == other.__cols \
                and self.__data == other.__data
-
-    def __hash__(self):
-        return super(_matrix, self).__hash__()
 
     def __len__(self):
         if self.rows == 1:

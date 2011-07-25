@@ -1,5 +1,4 @@
 from sympy.core import S, Add
-from sympy.utilities.source import get_class
 from sympy.assumptions import Q, ask
 from sympy.logic.boolalg import fuzzy_not
 
@@ -13,18 +12,18 @@ def refine(expr, assumptions=True):
 
     Examples::
 
-        >>> from sympy import refine, sqrt, Assume, Q
+        >>> from sympy import refine, sqrt, Q
         >>> from sympy.abc import x
-        >>> refine(sqrt(x**2), Assume(x, Q.real))
-        abs(x)
-        >>> refine(sqrt(x**2), Assume(x, Q.positive))
+        >>> refine(sqrt(x**2), Q.real(x))
+        Abs(x)
+        >>> refine(sqrt(x**2), Q.positive(x))
         x
 
     """
     if not expr.is_Atom:
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial
-        expr = type(expr)(*args)
+        expr = expr.func(*args)
     name = expr.__class__.__name__
     handler = handlers_dict.get(name, None)
     if handler is None: return expr
@@ -39,57 +38,56 @@ def refine_abs(expr, assumptions):
 
     Examples::
 
-    >>> from sympy import Symbol, Assume, Q, refine
+    >>> from sympy import Symbol, Q, refine, Abs
     >>> from sympy.assumptions.refine import refine_abs
     >>> from sympy.abc import x
-    >>> refine_abs(abs(x), Assume(x, Q.real))
-    >>> refine_abs(abs(x), Assume(x, Q.positive))
+    >>> refine_abs(Abs(x), Q.real(x))
+    >>> refine_abs(Abs(x), Q.positive(x))
     x
-    >>> refine_abs(abs(x), Assume(x, Q.negative))
+    >>> refine_abs(Abs(x), Q.negative(x))
     -x
 
     """
     arg = expr.args[0]
-    if ask(arg, Q.real, assumptions) and \
-            fuzzy_not(ask(arg, Q.negative, assumptions)):
+    if ask(Q.real(arg), assumptions) and \
+            fuzzy_not(ask(Q.negative(arg), assumptions)):
         # if it's nonnegative
         return arg
-    if ask(arg, Q.negative, assumptions):
+    if ask(Q.negative(arg), assumptions):
         return -arg
 
 def refine_Pow(expr, assumptions):
     """
     Handler for instances of Pow.
 
-    >>> from sympy import Symbol, Assume, Q
+    >>> from sympy import Symbol, Q
     >>> from sympy.assumptions.refine import refine_Pow
     >>> from sympy.abc import x,y,z
-    >>> refine_Pow((-1)**x, Assume(x, Q.real))
-    >>> refine_Pow((-1)**x, Assume(x, Q.even))
+    >>> refine_Pow((-1)**x, Q.real(x))
+    >>> refine_Pow((-1)**x, Q.even(x))
     1
-    >>> refine_Pow((-1)**x, Assume(x, Q.odd))
+    >>> refine_Pow((-1)**x, Q.odd(x))
     -1
 
     For powers of -1, even parts of the exponent can be simplified:
 
-    >>> refine_Pow((-1)**(x+y), Assume(x, Q.even))
+    >>> refine_Pow((-1)**(x+y), Q.even(x))
     (-1)**y
-    >>> refine_Pow((-1)**(x+y+z), Assume(x, Q.odd) & Assume(z, Q.odd))
+    >>> refine_Pow((-1)**(x+y+z), Q.odd(x) & Q.odd(z))
     (-1)**y
-    >>> refine_Pow((-1)**(x+y+2), Assume(x, Q.odd))
-    (-1)**(1 + y)
+    >>> refine_Pow((-1)**(x+y+2), Q.odd(x))
+    (-1)**(y + 1)
     >>> refine_Pow((-1)**(x+3), True)
-    (-1)**(1 + x)
-
+    (-1)**(x + 1)
 
     """
     from sympy.core import Pow, Rational
     from sympy.functions import sign
-    if ask(expr.base, Q.real, assumptions):
+    if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
-            if ask(expr.exp, Q.even, assumptions):
+            if ask(Q.even(expr.exp), assumptions):
                 return abs(expr.base) ** expr.exp
-            if ask(expr.exp, Q.odd, assumptions):
+            if ask(Q.odd(expr.exp), assumptions):
                 return sign(expr.base) * abs(expr.base) ** expr.exp
         if isinstance(expr.exp, Rational):
             if type(expr.base) is Pow:
@@ -104,16 +102,16 @@ def refine_Pow(expr, assumptions):
                 #  - a single odd term + 1
                 #  - A numerical constant N can be replaced with mod(N,2)
 
-                coeff, terms = expr.exp.as_coeff_factors()
+                coeff, terms = expr.exp.as_coeff_add()
                 terms = set(terms)
                 even_terms = set([])
                 odd_terms = set([])
                 initial_number_of_terms = len(terms)
 
                 for t in terms:
-                    if ask(t, Q.even, assumptions):
+                    if ask(Q.even(t), assumptions):
                         even_terms.add(t)
-                    elif ask(t, Q.odd, assumptions):
+                    elif ask(Q.odd(t), assumptions):
                         odd_terms.add(t)
 
                 terms -= even_terms
@@ -133,11 +131,11 @@ def refine_exp(expr, assumptions):
     """
     Handler for exponential function.
 
-    >>> from sympy import Symbol, Assume, Q, exp, I, pi
+    >>> from sympy import Symbol, Q, exp, I, pi
     >>> from sympy.assumptions.refine import refine_exp
     >>> from sympy.abc import x
-    >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.real))
-    >>> refine_exp(exp(pi*I*2*x), Assume(x, Q.integer))
+    >>> refine_exp(exp(pi*I*2*x), Q.real(x))
+    >>> refine_exp(exp(pi*I*2*x), Q.integer(x))
     1
 
     """
@@ -145,18 +143,18 @@ def refine_exp(expr, assumptions):
     if arg.is_Mul:
         coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
         if coeff:
-            if ask(2*coeff, Q.integer, assumptions):
-                if ask(coeff, Q.even, assumptions):
+            if ask(Q.integer(2*coeff), assumptions):
+                if ask(Q.even(coeff), assumptions):
                     return S.One
-                elif ask(coeff, Q.odd, assumptions):
+                elif ask(Q.odd(coeff), assumptions):
                     return S.NegativeOne
-                elif ask(coeff + S.Half, Q.even, assumptions):
+                elif ask(Q.even(coeff + S.Half), assumptions):
                     return -S.ImaginaryUnit
-                elif ask(coeff + S.Half, Q.odd, assumptions):
+                elif ask(Q.odd(coeff + S.Half), assumptions):
                     return S.ImaginaryUnit
 
 handlers_dict = {
-    'abs'        : refine_abs,
+    'Abs'        : refine_abs,
     'Pow'        : refine_Pow,
     'exp'        : refine_exp,
 }

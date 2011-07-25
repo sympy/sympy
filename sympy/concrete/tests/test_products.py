@@ -36,4 +36,3 @@ def test__eval_product():
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
     # 1711
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
-

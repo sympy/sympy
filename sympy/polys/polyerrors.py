@@ -22,7 +22,7 @@ class ExactQuotientFailed(BasePolynomialError):
     def new(self, f, g):
         return self.__class__(f, g, self.dom)
 
-class OperationNotSupported(Exception):
+class OperationNotSupported(BasePolynomialError):
 
     def __init__(self, poly, func):
         self.poly = poly
@@ -31,49 +31,49 @@ class OperationNotSupported(Exception):
     def __str__(self): # pragma: no cover
         return "`%s` operation not supported by %s representation" % (self.func, self.poly.rep.__class__.__name__)
 
-class HeuristicGCDFailed(Exception):
+class HeuristicGCDFailed(BasePolynomialError):
     pass
 
-class HomomorphismFailed(Exception):
+class HomomorphismFailed(BasePolynomialError):
     pass
 
-class IsomorphismFailed(Exception):
+class IsomorphismFailed(BasePolynomialError):
     pass
 
-class ExtraneousFactors(Exception):
+class ExtraneousFactors(BasePolynomialError):
     pass
 
-class EvaluationFailed(Exception):
+class EvaluationFailed(BasePolynomialError):
     pass
 
-class RefinementFailed(Exception):
+class RefinementFailed(BasePolynomialError):
     pass
 
-class CoercionFailed(Exception):
+class CoercionFailed(BasePolynomialError):
     pass
 
-class NotInvertible(Exception):
+class NotInvertible(BasePolynomialError):
     pass
 
-class NotReversible(Exception):
+class NotReversible(BasePolynomialError):
     pass
 
-class NotAlgebraic(Exception):
+class NotAlgebraic(BasePolynomialError):
     pass
 
-class DomainError(Exception):
+class DomainError(BasePolynomialError):
     pass
 
-class PolynomialError(Exception):
+class PolynomialError(BasePolynomialError):
     pass
 
-class UnificationFailed(Exception):
+class UnificationFailed(BasePolynomialError):
     pass
 
-class GeneratorsNeeded(Exception):
+class GeneratorsNeeded(BasePolynomialError):
     pass
 
-class ComputationFailed(Exception):
+class ComputationFailed(BasePolynomialError):
 
     def __init__(self, func, nargs, exc):
         self.func = func
@@ -83,7 +83,7 @@ class ComputationFailed(Exception):
     def __str__(self):
         return "%s(%s) failed without generators" % (self.func, ', '.join(map(str, self.exc.exprs[:self.nargs])))
 
-class GeneratorsError(Exception):
+class GeneratorsError(BasePolynomialError):
     pass
 
 class UnivariatePolynomialError(PolynomialError):
@@ -92,15 +92,9 @@ class UnivariatePolynomialError(PolynomialError):
 class MultivariatePolynomialError(PolynomialError):
     pass
 
-class OptionError(Exception):
-    pass
-
-class FlagError(OptionError):
-    pass
-
 class PolificationFailed(PolynomialError):
 
-    def __init__(self, origs, exprs, seq=False):
+    def __init__(self, opt, origs, exprs, seq=False):
         if not seq:
             self.orig = origs
             self.expr = exprs
@@ -110,6 +104,7 @@ class PolificationFailed(PolynomialError):
             self.origs = origs
             self.exprs = exprs
 
+        self.opt = opt
         self.seq = seq
 
     def __str__(self): # pragma: no cover
@@ -117,4 +112,10 @@ class PolificationFailed(PolynomialError):
             return "can't construct a polynomial from %s" % str(self.orig)
         else:
             return "can't construct polynomials from %s" % ', '.join(map(str, self.origs))
+
+class OptionError(BasePolynomialError):
+    pass
+
+class FlagError(OptionError):
+    pass
 

@@ -27,10 +27,21 @@ MPZ = long
 
 if 'MPMATH_NOGMPY' not in os.environ:
     try:
-        import gmpy
+        try:
+            import gmpy2 as gmpy
+        except ImportError:
+            try:
+                import gmpy
+            except ImportError:
+                raise ImportError
         if gmpy.version() >= '1.03':
-            BACKEND = 'gmpy'
-            MPZ = gmpy.mpz
+            if sys.version_info < (2, 5):
+                import warnings
+                warnings.warn('GMPY mpmath backend is not supported in Python '
+                    '2.4. Falling back to python backend.', UserWarning)
+            else:
+                BACKEND = 'gmpy'
+                MPZ = gmpy.mpz
     except:
         pass
 

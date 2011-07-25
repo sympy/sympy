@@ -22,7 +22,7 @@ The following terms are common in this documentation:
 - *Accuracy* is the inverse of error.
 - *Tolerance* is the maximum error (or minimum accuracy) desired in a result.
 
-Error and accuracy can be measured either directly, or logarithmically in bits or digits. Specifically, if a `\hat y` is an approximation for `y`, then 
+Error and accuracy can be measured either directly, or logarithmically in bits or digits. Specifically, if a `\hat y` is an approximation for `y`, then
 
 - (Direct) absolute error = `|\hat y - y|`
 - (Direct) relative error = `|\hat y - y| |y|^{-1}`

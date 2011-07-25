@@ -8,4 +8,3 @@ class SymPyFiniteField(FiniteField):
 
     dom = SymPyIntegerRing()
     alias = 'FF_sympy'
-

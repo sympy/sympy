@@ -95,4 +95,3 @@ while True:
 
         _globals['_'] = output
         send("latex", output)
-

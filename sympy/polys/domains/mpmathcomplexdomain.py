@@ -9,4 +9,3 @@ class MPmathComplexDomain(RealDomain): # XXX: tmp solution
 
     def __init__(self):
         pass
-

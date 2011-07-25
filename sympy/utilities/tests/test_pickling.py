@@ -5,13 +5,13 @@ from sympy.utilities.pytest import XFAIL
 
 from sympy.core.assumptions import AssumeMeths
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicMeta, BasicType, ClassesRegistry
-from sympy.core.singleton import SingletonFactory
-from sympy.core.symbol import Dummy, Symbol, Temporary, Wild
+from sympy.core.core import BasicMeta, BasicType, ClassRegistry
+from sympy.core.singleton import SingletonRegistry
+from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
         GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
         NegativeInfinity,  NegativeOne, Number, NumberSymbol, One, Pi,\
-        Rational, Real, Zero
+        Rational, Float, Zero
 from sympy.core.relational import Equality, Inequality, Relational,\
         StrictInequality, Unequality
 from sympy.core.add import Add
@@ -65,13 +65,14 @@ def test_core_assumptions():
 
 def test_core_basic():
     for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicMeta("test"),
-              BasicType, BasicType("test"), ClassesRegistry, ClassesRegistry(),
-              SingletonFactory, SingletonFactory()):
+              BasicType, BasicType("test"), ClassRegistry, ClassRegistry(),
+              SingletonRegistry, SingletonRegistry()):
         check(c)
 
 def test_core_symbol():
-    for c in (Dummy, Dummy("x", False), Symbol, Symbol("x", False),
-              Temporary, Temporary(), Wild, Wild("x")):
+    for c in (Dummy, Dummy("x", False),
+              Symbol, Symbol("x", False),
+              Wild, Wild("x")):
         check(c)
 
 def test_core_numbers():
@@ -81,7 +82,7 @@ def test_core_numbers():
               Integer, Integer(2), NaN, NaN(), NegativeInfinity,
               NegativeInfinity(), NegativeOne, NegativeOne(), Number, Number(15),
               NumberSymbol, NumberSymbol(), One, One(), Pi, Pi(), Rational,
-              Rational(1,2), Real, Real("1.2"), Zero, Zero()):
+              Rational(1,2), Float, Float("1.2"), Zero, Zero()):
         check(c)
 
 def test_core_relational():
@@ -143,25 +144,26 @@ def test_core_cache():
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh,
-        chebyshevu, chebyshevt, ln, chebyshevt_root, Binomial, legendre,
+        chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
         Heaviside, Dij, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
-        arg, asin, DiracDelta, re, rf, abs, uppergamma, binomial, sinh, Ylm,
-        oo, cos, cot, acos, acot, gamma, bell, hermite, harmonic,
-        LambertW, zeta, log, Factorial, pi, asinh, acoth, Zlm,
-        cosh, dirichlet_eta, Eijk, loggamma, erf, max_, ceiling, im, fibonacci,
-        conjugate, tan, chebyshevu_root, floor, atanh, nan, sqrt, zoo, min_,
-        RisingFactorial, sin, E, atan, I, ff, FallingFactorial, lucas, atan2,
+        arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ylm,
+        cos, cot, acos, acot, gamma, bell, hermite, harmonic,
+        LambertW, zeta, log, factorial, asinh, acoth, Zlm,
+        cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
+        conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
+        RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
         polygamma, exp)
+from sympy.core import pi, oo, nan, zoo, E, I
 
 def test_functions():
     zero_var = (pi, oo, nan, zoo, E, I)
     one_var = (acosh, ln, Heaviside, Dij, factorial, bernoulli, coth, tanh,
-            sign, arg, asin, DiracDelta, re, abs, sinh, cos, cot, acos, acot,
-            gamma, bell, harmonic, LambertW, zeta, log, Factorial, asinh,
+            sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
+            gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
             conjugate, tan, floor, atanh, sin, atan, lucas, exp)
-    two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial, max_,
-            min_, atan2, polygamma, hermite, legendre, uppergamma)
+    two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial,
+            atan2, polygamma, hermite, legendre, uppergamma)
     x, y, z = symbols("x,y,z")
     others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
             Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
@@ -197,7 +199,6 @@ def test_geometry():
               Polygon, Polygon(p1,p2,p3,p4), RegularPolygon, RegularPolygon(p1,4,5),
               Triangle, Triangle(p1,p2,p3)):
         check(c, check_attr = False)
-        pass
 
 #================== integrals ====================
 from sympy.integrals.integrals import Integral
@@ -208,10 +209,10 @@ def test_integrals():
         check(c)
 
 #================== matrices ====================
-from sympy.matrices.matrices import Matrix, SMatrix
+from sympy.matrices.matrices import Matrix, SparseMatrix
 
 def test_matrices():
-    for c in (Matrix, Matrix([1,2,3]), SMatrix, SMatrix([[1,2],[3,4]])):
+    for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
         check(c)
 
 #================== ntheorie ====================
@@ -372,14 +373,13 @@ def test_printing2():
     check(PrettyPrinter())
 
 #================== series ======================
-from sympy.series.gruntz import Limit2
 from sympy.series.limits import Limit
 from sympy.series.order import Order
 
 def test_series():
     e = Symbol("e")
     x = Symbol("x")
-    for c in (Limit2, Limit2(e, x, 1), Limit, Limit(e, x, 1), Order, Order(e)):
+    for c in (Limit, Limit(e, x, 1), Order, Order(e)):
         check(c)
 
 #================== statistics ==================
@@ -395,11 +395,9 @@ def test_statistics():
 #================== concrete ==================
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy.concrete.sums_products import Sum2, _BigOperator
 
 def test_concrete():
     x = Symbol("x")
-    for c in (Product, Product(1,2), Sum, Sum(1), Sum2, Sum2(x,(x,2,4)),
-              _BigOperator):
+    for c in (Product, Product(1,2), Sum, Sum(x, (x, 2, 4))):
         check(c)
 

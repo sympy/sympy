@@ -1,35 +1,43 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
 from sympy.core.mul import Mul
-from sympy.core.basic import S, C
+from sympy.core.singleton import S
+from sympy.core.basic import C
 
 from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.utilities import all, any, cythonized
 
 def monomials(variables, degree):
-    """Generate a set of monomials of the given total degree or less.
+    r"""
+    Generate a set of monomials of the given total degree or less.
 
-       Given a set of variables `V` and a total degree `N` generate a set
-       of monomials of degree at most `N`. The total number of monomials
-       is defined as `(#V + N)! / (#V! N!)`, so is huge.
+    Given a set of variables ``V`` and a total degree ``N`` generate
+    a set of monomials of degree at most ``N``. The total number of
+    monomials is huge and is given by the following formula:
 
-       For example if we would like to generate a dense polynomial of
-       a total degree `N = 50` in 5 variables, assuming that exponents
-       and all of coefficients are 32-bit long and stored in an array
-       we would need almost 80 GiB of memory! Fortunately most
-       polynomials, that we will encounter, are sparse.
+    .. math::
 
-       For example consider monomials in variables `x` and `y`::
+        \frac{(\#V + N)!}{\#V! N!}
 
-           >>> from sympy import monomials
-           >>> from sympy.abc import x, y
+    For example if we would like to generate a dense polynomial of
+    a total degree $N = 50$ in 5 variables, assuming that exponents
+    and all of coefficients are 32-bit long and stored in an array we
+    would need almost 80 GiB of memory! Fortunately most polynomials,
+    that we will encounter, are sparse.
 
-           >>> sorted(monomials([x, y], 2))
-           [1, x, y, x**2, y**2, x*y]
+    **Examples**
 
-           >>> sorted(monomials([x, y], 3))
-           [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
+    Consider monomials in variables ``x`` and ``y``::
+
+        >>> from sympy import monomials
+        >>> from sympy.abc import x, y
+
+        >>> sorted(monomials([x, y], 2))
+        [1, x, y, x**2, y**2, x*y]
+
+        >>> sorted(monomials([x, y], 3))
+        [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, x**2*y]
 
     """
     if not variables:
@@ -45,25 +53,34 @@ def monomials(variables, degree):
         return monoms
 
 def monomial_count(V, N):
-    """Computes the number of monomials of degree `N` in `#V` variables.
+    r"""
+    Computes the number of monomials.
 
-       The number of monomials is given as `(#V + N)! / (#V! N!)`, e.g.::
+    The number of monomials is given by the following formula:
 
-           >>> from sympy import monomials, monomial_count
-           >>> from sympy.abc import x, y
+    .. math::
 
-           >>> monomial_count(2, 2)
-           6
+        \frac{(\#V + N)!}{\#V! N!}
 
-           >>> M = monomials([x, y], 2)
+    where ``N`` is a total degree and ``V`` is a set of variables.
 
-           >>> sorted(M)
-           [1, x, y, x**2, y**2, x*y]
-           >>> len(M)
-           6
+    **Examples**
+
+    >>> from sympy import monomials, monomial_count
+    >>> from sympy.abc import x, y
+
+    >>> monomial_count(2, 2)
+    6
+
+    >>> M = monomials([x, y], 2)
+
+    >>> sorted(M)
+    [1, x, y, x**2, y**2, x*y]
+    >>> len(M)
+    6
 
     """
-    return C.Factorial(V + N) / C.Factorial(V) / C.Factorial(N)
+    return C.factorial(V + N) / C.factorial(V) / C.factorial(N)
 
 def monomial_lex_key(monom):
     """Key function for sorting monomials in lexicographic order. """
@@ -84,21 +101,22 @@ _monomial_key = {
 }
 
 def monomial_key(order=None):
-    """Return a function defining admissible order on monomials.
+    """
+    Return a function defining admissible order on monomials.
 
-       The result of a call to :func:`monomial_key` is a function which should
-       be used as a key to :func:`sorted` built-in function, to provide order
-       in a set of monomials of the same length.
+    The result of a call to :func:`monomial_key` is a function which should
+    be used as a key to :func:`sorted` built-in function, to provide order
+    in a set of monomials of the same length.
 
-       Currently supported monomial orderings are:
+    Currently supported monomial orderings are:
 
-       1. lex       - lexicographic order (default)
-       2. grlex     - graded lexicographic order
-       3. grevlex   - reversed graded lexicographic order
+    1. lex       - lexicographic order (default)
+    2. grlex     - graded lexicographic order
+    3. grevlex   - reversed graded lexicographic order
 
-       If the input argument is not a string but has ``__call__`` attribute,
-       then it will pass through with an assumption that the callable object
-       defines an admissible order on monomials.
+    If the input argument is not a string but has ``__call__`` attribute,
+    then it will pass through with an assumption that the callable object
+    defines an admissible order on monomials.
 
     """
     if order is None:
@@ -130,13 +148,14 @@ _monomial_order = {
 }
 
 def monomial_cmp(order):
-    """Returns a function defining admissible order on monomials.
+    """
+    Returns a function defining admissible order on monomials.
 
-       Currently supported orderings are:
+    Currently supported orderings are:
 
-       1. lex       - lexicographic order
-       2. grlex     - graded lexicographic order
-       3. grevlex   - reversed graded lexicographic order
+    1. lex       - lexicographic order
+    2. grlex     - graded lexicographic order
+    3. grevlex   - reversed graded lexicographic order
 
     """
     try:
@@ -146,37 +165,39 @@ def monomial_cmp(order):
 
 @cythonized("a,b")
 def monomial_mul(A, B):
-    """Multiplication of tuples representing monomials.
+    """
+    Multiplication of tuples representing monomials.
 
-       Lets multiply `x**3*y**4*z` with `x*y**2`::
+    Lets multiply `x**3*y**4*z` with `x*y**2`::
 
-           >>> from sympy.polys.monomialtools import monomial_mul
+        >>> from sympy.polys.monomialtools import monomial_mul
 
-           >>> monomial_mul((3, 4, 1), (1, 2, 0))
-           (4, 6, 1)
+        >>> monomial_mul((3, 4, 1), (1, 2, 0))
+        (4, 6, 1)
 
-       which gives `x**4*y**5*z`.
+    which gives `x**4*y**5*z`.
 
     """
     return tuple([ a + b for a, b in zip(A, B) ])
 
 @cythonized("a,b,c")
 def monomial_div(A, B):
-    """Division of tuples representing monomials.
+    """
+    Division of tuples representing monomials.
 
-       Lets divide `x**3*y**4*z` by `x*y**2`::
+    Lets divide `x**3*y**4*z` by `x*y**2`::
 
-           >>> from sympy.polys.monomialtools import monomial_div
+        >>> from sympy.polys.monomialtools import monomial_div
 
-           >>> monomial_div((3, 4, 1), (1, 2, 0))
-           (2, 2, 1)
+        >>> monomial_div((3, 4, 1), (1, 2, 0))
+        (2, 2, 1)
 
-       which gives `x**2*y**2*z`. However::
+    which gives `x**2*y**2*z`. However::
 
-           >>> monomial_div((3, 4, 1), (1, 2, 2)) is None
-           True
+        >>> monomial_div((3, 4, 1), (1, 2, 2)) is None
+        True
 
-       `x*y**2*z**2` does not divide `x**3*y**4*z`.
+    `x*y**2*z**2` does not divide `x**3*y**4*z`.
 
     """
     C = [ a - b for a, b in zip(A, B) ]
@@ -188,48 +209,51 @@ def monomial_div(A, B):
 
 @cythonized("a,b")
 def monomial_gcd(A, B):
-    """Greatest common divisor of tuples representing monomials.
+    """
+    Greatest common divisor of tuples representing monomials.
 
-       Lets compute GCD of `x**3*y**4*z` and `x*y**2`::
+    Lets compute GCD of `x**3*y**4*z` and `x*y**2`::
 
-           >>> from sympy.polys.monomialtools import monomial_gcd
+        >>> from sympy.polys.monomialtools import monomial_gcd
 
-           >>> monomial_gcd((3, 4, 1), (1, 2, 0))
-           (1, 2, 0)
+        >>> monomial_gcd((3, 4, 1), (1, 2, 0))
+        (1, 2, 0)
 
-       which gives `x*y**2`.
+    which gives `x*y**2`.
 
     """
     return tuple([ min(a, b) for a, b in zip(A, B) ])
 
 @cythonized("a,b")
 def monomial_lcm(A, B):
-    """Least common multiple of tuples representing monomials.
+    """
+    Least common multiple of tuples representing monomials.
 
-       Lets compute LCM of `x**3*y**4*z` and `x*y**2`::
+    Lets compute LCM of `x**3*y**4*z` and `x*y**2`::
 
-           >>> from sympy.polys.monomialtools import monomial_lcm
+        >>> from sympy.polys.monomialtools import monomial_lcm
 
-           >>> monomial_lcm((3, 4, 1), (1, 2, 0))
-           (3, 4, 1)
+        >>> monomial_lcm((3, 4, 1), (1, 2, 0))
+        (3, 4, 1)
 
-       which gives `x**3*y**4*z`.
+    which gives `x**3*y**4*z`.
 
     """
     return tuple([ max(a, b) for a, b in zip(A, B) ])
 
 @cythonized("i,n")
 def monomial_max(*monoms):
-    """Returns maximal degree for each variable in a set of monomials.
+    """
+    Returns maximal degree for each variable in a set of monomials.
 
-       Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.
-       We wish to find out what is the maximal degree for each of `x`, `y`
-       and `z` variables::
+    Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.
+    We wish to find out what is the maximal degree for each of `x`, `y`
+    and `z` variables::
 
-           >>> from sympy.polys.monomialtools import monomial_max
+        >>> from sympy.polys.monomialtools import monomial_max
 
-           >>> monomial_max((3,4,5), (0,5,1), (6,3,9))
-           (6, 5, 9)
+        >>> monomial_max((3,4,5), (0,5,1), (6,3,9))
+        (6, 5, 9)
 
     """
     M = list(monoms[0])
@@ -242,16 +266,17 @@ def monomial_max(*monoms):
 
 @cythonized("i,n")
 def monomial_min(*monoms):
-    """Returns minimal degree for each variable in a set of monomials.
+    """
+    Returns minimal degree for each variable in a set of monomials.
 
-       Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.
-       We wish to find out what is the minimal degree for each of `x`, `y`
-       and `z` variables::
+    Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.
+    We wish to find out what is the minimal degree for each of `x`, `y`
+    and `z` variables::
 
-           >>> from sympy.polys.monomialtools import monomial_min
+        >>> from sympy.polys.monomialtools import monomial_min
 
-           >>> monomial_min((3,4,5), (0,5,1), (6,3,9))
-           (0, 3, 1)
+        >>> monomial_min((3,4,5), (0,5,1), (6,3,9))
+        (0, 3, 1)
 
     """
     M = list(monoms[0])
@@ -276,7 +301,7 @@ class Monomial(object):
     def __repr__(self):
         return "Monomial(%s)" % ", ".join(map(str, self.data))
 
-    def as_basic(self, *gens):
+    def as_expr(self, *gens):
         """Convert a monomial instance to a SymPy expression. """
         return Mul(*[ gen**exp for gen, exp in zip(gens, self.data) ])
 
@@ -346,4 +371,3 @@ class Monomial(object):
     def min(cls, *monomials):
         """Returns minimal degree for each variable in a set of monomials. """
         return Monomial(*monomial_min(*[ monomial.data for monomial in monomials ]))
-

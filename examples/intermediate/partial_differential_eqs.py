@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Partial Differential Equations example
 
 Demonstrates various ways to solve partial differential equations
@@ -56,4 +57,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

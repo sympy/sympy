@@ -31,4 +31,3 @@ def timeit_Div_xy():
 
 def timeit_Div_2y():
     2/y
-

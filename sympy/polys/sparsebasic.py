@@ -110,4 +110,3 @@ def smp_inflate(f, M, u, ord, K):
 
 def smp_terms_gcd(f, u, ord, K):
     pass
-

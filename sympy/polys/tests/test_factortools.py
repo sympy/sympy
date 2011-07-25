@@ -29,7 +29,7 @@ from sympy.polys.factortools import (
     dmp_zz_wang_lead_coeffs,
     dmp_zz_wang_hensel_lifting,
     dup_zz_diophantine, dmp_zz_diophantine,
-    dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
+    dup_zz_cyclotomic_p, dup_zz_cyclotomic_poly, dup_zz_cyclotomic_factor,
     dup_zz_factor, dup_zz_factor_sqf, dmp_zz_factor,
     dup_ext_factor, dmp_ext_factor,
     dup_factor_list, dmp_factor_list,
@@ -43,7 +43,9 @@ from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
-from sympy import raises, nextprime, sin, sqrt, I
+from sympy import nextprime, sin, sqrt, I
+
+from sympy.utilities.pytest import raises
 
 def test_dup_trial_division():
     assert dup_trial_division([1,8,25,38,28,8],
@@ -95,6 +97,33 @@ def test_dup_zz_irreducible_p():
 
     assert dup_zz_irreducible_p([3, 2, 6, 8, 10], ZZ) == True
     assert dup_zz_irreducible_p([3, 2, 6, 8, 14], ZZ) == True
+
+def test_dup_zz_cyclotomic_p():
+    assert dup_zz_cyclotomic_p([1,-1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,-1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,1,1,1,1,1,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,0,0,1], ZZ) == True
+    assert dup_zz_cyclotomic_p([1,0,0,1,0,0,1], ZZ) == True
+
+    assert dup_zz_cyclotomic_p([], ZZ) == False
+    assert dup_zz_cyclotomic_p([1], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 0], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 2], ZZ) == False
+    assert dup_zz_cyclotomic_p([3, 1], ZZ) == False
+    assert dup_zz_cyclotomic_p([1, 0, -1], ZZ) == False
+
+    f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
+    assert dup_zz_cyclotomic_p(f, ZZ) == False
+
+    g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
+    assert dup_zz_cyclotomic_p(g, ZZ) == True
+
+    assert dup_zz_cyclotomic_p([QQ(1),QQ(1),QQ(1)], QQ) == True
+    assert dup_zz_cyclotomic_p([QQ(1,2),QQ(1),QQ(1)], QQ) == False
 
 def test_dup_zz_cyclotomic_poly():
     assert dup_zz_cyclotomic_poly(1, ZZ) == [1,-1]
@@ -583,6 +612,15 @@ def test_dup_factor_list():
         (DMP([QQ(1,2)],QQ), [([DMP([QQ(1),QQ(0)],QQ)], 1),
                              ([DMP([QQ(1)],QQ),DMP([],QQ)], 1),
                              ([DMP([QQ(1)],QQ),DMP([QQ(1),QQ(0)],QQ)], 1)])
+
+    K = QQ.algebraic_field(I)
+    h = [QQ(1,1), QQ(0,1), QQ(1,1)]
+
+    f = [ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ), ANP([], h, QQ), ANP([], h, QQ)]
+
+    assert dup_factor_list(f, K) == \
+        (ANP([QQ(1,1)], h, QQ), [([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ)], 2),
+                                 ([ANP([QQ(1,1)], h, QQ), ANP([], h, QQ), ANP([QQ(2,1)], h, QQ)], 1)])
 
     raises(DomainError, "dup_factor_list([EX(sin(1))], EX)")
 
