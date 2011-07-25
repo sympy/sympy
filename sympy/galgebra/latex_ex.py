@@ -1157,7 +1157,7 @@ def xdvi(filename='tmplatex.tex',debug=False):
         if debug: #Display latex excution output for debugging purposes
             os.system(latex_str+' '+filename[:-4])
         else: #Works for Linux don't know about Windows
-            if sys.platform == 'linux2':
+            if sys.platform.startswith('linux'):
                 os.system(latex_str+' '+filename[:-4]+' > /dev/null')
             else:
                 os.system(latex_str+' '+filename[:-4]+' > NUL')
