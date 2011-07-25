@@ -17,10 +17,11 @@ covers all files in the sympy repository unless stated otherwise.
 0. Download
 -----------
 
-$ git clone git://github.com/sympy/sympy.git
+::
+
+    $ git clone git://github.com/sympy/sympy.git
 
 For other options (tarballs, debs, etc.), see the web page of SymPy.
-
 
 1. Documentation and usage
 --------------------------
@@ -29,56 +30,55 @@ Everything is at:
 
 http://docs.sympy.org/
 
-You can generate everything at the above site in your local copy of SymPy by:
+You can generate everything at the above site in your local copy of SymPy by::
 
-$ cd doc
-$ make html
-$ epiphany _build/html/index.html
+    $ cd doc
+    $ make html
+    $ epiphany _build/html/index.html # Or your preferred web browser
 
 If you don't want to read that, here is a short usage:
 
-From this directory, start python and:
->>> from sympy import Symbol, cos
->>> x = Symbol('x')
->>> e = 1/cos(x)
->>> print e.series(x, 0, 10)
-1 + (1/2)*x**2 + (5/24)*x**4 + (61/720)*x**6 + (277/8064)*x**8 + O(x**10)
+From this directory, start python and::
+
+    >>> from sympy import Symbol, cos
+    >>> x = Symbol('x')
+    >>> e = 1/cos(x)
+    >>> print e.series(x, 0, 10)
+    1 + (1/2)*x**2 + (5/24)*x**4 + (61/720)*x**6 + (277/8064)*x**8 + O(x**10)
 
 SymPy also comes with a console that is a simple wrapper around the
 classic python console (or ipython when available) that loads the
 sympy namespace and executes some common commands for you.
 
-To start it, issue:
+To start it, issue::
 
-$ bin/isympy
+    $ bin/isympy
 
-from this directory if SymPy is not installed or simply
+from this directory if SymPy is not installed or simply::
 
-$ isympy
+    $ isympy
 
-if SymPy is installed somewhere in your PATH.
-
+if SymPy is installed somewhere in your ``PATH``.
 
 3. Tests
 --------
 
-To execute all tests, run
+To execute all tests, run::
 
-./setup.py test
+    $./setup.py test
 
 in the current directory.
 
-For more fine-grained running of tests, use bin/test or respectively
-bin/doctest.
+For more fine-grained running of tests, use ``bin/test`` or respectively
+``bin/doctest``.
 
 
 4. Clean
 --------
 
-To clean everything (thus getting the same tree as in the repository):
+To clean everything (thus getting the same tree as in the repository)::
 
-./setup.py clean
-
+    $./setup.py clean
 
 5. Brief History
 ----------------
@@ -106,17 +106,17 @@ For people that don't want to be listed there, see the git history.
 
 To cite SymPy in publications use::
 
-  SymPy Development Team (2011). SymPy: Python library for symbolic mathematics
-  URL http://www.sympy.org.
+    SymPy Development Team (2011). SymPy: Python library for symbolic mathematics
+    URL http://www.sympy.org.
 
 A BibTeX entry for LaTeX users is::
 
-  @Manual{,
+    @Manual{,
     title = {SymPy: Python library for symbolic mathematics},
     author = {{SymPy Development Team}},
     year = {2011},
     url = {http://www.sympy.org},
-  }
+    }
 
 SymPy is BSD licensed, so you are free to use it whatever you like, be it
 academic, commercial, creating forks or derivatives, as long as you copy the BSD
