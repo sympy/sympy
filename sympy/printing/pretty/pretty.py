@@ -699,6 +699,16 @@ class PrettyPrinter(Printer):
         pq = self._print(len(e.bq))
         pm = self._print(len(e.bm))
         pn = self._print(len(e.an))
+        def adjust(p1, p2):
+            diff = p1.width() - p2.width()
+            if diff == 0:
+                return p1, p2
+            elif diff > 0:
+                return p1, prettyForm(*p2.left(' '*diff))
+            else:
+                return prettyForm(*p1.left(' '*-diff)), p2
+        pp, pm = adjust(pp, pm)
+        pq, pn = adjust(pq, pn)
         pu = prettyForm(*pm.right(', ', pn))
         pl = prettyForm(*pp.right(', ', pq))
 
