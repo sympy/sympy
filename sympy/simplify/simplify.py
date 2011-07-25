@@ -1041,7 +1041,7 @@ def powdenest(eq, force=False):
 
     >>> powdenest(((x**(2*a/3))**(3*y/i))**x)
     ((x**(a/3))**(y/i))**(6*x)
-    >>> powdenest((x**(2*i)*y**(4*i))**z,1)
+    >>> powdenest((x**(2*i)*y**(4*i))**z, force=True)
     (x*y**2)**(2*i*z)
 
     >>> n = Symbol('n', negative=True)
@@ -1055,7 +1055,7 @@ def powdenest(eq, force=False):
 
     if force:
         eq, rep = posify(eq)
-        return powdenest(eq, force=False).subs(rep)
+        return powdenest(eq, force=False).xreplace(rep)
 
     eq = S(eq)
     if eq.is_Atom:
@@ -1098,15 +1098,14 @@ def powdenest(eq, force=False):
         if b is S.Exp1 and e.is_Mul:
             logs = []
             other = []
-            efunc = C.Mul
             for ei in Mul.make_args(e):
                 if any(aj.func is C.log for a in Mul.make_args(ei)
                        for ai in Add.make_args(a) for aj in Mul.make_args(ai)):
                     logs.append(ei)
                 else:
                     other.append(ei)
-            logs = logcombine(efunc(*logs), force=force)
-            return Pow(C.exp(logs), efunc(*other))
+            logs = logcombine(Mul(*logs))
+            return Pow(exp(logs), Mul(*other))
 
         _, be = b.as_base_exp()
         if be is S.One and not (b.is_Mul or
