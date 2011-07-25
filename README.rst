@@ -60,7 +60,18 @@ from this directory if SymPy is not installed or simply::
 
 if SymPy is installed somewhere in your ``PATH``.
 
-3. Tests
+3. Installation
+---------------
+
+To install SymPy, simply run::
+
+    $ python setup.py install
+
+If you install it system-wide, you may need to prefix the previous command with ``sudo``::
+
+    $ sudo python setup.py install
+
+4. Tests
 --------
 
 To execute all tests, run::
@@ -73,14 +84,14 @@ For more fine-grained running of tests, use ``bin/test`` or respectively
 ``bin/doctest``.
 
 
-4. Clean
+5. Clean
 --------
 
 To clean everything (thus getting the same tree as in the repository)::
 
     $./setup.py clean
 
-5. Brief History
+6. Brief History
 ----------------
 
 SymPy was started by Ondrej Certik in 2005, he wrote some code during the
@@ -101,7 +112,7 @@ http://docs.sympy.org/aboutus.html#sympy-development-team
 For people that don't want to be listed there, see the git history.
 
 
-6. Citation
+7. Citation
 -----------
 
 To cite SymPy in publications use::
