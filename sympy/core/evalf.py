@@ -614,16 +614,27 @@ def evalf_atan(v, prec, options):
         raise NotImplementedError
     return mpf_atan(xre, prec, round_nearest), None, prec, None
 
+def evalf_subs(prec, subs):
+    """ Change all Float entries in `subs` to have precision prec. """
+    newsubs = {}
+    for a, b in subs.items():
+        b = S(b)
+        if b.is_Float:
+            b = b._eval_evalf(prec)
+        newsubs[a] = b
+    return newsubs
+
 def evalf_piecewise(expr, prec, options):
     if 'subs' in options:
-        expr = expr.subs(options['subs'])
-        del options['subs']
+        expr = expr.subs(evalf_subs(prec, options['subs']))
+        newopts = options.copy()
+        del newopts['subs']
         if hasattr(expr,'func'):
-            return evalf(expr, prec, options)
+            return evalf(expr, prec, newopts)
         if type(expr) == float:
-            return evalf(C.Float(expr), prec, options)
+            return evalf(C.Float(expr), prec, newopts)
         if type(expr) == int:
-            return evalf(C.Integer(expr), prec, options)
+            return evalf(C.Integer(expr), prec, newopts)
 
     # We still have undefined symbols
     raise NotImplementedError
@@ -964,7 +975,7 @@ def evalf(x, prec, options):
         try:
             # Fall back to ordinary evalf if possible
             if 'subs' in options:
-                x = x.subs(options['subs'])
+                x = x.subs(evalf_subs(prec, options['subs']))
             re, im = x._eval_evalf(prec).as_real_imag()
             if re.has(re_) or im.has(im_):
                 raise NotImplementedError
