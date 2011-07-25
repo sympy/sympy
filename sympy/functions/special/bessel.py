@@ -387,53 +387,45 @@ class yn(SphericalBesselBase):
                (fn(-n-1, z) * sin(z) + (-1)**(-n) * fn(n, z) * cos(z))
 
 
-def jn_zeros(n, k, method="sympy"):
+def jn_zeros(n, k, method="sympy", dps=15):
     """
     Zeros of the spherical Bessel function of the first kind.
 
     This returns an array of zeros of jn up to the k-th zero.
 
-    method = "sympy": uses the SymPy's jn and findroot to find all roots
+    method = "sympy": uses mpmath besseljzero
     method = "scipy": uses the SciPy's sph_jn and newton to find all roots,
-            which if faster than method="sympy", but it requires SciPy and only
-            works with low precision floating point numbers
+            which is faster than computing the zeros using a general numerical
+            solver, but it requires SciPy and only
+            works with low precision floating point numbers.
+            [the function used with method="sympy" is a recent addition to
+             mpmath, before that a general solver was used]
 
     **Examples**
 
-        >>> from sympy.mpmath import nprint
         >>> from sympy import jn_zeros
-        >>> nprint(jn_zeros(2, 4))
-        [5.76345919689, 9.09501133048, 12.3229409706, 15.5146030109]
+        >>> jn_zeros(2, 4, dps=5)
+        [5.7635, 9.095, 12.323, 15.515]
 
     """
     from math import pi
 
     if method == "sympy":
-        from sympy.mpmath import findroot
-        f = lambda x: jn(n, x).n()
+        from sympy.mpmath import besseljzero
+        from sympy.mpmath.libmp.libmpf import dps_to_prec
+        from sympy import Expr
+        prec = dps_to_prec(dps)
+        return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
+                                              int(k)), prec) \
+                for k in xrange(1, k + 1)]
     elif method == "scipy":
         from scipy.special import sph_jn
         from scipy.optimize import newton
         f  = lambda x: sph_jn(n, x)[0][-1]
-    elif method == 'mpmath':
-        # this needs a recent version of mpmath, newer than in sympy
-        from mpmath import besseljzero
-        return [besseljzero(n + 0.5, k) for k in xrange(1, k + 1)]
     else:
         raise NotImplementedError("Unknown method.")
     def solver(f, x):
-        if method == "sympy":
-            # findroot(solver="newton") or findroot(solver="secant") can't find
-            # the root within the given tolerance. So we use solver="muller",
-            # which converges towards complex roots (even for real starting
-            # points), and so we need to chop all complex parts (that are small
-            # anyway). Also we need to set the tolerance, as it sometimes fail
-            # without it.
-            def f_real(x):
-                return f(complex(x).real)
-            root = findroot(f_real, x, solver="muller", tol=1e-9)
-            root = complex(root).real
-        elif method == "scipy":
+        if method == "scipy":
             root = newton(f, x)
         else:
             raise NotImplementedError("Unknown method.")
