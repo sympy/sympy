@@ -668,3 +668,8 @@ def test_integrate_series():
     assert diff(integrate(f, x), x) == f
 
     assert integrate(O(x**5), x) == O(x**6)
+
+def test_atom_bug():
+    from sympy import meijerg
+    from sympy.integrals.risch import heurisch
+    assert heurisch(meijerg([], [], [1], [], x), x) is None
