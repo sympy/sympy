@@ -615,14 +615,15 @@ def test_1st_homogeneous_coeff_ode2_check3():
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 def test_1st_homogeneous_coeff_ode3():
-    # This can be solved explicitly, but the the integration engine cannot handle
-    # it (see issue 1452).  The explicit solution is tested in
-    # test_1st_homogeneous_coeff_ode3_check below.
-    #
-    # The test here uses strings since u2 is a dummy variable.
+    # The standard integration engine cannot handle one of the integrals
+    # involved (see issue 1452).  meijerg code comes up with an answer, but in
+    # unconventional form.
+    # checkodesol fails for this equation, so its test is in
+    # test_homogeneous_order_ode1_sol above. It has to compare string
+    # expressions because u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    solstr = "f(x) == C1*exp(Integral(-1/(_u2*sqrt(-_u2**2 + 1)), (_u2, x/f(x))))"
-    assert str(dsolve(eq, hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
+    solstr = "log(C1*f(x)) + I*asin(f(x)/x) == 0"
+    assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode3_check():
