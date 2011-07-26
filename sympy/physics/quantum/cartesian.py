@@ -66,6 +66,14 @@ class XOp(HermitianOperator):
 
         return I*hbar*(d*delta)
 
+    def _represent_XKet(self, basis, **options):
+        from sympy.physics.quantum.represent import rep_expectation
+        options['basis'] = basis
+        return rep_expectation(self, **options)
+
+    def _represent_default_basis(self, **options):
+        return self._represent_XKet(XKet(), **options)
+
 class YOp(HermitianOperator):
     """ Y cartesian coordinate operator (for 2D or 3D systems) """
 
@@ -124,6 +132,14 @@ class PxOp(HermitianOperator):
 
         return -I*hbar*(d*delta)
 
+    def _represent_PxKet(self, basis, **options):
+        from sympy.physics.quantum.represent import rep_expectation
+        options['basis'] = basis
+        return rep_expectation(self, **options)
+
+    def _represent_default_basis(self, **options):
+        return self._represent_PxKet(PxKet(), **options)
+
 X = XOp('X')
 Y = YOp('Y')
 Z = ZOp('Z')
@@ -165,6 +181,14 @@ class XKet(Ket):
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return exp(-I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
+
+    def _represent_XKet(self, basis, **options):
+        from sympy.physics.quantum.represent import rep_innerproduct
+        options['basis'] = basis
+        return rep_innerproduct(self, **options)
+
+    def _represent_default_basis(self, **options):
+        return self._represent_XKet(XKet(), **options)
 
 class XBra(Bra):
     """1D cartesian position eigenbra."""
@@ -287,6 +311,15 @@ class PxKet(Ket):
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return DiracDelta(self.momentum-bra.momentum)
+
+    def _represent_PxKet(self, basis, **options):
+        from sympy.physics.quantum.represent import rep_innerproduct
+        options['basis'] = basis
+        return rep_innerproduct(self, **options)
+
+    def _represent_default_basis(self, **options):
+        return self._represent_PxKet(PxKet(), **options)
+
 
 class PxBra(Bra):
     """1D cartesian momentum eigenbra."""

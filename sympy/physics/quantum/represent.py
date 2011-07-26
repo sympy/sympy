@@ -132,7 +132,6 @@ def represent(expr, **options):
 
     format = options.get('format', 'sympy')
     if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
-        options['replace_none'] = False
         temp_basis = get_basis_state(expr, **options)
         if temp_basis is not None:
             options['basis'] = temp_basis
@@ -142,7 +141,6 @@ def represent(expr, **options):
             #If no _represent_FOO method exists, map to the
             #appropriate basis state and try
             #the other methods of representation
-            options['replace_none'] = True
 
             if isinstance(expr, (KetBase, BraBase)):
                 try:
@@ -363,7 +361,6 @@ def integrate_result(orig_expr, result, **options):
     if not isinstance(result, Expr):
         return result
 
-    options['replace_none'] = True
     if not "basis" in options:
         arg = orig_expr.args[-1]
         options["basis"] = get_basis_state(arg, **options)
@@ -445,21 +442,9 @@ def get_basis_state(expr, **options):
     """
 
     basis = options.pop("basis", None)
-    replace_none = options.pop("replace_none", True)
-
-    if basis is None and not replace_none:
-        return None
 
     if basis is None:
-        if isinstance(expr, KetBase):
-            return _make_default(expr.__class__)
-        elif isinstance(expr, BraBase):
-            return _make_default((expr.dual_class()))
-        elif isinstance(expr, Operator):
-            state_inst = operators_to_state(expr)
-            return (state_inst if state_inst is not None else None)
-        else:
-            return None
+        return None
     elif (isinstance(basis, Operator) or \
           (not isinstance(basis, StateBase) and issubclass(basis, Operator))):
         state = operators_to_state(basis)
