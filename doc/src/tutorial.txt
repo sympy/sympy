@@ -817,7 +817,7 @@ Tip: To make the pretty printing default in the python interpreter, use::
     >>> latex(1/x)
     \frac{1}{x}
     >>> latex(Integral(x**2, x))
-    \int x^{2}\,dx
+    \int x^{2}\, dx
 
 **MathML**
 

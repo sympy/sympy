@@ -7,8 +7,8 @@ from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta
 
-x,y = symbols('x,y')
-k,n = symbols('k,n', integer=True)
+x, y, z, t = symbols('x y z t')
+k, n = symbols('k n', integer=True)
 
 def test_printmethod():
     class R(Abs):
@@ -142,14 +142,23 @@ def test_latex_derivatives():
     r"\frac{\partial}{\partial x}\left(x^{2} + \operatorname{sin}\left(x\right)\right)"
 
 def test_latex_integrals():
-    assert latex(Integral(log(x), x)) == r"\int \operatorname{log}\left(x\right)\,dx"
-    assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\,dx"
-    assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\,dx"
-    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\,dx dy"
+    assert latex(Integral(log(x), x)) == r"\int \operatorname{log}\left(x\right)\, dx"
+    assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\, dx"
+    assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\, dx"
+    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\, dx\, dy"
     assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*') \
-        == r"\begin{equation*}\int\int\limits_{0}^{1} x^{2} y\,dx dy\end{equation*}"
+        == r"\begin{equation*}\int\int\limits_{0}^{1} x^{2} y\, dx\, dy\end{equation*}"
     assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*', itex=True) \
-        == r"$$\int\int_{0}^{1} x^{2} y\,dx dy$$"
+        == r"$$\int\int_{0}^{1} x^{2} y\, dx\, dy$$"
+    assert latex(Integral(x, (x, 0))) == r"\int^{0} x\, dx"
+    assert latex(Integral(x*y, x, y)) == r"\iint x y\, dx\, dy"
+    assert latex(Integral(x*y*z, x, y, z)) == r"\iiint x y z\, dx\, dy\, dz"
+    assert latex(Integral(x*y*z*t, x, y, z, t)) == \
+        r"\iiiint t x y z\, dx\, dy\, dz\, dt"
+    assert latex(Integral(x, x, x, x, x, x, x)) == \
+        r"\int\int\int\int\int\int x\, dx\, dx\, dx\, dx\, dx\, dx"
+    assert latex(Integral(x, x, y, (z, 0, 1))) == \
+        r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
