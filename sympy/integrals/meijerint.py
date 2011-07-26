@@ -68,6 +68,10 @@ def _create_lookup_table(table):
         gamma(a)*b**(a-1), And(b > 0))
     add(Heaviside(b - t)*(b - t)**(a-1), [], [a], [0], [], t/b,
         gamma(a)*b**(a-1), And(b > 0))
+    add(Heaviside(z - (b/p)**(1/q))*(t - b)**(a-1), [a], [], [], [0], t/b,
+        gamma(a)*b**(a-1), And(b > 0))
+    add(Heaviside((b/p)**(1/q) - z)*(b - t)**(a-1), [], [a], [0], [], t/b,
+        gamma(a)*b**(a-1), And(b > 0))
     add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a))
     add(abs(b - t)**(-a), [1 - a], [(1 - a)/2], [0], [(1 - a)/2], t/b,
         pi/(gamma(a)*cos(pi*a/2))*abs(b)**(-a), re(a) < 1)
@@ -276,6 +280,38 @@ def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
     return set(e.func for e in expr.atoms(Function) if e.has(x))
+
+def _find_splitting_points(expr, x):
+    """
+    Find numbers a such that a linear substitution x --> x+a would
+    (hopefully) simplify expr.
+
+    >>> from sympy.integrals.meijerint import _find_splitting_points as fsp
+    >>> from sympy import sin
+    >>> from sympy.abc import a, x
+    >>> fsp(x, x)
+    set([0])
+    >>> fsp((x-1)**3, x)
+    set([1])
+    >>> fsp(sin(x+3)*x, x)
+    set([-3, 0])
+    """
+    from sympy import Tuple
+    p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
+    def compute_innermost(expr, res):
+        if expr.func is Tuple:
+            return
+        m = expr.match(p*x+q)
+        if m and m[p] != 0:
+            res.add(-m[q]/m[p])
+            return
+        if expr.is_Atom:
+            return
+        for arg in expr.args:
+            compute_innermost(arg, res)
+    innermost = set()
+    compute_innermost(expr, innermost)
+    return innermost
 
 def _split_mul(f, x):
     """
@@ -1249,7 +1285,6 @@ def _rewrite2(f, x):
             if cond is not False:
                 return fac, po, g1[0], g2[0], cond
 
-
 def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
@@ -1260,6 +1295,13 @@ def meijerint_indefinite(f, x):
     >>> meijerint_indefinite(sin(x), x)
     -cos(x)
     """
+    for a in list(_find_splitting_points(f, x)) + [S(0)]:
+        res = _meijerint_indefinite_1(f.subs(x, x + a), x)
+        if res is not None:
+            return res.subs(x, x - a)
+
+def _meijerint_indefinite_1(f, x):
+    """ Helper thad does not attempt any substitution. """
     from sympy import Integral
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
@@ -1331,7 +1373,7 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    from sympy import Integral, arg, exp, I, Wild, And, DiracDelta
+    from sympy import Integral, arg, exp, I, And, DiracDelta, count_ops
     _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
 
     if f.has(DiracDelta):
@@ -1351,18 +1393,7 @@ def meijerint_definite(f, x, a, b):
     if a == -oo:
         # Integrating -oo to oo. We need to find a place to split the integral.
         _debug('  Integrating -oo to +oo.')
-        p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
-        def compute_innermost(expr, res):
-            m = expr.match(p*x+q)
-            if m and m[p] != 0:
-                res.add(-m[q]/m[p])
-                return
-            if expr.is_Atom:
-                return
-            for arg in expr.args:
-                compute_innermost(arg, res)
-        innermost = set()
-        compute_innermost(f, innermost)
+        innermost = _find_splitting_points(f, x)
         _debug('  Sensible splitting points:', innermost)
         for c in list(innermost) + [S(0)]:
             _debug('  Trying to split at', c)
@@ -1387,6 +1418,22 @@ def meijerint_definite(f, x, a, b):
             return res, cond
         return
 
+    if a == oo:
+        return -meijerint_definite(f, x, b, oo)
+
+    results = []
+    if b == oo:
+        for split in _find_splitting_points(f, x):
+            if a - split >= 0:
+                _debug('Trying x --> x + %s' % split)
+                res = _meijerint_definite_2(f.subs(x, x + split) \
+                                            *Heaviside(x + split - a), x)
+                if res is not None:
+                    if res[0].has(meijerg):
+                        results.append(res)
+                    else:
+                        return res
+
     f = f.subs(x, x + a)
     b = b - a
     a = 0
@@ -1399,7 +1446,14 @@ def meijerint_definite(f, x, a, b):
 
     _debug('Changed limits to', a, b)
     _debug('Changed function to', f)
-    return _meijerint_definite_2(f, x)
+    res = _meijerint_definite_2(f, x)
+    if res is not None:
+        if res[0].has(meijerg):
+            results.append(res)
+        else:
+            return res
+    if results:
+        return sorted(results, key=lambda x: count_ops(x[0]))[0]
 
 def _guess_expansion(f, x):
     """ Try to guess sensible rewritings for integrand f(x). """

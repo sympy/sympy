@@ -139,9 +139,14 @@ def test_meijerint():
     for n in range(6):
        assert integrate(exp(-x)*sin(x)*x**n, (x, 0, oo), meijerg=True) == res(n)
 
-    # Test trigexpand:
-    assert integrate(exp(-x)*sin(x + a), (x, 0, oo), meijerg=True) == \
+    # This used to test trigexpand... now it is done by linear substitution
+    assert simplify(integrate(exp(-x)*sin(x + a), (x, 0, oo), meijerg=True)).expand().rewrite(sin).expand() == \
            sin(a)/2 + cos(a)/2
+
+    # This is cosine-integral, not currently in hyperexpand tables
+    a = symbols('a', positive=True)
+    assert integrate(cos(x)/x, (x, a, oo), meijerg=True) == \
+           sqrt(pi)*meijerg(((), (1, S(1)/2)), ((S(1)/2, 0, 0), (S(1)/2,)), a**2/4)/2
 
 def test_bessel():
     from sympy import besselj, Heaviside, besseli, polar_lift, exp_polar
@@ -155,10 +160,10 @@ def test_bessel():
 
     # TODO there is actually a lot to improve here, this example is a good
     #      stress-test
-    # (the original integral is not recognised, the convergence conditions are
+    # (the convergence conditions are
     #  wrong, and the result can be simplified to besselj(y, z))
-    assert simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2))*Heaviside(x**2-1),
-                              (x, 0, oo), meijerg=True, conds='none')
+    assert simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2)),
+                              (x, 1, oo), meijerg=True, conds='none')
                     *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2-y))) == \
            2*(z**2/4)**(y + S(1)/2)*(z/2)**(-y)*(2*exp_polar(-I*pi/2)/z)**y \
            *besseli(y, z*exp_polar(I*pi/2))/z
@@ -245,3 +250,8 @@ def test_branch_bug():
     assert integrate(erf(x**3), x, meijerg=True) == \
            2*x*erf(x**3)*gamma(S(2)/3)/(3*gamma(S(5)/3)) \
            - 2*gamma(S(2)/3)*lowergamma(S(2)/3, x**6)/(3*sqrt(pi)*gamma(S(5)/3))
+
+def test_linear_subs():
+    from sympy import besselj
+    assert integrate(sin(x-1), x, meijerg=True) == -cos(1 - x)
+    assert integrate(besselj(1, x-1), x, meijerg=True) == -besselj(0, 1 - x)
