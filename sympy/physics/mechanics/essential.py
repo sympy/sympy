@@ -1,9 +1,18 @@
-__all__ = ['ReferenceFrame', 'Vector', 'Dyad']
+__all__ = ['ReferenceFrame', 'Vector', 'Dyad', 'dynamicsymbols',
+           'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
+           'MechanicsLatexPrinter']
 
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
-                   expand, S, zeros)
+                   expand, S, zeros, Basic, Derivative, Function, symbols, Add)
+from sympy.core import C
+from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Zero
-from sympy.physics.mechanics.dynamicsymbol import DynamicSymbol
+from sympy.printing.conventions import split_super_sub
+from sympy.printing.latex import LatexPrinter
+from sympy.printing.pretty.pretty import PrettyPrinter
+from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.str import StrPrinter
+from sympy.utilities import group
 
 class Dyad(object):
     """A Dyad object.
@@ -31,8 +40,8 @@ class Dyad(object):
         while len(inlist) != 0:
             added = 0
             for i, v in enumerate(self.args):
-                if ((inlist[0][1].__str__() == self.args[i][1].__str__()) and
-                    (inlist[0][2].__str__() == self.args[i][2].__str__())):
+                if ((str(inlist[0][1]) == str(self.args[i][1])) and
+                    (str(inlist[0][2]) == str(self.args[i][2]))):
                     self.args[i] = (self.args[i][0] +
                         inlist[0][0], inlist[0][1], inlist[0][2])
                     inlist.remove(inlist[0])
@@ -49,26 +58,6 @@ class Dyad(object):
                 self.args.remove(self.args[i])
                 i -= 1
             i += 1
-
-    def __str__(self):
-        """Printing method. """
-        ar = self.args
-        ol = []
-        for i, v in enumerate(ar):
-            if ar[i][0] == 1:
-                if len(ol) != 0:
-                    ol.append(' + ')
-                ol.append('(' + `ar[i][1]` + '|' + `ar[i][2]` + ')')
-            elif ar[i][0] == -1:
-                if len(ol) != 0:
-                    ol.append(' ')
-                ol.append('- (' + `ar[i][1]` + '|' + `ar[i][2]` + ')')
-            elif ar[i][0] != 0:
-                if len(ol) != 0:
-                    ol.append(' + ')
-                ol.append('(' + `ar[i][0]` + ')*(' + `ar[i][1]` + '|' +
-                        `ar[i][2]` + ')')
-        return ''.join(ol)
 
     def __add__(self, other):
         """The add operator for Dyad. """
@@ -149,7 +138,7 @@ class Dyad(object):
         >>> N = ReferenceFrame('N')
         >>> d = outer(N.x, N.x)
         >>> 5 * d
-        (5)*(N.x|N.x)
+        5*(N.x|N.x)
 
         """
 
@@ -164,6 +153,94 @@ class Dyad(object):
 
     def __neg__(self):
         return self * -1
+
+    def _latex(self, printer=None):
+        ar = self.args # just to shorten things
+        if len(ar) == 0:
+            return r"0"
+        ol = [] # output list, to be concatenated to a string
+        for i, v in enumerate(ar):
+            # if the coef of the dyad is 1, we skip the 1
+            if ar[i][0] == 1:
+                if len(ol) != 0:
+                    ol.append(r" + ")
+                ol.append(MechanicsLatexPrinter().doprint(ar[i][1]) +
+                          r"\otimes " +
+                          MechanicsLatexPrinter().doprint(ar[i][2]))
+            # if the coef of the dyad is -1, we skip the 1
+            elif ar[i][0] == -1:
+                if len(ol) != 0:
+                    ol.append(u" ")
+                ol.append(u"- " + 
+                          MechanicsLatexPrinter().doprint(ar[i][1]) +
+                          r"\otimes " +
+                          MechanicsLatexPrinter().doprint(ar[i][2]))
+            # If the coefficient of the dyad is not 1 or -1,
+            # we might wrap it in parentheses, for readability.
+            elif ar[i][0] != 0:
+                arg_str = MechanicsLatexPrinter().doprint(ar[i][0])
+                str_start = r" + "
+                if isinstance(ar[i][0], Add):
+                    arg_str = r"(%s)" % arg_str
+                if arg_str[0] == r"-":
+                    arg_str = arg_str[1:]
+                    str_start = r" - "
+                if len(ol) == 0:
+                    str_start = str_start[1:]
+                if (len(ol) != 0) or (str_start.find(r"-") != -1):
+                    ol.append(str_start)
+                ol.append(arg_str + r" " +
+                          MechanicsLatexPrinter().doprint(ar[i][1]) +
+                          r"\otimes " +
+                          MechanicsLatexPrinter().doprint(ar[i][2]))
+        return r"".join(ol)
+
+    def _pretty(self, printer=None):
+        e = self
+        class Fake(object):
+            baseline = 0
+            def render(self, *args, **kwargs):
+                self = e
+                ar = self.args # just to shorten things
+                if len(ar) == 0:
+                    return unicode(0)
+                ol = [] # output list, to be concatenated to a string
+                for i, v in enumerate(ar):
+                    # if the coef of the dyad is 1, we skip the 1
+                    if ar[i][0] == 1:
+                        if len(ol) != 0:
+                            ol.append(u" + ")
+                        ol.append(MechanicsPrettyPrinter().doprint(ar[i][1]) +
+                                  u"\u2a02 " +
+                                  MechanicsPrettyPrinter().doprint(ar[i][2]))
+                    # if the coef of the dyad is -1, we skip the 1
+                    elif ar[i][0] == -1:
+                        if len(ol) != 0:
+                            ol.append(u" ")
+                        ol.append(u"- " + 
+                                  MechanicsPrettyPrinter().doprint(ar[i][1]) +
+                                  u"\u2a02 " +
+                                  MechanicsPrettyPrinter().doprint(ar[i][2]))
+                    # If the coefficient of the dyad is not 1 or -1,
+                    # we might wrap it in parentheses, for readability.
+                    elif ar[i][0] != 0:
+                        arg_str = MechanicsPrettyPrinter().doprint(ar[i][0])
+                        str_start = u" + "
+                        if isinstance(ar[i][0], Add):
+                            arg_str = u"(%s)" % arg_str
+                        if arg_str[0] == u"-":
+                            arg_str = arg_str[1:]
+                            str_start = u" - "
+                        if len(ol) == 0:
+                            str_start = str_start[1:]
+                        if (len(ol) != 0) or (str_start.find(u"-") != -1):
+                            ol.append(str_start)
+                        ol.append(arg_str + u" " +
+                                  MechanicsPrettyPrinter().doprint(ar[i][1]) +
+                                  u"\u2a02 " +
+                                  MechanicsPrettyPrinter().doprint(ar[i][2]))
+                return u"".join(ol)
+        return Fake()
 
     def __rand__(self, other):
         """The inner product operator for a Vector or Dyad, and a Dyad
@@ -225,6 +302,41 @@ class Dyad(object):
             ol += v[0] * ((other ^ v[1]) | v[2])
         return ol
 
+    def __str__(self, printer=None):
+        """Printing method. """
+        ar = self.args # just to shorten things
+        if len(ar) == 0:
+            return str(0)
+        ol = [] # output list, to be concatenated to a string
+        for i, v in enumerate(ar):
+            # if the coef of the dyad is 1, we skip the 1
+            if ar[i][0] == 1:
+                if len(ol) != 0:
+                    ol.append(' + ')
+                ol.append('(' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
+            # if the coef of the dyad is -1, we skip the 1
+            elif ar[i][0] == -1:
+                if len(ol) != 0:
+                    ol.append(' ')
+                ol.append('- (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
+            # If the coefficient of the dyad is not 1 or -1,
+            # we might wrap it in parentheses, for readability.
+            elif ar[i][0] != 0:
+                arg_str = MechanicsStrPrinter().doprint(ar[i][0])
+                str_start = ' + '
+                if isinstance(ar[i][0], Add):
+                    arg_str = "(%s)"%arg_str
+                if arg_str[0] == '-':
+                    arg_str = arg_str[1:]
+                    str_start = ' - '
+                if len(ol) == 0:
+                    str_start = str_start[1:]
+                if (len(ol) != 0) or (str_start.find('-') != -1):
+                    ol.append(str_start)
+                ol.append(arg_str + '*(' + str(ar[i][1]) +
+                          '|' + str(ar[i][2]) + ')')
+        return ''.join(ol)
+
     def __sub__(self, other):
         """The subtraction operator. """
         return self.__add__(other * -1)
@@ -254,12 +366,6 @@ class Dyad(object):
             ol += v[0] * (v[1] | (v[2] ^ other))
         return ol
 
-    __repr__ = __str__
-    __radd__ = __add__
-    __rmul__ = __mul__
-    dot = __and__
-    cross = __xor__
-
     def _check_frame(self, other):
         if not isinstance(other, ReferenceFrame):
             raise TypeError('A ReferenceFrame must be supplied')
@@ -277,6 +383,12 @@ class Dyad(object):
                 return
         if not isinstance(other, Vector):
             raise TypeError('A Vector must be supplied')
+
+    _sympystr = __str__
+    _sympyrepr = _sympystr
+    __repr__ = __str__
+    __radd__ = __add__
+    __rmul__ = __mul__
 
     def express(self, frame1, frame2=None):
         """Expresses this Dyad in alternate frame(s)
@@ -297,13 +409,13 @@ class Dyad(object):
         ========
 
         >>> from sympy.physics.mechanics import ReferenceFrame, outer,\
-                DynamicSymbol
+                dynamicsymbols
         >>> N = ReferenceFrame('N')
-        >>> q = DynamicSymbol('q')
+        >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Simple', q, 3)
         >>> d = outer(N.x, N.x)
         >>> d.express(B, N)
-        (cos(q))*(B.x|N.x) + (-sin(q))*(B.y|N.x)
+        cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)
 
         """
 
@@ -328,24 +440,27 @@ class Dyad(object):
         ========
 
         >>> from sympy.physics.mechanics import ReferenceFrame, outer,\
-                DynamicSymbol
+                dynamicsymbols
         >>> N = ReferenceFrame('N')
-        >>> q = DynamicSymbol('q')
+        >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Simple', q, 3)
         >>> d = outer(N.x, N.x)
         >>> d.dt(B)
-        (-qd)*(N.y|N.x) + (-qd)*(N.x|N.y)
+        - q'*(N.y|N.x) - q'*(N.x|N.y)
 
         """
 
         self._check_frame(frame)
-        t = DynamicSymbol._t
+        t = dynamicsymbols._t
         ol = 0
         for i, v in enumerate(self.args):
             ol += (v[0].diff(t) * (v[1] | v[2]))
             ol += (v[0] * (v[1].dt(frame) | v[2]))
             ol += (v[0] * (v[1] | v[2].dt(frame)))
         return ol
+
+    dot = __and__
+    cross = __xor__
 
 
 class ReferenceFrame(object):
@@ -410,16 +525,6 @@ class ReferenceFrame(object):
         if not isinstance(other, Vector):
             raise TypeError('A Vector must be supplied')
 
-    def _w_diff_dcm(self, otherframe):
-        """Angular velocity from time differentiating the DCM. """
-        dcm2diff = self.dcm(otherframe)
-        diffed = dcm2diff.diff(DynamicSymbol._t)
-        angvelmat = diffed * dcm2diff.T
-        w1 = trigsimp(expand(angvelmat[7]), recursive=True)
-        w2 = trigsimp(expand(angvelmat[2]), recursive=True)
-        w3 = trigsimp(expand(angvelmat[3]), recursive=True)
-        return -Vector([(Matrix([w1, w2, w3]), self)])
-
     def _dict_list(self, other, num):
         """Creates a list from self to other using _dcm_dict. """
         outlist = [[self]]
@@ -441,6 +546,16 @@ class ReferenceFrame(object):
             return outlist[0]
         raise ValueError('No Connecting Path found between ' + self.name +
                          ' and ' + other.name)
+
+    def _w_diff_dcm(self, otherframe):
+        """Angular velocity from time differentiating the DCM. """
+        dcm2diff = self.dcm(otherframe)
+        diffed = dcm2diff.diff(dynamicsymbols._t)
+        angvelmat = diffed * dcm2diff.T
+        w1 = trigsimp(expand(angvelmat[7]), recursive=True)
+        w2 = trigsimp(expand(angvelmat[2]), recursive=True)
+        w3 = trigsimp(expand(angvelmat[3]), recursive=True)
+        return -Vector([(Matrix([w1, w2, w3]), self)])
 
     def ang_acc_in(self, otherframe):
         """Returns the angular acceleration Vector of the ReferenceFrame.
@@ -464,7 +579,7 @@ class ReferenceFrame(object):
         >>> V = 10 * N.x
         >>> A.set_ang_acc(N, V)
         >>> A.ang_acc_in(N)
-        (10)*N.x
+        10*N.x
 
         """
 
@@ -496,7 +611,7 @@ class ReferenceFrame(object):
         >>> V = 10 * N.x
         >>> A.set_ang_vel(N, V)
         >>> A.ang_vel_in(N)
-        (10)*N.x
+        10*N.x
 
         """
 
@@ -540,38 +655,6 @@ class ReferenceFrame(object):
         for i in range(len(flist) - 1):
             outdcm = outdcm * flist[i + 1]._dcm_dict[flist[i]]
         return outdcm
-
-    def orientnew(self, newname, rot_type, amounts, rot_order=''):
-        """Creates a new ReferenceFrame oriented with respect to this Frame.
-
-        See ReferenceFrame.orient() for acceptable rotation types, amounts,
-        and orders. Parent is going to be self.
-
-        Parameters
-        ==========
-        newname : str
-            The name for the new ReferenceFrame
-        rot_type : str
-            The type of orientation matrix that is being created.
-        amounts : list OR value
-            The quantities that the orientation matrix will be defined by.
-        rot_order : str
-            If applicable, the order of a series of rotations.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
-        >>> from sympy import symbols
-        >>> q1 = symbols('q1')
-        >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Simple', q1, 1)
-
-        """
-
-        newframe = ReferenceFrame(newname)
-        newframe.orient(self, rot_type, amounts, rot_order)
-        return newframe
 
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Defines the orientation of this frame relative to a parent frame.
@@ -727,7 +810,7 @@ class ReferenceFrame(object):
         parent._dcm_dict.update({self: parent_orient.T})
         # TODO double check the sign here
         if rot_type == 'QUATERNION':
-            t = DynamicSymbol._t
+            t = dynamicsymbols._t
             q0 = amounts[0]
             q1 = amounts[1]
             q2 = amounts[2]
@@ -741,12 +824,44 @@ class ReferenceFrame(object):
             w3 = 2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3)
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
-            thetad = (amounts[0]).diff(DynamicSymbol._t)
+            thetad = (amounts[0]).diff(dynamicsymbols._t)
             wvec = thetad * amounts[1].express(parent).unit
         else:
             wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
+
+    def orientnew(self, newname, rot_type, amounts, rot_order=''):
+        """Creates a new ReferenceFrame oriented with respect to this Frame.
+
+        See ReferenceFrame.orient() for acceptable rotation types, amounts,
+        and orders. Parent is going to be self.
+
+        Parameters
+        ==========
+        newname : str
+            The name for the new ReferenceFrame
+        rot_type : str
+            The type of orientation matrix that is being created.
+        amounts : list OR value
+            The quantities that the orientation matrix will be defined by.
+        rot_order : str
+            If applicable, the order of a series of rotations.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector
+        >>> from sympy import symbols
+        >>> q1 = symbols('q1')
+        >>> N = ReferenceFrame('N')
+        >>> A = N.orientnew('A', 'Simple', q1, 1)
+
+        """
+
+        newframe = ReferenceFrame(newname)
+        newframe.orient(self, rot_type, amounts, rot_order)
+        return newframe
 
     def set_ang_acc(self, otherframe, value):
         """Define the angular acceleration Vector in a ReferenceFrame.
@@ -772,7 +887,7 @@ class ReferenceFrame(object):
         >>> V = 10 * N.x
         >>> A.set_ang_acc(N, V)
         >>> A.ang_acc_in(N)
-        (10)*N.x
+        10*N.x
 
         """
 
@@ -805,7 +920,7 @@ class ReferenceFrame(object):
         >>> V = 10 * N.x
         >>> A.set_ang_vel(N, V)
         >>> A.ang_vel_in(N)
-        (10)*N.x
+        10*N.x
 
         """
 
@@ -879,34 +994,6 @@ class Vector(object):
                 self.args.remove(self.args[i])
                 i -= 1
             i += 1
-
-    def __str__(self):
-        """Printing method. """
-        str_ind = 'xyz'
-        ar = self.args # just to shorten things
-        if len(ar) == 0:
-            return `0`
-        ol = [] # output list, to be concatenated to a string
-        for i, v in enumerate(ar):
-            for j in 0, 1, 2:
-                # if the coef of the basis vector is 1, we skip the 1
-                if ar[i][0][j] == 1:
-                    if len(ol) != 0:
-                        ol.append(' + ')
-                    ol.append(`ar[i][1]` + '.' + str_ind[j])
-                # if the coef of the basis vector is -1, we skip the 1
-                elif ar[i][0][j] == -1:
-                    if len(ol) != 0:
-                        ol.append(' ')
-                    ol.append('- ' + `ar[i][1]` + '.' + str_ind[j])
-                elif ar[i][0][j] != 0:
-                    # If the coefficient of the basis vector is not 1 or -1,
-                    # we wrap it in parentheses, for readability.
-                    if len(ol) != 0:
-                        ol.append(' + ')
-                    ol.append('(' + `ar[i][0][j]` + ')*' + `ar[i][1]` +
-                              '.' + str_ind[j])
-        return ''.join(ol)
 
     def __add__(self, other):
         """The add operator for Vector. """
@@ -1003,7 +1090,7 @@ class Vector(object):
         >>> b = Symbol('b')
         >>> V = 10 * b * N.x
         >>> print V
-        (10*b)*N.x
+        10*b*N.x
 
         """
 
@@ -1057,6 +1144,95 @@ class Vector(object):
                 ol += Dyad([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
         return ol
 
+    def _latex(self, printer=None):
+        """Latex Printing method. """
+        str_ind = Vector.subscript_indices
+        ar = self.args # just to shorten things
+        if len(ar) == 0:
+            return r"0"
+        ol = [] # output list, to be concatenated to a string
+        for i, v in enumerate(ar):
+            for j in 0, 1, 2:
+                # if the coef of the basis vector is 1, we skip the 1
+                if ar[i][0][j] == 1:
+                    if len(ol) != 0:
+                        ol.append(r" + ")
+                    ol.append(r"\mathbf{\hat{%s}} " %
+                            (str(ar[i][1]).lower() + r"_{" + 
+                              str_ind[j] + r"}"))
+                # if the coef of the basis vector is -1, we skip the 1
+                elif ar[i][0][j] == -1:
+                    if len(ol) != 0:
+                        ol.append(r" ")
+                    ol.append(r"- " + r"\mathbf{\hat{%s}}" %
+                            (str(ar[i][1]).lower() + r"_{" +
+                                str_ind[j] + r"}"))
+                elif ar[i][0][j] != 0:
+                    # If the basis vector coeff is not 1 or -1,
+                    # we might wrap it in parentheses, for readability.
+                    arg_str = (
+                        MechanicsLatexPrinter().doprint(ar[i][0][j]))
+                    str_start = r" + "
+                    if isinstance(ar[i][0][j], Add):
+                        arg_str = r"(%s)"%arg_str
+                    if arg_str[0] == r"-":
+                        arg_str = arg_str[1:]
+                        str_start = r" - "
+                    if len(ol) == 0:
+                        str_start = str_start[1:]
+                    if (len(ol) != 0) or (str_start.find(r"-") != -1):
+                        ol.append(str_start)
+                    ol.append(arg_str + r" " + r"\mathbf{\hat{%s}}" %
+                            (str(ar[i][1]).lower() + r"_{" +
+                                str_ind[j] + r"}"))
+        return r"".join(ol)
+
+    def _pretty(self, printer=None):
+        """Pretty Printing method. """
+        e = self
+        class Fake(object):
+            baseline = 0
+            def render(self, *args, **kwargs):
+                self = e
+                str_ind = [u"\u2081", u"\u2082", u"\u2083"]
+                ar = self.args # just to shorten things
+                if len(ar) == 0:
+                    return unicode(0)
+                ol = [] # output list, to be concatenated to a string
+                for i, v in enumerate(ar):
+                    for j in 0, 1, 2:
+                        # if the coef of the basis vector is 1, we skip the 1
+                        if ar[i][0][j] == 1:
+                            if len(ol) != 0:
+                                ol.append(u" + ")
+                            ol.append(unicode(ar[i][1]).lower() + u"\u0302" +
+                                      str_ind[j])
+                        # if the coef of the basis vector is -1, we skip the 1
+                        elif ar[i][0][j] == -1:
+                            if len(ol) != 0:
+                                ol.append(u" ")
+                            ol.append(u"- " + unicode(ar[i][1]).lower()
+                                      + u"\u0302" + str_ind[j])
+                        elif ar[i][0][j] != 0:
+                            # If the basis vector coeff is not 1 or -1,
+                            # we might wrap it in parentheses, for readability.
+                            arg_str = (
+                                MechanicsPrettyPrinter().doprint(ar[i][0][j]))
+                            str_start = u" + "
+                            if isinstance(ar[i][0][j], Add):
+                                arg_str = u"(%s)"%arg_str
+                            if arg_str[0] == u"-":
+                                arg_str = arg_str[1:]
+                                str_start = u" - "
+                            if len(ol) == 0:
+                                str_start = str_start[1:]
+                            if (len(ol) != 0) or (str_start.find(u"-") != -1):
+                                ol.append(str_start)
+                            ol.append(arg_str + u" " + unicode(ar[i][1]).lower()
+                                      + u"\u0302" + str_ind[j])
+                return u"".join(ol)
+        return Fake()
+
     def __ror__(self, other):
         """Outer product between two Vectors.
 
@@ -1099,6 +1275,42 @@ class Vector(object):
     def __rsub__(self, other):
         return (-1 * self) + other
 
+    def __str__(self, printer=None):
+        """Printing method. """
+        str_ind = 'xyz'
+        ar = self.args # just to shorten things
+        if len(ar) == 0:
+            return str(0)
+        ol = [] # output list, to be concatenated to a string
+        for i, v in enumerate(ar):
+            for j in 0, 1, 2:
+                # if the coef of the basis vector is 1, we skip the 1
+                if ar[i][0][j] == 1:
+                    if len(ol) != 0:
+                        ol.append(' + ')
+                    ol.append(str(ar[i][1]) + '.' + str_ind[j])
+                # if the coef of the basis vector is -1, we skip the 1
+                elif ar[i][0][j] == -1:
+                    if len(ol) != 0:
+                        ol.append(' ')
+                    ol.append('- ' + str(ar[i][1]) + '.' + str_ind[j])
+                elif ar[i][0][j] != 0:
+                    # If the coefficient of the basis vector is not 1 or -1,
+                    # we might wrap it in parentheses, for readability.
+                    arg_str = MechanicsStrPrinter().doprint(ar[i][0][j])
+                    str_start = ' + '
+                    if isinstance(ar[i][0][j], Add):
+                        arg_str = "(%s)"%arg_str
+                    if arg_str[0] == '-':
+                        arg_str = arg_str[1:]
+                        str_start = ' - '
+                    if len(ol) == 0:
+                        str_start = str_start[1:]
+                    if (len(ol) != 0) or (str_start.find('-') != -1):
+                        ol.append(str_start)
+                    ol.append(arg_str + '*' + str(ar[i][1]) + '.' + str_ind[j])
+        return ''.join(ol)
+
     def __sub__(self, other):
         """The subraction operator. """
         return self.__add__(other * -1)
@@ -1126,7 +1338,7 @@ class Vector(object):
         >>> A.x ^ N.y
         N.z
         >>> N.y ^ A.x
-        (-sin(q1))*A.y + (-cos(q1))*A.z
+        - sin(q1)*A.y - cos(q1)*A.z
 
         """
 
@@ -1173,6 +1385,8 @@ class Vector(object):
         if not isinstance(other, Vector):
             raise TypeError('A Vector must be supplied')
 
+    _sympystr = __str__
+    _sympyrepr = _sympystr
     __repr__ = __str__
     __radd__ = __add__
     __rmul__ = __mul__
@@ -1188,27 +1402,6 @@ class Vector(object):
     def outer(self, other):
         return self | other
     outer.__doc__ = __or__.__doc__
-
-    def subs(self, dictin):
-        """Substituion on the Vector, with a dict.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame
-        >>> from sympy import Symbol
-        >>> N = ReferenceFrame('N')
-        >>> s = Symbol('s')
-        >>> a = N.x * s
-        >>> a.subs({s: 2})
-        (2)*N.x
-
-        """
-
-        ov = 0
-        for i, v in enumerate(self.args):
-            ov += Vector([(v[0].subs(dictin), v[1])])
-        return ov
 
     def diff(self, wrt, otherframe):
         """Takes the partial derivative, with respect to a value, in a frame.
@@ -1226,14 +1419,14 @@ class Vector(object):
         ========
 
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
-                DynamicSymbol
+                dynamicsymbols
         >>> from sympy import Symbol
         >>> t = Symbol('t')
-        >>> q1 = DynamicSymbol('q1')
+        >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 2)
         >>> A.x.diff(t, N)
-        (-q1d)*A.z
+        - q1'*A.z
 
         """
 
@@ -1267,10 +1460,10 @@ class Vector(object):
         ========
 
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
-                DynamicSymbol
+                dynamicsymbols
         >>> from sympy import Symbol
         >>> q1 = Symbol('q1')
-        >>> u1 = DynamicSymbol('u1')
+        >>> u1 = dynamicsymbols('u1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 1)
         >>> v = u1 * N.x
@@ -1278,7 +1471,7 @@ class Vector(object):
         >>> A.x.dt(N) == 0
         True
         >>> v.dt(N)
-        (u1d)*N.x
+        u1'*N.x
 
         """
 
@@ -1286,7 +1479,7 @@ class Vector(object):
         self._check_frame(otherframe)
         for i,v in enumerate(self.args):
             if v[1] == otherframe:
-                outvec += Vector([(v[0].diff(DynamicSymbol._t), otherframe)])
+                outvec += Vector([(v[0].diff(dynamicsymbols._t), otherframe)])
             else:
                 outvec += (Vector([v]).dt(v[1]) +
                     (v[1].ang_vel_in(otherframe) ^ Vector([v])))
@@ -1307,12 +1500,12 @@ class Vector(object):
         ========
 
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
-                DynamicSymbol
-        >>> q1 = DynamicSymbol('q1')
+                dynamicsymbols
+        >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Simple', q1, 2)
         >>> A.x.express(N)
-        (cos(q1))*N.x + (-sin(q1))*N.z
+        cos(q1)*N.x - sin(q1)*N.z
 
         """
 
@@ -1330,6 +1523,27 @@ class Vector(object):
                 outvec -= Vector([v])
         return outvec
 
+    def subs(self, dictin):
+        """Substituion on the Vector, with a dict.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> from sympy import Symbol
+        >>> N = ReferenceFrame('N')
+        >>> s = Symbol('s')
+        >>> a = N.x * s
+        >>> a.subs({s: 2})
+        2*N.x
+
+        """
+
+        ov = 0
+        for i, v in enumerate(self.args):
+            ov += Vector([(v[0].subs(dictin), v[1])])
+        return ov
+
     @property
     def mag(self):
         """Returns the magnitude of this Vector, as a scalar. """
@@ -1339,6 +1553,275 @@ class Vector(object):
     def unit(self):
         """Returns this Vector, with unit length. """
         return Vector(self.args + []) / self.mag
+
+
+class MechanicsStrPrinter(StrPrinter):
+    """String Printer for mechanics. """
+    def _print_Derivative(self, e):
+        t = dynamicsymbols._t
+        if (bool([i == t for i in e.variables]) &
+            isinstance(type(e.args[0]), UndefinedFunction)):
+            ol = str(e.args[0].func)
+            for i, v in enumerate(e.variables):
+                ol += '\''
+            return ol
+        else:
+            return StrPrinter().doprint(e)
+
+    def _print_Function(self, e):
+        t = dynamicsymbols._t
+        if isinstance(type(e), UndefinedFunction):
+            return StrPrinter().doprint(e).replace("(%s)"%t, '')
+        return e.func.__name__ + "(%s)"%self.stringify(e.args, ", ")
+
+
+class MechanicsLatexPrinter(LatexPrinter):
+    """Latex Printer for mechanics. """
+    def _print_Function(self, expr, exp=None):
+        func = expr.func.__name__
+        t = dynamicsymbols._t
+
+        if hasattr(self, '_print_' + func):
+            return getattr(self, '_print_' + func)(expr, exp)
+        elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
+            name, sup, sub = split_super_sub(func)
+            if len(sup) != 0:
+                sup = r"^{%s}" % "".join(sup)
+            else:
+                sup = r""
+            if len(sub) != 0:
+                sub = r"_{%s}" % "".join(sub)
+            else:
+                sub = r""
+            return r"%s" % (name + sup + sub)
+        else:
+            args = [ str(self._print(arg)) for arg in expr.args ]
+            # How inverse trig functions should be displayed, formats are:
+            # abbreviated: asin, full: arcsin, power: sin^-1
+            inv_trig_style = self._settings['inv_trig_style']
+            # If we are dealing with a power-style inverse trig function
+            inv_trig_power_case = False
+            # If it is applicable to fold the argument brackets
+            can_fold_brackets = self._settings['fold_func_brackets'] and \
+                                len(args) == 1 and \
+                                not self._needs_function_brackets(expr.args[0])
+
+            inv_trig_table = ["asin", "acos", "atan", "acot"]
+
+            # If the function is an inverse trig function, handle the style
+            if func in inv_trig_table:
+                if inv_trig_style == "abbreviated":
+                    func = func
+                elif inv_trig_style == "full":
+                    func = "arc" + func[1:]
+                elif inv_trig_style == "power":
+                    func = func[1:]
+                    inv_trig_power_case = True
+
+                    # Can never fold brackets if we're raised to a power
+                    if exp is not None:
+                        can_fold_brackets = False
+
+            if inv_trig_power_case:
+                name = r"\operatorname{%s}^{-1}" % func
+            elif exp is not None:
+                name = r"\operatorname{%s}^{%s}" % (func, exp)
+            else:
+                name = r"\operatorname{%s}" % func
+
+            if can_fold_brackets:
+                name += r"%s"
+            else:
+                name += r"\left(%s\right)"
+
+            if inv_trig_power_case and exp is not None:
+                name += r"^{%s}" % exp
+
+            return name % ",".join(args)
+
+    def _print_Derivative(self, expr):
+        expr = Derivative(expr)
+        t = dynamicsymbols._t
+        syms = list(reversed(expr.variables))
+        dots = 0
+
+        while len(syms) > 0:
+            if syms[-1] == t:
+                syms.pop()
+                dots += 1
+            else:
+                break
+        base = self._print(expr.expr)
+        if dots == 1:
+            base = r"\dot{%s}" % self._print(expr.expr)
+        if dots == 2:
+            base = r"\ddot{%s}" % self._print(expr.expr)
+        if dots == 3:
+            base = r"\dddot{%s}" % self._print(expr.expr)
+
+        expr = Derivative(expr.expr, *syms)
+
+        dim = len(expr.variables)
+
+        if dim == 1:
+            tex = r"\frac{\partial}{\partial %s}" % \
+                self._print(expr.variables[0])
+        else:
+            multiplicity, i, tex = [], 1, ""
+            current = expr.variables[0]
+
+            for symbol in expr.variables[1:]:
+                if symbol == current:
+                    i = i + 1
+                else:
+                    multiplicity.append((current, i))
+                    current, i = symbol, 1
+            else:
+                multiplicity.append((current, i))
+
+            for x, i in multiplicity:
+                if i == 1:
+                    tex += r"\partial %s" % self._print(x)
+                else:
+                    tex += r"\partial^{%s} %s" % (i, self._print(x))
+
+            tex = r"\frac{\partial^{%s}}{%s} " % (dim, tex)
+
+        if isinstance(expr.expr, C.AssocOp):
+            return r"%s\left(%s\right)" % (tex, base)
+        else:
+            return r"%s %s" % (tex, base)
+
+
+class MechanicsPrettyPrinter(PrettyPrinter):
+    """Pretty Printer for mechanics. """
+    def _print_Derivative(self, deriv):
+        # XXX use U('PARTIAL DIFFERENTIAL') here ?
+        t = dynamicsymbols._t
+        dots = 0
+        can_break = True
+        syms = list(reversed(deriv.variables))
+        x = None
+
+        while len(syms) > 0:
+            if syms[-1] == t:
+                syms.pop()
+                dots += 1
+            else:
+                break
+
+        f = prettyForm(binding=prettyForm.FUNC, *self._print(deriv.expr))
+        if not (isinstance(type(deriv.expr), UndefinedFunction)
+                and (deriv.expr.args == (t,))):
+            dots = 0
+            can_break = False
+            f = prettyForm(binding=prettyForm.FUNC,
+                    *self._print(deriv.expr).parens())
+        if dots == 0:
+            dots = u""
+        elif dots == 1:
+            dots = u"\u0307"
+        elif dots == 2:
+            dots = u"\u0308"
+        elif dots == 3:
+            dots = u"\u20db"
+        elif dots == 4:
+            dots = u"\u20dc"
+
+        uni_subs = [u"\u2080", u"\u2081", u"\u2082", u"\u2083", u"\u2084",
+                    u"\u2085", u"\u2086", u"\u2087", u"\u2088", u"\u2089",
+                    u"\u208a", u"\u208b", u"\u208c", u"\u208d", u"\u208e",
+                    u"\u208f", u"\u2090", u"\u2091", u"\u2092", u"\u2093",
+                    u"\u2094", u"\u2095", u"\u2096", u"\u2097", u"\u2098",
+                    u"\u2099", u"\u209a", u"\u209b", u"\u209c", u"\u209d",
+                    u"\u209e", u"\u209f"]
+
+        fpic = f.__dict__['picture']
+        funi = f.__dict__['unicode']
+        ind = len(funi)
+        val = ""
+
+        for i in uni_subs:
+            cur_ind = funi.find(i)
+            if (cur_ind != -1) and (cur_ind < ind):
+                ind = cur_ind
+                val = i
+        if ind == len(funi):
+            funi += dots
+        else:
+            funi = funi.replace(val, dots + val)
+
+        if f.__dict__['picture'] == [f.__dict__['unicode']]:
+            fpic = [funi]
+        f.__dict__['picture'] = fpic
+        f.__dict__['unicode'] = funi
+        if (len(syms)) == 0 and can_break:
+            return f
+
+        for sym, num in group(syms, multiple=False):
+            s = self._print(sym)
+            ds = prettyForm(*s.left('d'))
+
+            if num > 1:
+                ds = ds**prettyForm(str(num))
+
+            if x is None:
+                x = ds
+            else:
+                x = prettyForm(*x.right(' '))
+                x = prettyForm(*x.right(ds))
+        pform = prettyForm('d')
+        if len(syms) > 1:
+            pform = pform**prettyForm(str(len(syms)))
+        pform = prettyForm(*pform.below(stringPict.LINE, x))
+        pform.baseline = pform.baseline + 1
+        pform = prettyForm(*stringPict.next(pform, f))
+        return pform
+
+    def _print_Function(self, e):
+        t = dynamicsymbols._t
+        # XXX works only for applied functions
+        func = e.func
+        args = e.args
+        func_name = func.__name__
+        prettyFunc = self._print(C.Symbol(func_name))
+        prettyArgs = prettyForm(*self._print_seq(args).parens())
+        # If this function is an Undefined function of t, it is probably a
+        # dynamic symbol, so we'll skip the (t). The rest of the code is
+        # identical to the normal PrettyPrinter code
+        if isinstance(func, UndefinedFunction) and (args == (t,)):
+            pform = prettyForm(binding=prettyForm.FUNC,
+                       *stringPict.next(prettyFunc))
+        else:
+            pform = prettyForm(binding=prettyForm.FUNC,
+                       *stringPict.next(prettyFunc, prettyArgs))
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+        return pform
+
+
+
+
+def dynamicsymbols(names, level=0):
+    """Uses symbols and Function for functions of time. """
+    esses = symbols(names, cls=Function)
+    try:
+        esses = [i.__call__(dynamicsymbols._t) for i in list(esses)]
+        ol = esses
+        for i in range(level):
+            ol = []
+            for j, v in enumerate(esses):
+                ol.append(diff(v, dynamicsymbols._t))
+            esses = ol
+        return tuple(ol)
+    except:
+        esses = esses.__call__(dynamicsymbols._t)
+        for i in range(level):
+            esses = diff(esses, dynamicsymbols._t)
+        return esses
+
+dynamicsymbols._t = Symbol('t')
 
 
 if __name__ == "__main__":

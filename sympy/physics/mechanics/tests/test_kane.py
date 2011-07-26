@@ -128,7 +128,7 @@ def test_rolling_disc():
     # Finally we form the velocity and acceleration of the disc.
     C = Point('C')
     C.set_vel(N, 0)
-    Dmc = C.newpoint('Dmc', r * L.z)
+    Dmc = C.locatenew('Dmc', r * L.z)
     Dmc.v2pt(C, N, R)
     Dmc.a2pt(C, N, R)
 

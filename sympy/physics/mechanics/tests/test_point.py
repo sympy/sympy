@@ -8,7 +8,7 @@ def test_point_v1pts():
     B = ReferenceFrame('B')
     B.set_ang_vel(N, qd * B.z)
     O = Point('O')
-    P = O.newpoint('P', B.x)
+    P = O.locatenew('P', B.x)
     P.set_vel(B, 0)
     O.set_vel(N, 0)
     assert P.v1pt(O, N, B) == qd * B.y
@@ -23,7 +23,7 @@ def test_point_a1pts():
     B = ReferenceFrame('B')
     B.set_ang_vel(N, qd * B.z)
     O = Point('O')
-    P = O.newpoint('P', B.x)
+    P = O.locatenew('P', B.x)
     P.set_vel(B, 0)
     O.set_vel(N, 0)
     assert P.a1pt(O, N, B) ==  -(qd**2) * B.x + qdd * B.y
@@ -39,10 +39,10 @@ def test_point_v2pts():
     N = ReferenceFrame('N')
     B = N.orientnew('B', 'Simple', q, 3)
     O = Point('O')
-    P = O.newpoint('P', 0)
+    P = O.locatenew('P', 0)
     O.set_vel(N, 0)
     assert P.v2pt(O, N, B) == 0
-    P = O.newpoint('P', B.x)
+    P = O.locatenew('P', B.x)
     assert P.v2pt(O, N, B) == (qd * B.z ^ B.x)
     O.set_vel(N, N.x)
     assert P.v2pt(O, N, B) == N.x + qd * B.y
@@ -54,7 +54,7 @@ def test_point_a2pts():
     N = ReferenceFrame('N')
     B = N.orientnew('B', 'Simple', q, 3)
     O = Point('O')
-    P = O.newpoint('P', 0)
+    P = O.locatenew('P', 0)
     O.set_vel(N, 0)
     assert P.a2pt(O, N, B) == 0
     P.set_pos(O, B.x)
@@ -66,7 +66,7 @@ def test_point_funcs():
     B = ReferenceFrame('B')
     B.set_ang_vel(N, 5 * B.y)
     O = Point('O')
-    P = O.newpoint('P', q * B.x)
+    P = O.locatenew('P', q * B.x)
     assert P.pos_from(O) == q * B.x
     P.set_vel(B, qd * B.x + q2d * B.y)
     assert P.vel(B) == qd * B.x + q2d * B.y
@@ -77,14 +77,14 @@ def test_point_funcs():
 
     B = N.orientnew('B', 'Simple', q, 3)
     O = Point('O')
-    P = O.newpoint('P', 10 * B.x)
+    P = O.locatenew('P', 10 * B.x)
     O.set_vel(N, 5 * N.x)
     assert O.vel(N) == 5 * N.x
     assert P.a2pt(O, N, B) == (-10 * qd**2) * B.x + (10 * qdd) * B.y
 
     B.set_ang_vel(N, 5 * B.y)
     O = Point('O')
-    P = O.newpoint('P', q * B.x)
+    P = O.locatenew('P', q * B.x)
     P.set_vel(B, qd * B.x + q2d * B.y)
     O.set_vel(N, 0)
     assert P.v1pt(O, N, B) == qd * B.x + q2d * B.y - 5 * q * B.z
@@ -94,9 +94,9 @@ def test_point_pos():
     N = ReferenceFrame('N')
     B = N.orientnew('B', 'Simple', q, 3)
     O = Point('O')
-    P = O.newpoint('P', 10 * N.x + 5 * B.x)
+    P = O.locatenew('P', 10 * N.x + 5 * B.x)
     assert P.pos_from(O) == 10 * N.x + 5 * B.x
-    Q = P.newpoint('Q', 10 * N.y + 5 * B.y)
+    Q = P.locatenew('Q', 10 * N.y + 5 * B.y)
     assert Q.pos_from(P) == 10 * N.y + 5 * B.y
     assert Q.pos_from(O) == 10 * N.x + 10 * N.y + 5 * B.x + 5 * B.y
     assert O.pos_from(Q) == -10 * N.x - 10 * N.y - 5 * B.x - 5 * B.y
