@@ -1667,7 +1667,9 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(x**2 + y*x + 1, x, y).total_degree()
-        3
+        2
+        >>> Poly(x + y**5, x, y).total_degree()
+        5
 
         """
         if hasattr(f.rep, 'total_degree'):
