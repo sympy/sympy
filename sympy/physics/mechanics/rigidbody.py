@@ -16,7 +16,7 @@ class RigidBody(object):
         The body's mass
     inertia : (Dyad, Point)
         The body's inertia about a point; stored in a tuple as shown above
-    point : Point
+    mc : Point
         The point which represents the mass center of the rigid body
     frame : ReferenceFrame
         The ReferenceFrame which the rigid body is fixed in
@@ -34,7 +34,7 @@ class RigidBody(object):
     >>> B = RigidBody()
     >>> B.mass = m
     >>> B.frame = A
-    >>> B.cm = P
+    >>> B.mc = P
     >>> B.inertia = (I, B.cm)
 
     """
