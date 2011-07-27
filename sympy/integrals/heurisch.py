@@ -157,6 +157,7 @@ def heurisch(f, x, **kwargs):
     }
 
     rewrite = kwargs.pop('rewrite', False)
+    degree_offset = kwargs.pop('degree_offset', 0)
 
     if rewrite:
         for candidates, rule in rewritables.iteritems():
@@ -336,9 +337,9 @@ def heurisch(f, x, **kwargs):
     A, B = exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = monomials(V, A + B - 1)
+        monoms = monomials(V, A + B - 1 + degree_offset)
     else:
-        monoms = monomials(V, A + B)
+        monoms = monomials(V, A + B + degree_offset)
 
     poly_coeffs = _symbols('A', len(monoms))
 
