@@ -1,13 +1,10 @@
 from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
-from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import is_sequence
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
-from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
 from sympy.functions.elementary.trigonometric import cos, sin
 
@@ -579,7 +576,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
         return self._LDLdecomposition()
@@ -607,7 +604,7 @@ class Matrix(object):
         """
 
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if rhs.rows != self.rows:
             raise ShapeError("Matrices size mismatch.")
         if not self.is_lower():
@@ -634,7 +631,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if rhs.rows != self.rows:
             raise TypeError("Matrix size mismatch.")
         if not self.is_upper():
@@ -3277,13 +3274,6 @@ def symarray(prefix, shape):
     for index in np.ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
-
-def _separate_eig_results(res):
-    eigvals = [item[0] for item in res]
-    multiplicities = [item[1] for item in res]
-    eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
-    eigvects = flatten([item[2] for item in res])
-    return eigvals, eigvects
 
 def rot_axis3(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
