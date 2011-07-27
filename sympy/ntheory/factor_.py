@@ -450,7 +450,10 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
             >>> from sympy.core.numbers import ilcm, igcd
             >>> from sympy import factorint, Pow
-            >>> M = reduce(ilcm, range(2, 256))
+            >>> M = 1
+            >>> for i in range(2, 256):
+            ...     M = ilcm(M, i)
+            ...
             >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
             ...      igcd(pow(a, M, n) - 1, n) != n])
             set([1009])
