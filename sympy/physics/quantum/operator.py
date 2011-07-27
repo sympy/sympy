@@ -414,8 +414,8 @@ class DifferentialOperator(Operator):
         >>> d.variables
         (x,)
         >>> y = Symbol('y')
-        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
-                                     Derivative(f(x, y), y), f(x, y))
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
         >>> d.variables
         (x, y)
         """
@@ -438,8 +438,8 @@ class DifferentialOperator(Operator):
         >>> d.function
         f(x)
         >>> y = Symbol('y')
-        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
-                                     Derivative(f(x, y), y), f(x, y))
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
         >>> d.function
         f(x, y)
         """
@@ -463,8 +463,8 @@ class DifferentialOperator(Operator):
         >>> d.expr
         Derivative(f(x), x)
         >>> y = Symbol('y')
-        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
-                                     Derivative(f(x, y), y), f(x, y))
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
         >>> d.expr
         Derivative(f(x, y), x) + Derivative(f(x, y), y)
         """

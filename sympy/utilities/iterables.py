@@ -1020,8 +1020,7 @@ def generate_involutions(n):
     http://mathworld.wolfram.com/PermutationInvolution.html
 
     Examples:
-    >>> from sympy.utilities.iterables import \
-    generate_involutions
+    >>> from sympy.utilities.iterables import generate_involutions
     >>> generate_involutions(3)
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
     >>> len(generate_involutions(4))
