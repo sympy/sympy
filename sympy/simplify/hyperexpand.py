@@ -57,6 +57,7 @@ It is described in great(er) detail in the Sphinx documentation.
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
+from sympy.functions.special.hyper import hyper
 from sympy import SYMPY_DEBUG
 
 def add_formulae(formulae):
@@ -1847,6 +1848,41 @@ def build_hypergeometric_formula(nip):
             M[k, k] = -nip.bq[k - 1]
         return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
 
+def hyperexpand_special(ap, bq, z):
+    """
+    Try to find a closed-form expression for hyper(ap, bq, z), where `z`
+    is supposed to be a "special" value, e.g. 1.
+
+    This function tries various of the classical summation formulae
+    (Gauss, Saalschuetz, etc).
+    """
+    # This code is very ad-hoc. There are many clever algorithms
+    # (notably Zeilberger's) related to this problem.
+    # For now we just want a few simple cases to work.
+    from sympy import gamma, simplify, cos, unpolarify
+    p, q = len(ap), len(bq)
+    z_ = z
+    z = unpolarify(z)
+    if p == 2 and q == 1:
+        # 2F1
+        a, b, c = ap + bq
+        if z == 1:
+            # Gauss
+            return gamma(c - a - b)*gamma(c)/gamma(c - a)/gamma(c - b)
+        if z == -1 and simplify(b - a + c) == 1:
+            b, a = a, b
+        if z == -1 and simplify(a - b + c) == 1:
+            # Kummer
+            if b.is_integer and b < 0:
+                return 2*cos(pi*b/2)*gamma(-b)*gamma(b - a + 1) \
+                       /gamma(-b/2)/gamma(b/2 - a + 1)
+            else:
+                return gamma(b/2 + 1)*gamma(b - a + 1) \
+                       /gamma(b + 1)/gamma(b/2 - a + 1)
+    # TODO tons of more formulae
+    #      investigate what algorithms exist
+    return hyper(ap, bq, z_)
+
 collection = None
 def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     """
@@ -1928,10 +1964,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     r = C*f.B.subs(f.z, z0)*premult
     r = r[0].subs(z0, z) + p
 
-    # This will simpliy things like sqrt(-z**2) to i*z.
-    # It would be wrong under certain choices of branch, but all results we
-    # return are under an "implicit suitable choice of branch" anyway.
-    return powdenest(r, polar=True) # This unpolarifies!
+    return powdenest(r, polar=True).replace(hyper, hyperexpand_special)
 
 def devise_plan_meijer(fro, to, z):
     """
@@ -2062,7 +2095,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
     Currently this just does slater's theorem.
     """
-    from sympy import hyper, Piecewise, meijerg, powdenest
+    from sympy import hyper, Piecewise, meijerg, powdenest, re, polar_lift
     global meijercollection
     if meijercollection is None:
         meijercollection = MeijerFormulaCollection()
@@ -2217,15 +2250,22 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
                                t)
 
-    slater1 = powdenest(slater1.subs(z, z0), polar=True)
-    slater2 = powdenest(slater2.subs(t, 1/z0), polar=True)
+    slater1 = powdenest(slater1.subs(z, z0), polar=True).replace(hyper,
+                                                          hyperexpand_special)
+    slater2 = powdenest(slater2.subs(t, 1/z0), polar=True).replace(hyper,
+                                                          hyperexpand_special)
     if not isinstance(cond2, bool):
-        cond2 = cond2.subs(t, 1/z0)
+        cond2 = cond2.subs(t, 1/z)
 
-    if meijerg(iq.an, iq.ap, iq.bm, iq.bq, z).delta > 0:
-        # The above condition means that the convergence region is connected.
+    m = meijerg(iq.an, iq.ap, iq.bm, iq.bq, z)
+    if m.delta > 0 or \
+       (m.delta == 0 and len(m.ap) == len(m.bq) and \
+        (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
+        # The condition delta > 0 means that the convergence region is connected.
         # Any expression we find can be continued analytically to the entire
         # convergence region.
+        # The conditions delta==0, p==q, re(nu) < -1 imply that G is continuous
+        # on the positive reals, so the values at z=1 agree.
         if cond1 is not False:
             cond1 = True
         if cond2 is not False:
