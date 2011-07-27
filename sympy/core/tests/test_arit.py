@@ -273,6 +273,8 @@ def test_ncmul():
 
     assert A/(1+A) == A/(1+A)
 
+    assert (A+B + 2*(A+B)) == 3*A + 3*B
+
 def test_ncpow():
     x = Symbol('x', commutative=False)
     y = Symbol('y', commutative=False)
@@ -1196,4 +1198,4 @@ def test_issue2361():
     n = Symbol('n', commutative=False)
     u = 2*(1 + n)
     assert u.is_Mul
-    assert (2 + u).args == (S(2), u)
+    assert 2 + u == 4 + 2*n
