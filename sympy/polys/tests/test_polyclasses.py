@@ -161,7 +161,7 @@ def test_DMP_functionality():
 
     assert f.degree() == 2
     assert f.degree_list() == (2, 2)
-    assert f.total_degree() == 4
+    assert f.total_degree() == 2
 
     assert f.LC() == ZZ(1)
     assert f.TC() == ZZ(0)

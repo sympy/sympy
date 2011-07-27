@@ -992,7 +992,10 @@ def test_Poly_degree_list():
     raises(ComputationFailed, "degree_list(1)")
 
 def test_Poly_total_degree():
-    assert Poly(x**2*y+x**3*z**2+1).total_degree() == 6
+    assert Poly(x**2*y+x**3*z**2+1).total_degree() == 5
+    assert Poly(x**2 + z**3).total_degree() == 3
+    assert Poly(x*y*z + z**4).total_degree() == 4
+    assert Poly(x**3 + x + 1).total_degree() == 3
 
 def test_Poly_LC():
     assert Poly(0, x).LC() == 0
