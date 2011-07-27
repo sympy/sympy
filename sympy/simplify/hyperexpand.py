@@ -1792,6 +1792,61 @@ def try_lerchphi(nip):
             M[trans[b], trans[b2]] = c
     return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
 
+def build_hypergeometric_formula(nip):
+    """ Create a formula object representing the hypergeometric function
+        Corresponding to nip. """
+    # We know that no `ap` are negative integers, otherwise "detect poly"
+    # would have kicked in. However, `ap` could be empty. In this case we can
+    # use a different basis.
+    # I'm not aware of a basis that works in all cases.
+    from sympy import zeros, Dummy, Matrix, hyper, eye, Mul
+    z = Dummy('z')
+    if nip.ap:
+        afactors = map(lambda a: x + a, nip.ap)
+        bfactors = map(lambda b: x + b - 1, nip.bq)
+        expr = x*Mul(*bfactors) - z*Mul(*afactors)
+        poly = Poly(expr, x)
+        n = poly.degree()
+        basis = []
+        M = zeros(n)
+        for k in xrange(n):
+            a = nip.ap[0] + k
+            basis += [hyper([a] + list(nip.ap[1:]), nip.bq, z)]
+            if k < n - 1:
+                M[k, k] = -a
+                M[k, k + 1] = a
+        B = Matrix(basis)
+        C = Matrix([[1] + [0]*(n - 1)])
+        derivs = [eye(n)]
+        for k in xrange(n):
+            derivs.append(M*derivs[k])
+        l = poly.all_coeffs()
+        l.reverse()
+        res = [0]*n
+        for k, c in enumerate(l):
+            for r, d in enumerate(C*derivs[k]):
+                res[r] += c*d
+        for k, c in enumerate(res):
+            M[n-1, k] = -c/derivs[n-1][0, n-1]/poly.all_coeffs()[0]
+        return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+    else:
+        # Since there are no `ap`, none of the `bq` can be non-positive integers.
+        basis = []
+        bq = list(nip.bq[:])
+        for i in range(len(bq)):
+            basis += [hyper([], bq, z)]
+            bq[i] += 1
+        basis += [hyper([], bq, z)]
+        B = Matrix(basis)
+        n = len(B)
+        C = Matrix([[1] + [0]*(n - 1)])
+        M = zeros(n)
+        M[0, n - 1] = z/Mul(*nip.bq)
+        for k in range(1, n):
+            M[k, k - 1] = nip.bq[k - 1]
+            M[k, k] = -nip.bq[k - 1]
+        return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+
 collection = None
 def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     """
@@ -1807,8 +1862,6 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
 
     # TODO
     # The following would be possible:
-    # 1) Partial simplification (i.e. return a simpler hypergeometric function,
-    #    even if we cannot express it in terms of named special functions).
     # 2) PFD Duplication (see Kelly Roach's paper)
 
     global collection
@@ -1853,9 +1906,9 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
         f = try_lerchphi(nip)
 
     if f is None:
-        debug('  Could not find an origin.')
-        # There is nothing we can do.
-        return None
+        debug('  Could not find an origin.',
+              'Will return answer in terms of simpler hypergeometric functions.')
+        f = build_hypergeometric_formula(nip)
 
     debug('  Found an origin:', f.closed_form, f.indices)
 
@@ -2090,9 +2143,6 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 premult = (t/k)**bh
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
                                    t, premult, bh)
-                if hyp is None:
-                    hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                          lambda f: t*f.diff(t)).subs(t, harg)
                 res += fac * hyp
             else:
                 b_ = pbm[m][0]
@@ -2138,9 +2188,6 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
                                    t, premult, au)
-                if hyp is None:
-                    hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                          lambda f: t*f.diff(t)).subs(t, harg)
 
                 C = S(-1)**(lu)/factorial(lu)
                 for i in range(u):
