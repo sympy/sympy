@@ -172,7 +172,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(tail)
+        numer, denom = fraction(tail, exact=True)
         separator = self._settings['mul_symbol_latex']
 
         def convert(expr):

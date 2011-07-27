@@ -290,6 +290,18 @@ def test_latex_issue1477():
     assert latex(Symbol("alpha^aleph")) == r"\alpha^{\aleph}"
     assert latex(Symbol("alpha__aleph")) == r"\alpha^{\aleph}"
 
+def test_latex_pow_fraction():
+    x = Symbol('x')
+    # Testing exp
+    assert 'e^{-x}' in latex(exp(-x)/2).replace(' ', '') # Remove Whitespace
+
+    # Testing just e^{-x} in case future changes alter behavior of muls or fracs
+    # In particular current output is \frac{1}{2}e^{- x} but perhaps this will
+    # change to \frac{e^{-x}}{2}
+
+    # Testing general, non-exp, power
+    assert '3^{-x}' in latex(3**-x/2).replace(' ', '')
+
 def test_latex_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4
 
