@@ -11,7 +11,7 @@ from sympy.utilities.pytest import XFAIL, skip
 
 from sympy.abc import x, k, c, y, R, b, h, a, m, A, z, t
 
-import signal, os
+import signal
 
 class TimeOutError(Exception):
     pass
