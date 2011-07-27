@@ -3,6 +3,7 @@
 TODO:
 * Get represent working with continuous hilbert spaces.
 * Document default basis functionality.
+* Fix representations of Pow for continuous bases (see note in code)
 """
 
 from sympy import Add, Expr, I, integrate, Mul, Pow
@@ -13,8 +14,8 @@ from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixutils import flatten_scalar
-from sympy.physics.quantum.state import KetBase, BraBase, StateBase
-from sympy.physics.quantum.operator import Operator, OuterProduct
+from sympy.physics.quantum.state import KetBase, BraBase, StateBase, Wavefunction
+from sympy.physics.quantum.operator import Operator, HermitianOperator, OuterProduct
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
 
@@ -68,6 +69,12 @@ def represent(expr, **options):
 
     This function will have the logic for representing instances of its class
     in the basis set having a class named ``FooBasis``.
+
+    The function also keeps track of an 'index' option, which
+    represents the index of dummy kets that are inserted into the
+    expression. This index defaults to 1 at the start of the
+    representation of the expression. If the user specifies an index,
+    represent will start counting indices at the passed index.
 
     Parameters
     ==========
@@ -161,6 +168,8 @@ def represent(expr, **options):
             result = result + represent(args, **options)
         return result
     elif isinstance(expr, Pow):
+        #NOTE: This will not currently work with continuous operators
+        #For example, represent(X**2) != represent(X)**2
         base, exp = expr.as_base_exp()
         if format == 'numpy' or format == 'scipy.sparse':
             exp = _sympy_to_scalar(exp)
@@ -230,6 +239,10 @@ def rep_innerproduct(expr, **options):
     Attempts to calculate inner product with a bra from the specified
     basis. Should only be passed an instance of KetBase or BraBase
 
+    If a ``wrap_wavefunction`` option is passed and is True, the
+    function will wrap the result in a Wavefunction object before
+    returning. This option should be used if the basis is continuous.
+
     Parameters
     ==========
 
@@ -274,11 +287,24 @@ def rep_innerproduct(expr, **options):
     result = prod.doit()
 
     format = options.get('format', 'sympy')
-    return expr._format_represent(result, format)
+    ret = expr._format_represent(result, format)
+
+    wrap = options.pop('wrap_wavefunction', False)
+
+    #TODO: Insert proper limits
+    if wrap:
+        # The label of the original expr will be used as the free coordinate
+        return Wavefunction(ret, *expr.label)
+    else:
+        return ret
 
 def rep_expectation(expr, **options):
     """
     Returns an ``<x'|A|x>`` type representation for the given operator.
+
+    If a ``wrap_wavefunction`` option is passed and is True, the
+    function will wrap the result in a Wavefunction object before
+    returning. This option should be used if the basis is continuous.
 
     Parameters
     ==========
@@ -316,7 +342,17 @@ def rep_expectation(expr, **options):
     bra = basis_kets[1].dual
     ket = basis_kets[0]
 
-    return qapply(bra*expr*ket)
+    ret = qapply(bra*expr*ket)
+
+    wrap = options.pop('wrap_wavefunction', False)
+
+    #TODO: Insert proper limits
+    if wrap:
+        # We consider the ket coordinate to be the free variable, and
+        # the bra coordinate a dummy constant
+        return Wavefunction(ret, *ket.label)
+    else:
+        return ret
 
 def integrate_result(orig_expr, result, **options):
     """

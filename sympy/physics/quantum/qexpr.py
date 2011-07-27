@@ -332,7 +332,12 @@ class QExpr(Expr):
 
         If the ``format`` option is given it can be ("sympy", "numpy",
         "scipy.sparse"). This will ensure that any matrices that result from
-        representing the object are returned in the appropriate matrix format.
+        representing the object are returned in the appropriate matrix
+        format.
+
+        If the ``index`` option is given, then any dummy kets that the internal
+        _represent methods insert into the expression before representing should
+        begin being indexed at the index specified.
 
         Parameters
         ==========
