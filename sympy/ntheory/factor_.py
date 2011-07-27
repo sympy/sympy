@@ -460,7 +460,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
             But does aM % d for every divisor of n give 1?
 
-            >>> aM = pow(a, M, n)
+            >>> aM = pow(255, M, n)
             >>> [(d, aM%Pow(*d.args)) for d in factorint(n, visual=True).args]
             [(257**1, 1), (1009**1, 1)]
 
