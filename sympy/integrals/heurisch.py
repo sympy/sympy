@@ -83,7 +83,7 @@ def _symbols(name, n):
     return lsyms[:n]
 
 
-def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
+def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_offset=0):
     """
     Compute indefinite integral using heuristic Risch algorithm.
 
@@ -372,9 +372,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
     A, B = _exponent(f), a + max(b, c)
 
     if A > 1 and B > 1:
-        monoms = monomials(V, A + B - 1)
+        monoms = monomials(V, A + B - 1 + degree_offset)
     else:
-        monoms = monomials(V, A + B)
+        monoms = monomials(V, A + B + degree_offset)
 
     poly_coeffs = _symbols('A', len(monoms))
 
