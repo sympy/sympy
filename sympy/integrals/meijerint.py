@@ -793,17 +793,25 @@ def _check_antecedents(g1, g2, x):
     c12 = (abs(arg(omega)) < cstar*pi)
     c13 = Eq(abs(arg(omega)), cstar*pi)
 
-    tmp = []
+    # The following condition is *not* implemented as stated on the wolfram
+    # function site. In the book of prudnikov there is an additional part
+    # (the And involving re()). However, I only have this book in russian, and
+    # I don't read any russian. The following condition is what other people
+    # have told me it means.
+    # Worryingly, it is different from the condition implemented in REDUCE.
+    # The REDUCE implementation:
+    #   https://reduce-algebra.svn.sourceforge.net/svnroot/reduce-algebra/trunk/packages/defint/definta.red
+    #   (search for tst14)
+    # The Wolfram alpha version:
+    #   http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/03/0014/
     z0 = exp(-(bstar + cstar)*pi*I)
-    tmp += [Ne(z0*omega/sigma, 1), abs(arg(1 - z0*omega/sigma)) < pi]
-    tmp += [Eq(phi, 0), bstar - 1 + cstar <= 0]
-    c14 = And(*tmp)
+    c14 = And(Eq(phi, 0), bstar - 1 + cstar <= 0,
+              Or(And(Ne(z0*omega/sigma, 1), abs(arg(1 - z0*omega/sigma)) < pi),
+                 And(re(mu + rho + v - u) < 1, Eq(z0*omega/sigma, 1))))
 
-    tmp = []
-    z0 = exp(-(bstar + cstar)*pi*I)
-    tmp += [Ne(z0*sigma/omega, 1), abs(arg(1 - z0*sigma/omega)) < pi]
-    tmp += [Eq(phi, 0), cstar - 1 + bstar <= 0]
-    c14_alt = And(*tmp)
+    c14_alt = And(Eq(phi, 0), cstar - 1 + bstar <= 0,
+              Or(And(Ne(z0*sigma/omega, 1), abs(arg(1 - z0*sigma/omega)) < pi),
+                 And(re(mu + rho + q - p) < 1, Eq(z0*sigma/omega, 1))))
 
     # Since r=k=l=1, in our case there is c14_alt which is the same as calling
     # us with (g1, g2) = (g2, g1). The conditions below enumerate all cases

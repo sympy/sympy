@@ -148,6 +148,17 @@ def test_meijerint():
     assert integrate(cos(x)/x, (x, a, oo), meijerg=True) == \
            sqrt(pi)*meijerg(((), (1, S(1)/2)), ((S(1)/2, 0, 0), (S(1)/2,)), a**2/4)/2
 
+    # Test the condition 14 from prudnikov.
+    # (This is besselj*besselj in disguise, to stop the product from being
+    #  recognised in the tables.)
+    a, b, s = symbols('a b s')
+    from sympy import And, re
+    assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4) \
+                  *meijerg([], [], [b/2], [-b/2], x/4)*x**(s-1), x, 0, oo) == \
+           (4*2**(2*s - 2)*meijerg(((-a/2 - s + 1,), (a/2 - s + 1,)),
+                                   ((b/2,), (-b/2,)), 1),
+            And(0 < -2*re(4*s) + 8, 0 < re(a/2 + b/2 + s), re(2*s) < 1))
+
 def test_bessel():
     from sympy import besselj, Heaviside, besseli, polar_lift, exp_polar
     assert integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
