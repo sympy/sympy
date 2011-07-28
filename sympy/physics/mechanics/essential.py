@@ -171,7 +171,7 @@ class Dyad(object):
             elif ar[i][0] == -1:
                 if len(ol) != 0:
                     ol.append(u" ")
-                ol.append(u"- " + 
+                ol.append(u"- " +
                           MechanicsLatexPrinter().doprint(ar[i][1]) +
                           r"\otimes " +
                           MechanicsLatexPrinter().doprint(ar[i][2]))
@@ -217,7 +217,7 @@ class Dyad(object):
                     elif ar[i][0] == -1:
                         if len(ol) != 0:
                             ol.append(u" ")
-                        ol.append(u"- " + 
+                        ol.append(u"- " +
                                   MechanicsPrettyPrinter().doprint(ar[i][1]) +
                                   u"\u2a02 " +
                                   MechanicsPrettyPrinter().doprint(ar[i][2]))

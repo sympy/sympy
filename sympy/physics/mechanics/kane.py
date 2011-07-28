@@ -24,6 +24,10 @@ class Kane(object):
     simp : Boolean
         Flag determining whether simplification of symbolic matrix inversion
         can occur or not
+    mass_matrix_full : Matrix
+        The "mass matrix" for the u's and q's
+    forcing_full : Matrix
+        The "forcing vector" for the u's and q's
 
     A simple example for a one degree of freedom translational
     spring-mass-damper follows
@@ -152,7 +156,7 @@ class Kane(object):
                 ol.remove(v)
         return ol
 
-    def _mat_inv_mul(self, ml1, mr1):
+    def _mat_inv_mul(self, A, B):
         """Internal Function
 
         Computes A^-1 * B symbolically w/ substitution, where B is not
@@ -163,17 +167,23 @@ class Kane(object):
         # Note: investigate difficulty in only creating symbols for non-zero
         # entries; this could speed things up, perhaps?
 
-        r1, c1 = ml1.shape
-        r2, c2 = mr1.shape
+        r1, c1 = A.shape
+        r2, c2 = B.shape
         temp1 = Matrix(r1, c1, lambda i, j: Symbol('x' + str(j + r1 * i)))
         temp2 = Matrix(r2, c2, lambda i, j: Symbol('y' + str(j + r2 * i)))
+        for i in range(len(temp1)):
+            if A[i] == 0:
+                temp1[i] = 0
+        for i in range(len(temp2)):
+            if B[i] == 0:
+                temp2[i] = 0
         temp3 = []
         for i in range(c2):
             temp3.append(temp1.LUsolve(temp2.extract(range(r2), [i])))
         temp3 = Matrix([i.T for i in temp3]).T
         if Kane.simp == True:
             temp3.simplify()
-        return temp3.subs(dict(zip(temp1, ml1))).subs(dict(zip(temp2, mr1)))
+        return temp3.subs(dict(zip(temp1, A))).subs(dict(zip(temp2, B)))
 
     def coords(self, inlist):
         """Supply all the generalized coordiantes in a list.
@@ -210,6 +220,14 @@ class Kane(object):
             raise TypeError('Generalized speeds must be supplied in a list')
         self._u = inlist
         self._udot = [diff(i, dynamicsymbols._t) for i in inlist]
+
+    def kindiffdict(self):
+        """Returns the qdot's in a dictionary. """
+        if self._k_kqdot == None:
+            raise ValueError('Kin. diff. eqs  need to be supplied first')
+        sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
+        -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
+        return sub_dict
 
     def kindiffeq(self, kdeqs):
         """Supply all the kinematic differential equations in a list.
@@ -382,6 +400,7 @@ class Kane(object):
             raise TypeError('Bodies must be supplied in a list.')
         if self._fr == None:
             raise ValueError('Calculate Fr first, please')
+        t = dynamicsymbols._t
         N = self._inertial
         self._bodylist = bl
         u = self._u # all speeds
@@ -438,13 +457,14 @@ class Kane(object):
                 # keep them seperate for as long a possible
                 for j, w in enumerate(udot):
                     templist.append(-m * acc.diff(w, N))
-                other = -m.diff(dynamicsymbols._t) * ve - m * acc
+                other = -m.diff(t) * ve - m * acc.subs(udotzero)
                 rs = (templist, other)
                 templist = []
                 # see above note
                 for j, w in enumerate(udot):
                     templist.append(-I & alp.diff(w, N))
-                other = -((I.dt(v.frame) & om) + (I & alp) + (om ^ (I & om)))
+                other = -((I.dt(v.frame) & om) + (I & alp.subs(udotzero))
+                          + (om ^ (I & om)))
                 ts = (templist, other)
                 tl1 = []
                 tl2 = []
@@ -462,7 +482,7 @@ class Kane(object):
                 # see above note
                 for j, w in enumerate(udot):
                     templist.append(-m * acc.diff(w, N))
-                other = -m.diff(dynamicsymbols._t) * ve - m * acc
+                other = -m.diff(t) * ve - m * acc.subs(udotzero)
                 rs = (templist, other)
                 # We make an empty t star here so that way the later code
                 # doesn't care whether its operating on a body or particle
@@ -528,7 +548,7 @@ class Kane(object):
         zeroeq = zeroeq.subs(udotzero)
 
         self._k_d = MM
-        self._f_d = zeroeq.subs(udotzero)
+        self._f_d = zeroeq
         return FRSTAR
 
     def linearize(self):
@@ -537,7 +557,7 @@ class Kane(object):
         Note that for linearization, it is assumed that time is not perturbed,
         but only coordinates and positions. It returns the "forcing" vector,
         but linearized and in matrix form, with the state vector in the form
-        [Qi, Qd, Ui, Ud]
+        [Qi, Qd, Ui, Ud].
 
         Also, at the moment, linearization is only correct when the matrix
         k_kqdot is not a function of q.
@@ -663,12 +683,31 @@ class Kane(object):
         return Matrix([self._k_d, self._k_dnh])
 
     @property
+    def mass_matrix_full(self):
+        # Returns the mass matrix from above, augmented by kin diff's k_kqdot
+        if (self._frstar == None) & (self._fr == None):
+            raise ValueError('Need to compute Fr, Fr* first')
+        o = len(self._u)
+        n = len(self._q)
+        return ((self._k_kqdot).row_join(zeros((n, o)))).col_join((zeros((o,
+                n))).row_join(self.mass_matrix))
+
+    @property
     def forcing(self):
         # Returns the forcing vector, which is augmented by the differentiated
         # non holonomic equations if necessary
         if (self._frstar == None) & (self._fr == None):
             raise ValueError('Need to compute Fr, Fr* first')
         return -Matrix([self._f_d, self._f_dnh])
+
+    @property
+    def forcing_full(self):
+        # Returns the forcing vector, which is augmented by the differentiated
+        # non holonomic equations if necessary
+        if (self._frstar == None) & (self._fr == None):
+            raise ValueError('Need to compute Fr, Fr* first')
+        f1 = self._k_ku * Matrix(self._u) + self._f_k
+        return -Matrix([f1, self._f_d, self._f_dnh])
 
 
 if __name__ == "__main__":
