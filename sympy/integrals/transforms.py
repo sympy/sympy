@@ -212,40 +212,50 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     if F.has(Integral):
         raise IntegralTransformError('Mellin', f, 'integral in unexpected form')
 
-    a = -oo
-    b = oo
-    aux = True
-    conds = conjuncts(to_cnf(cond))
-    t = Dummy('t', real=True)
-    for c in conds:
-        a_ = oo
-        b_ = -oo
-        aux_ = []
-        for d in disjuncts(c):
-            d_ = d.replace(re, lambda x: x.as_real_imag()[0]).subs(re(s), t)
-            if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
-               or d_.has(s) or not d_.has(t):
-                aux_ += [d]
-                continue
-            soln = _solve_inequality(d_, t)
-            if not soln.is_Relational or \
-               (soln.rel_op != '<' and soln.rel_op != '<='):
-                aux_ += [d]
-                continue
-            if soln.lhs == t:
-                b_ = Max(soln.rhs, b_)
+    def process_conds(cond):
+        """
+        Turn `cond` into a strip (a, b), and auxiliary conditions.
+        """
+        a = -oo
+        b = oo
+        aux = True
+        conds = conjuncts(to_cnf(cond))
+        t = Dummy('t', real=True)
+        for c in conds:
+            a_ = oo
+            b_ = -oo
+            aux_ = []
+            for d in disjuncts(c):
+                d_ = d.replace(re, lambda x: x.as_real_imag()[0]).subs(re(s), t)
+                if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
+                   or d_.has(s) or not d_.has(t):
+                    aux_ += [d]
+                    continue
+                soln = _solve_inequality(d_, t)
+                if not soln.is_Relational or \
+                   (soln.rel_op != '<' and soln.rel_op != '<='):
+                    aux_ += [d]
+                    continue
+                if soln.lhs == t:
+                    b_ = Max(soln.rhs, b_)
+                else:
+                    a_ = Min(soln.lhs, a_)
+            if a_ != oo and a_ != b:
+                a = Max(a_, a)
+            elif b_ != -oo and b_ != a:
+                b = Min(b_, b)
             else:
-                a_ = Min(soln.lhs, a_)
-        if a_ != oo and a_ != b:
-            a = Max(a_, a)
-        elif b_ != -oo and b_ != a:
-            b = Min(b_, b)
-        else:
-            aux = And(aux, Or(*aux_))
+                aux = And(aux, Or(*aux_))
+        return a, b, aux
 
-    if aux is False:
+    conds = [process_conds(c) for c in disjuncts(cond)]
+    conds = filter(lambda x: x[2] is not False, conds)
+    conds.sort(key=lambda x: x[0]-x[1])
+
+    if not conds:
         raise IntegralTransformError('Mellin', f, 'no convergence found')
 
+    a, b, aux = conds[0]
     return _simplify(F.subs(s, s_), simplify), (a, b), aux
 
 class MellinTransform(IntegralTransform):

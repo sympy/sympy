@@ -154,40 +154,40 @@ def _create_lookup_table(table):
     # Section 8.4.19
     add(besselj(a, t), [], [], [a/2], [-a/2], t**2/4)
 
-    # TODO all of the following should be derivable
-    add(sin(t)*besselj(a, t), [S(1)/4, S(3)/4], [], [(1+a)/2],
-        [-a/2, a/2, (1-a)/2], t**2, 1/sqrt(2))
-    add(cos(t)*besselj(a, t), [S(1)/4, S(3)/4], [], [a/2],
-        [-a/2, (1+a)/2, (1-a)/2], t**2, 1/sqrt(2))
-    add(besselj(a, t)**2, [S(1)/2], [], [a], [-a, 0], t**2, 1/sqrt(pi))
-    add(besselj(a, t)*besselj(b, t), [0, S(1)/2], [], [(a + b)/2],
-        [-(a+b)/2, (a - b)/2, (b - a)/2], t**2, 1/sqrt(pi))
+    # all of the following are derivable
+    #add(sin(t)*besselj(a, t), [S(1)/4, S(3)/4], [], [(1+a)/2],
+    #    [-a/2, a/2, (1-a)/2], t**2, 1/sqrt(2))
+    #add(cos(t)*besselj(a, t), [S(1)/4, S(3)/4], [], [a/2],
+    #    [-a/2, (1+a)/2, (1-a)/2], t**2, 1/sqrt(2))
+    #add(besselj(a, t)**2, [S(1)/2], [], [a], [-a, 0], t**2, 1/sqrt(pi))
+    #add(besselj(a, t)*besselj(b, t), [0, S(1)/2], [], [(a + b)/2],
+    #    [-(a+b)/2, (a - b)/2, (b - a)/2], t**2, 1/sqrt(pi))
 
     # Section 8.4.20
     add(bessely(a, t), [], [-(a+1)/2], [a/2, -a/2], [-(a+1)/2], t**2/4)
 
     # TODO all of the following should be derivable
-    add(sin(t)*bessely(a, t), [S(1)/4, S(3)/4], [(1 - a - 1)/2],
-        [(1 + a)/2, (1 - a)/2], [(1 - a - 1)/2, (1 - 1 - a)/2, (1 - 1 + a)/2],
-        t**2, 1/sqrt(2))
-    add(cos(t)*bessely(a, t), [S(1)/4, S(3)/4], [(0 - a - 1)/2],
-        [(0 + a)/2, (0 - a)/2], [(0 - a - 1)/2, (1 - 0 - a)/2, (1 - 0 + a)/2],
-        t**2, 1/sqrt(2))
-    add(besselj(a, t)*bessely(b, t), [0, S(1)/2], [(a - b - 1)/2],
-        [(a + b)/2, (a - b)/2], [(a - b - 1)/2, -(a + b)/2, (b - a)/2],
-        t**2, 1/sqrt(pi))
-    addi(bessely(a, t)**2,
-         [(2/sqrt(pi), meijerg([], [S(1)/2, S(1)/2 - a], [0, a, -a],
-                               [S(1)/2 - a], t**2)),
-          (1/sqrt(pi), meijerg([S(1)/2], [], [a], [-a, 0], t**2))],
-         True)
-    addi(bessely(a, t)*bessely(b, t),
-         [(2/sqrt(pi), meijerg([], [0, S(1)/2, (1 - a - b)/2],
-                               [(a + b)/2, (a - b)/2, (b - a)/2, -(a + b)/2],
-                               [(1 - a - b)/2], t**2)),
-          (1/sqrt(pi), meijerg([0, S(1)/2], [], [(a + b)/2],
-                               [-(a + b)/2, (a - b)/2, (b - a)/2], t**2))],
-         True)
+    #add(sin(t)*bessely(a, t), [S(1)/4, S(3)/4], [(1 - a - 1)/2],
+    #    [(1 + a)/2, (1 - a)/2], [(1 - a - 1)/2, (1 - 1 - a)/2, (1 - 1 + a)/2],
+    #    t**2, 1/sqrt(2))
+    #add(cos(t)*bessely(a, t), [S(1)/4, S(3)/4], [(0 - a - 1)/2],
+    #    [(0 + a)/2, (0 - a)/2], [(0 - a - 1)/2, (1 - 0 - a)/2, (1 - 0 + a)/2],
+    #    t**2, 1/sqrt(2))
+    #add(besselj(a, t)*bessely(b, t), [0, S(1)/2], [(a - b - 1)/2],
+    #    [(a + b)/2, (a - b)/2], [(a - b - 1)/2, -(a + b)/2, (b - a)/2],
+    #    t**2, 1/sqrt(pi))
+    #addi(bessely(a, t)**2,
+    #     [(2/sqrt(pi), meijerg([], [S(1)/2, S(1)/2 - a], [0, a, -a],
+    #                           [S(1)/2 - a], t**2)),
+    #      (1/sqrt(pi), meijerg([S(1)/2], [], [a], [-a, 0], t**2))],
+    #     True)
+    #addi(bessely(a, t)*bessely(b, t),
+    #     [(2/sqrt(pi), meijerg([], [0, S(1)/2, (1 - a - b)/2],
+    #                           [(a + b)/2, (a - b)/2, (b - a)/2, -(a + b)/2],
+    #                           [(1 - a - b)/2], t**2)),
+    #      (1/sqrt(pi), meijerg([0, S(1)/2], [], [(a + b)/2],
+    #                           [-(a + b)/2, (a - b)/2, (b - a)/2], t**2))],
+    #     True)
 
     # Section 8.4.21 ?
     # Section 8.4.22
@@ -354,9 +354,20 @@ def _mul_as_two_parts(f):
     [(x, exp(x)*sin(x)), (exp(x), x*sin(x)), (sin(x), x*exp(x))]
     """
     from sympy.core.compatibility import combinations
-    if not f.is_Mul:
-        return None
-    gs = f.args
+
+    args = Mul.make_args(f)
+    gs = []
+    for g in args:
+        if g.is_Pow and g.exp.is_Integer:
+            n = g.exp
+            base = g.base
+            if n < 0:
+                n = -n
+                base = 1/base
+            gs += [base]*n
+        else:
+            gs.append(g)
+
     if len(gs) < 2:
         return None
 
@@ -905,6 +916,23 @@ def _check_antecedents(g1, g2, x):
                   c1, c2, c3, c10, c12)] #23
     pr(23)
 
+    # The following case is from [Luke1969]. As far as I can tell, it is *not*
+    # covered by prudnikov's.
+    # Let G1 and G2 be the two G-functions. Suppose the integral exists from
+    # 0 to a > 0 (this is easy the easy part), that G1 is exponential decay at
+    # infinity, and that the mellin transform of G2 exists.
+    # Then the integral exists.
+    mt1_exists = _check_antecedents_1(g1, x, helper=True)
+    mt2_exists = _check_antecedents_1(g2, x, helper=True)
+    conds += [And(mt2_exists, Eq(t, 0), u < s, bstar > 0, c10, c1, c2, c3)]
+    pr('E1')
+    conds += [And(mt2_exists, Eq(s, 0), v < t, bstar > 0, c10, c1, c2, c3)]
+    pr('E2')
+    conds += [And(mt1_exists, Eq(n, 0), p < m, cstar > 0, c12, c1, c2, c3)]
+    pr('E3')
+    conds += [And(mt1_exists, Eq(m, 0), q < n, cstar > 0, c12, c1, c2, c3)]
+    pr('E4')
+
     # Let's short-circuit if this worked ...
     # the rest is corner-cases and terrible to read.
     r = Or(*conds)
@@ -965,23 +993,6 @@ def _check_antecedents(g1, g2, x):
                   abs(arg(sigma)) < (s + t - v + 1)*pi,
                   c1, c3, c12, c14, c15)] #35
     pr(35)
-
-    # The following case is from [Luke1969]. As far as I can tell, it is *not*
-    # covered by prudnikov's.
-    # Let G1 and G2 be the two G-functions. Suppose the integral exists from
-    # 0 to a > 0 (this is easy the easy part), that G1 is exponential decay at
-    # infinity, and that the mellin transform of G2 exists.
-    # Then the integral exists.
-    mt1_exists = _check_antecedents_1(g1, x, helper=True)
-    mt2_exists = _check_antecedents_1(g2, x, helper=True)
-    conds += [And(mt2_exists, Eq(t, 0), u < s, bstar > 0, c10, c1, c2, c3)]
-    pr('E1')
-    conds += [And(mt2_exists, Eq(s, 0), v < t, bstar > 0, c10, c1, c2, c3)]
-    pr('E2')
-    conds += [And(mt1_exists, Eq(n, 0), p < m, cstar > 0, c12, c1, c2, c3)]
-    pr('E3')
-    conds += [And(mt1_exists, Eq(m, 0), q < n, cstar > 0, c12, c1, c2, c3)]
-    pr('E4')
 
     return Or(*conds)
 
@@ -1432,7 +1443,7 @@ def meijerint_definite(f, x, a, b):
     results = []
     if b == oo:
         for split in _find_splitting_points(f, x):
-            if a - split >= 0:
+            if (a - split >= 0) is True:
                 _debug('Trying x --> x + %s' % split)
                 res = _meijerint_definite_2(f.subs(x, x + split) \
                                             *Heaviside(x + split - a), x)

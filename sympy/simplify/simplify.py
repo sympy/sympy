@@ -2359,6 +2359,44 @@ def combsimp(expr):
                 while l: l.pop()
                 l += newl # Note l is empty before this
 
+        # Try to reduce the number of gammas by using the duplication
+        # theorem to cancel an upper and lower.
+        # e.g. gamma(2*s)/gamma(s) = gamma(s)*gamma(s+1/2)*C/gamma(s)
+        # (in principle this can also be done with with factors other than two,
+        #  but two is special in that we need only matching numer and denom, not
+        #  several in numer).
+        for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
+                                denom_others),
+                               (denom_gammas, numer_gammas, denom_others,
+                                numer_others)]:
+            changed = True
+            while changed:
+                changed = False
+                found = None
+                for x in ng:
+                    for y in dg:
+                        if simplify(2*y-x).is_Integer:
+                            found = (x, y)
+                            break
+                    if found:
+                        break
+                if not found:
+                    break
+                changed = True
+                x, y = found
+                n = simplify(x - 2*y)
+                ng.remove(x)
+                dg.remove(y)
+                if n > 0:
+                    for k in xrange(n):
+                        no.append(2*y + k)
+                elif n < 0:
+                    for k in xrange(-n):
+                        do.append(2*y - 1 - k)
+                ng.append(y + S(1)/2)
+                no.append(2**(2*y - 1))
+                do.append(sqrt(S.Pi))
+
         # Try to absorb factors into the gammas
         for to, numer, denom in [(numer_gammas, numer_others, denom_others),
                                  (denom_gammas, denom_others, numer_others)]:
