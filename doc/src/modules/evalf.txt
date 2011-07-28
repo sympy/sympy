@@ -35,8 +35,8 @@ Complex numbers are supported:
 
 If the expression contains symbols or for some other reason cannot be evaluated
 numerically, calling ``.evalf()`` or ``N()`` returns the original expression, or
- in some cases a partially evaluated expression. For example, when the
- expression is a polynomial in expanded form, the coefficients are evaluated:
+in some cases a partially evaluated expression. For example, when the
+expression is a polynomial in expanded form, the coefficients are evaluated:
 
     >>> x = Symbol('x')
     >>> (pi*x**2 + x/3).evalf()
