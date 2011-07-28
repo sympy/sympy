@@ -155,10 +155,20 @@ class im(Function):
 ###############################################################################
 
 class sign(Function):
-    """Return the sign of an expression, that is:
-        -1 if expr <  0
-         0 if expr == 0
-         1 if expr >  0
+    """Returns the sign of an expression, that is:
+
+       * 1 if expression is positive
+       * 0 if expression is equal to zero
+       * -1 if expression is negative
+
+       **Example**:
+
+       >>> from sympy.functions import sign
+       >>> sign(-1)
+       -1
+       >>> sign(0)
+       0
+
     """
 
     nargs = 1
