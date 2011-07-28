@@ -146,15 +146,37 @@ You can find a brief history of SymPy in the README.
 Financial and Infrastructure Support
 ------------------------------------
 
-* `Google <http://www.google.com/corporate/>`_: SymPy has received generous financial support from Google in 2007 by financing 5 students through the Google Summer of Code (GSOC 2007) program (`more info <http://code.google.com/p/sympy/wiki/GSoC2007>`_) and 1 student in 2008 (`more info <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
+* `Google <http://www.google.com/corporate/>`_: SymPy has received generous
+  financial support from Google in various years through the Google Summer of
+  Code program by providing stipends:
 
-* `Python Software Foundation <http://www.python.org/psf/>`_: PSF hosted 3 GSoC 2007 students (Brian, Robert and Jason), and 1 GSoC 2008 student (Fredrik)
+  * in 2007 for 5 students (`GSoC 2007 <http://code.google.com/p/sympy/wiki/GSoC2007>`_)
+  * in 2008 for 1 student (`GSoC 2008 <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
+  * in 2009 for 5 students (`GSoC 2009 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
+  * in 2010 for 5 students (`GSoC 2010 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
+  * in 2011 for 9 studends (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
+
+* `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
+  various GSoC studends over the years:
+
+  * 3 GSoC 2007 students (Brian, Robert and Jason)
+  * 1 GSoC 2008 student (Fredrik)
+  * 2 GSoC 2009 students (Freddie and Priit)
+  * 4 GSoC 2010 students (Aaron, Christian, Matthew and Øyvind)
+
+* `Portland State University (PSU) <http://www.pdx.edu/>`_ has hosted following
+  GSoC students:
+
+  * 1 student (Chris) in 2007
+  * 3 students (Aaron, Dale and Fabian) in 2009
+  * 1 student (Addison) in 2010
 
 * `the Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
 
-* `Portland State University <http://www.pdx.edu/>`_: PSU hosted 1 GSoC 2007 student (Chris)
-
 * `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/Sympy Core projects
+
+* `GitHub <https://github.com/about>`_ is providing us with development
+  and collaboration tools
 
 License
 -------
