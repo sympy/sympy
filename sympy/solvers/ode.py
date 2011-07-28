@@ -204,6 +204,8 @@ method. The existing code is tested extensively in test_ode.py, so if
 anything is broken, one of those tests will surely fail.
 
 """
+from collections import defaultdict
+
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
 from sympy.core.compatibility import iterable, cmp_to_key, is_sequence, set_union
 from sympy.core.function import Derivative, Function, UndefinedFunction, diff, expand_mul
@@ -2453,12 +2455,9 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
 
     # Create a dict root: multiplicity or charroots
-    charroots = {}
+    charroots = defaultdict(int)
     for root in chareqroots:
-        if root in charroots:
-            charroots[root] += 1
-        else:
-            charroots[root] = 1
+        charroots[root] += 1
     gsol = S(0)
     # We need keep track of terms so we can run collect() at the end.
     # This is necessary for constantsimp to work properly.

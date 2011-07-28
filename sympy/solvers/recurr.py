@@ -42,6 +42,7 @@
     [2] a rational function       -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
+from collections import defaultdict
 
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational
@@ -642,7 +643,7 @@ def rsolve(f, y, init=None):
     k = Wild('k')
     n = y.args[0]
 
-    h_part = {}
+    h_part = defaultdict(lambda: S.Zero)
     i_part = S.Zero
 
     for g in F:
@@ -669,10 +670,7 @@ def rsolve(f, y, init=None):
                 coeff *= h
 
         if kspec is not None:
-            if kspec in h_part:
-                h_part[kspec] += coeff
-            else:
-                h_part[kspec] = coeff
+            h_part[kspec] += coeff
         else:
             i_part += coeff
 
@@ -705,7 +703,7 @@ def rsolve(f, y, init=None):
     if K_min < 0:
         K = abs(K_min)
 
-        H_part = {}
+        H_part = defaultdict(lambda: S.Zero)
         i_part = i_part.subs(n, n+K).expand()
         common = common.subs(n, n+K).expand()
 
@@ -714,14 +712,8 @@ def rsolve(f, y, init=None):
     else:
         H_part = h_part
 
-    K_max = max(H_part.keys())
-    coeffs = []
-
-    for i in xrange(0, K_max+1):
-        if i in H_part:
-            coeffs.append(H_part[i])
-        else:
-            coeffs.append(S.Zero)
+    K_max = max(H_part.iterkeys())
+    coeffs = [H_part[i] for i in xrange(K_max+1)]
 
     result = rsolve_hyper(coeffs, i_part, n, symbols=True)
 
