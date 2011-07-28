@@ -734,6 +734,46 @@ def test_ModularInteger():
     a = GF(4)**(-1)
     assert isinstance(a, GF) and a == 4
 
+    assert (GF(1) <  GF(2)) == True
+    assert (GF(1) <= GF(2)) == True
+    assert (GF(1) >  GF(2)) == False
+    assert (GF(1) >= GF(2)) == False
+
+    assert (GF(3) <  GF(2)) == False
+    assert (GF(3) <= GF(2)) == False
+    assert (GF(3) >  GF(2)) == True
+    assert (GF(3) >= GF(2)) == True
+
+    assert (GF(1) <  GF(7)) == True
+    assert (GF(1) <= GF(7)) == True
+    assert (GF(1) >  GF(7)) == False
+    assert (GF(1) >= GF(7)) == False
+
+    assert (GF(3) <  GF(7)) == False
+    assert (GF(3) <= GF(7)) == False
+    assert (GF(3) >  GF(7)) == True
+    assert (GF(3) >= GF(7)) == True
+
+    assert (GF(1) <  2) == True
+    assert (GF(1) <= 2) == True
+    assert (GF(1) >  2) == False
+    assert (GF(1) >= 2) == False
+
+    assert (GF(3) <  2) == False
+    assert (GF(3) <= 2) == False
+    assert (GF(3) >  2) == True
+    assert (GF(3) >= 2) == True
+
+    assert (GF(1) <  7) == True
+    assert (GF(1) <= 7) == True
+    assert (GF(1) >  7) == False
+    assert (GF(1) >= 7) == False
+
+    assert (GF(3) <  7) == False
+    assert (GF(3) <= 7) == False
+    assert (GF(3) >  7) == True
+    assert (GF(3) >= 7) == True
+
     raises(NotInvertible, "GF(0)**(-1)")
     raises(NotInvertible, "GF(5)**(-1)")
 

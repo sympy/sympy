@@ -1,5 +1,7 @@
 """Implementation of :class:`ModularInteger` class. """
 
+import operator
+
 from sympy.polys.polyerrors import CoercionFailed
 
 class ModularInteger(object):
@@ -126,14 +128,31 @@ class ModularInteger(object):
 
         return self.__class__(val**exp)
 
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.val == other.val
+    def _compare(self, other, op):
+        val = self._get_val(other)
+
+        if val is not None:
+            return op(self.val, val % self.mod)
         else:
-            return self.val == other
+            return NotImplemented
+
+    def __eq__(self, other):
+        return self._compare(other, operator.eq)
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return self._compare(other, operator.ne)
+
+    def __lt__(self, other):
+        return self._compare(other, operator.lt)
+
+    def __le__(self, other):
+        return self._compare(other, operator.le)
+
+    def __gt__(self, other):
+        return self._compare(other, operator.gt)
+
+    def __ge__(self, other):
+        return self._compare(other, operator.ge)
 
     def __nonzero__(self):
         return bool(self.val)
