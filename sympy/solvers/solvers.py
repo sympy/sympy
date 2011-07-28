@@ -346,138 +346,147 @@ def solve(f, *symbols, **flags):
                                not be checked, or assumptions about a variable
                                can't be verified for a solution.
 
-        The output varies according to the input and can be seen by example:
+    The output varies according to the input and can be seen by example:
 
-            >>> from sympy import solve, Poly, Eq, Function, exp
-            >>> from sympy.abc import x, y, z, a, b
+        >>> from sympy import solve, Poly, Eq, Function, exp
+        >>> from sympy.abc import x, y, z, a, b
 
-            o boolean or univariate Relational
+        * boolean or univariate Relational:
 
-                >>> solve(x < 3)
-                And(im(x) == 0, re(x) < 3)
+            >>> solve(x < 3)
+            And(im(x) == 0, re(x) < 3)
 
-            o single expression and single symbol that is in the expression
+        * single expression and single symbol that is in the expression:
 
-                >>> solve(x - y, x)
-                [y]
-                >>> solve(x - 3, x)
-                [3]
-                >>> solve(Eq(x, 3), x)
-                [3]
-                >>> solve(Poly(x - 3), x)
-                [3]
-                >>> solve(x**2 - y**2, x)
+            >>> solve(x - y, x)
+            [y]
+            >>> solve(x - 3, x)
+            [3]
+            >>> solve(Eq(x, 3), x)
+            [3]
+            >>> solve(Poly(x - 3), x)
+            [3]
+            >>> solve(x**2 - y**2, x)
+            [y, -y]
+            >>> solve(x**4 - 1, x)
+            [1, -1, -I, I]
+
+        * single expression with no symbol that is in the expression:
+
+            >>> solve(3, x)
+            []
+            >>> solve(x - 3, y)
+            []
+
+        * when no symbol is given then all free symbols will be used
+          and sorted with default_sort_key and the result will be the
+          same as above as if those symbols had been supplied:
+
+            >>> solve(x - 3)
+            [3]
+            >>> solve(x**2 - y**2)
+            [y, -y]
+
+        * when a Function or Derivative is given as a symbol, it is isolated
+          algebraically and an implicit solution may be obtained:
+
+            >>> f = Function('f')
+            >>> solve(f(x) - x, f(x))
+            [x]
+            >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
+            [x + f(x)]
+
+        * single expression and more than 1 symbol:
+
+            * when there is a linear solution:
+
+                >>> solve(x - y**2, x, y)
+                {x: y**2}
+                >>> solve(x**2 - y, x, y)
+                {y: x**2}
+
+            * when undetermined coefficients are identified:
+
+                * that are either linear:
+
+                    >>> solve((a + b)*x - b + 2, a, b)
+                    {a: -2, b: 2}
+
+                * or nonlinear:
+
+                    >>> solve((a + b)*x - b**2 + 2, a, b)
+                    [(-2**(1/2), 2**(1/2)), (2**(1/2), -2**(1/2))]
+
+            * if there is no linear solution then the first successful
+              attempt for a nonlinear solution will be returned
+
+                >>> solve(x**2 - y**2, x, y)
                 [y, -y]
-                >>> solve(x**4 - 1, x)
-                [1, -1, -I, I]
+                >>> solve(x**2 - y**2/exp(x), x, y)
+                [x*exp(x/2), -x*exp(x/2)]
 
-            o single expression with no symbol that is in the expression
+        * iterable of one or more of the above:
 
-                >>> solve(3, x)
-                []
-                >>> solve(x - 3, y)
-                []
+            * involving relationals or bools:
+                >>> solve([x < 3, x - 2])
+                And(im(x) == 0, re(x) == 2)
+                >>> solve([x > 3, x - 2])
+                False
 
-            o when no symbol is given then all free symbols will be used
-              and sorted with default_sort_key and the result will be the
-              same as above as if those symbols had been supplied
+            * when the system is linear:
 
-                >>> solve(x - 3)
-                [3]
-                >>> solve(x**2 - y**2)
-                [y, -y]
+                * with a solution
+                    >>> solve([x - 3], x)
+                    {x: 3}
+                    >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y)
+                    {x: -3, y: 1}
+                    >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
+                    {x: -3, y: 1}
+                    >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
+                    {x: -5*y + 2, z: 21*y - 6}
 
-            o when a Function or Derivative is given as a symbol, it is isolated
-              algebraically and an implicit solution may be obtained
+                * without a solution
+                    >>> solve([x + 3, x - 3])
 
-                >>> f = Function('f')
-                >>> solve(f(x) - x, f(x))
-                [x]
-                >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
-                [x + f(x)]
+            * when the system is not linear
+                >>> solve([x**2 + y -2, y**2 - 4], x, y)
+                [(-2, -2), (0, 2), (0, 2), (2, -2)]
 
-            o single expression and more than 1 symbol
+    **Warning**:
+        There is a possibility of obtaining ambiguous results
+        if no symbols are given for a nonlinear system of equations or
+        are given as a set since the symbols are not presently reported
+        with the solution. A warning will be issued in this situation.
 
-                when there is a linear solution
-                    >>> solve(x - y**2, x, y)
-                    {x: y**2}
-                    >>> solve(x**2 - y, x, y)
-                    {y: x**2}
+            >>> solve([x - 2, x**2 + y])
+            <BLANKLINE>
+                For nonlinear systems of equations, symbols should be
+                given as a list so as to avoid ambiguity in the results.
+                solve sorted the symbols as [x, y]
+            [(2, -4)]
 
-                when undetermined coefficients are identified
-                    that are linear
-                        >>> solve((a + b)*x - b + 2, a, b)
-                        {a: -2, b: 2}
+            >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
+            <BLANKLINE>
+                For nonlinear systems of equations, symbols should be
+                given as a list so as to avoid ambiguity in the results.
+                solve sorted the symbols as [x, f(x)]
+            [(2, -4)]
 
-                    that are nonlinear
-                        >>> solve((a + b)*x - b**2 + 2, a, b)
-                        [(-2**(1/2), 2**(1/2)), (2**(1/2), -2**(1/2))]
+        If two variables (or more) don't appear in the result, the assumptions
+        can't be checked.
 
-                if there is no linear solution then the first successful
-                attempt for a nonlinear solution will be returned
-                    >>> solve(x**2 - y**2, x, y)
-                    [y, -y]
-                    >>> solve(x**2 - y**2/exp(x), x, y)
-                    [x*exp(x/2), -x*exp(x/2)]
+            >>> solve(z**2*x**2 - z**2*y**2/exp(x), x, y, z, warning=True)
+            <BLANKLINE>
+                Warning: assumptions can't be checked
+                (can't find for which variable equation was solved).
+            [x*exp(x/2), -x*exp(x/2)]
 
-            o iterable of one or more of the above
+        Presently, assumptions aren't checked either when ``solve()`` input
+        involves relationals or bools.
 
-                involving relationals or bools
-                    >>> solve([x < 3, x - 2])
-                    And(im(x) == 0, re(x) == 2)
-                    >>> solve([x > 3, x - 2])
-                    False
-
-                when the system is linear
-                    with a solution
-                        >>> solve([x - 3], x)
-                        {x: 3}
-                        >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y)
-                        {x: -3, y: 1}
-                        >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
-                        {x: -3, y: 1}
-                        >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
-                        {x: -5*y + 2, z: 21*y - 6}
-
-                    without a solution
-                        >>> solve([x + 3, x - 3])
-
-                when the system is not linear
-                    >>> solve([x**2 + y -2, y**2 - 4], x, y)
-                    [(-2, -2), (0, 2), (0, 2), (2, -2)]
-
-                Warning: there is a possibility of obtaining ambiguous results
-                if no symbols are given for a nonlinear system of equations or
-                are given as a set since the symbols are not presently reported
-                with the solution. A warning will be issued in this situation.
-                    >>> solve([x - 2, x**2 + y])
-                    <BLANKLINE>
-                        For nonlinear systems of equations, symbols should be
-                        given as a list so as to avoid ambiguity in the results.
-                        solve sorted the symbols as [x, y]
-                    [(2, -4)]
-
-                    >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
-                    <BLANKLINE>
-                        For nonlinear systems of equations, symbols should be
-                        given as a list so as to avoid ambiguity in the results.
-                        solve sorted the symbols as [x, f(x)]
-                    [(2, -4)]
-
-                If two variables (or more) don't appear in the result, the assumptions
-                can't be checked.
-                    >>> solve(z**2*x**2 - z**2*y**2/exp(x), x, y, z, warning=True)
-                    <BLANKLINE>
-                        Warning: assumptions can't be checked
-                        (can't find for which variable equation was solved).
-                    [x*exp(x/2), -x*exp(x/2)]
-
-                Presently, assumptions aren't checked either when `solve()` input
-                involves relationals or bools.
-
-       See also:
-          rsolve() for solving recurrence relationships
-          dsolve() for solving differential equations
+    See also:
+      rsolve() for solving recurrence relationships
+      dsolve() for solving differential equations
 
     """
     # make f and symbols into lists of sympified quantities
