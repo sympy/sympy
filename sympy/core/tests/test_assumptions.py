@@ -455,6 +455,7 @@ def test_hash_vs_typeinfo_2():
     x1= Symbol('x', even=True)
 
     assert x != x1
+    assert hash(x) != hash(x1) # This might fail with very low probability
 
 
 def test_hash_vs_eq():
