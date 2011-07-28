@@ -120,16 +120,10 @@ class Logic(object):
         else:
             return cmp(a.args, b.args)
 
-
-
-
-    # XXX later, we may want to change how expressions are printed
     def __str__(self):
         return '%s(%s)' % (self.op, ', '.join(str(a) for a in self.args))
 
-    # XXX this is not good ...
     __repr__ = __str__
-
 
     @staticmethod
     def fromstring(text):
