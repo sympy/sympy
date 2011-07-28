@@ -148,13 +148,16 @@ class RandomSymbol(Symbol):
     is_bounded=True
     is_finite=True
     def __new__(cls, *args):
-        return Basic.__new__(cls, *args)
-    @property
-    def pspace(self):
-        return self.args[0]
-    @property
-    def symbol(self):
-        return self.args[1]
+        obj = Basic.__new__(cls)
+        obj.pspace = args[0]
+        obj.symbol = args[1]
+        return obj
+#    @property
+#    def pspace(self):
+#        return self.args[0]
+#    @property
+#    def symbol(self):
+#        return self.args[1]
     @property
     def name(self):
         return self.symbol.name
@@ -162,7 +165,7 @@ class RandomSymbol(Symbol):
     def is_commutative(self):
         return self.symbol.is_commutative
     def _hashable_content(self):
-        return self.args
+        return self.pspace, self.symbol
 
 
 

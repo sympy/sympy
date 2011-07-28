@@ -113,7 +113,7 @@ class ContinuousPSpace(PSpace):
                 for rs in self.values - frozenset((expr,))),  **kwargs)
             return expr.symbol, density
 
-        z = Dummy('z', real=True)
+        z = Dummy('z', real=True, finite=True)
         return z, self.integrate(DiracDelta(expr - z), **kwargs)
 
     def P(self, condition, **kwargs):
