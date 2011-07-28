@@ -332,7 +332,7 @@ class Max(MinMaxBase, Application, Basic):
     **Algorithm**:
 
     The task can be considered as searching of supremums in the
-    directed complete partial orders [1]_.
+    directed complete partial orders `[1]`_.
 
     The source values are sequentially allocated by the isolated subsets
     in which supremums are searched and result as Max arguments.
@@ -353,8 +353,7 @@ class Max(MinMaxBase, Application, Basic):
        - if A > B > C then A > C
        - if A==B then B can be removed
 
-    [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
-    [2] http://en.wikipedia.org/wiki/Lattice_(order)
+    .. _[1]: http://en.wikipedia.org/wiki/Directed_complete_partial_order
 
     **See Also**:
         Min() : find minimum values
