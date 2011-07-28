@@ -37,7 +37,7 @@ Unpack it:
 
     \$ :input:`tar xzf sympy-0.5.12.tar.gz`
 
-and try it from a Python intepreter:
+and try it from a Python interpreter:
 
 .. parsed-literal::
 
@@ -46,9 +46,9 @@ and try it from a Python intepreter:
     Python 2.4.4 (#2, Jan  3 2008, 13:36:28)
     [GCC 4.2.3 20071123 (prerelease) (Debian 4.2.2-4)] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
-    >>> :input:`from sympy import Symbol, cos`
-    >>> :input:`x = Symbol("x")`
-    >>> :input:`(1/cos(x)).series(x, 0, 10)`
+    >>> :input:`from sympy import Symbol, cos`  #doctest: +SKIP
+    >>> :input:`x = Symbol("x")`                #doctest: +SKIP
+    >>> :input:`(1/cos(x)).series(x, 0, 10)`    #doctest: +SKIP
     1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
 You can use SymPy as shown above and this is indeed the recommended way if you
