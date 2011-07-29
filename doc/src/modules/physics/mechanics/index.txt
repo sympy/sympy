@@ -6,8 +6,8 @@ Physics/Mechanics Module
 
 .. topic:: Abstract
 
-   In this document many components of the physics/mechanics module will be
-   discussed. :mod:`mechanics` has been written to allow for creation of
+   In this documentation many components of the physics/mechanics module will
+   be discussed. :mod:`mechanics` has been written to allow for creation of
    symbolic equations of motion for complicated multibody systems.
 
 Mechanics
@@ -31,13 +31,13 @@ Contents
     vectors.txt
     kinematics.txt
     masses.txt
-    forces.txt
     kane.txt
     reference.txt
 
 The Point of Physics.Mechanics
 ==============================
 
-.. % Put an example here
+This module has been developed to aid in formulation of equations of motion;
+here, examples follow to help display how to use this module.
 
 

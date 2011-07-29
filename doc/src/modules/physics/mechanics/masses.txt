@@ -18,10 +18,10 @@ between two vectors returns a new quantity which represents the juxtaposition
 of these two vectors. For example:
 
 .. math::
-  \mathbf{\hat{a_x}} \otimes \mathbf{\hat{a_x}} &= \mathbf{\hat{a_x}}
-  \mathbf{\hat{a_x}}\\
-  \mathbf{\hat{a_x}} \otimes \mathbf{\hat{a_y}} &= \mathbf{\hat{a_x}}
-  \mathbf{\hat{a_y}}\\
+  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_x} &= \mathbf{\hat{a}_x}
+  \mathbf{\hat{a}_x}\\
+  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_y} &= \mathbf{\hat{a}_x}
+  \mathbf{\hat{a}_y}\\
 
 Note that the order is significant.
 Some additional properties of the outer product operation are:
@@ -43,50 +43,118 @@ could be represented as:
   \begin{bmatrix}
   a_{11} & a_{12} & a_{13} \\
   a_{21} & a_{22} & a_{23} \\
-  a_{31} & a_{32} & a_{33} 
+  a_{31} & a_{32} & a_{33}
   \end{bmatrix}\\
   \textnormal{or:}\\
-  a_{11} \mathbf{\hat{a_x}}\mathbf{\hat{a_x}} +
-  a_{12} \mathbf{\hat{a_x}}\mathbf{\hat{a_y}} +
-  a_{13} \mathbf{\hat{a_x}}\mathbf{\hat{a_z}} +
-  a_{21} \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} +
-  a_{22} \mathbf{\hat{a_y}}\mathbf{\hat{a_y}} +
-  a_{23} \mathbf{\hat{a_y}}\mathbf{\hat{a_z}} +
-  a_{31} \mathbf{\hat{a_z}}\mathbf{\hat{a_x}} +
-  a_{32} \mathbf{\hat{a_z}}\mathbf{\hat{a_y}} +
-  a_{33} \mathbf{\hat{a_z}}\mathbf{\hat{a_z}}\\
+  a_{11} \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} +
+  a_{12} \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} +
+  a_{13} \mathbf{\hat{a}_x}\mathbf{\hat{a}_z} +
+  a_{21} \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} +
+  a_{22} \mathbf{\hat{a}_y}\mathbf{\hat{a}_y} +
+  a_{23} \mathbf{\hat{a}_y}\mathbf{\hat{a}_z} +
+  a_{31} \mathbf{\hat{a}_z}\mathbf{\hat{a}_x} +
+  a_{32} \mathbf{\hat{a}_z}\mathbf{\hat{a}_y} +
+  a_{33} \mathbf{\hat{a}_z}\mathbf{\hat{a}_z}\\
 
 Just as before with vectors, the later representation makes it possible to have
 the dyadic defined in multiple frames. In fact, the two components of each term
 in the dyadic need not be the same frame; the following is valid:
 
 .. math::
-  \mathbf{\hat{a_x}} \otimes \mathbf{\hat{b_y}} = \mathbf{\hat{a_x}}
-  \mathbf{\hat{b_y}}
+  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{b}_y} = \mathbf{\hat{a}_x}
+  \mathbf{\hat{b}_y}
 
 Dyadics can also be crossed and dotted with vectors; again, order matters:
 
-  \mathbf{\hat{a_x}}\mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_x}} &=
-  \mathbf{\hat{a_x}}\\
-  \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_x}} &=
-  \mathbf{\hat{a_a}}\\
-  \mathbf{\hat{a_x}}\mathbf{\hat{a_y}} \cdot \mathbf{\hat{a_x}} &= 0\\
-  \mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_x}}\mathbf{\hat{a_x}} &=
-  \mathbf{\hat{a_x}}\\
-  \mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_x}}\mathbf{\hat{a_y}} &=
-  \mathbf{\hat{a_y}}\\
-  \mathbf{\hat{a_x}} \cdot \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} &= 0\\
-  \mathbf{\hat{a_x}} \times \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} &=
-  \mathbf{\hat{a_z}}\mathbf{\hat{a_x}}
-  \mathbf{\hat{a_x}} \times \mathbf{\hat{a_x}}\mathbf{\hat{a_x}} &= 0\\
-  \mathbf{\hat{a_y}}\mathbf{\hat{a_x}} \times \mathbf{\hat{a_z}} &=
-  - \mathbf{\hat{a_y}}\mathbf{\hat{a_y}}\\
+.. math::
+  \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &=
+  \mathbf{\hat{a}_x}\\
+  \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &=
+  \mathbf{\hat{a}_y}\\
+  \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} \cdot \mathbf{\hat{a}_x} &= 0\\
+  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &=
+  \mathbf{\hat{a}_x}\\
+  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} &=
+  \mathbf{\hat{a}_y}\\
+  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &= 0\\
+  \mathbf{\hat{a}_x} \times \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &=
+  \mathbf{\hat{a}_z}\mathbf{\hat{a}_x}\\
+  \mathbf{\hat{a}_x} \times \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &= 0\\
+  \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \times \mathbf{\hat{a}_z} &=
+  - \mathbf{\hat{a}_y}\mathbf{\hat{a}_y}\\
 
 One can also take the time derivative of dyadics or express them in different
-frames.
+frames, just like with vectors.
 
 
+Mass & Inertia in Mechanics
+===========================
 
+Within SymPy's :mod:`mechanics` package, there are two topics to discuss: the
+``Particle`` and ``RigidBody`` containers, and masses and inertias.
 
+Particle and RigidBody
+----------------------
 
+Particles and rigid bodies are represented with two object in :mod:`mechanics`.
+The ``Particle`` object has an associated point and an associated mass.::
+
+  >>> from sympy.physics.mechanics import Particle, Point
+  >>> from sympy import Symbol
+  >>> po = Point('po')
+  >>> pa = Particle()
+  >>> m = Symbol('m')
+  >>> pa.mass = m
+  >>> pa.point = po
+
+The mass need to be a ``sympify``-able expression; that is its only
+requirement. It can be time varying. The associated point represents the
+position/velocity/acceleration of the particle. :mod:`mechanics` allows one to
+perform kinematic analysis of points seperate from their association with
+masses.
+
+The :mod:`Particle` object has only two attributes, ``.mass`` and ``.point``.
+
+Rigid bodies are represented in a similar fashion within :mod:`mechanics`.
+``RigidBody`` is again a container class with four attributes: a mass, point,
+reference frame, and an inertia tuple.::
+
+  >>> from sympy import Symbol
+  >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
+  >>> from sympy.physics.mechanics import outer
+  >>> m = Symbol('m')
+  >>> A = ReferenceFrame('A')
+  >>> P = Point('P')
+  >>> I = outer (A.x, A.x)
+  >>> B = RigidBody()
+  >>> B.mass = m
+  >>> B.frame = A
+  >>> B.mc = P
+  >>> B.inertia = (I, B.mc)
+
+Again, mass needs only to be ``sympify``-able. Instead of ``Particle``'s
+``.point``, ``RigidBody`` represents its associated point as ``.mc``, or mass
+center. The frame is stored in an analagous fashion; the frame associated with
+the ``RigidBody`` represents that body's orientation and angular velocities.
+Finally, the description of the inertia tuple. The inertia for a rigid body
+needs to be specified about a point. In :mod:`mechanics`, you are allowed to
+specify any point for this. Most common is the mass center though, as shown in
+the above code. If a point is selected which is not the mass center, ensure
+that the position between the two points has been defined.  The inertia tuple
+is of length two with the first entry being a ``Dyad`` and the second entry
+being a ``Point`` which the inertia dyad is defined about.
+
+The Inertia Function
+--------------------
+
+Dyadics define the inertias of bodies within :mod:`mechanics`, although it can
+be very inconvenient to create the inertia ``Dyad`` by hand. For this reason,
+the ``inertia`` function has been created.::
+
+  >>> from sympy.physics.mechanics import ReferenceFrame, inertia
+  >>> N = ReferenceFrame('N')
+  >>> inertia(N, 1, 2, 3)
+  (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
+  >>> inertia(N,1,2,3,4,5,6)
+  (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) + 5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
 

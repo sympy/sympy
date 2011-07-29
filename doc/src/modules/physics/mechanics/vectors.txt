@@ -141,11 +141,11 @@ properties and relationships are:
 Alternative Representation
 --------------------------
 If we have three non-coplanar unit vectors
-:math:`\mathbf{\hat{n_x}},\mathbf{\hat{n_y}},\mathbf{\hat{n_z}}`,
+:math:`\mathbf{\hat{n}_x},\mathbf{\hat{n}_y},\mathbf{\hat{n}_z}`,
  we car represent any vector
-:math:`\mathbf{a}` as :math:`\mathbf{a} = a_x \mathbf{\hat{n_x}} + a_y
-\mathbf{\hat{n_y}} + a_z \mathbf{\hat{n_z}}`. In this situation
-:math:`\mathbf{\hat{n_x}},\mathbf{\hat{n_y}},\mathbf{\hat{n_z}}`
+:math:`\mathbf{a}` as :math:`\mathbf{a} = a_x \mathbf{\hat{n}_x} + a_y
+\mathbf{\hat{n}_y} + a_z \mathbf{\hat{n}_z}`. In this situation
+:math:`\mathbf{\hat{n}_x},\mathbf{\hat{n}_y},\mathbf{\hat{n}_z}`
 are referred to as a basis.  :math:`a_x, a_y, a_z`
 are called the measure numbers.
 Usually the unit vectors are mutually perpendicular, in which case we can refer
@@ -155,27 +155,27 @@ To test equality between two vectors, now we can do the following. With
 vectors:
 
 .. math::
-  \mathbf{a} &= a_x \mathbf{\hat{n_x}} + a_y \mathbf{\hat{n_y}} + a_z
-  \mathbf{\hat{n_z}}\\
-  \mathbf{b} &= b_x \mathbf{\hat{n_x}} + b_y \mathbf{\hat{n_y}} + b_z
-  \mathbf{\hat{n_z}}\\
+  \mathbf{a} &= a_x \mathbf{\hat{n}_x} + a_y \mathbf{\hat{n}_y} + a_z
+  \mathbf{\hat{n}_z}\\
+  \mathbf{b} &= b_x \mathbf{\hat{n}_x} + b_y \mathbf{\hat{n}_y} + b_z
+  \mathbf{\hat{n}_z}\\
 
 We can claim equality if: :math:`a_x = b_x, a_y = b_y, a_z = b_z`.
 
 Vector addition is then represented, for the same two vectors, as:
 
 .. math::
-  \mathbf{a} + \mathbf{b} = (a_x + b_x)\mathbf{\hat{n_x}} + (a_y + b_y)
-  \mathbf{\hat{n_y}} + (a_z + b_z) \mathbf{\hat{n_z}}
+  \mathbf{a} + \mathbf{b} = (a_x + b_x)\mathbf{\hat{n}_x} + (a_y + b_y)
+  \mathbf{\hat{n}_y} + (a_z + b_z) \mathbf{\hat{n}_z}
 
 Multiplication operations are now defined as:
 
 .. math::
-  \alpha \mathbf{b} &= \alpha b_x \mathbf{\hat{n_x}} + \alpha b_y
-  \mathbf{\hat{n_y}} + \alpha b_z \mathbf{\hat{n_z}}\\
+  \alpha \mathbf{b} &= \alpha b_x \mathbf{\hat{n}_x} + \alpha b_y
+  \mathbf{\hat{n}_y} + \alpha b_z \mathbf{\hat{n}_z}\\
   \mathbf{a} \cdot \mathbf{b} &= a_x b_x + a_y b_y + a_z b_z\\
   \mathbf{a} \times \mathbf{b} &=
-  \begin{vmatrix} \mathbf{\hat{n_x}} & \mathbf{\hat{n_y}} & \mathbf{\hat{n_z}}
+  \begin{vmatrix} \mathbf{\hat{n}_x} & \mathbf{\hat{n}_y} & \mathbf{\hat{n}_z}
   \\ a_x & a_y & a_z \\ a_x & a_y & a_z \end{vmatrix}\\
   (\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &=
   \begin{vmatrix} a_x & a_y & a_z \\ b_x & b_y & b_z \\ c_x & c_y & c_z
@@ -184,9 +184,9 @@ Multiplication operations are now defined as:
 To write a vector in a given basis, we can do the follow:
 
 .. math::
-  \mathbf{a} = (\mathbf{a}\cdot\mathbf{\hat{n_x}})\mathbf{\hat{n_x}} +
-  (\mathbf{a}\cdot\mathbf{\hat{n_y}})\mathbf{\hat{n_y}} +
-  (\mathbf{a}\cdot\mathbf{\hat{n_z}})\mathbf{\hat{n_z}}\\
+  \mathbf{a} = (\mathbf{a}\cdot\mathbf{\hat{n}_x})\mathbf{\hat{n}_x} +
+  (\mathbf{a}\cdot\mathbf{\hat{n}_y})\mathbf{\hat{n}_y} +
+  (\mathbf{a}\cdot\mathbf{\hat{n}_z})\mathbf{\hat{n}_z}\\
 
 
 Examples
@@ -194,17 +194,17 @@ Examples
 Some numeric examples of these operations follow:
 
 .. math::
-  \mathbf{a} &= \mathbf{\hat{n_x}} + 5 \mathbf{\hat{n_y}}\\
-  \mathbf{b} &= \mathbf{\hat{n_y}} + \alpha \mathbf{\hat{n_z}}\\
-  \mathbf{a} + \mathbf{b} &= \mathbf{\hat{n_x}} + 6 \mathbf{\hat{n_y}} + \alpha
+  \mathbf{a} &= \mathbf{\hat{n}_x} + 5 \mathbf{\hat{n}_y}\\
+  \mathbf{b} &= \mathbf{\hat{n}_y} + \alpha \mathbf{\hat{n}_z}\\
+  \mathbf{a} + \mathbf{b} &= \mathbf{\hat{n}_x} + 6 \mathbf{\hat{n}_y} + \alpha
   \mathbf{\hat{n)z}}\\
   \mathbf{a} \cdot \mathbf{b} &= 5\\
-  \mathbf{a} \cdot \mathbf{\hat{n_y}} &= 5\\
-  \mathbf{a} \cdot \mathbf{\hat{n_z}} &= 0\\
-  \mathbf{a} \times \mathbf{b} &= 5 \alpha \mathbf{\hat{n_x}} - \alpha
-  \mathbf{\hat{n_y}} + \mathbf{\hat{n_z}}\\
-  \mathbf{b} \times \mathbf{a} &= -5 \alpha \mathbf{\hat{n_x}} + \alpha
-  \mathbf{\hat{n_y}} - \mathbf{\hat{n_z}}\\
+  \mathbf{a} \cdot \mathbf{\hat{n}_y} &= 5\\
+  \mathbf{a} \cdot \mathbf{\hat{n}_z} &= 0\\
+  \mathbf{a} \times \mathbf{b} &= 5 \alpha \mathbf{\hat{n}_x} - \alpha
+  \mathbf{\hat{n}_y} + \mathbf{\hat{n}_z}\\
+  \mathbf{b} \times \mathbf{a} &= -5 \alpha \mathbf{\hat{n}_x} + \alpha
+  \mathbf{\hat{n}_y} - \mathbf{\hat{n}_z}\\
 
 
 Vector Calculus
@@ -221,7 +221,7 @@ reference frame :math:`\mathbf{N}`, vector :math:`\mathbf{a}` is said to be
 fixed in the frame :math:`\mathbf{N}` if none of its properties ever change
 when observed from :math:`\mathbf{N}`. We will typically assign a fixed
 orthonormal basis vector set with each reference frame; :math:`\mathbf{N}` will
-have :math:`\mathbf{\hat{n_x}}, \mathbf{\hat{n_y}},\mathbf{\hat{n_z}}` as its
+have :math:`\mathbf{\hat{n}_x}, \mathbf{\hat{n}_y},\mathbf{\hat{n}_z}` as its
 basis vectors.
 
 Derivatives of Vectors
@@ -281,11 +281,11 @@ the basis vectors of one frame to another, in the following fashion:
 
 .. math::
   \lbrk \begin{array}{c}
-  \mathbf{\hat{a_x}} \\ \mathbf{\hat{a_y}} \\ \mathbf{\hat{a_z}} \\
+  \mathbf{\hat{a}_x} \\ \mathbf{\hat{a}_y} \\ \mathbf{\hat{a}_z} \\
   \end{array} \rbrk  =
   \lbrk ^{\mathbf{A}} \mathbf{C}^{\mathbf{B}} \rbrk
   \lbrk \begin{array}{c}
-  \mathbf{\hat{b_x}} \\ \mathbf{\hat{b_y}} \\ \mathbf{\hat{b_z}} \\
+  \mathbf{\hat{b}_x} \\ \mathbf{\hat{b}_y} \\ \mathbf{\hat{b}_z} \\
   \end{array} \rbrk
 
 When two frames (say, :math:`\mathbf{A}` & :math:`\mathbf{B}`) are initially
@@ -297,7 +297,7 @@ rotation. The figure below shows this:
 
 The above rotation is a simple rotation about the Z axis by an angle
 :math:`\theta`. Note that after the rotation, the basis vectors
-:math:`\mathbf{\hat{a_z}}` and :math:`\mathbf{\hat{b_z}}` are still aligned.
+:math:`\mathbf{\hat{a}_z}` and :math:`\mathbf{\hat{b}_z}` are still aligned.
 
 This rotation can be characterized by the following direction cosine matrix:
 
@@ -342,15 +342,15 @@ associated basis vectors, their direction cosine matrix can be defined as:
   C_{zx} & C_{zy} & C_{zz}\\
   \end{array} \rbrk =
   \lbrk \begin{array}{ccc}
-  \mathbf{\hat{a_x}}\cdot\mathbf{\hat{b_x}} &
-  \mathbf{\hat{a_x}}\cdot\mathbf{\hat{b_y}} &
-  \mathbf{\hat{a_x}}\cdot\mathbf{\hat{b_z}}\\
-  \mathbf{\hat{a_y}}\cdot\mathbf{\hat{b_x}} &
-  \mathbf{\hat{a_y}}\cdot\mathbf{\hat{b_y}} &
-  \mathbf{\hat{a_y}}\cdot\mathbf{\hat{b_z}}\\
-  \mathbf{\hat{a_z}}\cdot\mathbf{\hat{b_x}} &
-  \mathbf{\hat{a_z}}\cdot\mathbf{\hat{b_y}} &
-  \mathbf{\hat{a_z}}\cdot\mathbf{\hat{b_z}}\\
+  \mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_x} &
+  \mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_y} &
+  \mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_z}\\
+  \mathbf{\hat{a}_y}\cdot\mathbf{\hat{b}_x} &
+  \mathbf{\hat{a}_y}\cdot\mathbf{\hat{b}_y} &
+  \mathbf{\hat{a}_y}\cdot\mathbf{\hat{b}_z}\\
+  \mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_x} &
+  \mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_y} &
+  \mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_z}\\
   \end{array} \rbrk
 
 Additionally, the direction cosine matrix is orthogonal, in that:
@@ -363,34 +363,34 @@ Additionally, the direction cosine matrix is orthogonal, in that:
 If we have reference frames :math:`\mathbf{A}` and :math:`\mathbf{B}`, which in
 this example have undergone a simple z-axis rotation by an amount
 :math:`\theta`, we will have two sets of basis vectors. We can then define two
-vectors: :math:`\mathbf{a} = \mathbf{\hat{a_x}} + \mathbf{\hat{a_y}} +
-\mathbf{\hat{a_z}}` and :math:`\mathbf{b} = \mathbf{\hat{b_x}} +
-\mathbf{\hat{b_y}} + \mathbf{\hat{b_z}}`. If we wish to express
+vectors: :math:`\mathbf{a} = \mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} +
+\mathbf{\hat{a}_z}` and :math:`\mathbf{b} = \mathbf{\hat{b}_x} +
+\mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}`. If we wish to express
 :math:`\mathbf{b}` in the :math:`\mathbf{A}` frame, we do the following:
 
 .. math::
-  \mathbf{b} &= \mathbf{\hat{b_x}} + \mathbf{\hat{b_y}} + \mathbf{\hat{b_z}}\\
-  \mathbf{b} &= \lbrk\mathbf{\hat{a_x}}\cdot (\mathbf{\hat{b_x}} +
-  \mathbf{\hat{b_y}} + \mathbf{\hat{b_z}})\rbrk \mathbf{\hat{a_x}} +
-  \lbrk\mathbf{\hat{a_y}}\cdot (\mathbf{\hat{b_x}} + \mathbf{\hat{b_y}} +
-  \mathbf{\hat{b_z}})\rbrk \mathbf{\hat{a_y}} + \lbrk\mathbf{\hat{a_z}}\cdot
-  (\mathbf{\hat{b_x}} + \mathbf{\hat{b_y}} + \mathbf{\hat{b_z}})\rbrk
-  \mathbf{\hat{a_z}}\\
-  \mathbf{b} &= (cos(\theta) - sin(\theta))\mathbf{\hat{a_x}} +
-  (sin(\theta)+cos(\theta))\mathbf{\hat{a_y}} + \mathbf{\hat{a_z}}
+  \mathbf{b} &= \mathbf{\hat{b}_x} + \mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}\\
+  \mathbf{b} &= \lbrk\mathbf{\hat{a}_x}\cdot (\mathbf{\hat{b}_x} +
+  \mathbf{\hat{b}_y} + \mathbf{\hat{b}_z})\rbrk \mathbf{\hat{a}_x} +
+  \lbrk\mathbf{\hat{a}_y}\cdot (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y} +
+  \mathbf{\hat{b}_z})\rbrk \mathbf{\hat{a}_y} + \lbrk\mathbf{\hat{a}_z}\cdot
+  (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y} + \mathbf{\hat{b}_z})\rbrk
+  \mathbf{\hat{a}_z}\\
+  \mathbf{b} &= (cos(\theta) - sin(\theta))\mathbf{\hat{a}_x} +
+  (sin(\theta)+cos(\theta))\mathbf{\hat{a}_y} + \mathbf{\hat{a}_z}
 
 And if we wish to express :math:`\mathbf{a}` in the :math:`\mathbf{B}`, we do:
 
 .. math::
-  \mathbf{a} &= \mathbf{\hat{a_x}} + \mathbf{\hat{a_y}} + \mathbf{\hat{a_z}}\\
-  \mathbf{a} &= \lbrk\mathbf{\hat{b_x}}\cdot (\mathbf{\hat{a_x}} +
-  \mathbf{\hat{a_y}} + \mathbf{\hat{a_z}})\rbrk \mathbf{\hat{b_x}} +
-  \lbrk\mathbf{\hat{b_y}}\cdot (\mathbf{\hat{a_x}} + \mathbf{\hat{a_y}} +
-  \mathbf{\hat{a_z}})\rbrk \mathbf{\hat{b_y}} + \lbrk\mathbf{\hat{b_z}}\cdot
-  (\mathbf{\hat{a_x}} + \mathbf{\hat{a_y}} + \mathbf{\hat{a_z}})\rbrk
-  \mathbf{\hat{b_z}}\\
-  \mathbf{a} &= (cos(\theta) + sin(\theta))\mathbf{\hat{b_x}} +
-  (-sin(\theta)+cos(\theta))\mathbf{\hat{b_y}} + \mathbf{\hat{b_z}}
+  \mathbf{a} &= \mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z}\\
+  \mathbf{a} &= \lbrk\mathbf{\hat{b}_x}\cdot (\mathbf{\hat{a}_x} +
+  \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\rbrk \mathbf{\hat{b}_x} +
+  \lbrk\mathbf{\hat{b}_y}\cdot (\mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} +
+  \mathbf{\hat{a}_z})\rbrk \mathbf{\hat{b}_y} + \lbrk\mathbf{\hat{b}_z}\cdot
+  (\mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\rbrk
+  \mathbf{\hat{b}_z}\\
+  \mathbf{a} &= (cos(\theta) + sin(\theta))\mathbf{\hat{b}_x} +
+  (-sin(\theta)+cos(\theta))\mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}
 
 
 Derivatives with Multiple Frames
@@ -398,18 +398,18 @@ Derivatives with Multiple Frames
 
 If we have reference frames :math:`\mathbf{A}` and :math:`\mathbf{B}`
 we will have two sets of basis vectors. We can then define two
-vectors: :math:`\mathbf{a} = a_x\mathbf{\hat{a_x}} + a_y\mathbf{\hat{a_y}} +
-a_z\mathbf{\hat{a_z}}` and :math:`\mathbf{b} = b_x\mathbf{\hat{b_x}} +
-b_y\mathbf{\hat{b_y}} + b_z\mathbf{\hat{b_z}}`. If we want to take the
+vectors: :math:`\mathbf{a} = a_x\mathbf{\hat{a}_x} + a_y\mathbf{\hat{a}_y} +
+a_z\mathbf{\hat{a}_z}` and :math:`\mathbf{b} = b_x\mathbf{\hat{b}_x} +
+b_y\mathbf{\hat{b}_y} + b_z\mathbf{\hat{b}_z}`. If we want to take the
 derivative of :math:`\mathbf{b}` in the reference frame :math:`\mathbf{A}`, we
 must first express it in :math:`\mathbf{A}`, and the take the derivatives of
 the measure numbers:
 
 .. math::
   \frac{^{\mathbf{A}} d\mathbf{b}}{dx} = \frac{d (\mathbf{b}\cdot
-  \mathbf{\hat{a_x}} )}{dx} \mathbf{\hat{a_x}} + \frac{d (\mathbf{b}\cdot
-  \mathbf{\hat{a_y}} )}{dx} \mathbf{\hat{a_y}} + \frac{d (\mathbf{b}\cdot
-  \mathbf{\hat{a_z}} )}{dx} \mathbf{\hat{a_z}} +
+  \mathbf{\hat{a}_x} )}{dx} \mathbf{\hat{a}_x} + \frac{d (\mathbf{b}\cdot
+  \mathbf{\hat{a}_y} )}{dx} \mathbf{\hat{a}_y} + \frac{d (\mathbf{b}\cdot
+  \mathbf{\hat{a}_z} )}{dx} \mathbf{\hat{a}_z} +
 
 
 Examples
@@ -425,13 +425,13 @@ We wish to know the time derivative of vector :math:`\mathbf{c}` in both the
 :math:`\mathbf{A}` and :math:`\mathbf{B}` frames.
 
 First, we need to define :math:`\mathbf{c}`;
-:math:`\mathbf{c}=x\mathbf{\hat{b_x}}+l\mathbf{\hat{b_y}}`. This provides a
+:math:`\mathbf{c}=x\mathbf{\hat{b}_x}+l\mathbf{\hat{b}_y}`. This provides a
 definition in the :math:`\mathbf{B}` frame. We can now do the following:
 
 .. math::
-  \frac{^{\mathbf{B}} d \mathbf{c}}{dt} &= \frac{dx}{dt} \mathbf{\hat{b_x}} +
-  \frac{dl}{dt} \mathbf{\hat{b_y}}\\
-  &= \dot{x} \mathbf{\hat{b_x}}
+  \frac{^{\mathbf{B}} d \mathbf{c}}{dt} &= \frac{dx}{dt} \mathbf{\hat{b}_x} +
+  \frac{dl}{dt} \mathbf{\hat{b}_y}\\
+  &= \dot{x} \mathbf{\hat{b}_x}
 
 To take the derivative in the :math:`\mathbf{A}` frame, we have to first relate
 the two frames:
@@ -448,14 +448,14 @@ Now we can do the following:
 
 .. math::
   \frac{^{\mathbf{A}} d \mathbf{c}}{dt} &= \frac{d (\mathbf{c} \cdot
-  \mathbf{\hat{a_x}})}{dt} \mathbf{\hat{a_x}} + \frac{d (\mathbf{c} \cdot
-  \mathbf{\hat{a_y}})}{dt} \mathbf{\hat{a_y}} + \frac{d (\mathbf{c} \cdot
-  \mathbf{\hat{a_z}})}{dt} \mathbf{\hat{a_z}}\\
-  &= \frac{d (cos(\theta) x)}{dt} \mathbf{\hat{a_x}} +
-  \frac{d (l)}{dt} \mathbf{\hat{a_y}} +
-  \frac{d (-sin(\theta) x)}{dt} \mathbf{\hat{a_z}}\\
-  &= (-\dot{\theta}sin(\theta)x + cos(\theta)\dot{x}) \mathbf{\hat{a_x}} +
-  (\dot{\theta}cos(\theta)x + sin(\theta)\dot(x)) \mathbf{\hat{a_z}}
+  \mathbf{\hat{a}_x})}{dt} \mathbf{\hat{a}_x} + \frac{d (\mathbf{c} \cdot
+  \mathbf{\hat{a}_y})}{dt} \mathbf{\hat{a}_y} + \frac{d (\mathbf{c} \cdot
+  \mathbf{\hat{a}_z})}{dt} \mathbf{\hat{a}_z}\\
+  &= \frac{d (cos(\theta) x)}{dt} \mathbf{\hat{a}_x} +
+  \frac{d (l)}{dt} \mathbf{\hat{a}_y} +
+  \frac{d (-sin(\theta) x)}{dt} \mathbf{\hat{a}_z}\\
+  &= (-\dot{\theta}sin(\theta)x + cos(\theta)\dot{x}) \mathbf{\hat{a}_x} +
+  (\dot{\theta}cos(\theta)x + sin(\theta)\dot(x)) \mathbf{\hat{a}_z}
 
 Note that this is the time derivative of :math:`\mathbf{c}` in
 :math:`\mathbf{A}`, and is expressed in the :math:`\mathbf{A}` frame. We can
@@ -464,9 +464,9 @@ still be valid:
 
 .. math::
   \frac{^{\mathbf{A}} d \mathbf{c}}{dt} &= (-\dot{\theta}sin(\theta)x +
-  cos(\theta)\dot{x}) \mathbf{\hat{a_x}} + (\dot{\theta}cos(\theta)x +
-  sin(\theta)\dot(x)) \mathbf{\hat{a_z}}\\
-  &= \dot(x)\mathbf{\hat{b_x}} - \theta x \mathbf{\hat{b_z}}\\
+  cos(\theta)\dot{x}) \mathbf{\hat{a}_x} + (\dot{\theta}cos(\theta)x +
+  sin(\theta)\dot(x)) \mathbf{\hat{a}_z}\\
+  &= \dot(x)\mathbf{\hat{b}_x} - \theta x \mathbf{\hat{b}_z}\\
 
 Note the difference in expression complexity between the two forms. They are
 equivalent, but one is much simpler. This is an extremely important concept, as
@@ -700,7 +700,7 @@ Every ``Vector``'s main information is stored in the ``args`` attribute, which
 stores the three measure numbers for each basis vector in a frame, for every
 relevant frame. A vector does not exist in code until a ``ReferenceFrame``
 is created. At this point, the ``x``, ``y``, and ``z`` attributes of the
-reference frame are immutable ``Vector``s which have measure numbers of
+reference frame are immutable ``Vector``'s which have measure numbers of
 [1,0,0], [0,1,0], and [0,0,1] associated with that ``ReferenceFrame``. One
 these vectors are accessible, new vectors can be created by doing algebraic
 operations with the basis vectors. A vector can have components from multiple
@@ -718,8 +718,8 @@ measure numbers with.
 ``ReferenceFrame`` stores a few things. First, it stores the name you supply it
 on creation (``name`` attribute). It also stores the direction cosine matrices,
 defined upon creation with the ``orientnew`` method, or calling the ``orient``
-method after creation. The direction cosine matrices are represented as SymPy
-``Matrix``'s, and are part of a dictionary where the keys are the
+method after creation. The direction cosine matrices are represented by SymPy's
+``Matrix``, and are part of a dictionary where the keys are the
 ``ReferenceFrame`` and the value the ``Matrix``; these are set
 bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
 orientation dictionary to include ``N`` and its ``Matrix``, but also you also
