@@ -273,7 +273,7 @@ def test_linear_subs():
 def test_probability():
     # various integrals from probability theory
     from sympy.abc import x, y, z
-    from sympy import symbols, Symbol, Abs, expand_mul
+    from sympy import symbols, Symbol, Abs, expand_mul, combsimp, powsimp
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
     sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
                                               bounded=True, positive=True)
@@ -329,3 +329,73 @@ def test_probability():
     assert simplify(E((x+y+1)**2) - E(x+y+1)**2) == (rate**2*sigma1**2 + 1)/rate**2
     assert simplify(E((x+y-1)**2) - E(x+y-1)**2) == (rate**2*sigma1**2 + 1)/rate**2
     assert simplify(E((x+y)**2) - E(x+y)**2) == (rate**2*sigma1**2 + 1)/rate**2
+
+    # Beta' distribution
+    alpha, beta = symbols('alpha beta', positive=True)
+    betadist = x**(alpha-1)*(1+x)**(-alpha - beta)*gamma(alpha+beta) \
+              /gamma(alpha)/gamma(beta)
+    assert integrate(betadist, (x, 0, oo), meijerg=True) == 1
+    i = integrate(x*betadist, (x, 0, oo), meijerg=True, conds='separate')
+    assert (combsimp(i[0]), i[1]) == (alpha/(beta - 1), 1 < beta)
+    j = integrate(x**2*betadist, (x, 0, oo), meijerg=True, conds='separate')
+    assert j[1] == (1 < beta - 1)
+    assert combsimp(j[0] - i[0]**2) == (alpha + beta - 1)*alpha \
+                                        /(beta - 2)/(beta - 1)**2
+
+    # Chi distribution
+    k = Symbol('k', integer=True, positive=True)
+    chi = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
+    assert powsimp(integrate(chi, (x, 0, oo), meijerg=True)) == 1
+    assert simplify(integrate(x*chi, (x, 0, oo), meijerg=True)) == \
+           sqrt(2)*gamma((k + 1)/2)/gamma(k/2)
+    assert simplify(integrate(x**2*chi, (x, 0, oo), meijerg=True)) == k
+
+    # Chi^2 distribution
+    chisquared = 2**(-k/2)/gamma(k/2)*x**(k/2-1)*exp(-x/2)
+    assert powsimp(integrate(chisquared, (x, 0, oo), meijerg=True)) == 1
+    assert simplify(integrate(x*chisquared, (x, 0, oo), meijerg=True)) == k
+    assert simplify(integrate(x**2*chisquared, (x, 0, oo), meijerg=True)) == \
+           k*(k + 2)
+    assert combsimp(integrate(((x-k)/sqrt(2*k))**3*chisquared, (x, 0, oo),
+                    meijerg=True)) == 2*sqrt(2)/sqrt(k)
+
+    # Dagum distribution
+    a, b, p = symbols('a b p', positive=True)
+    # XXX (x/b)**a does not work
+    dagum = a*p/x*(x/b)**(a*p)/(1 + x**a/b**a)**(p+1)
+    assert simplify(integrate(dagum, (x, 0, oo), meijerg=True)) == 1
+    # XXX conditions are a mess
+    assert simplify(integrate(x*dagum, (x, 0, oo), meijerg=True, conds='none')) \
+           == b*gamma(1 - 1/a)*gamma(p + 1/a)/gamma(p)
+    assert simplify(integrate(x**2*dagum, (x, 0, oo), meijerg=True, conds='none')) \
+           == b**2*gamma(1 - 2/a)*gamma(p + 2/a)/gamma(p)
+
+    # F-distribution
+    d1, d2 = symbols('d1 d2', positive=True)
+    f = sqrt(((d1*x)**d1 * d2**d2)/(d1*x + d2)**(d1+d2))/x \
+          /gamma(d1/2)/gamma(d2/2)*gamma((d1 + d2)/2)
+    assert simplify(integrate(f, (x, 0, oo), meijerg=True)) == 1
+    # TODO conditions are a mess
+    assert simplify(integrate(x*f, (x, 0, oo), meijerg=True, conds='none')) == \
+           d2/(d2 - 2)
+    assert simplify(integrate(x**2*f, (x, 0, oo), meijerg=True, conds='none')) == \
+           d2**2*(d1 + 2)/d1/(d2 - 4)/(d2 - 2)
+
+    # TODO gamma, inverse gaussian, Levi, log-logistic, rayleigh, weibull
+
+    # rice distribution
+    from sympy import besseli
+    nu, sigma = symbols('nu sigma', positive=True)
+    rice = x/sigma**2*exp(-(x**2+ nu**2)/2/sigma**2)*besseli(0, x*nu/sigma**2)
+    assert integrate(rice, (x, 0, oo), meijerg=True) == 1
+    # can someone verify higher moments?
+
+    # Laplace distribution
+    mu = Symbol('mu', real=True)
+    b = Symbol('b', positive=True)
+    laplace = exp(-abs(x-mu)/b)/2/b
+    assert integrate(laplace, (x, -oo, oo), meijerg=True) == 1
+    assert integrate(x*laplace, (x, -oo, oo), meijerg=True) == mu
+    assert integrate(x**2*laplace, (x, -oo, oo), meijerg=True) == 2*b**2 + mu**2
+
+    # TODO are there other distributions supported on (-oo, oo) that we can do?
