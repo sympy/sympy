@@ -1279,30 +1279,43 @@ def posify(eq):
     eq = eq.subs(reps)
     return eq, dict([(r,s) for s, r in reps.iteritems()])
 
-def _polarify(eq, pause=False):
+def _polarify(eq, lift, pause=False):
     from sympy import polar_lift
     if eq.is_polar:
         return eq
     if eq.is_number and not pause:
         return polar_lift(eq)
+    if isinstance(eq, Symbol) and not pause and lift:
+        return polar_lift(eq)
     elif eq.is_Atom:
         return eq
     elif eq.is_Add:
-        return eq.func(*[_polarify(arg, pause=True) for arg in eq.args])
+        r = eq.func(*[_polarify(arg, lift, pause=True) for arg in eq.args])
+        if lift:
+            return polar_lift(r)
+        return r
     elif eq.is_Function:
-        return eq.func(*[_polarify(arg, pause=False) for arg in eq.args])
+        return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
     else:
-        return eq.func(*[_polarify(arg, pause=pause) for arg in eq.args])
+        return eq.func(*[_polarify(arg, lift, pause=pause) for arg in eq.args])
 
-def polarify(eq, subs=True):
+def polarify(eq, subs=True, lift=False):
     """
     Turn all numbers in eq into their polar equivalents (under the standard
-    choice of argument), and substitute all symbols for polar dummies.
+    choice of argument).
 
     Note that no attempt is made to guess a formal convention of adding
-    polar numbers, expressions like 1 + x will not be altered.
+    polar numbers, expressions like 1 + x will generally not be altered.
 
     Note also that this function does not promote exp(x) to exp_polar(x).
+
+    If `subs` is True, all symbols which are not already polar will be
+    substituted for polar dummies; in this case the function behaves much
+    like posify.
+
+    If `lift` is True, both addition statements and non-polar symbols are
+    changed to their polar_lift()ed versions.
+    Note that lift=True implies subs=False.
 
     >>> from sympy import polarify, sin, I
     >>> from sympy.abc import x, y
@@ -1313,13 +1326,19 @@ def polarify(eq, subs=True):
     ((_x*exp_polar(I*pi))**_y, {_x: x, _y: y})
     >>> polarify(expr)[0].expand()
     _x**_y*exp_polar(_y*I*pi)
+    >>> polarify(x, lift=True)
+    polar_lift(x)
+    >>> polarify(x*(1+y), lift=True)
+    polar_lift(x)*polar_lift(y + 1)
 
     Adds are treated carefully:
 
     >>> polarify(1 + sin((1 + I)*x))
     (sin(_x*polar_lift(1 + I)) + 1, {_x: x})
     """
-    eq = _polarify(sympify(eq))
+    if lift:
+        subs = False
+    eq = _polarify(sympify(eq), lift)
     if not subs:
         return eq
     reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.atoms(Symbol)])

@@ -286,6 +286,7 @@ class Abs(Function):
 
     is_real = True
     is_negative = False
+    unbranched = True
 
     def fdiff(self, argindex=1):
         """
@@ -520,7 +521,7 @@ class periodic_argument(Function):
 
     @classmethod
     def _getunbranched(cls, ar):
-        from sympy import exp_polar, log
+        from sympy import exp_polar, log, polar_lift
         if ar.is_Mul:
             args = ar.args
         else:
@@ -534,6 +535,8 @@ class periodic_argument(Function):
             elif a.is_Pow:
                 re, im = a.exp.as_real_imag()
                 unbranched += re*unbranched_argument(a.base) + im*log(abs(a.base))
+            elif a.func is polar_lift:
+                unbranched += arg(a.args[0])
             else:
                 return None
         return unbranched

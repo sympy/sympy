@@ -239,6 +239,8 @@ def test_periodic_argument():
     assert periodic_argument(polar_lift(2 + I), pi) \
            == periodic_argument(polar_lift(2 + I), pi)
 
+    assert unbranched_argument(polar_lift(1 + I)) == pi/4
+
 @XFAIL
 def test_principal_branch_fail():
     # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
