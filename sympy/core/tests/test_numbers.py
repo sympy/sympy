@@ -1,6 +1,6 @@
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow)
+                   Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
@@ -81,11 +81,13 @@ def test_mod():
     assert 15 % Integer(4) == Integer(3)
 
 def test_divmod():
-    assert divmod(S(12), S(8)) == (1, 4)
-    assert divmod(-S(12), S(8)) == (-2, 4)
-    assert divmod(S(0), S(1)) == (0, 0)
+    assert divmod(S(12), S(8)) == Tuple(1, 4)
+    assert divmod(-S(12), S(8)) == Tuple(-2, 4)
+    assert divmod(S(0), S(1)) == Tuple(0, 0)
     raises(ZeroDivisionError, "divmod(S(0), S(0))")
     raises(ZeroDivisionError, "divmod(S(1), S(0))")
+    assert divmod(S(12), 8) == Tuple(1, 4)
+    assert divmod(12, S(8)) == Tuple(1, 4)
 
 def test_igcd():
     assert igcd(0, 0) == 0

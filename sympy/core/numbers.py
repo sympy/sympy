@@ -1016,7 +1016,18 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __divmod__(self, other):
-        return divmod(self.p, other.p)
+        from containers import Tuple
+        if isinstance(other, Integer):
+            return Tuple(*(divmod(self.p, other.p)))
+        else:
+            return Tuple(*(divmod(self.p, other)))
+
+    def __rdivmod__(self, other):
+        from containers import Tuple
+        if isinstance(other, Integer):
+            return Tuple(*divmod(other.p, self.p))
+        else:
+            return Tuple(*divmod(other, self.p))
 
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):
