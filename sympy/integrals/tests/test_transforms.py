@@ -365,7 +365,7 @@ def test_laplace_transform():
     # TODO would be nice to have these come out better
     assert LT(exp(-a*t)*sin(b*t), t, s) == (1/b/(1 + (a + s)**2/b**2), -a, True)
     assert LT(exp(-a*t)*cos(b*t), t, s) == \
-           (sqrt((a + s)**2)/b**2/(1 + (a + s)**2/b**2), -a, True)
+           ((s + a)/(a**2 + 2*a*s + b**2 + s**2), -a, True)
     # TODO sinh, cosh have delicate cancellation
 
     # TODO conditions are a mess
@@ -448,7 +448,7 @@ def test_fourier_transform():
     assert factor(FT(x*exp(-a*x)*Heaviside(x), x, k), extension=I) \
            == 1/(a + 2*pi*I*k)**2
     assert FT(exp(-a*x)*sin(b*x)*Heaviside(x), x, k) \
-           == 1/b/(1 + (a + 2*I*pi*k)**2/b**2)
+           == 1/b/(1 + (a + 2*pi*I*k)**2/b**2)
 
     assert FT(exp(-a*x**2), x, k) == sqrt(pi)*exp(-pi**2*k**2/a)/sqrt(a)
     assert IFT(sqrt(pi/a)*exp(-(pi*k)**2/a), k, x) == exp(-a*x**2)

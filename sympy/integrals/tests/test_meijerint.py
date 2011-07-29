@@ -160,6 +160,10 @@ def test_meijerint():
                  *gamma(a/2 + b/2 - s + 1)),
             And(0 < -2*re(4*s) + 8, 0 < re(a/2 + b/2 + s), re(2*s) < 1))
 
+    # test a bug
+    assert integrate(sin(x**a)*sin(x**b), (x, 0, oo), meijerg=True) == \
+           Integral(sin(x**a)*sin(x**b), (x, 0, oo))
+
 def test_bessel():
     from sympy import besselj, Heaviside, besseli, polar_lift, exp_polar
     assert simplify(integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
@@ -228,7 +232,7 @@ def test_lookup_table():
     table = {}
     _create_lookup_table(table)
     for _, l in sorted(table.items()):
-        for formula, terms, cond in sorted(l):
+        for formula, terms, cond, hint in sorted(l):
             subs = {}
             for a in list(formula.free_symbols) + [z_dummy]:
                 if hasattr(a, 'properties') and a.properties:
@@ -265,3 +269,63 @@ def test_linear_subs():
     from sympy import besselj
     assert integrate(sin(x-1), x, meijerg=True) == -cos(1 - x)
     assert integrate(besselj(1, x-1), x, meijerg=True) == -besselj(0, 1 - x)
+
+def test_probability():
+    # various integrals from probability theory
+    from sympy.abc import x, y, z
+    from sympy import symbols, Symbol, Abs, expand_mul
+    mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
+    sigma1, sigma2 = symbols('sigma1 sigma2', real=True, finite=True,
+                                              bounded=True, positive=True)
+    rate = Symbol('lambda', real=True, positive=True, bounded=True)
+    def normal(x, mu, sigma):
+        return 1/sqrt(2*pi*sigma**2)*exp(-(x-mu)**2/2/sigma**2)
+    def exponential(x, rate):
+        return rate*exp(-rate*x)
+
+    assert integrate(normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True) == 1
+    assert integrate(x*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True) == mu1
+    assert integrate(x**2*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True) \
+           == mu1**2 + sigma1**2
+    assert integrate(x**3*normal(x, mu1, sigma1), (x, -oo, oo), meijerg=True) \
+           == mu1**3 + 3*mu1*sigma1**2
+    assert integrate(normal(x, mu1, sigma1)*normal(y, mu2, sigma2),
+                     (x, -oo, oo), (y, -oo, oo), meijerg=True) == 1
+    assert integrate(x*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),
+                     (x, -oo, oo), (y, -oo, oo), meijerg=True) == mu1
+    assert integrate(y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),
+                     (x, -oo, oo), (y, -oo, oo), meijerg=True) == mu2
+    assert integrate(x*y*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),
+                     (x, -oo, oo), (y, -oo, oo), meijerg=True) == mu1*mu2
+    assert integrate((x+y+1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),
+                     (x, -oo, oo), (y, -oo, oo), meijerg=True) == 1 + mu1 + mu2
+    assert integrate((x+y-1)*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),
+                     (x, -oo, oo), (y, -oo, oo), meijerg=True) == -1 + mu1 + mu2
+
+    i = integrate(x**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),
+                  (x, -oo, oo), (y, -oo, oo), meijerg=True)
+    assert not i.has(Abs)
+    assert simplify(i) == mu1**2 + sigma1**2
+    assert integrate(y**2*normal(x, mu1, sigma1)*normal(y, mu2, sigma2),
+                     (x, -oo, oo), (y, -oo, oo), meijerg=True) == \
+           sigma2**2 + mu2**2
+
+    assert integrate(exponential(x, rate), (x, 0, oo), meijerg=True) == 1
+    assert integrate(x*exponential(x, rate), (x, 0, oo), meijerg=True) == 1/rate
+    assert integrate(x**2*exponential(x, rate), (x, 0, oo), meijerg=True) \
+           == 2/rate**2
+
+    def E(expr):
+        res1 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
+                         (x, 0, oo), (y, -oo, oo), meijerg=True)
+        res2 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
+                                 (y, -oo, oo), (x, 0, oo), meijerg=True)
+        assert expand_mul(res1) == expand_mul(res2)
+        return res1
+
+    assert E(1) == 1
+    assert E(x*y) == mu1/rate
+    assert E(x*y**2) == mu1**2/rate + sigma1**2/rate
+    assert simplify(E((x+y+1)**2) - E(x+y+1)**2) == (rate**2*sigma1**2 + 1)/rate**2
+    assert simplify(E((x+y-1)**2) - E(x+y-1)**2) == (rate**2*sigma1**2 + 1)/rate**2
+    assert simplify(E((x+y)**2) - E(x+y)**2) == (rate**2*sigma1**2 + 1)/rate**2

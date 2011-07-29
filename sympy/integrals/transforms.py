@@ -818,7 +818,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 def _laplace_transform(f, t, s, simplify=True):
     """ The backend function for laplace transforms. """
     from sympy import (re, Max, exp, pi, Abs, Min, periodic_argument as arg,
-                       cos, Wild, symbols)
+                       cos, Wild, symbols, polar_lift)
     F = integrate(exp(-s*t) * f, (t, 0, oo))
 
     if not F.has(Integral):
@@ -841,6 +841,8 @@ def _laplace_transform(f, t, s, simplify=True):
         aux_ = []
         for d in disjuncts(c):
             m = d.match(abs(arg((s + w3)**p*q, w1)) < w2)
+            if not m:
+                m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) < w2)
             if m:
                 if m[q] > 0 and m[w2]/m[p] == pi/2:
                     d = re(s + m[w3]) > 0

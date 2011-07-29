@@ -47,18 +47,27 @@ def _create_lookup_table(table):
     p, q, a, b, c = map(wild, 'pqabc')
     n = Wild('n', properties=[lambda x: x.is_Integer and x > 0])
     t = p*z**q
-    def add(formula, an, ap, bm, bq, arg=t, fac=S(1), cond=True):
+    def add(formula, an, ap, bm, bq, arg=t, fac=S(1), cond=True, hint=True):
         table.setdefault(_mytype(formula, z), []).append((formula,
-                                     [(fac, meijerg(an, ap, bm, bq, arg))], cond))
-    def addi(formula, inst, cond):
-        table.setdefault(_mytype(formula, z), []).append((formula, inst, cond))
+                                     [(fac, meijerg(an, ap, bm, bq, arg))], cond, hint))
+    def addi(formula, inst, cond, hint=True):
+        table.setdefault(_mytype(formula, z), []).append((formula, inst, cond, hint))
 
     def constant(a):
         return [(a, meijerg([1], [], [], [0], z)),
                 (a, meijerg([], [1], [0], [], z))]
-    table[()] = [(a, constant(a), True)]
+    table[()] = [(a, constant(a), True, True)]
 
     # [P], Section 8.
+
+    from sympy import unpolarify, Function, Not
+    class IsNonPositiveInteger(Function):
+        nargs = 1
+        @classmethod
+        def eval(cls, arg):
+            arg = unpolarify(arg)
+            if arg.is_Integer is True:
+                return arg <= 0
 
     # Section 8.4.2
     from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
@@ -72,7 +81,8 @@ def _create_lookup_table(table):
         gamma(a)*b**(a-1), And(b > 0))
     add(Heaviside((b/p)**(1/q) - z)*(b - t)**(a-1), [], [a], [0], [], t/b,
         gamma(a)*b**(a-1), And(b > 0))
-    add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a))
+    add((b + t)**(-a), [1 - a], [], [0], [], t/b, b**(-a)/gamma(a),
+        hint=Not(IsNonPositiveInteger(a)))
     add(abs(b - t)**(-a), [1 - a], [(1 - a)/2], [0], [(1 - a)/2], t/b,
         pi/(gamma(a)*cos(pi*a/2))*abs(b)**(-a), re(a) < 1)
     add((t**a - b**a)/(t - b), [0, a], [], [0, a], [], t/b,
@@ -682,7 +692,8 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     if b2 < 0:
         b2 = -b2
         g2 = _flip_g(g2)
-    # We may assume b1, b2 are Rationals.
+    if not b1.is_Rational or not b2.is_Rational:
+        return
     m1, n1 = b1.p, b1.q
     m2, n2 = b2.p, b2.q
     tau = ilcm(m1*n2, m2*n1)
@@ -1191,14 +1202,18 @@ def _rewrite_single(f, x, recursive=True):
     t = _mytype(f, z)
     if t in _lookup_table:
         l = _lookup_table[t]
-        for formula, terms, cond in l:
+        for formula, terms, cond, hint in l:
             subs = f.match(formula)
             if subs:
                 subs_ = {}
                 for fro, to in subs.items():
-                    subs_[fro] = unpolarify(polarify(to, subs=False),
+                    subs_[fro] = unpolarify(polarify(to, lift=True),
                                             exponents_only=True)
                 subs = subs_
+                if not isinstance(hint, bool):
+                    hint = hint.subs(subs)
+                if hint is False:
+                    continue
                 if not isinstance(cond, bool):
                     cond = unpolarify(cond.subs(subs))
                 if _eval_cond(cond) is False:
@@ -1265,7 +1280,11 @@ def _rewrite_single(f, x, recursive=True):
         c, m = f.as_coeff_mul(x)
         if len(m) > 1:
             raise NotImplementedError('Unexpected form...')
-        res += [(c, 0, m[0])]
+        g = m[0]
+        a, b = _get_coeff_exp(g.argument, x)
+        res += [(c, 0, meijerg(g.an, g.aother, g.bm, g.bother,
+                               unpolarify(polarify(a, lift=True), exponents_only=True) \
+                               *x**b))]
     _debug('Recursive mellin transform worked:', g)
     return res, True
 
@@ -1590,8 +1609,12 @@ def _meijerint_definite_4(f, x, only_double=False):
             res = S(0)
             for C1, s1, f1 in g1:
                 for C2, s2, f2 in g2:
-                    C, f1_, f2_ = _rewrite_saxena(fac*C1*C2, po*x**(s1 + s2),
+                    r = _rewrite_saxena(fac*C1*C2, po*x**(s1 + s2),
                                                   f1, f2, x, full_pb)
+                    if r is None:
+                        _debug('Non-rational exponents.')
+                        return
+                    C, f1_, f2_ = r
                     _debug('Saxena subst for yielded:', C, f1_, f2_)
                     cond = And(cond, _check_antecedents(f1_, f2_, x))
                     res += C*_int0oo(f1_, f2_, x)
