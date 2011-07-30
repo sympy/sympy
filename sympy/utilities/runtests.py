@@ -21,9 +21,11 @@ import linecache
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest # avoid clashing with our doctest() function
-from sympy.utilities import any
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
+import random
+
+from sympy.core.cache import clear_cache
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -82,8 +84,6 @@ def get_sympy_dir():
                         os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
 
-from sympy.utilities import any, all
-
 def isgeneratorfunction(object):
     """
     Return true if the object is a user-defined generator function.
@@ -121,20 +121,39 @@ def test(*paths, **kwargs):
 
     Examples:
 
-    >> from sympy.utilities.runtests import test
+    >> import sympy
 
     Run all tests:
-    >> test()
+    >> sympy.test()
 
     Run one file:
-    >> test("sympy/core/tests/test_basic.py")
-    >> test("_basic")
+    >> sympy.test("sympy/core/tests/test_basic.py")
+    >> sympy.test("_basic")
 
     Run all tests in sympy/functions/ and some particular file:
-    >> test("sympy/core/tests/test_basic.py", "sympy/functions")
+    >> sympy.test("sympy/core/tests/test_basic.py", "sympy/functions")
 
     Run all tests in sympy/core and sympy/utilities:
-    >> test("/core", "/util")
+    >> sympy.test("/core", "/util")
+
+    Run specific test from a file:
+    >> sympy.test("sympy/core/tests/test_basic.py", kw="test_equality")
+
+    Run the tests with verbose mode on:
+    >> sympy.test(verbose=True)
+
+    Don't sort the test output:
+    >> sympy.test(sort=False)
+
+    Turn on post-mortem pdb:
+    >> sympy.test(pdb=True)
+
+    Turn off colors:
+    >> sympy.test(colors=False)
+
+    The traceback verboseness can be set to "short" or "no" (default is "short")
+    >> sympy.test(tb='no')
+
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
@@ -142,8 +161,16 @@ def test(*paths, **kwargs):
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     sort = kwargs.get("sort", True)
+    seed = kwargs.get("seed", None)
+    if seed is None:
+        seed = random.randrange(100000000)
     r = PyTestReporter(verbose, tb, colors)
-    t = SymPyTests(r, kw, post_mortem)
+    t = SymPyTests(r, kw, post_mortem, seed)
+
+    # Disable warnings for external modules
+    import sympy.external
+    sympy.external.importtools.WARN_OLD_VERSION = False
+    sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     test_files = t.get_test_files('sympy')
     if len(paths) == 0:
@@ -174,27 +201,26 @@ def doctest(*paths, **kwargs):
 
     Examples:
 
-    >> froms sympy.utilities.runtests import doctest
+    >> import sympy
 
     Run all tests:
-    >> doctest()
+    >> sympy.doctest()
 
     Run one file:
-    >> doctest("sympy/core/basic.py")
-    >> doctest("polynomial.txt")
+    >> sympy.doctest("sympy/core/basic.py")
+    >> sympy.doctest("polynomial.txt")
 
     Run all tests in sympy/functions/ and some particular file:
-    >> doctest("/functions", "basic.py")
+    >> sympy.doctest("/functions", "basic.py")
 
     Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
     sympy\functions\special\polynomials.py, and sympy\polys\polynomial.py:
-    >> doctest("polynomial")
+    >> sympy.doctest("polynomial")
     """
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
-                    "sympy/thirdparty/pyglet", # segfaults
                     "doc/src/modules/mpmath", # needs to be fixed upstream
                     "sympy/mpmath", # needs to be fixed upstream
                     "doc/src/modules/plotting.txt", # generates live plots
@@ -207,6 +233,11 @@ def doctest(*paths, **kwargs):
                     "sympy/utilities/benchmarking.py", # needs py.test
                     ])
     blacklist = convert_to_native_paths(blacklist)
+
+    # Disable warnings for external modules
+    import sympy.external
+    sympy.external.importtools.WARN_OLD_VERSION = False
+    sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
@@ -442,7 +473,8 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
 class SymPyTests(object):
 
-    def __init__(self, reporter, kw="", post_mortem=False):
+    def __init__(self, reporter, kw="", post_mortem=False,
+                 seed=random.random()):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -450,6 +482,7 @@ class SymPyTests(object):
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
+        self._seed = seed
 
     def test(self, sort=False):
         """
@@ -461,8 +494,9 @@ class SymPyTests(object):
             self._testfiles.sort()
         else:
             from random import shuffle
+            random.seed(self._seed)
             shuffle(self._testfiles)
-        self._reporter.start()
+        self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
                 self.test_file(f)
@@ -472,10 +506,12 @@ class SymPyTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
+        clear_cache()
         name = "test%d" % self._count
         name = os.path.splitext(os.path.basename(filename))[0]
         self._count += 1
         gl = {'__file__':filename}
+        random.seed(self._seed)
         try:
             execfile(filename, gl)
         except (ImportError, SyntaxError):
@@ -531,7 +567,7 @@ class SymPyTests(object):
                     if self._post_mortem:
                         pdb.post_mortem(tr)
                 elif t.__name__ == "Skipped":
-                    self._reporter.test_skip()
+                    self._reporter.test_skip(v)
                 elif t.__name__ == "XFail":
                     self._reporter.test_xfail()
                 elif t.__name__ == "XPass":
@@ -592,6 +628,7 @@ class SymPyDocTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
+        clear_cache()
 
         import unittest
         from StringIO import StringIO
@@ -734,11 +771,7 @@ class SymPyDocTestFinder(DocTestFinder):
                             valname = '%s.%s' % (name, rawname)
                             self._find(tests, val, valname, module, source_lines, globs, seen)
                         except ValueError, msg:
-                            if "invalid option" in msg.args[0]:
-                                # +SKIP raises ValueError in Python 2.4
-                                pass
-                            else:
-                                raise
+                            raise
                         except:
                             pass
 
@@ -1024,14 +1057,18 @@ class PyTestReporter(Reporter):
         t = traceback.format_exception_only(e, val)
         self.write("".join(t))
 
-    def start(self):
+    def start(self, seed=None):
         self.write_center("test process starts")
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
         self.write("executable:   %s  (%s)\n" % (executable, python_version))
+        from .misc import ARCH
+        self.write("architecture: %s\n" % ARCH)
         from sympy.polys.domains import GROUND_TYPES
-        self.write("ground types: %s\n\n" % GROUND_TYPES)
+        self.write("ground types: %s\n" % GROUND_TYPES)
+        if seed is not None:
+            self.write("random seed: %d\n\n" % seed)
         self._t_start = clock()
 
     def finish(self):
@@ -1158,9 +1195,12 @@ class PyTestReporter(Reporter):
         else:
             self.write(".", "Green")
 
-    def test_skip(self):
+    def test_skip(self, v):
         self._skipped += 1
         self.write("s", "Green")
+        if self._verbose:
+            self.write(" - ", "Green")
+            self.write(v.message, "Green")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

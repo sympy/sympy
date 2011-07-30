@@ -21,8 +21,8 @@ def apart(f, x=None, full=False):
     >>> from sympy.polys.partfrac import apart
     >>> from sympy.abc import x, y
 
-    >>> apart(y/(x+2)/(x+1), x)
-    y/(1 + x) - y/(2 + x)
+    >>> apart(y/(x + 2)/(x + 1), x)
+    -y/(x + 2) + y/(x + 1)
 
     """
     f = sympify(f)
@@ -68,7 +68,7 @@ def apart_undetermined_coeffs(P, Q):
         n, q = f.degree(), Q
 
         for i in xrange(1, k+1):
-            coeffs, q = take(X, n), q.exquo(f)
+            coeffs, q = take(X, n), q.quo(f)
             partial.append((coeffs, q, f, i))
             symbols.extend(coeffs)
 
@@ -146,10 +146,10 @@ def apart_full_decomposition(P, Q):
             Q = Poly(Q, x)
 
             G = P.gcd(d)
-            D = d.exquo(G)
+            D = d.quo(G)
 
             B, g = Q.half_gcdex(D)
-            b = (P * B.exquo(g)).rem(D)
+            b = (P * B.quo(g)).rem(D)
 
             numer = b.as_expr()
             denom = (x-a)**(n-j)

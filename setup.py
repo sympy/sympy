@@ -32,22 +32,21 @@ from distutils.core import Command
 import sys
 
 import sympy
-from sympy.utilities.runtests import test, doctest
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2,4):
-    print "Sympy requires Python 2.4 or newer. Python %d.%d detected" % \
+if sys.version_info[:2] < (2,5):
+    print "Sympy requires Python 2.5 or newer. Python %d.%d detected" % \
           sys.version_info[:2]
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find * -name __init__.py |rev |cut -f 2- -d '/' |rev \
-#   |egrep -v "^sympy$|thirdparty" `;do echo "'${i//\//.}',"; done |sort
+# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev`; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.concrete',
     'sympy.core',
+    'sympy.external',
     'sympy.functions',
     'sympy.functions.combinatorial',
     'sympy.functions.elementary',
@@ -160,10 +159,10 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        if test():
+        if sympy.test():
             # all regular tests run successfuly, so let's also run doctests
             # (if some regular test fails, the doctests are not run)
-            doctest()
+            sympy.doctest()
 
 
 class run_benchmarks(Command):
@@ -200,6 +199,7 @@ tests = [
     'sympy.assumptions.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
+    'sympy.external.tests',
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
     'sympy.functions.special.tests',
@@ -223,34 +223,8 @@ tests = [
     'sympy.solvers.tests',
     'sympy.statistics.tests',
     'sympy.tensor.tests',
-    'sympy.test_external',
     'sympy.utilities.tests',
     ]
-
-# update the following list from:
-# http://pyglet.googlecode.com/svn/trunk/setup.py
-# (whenever we update pyglet in sympy)
-# try ./setup.py sdist to see if it works
-pyglet_packages=[
-        'pyglet',
-        'pyglet.app',
-        'pyglet.font',
-        'pyglet.gl',
-        'pyglet.graphics',
-        'pyglet.image',
-        'pyglet.image.codecs',
-        'pyglet.media',
-        'pyglet.media.drivers',
-        'pyglet.media.drivers.directsound',
-        'pyglet.media.drivers.openal',
-        'pyglet.text',
-        'pyglet.text.formats',
-        'pyglet.window',
-        'pyglet.window.carbon',
-        'pyglet.window.win32',
-        'pyglet.window.xlib',
-]
-pyglet_packages = ["sympy.thirdparty.pyglet." + s for s in pyglet_packages]
 
 setup(
       name = 'sympy',
@@ -260,7 +234,7 @@ setup(
       author_email = 'sympy@googlegroups.com',
       license = 'BSD',
       url = 'http://code.google.com/p/sympy',
-      packages = ['sympy'] + modules + tests + pyglet_packages,
+      packages = ['sympy'] + modules + tests,
       scripts = ['bin/isympy'],
       ext_modules = [],
       package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },

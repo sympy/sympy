@@ -8,6 +8,7 @@ from function import FunctionClass
 from sympy.logic.boolalg import Boolean
 
 import re
+import warnings
 
 class Symbol(AtomicExpr, Boolean):
     """
@@ -30,6 +31,20 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
 
+    @property
+    def _diff_wrt(self):
+        """Allow derivatives wrt Symbols.
+
+        Examples
+        ========
+
+            >>> from sympy import Symbol
+            >>> x = Symbol('x')
+            >>> x._diff_wrt
+            True
+        """
+        return True
+
     def __new__(cls, name, commutative=True, **assumptions):
         """Symbols are identified by name and assumptions::
 
@@ -42,7 +57,6 @@ class Symbol(AtomicExpr, Boolean):
         """
 
         if 'dummy' in assumptions:
-            import warnings
             warnings.warn(
                     "\nThe syntax Symbol('x', dummy=True) is deprecated and will"
                     "\nbe dropped in a future version of Sympy. Please use Dummy()"
@@ -53,7 +67,7 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew_cached_(cls, name, commutative, **assumptions)
 
     def __new_stage2__(cls, name, commutative=True, **assumptions):
-        assert isinstance(name, str),`type(name)`
+        assert isinstance(name, str),repr(type(name))
         obj = Expr.__new__(cls, **assumptions)
         obj.is_commutative = commutative
         obj.name = name
@@ -68,8 +82,14 @@ class Symbol(AtomicExpr, Boolean):
     def _hashable_content(self):
         return (self.is_commutative, self.name)
 
+    def sort_key(self, order=None):
+        from sympy.core import S
+        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+
     def as_dummy(self):
-        return Dummy(self.name, self.is_commutative, **self.assumptions0)
+        assumptions = self.assumptions0.copy()
+        assumptions.pop('commutative', None)
+        return Dummy(self.name, self.is_commutative, **assumptions)
 
     def __call__(self, *args):
         from function import Function
@@ -190,19 +210,9 @@ class Wild(Symbol):
         from sympy.core.function import WildFunction
         return WildFunction(self.name, nargs=len(args))(*args, **assumptions)
 
-class Pure(Dummy):
-
-    def __new__(cls):
-        obj = Symbol.__xnew__(cls, 'pure')
-        obj.dummy_index = 0
-        return obj
-
-    def _hashable_content(self):
-        return Symbol._hashable_content(self) + (self.dummy_index,)
-
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
-_re_var_split = re.compile(r"\s|,")
+_re_var_split = re.compile(r"\s*,\s*|\s+")
 
 def symbols(names, **args):
     """
@@ -219,9 +229,12 @@ def symbols(names, **args):
 
     The type of output is dependent on the properties of input arguments::
 
-        >>> x = symbols('x')
-        >>> (x,) = symbols('x,')
-
+        >>> symbols('x')
+        x
+        >>> symbols('x,')
+        (x,)
+        >>> symbols('x,y')
+        (x, y)
         >>> symbols(('a', 'b', 'c'))
         (a, b, c)
         >>> symbols(['a', 'b', 'c'])
@@ -229,12 +242,13 @@ def symbols(names, **args):
         >>> symbols(set(['a', 'b', 'c']))
         set([a, b, c])
 
-    If an iterable container is needed set ``seq`` argument to ``True``::
+    If an iterable container is needed for a single symbol, set the ``seq``
+    argument to ``True`` or terminate the symbol name with a comma::
 
         >>> symbols('x', seq=True)
         (x,)
 
-    To cut on typing, range syntax is supported co create indexed symbols::
+    To reduce typing, range syntax is supported to create indexed symbols::
 
         >>> symbols('x:10')
         (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)
@@ -248,7 +262,7 @@ def symbols(names, **args):
         >>> symbols(('x5:10', 'y:5'))
         ((x5, x6, x7, x8, x9), (y0, y1, y2, y3, y4))
 
-    To cut on typing even more, lexicographic range syntax is supported::
+    To reduce typing even more, lexicographic range syntax is supported::
 
         >>> symbols('x:z')
         (x, y, z)
@@ -281,16 +295,29 @@ def symbols(names, **args):
 
     """
     result = []
+    if 'each_char' in args:
+        warnings.warn("The each_char option to symbols() and var() is "
+            "deprecated.  Separate symbol names by spaces or commas instead.",
+            DeprecationWarning)
 
     if isinstance(names, basestring):
+        names = names.strip()
+        as_seq= names.endswith(',')
+        if as_seq:
+            names = names[:-1].rstrip()
+        if not names:
+            raise ValueError('no symbols given')
+
         names = _re_var_split.split(names)
+        if args.pop('each_char', False) and not as_seq and len(names) == 1:
+            return symbols(tuple(names[0]), **args)
 
         cls = args.pop('cls', Symbol)
-        seq = args.pop('seq', False)
+        seq = args.pop('seq', as_seq)
 
         for name in names:
             if not name:
-                continue
+                raise ValueError('missing symbol')
 
             if ':' not in name:
                 symbol = cls(name, **args)
@@ -330,17 +357,13 @@ def symbols(names, **args):
 
         if not seq and len(result) <= 1:
             if not result:
-                return None
-            elif names[-1]:
-                return result[0]
+                raise ValueError('missing symbol') # should never happen
+            return result[0]
 
         return tuple(result)
     else:
         for name in names:
-            syms = symbols(name, **args)
-
-            if syms is not None:
-                result.append(syms)
+            result.append(symbols(name, **args))
 
         return type(names)(result)
 

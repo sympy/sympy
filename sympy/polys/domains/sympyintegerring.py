@@ -16,6 +16,26 @@ class SymPyIntegerRing(IntegerRing):
     def __init__(self):
         """Allow instantiation of this domain. """
 
+    def of_type(self, a):
+        """
+        Check if `a` is of type `dtype` (`sympy`).
+
+        **Example**
+
+        >>> from sympy import S, Integer, Rational
+        >>> from sympy.polys.domains import ZZ_sympy
+
+        >>> ZZ_sympy().of_type(S.One)
+        True
+        >>> ZZ_sympy().of_type(Integer(3))
+        True
+        >>> ZZ_sympy().of_type(Rational(3, 2))
+        False
+
+        """
+        return type(a) in [type(self.one), type(self.zero),
+            type(self.dtype(-1)), type(self.dtype(2))]
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return a
@@ -24,7 +44,7 @@ class SymPyIntegerRing(IntegerRing):
         """Convert SymPy's Integer to SymPy's `Integer`. """
         if a.is_Integer:
             return a
-        elif a.is_Real and int(a) == a:
+        elif a.is_Float and int(a) == a:
             return SymPyIntegerType(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
@@ -69,7 +89,7 @@ class SymPyIntegerRing(IntegerRing):
             return SymPyIntegerType(int(a.numer()))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert SymPy's `Real` to SymPy's `Integer`. """
+        """Convert SymPy's `Float` to SymPy's `Integer`. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:

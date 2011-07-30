@@ -1,16 +1,14 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
-from sympy import (S, symbols, Symbol, Integer, Rational, sqrt, I, powsimp,
-    Lambda, sin, cos, pi, I)
+from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
+    powsimp, Lambda, sin, cos, pi, I)
 from sympy.utilities.pytest import raises
 
 from sympy.polys import Poly, cyclotomic_poly
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, roots_rational, roots)
-
-from sympy.utilities import all
+    roots_binomial, roots_rational, preprocess_roots, roots)
 
 a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
@@ -20,14 +18,14 @@ def test_roots_linear():
 def test_roots_quadratic():
     assert roots_quadratic(Poly(2*x**2, x)) == [0, 0]
     assert roots_quadratic(Poly(2*x**2 + 3*x, x)) == [-Rational(3, 2), 0]
-    assert roots_quadratic(Poly(2*x**2 + 3, x)) == [I*sqrt(6)/2, -I*sqrt(6)/2]
-    assert roots_quadratic(Poly(2*x**2 + 4*x+3, x)) == [-1 + I*sqrt(2)/2, -1 - I*sqrt(2)/2]
+    assert roots_quadratic(Poly(2*x**2 + 3, x)) == [-I*sqrt(6)/2, I*sqrt(6)/2]
+    assert roots_quadratic(Poly(2*x**2 + 4*x+3, x)) == [-1 - I*sqrt(2)/2, -1 + I*sqrt(2)/2]
 
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
 
     assert roots_quadratic(Poly(f, x)) == \
-        sorted([-e*(a + c)/(a - c) + ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half,
-                -e*(a + c)/(a - c) - ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half])
+        [-e*(a + c)/(a - c) - ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half,
+         -e*(a + c)/(a - c) + ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half]
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
@@ -74,42 +72,42 @@ def test_roots_quartic():
 def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]
     assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True)) == [-1]
-    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True)) == [-S(1)/2 + I*3**(S(1)/2)/2, -S(1)/2 - I*3**(S(1)/2)/2]
-    assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True)) == [I, -I]
-    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 + I*3**(S(1)/2)/2, S(1)/2 - I*3**(S(1)/2)/2]
+    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True)) == [-S(1)/2 - I*3**(S(1)/2)/2, -S(1)/2 + I*3**(S(1)/2)/2]
+    assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True)) == [-I, I]
+    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 - I*3**(S(1)/2)/2, S(1)/2 + I*3**(S(1)/2)/2]
 
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
-         I*sin(2*pi/7) + cos(2*pi/7),
-         I*sin(3*pi/7) - cos(3*pi/7),
-         I*sin(pi/7)   - cos(pi/7),
-        -I*sin(pi/7)   - cos(pi/7),
-        -I*sin(3*pi/7) - cos(3*pi/7),
-        -I*sin(2*pi/7) + cos(2*pi/7),
+        -cos(pi/7)   - I*sin(pi/7),
+        -cos(pi/7)   + I*sin(pi/7),
+         cos(2*pi/7) - I*sin(2*pi/7),
+         cos(2*pi/7) + I*sin(2*pi/7),
+        -cos(3*pi/7) - I*sin(3*pi/7),
+        -cos(3*pi/7) + I*sin(3*pi/7),
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(8, x, polys=True)) == [
-         2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
-        -2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
         -2**(S(1)/2)/2 - I*2**(S(1)/2)/2,
+        -2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
          2**(S(1)/2)/2 - I*2**(S(1)/2)/2,
+         2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(12, x, polys=True)) == [
-         I/2 + 3**(S(1)/2)/2,
-         I/2 - 3**(S(1)/2)/2,
-        -I/2 - 3**(S(1)/2)/2,
-        -I/2 + 3**(S(1)/2)/2,
+        -3**(S(1)/2)/2 - I/2,
+        -3**(S(1)/2)/2 + I/2,
+         3**(S(1)/2)/2 - I/2,
+         3**(S(1)/2)/2 + I/2,
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True), factor=True) == [1]
     assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True), factor=True) == [-1]
 
     assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True), factor=True) == \
-        [-1 + (-1)**(S(1)/3), -(-1)**(S(1)/3)]
+        [-(-1)**(S(1)/3), -1 + (-1)**(S(1)/3)]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True), factor=True) == \
-        [I, -I]
+        [-I, I]
     assert roots_cyclotomic(cyclotomic_poly(5, x, polys=True), factor=True) == \
-        [-(-1)**(S(1)/5), (-1)**(S(2)/5), -1 + (-1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5), -(-1)**(S(3)/5)]
+        [-(-1)**(S(1)/5), (-1)**(S(2)/5), -(-1)**(S(3)/5), -1 + (-1)**(S(1)/5) - (-1)**(S(2)/5) + (-1)**(S(3)/5)]
     assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True), factor=True) == \
         [(-1)**(S(1)/3), 1 - (-1)**(S(1)/3)]
 
@@ -121,7 +119,7 @@ def test_roots_binomial():
     A = 10**Rational(3, 4)/10
 
     assert roots_binomial(Poly(5*x**4+2, x)) == \
-        [-A+I*A, -A-I*A, A+I*A, A-I*A]
+        [-A - A*I, -A + A*I, A - A*I, A + A*I]
 
     a1 = Symbol('a1', nonnegative=True)
     b1 = Symbol('b1', nonnegative=True)
@@ -133,13 +131,67 @@ def test_roots_binomial():
     assert powsimp(r0[1]) == powsimp(r1[1])
 
 def test_roots_rational():
-    assert roots_rational(Poly(x**2-1, x)) == [S.One, -S.One]
+    assert roots_rational(Poly(x**2-1, x)) == [-S.One, S.One]
     assert roots_rational(Poly(x**2-x, x)) == [S.Zero, S.One]
 
     assert roots_rational(Poly(x**2-x/2, x)) == [S.Zero]
     assert roots_rational(Poly(2*x**2-x, x)) == [S.Zero]
 
     assert roots_rational(Poly(t*x**2-x, x)) == []
+
+def test_roots_preprocessing():
+    f = a*y*x**2 + y - b
+
+    coeff, poly = preprocess_roots(Poly(f, x))
+
+    assert coeff == 1
+    assert poly == Poly(a*y*x**2 + y - b, x)
+
+    f = c**3*x**3 + c**2*x**2 + c*x + a
+
+    coeff, poly = preprocess_roots(Poly(f, x))
+
+    assert coeff == 1/c
+    assert poly == Poly(x**3 + x**2 + x + a, x)
+
+    f = c**3*x**3 + c**2*x**2 + a
+
+    coeff, poly = preprocess_roots(Poly(f, x))
+
+    assert coeff == 1/c
+    assert poly == Poly(x**3 + x**2 + a, x)
+
+    f = c**3*x**3 + c*x + a
+
+    coeff, poly = preprocess_roots(Poly(f, x))
+
+    assert coeff == 1/c
+    assert poly == Poly(x**3 + x + a, x)
+
+    f = c**3*x**3 + a
+
+    coeff, poly = preprocess_roots(Poly(f, x))
+
+    assert coeff == 1/c
+    assert poly == Poly(x**3 + a, x)
+
+    E, F, J, L = symbols("E,F,J,L")
+
+    f = -21601054687500000000*E**8*J**8/L**16 + \
+         508232812500000000*F*x*E**7*J**7/L**14 - \
+         4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
+         16194716250000*E**5*F**3*J**5*x**3/L**10 - \
+         27633173750*E**4*F**4*J**4*x**4/L**8 + \
+         14840215*E**3*F**5*J**3*x**5/L**6 + \
+         54794*E**2*F**6*J**2*x**6/(5*L**4) - \
+         1153*E*J*F**7*x**7/(80*L**2) + \
+         633*F**8*x**8/160000
+
+    coeff, poly = preprocess_roots(Poly(f, x))
+
+    assert coeff == 20*E*J/(F*L**2)
+    assert poly == 633*x**8 - 115300*x**7 + 4383520*x**6 + 296804300*x**5 - 27633173750*x**4 + \
+        809735812500*x**3 - 10673859375000*x**2 + 63529101562500*x - 135006591796875
 
 def test_roots():
     assert roots(1, x) == {}
@@ -249,8 +301,8 @@ def test_roots():
     assert roots((x-1)*(x+1), x) == {S.One: 1, -S.One: 1}
     assert roots((x-1)*(x+1), x, predicate=lambda r: r.is_positive) == {S.One: 1}
 
-    assert roots(x**4-1, x, filter='Z', multiple=True) == [S.One, -S.One]
-    assert roots(x**4-1, x, filter='I', multiple=True) in ([I, -I], [-I, I])
+    assert roots(x**4-1, x, filter='Z', multiple=True) == [-S.One, S.One]
+    assert roots(x**4-1, x, filter='I', multiple=True) == [-I, I]
 
     assert roots(x**3, x, multiple=True) == [S.Zero, S.Zero, S.Zero]
     assert roots(1234, x, multiple=True) == []
@@ -310,7 +362,35 @@ def test_roots_inexact():
     R2 = sorted([-12.7530479110482, -3.85012393732929, 4.89897948556636, 7.46155167569183])
 
     for r1, r2 in zip(R1, R2):
-        assert abs(r1 - r2) < 1e-12
+        assert abs(r1 - r2) < 1e-10
+
+def test_roots_preprocessed():
+    E, F, J, L = symbols("E,F,J,L")
+
+    f = -21601054687500000000*E**8*J**8/L**16 + \
+         508232812500000000*F*x*E**7*J**7/L**14 - \
+         4269543750000000*E**6*F**2*J**6*x**2/L**12 + \
+         16194716250000*E**5*F**3*J**5*x**3/L**10 - \
+         27633173750*E**4*F**4*J**4*x**4/L**8 + \
+         14840215*E**3*F**5*J**3*x**5/L**6 + \
+         54794*E**2*F**6*J**2*x**6/(5*L**4) - \
+         1153*E*J*F**7*x**7/(80*L**2) + \
+         633*F**8*x**8/160000
+
+    assert roots(f, x) == {}
+
+    R1 = roots(f.evalf(), x, multiple=True)
+    R2 = [-1304.88375606366, 97.1168816800648, 186.946430171876, 245.526792947065,
+           503.441004174773, 791.549343830097, 1273.16678129348, 1850.10650616851]
+
+    w = Wild('w')
+    p = w*E*J/(F*L**2)
+
+    assert len(R1) == len(R2)
+
+    for r1, r2 in zip(R1, R2):
+        match = r1.match(p)
+        assert match is not None and abs(match[w] - r2) < 1e-10
 
 def test_root_factors():
     assert root_factors(Poly(1, x)) == [Poly(1, x)]

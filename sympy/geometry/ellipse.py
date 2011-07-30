@@ -239,7 +239,7 @@ class Ellipse(GeometryEntity):
         >>> m = Symbol('m')
         >>> M = m + 1
         >>> Ellipse(p1, m, M).major
-        1 + m
+        m + 1
 
         """
         rv = Max(*self[1:3])
@@ -277,7 +277,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(((1 - 8*_x**2/9)/(1 - _x**2))**(1/2), (_x, 0, 1))
+        12*Integral(((-8*_x**2/9 + 1)/(-_x**2 + 1))**(1/2), (_x, 0, 1))
 
         """
         if self.eccentricity == 1:
@@ -323,7 +323,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.periapsis
-        3 - 2*2**(1/2)
+        -2*2**(1/2) + 3
 
         """
         return self.major * (1 - self.eccentricity)
@@ -344,7 +344,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.apoapsis
-        3 + 2*2**(1/2)
+        2*2**(1/2) + 3
 
         """
         return self.major * (1 + self.eccentricity)
@@ -700,7 +700,7 @@ class Ellipse(GeometryEntity):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(1, 0), 3, 2)
         >>> e1.equation()
-        -1 + (-1/3 + x/3)**2 + y**2/4
+        y**2/4 + (x/3 - 1/3)**2 - 1
 
         """
         x = _symbol(x)
@@ -1014,7 +1014,7 @@ class Circle(Ellipse):
         >>> from sympy import Point, Circle
         >>> c1 = Circle(Point(0, 0), 5)
         >>> c1.equation()
-        -25 + x**2 + y**2
+        x**2 + y**2 - 25
 
         """
         x = _symbol(x)

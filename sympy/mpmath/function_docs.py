@@ -238,7 +238,7 @@ The computation of ``khinchin`` is based on an efficient
 implementation of the following series::
 
     >>> f = lambda n: (zeta(2*n)-1)/n*sum((-1)**(k+1)/mpf(k)
-    ...     for k in range(1,2*n))
+    ...     for k in range(1,2*int(n)))
     >>> exp(nsum(f, [1,inf])/log(2))
     2.6854520010653064453097148354817956938203822939945
 """
@@ -810,7 +810,7 @@ We have `\cos(\cos^{-1}(x)) = x` for all `x`, but
 `\cos^{-1}(\cos(x)) = x` only for `0 \le \Re[x] < \pi`::
 
     >>> for x in [1, 10, -1, 2+3j, 10+3j]:
-    ...     print cos(acos(x)), acos(cos(x))
+    ...     print("%s %s" % (cos(acos(x)), acos(cos(x))))
     ...
     1.0 1.0
     (10.0 + 0.0j) 2.566370614359172953850574
@@ -855,7 +855,7 @@ We have `\sin(\sin^{-1}(x)) = x` for all `x`, but
 `\sin^{-1}(\sin(x)) = x` only for `-\pi/2 < \Re[x] < \pi/2`::
 
     >>> for x in [1, 10, -1, 1+3j, -2+3j]:
-    ...     print chop(sin(asin(x))), asin(sin(x))
+    ...     print("%s %s" % (chop(sin(asin(x))), asin(sin(x))))
     ...
     1.0 1.0
     10.0 -0.5752220392306202846120698
@@ -907,7 +907,7 @@ We have `\tan(\tan^{-1}(x)) = x` for all `x`, but
 
     >>> mp.dps = 25
     >>> for x in [1, 10, -1, 1+3j, -2+3j]:
-    ...     print tan(atan(x)), atan(tan(x))
+    ...     print("%s %s" % (tan(atan(x)), atan(tan(x))))
     ...
     1.0 1.0
     10.0 0.5752220392306202846120698
@@ -1109,10 +1109,10 @@ the largest integer less than or equal to `x`::
 To avoid rounding, use *prec=0*::
 
     >>> mp.dps = 15
-    >>> int(floor(10**30+1))
-    1000000000000000019884624838656L
-    >>> int(floor(10**30+1, prec=0))
-    1000000000000000000000000000001L
+    >>> print(int(floor(10**30+1)))
+    1000000000000000019884624838656
+    >>> print(int(floor(10**30+1, prec=0)))
+    1000000000000000000000000000001
 
 The floor function is defined for complex numbers and
 acts on the real and imaginary parts separately::
@@ -1334,10 +1334,10 @@ potentially catastrophic cancellation::
 
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
-    >>> exp(1e-10)-1; print expm1(1e-10)
+    >>> exp(1e-10)-1; print(expm1(1e-10))
     1.00000008274037e-10
     1.00000000005e-10
-    >>> exp(1e-20)-1; print expm1(1e-20)
+    >>> exp(1e-20)-1; print(expm1(1e-20))
     0.0
     1.0e-20
     >>> 1/(exp(1e-20)-1)
@@ -1460,7 +1460,7 @@ Computing principal and non-principal square and cube roots::
 All the 7th roots of a complex number::
 
     >>> for r in [root(3+4j, 7, k) for k in range(7)]:
-    ...     print r, r**7
+    ...     print("%s %s" % (r, r**7))
     ...
     (1.24747270589553 + 0.166227124177353j) (3.0 + 4.0j)
     (0.647824911301003 + 1.07895435170559j) (3.0 + 4.0j)
@@ -1472,7 +1472,7 @@ All the 7th roots of a complex number::
 
 Cube roots of unity::
 
-    >>> for k in range(3): print root(1, 3, k)
+    >>> for k in range(3): print(root(1, 3, k))
     ...
     1.0
     (-0.5 + 0.866025403784439j)
@@ -1543,7 +1543,7 @@ Any primitive root `r` is a generator for this group, meaning that
 `r^0, r^1, \ldots, r^{n-1}` gives the whole set of unit roots (in
 some permuted order)::
 
-    >>> for r in unitroots(6): print r
+    >>> for r in unitroots(6): print(r)
     ...
     1.0
     (0.5 + 0.866025403784439j)
@@ -1552,7 +1552,7 @@ some permuted order)::
     (-0.5 - 0.866025403784439j)
     (0.5 - 0.866025403784439j)
     >>> r = unitroots(6, primitive=True)[1]
-    >>> for k in range(6): print chop(r**k)
+    >>> for k in range(6): print(chop(r**k))
     ...
     1.0
     (0.5 - 0.866025403784439j)
@@ -1722,19 +1722,36 @@ Some small Fibonacci numbers are::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for i in range(10):
-    ...     print fibonacci(i),
+    ...     print(fibonacci(i))
     ...
-    0.0 1.0 1.0 2.0 3.0 5.0 8.0 13.0 21.0 34.0
-
+    0.0
+    1.0
+    1.0
+    2.0
+    3.0
+    5.0
+    8.0
+    13.0
+    21.0
+    34.0
     >>> fibonacci(50)
     12586269025.0
 
 The recurrence for `F(n)` extends backwards to negative `n`::
 
     >>> for i in range(10):
-    ...     print fibonacci(-i),
+    ...     print(fibonacci(-i))
     ...
-    0.0 1.0 -1.0 2.0 -3.0 5.0 -8.0 13.0 -21.0 34.0
+    0.0
+    1.0
+    -1.0
+    2.0
+    -3.0
+    5.0
+    -8.0
+    13.0
+    -21.0
+    34.0
 
 Large Fibonacci numbers will be computed approximately unless
 the precision is set high enough::
@@ -1812,7 +1829,7 @@ Some related sums can be done in closed form::
     1.11803398874989
     >>> phi - 0.5
     1.11803398874989
-    >>> f = lambda k:(-1)**(k+1) / sum(fib(n)**2 for n in range(1,k+1))
+    >>> f = lambda k:(-1)**(k+1) / sum(fib(n)**2 for n in range(1,int(k+1)))
     >>> nsum(f, [1, inf])
     0.618033988749895
     >>> phi-1
@@ -1840,7 +1857,7 @@ function, having a finite value for all complex `s`. The special case
 
 The alternating zeta function may expressed using the Riemann zeta function
 as `\eta(s) = (1 - 2^{1-s}) \zeta(s)`. It can also be expressed
-in terms of the Hurwitz zeta function (:func:`~mpmath.hurwitz`), for example using
+in terms of the Hurwitz zeta function, for example using
 :func:`~mpmath.dirichlet` (see documentation for that function).
 
 **Examples**
@@ -1907,7 +1924,7 @@ Basic values and limits::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for k in range(6):
-    ...     print k, fac(k)
+    ...     print("%s %s" % (k, fac(k)))
     ...
     0 1.0
     1 1.0
@@ -1964,7 +1981,7 @@ Basic values and limits::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for k in range(1, 6):
-    ...     print k, gamma(k)
+    ...     print("%s %s" % (k, gamma(k)))
     ...
     1 1.0
     2 1.0
@@ -2121,7 +2138,7 @@ The first few harmonic numbers are::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(8):
-    ...     print n, harmonic(n)
+    ...     print("%s %s" % (n, harmonic(n)))
     ...
     0 0.0
     1 1.0
@@ -2166,7 +2183,7 @@ exceeds a given amount, say 100::
     >>> v
     15092688622113788323693563264538101449859496.864101
     >>> v = int(ceil(v))
-    >>> print v
+    >>> print(v)
     15092688622113788323693563264538101449859497
     >>> harmonic(v-1)
     99.999999999999999999999999999999999999999999942747
@@ -2189,7 +2206,7 @@ Numerical values of the first few Bernoulli numbers::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(15):
-    ...     print n, bernoulli(n)
+    ...     print("%s %s" % (n, bernoulli(n)))
     ...
     0 1.0
     1 -0.5
@@ -6022,7 +6039,7 @@ The point `x = 0` is a singularity (logarithmic if `n = 0`)::
     >>> besselk(1,0)
     +inf
     >>> for n in range(-4, 5):
-    ...     print besselk(n, '1e-1000')
+    ...     print(besselk(n, '1e-1000'))
     ...
     4.8e+4001
     8.0e+3000
@@ -6360,7 +6377,7 @@ The first few superfactorials are (OEIS A000178)::
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(10):
-    ...     print n, superfac(n)
+    ...     print("%s %s" % (n, superfac(n)))
     ...
     0 1.0
     1 1.0
@@ -6430,7 +6447,7 @@ The rapidly-growing sequence of hyperfactorials begins
     >>> from mpmath import *
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(10):
-    ...     print n, hyperfac(n)
+    ...     print("%s %s" % (n, hyperfac(n)))
     ...
     0 1.0
     1 1.0
@@ -6665,6 +6682,14 @@ complex arguments::
     >>> siegeltheta(10+0.25j)
     (-3.068638039426838572528867 + 0.05804937947429712998395177j)
 
+Arbitrary derivatives may be computed with derivative = k
+
+    >>> siegeltheta(1234, derivative=2)
+    0.0004051864079114053109473741
+    >>> diff(siegeltheta, 1234, n=2)
+    0.0004051864079114053109473741
+
+
 The Riemann-Siegel theta function has odd symmetry around `t = 0`,
 two local extreme points and three real roots including 0 (located
 symmetrically)::
@@ -6752,6 +6777,15 @@ Evaluation is supported for real and complex arguments::
     >>> siegelz(3+4j)
     (-0.1852895764366314976003936 - 0.2773099198055652246992479j)
 
+The first four derivatives are supported, using the
+optional *derivative* keyword argument::
+
+    >>> siegelz(1234567, derivative=3)
+    56.89689348495089294249178
+    >>> diff(siegelz, 1234567, n=3)
+    56.89689348495089294249178
+
+
 The Z-function has a Maclaurin expansion::
 
     >>> nprint(chop(taylor(siegelz, 0, 4)))
@@ -6836,10 +6870,10 @@ integer::
     >>> mp.dps = 15; mp.pretty = True
     >>> primepi(50), riemannr(50)
     (15, 14.9757023241462)
-    >>> max(abs(primepi(n)-round(riemannr(n))) for n in range(100))
-    1.0
-    >>> max(abs(primepi(n)-round(riemannr(n))) for n in range(300))
-    2.0
+    >>> max(abs(primepi(n)-int(round(riemannr(n)))) for n in range(100))
+    1
+    >>> max(abs(primepi(n)-int(round(riemannr(n)))) for n in range(300))
+    2
 
 The Riemann R function can be evaluated for arguments far too large
 for exact determination of `\pi(x)` to be computationally
@@ -6861,7 +6895,7 @@ The fractional error is shown in parentheses::
     ...     n += 1
     ...     r, l = riemannr(10**n), li(10**n)
     ...     rerr, lerr = nstr((r-p)/p,3), nstr((l-p)/p,3)
-    ...     print "%i %i %s(%s) %s(%s)" % (n, p, r, rerr, l, lerr)
+    ...     print("%i %i %s(%s) %s(%s)" % (n, p, r, rerr, l, lerr))
     ...
     1 4 4.56458314100509(0.141) 6.1655995047873(0.541)
     2 25 25.6616332669242(0.0265) 30.1261415840796(0.205)
@@ -7410,7 +7444,7 @@ using Taylor expansion::
     >>> mp.dps = 15; mp.pretty = True
     >>> for n in range(9):
     ...     p = chop(taylor(lambda x: cyclotomic(n,x), 0, 10))
-    ...     print n,; nprint(p[:10+1-p[::-1].index(1)])
+    ...     print("%s %s" % (n, nstr(p[:10+1-p[::-1].index(1)])))
     ...
     0 [1.0]
     1 [-1.0, 1.0]
@@ -7444,13 +7478,13 @@ can be checked to agree with the list of primitive roots::
 
     >>> p = taylor(lambda x: cyclotomic(6,x), 0, 6)[:3]
     >>> for r in polyroots(p[::-1]):
-    ...     print r
+    ...     print(r)
     ...
     (0.5 - 0.8660254037844386467637232j)
     (0.5 + 0.8660254037844386467637232j)
     >>>
     >>> for r in unitroots(6, primitive=True):
-    ...     print r
+    ...     print(r)
     ...
     (0.5 + 0.8660254037844386467637232j)
     (0.5 - 0.8660254037844386467637232j)
@@ -8287,8 +8321,8 @@ integrals, such as any integral of the form
     ...         v *= (1+x/b)**(-q)
     ...         v *= appellf1(r+1,-p,-q,2+r,-x/a,-x/b)
     ...         return v
-    ...     print "Num. quad:", quad(f, [x1,x2])
-    ...     print "Appell F1:", F(x2)-F(x1)
+    ...     print("Num. quad: %s" % quad(f, [x1,x2]))
+    ...     print("Appell F1: %s" % (F(x2)-F(x1)))
     ...
     >>> integral('1/5','4/3','-2','3','1/2',0,1)
     Num. quad: 9.073335358785776206576981
@@ -8855,11 +8889,11 @@ for `a = 1`, `n \le 4`)::
     (3230.72682687670422215339 + 14374.36950073615897616781j)
     >>> zeta(0.5+100000000j, derivative=4)
     (-11967.35573095046402130602 - 218945.7817789262839266148j)
-    >>> print zeta(1+10000000j)    # off the line
+    >>> zeta(1+10000000j)    # off the line
     (2.859846483332530337008882 + 0.491808047480981808903986j)
-    >>> print zeta(1+10000000j, derivative=1)
+    >>> zeta(1+10000000j, derivative=1)
     (-4.333835494679647915673205 - 0.08405337962602933636096103j)
-    >>> print zeta(1+10000000j, derivative=4)
+    >>> zeta(1+10000000j, derivative=4)
     (453.2764822702057701894278 - 581.963625832768189140995j)
 
 For investigation of the zeta function zeros, the Riemann-Siegel
@@ -8893,10 +8927,12 @@ Evaluation of derivatives::
     (-0.140075548947797130681075 - 0.3109263360275413251313634j)
     >>> zeta(0.5+100000j, 1, 4)
     (-10407.16081931495861539236 + 13777.78669862804508537384j)
+    >>> zeta(-100+0.5j, (1,3), derivative=4)
+    (4.007180821099823942702249e+79 + 4.916117957092593868321778e+78j)
 
 Generating a Taylor series at `s = 2` using derivatives::
 
-    >>> for k in range(11): print zeta(2,1,k)/fac(k), "*", "(s-2)^%i" % k
+    >>> for k in range(11): print("%s * (s-2)^%i" % (zeta(2,1,k)/fac(k), k))
     ...
     1.644934066848226436472415 * (s-2)^0
     -0.9375482543158437537025741 * (s-2)^1
@@ -8921,7 +8957,7 @@ Evaluation at zero and for negative integer `s`::
     (0.2899236037682695182085988 + 0.06561206166091757973112783j)
     >>> zeta(-3.25, 1/pi)
     -0.0005117269627574430494396877
-    >>> extraprec(20)(zeta)(-3.5, pi, 1)   # XXX: extra precision
+    >>> zeta(-3.5, pi, 1)
     11.156360390440003294709
     >>> zeta(-100.5, (8,3))
     -4.68162300487989766727122e+77
@@ -9130,7 +9166,8 @@ the precision::
     >>> mp.dps = 10
     >>> eta = 2; z = 5
     >>> for l in [5, 4, 3, 2, 1, 0]:
-    ...     print l, coulombf(l,eta,z), diff(lambda z: coulombf(l,eta,z), z)
+    ...     print("%s %s %s" % (l, coulombf(l,eta,z),
+    ...         diff(lambda z: coulombf(l,eta,z), z)))
     ...
     5 0.09079533488 0.1042553261
     4 0.2148205331 0.2029591779
@@ -9191,7 +9228,8 @@ at twice the precision::
     >>> mp.dps = 10
     >>> eta = 2; z = 5
     >>> for l in [1, 2, 3, 4, 5]:
-    ...     print l, coulombg(l,eta,z), -diff(lambda z: coulombg(l,eta,z), z)
+    ...     print("%s %s %s" % (l, coulombg(l,eta,z),
+    ...         -diff(lambda z: coulombg(l,eta,z), z)))
     ...
     1 1.08148276 0.6028279961
     2 1.496877075 0.5661803178
@@ -9506,9 +9544,9 @@ Comparing with an asymptotic formula for the Euler numbers::
 
 Pass ``exact=True`` to obtain exact values of Euler numbers as integers::
 
-    >>> print eulernum(50, exact=True)
+    >>> print(eulernum(50, exact=True))
     -6053285248188621896314383785111649088103498225146815121
-    >>> print eulernum(200, exact=True) % 10**10
+    >>> print(eulernum(200, exact=True) % 10**10)
     1925859625
     >>> eulernum(1001, exact=True)
     0
@@ -9666,10 +9704,10 @@ on the unit sphere::
     >>> Y1 = lambda t,p: fp.spherharm(l1,m1,t,p)
     >>> Y2 = lambda t,p: fp.conj(fp.spherharm(l2,m2,t,p))
     >>> l1 = l2 = 3; m1 = m2 = 2
-    >>> print fp.quad(lambda t,p: Y1(t,p)*Y2(t,p)*dS(t,p), *sphere)
+    >>> print(fp.quad(lambda t,p: Y1(t,p)*Y2(t,p)*dS(t,p), *sphere))
     (1+0j)
     >>> m2 = 1    # m1 != m2
-    >>> fp.chop(fp.quad(lambda t,p: Y1(t,p)*Y2(t,p)*dS(t,p), *sphere))
+    >>> print(fp.chop(fp.quad(lambda t,p: Y1(t,p)*Y2(t,p)*dS(t,p), *sphere)))
     0.0
 
 Evaluation is accurate for large orders::

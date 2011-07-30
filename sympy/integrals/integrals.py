@@ -2,11 +2,12 @@ from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
                         oo, Tuple, Dummy, Equality, Interval)
 
 from sympy.core.symbol import Dummy
+from sympy.core.compatibility import is_sequence
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
 from sympy.integrals.risch import heurisch
-from sympy.utilities import xthreaded, flatten, any, all
+from sympy.utilities import xthreaded, flatten
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
 from sympy.functions import Piecewise, sign
@@ -54,7 +55,7 @@ def _process_limits(*symbols):
         if isinstance(V, Symbol):
             limits.append(Tuple(V))
             continue
-        elif isinstance(V, (tuple, list, Tuple)):
+        elif is_sequence(V, Tuple):
             V = sympify(flatten(V))
             if V[0].is_Symbol:
                 newsymbol = V[0]
@@ -287,7 +288,7 @@ class Integral(Expr):
         function = self.function
         y = Dummy('y')
         inverse_mapping = solve(mapping.subs(x, y) - x, y)
-        if len(inverse_mapping) != 1 or not inverse_mapping[0].has(x):
+        if len(inverse_mapping) != 1 or x not in inverse_mapping[0].free_symbols:
             raise ValueError("The mapping must be uniquely invertible")
         inverse_mapping = inverse_mapping[0]
         if inverse:
@@ -431,7 +432,7 @@ class Integral(Expr):
         >>> i.free_symbols
         set([x])
         >>> i.doit()
-        -1/6 - x/2 + 2*x**3/3
+        2*x**3/3 - x/2 - 1/6
 
         """
 
@@ -682,7 +683,7 @@ class Integral(Expr):
         >>> i.subs(a + x, b) == i # there is no x + a, only x + <a>
         True
         >>> i.subs(x, y - c)
-        Integral(a + y - c, (a, a, 3), (b, y - c, c))
+        Integral(a - c + y, (a, a, 3), (b, -c + y, c))
         """
         if self == old:
             return new
@@ -735,9 +736,9 @@ class Integral(Expr):
             >>> from sympy.integrals import Integral
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
             >>> e
-            Integral((1 + x**3)**(1/2), (x, 2, 10))
+            Integral((x**3 + 1)**(1/2), (x, 2, 10))
             >>> e.as_sum(4, method="midpoint")
-            2*730**(1/2) + 4*7**(1/2) + 4*86**(1/2) + 6*14**(1/2)
+            4*7**(1/2) + 6*14**(1/2) + 4*86**(1/2) + 2*730**(1/2)
             >>> e.as_sum(4, method="midpoint").n()
             124.164447891310
             >>> e.n()
@@ -755,7 +756,7 @@ class Integral(Expr):
             >>> from sympy.abc import x
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
             >>> e
-            Integral((1 + x**3)**(1/2), (x, 2, 10))
+            Integral((x**3 + 1)**(1/2), (x, 2, 10))
             >>> e.as_sum(4, method="left")
             6 + 2*65**(1/2) + 2*217**(1/2) + 6*57**(1/2)
             >>> e.as_sum(4, method="left").n()
@@ -817,13 +818,13 @@ def integrate(*args, **kwargs):
        >>> from sympy.abc import a, x, y
 
        >>> integrate(x*y, x)
-       y*x**2/2
+       x**2*y/2
 
        >>> integrate(log(x), x)
-       -x + x*log(x)
+       x*log(x) - x
 
        >>> integrate(log(x), (x, 1, a))
-       1 - a + a*log(a)
+       a*log(a) - a + 1
 
        >>> integrate(x)
        x**2/2
@@ -868,8 +869,8 @@ def line_integrate(field, curve, vars):
         raise ValueError("Expecting function specifying field as first argument.")
     if not isinstance(curve, Curve):
         raise ValueError("Expecting Curve entity as second argument.")
-    if not isinstance(vars, (list, tuple)):
-        raise ValueError("Expecting list/tuple for variables.")
+    if not is_sequence(vars):
+        raise ValueError("Expecting ordered iterable for variables.")
     if len(curve.functions) != len(vars):
         raise ValueError("Field variable size does not match curve dimension.")
 

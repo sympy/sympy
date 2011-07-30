@@ -70,3 +70,11 @@ Cyclotomic polynomials
 :func:`cyclotomic`
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: mpmath.cyclotomic(n,x)
+
+
+Arithmetic functions
+......................
+
+:func:`mangoldt`
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: mpmath.mangoldt(n)

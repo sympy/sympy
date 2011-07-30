@@ -1,5 +1,5 @@
 from sympy import sin, cos, atan2, gamma, conjugate, sqrt, factorial, \
-    Integral, Piecewise, Add, diff, symbols, S, Real, Dummy
+    Integral, Piecewise, Add, diff, symbols, S, Float, Dummy
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
@@ -23,7 +23,7 @@ def test_fcode_Pow():
     assert fcode(x**3) == "      x**3"
     assert fcode(x**(y**3)) == "      x**(y**3)"
     assert fcode(1/(sin(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "      (3.5d0*sin(x))**(-x + y**x)/(y + x**2)"
+        "      (3.5d0*sin(x))**(-x + y**x)/(x**2 + y)"
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(n)) == '      sqrt(dble(n))'
     assert fcode(x**0.5) == '      sqrt(x)'
@@ -40,9 +40,9 @@ def test_fcode_Integer():
     assert fcode(Integer(67)) == "      67"
     assert fcode(Integer(-1)) == "      -1"
 
-def test_fcode_Real():
-    assert fcode(Real(42.0)) == "      42.0000000000000d0"
-    assert fcode(Real(-1e20)) == "      -1.00000000000000d+20"
+def test_fcode_Float():
+    assert fcode(Float(42.0)) == "      42.0000000000000d0"
+    assert fcode(Float(-1e20)) == "      -1.00000000000000d+20"
 
 def test_fcode_functions():
     x, y = symbols('x,y')
@@ -74,7 +74,7 @@ def test_fcode_complex():
     x = symbols('x', imaginary=True)
     assert fcode(5*x) == "      5*x"
     assert fcode(I*x) == "      cmplx(0,1)*x"
-    assert fcode(3+x) == "      3 + x"
+    assert fcode(3+x) == "      x + 3"
 
 def test_implicit():
     x, y = symbols('x,y')
@@ -124,14 +124,14 @@ def test_assign_to():
 def test_line_wrapping():
     x, y = symbols('x,y')
     assert fcode(((x+y)**10).expand(), assign_to="var") == (
-        "      var = 45*x**8*y**2 + 120*x**7*y**3 + 210*x**6*y**4 + 252*x**5*y**5\n"
-        "     @ + 210*x**4*y**6 + 120*x**3*y**7 + 45*x**2*y**8 + 10*x*y**9 + 10*y\n"
-        "     @ *x**9 + x**10 + y**10"
+        "      var = x**10 + 10*x**9*y + 45*x**8*y**2 + 120*x**7*y**3 + 210*x**6*\n"
+        "     @ y**4 + 252*x**5*y**5 + 210*x**4*y**6 + 120*x**3*y**7 + 45*x**2*y\n"
+        "     @ **8 + 10*x*y**9 + y**10"
     )
     e = [x**i for i in range(11)]
     assert fcode(Add(*e)) == (
-        "      1 + x + x**2 + x**3 + x**4 + x**5 + x**6 + x**7 + x**8 + x**9 + x\n"
-        "     @ **10"
+        "      x**10 + x**9 + x**8 + x**7 + x**6 + x**5 + x**4 + x**3 + x**2 + x\n"
+        "     @ + 1"
     )
 
 def test_fcode_Piecewise():
@@ -159,15 +159,15 @@ def test_fcode_Piecewise():
         b = diff(b, x)
     expected = (
         "      if (x < 0) then\n"
-        "         weird_name = -cos(x)/x - 1814400*cos(x)/x**9 - 604800*sin(x)/x\n"
-        "     @ **8 - 5040*cos(x)/x**5 - 720*sin(x)/x**4 + 10*sin(x)/x**2 + 90*\n"
-        "     @ cos(x)/x**3 + 30240*sin(x)/x**6 + 151200*cos(x)/x**7 + 3628800*\n"
-        "     @ cos(x)/x**11 + 3628800*sin(x)/x**10\n"
+        "         weird_name = -cos(x)/x + 10*sin(x)/x**2 + 90*cos(x)/x**3 - 720*\n"
+        "     @ sin(x)/x**4 - 5040*cos(x)/x**5 + 30240*sin(x)/x**6 + 151200*cos(x\n"
+        "     @ )/x**7 - 604800*sin(x)/x**8 - 1814400*cos(x)/x**9 + 3628800*sin(x\n"
+        "     @ )/x**10 + 3628800*cos(x)/x**11\n"
         "      else\n"
-        "         weird_name = -sin(x)/x - 3628800*cos(x)/x**10 - 1814400*sin(x)/\n"
-        "     @ x**9 - 30240*cos(x)/x**6 - 5040*sin(x)/x**5 - 10*cos(x)/x**2 + 90\n"
-        "     @ *sin(x)/x**3 + 720*cos(x)/x**4 + 151200*sin(x)/x**7 + 604800*cos(\n"
-        "     @ x)/x**8 + 3628800*sin(x)/x**11\n"
+        "         weird_name = -sin(x)/x - 10*cos(x)/x**2 + 90*sin(x)/x**3 + 720*\n"
+        "     @ cos(x)/x**4 - 5040*sin(x)/x**5 - 30240*cos(x)/x**6 + 151200*sin(x\n"
+        "     @ )/x**7 + 604800*cos(x)/x**8 - 1814400*sin(x)/x**9 - 3628800*cos(x\n"
+        "     @ )/x**10 + 3628800*sin(x)/x**11\n"
         "      end if"
     )
     code = fcode(Piecewise((a,x<0),(b,True)), assign_to="weird_name")
@@ -280,15 +280,15 @@ def test_settings():
 
 def test_free_form_code_line():
     x, y = symbols('x,y')
-    assert fcode(cos(x) + sin(y), source_format='free') == "cos(x) + sin(y)"
+    assert fcode(cos(x) + sin(y), source_format='free') == "sin(y) + cos(x)"
 
 def test_free_form_continuation_line():
     x, y = symbols('x,y')
     result = fcode(((cos(x) + sin(y))**(7)).expand(), source_format='free')
     expected = (
-'7*cos(x)**6*sin(y) + 7*sin(y)**6*cos(x) + 21*cos(x)**5*sin(y)**2 + 35* &\n'
-'      cos(x)**4*sin(y)**3 + 35*cos(x)**3*sin(y)**4 + 21*cos(x)**2*sin(y &\n'
-'      )**5 + cos(x)**7 + sin(y)**7'
+        'sin(y)**7 + 7*sin(y)**6*cos(x) + 21*sin(y)**5*cos(x)**2 + 35*sin(y)**4* &\n'
+        '      cos(x)**3 + 35*sin(y)**3*cos(x)**4 + 21*sin(y)**2*cos(x)**5 + 7* &\n'
+        '      sin(y)*cos(x)**6 + cos(x)**7'
     )
     assert result == expected
 
@@ -320,8 +320,8 @@ def test_loops():
             )
 
     code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
-    assert (code == expected % {'rhs': 'A(i, j)*x(j) + y(i)'} or
-            code == expected % {'rhs': 'x(j)*A(i, j) + y(i)'})
+    assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
+            code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'})
 
 def test_dummy_loops():
     # the following line could also be

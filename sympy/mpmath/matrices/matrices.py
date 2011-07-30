@@ -1,3 +1,5 @@
+from ..libmp.backend import xrange
+
 # TODO: interpret list as vectors (for multiplication)
 
 rowsep = '\n'
@@ -448,8 +450,8 @@ class _matrix(object):
             #Rows
             if isinstance(key[0],slice):
                 #Check bounds
-                if (key[0].start >= 0 or key[0].start is None) and \
-                    (key[0].stop <= self.__rows+1 or key[0].stop is None):
+                if (key[0].start is None or key[0].start >= 0) and \
+                    (key[0].stop is None or key[0].stop <= self.__rows+1):
                     # Generate indices
                     rows = xrange(*key[0].indices(self.__rows))
                 else:
@@ -461,8 +463,8 @@ class _matrix(object):
             # Columns
             if isinstance(key[1],slice):
                 # Check bounds
-                if (key[1].start >= 0 or key[1].start is None) and \
-                    (key[1].stop <= self.__cols+1 or key[1].stop is None):
+                if (key[1].start is None or key[1].start >= 0) and \
+                    (key[1].stop is None or key[1].stop <= self.__cols+1):
                     # Generate indices
                     columns = xrange(*key[1].indices(self.__cols))
                 else:
@@ -498,7 +500,6 @@ class _matrix(object):
         # A[:,2:6] = 2.5
         #  submatrix to matrix (the value matrix should be the same size as the slice size)
         # A[3,:] = B   where A is n x m  and B is n x 1
-
         # Convert vector to matrix indexing
         if isinstance(key, int) or isinstance(key,slice):
             # only sufficent for vectors
@@ -508,15 +509,13 @@ class _matrix(object):
                 key = (key, 0)
             else:
                 raise IndexError('insufficient indices for matrix')
-
         # Slice indexing
         if isinstance(key[0],slice) or isinstance(key[1],slice):
-
             # Rows
             if isinstance(key[0],slice):
                 # Check bounds
-                if (key[0].start >= 0 or key[0].start is None) and \
-                    (key[0].stop <= self.__rows+1 or key[0].stop is None):
+                if (key[0].start is None or key[0].start >= 0) and \
+                    (key[0].stop is None or key[0].stop <= self.__rows+1):
                     # generate row indices
                     rows = xrange(*key[0].indices(self.__rows))
                 else:
@@ -524,37 +523,33 @@ class _matrix(object):
             else:
                 # Single row
                 rows = [key[0]]
-
             # Columns
             if isinstance(key[1],slice):
                 # Check bounds
-                if (key[1].start >= 0 or key[1].start is None) and \
-                    (key[1].stop <= self.__cols+1 or key[1].stop is None):
+                if (key[1].start is None or key[1].start >= 0) and \
+                    (key[1].stop is None or key[1].stop <= self.__cols+1):
                     # Generate column indices
                     columns = xrange(*key[1].indices(self.__cols))
                 else:
                     raise IndexError('Column index out of bounds')
-
             else:
                 # Single column
                 columns = [key[1]]
-
-
             # Assign slice with a scalar
             if isinstance(value,self.ctx.matrix):
                 # Assign elements to matrix if input and output dimensions match
                 if len(rows) == value.rows and len(columns) == value.cols:
                     for i,x in enumerate(rows):
                         for j,y in enumerate(columns):
-                            self.__set_element( (x,y),value.__get_element((i,j)))
+                            self.__set_element((x,y), value.__get_element((i,j)))
                 else:
                     raise ValueError('Dimensions do not match')
             else:
                 # Assign slice with scalars
                 value = self.ctx.convert(value)
-                for index in ((a, b) for a in rows for b in columns):
-                    self.__set_element( index ,value)
-
+                for i in rows:
+                    for j in columns:
+                        self.__set_element((i,j), value)
         else:
             # Single element assingment
             # Check bounds
@@ -687,7 +682,7 @@ class _matrix(object):
         return self.__rows
 
     def __setrows(self, value):
-        for key in self.__data.copy().iterkeys():
+        for key in self.__data.copy():
             if key[0] >= value:
                 del self.__data[key]
         self.__rows = value
@@ -698,7 +693,7 @@ class _matrix(object):
         return self.__cols
 
     def __setcols(self, value):
-        for key in self.__data.copy().iterkeys():
+        for key in self.__data.copy():
             if key[1] >= value:
                 del self.__data[key]
         self.__cols = value

@@ -69,7 +69,9 @@ from sympy import S, Basic, Mul, Add
 
 from sympy.core.exprtools import decompose_power
 from sympy.polys.monomialtools import monomial_key
-from sympy.core.basic import BasicMeta
+from sympy.core.core import BasicMeta
+
+from sympy.core.compatibility import cmp_to_key
 
 class Printer(object):
     """Generic printer
@@ -180,9 +182,7 @@ class Printer(object):
 
     _global_settings = {}
 
-    _default_settings = {
-        "order": None,
-    }
+    _default_settings = {}
 
     emptyPrinter = str
     printmethod = None
@@ -205,7 +205,7 @@ class Printer(object):
                         raise TypeError("Unknown setting '%s'." % key)
 
         # _print_level is the number of times self._print() was recursively
-        # called. See StrPrinter._print_Real() for an example of usage
+        # called. See StrPrinter._print_Float() for an example of usage
         self._print_level = 0
 
     @classmethod
@@ -256,8 +256,7 @@ class Printer(object):
         """A compatibility function for ordering terms in Add. """
         order = order or self.order
 
-        if order is None:
-            return sorted(Add.make_args(expr), Basic._compare_pretty)
+        if order == 'old':
+            return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
         else:
             return expr.as_ordered_terms(order=order)
-

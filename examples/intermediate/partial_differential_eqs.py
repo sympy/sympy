@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Partial Differential Equations example
 
 Demonstrates various ways to solve partial differential equations

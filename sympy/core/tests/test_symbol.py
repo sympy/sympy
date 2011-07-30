@@ -1,7 +1,7 @@
 from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols, Dummy, S)
+    sympify, symbols, Dummy, S, Function, flatten)
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_Symbol():
     a = Symbol("a")
@@ -44,6 +44,10 @@ def test_as_dummy_nondummy():
     assert x1 != x
     assert x1.is_commutative == False
     # assert x == x1.as_nondummy()
+
+    # issue 2446
+    x = Symbol('x', real=True, commutative=False)
+    assert x.as_dummy().assumptions0 == x.assumptions0
 
 def test_lt_gt():
     x, y = Symbol('x'), Symbol('y')
@@ -108,51 +112,66 @@ def test_Wild_properties():
             else:
                 assert d == None
 
-def test_Pure():
-    assert (S.Pure == S.Pure) == True
+@XFAIL
+def test_symbols_each_char():
+    # XXX: Because of the way the warnings filters work, this will fail if it's
+    # run more than once in the same session.  See issue 2492.
+    import warnings
+    # each_char is deprecated and emits a warning.
 
-    assert (S.Pure == Symbol('x')) == False
-    assert (Symbol('x') == S.Pure) == False
+    w = Symbol('w')
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
 
-    assert (S.Pure == Dummy('x')) == False
-    assert (Dummy('x') == S.Pure) == False
+    # First, test the warning
+    warnings.filterwarnings("error", "The each_char option to symbols\(\) and var\(\) is "
+        "deprecated.  Separate symbol names by spaces or commas instead.")
+    raises(DeprecationWarning, "symbols('xyz', each_char=True)")
+    raises(DeprecationWarning, "symbols('xyz', each_char=False)")
+    # now test the actual output
+    warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
+        "deprecated.  Separate symbol names by spaces or commas instead.")
+    assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
+    assert all(w.is_Function for w in flatten(symbols(['wx', 'yz'], each_char=True, cls=Function)))
+    assert symbols('xyz', each_char=True) == (x, y, z)
+    assert symbols('x,', each_char=True) == (x,)
+    assert symbols('x y z', each_char=True) == symbols('x,y,z', each_char=True) == (x, y, z)
+    assert symbols('xyz', each_char=False) == Symbol('xyz')
+    a, b = symbols('x y', each_char=False, real=True)
+    assert a.is_real and b.is_real
+    assert 'each_char' not in a.assumptions0
 
-    assert (S.Pure == Symbol('x', commutative=False)) == False
-    assert (Symbol('x', commutative=False) == S.Pure) == False
+    assert symbols('x0:0', each_char=False) == ()
+    assert symbols('x0:1', each_char=False) == (Symbol('x0'),)
+    assert symbols('x0:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+    assert symbols('x:0', each_char=False) == ()
+    assert symbols('x:1', each_char=False) == (Symbol('x0'),)
+    assert symbols('x:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
+    assert symbols('x1:1', each_char=False) == ()
+    assert symbols('x1:2', each_char=False) == (Symbol('x1'),)
+    assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
 
-    assert (S.Pure == Symbol('pure')) == False
-    assert (Symbol('pure') == S.Pure) == False
-
-    assert (S.Pure == 1) == False
-    assert (S.Pure == I) == False
-
-    assert (S.Pure != S.Pure) == False
-
-    assert (S.Pure != Symbol('x')) == True
-    assert (Symbol('x') != S.Pure) == True
-
-    assert (S.Pure != Dummy('x')) == True
-    assert (Dummy('x') != S.Pure) == True
-
-    assert (S.Pure != Symbol('x', commutative=False)) == True
-    assert (Symbol('x', commutative=False) != S.Pure) == True
-
-    assert (S.Pure != Symbol('pure')) == True
-    assert (Symbol('pure') != S.Pure) == True
-
-    assert (S.Pure != 1) == True
-    assert (S.Pure != I) == True
+    # Keep testing reasonably thread safe, so reset the warning
+    warnings.filterwarnings("default", "The each_char option to symbols\(\) and var\(\) is "
+        "deprecated.  Separate symbol names by spaces or commas instead.")
+    # Note, in Python 2.6+, this can be done more nicely using the
+    # warnings.catch_warnings context manager.
+    # See http://docs.python.org/library/warnings#testing-warnings.
 
 def test_symbols():
     x = Symbol('x')
     y = Symbol('y')
     z = Symbol('z')
 
-    assert symbols('') is None
-
     assert symbols('x') == x
+    assert symbols('x ') == x
+    assert symbols(' x ') == x
     assert symbols('x,') == (x,)
-    assert symbols('x ') == (x,)
+    assert symbols('x, ') == (x,)
+    assert symbols('x ,') == (x,)
+
+    assert symbols('x , y') == (x, y)
 
     assert symbols('x,y,z') == (x, y, z)
     assert symbols('x y z') == (x, y, z)
@@ -178,11 +197,12 @@ def test_symbols():
     assert symbols(['x', 'y', 'z']) == [x, y, z]
     assert symbols(set(['x', 'y', 'z'])) == set([x, y, z])
 
-    assert symbols('x,,y,,z') == (x, y, z)
-    assert symbols(('x', '', 'y', '', 'z')) == (x, y, z)
+    raises(ValueError, "symbols('')")
+    raises(ValueError, "symbols(',')")
+    raises(ValueError, "symbols('x,,y,,z')")
+    raises(ValueError, "symbols(('x', '', 'y', '', 'z'))")
 
     a, b = symbols('x,y', real=True)
-
     assert a.is_real and b.is_real
 
     x0 = Symbol('x0')

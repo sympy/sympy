@@ -171,7 +171,7 @@ class MemoizerArg:
             raise ValueError('%s %s-th argument must be of type %r but got %r' % (func_src, index, self.allowed_types, obj))
         if isinstance(index, str):
             raise ValueError('%s %r keyword argument must be of type %r but got %r' % (func_src, index, self.allowed_types, obj))
-        raise NotImplementedError(`index,type(index)`)
+        raise NotImplementedError(repr((index,type(index))))
 
 class Memoizer:
     """ Memoizer function decorator generator.
@@ -275,7 +275,7 @@ class Memoizer_nocache(Memoizer):
 
     def __call__(self, func):
         # XXX I would be happy just to return func, but we need to provide
-        # argument convertion, and it is really needed for e.g. Real("0.5")
+        # argument convertion, and it is really needed for e.g. Float("0.5")
         @wraps(func)
         def wrapper(*args, **kw_args):
             kw_items = tuple(kw_args.items())

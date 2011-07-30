@@ -23,7 +23,7 @@ def refine(expr, assumptions=True):
     if not expr.is_Atom:
         args = [refine(arg, assumptions) for arg in expr.args]
         # TODO: this will probably not work with Integral or Polynomial
-        expr = type(expr)(*args)
+        expr = expr.func(*args)
     name = expr.__class__.__name__
     handler = handlers_dict.get(name, None)
     if handler is None: return expr
@@ -49,11 +49,11 @@ def refine_abs(expr, assumptions):
 
     """
     arg = expr.args[0]
-    if ask(arg, Q.real, assumptions) and \
-            fuzzy_not(ask(arg, Q.negative, assumptions)):
+    if ask(Q.real(arg), assumptions) and \
+            fuzzy_not(ask(Q.negative(arg), assumptions)):
         # if it's nonnegative
         return arg
-    if ask(arg, Q.negative, assumptions):
+    if ask(Q.negative(arg), assumptions):
         return -arg
 
 def refine_Pow(expr, assumptions):
@@ -76,19 +76,18 @@ def refine_Pow(expr, assumptions):
     >>> refine_Pow((-1)**(x+y+z), Q.odd(x) & Q.odd(z))
     (-1)**y
     >>> refine_Pow((-1)**(x+y+2), Q.odd(x))
-    (-1)**(1 + y)
+    (-1)**(y + 1)
     >>> refine_Pow((-1)**(x+3), True)
-    (-1)**(1 + x)
-
+    (-1)**(x + 1)
 
     """
     from sympy.core import Pow, Rational
     from sympy.functions import sign
-    if ask(expr.base, Q.real, assumptions):
+    if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
-            if ask(expr.exp, Q.even, assumptions):
+            if ask(Q.even(expr.exp), assumptions):
                 return abs(expr.base) ** expr.exp
-            if ask(expr.exp, Q.odd, assumptions):
+            if ask(Q.odd(expr.exp), assumptions):
                 return sign(expr.base) * abs(expr.base) ** expr.exp
         if isinstance(expr.exp, Rational):
             if type(expr.base) is Pow:
@@ -110,9 +109,9 @@ def refine_Pow(expr, assumptions):
                 initial_number_of_terms = len(terms)
 
                 for t in terms:
-                    if ask(t, Q.even, assumptions):
+                    if ask(Q.even(t), assumptions):
                         even_terms.add(t)
-                    elif ask(t, Q.odd, assumptions):
+                    elif ask(Q.odd(t), assumptions):
                         odd_terms.add(t)
 
                 terms -= even_terms
@@ -144,14 +143,14 @@ def refine_exp(expr, assumptions):
     if arg.is_Mul:
         coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
         if coeff:
-            if ask(2*coeff, Q.integer, assumptions):
-                if ask(coeff, Q.even, assumptions):
+            if ask(Q.integer(2*coeff), assumptions):
+                if ask(Q.even(coeff), assumptions):
                     return S.One
-                elif ask(coeff, Q.odd, assumptions):
+                elif ask(Q.odd(coeff), assumptions):
                     return S.NegativeOne
-                elif ask(coeff + S.Half, Q.even, assumptions):
+                elif ask(Q.even(coeff + S.Half), assumptions):
                     return -S.ImaginaryUnit
-                elif ask(coeff + S.Half, Q.odd, assumptions):
+                elif ask(Q.odd(coeff + S.Half), assumptions):
                     return S.ImaginaryUnit
 
 handlers_dict = {

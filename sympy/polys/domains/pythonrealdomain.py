@@ -34,10 +34,10 @@ class PythonRealDomain(RealDomain): # XXX: tmp solution
         """Convert SymPy's Integer to `dtype`. """
         b = a.evalf()
 
-        if b.is_Real and b not in [S.Infinity, S.NegativeInfinity]:
+        if b.is_Float and b not in [S.Infinity, S.NegativeInfinity]:
             return float(b)
         else:
-            raise CoercionFailed("expected Real object, got %s" % a)
+            raise CoercionFailed("expected Float object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
@@ -64,7 +64,7 @@ class PythonRealDomain(RealDomain): # XXX: tmp solution
         return K1.dtype(int(a.numer())) / int(a.denom)
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return K1.dtype(a)
 
     def from_RR_mpmath(K1, a, K0):

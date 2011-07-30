@@ -55,7 +55,7 @@ def test_subs():
 
     assert b21.subs({b1: b2, b2: b1}) == Basic(b2, b2)
 
-    raises(ValueError, "b21.subs('bad arg')")
+    raises(TypeError, "b21.subs('bad arg')")
     raises(TypeError, "b21.subs(b1, b2, b3)")
 
 def test_atoms():

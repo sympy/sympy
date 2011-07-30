@@ -3,8 +3,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
-    separatevars, erf, rcollect, count_ops, combsimp)
-from sympy.utilities import all
+    separatevars, erf, rcollect, count_ops, combsimp, posify)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -94,6 +93,11 @@ def test_trigsimp3():
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
+def test_trigsimp_issue_2515():
+    x = Symbol('x')
+    assert trigsimp(x*cos(x)*tan(x)) == x*sin(x)
+    assert trigsimp(-sin(x)+cos(x)*tan(x)) == 0
+
 @XFAIL
 def test_factorial_simplify():
     # There are more tests in test_factorials.py. These are just to
@@ -163,6 +167,9 @@ def test_simplify():
 
     assert simplify(A*B - B*A) == A*B - B*A
 
+    assert simplify(log(2) + log(3)) == log(6)
+    assert simplify(log(2*x) - log(2)) == log(x)
+
 def test_simplify_other():
     assert simplify(sin(x)**2 + cos(x)**2) == 1
     assert simplify(gamma(x + 1)/gamma(x)) == x
@@ -219,21 +226,22 @@ def test_separate():
     x, y, z = symbols('x,y,z')
 
     assert separate((x*y*z)**4) == x**4*y**4*z**4
-    assert separate((x*y*z)**x) == x**x*y**x*z**x
+    assert separate((x*y*z)**x).is_Pow
+    assert separate((x*y*z)**x, force=True) == x**x*y**x*z**x
     assert separate((x*(y*z)**2)**3) == x**3*y**6*z**6
 
-    assert separate((sin((x*y)**2)*y)**z) == sin((x*y)**2)**z*y**z
-    assert separate((sin((x*y)**2)*y)**z, deep=True) == sin(x**2*y**2)**z*y**z
+    assert separate((sin((x*y)**2)*y)**z).is_Pow
+    assert separate((sin((x*y)**2)*y)**z, force=True) == sin((x*y)**2)**z*y**z
+    assert separate((sin((x*y)**2)*y)**z, deep=True) == (sin(x**2*y**2)*y)**z
 
     assert separate(exp(x)**2) == exp(2*x)
     assert separate((exp(x)*exp(y))**2) == exp(2*x)*exp(2*y)
 
     assert separate((exp((x*y)**z)*exp(y))**2) == exp(2*(x*y)**z)*exp(2*y)
-    assert separate((exp((x*y)**z)*exp(y))**2, deep=True) == exp(2*x**z*y**z)*exp(2*y)
+    assert separate((exp((x*y)**z)*exp(y))**2, deep=True, force=True) == exp(2*x**z*y**z)*exp(2*y)
 
-def test_separate_X1():
-    x, y, z = map(Symbol, 'xyz')
-    assert separate((exp(x)*exp(y))**z) == exp(x*z)*exp(y*z)
+    assert separate((exp(x)*exp(y))**z).is_Pow
+    assert separate((exp(x)*exp(y))**z, force=True) == exp(x*z)*exp(y*z)
 
 def test_powsimp():
     x, y, z, n = symbols('x,y,z,n')
@@ -327,6 +335,9 @@ def test_collect_1():
     assert collect( ((1 + y + x)**4).expand(), x) == ((1 + y)**4).expand() + \
                 x*(4*(1 + y)**3).expand() + x**2*(6*(1 + y)**2).expand() + \
                 x**3*(4*(1 + y)).expand() + x**4
+    # symbols can be given as any iterable
+    expr = x + y
+    assert collect(expr, expr.free_symbols) == expr
 
 def test_collect_2():
     """Collect with respect to a sum"""
@@ -435,7 +446,16 @@ def test_separatevars():
     # 1759
     p=Symbol('p',positive=True)
     assert separatevars(sqrt(p**2 + x*p**2)) == p*sqrt(1 + x)
-    assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y)*sqrt(1 + x)
+    assert separatevars(sqrt(y*(p**2 + x*p**2))) == p*sqrt(y*(1 + x))
+    assert separatevars(sqrt(y*(p**2 + x*p**2)), force=True) == p*sqrt(y)*sqrt(1 + x)
+    # 1766
+    assert separatevars(sqrt(x*y)).is_Pow
+    assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
+
+@XFAIL
+def test_separation_by_factor():
+    x,y = symbols('x,y')
+    assert factor(sqrt(x*y), expand=False).is_Pow
 
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')
@@ -554,30 +574,28 @@ def test_logcombine_1():
         force=True) == log(x**2)+3*I*log(x) + \
         Integral((sin(x**2)+cos(x**3))/x, x)
 
-@XFAIL
-def test_logcombine_2():
-    # The same as one of the tests above, but with Rational(a, b) replaced with a/b.
-    # This fails because of a bug in matches.  See issue 1274.
-    x, y = symbols("x,y")
-    assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**(2/3)*y**(3/2)), \
-        force=True) == log(x**(1/(pi*x**(2/3)*y**(3/2)))*y**(-1/\
-        (pi*x**(2/3)*y**(3/2)))) + (x**4 + y**4)**(1/2)/(pi*x**(2/3)*y**(3/2)) + \
-        x**(1/3)/(pi*y**(1/2))
-
 def test_posify():
-    from sympy import posify, Symbol, log
     from sympy.abc import x
 
     assert str(posify(
         x +
         Symbol('p', positive=True) +
-        Symbol('n', negative=True))) == '(n + p + _x, {_x: x})'
+        Symbol('n', negative=True))) == '(_x + n + p, {_x: x})'
 
     # log(1/x).expand() should be log(1/x) but it comes back as -log(x)
-    # when it is corrected, posify will allow the change to be made:
+    # when it is corrected, posify will allow the change to be made. The
+    # force=True option can do so as well when it is implemented.
     eq, rep = posify(1/x)
     assert log(eq).expand().subs(rep) == -log(x)
-    assert str(posify([x, 1 + x])) == '([_x, 1 + _x], {_x: x})'
+    assert str(posify([x, 1 + x])) == '([_x, _x + 1], {_x: x})'
+
+    x = symbols('x')
+    p = symbols('p', positive=True)
+    n = symbols('n', negative=True)
+    orig = [x, n, p]
+    modified, reps = posify(orig)
+    assert str(modified) == '[_x, n, p]'
+    assert [w.subs(reps) for w in modified] == orig
 
 def test_powdenest():
     from sympy import powdenest
@@ -639,3 +657,8 @@ def test_combsimp():
         4*((n + 1)*(n + 2)*binomial(n, k + S(1)/2))/((2*k - 2*n - 1)*(2*k - 2*n - 3))
     assert combsimp(binomial(n + 2, k + 2.0)) == \
         -((1.0*n + 2.0)*binomial(n + 1.0, k + 2.0))/(k - n)
+
+def test_issue_2516():
+    aA, Re, a, b, D = symbols('aA Re a b D')
+    e=((D**3*a + b*aA**3)/Re).expand()
+    assert collect(e, [aA**3/Re, a]) == e

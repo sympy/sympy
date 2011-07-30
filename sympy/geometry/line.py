@@ -10,7 +10,7 @@ Segment
 """
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
-from sympy.core.numbers import Real, Rational
+from sympy.core.numbers import Float, Rational
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -638,10 +638,9 @@ class LinearEntity(GeometryEntity):
 
         """
         from random import randint
-        from sys import maxint
 
         # The lower and upper
-        lower, upper = -maxint - 1, maxint
+        lower, upper = -2**32 - 1, 2**32
 
         if self.slope is S.Infinity:
             if isinstance(self, Ray):
@@ -688,10 +687,6 @@ class LinearEntity(GeometryEntity):
     def __hash__(self):
         return super(LinearEntity, self).__hash__()
 
-    def __contains__(self, other):
-        """Subclasses should implement this method."""
-        raise NotImplementedError()
-
 
 class Line(LinearEntity):
     """An infinite line in space.
@@ -726,7 +721,7 @@ class Line(LinearEntity):
     >>> L.points
     (Point(2, 3), Point(3, 5))
     >>> L.equation()
-    1 + y - 2*x
+    -2*x + y + 1
     >>> L.coefficients
     (-2, 1, 1)
 
@@ -787,7 +782,7 @@ class Line(LinearEntity):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
         >>> l1.arbitrary_point()
-        Point(1 + 4*t, 3*t)
+        Point(4*t + 1, 3*t)
 
         """
         t = _symbol(parameter)
@@ -842,7 +837,7 @@ class Line(LinearEntity):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
         >>> l1.equation()
-        3 - 3*x + 4*y
+        -3*x + 4*y + 3
 
         """
         x, y = _symbol(x), _symbol(y)
@@ -1276,7 +1271,7 @@ class Segment(LinearEntity):
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> s1 = Segment(p1, p2)
         >>> s1.arbitrary_point()
-        Point(1 + 4*t, 3*t)
+        Point(4*t + 1, 3*t)
 
         """
         t = _symbol(parameter)

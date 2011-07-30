@@ -114,13 +114,13 @@ def test_householder():
     def coeff(n):
         # similiar to Hilbert matrix
         A = []
-        for i in xrange(1, 13):
-            A.append([1. / (i + j - 1) for j in xrange(1, n + 1)])
+        for i in range(1, 13):
+            A.append([1. / (i + j - 1) for j in range(1, n + 1)])
         return matrix(A)
 
     residuals = []
     refres = []
-    for n in xrange(2, 7):
+    for n in range(2, 7):
         A = coeff(n)
         H, p, x, r = householder(extend(A, y))
         x = matrix(x)

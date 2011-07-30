@@ -1,5 +1,6 @@
 from sympy.core import Basic, S, Function, diff, Number, sympify
 from sympy.core.relational import Equality, Relational
+from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
 
 class ExprCondPair(Function):
@@ -79,13 +80,17 @@ class Piecewise(Function):
             pair = ExprCondPair(*ec)
             cond_type = type(pair.cond)
             if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number) or issubclass(cond_type, Set)):
+                    issubclass(cond_type, Number) or \
+                    issubclass(cond_type, Set) or issubclass(cond_type, Boolean)):
                 raise TypeError(
                     "Cond %s is of type %s, but must be a bool," \
                     " Relational, Number or Set" % (pair.cond, cond_type))
             newargs.append(pair)
 
-        r = cls.eval(*newargs)
+        if options.pop('evaluate', True):
+            r = cls.eval(*newargs)
+        else:
+            r = None
 
         if r is None:
             return Basic.__new__(cls, *newargs, **options)
@@ -102,7 +107,7 @@ class Piecewise(Function):
     @classmethod
     def eval(cls, *args):
         # Check for situations where we can evaluate the Piecewise object.
-        # 1) Hit an unevaluatable cond (e.g. x<1) -> keep object
+        # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
         # 3) Remove false conditions, if no conditions left -> raise ValueError
         all_conds_evaled = True    # Do all conds eval to a bool?

@@ -15,6 +15,8 @@ from sympy.physics.quantum.operator import UnitaryOperator
 from sympy.physics.quantum.gate import Gate, HadamardGate
 from sympy.physics.quantum.qubit import IntQubit
 
+from sympy.core.compatibility import callable
+
 __all__ = [
     'OracleGate',
     'WGate',

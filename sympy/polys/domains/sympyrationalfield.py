@@ -6,6 +6,11 @@ from sympy.polys.domains.groundtypes import SymPyRationalType
 
 from sympy.polys.polyerrors import CoercionFailed
 
+from sympy import (
+    Integer as sympy_int,
+    Rational as sympy_rat,
+)
+
 class SymPyRationalField(RationalField):
     """Rational field based on SymPy Rational class. """
 
@@ -17,6 +22,24 @@ class SymPyRationalField(RationalField):
     def __init__(self):
         pass
 
+    def of_type(self, a):
+        """
+        Check if ``a`` is of type ``Rational``.
+
+        Example
+        =======
+
+        >>> from sympy import Rational, Real
+        >>> from sympy.polys.domains import QQ_sympy
+        >>> QQ_sympy().of_type(Rational(3, 2))
+        True
+        >>> QQ_sympy().of_type(2)
+        False
+        """
+        return type(a) in [type(self.one), type(self.zero), type(sympy_rat(-1)),
+                           type(sympy_rat(2)), type(sympy_rat(1, 2)),
+                           type(sympy_rat(3, 2))]
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return a
@@ -25,7 +48,7 @@ class SymPyRationalField(RationalField):
         """Convert SymPy's Rational to `dtype`. """
         if a.is_Rational and a.q != 0:
             return a
-        elif a.is_Real:
+        elif a.is_Float:
             from sympy.polys.domains import RR
             return SymPyRationalType(*RR.as_integer_ratio(a))
         else:
@@ -57,7 +80,7 @@ class SymPyRationalField(RationalField):
                                  int(a.denom()))
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return SymPyRationalType(*K0.as_integer_ratio(a))
 
     def from_RR_mpmath(K1, a, K0):

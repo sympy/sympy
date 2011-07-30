@@ -3,19 +3,21 @@
 from sympy.core.symbol import Dummy
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core import S, I
+from sympy.core import S, I, Basic
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.functions import exp, sqrt, re, im
 
-from sympy.polys.polytools import Poly, cancel, factor
+from sympy.polys.polytools import Poly, cancel, factor, gcd_list
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
 
 from sympy.simplify import simplify
-from sympy.utilities import all
+from sympy.utilities import default_sort_key
+
+from sympy.core.compatibility import reduce
 
 import math
 
@@ -76,7 +78,7 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([r0, r1])
+    return sorted([r0, r1], key=default_sort_key)
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
@@ -212,6 +214,7 @@ def roots_quartic(f):
                 root = sqrt(-(arg1 + s*arg2))
                 for t in [-1, 1]:
                     ans.append((s*w - t*root)/2 - aon4)
+
     return ans
 
 def roots_binomial(f):
@@ -230,18 +233,7 @@ def roots_binomial(f):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
-    if all([ r.is_number for r in roots ]):
-        reals, complexes = [], []
-
-        for root in roots:
-            if root.is_real:
-                reals.append(root)
-            else:
-                complexes.append(root)
-
-        roots = sorted(reals) + sorted(complexes, key=lambda r: (re(r), -im(r)))
-
-    return roots
+    return sorted(roots, key=default_sort_key)
 
 def _inv_totient_estimate(m):
     """
@@ -310,7 +302,7 @@ def roots_cyclotomic(f, factor=False):
         for h, _ in g.factor_list()[1]:
             roots.append(-h.TC())
 
-    return roots
+    return sorted(roots, key=default_sort_key)
 
 def roots_rational(f):
     """Returns a list of rational roots of a polynomial."""
@@ -341,7 +333,109 @@ def roots_rational(f):
             if not f.eval(-zero):
                 zeros.append(-zero)
 
-    return zeros
+    return sorted(zeros, key=default_sort_key)
+
+def _integer_basis(poly):
+    """Compute coefficient basis for a polynomial over integers. """
+    monoms, coeffs = zip(*poly.terms())
+
+    monoms, = zip(*monoms)
+    coeffs = map(abs, coeffs)
+
+    if coeffs[0] < coeffs[-1]:
+        coeffs = list(reversed(coeffs))
+    else:
+        return None
+
+    monoms = monoms[:-1]
+    coeffs = coeffs[:-1]
+
+    divs = reversed(divisors(gcd_list(coeffs))[1:])
+
+    try:
+        div = divs.next()
+    except StopIteration:
+        return None
+
+    while True:
+        for monom, coeff in zip(monoms, coeffs):
+            if coeff % div**monom != 0:
+                try:
+                    div = divs.next()
+                except StopIteration:
+                    return None
+                else:
+                    break
+        else:
+            return div
+
+def preprocess_roots(poly):
+    """Try to get rid of symbolic coefficients from ``poly``. """
+    coeff = S.One
+
+    try:
+        _, poly = poly.clear_denoms(convert=True)
+    except DomainError:
+        return coeff, poly
+
+    poly = poly.primitive()[1]
+    poly = poly.retract()
+
+    if poly.get_domain().is_Poly and all(c.is_monomial for c in poly.rep.coeffs()):
+        poly = poly.inject()
+
+        strips = zip(*poly.monoms())
+        gens = list(poly.gens[1:])
+
+        base, strips = strips[0], strips[1:]
+
+        for gen, strip in zip(list(gens), strips):
+            reverse = False
+
+            if strip[0] < strip[-1]:
+                strip = reversed(strip)
+                reverse = True
+
+            ratio = None
+
+            for a, b in zip(base, strip):
+                if not a and not b:
+                    continue
+                elif not a or not b:
+                    break
+                elif b % a != 0:
+                    break
+                else:
+                    _ratio = b // a
+
+                    if ratio is None:
+                        ratio = _ratio
+                    elif ratio != _ratio:
+                        break
+            else:
+                if reverse:
+                    ratio = -ratio
+
+                poly = poly.eval(gen, 1)
+                coeff *= gen**(-ratio)
+                gens.remove(gen)
+
+        if gens:
+            poly = poly.eject(*gens)
+
+    if poly.is_univariate and poly.get_domain().is_ZZ:
+        basis = _integer_basis(poly)
+
+        if basis is not None:
+            n = poly.degree()
+
+            def func(k, coeff):
+                return coeff//basis**(n-k[0])
+
+            poly = poly.termwise(func)
+            coeff *= basis
+
+    return coeff, poly
 
 def roots(f, *gens, **flags):
     """
@@ -380,10 +474,10 @@ def roots(f, *gens, **flags):
     >>> p = Poly(x**2-y, x, y)
 
     >>> roots(Poly(p, x))
-    {y**(1/2): 1, -y**(1/2): 1}
+    {-y**(1/2): 1, y**(1/2): 1}
 
     >>> roots(x**2 - y, x)
-    {y**(1/2): 1, -y**(1/2): 1}
+    {-y**(1/2): 1, y**(1/2): 1}
 
     >>> roots([1, 0, -1])
     {-1: 1, 1: 1}
@@ -422,11 +516,6 @@ def roots(f, *gens, **flags):
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-        if auto and f.get_domain().has_Ring:
-            f = f.to_field()
-
-    x = f.gen
-
     def _update_dict(result, root, k):
         if root in result:
             result[root] += k
@@ -444,7 +533,7 @@ def roots(f, *gens, **flags):
             previous, roots = list(roots), []
 
             for root in previous:
-                g = factor - Poly(root, x)
+                g = factor - Poly(root, f.gen)
 
                 for root in _try_heuristics(g):
                     roots.append(root)
@@ -468,7 +557,7 @@ def roots(f, *gens, **flags):
 
         for i in [-1, 1]:
             if not f.eval(i):
-                f = f.exquo(Poly(x - i, x))
+                f = f.quo(Poly(f.gen - i, f.gen))
                 result.append(i)
                 break
 
@@ -487,24 +576,21 @@ def roots(f, *gens, **flags):
 
         return result
 
-    if f.is_monomial == 1:
-        if f.is_ground:
-            if multiple:
-                return []
-            else:
-                return {}
-        else:
-            result = { S(0) : f.degree() }
+    (k,), f = f.terms_gcd()
+
+    if not k:
+        zeros = {}
     else:
-        (k,), f = f.terms_gcd()
+        zeros = {S(0) : k}
 
-        if not k:
-            zeros = {}
-        else:
-            zeros = { S(0) : k }
+    coeff, f = preprocess_roots(f)
 
-        result = {}
+    if auto and f.get_domain().has_Ring:
+        f = f.to_field()
 
+    result = {}
+
+    if not f.is_ground:
         if not f.get_domain().is_Exact:
             for r in f.nroots():
                 _update_dict(result, r, 1)
@@ -524,10 +610,16 @@ def roots(f, *gens, **flags):
                     _update_dict(result, root, 1)
             else:
                 for factor, k in factors:
-                    for r in _try_heuristics(Poly(factor, x, field=True)):
+                    for r in _try_heuristics(Poly(factor, f.gen, field=True)):
                         _update_dict(result, r, k)
 
-        result.update(zeros)
+    if coeff is not S.One:
+        _result, result, = result, {}
+
+        for root, k in _result.iteritems():
+            result[coeff*root] = k
+
+    result.update(zeros)
 
     if filter not in [None, 'C']:
         handlers = {
@@ -559,7 +651,7 @@ def roots(f, *gens, **flags):
         for zero, k in result.iteritems():
             zeros.extend([zero]*k)
 
-        return zeros
+        return sorted(zeros, key=default_sort_key)
 
 def root_factors(f, *gens, **args):
     """
@@ -599,7 +691,7 @@ def root_factors(f, *gens, **args):
 
         if N < F.degree():
             G = reduce(lambda p,q: p*q, factors)
-            factors.append(F.exquo(G))
+            factors.append(F.quo(G))
 
     if not isinstance(f, Poly):
         return [ f.as_expr() for f in factors ]

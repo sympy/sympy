@@ -15,6 +15,8 @@ from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
 from sympy.polys.polyroots import root_factors
 
+from sympy.core.compatibility import reduce
+
 def components(f, x):
     """Returns a set of all functional components of the given expression
        which includes symbols, function applications and compositions and
@@ -26,7 +28,7 @@ def components(f, x):
        >>> from sympy.integrals.risch import components
 
        >>> components(sin(x)*cos(x)**2, x)
-       set([x, cos(x), sin(x)])
+       set([x, sin(x), cos(x)])
 
     """
     result = set()
@@ -116,7 +118,7 @@ def heurisch(f, x, **kwargs):
        >>> from sympy.abc import x, y
 
        >>> heurisch(y*tan(x), x)
-       y*log(1 + tan(x)**2)/2
+       y*log(tan(x)**2 + 1)/2
 
        See Manuel Bronstein's "Poor Man's Integrator":
 

@@ -1,3 +1,5 @@
+import inspect
+from sympy.utilities.source import get_class
 from sympy.logic.boolalg import Boolean, Not
 
 class AssumptionsContext(set):
@@ -57,7 +59,7 @@ class AppliedPredicate(Boolean):
             >>> x = Symbol('x')
             >>> a = Q.integer(x + 1)
             >>> a.arg
-            1 + x
+            x + 1
 
         """
         return self._args[1]
@@ -78,35 +80,8 @@ class AppliedPredicate(Boolean):
     def __hash__(self):
         return super(AppliedPredicate, self).__hash__()
 
-def eliminate_assume(expr, symbol=None):
-    """
-    Convert an expression with assumptions to an equivalent with all assumptions
-    replaced by symbols.
-
-    Q.integer(x) --> Q.integer
-    ~Q.integer(x) --> ~Q.integer
-
-    Examples:
-        >>> from sympy.assumptions.assume import eliminate_assume
-        >>> from sympy import Q
-        >>> from sympy.abc import x
-        >>> eliminate_assume(Q.positive(x))
-        Q.positive
-        >>> eliminate_assume(~Q.positive(x))
-        Not(Q.positive)
-
-    """
-    if symbol is not None:
-        props = expr.atoms(AppliedPredicate)
-        if props and symbol not in [prop.arg for prop in props]:
-            return
-    if expr.__class__ is AppliedPredicate:
-        if symbol is not None:
-            if not expr.arg.has(symbol):
-                return
-        return expr.func
-    return expr.func(*filter(lambda x: x is not None,
-                [eliminate_assume(arg, symbol) for arg in expr.args]))
+    def _eval_ask(self, assumptions):
+        return self.func.eval(self.arg, assumptions)
 
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
@@ -153,3 +128,31 @@ class Predicate(Boolean):
 
     def remove_handler(self, handler):
         self.handlers.remove(handler)
+
+    def eval(self, expr, assumptions=True):
+        """
+        Evaluate self(expr) under the given assumptions.
+
+        This uses only direct resolution methods, not logical inference.
+        """
+        res, _res = None, None
+        mro = inspect.getmro(type(expr))
+        for handler in self.handlers:
+            cls = get_class(handler)
+            for subclass in mro:
+                try:
+                    eval = getattr(cls, subclass.__name__)
+                except AttributeError:
+                    continue
+                res = eval(expr, assumptions)
+                if _res is None:
+                    _res = res
+                elif res is None:
+                    # since first resolutor was conclusive, we keep that value
+                    res = _res
+                else:
+                    # only check consistency if both resolutors have concluded
+                    if _res != res:
+                        raise ValueError('incompatible resolutors')
+                break
+        return res

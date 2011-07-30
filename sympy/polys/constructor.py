@@ -3,16 +3,15 @@
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.domains import ZZ, QQ, RR, EX
-from sympy.assumptions import ask
+from sympy.assumptions import ask, Q
 from sympy.core import S, sympify
-from sympy.utilities import any
 
 def _construct_simple(coeffs, opt):
     """Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. """
     result, rationals, reals, algebraics = {}, False, False, False
 
     if opt.extension is True:
-        is_algebraic = lambda coeff: ask(coeff, 'algebraic')
+        is_algebraic = lambda coeff: ask(Q.algebraic(coeff))
     else:
         is_algebraic = lambda coeff: False
 
@@ -21,7 +20,7 @@ def _construct_simple(coeffs, opt):
         if coeff.is_Rational:
             if not coeff.is_Integer:
                 rationals = True
-        elif coeff.is_Real:
+        elif coeff.is_Float:
             if not algebraics:
                 reals = True
             else:
@@ -128,11 +127,9 @@ def _construct_composite(coeffs, opt):
                 fractions = True
                 break
 
-    result = []
+    coeffs = set([])
 
     if not fractions:
-        coeffs = set([])
-
         for numer, denom in zip(numers, denoms):
             denom = denom[zeros]
 
@@ -140,24 +137,31 @@ def _construct_composite(coeffs, opt):
                 coeff /= denom
                 coeffs.add(coeff)
                 numer[monom] = coeff
+    else:
+        for numer, denom in zip(numers, denoms):
+            coeffs.update(numer.values())
+            coeffs.update(denom.values())
 
-        rationals, reals = False, False
+    rationals, reals = False, False
 
-        for coeff in coeffs:
-            if coeff.is_Rational:
-                if not coeff.is_Integer:
-                    rationals = True
-            elif coeff.is_Real:
-                reals = True
-                break
+    for coeff in coeffs:
+        if coeff.is_Rational:
+            if not coeff.is_Integer:
+                rationals = True
+        elif coeff.is_Float:
+            reals = True
+            break
 
-        if reals:
-            ground = RR
-        elif rationals:
-            ground = QQ
-        else:
-            ground = ZZ
+    if reals:
+        ground = RR
+    elif rationals:
+        ground = QQ
+    else:
+        ground = ZZ
 
+    result = []
+
+    if not fractions:
         domain = ground.poly_ring(*gens)
 
         for numer in numers:
@@ -166,14 +170,14 @@ def _construct_composite(coeffs, opt):
 
             result.append(domain(numer))
     else:
-        domain = ZZ.frac_field(*gens)
+        domain = ground.frac_field(*gens)
 
         for numer, denom in zip(numers, denoms):
             for monom, coeff in numer.iteritems():
-                numer[monom] = ZZ.from_sympy(coeff)
+                numer[monom] = ground.from_sympy(coeff)
 
             for monom, coeff in denom.iteritems():
-                denom[monom] = ZZ.from_sympy(coeff)
+                denom[monom] = ground.from_sympy(coeff)
 
             result.append(domain((numer, denom)))
 

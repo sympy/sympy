@@ -7,6 +7,8 @@ GeometryEntity
 
 """
 
+from sympy.core.compatibility import cmp
+
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
     "Point",
@@ -135,7 +137,8 @@ class GeometryEntity(tuple):
         >>> t.translate(2)
         Triangle(Point(3, 0), Point(3/2, 3**(1/2)/2), Point(3/2, -3**(1/2)/2))
         >>> t.translate(2,2)
-        Triangle(Point(3, 2), Point(3/2, 2 + 3**(1/2)/2), Point(3/2, 2 - 3**(1/2)/2))
+        Triangle(Point(3, 2), Point(3/2, 3**(1/2)/2 + 2), Point(3/2, -3**(1/2)/2 + 2))
+
         """
         from sympy import Point
         if not isinstance(x, Point):
@@ -269,3 +272,12 @@ class GeometryEntity(tuple):
             return c
 
         return cmp(i1, i2)
+
+    def __contains__(self, other):
+        """Subclasses should implement this method for anything more complex than equality."""
+        if type(self) == type(other):
+            return self == other
+        raise NotImplementedError()
+
+from sympy.core.sympify import converter
+converter[GeometryEntity] = lambda x: x

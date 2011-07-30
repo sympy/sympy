@@ -15,7 +15,7 @@ def ratint(f, x, **flags):
        >>> from sympy.abc import x
 
        >>> ratint(36/(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2), x)
-       -4*log(1 + x) + 4*log(-2 + x) + (6 + 12*x)/(-1 + x**2)
+       (12*x + 6)/(x**2 - 1) + 4*log(x - 2) - 4*log(x + 1)
 
        References
        ==========
@@ -121,7 +121,7 @@ def ratint_ratpart(f, g, x):
     A = Poly(A_coeffs, x, domain=ZZ[C_coeffs])
     B = Poly(B_coeffs, x, domain=ZZ[C_coeffs])
 
-    H = f - A.diff()*v + A*(u.diff()*v).exquo(u) - B*u
+    H = f - A.diff()*v + A*(u.diff()*v).quo(u) - B*u
 
     result = solve(H.coeffs(), C_coeffs)
 
@@ -182,7 +182,7 @@ def ratint_logpart(f, g, x, t=None):
             _include_sign(c, h_lc_sqf)
 
             for a, j in h_lc_sqf:
-                h = h.exquo(Poly(a.gcd(q)**j, x))
+                h = h.quo(Poly(a.gcd(q)**j, x))
 
             inv, coeffs = h_lc.invert(q), [S(1)]
 
@@ -219,7 +219,7 @@ def log_to_atan(f, g):
         return 2*atan(p.as_expr())
     else:
         s, t, h = g.gcdex(-f)
-        u = (f*s+g*t).exquo(h)
+        u = (f*s+g*t).quo(h)
         A = 2*atan(u.as_expr())
 
         return A + log_to_atan(s, t)

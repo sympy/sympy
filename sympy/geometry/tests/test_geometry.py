@@ -1,4 +1,4 @@
-from sympy import (Abs, C, Dummy, Max, Min, Rational, Real, S, Symbol, cos, oo,
+from sympy import (Abs, C, Dummy, Max, Min, Rational, Float, S, Symbol, cos, oo,
                    pi, simplify, sqrt, symbols)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
@@ -16,7 +16,7 @@ half = Rational(1,2)
 
 def feq(a, b):
     """Test if two floating point values are 'equal'."""
-    t = Real("1.0E-10")
+    t = Float("1.0E-10")
     return -t < a-b < t
 
 def test_curve():
@@ -53,6 +53,8 @@ def test_point():
     p4 = Point(1, 1)
 
     assert len(p1) == 1
+    assert p1 in p1
+    assert p1 not in p2
     assert p2[1] == y2
     assert (p3+p4) == p4
     assert (p2-p1) == Point(y1-x1, y2-x2)
@@ -471,21 +473,30 @@ def test_polygon():
     assert p2.circumcircle == Circle(Point(0, 0), 5)
     assert p2.incircle == Circle(Point(0, 0), p2.apothem)
     assert p1.is_convex()
+    assert p1.rotation == 0
+    p1.spin(pi/3)
+    assert p1.rotation == pi/3
+    assert p1[0] == Point(5, 5*sqrt(3))
+    # while spin works in place (notice that rotation is 2pi/3 below)
+    # rotate returns a new object
+    p1_old = p1
+    assert p1.rotate(pi/3) == RegularPolygon(Point(0, 0), 10, 5, 2*pi/3)
+    assert p1 == p1_old
 
     #
     # Angles
     #
     angles = p4.angles
-    assert feq(angles[Point(0, 0)].evalf(), Real("0.7853981633974483"))
-    assert feq(angles[Point(4, 4)].evalf(), Real("1.2490457723982544"))
-    assert feq(angles[Point(5, 2)].evalf(), Real("1.8925468811915388"))
-    assert feq(angles[Point(3, 0)].evalf(), Real("2.3561944901923449"))
+    assert feq(angles[Point(0, 0)].evalf(), Float("0.7853981633974483"))
+    assert feq(angles[Point(4, 4)].evalf(), Float("1.2490457723982544"))
+    assert feq(angles[Point(5, 2)].evalf(), Float("1.8925468811915388"))
+    assert feq(angles[Point(3, 0)].evalf(), Float("2.3561944901923449"))
 
     angles = p3.angles
-    assert feq(angles[Point(0, 0)].evalf(), Real("0.7853981633974483"))
-    assert feq(angles[Point(4, 4)].evalf(), Real("1.2490457723982544"))
-    assert feq(angles[Point(5, 2)].evalf(), Real("1.8925468811915388"))
-    assert feq(angles[Point(3, 0)].evalf(), Real("2.3561944901923449"))
+    assert feq(angles[Point(0, 0)].evalf(), Float("0.7853981633974483"))
+    assert feq(angles[Point(4, 4)].evalf(), Float("1.2490457723982544"))
+    assert feq(angles[Point(5, 2)].evalf(), Float("1.8925468811915388"))
+    assert feq(angles[Point(3, 0)].evalf(), Float("2.3561944901923449"))
 
     #
     # Triangle
@@ -508,6 +519,8 @@ def test_polygon():
     assert t2.is_right() == False
     assert t3.is_right()
     assert p1 in t1
+    assert t1.sides[0] in t1
+    assert Segment((0, 0), (1, 0)) in t1
     assert Point(5, 5) not in t2
     assert t1.is_convex()
     assert feq(t1.angles[p1].evalf(), pi.evalf()/2)
@@ -576,7 +589,12 @@ def test_polygon():
     assert p2.distance(pt1) == Rational(3)/4
     assert p3.distance(pt2) == sqrt(2)/2
 
+@XFAIL
+def test_polygon_to_polygon():
     '''Polygon to Polygon'''
+    # XXX: Because of the way the warnings filters work, this will fail if it's
+    # run more than once in the same session.  See issue 2492.
+
     import warnings
     # p1.distance(p2) emits a warning
     # First, test the warning

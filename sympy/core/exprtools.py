@@ -8,6 +8,7 @@ from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.coreerrors import NonCommutativeExpression
+from sympy.core.containers import Tuple
 
 def decompose_power(expr):
     """
@@ -230,11 +231,7 @@ class Term(object):
 
                 if base.is_Add:
                     cont, base = base.primitive()
-
-                    if exp > 0:
-                        coeff *= cont
-                    else:
-                        coeff /= cont
+                    coeff *= cont**exp
 
                 if exp > 0:
                     numer[base] = exp
@@ -328,7 +325,7 @@ class Term(object):
 
 def _gcd_terms(terms):
     """Helper function for :func:`gcd_terms`. """
-    if isinstance(terms, Basic):
+    if isinstance(terms, Basic) and not isinstance(terms, Tuple):
         terms = Add.make_args(terms)
 
     if len(terms) <= 1:
@@ -378,8 +375,11 @@ def gcd_terms(terms):
     >>> from sympy.abc import x, y
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
-    y*(1 + x)*(1 + x + y)
+    y*(x + 1)*(x + y + 1)
 
     """
+    from sympy.polys.polytools import _keep_coeff
+
     cont, numer, denom = _gcd_terms(sympify(terms))
-    return cont*(numer/denom)
+    coeff, factors = cont.as_coeff_Mul()
+    return _keep_coeff(coeff, factors*numer/denom)

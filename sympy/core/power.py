@@ -96,6 +96,10 @@ class Pow(Expr):
     def exp(self):
         return self._args[1]
 
+    @classmethod
+    def class_key(cls):
+        return 3, 2, cls.__name__
+
     def _eval_power(self, other):
         b, e = self.as_base_exp()
         if other.is_integer:
@@ -237,7 +241,7 @@ class Pow(Expr):
         return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
-        if self.base.is_Rational and self.base.p==1:
+        if self.base.is_Rational and self.base.p==1 and self.base is not S.Infinity:
             return 1/self.base, -self.exp
         return self.base, self.exp
 
@@ -561,7 +565,7 @@ class Pow(Expr):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_func(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -593,10 +597,19 @@ class Pow(Expr):
             return False
 
         if self.base.has(*syms):
-            # it would be nice to have is_nni working
             return self.base._eval_is_polynomial(syms) and \
-                   self.exp.is_nonnegative and \
-                   self.exp.is_integer
+                   self.exp.is_Integer and \
+                   self.exp >= 0
+        else:
+            return True
+
+    def _eval_is_rational_function(self, syms):
+        if self.exp.has(*syms):
+            return False
+
+        if self.base.has(*syms):
+            return self.base._eval_is_rational_function(syms) and \
+                   self.exp.is_Integer
         else:
             return True
 
@@ -629,7 +642,7 @@ class Pow(Expr):
             c, t = exp.as_coeff_mul()
             if c.is_negative:
                 return 1, base**-exp
-        # unprocessed Real and NumberSymbol
+        # unprocessed Float and NumberSymbol
         return self, S.One
 
     def matches(self, expr, repl_dict={}, evaluate=False):
@@ -832,7 +845,7 @@ class Pow(Expr):
         return C.binomial(self.exp, n) * Pow(x, n)
 
     def _sage_(self):
-        return Pow(self.args[0]._sage_(), self.args[1]._sage_())
+        return self.args[0]._sage_()**self.args[1]._sage_()
 
 from add import Add
 from numbers import Integer

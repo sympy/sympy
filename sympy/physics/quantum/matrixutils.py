@@ -2,7 +2,7 @@
 
 from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import matrices
-from sympy.core.compatibility import all
+from sympy.external import import_module
 
 __all__ = [
     'numpy_ndarray',
@@ -22,20 +22,20 @@ __all__ = [
 # Conditionally define the base classes for numpy and scipy.sparse arrays
 # for use in isinstance tests.
 
-try:
-    import numpy as np
-except ImportError:
+np = import_module('numpy', min_python_version=(2, 6))
+if not np:
     class numpy_ndarray(object):
         pass
 else:
     numpy_ndarray = np.ndarray
 
-try:
-    from scipy import sparse
-except ImportError:
+scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+if not scipy:
     class scipy_sparse_matrix(object):
         pass
+    sparse = None
 else:
+    sparse = scipy.sparse
     # Try to find spmatrix.
     if hasattr(sparse, 'base'):
         # Newer versions have it under scipy.sparse.base.
@@ -47,7 +47,8 @@ else:
 
 def sympy_to_numpy(m, **options):
     """Convert a sympy Matrix/complex number to a numpy matrix or scalar."""
-    import numpy as np
+    if not np:
+        raise ImportError
     dtype = options.get('dtype','complex')
     if isinstance(m, Matrix):
         return np.matrix(m.tolist(), dtype=dtype)
@@ -59,8 +60,8 @@ def sympy_to_numpy(m, **options):
 
 def sympy_to_scipy_sparse(m, **options):
     """Convert a sympy Matrix/complex number to a numpy matrix or scalar."""
-    from scipy import sparse
-    import numpy as np
+    if not np or not sparse:
+        raise ImportError
     dtype = options.get('dtype','complex')
     if isinstance(m, Matrix):
         return sparse.csr_matrix(np.matrix(m.tolist(), dtype=dtype))
@@ -110,7 +111,8 @@ def to_scipy_sparse(m, **options):
     if isinstance(m,  (Matrix, Expr)):
         return sympy_to_scipy_sparse(m, dtype=dtype)
     elif isinstance(m, numpy_ndarray):
-        from scipy import sparse
+        if not sparse:
+            raise ImportError
         return sparse.csr_matrix(m)
     elif isinstance(m, scipy_sparse_matrix):
         return m
@@ -211,7 +213,8 @@ def _sympy_tensor_product(*matrices):
 
 def _numpy_tensor_product(*product):
     """numpy version of tensor product of multiple arguments."""
-    import numpy as np
+    if not np:
+        raise ImportError
     answer = product[0]
     for item in product[1:]:
         answer = np.kron(answer, item)
@@ -220,7 +223,8 @@ def _numpy_tensor_product(*product):
 
 def _scipy_sparse_tensor_product(*product):
     """scipy.sparse version of tensor product of multiple arguments."""
-    from scipy import sparse
+    if not sparse:
+        raise ImportError
     answer = product[0]
     for item in product[1:]:
         answer = sparse.kron(answer, item)
@@ -241,13 +245,15 @@ def matrix_tensor_product(*product):
 
 def _numpy_eye(n):
     """numpy version of complex eye."""
-    import numpy as np
+    if not np:
+        raise ImportError
     return np.matrix(np.eye(n, dtype='complex'))
 
 
 def _scipy_sparse_eye(n):
     """scipy.sparse version of complex eye."""
-    from scipy import sparse
+    if not sparse:
+        raise ImportError
     return sparse.eye(n, n, dtype='complex')
 
 
@@ -265,7 +271,8 @@ def matrix_eye(n, **options):
 
 def _numpy_matrix_to_zero(e):
     """Convert a numpy zero matrix to the zero scalar."""
-    import numpy as np
+    if not np:
+        raise ImportError
     test = np.zeros_like(e)
     if np.allclose(e, test):
         return 0.0
@@ -275,7 +282,8 @@ def _numpy_matrix_to_zero(e):
 
 def _scipy_sparse_matrix_to_zero(e):
     """Convert a scipy.sparse zero matrix to the zero scalar."""
-    import numpy as np
+    if not np:
+        raise ImportError
     edense = e.todense()
     test = np.zeros_like(edense)
     if np.allclose(edense, test):

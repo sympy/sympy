@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Vandermonde matrix example
 
 Demonstrates matrix computations using the Vandermonde matrix.

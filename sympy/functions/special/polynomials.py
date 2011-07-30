@@ -54,7 +54,7 @@ class chebyshevt(PolynomialSequence):
         >>> chebyshevt(1, x)
         x
         >>> chebyshevt(2, x)
-        -1 + 2*x**2
+        2*x**2 - 1
 
     References
     ==========
@@ -84,7 +84,7 @@ class chebyshevu(PolynomialSequence):
         >>> chebyshevu(1, x)
         2*x
         >>> chebyshevu(2, x)
-        -1 + 4*x**2
+        4*x**2 - 1
 
     """
 
@@ -161,7 +161,7 @@ class legendre(PolynomialSequence):
         >>> legendre(1, x)
         x
         >>> legendre(2, x)
-        -1/2 + 3*x**2/2
+        3*x**2/2 - 1/2
 
     References
     ==========
@@ -192,7 +192,7 @@ class assoc_legendre(Function):
         >>> assoc_legendre(1,0, x)
         x
         >>> assoc_legendre(1,1, x)
-        -(1 - x**2)**(1/2)
+        -(-x**2 + 1)**(1/2)
 
     References
     ==========
@@ -242,7 +242,7 @@ class hermite(PolynomialSequence):
         >>> hermite(1, x)
         2*x
         >>> hermite(2, x)
-        -2 + 4*x**2
+        4*x**2 - 2
 
     References
     ==========
@@ -273,20 +273,20 @@ def laguerre_l(n, alpha, x):
         >>> laguerre_l(0, alpha, x)
         1
         >>> laguerre_l(1, alpha, x)
-        1 + alpha - x
+        alpha - x + 1
         >>> laguerre_l(2, alpha, x)
-        1 + 3*alpha/2 + x*(-2 - alpha) + alpha**2/2 + x**2/2
+        alpha**2/2 + 3*alpha/2 + x**2/2 + x*(-alpha - 2) + 1
 
     If you set ``alpha=0``, you get regular Laguerre polynomials::
 
         >>> laguerre_l(1, 0, x)
-        1 - x
+        -x + 1
         >>> laguerre_l(2, 0, x)
-        1 - 2*x + x**2/2
+        x**2/2 - 2*x + 1
         >>> laguerre_l(3, 0, x)
-        1 - 3*x + 3*x**2/2 - x**3/6
+        -x**3/6 + 3*x**2/2 - 3*x + 1
         >>> laguerre_l(4, 0, x)
-        1 - 4*x + 3*x**2 - 2*x**3/3 + x**4/24
+        x**4/24 - 2*x**3/3 + 3*x**2 - 4*x + 1
 
     """
     return laguerre_poly(n, x, alpha)

@@ -5,7 +5,7 @@ from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Sy
 from sympy.utilities.pytest import XFAIL, skip, raises
 from sympy.physics.units import m, s
 
-x,y,a,t = symbols('x,y,a,t')
+x,y,a,t,x_1,x_2,z = symbols('x,y,a,t,x_1,x_2,z')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -334,13 +334,20 @@ def test_integrate_DiracDelta():
     assert integrate(DiracDelta(x),x) == Heaviside(x)
     assert integrate(DiracDelta(x) * f(x),x) == f(0) * Heaviside(x)
     assert integrate(DiracDelta(x) * f(x),(x,-oo,oo)) == f(0)
+    assert integrate(DiracDelta(-x) * f(x),(x,-oo,oo)) == f(0)
+    assert integrate(DiracDelta(-(x-1)) * f(x),(x,-oo,oo)) == f(1)
     assert integrate(DiracDelta(x) * f(x),(x,0,oo)) == f(0)/2
     assert integrate(DiracDelta(x**2+x-2),x) - \
            (Heaviside(-1 + x)/3 + Heaviside(2 + x)/3) == 0
     assert integrate(cos(x)*(DiracDelta(x)+DiracDelta(x**2-1))*sin(x)*(x-pi),x) - \
            (-pi*(cos(1)*Heaviside(-1 + x)*sin(1)/2 - cos(1)*Heaviside(1 + x)*sin(1)/2) + \
            cos(1)*Heaviside(1 + x)*sin(1)/2 + cos(1)*Heaviside(-1 + x)*sin(1)/2) == 0
-
+    assert integrate(x_2*DiracDelta(x - x_2)*DiracDelta(x_2 - x_1), (x_2, -oo, oo)) == \
+           x*DiracDelta(x - x_1)
+    assert integrate(x*y**2*z*DiracDelta(y - x)*DiracDelta(y - z)*DiracDelta(x - z), (y, -oo, oo)) \
+           == x**3*z*DiracDelta(x - z)**2
+    assert integrate((x+1)*DiracDelta(2*x), (x, -oo, oo)) == S(1)/2
+    assert integrate((x+1)*DiracDelta(2*x/3 + 4/S(9)), (x, -oo, oo)) == S(1)/2
 
 def test_subs1():
     e = Integral(exp(x-y), x)
@@ -468,6 +475,8 @@ def test_issue1566():
     assert f.doit() == Rational(-1, 3)
     assert Integral(x*y, (x, None, y)).subs(y, t) == Integral(x*t, (x, None, t))
     assert Integral(x*y, (x, y, None)).subs(y, t) == Integral(x*t, (x, t, None))
+    #FIXME-py3k: This fails somewhere down the line with:
+    #FIXME-py3k: TypeError: type Float doesn't define __round__ method
     assert integrate(x**2, (x, None, 1)) == Rational(1, 3)
     assert integrate(x**2, (x, 1, None)) == Rational(-1, 3)
     assert integrate("x**2", ("x", "1", None)) == Rational(-1, 3)

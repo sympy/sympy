@@ -1,13 +1,14 @@
 """Base class for all the objects in SymPy"""
 
-from assumptions import AssumeMeths, make__get_assumption
+from decorators import _sympifyit
+from assumptions import WithAssumptions
 from cache import cacheit
-from core import BasicMeta, BasicType, C
+from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
-from compatibility import any
+from compatibility import callable, reduce, cmp, iterable
+from sympy.core.decorators import deprecated
 
-
-class Basic(AssumeMeths):
+class Basic(object):
     """
     Base class for all objects in sympy.
 
@@ -41,12 +42,9 @@ class Basic(AssumeMeths):
 
 
     """
-
-    __metaclass__ = BasicMeta
-
+    __metaclass__ = WithAssumptions
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
-                 '_assume_type_keys',   # assumptions typeinfo keys
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -59,7 +57,7 @@ class Basic(AssumeMeths):
     is_Mul = False
     is_Pow = False
     is_Number = False
-    is_Real = False
+    is_Float = False
     is_Rational = False
     is_Integer = False
     is_NumberSymbol = False
@@ -73,97 +71,20 @@ class Basic(AssumeMeths):
     is_Boolean = False
     is_Not = False
 
+    @property
+    @deprecated
+    def is_Real(self):  # pragma: no cover
+        """Deprecated alias for is_Float"""
+        return self.is_Float
+
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
-
-        # FIXME we are slowed a *lot* by Add/Mul passing is_commutative as the
-        # only assumption.
-        #
-        # .is_commutative is not an assumption -- it's like typeinfo!!!
-        # we should remove it.
-
-        # initially assumptions are shared between instances and class
-        obj._assumptions  = cls.default_assumptions
-        obj._a_inprogress = []
-
-        # NOTE this could be made lazy -- probably not all instances will need
-        # fully derived assumptions?
-        if assumptions:
-            obj._learn_new_facts(assumptions)
-            #                      ^
-            # FIXME this is slow   |    another NOTE: speeding this up is *not*
-            #        |             |    important. say for %timeit x+y most of
-            # .------'             |    the time is spent elsewhere
-            # |                    |
-            # |  XXX _learn_new_facts  could be asked about what *new* facts have
-            # v  XXX been learned -- we'll need this to append to _hashable_content
-            basek = set(cls.default_assumptions.keys())
-            k2    = set(obj._assumptions.keys())
-            newk  = k2.difference(basek)
-
-            obj._assume_type_keys = frozenset(newk)
-        else:
-            obj._assume_type_keys = None
+        obj._init_assumptions(assumptions)
 
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
         return obj
 
-
-    # XXX better name?
-    @property
-    def assumptions0(self):
-        """
-        Return object `type` assumptions.
-
-        For example:
-
-          Symbol('x', real=True)
-          Symbol('x', integer=True)
-
-        are different objects. In other words, besides Python type (Symbol in
-        this case), the initial assumptions are also forming their typeinfo.
-
-        Example:
-
-        >>> from sympy import Symbol
-        >>> from sympy.abc import x
-        >>> x.assumptions0
-        {}
-        >>> x = Symbol("x", positive=True)
-        >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'imaginary': False,
-        'negative': False, 'nonnegative': True, 'nonpositive': False,
-        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
-
-        """
-
-        cls = type(self)
-        A   = self._assumptions
-
-        # assumptions shared:
-        if A is cls.default_assumptions or (self._assume_type_keys is None):
-            assumptions0 = {}
-        else:
-            assumptions0 = dict( (k, A[k]) for k in self._assume_type_keys )
-
-        return assumptions0
-
-
-    # NOTE NOTE NOTE
-    # --------------
-    #
-    # new-style classes + __getattr__ is *very* slow!
-
-    # def __getattr__(self, name):
-    #     raise Warning('no way, *all* attribute access will be 2.5x slower')
-
-    # here is what we do instead:
-    for k in AssumeMeths._assume_defined:
-        exec "is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k)
-    del k
-
-    # NB: there is no need in protective __setattr__
 
     def __getnewargs__(self):
         """ Pickling support.
@@ -200,6 +121,31 @@ class Basic(AssumeMeths):
         # then this method should be updated accordingly to return
         # relevant attributes as tuple.
         return self._args
+
+    def __getstate__(self, cls=None):
+        if cls is None:
+            # This is the case for the instance that gets pickled
+            cls = self.__class__
+
+        d = {}
+        # Get all data that should be stored from super classes
+        for c in cls.__bases__:
+            if hasattr(c, "__getstate__"):
+                d.update(c.__getstate__(self, c))
+
+        # Get all information that should be stored from cls and return the dic
+        for name in cls.__slots__:
+            if hasattr(self, name):
+                d[name] = getattr(self, name)
+        return d
+
+    def __setstate__(self, d):
+        # All values that were pickled are now assigned to a fresh instance
+        for name, value in d.iteritems():
+            try:
+                setattr(self, name, value)
+            except:
+                pass
 
     def compare(self, other):
         """
@@ -317,115 +263,51 @@ class Basic(AssumeMeths):
             return +1   # sympy > other
 
         # now both objects are from SymPy, so we can proceed to usual comparison
-        return Basic._compare_pretty(a, b)
-
-    def as_tuple_tree(self, order=None):
-        """Construct a tuple-tree version of ``self``. """
-        from sympy.core import S
-        funcs = {
-            'exp': 0, 'log': 1,
-            'sin': 2, 'cos': 3, 'tan': 4, 'cot': 5,
-            'sinh': 6, 'cosh': 7, 'tanh': 8, 'coth': 9,
-        }
-
-        def head(expr):
-            """Nice order of classes. """
-            name = expr.__class__.__name__
-
-            if expr.is_Number:
-                return 1, 0, 'Number'
-            elif expr.is_Atom:
-                return 2, 0, name
-            elif expr.is_Function:
-                try:
-                    i = funcs[name]
-                except KeyError:
-                    i = len(funcs)
-
-                return 3, i, name
-            else:
-                return 4, 0, name
-
-        def rmap(args):
-            """Recursively map a tree. """
-            result = []
-
-            for arg in args:
-                if isinstance(arg, Basic):
-                    arg = arg.as_tuple_tree(order=order)
-                elif hasattr(arg, '__iter__'):
-                    arg = rmap(arg)
-
-                result.append(arg)
-
-            return tuple(result)
-
-        def number(expr):
-            """Tuple of a number. """
-            return head(expr), (0, ()), (), expr
-
-        if self.is_Atom:
-            if self.is_Number:
-                return number(self)
-            else:
-                if self.is_Symbol:
-                    args = (str(self),)
-                else:
-                    args = (self,)
-
-                return head(self), (1, args), number(S.One), S.One
-        else:
-            try:
-                coeff, expr = self.as_coeff_Mul()
-            except AttributeError:
-                return head(self), (len(self.args), self.args), number(S.One), S.One
-            else:
-                if expr.is_Pow:
-                    expr, exp = expr.args
-                else:
-                    expr, exp = expr, S.One
-
-                if expr.is_Atom:
-                    if expr.is_Symbol:
-                        args = (str(expr),)
-                    else:
-                        args = (expr,)
-                else:
-                    if expr.is_Add:
-                        args = expr.as_ordered_terms(order=order)
-                    else:
-                        args = expr.args
-
-                    args = rmap(args)
-
-                    if expr.is_Mul:
-                        args = sorted(args)
-
-                args = (len(args), args)
-                exp = exp.as_tuple_tree(order=order)
-
-                return head(expr), args, exp, coeff
+        return cmp(a.sort_key(), b.sort_key())
 
     @classmethod
-    def sorted_key(cls, expr, order=None):
+    def fromiter(cls, args, **assumptions):
         """
-        A key-function for sorting expressions.
+        Create a new object from an iterable.
+
+        This is a convenience function that allows one to create objects from
+        any iterable, without having to convert to a list or tuple first.
+
+        Example:
+
+        >>> from sympy import Tuple
+        >>> Tuple.fromiter(i for i in xrange(5))
+        (0, 1, 2, 3, 4)
+
+        """
+        return cls(*tuple(args), **assumptions)
+
+    @classmethod
+    def class_key(cls):
+        """Nice order of classes. """
+        return 5, 0, cls.__name__
+
+    def sort_key(self, order=None):
+        """
+        Return a sort key.
 
         **Examples**
 
         >>> from sympy.core import Basic, S, I
         >>> from sympy.abc import x
 
-        >>> sorted([S(1)/2, I, -I], key=Basic.sorted_key)
+        >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
         [1/2, -I, I]
 
         >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
         [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
-        >>> sorted(_, key=Basic.sorted_key)
+        >>> sorted(_, key=lambda x: x.sort_key())
         [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
 
         """
-        return expr.as_tuple_tree(order=order)
+        from sympy.core.singleton import S
+        return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
+
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal
@@ -477,13 +359,60 @@ class Basic(AssumeMeths):
 
         return (st != ot) or self._assume_type_keys != other._assume_type_keys
 
+    def dummy_eq(self, other, symbol=None):
+        """
+        Compare two expressions and handle dummy symbols.
+
+        **Examples**
+
+        >>> from sympy import Dummy
+        >>> from sympy.abc import x, y
+
+        >>> u = Dummy('u')
+
+        >>> (u**2 + 1).dummy_eq(x**2 + 1)
+        True
+        >>> (u**2 + 1) == (x**2 + 1)
+        False
+
+        >>> (u**2 + y).dummy_eq(x**2 + y, x)
+        True
+        >>> (u**2 + y).dummy_eq(x**2 + y, y)
+        False
+
+        """
+        dummy_symbols = [ s for s in self.free_symbols if s.is_Dummy ]
+
+        if not dummy_symbols:
+            return self == other
+        elif len(dummy_symbols) == 1:
+            dummy = dummy_symbols.pop()
+        else:
+            raise ValueError("only one dummy symbol allowed on the left-hand side")
+
+        if symbol is None:
+            symbols = other.free_symbols
+
+            if not symbols:
+                return self == other
+            elif len(symbols) == 1:
+                symbol = symbols.pop()
+            else:
+                raise ValueError("specify a symbol in which expressions should be compared")
+
+        tmp = dummy.__class__()
+
+        return self.subs(dummy, tmp) == other.subs(symbol, tmp)
+
+    # Note, we always use the default ordering (lex) in __str__ and __repr__,
+    # regardless of the global setting.  See issue 2388.
     def __repr__(self):
         from sympy.printing import sstr
-        return sstr(self)
+        return sstr(self, order=None)
 
     def __str__(self):
         from sympy.printing import sstr
-        return sstr(self)
+        return sstr(self, order=None)
 
     def atoms(self, *types):
         """Returns the atoms that form the current object.
@@ -498,7 +427,7 @@ class Basic(AssumeMeths):
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
            >>> (1 + x + 2*sin(y + I*pi)).atoms()
-           set([1, 2, pi, x, y, I])
+           set([1, 2, I, pi, x, y])
 
            If one or more types are given, the results will contain only
            those types of atoms::
@@ -516,7 +445,7 @@ class Basic(AssumeMeths):
            set([1, 2, pi])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
-           set([1, 2, pi, I])
+           set([1, 2, I, pi])
 
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
@@ -545,11 +474,10 @@ class Basic(AssumeMeths):
 
            >>> from sympy import Function, Mul
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
-           set([sin(y + pi*I)])
+           set([sin(y + I*pi)])
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
-           set([2*sin(y + pi*I), pi*I])
-
+           set([I*pi, 2*sin(y + I*pi)])
 
         """
 
@@ -575,7 +503,7 @@ class Basic(AssumeMeths):
                                     result.add(expr)
 
                 iter = expr.iter_basic_args()
-            elif isinstance(expr, (tuple, list)):
+            elif iterable(expr):
                 iter = expr.__iter__()
             else:
                 iter = []
@@ -698,48 +626,6 @@ class Basic(AssumeMeths):
         """
         return iter(self.args)
 
-    def is_rational_function(self, *syms):
-        """
-        Test whether function is a ratio of two polynomials in the given
-        symbols, syms. When syms is not given, all symbols will be used.
-
-        Example:
-
-        >>> from sympy import symbols, sin
-        >>> from sympy.abc import x, y
-
-        >>> (x/y).is_rational_function()
-        True
-
-        >>> (x**2).is_rational_function()
-        True
-
-        >>> (x/sin(y)).is_rational_function(y)
-        False
-
-        """
-        p, q = self.as_numer_denom()
-        # sending no syms to is_polynomial will cause it to use all symbols
-        if p.is_polynomial(*syms):
-            if q.is_polynomial(*syms):
-                return True
-
-        return False
-
-    def _eval_is_polynomial(self, syms):
-        return
-
-    def is_polynomial(self, *syms):
-        if syms:
-            syms = map(sympify, syms)
-        else:
-            syms = list(self.atoms(C.Symbol))
-
-        if not syms: # constant polynomial
-            return True
-        else:
-            return self._eval_is_polynomial(syms)
-
     def as_poly(self, *gens, **args):
         """Converts `self` to a polynomial or returns `None`.
 
@@ -780,7 +666,7 @@ class Basic(AssumeMeths):
         >>> from sympy import pi
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
-        1 + pi*y
+        pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
         1 + 2*pi
         >>> (1 + x*y).subs([(x,pi), (y,2)])
@@ -789,13 +675,13 @@ class Basic(AssumeMeths):
         >>> (x + y).subs([(y,x**2), (x,2)])
         6
         >>> (x + y).subs([(x,2), (y,x**2)])
-        2 + x**2
+        x**2 + 2
         """
         if len(args) == 1:
             sequence = args[0]
             if isinstance(sequence, dict):
                 return self._subs_dict(sequence)
-            elif hasattr(sequence, '__iter__') or hasattr(sequence, '__getitem__'):
+            elif iterable(sequence):
                 return self._subs_list(sequence)
             else:
                 raise TypeError("Not an iterable container")
@@ -827,7 +713,7 @@ class Basic(AssumeMeths):
 
         >>> from sympy.abc import x, y
         >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
-        3 + x**2
+        x**2 + 3
         >>> (x+y)._subs_list( [(y, x**2),  (x, 3)   ] )
         12
 
@@ -864,7 +750,7 @@ class Basic(AssumeMeths):
            >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
 
            >>> expr._subs_dict([A,B,C,D,E])
-           b + a*c*sin(d*e)
+           a*c*sin(d*e) + b
 
         """
         if isinstance(sequence, dict):
@@ -1234,7 +1120,7 @@ class Basic(AssumeMeths):
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
             else:
-                if isinstance(pattern[0], (tuple, list)):
+                if iterable(pattern[0]):
                     pattern = pattern[0]
 
                 pattern = [ p.__class__ for p in pattern if self.has(p) ]
@@ -1271,3 +1157,11 @@ class Atom(Basic):
 
     def __contains__(self, obj):
         return (self == obj)
+
+    @classmethod
+    def class_key(cls):
+        return 2, 0, cls.__name__
+
+    def sort_key(self, order=None):
+        from sympy.core import S
+        return self.class_key(), (1, (self,)), S.One.sort_key(), S.One

@@ -2,14 +2,14 @@ from sympy.mpmath import *
 
 def test_matrix_basic():
     A1 = matrix(3)
-    for i in xrange(3):
+    for i in range(3):
         A1[i,i] = 1
     assert A1 == eye(3)
     assert A1 == matrix(A1)
     A2 = matrix(3, 2)
     assert not A2._matrix__data
     A3 = matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-    assert list(A3) == range(1, 10)
+    assert list(A3) == list(range(1, 10))
     A3[1,1] = 0
     assert not (1, 1) in A3._matrix__data
     A4 = matrix([[1, 2, 3], [4, 5, 6]])
@@ -176,7 +176,7 @@ def test_vector():
     assert x == matrix([[0], [1], [2], [3], [4]])
     assert x[3] == 3
     assert len(x._matrix__data) == 4
-    assert list(x) == range(5)
+    assert list(x) == list(range(5))
     x[0] = -10
     x[4] = 0
     assert x[0] == -10

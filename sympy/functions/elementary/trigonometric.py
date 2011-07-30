@@ -1,5 +1,5 @@
 from sympy.core.add import Add
-from sympy.core.numbers import Rational, Real
+from sympy.core.numbers import Rational, Float
 from sympy.core.basic import C, sympify, cacheit
 from sympy.core.singleton import S
 from sympy.core.function import Function, ArgumentIndexError
@@ -25,7 +25,7 @@ def _peeloff_pi(arg):
     >>> peel(x + pi/2)
     (x, pi/2)
     >>> peel(x + 2*pi/3 + pi*y)
-    (x + pi/6 + pi*y, pi/2)
+    (x + pi*y + pi/6, pi/2)
     """
     for a in Add.make_args(arg):
         if a is S.Pi:
@@ -81,10 +81,10 @@ def _pi_coeff(arg, cycles=1):
         cx = arg.coeff(S.Pi)
         if cx:
             c, x = cx.as_coeff_Mul() # pi is not included as coeff
-            if c.is_Real:
+            if c.is_Float:
                 # recast exact binary fractions to Rationals
                 m = int(c*2)
-                if Real(float(m)/2) == c:
+                if Float(float(m)/2) == c:
                     c = Rational(m, 2)
             if x is not S.One or not (c.is_Rational and c.q != 1):
                 if x.is_integer:
@@ -556,7 +556,7 @@ class tan(TrigonometricFunction):
         >>> from sympy import tan
         >>> from sympy.abc import x
         >>> tan(x**2).diff(x)
-        2*x*(1 + tan(x**2)**2)
+        2*x*(tan(x**2)**2 + 1)
         >>> tan(1).diff(x)
         0
 
@@ -920,6 +920,20 @@ class asin(Function):
     Usage
     =====
       asin(x) -> Returns the arc sine of x (measured in radians)
+
+    Notes
+    ====
+        asin(x) will evaluate automatically in the cases
+        oo, -oo, 0, 1, -1
+
+    Examples
+    ========
+        >>> from sympy import asin, oo, pi
+        >>> asin(1)
+        pi/2
+        >>> asin(-1)
+        -pi/2
+
     """
 
     nargs = 1
@@ -1023,6 +1037,21 @@ class acos(Function):
     Usage
     =====
       acos(x) -> Returns the arc cosine of x (measured in radians)
+
+    Notes
+    =====
+        acos(x) will evaluate automatically in the cases
+        oo, -oo, 0, 1, -1
+
+    Examples
+    ========
+        >>> from sympy import acos, oo, pi
+        >>> acos(1)
+        0
+        >>> acos(0)
+        pi/2
+        >>> acos(oo)
+        (oo)*I
     """
 
     nargs = 1
@@ -1115,6 +1144,22 @@ class atan(Function):
     Usage
     =====
       atan(x) -> Returns the arc tangent of x (measured in radians)
+
+    Notes
+    =====
+        atan(x) will evaluate automatically in the cases
+        oo, -oo, 0, 1, -1
+
+    Examples
+    ========
+        >>> from sympy import atan, oo, pi
+        >>> atan(0)
+        0
+        >>> atan(1)
+        pi/4
+        >>> atan(oo)
+        pi/2
+
     """
 
     nargs = 1

@@ -3,7 +3,8 @@ Implements the PSLQ algorithm for integer relation detection,
 and derivative algorithms for constant recognition.
 """
 
-from libmp import int_types, sqrt_fixed
+from .libmp.backend import xrange
+from .libmp import int_types, sqrt_fixed
 
 # round to nearest integer (can be done more elegantly...)
 def round_fixed(x, prec):
@@ -51,8 +52,9 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     by at least one rational number with denominator less than `10^{12}`::
 
         >>> p, q = pslq([-1, pi], maxcoeff=10**12)
-        >>> print p, q
-        238410049439 75888275702
+        >>> print(p); print(q)
+        238410049439
+        75888275702
         >>> mpf(p)/q
         3.14159265358979
 
@@ -135,7 +137,7 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     assert prec >= 53
 
     if verbose and prec // max(2,n) < 5:
-        print "Warning: precision for PSLQ may be too low"
+        print("Warning: precision for PSLQ may be too low")
 
     target = int(prec * 0.75)
 
@@ -148,7 +150,7 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
     prec += extra
 
     if verbose:
-        print "PSLQ using prec %i and tol %s" % (prec, ctx.nstr(tol))
+        print("PSLQ using prec %i and tol %s" % (prec, ctx.nstr(tol)))
 
     tol = ctx.to_fixed(tol, prec)
     assert tol
@@ -165,7 +167,7 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
         raise ValueError("PSLQ requires a vector of nonzero numbers")
     if minx < tol//100:
         if verbose:
-            print "STOPPING: (one number is too small)"
+            print("STOPPING: (one number is too small)")
         return None
 
     g = sqrt_fixed((4<<prec)//3, prec)
@@ -282,8 +284,8 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
                 range(1,n+1)]
                 if max(abs(v) for v in vec) < maxcoeff:
                     if verbose:
-                        print "FOUND relation at iter %i/%i, error: %s" % \
-                            (REP, maxsteps, ctx.nstr(err / ctx.mpf(2)**prec, 1))
+                        print("FOUND relation at iter %i/%i, error: %s" % \
+                            (REP, maxsteps, ctx.nstr(err / ctx.mpf(2)**prec, 1)))
                     return vec
             best_err = min(err, best_err)
         # Calculate a lower bound for the norm. We could do this
@@ -296,13 +298,13 @@ def pslq(ctx, x, tol=None, maxcoeff=1000, maxsteps=100, verbose=False):
         else:
             norm = ctx.inf
         if verbose:
-            print "%i/%i:  Error: %8s   Norm: %s" % \
-                (REP, maxsteps, ctx.nstr(best_err / ctx.mpf(2)**prec, 1), norm)
+            print("%i/%i:  Error: %8s   Norm: %s" % \
+                (REP, maxsteps, ctx.nstr(best_err / ctx.mpf(2)**prec, 1), norm))
         if norm >= maxcoeff:
             break
     if verbose:
-        print "CANCELLING after step %i/%i." % (REP, maxsteps)
-        print "Could not find an integer relation. Norm bound: %s" % norm
+        print("CANCELLING after step %i/%i." % (REP, maxsteps))
+        print("Could not find an integer relation. Norm bound: %s" % norm)
     return None
 
 def findpoly(ctx, x, n=1, **kwargs):
@@ -338,7 +340,7 @@ def findpoly(ctx, x, n=1, **kwargs):
         >>> nprint(polyval(findpoly(phi, 2), phi), 1)
         -2.0e-16
         >>> for r in polyroots(findpoly(phi, 2)):
-        ...     print r
+        ...     print(r)
         ...
         -0.618033988749895
         1.61803398874989
@@ -653,7 +655,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
     the first few)::
 
         >>> for p in identify(pi, ['e', 'catalan'], tol=1e-5, full=True):
-        ...     print p
+        ...     print(p)
         ...  # doctest: +ELLIPSIS
         e/log((6 + (-4/3)*e))
         (3**3*5*e*catalan**2)/(2*7**2)
@@ -741,7 +743,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
     solutions = []
 
     def addsolution(s):
-        if verbose: print "Found: ", s
+        if verbose: print("Found: ", s)
         solutions.append(s)
 
     x = ctx.mpf(x)
@@ -808,7 +810,7 @@ def identify(ctx, x, constants=[], tol=None, maxcoeff=1000, full=False,
                 if not full: return solutions[0]
 
             if verbose:
-                print "."
+                print(".")
 
     # Check for a direct multiplicative formula
     if x != 1:

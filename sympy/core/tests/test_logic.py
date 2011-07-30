@@ -2,6 +2,8 @@ from sympy.core.logic import fuzzy_not, name_not, Logic, And, Or, Not, \
                              fuzzy_and
 from sympy.utilities.pytest import raises
 
+from sympy.core.compatibility import cmp
+
 T = True
 F = False
 U = None

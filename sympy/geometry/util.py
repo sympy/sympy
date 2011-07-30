@@ -21,7 +21,7 @@ def idiff(eq, y, x, dep=None):
     >>> idiff(x + a + y, y, x)
     -1
     >>> idiff(x + a + y, y, x, [a])
-    -1 - D(a, x)
+    -Derivative(a, x) - 1
 
     """
     if not dep:
@@ -112,7 +112,7 @@ def intersection(*entities):
     >>> intersection(c, Point(1, 0))
     [Point(1, 0)]
     >>> intersection(c, l2)
-    [Point(1 - 5**(1/2)/5, 1 + 2*5**(1/2)/5), Point(1 + 5**(1/2)/5, 1 - 2*5**(1/2)/5)]
+    [Point(-5**(1/2)/5 + 1, 2*5**(1/2)/5 + 1), Point(5**(1/2)/5 + 1, -2*5**(1/2)/5 + 1)]
 
     """
     from entity import GeometryEntity

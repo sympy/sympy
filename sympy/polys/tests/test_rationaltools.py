@@ -2,7 +2,7 @@
 
 from sympy.polys.rationaltools import together
 
-from sympy import S, symbols, Rational, sin, exp, Eq, Integral
+from sympy import S, symbols, Rational, sin, exp, Eq, Integral, Mul
 from sympy.abc import x, y, z
 
 A, B = symbols('A,B', commutative=False)
@@ -21,7 +21,7 @@ def test_together():
     assert together(1/x + x) == (x**2 + 1)/x
 
     assert together(1/x + Rational(1, 2)) == (x + 2)/(2*x)
-    assert together(Rational(1, 2) + x/2) == (x + 1)/2
+    assert together(Rational(1, 2) + x/2) == Mul(S.Half, x + 1, evaluate=False)
 
     assert together(1/x + 2/y) == (2*x + y)/(y*x)
     assert together(1/(1 + 1/x)) == x/(1 + x)
@@ -40,6 +40,7 @@ def test_together():
     assert together(1 + 1/(x + 1)**2) == (1 + (x + 1)**2)/(x + 1)**2
     assert together(1 + 1/(x*(1 + x))) == (1 + x*(1 + x))/(x*(1 + x))
     assert together(1/(x*(x + 1)) + 1/(x*(x + 2))) == (3 + 2*x)/(x*(1 + x)*(2 + x))
+    assert together(1 + 1/(2*x + 2)**2) == (4*(x + 1)**2 + 1)/(4*(x + 1)**2)
 
     assert together(sin(1/x + 1/y)) == sin(1/x + 1/y)
     assert together(sin(1/x + 1/y), deep=True) == sin((x + y)/(x*y))

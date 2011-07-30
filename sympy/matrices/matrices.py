@@ -1,11 +1,16 @@
-from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational
+from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
+from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
+from sympy.core.compatibility import is_sequence
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
-from sympy.utilities import any, all
+from sympy.utilities.iterables import flatten
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
+from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
 
+from sympy.core.compatibility import callable, reduce
 
 import random
 
@@ -90,7 +95,7 @@ class Matrix(object):
             for i in range(self.rows):
                 for j in range(self.cols):
                     self.mat.append(sympify(operation(i, j)))
-        elif len(args)==3 and isinstance(args[2], (list, tuple)):
+        elif len(args)==3 and is_sequence(args[2]):
             self.rows=args[0]
             self.cols=args[1]
             mat = args[2]
@@ -121,7 +126,7 @@ class Matrix(object):
                     return
                 else:
                     raise NotImplementedError("Sympy supports just 1D and 2D matrices")
-            elif not isinstance(mat, (list, tuple, Matrix)):
+            elif not is_sequence(mat, include=Matrix):
                 raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
             mat = []
             for row in args[0]:
@@ -131,7 +136,7 @@ class Matrix(object):
                     mat.append(row)
             self.rows = len(mat)
             if len(mat) != 0:
-                if not isinstance(mat[0], (list, tuple)):
+                if not is_sequence(mat[0]):
                     self.cols = 1
                     self.mat = map(lambda i: sympify(i), mat)
                     return
@@ -154,7 +159,7 @@ class Matrix(object):
 
     def key2ij(self,key):
         """Converts key=(4,6) to 4,6 and ensures the key is correct."""
-        if not (isinstance(key,(list, tuple)) and len(key) == 2):
+        if not (is_sequence(key) and len(key) == 2):
             raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
                     %repr(key))
         i,j=key
@@ -287,7 +292,7 @@ class Matrix(object):
                 if isinstance(value, Matrix):
                     self.copyin_matrix(key, value)
                     return
-                if isinstance(value, (list, tuple)):
+                if is_sequence(value):
                     self.copyin_list(key, value)
                     return
             else:
@@ -332,7 +337,7 @@ class Matrix(object):
 
         Implemented mainly so bool(Matrix()) == False.
         """
-        return self.rows*self.cols
+        return self.rows * self.cols
 
     def tolist(self):
         """
@@ -365,8 +370,8 @@ class Matrix(object):
                 self[i+rlo, j+clo] = sympify(value[i,j])
 
     def copyin_list(self, key, value):
-        if not isinstance(value, (list, tuple)):
-            raise TypeError("`value` must have type list or tuple, not %s." % type(value))
+        if not is_sequence(value):
+            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
         self.copyin_matrix(key, Matrix(value))
 
     def hash(self):
@@ -458,16 +463,20 @@ class Matrix(object):
     def __eq__(self, a):
         if not isinstance(a, (Matrix, Basic)):
             a = sympify(a)
-        if isinstance(a, Matrix):
-            return self.hash() == a.hash()
+        if isinstance(a, Matrix) and self.shape == a.shape:
+            return all(self[i, j] == a[i, j]
+                for i in xrange(self.rows)
+                for j in xrange(self.cols))
         else:
             return False
 
-    def __ne__(self,a):
+    def __ne__(self, a):
         if not isinstance(a, (Matrix, Basic)):
             a = sympify(a)
-        if isinstance(a, Matrix):
-            return self.hash() != a.hash()
+        if isinstance(a, Matrix) and self.shape == a.shape:
+            return any(self[i, j] != a[i, j]
+                for i in xrange(self.rows)
+                for j in xrange(self.cols))
         else:
             return True
 
@@ -501,6 +510,201 @@ class Matrix(object):
 
     def __repr__(self):
         return sstr(self)
+
+    def cholesky(self):
+        """
+        Returns the Cholesky Decomposition L of a Matrix A
+        such that L * L.T = A
+
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix
+
+        >>> from sympy.matrices import Matrix
+        >>> A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> A.cholesky()
+        [ 5, 0, 0]
+        [ 3, 3, 0]
+        [-1, 1, 3]
+        >>> A.cholesky() * A.cholesky().T
+        [25, 15, -5]
+        [15, 18,  0]
+        [-5,  0, 11]
+        """
+
+        if not self.is_square:
+            raise NonSquareMatrixError("Matrix must be square.")
+        if not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._cholesky()
+
+    def _cholesky(self):
+        """
+        Helper function of cholesky.
+        Without the error checks.
+        To be used privately. """
+        L = zeros((self.rows, self.rows))
+        for i in xrange(self.rows):
+            for j in xrange(i):
+                L[i, j] = (1 / L[j, j]) * (self[i, j] - sum(L[i, k] * L[j, k]
+                    for k in xrange(j)))
+            L[i, i] = (self[i, i] - sum(L[i, k] ** 2
+                for k in xrange(i))) ** (S(1)/2)
+        return L
+
+    def LDLdecomposition(self):
+        """
+        Returns the LDL Decomposition (L,D) of matrix A,
+        such that L * D * L.T == A
+        This method eliminates the use of square root.
+        Further this ensures that all the diagonal entries of L are 1.
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix.
+
+        >>> from sympy.matrices import Matrix, eye
+        >>> A = Matrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> L, D = A.LDLdecomposition()
+        >>> L
+        [   1,   0, 0]
+        [ 3/5,   1, 0]
+        [-1/5, 1/3, 1]
+        >>> D
+        [25, 0, 0]
+        [ 0, 9, 0]
+        [ 0, 0, 9]
+        >>> L * D * L.T * A.inv() == eye(A.rows)
+        True
+
+        """
+        if not self.is_square:
+            raise NonSquareMatrixException("Matrix must be square.")
+        if not self.is_symmetric():
+            raise ValueError("Matrix must be symmetric.")
+        return self._LDLdecomposition()
+
+    def _LDLdecomposition(self):
+        """
+        Helper function of LDLdecomposition.
+        Without the error checks.
+        To be used privately.
+        """
+        D = zeros((self.rows, self.rows))
+        L = eye(self.rows)
+        for i in xrange(self.rows):
+            for j in xrange(i):
+                L[i, j] = (1 / D[j, j]) * (self[i, j] - sum(
+                    L[i, k] * L[j, k] * D[k, k] for k in xrange(j)))
+            D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k]
+                for k in xrange(i))
+        return L, D
+
+    def lower_triangular_solve(self, rhs):
+        """
+        Solves Ax = B, where A is a lower triangular matrix.
+
+        """
+
+        if not self.is_square:
+            raise NonSquareMatrixException("Matrix must be square.")
+        if rhs.rows != self.rows:
+            raise ShapeError("Matrices size mismatch.")
+        if not self.is_lower():
+            raise ValueError("Matrix must be lower triangular.")
+        return self._lower_triangular_solve(rhs)
+
+    def _lower_triangular_solve(self, rhs):
+        """
+        Helper function of function lower_triangular_solve.
+        Without the error checks.
+        To be used privately.
+        """
+        X = zeros((self.rows, 1))
+        for i in xrange(self.rows):
+            if self[i, i] == 0:
+                raise TypeError("Matrix must be non-singular.")
+            X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
+                for k in xrange(i))) / self[i, i]
+        return X
+
+    def upper_triangular_solve(self, rhs):
+        """
+        Solves Ax = B, where A is an upper triangular matrix.
+
+        """
+        if not self.is_square:
+            raise NonSquareMatrixException("Matrix must be square.")
+        if rhs.rows != self.rows:
+            raise TypeError("Matrix size mismatch.")
+        if not self.is_upper():
+            raise TypeError("Matrix is not upper triangular.")
+        return self._upper_triangular_solve(rhs)
+
+    def _upper_triangular_solve(self, rhs):
+        """
+        Helper function of function upper_triangular_solve.
+        Without the error checks, to be used privately. """
+        X = zeros((self.rows, 1))
+        for i in reversed(xrange(self.rows)):
+            if self[i, i] == 0:
+                raise ValueError("Matrix must be non-singular.")
+            X[i, 0] = (rhs[i, 0] - sum(self[i, k] * X[k, 0]
+                for k in xrange(i+1, self.rows))) / self[i, i]
+        return X
+
+    def cholesky_solve(self, rhs):
+        """
+        Solves Ax = B using Cholesky decomposition,
+        for a general square non-singular matrix.
+        For a non-square matrix with rows > cols,
+        the least squares solution is returned.
+
+        """
+        if self.is_symmetric():
+            L = self._cholesky()
+        elif self.rows >= self.cols:
+            L = (self.T * self)._cholesky()
+            rhs = self.T * rhs
+        else:
+            raise NotImplementedError("Under-determined System.")
+        Y = L._lower_triangular_solve(rhs)
+        return (L.T)._upper_triangular_solve(Y)
+
+    def diagonal_solve(self, rhs):
+        """
+        Solves Ax = B efficiently, where A is a diagonal Matrix,
+        with non-zero diagonal entries.
+        """
+        if not self.is_diagonal:
+            raise TypeError("Matrix should be diagonal")
+        if rhs.rows != self.rows:
+            raise TypeError("Size mis-match")
+        return self._diagonal_solve(rhs)
+
+    def _diagonal_solve(self, rhs):
+        """
+        Helper function of function diagonal_solve,
+        without the error checks, to be used privately.
+        """
+        return Matrix(rhs.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+
+    def LDLsolve(self, rhs):
+        """
+        Solves Ax = B using LDL decomposition,
+        for a general square and non-singular matrix.
+
+        For a non-square matrix with rows > cols,
+        the least squares solution is returned.
+
+        """
+        if self.is_symmetric():
+            L, D = self.LDLdecomposition()
+        elif self.rows >= self.cols:
+            L, D = (self.T * self).LDLdecomposition()
+            rhs = self.T * rhs
+        else:
+            raise NotImplementedError("Under-determined System.")
+        Y = L._lower_triangular_solve(rhs)
+        Z = D._diagonal_solve(Y)
+        return (L.T)._upper_triangular_solve(Z)
 
     def inv(self, method="GE", iszerofunc=_iszero, try_block_diag=False):
         """
@@ -1196,8 +1400,8 @@ class Matrix(object):
     #            self[i,j] = self[i,j].eval()
 
     def cross(self, b):
-        if not isinstance(b, (list, tuple, Matrix)):
-            raise TypeError("`b` must be of type list, tuple, or Matrix, not %s." %
+        if not is_sequence(b, include=Matrix):
+            raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows == 1 and self.cols == 3 or \
                 self.rows == 3 and self.cols == 1 ) and \
@@ -1210,8 +1414,8 @@ class Matrix(object):
                                (self[0]*b[1] - self[1]*b[0])))
 
     def dot(self, b):
-        if not isinstance(b, (list, tuple, Matrix)):
-            raise TypeError("`b` must be of type list, tuple, or Matrix, not %s." %
+        if not is_sequence(b, include=Matrix):
+            raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         m = len(b)
         if len(self) != m:
@@ -1233,14 +1437,80 @@ class Matrix(object):
         """
         return matrix_multiply_elementwise(self, b)
 
-    def norm(self):
-        if self.rows != 1 and self.cols != 1:
-            raise ShapeError("A Matrix must be a vector to compute the norm.")
+    def norm(self, ord=None):
+        """Return the Norm of a Matrix or Vector.
+        In the simplest case this is the geometric size of the vector
+        Other norms can be specified by the ord parameter
 
-        out = sympify(0)
-        for i in range(len(self)):
-            out += self[i]*self[i]
-        return out**S.Half
+
+        =====  ============================  ==========================
+        ord    norm for matrices             norm for vectors
+        =====  ============================  ==========================
+        None   Frobenius norm                2-norm
+        'fro'  Frobenius norm                - does not exist
+        inf    --                            max(abs(x))
+        -inf   --                            min(abs(x))
+        1      --                            as below
+        -1     --                            as below
+        2      2-norm (largest sing. value)  as below
+        -2     smallest singular value       as below
+        other  - does not exist              sum(abs(x)**ord)**(1./ord)
+        =====  ============================  ==========================
+
+        >>> from sympy import Matrix, var, trigsimp, cos, sin
+        >>> x = var('x', real=True)
+        >>> v = Matrix([cos(x), sin(x)])
+        >>> print trigsimp( v.norm() )
+        1
+        >>> print v.norm(10)
+        (sin(x)**10 + cos(x)**10)**(1/10)
+        >>> A = Matrix([[1,1], [1,1]])
+        >>> print A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
+        2
+        >>> print A.norm(-2) # Inverse spectral norm (smallest singular value)
+        0
+        >>> print A.norm() # Frobenius Norm
+        2
+        """
+
+        # Row or Column Vector Norms
+        if self.rows == 1 or self.cols == 1:
+            if ord == 2 or ord == None: # Common case sqrt(<x,x>)
+                return Add(*(abs(i)**2 for i in self.mat))**S.Half
+
+            elif ord == 1: # sum(abs(x))
+                return Add(*(abs(i) for i in self.mat))
+
+            elif ord == S.Infinity: # max(abs(x))
+                return Max(*self.applyfunc(abs))
+
+            elif ord == S.NegativeInfinity: # min(abs(x))
+                return Min(*self.applyfunc(abs))
+
+            # Otherwise generalize the 2-norm, Sum(x_i**ord)**(1/ord)
+            # Note that while useful this is not mathematically a norm
+            try:
+                return Pow( Add(*(abs(i)**ord for i in self.mat)), S(1)/ord )
+            except:
+                raise ValueError("Expected order to be Number, Symbol, oo")
+
+        # Matrix Norms
+        else:
+            if ord == 2: # Spectral Norm
+                # Maximum singular value
+                return Max(*self.singular_values())
+
+            elif ord == -2:
+                # Minimum singular value
+                return Min(*self.singular_values())
+
+            elif (ord == None or isinstance(ord,str) and ord.lower() in
+                    ['f', 'fro', 'frobenius', 'vector']):
+                # Reshape as vector and send back to norm function
+                return self.vec().norm(ord=2)
+
+            else:
+                raise NotImplementedError("Matrix Norms under development")
 
     def normalized(self):
         if self.rows != 1 and self.cols != 1:
@@ -1383,7 +1653,7 @@ class Matrix(object):
         >>> from sympy.abc import x, y
         >>> m = Matrix(2,2,[x**2 + y, y**2 + x, 0, x + y])
         >>> m
-        [y + x**2, x + y**2]
+        [x**2 + y, x + y**2]
         [       0,    x + y]
         >>> m.is_lower()
         False
@@ -1485,8 +1755,8 @@ class Matrix(object):
         >>> from sympy.abc import x, y
         >>> m = Matrix(3,3,[1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
         >>> m
-        [         1, 1 + 2*x + x**2, y]
-        [(1 + x)**2,              2, 0]
+        [         1, x**2 + 2*x + 1, y]
+        [(x + 1)**2,              2, 0]
         [         y,              0, 3]
         >>> m.is_symmetric()
         True
@@ -1765,7 +2035,7 @@ class Matrix(object):
            (1, -x, -y)
 
            >>> print r # 3 x 3 M's sub-matrix
-           (1, -2*x, -y - y*z + x**2, x*y - z**2)
+           (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
 
@@ -1861,6 +2131,41 @@ class Matrix(object):
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
             out.append((r, k, basis))
         return out
+
+    def singular_values(self):
+        """Compute the singular values of a Matrix
+        >>> from sympy import Matrix, Symbol, eye
+        >>> x = Symbol('x', real=True)
+        >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
+        >>> print A.singular_values()
+        [1, (x**2 + 1)**(1/2), 0]
+        """
+        # Compute eigenvalues of A.H A
+        valmultpairs = (self.H*self).eigenvals()
+
+        # Expands result from eigenvals into a simple list
+        vals = []
+        for k,v in valmultpairs.items():
+            vals += [sqrt(k)]*v # dangerous! same k in several spots!
+
+        # If sorting makes sense then sort
+        if all(val.is_number for val in vals):
+            vals.sort(reverse=True) # sort them in descending order
+
+        return vals
+
+    def condition_number(self):
+        """Returns the condition number of a matrix.
+        This is the maximum singular value divided by the minimum singular value
+
+        >>> from sympy import Matrix, S
+        >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
+        >>> print A.condition_number()
+        100
+        """
+
+        singularvalues = self.singular_values()
+        return Max(*singularvalues) / Min(*singularvalues)
 
     def fill(self, value):
         """Fill the matrix with the scalar value."""
@@ -2090,7 +2395,7 @@ class Matrix(object):
         self._eigenvects = self.eigenvects()
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:
-            if len(vects) <> multiplicity:
+            if len(vects) != multiplicity:
                 all_iscorrect = False
                 break
             elif reals_only and not eigenval.is_real:
@@ -2200,7 +2505,7 @@ class Matrix(object):
 
     def _jordan_split(self, algebraical, geometrical):
             "return a list which sum is equal to 'algebraical' and length is equal to 'geometrical'"
-            n1 = algebraical / geometrical
+            n1 = algebraical // geometrical
             res = [n1] * geometrical
             res[len(res)-1] += algebraical % geometrical
             assert sum(res) == algebraical
@@ -2211,14 +2516,14 @@ class Matrix(object):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
-        >>> from sympy import Matrix, Real
+        >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
         >>> A.has(x)
         True
         >>> A.has(y)
         False
-        >>> A.has(Real)
+        >>> A.has(Float)
         True
         """
         return any(a.has(*patterns) for a in self.mat)
@@ -2413,7 +2718,7 @@ def hessian(f, varlist):
     see: http://en.wikipedia.org/wiki/Hessian_matrix
     """
     # f is the expression representing a function f, return regular matrix
-    if isinstance(varlist, (list, tuple)):
+    if is_sequence(varlist):
         m = len(varlist)
         if not m:
             raise ShapeError("`len(varlist)` must not be zero.")
@@ -2522,7 +2827,7 @@ converter[Matrix] = _matrix_sympify
 del _matrix_sympify
 
 
-class SMatrix(Matrix):
+class SparseMatrix(Matrix):
     """Sparse matrix"""
 
     def __init__(self, *args):
@@ -2539,7 +2844,7 @@ class SMatrix(Matrix):
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
-                isinstance(args[1],int) and isinstance(args[2], (list, tuple)):
+                isinstance(args[1],int) and is_sequence(args[2]):
             self.rows = args[0]
             self.cols = args[1]
             mat = args[2]
@@ -2562,7 +2867,7 @@ class SMatrix(Matrix):
                 mat = args[0]
             else:
                 mat = args
-            if not isinstance(mat[0], (list, tuple)):
+            if not is_sequence(mat[0]):
                 mat = [ [element] for element in mat ]
             self.rows = len(mat)
             self.cols = len(mat[0])
@@ -2623,14 +2928,14 @@ class SMatrix(Matrix):
         if isinstance(key[0], slice) or isinstance(key[1], slice):
             if isinstance(value, Matrix):
                 self.copyin_matrix(key, value)
-            if isinstance(value, (list, tuple)):
+            if is_sequence(value):
                 self.copyin_list(key, value)
         else:
             i,j=self.key2ij(key)
             testval = sympify(value)
             if testval != 0:
                 self.mat[(i,j)] = testval
-            if (i,j) in self.mat:
+            elif (i,j) in self.mat:
                 del self.mat[(i,j)]
 
     def row_del(self, k):
@@ -2673,8 +2978,8 @@ class SMatrix(Matrix):
         """
         Returns a Row-sorted list of non-zero elements of the matrix.
 
-        >>> from sympy.matrices import SMatrix
-        >>> a=SMatrix((1,2),(3,4))
+        >>> from sympy.matrices import SparseMatrix
+        >>> a=SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
         [3, 4]
@@ -2695,8 +3000,8 @@ class SMatrix(Matrix):
     def col_list(self):
         """
         Returns a Column-sorted list of non-zero elements of the matrix.
-        >>> from sympy.matrices import SMatrix
-        >>> a=SMatrix((1,2),(3,4))
+        >>> from sympy.matrices import SparseMatrix
+        >>> a=SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
         [3, 4]
@@ -2715,9 +3020,9 @@ class SMatrix(Matrix):
 
     def transpose(self):
         """
-        Returns the transposed SMatrix of this SMatrix
-        >>> from sympy.matrices import SMatrix
-        >>> a = SMatrix((1,2),(3,4))
+        Returns the transposed SparseMatrix of this SparseMatrix
+        >>> from sympy.matrices import SparseMatrix
+        >>> a = SparseMatrix((1,2),(3,4))
         >>> a
         [1, 2]
         [3, 4]
@@ -2725,7 +3030,7 @@ class SMatrix(Matrix):
         [1, 3]
         [2, 4]
         """
-        tran = SMatrix(self.cols,self.rows,{})
+        tran = SparseMatrix(self.cols,self.rows,{})
         for key,value in self.mat.iteritems():
             tran.mat[key[1],key[0]]=value
         return tran
@@ -2734,30 +3039,30 @@ class SMatrix(Matrix):
 
 
     def __add__(self, other):
-        if isinstance(other, SMatrix):
+        if isinstance(other, SparseMatrix):
             return self.add(other)
         else:
-            raise NotImplementedError("Only SMatrix + SMatrix supported")
+            raise NotImplementedError("Only SparseMatrix + SparseMatrix supported")
 
     def __radd__(self, other):
-        if isinstance(other, SMatrix):
+        if isinstance(other, SparseMatrix):
             return self.add(other)
         else:
-            raise NotImplementedError("Only SMatrix + SMatrix supported")
+            raise NotImplementedError("Only SparseMatrix + SparseMatrix supported")
 
     def add(self, other):
         """
         Add two sparse matrices with dictionary representation.
 
-        >>> from sympy.matrices.matrices import SMatrix
-        >>> A = SMatrix(5, 5, lambda i, j : i * j + i)
+        >>> from sympy.matrices.matrices import SparseMatrix
+        >>> A = SparseMatrix(5, 5, lambda i, j : i * j + i)
         >>> A
         [0, 0,  0,  0,  0]
         [1, 2,  3,  4,  5]
         [2, 4,  6,  8, 10]
         [3, 6,  9, 12, 15]
         [4, 8, 12, 16, 20]
-        >>> B = SMatrix(5, 5, lambda i, j : i + 2 * j)
+        >>> B = SparseMatrix(5, 5, lambda i, j : i + 2 * j)
         >>> B
         [0, 2, 4,  6,  8]
         [1, 3, 5,  7,  9]
@@ -2791,16 +3096,16 @@ class SMatrix(Matrix):
                 c[a[i]] = self.mat[a[i]] + other.mat[b[j]]
                 i = i + 1
                 j = j + 1
-        return SMatrix(self.rows, self.cols, c)
+        return SparseMatrix(self.rows, self.cols, c)
 
 
 
     # from here to end all functions are same as in matrices.py
-    # with Matrix replaced with SMatrix
+    # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
-        if not isinstance(value, (list, tuple)):
+        if not is_sequence(value):
             raise TypeError("`value` must be of type list or tuple.")
-        self.copyin_matrix(key, SMatrix(value))
+        self.copyin_matrix(key, SparseMatrix(value))
 
     def multiply(self,b):
         """Returns self*b """
@@ -2813,7 +3118,7 @@ class SMatrix(Matrix):
                 r+=a[i,x]*b[x,j]
             return r
 
-        r = SMatrix(self.rows, b.cols, lambda i,j: dotprod(self,b,i,j))
+        r = SparseMatrix(self.rows, b.cols, lambda i,j: dotprod(self,b,i,j))
         if r.rows == 1 and r.cols ==1:
             return r[0,0]
         return r
@@ -2825,7 +3130,7 @@ class SMatrix(Matrix):
         clo, chi = self.slice2bounds(keys[1], self.cols)
         if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
             raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
-        return SMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
+        return SparseMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
 
     def reshape(self, _rows, _cols):
         if len(self) != _rows*_cols:
@@ -2836,11 +3141,11 @@ class SMatrix(Matrix):
                 m,n = self.rowdecomp(i*_cols + j)
                 if (m,n) in self.mat:
                     newD[(i,j)] = self.mat[(m,n)]
-        return SMatrix(_rows, _cols, newD)
+        return SparseMatrix(_rows, _cols, newD)
 
     def cross(self, b):
-        if not isinstance(b, (list, tuple, Matrix)):
-            raise TypeError("`b` must be of type list, tuple, or Matrix, not %s." %
+        if not is_sequence(b, include=Matrix):
+            raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows == 1 and self.cols == 3 or \
                 self.rows == 3 and self.cols == 1 ) and \
@@ -2848,7 +3153,7 @@ class SMatrix(Matrix):
                 b.rows == 3 and b.cols == 1):
             raise ShapeError("Dimensions incorrect for cross product")
         else:
-            return SMatrix(1,3,((self[1]*b[2] - self[2]*b[1]),
+            return SparseMatrix(1,3,((self[1]*b[2] - self[2]*b[1]),
                                (self[2]*b[0] - self[0]*b[2]),
                                (self[0]*b[1] - self[1]*b[0])))
 
@@ -2856,10 +3161,10 @@ class SMatrix(Matrix):
     def zeros(self, dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
         n, m = _dims_to_nm( dims )
-        return SMatrix(n,m,{})
+        return SparseMatrix(n,m,{})
 
     def eye(self, n):
-        tmp = SMatrix(n,n,lambda i,j:0)
+        tmp = SparseMatrix(n,n,lambda i,j:0)
         for i in range(tmp.rows):
             tmp[i,i] = 1
         return tmp
@@ -2957,3 +3262,10 @@ def symarray(prefix, shape):
     for index in np.ndindex(shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
+
+def _separate_eig_results(res):
+    eigvals = [item[0] for item in res]
+    multiplicities = [item[1] for item in res]
+    eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
+    eigvects = flatten([item[2] for item in res])
+    return eigvals, eigvects

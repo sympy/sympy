@@ -32,9 +32,9 @@ class AskInfinitesimalHandler(CommonHandler):
             return AskInfinitesimalHandler._number(expr, assumptions)
         result = False
         for arg in expr.args:
-            if ask(arg, Q.infinitesimal, assumptions):
+            if ask(Q.infinitesimal(arg), assumptions):
                 result = True
-            elif ask(arg, Q.bounded, assumptions):
+            elif ask(Q.bounded(arg), assumptions):
                 continue
             else: break
         else:
@@ -102,7 +102,7 @@ class AskBoundedHandler(CommonHandler):
         """
         result = True
         for arg in expr.args:
-            _bounded = ask(arg, Q.bounded, assumptions)
+            _bounded = ask(Q.bounded(arg), assumptions)
             if _bounded: continue
             elif _bounded is None: return
             elif _bounded is False:
@@ -119,10 +119,11 @@ class AskBoundedHandler(CommonHandler):
         Bounded ** Unbounded -> Unbounded if base > 1
         Bounded ** Unbounded -> Unbounded if base < 1
         """
-        base_bounded = ask(expr.base, Q.bounded, assumptions)
-        if not base_bounded: return base_bounded
-        if ask(expr.exp, Q.bounded, assumptions) \
-            and base_bounded: return True
+        base_bounded = ask(Q.bounded(expr.base), assumptions)
+        if not base_bounded:
+            return base_bounded
+        if ask(Q.bounded(expr.exp), assumptions) and base_bounded:
+            return True
         if base_bounded and expr.base.is_number:
             # We need to implement relations for this
             if abs(expr.base) > 1:
@@ -131,7 +132,7 @@ class AskBoundedHandler(CommonHandler):
 
     @staticmethod
     def log(expr, assumptions):
-        return ask(expr.args[0], Q.bounded, assumptions)
+        return ask(Q.bounded(expr.args[0]), assumptions)
 
     exp = log
 

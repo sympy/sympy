@@ -4,7 +4,7 @@ import bisect
 import difflib
 
 from sympy import Basic, Mul, Add
-from sympy.utilities.iterables import preorder_traversal, numbered_symbols, any
+from sympy.utilities.iterables import preorder_traversal, numbered_symbols
 
 import cse_opts
 

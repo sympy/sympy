@@ -1,5 +1,7 @@
 """OO layer for several polynomial representations. """
 
+from sympy.core.compatibility import cmp
+
 class GenericPoly(object):
     """Base class for low-level polynomial representations. """
 
@@ -29,8 +31,6 @@ class GenericPoly(object):
         else:
             return factors
 
-from sympy.utilities import any, all
-
 from sympy.polys.densebasic import (
     dmp_validate,
     dup_normal, dmp_normal,
@@ -50,8 +50,9 @@ from sympy.polys.densebasic import (
     dup_deflate, dmp_deflate,
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
-    dmp_list_terms,
-    dmp_slice_in)
+    dmp_list_terms, dmp_exclude,
+    dmp_slice_in, dmp_permute,
+    dmp_to_tuple,)
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
@@ -159,7 +160,7 @@ class DMP(object):
         return "%s(%s, %s)" % (f.__class__.__name__, f.rep, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.rep), f.lev, f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom))
 
     def __getstate__(self):
         return (self.rep, self.lev, self.dom)
@@ -226,18 +227,26 @@ class DMP(object):
         """Create an instance of `cls` given a list of SymPy coefficients. """
         return cls(dmp_from_sympy(rep, lev, dom), dom, lev)
 
-    def to_dict(f):
+    def to_dict(f, zero=False):
         """Convert `f` to a dict representation with native coefficients. """
-        return dmp_to_dict(f.rep, f.lev)
+        return dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
-    def to_sympy_dict(f):
+    def to_sympy_dict(f, zero=False):
         """Convert `f` to a dict representation with SymPy coefficients. """
-        rep = dmp_to_dict(f.rep, f.lev)
+        rep = dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
         for k, v in rep.iteritems():
             rep[k] = f.dom.to_sympy(v)
 
         return rep
+
+    def to_tuple(f):
+        """
+        Convert `f` to a tuple representation with native coefficients.
+
+        This is needed for hashing.
+        """
+        return dmp_to_tuple(f.rep, f.lev)
 
     @classmethod
     def from_dict(cls, rep, lev, dom):
@@ -335,6 +344,42 @@ class DMP(object):
         """Eject selected generators into the ground domain. """
         F = dmp_eject(f.rep, f.lev, dom, front=front)
         return f.__class__(F, dom, f.lev - len(dom.gens))
+
+    def exclude(f):
+        r"""
+        Remove useless generators from ``f``.
+
+        Returns the removed generators and the new excluded ``f``.
+
+        **Example**
+
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.domains import ZZ
+
+        >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude()
+        ([2], DMP([[1], [1, 2]], ZZ))
+
+        """
+        J, F, u = dmp_exclude(f.rep, f.lev, f.dom)
+        return J, f.__class__(F, f.dom, u)
+
+    def permute(f, P):
+        r"""
+        Returns a polynomial in ``K[x_{P(1)}, ..., x_{P(n)}]``.
+
+        **Example**
+
+        >>> from sympy.polys.polyclasses import DMP
+        >>> from sympy.polys.domains import ZZ
+
+        >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 0, 2])
+        DMP([[[2], []], [[1, 0], []]], ZZ)
+
+        >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 2, 0])
+        DMP([[[1], []], [[2, 0], []]], ZZ)
+
+        """
+        return f.per(dmp_permute(f.rep, P, f.lev, f.dom))
 
     def terms_gcd(f):
         """Remove GCD of terms from the polynomial `f`. """
@@ -450,7 +495,7 @@ class DMP(object):
 
     def total_degree(f):
         """Returns the total degree of `f`. """
-        return sum(dmp_degree_list(f.rep, f.lev))
+        return max([sum(m) for m in f.monoms()])
 
     def LC(f):
         """Returns the leading coefficent of `f`. """
@@ -575,18 +620,18 @@ class DMP(object):
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_lcm(F, G, lev, dom))
 
-    def cancel(f, g, multout=True):
+    def cancel(f, g, include=True):
         """Cancel common factors in a rational function ``f/g``. """
         lev, dom, per, F, G = f.unify(g)
 
-        if multout:
-                    F, G = dmp_cancel(F, G, lev, dom, multout=True)
+        if include:
+                    F, G = dmp_cancel(F, G, lev, dom, include=True)
         else:
-            cF, cG, F, G = dmp_cancel(F, G, lev, dom, multout=False)
+            cF, cG, F, G = dmp_cancel(F, G, lev, dom, include=False)
 
         F, G = per(F), per(G)
 
-        if multout:
+        if include:
             return F, G
         else:
             return cF, cG, F, G
@@ -732,19 +777,19 @@ class DMP(object):
         return f.dom.is_one(dmp_ground_content(f.rep, f.lev, f.dom))
 
     @property
-    def is_ground(f):
-        """Returns `True` if `f` is an element of the ground domain. """
-        return all(d <= 0 for d in dmp_degree_list(f.rep, f.lev))
-
-    @property
     def is_linear(f):
         """Returns `True` if `f` is linear in all its variables. """
-        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
+        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
 
     @property
     def is_quadratic(f):
         """Returns `True` if `f` is quadratic in all its variables. """
-        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev).keys() ])
+        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+
+    @property
+    def is_monomial(f):
+        """Returns `True` if `f` is zero or has only one term. """
+        return len(f.to_dict()) <= 1
 
     @property
     def is_homogeneous(f):
@@ -812,10 +857,10 @@ class DMP(object):
 
     def __floordiv__(f, g):
         if isinstance(g, DMP):
-            return f.exquo(g)
+            return f.quo(g)
         else:
             try:
-                return f.exquo_ground(g)
+                return f.quo_ground(g)
             except TypeError:
                 return NotImplemented
 
@@ -843,7 +888,7 @@ class DMP(object):
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__lt__(g)
+        return F.__lt__(G)
 
     def __le__(f, g):
         _, _, _, F, G = f.unify(g)
@@ -861,7 +906,7 @@ class DMP(object):
         return not dmp_zero_p(f.rep, f.lev)
 
 def init_normal_DMF(num, den, lev, dom):
-    return DFP(dmp_normal(num, lev, dom),
+    return DMF(dmp_normal(num, lev, dom),
                dmp_normal(den, lev, dom), dom, lev)
 
 class DMF(object):
@@ -939,7 +984,8 @@ class DMF(object):
         return "%s((%s, %s), %s)" % (f.__class__.__name__, f.num, f.den, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.num), repr(f.den), f.lev, f.dom))
+        return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
+            dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
 
     def __getstate__(self):
         return (self.num, self.den, self.lev, self.dom)
@@ -1185,10 +1231,10 @@ class DMF(object):
 
     def __div__(f, g):
         if isinstance(g, (DMP, DMF)):
-            return f.exquo(g)
+            return f.quo(g)
 
         try:
-            return f.exquo(f.half_per(g))
+            return f.quo(f.half_per(g))
         except TypeError:
             return NotImplemented
 
@@ -1228,6 +1274,22 @@ class DMF(object):
 
         return True
 
+    def __lt__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__lt__(G)
+
+    def __le__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
 
@@ -1263,22 +1325,13 @@ class ANP(object):
         return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.mod, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.rep), f.mod, f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), dmp_to_tuple(f.mod, 0), f.dom))
 
     def __getstate__(self):
         return (self.rep, self.mod, self.dom)
 
     def __getnewargs__(self):
         return (self.rep, self.mod, self.dom)
-
-    def __cmp__(f, g):
-        """Make sorting deterministic. """
-        k = len(f.rep) - len(g.rep)
-
-        if not k:
-            return cmp(f.rep, g.rep)
-        else:
-            return k
 
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
@@ -1318,11 +1371,11 @@ class ANP(object):
 
     def to_dict(f):
         """Convert `f` to a dict representation with native coefficients. """
-        return dmp_to_dict(f.rep, 0)
+        return dmp_to_dict(f.rep, 0, f.dom)
 
     def to_sympy_dict(f):
         """Convert `f` to a dict representation with SymPy coefficients. """
-        rep = dmp_to_dict(f.rep, 0)
+        rep = dmp_to_dict(f.rep, 0, f.dom)
 
         for k, v in rep.iteritems():
             rep[k] = f.dom.to_sympy(v)
@@ -1336,6 +1389,14 @@ class ANP(object):
     def to_sympy_list(f):
         """Convert `f` to a list representation with SymPy coefficients. """
         return [ f.dom.to_sympy(c) for c in f.rep ]
+
+    def to_tuple(f):
+        """
+        Convert `f` to a tuple representation with native coefficients.
+
+        This is needed for hashing.
+        """
+        return dmp_to_tuple(f.rep, 0)
 
     @classmethod
     def from_list(cls, rep, mod, dom):
@@ -1455,10 +1516,10 @@ class ANP(object):
 
     def __div__(f, g):
         if isinstance(g, ANP):
-            return f.exquo(g)
+            return f.quo(g)
         else:
             try:
-                return f.exquo(f.per(g))
+                return f.quo(f.per(g))
             except TypeError:
                 return NotImplemented
 
@@ -1480,6 +1541,21 @@ class ANP(object):
         except UnificationFailed:
             return True
 
+    def __lt__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__lt__(G)
+
+    def __le__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return bool(f.rep)
-

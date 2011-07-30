@@ -10,8 +10,6 @@ from ellipse import Circle
 from line import Line, Segment, Ray
 from util import _symbol
 
-from sympy.core.compatibility import all
-
 import warnings
 
 class Polygon(GeometryEntity):
@@ -62,7 +60,7 @@ class Polygon(GeometryEntity):
     Examples
     --------
     >>> from sympy import Point, Polygon, pi
-    >>> p1, p2, p3, p4, p5 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)])
+    >>> p1, p2, p3, p4, p5 = [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)]
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point(0, 0), Point(1, 0), Point(5, 1), Point(0, 1))
     >>> Polygon(p1, p2)
@@ -85,7 +83,8 @@ class Polygon(GeometryEntity):
     Polygon then a RegularPolygon is created and the other arguments are
     interpreted as center, radius and rotation. The unrotated RegularPolygon
     will always have a vertex at Point(r, 0) where `r` is the radius of the
-    circle that circumscribes the RegularPolygon.
+    circle that circumscribes the RegularPolygon. Its method `spin` can be
+    used to increment that angle.
 
     >>> p = Polygon((0,0), 1, n=3)
     >>> p
@@ -96,7 +95,7 @@ class Polygon(GeometryEntity):
     Point(1, 0)
     >>> p.args[0]
     Point(0, 0)
-    >>> p.rotate(pi/2)
+    >>> p.spin(pi/2)
     >>> p[0]
     Point(0, 1)
 
@@ -263,7 +262,7 @@ class Polygon(GeometryEntity):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.perimeter
-        7 + 17**(1/2)
+        17**(1/2) + 7
         """
         p = 0
         for i in xrange(len(self)):
@@ -679,23 +678,23 @@ class Polygon(GeometryEntity):
         e2_connections = {}
 
         for side in e1.sides:
-            if e1_connections.has_key(side.p1):
+            if side.p1 in e1_connections:
                 e1_connections[side.p1].append(side.p2)
             else:
                 e1_connections[side.p1] = [side.p2]
 
-            if e1_connections.has_key(side.p2):
+            if side.p2 in e1_connections:
                 e1_connections[side.p2].append(side.p1)
             else:
                 e1_connections[side.p2] = [side.p1]
 
         for side in e2.sides:
-            if e2_connections.has_key(side.p1):
+            if side.p1 in e2_connections:
                 e2_connections[side.p1].append(side.p2)
             else:
                 e2_connections[side.p1] = [side.p2]
 
-            if e2_connections.has_key(side.p2):
+            if side.p2 in e2_connections:
                 e2_connections[side.p2].append(side.p1)
             else:
                 e2_connections[side.p2] = [side.p1]
@@ -846,7 +845,7 @@ class Polygon(GeometryEntity):
         if isinstance(o, Polygon):
             return self == o
         elif isinstance(o, Segment):
-            return o in self.sides
+            return any(o in s for s in self.sides)
         elif isinstance(o, Point):
             if o in self.vertices:
                 return True
@@ -876,6 +875,7 @@ class RegularPolygon(Polygon):
     vertices
     center
     radius
+    rotation
     apothem
     interior_angle
     exterior_angle
@@ -939,7 +939,7 @@ class RegularPolygon(Polygon):
 
     @property
     def center(self):
-        """The center of the regular polygon
+        """The center of the RegularPolygon
 
         This is also the center of the circumscribing circle.
 
@@ -968,7 +968,7 @@ class RegularPolygon(Polygon):
 
     @property
     def radius(self):
-        """Radius of the regular polygon
+        """Radius of the RegularPolygon
 
         This is also the radius of the circumscribing circle.
 
@@ -995,7 +995,7 @@ class RegularPolygon(Polygon):
 
     @property
     def rotation(self):
-        """CCW angle by which regular polygon is rotated
+        """CCW angle by which the RegularPolygon is rotated
 
         Returns
         -------
@@ -1013,7 +1013,7 @@ class RegularPolygon(Polygon):
 
     @property
     def apothem(self):
-        """The inradius of the regular polygon.
+        """The inradius of the RegularPolygon.
 
         The apothem/inradius is the radius of the inscribed circle.
 
@@ -1028,7 +1028,7 @@ class RegularPolygon(Polygon):
         >>> radius = Symbol('r')
         >>> rp = RegularPolygon(Point(0, 0), radius, 4)
         >>> rp.apothem
-        r*2**(1/2)/2
+        2**(1/2)*r/2
 
         """
         return self.radius * cos(S.Pi/self._n)
@@ -1076,7 +1076,7 @@ class RegularPolygon(Polygon):
 
     @property
     def circumcircle(self):
-        """The circumcircle of the regular polygon.
+        """The circumcircle of the RegularPolygon.
 
         Returns
         -------
@@ -1098,7 +1098,7 @@ class RegularPolygon(Polygon):
 
     @property
     def incircle(self):
-        """The incircle of the regular polygon.
+        """The incircle of the RegularPolygon.
 
         Returns
         -------
@@ -1172,25 +1172,44 @@ class RegularPolygon(Polygon):
         elif d < self.inradius:
             return True
         else:
-            # now enumerate the regular polygon like a general polygon.
+            # now enumerate the RegularPolygon like a general polygon.
             return Polygon.encloses_point(self, p)
 
-    def rotate(self, angle):
-        """Rotate the virtual Polygon
+    def spin(self, angle):
+        """Increment *in place* the virtual Polygon's rotation by ccw angle.
+
+        See also: rotate method which moves the center.
+
         >>> from sympy import Polygon, Point, pi
         >>> r = Polygon(Point(0,0), 1, n=3)
         >>> r[0]
         Point(1, 0)
-        >>> r.rotate(pi/6)
+        >>> r.spin(pi/6)
         >>> r[0]
         Point(3**(1/2)/2, 1/2)
 
         """
         self._rot += angle
 
+    def rotate(self, angle, pt=None):
+        """Override GeometryEntity.rotate to first rotate the RegularPolygon
+        about its center.
+
+        >>> from sympy import Point, RegularPolygon, Polygon, pi
+        >>> t = RegularPolygon(Point(1, 0), 1, 3)
+        >>> t[0] # vertex on x-axis
+        Point(2, 0)
+        >>> t.rotate(pi/2).vertices[0] # vertex on y axis now
+        Point(0, 2)
+        """
+
+        r = type(self)(*self.args) # need a copy or else changes are in-place
+        r._rot += angle
+        return GeometryEntity.rotate(r, angle, pt)
+
     @property
     def vertices(self):
-        """The vertices of the regular polygon.
+        """The vertices of the RegularPolygon.
 
         Returns
         -------
@@ -1535,7 +1554,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, a)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumradius
-        (1/4 + a**2/4)**(1/2)
+        (a**2/4 + 1/4)**(1/2)
 
         """
         return Point.distance(self.circumcenter, self.vertices[0])
@@ -1620,7 +1639,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incenter
-        Point(1 - 2**(1/2)/2, 1 - 2**(1/2)/2)
+        Point(-2**(1/2)/2 + 1, -2**(1/2)/2 + 1)
 
         """
         s = self.sides
@@ -1675,7 +1694,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incircle
-        Circle(Point(2 - 2**(1/2), 2 - 2**(1/2)), 2 - 2**(1/2))
+        Circle(Point(-2**(1/2) + 2, -2**(1/2) + 2), -2**(1/2) + 2)
 
         """
         return Circle(self.incenter, self.inradius)

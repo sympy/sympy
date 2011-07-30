@@ -1,22 +1,23 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, all, pure, Poly
+from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import (
-    ZZ, QQ, RR, PolynomialRing, FractionField, EX,
-    PythonRationalType as Q,
-)
+    ZZ, QQ, RR, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
+    RR_mpmath, RR_sympy, PolynomialRing, FractionField, EX)
+
 from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsNeeded,
     GeneratorsError,
-    DomainError,
-)
+    CoercionFailed,
+    DomainError)
+
 from sympy.polys.polyclasses import DMP, DMF
 from sympy.utilities.pytest import raises
 
-ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
+ALG = QQ.algebraic_field(sqrt(2) + sqrt(3))
 
 def test_Domain__unify():
     assert ZZ.unify(ZZ) == ZZ
@@ -357,24 +358,22 @@ def test_Domain_get_field():
     assert EX.has_assoc_Field == True
     assert ZZ.has_assoc_Field == True
     assert QQ.has_assoc_Field == True
+    assert RR.has_assoc_Field == False
     assert ALG.has_assoc_Field == True
     assert ZZ[x].has_assoc_Field == True
     assert QQ[x].has_assoc_Field == True
     assert ZZ[x,y].has_assoc_Field == True
     assert QQ[x,y].has_assoc_Field == True
 
-    assert RR.has_assoc_Field == False
-
     assert EX.get_field() == EX
     assert ZZ.get_field() == QQ
     assert QQ.get_field() == QQ
+    raises(DomainError, "RR.get_field()")
     assert ALG.get_field() == ALG
     assert ZZ[x].get_field() == ZZ.frac_field(x)
     assert QQ[x].get_field() == QQ.frac_field(x)
     assert ZZ[x,y].get_field() == ZZ.frac_field(x,y)
     assert QQ[x,y].get_field() == QQ.frac_field(x,y)
-
-    raises(DomainError, "RR.get_field()")
 
 def test_Domain_get_exact():
     assert EX.get_exact() == EX
@@ -393,9 +392,17 @@ def test_Domain_get_exact():
 
 def test_Domain_convert():
     assert QQ.convert(10e-52) != QQ(0)
+    assert ZZ.convert(DMP([[ZZ(1)]], ZZ)) == ZZ(1)
 
 def test_PolynomialRing__init():
     raises(GeneratorsNeeded, "ZZ.poly_ring()")
+
+def test_PolynomialRing_from_FractionField():
+    x = DMF(([1, 0, 1], [1, 1]), ZZ)
+    y = DMF(([1, 0, 1], [1]), ZZ)
+
+    assert ZZ['x'].from_FractionField(x, ZZ['x']) is None
+    assert ZZ['x'].from_FractionField(y, ZZ['x']) == DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
 
 def test_FractionField__init():
     raises(GeneratorsNeeded, "ZZ.frac_field()")
@@ -430,15 +437,16 @@ def test_Domain___eq__():
 
 def test_Domain__algebraic_field():
     alg = ZZ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == pure**2 - 2
+    assert alg.ext.minpoly == Poly(x**2 - 2)
     assert alg.dom == QQ
 
     alg = QQ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == pure**2 - 2
+    assert alg.ext.minpoly == Poly(x**2 - 2)
     assert alg.dom == QQ
 
     alg = alg.algebraic_field(sqrt(3))
-    assert alg.ext.minpoly == pure**4 - 10*pure**2 + 1
+    assert alg.ext.minpoly == Poly(x**4 - 10*x**2 + 1)
+    assert alg.dom == QQ
 
 def test_PolynomialRing__from_FractionField():
     f = DMF(([1, 0, 1], [1, 1]), ZZ)
@@ -581,3 +589,43 @@ def test_PythonRationalType__lt_le_gt_ge__():
     assert (Q(1, 4) <= Q(1, 2)) is True
     assert (Q(1, 4) >  Q(1, 2)) is False
     assert (Q(1, 4) >= Q(1, 2)) is False
+
+def test_sympy_of_type():
+    assert ZZ_sympy().of_type(Integer(1))
+    assert ZZ_sympy().of_type(Integer(0))
+    assert ZZ_sympy().of_type(Integer(-1))
+    assert ZZ_sympy().of_type(Integer(2))
+    assert not ZZ_sympy().of_type(Rational(1, 2))
+    assert QQ_sympy().of_type(Rational(1))
+    assert QQ_sympy().of_type(Rational(-1))
+    assert QQ_sympy().of_type(Rational(0))
+    assert QQ_sympy().of_type(Rational(2))
+    assert QQ_sympy().of_type(Rational(1, 2))
+    assert QQ_sympy().of_type(Rational(3, 2))
+
+def test___eq__():
+    assert not QQ['x'] == ZZ['x']
+    assert not QQ.frac_field(x) == ZZ.frac_field(x)
+
+def test_RealDomain_from_sympy():
+    RR = RR_mpmath()
+
+    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S(0.0)) == RR.dtype(0.0)
+    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S(1.0)) == RR.dtype(1.0)
+    assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
+    raises(CoercionFailed, "RR.convert(x)")
+    raises(CoercionFailed, "RR.convert(oo)")
+    raises(CoercionFailed, "RR.convert(-oo)")
+
+    RR = RR_sympy()
+
+    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S(0.0)) == RR.dtype(0.0)
+    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S(1.0)) == RR.dtype(1.0)
+    assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
+    raises(CoercionFailed, "RR.convert(x)")
+    raises(CoercionFailed, "RR.convert(oo)")
+    raises(CoercionFailed, "RR.convert(-oo)")

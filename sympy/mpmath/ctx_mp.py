@@ -6,13 +6,13 @@ __docformat__ = 'plaintext'
 
 import re
 
-from string import strip
+from .ctx_base import StandardBaseContext
 
-from ctx_base import StandardBaseContext
+from .libmp.backend import basestring
 
-import libmp
+from . import libmp
 
-from libmp import (MPZ, MPZ_ZERO, MPZ_ONE, int_types, repr_dps,
+from .libmp import (MPZ, MPZ_ZERO, MPZ_ONE, int_types, repr_dps,
     round_floor, round_ceiling, dps_to_prec, round_nearest, prec_to_dps,
     ComplexResult, to_pickable, from_pickable, normalize,
     from_int, from_float, from_str, to_int, to_float, to_str,
@@ -35,8 +35,8 @@ from libmp import (MPZ, MPZ_ZERO, MPZ_ONE, int_types, repr_dps,
     mpf_glaisher, mpf_twinprime, mpf_mertens,
     int_types)
 
-import function_docs
-import rational
+from . import function_docs
+from . import rational
 
 new = object.__new__
 
@@ -44,15 +44,10 @@ get_complex = re.compile(r'^\(?(?P<re>[\+\-]?\d*\.?\d*(e[\+\-]?\d+)?)??'
                          r'(?P<im>[\+\-]?\d*\.?\d*(e[\+\-]?\d+)?j)?\)?$')
 
 
-try:
-    from sage.libs.mpmath.ext_main import Context as BaseMPContext
-    # pickle hack
-    import sage.libs.mpmath.ext_main as _mpf_module
-except ImportError:
-    from ctx_mp_python import PythonMPContext as BaseMPContext
-    import ctx_mp_python as _mpf_module
+from .ctx_mp_python import PythonMPContext as BaseMPContext
+from . import ctx_mp_python as _mpf_module
 
-from ctx_mp_python import _mpf, _mpc, mpnumeric
+from .ctx_mp_python import _mpf, _mpc, mpnumeric
 
 class MPContext(BaseMPContext, StandardBaseContext):
     """
@@ -76,10 +71,18 @@ class MPContext(BaseMPContext, StandardBaseContext):
         ctx._init_aliases()
 
         # XXX: automate
-        ctx.bernoulli.im_func.func_doc = function_docs.bernoulli
-        ctx.primepi.im_func.func_doc = function_docs.primepi
-        ctx.psi.im_func.func_doc = function_docs.psi
-        ctx.atan2.im_func.func_doc = function_docs.atan2
+        try:
+            ctx.bernoulli.im_func.func_doc = function_docs.bernoulli
+            ctx.primepi.im_func.func_doc = function_docs.primepi
+            ctx.psi.im_func.func_doc = function_docs.psi
+            ctx.atan2.im_func.func_doc = function_docs.atan2
+        except AttributeError:
+            # python 3
+            ctx.bernoulli.__func__.func_doc = function_docs.bernoulli
+            ctx.primepi.__func__.func_doc = function_docs.primepi
+            ctx.psi.__func__.func_doc = function_docs.psi
+            ctx.atan2.__func__.func_doc = function_docs.atan2
+
         ctx.digamma.func_doc = function_docs.digamma
         ctx.cospi.func_doc = function_docs.cospi
         ctx.sinpi.func_doc = function_docs.sinpi
@@ -486,8 +489,8 @@ class MPContext(BaseMPContext, StandardBaseContext):
                     if err < (-prec):
                         break
                     if verbose:
-                        print "autoprec: target=%s, prec=%s, accuracy=%s" \
-                            % (prec, prec2, -err)
+                        print("autoprec: target=%s, prec=%s, accuracy=%s" \
+                            % (prec, prec2, -err))
                     v1 = v2
                     if prec2 >= maxprec2:
                         raise ctx.NoConvergence(\
@@ -730,19 +733,19 @@ maxterms, or set zeroprec."""
         Negating with and without roundoff::
 
             >>> n = 200000000000000000000001
-            >>> print int(-mpf(n))
+            >>> print(int(-mpf(n)))
             -200000000000000016777216
-            >>> print int(fneg(n))
+            >>> print(int(fneg(n)))
             -200000000000000016777216
-            >>> print int(fneg(n, prec=log(n,2)+1))
+            >>> print(int(fneg(n, prec=log(n,2)+1)))
             -200000000000000000000001
-            >>> print int(fneg(n, dps=log(n,10)+1))
+            >>> print(int(fneg(n, dps=log(n,10)+1)))
             -200000000000000000000001
-            >>> print int(fneg(n, prec=inf))
+            >>> print(int(fneg(n, prec=inf)))
             -200000000000000000000001
-            >>> print int(fneg(n, dps=inf))
+            >>> print(int(fneg(n, dps=inf)))
             -200000000000000000000001
-            >>> print int(fneg(n, exact=True))
+            >>> print(int(fneg(n, exact=True)))
             -200000000000000000000001
 
         """
@@ -794,11 +797,11 @@ maxterms, or set zeroprec."""
         arithmetic with finite precision::
 
             >>> x, y = mpf(2), mpf('1e-1000')
-            >>> print x + y - x
+            >>> print(x + y - x)
             0.0
-            >>> print fadd(x, y, prec=inf) - x
+            >>> print(fadd(x, y, prec=inf) - x)
             1.0e-1000
-            >>> print fadd(x, y, exact=True) - x
+            >>> print(fadd(x, y, exact=True) - x)
             1.0e-1000
 
         Exact addition can be inefficient and may be impossible to perform
@@ -860,11 +863,11 @@ maxterms, or set zeroprec."""
         arithmetic with finite precision::
 
             >>> x, y = mpf(2), mpf('1e1000')
-            >>> print x - y + y
+            >>> print(x - y + y)
             0.0
-            >>> print fsub(x, y, prec=inf) + y
+            >>> print(fsub(x, y, prec=inf) + y)
             2.0
-            >>> print fsub(x, y, exact=True) + y
+            >>> print(fsub(x, y, exact=True) + y)
             2.0
 
         Exact addition can be inefficient and may be impossible to perform
@@ -916,17 +919,17 @@ maxterms, or set zeroprec."""
         Avoiding roundoff::
 
             >>> x, y = 10**10+1, 10**15+1
-            >>> print x*y
+            >>> print(x*y)
             10000000001000010000000001
-            >>> print mpf(x) * mpf(y)
+            >>> print(mpf(x) * mpf(y))
             1.0000000001e+25
-            >>> print int(mpf(x) * mpf(y))
+            >>> print(int(mpf(x) * mpf(y)))
             10000000001000011026399232
-            >>> print int(fmul(x, y))
+            >>> print(int(fmul(x, y)))
             10000000001000011026399232
-            >>> print int(fmul(x, y, dps=25))
+            >>> print(int(fmul(x, y, dps=25)))
             10000000001000010000000001
-            >>> print int(fmul(x, y, exact=True))
+            >>> print(int(fmul(x, y, exact=True)))
             10000000001000010000000001
 
         Exact multiplication with complex numbers can be inefficient and may
@@ -1037,23 +1040,29 @@ maxterms, or set zeroprec."""
 
             >>> from mpmath import *
             >>> n, d = nint_distance(5)
-            >>> print n, d
-            5 -inf
+            >>> print(n); print(d)
+            5
+            -inf
             >>> n, d = nint_distance(mpf(5))
-            >>> print n, d
-            5 -inf
+            >>> print(n); print(d)
+            5
+            -inf
             >>> n, d = nint_distance(mpf(5.00000001))
-            >>> print n, d
-            5 -26
+            >>> print(n); print(d)
+            5
+            -26
             >>> n, d = nint_distance(mpf(4.99999999))
-            >>> print n, d
-            5 -26
+            >>> print(n); print(d)
+            5
+            -26
             >>> n, d = nint_distance(mpc(5,10))
-            >>> print n, d
-            5 4
+            >>> print(n); print(d)
+            5
+            4
             >>> n, d = nint_distance(mpc(5,0.000001))
-            >>> print n, d
-            5 -19
+            >>> print(n); print(d)
+            5
+            -19
 
         """
         typx = type(x)
@@ -1159,11 +1168,11 @@ maxterms, or set zeroprec."""
             >>> mp.dps = 15
             >>> a = fraction(1,100)
             >>> b = mpf(1)/100
-            >>> print a; print b
+            >>> print(a); print(b)
             0.01
             0.01
             >>> mp.dps = 30
-            >>> print a; print b      # a will be accurate
+            >>> print(a); print(b)      # a will be accurate
             0.01
             0.0100000000000000002081668171172
             >>> mp.dps = 15
@@ -1207,8 +1216,8 @@ maxterms, or set zeroprec."""
         a = int(a)
         prec = ctx._prec
         xs, ys = libmp.mpc_zetasum(s._mpc_, a, n, derivatives, reflect, prec)
-        xs = map(ctx.make_mpc, xs)
-        ys = map(ctx.make_mpc, ys)
+        xs = [ctx.make_mpc(x) for x in xs]
+        ys = [ctx.make_mpc(y) for y in ys]
         return xs, ys
 
 class PrecisionManager:

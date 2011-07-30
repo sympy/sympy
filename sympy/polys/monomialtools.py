@@ -6,7 +6,9 @@ from sympy.core.basic import C
 
 from sympy.polys.polyerrors import ExactQuotientFailed
 
-from sympy.utilities import all, any, cythonized
+from sympy.utilities import cythonized
+
+from sympy.core.compatibility import cmp
 
 def monomials(variables, degree):
     r"""
@@ -37,7 +39,7 @@ def monomials(variables, degree):
         [1, x, y, x**2, y**2, x*y]
 
         >>> sorted(monomials([x, y], 3))
-        [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
+        [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, x**2*y]
 
     """
     if not variables:

@@ -1,5 +1,4 @@
 from sympy.core import (Expr, S, C, sympify, Wild, Dummy, Derivative)
-from sympy.core.compatibility import any
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.concrete.gosper import gosper_sum
 from sympy.polys import apart, PolynomialError
@@ -146,7 +145,7 @@ class Sum(Expr):
             1.28333333333333
             >>> s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()
             >>> s
-            7/20 - log(2) + log(5)
+            -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
             >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
             (1.26629073187416, 0.0175000000000000)
@@ -155,7 +154,7 @@ class Sum(Expr):
 
             >>> s, e = Sum(1/k, (k, a, b)).euler_maclaurin()
             >>> s
-            -log(a) + log(b) + 1/(2*a) + 1/(2*b)
+            -log(a) + log(b) + 1/(2*b) + 1/(2*a)
             >>> e
             Abs(-1/(12*b**2) + 1/(12*a**2))
 
@@ -163,9 +162,9 @@ class Sum(Expr):
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):
 
             >>> Sum(k, (k, 2, b)).euler_maclaurin()
-            (-1 + b/2 + b**2/2, 0)
+            (b**2/2 + b/2 - 1, 0)
             >>> Sum(k, (k, 2, b)).doit()
-            -1 + b/2 + b**2/2
+            b**2/2 + b/2 - 1
 
         With a nonzero eps specified, the summation is ended
         as soon as the remainder term is less than the epsilon.
@@ -245,12 +244,17 @@ def summation(f, *symbols, **kwargs):
     >>> summation(1/log(n)**n, (n, 2, oo))
     Sum(log(n)**(-n), (n, 2, oo))
     >>> summation(i, (i, 0, n), (n, 0, m))
-    m/3 + m**2/2 + m**3/6
+    m**3/6 + m**2/2 + m/3
+
+    >>> from sympy.abc import x
+    >>> from sympy import factorial
+    >>> summation(x**n/factorial(n), (n, 0, oo))
+    exp(x)
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
 
-def telescopic_direct(L, R, n, (i, a, b)):
+def telescopic_direct(L, R, n, limits):
     """Returns the direct summation of the terms of a telescopic sum
 
     L is the term with lower index
@@ -262,19 +266,21 @@ def telescopic_direct(L, R, n, (i, a, b)):
     >>> from sympy.concrete.summations import telescopic_direct
     >>> from sympy.abc import k, a, b
     >>> telescopic_direct(1/k, -1/(k+2), 2, (k, a, b))
-    1/a + 1/(1 + a) - 1/(1 + b) - 1/(2 + b)
+    -1/(b + 2) - 1/(b + 1) + 1/(a + 1) + 1/a
 
     """
+    (i, a, b) = limits
     s = 0
     for m in xrange(n):
         s += L.subs(i,a+m) + R.subs(i,b-m)
     return s
 
-def telescopic(L, R, (i, a, b)):
+def telescopic(L, R, limits):
     '''Tries to perform the summation using the telescopic property
 
     return None if not possible
     '''
+    (i, a, b) = limits
     if L.is_Add or R.is_Add:
         return None
 
@@ -297,7 +303,7 @@ def telescopic(L, R, (i, a, b)):
     if s is None:
         m = Dummy('m')
         try:
-            sol = solve(L.subs(i, i + m) + R, m)
+            sol = solve(L.subs(i, i + m) + R, m) or []
         except NotImplementedError:
             return None
         sol = [si for si in sol if si.is_Integer and
@@ -311,7 +317,8 @@ def telescopic(L, R, (i, a, b)):
     elif s > 0:
         return telescopic_direct(L, R, s, (i, a, b))
 
-def eval_sum(f, (i, a, b)):
+def eval_sum(f, limits):
+    (i, a, b) = limits
     if f is S.Zero:
         return S.Zero
 
@@ -332,7 +339,8 @@ def eval_sum(f, (i, a, b)):
     if definite:
         return eval_sum_direct(f, (i, a, b))
 
-def eval_sum_symbolic(f, (i, a, b)):
+def eval_sum_symbolic(f, limits):
+    (i, a, b) = limits
     if not f.has(i):
         return f*(b-a+1)
 
@@ -397,9 +405,89 @@ def eval_sum_symbolic(f, (i, a, b)):
         # TODO: more general limit handling
         return c1**c3 * (c1**(a*c2) - c1**(c2+b*c2)) / (1 - c1**c2)
 
-    return gosper_sum(f, (i, a, b))
+    r = gosper_sum(f, (i, a, b))
+    if not r in (None, S.NaN):
+        return r
 
-def eval_sum_direct(expr, (i, a, b)):
+    return eval_sum_hyper(f, (i, a, b))
+
+def _eval_sum_hyper(f, i, a):
+    """ Returns (res, cond). Sums from a to oo. """
+    from sympy.functions import hyper
+    from sympy.simplify import hyperexpand, hypersimp, fraction
+    from sympy.polys.polytools import Poly, factor
+
+    if a != 0:
+        return _eval_sum_hyper(f.subs(i, i + a), i, 0)
+
+    if f.subs(i, 0) == 0:
+        return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
+
+    hs = hypersimp(f, i)
+    if hs is None:
+        return None
+
+    numer, denom = fraction(factor(hs))
+    top, topl = numer.as_coeff_mul(i)
+    bot, botl = denom.as_coeff_mul(i)
+    ab = [top, bot]
+    factors = [topl, botl]
+    params = [[], []]
+    for k in range(2):
+        for fac in factors[k]:
+            mul = 1
+            if fac.is_Pow:
+                mul = fac.exp
+                fac = fac.base
+                if not mul.is_Integer:
+                    return None
+            p = Poly(fac, i)
+            if p.degree() != 1:
+                return None
+            m, n = p.all_coeffs()
+            ab[k] *= m**mul
+            params[k] += [n/m]*mul
+
+    # Add "1" to numerator parameters, to account for implicit n! in
+    # hypergeometric series.
+    ap = params[0] + [1]
+    bq = params[1]
+    x  = ab[0]/ab[1]
+    h = hyper(ap, bq, x)
+
+    return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
+
+def eval_sum_hyper(f, (i, a, b)):
+    from sympy.functions import Piecewise
+    from sympy import oo, And
+
+    if b != oo:
+        if a == -oo:
+            res = _eval_sum_hyper(f.subs(i, -i), i, -b)
+            if res is not None:
+                return Piecewise(res, (Sum(f, (i, a, b)), True))
+        else:
+            return None
+
+    if a == -oo:
+        res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)
+        res2 = _eval_sum_hyper(f, i, 0)
+        if res1 is None or res2 is None:
+            return None
+        res1, cond1 = res1
+        res2, cond2 = res2
+        cond = And(cond1, cond2)
+        if cond is False:
+            return None
+        return Piecewise((res1 + res2, cond), (Sum(f, (i, a, b)), True))
+
+    # Now b == oo, a != -oo
+    res = _eval_sum_hyper(f, i, a)
+    if res is not None:
+        return Piecewise(res, (Sum(f, (i, a, b)), True))
+
+def eval_sum_direct(expr, limits):
+    (i, a, b) = limits
     s = S.Zero
     if i in expr.free_symbols:
         for j in xrange(a, b+1):

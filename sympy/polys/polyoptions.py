@@ -1,7 +1,7 @@
 """Options manager for :class:`Poly` and public API functions. """
 
 from sympy.core import S, Basic, sympify
-from sympy.utilities import any, all, numbered_symbols, topological_sort
+from sympy.utilities import numbered_symbols, topological_sort
 
 from sympy.polys.polyerrors import (
     GeneratorsError,
@@ -279,14 +279,19 @@ class Wrt(Option):
     requires = []
     excludes = []
 
-    _re_split = re.compile(" |,")
+    _re_split = re.compile(r"\s*,\s*|\s+")
 
     @classmethod
     def preprocess(cls, wrt):
         if isinstance(wrt, Basic):
             return [str(wrt)]
         elif isinstance(wrt, str):
-            return [ gen.strip() for gen in cls._re_split.split(wrt) ]
+            wrt = wrt.strip()
+            if wrt.endswith(','):
+                raise OptionError('Bad input: missing parameter.')
+            if not wrt:
+                return []
+            return [ gen for gen in cls._re_split.split(wrt) ]
         elif hasattr(wrt, '__getitem__'):
             return list(map(str, wrt))
         else:

@@ -20,11 +20,11 @@ from sympy.polys.densearith import (
     dup_pow, dmp_pow,
     dup_div, dmp_div,
     dup_rem, dmp_rem,
-    dup_exquo, dmp_exquo,
+    dup_quo, dmp_quo,
     dup_prem, dmp_prem,
     dup_mul_ground, dmp_mul_ground,
     dup_mul_term, dmp_mul_term,
-    dup_exquo_ground, dmp_exquo_ground,
+    dup_quo_ground, dmp_quo_ground,
     dup_max_norm, dmp_max_norm)
 
 from sympy.polys.densetools import (
@@ -80,7 +80,7 @@ def dup_half_gcdex(f, g, K):
         f, g = g, r
         a, b = b, dup_sub_mul(a, q, b, K)
 
-    a = dup_exquo_ground(a, dup_LC(f, K), K)
+    a = dup_quo_ground(a, dup_LC(f, K), K)
     f = dup_monic(f, K)
 
     return a, f
@@ -121,7 +121,7 @@ def dup_gcdex(f, g, K):
     s, h = dup_half_gcdex(f, g, K)
 
     F = dup_sub_mul(h, s, f, K)
-    t = dup_exquo(F, g, K)
+    t = dup_quo(F, g, K)
 
     return s, t, h
 
@@ -344,7 +344,7 @@ def dup_inner_subresultants(f, g, K):
         else:
             q = c**(d-1)
 
-        c = K.exquo((-lc)**d, q)
+        c = K.quo((-lc)**d, q)
         b = -lc * c**(m-k)
 
         f, g, m, d = g, h, k, m-k
@@ -353,7 +353,7 @@ def dup_inner_subresultants(f, g, K):
         D.append(d)
 
         h = dup_prem(f, g, K)
-        h = dup_exquo_ground(h, b, K)
+        h = dup_quo_ground(h, b, K)
 
     return R, B, D
 
@@ -405,7 +405,7 @@ def dup_prs_resultant(f, g, K):
     s, i = 1, 1
     p, q = K.one, K.one
 
-    for b, d in zip(B, D)[:-1]:
+    for b, d in list(zip(B, D))[:-1]:
         du = dup_degree(R[i-1])
         dv = dup_degree(R[i  ])
         dw = dup_degree(R[i+1])
@@ -424,7 +424,7 @@ def dup_prs_resultant(f, g, K):
     i = dup_degree(R[-2])
 
     res = dup_LC(R[-1], K)**i
-    res = K.exquo(res*p, q)
+    res = K.quo(res*p, q)
 
     return res, R
 
@@ -508,7 +508,7 @@ def dmp_inner_subresultants(f, g, u, K):
         else:
             q = dmp_pow(c, d-1, v, K)
 
-        c = dmp_exquo(p, q, v, K)
+        c = dmp_quo(p, q, v, K)
         b = dmp_mul(dmp_neg(lc, v, K),
                     dmp_pow(c, m-k, v, K), v, K)
 
@@ -518,7 +518,7 @@ def dmp_inner_subresultants(f, g, u, K):
         D.append(d)
 
         h = dmp_prem(f, g, u, K)
-        h = [ dmp_exquo(ch, b, v, K) for ch in h ]
+        h = [ dmp_quo(ch, b, v, K) for ch in h ]
 
     return R, B, D
 
@@ -582,7 +582,7 @@ def dmp_prs_resultant(f, g, u, K):
     p = dmp_one(v, K)
     q = dmp_one(v, K)
 
-    for b, d in zip(B, D)[:-1]:
+    for b, d in list(zip(B, D))[:-1]:
         du = dmp_degree(R[i-1], u)
         dv = dmp_degree(R[i  ], u)
         dw = dmp_degree(R[i+1], u)
@@ -604,7 +604,7 @@ def dmp_prs_resultant(f, g, u, K):
     i = dmp_degree(R[-2], u)
 
     res = dmp_pow(dmp_LC(R[-1], K), i, v, K)
-    res = dmp_exquo(dmp_mul(res, p, v, K), q, v, K)
+    res = dmp_quo(dmp_mul(res, p, v, K), q, v, K)
 
     return res, R
 
@@ -778,7 +778,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 
     c = K0.convert(cf**m * cg**n, K1)
 
-    return dmp_exquo_ground(r, c, u-1, K0)
+    return dmp_quo_ground(r, c, u-1, K0)
 
 @cythonized("u")
 def dmp_resultant(f, g, u, K):
@@ -833,7 +833,7 @@ def dup_discriminant(f, K):
 
         r = dup_resultant(f, dup_diff(f, 1, K), K)
 
-        return K.exquo(r, c*K(s))
+        return K.quo(r, c*K(s))
 
 @cythonized("u,v,d,s")
 def dmp_discriminant(f, u, K):
@@ -865,7 +865,7 @@ def dmp_discriminant(f, u, K):
         r = dmp_resultant(f, dmp_diff(f, 1, u, K), u, K)
         c = dmp_mul_ground(c, K(s), v, K)
 
-        return dmp_exquo(r, c, v, K)
+        return dmp_quo(r, c, v, K)
 
 def _dup_rr_trivial_gcd(f, g, K):
     """Handle trivial cases in GCD algorithm over a ring. """
@@ -962,8 +962,8 @@ def _dmp_simplify_gcd(f, g, u, K):
     v = u - 1
     h = dmp_gcd(F, G, v, K)
 
-    cff = [ dmp_exquo(cf, h, v, K) for cf in f ]
-    cfg = [ dmp_exquo(cg, h, v, K) for cg in g ]
+    cff = [ dmp_quo(cf, h, v, K) for cf in f ]
+    cfg = [ dmp_quo(cg, h, v, K) for cg in g ]
 
     return [h], cff, cfg
 
@@ -1004,8 +1004,8 @@ def dup_rr_prs_gcd(f, g, K):
 
     h = dup_mul_ground(h, c, K)
 
-    cff = dup_exquo(f, h, K)
-    cfg = dup_exquo(g, h, K)
+    cff = dup_quo(f, h, K)
+    cfg = dup_quo(g, h, K)
 
     return h, cff, cfg
 
@@ -1036,8 +1036,8 @@ def dup_ff_prs_gcd(f, g, K):
     h = dup_subresultants(f, g, K)[-1]
     h = dup_monic(h, K)
 
-    cff = dup_exquo(f, h, K)
-    cfg = dup_exquo(g, h, K)
+    cff = dup_quo(f, h, K)
+    cfg = dup_quo(g, h, K)
 
     return h, cff, cfg
 
@@ -1081,8 +1081,8 @@ def dmp_rr_prs_gcd(f, g, u, K):
     _, h = dmp_primitive(h, u, K)
     h = dmp_mul_term(h, c, 0, u, K)
 
-    cff = dmp_exquo(f, h, u, K)
-    cfg = dmp_exquo(g, h, u, K)
+    cff = dmp_quo(f, h, u, K)
+    cfg = dmp_quo(g, h, u, K)
 
     return h, cff, cfg
 
@@ -1114,18 +1114,18 @@ def dmp_ff_prs_gcd(f, g, u, K):
     if result is not None:
         return result
 
-    fc, f = dmp_primitive(f, u, K)
-    gc, g = dmp_primitive(g, u, K)
+    fc, F = dmp_primitive(f, u, K)
+    gc, G = dmp_primitive(g, u, K)
 
-    h = dmp_subresultants(f, g, u, K)[-1]
+    h = dmp_subresultants(F, G, u, K)[-1]
     c, _, _ = dmp_ff_prs_gcd(fc, gc, u-1, K)
 
     _, h = dmp_primitive(h, u, K)
     h = dmp_mul_term(h, c, 0, u, K)
     h = dmp_ground_monic(h, u, K)
 
-    cff = dmp_exquo(f, h, u, K)
-    cfg = dmp_exquo(g, h, u, K)
+    cff = dmp_quo(f, h, u, K)
+    cfg = dmp_quo(g, h, u, K)
 
     return h, cff, cfg
 
@@ -1263,7 +1263,7 @@ def _dmp_zz_gcd_interpolate(h, x, v, K):
         f.insert(0, g)
 
         h = dmp_sub(h, g, v, K)
-        h = dmp_exquo_ground(h, x, v, K)
+        h = dmp_quo_ground(h, x, v, K)
 
     if K.is_negative(dmp_ground_LC(f, v+1, K)):
         return dmp_neg(f, v+1, K)
@@ -1617,8 +1617,8 @@ def dup_rr_lcm(f, g, K):
 
     c = K.lcm(fc, gc)
 
-    h = dup_exquo(dup_mul(f, g, K),
-                  dup_gcd(f, g, K), K)
+    h = dup_quo(dup_mul(f, g, K),
+                dup_gcd(f, g, K), K)
 
     return dup_mul_ground(h, c, K)
 
@@ -1638,8 +1638,8 @@ def dup_ff_lcm(f, g, K):
     [1/1, 7/2, 3/1, 0/1]
 
     """
-    h = dup_exquo(dup_mul(f, g, K),
-                  dup_gcd(f, g, K), K)
+    h = dup_quo(dup_mul(f, g, K),
+                dup_gcd(f, g, K), K)
 
     return dup_monic(h, K)
 
@@ -1686,8 +1686,8 @@ def dmp_rr_lcm(f, g, u, K):
 
     c = K.lcm(fc, gc)
 
-    h = dmp_exquo(dmp_mul(f, g, u, K),
-                  dmp_gcd(f, g, u, K), u, K)
+    h = dmp_quo(dmp_mul(f, g, u, K),
+                dmp_gcd(f, g, u, K), u, K)
 
     return dmp_mul_ground(h, c, u, K)
 
@@ -1708,8 +1708,8 @@ def dmp_ff_lcm(f, g, u, K):
     [[1/1], [4/1, 0/1], [4/1, 0/1, 0/1], []]
 
     """
-    h = dmp_exquo(dmp_mul(f, g, u, K),
-                  dmp_gcd(f, g, u, K), u, K)
+    h = dmp_quo(dmp_mul(f, g, u, K),
+                dmp_gcd(f, g, u, K), u, K)
 
     return dmp_ground_monic(h, u, K)
 
@@ -1791,9 +1791,9 @@ def dmp_primitive(f, u, K):
     if dmp_zero_p(f, u) or dmp_one_p(cont, v, K):
         return cont, f
     else:
-        return cont, [ dmp_exquo(c, cont, v, K) for c in f ]
+        return cont, [ dmp_quo(c, cont, v, K) for c in f ]
 
-def dup_cancel(f, g, K, multout=True):
+def dup_cancel(f, g, K, include=True):
     """
     Cancel common factors in a rational function ``f/g``.
 
@@ -1809,9 +1809,9 @@ def dup_cancel(f, g, K, multout=True):
     ([2, 2], [1, -1])
 
     """
-    return dmp_cancel(f, g, 0, K, multout=multout)
+    return dmp_cancel(f, g, 0, K, include=include)
 
-def dmp_cancel(f, g, u, K, multout=True):
+def dmp_cancel(f, g, u, K, include=True):
     """
     Cancel common factors in a rational function ``f/g``.
 
@@ -1828,7 +1828,7 @@ def dmp_cancel(f, g, u, K, multout=True):
 
     """
     if dmp_zero_p(f, u) or dmp_zero_p(g, u):
-        if multout:
+        if include:
             return f, g
         else:
             return K.one, K.one, f, g
@@ -1861,7 +1861,7 @@ def dmp_cancel(f, g, u, K, multout=True):
     elif q_neg:
         cp, q = -cp, dmp_neg(q, u, K)
 
-    if not multout:
+    if not include:
         return cp, cq, p, q
 
     p = dmp_mul_ground(p, cp, u, K)

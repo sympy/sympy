@@ -11,7 +11,7 @@ def Rel(a, b, op):
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x+x**2, '==')
-    y == x + x**2
+    y == x**2 + x
 
     """
     return Relational(a,b,op)
@@ -25,7 +25,7 @@ def Eq(a, b=0):
     >>> from sympy import Eq
     >>> from sympy.abc import x, y
     >>> Eq(y, x+x**2)
-    y == x + x**2
+    y == x**2 + x
 
     """
     return Relational(a,b,'==')
@@ -39,7 +39,7 @@ def Ne(a, b):
     >>> from sympy import Ne
     >>> from sympy.abc import x, y
     >>> Ne(y, x+x**2)
-    y != x + x**2
+    y != x**2 + x
 
     """
     return Relational(a,b,'!=')
@@ -53,7 +53,7 @@ def Lt(a, b):
     >>> from sympy import Lt
     >>> from sympy.abc import x, y
     >>> Lt(y, x+x**2)
-    y < x + x**2
+    y < x**2 + x
 
     """
     return Relational(a,b,'<')
@@ -67,7 +67,7 @@ def Le(a, b):
     >>> from sympy import Le
     >>> from sympy.abc import x, y
     >>> Le(y, x+x**2)
-    y <= x + x**2
+    y <= x**2 + x
 
     """
     return Relational(a,b,'<=')
@@ -81,7 +81,7 @@ def Gt(a, b):
     >>> from sympy import Gt
     >>> from sympy.abc import x, y
     >>> Gt(y, x+x**2)
-    x + x**2 < y
+    x**2 + x < y
 
     """
     return Relational(a,b,'>')
@@ -95,7 +95,7 @@ def Ge(a, b):
     >>> from sympy import Ge
     >>> from sympy.abc import x, y
     >>> Ge(y, x+x**2)
-    x + x**2 <= y
+    x**2 + x <= y
 
     """
     return Relational(a,b,'>=')
@@ -125,10 +125,16 @@ class Relational(Expr, EvalfMixin):
             rop_cls, swap = Relational.get_relational_class(rop)
             if swap: lhs, rhs = rhs, lhs
         if lhs.is_real and lhs.is_number and rhs.is_real and rhs.is_number:
-            return rop_cls._eval_relation(lhs.evalf(), rhs.evalf())
-        else:
-            obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
-            return obj
+            # Just becase something is a number, doesn't mean you can evalf it.
+            Nlhs = lhs.evalf()
+            if Nlhs.is_Number:
+                # S.Zero.evalf() returns S.Zero, so test Number instead of Float
+                Nrhs = rhs.evalf()
+                if Nrhs.is_Number:
+                    return rop_cls._eval_relation(Nlhs, Nrhs)
+
+        obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
+        return obj
 
     @property
     def lhs(self):

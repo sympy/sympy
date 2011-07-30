@@ -54,7 +54,7 @@ class RSCache:
      def __init__(ctx):
         ctx._rs_cache = [0, 10, {}, {}]
 
-from functions import defun
+from .functions import defun
 
 #-------------------------------------------------------------------------------#
 #                                                                               #

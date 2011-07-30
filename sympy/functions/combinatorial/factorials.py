@@ -2,6 +2,8 @@ from sympy.core import S, C, sympify, Function
 from sympy.ntheory import sieve
 from math import sqrt
 
+from sympy.core.compatibility import reduce
+
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
@@ -161,11 +163,12 @@ class factorial2(CombinatorialFunction):
     >>> var('n')
     n
     >>> factorial2(n + 1)
-    (1 + n)!!
+    (n + 1)!!
     >>> factorial2(5)
     15
     >>> factorial2(-1)
     1
+
     """
     nargs = 1
 
@@ -361,7 +364,7 @@ class binomial(CombinatorialFunction):
        -5/128
 
        >>> binomial(n, 3)
-       n*(-1 + n)*(-2 + n)/6
+       n*(n - 2)*(n - 1)/6
 
     """
 

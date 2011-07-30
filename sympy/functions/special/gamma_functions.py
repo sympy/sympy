@@ -1,10 +1,12 @@
 from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
+from error_functions import erf
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
+from sympy.functions.combinatorial.factorials import rf
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -84,39 +86,159 @@ class gamma(Function):
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))
 
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if not (x0.is_Integer and x0 <= 0):
+            return super(gamma, self)._eval_nseries(x, n, logx)
+        t = self.args[0] - x0
+        return (gamma(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
 ###############################################################################
 
 class lowergamma(Function):
-    """Lower incomplete gamma function"""
+    r"""
+    Lower incomplete gamma function
 
-    nargs = 2
+    It can be defined as the meromorphic continuation of
 
-    @classmethod
-    def eval(cls, a, x):
-        if a.is_Number:
-            if a is S.One:
-                return S.One - C.exp(-x)
-            elif a.is_Integer:
-                b = a - 1
+    .. math ::
+        \gamma(s, x) = \int_0^x t^{s-1} e^{-t} \mathrm{d}t.
 
-                if b.is_positive:
-                    return b*cls(b, x) - x**b * C.exp(-x)
+    This can be shown to be the same as
 
+    .. math ::
+        \gamma(s, x) = \frac{x^s}{s} {}_1F_1\left.\left({s \atop s+1} \right| -x\right),
 
-class uppergamma(Function):
-    """Upper incomplete gamma function"""
+    where :math:`{}_1F_1` is the (confluent) hypergeometric function.
+
+    **See also:** :class:`gamma`, :class:`uppergamma`, :class:`hyper`.
+
+    **Examples**
+
+    >>> from sympy import lowergamma, S
+    >>> from sympy.abc import s, x
+    >>> lowergamma(s, x)
+    lowergamma(s, x)
+    >>> lowergamma(3, x)
+    -x**2*exp(-x) - 2*x*exp(-x) + 2 - 2*exp(-x)
+    >>> lowergamma(-S(1)/2, x)
+    -2*pi**(1/2)*erf(x**(1/2)) - 2*exp(-x)/x**(1/2)
+
+    **References**
+
+    - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
+      Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
+      Tables
+    - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+    """
 
     nargs = 2
 
     def fdiff(self, argindex=2):
+        from sympy import meijerg
         if argindex == 2:
-            a, z = self[0:2]
-            return -C.exp(-z)*z**(a-1)
+            a, z = self.args
+            return C.exp(-z)*z**(a-1)
+        elif argindex == 1:
+            a, z = self.args
+            return gamma(a)*digamma(a) - log(z)*uppergamma(a, z) \
+                   + meijerg([], [1, 1], [0, 0, a], [], z)
+
         else:
             raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, a, x):
+        if a.is_Number:
+            # TODO this should be non-recursive
+            if a is S.One:
+                return S.One - C.exp(-x)
+            elif a is S.Half:
+                return sqrt(pi)*erf(sqrt(x))
+            elif a.is_Integer or (2*a).is_Integer:
+                b = a - 1
+                if b.is_positive:
+                    return b*cls(b, x) - x**b * C.exp(-x)
+
+                if not a.is_Integer:
+                    return (cls(a + 1, x) + x**a * C.exp(-x))/a
+
+    def _eval_evalf(self, prec):
+        from sympy.mpmath import mp
+        from sympy import Expr
+        a = self.args[0]._to_mpmath(prec)
+        z = self.args[1]._to_mpmath(prec)
+        oprec = mp.prec
+        mp.prec = prec
+        res = mp.gammainc(a, 0, z)
+        mp.prec = oprec
+        return Expr._from_mpmath(res, prec)
+
+class uppergamma(Function):
+    r"""
+    Upper incomplete gamma function
+
+    It can be defined as the meromorphic continuation of
+
+    .. math ::
+        \Gamma(s, x) = \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t
+                     = \Gamma(s) - \gamma(s, x).
+
+    This can be shown to be the same as
+
+    .. math ::
+        \Gamma(s, x) = \Gamma(s)
+                - \frac{x^s}{s} {}_1F_1\left.\left({s \atop s+1} \right| -x\right),
+
+    where :math:`{}_1F_1` is the (confluent) hypergeometric function.
+
+    **Examples**
+
+    >>> from sympy import uppergamma, S
+    >>> from sympy.abc import s, x
+    >>> uppergamma(s, x)
+    uppergamma(s, x)
+    >>> uppergamma(3, x)
+    x**2*exp(-x) + 2*x*exp(-x) + 2*exp(-x)
+    >>> uppergamma(-S(1)/2, x)
+    -2*pi**(1/2)*(-erf(x**(1/2)) + 1) + 2*exp(-x)/x**(1/2)
+
+    **See also:** :class:`gamma`, :class:`lowergamma`, :class:`hyper`.
+
+    **References**
+
+    - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
+      Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
+      Tables
+    - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+    """
+
+    nargs = 2
+
+    def fdiff(self, argindex=2):
+        from sympy import meijerg
+        if argindex == 2:
+            a, z = self.args
+            return -C.exp(-z)*z**(a-1)
+        elif argindex == 1:
+            a, z = self.args
+            return uppergamma(a, z)*log(z) + meijerg([], [1, 1], [0, 0, a], [], z)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_evalf(self, prec):
+        from sympy.mpmath import mp
+        from sympy import Expr
+        a = self.args[0]._to_mpmath(prec)
+        z = self.args[1]._to_mpmath(prec)
+        oprec = mp.prec
+        mp.prec = prec
+        res = mp.gammainc(a, z, mp.inf)
+        mp.prec = oprec
+        return Expr._from_mpmath(res, prec)
 
     @classmethod
     def eval(cls, a, z):
@@ -129,13 +251,18 @@ class uppergamma(Function):
                 return gamma(a)
 
         if a.is_Number:
+            # TODO this should be non-recursive
             if a is S.One:
                 return C.exp(-z)
-            elif a.is_Integer:
+            elif a is S.Half:
+                return sqrt(pi)*(1 - erf(sqrt(z))) # TODO could use erfc...
+            elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
-
                 if b.is_positive:
                     return b*cls(b, z) + z**b * C.exp(-z)
+
+                if not a.is_Integer:
+                    return (cls(a + 1, z) - z**a * C.exp(-z))/a
 
 
 
@@ -185,7 +312,7 @@ class polygamma(Function):
             if n < 2:
                 o = C.Order(1/z, x)
             else:
-                m = C.ceiling((n+1)/2)
+                m = C.ceiling((n+1)//2)
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
                 o = C.Order(1/z**(2*m), x)
@@ -198,7 +325,7 @@ class polygamma(Function):
             #    quite a long time!
             fac = gamma(N)
             e0 = fac + N*fac/(2*z)
-            m = C.ceiling((n+1)/2)
+            m = C.ceiling((n+1)//2)
             for k in range(1, m):
                 fac = fac*(2*k+N-1)*(2*k+N-2) / ((2*k)*(2*k-1))
                 e0 += bernoulli(2*k)*fac/z**(2*k)

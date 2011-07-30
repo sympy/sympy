@@ -94,6 +94,9 @@ class Domain(object):
                 if type(a) is long:
                     return K1(a)
 
+                if K1.is_Numerical and getattr(a, 'is_ground', False):
+                    return K1.convert(a.LC())
+
                 a = sympify(a)
 
                 if isinstance(a, Basic):
@@ -161,7 +164,7 @@ class Domain(object):
         return None
 
     def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
+        """Convert a SymPy `Float` object to `dtype`. """
         return None
 
     def from_RR_mpmath(K1, a, K0):

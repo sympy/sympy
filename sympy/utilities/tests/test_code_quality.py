@@ -1,3 +1,5 @@
+from sympy.core.compatibility import reduce
+
 from os import walk, sep, chdir, pardir
 from os.path import split, join, abspath, exists
 from glob import glob
@@ -6,7 +8,7 @@ import re
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
 #     exclude = set([
-#                    "%(sep)sthirdparty%(sep)s" % sepd,
+#                    "%(sep)smpmath%(sep)s" % sepd,
 #                   ])
 sepd = {"sep": sep}
 
@@ -32,6 +34,8 @@ message_str_raise = "File contains string exception: %s, line %s"
 message_gen_raise = "File contains generic exception: %s, line %s"
 message_old_raise = "File contains old style raise statement: %s, line %s, \"%s\""
 message_eof = "File does not end with a newline: %s, line %s"
+
+implicit_test_re = re.compile('^\s*(>>> )?from .* import .*\*')
 
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
@@ -73,7 +77,7 @@ def test_whitespace_and_exceptions():
     oldRaise = re.compile(r'raise(\s+\w+\s*,)')
 
     def test(fname):
-        file = open(fname, "rb") # without "b" the lines from all systems will appear to be \n terminated
+        file = open(fname, "rt") # without "t" the lines from all systems may appear to be \n terminated
         try:
             line = None # to flag the case where there were no lines in file
             for idx, line in enumerate(file):
@@ -100,11 +104,31 @@ def test_whitespace_and_exceptions():
             file.close()
 
     exclude = set([
-        "%(sep)sthirdparty%(sep)s" % sepd,
         "%(sep)smpmath%(sep)s" % sepd,
     ])
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
+
+def test_implicit_imports_regular_expression():
+    candidates_ok = [
+            "from sympy import something",
+            ">>> from sympy import something",
+            "from sympy.somewhere import something",
+            ">>> from sympy.somewhere import something",
+            "import sympy",
+            ">>> import sympy",
+            "import sympy.something.something",
+            ]
+    candidates_fail = [
+            "from sympy import *",
+            ">>> from sympy import *",
+            "from sympy.somewhere import *",
+            ">>> from sympy.somewhere import *",
+            ]
+    for c in candidates_ok:
+        assert implicit_test_re.search(c) is None
+    for c in candidates_fail:
+        assert implicit_test_re.search(c) is not None
 
 def test_implicit_imports():
     """
@@ -115,18 +139,19 @@ def test_implicit_imports():
         file = open(fname, "r")
         try:
             for idx, line in enumerate(file):
-                if re.match("^\s*(>>>)? from .* import .*\*",line):
+                if implicit_test_re.search(line):
                     assert False, message_implicit % (fname, idx+1)
         finally:
             file.close()
 
     exclude = set([
-        "%(sep)sthirdparty%(sep)s" % sepd,
         "%(sep)s__init__.py" % sepd,
+        "%(sep)sinteractive%(sep)ssession.py" % sepd,
+        # Taken from Python stdlib:
+        "%(sep)sparsing%(sep)ssympy_tokenize.py" % sepd,
         # these two should be fixed:
         "%(sep)smpmath%(sep)s" % sepd,
         "%(sep)splotting%(sep)s" % sepd,
     ])
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
-

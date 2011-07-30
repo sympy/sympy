@@ -3,11 +3,12 @@ from sympify import converter, sympify, _sympify, SympifyError
 from basic import Basic
 from singleton import S, Singleton
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit
+from decorators import _sympifyit, deprecated
 from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
+from sympy.mpmath.ctx_mp import mpnumeric
 
 import decimal
 
@@ -106,7 +107,7 @@ class Number(AtomicExpr):
     """
     Represents any kind of number in sympy.
 
-    Floating point numbers are represented by the Real class.
+    Floating point numbers are represented by the Float class.
     Integer numbers (of any size), together with rational numbers (again, there
     is no limit on their size) are represented by the Rational class.
 
@@ -118,6 +119,7 @@ class Number(AtomicExpr):
     is_comparable = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
@@ -134,7 +136,7 @@ class Number(AtomicExpr):
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
         if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
-            return Real(obj)
+            return Float(obj)
         if isinstance(obj, str):
             val = sympify(obj)
             if isinstance(val, Number):
@@ -151,7 +153,7 @@ class Number(AtomicExpr):
             (self.__class__.__name__))
 
     def _eval_evalf(self, prec):
-        return Real._new(self._as_mpf_val(prec), prec)
+        return Float._new(self._as_mpf_val(prec), prec)
 
     def _as_mpf_op(self, prec):
         prec = max(prec, self._prec)
@@ -166,6 +168,14 @@ class Number(AtomicExpr):
     def _eval_order(self, *symbols):
         # Order(5, x, y) -> Order(1,x,y)
         return C.Order(S.One, *symbols)
+
+    @classmethod
+    def class_key(cls):
+        return 1, 0, 'Number'
+
+    def sort_key(self, order=None):
+        return self.class_key(), (0, ()), (), self
+
 
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' % (self.__class__.__name__))
@@ -221,22 +231,22 @@ class Number(AtomicExpr):
         """Efficiently extract the coefficient of a product. """
         return self, S.One
 
-class Real(Number):
+class Float(Number):
     """
     Represents a floating point number. It is capable of representing
     arbitrary-precision floating-point numbers
 
     Usage:
     ======
-        Real(3.5)   .... 3.5 (the 3.5 was converted from a python float)
-        Real("3.0000000000000005")
+        Float(3.5)   .... 3.5 (the 3.5 was converted from a python float)
+        Float("3.0000000000000005")
 
-        Real((1,3,0,2)) # mpmath tuple: (-1)**1 * 3 * 2**0; 3 has 2 bits
+        Float((1,3,0,2)) # mpmath tuple: (-1)**1 * 3 * 2**0; 3 has 2 bits
         -3.00000000000000
 
     Notes:
     ======
-        - Real(x) with x being a Python int/long will return Integer(x)
+        - Float(x) with x being a Python int/long will return Integer(x)
     """
     is_real = True
     is_irrational = False
@@ -259,7 +269,7 @@ class Real(Number):
         self._mpf_ = _mpf_
         Expr.__setstate__(self, d)
 
-    is_Real = True
+    is_Float = True
 
     def floor(self):
         return C.Integer(int(mlib.to_int(mlib.mpf_floor(self._mpf_, self._prec))))
@@ -321,21 +331,28 @@ class Real(Number):
         return self.num < 0
 
     def __neg__(self):
-        return Real._new(mlib.mpf_neg(self._mpf_), self._prec)
+        return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
-            return Real._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
-            return Real._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mod__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rmod__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
+        return Number.__rmod__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -343,12 +360,11 @@ class Real(Number):
             return S.NaN
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
-            return Real._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
+            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
         return Number.__add__(self, other)
 
-    def _eval_power(b, e):
+    def _eval_power(self, e):
         """
-        b is Real but not equal to rationals, integers, 0.5, oo, -oo, nan
         e is symbolic object but not equal to 0, 1
 
         (-p) ** r -> exp(r * log(-p)) -> exp(r * (log(p) + I*Pi)) ->
@@ -356,19 +372,19 @@ class Real(Number):
         """
         if isinstance(e, Number):
             if isinstance(e, Integer):
-                prec = b._prec
-                return Real._new(mlib.mpf_pow_int(b._mpf_, e.p, prec, rnd), prec)
-            e, prec = e._as_mpf_op(b._prec)
-            b = b._mpf_
+                prec = self._prec
+                return Float._new(mlib.mpf_pow_int(self._mpf_, e.p, prec, rnd), prec)
+            e, prec = e._as_mpf_op(self._prec)
+            b = self._mpf_
             try:
                 y = mpf_pow(b, e, prec, rnd)
-                return Real._new(y, prec)
+                return Float._new(y, prec)
             except mlib.ComplexResult:
                 re, im = mlib.mpc_pow((b, mlib.fzero), (e, mlib.fzero), prec, rnd)
-                return Real._new(re, prec) + Real._new(im, prec) * S.ImaginaryUnit
+                return Float._new(re, prec) + Float._new(im, prec) * S.ImaginaryUnit
 
     def __abs__(self):
-        return Real._new(mlib.mpf_abs(self._mpf_), self._prec)
+        return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
 
     def __int__(self):
         return int(mlib.to_int(self._mpf_))
@@ -385,7 +401,7 @@ class Real(Number):
             return False
         if isinstance(other, Number):
             return bool(mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
-        return False    # Real != non-Number
+        return False    # Float != non-Number
 
     def __ne__(self, other):
         try:
@@ -399,7 +415,7 @@ class Real(Number):
             return True
         if isinstance(other, Number):
             return bool(not mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
-        return True     # Real != non-Number
+        return True     # Float != non-Number
 
     def __lt__(self, other):
         try:
@@ -426,20 +442,25 @@ class Real(Number):
         return Expr.__le__(self, other)
 
     def __hash__(self):
-        return super(Real, self).__hash__()
+        return super(Float, self).__hash__()
 
     def epsilon_eq(self, other, epsilon="10e-16"):
-        return abs(self - other) < Real(epsilon)
+        return abs(self - other) < Float(epsilon)
 
     def _sage_(self):
         import sage.all as sage
         return sage.RealNumber(str(self))
 
 # Add sympify converters
-converter[float] = converter[decimal.Decimal] = Real
+converter[float] = converter[decimal.Decimal] = Float
 
 # this is here to work nicely in Sage
-RealNumber = Real
+RealNumber = Float
+
+@deprecated
+def Real(*args, **kwargs):  # pragma: no cover
+    """Deprecated alias for the Float constructor."""
+    return Float(*args, **kwargs)
 
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
@@ -500,7 +521,7 @@ class Rational(Number):
                return p
             if isinstance(p, basestring):
                 try:
-                    # we might have a Real
+                    # we might have a Float
                     neg_pow, digits, expt = decimal.Decimal(p).as_tuple()
                     p = [1, -1][neg_pow] * int("".join(str(x) for x in digits))
                     if expt > 0:
@@ -624,7 +645,7 @@ class Rational(Number):
     def __mul__(self, other):
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
-        if isinstance(other, Real):
+        if isinstance(other, Float):
             return other * self
         if isinstance(other, Rational):
             return Rational(self.p * other.p, self.q * other.q)
@@ -635,16 +656,24 @@ class Rational(Number):
         if isinstance(other, Rational):
             n = (self.p*other.q) // (other.p*self.q)
             return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
-        if isinstance(other, Real):
+        if isinstance(other, Float):
             return self.evalf() % other
         return Number.__mod__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rmod__(self, other):
+        if isinstance(other, Rational):
+            return Rational.__mod__(other, self)
+        if isinstance(other, Float):
+            return other % self.evalf()
+        return Number.__rmod__(self, other)
 
     # TODO reorder
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if (other is S.NaN) or (self is S.NaN):
             return S.NaN
-        if isinstance(other, Real):
+        if isinstance(other, Float):
             return other + self
         if isinstance(other, Rational):
             if self.is_unbounded:
@@ -661,7 +690,7 @@ class Rational(Number):
     def _eval_power(b, e):
         if (e is S.NaN): return S.NaN
         if isinstance(e, Number):
-            if isinstance(e, Real):
+            if isinstance(e, Float):
                 return b._eval_evalf(e._prec) ** e
             if e.is_negative:
                 # (3/4)**-2 -> (4/3)**2
@@ -726,7 +755,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
-            if isinstance(other, Real):
+            if isinstance(other, Float):
                 return bool(mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p==other.p and self.q==other.q)
 
@@ -745,7 +774,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
-            if isinstance(other, Real):
+            if isinstance(other, Float):
                 return bool(not mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p!=other.p or self.q!=other.q)
 
@@ -761,7 +790,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
-            if isinstance(other, Real):
+            if isinstance(other, Float):
                 return bool(mlib.mpf_lt(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p * other.q < self.q * other.p)
         return Expr.__lt__(self, other)
@@ -776,7 +805,7 @@ class Rational(Number):
         if other.is_comparable and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
-            if isinstance(other, Real):
+            if isinstance(other, Float):
                 return bool(mlib.mpf_le(self._as_mpf_val(other._prec), other._mpf_))
             return bool(self.p * other.q <= self.q * other.p)
         return Expr.__le__(self, other)
@@ -784,13 +813,26 @@ class Rational(Number):
     def __hash__(self):
         return super(Rational, self).__hash__()
 
-    def factors(self, limit=None, verbose=False):
+    def factors(self, limit=None, use_trial=True,
+                                  use_rho=False,
+                                  use_pm1=False,
+                                  verbose=False):
         """A wrapper to factorint which return factors of self that are
-        smaller than limit (or cheap to compute)."""
+        smaller than limit (or cheap to compute). Special methods of
+        factoring are disabled by default so that only trial division is used.
+        """
         from sympy.ntheory import factorint
 
-        f = factorint(self.p, limit=limit, verbose=verbose).copy()
-        for p, e in factorint(self.q, limit=limit, verbose=verbose).items():
+        f = factorint(self.p, limit=limit,
+                              use_trial=use_trial,
+                              use_rho=use_rho,
+                              use_pm1=use_pm1,
+                              verbose=verbose).copy()
+        for p, e in factorint(self.q, limit=limit,
+                              use_trial=use_trial,
+                              use_rho=use_rho,
+                              use_pm1=use_pm1,
+                              verbose=verbose).items():
             try: f[p] += -e
             except KeyError: f[p] = -e
 
@@ -861,8 +903,6 @@ class Rational(Number):
 
     def _sage_(self):
         import sage.all as sage
-        #XXX: fixme, this should work:
-        #return sage.Integer(self[0])/sage.Integer(self[1])
         return sage.Integer(self.p)/sage.Integer(self.q)
 
 # int -> Integer
@@ -975,14 +1015,6 @@ class Integer(Rational):
         else:
             return Integer(-self.p)
 
-    def __mod__(self, other):
-        if isinstance(other, Integer) or not isinstance(other, Rational):
-            return Integer(self.p % other)
-        return Rational.__mod__(self, other)
-
-    def __rmod__(self, other):
-        return Integer(other % self.p)
-
     def __divmod__(self, other):
         return divmod(self.p, other.p)
 
@@ -1028,6 +1060,20 @@ class Integer(Rational):
         elif isinstance(b, Integer):
             return Integer(b.p * a.p)
         return Rational.__mul__(a, b)
+
+    def __mod__(a, b):
+        if isinstance(b, (int, long)):
+            return Integer(a.p % b)
+        elif isinstance(b, Integer):
+            return Integer(a.p % b.p)
+        return Rational.__mod__(a, b)
+
+    def __rmod__(a, b):
+        if isinstance(b, (int, long)):
+            return Integer(b % a.p)
+        elif isinstance(b, Integer):
+            return Integer(b.p % a.p)
+        return Rational.__rmod__(a, b)
 
     def __eq__(a, b):
         if isinstance(b, (int, long)):
@@ -1372,8 +1418,8 @@ class NegativeOne(IntegerConstant):
         if e.is_odd: return S.NegativeOne
         if e.is_even: return S.One
         if isinstance(e, Number):
-            if isinstance(e, Real):
-                return Real(-1.0) ** e
+            if isinstance(e, Float):
+                return Float(-1.0) ** e
             if e is S.NaN:
                 return S.NaN
             if e is S.Infinity  or  e is S.NegativeInfinity:
@@ -1383,7 +1429,7 @@ class NegativeOne(IntegerConstant):
             if isinstance(e, Rational):
                 if e.q == 2:
                     return S.ImaginaryUnit ** Integer(e.p)
-                q = Real(e).floor()
+                q = Float(e).floor()
                 if q:
                     q = Integer(q)
                     return b ** q * b ** (e - q)
@@ -1525,6 +1571,10 @@ class NegativeInfinity(RationalConstant):
     def _as_mpf_val(self, prec):
         return mlib.fninf
 
+    def _sage_(self):
+        import sage.all as sage
+        return -(sage.oo)
+
     def __gt__(a, b):
         return False
 
@@ -1540,7 +1590,6 @@ class NegativeInfinity(RationalConstant):
 
     def __le__(a, b):
         return True
-
 
 class NaN(RationalConstant):
     __metaclass__ = Singleton
@@ -1581,6 +1630,7 @@ class ComplexInfinity(AtomicExpr):
     is_comparable = None
     is_bounded = False
     is_real = None
+    is_number = True
 
     __slots__ = []
 
@@ -1616,6 +1666,7 @@ class NumberSymbol(AtomicExpr):
     is_comparable = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
@@ -1631,7 +1682,7 @@ class NumberSymbol(AtomicExpr):
         """
 
     def _eval_evalf(self, prec):
-        return Real._new(self._as_mpf_val(prec), prec)
+        return Float._new(self._as_mpf_val(prec), prec)
 
     def __eq__(self, other):
         try:
@@ -1844,6 +1895,7 @@ class ImaginaryUnit(AtomicExpr):
     is_imaginary = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
@@ -1895,15 +1947,37 @@ I = S.ImaginaryUnit
 try:
     # fractions is only available for python 2.6+
     import fractions
+
     def sympify_fractions(f):
         return Rational(f.numerator, f.denominator)
+
     converter[fractions.Fraction] = sympify_fractions
 except ImportError:
     pass
 
+try:
+    import gmpy
+
+    def sympify_mpz(x):
+        return Integer(long(x))
+
+    def sympify_mpq(x):
+        return Rational(long(x.numer()), long(x.denom()))
+
+    converter[type(gmpy.mpz(1))] = sympify_mpz
+    converter[type(gmpy.mpq(1, 2))] = sympify_mpq
+except ImportError:
+    pass
+
+def sympify_mpmath(x):
+    return Expr._from_mpmath(x, x.context.prec)
+
+converter[mpnumeric] = sympify_mpmath
+
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))
     return real + S.ImaginaryUnit * imag
+
 converter[complex] = sympify_complex
 
 _intcache[0] = S.Zero

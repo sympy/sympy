@@ -11,8 +11,7 @@ from sympy.polys.polyerrors import (
     PolificationFailed, ComputationFailed,
     MultivariatePolynomialError)
 
-from sympy.utilities import (
-    all, any, numbered_symbols, take)
+from sympy.utilities import numbered_symbols, take
 
 from sympy.core import S, Basic, Add, Mul
 
@@ -29,13 +28,13 @@ def symmetrize(F, *gens, **args):
     (-2*x*y + (x + y)**2, 0)
 
     >>> symmetrize(x**2 + y**2, formal=True)
-    (-2*s2 + s1**2, 0, [(s1, x + y), (s2, x*y)])
+    (s1**2 - 2*s2, 0, [(s1, x + y), (s2, x*y)])
 
     >>> symmetrize(x**2 - y**2)
     (-2*x*y + (x + y)**2, -2*y**2)
 
     >>> symmetrize(x**2 - y**2, formal=True)
-    (-2*s2 + s1**2, -2*y**2, [(s1, x + y), (s2, x*y)])
+    (s1**2 - 2*s2, -2*y**2, [(s1, x + y), (s2, x*y)])
 
     """
     allowed_flags(args, ['formal', 'symbols'])
@@ -147,18 +146,18 @@ def horner(f, *gens, **args):
     >>> from sympy.abc import x, y, a, b, c, d, e
 
     >>> horner(9*x**4 + 8*x**3 + 7*x**2 + 6*x + 5)
-    5 + x*(6 + x*(7 + x*(8 + 9*x)))
+    x*(x*(x*(9*x + 8) + 7) + 6) + 5
 
     >>> horner(a*x**4 + b*x**3 + c*x**2 + d*x + e)
-    e + x*(d + x*(c + x*(b + a*x)))
+    e + x*(d + x*(c + x*(a*x + b)))
 
     >>> f = 4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y
 
     >>> horner(f, wrt=x)
-    x*(y*(1 + 2*y) + x*y*(2 + 4*y))
+    x*(x*y*(4*y + 2) + y*(2*y + 1))
 
     >>> horner(f, wrt=y)
-    y*(x*(1 + 2*x) + x*y*(2 + 4*x))
+    y*(x*y*(4*x + 2) + x*(2*x + 1))
 
     """
     allowed_flags(args, [])
@@ -195,9 +194,9 @@ def interpolate(data, x):
     >>> interpolate([(1, 1), (2, 4), (3, 9)], x)
     x**2
     >>> interpolate([(1, 2), (2, 5), (3, 10)], x)
-    1 + x**2
+    x**2 + 1
     >>> interpolate({1: 2, 2: 5, 3: 10}, x)
-    1 + x**2
+    x**2 + 1
 
     """
     n = len(data)

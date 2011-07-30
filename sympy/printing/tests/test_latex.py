@@ -1,7 +1,7 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
         Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
         Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
-        Limit, oo, Poly, Real)
+        Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -21,10 +21,10 @@ def test_printmethod():
     assert latex(R(x)) == "foo"
 
 def test_latex_basic():
-    assert latex(1+x) == "1 + x"
+    assert latex(1+x) == "x + 1"
     assert latex(x**2) == "x^{2}"
-    assert latex(x**(1+x)) == "x^{1 + x}"
-    assert latex(x**3+x+1+x**2) == "1 + x + x^{2} + x^{3}"
+    assert latex(x**(1+x)) == "x^{x + 1}"
+    assert latex(x**3+x+1+x**2) == "x^{3} + x^{2} + x + 1"
 
     assert latex(2*x*y) == "2 x y"
     assert latex(2*x*y, mul_symbol='dot') == r"2 \cdot x \cdot y"
@@ -41,10 +41,10 @@ def test_latex_basic():
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
 
-def test_latex_Real():
-    assert latex(Real(1.0e100)) == r"1.0 \times 10^{100}"
-    assert latex(Real(1.0e-100)) == r"1.0 \times 10^{-100}"
-    latex(Real(1.0e-100), mul_symbol="dot") == r"1.0 \cdot 10^{-100}"
+def test_latex_Float():
+    assert latex(Float(1.0e100)) == r"1.0 \times 10^{100}"
+    assert latex(Float(1.0e-100)) == r"1.0 \times 10^{-100}"
+    latex(Float(1.0e-100), mul_symbol="dot") == r"1.0 \cdot 10^{-100}"
     assert latex(1.0*oo) == r"\infty"
     assert latex(-1.0*oo) == r"- \infty"
 
@@ -99,6 +99,38 @@ def test_latex_functions():
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\operatorname{\Gamma}\left(x\right)"
     assert latex(Order(x)) == r"\operatorname{\mathcal{O}}\left(x\right)"
+    assert latex(lowergamma(x, y)) == r'\operatorname{\gamma}\left(x, y\right)'
+    assert latex(uppergamma(x, y)) == r'\operatorname{\Gamma}\left(x, y\right)'
+
+def test_hyper_printing():
+    from sympy import pi, Tuple
+    from sympy.abc import x, z
+
+    assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
+                         (0,1), Tuple(1, 2, 3/pi),z)) == \
+             r'{G_{4, 5}^{2, 3}\left.\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \right| {z} \right)}'
+    assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(),z)) == \
+             r'{G_{1, 1}^{1, 0}\left.\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \right| {z} \right)}'
+    assert latex(hyper((x, 2), (3,), z)) == \
+               r'{{}_{2}F_{1}\left.\left(\begin{matrix} x, 2 ' \
+               r'\\ 3 \end{matrix}\right| {z} \right)}'
+    assert latex(hyper(Tuple(), Tuple(1), z)) == \
+               r'{{}_{0}F_{1}\left.\left(\begin{matrix}  ' \
+               r'\\ 1 \end{matrix}\right| {z} \right)}'
+
+def test_latex_bessel():
+    from sympy.functions.special.bessel import (besselj, bessely, besseli,
+            besselk, hankel1, hankel2, jn, yn)
+    from sympy.abc import z
+    assert latex(besselj(n, z**2)**k) == r'J^{k}_{n}\left(z^{2}\right)'
+    assert latex(bessely(n, z)) == r'Y_{n}\left(z\right)'
+    assert latex(besseli(n, z)) == r'I_{n}\left(z\right)'
+    assert latex(besselk(n, z)) == r'K_{n}\left(z\right)'
+    assert latex(hankel1(n, z**2)**2) == \
+              r'\left(H^{(1)}_{n}\left(z^{2}\right)\right)^{2}'
+    assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
+    assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
+    assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
 
 def test_latex_brackets():
     assert latex((-1)**x) == r"\left(-1\right)^{x}"
@@ -107,17 +139,17 @@ def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
     r"\frac{\partial}{\partial x} x^{3}"
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
-    r"\frac{\partial}{\partial x}\left(\operatorname{sin}\left(x\right) + x^{2}\right)"
+    r"\frac{\partial}{\partial x}\left(x^{2} + \operatorname{sin}\left(x\right)\right)"
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"\int \operatorname{log}\left(x\right)\,dx"
     assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\,dx"
     assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\,dx"
-    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} y x^{2}\,dx dy"
+    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\,dx dy"
     assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*') \
-        == r"\begin{equation*}\int\int\limits_{0}^{1} y x^{2}\,dx dy\end{equation*}"
+        == r"\begin{equation*}\int\int\limits_{0}^{1} x^{2} y\,dx dy\end{equation*}"
     assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*', itex=True) \
-        == r"$$\int\int_{0}^{1} y x^{2}\,dx dy$$"
+        == r"$$\int\int_{0}^{1} x^{2} y\,dx dy$$"
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
@@ -134,7 +166,7 @@ def test_latex_union():
     assert latex(Union(Interval(0, 1), Interval(2, 3))) == \
         r"\left[0, 1\right] \cup \left[2, 3\right]"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
-        r"\left\{1, 2\right\} \cup \left[3, 4\right]"
+        r"\left[3, 4\right] \cup \left\{1, 2\right\}"
 
 def test_latex_sum():
     assert latex(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
@@ -142,7 +174,7 @@ def test_latex_sum():
     assert latex(Sum(x**2, (x, -2, 2))) == \
         r"\sum_{x=-2}^{2} x^{2}"
     assert latex(Sum(x**2 + y, (x, -2, 2))) == \
-        r"\sum_{x=-2}^{2} \left(y + x^{2}\right)"
+        r"\sum_{x=-2}^{2} \left(x^{2} + y\right)"
 
 def test_latex_limits():
     assert latex(Limit(x, x, oo)) == r"\lim_{x \to \infty} x"
@@ -208,16 +240,16 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
-    assert latex(M) == '\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
-                       'x\\end{smallmatrix}\\right)'
+    assert latex(M) == '\\left(\\begin{smallmatrix}x + 1 & y\\\\y & x -'\
+                       '1\\end{smallmatrix}\\right)'
     settings = {'mat_str' : 'bmatrix'}
-    assert latex(M, **settings) == '\\left(\\begin{bmatrix}1 + x & y\\\\y &'\
-           ' -1 + x\\end{bmatrix}\\right)'
+    assert latex(M, **settings) == '\\left(\\begin{bmatrix}x + 1 & y\\\\y &'\
+           ' x -1\\end{bmatrix}\\right)'
     settings['mat_delim'] = None
-    assert latex(M, **settings) == '\\begin{bmatrix}1 + x & y\\\\y & -1 + '\
-                       'x\\end{bmatrix}'
-    assert latex(M) == '\\left(\\begin{smallmatrix}1 + x & y\\\\y & -1 + '\
-                       'x\\end{smallmatrix}\\right)'
+    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x -1'\
+                       '\\end{bmatrix}'
+    assert latex(M) == '\\left(\\begin{smallmatrix}x + 1 & y\\\\y & x -1'\
+                       '\\end{smallmatrix}\\right)'
 
 def test_latex_mul_symbol():
     assert latex(4*4**x, mul_symbol='times') == "4 \\times 4^{x}"
@@ -229,7 +261,7 @@ def test_latex_mul_symbol():
     assert latex(4*x, mul_symbol='ldot') == "4 \,.\, x"
 
 def test_latex_Poly():
-    assert latex(Poly(x**2 + 2 * x, x)) == r"2 x + x^{2}"
+    assert latex(Poly(x**2 + 2 * x, x)) == r"x^{2} + 2 x"
 
 def test_latex_issue1282():
     y = 4*4**log(2)
@@ -257,6 +289,18 @@ def test_latex_issue1477():
     assert latex(Symbol("alpha_alpha")) == r"\alpha_{\alpha}"
     assert latex(Symbol("alpha^aleph")) == r"\alpha^{\aleph}"
     assert latex(Symbol("alpha__aleph")) == r"\alpha^{\aleph}"
+
+def test_latex_pow_fraction():
+    x = Symbol('x')
+    # Testing exp
+    assert 'e^{-x}' in latex(exp(-x)/2).replace(' ', '') # Remove Whitespace
+
+    # Testing just e^{-x} in case future changes alter behavior of muls or fracs
+    # In particular current output is \frac{1}{2}e^{- x} but perhaps this will
+    # change to \frac{e^{-x}}{2}
+
+    # Testing general, non-exp, power
+    assert '3^{-x}' in latex(3**-x/2).replace(' ', '')
 
 def test_latex_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4

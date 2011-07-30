@@ -71,23 +71,13 @@ class Add(AssocOp):
 
             # Mul([...])
             elif o.is_Mul:
-                c = o.args[0]
+                c, s = o.as_coeff_Mul()
 
                 # 3*...
-                if c.is_Number:
-                    # unevaluated 2-arg Mul
-                    if len(o.args) == 2 and o.args[1].is_Add and o.args[1].is_commutative:
-                        seq.extend([c*a for a in o.args[1].args])
-                        continue
-
-                    if c is S.One:
-                        s = o
-                    else:
-                        s = o.as_two_terms()[1]
-
-                else:
-                    c = S.One
-                    s = o
+                # unevaluated 2-arg Mul
+                if c.is_Number and s.is_Add:
+                    seq.extend([c*a for a in s.args])
+                    continue
 
             # everything else
             else:
@@ -193,6 +183,9 @@ class Add(AssocOp):
         else:
             return newseq, [], None
 
+    @classmethod
+    def class_key(cls):
+        return 3, 1, cls.__name__
 
     @cacheit
     def as_coeff_add(self, *deps):
@@ -210,12 +203,9 @@ class Add(AssocOp):
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
-    @cacheit
-    def as_coeff_mul(self, *deps):
-        # -2 + 2 * a -> -1, 2-2*a
-        if self.args[0].is_Rational and self.args[0].is_negative:
-            return S.NegativeOne, (-self,)
-        return Expr.as_coeff_mul(self, *deps)
+    # Note, we intentionally do not implement Add.as_coeff_mul().  Rather, we
+    # let Expr.as_coeff_mul() just always return (S.One, self) for an Add.  See
+    # issue 2425.
 
     def _eval_derivative(self, s):
         return Add(*[f.diff(s) for f in self.args])
@@ -276,10 +266,10 @@ class Add(AssocOp):
                      for i in r]), Mul(*denoms)
 
     def _eval_is_polynomial(self, syms):
-        for term in self.args:
-            if not term._eval_is_polynomial(syms):
-                return False
-        return True
+        return all(term._eval_is_polynomial(syms) for term in self.args)
+
+    def _eval_is_rational_function(self, syms):
+        return all(term._eval_is_rational_function(syms) for term in self.args)
 
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr('is_real')
@@ -546,7 +536,7 @@ class Add(AssocOp):
         (2, x + 2*y)
 
         >>> (2*x/3 + 4*y/9).primitive()
-        (2/9, 2*y + 3*x)
+        (2/9, 3*x + 2*y)
 
         >>> (2*x/3 + 4.1*y).primitive()
         (1, 2*x/3 + 4.1*y)

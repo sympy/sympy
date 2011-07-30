@@ -1,4 +1,4 @@
-from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Real, \
+from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Float, \
         Rational, exp, I, Integer, diff, Mul, var, oo, S, Add, Poly
 from sympy.utilities.pytest import XFAIL
 
@@ -302,7 +302,7 @@ def test_floats():
 
     e = cos(0.12345, evaluate=False)**2
     r = e.match(a*cos(b)**2)
-    assert r == {a: 1, b: Real(0.12345)}
+    assert r == {a: 1, b: Float(0.12345)}
 
 def test_Derivative_bug1():
     f = Function("f")

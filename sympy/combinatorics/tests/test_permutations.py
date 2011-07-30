@@ -1,23 +1,38 @@
-from sympy.combinatorics.permutations import Permutation, josephus
+from sympy.combinatorics.permutations import Permutation
 
 def test_Permutation():
     p = Permutation([2,5,1,6,3,0,4])
     q = Permutation([[1,4,5],[2,0,6],[3]])
 
-    assert p.is_ArrayForm
-    assert q.is_CyclicForm
     assert q.cycles == 3
     assert p*q == Permutation([4, 6, 1, 2, 5, 3, 0])
     assert q*p == Permutation([6, 5, 3, 0, 2, 4, 1])
 
-    assert q.to_array() == Permutation([3, 1, 4, 5, 0, 6, 2])
-    assert p.to_cycles() == Permutation([[3, 6, 4], [0, 2, 1, 5]])
+    assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
+    assert p.cyclic_form == [[3, 6, 4], [0, 2, 1, 5]]
 
     assert p**13 == p
-    assert q**2 == Permutation([[3, 6, 4], [1], [0, 5, 2]])
+    assert q**2 == Permutation([5, 1, 0, 6, 3, 2, 4])
+
+    assert p+q == Permutation([5, 6, 3, 1, 2, 4, 0])
+    assert q+p == p+q
+
+    assert p-q == Permutation([6, 3, 5, 1, 2, 4, 0])
+    assert q-p == Permutation([1, 4, 2, 6, 5, 3, 0])
+
+    a = p-q
+    b = q-p
+    assert (a+b).is_Identity
 
     assert len(p.atoms()) == 7
     assert q.atoms() == set([0, 1, 2, 3, 4, 5, 6])
+
+    assert p.inversion_vector == [2, 4, 1, 3, 1, 0]
+    assert q.inversion_vector == [3, 1, 2, 2, 0, 1]
+
+    assert Permutation.from_inversion_vector(p.inversion_vector) == p
+    assert Permutation.from_inversion_vector(q.inversion_vector).array_form\
+           == q.array_form
 
     s = Permutation([0])
 
@@ -39,7 +54,10 @@ def test_Permutation():
 
     assert p.rank_nonlex() == 14830
     assert q.rank_nonlex() == 8441
-    assert q.unrank_nonlex(41) == Permutation([4, 2, 3, 5, 1, 0, 6])
+    assert Permutation.unrank_nonlex(7, 41) == Permutation([4, 2, 3, 5, 1, 0, 6])
+
+    assert q.rank == 870
+    assert p.rank == 1964
 
     p = Permutation([1,5,2,0,3,6,4])
     q = Permutation([[2,3,5],[1,0,6],[4]])
@@ -78,6 +96,13 @@ def test_Permutation():
     assert q.runs() == [[4], [2, 3, 5], [0, 6], [1]]
     assert r.runs() == [[3], [2], [1], [0]]
 
+    assert p.index == 8
+    assert q.index == 8
+    assert r.index == 3
+
+    assert q.rank_trotterjohnson == 259
+    assert p.rank_trotterjohnson == 1087
+
     assert p.get_precedence_distance(q) == q.get_precedence_distance(p)
     assert p.get_adjacency_distance(q) == p.get_adjacency_distance(q)
     assert p.get_positional_distance(q) == p.get_positional_distance(q)
@@ -88,5 +113,11 @@ def test_Permutation():
     assert p.get_positional_distance(q) == 8
 
 def test_josephus():
-    assert josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
-    assert josephus(1, 5, 1).is_Identity
+    assert Permutation.josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
+    assert Permutation.josephus(1, 5, 1).is_Identity
+
+def test_unrank_lex():
+    assert Permutation.unrank_lex(5, 10).rank == 10
+    assert Permutation.unrank_lex(15, 225).rank == 225
+    assert Permutation.unrank_lex(10, 0).is_Identity
+    assert Permutation.unrank_lex(4, 23).array_form == [0, 3, 2, 1]

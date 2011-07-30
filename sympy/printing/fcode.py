@@ -245,8 +245,8 @@ class FCodePrinter(CodePrinter):
         p, q = int(expr.p), int(expr.q)
         return "%d.0d0/%d.0d0" % (p, q)
 
-    def _print_Real(self, expr):
-        printed = CodePrinter._print_Real(self, expr)
+    def _print_Float(self, expr):
+        printed = CodePrinter._print_Float(self, expr)
         e = printed.find('e')
         if e > -1:
             return "%sd%s" % (printed[:e], printed[e+1:])
@@ -339,7 +339,6 @@ class FCodePrinter(CodePrinter):
         inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
         dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
 
-        from sympy.utilities.iterables import any  # 2.4 support
         increase = [ int(any(map(line.startswith, inc_keyword))) for line in code ]
         decrease = [ int(any(map(line.startswith, dec_keyword))) for line in code ]
         continuation = [ int(any(map(line.endswith, ['&', '&\n']))) for line in code ]

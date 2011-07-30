@@ -3,7 +3,6 @@ import pickle
 import types
 from sympy.utilities.pytest import XFAIL
 
-from sympy.core.assumptions import AssumeMeths
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta, BasicType, ClassRegistry
 from sympy.core.singleton import SingletonRegistry
@@ -11,7 +10,7 @@ from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
         GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
         NegativeInfinity,  NegativeOne, Number, NumberSymbol, One, Pi,\
-        Rational, Real, Zero
+        Rational, Float, Zero
 from sympy.core.relational import Equality, Inequality, Relational,\
         StrictInequality, Unequality
 from sympy.core.add import Add
@@ -24,12 +23,15 @@ from sympy.core.multidimensional import vectorize
 from sympy.core.cache import Memoizer
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
+from sympy.core.compatibility import callable
+
 from sympy import symbols
 
 
 def check(a, check_attr = True):
     """ Check that pickling and copying round-trips.
     """
+    #FIXME-py3k: Add support for protocol 3.
     for protocol in [0, 1, 2, copy.copy, copy.deepcopy]:
         if callable(protocol):
             if isinstance(a, BasicType):
@@ -59,10 +61,6 @@ def check(a, check_attr = True):
 
 #================== core =========================
 
-def test_core_assumptions():
-    for c in (AssumeMeths, AssumeMeths()):
-        check(c)
-
 def test_core_basic():
     for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicMeta("test"),
               BasicType, BasicType("test"), ClassRegistry, ClassRegistry(),
@@ -82,7 +80,7 @@ def test_core_numbers():
               Integer, Integer(2), NaN, NaN(), NegativeInfinity,
               NegativeInfinity(), NegativeOne, NegativeOne(), Number, Number(15),
               NumberSymbol, NumberSymbol(), One, One(), Pi, Pi(), Rational,
-              Rational(1,2), Real, Real("1.2"), Zero, Zero()):
+              Rational(1,2), Float, Float("1.2"), Zero, Zero()):
         check(c)
 
 def test_core_relational():
@@ -209,13 +207,14 @@ def test_integrals():
         check(c)
 
 #================== matrices ====================
-from sympy.matrices.matrices import Matrix, SMatrix
+from sympy.matrices.matrices import Matrix, SparseMatrix
 
 def test_matrices():
-    for c in (Matrix, Matrix([1,2,3]), SMatrix, SMatrix([[1,2],[3,4]])):
+    for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
+        #FIXME-py3k: This raises sympy.matrices.matrices.ShapeError
         check(c)
 
-#================== ntheorie ====================
+#================== ntheory =====================
 from sympy.ntheory.generate import Sieve
 
 def test_ntheory():
@@ -362,6 +361,9 @@ def test_printing():
     for c in (LatexPrinter, LatexPrinter(), MathMLPrinter,
               PrettyPrinter, prettyForm, stringPict, stringPict("a"),
               Printer, Printer(), PythonPrinter, PythonPrinter()):
+        #FIXME-py3k: sympy/printing/printer.py", line 220, in order
+        #FIXME-py3k: return self._settings['order']
+        #FIXME-py3k: KeyError: 'order'
         check(c)
 
 @XFAIL

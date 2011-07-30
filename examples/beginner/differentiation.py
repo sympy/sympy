@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Differentiation example
 
 Demonstrates some differentiation operations.
