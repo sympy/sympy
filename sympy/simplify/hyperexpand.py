@@ -60,6 +60,9 @@ from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
 from sympy.functions.special.hyper import hyper
 from sympy import SYMPY_DEBUG
 
+from sympy.utilities.timeutils import timethis
+timeit = timethis('meijerg')
+
 def add_formulae(formulae):
     """ Create our knowledge base.
         Leave this at the top for easy reference. """
@@ -1886,6 +1889,7 @@ def hyperexpand_special(ap, bq, z):
     return hyper(ap, bq, z_)
 
 collection = None
+@timeit
 def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     """
     Try to find an expression for the hypergeometric function
@@ -2089,6 +2093,7 @@ def devise_plan_meijer(fro, to, z):
     return ops
 
 meijercollection = None
+@timeit
 def _meijergexpand(iq, z0, allow_hyper=False):
     """
     Try to find an expression for the Meijer G function specified
@@ -2155,6 +2160,12 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         iq = IndexQuadruple(an, bm, ap, bq)
         _, pbm, pap, _ = iq.compute_buckets()
         if not can_do(pbm, pap):
+            return S(0), False
+
+        cond = len(an) + len(ap) < len(bm) + len(bq)
+        if len(an) + len(ap) == len(bm) + len(bq):
+            cond = abs(z) < 1
+        if cond is False:
             return S(0), False
 
         res = S(0)
@@ -2238,9 +2249,6 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
                 res += C*hyp
 
-        cond = len(an) + len(ap) < len(bm) + len(bq)
-        if len(an) + len(ap) == len(bm) + len(bq):
-            cond = abs(z) < 1
         return res, cond
 
     t = Dummy('t')

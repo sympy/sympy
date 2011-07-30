@@ -213,6 +213,9 @@ def _create_lookup_table(table):
 # First some helper functions.
 ####################################################################
 
+from sympy.utilities.timeutils import timethis
+timeit = timethis('meijerg')
+
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
     if not f.has(x):
@@ -259,7 +262,7 @@ def _get_coeff_exp(expr, x):
 
 def _exponents(expr, x):
     """
-    Find the exponents of `x` in `expr`.
+    Find the exponents of `x` (not including zero) in `expr`.
 
     >>> from sympy.integrals.meijerint import _exponents
     >>> from sympy.abc import x, y
@@ -352,6 +355,27 @@ def _split_mul(f, x):
 
     return fac, po, g
 
+def _mul_args(f):
+    """
+    Return a list `L` such that Mul(*L) == f.
+    If f is not a Mul or Pow, L=[f].
+    If f=g**n for an integer n, L=[g]*n.
+    If f is a Mul, L comes from applying _mul_args to all factors of f.
+    """
+    args = Mul.make_args(f)
+    gs = []
+    for g in args:
+        if g.is_Pow and g.exp.is_Integer:
+            n = g.exp
+            base = g.base
+            if n < 0:
+                n = -n
+                base = 1/base
+            gs += [base]*n
+        else:
+            gs.append(g)
+    return gs
+
 def _mul_as_two_parts(f):
     """
     Find all the ways to split f into a product of two terms.
@@ -365,19 +389,7 @@ def _mul_as_two_parts(f):
     """
     from sympy.core.compatibility import combinations
 
-    args = Mul.make_args(f)
-    gs = []
-    for g in args:
-        if g.is_Pow and g.exp.is_Integer:
-            n = g.exp
-            base = g.base
-            if n < 0:
-                n = -n
-                base = 1/base
-            gs += [base]*n
-        else:
-            gs.append(g)
-
+    gs = _mul_args(f)
     if len(gs) < 2:
         return None
 
@@ -1169,6 +1181,7 @@ def _int_inversion(g, x, t):
 
 _lookup_table = None
 @cacheit
+@timeit
 def _rewrite_single(f, x, recursive=True):
     """
     Try to rewrite f as a sum of single G functions of the form
@@ -1310,18 +1323,23 @@ def _rewrite2(f, x):
     Returns None on failure.
     """
     fac, po, g = _split_mul(f, x)
+    if any(_rewrite_single(expr, x, False) is None for expr in _mul_args(g)):
+        return None
     l = _mul_as_two_parts(g)
     if not l:
         return None
-    l.sort(key=lambda p: (len(_exponents(p[0], x)) + len(_exponents(p[1], x)),
-                          len(_functions(p[0], x)) + len(_functions(p[1], x))))
-    for fac1, fac2 in l:
-        g1 = _rewrite_single(fac1, x)
-        g2 = _rewrite_single(fac2, x)
-        if g1 and g2:
-            cond = And(g1[1], g2[1])
-            if cond is not False:
-                return fac, po, g1[0], g2[0], cond
+    l.sort(key=lambda p: (max(len(_exponents(p[0], x)), len(_exponents(p[1], x))),
+                          max(len(_functions(p[0], x)), len(_functions(p[1], x))),
+                          max(len(_find_splitting_points(p[0], x)),
+                              len(_find_splitting_points(p[1], x)))))
+    for recursive in [False, True]:
+        for fac1, fac2 in l:
+            g1 = _rewrite_single(fac1, x, recursive)
+            g2 = _rewrite_single(fac2, x, recursive)
+            if g1 and g2:
+                cond = And(g1[1], g2[1])
+                if cond is not False:
+                    return fac, po, g1[0], g2[0], cond
 
 def meijerint_indefinite(f, x):
     """
@@ -1385,6 +1403,7 @@ def _meijerint_indefinite_1(f, x):
     res = _my_unpolarify(Add(*expand_mul(res).as_coeff_add(x)[1]))
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
+@timeit
 def meijerint_definite(f, x, a, b):
     """
     Integrate ``f`` over the interval [``a``, ``b``], by rewriting it as a product
@@ -1458,6 +1477,12 @@ def meijerint_definite(f, x, a, b):
 
     if a == oo:
         return -meijerint_definite(f, x, b, oo)
+
+    if (a, b) == (0, oo):
+       # This is a common case - try it directly first.
+       res = _meijerint_definite_2(f, x)
+       if res is not None and not res[0].has(meijerg):
+           return res
 
     results = []
     if b == oo:
@@ -1569,6 +1594,7 @@ def _meijerint_definite_3(f, x):
 def _my_unpolarify(f):
     from sympy import unpolarify
     return _eval_cond(unpolarify(f))
+@timeit
 def _meijerint_definite_4(f, x, only_double=False):
     """
     Try to integrate f dx from zero to infinity.
