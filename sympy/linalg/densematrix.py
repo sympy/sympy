@@ -1,6 +1,7 @@
 #from __future__ import division
 
 import matrixutils
+import densematrix_tools
 from datamatrix import DataMatrix
 from sympy.core.sympify import sympify as sympy_simplify
 
@@ -51,9 +52,9 @@ class DenseMatrix(DataMatrix):
     @property
     def T(self):
         """
-        Matrix transposition.
+        matrix transposition.
 
-        >>> from sympy import Matrix, I
+        >>> from sympy import DenseMatrix, I
         >>> m=DenseMatrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
         [1, 2 + I]
@@ -76,7 +77,7 @@ class DenseMatrix(DataMatrix):
         """
         Hermite conjugation.
 
-        >>> from sympy import Matrix, I
+        >>> from sympy import DenseMatrix, I
         >>> m=Matrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
         [1, 2 + I]
@@ -90,7 +91,7 @@ class DenseMatrix(DataMatrix):
 
     def __getitem__(self,key):
         """
-        >>> from sympy import Matrix, I
+        >>> from sympy import DenseMatrix, I
         >>> m=Matrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
         [1, 2 + I]
@@ -109,7 +110,7 @@ class DenseMatrix(DataMatrix):
 
     def __setitem__(self, key, value):
         """
-        >>> from sympy import Matrix, I
+        >>> from sympy import DenseMatrix, I
         >>> m=Matrix(((1,2+I),(3,4)))
         >>> m  #doctest: +NORMALIZE_WHITESPACE
         [1, 2 + I]
@@ -131,9 +132,9 @@ class DenseMatrix(DataMatrix):
 
     def tolist(self):
         """
-        Return the Matrix converted in a python list.
+        Return the matrix converted in a python list.
 
-        >>> from sympy import Matrix
+        >>> from sympy import MDenseatrix
         >>> m=Matrix(3, 3, range(9))
         >>> m
         [0, 1, 2]
@@ -257,17 +258,13 @@ class DenseMatrix(DataMatrix):
         if not self.is_square:
             raise NonSquareMatrixError()
         if method == "GE":
-            from densematrix_tools import inverse_GE
-            return inverse_GE(self)
+            return densematrix_tools.inverse_GE(self)
         elif method == "LU":
-            from densematrix_tools import inverse_LU
-            return inverse_LU(self)
+            return densematrix_tools.inverse_LU(self)
         elif method == "ADJ":
-            from densematrix_tools import inverse_ADJ
-            return inverse_ADJ(self)
+            return denseatrix_tools.inverse_ADJ(self)
         elif method == "LDL" or method == "CH":
-            from densematrix_tools import inverse_solver
-            return inverse_solver(self, solver=method)
+            return densematrix_tools.inverse_solver(self, solver=method)
         else:
             raise ValueError("Inversion method unrecognized")
 
@@ -305,8 +302,8 @@ class DenseMatrix(DataMatrix):
 
     def row_insert(self, pos, mti):
         """
-        >>> from sympy import Matrix, zeros
-        >>> M = Matrix(3,3,lambda i,j: i+j)
+        >>> from sympy import DenseMatrix, zeros
+        >>> M = DenseMatrix(3,3,lambda i,j: i+j)
         >>> M
         [0, 1, 2]
         [1, 2, 3]
@@ -332,8 +329,8 @@ class DenseMatrix(DataMatrix):
 
     def col_insert(self, pos, mti):
         """
-        >>> from sympy import Matrix, zeros
-        >>> M = Matrix(3,3,lambda i,j: i+j)
+        >>> from sympy import DenseMatrix, zeros
+        >>> M = DenseMatrix(3,3,lambda i,j: i+j)
         >>> M
         [0, 1, 2]
         [1, 2, 3]
@@ -363,8 +360,8 @@ class DenseMatrix(DataMatrix):
 
     def submatrix(self, *args):
         """
-        >>> from sympy import Matrix
-        >>> m = Matrix(4,4,lambda i,j: i+j)
+        >>> from sympy import DenseMatrix
+        >>> m = DenseMatrix(4,4,lambda i,j: i+j)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
         [0, 1, 2, 3]
         [1, 2, 3, 4]
@@ -394,8 +391,8 @@ class DenseMatrix(DataMatrix):
     
     def applyfunc(self, f):
         """
-        >>> from sympy import Matrix
-        >>> m = Matrix(2,2,lambda i,j: i*2+j)
+        >>> from sympy import DenseMatrix
+        >>> m = DenseMatrix(2,2,lambda i,j: i*2+j)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
         [0, 1]
         [2, 3]
@@ -434,11 +431,9 @@ class DenseMatrix(DataMatrix):
         """
 
         if method == "bareis":
-            from densematrix_tools import det_bareis
-            return det_bareis(self)
+            return densematrix_tools.det_bareis(self)
         elif method == "berkowitz":
-            from densematrix_tools import berkowitz_det
-            return berkowitz_det(self)
+            return densematrix_tools.berkowitz_det(self)
         else:
             raise ValueError("Determinant method unrecognized")
 

@@ -138,7 +138,7 @@ def LUdecompositionFF(self):
             Vol 2, no. 1, pp. 67-80, 2008.
     """
     n, m = self.rows, self.cols
-    U, L, P = self[:,:], eye(n), eye(n)
+    U, L, P = self.copy(), eye(n), eye(n)
     DD = zeros(n) # store it smarter since it's just diagonal
     oldpivot = 1
 
@@ -162,4 +162,7 @@ def LUdecompositionFF(self):
         oldpivot = Ukk
     DD[n-1,n-1] = oldpivot
     return P, L, DD, U
+
+def eye():
+def zeros():
 
