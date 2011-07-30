@@ -48,7 +48,7 @@ copyright = '2008, 2009, 2010, 2011 SymPy Development Team'
 # The short X.Y version.
 version = '0.7.1'
 # The full version, including alpha/beta/rc tags.
-release = '0.7.1'
+release = '0.7.1-git'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
