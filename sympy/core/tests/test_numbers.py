@@ -309,6 +309,19 @@ def test_Infinity():
     assert 8/oo  == 0
     assert oo % 2 == nan
     assert 2 % oo == nan
+    assert oo/oo == nan
+    assert oo/-oo == nan
+    assert -oo/oo == nan
+    assert oo/0 == oo
+    assert -oo/0 == -oo
+    assert oo/2 == oo
+    assert -oo/2 == -oo
+    assert oo/-2 == -oo
+    assert -oo/-2 == oo
+    assert 2 + oo == oo
+    assert 2 - oo == -oo
+    assert S(2) + oo == oo
+    assert S(2) - oo == -oo
 
 def test_Infinity_2():
     x = Symbol('x')
@@ -341,6 +354,23 @@ def test_NaN():
     assert 1/nan  == nan
     assert 1/(-nan)  == nan
     assert 8/nan  == nan
+
+def test_special_numbers():
+    assert isinstance(S.NaN, Number) == True
+    assert isinstance(S.Infinity, Number) == True
+    assert isinstance(S.NegativeInfinity, Number) == True
+
+    assert S.NaN.is_number == True
+    assert S.Infinity.is_number == True
+    assert S.NegativeInfinity.is_number == True
+
+    assert isinstance(S.NaN, Rational) == False
+    assert isinstance(S.Infinity, Rational) == False
+    assert isinstance(S.NegativeInfinity, Rational) == False
+
+    assert S.NaN.is_rational != True
+    assert S.Infinity.is_rational != True
+    assert S.NegativeInfinity.is_rational != True
 
 def test_powers():
     assert integer_nthroot(1, 2) == (1, True)

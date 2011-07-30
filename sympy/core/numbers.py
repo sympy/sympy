@@ -177,6 +177,132 @@ class Number(AtomicExpr):
     def sort_key(self, order=None):
         return self.class_key(), (0, ()), (), self
 
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if isinstance(other, Number):
+            if self is S.NaN or other is S.NaN:
+                return S.NaN
+            elif self is S.Infinity:
+                if other is S.NegativeInfinity:
+                    return S.NaN
+                else:
+                    return S.Infinity
+            elif self is S.NegativeInfinity:
+                if other is S.Infinity:
+                    return S.NaN
+                else:
+                    return S.NegativeInfinity
+            elif other is S.Infinity:
+                if self is S.NegativeInfinity:
+                    return S.NaN
+                else:
+                    return S.Infinity
+            elif other is S.NegativeInfinity:
+                if self is S.Infinity:
+                    return S.NaN
+                else:
+                    return S.NegativeInfinity
+        return AtomicExpr.__add__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        if isinstance(other, Number):
+            if self is S.NaN or other is S.NaN:
+                return S.NaN
+            elif self is S.Infinity:
+                if other is S.Infinity:
+                    return S.NaN
+                else:
+                    return S.Infinity
+            elif self is S.NegativeInfinity:
+                if other is S.NegativeInfinity:
+                    return S.NaN
+                else:
+                    return S.NegativeInfinity
+            elif other is S.Infinity:
+                if self is S.Infinity:
+                    return S.NaN
+                else:
+                    return S.NegativeInfinity
+            elif other is S.NegativeInfinity:
+                if self is S.NegativeInfinity:
+                    return S.NaN
+                else:
+                    return S.Infinity
+        return AtomicExpr.__sub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            if self is S.NaN or other is S.NaN:
+                return S.NaN
+            elif self is S.Infinity:
+                if other is S.Zero:
+                    return S.NaN
+                elif other > 0:
+                    return S.Infinity
+                else:
+                    return S.NegativeInfinity
+            elif self is S.NegativeInfinity:
+                if other is S.Zero:
+                    return S.NaN
+                elif other > 0:
+                    return S.NegativeInfinity
+                else:
+                    return S.Infinity
+            elif other is S.Infinity:
+                if self is S.Zero:
+                    return S.NaN
+                elif self > 0:
+                    return S.Infinity
+                else:
+                    return S.NegativeInfinity
+            elif other is S.NegativeInfinity:
+                if self is S.Zero:
+                    return S.NaN
+                elif self > 0:
+                    return S.NegativeInfinity
+                else:
+                    return S.Infinity
+        return AtomicExpr.__mul__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        if isinstance(other, Number):
+            if self is S.NaN or other is S.NaN:
+                return S.NaN
+            elif self is S.Infinity:
+                if other is S.Infinity or other is S.NegativeInfinity:
+                    return S.NaN
+                elif other >= 0:
+                    return S.Infinity
+                else:
+                    return S.NegativeInfinity
+            elif self is S.NegativeInfinity:
+                if other is S.Infinity or other is S.NegativeInfinity:
+                    return S.NaN
+                elif other >= 0:
+                    return S.NegativeInfinity
+                else:
+                    return S.Infinity
+            elif other is S.Infinity:
+                if self is S.Infinity or self is S.NegativeInfinity:
+                    return S.NaN
+                elif self >= 0:
+                    return S.Infinity
+                else:
+                    return S.NegativeInfinity
+            elif other is S.NegativeInfinity:
+                if self is S.Infinity or self is S.NegativeInfinity:
+                    return S.NaN
+                elif self >= 0:
+                    return S.NegativeInfinity
+                else:
+                    return S.Infinity
+        return AtomicExpr.__div__(self, other)
+
+    __truediv__ = __div__
+
 
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' % (self.__class__.__name__))
@@ -750,7 +876,7 @@ class Rational(Number):
                         return S.NegativeOne ** ne * Rational(b.q, -b.p) ** ne
                 else:
                     return Rational(b.q, b.p) ** ne
-            if (e is S.Infinity):
+            if e is S.Infinity:
                 if b.p > b.q:
                     # (3/2)**oo -> oo
                     return S.Infinity
@@ -758,6 +884,8 @@ class Rational(Number):
                     # (-3/2)**oo -> oo + I*oo
                     return S.Infinity + S.Infinity * S.ImaginaryUnit
                 return S.Zero
+            if e is S.NegativeInfinity:
+                return Rational(b.q, b.p)**S.Infinity
             if isinstance(e, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
                 return Rational(b.p ** e.p, b.q ** e.p)
@@ -802,29 +930,13 @@ class Rational(Number):
             other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Float):
-                return bool(mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p==other.p and self.q==other.q)
-
-        return False    # Rational != non-Number
+                return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
+            elif isinstance(other, Rational):
+                return self.p == other.p and self.q == other.q
+        return False
 
     def __ne__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return True     # sympy != other
-        if isinstance(other, NumberSymbol):
-            if other.is_irrational: return True
-            return other.__ne__(self)
-        if isinstance(other, FunctionClass): #cos as opposed to cos(x)
-            return True
-        if other.is_comparable and not isinstance(other, Rational):
-            other = other.evalf()
-        if isinstance(other, Number):
-            if isinstance(other, Float):
-                return bool(not mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_))
-            return bool(self.p!=other.p or self.q!=other.q)
-
-        return True     # Rational != non-Number
+        return not self.__eq__(other)
 
     def __lt__(self, other):
         try:
@@ -1237,6 +1349,8 @@ class Integer(Rational):
                 return S.NaN
             # cases for 0 and 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit * S.Infinity
+        if e is S.NegativeInfinity:
+            return Rational(1, b)**S.Infinity
         if not isinstance(e, Number):
             # simplify when exp is even
             # (-2) ** k --> 2 ** k
@@ -1517,49 +1631,52 @@ class Half(RationalConstant):
         return S.Half
 
 
-class Infinity(RationalConstant):
+class Infinity(Number):
     __metaclass__ = Singleton
 
-    p = 1
-    q = 0
+    is_commutative   = True
+    is_positive      = True
+    is_bounded       = False
+    is_finite        = False
+    is_infinitesimal = False
+    is_integer       = None
+    is_rational      = None
+    is_odd           = None
 
     __slots__ = []
 
-    is_commutative = True
-    is_positive = True
-    is_bounded = False
-    is_finite   = False
-    is_infinitesimal = False
-    is_integer  = None
-    is_rational = None
-    is_odd = None
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
 
-    @staticmethod
-    def __abs__():
+    def __abs__(self):
         return S.Infinity
 
-    @staticmethod
-    def __neg__():
+    def __neg__(self):
         return S.NegativeInfinity
 
-    def _eval_power(b, e):
+    def _eval_power(base, exp):
         """
-        e is symbolic object but not equal to 0, 1
+        ``exp`` is symbolic object but not equal to 0 or 1.
 
-        oo ** nan -> nan
-        oo ** (-p) -> 0, p is number, oo
+        ================ ======= ==============================
+        Expression       Result  Notes
+        ================ ======= ==============================
+        ``oo ** nan``    ``nan``
+        ``oo ** -p``     ``0``   ``p`` is number, ``oo``
+        ================ ======= ==============================
+
         """
-        if e.is_positive:
+        if exp.is_positive:
             return S.Infinity
-        if e.is_negative:
+        if exp.is_negative:
             return S.Zero
-        if isinstance(e, Number):
-            if e is S.NaN:
-                return S.NaN
-        d = e.evalf()
-        if isinstance(d, Number):
-            return b ** d
-        return
+        if exp is S.NaN:
+            return S.NaN
+
+        n = exp.evalf()
+
+        if isinstance(n, Number):
+            return base**n
 
     def _as_mpf_val(self, prec):
         return mlib.finf
@@ -1568,74 +1685,83 @@ class Infinity(RationalConstant):
         import sage.all as sage
         return sage.oo
 
-    def __gt__(a, b):
-        if b is S.Infinity:
-            return False
-        return True
+    def __hash__(self):
+        return super(Infinity, self).__hash__()
 
-    def __lt__(a, b):
+    def __eq__(self, other):
+        return other is S.Infinity
+
+    def __ne__(self, other):
+        return other is not S.Infinity
+
+    def __lt__(self, other):
         return False
 
-    def __ge__(a, b):
-        return True
+    def __le__(self, other):
+        return other is S.Infinity
 
-    def __le__(a, b):
-        if b is S.Infinity:
-            return True
-        return False
+    def __gt__(self, other):
+        return other is not S.Infinity
+
+    def __ge__(self, other):
+        return True
 
     def __mod__(self, other):
         return S.NaN
 
     __rmod__ = __mod__
+
 oo = S.Infinity
 
-class NegativeInfinity(RationalConstant):
+class NegativeInfinity(Number):
     __metaclass__ = Singleton
 
-    p = -1
-    q = 0
+    is_commutative   = True
+    is_real          = True
+    is_positive      = False
+    is_bounded       = False
+    is_finite        = False
+    is_infinitesimal = False
+    is_integer       = None
+    is_rational      = None
 
     __slots__ = []
 
-    is_commutative = True
-    is_real = True
-    is_positive = False
-    is_bounded = False
-    is_finite = False
-    is_infinitesimal = False
-    is_integer  = None
-    is_rational = None
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
 
-    @staticmethod
-    def __abs__():
+    def __abs__(self):
         return S.Infinity
 
-    @staticmethod
-    def __neg__():
+    def __neg__(self):
         return S.Infinity
 
-    def _eval_power(b, e):
+    def _eval_power(base, exp):
         """
-        e is symbolic object but not equal to 0, 1
+        ``exp`` is symbolic object but not equal to 0 or 1.
 
-        (-oo) ** nan -> nan
-        (-oo) ** oo  -> nan
-        (-oo) ** (-oo) -> nan
-        (-oo) ** e -> oo, e is positive even integer
-        (-oo) ** o -> -oo, o is positive odd integer
+        ================ ======= ==============================
+        Expression       Result  Notes
+        ================ ======= ==============================
+        ``(-oo) ** nan`` ``nan``
+        ``(-oo) ** oo``  ``nan``
+        ``(-oo) ** -oo`` ``nan``
+        ``(-oo) ** e``   ``oo``  ``e`` is positive even integer
+        ``(-oo) ** o``   ``-oo`` ``o`` is positive odd integer
+        ================ ======= ==============================
 
         """
-        if isinstance(e, Number):
-            if (e is S.NaN)  or  (e is S.Infinity)  or  (e is S.NegativeInfinity):
+        if isinstance(exp, Number):
+            if (exp is S.NaN) or (exp is S.Infinity) or (exp is S.NegativeInfinity):
                 return S.NaN
-            if isinstance(e, Integer):
-                if e.is_positive:
-                    if e.is_odd:
-                        return S.NegativeInfinity
+
+            if isinstance(exp, Integer) and exp.is_positive:
+                if exp.is_odd:
+                    return S.NegativeInfinity
+                else:
                     return S.Infinity
-            return S.NegativeOne**e * S.Infinity ** e
-        return
+
+            return S.NegativeOne**exp*S.Infinity**exp
 
     def _as_mpf_val(self, prec):
         return mlib.fninf
@@ -1644,62 +1770,79 @@ class NegativeInfinity(RationalConstant):
         import sage.all as sage
         return -(sage.oo)
 
-    def __gt__(a, b):
-        return False
+    def __hash__(self):
+        return super(NegativeInfinity, self).__hash__()
 
-    def __lt__(a, b):
-        if b is S.NegativeInfinity:
-            return False
+    def __eq__(self, other):
+        return other is S.NegativeInfinity
+
+    def __ne__(self, other):
+        return other is not S.NegativeInfinity
+
+    def __lt__(self, other):
+        return other is not S.NegativeInfinity
+
+    def __le__(self, other):
         return True
 
-    def __ge__(a, b):
-        if b is S.NegativeInfinity:
-            return True
+    def __gt__(self, other):
         return False
 
-    def __le__(a, b):
-        return True
+    def __ge__(self, other):
+        return other is S.NegativeInfinity
 
-class NaN(RationalConstant):
+class NaN(Number):
     __metaclass__ = Singleton
 
-    p = 0
-    q = 0
-
     is_commutative = True
-    is_real = None
-    is_rational = None
-    is_integer  = None
-    is_comparable = False
-    is_finite   = None
-    is_bounded = None
-    #is_unbounded = False
-    is_zero     = None
-    is_prime    = None
-    is_positive = None
+    is_real        = None
+    is_rational    = None
+    is_integer     = None
+    is_comparable  = False
+    is_finite      = None
+    is_bounded     = None
+    #is_unbounded  = False
+    is_zero        = None
+    is_prime       = None
+    is_positive    = None
 
     __slots__ = []
+
+    def __new__(cls):
+        return AtomicExpr.__new__(cls)
 
     def _as_mpf_val(self, prec):
         return mlib.fnan
 
-    def _eval_power(b, e):
-        if e is S.Zero:
+    def _eval_power(base, exp):
+        if exp is S.Zero:
             return S.One
-        return b
+        else:
+            return base
 
     def _sage_(self):
         import sage.all as sage
         return sage.NaN
+
+    def __hash__(self):
+        return super(NaN, self).__hash__()
+
+    def __eq__(self, other):
+        return other is S.NaN
+
+    def __ne__(self, other):
+        return other is not S.NaN
+
 nan = S.NaN
 
 class ComplexInfinity(AtomicExpr):
     __metaclass__ = Singleton
+
     is_commutative = True
-    is_comparable = None
-    is_bounded = False
-    is_real = None
-    is_number = True
+    is_comparable  = None
+    is_bounded     = False
+    is_real        = None
+    is_number      = True
 
     __slots__ = []
 
@@ -1726,6 +1869,7 @@ class ComplexInfinity(AtomicExpr):
                     return S.ComplexInfinity
                 else:
                     return S.Zero
+
 zoo = S.ComplexInfinity
 
 class NumberSymbol(AtomicExpr):
