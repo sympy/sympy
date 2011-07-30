@@ -1,4 +1,4 @@
-from sympy.matrices.lilmatrix import LILMatrix
+from sympy.linalg import DenseMatrix
 
 # Search and replace matrix to matrix
 
@@ -89,14 +89,11 @@ def test_addition():
     C = matrix([[-1,0,-3],[0,0,-1],[0,0,0]])
     D = A + C
     assert D == matrix([[0,0,0],[0,0,0],[0,0,0]])
-    print D, D.mat
-    assert D.mat == [[],[],[]]
     # Add more ?
 
 def test_subtraction():
     A = matrix([[0,1,1],[4,7,-1],[1,0,-1]])
     assert A - A == matrix([[0,0,0],[0,0,0],[0,0,0]])
-    (A - A).mat == [[],[],[]]
     B = matrix([[-1,0,-3],[0,0,-1],[0,0,0]])
     assert A - B == matrix([[1,1,4],[4,7,0],[1,0,-1]])
 
@@ -137,34 +134,36 @@ def test_LDL():
     assert L == matrix([[1,0,0],[3/5,1,0],[-1/5,1/3,1]])
     assert D == matrix([[25,0,0],[0,9,0],[0,0,9]])
 
-def test_det_GE():
+def test_det_berkowitz():
+    from sympy.linalg.densematrix_tools import berkowitz_det as det
     A = matrix([[3,1,8],[2,-5,4],[-1,6,-2]])
-    assert A.det_GE() == 14
+    assert det(A) == 14
     A = matrix([[1,2,3],[4,5,6],[7,8,9]])
-    assert A.det_GE() == 0
+    assert det(A) == 0
     A = matrix([[1,5,3],[6,8,3],[3,5,6]])
-    assert A.det_GE() == -84
+    assert det(A) == -84
 
 def test_LUsolve():
+    from sympy.linalg.densematrix_tools import LUsolve
     A = matrix([[3,1,8],[2,-5,4],[-1,6,-2]])
-    B = matrix([14,21,7])
+    B = matrix([[14,21,7]])
     X = LUsolve(A, B)
     assert A * X == B
     assert X == matrix([83,5,-30])
 
 def test_cholesky_solve():
     A = matrix([[3,1,8],[2,-5,4],[-1,6,-2]])
-    B = matrix([14,21,7])
+    B = matrix([[14,21,7]])
     X = cholesky_solve(A, B)
     assert A * X == B
     assert X == matrix([83,5,-30])
 
 def test_LDLsolve():
     A = matrix([[3,1,8],[2,-5,4],[-1,6,-2]])
-    B = matrix([14,21,7])
+    B = matrix([[14,21,7]])
     X = LDLsolve(A, B)
     assert A * X == B
-    assert X == matrix([83,5,-30])
+    assert X == matrix([[83,5,-30]])
 
 # Merge the above three functions ?
     
