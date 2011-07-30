@@ -56,3 +56,6 @@ class DataMatrix(object):
                 mml += self[i,j].__mathml__()
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
+
+    def is_square(self):
+        return self.rows == self.cols

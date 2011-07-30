@@ -1,3 +1,4 @@
+from __future__ import division
 from sympy.linalg import DenseMatrix
 
 # Search and replace matrix to matrix
@@ -110,6 +111,7 @@ def test_matrix_multiplication():
     assert A * C == 4 * matrix([[1,0,0],[0,1,0],[0,0,1]])
 
 def test_LU():
+    from sympy.linalg.densematrix_tools import LUdecomposition as LUdecomp 
     A = matrix([[1,2,0],[3,6,-1],[1,2,1]])
     L, U = LUdecomp(A)
     assert L.is_lower()
@@ -119,13 +121,15 @@ def test_LU():
     assert U == matrix([[1,2,0],[0,0,-1],[0,0,0]])
 
 def test_cholesky():
+    from sympy.linalg.densematrix_tools import cholesky
     A = matrix([[25,15,-5],[15,18,0],[-5,0,11]])
     L = cholesky(A)
     assert L.is_lower()
     assert L * L.T == A
-    assert L == matrix([[5,3,-1],[0,3,1],[0,0,3]])
+    assert L == matrix([[5,0,0],[3,3,0],[-1,1,3]])
 
 def test_LDL():
+    from sympy.linalg.densematrix_tools import LDLdecomposition as LDLdecomp
     A = matrix([[25,15,-5],[15,18,0],[-5,0,11]])
     L, D = LDLdecomp(A)
     assert L.is_lower()
@@ -146,24 +150,25 @@ def test_det_berkowitz():
 def test_LUsolve():
     from sympy.linalg.densematrix_tools import LUsolve
     A = matrix([[3,1,8],[2,-5,4],[-1,6,-2]])
-    B = matrix([[14,21,7]])
+    B = matrix([[14,21,7]]).T
     X = LUsolve(A, B)
     assert A * X == B
-    assert X == matrix([83,5,-30])
+    assert X == matrix([[83,5,-30]]).T
 
 def test_cholesky_solve():
+    from sympy.linalg.densematrix_tools import cholesky_solve
     A = matrix([[3,1,8],[2,-5,4],[-1,6,-2]])
-    B = matrix([[14,21,7]])
+    B = matrix([[14,21,7]]).T
     X = cholesky_solve(A, B)
     assert A * X == B
-    assert X == matrix([83,5,-30])
+    assert X == matrix([[83,5,-30]]).T
 
 def test_LDLsolve():
+    from sympy.linalg.densematrix_tools import LDLsolve
     A = matrix([[3,1,8],[2,-5,4],[-1,6,-2]])
-    B = matrix([[14,21,7]])
+    B = matrix([[14,21,7]]).T
     X = LDLsolve(A, B)
     assert A * X == B
-    assert X == matrix([[83,5,-30]])
+    assert X == matrix([[83,5,-30]]).T
 
-# Merge the above three functions ?
     

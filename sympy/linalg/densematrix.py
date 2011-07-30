@@ -4,6 +4,7 @@ import matrixutils
 import densematrix_tools
 from datamatrix import DataMatrix
 from sympy.core.sympify import sympify as sympy_simplify
+from sympy.core.singleton import S
 
 class DenseMatrix(DataMatrix):
 
@@ -47,7 +48,7 @@ class DenseMatrix(DataMatrix):
 
         self.rows = rows
         self.cols = cols
-        self.mat = mat
+        self.mat = map(S, mat)
 
     @property
     def T(self):
@@ -103,10 +104,7 @@ class DenseMatrix(DataMatrix):
 
         """
         i, j = key
-        try:
-            return self.mat[i*self.cols + j]
-        except:
-            return self.submatrix(key)
+        return self.mat[i*self.cols + j]
 
     def __setitem__(self, key, value):
         """
@@ -359,6 +357,12 @@ class DenseMatrix(DataMatrix):
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
+    def permuteFwd(self, perm):
+        copy = self.copy()
+        for i in range(len(perm)):
+            copy.row_swap(perm[i][0], perm[i][1])
+        return copy
+
     def trace(self):
         return sum(self[i, i] for i in xrange(self.rows))
 
@@ -470,4 +474,91 @@ class DenseMatrix(DataMatrix):
         True
         """
         return any(a.has(*patterns) for a in self.mat)
+
+    def is_upper(self):
+        """
+        Check if matrix is an upper triangular matrix.
+
+        Example:
+        >>> from sympy import Matrix
+        >>> m = Matrix(2,2,[1, 0, 0, 1])
+        >>> m
+        [1, 0]
+        [0, 1]
+        >>> m.is_upper()
+        True
+
+        >>> m = Matrix(3,3,[5, 1, 9, 0, 4 , 6, 0, 0, 5])
+        >>> m
+        [5, 1, 9]
+        [0, 4, 6]
+        [0, 0, 5]
+        >>> m.is_upper()
+        True
+
+        >>> m = Matrix(2,3,[4, 2, 5, 6, 1, 1])
+        >>> m
+        [4, 2, 5]
+        [6, 1, 1]
+        >>> m.is_upper()
+        False
+
+        """
+        for i in xrange(1, self.rows):
+            for j in xrange(0, i):
+                if self[i,j] != 0:
+                    return False
+        return True
+
+    def is_lower(self):
+        """
+        Check if matrix is a lower triangular matrix.
+
+        Example:
+        >>> from sympy import Matrix
+        >>> m = Matrix(2,2,[1, 0, 0, 1])
+        >>> m
+        [1, 0]
+        [0, 1]
+        >>> m.is_lower()
+        True
+
+        >>> m = Matrix(3,3,[2, 0, 0, 1, 4 , 0, 6, 6, 5])
+        >>> m
+        [2, 0, 0]
+        [1, 4, 0]
+        [6, 6, 5]
+        >>> m.is_lower()
+        True
+
+        >>> from sympy.abc import x, y
+        >>> m = Matrix(2,2,[x**2 + y, y**2 + x, 0, x + y])
+        >>> m
+        [x**2 + y, x + y**2]
+        [       0,    x + y]
+        >>> m.is_lower()
+        False
+
+        """
+        for i in xrange(0, self.rows):
+            for j in xrange(i+1, self.cols):
+                if self[i, j] != 0:
+                    return False
+        return True
+
+    def is_symmetric(self):
+        for i in xrange(self.rows):
+            for j in xrange(i):
+                if self[i, j] != self[j, i]:
+                    return False
+        return True
+
+    def is_diagonal(self):
+        for i in xrange(self.rows):
+            for j in xrange(self.cols):
+                if i==j:
+                    continue
+                if self[i, j] != 0:
+                    return False
+        return True
 
