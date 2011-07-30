@@ -188,6 +188,9 @@ class StrPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]"%self.stringify(expr, ", ")
 
+    def _print_DataMatrix(self, expr):
+        return expr._format_str(lambda elem: self._print(elem))
+    
     def _print_Matrix(self, expr):
         return expr._format_str(lambda elem: self._print(elem))
 

@@ -443,6 +443,9 @@ class PrettyPrinter(Printer):
     def _print__MatrixAsBasic(self, e):
         return self._print_Matrix(e.m)
 
+    def _print_DataMatrix(self, e):
+        return self._print_Matrix(e)
+
     def _print_Matrix(self, e):
         M = e   # matrix
         Ms = {}  # i,j -> pretty(M[i,j])
