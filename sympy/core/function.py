@@ -326,18 +326,6 @@ class Function(Application, Expr):
 
         return Expr._from_mpmath(v, prec)
 
-    def _eval_is_comparable(self):
-        if self.is_Function:
-            r = True
-            for s in self.args:
-                c = s.is_comparable
-                if c is None:
-                    return
-                if not c:
-                    r = False
-            return r
-        return
-
     def _eval_derivative(self, s):
         # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
         i = 0
