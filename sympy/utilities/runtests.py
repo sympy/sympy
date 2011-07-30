@@ -1065,10 +1065,13 @@ class PyTestReporter(Reporter):
         self.write("executable:   %s  (%s)\n" % (executable, python_version))
         from .misc import ARCH
         self.write("architecture: %s\n" % ARCH)
+        from sympy.core.cache import USE_CACHE
+        self.write("cache:        %s\n" % USE_CACHE)
         from sympy.polys.domains import GROUND_TYPES
         self.write("ground types: %s\n" % GROUND_TYPES)
         if seed is not None:
-            self.write("random seed: %d\n\n" % seed)
+            self.write("random seed:  %d\n" % seed)
+        self.write('\n')
         self._t_start = clock()
 
     def finish(self):
