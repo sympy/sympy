@@ -2097,7 +2097,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
     Currently this just does slater's theorem.
     """
-    from sympy import hyper, Piecewise, meijerg, powdenest, re, polar_lift
+    from sympy import hyper, Piecewise, meijerg, powdenest, re, polar_lift, oo
     global meijercollection
     if meijercollection is None:
         meijercollection = MeijerFormulaCollection()
@@ -2276,20 +2276,25 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     if not isinstance(cond1, bool): cond1 = cond1.subs(z, z0)
     if not isinstance(cond2, bool): cond2 = cond2.subs(z, z0)
 
-    if cond1 is True and cond2 is True and not slater1.has(hyper) and \
-       not slater2.has(hyper):
-        # If both are possible and free of unevaluated terms, return the
-        # simpler one.
-        from sympy import count_ops
-        if count_ops(slater1) > count_ops(slater2):
-            return slater2
+    def weight(expr, cond):
+        if cond is True:
+            c0 = 0
+        elif cond is False:
+            c0 = 1
         else:
-            return slater1
+            c0 = 2
+        return (c0, expr.count(hyper), expr.count_ops())
 
-    if cond1 is True and not slater1.has(hyper):
-        return slater1
-    if cond2 is True and not slater2.has(hyper):
-        return slater2
+    w1 = weight(slater1, cond1)
+    w2 = weight(slater2, cond2)
+    if min(w1, w2) <= (0, 1, oo):
+        if w1 < w2:
+            return slater1
+        else:
+            return slater2
+    if max(w1[0], w2[0]) <= 1 and max(w1[1], w2[1]) <= 1:
+        return Piecewise((slater1, cond1), (slater2, cond2),
+                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
 
     # We couldn't find an expression without hypergeometric functions.
     # TODO it would be helpful to give conditions under which the integral

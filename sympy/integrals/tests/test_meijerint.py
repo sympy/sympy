@@ -1,5 +1,6 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
-                   hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos)
+                   hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
+                   exp_polar, polar_lift, polygamma, hyper, log)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
@@ -144,9 +145,11 @@ def test_meijerint():
            sin(a)/2 + cos(a)/2
 
     # This is cosine-integral, not currently in hyperexpand tables
+    from sympy import EulerGamma
     a = symbols('a', positive=True)
-    assert integrate(cos(x)/x, (x, a, oo), meijerg=True) == \
-           sqrt(pi)*meijerg(((), (1, S(1)/2)), ((S(1)/2, 0, 0), (S(1)/2,)), a**2/4)/2
+    assert simplify(integrate(cos(x)/x, (x, a, oo), meijerg=True)) == \
+           a**2*hyper((1, 1), (S(3)/2, 2, 2), a**2*exp_polar(I*pi)/4)/4 \
+           + log(2/a) + polygamma(0, S(1)/2)/2 - EulerGamma/2
 
     # Test the condition 14 from prudnikov.
     # (This is besselj*besselj in disguise, to stop the product from being
@@ -163,6 +166,13 @@ def test_meijerint():
     # test a bug
     assert integrate(sin(x**a)*sin(x**b), (x, 0, oo), meijerg=True) == \
            Integral(sin(x**a)*sin(x**b), (x, 0, oo))
+
+    # test better hyperexpand
+    assert integrate(exp(-x**2)*log(x), (x, 0, oo), meijerg=True) == \
+           sqrt(pi)*polygamma(0, S(1)/2)/4
+    n = symbols('n', integer = True)
+    assert simplify(integrate(exp(-x)*x**n, x, meijerg=True)) == \
+           x**(n + 1)*hyper([n + 1], [n + 2], polar_lift(-1)*x)/(n + 1)
 
 def test_bessel():
     from sympy import besselj, Heaviside, besseli, polar_lift, exp_polar
@@ -399,3 +409,9 @@ def test_probability():
     assert integrate(x**2*laplace, (x, -oo, oo), meijerg=True) == 2*b**2 + mu**2
 
     # TODO are there other distributions supported on (-oo, oo) that we can do?
+
+    # misc tests
+    k = Symbol('k', integer=True)
+    assert simplify(integrate(log(x) * x**(k-1) * exp(-x) / gamma(k), (x, 0, oo),
+                              conds='none')) == polygamma(0, k)
+

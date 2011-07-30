@@ -202,9 +202,10 @@ def test_issue580():
     assert NS(Integral(1/(x**2-8*x+17), (x, 2, 4))) == '1.10714871779409'
 
 def test_issue587(): # remove this when fresnel itegrals are implemented
-    from sympy import meijerg
+    from sympy import hyper, exp_polar, gamma
     assert integrate(sin(x**2), x) == \
-           sqrt(2*pi)*meijerg([1], [], [S(3)/4], [S(1)/4, 0], x**4/4)/4
+           x**3*gamma(S(3)/4)*hyper([S(3)/4], [S(3)/2, S(7)/4],
+                                    x**4*exp_polar(I*pi)/4)/(4*gamma(S(7)/4))
 
 def test_integrate_units():
     assert integrate(x * m/s, (x, 1*s, 5*s)) == 12*m*s

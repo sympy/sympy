@@ -353,10 +353,7 @@ def test_laplace_transform():
     assert LT(exp(2*t), t, s)[0:2] == (1/(s-2), 2)
     assert LT(exp(a*t), t, s)[0:2] == (1/(s-a), a)
 
-    lt = LT(log(t/a), t, s)
-    assert lt[1:] == (0, True)
-    # TODO hyperexpand is not clever enough to recognise this on its own
-    assert hyperexpand(lt[0], allow_hyper=True) == (-log(a*s) - EulerGamma)/s
+    assert LT(log(t/a), t, s) == (-(log(a) + log(s) + EulerGamma)/s, 0, True)
 
     assert LT(erf(t), t, s) == ((-erf(s/2) + 1)*exp(s**2/4)/s, 0, True)
 

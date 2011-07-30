@@ -358,6 +358,10 @@ def test_meijerg_expand():
                                                  [], 1/z)))) == \
            -2*sqrt(pi)*(sqrt(z + 1) + 1)**a/a
 
+    # Test that hyper is returned
+    assert hyperexpand(meijerg([1], [], [a], [0], z)) == \
+           z**a*gamma(a)*hyper((a,), (a + 1,), z*exp_polar(I*pi))/gamma(a + 1)
+
 def test_meijerg_lookup():
     from sympy import uppergamma
     assert hyperexpand(meijerg([a], [], [b, a], [], z)) == \
@@ -559,11 +563,12 @@ def test_hyperexpand_special():
            /gamma(1 - z - a/2 + b/2)/gamma(1 - z + a/2 + b/2)
 
 def test_Mod1Effective():
-    from sympy import Symbol
+    from sympy import Symbol, polar_lift
     n = Symbol('n', integer=True)
     # Note: this should not hang.
     assert hyperexpand(meijerg([1], [], [n + 1], [0], z)) == \
-           meijerg([1], [], [n + 1], [0], z)
+           z**(n + 1)*gamma(n + 1)*hyper([n + 1], [n + 2], polar_lift(-1)*z) \
+           /gamma(n + 2)
 
 @slow
 def test_prudnikov_misc():
