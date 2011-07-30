@@ -2716,3 +2716,21 @@ u"""\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+    ucode_str = \
+u"""\
+╭─╮ 1, 10 ⎛1, 1, 1, 1, 1, 1, 1, 1, 1, 1  1 │  ⎞\n\
+│╶┐       ⎜                                │ z⎟\n\
+╰─╯11,  2 ⎝             1                1 │  ⎠\
+"""
+    ascii_str = \
+"""\
+ __ 1, 10 /1, 1, 1, 1, 1, 1, 1, 1, 1, 1  1 |  \\\n\
+/__       |                                | z|\n\
+\_|11,  2 \\             1                1 |  /\
+"""
+
+    expr = meijerg([1]*10, [1], [1], [1], z)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str

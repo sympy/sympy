@@ -1,6 +1,82 @@
-from facts import FactRules
-
 from sympy.core.compatibility import cmp
+from sympy.core.facts import FactRules
+from sympy.core.core import BasicMeta
+
+# This are the rules under which our assumptions function
+#
+# References
+# ----------
+#
+# negative,     -- http://en.wikipedia.org/wiki/Negative_number
+# nonnegative
+#
+# even, odd     -- http://en.wikipedia.org/wiki/Parity_(mathematics)
+# imaginary     -- http://en.wikipedia.org/wiki/Imaginary_number
+# composite     -- http://en.wikipedia.org/wiki/Composite_number
+# finite        -- http://en.wikipedia.org/wiki/Finite
+# infinitesimal -- http://en.wikipedia.org/wiki/Infinitesimal
+# irrational    -- http://en.wikipedia.org/wiki/Irrational_number
+# ...
+
+_assume_rules = FactRules([
+
+    'integer        ->  rational',
+    'rational       ->  real',
+    'real           ->  complex',
+    'imaginary      ->  complex',
+    'complex        ->  commutative',
+
+    'odd            ==  integer & !even',
+    'even           ==  integer & !odd',
+
+    'real           ==  negative | zero | positive',
+
+    'positive       ->  real & !negative & !zero',
+    'negative       ->  real & !positive & !zero',
+
+    'nonpositive    ==  real & !positive',
+    'nonnegative    ==  real & !negative',
+
+    'zero           ->  infinitesimal & even',
+
+    'prime          ->  integer & positive',
+    'composite      ==  integer & positive & !prime',
+
+    'irrational     ==  real & !rational',
+
+    'imaginary      ->  !real',
+
+
+    '!bounded     ==  unbounded',
+    'noninteger     ==  real & !integer',
+    '!zero        ==  nonzero',
+
+    # XXX do we need this ?
+    'finite     ->  bounded',       # XXX do we need this?
+    'finite     ->  !zero',         # XXX wrong?
+    'infinitesimal ->  !finite',    # XXX is this ok?
+])
+
+_assume_defined = _assume_rules.defined_facts.copy()
+_assume_defined.add('comparable')
+_assume_defined = frozenset(_assume_defined)
+
+
+###################################
+# positive/negative from .evalf() #
+###################################
+
+# properties that indicate ordering on real axis
+_real_ordering = set(['negative', 'nonnegative', 'positive', 'nonpositive'])
+
+# what can be said from cmp(x.evalf(),0)
+# if x.evalf() is zero we can say nothing so nonpositive is the same as negative
+_real_cmp0_table= {
+        'positive': {1: True,  -1: False, 0: None},
+        'negative': {1: False, -1: True,  0: None},
+        }
+_real_cmp0_table['nonpositive'] = _real_cmp0_table['negative']
+_real_cmp0_table['nonnegative'] = _real_cmp0_table['positive']
 
 class CycleDetected(Exception):
     """(internal) used to detect cycles when evaluating assumptions
@@ -8,8 +84,82 @@ class CycleDetected(Exception):
     """
     pass
 
+def as_property(fact):
+    """Convert a fact name to the name of the corresponding property"""
+    return 'is_%s' % fact
 
-class AssumeMeths(object):
+class WithAssumptions(BasicMeta):
+    """Metaclass for classes with old-style assumptions"""
+    __metaclass__ = BasicMeta
+
+    def __new__(mcl, name, bases, attrdict):
+        if not any(issubclass(base, AssumeMixin) for base in bases):
+            bases = (AssumeMixin,) + bases
+            if '__slots__' in attrdict:
+                attrdict['__slots__'] += AssumeMixin._assume_slots
+        return super(WithAssumptions, mcl).__new__(mcl, name, bases, attrdict)
+
+    def __init__(cls, *args, **kws):
+        BasicMeta.__init__(cls, *args, **kws)
+
+        cls_premises = {}
+        for k in _assume_defined:
+            attrname = as_property(k)
+            v = cls.__dict__.get(attrname, '')
+            if isinstance(v, (bool, int, long, type(None))):
+                if v is not None:
+                    v = bool(v)
+                cls_premises[k] = v
+
+        cls._default_premises = {}
+        for base in reversed(cls.__bases__):
+            try:
+                cls._default_premises.update(base._default_premises)
+            except AttributeError:
+                pass
+        cls._default_premises.update(cls_premises)
+
+        # deduce all consequences from default assumptions -- make it complete
+        default_assumptions = _assume_rules.deduce_all_facts(cls._default_premises)
+
+        # and store completed set into cls -- this way we'll avoid rededucing
+        # extensions of class default assumptions each time on instance
+        # creation -- we keep it prededuced already.
+        for k, v in default_assumptions.iteritems():
+            setattr(cls, as_property(k), v)
+        cls.default_assumptions = default_assumptions
+
+        # protection e.g. for Initeger.is_even=F <- (Rational.is_integer=F)
+        base_derived_premises = set()
+        for base in cls.__bases__:
+            try:
+                base_derived_premises |= (set(base.default_assumptions) -
+                                                set(base._default_premises))
+            except AttributeError:
+                continue        #not an assumption-aware class
+
+        for fact in base_derived_premises:
+            if as_property(fact) not in cls.__dict__:
+                cls.add_property(fact)
+
+        for fact in _assume_defined:
+            if not hasattr(cls, as_property(fact)):
+                cls.add_property(fact)
+
+    def add_property(cls, fact):
+        """Add to the class the automagic property corresponding to a fact."""
+
+        def getit(self):
+            try:
+                return self._assumptions[fact]
+            except KeyError:
+                return self._what_known_about(fact)
+
+        getit.func_name = '%s__is_%s' % (cls.__name__, fact)
+        setattr(cls, as_property(fact), property(getit))
+
+
+class AssumeMixin(object):
     """ Define default assumption methods.
 
     AssumeMeths should be used to derive Basic class only.
@@ -70,120 +220,74 @@ class AssumeMeths(object):
 
         - None (if you don't know if the property is True or false)
     """
-
-    __slots__ = ['_assumptions',    # assumptions
+    _assume_slots = ['_assumptions',    # assumptions
                  '_a_inprogress',   # already-seen requests (when deducing
                                     # through prerequisites -- see CycleDetected)
+                 '_assume_type_keys', # assumptions typeinfo keys
                 ]
+    __slots__ = []
 
+    def  _init_assumptions(self, assumptions):
+        # initially assumptions are shared between instances and class
+        self._assumptions  = self.default_assumptions
+        self._a_inprogress = []
 
-    # This are the rules under which our assumptions function
-    #
-    # References
-    # ----------
-    #
-    # negative,     -- http://en.wikipedia.org/wiki/Negative_number
-    # nonnegative
-    #
-    # even, odd     -- http://en.wikipedia.org/wiki/Parity_(mathematics)
-    # imaginary     -- http://en.wikipedia.org/wiki/Imaginary_number
-    # composite     -- http://en.wikipedia.org/wiki/Composite_number
-    # finite        -- http://en.wikipedia.org/wiki/Finite
-    # infinitesimal -- http://en.wikipedia.org/wiki/Infinitesimal
-    # irrational    -- http://en.wikipedia.org/wiki/Irrational_number
-    # ...
+        # NOTE this could be made lazy -- probably not all instances will need
+        # fully derived assumptions?
+        if assumptions:
+            self._learn_new_facts(assumptions)
+            #                      ^
+            # FIXME this is slow   |    another NOTE: speeding this up is *not*
+            #        |             |    important. say for %timeit x+y most of
+            # .------'             |    the time is spent elsewhere
+            # |                    |
+            # |  XXX _learn_new_facts  could be asked about what *new* facts have
+            # v  XXX been learned -- we'll need this to append to _hashable_content
+            basek = set(self.default_assumptions.keys())
+            k2    = set(self._assumptions.keys())
+            newk  = k2.difference(basek)
 
-    _assume_rules = FactRules([
+            self._assume_type_keys = frozenset(newk)
+        else:
+            self._assume_type_keys = None
 
-        'integer        ->  rational',
-        'rational       ->  real',
-        'real           ->  complex',
-        'imaginary      ->  complex',
-        'complex        ->  commutative',
+    # XXX better name?
+    @property
+    def assumptions0(self):
+        """
+        Return object `type` assumptions.
 
-        'odd            ==  integer & !even',
-        'even           ==  integer & !odd',
+        For example:
 
-        'real           ==  negative | zero | positive',
+          Symbol('x', real=True)
+          Symbol('x', integer=True)
 
-        'positive       ->  real & !negative & !zero',
-        'negative       ->  real & !positive & !zero',
+        are different objects. In other words, besides Python type (Symbol in
+        this case), the initial assumptions are also forming their typeinfo.
 
-        'nonpositive    ==  real & !positive',
-        'nonnegative    ==  real & !negative',
+        Example:
 
-        'zero           ->  infinitesimal & even',
+        >>> from sympy import Symbol
+        >>> from sympy.abc import x
+        >>> x.assumptions0
+        {}
+        >>> x = Symbol("x", positive=True)
+        >>> x.assumptions0
+        {'commutative': True, 'complex': True, 'imaginary': False,
+        'negative': False, 'nonnegative': True, 'nonpositive': False,
+        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
 
-        'prime          ->  integer & positive',
-        'composite      ==  integer & positive & !prime',
+        """
+        cls = type(self)
+        A   = self._assumptions
 
-        'irrational     ==  real & !rational',
+        # assumptions shared:
+        if A is cls.default_assumptions or (self._assume_type_keys is None):
+            assumptions0 = {}
+        else:
+            assumptions0 = dict( (k, A[k]) for k in self._assume_type_keys )
 
-        'imaginary      ->  !real',
-
-
-        '!bounded     ==  unbounded',
-        'noninteger     ==  real & !integer',
-        '!zero        ==  nonzero',
-
-        # XXX do we need this ?
-        'finite     ->  bounded',       # XXX do we need this?
-        'finite     ->  !zero',         # XXX wrong?
-        'infinitesimal ->  !finite',    # XXX is this ok?
-
-    ])
-
-    _assume_defined = _assume_rules.defined_facts.copy()
-    _assume_defined.add('comparable')
-    _assume_defined = frozenset(_assume_defined)
-
-
-
-    ###################################
-    # positive/negative from .evalf() #
-    ###################################
-
-    # properties that indicate ordering on real axis
-    _real_ordering = set(['negative', 'nonnegative', 'positive', 'nonpositive'])
-
-    # what can be said from cmp(x.evalf(),0)
-    # NOTE: if x.evalf() is zero we can say nothing
-    _real_cmp0_table= {
-            'positive': {1: True,  -1: False, 0: None},
-            'negative': {1: False, -1: True,  0: None},
-            }
-
-    # because we can say nothing if x.evalf() is zero, nonpositive is the same
-    # as negative
-    _real_cmp0_table['nonpositive'] = _real_cmp0_table['negative']
-    _real_cmp0_table['nonnegative'] = _real_cmp0_table['positive']
-
-    def __getstate__(self, cls=None):
-        if cls is None:
-            # This is the case for the instance that gets pickled
-            cls = self.__class__
-
-        d = {}
-        # Get all data that should be stored from super classes
-        for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
-
-        # Get all information that should be stored from cls and return the dic
-        for name in cls.__slots__:
-            if hasattr(self, name):
-                d[name] = getattr(self, name)
-        return d
-
-    def __setstate__(self, d):
-        # All values that were pickled are now assigned to a fresh instance
-        for name, value in d.iteritems():
-            try:
-                setattr(self, name, value)
-            except:
-                pass
-
-
+        return assumptions0
 
     def _what_known_about(self, k):
         """tries hard to give an answer to: what is known about fact `k`
@@ -235,50 +339,33 @@ class AssumeMeths(object):
            _learn_new_facts to deduce all its implications, and also the result
            is cached in ._assumptions for later quick access.
         """
-
-        # 'defined' assumption
-        if k not in self._assume_defined:
+        if k not in _assume_defined:
             raise AttributeError('undefined assumption %r' % (k))
 
-        assumptions = self._assumptions
-
         seen = self._a_inprogress
-        #print '%s=?\t%s %s' % (name, self,seen)
         if k in seen:
             raise CycleDetected
-
         seen.append(k)
 
         try:
             # First try the assumption evaluation function if it exists
-            if hasattr(self, '_eval_is_'+k):
-                #print 'FWDREQ: %s\t%s' % (self, k)
+            if hasattr(self, '_eval_is_' + k):
                 try:
-                    a = getattr(self,'_eval_is_'+k)()
-
-                # no luck - e.g. is_integer -> ... -> is_integer
+                    a = getattr(self, '_eval_is_' + k)()
                 except CycleDetected:
-                    #print 'CYC'
                     pass
-
                 else:
                     if a is not None:
-                        self._learn_new_facts( ((k,a),) )
+                        self._learn_new_facts( ((k, a),) )
                         return a
 
-
-
             # Try assumption's prerequisites
-            for pk in self._assume_rules.prereq.get(k,()):
-                #print 'pk: %s' % pk
-                if hasattr(self, '_eval_is_'+pk):
+            for pk in _assume_rules.prereq.get(k, ()):
+                if hasattr(self, '_eval_is_' + pk):
                     # cycle
                     if pk in seen:
                         continue
-
-                    #print 'PREREQ: %s\t%s <- %s' % (self, k, pk)
-                    a = getattr(self,'is_'+pk)
-
+                    a = getattr(self, 'is_' + pk)
                     if a is not None:
                         self._learn_new_facts( ((pk,a),) )
                         # it is possible that we either know or don't know k at
@@ -290,20 +377,14 @@ class AssumeMeths(object):
         finally:
             seen.pop()
 
-
         # For positive/negative try to ask evalf
-        if k in self._real_ordering:
-            if self.is_comparable:
-                v = self.evalf()
-
-                #FIXME-py3k: this fails for complex numbers, when we define cmp
-                #FIXME-py3k: as (a>b) - (a<b)
-                c = cmp(v, 0)
-                a = self._real_cmp0_table[k][c]
-
-                if a is not None:
-                    self._learn_new_facts( ((k,a),) )
-                    return a
+        if k in _real_ordering and self.is_comparable:
+            #FIXME-py3k: this fails for complex numbers, when we define cmp
+            #FIXME-py3k: as (a>b) - (a<b)
+            a = _real_cmp0_table[k][cmp(self.evalf(), 0)]
+            if a is not None:
+                self._learn_new_facts( ((k,a),) )
+                return a
 
         # No result -- unknown
         # cache it  (NB ._learn_new_facts(k, None) to learn other properties,
@@ -325,53 +406,13 @@ class AssumeMeths(object):
 
            The result is stored back into ._assumptions
         """
-        # no new facts
         if not facts:
             return
 
-        default_assumptions = type(self).default_assumptions
         base = self._assumptions
-
-        # ._assumptions were shared with the class
-        if base is default_assumptions:
+        if base is self.default_assumptions:
             base = base.copy()
             self._assumptions = base
-            self._assume_rules.deduce_all_facts(facts, base)
+        # NOTE it modifies base inplace
+        _assume_rules.deduce_all_facts(facts, base)
 
-        else:
-            # NOTE it modifies base inplace
-            self._assume_rules.deduce_all_facts(facts, base)
-
-
-def make__get_assumption(classname, name):
-    """Cooks function which will get named assumption
-
-       e.g.
-
-       class C:
-
-           is_xxx = make__get_assumption('C', 'xxx')
-           is_yyy = property( make__get_assumption('C', 'yyy'))
-
-
-       then
-
-       c = C()
-
-       c.is_xxx()   # note braces -- it's a function call
-       c.is_yyy     # no braces   -- it's a property
-    """
-
-    def getit(self):
-        try:
-            return self._assumptions[name]
-        except KeyError:
-            return self._what_known_about(name)
-
-    getit.func_name = '%s__is_%s' % (classname, name)
-
-    #print '\n\n\n%s\n' % getit
-    #from dis import dis
-    #dis(getit)
-
-    return getit

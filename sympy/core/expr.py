@@ -9,6 +9,37 @@ from compatibility import reduce
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
+    @property
+    def _diff_wrt(self):
+        """Is it allowed to take derivative wrt to this instance.
+
+        This determines if it is allowed to take derivatives wrt this object.
+        Subclasses such as Symbol, Function and Derivative should return True
+        to enable derivatives wrt them. The implementation in Derivative
+        separates the Symbol and non-Symbol _diff_wrt=True variables and
+        temporarily converts the non-Symbol vars in Symbols when performing
+        the differentiation.
+
+        Note, see the docstring of Derivative for how this should work
+        mathematically.  In particular, note that expr.subs(yourclass, Symbol)
+        should be well-defined on a structural level, or this will lead to
+        inconsistent results.
+
+        Examples
+        ========
+
+            >>> from sympy import Expr
+            >>> e = Expr()
+            >>> e._diff_wrt
+            False
+            >>> class MyClass(Expr):
+            ...     _diff_wrt = True
+            ...
+            >>> (2*MyClass()).diff(MyClass())
+            2
+        """
+        return False
+
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work
         from sympy.core import S

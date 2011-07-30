@@ -29,7 +29,7 @@ class FooState(StateBase):
 
 class FooKet(Ket, FooState):
 
-    @property
+    @classmethod
     def dual_class(self):
         return FooBra
 
@@ -41,7 +41,7 @@ class FooKet(Ket, FooState):
 
 
 class FooBra(Bra, FooState):
-    @property
+    @classmethod
     def dual_class(self):
         return FooKet
 
@@ -51,13 +51,13 @@ class BarState(StateBase):
 
 
 class BarKet(Ket, BarState):
-    @property
+    @classmethod
     def dual_class(self):
         return BarBra
 
 
 class BarBra(Bra, BarState):
-    @property
+    @classmethod
     def dual_class(self):
         return BarKet
 
