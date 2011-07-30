@@ -449,7 +449,7 @@ class meijerg(TupleParametersBase):
         # (There is a similar equation for -n instead of +n).
 
         # We first figure out how to pair the parameters.
-        from sympy.simplify.hyperexpand import Mod1
+        from sympy.simplify.hyperexpand import Mod1Effective
         from sympy import log
         an = list(self.an)
         ap = list(self.aother)
@@ -474,7 +474,7 @@ class meijerg(TupleParametersBase):
                 x = l1.pop()
                 found = None
                 for i, y in enumerate(l2):
-                    if Mod1(x) == Mod1(y):
+                    if Mod1Effective(x) == Mod1Effective(y):
                         found = i
                         break
                 if found is None:
@@ -534,14 +534,14 @@ class meijerg(TupleParametersBase):
         """
         # This follows from slater's theorem.
         from sympy import oo, ilcm, pi, Min
-        from sympy.simplify.hyperexpand import Mod1
+        from sympy.simplify.hyperexpand import Mod1Effective
         def compute(l):
             # first check that no two differ by an integer
             for i, b in enumerate(l):
                 if not b.is_Rational:
                     return oo
                 for j in range(i + 1, len(l)):
-                    if Mod1(b) == Mod1(l[j]):
+                    if Mod1Effective(b) == Mod1Effective(l[j]):
                         return oo
             return reduce(ilcm, (x.q for x in l), 1)
         beta = compute(self.bm)

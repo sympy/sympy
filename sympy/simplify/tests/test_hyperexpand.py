@@ -558,6 +558,13 @@ def test_hyperexpand_special():
            gamma(1 - 2*z)*gamma(z + a/2 + b/2)/gamma(1 - z + a/2 - b/2) \
            /gamma(1 - z - a/2 + b/2)/gamma(1 - z + a/2 + b/2)
 
+def test_Mod1Effective():
+    from sympy import Symbol
+    n = Symbol('n', integer=True)
+    # Note: this should not hang.
+    assert hyperexpand(meijerg([1], [], [n + 1], [0], z)) == \
+           meijerg([1], [], [n + 1], [0], z)
+
 @slow
 def test_prudnikov_misc():
     assert can_do([1, (3 + I)/2, (3 - I)/2], [S(3)/2, 2])
