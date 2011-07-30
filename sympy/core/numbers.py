@@ -352,11 +352,34 @@ class Float(Number):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
+        return Number.__add__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_sub(self._mpf_, rhs, prec, rnd), prec)
+        return Number.__sub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mul(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mul__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
+        return Number.__div__(self, other)
+
+    __truediv__ = __div__
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
@@ -371,15 +394,6 @@ class Float(Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
         return Number.__rmod__(self, other)
-
-    @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
-        if (other is S.NaN) or (self is NaN):
-            return S.NaN
-        if isinstance(other, Number):
-            rhs, prec = other._as_mpf_op(self._prec)
-            return Float._new(mlib.mpf_add(self._mpf_, rhs, prec, rnd), prec)
-        return Number.__add__(self, other)
 
     def _eval_power(self, e):
         """
@@ -665,14 +679,42 @@ class Rational(Number):
         return Rational(-self.p, self.q)
 
     @_sympifyit('other', NotImplemented)
-    def __mul__(self, other):
-        if (other is S.NaN) or (self is S.NaN):
-            return S.NaN
-        if isinstance(other, Float):
-            return other * self
+    def __add__(self, other):
         if isinstance(other, Rational):
-            return Rational(self.p * other.p, self.q * other.q)
-        return Number.__mul__(self, other)
+            return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
+        elif isinstance(other, Float):
+            return other + self
+        else:
+            return Number.__add__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        if isinstance(other, Rational):
+            return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
+        elif isinstance(other, Float):
+            return -other + self
+        else:
+            return Number.__sub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        if isinstance(other, Rational):
+            return Rational(self.p*other.p, self.q*other.q)
+        elif isinstance(other, Float):
+            return other*self
+        else:
+            return Number.__mul__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        if isinstance(other, Rational):
+            return Rational(self.p*other.q, self.q*other.p)
+        elif isinstance(other, Float):
+            return self*(1/other)
+        else:
+            return Number.__div__(self, other)
+
+    __truediv__ = __div__
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
@@ -690,25 +732,6 @@ class Rational(Number):
         if isinstance(other, Float):
             return other % self.evalf()
         return Number.__rmod__(self, other)
-
-    # TODO reorder
-    @_sympifyit('other', NotImplemented)
-    def __add__(self, other):
-        if (other is S.NaN) or (self is S.NaN):
-            return S.NaN
-        if isinstance(other, Float):
-            return other + self
-        if isinstance(other, Rational):
-            if self.is_unbounded:
-                if other.is_bounded:
-                    return self
-                elif self==other:
-                    return self
-            else:
-                if other.is_unbounded:
-                    return other
-            return Rational(self.p * other.q + self.q * other.p, self.q * other.q)
-        return Number.__add__(self, other)
 
     def _eval_power(b, e):
         if (e is S.NaN): return S.NaN
