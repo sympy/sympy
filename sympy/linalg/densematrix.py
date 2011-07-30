@@ -239,6 +239,7 @@ class DenseMatrix(DataMatrix):
           GE .... inverse_GE()
           LU .... inverse_LU()
           ADJ ... inverse_ADJ()
+          LDL ... inverse_solver(method='LDL')
 
         According to the "try_block_diag" parameter, it will try to form block
         diagonal matrices using the method get_diag_blocks(), invert these
@@ -256,15 +257,17 @@ class DenseMatrix(DataMatrix):
         if not self.is_square:
             raise NonSquareMatrixError()
         if method == "GE":
-            return self.inverse_GE(iszerofunc=iszerofunc)
+            from densematrix_tools import inverse_GE
+            return inverse_GE(self)
         elif method == "LU":
-            return self.inverse_LU(iszerofunc=iszerofunc)
+            from densematrix_tools import inverse_LU
+            return inverse_LU(self)
         elif method == "ADJ":
-            return self.inverse_ADJ()
-        elif method == "LDL":
-            return self.inverse_solver(solver='LDL')
-        elif method == "CH":
-            return self.inverse_solver(solver='CH')
+            from densematrix_tools import inverse_ADJ
+            return inverse_ADJ(self)
+        elif method == "LDL" or method == "CH":
+            from densematrix_tools import inverse_solver
+            return inverse_solver(self, solver=method)
         else:
             raise ValueError("Inversion method unrecognized")
 
@@ -431,9 +434,11 @@ class DenseMatrix(DataMatrix):
         """
 
         if method == "bareis":
-            return self.det_bareis()
+            from densematrix_tools import det_bareis
+            return det_bareis(self)
         elif method == "berkowitz":
-            return self.berkowitz_det()
+            from densematrix_tools import berkowitz_det
+            return berkowitz_det(self)
         else:
             raise ValueError("Determinant method unrecognized")
 
