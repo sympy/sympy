@@ -355,6 +355,10 @@ class DenseMatrix(DataMatrix):
         newmat[:,pos+mti.cols:] = self[:,pos:]
         return newmat
 
+    def row_swap(self, i, j):
+        for k in range(0, self.cols):
+            self[i, k], self[j, k] = self[j, k], self[i, k]
+
     def trace(self):
         return sum(self[i, i] for i in xrange(self.rows))
 
