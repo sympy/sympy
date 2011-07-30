@@ -3,7 +3,7 @@
 # The syntax is:
 # Name that should be used <email that should be used> Bad name <bad email>
 #
-# You can skip Bad name or <bad email> if it is the same as the one that should be used, and is unique.
+# You can skip Bad name if it is the same as the one that should be used, and is unique.
 Ondřej Čertík <ondrej@certik.cz> Ondrej Certik <ondrej@certik.cz>
 Ondřej Čertík <ondrej@certik.cz> ondrej.certik <devnull@localhost>
 Fredrik Johansson <fredrik.johansson@gmail.com> fredrik.johansson <devnull@localhost>
@@ -52,3 +52,4 @@ Andy R. Terrel <andy.terrel@gmail.com> Andy R. Terrel <aterrel@uchicago.edu>
 Nicolas Pourcelot <nicolas.pourcelot@gmail.com> wxgeo <nicolas.pourcelot@gmail.com>
 Min Ragan-Kelley <benjaminrk@gmail.com> MinRK <benjaminrk@gmail.com>
 Bradley Froehle <brad.froehle@gmail.com> Bradley M. Froehle <brad.froehle@gmail.com>
+Matthew Rocklin <mrocklin@cs.uchicago.edu> <mrocklin@gmail.com>
