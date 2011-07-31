@@ -26,6 +26,7 @@ Add
    :members:
 
 .. module:: sympy.core.sets
+
 Set
 ---
 .. autoclass:: Set

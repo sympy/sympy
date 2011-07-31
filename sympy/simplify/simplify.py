@@ -228,7 +228,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> collect(a*x*log(x) + b*(x*log(x)), x*log(x))
         x*(a + b)*log(x)
 
-        You can use wildcards in the pattern
+        You can use wildcards in the pattern:
 
         >>> w = Wild('w1')
         >>> collect(a*x**y - b*x**y, w**y)
@@ -288,7 +288,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f,x)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
 
-        Or you can even match both derivative order and exponent at time::
+        Or you can even match both derivative order and exponent at time:
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
         (a + b)*Derivative(f(x), x, x)**2

@@ -1,5 +1,5 @@
 Logic Module
-===============
+============
 
 .. module:: sympy.logic
 
@@ -12,8 +12,8 @@ symbolic and boolean values
 Forming logical expressions
 ---------------------------
 
-You can build boolean expressions with the standard python operators & (And),
-|(Or), ~ (Not):
+You can build boolean expressions with the standard python operators ``&``
+(``And``), ``|`` (``Or``), ``~`` (``Not``):
 
     >>> from sympy import *
     >>> x, y = symbols('x,y')
@@ -41,13 +41,13 @@ Like most types in SymPy, Boolean expressions inherit from sympy.core.Basic:
 Other boolean functions
 -----------------------
 
-.. automethod:: sympy.logic.boolalg.Xor
+.. autoclass:: sympy.logic.boolalg.Xor
 
-.. automethod:: sympy.logic.boolalg.Nand
+.. autoclass:: sympy.logic.boolalg.Nand
 
-.. automethod:: sympy.logic.boolalg.Nor
+.. autoclass:: sympy.logic.boolalg.Nor
 
-.. automethod:: sympy.logic.boolalg.Equivalent
+.. autoclass:: sympy.logic.boolalg.Equivalent
 
 Inference
 ---------

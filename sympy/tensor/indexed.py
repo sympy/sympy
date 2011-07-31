@@ -278,10 +278,10 @@ class Indexed(Expr):
 
     @property
     def ranges(self):
-        """returns a list of tuples with lower and upper range of each index
+        """Returns a list of tuples with lower and upper range of each index.
 
         If an index does not define the data members upper and lower, the
-        corresponding slot in the list contains ``None'' instead of a tuple.
+        corresponding slot in the list contains ``None`` instead of a tuple.
         """
         ranges = []
         for i in self.indices:

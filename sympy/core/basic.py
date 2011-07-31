@@ -14,32 +14,28 @@ class Basic(object):
 
     Conventions:
 
-    1)
-    When you want to access parameters of some instance, always use .args:
-    Example:
+    1) Always use ``.args``, when accessing parameters of some instance:
 
-    >>> from sympy import symbols, cot
-    >>> from sympy.abc import x, y
+        >>> from sympy import symbols, cot
+        >>> from sympy.abc import x, y
 
-    >>> cot(x).args
-    (x,)
+        >>> cot(x).args
+        (x,)
 
-    >>> cot(x).args[0]
-    x
+        >>> cot(x).args[0]
+        x
 
-    >>> (x*y).args
-    (x, y)
+        >>> (x*y).args
+        (x, y)
 
-    >>> (x*y).args[1]
-    y
+        >>> (x*y).args[1]
+        y
 
 
-    2) Never use internal methods or variables (the ones prefixed with "_").
-    Example:
+    2) Never use internal methods or variables (the ones prefixed with "_"):
 
-    >>> cot(x)._args    #don't use this, use cot(x).args instead
-    (x,)
-
+        >>> cot(x)._args    # do not use this, use cot(x).args instead
+        (x,)
 
     """
     __metaclass__ = WithAssumptions
@@ -422,7 +418,7 @@ class Basic(object):
            and number symbols like I and pi. It is possible to request
            atoms of any type, however, as demonstrated below.
 
-           Examples::
+           Example:
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
@@ -430,9 +426,9 @@ class Basic(object):
            set([1, 2, I, pi, x, y])
 
            If one or more types are given, the results will contain only
-           those types of atoms::
+           those types of atoms.
 
-           Examples::
+           Example:
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -450,7 +446,7 @@ class Basic(object):
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
 
-           The type can be given implicitly, too::
+           The type can be given implicitly, too:
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
            set([x, y])
@@ -458,7 +454,7 @@ class Basic(object):
            Be careful to check your assumptions when using the implicit option
            since S(1).is_Integer = True but type(S(1)) is One, a special type
            of sympy atom, while type(S(2)) is type Integer and will find all
-           integers in an expression::
+           integers in an expression:
 
            >>> from sympy import S
            >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
@@ -470,7 +466,7 @@ class Basic(object):
            Finally, arguments to atoms() can select more than atomic atoms: any
            sympy type (loaded in core/__init__.py) can be listed as an argument
            and those types of "atoms" as found in scanning the arguments of the
-           expression recursively::
+           expression recursively:
 
            >>> from sympy import Function, Mul
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)

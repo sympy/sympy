@@ -25,18 +25,18 @@ class Expr(Basic, EvalfMixin):
         should be well-defined on a structural level, or this will lead to
         inconsistent results.
 
-        Examples
-        ========
+        Example:
 
-            >>> from sympy import Expr
-            >>> e = Expr()
-            >>> e._diff_wrt
-            False
-            >>> class MyClass(Expr):
-            ...     _diff_wrt = True
-            ...
-            >>> (2*MyClass()).diff(MyClass())
-            2
+        >>> from sympy import Expr
+        >>> e = Expr()
+        >>> e._diff_wrt
+        False
+        >>> class MyClass(Expr):
+        ...     _diff_wrt = True
+        ...
+        >>> (2*MyClass()).diff(MyClass())
+        2
+
         """
         return False
 
@@ -314,7 +314,7 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of factors.
 
-        **Examples**
+        Example:
 
         >>> from sympy import sin, cos
         >>> from sympy.abc import x, y
@@ -341,7 +341,7 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of terms.
 
-        **Examples**
+        Examples:
 
         >>> from sympy import sin, cos
         >>> from sympy.abc import x, y
@@ -529,7 +529,7 @@ class Expr(Basic, EvalfMixin):
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
 
-        Examples::
+        Examples:
 
         >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
@@ -571,7 +571,6 @@ class Expr(Basic, EvalfMixin):
 
         >>> (2*x+2+(x+1)*y).coeff(x+1)
         y
-
         >>> n, m, o = symbols('n m o', commutative=False)
         >>> n.coeff(n)
         1
@@ -825,9 +824,11 @@ class Expr(Basic, EvalfMixin):
         A mostly naive separation of a Mul or Add into arguments that are not/
         are dependent on deps. To obtain as complete a separation of variables
         as possible, use a separation method first, e.g.:
-            separatevars() to change Mul, Add and Pow (including exp) into Mul
-            .expand(mul=True) to change Add or Mul into Add
-            .expand(log=True) to change log expr into an Add
+
+          * separatevars() to change Mul, Add and Pow (including exp) into Mul
+          * .expand(mul=True) to change Add or Mul into Add
+          * .expand(log=True) to change log expr into an Add
+
         The only non-naive thing that is done here is to respect noncommutative
         ordering of variables.
 
@@ -1015,7 +1016,7 @@ class Expr(Basic, EvalfMixin):
         - if you don't want to process the arguments of the tail but need the
           tail then use self.as_two_terms() which gives the head and tail;
         - if you want to split self into an independent and dependent parts
-          use self.as_independent(*deps)
+          use ``self.as_independent(*deps)``
 
         >>> from sympy import S
         >>> from sympy.abc import x, y
@@ -1050,7 +1051,7 @@ class Expr(Basic, EvalfMixin):
         - if you don't want to process the arguments of the tail but need the
           tail then use self.as_two_terms() which gives the head and tail.
         - if you want to split self into an independent and dependent parts
-          use self.as_independent(*deps)
+          use ``self.as_independent(*deps)``
 
         >>> from sympy import S
         >>> from sympy.abc import x, y
@@ -1320,15 +1321,16 @@ class Expr(Basic, EvalfMixin):
         This checks if self is an exact polynomial in syms.  This function
         returns False for expressions that are "polynomials" with symbolic
         exponents.  Thus, you should be able to apply polynomial algorithms to
-        expressions for which this returns True, and Poly(expr, *syms) should
-        work only if and only if expr.is_polynomial(*syms) returns True. The
+        expressions for which this returns True, and ``Poly(expr, *syms)`` should
+        work only if and only if ``expr.is_polynomial(*syms)`` returns True. The
         polynomial does not have to be in expanded form.  If no symbols are
         given, all free symbols in the expression will be used.
 
         This is not part of the assumptions system.  You cannot do
         Symbol('z', polynomial=True).
 
-        **Examples**
+        Examples:
+
         >>> from sympy import Symbol
         >>> x = Symbol('x')
         >>> ((x**2 + 1)**4).is_polynomial(x)
@@ -1337,7 +1339,6 @@ class Expr(Basic, EvalfMixin):
         True
         >>> (2**x + 1).is_polynomial(x)
         False
-
 
         >>> n = Symbol('n', nonnegative=True, integer=True)
         >>> (x**n + 1).is_polynomial(x)
@@ -1451,50 +1452,54 @@ class Expr(Basic, EvalfMixin):
 
     def series(self, x=None, x0=0, n=6, dir="+"):
         """
-        Series expansion of "self" around `x = x0` yielding either terms of
-        the series one by one (the lazy series given when n=None), else
-        all the terms at once when n != None.
+        Series expansion of ``self`` around ``x = x0`` yielding either terms
+        of the series one by one (the lazy series given when ``n=None``),
+        else all the terms at once when ``n != None``.
 
-        Note: when n != None, if an O() term is returned then the x in the
-        in it and the entire expression represents x - x0, the displacement
-        from x0. (If there is no O() term then the series was exact and x has
-        it's normal meaning.) This is currently necessary since sympy's O()
-        can only represent terms at x0=0. So instead of
+        **Note**:
+            When ``n != None``, if an ``O()`` term is returned with the
+            `x` in and the entire expression represents ``x - x0``, the
+            displacement from ``x0``. (If there is no ``O()`` term then
+            the series was exact and ``x`` has its normal meaning.) This
+            is currently necessary since SymPy's ``O()`` can only represent
+            terms at ``x0=0``. So instead of::
 
-            >> cos(x).series(x0=1, n=2)
-            (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
+                >>> cos(x).series(x0=1, n=2)                #doctest: +SKIP
+                (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
 
-        which graphically looks like this:
+            which graphically looks like this::
 
-               \
-              .|.         . .
-             . | \      .     .
-            ---+----------------------
-               |   . .          . .
-               |    \
-              x=0
+                   \\
+                  .|.         . .
+                 . | \      .     .
+                ---+----------------------
+                   |   . .          . .
+                   |    \\
+                  x=0
 
-        the following is returned instead
+            the following is returned instead::
 
-            -x*sin(1) + cos(1) + O(x**2)
+                -x*sin(1) + cos(1) + O(x**2)
 
-        whose graph is this
+            whose graph is this::
 
-               \ |
-              . .|        . .
-             .   \      .     .
-            -----+\------------------.
-                 | . .          . .
-                 |  \
-                x=0
+                   \ |
+                  . .|        . .
+                 .   \      .     .
+                -----+\------------------.
+                     | . .          . .
+                     |  \\
+                    x=0
 
-        which is identical to cos(x + 1).series(n=2).
+            and which is identical to::
+
+                cos(x + 1).series(n=2).
 
         Usage:
-            Returns the series expansion of "self" around the point `x = x0`
-            with respect to `x` up to O(x**n) (default n is 6).
+            Returns the series expansion of ``self`` around the point ``x = x0``
+            with respect to ``x`` up to ``O(x**n)`` (default n is 6).
 
-            If `x=None` and `self` is univariate, the univariate symbol will
+            If ``x=None`` and ``self`` is univariate, the univariate symbol will
             be supplied, otherwise an error will be raised.
 
             >>> from sympy import cos, exp
@@ -1509,15 +1514,15 @@ class Expr(Basic, EvalfMixin):
             >>> e.series(x, n=2)
             cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
-            If `n=None` then an iterator of the series terms will be returned.
+            If ``n=None`` then an iterator of the series terms will be returned.
 
             >>> term=cos(x).series(n=None)
             >>> [term.next() for i in range(2)]
             [1, -x**2/2]
 
-            For `dir=+` (default) the series is calculated from the right and
-            for `dir=-` the series from the left. For smooth functions this
-            flag will not alter the results.
+            For ``dir=+`` (default) the series is calculated from the right
+            and for ``dir=-`` the series is calculated from the left. For
+            smooth functions this flag will not alter the results.
 
             >>> abs(x).series(dir="+")
             x
@@ -1750,8 +1755,8 @@ class Expr(Basic, EvalfMixin):
             This is a wrapper to compute a series first.
             If skip_abs is true, the absolute term is assumed to be zero.
             (This is necessary because sometimes it cannot be simplified
-             to zero without a lot of work, but is still known to be zero.
-             See log._eval_nseries for an example.)
+            to zero without a lot of work, but is still known to be zero.
+            See log._eval_nseries for an example.)
             If skip_log is true, log(x) is treated as an independent symbol.
             (This is needed for the gruntz algorithm.)
         """
