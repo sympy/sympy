@@ -13,7 +13,6 @@ from optparse import OptionParser
 
 from get_sympy import path_hack
 path_hack()
-import sympy
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
@@ -33,13 +32,30 @@ parser.add_option("--random", action="store_false", dest="sort", default=True,
 parser.add_option("--seed", dest="seed", type="int",
         help="use this seed for randomised tests",
         metavar="SEED")
+parser.add_option('-t', '--types', dest='types', action='store',
+        default=None, choices=['gmpy', 'python', 'sympy'],
+        help='setup ground types: gmpy | python | sympy')
+parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
+        default=True, help='disable caching mechanism')
 parser.set_usage("test [options ...] [tests ...]")
-parser.epilog = '"options" are any of the options above.  "tests" are 0 or more glob strings of tests to run.  If no test arguments are given, all tests will be run.'
+parser.epilog = """\
+"options" are any of the options above. "tests" are 0 or more glob strings of \
+tests to run. If no test arguments are given, all tests will be run.\
+"""
+
 options, args = parser.parse_args()
+
+if not options.cache:
+    os.environ['SYMPY_USE_CACHE'] = 'no'
+if options.types:
+    os.environ['SYMPY_GROUND_TYPES'] = options.types
+
+import sympy
 
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
     "sort": options.sort, "seed": options.seed})
+
 if ok:
     sys.exit(0)
 else:
