@@ -330,10 +330,8 @@ def test_roots():
         -I: 1, I: 1,
     }
 
-def test_roots2():
-    """Just test that calculating these roots does not hang
-    (final result is not checked)
-    """
+def test_roots_slow():
+    """Just test that calculating these roots does not hang. """
     a, b, c, d, x = symbols("a,b,c,d,x")
 
     f1 = x**2*c + (a/b) + x*c*d - a
@@ -348,6 +346,13 @@ def test_roots2():
     e2 = (zz-k)*yx*yx + zx*(yy-k)*zx + zy*zy*(xx-k)
 
     assert roots(e1 - e2, k).values() == [1, 1, 1]
+
+    f = x**3 + 2*x**2 + 8
+    R = roots(f).keys()
+
+    assert f.subs(x, R[0]).simplify() == 0
+    assert f.subs(x, R[1]).simplify() == 0
+    assert f.subs(x, R[2]).simplify() == 0
 
 def test_roots_inexact():
     R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1,   x) ])
