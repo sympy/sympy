@@ -9,6 +9,14 @@ class Subset(Basic):
 
     We generate subsets using essentially two techniques,
     binary enumeration and lexicographic enumeration.
+
+    Examples:
+    >>> from sympy.combinatorics.subsets import Subset
+    >>> a = Subset(['c','d'],['a','b','c','d'])
+    >>> a.next_binary()
+    ['b']
+    >>> a.prev_binary()
+    ['c']
     """
 
     _rank_binary = None
