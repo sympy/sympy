@@ -127,7 +127,7 @@ def LUdecomposition_Simple(self, iszerofunc=_iszero):
         if pivot < 0:
             # this result is based on iszerofunc's analysis of the possible pivots, so even though
             # the element may not be strictly zero, the supplied iszerofunc's evaluation gave True
-            raise ValueError("No nonzero pivot found; inversion failed.")
+            raise ValueError("No nonzero pivot found; inversion failed. %s" %A)
         if pivot != j: # row must be swapped
             A.row_swap(pivot,j)
             p.append([pivot,j])
@@ -548,7 +548,11 @@ def LDLsolve(self, rhs):
 
 ####################
 
-def zeros(m, n):
+def zeros(*dims):
+    if len(dims) == 2:
+        m, n = dims
+    elif len(dims) == 1:
+        m = n = dims[0]
     from densematrix import DenseMatrix
     return DenseMatrix(m,n,[0]*n*m)
 

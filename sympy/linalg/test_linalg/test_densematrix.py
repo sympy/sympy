@@ -1,8 +1,6 @@
 from __future__ import division
 from sympy.linalg import DenseMatrix
 
-# Search and replace matrix to matrix
-
 matrix = DenseMatrix
 
 def test_setelement():
@@ -112,13 +110,14 @@ def test_matrix_multiplication():
 
 def test_LU():
     from sympy.linalg.densematrix_tools import LUdecomposition as LUdecomp 
-    A = matrix([[1,2,0],[3,6,-1],[1,2,1]])
-    L, U = LUdecomp(A)
+    A = matrix([[2,-1,3],[4,2,1],[-6,-1,2]])
+    L, U, p = LUdecomp(A)
+    assert p == []
     assert L.is_lower()
     assert U.is_upper()
     assert L * U == A
-    assert L == matrix([[1,0,0],[3,1,0],[1,-1,1]])
-    assert U == matrix([[1,2,0],[0,0,-1],[0,0,0]])
+    assert L == matrix([[1,0,0],[2,1,0],[-3,-1,1]])
+    assert U == matrix([[2,-1,3],[0,4,-5],[0,0,6]])
 
 def test_cholesky():
     from sympy.linalg.densematrix_tools import cholesky
