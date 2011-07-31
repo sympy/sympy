@@ -1,4 +1,4 @@
-from sympy.combinatorics.graycode import GrayCode, unrank_gray_code
+from sympy.combinatorics.graycode import GrayCode
 
 def test_graycode():
     a = GrayCode(4)
@@ -15,6 +15,6 @@ def test_graycode():
     a = GrayCode(6, start = ['1','0','1','0','0','0'])
     assert a.rank == 6
 
-    assert unrank_gray_code(4, 6)._current == \
+    assert GrayCode.unrank_gray_code(4, 6)._current == \
           ['0', '1', '1', '0', '0', '0']
-    assert unrank_gray_code(4, 6).rank == 4
+    assert GrayCode.unrank_gray_code(4, 6).rank == 4

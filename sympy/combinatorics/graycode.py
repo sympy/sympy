@@ -176,6 +176,33 @@ class GrayCode(Basic):
         """
         return self._current
 
+    @classmethod
+    def unrank_gray_code(self, k, n):
+        """
+        Unranks an n-bit sized gray code of rank k.
+
+        We generate in reverse order to allow for tail-call
+        optimization.
+
+        Examples:
+        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> GrayCode.unrank_gray_code(3, 5).current
+        ['0', '1', '0', '0', '0']
+        >>> GrayCode.unrank_gray_code(7, 10).rank
+        7
+        """
+        def unrank(k, n):
+            if n == 1:
+                return [str(k % 2)]
+            m = 2**(n - 1)
+            if k < m:
+                return ["0"] + unrank(k, n - 1)
+            return ["1"] + unrank(m - (k % m) - 1, n - 1)
+        ret_list = unrank(k, n)
+        list.reverse(ret_list)
+        return GrayCode(start = ret_list)
+
+
 def random_bitlist(n):
     """
     Generates a random bitlist of length n.
@@ -248,28 +275,3 @@ def gray_code_subsets(gray_code_set):
     """
     return [get_subset_from_bitlist(gray_code_set, bitlist) for \
             bitlist in list(GrayCode(len(gray_code_set)).generate_bitlist())]
-
-def unrank_gray_code(k, n):
-    """
-    Unranks an n-bit sized gray code of rank k.
-
-    We generate in reverse order to allow for tail-call
-    optimization.
-
-    Examples:
-    >>> from sympy.combinatorics.graycode import unrank_gray_code
-    >>> unrank_gray_code(3, 5).current
-    ['0', '1', '0', '0', '0']
-    >>> unrank_gray_code(7, 10).rank
-    7
-    """
-    def unrank(k, n):
-        if n == 1:
-            return [str(k % 2)]
-        m = 2**(n - 1)
-        if k < m:
-            return ["0"] + unrank(k, n - 1)
-        return ["1"] + unrank(m - (k % m) - 1, n - 1)
-    ret_list = unrank(k, n)
-    list.reverse(ret_list)
-    return GrayCode(start = ret_list)

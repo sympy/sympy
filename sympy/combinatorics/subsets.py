@@ -1,6 +1,5 @@
 from sympy.core import Basic
-from sympy.combinatorics.graycode import (GrayCode,
-                                          unrank_gray_code)
+from sympy.combinatorics.graycode import GrayCode
 
 import itertools
 
@@ -103,8 +102,8 @@ class Subset(Basic):
         [1, 2, 3, 4]
         """
         rank_ = self.rank_graycode
-        unranked_code = unrank_gray_code((rank_-1) % self.cardinality,
-                                         self.superset_size)
+        unranked_code = GrayCode.unrank_gray_code((rank_-1) % self.cardinality,
+                                                  self.superset_size)
         return get_subset_from_bitlist(self.superset,
                                        unranked_code._current)
 
@@ -266,8 +265,8 @@ def unrank_graycode_subset(rank, superset):
     >>> unrank_graycode_subset(0, ['a','b','c'])
     []
     """
-    graycode_bitlist = unrank_gray_code(rank,
-                                        len(superset))._current
+    graycode_bitlist = GrayCode.unrank_gray_code(rank,
+                                                 len(superset))._current
     return get_subset_from_bitlist(superset, graycode_bitlist)
 
 def ksubsets(superset, k):
