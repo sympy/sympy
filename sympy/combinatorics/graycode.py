@@ -13,7 +13,7 @@ class GrayCode(Basic):
     cube is [[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,1,1],
     [1,1,1],[1,0,1],[0,0,1]].
 
-    The Gray code solves the problem of sequentially
+    A Gray code solves the problem of sequentially
     generating all possible subsets of n objects in such
     a way that each subset is obtained from the previous
     one by either deleting or adding a single object.
@@ -29,12 +29,30 @@ class GrayCode(Basic):
     Combinatorial Algorithms. Academic Press.
     [2] Knuth, D. (2011). The Art of Computer Programming, Vol 4
     Addison Wesley
+
+    Examples:
+    >>> from sympy.combinatorics.graycode import GrayCode
+    >>> a = GrayCode(3)
+    >>> list(a.generate_bitlist())
+    [['0', '0', '0'], ['0', '0', '1'], ['0', '1', '1'], \
+    ['0', '1', '0'], ['1', '1', '0'], ['1', '1', '1'], \
+    ['1', '0', '1'], ['1', '0', '0']]
     """
 
     _reset = False
     _current = 0
 
     def __new__(cls, *args, **kw_args):
+        """
+        Default constructor
+        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> a = GrayCode(3)
+        >>> a
+        GrayCode(3)
+        >>> a = GrayCode(3, start = ['1','0','0'])
+        >>> a.selections
+        8
+        """
         obj = Basic.__new__(cls, *args, **kw_args)
         if kw_args.has_key("start"):
             obj._current = kw_args["start"]
