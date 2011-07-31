@@ -23,6 +23,31 @@ class Subset(Basic):
     _rank_lex = None
     _rank_graycode = None
 
+    def iterate_binary(self, k):
+        """
+        This is a helper function. It iterates over the
+        binary subsets by k steps. This variable can be
+        both positive or negative.
+
+        Examples:
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'],['a','b','c','d'])
+        >>> a.iterate_binary(-2)
+        ['d']
+        >>> a = Subset(['a','b','c'],['a','b','c','d'])
+        >>> a.iterate_binary(2)
+        []
+        """
+        bin_list = get_bitlist_from_subset(self.subset, self.superset)
+        next_bin_list = list(bin((int(reduce(lambda x, y:
+                                             x + y, bin_list), 2) + k)
+                                 % 2**self.superset_size))[2:]
+        next_bin_list = [0] * (self.superset_size - len(next_bin_list)) + \
+                        next_bin_list
+        return get_subset_from_bitlist(self.superset, next_bin_list)
+
+
     def next_binary(self):
         """
         Generates the next binary ordered subset.
@@ -36,13 +61,7 @@ class Subset(Basic):
         >>> a.next_binary()
         []
         """
-        bin_list = get_bitlist_from_subset(self.subset, self.superset)
-        next_bin_list = list(bin((int(reduce(lambda x, y:
-                                             x + y, bin_list), 2) + 1)
-                                 % 2**self.superset_size))[2:]
-        next_bin_list = [0] * (self.superset_size - len(next_bin_list)) + \
-                        next_bin_list
-        return get_subset_from_bitlist(self.superset, next_bin_list)
+        return self.iterate_binary(1)
 
     def prev_binary(self):
         """
@@ -57,13 +76,7 @@ class Subset(Basic):
         >>> a.prev_binary()
         ['c']
         """
-        bin_list = get_bitlist_from_subset(self.subset, self.superset)
-        next_bin_list = list(bin((int(reduce(lambda x, y:
-                                             x + y, bin_list), 2) - 1)
-                                 % 2**self.superset_size))[2:]
-        next_bin_list = [0] * (self.superset_size - len(next_bin_list)) + \
-                        next_bin_list
-        return get_subset_from_bitlist(self.superset, next_bin_list)
+        return self.iterate_binary(-1)
 
     def next_lexicographic(self):
         """
