@@ -5064,7 +5064,7 @@ def groebner(F, *gens, **args):
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grlex')
     [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grevlex')
-    [x**3 - 2*x**2, -x**2 + 2*y**2, x*y - 2*y]
+    [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
 
     **References**
 
