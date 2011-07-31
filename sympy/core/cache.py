@@ -293,20 +293,19 @@ class Memoizer_nocache(Memoizer):
 
         return wrapper
 
-
+def _getenv(key, default=None):
+    from os import getenv
+    return getenv(key, default)
 
 # SYMPY_USE_CACHE=yes/no/debug
-def __usecache():
-    import os
-    return os.getenv('SYMPY_USE_CACHE', 'yes').lower()
-usecache = __usecache()
+USE_CACHE = _getenv('SYMPY_USE_CACHE', 'yes').lower()
 
-if usecache=='no':
-    Memoizer            = Memoizer_nocache
-    cacheit             = __cacheit_nocache
-elif usecache=='yes':
-    cacheit = __cacheit
-elif usecache=='debug':
-    cacheit = __cacheit_debug   # a lot slower
+if USE_CACHE == 'no':
+    Memoizer = Memoizer_nocache
+    cacheit  = __cacheit_nocache
+elif USE_CACHE == 'yes':
+    cacheit  = __cacheit
+elif USE_CACHE == 'debug':
+    cacheit  = __cacheit_debug   # a lot slower
 else:
-    raise RuntimeError('unknown argument in SYMPY_USE_CACHE: %s' % usecache)
+    raise RuntimeError('unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
