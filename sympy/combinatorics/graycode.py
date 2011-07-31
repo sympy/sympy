@@ -41,6 +41,7 @@ class GrayCode(Basic):
 
     _reset = False
     _current = 0
+    _rank = None
 
     def __new__(cls, *args, **kw_args):
         """
@@ -156,15 +157,17 @@ class GrayCode(Basic):
         >>> a.rank
         6
         """
-        if isinstance(self._current, int):
-            self._current = list(bin(self._current), 2)[2:]
-        if len(self._current)==0:
-            return 0
-        elif self._current[-1]=='0':
-            return GrayCode(start = self._current[:-1]).rank
-        else:
-            return 2**len(self._current) - \
-                   GrayCode(start = self._current[:-1]).rank - 1
+        if self._rank is None:
+            if isinstance(self._current, int):
+                self._current = list(bin(self._current), 2)[2:]
+            if len(self._current)==0:
+                return 0
+            elif self._current[-1]=='0':
+                self._rank = GrayCode(start = self._current[:-1]).rank
+            else:
+                self._rank =  2**len(self._current) - \
+                             GrayCode(start = self._current[:-1]).rank - 1
+        return self._rank
 
     @property
     def current(self):
