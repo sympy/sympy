@@ -177,7 +177,7 @@ def random_bitlist(n):
     """
     Generates a random bitlist of length n.
     """
-    return [random.randint(0, 1) for i in xrange(n)]
+    return [random.choice(['0', '1']) for i in xrange(n)]
 
 def gray_to_bin(bin_list):
     """
