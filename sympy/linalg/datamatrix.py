@@ -24,7 +24,7 @@ class DataMatrix(object):
 
     def __str__(self):
         from sympy.printing.str import sstr
-        return sstr(self)
+        return sstr(self.to_densematrix())
 
     __repr__ = __str__
 
@@ -37,7 +37,7 @@ class DataMatrix(object):
         return self.rows * self.cols
 
     def __array__(self):
-        return matrix2numpy(self)
+        return matrix2numpy(self.to_densematrix())
 
     def hash(self): # Remove this ?
         """Compute a hash every time, because the matrix elements

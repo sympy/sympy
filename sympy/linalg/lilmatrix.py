@@ -65,42 +65,10 @@ class LILMatrix(MatrixBase):
                     if value != 0:
                         self.mat[i].append((j, value))
 
-    def __str__(self):
-        return sstr(self.to_densematrix())
-
-    def __repr__(self):
-        return sstr(self.to_densematrix())
-
-    def slice2bounds(self, key, defmax):
-        """
-        Takes slice or number and returns (min,max) for iteration
-        Takes a default maxval to deal with the slice ':' which is (none, none)
-        """
-        if isinstance(key, slice):
-            lo, hi = 0, defmax
-            if key.start is not None:
-                if key.start >= 0:
-                    lo = key.start
-                else:
-                    lo = defmax+key.start
-            if key.stop is not None:
-                if key.stop >= 0:
-                    hi = key.stop
-                else:
-                    hi = defmax+key.stop
-            return lo, hi
-        elif isinstance(key, int):
-            if key >= 0:
-                return key, key+1
-            else:
-                return defmax+key, defmax+key+1
-        else:
-            raise IndexError("Improper index type")
-
     def __getitem__(self, key):
         i, j = key
         if type(i) is slice or type(j) is slice:
-                return self.submatrix2(key)
+                return self.submatrix(key)
         
         for ind, val in self.mat[i]:
             if ind >= j:
@@ -127,7 +95,7 @@ class LILMatrix(MatrixBase):
         if value != 0:
             self.mat[i].append((j, value))
 
-    def submatrix2(self, keys):
+    def submatrix(self, keys):
         if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
             raise TypeError("At least one element of `keys` must be a slice object.")
 
@@ -155,84 +123,27 @@ class LILMatrix(MatrixBase):
         A.mat = outMat
         return A
 
-    def submatrix(self, keys):
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("At least one element of `keys` must be a slice object.")
-
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
-        outRows, outCols = rhi-rlo, chi-clo
-        outMat = []
-        for i in xrange(rlo, rhi):
-            startset = False
-            start = 0
-            end = len(self.mat[i])
-            for ind, (j, val) in enumerate(self.mat[i]):
-                if not startset and j >= clo:
-                    start = ind
-                    startset = True
-                if j >= chi:
-                    end = ind
-                    break
-            outMat.append(self.mat[i][start:end])
-        A = LILMatrix.zeros((outRows, outCols))
-        A.mat = outMat
-        return A
-
     def copyin_matrix(self, key, value):
-        rlo, rhi = self.slice2bounds(key[0], self.rows)
-        clo, chi = self.slice2bounds(key[1], self.cols)
-        if value.rows != rhi - rlo or value.cols != chi - clo:
-            raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
-                "as the in sub-Matrix given by `key`.")
-        raise NotImplemented
+        from matrixutils import _slice_to_bounds
+        rlo, rhi = _slice_to_bounds(self, key[0], self.rows)
+        clo, chi = _slice_to_bounds(self, key[1], self.cols)
+        lilrepr = value.mat
+        for i in xrange(len(value.mat)):
+            self.mat[rlo + i].extend([(j + clo, val) for j, val in value.mat[i]])
+            self.mat[rlo + i].sort()
 
-    def row_add(self, r1, r2, alpha):
-        if r1 == r2:
-            return
-        row1 = self.mat[r1]
-        row2 = self.mat[r2]
-        self.mat[r1] = _row_add(row1, row2, alpha)
-
-    def row_scale(self, r, alpha):
-        for ind, (j, val) in enumerate(self.mat[r]):
-            self.mat[r][ind] = (j, alpha * val)
-
-    def row_add_bad(self, r1, r2, alpha):
-        row2 = self.mat[r2]
-        for elem in row2:
-            self[r1,elem[0]] += alpha * elem[1]
-
-    def row_functor(self, r, f):
-        for i in xrange(len(self.mat[r])):
-            self.mat[r][i] = self.mat[r][i][0],f(self.mat[r][i][1],self.mat[r][i][0])
-
-    row = row_functor
+    def row(self, r, f):
+        for i, (j, val) in enumerate(self.mat[r]):
+            self.mat[r][i] = j, f(val, j)
 
     def row_swap(self, r1, r2):
         self.mat[r1], self.mat[r2] = self.mat[r2], self.mat[r1]
-
-    @classmethod
-    def _from_dict(cls, rows, cols, dok):
-        mat = cls.zeros((rows, cols))
-        for i in dok:
-            mat[i] = dok[i]
-        return mat    
-
-    @classmethod
-    def zeros(cls, shape):
-        if isinstance(shape, tuple):
-            return cls(shape[0], shape[1], lambda i,j:0)
-        else:
-            return cls(shape, shape, lambda i, j: 0)
 
     def to_densematrix(self):
         return Matrix(self.rows, self.cols, lambda i, j: self[i, j])
 
     def to_dokmatrix(self):
-        from sympy import DOKMatrix
+        from sympy.linalg import DOKMatrix
         mat = DOKMatrix(self.rows, self.cols, {})
         for i in xrange(self.rows):
             for j, value in self.mat[i]:
@@ -242,91 +153,13 @@ class LILMatrix(MatrixBase):
     def to_lilmatrix(self):
         return self
 
-    def gauss_sparse(self):
-        A = self.copy()
-        for i in xrange(A.rows):
-            if A[i, i] == 0:
-                print 'bad pivot, exchanging', i
-                for k in xrange(i + 1, A.rows):
-                    print '\tconsidering', k, i
-                    if A[k, i] != 0:
-                        print '\t\tfound', k, i
-                        print pretty(A)
-                        print
-
-                        A.row_swap(k, i)
-
-                        print pretty(A)
-                        break
-                if A[i, i] == 0:
-                    print 'bad bad pivot', i
-                    print pretty(A)
-                    raise Exception
-            ind = 0
-            l = len(A.mat[i])
-            while ind < l:
-                j, v = A.mat[i][ind]
-                if j < i:
-                    print 'zeroing out', i, j, A.mat[i]
-                    A.row_add(i, j, - v / A[j, j])
-                    print 'zeroed out', i, j, A.mat[i]
-                    l = len(A.mat[i])
-                else:
-                    break
-        return A
-
-    def gauss_col(self):
-        "Gaussian elimnation, currently tested only on square matrices"
-        A = self.copy()
-        row_swaps = []
-        for j in xrange(A.rows):
-            rlist = A.nz_col_lower(j)
-            if A[j, j] == 0:
-                if rlist:
-                    A.row_swap(j, rlist[0])
-                    row_swaps.append((j, rlist[0]))
-                    rlist.pop(0)
-                else:
-                    continue
-            for i in rlist:
-                A.row_add(i, j, - A[i, j] / A[j, j])
-        return A, row_swaps
-
-    def _upper_triangular_solve(self, rhs):
-        X = LILMatrix.zeros((rhs.rows, 1))
-        for i in reversed(xrange(self.rows)):
-            X[i, 0] = (rhs[i, 0] - sum(value * X[j, 0] for j, value in self.mat[i])) / self[i, i]
-        return X
-
-    def _lower_triangular_solve(self, rhs):
-        X = LILMatrix.zeros((rhs.rows, 1))
-        for i in xrange(self.rows):
-            X[i, 0] = (rhs[i, 0] - sum(value * X[j, 0] for j, value in self.mat[i])) / self[i, i]
-        return X
-
-    def LUsolve(self, rhs):
-        L, U, p = self.LU_sparse()
-        b = rhs.copy()
-        b.permute(p)
-        Y = L._lower_triangular_solve(b)
-        return U._upper_triangular_solve(Y)
-
-    def solve_gauss(self, rhs):
-        U, p = self.gauss_col()
-        b = rhs.clone()
-        b.permute(p)
-        return U._upper_triangular_solve(b)
-
-    def solve_rref(self, rhs):
-        big = self.join_rows(rhs)
-        rref = big.rref()
-        return rref[:, self.cols]
-
     def solve(self, rhs, method="GE"):
         if method == "GE":
-            return self.solve_gauss(rhs)
+            from lilmatrix_tools import solve_gauss
+            return solve_gauss(self, rhs)
         elif method == "RREF":
-            return self.solve_rref(rhs)
+            from lilmatrix_tools import solve_rref
+            return solve_rref(self, rhs)
         else:
             raise ValueError('Unrecognised method')
 
@@ -349,86 +182,15 @@ class LILMatrix(MatrixBase):
     def __sub__(self, other):
         return self + (-1 * other)
 
-    def det_gauss(self):
-        ref, p = self.gauss_col()
-        det = 1
-        for i in xrange(ref.rows):
-            det *= ref[i, i]
-        if len(p) % 2 == 1:
-            det *= -1
-        return det
-
-    def det_LU(self):
-        L, U, p = self.LU_sparse()
-        det = 1
-        for i in xrange(U.rows):
-            det *= U[i, i]
-        if len(p) % 2 == 1:
-            det *= -1
-        return det
-
     def det(self, method='GE'):
         if method == "GE":
-            return self.det_gauss()
+            from lilmatrix_tools import det_gauss
+            return det_gauss(self)
         elif method == 'LU':
-            return self.det_LU()
+            from lilmatrix_tools import det_LU
+            return det_LU(self)
         else:
             raise Exception
-
-    def rref2(self):
-        pivot, r = 0, self.copy()
-        pivotlist = []
-        for i in range(r.cols):
-            if pivot == r.rows:
-                break
-            if r[pivot,i] == 0:
-                for k in xrange(pivot + 1, r.rows):
-                    if r[k, i] != 0:
-                        r.row_swap(pivot, k)
-                        break
-                if r[pivot, i] == 0:
-                    continue
-            r.row_scale(pivot, 1 / r[pivot, i])
-            for j in r.nz_col(i):
-                if j == pivot:
-                    continue
-                scale = r[j,i]
-                r.row_add(j, pivot, - scale)
-            pivotlist.append(i)
-            pivot += 1
-        return r, pivotlist
-
-    def rref(self):
-        "rref"
-        A = self.copy()
-        for j in xrange(A.rows):
-            rlist = A.nz_col_lower(j)
-            if A[j, j] == 0:
-                if rlist:
-                    A.row_swap(j, rlist[0])
-                    rlist.pop(0)
-                else:
-                    continue
-            A.row_scale(j, 1 /  A[j, j])
-            for i in A.nz_col(j):
-                if i != j:
-                    A.row_add(i, j, - A[i, j])
-        return A
-                    
-    def nz_col(self, j):
-        li = []
-        for i in xrange(self.rows):
-            if self[i, j] != 0:
-                li.append(i)
-        return li
-
-    def nz_col_lower(self, j):
-        " Returns the row indices of non-zero elements in column j, below the diagonal"
-        li = []
-        for i in xrange(j + 1, self.rows):
-            if self[i, j] != 0:
-                li.append(i)
-        return li
 
     def is_upper(self):
         return all(j >= i for i in xrange(self.rows) for j, _ in self.mat[i])
@@ -443,26 +205,6 @@ class LILMatrix(MatrixBase):
 
     def nnz(self):
         return sum(len(self.mat[i]) for i in xrange(self.rows))
-
-    def join_rows(A, B):
-        A = A.copy()
-        B = B.copy()
-        assert A.rows == B.rows
-        for i in xrange(B.rows):
-            for ind, (j, val) in enumerate(B.mat[i]):
-                B.mat[i][ind] = (j + A.cols, val)
-            A.mat[i].extend(B.mat[i])
-        A.cols += B.cols
-        return A
-
-    @classmethod
-    def eye(cls, n, one = 1, zero = 0):
-        return cls(n, n, lambda i, j: one if i==j else zero)
-
-    def inv_rref(self):
-        aug = self.join_rows(LILMatrix.eye(self.rows, one = 1, zero = 0))
-        reduced = aug.rref()
-        return reduced[:,self.rows:]
 
     def copy(self):
         # Could be better
@@ -490,10 +232,6 @@ class LILMatrix(MatrixBase):
         return T
     
     T = property(transpose)
-
-    @property
-    def shape(self):
-        return (self.rows, self.cols)
     
     def __eq__(self, other):
         if not self.shape == other.shape:
@@ -503,84 +241,7 @@ class LILMatrix(MatrixBase):
     def __ne__(self, other):
         if not self.shape == other.shape:
             return True
-        return any(self.mat[i][ind] != other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i]))) 
-
-    def doolittle(self):
-        A = self.clone()
-        n = A.rows
-        for i in xrange(n):
-            for j in xrange(i):
-                a = A[i, j]
-                for p in xrange(j):
-                    a -= A[i, p] * A[p, j]
-                A[i, j] = a / A[j, j]
-            for j in xrange(i, n):
-                a = A[i, j]
-                for p in xrange(i):
-                    a -= A[i, p] * A[p, j]
-                A[i, j] = a
-        return A
-
-    def LU_sparse(self):
-
-        cached_result = self._get_cache('LUP')
-        if cached_result and self._cached:
-            return cached_result
-
-        row_swaps = []
-        A = self.clone()
-        n = self.rows
-        for k in xrange(n):
-
-            rlist = A.nz_col_lower(k)
-
-            # Pivoting
-            if A[k, k] == 0:
-                if not rlist:
-                    raise Exception('Singular')
-                A.row_swap(k, rlist[0])
-                row_swaps.append((k, rlist[0]))
-                rlist.pop(0)
-            assert A[k, k] != 0
-
-            # Algorithm
-            for i in rlist:
-                A[i, k] /= A[k, k]
-
-            for j, val in A.mat[k]:
-                if j <= k:
-                    continue
-                # j > k
-                for i in rlist:
-                    A[i, j] -= A[i, k] * val # i > k, j > k
-    
-        L = LILMatrix.eye(self.rows)
-        for i in xrange(L.rows):
-            for j in xrange(i):
-                L[i, j] = A[i, j]
-
-        U = LILMatrix.zeros(self.rows)
-        for i in xrange(U.rows):
-            for j in xrange(i, U.rows):
-                U[i, j] = A[i, j]
-
-        self._set_cache('LUP', (L, U, row_swaps))
-
-        return L, U, row_swaps
-
-    def permute(self, row_swaps):
-        for r1, r2 in row_swaps:
-            self.row_swap(r1, r2)
-
-    def scalar_multiply(self, scalar):
-        prod = self.clone()
-        for i in xrange(self.rows):
-            for ind, (j, value) in enumerate(self.mat[i]):
-                prod.mat[i][ind] = (j, scalar * value)
-        return prod
-        
-            
-            
+        return any(self.mat[i][ind] != other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i])))            
                 
 def _row_add(row1, row2, alpha):
     "li = row1 + alpha * row2 "
