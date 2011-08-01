@@ -67,9 +67,9 @@ class XOp(HermitianOperator):
         return I*hbar*(d*delta)
 
     def _represent_XKet(self, basis, **options):
-        from sympy.physics.quantum.represent import rep_expectation
+        from sympy.physics.quantum.represent import expectation_helper
         options['basis'] = basis
-        return rep_expectation(self, **options)
+        return expectation_helper(self, **options)
 
     def _represent_default_basis(self, **options):
         return self._represent_XKet(XKet(), **options)
@@ -133,9 +133,9 @@ class PxOp(HermitianOperator):
         return -I*hbar*(d*delta)
 
     def _represent_PxKet(self, basis, **options):
-        from sympy.physics.quantum.represent import rep_expectation
+        from sympy.physics.quantum.represent import expectation_helper
         options['basis'] = basis
-        return rep_expectation(self, **options)
+        return expectation_helper(self, **options)
 
     def _represent_default_basis(self, **options):
         return self._represent_PxKet(PxKet(), **options)
@@ -183,9 +183,9 @@ class XKet(Ket):
         return exp(-I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
 
     def _represent_XKet(self, basis, **options):
-        from sympy.physics.quantum.represent import rep_innerproduct
+        from sympy.physics.quantum.represent import innerproduct_helper
         options['basis'] = basis
-        return rep_innerproduct(self, **options)
+        return innerproduct_helper(self, **options)
 
     def _represent_default_basis(self, **options):
         return self._represent_XKet(XKet(), **options)
@@ -313,9 +313,9 @@ class PxKet(Ket):
         return DiracDelta(self.momentum-bra.momentum)
 
     def _represent_PxKet(self, basis, **options):
-        from sympy.physics.quantum.represent import rep_innerproduct
+        from sympy.physics.quantum.represent import innerproduct_helper
         options['basis'] = basis
-        return rep_innerproduct(self, **options)
+        return innerproduct_helper(self, **options)
 
     def _represent_default_basis(self, **options):
         return self._represent_PxKet(PxKet(), **options)

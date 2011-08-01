@@ -3,9 +3,10 @@ from sympy.external import import_module
 from sympy.utilities.pytest import skip
 
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.represent import (represent, rep_innerproduct,
-                                             rep_expectation, enumerate_states)
-from sympy.physics.quantum.state import Bra, Ket
+from sympy.physics.quantum.represent import (enumerate_states,
+                                             expectation_helper,
+                                             innerproduct_helper, represent)
+from sympy.physics.quantum.state import Bra, Ket, TimeDepKet
 from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product

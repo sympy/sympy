@@ -21,8 +21,8 @@ from sympy.physics.quantum.operatorset import operators_to_state, state_to_opera
 
 __all__ = [
     'represent',
-    'rep_innerproduct',
-    'rep_expectation',
+    'innerproduct_helper',
+    'expectation_helper',
     'integrate_result',
     'get_basis_state',
     'enumerate_states'
@@ -139,28 +139,10 @@ def represent(expr, **options):
 
     format = options.get('format', 'sympy')
     if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
-        temp_basis = get_basis_state(expr, **options)
-        if temp_basis is not None:
-            options['basis'] = temp_basis
-        try:
-            return expr._represent(**options)
-        except NotImplementedError, strerr:
-            #If no _represent_FOO method exists, map to the
-            #appropriate basis state and try
-            #the other methods of representation
-
-            if isinstance(expr, (KetBase, BraBase)):
-                try:
-                    return rep_innerproduct(expr, **options)
-                except NotImplementedError:
-                    raise NotImplementedError(strerr)
-            elif isinstance(expr, Operator):
-                try:
-                    return rep_expectation(expr, **options)
-                except NotImplementedError:
-                    raise NotImplementedError(strerr)
-            else:
-                raise NotImplementedError(strerr)
+        basis = get_basis_state(expr, **options)
+        if basis is not None:
+            options['basis'] = basis
+        return expr._represent(**options)
     elif isinstance(expr, Add):
         result = represent(expr.args[0], **options)
         for args in expr.args[1:]:
@@ -231,13 +213,16 @@ def represent(expr, **options):
 
     return result
 
-def rep_innerproduct(expr, **options):
+def innerproduct_helper(expr, **options):
     """
-    Returns an innerproduct like representation (e.g. ``<x'|x>``) for the
-    given state.
+    Returns an innerproduct like representation (e.g. <x'|x>) for the
+    given state. This is meant to be a helper function for the
+    internal _represent methods when they want to form a standard
+    <x'|x> type reprsentation.
 
     Attempts to calculate inner product with a bra from the specified
-    basis. Should only be passed an instance of KetBase or BraBase
+    basis. Should only be passed an instance of KetBase or BraBase,
+    and the basis specified in option must be a State instance.
 
     If a ``wrap_wavefunction`` option is passed and is True, the
     function will wrap the result in a Wavefunction object before
@@ -252,9 +237,9 @@ def rep_innerproduct(expr, **options):
     Examples
     ========
 
-    >>> from sympy.physics.quantum.represent import rep_innerproduct
+    >>> from sympy.physics.quantum.represent import innerproduct_helper
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
-    >>> rep_innerproduct(XKet())
+    >>> innerproduct_helper(XKet())
     DiracDelta(x - x_1)
     >>> rep_innerproduct(XKet(), basis=PxOp())
     sqrt(2)*exp(-I*px_1*x/hbar)/(2*sqrt(hbar)*sqrt(pi))
@@ -266,7 +251,7 @@ def rep_innerproduct(expr, **options):
     if not isinstance(expr, (KetBase, BraBase)):
         raise TypeError("expr passed is not a Bra or Ket")
 
-    basis = get_basis_state(expr, **options)
+    basis = options.pop("basis", None)
 
     if not isinstance(basis, StateBase):
         raise NotImplementedError("Can't form this representation!")
@@ -298,9 +283,13 @@ def rep_innerproduct(expr, **options):
     else:
         return ret
 
-def rep_expectation(expr, **options):
+def expectation_helper(expr, **options):
     """
     Returns an ``<x'|A|x>`` type representation for the given operator.
+
+    This is meant to be a helper function for the
+    internal _represent methods when they want to form a standard
+    <x'|A|x> type reprsentation.
 
     If a ``wrap_wavefunction`` option is passed and is True, the
     function will wrap the result in a Wavefunction object before
@@ -316,12 +305,12 @@ def rep_expectation(expr, **options):
     ========
 
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
-    >>> from sympy.physics.quantum.represent import rep_expectation
-    >>> rep_expectation(XOp())
+    >>> from sympy.physics.quantum.represent import expectation_helper
+    >>> expectation_helper(XOp())
     x_1*DiracDelta(x_1 - x_2)
-    >>> rep_expectation(XOp(), basis=PxOp())
+    >>> expectation_helper(XOp(), basis=PxOp())
     <px_2|*X*|px_1>
-    >>> rep_expectation(XOp(), basis=PxKet())
+    >>> expectation_helper(XOp(), basis=PxKet())
     <px_2|*X*|px_1>
 
     """
@@ -332,7 +321,7 @@ def rep_expectation(expr, **options):
     if not isinstance(expr, Operator):
         raise TypeError("The passed expression is not an operator")
 
-    basis_state = get_basis_state(expr, **options)
+    basis_state = options.pop('basis', None)
 
     if basis_state is None or not isinstance(basis_state, StateBase):
         raise NotImplementedError("Could not get basis kets for this operator")
