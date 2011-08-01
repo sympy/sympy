@@ -973,7 +973,7 @@ def test_conjugate():
                            [5,0]])
 
 def test_conj_dirac():
-    raises(ShapeError, "eye(3).D")
+    raises(AttributeError, "eye(3).D")
 
     M = Matrix([ [1,I,I,I],
                  [0,1,I,I],
