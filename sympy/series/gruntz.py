@@ -117,17 +117,13 @@ this function to figure out the exact problem.
 """
 from sympy import SYMPY_DEBUG
 from sympy.core import Basic, S, oo, Symbol, C, I, Dummy, Wild
-from sympy.core.function import Function, UndefinedFunction, PoleError
+from sympy.core.function import Function, UndefinedFunction, LimitError
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
 from sympy import cacheit
 
 from sympy.core.compatibility import reduce
-=======
-#class LimitError(Exception):
-#    pass
-
 
 O = Order
 
@@ -696,7 +692,7 @@ def gruntz(e, z, z0, dir="real"):
                 return limit_left
             else:
                 msg = "Limit(%s, %s, %s, dir=%s) does not exist. \n Right and left hand side limits are different"
-                raise PoleError(msg % (e, z, z0, dir))
+                raise LimitError(msg % (e, z, z0, dir))
         else:
             raise NotImplementedError("dir must be '+' or '-'")
         r = limitinf(e0, z)

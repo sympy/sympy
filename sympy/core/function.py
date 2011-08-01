@@ -48,6 +48,9 @@ from itertools import repeat
 class PoleError(Exception):
     pass
 
+class LimitError(Exception):
+    pass
+
 class FunctionClass(BasicMeta):
     """
     Base class for function classes. FunctionClass is a subclass of type.
