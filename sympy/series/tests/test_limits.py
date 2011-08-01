@@ -72,7 +72,7 @@ def test_basic4():
     assert limit(sqrt(x + 1) - sqrt(x), x, oo)==0
     assert integrate(1/(x**3+1),(x,0,oo)) == 2*pi*sqrt(3)/9
 
-    
+
 def test_issue786():
     assert limit(x*y + x*z, z, 2) == x*y+2*x
 

@@ -25,9 +25,6 @@ def limit(e, z, z0, dir="real"):
     -oo
     >>> limit(1/x, x, oo)
     0
-    >>> limit(abs(x)/x, x, 0)
-    LimitError: Limit(Abs(x)/x, x, 0, dir=real) does not exist.
-    Right and left hand side limits are different
     >>> limit(abs(x)/x, x, 0, dir = '+')
     1
     >>> limit(abs(x)/x, x, 0, dir = '-')
