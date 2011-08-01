@@ -2,23 +2,23 @@ from __future__ import division
 from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core.cache import cacheit
+
 
 from sympy.core.numbers import nan, oo
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
-from sympy.utilities import any, all
 from sympy.printing import sstr
 
-from matrices import Matrix, ShapeError
-from matrixbase import MatrixBase
+from sympy.linalg import DenseMatrix
+from exceptions import *
+from datamatrix import DataMatrix
 
 import random
 
-from sympy.polys import EX, QQ, RR, ZZ
 
-class DOKMatrix(MatrixBase):
+
+class DOKMatrix(DataMatrix):
     """Sparse matrix"""
     def __init__(self, *args, **kwargs):
         self.type = lambda i: i
@@ -76,19 +76,7 @@ class DOKMatrix(MatrixBase):
                         self.mat[(i,j)] = value
 
     def __getitem__(self, key):
-        if len(key) == 2:
-            i, j = key
-            if isinstance(i, int) and isinstance(j, int):
-                if (i, j) in self.mat:
-                    return self.mat[i, j]
-                elif (0, 0) <= key < self.shape:
-                    return self.type(0)
-                else:
-                    raise IndexError
-            elif isinstance(i, slice) or isinstance(j, slice):
-                return self.submatrix((i, j))
-            else:
-                raise TypeError
+        return self.mat.get(key, 0)
    
     def rowdecomp(self, num):
         nmax = len(self)
@@ -965,7 +953,7 @@ def DOK_matrix_multiply_row_major(A, B):
     for k in xrange(A.rows):
         for _, j in rows1[k]:
             for _, n  in rows2[j]:
-                temp = A.mat[k, j] * B.mat[j, n]
+                temp = A[k, j] * B[j, n]
                 if (k, n) in Cdict:
                     Cdict[k, n] += temp
                 else:

@@ -86,7 +86,10 @@ class LILMatrix(DataMatrix):
     def __eq__(self, other):
         if not self.shape == other.shape:
             return False
-        return all(self.mat[i][ind] == other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i]))) 
+        try:
+            return all(self.mat[i][ind] == other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i])))
+        except:
+            return False
 
     def __ne__(self, other):
         if not self.shape == other.shape:
@@ -114,6 +117,9 @@ class LILMatrix(DataMatrix):
             return prod.to_lilmatrix() 
         else:
             # Scalar multiplication
+            if other == 0:
+                from lilmatrix_tools import zeros
+                return zeros(self.rows, self.cols)
             prod = self.copy()
             for i in xrange(self.rows):
                 for ind, (j, value) in enumerate(self.mat[i]):
