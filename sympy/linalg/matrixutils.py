@@ -43,6 +43,7 @@ def _denserepr_from_callable(rows, cols, f):
     return mat
 
 def _lilrepr_from_callable(rows, cols, f):
+    assert type(rows) == int, rows
     mat = [[] for i in xrange(rows)]
     for i in xrange(rows):
         for j in xrange(cols):

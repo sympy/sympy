@@ -94,6 +94,7 @@ class LILMatrix(DataMatrix):
         return any(self.mat[i][ind] != other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i])))
 
     def __add__(self, other):
+        from lilmatrix_tools import _row_add
         if not isinstance(other, LILMatrix):
             if self.is_square():
                 other = other * LILMatrix.eye(self.rows)
@@ -108,12 +109,12 @@ class LILMatrix(DataMatrix):
         return self + (-1 * other)
     
     def __mul__(self, other):
-        if isinstance(other, MatrixBase):
+        if isinstance(other, DataMatrix):
             prod = self.to_dokmatrix() * other.to_dokmatrix()
             return prod.to_lilmatrix() 
         else:
             # Scalar multiplication
-            prod = self.clone()
+            prod = self.copy()
             for i in xrange(self.rows):
                 for ind, (j, value) in enumerate(self.mat[i]):
                     prod.mat[i][ind] = (j, other * value)
@@ -123,11 +124,17 @@ class LILMatrix(DataMatrix):
         ## assume other is scalar
         return self.__mul__(other)
 
-    def submatrix(self, keys):
+    def submatrix(self, *args):
         from matrixutils import _slice_to_bounds
-
-        rlo, rhi = slice2bounds(self, keys[0], self.rows)
-        clo, chi = slice2bounds(self, keys[1], self.cols)
+        from lilmatrix_tools import zeros
+        if len(args) == 1:
+            keys = args[0]
+            rlo, rhi = _slice_to_bounds(keys[0], self.rows)
+            clo, chi = _slice_to_bounds(keys[1], self.cols)
+        elif len(args) == 4:
+            rlo, rhi, clo, chi = args
+        else:
+            raise TypeError("Data type not understood")
 
         outRows, outCols = rhi-rlo, chi-clo
         outMat = []
@@ -145,7 +152,7 @@ class LILMatrix(DataMatrix):
         for i in xrange(len(outMat)):
             for ind, (j, val) in enumerate(outMat[i]):
                  outMat[i][ind] = (j - clo, val)
-        A = LILMatrix.zeros((outRows, outCols))
+        A = zeros(outRows, outCols)
         A.mat = outMat
         return A
 
@@ -219,11 +226,27 @@ class LILMatrix(DataMatrix):
         return self.rows == self.cols
 
     def transpose(self):
-        T = LILMatrix.zeros(self.rows)
+        from lilmatrix_tools import zeros
+        T = zeros(self.cols, self.rows)
         for i in xrange(self.rows):
             for j, value in self.mat[i]:
                 T.mat[j].append((i, value))
         return T
 
     T = property(transpose)
+
+    def is_symmetric(self):
+        for i in xrange(self.rows):
+            for j in xrange(i):
+                if self[i, j] != self[j, i]:
+                    return False
+        return True
+
+    def is_lower(self):
+        return all (i >= j for i in xrange(len(self.mat)) for j, val in self.mat[i])
+
+    def permute(self, row_swaps):
+        for r1, r2 in row_swaps:
+            self.row_swap(r1, r2)
+
 
