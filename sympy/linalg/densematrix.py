@@ -10,7 +10,7 @@ class DenseMatrix(DataMatrix):
 
     def __init__(self, *args, **kwargs):
         """
-        DenseMatrix, internal low-level matrix for Matrix
+        DenseMatrix, internal low-level dense representation matrix
         self.rows ---> number of rows
         self.cols ---> number of cols
         self.mat  ---> data stored in a single array of size rows * cols,
@@ -33,9 +33,10 @@ class DenseMatrix(DataMatrix):
         elif len(args) == 1:
             mat = args[0]
             if isinstance(mat, DenseMatrix):
-                rows = mat.rows
-                cols = mat.cols
-                mat = matrixutils._denserepr_from_list(rows, cols, mat.mat)
+                matrix = mat.to_densematrix()
+                rows = matrix.rows
+                cols = matrix.cols
+                mat = matrix.mat
             elif isinstance(mat, (list, tuple)):
                 rows = len(mat)
                 cols = len(mat[0])

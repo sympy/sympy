@@ -1,69 +1,57 @@
 from __future__ import division
 import random
-from sympy.matrices.matrices import Matrix
 from sympy.printing import sstr, pretty
 from sympy.simplify.simplify import simplify as sympy_simplify
 from sympy.core.singleton import S
-from matrixbase import MatrixBase
+from datamatrix import DataMatrix
+import matrixutils
+
 def _iszero(x):
     return x == 0
 
-class LILMatrix(MatrixBase):
+class LILMatrix(DataMatrix):
+    """
+        LILMatrix, internal low-level sparse list of list representation matrix
+        self.rows ---> number of rows
+        self.cols ---> number of cols
+        self.mat  ---> data stored in a list of rows, where each row i is a
+                       list of non-zero elements in the form of tuple (j, value)
+        """
+
     def __init__(self, *args, **kwargs):
-        if len(args) == 3 and callable(args[2]):
-            "LILMatrix from lambda function"
-            op = args[2]
-            if not isinstance(args[0], int) or not isinstance(args[1], int):
-                raise TypeError("`args[0]` and `args[1]` must both be integers.")
-            self.rows = args[0]
-            self.cols = args[1]
-            self.mat = [[] for i in xrange(self.rows)]
-            for i in xrange(self.rows):
-                for j in xrange(self.cols):
-                    value = op(i,j)
-                    if value != 0:
-                        self.mat[i].append((j, value))
-        elif len(args)==3 and isinstance(args[0],int) and \
-                isinstance(args[1],int) and isinstance(args[2], (list, tuple)):
-            "LILmatrix from a single list"
-            self.rows = args[0]
-            self.cols = args[1]
+        if len(args) == 3:
+            rows = args[0]
+            cols = args[1]
             mat = args[2]
-            self.mat = [[] for i in xrange(self.rows)]
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    value = mat[i*self.cols+j]
-                    if value != 0:
-                        self.mat[i].append((j, value))
-        elif len(args)==3 and isinstance(args[0],int) and \
-                isinstance(args[1],int) and isinstance(args[2], dict):
-            "LILMatrix from a dictionary"
-            self.rows = args[0]
-            self.cols = args[1]
-            self.mat = [[] for i in xrange(self.rows)]
-            # manual copy, copy.deepcopy() doesn't work
-            for key in args[2].keys():
-                val = args[2][key]
-                if val != 0:
-                    self.mat[i].append((j, value))
-        else:
-            if len(args) == 1:
-                mat = args[0]
+
+            if isinstance(mat, dict):
+                mat = matrixutils._lilrepr_from_dict(rows, cols, mat)
+            elif callable(mat):
+                mat = matrixutils._lilrepr_from_callable(rows, cols, mat)
+            elif isinstance(mat, (list, tuple)) and len(mat) == rows * cols:
+                mat = matrixutils._lilrepr_from_list(rows, cols, mat)
             else:
-                mat = args
-            "LILMatri from a list of list"
-            if not isinstance(mat[0], (list, tuple)):
-                mat = [ [element] for element in mat ]
-            self.rows = len(mat)
-            self.cols = len(mat[0])
-            self.mat = [[] for i in xrange(self.rows)]
-            for i in range(self.rows):
-                if len(mat[i]) != self.cols:
-                    raise ValueError("All arguments must have the same length.")
-                for j in range(self.cols):
-                    value = mat[i][j]
-                    if value != 0:
-                        self.mat[i].append((j, value))
+                raise TypeError('Data type not understood.')
+        elif len(args) == 1:
+            mat = args[0]
+            if isinstance(mat, DataMatrix):
+                matrix = mat.to_lilmatrix()
+                rows = matrix.rows
+                col = matrix.cols
+                mat = matrix.mat
+            elif isinstance(mat, (list, tuple)):
+                rows = len(mat)
+                cols = len(mat[0])
+                mat = matrixutils._lilrepr_from_lil(rows, cols, mat)
+            else:
+                raise TypeError('Data type not understood.')
+        elif len(args) == 0:
+            rows = cols = 0
+            mat = []
+
+        self.rows = rows
+        self.cols = cols
+        self.mat = map(S, mat)
 
     def __getitem__(self, key):
         i, j = key
@@ -95,14 +83,52 @@ class LILMatrix(MatrixBase):
         if value != 0:
             self.mat[i].append((j, value))
 
-    def submatrix(self, keys):
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("At least one element of `keys` must be a slice object.")
+    def __eq__(self, other):
+        if not self.shape == other.shape:
+            return False
+        return all(self.mat[i][ind] == other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i]))) 
 
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi<=self.rows and 0<=clo<=chi<=self.cols ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+    def __ne__(self, other):
+        if not self.shape == other.shape:
+            return True
+        return any(self.mat[i][ind] != other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i])))
+
+    def __add__(self, other):
+        if not isinstance(other, LILMatrix):
+            if self.is_square():
+                other = other * LILMatrix.eye(self.rows)
+            else:
+                raise Exception
+        add = self.copy()
+        for i in xrange(self.rows):
+            add.mat[i] = _row_add(self.mat[i], other.mat[i], 1)
+        return add
+
+    def __sub__(self, other):
+        return self + (-1 * other)
+    
+    def __mul__(self, other):
+        if isinstance(other, MatrixBase):
+            prod = self.to_dokmatrix() * other.to_dokmatrix()
+            return prod.to_lilmatrix() 
+        else:
+            # Scalar multiplication
+            prod = self.clone()
+            for i in xrange(self.rows):
+                for ind, (j, value) in enumerate(self.mat[i]):
+                    prod.mat[i][ind] = (j, other * value)
+            return prod
+
+    def __rmul__(self, other):
+        ## assume other is scalar
+        return self.__mul__(other)
+
+    def submatrix(self, keys):
+        from matrixutils import _slice_to_bounds
+
+        rlo, rhi = slice2bounds(self, keys[0], self.rows)
+        clo, chi = slice2bounds(self, keys[1], self.cols)
+
         outRows, outCols = rhi-rlo, chi-clo
         outMat = []
         for i in xrange(rlo, rhi):
@@ -136,11 +162,9 @@ class LILMatrix(MatrixBase):
         for i, (j, val) in enumerate(self.mat[r]):
             self.mat[r][i] = j, f(val, j)
 
-    def row_swap(self, r1, r2):
-        self.mat[r1], self.mat[r2] = self.mat[r2], self.mat[r1]
-
     def to_densematrix(self):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j])
+        from sympy.linalg.densematrix import DenseMatrix
+        return DenseMatrix(self.rows, self.cols, lambda i, j: self[i, j])
 
     def to_dokmatrix(self):
         from sympy.linalg import DOKMatrix
@@ -162,25 +186,6 @@ class LILMatrix(MatrixBase):
             return solve_rref(self, rhs)
         else:
             raise ValueError('Unrecognised method')
-
-    def __mul__(self, other):
-        if isinstance(other, MatrixBase):
-            prod = self.to_dokmatrix() * other.to_dokmatrix()
-            return prod.to_lilmatrix() 
-        else:
-            # Scalar multiplication
-            prod = self.clone()
-            for i in xrange(self.rows):
-                for ind, (j, value) in enumerate(self.mat[i]):
-                    prod.mat[i][ind] = (j, other * value)
-            return prod
-
-    def __rmul__(self, other):
-        ## assume other is scalar
-        return self.__mul__(other)
-
-    def __sub__(self, other):
-        return self + (-1 * other)
 
     def det(self, method='GE'):
         if method == "GE":
@@ -209,17 +214,6 @@ class LILMatrix(MatrixBase):
     def copy(self):
         # Could be better
         return LILMatrix(self.rows, self.cols, lambda i, j: self[i, j])
-        
-    def __add__(self, other):
-        if not isinstance(other, LILMatrix):
-            if self.is_square():
-                other = other * LILMatrix.eye(self.rows)
-            else:
-                raise Exception
-        add = self.copy()
-        for i in xrange(self.rows):
-            add.mat[i] = _row_add(self.mat[i], other.mat[i], 1)
-        return add
 
     def is_square(self):
         return self.rows == self.cols
@@ -230,48 +224,6 @@ class LILMatrix(MatrixBase):
             for j, value in self.mat[i]:
                 T.mat[j].append((i, value))
         return T
-    
+
     T = property(transpose)
-    
-    def __eq__(self, other):
-        if not self.shape == other.shape:
-            return False
-        return all(self.mat[i][ind] == other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i]))) 
 
-    def __ne__(self, other):
-        if not self.shape == other.shape:
-            return True
-        return any(self.mat[i][ind] != other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i])))            
-                
-def _row_add(row1, row2, alpha):
-    "li = row1 + alpha * row2 "
-    li = []
-    i1 = i2 = 0
-    n1 = len(row1)
-    n2 = len(row2)
-    while i1 < n1 or i2 < n2:
-        # print i1, i2, len(row1), len(row2)
-        if i1 < n1 and (i2 >= n2 or row1[i1][0] < row2[i2][0]):
-            li.append(row1[i1])
-            i1 += 1
-        elif i1 >= n1 or row1[i1][0] > row2[i2][0]:
-            li.append((row2[i2][0], alpha * row2[i2][1]))
-            i2 += 1
-        else:
-            val = row1[i1][1] + alpha * row2[i2][1]
-            if val != 0:
-                li.append((row1[i1][0], val))
-            i1 += 1
-            i2 += 1
-    return li   
-
-def randInvLILMatrix(n, d, min=-5, max=10):
-    A = LILMatrix(n, n, lambda i, j: random.randint(min, max) if abs(i - j) <= d-1 else 0)
-    return A
-    
-def iszero(A):
-    return all(len(i) == 0 for i in A.mat)
-
-def randLILMatrix(i, j, min=1, max=1, sparsity=0.5):
-    return LILMatrix(i, j, lambda i, j: random.randint(min, max) if random.random() < sparsity else 0)
-    

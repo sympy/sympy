@@ -42,3 +42,42 @@ def _denserepr_from_callable(rows, cols, f):
             mat[i * cols + j] = f(i, j)
     return mat
 
+def _lilrepr_from_callable(rows, cols, f):
+    mat = [[] for i in xrange(rows)]
+    for i in xrange(rows):
+        for j in xrange(cols):
+            val = f(i,j)
+            if val != 0:
+                mat[i].append((j, val))  
+    return mat
+
+def _lilrepr_from_list(rows, cols, li):
+    mat = [[] for i in xrange(rows)]
+    for i in xrange(rows):
+        for j in xrange(cols):
+            val = li[i*cols + j]
+            if val != 0:
+                mat[i].append((j, val))
+    return mat
+
+def _lilrepr_from_dict(rows, cols, di):
+    mat = [[] for i in xrange(rows)]
+    for i in xrange(rows):
+        for j in xrange(cols):
+            val = di[i, j]
+            if val != 0:
+                mat[i].append((j, val))
+    return mat
+
+def _lilrepr_from_lil(rows, cols, lil):
+    mat = [[] for i in xrange(rows)]
+    for i in xrange(rows):
+        for j in xrange(cols):
+            val = lil[i][j]
+            if val != 0:
+                mat[i].append((j, val))
+    return mat
+
+
+  
+
