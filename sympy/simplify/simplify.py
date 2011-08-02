@@ -2102,6 +2102,8 @@ def hypersimilar(f, g, k):
 
     return h.is_rational_function(k)
 
+from sympy.utilities.timeutils import timethis
+@timethis('combsimp')
 def combsimp(expr):
     r"""
     Simplify combinatorial expressions.

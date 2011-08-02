@@ -328,7 +328,7 @@ class IndexPair(object):
     def sizes(self):
         return (len(self.ap), len(self.bq))
 
-    def __str__(self):
+    def __repr__(self):
         return 'IndexPair(%s, %s)' % (self.ap, self.bq)
 
     def compute_buckets(self, oabuckets=None, obbuckets=None):
@@ -509,7 +509,7 @@ class IndexQuadruple(object):
     def signature(self):
         return (len(self.an), len(self.ap), len(self.bm), len(self.bq))
 
-    def __str__(self):
+    def __repr__(self):
         return 'IndexQuadruple(%s, %s, %s, %s)' % (self.an, self.ap,
                                                    self.bm, self.bq)
 
