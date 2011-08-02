@@ -8,6 +8,7 @@ MANIFEST
 my/
 dist/
 build/
+sympy-py3k/
 
 tox.ini
 .tox/
