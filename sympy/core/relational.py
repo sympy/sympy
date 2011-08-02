@@ -132,6 +132,8 @@ class Relational(Expr, EvalfMixin):
                 Nrhs = rhs.evalf()
                 if Nrhs.is_Number:
                     return rop_cls._eval_relation(Nlhs, Nrhs)
+        if (cls is Equality or rop=='==') and lhs == rhs:
+            return True
 
         obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
         return obj
