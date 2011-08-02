@@ -154,12 +154,8 @@ class DOKMatrix(DataMatrix):
         return True
 
     def submatrix(self, keys):
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("Both elements of `keys` must be slice objects.")
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        rlo, rhi = slice_to_bounds(keys[0], self.rows)
+        clo, chi = slice_to_bounds(keys[1], self.cols)
         return DOKMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
 
     @property
@@ -183,13 +179,13 @@ class DOKMatrix(DataMatrix):
 
     def det(self, method="LDL"):
         if method == "CH":
-            L = (self.T * self)._cholesky_sparse()
+            L = _cholesky_sparse(self.T * self)
             det = 1
             for i in xrange(L.rows):
                 det *= L[i,i]
             return det
         elif method =="LDL":
-            _, D = (self.T * self)._LDL_sparse()
+            _, D = _LDL_sparse(self.T * self)
             det = 1
             for i in xrange(D.rows):
                 det *= D[i, i]
@@ -200,12 +196,6 @@ class DOKMatrix(DataMatrix):
     def applyfunc(self, op):
         for i in self.mat:
             self.mat[i] = op(self.mat[i])
-
-    def scalar_multiply(self, scalar):
-        mat = DOKMatrix(self.rows, self.cols, {})
-        for key, value in self.mat.iteritems():
-            mat[key] = scalar * value
-        return mat
 
     def to_dokmatrix(self):
         return self
@@ -219,43 +209,4 @@ class DOKMatrix(DataMatrix):
 
     def copy(self):
         return DOKMatrix(self.rows, self.cols, self.mat)
-
-    def inverse_solver(self, solver=None):
-        from matrixutils import vecs2matrix
-        if not solver or solver == 'CH':
-            solver = self._cholesky_solve
-        elif solver == 'LDL':
-            solver = self.LDL_solve
-        else:
-            raise Exception('solver method not recognized')
-        I = Matrix.eye(self.rows)
-        return vecs2matrix([solver(I[:, i])
-            for i in xrange(self.cols)], repr='dok')
-
-    def _lil_row_lower(A):
-        return A._lil_lower(0)
-
-    def _lil_col_lower(A):
-        return A._lil_lower(1)
-
-    def _lil_lower(A, j):
-        lower = [k for k in A.mat.iterkeys() if k[0] >= k[1]]
-        return _lil(lower, A.cols, j)
-
-    def _lil_row(A):
-        return _lil(A.mat.keys(), A.cols, 0)
-
-    def _lil_col(A):
-        return _lil(A.mat.keys(), A.cols, 1) 
-
-def _lil(keys, n, j):
-    keys.sort()
-    zeros = set(xrange(n)) - set(k[j] for k in keys)
-    lil = [ [] if i in zeros 
-        else [k for k in keys if k[j] == i ]
-        for i in xrange(n) ]
-    return lil
-
-lil = _lil
-
 
