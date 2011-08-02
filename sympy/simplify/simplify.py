@@ -2418,7 +2418,26 @@ def combsimp(expr):
                 no.append(2**(2*y - 1))
                 do.append(sqrt(S.Pi))
 
-        # Try to absorb factors into the gammas
+        # Try to absorb factors into the gammas.
+        # This code (in particular repeated calls to find_fuzzy) can be very
+        # slow.
+        # We thus try to avoid expensive calls by building the following
+        # "invariants": For every factor or gamma function argument
+        #   - the set of free symbols S
+        #   - the set of functional components T
+        # We will only try to absorb if T1==T2 and (S1 intersect S2 != emptyset
+        # or S1 == S2 == emptyset)
+        inv = {}
+        def compute_ST(expr):
+            from sympy import Function, Pow
+            if expr in inv:
+                return inv[expr]
+            return (expr.free_symbols, expr.atoms(Function).union(
+                                            set(e.exp for e in expr.atoms(Pow))))
+        def update_ST(expr):
+            inv[expr] = compute_ST(expr)
+        for expr in numer_gammas + denom_gammas + numer_others + denom_others:
+            update_ST(expr)
         for to, numer, denom in [(numer_gammas, numer_others, denom_others),
                                  (denom_gammas, denom_others, numer_others)]:
             newl = []
@@ -2428,7 +2447,12 @@ def combsimp(expr):
                 while cont:
                     cont = False
                     def find_fuzzy(l, x):
+                        S1, T1 = compute_ST(x)
                         for y in l:
+                            S2, T2 = inv[y]
+                            if T1 != T2 or (not S1.intersection(S2) and \
+                                            (S1 != set() or S2 != set())):
+                                continue
                             # XXX we want some simplification (e.g. cancel or
                             # simplify) but no matter what it's slow.
                             a = len(cancel(x/y).free_symbols)
@@ -2442,6 +2466,7 @@ def combsimp(expr):
                         numer.remove(y)
                         if y != g:
                             numer.append(y/g)
+                            update_ST(y/g)
                         g += 1
                         cont = True
                     y = find_fuzzy(numer, 1/(g-1))
@@ -2449,6 +2474,7 @@ def combsimp(expr):
                         numer.remove(y)
                         if y != 1/(g-1):
                             numer.append((g-1)*y)
+                            update_ST((g-1)*y)
                         g -= 1
                         cont = True
                     y = find_fuzzy(denom, 1/g)
@@ -2456,6 +2482,7 @@ def combsimp(expr):
                         denom.remove(y)
                         if y != 1/g:
                             denom.append(y*g)
+                            update_ST(y*g)
                         g += 1
                         cont = True
                     y = find_fuzzy(denom, g - 1)
@@ -2463,6 +2490,7 @@ def combsimp(expr):
                         denom.remove(y)
                         if y != g - 1:
                             numer.append((g-1)/y)
+                            update_ST((g-1)/y)
                         g -= 1
                         cont = True
                 newl.append(g)
