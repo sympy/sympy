@@ -1,5 +1,5 @@
 from sympy import (hyper, meijerg, S, Tuple, pi, I, exp, log,
-                   cos, sqrt, symbols, oo, Derivative)
+                   cos, sqrt, symbols, oo, Derivative, gamma)
 from sympy.abc import x, z, k
 from sympy.utilities.pytest import raises
 from sympy.utilities.randtest import (
@@ -132,6 +132,11 @@ def test_meijer():
     from sympy import polar_lift as pl
     assert meijerg([pl(a1)], [pl(a2)], [pl(b1)], [pl(b2)], pl(z)) == \
            meijerg([a1], [a2], [b1], [b2], pl(z))
+
+    # integrand
+    from sympy.abc import a, b, c, d, s
+    assert meijerg([a], [b], [c], [d], z).integrand(s) == \
+           z**s*gamma(c - s)*gamma(-a + s + 1)/(gamma(b - s)*gamma(-d + s + 1))
 
 def test_meijerg_derivative():
     assert meijerg([], [1, 1], [0, 0, x], [], z).diff(x) == \

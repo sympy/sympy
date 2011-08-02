@@ -560,6 +560,15 @@ class meijerg(TupleParametersBase):
         from sympy import hyperexpand
         return hyperexpand(self)
 
+    def integrand(self, s):
+        """ Get the defining integrand D(s). """
+        from sympy import gamma
+        return self.argument**s \
+               * Mul(*(gamma(b - s) for b in self.bm)) \
+               * Mul(*(gamma(1 - a + s) for a in self.an)) \
+               / Mul(*(gamma(1 - b + s) for b in self.bother)) \
+               / Mul(*(gamma(a - s) for a in self.aother))
+
     @property
     def argument(self):
         """ Argument of the Meijer G-function. """
