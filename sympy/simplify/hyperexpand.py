@@ -1902,9 +1902,22 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     from sympy.simplify import powdenest, simplify, polarify
     z = polarify(z, subs=False)
 
+    def carryout_plan(f, ops):
+        C = apply_operators(f.C.subs(f.z, z0), ops,
+                            make_derivative_operator(f.M.subs(f.z, z0), z0))
+        from sympy import eye
+        C = apply_operators(C, ops0,
+                            make_derivative_operator(f.M.subs(f.z, z0)
+                                                     + prem*eye(f.M.shape[0]), z0))
+
+        if premult == 1:
+            C = C.applyfunc(make_simp(z0))
+        r = C*f.B.subs(f.z, z0)*premult
+        return r[0].subs(z0, z)
+
     # TODO
     # The following would be possible:
-    # 2) PFD Duplication (see Kelly Roach's paper)
+    # *) PFD Duplication (see Kelly Roach's paper)
 
     global collection
     if collection is None:
@@ -1940,6 +1953,14 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
     p = simplify(p).subs(z0, z)
 
+    # Try special expansions early.
+    from sympy import unpolarify
+    if unpolarify(z) in [1, -1] and (len(nip.ap), len(nip.bq)) == (2, 1):
+        f = build_hypergeometric_formula(nip)
+        r = carryout_plan(f, ops).replace(hyper, hyperexpand_special)
+        if not r.has(hyper):
+            return r + p
+
     # Try to find a formula in our collection
     f = collection.lookup_origin(nip)
 
@@ -1958,17 +1979,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     ops += devise_plan(nip, f.indices, z0)
 
     # Now carry out the plan.
-    C = apply_operators(f.C.subs(f.z, z0), ops,
-                        make_derivative_operator(f.M.subs(f.z, z0), z0))
-    from sympy import eye
-    C = apply_operators(C, ops0,
-                        make_derivative_operator(f.M.subs(f.z, z0)
-                                                 + prem*eye(f.M.shape[0]), z0))
-
-    if premult == 1:
-        C = C.applyfunc(make_simp(z0))
-    r = C*f.B.subs(f.z, z0)*premult
-    r = r[0].subs(z0, z) + p
+    r = carryout_plan(f, ops) + p
 
     return powdenest(r, polar=True).replace(hyper, hyperexpand_special)
 
@@ -2137,9 +2148,9 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     debug("  Could not find a direct formula. Trying slater's theorem.")
 
     # TODO the following would be possible:
-    # 2) Paired Index Theorems
-    # 3) PFD Duplication
-    #    (See Kelly Roach's paper for (2) and (3).)
+    # *) Paired Index Theorems
+    # *) PFD Duplication
+    #    (See Kelly Roach's paper for details on either.)
     #
     # TODO Also, we tend to create combinations of gamma functions that can be
     #      simplified.
@@ -2155,8 +2166,10 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                     return False
         return True
 
-    def do_slater(an, bm, ap, bq, z):
+    def do_slater(an, bm, ap, bq, z, zfinal):
         from sympy import gamma, residue, factorial, rf, expand_func, polar_lift
+        # zfinal is the value that will eventually be substituted for z.
+        # We pass it to _hyperexpand to improve performance.
         iq = IndexQuadruple(an, bm, ap, bq)
         _, pbm, pap, _ = iq.compute_buckets()
         if not can_do(pbm, pap):
@@ -2183,7 +2196,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 nbq = [1 + bh - b for b in list(bo) + list(bq)]
 
                 k = polar_lift(S(-1)**(len(ap) - len(bm)))
-                harg = k*z
+                harg = k*zfinal
                 # NOTE even though k "is" +-1, this has to be t/k instead of
                 #      t*k ... we are using polar numbers for consistency!
                 premult = (t/k)**bh
@@ -2227,7 +2240,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 # Now the hypergeometric term.
                 au = b_ + lu
                 k = polar_lift(S(-1)**(len(ao) + len(bo) + 1))
-                harg = k*z
+                harg = k*zfinal
                 premult = (t/k)**au
                 nap = [1 + au - a for a in list(an) + list(ap)] + [1]
                 nbq = [1 + au - b for b in list(bm) + list(bq)]
@@ -2252,18 +2265,16 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         return res, cond
 
     t = Dummy('t')
-    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z)
+    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, z0)
 
     def tr(l): return [1 - x for x in l]
     for op in ops:
         op._poly = Poly(op._poly.subs({z: 1/t, x: -x}), x)
     slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
-                               t)
+                               t, 1/z0)
 
-    slater1 = powdenest(slater1.subs(z, z0), polar=True).replace(hyper,
-                                                          hyperexpand_special)
-    slater2 = powdenest(slater2.subs(t, 1/z0), polar=True).replace(hyper,
-                                                          hyperexpand_special)
+    slater1 = powdenest(slater1.subs(z, z0), polar=True)
+    slater2 = powdenest(slater2.subs(t, 1/z0), polar=True)
     if not isinstance(cond2, bool):
         cond2 = cond2.subs(t, 1/z)
 

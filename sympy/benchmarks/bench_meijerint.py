@@ -175,7 +175,9 @@ bench = [
   'integrate(besselj(0,x)*besselj(1,x)*exp(-x**2), (x, 0, oo), meijerg=True)',
   'integrate(besselj(0,x)*besselj(1,x)*besselk(0,x), (x, 0, oo), meijerg=True)',
   'integrate(besselj(0,x)*besselj(1,x)*exp(-x**2), (x, 0, oo), meijerg=True)',
-  'integrate(besselj(a,x)*besselj(b,x)/x, (x,0,oo), meijerg=True)'
+  'integrate(besselj(a,x)*besselj(b,x)/x, (x,0,oo), meijerg=True)',
+
+  'hyperexpand(meijerg((-s - a/2 + 1, -s + a/2 + 1), (-a/2 - S(1)/2, -s + a/2 + S(3)/2), (a/2, -a/2), (-a/2 - S(1)/2, -s + a/2 + S(3)/2), 1))'
  ]
 
 from time import time
