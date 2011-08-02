@@ -66,8 +66,11 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
     def _test(self, elem):
         val = self.condition.subs(dict(elem))
-        assert val in [True, False]
-        return val
+        if val in [True, False]:
+            return val
+        elif val.is_Equality:
+            return False #equalities check if lhs is rhs. This must not be true.
+        raise ValueError("Undeciable if %s"%str(val))
 
     def __contains__(self, other):
         return other in self.fulldomain and self._test(other)

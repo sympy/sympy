@@ -1,5 +1,5 @@
 from sympy import Basic, S, Expr, Symbol, Tuple, And
-from sympy.core.sets import FiniteSet
+from sympy.core.sets import FiniteSet, ProductSet
 
 class Domain(Basic):
     """
@@ -182,6 +182,9 @@ class ProductPSpace(PSpace):
             for value in space.values:
                 rs_space_dict[value] = space
         symbols = FiniteSet(val.symbol for val in rs_space_dict.keys())
+        # Overlapping symbols
+        if len(symbols) < sum(len(space.symbols) for space in spaces):
+            raise ValueError("Overlapping Random Variables")
 
         if all(space.is_Finite for space in spaces):
             cls = ProductFinitePSpace

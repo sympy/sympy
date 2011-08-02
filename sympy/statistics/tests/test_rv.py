@@ -25,6 +25,7 @@ def test_random_symbols():
 def test_pspace():
     X, Y = Normal(0,1), Normal(0,1)
 
+    assert not pspace(5+3)
     assert pspace(X) == X.pspace
     assert pspace(2*X+1) == X.pspace
     #assert pspace(2*X+Y) == ProductPSpace(Y.pspace, X.pspace)
@@ -39,3 +40,22 @@ def test_rs_swap():
 
     expr = 2*X+Y
     assert expr.subs(rs_swap((X,Y), (YY,XX))) == 2*XX+YY
+
+def test_RandomSymbol():
+
+    X = Normal(0, 1, symbol=Symbol('x'))
+    Y = Normal(0, 2, symbol=Symbol('x'))
+    assert X.symbol == Y.symbol
+    assert X!=Y
+
+def test_ProductPSpace():
+    X = Normal(0, 1)
+    Y = Normal(0, 1)
+    px = X.pspace
+    py = Y.pspace
+    #assert pspace(X+Y) == ProductPSpace(px, py)
+    assert pspace(X+Y) == ProductPSpace(py, px)
+
+def test_E():
+    assert E(5) == 5
+

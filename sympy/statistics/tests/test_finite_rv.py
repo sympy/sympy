@@ -1,7 +1,8 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple)
+        symbols, simplify, Eq, cos, And, Tuple, Or)
 from sympy.statistics import (Die, Bernoulli, Coin, P, E, var, covar, skewness,
-        Density, Given, independent, dependent)
+        Density, Given, independent, dependent, Where, FiniteRV, pspace)
+from sympy.utilities.pytest import raises
 
 oo = S.Infinity
 def BayesTest(A,B):
@@ -42,6 +43,29 @@ def test_dice():
     d = Density(2*X+Y**Z)
     assert d[S(22)] == S.One/108 and d[S(4100)]==S.One/216 and S(3130) not in d
 
+    assert pspace(X).domain.as_boolean() == Or(
+            *[Eq(X.symbol, i) for i in [1,2,3,4,5,6]])
+
+def test_domains():
+    x, y = symbols('x y')
+    X, Y= Die(6, symbol=x), Die(6, symbol=y)
+    # Domains
+    d = Where(X>Y)
+    assert d.condition == (x > y)
+    d = Where(And(X>Y, Y>3))
+    assert d.as_boolean() == Or(And(Eq(x,5), Eq(y,4)), And(Eq(x,6), Eq(y,5)),
+        And(Eq(x,6), Eq(y,4)))
+    assert len(d.elements) == 3
+
+    assert len(pspace(X+Y).domain.elements) == 36
+
+    Z = Die(4, symbol=x)
+
+    raises(ValueError, "P(X>Z)") # Two domains with same internal symbol
+
+    pspace(X+Y).domain.set == FiniteSet(1,2,3,4,5,6)**2
+
+
 def test_dice_bayes():
     X, Y, Z = Die(6), Die(6), Die(6)
 
@@ -72,3 +96,29 @@ def test_dependence():
 
     XX, YY = Given(Tuple(X, Y), X+Y>5) # Create a dependency
     assert dependent(XX, YY)
+
+def test_coins():
+    C, D = Coin(), Coin()
+    H, T = sorted(Density(C).keys())
+    assert P(Eq(C, D)) == S.Half
+    assert Density(Tuple(C, D)) == {(H, H): S.One/4, (H, T): S.One/4,
+            (T, H): S.One/4, (T, T): S.One/4}
+    assert Density(C) == {H: S.Half, T: S.Half}
+
+    E = Coin(S.One/10)
+    assert P(Eq(E, H))==S(1)/10
+
+    d = pspace(C).domain
+
+    assert d.as_boolean() == Or(Eq(C.symbol, H), Eq(C.symbol, T))
+
+def test_FiniteRV():
+    F = FiniteRV({1:S.Half, 2:S.One/4, 3:S.One/4})
+
+    assert Density(F) =={S(1):S.Half, S(2):S.One/4, S(3):S.One/4}
+    assert P(F>=2)==S.Half
+
+    assert pspace(F).domain.as_boolean() == Or(
+            *[Eq(F.symbol, i) for i in [1,2,3]])
+
+
