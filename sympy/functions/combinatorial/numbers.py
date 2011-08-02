@@ -88,7 +88,7 @@ class fibonacci(Function):
                 F_needed.insert(0, a)
                 n = a
 
-        ## Depending on situations, we have to use 4 modifications of same equation.
+        ## Depending on situations, we have to use 4 modifications of governing equation.
         ## 1) F_{2*n} = F_n * ( 2 * F_{n + 1} - F_n )
         ## 2) F_{2*n} = F_n * ( 2 * F_{n - 1} + F_n )
         ## 3) F_{2*n + 1} = F_{n + 1}**2 + F_n**2
