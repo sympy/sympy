@@ -64,12 +64,12 @@ class XOp(HermitianOperator):
         d = DifferentialOperator(Derivative(f(coord1), coord1), f(coord1))
         delta = DiracDelta(coord1 - coord2)
 
-        return I*hbar*(d*delta)
+        return I*hbar*delta*d
 
     def _represent_XKet(self, basis, **options):
         from sympy.physics.quantum.represent import expectation_helper
         options['basis'] = basis
-        return expectation_helper(self, **options)
+        return expectation_helper(self, wrap_wavefunction=True, **options)
 
     def _represent_default_basis(self, **options):
         return self._represent_XKet(XKet(), **options)
@@ -130,12 +130,12 @@ class PxOp(HermitianOperator):
         d = DifferentialOperator(Derivative(f(coord1), coord1), f(coord1))
         delta = DiracDelta(coord1 - coord2)
 
-        return -I*hbar*(d*delta)
+        return -I*hbar*delta*d
 
     def _represent_PxKet(self, basis, **options):
         from sympy.physics.quantum.represent import expectation_helper
         options['basis'] = basis
-        return expectation_helper(self, **options)
+        return expectation_helper(self, wrap_wavefunction=True, **options)
 
     def _represent_default_basis(self, **options):
         return self._represent_PxKet(PxKet(), **options)
@@ -185,7 +185,7 @@ class XKet(Ket):
     def _represent_XKet(self, basis, **options):
         from sympy.physics.quantum.represent import innerproduct_helper
         options['basis'] = basis
-        return innerproduct_helper(self, **options)
+        return innerproduct_helper(self, wrap_wavefunction=True, **options)
 
     def _represent_default_basis(self, **options):
         return self._represent_XKet(XKet(), **options)
@@ -315,7 +315,7 @@ class PxKet(Ket):
     def _represent_PxKet(self, basis, **options):
         from sympy.physics.quantum.represent import innerproduct_helper
         options['basis'] = basis
-        return innerproduct_helper(self, **options)
+        return innerproduct_helper(self, wrap_wavefunction=True, **options)
 
     def _represent_default_basis(self, **options):
         return self._represent_PxKet(PxKet(), **options)
