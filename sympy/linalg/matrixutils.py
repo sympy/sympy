@@ -1,3 +1,5 @@
+from sympy.core.singleton import S
+
 def _slice_to_bounds(key, defmax): 
     """
         Takes slice or number and returns (min,max) for iteration
@@ -47,7 +49,7 @@ def _lilrepr_from_callable(rows, cols, f):
     mat = [[] for i in xrange(rows)]
     for i in xrange(rows):
         for j in xrange(cols):
-            val = f(i,j)
+            val = S(f(i,j))
             if val != 0:
                 mat[i].append((j, val))  
     return mat
@@ -56,7 +58,7 @@ def _lilrepr_from_list(rows, cols, li):
     mat = [[] for i in xrange(rows)]
     for i in xrange(rows):
         for j in xrange(cols):
-            val = li[i*cols + j]
+            val = S(li[i*cols + j])
             if val != 0:
                 mat[i].append((j, val))
     return mat
@@ -65,7 +67,7 @@ def _lilrepr_from_dict(rows, cols, di):
     mat = [[] for i in xrange(rows)]
     for i in xrange(rows):
         for j in xrange(cols):
-            val = di[i, j]
+            val = S(di[i, j])
             if val != 0:
                 mat[i].append((j, val))
     return mat
@@ -74,7 +76,7 @@ def _lilrepr_from_lil(rows, cols, lil):
     mat = [[] for i in xrange(rows)]
     for i in xrange(rows):
         for j in xrange(cols):
-            val = lil[i][j]
+            val = S(lil[i][j])
             if val != 0:
                 mat[i].append((j, val))
     return mat

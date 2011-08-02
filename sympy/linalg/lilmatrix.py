@@ -51,7 +51,7 @@ class LILMatrix(DataMatrix):
 
         self.rows = rows
         self.cols = cols
-        self.mat = map(S, mat)
+        self.mat = mat
 
     def __getitem__(self, key):
         i, j = key
