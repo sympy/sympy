@@ -295,7 +295,7 @@ class Permutation(Basic):
         while n > 1:
             id_perm[n-1],id_perm[r % n] = id_perm[r % n], id_perm[n-1]
             n -= 1
-            r = r/n
+            r = r//n
         return Permutation(id_perm)
 
     def rank_nonlex(self, inv_perm = None, n = 0):
@@ -345,7 +345,7 @@ class Permutation(Basic):
         rank = 0
         rho = self.array_form[:]
         for j in xrange(self.size - 1):
-            rank += (rho[j])*int(factorial(self.size - j - 1))
+            rank += (rho[j])*factorial(self.size - j - 1)
             for i in xrange(j + 1, self.size):
                 if rho[i] > rho[j]:
                     rho[i] = rho[i] - 1
@@ -774,7 +774,7 @@ class Permutation(Basic):
                     continue
                 if self_prec_mat[i, j] * other_prec_mat[i, j] == 1:
                     n_prec += 1
-        d = self.size * (self.size - 1)/2 - n_prec
+        d = self.size * (self.size - 1)//2 - n_prec
         return d
 
     def get_adjacency_matrix(self):
@@ -966,8 +966,8 @@ class Permutation(Basic):
         perm_array = [0] * size
         perm_array[size - 1] = 1
         for i in xrange(size - 1):
-            d = (rank % int(factorial(i + 1))) / int(factorial(i))
-            rank = rank - d*int(factorial(i))
+            d = (rank % factorial(i + 1)) // factorial(i)
+            rank = rank - d*factorial(i)
             perm_array[size - i - 1] = d + 1
             for j in xrange(size - i, size):
                 if perm_array[j] > d:
