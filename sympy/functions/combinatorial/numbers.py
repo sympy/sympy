@@ -9,7 +9,7 @@ the separate 'factorials' module.
 
 from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
 
-from sympy.mpmath import bernfrac
+from sympy.mpmath import bernfrac, floor
 
 def _product(a, b):
     p = 1
@@ -64,10 +64,41 @@ class fibonacci(Function):
         * http://mathworld.wolfram.com/FibonacciNumber.html
 
     """
+    # First 50 fibonacci numbers.
+    F = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811, 514229, 832040, 1346269, 2178309, 3524578, 5702887, 9227465, 14930352, 24157817, 39088169, 63245986, 102334155, 165580141, 267914296, 433494437, 701408733, 1134903170, 1836311903, 2971215073, 4807526976, 7778742049, 12586269025]
+
     @staticmethod
-    @recurrence_memo([0, 1])
-    def _fib(n, prev):
-        return prev[-1] + prev[-2]
+    def _fib(n):
+        if n < 51:
+            return fibonacci.F[n]
+        else:
+            F_needed = [n] # To store the indices of Fibonacci numbers required.
+            while n > 49:
+                a = int(floor(n/2))
+                F_needed.insert(0, a + 1)
+                F_needed.insert(0, a)
+                n = a
+
+        ## Depending on situations, we have to use 4 modifications of same equation.
+        ## 1) F_{2*n} = F_n * ( 2 * F_{n + 1} - F_n )
+        ## 2) F_{2*n} = F_n * ( 2 * F_{n - 1} + F_n )
+        ## 3) F_{2*n + 1} = F_{n + 1}**2 + F_n**2
+        ## 4) F_{2*n + 1} = ( F_n + F_{n - 1} )**2 + F_n**2
+
+        fa, fb = fibonacci.F[F_needed[0]], fibonacci.F[F_needed[1]]
+        i = 0
+        while i < len(F_needed) - 3: # -3 to adjest the overflow as increment is +2
+            if F_needed[i + 2] != 2 * F_needed[i]:
+                fa, fb = fb**2 + fa**2, fb*(2*fa + fb)
+            else:
+                fa, fb = fa * (2*fb - fa), fa**2 + fb**2
+            i += 2
+
+        if F_needed[-1]%2 == 0:
+            return fa*(2*fb - fa)
+        else:
+            return fa**2 + fb**2
+
 
     @staticmethod
     @recurrence_memo([None, S.One, _sym])
