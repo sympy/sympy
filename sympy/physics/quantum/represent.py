@@ -15,7 +15,9 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixutils import flatten_scalar
 from sympy.physics.quantum.state import KetBase, BraBase, StateBase, Wavefunction
-from sympy.physics.quantum.operator import Operator, HermitianOperator, OuterProduct
+from sympy.physics.quantum.operator import (
+    Operator, HermitianOperator, OuterProduct, DifferentialOperator
+)
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
 
@@ -209,7 +211,14 @@ def represent(expr, **options):
     # vectors are taken. In these cases, we simply return a scalar.
     result = flatten_scalar(result)
 
-    result = integrate_result(expr, result, **options)
+    result = do_qapply(result)
+
+    unwrapped_res, unwrapped_vars = _unwrap_wf(result)
+
+    result = integrate_result(expr, unwrapped_res, **options)
+
+    if not len(unwrapped_vars) == 0:
+        result = Wavefunction(result, *unwrapped_vars)
 
     return result
 
@@ -551,3 +560,43 @@ def enumerate_states(*args, **options):
         ret = []
 
     return ret
+
+def do_qapply(expr):
+    if not isinstance(expr, Mul):
+        return expr
+
+    args = expr.args
+
+    has_cont = False
+
+    for arg in args:
+        if isinstance(arg, DifferentialOperator) \
+               or isinstance(arg, Wavefunction):
+            has_cont = True
+            break
+
+    if has_cont:
+        return qapply(expr)
+    else:
+        return expr
+
+def _unwrap_wf(expr):
+    if not isinstance(expr, Expr):
+        return (expr, [])
+
+    new_args = [None for arg in expr.args]
+    unwrapped_vars = []
+    has_wf = False
+    for i,arg in enumerate(expr.args):
+        if isinstance(arg, Wavefunction):
+            new_args[i] = arg.expr
+            for v in arg.variables:
+                unwrapped_vars.append(v)
+            has_wf = True
+        else:
+            new_args[i] = arg
+
+    if not has_wf:
+        return (expr, [])
+    else:
+        return (expr.__class__(*new_args), unwrapped_vars)
