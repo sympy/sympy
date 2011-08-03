@@ -36,7 +36,7 @@ from sympy.logic.boolalg import And, Or
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
-from sympy import SYMPY_DEBUG
+from sympy.utilities.misc import debug as _debug
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -198,12 +198,6 @@ def _create_lookup_table(table):
 ####################################################################
 # First some helper functions.
 ####################################################################
-
-def _debug(*args):
-    if SYMPY_DEBUG:
-        for a in args:
-            print a,
-        print
 
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
