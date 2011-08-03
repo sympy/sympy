@@ -83,17 +83,18 @@ class ParetoPSpace(SingleContinuousPSpace):
 def Pareto(xm, alpha, symbol=None):
     return ParetoPSpace(xm, alpha, symbol).value
 
+def beta_function(x,y):
+    return gamma(x+y)/(gamma(x)*gamma(y))
+
 class BetaPSpace(SingleContinuousPSpace):
     def __new__(cls, alpha, beta, symbol=None):
         assert alpha>0, "Alpha must be positive"
         assert beta>0, "Beta must be positive"
 
         alpha, beta = sympify(alpha), sympify(beta)
-        lazy = alpha.is_Symbol or beta.is_Symbol
 
         x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = x**(alpha-1) * (1-x)**(beta-1)
-        pdf = pdf / integrate(pdf, (x, 0,1), lazy=lazy)
+        pdf = x**(alpha-1) * (1-x)**(beta-1) / beta_function(alpha, beta)
 
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, 1))
         obj.alpha = alpha

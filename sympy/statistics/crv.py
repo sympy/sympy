@@ -1,7 +1,7 @@
 from rv import (Domain, SingleDomain, ConditionalDomain, ProductDomain, PSpace,
         random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import S, Interval, Dummy, FiniteSet, Mul, Integral, And
+from sympy import S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy import integrate as sympy_integrate
 oo = S.Infinity
@@ -141,7 +141,7 @@ class ContinuousPSpace(PSpace):
             raise NotImplementedError(
                     "Multiple continuous random variables not supported")
         rv = tuple(rvs)[0]
-        interval = reduce_poly_inequalities([[condition]], rv, relational=False)
+        interval = reduce_poly_inequalities_wrap(condition, rv)
         interval = interval.intersect(self.domain.set)
         return SingleContinuousDomain(rv.symbol, interval)
 
@@ -174,4 +174,18 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     @property
     def density(self):
         return Mul(*[space.density for space in self.spaces])
+
+def reduce_poly_inequalities_wrap(condition, var):
+    if condition.is_Relational:
+        return reduce_poly_inequalities([[condition]], var, relational=False)
+    if condition.__class__ is Or:
+        return reduce_poly_inequalities([list(condition.args)],
+                var, relational=False)
+    if condition.__class__ is And:
+        intervals = [reduce_poly_inequalities([[arg]], var, relational=False)
+            for arg in condition.args]
+        I = intervals[0]
+        for i in intervals:
+            I = I.intersect(i)
+        return I
 

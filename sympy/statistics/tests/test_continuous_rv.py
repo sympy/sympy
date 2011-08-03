@@ -86,3 +86,21 @@ def test_gamma():
     # can't get things to simplify on this one so we use subs
     assert var(X).subs(k,5) == (k*theta**2).subs(k, 5)
     assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
+
+def beta_function(x,y):
+    return gamma(x+y)/(gamma(x)+gamma(y))
+
+def test_beta():
+    alpha, beta = symbols('alpha beta', positive=True)
+    a, b = alpha, beta
+
+    B = Beta(alpha, beta)
+
+    assert pspace(B).domain.set == Interval(0, 1)
+
+    x, dens = Density(B)
+    assert dens == x**(a-1)*(1-x)**(b-1) / beta_function(a,b)
+
+    assert E(B) == alpha / (alpha + beta)
+    assert var(B) == (a*b) / ((a+b)**2 * (a+b+1))
+
