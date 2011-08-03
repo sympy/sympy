@@ -433,3 +433,10 @@ def digamma(x):
 
 def trigamma(x):
     return polygamma(1, x)
+
+def beta(x, y):
+    """ Euler Beta function
+    beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)
+    """
+    return gamma(x)*gamma(y) / gamma(x+y)
+
