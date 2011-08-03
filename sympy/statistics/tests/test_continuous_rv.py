@@ -1,7 +1,7 @@
 from sympy.statistics import (Normal, Exponential, P, E, Where,
         Density, var, covar, skewness, Gamma, Pareto, Beta, Given, pspace)
 from sympy import (Symbol, exp, S, pi, simplify, Interval, erf, Eq, symbols,
-        sqrt, And, gamma)
+        sqrt, And, gamma, beta)
 oo = S.Infinity
 
 def test_single_normal():
@@ -110,20 +110,16 @@ def test_gamma():
     assert var(X).subs(k,5) == (k*theta**2).subs(k, 5)
     assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
-def beta_function(x,y):
-    return gamma(x+y)/(gamma(x)*gamma(y))
-
 def test_beta():
-    alpha, beta = symbols('alpha beta', positive=True)
-    a, b = alpha, beta
+    a, b = symbols('alpha beta', positive=True)
 
-    B = Beta(alpha, beta)
+    B = Beta(a, b)
 
     assert pspace(B).domain.set == Interval(0, 1)
 
     x, dens = Density(B)
-    assert dens == x**(a-1)*(1-x)**(b-1) / beta_function(a,b)
+    assert dens == x**(a-1)*(1-x)**(b-1) / beta(a,b)
 
-    assert E(B) == alpha / (alpha + beta)
+    assert E(B) == a / (a + b)
     assert var(B) == (a*b) / ((a+b)**2 * (a+b+1))
 
