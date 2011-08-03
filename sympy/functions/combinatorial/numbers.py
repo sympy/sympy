@@ -65,9 +65,29 @@ class fibonacci(Function):
 
     """
     @staticmethod
-    @recurrence_memo([0, 1])
-    def _fib(n, prev):
-        return prev[-1] + prev[-2]
+    def _fib(n):
+        """
+        The governing formula for this function is
+            F_{m + n} = F_{m} * F_{n + 1} + F_{m - 1} * F_{n}
+
+        Any number N uniquely be written as N = m + n, where m is non-negative and n = 2^k and N < 2^(k + 1).
+        We generate only those Fibonacci numbers which will be used to calculate F_m and F_n and hence the algorithm runs in O(ln(n)) time.
+
+        References and further reading
+        ==============================
+            * The Art of Computer Programming Vol.1 Fundamental Algorithms by Donald E. Knuth.
+              1.2.8 Fibonacci Numbers
+
+        """
+        a, b, p, q = 1, 0, 0, 1
+        while n:
+            if n % 2:
+                a, b = (a + b)*q + a*p, b*p + a*q
+                n -= 1
+            else:
+                p, q = p*p + q*q, q*q + 2*p*q
+                n //= 2
+        return b
 
     @staticmethod
     @recurrence_memo([None, S.One, _sym])
