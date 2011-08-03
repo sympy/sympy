@@ -64,13 +64,14 @@ class fibonacci(Function):
         * http://mathworld.wolfram.com/FibonacciNumber.html
 
     """
-    _first_50_fibonacci = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811, 514229, 832040, 1346269, 2178309, 3524578, 5702887, 9227465, 14930352, 24157817, 39088169, 63245986, 102334155, 165580141, 267914296, 433494437, 701408733, 1134903170, 1836311903, 2971215073, 4807526976, 7778742049, 12586269025]
-
     @staticmethod
     def _fib(n):
         """
         The governing formula for this function is 
             F_{m + n} = F_{m} * F_{n + 1} + F_{m - 1} * F_{n}
+
+        Any number N uniquely be written as N = m + n, where m is non-negative and n = 2^k and N < 2^(k + 1).
+        We generate only those Fibonacci numbers which will be used to calculate F_m and F_n and hence the algorithm runs in O(ln(n)) time. 
 
         References and further reading
         ==============================
@@ -78,35 +79,15 @@ class fibonacci(Function):
               1.2.8 Fibonacci Numbers
  
         """
-        if n < 51:
-            return fibonacci._first_50_fibonacci[n]
-        else:
-            F_needed = [n] # To store the indices of Fibonacci numbers required.
-            while n > 49:
-                a = n//2
-                F_needed.insert(0, a + 1)
-                F_needed.insert(0, a)
-                n = a
-
-        ## Depending on situations, we have to use 4 modifications of governing equation.
-        ## 1) F_{2*n} = F_n * ( 2 * F_{n + 1} - F_n )
-        ## 2) F_{2*n} = F_n * ( 2 * F_{n - 1} + F_n )
-        ## 3) F_{2*n + 1} = F_{n + 1}**2 + F_n**2
-        ## 4) F_{2*n + 1} = ( F_n + F_{n - 1} )**2 + F_n**2
-
-        fa, fb = fibonacci._first_50_fibonacci[F_needed[0]], fibonacci._first_50_fibonacci[F_needed[1]]
-        i = 0
-        while i < len(F_needed) - 3: # -3 to adjust the overflow as increment is +2
-            if F_needed[i + 2] != 2 * F_needed[i]:
-                fa, fb = fb**2 + fa**2, fb*(2*fa + fb)
+        a, b, p, q = 1, 0, 0, 1
+        while n:
+            if n % 2:
+                a, b = (a + b)*q + a*p, b*p + a*q
+                n -= 1
             else:
-                fa, fb = fa * (2*fb - fa), fa**2 + fb**2
-            i += 2
-
-        if F_needed[-1]%2 == 0:
-            return fa*(2*fb - fa)
-        else:
-            return fa**2 + fb**2
+                p, q = p*p + q*q, q*q + 2*p*q
+                n //= 2 
+        return b
 
     @staticmethod
     @recurrence_memo([None, S.One, _sym])
