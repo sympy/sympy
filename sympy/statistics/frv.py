@@ -172,6 +172,3 @@ class ProductFinitePSpace(ProductPSpace, FinitePSpace):
     @cacheit
     def density(self):
         return Dict(self._density)
-
-def print_elem(elem):
-    return And(*[Eq(sym, val) for sym, val in elem])

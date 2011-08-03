@@ -112,6 +112,9 @@ def test_coins():
 
     assert d.as_boolean() == Or(Eq(C.symbol, H), Eq(C.symbol, T))
 
+    raises(ValueError, "P(C>D)") # Can't intelligently compare H to T
+
+
 def test_FiniteRV():
     F = FiniteRV({1:S.Half, 2:S.One/4, 3:S.One/4})
 
@@ -120,5 +123,4 @@ def test_FiniteRV():
 
     assert pspace(F).domain.as_boolean() == Or(
             *[Eq(F.symbol, i) for i in [1,2,3]])
-
 

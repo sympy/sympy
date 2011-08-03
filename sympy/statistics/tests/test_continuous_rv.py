@@ -1,7 +1,8 @@
 from sympy.statistics import (Normal, Exponential, P, E, Where,
-        Density, var, covar, skewness, Gamma, Pareto)
+        Density, var, covar, skewness, Gamma, Pareto, Beta, Given, pspace)
 from sympy import (Symbol, exp, S, pi, simplify, Interval, erf, Eq, symbols,
-        sqrt)
+        sqrt, And, gamma)
+oo = S.Infinity
 
 def test_single_normal():
     mu = Symbol('mu', real=True, bounded=True, finite=True)
@@ -14,12 +15,34 @@ def test_single_normal():
     x, pdf = Density(Y)
     assert pdf == 2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma)
 
-    assert Where(X**2<=1).set == Interval(-1,1)
-    assert Where(X**2<=1).symbol == X.symbol
-
     assert P(X**2<1) == erf(2**S.Half/2)
 
     assert E(X, Eq(X, mu)) == mu
+
+def test_conditional_1d():
+    X = Normal(0,1)
+    Y = Given(X, X>=0)
+
+    assert Density(Y)[1] == 2 * Density(X)[1]
+
+    assert Y.pspace.domain.set == Interval(0, oo)
+    assert E(Y) == sqrt(2) / sqrt(pi)
+
+    assert E(X**2) == E(Y**2)
+
+def test_ContinuousDomain():
+    X = Normal(0,1)
+    assert Where(X**2<=1).set == Interval(-1,1)
+    assert Where(X**2<=1).symbol == X.symbol
+    Where(And(X**2<=1, X>=0)).set == Interval(0,1)
+
+    Y = Given(X, X>=0)
+
+    assert Y.pspace.domain.set == Interval(0, oo)
+
+
+
+
 
 def test_multiple_normal():
     X, Y = Normal(0,1), Normal(0,1)
@@ -88,7 +111,7 @@ def test_gamma():
     assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
 def beta_function(x,y):
-    return gamma(x+y)/(gamma(x)+gamma(y))
+    return gamma(x+y)/(gamma(x)*gamma(y))
 
 def test_beta():
     alpha, beta = symbols('alpha beta', positive=True)

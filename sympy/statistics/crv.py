@@ -25,7 +25,7 @@ class ContinuousDomain(Domain):
     is_Continuous = True
 
     def as_boolean(self):
-        return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in self])
+        raise NotImplementedError("Not Implemented for generic Domains")
 
 class SingleContinuousDomain(ContinuousDomain, SingleDomain):
     def __new__(cls, symbol, set):
@@ -57,14 +57,21 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
                 expr = domain.integrate(expr, domain_vars, **kwargs)
         return expr
 
+    def as_boolean(self):
+        return And(*[domain.as_boolean() for domain in self.domains])
+
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
 
 
     def integrate(self, expr, variables=None, **kwargs):
+        if variables is None:
+            variables = self.symbols
+        if not variables:
+            return expr
         # Extract the full integral
         fullintegral = self.fulldomain.integrate(expr, variables, lazy=True)
         # separate into integrand and limits
-        integrand, limits = fullintegral.function, fullintegral.limits
+        integrand, limits = fullintegral.function, list(fullintegral.limits)
 
         conditions = [self.condition]
         while conditions:
@@ -79,14 +86,40 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     # Add the appropriate Delta to the integrand
                     integrand *= DiracDelta(cond.lhs-cond.rhs)
                 else:
-                    raise NotImplementedError(
-                            "Inequalities not yet implemented")
+                    symbols = FiniteSet(cond.free_symbols) & self.symbols
+                    if len(symbols)!=1: # Can't handle x > y
+                        raise NotImplementedError(
+                            "Multivariate Inequalities not yet implemented")
+                    # Can handle x > 0
+                    symbol = tuple(symbols)[0]
+                    # Find the limit with x, such as (x, -oo, oo)
+                    for i, limit in enumerate(limits):
+                        if limit[0]==symbol:
+                            # Make condition into an Interval like [0, oo]
+                            cintvl = reduce_poly_inequalities_wrap(cond, symbol)
+                            # Make limit into an Interval like [-oo, oo]
+                            lintvl = Interval(limit[1], limit[2])
+                            # Intersect them to get [0, oo]
+                            intvl = cintvl.intersect(lintvl)
+                            # Put back into limits list
+                            limits[i] = (symbol, intvl.left, intvl.right)
             else:
                 raise ValueError(
                         "Condition %s is not a relational or Boolean"%cond)
 
         return integrate(integrand, *limits, **kwargs)
 
+    def as_boolean(self):
+        return And(self.fulldomain.as_boolean(), self.condition)
+
+    @property
+    def set(self):
+        if len(self.symbols) == 1:
+            return (self.fulldomain.set & reduce_poly_inequalities_wrap(
+                self.condition, tuple(self.symbols)[0]))
+        else:
+            raise NotImplementedError(
+                    "Set of Conditional Domain not Implemented")
 
 
 class ContinuousPSpace(PSpace):

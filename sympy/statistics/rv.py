@@ -74,6 +74,10 @@ class ConditionalDomain(Domain):
     def condition(self):
         return self.args[2]
 
+    @property
+    def set(self):
+        raise NotImplementedError("Set of Conditional Domain not Implemented")
+
     def as_boolean(self):
         return And(self.fulldomain.as_boolean(), self.condition)
 
