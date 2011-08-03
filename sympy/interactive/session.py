@@ -126,7 +126,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
             import IPython
         except ImportError:
             if ipython is not True:
-                print no_ipython
+                if not quiet:
+                    print no_ipython
                 ip = _init_python_session()
                 mainloop = ip.interact
             else:
