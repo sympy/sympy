@@ -1,4 +1,4 @@
-from sympy import residue, Symbol, Function, sin, S, I, pi, exp
+from sympy import residue, Symbol, Function, sin, S, I, pi, exp, log
 from sympy.utilities.pytest import XFAIL
 
 def test_basic1():
@@ -49,3 +49,8 @@ def test_expressions():
 def test_expressions_failing():
     x = Symbol('x')
     assert residue(1/(x**4+1), x, exp(I*pi/4)) == -(S(1)/4+I/4)/sqrt(2)
+
+def test_bug():
+    from sympy.abc import s, z
+    assert residue(2**(z)*(s+z)*(1-s-z)/z**2, z, 0) == \
+           1 + s*log(2) - s**2*log(2) - 2*s

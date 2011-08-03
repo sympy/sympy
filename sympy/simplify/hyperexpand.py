@@ -57,7 +57,11 @@ It is described in great(er) detail in the Sphinx documentation.
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
+from sympy.functions.special.hyper import hyper
 from sympy import SYMPY_DEBUG
+
+from sympy.utilities.timeutils import timethis
+timeit = timethis('meijerg')
 
 def add_formulae(formulae):
     """ Create our knowledge base.
@@ -75,63 +79,64 @@ def add_formulae(formulae):
     # Volume 1, section 6.2
 
     from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
-                       atanh, besseli, gamma, erf, pi, sin, besselj)
+                       atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
+                       EulerGamma, Shi, sinh, cosh, Chi)
+    from sympy.functions.special.hyper import (HyperRep_atanh,
+        HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
+        HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
+        HyperRep_cosasin, HyperRep_sinasin)
     from sympy import polar_lift, exp_polar
 
     # 0F0
     add((), (), exp(z))
 
     # 1F0
-    add((-a, ), (), (1+exp_polar(-I*pi)*z)**a)
+    add((-a, ), (), HyperRep_power1(a, z))
 
     # 2F1
     addb((a, a - S.Half), (2*a,),
-         Matrix([2**(2*a-1)*(1 + sqrt(1+exp_polar(-I*pi)*z))**(1-2*a),
-                 2**(2*a-1)*(1 + sqrt(1+exp_polar(-I*pi)*z))**(-2*a)]),
+         Matrix([HyperRep_power2(a, z),
+                 HyperRep_power2(a + S(1)/2, z)/2]),
          Matrix([[1, 0]]),
          Matrix([[(a-S.Half)*z/(1-z), (S.Half-a)*z/(1-z)],
                  [a/(1-z), a*(z-2)/(1-z)]]))
-    addb((1, 1), (2,), # it is not particularly obvious, but this is the cts. branch
-         Matrix([log(1 + exp_polar(-I*pi)*z), 1]), Matrix([[-1/z, 0]]),
+    addb((1, 1), (2,),
+         Matrix([HyperRep_log1(z), 1]), Matrix([[-1/z, 0]]),
          Matrix([[0, z/(z - 1)], [0, 0]]))
-    # TODO branching
     addb((S.Half, 1), (S('3/2'),),
-         Matrix([log((1 + sqrt(z))/(1 - sqrt(z)))/sqrt(z), 1]),
-         Matrix([[S(1)/2, 0]]),
-         Matrix([[-S(1)/2, 1/(1 - z)], [0, 0]]))
+         Matrix([HyperRep_atanh(z), 1]),
+         Matrix([[1, 0]]),
+         Matrix([[-S(1)/2, 1/(1 - z)/2], [0, 0]]))
     addb((S.Half, S.Half), (S('3/2'),),
-         Matrix([asin(sqrt(z))/sqrt(z), 1/sqrt(1 - z)]),
+         Matrix([HyperRep_asin1(z), HyperRep_power1(-S(1)/2, z)]),
          Matrix([[1, 0]]),
          Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
-    # TODO branching
     addb((-a, S.Half - a), (S.Half,),
-         Matrix([(1 + sqrt(z))**(2*a) + (1 - sqrt(z))**(2*a),
-                 sqrt(z)*(1 + sqrt(z))**(2*a-1)
-                 - sqrt(z)*(1 - sqrt(z))**(2*a-1)]),
-         Matrix([[S.Half, 0]]),
+         Matrix([HyperRep_sqrts1(a, z), -HyperRep_sqrts2(a - S(1)/2, z)]),
+         Matrix([[1, 0]]),
          Matrix([[0, a], [z*(2*a-1)/2/(1-z), S.Half - z*(2*a-1)/(1-z)]]))
 
     # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
     # Integrals and Series: More Special Functions, Vol. 3,.
     # Gordon and Breach Science Publisher
-    add([a, -a], [S.Half], cos(2*a*asin(sqrt(z))))
-    # TODO branching
+    addb([a, -a], [S.Half],
+         Matrix([HyperRep_cosasin(a, z), HyperRep_sinasin(a, z)]),
+         Matrix([[1, 0]]),
+         Matrix([[0, -a], [a*z/(1 - z), 1/(1 - z)/2]]))
     addb([1, 1], [3*S.Half],
-         Matrix([asin(sqrt(z))/sqrt(z*(1-z)), 1]), Matrix([[1, 0]]),
+         Matrix([HyperRep_asin2(z), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
     # 3F2
-    # TODO branching
     addb([-S.Half, 1, 1], [S.Half, 2],
-         Matrix([sqrt(z)*atanh(sqrt(z)), log(1 - z), 1]),
+         Matrix([z*HyperRep_atanh(z), HyperRep_log1(z), 1]),
          Matrix([[-S(2)/3, -S(1)/(3*z), S(2)/3]]),
          Matrix([[S(1)/2, 0, z/(1 - z)/2],
                  [0, 0, z/(z - 1)],
                  [0, 0, 0]]))
     # actually the formula for 3/2 is much nicer ...
-    # TODO branching
     addb([-S.Half, 1, 1], [2, 2],
-         Matrix([sqrt(1 - z), log(sqrt(1 - z)/2 + S.Half), 1]),
+         Matrix([HyperRep_power1(S(1)/2, z), HyperRep_log2(z), 1]),
          Matrix([[S(4)/9 - 16/(9*z), 4/(3*z), 16/(9*z)]]),
          Matrix([[z/2/(z - 1), 0, 0], [1/(2*(z - 1)), 0, S.Half], [0, 0, 0]]))
 
@@ -145,14 +150,29 @@ def add_formulae(formulae):
                  * gamma(a + S.Half)/4**(S.Half - a)]),
          Matrix([[1, 0]]),
          Matrix([[z/2, z/2], [z/2, (z/2 - 2*a)]]))
+    mz = polar_lift(-1)*z
+    addb([a], [a + 1],
+         Matrix([mz**(-a)*a*lowergamma(a, mz), a*exp(z)]),
+         Matrix([[1, 0]]),
+         Matrix([[-a, 1], [0, z]]))
+    # This one is redundant.
     add([-S.Half], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
          Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
-                 a/(2*a - 1)*(polar_lift(-1)*z)**(-a)*lowergamma(a, polar_lift(-1)*z), a/(2*a - 1)*exp(z)]),
+                 a/(2*a - 1)*(polar_lift(-1)*z)**(-a)*lowergamma(a, polar_lift(-1)*z),
+                 a/(2*a - 1)*exp(z)]),
          Matrix([[1, -1, 0]]),
          Matrix([[-S.Half, 0, 1], [0, -a, 1], [0, 0, z]]))
+    # We make a "basis" of four functions instead of three, and give EulerGamma
+    # an extra slot (it could just be a coefficient to 1). The advantage is that
+    # this way Polys will not see multivariate polynomials (it treats EulerGamma
+    # as an indeterminate), which is *way* faster.
+    addb([1, 1], [2, 2],
+         Matrix([Ei(z) - log(z), exp(z), 1, EulerGamma]),
+         Matrix([[1/z, 0, 0, -1/z]]),
+         Matrix([[0, 1, -1, 0], [0, z, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]))
 
     # 0F1
     add((), (S.Half,), cosh(2*sqrt(z)))
@@ -175,9 +195,9 @@ def add_formulae(formulae):
                  [0, S(1)/2 - a, 1, 0],
                  [0, 0, S(1)/2, 1],
                  [z, 0, 0, 1 - a]]))
-    x = 2*(-4*z)**(S(1)/4)
+    x = 2*(4*z)**(S(1)/4)*exp_polar(I*pi/4)
     addb([], [a, a + S.Half, 2*a],
-         (2*sqrt(-z))**(1-2*a)*gamma(2*a)**2 *
+         (2*sqrt(polar_lift(-1)*z))**(1-2*a)*gamma(2*a)**2 *
          Matrix([besselj(2*a-1, x)*besseli(2*a-1, x),
                  x*(besseli(2*a, x)*besselj(2*a-1, x)
                     - besseli(2*a-1, x)*besselj(2*a, x)),
@@ -210,6 +230,11 @@ def add_formulae(formulae):
          Matrix([[b-1, S(1)/2, 0],
                  [z, 0, z],
                  [0, S(1)/2, -b]]))
+    addb([S(1)/2], [S(3)/2, S(3)/2],
+         Matrix([Shi(2*sqrt(z))/2/sqrt(z), sinh(2*sqrt(z))/2/sqrt(z),
+                 cosh(2*sqrt(z))]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S.Half, S.Half, 0], [0, -S.Half, S.Half], [0, 2*z, 0]]))
 
     # 2F3
     # XXX with this five-parameter formula is pretty slow with the current
@@ -226,6 +251,16 @@ def add_formulae(formulae):
                  [z/2, 1-b, 0, z/2],
                  [z/2, 0, b-2*a, z/2],
                  [0, S(1)/2, S(1)/2, -2*a]]))
+    # (C/f above comment about eulergamma in the basis).
+    addb([1, 1], [2, 2, S(3)/2],
+         Matrix([Chi(2*sqrt(z)) - log(2*sqrt(z)),
+                 cosh(2*sqrt(z)), sqrt(z)*sinh(2*sqrt(z)), 1, EulerGamma]),
+         Matrix([[1/z, 0, 0, 0, -1/z]]),
+         Matrix([[0, S(1)/2, 0, -S(1)/2, 0],
+                 [0, 0, 1, 0, 0],
+                 [0, z, S(1)/2, 0, 0],
+                 [0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0]]))
 
 def add_meijerg_formulae(formulae):
     z = Dummy('z')
@@ -242,10 +277,10 @@ def add_meijerg_formulae(formulae):
         x = iq.an[0]
         y, z = iq.bm
         swapped = False
-        if Mod1(x) == Mod1(y):
+        if Mod1Effective(x) == Mod1Effective(y):
             swapped = True
             (y, z) = (z, y)
-        if Mod1(x) != Mod1(z) or x > z:
+        if Mod1Effective(x) != Mod1Effective(z) or x > z:
             return None
         l = [y, x]
         if swapped:
@@ -260,9 +295,9 @@ def add_meijerg_formulae(formulae):
 
 
 def make_simp(z):
-    """ Create a function that simplifies rational functions in `z`. """
+    """ Create a function that simplifies rational functions in ``z``. """
     def simp(expr):
-        """ Efficiently simplify the rational function `expr`. """
+        """ Efficiently simplify the rational function ``expr``. """
         from sympy import poly
         numer, denom = expr.as_numer_denom()
         c, numer, denom = poly(numer, z).cancel(poly(denom, z))
@@ -276,14 +311,16 @@ def debug(*args):
         print
 
 
-class Mod1(object):
+class Mod1Effective(object):
     """
-    Represent an expression 'mod 1'.
+    Represent an expression 'effectively mod 1'.
+    This means that Mod1Effective(a) == Mod1Effective(b) if simplify() can
+    establish that a-b is an Integer (e.g. 5 or -7, not ``k``).
 
     Beware: __eq__ and the hash are NOT compatible. (by design)
     This means that m1 == m2 does not imply hash(m1) == hash(m2).
-    Code that creates Mod1 objects (like compute_buckets below) should be
-    careful only to produce one instance of Mod1 for each class.
+    Code that creates Mod1Effective objects (like compute_buckets below) should be
+    careful only to produce one instance of Mod1Effective for each class.
     """
     # TODO this should be backported to any implementation of a Mod object
     #      (c/f issue 2490)
@@ -300,13 +337,13 @@ class Mod1(object):
 
     #Needed to allow adding Mod1 objects to a dict in Python 3
     def __hash__(self):
-        return super(Mod1, self).__hash__()
+        return super(Mod1Effective, self).__hash__()
 
     def __eq__(self, other):
         from sympy import simplify
-        if not isinstance(other, Mod1):
+        if not isinstance(other, Mod1Effective):
             return False
-        if simplify(self.expr - other.expr).is_integer is True:
+        if simplify(self.expr - other.expr).is_Integer is True:
             return True
         return False
 
@@ -325,17 +362,17 @@ class IndexPair(object):
     def sizes(self):
         return (len(self.ap), len(self.bq))
 
-    def __str__(self):
+    def __repr__(self):
         return 'IndexPair(%s, %s)' % (self.ap, self.bq)
 
     def compute_buckets(self, oabuckets=None, obbuckets=None):
         """
-        Partition parameters `ap`, `bq` into buckets, that is return two dicts
+        Partition parameters ``ap``, ``bq`` into buckets, that is return two dicts
         abuckets, bbuckets such that every key in [ab]buckets is a rational in
         range [0, 1) and the corresponding items are items of ap/bq congruent to
         the key mod 1.
 
-        If oabuckets, obbuckets is specified, try to use the same Mod1 objects
+        If oabuckets, obbuckets is specified, try to use the same Mod1Effective objects
         for parameters where possible.
 
         >>> from sympy.simplify.hyperexpand import IndexPair
@@ -354,15 +391,15 @@ class IndexPair(object):
         if oabuckets is not None:
             for parametric, buckets in [(oaparametric, oabuckets),
                                         (obparametric, obbuckets)]:
-                parametric += filter(lambda x: isinstance(x, Mod1),
+                parametric += filter(lambda x: isinstance(x, Mod1Effective),
                                      buckets.keys())
 
         for params, bucket, oparametric in [(self.ap, abuckets, oaparametric),
                                             (self.bq, bbuckets, obparametric)]:
             parametric = []
             for p in params:
-                res = Mod1(p)
-                if isinstance(res, Mod1):
+                res = Mod1Effective(p)
+                if isinstance(res, Mod1Effective):
                     parametric.append(p)
                     continue
                 if res in bucket:
@@ -371,14 +408,14 @@ class IndexPair(object):
                     bucket[res] = (p,)
             while parametric:
                 p0 = parametric[0]
-                p0mod1 = Mod1(p0)
+                p0mod1 = Mod1Effective(p0)
                 if oparametric.count(p0mod1):
                     i = oparametric.index(p0mod1)
                     p0mod1 = oparametric.pop(i)
                 bucket[p0mod1] = (p0,)
                 pos = []
                 for po in parametric[1:]:
-                    if Mod1(po) == p0mod1:
+                    if Mod1Effective(po) == p0mod1:
                         bucket[p0mod1] += (po,)
                     else:
                         pos.append(po)
@@ -388,7 +425,7 @@ class IndexPair(object):
 
     def build_invariants(self):
         """
-        Compute the invariant vector of (`ap`, `bq`), that is:
+        Compute the invariant vector of (``ap``, ``bq``), that is:
             (gamma, ((s1, n1), ..., (sk, nk)), ((t1, m1), ..., (tr, mr)))
         where gamma is the number of integer a < 0,
               s1 < ... < sk
@@ -420,7 +457,7 @@ class IndexPair(object):
 
         def tr(bucket):
             bucket = bucket.items()
-            if not any(isinstance(x[0], Mod1) for x in bucket):
+            if not any(isinstance(x[0], Mod1Effective) for x in bucket):
                 bucket.sort(key=lambda x: x[0])
             bucket = tuple(map(lambda x: (x[0], len(x[1])), bucket))
             return bucket
@@ -428,7 +465,7 @@ class IndexPair(object):
         return (gamma, tr(abuckets), tr(bbuckets))
 
     def difficulty(self, ip):
-        """ Estimate how many steps it takes to reach `ip` from self.
+        """ Estimate how many steps it takes to reach ``ip`` from self.
             Return -1 if impossible. """
         oabuckets, obbuckets = self.compute_buckets()
         abuckets, bbuckets = ip.compute_buckets(oabuckets, obbuckets)
@@ -466,7 +503,7 @@ class IndexQuadruple(object):
     def compute_buckets(self):
         """
         Compute buckets for the fours sets of parameters.
-        We guarantee that any two equal Mod1 objects returned are actually the
+        We guarantee that any two equal Mod1Effective objects returned are actually the
         same, and that the buckets are sorted by real part (an and bq
         descendending, bm and ap ascending).
 
@@ -482,7 +519,7 @@ class IndexQuadruple(object):
         for dic, lis in [(pan, self.an), (pap, self.ap), (pbm, self.bm),
                            (pbq, self.bq)]:
             for x in lis:
-                m = Mod1(x)
+                m = Mod1Effective(x)
                 if mod1s.count(m):
                     i = mod1s.index(m)
                     m = mod1s[i]
@@ -506,7 +543,7 @@ class IndexQuadruple(object):
     def signature(self):
         return (len(self.an), len(self.ap), len(self.bm), len(self.bq))
 
-    def __str__(self):
+    def __repr__(self):
         return 'IndexQuadruple(%s, %s, %s, %s)' % (self.an, self.ap,
                                                    self.bm, self.bq)
 
@@ -637,7 +674,7 @@ class Formula(object):
     def find_instantiations(self, ip):
         """
         Try to find instantiations of the free symbols that match
-        `ip.ap`, `ip.bq`. Return the instantiated formulae as a list.
+        ``ip.ap``, ``ip.bq``. Return the instantiated formulae as a list.
         Note that the returned instantiations need not actually match,
         or be valid!
         """
@@ -684,7 +721,7 @@ class Formula(object):
 
     def is_suitable(self):
         """
-        Decide if `self` is a suitable origin.
+        Decide if ``self`` is a suitable origin.
 
         >>> from sympy.simplify.hyperexpand import Formula
         >>> from sympy import S
@@ -763,7 +800,7 @@ class FormulaCollection(object):
 
     def lookup_origin(self, ip):
         """
-        Given the suitable parameters `ip.ap`, `ip.bq`, try to find an origin
+        Given the suitable parameters ``ip.ap``, ``ip.bq``, try to find an origin
         in our knowledge base.
 
         >>> from sympy.simplify.hyperexpand import FormulaCollection, IndexPair
@@ -771,11 +808,11 @@ class FormulaCollection(object):
         >>> f.lookup_origin(IndexPair((), ())).closed_form
         exp(_z)
         >>> f.lookup_origin(IndexPair([1], ())).closed_form
-        1/(_z*exp_polar(-I*pi) + 1)
+        HyperRep_power1(-1, _z)
 
         >>> from sympy import S
         >>> f.lookup_origin(IndexPair([S('1/4'), S('3/4 + 4')], [S.Half])).closed_form
-        1/(2*(sqrt(_z) + 1)**(17/2)) + 1/(2*(-sqrt(_z) + 1)**(17/2))
+        HyperRep_sqrts1(-17/4, _z)
         """
         inv = ip.build_invariants()
         sizes = ip.sizes
@@ -895,7 +932,7 @@ class Operator(object):
 
     def apply(self, obj, op):
         """
-        Apply `self` to the object `obj`, where the generator is given by `op`.
+        Apply ``self`` to the object ``obj``, where the generator is given by ``op``.
 
         >>> from sympy.simplify.hyperexpand import Operator
         >>> from sympy.polys.polytools import Poly
@@ -1372,8 +1409,8 @@ def _reduce_order(ap, bq, gen, key):
 
 def reduce_order(ip):
     """
-    Given the hypergeometric parameters `ip.ap`, `ip.bq`, find a sequence of operators
-    to reduces order as much as possible.
+    Given the hypergeometric parameters ``ip.ap``, ``ip.bq``,
+    find a sequence of operators to reduces order as much as possible.
 
     Return (nip, [operators]), where applying the operators to the
     hypergeometric function specified by nip.ap, nip.bq yields ap, bq.
@@ -1395,8 +1432,8 @@ def reduce_order(ip):
 
 def reduce_order_meijer(iq):
     """
-    Given the Meijer G function parameters, `iq.am`, `iq.ap`, `iq.bm`,
-    `iq.bq`, find a sequence of operators that reduces order as much as possible.
+    Given the Meijer G function parameters, ``iq.am``, ``iq.ap``, ``iq.bm``,
+    ``iq.bq``, find a sequence of operators that reduces order as much as possible.
 
     Return niq, [operators].
 
@@ -1431,8 +1468,8 @@ def make_derivative_operator(M, z):
 
 def apply_operators(obj, ops, op):
     """
-    Apply the list of operators `ops` to object `obj`, substituting `op` for the
-    generator.
+    Apply the list of operators ``ops`` to object ``obj``, substituting
+    ``op`` for the generator.
     """
     res = obj
     for o in reversed(ops):
@@ -1442,8 +1479,8 @@ def apply_operators(obj, ops, op):
 def devise_plan(ip, nip, z):
     """
     Devise a plan (consisting of shift and un-shift operators) to be applied
-    to the hypergeometric function (`nip.ap`, `nip.bq`) to yield
-    (`ip.ap`, `ip.bq`).
+    to the hypergeometric function (``nip.ap``, ``nip.bq``) to yield
+    (``ip.ap``, ``ip.bq``).
     Returns a list of operators.
 
     >>> from sympy.simplify.hyperexpand import devise_plan, IndexPair
@@ -1648,11 +1685,247 @@ def try_polynomial(ip, z):
        res += fac
     return res
 
+def try_lerchphi(nip):
+    """
+    Try to find an expression for IndexPair ``nip`` in terms of Lerch
+    Transcendents.
+
+    Return None if no such expression can be found.
+    """
+    # This is actually quite simple, and is described in Roach's paper,
+    # section 18.
+    # We don't need to implement the reduction to polylog here, this
+    # is handled by expand_func.
+    from sympy import (expand_func, lerchphi, apart, Dummy, rf, Poly, Matrix,
+                       zeros, Add)
+
+    # First we need to figure out if the summation coefficient is a rational
+    # function of the summation index, and construct that rational function.
+    abuckets, bbuckets = nip.compute_buckets()
+    # Update all the keys in bbuckets to be the same Mod1Effective objects as abuckets.
+    akeys = abuckets.keys()
+    bkeys = []
+    for key in bbuckets.keys():
+        new = key
+        for a in akeys:
+            if a == key:
+                new = a
+                break
+        bkeys += [(new, key)]
+    bb = {}
+    for new, key in bkeys:
+        bb[new] = bbuckets[key]
+    bbuckets = bb
+
+    paired = {}
+    for key, value in abuckets.items():
+        if key != 0 and not key in bbuckets:
+            return None
+        bvalue = bbuckets.get(key, [])
+        paired[key] = (list(value), list(bvalue))
+        bbuckets.pop(key, None)
+    if bbuckets != {}:
+        return None
+    if not S(0) in abuckets:
+        return None
+    aints, bints = paired[S(0)]
+    # Account for the additional n! in denominator
+    paired[S(0)] = (aints, bints + [1])
+
+    t = Dummy('t')
+    numer = S(1)
+    denom = S(1)
+    for key, (avalue, bvalue) in paired.items():
+        if len(avalue) != len(bvalue):
+            return None
+        # Note that since order has been reduced fully, all the b are
+        # bigger than all the a they differ from by an integer. In particular
+        # if there are any negative b left, this function is not well-defined.
+        for a, b in zip(avalue, bvalue):
+            if a > b:
+                k = a - b
+                numer *= rf(b + t, k)
+                denom *= rf(b, k)
+            else:
+                k = b - a
+                numer *= rf(a, k)
+                denom *= rf(a + t, k)
+
+    # Now do a partial fraction decomposition.
+    # We assemble two structures: a list monomials of pairs (a, b) representing
+    # a*t**b (b a non-negative integer), and a dict terms, where terms[a] = [(b, c)]
+    # means that there is a term b/(t-a)**c.
+    part = apart(numer/denom, t)
+    args = Add.make_args(part)
+    monomials = []
+    terms = {}
+    for arg in args:
+        numer, denom = arg.as_numer_denom()
+        if not denom.has(t):
+            p = Poly(numer, t)
+            assert p.is_monomial
+            ((b,), a) = p.LT()
+            monomials += [(a/denom, b)]
+            continue
+        if numer.has(t):
+            raise NotImplementedError('Need partial fraction decomposition' \
+                                      ' with linear denominators')
+        indep, [dep] = denom.as_coeff_mul(t)
+        n = 1
+        if dep.is_Pow:
+            n = dep.exp
+            dep = dep.base
+        if dep == t:
+            a == 0
+        elif dep.is_Add:
+            a, tmp = dep.as_independent(t)
+            b = 1
+            if tmp != t:
+                b, _ = tmp.as_independent(t)
+            if dep != b*t + a:
+                raise NotImplementedError('unrecognised form %s' % dep)
+            a /= b
+            indep *= b**n
+        else:
+            raise NotImplementedError('unrecognised form of partial fraction')
+        terms.setdefault(a, []).append((numer/indep, n))
+
+    # Now that we have this information, assemble our formula. All the
+    # monomials yield rational functions and go into one basis element.
+    # The terms[a] are related by differentiation. If the largest exponent is
+    # n, we need lerchphi(z, k, a) for k = 1, 2, ..., n.
+    # deriv maps a basis to its derivative, expressed as a C(z)-linear combination
+    # of other basis elements.
+    deriv = {}
+    coeffs = {}
+    z = Dummy('z')
+    monomials.sort(key=lambda x: x[1])
+    mon = {0: 1/(1-z)}
+    if monomials:
+        for k in range(monomials[-1][1]):
+            mon[k + 1] = z*mon[k].diff(z)
+    for a, n in monomials:
+        coeffs.setdefault(S(1), []).append(a*mon[n])
+    for a, l in terms.items():
+        for c, k in l:
+            coeffs.setdefault(lerchphi(z, k, a), []).append(c)
+        l.sort(key=lambda x: x[1])
+        for k in range(2, l[-1][1] + 1):
+            deriv[lerchphi(z, k, a)] = [(-a, lerchphi(z, k, a)),
+                                        (1, lerchphi(z, k-1, a))]
+        deriv[lerchphi(z, 1, a)] = [(-a, lerchphi(z, 1, a)),
+                                    (1/(1 - z), S(1))]
+    trans = {}
+    for n, b in enumerate([S(1)] + deriv.keys()):
+        trans[b] = n
+    basis = [expand_func(b) for (b, _) in sorted(trans.items(), key=lambda x:x[1])]
+    B = Matrix(basis)
+    C = Matrix([[0]*len(B)])
+    for b, c in coeffs.items():
+        C[trans[b]] = Add(*c)
+    M = zeros(len(B))
+    for b, l in deriv.items():
+        for c, b2 in l:
+            M[trans[b], trans[b2]] = c
+    return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+
+def build_hypergeometric_formula(nip):
+    """ Create a formula object representing the hypergeometric function
+        Corresponding to nip. """
+    # We know that no `ap` are negative integers, otherwise "detect poly"
+    # would have kicked in. However, `ap` could be empty. In this case we can
+    # use a different basis.
+    # I'm not aware of a basis that works in all cases.
+    from sympy import zeros, Dummy, Matrix, hyper, eye, Mul
+    z = Dummy('z')
+    if nip.ap:
+        afactors = map(lambda a: x + a, nip.ap)
+        bfactors = map(lambda b: x + b - 1, nip.bq)
+        expr = x*Mul(*bfactors) - z*Mul(*afactors)
+        poly = Poly(expr, x)
+        n = poly.degree()
+        basis = []
+        M = zeros(n)
+        for k in xrange(n):
+            a = nip.ap[0] + k
+            basis += [hyper([a] + list(nip.ap[1:]), nip.bq, z)]
+            if k < n - 1:
+                M[k, k] = -a
+                M[k, k + 1] = a
+        B = Matrix(basis)
+        C = Matrix([[1] + [0]*(n - 1)])
+        derivs = [eye(n)]
+        for k in xrange(n):
+            derivs.append(M*derivs[k])
+        l = poly.all_coeffs()
+        l.reverse()
+        res = [0]*n
+        for k, c in enumerate(l):
+            for r, d in enumerate(C*derivs[k]):
+                res[r] += c*d
+        for k, c in enumerate(res):
+            M[n-1, k] = -c/derivs[n-1][0, n-1]/poly.all_coeffs()[0]
+        return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+    else:
+        # Since there are no `ap`, none of the `bq` can be non-positive integers.
+        basis = []
+        bq = list(nip.bq[:])
+        for i in range(len(bq)):
+            basis += [hyper([], bq, z)]
+            bq[i] += 1
+        basis += [hyper([], bq, z)]
+        B = Matrix(basis)
+        n = len(B)
+        C = Matrix([[1] + [0]*(n - 1)])
+        M = zeros(n)
+        M[0, n - 1] = z/Mul(*nip.bq)
+        for k in range(1, n):
+            M[k, k - 1] = nip.bq[k - 1]
+            M[k, k] = -nip.bq[k - 1]
+        return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+
+def hyperexpand_special(ap, bq, z):
+    """
+    Try to find a closed-form expression for hyper(ap, bq, z), where ``z``
+    is supposed to be a "special" value, e.g. 1.
+
+    This function tries various of the classical summation formulae
+    (Gauss, Saalschuetz, etc).
+    """
+    # This code is very ad-hoc. There are many clever algorithms
+    # (notably Zeilberger's) related to this problem.
+    # For now we just want a few simple cases to work.
+    from sympy import gamma, simplify, cos, unpolarify
+    p, q = len(ap), len(bq)
+    z_ = z
+    z = unpolarify(z)
+    if p == 2 and q == 1:
+        # 2F1
+        a, b, c = ap + bq
+        if z == 1:
+            # Gauss
+            return gamma(c - a - b)*gamma(c)/gamma(c - a)/gamma(c - b)
+        if z == -1 and simplify(b - a + c) == 1:
+            b, a = a, b
+        if z == -1 and simplify(a - b + c) == 1:
+            # Kummer
+            if b.is_integer and b < 0:
+                return 2*cos(pi*b/2)*gamma(-b)*gamma(b - a + 1) \
+                       /gamma(-b/2)/gamma(b/2 - a + 1)
+            else:
+                return gamma(b/2 + 1)*gamma(b - a + 1) \
+                       /gamma(b + 1)/gamma(b/2 - a + 1)
+    # TODO tons of more formulae
+    #      investigate what algorithms exist
+    return hyper(ap, bq, z_)
+
 collection = None
-def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
+@timeit
+def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
+                 rewrite='default'):
     """
     Try to find an expression for the hypergeometric function
-    `ip.ap`, `ip.bq`.
+    ``ip.ap``, ``ip.bq``.
 
     The result is expressed in terms of a dummy variable z0. Then it
     is multiplied by premult. Then ops0 is applied.
@@ -1660,17 +1933,35 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     """
     from sympy.simplify import powdenest, simplify, polarify
     z = polarify(z, subs=False)
+    if rewrite == 'default':
+        rewrite = 'nonrepsmall'
+
+    def carryout_plan(f, ops):
+        C = apply_operators(f.C.subs(f.z, z0), ops,
+                            make_derivative_operator(f.M.subs(f.z, z0), z0))
+        from sympy import eye
+        C = apply_operators(C, ops0,
+                            make_derivative_operator(f.M.subs(f.z, z0)
+                                                     + prem*eye(f.M.shape[0]), z0))
+
+        if premult == 1:
+            C = C.applyfunc(make_simp(z0))
+        r = C*f.B.subs(f.z, z0)*premult
+        res = r[0].subs(z0, z)
+        if rewrite:
+            res = res.rewrite(rewrite)
+        return res
+
+    # Try this early for speed.
+    # We will try again later after reduction of order.
+    #r = hyperexpand_special(ip.ap, ip.bq, z)
+    #if not r.has(hyper):
+    #    return r
 
     # TODO
     # The following would be possible:
-    # 1) Partial simplification (i.e. return a simpler hypergeometric function,
-    #    even if we cannot express it in terms of named special functions).
-    # 2) PFD Duplication (see Kelly Roach's paper)
-    # 3) If the coefficients are a rational function of n (numerator parameters
-    #    k, a1, ..., an, denominator parameters a1+k1, a2+k2, ..., an+kn, where
-    #    k, k1, ..., kn are integers) then result can be expressed using Lerch
-    #    transcendent. Under certain conditions, this simplifies to polylogs
-    #    or even zeta functions. C/f Kelly Roach's paper.
+    # *) PFD Duplication (see Kelly Roach's paper)
+    # *) In a similar spirit, try_lerchphi() can be generalised considerably.
 
     global collection
     if collection is None:
@@ -1706,39 +1997,40 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
     p = simplify(p).subs(z0, z)
 
-    # Now try to find a formula
+    # Try special expansions early.
+    from sympy import unpolarify
+    if unpolarify(z) in [1, -1] and (len(nip.ap), len(nip.bq)) == (2, 1):
+        f = build_hypergeometric_formula(nip)
+        r = carryout_plan(f, ops).replace(hyper, hyperexpand_special)
+        if not r.has(hyper):
+            return r + p
+
+    # Try to find a formula in our collection
     f = collection.lookup_origin(nip)
 
+    # Now try a lerch phi formula
     if f is None:
-        debug('  Could not find an origin.')
-        # There is nothing we can do.
-        return None
+        f = try_lerchphi(nip)
+
+    if f is None:
+        debug('  Could not find an origin.',
+              'Will return answer in terms of simpler hypergeometric functions.')
+        f = build_hypergeometric_formula(nip)
+
+    debug('  Found an origin:', f.closed_form, f.indices)
 
     # We need to find the operators that convert f into (nap, nbq).
     ops += devise_plan(nip, f.indices, z0)
 
     # Now carry out the plan.
-    C = apply_operators(f.C.subs(f.z, z0), ops,
-                        make_derivative_operator(f.M.subs(f.z, z0), z0))
-    from sympy import eye
-    C = apply_operators(C, ops0,
-                        make_derivative_operator(f.M.subs(f.z, z0)
-                                                 + prem*eye(f.M.shape[0]), z0))
+    r = carryout_plan(f, ops) + p
 
-    if premult == 1:
-        C = C.applyfunc(make_simp(z0))
-    r = C*f.B.subs(f.z, z0)*premult
-    r = r[0].subs(z0, z) + p
-
-    # This will simpliy things like sqrt(-z**2) to i*z.
-    # It would be wrong under certain choices of branch, but all results we
-    # return are under an "implicit suitable choice of branch" anyway.
-    return powdenest(r, polar=True) # This unpolarifies!
+    return powdenest(r, polar=True).replace(hyper, hyperexpand_special)
 
 def devise_plan_meijer(fro, to, z):
     """
-    Find a sequence of operators to convert index quadruple `fro` into
-    index quadruple `to`. It is assumed that fro and to have the same
+    Find a sequence of operators to convert index quadruple ``fro`` into
+    index quadruple ``to``. It is assumed that fro and to have the same
     signatures, and that in fact any corresponding pair of parameters differs
     by integers, and a direct path is possible. I.e. if there are parameters
        a1 b1 c1  and a2 b2 c2
@@ -1779,9 +2071,9 @@ def devise_plan_meijer(fro, to, z):
     # TODO for now, we use the following simple heuristic: inverse-shift
     #      when possible, shift otherwise. Give up if we cannot make progress.
     def try_shift(f, t, shifter, diff, counter):
-        """ Try to apply `shifter` in order to bring some element in `f` nearer
-            to its counterpart in `to`. `diff` is +/- 1 and determines the
-            effect of `shifter`. Counter is a list of elements blocking the
+        """ Try to apply ``shifter`` in order to bring some element in ``f`` nearer
+            to its counterpart in ``to``. ``diff`` is +/- 1 and determines the
+            effect of ``shifter``. Counter is a list of elements blocking the
             shift.
             Return an operator if change was possible, else None.
         """
@@ -1854,18 +2146,21 @@ def devise_plan_meijer(fro, to, z):
     return ops
 
 meijercollection = None
-def _meijergexpand(iq, z0, allow_hyper=False):
+@timeit
+def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     """
     Try to find an expression for the Meijer G function specified
-    by the IndexQuadruple `iq`. If `allow_hyper` is True, then returning
+    by the IndexQuadruple ``iq``. If ``allow_hyper`` is True, then returning
     an expression in terms of hypergeometric functions is allowed.
 
     Currently this just does slater's theorem.
     """
-    from sympy import hyper, Piecewise, meijerg, powdenest
+    from sympy import hyper, Piecewise, meijerg, powdenest, re, polar_lift, oo
     global meijercollection
     if meijercollection is None:
         meijercollection = MeijerFormulaCollection()
+    if rewrite == 'default':
+        rewrite = None
 
     iq_ = iq
     debug('Try to expand meijer G function corresponding to', iq)
@@ -1897,9 +2192,9 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     debug("  Could not find a direct formula. Trying slater's theorem.")
 
     # TODO the following would be possible:
-    # 2) Paired Index Theorems
-    # 3) PFD Duplication
-    #    (See Kelly Roach's paper for (2) and (3).)
+    # *) Paired Index Theorems
+    # *) PFD Duplication
+    #    (See Kelly Roach's paper for details on either.)
     #
     # TODO Also, we tend to create combinations of gamma functions that can be
     #      simplified.
@@ -1915,11 +2210,19 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                    return False
         return True
 
-    def do_slater(an, bm, ap, bq, z):
+    def do_slater(an, bm, ap, bq, z, zfinal):
         from sympy import gamma, residue, factorial, rf, expand_func, polar_lift
+        # zfinal is the value that will eventually be substituted for z.
+        # We pass it to _hyperexpand to improve performance.
         iq = IndexQuadruple(an, bm, ap, bq)
         _, pbm, pap, _ = iq.compute_buckets()
         if not can_do(pbm, pap):
+            return S(0), False
+
+        cond = len(an) + len(ap) < len(bm) + len(bq)
+        if len(an) + len(ap) == len(bm) + len(bq):
+            cond = abs(z) < 1
+        if cond is False:
             return S(0), False
 
         res = S(0)
@@ -1937,15 +2240,12 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 nbq = [1 + bh - b for b in list(bo) + list(bq)]
 
                 k = polar_lift(S(-1)**(len(ap) - len(bm)))
-                harg = k*z
+                harg = k*zfinal
                 # NOTE even though k "is" +-1, this has to be t/k instead of
                 #      t*k ... we are using polar numbers for consistency!
                 premult = (t/k)**bh
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                                   t, premult, bh)
-                if hyp is None:
-                    hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                          lambda f: t*f.diff(t)).subs(t, harg)
+                                   t, premult, bh, rewrite=None)
                 res += fac * hyp
             else:
                 b_ = pbm[m][0]
@@ -1984,16 +2284,13 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 # Now the hypergeometric term.
                 au = b_ + lu
                 k = polar_lift(S(-1)**(len(ao) + len(bo) + 1))
-                harg = k*z
+                harg = k*zfinal
                 premult = (t/k)**au
                 nap = [1 + au - a for a in list(an) + list(ap)] + [1]
                 nbq = [1 + au - b for b in list(bm) + list(bq)]
 
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                                   t, premult, au)
-                if hyp is None:
-                    hyp = apply_operators(premult*hyper(nap, nbq, t), ops,
-                                          lambda f: t*f.diff(t)).subs(t, harg)
+                                   t, premult, au, rewrite=None)
 
                 C = S(-1)**(lu)/factorial(lu)
                 for i in range(u):
@@ -2009,51 +2306,72 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
                 res += C*hyp
 
-        cond = len(an) + len(ap) < len(bm) + len(bq)
-        if len(an) + len(ap) == len(bm) + len(bq):
-            cond = abs(z) < 1
         return res, cond
 
     t = Dummy('t')
-    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z)
+    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, z0)
 
     def tr(l): return [1 - x for x in l]
     for op in ops:
         op._poly = Poly(op._poly.subs({z: 1/t, x: -x}), x)
     slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
-                               t)
+                               t, 1/z0)
 
     slater1 = powdenest(slater1.subs(z, z0), polar=True)
     slater2 = powdenest(slater2.subs(t, 1/z0), polar=True)
     if not isinstance(cond2, bool):
-        cond2 = cond2.subs(t, 1/z0)
+        cond2 = cond2.subs(t, 1/z)
 
-    if meijerg(iq.an, iq.ap, iq.bm, iq.bq, z).delta > 0:
-        # The above condition means that the convergence region is connected.
+    m = meijerg(iq.an, iq.ap, iq.bm, iq.bq, z)
+    if m.delta > 0 or \
+       (m.delta == 0 and len(m.ap) == len(m.bq) and \
+        (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
+        # The condition delta > 0 means that the convergence region is connected.
         # Any expression we find can be continued analytically to the entire
         # convergence region.
+        # The conditions delta==0, p==q, re(nu) < -1 imply that G is continuous
+        # on the positive reals, so the values at z=1 agree.
         if cond1 is not False:
             cond1 = True
         if cond2 is not False:
             cond2 = True
 
+    if cond1 is True:
+        slater1 = slater1.rewrite(rewrite or 'nonrep')
+    else:
+        slater1 = slater1.rewrite(rewrite or 'nonrepsmall')
+    if cond2 is True:
+        slater2 = slater2.rewrite(rewrite or 'nonrep')
+    else:
+        slater2 = slater2.rewrite(rewrite or 'nonrepsmall')
+
     if not isinstance(cond1, bool): cond1 = cond1.subs(z, z0)
     if not isinstance(cond2, bool): cond2 = cond2.subs(z, z0)
 
-    if cond1 is True and cond2 is True and not slater1.has(hyper) and \
-       not slater2.has(hyper):
-        # If both are possible and free of unevaluated terms, return the
-        # simpler one.
-        from sympy import count_ops
-        if count_ops(slater1) > count_ops(slater2):
-            return slater2
+    def weight(expr, cond):
+        from sympy import oo, zoo, nan
+        if cond is True:
+            c0 = 0
+        elif cond is False:
+            c0 = 1
         else:
-            return slater1
+            c0 = 2
+        if expr.has(oo, zoo, -oo, nan):
+            # XXX this actually should not happen, but consider
+            # S('meijerg(((0, -1/2, 0, -1/2, 1/2), ()), ((0,), (-1/2, -1/2, -1/2, -1)), exp_polar(I*pi))/4')
+            c0 = 3
+        return (c0, expr.count(hyper), expr.count_ops())
 
-    if cond1 is True and not slater1.has(hyper):
-        return slater1
-    if cond2 is True and not slater2.has(hyper):
-        return slater2
+    w1 = weight(slater1, cond1)
+    w2 = weight(slater2, cond2)
+    if min(w1, w2) <= (0, 1, oo):
+        if w1 < w2:
+            return slater1
+        else:
+            return slater2
+    if max(w1[0], w2[0]) <= 1 and max(w1[1], w2[1]) <= 1:
+        return Piecewise((slater1, cond1), (slater2, cond2),
+                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
 
     # We couldn't find an expression without hypergeometric functions.
     # TODO it would be helpful to give conditions under which the integral
@@ -2067,7 +2385,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
     return meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0)
 
-def hyperexpand(f, allow_hyper=False):
+def hyperexpand(f, allow_hyper=False, rewrite='default'):
     """
     Expand hypergeometric functions. If allow_hyper is True, allow partial
     simplification (that is a result different from input,
@@ -2092,14 +2410,14 @@ def hyperexpand(f, allow_hyper=False):
     from sympy import nan, zoo, oo
     f = sympify(f)
     def do_replace(ap, bq, z):
-        r = _hyperexpand(IndexPair(ap, bq), z)
+        r = _hyperexpand(IndexPair(ap, bq), z, rewrite=rewrite)
         if r is None:
             return hyper(ap, bq, z)
         else:
             return r
     def do_meijer(ap, bq, z):
         r = _meijergexpand(IndexQuadruple(ap[0], ap[1], bq[0], bq[1]), z,
-                           allow_hyper)
+                           allow_hyper, rewrite=rewrite)
         if not r.has(nan, zoo, oo, -oo):
             return r
     return f.replace(hyper, do_replace).replace(meijerg, do_meijer)

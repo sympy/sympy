@@ -1272,30 +1272,43 @@ def posify(eq):
     eq = eq.subs(reps)
     return eq, dict([(r,s) for s, r in reps.iteritems()])
 
-def _polarify(eq, pause=False):
+def _polarify(eq, lift, pause=False):
     from sympy import polar_lift
     if eq.is_polar:
         return eq
     if eq.is_number and not pause:
         return polar_lift(eq)
+    if isinstance(eq, Symbol) and not pause and lift:
+        return polar_lift(eq)
     elif eq.is_Atom:
         return eq
     elif eq.is_Add:
-        return eq.func(*[_polarify(arg, pause=True) for arg in eq.args])
+        r = eq.func(*[_polarify(arg, lift, pause=True) for arg in eq.args])
+        if lift:
+            return polar_lift(r)
+        return r
     elif eq.is_Function:
-        return eq.func(*[_polarify(arg, pause=False) for arg in eq.args])
+        return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
     else:
-        return eq.func(*[_polarify(arg, pause=pause) for arg in eq.args])
+        return eq.func(*[_polarify(arg, lift, pause=pause) for arg in eq.args])
 
-def polarify(eq, subs=True):
+def polarify(eq, subs=True, lift=False):
     """
     Turn all numbers in eq into their polar equivalents (under the standard
-    choice of argument), and substitute all symbols for polar dummies.
+    choice of argument).
 
     Note that no attempt is made to guess a formal convention of adding
-    polar numbers, expressions like 1 + x will not be altered.
+    polar numbers, expressions like 1 + x will generally not be altered.
 
     Note also that this function does not promote exp(x) to exp_polar(x).
+
+    If `subs` is True, all symbols which are not already polar will be
+    substituted for polar dummies; in this case the function behaves much
+    like posify.
+
+    If `lift` is True, both addition statements and non-polar symbols are
+    changed to their polar_lift()ed versions.
+    Note that lift=True implies subs=False.
 
     >>> from sympy import polarify, sin, I
     >>> from sympy.abc import x, y
@@ -1306,13 +1319,19 @@ def polarify(eq, subs=True):
     ((_x*exp_polar(I*pi))**_y, {_x: x, _y: y})
     >>> polarify(expr)[0].expand()
     _x**_y*exp_polar(_y*I*pi)
+    >>> polarify(x, lift=True)
+    polar_lift(x)
+    >>> polarify(x*(1+y), lift=True)
+    polar_lift(x)*polar_lift(y + 1)
 
     Adds are treated carefully:
 
     >>> polarify(1 + sin((1 + I)*x))
     (sin(_x*polar_lift(1 + I)) + 1, {_x: x})
     """
-    eq = _polarify(sympify(eq))
+    if lift:
+        subs = False
+    eq = _polarify(sympify(eq), lift)
     if not subs:
         return eq
     reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.atoms(Symbol)])
@@ -1412,6 +1431,19 @@ def _denest_pow(eq):
         return eq
 
     # denest eq which is either pos**e or Pow**e or Mul**e or Mul(b1**e1, b2**e2)
+
+    # handle polar numbers specially
+    polars, nonpolars = [], []
+    for bb in Mul.make_args(b):
+        if bb.is_polar:
+            polars.append(bb.as_base_exp())
+        else:
+            nonpolars.append(bb)
+    if len(polars) == 1 and not polars[0][0].is_Mul:
+        return Pow(polars[0][0], polars[0][1]*e)*powdenest(Mul(*nonpolars)**e)
+    elif polars:
+        return Mul(*[powdenest(bb**(ee*e)) for (bb, ee) in polars]) \
+               *powdenest(Mul(*nonpolars)**e)
 
     # see if there is a positive, non-Mul base at the very bottom
     exponents = []
@@ -2073,6 +2105,8 @@ def hypersimilar(f, g, k):
 
     return h.is_rational_function(k)
 
+from sympy.utilities.timeutils import timethis
+@timethis('combsimp')
 def combsimp(expr):
     r"""
     Simplify combinatorial expressions.
@@ -2349,7 +2383,64 @@ def combsimp(expr):
                 while l: l.pop()
                 l += newl # Note l is empty before this
 
-        # Try to absorb factors into the gammas
+        # Try to reduce the number of gammas by using the duplication
+        # theorem to cancel an upper and lower.
+        # e.g. gamma(2*s)/gamma(s) = gamma(s)*gamma(s+1/2)*C/gamma(s)
+        # (in principle this can also be done with with factors other than two,
+        #  but two is special in that we need only matching numer and denom, not
+        #  several in numer).
+        for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
+                                denom_others),
+                               (denom_gammas, numer_gammas, denom_others,
+                                numer_others)]:
+            changed = True
+            while changed:
+                changed = False
+                found = None
+                for x in ng:
+                    for y in dg:
+                        if simplify(2*y-x).is_Integer:
+                            found = (x, y)
+                            break
+                    if found:
+                        break
+                if not found:
+                    break
+                changed = True
+                x, y = found
+                n = simplify(x - 2*y)
+                ng.remove(x)
+                dg.remove(y)
+                if n > 0:
+                    for k in xrange(n):
+                        no.append(2*y + k)
+                elif n < 0:
+                    for k in xrange(-n):
+                        do.append(2*y - 1 - k)
+                ng.append(y + S(1)/2)
+                no.append(2**(2*y - 1))
+                do.append(sqrt(S.Pi))
+
+        # Try to absorb factors into the gammas.
+        # This code (in particular repeated calls to find_fuzzy) can be very
+        # slow.
+        # We thus try to avoid expensive calls by building the following
+        # "invariants": For every factor or gamma function argument
+        #   - the set of free symbols S
+        #   - the set of functional components T
+        # We will only try to absorb if T1==T2 and (S1 intersect S2 != emptyset
+        # or S1 == S2 == emptyset)
+        inv = {}
+        def compute_ST(expr):
+            from sympy import Function, Pow
+            if expr in inv:
+                return inv[expr]
+            return (expr.free_symbols, expr.atoms(Function).union(
+                                            set(e.exp for e in expr.atoms(Pow))))
+        def update_ST(expr):
+            inv[expr] = compute_ST(expr)
+        for expr in numer_gammas + denom_gammas + numer_others + denom_others:
+            update_ST(expr)
         for to, numer, denom in [(numer_gammas, numer_others, denom_others),
                                  (denom_gammas, denom_others, numer_others)]:
             newl = []
@@ -2359,7 +2450,12 @@ def combsimp(expr):
                 while cont:
                     cont = False
                     def find_fuzzy(l, x):
+                        S1, T1 = compute_ST(x)
                         for y in l:
+                            S2, T2 = inv[y]
+                            if T1 != T2 or (not S1.intersection(S2) and \
+                                            (S1 != set() or S2 != set())):
+                                continue
                             # XXX we want some simplification (e.g. cancel or
                             # simplify) but no matter what it's slow.
                             a = len(cancel(x/y).free_symbols)
@@ -2373,6 +2469,7 @@ def combsimp(expr):
                         numer.remove(y)
                         if y != g:
                             numer.append(y/g)
+                            update_ST(y/g)
                         g += 1
                         cont = True
                     y = find_fuzzy(numer, 1/(g-1))
@@ -2380,6 +2477,7 @@ def combsimp(expr):
                         numer.remove(y)
                         if y != 1/(g-1):
                             numer.append((g-1)*y)
+                            update_ST((g-1)*y)
                         g -= 1
                         cont = True
                     y = find_fuzzy(denom, 1/g)
@@ -2387,6 +2485,7 @@ def combsimp(expr):
                         denom.remove(y)
                         if y != 1/g:
                             denom.append(y*g)
+                            update_ST(y*g)
                         g += 1
                         cont = True
                     y = find_fuzzy(denom, g - 1)
@@ -2394,6 +2493,7 @@ def combsimp(expr):
                         denom.remove(y)
                         if y != g - 1:
                             numer.append((g-1)/y)
+                            update_ST((g-1)/y)
                         g -= 1
                         cont = True
                 newl.append(g)

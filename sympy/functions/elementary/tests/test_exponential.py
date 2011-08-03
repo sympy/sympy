@@ -45,6 +45,11 @@ def test_exp_log():
     assert log(x).inverse() == exp
     assert exp(x).inverse() == log
 
+    y = Symbol("y", polar=True)
+    z = Symbol("z")
+    assert log(exp_polar(z)) == z
+    assert exp(log(y)) == y
+
 def test_exp_expand():
     x = Symbol("x")
     y = Symbol("y")
@@ -283,5 +288,12 @@ def test_as_numer_denom():
     assert exp(-n).as_numer_denom() == (1, exp(n))
 
 def test_polar():
+    x, y = symbols('x y', polar=True)
+    z = Symbol('z')
+
     assert abs(exp_polar(I*4)) == 1
     assert exp_polar(I*10).n() == exp_polar(I*10)
+
+    assert log(exp_polar(z)) == z
+    assert log(x*y).expand() == log(x) + log(y)
+    assert log(x**z).expand() == z*log(x)

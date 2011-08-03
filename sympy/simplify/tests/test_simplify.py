@@ -730,6 +730,14 @@ def test_powdenest():
     assert powdenest((4**x)**y) == 2**(2*x*y)
     assert powdenest(4**x*y) == 2**(2*x)*y
 
+def test_powdenest_polar():
+    from sympy import powdenest
+    x, y, z = symbols('x y z', polar=True)
+    a, b, c = symbols('a b c')
+    assert powdenest((x*y*z)**a) == x**a*y**a*z**a
+    assert powdenest((x**a*y**b)**c) == x**(a*c)*y**(b*c)
+    assert powdenest(((x**a)**b*y**c)**c) == x**(a*b*c)*y**(c**2)
+
 @XFAIL
 def test_issue_2706():
     assert (((gamma(x)*hyper((),(),x))*pi)**2).is_positive is None
@@ -934,6 +942,9 @@ def test_combsimp_gamma():
     assert simplify(gamma(S(1)/2 + x/2)*gamma(1 + x/2)/gamma(1+x)/sqrt(pi)*2**x) \
            == 1
     assert combsimp(gamma(S(-1)/4)*gamma(S(-3)/4)) == 16*sqrt(2)*pi/3
+
+    assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
+           2**(2*x - 1)*gamma(x + S(1)/2)/sqrt(pi)
 
 def test_unpolarify():
     from sympy import (exp_polar, polar_lift, exp, unpolarify, sin,

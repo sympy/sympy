@@ -80,3 +80,13 @@ if size > 2**32:
     ARCH = "64-bit"
 else:
     ARCH = "32-bit"
+
+def debug(*args):
+    """
+    Print *args if SYMPY_DEBUG is True, else do nothing.
+    """
+    from sympy import SYMPY_DEBUG
+    if SYMPY_DEBUG:
+        for a in args:
+            print a,
+        print

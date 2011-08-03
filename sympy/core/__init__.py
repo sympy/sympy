@@ -19,7 +19,7 @@ from multidimensional import vectorize
 from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, Subs, expand, PoleError, count_ops, \
     expand_mul, expand_log, expand_func,\
-    expand_trig, expand_complex, expand_multinomial, nfloat
+    expand_trig, expand_complex, expand_multinomial, nfloat, expand_power_base
 from sets import Set, Interval, Union, EmptySet, FiniteSet, ProductSet
 from evalf import PrecisionExhausted, N
 from containers import Tuple, Dict
