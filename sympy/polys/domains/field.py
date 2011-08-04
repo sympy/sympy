@@ -34,11 +34,27 @@ class Field(Ring):
 
     def gcd(self, a, b):
         """Returns GCD of `a` and `b`. """
-        return self.one
+        try:
+            ring = self.get_ring()
+        except DomainError:
+            return self.one
+
+        p = ring.gcd(self.numer(a), self.numer(b))
+        q = ring.lcm(self.denom(a), self.denom(b))
+
+        return self.convert(p, ring)/q
 
     def lcm(self, a, b):
         """Returns LCM of `a` and `b`. """
-        return a*b
+        try:
+            ring = self.get_ring()
+        except DomainError:
+            return a*b
+
+        p = ring.lcm(self.numer(a), self.numer(b))
+        q = ring.gcd(self.denom(a), self.denom(b))
+
+        return self.convert(p, ring)/q
 
     def revert(self, a):
         """Returns `a**(-1)` if possible. """
