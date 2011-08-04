@@ -596,6 +596,15 @@ class LatexPrinter(Printer):
         else:
             return r"\gamma%s" % tex
 
+    def _print_expint(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[1])
+        nu = self._print(expr.args[0])
+
+        if exp is not None:
+            return r"\operatorname{E}_{%s}^{%s}%s" % (nu, exp, tex)
+        else:
+            return r"\operatorname{E}_{%s}%s" % (nu, tex)
+
     def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
         if self._needs_brackets(x):

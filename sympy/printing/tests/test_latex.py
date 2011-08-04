@@ -4,7 +4,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
     Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan,
     cot, coth, re, im, root, arg, zeta, dirichlet_eta, binomial, RisingFactorial,
-    FallingFactorial, polylog, lerchphi)
+    FallingFactorial, polylog, lerchphi, Ei, expint, Si, Ci, Shi, Chi)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -159,6 +159,14 @@ def test_latex_functions():
     assert latex(polylog(x, y)**2) == r"\operatorname{Li}_{x}^{2}\left(y\right)"
     assert latex(lerchphi(x, y, n)) == r"\Phi\left(x, y, n\right)"
     assert latex(lerchphi(x, y, n)**2) == r"\Phi^{2}\left(x, y, n\right)"
+
+    assert latex(Ei(x)) == r'\operatorname{Ei}{\left (x \right )}'
+    assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left (x \right )}'
+    assert latex(expint(x, y)**2) == r'\operatorname{E}_{x}^{2}\left(y\right)'
+    assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left (x \right )}'
+    assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
+    assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
+    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
 
 def test_hyper_printing():
     from sympy import pi, Tuple

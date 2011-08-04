@@ -29,7 +29,7 @@ from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, a
 from elementary.integers import floor, ceiling
 from elementary.piecewise import Piecewise, piecewise_fold
 
-from special.error_functions import erf
+from special.error_functions import erf, Ei, expint, E1, Si, Ci, Shi, Chi
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, \
          loggamma, digamma, trigamma, beta
 from special.zeta_functions import dirichlet_eta, zeta, lerchphi, polylog

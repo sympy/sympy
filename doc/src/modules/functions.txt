@@ -453,38 +453,33 @@ erf
 .. autoclass:: sympy.functions.special.error_functions.erf
    :members:
 
-gamma
------
+Gamma and Related Functions
+---------------------------
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
    :members:
-
-loggamma
---------
 .. autoclass:: sympy.functions.special.gamma_functions.loggamma
    :members:
-
-polygamma
----------
 .. autoclass:: sympy.functions.special.gamma_functions.polygamma
    :members:
-
-digamma
--------
 .. autofunction:: sympy.functions.special.gamma_functions.digamma
-
-trigamma
---------
 .. autofunction:: sympy.functions.special.gamma_functions.trigamma
-
-uppergamma
-----------
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
    :members:
-
-lowergamma
-----------
 .. autoclass:: sympy.functions.special.gamma_functions.lowergamma
    :members:
+
+Special Cases of the Incomplete Gamma Functions
+-----------------------------------------------
+.. module:: sympy.functions.special.error_functions
+
+.. autoclass:: erf
+.. autoclass:: Ei
+.. autoclass:: expint
+.. autofunction:: E1
+.. autoclass:: Si
+.. autoclass:: Ci
+.. autoclass:: Shi
+.. autoclass:: Chi
 
 Bessel Type Functions
 ---------------------

@@ -924,6 +924,26 @@ class PrettyPrinter(Printer):
         else:
             return self._print_Function(e)
 
+    def _print_expint(self, e):
+        from sympy import Function
+        if e.args[0].is_Integer and self._use_unicode:
+            return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
+        return self._print_Function(e)
+
+    def _print_Chi(self, e):
+        # This needs a special case since otherwise it comes out as greek
+        # letter chi...
+        prettyFunc = prettyForm("Chi")
+        prettyArgs = prettyForm(*self._print_seq(e.args).parens())
+
+        pform = prettyForm(binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+
+        return pform
+
     def _print_Add(self, expr, order=None):
         if self.order == 'none':
             terms = list(expr.args)
