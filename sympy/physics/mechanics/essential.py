@@ -561,7 +561,7 @@ class ReferenceFrame(object):
         """Returns the angular acceleration Vector of the ReferenceFrame.
 
         Effectively returns the Vector:
-        :math:`^{N} \vec{\alpha} ^{B}`
+        ^N alpha ^B
         which represent the angular acceleration of B in N, where B is self, and
         N is otherframe.
 
@@ -593,7 +593,7 @@ class ReferenceFrame(object):
         """Returns the angular velocity Vector of the ReferenceFrame.
 
         Effectively returns the Vector:
-        :math:`^{N} \vec{\omega} ^{B}`
+        ^N omega ^B
         which represent the angular velocity of B in N, where B is self, and
         N is otherframe.
 
@@ -707,12 +707,12 @@ class ReferenceFrame(object):
 
         Next is Quaternion. This orients the new ReferenceFrame with
         Quaternions, defined as a finite rotation about
-        :math:`\vec{\hat \lambda}`, a unit vector, by some amount
-        :math:`\theta`. This orientation is described by four parameters:
-        q0 = :math:`cos(\frac{\theta}{2})`
-        q1 = :math:`\lambda_x' sin(\frac{\theta}{2})`
-        q2 = :math:`\lambda_y' sin(\frac{\theta}{2})`
-        q3 = :math:`\lambda_z' sin(\frac{\theta}{2})`
+        lambda, a unit vector, by some amount
+        theta. This orientation is described by four parameters:
+        q0 = cos(theta/2)
+        q1 = lambda_x sin(theta/2)
+        q2 = lambda_y sin(theta/2)
+        q3 = lambda_z sin(theta/2)
         Quaternion does not take in a rotation order.
 
         >>> B.orient(N, 'Quaternion', [q0, q1, q2, q3])
@@ -773,10 +773,7 @@ class ReferenceFrame(object):
                 raise TypeError('Quaternion orientation takes no rotation order')
             if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 4)):
                 raise TypeError('Amounts are a list or tuple of length 4')
-            q0 = amounts[0]
-            q1 = amounts[1]
-            q2 = amounts[2]
-            q3 = amounts[3]
+            q0, q1, q2, q3 = amounts
             parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - q3 **
                 2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)],
                 [2 * (q1 * q2 + q0 * q3), q0 ** 2 - q1 ** 2 + q2 **2 - q3 ** 2,
@@ -1157,8 +1154,8 @@ class Vector(object):
                 if ar[i][0][j] == 1:
                     if len(ol) != 0:
                         ol.append(r" + ")
-                    ol.append(r"\mathbf{\hat{%s}} " %
-                            (str(ar[i][1]).lower() + r"_{" + 
+                    ol.append(r"\mathbf{\hat{%s}}" %
+                            (str(ar[i][1]).lower() + r"_{" +
                               str_ind[j] + r"}"))
                 # if the coef of the basis vector is -1, we skip the 1
                 elif ar[i][0][j] == -1:
@@ -1194,7 +1191,7 @@ class Vector(object):
             baseline = 0
             def render(self, *args, **kwargs):
                 self = e
-                str_ind = [u"\u2081", u"\u2082", u"\u2083"]
+                str_ind = Vector.subscript_indices
                 ar = self.args # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
@@ -1205,14 +1202,17 @@ class Vector(object):
                         if ar[i][0][j] == 1:
                             if len(ol) != 0:
                                 ol.append(u" + ")
-                            ol.append(unicode(ar[i][1]).lower() + u"\u0302" +
-                                      str_ind[j])
+                            ol.append(u"\033[94m\033[1m" +
+                                      unicode(ar[i][1]).lower() + u"_" +
+                                      str_ind[j] + u"\033[0;0m\x1b[0;0m")
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
                             if len(ol) != 0:
                                 ol.append(u" ")
-                            ol.append(u"- " + unicode(ar[i][1]).lower()
-                                      + u"\u0302" + str_ind[j])
+                            ol.append(u"- " + u"\033[94m\033[1m" +
+                                      unicode(ar[i][1]).lower()
+                                      + u"_" + str_ind[j] +
+                                      u"\033[0;0m\x1b[0;0m")
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
@@ -1228,8 +1228,9 @@ class Vector(object):
                                 str_start = str_start[1:]
                             if (len(ol) != 0) or (str_start.find(u"-") != -1):
                                 ol.append(str_start)
-                            ol.append(arg_str + u" " + unicode(ar[i][1]).lower()
-                                      + u"\u0302" + str_ind[j])
+                            ol.append(arg_str + u" " + u"\033[94m\033[1m" +
+                                      unicode(ar[i][1]).lower() + u"_" +
+                                      str_ind[j] + u"\033[0;0m\x1b[0;0m")
                 return u"".join(ol)
         return Fake()
 
@@ -1559,7 +1560,7 @@ class MechanicsStrPrinter(StrPrinter):
     """String Printer for mechanics. """
     def _print_Derivative(self, e):
         t = dynamicsymbols._t
-        if (bool([i == t for i in e.variables]) &
+        if (bool(sum([i == t for i in e.variables])) &
             isinstance(type(e.args[0]), UndefinedFunction)):
             ol = str(e.args[0].func)
             for i, v in enumerate(e.variables):

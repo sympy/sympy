@@ -62,27 +62,25 @@ class Point(object):
         raise ValueError('No Connecting Path found between ' + other.name +
                          ' and ' + self.name)
 
-    def a1pt(self, otherpoint, outframe, interframe):
+    def a1pt_theory(self, otherpoint, outframe, interframe):
         """Sets the acceleration of this point with the 1-point theory.
 
         The 1-point theory for point acceleration looks like this:
 
-        :math:`^{N} \vec{a} ^{P} = ^{B} \vec{a} ^{P} + ^{N} \vec{a} ^{O} +
-        ^{N} \vec{\alpha} ^{B} \times \vec{r} ^{OP} + ^{N} \vec{\omega} ^{B}
-        \times (^{N} \vec{\omega} ^{B} \times \vec{r} ^{OP}) + 2 ^{N}
-        \vec{\omega}^{B} \times ^{B} \vec{v} ^{P} `
+        ^N a^P = ^B a^P + ^N a^O + ^N alpha^B x r^OP + ^N omega^B x (^N omega^B
+        x r^OP) + 2 ^N omega^B x ^B v^P
 
-        where Q is a point fixed in B, P is a point moving in B, and B is
+        where O is a point fixed in B, P is a point moving in B, and B is
         rotating in frame N.
 
         Parameters
         ==========
         otherpoint : Point
-            The first point of the 1-point theory
+            The first point of the 1-point theory (O)
         outframe : ReferenceFrame
-            The frame we want this point's acceleration defined in
+            The frame we want this point's acceleration defined in (N)
         fixedframe : ReferenceFrame
-            The intermediate frame in this calculation
+            The intermediate frame in this calculation (B)
 
         Examples
         ========
@@ -99,7 +97,7 @@ class Point(object):
         >>> P = O.locatenew('P', q * B.x)
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
-        >>> P.a1pt(O, N, B)
+        >>> P.a1pt_theory(O, N, B)
         (-25*q + q'')*B.x + q2''*B.y - 10*q'*B.z
 
         """
@@ -117,26 +115,24 @@ class Point(object):
                 (omega ^ (omega ^ dist)))
         return self.acc(outframe)
 
-    def a2pt(self, otherpoint, outframe, fixedframe):
+    def a2pt_theory(self, otherpoint, outframe, fixedframe):
         """Sets the acceleration of this point with the 2-point theory.
 
         The 2-point theory for point acceleration looks like this:
 
-        :math:`^{N} \vec{a} ^{P} = ^{N} \vec{a} ^{O} + ^{N} \vec{\alpha} ^{B}
-         \times \vec{r} ^{OP} + ^{N} \vec{\omega} ^{B} \times (
-         ^{N} \vec{\omega} ^{B} \times \vec{r} ^{OP})`
+        ^N a^P = ^N a^O + ^N alpha^B x r^OP + ^N omega^B x (^N omega^B x r^OP)
 
-        where Q and P are both points fixed in frame B, which is rotating in
+        where O and P are both points fixed in frame B, which is rotating in
         frame N.
 
         Parameters
         ==========
         otherpoint : Point
-            The first point of the 2-point theory
+            The first point of the 2-point theory (O)
         outframe : ReferenceFrame
-            The frame we want this point's acceleration defined in
+            The frame we want this point's acceleration defined in (N)
         fixedframe : ReferenceFrame
-            The frame in which both this point and the other point are fixed
+            The frame in which both points are fixed (B)
 
         Examples
         ========
@@ -150,7 +146,7 @@ class Point(object):
         >>> O = Point('O')
         >>> P = O.locatenew('P', 10 * B.x)
         >>> O.set_vel(N, 5 * N.x)
-        >>> P.a2pt(O, N, B)
+        >>> P.a2pt_theory(O, N, B)
         - 10*q'**2*B.x + 10*q''*B.y
 
         """
@@ -159,7 +155,6 @@ class Point(object):
         self._check_frame(fixedframe)
         self._check_point(otherpoint)
         dist = self.pos_from(otherpoint)
-        v = otherpoint.vel(outframe)
         a = otherpoint.acc(outframe)
         omega = fixedframe.ang_vel_in(outframe)
         alpha = fixedframe.ang_acc_in(outframe)
@@ -329,25 +324,24 @@ class Point(object):
         self._check_frame(frame)
         self._vel_dict.update({frame: value})
 
-    def v1pt(self, otherpoint, outframe, interframe):
+    def v1pt_theory(self, otherpoint, outframe, interframe):
         """Sets the velocity of this point with the 1-point theory.
 
         The 1-point theory for point velocity looks like this:
 
-        :math:`^{N} \vec{v} ^{P} = ^{B} \vec{v} ^{P} + ^{N} \vec{v} ^{O} +
-        ^{N} \vec{\omega} ^{B} \times \vec{r} ^{OP}`
+        ^N v^P = ^B v^P + ^N v^O + ^N omega^B x r^OP
 
-        where Q is a point fixed in B, P is a point moving in B, and B is
+        where O is a point fixed in B, P is a point moving in B, and B is
         rotating in frame N.
 
         Parameters
         ==========
         otherpoint : Point
-            The first point of the 2-point theory
+            The first point of the 2-point theory (O)
         outframe : ReferenceFrame
-            The frame we want this point's velocity defined in
+            The frame we want this point's velocity defined in (N)
         interframe : ReferenceFrame
-            The intermediate frame in this calculation
+            The intermediate frame in this calculation (B)
 
         Examples
         ========
@@ -365,7 +359,7 @@ class Point(object):
         >>> P = O.locatenew('P', q * B.x)
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
-        >>> P.v1pt(O, N, B)
+        >>> P.v1pt_theory(O, N, B)
         q'*B.x + q2'*B.y - 5*q*B.z
 
         """
@@ -380,25 +374,24 @@ class Point(object):
         self.set_vel(outframe, v1 + v2 + (omega ^ dist))
         return self.vel(outframe)
 
-    def v2pt(self, otherpoint, outframe, fixedframe):
+    def v2pt_theory(self, otherpoint, outframe, fixedframe):
         """Sets the velocity of this point with the 2-point theory.
 
         The 2-point theory for point velocity looks like this:
 
-        :math:`^{N} \vec{v} ^{P} = ^{N} \vec{v} ^{O} + ^{N} \vec{\omega} ^{B}
-         \times \vec{r} ^{OP}`
+        ^N v^P = ^N v^O + ^N omega^B x r^OP
 
-        where Q and P are both points fixed in frame B, which is rotating in
+        where O and P are both points fixed in frame B, which is rotating in
         frame N.
 
         Parameters
         ==========
         otherpoint : Point
-            The first point of the 2-point theory
+            The first point of the 2-point theory (O)
         outframe : ReferenceFrame
-            The frame we want this point's velocity defined in
+            The frame we want this point's velocity defined in (N)
         fixedframe : ReferenceFrame
-            The frame in which both this point and the other point are fixed
+            The frame in which both points are fixed (B)
 
         Examples
         ========
@@ -412,7 +405,7 @@ class Point(object):
         >>> O = Point('O')
         >>> P = O.locatenew('P', 10 * B.x)
         >>> O.set_vel(N, 5 * N.x)
-        >>> P.v2pt(O, N, B)
+        >>> P.v2pt_theory(O, N, B)
         5*N.x + 10*q'*B.y
 
         """

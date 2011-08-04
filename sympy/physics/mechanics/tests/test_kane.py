@@ -129,8 +129,8 @@ def test_rolling_disc():
     C = Point('C')
     C.set_vel(N, 0)
     Dmc = C.locatenew('Dmc', r * L.z)
-    Dmc.v2pt(C, N, R)
-    Dmc.a2pt(C, N, R)
+    Dmc.v2pt_theory(C, N, R)
+    Dmc.a2pt_theory(C, N, R)
 
     # This is a simple way to form the inertia dyadic.
     I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)

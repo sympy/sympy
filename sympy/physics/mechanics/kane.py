@@ -1,6 +1,6 @@
 __all__ = ['Kane']
 
-from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU
+from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
 from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics.point import Point
 from sympy.physics.mechanics.rigidbody import RigidBody
@@ -125,7 +125,7 @@ class Kane(object):
         self._k_dnh = Matrix([])
         self._f_dnh = Matrix([])
 
-    def _find_others(self, inlist, insyms):
+    def _find_dynamicsymbols(self, inlist, insyms=[]):
         """Finds all non-supplied dynamicsymbols in the expressions."""
         from sympy.core.function import UndefinedFunction, Derivative
         t = dynamicsymbols._t
@@ -147,7 +147,31 @@ class Kane(object):
                     oli += _deeper(v)
             return oli
 
-        ol = _deeper(inlist)
+        ol = []
+        for i in list(inlist):
+            ol += _deeper(i)
+        seta = {}
+        map(seta.__setitem__, ol, [])
+        ol = seta.keys()
+        for i, v in enumerate(insyms):
+            if ol.__contains__(v):
+                ol.remove(v)
+        return ol
+
+    def _find_othersymbols(self, inlist, insyms=[]):
+        """Finds all non-dynamic symbols in the expressions."""
+        def _deeper(iexpr):
+            oli = []
+            if isinstance(iexpr, Symbol):
+                oli += [iexpr]
+            else:
+                for i, v in enumerate(iexpr.args):
+                    oli += _deeper(v)
+            return oli
+
+        ol = []
+        for i in list(inlist):
+            ol += _deeper(i)
         seta = {}
         map(seta.__setitem__, ol, [])
         ol = seta.keys()
@@ -226,7 +250,7 @@ class Kane(object):
         if self._k_kqdot == None:
             raise ValueError('Kin. diff. eqs  need to be supplied first')
         sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
-        -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
+            -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
         return sub_dict
 
     def kindiffeq(self, kdeqs):
@@ -252,9 +276,13 @@ class Kane(object):
         u = self._u
         uzero = dict(zip(u, [0] * len(u)))
 
-        self._f_k = kdeqs.subs(uzero).subs(qdotzero)
-        self._k_kqdot = (kdeqs.subs(uzero) - self._f_k).jacobian(Matrix(qdot))
-        self._k_ku = (kdeqs.subs(qdotzero) - self._f_k).jacobian(Matrix(u))
+        f_k = kdeqs.subs(uzero).subs(qdotzero)
+        k_kqdot = (kdeqs.subs(uzero) - f_k).jacobian(Matrix(qdot))
+        k_ku = (kdeqs.subs(qdotzero) - f_k).jacobian(Matrix(u))
+
+        self._k_ku = self._mat_inv_mul(k_kqdot, k_ku)
+        self._f_k = self._mat_inv_mul(k_kqdot, f_k)
+        self._k_kqdot = eye(len(qdot))
 
     def dependent_coords(self, qdep, coneq):
         """This is used with systems with configuration constraints.
@@ -273,7 +301,6 @@ class Kane(object):
             if self._q[-(i + 1)] != qdep[-(i + 1)]:
                 raise ValueError('The order of dependent coords does not'
                                   ' match  previously specified coords')
-
         coneq = Matrix(coneq)
         self._qdep = qdep
         self._f_h = coneq
@@ -555,24 +582,45 @@ class Kane(object):
         """ Method used to generate linearized equations.
 
         Note that for linearization, it is assumed that time is not perturbed,
-        but only coordinates and positions. It returns the "forcing" vector,
-        but linearized and in matrix form, with the state vector in the form
-        [Qi, Qd, Ui, Ud].
+        but only coordinates and positions. The "forcing" vector's jacobian is
+        computed with respect to the state vector in the form [Qi, Qd, Ui, Ud].
+        This is the "A" matrix.
 
-        Also, at the moment, linearization is only correct when the matrix
-        k_kqdot is not a function of q.
+        It also finds any non-state dynamicsymbols and computes the jacobian of
+        the "forcing" vector with respect to them. This is the "B" matrix; if
+        this is empty, an empty matrix is created
+
+        A tuple of ("A", "B") is returned.
 
         """
 
         if (self._fr == None) or (self._frstar == None):
             raise ValueError('Need to compute Fr, Fr* first')
 
-        # This is a current limitation of the linearization process, that the
-        # K_kqdot matrix cannot be a function of the q's (coordinates).
-        # Hopefully this limitation will be removed soon.
+        # Note that this is now unneccessary, and it should never be
+        # encountered; I still think it should be in here in case the user
+        # manually sets these matrices incorrectly.
         for i in self._q:
             if self._k_kqdot.diff(i) != 0 * self._k_kqdot:
                 raise ValueError('Matrix K_kqdot must not depend on any q')
+
+        # Checking for dynamic symbols outside the dynamic differential
+        # equations; throws error if there is.
+        insyms = self._q + self._qdot + self._u + self._udot
+        bad_oths  = self._find_dynamicsymbols(self._k_kqdot, insyms)
+        bad_oths += self._find_dynamicsymbols(self._k_ku, insyms)
+        bad_oths += self._find_dynamicsymbols(self._f_k, insyms)
+        bad_oths += self._find_dynamicsymbols(self._k_dnh, insyms)
+        bad_oths += self._find_dynamicsymbols(self._f_dnh, insyms)
+        bad_oths += self._find_dynamicsymbols(self._k_d, insyms)
+        if bad_oths != []:
+            raise ValueError('Cannot have dynamic symbols outside dynamic ' +
+                             'forcing vector')
+        oth_dyns = self._find_dynamicsymbols(self._f_d, insyms)
+        for i in oth_dyns:
+            if diff(i, dynamicsymbols._t) in oth_dyns:
+                raise ValueError('Cannot have derivatives of forcing terms ' +
+                                 'when linearizing forcing terms')
 
         o = len(self._u) # number of speeds
         n = len(self._q) # number of coordinates
@@ -672,7 +720,14 @@ class Kane(object):
             f1_u = f1.jacobian(ui)
             f2_q = f2.jacobian(qi) + f2.jacobian(self._qdot) * dqdot_dqi
             f2_u = f2.jacobian(ui) + f2.jacobian(self._qdot) * dqdot_dui
-        return -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
+        Amat = -(f1_q.row_join(f1_u)).col_join(f2_q.row_join(f2_u))
+        if oth_dyns != []:
+            f1_oths = f1.jacobian(oth_dyns)
+            f2_oths = f2.jacobian(oth_dyns)
+            Bmat = -f1_oths.col_join(f2_oths)
+        else:
+            Bmat = Matrix([])
+        return (Amat, Bmat)
 
     @property
     def mass_matrix(self):
