@@ -307,19 +307,19 @@ def variations(seq, n=None, repetition=False):
     repetition of seq's elements:
         >>> from sympy.utilities.iterables import variations
         >>> list(variations([1, 2], 2))
-        [[1, 2], [2, 1]]
+        [(1, 2), (2, 1)]
 
     variations(seq, n, True) will return the N**n permutations obtained
     by allowing repetition of elements:
         >>> list(variations([1, 2], 2, repetition=True))
-        [[1, 1], [1, 2], [2, 1], [2, 2]]
+        [(1, 1), (1, 2), (2, 1), (2, 2)]
 
     If you ask for more items than are in the set you get the empty set unless
     you allow repetitions:
         >>> list(variations([0, 1], 3, repetition=False))
         []
         >>> list(variations([0, 1], 3, repetition=True))[:4]
-        [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1]]
+        [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
 
     """
@@ -327,14 +327,14 @@ def variations(seq, n=None, repetition=False):
 
     if not repetition:
         for i in permutations(seq, n):
-            yield list(i)
+            yield i
     else:
         if n == 0:
-            yield []
+            yield ()
         else:
             for i in xrange(len(seq)):
                 for cc in variations(seq, n - 1, True):
-                    yield [seq[i]] + cc
+                    yield (seq[i],) + cc
 
 def subsets(seq, k=None, repetition=False):
     """Generates all k-subsets (combinations) from an n-element set, seq.
@@ -351,24 +351,24 @@ def subsets(seq, k=None, repetition=False):
        without repetition, i.e. once an item has been removed, it can no
        longer be "taken":
            >>> list(subsets([1, 2], 2))
-           [[1, 2]]
+           [(1, 2)]
            >>> list(subsets([1, 2]))
-           [[], [1], [2], [1, 2]]
+           [(), (1,), (2,), (1, 2)]
            >>> list(subsets([1, 2, 3], 2))
-           [[1, 2], [1, 3], [2, 3]]
+           [(1, 2), (1, 3), (2, 3)]
 
 
        subsets(seq, k, repetition=True) will return the (n - 1 + k)!/k!/(n - 1)!
        combinations *with* repetition:
            >>> list(subsets([1, 2], 2, repetition=True))
-           [[1, 1], [1, 2], [2, 2]]
+           [(1, 1), (1, 2), (2, 2)]
 
        If you ask for more items than are in the set you get the empty set unless
        you allow repetitions:
            >>> list(subsets([0, 1], 3, repetition=False))
            []
            >>> list(subsets([0, 1], 3, repetition=True))
-           [[0, 0, 0], [0, 0, 1], [0, 1, 1], [1, 1, 1]]
+           [(0, 0, 0), (0, 0, 1), (0, 1, 1), (1, 1, 1)]
        """
     if k is None:
         for k in range(len(seq) + 1):
@@ -377,10 +377,10 @@ def subsets(seq, k=None, repetition=False):
     else:
         if not repetition:
             for i in combinations(seq, k):
-                yield list(i)
+                yield i
         else:
             for i in combinations_with_replacement(seq, k):
-                yield list(i)
+                yield i
 
 def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     """
