@@ -25,6 +25,7 @@ def satisfiable(expr, algorithm="dpll2"):
     Returns a model when it succeeds
 
     Examples
+
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
     >>> satisfiable(A & ~B)

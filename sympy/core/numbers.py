@@ -111,9 +111,9 @@ class Number(AtomicExpr):
     Integer numbers (of any size), together with rational numbers (again, there
     is no limit on their size) are represented by the Rational class.
 
-    If you want to represent for example 1+sqrt(2), then you need to do:
+    If you want to represent, for example, ``1+sqrt(2)``, then you need to do::
 
-    Rational(1) + sqrt(Rational(2))
+      Rational(1) + sqrt(Rational(2))
     """
     is_commutative = True
     is_comparable = True
@@ -236,17 +236,21 @@ class Float(Number):
     Represents a floating point number. It is capable of representing
     arbitrary-precision floating-point numbers
 
-    Usage:
-    ======
-        Float(3.5)   .... 3.5 (the 3.5 was converted from a python float)
-        Float("3.0000000000000005")
+    **Usage**
 
-        Float((1,3,0,2)) # mpmath tuple: (-1)**1 * 3 * 2**0; 3 has 2 bits
-        -3.00000000000000
+    ::
 
-    Notes:
-    ======
-        - Float(x) with x being a Python int/long will return Integer(x)
+      Float(3.5)
+      3.5 # (the 3.5 was converted from a python float)
+      Float("3.0000000000000005")
+
+    >>> from sympy import Float
+    >>> Float((1,3,0,2)) # mpmath tuple: (-1)**1 * 3 * 2**0; 3 has 2 bits
+    -3.00000000000000
+
+    **Notes**
+
+    - Float(x) with x being a Python int/long will return Integer(x)
     """
     is_real = True
     is_irrational = False
@@ -465,45 +469,47 @@ def Real(*args, **kwargs):  # pragma: no cover
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
 
-    Examples
-    ========
-        >>> from sympy import Rational
-        >>> from sympy.abc import x, y
-        >>> Rational(3)
-        3
-        >>> Rational(1,2)
-        1/2
-        >>> Rational(1.5)
-        1
+    **Examples**
+
+    >>> from sympy import Rational
+    >>> from sympy.abc import x, y
+    >>> Rational(3)
+    3
+    >>> Rational(1,2)
+    1/2
+    >>> Rational(1.5)
+    1
 
     Rational can also accept strings that are valid literals for reals:
-        >>> Rational("1.23")
-        123/100
-        >>> Rational('1e-2')
-        1/100
-        >>> Rational(".1")
-        1/10
+
+    >>> Rational("1.23")
+    123/100
+    >>> Rational('1e-2')
+    1/100
+    >>> Rational(".1")
+    1/10
 
     Parsing needs for any other type of string for which a Rational is desired
     can be handled with the rational=True option in sympify() which produces
     rationals from strings like '.[3]' (=1/3) and '3/10' (=3/10).
 
-    Low-level
-    ---------
+    **Low-level**
 
     Access numerator and denominator as .p and .q:
-        >>> r = Rational(3,4)
-        >>> r
-        3/4
-        >>> r.p
-        3
-        >>> r.q
-        4
+
+    >>> r = Rational(3,4)
+    >>> r
+    3/4
+    >>> r.p
+    3
+    >>> r.q
+    4
 
     Note that p and q return integers (not sympy Integers) so some care
     is needed when using them in expressions:
-        >>> r.p/r.q
-        0
+
+    >>> r.p/r.q
+    0
 
     """
     is_real = True

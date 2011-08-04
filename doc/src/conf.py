@@ -21,7 +21,13 @@ sys.path.extend(['../sympy', 'ext'])
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.pngmath', 'math_dollar']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'mathjax', ]
+
+# Use this to use pngmath instead
+#extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
+
+# MathJax file, which is free to use.  See https://bitbucket.org/kevindunn/sphinx-extension-mathjax/wiki/Home
+mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
@@ -40,9 +46,9 @@ copyright = '2008, 2009, 2010, 2011 SymPy Development Team'
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.7.0'
+version = '0.7.1'
 # The full version, including alpha/beta/rc tags.
-release = '0.7.0-git'
+release = '0.7.1-git'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -136,28 +142,10 @@ latex_documents = [('index', 'sympy.tex', 'SymPy Documentation',
 
 default_role = 'math'
 pngmath_divpng_args = ['-gamma 1.5','-D 110']
+# Note, this is ignored by the mathjax extension
+# Any \newcommand should be defined in the file
 pngmath_latex_preamble =  '\\usepackage{amsmath}\n'+\
               '\\usepackage{bm}\n'+\
               '\\usepackage{amsfonts}\n'+\
               '\\usepackage{amssymb}\n'+\
-              '\\setlength{\\parindent}{0pt}\n'+\
-              '\\newcommand{\\bfrac}[2]{\\displaystyle\\frac{#1}{#2}}\n'+\
-              '\\newcommand{\\lp}{\\left (}\n'+\
-              '\\newcommand{\\rp}{\\right )}\n'+\
-              '\\newcommand{\\half}{\\frac{1}{2}}\n'+\
-              '\\newcommand{\\llt}{\\left <}\n'+\
-              '\\newcommand{\\rgt}{\\right >}\n'+\
-              '\\newcommand{\\abs}[1]{\\left |{#1}\\right | }\n'+\
-              '\\newcommand{\\pdiff}[2]{\\bfrac{\\partial {#1}}{\\partial {#2}}}\n'+\
-              '\\newcommand{\\lbrc}{\\left \\{}\n'+\
-              '\\newcommand{\\rbrc}{\\right \\}}\n'+\
-              '\\newcommand{\\W}{\\wedge}\n'+\
-              '\\newcommand{\\R}{\\dagger}\n'+\
-              '\\newcommand{\\lbrk}{\\left [}\n'+\
-              '\\newcommand{\\rbrk}{\\right ]}\n'+\
-              '\\newcommand{\\proj}[2]{\\llt {#1} \\rgt_{#2}}\n'+\
-              '\\newcommand{\\bs}{$\\backslash$}\n'+\
-              '\\newcommand{\\sinf}[1]{\\sin\\lp{#1}\\rp}\n'+\
-              '\\newcommand{\\cosf}[1]{\\cos\\lp{#1}\\rp}\n'+\
-              '\\newcommand{\\ebh}{\\hat{\\bm{e}}}\n'
-
+              '\\setlength{\\parindent}{0pt}\n'

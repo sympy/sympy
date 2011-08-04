@@ -9,7 +9,7 @@ terms. Formally these are sequences annihilated by first order linear
 recurrence operators. In simple words if we are given term `a(n)` then it is
 hypergeometric if its consecutive term ratio is a rational function in `n`.
 
-To check if a sequence is of this type you can use `is_hypergeometric` method
+To check if a sequence is of this type you can use the ``is_hypergeometric`` method
 which is  available in Basic class. Here is simple example involving a
 polynomial:
 
