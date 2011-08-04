@@ -46,6 +46,8 @@ def test_dice():
     assert pspace(X).domain.as_boolean() == Or(
             *[Eq(X.symbol, i) for i in [1,2,3,4,5,6]])
 
+    assert Where(X>3).set == FiniteSet(4,5,6)
+
 def test_domains():
     x, y = symbols('x y')
     X, Y= Die(6, symbol=x), Die(6, symbol=y)

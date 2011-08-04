@@ -10,7 +10,7 @@ def test_single_normal():
     X = Normal(0,1)
     Y = X*sigma + mu
 
-    assert E(Y) == mu
+    assert simplify(E(Y)) == mu
     assert simplify(var(Y)) == sigma**2
     x, pdf = Density(Y)
     assert pdf == 2**S.Half*exp(-(x - mu)**2/(2*sigma**2))/(2*pi**S.Half*sigma)
@@ -58,7 +58,7 @@ def test_multiple_normal():
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, finite=True, bounded=True)
-    s1, s2 = symbols('sigma1 sigma2', real=True, finite=True, possitive=True)
+    s1, s2 = symbols('sigma1 sigma2', real=True, finite=True, positive=True)
     rate = Symbol('lambda', real=True, positive=True, bounded=True)
     X = Normal(mu1, s1)
     Y = Normal(mu2, s2)
@@ -69,10 +69,10 @@ def test_symbolic():
     assert E(X+Y) == mu1+mu2
     assert E(a*X+b) == a*E(X)+b
     assert var(X) == s1**2
-    assert var(X+a*Y+b) == var(X) + a*var(Y)
+    assert simplify(var(X+a*Y+b)) == var(X) + a**2*var(Y)
 
     assert E(Z) == 1/rate
-    assert E(a*Z+b) == a*E(Z)+B
+    assert E(a*Z+b) == a*E(Z)+b
     assert E(X+a*Z+b) == mu1 + a/rate + b
 
 
