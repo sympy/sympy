@@ -10,6 +10,7 @@ the separate 'factorials' module.
 from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
 
 from sympy.mpmath import bernfrac
+from sympy.mpmath.libmp import ifib as _ifib
 
 def _product(a, b):
     p = 1
@@ -64,10 +65,10 @@ class fibonacci(Function):
         * http://mathworld.wolfram.com/FibonacciNumber.html
 
     """
+
     @staticmethod
-    @recurrence_memo([0, 1])
-    def _fib(n, prev):
-        return prev[-1] + prev[-2]
+    def _fib(n):
+        return _ifib(n)
 
     @staticmethod
     @recurrence_memo([None, S.One, _sym])
