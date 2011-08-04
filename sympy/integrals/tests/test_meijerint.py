@@ -175,7 +175,8 @@ def test_meijerint():
            x**(n + 1)*hyper([n + 1], [n + 2], polar_lift(-1)*x)/(n + 1)
 
 def test_bessel():
-    from sympy import besselj, Heaviside, besseli, polar_lift, exp_polar
+    from sympy import (besselj, Heaviside, besseli, polar_lift, exp_polar,
+                       powdenest)
     assert simplify(integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
                      meijerg=True, conds='none')) == \
            2*sin(pi*a/2 - pi*b/2)/(pi*(a-b)*(a+b))
@@ -186,11 +187,11 @@ def test_bessel():
 
     # TODO there is some improvement possible here:
     #  - the result can be simplified to besselj(y, z))
-    assert simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2)),
+    assert powdenest(simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2)),
                               (x, 1, oo), meijerg=True, conds='none')
-                    *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2-y))) == \
-           2*(z**2/4)**(y + S(1)/2)*(z/2)**(-y)*(2*exp_polar(-I*pi/2)/z)**y \
-           *besseli(y, z*exp_polar(I*pi/2))/z
+                              *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2-y))),
+                     polar=True) == \
+           exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))
 
     # Werner Rosenheinrich
     # SOME INDEFINITE INTEGRALS OF BESSEL FUNCTIONS

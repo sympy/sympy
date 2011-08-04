@@ -210,7 +210,7 @@ def test_mellin_transform_bessel():
 
 def test_inverse_mellin_transform():
     from sympy import (sin, simplify, expand_func, powsimp, Max, Min, expand,
-                       powdenest, powsimp, exp_polar)
+                       powdenest, powsimp, exp_polar, combsimp)
     IMT = inverse_mellin_transform
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
@@ -297,7 +297,7 @@ def test_inverse_mellin_transform():
     # 8.4.19
     # TODO these come out ugly
     def mysimp(expr):
-        return expand(unpolarify(simplify(expand(expand_func(expr.rewrite(besselj))))))
+        return powsimp(powdenest(expand(unpolarify(simplify(expand(combsimp(expand_func(expr.rewrite(besselj))))))), polar=True))
     assert mysimp(IMT(gamma(a/2 + s)/gamma(a/2 - s + 1), s, x, (-re(a)/2, S(3)/4))) \
            == besselj(a, 2*sqrt(x)*polar_lift(-1))*exp(-I*pi*a)
     assert mysimp(IMT(2**a*gamma(S(1)/2 - 2*s)*gamma(s + (a + 1)/2) \
@@ -324,7 +324,7 @@ def test_inverse_mellin_transform():
                       / (gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1) \
                          *gamma(a/2 + b/2 - s + 1)),
                       s, x, (-(re(a) + re(b))/2, S(1)/2))) == \
-           exp(-I*pi*a)*exp(-I*pi*b)*besselj(a, sqrt(x)*polar_lift(-1)) \
+           exp(-I*pi*a -I*pi*b)*besselj(a, sqrt(x)*polar_lift(-1)) \
                                     *besselj(b, sqrt(x)*polar_lift(-1))
 
     # Section 8.4.20
