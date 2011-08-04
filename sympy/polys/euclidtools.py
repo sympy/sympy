@@ -54,7 +54,7 @@ from sympy.ntheory import nextprime
 
 def dup_half_gcdex(f, g, K):
     """
-    Half extended Euclidean algorithm in ``F[x]``.
+    Half extended Euclidean algorithm in `F[x]`.
 
     Returns ``(s, h)`` such that ``h = gcd(f, g)`` and ``s*f = h (mod g)``.
 
@@ -87,7 +87,7 @@ def dup_half_gcdex(f, g, K):
 
 def dmp_half_gcdex(f, g, u, K):
     """
-    Half extended Euclidean algorithm in ``F[X]``.
+    Half extended Euclidean algorithm in `F[X]`.
 
     **Examples**
 
@@ -102,7 +102,7 @@ def dmp_half_gcdex(f, g, u, K):
 
 def dup_gcdex(f, g, K):
     """
-    Extended Euclidean algorithm in ``F[x]``.
+    Extended Euclidean algorithm in `F[x]`.
 
     Returns ``(s, t, h)`` such that ``h = gcd(f, g)`` and ``s*f + t*g = h``.
 
@@ -127,7 +127,7 @@ def dup_gcdex(f, g, K):
 
 def dmp_gcdex(f, g, u, K):
     """
-    Extended Euclidean algorithm in ``F[X]``.
+    Extended Euclidean algorithm in `F[X]`.
 
     **Examples**
 
@@ -142,7 +142,7 @@ def dmp_gcdex(f, g, u, K):
 
 def dup_invert(f, g, K):
     """
-    Compute multiplicative inverse of ``f`` modulo ``g`` in ``F[x]``.
+    Compute multiplicative inverse of `f` modulo `g` in `F[x]`.
 
     **Examples**
 
@@ -171,7 +171,7 @@ def dup_invert(f, g, K):
 
 def dmp_invert(f, g, u, K):
     """
-    Compute multiplicative inverse of ``f`` modulo ``g`` in ``F[X]``.
+    Compute multiplicative inverse of `f` modulo `g` in `F[X]`.
 
     **Examples**
 
@@ -186,7 +186,7 @@ def dmp_invert(f, g, u, K):
 
 def dup_euclidean_prs(f, g, K):
     """
-    Euclidean polynomial remainder sequence (PRS) in ``K[x]``.
+    Euclidean polynomial remainder sequence (PRS) in `K[x]`.
 
     **Examples**
 
@@ -224,7 +224,7 @@ def dup_euclidean_prs(f, g, K):
 
 def dmp_euclidean_prs(f, g, u, K):
     """
-    Euclidean polynomial remainder sequence (PRS) in ``K[X]``.
+    Euclidean polynomial remainder sequence (PRS) in `K[X]`.
 
     **Examples**
 
@@ -239,7 +239,7 @@ def dmp_euclidean_prs(f, g, u, K):
 
 def dup_primitive_prs(f, g, K):
     """
-    Primitive polynomial remainder sequence (PRS) in ``K[x]``.
+    Primitive polynomial remainder sequence (PRS) in `K[x]`.
 
     **Examples**
 
@@ -277,7 +277,7 @@ def dup_primitive_prs(f, g, K):
 
 def dmp_primitive_prs(f, g, u, K):
     """
-    Primitive polynomial remainder sequence (PRS) in ``K[X]``.
+    Primitive polynomial remainder sequence (PRS) in `K[X]`.
 
     **Examples**
 
@@ -293,10 +293,10 @@ def dmp_primitive_prs(f, g, u, K):
 @cythonized("n,m,d,k")
 def dup_inner_subresultants(f, g, K):
     """
-    Subresultant PRS algorithm in ``K[x]``.
+    Subresultant PRS algorithm in `K[x]`.
 
-    Computes the subresultant polynomial remainder sequence (PRS) of ``f``
-    and ``g``, and the values for $\\beta_i$ and $\\delta_i$. The last two
+    Computes the subresultant polynomial remainder sequence (PRS) of `f`
+    and `g`, and the values for `\beta_i` and `\delta_i`. The last two
     sequences of values are necessary for computing the resultant in
     :func:`dup_prs_resultant`.
 
@@ -359,7 +359,7 @@ def dup_inner_subresultants(f, g, K):
 
 def dup_subresultants(f, g, K):
     """
-    Computes subresultant PRS of two polynomials in ``K[x]``.
+    Computes subresultant PRS of two polynomials in `K[x]`.
 
     **Examples**
 
@@ -378,7 +378,7 @@ def dup_subresultants(f, g, K):
 @cythonized("s,i,du,dv,dw")
 def dup_prs_resultant(f, g, K):
     """
-    Resultant algorithm in ``K[x]`` using subresultant PRS.
+    Resultant algorithm in `K[x]` using subresultant PRS.
 
     **Examples**
 
@@ -430,7 +430,7 @@ def dup_prs_resultant(f, g, K):
 
 def dup_resultant(f, g, K):
     """
-    Computes resultant of two polynomials in ``K[x]``.
+    Computes resultant of two polynomials in `K[x]`.
 
     **Examples**
 
@@ -449,7 +449,7 @@ def dup_resultant(f, g, K):
 @cythonized("u,v,n,m,d,k")
 def dmp_inner_subresultants(f, g, u, K):
     """
-    Subresultant PRS algorithm in ``K[X]``.
+    Subresultant PRS algorithm in `K[X]`.
 
     **Examples**
 
@@ -525,7 +525,7 @@ def dmp_inner_subresultants(f, g, u, K):
 @cythonized("u")
 def dmp_subresultants(f, g, u, K):
     """
-    Computes subresultant PRS of two polynomials in ``K[X]``.
+    Computes subresultant PRS of two polynomials in `K[X]`.
 
     **Examples**
 
@@ -547,7 +547,7 @@ def dmp_subresultants(f, g, u, K):
 @cythonized("u,v,s,i,d,du,dv,dw")
 def dmp_prs_resultant(f, g, u, K):
     """
-    Resultant algorithm in ``K[X]`` using subresultant PRS.
+    Resultant algorithm in `K[X]` using subresultant PRS.
 
     **Examples**
 
@@ -611,7 +611,7 @@ def dmp_prs_resultant(f, g, u, K):
 @cythonized("u,v,n,m,N,M,B")
 def dmp_zz_modular_resultant(f, g, p, u, K):
     """
-    Compute resultant of ``f`` and ``g`` modulo a prime ``p``.
+    Compute resultant of `f` and `g` modulo a prime `p`.
 
     **Examples**
 
@@ -687,7 +687,7 @@ def _collins_crt(r, R, P, p, K):
 @cythonized("u,v,n,m")
 def dmp_zz_collins_resultant(f, g, u, K):
     """
-    Collins's modular resultant algorithm in ``Z[X]``.
+    Collins's modular resultant algorithm in `Z[X]`.
 
     **Examples**
 
@@ -745,7 +745,7 @@ def dmp_zz_collins_resultant(f, g, u, K):
 @cythonized("u,n,m")
 def dmp_qq_collins_resultant(f, g, u, K0):
     """
-    Collins's modular resultant algorithm in ``Q[X]``.
+    Collins's modular resultant algorithm in `Q[X]`.
 
     **Examples**
 
@@ -783,7 +783,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 @cythonized("u")
 def dmp_resultant(f, g, u, K):
     """
-    Computes resultant of two polynomials in ``K[X]``.
+    Computes resultant of two polynomials in `K[X]`.
 
     **Examples**
 
@@ -812,7 +812,7 @@ def dmp_resultant(f, g, u, K):
 @cythonized("d,s")
 def dup_discriminant(f, K):
     """
-    Computes discriminant of a polynomial in ``K[x]``.
+    Computes discriminant of a polynomial in `K[x]`.
 
     **Examples**
 
@@ -838,7 +838,7 @@ def dup_discriminant(f, K):
 @cythonized("u,v,d,s")
 def dmp_discriminant(f, u, K):
     """
-    Computes discriminant of a polynomial in ``K[X]``.
+    Computes discriminant of a polynomial in `K[X]`.
 
     **Examples**
 
@@ -941,7 +941,7 @@ def _dmp_ff_trivial_gcd(f, g, u, K):
 
 @cythonized("u,v,df,dg")
 def _dmp_simplify_gcd(f, g, u, K):
-    """Try to eliminate ``x_0`` from GCD computation in ``K[X]``. """
+    """Try to eliminate `x_0` from GCD computation in `K[X]`. """
     df = dmp_degree(f, u)
     dg = dmp_degree(g, u)
 
@@ -1149,9 +1149,9 @@ def _dup_zz_gcd_interpolate(h, x, K):
 @cythonized("i,df,dg")
 def dup_zz_heu_gcd(f, g, K):
     """
-    Heuristic polynomial GCD in ``Z[x]``.
+    Heuristic polynomial GCD in `Z[x]`.
 
-    Given univariate polynomials ``f`` and ``g`` in ``Z[x]``, returns
+    Given univariate polynomials `f` and `g` in `Z[x]`, returns
     their GCD and cofactors, i.e. polynomials ``h``, ``cff`` and ``cfg``
     such that::
 
@@ -1273,9 +1273,9 @@ def _dmp_zz_gcd_interpolate(h, x, v, K):
 @cythonized("u,v,i,dg,df")
 def dmp_zz_heu_gcd(f, g, u, K):
     """
-    Heuristic polynomial GCD in ``Z[X]``.
+    Heuristic polynomial GCD in `Z[X]`.
 
-    Given univariate polynomials ``f`` and ``g`` in ``Z[X]``, returns
+    Given univariate polynomials `f` and `g` in `Z[X]`, returns
     their GCD and cofactors, i.e. polynomials ``h``, ``cff`` and ``cfg``
     such that::
 
@@ -1380,7 +1380,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
 def dup_qq_heu_gcd(f, g, K0):
     """
-    Heuristic polynomial GCD in ``Q[x]``.
+    Heuristic polynomial GCD in `Q[x]`.
 
     Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
     ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
@@ -1428,7 +1428,7 @@ def dup_qq_heu_gcd(f, g, K0):
 @cythonized("u")
 def dmp_qq_heu_gcd(f, g, u, K0):
     """
-    Heuristic polynomial GCD in ``Q[X]``.
+    Heuristic polynomial GCD in `Q[X]`.
 
     Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
     ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
@@ -1475,7 +1475,7 @@ def dmp_qq_heu_gcd(f, g, u, K0):
 
 def dup_inner_gcd(f, g, K):
     """
-    Computes polynomial GCD and cofactors of ``f`` and ``g`` in ``K[x]``.
+    Computes polynomial GCD and cofactors of `f` and `g` in `K[x]`.
 
     Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
     ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
@@ -1532,7 +1532,7 @@ def _dmp_inner_gcd(f, g, u, K):
 @cythonized("u")
 def dmp_inner_gcd(f, g, u, K):
     """
-    Computes polynomial GCD and cofactors of ``f`` and ``g`` in ``K[X]``.
+    Computes polynomial GCD and cofactors of `f` and `g` in `K[X]`.
 
     Returns ``(h, cff, cfg)`` such that ``a = gcd(f, g)``,
     ``cff = quo(f, h)``, and ``cfg = quo(g, h)``.
@@ -1561,7 +1561,7 @@ def dmp_inner_gcd(f, g, u, K):
 
 def dup_gcd(f, g, K):
     """
-    Computes polynomial GCD of ``f`` and ``g`` in ``K[x]``.
+    Computes polynomial GCD of `f` and `g` in `K[x]`.
 
     **Examples**
 
@@ -1580,7 +1580,7 @@ def dup_gcd(f, g, K):
 @cythonized("u")
 def dmp_gcd(f, g, u, K):
     """
-    Computes polynomial GCD of ``f`` and ``g`` in ``K[X]``.
+    Computes polynomial GCD of `f` and `g` in `K[X]`.
 
     **Examples**
 
@@ -1598,7 +1598,7 @@ def dmp_gcd(f, g, u, K):
 
 def dup_rr_lcm(f, g, K):
     """
-    Computes polynomial LCM over a ring in ``K[x]``.
+    Computes polynomial LCM over a ring in `K[x]`.
 
     **Examples**
 
@@ -1624,7 +1624,7 @@ def dup_rr_lcm(f, g, K):
 
 def dup_ff_lcm(f, g, K):
     """
-    Computes polynomial LCM over a field in ``K[x]``.
+    Computes polynomial LCM over a field in `K[x]`.
 
     **Examples**
 
@@ -1645,7 +1645,7 @@ def dup_ff_lcm(f, g, K):
 
 def dup_lcm(f, g, K):
     """
-    Computes polynomial LCM of ``f`` and ``g`` in ``K[x]``.
+    Computes polynomial LCM of `f` and `g` in `K[x]`.
 
     **Examples**
 
@@ -1667,7 +1667,7 @@ def dup_lcm(f, g, K):
 @cythonized("u")
 def dmp_rr_lcm(f, g, u, K):
     """
-    Computes polynomial LCM over a ring in ``K[X]``.
+    Computes polynomial LCM over a ring in `K[X]`.
 
     **Examples**
 
@@ -1694,7 +1694,7 @@ def dmp_rr_lcm(f, g, u, K):
 @cythonized("u")
 def dmp_ff_lcm(f, g, u, K):
     """
-    Computes polynomial LCM over a field in ``K[X]``.
+    Computes polynomial LCM over a field in `K[X]`.
 
     **Examples**
 
@@ -1716,7 +1716,7 @@ def dmp_ff_lcm(f, g, u, K):
 @cythonized("u")
 def dmp_lcm(f, g, u, K):
     """
-    Computes polynomial LCM of ``f`` and ``g`` in ``K[X]``.
+    Computes polynomial LCM of `f` and `g` in `K[X]`.
 
     **Examples**
 
@@ -1795,7 +1795,7 @@ def dmp_primitive(f, u, K):
 
 def dup_cancel(f, g, K, include=True):
     """
-    Cancel common factors in a rational function ``f/g``.
+    Cancel common factors in a rational function `f/g`.
 
     **Examples**
 
@@ -1813,7 +1813,7 @@ def dup_cancel(f, g, K, include=True):
 
 def dmp_cancel(f, g, u, K, include=True):
     """
-    Cancel common factors in a rational function ``f/g``.
+    Cancel common factors in a rational function `f/g`.
 
     **Examples**
 

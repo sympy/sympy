@@ -288,15 +288,14 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f,x)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
 
-        Or you can even match both derivative order and exponent at time::
+        Or you can even match both derivative order and exponent at the same
+        time.
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
         (a + b)*Derivative(f(x), x, x)**2
 
-
-    == Notes ==
-        - arguments are expected to be in expanded form, so you might have to
-          call expand() prior to calling this function.
+        Note: arguments are expected to be in expanded form, so you might have
+        to call expand() prior to calling this function.
     """
     def make_expression(terms):
         product = []
@@ -957,7 +956,7 @@ def powdenest(eq, force=False):
           of the exponent can be removed from any term and the gcd of such
           integers can be joined with e
 
-    Setting `force` to True will make symbols that are not explicitly
+    Setting ``force`` to True will make symbols that are not explicitly
     negative behave as though they are positive, resulting in more
     denesting.
 
@@ -1579,29 +1578,30 @@ def simplify(expr, ratio=1.7):
        if (result length)/(input length) > ratio, then input is returned
        unmodified (:func:`count_ops` is used to measure length).
 
-       For example, if ``ratio=1``, `simplify` output can't be longer
+       For example, if ``ratio=1``, ``simplify`` output can't be longer
        than input.
 
        ::
 
-           >>> from sympy import S, simplify, count_ops, oo
-           >>> root = S("(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2) \
-                        + 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))")
+            >>> from sympy import S, simplify, count_ops, oo
+            >>> root = S("(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2)"
+            ... "+ 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))")
 
        Since ``simplify(root)`` would result in a slightly longer expression,
        root is returned inchanged instead::
 
-           >>> simplify(root, ratio=1) is root
-           True
+            >>> simplify(root, ratio=1) is root
+            True
 
        If ``ratio=oo``, simplify will be applied anyway::
 
-           >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
-           True
+            >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
+            True
 
        Note that the shortest expression is not necessary the simplest, so
        setting ``ratio`` to 1 may not be a good idea.
        Heuristically, default value ``ratio=1.7`` seems like a reasonable choice.
+
     """
     expr = sympify(expr)
 

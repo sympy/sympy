@@ -127,217 +127,217 @@ class SparsePoly(GenericPoly):
         return smp_to_sympy_dict(f.rep, f.lev, f.ord, f.dom)
 
     def set_order(f, ord):
-        """Set the ordering of monomials in $f$ to ``ord``. """
+        """Set the ordering of monomials in `f` to ``ord``. """
         if f.ord == ord:
             return f
         else:
             return f.per(smp_set_order(f.rep, f.lev, ord, f.dom), ord=ord)
 
     def set_domain(f, dom):
-        """Set the ground domain in $f$ to ``dom``. """
+        """Set the ground domain in `f` to ``dom``. """
         if f.dom == dom:
             return f
         else:
             return f.per(smp_set_domain(f.rep, f.lev, f.ord, f.dom, dom), dom=dom)
 
     def LC(f):
-        """Return the leading coefficient of $f$. """
+        """Return the leading coefficient of `f`. """
         return smp_ground_LC(f.rep, f.lev, f.ord, f.dom)
 
     def LM(f):
-        """Return the leading monomial of $f$. """
+        """Return the leading monomial of `f`. """
         return smp_ground_LM(f.rep, f.lev, f.ord, f.dom)
 
     def LT(f):
-        """Return the leading term of $f$. """
+        """Return the leading term of `f`. """
         return smp_ground_LT(f.rep, f.lev, f.ord, f.dom)
 
     def TC(f):
-        """Return the trailing coefficient of $f$. """
+        """Return the trailing coefficient of `f`. """
         return smp_ground_TC(f.rep, f.lev, f.ord, f.dom)
 
     def TM(f):
-        """Return the trailing monomial of $f$. """
+        """Return the trailing monomial of `f`. """
         return smp_ground_TM(f.rep, f.lev, f.ord, f.dom)
 
     def TT(f):
-        """Return the trailing coefficient of $f$. """
+        """Return the trailing coefficient of `f`. """
         return smp_ground_TT(f.rep, f.lev, f.ord, f.dom)
 
     def EC(f):
-        """Return the last non-zero coefficient of $f$. """
+        """Return the last non-zero coefficient of `f`. """
         return smp_ground_EC(f.rep, f.lev, f.ord, f.dom)
 
     def EM(f):
-        """Return the last non-zero monomial of $f$. """
+        """Return the last non-zero monomial of `f`. """
         return smp_ground_EM(f.rep, f.lev, f.ord, f.dom)
 
     def ET(f):
-        """Return the last non-zero coefficient of $f$. """
+        """Return the last non-zero coefficient of `f`. """
         return smp_ground_ET(f.rep, f.lev, f.ord, f.dom)
 
     def nth(f, *N):
-        """Return $n$-th coefficient of $f$. """
+        """Return `n`-th coefficient of `f`. """
         return smp_ground_nth(f.rep, N, f.lev, f.dom)
 
     def coeffs(f):
-        """Return all non-zero coefficients of $f$. """
+        """Return all non-zero coefficients of `f`. """
         return smp_coeffs(f.rep, f.lev, f.ord, f.dom)
 
     def monoms(f):
-        """Return all non-zero monomials of $f$. """
+        """Return all non-zero monomials of `f`. """
         return smp_monoms(f.rep, f.lev, f.ord, f.dom)
 
     def terms(f):
-        """Return all non-zero terms from $f$. """
+        """Return all non-zero terms from `f`. """
         return smp_terms(f.rep, f.lev, f.ord, f.dom)
 
     def all_coeffs(f):
-        """Return all coefficients of $f$. """
+        """Return all coefficients of `f`. """
         return smp_all_coeffs(f.rep, f.lev, f.ord, f.dom)
 
     def all_monoms(f):
-        """Return all monomials of $f$. """
+        """Return all monomials of `f`. """
         return smp_all_monoms(f.rep, f.lev, f.ord, f.dom)
 
     def all_terms(f):
-        """Return all terms of $f$. """
+        """Return all terms of `f`. """
         return smp_all_terms(f.rep, f.lev, f.ord, f.dom)
 
     def degree(f, j=0):
-        """Return the degree of $f$ in $x_j$. """
+        """Return the degree of `f` in `x_j`. """
         return smp_degree(f.rep, j, f.lev)
 
     def degrees(f):
-        """Return the list of degrees of $f$. """
+        """Return the list of degrees of `f`. """
         return smp_degrees(f.rep, f.lev)
 
     def total_degree(f):
-        """Return the total degree of $f$. """
+        """Return the total degree of `f`. """
         return smp_total_degree(f.rep, f.lev)
 
     def deflate(f):
-        """Reduce degree of $f$ by mapping $x_i^m$ to $y_i$. """
+        """Reduce degree of `f` by mapping `x_i^m` to `y_i`. """
         M, F = smp_deflate(f.rep, f.lev, f.ord, f.dom)
         return M, f.per(F)
 
     def inflate(f, M):
-        """Revert :func:`deflate` by mapping $y_i$ to $x_i^m$. """
+        """Revert :func:`deflate` by mapping `y_i` to `x_i^m`. """
         return f.per(smp_inflate(f.rep, M, f.lev, f.ord, f.dom))
 
     def terms_gcd(f):
-        """Remove GCD of terms from the polynomial $f$. """
+        """Remove GCD of terms from the polynomial `f`. """
         J, F = smp_terms_gcd(f.rep, f.lev, f.ord, f.dom)
         return J, f.per(F)
 
     def add_ground(f, c):
-        """Add an element of the ground domain to $f$. """
+        """Add an element of the ground domain to `f`. """
         return f.per(smp_add_ground(f.rep, f.dom.convert(c), f.lev, f.ord, f.dom))
 
     def sub_ground(f, c):
-        """Subtract an element of the ground domain from $f$. """
+        """Subtract an element of the ground domain from `f`. """
         return f.per(smp_sub_ground(f.rep, f.dom.convert(c), f.lev, f.ord, f.dom))
 
     def mul_ground(f, c):
-        """Multiply $f$ by an element of the ground domain. """
+        """Multiply `f` by an element of the ground domain. """
         return f.per(smp_mul_ground(f.rep, f.dom.convert(c), f.lev, f.ord, f.dom))
 
     def quo_ground(f, c):
-        """Quotient of $f$ by an element of the ground domain. """
+        """Quotient of `f` by an element of the ground domain. """
         return f.per(smp_quo_ground(f.rep, f.dom.convert(c), f.lev, f.ord, f.dom))
 
     def exquo_ground(f, c):
-        """Exact quotient of $f$ by an element of the ground domain. """
+        """Exact quotient of `f` by an element of the ground domain. """
         return f.per(smp_exquo_ground(f.rep, f.dom.convert(c), f.lev, f.ord, f.dom))
 
     def abs(f):
-        """Make all coefficients in $f$ positive. """
+        """Make all coefficients in `f` positive. """
         return f.per(smp_abs(f.rep, f.lev, f.ord, f.dom))
 
     def neg(f):
-        """Negate all coefficients in $f$. """
+        """Negate all coefficients in `f`. """
         return f.per(smp_neg(f.rep, f.lev, f.ord, f.dom))
 
     def add(f, g):
-        """Add two multivariate polynomials $f$ and $g$. """
+        """Add two multivariate polynomials `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_add(F, G, lev, ord, dom))
 
     def sub(f, g):
-        """Subtract two multivariate polynomials $f$ and $g$. """
+        """Subtract two multivariate polynomials `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_sub(F, G, lev, ord, dom))
 
     def mul(f, g):
-        """Multiply two multivariate polynomials $f$ and $g$. """
+        """Multiply two multivariate polynomials `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_mul(F, G, lev, ord, dom))
 
     def sqr(f):
-        """Square a multivariate polynomial $f$. """
+        """Square a multivariate polynomial `f`. """
         return f.per(smp_sqr(f.rep, f.lev, f.ord, f.dom))
 
     def pow(f, n):
-        """Raise $f$ to a non-negative power $n$. """
+        """Raise `f` to a non-negative power `n`. """
         return f.per(smp_pow(f.rep, n, f.lev, f.ord, f.dom))
 
     def pdiv(f, g):
-        """Polynomial pseudo-division of $f$ and $g$. """
+        """Polynomial pseudo-division of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         q, r = smp_pdiv(F, G, lev, ord, dom)
         return per(q), per(r)
 
     def prem(f, g):
-        """Polynomial pseudo-remainder of $f$ and $g$. """
+        """Polynomial pseudo-remainder of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_prem(F, G, lev, dom))
 
     def pquo(f, g):
-        """Polynomial pseudo-quotient of $f$ and $g$. """
+        """Polynomial pseudo-quotient of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_pquo(F, G, lev, ord, dom))
 
     def pexquo(f, g):
-        """Polynomial exact pseudo-quotient of $f$ and $g$. """
+        """Polynomial exact pseudo-quotient of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_pexquo(F, G, lev, ord, dom))
 
     def div(f, g):
-        """Polynomial division with remainder of $f$ and $g$. """
+        """Polynomial division with remainder of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         q, r = smp_div(F, G, lev, ord, dom)
         return per(q), per(r)
 
     def rem(f, g):
-        """Compute polynomial remainder of $f$ and $g$. """
+        """Compute polynomial remainder of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_rem(F, G, lev, ord, dom))
 
     def quo(f, g):
-        """Compute polynomial quotient of $f$ and $g$. """
+        """Compute polynomial quotient of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_quo(F, G, lev, ord, dom))
 
     def exquo(f, g):
-        """Compute polynomial exact quotient of $f$ and $g$. """
+        """Compute polynomial exact quotient of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_exquo(F, G, lev, ord, dom))
 
     def reduced(f, G):
-        """Reduce $f$ modulo a set of polynomials $G$. """
+        """Reduce `f` modulo a set of polynomials `G`. """
         lev, ord, dom, per, f, G = f.unify(G)
         return per(smp_reduced(f, G, lev, ord, dom))
 
     def max_norm(f):
-        """Returns maximum norm of $f$. """
+        """Returns maximum norm of `f`. """
         return smp_max_norm(f.rep, f.lev, f.ord, f.dom)
 
     def l1_norm(f):
-        """Returns l1 norm of $f$. """
+        """Returns l1 norm of `f`. """
         return smp_l1_norm(f.rep, f.lev, f.ord, f.dom)
 
     def clear_denoms(f, convert=False):
-        """Clear denominators in $f$, but keep the ground domain. """
+        """Clear denominators in `f`, but keep the ground domain. """
         coeff, F = smp_clear_denoms(f.rep, f.lev, f.ord, f.dom, convert=convert)
         return coeff, f.per(F)
 
@@ -358,125 +358,125 @@ class SparsePoly(GenericPoly):
         return per(s), per(t), per(h)
 
     def invert(f, g):
-        """Invert $f$ modulo $g$, if possible. """
+        """Invert `f` modulo `g`, if possible. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_invert(F, G, lev, ord, dom))
 
     def subresultants(f, g):
-        """Compute subresultant PRS sequence of $f$ and $g$. """
+        """Compute subresultant PRS sequence of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         R = smp_subresultants(F, G, lev, ord, dom)
         return map(per, R)
 
     def resultant(f, g):
-        """Compute resultant of $f$ and $g$. """
+        """Compute resultant of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_resultant(F, G, lev, ord, dom), lower=True)
 
     def discriminant(f):
-        """Compute discriminant of $f$. """
+        """Compute discriminant of `f`. """
         return f.per(smp_discriminant(f.rep, f.lev, f.ord, f.dom), lower=True)
 
     def cofactors(f, g):
-        """Compute GCD of $f$ and $g$ and their cofactors. """
+        """Compute GCD of `f` and `g` and their cofactors. """
         lev, ord, dom, per, F, G = f.unify(g)
         h, cff, cfg = smp_cofactors(F, G, lev, ord, dom)
         return per(h), per(cff), per(cfg)
 
     def gcd(f, g):
-        """Compute polynomial GCD of $f$ and $g$. """
+        """Compute polynomial GCD of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_gcd(F, G, lev, ord, dom))
 
     def lcm(f, g):
-        """Compute polynomial LCM of $f$ and $g$. """
+        """Compute polynomial LCM of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_lcm(F, G, lev, ord, dom))
 
     def trunc(f, p):
-        """Reduce $f$ modulo an element of the ground domain. """
+        """Reduce `f` modulo an element of the ground domain. """
         return f.per(smp_ground_trunc(f.rep, f.dom.convert(p), f.lev, f.ord, f.dom))
 
     def monic(f):
-        """Divide all coefficients by the leading coefficient of $f$. """
+        """Divide all coefficients by the leading coefficient of `f`. """
         return f.per(smp_ground_monic(f.rep, f.lev, f.ord, f.dom))
 
     def content(f):
-        """Compute GCD of all coefficients of $f$. """
+        """Compute GCD of all coefficients of `f`. """
         return smp_ground_content(f.rep, f.lev, f.ord, f.dom)
 
     def primitive(f):
-        """Compute content and the primitive form of $f$. """
+        """Compute content and the primitive form of `f`. """
         cont, F = smp_ground_primitive(f.rep, f.lev, f.ord, f.dom)
         return cont, f.per(F)
 
     def integrate(f, m=1, j=0):
-        """Compute $m$-th order indefinite integral of $f$ in $x_j$. """
+        """Compute `m`-th order indefinite integral of `f` in `x_j`. """
         return f.per(smp_integrate_in(f.rep, m, j, f.lev, f.ord, f.dom))
 
     def diff(f, m=1, j=0):
-        """Compute $m$-th order derivative of $f$ in $x_j$. """
+        """Compute `m`-th order derivative of `f` in `x_j`. """
         return f.per(smp_diff_in(f.rep, m, j, f.lev, f.ord, f.dom))
 
     def eval(f, a, j=0):
-        """Evaluate $f$ at the given point $a$ in $x_j$. """
+        """Evaluate `f` at the given point `a` in `x_j`. """
         return f.per(smp_eval_in(f.rep, f.dom.convert(a), j, f.lev, f.ord, f.dom), lower=True)
 
     def mirror(f, j=0):
-        """Evaluate efficiently composition $f(-x_j)$. """
+        """Evaluate efficiently composition `f(-x_j)`. """
         return f.per(smp_mirror_in(f.rep, j, f.lev, f.ord, f.dom))
 
     def scale(f, a, j=0):
-        """Evaluate efficiently composition $f(a x_j)$. """
+        """Evaluate efficiently composition `f(a x_j)`. """
         return f.per(smp_scale_in(f.rep, f.dom.convert(a), j, f.lev, f.ord, f.dom))
 
     def taylor(f, a, j=0):
-        """Evaluate efficiently Taylor shift $f(x_j + a)$. """
+        """Evaluate efficiently Taylor shift `f(x_j + a)`. """
         return f.per(smp_taylor_in(f.rep, f.dom.convert(a), j, f.lev, f.ord, f.dom))
 
     def transform(f, p, q, j=0):
-        """Evaluate functional transformation $q^n \cdot f(p/q)$. """
+        """Evaluate functional transformation `q^n \cdot f(p/q)`. """
         lev, ord, dom, per, F, (P, Q) = f.unify((p, q))
         return per(smp_transform_in(F, P, Q, j, lev, ord, dom))
 
     def compose(f, g):
-        """Compute functional composition of $f$ and $g$. """
+        """Compute functional composition of `f` and `g`. """
         lev, ord, dom, per, F, G = f.unify(g)
         return per(smp_compose(F, G, lev, ord, dom))
 
     def decompose(f):
-        """Computes functional decomposition of $f$. """
+        """Computes functional decomposition of `f`. """
         return map(f.per, smp_decompose(f.rep, f.lev, f.ord, f.dom))
 
     def sturm(f):
-        """Computes the Sturm sequence of $f$. """
+        """Computes the Sturm sequence of `f`. """
         return map(f.per, smp_sturm(f.rep, f.lev, f.ord, f.dom))
 
     def sqf_norm(f):
-        """Compute square-free norm of $f$. """
+        """Compute square-free norm of `f`. """
         s, g, r = smp_sqf_norm(f.rep, f.lev, f.ord, f.dom)
         return s, f.per(g), f.per(r, dom=f.dom.dom)
 
     def sqf_part(f):
-        """Compute square-free part of $f$. """
+        """Compute square-free part of `f`. """
         return f.per(smp_sqf_part(f.rep, f.lev, f.ord, f.dom))
 
     def sqf_list(f, all=False, include=False):
-        """Return a list of square-free factors of $f$. """
+        """Return a list of square-free factors of `f`. """
         result = smp_sqf_list(f.rep, f.lev, f.ord, f.dom, all=all, include=include)
         return f._perify_factors(result, include)
 
     def factor_list(f, include=False):
-        """Return a list of irreducible factors of $f$. """
+        """Return a list of irreducible factors of `f`. """
         result = smp_factor_list(f.rep, f.lev, f.ord, f.dom, include=include)
         return f._perify_factors(f.per, result, include)
 
     def real_intervals(f, eps=None, inf=None, sup=None, fast=False, sqf=False):
-        """Compute isolating intervals for real roots of $f$. """
+        """Compute isolating intervals for real roots of `f`. """
         return smp_real_intervals(f.rep, f.lev, f.ord, f.dom, eps=eps, inf=inf, sup=sup, fast=fast, sqf=sqf)
 
     def complex_intervals(f, eps=None, inf=None, sup=None, fast=False, sqf=False):
-        """Compute isolating rectangles for complex roots of $f$. """
+        """Compute isolating rectangles for complex roots of `f`. """
         return smp_complex_intervals(f.rep, f.lev, f.ord, f.dom, eps=eps, inf=inf, sup=sup, fast=fast, sqf=sqf)
 
     def refine_real_root(f, s, t, eps=None, steps=None, fast=False, sqf=False):
@@ -488,51 +488,51 @@ class SparsePoly(GenericPoly):
         return smp_refine_complex_root(f.rep, s, t, f.lev, f.ord, f.dom, eps=eps, steps=steps, fast=fast, sqf=sqf)
 
     def count_real_roots(f, inf=None, sup=None):
-        """Return the number of real roots of $f$ in $[inf, sup]$ interval. """
+        """Return the number of real roots of `f` in the ``[inf, sup]`` interval. """
         return smp_count_real_roots(f.rep, f.lev, f.ord, f.dom, inf=inf, sup=sup)
 
     def count_complex_roots(f, inf=None, sup=None):
-        """Return the number of complex roots of $f$ in $[inf, sup]$ rectangle. """
+        """Return the number of complex roots of `f` in the ``[inf, sup]`` rectangle. """
         return smp_count_complex_roots(f.rep, f.lev, f.ord, f.dom, inf=inf, sup=sup)
 
     @property
     def is_zero(f):
-        """Returns ``True`` if $f$ is equivalent to zero. """
+        """Returns ``True`` if `f` is equivalent to zero. """
         return smp_zero_p(f.rep, f.lev)
 
     @property
     def is_one(f):
-        """Return ``True`` if $f$ is equivalent to one. """
+        """Return ``True`` if `f` is equivalent to one. """
         return smp_one_p(f.rep, f.lev, f.dom)
 
     @property
     def is_ground(f):
-        """Return ``True`` if $f$ is an element of the ground domain. """
+        """Return ``True`` if `f` is an element of the ground domain. """
         return smp_ground_p(f.rep, f.lev)
 
     @property
     def is_sqf(f):
-        """Return ``True`` if $f$ is a square-free polynomial. """
+        """Return ``True`` if `f` is a square-free polynomial. """
         return smp_sqf_p(f.rep, f.lev, f.ord, f.dom)
 
     @property
     def is_monic(f):
-        """Return ``True`` if the leading coefficient of $f$ is one. """
+        """Return ``True`` if the leading coefficient of `f` is one. """
         return smp_monic_p(f.rep, f.lev, f.ord, f.dom)
 
     @property
     def is_primitive(f):
-        """Return ``True`` if GCD of coefficients of $f$ is one. """
+        """Return ``True`` if GCD of coefficients of `f` is one. """
         return smp_primitive_p(f.rep, f.lev, f.ord, f.dom)
 
     @property
     def is_linear(f):
-        """Return ``True`` if $f$ is linear in all its variables. """
+        """Return ``True`` if `f` is linear in all its variables. """
         return smp_linear_p(f.rep, f.lev, f.ord, f.dom)
 
     @property
     def is_homogeneous(f):
-        """Return ``True`` if $f$ has zero trailing coefficient. """
+        """Return ``True`` if `f` has zero trailing coefficient. """
         return smp_homogeneous_p(f.rep, f.lev, f.ord, f.dom)
 
     def __abs__(f):
