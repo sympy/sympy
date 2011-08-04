@@ -160,6 +160,22 @@ def test_polygamma():
     assert polygamma(3, 5) == 6*(Rational(-22369,20736) + pi**4/90)
     assert polygamma(5, 1) == 8 * pi**6 / 63
 
+    def t(m, n):
+        x = S(m)/n
+        r = polygamma(0, x)
+        if r.has(polygamma):
+            return False
+        return abs(polygamma(0, x.n()).n() - r.n()).n() < 1e-10
+    assert t(1, 2)
+    assert t(3, 2)
+    assert t(-1, 2)
+    assert t(1, 4)
+    assert t(-3, 4)
+    assert t(1, 3)
+    assert t(4, 3)
+    assert t(3, 4)
+    assert t(2, 3)
+
     assert polygamma(3, 7*x).diff(x) == 7*polygamma(4, 7*x)
 
     # Polygamma of non-negative integer order is unbranched:

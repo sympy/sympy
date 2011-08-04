@@ -453,6 +453,26 @@ class polygamma(Function):
                             elif n.is_odd:
                                 return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z)
 
+        if n == 0 and z.is_Rational:
+            # TODO actually *any* n/m can be done, but that is messy
+            lookup = {S(1)/2: -2*log(2) - S.EulerGamma,
+                      S(1)/3: -S.Pi/2/sqrt(3) - 3*log(3)/2 - S.EulerGamma,
+                      S(1)/4: -S.Pi/2 - 3*log(2) - S.EulerGamma,
+                      S(3)/4: -3*log(2) - S.EulerGamma + S.Pi/2,
+                      S(2)/3: -3*log(3)/2 + S.Pi/2/sqrt(3) - S.EulerGamma}
+            if z > 0:
+                n = floor(z)
+                z0 = z - n
+                if z0 in lookup:
+                    return lookup[z0] + Add(*[1/(z0 + k) for k in range(n)])
+            elif z < 0:
+                n = floor(1 - z)
+                z0 = z + n
+                if z0 in lookup:
+                    return lookup[z0] - Add(*[1/(z0 - 1 - k) for k in range(n)])
+
+        # TODO n == 1 also can do some rational z
+
 
     def _eval_expand_func(self, deep=True, **hints):
         if deep:
