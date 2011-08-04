@@ -33,7 +33,21 @@ class Field(Ring):
         return a / b, self.zero
 
     def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
+        """Returns GCD of `a` and `b` that is consistent with the core
+        implementation. In addition, this allows the primitive of an
+        expression to be cleared of Rationals.
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy import gcd, Rational, primitive
+        >>> from sympy.abc import x
+        >>> QQ.gcd(QQ(2, 3), QQ(4, 9))
+        2/9
+        >>> gcd(Rational(2, 3), Rational(4, 9))
+        2/9
+        >>> primitive(2*x/3 + Rational(4, 9))
+        (2/9, 3*x + 2)
+
+        """
         try:
             ring = self.get_ring()
         except DomainError:
@@ -45,7 +59,18 @@ class Field(Ring):
         return self.convert(p, ring)/q
 
     def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
+        """Returns LCM of `a` and `b` that is consistent with the core
+        implementation.
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy import lcm, Rational, primitive
+        >>> from sympy.abc import x
+        >>> QQ.lcm(QQ(2, 3), QQ(4, 9))
+        4/3
+        >>> lcm(Rational(2, 3), Rational(4, 9))
+        4/3
+        """
+
         try:
             ring = self.get_ring()
         except DomainError:
