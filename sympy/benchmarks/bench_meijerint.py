@@ -38,6 +38,11 @@ rice = x/sigmapos**2*exp(-(x**2+ nupos**2)/2/sigmapos**2)*besseli(0, x*nupos/sig
 mu = Symbol('mu', real=True)
 laplace = exp(-abs(x-mu)/bpos)/2/bpos
 
+u = Symbol('u', polar=True)
+tpos = Symbol('t', positive=True)
+
+from sympy import Chi as cosint
+
 def E(expr):
     res1 = integrate(expr*exponential(x, rate)*normal(y, mu1, sigma1),
                      (x, 0, oo), (y, -oo, oo), meijerg=True)
@@ -178,7 +183,42 @@ bench = [
   'integrate(besselj(a,x)*besselj(b,x)/x, (x,0,oo), meijerg=True)',
 
   'hyperexpand(meijerg((-s - a/2 + 1, -s + a/2 + 1), (-a/2 - S(1)/2, -s + a/2 + S(3)/2), (a/2, -a/2), (-a/2 - S(1)/2, -s + a/2 + S(3)/2), 1))',
-  "combsimp(S('2**(2*s)*(-pi*gamma(-a + 1)*gamma(a + 1)*gamma(-a - s + 1)*gamma(-a + s - 1/2)*gamma(a - s + 3/2)*gamma(a + s + 1)/(a*(a + s)) - gamma(-a - 1/2)*gamma(-a + 1)*gamma(a + 1)*gamma(a + 3/2)*gamma(-s + 3/2)*gamma(s - 1/2)*gamma(-a + s + 1)*gamma(a - s + 1)/(a*(-a + s)))*gamma(-2*s + 1)*gamma(s + 1)/(pi*s*gamma(-a - 1/2)*gamma(a + 3/2)*gamma(-s + 1)*gamma(-s + 3/2)*gamma(s - 1/2)*gamma(-a - s + 1)*gamma(-a + s - 1/2)*gamma(a - s + 1)*gamma(a - s + 3/2))'))"
+  "combsimp(S('2**(2*s)*(-pi*gamma(-a + 1)*gamma(a + 1)*gamma(-a - s + 1)*gamma(-a + s - 1/2)*gamma(a - s + 3/2)*gamma(a + s + 1)/(a*(a + s)) - gamma(-a - 1/2)*gamma(-a + 1)*gamma(a + 1)*gamma(a + 3/2)*gamma(-s + 3/2)*gamma(s - 1/2)*gamma(-a + s + 1)*gamma(a - s + 1)/(a*(-a + s)))*gamma(-2*s + 1)*gamma(s + 1)/(pi*s*gamma(-a - 1/2)*gamma(a + 3/2)*gamma(-s + 1)*gamma(-s + 3/2)*gamma(s - 1/2)*gamma(-a - s + 1)*gamma(-a + s - 1/2)*gamma(a - s + 1)*gamma(a - s + 3/2))'))",
+
+  'mellin_transform(E1(x), x, s)',
+  'inverse_mellin_transform(gamma(s)/s, s, x, (0, oo))',
+  'mellin_transform(expint(a, x), x, s)',
+  'mellin_transform(Si(x), x, s)',
+  'inverse_mellin_transform(-2**s*sqrt(pi)*gamma((s + 1)/2)/(2*s*gamma(-s/2 + 1)), s, x, (-1, 0))',
+  'mellin_transform(Ci(sqrt(x)), x, s)',
+  'inverse_mellin_transform(-4**s*sqrt(pi)*gamma(s)/(2*s*gamma(-s + S(1)/2)),s, u, (0, 1))',
+  'laplace_transform(Ci(x), x, s)',
+  'laplace_transform(expint(a, x), x, s)',
+  'laplace_transform(expint(1, x), x, s)',
+  'laplace_transform(expint(2, x), x, s)',
+  'inverse_laplace_transform(-log(1 + s**2)/2/s, s, u)',
+  'inverse_laplace_transform(log(s + 1)/s, s, x)',
+  'inverse_laplace_transform((s - log(s + 1))/s**2, s, x)',
+
+  'integrate(exp(-z*x)/x, (x, 1, oo), meijerg=True, conds="none")',
+  'integrate(exp(-z*x)/x**2, (x, 1, oo), meijerg=True, conds="none")',
+  'integrate(exp(-z*x)/x**3, (x, 1, oo), meijerg=True,conds="none")',
+  'integrate(-cos(x)/x, (x, tpos, oo), meijerg=True)',
+  'integrate(-sin(x)/x, (x, tpos, oo), meijerg=True)',
+  'integrate(sin(x)/x, (x, 0, z), meijerg=True)',
+  'integrate(sinh(x)/x, (x, 0, z), meijerg=True)',
+  'integrate(exp(-x)/x, x, meijerg=True)',
+  'integrate(exp(-x)/x**2, x, meijerg=True)',
+  'integrate(cos(u)/u, u, meijerg=True)',
+  'integrate(cosh(u)/u, u, meijerg=True)',
+  'integrate(expint(1, x), x, meijerg=True)',
+  'integrate(expint(2, x), x, meijerg=True)',
+  'integrate(Si(x), x, meijerg=True)',
+  'integrate(Ci(u), u, meijerg=True)',
+  'integrate(Shi(x), x, meijerg=True)',
+  'integrate(cosint(u), u, meijerg=True)',
+  'integrate(Si(x)*exp(-x), (x, 0, oo), meijerg=True)',
+  'integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True)'
  ]
 
 from time import time

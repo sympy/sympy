@@ -79,7 +79,8 @@ def add_formulae(formulae):
     # Volume 1, section 6.2
 
     from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
-                       atanh, besseli, gamma, erf, pi, sin, besselj)
+                       atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
+                       EulerGamma, Shi, sinh, cosh, Chi)
     from sympy import polar_lift, exp_polar
 
     # 0F0
@@ -149,14 +150,29 @@ def add_formulae(formulae):
                  * gamma(a + S.Half)/4**(S.Half - a)]),
          Matrix([[1, 0]]),
          Matrix([[z/2, z/2], [z/2, (z/2 - 2*a)]]))
+    mz = polar_lift(-1)*z
+    addb([a], [a + 1],
+         Matrix([mz**(-a)*a*lowergamma(a, mz), a*exp(z)]),
+         Matrix([[1, 0]]),
+         Matrix([[-a, 1], [0, z]]))
+    # This one is redundant.
     add([-S.Half], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
          Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
-                 a/(2*a - 1)*(polar_lift(-1)*z)**(-a)*lowergamma(a, polar_lift(-1)*z), a/(2*a - 1)*exp(z)]),
+                 a/(2*a - 1)*(polar_lift(-1)*z)**(-a)*lowergamma(a, polar_lift(-1)*z),
+                 a/(2*a - 1)*exp(z)]),
          Matrix([[1, -1, 0]]),
          Matrix([[-S.Half, 0, 1], [0, -a, 1], [0, 0, z]]))
+    # We make a "basis" of four functions instead of three, and give EulerGamma
+    # an extra slot (it could just be a coefficient to 1). The advantage is that
+    # this way Polys will not see multivariate polynomials (it treats EulerGamma
+    # as an indeterminate), which is *way* faster.
+    addb([1, 1], [2, 2],
+         Matrix([Ei(z) - log(z), exp(z), 1, EulerGamma]),
+         Matrix([[1/z, 0, 0, -1/z]]),
+         Matrix([[0, 1, -1, 0], [0, z, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]))
 
     # 0F1
     add((), (S.Half,), cosh(2*sqrt(z)))
@@ -179,9 +195,9 @@ def add_formulae(formulae):
                  [0, S(1)/2 - a, 1, 0],
                  [0, 0, S(1)/2, 1],
                  [z, 0, 0, 1 - a]]))
-    x = 2*(-4*z)**(S(1)/4)
+    x = 2*(4*z)**(S(1)/4)*exp_polar(I*pi/4)
     addb([], [a, a + S.Half, 2*a],
-         (2*sqrt(-z))**(1-2*a)*gamma(2*a)**2 *
+         (2*sqrt(polar_lift(-1)*z))**(1-2*a)*gamma(2*a)**2 *
          Matrix([besselj(2*a-1, x)*besseli(2*a-1, x),
                  x*(besseli(2*a, x)*besselj(2*a-1, x)
                     - besseli(2*a-1, x)*besselj(2*a, x)),
@@ -214,6 +230,11 @@ def add_formulae(formulae):
          Matrix([[b-1, S(1)/2, 0],
                  [z, 0, z],
                  [0, S(1)/2, -b]]))
+    addb([S(1)/2], [S(3)/2, S(3)/2],
+         Matrix([Shi(2*sqrt(z))/2/sqrt(z), sinh(2*sqrt(z))/2/sqrt(z),
+                 cosh(2*sqrt(z))]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S.Half, S.Half, 0], [0, -S.Half, S.Half], [0, 2*z, 0]]))
 
     # 2F3
     # XXX with this five-parameter formula is pretty slow with the current
@@ -230,6 +251,16 @@ def add_formulae(formulae):
                  [z/2, 1-b, 0, z/2],
                  [z/2, 0, b-2*a, z/2],
                  [0, S(1)/2, S(1)/2, -2*a]]))
+    # (C/f above comment about eulergamma in the basis).
+    addb([1, 1], [2, 2, S(3)/2],
+         Matrix([Chi(2*sqrt(z)) - log(2*sqrt(z)),
+                 cosh(2*sqrt(z)), sqrt(z)*sinh(2*sqrt(z)), 1, EulerGamma]),
+         Matrix([[1/z, 0, 0, 0, -1/z]]),
+         Matrix([[0, S(1)/2, 0, -S(1)/2, 0],
+                 [0, 0, 1, 0, 0],
+                 [0, z, S(1)/2, 0, 0],
+                 [0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0]]))
 
 def add_meijerg_formulae(formulae):
     z = Dummy('z')
@@ -1918,6 +1949,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     # TODO
     # The following would be possible:
     # *) PFD Duplication (see Kelly Roach's paper)
+    # *) In a similar spirit, try_lerchphi() can be generalised considerably.
 
     global collection
     if collection is None:

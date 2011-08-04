@@ -152,6 +152,27 @@ def _create_lookup_table(table):
     #      be derivable?
     # TODO further formulae in this section seem obscure
 
+    # Sections 8.4.9-10
+    # TODO
+
+    # Section 8.4.11
+    from sympy import Ei, I, expint, Si, Ci, Shi, Chi
+    addi(Ei(t),
+         constant(-I*pi) + [(S(-1), meijerg([], [1], [0, 0], [], t*polar_lift(-1)))],
+         True)
+
+    # Section 8.4.12
+    add(Si(t), [1], [], [S(1)/2], [0, 0], t**2/4, sqrt(pi)/2)
+    add(Ci(t), [], [1], [0, 0], [S(1)/2], t**2/4, -sqrt(pi)/2)
+
+    # Section 8.4.13
+    add(Shi(t), [S(1)/2], [], [0], [S(-1)/2, S(-1)/2], polar_lift(-1)*t**2/4,
+        t*sqrt(pi)/4)
+    add(Chi(t), [], [S(1)/2, 1], [0, 0], [S(1)/2, S(1)/2], t**2/4, -pi**S('3/2')/2)
+
+    # generalized exponential integral
+    add(expint(a, t), [], [a], [a - 1, 0], [], t)
+
     # Section 8.4.14
     # TODO erfc
     add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
@@ -1233,7 +1254,8 @@ def _rewrite_single(f, x, recursive=True):
                     continue
                 if not isinstance(terms, list):
                     terms = terms(subs)
-                return [(fac.subs(subs), 0, g.subs(subs).subs(z, x))
+                return [_get_coeff_exp(fac.subs(subs).subs(z, x), x) \
+                        + (g.subs(subs).subs(z, x),)
                         for (fac, g) in terms], cond
 
     # try recursive mellin transform

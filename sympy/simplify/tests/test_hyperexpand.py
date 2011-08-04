@@ -57,13 +57,13 @@ def test_roach():
     assert can_do([-S.Half, 1, 2], [3, 4])
     assert can_do([S(1)/3], [-S(2)/3, -S(1)/2, S(1)/2, 1])
     assert can_do([-S(3)/2, -S(1)/2], [-S(5)/2, 1])
+    assert can_do([-S(3)/2,], [-S(1)/2, S(1)/2]) # shine-integral
 
 @XFAIL
 def test_roach_fail():
-    assert can_do([-S(3)/2,], [-S(1)/2, S(1)/2]) # shine-integral
     assert can_do([-S(3)/2, -S(1)/2], [2]) # elliptic integrals
     assert can_do([-S(1)/2, 1], [S(1)/4, S(1)/2, S(3)/4]) # PFDD
-    assert can_do([S(3)/2], [S(5)/2, 5]) # polylog
+    assert can_do([S(3)/2], [S(5)/2, 5]) # struve function
     assert can_do([-S(1)/2, S(1)/2, 1], [S(3)/2, S(5)/2]) # polylog, pfdd
     assert can_do([1, 2, 3], [S(1)/2, 4]) # XXX ?
     assert can_do([S(1)/2], [-S(1)/3, -S(1)/2, -S(2)/3]) # PFDD ?
@@ -359,8 +359,8 @@ def test_meijerg_expand():
            -2*sqrt(pi)*(sqrt(z + 1) + 1)**a/a
 
     # Test that hyper is returned
-    assert hyperexpand(meijerg([1], [], [a], [0], z)) == \
-           z**a*gamma(a)*hyper((a,), (a + 1,), z*exp_polar(I*pi))/gamma(a + 1)
+    assert hyperexpand(meijerg([1], [], [a], [0, 0], z)) == \
+           z**a*gamma(a)*hyper((a,), (a + 1, a + 1), z*exp_polar(I*pi))/gamma(a + 1)**2
 
 def test_meijerg_lookup():
     from sympy import uppergamma
@@ -563,12 +563,11 @@ def test_hyperexpand_special():
            /gamma(1 - z - a/2 + b/2)/gamma(1 - z + a/2 + b/2)
 
 def test_Mod1Effective():
-    from sympy import Symbol, polar_lift
+    from sympy import Symbol, simplify, lowergamma
     n = Symbol('n', integer=True)
     # Note: this should not hang.
-    assert hyperexpand(meijerg([1], [], [n + 1], [0], z)) == \
-           z**(n + 1)*gamma(n + 1)*hyper([n + 1], [n + 2], polar_lift(-1)*z) \
-           /gamma(n + 2)
+    assert simplify(hyperexpand(meijerg([1], [], [n + 1], [0], z))) == \
+           lowergamma(n + 1, z)
 
 @slow
 def test_prudnikov_misc():
@@ -589,6 +588,8 @@ def test_prudnikov_misc():
 
     assert can_do([a, a+S.Half], [2*a, b, 2*a - b + 1])
     assert can_do([a, a+S.Half], [S.Half, 2*a, 2*a + S.Half])
+    assert can_do([1, b], [b + 1]) # Lerch Phi
+    assert can_do([a], [a+1]) # lowergamma
 
 @slow
 def test_prudnikov_1():
@@ -610,6 +611,8 @@ def test_prudnikov_1():
     assert can_do([a, a + S(1)/2], [S(3)/2])
     assert can_do([a, a/2 + 1], [a/2])
     assert can_do([1, b], [2])
+    assert can_do([1, b], [b + 1], numerical=False) # Lerch Phi
+             # NOTE: branches are complicated for |z| > 1
 
     assert can_do([a], [2*a])
     assert can_do([a], [2*a + 1])
@@ -773,6 +776,8 @@ def test_prudnikov_10():
     for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
        assert can_do([7*h], [5*h, m])
 
+    assert can_do([-S(1)/2], [S(1)/2, S(1)/2]) # shine-integral shi
+
 @slow
 def test_prudnikov_11():
     # 7.15
@@ -783,6 +788,8 @@ def test_prudnikov_11():
     assert can_do([S(5)/4, S(3)/4], [S(3)/2, S(1)/2, 2])
     assert can_do([S(5)/4, S(3)/4], [S(3)/2, S(3)/2, 1])
     assert can_do([S(5)/4, S(7)/4], [S(3)/2, S(5)/2, 2])
+
+    assert can_do([1, 1], [S(3)/2, 2, 2]) # cosh-integral chi
 
 @slow
 def test_prudnikov_12():
@@ -805,7 +812,6 @@ def test_prudnikov_12():
 @XFAIL
 def test_prudnikov_fail_2F1():
     assert can_do([a, b], [b + 1]) # incomplete beta function
-    assert can_do([1, b], [b + 1]) # Lerch Phi
     assert can_do([-1, b], [c])    # Poly. also -2, -3 etc
 
     # TODO polys
@@ -892,15 +898,13 @@ def test_prudnikov_fail_3F2():
 @XFAIL
 def test_prudnikov_fail_other():
     # 7.11.2
-    assert can_do([a], [a+1]) # lowergamma ... why??
 
     # 7.12.1
     assert can_do([1, a], [b, 1 - 2*a + b]) # ???
 
     # 7.14.2
-    assert can_do([-S(1)/2], [S(1)/2, S(1)/2]) # shine-integral shi
-    assert can_do([-S(1)/2], [S(1)/2, 1]) # poly-log
-    assert can_do([1], [S(1)/2, S(1)/2])  # poly-log
+    assert can_do([-S(1)/2], [S(1)/2, 1]) # struve
+    assert can_do([1], [S(1)/2, S(1)/2])  # struve
     assert can_do([S(1)/4], [S(1)/2, S(5)/4]) # PFDD
     assert can_do([S(3)/4], [S(3)/2, S(7)/4]) # PFDD
     assert can_do([1], [S(1)/4, S(3)/4]) # PFDD
@@ -911,7 +915,6 @@ def test_prudnikov_fail_other():
     # 7.15.2
     assert can_do([S(1)/2, 1], [S(3)/4, S(5)/4, S(3)/2]) # PFDD
     assert can_do([S(1)/2, 1], [S(7)/4, S(5)/4, S(3)/2]) # PFDD
-    assert can_do([1, 1], [S(3)/2, 2, 2]) # cosh-integral chi
 
     # 7.16.1
     assert can_do([], [S(1)/3, S(2/3)]) # PFDD

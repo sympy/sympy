@@ -144,13 +144,6 @@ def test_meijerint():
     assert simplify(integrate(exp(-x)*sin(x + a), (x, 0, oo), meijerg=True)).expand().rewrite(sin).expand() == \
            sin(a)/2 + cos(a)/2
 
-    # This is cosine-integral, not currently in hyperexpand tables
-    from sympy import EulerGamma
-    a = symbols('a', positive=True)
-    assert simplify(integrate(cos(x)/x, (x, a, oo), meijerg=True)) == \
-           a**2*hyper((1, 1), (S(3)/2, 2, 2), a**2*exp_polar(I*pi)/4)/4 \
-           + log(2/a) + polygamma(0, S(1)/2)/2 - EulerGamma/2
-
     # Test the condition 14 from prudnikov.
     # (This is besselj*besselj in disguise, to stop the product from being
     #  recognised in the tables.)
@@ -169,10 +162,13 @@ def test_meijerint():
 
     # test better hyperexpand
     assert integrate(exp(-x**2)*log(x), (x, 0, oo), meijerg=True) == \
-           sqrt(pi)*polygamma(0, S(1)/2)/4
+           (sqrt(pi)*polygamma(0, S(1)/2)/4).expand()
+
+    # Test hyperexpand bug.
+    from sympy import lowergamma
     n = symbols('n', integer = True)
     assert simplify(integrate(exp(-x)*x**n, x, meijerg=True)) == \
-           x**(n + 1)*hyper([n + 1], [n + 2], polar_lift(-1)*x)/(n + 1)
+           lowergamma(n + 1, x)
 
 def test_bessel():
     from sympy import (besselj, Heaviside, besseli, polar_lift, exp_polar,
@@ -416,3 +412,53 @@ def test_probability():
     assert simplify(integrate(log(x) * x**(k-1) * exp(-x) / gamma(k), (x, 0, oo),
                               conds='none')) == polygamma(0, k)
 
+def test_expint():
+    """ Test various exponential integrals. """
+    from sympy import (expint, unpolarify, Symbol, Ci, Si, Shi, Chi,
+                       sin, cos, sinh, cosh, Ei)
+    assert simplify(unpolarify(integrate(exp(-z*x)/x**y, (x, 1, oo),
+                meijerg=True, conds='none').rewrite(expint).expand(func=True))) \
+           == expint(y, z)
+
+    assert integrate(exp(-z*x)/x, (x, 1, oo), meijerg=True,
+                     conds='none').rewrite(expint).expand() == \
+           expint(1, z)
+    assert integrate(exp(-z*x)/x**2, (x, 1, oo), meijerg=True,
+                     conds='none').rewrite(expint).expand() == \
+           expint(2, z).rewrite(Ei).rewrite(expint)
+    assert integrate(exp(-z*x)/x**3, (x, 1, oo), meijerg=True,
+                     conds='none').rewrite(expint).expand() == \
+           expint(3, z).rewrite(Ei).rewrite(expint).expand()
+
+    t = Symbol('t', positive=True)
+    assert integrate(-cos(x)/x, (x, t, oo), meijerg=True).expand() == Ci(t)
+    assert integrate(-sin(x)/x, (x, t, oo), meijerg=True).expand() == \
+           Si(t) - pi/2
+    assert integrate(sin(x)/x, (x, 0, z), meijerg=True) == Si(z)
+    assert integrate(sinh(x)/x, (x, 0, z), meijerg=True) == Shi(z)
+    assert integrate(exp(-x)/x, x, meijerg=True).expand().rewrite(expint) == \
+           -expint(1, x)
+    assert integrate(exp(-x)/x**2, x, meijerg=True).rewrite(expint).expand() \
+           == expint(1, x) - exp(-x)/x
+
+    u = Symbol('u', polar=True)
+    assert integrate(cos(u)/u, u, meijerg=True).expand().as_independent(u)[1] \
+           == Ci(u)
+    assert integrate(cosh(u)/u, u, meijerg=True).expand().as_independent(u)[1] \
+           == Chi(u)
+
+    assert integrate(expint(1, x), x, meijerg=True).rewrite(expint).expand() == \
+           x*expint(1, x) - exp(-x)
+    assert integrate(expint(2, x), x, meijerg=True).rewrite(expint).expand() == \
+           -x**2*expint(1, x)/2 + x*exp(-x)/2 - exp(-x)/2
+    assert simplify(unpolarify(integrate(expint(y,x), x,
+                 meijerg=True).rewrite(expint).expand(func=True))) == \
+           -expint(y + 1, x)
+
+    assert integrate(Si(x), x, meijerg=True) == x*Si(x) + cos(x)
+    assert integrate(Ci(u), u, meijerg=True).expand() == u*Ci(u) - sin(u)
+    assert integrate(Shi(x), x, meijerg=True) == x*Shi(x) - cosh(x)
+    assert integrate(Chi(u), u, meijerg=True).expand() == u*Chi(u) - sinh(u)
+
+    assert integrate(Si(x)*exp(-x), (x, 0, oo), meijerg=True) == pi/4
+    assert integrate(expint(1, x)*sin(x), (x, 0, oo), meijerg=True) == log(2)/2

@@ -101,7 +101,7 @@ class IntegralTransform(Function):
         usually the default is
         ``(simplify, noconds, needeval) = (True, False, False)``.
         """
-        from sympy import Add
+        from sympy import Add, expand_mul
         from sympy.core.function import AppliedUndef
         needeval = hints.pop('needeval', False)
         try_directly = not any(func.has(self.function_variable) \
@@ -113,10 +113,14 @@ class IntegralTransform(Function):
             except IntegralTransformError:
                 pass
 
-        if self.function.is_Add:
+        fn = self.function
+        if not fn.is_Add:
+            fn = expand_mul(fn)
+
+        if fn.is_Add:
             hints['needeval'] = needeval
             res = [self.__class__(*([x] + list(self.args[1:]))).doit(**hints)
-                   for x in self.function.args]
+                   for x in fn.args]
             extra = []
             ress = []
             for x in res:

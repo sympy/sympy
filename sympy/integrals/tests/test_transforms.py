@@ -208,6 +208,49 @@ def test_mellin_transform_bessel():
     # TODO exp(x/2)*besselk(a, x/2) [etc] cannot currently be done
     # TODO various strange products of special orders
 
+def test_expint():
+    from sympy import E1, expint, Max, re, lerchphi, Symbol, simplify, Si, Ci, Ei
+    aneg = Symbol('a', negative=True)
+    u = Symbol('u', polar=True)
+
+    assert mellin_transform(E1(x), x, s) == (gamma(s)/s, (0, oo), True)
+    assert inverse_mellin_transform(gamma(s)/s, s, x,
+              (0, oo)).rewrite(expint).expand() == E1(x)
+    assert mellin_transform(expint(a, x), x, s) == \
+           (gamma(s)/(a + s - 1), (Max(1 - re(a), 0), oo), True)
+    # XXX IMT has hickups with complicated strips ...
+    assert simplify(unpolarify(
+             inverse_mellin_transform(gamma(s)/(aneg + s - 1), s, x,
+                  (1 - aneg, oo)).rewrite(expint).expand(func=True))) \
+           == expint(aneg, x)
+
+    assert mellin_transform(Si(x), x, s) == \
+           (-2**s*sqrt(pi)*gamma((s + 1)/2)/(2*s*gamma(-s/2 + 1)), (-1, 0), True)
+    assert inverse_mellin_transform(-2**s*sqrt(pi)*gamma((s + 1)/2) \
+                                    /(2*s*gamma(-s/2 + 1)), s, x, (-1, 0)) \
+           == Si(x)
+
+    assert mellin_transform(Ci(sqrt(x)), x, s) == \
+           (-2**(2*s)*sqrt(pi)*gamma(s)/(2*s*gamma(-s + S(1)/2)), (0, 1), True)
+    assert inverse_mellin_transform(-4**s*sqrt(pi)*gamma(s)/(2*s*gamma(-s + S(1)/2)),
+               s, u, (0, 1)).expand() == Ci(sqrt(u))
+
+    # TODO LT of Si, Shi, Chi is a mess ...
+    assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, True)
+    assert laplace_transform(expint(a, x), x, s) == \
+           (lerchphi(s*polar_lift(-1), 1, a), 0, 0 < re(a))
+    assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s, 0, True)
+    assert laplace_transform(expint(2, x), x, s) == \
+           ((s - log(s + 1))/s**2, 0, True)
+
+    assert inverse_laplace_transform(-log(1 + s**2)/2/s, s, u).expand() == \
+           Heaviside(u)*Ci(u)
+    assert inverse_laplace_transform(log(s + 1)/s, s, x).rewrite(expint) == \
+           Heaviside(x)*E1(x)
+    assert inverse_laplace_transform((s - log(s + 1))/s**2, s,
+                x).rewrite(expint).expand() == \
+           (expint(2, x)*Heaviside(x)).rewrite(Ei).rewrite(expint).expand()
+
 def test_inverse_mellin_transform():
     from sympy import (sin, simplify, expand_func, powsimp, Max, Min, expand,
                        powdenest, powsimp, exp_polar, combsimp)
