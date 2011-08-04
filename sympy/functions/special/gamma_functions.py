@@ -148,10 +148,10 @@ class lowergamma(Function):
     nargs = 2
 
     def fdiff(self, argindex=2):
-        from sympy import meijerg
+        from sympy import meijerg, unpolarify
         if argindex == 2:
             a, z = self.args
-            return C.exp(-z)*z**(a-1)
+            return C.exp(-unpolarify(z))*z**(a-1)
         elif argindex == 1:
             a, z = self.args
             return gamma(a)*digamma(a) - log(z)*uppergamma(a, z) \
@@ -218,6 +218,12 @@ class lowergamma(Function):
     def _eval_rewrite_as_uppergamma(self, s, x):
         return gamma(s) - uppergamma(s, x)
 
+    def _eval_rewrite_as_expint(self, s, x):
+        from sympy import expint
+        if s.is_integer and s.is_nonpositive:
+            return self
+        return self.rewrite(uppergamma).rewrite(expint)
+
 class uppergamma(Function):
     r"""
     Upper incomplete gamma function
@@ -236,6 +242,9 @@ class uppergamma(Function):
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
+    The upper incomplete gamma function is also essentially equivalent to the
+    generalized exponential integral.
+
     Examples
     ========
 
@@ -247,6 +256,8 @@ class uppergamma(Function):
     x**2*exp(-x) + 2*x*exp(-x) + 2*exp(-x)
     >>> uppergamma(-S(1)/2, x)
     -2*sqrt(pi)*(-erf(sqrt(x)) + 1) + 2*exp(-x)/sqrt(x)
+    >>> uppergamma(-2, x)
+    expint(3, x)/x**2
 
     See Also
     ========
@@ -268,10 +279,10 @@ class uppergamma(Function):
     nargs = 2
 
     def fdiff(self, argindex=2):
-        from sympy import meijerg
+        from sympy import meijerg, unpolarify
         if argindex == 2:
             a, z = self.args
-            return -C.exp(-z)*z**(a-1)
+            return -C.exp(-unpolarify(z))*z**(a-1)
         elif argindex == 1:
             a, z = self.args
             return uppergamma(a, z)*log(z) + meijerg([], [1, 1], [0, 0, a], [], z)
@@ -291,7 +302,7 @@ class uppergamma(Function):
 
     @classmethod
     def eval(cls, a, z):
-        from sympy import unpolarify, I, factorial, exp
+        from sympy import unpolarify, I, factorial, exp, expint
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
@@ -323,12 +334,19 @@ class uppergamma(Function):
                 b = a - 1
                 if b.is_positive:
                     return b*cls(b, z) + z**b * C.exp(-z)
+                elif b.is_Integer:
+                    return expint(-b, z)*unpolarify(z)**(b + 1)
 
                 if not a.is_Integer:
                     return (cls(a + 1, z) - z**a * C.exp(-z))/a
 
+
     def _eval_rewrite_as_lowergamma(self, s, x):
         return gamma(s) - lowergamma(s, x)
+
+    def _eval_rewrite_as_expint(self, s, x):
+        from sympy import expint
+        return expint(1 - s, x)*x**s
 
 
 
@@ -406,9 +424,15 @@ class polygamma(Function):
     @classmethod
     def eval(cls, n, z):
         n, z = map(sympify, (n, z))
+        from sympy import unpolarify
 
         if n.is_integer:
-            if n.is_negative:
+            if n.is_nonnegative:
+                nz = unpolarify(z)
+                if z != nz:
+                    return polygamma(n, nz)
+
+            if n == -1:
                 return loggamma(z)
             else:
                 if z.is_Number:
@@ -457,6 +481,7 @@ class polygamma(Function):
                         return Add(*tail)/coeff + log(coeff)
                     else:
                         return Add(*tail)/coeff**(n+1)
+                z *= coeff
 
         return polygamma(n, z)
 
