@@ -27,6 +27,9 @@ __all__ = [
     'Jy',
     'Jz',
     'J2',
+    'Jx_basis',
+    'Jy_basis',
+    'Jz_basis',
     'JxKet',
     'JxBra',
     'JyKet',
@@ -536,10 +539,10 @@ class JplusOp(SpinOpBase, Operator):
         result *= KroneckerDelta(j, jp)
         return result
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_base(basis, **options)
 
     def _eval_rewrite_as_xyz(self, *args):
@@ -577,10 +580,10 @@ class JminusOp(SpinOpBase, Operator):
         result *= KroneckerDelta(j, jp)
         return result
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_base(basis, **options)
 
     def _eval_rewrite_as_xyz(self, *args):
@@ -610,12 +613,12 @@ class JxOp(SpinOpBase, HermitianOperator):
         jm = JminusOp(self.name)._apply_operator_JzKetCoupled(ket, **options)
         return (jp + jm)/Integer(2)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JzOp(self, basis, **options):
-        jp = JplusOp(self.name)._represent_JzOp(basis, **options)
-        jm = JminusOp(self.name)._represent_JzOp(basis, **options)
+    def _represent_JzKet(self, basis, **options):
+        jp = JplusOp(self.name)._represent_JzKet(basis, **options)
+        jm = JminusOp(self.name)._represent_JzKet(basis, **options)
         return (jp + jm)/Integer(2)
 
     def _eval_rewrite_as_plusminus(self, *args):
@@ -645,12 +648,12 @@ class JyOp(SpinOpBase, HermitianOperator):
         jm = JminusOp(self.name)._apply_operator_JzKetCoupled(ket, **options)
         return (jp - jm)/(Integer(2)*I)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JzOp(self, basis, **options):
-        jp = JplusOp(self.name)._represent_JzOp(basis, **options)
-        jm = JminusOp(self.name)._represent_JzOp(basis, **options)
+    def _represent_JzKet(self, basis, **options):
+        jp = JplusOp(self.name)._represent_JzKet(basis, **options)
+        jm = JminusOp(self.name)._represent_JzKet(basis, **options)
         return (jp - jm)/(Integer(2)*I)
 
     def _eval_rewrite_as_plusminus(self, *args):
@@ -682,10 +685,10 @@ class JzOp(SpinOpBase, HermitianOperator):
         result *= KroneckerDelta(j, jp)
         return result
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_base(basis, **options)
 
 
@@ -739,10 +742,10 @@ class J2Op(SpinOpBase, HermitianOperator):
         result *= KroneckerDelta(j, jp)
         return result
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_base(basis, **options)
 
     def _pretty(self, printer, *args):
@@ -949,10 +952,10 @@ class Rotation(UnitaryOperator):
                 result[p, q] = me
         return result
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_base(basis, **options)
 
 
@@ -1163,6 +1166,9 @@ Jz = JzOp('J')
 J2 = J2Op('J')
 Jplus = JplusOp('J')
 Jminus = JminusOp('J')
+Jx_basis = set([J2, Jx])
+Jy_basis = set([J2, Jy])
+Jz_basis = set([J2, Jz])
 
 
 #-----------------------------------------------------------------------------
@@ -1327,16 +1333,16 @@ class JxKet(SpinState, Ket):
     def coupled_class(self):
         return JxKetCoupled
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JxOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JxKet
 
-    def _represent_JxOp(self, basis, **options):
+    def _represent_JxKet(self, basis, **options):
         return self._represent_base(**options)
 
-    def _represent_JyOp(self, basis, **options):
+    def _represent_JyKet(self, basis, **options):
         return self._represent_base(alpha=3*pi/2, **options)
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_base(beta=pi/2, **options)
 
 class JxBra(SpinState, Bra):
@@ -1380,18 +1386,17 @@ class JyKet(SpinState, Ket):
     def coupled_class(self):
         return JyKetCoupled
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JyOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JyKet
 
-    def _represent_JxOp(self, basis, **options):
+    def _represent_JxKet(self, basis, **options):
         return self._represent_base(gamma=pi/2, **options)
 
-    def _represent_JyOp(self, basis, **options):
+    def _represent_JyKet(self, basis, **options):
         return self._represent_base(**options)
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_base(alpha=3*pi/2,beta=-pi/2,gamma=pi/2, **options)
-
 
 class JyBra(SpinState, Bra):
     """Eigenbra of Jy.
@@ -1530,18 +1535,17 @@ class JzKet(SpinState, Ket):
     def coupled_class(self):
         return JzKetCoupled
 
-    def _represent_default_basis(self, **options):
-        return self._represent_JzOp(None, **options)
+    def _get_default_basis(self, **options):
+        return JzKet
 
-    def _represent_JxOp(self, basis, **options):
+    def _represent_JxKet(self, basis, **options):
         return self._represent_base(beta=3*pi/2, **options)
 
-    def _represent_JyOp(self, basis, **options):
+    def _represent_JyKet(self, basis, **options):
         return self._represent_base(alpha=3*pi/2,beta=pi/2,gamma=pi/2, **options)
 
-    def _represent_JzOp(self, basis, **options):
+    def _represent_JzKet(self, basis, **options):
         return self._represent_base(**options)
-
 
 class JzBra(SpinState, Bra):
     """Eigenbra of Jz.

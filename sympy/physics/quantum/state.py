@@ -122,9 +122,6 @@ class StateBase(QExpr):
     def _enumerate_state(self, num_states, **options):
         raise NotImplementedError("Cannot enumerate this state!")
 
-    def _represent_default_basis(self, **options):
-        return self._represent(basis=self.operators)
-
     #-------------------------------------------------------------------------
     # Dagger/dual
     #-------------------------------------------------------------------------

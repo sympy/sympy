@@ -141,7 +141,11 @@ def represent(expr, **options):
 
     format = options.get('format', 'sympy')
     if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
+        if not 'basis' in options:
+            options['basis'] = expr._get_default_basis(**options)
+
         basis = get_basis_state(expr, **options)
+
         if basis is not None:
             options['basis'] = basis
         return expr._represent(**options)
@@ -479,7 +483,7 @@ def get_basis_state(expr, **options):
 
     if basis is None:
         return None
-    elif (isinstance(basis, Operator) or \
+    elif (isinstance(basis, Operator) or isinstance(basis, set) or \
           (not isinstance(basis, StateBase) and issubclass(basis, Operator))):
         state = operators_to_state(basis)
         if state is None:

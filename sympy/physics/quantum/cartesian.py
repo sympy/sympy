@@ -71,8 +71,8 @@ class XOp(HermitianOperator):
         options['basis'] = basis
         return expectation_helper(self, wrap_wavefunction=True, **options)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_XKet(XKet(), **options)
+    def _get_default_basis(self, **options):
+        return XKet
 
 class YOp(HermitianOperator):
     """ Y cartesian coordinate operator (for 2D or 3D systems) """
@@ -137,8 +137,8 @@ class PxOp(HermitianOperator):
         options['basis'] = basis
         return expectation_helper(self, wrap_wavefunction=True, **options)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_PxKet(PxKet(), **options)
+    def _get_default_basis(self, **options):
+        return PxKet
 
 X = XOp('X')
 Y = YOp('Y')
@@ -187,8 +187,8 @@ class XKet(Ket):
         options['basis'] = basis
         return innerproduct_helper(self, wrap_wavefunction=True, **options)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_XKet(XKet(), **options)
+    def _get_default_basis(self, **options):
+        return XKet
 
 class XBra(Bra):
     """1D cartesian position eigenbra."""
@@ -317,8 +317,8 @@ class PxKet(Ket):
         options['basis'] = basis
         return innerproduct_helper(self, wrap_wavefunction=True, **options)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_PxKet(PxKet(), **options)
+    def _get_default_basis(self, **options):
+        return PxKet
 
 
 class PxBra(Bra):

@@ -12,7 +12,7 @@ from sympy.physics.quantum.spin import (
     JxKet, JyKet, JzKet,
     JxKetCoupled, JyKetCoupled, JzKetCoupled,
     couple, uncouple,
-    Rotation, WignerD
+    Rotation, WignerD, Jx_basis, Jy_basis, Jz_basis
 )
 
 from sympy.utilities.pytest import raises
@@ -229,6 +229,41 @@ def test_represent():
         Matrix([0,0,1,0])
     assert represent(JzKetCoupled(1, -1, (S(1)/2,S(1)/2)), basis=Jz) == \
         Matrix([0,0,0,1])
+
+    # Jz basis (set)
+    assert represent(JxKet(S(1)/2,S(1)/2), basis=Jz_basis) == sqrt(2)*Matrix([1,1])/2
+    assert represent(JxKet(S(1)/2,-S(1)/2), basis=Jz_basis) == sqrt(2)*Matrix([-1,1])/2
+    assert represent(JxKet(1,1), basis=Jz_basis) == Matrix([1,sqrt(2),1])/2
+    assert represent(JxKet(1,0), basis=Jz_basis) == sqrt(2)*Matrix([-1,0,1])/2
+    assert represent(JxKet(1,-1), basis=Jz_basis) == Matrix([1,-sqrt(2),1])/2
+    assert represent(JyKet(S(1)/2,S(1)/2), basis=Jz_basis) == sqrt(2)*Matrix([-1,-I])/2
+    assert represent(JyKet(S(1)/2,-S(1)/2), basis=Jz_basis) == sqrt(2)*Matrix([-I,-1])/2
+    assert represent(JyKet(1,1), basis=Jz_basis) == Matrix([1,sqrt(2)*I,-1])/2
+    assert represent(JyKet(1,0), basis=Jz_basis) == sqrt(2)*Matrix([I,0,I])/2
+    assert represent(JyKet(1,-1), basis=Jz_basis) == Matrix([-1,sqrt(2)*I,1])/2
+    assert represent(JzKet(S(1)/2,S(1)/2), basis=Jz_basis) == Matrix([1,0])
+    assert represent(JzKet(S(1)/2,-S(1)/2), basis=Jz_basis) == Matrix([0,1])
+    assert represent(JzKet(1,1), basis=Jz_basis) == Matrix([1,0,0])
+    assert represent(JzKet(1,0), basis=Jz_basis) == Matrix([0,1,0])
+    assert represent(JzKet(1,-1), basis=Jz_basis) == Matrix([0,0,1])
+
+    # Jz basis (ket)
+    assert represent(JxKet(S(1)/2,S(1)/2), basis=JzKet) == sqrt(2)*Matrix([1,1])/2
+    assert represent(JxKet(S(1)/2,-S(1)/2), basis=JzKet) == sqrt(2)*Matrix([-1,1])/2
+    assert represent(JxKet(1,1), basis=JzKet) == Matrix([1,sqrt(2),1])/2
+    assert represent(JxKet(1,0), basis=JzKet) == sqrt(2)*Matrix([-1,0,1])/2
+    assert represent(JxKet(1,-1), basis=JzKet) == Matrix([1,-sqrt(2),1])/2
+    assert represent(JyKet(S(1)/2,S(1)/2), basis=JzKet) == sqrt(2)*Matrix([-1,-I])/2
+    assert represent(JyKet(S(1)/2,-S(1)/2), basis=JzKet) == sqrt(2)*Matrix([-I,-1])/2
+    assert represent(JyKet(1,1), basis=JzKet) == Matrix([1,sqrt(2)*I,-1])/2
+    assert represent(JyKet(1,0), basis=JzKet) == sqrt(2)*Matrix([I,0,I])/2
+    assert represent(JyKet(1,-1), basis=JzKet) == Matrix([-1,sqrt(2)*I,1])/2
+    assert represent(JzKet(S(1)/2,S(1)/2), basis=JzKet) == Matrix([1,0])
+    assert represent(JzKet(S(1)/2,-S(1)/2), basis=JzKet) == Matrix([0,1])
+    assert represent(JzKet(1,1), basis=JzKet) == Matrix([1,0,0])
+    assert represent(JzKet(1,0), basis=JzKet) == Matrix([0,1,0])
+    assert represent(JzKet(1,-1), basis=JzKet) == Matrix([0,0,1])
+
 
 def test_rewrite():
     # Rewrite to same basis
