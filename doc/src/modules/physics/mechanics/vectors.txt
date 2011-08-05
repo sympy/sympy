@@ -510,7 +510,7 @@ We can now do basic algebraic operations on these vectors.::
   >>> N.x + N.y
   N.x + N.y
   >>> 2 * N.x + N.y
-  (2)*N.x + N.y
+  2*N.x + N.y
 
 Remember, don't add a scalar quantity to a vector (``N.x + 5``); this will
 raise an error. At this point, we'll use SymPy's Symbol in our vectors.
@@ -519,9 +519,9 @@ Remember to refer to SymPy's Gotchas and Pitfalls when dealing with symbols.::
   >>> from sympy import Symbol, symbols
   >>> x = Symbol('x')
   >>> x * N.x
-  (x)*N.x
+  x*N.x
   >>> x*(N.x + N.y)
-  (x)*N.x + (x)*N.y
+  x*N.x + x*N.y
 
 In :mod:`mechanics` multiple interfaces to vector multiplication have been
 implemented, at the operator level, method level, and function level. The dot
@@ -569,7 +569,7 @@ Two additional operations can be done with vectors: normalizing the vector to
 length 1, and getting its magnitude. These are done as follows:
 
   >>> (N.x + N.y).unit
-  (2**(1/2)/2)*N.x + (2**(1/2)/2)*N.y
+  2**(1/2)/2*N.x + 2**(1/2)/2*N.y
   >>> (N.x + N.y).mag
   2**(1/2)
 
@@ -646,30 +646,46 @@ things you can do in ``orient``, you can do in ``orientnew``. ::
 
 Quaternions (or Euler Parameters) use 4 value to characterize the orientation
 of the frame. This and arbitrary axis rotations are described in the ``orient``
-and ``orientnew`` method help, or in the references [Kane, S.D.].
+and ``orientnew`` method help, or in the references [Kane 1983].
 
 
 Finally, before starting multiframe calculus operations, we will introduce
-another :mod:`mechanics` object: ``DynamicSymbol``. ``DynamicSymbol`` is
-identical to SymPy's ``Symbol``, except when you take the derivative of it with
-respect to time (by default, a ``Symbol('t')`` object``), it returns a new
-dynamic symbol, with a suffix to denote time differentiation.
-``dynamicsymbols`` works the same as ``symbols``, but for ``DynamicSymbol``. ::
+another :mod:`mechanics` tool: ``dynamicsymbols``. ``dynamicsymbols`` is
+a shortcut function to create undefined functions of time within sympy. The
+derivative of such a 'dynamicsymbol' is shown below. ::
 
   >>> from sympy import diff
   >>> q1, q2, q3 = dynamicsymbols('q1 q2 q3')
   >>> diff(q1, Symbol('t'))
-  q1d
+  Derivative(q1(t), t)
 
-``DynamicSymbol`` appends a ``'d'`` to the end of the name to denote
-differentiation. For this reason, it is recommended to avoid using a name for
-your ``DynamicSymbol`` objects which ends in 'd'.
-``DynamicSymbol`` should be used to represent any time varying quantity in
-:mod:`mechanics`, whether it is a coordinate, varying position, or force.
-The primary use of ``DynamicSymbol`` is for speeds and coordinates (of which
-there will be more discussion in the Kinematics Section of the documentation).
+The 'dynamicsymbol' printing is not very clear above; we will also introduce a
+few other tools here. We can use ``mprint`` instead of print for
+non-interactive sessions. ::
 
-Now we will define the orientation of our new frames with ``DynamicSymbol``,
+  >>> q1
+  q1(t)
+  >>> q1d = diff(q1, Symbol('t'))
+  >>> mprint(q1)
+  q1
+  >>> mprint(q1d)
+  q1'
+
+For interactive sessions use ``mechanics_printing``. There also exist analogs
+for SymPy's ``pprint``, ``mpprint``, and ``latex``, ``mlatex``. ::
+
+  >>> mechanics_printing()
+  >>> q1
+  q1
+  >>> q1d
+  q1'
+
+A 'dynamicsymbol' should be used to represent any time varying quantity in
+:mod:`mechanics`, whether it is a coordinate, varying position, or force.  The
+primary use of a 'dynamicsymbol' is for speeds and coordinates (of which there
+will be more discussion in the Kinematics Section of the documentation).
+
+Now we will define the orientation of our new frames with a 'dynamicsymbol',
 and can take derivatives and time derivatives with ease. Some examples follow.
 ::
 
@@ -678,7 +694,7 @@ and can take derivatives and time derivatives with ease. Some examples follow.
   >>> (B.y*q2 + B.z).diff(q2, N)
   B.y
   >>> (B.y*q2 + B.z).dt(N)
-  (-q1d + q2d)*B.y + (q1d*q2)*B.z
+  (-q1' + q2')*B.y + q2*q1'*B.z
 
 Note that the output vectors are kept in the same frames that they were
 provided in. This remains true for vectors with components made of basis

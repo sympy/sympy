@@ -226,6 +226,7 @@ class Kane(object):
             raise TypeError('Generalized coords. must be supplied in a list')
         self._q = inlist
         self._qdot = [diff(i, dynamicsymbols._t) for i in inlist]
+        return
 
     def speeds(self, inlist):
         """Supply all the generalized speeds in a list.
@@ -289,6 +290,16 @@ class Kane(object):
 
         This is really only used as part of the linearization process, as
         most configuration constraints cannot be solved for easily.
+        See the html documentation for more information on using this.
+
+        Parameters
+        ==========
+        qdep : list
+            List of dependent coordinates, suppled in the same order as the
+            coordinates
+        coneq : list
+            List of expressions which are equal to zero; these are the
+            configuration constraint equations
 
         """
         if not isinstance(qdep, (list, tuple)):
@@ -308,7 +319,19 @@ class Kane(object):
     def dependent_speeds(self, udep, coneq, diffconeq=None):
         """This is used to when dealing with systems with motion constraints.
 
-        There will be much more documentation for this in the future.
+        See the html documentation for more information on using this.
+
+        Parameters
+        ==========
+        udep : list
+            List of dependent speeds must match the order of generalized speeds
+        coneq : list
+            List of constraint expressions; these are expressions which are
+            equal to zero which define a speed (motion) constraint.
+        diffconeq : list
+            Optional, calculated automatically otherwise; list of constraint
+            equations; again equal to zero, but define an acceleration
+            constraint.
 
         """
 

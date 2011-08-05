@@ -8,6 +8,18 @@ class Particle(object):
 
     Particles have a non-zero mass and lack spatial extension; they take up no
     space.
+
+    Parameters
+    ==========
+    mass : sympifyable
+        A SymPy expression representing the Particle's mass
+    point : Point
+        A physics/mechanics Point which represents the position, velocity, and
+        acceleration of this Particle
+
+    Examples
+    ========
+
     >>> from sympy.physics.mechanics import Particle, Point
     >>> from sympy import Symbol
     >>> po = Point('po')

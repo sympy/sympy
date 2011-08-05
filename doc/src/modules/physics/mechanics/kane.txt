@@ -3,7 +3,7 @@ Kane's Method in Physics/Mechanics
 ==================================
 
 :mod:`mechanics` has been written for use with Kane's method of forming
-equations of motion [see Kane 1985]. This document will describe Kane's Method
+equations of motion [Kane 1985]. This document will describe Kane's Method
 as used in this module, but not how the equations are actually derived.
 
 Structure of Equations
@@ -73,14 +73,15 @@ Kinematic differential equations must also be supplied; there are to be
 provided as a list of expressions which are each equal to zero. A trivial
 example follows: ::
 
+  >>> KM.coords([q1, q2])
   >>> kd = [q1d - u1, q2d - u2]
   >>> KM.kindiffeq(kd)
 
 A dictionary returning the solved :math:`\dot{q}`'s can also be solved for: ::
 
-  >>> KM.kindiffdict()
   >>> mechanics_printing()
-  >>> {q1': u1, q2': u2}
+  >>> KM.kindiffdict()
+  {q1': u1, q2': u2}
 
 Turning on ``mechanics_printing()`` makes the expressions significantly
 shorter and is recommended.
@@ -149,9 +150,16 @@ o) x (n + o), or square and the size of all coordinates and speeds. ::
 The forcing vector can be linearized as well; its jacobian is taken only with
 respect to the independent coordinates and speeds. The linearized forcing
 vector is of size (n + o) x (n - l + o - m), where l is the number of
-configuration constraints and m is the number of motion constraints. ::
+configuration constraints and m is the number of motion constraints. Two
+matrices are returned; the first is an "A" matrix, or the jacobian with respect
+to the independent states, the second is a "B" matrix, or the jacobian with
+respect to 'forces'; this can be an empty matrix if there are no 'forces'.
+Forces here are undefined functions of time (dynamic symbols); they are only
+allowed to be in the forcing vector and their derivatives are not allowed to be
+present. If dynamic symbols appear in the mass matrix or kinematic differential
+equations, an error with be raised. ::
 
-  >>> KM.linearize()
+  >>> KM.linearize()[0]
   [0, 1]
   [0, 0]
 

@@ -401,11 +401,12 @@ velocity definition. ::
 
   >>> from sympy import Symbol, sin, cos
   >>> from sympy.physics.mechanics import *
+  >>> mechanics_printing()
   >>> N = ReferenceFrame('N')
   >>> q1 = dynamicsymbols('q1')
   >>> A = N.orientnew('A', 'Simple', q1, 'x')
   >>> A.ang_vel_in(N)
-  (q1d)*A.x
+  q1'*A.x
 
 Note that the angular velocity can be defined in an alternate way: ::
 
@@ -413,9 +414,9 @@ Note that the angular velocity can be defined in an alternate way: ::
   >>> u1 = dynamicsymbols('u1')
   >>> B.set_ang_vel(N, u1 * B.y)
   >>> B.ang_vel_in(N)
-  (u1)*B.y
+  u1*B.y
   >>> N.ang_vel_in(B)
-  (-u1)*B.y
+  - u1*B.y
 
 Both upon frame creation during ``orientnew`` and when calling ``set_ang_vel``,
 the angular velocity is set in both frames involved, as seen above.
@@ -435,8 +436,8 @@ other. This is coded as: ::
   >>> B.set_ang_vel(A, u1 * A.x)
   >>> C.set_ang_vel(B, -u2 * B.z)
   >>> D.set_ang_vel(C, u3 * C.y)
-  >>> D.ang_vel_in(C)
-  (u3)*C.y + (-u2)*B.z + (u1)*A.x
+  >>> D.ang_vel_in(N)
+  u3*C.y - u2*B.z + u1*A.x
 
 In :mod:`mechanics` the shortest path between two frames is used when finding
 the angular velocity. That would mean if we went back and set: ::
@@ -456,15 +457,15 @@ Points are a translational analog to the rotational ``ReferenceFrame``.
 Creating a ``Point`` can be done in two ways, like ``ReferenceFrame``: ::
 
   >>> O = Point('O')
-  >>> P = O.newpoint('P', 3 * N.x + N.y)
+  >>> P = O.locatenew('P', 3 * N.x + N.y)
   >>> P.pos_from(O)
-  (3)*N.x + N.y
+  3*N.x + N.y
   >>> Q = Point('Q')
   >>> Q.set_pos(P, N.z)
   >>> Q.pos_from(P)
   N.z
   >>> Q.pos_from(O)
-  (3)*N.x + N.y + N.z
+  3*N.x + N.y + N.z
 
 Similar to ``ReferenceFrame``, the position vector between two points is found
 by the shortest path (number of intermediate points) between them. Unlike
@@ -475,17 +476,17 @@ set the value. ::
   >>> O = Point('O')
   >>> O.set_vel(N, u1*N.x)
   >>> O.vel(N)
-  (u1)*N.x
+  u1*N.x
 
 For both translational and rotational accelerations, the value is computed by
 taking the time derivative of the appropriate velocity, unless the user sets it
 otherwise.
 
   >>> O.acc(N)
-  (u1d)*N.x
+  u1'*N.x
   >>> O.set_acc(N, u2*u1*N.y)
   >>> O.acc(N)
-  (u1*u2)*N.y
+  u1*u2*N.y
 
 
 Next is a description of the 2 point and 1 point theorems, as used in
@@ -501,12 +502,12 @@ First is the translating, rotating disc. ::
   >>> B = ReferenceFrame('B')
   >>> O = Point('O')
   >>> O.set_vel(N, u1 * N.x + u2 * N.y)
-  >>> P = O.newpoint('P', R * B.x)
+  >>> P = O.locatenew('P', R * B.x)
   >>> B.set_ang_vel(N, u3 * B.z)
   >>> P.v2pt_theory(O, N, B)
-  (u1)*N.x + (u2)*N.y + (u3*R)*B.y
+  u1*N.x + u2*N.y + R*u3*B.y
   >>> P.a2pt_theory(O, N, B)
-  (u1d)*N.x + (u2d)*N.y + (-u3**2*R)*B.x + (u3d*R)*B.y
+  u1'*N.x + u2'*N.y - R*u3**2*B.x + R*u3'*B.y
 
 We will also cover implementation of the 1 point theorem.
 
@@ -523,16 +524,13 @@ This is the particle moving on a ring, again. ::
   >>> C.set_ang_vel(N, u1 * N.x)
   >>> O = Point('O')
   >>> O.set_vel(N, 0)
-  >>> Q = O.newpoint('Q', -l * C.z)
-  >>> P = Q.newpoint('P', R * (cos(q2) * C.x + sin(q2) * C.y))
+  >>> Q = O.locatenew('Q', -l * C.z)
+  >>> P = Q.locatenew('P', R * (cos(q2) * C.x + sin(q2) * C.y))
   >>> P.set_vel(C, R * u2 * (-sin(q2) * C.x + cos(q2) * C.y))
   >>> Q.v2pt_theory(O, N, C)
+  l*u1*C.y
   >>> P.v1pt_theory(Q, N, C)
-  (-u2*R*sin(q2))*C.x + (u1*l + u2*R*cos(q2))*C.y + (u1*R*sin(q1))*C.z
-
-
-
-
+  - R*u2*sin(q2)*C.x + (R*u2*cos(q2) + l*u1)*C.y + R*u1*sin(q2)*C.z
 
 
 

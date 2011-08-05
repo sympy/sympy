@@ -35,7 +35,7 @@ class RigidBody(object):
     >>> B.mass = m
     >>> B.frame = A
     >>> B.mc = P
-    >>> B.inertia = (I, B.cm)
+    >>> B.inertia = (I, B.mc)
 
     """
 

@@ -1802,10 +1802,34 @@ class MechanicsPrettyPrinter(PrettyPrinter):
         return pform
 
 
-
-
 def dynamicsymbols(names, level=0):
-    """Uses symbols and Function for functions of time. """
+    """Uses symbols and Function for functions of time. 
+
+    Creates a SymPy UndefinedFunction, which is then initialized as a function
+    of a variable, the default being Symbol('t').
+
+    Parameters
+    ==========
+    names : str
+        Names of the dynamic symbols you want to create; works the same way as
+        inputs to symbols
+    level : int
+        Level of differentiation of the returned function; d/dt once of t,
+        twice of t, etc.
+
+    Example
+    =======
+    
+    >>> from sympy.physics.mechanics import dynamicsymbols
+    >>> from sympy import diff, Symbol
+    >>> q1 = dynamicsymbols('q1')
+    >>> q1
+    q1(t)
+    >>> diff(q1, Symbol('t'))
+    Derivative(q1(t), t)
+
+    """
+
     esses = symbols(names, cls=Function)
     try:
         esses = [i.__call__(dynamicsymbols._t) for i in list(esses)]
