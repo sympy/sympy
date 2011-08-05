@@ -527,6 +527,11 @@ def test_lerchphi():
     # XXX lerchphi in mpmath is flaky
     assert can_do([1, a, a, a, b + 5], [a + 1, a + 1, a + 1, b], numerical=False)
 
+    # test a bug
+    assert hyperexpand(hyper([S(1)/2, S(1)/2, S(1)/2, 1],
+                             [S(3)/2, S(3)/2, S(3)/2], S(1)/4)) == \
+           -polylog(3, exp_polar(I*pi)/2) + polylog(3, S(1)/2)
+
 def test_partial_simp():
     # First test that hypergeometric function formulae work.
     a, b, c, d, e = map(lambda _: randcplx(), range(5))

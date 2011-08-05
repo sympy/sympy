@@ -1785,7 +1785,7 @@ def try_lerchphi(nip):
             if dep != b*t + a:
                 raise NotImplementedError('unrecognised form %s' % dep)
             a /= b
-            indep *= b
+            indep *= b**n
         else:
             raise NotImplementedError('unrecognised form of partial fraction')
         terms.setdefault(a, []).append((numer/indep, n))
