@@ -830,7 +830,7 @@ class Matrix(object):
             raise ShapeError("`self` and `rhs` must have the same number of rows.")
 
         newmat = self.zeros((self.rows, self.cols + rhs.cols))
-        newmat[:,:self.cols] = self[:,:]
+        newmat[:,:self.cols] = self.clone()
         newmat[:,self.cols:] = rhs
         return newmat
 
@@ -852,7 +852,7 @@ class Matrix(object):
             raise ShapeError("`self` and `bott` must have the same number of columns.")
 
         newmat = self.zeros((self.rows+bott.rows, self.cols))
-        newmat[:self.rows,:] = self[:,:]
+        newmat[:self.rows,:] = self.clone()
         newmat[self.rows:,:] = bott
         return newmat
 
@@ -882,7 +882,7 @@ class Matrix(object):
 
         newmat = self.zeros((self.rows + mti.rows, self.cols))
         newmat[:pos,:] = self[:pos,:]
-        newmat[pos:pos+mti.rows,:] = mti[:,:]
+        newmat[pos:pos+mti.rows,:] = mti.clone()
         newmat[pos+mti.rows:,:] = self[pos:,:]
         return newmat
 
@@ -913,7 +913,7 @@ class Matrix(object):
 
         newmat = self.zeros((self.rows, self.cols + mti.cols))
         newmat[:,:pos] = self[:,:pos]
-        newmat[:,pos:pos+mti.cols] = mti[:,:]
+        newmat[:,pos:pos+mti.cols] = mti.clone()
         newmat[:,pos+mti.cols:] = self[:,pos:]
         return newmat
 
@@ -1150,7 +1150,7 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
         n = self.rows
-        A = self[:,:]
+        A = self.clone()
         p = []
         # factorization
         for j in range(n):
@@ -1191,7 +1191,7 @@ class Matrix(object):
               Vol 2, no. 1, pp. 67-80, 2008.
         """
         n, m = self.rows, self.cols
-        U, L, P = self[:,:], eye(n), eye(n)
+        U, L, P = self.clone(), eye(n), eye(n)
         DD = zeros(n) # store it smarter since it's just diagonal
         oldpivot = 1
 
@@ -1524,20 +1524,20 @@ class Matrix(object):
         return v * (self.dot(v) / v.dot(v))
 
     def permuteBkwd(self, perm):
-        copy = self[:,:]
+        copy = self.clone()
         for i in range(len(perm)-1, -1, -1):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
 
     def permuteFwd(self, perm):
-        copy = self[:,:]
+        copy = self.clone()
         for i in range(len(perm)):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
 
     def delRowCol(self, i, j):
         # used only for cofactors, makes a copy
-        M = self[:,:]
+        M = self.clone()
         M.row_del(i)
         M.col_del(j)
         return M
@@ -1818,7 +1818,17 @@ class Matrix(object):
         return True
 
     def clone(self):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j])
+        """
+        Syntactic sugar to copy a matrix efficiently.
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(((1,2,3),(3,4,5),(7,8,0)))
+        >>> A.clone() == A
+        True
+        >>> A.clone() is A
+        False
+        """
+        return Matrix(self.rows, self.cols, self.mat)
 
     def det(self, method="bareis"):
         """
@@ -1849,7 +1859,7 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        M, n = self[:,:], self.rows
+        M, n = self.clone(), self.rows
 
         if n == 1:
             det = M[0, 0]
@@ -1943,7 +1953,7 @@ class Matrix(object):
         To set a custom simplify function, use the simplify keyword argument.
         """
         # TODO: rewrite inverse_GE to use this
-        pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
+        pivots, r = 0, self.clone()        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
             if pivots == r.rows:
@@ -2861,7 +2871,9 @@ class SparseMatrix(Matrix):
             self.mat = {}
             # manual copy, copy.deepcopy() doesn't work
             for key in args[2].keys():
-                self.mat[key] = args[2][key]
+                val = args[2][key]
+                if val!=0:
+                    self.mat[key] = val
         else:
             if len(args) == 1:
                 mat = args[0]
@@ -2937,6 +2949,19 @@ class SparseMatrix(Matrix):
                 self.mat[(i,j)] = testval
             elif (i,j) in self.mat:
                 del self.mat[(i,j)]
+
+    def clone(self):
+        """
+        Syntactic sugar to copy a matrix efficiently.
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((1,0,0),(3,4,0),(7,8,0)))
+        >>> A.clone() == A
+        True
+        >>> A.clone() is A
+        False
+        """
+        return SparseMatrix(self.rows, self.cols, self.mat)
 
     def row_del(self, k):
         newD = {}
@@ -3037,68 +3062,369 @@ class SparseMatrix(Matrix):
 
     T = property(transpose,None,None,"Matrix transposition.")
 
-
     def __add__(self, other):
         if isinstance(other, SparseMatrix):
             return self.add(other)
+        elif isinstance(other, Matrix):
+            return other + self.toMatrix()
         else:
-            raise NotImplementedError("Only SparseMatrix + SparseMatrix supported")
+            raise NotImplementedError("Addition/Subtraction of %s and %s not supported" % (type(self), type(other)))
 
-    def __radd__(self, other):
-        if isinstance(other, SparseMatrix):
-            return self.add(other)
-        else:
-            raise NotImplementedError("Only SparseMatrix + SparseMatrix supported")
+    __radd__ = __add__
+
+    def __sub__(self, other):
+        return self + (-1 * other)
+
+    def __neg__(self):
+        return -1 * self
 
     def add(self, other):
-        """
-        Add two sparse matrices with dictionary representation.
-
-        >>> from sympy.matrices.matrices import SparseMatrix
-        >>> A = SparseMatrix(5, 5, lambda i, j : i * j + i)
-        >>> A
-        [0, 0,  0,  0,  0]
-        [1, 2,  3,  4,  5]
-        [2, 4,  6,  8, 10]
-        [3, 6,  9, 12, 15]
-        [4, 8, 12, 16, 20]
-        >>> B = SparseMatrix(5, 5, lambda i, j : i + 2 * j)
-        >>> B
-        [0, 2, 4,  6,  8]
-        [1, 3, 5,  7,  9]
-        [2, 4, 6,  8, 10]
-        [3, 5, 7,  9, 11]
-        [4, 6, 8, 10, 12]
-        >>> A + B
-        [0,  2,  4,  6,  8]
-        [2,  5,  8, 11, 14]
-        [4,  8, 12, 16, 20]
-        [6, 11, 16, 21, 26]
-        [8, 14, 20, 26, 32]
-        """
         if self.shape != other.shape:
             raise ShapeError()
-        a, b = self.mat.keys(), other.mat.keys()
-        a.sort()
-        b.sort()
-        i = j = 0
-        c = {}
-        while i < len(a) or j < len(b):
-            if j >= len(b) or (i < len(a) and a[i] < b[j]):
-                c[a[i]] = self.mat[a[i]]
-                i = i + 1
-                continue
-            elif i >= len(a) or (j < len(b) and a[i] > b[j]):
-                c[b[j]] = other.mat[b[j]]
-                j = j + 1
-                continue
-            else:
-                c[a[i]] = self.mat[a[i]] + other.mat[b[j]]
-                i = i + 1
-                j = j + 1
-        return SparseMatrix(self.rows, self.cols, c)
+        M = self.clone() # self[:,:] should be as fast as this
+        for i in other.mat:
+            M[i] += other[i]
+        return M
 
+    def _lil_row_major(self):
+        """
+        Returns the row-based list of list structure of the given matrix
+        """
+        n = self.rows
+        keys = sorted(self.mat.keys())
+        lil = [[] for x in xrange(n)]
+        if not keys:
+            return lil
+        k = 0
+        start = 0
+        for i in xrange(len(keys)):
+            if keys[i][0] > k:
+                lil[k] = keys[start:i]
+                start = i
+                k = keys[i][0]
+        lil[keys[-1][0]] = keys[start:]
+        return lil
 
+    def __mul__(self, other):
+        if isinstance(other, SparseMatrix):
+            return self.multiply(other)
+        elif isinstance(other, Matrix):
+            return self.toMatrix() * other
+        else:
+            return self.scalar_multiply(other)
+
+    def multiply(A, B):
+        "Fast multiplication exploiting the sparsity of the matrix."
+        rows1 = A._lil_row_major()
+        rows2 = B._lil_row_major()
+        Cdict = {}
+        for k in xrange(A.rows):
+            for _, j in rows1[k]:
+                for _, n  in rows2[j]:
+                    temp = A.mat[k, j] * B.mat[j, n]
+                    if (k, n) in Cdict:
+                        Cdict[k, n] += temp
+                    else:
+                        Cdict[k, n] = temp
+        return SparseMatrix(A.rows, B.cols, Cdict)
+
+    def scalar_multiply(matrix, scalar):
+        "Scalar element-wise multiplication"
+        C = SparseMatrix(matrix.rows, matrix.cols, {})
+        for i in matrix.mat:
+            C.mat[i] = scalar * matrix.mat[i]
+        return C
+
+    def __rmul__(self, other):
+        assert not isinstance(other, (Matrix, SparseMatrix))
+        return self * other
+
+    def _lower_row_nonzero_structure(self):
+        """
+        Algorithm to determine the lower triangular non-zero structure,
+        in row-based list of list form.
+        """
+        n = self.rows
+        NZlist = [[]] * n
+        keys = sorted(self.mat.keys())
+        k = 0
+        startset = False
+        for i in xrange(len(keys)):
+            if startset and (keys[i][0] > k or keys[i][1] > keys[i][0]):
+                NZlist[k] = keys[start:i]
+                startset = False
+            k = keys[i][0]
+            if not startset and keys[i][1] <= keys[i][0] and keys[i][0] == k and not NZlist[k]:
+                start = i
+                startset = True
+        NZlist[keys[start][0]] = keys[start:]
+        return NZlist
+
+    def liupc(self):
+        """
+        Liu's algorithm,
+        for pre-determination of the Elimination Tree of the given matrix,
+        used in row-based symbolic cholesky factorization.
+        Reference: Symbolic Sparse Cholesky Factorization using Elimination Trees, Jeroen Van Grondelle (1999)
+        Link: <link>
+        """
+        R = self._lower_row_nonzero_structure()
+        parent = [None] * self.rows
+        virtual = [None] * self.rows
+        for j in xrange(self.rows):
+            for i, (_,r) in enumerate(R[j][:-1]):
+                while virtual[r] and virtual[r] < j:
+                    t = virtual[r]
+                    virtual[r] = j
+                    r = t
+                if not virtual[r]:
+                    virtual[r] = j
+                    parent[r] = j
+        return R, parent
+
+    def row_structure_symbolic_cholesky(self):
+        """
+        Symbolic cholesky factorization,
+        for pre-determination of the non-zero structure of the cholesky factor.
+        Reference: Symbolic Sparse Cholesky Factorization using Elimination Trees, Jeroen Van Grondelle (1999)
+        Link: <link>
+        """
+        import copy
+        R, parent = self.liupc()
+        Lrow = copy.deepcopy(R)
+        for k in xrange(self.rows):
+            for _, j in R[k]:
+                while j != None and j != k:
+                    if (k, j) not in Lrow[k]:
+                        Lrow[k].append((k, j))
+                        Lrow[k].sort()
+                    j = parent[j]
+        return Lrow
+
+    def _cholesky_sparse(self):
+        """
+        Algorithm for numeric cholesky factization, exploiting the sparsity of the given matrix.
+        """
+        Crowstruc = self.row_structure_symbolic_cholesky()
+        C = self.zeros(self.rows)
+        for row in Crowstruc:
+            for i, j in row:
+                if i != j:
+                    C[i, j] = self[i, j]
+                    summ = 0
+                    for p1 in Crowstruc[i]:
+                        if p1[1] < j:
+                            for p2 in Crowstruc[j]:
+                                if p2[1] < j:
+                                    if p1[1] == p2[1]:
+                                        summ += C[p1] * C[p2]
+                                else:
+                                    break
+                            else:
+                                break
+                    C[i, j] -= summ
+                    C[i, j] /= C[j, j]
+                else:
+                    C[j, j] = self[j, j]
+                    summ = 0
+                    for _, k in Crowstruc[j]:
+                        if k < j:
+                            summ += C[j, k] ** 2
+                        else:
+                            break
+                    C[j, j] -= summ
+                    C[j, j] = sqrt(C[j, j])
+        return C
+
+    def _LDL_sparse(self):
+        """
+        Algorithm for numeric LDL factization, exploiting the sparsity of the given matrix.
+        """
+        Lrowstruc = self.row_structure_symbolic_cholesky()
+        L = self.eye(self.rows)
+        D = SparseMatrix(self.rows, self.cols, {})
+        
+        for row in Lrowstruc:
+            for i, j in row:
+                if i != j:
+                    L[i, j] = self[i, j]
+                    summ = 0
+                    for p1 in Lrowstruc[i]:
+                        if p1[1] < j:
+                            for p2 in Lrowstruc[j]:
+                                if p2[1] < j:
+                                    if p1[1] == p2[1]:
+                                        summ += L[p1] * L[p2] * D[p1[1], p1[1]]
+                                else:
+                                    break
+                        else:
+                            break
+                    L[i, j] -= summ
+                    L[i, j] /= D[j, j]
+                elif i == j:
+                    D[i, i] = self[i, i]
+                    summ = 0
+                    for _, k in Lrowstruc[i]:
+                        if k < i:
+                            summ += L[i, k]**2 * D[k, k]
+                        else:
+                            break
+                    D[i, i] -= summ
+                                    
+        return L, D
+
+    def _lower_triangular_solve(self, rhs):
+        """
+        Fast algorithm for solving a triangular system,
+        exploiting the sparsity of the given matrix.
+        """
+        rows = self._lil_row_major()
+        X = SparseMatrix(rhs.rows, 1, rhs.mat)
+        for i in xrange(self.rows):
+            for key in rows[i]:
+                if key[1] < i:
+                    X[i, 0] -= self[key] * X[key[1], 0]
+                else:
+                    break
+            X[i, 0] /= self[i, i]
+        return X
+
+    def _upper_triangular_solve(self, rhs):
+        """
+        Fast algorithm for solving a triangular system,
+        exploiting the sparsity of the given matrix.
+        """
+        rows = self._lil_row_major()
+        X = SparseMatrix(rhs.rows, 1, rhs.mat)
+        for i in reversed(xrange(self.rows)):
+            for key in reversed(rows[i]):
+                if key[1] > i:
+                    X[i, 0] -= self[key] * X[key[1], 0]
+                else:
+                    break
+            X[i, 0] /= self[i, i]
+        return X
+
+    def _diagonal_solve(self, rhs):
+        "Diagonal solve."
+        return SparseMatrix(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
+    
+    def _cholesky_solve(self, rhs):
+        if not self.is_symmetric():
+            rhs = self.T * rhs
+            self = self.T * self
+        L = self._cholesky()
+        Y = L._lower_triangular_solve(rhs)
+        return L.T._upper_triangular_solve(Y)
+
+    def _LDL_solve(self, rhs):
+        if not self.is_symmetric():
+            rhs = self.T * rhs
+            self = self.T * self
+        L, D = self._LDL_sparse()
+        Z = L._lower_triangular_solve(rhs)
+        Y = D._diagonal_solve(Z)
+        return L.T._upper_triangular_solve(Y)
+
+    def solve(self, rhs, method='LDL'):
+        if not self.is_square():
+            if self.rows < self.cols:
+                raise ValueError('Under-determined system.')
+            elif self.rows > self.cols:
+                raise('Over-determined system. Use .solve_least_squares function')
+        else:
+            if method == 'LDL':
+                return self._LDL_solve(rhs)
+            elif method == 'CH':
+                return self._cholesky_solve(rhs)
+
+    def solve_least_squares(self, rhs, method='LDL'):
+        return (self.T * self).solve(self.T * rhs, method=method)
+
+    def is_symmetric(self):
+        if not self.is_square():
+            return False
+        return all(self[i, j] == self[j, i] for i, j in self.mat.keys())
+
+    def is_square(self):
+        return self.rows == self.cols
+
+    def has(self, *patterns):
+        """
+        Test whether any subexpression matches any of the patterns.
+
+        Examples:
+        >>> from sympy import SparseMatrix, Float
+        >>> from sympy.abc import x, y
+        >>> A = SparseMatrix(((1, x), (0.2, 3)))
+        >>> A.has(x)
+        True
+        >>> A.has(y)
+        False
+        >>> A.has(Float)
+        True
+        """
+        return any(self[key].has(*patterns) for key in self.mat)
+
+    def cholesky(self):
+        """
+        Returns the Cholesky Decomposition L of a matrix A
+        such that L * L.T = A
+
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> A.cholesky()
+        [ 5, 0, 0]
+        [ 3, 3, 0]
+        [-1, 1, 3]
+        >>> A.cholesky() * A.cholesky().T
+        [25, 15, -5]
+        [15, 18,  0]
+        [-5,  0, 11]
+        """
+
+        from sympy.core.numbers import nan, oo
+        if not self.is_symmetric():
+            raise Exception('Cholesky decomposition applies only to symmetric matrices.')
+        C = self._cholesky_sparse()
+        if C.has(nan) or C.has(oo):
+            raise Exception('Cholesky decomposition applies only to positive-definite matrices')
+        return C
+
+    def LDLdecomposition(self):
+        """
+        Returns the LDL Decomposition (L,D) of matrix A,
+        such that L * D * L.T == A
+        This method eliminates the use of square root.
+        Further this ensures that all the diagonal entries of L are 1.
+        A must be a square, symmetric, positive-definite
+        and non-singular matrix.
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
+        >>> L, D = A.LDLdecomposition()
+        >>> L
+        [   1,   0, 0]
+        [ 3/5,   1, 0]
+        [-1/5, 1/3, 1]
+        >>> D
+        [25, 0, 0]
+        [ 0, 9, 0]
+        [ 0, 0, 9]
+        >>> L * D * L.T == A
+        True
+
+        """
+        from sympy.core.numbers import nan, oo
+        if not self.is_symmetric():
+            raise Exception('LDL decomposition applies only to symmetric matrices.')
+        L, D = self._LDL_sparse()
+        if L.has(nan) or L.has(oo) or D.has(nan) or D.has(oo):
+            raise Exception('LDL decomposition applies only to positive-definite matrices')
+        return L, D
 
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
@@ -3106,22 +3432,6 @@ class SparseMatrix(Matrix):
         if not is_sequence(value):
             raise TypeError("`value` must be of type list or tuple.")
         self.copyin_matrix(key, SparseMatrix(value))
-
-    def multiply(self,b):
-        """Returns self*b """
-
-        def dotprod(a,b,i,j):
-            if a.cols != b.rows:
-                raise ShapeError("`self.cols` must equal `b.rows`.")
-            r=0
-            for x in range(a.cols):
-                r+=a[i,x]*b[x,j]
-            return r
-
-        r = SparseMatrix(self.rows, b.cols, lambda i,j: dotprod(self,b,i,j))
-        if r.rows == 1 and r.cols ==1:
-            return r[0,0]
-        return r
 
     def submatrix(self, keys):
         if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
@@ -3168,6 +3478,76 @@ class SparseMatrix(Matrix):
         for i in range(tmp.rows):
             tmp[i,i] = 1
         return tmp
+
+    def join_rows(A, B):
+        """
+        Returns [A B], i.e. A with B augmented row-wise.
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((1,0,1),(0,1,0),(1,1,0)))
+        >>> A
+        [1, 0, 1]
+        [0, 1, 0]
+        [1, 1, 0]
+        >>> B = SparseMatrix(((1,0,0),(0,1,0),(0,0,1)))
+        >>> B
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+        >>> A.join_rows(B)
+        [1, 0, 1, 1, 0, 0]
+        [0, 1, 0, 0, 1, 0]
+        [1, 1, 0, 0, 0, 1]
+        """
+        if not A.rows == B.rows:
+            raise ValueError("Matrix size mis-match")
+        A = A[:, :]
+        for i, j in B.mat:
+            A.mat[i, j + A.cols] = B.mat[i, j]
+        A.cols += B.cols
+        return A
+
+    def inv(self, method="LDL"):
+        """
+        Returns the inverse of the given matrix using
+        Cholesky decomposition or LDL decomposition,
+        as specified by user.
+
+        >>> from sympy import SparseMatrix
+        >>> A = SparseMatrix(((3,0,2),(0,0,1),(1,2,0)))
+        >>> A
+        [3, 0, 2]
+        [0, 0, 1]
+        [1, 2, 0]
+        >>> A.inv()
+        [ 1/3, -2/3,   0]
+        [-1/6,  1/3, 1/2]
+        [   0,    1,   0]
+        >>> A.inv() * A
+        [1, 0, 0]
+        [0, 1, 0]
+        [0, 0, 1]
+
+        """
+        if method == "LDL":
+            solve = self._LDL_solve
+        elif method == "CH":
+            solve = self._cholesky_solve
+        I = self.eye(self.rows)
+        return vecs2matrix([solve(I[:,i]) for i in xrange(I.cols)])
+
+
+def vecs2matrix(vecs):
+    """
+    Utility function.
+    Strings together a list of vectors to form a Matrix
+    """
+    A = vecs[0]
+    for vec in vecs[1:]:
+        A = A.join_rows(vec)
+    return A
+    
+    
 
 
 def list2numpy(l):
