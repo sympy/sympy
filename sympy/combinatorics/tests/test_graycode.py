@@ -18,3 +18,8 @@ def test_graycode():
     assert GrayCode.unrank_gray_code(4, 6)._current == \
           ['0', '1', '1', '0', '0', '0']
     assert GrayCode.unrank_gray_code(4, 6).rank == 4
+    assert [GrayCode(4, start=s).rank for s in \
+            GrayCode(4).generate_bitlist()] == [0, 15, 8, 7, 4, 11,
+                                                12, 3, 2, 13, 10, 5,
+                                                6, 9, 14, 1]
+
