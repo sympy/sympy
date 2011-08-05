@@ -300,7 +300,7 @@ def test_inverse_mellin_transform():
     assert simp_pows(IMT(d**c*d**(s-1)*sin(pi*c) \
                          *gamma(s)*gamma(s+c)*gamma(1-s)*gamma(1-s-c)/pi,
                          s, x, (Max(-re(c), 0), Min(1 - re(c), 1)))) \
-           == d**c*(x/d)**c/(-d + x) - d**c/(-d + x)
+           == d**c/(d - x) - x**c/(d - x)
 
     # TODO is calling simplify twice a bug?
     assert simplify(simplify(IMT(1/sqrt(pi)*(-c/2)*gamma(s)*gamma((1-c)/2 - s) \
@@ -445,12 +445,12 @@ def test_inverse_laplace_transform():
         Heaviside(t - a)*besselj(0, a - t) # note: besselj(0, x) is even
 
     # TODO besselsimp would be good to have
-    # these are re-enabled in a later commit
-    #assert ILT(a**b*(s + sqrt(s**2 - a**2))**(-b)/sqrt(s**2 - a**2), s, t) == \
-    #    (t**2)**(b/2 + S(1)/2)*Heaviside(t)*besseli(b, a*t*exp_polar(I*pi))*exp_polar(-I*pi*b)/(t*sqrt((t**2)**b))
-    #assert unpolarify(ILT(a**b*(s + sqrt(s**2 + a**2))**(-b)/sqrt(s**2 + a**2),
-    #                      s, t).rewrite(besselj)) == \
-    #    (t**2)**(b/2 + S(1)/2)*exp(-I*pi*b)*Heaviside(t)*besselj(b, a*t*exp_polar(I*pi))/(t*sqrt((t**2)**b))
+    # XXX ILT turns these branch factor into trig functions ...
+    assert ILT(a**b*(s + sqrt(s**2 - a**2))**(-b)/sqrt(s**2 - a**2), s, t).rewrite(exp) == \
+        exp(-I*pi*b)*Heaviside(t)*besseli(b, a*t*exp_polar(I*pi))
+    assert ILT(a**b*(s + sqrt(s**2 + a**2))**(-b)/sqrt(s**2 + a**2),
+                          s, t).rewrite(besselj).rewrite(exp) == \
+        exp(-I*pi*b)*Heaviside(t)*besselj(b, a*t*exp_polar(I*pi))
 
     assert ILT(1/(s*sqrt(s+1)), s, t) == Heaviside(t)*erf(sqrt(t))
     # TODO can we make erf(t) work?

@@ -1440,6 +1440,19 @@ def _denest_pow(eq):
 
     # denest eq which is either pos**e or Pow**e or Mul**e or Mul(b1**e1, b2**e2)
 
+    # handle polar numbers specially
+    polars, nonpolars = [], []
+    for bb in Mul.make_args(b):
+        if bb.is_polar:
+            polars.append(bb.as_base_exp())
+        else:
+            nonpolars.append(bb)
+    if len(polars) == 1 and not polars[0][0].is_Mul:
+        return Pow(polars[0][0], polars[0][1]*e)*powdenest(Mul(*nonpolars)**e)
+    elif polars:
+        return Mul(*[powdenest(bb**(ee*e)) for (bb, ee) in polars]) \
+               *powdenest(Mul(*nonpolars)**e)
+
     # see if there is a positive, non-Mul base at the very bottom
     exponents = []
     kernel = eq
