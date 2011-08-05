@@ -638,10 +638,9 @@ class LinearEntity(GeometryEntity):
 
         """
         from random import randint
-        from sys import maxint
 
         # The lower and upper
-        lower, upper = -maxint - 1, maxint
+        lower, upper = -2**32 - 1, 2**32
 
         if self.slope is S.Infinity:
             if isinstance(self, Ray):
@@ -687,10 +686,6 @@ class LinearEntity(GeometryEntity):
 
     def __hash__(self):
         return super(LinearEntity, self).__hash__()
-
-    def __contains__(self, other):
-        """Subclasses should implement this method."""
-        raise NotImplementedError()
 
 
 class Line(LinearEntity):

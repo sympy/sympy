@@ -1,5 +1,5 @@
-from sympy import symbols, DiracDelta, Heaviside, nan, oo, sqrt, pi
-x = symbols('x')
+from sympy import symbols, DiracDelta, Heaviside, nan, oo, sqrt, pi, conjugate
+x,y = symbols('x y')
 
 def test_DiracDelta():
     assert DiracDelta(1) == 0
@@ -9,6 +9,8 @@ def test_DiracDelta():
     assert DiracDelta(0) == oo
     assert DiracDelta(0,5) == oo
     assert DiracDelta(x).func == DiracDelta
+    assert conjugate(DiracDelta(x)) == DiracDelta(x)
+    assert conjugate(DiracDelta(x - y)) == DiracDelta(x - y)
 
 def test_heaviside():
     assert Heaviside(0) == 0.5

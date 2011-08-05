@@ -1,6 +1,8 @@
 #from ctx_base import StandardBaseContext
 
-from libmp import (MPZ, MPZ_ZERO, MPZ_ONE, int_types, repr_dps,
+from .libmp.backend import basestring, exec_
+
+from .libmp import (MPZ, MPZ_ZERO, MPZ_ONE, int_types, repr_dps,
     round_floor, round_ceiling, dps_to_prec, round_nearest, prec_to_dps,
     ComplexResult, to_pickable, from_pickable, normalize,
     from_int, from_float, from_str, to_int, to_float, to_str,
@@ -23,8 +25,8 @@ from libmp import (MPZ, MPZ_ZERO, MPZ_ONE, int_types, repr_dps,
     mpf_glaisher, mpf_twinprime, mpf_mertens,
     int_types)
 
-import rational
-import function_docs
+from . import rational
+from . import function_docs
 
 new = object.__new__
 
@@ -142,6 +144,8 @@ class _mpf(mpnumeric):
     def __complex__(s): return complex(float(s))
     def __nonzero__(s): return s._mpf_ != fzero
 
+    __bool__ = __nonzero__
+
     def __abs__(s):
         cls, new, (prec, rounding) = s._ctxdata
         v = new(cls)
@@ -224,6 +228,8 @@ class _mpf(mpnumeric):
     def to_fixed(self, prec):
         return to_fixed(self._mpf_, prec)
 
+    def __round__(self, *args):
+        return round(float(self), *args)
 
 mpf_binary_op = """
 def %NAME%(self, other):
@@ -275,7 +281,7 @@ def binary_op(name, with_mpf='', with_int='', with_mpc=''):
     code = code.replace("%WITH_MPF%", with_mpf)
     code = code.replace("%NAME%", name)
     np = {}
-    exec code in globals(), np
+    exec_(code, globals(), np)
     return np[name]
 
 _mpf.__eq__ = binary_op('__eq__',
@@ -417,6 +423,8 @@ class _mpc(mpnumeric):
 
     def __nonzero__(s):
         return mpc_is_nonzero(s._mpc_)
+
+    __bool__ = __nonzero__
 
     def __hash__(s):
         return mpc_hash(s._mpc_)
@@ -894,7 +902,7 @@ class PythonMPContext:
             >>> B = [1, -1, 2]
             >>> fdot(A, B)
             mpf('6.5')
-            >>> zip(A, B)
+            >>> list(zip(A, B))
             [(2, 1), (1.5, -1), (3, 2)]
             >>> fdot(_)
             mpf('6.5')

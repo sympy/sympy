@@ -1,7 +1,7 @@
 from sympy.core import Basic, S, C, sympify, Expr, oo, Rational, Symbol, Dummy
 from sympy.core import Add, Mul
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import all
+from sympy.core.compatibility import cmp_to_key
 
 class Order(Expr):
     """
@@ -132,7 +132,7 @@ class Order(Expr):
             expr = S.One
 
         # create Order instance:
-        symbols.sort(Basic.compare)
+        symbols.sort(key=cmp_to_key(Basic.compare))
         obj = Expr.__new__(cls, expr, *symbols, **assumptions)
 
         return obj

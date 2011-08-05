@@ -21,8 +21,8 @@ class Unit(AtomicExpr):
 
     def __new__(cls, name, abbrev, **assumptions):
         obj = AtomicExpr.__new__(cls, **assumptions)
-        assert isinstance(name, str),`type(name)`
-        assert isinstance(abbrev, str),`type(abbrev)`
+        assert isinstance(name, str),repr(type(name))
+        assert isinstance(abbrev, str),repr(type(abbrev))
         obj.name = name
         obj.abbrev = abbrev
         return obj

@@ -8,9 +8,7 @@ from sympy.polys.polyconfig import query
 
 from sympy.polys.polyerrors import ExactQuotientFailed
 
-from sympy.utilities import (
-    any, all, cythonized
-)
+from sympy.utilities import cythonized
 
 from sympy.ntheory import factorint
 

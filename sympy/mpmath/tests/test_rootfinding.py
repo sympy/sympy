@@ -44,7 +44,7 @@ def test_muller():
     assert abs(f(x)) < eps
 
 def test_multiplicity():
-    for i in xrange(1, 5):
+    for i in range(1, 5):
         assert multiplicity(lambda x: (x - 1)**i, 1) == i
     assert multiplicity(lambda x: x**2, 1) == 0
 

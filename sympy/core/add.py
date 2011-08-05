@@ -4,7 +4,6 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from expr import Expr
-from compatibility import all
 
 class Add(AssocOp):
 
@@ -72,23 +71,13 @@ class Add(AssocOp):
 
             # Mul([...])
             elif o.is_Mul:
-                c = o.args[0]
+                c, s = o.as_coeff_Mul()
 
                 # 3*...
-                if c.is_Number:
-                    # unevaluated 2-arg Mul
-                    if len(o.args) == 2 and o.args[1].is_Add and o.args[1].is_commutative:
-                        seq.extend([c*a for a in o.args[1].args])
-                        continue
-
-                    if c is S.One:
-                        s = o
-                    else:
-                        s = o.as_two_terms()[1]
-
-                else:
-                    c = S.One
-                    s = o
+                # unevaluated 2-arg Mul
+                if c.is_Number and s.is_Add:
+                    seq.extend([c*a for a in s.args])
+                    continue
 
             # everything else
             else:

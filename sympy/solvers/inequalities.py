@@ -7,7 +7,6 @@ from sympy.assumptions import ask, AppliedPredicate, Q
 from sympy.functions import re, im, Abs
 from sympy.logic import And, Or
 from sympy.polys import Poly
-from sympy.utilities import all
 
 def interval_evalf(interval):
     """Proper implementation of evalf() on Interval. """
@@ -133,28 +132,18 @@ def reduce_poly_inequalities(exprs, gen, assume=True, relational=True):
 
     solution = solve_poly_inequalities(polys)
 
-    if isinstance(solution, Union):
-        intervals = list(solution.args)
-    elif isinstance(solution, Interval):
-        intervals = [solution]
-    else:
-        intervals = []
-
     if not exact:
-        intervals = map(interval_evalf, intervals)
+        solution = solution.evalf()
 
     if not relational:
-        return intervals
+        return solution
 
     real = ask(Q.real(gen), assumptions=assume)
 
-    def relationalize(gen):
-        return Or(*[ i.as_relational(gen) for i in intervals ])
-
     if not real:
-        result = And(relationalize(re(gen)), Eq(im(gen), 0))
+        result = And(solution.as_relational(re(gen)), Eq(im(gen), 0))
     else:
-        result = relationalize(gen)
+        result = solution.as_relational(gen)
 
     return result
 

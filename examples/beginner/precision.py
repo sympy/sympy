@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Precision Example
 
 Demonstrates SymPy's arbitrary precision abilities

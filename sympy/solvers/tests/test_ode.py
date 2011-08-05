@@ -1,7 +1,9 @@
+from __future__ import division
+
 from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
-    Equality, solve, O, LambertW, Dummy, pure)
+    Equality, solve, O, LambertW, Dummy)
 from sympy.abc import x, y, z
 from sympy.solvers.ode import ode_order, homogeneous_order, \
     _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
@@ -51,6 +53,9 @@ def test_checkodesol():
     assert checkodesol(f(x).diff(x, 2), f(x), [Eq(f(x), C1 + C2*x), \
         Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)]) == \
             [(True, 0), (True, 0), (False, 2*C2)]
+    assert checkodesol(f(x).diff(x, 2), f(x), set([Eq(f(x), C1 + C2*x), \
+        Eq(f(x), C2 + C1*x), Eq(f(x), C1*x + C2*x**2)])) == \
+            set([(True, 0), (True, 0), (False, 2*C2)])
     assert checkodesol(f(x).diff(x) - 1/f(x)/2, f(x), Eq(f(x)**2, x)) == \
         [(True, 0), (True, 0)]
     assert checkodesol(f(x).diff(x) - f(x), f(x), Eq(C1*exp(x), f(x))) == (True, 0)
@@ -140,7 +145,18 @@ def test_classify_ode():
     assert a == b == c != ()
     assert classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)) ==\
         ('Bernoulli', 'Bernoulli_Integral')
+    assert 'Riccati_special_minus2' in\
+        classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, "classify_ode(x + f(x, y).diff(x).diff(y), f(x, y))")
+    # 2077
+    k = Symbol('k')
+    assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) +
+                 2*f(x)/(k*f(x) + k*x*f(x)) +
+                 x*f(x).diff(x)/(k*f(x) + k*x*f(x))
+                 + z, f(x)) == ('separable',
+                                '1st_exact',
+                                'separable_Integral',
+                                '1st_exact_Integral')
 
 def test_ode_order():
     f = Function('f')
@@ -226,6 +242,12 @@ def test_Bernoulli():
     eq = Eq(x*f(x).diff(x) + f(x) - f(x)**2,0)
     sol = dsolve(eq,f(x), hint='Bernoulli')
     assert sol == Eq(f(x),1/(x*(C1 + 1/x)))
+    assert checkodesol(eq, f(x), sol, order=1, solve_for_func=False)[0]
+
+def test_Riccati_special_minus2():
+    # Type: Riccati special alpha = -2, a*dy/dx + b*y**2 + c*y/x +d/x**2
+    eq = 2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2)
+    sol = dsolve(eq,f(x), hint='Riccati_special_minus2')
     assert checkodesol(eq, f(x), sol, order=1, solve_for_func=False)[0]
 
 def test_1st_exact1():
@@ -493,15 +515,16 @@ def test_1st_homogeneous_coeff_ode2():
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol1 = Eq(f(x), x*acos(log(C1*x)))
-    sol2 = [Eq(f(x), -sqrt(C1*x + x**2)), Eq(f(x), sqrt(C1*x + x**2))]
-    sol3 = Eq(f(x), log(log(C1/x)**(-x)))
+    sol2 = set([Eq(f(x), -sqrt(C1*x + x**2)), Eq(f(x), sqrt(C1*x + x**2))])
+    sol3 = Eq(f(x), log((-1/log(C1*x))**x))
     # specific hints are applied for speed reasons
     assert dsolve(eq1, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
-    assert dsolve(eq2, f(x), hint='1st_homogeneous_coeff_best') == sol2
+    assert set(dsolve(eq2, f(x), hint='1st_homogeneous_coeff_best')) == sol2
     assert dsolve(eq3, f(x), hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3
     assert checkodesol(eq1, f(x), sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2[0], order=1, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol2[1], order=1, solve_for_func=False)[0]
+    assert all(i[0] for i in checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False))
+    # the solution doesn't check...perhaps there is something wrong with the routine or the solver?
+    # assert checkodesol(eq3, f(x), sol3, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode2_eq3sol():
@@ -517,7 +540,7 @@ def test_1st_homogeneous_coeff_ode3():
     # test_homogeneous_order_ode1_sol above. It has to compare string
     # expressions because u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    solstr = "f(x) == C1*exp(Integral(-1/(_u2*(-_u2**2 + 1)**(1/2)), (_u2, x/f(x))))"
+    solstr = "log(C1*f(x)) - Integral(-1/(_u2*(-_u2**2 + 1)**(1/2)), (_u2, x/f(x))) == 0"
     assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
 
 def test_1st_homogeneous_coeff_ode4_explicit():
@@ -698,22 +721,22 @@ def test_nth_linear_constant_coeff_homogeneous():
 def test_nth_linear_constant_coeff_homogeneous_RootOf():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
-        C1*exp(x*RootOf(pure**5 + 11*pure - 2, 0)) + \
-        C2*exp(x*RootOf(pure**5 + 11*pure - 2, 1)) + \
-        C3*exp(x*RootOf(pure**5 + 11*pure - 2, 2)) + \
-        C4*exp(x*RootOf(pure**5 + 11*pure - 2, 3)) + \
-        C5*exp(x*RootOf(pure**5 + 11*pure - 2, 4)))
+        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) + \
+        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) + \
+        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) + \
+        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) + \
+        C5*exp(x*RootOf(x**5 + 11*x - 2, 4)))
     assert dsolve(eq, f(x)) == sol
 
 @XFAIL
 def test_nth_linear_constant_coeff_homogeneous_RootOf_sol():
     eq = f(x).diff(x, 5) + 11*f(x).diff(x) - 2*f(x)
     sol = Eq(f(x),
-        C1*exp(x*RootOf(pure**5 + 11*pure - 2, 0)) + \
-        C2*exp(x*RootOf(pure**5 + 11*pure - 2, 1)) + \
-        C3*exp(x*RootOf(pure**5 + 11*pure - 2, 2)) + \
-        C4*exp(x*RootOf(pure**5 + 11*pure - 2, 3)) + \
-        C5*exp(x*RootOf(pure**5 + 11*pure - 2, 4)))
+        C1*exp(x*RootOf(x**5 + 11*x - 2, 0)) + \
+        C2*exp(x*RootOf(x**5 + 11*x - 2, 1)) + \
+        C3*exp(x*RootOf(x**5 + 11*x - 2, 2)) + \
+        C4*exp(x*RootOf(x**5 + 11*x - 2, 3)) + \
+        C5*exp(x*RootOf(x**5 + 11*x - 2, 4)))
     assert checkodesol(eq, f(x), sol, order=5, solve_for_func=False)[0]
 
 def test_undetermined_coefficients_match():
@@ -1058,9 +1081,9 @@ def test_Liouville_ODE():
     # If solve() is ever improved, this is a better solution
     sol1a = Eq(f(x), -log((C1*x+C2)/x))
     sol2 = Eq(C1 + C2/x - exp(-f(x)), 0) # This is equivalent to sol1
-    sol3 = [Eq(f(x), -sqrt(2)*sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*log(x)))]
-    sol4 = [Eq(f(x), -sqrt(2)*sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*exp(-x)))]
-    sol5 = Eq(f(x), -log(x) + log(C1 + C2*x))
+    sol3 = set([Eq(f(x), -sqrt(2)*sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*log(x)))])
+    sol4 = set([Eq(f(x), -sqrt(2)*sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*exp(-x)))])
+    sol5 = Eq(f(x), log(C1 + C2/x))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
     sol2s = constant_renumber(sol2, 'C', 1, 2)
     sol3s = constant_renumber(sol3, 'C', 1, 2)
@@ -1069,19 +1092,16 @@ def test_Liouville_ODE():
     assert dsolve(eq1, f(x), hint) in (sol1, sol1s)
     assert dsolve(eq1a, f(x), hint) in (sol1, sol1s)
     assert dsolve(eq2, f(x), hint) in (sol2, sol2s)
-    assert dsolve(eq3, f(x), hint) in (sol3, sol3s) # XXX: remove sqrt(2) factor
-    assert dsolve(eq4, f(x), hint) in (sol4, sol4s) # XXX: remove sqrt(2) factor
+    assert set(dsolve(eq3, f(x), hint)) in (sol3, sol3s) # XXX: remove sqrt(2) factor
+    assert set(dsolve(eq4, f(x), hint)) in (sol4, sol4s) # XXX: remove sqrt(2) factor
     assert dsolve(eq5, f(x), hint) in (sol5, sol5s)
     assert checkodesol(sol1, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1a, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(sol2, f(x), sol1a, order=2, solve_for_func=False)[0]
     assert checkodesol(eq2, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3[0], order=2, solve_for_func=False)[0]
-    assert checkodesol(eq3, f(x), sol3[1], order=2, solve_for_func=False)[0]
-    sol4c = checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False)
-    assert sol4c[0][0]
-    assert sol4c[1][0]
+    assert all(i[0] for i in checkodesol(eq3, f(x), sol3, order=2, solve_for_func=False))
+    assert all(i[0] for i in checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False))
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
     not_Liouville1 = classify_ode(diff(f(x),x)/x + f(x)*diff(f(x),x,x)/2 -
         diff(f(x),x)**2/2, f(x))

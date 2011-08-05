@@ -1,6 +1,6 @@
 """Sparse distributed multivariate polynomials and Groebner bases. """
 
-from sympy.core.compatibility import minkey
+from sympy.core.compatibility import cmp
 
 from sympy.polys.monomialtools import (
     monomial_mul,
@@ -15,7 +15,6 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed, DomainError,
 )
 
-from sympy.utilities import any, all
 from operator import itemgetter
 
 def sdp_LC(f, K):
@@ -530,8 +529,9 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
         raise DomainError("can't compute a Groebner basis over %s" % K)
 
     def select(P):
+        # normal selection strategy
         # select the pair with minimum LCM(LM(f), LM(g))
-        pr = minkey(P, key=lambda (i, j): O(monomial_lcm(sdp_LM(f[i], u), sdp_LM(f[j], u))))
+        pr = min(P, key=lambda pair: O(monomial_lcm(sdp_LM(f[pair[0]], u), sdp_LM(f[pair[1]], u))))
         return pr
 
     def normal(g, J):
@@ -540,6 +540,7 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
         if not h:
             return None
         else:
+            h = sdp_monic(h, K)
             h = tuple(h)
 
             if not h in I:
@@ -635,7 +636,7 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
             r = sdp_rem(p, f[:i], u, O, K)
 
             if r:
-               f1.append(r)
+               f1.append(sdp_monic(r, K))
 
         if f == f1:
             break
@@ -654,7 +655,7 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
     # algorithm GROEBNERNEWS2 in [BW] page 232
     while F:
         # select p with minimum monomial according to the monomial ordering O
-        h = minkey([f[x] for x in F], key=lambda f: O(sdp_LM(f, u)))
+        h = min([f[x] for x in F], key=lambda f: O(sdp_LM(f, u)))
         ih = I[h]
         F.remove(ih)
         G, CP = update(G, CP, ih)
@@ -667,7 +668,9 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
         CP.remove((ig1, ig2))
 
         h = sdp_spoly(f[ig1], f[ig2], u, O, K)
-        ht = normal(h, G)
+        # ordering divisors is on average more efficient [Cox] page 111
+        G1 = sorted(G, key=lambda g: O(sdp_LM(f[g], u)))
+        ht = normal(h, G1)
 
         if ht:
             G, CP = update(G, CP, ht[1])
@@ -684,7 +687,7 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False):
         if ht:
             Gr.add(ht[1])
 
-    Gr = [sdp_monic(list(f[ig]), K) for ig in Gr]
+    Gr = [list(f[ig]) for ig in Gr]
 
     # order according to the monomial ordering
     Gr = sorted(Gr, key=lambda f: O(sdp_LM(f, u)), reverse=True)
@@ -721,13 +724,12 @@ def sdp_str(f, gens):
         if cnt1:
             sa = [cnt1] + sa
         s += '*'.join(sa)
-        if expv == z:
-          s += str(c)
     return s
 
 def sdp_spoly(p1, p2, u, O, K):
     """
     Compute LCM(LM(p1), LM(p2))/LM(p1)*p1 - LCM(LM(p1), LM(p2))/LM(p2)*p2
+    This is the S-poly provided p1 and p2 are monic
     """
     LM1 = sdp_LM(p1, u)
     LM2 = sdp_LM(p2, u)

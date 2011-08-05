@@ -10,10 +10,10 @@
 """
 
 from sympy.tensor.indexed import Idx, IndexedBase, Indexed
-from sympy.utilities import all
 from sympy.functions import exp
 from sympy.core import C
 
+from sympy.core.compatibility import reduce
 
 class IndexConformanceException(Exception):
     pass

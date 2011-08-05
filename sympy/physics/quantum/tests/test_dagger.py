@@ -1,6 +1,8 @@
 from sympy import I, Matrix, symbols, conjugate, Expr, Integer
 
 from sympy.physics.quantum.dagger import Dagger
+from sympy.external import import_module
+from sympy.utilities.pytest import skip
 
 
 def test_scalars():
@@ -35,24 +37,27 @@ def test_eval_dagger():
     d = Dagger(f)
     assert d == I
 
-try:
-    import numpy as np
-except ImportError:
-    pass
-else:
-    def test_numpy_dagger():
-        a = np.matrix([[1.0,2.0j],[-1.0j,2.0]])
-        adag = a.copy().transpose().conjugate()
-        assert (Dagger(a) == adag).all()
+np = import_module('numpy', min_python_version=(2, 6))
+
+def test_numpy_dagger():
+    if not np:
+        skip("numpy not installed or Python too old.")
+
+    a = np.matrix([[1.0,2.0j],[-1.0j,2.0]])
+    adag = a.copy().transpose().conjugate()
+    assert (Dagger(a) == adag).all()
 
 
-try:
-    from scipy import sparse
-    import numpy as np
-except ImportError:
-    pass
-else:
-    def test_scipy_sparse_dagger():
-        a = sparse.csr_matrix([[1.0+0.0j,2.0j],[-1.0j,2.0+0.0j]])
-        adag = a.copy().transpose().conjugate()
-        assert np.linalg.norm((Dagger(a) - adag).todense()) == 0.0
+scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+
+def test_scipy_sparse_dagger():
+    if not np:
+        skip("numpy not installed or Python too old.")
+    if not scipy:
+        skip("scipy not installed.")
+    else:
+        sparse = scipy.sparse
+
+    a = sparse.csr_matrix([[1.0+0.0j,2.0j],[-1.0j,2.0+0.0j]])
+    adag = a.copy().transpose().conjugate()
+    assert np.linalg.norm((Dagger(a) - adag).todense()) == 0.0

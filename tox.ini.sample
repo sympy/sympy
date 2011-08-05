@@ -1,0 +1,56 @@
+# Sample tox.ini configuration file. Copy to tox.ini and edit to needs.
+# More information on the wiki:
+# https://github.com/sympy/sympy/wiki/Using-Tox
+# Also see the tox documentation at
+# http://tox.testrun.org/en/latest/config.html
+# Note: don't forget to install it:
+#  pip install tox
+
+[tox]
+# Define the environments. By default, py24-py32, jython, pypy.
+# It's also possible to define a custom environment, like docs.
+# You must list a defined environment here in order to run it.
+envlist = py25, py26, py27, docs
+
+[testenv]
+# Commands to be executed, it could be anything. The brackets are
+# important, as they allow us to call bin/test with arguments we
+# pass on through tox. Applies to all default environments.
+# You can run multiple commands by putting them on subsequent lines
+# Note that you should use bin/test and bin/doctest rather than setup.py
+# test, because the latter does not work with [].
+commands = python bin/test []
+    python bin/doctest []
+
+# Example of a test environment, we use it so we'd test docs just
+# once.
+[testenv:docs]
+commands = python bin/doctest []
+
+# Example of testing a 32bit version of Python.
+[testenv:py27-32]
+# basepython allows us to point to an arbitrary Python executable
+basepython=/Library/Frameworks/Python.framework/Versions/2.7/bin/python2.7
+commands = python bin/test []
+    python bin/doctest []
+
+# Example of testing with a dependancy.
+[testenv:py27-gmpy]
+# deps is used to specify the dependancies we need. Tox will
+# automatically download them from PyPi using easy_install/pip.
+# Note that you have to provide the download link because
+# deps = gmpy will try to install gmpy2.
+deps = http://gmpy.googlecode.com/files/gmpy-1.14.zip
+commands = python bin/test []
+    python bin/doctest []
+
+# Usage:
+#  tox              # runs all defined environments
+#  tox -e py25,py26 # runs the specified environments, comma-separated
+#  tox --recreate   # recreate and then run all virtualenvs
+#  tox hydrogen     # runs the "hydrogen" tests on all environments
+
+# It's possible to combine commands freely, eg:
+#  tox --recreate -e py25,py27 sympy/core
+# will recreate the py25 and py27 environments, and then run the
+# tests in sympy/core in them.

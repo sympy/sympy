@@ -565,7 +565,7 @@ class Pow(Expr):
             else:
                 newterm = term
             terms.append(newterm)
-        return self.new(*terms)
+        return self.func(*terms)
 
     def _eval_expand_func(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -845,7 +845,7 @@ class Pow(Expr):
         return C.binomial(self.exp, n) * Pow(x, n)
 
     def _sage_(self):
-        return Pow(self.args[0]._sage_(), self.args[1]._sage_())
+        return self.args[0]._sage_()**self.args[1]._sage_()
 
 from add import Add
 from numbers import Integer

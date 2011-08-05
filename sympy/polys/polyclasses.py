@@ -1,5 +1,7 @@
 """OO layer for several polynomial representations. """
 
+from sympy.core.compatibility import cmp
+
 class GenericPoly(object):
     """Base class for low-level polynomial representations. """
 
@@ -29,8 +31,6 @@ class GenericPoly(object):
         else:
             return factors
 
-from sympy.utilities import any, all
-
 from sympy.polys.densebasic import (
     dmp_validate,
     dup_normal, dmp_normal,
@@ -51,7 +51,8 @@ from sympy.polys.densebasic import (
     dmp_inject, dmp_eject,
     dup_terms_gcd, dmp_terms_gcd,
     dmp_list_terms, dmp_exclude,
-    dmp_slice_in, dmp_permute)
+    dmp_slice_in, dmp_permute,
+    dmp_to_tuple,)
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
@@ -159,7 +160,7 @@ class DMP(object):
         return "%s(%s, %s)" % (f.__class__.__name__, f.rep, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.rep), f.lev, f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom))
 
     def __getstate__(self):
         return (self.rep, self.lev, self.dom)
@@ -238,6 +239,14 @@ class DMP(object):
             rep[k] = f.dom.to_sympy(v)
 
         return rep
+
+    def to_tuple(f):
+        """
+        Convert `f` to a tuple representation with native coefficients.
+
+        This is needed for hashing.
+        """
+        return dmp_to_tuple(f.rep, f.lev)
 
     @classmethod
     def from_dict(cls, rep, lev, dom):
@@ -486,7 +495,7 @@ class DMP(object):
 
     def total_degree(f):
         """Returns the total degree of `f`. """
-        return sum(dmp_degree_list(f.rep, f.lev))
+        return max([sum(m) for m in f.monoms()])
 
     def LC(f):
         """Returns the leading coefficent of `f`. """
@@ -879,7 +888,7 @@ class DMP(object):
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
-        return F.__lt__(g)
+        return F.__lt__(G)
 
     def __le__(f, g):
         _, _, _, F, G = f.unify(g)
@@ -975,7 +984,8 @@ class DMF(object):
         return "%s((%s, %s), %s)" % (f.__class__.__name__, f.num, f.den, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.num), repr(f.den), f.lev, f.dom))
+        return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
+            dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
 
     def __getstate__(self):
         return (self.num, self.den, self.lev, self.dom)
@@ -1264,6 +1274,22 @@ class DMF(object):
 
         return True
 
+    def __lt__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__lt__(G)
+
+    def __le__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, _, F, G = f.frac_unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
 
@@ -1299,22 +1325,13 @@ class ANP(object):
         return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.mod, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, repr(f.rep), f.mod, f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), dmp_to_tuple(f.mod, 0), f.dom))
 
     def __getstate__(self):
         return (self.rep, self.mod, self.dom)
 
     def __getnewargs__(self):
         return (self.rep, self.mod, self.dom)
-
-    def __cmp__(f, g):
-        """Make sorting deterministic. """
-        k = len(f.rep) - len(g.rep)
-
-        if not k:
-            return cmp(f.rep, g.rep)
-        else:
-            return k
 
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
@@ -1372,6 +1389,14 @@ class ANP(object):
     def to_sympy_list(f):
         """Convert `f` to a list representation with SymPy coefficients. """
         return [ f.dom.to_sympy(c) for c in f.rep ]
+
+    def to_tuple(f):
+        """
+        Convert `f` to a tuple representation with native coefficients.
+
+        This is needed for hashing.
+        """
+        return dmp_to_tuple(f.rep, 0)
 
     @classmethod
     def from_list(cls, rep, mod, dom):
@@ -1516,6 +1541,21 @@ class ANP(object):
         except UnificationFailed:
             return True
 
+    def __lt__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__lt__(G)
+
+    def __le__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__le__(G)
+
+    def __gt__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__gt__(G)
+
+    def __ge__(f, g):
+        _, _, F, G, _ = f.unify(g)
+        return F.__ge__(G)
+
     def __nonzero__(f):
         return bool(f.rep)
-

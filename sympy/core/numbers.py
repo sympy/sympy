@@ -8,6 +8,7 @@ from cache import cacheit, clear_cache
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
+from sympy.mpmath.ctx_mp import mpnumeric
 
 import decimal
 
@@ -118,6 +119,7 @@ class Number(AtomicExpr):
     is_comparable = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
@@ -344,6 +346,13 @@ class Float(Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
         return Number.__mod__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rmod__(self, other):
+        if isinstance(other, Number):
+            rhs, prec = other._as_mpf_op(self._prec)
+            return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
+        return Number.__rmod__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -651,6 +660,14 @@ class Rational(Number):
             return self.evalf() % other
         return Number.__mod__(self, other)
 
+    @_sympifyit('other', NotImplemented)
+    def __rmod__(self, other):
+        if isinstance(other, Rational):
+            return Rational.__mod__(other, self)
+        if isinstance(other, Float):
+            return other % self.evalf()
+        return Number.__rmod__(self, other)
+
     # TODO reorder
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -796,13 +813,26 @@ class Rational(Number):
     def __hash__(self):
         return super(Rational, self).__hash__()
 
-    def factors(self, limit=None, verbose=False):
+    def factors(self, limit=None, use_trial=True,
+                                  use_rho=False,
+                                  use_pm1=False,
+                                  verbose=False):
         """A wrapper to factorint which return factors of self that are
-        smaller than limit (or cheap to compute)."""
+        smaller than limit (or cheap to compute). Special methods of
+        factoring are disabled by default so that only trial division is used.
+        """
         from sympy.ntheory import factorint
 
-        f = factorint(self.p, limit=limit, verbose=verbose).copy()
-        for p, e in factorint(self.q, limit=limit, verbose=verbose).items():
+        f = factorint(self.p, limit=limit,
+                              use_trial=use_trial,
+                              use_rho=use_rho,
+                              use_pm1=use_pm1,
+                              verbose=verbose).copy()
+        for p, e in factorint(self.q, limit=limit,
+                              use_trial=use_trial,
+                              use_rho=use_rho,
+                              use_pm1=use_pm1,
+                              verbose=verbose).items():
             try: f[p] += -e
             except KeyError: f[p] = -e
 
@@ -873,8 +903,6 @@ class Rational(Number):
 
     def _sage_(self):
         import sage.all as sage
-        #XXX: fixme, this should work:
-        #return sage.Integer(self[0])/sage.Integer(self[1])
         return sage.Integer(self.p)/sage.Integer(self.q)
 
 # int -> Integer
@@ -987,14 +1015,6 @@ class Integer(Rational):
         else:
             return Integer(-self.p)
 
-    def __mod__(self, other):
-        if isinstance(other, Integer) or not isinstance(other, Rational):
-            return Integer(self.p % other)
-        return Rational.__mod__(self, other)
-
-    def __rmod__(self, other):
-        return Integer(other % self.p)
-
     def __divmod__(self, other):
         return divmod(self.p, other.p)
 
@@ -1040,6 +1060,20 @@ class Integer(Rational):
         elif isinstance(b, Integer):
             return Integer(b.p * a.p)
         return Rational.__mul__(a, b)
+
+    def __mod__(a, b):
+        if isinstance(b, (int, long)):
+            return Integer(a.p % b)
+        elif isinstance(b, Integer):
+            return Integer(a.p % b.p)
+        return Rational.__mod__(a, b)
+
+    def __rmod__(a, b):
+        if isinstance(b, (int, long)):
+            return Integer(b % a.p)
+        elif isinstance(b, Integer):
+            return Integer(b.p % a.p)
+        return Rational.__rmod__(a, b)
 
     def __eq__(a, b):
         if isinstance(b, (int, long)):
@@ -1537,6 +1571,10 @@ class NegativeInfinity(RationalConstant):
     def _as_mpf_val(self, prec):
         return mlib.fninf
 
+    def _sage_(self):
+        import sage.all as sage
+        return -(sage.oo)
+
     def __gt__(a, b):
         return False
 
@@ -1552,7 +1590,6 @@ class NegativeInfinity(RationalConstant):
 
     def __le__(a, b):
         return True
-
 
 class NaN(RationalConstant):
     __metaclass__ = Singleton
@@ -1593,6 +1630,7 @@ class ComplexInfinity(AtomicExpr):
     is_comparable = None
     is_bounded = False
     is_real = None
+    is_number = True
 
     __slots__ = []
 
@@ -1628,6 +1666,7 @@ class NumberSymbol(AtomicExpr):
     is_comparable = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
@@ -1856,6 +1895,7 @@ class ImaginaryUnit(AtomicExpr):
     is_imaginary = True
     is_bounded = True
     is_finite = True
+    is_number = True
 
     __slots__ = []
 
@@ -1907,15 +1947,37 @@ I = S.ImaginaryUnit
 try:
     # fractions is only available for python 2.6+
     import fractions
+
     def sympify_fractions(f):
         return Rational(f.numerator, f.denominator)
+
     converter[fractions.Fraction] = sympify_fractions
 except ImportError:
     pass
 
+try:
+    import gmpy
+
+    def sympify_mpz(x):
+        return Integer(long(x))
+
+    def sympify_mpq(x):
+        return Rational(long(x.numer()), long(x.denom()))
+
+    converter[type(gmpy.mpz(1))] = sympify_mpz
+    converter[type(gmpy.mpq(1, 2))] = sympify_mpq
+except ImportError:
+    pass
+
+def sympify_mpmath(x):
+    return Expr._from_mpmath(x, x.context.prec)
+
+converter[mpnumeric] = sympify_mpmath
+
 def sympify_complex(a):
     real, imag = map(sympify, (a.real, a.imag))
     return real + S.ImaginaryUnit * imag
+
 converter[complex] = sympify_complex
 
 _intcache[0] = S.Zero

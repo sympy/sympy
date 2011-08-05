@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Functions example
 
 Demonstrates sympy defined functions.

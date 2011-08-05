@@ -28,8 +28,8 @@ LG10 = math.log(10,2)
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
 # passing these to mpmath functions or returning them in final results.
-INF = 1e1000
-MINUS_INF = -1e1000
+INF = float(mpmath_inf)
+MINUS_INF = float(-mpmath_inf)
 
 # ~= 100 digits. Real men set this to INF.
 DEFAULT_MAXPREC = 333
@@ -876,8 +876,10 @@ def evalf_sum(expr, prec, options):
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
         re, im, re_acc, im_acc = evalf(s, prec2, options)
-        re_acc = max(re_acc, -err)
-        im_acc = max(im_acc, -err)
+        if re_acc is None:
+            re_acc = -err
+        if im_acc is None:
+            im_acc = -err
         return re, im, re_acc, im_acc
 
 
@@ -1066,6 +1068,8 @@ class EvalfMixin(object):
         try:
             re, im, _, _ = evalf(self, prec, {})
             if im:
+                if not re:
+                    re = fzero
                 return make_mpc((re, im))
             else:
                 return make_mpf(re)

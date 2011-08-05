@@ -14,7 +14,7 @@ See:
 """
 
 from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
-        sin, cos, sign, Plot, msolve, lambdify, Integral, S
+        sin, cos, sign, Plot, lambdify, Integral, S
 
 #seterr(True)
 

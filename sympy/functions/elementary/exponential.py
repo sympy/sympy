@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
 
-from sympy.ntheory import multiplicity
+from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -325,22 +325,20 @@ class log(Function):
                 return S.NaN
             elif arg.is_negative:
                 return S.Pi * S.ImaginaryUnit + cls(-arg)
+            elif arg.is_Rational:
+                if arg.q != 1:
+                    return cls(arg.p) - cls(arg.q)
+                # remove perfect powers automatically
+                p = perfect_power(int(arg))
+                if p is not False:
+                    return p[1]*cls(p[0])
         elif arg is S.ComplexInfinity:
             return S.ComplexInfinity
         elif arg is S.Exp1:
             return S.One
-        #this doesn't work due to caching: :(
-        #elif arg.func is exp and arg.args[0].is_real:
-        #using this one instead:
         elif arg.func is exp and arg.args[0].is_real:
             return arg.args[0]
-        #this shouldn't happen automatically (see the issue 252):
-        #elif arg.is_Pow:
-        #    if arg.exp.is_Number or arg.exp.is_NumberSymbol or \
-        #        arg.exp.is_number:
-        #        return arg.exp * self(arg.base)
-        #elif arg.is_Mul and arg.is_real:
-        #    return Add(*[self(a) for a in arg])
+        #don't autoexpand Pow or Mul (see the issue 252):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
 
@@ -398,6 +396,7 @@ class log(Function):
                     e = arg.exp
                 return e * self.func(b)._eval_expand_log(deep=deep,\
                 **hints)
+
         return self.func(arg)
 
     def as_real_imag(self, deep=True, **hints):
@@ -443,12 +442,6 @@ class log(Function):
             return self.args[0].expand() is S.One
         elif self.args[0].is_negative:
             return False
-
-    def as_numer_denom(self):
-        n, d = self.args[0].as_numer_denom()
-        if d is S.One:
-            return self.func(n), d
-        return (self.func(n) - self.func(d)).as_numer_denom()
 
     def _eval_nseries(self, x, n, logx):
         # NOTE Please see the comment at the beginning of this file, labelled

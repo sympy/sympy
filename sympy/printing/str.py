@@ -11,6 +11,8 @@ from sympy.mpmath.libmp import prec_to_dps
 
 from sympy.polys.polyerrors import PolynomialError
 
+from sympy.core.compatibility import cmp_to_key
+
 class StrPrinter(Printer):
     printmethod = "_sympystr"
     _default_settings = {
@@ -73,11 +75,11 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_Derivative(self, expr):
-        return 'D(%s)'%", ".join(map(self._print, expr.args))
+        return 'Derivative(%s)'%", ".join(map(self._print, expr.args))
 
     def _print_dict(self, expr):
         keys = expr.keys()
-        keys.sort( Basic.compare_pretty )
+        keys.sort( key=cmp_to_key(Basic.compare_pretty) )
 
         items = []
         for key in keys:
@@ -100,6 +102,18 @@ class StrPrinter(Printer):
 
     def _print_factorial(self, expr):
         return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
+
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        try:
+            printset = sorted(printset)
+        except:  pass
+        return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)"%self.stringify(expr.args, ", ")
@@ -126,6 +140,18 @@ class StrPrinter(Printer):
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
 
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        try:
+            printset = sorted(printset)
+        except:  pass
+        return '{' + ', '.join(self._print(el) for el in printset) + '}'
+
     def _print_Interval(self, i):
         if i.left_open:
             left = '('
@@ -149,7 +175,7 @@ class StrPrinter(Printer):
             return "Lambda((%s), %s" % (arg_string, expr)
 
     def _print_LatticeOp(self, expr):
-        args = sorted(expr.args, cmp=expr._compare_pretty)
+        args = sorted(expr.args, key=cmp_to_key(expr._compare_pretty))
         return expr.func.__name__ + "(%s)"%", ".join(self._print(arg) for arg in args)
 
     def _print_Limit(self, expr):
@@ -297,6 +323,10 @@ class StrPrinter(Printer):
 
         return format % (' '.join(terms), ', '.join(gens))
 
+    def _print_ProductSet(self, p):
+        return ' x '.join(self._print(set) for set in p.sets)
+
+
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
             return self._print(expr.as_poly().as_expr())
@@ -379,7 +409,7 @@ class StrPrinter(Printer):
 
     def __print_set(self, expr):
         items = list(expr)
-        items.sort( Basic.compare_pretty )
+        items.sort( key=cmp_to_key(Basic.compare_pretty) )
 
         args = ', '.join(self._print(item) for item in items)
         if args:
@@ -416,8 +446,14 @@ class StrPrinter(Printer):
         else:
             return "(%s)"%self.stringify(expr, ", ")
 
+    def _print_Tuple(self, expr):
+        return self._print_tuple(expr)
+
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)"%(expr.a, expr.b)
+
+    def _print_Union(self, expr):
+        return ' U '.join(self._print(set) for set in expr.args)
 
     def _print_Unit(self, expr):
         return expr.abbrev
@@ -433,7 +469,14 @@ class StrPrinter(Printer):
 
 
 def sstr(expr, **settings):
-    """return expr in str form"""
+    """Returns the expression as a string.
+    Example:
+
+    >>> from sympy import symbols, Eq, sstr
+    >>> a, b = symbols('a b')
+    >>> sstr(Eq(a + b, 0))
+    'a + b == 0'
+    """
 
     p = StrPrinter(settings)
     s = p.doprint(expr)

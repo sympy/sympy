@@ -62,6 +62,8 @@ When is this module NOT the best approach?
        need the binaries for another project.
 
 """
+from __future__ import with_statement
+
 import sys
 import os
 import shutil
@@ -163,24 +165,23 @@ def %(name)s():
         return
 
     def _generate_code(self, routine, helpers):
-        f = file('%s.py' % self.module_name, 'w')
-        printed = ", ".join([str(res.expr) for res in routine.result_variables])
-        # convert OutputArguments to return value like f2py
-        inargs = filter(lambda x: not isinstance(x, OutputArgument), routine.arguments)
-        retvals = []
-        for val in routine.result_variables:
-            if isinstance(val, Result):
-                retvals.append('nameless')
-            else:
-                retvals.append(val.result_var)
+        with open('%s.py' % self.module_name, 'w') as f:
+            printed = ", ".join([str(res.expr) for res in routine.result_variables])
+            # convert OutputArguments to return value like f2py
+            inargs = filter(lambda x: not isinstance(x, OutputArgument), routine.arguments)
+            retvals = []
+            for val in routine.result_variables:
+                if isinstance(val, Result):
+                    retvals.append('nameless')
+                else:
+                    retvals.append(val.result_var)
 
-        print >> f, DummyWrapper.template % {
-                'name': routine.name,
-                'expr': printed,
-                'args': ", ".join([str(arg.name) for arg in inargs]),
-                'retvals': ", ".join([str(val) for val in retvals])
-                }
-        f.close()
+            print >> f, DummyWrapper.template % {
+                    'name': routine.name,
+                    'expr': printed,
+                    'args': ", ".join([str(arg.name) for arg in inargs]),
+                    'retvals': ", ".join([str(val) for val in retvals])
+                    }
 
     def _process_files(self, routine):
         return
@@ -213,16 +214,14 @@ setup(
         codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
 
         # pyx
-        f = file(pyxfilename, 'w')
-        self.dump_pyx([routine], f, self.filename,
+        with open(pyxfilename, 'w') as f:
+            self.dump_pyx([routine], f, self.filename,
                 self.include_header, self.include_empty)
-        f.close()
 
         # setup.py
         ext_args = [repr(self.module_name), repr([pyxfilename, codefilename])]
-        f = file('setup.py', 'w')
-        print >> f, CythonCodeWrapper.setup_template % {'args': ", ".join(ext_args)}
-        f.close()
+        with open('setup.py', 'w') as f:
+            print >> f, CythonCodeWrapper.setup_template % {'args': ", ".join(ext_args)}
 
     @classmethod
     def _get_wrapped_function(cls, mod):

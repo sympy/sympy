@@ -1,14 +1,10 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
-        Matrix, Lambda, exp, Integral, oo)
+        Matrix, Lambda, exp, Integral, oo, I)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
 import math, sympy
-
-# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
-mpmath.mp.dps = 50
-sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
 
 x,y,z = symbols('x,y,z')
 
@@ -71,44 +67,78 @@ def test_bad_args():
     except TypeError:
         pass
 
+def test_atoms():
+    # Non-Symbol atoms should not be pulled out from the expression namespace
+    f = lambdify(x, pi + x, {"pi": 3.14})
+    assert f(0) == 3.14
+    f = lambdify(x, I + x, {"I": 1j})
+    assert f(1) == 1 + 1j
+
 #================== Test different modules ================
+
+# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
+
 def test_sympy_lambda():
-    f = lambdify(x, sin(x), "sympy")
-    assert f(x) is sin(x)
-    prec = 1e-15
-    assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        # arctan is in numpy module and should not be available
-        f = lambdify(x, arctan(x), "sympy")
-        assert False
-    except NameError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "sympy")
+        assert f(x) == sin(x)
+        prec = 1e-15
+        assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
+        try:
+            # arctan is in numpy module and should not be available
+            f = lambdify(x, arctan(x), "sympy")
+            assert False
+        except NameError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 def test_math_lambda():
-    f = lambdify(x, sin(x), "math")
-    prec = 1e-15
-    assert -prec < f(0.2) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        f(x) # if this succeeds, it can't be a python math function
-        assert False
-    except ValueError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "math")
+        prec = 1e-15
+        assert -prec < f(0.2) - sin02 < prec
+        try:
+            f(x) # if this succeeds, it can't be a python math function
+            assert False
+        except ValueError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 def test_mpmath_lambda():
-    f = lambdify(x, sin(x), "mpmath")
-    prec = 1e-49 # mpmath precision is around 50 decimal places
-    assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        f(x) # if this succeeds, it can't be a mpmath function
-        assert False
-    except TypeError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "mpmath")
+        prec = 1e-49 # mpmath precision is around 50 decimal places
+        assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
+        try:
+            f(x) # if this succeeds, it can't be a mpmath function
+            assert False
+        except TypeError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 @XFAIL
 def test_number_precision():
-    f = lambdify(x, sin02, "mpmath")
-    prec = 1e-49 # mpmath precision is around 50 decimal places
-    assert -prec < f(0) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
+    try:
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin02, "mpmath")
+        prec = 1e-49 # mpmath precision is around 50 decimal places
+        assert -prec < f(0) - sin02 < prec
+    finally:
+        mpmath.mp.dps = dps
 
 #================== Test Translations =====================
 # We can only check if all translated functions are valid. It has to be checked
@@ -144,6 +174,8 @@ def test_sqrt():
     assert abs(f(2) - 1.414) < 0.001
     assert f(6.25) == 2.5
     try:
+    #FIXME-py3k: In Python 3, sqrt(-1) is a ValueError but (-1)**(1/2) isn't
+    #FIXME-py3k: (previously both were). Change the test, or check Py version?
         f(-1)
         assert False
     except ValueError: pass

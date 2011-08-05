@@ -3,9 +3,17 @@
 *.sw[op]
 tags
 
+MANIFEST
+
 my/
 dist/
 build/
+
+tox.ini
+.tox/
+
+.coverage
+covhtml/
 
 doc/_build/
 doc/sphinx/

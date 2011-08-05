@@ -4,7 +4,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
-from sympy.utilities.iterables import iff
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -184,7 +183,7 @@ class sign(Function):
                     is_neg = not is_neg
             if c is S.One and len(unk) == len(args):
                 return None
-            return iff(is_neg, S.NegativeOne, S.One) * cls(arg._new_rawargs(*unk))
+            return (S.NegativeOne if is_neg else S.One) * cls(arg._new_rawargs(*unk))
 
     is_bounded = True
 

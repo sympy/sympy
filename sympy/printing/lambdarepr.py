@@ -23,18 +23,18 @@ class LambdaPrinter(StrPrinter):
         for arg in expr.args:
             e = arg.expr
             c = arg.cond
-            result.append('iff(')
+            result.append('((')
+            result.append(self._print(e))
+            result.append(') if (')
             if isinstance(c, Interval):
                 result.append(self._print(c.contains(_find_first_symbol(e))))
             else:
                 result.append(self._print(c))
-            result.append(',')
-            result.append(self._print(e))
-            result.append(',')
+            result.append(') else (')
             i += 1
         result = result[:-1]
-        result.append(',0')
-        result.append(i*')')
+        result.append(') else None)')
+        result.append(')'*(2*i - 2))
         return ''.join(result)
 
     def _print_And(self, expr):

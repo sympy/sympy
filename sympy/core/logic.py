@@ -6,6 +6,7 @@ NOTE
 at present this is mainly needed for facts.py , feel free however to improve
 this stuff for general purpose.
 """
+from sympy.core.compatibility import iterable, cmp
 
 def fuzzy_bool(x):
     """Return True, False or None according to x.
@@ -22,7 +23,7 @@ def fuzzy_and(*args):
 
     If `a` is an iterable it must have more than one element."""
 
-    if (len(args) == 1 and hasattr(args[0], '__iter__') or
+    if (len(args) == 1 and iterable(args[0]) or
         len(args) > 2):
         if len(args) == 1:
             args = args[0]
@@ -106,6 +107,11 @@ class Logic(object):
         else:
             return a.args != b.args
 
+    def __lt__(cls, other):
+        if cls.__cmp__(other) == -1:
+            return True
+        return False
+
 
     def __cmp__(a, b):
         if type(a) is not type(b):
@@ -114,16 +120,10 @@ class Logic(object):
         else:
             return cmp(a.args, b.args)
 
-
-
-
-    # XXX later, we may want to change how expressions are printed
     def __str__(self):
         return '%s(%s)' % (self.op, ', '.join(str(a) for a in self.args))
 
-    # XXX this is not good ...
     __repr__ = __str__
-
 
     @staticmethod
     def fromstring(text):
@@ -222,7 +222,7 @@ class AndOr_Base(Logic):
         # canonicalize arguments
         # XXX do we always need this?
         # NB: this is needed to reduce number of &-nodes in beta-network
-        args = sorted(args)
+        args = sorted(args, key=hash)
 
         # now let's kill duplicate arguments, e.g. &(a,a,b) -> &(a,b)
         prev = None

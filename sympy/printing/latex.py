@@ -11,6 +11,8 @@ from sympy import Interval
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
+from sympy.core.compatibility import cmp_to_key
+
 import re, warnings
 
 class LatexPrinter(Printer):
@@ -170,7 +172,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(tail)
+        numer, denom = fraction(tail, exact=True)
         separator = self._settings['mul_symbol_latex']
 
         def convert(expr):
@@ -490,6 +492,24 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{\Gamma}%s" % tex
 
+    def _print_uppergamma(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{\Gamma}%s" % tex
+
+    def _print_lowergamma(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"\operatorname{\gamma}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{\gamma}%s" % tex
+
     def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
         if self._needs_brackets(x):
@@ -522,6 +542,80 @@ class LatexPrinter(Printer):
             (self._print(expr[0]), self._print(expr[1]))
 
         return self._do_exponent(tex, exp)
+
+    def _hprint_BesselBase(self, expr, exp, sym):
+        tex = r"%s" % (sym)
+
+        need_exp = False
+        if exp is not None:
+            if tex.find('^') == -1:
+                tex = r"%s^{%s}" % (tex, self._print(exp))
+            else:
+                need_exp = True
+
+        tex = r"%s_{%s}\left(%s\right)" % (tex, self._print(expr.order),
+                                           self._print(expr.argument))
+
+        if need_exp:
+            tex = self._do_exponent(tex, exp)
+        return tex
+
+    def _hprint_vec(self, vec):
+        if len(vec) == 0:
+            return ""
+        s = ""
+        for i in vec[:-1]:
+            s += "%s, " % self._print(i)
+        s += self._print(vec[-1])
+        return s
+
+    def _print_besselj(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'J')
+
+    def _print_besseli(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'I')
+
+    def _print_besselk(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'K')
+
+    def _print_bessely(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'Y')
+
+    def _print_yn(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'y')
+
+    def _print_jn(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'j')
+
+    def _print_hankel1(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'H^{(1)}')
+
+    def _print_hankel2(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
+
+    def _print_hyper(self, expr, exp=None):
+        tex = r"{{}_{%s}F_{%s}\left.\left(\begin{matrix} %s \\ %s \end{matrix}" \
+              r"\right| {%s} \right)}" % \
+             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+              self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
+              self._print(expr.argument))
+
+        if exp is not None:
+            tex = r"{%s}^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_meijerg(self, expr, exp=None):
+        tex = r"{G_{%s, %s}^{%s, %s}\left.\left(\begin{matrix} %s & %s \\" \
+              r"%s & %s \end{matrix} \right| {%s} \right)}" % \
+             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+              self._print(len(expr.bm)), self._print(len(expr.an)),
+              self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
+              self._hprint_vec(expr.bm), self._hprint_vec(expr.bother),
+              self._print(expr.argument))
+
+        if exp is not None:
+            tex = r"{%s}^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_Rational(self, expr):
         if expr.q != 1:
@@ -649,7 +743,7 @@ class LatexPrinter(Printer):
         items = []
 
         keys = expr.keys()
-        keys.sort(Basic.compare_pretty)
+        keys.sort(key=cmp_to_key(Basic.compare_pretty))
         for key in keys:
             val = expr[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
@@ -663,7 +757,20 @@ class LatexPrinter(Printer):
             tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
             self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
-
+    def _print_ProductSet(self, p):
+        return r" \cross ".join(self._print(set) for set in p.sets)
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        try:
+            printset.sort()
+        except:
+            pass
+        return r"\left\{" + r", ".join(self._print(el) for el in printset) + r"\right\}"
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)
@@ -683,25 +790,7 @@ class LatexPrinter(Printer):
                    (left, self._print(i.start), self._print(i.end), right)
 
     def _print_Union(self, u):
-        other_sets, singletons = [], []
-        for set in u.args:
-            if isinstance(set, Interval) and set.measure == 0:
-                singletons.append(set.start)
-            else:
-                other_sets.append(set)
-
-        S2 = r"%s" % \
-             r" \cup ".join([ self._print_Interval(i) for i in other_sets ])
-
-        if len(singletons) > 0:
-            S1 = r"\left\{%s\right\}" % \
-                 r", ".join([ self._print(i) for i in singletons ])
-
-            S = r"%s \cup %s" % (S1, S2)
-        else:
-            S = S2
-
-        return S
+        return r" \cup ".join([self._print(i) for i in u.args])
 
     def _print_EmptySet(self, e):
         return r"\emptyset"

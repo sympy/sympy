@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Plotting Examples
 
@@ -12,6 +13,7 @@ Suggested Usage:    python -i plotting.py
 from sympy import symbols
 from sympy import Plot
 from sympy import sin, cos, pi, sqrt, exp
+from sympy.core.compatibility import callable
 
 from time import sleep, clock
 

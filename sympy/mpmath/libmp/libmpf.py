@@ -8,14 +8,16 @@ import math
 
 from bisect import bisect
 
+import sys
+
 # Importing random is slow
 #from random import getrandbits
 getrandbits = None
 
-from backend import (MPZ, MPZ_TYPE, MPZ_ZERO, MPZ_ONE, MPZ_TWO, MPZ_FIVE,
-    BACKEND, STRICT, gmpy, sage, sage_utils)
+from .backend import (MPZ, MPZ_TYPE, MPZ_ZERO, MPZ_ONE, MPZ_TWO, MPZ_FIVE,
+    BACKEND, STRICT, HASH_MODULUS, HASH_BITS, gmpy, sage, sage_utils)
 
-from libintmath import (giant_steps,
+from .libintmath import (giant_steps,
     trailtable, bctable, lshift, rshift, bitcount, trailing,
     sqrt_fixed, numeral, isqrt, isqrt_fast, sqrtrem,
     bin_to_radix)
@@ -40,6 +42,11 @@ def from_pickable(x):
 
 class ComplexResult(ValueError):
     pass
+
+try:
+    intern
+except NameError:
+    intern = lambda x: x
 
 # All supported rounding modes
 round_nearest = intern('n')
@@ -239,12 +246,17 @@ def _normalize1(sign, man, exp, bc, prec, rnd):
         bc = 1
     return sign, man, exp, bc
 
+try:
+    _exp_types = (int, long)
+except NameError:
+    _exp_types = (int,)
+
 def strict_normalize(sign, man, exp, bc, prec, rnd):
     """Additional checks on the components of an mpf. Enable tests by setting
        the environment variable MPMATH_STRICT to Y."""
     assert type(man) == MPZ_TYPE
-    assert type(bc) in (int, long)
-    assert type(exp) in (int, long)
+    assert type(bc) in _exp_types
+    assert type(exp) in _exp_types
     assert bc == bitcount(man)
     return _normalize(sign, man, exp, bc, prec, rnd)
 
@@ -252,8 +264,8 @@ def strict_normalize1(sign, man, exp, bc, prec, rnd):
     """Additional checks on the components of an mpf. Enable tests by setting
        the environment variable MPMATH_STRICT to Y."""
     assert type(man) == MPZ_TYPE
-    assert type(bc) in (int, long)
-    assert type(exp) in (int, long)
+    assert type(bc) in _exp_types
+    assert type(exp) in _exp_types
     assert bc == bitcount(man)
     assert (not man) or (man & 1)
     return _normalize1(sign, man, exp, bc, prec, rnd)
@@ -505,14 +517,33 @@ def mpf_eq(s, t):
     return s == t
 
 def mpf_hash(s):
-    try:
-        # Try to be compatible with hash values for floats and ints
-        return hash(to_float(s, strict=1))
-    except OverflowError:
-        # We must unfortunately sacrifice compatibility with ints here. We
-        # could do hash(man << exp) when the exponent is positive, but
-        # this would cause unreasonable inefficiency for large numbers.
-        return hash(s)
+    # Duplicate the new hash algorithm introduces in Python 3.2.
+    if sys.version >= "3.2":
+        ssign, sman, sexp, sbc = s
+
+        # Handle special numbers
+        if not sman:
+            if s == fnan: return sys.hash_info.nan
+            if s == finf: return sys.hash_info.inf
+            if s == fninf: return -sys.hash_info.inf
+        h = sman % HASH_MODULUS
+        if sexp >= 0:
+            sexp = sexp % HASH_BITS
+        else:
+            sexp = HASH_BITS - 1 - ((-1 - sexp) % HASH_BITS)
+        h = (h << sexp) % HASH_MODULUS
+        if ssign: h = -h
+        if h == -1: h == -2
+        return int(h)
+    else:
+        try:
+            # Try to be compatible with hash values for floats and ints
+            return hash(to_float(s, strict=1))
+        except OverflowError:
+            # We must unfortunately sacrifice compatibility with ints here.
+            # We could do hash(man << exp) when the exponent is positive, but
+            # this would cause unreasonable inefficiency for large numbers.
+            return hash(s)
 
 def mpf_cmp(s, t):
     """Compare the raw mpfs s and t. Return -1 if s < t, 0 if s == t,
@@ -1118,7 +1149,7 @@ def to_digits_exp(s, dps):
     # TODO: account for precision when doing this
     exp_from_1 = exp + bc
     if abs(exp_from_1) > 3500:
-        from libelefun import mpf_ln2, mpf_ln10
+        from .libelefun import mpf_ln2, mpf_ln10
         # Set b = int(exp * log(2)/log(10))
         # If exp is huge, we must use high-precision arithmetic to
         # find the nearest power of ten

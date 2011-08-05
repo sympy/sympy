@@ -96,7 +96,7 @@ defined the symbols x, y, z and some other things:
 
     $ :input:`cd sympy`
     $ :input:`./bin/isympy`
-IPython console for SymPy 0.6.7-git (Python 2.7.1) (ground types: gmpy)
+IPython console for SymPy 0.7.0-git (Python 2.7.1) (ground types: gmpy)
 
 These commands were executed:
 >>> from __future__ import division
@@ -607,14 +607,14 @@ Differential Equations
 In ``isympy``::
 
     >>> f(x).diff(x, x) + f(x)
-              2
-             d
-    f(x) + -----(f(x))
-           dx dx
+            2
+           d
+    f(x) + ---(f(x))
+             2
+           dx
 
     >>> dsolve(f(x).diff(x, x) + f(x), f(x))
     f(x) = C1*cos(x) + C2*sin(x)
-
 
 .. index:: equations; algebraic, solve
 

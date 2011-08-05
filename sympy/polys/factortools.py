@@ -73,7 +73,7 @@ from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
 from sympy.ntheory import nextprime, isprime, factorint
-from sympy.utilities import any, all, subsets, cythonized
+from sympy.utilities import subsets, cythonized
 
 from math import ceil, log
 from random import randint

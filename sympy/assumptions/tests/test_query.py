@@ -982,6 +982,8 @@ def test_key_extensibility():
     assert ask(Q.my_key(x)) == True
     assert ask(Q.my_key(x+1)) == None
     remove_handler('my_key', MyAskHandler)
+    del Q.my_key
+    raises(AttributeError, "ask(Q.my_key(x))")
 
 def test_type_extensibility():
     """test that new types can be added to the ask system at runtime

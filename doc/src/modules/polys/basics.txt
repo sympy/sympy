@@ -194,10 +194,10 @@ polynomials and to solve some systems of polynomial equations::
     >>> from sympy import roots, solve_poly_system
 
     >>> solve(x**3 + 2*x + 3, x)
-           ____              ____
-     1   \/ 11 *I      1   \/ 11 *I
-    [- - --------, -1, - + --------]
-     2      2          2      2
+               ____          ____
+         1   \/ 11 *I  1   \/ 11 *I
+    [-1, - - --------, - + --------]
+         2      2      2      2
 
     >>> p = Symbol('p')
     >>> q = Symbol('q')

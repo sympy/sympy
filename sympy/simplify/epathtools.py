@@ -19,6 +19,8 @@ class EPath(object):
         selector  ::= range | query range?
         path      ::= "/" selector ("/" selector)*
 
+    See the docstring of the epath() function.
+
     """
 
     __slots__ = ["_path", "_epath"]
@@ -282,6 +284,11 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
 
     If ``func`` is ``None``, :func:`epath` retrieves elements selected by
     the ``path``. Otherwise it applies ``func`` to each matching element.
+
+    Note that it is more efficient to create an EPath object and use the select
+    and apply methods of that object, since this will compile the path string
+    only once.  This function should only be used as a convenient shortcut for
+    interactive use.
 
     **Syntax**
 

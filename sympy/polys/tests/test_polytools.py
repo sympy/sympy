@@ -1,7 +1,7 @@
 """Tests for user-friendly public interface to polynomial functions. """
 
 from sympy.polys.polytools import (
-    Poly, poly,
+    Poly, PurePoly, poly,
     parallel_poly_from_expr,
     degree, degree_list,
     LC, LM, LT,
@@ -51,9 +51,9 @@ from sympy.polys.polyclasses import DMP, DMF
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
-    S, Integer, Rational, Mul, symbols, sqrt, exp, sin,
-    expand, oo, I, pi, re, im, RootOf, all, Eq, Tuple
-)
+    S, Integer, Rational, Float, Mul, symbols, sqrt, exp,
+    sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
+
 from sympy.utilities.pytest import raises, XFAIL
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
@@ -98,6 +98,9 @@ def test_Poly_from_list():
 
     assert Poly.from_list([2,1], gens=x, domain=ZZ).rep == DMP([ZZ(2),ZZ(1)], ZZ)
     assert Poly.from_list([2,1], gens=x, domain=QQ).rep == DMP([QQ(2),QQ(1)], QQ)
+
+    assert Poly.from_list([0, 1.0], gens=x).rep == DMP([RR(1.0)], RR)
+    assert Poly.from_list([1.0, 0], gens=x).rep == DMP([RR(1.0), RR(0.0)], RR)
 
     raises(MultivariatePolynomialError, "Poly.from_list([[]], gens=(x,y))")
 
@@ -373,6 +376,22 @@ def test_Poly__unify():
 
     raises(CoercionFailed, "Poly(Poly(x**2 + x**2*z, y, field=True), domain='ZZ(x)')")
 
+def test_Poly_free_symbols():
+    assert Poly(x**2 + 1).free_symbols == set([x])
+    assert Poly(x**2 + y*z).free_symbols == set([x, y, z])
+    assert Poly(x**2 + y*z, x).free_symbols == set([x, y, z])
+    assert Poly(x**2 + sin(y*z)).free_symbols == set([x, y, z])
+    assert Poly(x**2 + sin(y*z), x).free_symbols == set([x, y, z])
+    assert Poly(x**2 + sin(y*z), x, domain=EX).free_symbols == set([x, y, z])
+
+def test_PurePoly_free_symbols():
+    assert PurePoly(x**2 + 1).free_symbols == set([])
+    assert PurePoly(x**2 + y*z).free_symbols == set([])
+    assert PurePoly(x**2 + y*z, x).free_symbols == set([y, z])
+    assert PurePoly(x**2 + sin(y*z)).free_symbols == set([])
+    assert PurePoly(x**2 + sin(y*z), x).free_symbols == set([y, z])
+    assert PurePoly(x**2 + sin(y*z), x, domain=EX).free_symbols == set([y, z])
+
 def test_Poly__eq__():
     assert (Poly(x, x) == Poly(x, x)) == True
     assert (Poly(x, x, domain=QQ) == Poly(x, x)) == True
@@ -382,6 +401,32 @@ def test_Poly__eq__():
     assert (Poly(x, x) == Poly(x, x, domain=ZZ[a])) == True
 
     assert (Poly(x*y, x, y) == Poly(x, x)) == False
+
+    assert (Poly(x, x, y) == Poly(x, x)) == False
+    assert (Poly(x, x) == Poly(x, x, y)) == False
+
+    assert (Poly(x**2 + 1, x) == Poly(y**2 + 1, y)) == False
+    assert (Poly(y**2 + 1, y) == Poly(x**2 + 1, x)) == False
+
+def test_PurePoly__eq__():
+    assert (PurePoly(x, x) == PurePoly(x, x)) == True
+    assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) == True
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=QQ)) == True
+
+    assert (PurePoly(x, x, domain=ZZ[a]) == PurePoly(x, x)) == True
+    assert (PurePoly(x, x) == PurePoly(x, x, domain=ZZ[a])) == True
+
+    assert (PurePoly(x*y, x, y) == PurePoly(x, x)) == False
+
+    assert (PurePoly(x, x, y) == PurePoly(x, x)) == False
+    assert (PurePoly(x, x) == PurePoly(x, x, y)) == False
+
+    assert (PurePoly(x**2 + 1, x) == PurePoly(y**2 + 1, y)) == True
+    assert (PurePoly(y**2 + 1, y) == PurePoly(x**2 + 1, x)) == True
+
+def test_PurePoly_Poly():
+    assert isinstance(PurePoly(Poly(x**2 + 1)), PurePoly) == True
+    assert isinstance(Poly(PurePoly(x**2 + 1)), Poly) == True
 
 def test_Poly_get_domain():
     assert Poly(2*x).get_domain() == ZZ
@@ -947,7 +992,10 @@ def test_Poly_degree_list():
     raises(ComputationFailed, "degree_list(1)")
 
 def test_Poly_total_degree():
-    assert Poly(x**2*y+x**3*z**2+1).total_degree() == 6
+    assert Poly(x**2*y+x**3*z**2+1).total_degree() == 5
+    assert Poly(x**2 + z**3).total_degree() == 3
+    assert Poly(x*y*z + z**4).total_degree() == 4
+    assert Poly(x**3 + x + 1).total_degree() == 3
 
 def test_Poly_LC():
     assert Poly(0, x).LC() == 0
@@ -1895,6 +1943,9 @@ def test_factor():
     assert factor([x, Eq(x**2 - y**2, Tuple(x**2 - z**2, 1/x + 1/y))]) == \
         [x, Eq((x - y)*(x + y), Tuple((x - z)*(x + z), (x + y)/x/y))]
 
+    assert not isinstance(Poly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
+    assert isinstance(PurePoly(x**3 + x + 1).factor_list()[1][0][0], PurePoly) == True
+
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
     g = ((x**2 + 2*x + 1)**3000*y**2 + (x**2 + 2*x + 1)**3000*2*y + (x**2 + 2*x + 1)**3000)
@@ -2009,20 +2060,18 @@ def test_intervals():
 
     assert intervals(f) == []
 
-    roots = sorted(nroots(f), key=lambda r: (re(r), -im(r)))
-
     real_part, complex_part = intervals(f, all=True, sqf=True)
 
     assert real_part == []
-    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, roots) ])
+    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, nroots(f)) ])
 
-    assert complex_part == [(-S(40)/7, 40*I/7), (-S(40)/7 - 40*I/7, 0),
-                            (0, S(40)/7 + 40*I/7), (-40*I/7, S(40)/7)]
+    assert complex_part == [(-S(40)/7 - 40*I/7, 0), (-S(40)/7, 40*I/7),
+                            (-40*I/7, S(40)/7), (0, S(40)/7 + 40*I/7)]
 
     real_part, complex_part = intervals(f, all=True, sqf=True, eps=S(1)/10)
 
     assert real_part == []
-    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, roots) ])
+    assert all([ re(a) < re(r) < re(b) and im(a) < im(r) < im(b) for (a, b), r in zip(complex_part, nroots(f)) ])
 
     raises(ValueError, "intervals(x**2 - 2, eps=10**-100000)")
     raises(ValueError, "Poly(x**2 - 2).intervals(eps=10**-100000)")
@@ -2102,6 +2151,16 @@ def test_count_roots():
 
     raises(PolynomialError, "count_roots(1)")
 
+def test_Poly_root():
+    f = Poly(2*x**3 - 7*x**2 + 4*x + 4)
+
+    assert f.root(0) == -S(1)/2
+    assert f.root(1) == 2
+    assert f.root(2) == 2
+    raises(IndexError, "f.root(3)")
+
+    assert Poly(x**5 + x + 1).root(0) == RootOf(x**3 - x**2 + 1, 0)
+
 def test_real_roots():
     assert real_roots(x) == [0]
     assert real_roots(x, multiple=False) == [(0, 1)]
@@ -2114,6 +2173,19 @@ def test_real_roots():
 
     assert real_roots(x**3*(x**3 + x + 3)) == [RootOf(x**3 + x + 3, 0), 0, 0, 0]
     assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(RootOf(x**3 + x + 3, 0), 1), (0, 3)]
+
+    f = 2*x**3 - 7*x**2 + 4*x + 4
+    g = x**3 + x + 1
+
+    assert Poly(f).real_roots() == [-S(1)/2, 2, 2]
+    assert Poly(g).real_roots() == [RootOf(g, 0)]
+
+def test_all_roots():
+    f = 2*x**3 - 7*x**2 + 4*x + 4
+    g = x**3 + x + 1
+
+    assert Poly(f).all_roots() == [-S(1)/2, 2, 2]
+    assert Poly(g).all_roots() == [RootOf(g, 0), RootOf(g, 1), RootOf(g, 2)]
 
 def test_nroots():
     assert Poly(0, x).nroots() == []
@@ -2139,8 +2211,35 @@ def test_nroots():
 
     assert Poly(0.2*x + 0.1).nroots() == [-0.5]
 
-    raises(DomainError, "Poly(x+y, x).nroots()")
-    raises(MultivariatePolynomialError, "Poly(x+y).nroots()")
+    roots = nroots(x**5 + x + 1, n=5)
+    eps = Float("1e-5")
+
+    assert re(roots[0]).epsilon_eq(-0.75487, eps) is True
+    assert im(roots[0]) ==  0.0
+    assert re(roots[1]) == -0.5
+    assert im(roots[1]).epsilon_eq(-0.86602, eps) is True
+    assert re(roots[2]) == -0.5
+    assert im(roots[2]).epsilon_eq(+0.86602, eps) is True
+    assert re(roots[3]).epsilon_eq(+0.87743, eps) is True
+    assert im(roots[3]).epsilon_eq(-0.74486, eps) is True
+    assert re(roots[4]).epsilon_eq(+0.87743, eps) is True
+    assert im(roots[4]).epsilon_eq(+0.74486, eps) is True
+
+    eps = Float("1e-6")
+
+    assert re(roots[0]).epsilon_eq(-0.75487, eps) is False
+    assert im(roots[0]) ==  0.0
+    assert re(roots[1]) == -0.5
+    assert im(roots[1]).epsilon_eq(-0.86602, eps) is False
+    assert re(roots[2]) == -0.5
+    assert im(roots[2]).epsilon_eq(+0.86602, eps) is False
+    assert re(roots[3]).epsilon_eq(+0.87743, eps) is False
+    assert im(roots[3]).epsilon_eq(-0.74486, eps) is False
+    assert re(roots[4]).epsilon_eq(+0.87743, eps) is False
+    assert im(roots[4]).epsilon_eq(+0.74486, eps) is False
+
+    raises(DomainError, "Poly(x + y, x).nroots()")
+    raises(MultivariatePolynomialError, "Poly(x + y).nroots()")
 
     assert nroots(x**2 - 1) == [-1.0, 1.0]
 

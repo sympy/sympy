@@ -1,7 +1,11 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic
 from sympy.utilities.iterables import (postorder_traversal, preorder_traversal,
     flatten, group, take, subsets, variations, cartes, numbered_symbols,
-    dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right)
+    dict_merge, prefixes, postfixes, sift, topological_sort, rotate_left,
+    rotate_right, multiset_partitions, partitions, binary_partitions,
+    generate_bell, generate_involutions, generate_derangements,
+    unrestricted_necklace, generate_oriented_forest)
+
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -220,3 +224,93 @@ def test_rotate():
 
     assert rotate_left(A, 2) == [2, 3, 4, 0, 1]
     assert rotate_right(A, 1) == [4, 0, 1, 2, 3]
+
+def test_multiset_partitions():
+    A = [0, 1, 2, 3, 4]
+
+    assert list(multiset_partitions(A, 5)) == [[[0], [1], [2], [3], [4]]]
+    assert len(list(multiset_partitions(A, 4))) == 10
+    assert len(list(multiset_partitions(A, 3))) == 25
+
+
+    assert list(multiset_partitions([1,1,1,2,2], 2)) == [[[1, 1, 1, 2], [2]],\
+    [[1, 1, 2], [1, 2]], [[1, 1], [1, 2, 2]], [[1], [1, 1, 2, 2]], [[1, 2],\
+    [1, 1, 2]], [[1, 1, 2, 2], [1]], [[1, 2, 2], [1, 1]]]
+
+    assert list(multiset_partitions([1,1,2,2], 2)) == [[[1, 1, 2], [2]], \
+    [[1, 2], [1, 2]], [[1], [1, 2, 2]], [[1, 1], [2, 2]], [[1, 2, 2], [1]]]
+
+    assert list(multiset_partitions([1,2,3,4], 2)) == [[[1, 2, 3], [4]], [[1, 3], \
+    [2, 4]], [[1], [2, 3, 4]], [[1, 2], [3, 4]], [[1, 2, 4], [3]], \
+    [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
+
+    assert list(multiset_partitions([1,2,2], 2)) == [[[1, 2], [2]],
+                                                     [[1], [2, 2]]]
+
+def test_partitions():
+    assert [p.copy() for p in partitions(6, k=2)] == [{2: 3}, \
+    {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
+
+    assert [p.copy() for p in partitions(6, k=3)] == [{3: 2}, \
+    {1: 1, 2: 1, 3: 1}, {1: 3, 3: 1}, {2: 3}, {1: 2, 2: 2}, \
+    {1: 4, 2: 1}, {1: 6}]
+
+    assert [p.copy() for p in partitions(6, k=2, m=2)] == []
+
+    assert [p.copy() for p in partitions(8, k=4, m=3)] == [{4: 2},\
+    {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}]
+
+def test_binary_partitions():
+    assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1], \
+    [4, 4, 2], [4, 4, 1, 1], [4, 2, 2, 2], [4, 2, 2, 1, 1], [4, 2, 1, 1, 1, 1], \
+    [4, 1, 1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [2, 2, 2, 2, 1, 1], \
+    [2, 2, 2, 1, 1, 1, 1], [2, 2, 1, 1, 1, 1, 1, 1], [2, 1, 1, 1, 1, 1, 1, 1, 1], \
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+
+    assert len([j[:] for j in binary_partitions(16)]) == 36
+
+def test_bell_perm():
+    assert [len(generate_bell(i)) for i in xrange(1, 7)] == [1, 2, 5, 15, 52, 203]
+    assert list(generate_bell(4)) == [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3),
+                                     (0, 3, 1, 2), (0, 3, 2, 1), (1, 0, 2, 3),
+                                     (1, 0, 3, 2), (2, 0, 1, 3), (2, 1, 0, 3),
+                                     (2, 3, 0, 1), (3, 0, 1, 2), (3, 0, 2, 1),
+                                     (3, 1, 0, 2), (3, 1, 2, 0), (3, 2, 1, 0)]
+
+def test_involutions():
+    assert [len(generate_involutions(n)) for n in range(1, 7)] == [1, 2, 4, 10, 26, 76]
+    assert generate_involutions(4) == [(0, 1, 2, 3), (0, 1, 3, 2),
+                                       (0, 2, 1, 3), (0, 3, 2, 1),
+                                       (1, 0, 2, 3), (2, 1, 0, 3),
+                                       (3, 0, 2, 1), (3, 1, 0, 2),
+                                       (3, 1, 2, 0), (3, 2, 1, 0)]
+
+def test_derangements():
+    assert len(list(generate_derangements([0, 1, 2, 3, 4, 5]))) == 265
+    assert list(generate_derangements([0, 1, 2, 3])) == [[1, 0, 3, 2], \
+    [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], [2, 3, 0, 1], [2, 3, 1, 0], \
+    [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
+    assert list(generate_derangements([0, 1, 2, 2])) == [[2, 2, 0, 1], \
+                                                        [2, 2, 1, 0]]
+
+def test_unrestricted_necklaces():
+    assert [i[:] for i in unrestricted_necklace(4, 5)] == [[0, 0, 0, 0], \
+    [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], [0, 0, 4, 0], [0, 1, 1, 1], \
+    [0, 1, 2, 1], [0, 1, 3, 1], [0, 1, 4, 1], [0, 2, 2, 2], [0, 2, 3, 2], \
+    [0, 2, 4, 2], [0, 3, 3, 3], [0, 3, 4, 3], [0, 4, 4, 4]]
+    assert [i[:] for i in unrestricted_necklace(6, 3)] == [[0, 0, 0, 0, 0, 0],\
+    [0, 0, 0, 1, 0, 0], [0, 0, 0, 2, 0, 0], [0, 0, 1, 0, 1, 0], \
+    [0, 0, 1, 1, 0, 1], [0, 0, 1, 2, 0, 1], [0, 0, 2, 0, 2, 0], \
+    [0, 0, 2, 1, 0, 2], [0, 0, 2, 2, 0, 2], [0, 1, 1, 1, 1, 1], \
+    [0, 1, 1, 2, 1, 1], [0, 1, 2, 1, 2, 1], [0, 1, 2, 2, 1, 2], \
+    [0, 2, 2, 2, 2, 2]]
+    assert len(list(unrestricted_necklace(20, 2))) == 111
+
+def test_generate_oriented_forest():
+    assert list(generate_oriented_forest(5)) == [[0, 1, 2, 3, 4], \
+    [0, 1, 2, 3, 3], [0, 1, 2, 3, 2], [0, 1, 2, 3, 1], [0, 1, 2, 3, 0], \
+    [0, 1, 2, 2, 2], [0, 1, 2, 2, 1], [0, 1, 2, 2, 0], [0, 1, 2, 1, 2], \
+    [0, 1, 2, 1, 1], [0, 1, 2, 1, 0], [0, 1, 2, 0, 1], [0, 1, 2, 0, 0], \
+    [0, 1, 1, 1, 1], [0, 1, 1, 1, 0], [0, 1, 1, 0, 1], [0, 1, 1, 0, 0], \
+    [0, 1, 0, 1, 0], [0, 1, 0, 0, 0], [0, 0, 0, 0, 0]]
+    assert len(list(generate_oriented_forest(10))) == 1842

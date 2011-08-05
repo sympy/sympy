@@ -1,7 +1,8 @@
 from sympy import sqrt
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit, IntQubit
-from sympy.physics.quantum.grover import *
+from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
+        OracleGate, grover_iteration, WGate)
 
 def return_one_on_two(qubits):
     return qubits == IntQubit(2, qubits.nqubits)

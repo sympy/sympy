@@ -4,15 +4,19 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops)
 
+from sympy.core.compatibility import iterable
 from sympy.core.numbers import igcd
+from sympy.core.function import expand_log
 
-from sympy.utilities import all, any, flatten
+from sympy.utilities import flatten
 from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, terms_gcd)
+
+from sympy.core.compatibility import reduce
 
 import sympy.mpmath as mpmath
 
@@ -109,59 +113,63 @@ def denom_expand(expr):
     a, b = fraction(expr)
     return a / b.expand()
 
-def separate(expr, deep=False):
-    """Rewrite or separate a power of product to a product of powers
-       but without any expanding, i.e., rewriting products to summations.
+def separate(expr, deep=False, force=False):
+    """A wrapper to expand(power_base=True) which separates a power
+       with a base that is a Mul into a product of powers, without performing
+       any other expansions, provided that assumptions about the power's base
+       and exponent allow.
+
+       deep=True (default is False) will do separations inside functions.
+
+       force=True (default is False) will cause the expansion to ignore
+       assumptions about the base and exponent. When False, the expansion will
+       only happen if the base is non-negative or the exponent is an integer.
 
        >>> from sympy.abc import x, y, z
        >>> from sympy import separate, sin, cos, exp
 
-       >>> separate((x*y)**2)
+       >>> (x*y)**2
        x**2*y**2
 
-       >>> separate((x*(y*z)**3)**2)
-       x**2*y**6*z**6
+       >>> (2*x)**y
+       (2*x)**y
+       >>> separate(_)
+       2**y*x**y
 
-       >>> separate((x*sin(x))**y + (x*cos(x))**y)
-       x**y*sin(x)**y + x**y*cos(x)**y
+       >>> separate((x*y)**z)
+       (x*y)**z
+       >>> separate((x*y)**z, force=True)
+       x**z*y**z
+       >>> separate(sin((x*y)**z))
+       sin((x*y)**z)
+       >>> separate(sin((x*y)**z), deep=True, force=True)
+       sin(x**z*y**z)
 
-       >>> separate((exp(x)*exp(y))**x)
-       exp(x**2)*exp(x*y)
+       >>> separate((2*sin(x))**y + (2*cos(x))**y)
+       2**y*sin(x)**y + 2**y*cos(x)**y
 
-       >>> separate((sin(x)*cos(x))**y)
-       sin(x)**y*cos(x)**y
+       >>> separate((2*exp(y))**x)
+       2**x*exp(x*y)
+
+       >>> separate((2*cos(x))**y)
+       2**y*cos(x)**y
 
        Notice that summations are left untouched. If this is not the
-       requested behavior, apply 'expand' to input expression before:
+       desired behavior, apply 'expand' to the expression:
 
        >>> separate(((x+y)*z)**2)
        z**2*(x + y)**2
+       >>> (((x+y)*z)**2).expand()
+       x**2*z**2 + 2*x*y*z**2 + y**2*z**2
 
-       >>> separate((x*y)**(1+z))
-       x**(z + 1)*y**(z + 1)
+       >>> separate((2*y)**(1+z))
+       2**(z + 1)*y**(z + 1)
+       >>> ((2*y)**(1+z)).expand()
+       2*2**z*y*y**z
 
     """
-    expr = sympify(expr)
-
-    if expr.is_Pow:
-        terms, expo = [], separate(expr.exp, deep)
-
-        if expr.base.is_Mul:
-            t = [separate(Pow(t,expo), deep) for t in expr.base.args]
-            return Mul(*t)
-        elif expr.base.func is C.exp:
-            if deep == True:
-                return C.exp(separate(expr.base[0], deep)*expo)
-            else:
-                return C.exp(expr.base[0]*expo)
-        else:
-            return Pow(separate(expr.base, deep), expo)
-    elif expr.is_Add or expr.is_Mul:
-        return type(expr)(*[separate(t, deep) for t in expr.args])
-    elif expr.is_Function and deep:
-        return expr.func(*[separate(t) for t in expr.args])
-    else:
-        return expr
+    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
+    power_base=True, basic=False, multinomial=False, log=False, force=force)
 
 def collect(expr, syms, evaluate=True, exact=False):
     """
@@ -269,21 +277,21 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> f = Function('f') (x)
 
         >>> collect(a*D(f,x) + b*D(f,x), D(f,x))
-        (a + b)*D(f(x), x)
+        (a + b)*Derivative(f(x), x)
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), f)
-        (a + b)*D(f(x), x, x)
+        (a + b)*Derivative(f(x), x, x)
 
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
-        a*D(f(x), x, x) + b*D(f(x), x, x)
+        a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)
 
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f,x)
-        (a + b)*f(x) + (a + b)*D(f(x), x)
+        (a + b)*f(x) + (a + b)*Derivative(f(x), x)
 
         Or you can even match both derivative order and exponent at time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
-        (a + b)*D(f(x), x, x)**2
+        (a + b)*Derivative(f(x), x, x)**2
 
 
     == Notes ==
@@ -382,8 +390,8 @@ def collect(expr, syms, evaluate=True, exact=False):
 
     def parse_expression(terms, pattern):
         """Parse terms searching for a pattern.
-        terms is a list of tuples as returned by parse_terms
-        pattern is an expression
+        terms is a list of tuples as returned by parse_terms;
+        pattern is an expression treated as a product of factors
         """
         pattern = Mul.make_args(pattern)
 
@@ -394,11 +402,19 @@ def collect(expr, syms, evaluate=True, exact=False):
         else:
             pattern = [parse_term(elem) for elem in pattern]
 
+            terms = terms[:] # need a copy
             elems, common_expo, has_deriv = [], None, False
 
             for elem, e_rat, e_sym, e_ord in pattern:
 
+                if elem.is_Number:
+                    # a constant is a match for everything
+                    continue
+
                 for j in range(len(terms)):
+                    if terms[j] is None:
+                        continue
+
                     term, t_rat, t_sym, t_ord = terms[j]
 
                     # keeping track of whether one of the terms had
@@ -406,10 +422,6 @@ def collect(expr, syms, evaluate=True, exact=False):
                     # the expression later
                     if t_ord is not None:
                         has_deriv= True
-
-                    if elem.is_Number:
-                        # a constant is a match for everything
-                        break
 
                     if (term.match(elem) is not None and \
                             (t_sym == e_sym or t_sym is not None and \
@@ -438,14 +450,15 @@ def collect(expr, syms, evaluate=True, exact=False):
                         # found common term so remove it from the expression
                         # and try to match next element in the pattern
                         elems.append(terms[j])
-                        del terms[j]
+                        terms[j] = None
 
                         break
 
                 else:
                     # pattern element not found
                     return None
-            return terms, elems, common_expo, has_deriv
+
+            return filter(None, terms), elems, common_expo, has_deriv
 
     if evaluate:
         if expr.is_Mul:
@@ -459,13 +472,12 @@ def collect(expr, syms, evaluate=True, exact=False):
 
     summa = [separate(i) for i in Add.make_args(sympify(expr))]
 
-    if isinstance(syms, (tuple, list)):
+    if hasattr(syms, '__iter__') or hasattr(syms, '__getitem__'):
         syms = [separate(s) for s in syms]
     else:
         syms = [separate(syms)]
 
     collected, disliked = {}, S.Zero
-
     for product in summa:
         terms = [parse_term(i) for i in Mul.make_args(product)]
 
@@ -491,7 +503,6 @@ def collect(expr, syms, evaluate=True, exact=False):
                             index **= elem[2]
                 else:
                     index = make_expression(elems)
-
                 terms = separate(make_expression(terms))
                 index = separate(index)
                 if index in collected.keys():
@@ -538,7 +549,7 @@ def rcollect(expr, *vars):
         else:
             return expr
 
-def separatevars(expr, symbols=[], dict=False):
+def separatevars(expr, symbols=[], dict=False, force=False):
     """
     Separates variables in an expression, if possible.  By
     default, it separates with respect to all symbols in an
@@ -553,12 +564,18 @@ def separatevars(expr, symbols=[], dict=False):
     other symbols or non-symbols will be returned keyed to the
     string 'coeff'.
 
+    If force=True, then power bases will only be separated if assumptions allow.
+
     Note: the order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
 
     Examples:
     >>> from sympy.abc import x, y, z, alpha
     >>> from sympy import separatevars, sin
+    >>> separatevars((x*y)**y)
+    (x*y)**y
+    >>> separatevars((x*y)**y, force=True)
+    x**y*y**y
     >>> separatevars(2*x**2*z*sin(y)+2*z*x**2)
     2*x**2*z*(sin(y) + 1)
 
@@ -587,20 +604,33 @@ def separatevars(expr, symbols=[], dict=False):
     """
 
     if dict:
-        return _separatevars_dict(_separatevars(expr), *symbols)
+        return _separatevars_dict(_separatevars(expr, force), *symbols)
     else:
-        return _separatevars(expr)
+        return _separatevars(expr, force)
 
-def _separatevars(expr):
+def _separatevars(expr, force):
     # get a Pow ready for expansion
     if expr.is_Pow:
-        expr = separatevars(expr.base)**expr.exp
+        expr = Pow(separatevars(expr.base, force=force), expr.exp)
 
     # First try other expansion methods
-    expr = expr.expand(mul=False, multinomial=False)
+    expr = expr.expand(mul=False, multinomial=False, force=force)
 
-    _expr = expr.expand(power_exp=False, deep=False)
+    _expr = expr.expand(power_exp=False, deep=False, force=force)
+
+    if not force:
+        # factor will expand bases so we mask them off now
+        pows = [p for p in _expr.atoms(Pow) if p.base.is_Mul]
+        dums = [Dummy(str(i)) for i in xrange(len(pows))]
+        _expr = _expr.subs(dict(zip(pows, dums)))
+
     _expr = factor(_expr, expand=False)
+
+    if not force:
+        # and retore them
+        _expr = _expr.subs(dict(zip(dums, pows)))
+
+
 
     if not _expr.is_Add:
         expr = _expr
@@ -639,29 +669,19 @@ def _separatevars(expr):
 def _separatevars_dict(expr, *symbols):
     if symbols:
         assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
-    ret = dict(((i,sympify(1)) for i in symbols))
-    ret['coeff'] = sympify(1)
-    if expr.is_Mul:
-        for i in expr.args:
-            expsym = i.atoms(Symbol)
-            intersection = set(symbols).intersection(expsym)
-            if len(intersection) > 1:
-                return None
-            if len(intersection) == 0:
-                # There are no symbols, so it is part of the coefficient
-                ret['coeff'] *= i
-            else:
-                ret[intersection.pop()] *= i
-    else:
-        expsym = expr.atoms(Symbol)
+
+    ret = dict(((i, S.One) for i in symbols + ('coeff',)))
+
+    for i in Mul.make_args(expr):
+        expsym = i.free_symbols
         intersection = set(symbols).intersection(expsym)
         if len(intersection) > 1:
             return None
         if len(intersection) == 0:
             # There are no symbols, so it is part of the coefficient
-            ret['coeff'] *= expr
+            ret['coeff'] *= i
         else:
-            ret[intersection.pop()] *= expr
+            ret[intersection.pop()] *= i
 
     return ret
 
@@ -726,29 +746,6 @@ def trigsimp(expr, deep=False, recursive=False):
     else:
         result = trigsimp_nonrecursive(expr, deep)
 
-    # do some final simplifications like sin/cos -> tan:
-    a,b,c = map(Wild, 'abc')
-    matchers = (
-            (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
-            (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
-            (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
-            (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
-            (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
-    )
-    for pattern, simp in matchers:
-        res = result.match(pattern)
-        if res is not None:
-            # if c is missing or zero, do nothing:
-            if (not c in res) or res[c] == 0:
-                continue
-            # if "a" contains the argument of sin/cos "b", skip the
-            # simplification:
-            if res[a].has(res[b]):
-                continue
-            # simplify and finish:
-            result = simp.subs(res)
-            break
-
     return result
 
 
@@ -783,10 +780,33 @@ def trigsimp_nonrecursive(expr, deep=False):
         if deep:
             return expr.func(trigsimp_nonrecursive(expr.args[0], deep))
     elif expr.is_Mul:
+        # do some simplifications like sin/cos -> tan:
+        a,b,c = map(Wild, 'abc')
+        matchers = (
+                (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
+                (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
+                (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
+                (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
+                (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
+        )
+        for pattern, simp in matchers:
+            res = expr.match(pattern)
+            if res is not None:
+                # if c is missing or zero, do nothing:
+                if (not c in res) or res[c] == 0:
+                    continue
+                # if "a" contains any of sin("b"), cos("b"), tan("b") or cot("b),
+                # skip the simplification:
+                if res[a].has(cos(res[b]), sin(res[b]), tan(res[b]), cot(res[b])):
+                    continue
+                # simplify and finish:
+                expr = simp.subs(res)
+                break
+        if not expr.is_Mul:
+            return trigsimp_nonrecursive(expr, deep)
         ret = S.One
         for x in expr.args:
             ret *= trigsimp_nonrecursive(x, deep)
-
         return ret
     elif expr.is_Pow:
         return Pow(trigsimp_nonrecursive(expr.base, deep),
@@ -901,7 +921,7 @@ def posify(eq):
     ([_x, _x + 1], {_x: x})
     """
     eq = sympify(eq)
-    if type(eq) in (list, set, tuple):
+    if iterable(eq):
         f = type(eq)
         eq = list(eq)
         syms = set()
@@ -1612,6 +1632,10 @@ def simplify(expr, ratio=1.7):
     if expr.has(C.TrigonometricFunction):
         expr = trigsimp(expr)
 
+    if expr.has(C.log):
+        expr = min([expand_log(expr, deep=True), logcombine(expr)],
+                       key=count_ops)
+
     if expr.has(C.CombinatorialFunction, gamma):
         expr = combsimp(expr)
 
@@ -1889,12 +1913,10 @@ def _logcombine(expr, force=False):
              expr.args[1:], 1)
 
     if expr.is_Function:
-        return apply(expr.func,map(lambda t: _logcombine(t, force)\
-        , expr.args))
+        return expr.func(*map(lambda t: _logcombine(t, force), expr.args))
 
     if expr.is_Pow:
         return _logcombine(expr.args[0], force)**\
         _logcombine(expr.args[1], force)
 
     return expr
-

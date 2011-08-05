@@ -1,5 +1,5 @@
 from sympy.core import Basic, C
-from sympy.core.compatibility import minkey, iff, all, any #for backwards compatibility
+from sympy.core.compatibility import is_sequence, iterable #logically, they belong here
 
 import random
 
@@ -130,7 +130,7 @@ def postorder_traversal(node):
         for arg in node.args:
             for subtree in postorder_traversal(arg):
                 yield subtree
-    elif hasattr(node, "__iter__"):
+    elif iterable(node):
         for item in node:
             for subtree in postorder_traversal(item):
                 yield subtree
@@ -176,7 +176,7 @@ class preorder_traversal(object):
             for arg in node.args:
                 for subtree in self._preorder_traversal(arg):
                     yield subtree
-        elif hasattr(node, "__iter__"):
+        elif iterable(node):
             for item in node:
                 for subtree in self._preorder_traversal(item):
                     yield subtree
@@ -719,3 +719,485 @@ def rotate_right(x, y):
         return x
     y = len(x) - y % len(x)
     return x[y:] + x[:y]
+
+def multiset_partitions(multiset, m):
+    """
+    This is the algorithm for generating multiset partitions
+    as described by Knuth in TAOCP Vol 4.
+
+    Given a multiset, this algorithm visits all of its
+    m-partitions, that is, all partitions having exactly size m
+    using auxiliary arrays as described in the book.
+
+    Examples:
+    >>> from sympy.utilities.iterables import multiset_partitions
+    >>> list(multiset_partitions([1,2,3,4], 2))
+    [[[1, 2, 3], [4]], [[1, 3], [2, 4]], [[1], [2, 3, 4]], [[1, 2], \
+    [3, 4]], [[1, 2, 4], [3]], [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
+    >>> list(multiset_partitions([1,2,3,4], 1))
+    [[[1, 2, 3, 4]]]
+    >>> list(multiset_partitions([1,2,3,4], 4))
+    [[[1], [2], [3], [4]]]
+    """
+    cache = {}
+
+    def visit(n, a):
+        ps = [[] for i in xrange(m)]
+        for j in xrange(n):
+            ps[a[j + 1]].append(multiset[j])
+        canonical = tuple(tuple(j) for j in ps)
+        if not canonical in cache:
+            cache[canonical] = 1
+            return ps
+
+    def f(m_arr, n_arr, sigma, n, a):
+        if m_arr <= 2:
+            v = visit(n, a)
+            if not v is None:
+                yield v
+        else:
+            for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
+                yield v
+        if n_arr == m_arr + 1:
+            a[m_arr] = m_arr - 1
+            v = visit(n, a)
+            if not v is None:
+                yield v
+            while a[n_arr] > 0:
+                a[n_arr] = a[n_arr] - 1
+                v = visit(n, a)
+                if not v is None:
+                    yield v
+        elif n_arr > m_arr + 1:
+            if (m_arr + sigma) % 2 == 1:
+                a[n_arr - 1] = m_arr - 1
+            else:
+                a[m_arr] = m_arr - 1
+            func = [f, b][(a[n_arr] + sigma) % 2]
+            for v in func(m_arr, n_arr - 1, 0, n, a):
+                if v is not None:
+                    yield v
+            while a[n_arr] > 0:
+                a[n_arr] = a[n_arr] - 1
+                func = [f, b][(a[n_arr] + sigma) % 2]
+                for v in func(m_arr, n_arr - 1, 0, n, a):
+                    if v is not None:
+                        yield v
+
+    def b(m_arr, n_arr, sigma, n, a):
+        if n_arr == m_arr + 1:
+            v = visit(n, a)
+            if not v is None:
+                yield v
+            while a[n_arr] < m_arr - 1:
+                a[n_arr] = a[n_arr] + 1
+                v = visit(n, a)
+                if not v is None:
+                    yield v
+            a[m_arr] = 0
+            v = visit(n, a)
+            if not v is None:
+                yield v
+        elif n_arr > m_arr + 1:
+            func = [f, b][(a[n_arr] + sigma) % 2]
+            for v in func(m_arr, n_arr - 1, 0, n, a):
+                if v is not None:
+                    yield v
+            while a[n_arr] < m_arr - 1:
+                a[n_arr] = a[n_arr] + 1
+                func = [f, b][(a[n_arr] + sigma) % 2]
+                for v in func(m_arr, n_arr - 1, 0, n, a):
+                    if v is not None:
+                        yield v
+            if (m_arr + sigma) % 2 == 1:
+                a[n_arr - 1] = 0
+            else:
+                a[m_arr] = 0
+        if m_arr <= 2:
+            v = visit(n, a)
+            if not v is None:
+                yield v
+        else:
+            for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
+                if v is not None:
+                    yield v
+
+    n = len(multiset)
+    a = [0] * (n + 1)
+    for j in xrange(1, m + 1):
+        a[n - m + j] = j - 1
+    return f(m, n, 0, n, a)
+
+def partitions(n, m=None, k=None):
+    """Generate all partitions of integer n (>= 0).
+
+    'm' limits the number of parts in the partition, e.g. if m=2 then
+        partitions will contain no more than 2 numbers, while
+    'k' limits the numbers which may appear in the partition, e.g. k=2 will
+        return partitions with no element greater than 2.
+
+    Each partition is represented as a dictionary, mapping an integer
+    to the number of copies of that integer in the partition.  For example,
+    the first partition of 4 returned is {4: 1}: a single 4.
+
+    >>> from sympy.utilities.iterables import partitions
+
+    Maximum key (number in partition) limited with k (in this case, 2):
+
+    >>> for p in partitions(6, k=2):
+    ...     print p
+    {2: 3}
+    {1: 2, 2: 2}
+    {1: 4, 2: 1}
+    {1: 6}
+
+    Maximum number of parts in partion limited with m (in this case, 2):
+
+    >>> for p in partitions(6, m=2):
+    ...     print p
+    ...
+    {6: 1}
+    {1: 1, 5: 1}
+    {2: 1, 4: 1}
+    {3: 2}
+
+    Note that the _same_ dictionary object is returned each time.
+    This is for speed:  generating each partition goes quickly,
+    taking constant time independent of n.
+
+    >>> [p for p in partitions(6, k=2)]
+    [{1: 6}, {1: 6}, {1: 6}, {1: 6}]
+
+    If you want to build a list of the returned dictionaries then
+    make a copy of them:
+
+    >>> [p.copy() for p in partitions(6, k=2)]
+    [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
+
+    Reference:
+        modified from Tim Peter's version to allow for k and m values:
+        code.activestate.com/recipes/218332-generator-for-integer-partitions/
+    """
+
+    if n < 0:
+        raise ValueError("n must be >= 0")
+    m = min(m or n, n)
+    if m < 1:
+        raise ValueError("maximum numbers in partition, m, must be > 0")
+    k = min(k or n, n)
+    if k < 1:
+        raise ValueError("maximum value in partition, k, must be > 0")
+
+    if m*k < n:
+        return
+
+    q, r = divmod(n, k)
+    ms = {k: q}
+    keys = [k]  # ms.keys(), from largest to smallest
+    if r:
+        ms[r] = 1
+        keys.append(r)
+    room = m - q - bool(r)
+    yield ms
+
+    while keys != [1]:
+        # Reuse any 1's.
+        if keys[-1] == 1:
+            del keys[-1]
+            reuse = ms.pop(1)
+            room += reuse
+        else:
+            reuse = 0
+
+        while 1:
+            # Let i be the smallest key larger than 1.  Reuse one
+            # instance of i.
+            i = keys[-1]
+            newcount = ms[i] = ms[i] - 1
+            reuse += i
+            if newcount == 0:
+                del keys[-1], ms[i]
+            room += 1
+
+
+            # Break the remainder into pieces of size i-1.
+            i -= 1
+            q, r = divmod(reuse, i)
+            need = q + bool(r)
+            if need > room:
+                if not keys:
+                    return
+                continue
+
+            ms[i] = q
+            keys.append(i)
+            if r:
+                ms[r] = 1
+                keys.append(r)
+            break
+        room -= need
+        yield ms
+
+def binary_partitions(n):
+    """
+    Generates the binary partition of n.
+
+    A binary partition consists only of numbers that are
+    powers of two. Each step reduces a 2**(k+1) to 2**k and
+    2**k. Thus 16 is converted to 8 and 8.
+
+    Reference: TAOCP 4, section 7.2.1.5, problem 64
+
+    Examples:
+    >>> from sympy.utilities.iterables import binary_partitions
+    >>> for i in binary_partitions(5):
+    ...     print i
+    ...
+    [4, 1]
+    [2, 2, 1]
+    [2, 1, 1, 1]
+    [1, 1, 1, 1, 1]
+    """
+    from math import ceil, log
+    pow = int(2**(ceil(log(n, 2))))
+    sum = 0
+    partition = []
+    while pow:
+        if sum + pow <= n:
+            partition.append(pow)
+            sum += pow
+        pow >>= 1
+
+    last_num = len(partition) - 1 - (n & 1)
+    while last_num >= 0:
+        yield partition
+        if partition[last_num] == 2:
+            partition[last_num] = 1
+            partition.append(1)
+            last_num -= 1
+            continue
+        partition.append(1)
+        partition[last_num] >>= 1
+        x = partition[last_num + 1] = partition[last_num]
+        last_num += 1
+        while x > 1:
+            if x <= len(partition) - last_num - 1:
+                del partition[-x + 1:]
+                last_num += 1
+                partition[last_num] = x
+            else:
+                x >>= 1
+    yield [1]*n
+
+def uniq(seq):
+    '''
+    Remove repeated elements from an iterable, preserving order of first
+    appearance.
+
+    Returns a sequence of the same type of the input, or a list if the input
+    was not a sequence.
+
+    Examples:
+    --------
+    >>> from sympy.utilities.iterables import uniq
+    >>> uniq([1,4,1,5,4,2,1,2])
+    [1, 4, 5, 2]
+    >>> uniq((1,4,1,5,4,2,1,2))
+    (1, 4, 5, 2)
+    >>> uniq(x for x in (1,4,1,5,4,2,1,2))
+    [1, 4, 5, 2]
+
+    '''
+    from sympy.core.function import Tuple
+    seen = set()
+    result = (s for s in seq if not (s in seen or seen.add(s)))
+    if not hasattr(seq, '__getitem__'):
+        return list(result)
+    if isinstance(seq, Tuple):
+        return Tuple(*tuple(result))
+    return type(seq)(result)
+
+def generate_bell(n):
+    """
+    Generates the bell permutations.
+
+    In a Bell permutation, each cycle is a decreasing
+    sequence of integers.
+
+    Reference:
+    [1] Generating involutions, derangements, and relatives by ECO
+        Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+
+    Examples:
+    >>> from sympy.utilities.iterables import generate_bell
+    >>> list(generate_bell(3))
+    [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 0, 1), (2, 1, 0)]
+    """
+    P = [i for i in xrange(n)]
+    T = [0]
+    cache = set()
+    def gen(P, T, t):
+        if t == (n - 1):
+            cache.add(tuple(P))
+        else:
+            for i in T:
+                P[i], P[t+1] = P[t+1], P[i]
+                if tuple(P) not in cache:
+                    cache.add(tuple(P))
+                    gen(P, T, t + 1)
+                P[i], P[t+1] = P[t+1], P[i]
+            T.append(t + 1)
+            cache.add(tuple(P))
+            gen(P, T, t + 1)
+            T.remove(t + 1)
+    gen(P, T, 0)
+    return sorted(cache)
+
+def generate_involutions(n):
+    """
+    Generates involutions.
+
+    An involution is a permutation that when multiplied
+    by itself equals the identity permutation. In this
+    implementation the involutions are generated using
+    Fixed Points.
+
+    Alternatively, an involution can be considered as
+    a permutation that does not contain any cycles with
+    a length that is greater than two.
+
+    Reference:
+    http://mathworld.wolfram.com/PermutationInvolution.html
+
+    Examples:
+    >>> from sympy.utilities.iterables import \
+    generate_involutions
+    >>> generate_involutions(3)
+    [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
+    >>> len(generate_involutions(4))
+    10
+    """
+    P = range(n) # the items of the permutation
+    F = [0] # the fixed points {is this right??}
+    cache = set()
+    def gen(P, F, t):
+        if t == n:
+            cache.add(tuple(P))
+        else:
+            for j in xrange(len(F)):
+                P[j], P[t] = P[t], P[j]
+                if tuple(P) not in cache:
+                    cache.add(tuple(P))
+                    Fj = F.pop(j)
+                    gen(P, F, t + 1)
+                    F.insert(j, Fj)
+                P[j], P[t] = P[t], P[j]
+            t += 1
+            F.append(t)
+            cache.add(tuple(P))
+            gen(P, F, t)
+            F.pop()
+    gen(P, F, 1)
+    return sorted(cache)
+
+def generate_derangements(perm):
+    """
+    Routine to generate derangements.
+
+    TODO: This will be rewritten to use the
+    ECO operator approach once the permutations
+    branch is in master.
+
+    Examples:
+    >>> from sympy.utilities.iterables import generate_derangements
+    >>> list(generate_derangements([0,1,2]))
+    [[1, 2, 0], [2, 0, 1]]
+    >>> list(generate_derangements([0,1,2,3]))
+    [[1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], \
+    [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], \
+    [3, 2, 1, 0]]
+    >>> list(generate_derangements([0,1,1]))
+    []
+    """
+    indices = range(len(perm))
+    p = variations(indices, len(indices))
+    for rv in \
+            uniq(tuple(perm[i] for i in idx) \
+                 for idx in p if all(perm[k] != \
+                                     perm[idx[k]] for k in xrange(len(perm)))):
+        yield list(rv)
+
+def unrestricted_necklace(n, k):
+    """
+    A routine to generate unrestriced necklaces.
+
+    Here n is the length of the necklace and k - 1
+    is the maximum permissible element in the
+    generated necklaces.
+
+    Reference:
+    http://mathworld.wolfram.com/Necklace.html
+
+    Examples:
+    >>> from sympy.utilities.iterables import unrestricted_necklace
+    >>> [i[:] for i in unrestricted_necklace(3, 2)]
+    [[0, 0, 0], [0, 1, 1]]
+    >>> [i[:] for i in unrestricted_necklace(4, 4)]
+    [[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], \
+    [0, 1, 1, 1], [0, 1, 2, 1], [0, 1, 3, 1], [0, 2, 2, 2], \
+    [0, 2, 3, 2], [0, 3, 3, 3]]
+    """
+    a = [0] * n
+    def gen(t, p):
+        if (t > n - 1):
+            if (n % p == 0):
+                yield a
+        else:
+            a[t] = a[t - p]
+            for necklace in gen(t + 1, p):
+                yield necklace
+            for j in xrange(a[t - p] + 1, k):
+                a[t] = j
+                for necklace in gen(t + 1, t):
+                    yield necklace
+    return gen(1, 1)
+
+def generate_oriented_forest(n):
+    """
+    This algorithm generates oriented forests.
+
+    An oriented graph is a directed graph having no symmetric pair of directed
+    edges. A forest is an acyclic graph, i.e., it has no cycles. A forest can
+    also be described as a disjoint union of trees, which are graphs in which
+    any two vertices are connected by exactly one simple path.
+
+    Reference:
+    [1] T. Beyer and S.M. Hedetniemi: constant time generation of \
+        rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
+    [2] http://stackoverflow.com/questions/1633833/
+        oriented-forest-taocp-algorithm-in-python
+
+    Examples:
+    >>> from sympy.utilities.iterables import generate_oriented_forest
+    >>> list(generate_oriented_forest(4))
+    [[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0], \
+    [0, 1, 1, 1], [0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 0, 0], [0, 0, 0, 0]]
+    """
+    P = range(-1, n)
+    while True:
+        yield P[1:]
+        if P[n] > 0:
+            P[n] = P[P[n]]
+        else:
+            for p in xrange(n - 1, 0, -1):
+                if P[p] != 0:
+                    target = P[p] - 1
+                    for q in xrange(p - 1, 0, -1):
+                        if P[q] == target:
+                            break
+                    offset = p - q
+                    for i in xrange(p, n + 1):
+                        P[i] = P[i - offset]
+                    break
+            else:
+                break

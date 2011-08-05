@@ -1,7 +1,7 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
         Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
         Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
-        Limit, oo, Poly, Float)
+        Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -99,6 +99,38 @@ def test_latex_functions():
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\operatorname{\Gamma}\left(x\right)"
     assert latex(Order(x)) == r"\operatorname{\mathcal{O}}\left(x\right)"
+    assert latex(lowergamma(x, y)) == r'\operatorname{\gamma}\left(x, y\right)'
+    assert latex(uppergamma(x, y)) == r'\operatorname{\Gamma}\left(x, y\right)'
+
+def test_hyper_printing():
+    from sympy import pi, Tuple
+    from sympy.abc import x, z
+
+    assert latex(meijerg(Tuple(pi, pi, x), Tuple(1), \
+                         (0,1), Tuple(1, 2, 3/pi),z)) == \
+             r'{G_{4, 5}^{2, 3}\left.\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \right| {z} \right)}'
+    assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(),z)) == \
+             r'{G_{1, 1}^{1, 0}\left.\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \right| {z} \right)}'
+    assert latex(hyper((x, 2), (3,), z)) == \
+               r'{{}_{2}F_{1}\left.\left(\begin{matrix} x, 2 ' \
+               r'\\ 3 \end{matrix}\right| {z} \right)}'
+    assert latex(hyper(Tuple(), Tuple(1), z)) == \
+               r'{{}_{0}F_{1}\left.\left(\begin{matrix}  ' \
+               r'\\ 1 \end{matrix}\right| {z} \right)}'
+
+def test_latex_bessel():
+    from sympy.functions.special.bessel import (besselj, bessely, besseli,
+            besselk, hankel1, hankel2, jn, yn)
+    from sympy.abc import z
+    assert latex(besselj(n, z**2)**k) == r'J^{k}_{n}\left(z^{2}\right)'
+    assert latex(bessely(n, z)) == r'Y_{n}\left(z\right)'
+    assert latex(besseli(n, z)) == r'I_{n}\left(z\right)'
+    assert latex(besselk(n, z)) == r'K_{n}\left(z\right)'
+    assert latex(hankel1(n, z**2)**2) == \
+              r'\left(H^{(1)}_{n}\left(z^{2}\right)\right)^{2}'
+    assert latex(hankel2(n, z)) == r'H^{(2)}_{n}\left(z\right)'
+    assert latex(jn(n, z)) == r'j_{n}\left(z\right)'
+    assert latex(yn(n, z)) == r'y_{n}\left(z\right)'
 
 def test_latex_brackets():
     assert latex((-1)**x) == r"\left(-1\right)^{x}"
@@ -134,7 +166,7 @@ def test_latex_union():
     assert latex(Union(Interval(0, 1), Interval(2, 3))) == \
         r"\left[0, 1\right] \cup \left[2, 3\right]"
     assert latex(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
-        r"\left\{1, 2\right\} \cup \left[3, 4\right]"
+        r"\left[3, 4\right] \cup \left\{1, 2\right\}"
 
 def test_latex_sum():
     assert latex(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
@@ -257,6 +289,18 @@ def test_latex_issue1477():
     assert latex(Symbol("alpha_alpha")) == r"\alpha_{\alpha}"
     assert latex(Symbol("alpha^aleph")) == r"\alpha^{\aleph}"
     assert latex(Symbol("alpha__aleph")) == r"\alpha^{\aleph}"
+
+def test_latex_pow_fraction():
+    x = Symbol('x')
+    # Testing exp
+    assert 'e^{-x}' in latex(exp(-x)/2).replace(' ', '') # Remove Whitespace
+
+    # Testing just e^{-x} in case future changes alter behavior of muls or fracs
+    # In particular current output is \frac{1}{2}e^{- x} but perhaps this will
+    # change to \frac{e^{-x}}{2}
+
+    # Testing general, non-exp, power
+    assert '3^{-x}' in latex(3**-x/2).replace(' ', '')
 
 def test_latex_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4

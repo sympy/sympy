@@ -15,7 +15,9 @@ from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
 
 from sympy.simplify import simplify
-from sympy.utilities import all
+from sympy.utilities import default_sort_key
+
+from sympy.core.compatibility import reduce
 
 import math
 
@@ -76,7 +78,7 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([r0, r1])
+    return sorted([r0, r1], key=default_sort_key)
 
 def roots_cubic(f):
     """Returns a list of roots of a cubic polynomial."""
@@ -212,6 +214,7 @@ def roots_quartic(f):
                 root = sqrt(-(arg1 + s*arg2))
                 for t in [-1, 1]:
                     ans.append((s*w - t*root)/2 - aon4)
+
     return ans
 
 def roots_binomial(f):
@@ -230,18 +233,7 @@ def roots_binomial(f):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
-    if all([ r.is_number for r in roots ]):
-        reals, complexes = [], []
-
-        for root in roots:
-            if root.is_real:
-                reals.append(root)
-            else:
-                complexes.append(root)
-
-        roots = sorted(reals) + sorted(complexes, key=lambda r: (re(r), -im(r)))
-
-    return roots
+    return sorted(roots, key=default_sort_key)
 
 def _inv_totient_estimate(m):
     """
@@ -310,7 +302,7 @@ def roots_cyclotomic(f, factor=False):
         for h, _ in g.factor_list()[1]:
             roots.append(-h.TC())
 
-    return roots
+    return sorted(roots, key=default_sort_key)
 
 def roots_rational(f):
     """Returns a list of rational roots of a polynomial."""
@@ -341,7 +333,7 @@ def roots_rational(f):
             if not f.eval(-zero):
                 zeros.append(-zero)
 
-    return zeros
+    return sorted(zeros, key=default_sort_key)
 
 def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers. """
@@ -397,7 +389,7 @@ def preprocess_roots(poly):
 
         base, strips = strips[0], strips[1:]
 
-        for gen, strip in zip(gens, strips):
+        for gen, strip in zip(list(gens), strips):
             reverse = False
 
             if strip[0] < strip[-1]:
@@ -437,8 +429,8 @@ def preprocess_roots(poly):
         if basis is not None:
             n = poly.degree()
 
-            def func((k,), coeff):
-                return coeff//basis**(n-k)
+            def func(k, coeff):
+                return coeff//basis**(n-k[0])
 
             poly = poly.termwise(func)
             coeff *= basis
@@ -659,7 +651,7 @@ def roots(f, *gens, **flags):
         for zero, k in result.iteritems():
             zeros.extend([zero]*k)
 
-        return sorted(zeros, key=lambda expr: expr.sort_key())
+        return sorted(zeros, key=default_sort_key)
 
 def root_factors(f, *gens, **args):
     """

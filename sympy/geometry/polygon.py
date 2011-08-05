@@ -10,8 +10,6 @@ from ellipse import Circle
 from line import Line, Segment, Ray
 from util import _symbol
 
-from sympy.core.compatibility import all
-
 import warnings
 
 class Polygon(GeometryEntity):
@@ -680,23 +678,23 @@ class Polygon(GeometryEntity):
         e2_connections = {}
 
         for side in e1.sides:
-            if e1_connections.has_key(side.p1):
+            if side.p1 in e1_connections:
                 e1_connections[side.p1].append(side.p2)
             else:
                 e1_connections[side.p1] = [side.p2]
 
-            if e1_connections.has_key(side.p2):
+            if side.p2 in e1_connections:
                 e1_connections[side.p2].append(side.p1)
             else:
                 e1_connections[side.p2] = [side.p1]
 
         for side in e2.sides:
-            if e2_connections.has_key(side.p1):
+            if side.p1 in e2_connections:
                 e2_connections[side.p1].append(side.p2)
             else:
                 e2_connections[side.p1] = [side.p2]
 
-            if e2_connections.has_key(side.p2):
+            if side.p2 in e2_connections:
                 e2_connections[side.p2].append(side.p1)
             else:
                 e2_connections[side.p2] = [side.p1]
@@ -847,7 +845,7 @@ class Polygon(GeometryEntity):
         if isinstance(o, Polygon):
             return self == o
         elif isinstance(o, Segment):
-            return o in self.sides
+            return any(o in s for s in self.sides)
         elif isinstance(o, Point):
             if o in self.vertices:
                 return True

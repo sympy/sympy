@@ -7,6 +7,8 @@ GeometryEntity
 
 """
 
+from sympy.core.compatibility import cmp
+
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
     "Point",
@@ -270,3 +272,12 @@ class GeometryEntity(tuple):
             return c
 
         return cmp(i1, i2)
+
+    def __contains__(self, other):
+        """Subclasses should implement this method for anything more complex than equality."""
+        if type(self) == type(other):
+            return self == other
+        raise NotImplementedError()
+
+from sympy.core.sympify import converter
+converter[GeometryEntity] = lambda x: x

@@ -3,7 +3,6 @@ import pickle
 import types
 from sympy.utilities.pytest import XFAIL
 
-from sympy.core.assumptions import AssumeMeths
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta, BasicType, ClassRegistry
 from sympy.core.singleton import SingletonRegistry
@@ -24,12 +23,15 @@ from sympy.core.multidimensional import vectorize
 from sympy.core.cache import Memoizer
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
+from sympy.core.compatibility import callable
+
 from sympy import symbols
 
 
 def check(a, check_attr = True):
     """ Check that pickling and copying round-trips.
     """
+    #FIXME-py3k: Add support for protocol 3.
     for protocol in [0, 1, 2, copy.copy, copy.deepcopy]:
         if callable(protocol):
             if isinstance(a, BasicType):
@@ -58,10 +60,6 @@ def check(a, check_attr = True):
 
 
 #================== core =========================
-
-def test_core_assumptions():
-    for c in (AssumeMeths, AssumeMeths()):
-        check(c)
 
 def test_core_basic():
     for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicMeta("test"),
@@ -213,9 +211,10 @@ from sympy.matrices.matrices import Matrix, SparseMatrix
 
 def test_matrices():
     for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
+        #FIXME-py3k: This raises sympy.matrices.matrices.ShapeError
         check(c)
 
-#================== ntheorie ====================
+#================== ntheory =====================
 from sympy.ntheory.generate import Sieve
 
 def test_ntheory():
@@ -362,6 +361,9 @@ def test_printing():
     for c in (LatexPrinter, LatexPrinter(), MathMLPrinter,
               PrettyPrinter, prettyForm, stringPict, stringPict("a"),
               Printer, Printer(), PythonPrinter, PythonPrinter()):
+        #FIXME-py3k: sympy/printing/printer.py", line 220, in order
+        #FIXME-py3k: return self._settings['order']
+        #FIXME-py3k: KeyError: 'order'
         check(c)
 
 @XFAIL

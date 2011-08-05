@@ -202,14 +202,14 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import any, all, minkey
+from sympy.core.compatibility import iterable, cmp_to_key
 from sympy.core.function import Derivative, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, sign
+from sympy.functions import cos, exp, im, log, re, sin, tan, sign, sqrt
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf
 from sympy.series import Order
@@ -231,7 +231,7 @@ from sympy.utilities import numbered_symbols
 # anyway).
 # "default", "all", "best", and "all_Integral" meta-hints should not be
 # included in this list, but "_best" and "_Integral" hints should be included.
-allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli",
+allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
 "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
 "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
 "nth_linear_constant_coeff_undetermined_coefficients",
@@ -447,7 +447,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                 failedhints[i] = detail
             else:
                 retdict[i] = sol
-        retdict['best'] = minkey(retdict.values(), key=lambda x:
+        retdict['best'] = min(retdict.values(), key=lambda x:
             ode_sol_simplicity(x, func, trysolving=not simplify))
         if hint == 'best':
             return retdict['best']
@@ -621,6 +621,10 @@ def classify_ode(eq, func, dict=False):
     k = Wild('k', exclude=[df])
     n = Wild('n', exclude=[f(x)])
     c1 = Wild('c1', exclude=[x])
+    a2 = Wild('a2', exclude=[x, f(x), df])
+    b2 = Wild('b2', exclude=[x, f(x), df])
+    c2 = Wild('c2', exclude=[x, f(x), df])
+    d2 = Wild('d2', exclude=[x, f(x), df])
 
     eq = expand(eq)
 
@@ -665,6 +669,15 @@ def classify_ode(eq, func, dict=False):
             r['n'] = n
             matching_hints["Bernoulli"] = r
             matching_hints["Bernoulli_Integral"] = r
+
+        # Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
+        r = collect(reduced_eq, f(x), exact = True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
+        if r and r[b2] != 0 and (r[c2] != 0 or r[d2] != 0):
+            r['a2'] = a2
+            r['b2'] = b2
+            r['c2'] = c2
+            r['d2'] = d2
+            matching_hints["Riccati_special_minus2"] = r
 
         # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
         # WITH NON-REDUCED FORM OF EQUATION
@@ -927,7 +940,6 @@ def odesimp(eq, func, order, hint):
 
     return eq
 
-@vectorize(2)
 def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
     """
     Substitutes sol for func in ode and checks that the result is 0.
@@ -979,6 +991,9 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         (False, 2)
 
     """
+    if type(sol) in (tuple, list, set):
+        return type(sol)(map(lambda i: checkodesol(ode, func, i, order=order,
+            solve_for_func=solve_for_func), sol))
     if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
     x = func.args[0]
@@ -1157,12 +1172,9 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
     This function is designed to be passed to min as the key argument,
     such as min(listofsolutions, key=lambda i: ode_sol_simplicity(i, f(x))).
-    Note that as long as SymPy supports Python 2.4, you must use the minkey()
-    function in sympy/utilities/iterables.py to emulate this behavior.
 
         >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
         >>> from sympy.solvers.ode import ode_sol_simplicity
-        >>> from sympy.utilities.iterables import minkey
         >>> x, C1 = symbols('x,C1')
         >>> f = Function('f')
 
@@ -1180,7 +1192,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
         >>> eq2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
         >>> ode_sol_simplicity(eq1, f(x))
         23
-        >>> minkey([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
+        >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
         x/tan(f(x)/(2*x)) == C1
 
     """
@@ -1189,7 +1201,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     # See the docstring for the coercion rules.  We check easier (faster)
     # things here first, to save time.
 
-    if type(sol) in (list, tuple):
+    if iterable(sol):
         # See if there are Integrals
         for i in sol:
             if ode_sol_simplicity(i, func, trysolving=trysolving) == oo:
@@ -1375,7 +1387,6 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             else:
                 return newexpr
 
-@vectorize(0)
 def constant_renumber(expr, symbolname, startnumber, endnumber):
     """
     Renumber arbitrary constants in expr.
@@ -1405,7 +1416,9 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
         C1 + C2*x + C3*x
 
     """
-
+    if type(expr) in (set, list, tuple):
+        return type(expr)(map(lambda i: constant_renumber(i, symbolname=symbolname,
+            startnumber=startnumber, endnumber=endnumber), expr))
     global newstartnumber
     newstartnumber = 1
 
@@ -1443,7 +1456,8 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 # that to make sure that term ordering is not dependent on
                 # the indexed value of C
                 C_1 = [(ci, S.One) for ci in constantsymbols]
-                sortedargs.sort(Basic._compare_pretty, key=lambda x: x.subs(C_1))
+                sortedargs.sort(key=cmp_to_key(lambda x, y:\
+                               Basic._compare_pretty(x.subs(C_1), y.subs(C_1))))
                 return expr.func(*[_constant_renumber(x, symbolname, startnumber,
                 endnumber) for x in sortedargs])
 
@@ -1641,7 +1655,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     if simplify:
         sol1 = odesimp(sol1, func, order, "1st_homogeneous_coeff_subs_indep_div_dep")
         sol2 = odesimp(sol2, func, order, "1st_homogeneous_coeff_subs_dep_div_indep")
-    return minkey([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
+    return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, func,
         trysolving=not simplify))
 
 def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
@@ -1756,18 +1770,16 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
      \f(x)/    \f(x)/ dx
     >>> pprint(dsolve(genform, f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral'))
-                 x
-                ----
-                f(x)
-                  /
-                 |
-                 |        g(u2)
-                 |  ----------------- d(u2)
-                 |  -u2*g(u2) - h(u2)
-                 |
-                /
-    <BLANKLINE>
-    f(x) = C1*e
+                     x
+                    ----
+                    f(x)
+                      /
+                     |
+                     |        g(u2)
+    log(C1*f(x)) -   |  ----------------- d(u2) = 0
+                     |  -u2*g(u2) - h(u2)
+                     |
+                    /
 
     Where u2*g(u2) + h(u2) != 0 and f(x) != 0.
 
@@ -2094,6 +2106,48 @@ def ode_Bernoulli(eq, func, order, match):
     tt = (r[r['n']]-1)*C.Integral(t*r[r['c']]/r[r['a']],x)
     return Eq(f(x),((tt + C1)/t)**(1/(1-r[r['n']])))
 
+def ode_Riccati_special_minus2(eq, func, order, match):
+    r"""
+    The general Riccati equation has the form dy/dx = f(x)*y**2 + g(x)*y + h(x).
+    While it does not have a general solution [1], the "special" form,
+    dy/dx = a*y**2 - b*x**c, does have solutions in many cases [2]. This routine
+    returns a solution for a*dy/dx = b*y**2 + c*y/x + d/x**2 that is obtained by
+    using a suitable change of variables to reduce it to the special form and is
+    valid when neither a nor b are zero and either c or d is zero.
+
+    >>> from sympy.abc import x, y, a, b, c, d
+    >>> from sympy.solvers.ode import dsolve, checkodesol
+    >>> from sympy import pprint, Function
+    >>> f = Function('f')
+    >>> y = f(x)
+    >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
+    >>> sol = dsolve(genform, y)
+    >>> pprint(sol)
+             /                                 /        __________________      \\
+            |           __________________    |       /                2        ||
+            |          /                2     |     \/  4*b*d - (a + c)  *log(x)||
+           -|a + c - \/  4*b*d - (a + c)  *tan|C1 + ----------------------------||
+            \                                 \                 2*a             //
+    f(x) = -----------------------------------------------------------------------
+                                            2*b*x
+
+    >>> checkodesol(genform, y, sol, order=1)[0]
+    True
+
+    References:
+    [1] http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+    [2] http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+        http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
+    """
+
+    x = func.args[0]
+    f = func.func
+    r = match # a2*diff(f(x),x) + b2*f(x) + c2*f(x)/x + d2/x**2
+    a2, b2, c2, d2 = [r[r[s]] for s in 'a2 b2 c2 d2'.split()]
+    C1 = Symbol('C1')
+    mu = sqrt(4*d2*b2 - (a2 - c2)**2)
+    return Eq(f(x), (a2 - c2 - mu*tan(mu/(2*a2)*log(x)+C1))/(2*b2*x))
+
 def ode_Liouville(eq, func, order, match):
     r"""
     Solves 2nd order Liouville differential equations.
@@ -2106,10 +2160,11 @@ def ode_Liouville(eq, func, order, match):
         >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
         ... h(x)*diff(f(x),x), 0)
         >>> pprint(genform)
-                        2                      2
-                d                d            d
-        g(f(x))*--(f(x))  + h(x)*--(f(x)) + -----(f(x)) = 0
-                dx               dx         dx dx
+                        2                    2
+                d                d          d
+        g(f(x))*--(f(x))  + h(x)*--(f(x)) + ---(f(x)) = 0
+                dx               dx           2
+                                            dx
         >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
                                           f(x)
                   /                     /
@@ -2229,11 +2284,11 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    f(x) == C1*exp(x*RootOf(_pure**5 + 10*_pure - 2, 0)) + \
-    C2*exp(x*RootOf(_pure**5 + 10*_pure - 2, 1)) + \
-    C3*exp(x*RootOf(_pure**5 + 10*_pure - 2, 2)) + \
-    C4*exp(x*RootOf(_pure**5 + 10*_pure - 2, 3)) + \
-    C5*exp(x*RootOf(_pure**5 + 10*_pure - 2, 4))
+    f(x) == C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) + \
+    C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) + \
+    C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) + \
+    C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) + \
+    C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4))
 
     Note that because this method does not involve integration, there is
     no 'nth_linear_constant_coeff_homogeneous_Integral' hint.
@@ -2279,15 +2334,15 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
     # First, set up characteristic equation.
-    chareq = S.Zero
+    chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
         if type(i) == str or i < 0:
             pass
         else:
-            chareq += r[i]*S.Pure**i
+            chareq += r[i]*symbol**i
 
-    chareq = Poly(chareq, S.Pure)
+    chareq = Poly(chareq, symbol)
     chareqroots = [ RootOf(chareq, k) for k in xrange(chareq.degree()) ]
 
     # Create a dict root: multiplicity or charroots

@@ -71,12 +71,14 @@ printing.
 - Python
 - ...
 """
+from __future__ import with_statement
 
 import os
 from StringIO import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
+from sympy.core.compatibility import is_sequence
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -138,7 +140,7 @@ class Routine(object):
         """
         arg_list = []
 
-        if isinstance(expr, (list, tuple)):
+        if is_sequence(expr):
             if not expr:
                 raise ValueError("No expression given")
             expressions = Tuple(*expr)
@@ -437,9 +439,8 @@ class CodeGen(object):
         if to_files:
             for dump_fn in self.dump_fns:
                 filename = "%s.%s" % (prefix, dump_fn.extension)
-                f = file(filename, "w")
-                dump_fn(self, routines, f, prefix, header, empty)
-                f.close()
+                with open(filename, "w") as f:
+                    dump_fn(self, routines, f, prefix, header, empty)
         else:
             result = []
             for dump_fn in self.dump_fns:

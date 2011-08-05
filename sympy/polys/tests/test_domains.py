@@ -1,22 +1,23 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import S, sqrt, sin, oo, all, pure, Poly, Integer, Rational
+from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import (
-    ZZ, QQ, RR, PolynomialRing, FractionField, EX,
-    PythonRationalType as Q, ZZ_sympy, QQ_sympy
-)
+    ZZ, QQ, RR, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
+    RR_mpmath, RR_sympy, PolynomialRing, FractionField, EX)
+
 from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsNeeded,
     GeneratorsError,
-    DomainError,
-)
+    CoercionFailed,
+    DomainError)
+
 from sympy.polys.polyclasses import DMP, DMF
 from sympy.utilities.pytest import raises
 
-ALG = QQ.algebraic_field(sqrt(2)+sqrt(3))
+ALG = QQ.algebraic_field(sqrt(2) + sqrt(3))
 
 def test_Domain__unify():
     assert ZZ.unify(ZZ) == ZZ
@@ -436,15 +437,16 @@ def test_Domain___eq__():
 
 def test_Domain__algebraic_field():
     alg = ZZ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == pure**2 - 2
+    assert alg.ext.minpoly == Poly(x**2 - 2)
     assert alg.dom == QQ
 
     alg = QQ.algebraic_field(sqrt(2))
-    assert alg.ext.minpoly == pure**2 - 2
+    assert alg.ext.minpoly == Poly(x**2 - 2)
     assert alg.dom == QQ
 
     alg = alg.algebraic_field(sqrt(3))
-    assert alg.ext.minpoly == pure**4 - 10*pure**2 + 1
+    assert alg.ext.minpoly == Poly(x**4 - 10*x**2 + 1)
+    assert alg.dom == QQ
 
 def test_PolynomialRing__from_FractionField():
     f = DMF(([1, 0, 1], [1, 1]), ZZ)
@@ -604,3 +606,26 @@ def test_sympy_of_type():
 def test___eq__():
     assert not QQ['x'] == ZZ['x']
     assert not QQ.frac_field(x) == ZZ.frac_field(x)
+
+def test_RealDomain_from_sympy():
+    RR = RR_mpmath()
+
+    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S(0.0)) == RR.dtype(0.0)
+    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S(1.0)) == RR.dtype(1.0)
+    assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
+    raises(CoercionFailed, "RR.convert(x)")
+    raises(CoercionFailed, "RR.convert(oo)")
+    raises(CoercionFailed, "RR.convert(-oo)")
+
+    RR = RR_sympy()
+
+    assert RR.convert(S(0)) == RR.dtype(0)
+    assert RR.convert(S(0.0)) == RR.dtype(0.0)
+    assert RR.convert(S(1)) == RR.dtype(1)
+    assert RR.convert(S(1.0)) == RR.dtype(1.0)
+    assert RR.convert(sin(1)) == RR.dtype(sin(1).evalf())
+    raises(CoercionFailed, "RR.convert(x)")
+    raises(CoercionFailed, "RR.convert(oo)")
+    raises(CoercionFailed, "RR.convert(-oo)")

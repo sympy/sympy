@@ -3,8 +3,6 @@
 from sympy.polys.domains.realdomain import RealDomain
 from sympy.polys.domains.groundtypes import SymPyRealType
 
-from sympy.core import S
-
 class SymPyRealDomain(RealDomain):
     """Domain for real numbers based on SymPy Float type. """
 
@@ -15,19 +13,6 @@ class SymPyRealDomain(RealDomain):
 
     def __init__(self):
         pass
-
-    def to_sympy(self, a):
-        """Convert `a` to a SymPy object. """
-        return a
-
-    def from_sympy(self, a):
-        """Convert SymPy's Integer to `dtype`. """
-        b = a.evalf()
-
-        if b.is_Float and b not in [S.Infinity, S.NegativeInfinity]:
-            return b
-        else:
-            raise CoercionFailed("expected Float object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """

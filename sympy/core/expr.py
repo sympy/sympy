@@ -2,14 +2,46 @@ from core import C
 from basic import Basic, Atom
 from singleton import S
 from evalf import EvalfMixin
-from decorators import _sympifyit
+from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from sympy.core.compatibility import any, all
+from compatibility import reduce
 
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
+    @property
+    def _diff_wrt(self):
+        """Is it allowed to take derivative wrt to this instance.
+
+        This determines if it is allowed to take derivatives wrt this object.
+        Subclasses such as Symbol, Function and Derivative should return True
+        to enable derivatives wrt them. The implementation in Derivative
+        separates the Symbol and non-Symbol _diff_wrt=True variables and
+        temporarily converts the non-Symbol vars in Symbols when performing
+        the differentiation.
+
+        Note, see the docstring of Derivative for how this should work
+        mathematically.  In particular, note that expr.subs(yourclass, Symbol)
+        should be well-defined on a structural level, or this will lead to
+        inconsistent results.
+
+        Examples
+        ========
+
+            >>> from sympy import Expr
+            >>> e = Expr()
+            >>> e._diff_wrt
+            False
+            >>> class MyClass(Expr):
+            ...     _diff_wrt = True
+            ...
+            >>> (2*MyClass()).diff(MyClass())
+            2
+        """
+        return False
+
     def sort_key(self, order=None):
+        # XXX: The order argument does not actually work
         from sympy.core import S
 
         def key_inner(arg):
@@ -51,6 +83,19 @@ class Expr(Basic, EvalfMixin):
     # ***************
     # * Arithmetics *
     # ***************
+
+    # Expr and its sublcasses use _op_priority to determine which object
+    # passed to a binary special method (__mul__, etc.) will handle the
+    # operation. In general, the 'call_highest_priority' decorator will choose
+    # the object with the highest _op_priority to handle the call.
+    # Custom subclasses that want to define their own binary special methods
+    # should set an _op_priority value that is higher than the default.
+    #
+    # **NOTE**:
+    # This is a temporary fix, and will eventually be replaced with
+    # something better and more powerful.  See issue 2411.
+    _op_priority = 10.0
+
     def __pos__(self):
         return self
     def __neg__(self):
@@ -59,42 +104,47 @@ class Expr(Basic, EvalfMixin):
         return C.Abs(self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         return Add(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__add__')
     def __radd__(self, other):
         return Add(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return Add(self, -other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
         return Add(other, -self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         return Mul(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
         return Mul(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rpow__')
     def __pow__(self, other):
         return Pow(self, other)
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__pow__')
     def __rpow__(self, other):
         return Pow(other, self)
 
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return Mul(self, Pow(other, S.NegativeOne))
-
     @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__div__')
     def __rdiv__(self, other):
         return Mul(other, Pow(self, S.NegativeOne))
 
@@ -238,11 +288,22 @@ class Expr(Basic, EvalfMixin):
 
         monom_key = monomial_key(order)
 
+        def neg(monom):
+            result = []
+
+            for m in monom:
+                if isinstance(m, tuple):
+                    result.append(neg(m))
+                else:
+                    result.append(-m)
+
+            return tuple(result)
+
         def key(term):
             _, ((re, im), monom, ncpart) = term
 
-            monom = [ -m for m in monom_key(monom) ]
-            ncpart = tuple([ e.sort_key() for e in ncpart ])
+            monom = neg(monom_key(monom))
+            ncpart = tuple([ e.sort_key(order=order) for e in ncpart ])
             coeff = ((bool(im), im), (re, im))
 
             return monom, ncpart, coeff
@@ -315,6 +376,7 @@ class Expr(Basic, EvalfMixin):
         """Transform an expression to a list of terms. """
         from sympy.core import Add, Mul, S
         from sympy.core.exprtools import decompose_power
+        from sympy.utilities import default_sort_key
 
         gens, terms = set([]), []
 
@@ -347,7 +409,7 @@ class Expr(Basic, EvalfMixin):
 
             terms.append((term, (coeff, cpart, ncpart)))
 
-        gens = sorted(gens, key=lambda expr: expr.sort_key())
+        gens = sorted(gens, key=default_sort_key)
 
         k, indices = len(gens), {}
 
@@ -812,6 +874,8 @@ class Expr(Basic, EvalfMixin):
             (1, n1*n2*n3)
             >>> (n1*n2*n3).as_independent(n2)
             (n1, n2*n3)
+            >>> ((x-n1)*(x-y)).as_independent(x)
+            (1, (x - y)*(x - n1))
 
           -- self is anything else:
             >>> (sin(x)).as_independent(x)
@@ -875,25 +939,18 @@ class Expr(Basic, EvalfMixin):
         else:
             if func is Add:
                 args = list(self.args)
-                nc = ndeps = []
-                func = Add
             else:
                 args, nc = self.args_cnc()
-                d = sift(deps, lambda w: bool(getattr(w, 'is_commutative', True)))
-                ndeps = d.pop(False, [])
-                deps = d.pop(True, [])
-                func = Mul
 
-        # do commutative terms
         d = sift(args, lambda x: x.has(*deps))
         depend = d.pop(True, [])
         indep = d.pop(False, [])
-        if func is Add or not ndeps:
-            return (func(*(indep + nc)),
-                    func(*depend))
-        else:
+        if func is Add: # all terms were treated as commutative
+            return (Add(*indep),
+                    Add(*depend))
+        else: # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
-                if n.has(*ndeps):
+                if n.has(*deps):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
@@ -1738,7 +1795,7 @@ class Expr(Basic, EvalfMixin):
         elif not symbols:
             return self
         x = sympify(symbols[0])
-        assert x.is_Symbol, `x`
+        assert x.is_Symbol, repr(x)
         if not self.has(x):
             return self
         obj = self._eval_as_leading_term(x)
@@ -1889,7 +1946,7 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import nsimplify
         return nsimplify(self, constants, tolerance, full)
 
-    def separate(self, deep=False):
+    def separate(self, deep=False, force=False):
         """See the separate function in sympy.simplify"""
         from sympy.simplify import separate
         return separate(self, deep)
@@ -1979,10 +2036,6 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_rational_function(self, syms):
-        return True
-
-    @property
-    def is_number(self):
         return True
 
     def _eval_nseries(self, x, n, logx):

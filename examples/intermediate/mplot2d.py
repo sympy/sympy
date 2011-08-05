@@ -1,11 +1,17 @@
 #!/usr/bin/env python
+
 """Matplotlib 2D plotting example
 
 Demonstrates plotting with matplotlib.
 """
 
+import sys
+
 from sample import sample
-from sympy import Basic, log, pi, sqrt, sin, Symbol
+
+from sympy import log, pi, sqrt, sin, Symbol
+from sympy.core.compatibility import ordered_iter
+from sympy.external import import_module
 
 def mplot2d(f, var, show=True):
     """
@@ -15,12 +21,11 @@ def mplot2d(f, var, show=True):
     import warnings
     warnings.filterwarnings("ignore", "Could not match \S")
 
-    try:
-        import pylab as p
-    except ImportError:
-        raise ImportError("Matplotlib is required to use mplot2d.")
+    p = import_module('pylab')
+    if not p:
+        sys.exit("Matplotlib is required to use mplot2d.")
 
-    if not isinstance(f, (tuple, list)):
+    if not ordered_iter(f):
         f = [f,]
 
     for f_i in f:

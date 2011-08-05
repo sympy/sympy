@@ -53,6 +53,8 @@ def test_point():
     p4 = Point(1, 1)
 
     assert len(p1) == 1
+    assert p1 in p1
+    assert p1 not in p2
     assert p2[1] == y2
     assert (p3+p4) == p4
     assert (p2-p1) == Point(y1-x1, y2-x2)
@@ -517,6 +519,8 @@ def test_polygon():
     assert t2.is_right() == False
     assert t3.is_right()
     assert p1 in t1
+    assert t1.sides[0] in t1
+    assert Segment((0, 0), (1, 0)) in t1
     assert Point(5, 5) not in t2
     assert t1.is_convex()
     assert feq(t1.angles[p1].evalf(), pi.evalf()/2)
@@ -585,7 +589,12 @@ def test_polygon():
     assert p2.distance(pt1) == Rational(3)/4
     assert p3.distance(pt2) == sqrt(2)/2
 
+@XFAIL
+def test_polygon_to_polygon():
     '''Polygon to Polygon'''
+    # XXX: Because of the way the warnings filters work, this will fail if it's
+    # run more than once in the same session.  See issue 2492.
+
     import warnings
     # p1.distance(p2) emits a warning
     # First, test the warning

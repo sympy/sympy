@@ -1,12 +1,12 @@
-from sympy.physics.quantum.qubit import *
-from sympy.physics.quantum.gate import *
-from sympy.physics.quantum.qft import *
-from sympy.physics.quantum.represent import *
-from sympy.physics.quantum.qapply import *
-from sympy import symbols, Rational
-from sympy.core.numbers import *
-from sympy.functions.elementary import *
-from sympy.physics.quantum.shor import *
+from sympy.physics.quantum.qubit import (measure_all, measure_partial,
+        matrix_to_qubit, qubit_to_matrix, IntQubit, IntQubitBra, QubitBra)
+from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, ZGate,
+        YGate, PhaseGate)
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.qapply import qapply
+from sympy import symbols, Rational, sqrt
+from sympy.core.numbers import Integer
+from sympy.physics.quantum.shor import Qubit
 from sympy.core.containers import Tuple
 from sympy.matrices.matrices import Matrix
 import random
@@ -27,8 +27,8 @@ def test_Qubit():
     qb = Qubit('110')
 
 def test_QubitBra():
-    assert Qubit(0).dual_class == QubitBra
-    assert QubitBra(0).dual_class == Qubit
+    assert Qubit(0).dual_class() == QubitBra
+    assert QubitBra(0).dual_class() == Qubit
     assert represent(Qubit(1,1,0), nqubits=3).H ==\
            represent(QubitBra(1,1,0), nqubits=3)
     assert Qubit(0,1)._eval_innerproduct_QubitBra(QubitBra(1,0)) == Integer(0)
@@ -41,8 +41,8 @@ def test_IntQubit():
     assert IntQubit(3) == IntQubit(3,2)
 
     #test Dual Classes
-    assert IntQubit(3).dual_class == IntQubitBra
-    assert IntQubitBra(3).dual_class == IntQubit
+    assert IntQubit(3).dual_class() == IntQubitBra
+    assert IntQubitBra(3).dual_class() == IntQubit
 
 def test_superposition_of_states():
     assert qapply(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\

@@ -4,10 +4,12 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    Sum, FF, ZZ, QQ, RR, O)
+    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
+
+from sympy.physics.units import joule
 
 from sympy.utilities.pytest import raises
 
@@ -158,6 +160,18 @@ Limit(x, x, oo)
 Limit(x**2, x, 0)
 Limit(1/x, x, 0)
 Limit(sin(x)/x, x, 0)
+
+
+UNITS:
+
+joule => kg*m**2/s
+
+
+SUBS:
+
+Subs(f(x), x, ph**2)
+Subs(f(x).diff(x), x, 0)
+Subs(f(x).diff(x)/y, (x, y), (0, Rational(1, 2)))
 
 """
 
@@ -1379,6 +1393,79 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+def test_pretty_lambda():
+    expr = Lambda(x, x)
+    ascii_str = \
+"""\
+Lambda(x, x)\
+"""
+    ucode_str = \
+u"""\
+Λ(x, x)\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Lambda(x, x**2)
+    ascii_str = \
+"""\
+      /    2\\\n\
+Lambda\\x, x /\
+"""
+    ucode_str = \
+u"""\
+ ⎛    2⎞\n\
+Λ⎝x, x ⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Lambda(x, x**2)**2
+    ascii_str = \
+"""\
+      2       \n\
+       /    2\\\n\
+Lambda \\x, x /\
+"""
+    ucode_str = \
+u"""\
+ 2       \n\
+  ⎛    2⎞\n\
+Λ ⎝x, x ⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Lambda((x, y), x)
+    ascii_str = \
+"""\
+Lambda((x, y), x)\
+"""
+    ucode_str = \
+u"""\
+Λ((x, y), x)\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Lambda((x, y), x**2)
+    ascii_str = \
+"""\
+      /         2\\\n\
+Lambda\\(x, y), x /\
+"""
+    ucode_str = \
+u"""\
+ ⎛         2⎞\n\
+Λ⎝(x, y), x ⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_derivatives():
     # Simple
@@ -1426,7 +1513,8 @@ dx            \
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    expr = Derivative(log(x) + x**2, x, y, evaluate=False)
+    # Multiple symbols
+    expr = Derivative(log(x) + x**2, x, y)
     ascii_str_1 = \
 """\
    2              \n\
@@ -1458,8 +1546,7 @@ dy dx             \
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
-    # Multiple symbols
-    expr = Derivative(2*x*y, y, x, evaluate=False) + x**2
+    expr = Derivative(2*x*y, y, x) + x**2
     ascii_str_1 = \
 """\
    2             \n\
@@ -1491,6 +1578,66 @@ x  + ─────(2⋅x⋅y)\n\
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
+    expr = Derivative(2*x*y, x, x)
+    ascii_str = \
+"""\
+  2       \n\
+ d        \n\
+---(2*x*y)\n\
+  2       \n\
+dx        \
+"""
+    ucode_str = \
+u"""\
+  2       \n\
+ d        \n\
+───(2⋅x⋅y)\n\
+  2       \n\
+dx        \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Derivative(2*x*y, x, 17)
+    ascii_str = \
+"""\
+ 17        \n\
+d          \n\
+----(2*x*y)\n\
+  17       \n\
+dx         \
+"""
+    ucode_str = \
+u"""\
+ 17        \n\
+d          \n\
+────(2⋅x⋅y)\n\
+  17       \n\
+dx         \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Derivative(2*x*y, x, x, y)
+    ascii_str = \
+"""\
+   3         \n\
+  d          \n\
+------(2*x*y)\n\
+     2       \n\
+dy dx        \
+"""
+    ucode_str = \
+u"""\
+   3         \n\
+  d          \n\
+──────(2⋅x⋅y)\n\
+     2       \n\
+dy dx        \
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     # Greek letters
     alpha = Symbol('alpha')
     beta  = Function('beta')
@@ -1509,7 +1656,6 @@ dα      \
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-
 
 def test_pretty_integrals():
     expr = Integral(log(x), x)
@@ -2054,18 +2200,20 @@ RootSum⎝x  + 11⋅x - 2⎠\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
-    expr = RootSum(x**5 + 11*x - 2, Lambda(z, z**2))
-
+    expr = RootSum(x**5 + 11*x - 2, Lambda(z, exp(z)))
     ascii_str = \
 """\
-       / 5                   /    2\\\\\n\
-RootSum\\x  + 11*x - 2, Lambda\\z, z //\
+       / 5                   /    z\\\\\n\
+RootSum\\x  + 11*x - 2, Lambda\\z, e //\
 """
     ucode_str = \
 u"""\
-       ⎛ 5              ⎛    2⎞⎞\n\
-RootSum⎝x  + 11⋅x - 2, Λ⎝z, z ⎠⎠\
+       ⎛ 5              ⎛    z⎞⎞\n\
+RootSum⎝x  + 11⋅x - 2, Λ⎝z, ℯ ⎠⎠\
 """
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_Boolean():
     expr = Not(x, evaluate=False)
@@ -2173,6 +2321,9 @@ def test_pprint():
     sso = sys.stdout
     sys.stdout = fd
     try:
+        #FIXME-py3k: sympy/printing/pretty/stringpict.py", line 286, in terminal_width
+        #FIXME-py3k: curses.setupterm()
+        #FIXME-py3k: io.UnsupportedOperation: fileno
         pprint(pi, use_unicode=False)
     finally:
         sys.stdout = sso
@@ -2356,3 +2507,230 @@ k = -----                                \n\
 
     assert  pretty(expr) == ascii_str
     #assert upretty(expr) == ucode_str
+
+def test_units():
+    # issue 2461
+    expr = joule
+    ascii_str = \
+"""\
+    2\n\
+kg*m \n\
+-----\n\
+   2 \n\
+  s  \
+"""
+
+    unicode_str = \
+u"""\
+    2\n\
+kg⋅m \n\
+─────\n\
+   2 \n\
+  s  \
+"""
+    assert upretty(expr) == unicode_str
+    assert pretty(expr) == ascii_str
+
+def test_pretty_Subs():
+    f = Function('f')
+    expr = Subs(f(x), x, ph**2)
+    ascii_str = \
+"""\
+(f(x))|     2\n\
+      |x=phi \
+"""
+    unicode_str = \
+u"""\
+(f(x))│   2\n\
+      │x=φ \
+"""
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
+
+    expr = Subs(f(x).diff(x), x, 0)
+    ascii_str = \
+"""\
+/d       \\|   \n\
+|--(f(x))||   \n\
+\\dx      /|x=0\
+"""
+    unicode_str = \
+u"""\
+⎛d       ⎞│   \n\
+⎜──(f(x))⎟│   \n\
+⎝dx      ⎠│x=0\
+"""
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
+
+    expr = Subs(f(x).diff(x)/y, (x, y), (0, Rational(1, 2)))
+    ascii_str = \
+"""\
+/d       \\|          \n\
+|--(f(x))||          \n\
+|dx      ||          \n\
+|--------||          \n\
+\\   y    /|x=0, y=1/2\
+"""
+    unicode_str = \
+u"""\
+⎛d       ⎞│          \n\
+⎜──(f(x))⎟│          \n\
+⎜dx      ⎟│          \n\
+⎜────────⎟│          \n\
+⎝   y    ⎠│x=0, y=1/2\
+"""
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
+
+def test_gammas():
+    assert upretty(lowergamma(x, y)) == u"γ(x, y)"
+    assert upretty(uppergamma(x, y)) == u"Γ(x, y)"
+
+def test_hyper():
+    expr = hyper((), (), z)
+    ucode_str = \
+u"""\
+ ┌─  ⎛  │  ⎞\n\
+ ├─  ⎜  │ z⎟\n\
+0╵ 0 ⎝  │  ⎠\
+"""
+    ascii_str = \
+"""\
+  _         \n\
+ |_  /  |  \\\n\
+ |   |  | z|\n\
+0  0 \\  |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hyper((), (1,), x)
+    ucode_str = \
+u"""\
+ ┌─  ⎛  │  ⎞\n\
+ ├─  ⎜  │ x⎟\n\
+0╵ 1 ⎝1 │  ⎠\
+"""
+    ascii_str = \
+"""\
+  _         \n\
+ |_  /  |  \\\n\
+ |   |  | x|\n\
+0  1 \\1 |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hyper([2], [1], x)
+    ucode_str = \
+u"""\
+ ┌─  ⎛2 │  ⎞\n\
+ ├─  ⎜  │ x⎟\n\
+1╵ 1 ⎝1 │  ⎠\
+"""
+    ascii_str = \
+"""\
+  _         \n\
+ |_  /2 |  \\\n\
+ |   |  | x|\n\
+1  1 \\1 |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hyper((pi/3, -2*k), (3, 4, 5, -3), x)
+    ucode_str = \
+u"""\
+     ⎛  π         │  ⎞\n\
+ ┌─  ⎜  ─, -2⋅k   │  ⎟\n\
+ ├─  ⎜  3         │ x⎟\n\
+2╵ 4 ⎜            │  ⎟\n\
+     ⎝3, 4, 5, -3 │  ⎠\
+"""
+    ascii_str = \
+"""\
+                      \n\
+  _  /  pi        |  \\\n\
+ |_  |  --, -2*k  |  |\n\
+ |   |  3         | x|\n\
+2  4 |            |  |\n\
+     \\3, 4, 5, -3 |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = hyper((pi,S('2/3'),-2*k), (3,4,5,-3), x**2)
+    ucode_str = \
+u"""\
+ ┌─  ⎛π, 2/3, -2⋅k │  2⎞\n\
+ ├─  ⎜             │ x ⎟\n\
+3╵ 4 ⎝3, 4, 5, -3  │   ⎠\
+"""
+    ascii_str = \
+"""\
+  _                      \n\
+ |_  /pi, 2/3, -2*k |  2\\\n\
+ |   |              | x |\n\
+3  4 \\ 3, 4, 5, -3  |   /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+def test_meijerg():
+    expr = meijerg([pi, pi, x], [1], [0, 1], [1, 2, 3], z)
+    ucode_str = \
+u"""\
+╭─╮2, 3 ⎛π, π, x     1    │  ⎞\n\
+│╶┐     ⎜                 │ z⎟\n\
+╰─╯4, 5 ⎝ 0, 1    1, 2, 3 │  ⎠\
+"""
+    ascii_str = \
+"""\
+ __2, 3 /pi, pi, x     1    |  \\\n\
+/__     |                   | z|\n\
+\_|4, 5 \\  0, 1     1, 2, 3 |  /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = meijerg([1, pi/7], [2, pi, 5], [], [], z**2)
+    ucode_str = \
+u"""\
+        ⎛   π          │   ⎞\n\
+╭─╮0, 2 ⎜1, ─  2, π, 5 │  2⎟\n\
+│╶┐     ⎜   7          │ z ⎟\n\
+╰─╯5, 0 ⎜              │   ⎟\n\
+        ⎝              │   ⎠\
+"""
+    ascii_str = \
+"""\
+        /   pi           |   \\\n\
+ __0, 2 |1, --  2, pi, 5 |  2|\n\
+/__     |   7            | z |\n\
+\_|5, 0 |                |   |\n\
+        \\                |   /\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
+    ucode_str = \
+u"""\
+╭─╮ 1, 10 ⎛1, 1, 1, 1, 1, 1, 1, 1, 1, 1  1 │  ⎞\n\
+│╶┐       ⎜                                │ z⎟\n\
+╰─╯11,  2 ⎝             1                1 │  ⎠\
+"""
+    ascii_str = \
+"""\
+ __ 1, 10 /1, 1, 1, 1, 1, 1, 1, 1, 1, 1  1 |  \\\n\
+/__       |                                | z|\n\
+\_|11,  2 \\             1                1 |  /\
+"""
+
+    expr = meijerg([1]*10, [1], [1], [1], z)
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str

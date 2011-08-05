@@ -1,9 +1,11 @@
-from sympy import Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I, \
-    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify, \
-    WildFunction, Poly, Function, Derivative, Number, pi, var, \
-    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, \
-    radsimp, powsimp, simplify, together, separate, collect, factorial, \
-    apart, combsimp, factor, refine, cancel, invert, Tuple
+from __future__ import division
+
+from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
+    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify,
+    WildFunction, Poly, Function, Derivative, Number, pi, var,
+    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
+    radsimp, powsimp, simplify, together, separate, collect, factorial,
+    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key, DiracDelta)
 from sympy.physics.secondquant import FockState
 
 from sympy.core.cache import clear_cache
@@ -433,7 +435,7 @@ def test_as_independent():
     assert (2*sin(x)).as_independent(y) == (2*sin(x), 1)
 
     # issue 1804 = 1766b
-    n1, n2 = symbols('n1 n2', commutative=False)
+    n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
     assert (n1 + n1*n2).as_independent(n2) == (n1, n1*n2)
     assert (n2*n1 + n1*n2).as_independent(n2) == (0, n1*n2 + n2*n1)
     assert (n1*n2*n1).as_independent(n2) == (n1, n2*n1)
@@ -446,6 +448,17 @@ def test_as_independent():
 
     # issue 2380
     assert (3*x).as_independent(Symbol) == (3, x)
+
+    # issue 2549
+    assert (n1*x*y).as_independent(x) == (n1*y, x)
+    assert ((x + n1)*(x - y)).as_independent(x) == (1, (x + n1)*(x - y))
+    assert ((x + n1)*(x - y)).as_independent(y) == (x + n1, x - y)
+    assert (DiracDelta(x - n1)*DiracDelta(x - y)).as_independent(x) == (1, DiracDelta(x - n1)*DiracDelta(x - y))
+    assert (x*y*n1*n2*n3).as_independent(n2) == (x*y*n1, n2*n3)
+    assert (x*y*n1*n2*n3).as_independent(n1) == (x*y, n1*n2*n3)
+    assert (x*y*n1*n2*n3).as_independent(n3) == (x*y*n1*n2, n3)
+    assert (DiracDelta(x - n1)*DiracDelta(y - n1)*DiracDelta(x - n2)).as_independent(y) == \
+           (DiracDelta(x - n1), DiracDelta(y - n1)*DiracDelta(x - n2))
 
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')
@@ -962,28 +975,27 @@ def test_as_coeff_Mul():
 
 def test_expr_sorting():
     f, g = symbols('f,g', cls=Function)
-    sort_key = lambda expr: expr.sort_key()
 
     exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [x + 1, x**2 + x + 1, x**3 + x**2 + x + 1]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [S(4), x - 3*I/2, x + 3*I/2, x - 4*I + 1, x + 4*I + 1]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [f(x), g(x), exp(x), sin(x), cos(x), factorial(x)]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [Tuple(x, y), Tuple(x, z), Tuple(x, y, z)]
-    assert sorted(exprs, key=sort_key) == exprs
+    assert sorted(exprs, key=default_sort_key) == exprs
 
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)
@@ -1023,6 +1035,13 @@ def test_as_ordered_terms():
     assert (-4 + 3*I).as_ordered_terms() == [-4,  3*I]
     assert ( 4 - 3*I).as_ordered_terms() == [ 4, -3*I]
     assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
+
+    f = x**2*y**2 + x*y**4 + y + 2
+
+    assert f.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
+    assert f.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
+    assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
+    assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
 def test_issue_1100():
     # first subs and limit gives NaN

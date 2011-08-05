@@ -21,9 +21,12 @@ import linecache
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest # avoid clashing with our doctest() function
-from sympy.utilities import any
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
+import random
+import subprocess
+
+from sympy.core.cache import clear_cache
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -82,8 +85,6 @@ def get_sympy_dir():
                         os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
 
-from sympy.utilities import any, all
-
 def isgeneratorfunction(object):
     """
     Return true if the object is a user-defined generator function.
@@ -121,20 +122,39 @@ def test(*paths, **kwargs):
 
     Examples:
 
-    >> from sympy.utilities.runtests import test
+    >> import sympy
 
     Run all tests:
-    >> test()
+    >> sympy.test()
 
     Run one file:
-    >> test("sympy/core/tests/test_basic.py")
-    >> test("_basic")
+    >> sympy.test("sympy/core/tests/test_basic.py")
+    >> sympy.test("_basic")
 
     Run all tests in sympy/functions/ and some particular file:
-    >> test("sympy/core/tests/test_basic.py", "sympy/functions")
+    >> sympy.test("sympy/core/tests/test_basic.py", "sympy/functions")
 
     Run all tests in sympy/core and sympy/utilities:
-    >> test("/core", "/util")
+    >> sympy.test("/core", "/util")
+
+    Run specific test from a file:
+    >> sympy.test("sympy/core/tests/test_basic.py", kw="test_equality")
+
+    Run the tests with verbose mode on:
+    >> sympy.test(verbose=True)
+
+    Don't sort the test output:
+    >> sympy.test(sort=False)
+
+    Turn on post-mortem pdb:
+    >> sympy.test(pdb=True)
+
+    Turn off colors:
+    >> sympy.test(colors=False)
+
+    The traceback verboseness can be set to "short" or "no" (default is "short")
+    >> sympy.test(tb='no')
+
     """
     verbose = kwargs.get("verbose", False)
     tb = kwargs.get("tb", "short")
@@ -142,8 +162,16 @@ def test(*paths, **kwargs):
     post_mortem = kwargs.get("pdb", False)
     colors = kwargs.get("colors", True)
     sort = kwargs.get("sort", True)
+    seed = kwargs.get("seed", None)
+    if seed is None:
+        seed = random.randrange(100000000)
     r = PyTestReporter(verbose, tb, colors)
-    t = SymPyTests(r, kw, post_mortem)
+    t = SymPyTests(r, kw, post_mortem, seed)
+
+    # Disable warnings for external modules
+    import sympy.external
+    sympy.external.importtools.WARN_OLD_VERSION = False
+    sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     test_files = t.get_test_files('sympy')
     if len(paths) == 0:
@@ -174,27 +202,26 @@ def doctest(*paths, **kwargs):
 
     Examples:
 
-    >> froms sympy.utilities.runtests import doctest
+    >> import sympy
 
     Run all tests:
-    >> doctest()
+    >> sympy.doctest()
 
     Run one file:
-    >> doctest("sympy/core/basic.py")
-    >> doctest("polynomial.txt")
+    >> sympy.doctest("sympy/core/basic.py")
+    >> sympy.doctest("polynomial.txt")
 
     Run all tests in sympy/functions/ and some particular file:
-    >> doctest("/functions", "basic.py")
+    >> sympy.doctest("/functions", "basic.py")
 
     Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
     sympy\functions\special\polynomials.py, and sympy\polys\polynomial.py:
-    >> doctest("polynomial")
+    >> sympy.doctest("polynomial")
     """
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
-                    "sympy/thirdparty/pyglet", # segfaults
                     "doc/src/modules/mpmath", # needs to be fixed upstream
                     "sympy/mpmath", # needs to be fixed upstream
                     "doc/src/modules/plotting.txt", # generates live plots
@@ -207,6 +234,11 @@ def doctest(*paths, **kwargs):
                     "sympy/utilities/benchmarking.py", # needs py.test
                     ])
     blacklist = convert_to_native_paths(blacklist)
+
+    # Disable warnings for external modules
+    import sympy.external
+    sympy.external.importtools.WARN_OLD_VERSION = False
+    sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
@@ -289,14 +321,14 @@ def doctest(*paths, **kwargs):
                 if first_report:
                     first_report = False
                     msg = 'txt doctests start'
-                    lhead = '='*((80 - len(msg))//2 - 1)
-                    rhead = '='*(79 - len(msg) - len(lhead) - 1)
+                    lhead = '='*((r.terminal_width - len(msg))//2 - 1)
+                    rhead = '='*(r.terminal_width - 1 - len(msg) - len(lhead) - 1)
                     print ' '.join([lhead, msg, rhead])
                     print
                 # use as the id, everything past the first 'sympy'
                 file_id = txt_file[txt_file.find('sympy') + len('sympy') + 1:]
                 print file_id, # get at least the name out so it is know who is being tested
-                wid = 80 - len(file_id) - 1 #update width
+                wid = r.terminal_width - len(file_id) - 1 #update width
                 test_file = '[%s]' % (tested)
                 report = '[%s]' % (txtfailed or 'OK')
                 print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
@@ -442,7 +474,8 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
 class SymPyTests(object):
 
-    def __init__(self, reporter, kw="", post_mortem=False):
+    def __init__(self, reporter, kw="", post_mortem=False,
+                 seed=random.random()):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -450,6 +483,7 @@ class SymPyTests(object):
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
+        self._seed = seed
 
     def test(self, sort=False):
         """
@@ -461,8 +495,9 @@ class SymPyTests(object):
             self._testfiles.sort()
         else:
             from random import shuffle
+            random.seed(self._seed)
             shuffle(self._testfiles)
-        self._reporter.start()
+        self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
                 self.test_file(f)
@@ -472,10 +507,12 @@ class SymPyTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
+        clear_cache()
         name = "test%d" % self._count
         name = os.path.splitext(os.path.basename(filename))[0]
         self._count += 1
         gl = {'__file__':filename}
+        random.seed(self._seed)
         try:
             execfile(filename, gl)
         except (ImportError, SyntaxError):
@@ -531,7 +568,7 @@ class SymPyTests(object):
                     if self._post_mortem:
                         pdb.post_mortem(tr)
                 elif t.__name__ == "Skipped":
-                    self._reporter.test_skip()
+                    self._reporter.test_skip(v)
                 elif t.__name__ == "XFail":
                     self._reporter.test_xfail()
                 elif t.__name__ == "XPass":
@@ -592,6 +629,7 @@ class SymPyDocTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
+        clear_cache()
 
         import unittest
         from StringIO import StringIO
@@ -734,11 +772,7 @@ class SymPyDocTestFinder(DocTestFinder):
                             valname = '%s.%s' % (name, rawname)
                             self._find(tests, val, valname, module, source_lines, globs, seen)
                         except ValueError, msg:
-                            if "invalid option" in msg.args[0]:
-                                # +SKIP raises ValueError in Python 2.4
-                                pass
-                            else:
-                                raise
+                            raise
                         except:
                             pass
 
@@ -929,6 +963,8 @@ class PyTestReporter(Reporter):
         self._passed = 0
         self._skipped = 0
         self._exceptions = []
+        self._terminal_width = None
+        self._default_width = 80
 
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
@@ -938,7 +974,68 @@ class PyTestReporter(Reporter):
     def root_dir(self, dir):
         self._root_dir = dir
 
-    def write(self, text, color="", align="left", width=80):
+    @property
+    def terminal_width(self):
+        if self._terminal_width is not None:
+            return self._terminal_width
+
+        def findout_terminal_width():
+            if sys.platform == "win32":
+                # Windows support is based on:
+                #
+                #  http://code.activestate.com/recipes/440694-determine-size-of-console-window-on-windows/
+
+                from ctypes import windll, create_string_buffer
+
+                h = windll.kernel32.GetStdHandle(-12)
+                csbi = create_string_buffer(22)
+                res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
+
+                if res:
+                    import struct
+                    (_, _, _, _, _, left, _, right, _, _, _) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+                    return right - left
+                else:
+                    return self._default_width
+
+            if hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
+                return self._default_width # leave PIPEs alone
+
+            try:
+                process = subprocess.Popen(['stty', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout = process.stdout.read()
+            except (OSError, IOError):
+                pass
+            else:
+                # We support the following output formats from stty:
+                #
+                # 1) Linux   -> columns 80
+                # 2) OS X    -> 80 columns
+                # 3) Solaris -> columns = 80
+
+                re_linux   = r"columns\s+(?P<columns>\d+);"
+                re_osx     = r"(?P<columns>\d+)\s*columns;"
+                re_solaris = r"columns\s+=\s+(?P<columns>\d+);"
+
+                for regex in (re_linux, re_osx, re_solaris):
+                    match = re.search(regex, stdout)
+
+                    if match is not None:
+                        columns = match.group('columns')
+
+                        try:
+                            return int(columns)
+                        except ValueError:
+                            pass
+
+            return self._default_width
+
+        width = findout_terminal_width()
+        self._terminal_width = width
+
+        return width
+
+    def write(self, text, color="", align="left", width=None):
         """
         Prints a text on the screen.
 
@@ -974,6 +1071,9 @@ class PyTestReporter(Reporter):
         c_normal = '\033[0m'
         c_color = '\033[%sm'
 
+        if width is None:
+            width = self.terminal_width
+
         if align == "right":
             if self._write_pos+len(text) > width:
                 # we don't fit on the current line, create a new line
@@ -1008,7 +1108,7 @@ class PyTestReporter(Reporter):
         self._write_pos %= width
 
     def write_center(self, text, delim="="):
-        width = 80
+        width = self.terminal_width
         if text != "":
             text = " %s " % text
         idx = (width-len(text)) // 2
@@ -1024,14 +1124,21 @@ class PyTestReporter(Reporter):
         t = traceback.format_exception_only(e, val)
         self.write("".join(t))
 
-    def start(self):
+    def start(self, seed=None):
         self.write_center("test process starts")
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
         self.write("executable:   %s  (%s)\n" % (executable, python_version))
+        from .misc import ARCH
+        self.write("architecture: %s\n" % ARCH)
+        from sympy.core.cache import USE_CACHE
+        self.write("cache:        %s\n" % USE_CACHE)
         from sympy.polys.domains import GROUND_TYPES
-        self.write("ground types: %s\n\n" % GROUND_TYPES)
+        self.write("ground types: %s\n" % GROUND_TYPES)
+        if seed is not None:
+            self.write("random seed:  %d\n" % seed)
+        self.write('\n')
         self._t_start = clock()
 
     def finish(self):
@@ -1043,7 +1150,7 @@ class PyTestReporter(Reporter):
         def add_text(mytext):
             global text, linelen
             """Break new text if too long."""
-            if linelen + len(mytext) > 80:
+            if linelen + len(mytext) > self.terminal_width:
                 text += '\n'
                 linelen = 0
             text += mytext
@@ -1158,9 +1265,12 @@ class PyTestReporter(Reporter):
         else:
             self.write(".", "Green")
 
-    def test_skip(self):
+    def test_skip(self, v):
         self._skipped += 1
         self.write("s", "Green")
+        if self._verbose:
+            self.write(" - ", "Green")
+            self.write(v.message, "Green")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

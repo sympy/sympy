@@ -2,7 +2,7 @@ from core import C
 from expr import Expr
 from sympify import _sympify, sympify
 from cache import cacheit
-from compatibility import all
+from compatibility import cmp
 
 # from add import Add   /cyclic/
 # from mul import Mul   /cyclic/
