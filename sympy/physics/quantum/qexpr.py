@@ -311,9 +311,9 @@ class QExpr(Expr):
     def _get_default_basis(self, **options):
         raise NotImplementedError('This object does not have a default basis')
 
-    def _represent_default_basis(self, **options):
-        def_basis = self._get_default_basis(**options)
-        return self._represent(basis=def_basis(), **options)
+    #def _represent_default_basis(self, **options):
+    #    def_basis = self._get_default_basis(**options)
+    #    return self._represent(basis=def_basis(), **options)
 
     def _represent(self, **options):
         """Represent this object in a given basis.

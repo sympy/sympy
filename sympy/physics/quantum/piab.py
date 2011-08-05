@@ -7,6 +7,7 @@ from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.constants import hbar
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import L2
+from sympy.physics.quantum.cartesian import XKet
 
 m = Symbol('m')
 L = Symbol('L')
@@ -42,10 +43,10 @@ class PIABKet(Ket):
     def dual_class(self):
         return PIABBra
 
-    def _represent_default_basis(self, **options):
-        return self._represent_XOp(None, **options)
+    def _get_default_basis(self, **options):
+        return XKet
 
-    def _represent_XOp(self, basis, **options):
+    def _represent_XKet(self, basis, **options):
         x = Symbol('x')
         n = Symbol('n')
         subs_info = options.get('subs',{})

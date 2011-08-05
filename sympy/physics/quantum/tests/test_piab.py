@@ -4,6 +4,7 @@ from sympy import Interval, pi, S, sin, sqrt, symbols
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum import L2, qapply, hbar, represent
 from sympy.physics.quantum.piab import PIABHamiltonian, PIABKet, PIABBra, m, L
+from sympy.physics.quantum.cartesian import XOp, XKet
 
 i, j, n, x = symbols('i j n x')
 
@@ -18,5 +19,7 @@ def test_states():
     assert PIABKet(n).hilbert_space ==\
         L2(Interval(S.NegativeInfinity,S.Infinity))
     assert represent(PIABKet(n)) == sqrt(2/L)*sin(n*pi*x/L)
+    assert represent(PIABKet(n), basis=XKet) == sqrt(2/L)*sin(n*pi*x/L)
+    assert represent(PIABKet(n), basis=XOp) == sqrt(2/L)*sin(n*pi*x/L)
     assert (PIABBra(i)*PIABKet(j)).doit() == KroneckerDelta(i, j)
     assert PIABBra(n).dual_class() == PIABKet
