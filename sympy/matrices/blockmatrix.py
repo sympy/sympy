@@ -9,6 +9,30 @@ from sympy import Tuple, Basic, sympify, FiniteSet
 from sympy.utilities.iterables import iterable
 
 class BlockMatrix(MatrixExpr):
+    """A BlockMatrix is a Matrix composed of other smaller, submatrices
+
+    The submatrices are stored in a SymPy Matrix object but accessed as part of
+    a Matrix Expression
+
+    >>> from sympy import (MatrixSymbol, BlockMatrix, symbols, Identity,
+            Matrix, ZeroMatrix, block_collapse)
+    >>> n,m,l = symbols('n m l')
+    >>> X = MatrixSymbol('X', n, n)
+    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Z = MatrixSymbol('Z', n, m)
+    >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
+    >>> print B
+    [X, Z]
+    [0, Y]
+
+    >>> C = BlockMatrix([[Identity(n), X]])
+    >>> print C
+    [I, Z]
+
+    >>> print block_collapse(C*B)
+    [X, Z + Z*Y]
+
+    """
     is_BlockMatrix = True
     is_BlockDiagMatrix = False
     def __new__(cls, mat):
@@ -112,6 +136,17 @@ class BlockMatrix(MatrixExpr):
         return self.rowblocksizes == self.colblocksizes
 
 class BlockDiagMatrix(BlockMatrix):
+    """A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
+
+    >>> from sympy import MatrixSymbol, BlockDiagMatrix, symbols, Identity
+    >>> n,m,l = symbols('n m l')
+    >>> X = MatrixSymbol('X', n, n)
+    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> BlockDiagMatrix(X, Y)
+    [X, 0]
+    [0, Y]
+
+    """
     is_BlockDiagMatrix = True
     def __new__(cls, *mats):
         data_matrix = eye(len(mats))
@@ -158,6 +193,7 @@ class BlockDiagMatrix(BlockMatrix):
             return BlockMatrix._blockadd(self, other)
 
 def block_collapse(expr):
+    """Evaluates a block matrix expression"""
 
     if expr.__class__ in [tuple, list, set, frozenset]:
         return expr.__class__([block_collapse(arg) for arg in expr])
@@ -220,14 +256,14 @@ def block_collapse(expr):
         matrices = [arg for arg in expr.args if arg.is_Matrix]
         newmatrices = []
         i = 0
-        while (i+1<len(matrices)):
+        while (i+1 < len(matrices)):
             A, B = matrices[i:i+2]
             if A.is_BlockMatrix and B.is_BlockMatrix:
                 matrices[i] = A._blockmul(B)
                 matrices.pop(i+1)
             else:
                 i+=1
-        return MatMul(*(nonmatrices+matrices))
+        return MatMul(*(nonmatrices + matrices))
 
     if expr.is_Pow:
         rv = expr.base

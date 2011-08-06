@@ -1,7 +1,8 @@
 from sympy.utilities.pytest import raises
 from sympy import S, symbols, Symbol
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
-        MatMul)
+        MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
+        ZeroMatrix)
 
 def test_transpose():
     n, m, l = symbols('n m l', integer=True)
@@ -43,7 +44,20 @@ def test_matexpr():
 
     assert (x*A).shape == A.shape
     assert (x*A).__class__ == MatMul
-    assert 2*A - A - A == S.Zero
+    assert 2*A - A - A == ZeroMatrix(*A.shape)
+
+def test_subs():
+    n, m, l = symbols('n m l', integer=True)
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', m, l)
+    C = MatrixSymbol('C', m, l)
+
+    assert A.subs(n,m).shape == (m,m)
+
+    assert (A*B).subs(B,C) == A*C
+
+    assert (A*B).subs(l,n).is_square
+
 
 def test_BlockMatrix():
     n,m,l,k = symbols('n m l k', integer=True)
@@ -63,7 +77,7 @@ def test_BlockMatrix():
 
     Y = BlockMatrix(Matrix([[E], [F]]))
 
-    assert (X*Y).shape = (l+n, 1)
+    assert (X*Y).shape == (l+n, 1)
     assert block_collapse(X*Y)[0,0] == A*E + B*F
     assert block_collapse(X*Y)[1,0] == C*E + D*F
     assert Transpose(block_collapse(Transpose(X*Y))) == block_collapse(X*Y)
@@ -84,6 +98,3 @@ def test_BlockDiagMatrix():
     assert block_collapse(X.I * X).is_Identity
 
     assert block_collapse(X*X) == BlockDiagMatrix(A**2, B**2, C**2)
-
-
-

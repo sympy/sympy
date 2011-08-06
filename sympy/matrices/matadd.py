@@ -12,7 +12,6 @@ class MatAdd(MatrixExpr, Add):
         if not all(arg.is_Matrix for arg in args):
             raise ValueError("Mix of Matrix and Scalar symbols")
 
-
         # Check that the shape of the args is consistent
         A = args[0]
         for B in args[1:]:
@@ -41,9 +40,5 @@ class MatAdd(MatrixExpr, Add):
     @property
     def shape(self):
         return self.args[0].shape
-
-    def _check_shape(self):
-        return (all(arg.shape == self.args[0].shape for arg in self.args) and
-                all(arg._check_shape() for arg in self.args))
 
 from matmul import MatMul

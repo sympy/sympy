@@ -7,6 +7,17 @@ from sympy.core.compatibility import any, all, reduce
 from sympy.matrices import ShapeError
 
 class MatrixExpr(Expr):
+    """ Matrix Expression Class
+    Matrix Expressions subclass SymPy Expr's so that
+    MatAdd inherits from Add
+    MatMul inherits from Mul
+    MatPow inherits from Pow
+
+    They use _op_priority to gain control with binary operations (+, *, -, **)
+    are used
+
+    They implement operations specific to Matrix Algebra.
+    """
 
     _op_priority = 11.0
 
@@ -86,13 +97,7 @@ class MatrixExpr(Expr):
 
     @property
     def is_square(self):
-        return Eq(self.n, self.m)
-
-    def subs(self, *args):
-        ex = matrixify(Basic.subs(self, *args))
-        #if ex.is_Matrix and not ex._check_shape():
-#            raise ShapeError("Substituted expression invalid")
-        return ex
+        return self.n == self.m
 
     def eval_transpose(self):
         raise NotImplementedError()
@@ -111,15 +116,13 @@ class MatrixExpr(Expr):
 
 class MatrixSymbol(MatrixExpr, Symbol):
     is_commutative = False
+
     def __new__(cls, name, n, m):
         obj = Basic.__new__(cls, name, n, m)
         return obj
 
     def _hashable_content(self):
         return(self.name, self.shape)
-
-    def _check_shape(self):
-        return True
 
     @property
     def shape(self):
@@ -129,7 +132,22 @@ class MatrixSymbol(MatrixExpr, Symbol):
     def name(self):
         return self.args[0]
 
+    def _eval_subs(self, old, new):
+        if self==old:
+            return new
+        else:
+            shape = Tuple(*self.shape).subs(old, new)
+            return MatrixSymbol(self.name, *shape)
+
 class Identity(MatrixSymbol):
+    """The Matrix Identity I - multiplicative identity
+    >>> from sympy.matrices import Identity, MatrixSymbol
+    >>> A = MatrixSymbol(3,5)
+    >>> I = Identity(3)
+    >>> I*A
+    A
+    """
+
     is_Identity = True
     def __new__(cls, n):
         return MatrixSymbol.__new__(cls, "I", n, n)
@@ -138,6 +156,15 @@ class Identity(MatrixSymbol):
         return self
 
 class ZeroMatrix(MatrixSymbol):
+    """The Matrix Zero 0 - additive identity
+    >>> from sympy.matrices import Identity, MatrixSymbol
+    >>> A = MatrixSymbol(3,5)
+    >>> Z = ZeroMatrix(3,5)
+    >>> A+Z
+    A
+    >>> Z*A.T
+    0
+    """
     is_ZeroMatrix = True
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
@@ -149,11 +176,19 @@ def matrix_symbols(expr):
 
 def matrixify(expr):
     """
-    Mul.flatten is useful but always returns Muls. This is a quick fix to ensure
-    that at least the outer class is a Matrix Expression.
-    I expect that this will break for complex expression trees.
+    Recursively walks down an expression tree changing Expr's to MatExpr's
+    i.e. Add -> MatAdd
+         Mul -> MatMul
 
-    Internal use only
+    Only changes those Exprs which contain MatrixSymbols
+
+    This function is useful when traditional SymPy functions which use Mul and
+    Add are called on MatrixExpressions. Examples flatten, expand, simplify...
+
+    Calling matrixify after calling these functions will reset classes back to
+    their matrix equivalents
+
+    For internal use
     """
     if len(matrix_symbols(expr))==0: # No matrix symbols present
         return expr
@@ -163,17 +198,25 @@ def matrixify(expr):
     if expr.__class__ not in class_dict.keys():
         return expr
 
-    args = map(matrixify, expr.args) # recursively call down the tree
+    args = map(matrixify, expr.args) # Recursively call down the tree
 
     return Basic.__new__(class_dict[expr.__class__], *args)
 
-def matsimp(expr):
-    if all(mat.is_Identity for mat in new):
-        new = [new[0]]
-    else:
-        new = [mat for mat in new if not mat.is_Identity] # clear ident
-
 def linear_factors(expr, *syms):
+    """Reduce a Matrix Expression to a sum of linear factors
+
+    Given symbols and a matrix expression linear in those symbols return a
+    dict mapping symbol to the linear factor
+
+    >>> from sympy.matrices import MatrixSymbol, linear_factors
+    >>> n, m, l = symbols('n m l')
+    >>> A = MatrixSymbol('A', n, m)
+    >>> B = MatrixSymbol('B', m, l)
+    >>> C = MatrixSymbol('C', n, l)
+    >>> linear_factors(2*A*B + C, B, C)
+    {C: I, B: 2*A}
+    """
+
     expr = matrixify(expand(expr))
     d = {}
     if expr.is_Matrix and expr.is_Symbol:

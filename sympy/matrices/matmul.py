@@ -42,13 +42,6 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].n, matrices[-1].m)
 
-    def _check_shape(self):
-        matrices = [arg for arg in self.args if arg.is_Matrix]
-        for A, B in zip(matrices[:-1], matrices[1:]):
-            if A.m != B.n:
-                return False
-        return all(mat._check_shape() for mat in matrices)
-
 from matadd import MatAdd
 from matpow import MatPow
 from inverse import Inverse
