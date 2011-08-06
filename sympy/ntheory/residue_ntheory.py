@@ -1,7 +1,79 @@
+from sympy.core import Basic
 from sympy.core.numbers import igcd
 from primetest import isprime
 from factor_ import factorint
 
+class Residue(Basic):
+    """
+    The residue classes of a function f(x) mod n are all
+    possible values of the residue f(x) (mod n).
+    For example, the residue classes of x^2 (mod 6) are
+    {0,1,3,4}.
+    """
+
+    def __init__(self, val, n):
+        self.v = val % n
+        self.n = n
+
+    def __mul__(self, m):
+        """
+        a*b = (a*b) mod n
+        """
+        return Residue(self.v * m.v, self.n)
+
+    def __div__(self, m):
+        return self * m.inv()
+
+    def __add__(self, m):
+        """
+        a+b = (a+b) mod n
+        """
+        return Residue(self.v + m.v, self.n)
+
+    def __sub__(self, m):
+        return self.__add__(-m)
+
+    def __neg__(self):
+        return Residue(-self.v, self.n)
+
+    def __pow__(self, n):
+        new = Residue(1, self.n)
+        if n==0:
+            return new
+        new = Residue(pow(self.v,abs(n), self.n), self.n)
+        if n < 0:
+            new = new.inv()
+        return new
+
+    def ord(self):
+        """
+        Exponent of g: power of g > 0 that equals 1
+        """
+        i = 1
+        while (self**i).v != 1:
+            i += 1
+        return i
+
+    def inv(self):
+        return pow(self, totient(self.n) - 1)
+
+    def __gte__(self, k):
+        return self.v >= k.v
+
+    def __lte__(self, k):
+        return self.v <= k.v
+
+    def __lt__(self, k):
+        return self.v < k.v
+
+    def __gt__(self, k):
+        return self.v > k.v
+
+    def __eq__(self, k):
+        return self.v == k.v
+
+    def __repr__(self):
+        return str(self.v)
 
 def totient_(n):
     """returns the number of integers less than n
