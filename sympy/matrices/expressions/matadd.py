@@ -2,6 +2,19 @@ from matexpr import MatrixExpr, ShapeError, matrixify, ZeroMatrix
 from sympy import Add, S
 
 class MatAdd(MatrixExpr, Add):
+    """A Sum of Matrix Expressions
+
+    MatAdd inherits from and operates like SymPy Add
+
+    >>> from sympy import MatAdd, MatrixSymbol
+    >>> A = MatrixSymbol('A', 5, 5)
+    >>> B = MatrixSymbol('B', 5, 5)
+    >>> C = MatrixSymbol('C', 5, 5)
+    >>> MatAdd(A, B, C)
+    A + B + C
+    """
+
+
 
     def __new__(cls, *args):
 

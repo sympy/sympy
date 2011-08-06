@@ -14,8 +14,7 @@ class BlockMatrix(MatrixExpr):
     The submatrices are stored in a SymPy Matrix object but accessed as part of
     a Matrix Expression
 
-    >>> from sympy import (MatrixSymbol, BlockMatrix, symbols, Identity,
-            Matrix, ZeroMatrix, block_collapse)
+    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, ZeroMatrix, block_collapse
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
@@ -25,7 +24,7 @@ class BlockMatrix(MatrixExpr):
     [X, Z]
     [0, Y]
 
-    >>> C = BlockMatrix([[Identity(n), X]])
+    >>> C = BlockMatrix([[Identity(n), Z]])
     >>> print C
     [I, Z]
 
@@ -195,18 +194,17 @@ class BlockDiagMatrix(BlockMatrix):
 def block_collapse(expr):
     """Evaluates a block matrix expression
 
-    >>> from sympy import (MatrixSymbol, BlockMatrix, symbols, Identity,
-            Matrix, ZeroMatrix, block_collapse)
+    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, Matrix, ZeroMatrix, block_collapse
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
-    >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
+    >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
     >>> print B
     [X, Z]
     [0, Y]
 
-    >>> C = BlockMatrix([[Identity(n), X]])
+    >>> C = BlockMatrix([[Identity(n), Z]])
     >>> print C
     [I, Z]
 

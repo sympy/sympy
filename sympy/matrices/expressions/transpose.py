@@ -16,7 +16,7 @@ class Transpose(MatrixExpr):
     >>> A.T
     A'
     >>> Transpose(A*B)
-    B'A'
+    B'*A'
     """
     is_Transpose = True
     def __new__(cls, mat):

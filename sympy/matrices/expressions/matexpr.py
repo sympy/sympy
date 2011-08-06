@@ -125,7 +125,7 @@ class MatrixSymbol(MatrixExpr, Symbol):
     >>> A.shape
     (3, 4)
     >>> 2*A*B + Identity(3)
-    2*A*B + I
+    I + 2*A*B
     """
     is_commutative = False
 
@@ -154,7 +154,7 @@ class MatrixSymbol(MatrixExpr, Symbol):
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
     >>> from sympy.matrices import Identity, MatrixSymbol
-    >>> A = MatrixSymbol(3,5)
+    >>> A = MatrixSymbol('A', 3, 5)
     >>> I = Identity(3)
     >>> I*A
     A
@@ -169,9 +169,9 @@ class Identity(MatrixSymbol):
 
 class ZeroMatrix(MatrixSymbol):
     """The Matrix Zero 0 - additive identity
-    >>> from sympy.matrices import Identity, MatrixSymbol
-    >>> A = MatrixSymbol(3,5)
-    >>> Z = ZeroMatrix(3,5)
+    >>> from sympy import MatrixSymbol, ZeroMatrix
+    >>> A = MatrixSymbol('A', 3, 5)
+    >>> Z = ZeroMatrix(3, 5)
     >>> A+Z
     A
     >>> Z*A.T
@@ -220,13 +220,13 @@ def linear_factors(expr, *syms):
     Given symbols and a matrix expression linear in those symbols return a
     dict mapping symbol to the linear factor
 
-    >>> from sympy.matrices import MatrixSymbol, linear_factors
+    >>> from sympy import MatrixSymbol, linear_factors, symbols
     >>> n, m, l = symbols('n m l')
     >>> A = MatrixSymbol('A', n, m)
     >>> B = MatrixSymbol('B', m, l)
     >>> C = MatrixSymbol('C', n, l)
     >>> linear_factors(2*A*B + C, B, C)
-    {C: I, B: 2*A}
+    {B: 2*A, C: I}
     """
 
     expr = matrixify(expand(expr))

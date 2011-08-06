@@ -2,6 +2,17 @@ from matexpr import MatrixExpr, ShapeError, matrixify, Identity, ZeroMatrix
 from sympy.core import Mul
 
 class MatMul(MatrixExpr, Mul):
+    """A Product of Matrix Expressions
+
+    MatMul inherits from and operates like SymPy Mul
+
+    >>> from sympy import MatMul, MatrixSymbol
+    >>> A = MatrixSymbol('A', 5, 4)
+    >>> B = MatrixSymbol('B', 4, 3)
+    >>> C = MatrixSymbol('C', 3, 6)
+    >>> MatMul(A, B, C)
+    A*B*C
+    """
 
     def __new__(cls, *args):
 
