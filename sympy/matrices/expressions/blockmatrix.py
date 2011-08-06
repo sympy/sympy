@@ -245,7 +245,11 @@ def block_collapse(expr):
     # Turn  -[X, Y] into [-X, -Y]
     if (expr.is_Mul and len(expr.args)==2 and not expr.args[0].is_Matrix
             and expr.args[1].is_BlockMatrix):
-        return BlockMatrix(expr.args[0]*expr.args[1].mat)
+        if expr.args[1].is_BlockDiagMatrix:
+            return BlockDiagMatrix(
+                    *[expr.args[0]*arg for arg in expr.args[1].diag])
+        else:
+            return BlockMatrix(expr.args[0]*expr.args[1].mat)
 
     if expr.is_Add:
         nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]
@@ -262,7 +266,7 @@ def block_collapse(expr):
             c, M = mat.as_coeff_Mul()
             if M.is_Identity and block.is_structurally_symmetric:
                 block_id = BlockDiagMatrix(
-                        [c*Identity(k) for k in block.rowblocksizes])
+                        *[c*Identity(k) for k in block.rowblocksizes])
                 nonblocks.pop(i)
                 block = block._blockadd(block_id)
 
