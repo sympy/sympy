@@ -38,6 +38,26 @@
 
 .. % scope of the document.
 
+.. math::
+
+    \newcommand{\bfrac}[2]{\displaystyle\frac{#1}{#2}}
+    \newcommand{\lp}{\left (}
+    \newcommand{\rp}{\right )}
+    \newcommand{\half}{\frac{1}{2}}
+    \newcommand{\llt}{\left <}
+    \newcommand{\rgt}{\right >}
+    \newcommand{\abs}[1]{\left |{#1}\right | }
+    \newcommand{\pdiff}[2]{\bfrac{\partial {#1}}{\partial {#2}}}
+    \newcommand{\lbrc}{\left \{}
+    \newcommand{\rbrc}{\right \}}
+    \newcommand{\W}{\wedge}
+    \newcommand{\R}{\dagger}
+    \newcommand{\lbrk}{\left [}
+    \newcommand{\rbrk}{\right ]}
+    \newcommand{\proj}[2]{\llt {#1} \rgt_{#2}}
+    \newcommand{\bm}{\boldsymbol}
+
+
 
 .. topic:: Abstract
 

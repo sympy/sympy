@@ -1,22 +1,166 @@
 SymPy Core
 ==========
 
+sympify
+-------
+.. module:: sympy.core.sympify
+.. autofunction:: sympify
+
+cacheit
+-------
+.. module:: sympy.core.cache
+.. autofunction:: cacheit
+
+.. module:: sympy.core.basic
+
 Basic
 -----
-.. module:: sympy.core.basic
 .. autoclass:: Basic
    :members:
 
+Atom
+----
+.. autoclass:: Atom
+   :members:
+
+C
+-
+.. autoclass:: C
+   :members:
+
+S
+-
+.. module:: sympy.core.singleton
+.. autoclass:: S
+   :members:
+
+.. module:: sympy.core.expr
+
 Expr
 ----
-.. module:: sympy.core.expr
 .. autoclass:: Expr
    :members:
 
+AtomicExpr
+----------
+.. autoclass:: AtomicExpr
+   :members:
+
+.. module:: sympy.core.symbol
+
 Symbol
 ------
-.. module:: sympy.core.symbol
 .. autoclass:: Symbol
+   :members:
+
+Wild
+----
+.. autoclass:: Wild
+   :members:
+
+Dummy
+-----
+.. autoclass:: Dummy
+   :members:
+
+symbols
+-------
+.. autofunction:: symbols
+
+var
+---
+.. autofunction:: var
+
+.. module:: sympy.core.numbers
+
+Number
+------
+.. autoclass:: Number
+   :members:
+
+Float
+-----
+.. autoclass:: Float
+   :members:
+
+Rational
+--------
+.. autoclass:: Rational
+   :members:
+
+Integer
+-------
+.. autoclass:: Integer
+   :members:
+
+NumberSymbol
+------------
+.. autoclass:: NumberSymbol
+   :members:
+
+RealNumber
+----------
+.. autoclass:: RealNumber
+   :members:
+
+Real
+----
+.. autoclass:: Real
+   :members:
+
+igcd
+----
+.. autofunction:: igcd
+
+ilcm
+----
+.. autofunction:: ilcm
+
+seterr
+------
+.. autofunction:: seterr
+
+E
+-
+.. autoclass:: E
+   :members:
+
+I
+-
+.. autoclass:: I
+   :members:
+
+nan
+---
+.. autofunction:: nan
+
+oo
+--
+.. autofunction:: oo
+
+pi
+--
+.. autofunction:: pi
+
+zoo
+---
+.. autofunction:: zoo
+
+.. module:: sympy.core.power
+
+Pow
+---
+.. autoclass:: Pow
+   :members:
+
+integer_nthroot
+---------------
+.. autofunction:: integer_nthroot
+
+Mul
+---
+.. module:: sympy.core.mul
+.. autoclass:: Mul
    :members:
 
 Add
@@ -25,7 +169,144 @@ Add
 .. autoclass:: Add
    :members:
 
+.. module:: sympy.core.relational
+
+Rel
+---
+.. autoclass:: Rel
+   :members:
+
+Eq
+--
+.. autoclass:: Eq
+   :members:
+
+Ne
+--
+.. autoclass:: Ne
+   :members:
+
+Lt
+--
+.. autoclass:: Lt
+   :members:
+
+Le
+--
+.. autoclass:: Le
+   :members:
+
+Gt
+--
+.. autoclass:: Gt
+   :members:
+
+Ge
+--
+.. autoclass:: Ge
+   :members:
+
+Equality
+--------
+.. autoclass:: Equality
+   :members:
+
+Inequality
+----------
+.. autoclass:: Inequality
+   :members:
+
+Unequality
+----------
+.. autoclass:: Unequality
+   :members:
+
+StrictInequality
+----------------
+.. autoclass:: StrictInequality
+   :members:
+
+vectorize
+---------
+.. module:: sympy.core.multidimensional
+.. autoclass:: vectorize
+   :members:
+
+.. module:: sympy.core.function
+
+Lambda
+------
+.. autoclass:: Lambda
+   :members:
+
+WildFunction
+------------
+.. autoclass:: WildFunction
+   :members:
+
+Derivative
+----------
+.. autoclass:: Derivative
+   :members:
+
+diff
+----
+.. autofunction:: diff
+
+FunctionClass
+-------------
+.. autoclass:: FunctionClass
+   :members:
+
+Function
+--------
+.. autoclass:: Function
+   :members:
+
+Subs
+----
+.. autoclass:: Subs
+   :members:
+
+expand
+------
+.. autofunction:: expand
+
+PoleError
+---------
+.. autoclass:: PoleError
+   :members:
+
+count_ops
+---------
+.. autofunction:: count_ops
+
+expand_mul
+----------
+.. autofunction:: expand_mul
+
+expand_log
+----------
+.. autofunction:: expand_log
+
+expand_func
+-----------
+.. autofunction:: expand_func
+
+expand_trig
+-----------
+.. autofunction:: expand_trig
+
+expand_complex
+--------------
+.. autofunction:: expand_complex
+
+expand_multinomial
+------------------
+.. autofunction:: expand_multinomial
+
 .. module:: sympy.core.sets
+
 Set
 ---
 .. autoclass:: Set
@@ -40,3 +321,31 @@ Union
 -----
 .. autoclass:: Union
    :members:
+
+EmptySet
+--------
+.. autoclass:: EmptySet
+   :members:
+
+.. module:: sympy.core.evalf
+
+PrecisionExhausted
+------------------
+.. autoclass:: PrecisionExhausted
+   :members:
+
+N
+-
+.. autoclass:: N
+   :members:
+
+Tuple
+-----
+.. module:: sympy.core.containers
+.. autoclass:: Tuple
+   :members:
+
+gcd_terms
+---------
+.. module:: sympy.core.exprtools
+.. autofunction:: gcd_terms

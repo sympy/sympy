@@ -40,7 +40,7 @@ if sys.version_info[:2] < (2,5):
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev`; do echo "'${i//\//.}',"; done | sort
+# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" `; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
@@ -245,4 +245,3 @@ setup(
                      'audit' : audit,
                      },
       )
-

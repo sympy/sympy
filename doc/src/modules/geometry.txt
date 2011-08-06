@@ -166,7 +166,7 @@ cannot be guaranteed. For example, consider the following code:
     >>> Point.is_collinear(p1, p2, p3)
     False
 
-Even though the result is currently `False`, this is not _always_ true. If the
+Even though the result is currently ``False``, this is not *always* true. If the
 quantity `z - y - 2*y*z + 2*y**2 == 0` then the points will be collinear. It
 would be really nice to inform the user of this because such a quantity may be
 useful to a user for further calculation and, at the very least, being nice to

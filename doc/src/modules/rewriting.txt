@@ -26,13 +26,13 @@ Expanding of arithmetic expressions involving products and powers:
     x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
 
 
-Arithmetic expand is done by default in `expand()` so the keyword `basic` can
-be omitted. However you can set `basic=False` to avoid this type of expand if
+Arithmetic expand is done by default in ``expand()`` so the keyword ``basic`` can
+be omitted. However you can set ``basic=False`` to avoid this type of expand if
 you use rules described below. This give complete control on what is done with
 the expression.
 
 Another type of expand rule is expanding complex valued expressions and putting
-them into a normal form. For this `complex` keyword is used. Note that it will
+them into a normal form. For this ``complex`` keyword is used. Note that it will
 always perform arithmetic expand to obtain the desired normal form:
 
     >>> (x + I*y).expand(complex=True)
@@ -41,10 +41,10 @@ always perform arithmetic expand to obtain the desired normal form:
     >>> sin(x + I*y).expand(complex=True)
     -sin(im(y) - re(x))*cosh(im(x) + re(y)) + I*cos(im(y) - re(x))*sinh(im(x) + re(y))
 
-Note also that the same behavior can be obtained by using `as_real_imag()`
+Note also that the same behavior can be obtained by using ``as_real_imag()``
 method. However it will return a tuple containing the real part in the first
 place and the imaginary part in the other. This can be also done in a two step
-process by using `collect` function:
+process by using ``collect`` function:
 
     >>> (x + I*y).as_real_imag()
     (-im(y) + re(x), im(x) + re(y))

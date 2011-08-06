@@ -12,6 +12,13 @@ def random_complex_number(a=2, b=-1, c=3, d=1):
     """
     return uniform(a, c) + I*uniform(b, d)
 
+def comp(z1, z2, tol):
+    diff = abs(z1 - z2)
+    if abs(z1) > 1:
+        return diff/abs(z1) <= tol
+    else:
+        return diff <= tol
+
 def test_numerically(f, g, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
     Test numerically that f and g agree when evaluated in the argument z.
@@ -25,7 +32,9 @@ def test_numerically(f, g, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     True
     """
     z0 = random_complex_number(a, b, c, d)
-    return abs((f.subs(z, z0) - g.subs(z, z0)).n()) <= tol
+    z1 = f.subs(z, z0).n()
+    z2 = g.subs(z, z0).n()
+    return comp(z1, z2, tol)
 
 def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
@@ -43,4 +52,4 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     z0 = random_complex_number(a, b, c, d)
     f1 = f.diff(z).subs(z, z0)
     f2 = Derivative(f, z).doit_numerically(z0)
-    return abs((f1 - f2).n()) <= tol
+    return comp(f1.n(), f2.n(), tol)

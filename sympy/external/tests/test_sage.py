@@ -1,12 +1,14 @@
 # This testfile tests SymPy <-> Sage compatibility
 #
 # Execute this test inside Sage, e.g. with:
-# sage -python bin/test sympy/test_external/test_sage.py
+# sage -python bin/test sympy/external/tests/test_sage.py
 #
 # This file can be tested by Sage itself by:
-# sage -t sympy/test_external/test_sage.py
+# sage -t sympy/external/tests/test_sage.py
 # and if all tests pass, it should be copied (verbatim) to Sage, so that it is
-# automatically doctested by Sage.
+# automatically doctested by Sage.  Note that this second method imports the
+# version of SymPy in Sage, whereas the -python method imports the local version
+# of SymPy (both use the local version of the tests, however).
 #
 # Don't test any SymPy features here. Just pure interaction with Sage.
 # Always write regular SymPy tests for anything, that can be tested in pure
@@ -42,7 +44,8 @@ def check_expression(expr, var_symbols):
     assert not isinstance(e_sage, sympy.Basic)
 
     # evaluate the expression in the context of SymPy:
-    sympy.var(var_symbols)
+    if var_symbols:
+        sympy.var(var_symbols)
     b = globals().copy()
     assert not "sin" in b
     b.update(sympy.__dict__)
