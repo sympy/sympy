@@ -1254,9 +1254,15 @@ def _rewrite_single(f, x, recursive=True):
                     continue
                 if not isinstance(terms, list):
                     terms = terms(subs)
-                return [_get_coeff_exp(fac.subs(subs).subs(z, x), x) \
-                        + (g.subs(subs).subs(z, x),)
-                        for (fac, g) in terms], cond
+                res = []
+                for fac, g in terms:
+                    r1 = _get_coeff_exp(unpolarify(fac.subs(subs).subs(z, x),
+                                                   exponents_only=True), x)
+                    g = g.subs(subs).subs(z, x)
+                    g = meijerg(g.an, g.aother, g.bm, g.bother,
+                                unpolarify(g.argument, exponents_only=True))
+                    res.append(r1 + (g,))
+                return res, cond
 
     # try recursive mellin transform
     if not recursive:
