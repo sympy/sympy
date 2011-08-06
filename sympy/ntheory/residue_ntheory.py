@@ -93,3 +93,24 @@ def legendre_symbol(a, p):
         return 1
     else:
         return -1
+
+def bin_gcd(a, b):
+    """
+    Extended version of Euclid's Algorithm (binary GCD)
+    Returns (m, n, gcd) such that  (m * a) + (n * b) = gcd(a, b)
+
+    Examples:
+    >>> from sympy.ntheory.residue_ntheory import bin_gcd
+    >>> bin_gcd(10, 15)
+    (14, -9, 5)
+    """
+    g, u, v = [b, a], [1, 0], [0, 1]
+    while g[1] != 0:
+        y = g[0] // g[1]
+        g[0], g[1] = g[1], g[0] % g[1]
+        u[0], u[1] = u[1], u[0] - (y * u[1])
+        v[0], v[1] = v[1], v[0] - (y * v[1])
+    m = v[0] % b
+    gcd = (m * a) % b
+    n = (gcd - m * a) // b
+    return (m, n, gcd)
