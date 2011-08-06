@@ -23,6 +23,8 @@ def test_inverse():
     raises(ShapeError, "Inverse(A)")
     assert Inverse(Inverse(C)) == C
 
+    assert Inverse(C)*C == Identity(C.n)
+
     assert Inverse(eye(3)) == eye(3)
 
 def test_shape():

@@ -17,6 +17,12 @@ class Transpose(MatrixExpr):
             except:
                 pass
 
+        if mat.is_Mul:
+            return MatMul(*[Transpose(arg) for arg in mat.args[::-1]])
+
+        if mat.is_Add:
+            return MatAdd(*[Transpose(arg) for arg in mat.args])
+
         return Basic.__new__(cls, mat)
 
     @property
@@ -27,4 +33,5 @@ class Transpose(MatrixExpr):
     def shape(self):
         return self.arg.shape[::-1]
 
-
+from matmul import MatMul
+from matadd import MatAdd
