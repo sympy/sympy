@@ -3,7 +3,6 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import any, all, reduce
 from sympy.matrices import ShapeError
 
 class MatrixExpr(Expr):
@@ -115,6 +114,19 @@ class MatrixExpr(Expr):
 
 
 class MatrixSymbol(MatrixExpr, Symbol):
+    """Symbolic representation of a Matrix object
+
+    Creates a SymPy Symbol to represent a Matrix. This matrix has a shape and
+    can be included in Matrix Expressions
+
+    >>> from sympy import MatrixSymbol, Identity
+    >>> A = MatrixSymbol('A', 3, 4) # A 3 by 4 Matrix
+    >>> B = MatrixSymbol('B', 4, 3) # A 4 by 3 Matrix
+    >>> A.shape
+    (3, 4)
+    >>> 2*A*B + Identity(3)
+    2*A*B + I
+    """
     is_commutative = False
 
     def __new__(cls, name, n, m):

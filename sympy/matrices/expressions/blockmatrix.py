@@ -4,7 +4,7 @@ from matadd import MatAdd
 from matpow import MatPow
 from transpose import Transpose
 from inverse import Inverse
-from matrices import Matrix, eye
+from sympy.matrices import Matrix, eye
 from sympy import Tuple, Basic, sympify, FiniteSet
 from sympy.utilities.iterables import iterable
 
@@ -193,8 +193,26 @@ class BlockDiagMatrix(BlockMatrix):
             return BlockMatrix._blockadd(self, other)
 
 def block_collapse(expr):
-    """Evaluates a block matrix expression"""
+    """Evaluates a block matrix expression
 
+    >>> from sympy import (MatrixSymbol, BlockMatrix, symbols, Identity,
+            Matrix, ZeroMatrix, block_collapse)
+    >>> n,m,l = symbols('n m l')
+    >>> X = MatrixSymbol('X', n, n)
+    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Z = MatrixSymbol('Z', n, m)
+    >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
+    >>> print B
+    [X, Z]
+    [0, Y]
+
+    >>> C = BlockMatrix([[Identity(n), X]])
+    >>> print C
+    [I, Z]
+
+    >>> print block_collapse(C*B)
+    [X, Z + Z*Y]
+    """
     if expr.__class__ in [tuple, list, set, frozenset]:
         return expr.__class__([block_collapse(arg) for arg in expr])
     if expr.__class__ in [Tuple, FiniteSet]:

@@ -3,6 +3,23 @@ from matpow import MatPow
 from sympy import Basic
 
 class Inverse(MatPow):
+    """Matrix Inverse
+
+    Represents the Inverse of a matrix expression
+
+    Use .I as shorthand
+
+    >>> from sympy import MatrixSymbol, Inverse
+    >>> A = MatrixSymbol('A', 3, 3)
+    >>> B = MatrixSymbol('B', 3, 3)
+    >>> Inverse(A)
+    A^-1
+    >>> A.I
+    A^-1
+    >>> Inverse(A*B)
+    B^-1*A^-1
+
+    """
     is_Inverse = True
 
     def __new__(cls, mat, **kwargs):

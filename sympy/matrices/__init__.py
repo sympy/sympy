@@ -7,7 +7,4 @@ from matrices import (Matrix, SparseMatrix, zeros, ones, eye, diag,
      list2numpy, matrix2numpy, DeferredVector, block_diag, symarray, ShapeError,
      NonSquareMatrixError)
 
-from matexpr import *
-from transpose import Transpose
-from inverse import Inverse
-from blockmatrix import BlockMatrix, BlockDiagMatrix, block_collapse
+from expressions import *
