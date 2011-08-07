@@ -3234,9 +3234,9 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 + x + 1, x, modulus=2).is_irreducible #doctest: +SKIP
+        >>> Poly(x**2 + x + 1, x, modulus=2).is_irreducible
         True
-        >>> Poly(x**2 + 1, x, modulus=2).is_irreducible #doctest: +SKIP
+        >>> Poly(x**2 + 1, x, modulus=2).is_irreducible
         False
 
         """

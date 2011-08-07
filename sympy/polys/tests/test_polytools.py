@@ -645,9 +645,10 @@ def test_Poly_properties():
     assert Poly(x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1).is_cyclotomic == False
     assert Poly(x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1).is_cyclotomic == True
 
-@XFAIL
 def test_Poly_is_irreducible():
-    # when this passes, check the polytools is_irreducible docstring, too.
+    assert Poly(x**2 + x + 1).is_irreducible == True
+    assert Poly(x**2 + 2*x + 1).is_irreducible == False
+
     assert Poly(7*x + 3, modulus=11).is_irreducible == True
     assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible == False
 

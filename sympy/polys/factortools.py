@@ -1291,3 +1291,18 @@ def dmp_factor_list_include(f, u, K):
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
         return [(g, factors[0][1])] + factors[1:]
 
+def dup_irreducible_p(f, K):
+    """Returns ``True`` if ``f`` has no factors over its domain. """
+    return dmp_irreducible_p(f, 0, K)
+
+def dmp_irreducible_p(f, u, K):
+    """Returns ``True`` if ``f`` has no factors over its domain. """
+    _, factors = dmp_factor_list(f, u, K)
+
+    if not factors:
+        return True
+    elif len(factors) > 1:
+        return False
+    else:
+        _, k = factors[0]
+        return k == 1

@@ -116,7 +116,7 @@ from sympy.polys.sqfreetools import (
     dmp_sqf_list, dmp_sqf_list_include)
 
 from sympy.polys.factortools import (
-    dup_cyclotomic_p,
+    dup_cyclotomic_p, dmp_irreducible_p,
     dup_factor_list, dup_factor_list_include,
     dmp_factor_list, dmp_factor_list_include)
 
@@ -795,6 +795,11 @@ class DMP(object):
     def is_homogeneous(f):
         """Returns `True` if `f` has zero trailing coefficient. """
         return f.dom.is_zero(dmp_ground_TC(f.rep, f.lev, f.dom))
+
+    @property
+    def is_irreducible(f):
+        """Returns ``True`` if ``f`` has no factors over its domain. """
+        return dmp_irreducible_p(f.rep, f.lev, f.dom)
 
     @property
     def is_cyclotomic(f):
