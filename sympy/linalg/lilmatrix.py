@@ -87,14 +87,18 @@ class LILMatrix(DataMatrix):
         if not self.shape == other.shape:
             return False
         try:
-            return all(self.mat[i][ind] == other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i])))
+            return all(self.mat[i][ind] == other.mat[i][ind]
+                for i in xrange(self.rows)
+                for ind in xrange(len(self.mat[i])))
         except:
             return False
 
     def __ne__(self, other):
         if not self.shape == other.shape:
             return True
-        return any(self.mat[i][ind] != other.mat[i][ind] for i in xrange(self.rows) for ind in xrange(len(self.mat[i])))
+        return any(self.mat[i][ind] != other.mat[i][ind]
+            for i in xrange(self.rows)
+            for ind in xrange(len(self.mat[i])))
 
     def __add__(self, other):
         from lilmatrix_tools import _row_add

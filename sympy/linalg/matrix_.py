@@ -260,9 +260,7 @@ class Matrix_(object):
         return NotImplemented
 
     def __rsub__(self, other):
-        # Do we want to support `scalar + matrix` ?
-        # If not, then this is of no use.
-        pass
+        return NotImplemented
 
     def __mul__(self, other):
         if isinstance(other, Matrix_):
@@ -480,8 +478,4 @@ class Matrix_(object):
 
     def to_lilmatrix(self):
         return Matrix_(self.mat.to_lilmatrix())
-
-def randMatrix_(n, m, max=10, min=-10, repr='dok'):
-    from randmatrix import randMatrix
-    return Matrix_(randMatrix(n, m, max=max, min=min))
 

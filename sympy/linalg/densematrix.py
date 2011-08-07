@@ -7,16 +7,14 @@ from sympy.core.sympify import sympify as sympy_simplify
 from sympy.core.singleton import S
 
 class DenseMatrix(DataMatrix):
-
+    """
+    DenseMatrix, internal low-level dense representation matrix
+    self.rows ---> number of rows
+    self.cols ---> number of cols
+    self.mat  ---> data stored in a single array of size rows * cols,
+                    with element (i, j) in mat[i*cols + j]
+    """
     def __init__(self, *args, **kwargs):
-        """
-        DenseMatrix, internal low-level dense representation matrix
-        self.rows ---> number of rows
-        self.cols ---> number of cols
-        self.mat  ---> data stored in a single array of size rows * cols,
-                       with element (i, j) in mat[i*cols + j]
-        """
-        
         if len(args) == 3:
             rows = args[0]
             cols = args[1]
