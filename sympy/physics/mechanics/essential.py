@@ -3,7 +3,8 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyad', 'dynamicsymbols',
            'MechanicsLatexPrinter']
 
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
-                   expand, S, zeros, Basic, Derivative, Function, symbols, Add)
+                   expand, S, zeros, Basic, Derivative, Function, symbols, Add,
+                   solve)
 from sympy.core import C
 from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Zero
@@ -808,10 +809,7 @@ class ReferenceFrame(object):
         # TODO double check the sign here
         if rot_type == 'QUATERNION':
             t = dynamicsymbols._t
-            q0 = amounts[0]
-            q1 = amounts[1]
-            q2 = amounts[2]
-            q3 = amounts[3]
+            q0, q1, q2, q3 = amounts
             q0d = diff(q0, t)
             q1d = diff(q1, t)
             q2d = diff(q2, t)
@@ -823,8 +821,31 @@ class ReferenceFrame(object):
         elif rot_type == 'AXIS':
             thetad = (amounts[0]).diff(dynamicsymbols._t)
             wvec = thetad * amounts[1].express(parent).unit
+        elif rot_type == 'SIMPLE':
+            t = dynamicsymbols._t
+            a = int(rot_order)
+            if a == 1:
+                v = self.x
+            if a == 2:
+                v = self.y
+            if a == 3:
+                v = self.z
+            wvec = diff(amounts, t) * v
         else:
-            wvec = self._w_diff_dcm(parent)
+            try:
+                from sympy.physics.mechanics.functions import kinematic_equations
+                q1, q2, q3 = amounts
+                u1, u2, u3 = dynamicsymbols('u1, u2, u3')
+                templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
+                                               rot_type, rot_order)
+                templist = [expand(i) for i in templist]
+                td = solve(templist, [u1, u2, u3])
+                u1 = expand(td[u1])
+                u2 = expand(td[u2])
+                u3 = expand(td[u3])
+                wvec = u1 * self.x + u2 * self.y + u3 * self.z
+            except:
+                wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
 

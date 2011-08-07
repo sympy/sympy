@@ -144,7 +144,7 @@ def mprint(expr, **settings):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics import mpprint, dynamicsymbols
+    >>> from sympy.physics.mechanics import mprint, dynamicsymbols
     >>> u1 = dynamicsymbols('u1')
     >>> print(u1)
     u1(t)
@@ -176,15 +176,9 @@ def mpprint(expr, **settings):
 
     Examples
     ========
-
-    >>> from sympy.physics.mechanics import mpprint, dynamicsymbols
-    >>> from sympy import pprint
-    >>> u1 = dynamicsymbols('u1')
-    >>> pprint(u1)
-    u₁(t)
-    >>> mpprint(u1)
-    u₁
-
+    
+    Use in the same way as pprint
+  
     """
 
     mp = MechanicsPrettyPrinter(settings)
@@ -282,19 +276,19 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         c1, c2, c3 = [cos(q1), cos(q2), cos(q3)]
         if rot_type.lower() == 'body':
             if rot_order == '123':
-                return [q1d - (w1 * c1 - w2 * s3) / c2, q2d - w1 * s3 - w2 * c3,
-                        q3d - (-w1 * c3 + w2 * s3) * s2 / c2 - w3]
+                return [q1d - (w1 * c3 - w2 * s3) / c2, q2d - w1 * s3 - w2 *
+                        c3, q3d - (-w1 * c3 + w2 * s3) * s2 / c2 - w3]
             if rot_order == '231':
                 return [q1d - (w2 * c3 - w3 * s3) / c2, q2d - w2 * s3 - w3 *
                         c3, q3d - w1 - (- w2 * c3 + w3 * s3) * s2 / c2]
             if rot_order == '312':
-                return [q1d - (-w1 * s3 + w3 * c3) / c3, q2d - w1 * c3 - w3 *
+                return [q1d - (-w1 * s3 + w3 * c3) / c2, q2d - w1 * c3 - w3 *
                         s3, q3d - (w1 * s3 - w3 * c3) * s2 / c2 - w2]
             if rot_order == '132':
                 return [q1d - (w1 * c3 + w3 * s3) / c2, q2d + w1 * s3 - w3 *
                         c3, q3d - (w1 * c3 + w3 * s3) * s2 / c2 - w2]
             if rot_order == '213':
-                return [q1d - (q1 * s3 + w2 * c3) / c2, q2d - w1 * c3 + w2 *
+                return [q1d - (w1 * s3 + w2 * c3) / c2, q2d - w1 * c3 + w2 *
                         s3, q3d - (w1 * s3 + w2 * c3) * s2 / c2 - w3]
             if rot_order == '321':
                 return [q1d - (w2 * s3 + w3 * c3) / c2, q2d - w2 * c3 + w3 *
@@ -329,22 +323,22 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
                         c1 + w2 * s1, q3d - (w1 * s1 + w2 * c1) / c2]
             if rot_order == '132':
                 return [q1d - w1 - (-w2 * c1 + w3 * s1) * s2 / c2, q2d - w2 *
-                        s1 + w3 * c1, q3d - (w2 * c1 - w3 * s1) / c2]
+                        s1 - w3 * c1, q3d - (w2 * c1 - w3 * s1) / c2]
             if rot_order == '213':
                 return [q1d - (w1 * s1 - w3 * c1) * s2 / c2 - w2, q2d - w1 *
-                        c1 + w3 * s1, q3d - (-w1 * s1 + w3 * c1) / c2]
+                        c1 - w3 * s1, q3d - (-w1 * s1 + w3 * c1) / c2]
             if rot_order == '321':
                 return [q1d - (-w1 * c1 + w2 * s1) * s2 / c2 - w3, q2d - w1 *
                         s1 - w2 * c1, q3d - (w1 * c1 - w2 * s1) / c2]
             if rot_order == '121':
-                return [q1d - w1 + (w2 * s1 + w3 * c2) * c2 / s2, q2d - w2 *
+                return [q1d - w1 + (w2 * s1 + w3 * c1) * c2 / s2, q2d - w2 *
                         c1 + w3 * s1, q3d - (w2 * s1 + w3 * c1) / s2]
             if rot_order == '131':
                 return [q1d - w1 - (w2 * c1 - w3 * s1) * c2 / s2, q2d - w2 *
                         s1 - w3 * c1, q3d - (-w2 * c1 + w3 * s1) / s2]
             if rot_order == '212':
                 return [q1d - (-w1 * s1 + w3 * c1) * c2 / s2 - w2, q2d - w1 *
-                        c1 + w3 * s1, q3d - (w1 * s1 - w3 * c1) / s2]
+                        c1 - w3 * s1, q3d - (w1 * s1 - w3 * c1) / s2]
             if rot_order == '232':
                 return [q1d + (w1 * c1 + w3 * s1) * c2 / s2 - w2, q2d + w1 *
                         s1 - w3 * c1, q3d - (w1 * c1 + w3 * s1) / s2]
