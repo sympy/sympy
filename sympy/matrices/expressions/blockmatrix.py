@@ -254,7 +254,9 @@ def block_collapse(expr):
         blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
         if not blocks:
             return MatAdd(*nonblocks)
-        block = reduce(lambda a,b: a._blockadd(b), blocks[1:], blocks[0])
+        block = blocks[0]
+        for b in blocks[:1]:
+            block._blockadd(b)
         if block.blockshape == (1,1):
             # Bring all the non-blocks into the block_matrix
             mat = Matrix(1, 1, (block[0,0] + MatAdd(*nonblocks), ))
