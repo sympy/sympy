@@ -331,21 +331,21 @@ def dup_zz_irreducible_p(f, K):
                 return True
 
 @cythonized("n,i")
-def dup_zz_cyclotomic_p(f, K, irreducible=False):
+def dup_cyclotomic_p(f, K, irreducible=False):
     """
     Efficiently test if ``f`` is a cyclotomic polnomial.
 
     **Examples**
 
-    >>> from sympy.polys.factortools import dup_zz_cyclotomic_p
+    >>> from sympy.polys.factortools import dup_cyclotomic_p
     >>> from sympy.polys.domains import ZZ
 
     >>> f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
-    >>> dup_zz_cyclotomic_p(f, ZZ)
+    >>> dup_cyclotomic_p(f, ZZ)
     False
 
     >>> g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
-    >>> dup_zz_cyclotomic_p(g, ZZ)
+    >>> dup_cyclotomic_p(g, ZZ)
     True
 
     """
@@ -395,12 +395,12 @@ def dup_zz_cyclotomic_p(f, K, irreducible=False):
     if K.is_negative(dup_LC(g, K)):
         g = dup_neg(g, K)
 
-    if F == g and dup_zz_cyclotomic_p(g, K):
+    if F == g and dup_cyclotomic_p(g, K):
         return True
 
     G = dup_sqf_part(F, K)
 
-    if dup_sqr(G, K) == F and dup_zz_cyclotomic_p(G, K):
+    if dup_sqr(G, K) == F and dup_cyclotomic_p(G, K):
         return True
 
     return False
