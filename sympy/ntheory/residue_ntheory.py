@@ -7,38 +7,84 @@ class Residue(Basic):
     """
     The residue classes of a function f(x) mod n are all
     possible values of the residue f(x) (mod n).
-    For example, the residue classes of x^2 (mod 6) are
-    {0,1,3,4}.
+    For example, the residue classes of x**2 (mod 6) are
+    {0, 1, 3, 4}.
+
+    Examples:
+    >>> from sympy.ntheory.residue_ntheory import Residue
     """
 
-    def __init__(self, val, n):
-        self.v = val % n
-        self.n = n
+    _v = None
+    _n = None
 
-    def __mul__(self, m):
-        """
-        a*b = (a*b) mod n
-        """
-        return Residue(self.v * m.v, self.n)
+    def __new__(cls, *args):
+        ret_obj = Basic.__new__(cls, *args)
+        val = args[0]
+        n = args[1]
+        ret_obj._v = val % n
+        ret_obj._n = n
+        return ret_obj
 
-    def __div__(self, m):
-        return self * m.inv()
-
-    def __add__(self, m):
+    def __mul__(self, other):
         """
-        a+b = (a+b) mod n
-        """
-        return Residue(self.v + m.v, self.n)
+        Routine for multiplication of residue classes.
 
-    def __sub__(self, m):
-        return self.__add__(-m)
+        a * b = (a * b) mod n
+
+        Examples:
+        """
+        if not isInstance(other, Residue):
+            raise ValueError("The second operand is not a residue class")
+        return Residue(self.v * other.v, self.n)
+
+    def __div__(self, other):
+        """
+        Routine for division of residue classes.
+
+        Examples:
+        """
+        if not isInstance(other, Residue):
+            raise ValueError("The second operand is not a residue class")
+        return self * other.inv()
+
+    def __add__(self, other):
+        """
+        Routine for addition of residue classes.
+
+        a + b = (a + b) mod n
+
+        Examples:
+        """
+        if not isInstance(other, Residue):
+            raise ValueError("The second operand is not a Residue class")
+        return Residue(self.v + other.v, self.n)
+
+    def __sub__(self, other):
+        """
+        Routine for substraction of residue classes.
+
+        Examples:
+        """
+        if not isInstance(other, Residue):
+            raise ValueError("The second operand is not a Residue class")
+        return self.__add__(-other)
 
     def __neg__(self):
+        """
+        Negates the residue class.
+
+        Examples:
+        """
         return Residue(-self.v, self.n)
 
     def __pow__(self, n):
+        """
+        Computes the exponent of the residue class.
+
+        Examples:
+        """
         new = Residue(1, self.n)
-        if n==0:
+        if n == 0:
             return new
         new = Residue(pow(self.v,abs(n), self.n), self.n)
         if n < 0:
@@ -48,6 +94,8 @@ class Residue(Basic):
     def ord(self):
         """
         Exponent of g: power of g > 0 that equals 1
+
+        Examples:
         """
         i = 1
         while (self**i).v != 1:
@@ -55,22 +103,62 @@ class Residue(Basic):
         return i
 
     def inv(self):
+        """
+        Computes the inverse of a residue class.
+
+        Examples:
+        """
         return pow(self, totient(self.n) - 1)
 
-    def __gte__(self, k):
-        return self.v >= k.v
+    def __gte__(self, other):
+        """
+        Checks if a residue class is greater than or equal to another.
 
-    def __lte__(self, k):
-        return self.v <= k.v
+        Examples:
+        """
+        if not isinstance(other, Residue):
+            raise ValueError("The second operand is not a residue class.")
+        return self.v >= other.v
 
-    def __lt__(self, k):
-        return self.v < k.v
+    def __lte__(self, other):
+        """
+        Checks if a residue class is greater than or equal to another.
 
-    def __gt__(self, k):
-        return self.v > k.v
+        Examples:
+        """
+        if not isinstance(other, Residue):
+            raise ValueError("The second operand is not a residue class.")
+        return self.v <= other.v
 
-    def __eq__(self, k):
-        return self.v == k.v
+    def __lt__(self, other):
+        """
+        Checks if a residue class is greater than or equal to another.
+
+        Examples:
+        """
+        if not isinstance(other, Residue):
+            raise ValueError("The second operand is not a residue class.")
+        return self.v < other.v
+
+    def __gt__(self, other):
+        """
+        Checks if a residue class is greater than or equal to another.
+
+        Examples:
+        """
+        if not isinstance(other, Residue):
+            raise ValueError("The second operand is not a residue class.")
+        return self.v > other.v
+
+    def __eq__(self, other):
+        """
+        Checks if a residue class is greater than or equal to another.
+
+        Examples:
+        """
+        if not isinstance(other, Residue):
+            raise ValueError("The second operand is not a residue class.")
+        return self.v == other.v
 
     def __repr__(self):
         return str(self.v)
