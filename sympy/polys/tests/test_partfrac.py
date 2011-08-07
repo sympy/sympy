@@ -6,7 +6,7 @@ from sympy.polys.partfrac import (
     apart,
 )
 
-from sympy import S, Poly, E, pi, Matrix, Eq
+from sympy import S, Poly, E, pi, I, Matrix, Eq
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, a, b, c
 
@@ -53,6 +53,13 @@ def test_apart_symbolic():
     assert apart(1/((x + a)*(x + b)*(x + c)), x) == \
         1/((a - c)*(b - c)*(c + x)) - 1/((a - b)*(b - c)*(b + x)) + 1/((a - b)*(a - c)*(a + x))
 
+def test_apart_extension():
+    f = 2/(x**2 + 1)
+    g = I/(x + I) - I/(x - I)
+
+    assert apart(f, extension=I) == g
+    assert apart(f, gaussian=True) == g
+
 def test_apart_undetermined_coeffs():
     p = Poly(2*x - 3)
     q = Poly(x**9 - x**8 - x**6 + x**5 - 2*x**2 + 3*x - 1)
@@ -72,4 +79,3 @@ def test_apart_full_decomposition():
 
     assert apart_full_decomposition(p, q) == \
         (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 - x + 1)) + (S(1)/5)/(x + 1)
-
