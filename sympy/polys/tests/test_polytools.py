@@ -1194,10 +1194,21 @@ def test_Poly_eval():
     assert Poly(x*y + y, x, y).eval({x: 6, y: 7}) == 49
     assert Poly(x*y + y, x, y).eval({x: 7, y: 6}) == 48
 
+    assert Poly(x*y + y, x, y).eval((6, 7)) == 49
+    assert Poly(x*y + y, x, y).eval([6, 7]) == 49
+
     Poly(x+1, domain='ZZ').eval(S(1)/2) == S(3)/2
     Poly(x+1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
+    raises(ValueError, "Poly(x*y + y, x, y).eval((6, 7, 8))")
     raises(DomainError, "Poly(x+1, domain='ZZ').eval(S(1)/2, auto=False)")
+
+def test_Poly___call__():
+    f = Poly(2*x*y + 3*x + y + 2*z)
+
+    assert f(2) == Poly(5*y + 2*z + 6)
+    assert f(2, 5) == Poly(2*z + 31)
+    assert f(2, 5, 7) == 45
 
 def test_parallel_poly_from_expr():
     assert parallel_poly_from_expr([x-1, x**2-1], x)[0] == [Poly(x-1, x), Poly(x**2-1, x)]

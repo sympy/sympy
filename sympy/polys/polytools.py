@@ -2029,15 +2029,27 @@ class Poly(Expr):
         >>> f.eval({x: 2, y: 5, z: 7})
         45
 
+        >>> f.eval((2, 5))
+        Poly(2*z + 31, z, domain='ZZ')
+        >>> f(2, 5)
+        Poly(2*z + 31, z, domain='ZZ')
+
         """
         if a is None:
-            if isinstance(x, (list, dict)):
-                try:
-                    mapping = x.items()
-                except AttributeError:
-                    mapping = x
+            if isinstance(x, dict):
+                mapping = x
 
-                for gen, value in mapping:
+                for gen, value in mapping.iteritems():
+                    f = f.eval(gen, value)
+
+                return f
+            elif isinstance(x, (tuple, list)):
+                values = x
+
+                if len(values) > len(f.gens):
+                    raise ValueError("too many values provided")
+
+                for gen, value in zip(f.gens, values):
                     f = f.eval(gen, value)
 
                 return f
@@ -2060,6 +2072,27 @@ class Poly(Expr):
                 result = f.rep.eval(a, j)
 
         return f.per(result, remove=j)
+
+    def __call__(f, *values):
+        """
+        Evaluate ``f`` at the give values.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y, z
+
+        >>> f = Poly(2*x*y + 3*x + y + 2*z, x, y, z)
+
+        >>> f(2)
+        Poly(5*y + 2*z + 6, y, z, domain='ZZ')
+        >>> f(2, 5)
+        Poly(2*z + 31, z, domain='ZZ')
+        >>> f(2, 5, 7)
+        45
+
+        """
+        return f.eval(values)
 
     def half_gcdex(f, g, auto=True):
         """
