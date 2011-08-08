@@ -159,18 +159,18 @@ x_ket = XKet('x')
 x_bra = XBra('x')
 x_op = XOp('X')
 
-#def test_innerprod_represent():
-#   assert rep_innerproduct(x_ket) == InnerProduct(XBra("x_1"), x_ket).doit()
-#   assert rep_innerproduct(x_bra) == InnerProduct(x_bra, XKet("x_1")).doit()
-#
-#   try:
-#       test = rep_innerproduct(x_op)
-#   except TypeError:
-#       return True
-#
-#def test_operator_represent():
-#   basis_kets = enumerate_states(operators_to_state(x_op), 1, 2)
-#   assert rep_expectation(x_op) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
+def test_innerprod_represent():
+   assert innerproduct_helper(x_ket, basis=XKet()) == InnerProduct(XBra("x_1"), x_ket).doit()
+   assert innerproduct_helper(x_bra, basis=XKet()) == InnerProduct(x_bra, XKet("x_1")).doit()
+
+   try:
+       test = innerproduct_helper(x_op)
+   except TypeError:
+       return True
+
+def test_operator_represent():
+   basis_kets = enumerate_states(operators_to_state(x_op), 1, 2)
+   assert expectation_helper(x_op, basis=XKet()) == qapply(basis_kets[1].dual*x_op*basis_kets[0])
 
 def test_enumerate_states():
     test = XKet("foo")

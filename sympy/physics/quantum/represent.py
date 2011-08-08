@@ -228,18 +228,20 @@ def represent(expr, **options):
 
 def innerproduct_helper(expr, **options):
     """
-    Returns an innerproduct like representation (e.g. <x'|x>) for the
-    given state. This is meant to be a helper function for the
-    internal _represent methods when they want to form a standard
-    <x'|x> type reprsentation.
+    Returns an innerproduct like representation (e.g. <x'|x>) for the given
+    state. This is meant to be a helper function for the internal _represent
+    methods when they want to form a standard <x'|x> type reprsentation. As this
+    is a helper function, the basis must be specified in the options or an error
+    will be raised. We also expect that any basis passed to this will be a state
+    instance, as this is the convention specified for representations. 
 
     Attempts to calculate inner product with a bra from the specified
-    basis. Should only be passed an instance of KetBase or BraBase,
-    and the basis specified in option must be a State instance.
+    basis. Should only be passed an instance of KetBase or BraBase, and the
+    basis specified in option must be a State instance.
 
-    If a ``wrap_wavefunction`` option is passed and is True, the
-    function will wrap the result in a Wavefunction object before
-    returning. This option should be used if the basis is continuous.
+    If a ``wrap_wavefunction`` option is passed and is True, the function will
+    wrap the result in a Wavefunction object before returning. This option
+    should be used if the basis is continuous.
 
     Parameters
     ==========
@@ -252,7 +254,7 @@ def innerproduct_helper(expr, **options):
 
     >>> from sympy.physics.quantum.represent import innerproduct_helper
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
-    >>> innerproduct_helper(XKet())
+    >>> innerproduct_helper(XKet(), basis=XKet())
     DiracDelta(x - x_1)
     >>> rep_innerproduct(XKet(), basis=PxOp())
     sqrt(2)*exp(-I*px_1*x/hbar)/(2*sqrt(hbar)*sqrt(pi))
@@ -266,8 +268,11 @@ def innerproduct_helper(expr, **options):
 
     basis = options.pop("basis", None)
 
+    if basis is None:
+        raise NotImplementedError("Basis not specified!")
+
     if not isinstance(basis, StateBase):
-        raise NotImplementedError("Can't form this representation!")
+        raise NotImplementedError("Specified basis is not a State!")
 
     if not "index" in options:
         options["index"] = 1
@@ -300,13 +305,15 @@ def expectation_helper(expr, **options):
     """
     Returns an ``<x'|A|x>`` type representation for the given operator.
 
-    This is meant to be a helper function for the
-    internal _represent methods when they want to form a standard
-    <x'|A|x> type reprsentation.
+    This is meant to be a helper function for the internal _represent methods
+    when they want to form a standard <x'|A|x> type reprsentation. As it is a
+    helper function, the basis must be specified in the options.  We also expect
+    that any basis passed to this will be a state instance, as this is the
+    convention specified for representations.
 
-    If a ``wrap_wavefunction`` option is passed and is True, the
-    function will wrap the result in a Wavefunction object before
-    returning. This option should be used if the basis is continuous.
+    If a ``wrap_wavefunction`` option is passed and is True, the function will
+    wrap the result in a Wavefunction object before returning. This option
+    should be used if the basis is continuous.
 
     Parameters
     ==========
@@ -319,9 +326,9 @@ def expectation_helper(expr, **options):
 
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
     >>> from sympy.physics.quantum.represent import expectation_helper
-    >>> expectation_helper(XOp())
+    >>> expectation_helper(XOp(), basis=XKet())
     x_1*DiracDelta(x_1 - x_2)
-    >>> expectation_helper(XOp(), basis=PxOp())
+    >>> expectation_helper(XOp(), basis=PxKet())
     <px_2|*X*|px_1>
     >>> expectation_helper(XOp(), basis=PxKet())
     <px_2|*X*|px_1>
@@ -392,7 +399,7 @@ def integrate_result(orig_expr, result, **options):
     >>> x, x_1, x_2 = symbols('x, x_1, x_2')
     >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2))
     x*DiracDelta(x - x_1)*DiracDelta(x_1 - x_2)
-    >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2), unities=[1])
+    >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2), basis=XKet, unities=[1])
     x*DiracDelta(x - x_2)
 
     """
@@ -432,7 +439,7 @@ def get_basis_state(expr, **options):
     """
     Returns a basis state instance corresponding to the basis
     specified in options=s. If no basis is specified, the function
-    tries to form a default basis state of the given expression.
+    will try to call the internal _get_default_basis function. 
 
     There are three behaviors:
 
@@ -482,7 +489,7 @@ def get_basis_state(expr, **options):
     basis = options.pop("basis", None)
 
     if basis is None:
-        return None
+        return _make_default(_find_default_basis(expr, **options))
     elif (isinstance(basis, Operator) or isinstance(basis, set) or \
           (not isinstance(basis, StateBase) and issubclass(basis, Operator))):
         state = operators_to_state(basis)
@@ -496,6 +503,16 @@ def get_basis_state(expr, **options):
         return basis
     elif issubclass(basis, StateBase):
         return _make_default(basis)
+    else:
+        return None
+
+
+def _find_default_basis(expr, **options):
+    if isinstance(expr, (Mul, Add, Pow, TensorProduct, Commutator, \
+                         AntiCommutator, InnerProduct, OuterProduct)):
+        return _find_default_basis(expr.args[0], **options)
+    elif isinstance(expr, QExpr):
+        return expr._get_default_basis(**options)
     else:
         return None
 
