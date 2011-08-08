@@ -10,8 +10,8 @@ class GrayCode(Basic):
     The vertices of the cube are represented by vectors
     whose values are binary. The Hamilton walk visits
     each vertex exactly once. The Gray code for a 3d
-    cube is [[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,1,1],
-    [1,1,1],[1,0,1],[0,0,1]].
+    cube is ['000','100','110','010','011','111','101',
+    '001'].
 
     A Gray code solves the problem of sequentially
     generating all possible subsets of n objects in such
@@ -33,41 +33,56 @@ class GrayCode(Basic):
     Examples:
     >>> from sympy.combinatorics.graycode import GrayCode
     >>> a = GrayCode(3)
-    >>> list(a.generate_bitlist())
-    [['0', '0', '0'], ['0', '0', '1'], ['0', '1', '1'], \
-    ['0', '1', '0'], ['1', '1', '0'], ['1', '1', '1'], \
-    ['1', '0', '1'], ['1', '0', '0']]
+    >>> list(a.doit())
+    ['000', '001', '011', '010', '110', '111', '101', '100']
     >>> a = GrayCode(4)
-    >>> list(a.generate_bitstring())
+    >>> list(a.doit())
     ['0000', '0001', '0011', '0010', '0110', '0111', '0101', '0100', \
     '1100', '1101', '1111', '1110', '1010', '1011', '1001', '1000']
     """
 
-    _reset = False
+    _skip = False
     _current = 0
     _rank = None
 
     def __new__(cls, *args, **kw_args):
         """
-        Default constructor
+        Default constructor.
+
+        It takes a single argument, n, which gives the dimension
+        of the Gray code. The starting value or starting rank is
+        optionally given with two keywords.
+
+        Examples:
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> a
         GrayCode(3)
-        >>> a = GrayCode(3, start=['1','0','0'])
-        >>> a.selections
-        8
+        >>> a.n
+        3
+
+        >>> a = GrayCode(3, start='100')
+        >>> a.current
+        '100'
+
+        >>> a = GrayCode(4, rank=4)
+        >>> a.current
+        '0110'
+        >>> a.rank_current
+        4
         """
         obj = Basic.__new__(cls, *args, **kw_args)
         if kw_args.has_key("start"):
             obj._current = kw_args["start"]
+            return obj
+        elif kw_args.has_key("rank"):
+            obj = GrayCode.unrank_gray(args[0], kw_args["rank"])
         return obj
 
     @property
     def selections(self):
         """
-        Returns the number of bit vectors in the
-        Gray code.
+        Returns the number of bit vectors in the Gray code.
 
         Examples:
         >>> from sympy.combinatorics.graycode import GrayCode
@@ -80,7 +95,7 @@ class GrayCode(Basic):
     @property
     def n(self):
         """
-        Returns the dimension of the gray code.
+        Returns the dimension of the Gray code.
 
         Examples:
         >>> from sympy.combinatorics.graycode import GrayCode
@@ -90,7 +105,7 @@ class GrayCode(Basic):
         """
         return self.args[0]
 
-    def generate_bitlist(self, start=None):
+    def doit(self, **hints):
         """
         Generates the sequence of bit vectors of a Gray Code.
 
@@ -100,136 +115,126 @@ class GrayCode(Basic):
         Examples:
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
-        >>> list(a.generate_bitlist())
-        [['0', '0', '0'], ['0', '0', '1'], ['0', '1', '1'], \
-        ['0', '1', '0'], ['1', '1', '0'], ['1', '1', '1'], \
-        ['1', '0', '1'], ['1', '0', '0']]
-        >>> list(a.generate_bitlist(['0', '1', '1']))
-        [['0', '1', '1'], ['0', '1', '0'], ['1', '1', '0'], \
-        ['1', '1', '1'], ['1', '0', '1'], ['1', '0', '0']]
+        >>> list(a.doit())
+        ['000', '001', '011', '010', '110', '111', '101', '100']
+        >>> list(a.doit(start='011'))
+        ['011', '010', '110', '111', '101', '100']
+        >>> list(a.doit(rank=4))
+        ['010', '110', '111', '101', '100']
         """
         bits = self.args[0]
+        start = None
+        if hints.has_key("start"):
+            start = hints["start"]
+        elif hints.has_key("rank"):
+            start = GrayCode.unrank_gray(hints["rank"] - 1, self.n).current
         if start != None:
             self._current = start
-        if isinstance(self._current, list):
-            graycode_int = gray_to_bin(self._current)
-            self._current = int(''.join(self._current), 2)
-        else:
-            graycode_int = gray_to_bin(list(bin(self._current))[2:])
-        graycode_int = int(''.join(graycode_int), 2)
+        current = self.current
+        graycode_bin = gray_to_bin(current)
+        if len(graycode_bin) > self.n:
+            raise ValueError('start value dimension is %i but should not be greater than %i' % (len(graycode_bin), self.n))
+        self._current = int(current, 2)
+        graycode_int = int(''.join(graycode_bin), 2)
         for i in xrange(graycode_int, 1 << bits):
-            if self._reset:
+            if self._skip:
                 self._current = 0
-                self._reset = False
+                self._skip = False
                 break
-            retlist = list(bin(self._current))[2:]
-            yield ['0'] * (self.n - len(retlist)) + retlist
+            retlist = list(self.current)
+            yield self.current.rjust(self.n, '0')
             bbtc = (i ^ (i + 1))
             gbtc = (bbtc ^ (bbtc >> 1))
             self._current = (self._current ^ gbtc)
+        self._current = 0
 
-    def generate_bitstring(self, start=None):
+    def skip(self):
         """
-        Generates bitstrings instead of bitlists.
+        Skips the bit generation.
 
         Examples:
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
-        >>> list(a.generate_bitstring())
-        ['000', '001', '011', '010', '110', '111', '101', '100']
-        """
-        return [''.join(r) for r in self.generate_bitlist(start)]
-
-    def reset(self):
-        """
-        Resets the bit generation.
-
-        Examples:
-        >>> from sympy.combinatorics.graycode import GrayCode
-        >>> a = GrayCode(3)
-        >>> for i in a.generate_bitlist():
-        ...     if i == ['0', '1', '0']:
-        ...         a.reset()
+        >>> for i in a.doit():
+        ...     if i == '010':
+        ...         a.skip()
         ...     print i
         ...
-        ['0', '0', '0']
-        ['0', '0', '1']
-        ['0', '1', '1']
-        ['0', '1', '0']
+        000
+        001
+        011
+        010
         """
-        self._reset = True
+        self._skip = True
 
     @property
-    def rank(self):
+    def rank_current(self):
         """
-        Ranks the gray code.
+        Ranks the Gray code.
 
-        The rank of a gray code represents the number of gray
-        codes that precede it in its family. Thus a gray code
-        may be common to both the binary-reflected group as
-        well as the Frank-Ruskey group buts its rank in these
-        two families will differ.
+        A ranking algorithm determines the position (or rank)
+        of a combinatorial object among all the objects w.r.t.
+        a given order. For example, the 4 bit binary reflected
+        Gray code (BRGC) '0101' has a rank of 6 as it appears in
+        the 6th position in the canonical ordering of the family
+        of 4 bit Gray codes.
+
+        References:
+        [1] http://www-stat.stanford.edu/~susan/courses/s208/node12.html
 
         Examples:
         >>> from sympy.combinatorics.graycode import GrayCode
-        >>> a = GrayCode(3, start=['1','0','0'])
-        >>> a.rank
-        1
-        >>> a = GrayCode(5, start=['1','0','1','0','0'])
-        >>> a.rank
-        6
+        >>> a = GrayCode(3, start='100')
+        >>> a.rank_current
+        7
+        >>> a = GrayCode(5, start='10100')
+        >>> a.rank_current
+        24
         """
         if self._rank is None:
-            if isinstance(self._current, int):
-                self._current = list(bin(self._current))[2:]
-            if len(self._current)==0:
-                return 0
-            elif self._current[-1]=='0':
-                self._rank = GrayCode(start = self._current[:-1]).rank
-            else:
-                self._rank =  2**len(self._current) - \
-                             GrayCode(start = self._current[:-1]).rank - 1
+            self._rank = int('0b' + gray_to_bin(self.current), 2)
         return self._rank
 
     @property
     def current(self):
         """
-        Returns the currently referenced gray code.
+        Returns the currently referenced Gray code as a bit string.
         """
-        return self._current
+        try:
+            assert isinstance(self._current, str)
+            return self._current
+        except AssertionError:
+            return bin(self._current)[2:]
 
     @classmethod
-    def unrank_gray_code(self, k, n):
+    def unrank_gray(self, k, n):
         """
-        Unranks an n-bit sized gray code of rank k.
+        Unranks an n-bit sized Gray code of rank k.
 
         We generate in reverse order to allow for tail-call
         optimization.
 
         Examples:
         >>> from sympy.combinatorics.graycode import GrayCode
-        >>> GrayCode.unrank_gray_code(3, 5).current
-        ['0', '1', '0', '0', '0']
-        >>> GrayCode.unrank_gray_code(7, 10).rank
+        >>> GrayCode.unrank_gray(3, 5).current
+        '00010'
+        >>> GrayCode.unrank_gray(7, 10).rank_current
         7
         """
         def unrank(k, n):
             if n == 1:
-                return [str(k % 2)]
+                return str(k % 2)
             m = 2**(n - 1)
             if k < m:
-                return ["0"] + unrank(k, n - 1)
-            return ["1"] + unrank(m - (k % m) - 1, n - 1)
-        ret_list = unrank(k, n)
-        list.reverse(ret_list)
-        return GrayCode(start = ret_list)
+                return '0' + unrank(k, n - 1)
+            return '1' + unrank(m - (k % m) - 1, n - 1)
+        return GrayCode(n, start=unrank(k, n))
 
-
-def random_bitlist(n):
+def random_bitstring(n):
     """
     Generates a random bitlist of length n.
     """
-    return [random.choice('01') for i in xrange(n)]
+    return ''.join([random.choice('01') for i in xrange(n)])
 
 def gray_to_bin(bin_list):
     """
@@ -239,14 +244,13 @@ def gray_to_bin(bin_list):
 
     Examples:
     >>> from sympy.combinatorics.graycode import gray_to_bin
-    >>> gray_to_bin(['1','0','0'])
-    ['1', '1', '1']
+    >>> gray_to_bin('100')
+    '111'
     """
-    b = bin_list[0]
+    b = [bin_list[0]]
     for i in xrange(1, len(bin_list)):
         b += str(int(b[i-1] != bin_list[i]))
-
-    return list(b)
+    return ''.join(b)
 
 def bin_to_gray(bin_list):
     """
@@ -256,29 +260,29 @@ def bin_to_gray(bin_list):
 
     Examples:
     >>> from sympy.combinatorics.graycode import bin_to_gray
-    >>> bin_to_gray(['1','1','1'])
-    ['1', '0', '0']
+    >>> bin_to_gray('111')
+    '100'
     """
-    b = bin_list[0]
+    b = [bin_list[0]]
     for i in xrange(0, len(bin_list) - 1):
         b += str(int(bin_list[i]) ^ int(b[i - 1]))
+    return ''.join(b)
 
-    return list(b)
-
-def get_subset_from_bitlist(super_set, bitlist):
+def get_subset_from_bitstring(super_set, bitstring):
     """
-    Gets the subset defined by the bitlist.
+    Gets the subset defined by the bitstring.
 
     Examples:
-    >>> from sympy.combinatorics.graycode import get_subset_from_bitlist
-    >>> get_subset_from_bitlist(['a','b','c','d'],['0','0','1','1'])
+    >>> from sympy.combinatorics.graycode import get_subset_from_bitstring
+    >>> get_subset_from_bitstring(['a','b','c','d'], '0011')
     ['c', 'd']
-    >>> get_subset_from_bitlist(['c','a','c','c'],['1','1','0','0'])
+    >>> get_subset_from_bitstring(['c','a','c','c'], '1100')
     ['c', 'a']
     """
-    if len(super_set) != len(bitlist):
+    if len(super_set) != len(bitstring):
         raise ValueError("The sizes of the lists are not equal")
-    return [super_set[i] for i, j in enumerate(bitlist) if bitlist[i] == '1']
+    return [super_set[i] for i, j in enumerate(bitstring) \
+            if bitstring[i] == '1']
 
 def gray_code_subsets(gray_code_set):
     """
@@ -294,5 +298,5 @@ def gray_code_subsets(gray_code_set):
     ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], ['a', 'b', 'c', 'c'], \
     ['a', 'b', 'c'], ['a', 'c'], ['a', 'c', 'c'], ['a', 'c'], ['a']]
     """
-    return [get_subset_from_bitlist(gray_code_set, bitlist) for \
-            bitlist in list(GrayCode(len(gray_code_set)).generate_bitlist())]
+    return [get_subset_from_bitstring(gray_code_set, bitstring) for \
+            bitstring in list(GrayCode(len(gray_code_set)).doit())]
