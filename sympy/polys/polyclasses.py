@@ -497,6 +497,22 @@ class DMP(object):
         """Returns the total degree of `f`. """
         return max([sum(m) for m in f.monoms()])
 
+    def homogeneous_order(f):
+        """Returns the homogeneous order of `f`. """
+        if f.is_zero:
+            return -1
+
+        monoms = f.monoms()
+        tdeg = sum(monoms[0])
+
+        for monom in monoms:
+            _tdeg = sum(monom)
+
+            if _tdeg != tdeg:
+                return None
+
+        return tdeg
+
     def LC(f):
         """Returns the leading coefficent of `f`. """
         return dmp_ground_LC(f.rep, f.lev, f.dom)
@@ -794,7 +810,7 @@ class DMP(object):
     @property
     def is_homogeneous(f):
         """Returns `True` if `f` has zero trailing coefficient. """
-        return f.dom.is_zero(dmp_ground_TC(f.rep, f.lev, f.dom))
+        return f.homogeneous_order() is not None
 
     @property
     def is_irreducible(f):

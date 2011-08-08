@@ -633,8 +633,8 @@ def test_Poly_properties():
     assert Poly(x*y).is_monomial == True
     assert Poly(x*y+1).is_monomial == False
 
-    assert Poly(x*y+x).is_homogeneous == True
-    assert Poly(x*y+x+1).is_homogeneous == False
+    assert Poly(x**2 + x*y).is_homogeneous == True
+    assert Poly(x**3 + x*y).is_homogeneous == False
 
     assert Poly(x).is_univariate == True
     assert Poly(x*y).is_univariate == False
@@ -997,6 +997,18 @@ def test_Poly_total_degree():
     assert Poly(x**2 + z**3).total_degree() == 3
     assert Poly(x*y*z + z**4).total_degree() == 4
     assert Poly(x**3 + x + 1).total_degree() == 3
+
+def test_Poly_homogeneous_order():
+    assert Poly(0, x, y).homogeneous_order() == -1
+    assert Poly(1, x, y).homogeneous_order() == 0
+    assert Poly(x, x, y).homogeneous_order() == 1
+    assert Poly(x*y, x, y).homogeneous_order() == 2
+
+    assert Poly(x + 1, x, y).homogeneous_order() is None
+    assert Poly(x*y + x, x, y).homogeneous_order() is None
+
+    assert Poly(x**5 + 2*x**3*y**2 + 9*x*y**4).homogeneous_order() == 5
+    assert Poly(x**5 + 2*x**3*y**3 + 9*x*y**4).homogeneous_order() is None
 
 def test_Poly_LC():
     assert Poly(0, x).LC() == 0

@@ -1681,6 +1681,29 @@ class Poly(Expr):
         else: # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
+    def homogeneous_order(f):
+        """
+        Returns the homogeneous order of ``f``.
+
+        A homogeneous polynomial is a polynomial whose all monomials with
+        non-zero coefficients have the same total degree. This degree is
+        the homogeneous order of ``f``.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> f = Poly(x**5 + 2*x**3*y**2 + 9*x*y**4)
+        >>> f.homogeneous_order()
+        5
+
+        """
+        if hasattr(f.rep, 'homogeneous_order'):
+            return f.rep.homogeneous_order()
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'homogeneous_order')
+
     def LC(f, order=None):
         """
         Returns the leading coefficient of ``f``.
@@ -3249,9 +3272,9 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
-        >>> Poly(x*y + x + y, x, y).is_homogeneous
+        >>> Poly(x**2 + x*y, x, y).is_homogeneous
         True
-        >>> Poly(x*y + x + y + 1, x, y).is_homogeneous
+        >>> Poly(x**3 + x*y, x, y).is_homogeneous
         False
 
         """
