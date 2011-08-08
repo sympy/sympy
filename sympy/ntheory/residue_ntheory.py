@@ -1,5 +1,7 @@
 from sympy.core import Basic
 from sympy.core.numbers import igcd
+from sympy.utilities.iterables import uniquify
+
 from primetest import isprime
 from factor_ import factorint
 
@@ -8,20 +10,33 @@ class Residue(Basic):
     The residue classes of a function f(x) mod n are all
     possible values of the residue f(x) (mod n).
     For example, the residue classes of x**2 (mod 6) are
-    {0, 1, 3, 4}.
+    [0, 1, 3, 4].
 
     Examples:
     >>> from sympy.ntheory.residue_ntheory import Residue
+    >>> from sympy.abc import x
+    >>> a = x**2
+    >>> b = Residue(a, 6)
+    >>> b.values()
+    [0, 1, 3, 4]
     """
 
     _v = None
     _n = None
 
+    @property
+    def v(self):
+        return self._v
+
+    @property
+    def n(self):
+        return self._n
+
     def __new__(cls, *args):
         ret_obj = Basic.__new__(cls, *args)
         val = args[0]
         n = args[1]
-        ret_obj._v = val % n
+        ret_obj._v = val
         ret_obj._n = n
         return ret_obj
 
@@ -32,9 +47,19 @@ class Residue(Basic):
         a * b = (a * b) mod n
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> from sympy.abc import x
+        >>> a = x
+        >>> b = x
+        >>> c = Residue(a, 6)
+        >>> d = Residue(b, 6)
+        >>> (c * d).values()
+        [0, 1, 3, 4]
         """
-        if not isInstance(other, Residue):
+        if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class")
+        if isinstance(self.v, int) and isinstance(other.v, int):
+            return Residue((self.v * other.v) % self.n, self.n)
         return Residue(self.v * other.v, self.n)
 
     def __div__(self, other):
@@ -42,8 +67,16 @@ class Residue(Basic):
         Routine for division of residue classes.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> from sympy.abc import x
+        >>> a = x**17
+        >>> b = x**15
+        >>> c = Residue(a, 6)
+        >>> d = Residue(b, 6)
+        >>> (c/d).values()
+        [0, 1, 3, 4]
         """
-        if not isInstance(other, Residue):
+        if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class")
         return self * other.inv()
 
@@ -54,9 +87,19 @@ class Residue(Basic):
         a + b = (a + b) mod n
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> from sympy.abc import x
+        >>> a = x**2 + 5
+        >>> b = -5
+        >>> c = Residue(a, 6)
+        >>> d = Residue(b, 6)
+        >>> (c + d).values()
+        [0, 1, 3, 4]
         """
-        if not isInstance(other, Residue):
+        if not isinstance(other, Residue):
             raise ValueError("The second operand is not a Residue class")
+        if isinstance(self.v, int) and isinstance(other.v, int):
+            return Residue((self.v + other.v) % self.n, self.n)
         return Residue(self.v + other.v, self.n)
 
     def __sub__(self, other):
@@ -64,8 +107,14 @@ class Residue(Basic):
         Routine for substraction of residue classes.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> from sympy.abc import x
+        >>> a = Residue(x**2, 6)
+        >>> b = Residue(5, 6)
+        >>> (a - b).values()
+        [2, 4, 5]
         """
-        if not isInstance(other, Residue):
+        if not isinstance(other, Residue):
             raise ValueError("The second operand is not a Residue class")
         return self.__add__(-other)
 
@@ -74,6 +123,11 @@ class Residue(Basic):
         Negates the residue class.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> from sympy.abc import x
+        >>> b = Residue(x**2 - 5, 6)
+        >>> (-b).values()
+        [1, 2, 4]
         """
         return Residue(-self.v, self.n)
 
@@ -82,11 +136,20 @@ class Residue(Basic):
         Computes the exponent of the residue class.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> from sympy.abc import x
+        >>> a = x
+        >>> b = Residue(a, 6)
+        >>> (b**2).values()
+        [0, 1, 3, 4]
         """
         new = Residue(1, self.n)
         if n == 0:
             return new
-        new = Residue(pow(self.v,abs(n), self.n), self.n)
+        if isinstance(self.v, int):
+            new = Residue(pow(self.v, abs(n), self.n), self.n)
+        else:
+            new = Residue(pow(self.v, abs(n)), self.n)
         if n < 0:
             new = new.inv()
         return new
@@ -96,72 +159,119 @@ class Residue(Basic):
         Exponent of g: power of g > 0 that equals 1
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> a = Residue(4, 7)
+        >>> a.ord()
+        3
         """
         i = 1
-        while (self**i).v != 1:
-            i += 1
-        return i
+        if isinstance(self.v, int):
+            while (self**i).v != 1:
+                i += 1
+            return i
 
     def inv(self):
         """
         Computes the inverse of a residue class.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> a = Residue(4, 7)
+        >>> a.inv()
+        Residue(2, 7)
         """
-        return pow(self, totient(self.n) - 1)
+        return pow(self, totient_(self.n) - 1)
 
     def __gte__(self, other):
         """
         Checks if a residue class is greater than or equal to another.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> a = Residue(4, 7)
+        >>> b = Residue(2, 7)
+        >>> a >= b
+        False
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class.")
-        return self.v >= other.v
+        if isinstance(self.v, int) and isinstance(other.v, int):
+            return self.v <= other.v
 
     def __lte__(self, other):
         """
         Checks if a residue class is greater than or equal to another.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> a = Residue(4, 7)
+        >>> b = Residue(2, 7)
+        >>> a <= b
+        True
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class.")
-        return self.v <= other.v
+        if isinstance(self.v, int) and isinstance(other.v, int):
+            return self.v >= other.v
 
     def __lt__(self, other):
         """
         Checks if a residue class is greater than or equal to another.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> a = Residue(4, 7)
+        >>> b = Residue(2, 7)
+        >>> a < b
+        False
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class.")
-        return self.v < other.v
+        if isinstance(self.v, int) and isinstance(other.v, int):
+            return self.v < other.v
 
     def __gt__(self, other):
         """
         Checks if a residue class is greater than or equal to another.
 
         Examples:
+        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> a = Residue(4, 7)
+        >>> b = Residue(2, 7)
+        >>> a > b
+        True
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class.")
-        return self.v > other.v
+        if isinstance(self.v, int) and isinstance(other.v, int):
+            return self.v > other.v
 
     def __eq__(self, other):
         """
         Checks if a residue class is greater than or equal to another.
-
-        Examples:
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class.")
-        return self.v == other.v
+        if isinstance(self.v, int) and isinstance(other.v, int):
+            return self.v == other.v
+        else:
+            return self.values == other.values
+
+    def values(self):
+        """
+        List the members of the residue class.
+        """
+        if isinstance(self._v, int):
+            return [self.v % self.n]
+        symbol = self._v.as_poly().gens[0]
+        ret_obj = sorted(uniquify([self._v.subs(symbol, i) % self.n \
+                                   for i in xrange(1, self.n)]))
+        if self._v.subs(self._v.args[0], 0) == 0:
+            ret_obj = [0] + ret_obj
+        return ret_obj
 
     def __repr__(self):
-        return str(self.v)
+        return str(self.values())
 
 def totient_(n):
     """returns the number of integers less than n

@@ -99,6 +99,17 @@ def group(container, multiple=True):
 
     return groups
 
+def uniquify(seq):
+    """
+    A fast routine to remove duplicates from a list.
+
+    Reference:
+    http://stackoverflow.com/questions/480214/how-do-you-remove-duplicates-from-a-list-in-python-whilst-preserving-order
+    """
+    seen = set()
+    seen_add = seen.add
+    return [ x for x in seq if x not in seen and not seen_add(x)]
+
 def postorder_traversal(node):
     """
     Do a postorder traversal of a tree.
