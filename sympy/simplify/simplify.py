@@ -171,7 +171,7 @@ def separate(expr, deep=False, force=False):
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
     power_base=True, basic=False, multinomial=False, log=False, force=force)
 
-def collect(expr, syms, evaluate=True, exact=False):
+def collect(expr, syms, func=None, evaluate=True, exact=False):
     """
         Collect additive terms with respect to a list of symbols up
         to powers with rational exponents. By the term symbol here
@@ -285,7 +285,7 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
         a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)
 
-        >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f,x)
+        >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
 
         Or you can even match both derivative order and exponent at the same
@@ -463,10 +463,10 @@ def collect(expr, syms, evaluate=True, exact=False):
         if expr.is_Mul:
             ret = 1
             for term in expr.args:
-                ret *= collect(term, syms, True, exact)
+                ret *= collect(term, syms, func, True, exact)
             return ret
         elif expr.is_Pow:
-            b = collect(expr.base, syms, True, exact)
+            b = collect(expr.base, syms, func, True, exact)
             return Pow(b, expr.exp)
 
     summa = [separate(i) for i in Add.make_args(sympify(expr))]
@@ -516,6 +516,9 @@ def collect(expr, syms, evaluate=True, exact=False):
 
     if disliked is not S.Zero:
         collected[S.One] = disliked
+
+    if func is not None:
+        collected = dict([ (key, func(val)) for key, val in collected.iteritems() ])
 
     if evaluate:
         return Add(*[a*b for a, b in collected.iteritems()])
