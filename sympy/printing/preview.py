@@ -90,6 +90,7 @@ def preview(expr, output='png', viewer=None, euler=True):
     if not euler:
         format = r"""\documentclass[12pt]{article}
                      \usepackage{amsmath}
+                     \usepackage{amsfonts}
                      \begin{document}
                      \pagestyle{empty}
                      %s
@@ -99,6 +100,7 @@ def preview(expr, output='png', viewer=None, euler=True):
     else:
         format = r"""\documentclass[12pt]{article}
                      \usepackage{amsmath}
+                     \usepackage{amsfonts}
                      \usepackage{eulervm}
                      \begin{document}
                      \pagestyle{empty}
