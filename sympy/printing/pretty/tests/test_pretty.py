@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
-    Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
+    Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, Tuple,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
@@ -2063,6 +2063,26 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Tuple(x**2, 1/x, x, y, sin(th)**2/cos(ph)**2)
+    ascii_str = \
+"""\
+                 2        \n\
+  2  1        sin (theta) \n\
+(x , -, x, y, -----------)\n\
+     x            2       \n\
+               cos (phi)  \
+"""
+    ucode_str = \
+u"""\
+⎛                2   ⎞\n\
+⎜ 2  1        sin (θ)⎟\n\
+⎜x , ─, x, y, ───────⎟\n\
+⎜    x           2   ⎟\n\
+⎝             cos (φ)⎠\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = {x: sin(x)}
     ascii_str = \
 """\
@@ -2107,6 +2127,20 @@ u"""\
     assert upretty(expr) == ucode_str
 
     expr = (x**2,)
+    ascii_str = \
+"""\
+  2  \n\
+(x ,)\
+"""
+    ucode_str = \
+u"""\
+⎛ 2 ⎞\n\
+⎝x ,⎠\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Tuple(x**2)
     ascii_str = \
 """\
   2  \n\

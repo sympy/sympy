@@ -1061,6 +1061,9 @@ class PrettyPrinter(Printer):
         else:
             return self._print_seq(t, '(', ')')
 
+    def _print_Tuple(self, expr):
+        return self._print_tuple(expr)
+
     def _print_dict(self, d):
         items = []
 
