@@ -298,6 +298,9 @@ class BraBase(StateBase):
         from sympy.physics.quantum.dagger import Dagger
         return Dagger(self.dual._represent(**options))
 
+    def _get_default_basis(self, **options):
+        """Get the default basis of the corresponding ket."""
+        return self.dual._get_default_basis(**options)
 
 class State(StateBase):
     """General abstract quantum state used as a base class for Ket and Bra."""

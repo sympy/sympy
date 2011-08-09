@@ -6,7 +6,10 @@ TODO:
 * Fix representations of Pow for continuous bases (see note in code)
 """
 
-from sympy import Add, Expr, I, integrate, Mul, Pow
+
+from sympy import Add, Expr, I, integrate, Mul, oo, Pow, Symbol
+from sympy.functions import conjugate, DiracDelta
+from sympy.utilities import default_sort_key
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -107,6 +110,7 @@ def represent(expr, **options):
     and its spin 1/2 up eigenstate. By definining the ``_represent_SzOp``
     method, the ket can be represented in the z-spin basis.
 
+<<<<<<< HEAD
     >>> from sympy.physics.quantum import Operator, represent, Ket
     >>> from sympy import Matrix
 
@@ -122,12 +126,30 @@ def represent(expr, **options):
     >>> represent(up, basis=sz)
     [1]
     [0]
+=======
+        >>> from sympy.physics.quantum import Operator, represent, Ket
+        >>> from sympy import Matrix
+
+        >>> class SzUpKet(Ket):
+        ...     def _represent_SzUpKet(self, basis, **options):
+        ...         return Matrix([1,0])
+        ...
+        >>> class SzOp(Operator):
+        ...     pass
+        ...
+        >>> sz = SzOp('Sz')
+        >>> up = SzUpKet('up')
+        >>> represent(up, basis=up)
+        [1]
+        [0]
+>>>>>>> Factor represent logic out to _represent_helper so that the chosen basis can be passed around; Add logic for choosing the basis in complicated expressions; Fix tests in cartesian and represent to account for Wavefunctions; NOTE: There is an issue involving unwrapping and rewrapping Wavefunctions when delta functions have been integrated over (variable replacement)
 
     Here we see an example of representations in a continuous
     basis. We see that the result of representing various combinations
     of cartesian position operators and kets give us continuous
     expressions involving DiracDelta functions.
 
+<<<<<<< HEAD
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
     >>> X = XOp()
     >>> x = XKet()
@@ -136,52 +158,71 @@ def represent(expr, **options):
     x*DiracDelta(x - x_2)
     >>> represent(X*x*y)
     x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
+=======
+        >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
+        >>> X = XOp()
+        >>> x = XKet()
+        >>> y = XBra('y')
+        >>> represent(X*x)
+        Wavefunction(x*DiracDelta(x - x_2), x)
+        >>> represent(X*x*y)
+        Wavefunction(x*DiracDelta(x - x_3)*DiracDelta(-x_1 + y), x, y)
+>>>>>>> Factor represent logic out to _represent_helper so that the chosen basis can be passed around; Add logic for choosing the basis in complicated expressions; Fix tests in cartesian and represent to account for Wavefunctions; NOTE: There is an issue involving unwrapping and rewrapping Wavefunctions when delta functions have been integrated over (variable replacement)
 
     """
 
+    rep_expr, basis = _represent_helper(expr, **options)
+
+    return rep_expr
+
+def _represent_helper(expr, **options):
+    """A recursively called helper function for represent. Handles all of the
+    logic described in the represent docstring, but it returns the basis used
+    for representing in addition to the represented expression"""
+
     format = options.get('format', 'sympy')
-    if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
-        if not 'basis' in options:
-            options['basis'] = expr._get_default_basis(**options)
 
+    if not 'basis' in options or not isinstance(options['basis'], StateBase):
         basis = get_basis_state(expr, **options)
+        options['basis'] = basis
 
-        if basis is not None:
-            options['basis'] = basis
-        return expr._represent(**options)
+    basis = options['basis']
+
+    if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
+        return (expr._represent(**options), basis)
     elif isinstance(expr, Add):
         result = represent(expr.args[0], **options)
         for args in expr.args[1:]:
             # scipy.sparse doesn't support += so we use plain = here.
             result = result + represent(args, **options)
-        return result
+        return (result, basis)
     elif isinstance(expr, Pow):
         #NOTE: This will not currently work with continuous operators
         #For example, represent(X**2) != represent(X)**2
         base, exp = expr.as_base_exp()
         if format == 'numpy' or format == 'scipy.sparse':
             exp = _sympy_to_scalar(exp)
-        return represent(base, **options)**exp
+        return (represent(base, **options)**exp, basis)
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
-        return TensorProduct(*new_args)
+        return (TensorProduct(*new_args), basis)
     elif isinstance(expr, Dagger):
-        return Dagger(represent(expr.args[0], **options))
+        return (Dagger(represent(expr.args[0], **options)), basis)
     elif isinstance(expr, Commutator):
         A = expr.args[0]
         B = expr.args[1]
-        return represent(A*B, **options) - represent(B*A, **options)
+        return (represent(A*B, **options) - represent(B*A, **options), basis)
     elif isinstance(expr, AntiCommutator):
         A = expr.args[0]
         B = expr.args[1]
-        return represent(A*B, **options) + represent(B*A, **options)
+        return (represent(A*B, **options) + represent(B*A, **options), basis)
     elif isinstance(expr, InnerProduct):
-        return represent(Mul(expr.bra,expr.ket), **options)
+        return (represent(Mul(expr.bra,expr.ket), **options), basis)
     elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format == 'numpy' or format == 'scipy.sparse':
-            return _sympy_to_scalar(expr)
-        return expr
+            return (_sympy_to_scalar(expr), basis)
+        return (expr, basis)
 
     if not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
         raise TypeError('Mul expected, got: %r' % expr)
@@ -215,16 +256,24 @@ def represent(expr, **options):
     # vectors are taken. In these cases, we simply return a scalar.
     result = flatten_scalar(result)
 
-    result = do_qapply(result)
+    should_apply = options.pop('qapply', True)
+    if should_apply:
+        result = do_qapply(result)
 
     unwrapped_res, unwrapped_vars = _unwrap_wf(result)
+    vars_beforeint = set(unwrapped_vars)
 
     result = integrate_result(expr, unwrapped_res, **options)
 
-    if not len(unwrapped_vars) == 0:
-        result = Wavefunction(result, *unwrapped_vars)
+    if len(unwrapped_vars) != 0:
+        vars_afterint = result.free_symbols
+        unwrapped_vars = list(vars_beforeint.intersection(vars_afterint))
+        unwrapped_vars.sort(key=default_sort_key)
 
-    return result
+        if len(unwrapped_vars) != 0:
+            result = Wavefunction(result, *unwrapped_vars)
+
+    return (result, basis)
 
 def innerproduct_helper(expr, **options):
     """
@@ -233,7 +282,7 @@ def innerproduct_helper(expr, **options):
     methods when they want to form a standard <x'|x> type reprsentation. As this
     is a helper function, the basis must be specified in the options or an error
     will be raised. We also expect that any basis passed to this will be a state
-    instance, as this is the convention specified for representations. 
+    instance, as this is the convention specified for representations.
 
     Attempts to calculate inner product with a bra from the specified
     basis. Should only be passed an instance of KetBase or BraBase, and the
@@ -439,7 +488,7 @@ def get_basis_state(expr, **options):
     """
     Returns a basis state instance corresponding to the basis
     specified in options=s. If no basis is specified, the function
-    will try to call the internal _get_default_basis function. 
+    will try to call the internal _get_default_basis function.
 
     There are three behaviors:
 
@@ -510,7 +559,12 @@ def get_basis_state(expr, **options):
 def _find_default_basis(expr, **options):
     if isinstance(expr, (Mul, Add, Pow, TensorProduct, Commutator, \
                          AntiCommutator, InnerProduct, OuterProduct)):
-        return _find_default_basis(expr.args[0], **options)
+        for arg in expr.args:
+            basis = _find_default_basis(arg, **options)
+            if basis is not None:
+                return basis
+
+        return None
     elif isinstance(expr, QExpr):
         return expr._get_default_basis(**options)
     else:

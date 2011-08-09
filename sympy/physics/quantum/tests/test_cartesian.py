@@ -29,13 +29,14 @@ def test_x():
         exp(-I*x*px/hbar)/sqrt(2*pi*hbar)
     assert represent(XKet(x)) == Wavefunction(DiracDelta(x - x_1), x)
     assert represent(XOp()) == Wavefunction(x_1*DiracDelta(x_1 - x_2), x_1)
-    #assert represent(XBra(x)) == DiracDelta(x_1 - x)
+    assert represent(XBra(x)) == Wavefunction(DiracDelta(x - x_1), x)
     assert XBra(x).position == x
-    #assert represent(XOp()*XKet()) == x*DiracDelta(x-x_2)
-    #assert represent(XOp()*XKet()*XBra('y')) == \
-    #       x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-    #assert represent(XBra("y")*XKet()) == DiracDelta(x - y)
-    #assert represent(XKet()*XBra()) == DiracDelta(x - x_2) * DiracDelta(x_1 - x)
+    assert represent(XOp()*XKet()) == Wavefunction(x*DiracDelta(x-x_2), x)
+    assert represent(XOp()*XKet()*XBra('y')) == \
+           Wavefunction(x*DiracDelta(x - x_3)*DiracDelta(y - x_1), x, y)
+    assert represent(XBra("y")*XKet()) == Wavefunction(DiracDelta(y - x), x, y)
+    assert represent(XKet()*XBra()) == \
+           Wavefunction(DiracDelta(x - x_1)*DiracDelta(x - x_2), x)
 
     rep_p = represent(XOp(), basis = PxOp)
     diff_op1 = DifferentialOperator(Derivative(f(px_1), px_1), f(px_1))
@@ -44,9 +45,7 @@ def test_x():
     assert rep_p == represent(XOp(), basis = PxKet)
     assert rep_p == represent(XOp(), basis = PxKet())
 
-    #diff_op = DifferentialOperator(Derivative(f(px), px), f(px))
-    #assert represent(XOp()*PxKet(), basis = PxKet) == \
-    #       hbar*I*DiracDelta(px - px_2)*diff_op
+    assert represent(XOp()*PxKet(), basis = PxKet) == 0
 
 def test_p():
     assert Px.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
@@ -66,10 +65,8 @@ def test_p():
     assert rep_x == represent(PxOp(), basis = XKet())
 
     diff_op = DifferentialOperator(Derivative(f(x), x), f(x))
-    #assert represent(PxOp()*XKet(), basis=XKet) == \
-    #       -hbar*I*DiracDelta(x - x_2)*diff_op
-    #assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == \
-    #       -hbar*I*DiracDelta(x-y)*diff_op
+    assert represent(PxOp()*XKet(), basis=XKet) == 0
+    assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == 0
 
 def test_3dpos():
     assert Y.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))

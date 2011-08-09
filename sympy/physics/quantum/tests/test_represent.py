@@ -30,10 +30,10 @@ class AKet(Ket):
     def dual_class(self):
         return ABra
 
-    def _represent_default_basis(self, **options):
-        return self._represent_AOp(None, **options)
+    def _get_default_basis(self, **options):
+        return AKet
 
-    def _represent_AOp(self, basis, **options):
+    def _represent_AKet(self, basis, **options):
         return Avec
 
 
@@ -46,19 +46,19 @@ class ABra(Bra):
 
 class AOp(Operator):
 
-    def _represent_default_basis(self, **options):
-        return self._represent_AOp(None, **options)
+    def _get_default_basis(self, **options):
+        return AKet
 
-    def _represent_AOp(self, basis, **options):
+    def _represent_AKet(self, basis, **options):
         return Amat
 
 
 class BOp(Operator):
 
-    def _represent_default_basis(self, **options):
-        return self._represent_AOp(None, **options)
+    def _get_default_basis(self, **options):
+        return AKet
 
-    def _represent_AOp(self, basis, **options):
+    def _represent_AKet(self, basis, **options):
         return Bmat
 
 
@@ -96,7 +96,7 @@ _tests = [
 
 def test_format_sympy():
     for test in _tests:
-        lhs = represent(test[0], basis=A, format='sympy')
+        lhs = represent(test[0], basis=k, format='sympy')
         rhs = to_sympy(test[1])
         assert lhs == rhs
 
@@ -113,7 +113,7 @@ def test_format_numpy():
         skip("numpy not installed or Python too old.")
 
     for test in _tests:
-        lhs = represent(test[0], basis=A, format='numpy')
+        lhs = represent(test[0], basis=k, format='numpy')
         rhs = to_numpy(test[1])
         if isinstance(lhs, numpy_ndarray):
             assert (lhs == rhs).all()
@@ -138,7 +138,7 @@ def test_format_scipy_sparse():
         skip("scipy not installed.")
 
     for test in _tests:
-        lhs = represent(test[0], basis=A, format='scipy.sparse')
+        lhs = represent(test[0], basis=k, format='scipy.sparse')
         rhs = to_scipy_sparse(test[1])
         if isinstance(lhs, scipy_sparse_matrix):
             assert np.linalg.norm((lhs-rhs).todense()) == 0.0

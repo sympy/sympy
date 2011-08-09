@@ -1459,8 +1459,8 @@ class JzKet(SpinState, Ket):
     of the Jx operator:
 
         >>> from sympy.physics.quantum.represent import represent
-        >>> from sympy.physics.quantum.spin import Jx, Jz
-        >>> represent(JzKet(1,-1), basis=Jx)
+        >>> from sympy.physics.quantum.spin import Jx_basis
+        >>> represent(JzKet(1,-1), basis=Jx_basis)
         [      1/2]
         [sqrt(2)/2]
         [      1/2]
