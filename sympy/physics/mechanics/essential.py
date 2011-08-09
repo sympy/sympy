@@ -413,7 +413,7 @@ class Dyad(object):
                 dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
-        >>> B = N.orientnew('B', 'Simple', q, 3)
+        >>> B = N.orientnew('B', 'Axis', [q, N.z])
         >>> d = outer(N.x, N.x)
         >>> d.express(B, N)
         cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)
@@ -444,7 +444,7 @@ class Dyad(object):
                 dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
-        >>> B = N.orientnew('B', 'Simple', q, 3)
+        >>> B = N.orientnew('B', 'Axis', [q, N.z])
         >>> d = outer(N.x, N.x)
         >>> d.dt(B)
         - q'*(N.y|N.x) - q'*(N.x|N.y)
@@ -459,6 +459,25 @@ class Dyad(object):
             ol += (v[0] * (v[1].dt(frame) | v[2]))
             ol += (v[0] * (v[1] | v[2].dt(frame)))
         return ol
+
+    def subs(self, dictin):
+        """Substituion on the Dyad, with a dict.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> from sympy import Symbol
+        >>> N = ReferenceFrame('N')
+        >>> s = Symbol('s')
+        >>> a = s * (N.x|N.x)
+        >>> a.subs({s: 2})
+        2*(N.x|N.x)
+
+        """
+
+        return sum([ Dyad( [ (v[0].subs(dictin), v[1], v[2]) ]) for v in
+                   self.args])
 
     dot = __and__
     cross = __xor__
@@ -642,7 +661,7 @@ class ReferenceFrame(object):
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Simple', q1, 1)
+        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
         >>> N.dcm(A)
         [1,       0,        0]
         [0, cos(q1), -sin(q1)]
@@ -660,7 +679,7 @@ class ReferenceFrame(object):
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Defines the orientation of this frame relative to a parent frame.
 
-        Supported orientation types are Simple, Body, Space, Quaternion, Axis.
+        Supported orientation types are Body, Space, Quaternion, Axis.
         Examples show correct usage.
 
         Parameters
@@ -684,18 +703,11 @@ class ReferenceFrame(object):
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
 
-        Now we have a choice of how to implement the orientation.  Simple is
-        shown first. Simple takes in one value and one rotation axis. The
-        axis can be in 123 or XYZ.
-
-        >>> B.orient(N, 'Simple', q1, '3')
-        >>> B.orient(N, 'Simple', q1, 'X')
-        >>> B.orient(N, 'Simple', 1, 'Z')
-
-        Next is Body. Body orientation takes this reference frame through
-        three successive simple rotations. Acceptable rotation orders are
-        of length 3, expressed in XYZ or 123, and cannot have a rotation
-        about about an axis twice in a row.
+        Now we have a choice of how to implement the orientation. First is
+        Body. Body orientation takes this reference frame through three
+        successive simple rotations. Acceptable rotation orders are of length
+        3, expressed in XYZ or 123, and cannot have a rotation about about an
+        axis twice in a row.
 
         >>> B.orient(N, 'Body', [q1, q2, q3], '123')
         >>> B.orient(N, 'Body', [q1, q2, 0], 'ZXZ')
@@ -742,8 +754,7 @@ class ReferenceFrame(object):
                     [0, 0, 1]])
 
         approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                           '131', '212', '232', '313', '323', '1', '2',
-                           '3', '')
+                           '131', '212', '232', '313', '323', '')
         rot_order = str(rot_order).upper() # Now we need to make sure XYZ = 123
         rot_type  = rot_type.upper()
         rot_order = [i.replace('X', '1') for i in rot_order]
@@ -796,17 +807,10 @@ class ReferenceFrame(object):
             a3 = int(rot_order[2])
             parent_orient = (_rot(a3, amounts[2]) * _rot(a2, amounts[1])
                     * _rot(a1, amounts[0]))
-        elif rot_type == 'SIMPLE':
-            if ((isinstance(amounts, (list, tuple))) |
-                    (isinstance(rot_order, (list, tuple)))):
-                raise TypeError('Simple takes 1 value for amount and order')
-            a = int(rot_order)
-            parent_orient = _rot(a, amounts)
         else:
             raise NotImplementedError('That is not an implemented rotation')
         self._dcm_dict.update({parent: parent_orient})
         parent._dcm_dict.update({self: parent_orient.T})
-        # TODO double check the sign here
         if rot_type == 'QUATERNION':
             t = dynamicsymbols._t
             q0, q1, q2, q3 = amounts
@@ -821,16 +825,6 @@ class ReferenceFrame(object):
         elif rot_type == 'AXIS':
             thetad = (amounts[0]).diff(dynamicsymbols._t)
             wvec = thetad * amounts[1].express(parent).unit
-        elif rot_type == 'SIMPLE':
-            t = dynamicsymbols._t
-            a = int(rot_order)
-            if a == 1:
-                v = self.x
-            if a == 2:
-                v = self.y
-            if a == 3:
-                v = self.z
-            wvec = diff(amounts, t) * v
         else:
             try:
                 from sympy.physics.mechanics.functions import kinematic_equations
@@ -873,7 +867,7 @@ class ReferenceFrame(object):
         >>> from sympy import symbols
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Simple', q1, 1)
+        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
 
         """
 
@@ -1042,7 +1036,7 @@ class Vector(object):
         1
         >>> dot(N.x, N.y)
         0
-        >>> A = N.orientnew('A', 'Simple', q1, 1)
+        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
         >>> dot(N.y, A.y)
         cos(q1)
 
@@ -1356,7 +1350,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> N.x ^ N.y
         N.z
-        >>> A = N.orientnew('A', 'Simple', q1, 1)
+        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
         >>> A.x ^ N.y
         N.z
         >>> N.y ^ A.x
@@ -1446,7 +1440,7 @@ class Vector(object):
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Simple', q1, 2)
+        >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
         - q1'*A.z
 
@@ -1487,7 +1481,7 @@ class Vector(object):
         >>> q1 = Symbol('q1')
         >>> u1 = dynamicsymbols('u1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Simple', q1, 1)
+        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
         >>> v = u1 * N.x
         >>> A.set_ang_vel(N, 10*A.x)
         >>> A.x.dt(N) == 0
@@ -1525,7 +1519,7 @@ class Vector(object):
                 dynamicsymbols
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Simple', q1, 2)
+        >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.express(N)
         cos(q1)*N.x - sin(q1)*N.z
 
@@ -1739,6 +1733,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
             can_break = False
             f = prettyForm(binding=prettyForm.FUNC,
                     *self._print(deriv.expr).parens())
+
         if dots == 0:
             dots = u""
         elif dots == 1:
@@ -1777,6 +1772,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
             fpic = [funi]
         f.__dict__['picture'] = fpic
         f.__dict__['unicode'] = funi
+
         if (len(syms)) == 0 and can_break:
             return f
 
@@ -1824,7 +1820,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
 
 
 def dynamicsymbols(names, level=0):
-    """Uses symbols and Function for functions of time. 
+    """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
     of a variable, the default being Symbol('t').
@@ -1840,7 +1836,7 @@ def dynamicsymbols(names, level=0):
 
     Example
     =======
-    
+
     >>> from sympy.physics.mechanics import dynamicsymbols
     >>> from sympy import diff, Symbol
     >>> q1 = dynamicsymbols('q1')

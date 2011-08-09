@@ -17,6 +17,9 @@ class Kane(object):
 
     Attributes
     ==========
+    auxiliary : Matrix
+        If applicable, the set of auxiliary Kane's equations used to solve for
+        non-contributing forces.
     mass_matrix : Matrix
         The system's mass matrix
     forcing : Matrix
@@ -81,8 +84,7 @@ class Kane(object):
     >>> KM.coords([q])
     >>> KM.speeds([u])
     >>> KM.kindiffeq(kd)
-    >>> fr = KM.form_fr(FL)
-    >>> frstar = KM.form_frstar(BL)
+    >>> (fr, frstar) = KM.kanes_equations(FL, BL)
     >>> MM = KM.mass_matrix
     >>> forcing = KM.forcing
     >>> rhs = MM.inv() * forcing
@@ -102,6 +104,7 @@ class Kane(object):
         self._fr = None
         self._frstar = None
         self._rhs = None
+        self._aux_eq = None
 
         # States
         self._q = None
@@ -110,6 +113,7 @@ class Kane(object):
         self._u = None
         self._udep = []
         self._udot = None
+        self._uaux = None
 
         # Differential Equations Matrices
         self._k_d = None
@@ -209,42 +213,114 @@ class Kane(object):
             temp3.simplify()
         return temp3.subs(dict(zip(temp1, A))).subs(dict(zip(temp2, B)))
 
-    def coords(self, inlist):
+    def coords(self, qind, qdep=[], coneqs=[]):
         """Supply all the generalized coordiantes in a list.
 
-        If there are configuration constraints, the order needs to be:
-        [Qi, Qd], where Qi is independent coords & Qd is dependent coords.
+        If some coordinates are dependent, supply them as part of qdep. Their
+        dependent nature will only show up in the linearization process though.
 
         Parameters
         ==========
-        inlist : list
-            A list of generalized coords
-
+        qind : list
+            A list of independent generalized coords
+        qdep : list
+            List of dependent coordinates
+        coneq : list
+            List of expressions which are equal to zero; these are the
+            configuration constraint equations
         """
 
-        if not isinstance(inlist, (list, tuple)):
+        if not isinstance(qind, (list, tuple)):
             raise TypeError('Generalized coords. must be supplied in a list')
-        self._q = inlist
-        self._qdot = [diff(i, dynamicsymbols._t) for i in inlist]
-        return
+        self._q = qind + qdep
+        self._qdot = [diff(i, dynamicsymbols._t) for i in self._q]
 
-    def speeds(self, inlist):
+        if not isinstance(qdep, (list, tuple)):
+            raise TypeError('Dependent speeds and constraints must each be '
+                            'provided in their own list')
+        if len(qdep) != len(coneqs):
+            raise ValueError('There must be an equal number of dependent '
+                             'speeds and constraints')
+        coneqs = Matrix(coneqs)
+        self._qdep = qdep
+        self._f_h = coneqs
+
+    def speeds(self, uind, udep=[], coneqs=[], diffconeqs=None, aux=[]):
         """Supply all the generalized speeds in a list.
 
-        If there are motion constraints, the order needs to be:
-        [Ui, Ud], where Ui is independent speeds & Ud is dependent speeds.
+        If there are motion constraints or auxiliary speeds, they are provided
+        here as well (as well as motion constraints).
 
         Parameters
         ==========
-        inlist : list
-            A list of generalized speeds
+        unid : list
+            A list of independent generalized speeds
+        udep : list
+            Optional list of dependent speeds
+        coneqs : list
+            Optional List of constraint expressions; these are expressions
+            which are equal to zero which define a speed (motion) constraint.
+        diffconeqs : list
+            Optional, calculated automatically otherwise; list of constraint
+            equations; again equal to zero, but define an acceleration
+            constraint.
+        auxlist : list
+            An optional list of auxialliary speeds used for brining
+            non-contributing forces into evidence
 
         """
 
-        if not isinstance(inlist, (list, tuple)):
+        if not isinstance(uind, (list, tuple)):
             raise TypeError('Generalized speeds must be supplied in a list')
-        self._u = inlist
-        self._udot = [diff(i, dynamicsymbols._t) for i in inlist]
+        self._u = uind + udep
+        self._udot = [diff(i, dynamicsymbols._t) for i in self._u]
+        self._uaux = aux
+
+        if not isinstance(udep, (list, tuple)):
+            raise TypeError('Dependent speeds and constraints must each be '
+                            'provided in their own list')
+        if len(udep) != len(coneqs):
+            raise ValueError('There must be an equal number of dependent '
+                             'speeds and constraints')
+        if diffconeqs != None:
+            if len(udep) != len(diffconeqs):
+                raise ValueError('There must be an equal number of dependent '
+                                 'speeds and constraints')
+        if len(udep) != 0:
+            u = self._u
+            uzero = dict(zip(u, [0] * len(u)))
+            coneqs = Matrix(coneqs)
+            udot = self._udot
+            udotzero = dict(zip(udot, [0] * len(udot)))
+
+            self._udep = udep
+            self._f_nh = coneqs.subs(uzero)
+            self._k_nh = (coneqs - self._f_nh).jacobian(u)
+            # if no differentiated non holonomic constraints were given, calculate
+            if diffconeqs == None:
+                self._k_dnh = self._k_nh
+                self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * Matrix(u) +
+                               self._f_nh.diff(dynamicsymbols._t))
+            else:
+                self._f_dnh = diffconeqs.subs(udotzero)
+                self._k_dnh = (diffconeqs - self._f_dnh).jacobian(udot)
+
+            o = len(u) # number of generalized speeds
+            m = len(udep) # number of motion constraints
+            p = o - m # number of independent speeds
+            # For a reminder, form of non-holonomic constraints is:
+            # B u + C = 0
+            B = self._k_nh.extract(range(m), range(o))
+            C = self._f_nh.extract(range(m), [0])
+
+            # We partition B into indenpendent and dependent columns
+            # Ars is then -Bdep.inv() * Bind, and it relates depedent speeds to
+            # independent speeds as: udep = Ars uind, neglecting the C term here.
+            self._depB = B
+            self._depC = C
+            mr1 = B.extract(range(m), range(p))
+            ml1 = B.extract(range(m), range(p, o))
+            self._Ars = - self._mat_inv_mul(ml1, mr1)
 
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
@@ -285,107 +361,7 @@ class Kane(object):
         self._f_k = self._mat_inv_mul(k_kqdot, f_k)
         self._k_kqdot = eye(len(qdot))
 
-    def dependent_coords(self, qdep, coneq):
-        """This is used with systems with configuration constraints.
-
-        This is really only used as part of the linearization process, as
-        most configuration constraints cannot be solved for easily.
-        See the html documentation for more information on using this.
-
-        Parameters
-        ==========
-        qdep : list
-            List of dependent coordinates, suppled in the same order as the
-            coordinates
-        coneq : list
-            List of expressions which are equal to zero; these are the
-            configuration constraint equations
-
-        """
-        if not isinstance(qdep, (list, tuple)):
-            raise TypeError('Dependent speeds and constraints must each be '
-                            'provided in their own list')
-        if len(qdep) != len(coneq):
-            raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints')
-        for i in range(len(qdep)):
-            if self._q[-(i + 1)] != qdep[-(i + 1)]:
-                raise ValueError('The order of dependent coords does not'
-                                  ' match  previously specified coords')
-        coneq = Matrix(coneq)
-        self._qdep = qdep
-        self._f_h = coneq
-
-    def dependent_speeds(self, udep, coneq, diffconeq=None):
-        """This is used to when dealing with systems with motion constraints.
-
-        See the html documentation for more information on using this.
-
-        Parameters
-        ==========
-        udep : list
-            List of dependent speeds must match the order of generalized speeds
-        coneq : list
-            List of constraint expressions; these are expressions which are
-            equal to zero which define a speed (motion) constraint.
-        diffconeq : list
-            Optional, calculated automatically otherwise; list of constraint
-            equations; again equal to zero, but define an acceleration
-            constraint.
-
-        """
-
-        if not isinstance(udep, (list, tuple)):
-            raise TypeError('Dependent speeds and constraints must each be '
-                            'provided in their own list')
-        if len(udep) != len(coneq):
-            raise ValueError('There must be an equal number of dependent '
-                             'speeds and constraints')
-        if diffconeq != None:
-            if len(udep) != len(diffconeq):
-                raise ValueError('There must be an equal number of dependent '
-                                 'speeds and constraints')
-        for i in range(len(udep)):
-            if self._u[-(i + 1)] != udep[-(i + 1)]:
-                raise ValueError('The order of dependent speeds does not match'
-                                 ' previously specified speeds')
-
-        u = self._u
-        uzero = dict(zip(u, [0] * len(u)))
-        coneq = Matrix(coneq)
-        udot = self._udot
-        udotzero = dict(zip(udot, [0] * len(udot)))
-
-        self._udep = udep
-        self._f_nh = coneq.subs(uzero)
-        self._k_nh = (coneq - self._f_nh).jacobian(u)
-        # if no differentiated non holonomic constraints were given, calculate
-        if diffconeq == None:
-            self._k_dnh = self._k_nh
-            self._f_dnh = (self._k_nh.diff(dynamicsymbols._t) * Matrix(u) +
-                           self._f_nh.diff(dynamicsymbols._t))
-        else:
-            self._f_dnh = diffconeq.subs(udotzero)
-            self._k_dnh = (diffconeq - self._f_dnh).jacobian(udot)
-
-        o = len(u) # number of generalized speeds
-        m = len(udep) # number of motion constraints
-        p = o - m # number of independent speeds
-        # For a reminder, form of non-holonomic constraints is:
-        # B u + C = 0
-        B = self._k_nh.extract(range(m), range(o))
-        C = self._f_nh.extract(range(m), [0])
-
-        # We partition B into indenpendent and dependent columns
-        # Ars is then -Bdep.inv() * Bind, and it relates depedent speeds to
-        # independent speeds as: udep = Ars uind, neglecting the C term here.
-        self._depB = B
-        self._depC = C
-        mr1 = B.extract(range(m), range(p))
-        ml1 = B.extract(range(m), range(p, o))
-        self._Ars = - self._mat_inv_mul(ml1, mr1)
-
-    def form_fr(self, fl):
+    def _form_fr(self, fl):
         """Form the generalized active force.
 
         Computes the vector of the generalized active force vector.
@@ -402,6 +378,7 @@ class Kane(object):
         if not isinstance(fl, (list, tuple)):
             raise TypeError('Forces must be supplied in a list of: lists or '
                             'tuples.')
+        t = dynamicsymbols._t
         N = self._inertial
         self._forcelist = fl[:]
         u = self._u
@@ -433,7 +410,7 @@ class Kane(object):
         self._fr = FR
         return FR
 
-    def form_frstar(self, bl):
+    def _form_frstar(self, bl):
         """Form the generalized inertia force.
 
         Computes the vector of the generalized inertia force vector.
@@ -460,6 +437,12 @@ class Kane(object):
         udot = self._udot
         udots = []
         udotzero = dict(zip(udot, [0] * len(udot)))
+        uaux = self._uaux
+        uauxdot = [diff(i, t) for i in uaux]
+        # dictionary of auxiliary speeds which are equal to zero
+        uaz = dict(zip(uaux, [0] * len(uaux)))
+        # dictionary of derivatives of auxiliary speeds which are equal to zero
+        uadz = dict(zip(uauxdot, [0] * len(uauxdot)))
 
         # Form R*, T* for each body or particle in the list
         # This is stored as a list of tuples [(r*, t*),...]
@@ -479,12 +462,15 @@ class Kane(object):
         partials = []
         for i, v in enumerate(bl): # go through list of bodies, particles
             if isinstance(v, RigidBody):
-                om = v.frame.ang_vel_in(N) # angular velocity
-                alp = v.frame.ang_acc_in(N) # angular acceleration
-                ve = v.mc.vel(N) # velocity
-                acc = v.mc.acc(N) # acceleration
-                m = v.mass
+                om = v.frame.ang_vel_in(N).subs(uadz).subs(uaz) # ang velocity
+                omp = v.frame.ang_vel_in(N) # ang velocity, for partials
+                alp = v.frame.ang_acc_in(N).subs(uadz).subs(uaz) # ang acc
+                ve = v.mc.vel(N).subs(uadz).subs(uaz) # velocity
+                vep = v.mc.vel(N) # velocity, for partials
+                acc = v.mc.acc(N).subs(uadz).subs(uaz) # acceleration
+                m = (v.mass).subs(uadz).subs(uaz)
                 I, P = v.inertia
+                I = I.subs(uadz).subs(uaz)
                 if P != v.mc:
                     # redefine I about mass center
                     # have I S/O, want I S/S*
@@ -520,14 +506,15 @@ class Kane(object):
                 tl2 = []
                 # calculates the partials only once and stores them for later
                 for j, w in enumerate(u):
-                    tl1.append(ve.diff(w, N))
-                    tl2.append(om.diff(w, N))
+                    tl1.append(vep.diff(w, N))
+                    tl2.append(omp.diff(w, N))
                 partials.append((tl1, tl2))
 
             elif isinstance(v, Particle):
-                ve = v.point.vel(N)
-                acc = v.point.acc(N)
-                m = v.mass
+                ve = v.point.vel(N).subs(uadz).subs(uaz)
+                vep = v.point.vel(N)
+                acc = v.point.acc(N).subs(uadz).subs(uaz)
+                m = v.mass.subs(uadz).subs(uaz)
                 templist = []
                 # see above note
                 for j, w in enumerate(udot):
@@ -542,7 +529,7 @@ class Kane(object):
                 # calculates the partials only once, makes 0's for angular
                 # partials so the later code is body/particle indepedent
                 for j, w in enumerate(u):
-                    tl1.append(ve.diff(w, N))
+                    tl1.append(vep.diff(w, N))
                     tl2.append(0)
                 partials.append((tl1, tl2))
             else:
@@ -559,15 +546,15 @@ class Kane(object):
             # Computes the mass matrix entries from r*, there are from the list
             # in the rstar tuple
             ii = 0
-            for j, w in enumerate(rs[0]):
-                for k, x in enumerate(vps):
+            for x in vps:
+                for w in rs[0]:
                     MM[ii] += w & x
                     ii += 1
             # Computes the mass matrix entries from t*, there are from the list
             # in the tstar tuple
             ii = 0
-            for j, w in enumerate(ts[0]):
-                for k, x in enumerate(ops):
+            for x in ops:
+                for w in ts[0]:
                     MM[ii] += w & x
                     ii += 1
             # Non mass matrix entries from rstar, from the other in the rstar
@@ -601,6 +588,49 @@ class Kane(object):
         self._f_d = zeroeq
         return FRSTAR
 
+    def kanes_equations(self, FL, BL):
+        """ Method to form Kane's equations, Fr + Fr* = 0.
+
+        Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
+        present (say, s auxiliary speeds, o generalized speeds, and m motion
+        constraints) the length of the returned vectors will be o - m + s in
+        length. The first o - m equations will be the constrained Kane's
+        equations, then the s auxiliary Kane's equations. These auxiliary
+        equations can be accessed with the auxiliary_eqs().
+
+        Parameters
+        ==========
+        FL : list
+            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
+            tuples which represent the force at a point or torque on a frame.
+        BL : list
+            A list of all RigidBody's and Particle's in the system.
+
+        """
+
+        fr = self._form_fr(FL)
+        frstar = self._form_frstar(BL)
+        if self._uaux != []:
+            km = Kane(self._inertial)
+            km.coords(self._q)
+            km.speeds(self._uaux, aux=self._uaux)
+            fraux = km._form_fr(FL)
+            frstaraux = km._form_frstar(BL)
+            self._aux_eq = fraux + frstaraux
+            self._fr = fr.col_join(fraux)
+            self._frstar = frstar.col_join(frstaraux)
+            return (self._fr, self._frstar)
+        else:
+            return (fr, frstar)
+
+    @property
+    def auxiliary_eqs(self):
+        if (self._fr == None) or (self._frstar == None):
+            raise ValueError('Need to compute Fr, Fr* first')
+        if self._uaux == []:
+            raise ValueError('No auxiliary speeds have been declared')
+        return self._aux_eq
+
     def linearize(self):
         """ Method used to generate linearized equations.
 
@@ -627,10 +657,18 @@ class Kane(object):
             if self._k_kqdot.diff(i) != 0 * self._k_kqdot:
                 raise ValueError('Matrix K_kqdot must not depend on any q')
 
+        t = dynamicsymbols._t
+        uaux = self._uaux
+        uauxdot = [diff(i, t) for i in uaux]
+        # dictionary of auxiliary speeds which are equal to zero
+        uaz = dict(zip(uaux, [0] * len(uaux)))
+        # dictionary of derivatives of auxiliary speeds which are equal to zero
+        uadz = dict(zip(uauxdot, [0] * len(uauxdot)))
+
         # Checking for dynamic symbols outside the dynamic differential
         # equations; throws error if there is.
-        insyms = self._q + self._qdot + self._u + self._udot
-        bad_oths  = self._find_dynamicsymbols(self._k_kqdot, insyms)
+        insyms = self._q + self._qdot + self._u + self._udot + uaux + uauxdot
+        bad_oths= self._find_dynamicsymbols(self._k_kqdot, insyms)
         bad_oths += self._find_dynamicsymbols(self._k_ku, insyms)
         bad_oths += self._find_dynamicsymbols(self._f_k, insyms)
         bad_oths += self._find_dynamicsymbols(self._k_dnh, insyms)
@@ -639,7 +677,8 @@ class Kane(object):
         if bad_oths != []:
             raise ValueError('Cannot have dynamic symbols outside dynamic ' +
                              'forcing vector')
-        oth_dyns = self._find_dynamicsymbols(self._f_d, insyms)
+        oth_dyns = self._find_dynamicsymbols(self._f_d.subs(uadz).subs(uaz),
+                                             insyms)
         for i in oth_dyns:
             if diff(i, dynamicsymbols._t) in oth_dyns:
                 raise ValueError('Cannot have derivatives of forcing terms ' +
@@ -668,9 +707,11 @@ class Kane(object):
         if m != 0:
             f2 = self._f_d.col_join(self._f_dnh)
             fnh = self._f_nh + self._k_nh * Matrix(self._u)
-        fh = self._f_h
-        fku = self._k_ku * Matrix(self._u)
-        fkf = self._f_k
+        f1 = f1.subs(uadz).subs(uaz)
+        f2 = f2.subs(uadz).subs(uaz)
+        fh = self._f_h.subs(uadz).subs(uaz)
+        fku = (self._k_ku * Matrix(self._u)).subs(uadz).subs(uaz)
+        fkf = self._f_k.subs(uadz).subs(uaz)
 
         # In the code below, we are applying the chain rule by hand on these
         # things. All the matrices have been changed into vectors (by

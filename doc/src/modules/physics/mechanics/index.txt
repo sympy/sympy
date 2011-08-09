@@ -70,9 +70,9 @@ rotations. Angular velocity for this is defined using the second frame's basis
 rather than using a body-three orientation. ::
 
   >>> N = ReferenceFrame('N')
-  >>> Y = N.orientnew('Y', 'Simple', q1, 3)
-  >>> L = Y.orientnew('L', 'Simple', q2, 1)
-  >>> R = L.orientnew('R', 'Simple', q3, 2)
+  >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])
+  >>> L = Y.orientnew('L', 'Axis', [q2, Y.x])
+  >>> R = L.orientnew('R', 'Axis', [q3, L.y])
   >>> R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
   >>> R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
 
@@ -117,7 +117,7 @@ we form the body list. ::
 
 Finally we form the equations of motion, using the same steps we did before.
 Specify inertial frame, supply generalized speeds, supply kinematic
-differential equation dictionary, compute Fr from the force list and Fr* fromt
+differential equation dictionary, compute Fr from the force list and Fr* from
 the body list, compute the mass matrix and forcing terms, then solve for the u
 dots (time derivatives of the generalized speeds). ::
 
@@ -125,8 +125,7 @@ dots (time derivatives of the generalized speeds). ::
   >>> KM.coords([q1, q2, q3])
   >>> KM.speeds([u1, u2, u3])
   >>> KM.kindiffeq(kd)
-  >>> fr = KM.form_fr(ForceList)
-  >>> frstar = KM.form_frstar(BodyList)
+  >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
   >>> MM = KM.mass_matrix
   >>> forcing = KM.forcing
   >>> rhs = MM.inv() * forcing
@@ -139,6 +138,79 @@ dots (time derivatives of the generalized speeds). ::
   [                             (-2*u2 + u3*tan(q2))*u1]
 
 This concludes the rolling disc example.
+
+The Rolling Disc, again
+-----------------------
+
+We will now revisit the rolling disc example, except this time we are bringing
+the non-contributing (constraint) forces into evidence. See [Kane 1985] for a
+more thorough  explanation of this.::
+
+  >>> from sympy.physics.mechanics import *
+  >>> mechanics_printing()
+  >>> q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
+  >>> q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
+  >>> r, m, g = symbols('r m g')
+
+These two lines introduce the extra quantities needed to find the constraint
+forces. ::
+
+  >>> u4, u5, u6, f1, f2, f3 = dynamicsymbols('u4 u5 u6 f1 f2 f3')
+
+Most of the main code is the same as before. ::
+
+  >>> N = ReferenceFrame('N')
+  >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])
+  >>> L = Y.orientnew('L', 'Axis', [q2, Y.x])
+  >>> R = L.orientnew('R', 'Axis', [q3, L.y])
+  >>> R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
+  >>> R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
+
+The definition of rolling without slip necessitates that the velocity of the
+contact point is zero; as part of bringing the constraint forces into evidence,
+we have to introduce speeds at this point, which will by definition always be
+zero. They are normal to the ground, along the path which the disc is rolling,
+and along the ground in an perpendicular direction. ::
+
+  >>> C = Point('C')
+  >>> C.set_vel(N, u4 * L.x + u5 * (Y.z ^ L.x) + u6 * Y.z)
+  >>> Dmc = C.locatenew('Dmc', r * L.z)
+  >>> vel = Dmc.v2pt_theory(C, N, R)
+  >>> acc = Dmc.a2pt_theory(C, N, R)
+  >>> I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
+  >>> kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
+
+Just as we previously introduced three speeds as part of this process, we also
+introduce three forces; they are in the same direction as the speeds, and
+represent the constraint forces in those directions. ::
+
+  >>> ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x) + f3 * Y.z)]
+  >>> BodyD = RigidBody()
+  >>> BodyD.mc = Dmc
+  >>> BodyD.inertia = (I, Dmc)
+  >>> BodyD.frame = R
+  >>> BodyD.mass = m
+  >>> BodyList = [BodyD]
+
+  >>> KM = Kane(N)
+  >>> KM.coords([q1, q2, q3])
+  >>> KM.speeds([u1, u2, u3], aux=[u4, u5, u6])
+  >>> KM.kindiffeq(kd)
+  >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
+  >>> MM = KM.mass_matrix
+  >>> forcing = KM.forcing
+  >>> rhs = MM.inv() * forcing
+  >>> kdd = KM.kindiffdict()
+  >>> rhs = rhs.subs(kdd)
+  >>> rhs.simplify()
+  >>> mprint(rhs)
+  [(4*g*sin(q2) + 10*r*u2*u3 - 5*r*u3**2*tan(q2))/(5*r)]
+  [                                          -2*u1*u3/3]
+  [                             (-2*u2 + u3*tan(q2))*u1]
+  >>> KM.auxiliary_eqs
+  [                                                            -m*(r*u1*u3 + r*u2') + f1]
+  [      -m*(-r*(-u3*q3' + u1') + r*u2*u3)*cos(q2) + m*(-r*u1**2 - r*u2**2)*sin(q2) + f2]
+  [-g*m - m*(-r*(-u3*q3' + u1') + r*u2*u3)*sin(q2) - m*(-r*u1**2 - r*u2**2)*cos(q2) + f3]
 
 
 The Bicycle
@@ -201,13 +273,13 @@ TempFork - statically rotated frame for easier reference inertia definition
 WF - front wheel, again posses a ignorable coordinate ::
 
   >>> N = ReferenceFrame('N')
-  >>> Y = N.orientnew('Y', 'Simple', q1, 3)
-  >>> R = Y.orientnew('R', 'Simple', q2, 1)
-  >>> Frame = R.orientnew('Frame', 'Simple', q4 + htangle, 2)
+  >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])
+  >>> R = Y.orientnew('R', 'Axis', [q2, Y.x])
+  >>> Frame = R.orientnew('Frame', 'Axis', [q4 + htangle, R.y])
   >>> WR = ReferenceFrame('WR')
-  >>> TempFrame = Frame.orientnew('TempFrame', 'Simple', -htangle, 2)
-  >>> Fork = Frame.orientnew('Fork', 'Simple', q5, 1)
-  >>> TempFork = Fork.orientnew('TempFork', 'Simple', -htangle, 2)
+  >>> TempFrame = Frame.orientnew('TempFrame', 'Axis', [-htangle, Frame.y])
+  >>> Fork = Frame.orientnew('Fork', 'Axis', [q5, Frame.x])
+  >>> TempFork = Fork.orientnew('TempFork', 'Axis', [-htangle, Fork.y])
   >>> WF = ReferenceFrame('WF')
 
 Declaration of the RigidBody containers & setting their masses. ::
@@ -331,28 +403,21 @@ its mass center. ::
 
 The N frame is the inertial frame, coordinates are supplied in the order of
 independent, dependent coordinates, as are the speeds. The kinematic
-differential equation are also entered here. ::
+differential equation are also entered here.  Here the dependent speeds are
+specified, in the same order they were provided in earlier, along with the
+non-holonomic constraints.  The dependent coordinate is also provided, with the
+holonomic constraint.  Again, this is only provided for the linearization
+process. ::
 
   >>> KM = Kane(N)
-  >>> KM.coords([q1, q2, q5, q4])
-  >>> KM.speeds([u2, u3, u5, u1, u4, u6])
-  >>> KM.kindiffeq(kd)
+  >>> KM.coords([q1, q2, q5], qdep=[q4], coneqs=conlist_coord)
   >>> print('Before Handling of Dependent Speeds.')
   Before Handling of Dependent Speeds.
-
-Here the dependent speeds are specified, in the same order they were provided
-in earlier, along with the non-holonomic constraints.  The dependent coordinate
-is also provided, with the holonomic constraint.  Again, this is only provided
-for the linearization process. ::
-
-  >>> KM.dependent_speeds([u1, u4, u6], conlist_speed)
-  >>> KM.dependent_coords([q4], conlist_coord)
-  >>> print('Before Forming Generalized Active Forces, Fr')
-  Before Forming Generalized Active Forces, Fr
-  >>> fr = KM.form_fr(FL)
-  >>> print('Before Forming Generalized Inertia Forces, Fr*')
-  Before Forming Generalized Inertia Forces, Fr*
-  >>> frstar = KM.form_frstar(BL)
+  >>> KM.speeds([u2, u3, u5], udep=[u1, u4, u6], coneqs=conlist_speed)
+  >>> KM.kindiffeq(kd)
+  >>> print('Before Forming Generalized Active and Inertia Forces, Fr and Fr*')
+  Before Forming Generalized Active and Inertia Forces, Fr and Fr*
+  >>> (fr, frstar) = KM.kanes_equations(FL, BL)
   >>> print('Base Equations of Motion Computed')
   Base Equations of Motion Computed
 

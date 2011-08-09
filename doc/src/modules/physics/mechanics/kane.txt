@@ -61,13 +61,22 @@ Next is the specification of coordinates and speeds for Kane's Method.
 
 It is also important to supply the order of coordinates and speeds properly if
 there are dependent coordinates and speeds. They must be supplied after
-independent coordinates and speeds: ::
+independent coordinates and speeds or as a keyword arguement; this is shown
+later: ::
 
   >>> q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
   >>> u1, u2, u3, u4 = dynamicsymbols('u1 u2 u3 u4')
-  >>> #Here we will assume q2 is dependent, and u2 and u3 are dependent
-  >>> KM.coords([q1, q3, q4, q2])
-  >>> KM.speeds([u1, u4, u2, u3])
+  >>> # Here we will assume q2 is dependent, and u2 and u3 are dependent
+  >>> # We need the constraint equations to enter them though
+  >>> KM.coords([q1, q3, q4])
+  >>> KM.speeds([u1, u4])
+
+Additionally, if there are auxiliary speeds, they need to be identified here.
+See the examples for more information on this. In this example u4 is the
+auxiliary speed. ::
+
+  >>> u1, u2, u3, u4 = dynamicsymbols('u1 u2 u3 u4')
+  >>> KM.speeds([u1, u2, u3], aux=[u4])
 
 Kinematic differential equations must also be supplied; there are to be
 provided as a list of expressions which are each equal to zero. A trivial
@@ -98,12 +107,10 @@ below: ::
   >>> q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
   >>> u1, u2, u3, u4 = dynamicsymbols('u1 u2 u3 u4')
   >>> #Here we will assume q2 is dependent, and u2 and u3 are dependent
-  >>> KM.coords([q1, q3, q4, q2])
-  >>> KM.speeds([u1, u4, u2, u3])
   >>> speed_cons = [u2 - u1, u3 - u1 - u4]
   >>> coord_cons = [q2 - q1]
-  >>> KM.dependent_coords([q2], coord_cons)
-  >>> KM.dependent_speeds([u2, u3], speed_cons)
+  >>> KM.coords([q1, q3, q4], qdep=[q2], coneqs=coord_cons)
+  >>> KM.speeds([u1, u4], udep=[u2, u3], coneqs=speed_cons)
 
 The final step if forming the equations of motion is supplying a list of
 bodies and particles, and a list of tuples of ``Point``s/``ReferenceFrame``s
@@ -123,10 +130,7 @@ and ``Vector``s representing forces/torques.
   >>> KM.coords([q])
   >>> KM.speeds([u])
   >>> KM.kindiffeq([qd - u])
-  >>> KM.form_fr(FL)
-  [7]
-  >>> KM.form_frstar(BL)
-  [-5*u']
+  >>> (fr, frstar) = KM.kanes_equations(FL, BL)
   >>> KM.mass_matrix
   [-5]
   >>> KM.forcing

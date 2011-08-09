@@ -1,12 +1,13 @@
 from sympy import symbols, Symbol, sin, cos
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
-                                     ReferenceFrame, inertia, Dyad)
+                                     ReferenceFrame, inertia, Dyad,
+                                     kinematic_equations)
 
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 N = ReferenceFrame('N')
-A = N.orientnew('A', 'Simple', q1, 3)
-B = A.orientnew('B', 'Simple', q2, 1)
-C = B.orientnew('C', 'Simple', q3, 2)
+A = N.orientnew('A', 'Axis', [q1, N.z])
+B = A.orientnew('B', 'Axis', [q2, A.x])
+C = B.orientnew('C', 'Axis', [q3, B.y])
 
 def test_dot():
     assert dot(A.x, A.x) == 1
@@ -238,4 +239,12 @@ def test_inertia():
             (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
             N.y) + izz * (N.z | N.z))
 
-# Need to add tests for dynamicsymbols
+def test_kin_eqs():
+    q0, q1, q2, q3 = dynamicsymbols('q0 q1 q2 q3')
+    q0d, q1d, q2d, q3d = dynamicsymbols('q0 q1 q2 q3', 1)
+    u1, u2, u3 = dynamicsymbols('u1 u2 u3')
+    kds = kinematic_equations([u1, u2, u3], [q0, q1, q2, q3], 'quaternion')
+    assert kds == [-0.5 * q0 * u1 - 0.5 * q2 * u3 + 0.5 * q3 * u2 + q1d,
+            -0.5 * q0 * u2 + 0.5 * q1 * u3 - 0.5 * q3 * u1 + q2d,
+            -0.5 * q0 * u3 - 0.5 * q1 * u2 + 0.5 * q2 * u1 + q3d,
+            0.5 * q1 * u1 + 0.5 * q2 * u2 + 0.5 * q3 * u3 + q0d]

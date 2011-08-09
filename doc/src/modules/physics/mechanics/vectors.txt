@@ -599,7 +599,7 @@ If we want to do vector multiplication, first we have to define and
 orientation. The ``orient`` method of ``ReferenceFrame`` provides that
 functionality. ::
 
-  >>> A.orient(N, 'Simple', x, 'Y')
+  >>> A.orient(N, 'Axis', [x, N.y])
 
 If we desire, we can view the dcm between these two frames at any time. This
 can be calculated with the ``dcm`` method. This code: ``N.dcm(A)`` gives the
@@ -618,9 +618,9 @@ the new frame. An example follows: ::
   >>> Bpp = ReferenceFrame('Bpp')
   >>> B = ReferenceFrame('B')
   >>> q1,q2,q3 = symbols('q1 q2 q3')
-  >>> Bpp.orient(N,'Simple',q1,'x')
-  >>> Bp.orient(Bpp,'Simple',q2,'y')
-  >>> B.orient(Bp,'Simple',q3,'z')
+  >>> Bpp.orient(N,'Axis', [q1, N.x])
+  >>> Bp.orient(Bpp,'Axis', [q2, Bpp.y])
+  >>> B.orient(Bp,'Axis', [q3, Bp.z])
   >>> N.dcm(B)
   [                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)]
   [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)]
@@ -642,7 +642,7 @@ relative to an existing one in one step. The ``orientnew`` method allows for
 this functionality, and essentially wraps the ``orient`` method. All of the
 things you can do in ``orient``, you can do in ``orientnew``. ::
 
-  >>> C = N.orientnew('C', 'Simple', q1, 'X')
+  >>> C = N.orientnew('C', 'Axis', [q1, N.x])
 
 Quaternions (or Euler Parameters) use 4 value to characterize the orientation
 of the frame. This and arbitrary axis rotations are described in the ``orient``
@@ -690,7 +690,7 @@ and can take derivatives and time derivatives with ease. Some examples follow.
 ::
 
   >>> N = ReferenceFrame('N')
-  >>> B = N.orientnew('B', 'Simple', q1, 'x')
+  >>> B = N.orientnew('B', 'Axis', [q1, N.x])
   >>> (B.y*q2 + B.z).diff(q2, N)
   B.y
   >>> (B.y*q2 + B.z).dt(N)

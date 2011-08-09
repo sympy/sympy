@@ -26,8 +26,10 @@ def test_dyad():
     assert d1 & d3 == A.x | A.y
     assert d3 & d1 == 0
     assert d1.dt(A) == 0
-    q, qd, qdd = dynamicsymbols('q qd qdd')
-    B = A.orientnew('B', 'Simple', q, 3)
+    q = dynamicsymbols('q')
+    qd = dynamicsymbols('q', 1)
+    qdd = dynamicsymbols('q', 2)
+    B = A.orientnew('B', 'Axis', [q, A.z])
     assert d1.express(B) == d1.express(B, B)
     assert d1.express(B) == ((cos(q)**2) * (B.x | B.x) + (-sin(q) * cos(q)) *
             (B.x | B.y) + (-sin(q) * cos(q)) * (B.y | B.x) + (sin(q)**2) *
@@ -37,19 +39,19 @@ def test_dyad():
     assert d1.dt(B) == (-qd) * (A.y | A.x) + (-qd) * (A.x | A.y)
 
 def test_ang_vel():
-    q1, q2, q3, q4, q1d, q2d, q3d, q4d = dynamicsymbols('q1 q2 q3 q4 q1d q2d \
-                                                        q3d q4d')
+    q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
+    q1d, q2d, q3d, q4d = dynamicsymbols('q1 q2 q3 q4', 1)
     N = ReferenceFrame('N')
-    A = N.orientnew('A', 'Simple', q1, 3)
-    B = A.orientnew('B', 'Simple', q2, 1)
-    C = B.orientnew('C', 'Simple', q3, 2)
-    D = N.orientnew('D', 'Simple', q4, 2)
-    u0, u1, u2 = dynamicsymbols('u1 u2 u3')
+    A = N.orientnew('A', 'Axis', [q1, N.z])
+    B = A.orientnew('B', 'Axis', [q2, A.x])
+    C = B.orientnew('C', 'Axis', [q3, B.y])
+    D = N.orientnew('D', 'Axis', [q4, N.y])
+    u1, u2, u3 = dynamicsymbols('u1 u2 u3')
     assert A.ang_vel_in(N) == (q1d)*A.z
     assert B.ang_vel_in(N) == (q2d)*B.x + (q1d)*A.z
     assert C.ang_vel_in(N) == (q3d)*C.y + (q2d)*B.x + (q1d)*A.z
 
-    A2 = N.orientnew('A2', 'Simple', q4, 2)
+    A2 = N.orientnew('A2', 'Axis', [q4, N.y])
     assert N.ang_vel_in(N) == 0
     assert N.ang_vel_in(A) == -q1d*N.z
     assert N.ang_vel_in(B) == -q1d*A.z - q2d*B.x
@@ -80,13 +82,14 @@ def test_ang_vel():
     assert A2.ang_vel_in(C) == q4d*N.y - q1d*A.z - q2d*A.x - q3d*B.y
     assert A2.ang_vel_in(A2) == 0
 
-    C.set_ang_vel(N, u0*C.x + u1*C.y + u2*C.z)
-    assert C.ang_vel_in(N) == (u0)*C.x + (u1)*C.y + (u2)*C.z
-    assert N.ang_vel_in(C) == (-u0)*C.x + (-u1)*C.y + (-u2)*C.z
-    assert C.ang_vel_in(D) == (u0)*C.x + (u1)*C.y + (u2)*C.z + (-q4d)*D.y
-    assert D.ang_vel_in(C) == (-u0)*C.x + (-u1)*C.y + (-u2)*C.z + (q4d)*D.y
+    C.set_ang_vel(N, u1*C.x + u2*C.y + u3*C.z)
+    assert C.ang_vel_in(N) == (u1)*C.x + (u2)*C.y + (u3)*C.z
+    assert N.ang_vel_in(C) == (-u1)*C.x + (-u2)*C.y + (-u3)*C.z
+    assert C.ang_vel_in(D) == (u1)*C.x + (u2)*C.y + (u3)*C.z + (-q4d)*D.y
+    assert D.ang_vel_in(C) == (-u1)*C.x + (-u2)*C.y + (-u3)*C.z + (q4d)*D.y
 
-    q0, q0d = dynamicsymbols('q0 q0d')
+    q0 = dynamicsymbols('q0')
+    q0d = dynamicsymbols('q0', 1)
     E = N.orientnew('E', 'Quaternion', (q0, q1, q2, q3))
     assert E.ang_vel_in(N) == (
         2 * (q1d * q0 + q2d * q3 - q3d * q2 - q0d * q1) * E.x +
@@ -104,10 +107,10 @@ def test_ang_vel():
 def test_dcm():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
     N = ReferenceFrame('N')
-    A = N.orientnew('A', 'Simple', q1, 3)
-    B = A.orientnew('B', 'Simple', q2, 1)
-    C = B.orientnew('C', 'Simple', q3, 2)
-    D = N.orientnew('D', 'Simple', q4, 2)
+    A = N.orientnew('A', 'Axis', [q1, N.z])
+    B = A.orientnew('B', 'Axis', [q2, A.x])
+    C = B.orientnew('C', 'Axis', [q3, B.y])
+    D = N.orientnew('D', 'Axis', [q4, N.y])
     assert N.dcm(C) == Matrix([
         [- sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), - sin(q1) *
         cos(q2), sin(q1) * sin(q2) * cos(q3) + sin(q3) * cos(q1)], [sin(q1) *
@@ -159,11 +162,12 @@ def test_Vector():
     assert dot(v4, A.z) == z - z**2
 
 def test_Vector_diffs():
-    q1, q2, q3, q4, q1d, q2d, q3d, q4d, q1dd, q2dd, q3dd, q4dd = (
-        dynamicsymbols('q1 q2 q3 q4 q1d q2d q3d q4d q1dd q2dd q3dd q4dd'))
+    q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
+    q1d, q2d, q3d, q4d = dynamicsymbols('q1 q2 q3 q4', 1)
+    q1dd, q2dd, q3dd, q4dd = dynamicsymbols('q1 q2 q3 q4', 2)
     N = ReferenceFrame('N')
-    A = N.orientnew('A', 'Simple', q3, 3)
-    B = A.orientnew('B', 'Simple', q2, 1)
+    A = N.orientnew('A', 'Axis', [q3, N.z])
+    B = A.orientnew('B', 'Axis', [q2, A.x])
     v1 = q2 * A.x + q3 * N.y
     v2 = q3 * B.x + v1
     v3 = v1.dt(B)

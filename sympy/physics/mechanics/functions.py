@@ -16,7 +16,8 @@ from sympy.physics.mechanics.essential import (Vector, Dyad, ReferenceFrame,
                                                MechanicsLatexPrinter,
                                                dynamicsymbols)
 from sympy.physics.mechanics.kane import Kane
-from sympy import (sympify, symbols, numbered_symbols, cse, diff, sin, cos)
+from sympy import (sympify, symbols, numbered_symbols, cse, diff, sin, cos,
+                   Matrix)
 
 def cross(vec1, vec2):
     """Cross product convenience wrapper for Vector.cross(): \n"""
@@ -132,7 +133,7 @@ def mechanics_printing():
     sys.displayhook = mprint
 
 def mprint(expr, **settings):
-    r"""Function for printing of expressions generated in mechanics. 
+    r"""Function for printing of expressions generated in mechanics.
 
     Parameters
     ==========
@@ -176,9 +177,9 @@ def mpprint(expr, **settings):
 
     Examples
     ========
-    
+
     Use in the same way as pprint
-  
+
     """
 
     mp = MechanicsPrettyPrinter(settings)
@@ -358,13 +359,16 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         w = Matrix(speeds + [0])
         E = Matrix([[e0, -e3, e2, e1], [e3, e0, -e1, e2], [-e2, e1, e0, e3],
             [-e1, -e2, -e3, e0]])
-        edots = Matrix([diff(i, dynamicsymbols._t) for i in coords])
-        return (edots - 0.5 * w * E.t)[:]
+        edots = Matrix([diff(i, dynamicsymbols._t) for i in [e1, e2, e3, e0]])
+        return list(edots.T - 0.5 * w.T * E.T)
     else:
         raise ValueError('Not an approved rotation type for this function')
 
 def code_output(typ, KM, fname, params=[]):
     """Function for generating files with code to integrate.
+
+    Note: the interface for this function is likely to change in the future.
+    Please keep that in mind.
 
     Parameters
     ==========
@@ -378,6 +382,13 @@ def code_output(typ, KM, fname, params=[]):
         A list of symbols needed by the rhs function
 
     """
+
+    # Note for future developers: the code output is written assuming the 5
+    # basic equations as described in the sphinx documentation. As long as the
+    # class object provided can supply the kinematic differential equations,
+    # mass matrix, and forcing vector, it should be compatible with this code
+    # output function. Keep this in mind if you write other methods of forming
+    # the equations of motion (Newton-Euler or Lagrange).
 
     def _py_code_output(KM, fname, params):
         """Function for generating code for numerical integration.

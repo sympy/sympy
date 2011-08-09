@@ -404,9 +404,9 @@ velocity definition. ::
   >>> mechanics_printing()
   >>> N = ReferenceFrame('N')
   >>> q1 = dynamicsymbols('q1')
-  >>> A = N.orientnew('A', 'Simple', q1, 'x')
+  >>> A = N.orientnew('A', 'Axis', [q1, N.x])
   >>> A.ang_vel_in(N)
-  q1'*A.x
+  q1'*N.x
 
 Note that the angular velocity can be defined in an alternate way: ::
 
@@ -520,7 +520,7 @@ This is the particle moving on a ring, again. ::
   >>> q1, q2 = dynamicsymbols('q1 q2')
   >>> l = Symbol('l')
   >>> R = Symbol('R')
-  >>> C = N.orientnew('C', 'Simple', q1, 'x')
+  >>> C = N.orientnew('C', 'Axis', [q1, N.x])
   >>> C.set_ang_vel(N, u1 * N.x)
   >>> O = Point('O')
   >>> O.set_vel(N, 0)

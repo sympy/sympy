@@ -23,8 +23,7 @@ def test_one_dof():
     KM.coords([q])
     KM.speeds([u])
     KM.kindiffeq(kd)
-    KM.form_fr(FL)
-    KM.form_frstar(BL)
+    KM.kanes_equations(FL, BL)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -64,8 +63,7 @@ def test_two_dof():
     KM.coords([q1, q2])
     KM.speeds([u1, u2])
     KM.kindiffeq(kd)
-    KM.form_fr(FL)
-    KM.form_frstar(BL)
+    KM.kanes_equations(FL, BL)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -91,8 +89,7 @@ def test_pend():
     KM.coords([q])
     KM.speeds([u])
     KM.kindiffeq(kd)
-    KM.form_fr(FL)
-    KM.form_frstar(BL)
+    KM.kanes_equations(FL, BL)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -116,9 +113,9 @@ def test_rolling_disc():
     # Z, X, Y series of rotations. Angular velocity for this is defined using
     # the second frame's basis (the lean frame).
     N = ReferenceFrame('N')
-    Y = N.orientnew('Y', 'Simple', q1, 3)
-    L = Y.orientnew('L', 'Simple', q2, 1)
-    R = L.orientnew('R', 'Simple', q3, 2)
+    Y = N.orientnew('Y', 'Axis', [q1, N.z])
+    L = Y.orientnew('L', 'Axis', [q2, Y.x])
+    R = L.orientnew('R', 'Axis', [q3, L.y])
     R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
     R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
 
@@ -161,14 +158,69 @@ def test_rolling_disc():
     KM.coords([q1, q2, q3])
     KM.speeds([u1, u2, u3])
     KM.kindiffeq(kd)
-    fr = KM.form_fr(ForceList)
-    frstar = KM.form_frstar(BodyList)
+    KM.kanes_equations(ForceList, BodyList)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
-    sub_dict = solve_linear_system_LU(Matrix([KM._k_kqdot.T,
-        -(KM._k_ku*Matrix(KM._u) + KM._f_k).T]).T, KM._qdot)
-    rhs = rhs.subs(sub_dict)
+    kdd = KM.kindiffdict()
+    rhs = rhs.subs(kdd)
     assert rhs.expand() == Matrix([(10*u2*u3*r - 5*u3**2*r*tan(q2) +
         4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
 
+def test_aux():
+    # Same as above, except we have 2 auxiliary speeds for the ground contact
+    # point, which is known to be zero. In one case, we go through then
+    # substitute the aux. speeds in at the end (they are zero, as well as their
+    # derivative), in the other case, we use the built-in auxiliary speed part
+    # of Kane. The equations from each should be the same.
+    q1, q2, q3, u1, u2, u3  = dynamicsymbols('q1 q2 q3 u1 u2 u3')
+    q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
+    u4, u5, f1, f2 = dynamicsymbols('u4, u5, f1, f2')
+    u4d, u5d = dynamicsymbols('u4, u5', 1)
+    r, m, g = symbols('r m g')
+
+    N = ReferenceFrame('N')
+    Y = N.orientnew('Y', 'Axis', [q1, N.z])
+    L = Y.orientnew('L', 'Axis', [q2, Y.x])
+    R = L.orientnew('R', 'Axis', [q3, L.y])
+    R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
+    R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^
+        R.ang_vel_in(N)))
+
+    C = Point('C')
+    C.set_vel(N, u4 * L.x + u5 * (Y.z ^ L.x))
+    Dmc = C.locatenew('Dmc', r * L.z)
+    Dmc.v2pt_theory(C, N, R)
+    Dmc.a2pt_theory(C, N, R)
+
+    I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
+
+    kd = [q1d - u3/cos(q3), q2d - u1, q3d - u2 + u3 * tan(q2)]
+
+    ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x))]
+    BodyD = RigidBody()
+    BodyD.mc = Dmc
+    BodyD.inertia = (I, Dmc)
+    BodyD.frame = R
+    BodyD.mass = m
+    BodyList = [BodyD]
+
+    KM = Kane(N)
+    KM.coords([q1, q2, q3])
+    KM.speeds([u1, u2, u3, u4, u5])
+    KM.kindiffeq(kd)
+    kdd = KM.kindiffdict()
+    (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
+    fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
+    frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
+
+    KM2 = Kane(N)
+    KM2.coords([q1, q2, q3])
+    KM2.speeds([u1, u2, u3], aux=[u4, u5])
+    KM2.kindiffeq(kd)
+    (fr2, frstar2) = KM2.kanes_equations(ForceList, BodyList)
+    fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
+    frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})
+
+    assert fr.expand() == fr2.expand()
+    assert frstar.expand() == frstar2.expand()

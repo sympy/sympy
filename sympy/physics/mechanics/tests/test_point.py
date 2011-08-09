@@ -41,7 +41,7 @@ def test_point_v2pt_theorys():
     q = dynamicsymbols('q')
     qd = dynamicsymbols('q', 1)
     N = ReferenceFrame('N')
-    B = N.orientnew('B', 'Simple', q, 3)
+    B = N.orientnew('B', 'Axis', [q, N.z])
     O = Point('O')
     P = O.locatenew('P', 0)
     O.set_vel(N, 0)
@@ -56,7 +56,7 @@ def test_point_a2pt_theorys():
     qd = dynamicsymbols('q', 1)
     qdd = dynamicsymbols('q', 2)
     N = ReferenceFrame('N')
-    B = N.orientnew('B', 'Simple', q, 3)
+    B = N.orientnew('B', 'Axis', [q, N.z])
     O = Point('O')
     P = O.locatenew('P', 0)
     O.set_vel(N, 0)
@@ -81,7 +81,7 @@ def test_point_funcs():
     assert P.a1pt_theory(O, N, B) == ((-25 * q + qdd) * B.x + (q2dd) * B.y +
                                (-10 * qd) * B.z)
 
-    B = N.orientnew('B', 'Simple', q, 3)
+    B = N.orientnew('B', 'Axis', [q, N.z])
     O = Point('O')
     P = O.locatenew('P', 10 * B.x)
     O.set_vel(N, 5 * N.x)
@@ -98,7 +98,7 @@ def test_point_funcs():
 def test_point_pos():
     q = dynamicsymbols('q')
     N = ReferenceFrame('N')
-    B = N.orientnew('B', 'Simple', q, 3)
+    B = N.orientnew('B', 'Axis', [q, N.z])
     O = Point('O')
     P = O.locatenew('P', 10 * N.x + 5 * B.x)
     assert P.pos_from(O) == 10 * N.x + 5 * B.x
