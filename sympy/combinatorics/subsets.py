@@ -42,13 +42,13 @@ class Subset(Basic):
         >>> a.iterate_binary(2)
         Subset([], ['a', 'b', 'c', 'd'])
         """
-        bin_list = Subset.get_bitlist_from_subset(self.subset, self.superset)
+        bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
         next_bin_list = list(bin((int(reduce(lambda x, y:
                                              x + y, bin_list), 2) + k)
                                  % 2**self.superset_size))[2:]
         next_bin_list = [0] * (self.superset_size - len(next_bin_list)) + \
                         next_bin_list
-        return Subset.get_subset_from_bitlist(self.superset, next_bin_list)
+        return Subset.subset_from_bitlist(self.superset, next_bin_list)
 
 
     def next_binary(self):
@@ -99,7 +99,7 @@ class Subset(Basic):
 
     def iterate_graycode(self, k):
         """
-        Helper function used for prev_graycode and next_graycode.
+        Helper function used for prev_gray and next_gray.
         It performs k step overs to get the respective Gray codes.
 
         Examples:
@@ -110,32 +110,32 @@ class Subset(Basic):
         >>> a.iterate_graycode(-2)
         Subset([2], [1, 2, 3, 4])
         """
-        unranked_code = GrayCode.unrank_gray((self.rank_graycode+k)\
+        unranked_code = GrayCode.unrank_gray((self.rank_gray + k)\
                                              % self.cardinality,
                                              self.superset_size)
-        return Subset.get_subset_from_bitlist(self.superset,
-                                              unranked_code._current)
+        return Subset.subset_from_bitlist(self.superset,
+                                          unranked_code._current)
 
-    def next_graycode(self):
+    def next_gray(self):
         """
         Generates the next Gray code ordered subset.
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset([1,2,3], [1,2,3,4])
-        >>> a.next_graycode()
+        >>> a.next_gray()
         Subset([1, 3], [1, 2, 3, 4])
         """
         return self.iterate_graycode(1)
 
-    def prev_graycode(self):
+    def prev_gray(self):
         """
         Generates the previous Gray code ordered subset.
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset([2,3,4], [1,2,3,4,5])
-        >>> a.prev_graycode()
+        >>> a.prev_gray()
         Subset([1, 2, 3, 4], [1, 2, 3, 4, 5])
         """
         return self.iterate_graycode(-1)
@@ -156,8 +156,8 @@ class Subset(Basic):
         """
         if self._rank_binary == None:
             self._rank_binary = int("".join(
-                Subset.get_bitlist_from_subset(self.subset,
-                                               self.superset)), 2)
+                Subset.bitlist_from_subset(self.subset,
+                                           self.superset)), 2)
         return self._rank_binary
 
     @property
@@ -188,22 +188,22 @@ class Subset(Basic):
         return self._rank_lex
 
     @property
-    def rank_graycode(self):
+    def rank_gray(self):
         """
         Computes the Gray code ranking of the subset.
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset(['c','d'], ['a','b','c','d'])
-        >>> a.rank_graycode
+        >>> a.rank_gray
         8
         >>> a = Subset([2,4,5], [1,2,3,4,5,6])
-        >>> a.rank_graycode
+        >>> a.rank_gray
         19
         """
         if self._rank_graycode == None:
-            bits = Subset.get_bitlist_from_subset(self.subset, self.superset)
-            self._rank_graycode = GrayCode(start = bits).rank
+            bits = Subset.bitlist_from_subset(self.subset, self.superset)
+            self._rank_graycode = GrayCode(start=bits).rank_current
         return self._rank_graycode
 
     @property
@@ -242,13 +242,13 @@ class Subset(Basic):
         return 2**(self.superset_size)
 
     @classmethod
-    def get_subset_from_bitlist(self, super_set, bitlist):
+    def subset_from_bitlist(self, super_set, bitlist):
         """
         Gets the subset defined by the bitlist.
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
-        >>> Subset.get_subset_from_bitlist(['a','b','c','d'], '0011')
+        >>> Subset.subset_from_bitlist(['a','b','c','d'], '0011')
         Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         """
         if len(super_set) != len(bitlist):
@@ -260,13 +260,13 @@ class Subset(Basic):
         return Subset(ret_set, super_set)
 
     @classmethod
-    def get_bitlist_from_subset(self, subset, superset):
+    def bitlist_from_subset(self, subset, superset):
         """
         Gets the bitlist corresponding to a subset.
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
-        >>> Subset.get_bitlist_from_subset(['c','d'], ['a','b','c','d'])
+        >>> Subset.bitlist_from_subset(['c','d'], ['a','b','c','d'])
         '0011'
         """
         bitlist = ['0'] * len(superset)
@@ -288,22 +288,22 @@ class Subset(Basic):
         """
         bin_list = list(bin(rank))[2:]
         bin_list = [0] * (len(superset) - len(bin_list)) + bin_list
-        return Subset.get_subset_from_bitlist(superset, bin_list)
+        return Subset.subset_from_bitlist(superset, bin_list)
 
     @classmethod
-    def unrank_graycode_subset(self, rank, superset):
+    def unrank_gray(self, rank, superset):
         """
         Gets the Gray code ordered subset of the specified rank.
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
-        >>> Subset.unrank_graycode_subset(4, ['a','b','c'])
+        >>> Subset.unrank_gray(4, ['a','b','c'])
         Subset(['b', 'c'], ['a', 'b', 'c'])
-        >>> Subset.unrank_graycode_subset(0, ['a','b','c'])
+        >>> Subset.unrank_gray(0, ['a','b','c'])
         Subset([], ['a', 'b', 'c'])
         """
         graycode_bitlist = GrayCode.unrank_gray(rank, len(superset))._current
-        return Subset.get_subset_from_bitlist(superset, graycode_bitlist)
+        return Subset.subset_from_bitlist(superset, graycode_bitlist)
 
 def ksubsets(superset, k):
     """
