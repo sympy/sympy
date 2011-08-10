@@ -439,7 +439,7 @@ def test_collect_func():
     assert collect(f, x, evaluate=False) == {S.One: a**3 + 3*a**2 + 3*a + 1, x: 3*a**2 + 6*a + 3, x**2: 3*a + 3, x**3: 1}
 
 @XFAIL
-def test_collect_func():
+def test_collect_func_xfail():
     # XXX: this test will pass when automatic constant distribution is removed (#1497)
     assert collect(f, x, factor, evaluate=False) == {S.One: (a + 1)**3, x: 3*(a + 1)**2, x**2: 3*(a + 1), x**3: 1}
 
