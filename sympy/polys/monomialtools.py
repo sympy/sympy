@@ -94,7 +94,7 @@ def monomial_grlex_key(monom):
 
 def monomial_grevlex_key(monom):
     """Key function for sorting monomials in reversed graded lexicographic order. """
-    return (sum(monom), tuple(reversed(monom)))
+    return (sum(monom), tuple(reversed([-m for m in monom])))
 
 _monomial_key = {
     'lex'     : monomial_lex_key,
