@@ -399,6 +399,13 @@ def test_full_prec():
             "x*0.3"
             ]
 
+def test_noncommutative():
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    assert sstr(A*B*C**-1) == "A*B*C**(-1)"
+    assert sstr(C**-1*A*B) == "C**(-1)*A*B"
+    assert sstr(A*C**-1*B) == "A*C**(-1)*B"
+
 def test_empty_printer():
     str_printer = StrPrinter()
     assert str_printer.emptyPrinter("foo") == "foo"
