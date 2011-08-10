@@ -6,7 +6,7 @@ from sympy.polys.monomialtools import (
     monomial_key, monomial_min, monomial_div
 )
 
-from sympy.polys.groebnertools import sdp_sort
+from sympy.polys.distributedpolys import sdp_sort
 
 from sympy.utilities import cythonized
 

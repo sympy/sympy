@@ -33,8 +33,12 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_list,
 )
 
+from sympy.polys.distributedpolys import (
+    sdp_from_dict, sdp_div,
+)
+
 from sympy.polys.groebnertools import (
-    sdp_from_dict, sdp_div, sdp_groebner,
+    sdp_groebner,
 )
 
 from sympy.polys.monomialtools import (
@@ -57,7 +61,7 @@ from sympy.polys.polycontext import (
 )
 
 from sympy.utilities import (
-    group,
+    group, flatten,
 )
 
 from sympy.ntheory import isprime
@@ -5289,6 +5293,19 @@ def groebner(F, *gens, **args):
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grevlex')
     [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
 
+    By default, an improved implementation of the Buchberger algorithm
+    is used. Optionally, an implementation of the F5B algorithm can
+    be used. The algorithm can be changed with the `setup` function
+    from sympy.polys.polyconfig:
+
+    >>> from sympy.polys.polyconfig import setup
+    >>> groebner([x**2 - x - 1, (2*x - 1) * y - (x**10 - (1-x)**10)], x, y, order='lex') # default
+    [x**2 - x - 1, y - 55]
+    >>> setup('GB_METHOD', 'f5b')
+    >>> groebner([x**2 - x - 1, (2*x - 1) * y - (x**10 - (1-x)**10)], x, y, order='lex') # f5b
+    [x**2 - x - 1, y - 55]
+    >>> setup('GB_METHOD', 'buchberger') # back to the default algorithm
+
     **References**
 
     1. [Buchberger01]_
@@ -5313,7 +5330,7 @@ def groebner(F, *gens, **args):
         poly = poly.set_domain(opt.domain).rep.to_dict()
         polys[i] = sdp_from_dict(poly, opt.order)
 
-    level = len(gens)-1
+    level = len(flatten(gens)) - 1
 
     G = sdp_groebner(polys, level, opt.order, opt.domain)
     G = [ Poly._from_dict(dict(g), opt) for g in G ]
