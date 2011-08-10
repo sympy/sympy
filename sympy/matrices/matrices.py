@@ -2558,7 +2558,7 @@ def matrix_multiply(A, B):
     >>> B*A
     Traceback (most recent call last):
     ...
-    ShapeError
+    ShapeError: Matrices size mismatch.
     >>>
 
     """
@@ -2577,7 +2577,7 @@ def matrix_multiply(A, B):
     #        product[i, j] = s
     #return product
     if A.shape[1] != B.shape[0]:
-        raise ShapeError()
+        raise ShapeError("Matrices size mismatch.")
     blst = B.T.tolist()
     alst = A.tolist()
     return Matrix(A.shape[0], B.shape[1], lambda i, j:

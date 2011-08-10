@@ -216,6 +216,10 @@ class Mod1(object):
     def __repr__(self):
         return str(self.expr) + ' % 1'
 
+    #Needed to allow adding Mod1 objects to a dict in Python 3
+    def __hash__(self):
+        return super(Mod1, self).__hash__()
+
     def __eq__(self, other):
         from sympy import simplify
         if not isinstance(other, Mod1):

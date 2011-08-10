@@ -602,7 +602,7 @@ class PrettyPrinter(Printer):
                 D = prettyForm(*D.below(D_row))
 
         # make sure that the argument `z' is centred vertically
-        D.baseline = D.height()/2
+        D.baseline = D.height()//2
 
         # insert horizontal separator
         P = prettyForm(*P.left(' '))
@@ -615,7 +615,7 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('(', ')'))
 
         # create the F symbol
-        above = D.height()/2 - 1
+        above = D.height()//2 - 1
         below = D.height() - above - 1
 
         if self._use_unicode:
@@ -627,7 +627,7 @@ class PrettyPrinter(Printer):
         sz, t, b, img = pic
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline = above + sz)
-        add = (sz+1)/2
+        add = (sz+1)//2
 
         F = prettyForm(*F.left(self._print(len(e.ap))))
         F = prettyForm(*F.right(self._print(len(e.bq))))
@@ -668,7 +668,7 @@ class PrettyPrinter(Printer):
         D  = prettyForm(*D1.below(D2))
 
         # make sure that the argument `z' is centred vertically
-        D.baseline = D.height()/2
+        D.baseline = D.height()//2
 
         # insert horizontal separator
         P = prettyForm(*P.left(' '))
@@ -681,7 +681,7 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('(', ')'))
 
         # create the G symbol
-        above = D.height()/2 - 1
+        above = D.height()//2 - 1
         below = D.height() - above - 1
 
         if self._use_unicode:

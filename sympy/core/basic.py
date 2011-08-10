@@ -621,7 +621,7 @@ class Basic(object):
         >>> from sympy.abc import x
         >>> a = 2*x
         >>> a.iter_basic_args()
-        <tupleiterator object at 0x...>
+        <tuple...iterator object at 0x...>
         >>> list(a.iter_basic_args())
         [2, x]
 

@@ -26,14 +26,14 @@ def iterable(i, exclude=(basestring, dict)):
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
     >>> for i in things:
     ...     print iterable(i), type(i)
-    True <type 'list'>
-    True <type 'tuple'>
-    True <type 'set'>
+    True <... 'list'>
+    True <... 'tuple'>
+    True <... 'set'>
     True <class 'sympy.core.containers.Tuple'>
-    True <type 'generator'>
-    False <type 'dict'>
-    False <type 'str'>
-    False <type 'int'>
+    True <... 'generator'>
+    False <... 'dict'>
+    False <... 'str'>
+    False <... 'int'>
 
     >>> iterable({}, exclude=None)
     True
