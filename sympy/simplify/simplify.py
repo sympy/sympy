@@ -73,7 +73,7 @@ def fraction(expr, exact=False):
     numer, denom = [], []
 
     for term in Mul.make_args(expr):
-        if term.is_Pow or term.func is exp:
+        if term.is_commutative and (term.is_Pow or term.func is exp):
             b, ex = term.as_base_exp()
             if ex.is_negative:
                 if ex is S.NegativeOne:

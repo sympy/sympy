@@ -614,6 +614,8 @@ class Pow(Expr):
             return True
 
     def as_numer_denom(self):
+        if not self.is_commutative:
+            return self, S.One
         base, exp = self.as_base_exp()
         n, d = base.as_numer_denom()
         if d.is_negative and n.is_negative:
