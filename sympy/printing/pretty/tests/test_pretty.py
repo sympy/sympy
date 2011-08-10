@@ -2734,3 +2734,66 @@ u"""\
     expr = meijerg([1]*10, [1], [1], [1], z)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+def test_noncommutative():
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    expr = A*B*C**-1
+    ascii_str = \
+"""\
+     -1\n\
+A*B*C  \
+"""
+    ucode_str = \
+u"""\
+     -1\n\
+A⋅B⋅C  \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = C**-1*A*B
+    ascii_str = \
+"""\
+ -1    \n\
+C  *A*B\
+"""
+    ucode_str = \
+u"""\
+ -1    \n\
+C  ⋅A⋅B\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A*C**-1*B
+    ascii_str = \
+"""\
+   -1  \n\
+A*C  *B\
+"""
+    ucode_str = \
+u"""\
+   -1  \n\
+A⋅C  ⋅B\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A*C**-1*B/x
+    ascii_str = \
+"""\
+   -1  \n\
+A*C  *B\n\
+-------\n\
+   x   \
+"""
+    ucode_str = \
+u"""\
+   -1  \n\
+A⋅C  ⋅B\n\
+───────\n\
+   x   \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str

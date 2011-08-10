@@ -302,6 +302,13 @@ def test_latex_pow_fraction():
     # Testing general, non-exp, power
     assert '3^{-x}' in latex(3**-x/2).replace(' ', '')
 
+def test_noncommutative():
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    assert latex(A*B*C**-1) == "A B C^{-1}"
+    assert latex(C**-1*A*B) == "C^{-1} A B"
+    assert latex(A*C**-1*B) == "A C^{-1} B"
+
 def test_latex_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4
 

@@ -215,7 +215,7 @@ class StrPrinter(Printer):
 
         # Gather args for numerator/denominator
         for item in args:
-            if item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 b.append(Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
@@ -335,11 +335,12 @@ class StrPrinter(Printer):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp is S.NegativeOne:
-            return '1/%s'%(self.parenthesize(expr.base, PREC))
+
+        if expr.is_commutative and expr.exp is S.NegativeOne:
+            return '1/%s' % self.parenthesize(expr.base, PREC)
         else:
-            return '%s**%s'%(self.parenthesize(expr.base, PREC),
-                             self.parenthesize(expr.exp, PREC))
+            return '%s**%s' % (self.parenthesize(expr.base, PREC),
+                               self.parenthesize(expr.exp, PREC))
 
     def _print_Integer(self, expr):
         return str(expr.p)

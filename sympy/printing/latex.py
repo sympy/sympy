@@ -250,9 +250,7 @@ class LatexPrinter(Printer):
 
     def _print_Pow(self, expr):
         # Treat x**(Rational(1,n)) as special case
-        if expr.exp.is_Rational\
-           and abs(expr.exp.p) == 1\
-           and expr.exp.q != 1:
+        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1:
             base = self._print(expr.base)
             expq = expr.exp.q
 
@@ -276,7 +274,7 @@ class LatexPrinter(Printer):
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
             else:
-                if expr.exp == S.NegativeOne:
+                if expr.is_commutative and expr.exp is S.NegativeOne:
                     #solves issue 1030
                     #As Mul always simplify 1/x to x**-1
                     #The objective is achieved with this hack
