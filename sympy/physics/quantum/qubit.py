@@ -181,10 +181,10 @@ class Qubit(QubitState, Ket):
         else:
             return Integer(0)
 
-    def _represent_default_basis(self, **options):
-        return self._represent_ZGate(None, **options)
+    def _get_default_basis(self, **options):
+        return Qubit(0)
 
-    def _represent_ZGate(self, basis, **options):
+    def _represent_Qubit(self, basis, **options):
         """Represent this qubits in the computational basis (ZGate).
         """
         format = options.get('format', 'sympy')
