@@ -154,7 +154,7 @@ def preview(expr, output='png', viewer=None, euler=True):
         try:
             from pyglet import window, image, gl
             from pyglet.window import key
-        except:
+        except ImportError:
             raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
         if output == "png":
