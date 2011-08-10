@@ -417,6 +417,15 @@ def test_as_numer_denom():
     n = Symbol('0 or neg', nonpositive=True)
     assert ((x/n)**-S.Half).as_numer_denom() == (1, (x/n)**S.Half)
 
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    assert (A*B*C**-1).as_numer_denom() == (A*B*C**-1, 1)
+    assert (A*B*C**-1/x).as_numer_denom() == (A*B*C**-1, x)
+    assert (C**-1*A*B).as_numer_denom() == (C**-1*A*B, 1)
+    assert (C**-1*A*B/x).as_numer_denom() == (C**-1*A*B, x)
+    assert ((A*B*C)**-1).as_numer_denom() == ((A*B*C)**-1, 1)
+    assert ((A*B*C)**-1/x).as_numer_denom() == ((A*B*C)**-1, x)
+
 def test_as_independent():
     assert (2*x*sin(x)+y+x).as_independent(x) == (y, x + 2*x*sin(x))
     assert (2*x*sin(x)+y+x).as_independent(y) == (x + 2*x*sin(x), y)
