@@ -173,53 +173,55 @@ def separate(expr, deep=False, force=False):
 
 def collect(expr, syms, func=None, evaluate=True, exact=False):
     """
-        Collect additive terms with respect to a list of symbols up
-        to powers with rational exponents. By the term symbol here
-        are meant arbitrary expressions, which can contain powers,
-        products, sums etc. In other words symbol is a pattern
-        which will be searched for in the expression's terms.
+    Collect additive terms of an expression.
 
-        This function will not apply any redundant expanding to the
-        input expression, so user is assumed to enter expression in
-        final form. This makes 'collect' more predictable as there
-        is no magic behind the scenes. However it is important to
-        note, that powers of products are converted to products of
-        powers using 'separate' function.
+    This function collects additive terms of an expression with respect
+    to a list of expression up to powers with rational exponents. By the
+    term symbol here are meant arbitrary expressions, which can contain
+    powers, products, sums etc. In other words symbol is a pattern which
+    will be searched for in the expression's terms.
 
-        There are two possible types of output. First, if 'evaluate'
-        flag is set, this function will return a single expression
-        or else it will return a dictionary with separated symbols
-        up to rational powers as keys and collected sub-expressions
-        as values respectively.
+    The input expression is not expanded by :func:`collect`, so user is
+    expected to provide an expression is an appropriate form. This makes
+    :func:`collect` more predictable as there is no magic happening behind
+    the scenes. However, it is important to note, that powers of products
+    are converted to products of powers using :func:`separate` function.
 
-        >>> from sympy import collect, sympify, Wild
-        >>> from sympy.abc import a, b, c, x, y, z
+    There are two possible types of output. First, if ``evaluate`` flag is
+    set, this function will return an expression with collected terms or
+    else it will return a dictionary with expressions up to rational powers
+    as keys and collected coefficients as values.
 
-        This function can collect symbolic coefficients in polynomial
-        or rational expressions. It will manage to find all integer or
-        rational powers of collection variable:
+    **Examples**
+
+    >>> from sympy import S, collect, expand, factor, Wild
+    >>> from sympy.abc import a, b, c, x, y, z
+
+    This function can collect symbolic coefficients in polynomials or
+    rational expressions. It will manage to find all integer or rational
+    powers of collection variable::
 
         >>> collect(a*x**2 + b*x**2 + a*x - b*x + c, x)
         c + x**2*(a + b) + x*(a - b)
 
-        The same result can be achieved in dictionary form:
+    The same result can be achieved in dictionary form::
 
         >>> d = collect(a*x**2 + b*x**2 + a*x - b*x + c, x, evaluate=False)
         >>> d[x**2]
         a + b
         >>> d[x]
         a - b
-        >>> d[sympify(1)]
+        >>> d[S.One]
         c
 
-        You can also work with multi-variate polynomials. However
-        remember that this function is greedy so it will care only
-        about a single symbol at time, in specification order:
+    You can also work with multivariate polynomials. However, remember that
+    this function is greedy so it will care only about a single symbol at time,
+    in specification order::
 
         >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
         x**2*(y + 1) + x*y + y*(a + 1)
 
-        Also more complicated expressions can be used as patterns:
+    Also more complicated expressions can be used as patterns::
 
         >>> from sympy import sin, log
         >>> collect(a*sin(2*x) + b*sin(2*x), sin(2*x))
@@ -228,50 +230,46 @@ def collect(expr, syms, func=None, evaluate=True, exact=False):
         >>> collect(a*x*log(x) + b*(x*log(x)), x*log(x))
         x*(a + b)*log(x)
 
-        You can use wildcards in the pattern
+    You can use wildcards in the pattern::
 
         >>> w = Wild('w1')
         >>> collect(a*x**y - b*x**y, w**y)
         x**y*(a - b)
 
-        It is also possible to work with symbolic powers, although
-        it has more complicated behavior, because in this case
-        power's base and symbolic part of the exponent are treated
-        as a single symbol:
+    It is also possible to work with symbolic powers, although it has more
+    complicated behavior, because in this case power's base and symbolic part
+    of the exponent are treated as a single symbol::
 
         >>> collect(a*x**c + b*x**c, x)
         a*x**c + b*x**c
-
         >>> collect(a*x**c + b*x**c, x**c)
         x**c*(a + b)
 
-        However if you incorporate rationals to the exponents, then
-        you will get well known behavior:
+    However if you incorporate rationals to the exponents, then you will get
+    well known behavior::
 
         >>> collect(a*x**(2*c) + b*x**(2*c), x**c)
         (a + b)*(x**2)**c
 
-        Note also that all previously stated facts about 'collect'
-        function apply to the exponential function, so you can get:
+    Note also that all previously stated facts about :func:`collect` function
+    apply to the exponential function, so you can get::
 
         >>> from sympy import exp
         >>> collect(a*exp(2*x) + b*exp(2*x), exp(x))
         (a + b)*exp(2*x)
 
-        If you are interested only in collecting specific powers
-        of some symbols then set 'exact' flag in arguments:
+    If you are interested only in collecting specific powers of some symbols
+    then set ``exact`` flag in arguments::
 
         >>> collect(a*x**7 + b*x**7, x, exact=True)
         a*x**7 + b*x**7
-
         >>> collect(a*x**7 + b*x**7, x**7, exact=True)
         x**7*(a + b)
 
-        You can also apply this function to differential equations, where
-        derivatives of arbitrary order can be collected.  Note that if you
-        collect with respect to a function or a derivative of a function,
-        all derivatives of that function will also be collected. Use
-        exact=True to prevent this from happening:
+    You can also apply this function to differential equations, where derivatives
+    of arbitrary order can be collected. Note that if you collect with respect
+    to a function or a derivative of a function, all derivatives of that function
+    will also be collected. Use ``exact=True`` to prevent this from happening::
 
         >>> from sympy import Derivative as D, collect, Function
         >>> f = Function('f') (x)
@@ -288,14 +286,22 @@ def collect(expr, syms, func=None, evaluate=True, exact=False):
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
 
-        Or you can even match both derivative order and exponent at the same
-        time.
+    Or you can even match both derivative order and exponent at the same time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
         (a + b)*Derivative(f(x), x, x)**2
 
-        Note: arguments are expected to be in expanded form, so you might have
-        to call expand() prior to calling this function.
+    Finally, you can apply a function to each of the collected coefficients.
+    For example you can factorize symbolic coefficients of polynomial::
+
+        >>> f = expand((x + a + 1)**3)
+
+        >>> collect(f, x, factor)
+        x**3 + 3*x**2*(a + 1) + 3*x*(a + 1)**2 + (a + 1)**3
+
+    .. note:: Arguments are expected to be in expanded form, so you might have
+              to call :func:`expand` prior to calling this function.
+
     """
     def make_expression(terms):
         product = []
