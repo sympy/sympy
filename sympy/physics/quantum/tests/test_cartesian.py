@@ -45,7 +45,8 @@ def test_x():
     assert rep_p == represent(XOp(), basis = PxKet)
     assert rep_p == represent(XOp(), basis = PxKet())
 
-    assert represent(XOp()*PxKet(), basis = PxKet) == 0
+    assert represent(XOp()*PxKet(), basis = PxKet) == \
+           Wavefunction(-hbar*I*DiracDelta(px - px_2, 1), px)
 
 def test_p():
     assert Px.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
@@ -65,8 +66,10 @@ def test_p():
     assert rep_x == represent(PxOp(), basis = XKet())
 
     diff_op = DifferentialOperator(Derivative(f(x), x), f(x))
-    assert represent(PxOp()*XKet(), basis=XKet) == 0
-    assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == 0
+    assert represent(PxOp()*XKet(), basis=XKet) == \
+           Wavefunction(hbar*I*DiracDelta(x - x_2, 1), x)
+    assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == \
+           Wavefunction(hbar*I*DiracDelta(x - y, 1), x, y)
 
 def test_3dpos():
     assert Y.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))

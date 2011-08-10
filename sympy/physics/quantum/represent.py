@@ -263,15 +263,32 @@ def _represent_helper(expr, **options):
     unwrapped_res, unwrapped_vars = _unwrap_wf(result)
     vars_beforeint = set(unwrapped_vars)
 
-    result = integrate_result(expr, unwrapped_res, **options)
+    should_integrate = options.pop('integrate', True)
+    if should_integrate:
+        result = integrate_result(expr, unwrapped_res, **options)
+
+    should_wrap = options.pop('wrap_wf', True)
+
+    if not should_wrap:
+        return (result, basis)
 
     if len(unwrapped_vars) != 0:
         vars_afterint = result.free_symbols
-        unwrapped_vars = list(vars_beforeint.intersection(vars_afterint))
-        unwrapped_vars.sort(key=default_sort_key)
+        intersect = list(vars_beforeint.intersection(vars_afterint))
+        intersect.sort(key=default_sort_key)
+
+        if len(intersect) == 0 and len(vars_afterint) != 0:
+            #If none of the original variables are left in the integrated
+            #expression, then make the Wf variable the first coordinate that we
+            #inserted
+            vars_afterint = list(vars_afterint)
+            vars_afterint.sort(key=default_sort_key)
+            intersect.append(vars_afterint[0])
+
+        unwrapped_vars = intersect
 
         if len(unwrapped_vars) != 0:
-            result = Wavefunction(result, *unwrapped_vars)
+            result = _rewrap_wf(result, unwrapped_vars)
 
     return (result, basis)
 
@@ -640,17 +657,7 @@ def do_qapply(expr):
     if not isinstance(expr, Mul):
         return expr
 
-    args = expr.args
-
-    has_cont = False
-
-    for arg in args:
-        if isinstance(arg, DifferentialOperator) \
-               or isinstance(arg, Wavefunction):
-            has_cont = True
-            break
-
-    if has_cont:
+    if expr.has(Wavefunction) and expr.has(DifferentialOperator):
         return qapply(expr)
     else:
         return expr
@@ -675,3 +682,29 @@ def _unwrap_wf(expr):
         return (expr, [])
     else:
         return (expr.__class__(*new_args), unwrapped_vars)
+
+def _rewrap_wf(expr, unwrapped_vars):
+    if not isinstance(expr, Expr):
+        return expr
+
+    new_args = []
+    tmp_args = []
+
+    if not expr.has(DifferentialOperator):
+        return Wavefunction(expr, *unwrapped_vars)
+
+    for arg in expr.args:
+        if not isinstance(arg, DifferentialOperator):
+            tmp_args.append(arg)
+        else:
+            expr_part = expr.__class__(*tmp_args)
+            wf = Wavefunction(expr_part, *unwrapped_vars)
+            new_args.append(wf)
+            new_args.append(arg)
+            tmp_args = []
+
+    if len(tmp_args) != 0:
+        wf = Wavefunction(expr.__class__(*tmp_args), *unwrapped_vars)
+        new_args.append(wf)
+
+    return expr.__class__(*new_args)

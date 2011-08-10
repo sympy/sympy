@@ -187,6 +187,11 @@ class XKet(Ket):
         options['basis'] = basis
         return innerproduct_helper(self, wrap_wavefunction=True, **options)
 
+    def _represent_PxKet(self, basis, **options):
+        from sympy.physics.quantum.represent import innerproduct_helper
+        options['basis'] = basis
+        return innerproduct_helper(self, wrap_wavefunction=True, **options)
+
     def _get_default_basis(self, **options):
         return XKet
 
@@ -313,6 +318,11 @@ class PxKet(Ket):
         return DiracDelta(self.momentum-bra.momentum)
 
     def _represent_PxKet(self, basis, **options):
+        from sympy.physics.quantum.represent import innerproduct_helper
+        options['basis'] = basis
+        return innerproduct_helper(self, wrap_wavefunction=True, **options)
+
+    def _represent_XKet(self, basis, **options):
         from sympy.physics.quantum.represent import innerproduct_helper
         options['basis'] = basis
         return innerproduct_helper(self, wrap_wavefunction=True, **options)

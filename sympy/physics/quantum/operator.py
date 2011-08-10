@@ -485,7 +485,7 @@ class DifferentialOperator(Operator):
         wf_vars = func.args[1:]
 
         f = self.function
-        new_expr = self.expr.subs(f, func(*var))
+        new_expr = self.expr.subs(f, func.expr)
         new_expr = new_expr.doit()
 
         return Wavefunction(new_expr, *wf_vars)
