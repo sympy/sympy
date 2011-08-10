@@ -1,9 +1,7 @@
 """Dirac notation for states."""
 
-
-
-from sympy import (Add, cacheit, conjugate, expand, Expr, Function, integrate,
-                    Lambda, oo, sqrt, Symbol, Tuple)
+from sympy import (Add, cacheit, conjugate, DiracDelta, expand, Expr,
+                   Function, integrate, Lambda, Mul, oo, sqrt, Symbol, Tuple)
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method, _qsympify_sequence
@@ -691,7 +689,14 @@ class Wavefunction(Function):
     def __new__(cls, *args, **options):
         args = _qsympify_sequence(args)
 
-        return super(Function, cls).__new__(cls, *args, **options)
+        obj = super(Function, cls).__new__(cls, *args, **options)
+
+        keep_delta = options.pop('keep_delta', True)
+
+        if not keep_delta:
+            return obj._remove_delta(**options)
+        else:
+            return obj
 
     def __call__(self, *args, **options):
         var = self.variables
@@ -941,3 +946,31 @@ class Wavefunction(Function):
         """
 
         return Wavefunction(self.expr*conjugate(self.expr), *self.variables)
+
+    def _remove_delta(self, **options):
+        """Utility function to remove Delta functions from the Wf for easier integration"""
+        expr = self.expr
+        args = self.args
+
+        if isinstance(expr, DiracDelta): #Only a delta in the Wf
+            return expr
+
+        if expr.is_Mul and expr.has(DiracDelta):
+            delta = []
+            rest = []
+            for arg in expr.args:
+                if isinstance(arg, DiracDelta):
+                    delta.append(arg)
+                else:
+                    rest.append(arg)
+
+            args = list(args)
+            args[0] = Mul(*rest)
+            wf = self.__class__(*args)
+
+            if len(rest) == 0:
+                return Mul(*delta)
+            else:
+                return Mul(wf, *delta)
+
+        return self

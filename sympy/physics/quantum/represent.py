@@ -110,23 +110,6 @@ def represent(expr, **options):
     and its spin 1/2 up eigenstate. By definining the ``_represent_SzOp``
     method, the ket can be represented in the z-spin basis.
 
-<<<<<<< HEAD
-    >>> from sympy.physics.quantum import Operator, represent, Ket
-    >>> from sympy import Matrix
-
-    >>> class SzUpKet(Ket):
-    ...     def _represent_SzOp(self, basis, **options):
-    ...         return Matrix([1,0])
-    ...
-    >>> class SzOp(Operator):
-    ...     pass
-    ...
-    >>> sz = SzOp('Sz')
-    >>> up = SzUpKet('up')
-    >>> represent(up, basis=sz)
-    [1]
-    [0]
-=======
         >>> from sympy.physics.quantum import Operator, represent, Ket
         >>> from sympy import Matrix
 
@@ -142,33 +125,20 @@ def represent(expr, **options):
         >>> represent(up, basis=up)
         [1]
         [0]
->>>>>>> Factor represent logic out to _represent_helper so that the chosen basis can be passed around; Add logic for choosing the basis in complicated expressions; Fix tests in cartesian and represent to account for Wavefunctions; NOTE: There is an issue involving unwrapping and rewrapping Wavefunctions when delta functions have been integrated over (variable replacement)
 
     Here we see an example of representations in a continuous
     basis. We see that the result of representing various combinations
     of cartesian position operators and kets give us continuous
     expressions involving DiracDelta functions.
 
-<<<<<<< HEAD
-    >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
-    >>> X = XOp()
-    >>> x = XKet()
-    >>> y = XBra('y')
-    >>> represent(X*x)
-    x*DiracDelta(x - x_2)
-    >>> represent(X*x*y)
-    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-=======
         >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
         >>> X = XOp()
         >>> x = XKet()
         >>> y = XBra('y')
         >>> represent(X*x)
-        Wavefunction(x*DiracDelta(x - x_2), x)
+        DiracDelta(x - x_2)*Wavefunction(x, x)
         >>> represent(X*x*y)
-        Wavefunction(x*DiracDelta(x - x_3)*DiracDelta(-x_1 + y), x, y)
->>>>>>> Factor represent logic out to _represent_helper so that the chosen basis can be passed around; Add logic for choosing the basis in complicated expressions; Fix tests in cartesian and represent to account for Wavefunctions; NOTE: There is an issue involving unwrapping and rewrapping Wavefunctions when delta functions have been integrated over (variable replacement)
-
+        DiracDelta(x - x_3)*DiracDelta(-x_1 + y)*Wavefunction(x, x)
     """
 
     rep_expr, basis = _represent_helper(expr, **options)
@@ -235,21 +205,32 @@ def _represent_helper(expr, **options):
     if not "unities" in options:
         options["unities"] = []
 
+    if not "delta_unities" in options:
+        options["delta_unities"] = []
+
     result = represent(expr.args[-1], **options)
     last_arg = expr.args[-1]
 
     for arg in reversed(expr.args[:-1]):
+        unity = None
         if isinstance(last_arg, Operator):
             options["index"] += 1
-            options["unities"].append(options["index"])
+            unity = options["index"]
         elif isinstance(last_arg, BraBase) and isinstance(arg, KetBase):
             options["index"] += 1
         elif isinstance(last_arg, KetBase) and isinstance(arg, Operator):
-            options["unities"].append(options["index"])
+            unity = options["index"]
         elif isinstance(last_arg, KetBase) and isinstance(arg, BraBase):
-            options["unities"].append(options["index"])
+            unity = options["index"]
 
-        result = represent(arg, **options)*result
+        tmp_result = represent(arg, **options)
+        if unity is not None:
+            if isinstance(tmp_result, Expr) and tmp_result.has(DiracDelta):
+                options["delta_unities"].append(unity)
+            else:
+                options["unities"].append(unity)
+
+        result = tmp_result*result
         last_arg = arg
 
     # All three matrix formats create 1 by 1 matrices when inner products of
@@ -257,17 +238,20 @@ def _represent_helper(expr, **options):
     result = flatten_scalar(result)
 
     should_apply = options.pop('qapply', True)
+    should_integrate = options.pop('integrate', True)
+    should_wrap = options.pop('wrap_wf', True)
+
+    if should_integrate:
+        result = integrate_result(expr, result, delta=True, **options)
+
     if should_apply:
         result = do_qapply(result)
 
     unwrapped_res, unwrapped_vars = _unwrap_wf(result)
     vars_beforeint = set(unwrapped_vars)
 
-    should_integrate = options.pop('integrate', True)
     if should_integrate:
         result = integrate_result(expr, unwrapped_res, **options)
-
-    should_wrap = options.pop('wrap_wf', True)
 
     if not should_wrap:
         return (result, basis)
@@ -288,7 +272,7 @@ def _represent_helper(expr, **options):
         unwrapped_vars = intersect
 
         if len(unwrapped_vars) != 0:
-            result = _rewrap_wf(result, unwrapped_vars)
+            result = _rewrap_wf(result, unwrapped_vars, **options)
 
     return (result, basis)
 
@@ -359,11 +343,11 @@ def innerproduct_helper(expr, **options):
     ret = expr._format_represent(result, format)
 
     wrap = options.pop('wrap_wavefunction', False)
-
+    delta = options.pop('keep_delta', False)
     #TODO: Insert proper limits
     if wrap:
         # The label of the original expr will be used as the free coordinate
-        return Wavefunction(ret, *expr.label)
+        return Wavefunction(ret, *expr.label, keep_delta=delta, **options)
     else:
         return ret
 
@@ -420,12 +404,12 @@ def expectation_helper(expr, **options):
     ret = qapply(bra*expr*ket)
 
     wrap = options.pop('wrap_wavefunction', False)
-
+    delta = options.pop('keep_delta', False)
     #TODO: Insert proper limits
     if wrap:
         # We consider the ket coordinate to be the free variable, and
         # the bra coordinate a dummy constant
-        return Wavefunction(ret, *ket.label)
+        return Wavefunction(ret, *ket.label, keep_delta=delta, **options)
     else:
         return ret
 
@@ -483,7 +467,11 @@ def integrate_result(orig_expr, result, **options):
     if basis is None:
         return result
 
-    unities = options.pop("unities", [])
+    delta = options.pop("delta", False)
+    if delta:
+        unities = options.pop("delta_unities", [])
+    else:
+        unities = options.pop("unities", [])
 
     if len(unities) == 0:
         return result
@@ -683,28 +671,30 @@ def _unwrap_wf(expr):
     else:
         return (expr.__class__(*new_args), unwrapped_vars)
 
-def _rewrap_wf(expr, unwrapped_vars):
+def _rewrap_wf(expr, unwrapped_vars, **options):
     if not isinstance(expr, Expr):
         return expr
 
     new_args = []
     tmp_args = []
 
+    delta = options.pop("keep_delta", False)
+
     if not expr.has(DifferentialOperator):
-        return Wavefunction(expr, *unwrapped_vars)
+        return Wavefunction(expr, *unwrapped_vars, keep_delta=delta)
 
     for arg in expr.args:
         if not isinstance(arg, DifferentialOperator):
             tmp_args.append(arg)
         else:
             expr_part = expr.__class__(*tmp_args)
-            wf = Wavefunction(expr_part, *unwrapped_vars)
+            wf = Wavefunction(expr_part, *unwrapped_vars, keep_delta=delta)
             new_args.append(wf)
             new_args.append(arg)
             tmp_args = []
 
     if len(tmp_args) != 0:
-        wf = Wavefunction(expr.__class__(*tmp_args), *unwrapped_vars)
+        wf = Wavefunction(expr.__class__(*tmp_args), *unwrapped_vars, keep_delta=delta)
         new_args.append(wf)
 
     return expr.__class__(*new_args)
