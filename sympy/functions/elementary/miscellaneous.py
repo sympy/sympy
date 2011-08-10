@@ -107,7 +107,8 @@ class MinMaxBase(LatticeOp):
         localzeros = set()
         for v in values:
             is_newzero = True
-            for z in localzeros:
+            localzeros_ = list(localzeros)
+            for z in localzeros_:
                 if id(v) == id(z):
                     is_newzero = False
                 elif cls._is_connected(v, z):
@@ -115,7 +116,6 @@ class MinMaxBase(LatticeOp):
                     if cls._is_asneeded(v, z):
                         localzeros.remove(z)
                         localzeros.update([v])
-                        break
             if is_newzero:
                 localzeros.update([v])
         return localzeros
