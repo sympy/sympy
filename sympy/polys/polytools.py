@@ -5327,7 +5327,7 @@ def groebner(F, *gens, **args):
     else:
         return G
 
-def fglm(G, from_order, to_order, *gens, **args):
+def fglm(G, order, *gens, **args):
     """
     Convert reduced Groebner basis ``G`` of zero-dimensional ideal from
     ``from_order`` to ``to_order``.
@@ -5341,7 +5341,7 @@ def fglm(G, from_order, to_order, *gens, **args):
     >>> from sympy import groebner, fglm
     >>> F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
     >>> G = groebner(F, x, y, order='grlex')
-    >>> fglm(G, 'grlex', 'lex', x, y)
+    >>> fglm(G, ('grlex', 'lex'), x, y)
     [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
     >>> groebner(F, x, y, order='lex')
     [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
@@ -5355,6 +5355,15 @@ def fglm(G, from_order, to_order, *gens, **args):
     http://www-salsa.lip6.fr/~jcf/Papers/2010_MPRI5e.pdf
     """
     options.allowed_flags(args, ['polys'])
+
+    if type(order) == str:
+        from_order, to_order = order, 'lex'
+    elif type(order) == tuple and len(order) == 2:
+        from_order, to_order = order
+    elif type(order) == tuple and len(order) == 1:
+        from_order, to_order = order[0], 'lex'
+    else:
+        raise TypeError("order has to be a string or a tuple of at most two strings")
 
     try:
         polys, opt = parallel_poly_from_expr(G, *gens, **args)
