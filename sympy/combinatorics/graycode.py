@@ -79,6 +79,32 @@ class GrayCode(Basic):
             obj = GrayCode.unrank_gray(args[0], kw_args["rank"])
         return obj
 
+    def next(self):
+        """
+        Returns the next Gray code in the canonical order.
+
+        Examples:
+        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> a = GrayCode(3, start='110')
+        >>> a.next().current
+        '111'
+        """
+        return GrayCode.unrank_gray((self.rank_current + 1) % self.selections,
+                                    self.n)
+
+    def previous(self):
+        """
+        Returns the previous Gray code in the canonical order.
+
+        Examples:
+        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> a = GrayCode(3, start='110')
+        >>> a.previous().current
+        '010'
+        """
+        return GrayCode.unrank_gray((self.rank_current - 1) % self.selections,
+                                    self.n)
+
     @property
     def selections(self):
         """
