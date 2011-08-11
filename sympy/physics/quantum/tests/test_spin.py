@@ -9,6 +9,7 @@ from sympy.physics.quantum.spin import (
     Jx, Jy, Jz, Jplus, Jminus, J2,
     JxBra, JyBra, JzBra,
     JxKet, JyKet, JzKet,
+    couple,
     Rotation, WignerD
 )
 
@@ -160,29 +161,29 @@ def test_represent():
     assert represent(JzKet(1,0), basis=Jz, j1=S(1)/2, j2=S(1)/2) == Matrix([0,sqrt(2)/2,sqrt(2)/2,0])
     assert represent(JzKet(1,-1), basis=Jz, j1=S(1)/2, j2=S(1)/2) == Matrix([0,0,0,1.0])
     # Uncoupled to coupled
-    assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,S(1)/2))), basis=Jz) == \
             Matrix([0,S(1)/2,sqrt(2)/2,0.5])
-    assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,-S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,-S(1)/2))), basis=Jz) == \
             Matrix([sqrt(2)/2,-S(1)/2,0,0.5])
-    assert represent(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,S(1)/2))), basis=Jz) == \
             Matrix([-sqrt(2)/2,-S(1)/2,0,0.5])
-    assert represent(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,-S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,-S(1)/2))), basis=Jz) == \
             Matrix([0,S(1)/2,-sqrt(2)/2,0.5])
-    assert represent(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,S(1)/2))), basis=Jz) == \
             Matrix([0,S(1)/2,sqrt(2)*I/2,-0.5])
-    assert represent(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,-S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,-S(1)/2))), basis=Jz) == \
             Matrix([sqrt(2)/2,I/2,0,0.5*I])
-    assert represent(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,S(1)/2))), basis=Jz) == \
             Matrix([-sqrt(2)/2,I/2,0,0.5*I])
-    assert represent(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,-S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,-S(1)/2))), basis=Jz) == \
             Matrix([0,-S(1)/2,sqrt(2)*I/2,0.5])
-    assert represent(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2))), basis=Jz) == \
             Matrix([0,1,0,0])
-    assert represent(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,-S(1)/2))), basis=Jz) == \
             Matrix([sqrt(2)/2,0,sqrt(2)/2,0])
-    assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,S(1)/2))), basis=Jz) == \
             Matrix([-sqrt(2)/2,0,sqrt(2)/2,0])
-    assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jz, coupled=True) == \
+    assert represent(couple(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,-S(1)/2))), basis=Jz) == \
             Matrix([0,0,0,1])
 
 def test_rewrite():
@@ -331,52 +332,52 @@ def test_rewrite():
     # Couple an uncoupled state
     # Numerical
     # 1/2 x 1/2
-    assert TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2))).rewrite('Jz') == \
         JzKet(1,1)
-    assert TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,-S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,-S(1)/2))).rewrite('Jz') == \
         sqrt(2)*JzKet(1,0)/2+sqrt(2)*JzKet(0,0)/2
-    assert TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,S(1)/2))).rewrite('Jz') == \
         sqrt(2)*JzKet(1,0)/2-sqrt(2)*JzKet(0,0)/2
-    assert TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,-S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,-S(1)/2))).rewrite('Jz') == \
         1.0*JzKet(1,-1)
     # 1 x 1/2
-    assert TensorProduct(JzKet(1,1),JzKet(S(1)/2,S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,1),JzKet(S(1)/2,S(1)/2))).rewrite('Jz') == \
         JzKet(S(3)/2,S(3)/2)
-    assert TensorProduct(JzKet(1,1),JzKet(S(1)/2,-S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,1),JzKet(S(1)/2,-S(1)/2))).rewrite('Jz') == \
         sqrt(3)*JzKet(S(3)/2,S(1)/2)/3+sqrt(6)*JzKet(S(1)/2,S(1)/2)/3
-    assert TensorProduct(JzKet(1,0),JzKet(S(1)/2,S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,0),JzKet(S(1)/2,S(1)/2))).rewrite('Jz') == \
         sqrt(6)*JzKet(S(3)/2,S(1)/2)/3-sqrt(3)*JzKet(S(1)/2,S(1)/2)/3
-    assert TensorProduct(JzKet(1,0),JzKet(S(1)/2,-S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,0),JzKet(S(1)/2,-S(1)/2))).rewrite('Jz') == \
         sqrt(6)*JzKet(S(3)/2,-S(1)/2)/3+sqrt(3)*JzKet(S(1)/2,-S(1)/2)/3
-    assert TensorProduct(JzKet(1,-1),JzKet(S(1)/2,S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,-1),JzKet(S(1)/2,S(1)/2))).rewrite('Jz') == \
         sqrt(3)*JzKet(S(3)/2,-S(1)/2)/3-sqrt(6)*JzKet(S(1)/2,-S(1)/2)/3
-    assert TensorProduct(JzKet(1,-1),JzKet(S(1)/2,-S(1)/2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,-1),JzKet(S(1)/2,-S(1)/2))).rewrite('Jz') == \
         1.0*JzKet(S(3)/2,-S(3)/2)
     # 1 x 1
-    assert TensorProduct(JzKet(1,1),JzKet(1,1)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,1),JzKet(1,1))).rewrite('Jz') == \
         JzKet(2,2)
-    assert TensorProduct(JzKet(1,1),JzKet(1,0)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,1),JzKet(1,0))).rewrite('Jz') == \
         sqrt(2)*JzKet(2,1)/2+sqrt(2)*JzKet(1,1)/2
-    assert TensorProduct(JzKet(1,0),JzKet(1,1)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,0),JzKet(1,1))).rewrite('Jz') == \
         sqrt(2)*JzKet(2,1)/2-sqrt(2)*JzKet(1,1)/2
-    assert TensorProduct(JzKet(1,1),JzKet(1,-1)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,1),JzKet(1,-1))).rewrite('Jz') == \
         sqrt(6)*JzKet(2,0)/6+sqrt(2)*JzKet(1,0)/2+sqrt(3)*JzKet(0,0)/3
-    assert TensorProduct(JzKet(1,0),JzKet(1,0)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,0),JzKet(1,0))).rewrite('Jz') == \
         sqrt(6)*JzKet(2,0)/3-sqrt(3)*JzKet(0,0)/3
-    assert TensorProduct(JzKet(1,-1),JzKet(1,1)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,-1),JzKet(1,1))).rewrite('Jz') == \
         sqrt(6)*JzKet(2,0)/6-sqrt(2)*JzKet(1,0)/2+sqrt(3)*JzKet(0,0)/3
-    assert TensorProduct(JzKet(1,0),JzKet(1,-1)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,0),JzKet(1,-1))).rewrite('Jz') == \
         0.5*sqrt(2)*JzKet(2,-1)+0.5*sqrt(2)*JzKet(1,-1)
-    assert TensorProduct(JzKet(1,-1),JzKet(1,0)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,-1),JzKet(1,0))).rewrite('Jz') == \
         0.5*sqrt(2)*JzKet(2,-1)-0.5*sqrt(2)*JzKet(1,-1)
-    assert TensorProduct(JzKet(1,-1),JzKet(1,-1)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(1,-1),JzKet(1,-1))).rewrite('Jz') == \
         1.0*JzKet(2,-2)
     # Symbolic
-    assert TensorProduct(JxKet(j1,m1),JxKet(j2,m2)).rewrite('Jx',coupled=True) == \
+    assert couple(TensorProduct(JxKet(j1,m1),JxKet(j2,m2))).rewrite('Jx') == \
         Sum(CG(j1,m1,j2,m2,j,m1+m2) * JxKet(j,m1+m2), (j,0,j1+j2))
-    assert TensorProduct(JyKet(j1,m1),JyKet(j2,m2)).rewrite('Jy',coupled=True) == \
+    assert couple(TensorProduct(JyKet(j1,m1),JyKet(j2,m2))).rewrite('Jy') == \
         Sum(CG(j1,m1,j2,m2,j,m1+m2) * JyKet(j,m1+m2), (j,0,j1+j2))
-    assert TensorProduct(JzKet(j1,m1),JzKet(j2,m2)).rewrite('Jz',coupled=True) == \
+    assert couple(TensorProduct(JzKet(j1,m1),JzKet(j2,m2))).rewrite('Jz') == \
         Sum(CG(j1,m1,j2,m2,j,m1+m2) * JzKet(j,m1+m2), (j,0,j1+j2))
     # Innerproducts of rewritten states
     # Numerical

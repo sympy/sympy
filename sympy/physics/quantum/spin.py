@@ -35,7 +35,9 @@ __all__ = [
     'JyKet',
     'JyBra',
     'Rotation',
-    'WignerD'
+    'WignerD',
+    'couple',
+    'uncouple'
 ]
 
 def m_values(j):
@@ -71,30 +73,12 @@ def vect_to_state(vect, evect, j1=None, j2=None):
     return Add(*result)
 
 
-def couple_vect(vect, j1, j2):
-    maxj = j1+j2
-    if maxj == int(maxj):
-        minj = 0
-    else:
-        minj = S(1)/2
-    result = zeros(((2*j1+1)*(2*j2+1),1))
-    for i in range(maxj-minj+1):
-        j = maxj-i
-        if j == int(j):
-            start = j**2
-        else:
-            start = (2*j-1)*(1+2*j)/4
-        for k in range(2*j+1):
-            m = j-k
-            max_m1 = min(j1, m+j2)
-            min_m1 = max(-j1, m-j2)
-            min_m2 = m-max_m1
-            result[start+k,0] = Add(*[vect[(j1-(max_m1-l))*(2*j2+1)+(j2-(min_m2+l)),0] * CG(j1,max_m1-l,j2,min_m2+l,j,m).doit() for l in range(max_m1-min_m1+1)])
-    return result
-
-
-def couple_state(*states):
+def couple(tp):
+    states = tp.args
     evect = states[0].__class__
+    if not all([arg.__class__ is evect for arg in states]):
+        raise TypeError('All operands must be of the same class')
+    # Symbolic coupling
     if any(not (state.j.is_number and state.m.is_number) for state in states):
         maxj = Add(*[state.j for state in states])
         m = Add(*[state.m for state in states])
@@ -108,18 +92,39 @@ def couple_state(*states):
         m1 = states[0].m
         m2 = states[1].m
         return Sum(CG(j1,m1,j2,m2,j,m) * evect(j,m), (j,minj,maxj))
-    vect = TensorProduct(*[state._represent() for state in states])
-    vect = couple_vect(vect, states[0].j, states[1].j)
-    j = states[0].j + states[1].j
-    state = 0
-    while j >= 0:
-        if j == int(j):
-            start = j**2
+    # Numerical coupling
+    else:
+        vect = TensorProduct(*[state._represent() for state in states])
+        maxj = states[0].j + states[1].j
+        j1, j2 = states[0].j, states[1].j
+        if maxj == int(maxj):
+            minj = 0
         else:
-            start = (2*j-1)*(1+2*j)/4
-        state += vect_to_state(vect[start:start+2*j+1], evect)
-        j -= 1
-    return state
+            minj = S(1)/2
+        result = zeros(((2*j1+1)*(2*j2+1),1))
+        for i in range(maxj-minj+1):
+            j = maxj-i
+            if j == int(j):
+                start = j**2
+            else:
+                start = (2*j-1)*(1+2*j)/4
+            for k in range(2*j+1):
+                m = j-k
+                max_m1 = min(j1, m+j2)
+                min_m1 = max(-j1, m-j2)
+                min_m2 = m-max_m1
+                result[start+k,0] = Add(*[vect[(j1-(max_m1-l))*(2*j2+1)+(j2-(min_m2+l)),0] * CG(j1,max_m1-l,j2,min_m2+l,j,m).doit() for l in range(max_m1-min_m1+1)])
+        vect = result
+        state = 0
+        j = maxj
+        while j >= 0:
+            if j == int(j):
+                start = j**2
+            else:
+                start = (2*j-1)*(1+2*j)/4
+            state += vect_to_state(vect[start:start+2*j+1], evect)
+            j -= 1
+        return state
 
 
 #-----------------------------------------------------------------------------
