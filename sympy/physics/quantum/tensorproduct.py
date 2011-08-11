@@ -125,10 +125,6 @@ class TensorProduct(Expr):
 
     def _eval_rewrite(self, pattern, rule, **hints):
         sargs = self.args
-        if hints.pop('coupled',None) is True:
-            from sympy.physics.quantum.spin import couple_state
-            terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs]
-            return couple_state(*terms)
         terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs]
         return TensorProduct(*terms).expand(tensorproduct=True)
 

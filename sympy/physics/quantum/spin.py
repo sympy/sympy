@@ -182,6 +182,18 @@ class SpinOpBase(object):
     def _apply_operator_JzKet(self, ket, **options):
         return self._apply_op(ket, **options)
 
+    def _apply_operator_TensorProduct(self, tp, **options):
+        if isinstance(self, J2Op):
+            raise NotImplementedError
+        result = []
+        for n in range(len(tp.args)):
+            arg = []
+            arg.extend(tp.args[:n])
+            arg.append(self._apply_operator(tp.args[n]))
+            arg.extend(tp.args[n+1:])
+            result.append(tp.__class__(*arg))
+        return Add(*result).expand()
+
 
 class JplusOp(SpinOpBase, Operator):
     """The J+ operator."""
