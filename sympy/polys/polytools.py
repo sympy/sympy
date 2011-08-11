@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Pow
 )
 
 from sympy.core.sympify import (
@@ -4850,8 +4850,10 @@ def _symbolic_factor_list(expr, opt, method):
                 if exp is S.One:
                     factors.extend(_factors)
                 else:
-                    for factor, k in _factors:
-                        factors.append((factor, k*exp))
+                    muls = Mul(*(b.as_expr()**e for b, e in _factors))**exp
+                    for m in Mul.make_args(muls):
+                        b, e = m.as_base_exp()
+                        factors.append((Poly(b), e))
 
     return coeff, factors
 
