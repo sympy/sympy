@@ -448,6 +448,9 @@ class Float(Number):
     def __hash__(self):
         return super(Float, self).__hash__()
 
+    def __round__(self, *args):
+        return round(float(self), *args)
+
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Float(epsilon)
 
@@ -508,7 +511,7 @@ class Rational(Number):
     Note that p and q return integers (not sympy Integers) so some care
     is needed when using them in expressions:
 
-    >>> r.p/r.q
+    >>> r.p//r.q
     0
 
     """

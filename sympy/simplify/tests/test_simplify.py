@@ -203,6 +203,7 @@ def test_simplify_fail1():
 
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
+    A = Symbol('A', commutative=False)
 
     assert fraction(Rational(1, 2)) == (1, 2)
 
@@ -221,6 +222,9 @@ def test_fraction():
     assert fraction(x*(y+1)/y**7) == (x*(y+1), y**7)
 
     assert fraction(exp(-x), exact=True) == (exp(-x), 1)
+
+    assert fraction(x*A/y) == (x*A, y)
+    assert fraction(x*A**-1/y) == (x*A**-1, y)
 
 def test_separate():
     x, y, z = symbols('x,y,z')

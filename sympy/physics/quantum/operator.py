@@ -86,7 +86,7 @@ class Operator(QExpr):
     Operator inverses are handle symbolically::
 
         >>> A.inv()
-        1/A
+        A**(-1)
         >>> A*A.inv()
         1
 
