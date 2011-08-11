@@ -1880,11 +1880,15 @@ def test_factor():
     assert factor(f, x) == u*v**2*w
     assert factor(f, (x,)) == u*v**2*w
 
-    g, p, q = x**2 - y**2, x - y, x + y
+    g, p, q, r = x**2 - y**2, x - y, x + y, x**2 + 1
+    i = symbols('i', integer=True)
 
     assert factor(f/g) == (u*v**2*w)/(p*q)
     assert factor(f/g, x) == (u*v**2*w)/(p*q)
     assert factor(f/g, (x,)) == (u*v**2*w)/(p*q)
+    assert factor(sqrt(x*y)).is_Pow
+    assert factor(sqrt(3 + 3*x**2)) == sqrt(3)*sqrt(r)
+    assert factor((y + y*x**2)**i) == y**i*r**i
 
     f = Poly(sin(1)*x + 1, x, domain=EX)
 
