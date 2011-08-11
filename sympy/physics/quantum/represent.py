@@ -456,6 +456,15 @@ def integrate_result(orig_expr, result, **options):
     if not isinstance(result, Expr):
         return result
 
+    delta = options.pop("delta", False)
+    if delta:
+        unities = options.pop("delta_unities", [])
+    else:
+        unities = options.pop("unities", [])
+
+    if len(unities) == 0:
+        return result
+
     if not "basis" in options:
         arg = orig_expr.args[-1]
         options["basis"] = get_basis_state(arg, **options)
@@ -465,15 +474,6 @@ def integrate_result(orig_expr, result, **options):
     basis = options.pop("basis", None)
 
     if basis is None:
-        return result
-
-    delta = options.pop("delta", False)
-    if delta:
-        unities = options.pop("delta_unities", [])
-    else:
-        unities = options.pop("unities", [])
-
-    if len(unities) == 0:
         return result
 
     kets = enumerate_states(basis, unities)
