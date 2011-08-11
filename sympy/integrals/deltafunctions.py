@@ -34,10 +34,15 @@ def change_mul(node, x):
     """
     if not node.is_Mul:
         return node
+
     new_args = []
     dirac = None
-    sorted_args = list(node.args)
-    sorted_args.sort(key=default_sort_key)
+
+    #Sorting is needed so that we consistently collapse the same delta;
+    #However, we must preserve the ordering of non-commutative terms
+    c, nc = node.args_cnc()
+    sorted_args = sorted(c, key=default_sort_key)
+    sorted_args.extend(nc)
 
     for arg in sorted_args:
         if arg.func == DiracDelta and arg.is_simple(x) \
