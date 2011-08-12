@@ -1,0 +1,223 @@
+.. _polys-groebner:
+
+============================================
+Overview of the Groebner basis functionality
+============================================
+
+Introduction
+============
+This tutorial will explain how to use the Groebner basis algorithms in
+SymPy::
+
+    >>> from sympy import *
+    >>> x, y, z = symbols('x,y,z')
+
+    >>> import sys
+    >>> sys.displayhook = pprint
+
+Algorithms
+==========
+SymPy has implementations of an improved Buchberger algorithm [BW93]_ and F5B
+[SW10]_. Both work approximately like this (pseudo Python)::
+
+    def groebner(F):
+        CP = set of critical pairs
+        while CP:
+            choose cp in CP; remove cp from CP
+            if cp is not redundant:
+                s = spoly(cp)
+                r = remainder(cp, F)
+                if r != 0:
+                    F.append(r)
+                    add new critical pairs to CP
+
+They apply different criteria to check whether a critical pair is redundant.
+The improved Buchberger algorithm uses Buchberger's criteria, which can detect
+some redundant pairs, F5B uses Faugere's criteria, which can detect most.
+
+
+Monomial Orderings
+==================
+In order to make sense of a Groebner basis it is important to have the notion
+of a monomial ordering. A monomial order `<` is a relation on the set of all
+monomials such that the following holds:
+
+ * `1 < m` for all monomials `m \not= 1`
+ * Any two monomials can be compared
+ * If `a, b, c` are monomials and `a < b`, then `a c < b c`
+
+A monomial order is extended to polynomials by considering the term with the
+greatest monomial as the leading term::
+
+    >>> f = Poly(x**2 + y**5 + 1)
+    >>> f.LM(order='lex')  # corresponding to x**2
+    (2, 0)
+
+SymPy supports the following monomial orders:
+
+ * ``'lex'`` - Lexicographic order
+    Considers the exponents of monomials as tuples and compares them
+    lexicographically:
+
+    .. math ::
+
+        X_1^{\alpha_1} \cdots X_n^{\alpha_n} <_{lex} X_1^{\beta_1} \cdots X_n^{\beta_n}
+
+    if the leftmost non-zero entry of `\alpha - \beta = (\alpha_1 - \beta_1, \ldots, \alpha_n - \beta_n)` is negative.
+
+ * ``'grlex'`` - Graded lexicographic order
+    Compares the sum of exponents of monomials and fills the gaps with
+    the lexicographic term order:
+
+    .. math ::
+
+        X_1^{\alpha_1} \cdots X_n^{\alpha_n} <_{grlex} X_1^{\beta_1} \cdots X_n^{\beta_n}
+
+    if either
+     * `\sum_{i=1}^n \alpha_i < \sum_{i=1}^n \beta_i`
+    or
+     * `\sum_{i=1}^n \alpha_i = \sum_{i=1}^n \beta_i` and `X_1^{\alpha_1} \cdots X_n^{\alpha_n} <_{lex} X_1^{\beta_1} \cdots X_n^{\beta_n}`
+
+ * ``'grevlex'`` - Graded reverse lexicographic order
+    Compares the sum of exponents of monomials and fills the gaps with
+    a reversed lexicographic term order:
+
+    .. math ::
+
+        X_1^{\alpha_1} \cdots X_n^{\alpha_n} <_{grevlex} X_1^{\beta_1} \cdots X_n^{\beta_n}
+
+    if either
+     *  `\sum_{i=1}^n \alpha_i < \sum_{i=1}^n \beta_i`
+    or
+     * `\sum_{i=1}^n \alpha_i = \sum_{i=1}^n \beta_i` and `X_1^{\alpha_1} \cdots X_n^{\alpha_n} >_{lex} X_1^{\beta_1} \cdots X_n^{\beta_n}`
+
+Monomial orders are supported by polynomials (and their internal representation)
+and expressions::
+
+    >>> f = x**2*y*z + 3*x**3 + 2
+    >>> LM(f)
+     3
+    x
+    >>> LM(f, order='grevlex')
+     2
+    x ⋅y⋅z
+
+Please note that for expressions variables are always ordered alphabetically.
+
+Computing Groebner bases
+========================
+
+
+A first example
+---------------
+In order to use the improved Buchberger algorithm, simply invoke ``groebner``
+like this::
+
+
+    >>> F = [x**2 + x*y**2 + 1, y**2 + 2]
+    >>> groebner(F, x, y, order='lex')
+     2             2
+    x  - 2⋅x + 1, y  + 2
+
+If you want to use F5B, you can either change the behaviour of ``groebner``
+globally like this::
+
+    >>> from sympy.polys.polyconfig import setup
+    >>> setup('GB_METHOD', 'f5b')
+    >>> groebner(F, x, y, order='lex')  # uses F5B
+     2             2
+    x  - 2⋅x + 1, y  + 2
+
+or locally with the ``method`` flag::
+
+    >>> groebner([x + 1, x + 2], x, order='lex', method='f5b')
+    1
+
+Note that the second always overrides the first. Possible arguments for
+both are ``'buchberger'`` and ``'f5b'``.
+
+Properties
+----------
+``groebner`` computes a reduced Groebner basis, which means that no leading
+term of any element of the Groebner basis divides any term of another element
+and all polynomials are monic. However, the returned basis need not consist
+of monic elements::
+
+    >>> F = [2*x**2 + x + 1, -3*x + y]
+    >>> groebner(F, x, y, order='lex')
+                2
+    3⋅x - y, 2⋅y  + 3⋅y + 9
+
+This is because SymPy assumes the user would like to have the coefficients
+to have the same domain as in the input. To get monic polynomials, try::
+
+    >>> groebner(F, x, y, order='lex', domain=QQ)
+        y   2   3⋅y   9
+    x - ─, y  + ─── + ─
+        3        2    2
+
+Performance
+-----------
+Both implementations may have an advantage over the other for some problems,
+so it may be worth it to try both.
+
+An example for which F5B is faster ("cyclic 5")::
+
+    >>> a, b, c, d, e = symbols('a, b, c, d, e')
+    >>> F = [a + b + c + d + e,
+        a*b + a*e + b*c + c*d + d*e,
+        a*b*c + a*b*e + a*d*e + b*c*d + c*d*e,
+        a*b*c*d + a*b*c*e + a*b*d*e + a*c*d*e + b*c*d*e,
+        a*b*c*d*e - 1]
+    >>> groebner(F, a, b, c, d, e, order='lex', method='f5b');
+
+And an example for which the improved Buchberger algorithm is faster
+("katsura 5")::
+
+    >>> t, u, v, x, y, z = symbols('t, u, v, x, y, z')
+    >>> F = [2*t**2 + 4*u + v**2 - v + 2*x**2 + 2*y**2 + 2*z**2,
+        2*t*u + 2*t*z + 2*u*v - u + x*y + y*z,
+        2*t*v + 2*t*y - t + u**2 + 2*u*z + 2*x*z,
+        2*t*u + 2*t*x + 2*u*y + 2*v*z - z,
+        t**2 + 2*v*x + 2*v*y + 2*v*z - y,
+        2*t + 2*u + v + 2*x + 2*y + 2*z - 1]
+    >>> groebner(F, t, u, v, x, y, z, order='grlex', method='buchberger');
+
+
+Converting Groebner bases
+-------------------------
+Most of the time, a Groebner basis with respect to the lexicographic
+term order is most useful (e.g. for solving) but also the most expensive
+to compute. SymPy has an implementation if the FGLM algorithm [FGLM94]_,
+which converts Groebner bases of zero-dimensional ideals (ideals generated
+by polynomials which have only finitely many common roots).
+
+In order to use FGLM, do the following::
+
+    >>> F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
+    >>> G = groebner(F, x, y,order='grevlex')
+    >>> fglm(G, 'grevlex', x, y)
+                     2
+    x - 4⋅y + 2, 16⋅y  - 23⋅y + 7
+    >>> groebner(F, x, y, order='lex')
+                     2
+    x - 4⋅y + 2, 16⋅y  - 23⋅y + 7
+
+The term order of the original Groebner basis has to be included. If no
+further target term order is provided, ``'lex'`` is assumed. In order to
+convert to something else than ``'lex'``, do::
+
+    >>> fglm(G, ('grevlex', 'grlex'), x, y)
+        2
+    16⋅y  - 23⋅y + 7, x - 4⋅y + 2
+
+
+
+.. [BW93] Thomas Becker, Volker Weispfennig. Groebner Bases, A Computational
+    Approach to Commutative Algebra. Graduate Texts in Mathematics.
+    Springer-Verlag, 1993.
+.. [FGLM94] J. Faugere, P. Gianni, D. Lazard, T. Mora. Efficient Computation of
+    Zero-Dimensional Groebner Bases by Change of Ordering. J. Symb. Comp. 16,
+    p. 329-344, 1993.
+.. [SW10] Sun, Y. Wang, D.K., 2010. A New PRoof for the Correctness of F5 (F5-Like)
+    Algorithm, http://arxiv.org/abs/1004.0084
