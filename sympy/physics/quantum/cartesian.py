@@ -42,6 +42,10 @@ class XOp(HermitianOperator):
         return ("X",)
 
     @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
+
+    @classmethod
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
@@ -82,6 +86,10 @@ class YOp(HermitianOperator):
         return ("Y",)
 
     @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
+
+    @classmethod
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
@@ -94,6 +102,10 @@ class ZOp(HermitianOperator):
     @classmethod
     def default_args(self):
         return ("Z",)
+
+    @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
 
     @classmethod
     def _eval_hilbert_space(self, args):
@@ -112,6 +124,10 @@ class PxOp(HermitianOperator):
     @classmethod
     def default_args(self):
         return ("Px",)
+
+    @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
 
     @classmethod
     def _eval_hilbert_space(self, args):
@@ -162,7 +178,11 @@ class XKet(Ket):
 
     @classmethod
     def default_args(self):
-        return (Symbol("x", real=True),)
+        return ("x",)
+
+    @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
 
     @classmethod
     def dual_class(self):
@@ -197,10 +217,6 @@ class XKet(Ket):
 
 class XBra(Bra):
     """1D cartesian position eigenbra."""
-
-    @classmethod
-    def default_args(self):
-        return ("x",)
 
     @classmethod
     def dual_class(self):
@@ -243,6 +259,10 @@ class PositionState3D(State):
     @classmethod
     def default_args(self):
         return ("x", "y", "z")
+
+    @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
 
     @property
     def position_x(self):
@@ -300,6 +320,10 @@ class PxKet(Ket):
         return ("px",)
 
     @classmethod
+    def def_label_assumptions(self):
+        return {"real" : True}
+
+    @classmethod
     def dual_class(self):
         return PxBra
 
@@ -335,10 +359,6 @@ class PxBra(Bra):
     """1D cartesian momentum eigenbra."""
 
     @classmethod
-    def default_args(self):
-        return ("px",)
-
-    @classmethod
     def dual_class(self):
         return PxKet
 
@@ -366,7 +386,8 @@ def _enumerate_continuous_1D(*args, **options):
 
     for i, ind in enumerate(index_list):
         label = state.args[0]
-        enum_states[i] = state_class(_append_index(label, ind), **options)
+        enum_states[i] = state_class( \
+            _append_index(label, ind, **state.label_assumptions), **options)
 
     return enum_states
 

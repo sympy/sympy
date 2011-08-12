@@ -1,12 +1,16 @@
 """Tests for piab.py"""
 
-from sympy import Interval, pi, S, sin, sqrt, symbols
+<<<<<<< HEAD
+from sympy import DiracDelta, I, Interval, pi, S, sin, sqrt, Symbol, symbols
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum import L2, qapply, hbar, represent
 from sympy.physics.quantum.piab import PIABHamiltonian, PIABKet, PIABBra, m, L
 from sympy.physics.quantum.cartesian import XOp, XKet
+from sympy.physics.quantum.state import Wavefunction
 
-i, j, n, x = symbols('i j n x')
+x_1 = Symbol('x_1', real=True)
+n = Symbol('n', integer=True)
+i, j = symbols('i,j')
 
 def test_H():
     assert PIABHamiltonian('H').hilbert_space ==\
@@ -18,8 +22,11 @@ def test_states():
     assert PIABKet(n).dual_class() == PIABBra
     assert PIABKet(n).hilbert_space ==\
         L2(Interval(S.NegativeInfinity,S.Infinity))
-    assert represent(PIABKet(n)) == sqrt(2/L)*sin(n*pi*x/L)
-    assert represent(PIABKet(n), basis=XKet) == sqrt(2/L)*sin(n*pi*x/L)
-    assert represent(PIABKet(n), basis=XOp) == sqrt(2/L)*sin(n*pi*x/L)
+    assert represent(PIABKet(n)) == \
+           Wavefunction(sqrt(2/L)*sin(n*pi*x_1/L), (x_1, 0, L))
+    assert represent(PIABKet(n), basis=XKet) == \
+           Wavefunction(sqrt(2/L)*sin(n*pi*x_1 /L), (x_1, 0, L))
+    assert represent(PIABKet(n), basis=XOp) == \
+           Wavefunction(sqrt(2/L)*sin(n*pi*x_1/L), (x_1, 0, L))
     assert (PIABBra(i)*PIABKet(j)).doit() == KroneckerDelta(i, j)
     assert PIABBra(n).dual_class() == PIABKet

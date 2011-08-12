@@ -23,7 +23,7 @@ class QuantumError(Exception):
     pass
 
 
-def _qsympify_sequence(seq):
+def _qsympify_sequence(seq, **assumptions):
     """Convert elements of a sequence to standard form.
 
     This is like sympify, but it performs special logic for arguments passed
@@ -47,9 +47,9 @@ def _qsympify_sequence(seq):
 
     """
 
-    return tuple(__qsympify_sequence_helper(seq))
+    return tuple(__qsympify_sequence_helper(seq, **assumptions))
 
-def __qsympify_sequence_helper(seq):
+def __qsympify_sequence_helper(seq, **assumptions):
     """
        Helper function for _qsympify_sequence
        This function does the actual work.
@@ -59,12 +59,12 @@ def __qsympify_sequence_helper(seq):
         if isinstance(seq, Matrix):
             return seq
         elif isinstance(seq, basestring):
-            return Symbol(seq)
+            return Symbol(seq, **assumptions)
         else:
             return sympify(seq)
 
     #if list, recurse on each item in the list
-    result = [__qsympify_sequence_helper(item) for item in seq]
+    result = [__qsympify_sequence_helper(item, **assumptions) for item in seq]
 
     return Tuple(*result)
 
@@ -81,7 +81,7 @@ class QExpr(Expr):
     # derive from args.
 
     # The Hilbert space a quantum Object belongs to.
-    __slots__ = ['hilbert_space']
+    __slots__ = ['hilbert_space', 'label_assumptions']
 
     # The separator used in printing the label.
     _label_separator = u''
@@ -112,21 +112,33 @@ class QExpr(Expr):
         (0,)
         >>> q.is_commutative
         False
+        >>> q1 = QExpr('x', label_assumptions={'real':True})
+        >>> q1.label
+        (x,)
+        >>> q1.label[0].is_real
+        True
+
         """
 
         # First compute args and call Expr.__new__ to create the instance
         if len(args) == 0:
             args = tuple(cls.default_args())
 
-        args = cls._eval_args(args)
+        user_assumptions = old_assumptions.pop("label_assumptions", {})
+        def_assumptions = cls.def_label_assumptions()
+        for key in user_assumptions:
+            def_assumptions[key] = user_assumptions[key]
+
+        args = cls._eval_args(args, **def_assumptions)
 
         inst = Expr.__new__(cls, *args, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
+        inst.label_assumptions = def_assumptions
         return inst
 
     @classmethod
-    def _new_rawargs(cls, hilbert_space, *args):
+    def _new_rawargs(cls, hilbert_space, label_assumptions, *args):
         """Create new instance of this class with hilbert_space and args.
 
         This is used to bypass the more complex logic in the ``__new__``
@@ -138,6 +150,7 @@ class QExpr(Expr):
 
         obj = Expr.__new__(cls, *args, **{'commutative':False})
         obj.hilbert_space = hilbert_space
+        obj.label_assumptions = label_assumptions
         return obj
 
     #-------------------------------------------------------------------------
@@ -163,6 +176,19 @@ class QExpr(Expr):
         return True
 
     @classmethod
+    def def_label_assumptions(self):
+        """
+        Options which are to be applied to any Symbol objects that are created
+        from the arguments passed to the QExpr constructor.
+
+        To be overridden in subclasses. Any of these options can also be
+        overridden by the user when the constructor is called with use of the
+        label_assumptions option. Should return a dictionary.
+        """
+
+        return {}
+
+    @classmethod
     def default_args(self):
         """If no arguments are specified, then this will return a default set of arguments to be run through the constructor.
 
@@ -176,12 +202,12 @@ class QExpr(Expr):
     #-------------------------------------------------------------------------
 
     @classmethod
-    def _eval_args(cls, args):
+    def _eval_args(cls, args, **assumptions):
         """Process the args passed to the __new__ method.
 
         This simply runs args through _qsympify_sequence.
         """
-        return _qsympify_sequence(args)
+        return _qsympify_sequence(args, **assumptions)
 
     @classmethod
     def _eval_hilbert_space(cls, args):

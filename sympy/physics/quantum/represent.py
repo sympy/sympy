@@ -446,7 +446,7 @@ def integrate_result(orig_expr, result, **options):
     >>> from sympy.physics.quantum.cartesian import XOp, XKet
     >>> x_ket = XKet()
     >>> X_op = XOp()
-    >>> x, x_1, x_2 = symbols('x, x_1, x_2')
+    >>> x, x_1, x_2 = symbols('x, x_1, x_2', real=True)
     >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2))
     x*DiracDelta(x - x_1)*DiracDelta(x_1 - x_2)
     >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2), basis=XKet, unities=[1])
@@ -699,19 +699,14 @@ def _rewrap_wf(expr, unwrapped_vars, **options):
 
     return expr.__class__(*new_args)
 
-def _append_index(symbol, index):
+def _append_index(symbol, index, **assumptions):
     """
 
     A helper function to append an index to a symbol
-
-    NOTE: Directly changes the name of the symbol, so if you call this more than
-    once on the same symbol you will get multiple indices appended. It does this
-    so that the assumptions of the symbol can be kept. 
 
     """
 
     symbol_str = str(symbol)
     symbol_str += "_" + str(index)
 
-    return Symbol(symbol_str, **symbol._assumptions)
-    
+    return Symbol(symbol_str, **assumptions)

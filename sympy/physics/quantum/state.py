@@ -127,7 +127,8 @@ class StateBase(QExpr):
     @property
     def dual(self):
         """Return the dual state of this one."""
-        return self.dual_class()._new_rawargs(self.hilbert_space, *self.args)
+        return self.dual_class()._new_rawargs(\
+            self.hilbert_space, self.label_assumptions, *self.args)
 
     @classmethod
     def dual_class(self):
@@ -270,6 +271,10 @@ class BraBase(StateBase):
     @classmethod
     def default_args(self):
         return self.dual_class().default_args()
+
+    @classmethod
+    def def_label_assumptions(self):
+        return self.dual_class().def_label_assumptions()
 
     @classmethod
     def dual_class(self):

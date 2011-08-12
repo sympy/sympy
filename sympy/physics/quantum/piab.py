@@ -37,8 +37,11 @@ class PIABKet(Ket):
 
     @classmethod
     def default_args(self):
-        n = Symbol('n', integer=True)
-        return (n,)
+        return ('n',)
+
+    @classmethod
+    def def_label_assumptions(self):
+        return {'integer':True}
 
     @classmethod
     def _eval_hilbert_space(cls, args):
@@ -57,7 +60,7 @@ class PIABKet(Ket):
 
         n = self.label[0]
         x = basis.position
-        x = _append_index(x, options.pop("index", 1))
+        x = _append_index(x, options.pop("index", 1), **basis.label_assumptions)
 
         expr = sqrt(2/L)*sin(n*pi*x/L).subs(subs_info)
         return Wavefunction(expr, (x, 0, L))
