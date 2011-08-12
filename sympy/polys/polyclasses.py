@@ -809,7 +809,7 @@ class DMP(object):
 
     @property
     def is_homogeneous(f):
-        """Returns `True` if `f` has zero trailing coefficient. """
+        """Returns ``True`` if ``f`` is a homogeneous polynomial. """
         return f.homogeneous_order() is not None
 
     @property
@@ -819,7 +819,7 @@ class DMP(object):
 
     @property
     def is_cyclotomic(f):
-        """Returns ``True`` if ``f`` is a cyclotomic polnomial. """
+        """Returns ``True`` if ``f`` is a cyclotomic polynomial. """
         if not f.lev:
             return dup_cyclotomic_p(f.rep, f.dom)
         else:

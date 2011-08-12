@@ -1687,7 +1687,8 @@ class Poly(Expr):
 
         A homogeneous polynomial is a polynomial whose all monomials with
         non-zero coefficients have the same total degree. This degree is
-        the homogeneous order of ``f``.
+        the homogeneous order of ``f``. If you only want to check if a
+        polynomial is homogeneous, then use :func:`Poly.is_homogeneous`.
 
         **Examples**
 
@@ -3265,7 +3266,12 @@ class Poly(Expr):
     @property
     def is_homogeneous(f):
         """
-        Returns ``True`` if ``f`` has zero trailing coefficient.
+        Returns ``True`` if ``f`` is a homogeneous polynomial.
+
+        A homogeneous polynomial is a polynomial whose all monomials with
+        non-zero coefficients have the same total degree. If you want not
+        only to check if a polynomial is homogeneous but also compute its
+        homogeneous order, then use :func:`Poly.homogeneous_order`.
 
         **Examples**
 
