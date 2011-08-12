@@ -547,13 +547,17 @@ class periodic_argument(Function):
         # logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
         # period != 2*pi and non-polar numbers.
-        from sympy import ceiling, oo, atan2, atan, polar_lift, pi
+        from sympy import ceiling, oo, atan2, atan, polar_lift, pi, Mul
         if not period.is_positive:
             return None
         if period == oo and isinstance(ar, principal_branch):
             return periodic_argument(*ar.args)
         if ar.func is polar_lift and period >= 2*pi:
             return periodic_argument(ar.args[0], period)
+        if ar.is_Mul:
+            newargs = [x for x in ar.args if not x.is_positive]
+            if len(newargs) != len(ar.args):
+                return periodic_argument(Mul(*newargs), period)
         unbranched = cls._getunbranched(ar)
         if unbranched is None:
             return None
@@ -562,9 +566,9 @@ class periodic_argument(Function):
         if period == oo:
             return unbranched
         if period != oo:
-            n = ceiling(unbranched/period - S(1)/2)*period
-            if not n.has(ceiling):
-                return unbranched - n
+             n = ceiling(unbranched/period - S(1)/2)*period
+             if not n.has(ceiling):
+                 return unbranched - n
 
     def _eval_evalf(self, prec):
         from sympy import ceiling, oo

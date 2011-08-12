@@ -818,15 +818,90 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 # Laplace Transform
 ##########################################################################
 
+def _simplifyconds(expr, s, a):
+    """
+    Naively simplify some conditions occuring in `expr`, given that Re(s) > a.
+
+    >>> from sympy.integrals.transforms import _simplifyconds as simp
+    >>> from sympy.abc import x
+    >>> simp(abs(x**2) < 1, x, 1)
+    False
+    >>> simp(abs(x**2) < 1, x, 2)
+    False
+    >>> simp(abs(x**2) < 1, x, 0)
+    Abs(x**2) < 1
+    >>> simp(abs(1/x**2) < 1, x, 1)
+    True
+    >>> simp(1 < abs(x), x, 1)
+    True
+    >>> simp(1 < abs(1/x), x, 1)
+    False
+
+    >>> from sympy import Ne
+    >>> simp(Ne(1, x**3), x, 1)
+    True
+    >>> simp(Ne(1, x**3), x, 2)
+    True
+    >>> simp(Ne(1, x**3), x, 0)
+    1 != x**3
+    """
+    from sympy.core.relational import StrictInequality, Unequality
+    from sympy import Abs
+    def power(ex):
+        if ex == s:
+            return 1
+        if ex.is_Pow and ex.base == s:
+            return ex.exp
+        return None
+    def bigger(ex1, ex2):
+        """ Return True only if |ex1| > |ex2|, False only if |ex1| < |ex2|.
+            Else return None. """
+        if ex1.has(s) and ex2.has(s):
+            return None
+        if ex1.func is Abs:
+            ex1 = ex1.args[0]
+        if ex2.func is Abs:
+            ex2 = ex2.args[0]
+        if ex1.has(s):
+            return bigger(1/ex2, 1/ex1)
+        n = power(ex2)
+        if n is None:
+            return None
+        if n > 0 and (abs(ex1) <= abs(a)**n) is True:
+            return False
+        if n < 0 and (abs(ex1) >= abs(a)**n) is True:
+            return True
+    def replie(x, y):
+        """ simplify x < y """
+        if not (x.is_positive or x.func is Abs) \
+           or not (y.is_positive or y.func is Abs):
+            return (x < y)
+        r = bigger(x, y)
+        if r is not None:
+            return not r
+        return (x < y)
+    def replue(x, y):
+        if bigger(x, y) in [True, False]:
+            return True
+        return Unequality(x, y)
+    def repl(ex, *args):
+        if isinstance(ex, bool):
+            return ex
+        return ex.replace(*args)
+    expr = repl(expr, StrictInequality, replie)
+    expr = repl(expr, Unequality, replue)
+    return expr
+
 @_noconds
-def _laplace_transform(f, t, s, simplify=True):
+def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for laplace transforms. """
     from sympy import (re, Max, exp, pi, Abs, Min, periodic_argument as arg,
                        cos, Wild, symbols, polar_lift)
+    s = Dummy('s')
     F = integrate(exp(-s*t) * f, (t, 0, oo))
 
     if not F.has(Integral):
-        return _simplify(F, simplify), -oo, True
+        return _simplify(F.subs(s, s_), simplify), -oo, True
 
     if not F.is_Piecewise:
         raise IntegralTransformError('Laplace', f, 'could not compute integral')
@@ -835,45 +910,69 @@ def _laplace_transform(f, t, s, simplify=True):
     if F.has(Integral):
         raise IntegralTransformError('Laplace', f, 'integral in unexpected form')
 
-    a = -oo
-    aux = True
-    conds = conjuncts(to_cnf(cond))
-    u = Dummy('u', real=True)
-    p, q, w1, w2, w3 = symbols('p q w1 w2 w3', cls=Wild, exclude=[s])
-    for c in conds:
-        a_ = oo
-        aux_ = []
-        for d in disjuncts(c):
-            m = d.match(abs(arg((s + w3)**p*q, w1)) < w2)
-            if not m:
-                m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) < w2)
-            if m:
-                if m[q] > 0 and m[w2]/m[p] == pi/2:
-                    d = re(s + m[w3]) > 0
-            m = d.match(0 < cos(abs(arg(s, q)))*abs(s) - p)
-            if m:
-                d = re(s) > m[p]
-            d_ = d.replace(re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
-            if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
-               or d_.has(s) or not d_.has(t):
-                aux_ += [d]
-                continue
-            soln = _solve_inequality(d_, t)
-            if not soln.is_Relational or \
-               (soln.rel_op != '<' and soln.rel_op != '<='):
-                aux_ += [d]
-                continue
-            if soln.lhs == t:
-                raise IntegralTransformError('Laplace', f,
-                                     'convergence not in half-plane?')
+    def process_conds(conds):
+        """ Turn `conds` into a strip and auxiliary conditions. """
+        a = -oo
+        aux = True
+        conds = conjuncts(to_cnf(conds))
+        u = Dummy('u', real=True)
+        p, q, w1, w2, w3, w4, w5 = symbols('p q w1 w2 w3 w4 w5', cls=Wild, exclude=[s])
+        for c in conds:
+            a_ = oo
+            aux_ = []
+            for d in disjuncts(c):
+                m = d.match(abs(arg((s + w3)**p*q, w1)) < w2)
+                if not m:
+                    m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) < w2)
+                if m:
+                    if m[q] > 0 and m[w2]/m[p] == pi/2:
+                        d = re(s + m[w3]) > 0
+                m = d.match(0 < cos(abs(arg(s**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
+                if not m:
+                    m = d.match(0 < cos(abs(arg(polar_lift(s)**w1*w5, q))*w2)*abs(s**w3)**w4 - p)
+                if m and all(m[wild] > 0 for wild in [w1, w2, w3, w4, w5]):
+                    d = re(s) > m[p]
+                d_ = d.replace(re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
+                if not d.is_Relational or (d.rel_op != '<' and d.rel_op != '<=') \
+                   or d_.has(s) or not d_.has(t):
+                    aux_ += [d]
+                    continue
+                soln = _solve_inequality(d_, t)
+                if not soln.is_Relational or \
+                   (soln.rel_op != '<' and soln.rel_op != '<='):
+                    aux_ += [d]
+                    continue
+                if soln.lhs == t:
+                    raise IntegralTransformError('Laplace', f,
+                                         'convergence not in half-plane?')
+                else:
+                    a_ = Min(soln.lhs, a_)
+            if a_ != oo:
+                a = Max(a_, a)
             else:
-                a_ = Min(soln.lhs, a_)
-        if a_ != oo:
-            a = Max(a_, a)
-        else:
-            aux = And(aux, Or(*aux_))
+                aux = And(aux, Or(*aux_))
+        return a, aux
 
-    return _simplify(F, simplify), a, aux
+    conds = [process_conds(c) for c in disjuncts(cond)]
+    conds = filter(lambda x: x[1] is not False and x[0] != -oo, conds)
+    def cnt(expr):
+        if isinstance(expr, bool):
+            return 0
+        return expr.count_ops()
+    conds.sort(key=lambda x: (-x[0], cnt(x[1])))
+
+    if not conds:
+        raise IntegralTransformError('Laplace', f, 'no convergence found')
+    a, aux = conds[0]
+
+    def sbs(expr):
+        if isinstance(expr, bool):
+            return expr
+        return expr.subs(s, s_)
+    if simplify:
+        F = _simplifyconds(F, s, a)
+        aux = _simplifyconds(aux, s, a)
+    return _simplify(F.subs(s, s_), simplify), sbs(a), sbs(aux)
 
 class LaplaceTransform(IntegralTransform):
     """

@@ -754,8 +754,9 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
 
 def _check_antecedents(g1, g2, x):
     """ Return a condition under which the integral theorem applies. """
-    from sympy import re, Eq, Not, Ne, cos, I, exp, ceiling, sin, sign
-    from sympy import unbranched_argument as arg
+    from sympy import (re, Eq, Not, Ne, cos, I, exp, ceiling, sin, sign,
+                       unpolarify)
+    from sympy import arg as arg_, unbranched_argument as arg
     #  Yes, this is madness.
     # XXX TODO this is a testing *nightmare*
     # NOTE if you update these conditions, please update the documentation as well
@@ -860,27 +861,36 @@ def _check_antecedents(g1, g2, x):
     # The Wolfram alpha version:
     #   http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/03/0014/
     z0 = exp(-(bstar + cstar)*pi*I)
-    c14 = And(Eq(phi, 0), bstar - 1 + cstar <= 0,
-              Or(And(Ne(z0*omega/sigma, 1), abs(arg(1 - z0*omega/sigma)) < pi),
-                 And(re(mu + rho + v - u) < 1, Eq(z0*omega/sigma, 1))))
+    zos = unpolarify(z0*omega/sigma)
+    zso = unpolarify(z0*sigma/omega)
+    if zos == 1/zso:
+        c14 = And(Eq(phi, 0), bstar + cstar <= 1,
+                  Or(Ne(zos, 1), re(mu + rho + v - u) < 1,
+                     re(mu + rho + q - p) < 1))
+    else:
+        c14 = And(Eq(phi, 0), bstar - 1 + cstar <= 0,
+                  Or(And(Ne(zos, 1), abs(arg_(1 - zos)) < pi),
+                     And(re(mu + rho + v - u) < 1, Eq(zos, 1))))
 
-    c14_alt = And(Eq(phi, 0), cstar - 1 + bstar <= 0,
-              Or(And(Ne(z0*sigma/omega, 1), abs(arg(1 - z0*sigma/omega)) < pi),
-                 And(re(mu + rho + q - p) < 1, Eq(z0*sigma/omega, 1))))
+        c14_alt = And(Eq(phi, 0), cstar - 1 + bstar <= 0,
+                  Or(And(Ne(zso, 1), abs(arg_(1 - zso)) < pi),
+                     And(re(mu + rho + q - p) < 1, Eq(zso, 1))))
 
-    # Since r=k=l=1, in our case there is c14_alt which is the same as calling
-    # us with (g1, g2) = (g2, g1). The conditions below enumerate all cases
-    # (i.e. we don't have to try arguments reversed by hand), and indeed try
-    # all symmetric cases. (i.e. whenever there is a condition involving c14,
-    # there is also a dual condition which is exactly what we would get when g1,
-    # g2 were interchanged, *but c14 was unaltered*).
-    # Hence the following seems correct:
-    c14 = Or(c14, c14_alt)
+        # Since r=k=l=1, in our case there is c14_alt which is the same as calling
+        # us with (g1, g2) = (g2, g1). The conditions below enumerate all cases
+        # (i.e. we don't have to try arguments reversed by hand), and indeed try
+        # all symmetric cases. (i.e. whenever there is a condition involving c14,
+        # there is also a dual condition which is exactly what we would get when g1,
+        # g2 were interchanged, *but c14 was unaltered*).
+        # Hence the following seems correct:
+        c14 = Or(c14, c14_alt)
 
     tmp = [lambda_c > 0,
            And(Eq(lambda_c, 0), Ne(lambda_s, 0), re(eta) > -1),
            And(Eq(lambda_c, 0), Eq(lambda_s, 0), re(eta) > 0)]
     c15 = Or(*tmp)
+    if _eval_cond(lambda_c > 0) is not False:
+        c15 = (lambda_c > 0)
 
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
                     (c7, 7), (c8, 8), (c9, 9), (c10, 10), (c11, 11),

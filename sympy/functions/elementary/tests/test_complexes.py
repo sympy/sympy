@@ -213,8 +213,9 @@ def test_derivatives_issue1658():
 
 def test_periodic_argument():
     from sympy import (periodic_argument, unbranched_argument, oo,
-                       principal_branch, polar_lift)
+                       principal_branch, polar_lift, pi)
     x = Symbol('x')
+    p = Symbol('p', positive = True)
 
     def tn(a, b):
         from sympy.utilities.randtest import test_numerically
@@ -240,6 +241,8 @@ def test_periodic_argument():
            == periodic_argument(polar_lift(2 + I), pi)
 
     assert unbranched_argument(polar_lift(1 + I)) == pi/4
+    assert periodic_argument(2*p, p) == periodic_argument(p, p)
+    assert periodic_argument(pi*p, p) == periodic_argument(p, p)
 
 @XFAIL
 def test_principal_branch_fail():

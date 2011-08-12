@@ -472,13 +472,16 @@ def test_expint():
 
 def test_messy():
     from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
-                       atanh, acoth, E1, besselj, acosh, asin)
+                       atanh, acoth, E1, besselj, acosh, asin, Ne, And, re)
     assert laplace_transform(Si(x), x, s) == ((pi*s/2 - s*atan(s))/s**2, 0, True)
 
-    # TODO conditions
-    assert laplace_transform(Shi(x), x, s, noconds=True) == \
-           Piecewise((acoth(s)/s, 1 < abs(s**2)), (atanh(s)/s - I*pi/(2*s), True))
-    # TODO chi
+    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True) \
+    # where should the logs be simplified?
+    assert laplace_transform(Chi(x), x, s) == \
+           ((log(s**(-2))/2 - log(1 - 1/s**2)/2)/s, 1, True)
+    # TODO maybe simplify the inequalities?
+    assert laplace_transform(besselj(a, x), x, s)[1:] == \
+           (0, And(0 < re(a/2) + S(1)/2, 0 < re(a/2) + 1))
     # TODO LT(besselj(a,x), x, s)
     # TODO FT(besselj(0,x), x, s)
     # TODO FT conds?

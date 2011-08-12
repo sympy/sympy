@@ -199,6 +199,8 @@ bench = [
   'inverse_laplace_transform(-log(1 + s**2)/2/s, s, u)',
   'inverse_laplace_transform(log(s + 1)/s, s, x)',
   'inverse_laplace_transform((s - log(s + 1))/s**2, s, x)',
+  'laplace_transform(Chi(x), x, s)',
+  'laplace_transform(Shi(x), x, s)',
 
   'integrate(exp(-z*x)/x, (x, 1, oo), meijerg=True, conds="none")',
   'integrate(exp(-z*x)/x**2, (x, 1, oo), meijerg=True, conds="none")',

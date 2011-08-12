@@ -380,6 +380,10 @@ def test_laplace_transform():
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
 
+    # test a bug
+    spos = symbols('s', positive=True)
+    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), True)
+
     # basic tests from wikipedia
 
     assert LT((t-a)**b*exp(-c*(t-a))*Heaviside(t-a), t, s) \
