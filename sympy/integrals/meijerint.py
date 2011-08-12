@@ -1387,7 +1387,7 @@ def meijerint_indefinite(f, x):
 
 def _meijerint_indefinite_1(f, x):
     """ Helper thad does not attempt any substitution. """
-    from sympy import Integral
+    from sympy import Integral, piecewise_fold
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
     gs = _rewrite1(f, x)
@@ -1421,15 +1421,23 @@ def _meijerint_indefinite_1(f, x):
             r = -meijerg(tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
         else:
             r = meijerg(tr(g.an) + [1], tr(g.aother), tr(g.bm), tr(g.bother) + [0], t)
-        r = hyperexpand(r)
+        r = hyperexpand(r.subs(t, a*x**b))
 
         # now substitute back
         # Note: we really do want to powers of x to combine.
-        res += fac_*powdenest(r.subs(t, a*x**b), polar=True)
+        res += powdenest(fac_*r, polar=True)
 
     # This multiplies out superfluous powers of x we created, and chops off
     # constants (e.g. x*(exp(x)/x - 1/x) -> exp(x))
-    res = _my_unpolarify(Add(*expand_mul(res).as_coeff_add(x)[1]))
+    res = piecewise_fold(res)
+    if res.is_Piecewise:
+        nargs = []
+        for expr, cond in res.args:
+            expr = _my_unpolarify(Add(*expand_mul(expr).as_coeff_add(x)[1]))
+            nargs += [(expr, cond)]
+        res = Piecewise(*nargs)
+    else:
+        res = _my_unpolarify(Add(*expand_mul(res).as_coeff_add(x)[1]))
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
 
 @timeit

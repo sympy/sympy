@@ -472,7 +472,7 @@ def test_expint():
 
 def test_messy():
     from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
-                       atanh, acoth, e1, besselj)
+                       atanh, acoth, E1, besselj, acosh, asin)
     assert laplace_transform(Si(x), x, s) == ((pi*s/2 - s*atan(s))/s**2, 0, True)
 
     # TODO conditions
@@ -487,3 +487,6 @@ def test_messy():
            == log(1 + sqrt(2))
     assert integrate(E1(x)*besselj(1, x), (x, 0, oo), meijerg=True) \
            == log(S(1)/2 + sqrt(2)/2)
+
+    assert integrate(1/x/sqrt(1 - x**2), x, meijerg=True) == \
+           Piecewise((-acosh(1/x), 1 < abs(x**(-2))), (I*asin(1/x), True))
