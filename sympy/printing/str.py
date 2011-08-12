@@ -103,6 +103,18 @@ class StrPrinter(Printer):
     def _print_factorial(self, expr):
         return "%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Pow"])
 
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        try:
+            printset = sorted(printset)
+        except:  pass
+        return '{' + ', '.join(self._print(el) for el in printset) + '}'
+
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)"%self.stringify(expr.args, ", ")
 
@@ -127,6 +139,18 @@ class StrPrinter(Printer):
                 return self._print((xab[0],) + tuple(xab[1:]))
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
         return 'Integral(%s, %s)' % (self._print(expr.function), L)
+
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        try:
+            printset = sorted(printset)
+        except:  pass
+        return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Interval(self, i):
         if i.left_open:
@@ -191,7 +215,7 @@ class StrPrinter(Printer):
 
         # Gather args for numerator/denominator
         for item in args:
-            if item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 b.append(Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
@@ -299,6 +323,10 @@ class StrPrinter(Printer):
 
         return format % (' '.join(terms), ', '.join(gens))
 
+    def _print_ProductSet(self, p):
+        return ' x '.join(self._print(set) for set in p.sets)
+
+
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
             return self._print(expr.as_poly().as_expr())
@@ -307,11 +335,12 @@ class StrPrinter(Printer):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp is S.NegativeOne:
-            return '1/%s'%(self.parenthesize(expr.base, PREC))
+
+        if expr.is_commutative and expr.exp is S.NegativeOne:
+            return '1/%s' % self.parenthesize(expr.base, PREC)
         else:
-            return '%s**%s'%(self.parenthesize(expr.base, PREC),
-                             self.parenthesize(expr.exp, PREC))
+            return '%s**%s' % (self.parenthesize(expr.base, PREC),
+                               self.parenthesize(expr.exp, PREC))
 
     def _print_Integer(self, expr):
         return str(expr.p)
@@ -418,8 +447,14 @@ class StrPrinter(Printer):
         else:
             return "(%s)"%self.stringify(expr, ", ")
 
+    def _print_Tuple(self, expr):
+        return self._print_tuple(expr)
+
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)"%(expr.a, expr.b)
+
+    def _print_Union(self, expr):
+        return ' U '.join(self._print(set) for set in expr.args)
 
     def _print_Unit(self, expr):
         return expr.abbrev

@@ -1,12 +1,12 @@
 from sympy import Integer
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
 try:
     from pyglet.gl import *
-except:
+except ImportError:
     raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
 from plot_object import PlotObject
@@ -291,7 +291,7 @@ class Plot(object):
         if isinstance(args, PlotObject):
             f = args
         else:
-            if (not ordered_iter(args)) or isinstance(args, GeometryEntity):
+            if (not is_sequence(args)) or isinstance(args, GeometryEntity):
                 args = [args]
             if len(args) == 0:
                 return # no arguments given

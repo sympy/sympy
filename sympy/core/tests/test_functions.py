@@ -1,12 +1,11 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
         oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma,
-        Tuple, Dummy)
+        Tuple, Dummy, Eq, Expr)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
 from sympy.core.function import PoleError
 from sympy.utilities.iterables import subsets, variations
-from sympy.core.compatibility import all
 
 def test_f_expand_complex():
     f = Function('f')
@@ -163,6 +162,7 @@ def test_Subs():
     y = Symbol('y')
     z = Symbol('z')
     f = Function('f')
+    g = Function('g')
 
     assert Subs(f(x), x, 0).doit() == f(0)
     assert Subs(f(x**2), x**2, 0).doit() == f(0)
@@ -205,6 +205,8 @@ def test_Subs():
     assert e1 + e2 == 2*e1
     assert e1.__hash__() == e2.__hash__()
     assert Subs(z*f(x+1), x, 1) not in [ e1, e2 ]
+    assert Derivative(f(x),x).subs(x,g(x)) == Derivative(f(g(x)),g(x))
+
 
 @XFAIL
 def test_Subs2():
@@ -248,8 +250,6 @@ def test_deriv1():
     g = Function('g')
     x = Symbol('x')
 
-    assert f(g(x)).diff(x) == Derivative(g(x), x)*Subs(Derivative(f(x), x),
-            Tuple(x), Tuple(g(x)))
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
     assert (f(x)**3).diff(x) == 3*f(x)**2*f(x).diff(x)
     assert (f(2*x)**3).diff(x) == 6*f(2*x)**2*Subs(Derivative(f(x), x), Tuple(x),
@@ -258,8 +258,6 @@ def test_deriv1():
     assert f(2+x).diff(x) == Subs(Derivative(f(x), x), Tuple(x), Tuple(x + 2))
     assert f(2+3*x).diff(x) == 3*Subs(Derivative(f(x), x), Tuple(x),
             Tuple(3*x + 2))
-    assert f(sin(x)).diff(x) == cos(x)*Subs(Derivative(f(x), x), Tuple(x),
-            Tuple(sin(x)))
     assert f(3*sin(x)).diff(x) == 3*cos(x)*Subs(Derivative(f(x), x),
             Tuple(x), Tuple(3*sin(x)))
 
@@ -347,7 +345,7 @@ def test_evalf_default():
     assert type(re(sin(I + 1.0))) == Float
     assert type(im(sin(I + 1.0))) == Float
     assert type(sin(4)) == sin
-    assert type(polygamma(2,4.0)) == Float
+    assert type(polygamma(2.0,4.0)) == Float
     assert type(sin(Rational(1,4))) == sin
 
 def test_issue2300():
@@ -371,3 +369,172 @@ def test_issue2300():
                 noraise = eq.diff(*v)
             else:
                 raises(ValueError, 'eq.diff(*v)')
+
+def test_derivative_numerically():
+    from random import random
+    z0 = random() + I*random()
+    assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
+
+def test_fdiff_argument_index_error():
+    from sympy.core.function import ArgumentIndexError
+    class myfunc(Function):
+        nargs = 1
+        def fdiff(self, idx):
+            raise ArgumentIndexError
+    mf = myfunc(x)
+    assert mf.diff(x) == Derivative(mf, x)
+    raises(ValueError, 'myfunc(x, x)')
+
+def test_deriv_wrt_function():
+    t = Symbol('t')
+    xfunc = Function('x')
+    yfunc = Function('y')
+    x = xfunc(t)
+    xd = diff(x, t)
+    xdd = diff(xd, t)
+    y = yfunc(t)
+    yd = diff(y, t)
+    ydd = diff(yd, t)
+
+    assert diff(x, t) == xd
+    assert diff(2 * x + 4, t) == 2 * xd
+    assert diff(2 * x + 4 + y, t) == 2 * xd + yd
+    assert diff(2 * x + 4 + y * x, t) == 2 * xd + x * yd + xd * y
+    assert diff(2 * x + 4 + y * x, x) == 2 + y
+    assert (diff(4 * x**2 + 3 * x + x * y, t) == 3 * xd + x * yd + xd * y +
+            8 * x * xd)
+    assert (diff(4 * x**2 + 3 * xd + x * y, t) ==  3 * xdd + x * yd + xd * y +
+            8 * x * xd)
+    assert diff(4 * x**2 + 3 * xd + x * y, xd) == 3
+    assert diff(4 * x**2 + 3 * xd + x * y, xdd) == 0
+    assert diff(sin(x), t) == xd * cos(x)
+    assert diff(exp(x), t) == xd * exp(x)
+    assert diff(sqrt(x), t) == xd / (2 * sqrt(x))
+
+def test_diff_wrt_value():
+    x = Symbol('x')
+    f = Function('f')
+
+    assert Expr()._diff_wrt == False
+    assert x._diff_wrt == True
+    assert f(x)._diff_wrt == True
+    assert Derivative(f(x),x)._diff_wrt == True
+    assert Derivative(x**2,x)._diff_wrt == False
+
+def test_diff_wrt():
+    x = Symbol('x')
+    f = Function('f')
+    g = Function('g')
+    h = Function('h')
+    fx = f(x)
+    dfx = diff(f(x),x)
+    ddfx = diff(f(x),x,x)
+
+    assert diff(sin(fx)+fx**2, fx) == cos(fx)+2*fx
+    assert diff(sin(dfx)+dfx**2, dfx) == cos(dfx)+2*dfx
+    assert diff(sin(ddfx)+ddfx**2, ddfx) == cos(ddfx)+2*ddfx
+    assert diff(fx**2, dfx) == 0
+    assert diff(fx**2, ddfx) == 0
+    assert diff(dfx**2, fx) == 0
+    assert diff(dfx**2, ddfx) == 0
+    assert diff(ddfx**2, dfx) == 0
+
+    assert diff(fx*dfx*ddfx, fx) == dfx*ddfx
+    assert diff(fx*dfx*ddfx, dfx) == fx*ddfx
+    assert diff(fx*dfx*ddfx, ddfx) == fx*dfx
+
+    assert diff(f(x), x).diff(f(x)) == 0
+    assert (sin(f(x)) - cos(diff(f(x), x))).diff(f(x)) == cos(f(x))
+
+    assert diff(sin(fx), fx, x) == diff(sin(fx), x, fx)
+
+    # Chain rule cases
+    assert f(g(x)).diff(x) ==\
+        Derivative(f(g(x)),g(x))*Derivative(g(x),x)
+    assert diff(f(g(x),h(x)),x) ==\
+        Derivative(f(g(x), h(x)), g(x))*Derivative(g(x), x) +\
+        Derivative(f(g(x), h(x)), h(x))*Derivative(h(x), x)
+    assert f(sin(x)).diff(x) == Derivative(f(sin(x)),sin(x))*cos(x)
+
+    assert diff(f(g(x)),g(x)) == Derivative(f(g(x)),g(x))
+
+def test_diff_wrt_not_allowed():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    raises(ValueError, 'diff(sin(x**2),x**2)')
+    raises(ValueError, 'diff(exp(x*y)),x*y')
+    raises(ValueError, 'diff(1+x,1+x)')
+
+def test_klein_gordon_lagrangian():
+    x = Symbol('x')
+    t = Symbol('t')
+    m = Symbol('m')
+    phi = Function('phi')(x,t)
+
+    L = -(diff(phi,t)**2 - diff(phi,x)**2 - m**2*phi**2)/2
+    eqna = Eq(diff(L,phi) - diff(L,diff(phi,x),x) - diff(L,diff(phi,t),t), 0)
+    eqnb = Eq(diff(phi,t,t) - diff(phi,x,x) + m**2*phi, 0)
+    assert eqna == eqnb
+
+def test_sho_lagrangian():
+    t = Symbol('t')
+    m = Symbol('m')
+    k = Symbol('k')
+    x = Function('x')(t)
+
+    L = m*diff(x,t)**2/2 - k*x**2/2
+    eqna = Eq(diff(L,x), diff(L,diff(x,t),t))
+    eqnb = Eq(-k*x, m*diff(x,t,t))
+    assert eqna == eqnb
+
+    assert diff(L,x,t) == diff(L,t,x)
+    assert diff(L,diff(x,t),t) == m*diff(x,t,2)
+    assert diff(L,t,diff(x,t)) == -k*x + m*diff(x,t,2)
+
+def test_straight_line():
+    x = Symbol('x')
+    f = Function('f')(x)
+
+    L = sqrt(1 + diff(f,x)**2)
+    assert diff(L,f) == 0
+    assert diff(L, diff(f,x)) == diff(f,x)/sqrt(1 + diff(f,x)**2)
+
+def test_sort_variable():
+    vsort = Derivative._sort_variables
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    f = Function('f')
+    g = Function('g')
+    h = Function('h')
+
+    assert vsort((x,y,z)) == [x, y, z]
+    assert vsort((h(x),g(x),f(x))) == [f(x), g(x), h(x)]
+    assert vsort((z,y,x,h(x),g(x),f(x))) == [x, y, z, f(x), g(x), h(x)]
+    assert vsort((x,f(x),y,f(y))) == [x, f(x), y, f(y)]
+    assert vsort((y,x,g(x),f(x),z,h(x),y,x)) ==\
+        [x, y, f(x), g(x), z, h(x), x, y]
+    assert vsort((z,y,f(x),x,f(x),g(x))) == [y, z, f(x), x, f(x), g(x)]
+    assert vsort((z,y,f(x),x,f(x),g(x),z,z,y,x)) ==\
+        [y, z, f(x), x, f(x), g(x), x, y, z, z]
+
+def test_unhandled():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    f = Function('f')
+    g = Function('g')
+    h = Function('h')
+
+    class MyExpr(Expr):
+        def _eval_derivative(self, s):
+            if not s.name.startswith('diff_wrt'):
+                return self
+            else:
+                return None
+
+    expr = MyExpr(x,y,z)
+    assert diff(expr,x,y,f(x),z) == Derivative(expr,f(x),z)
+    assert diff(expr,f(x),x) == Derivative(expr,f(x),x)
+

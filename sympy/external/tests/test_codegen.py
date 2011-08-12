@@ -33,11 +33,6 @@ import os
 import tempfile
 import subprocess
 
-if sys.platform == 'win32' and sys.version_info < (2, 5):
-    # subprocess has problems in Windows Python 2.4, so skip the tests there
-    disabled = True
-else:
-    disabled = False
 
 # templates for the main program that will test the generated code.
 
@@ -256,15 +251,14 @@ def is_feasible(language, commands):
     except AssertionError:
         return False
 
-if not disabled:
-    valid_lang_commands = []
-    invalid_lang_compilers = []
-    for lang, compiler in combinations_lang_compiler:
-        commands = compile_commands[compiler]
-        if is_feasible(lang, commands):
-            valid_lang_commands.append((lang, commands))
-        else:
-            invalid_lang_compilers.append((lang, compiler))
+valid_lang_commands = []
+invalid_lang_compilers = []
+for lang, compiler in combinations_lang_compiler:
+    commands = compile_commands[compiler]
+    if is_feasible(lang, commands):
+        valid_lang_commands.append((lang, commands))
+    else:
+        invalid_lang_compilers.append((lang, compiler))
 
 # We test all language-compiler combinations, just to report what is skipped
 

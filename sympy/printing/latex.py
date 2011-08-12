@@ -172,7 +172,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
-        numer, denom = fraction(tail)
+        numer, denom = fraction(tail, exact=True)
         separator = self._settings['mul_symbol_latex']
 
         def convert(expr):
@@ -250,9 +250,7 @@ class LatexPrinter(Printer):
 
     def _print_Pow(self, expr):
         # Treat x**(Rational(1,n)) as special case
-        if expr.exp.is_Rational\
-           and abs(expr.exp.p) == 1\
-           and expr.exp.q != 1:
+        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1:
             base = self._print(expr.base)
             expq = expr.exp.q
 
@@ -276,7 +274,7 @@ class LatexPrinter(Printer):
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
             else:
-                if expr.exp == S.NegativeOne:
+                if expr.is_commutative and expr.exp is S.NegativeOne:
                     #solves issue 1030
                     #As Mul always simplify 1/x to x**-1
                     #The objective is achieved with this hack
@@ -429,8 +427,18 @@ class LatexPrinter(Printer):
 
             return name % ",".join(args)
 
-    def _print_Poly(self, expr):
-        return self._print(expr.as_expr())
+    def _print_Lambda(self, expr):
+        symbols, expr = expr.args
+
+        if len(symbols) == 1:
+            symbols = self._print(symbols[0])
+        else:
+            symbols = self._print(tuple(symbols))
+
+        args = (symbols, self._print(expr))
+        tex = r"\operatorname{\Lambda}\left(%s\right)" % ", ".join(args)
+
+        return tex
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
@@ -492,6 +500,24 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{\Gamma}%s" % tex
 
+    def _print_uppergamma(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{\Gamma}%s" % tex
+
+    def _print_lowergamma(self, expr, exp=None):
+        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"\operatorname{\gamma}^{%s}%s" % (exp, tex)
+        else:
+            return r"\operatorname{\gamma}%s" % tex
+
     def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
         if self._needs_brackets(x):
@@ -524,6 +550,80 @@ class LatexPrinter(Printer):
             (self._print(expr[0]), self._print(expr[1]))
 
         return self._do_exponent(tex, exp)
+
+    def _hprint_BesselBase(self, expr, exp, sym):
+        tex = r"%s" % (sym)
+
+        need_exp = False
+        if exp is not None:
+            if tex.find('^') == -1:
+                tex = r"%s^{%s}" % (tex, self._print(exp))
+            else:
+                need_exp = True
+
+        tex = r"%s_{%s}\left(%s\right)" % (tex, self._print(expr.order),
+                                           self._print(expr.argument))
+
+        if need_exp:
+            tex = self._do_exponent(tex, exp)
+        return tex
+
+    def _hprint_vec(self, vec):
+        if len(vec) == 0:
+            return ""
+        s = ""
+        for i in vec[:-1]:
+            s += "%s, " % self._print(i)
+        s += self._print(vec[-1])
+        return s
+
+    def _print_besselj(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'J')
+
+    def _print_besseli(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'I')
+
+    def _print_besselk(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'K')
+
+    def _print_bessely(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'Y')
+
+    def _print_yn(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'y')
+
+    def _print_jn(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'j')
+
+    def _print_hankel1(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'H^{(1)}')
+
+    def _print_hankel2(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'H^{(2)}')
+
+    def _print_hyper(self, expr, exp=None):
+        tex = r"{{}_{%s}F_{%s}\left.\left(\begin{matrix} %s \\ %s \end{matrix}" \
+              r"\right| {%s} \right)}" % \
+             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+              self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
+              self._print(expr.argument))
+
+        if exp is not None:
+            tex = r"{%s}^{%s}" % (tex, self._print(exp))
+        return tex
+
+    def _print_meijerg(self, expr, exp=None):
+        tex = r"{G_{%s, %s}^{%s, %s}\left.\left(\begin{matrix} %s & %s \\" \
+              r"%s & %s \end{matrix} \right| {%s} \right)}" % \
+             (self._print(len(expr.ap)), self._print(len(expr.bq)),
+              self._print(len(expr.bm)), self._print(len(expr.an)),
+              self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
+              self._hprint_vec(expr.bm), self._hprint_vec(expr.bother),
+              self._print(expr.argument))
+
+        if exp is not None:
+            tex = r"{%s}^{%s}" % (tex, self._print(exp))
+        return tex
 
     def _print_Rational(self, expr):
         if expr.q != 1:
@@ -665,7 +765,20 @@ class LatexPrinter(Printer):
             tex = r"\delta^{\left( %s \right)}\left( %s \right)" % (\
             self._print(expr.args[1]), self._print(expr.args[0]))
         return tex
-
+    def _print_ProductSet(self, p):
+        return r" \cross ".join(self._print(set) for set in p.sets)
+    def _print_FiniteSet(self, s):
+        if len(s) > 10:
+            #take ten elements from the set at random
+            q = iter(s)
+            printset = [q.next() for i in xrange(10)]
+        else:
+            printset = s
+        try:
+            printset.sort()
+        except:
+            pass
+        return r"\left\{" + r", ".join(self._print(el) for el in printset) + r"\right\}"
     def _print_Interval(self, i):
         if i.start == i.end:
             return r"\left{%s\right}" % self._print(i.start)
@@ -685,29 +798,61 @@ class LatexPrinter(Printer):
                    (left, self._print(i.start), self._print(i.end), right)
 
     def _print_Union(self, u):
-        other_sets, singletons = [], []
-        for set in u.args:
-            if isinstance(set, Interval) and set.measure == 0:
-                singletons.append(set.start)
-            else:
-                other_sets.append(set)
-
-        S2 = r"%s" % \
-             r" \cup ".join([ self._print_Interval(i) for i in other_sets ])
-
-        if len(singletons) > 0:
-            S1 = r"\left\{%s\right\}" % \
-                 r", ".join([ self._print(i) for i in singletons ])
-
-            S = r"%s \cup %s" % (S1, S2)
-        else:
-            S = S2
-
-        return S
+        return r" \cup ".join([self._print(i) for i in u.args])
 
     def _print_EmptySet(self, e):
         return r"\emptyset"
 
+    def _print_FiniteField(self, expr):
+        return r"\mathbb{F}_{%s}" % expr.mod
+
+    def _print_IntegerRing(self, expr):
+        return r"\mathbb{Z}"
+
+    def _print_RationalField(self, expr):
+        return r"\mathbb{Q}"
+
+    def _print_RealDomain(self, expr):
+        return r"\mathbb{R}"
+
+    def _print_ComplexDomain(self, expr):
+        return r"\mathbb{C}"
+
+    def _print_PolynomialRing(self, expr):
+        domain = self._print(expr.dom)
+        gens = ", ".join(map(self._print, expr.gens))
+        return r"%s\left\[%s\right\]" % (domain, gens)
+
+    def _print_FractionField(self, expr):
+        domain = self._print(expr.dom)
+        gens = ", ".join(map(self._print, expr.gens))
+        return r"%s\left(%s\right)" % (domain, gens)
+
+    def _print_Poly(self, poly):
+        cls = poly.__class__.__name__
+        expr = self._print(poly.as_expr())
+        gens = map(self._print, poly.gens)
+        domain = "domain=%s" % self._print(poly.get_domain())
+
+        args = ", ".join([expr] + gens + [domain])
+        tex = r"\operatorname{%s}\left(%s\right)" % (cls, args)
+
+        return tex
+
+    def _print_RootOf(self, root):
+        cls = root.__class__.__name__
+        expr = self._print(root.expr)
+        index = root.index
+        return r"\operatorname{%s}\left(%s, %d\right)" % (cls, expr, index)
+
+    def _print_RootSum(self, expr):
+        cls = expr.__class__.__name__
+        args = [self._print(expr.expr)]
+
+        if expr.fun is not S.IdentityFunction:
+            args.append(self._print(expr.fun))
+
+        return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
 
 def latex(expr, **settings):
     r"""Convert the given expression to LaTeX representation.

@@ -206,7 +206,6 @@ class CCodePrinter(CodePrinter):
 
         code = [ line.lstrip(' \t') for line in code ]
 
-        from sympy.utilities.iterables import any  # 2.4 support
         increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
         decrease = [ int(any(map(line.startswith, dec_token))) for line in code ]
 

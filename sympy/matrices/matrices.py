@@ -1,17 +1,16 @@
 from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
 from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
-from sympy.utilities import any, all
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
 
-from sympy.core.compatibility import callable, reduce, any, all
+from sympy.core.compatibility import callable, reduce
 
 import random
 
@@ -96,7 +95,7 @@ class Matrix(object):
             for i in range(self.rows):
                 for j in range(self.cols):
                     self.mat.append(sympify(operation(i, j)))
-        elif len(args)==3 and ordered_iter(args[2]):
+        elif len(args)==3 and is_sequence(args[2]):
             self.rows=args[0]
             self.cols=args[1]
             mat = args[2]
@@ -127,7 +126,7 @@ class Matrix(object):
                     return
                 else:
                     raise NotImplementedError("Sympy supports just 1D and 2D matrices")
-            elif not ordered_iter(mat, include=Matrix):
+            elif not is_sequence(mat, include=Matrix):
                 raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
             mat = []
             for row in args[0]:
@@ -137,7 +136,7 @@ class Matrix(object):
                     mat.append(row)
             self.rows = len(mat)
             if len(mat) != 0:
-                if not ordered_iter(mat[0]):
+                if not is_sequence(mat[0]):
                     self.cols = 1
                     self.mat = map(lambda i: sympify(i), mat)
                     return
@@ -160,7 +159,7 @@ class Matrix(object):
 
     def key2ij(self,key):
         """Converts key=(4,6) to 4,6 and ensures the key is correct."""
-        if not (ordered_iter(key) and len(key) == 2):
+        if not (is_sequence(key) and len(key) == 2):
             raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
                     %repr(key))
         i,j=key
@@ -293,7 +292,7 @@ class Matrix(object):
                 if isinstance(value, Matrix):
                     self.copyin_matrix(key, value)
                     return
-                if ordered_iter(value):
+                if is_sequence(value):
                     self.copyin_list(key, value)
                     return
             else:
@@ -371,7 +370,7 @@ class Matrix(object):
                 self[i+rlo, j+clo] = sympify(value[i,j])
 
     def copyin_list(self, key, value):
-        if not ordered_iter(value):
+        if not is_sequence(value):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
         self.copyin_matrix(key, Matrix(value))
 
@@ -1119,6 +1118,7 @@ class Matrix(object):
         Returns the decomposition LU and the row swaps p.
 
         Example:
+
         >>> from sympy import Matrix
         >>> a = Matrix([[4, 3], [6, 3]])
         >>> L, U, _ = a.LUdecomposition()
@@ -1293,8 +1293,10 @@ class Matrix(object):
         """
         Return Q,R where A = Q*R, Q is orthogonal and R is upper triangular.
 
-        Examples::
-        This is the example from wikipedia
+        Examples
+
+        This is the example from wikipedia::
+
         >>> from sympy import Matrix, eye
         >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
         >>> Q, R = A.QRdecomposition()
@@ -1401,7 +1403,7 @@ class Matrix(object):
     #            self[i,j] = self[i,j].eval()
 
     def cross(self, b):
-        if not ordered_iter(b, include=Matrix):
+        if not is_sequence(b, include=Matrix):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows == 1 and self.cols == 3 or \
@@ -1415,7 +1417,7 @@ class Matrix(object):
                                (self[0]*b[1] - self[1]*b[0])))
 
     def dot(self, b):
-        if not ordered_iter(b, include=Matrix):
+        if not is_sequence(b, include=Matrix):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         m = len(b)
@@ -1600,6 +1602,7 @@ class Matrix(object):
         Check if matrix is an upper triangular matrix.
 
         Example:
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -1635,6 +1638,7 @@ class Matrix(object):
         Check if matrix is a lower triangular matrix.
 
         Example:
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -1674,6 +1678,7 @@ class Matrix(object):
         below the first subdiagonal.
 
         Example:
+
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
         >>> a
@@ -1698,6 +1703,7 @@ class Matrix(object):
         above the first superdiagonal.
 
         Example:
+
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
         >>> a
@@ -2134,7 +2140,9 @@ class Matrix(object):
         return out
 
     def singular_values(self):
-        """Compute the singular values of a Matrix
+        """
+        Compute the singular values of a Matrix
+
         >>> from sympy import Matrix, Symbol, eye
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
@@ -2156,7 +2164,9 @@ class Matrix(object):
         return vals
 
     def condition_number(self):
-        """Returns the condition number of a matrix.
+        """
+        Returns the condition number of a matrix.
+
         This is the maximum singular value divided by the minimum singular value
 
         >>> from sympy import Matrix, S
@@ -2517,6 +2527,7 @@ class Matrix(object):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
+
         >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
@@ -2547,7 +2558,7 @@ def matrix_multiply(A, B):
     >>> B*A
     Traceback (most recent call last):
     ...
-    ShapeError
+    ShapeError: Matrices size mismatch.
     >>>
 
     """
@@ -2566,7 +2577,7 @@ def matrix_multiply(A, B):
     #        product[i, j] = s
     #return product
     if A.shape[1] != B.shape[0]:
-        raise ShapeError()
+        raise ShapeError("Matrices size mismatch.")
     blst = B.T.tolist()
     alst = A.tolist()
     return Matrix(A.shape[0], B.shape[1], lambda i, j:
@@ -2719,7 +2730,7 @@ def hessian(f, varlist):
     see: http://en.wikipedia.org/wiki/Hessian_matrix
     """
     # f is the expression representing a function f, return regular matrix
-    if ordered_iter(varlist):
+    if is_sequence(varlist):
         m = len(varlist)
         if not m:
             raise ShapeError("`len(varlist)` must not be zero.")
@@ -2845,7 +2856,7 @@ class SparseMatrix(Matrix):
                     if value != 0:
                         self.mat[(i,j)] = value
         elif len(args)==3 and isinstance(args[0],int) and \
-                isinstance(args[1],int) and ordered_iter(args[2]):
+                isinstance(args[1],int) and is_sequence(args[2]):
             self.rows = args[0]
             self.cols = args[1]
             mat = args[2]
@@ -2868,7 +2879,7 @@ class SparseMatrix(Matrix):
                 mat = args[0]
             else:
                 mat = args
-            if not ordered_iter(mat[0]):
+            if not is_sequence(mat[0]):
                 mat = [ [element] for element in mat ]
             self.rows = len(mat)
             self.cols = len(mat[0])
@@ -2929,7 +2940,7 @@ class SparseMatrix(Matrix):
         if isinstance(key[0], slice) or isinstance(key[1], slice):
             if isinstance(value, Matrix):
                 self.copyin_matrix(key, value)
-            if ordered_iter(value):
+            if is_sequence(value):
                 self.copyin_list(key, value)
         else:
             i,j=self.key2ij(key)
@@ -3104,7 +3115,7 @@ class SparseMatrix(Matrix):
     # from here to end all functions are same as in matrices.py
     # with Matrix replaced with SparseMatrix
     def copyin_list(self, key, value):
-        if not ordered_iter(value):
+        if not is_sequence(value):
             raise TypeError("`value` must be of type list or tuple.")
         self.copyin_matrix(key, SparseMatrix(value))
 
@@ -3145,7 +3156,7 @@ class SparseMatrix(Matrix):
         return SparseMatrix(_rows, _cols, newD)
 
     def cross(self, b):
-        if not ordered_iter(b, include=Matrix):
+        if not is_sequence(b, include=Matrix):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
         if not (self.rows == 1 and self.cols == 3 or \

@@ -3,7 +3,7 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from logic import fuzzy_not
-from compatibility import any, all, cmp_to_key
+from compatibility import cmp_to_key
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -792,6 +792,21 @@ class Mul(AssocOp):
         else:
             return S.One, self
 
+    def as_base_exp(self):
+        e1 = None
+        bases = []
+        nc = 0
+        for m in self.args:
+            b, e = m.as_base_exp()
+            if not b.is_commutative:
+                nc += 1
+            if e1 is None:
+                e1 = e
+            elif e != e1 or nc > 1:
+                return self, S.One
+            bases.append(b)
+        return Mul(*bases), e1
+
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
 
@@ -942,6 +957,7 @@ class Mul(AssocOp):
         if self == old:
             return new
 
+
         def fallback():
             """Return this value when partial subs has failed."""
 
@@ -956,7 +972,7 @@ class Mul(AssocOp):
             """
 
             (c, nc) = (dict(), list())
-            for (i, a) in enumerate(Mul.make_args(eq) or [eq]): # remove or [eq] after 2114 accepted
+            for (i, a) in enumerate(Mul.make_args(eq)):
                 a = powdenest(a)
                 (b, e) = a.as_base_exp()
                 if not e is S.One:
@@ -1021,7 +1037,7 @@ class Mul(AssocOp):
             c[co_xmul] = S.One
             old_c.pop(co_old)
 
-        # Do bunch of quick tests to see whether we can succeed:
+        # Do some quick tests to see whether we can succeed:
         # 1) check for more non-commutative or 2) commutative terms
         # 3) ... unmatched non-commutative bases
         # 4) ... unmatched commutative terms

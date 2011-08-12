@@ -339,7 +339,6 @@ class FCodePrinter(CodePrinter):
         inc_keyword = ('do ', 'if(', 'if ', 'do\n', 'else')
         dec_keyword = ('end do', 'enddo', 'end if', 'endif', 'else')
 
-        from sympy.utilities.iterables import any  # 2.4 support
         increase = [ int(any(map(line.startswith, inc_keyword))) for line in code ]
         decrease = [ int(any(map(line.startswith, dec_keyword))) for line in code ]
         continuation = [ int(any(map(line.endswith, ['&', '&\n']))) for line in code ]

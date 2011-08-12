@@ -4,7 +4,6 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from expr import Expr
-from compatibility import all
 
 class Add(AssocOp):
 
@@ -75,11 +74,10 @@ class Add(AssocOp):
                 c, s = o.as_coeff_Mul()
 
                 # 3*...
-                if c.is_Number:
-                    # unevaluated 2-arg Mul
-                    if s.is_Add and s.is_commutative:
-                        seq.extend([c*a for a in s.args])
-                        continue
+                # unevaluated 2-arg Mul
+                if c.is_Number and s.is_Add:
+                    seq.extend([c*a for a in s.args])
+                    continue
 
             # everything else
             else:
@@ -529,8 +527,7 @@ class Add(AssocOp):
         """
         Divide ``self`` by the GCD of coefficients of ``self``.
 
-        Example
-        =======
+        **Example**
 
         >>> from sympy.abc import x, y
 

@@ -1,6 +1,5 @@
 """Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from sympy.utilities import any, all
 from sympy.core import igcd, ilcm
 
 from sympy.polys.monomialtools import (
@@ -1649,7 +1648,7 @@ def dmp_list_terms(f, u, K, order=None):
     >>> dmp_list_terms(f, 1, ZZ)
     [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]
     >>> dmp_list_terms(f, 1, ZZ, order='grevlex')
-    [((1, 1), 1), ((0, 1), 2), ((1, 0), 1), ((0, 0), 3)]
+    [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]
 
     """
     terms = _rec_list_terms(f, u, ())

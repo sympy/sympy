@@ -3,7 +3,6 @@ import pickle
 import types
 from sympy.utilities.pytest import XFAIL
 
-from sympy.core.assumptions import AssumeMeths
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta, BasicType, ClassRegistry
 from sympy.core.singleton import SingletonRegistry
@@ -61,10 +60,6 @@ def check(a, check_attr = True):
 
 
 #================== core =========================
-
-def test_core_assumptions():
-    for c in (AssumeMeths, AssumeMeths()):
-        check(c)
 
 def test_core_basic():
     for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicMeta("test"),

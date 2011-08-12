@@ -24,7 +24,7 @@ from sympy.polys.polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel,
-    reduced, groebner)
+    reduced, groebner, fglm)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -52,7 +52,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
     S, Integer, Rational, Float, Mul, symbols, sqrt, exp,
-    sin, expand, oo, I, pi, re, im, RootOf, all, Eq, Tuple)
+    sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -633,8 +633,8 @@ def test_Poly_properties():
     assert Poly(x*y).is_monomial == True
     assert Poly(x*y+1).is_monomial == False
 
-    assert Poly(x*y+x).is_homogeneous == True
-    assert Poly(x*y+x+1).is_homogeneous == False
+    assert Poly(x**2 + x*y).is_homogeneous == True
+    assert Poly(x**3 + x*y).is_homogeneous == False
 
     assert Poly(x).is_univariate == True
     assert Poly(x*y).is_univariate == False
@@ -645,9 +645,10 @@ def test_Poly_properties():
     assert Poly(x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1).is_cyclotomic == False
     assert Poly(x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1).is_cyclotomic == True
 
-@XFAIL
 def test_Poly_is_irreducible():
-    # when this passes, check the polytools is_irreducible docstring, too.
+    assert Poly(x**2 + x + 1).is_irreducible == True
+    assert Poly(x**2 + 2*x + 1).is_irreducible == False
+
     assert Poly(7*x + 3, modulus=11).is_irreducible == True
     assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible == False
 
@@ -992,7 +993,22 @@ def test_Poly_degree_list():
     raises(ComputationFailed, "degree_list(1)")
 
 def test_Poly_total_degree():
-    assert Poly(x**2*y+x**3*z**2+1).total_degree() == 6
+    assert Poly(x**2*y+x**3*z**2+1).total_degree() == 5
+    assert Poly(x**2 + z**3).total_degree() == 3
+    assert Poly(x*y*z + z**4).total_degree() == 4
+    assert Poly(x**3 + x + 1).total_degree() == 3
+
+def test_Poly_homogeneous_order():
+    assert Poly(0, x, y).homogeneous_order() == -1
+    assert Poly(1, x, y).homogeneous_order() == 0
+    assert Poly(x, x, y).homogeneous_order() == 1
+    assert Poly(x*y, x, y).homogeneous_order() == 2
+
+    assert Poly(x + 1, x, y).homogeneous_order() is None
+    assert Poly(x*y + x, x, y).homogeneous_order() is None
+
+    assert Poly(x**5 + 2*x**3*y**2 + 9*x*y**4).homogeneous_order() == 5
+    assert Poly(x**5 + 2*x**3*y**3 + 9*x*y**4).homogeneous_order() is None
 
 def test_Poly_LC():
     assert Poly(0, x).LC() == 0
@@ -1190,10 +1206,21 @@ def test_Poly_eval():
     assert Poly(x*y + y, x, y).eval({x: 6, y: 7}) == 49
     assert Poly(x*y + y, x, y).eval({x: 7, y: 6}) == 48
 
+    assert Poly(x*y + y, x, y).eval((6, 7)) == 49
+    assert Poly(x*y + y, x, y).eval([6, 7]) == 49
+
     Poly(x+1, domain='ZZ').eval(S(1)/2) == S(3)/2
     Poly(x+1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
+    raises(ValueError, "Poly(x*y + y, x, y).eval((6, 7, 8))")
     raises(DomainError, "Poly(x+1, domain='ZZ').eval(S(1)/2, auto=False)")
+
+def test_Poly___call__():
+    f = Poly(2*x*y + 3*x + y + 2*z)
+
+    assert f(2) == Poly(5*y + 2*z + 6)
+    assert f(2, 5) == Poly(2*z + 31)
+    assert f(2, 5, 7) == 45
 
 def test_parallel_poly_from_expr():
     assert parallel_poly_from_expr([x-1, x**2-1], x)[0] == [Poly(x-1, x), Poly(x**2-1, x)]
@@ -2208,22 +2235,35 @@ def test_nroots():
 
     assert Poly(0.2*x + 0.1).nroots() == [-0.5]
 
-    roots = Poly(x**5 + x + 1).nroots()
-    eps = Float("10e-12")
+    roots = nroots(x**5 + x + 1, n=5)
+    eps = Float("1e-5")
 
-    assert re(roots[0]).epsilon_eq(-0.754877666246693, eps) and roots[0].is_real
-    # XXX: assert im(roots[0]).epsilon_eq(-0.000000000000000, eps) -> 'Zero' object has no attribute 'epsilon_eq'
-    assert re(roots[1]).epsilon_eq(-0.500000000000000, eps)
-    assert im(roots[1]).epsilon_eq(-0.866025403784439, eps)
-    assert re(roots[2]).epsilon_eq(-0.500000000000000, eps)
-    assert im(roots[2]).epsilon_eq(+0.866025403784439, eps)
-    assert re(roots[3]).epsilon_eq(+0.877438833123346, eps)
-    assert im(roots[3]).epsilon_eq(-0.744861766619744, eps)
-    assert re(roots[4]).epsilon_eq(+0.877438833123346, eps)
-    assert im(roots[4]).epsilon_eq(+0.744861766619744, eps)
+    assert re(roots[0]).epsilon_eq(-0.75487, eps) is True
+    assert im(roots[0]) ==  0.0
+    assert re(roots[1]) == -0.5
+    assert im(roots[1]).epsilon_eq(-0.86602, eps) is True
+    assert re(roots[2]) == -0.5
+    assert im(roots[2]).epsilon_eq(+0.86602, eps) is True
+    assert re(roots[3]).epsilon_eq(+0.87743, eps) is True
+    assert im(roots[3]).epsilon_eq(-0.74486, eps) is True
+    assert re(roots[4]).epsilon_eq(+0.87743, eps) is True
+    assert im(roots[4]).epsilon_eq(+0.74486, eps) is True
 
-    raises(DomainError, "Poly(x+y, x).nroots()")
-    raises(MultivariatePolynomialError, "Poly(x+y).nroots()")
+    eps = Float("1e-6")
+
+    assert re(roots[0]).epsilon_eq(-0.75487, eps) is False
+    assert im(roots[0]) ==  0.0
+    assert re(roots[1]) == -0.5
+    assert im(roots[1]).epsilon_eq(-0.86602, eps) is False
+    assert re(roots[2]) == -0.5
+    assert im(roots[2]).epsilon_eq(+0.86602, eps) is False
+    assert re(roots[3]).epsilon_eq(+0.87743, eps) is False
+    assert im(roots[3]).epsilon_eq(-0.74486, eps) is False
+    assert re(roots[4]).epsilon_eq(+0.87743, eps) is False
+    assert im(roots[4]).epsilon_eq(+0.74486, eps) is False
+
+    raises(DomainError, "Poly(x + y, x).nroots()")
+    raises(MultivariatePolynomialError, "Poly(x + y).nroots()")
 
     assert nroots(x**2 - 1) == [-1.0, 1.0]
 
@@ -2384,15 +2424,44 @@ def test_groebner():
 
     F = [x*y - 2*y, 2*y**2 - x**2]
 
-    assert groebner(F, order='grevlex') == \
-        [-2*x**2 + x**3, -x**2 + 2*y**2, -2*y + x*y]
+    assert groebner(F, x, y, order='grevlex') == \
+        [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
+    assert groebner(F, y, x, order='grevlex') == \
+        [x**3 - 2*x**2, -x**2 + 2*y**2, x*y - 2*y]
     assert groebner(F, order='grevlex', field=True) == \
-        [-2*x**2 + x**3, -x**2/2 + y**2, -2*y + x*y]
+        [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
 
     assert groebner([1], x) == [1]
 
     raises(DomainError, "groebner([x**2 + 2.0*y], x, y)")
     raises(ComputationFailed, "groebner([1])")
+
+def test_fglm():
+    a, b, c, d = symbols('a b c d')
+    F = [a+b+c+d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + b*c*d, a*b*c*d - 1]
+    G = groebner(F, a, b, c, d, order='grlex')
+
+    assert fglm(G, ('grlex'), a, b, c, d) == \
+        [4*a + 3*d**9 - 4*d**5 - 3*d, 4*b + 4*c - 3*d**9 + 4*d**5 + 7*d,
+        4*c**2 + 3*d**10 - 4*d**6 - 3*d**2, 4*c*d**4 + 4*c - d**9 + 4*d**5 + 5*d,
+        d**12 - d**8 - d**4 + 1]
+
+    x, t = symbols('x t')
+    F = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
+        -72*t*x**7 - 252*t*x**6 + 192*t*x**5 + 1260*t*x**4 + 312*t*x**3 - 404*t*x**2 - 576*t*x + \
+        108*t - 72*x**7 - 256*x**6 + 192*x**5 + 1280*x**4 + 312*x**3 - 576*x + 96]
+    G = groebner(F, t, x, order='grlex')
+
+    assert fglm(G, 'grlex', t, x) == [203577793572507451707*t + 627982239411707112*x**7 - \
+        666924143779443762*x**6 - 10874593056632447619*x**5 + 5119998792707079562*x**4 + \
+        72917161949456066376*x**3 + 20362663855832380362*x**2 - 142079311455258371571*x + 183756699868981873194,
+        9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9]
+
+    x, y = symbols('x y')
+    F = [x**2 - x - 3*y + 1, -2*x + y**2 + y - 1]
+    G = groebner(F, x, y, order='lex')
+
+    assert fglm(G, ('lex', 'grlex'), x, y) == [x**2 - x - 3*y + 1, -2*x + y**2 + y - 1]
 
 def test_poly():
     assert poly(x) == Poly(x, x)

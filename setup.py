@@ -34,13 +34,13 @@ import sys
 import sympy
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2,4):
-    print "Sympy requires Python 2.4 or newer. Python %d.%d detected" % \
+if sys.version_info[:2] < (2,5):
+    print "Sympy requires Python 2.5 or newer. Python %d.%d detected" % \
           sys.version_info[:2]
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$|thirdparty/" `; do echo "'${i//\//.}',"; done | sort
+# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" `; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
@@ -79,7 +79,6 @@ modules = [
     'sympy.solvers',
     'sympy.statistics',
     'sympy.tensor',
-    'sympy.thirdparty',
     'sympy.utilities',
     'sympy.utilities.mathml',
     ]
@@ -246,4 +245,3 @@ setup(
                      'audit' : audit,
                      },
       )
-

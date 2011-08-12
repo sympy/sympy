@@ -11,9 +11,6 @@ from sympy.utilities.lambdify import implemented_function
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
 
-#FIXME-py3k: Many AssertionErrors here, perhaps related to unicode;
-#FIXME-py3k: some are just due to an extra space at the end of the string
-
 def get_string(dump_fn, routines, prefix="file", header=False, empty=False):
     """Wrapper for dump_fn. dump_fn writes its results to a stream object and
        this wrapper returns the contents of that stream as a string. This
@@ -60,7 +57,7 @@ def test_empty_c_code_with_comment():
     assert source[:82] == (
             "/******************************************************************************\n *"
             )
-          #   "                    Code generated with sympy 0.7.0-git                    "
+          #   "                    Code generated with sympy 0.7.1-git                    "
     assert source[158:] == (                                                              "*\n"
             " *                                                                            *\n"
             " *              See http://www.sympy.org/ for more information.               *\n"
@@ -443,7 +440,7 @@ def test_empty_f_code_with_header():
     assert source[:82] == (
             "!******************************************************************************\n!*"
             )
-          #   "                    Code generated with sympy 0.7.0-git                    "
+          #   "                    Code generated with sympy 0.7.1-git                    "
     assert source[158:] == (                                                              "*\n"
             "!*                                                                            *\n"
             "!*              See http://www.sympy.org/ for more information.               *\n"

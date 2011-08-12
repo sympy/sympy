@@ -5,22 +5,12 @@ from sympy.polys.distributedpolys import (
 )
 
 from sympy.polys.groebnertools import (
-    sdp_groebner,
-    sig,
-    sig_key,
-    sig_cmp,
-    lbp,
-    lbp_cmp,
-    lbp_key,
-    critical_pair,
-    cp_cmp,
-    cp_key,
-    is_rewritable_or_comparable,
-    Sign,
-    Polyn,
-    Num,
-    s_poly,
-    f5_reduce,
+    sdp_groebner, sig, sig_key, sig_cmp,
+    lbp, lbp_cmp, lbp_key, critical_pair,
+    cp_cmp, cp_key, is_rewritable_or_comparable,
+    Sign, Polyn, Num, s_poly, f5_reduce,
+    matrix_fglm, is_zero_dimensional,
+    _basis, _representing_matrices,
 )
 
 from sympy.polys.monomialtools import (
@@ -333,7 +323,10 @@ def helper_test_benchmark_czichowski():
         -3725142681462373002731339445216700112264527*t**3 + 583711207282060457652784180668273817487940*t**2*x - 12381382393074485225164741437227437062814908*t**2 + 151081054097783125250959636747516827435040*t*x**2 + 1814103857455163948531448580501928933873280*t*x - 13353115629395094645843682074271212731433648*t + 236415091385250007660606958022544983766080*x**2 + 1390443278862804663728298060085399578417600*x - 4716885828494075789338754454248931750698880
     ]
 
+@XFAIL
 def test_benchmark_czichowski():
+    skip('This takes too much time (without gmpy)')
+
     setup('GB_METHOD', 'f5b')
     helper_test_benchmark_czichowski()
     setup('GB_METHOD', 'buchberger')
@@ -438,3 +431,33 @@ def test_f5_reduce():
     s = lbp(sig(Sign(s)[0], 100), Polyn(s), Num(s))
     assert f5_reduce(s, F, 2, O_lex, QQ) == s
 
+def test_matrix_fglm():
+    pass  # see test_polytools.py
+
+def test_is_zero_dimensional():
+    F = [[((3, 0), QQ.one), ((0, 2), QQ.one)]]
+
+    assert is_zero_dimensional(F, 1, O_lex, QQ) == False
+
+    F = [[((1, 0), QQ.one)], [((0, 1), QQ.one)]]
+
+    assert is_zero_dimensional(F, 1, O_lex, QQ) == True
+
+    F = [[((1, 0, 0, 0), QQ.one)], [((0, 1, 0, 0), QQ.one)], [((0, 0, 0, 1), QQ.one)]]
+
+    assert is_zero_dimensional(F, 3, O_grevlex, QQ) == False
+
+def test_representing_matrices():
+    basis = [(0, 0), (0, 1), (1, 0), (1, 1)]
+    F = [[((2, 0), QQ(1,1)), ((1, 0), QQ(-1,1)), ((0, 1), QQ(-3,1)), ((0, 0), QQ(1,1))],
+        [((0, 2), QQ(1,1)), ((1, 0), QQ(-2,1)), ((0, 1), QQ(1,1)), ((0, 0), QQ(-1,1))]]
+
+    assert _representing_matrices(basis, F, 1, O_grlex, QQ) ==[ \
+        [[QQ(0,1), QQ(0,1), QQ(-1,1), QQ(3,1)],
+        [QQ(0,1), QQ(0,1), QQ(3,1), QQ(-4,1)],
+        [QQ(1,1), QQ(0,1), QQ(1,1), QQ(6,1)],
+        [QQ(0,1), QQ(1,1), QQ(0,1), QQ(1,1)]],
+        [[QQ(0,1), QQ(1,1), QQ(0,1), QQ(-2,1)],
+        [QQ(1,1), QQ(-1,1), QQ(0,1), QQ(6,1)],
+        [QQ(0,1), QQ(2,1), QQ(0,1), QQ(3,1)],
+        [QQ(0,1), QQ(0,1), QQ(1,1), QQ(-1,1)]]]

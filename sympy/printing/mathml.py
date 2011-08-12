@@ -28,7 +28,7 @@ class MathMLPrinter(Printer):
 
     def doprint(self, expr):
         mathML = Printer._print(self, expr)
-        return mathML.toxml(encoding=self._settings['encoding'])
+        return mathML.toxml()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -380,5 +380,4 @@ def print_mathml(expr, **settings):
 
     """
     s = MathMLPrinter(settings)
-    print s._print(sympify(expr)).toprettyxml(encoding="utf-8")
-
+    print s._print(sympify(expr)).toprettyxml()

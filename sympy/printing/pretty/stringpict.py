@@ -282,6 +282,7 @@ class stringPict(object):
         ncols = 0
         try:
             import curses
+            import io
             try:
                 curses.setupterm()
                 ncols = curses.tigetnum('cols')
@@ -302,6 +303,8 @@ class stringPict(object):
                      left, top, right, bottom, maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
                     ncols = right - left + 1
             except curses.error:
+                pass
+            except io.UnsupportedOperation:
                 pass
         except (ImportError, TypeError):
             pass

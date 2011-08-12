@@ -52,22 +52,25 @@ nsimplify
 .. autofunction:: nsimplify
 
 Rewrite
-=======
+-------
 .. module:: sympy.simplify.rewrite
 
 Square Root Denest
-==================
+------------------
 .. module:: sympy.simplify.sqrtdenest
 
 sqrtdenest
-----------
+^^^^^^^^^^
 .. autofunction:: sqrtdenest
 
 Common Subexpresion Elimination
-================================
+-------------------------------
 .. module:: sympy.simplify.cse_main
 
 cse
----
+^^^
 .. autofunction:: cse
 
+Hypergeometric Function Expansion
+---------------------------------
+.. autofunction:: sympy.simplify.hyperexpand.hyperexpand

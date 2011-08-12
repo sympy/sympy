@@ -7,6 +7,7 @@
 """
 
 from basic import Basic
+from sympify import sympify
 
 class Tuple(Basic):
     """
@@ -20,11 +21,16 @@ class Tuple(Basic):
     >>> from sympy.core.containers import Tuple
     >>> a, b, c, d = symbols('a b c d')
     >>> Tuple(a, b, c)[1:]
-    Tuple(b, c)
+    (b, c)
     >>> Tuple(a, b, c).subs(a, d)
-    Tuple(d, b, c)
+    (d, b, c)
 
     """
+
+    def __new__(cls, *args, **assumptions):
+        args = [ sympify(arg) for arg in args ]
+        obj = Basic.__new__(cls, *args, **assumptions)
+        return obj
 
     def __getitem__(self,i):
         if isinstance(i,slice):
@@ -70,6 +76,9 @@ class Tuple(Basic):
     def __hash__(self):
         return hash(self.args)
 
+    def _to_mpmath(self, prec):
+        return tuple([a._to_mpmath(prec) for a in self.args])
+
 
 def tuple_wrapper(method):
     """
@@ -87,7 +96,7 @@ def tuple_wrapper(method):
     The decorated function g sees only the Tuple argument:
 
     >>> g(0, (1, 2), 3)
-    (0, Tuple(1, 2), 3)
+    (0, (1, 2), 3)
 
     """
     def wrap_tuples(*args, **kw_args):

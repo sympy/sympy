@@ -1,4 +1,4 @@
-"""Basic tools for sparse polynomials in $\K[x]$ or $\K[X]$. """
+"""Basic tools for sparse polynomials in `K[x]` or `K[X]`. """
 
 def smp_validate(f):
     pass

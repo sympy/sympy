@@ -1,7 +1,7 @@
 """User-friendly public interface to polynomial functions. """
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy,
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
 
 from sympy.core.sympify import (
@@ -38,7 +38,8 @@ from sympy.polys.distributedpolys import (
 )
 
 from sympy.polys.groebnertools import (
-    sdp_groebner,
+    sdp_groebner, matrix_fglm,
+    is_zero_dimensional,
 )
 
 from sympy.polys.monomialtools import (
@@ -60,22 +61,21 @@ from sympy.polys.polycontext import (
     register_context,
 )
 
-from sympy.mpmath import (
-    polyroots as npolyroots,
-)
-
 from sympy.utilities import (
-    any, all, group, flatten,
+    group, flatten,
 )
 
 from sympy.ntheory import isprime
 
 import sympy.polys
+import sympy.mpmath
 
 from sympy.polys.domains import FF, QQ
 from sympy.polys.constructor import construct_domain
 
 from sympy.polys import polyoptions as options
+
+from sympy.core.compatibility import iterable
 
 class Poly(Expr):
     """Generic class for representing polynomial expressions. """
@@ -91,7 +91,7 @@ class Poly(Expr):
         if 'order' in opt:
             raise NotImplementedError("'order' keyword is not implemented yet")
 
-        if hasattr(rep, '__iter__'):
+        if iterable(rep, exclude=str):
             if isinstance(rep, dict):
                 return cls._from_dict(rep, opt)
             else:
@@ -1674,13 +1674,39 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(x**2 + y*x + 1, x, y).total_degree()
-        3
+        2
+        >>> Poly(x + y**5, x, y).total_degree()
+        5
 
         """
         if hasattr(f.rep, 'total_degree'):
             return f.rep.total_degree()
         else: # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
+
+    def homogeneous_order(f):
+        """
+        Returns the homogeneous order of ``f``.
+
+        A homogeneous polynomial is a polynomial whose all monomials with
+        non-zero coefficients have the same total degree. This degree is
+        the homogeneous order of ``f``. If you only want to check if a
+        polynomial is homogeneous, then use :func:`Poly.is_homogeneous`.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> f = Poly(x**5 + 2*x**3*y**2 + 9*x*y**4)
+        >>> f.homogeneous_order()
+        5
+
+        """
+        if hasattr(f.rep, 'homogeneous_order'):
+            return f.rep.homogeneous_order()
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'homogeneous_order')
 
     def LC(f, order=None):
         """
@@ -2030,15 +2056,27 @@ class Poly(Expr):
         >>> f.eval({x: 2, y: 5, z: 7})
         45
 
+        >>> f.eval((2, 5))
+        Poly(2*z + 31, z, domain='ZZ')
+        >>> f(2, 5)
+        Poly(2*z + 31, z, domain='ZZ')
+
         """
         if a is None:
-            if isinstance(x, (list, dict)):
-                try:
-                    mapping = x.items()
-                except AttributeError:
-                    mapping = x
+            if isinstance(x, dict):
+                mapping = x
 
-                for gen, value in mapping:
+                for gen, value in mapping.iteritems():
+                    f = f.eval(gen, value)
+
+                return f
+            elif isinstance(x, (tuple, list)):
+                values = x
+
+                if len(values) > len(f.gens):
+                    raise ValueError("too many values provided")
+
+                for gen, value in zip(f.gens, values):
                     f = f.eval(gen, value)
 
                 return f
@@ -2061,6 +2099,27 @@ class Poly(Expr):
                 result = f.rep.eval(a, j)
 
         return f.per(result, remove=j)
+
+    def __call__(f, *values):
+        """
+        Evaluate ``f`` at the give values.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y, z
+
+        >>> f = Poly(2*x*y + 3*x + y + 2*z, x, y, z)
+
+        >>> f(2)
+        Poly(5*y + 2*z + 6, y, z, domain='ZZ')
+        >>> f(2, 5)
+        Poly(2*z + 31, z, domain='ZZ')
+        >>> f(2, 5, 7)
+        45
+
+        """
+        return f.eval(values)
 
     def half_gcdex(f, g, auto=True):
         """
@@ -2895,7 +2954,7 @@ class Poly(Expr):
         else:
             return group(roots, multiple=False)
 
-    def nroots(f, maxsteps=50, cleanup=True, error=False):
+    def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
         """
         Compute numerical approximations of roots of ``f``.
 
@@ -2904,29 +2963,40 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 - 3).nroots()
+        >>> Poly(x**2 - 3).nroots(n=15)
         [-1.73205080756888, 1.73205080756888]
+        >>> Poly(x**2 - 3).nroots(n=30)
+        [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
         """
         if f.is_multivariate:
-            raise MultivariatePolynomialError("can't compute numerical roots of %s" % f)
+            raise MultivariatePolynomialError("can't compute numerical roots "
+                                              "of %s" % f)
 
         if f.degree() <= 0:
             return []
 
+        coeffs = [ coeff.evalf(n=n).as_real_imag() for coeff in f.all_coeffs() ]
+
+        dps = sympy.mpmath.mp.dps
+        sympy.mpmath.mp.dps = n
+
         try:
-            coeffs = [ complex(c) for c in f.all_coeffs() ]
-        except ValueError:
-            raise DomainError("numerical domain expected, got %s" % f.rep.dom)
+            try:
+                coeffs = [ sympy.mpmath.mpc(*coeff) for coeff in coeffs ]
+            except TypeError:
+                raise DomainError("numerical domain expected, got %s" % f.rep.dom)
 
-        result = npolyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
+            result = sympy.mpmath.polyroots(coeffs, maxsteps=maxsteps, cleanup=cleanup, error=error)
 
-        if error:
-            roots, error = result
-        else:
-            roots, error = result, None
+            if error:
+                roots, error = result
+            else:
+                roots, error = result, None
 
-        roots = map(sympify, sorted(roots, key=lambda r: (r.real, r.imag)))
+            roots = map(sympify, sorted(roots, key=lambda r: (r.real, r.imag)))
+        finally:
+            sympy.mpmath.mp.dps = dps
 
         if error is not None:
             return roots, sympify(error)
@@ -3199,16 +3269,21 @@ class Poly(Expr):
     @property
     def is_homogeneous(f):
         """
-        Returns ``True`` if ``f`` has zero trailing coefficient.
+        Returns ``True`` if ``f`` is a homogeneous polynomial.
+
+        A homogeneous polynomial is a polynomial whose all monomials with
+        non-zero coefficients have the same total degree. If you want not
+        only to check if a polynomial is homogeneous but also compute its
+        homogeneous order, then use :func:`Poly.homogeneous_order`.
 
         **Examples**
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
-        >>> Poly(x*y + x + y, x, y).is_homogeneous
+        >>> Poly(x**2 + x*y, x, y).is_homogeneous
         True
-        >>> Poly(x*y + x + y + 1, x, y).is_homogeneous
+        >>> Poly(x**3 + x*y, x, y).is_homogeneous
         False
 
         """
@@ -3224,9 +3299,9 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >> Poly(x**2 + x + 1, x, modulus=2).is_irreducible
+        >>> Poly(x**2 + x + 1, x, modulus=2).is_irreducible
         True
-        >> Poly(x**2 + 1, x, modulus=2).is_irreducible
+        >>> Poly(x**2 + 1, x, modulus=2).is_irreducible
         False
 
         """
@@ -5100,7 +5175,7 @@ def real_roots(f, multiple=True):
 
     return F.real_roots(multiple=multiple)
 
-def nroots(f, maxsteps=50, cleanup=True, error=False):
+def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
     """
     Compute numerical approximations of roots of ``f``.
 
@@ -5109,8 +5184,10 @@ def nroots(f, maxsteps=50, cleanup=True, error=False):
     >>> from sympy import nroots
     >>> from sympy.abc import x
 
-    >>> nroots(x**2 - 3)
+    >>> nroots(x**2 - 3, n=15)
     [-1.73205080756888, 1.73205080756888]
+    >>> nroots(x**2 - 3, n=30)
+    [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
     """
     try:
@@ -5118,7 +5195,7 @@ def nroots(f, maxsteps=50, cleanup=True, error=False):
     except GeneratorsNeeded:
         raise PolynomialError("can't compute numerical roots of %s, not a polynomial" % f)
 
-    return F.nroots(maxsteps=maxsteps, cleanup=cleanup, error=error)
+    return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup, error=error)
 
 def ground_roots(f, *gens, **args):
     """
@@ -5195,7 +5272,7 @@ def cancel(f, *gens, **args):
 
     f = sympify(f)
 
-    if type(f) is not tuple:
+    if not isinstance(f, (tuple, Tuple)):
         if f.is_Number:
             return f
         else:
@@ -5206,14 +5283,14 @@ def cancel(f, *gens, **args):
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
     except PolificationFailed, exc:
-        if type(f) is not tuple:
+        if not isinstance(f, (tuple, Tuple)):
             return f
         else:
             return S.One, p, q
 
     c, P, Q = F.cancel(G)
 
-    if type(f) is not tuple:
+    if not isinstance(f, (tuple, Tuple)):
         return c*(P.as_expr()/Q.as_expr())
     else:
         if not opt.polys:
@@ -5279,7 +5356,7 @@ def groebner(F, *gens, **args):
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grlex')
     [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
     >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grevlex')
-    [x**3 - 2*x**2, -x**2 + 2*y**2, x*y - 2*y]
+    [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
 
     By default, an improved implementation of the Buchberger algorithm
     is used. Optionally, an implementation of the F5B algorithm can be
@@ -5332,6 +5409,77 @@ def groebner(F, *gens, **args):
 
     if not opt.polys:
         return [ g.as_expr() for g in G ]
+    else:
+        return G
+
+def fglm(G, order, *gens, **args):
+    """
+    Convert reduced Groebner basis ``G`` of zero-dimensional ideal from
+    ``from_order`` to ``to_order``.
+    ``fglm`` does not check if ``G`` is a Groebner basis or if
+    it is reduced but does check if the ideal generated by ``G``
+    is zero-dimensional.
+
+    **Examples**
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import groebner, fglm
+    >>> F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
+    >>> G = groebner(F, x, y, order='grlex')
+    >>> fglm(G, ('grlex', 'lex'), x, y)
+    [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
+    >>> groebner(F, x, y, order='lex')
+    [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
+
+    **References**
+    J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
+    Computation of Zero-dimensional Groebner Bases by Change of
+    Ordering
+
+    J.C. Faugere's lecture notes:
+    http://www-salsa.lip6.fr/~jcf/Papers/2010_MPRI5e.pdf
+    """
+    options.allowed_flags(args, ['polys'])
+
+    if type(order) == str:
+        from_order, to_order = order, 'lex'
+    elif type(order) == tuple and len(order) == 2:
+        from_order, to_order = order
+    elif type(order) == tuple and len(order) == 1:
+        from_order, to_order = order[0], 'lex'
+    else:
+        raise TypeError("order has to be a string or a tuple of at most two strings")
+
+    try:
+        polys, opt = parallel_poly_from_expr(G, *gens, **args)
+    except PolificationFailed, exc:
+        raise ComputationFailed('fglm', len(G), exc)
+
+    domain = opt.domain
+
+    if domain.has_assoc_Field:
+        opt.domain = domain.get_field()
+    else:
+        raise DomainError("can't convert Groebner basis over %s" % domain)
+
+    for i, poly in enumerate(polys):
+        poly = poly.set_domain(opt.domain).rep.to_dict()
+        polys[i] = sdp_from_dict(poly, monomial_key(from_order))
+
+    level = len(flatten(gens)) - 1
+
+    if not is_zero_dimensional(polys, level, monomial_key(from_order), opt.domain):
+        raise NotImplementedError("Can't convert Groebner bases of ideals with positive dimension")
+
+    G = matrix_fglm(polys, level, monomial_key(from_order), monomial_key(to_order), opt.domain)
+    opt.order = monomial_key(to_order)
+    G = [Poly._from_dict(dict(g), opt).primitive()[1] for g in G]
+
+    if not domain.has_Field:
+        G = [g.clear_denoms(convert=True)[1] for g in G]
+
+    if not opt.polys:
+        return [g.as_expr() for g in G]
     else:
         return G
 

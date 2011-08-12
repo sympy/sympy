@@ -3,8 +3,7 @@
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyerrors import ComputationFailed, PolificationFailed
-from sympy.utilities import any, all, postfixes
-from sympy.utilities.iterables import minkey
+from sympy.utilities import postfixes
 from sympy.simplify import rcollect
 from sympy.core import S
 
@@ -241,12 +240,12 @@ def solve_triangulated(polys, *gens, **args):
                 _vars = (var,) + vars
 
                 if g.has_only_gens(*_vars) and g.degree(var) != 0:
-                    h = g.ltrim(var).eval(mapping)
+                    h = g.ltrim(var).eval(dict(mapping))
 
                     if g.degree(var) == h.degree():
                         H.append(h)
 
-            p = minkey(H, key=lambda h: h.degree())
+            p = min(H, key=lambda h: h.degree())
             zeros = p.ground_roots()
 
             for zero in zeros:

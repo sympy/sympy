@@ -13,10 +13,12 @@
 
 """
 
-from sympy.core.compatibility import iterable, ordered_iter
+from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.numbers import ilcm
+from sympy.core.relational import Relational
+from sympy.logic.boolalg import And, Or
 
 from sympy.functions import log, exp, LambertW
 from sympy.simplify import simplify, collect, powsimp
@@ -24,8 +26,6 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together
 from sympy.functions.elementary.piecewise import piecewise_fold
 
-from sympy.utilities import any, all
-from sympy.utilities.iterables import iff
 from sympy.utilities.lambdify import lambdify
 from sympy.mpmath import findroot
 
@@ -33,6 +33,8 @@ from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
 
 from sympy.core.compatibility import reduce
+
+from sympy.assumptions import Q, ask
 
 from warnings import warn
 from types import GeneratorType
@@ -144,6 +146,10 @@ def checksol(f, symbol, sol=None, **flags):
             # the simplification will not be attempted here, either. But
             # if the simplification is done here then the flag should be
             # set to False so it isn't done again there.
+            # FIXME: this can't work, since `flags` is not passed to
+            # `checksol()` as a dict, but as keywords.
+            # So, any modification to `flags` here will be lost when returning
+            # from `checksol()`.
             if flags.get('simplified', True):
                 for k in sol:
                     sol[k] = simplify(sympify(sol[k]))
@@ -169,9 +175,65 @@ def checksol(f, symbol, sol=None, **flags):
             return False
 
     if flags.get('warning', False):
-        print("Warning: could not verify solution %s." % sol)
+        print("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
+
+def check_assumptions(expr, **assumptions):
+    """Checks whether expression `expr` satisfies all assumptions.
+
+    `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
+
+    Examples:
+    ---------
+
+       >>> from sympy import Symbol, pi, I, exp
+       >>> from sympy.solvers.solvers import check_assumptions
+
+       >>> check_assumptions(-5, integer=True)
+       True
+       >>> check_assumptions(pi, real=True, integer=False)
+       True
+       >>> check_assumptions(pi, real=True, negative=True)
+       False
+       >>> check_assumptions(exp(I*pi/7), real=False)
+       True
+
+       >>> x = Symbol('x', real=True, positive=True)
+       >>> check_assumptions(2*x + 1, real=True, positive=True)
+       True
+       >>> check_assumptions(-2*x - 5, real=True, positive=True)
+       False
+
+       `None` is returned if check_assumptions() could not conclude.
+
+       >>> check_assumptions(2*x - 1, real=True, positive=True)
+       >>> z = Symbol('z')
+       >>> check_assumptions(z, real=True)
+    """
+    expr = sympify(expr)
+
+    result = True
+    for key, expected in assumptions.iteritems():
+        if expected is None:
+            continue
+        assert isinstance(expected, bool), 'Argument %s=%s is incorrect. \
+                                            A boolean is expected.' %(key, expected)
+        if hasattr(Q, key):
+            test = ask(getattr(Q, key)(expr))
+            if test is expected:
+                continue
+            elif test is not None:
+                return False
+        # ask() can't conclude. Try using old assumption system.
+        # XXX: remove this once transition to new assumption system is finished.
+        test = getattr(expr, 'is_' + key, None)
+        if test is expected:
+            continue
+        elif test is not None:
+            return False
+        result = None # Can't conclude, unless an other test fails.
+    return result
 
 # Codes for guess solve strategy
 GS_POLY = 0
@@ -280,6 +342,9 @@ def solve(f, *symbols, **flags):
                 - ``simplified``, when False, will not simplify solutions
                                  (default=True except for polynomials of
                                   order 3 or greater)
+                - ``warning``, when True, will warn every time a solution can
+                               not be checked, or assumptions about a variable
+                               can't be verified for a solution.
 
         The output varies according to the input and can be seen by example:
 
@@ -399,6 +464,17 @@ def solve(f, *symbols, **flags):
                         solve sorted the symbols as [x, f(x)]
                     [(2, -4)]
 
+                If two variables (or more) don't appear in the result, the assumptions
+                can't be checked.
+                    >>> solve(z**2*x**2 - z**2*y**2/exp(x), x, y, z, warning=True)
+                    <BLANKLINE>
+                        Warning: assumptions can't be checked
+                        (can't find for which variable equation was solved).
+                    [x*exp(x/2), -x*exp(x/2)]
+
+                Presently, assumptions aren't checked either when `solve()` input
+                involves relationals or bools.
+
        See also:
           rsolve() for solving recurrence relationships
           dsolve() for solving differential equations
@@ -409,12 +485,12 @@ def solve(f, *symbols, **flags):
     # a dictionary of results will be returned.
     ###########################################################################
     def sympified_list(w):
-        return map(sympify, iff(iterable(w), w, [w]))
+        return map(sympify, w if iterable(w) else [w])
     bare_f = not iterable(f)
     ordered_symbols = (symbols and
                        symbols[0] and
                        (isinstance(symbols[0], Symbol) or
-                        ordered_iter(symbols[0], include=GeneratorType)
+                        is_sequence(symbols[0], include=GeneratorType)
                        )
                       )
     f, symbols = (sympified_list(w) for w in [f, symbols])
@@ -502,16 +578,89 @@ def solve(f, *symbols, **flags):
     # see issue 2405 for logic in how Polys chooses ordering and
     # for discussion of what to return see http://groups.google.com/group/sympy
     #                           Apr 18, 2011 posting 'using results from solve'
-    elif (not ordered_symbols and len(symbols) > 1 and solution and
-          ordered_iter(solution) and ordered_iter(solution[0]) and
-          any(len(set(s)) > 1 for s in solution)):
+    elif (not ordered_symbols and
+          len(symbols) > 1 and
+          solution and
+          is_sequence(solution) and
+          is_sequence(solution[0]) and
+          any(len(set(s)) > 1 for s in solution)
+         ):
         msg = ('\n\tFor nonlinear systems of equations, symbols should be' +
                '\n\tgiven as a list so as to avoid ambiguity in the results.' +
                '\n\tsolve sorted the symbols as %s')
-        print msg % str(bool(symbol_swapped) and list(zip(*swap_dict)[0]) or symbols)
+        if symbol_swapped:
+            from itertools import izip
+            tmp = izip(*swap_dict) # separate for the benefit of 2to3
+            print msg % list(tmp.next())
+        else:
+            print msg % symbols
+
+    # Get assumptions about symbols, to filter solutions.
+    # Note that if assumptions about a solution can't be verified, it is still returned.
+    # XXX: Currently, there are some cases which are not handled,
+    # see issue 2098 comment 13: http://code.google.com/p/sympy/issues/detail?id=2098#c13.
+    warn = flags.get('warning', False)
+    if type(solution) is list:
+        if solution:
+            unchecked = []
+            filtered = []
+            if type(solution[0]) is tuple:
+                for sol in solution:
+                    full_check = True
+                    for symb, val in zip(symbols, sol):
+                        test = check_assumptions(val, **symb.assumptions0)
+                        if test is None:
+                            full_check = False
+                        if test is False: # not None nor True
+                            break
+                    if test is not False:
+                        filtered.append(sol)
+                    if not full_check:
+                        unchecked.append(sol)
+                solution = filtered
+            else:
+                if len(symbols) != 1: # find which one was solved for
+                    symbols = list(f.free_symbols - set.union(*(s.free_symbols for s in solution)))
+                if len(symbols) == 1:
+                    for sol in solution:
+                        test = check_assumptions(sol, **symbols[0].assumptions0)
+                        if test is None:
+                            unchecked.append(sol)
+                        if test is not False: # None or True
+                            filtered.append(sol)
+                    solution = filtered
+                else:
+                    if warn:
+                        print("\n\tWarning: assumptions can't be checked"
+                              "\n\t(can't find for which variable equation was solved).")
+            if warn and unchecked:
+                print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
+                      + '\n\t' + ', '.join(str(s) for s in unchecked))
+
+    elif type(solution) is dict:
+        full_check = True
+        for symb, val in solution.iteritems():
+            test = check_assumptions(val, **symb.assumptions0)
+            if test is None:
+                full_check = False
+            if test is False: # not None nor True
+                solution = None
+                break
+
+        if warn and not full_check:
+            print("\n\tWarning: assumptions concerning solution can't be checked.")
+    elif isinstance(solution, (Relational, And, Or)):
+        assert len(symbols) == 1
+        if warn and symbols[0].assumptions0:
+            print("\n\tWarning: assumptions about variable '%s' are not handled currently." %symbols[0])
+        # TODO: check also variable assumptions for inequalities
+    elif solution is not None:
+        raise TypeError('Unrecognized solution') # improve the checker to handle this
+
     #
     # done
     ###########################################################################
+
     return solution
 
 def _solve(f, *symbols, **flags):
@@ -587,7 +736,7 @@ def _solve(f, *symbols, **flags):
                 if dens:
                     # reject any result that makes any denom. affirmatively 0;
                     # if in doubt, keep it
-                    result = [s for s in soln if all(not checksol(den, {symbol: s}) for den in dens)]
+                    result = [s for s in soln if all(not checksol(den, {symbol: s}, **flags) for den in dens)]
                 else:
                     result = soln
 
@@ -624,7 +773,7 @@ def _solve(f, *symbols, **flags):
                     # we might have introduced solutions from another branch
                     # when changing variables; check and keep solutions
                     # unless they definitely aren't a solution
-                    result = [s for s in soln if checksol(f, {symbol: s}) is not False]
+                    result = [s for s in soln if checksol(f, {symbol: s}, **flags) is not False]
 
             elif isinstance(f, Mul):
                 result = []
@@ -658,7 +807,7 @@ def _solve(f, *symbols, **flags):
                     # when multiplying by x**-m; check and keep solutions
                     # unless they definitely aren't a solution
                     if sols:
-                        result = [s for s in sols if checksol(f, {symbol: s}) is not False]
+                        result = [s for s in sols if checksol(f, {symbol: s}, **flags) is not False]
             else:
                 msg = 'CV_2 calculated %d but it should have been other than 0 or 1' % m
 
@@ -702,7 +851,7 @@ def _solve(f, *symbols, **flags):
             else:
                 # reject any result that makes any denom. affirmatively 0;
                 # if in doubt, keep it
-                result = [s for s in soln if all(not checksol(den, {symbol: s}) for den in dens)]
+                result = [s for s in soln if all(not checksol(den, {symbol: s}, **flags) for den in dens)]
 
         if result is False:
             raise NotImplementedError(msg + "\nNo algorithms are implemented to solve equation %s" % f)

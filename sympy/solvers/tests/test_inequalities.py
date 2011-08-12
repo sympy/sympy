@@ -4,8 +4,8 @@ from sympy.solvers.inequalities import (
     reduce_poly_inequalities,
     reduce_inequalities)
 
-from sympy import (S, Symbol, Interval, Eq, Ne, Lt, Le, Gt, Ge, Or, And, pi, oo,
-    sqrt, Q, global_assumptions, re, im, sin)
+from sympy import (S, Symbol, Union, Interval, FiniteSet, Eq, Ne, Lt, Le, Gt,
+        Ge, Or, And, pi, oo, sqrt, Q, global_assumptions, re, im, sin)
 
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
@@ -16,36 +16,35 @@ def test_reduce_poly_inequalities_real_interval():
     global_assumptions.add(Q.real(x))
     global_assumptions.add(Q.real(y))
 
-    assert reduce_poly_inequalities([[Eq(x**2, 0)]], x, relational=False) == [Interval(0, 0)]
-    assert reduce_poly_inequalities([[Le(x**2, 0)]], x, relational=False) == [Interval(0, 0)]
-    assert reduce_poly_inequalities([[Lt(x**2, 0)]], x, relational=False) == []
-    assert reduce_poly_inequalities([[Ge(x**2, 0)]], x, relational=False) == [Interval(-oo, oo)]
-    assert reduce_poly_inequalities([[Gt(x**2, 0)]], x, relational=False) == [Interval(-oo, 0, right_open=True), Interval(0, oo, left_open=True)]
-    assert reduce_poly_inequalities([[Ne(x**2, 0)]], x, relational=False) == [Interval(-oo, 0, right_open=True), Interval(0, oo, left_open=True)]
+    assert reduce_poly_inequalities([[Eq(x**2, 0)]], x, relational=False) == FiniteSet(0)
+    assert reduce_poly_inequalities([[Le(x**2, 0)]], x, relational=False) == FiniteSet(0)
+    assert reduce_poly_inequalities([[Lt(x**2, 0)]], x, relational=False) == S.EmptySet
+    assert reduce_poly_inequalities([[Ge(x**2, 0)]], x, relational=False) == Interval(-oo, oo)
+    assert reduce_poly_inequalities([[Gt(x**2, 0)]], x, relational=False) == FiniteSet(0).complement
+    assert reduce_poly_inequalities([[Ne(x**2, 0)]], x, relational=False) == FiniteSet(0).complement
 
-    assert reduce_poly_inequalities([[Eq(x**2, 1)]], x, relational=False) == [Interval(-1,-1), Interval(1, 1)]
-    assert reduce_poly_inequalities([[Le(x**2, 1)]], x, relational=False) == [Interval(-1, 1)]
-    assert reduce_poly_inequalities([[Lt(x**2, 1)]], x, relational=False) == [Interval(-1, 1, True, True)]
-    assert reduce_poly_inequalities([[Ge(x**2, 1)]], x, relational=False) == [Interval(-oo, -1), Interval(1, oo)]
-    assert reduce_poly_inequalities([[Gt(x**2, 1)]], x, relational=False) == [Interval(-oo, -1, right_open=True), Interval(1, oo, left_open=True)]
-    assert reduce_poly_inequalities([[Ne(x**2, 1)]], x, relational=False) == [Interval(-oo, -1, right_open=True), Interval(-1, 1, True, True), Interval(1, oo, left_open=True)]
-
-    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=False) == [Interval(-1.0,-1.0), Interval(1.0, 1.0)]
-    assert reduce_poly_inequalities([[Le(x**2, 1.0)]], x, relational=False) == [Interval(-1.0, 1.0)]
-    assert reduce_poly_inequalities([[Lt(x**2, 1.0)]], x, relational=False) == [Interval(-1.0, 1.0, True, True)]
-    assert reduce_poly_inequalities([[Ge(x**2, 1.0)]], x, relational=False) == [Interval(-inf, -1.0), Interval(1.0, inf)]
-    assert reduce_poly_inequalities([[Gt(x**2, 1.0)]], x, relational=False) == [Interval(-inf, -1.0, right_open=True), Interval(1.0, inf, left_open=True)]
-    assert reduce_poly_inequalities([[Ne(x**2, 1.0)]], x, relational=False) == [Interval(-inf, -1.0, right_open=True), Interval(-1.0, 1.0, True, True), Interval(1.0, inf, left_open=True)]
+    assert reduce_poly_inequalities([[Eq(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1)
+    assert reduce_poly_inequalities([[Le(x**2, 1)]], x, relational=False) == Interval(-1, 1)
+    assert reduce_poly_inequalities([[Lt(x**2, 1)]], x, relational=False) == Interval(-1, 1, True, True)
+    assert reduce_poly_inequalities([[Ge(x**2, 1)]], x, relational=False) == Union(Interval(-oo, -1), Interval(1, oo))
+    assert reduce_poly_inequalities([[Gt(x**2, 1)]], x, relational=False) == Interval(-1,1).complement
+    assert reduce_poly_inequalities([[Ne(x**2, 1)]], x, relational=False) == FiniteSet(-1,1).complement
+    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0,1.0).evalf()
+    assert reduce_poly_inequalities([[Le(x**2, 1.0)]], x, relational=False) == Interval(-1.0, 1.0)
+    assert reduce_poly_inequalities([[Lt(x**2, 1.0)]], x, relational=False) == Interval(-1.0, 1.0, True, True)
+    assert reduce_poly_inequalities([[Ge(x**2, 1.0)]], x, relational=False) == Union(Interval(-inf, -1.0), Interval(1.0, inf))
+    assert reduce_poly_inequalities([[Gt(x**2, 1.0)]], x, relational=False) == Union(Interval(-inf, -1.0, right_open=True), Interval(1.0, inf, left_open=True))
+    assert reduce_poly_inequalities([[Ne(x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).complement
 
     s = sqrt(2)
 
-    assert reduce_poly_inequalities([[Lt(x**2 - 1, 0), Gt(x**2 - 1, 0)]], x, relational=False) == []
-    assert reduce_poly_inequalities([[Le(x**2 - 1, 0), Ge(x**2 - 1, 0)]], x, relational=False) == [Interval(-1,-1), Interval(1, 1)]
-    assert reduce_poly_inequalities([[Le(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False) == [Interval(-s, -1, False, False), Interval(1, s, False, False)]
-    assert reduce_poly_inequalities([[Le(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False) == [Interval(-s, -1, False, True), Interval(1, s, True, False)]
-    assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False) == [Interval(-s, -1, True, False), Interval(1, s, False, True)]
-    assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False) == [Interval(-s, -1, True, True), Interval(1, s, True, True)]
-    assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Ne(x**2 - 1, 0)]], x, relational=False) == [Interval(-s, -1, True, True), Interval(-1, 1, True, True), Interval(1, s, True, True)]
+    assert reduce_poly_inequalities([[Lt(x**2 - 1, 0), Gt(x**2 - 1, 0)]], x, relational=False) == S.EmptySet
+    assert reduce_poly_inequalities([[Le(x**2 - 1, 0), Ge(x**2 - 1, 0)]], x, relational=False) == FiniteSet(-1,1)
+    assert reduce_poly_inequalities([[Le(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, False, False), Interval(1, s, False, False))
+    assert reduce_poly_inequalities([[Le(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, False, True), Interval(1, s, True, False))
+    assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, False), Interval(1, s, False, True))
+    assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, True), Interval(1, s, True, True))
+    assert reduce_poly_inequalities([[Lt(x**2 - 2, 0), Ne(x**2 - 1, 0)]], x, relational=False) == Union(Interval(-s, -1, True, True), Interval(-1, 1, True, True), Interval(1, s, True, True))
 
     global_assumptions.remove(Q.real(x))
     global_assumptions.remove(Q.real(y))
@@ -68,7 +67,7 @@ def test_reduce_poly_inequalities_real_relational():
     assert reduce_poly_inequalities([[Gt(x**2, 1)]], x, relational=True) == Or(Lt(x, -1), Lt(1, x))
     assert reduce_poly_inequalities([[Ne(x**2, 1)]], x, relational=True) == Or(Lt(x, -1), And(Lt(-1, x), Lt(x, 1)), Lt(1, x))
 
-    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=True) == Or(Eq(x, -1.0), Eq(x, 1.0))
+    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=True).evalf() == Or(Eq(x, -1.0), Eq(x, 1.0)).evalf()
     assert reduce_poly_inequalities([[Le(x**2, 1.0)]], x, relational=True) == And(Le(-1.0, x), Le(x, 1.0))
     assert reduce_poly_inequalities([[Lt(x**2, 1.0)]], x, relational=True) == And(Lt(-1.0, x), Lt(x, 1.0))
     assert reduce_poly_inequalities([[Ge(x**2, 1.0)]], x, relational=True) == Or(Le(x, -1.0), Le(1.0, x))
@@ -95,7 +94,7 @@ def test_reduce_poly_inequalities_complex_relational():
     assert reduce_poly_inequalities([[Gt(x**2, 1)]], x, relational=True) == And(Or(Lt(re(x), -1), Lt(1, re(x))), cond)
     assert reduce_poly_inequalities([[Ne(x**2, 1)]], x, relational=True) == And(Or(Lt(re(x), -1), And(Lt(-1, re(x)), Lt(re(x), 1)), Lt(1, re(x))), cond)
 
-    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=True) == And(Or(Eq(re(x), -1.0), Eq(re(x), 1.0)), cond)
+    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=True).evalf() == And(Or(Eq(re(x), -1.0), Eq(re(x), 1.0)), cond)
     assert reduce_poly_inequalities([[Le(x**2, 1.0)]], x, relational=True) == And(And(Le(-1.0, re(x)), Le(re(x), 1.0)), cond)
     assert reduce_poly_inequalities([[Lt(x**2, 1.0)]], x, relational=True) == And(And(Lt(-1.0, re(x)), Lt(re(x), 1.0)), cond)
     assert reduce_poly_inequalities([[Ge(x**2, 1.0)]], x, relational=True) == And(Or(Le(re(x), -1.0), Le(1.0, re(x))), cond)

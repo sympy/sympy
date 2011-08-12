@@ -1,25 +1,16 @@
 """Sparse distributed multivariate polynomials. """
 
-from sympy.core.compatibility import minkey
 
 from sympy.polys.monomialtools import (
     monomial_mul,
     monomial_div,
     monomial_lcm,
-    monomial_lex_key as O_lex,
-    monomial_grlex_key as O_grlex,
-    monomial_grevlex_key as O_grevlex,
 )
-
-#from sympy.polys.groebnertools import (
-#    sdp_groebner,
-#)
 
 from sympy.polys.polyerrors import (
     ExactQuotientFailed, DomainError,
 )
 
-from sympy.utilities import any, all
 from operator import itemgetter
 
 

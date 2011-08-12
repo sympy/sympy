@@ -54,17 +54,30 @@ def test_mod():
 
     a = Float('2.6')
 
-    #FIXME-py3k: TypeError: type Float doesn't define __round__ method
     assert round(a % Float('0.2'), 15) == 0.2
     assert round(a % 2, 15) == 0.6
     assert round(a % 0.5, 15) == 0.1
     assert Rational(3,4) % Float(1.1) == 0.75
+    assert Float(1.5) % Rational(5, 4) == 0.25
+    assert Rational(5,4).__rmod__(Float('1.5')) == 0.25
+
+    # No rounding required since these numbers can be represented
+    # exactly.
+    assert Float('1.5').__rmod__(Float('2.75')) == Float('1.25')
+    assert 2.75 % Float('1.5') == Float('1.25')
 
     a = Integer(7)
     b = Integer(4)
 
     assert type(a % b) == Integer
+    assert a % b == Integer(3)
     assert Integer(1) % Rational(2, 3) == Rational(1, 3)
+    assert Rational(7,5) % Integer(1) == Rational(2,5)
+    assert Integer(2) % 1.5 == 0.5
+
+    assert Integer(3).__rmod__(Integer(10)) == Integer(1)
+    assert Integer(10) % 4 == Integer(2)
+    assert 15 % Integer(4) == Integer(3)
 
 def test_divmod():
     assert divmod(S(12), S(8)) == (1, 4)

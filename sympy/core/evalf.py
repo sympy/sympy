@@ -1068,6 +1068,8 @@ class EvalfMixin(object):
         try:
             re, im, _, _ = evalf(self, prec, {})
             if im:
+                if not re:
+                    re = fzero
                 return make_mpc((re, im))
             else:
                 return make_mpf(re)
@@ -1096,12 +1098,13 @@ class EvalfMixin(object):
 
 def N(x, n=15, **options):
     """
-    Calls x.evalf(n, **options).
+    Calls x.evalf(n, \*\*options).
 
     Both .evalf() and N() are equivalent, use the one that you like better.
     See also the docstring of .evalf() for information on the options.
 
     Example:
+
     >>> from sympy import Sum, Symbol, oo, N
     >>> from sympy.abc import k
     >>> Sum(1/k**k, (k, 1, oo))

@@ -26,8 +26,6 @@ __author__ = 'Ka-Ping Yee <ping@lfw.org>'
 __credits__ = \
     'GvR, ESR, Tim Peters, Thomas Wouters, Fred Drake, Skip Montanaro, Raymond Hettinger'
 
-from sympy.core.compatibility import iff
-
 import string, re
 from token import *
 
@@ -365,7 +363,7 @@ def generate_tokens(readline):
                    (initial == '.' and token != '.'):      # ordinary number
                     yield (NUMBER, token, spos, epos, line)
                 elif initial in '\r\n':
-                    yield iff(parenlev > 0, NL, NEWLINE, token, spos, epos, line)
+                    yield (NL if parenlev > 0 else NEWLINE, token, spos, epos, line)
                 elif initial == '#':
                     assert not token.endswith("\n")
                     yield (COMMENT, token, spos, epos, line)

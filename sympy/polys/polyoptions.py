@@ -1,7 +1,7 @@
 """Options manager for :class:`Poly` and public API functions. """
 
 from sympy.core import S, Basic, sympify
-from sympy.utilities import any, all, numbered_symbols, topological_sort
+from sympy.utilities import numbered_symbols, topological_sort
 
 from sympy.polys.polyerrors import (
     GeneratorsError,

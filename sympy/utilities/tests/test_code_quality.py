@@ -8,7 +8,7 @@ import re
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
 #     exclude = set([
-#                    "%(sep)sthirdparty%(sep)s" % sepd,
+#                    "%(sep)smpmath%(sep)s" % sepd,
 #                   ])
 sepd = {"sep": sep}
 
@@ -104,7 +104,6 @@ def test_whitespace_and_exceptions():
             file.close()
 
     exclude = set([
-        "%(sep)sthirdparty%(sep)s" % sepd,
         "%(sep)smpmath%(sep)s" % sepd,
     ])
     check_directory_tree(SYMPY_PATH, test, exclude)
@@ -146,7 +145,6 @@ def test_implicit_imports():
             file.close()
 
     exclude = set([
-        "%(sep)sthirdparty%(sep)s" % sepd,
         "%(sep)s__init__.py" % sepd,
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
         # Taken from Python stdlib:

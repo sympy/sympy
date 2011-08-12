@@ -5,12 +5,15 @@ import tempfile
 from latex import latex
 
 def preview(expr, output='png', viewer=None, euler=True):
-    """View expression in PNG, DVI, PostScript or PDF form.
+    """View expression or LaTeX markup in PNG, DVI, PostScript or
+       PDF form.
 
-       This will generate LaTeX representation of the given expression
-       and compile it using available TeX distribution. Then it will
-       run appropriate viewer for the given output format or use the
-       user defined one. By default png output is generated.
+       If the expr argument is an expression, it will be exported to
+       LaTeX and then compiled using available the TeX distribution.
+       The first argument, 'expr', may also be a LaTeX string.
+       The function will then run the appropriate viewer for the given
+       output format or use the user defined one. By default png
+       output is generated.
 
        By default pretty Euler fonts are used for typesetting (they
        were used to typeset the well known "Concrete Mathematics"
@@ -26,9 +29,10 @@ def preview(expr, output='png', viewer=None, euler=True):
 
            >> preview(x + y, output='png')
 
-       This will choose 'pyglet by default. To select different one::
+       This will choose 'pyglet' by default. To select different one::
 
            >> preview(x + y, output='png', viewer='gimp')
+
 
        The 'png' format is considered special. For all other formats
        the rules are slightly different. As an example we will take
@@ -45,7 +49,9 @@ def preview(expr, output='png', viewer=None, euler=True):
 
        This will skip auto-detection and will run user specified
        'superior-dvi-viewer'. If 'view' fails to find it on
-       your system it will gracefully raise an exception.
+       your system it will gracefully raise an exception. You may also
+       enter 'file' for the viewer argument. Doing so will cause this function
+       to return a file object in read-only mode.
 
        Currently this depends on pexpect, which is not available for windows.
     """
@@ -84,6 +90,7 @@ def preview(expr, output='png', viewer=None, euler=True):
     if not euler:
         format = r"""\documentclass[12pt]{article}
                      \usepackage{amsmath}
+                     \usepackage{amsfonts}
                      \begin{document}
                      \pagestyle{empty}
                      %s
@@ -93,6 +100,7 @@ def preview(expr, output='png', viewer=None, euler=True):
     else:
         format = r"""\documentclass[12pt]{article}
                      \usepackage{amsmath}
+                     \usepackage{amsfonts}
                      \usepackage{eulervm}
                      \begin{document}
                      \pagestyle{empty}
@@ -101,10 +109,16 @@ def preview(expr, output='png', viewer=None, euler=True):
                      \end{document}
                  """
 
+    if isinstance(expr, str):
+        latex_string = expr
+    else:
+        latex_string = latex(expr, mode='inline')
+
+
     tmp = tempfile.mktemp()
 
     tex = open(tmp + ".tex", "w")
-    tex.write(format % latex(expr, mode='inline'))
+    tex.write(format % latex_string)
     tex.close()
 
     cwd = os.getcwd()
@@ -134,12 +148,15 @@ def preview(expr, output='png', viewer=None, euler=True):
             raise SystemError("Invalid output format: %s" % output)
 
     src = "%s.%s" % (tmp, output)
+    src_file = None
 
-    if viewer == "pyglet":
+    if viewer == "file":
+        src_file = open(src, 'rb')
+    elif viewer == "pyglet":
         try:
             from pyglet import window, image, gl
             from pyglet.window import key
-        except:
+        except ImportError:
             raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
         if output == "png":
@@ -195,3 +212,6 @@ def preview(expr, output='png', viewer=None, euler=True):
 
     os.remove(src)
     os.chdir(cwd)
+
+    if src_file is not None:
+        return src_file

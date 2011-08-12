@@ -349,6 +349,15 @@ def test_integrate_DiracDelta():
     assert integrate((x+1)*DiracDelta(2*x), (x, -oo, oo)) == S(1)/2
     assert integrate((x+1)*DiracDelta(2*x/3 + 4/S(9)), (x, -oo, oo)) == S(1)/2
 
+    a, b, c = symbols('a b c', commutative=False)
+    assert integrate(DiracDelta(x - y)*f(x - b)*f(x - a), (x, -oo, oo)) == \
+           f(y - b)*f(y - a)
+    assert integrate(f(x - a)*DiracDelta(x - y)*f(x - c)*f(x - b), \
+                     (x, -oo, oo)) == f(y - a)*f(y - c)*f(y - b)
+
+    assert integrate(DiracDelta(x - z)*f(x - b)*f(x - a)*DiracDelta(x - y), \
+                     (x, -oo, oo)) == DiracDelta(y - z)*f(y - b)*f(y - a)
+
 def test_subs1():
     e = Integral(exp(x-y), x)
     assert e.subs(y, 3) == Integral(exp(x-3), x)
@@ -475,8 +484,6 @@ def test_issue1566():
     assert f.doit() == Rational(-1, 3)
     assert Integral(x*y, (x, None, y)).subs(y, t) == Integral(x*t, (x, None, t))
     assert Integral(x*y, (x, y, None)).subs(y, t) == Integral(x*t, (x, t, None))
-    #FIXME-py3k: This fails somewhere down the line with:
-    #FIXME-py3k: TypeError: type Float doesn't define __round__ method
     assert integrate(x**2, (x, None, 1)) == Rational(1, 3)
     assert integrate(x**2, (x, 1, None)) == Rational(-1, 3)
     assert integrate("x**2", ("x", "1", None)) == Rational(-1, 3)

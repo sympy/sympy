@@ -37,12 +37,12 @@ Unpack it:
 
     $ :input:`tar xzf sympy-0.5.12.tar.gz`
 
-and try it from a Python intepreter:
+and try it from a Python interpreter:
 
 .. parsed-literal::
 
-    $ cd sympy-0.5.12
-    $ python
+    $ :input:`cd sympy-0.5.12`
+    $ :input:`python`
     Python 2.4.4 (#2, Jan  3 2008, 13:36:28)
     [GCC 4.2.3 20071123 (prerelease) (Debian 4.2.2-4)] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
@@ -96,28 +96,28 @@ defined the symbols x, y, z and some other things:
 
     $ :input:`cd sympy`
     $ :input:`./bin/isympy`
-IPython console for SymPy 0.7.0-git (Python 2.7.1) (ground types: gmpy)
+    IPython console for SymPy 0.7.1-git (Python 2.7.1) (ground types: gmpy)
 
-These commands were executed:
->>> from __future__ import division
->>> from sympy import *
->>> x, y, z, t = symbols('x y z t')
->>> k, m, n = symbols('k m n', integer=True)
->>> f, g, h = symbols('f g h', cls=Function)
+    These commands were executed:
+    >>> from __future__ import division
+    >>> from sympy import *
+    >>> x, y, z, t = symbols('x y z t')
+    >>> k, m, n = symbols('k m n', integer=True)
+    >>> f, g, h = symbols('f g h', cls=Function)
 
-Documentation can be found at http://www.sympy.org
+    Documentation can be found at http://www.sympy.org
 
-    In [1]: input:`(1/cos(x)).series(x, 0, 10)`
+    In [1]: :input:`(1/cos(x)).series(x, 0, 10)`
     Out[1]:
          2      4       6        8
-        x    5*x    61*x    277*x
-    1 + ── + ──── + ───── + ────── + O(x**10)
+        x    5*x    61*x    277*x     / 10\
+    1 + ── + ──── + ───── + ────── + O\x  /
         2     24     720     8064
 
 .. note::
 
     Commands entered by you are bold. Thus what we did in 3 lines in a regular
-    Python interpeter can be done in 1 line in isympy.
+    Python interpreter can be done in 1 line in isympy.
 
 
 Using SymPy as a calculator
@@ -125,7 +125,8 @@ Using SymPy as a calculator
 
 Sympy has three built-in numeric types: Float, Rational and Integer.
 
-The Rational class represents a rational number as a pair of two Integers: the numerator and the denominator, so Rational(1,2) represents 1/2, Rational(5,2) 5/2 and so on.
+The Rational class represents a rational number as a pair of two Integers: the numerator
+and the denominator, so Rational(1,2) represents 1/2, Rational(5,2) 5/2 and so on.
 
 ::
 
@@ -162,7 +163,7 @@ True division is going to be standard in python3k and ``isympy`` does that too.
 
 We also have some special constants, like e and pi, that are treated as symbols
 (1+pi won't evaluate to something numeric, rather it will remain as 1+pi), and
-have arbitrary precission::
+have arbitrary precision::
 
     >>> pi**2
     pi**2
@@ -217,7 +218,9 @@ For the remainder of the tutorial, we assume that we have run::
     >>> oldhook = sys.displayhook
     >>> sys.displayhook = pprint
 
-So that things pretty print.  See the :ref:`printing-tutorial` section below.  If you have a unicode font installed, your output may look a litte different (it will look slightly nicer).
+So that things pretty print.  See the :ref:`printing-tutorial` section below.  If you have
+a unicode font installed, your output may look a little different (it will look slightly
+nicer).
 
 Algebra
 =======
@@ -272,9 +275,9 @@ Calculus
 Limits
 ------
 
-Limits are easy to use in sympy, they follow the syntax limit(function,
-variable, point), so to compute the limit of f(x) as x -> 0, you would issue
-limit(f, x, 0)::
+Limits are easy to use in sympy, they follow the syntax ``limit(function,
+variable, point)``, so to compute the limit of f(x) as x -> 0, you would issue
+``limit(f, x, 0)``::
 
    >>> from sympy import *
    >>> x=Symbol("x")
@@ -345,13 +348,13 @@ Use ``.series(var, point, order)``::
     >>> x = Symbol('x')
     >>> cos(x).series(x, 0, 10)
          2    4     6      8
-        x    x     x      x
-    1 - -- + -- - --- + ----- + O(x**10)
+        x    x     x      x      / 10\
+    1 - -- + -- - --- + ----- + O\x  /
         2    24   720   40320
     >>> (1/cos(x)).series(x, 0, 10)
          2      4       6        8
-        x    5*x    61*x    277*x
-    1 + -- + ---- + ----- + ------ + O(x**10)
+        x    5*x    61*x    277*x     / 10\
+    1 + -- + ---- + ----- + ------ + O\x  /
         2     24     720     8064
 
 Another simple example::
@@ -371,8 +374,8 @@ That should print the following after the execution::
 
     1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
          2    4         3
-    1   x    x    x    x
-    ─ + ── + ── - ── - ── + O(x**5)
+    1   x    x    x    x     / 5\
+    ─ + ── + ── - ── - ── + O\x /
     y    3    5    2    4
         y    y    y    y
 
@@ -382,7 +385,7 @@ Integration
 -----------
 
 SymPy has support for indefinite and definite integration of transcendental
-elementary and special functions via `integrate()` facility, which uses
+elementary and special functions via ``integrate()`` facility, which uses
 powerful extended Risch-Norman algorithm and some heuristics and pattern
 matching::
 
@@ -474,28 +477,27 @@ Functions
 
     >>> sin(x).series(x, 0, 10)
          3     5     7       9
-        x     x     x       x
-    x - -- + --- - ---- + ------ + O(x**10)
+        x     x     x       x       / 10\
+    x - -- + --- - ---- + ------ + O\x  /
         6    120   5040   362880
 
     >>> sinh(x).series(x, 0, 10)
          3     5     7       9
-        x     x     x       x
-    x + -- + --- + ---- + ------ + O(x**10)
+        x     x     x       x       / 10\
+    x + -- + --- + ---- + ------ + O\x  /
         6    120   5040   362880
 
     >>> asin(x).series(x, 0, 10)
          3      5      7       9
-        x    3*x    5*x    35*x
-    x + -- + ---- + ---- + ----- + O(x**10)
+        x    3*x    5*x    35*x     / 10\
+    x + -- + ---- + ---- + ----- + O\x  /
         6     40    112     1152
 
     >>> asinh(x).series(x, 0, 10)
          3      5      7       9
-        x    3*x    5*x    35*x
-    x - -- + ---- - ---- + ----- + O(x**10)
+        x    3*x    5*x    35*x     / 10\
+    x - -- + ---- - ---- + ----- + O\x  /
         6     40    112     1152
-
 
 **spherical harmonics**::
 
@@ -536,8 +538,8 @@ Functions
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
                          2  2             2  2
-                       pi *x    EulerGamma *x
-    1 - EulerGamma*x + ------ + -------------- + O(x**3)
+                       pi *x    EulerGamma *x     / 3\
+    1 - EulerGamma*x + ------ + -------------- + O\x /
                          12           2
 
 **zeta function**::
@@ -745,7 +747,8 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
      |
     /
 
-If you have a unicode font installed, it should use unicode pretty printing by default.  You can override this using the `use_unicode` option.:
+If you have a unicode font installed, it should use unicode pretty printing by default.
+You can override this using the ``use_unicode`` option.:
 
     >>> pprint(Integral(x**2, x), use_unicode=True)
     ⌠
@@ -785,6 +788,7 @@ Tip: To make the pretty printing default in the python interpreter, use::
 **Python printing**
 
     >>> from sympy.printing.python import python
+    >>> from sympy.printing.python import python
     >>> from sympy import Integral
     >>> from sympy.abc import x
     >>> print python(x**2)
@@ -814,7 +818,6 @@ Tip: To make the pretty printing default in the python interpreter, use::
     \frac{1}{x}
     >>> latex(Integral(x**2, x))
     \int x^{2}\,dx
-    >>>
 
 **MathML**
 
@@ -845,7 +848,7 @@ Notes
 printing by default.
 
 Note that there is also a printing module available, ``sympy.printing``.  Other
-printing methods available trough this module are:
+printing methods available through this module are:
 
 * ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, respectively, a pretty representation of ``expr``. This is the same as the second level of representation described above.
 

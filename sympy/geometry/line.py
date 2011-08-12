@@ -687,10 +687,6 @@ class LinearEntity(GeometryEntity):
     def __hash__(self):
         return super(LinearEntity, self).__hash__()
 
-    def __contains__(self, other):
-        """Subclasses should implement this method."""
-        raise NotImplementedError()
-
 
 class Line(LinearEntity):
     """An infinite line in space.

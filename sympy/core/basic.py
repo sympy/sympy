@@ -1,16 +1,14 @@
 """Base class for all the objects in SymPy"""
 
-from assumptions import AssumeMeths, make__get_assumption
+from decorators import _sympifyit
+from assumptions import WithAssumptions
 from cache import cacheit
-from core import BasicMeta, BasicType, C
+from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
-from compatibility import any, iterable
+from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 
-from sympy.core.compatibility import callable, reduce, cmp
-
-
-class Basic(AssumeMeths):
+class Basic(object):
     """
     Base class for all objects in sympy.
 
@@ -44,12 +42,9 @@ class Basic(AssumeMeths):
 
 
     """
-
-    __metaclass__ = BasicMeta
-
+    __metaclass__ = WithAssumptions
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
-                 '_assume_type_keys',   # assumptions typeinfo keys
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -79,100 +74,17 @@ class Basic(AssumeMeths):
     @property
     @deprecated
     def is_Real(self):  # pragma: no cover
-        """Deprecated alias for is_Float"""
+        """Deprecated alias for ``is_Float``"""
         return self.is_Float
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
-
-        # FIXME we are slowed a *lot* by Add/Mul passing is_commutative as the
-        # only assumption.
-        #
-        # .is_commutative is not an assumption -- it's like typeinfo!!!
-        # we should remove it.
-
-        # initially assumptions are shared between instances and class
-        obj._assumptions  = cls.default_assumptions
-        obj._a_inprogress = []
-
-        # NOTE this could be made lazy -- probably not all instances will need
-        # fully derived assumptions?
-        if assumptions:
-            obj._learn_new_facts(assumptions)
-            #                      ^
-            # FIXME this is slow   |    another NOTE: speeding this up is *not*
-            #        |             |    important. say for %timeit x+y most of
-            # .------'             |    the time is spent elsewhere
-            # |                    |
-            # |  XXX _learn_new_facts  could be asked about what *new* facts have
-            # v  XXX been learned -- we'll need this to append to _hashable_content
-            basek = set(cls.default_assumptions.keys())
-            k2    = set(obj._assumptions.keys())
-            newk  = k2.difference(basek)
-
-            obj._assume_type_keys = frozenset(newk)
-        else:
-            obj._assume_type_keys = None
+        obj._init_assumptions(assumptions)
 
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
         return obj
 
-
-    # XXX better name?
-    @property
-    def assumptions0(self):
-        """
-        Return object `type` assumptions.
-
-        For example:
-
-          Symbol('x', real=True)
-          Symbol('x', integer=True)
-
-        are different objects. In other words, besides Python type (Symbol in
-        this case), the initial assumptions are also forming their typeinfo.
-
-        Example:
-
-        >>> from sympy import Symbol
-        >>> from sympy.abc import x
-        >>> x.assumptions0
-        {}
-        >>> x = Symbol("x", positive=True)
-        >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'imaginary': False,
-        'negative': False, 'nonnegative': True, 'nonpositive': False,
-        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
-
-        """
-
-        cls = type(self)
-        A   = self._assumptions
-
-        # assumptions shared:
-        if A is cls.default_assumptions or (self._assume_type_keys is None):
-            assumptions0 = {}
-        else:
-            assumptions0 = dict( (k, A[k]) for k in self._assume_type_keys )
-
-        return assumptions0
-
-
-    # NOTE NOTE NOTE
-    # --------------
-    #
-    # new-style classes + __getattr__ is *very* slow!
-
-    # def __getattr__(self, name):
-    #     raise Warning('no way, *all* attribute access will be 2.5x slower')
-
-    # here is what we do instead:
-    for k in AssumeMeths._assume_defined:
-        exec "is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k)
-    del k
-
-    # NB: there is no need in protective __setattr__
 
     def __getnewargs__(self):
         """ Pickling support.
@@ -209,6 +121,31 @@ class Basic(AssumeMeths):
         # then this method should be updated accordingly to return
         # relevant attributes as tuple.
         return self._args
+
+    def __getstate__(self, cls=None):
+        if cls is None:
+            # This is the case for the instance that gets pickled
+            cls = self.__class__
+
+        d = {}
+        # Get all data that should be stored from super classes
+        for c in cls.__bases__:
+            if hasattr(c, "__getstate__"):
+                d.update(c.__getstate__(self, c))
+
+        # Get all information that should be stored from cls and return the dic
+        for name in cls.__slots__:
+            if hasattr(self, name):
+                d[name] = getattr(self, name)
+        return d
+
+    def __setstate__(self, d):
+        # All values that were pickled are now assigned to a fresh instance
+        for name, value in d.iteritems():
+            try:
+                setattr(self, name, value)
+            except:
+                pass
 
     def compare(self, other):
         """
@@ -277,17 +214,19 @@ class Basic(AssumeMeths):
         """
         Is a > b in the sense of ordering in printing?
 
-        yes ..... return 1
-        no ...... return -1
-        equal ... return 0
+        ::
+
+          yes ..... return 1
+          no ...... return -1
+          equal ... return 0
 
         Strategy:
 
         It uses Basic.compare as a fallback, but improves it in many cases,
         like x**3, x**4, O(x**3) etc. In those simple cases, it just parses the
-        expression and returns the "sane" ordering such as:
+        expression and returns the "sane" ordering such as::
 
-        1 < x < x**2 < x**3 < O(x**4) etc.
+          1 < x < x**2 < x**3 < O(x**4) etc.
 
         Example:
 
@@ -328,6 +267,22 @@ class Basic(AssumeMeths):
         # now both objects are from SymPy, so we can proceed to usual comparison
         return cmp(a.sort_key(), b.sort_key())
 
+    @classmethod
+    def fromiter(cls, args, **assumptions):
+        """
+        Create a new object from an iterable.
+
+        This is a convenience function that allows one to create objects from
+        any iterable, without having to convert to a list or tuple first.
+
+        Example:
+
+        >>> from sympy import Tuple
+        >>> Tuple.fromiter(i for i in xrange(5))
+        (0, 1, 2, 3, 4)
+
+        """
+        return cls(*tuple(args), **assumptions)
 
     @classmethod
     def class_key(cls):
@@ -469,7 +424,7 @@ class Basic(AssumeMeths):
            and number symbols like I and pi. It is possible to request
            atoms of any type, however, as demonstrated below.
 
-           Examples::
+           Examples:
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
@@ -477,9 +432,9 @@ class Basic(AssumeMeths):
            set([1, 2, I, pi, x, y])
 
            If one or more types are given, the results will contain only
-           those types of atoms::
+           those types of atoms.
 
-           Examples::
+           Examples:
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -497,15 +452,15 @@ class Basic(AssumeMeths):
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
 
-           The type can be given implicitly, too::
+           The type can be given implicitly, too:
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
            set([x, y])
 
            Be careful to check your assumptions when using the implicit option
-           since S(1).is_Integer = True but type(S(1)) is One, a special type
-           of sympy atom, while type(S(2)) is type Integer and will find all
-           integers in an expression::
+           since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
+           of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
+           integers in an expression:
 
            >>> from sympy import S
            >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
@@ -517,7 +472,7 @@ class Basic(AssumeMeths):
            Finally, arguments to atoms() can select more than atomic atoms: any
            sympy type (loaded in core/__init__.py) can be listed as an argument
            and those types of "atoms" as found in scanning the arguments of the
-           expression recursively::
+           expression recursively:
 
            >>> from sympy import Function, Mul
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
@@ -584,7 +539,7 @@ class Basic(AssumeMeths):
 
     @property
     def is_number(self):
-        """Returns True if 'self' is a number.
+        """Returns ``True`` if 'self' is a number.
 
            >>> from sympy import log, Integral
            >>> from sympy.abc import x, y
@@ -666,7 +621,7 @@ class Basic(AssumeMeths):
         >>> from sympy.abc import x
         >>> a = 2*x
         >>> a.iter_basic_args()
-        <tupleiterator object at 0x...>
+        <tuple...iterator object at 0x...>
         >>> list(a.iter_basic_args())
         [2, x]
 
@@ -674,7 +629,7 @@ class Basic(AssumeMeths):
         return iter(self.args)
 
     def as_poly(self, *gens, **args):
-        """Converts `self` to a polynomial or returns `None`.
+        """Converts ``self`` to a polynomial or returns ``None``.
 
            >>> from sympy import Poly, sin
            >>> from sympy.abc import x, y
@@ -835,6 +790,7 @@ class Basic(AssumeMeths):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
+
         >>> from sympy import sin, S
         >>> from sympy.abc import x, y, z
         >>> (x**2 + sin(x*y)).has(z)
@@ -847,6 +803,7 @@ class Basic(AssumeMeths):
         Note that ``expr.has(*patterns)`` is exactly equivalent to
         ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
         returned when the list of patterns is empty.
+
         >>> x.has()
         False
 
@@ -875,7 +832,7 @@ class Basic(AssumeMeths):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
-        If map=True then also return the mapping {old: new} where `old``
+        If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
         value for it.
 
@@ -1035,11 +992,12 @@ class Basic(AssumeMeths):
         Helper method for match() - switches the pattern and expr.
 
         Can be used to solve linear equations:
-          >>> from sympy import Symbol, Wild, Integer
-          >>> a,b = map(Symbol, 'ab')
-          >>> x = Wild('x')
-          >>> (a+b*x).matches(Integer(0))
-          {x_: -a/b}
+
+        >>> from sympy import Symbol, Wild, Integer
+        >>> a,b = map(Symbol, 'ab')
+        >>> x = Wild('x')
+        >>> (a+b*x).matches(Integer(0))
+        {x_: -a/b}
 
         """
         if evaluate:
@@ -1070,8 +1028,8 @@ class Basic(AssumeMeths):
 
         Wild symbols match all.
 
-        Return None when expression (self) does not match
-        with pattern. Otherwise return a dictionary such that
+        Return ``None`` when expression (self) does not match
+        with pattern. Otherwise return a dictionary such that::
 
           pattern.subs(self.match(pattern)) == self
 

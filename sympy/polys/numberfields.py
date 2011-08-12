@@ -2,7 +2,7 @@
 
 from sympy import (
     S, Expr, I, Integer, Rational, Float,
-    Symbol, Add, Mul, sympify, Q, ask, Dummy,
+    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple
 )
 
 from sympy.polys.polytools import (
@@ -24,7 +24,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.utilities import (
-    any, all, numbered_symbols, variations, lambdify,
+    numbered_symbols, variations, lambdify,
 )
 
 from sympy.ntheory import sieve
@@ -400,7 +400,7 @@ class AlgebraicNumber(Expr):
         """Construct a new algebraic number. """
         expr = sympify(expr)
 
-        if type(expr) is tuple:
+        if isinstance(expr, (tuple, Tuple)):
             minpoly, root = expr
 
             if not minpoly.is_Poly:
