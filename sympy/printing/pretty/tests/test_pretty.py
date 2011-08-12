@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
-    Rational, conjugate, Derivative, tan, Function, log, floor, Symbol,
+    Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, Tuple,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
@@ -172,6 +172,13 @@ SUBS:
 Subs(f(x), x, ph**2)
 Subs(f(x).diff(x), x, 0)
 Subs(f(x).diff(x)/y, (x, y), (0, Rational(1, 2)))
+
+
+ORDER:
+
+O(1)
+O(1/x)
+O(x**2 + y**2)
 
 """
 
@@ -670,22 +677,20 @@ y  + y  - x  + 2*x \
 """
 
     expr = x - x**3/6 + x**5/120 + O(x**6)
-
     ascii_str = \
 """\
-     3     5          \n\
-    x     x           \n\
-x - -- + --- + O(x**6)\n\
-    6    120          \
+     3     5        \n\
+    x     x     / 6\\\n\
+x - -- + --- + O\\x /\n\
+    6    120        \
 """
     ucode_str = \
 u"""\
-     3     5          \n\
-    x     x           \n\
-x - ── + ─── + O(x**6)\n\
-    6    120          \
+     3     5        \n\
+    x     x     ⎛ 6⎞\n\
+x - ── + ─── + O⎝x ⎠\n\
+    6    120        \
 """
-
     assert  pretty(expr, order=None) == ascii_str
     assert upretty(expr, order=None) == ucode_str
 
@@ -1465,6 +1470,48 @@ u"""\
 """
 
     assert  pretty(expr) == ascii_str
+
+def test_pretty_order():
+    expr = O(1)
+    ascii_str = \
+"""\
+O(1)\
+"""
+    ucode_str = \
+u"""\
+O(1)\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = O(1/x)
+    ascii_str = \
+"""\
+ /1\\\n\
+O|-|\n\
+ \\x/\
+"""
+    ucode_str = \
+u"""\
+ ⎛1⎞\n\
+O⎜─⎟\n\
+ ⎝x⎠\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = O(x**2 + y**2)
+    ascii_str = \
+"""\
+ / 2    2\\\n\
+O\\x  + y /\
+"""
+    ucode_str = \
+u"""\
+ ⎛ 2    2⎞\n\
+O⎝x  + y ⎠\
+"""
+    assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
 def test_pretty_derivatives():
@@ -2016,6 +2063,26 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = Tuple(x**2, 1/x, x, y, sin(th)**2/cos(ph)**2)
+    ascii_str = \
+"""\
+                 2        \n\
+  2  1        sin (theta) \n\
+(x , -, x, y, -----------)\n\
+     x            2       \n\
+               cos (phi)  \
+"""
+    ucode_str = \
+u"""\
+⎛                2   ⎞\n\
+⎜ 2  1        sin (θ)⎟\n\
+⎜x , ─, x, y, ───────⎟\n\
+⎜    x           2   ⎟\n\
+⎝             cos (φ)⎠\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
     expr = {x: sin(x)}
     ascii_str = \
 """\
@@ -2060,6 +2127,20 @@ u"""\
     assert upretty(expr) == ucode_str
 
     expr = (x**2,)
+    ascii_str = \
+"""\
+  2  \n\
+(x ,)\
+"""
+    ucode_str = \
+u"""\
+⎛ 2 ⎞\n\
+⎝x ,⎠\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Tuple(x**2)
     ascii_str = \
 """\
   2  \n\

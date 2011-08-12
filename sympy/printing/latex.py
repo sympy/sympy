@@ -427,8 +427,18 @@ class LatexPrinter(Printer):
 
             return name % ",".join(args)
 
-    def _print_Poly(self, expr):
-        return self._print(expr.as_expr())
+    def _print_Lambda(self, expr):
+        symbols, expr = expr.args
+
+        if len(symbols) == 1:
+            symbols = self._print(symbols[0])
+        else:
+            symbols = self._print(tuple(symbols))
+
+        args = (symbols, self._print(expr))
+        tex = r"\operatorname{\Lambda}\left(%s\right)" % ", ".join(args)
+
+        return tex
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
@@ -793,6 +803,56 @@ class LatexPrinter(Printer):
     def _print_EmptySet(self, e):
         return r"\emptyset"
 
+    def _print_FiniteField(self, expr):
+        return r"\mathbb{F}_{%s}" % expr.mod
+
+    def _print_IntegerRing(self, expr):
+        return r"\mathbb{Z}"
+
+    def _print_RationalField(self, expr):
+        return r"\mathbb{Q}"
+
+    def _print_RealDomain(self, expr):
+        return r"\mathbb{R}"
+
+    def _print_ComplexDomain(self, expr):
+        return r"\mathbb{C}"
+
+    def _print_PolynomialRing(self, expr):
+        domain = self._print(expr.dom)
+        gens = ", ".join(map(self._print, expr.gens))
+        return r"%s\left\[%s\right\]" % (domain, gens)
+
+    def _print_FractionField(self, expr):
+        domain = self._print(expr.dom)
+        gens = ", ".join(map(self._print, expr.gens))
+        return r"%s\left(%s\right)" % (domain, gens)
+
+    def _print_Poly(self, poly):
+        cls = poly.__class__.__name__
+        expr = self._print(poly.as_expr())
+        gens = map(self._print, poly.gens)
+        domain = "domain=%s" % self._print(poly.get_domain())
+
+        args = ", ".join([expr] + gens + [domain])
+        tex = r"\operatorname{%s}\left(%s\right)" % (cls, args)
+
+        return tex
+
+    def _print_RootOf(self, root):
+        cls = root.__class__.__name__
+        expr = self._print(root.expr)
+        index = root.index
+        return r"\operatorname{%s}\left(%s, %d\right)" % (cls, expr, index)
+
+    def _print_RootSum(self, expr):
+        cls = expr.__class__.__name__
+        args = [self._print(expr.expr)]
+
+        if expr.fun is not S.IdentityFunction:
+            args.append(self._print(expr.fun))
+
+        return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
 
 def latex(expr, **settings):
     r"""Convert the given expression to LaTeX representation.

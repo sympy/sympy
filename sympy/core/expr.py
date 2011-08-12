@@ -1958,10 +1958,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import separate
         return separate(self, deep)
 
-    def collect(self, syms, evaluate=True, exact=False):
+    def collect(self, syms, func=None, evaluate=True, exact=False):
         """See the collect function in sympy.simplify"""
         from sympy.simplify import collect
-        return collect(self, syms, evaluate, exact)
+        return collect(self, syms, func, evaluate, exact)
 
     def together(self, *args, **kwargs):
         """See the together function in sympy.polys"""
