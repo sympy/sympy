@@ -4861,7 +4861,7 @@ def _symbolic_factor_list(expr, opt, method):
                         f, k = unk
                         factors.append((f, k*exp))
                     else:
-                        factors.append((Poly(Mul(*(f.as_expr()**k for f, k in unk)), opt), exp))
+                        factors.append((_poly_from_expr(Mul(*(f.as_expr()**k for f, k in unk)), opt)[0], exp))
 
     return coeff, factors
 
