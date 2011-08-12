@@ -771,6 +771,12 @@ class PrettyPrinter(Printer):
 
         return pform
 
+    def _print_Order(self, e):
+        pform = self._print(e.expr)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('O'))
+        return pform
+
     def _print_gamma(self, e):
         if self._use_unicode:
             pform = self._print(e.args[0])
@@ -1055,6 +1061,9 @@ class PrettyPrinter(Printer):
             return prettyForm(*ptuple.parens('(', ')', ifascii_nougly=True))
         else:
             return self._print_seq(t, '(', ')')
+
+    def _print_Tuple(self, expr):
+        return self._print_tuple(expr)
 
     def _print_dict(self, d):
         items = []

@@ -3,7 +3,8 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
-    separatevars, erf, rcollect, count_ops, combsimp, posify)
+    separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
+    factor)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -432,6 +433,19 @@ def test_collect_Wild():
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**b) == a*(x + 1)**y + (x + 1)**y
     assert collect(a*(x + 1)**y + (x + 1)**y, (x + 1)**w2) == (1 + a)*(x + 1)**y
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
+
+def test_collect_func():
+    f = expand((x + a + 1)**3)
+
+    assert collect(f, x) == a**3 + 3*a**2 + 3*a + x**3 + x**2*(3*a + 3) + x*(3*a**2 + 6*a + 3) + 1
+    assert collect(f, x, factor) == x**3 + 3*x**2*(a + 1) + 3*x*(a + 1)**2 + (a + 1)**3
+
+    assert collect(f, x, evaluate=False) == {S.One: a**3 + 3*a**2 + 3*a + 1, x: 3*a**2 + 6*a + 3, x**2: 3*a + 3, x**3: 1}
+
+@XFAIL
+def test_collect_func_xfail():
+    # XXX: this test will pass when automatic constant distribution is removed (#1497)
+    assert collect(f, x, factor, evaluate=False) == {S.One: (a + 1)**3, x: 3*(a + 1)**2, x**2: 3*(a + 1), x**3: 1}
 
 def test_rcollect():
     assert rcollect((x**2*y + x*y + x + y)/(x + y), y) == (x + y*(1 + x + x**2))/(x + y)

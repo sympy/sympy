@@ -40,7 +40,6 @@ from cache import cacheit
 from numbers import Rational
 
 from sympy.core.containers import Tuple
-from sympy.core.decorators import deprecated
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -243,11 +242,6 @@ class Function(Application, Expr):
             return True
         else:
             return False
-
-    @classmethod
-    @deprecated
-    def canonize(cls, *args):
-        return cls.eval(*args)
 
     def _eval_evalf(self, prec):
         # Lookup mpmath function based on name
@@ -1163,10 +1157,6 @@ class Lambda(Expr):
     def nargs(self):
         """The number of arguments that this function takes"""
         return len(self._args[0])
-
-    @deprecated
-    def apply(self, *args): # pragma: no cover
-        return self(*args)
 
     def __call__(self, *args):
         if len(args) != self.nargs:

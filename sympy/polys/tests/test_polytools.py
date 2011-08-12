@@ -633,8 +633,8 @@ def test_Poly_properties():
     assert Poly(x*y).is_monomial == True
     assert Poly(x*y+1).is_monomial == False
 
-    assert Poly(x*y+x).is_homogeneous == True
-    assert Poly(x*y+x+1).is_homogeneous == False
+    assert Poly(x**2 + x*y).is_homogeneous == True
+    assert Poly(x**3 + x*y).is_homogeneous == False
 
     assert Poly(x).is_univariate == True
     assert Poly(x*y).is_univariate == False
@@ -645,9 +645,10 @@ def test_Poly_properties():
     assert Poly(x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1).is_cyclotomic == False
     assert Poly(x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1).is_cyclotomic == True
 
-@XFAIL
 def test_Poly_is_irreducible():
-    # when this passes, check the polytools is_irreducible docstring, too.
+    assert Poly(x**2 + x + 1).is_irreducible == True
+    assert Poly(x**2 + 2*x + 1).is_irreducible == False
+
     assert Poly(7*x + 3, modulus=11).is_irreducible == True
     assert Poly(7*x**2 + 3*x + 1, modulus=11).is_irreducible == False
 
@@ -997,6 +998,18 @@ def test_Poly_total_degree():
     assert Poly(x*y*z + z**4).total_degree() == 4
     assert Poly(x**3 + x + 1).total_degree() == 3
 
+def test_Poly_homogeneous_order():
+    assert Poly(0, x, y).homogeneous_order() == -1
+    assert Poly(1, x, y).homogeneous_order() == 0
+    assert Poly(x, x, y).homogeneous_order() == 1
+    assert Poly(x*y, x, y).homogeneous_order() == 2
+
+    assert Poly(x + 1, x, y).homogeneous_order() is None
+    assert Poly(x*y + x, x, y).homogeneous_order() is None
+
+    assert Poly(x**5 + 2*x**3*y**2 + 9*x*y**4).homogeneous_order() == 5
+    assert Poly(x**5 + 2*x**3*y**3 + 9*x*y**4).homogeneous_order() is None
+
 def test_Poly_LC():
     assert Poly(0, x).LC() == 0
     assert Poly(1, x).LC() == 1
@@ -1193,10 +1206,21 @@ def test_Poly_eval():
     assert Poly(x*y + y, x, y).eval({x: 6, y: 7}) == 49
     assert Poly(x*y + y, x, y).eval({x: 7, y: 6}) == 48
 
+    assert Poly(x*y + y, x, y).eval((6, 7)) == 49
+    assert Poly(x*y + y, x, y).eval([6, 7]) == 49
+
     Poly(x+1, domain='ZZ').eval(S(1)/2) == S(3)/2
     Poly(x+1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
+    raises(ValueError, "Poly(x*y + y, x, y).eval((6, 7, 8))")
     raises(DomainError, "Poly(x+1, domain='ZZ').eval(S(1)/2, auto=False)")
+
+def test_Poly___call__():
+    f = Poly(2*x*y + 3*x + y + 2*z)
+
+    assert f(2) == Poly(5*y + 2*z + 6)
+    assert f(2, 5) == Poly(2*z + 31)
+    assert f(2, 5, 7) == 45
 
 def test_parallel_poly_from_expr():
     assert parallel_poly_from_expr([x-1, x**2-1], x)[0] == [Poly(x-1, x), Poly(x**2-1, x)]

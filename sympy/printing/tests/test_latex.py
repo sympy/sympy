@@ -1,7 +1,8 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
-        Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
-        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
-        Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg)
+    Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
+    Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
+    Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
+    Lambda, Poly, RootOf, RootSum)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -314,6 +315,26 @@ def test_latex_order():
 
     assert latex(expr, order='lex') == "x^{3} + x^{2} y + 3 x y^{3} + y^{4}"
     assert latex(expr, order='rev-lex') == "y^{4} + 3 x y^{3} + x^{2} y + x^{3}"
+
+def test_latex_Lambda():
+    assert latex(Lambda(x, x + 1)) == \
+        r"\operatorname{\Lambda}\left(x, x + 1\right)"
+    assert latex(Lambda((x, y), x + 1)) == \
+        r"\operatorname{\Lambda}\left(\begin{pmatrix}x, & y\end{pmatrix}, x + 1\right)"
+
+def test_latex_Poly():
+    assert latex(Poly(x/y, x)) == \
+        r"\operatorname{Poly}\left(\frac{x}{y}, x, domain=\mathbb{Z}\left(y\right)\right)"
+    assert latex(Poly(2.0*x + y)) == \
+        r"\operatorname{Poly}\left(2.0 x + 1.0 y, x, y, domain=\mathbb{R}\right)"
+
+def test_latex_RootOf():
+    assert latex(RootOf(x**5 + x + 3, 0)) == \
+        r"\operatorname{RootOf}\left(x^{5} + x + 3, 0\right)"
+
+def test_latex_RootSum():
+    assert latex(RootSum(x**5 + x + 3, sin)) == \
+        r"\operatorname{RootSum}\left(x^{5} + x + 3, \operatorname{\Lambda}\left(x, \operatorname{sin}\left(x\right)\right)\right)"
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')

@@ -1683,6 +1683,30 @@ class Poly(Expr):
         else: # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
+    def homogeneous_order(f):
+        """
+        Returns the homogeneous order of ``f``.
+
+        A homogeneous polynomial is a polynomial whose all monomials with
+        non-zero coefficients have the same total degree. This degree is
+        the homogeneous order of ``f``. If you only want to check if a
+        polynomial is homogeneous, then use :func:`Poly.is_homogeneous`.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y
+
+        >>> f = Poly(x**5 + 2*x**3*y**2 + 9*x*y**4)
+        >>> f.homogeneous_order()
+        5
+
+        """
+        if hasattr(f.rep, 'homogeneous_order'):
+            return f.rep.homogeneous_order()
+        else: # pragma: no cover
+            raise OperationNotSupported(f, 'homogeneous_order')
+
     def LC(f, order=None):
         """
         Returns the leading coefficient of ``f``.
@@ -2031,15 +2055,27 @@ class Poly(Expr):
         >>> f.eval({x: 2, y: 5, z: 7})
         45
 
+        >>> f.eval((2, 5))
+        Poly(2*z + 31, z, domain='ZZ')
+        >>> f(2, 5)
+        Poly(2*z + 31, z, domain='ZZ')
+
         """
         if a is None:
-            if isinstance(x, (list, dict)):
-                try:
-                    mapping = x.items()
-                except AttributeError:
-                    mapping = x
+            if isinstance(x, dict):
+                mapping = x
 
-                for gen, value in mapping:
+                for gen, value in mapping.iteritems():
+                    f = f.eval(gen, value)
+
+                return f
+            elif isinstance(x, (tuple, list)):
+                values = x
+
+                if len(values) > len(f.gens):
+                    raise ValueError("too many values provided")
+
+                for gen, value in zip(f.gens, values):
                     f = f.eval(gen, value)
 
                 return f
@@ -2062,6 +2098,27 @@ class Poly(Expr):
                 result = f.rep.eval(a, j)
 
         return f.per(result, remove=j)
+
+    def __call__(f, *values):
+        """
+        Evaluate ``f`` at the give values.
+
+        **Examples**
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y, z
+
+        >>> f = Poly(2*x*y + 3*x + y + 2*z, x, y, z)
+
+        >>> f(2)
+        Poly(5*y + 2*z + 6, y, z, domain='ZZ')
+        >>> f(2, 5)
+        Poly(2*z + 31, z, domain='ZZ')
+        >>> f(2, 5, 7)
+        45
+
+        """
+        return f.eval(values)
 
     def half_gcdex(f, g, auto=True):
         """
@@ -3211,16 +3268,21 @@ class Poly(Expr):
     @property
     def is_homogeneous(f):
         """
-        Returns ``True`` if ``f`` has zero trailing coefficient.
+        Returns ``True`` if ``f`` is a homogeneous polynomial.
+
+        A homogeneous polynomial is a polynomial whose all monomials with
+        non-zero coefficients have the same total degree. If you want not
+        only to check if a polynomial is homogeneous but also compute its
+        homogeneous order, then use :func:`Poly.homogeneous_order`.
 
         **Examples**
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
 
-        >>> Poly(x*y + x + y, x, y).is_homogeneous
+        >>> Poly(x**2 + x*y, x, y).is_homogeneous
         True
-        >>> Poly(x*y + x + y + 1, x, y).is_homogeneous
+        >>> Poly(x**3 + x*y, x, y).is_homogeneous
         False
 
         """
@@ -3236,9 +3298,9 @@ class Poly(Expr):
         >>> from sympy import Poly
         >>> from sympy.abc import x
 
-        >>> Poly(x**2 + x + 1, x, modulus=2).is_irreducible #doctest: +SKIP
+        >>> Poly(x**2 + x + 1, x, modulus=2).is_irreducible
         True
-        >>> Poly(x**2 + 1, x, modulus=2).is_irreducible #doctest: +SKIP
+        >>> Poly(x**2 + 1, x, modulus=2).is_irreducible
         False
 
         """

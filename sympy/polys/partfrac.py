@@ -7,7 +7,7 @@ from sympy.core import S, Add, sympify, Symbol, Function, Lambda, Dummy
 from sympy.utilities import numbered_symbols, take, threaded
 
 @threaded
-def apart(f, x=None, full=False):
+def apart(f, x=None, full=False, **args):
     """
     Compute partial fraction decomposition of a rational function.
 
@@ -32,7 +32,7 @@ def apart(f, x=None, full=False):
     else:
         P, Q = f.as_numer_denom()
 
-    (P, Q), opt = parallel_poly_from_expr((P, Q), x)
+    (P, Q), opt = parallel_poly_from_expr((P, Q), x, **args)
 
     if P.is_multivariate:
         raise NotImplementedError("multivariate partial fraction decomposition")

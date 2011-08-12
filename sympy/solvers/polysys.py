@@ -240,7 +240,7 @@ def solve_triangulated(polys, *gens, **args):
                 _vars = (var,) + vars
 
                 if g.has_only_gens(*_vars) and g.degree(var) != 0:
-                    h = g.ltrim(var).eval(mapping)
+                    h = g.ltrim(var).eval(dict(mapping))
 
                     if g.degree(var) == h.degree():
                         H.append(h)
