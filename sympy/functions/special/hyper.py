@@ -143,7 +143,7 @@ class hyper(TupleParametersBase):
 
     >>> from sympy.abc import a
     >>> hyperexpand(hyper([-a], [], x))
-    (x*exp_polar(-I*pi) + 1)**a
+    (-x + 1)**a
 
     See Also
     ========

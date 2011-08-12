@@ -81,62 +81,62 @@ def add_formulae(formulae):
     from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
                        atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
                        EulerGamma, Shi, sinh, cosh, Chi)
+    from sympy.functions.special.hyper import (HyperRep_atanh,
+        HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
+        HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
+        HyperRep_cosasin, HyperRep_sinasin)
     from sympy import polar_lift, exp_polar
 
     # 0F0
     add((), (), exp(z))
 
     # 1F0
-    add((-a, ), (), (1+exp_polar(-I*pi)*z)**a)
+    add((-a, ), (), HyperRep_power1(a, z))
 
     # 2F1
     addb((a, a - S.Half), (2*a,),
-         Matrix([2**(2*a-1)*(1 + sqrt(1+exp_polar(-I*pi)*z))**(1-2*a),
-                 2**(2*a-1)*(1 + sqrt(1+exp_polar(-I*pi)*z))**(-2*a)]),
+         Matrix([HyperRep_power2(a, z),
+                 HyperRep_power2(a + S(1)/2, z)/2]),
          Matrix([[1, 0]]),
          Matrix([[(a-S.Half)*z/(1-z), (S.Half-a)*z/(1-z)],
                  [a/(1-z), a*(z-2)/(1-z)]]))
-    addb((1, 1), (2,), # it is not particularly obvious, but this is the cts. branch
-         Matrix([log(1 + exp_polar(-I*pi)*z), 1]), Matrix([[-1/z, 0]]),
+    addb((1, 1), (2,),
+         Matrix([HyperRep_log1(z), 1]), Matrix([[-1/z, 0]]),
          Matrix([[0, z/(z - 1)], [0, 0]]))
-    # TODO branching
     addb((S.Half, 1), (S('3/2'),),
-         Matrix([log((1 + sqrt(z))/(1 - sqrt(z)))/sqrt(z), 1]),
-         Matrix([[S(1)/2, 0]]),
-         Matrix([[-S(1)/2, 1/(1 - z)], [0, 0]]))
+         Matrix([HyperRep_atanh(z), 1]),
+         Matrix([[1, 0]]),
+         Matrix([[-S(1)/2, 1/(1 - z)/2], [0, 0]]))
     addb((S.Half, S.Half), (S('3/2'),),
-         Matrix([asin(sqrt(z))/sqrt(z), 1/sqrt(1 - z)]),
+         Matrix([HyperRep_asin1(z), HyperRep_power1(-S(1)/2, z)]),
          Matrix([[1, 0]]),
          Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
-    # TODO branching
     addb((-a, S.Half - a), (S.Half,),
-         Matrix([(1 + sqrt(z))**(2*a) + (1 - sqrt(z))**(2*a),
-                 sqrt(z)*(1 + sqrt(z))**(2*a-1)
-                 - sqrt(z)*(1 - sqrt(z))**(2*a-1)]),
-         Matrix([[S.Half, 0]]),
+         Matrix([HyperRep_sqrts1(a, z), -HyperRep_sqrts2(a - S(1)/2, z)]),
+         Matrix([[1, 0]]),
          Matrix([[0, a], [z*(2*a-1)/2/(1-z), S.Half - z*(2*a-1)/(1-z)]]))
 
     # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
     # Integrals and Series: More Special Functions, Vol. 3,.
     # Gordon and Breach Science Publisher
-    add([a, -a], [S.Half], cos(2*a*asin(sqrt(z))))
-    # TODO branching
+    addb([a, -a], [S.Half],
+         Matrix([HyperRep_cosasin(a, z), HyperRep_sinasin(a, z)]),
+         Matrix([[1, 0]]),
+         Matrix([[0, -a], [a*z/(1 - z), 1/(1 - z)/2]]))
     addb([1, 1], [3*S.Half],
-         Matrix([asin(sqrt(z))/sqrt(z*(1-z)), 1]), Matrix([[1, 0]]),
+         Matrix([HyperRep_asin2(z), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
     # 3F2
-    # TODO branching
     addb([-S.Half, 1, 1], [S.Half, 2],
-         Matrix([sqrt(z)*atanh(sqrt(z)), log(1 - z), 1]),
+         Matrix([z*HyperRep_atanh(z), HyperRep_log1(z), 1]),
          Matrix([[-S(2)/3, -S(1)/(3*z), S(2)/3]]),
          Matrix([[S(1)/2, 0, z/(1 - z)/2],
                  [0, 0, z/(z - 1)],
                  [0, 0, 0]]))
     # actually the formula for 3/2 is much nicer ...
-    # TODO branching
     addb([-S.Half, 1, 1], [2, 2],
-         Matrix([sqrt(1 - z), log(sqrt(1 - z)/2 + S.Half), 1]),
+         Matrix([HyperRep_power1(S(1)/2, z), HyperRep_log2(z), 1]),
          Matrix([[S(4)/9 - 16/(9*z), 4/(3*z), 16/(9*z)]]),
          Matrix([[z/2/(z - 1), 0, 0], [1/(2*(z - 1)), 0, S.Half], [0, 0, 0]]))
 
@@ -808,11 +808,11 @@ class FormulaCollection(object):
         >>> f.lookup_origin(IndexPair((), ())).closed_form
         exp(_z)
         >>> f.lookup_origin(IndexPair([1], ())).closed_form
-        1/(_z*exp_polar(-I*pi) + 1)
+        HyperRep_power1(-1, _z)
 
         >>> from sympy import S
         >>> f.lookup_origin(IndexPair([S('1/4'), S('3/4 + 4')], [S.Half])).closed_form
-        1/(2*(sqrt(_z) + 1)**(17/2)) + 1/(2*(-sqrt(_z) + 1)**(17/2))
+        HyperRep_sqrts1(-17/4, _z)
         """
         inv = ip.build_invariants()
         sizes = ip.sizes
@@ -1921,7 +1921,8 @@ def hyperexpand_special(ap, bq, z):
 
 collection = None
 @timeit
-def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
+def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
+                 rewrite='default'):
     """
     Try to find an expression for the hypergeometric function
     `ip.ap`, `ip.bq`.
@@ -1932,6 +1933,8 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
     """
     from sympy.simplify import powdenest, simplify, polarify
     z = polarify(z, subs=False)
+    if rewrite == 'default':
+        rewrite = 'nonrepsmall'
 
     def carryout_plan(f, ops):
         C = apply_operators(f.C.subs(f.z, z0), ops,
@@ -1944,7 +1947,10 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0):
         if premult == 1:
             C = C.applyfunc(make_simp(z0))
         r = C*f.B.subs(f.z, z0)*premult
-        return r[0].subs(z0, z)
+        res = r[0].subs(z0, z)
+        if rewrite:
+            res = res.rewrite(rewrite)
+        return res
 
     # TODO
     # The following would be possible:
@@ -2137,7 +2143,7 @@ def devise_plan_meijer(fro, to, z):
 
 meijercollection = None
 @timeit
-def _meijergexpand(iq, z0, allow_hyper=False):
+def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     """
     Try to find an expression for the Meijer G function specified
     by the IndexQuadruple `iq`. If `allow_hyper` is True, then returning
@@ -2149,6 +2155,8 @@ def _meijergexpand(iq, z0, allow_hyper=False):
     global meijercollection
     if meijercollection is None:
         meijercollection = MeijerFormulaCollection()
+    if rewrite == 'default':
+        rewrite = None
 
     iq_ = iq
     debug('Try to expand meijer G function corresponding to', iq)
@@ -2233,7 +2241,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 #      t*k ... we are using polar numbers for consistency!
                 premult = (t/k)**bh
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                                   t, premult, bh)
+                                   t, premult, bh, rewrite=None)
                 res += fac * hyp
             else:
                 b_ = pbm[m][0]
@@ -2278,7 +2286,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
                 nbq = [1 + au - b for b in list(bm) + list(bq)]
 
                 hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
-                                   t, premult, au)
+                                   t, premult, au, rewrite=None)
 
                 C = S(-1)**(lu)/factorial(lu)
                 for i in range(u):
@@ -2324,16 +2332,30 @@ def _meijergexpand(iq, z0, allow_hyper=False):
         if cond2 is not False:
             cond2 = True
 
+    if cond1 is True:
+        slater1 = slater1.rewrite(rewrite or 'nonrep')
+    else:
+        slater1 = slater1.rewrite(rewrite or 'nonrepsmall')
+    if cond2 is True:
+        slater2 = slater2.rewrite(rewrite or 'nonrep')
+    else:
+        slater2 = slater2.rewrite(rewrite or 'nonrepsmall')
+
     if not isinstance(cond1, bool): cond1 = cond1.subs(z, z0)
     if not isinstance(cond2, bool): cond2 = cond2.subs(z, z0)
 
     def weight(expr, cond):
+        from sympy import oo, zoo, nan
         if cond is True:
             c0 = 0
         elif cond is False:
             c0 = 1
         else:
             c0 = 2
+        if expr.has(oo, zoo, -oo, nan):
+            # XXX this actually should not happen, but consider
+            # S('meijerg(((0, -1/2, 0, -1/2, 1/2), ()), ((0,), (-1/2, -1/2, -1/2, -1)), exp_polar(I*pi))/4')
+            c0 = 3
         return (c0, expr.count(hyper), expr.count_ops())
 
     w1 = weight(slater1, cond1)
@@ -2359,7 +2381,7 @@ def _meijergexpand(iq, z0, allow_hyper=False):
 
     return meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0)
 
-def hyperexpand(f, allow_hyper=False):
+def hyperexpand(f, allow_hyper=False, rewrite='default'):
     """
     Expand hypergeometric functions. If allow_hyper is True, allow partial
     simplification (that is a result different from input,
@@ -2384,14 +2406,14 @@ def hyperexpand(f, allow_hyper=False):
     from sympy import nan, zoo, oo
     f = sympify(f)
     def do_replace(ap, bq, z):
-        r = _hyperexpand(IndexPair(ap, bq), z)
+        r = _hyperexpand(IndexPair(ap, bq), z, rewrite=rewrite)
         if r is None:
             return hyper(ap, bq, z)
         else:
             return r
     def do_meijer(ap, bq, z):
         r = _meijergexpand(IndexQuadruple(ap[0], ap[1], bq[0], bq[1]), z,
-                           allow_hyper)
+                           allow_hyper, rewrite=rewrite)
         if not r.has(nan, zoo, oo, -oo):
             return r
     return f.replace(hyper, do_replace).replace(meijerg, do_meijer)

@@ -156,9 +156,9 @@ class IntegralTransform(Function):
 from sympy.solvers.inequalities import _solve_inequality
 
 def _simplify(expr, doit):
-    from sympy import powdenest, powsimp
+    from sympy import powdenest, piecewise_fold
     if doit:
-        return simplify(powdenest(expr, polar=True))
+        return simplify(powdenest(piecewise_fold(expr), polar=True))
     return expr
 
 def _noconds_(default):

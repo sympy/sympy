@@ -1290,7 +1290,8 @@ def _rewrite_single(f, x, recursive=True):
         r = _meijerint_definite_4(f, x, only_double=True)
         if r is not None:
             res, cond = r
-            return Piecewise((hyperexpand(res), cond),
+            res = _my_unpolarify(hyperexpand(res, rewrite='nonrepsmall'))
+            return Piecewise((res, cond),
                              (Integral(f, (x, 0, oo)), True))
         return Integral(f, (x, 0, oo))
     try:
@@ -1677,6 +1678,8 @@ def _meijerint_definite_4(f, x, only_double=False):
             if cond is False:
                 _debug('But cond is always False (full_pb=%s).' % full_pb)
             else:
+                if only_double:
+                    return res, cond
                 return _my_unpolarify(hyperexpand(res)), cond
 
 def meijerint_inversion(f, x, t):

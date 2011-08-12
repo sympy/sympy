@@ -81,9 +81,9 @@ def test_hyperexpand_bases():
     assert hyperexpand(hyper([2], [a], z)) == \
   a + z**(-a + 1)*(-a**2 + 3*a + z*(a - 1) - 2)*exp(z)*lowergamma(a - 1, z) - 1
     # TODO [a+1, a-S.Half], [2*a]
-    assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(exp_polar(-I*pi)*z + 1)/z**2
+    assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(-z + 1)/z**2
     assert hyperexpand(hyper([S.Half, 2], [S(3)/2], z)) == \
-      -1/(2*z - 2) + log((sqrt(z) + 1)/(-sqrt(z) + 1))/(4*sqrt(z))
+      -1/(2*z - 2) + atanh(sqrt(z))/sqrt(z)/2
     assert hyperexpand(hyper([S(1)/2, S(1)/2], [S(5)/2], z)) == \
                (-3*z + 3)/4/(z*sqrt(-z + 1)) \
                + (6*z - 3)*asin(sqrt(z))/(4*z**(S(3)/2))
@@ -105,7 +105,7 @@ def test_hyperexpand_parametric():
     assert hyperexpand(hyper([a, S(1)/2 + a], [S(1)/2], z)) \
         == (1 + sqrt(z))**(-2*a)/2 + (1 - sqrt(z))**(-2*a)/2
     assert hyperexpand(hyper([a, -S(1)/2 + a], [2*a], z)) \
-        == 2**(2*a - 1)*((exp_polar(-I*pi)*z + 1)**(S(1)/2) + 1)**(-2*a + 1)
+        == 2**(2*a - 1)*((-z + 1)**(S(1)/2) + 1)**(-2*a + 1)
 
 def test_shifted_sum():
     from sympy import simplify
@@ -136,17 +136,18 @@ def test_formulae():
 
         # first test if the closed-form is actually correct
         h = h.subs(rep)
-        closed_form = formula.closed_form.subs(rep)
+        closed_form = formula.closed_form.subs(rep).rewrite('nonrepsmall')
         z = formula.z
         assert tn(h, closed_form.replace(exp_polar, exp), z)
 
         # now test the computed matrix
-        cl = (formula.C * formula.B)[0].subs(rep)
+        cl = (formula.C * formula.B)[0].subs(rep).rewrite('nonrepsmall')
         assert tn(closed_form.replace(exp_polar, exp), cl.replace(exp_polar, exp), z)
-        deriv1 = z*formula.B.diff(z)
+        deriv1 = z*formula.B.applyfunc(lambda t: t.rewrite('nonrepsmall')).diff(z)
         deriv2 = formula.M * formula.B
         for d1, d2 in zip(deriv1, deriv2):
-            assert tn(d1.subs(rep).replace(exp_polar, exp), d2.subs(rep).replace(exp_polar, exp), z)
+            assert tn(d1.subs(rep).replace(exp_polar, exp),
+                      d2.subs(rep).rewrite('nonrepsmall').replace(exp_polar, exp), z)
 
 def test_meijerg_formulae():
     from sympy.simplify.hyperexpand import MeijerFormulaCollection
@@ -506,7 +507,7 @@ def test_lerchphi():
                     exp_polar(-I*pi)*z))) == \
            lerchphi(z, 3, a)
 
-    assert hyperexpand(z*hyper([1, 1], [2], z)) == -log(1 + exp_polar(-I*pi)*z)
+    assert hyperexpand(z*hyper([1, 1], [2], z)) == -log(1 + -z)
     assert hyperexpand(z*hyper([1, 1, 1], [2, 2], z)) == polylog(2, z)
     assert hyperexpand(z*hyper([1, 1, 1, 1], [2, 2, 2], z)) == polylog(3, z)
 

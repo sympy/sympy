@@ -408,9 +408,8 @@ def test_laplace_transform():
            ((s + a)/(a**2 + 2*a*s + b**2 + s**2), -a, True)
     # TODO sinh, cosh have delicate cancellation
 
-    # TODO conditions are a mess
-    assert LT(besselj(0, t), t, s, noconds=True) == 1/sqrt(1 + s**2)
-    assert LT(besselj(1, t), t, s, noconds=True) == 1 - 1/sqrt(1 + 1/s**2)
+    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
+    assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
     # TODO general order works, but is a *mess*
     # TODO besseli also works, but is an eaven greater mess
 
@@ -488,7 +487,7 @@ def test_fourier_transform():
     assert factor(FT(x*exp(-a*x)*Heaviside(x), x, k), extension=I) \
            == 1/(a + 2*pi*I*k)**2
     assert FT(exp(-a*x)*sin(b*x)*Heaviside(x), x, k) \
-           == 1/b/(1 + (a + 2*pi*I*k)**2/b**2)
+           == 1/b/(1 + a**2*(1 + 2*pi*I*k/a)**2/b**2)
 
     assert FT(exp(-a*x**2), x, k) == sqrt(pi)*exp(-pi**2*k**2/a)/sqrt(a)
     assert IFT(sqrt(pi/a)*exp(-(pi*k)**2/a), k, x) == exp(-a*x**2)
