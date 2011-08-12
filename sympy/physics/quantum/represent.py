@@ -698,3 +698,20 @@ def _rewrap_wf(expr, unwrapped_vars, **options):
         new_args.append(wf)
 
     return expr.__class__(*new_args)
+
+def _append_index(symbol, index):
+    """
+
+    A helper function to append an index to a symbol
+
+    NOTE: Directly changes the name of the symbol, so if you call this more than
+    once on the same symbol you will get multiple indices appended. It does this
+    so that the assumptions of the symbol can be kept. 
+
+    """
+
+    symbol_str = str(symbol)
+    symbol_str += "_" + str(index)
+
+    return Symbol(symbol_str, **symbol._assumptions)
+    

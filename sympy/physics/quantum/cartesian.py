@@ -162,7 +162,7 @@ class XKet(Ket):
 
     @classmethod
     def default_args(self):
-        return ("x",)
+        return (Symbol("x", real=True),)
 
     @classmethod
     def dual_class(self):
@@ -352,6 +352,7 @@ class PxBra(Bra):
 #-------------------------------------------------------------------------
 
 def _enumerate_continuous_1D(*args, **options):
+    from sympy.physics.quantum.represent import _append_index
     state = args[0]
     num_states = args[1]
     state_class = state.__class__
@@ -365,7 +366,7 @@ def _enumerate_continuous_1D(*args, **options):
 
     for i, ind in enumerate(index_list):
         label = state.args[0]
-        enum_states[i] = state_class(str(label) + "_" + str(ind), **options)
+        enum_states[i] = state_class(_append_index(label, ind), **options)
 
     return enum_states
 

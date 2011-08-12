@@ -3,14 +3,14 @@
 from sympy import Symbol, pi, sqrt, sin, Interval, S
 
 from sympy.physics.quantum.operator import HermitianOperator
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.constants import hbar
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import L2
 from sympy.physics.quantum.cartesian import XKet
 
-m = Symbol('m')
-L = Symbol('L')
+m = Symbol('m', real=True)
+L = Symbol('L', real=True)
 
 
 __all__ = [
@@ -36,6 +36,11 @@ class PIABKet(Ket):
     """Particle in a box eigenket."""
 
     @classmethod
+    def default_args(self):
+        n = Symbol('n', integer=True)
+        return (n,)
+
+    @classmethod
     def _eval_hilbert_space(cls, args):
         return L2(Interval(S.NegativeInfinity,S.Infinity))
 
@@ -47,10 +52,15 @@ class PIABKet(Ket):
         return XKet
 
     def _represent_XKet(self, basis, **options):
-        x = Symbol('x')
-        n = Symbol('n')
+        from sympy.physics.quantum.represent import _append_index
         subs_info = options.get('subs',{})
-        return sqrt(2/L)*sin(n*pi*x/L).subs(subs_info)
+
+        n = self.label[0]
+        x = basis.position
+        x = _append_index(x, options.pop("index", 1))
+
+        expr = sqrt(2/L)*sin(n*pi*x/L).subs(subs_info)
+        return Wavefunction(expr, (x, 0, L))
 
     def _eval_innerproduct_PIABBra(self, bra):
         return KroneckerDelta(bra.label[0], self.label[0])
