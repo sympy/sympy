@@ -182,7 +182,8 @@ class Add(AssocOp):
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better
         # solution is not to sort things at all - but this needs some more
-        # fixing.
+        # fixing. NOTE: this is used in primitive, too, so if it changes
+        # here it should be changed there.
         newseq.sort(key=hash)
 
         # current code expects coeff to be always in slot-0
@@ -539,7 +540,9 @@ class Add(AssocOp):
         """
         Return ``(R, self/R)`` where ``R``` is the Rational GCD of ``self```.
 
-        **Example**
+        ``R`` is collected only from the leading coefficient of each term.
+
+        **Examples**
 
         >>> from sympy.abc import x, y
 
@@ -552,27 +555,37 @@ class Add(AssocOp):
         >>> (2*x/3 + 4.1*y).primitive()
         (1, 2*x/3 + 4.1*y)
 
+        No subprocessing of term factors is performed:
+
+        >>> ((2 + 2*x)*x + 2).primitive()
+        (1, x*(2*x + 2) + 2)
+
+        See also: primtive()
+
         """
         cont = S.Zero
-        terms = []
         terms = [a.as_coeff_Mul() for a in self.args]
-        for term in terms:
-            cont = cont.gcd(term[0])
-            if cont != 1: # not S.One in case Float is ever handled
-                continue
-            return S.One, self
+        for coeff, _ in terms:
+            cont = cont.gcd(coeff)
+            if cont == 1: # not S.One in case Float is ever handled
+                return S.One, self
 
-        M = object.__new__(Mul)
-        for i, term in enumerate(terms):
-            c = term[0]/cont
+        MUL = object.__new__(Mul)._new_rawargs
+        for i, (coeff, term) in enumerate(terms):
+            c = coeff/cont
             if c == 1:  # not S.One in case Float is ever handled
-                terms[i] = term[1]
+                terms[i] = term
+            elif term is S.One:
+                terms[i] = c
             else:
-                terms[i] = M._new_rawargs(c, term[1])
+                terms[i] = MUL(*((c,) + Mul.make_args(term)))
 
-        # it would be better not to use Add, but since ordering may have
-        # changed, _new_rawargs cannot be used
-        return cont, Add(*terms)
+        # we don't need a complete re-flattening since no new terms will join
+        # so we just use the same sort as is used in Add.flatten. When the
+        # coefficient changes, the ordering of terms may change, e.g.
+        # (3*x, 6*y) -> (2*y, x)
+        terms.sort(key=hash)
+        return cont, self._new_rawargs(*terms)
 
 from function import FunctionClass
 from mul import Mul
