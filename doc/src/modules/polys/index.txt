@@ -21,6 +21,7 @@ Contents
     :maxdepth: 3
 
     basics.txt
+    groebner.txt
     wester.txt
     reference.txt
     literature.txt
