@@ -84,19 +84,7 @@ def couple(tp):
     evect = states[0].__class__
     if not all([arg.__class__ is evect for arg in states]):
         raise TypeError('All operands must be of the same class')
-    # TODO: make less messy way to get coupled class
-    if evect is JxBra:
-        evect = JxBraCoupled
-    elif evect is JxKet:
-        evect = JxKetCoupled
-    elif evect is JyBra:
-        evect = JyBraCoupled
-    elif evect is JyKet:
-        evect = JyKetCoupled
-    elif evect is JzBra:
-        evect = JzBraCoupled
-    elif evect is JzKet:
-        evect = JzKetCoupled
+    evect = evect.coupled_class()
     # Symbolic coupling
     if any(not (state.j.is_number and state.m.is_number) for state in states):
         maxj = Add(*[state.j for state in states])
@@ -962,6 +950,10 @@ class JxKet(SpinState, Ket):
     def dual_class(self):
         return JxBra
 
+    @classmethod
+    def coupled_class(self):
+        return JxKetCoupled
+
     def _represent_default_basis(self, **options):
         return self._represent_JxOp(None, **options)
 
@@ -984,6 +976,10 @@ class JxBra(SpinState, Bra):
     def dual_class(self):
         return JxKet
 
+    @classmethod
+    def coupled_class(self):
+        return JxBraCoupled
+
 
 class JyKet(SpinState, Ket):
     """Eigenket of Jy.
@@ -994,6 +990,10 @@ class JyKet(SpinState, Ket):
     @classmethod
     def dual_class(self):
         return JyBra
+
+    @classmethod
+    def coupled_class(self):
+        return JyKetCoupled
 
     def _represent_default_basis(self, **options):
         return self._represent_JyOp(None, **options)
@@ -1017,6 +1017,10 @@ class JyBra(SpinState, Bra):
     @classmethod
     def dual_class(self):
         return JyKet
+
+    @classmethod
+    def coupled_class(self):
+        return JyBraCoupled
 
 
 class JzKet(SpinState, Ket):
@@ -1164,6 +1168,10 @@ class JzKet(SpinState, Ket):
     def dual_class(self):
         return JzBra
 
+    @classmethod
+    def coupled_class(self):
+        return JzKetCoupled
+
     def _represent_default_basis(self, **options):
         return self._represent_JzOp(None, **options)
 
@@ -1187,6 +1195,10 @@ class JzBra(SpinState, Bra):
     def dual_class(self):
         return JzKet
 
+    @classmethod
+    def coupled_class(self):
+        return JzBraCoupled
+
 
 class CoupledSpinState(SpinState):
     """Base class for coupled angular momentum states."""
@@ -1196,7 +1208,23 @@ class CoupledSpinState(SpinState):
 
     @classmethod
     def _eval_hilbert_space(cls, label):
-        return Add(*[ComplexSpace(2*j+1) for j in label[2:]])
+        if len(label) == 2:
+            return 0
+        ret = ComplexSpace(2*label[2]+1)
+        for j in label[3:]:
+            ret += ComplexSpace(2*j+1)
+        return ret
+
+    def _represent_coupled_base(self, **options):
+        evect = self.uncoupled_class()
+        result = zeros((self.hilbert_space.dimension,1))
+        if self.j == int(self.j):
+            start = self.j**2
+        else:
+            start = (2*self.j-1)*(1+2*self.j)/4
+        result[start:start+2*self.j+1,0] = evect(self.j, self.m)._represent_base(**options)
+        return result
+
 
 class JxKetCoupled(CoupledSpinState, Ket):
     """Eigenket of Jx.
@@ -1206,19 +1234,23 @@ class JxKetCoupled(CoupledSpinState, Ket):
 
     @classmethod
     def dual_class(self):
-        return JxBra
+        return JxBraCoupled
+
+    @classmethod
+    def uncoupled_class(self):
+        return JxKet
 
     def _represent_default_basis(self, **options):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_base(**options)
+        return self._represent_coupled_base(**options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2, **options)
+        return self._represent_coupled_base(alpha=3*pi/2, **options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_base(beta=pi/2, **options)
+        return self._represent_coupled_base(beta=pi/2, **options)
 
 class JxBraCoupled(CoupledSpinState, Bra):
     """Eigenbra of Jx.
@@ -1228,7 +1260,11 @@ class JxBraCoupled(CoupledSpinState, Bra):
 
     @classmethod
     def dual_class(self):
-        return JxKet
+        return JxKetCoupled
+
+    @classmethod
+    def uncoupled_class(self):
+        return JxBra
 
 
 class JyKetCoupled(CoupledSpinState, Ket):
@@ -1239,19 +1275,23 @@ class JyKetCoupled(CoupledSpinState, Ket):
 
     @classmethod
     def dual_class(self):
-        return JyBra
+        return JyBraCoupled
+
+    @classmethod
+    def uncoupled_class(self):
+        return JyKet
 
     def _represent_default_basis(self, **options):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_base(gamma=pi/2, **options)
+        return self._represent_coupled_base(gamma=pi/2, **options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(**options)
+        return self._represent_coupled_base(**options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2,beta=-pi/2,gamma=pi/2, **options)
+        return self._represent_coupled_base(alpha=3*pi/2,beta=-pi/2,gamma=pi/2, **options)
 
 
 class JyBraCoupled(CoupledSpinState, Bra):
@@ -1262,7 +1302,11 @@ class JyBraCoupled(CoupledSpinState, Bra):
 
     @classmethod
     def dual_class(self):
-        return JyKet
+        return JyKetCoupled
+
+    @classmethod
+    def uncoupled_class(self):
+        return JyBra
 
 
 class JzKetCoupled(CoupledSpinState, Ket):
@@ -1270,19 +1314,23 @@ class JzKetCoupled(CoupledSpinState, Ket):
 
     @classmethod
     def dual_class(self):
-        return JzBra
+        return JzBraCoupled
+
+    @classmethod
+    def uncoupled_class(self):
+        return JzKet
 
     def _represent_default_basis(self, **options):
         return self._represent_JzOp(None, **options)
 
     def _represent_JxOp(self, basis, **options):
-        return self._represent_base(beta=3*pi/2, **options)
+        return self._represent_coupled_base(beta=3*pi/2, **options)
 
     def _represent_JyOp(self, basis, **options):
-        return self._represent_base(alpha=3*pi/2,beta=pi/2,gamma=pi/2, **options)
+        return self._represent_coupled_base(alpha=3*pi/2,beta=pi/2,gamma=pi/2, **options)
 
     def _represent_JzOp(self, basis, **options):
-        return self._represent_base(**options)
+        return self._represent_coupled_base(**options)
 
 
 class JzBraCoupled(CoupledSpinState, Bra):
@@ -1293,4 +1341,8 @@ class JzBraCoupled(CoupledSpinState, Bra):
 
     @classmethod
     def dual_class(self):
-        return JzKet
+        return JzKetCoupled
+
+    @classmethod
+    def uncoupled_class(self):
+        return JzBra
