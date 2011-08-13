@@ -62,6 +62,7 @@ from numberfields import (
 
 from monomialtools import (
     Monomial, monomials, monomial_count,
+    lex, grlex, grevlex,
 )
 
 from rootoftools import (

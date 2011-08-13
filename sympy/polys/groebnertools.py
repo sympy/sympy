@@ -3,12 +3,7 @@
 from sympy.core.compatibility import cmp
 
 from sympy.polys.monomialtools import (
-    monomial_mul,
-    monomial_div,
-    monomial_lcm,
-    monomial_lex_key as O_lex,
-    monomial_grlex_key as O_grlex,
-    monomial_grevlex_key as O_grevlex,
+    monomial_mul, monomial_div, monomial_lcm,
 )
 
 from sympy.polys.distributedpolys import (
@@ -565,15 +560,19 @@ def f5_reduce(f, B, u, O, K):
     A polynomial that is reducible in the usual sense (sdp_rem)
     need not be F5-reducible, e.g.:
 
-    >>> from sympy.polys.groebnertools import lbp, sig, f5_reduce, Polyn, O_lex
+    >>> from sympy.polys.groebnertools import lbp, sig, f5_reduce, Polyn
     >>> from sympy.polys.distributedpolys import sdp_rem
+    >>> from sympy.polys.monomialtools import lex
     >>> from sympy import QQ
-    >>> f = lbp(sig((1,1,1),4), [((1, 0, 0), QQ(1))], 3)
+
+    >>> f = lbp(sig((1, 1, 1), 4), [((1, 0, 0), QQ(1))], 3)
     >>> g = lbp(sig((0, 0, 0), 2), [((1, 0, 0), QQ(1))], 2)
-    >>> sdp_rem(Polyn(f), [Polyn(g)], 2, O_lex, QQ)
+
+    >>> sdp_rem(Polyn(f), [Polyn(g)], 2, lex, QQ)
     []
-    >>> f5_reduce(f, [g], 2, O_lex, QQ)
+    >>> f5_reduce(f, [g], 2, lex, QQ)
     (((1, 1, 1), 4), [((1, 0, 0), 1/1)], 3)
+
     """
     if Polyn(f) == []:
         return f

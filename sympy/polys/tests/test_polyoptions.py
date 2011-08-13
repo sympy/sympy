@@ -5,7 +5,7 @@ from sympy.polys.polyoptions import (
     Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
     Frac, Formal, Polys, Include, All, Gen, Symbols)
 
-from sympy.polys.monomialtools import monomial_lex_key
+from sympy.polys.monomialtools import lex
 
 from sympy.polys.domains import FF, GF, ZZ, QQ, RR, EX
 
@@ -101,7 +101,7 @@ def test_Sort_postprocess():
     assert opt == {'sort': 'x > y'}
 
 def test_Order_preprocess():
-    assert Order.preprocess('lex') == monomial_lex_key
+    assert Order.preprocess('lex') == lex
 
 def test_Order_postprocess():
     opt = {'order': True}

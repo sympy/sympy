@@ -2,7 +2,7 @@
 
 from sympy.polys.monomialtools import (
     monomials, monomial_count,
-    monomial_lex_key, monomial_grlex_key, monomial_grevlex_key, monomial_key,
+    monomial_key, lex, grlex, grevlex,
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
@@ -34,21 +34,69 @@ def test_monomial_count():
     assert monomial_count(2, 2) == 6
     assert monomial_count(2, 3) == 10
 
-def test_monomial_lex_key():
-    assert monomial_lex_key((1,2,3)) == (1,2,3)
+def test_lex_order():
+    assert lex((1,2,3)) == (1,2,3)
+    assert str(lex) == 'lex'
 
-def test_monomial_grlex_key():
-    assert monomial_grlex_key((1,2,3)) == (6, (1,2,3))
+    assert lex((1,2,3)) == lex((1,2,3))
 
-def test_monomial_grevlex_key():
-    assert monomial_grevlex_key((1,2,3)) == (6, (-3,-2,-1))
+    assert lex((2,2,3)) > lex((1,2,3))
+    assert lex((1,3,3)) > lex((1,2,3))
+    assert lex((1,2,4)) > lex((1,2,3))
+
+    assert lex((0,2,3)) < lex((1,2,3))
+    assert lex((1,1,3)) < lex((1,2,3))
+    assert lex((1,2,2)) < lex((1,2,3))
+
+def test_grlex_order():
+    assert grlex((1,2,3)) == (6, (1,2,3))
+    assert str(grlex) == 'grlex'
+
+    assert grlex((1,2,3)) == grlex((1,2,3))
+
+    assert grlex((2,2,3)) > grlex((1,2,3))
+    assert grlex((1,3,3)) > grlex((1,2,3))
+    assert grlex((1,2,4)) > grlex((1,2,3))
+
+    assert grlex((0,2,3)) < grlex((1,2,3))
+    assert grlex((1,1,3)) < grlex((1,2,3))
+    assert grlex((1,2,2)) < grlex((1,2,3))
+
+    assert grlex((2,2,3)) > grlex((1,2,4))
+    assert grlex((1,3,3)) > grlex((1,2,4))
+
+    assert grlex((0,2,3)) < grlex((1,2,2))
+    assert grlex((1,1,3)) < grlex((1,2,2))
+
+def test_grevlex_order():
+    assert grevlex((1,2,3)) == (6, (-3,-2,-1))
+    assert str(grevlex) == 'grevlex'
+
+    assert grevlex((1,2,3)) == grevlex((1,2,3))
+
+    assert grevlex((2,2,3)) > grevlex((1,2,3))
+    assert grevlex((1,3,3)) > grevlex((1,2,3))
+    assert grevlex((1,2,4)) > grevlex((1,2,3))
+
+    assert grevlex((0,2,3)) < grevlex((1,2,3))
+    assert grevlex((1,1,3)) < grevlex((1,2,3))
+    assert grevlex((1,2,2)) < grevlex((1,2,3))
+
+    assert grevlex((2,2,3)) > grevlex((1,2,4))
+    assert grevlex((1,3,3)) > grevlex((1,2,4))
+
+    assert grevlex((0,2,3)) < grevlex((1,2,2))
+    assert grevlex((1,1,3)) < grevlex((1,2,2))
+
+    assert grevlex((0,1,1)) > grevlex((0,0,2))
+    assert grevlex((0,3,1)) < grevlex((2,2,1))
 
 def test_monomial_key():
-    assert monomial_key() == monomial_lex_key
+    assert monomial_key() == lex
 
-    assert monomial_key('lex') == monomial_lex_key
-    assert monomial_key('grlex') == monomial_grlex_key
-    assert monomial_key('grevlex') == monomial_grevlex_key
+    assert monomial_key('lex') == lex
+    assert monomial_key('grlex') == grlex
+    assert monomial_key('grevlex') == grevlex
 
     raises(ValueError, "monomial_key('foo')")
     raises(ValueError, "monomial_key(1)")

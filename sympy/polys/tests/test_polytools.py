@@ -43,9 +43,6 @@ from sympy.polys.polyerrors import (
     OptionError,
     FlagError)
 
-from sympy.polys.monomialtools import (
-    monomial_lex_key)
-
 from sympy.polys.polyclasses import DMP, DMF
 
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX

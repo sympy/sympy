@@ -332,7 +332,7 @@ class Order(Option):
 
     @classmethod
     def default(cls):
-        return sympy.polys.monomialtools.monomial_key('lex')
+        return sympy.polys.monomialtools.lex
 
     @classmethod
     def preprocess(cls, order):

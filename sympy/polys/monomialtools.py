@@ -82,22 +82,52 @@ def monomial_count(V, N):
     """
     return C.factorial(V + N) / C.factorial(V) / C.factorial(N)
 
-def monomial_lex_key(monom):
-    """Key function for sorting monomials in lexicographic order. """
-    return monom
+class MonomialOrder(object):
+    """Base class for monomial orderings. """
 
-def monomial_grlex_key(monom):
-    """Key function for sorting monomials in graded lexicographic order. """
-    return (sum(monom), monom)
+    alias = None
 
-def monomial_grevlex_key(monom):
-    """Key function for sorting monomials in reversed graded lexicographic order. """
-    return (sum(monom), tuple(reversed([-m for m in monom])))
+    def key(self, monomial):
+        raise NotImplementedError
+
+    def __str__(self):
+        return self.alias
+
+    def __call__(self, monomial):
+        return self.key(monomial)
+
+class LexOrder(MonomialOrder):
+    """Lexicographic order of monomials. """
+
+    alias = 'lex'
+
+    def key(self, monomial):
+        return monomial
+
+class GradedLexOrder(MonomialOrder):
+    """Graded lexicographic order of monomials. """
+
+    alias = 'grlex'
+
+    def key(self, monomial):
+        return (sum(monomial), monomial)
+
+class ReversedGradedLexOrder(MonomialOrder):
+    """Reversed graded lexicographic order of monomials. """
+
+    alias = 'grevlex'
+
+    def key(self, monomial):
+        return (sum(monomial), tuple(reversed([-m for m in monomial])))
+
+lex = LexOrder()
+grlex = GradedLexOrder()
+grevlex = ReversedGradedLexOrder()
 
 _monomial_key = {
-    'lex'     : monomial_lex_key,
-    'grlex'   : monomial_grlex_key,
-    'grevlex' : monomial_grevlex_key,
+    'lex'     : lex,
+    'grlex'   : grlex,
+    'grevlex' : grevlex,
 }
 
 def monomial_key(order=None):
@@ -120,7 +150,7 @@ def monomial_key(order=None):
 
     """
     if order is None:
-        return _monomial_key['lex']
+        return lex
 
     if isinstance(order, str):
         try:
