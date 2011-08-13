@@ -3,7 +3,6 @@
 from sympy.polys.monomialtools import (
     monomials, monomial_count,
     monomial_lex_key, monomial_grlex_key, monomial_grevlex_key, monomial_key,
-    monomial_lex_cmp, monomial_grlex_cmp, monomial_grevlex_cmp, monomial_cmp,
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
@@ -53,62 +52,6 @@ def test_monomial_key():
 
     raises(ValueError, "monomial_key('foo')")
     raises(ValueError, "monomial_key(1)")
-
-def test_monomial_lex_cmp():
-    assert monomial_lex_cmp((1,2,3), (1,2,3)) == 0
-
-    assert monomial_lex_cmp((2,2,3), (1,2,3)) == 1
-    assert monomial_lex_cmp((1,3,3), (1,2,3)) == 1
-    assert monomial_lex_cmp((1,2,4), (1,2,3)) == 1
-
-    assert monomial_lex_cmp((0,2,3), (1,2,3)) == -1
-    assert monomial_lex_cmp((1,1,3), (1,2,3)) == -1
-    assert monomial_lex_cmp((1,2,2), (1,2,3)) == -1
-
-def test_monomial_grlex_cmp():
-    assert monomial_grlex_cmp((1,2,3), (1,2,3)) == 0
-
-    assert monomial_grlex_cmp((2,2,3), (1,2,3)) == 1
-    assert monomial_grlex_cmp((1,3,3), (1,2,3)) == 1
-    assert monomial_grlex_cmp((1,2,4), (1,2,3)) == 1
-
-    assert monomial_grlex_cmp((0,2,3), (1,2,3)) == -1
-    assert monomial_grlex_cmp((1,1,3), (1,2,3)) == -1
-    assert monomial_grlex_cmp((1,2,2), (1,2,3)) == -1
-
-    assert monomial_grlex_cmp((2,2,3), (1,2,4)) == 1
-    assert monomial_grlex_cmp((1,3,3), (1,2,4)) == 1
-
-    assert monomial_grlex_cmp((0,2,3), (1,2,2)) == -1
-    assert monomial_grlex_cmp((1,1,3), (1,2,2)) == -1
-
-def test_monomial_grevlex_cmp():
-    assert monomial_grevlex_cmp((1,2,3), (1,2,3)) == 0
-
-    assert monomial_grevlex_cmp((2,2,3), (1,2,3)) == 1
-    assert monomial_grevlex_cmp((1,3,3), (1,2,3)) == 1
-    assert monomial_grevlex_cmp((1,2,4), (1,2,3)) == 1
-
-    assert monomial_grevlex_cmp((0,2,3), (1,2,3)) == -1
-    assert monomial_grevlex_cmp((1,1,3), (1,2,3)) == -1
-    assert monomial_grevlex_cmp((1,2,2), (1,2,3)) == -1
-
-    assert monomial_grevlex_cmp((2,2,3), (1,2,4)) == 1
-    assert monomial_grevlex_cmp((1,3,3), (1,2,4)) == 1
-
-    assert monomial_grevlex_cmp((0,2,3), (1,2,2)) == -1
-    assert monomial_grevlex_cmp((1,1,3), (1,2,2)) == -1
-
-    assert monomial_grevlex_cmp((0,1,1), (0,0,2)) == 1
-    assert monomial_grevlex_cmp((0,3,1), (2,2,1)) == -1
-
-
-def test_monomial_cmp():
-    assert monomial_cmp('lex') == monomial_lex_cmp
-    assert monomial_cmp('grlex') == monomial_grlex_cmp
-    assert monomial_cmp('grevlex') == monomial_grevlex_cmp
-
-    raises(ValueError, "monomial_cmp('unknown')")
 
 def test_monomial_mul():
     assert monomial_mul((3,4,1), (1,2,0)) == (4,6,1)

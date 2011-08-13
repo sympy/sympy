@@ -8,8 +8,6 @@ from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.utilities import cythonized
 
-from sympy.core.compatibility import cmp
-
 def monomials(variables, degree):
     r"""
     Generate a set of monomials of the given total degree or less.
@@ -133,37 +131,6 @@ def monomial_key(order=None):
         return order
     else:
         raise ValueError("monomial ordering specification must be a string or a callable, got %s" % order)
-
-def monomial_lex_cmp(a, b):
-    return cmp(a, b)
-
-def monomial_grlex_cmp(a, b):
-    return cmp(sum(a), sum(b)) or cmp(a, b)
-
-def monomial_grevlex_cmp(a, b):
-    return cmp(sum(a), sum(b)) or cmp(tuple(reversed(b)), tuple(reversed(a)))
-
-_monomial_order = {
-    'lex'     : monomial_lex_cmp,
-    'grlex'   : monomial_grlex_cmp,
-    'grevlex' : monomial_grevlex_cmp,
-}
-
-def monomial_cmp(order):
-    """
-    Returns a function defining admissible order on monomials.
-
-    Currently supported orderings are:
-
-    1. lex       - lexicographic order
-    2. grlex     - graded lexicographic order
-    3. grevlex   - reversed graded lexicographic order
-
-    """
-    try:
-        return _monomial_order[order]
-    except KeyError:
-        raise ValueError("expected valid monomial order, got %s" % order)
 
 @cythonized("a,b")
 def monomial_mul(A, B):
