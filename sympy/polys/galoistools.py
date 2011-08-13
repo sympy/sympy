@@ -2066,7 +2066,7 @@ def csolve_primepower(f,p,e):
 
     We need to solve the f(x) congruent 0 mod(p) and then by generating the solutions for f(x) congruent 0 mod(p**2) and so on. Following is an example of how to it generates the solutions for x**2 + x + 223 congruent 0 mod(3**i) for i = 1, 2, 3, 4
 
-    >>>from sympy.polys.galoistools import csolve_primepower
+    >>> from sympy.polys.galoistools import csolve_primepower
 
     >>> g.csolve_primepower([1,1,223], 3, 4)
     [76, 49, 22, 67, 40, 13, 58, 31, 4]
