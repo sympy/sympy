@@ -2068,7 +2068,7 @@ def csolve_primepower(f,p,e):
 
     >>> from sympy.polys.galoistools import csolve_primepower
 
-    >>> g.csolve_primepower([1,1,223], 3, 4)
+    >>> csolve_primepower([1,1,223], 3, 4)
     [76, 49, 22, 67, 40, 13, 58, 31, 4]
 
     **Reference**
@@ -2104,7 +2104,7 @@ def gf_csolve(f,n):
     >>> from sympy.polys.galoistools import gf_csolve
 
     >>> gf_csolve([1, 1, 7], 189)
-    >>> [76, 49, 13, 175, 139, 112]
+    [76, 49, 13, 175, 139, 112]
 
     """
     P = factorint(n)
