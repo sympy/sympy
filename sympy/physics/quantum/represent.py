@@ -589,15 +589,15 @@ def enumerate_states(*args, **options):
 
     Operates in two different modes:
 
-    1) Two arguments are passed to it. The first is the base state
-    which is to be indexed, and the second argument is a list of
-    indices to append.
+    1) Two arguments are passed to it. The first is the base state which is to
+    be indexed, and the second argument is a list of indices to append.
 
-    2) Three arguments are passed. The first is again the base state
-    to be indexed. The second is the start index for counting.
-    The final argument is the number of kets you wish to receive.
+    2) Three arguments are passed. The first is again the base state to be
+    indexed. The second is the start index for counting.  The final argument is
+    the number of kets you wish to receive.
 
-    Tries to call state._enumerate_state. If this fails, returns an empty list
+    Will throw an error if a state is not passed or if the labels of the state
+    passed are not symbols.
 
     Parameters
     ==========
@@ -617,6 +617,16 @@ def enumerate_states(*args, **options):
     >>> enumerate_states(test2, [4, 5, 10])
     [<bar_4|, <bar_5|, <bar_10|]
 
+    Works for states with multiple symbols also
+    >>> from sympy.physics.quantum.cartesian import PositionKet3D
+    >>> from sympy.physics.quantum.spin import JzKet
+    >>> test = JzKet('j', 'm')
+    >>> enumerate_states(test, 1, 1)
+    [|j_1,m_1>]
+    >>> test2 = PositionKet3D()
+    >>> enumerate_states(test2, [2, 4])
+    [|x_2,y_2,z_2>, |x_4,y_4,z_4>]
+
     """
 
     state = args[0]
@@ -629,17 +639,26 @@ def enumerate_states(*args, **options):
 
     if len(args) == 3:
         num_states = args[2]
-        options['start_index'] = args[1]
+        start_index = args[1]
+        index_list = range(start_index, start_index + num_states)
     else:
         num_states = len(args[1])
-        options['index_list'] = args[1]
+        index_list = args[1]
 
-    try:
-        ret = state._enumerate_state(num_states, **options)
-    except NotImplementedError:
-        ret = []
+    state = args[0]
+    num_states = args[1]
+    state_class = state.__class__
+    assumptions = state.label_assumptions
 
-    return ret
+    enum_states = [0 for i in range(len(index_list))]
+
+    for i, ind in enumerate(index_list):
+        label = state.label
+        new_labels = map(lambda x: _append_index(x, ind, **assumptions), label)
+
+        enum_states[i] = state_class(*new_labels, **options)
+
+    return enum_states
 
 def do_qapply(expr):
     if not isinstance(expr, Mul):
@@ -705,6 +724,9 @@ def _append_index(symbol, index, **assumptions):
     A helper function to append an index to a symbol
 
     """
+
+    if not isinstance(symbol, Symbol):
+        raise TypeError("Argument passed not a Symbol!")
 
     symbol_str = str(symbol)
     symbol_str += "_" + str(index)

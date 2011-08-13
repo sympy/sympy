@@ -1,6 +1,5 @@
 """Tests for piab.py"""
 
-<<<<<<< HEAD
 from sympy import DiracDelta, I, Interval, pi, S, sin, sqrt, Symbol, symbols
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum import L2, qapply, hbar, represent

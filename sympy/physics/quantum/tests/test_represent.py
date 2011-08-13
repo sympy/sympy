@@ -16,7 +16,7 @@ from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.matrixutils import (numpy_ndarray,
                                                scipy_sparse_matrix, to_numpy,
                                                to_scipy_sparse, to_sympy)
-from sympy.physics.quantum.cartesian import XKet, XOp, XBra
+from sympy.physics.quantum.cartesian import XKet, XOp, XBra, PositionKet3D
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state
 
@@ -176,3 +176,10 @@ def test_enumerate_states():
     test = XKet("foo")
     assert enumerate_states(test, 1, 1) == [XKet("foo_1")]
     assert enumerate_states(test, [1, 2, 4]) == [XKet("foo_1"), XKet("foo_2"), XKet("foo_4")]
+
+    test2 = PositionKet3D()
+    assert enumerate_states(test2, 1, 2) == \
+           [PositionKet3D("x_1","y_1","z_1"), PositionKet3D("x_2","y_2","z_2")]
+    assert enumerate_states(test2, [4, 7]) == \
+           [PositionKet3D("x_4","y_4","z_4"), PositionKet3D("x_7","y_7","z_7")]
+

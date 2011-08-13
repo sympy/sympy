@@ -59,9 +59,10 @@ class XOp(HermitianOperator):
         return ket.position_x*ket
 
     def _represent_PxKet(self, basis, **options):
-        index = options.pop("index", 1)
+        from sympy.physics.quantum.represent import enumerate_states
 
-        states = basis._enumerate_state(2, start_index = index)
+        index = options.pop("index", 1)
+        states = enumerate_states(basis, index, 2)
         coord1 = states[0].momentum
         coord2 = states[1].momentum
         f = Function('f')
@@ -137,9 +138,10 @@ class PxOp(HermitianOperator):
         return ket.momentum*ket
 
     def _represent_XKet(self, basis, **options):
-        index = options.pop("index", 1)
+        from sympy.physics.quantum.represent import enumerate_states
 
-        states = basis._enumerate_state(2, start_index = index)
+        index = options.pop("index", 1)
+        states = enumerate_states(basis, index, 2)
         coord1 = states[0].position
         coord2 = states[1].position
         f = Function('f')
@@ -193,9 +195,6 @@ class XKet(Ket):
         """The position of the state."""
         return self.label[0]
 
-    def _enumerate_state(self, num_states, **options):
-        return _enumerate_continuous_1D(self, num_states, **options)
-
     def _eval_innerproduct_XBra(self, bra, **hints):
         return DiracDelta(self.position-bra.position)
 
@@ -229,6 +228,8 @@ class XBra(Bra):
 
 class PositionState3D(State):
     """ Base class for 3D cartesian position eigenstates """
+
+    _label_separator = ','
 
     @classmethod
     def _operators_to_state(self, ops, **options):
@@ -332,9 +333,6 @@ class PxKet(Ket):
         """The momentum of the state."""
         return self.label[0]
 
-    def _enumerate_state(self, *args, **options):
-        return _enumerate_continuous_1D(self, *args, **options)
-
     def _eval_innerproduct_XBra(self, bra, **hints):
         return exp(I*self.momentum*bra.position/hbar)/sqrt(2*pi*hbar)
 
@@ -370,26 +368,6 @@ class PxBra(Bra):
 #-------------------------------------------------------------------------
 # Global helper functions
 #-------------------------------------------------------------------------
-
-def _enumerate_continuous_1D(*args, **options):
-    from sympy.physics.quantum.represent import _append_index
-    state = args[0]
-    num_states = args[1]
-    state_class = state.__class__
-    index_list = options.pop('index_list', [])
-
-    if len(index_list) == 0:
-        start_index = options.pop('start_index', 1)
-        index_list = range(start_index, start_index + num_states)
-
-    enum_states = [0 for i in range(len(index_list))]
-
-    for i, ind in enumerate(index_list):
-        label = state.args[0]
-        enum_states[i] = state_class( \
-            _append_index(label, ind, **state.label_assumptions), **options)
-
-    return enum_states
 
 def _lowercase_labels(ops):
     if not isinstance(ops, list):

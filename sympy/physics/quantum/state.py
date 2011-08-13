@@ -117,9 +117,6 @@ class StateBase(QExpr):
         from operatorset import state_to_operators #import internally to avoid circular import errors
         return state_to_operators(self)
 
-    def _enumerate_state(self, num_states, **options):
-        raise NotImplementedError("Cannot enumerate this state!")
-
     #-------------------------------------------------------------------------
     # Dagger/dual
     #-------------------------------------------------------------------------
@@ -263,10 +260,6 @@ class BraBase(StateBase):
 
     def _state_to_operators(self, op_classes, **options):
         return self.dual._state_to_operators(op_classes, **options)
-
-    def _enumerate_state(self, num_states, **options):
-        dual_states = self.dual._enumerate_state(num_states, **options)
-        return map(lambda x: x.dual, dual_states)
 
     @classmethod
     def default_args(self):
