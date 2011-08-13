@@ -2,6 +2,7 @@
 Mechanics: Vector & ReferenceFrame
 ==================================
 
+
 In :mod:`mechanics`, vectors and reference frames are the "building blocks" of
 dynamic systems. This document will describe these mathematically and describe
 how to use them with this module's code.
@@ -124,9 +125,9 @@ properties and relationships are:
   \mathbf{a} \cdot \mathbf{c}\\
   \mathbf{a} \times (\mathbf{b} + \mathbf{c}) &= \mathbf{a} \times \mathbf{b} +
   \mathbf{a} \times \mathbf{b}\\
-  (\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &\textnormal{ gives the scalar
+  (\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} & \textrm{ gives the scalar
   triple product.}\\
-  \mathbf{a} \times (\mathbf{b} \cdot \mathbf{c}) &\textnormal{ does not work,
+  \mathbf{a} \times (\mathbf{b} \cdot \mathbf{c}) & \textrm{ does not work,
   as you cannot cross a vector and a scalar.}\\
   (\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &= \mathbf{a} \cdot
   (\mathbf{b} \times \mathbf{c})\\
@@ -175,11 +176,11 @@ Multiplication operations are now defined as:
   \mathbf{\hat{n}_y} + \alpha b_z \mathbf{\hat{n}_z}\\
   \mathbf{a} \cdot \mathbf{b} &= a_x b_x + a_y b_y + a_z b_z\\
   \mathbf{a} \times \mathbf{b} &=
-  \begin{vmatrix} \mathbf{\hat{n}_x} & \mathbf{\hat{n}_y} & \mathbf{\hat{n}_z}
-  \\ a_x & a_y & a_z \\ a_x & a_y & a_z \end{vmatrix}\\
+  \textrm{det }\begin{bmatrix} \mathbf{\hat{n}_x} & \mathbf{\hat{n}_y} &
+  \mathbf{\hat{n}_z} \\ a_x & a_y & a_z \\ a_x & a_y & a_z \end{bmatrix}\\
   (\mathbf{a} \times \mathbf{b}) \cdot \mathbf{c} &=
-  \begin{vmatrix} a_x & a_y & a_z \\ b_x & b_y & b_z \\ c_x & c_y & c_z
-  \end{vmatrix}\\
+  \textrm{det }\begin{bmatrix} a_x & a_y & a_z \\ b_x & b_y & b_z \\ c_x & c_y
+  & c_z \end{bmatrix}\\
 
 To write a vector in a given basis, we can do the follow:
 
@@ -246,18 +247,18 @@ it is not clear what the derivative is. If you are observing from frame
 frame as part of the derivative notation:
 
 .. math::
-  \frac{^{\mathbf{A}} d \mathbf{e}}{d \theta} &\neq 0 \textnormal{,
-  the derivative of } \mathbf{e} \textnormal{ with respect to } \theta
-  \textnormal{ in the reference frame } \mathbf{A}\\
-  \frac{^{\mathbf{B}} d \mathbf{e}}{d \theta} &= 0 \textnormal{,
-   the derivative of } \mathbf{e} \textnormal{ with respect to } \theta
-  \textnormal{ in the reference frame } \mathbf{B}\\
-  \frac{^{\mathbf{A}} d \mathbf{c}}{d \theta} &= 0 \textnormal{,
-   the derivative of } \mathbf{c} \textnormal{ with respect to } \theta
-  \textnormal{ in the reference frame } \mathbf{A}\\
-  \frac{^{\mathbf{B}} d \mathbf{c}}{d \theta} &\neq 0 \textnormal{,
-   the derivative of } \mathbf{c} \textnormal{ with respect to } \theta
-  \textnormal{ in the reference frame } \mathbf{B}\\
+  \frac{^{\mathbf{A}} d \mathbf{e}}{d \theta} &\neq 0 \textrm{,
+  the derivative of } \mathbf{e} \textrm{ with respect to } \theta
+  \textrm{ in the reference frame } \mathbf{A}\\
+  \frac{^{\mathbf{B}} d \mathbf{e}}{d \theta} &= 0 \textrm{,
+   the derivative of } \mathbf{e} \textrm{ with respect to } \theta
+  \textrm{ in the reference frame } \mathbf{B}\\
+  \frac{^{\mathbf{A}} d \mathbf{c}}{d \theta} &= 0 \textrm{,
+   the derivative of } \mathbf{c} \textrm{ with respect to } \theta
+  \textrm{ in the reference frame } \mathbf{A}\\
+  \frac{^{\mathbf{B}} d \mathbf{c}}{d \theta} &\neq 0 \textrm{,
+   the derivative of } \mathbf{c} \textrm{ with respect to } \theta
+  \textrm{ in the reference frame } \mathbf{B}\\
 
 Here are some additional properties of derivatives of vectors in specific
 frames:
@@ -280,13 +281,13 @@ using a direction cosine matrix (or DCM). The direction cosine matrix relates
 the basis vectors of one frame to another, in the following fashion:
 
 .. math::
-  \lbrk \begin{array}{c}
+  \begin{bmatrix}
   \mathbf{\hat{a}_x} \\ \mathbf{\hat{a}_y} \\ \mathbf{\hat{a}_z} \\
-  \end{array} \rbrk  =
-  \lbrk ^{\mathbf{A}} \mathbf{C}^{\mathbf{B}} \rbrk
-  \lbrk \begin{array}{c}
+  \end{bmatrix}  =
+  \begin{bmatrix} ^{\mathbf{A}} \mathbf{C}^{\mathbf{B}} \end{bmatrix}
+  \begin{bmatrix}
   \mathbf{\hat{b}_x} \\ \mathbf{\hat{b}_y} \\ \mathbf{\hat{b}_z} \\
-  \end{array} \rbrk
+  \end{bmatrix}
 
 When two frames (say, :math:`\mathbf{A}` & :math:`\mathbf{B}`) are initially
 aligned, then one frame has all of its basis vectors rotated around an axis
@@ -304,29 +305,29 @@ This rotation can be characterized by the following direction cosine matrix:
 .. math::
 
   ^{\mathbf{A}}\mathbf{C}^{\mathbf{B}} =
-  \lbrk \begin{array}{ccc}
+  \begin{bmatrix}
   cos(\theta) & -sin(\theta) & 0\\
   sin(\theta) & cos(\theta) & 0\\
   0 & 0 & 1\\
-  \end{array} \rbrk
+  \end{bmatrix}
 
 Simple rotations about the X and Y axes are defined by:
 
 .. math::
 
-  \textnormal{DCM for x-axis rotation: }
-  \lbrk \begin{array}{ccc}
+  \textrm{DCM for x-axis rotation: }
+  \begin{bmatrix}
   1 & 0 & 0\\
   0 & cos(\theta) & -sin(\theta)\\
   0 & sin(\theta) & cos(\theta)
-  \end{array} \rbrk
+  \end{bmatrix}
 
-  \textnormal{DCM for y-axis rotation: }
-  \lbrk \begin{array}{ccc}
+  \textrm{DCM for y-axis rotation: }
+  \begin{bmatrix}
   cos(\theta) & 0 & sin(\theta)\\
   0 & 1 & 0\\
   -sin(\theta) & 0 & cos(\theta)\\
-  \end{array} \rbrk
+  \end{bmatrix}
 
 Rotation in the positive direction here will be defined by using the right-hand
 rule.
@@ -336,12 +337,13 @@ product between sets of basis vectors. If we have two reference frames with
 associated basis vectors, their direction cosine matrix can be defined as:
 
 .. math::
-  \lbrk \begin{array}{ccc}
+
+  \begin{bmatrix}
   C_{xx} & C_{xy} & C_{xz}\\
   C_{yx} & C_{yy} & C_{yz}\\
   C_{zx} & C_{zy} & C_{zz}\\
-  \end{array} \rbrk =
-  \lbrk \begin{array}{ccc}
+  \end{bmatrix} =
+  \begin{bmatrix}
   \mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_x} &
   \mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_y} &
   \mathbf{\hat{a}_x}\cdot\mathbf{\hat{b}_z}\\
@@ -351,7 +353,7 @@ associated basis vectors, their direction cosine matrix can be defined as:
   \mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_x} &
   \mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_y} &
   \mathbf{\hat{a}_z}\cdot\mathbf{\hat{b}_z}\\
-  \end{array} \rbrk
+  \end{bmatrix}
 
 Additionally, the direction cosine matrix is orthogonal, in that:
 
@@ -370,25 +372,25 @@ vectors: :math:`\mathbf{a} = \mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} +
 
 .. math::
   \mathbf{b} &= \mathbf{\hat{b}_x} + \mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}\\
-  \mathbf{b} &= \lbrk\mathbf{\hat{a}_x}\cdot (\mathbf{\hat{b}_x} +
-  \mathbf{\hat{b}_y} + \mathbf{\hat{b}_z})\rbrk \mathbf{\hat{a}_x} +
-  \lbrk\mathbf{\hat{a}_y}\cdot (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y} +
-  \mathbf{\hat{b}_z})\rbrk \mathbf{\hat{a}_y} + \lbrk\mathbf{\hat{a}_z}\cdot
-  (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y} + \mathbf{\hat{b}_z})\rbrk
-  \mathbf{\hat{a}_z}\\
-  \mathbf{b} &= (cos(\theta) - sin(\theta))\mathbf{\hat{a}_x} +
+  \mathbf{b} &= \begin{bmatrix}\mathbf{\hat{a}_x}\cdot (\mathbf{\hat{b}_x} +
+  \mathbf{\hat{b}_y} + \mathbf{\hat{b}_z})\end{bmatrix} \mathbf{\hat{a}_x} +
+  \begin{bmatrix}\mathbf{\hat{a}_y}\cdot (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y}
+  + \mathbf{\hat{b}_z})\end{bmatrix} \mathbf{\hat{a}_y} +
+  \begin{bmatrix}\mathbf{\hat{a}_z}\cdot (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y}
+  + \mathbf{\hat{b}_z})\end{bmatrix} \mathbf{\hat{a}_z}\\ \mathbf{b} &=
+  (cos(\theta) - sin(\theta))\mathbf{\hat{a}_x} +
   (sin(\theta)+cos(\theta))\mathbf{\hat{a}_y} + \mathbf{\hat{a}_z}
 
 And if we wish to express :math:`\mathbf{a}` in the :math:`\mathbf{B}`, we do:
 
 .. math::
   \mathbf{a} &= \mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z}\\
-  \mathbf{a} &= \lbrk\mathbf{\hat{b}_x}\cdot (\mathbf{\hat{a}_x} +
-  \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\rbrk \mathbf{\hat{b}_x} +
-  \lbrk\mathbf{\hat{b}_y}\cdot (\mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} +
-  \mathbf{\hat{a}_z})\rbrk \mathbf{\hat{b}_y} + \lbrk\mathbf{\hat{b}_z}\cdot
-  (\mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\rbrk
-  \mathbf{\hat{b}_z}\\
+  \mathbf{a} &= \begin{bmatrix}\mathbf{\hat{b}_x}\cdot (\mathbf{\hat{a}_x} +
+  \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\end{bmatrix} \mathbf{\hat{b}_x} +
+  \begin{bmatrix}\mathbf{\hat{b}_y}\cdot (\mathbf{\hat{a}_x} +
+  \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\end{bmatrix} \mathbf{\hat{b}_y} +
+  \begin{bmatrix}\mathbf{\hat{b}_z}\cdot (\mathbf{\hat{a}_x} +
+  \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\end{bmatrix} \mathbf{\hat{b}_z}\\
   \mathbf{a} &= (cos(\theta) + sin(\theta))\mathbf{\hat{b}_x} +
   (-sin(\theta)+cos(\theta))\mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}
 
@@ -438,11 +440,11 @@ the two frames:
 
 .. math::
   ^{\mathbf{A}} \mathbf{C} ^{\mathbf{B}} =
-  \lbrk \begin{array}{ccc}
+  \begin{bmatrix}
   cos(\theta) & 0 & sin(\theta)\\
   0 & 1 & 0\\
   -sin(\theta) & 0 & cos(\theta)\\
-  \end{array} \rbrk
+  \end{bmatrix}
 
 Now we can do the following:
 
@@ -455,7 +457,7 @@ Now we can do the following:
   \frac{d (l)}{dt} \mathbf{\hat{a}_y} +
   \frac{d (-sin(\theta) x)}{dt} \mathbf{\hat{a}_z}\\
   &= (-\dot{\theta}sin(\theta)x + cos(\theta)\dot{x}) \mathbf{\hat{a}_x} +
-  (\dot{\theta}cos(\theta)x + sin(\theta)\dot(x)) \mathbf{\hat{a}_z}
+  (\dot{\theta}cos(\theta)x + sin(\theta)\dot{x}) \mathbf{\hat{a}_z}
 
 Note that this is the time derivative of :math:`\mathbf{c}` in
 :math:`\mathbf{A}`, and is expressed in the :math:`\mathbf{A}` frame. We can
@@ -465,8 +467,8 @@ still be valid:
 .. math::
   \frac{^{\mathbf{A}} d \mathbf{c}}{dt} &= (-\dot{\theta}sin(\theta)x +
   cos(\theta)\dot{x}) \mathbf{\hat{a}_x} + (\dot{\theta}cos(\theta)x +
-  sin(\theta)\dot(x)) \mathbf{\hat{a}_z}\\
-  &= \dot(x)\mathbf{\hat{b}_x} - \theta x \mathbf{\hat{b}_z}\\
+  sin(\theta)\dot{x}) \mathbf{\hat{a}_z}\\
+  &= \dot{x}\mathbf{\hat{b}_x} - \theta x \mathbf{\hat{b}_z}\\
 
 Note the difference in expression complexity between the two forms. They are
 equivalent, but one is much simpler. This is an extremely important concept, as

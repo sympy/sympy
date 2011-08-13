@@ -6,7 +6,8 @@ from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
 def test_one_dof():
     # This is for a 1 dof spring-mass-damper case.
     # It is described in more detail in the Kane docstring.
-    q, qd, u, ud = dynamicsymbols('q qd u ud')
+    q, u = dynamicsymbols('q u')
+    qd, ud = dynamicsymbols('q u', 1)
     m, c, k = symbols('m c k')
     N = ReferenceFrame('N')
     P = Point('P')
@@ -34,8 +35,8 @@ def test_two_dof():
     # The first coordinate is the displacement of the first particle, and the
     # second is the relative displacement between the first and second
     # particles. Speeds are defined as the time derivatives of the particles.
-    q1, q2, q1d, q2d = dynamicsymbols('q1 q2 q1d q2d')
-    u1, u2, u1d, u2d = dynamicsymbols('u1 u2 u1d u2d')
+    q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
+    q1d, q2d, u1d, u2d = dynamicsymbols('q1 q2 u1 u2', 1)
     m, c1, c2, k1, k2 = symbols('m c1 c2 k1 k2')
     N = ReferenceFrame('N')
     P1 = Point('P1')
@@ -72,7 +73,8 @@ def test_two_dof():
                                     c2 * u2) / m)
 
 def test_pend():
-    q, qd, u, ud = dynamicsymbols('q qd u ud')
+    q, u = dynamicsymbols('q u')
+    qd, ud = dynamicsymbols('q u', 1)
     m, l, g = symbols('m l g')
     N = ReferenceFrame('N')
     P = Point('P')
@@ -103,8 +105,8 @@ def test_rolling_disc():
     # need to introduce generalized speeds. Only 3 configuration and three
     # speed variables are need to describe this system, along with the disc's
     # mass and radius, and the local graivty (note that mass will drop out).
-    q1, q2, q3, q1d, q2d, q3d = dynamicsymbols('q1 q2 q3 q1d q2d q3d')
-    u1, u2, u3, u1d, u2d, u3d = dynamicsymbols('u1 u2 u3 u1d u2d u3d')
+    q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1 q2 q3 u1 u2 u3')
+    q1d, q2d, q3d, u1d, u2d, u3d = dynamicsymbols('q1 q2 q3 u1 u2 u3', 1)
     r, m, g = symbols('r m g')
 
     # The kinematics are formed by a series of simple rotations. Each simple

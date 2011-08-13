@@ -29,7 +29,7 @@ Provides variables for commonly written dimensionless (unit-less) quantities.
     20
     >>> 20*percent
     1/5
-    >>> 300*kilo*tax_rate
+    >>> 300*kilo*20*percent
     60000
     >>> nano*deg
     pi/180000000000
@@ -60,4 +60,5 @@ Derived units
 Common SI derived units.
 
     >>> joule
+    kg*m**2/s**2
 

@@ -19,10 +19,6 @@ import rigidbody
 from rigidbody import *
 __all__.extend(rigidbody.__all__)
 
-import dynamicsymbol
-from dynamicsymbol import *
-__all__.extend(dynamicsymbol.__all__)
-
 import functions
 from functions import *
 __all__.extend(functions.__all__)

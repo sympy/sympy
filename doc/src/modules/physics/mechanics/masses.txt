@@ -45,7 +45,7 @@ could be represented as:
   a_{21} & a_{22} & a_{23} \\
   a_{31} & a_{32} & a_{33}
   \end{bmatrix}\\
-  \textnormal{or:}\\
+  \textrm{or:}\\
   a_{11} \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} +
   a_{12} \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} +
   a_{13} \mathbf{\hat{a}_x}\mathbf{\hat{a}_z} +
