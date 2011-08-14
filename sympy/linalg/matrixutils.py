@@ -107,6 +107,36 @@ def _dokrepr_from_callable(rows, cols, func):
                 mat[i, j] = val
     return mat
 
+def _from_callable(*args):
+    rows = args[0]
+    cols = args[1]
+    op = args[2]
+    mat = {}
+    for i in xrange(rows):
+        for j in xrange(cols):
+            val = op(i, j)
+            if val != 0:
+                mat[i, j] = val
+    return rows, cols, mat
 
-  
+def _from_list(*args):
+    rows = args[0]
+    cols = args[1]
+    inp = args[2]
+    mat = {}
+    for i in xrange(rows):
+        for j in xrange(cols):
+            val = mat[i * rows + j]
+            if val != 0:
+                mat[i, j] = val
+    return rows, cols, mat
+
+def _dict_to_densematrix(rows, cols, mat):
+    return DenseMatrix(rows, cols, mat)
+
+def _dict_to_dokmatrix(rows, cols, mat):
+    return DOKMatrix(rows, cols, mat)
+
+def _dict_to_lilmatrix(rows, cols, mat):
+    return LILMatrix(rows, cols, mat)
 
