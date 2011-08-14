@@ -3,7 +3,7 @@
 from sympy.polys.polyoptions import (
     Options, Expand, Gens, Wrt, Sort, Order, Field, Greedy, Domain,
     Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
-    Frac, Formal, Polys, Include, All, Gen, Symbols)
+    Frac, Formal, Polys, Include, All, Gen, Symbols, Method)
 
 from sympy.polys.monomialtools import lex
 
@@ -418,3 +418,11 @@ def test_Symbols_postprocess():
 
     assert opt == {'symbols': [x, y, z]}
 
+def test_Method_preprocess():
+    raises(OptionError, "Method.preprocess(10)")
+
+def test_Method_postprocess():
+    opt = {'method': 'f5b'}
+    Method.postprocess(opt)
+
+    assert opt == {'method': 'f5b'}

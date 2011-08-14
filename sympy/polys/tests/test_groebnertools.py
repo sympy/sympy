@@ -24,11 +24,8 @@ from sympy.polys.polyerrors import (
 from sympy.polys.domains import ZZ, QQ
 
 from sympy import S, Symbol, symbols, groebner
-
 from sympy.utilities.pytest import raises, skip, XFAIL
-
 from sympy.polys.polyconfig import setup
-
 
 def helper_test_sdp_groebner():
     f = sdp_from_dict({(1,2): QQ(2,), (2,0): QQ(1)}, lex)

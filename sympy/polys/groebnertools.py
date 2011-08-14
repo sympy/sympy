@@ -1,7 +1,5 @@
 """Groebner bases algorithms. """
 
-from sympy.core.compatibility import cmp
-
 from sympy.polys.monomialtools import (
     monomial_mul, monomial_div, monomial_lcm,
 )
@@ -17,33 +15,37 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed, DomainError,
 )
 
+from sympy.polys.polyconfig import query
+from sympy.core.compatibility import cmp
+
 from operator import itemgetter
 
-from sympy.polys.polyconfig import query
-
-
-def sdp_groebner(f, u, O, K, gens='', verbose=False):
+def sdp_groebner(f, u, O, K, gens='', verbose=False, method=None):
     """
-    Wrapper around the (default) improved Buchberger and other
-    algorithms for Groebner bases. The choice of algorithm can be
-    changed via
+    Computes Groebner basis for a set of polynomials in `K[X]`.
 
-    >>> from sympy.polys.polyconfig import setup
-    >>> setup('GB_METHOD', 'method')
-
-    where 'method' can be 'buchberger' or 'f5b'. If an unknown method
-    is provided, the default Buchberger algorithm will be used.
+    Wrapper around the (default) improved Buchberger and the other algorithms
+    for computing Groebner bases. The choice of algorithm can be changed via
+    ``method`` argument or :func:`setup` from :mod:`sympy.polys.polyconfig`,
+    where ``method`` can be either ``buchberger`` or ``f5b``.
 
     """
-    if query('GB_METHOD') == 'buchberger':
-        return buchberger(f, u, O, K, gens, verbose)
-    elif query('GB_METHOD') == 'f5b':
-        return f5b(f, u, O, K, gens, verbose)
+    if method is None:
+        method = query('GB_METHOD')
+
+    _groebner_methods = {
+        'buchberger': buchberger,
+        'f5b': f5b,
+    }
+
+    try:
+        func = _groebner_methods[method]
+    except KeyError:
+        raise ValueError("'%s' is not a valid Groebner bases algorithm (valid are 'buchberger' and 'f5b')" % method)
     else:
-        return buchberger(f, u, O, K, gens, verbose)
+        return func(f, u, O, K, gens, verbose)
 
 # Buchberger algorithm
-
 
 def buchberger(f, u, O, K, gens='', verbose=False):
     """

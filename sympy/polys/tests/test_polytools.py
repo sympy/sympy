@@ -2463,6 +2463,11 @@ def test_groebner():
     raises(DomainError, "groebner([x**2 + 2.0*y], x, y)")
     raises(ComputationFailed, "groebner([1])")
 
+    assert groebner([x**2 - 1, x**3 + 1], method='buchberger') == [x + 1]
+    assert groebner([x**2 - 1, x**3 + 1], method='f5b') == [x + 1]
+
+    raises(ValueError, "groebner([x, y], method='unknown')")
+
 def test_fglm():
     a, b, c, d = symbols('a b c d')
     F = [a+b+c+d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + b*c*d, a*b*c*d - 1]
