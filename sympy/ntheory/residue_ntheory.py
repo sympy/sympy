@@ -284,6 +284,11 @@ def totient_(n):
             tot += 1
     return tot
 
+def relprimes(n):
+    """
+    List integers 0 < i < n, such that i, n are coprime
+    """
+    return [x for x in xrange(1, n) if igcd(n,x) == 1]
 
 def n_order(a, n):
     """ returns the order of a modulo n
