@@ -4846,22 +4846,25 @@ def _symbolic_factor_list(expr, opt, method):
 
                 _coeff, _factors = func()
                 coeff *= _coeff**exp
+
                 if exp is S.One:
                     factors.extend(_factors)
                 elif exp.is_integer or len(_factors) == 1:
-                    factors.extend([(f, k*exp) for f, k in _factors])
+                    factors.extend([ (f, k*exp) for f, k in _factors ])
                 else:
-                    unk = []
+                    other = []
+
                     for f, k in _factors:
-                        if f.is_positive:
+                        if f.as_expr().is_positive:
                             factors.append((f, k*exp))
                         else:
-                            unk.append((f, k))
-                    if len(unk) == 1:
-                        f, k = unk
+                            other.append((f, k))
+
+                    if len(other) == 1:
+                        f, k = other[0]
                         factors.append((f, k*exp))
                     else:
-                        factors.append((_poly_from_expr(Mul(*(f.as_expr()**k for f, k in unk)), opt)[0], exp))
+                        factors.append((_factors_product(other), exp))
 
     return coeff, factors
 
@@ -4892,6 +4895,14 @@ def _generic_factor_list(expr, gens, args, method):
 
         if fq and not opt.frac:
             raise PolynomialError("a polynomial expected, got %s" % expr)
+
+        _opt = opt.clone(dict(expand=True))
+
+        for factors in (fp, fq):
+            for i, (f, k) in enumerate(factors):
+                if not f.is_Poly:
+                    f, _ = _poly_from_expr(f, _opt)
+                    factors[i] = (f, k)
 
         fp = _sorted_factors(fp, method)
         fq = _sorted_factors(fq, method)

@@ -51,8 +51,8 @@ from sympy.polys.polyclasses import DMP, DMF
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
-    S, Integer, Rational, Float, Mul, symbols, sqrt, exp,
-    sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
+    S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
+    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -1881,14 +1881,37 @@ def test_factor():
     assert factor(f, (x,)) == u*v**2*w
 
     g, p, q, r = x**2 - y**2, x - y, x + y, x**2 + 1
-    i = symbols('i', integer=True)
 
     assert factor(f/g) == (u*v**2*w)/(p*q)
     assert factor(f/g, x) == (u*v**2*w)/(p*q)
     assert factor(f/g, (x,)) == (u*v**2*w)/(p*q)
-    assert factor(sqrt(x*y)).is_Pow
-    assert factor(sqrt(3 + 3*x**2)) == sqrt(3)*sqrt(r)
-    assert factor((y + y*x**2)**i) == y**i*r**i
+
+    p = Symbol('p', positive=True)
+    i = Symbol('i', integer=True)
+    r = Symbol('r', real=True)
+
+    assert factor(sqrt(x*y)).is_Pow == True
+
+    assert factor(sqrt(3*x**2 - 3)) == sqrt(3)*sqrt((x - 1)*(x + 1))
+    assert factor(sqrt(3*x**2 + 3)) == sqrt(3)*sqrt(x**2 + 1)
+
+    assert factor((y*x**2 - y)**i) == y**i*(x - 1)**i*(x + 1)**i
+    assert factor((y*x**2 + y)**i) == y**i*(x**2 + 1)**i
+
+    assert factor((y*x**2 - y)**t) == (y*(x - 1)*(x + 1))**t
+    assert factor((y*x**2 + y)**t) == (y*(x**2 + 1))**t
+
+    f = sqrt(expand((r**2 + 1)*(p + 1)*(p - 1)*(p - 2)**3))
+    g = ((p - 2)**3*(p - 1))**(S(1)/2)*(p + 1)**(S(1)/2)*(r**2 + 1)**(S(1)/2)
+
+    assert factor(f) == g
+    assert factor(g) == g
+
+    f = sqrt(expand((x - 1)**5*(r**2 + 1)))
+    g = (r**2 + 1)**(S(1)/2)*(x - 1)**(S(5)/2)
+
+    assert factor(f) == g
+    assert factor(g) == g
 
     f = Poly(sin(1)*x + 1, x, domain=EX)
 
