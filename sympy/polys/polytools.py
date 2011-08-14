@@ -2970,8 +2970,7 @@ class Poly(Expr):
 
         """
         if f.is_multivariate:
-            raise MultivariatePolynomialError("can't compute numerical roots "
-                                              "of %s" % f)
+            raise MultivariatePolynomialError("can't compute numerical roots of %s" % f)
 
         if f.degree() <= 0:
             return []

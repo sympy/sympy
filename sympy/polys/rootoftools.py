@@ -17,12 +17,13 @@ from sympy.polys.polyroots import (
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
-    PolynomialError)
+    PolynomialError,
+    DomainError)
 
 from sympy.polys.domains import QQ
 
-from sympy.mpmath import (
-    mp, mpf, mpc, findroot)
+from sympy.mpmath import mp, mpf, mpc, findroot
+from sympy.mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify
 
@@ -659,6 +660,14 @@ class RootSum(Expr):
         _roots = roots(self.poly, multiple=True)
 
         if len(_roots) < self.poly.degree():
+            return self
+        else:
+            return Add(*[ self.fun(r) for r in _roots ])
+
+    def _eval_evalf(self, prec):
+        try:
+            _roots = self.poly.nroots(n=prec_to_dps(prec))
+        except (DomainError, PolynomialError):
             return self
         else:
             return Add(*[ self.fun(r) for r in _roots ])

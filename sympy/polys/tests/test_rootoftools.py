@@ -237,6 +237,16 @@ def test_RootSum_doit():
     assert isinstance(rs, RootSum) == True
     assert rs.doit() == exp(-sqrt(-a)) + exp(sqrt(-a))
 
+def test_RootSum_evalf():
+    rs = RootSum(x**2 + 1, exp)
+
+    assert rs.evalf(n=20, chop=True).epsilon_eq(Float("1.0806046117362794348", 20), Float("1e-20")) == True
+    assert rs.evalf(n=15, chop=True).epsilon_eq(Float("1.08060461173628", 15), Float("1e-15")) == True
+
+    rs = RootSum(x**2 + a, exp, x)
+
+    assert rs.evalf() == rs
+
 def test_RootSum_diff():
     f = x**3 + x + 3
 
