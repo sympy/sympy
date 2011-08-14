@@ -458,7 +458,7 @@ def test_separatevars():
     assert separatevars(pi*x*z+pi*x*y*z) == pi*x*z*(1+y)
     assert separatevars(x*y**2*sin(x) + x*sin(x)*sin(y)) == x*(sin(y) + y**2)*sin(x)
     assert separatevars(x*exp(x+y)+x*exp(x)) == x*(1 + exp(y))*exp(x)
-    assert separatevars((x*(y+1))**z) == x**z*(1 + y)**z
+    assert separatevars((x*(y+1))**z).is_Pow # != x**z*(1 + y)**z
     assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
     assert separatevars(y / pi * exp(-(z - x) / cos(n))) == y * exp((x - z) / cos(n)) / pi
     # 1759
