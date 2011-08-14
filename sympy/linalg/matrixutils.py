@@ -81,6 +81,32 @@ def _lilrepr_from_lil(rows, cols, lil):
                 mat[i].append((j, val))
     return mat
 
+def _dokrepr_from_lil(rows, cols, lil):
+    mat = {}
+    for i in xrange(rows):
+        for j in xrange(cols):
+            val = lil[i][j]
+            if val != 0:
+                mat[i, j] = val
+    return mat
+
+def _dokrepr_from_dict(rows, cols, di):
+    mat = {}
+    for i in xrange(rows):
+        for j in xrange(cols):
+            if (i, j) in di:
+                mat[i, j] = di[i, j]
+    return mat
+
+def _dokrepr_from_callable(rows, cols, func):
+    mat = {}
+    for i in xrange(rows):
+        for j in xrange(cols):
+            val = func(i, j)
+            if val != 0:
+                mat[i, j] = val
+    return mat
+
 
   
 

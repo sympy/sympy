@@ -1,5 +1,5 @@
-from sympy.linalg.dokmatrix import DOKMatrix
 from __future__ import division
+from sympy.linalg.dokmatrix import DOKMatrix
 
 def test_getitem():
     A = DOKMatrix(((1,2,0),(4,0,6),(7,8,0)))
@@ -21,7 +21,7 @@ def test_copyinmatrix():
 
 def test_transpose():
     A = DOKMatrix(((1,0,3),(0,5,6),(7,0,9)))
-    assert A.T == DOKMatrix(((1,0,3),(2,0,4),(3,0,0)))
+    assert A.T == DOKMatrix(((1,0,7),(0,5,0),(3,6,9)))
 
 def test_add():
     A = DOKMatrix(((1,0,3),(0,5,6),(7,0,9)))
@@ -31,7 +31,7 @@ def test_add():
 def test_mul():
     A = DOKMatrix(((1,2,3),(4,0,1),(9,8,0)))
     B = DOKMatrix(((0,0,1),(2,1,0),(0,2,7)))
-    C = DOKMatrix(((4,8,27),(0,2,11),(16,8,9)))
+    C = DOKMatrix(((4,8,22),(0,2,11),(16,8,9)))
     assert A * B == C
 
 def test_submatrix():
@@ -45,13 +45,6 @@ def test_submatrix():
 
 def test_solve():
     A = DOKMatrix(((1,2,3),(4,0,1),(9,8,0)))
-    rhs = DOKMatrix((3,4,5)).T
-    X = DOKMatrix((41/53),(-13/53),(48/53)).T
+    rhs = DOKMatrix([[3,4,5]]).T
     for method in ["LDL", "CH"]:
-        assert A.solve(rhs, method=method) == X, method
-        
-        
-
-
-    
-    
+        assert A * A.solve(rhs, method=method) == rhs, method

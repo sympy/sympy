@@ -60,6 +60,8 @@ class DOKMatrix(DataMatrix):
             rows = cols = 0
             mat = []
 
+        for i in mat:
+            mat[i] = S(mat[i])
         self.rows = rows
         self.cols = cols
         self.mat = mat
@@ -71,7 +73,7 @@ class DOKMatrix(DataMatrix):
     def __setitem__(self, key, value):
         "Key cannot be a slice"
         if value != 0:
-            self.mat[key] == value
+            self.mat[key] = value
         else:
             del self.mat[key]
 
@@ -120,27 +122,28 @@ class DOKMatrix(DataMatrix):
         Multiplication a matrix with another matrix or a scalar.
         """
         if isinstance(other, DOKMatrix):
-            rows1 = _lil_row_major(A)
-            rows2 = _lil_row_major(B)
+            from dokmatrix_tools import _lil_row_major
+            rows1 = _lil_row_major(self)
+            rows2 = _lil_row_major(other)
             Cdict = {}
-            for k in xrange(A.rows):
+            for k in xrange(self.rows):
                 for _, j in rows1[k]:
                     for _, n  in rows2[j]:
-                        temp = A[k, j] * B[j, n]
+                        temp = self[k, j] * other[j, n]
                         if (k, n) in Cdict:
                             Cdict[k, n] += temp
                         else:
                             Cdict[k, n] = temp
-            C = DOKMatrix(A.rows, B.cols, Cdict)
+            C = DOKMatrix(self.rows, other.cols, Cdict)
             if C.shape == (1, 1):
                 return C[0, 0]
             return C
         else:
             "other is a scalar"
-            C = DOKMatrix(matrix.rows, matrix.cols, {})
-            if scalar != 0:
-                for i in matrix.mat:
-                    C.mat[i] = scalar * matrix.mat[i]
+            C = DOKMatrix(self.rows, self.cols, {})
+            if B != 0:
+                for i in self.mat:
+                    C.mat[i] = B * self.mat[i]
             return C
 
     def __neg__(self):
@@ -153,7 +156,7 @@ class DOKMatrix(DataMatrix):
         return self.__mul__(other)  
 
     def __eq__(self, other):
-        if not isinstance(other, (Matrix, DOKMatrix)):
+        if not isinstance(other, DOKMatrix):
             return False
         if self.rows != other.rows or self.cols != other.cols:
             return False
@@ -213,11 +216,12 @@ class DOKMatrix(DataMatrix):
         return self
 
     def to_lilmatrix(self):
-        from sympy.matrices.lilmatrix import LILMatrix
+        from sympy.linalg.lilmatrix import LILMatrix
         return LILMatrix._from_dict(self.rows, self.cols, self.mat)
 
     def to_densematrix(self):
-        return Matrix(self.rows, self.cols, lambda i, j: self[i, j])
+        from sympy.linalg.densematrix import DenseMatrix
+        return DenseMatrix(self.rows, self.cols, lambda i, j: self[i, j])
 
     def copy(self):
         return DOKMatrix(self.rows, self.cols, self.mat)

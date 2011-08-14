@@ -1,3 +1,5 @@
+from __future__ import division
+from sympy.linalg.dokmatrix import DOKMatrix
 def rowdecomp(self, num):
     nmax = len(self)
     if not (0 <= num < nmax) and not (0 <= -num < nmax):
@@ -130,7 +132,7 @@ def liu(self):
     return parent
 
 def liupc(self):
-    R = self._lower_row_nonzero_structure()
+    R = _lower_row_nonzero_structure(self)
     parent = [None] * self.rows
     virtual = [None] * self.rows
     for j in xrange(self.rows):
@@ -146,7 +148,7 @@ def liupc(self):
 
 def row_structure_symbolic_cholesky(self):
     from copy import deepcopy
-    R, parent = self.liupc()
+    R, parent = liupc(self)
     Lrow = deepcopy(R)
     for k in xrange(self.rows):
         for _, j in R[k]:
@@ -169,7 +171,7 @@ def elementary_symbolic_cholesky(self):
 
 def fast_symbolic_cholesky(self): 
     """ implement algorithm 1.3 from 10.1.1.163.7506 """
-    C = self._lower_columnar_nonzero_structure()
+    C = _lower_columnar_nonzero_structure(self)
     p=[]
     for k, col in enumerate(C):
         if len(C[k]) > 1:
@@ -185,11 +187,7 @@ def fast_symbolic_cholesky(self):
 
 def _cholesky(self):
 
-    cached_result = self._get_cache('CH')
-    if cached_result and self._cached:
-        return cached_result
-
-    CHstruc = self.fast_symbolic_cholesky()
+    CHstruc = fast_symbolic_cholesky(self)
     C = DOKMatrix(self.rows, self.cols, {})
     for col in CHstruc:
         for i, j in col:
@@ -200,14 +198,10 @@ def _cholesky(self):
                 C[j, j] = (self[j, j] - sum(C[j, k] ** 2
                     for k in xrange(j))) ** (0.5)
 
-    self._set_cache('CH', C)
+
     return C
 
 def _cholesky_sparse(self):
-
-    cached_result = self._get_cache('CH')
-    if cached_result and self._cached:
-        return cached_result
 
     Crowstruc = self.row_structure_symbolic_cholesky()
     C = DOKMatrix.zeros(self.rows)
@@ -239,18 +233,14 @@ def _cholesky_sparse(self):
                 C[j, j] -= summ
                 C[j, j] = C[j, j] ** 0.5
 
-    self._set_cache('CH', C)
+
     return C
                 
         
 def _LDL(self):
 
-    cached_result = self._get_cache('LDL')
-    if cached_result and self._cached:
-        return cached_result
-
-    CHstruc = self.fast_symbolic_cholesky()
-    L = DOKMatrix.eye(self.rows)
+    CHstruc = fast_symbolic_cholesky(self)
+    L = eye(self.rows)
     D = DOKMatrix(self.rows, self.cols, {})
     
     for col in CHstruc:
@@ -261,19 +251,13 @@ def _LDL(self):
             elif i == j:
                 D[i, i] = self[i, i] - sum(L[i, k]**2 * D[k, k] 
                     for k in range(i))
-
-    self._set_cache('LDL', (L, D))
     return L, D
 
 
 def _LDL_sparse(self):
 
-    cached_result = self._get_cache('LDL')
-    if cached_result and self._cached:
-        return cached_result
-
-    Lrowstruc = self.row_structure_symbolic_cholesky()
-    L = DOKMatrix.eye(self.rows)
+    Lrowstruc = row_structure_symbolic_cholesky(self)
+    L = eye(self.rows)
     D = DOKMatrix(self.rows, self.cols, {})
     
     for row in Lrowstruc:
@@ -303,12 +287,11 @@ def _LDL_sparse(self):
                         break
                 D[i, i] -= summ
 
-    self._set_cache('LDL', (L, D)) 
     return L, D
 
 
 def _lower_triangular_solve(self, rhs):
-    rows = self._lil_row_major()
+    rows = _lil_row_major(self)
     X = DOKMatrix(rhs.rows, 1, rhs.mat)
     for i in xrange(self.rows):
         for key in rows[i]:
@@ -321,7 +304,7 @@ def _lower_triangular_solve(self, rhs):
 
 def _upper_triangular_solve(self, rhs):
     """ Helper function of function upper_triangular_solve, without the error checks, to be used privately. """
-    rows = self._lil_row_major()
+    rows = _lil_row_major(self)
     X = DOKMatrix(rhs.rows, 1, rhs.mat)
     for i in reversed(xrange(self.rows)):
         for key in reversed(rows[i]):
@@ -336,32 +319,22 @@ def _diagonal_solve(self, rhs):
     return DOKMatrix(self.rows, 1, lambda i, j: rhs[i, 0] / self[i, i])
 
 def _cholesky_solve(self, rhs):
-    L = self._cholesky()
-    Y = L._lower_triangular_solve(rhs)
-    X = L.T._upper_triangular_solve(Y)
-    return X
-
-def LDL_solve(self, rhs):
-    if not self.is_square():
-        raise Exception("Make a square matrix exception")
-    if not self.rows == rhs.rows:
-        raise Exception
     if not self.is_symmetric():
         rhs = self.T * rhs
         self = self.T * self
-    L, D = self._LDL_sparse()
-    z = L._lower_triangular_solve(rhs)
-    y = D._diagonal_solve(z)
-    x = L.T._upper_triangular_solve(y)
-    if x.has(nan) or x.has(oo): # import this
-        raise Exception
-    return x
+    L = _cholesky(self)
+    Y = _lower_triangular_solve(L, rhs)
+    X = _upper_triangular_solve(L.T, Y)
+    return X
 
 def _LDLsolve(self, rhs):
-    L, D = self._LDL_sparse()
-    z = L._lower_triangular_solve(rhs)
-    y = D._diagonal_solve(z)
-    x = L.T._upper_triangular_solve(y)
+    if not self.is_symmetric():
+        rhs = self.T * rhs
+        self = self.T * self
+    L, D = _LDL_sparse(self)
+    z = _lower_triangular_solve(L, rhs)
+    y = _diagonal_solve(D, z)
+    x = _upper_triangular_solve(L.T, y)
     return x
 
 def _lower_columnar_nonzero_structure(self):
@@ -416,12 +389,25 @@ def copyin_list(self, key, value):
 def inverse_solver(self, solver=None):
     from matrixutils import vecs2matrix
     if not solver or solver == 'CH':
-        solver = self._cholesky_solve
+        solver = _cholesky_solve
     elif solver == 'LDL':
-        solver = self.LDL_solve
+        solver = LDL_solve
     else:
         raise Exception('solver method not recognized')
-    I = Matrix.eye(self.rows)
-    return vecs2matrix([solver(I[:, i])
+    I = eye(self.rows)
+    return vecs2matrix([solver(self, I[:, i])
         for i in xrange(self.cols)])
 
+def zeros(*args):
+    from dokmatrix import DOKMatrix
+    if len(args) == 1:
+        m = n = args[0]
+    elif len(args) == 2:
+        m, n = args
+    return DOKMatrix(m, n, lambda i, j: 0)
+
+def eye(n):
+    matrix = zeros(n)
+    for i in xrange(n):
+        matrix[i, i] = 1
+    return matrix
