@@ -174,10 +174,10 @@ class DOKMatrix(DataMatrix):
         return (self.rows, self.cols)
 
     def __len__(self):
-        return self.rows*self.cols
+        return self.rows * self.cols
 
     def sparsity(self):
-        return len(self.mat)/len(self)
+        return float(len(self.mat)) / len(self)
 
     def is_symmetric(self):
         return all(self[i, j] == self[j, i] for i, j in self.mat.keys())
@@ -189,6 +189,12 @@ class DOKMatrix(DataMatrix):
         any(self[i, j].has(expr) for i, j in self.mat.keys())
 
     def solve(self, rhs, method="LDL"):
+        """
+        Solves self * X = rhs using method specified.
+        
+        LDL     ---     LDL decomposition
+        CH      ---     Cholesky decomposition
+        """
         if method == "LDL":
             from dokmatrix_tools import _LDLsolve
             return _LDLsolve(self, rhs)
