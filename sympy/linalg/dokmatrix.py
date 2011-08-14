@@ -65,17 +65,20 @@ class DOKMatrix(DataMatrix):
         self.mat = mat
 
     def __getitem__(self, key):
+        "Only element accessing. Slicing disabled for performance."
         return self.mat.get(key, 0)
 
     def __setitem__(self, key, value):
+        "Key cannot be a slice"
         if value != 0:
             self.mat[key] == value
         else:
             del self.mat[key]
 
     def copyin_matrix(self, key, value):
-        rlo, rhi = slice_to_bounds(key[0], self.rows)
-        clo, chi = slice_to_bounds(key[1], self.cols)
+        from matrixutils import _slice_to_bounds
+        rlo, rhi = _slice_to_bounds(key[0], self.rows)
+        clo, chi = _slice_to_bounds(key[1], self.cols)
 
         for i in range(value.rows):
             for j in range(value.cols):
@@ -101,6 +104,9 @@ class DOKMatrix(DataMatrix):
     T = property(transpose,None,None,"Matrix transposition.")
 
     def __add__(self, other):
+        """
+        Addition of two matrices.
+        """
         M = self.copy()
         for i in other.mat:
             if i in M.mat:
@@ -110,6 +116,9 @@ class DOKMatrix(DataMatrix):
         return M
 
     def __mul__(self, other):
+        """
+        Multiplication a matrix with another matrix or a scalar.
+        """
         if isinstance(other, DOKMatrix):
             rows1 = _lil_row_major(A)
             rows2 = _lil_row_major(B)
@@ -127,6 +136,7 @@ class DOKMatrix(DataMatrix):
                 return C[0, 0]
             return C
         else:
+            "other is a scalar"
             C = DOKMatrix(matrix.rows, matrix.cols, {})
             if scalar != 0:
                 for i in matrix.mat:
@@ -154,8 +164,9 @@ class DOKMatrix(DataMatrix):
         return True
 
     def submatrix(self, keys):
-        rlo, rhi = slice_to_bounds(keys[0], self.rows)
-        clo, chi = slice_to_bounds(keys[1], self.cols)
+        from matrixutils import _slice_to_bounds
+        rlo, rhi = _slice_to_bounds(keys[0], self.rows)
+        clo, chi = _slice_to_bounds(keys[1], self.cols)
         return DOKMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
 
     @property
@@ -177,23 +188,18 @@ class DOKMatrix(DataMatrix):
     def has(self, expr):
         any(self[i, j].has(expr) for i, j in self.mat.keys())
 
-    def det(self, method="LDL"):
-        if method == "CH":
-            L = _cholesky_sparse(self.T * self)
-            det = 1
-            for i in xrange(L.rows):
-                det *= L[i,i]
-            return det
-        elif method =="LDL":
-            _, D = _LDL_sparse(self.T * self)
-            det = 1
-            for i in xrange(D.rows):
-                det *= D[i, i]
-            return sqrt(det) 
+    def solve(self, rhs, method="LDL"):
+        if method == "LDL":
+            from dokmatrix_tools import _LDLsolve
+            return _LDLsolve(self, rhs)
+        elif method == "CH":
+            from dokmatrix_tools import _cholesky_solve
+            return _cholesky_solve(self, rhs)
         else:
-            raise Exception('No such method')
+            raise ValueError("Unrecognized method")
 
     def applyfunc(self, op):
+        "Applies the function op to all non-zero elements of the matrix"
         for i in self.mat:
             self.mat[i] = op(self.mat[i])
 
