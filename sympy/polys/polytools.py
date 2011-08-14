@@ -4908,12 +4908,22 @@ def _symbolic_factor_list(expr, opt, method):
 
                 _coeff, _factors = func()
                 coeff *= _coeff**exp
-
                 if exp is S.One:
                     factors.extend(_factors)
+                elif exp.is_integer or len(_factors) == 1:
+                    factors.extend([(f, k*exp) for f, k in _factors])
                 else:
-                    for factor, k in _factors:
-                        factors.append((factor, k*exp))
+                    unk = []
+                    for f, k in _factors:
+                        if f.is_positive:
+                            factors.append((f, k*exp))
+                        else:
+                            unk.append((f, k))
+                    if len(unk) == 1:
+                        f, k = unk
+                        factors.append((f, k*exp))
+                    else:
+                        factors.append((_poly_from_expr(Mul(*(f.as_expr()**k for f, k in unk)), opt)[0], exp))
 
     return coeff, factors
 
