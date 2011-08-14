@@ -173,16 +173,11 @@ def test_RootSum___new__():
     g = Lambda(r, log(r*x))
     s = RootSum(f, g)
 
-    rootofs = sum(log(RootOf(f, i)*x) for i in (0, 1, 2))
-
     assert isinstance(s, RootSum) == True
-    assert s.doit() == rootofs
 
     assert RootSum(f**2, g) == 2*RootSum(f, g)
-    assert RootSum(f**2, g).doit() == 2*rootofs
-
     assert RootSum((x - 7)*f**3, g) == log(7*x) + 3*RootSum(f, g)
-    assert RootSum((x - 7)*f**3, g).doit() == log(7*x) + 3*rootofs
+
     # Issue 2472
     assert hash(RootSum((x - 7)*f**3, g)) == hash(log(7*x) + 3*RootSum(f, g))
 
@@ -230,6 +225,17 @@ def test_RootSum___eq__():
 
     assert (RootSum(x**3 + x + 1, f) == RootSum(x**3 + x + 2, f)) == False
     assert (RootSum(x**3 + x + 1, f) == RootSum(y**3 + y + 2, f)) == False
+
+def test_RootSum_doit():
+    rs = RootSum(x**2 + 1, exp)
+
+    assert isinstance(rs, RootSum) == True
+    assert rs.doit() == exp(-I) + exp(I)
+
+    rs = RootSum(x**2 + a, exp, x)
+
+    assert isinstance(rs, RootSum) == True
+    assert rs.doit() == exp(-sqrt(-a)) + exp(sqrt(-a))
 
 def test_RootSum_diff():
     f = x**3 + x + 3

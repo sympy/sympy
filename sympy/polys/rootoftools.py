@@ -11,8 +11,8 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_sqf)
 
 from sympy.polys.polyroots import (
-    roots_linear, roots_quadratic,
-    roots_binomial, preprocess_roots)
+    roots_linear, roots_quadratic, roots_binomial,
+    preprocess_roots, roots)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -653,10 +653,15 @@ class RootSum(Expr):
         return True
 
     def doit(self, **hints):
-        if hints.get('roots', True):
-            return Add(*map(self.fun, self.poly.all_roots()))
-        else:
+        if not hints.get('roots', True):
             return self
+
+        _roots = roots(self.poly, multiple=True)
+
+        if len(_roots) < self.poly.degree():
+            return self
+        else:
+            return Add(*[ self.fun(r) for r in _roots ])
 
     def _eval_derivative(self, x):
         var, expr = self.fun.args
