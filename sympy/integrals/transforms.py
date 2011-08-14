@@ -420,7 +420,7 @@ def _rewrite_gamma(f, s, a, b):
     """
     from itertools import repeat
     from sympy import (Poly, gamma, Mul, re, RootOf, exp as exp_, E, expand,
-                       roots, ilcm, pi, sin, cos, tan, cot, igcd)
+                       roots, ilcm, pi, sin, cos, tan, cot, igcd, exp_polar)
     # Our strategy will be as follows:
     # 1) Guess a constant c such that the inversion integral should be
     #    performed wrt s'=c*s (instead of plain s). Write s for s'.
@@ -542,7 +542,7 @@ def _rewrite_gamma(f, s, a, b):
                 base = fact.base
                 exp  = fact.exp
             else:
-                base = E
+                base = exp_polar(1)
                 exp  = fact.args[0]
             if exp.is_Integer:
                 cond = is_numer
