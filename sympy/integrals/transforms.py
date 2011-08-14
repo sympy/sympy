@@ -923,7 +923,11 @@ def _laplace_transform(f, t, s_, simplify=True):
             for d in disjuncts(c):
                 m = d.match(abs(arg((s + w3)**p*q, w1)) < w2)
                 if not m:
+                    m = d.match(abs(arg((s + w3)**p*q, w1)) <= w2)
+                if not m:
                     m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) < w2)
+                if not m:
+                    m = d.match(abs(arg((polar_lift(s + w3))**p*q, w1)) <= w2)
                 if m:
                     if m[q] > 0 and m[w2]/m[p] == pi/2:
                         d = re(s + m[w3]) > 0

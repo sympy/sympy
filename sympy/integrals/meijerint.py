@@ -509,11 +509,101 @@ def _is_analytic(f, x):
     from sympy import Heaviside, Abs
     return not any(expr.has(x) for expr in f.atoms(Heaviside, Abs))
 
+def _condsimp(cond):
+    """
+    Do naive simplifications on `cond`.
+    Note that this routine is completely ad-hoc, simplification rules being
+    added as need arises rather than following any logical pattern.
+
+    >>> from sympy.integrals.meijerint import _condsimp as simp
+    >>> from sympy import Or, Eq, unbranched_argument as arg, And
+    >>> from sympy.abc import x, y, z
+    >>> simp(Or(x < y, z, Eq(x, y)))
+    Or(x <= y, z)
+    >>> simp(Or(x <= y, And(x < y, z)))
+    x <= y
+    """
+    from sympy import (symbols, Wild, Eq, unbranched_argument, exp_polar, pi, I,
+                       periodic_argument, oo, polar_lift)
+    from sympy.logic.boolalg import BooleanFunction
+    if not isinstance(cond, BooleanFunction):
+        return cond
+    cond = cond.func(*map(_condsimp, cond.args))
+    change = True
+    p, q, r = symbols('p q r', cls=Wild)
+    rules = [
+      (Or(p < q, Eq(p, q)), p <= q),
+      # The next two obviously are instances of a general pattern, but it is
+      # easier to spell out the few cases we care about.
+      (And(abs(unbranched_argument(p)) <= pi,
+           abs(unbranched_argument(exp_polar(-2*pi*I)*p)) <= pi),
+       Eq(unbranched_argument(exp_polar(-I*pi)*p), 0)),
+      (And(abs(unbranched_argument(p)) <= pi/2,
+           abs(unbranched_argument(exp_polar(-pi*I)*p)) <= pi/2),
+       Eq(unbranched_argument(exp_polar(-I*pi/2)*p), 0)),
+      (Or(p <= q, And(p < q, r)), p <= q)
+            ]
+    while change:
+        change = False
+        for fro, to in rules:
+            if fro.func != cond.func:
+                continue
+            for n, arg in enumerate(cond.args):
+                if fro.args[0].has(r):
+                    m = arg.match(fro.args[1])
+                    num = 1
+                else:
+                    num = 0
+                    m = arg.match(fro.args[0])
+                if not m:
+                    continue
+                otherargs = map(lambda x: x.subs(m), fro.args[:num] + fro.args[num+1:])
+                otherlist = [n]
+                for arg2 in otherargs:
+                    for k, arg3 in enumerate(cond.args):
+                        if k in otherlist:
+                            continue
+                        if arg2 == arg3:
+                            otherlist += [k]
+                            break
+                        if arg3.func is And and arg2.args[1] == r and \
+                           arg2.func is And and arg2.args[0] in arg3.args:
+                            otherlist += [k]
+                            break
+                        if arg3.func is And and arg2.args[0] == r and \
+                           arg2.func is And and arg2.args[1] in arg3.args:
+                            otherlist += [k]
+                            break
+                if len(otherlist) != len(otherargs) + 1:
+                    continue
+                newargs = [arg for (k, arg) in enumerate(cond.args) \
+                           if k not in otherlist] + [to.subs(m)]
+                cond = cond.func(*newargs)
+                change = True
+                break
+    # final tweak
+    def repl_eq(orig):
+        if orig.lhs == 0:
+            expr = orig.rhs
+        elif orig.rhs == 0:
+            expr = orig.lhs
+        else:
+            return orig
+        m = expr.match(unbranched_argument(polar_lift(p)**q))
+        if not m:
+            if expr.func is periodic_argument and not expr.args[0].is_polar \
+               and expr.args[1] == oo:
+                return (expr.args[0] > 0)
+            return orig
+        return (m[p] > 0)
+    return cond.replace(lambda expr: expr.is_Relational and expr.rel_op == '==',
+                        repl_eq)
+
 def _eval_cond(cond):
     """ Re-evaluate the conditions. """
     if isinstance(cond, bool):
         return cond
-    return cond.doit()
+    return _condsimp(cond.doit())
 
 ####################################################################
 # Now the "backbone" functions to do actual integration.
@@ -1514,7 +1604,7 @@ def meijerint_definite(f, x, a, b):
                 continue
             res1, cond1 = res1
             res2, cond2 = res2
-            cond = (And(cond1, cond2))
+            cond = _condsimp(And(cond1, cond2))
             if cond is False:
                 _debug('  But combined condition is always false.')
                 continue

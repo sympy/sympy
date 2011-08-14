@@ -472,7 +472,8 @@ def test_expint():
 
 def test_messy():
     from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
-                       atanh, acoth, E1, besselj, acosh, asin, Ne, And, re)
+                       atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
+                       fourier_transform, sqrt)
     assert laplace_transform(Si(x), x, s) == ((pi*s/2 - s*atan(s))/s**2, 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True) \
@@ -482,9 +483,12 @@ def test_messy():
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
            (0, And(0 < re(a/2) + S(1)/2, 0 < re(a/2) + 1))
-    # TODO LT(besselj(a,x), x, s)
-    # TODO FT(besselj(0,x), x, s)
-    # TODO FT conds?
+    # NOTE s < 0 can be done, but argument reduction is currently not good enough
+    assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
+           (Piecewise((0, 1 < 4*abs(pi**2*s**2)),
+                      (2*sqrt(-4*pi**2*s**2 + 1), True)), 0 < s)
+    # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)
+    #                       - folding could be better
 
     assert integrate(E1(x)*besselj(0, x), (x, 0, oo), meijerg=True) \
            == log(1 + sqrt(2))
