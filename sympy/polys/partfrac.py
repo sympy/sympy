@@ -53,7 +53,10 @@ def apart(f, x=None, full=False, **args):
     terms = S.Zero
 
     for term in Add.make_args(partial):
-        terms += factor(term)
+        if term.has(RootSum):
+            terms += term
+        else:
+            terms += factor(term)
 
     return common*(poly.as_expr() + terms)
 
@@ -154,8 +157,7 @@ def apart_full_decomposition(P, Q):
             numer = b.as_expr()
             denom = (x-a)**(n-j)
 
-            expr = numer.subs(x, a) / denom
-
-            partial += RootSum(D, Lambda(a, expr))
+            func = Lambda(a, numer.subs(x, a)/denom)
+            partial += RootSum(D, func, auto=False)
 
     return partial
