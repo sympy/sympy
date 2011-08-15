@@ -627,7 +627,7 @@ class Rotation(UnitaryOperator):
     def d(cls, j, m, mp, beta):
         """Wigner small-d function.
 
-        Roturns an instance of cthe WignerD class with the alpha and gamma
+        Returns an instance of the WignerD class with the alpha and gamma
         angles given as 0. See the corresponding docstring for more
         information on the Wigner small-d matrix.
 
@@ -687,7 +687,7 @@ class WignerD(Expr):
 
     The Wigner D-function gives the matrix elements of the rotation
     operator in the jm-representation. For the Euler angles alpha, beta,
-    gamma, the the D-function is defined such that:
+    gamma, the D-function is defined such that:
     <j,m| R(alpha,beta,gamma) |j',m'> = delta_jj' * D(j, m, m', alpha, beta, gamma)
     Where the rotation operator is as defined by the Rotation class.
 
@@ -1075,7 +1075,7 @@ class JzKet(SpinState, Ket):
     """Eigenket of Jz.
 
     Spin state which is an eigenstate of the Jz operator. Uncoupled states,
-    that is states representing the interation of multiple seperate spin
+    that is states representing the interaction of multiple separate spin
     states, are defined as a tensor product of states.
 
     See uncouple and couple for coupling of states and JzKetCoupled for coupled
@@ -1134,7 +1134,7 @@ class JzKet(SpinState, Ket):
     Uncoupled States
     ---------------
 
-    Define an uncoulped state as a TensorProduct between two Jz eigenkets:
+    Define an uncoupled state as a TensorProduct between two Jz eigenkets:
 
         >>> from sympy.physics.quantum.tensorproduct import TensorProduct
         >>> j1,m1,j2,m2 = symbols('j1 m1 j2 m2')
@@ -1150,7 +1150,7 @@ class JzKet(SpinState, Ket):
         |1,1>x|1,-1>/2 + 2**(1/2)*|1,1>x|1,0>/2 + |1,1>x|1,1>/2
 
     The represent method for TensorProduct's gives the vector representation of
-    the state. Note that the state in the product basis is the eqivalent of the
+    the state. Note that the state in the product basis is the equivalent of the
     tensor product of the vector representation of the component eigenstates:
 
         >>> represent(TensorProduct(JzKet(1,0),JzKet(1,1)))
@@ -1378,7 +1378,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
     """Coupled eigenket of Jz
 
     Spin state that is an eigenket of Jz which represents the coupling of
-    seperate spin spaces.
+    separate spin spaces.
 
     See uncouple and couple for coupling of states and JzKetCoupled for coupled
     states.
