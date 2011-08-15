@@ -71,3 +71,14 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Davenport88] J.H. Davenport, Y. Siret, E. Tournier, Computer Algebra
     Systems and Algorithms for Algebraic Computation, Academic Press, London,
     1988, pp. 124--128
+
+.. [BW93] Thomas Becker, Volker Weispfennig. Groebner Bases, A Computational
+    Approach to Commutative Algebra. Graduate Texts in Mathematics.
+    Springer-Verlag, 1993.
+
+.. [FGLM94] J. Faugere, P. Gianni, D. Lazard, T. Mora. Efficient Computation of
+    Zero-Dimensional Groebner Bases by Change of Ordering. J. Symb. Comp. 16,
+    p. 329-344, 1993.
+
+.. [SW10] Sun, Y. Wang, D.K., 2010. A New PRoof for the Correctness of F5 (F5-Like)
+    Algorithm, http://arxiv.org/abs/1004.0084
