@@ -241,7 +241,7 @@ class UnitaryOperator(Operator):
 
 
 class OuterProduct(Operator):
-    """An unevaluated outer product between a ket and kra.
+    """An unevaluated outer product between a ket and bra.
 
     This constructs an outer product between any subclass of KetBase and
     BraBase as |a><b|. An OuterProduct inherits from Operator as they act as

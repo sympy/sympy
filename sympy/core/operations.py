@@ -26,10 +26,20 @@ class AssocOp(Expr):
 
     @cacheit
     def __new__(cls, *args, **options):
+
         if len(args) == 0:
             return cls.identity
 
         args = map(_sympify, args)
+
+        try:
+            args = [a for a in args if a is not cls.identity]
+        except AttributeError:
+            pass
+
+        if len(args) == 0: # recheck after filtering
+            return cls.identity
+
         if len(args) == 1:
             return args[0]
 

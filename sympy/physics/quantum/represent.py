@@ -163,10 +163,10 @@ def represent(expr, **options):
             result = result + represent(args, **options)
         return result
     elif isinstance(expr, Pow):
-        exp = expr.exp
+        base, exp = expr.as_base_exp()
         if format == 'numpy' or format == 'scipy.sparse':
             exp = _sympy_to_scalar(exp)
-        return represent(expr.base, **options)**exp
+        return represent(base, **options)**exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
         return TensorProduct(*new_args)
