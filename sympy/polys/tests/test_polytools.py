@@ -24,7 +24,8 @@ from sympy.polys.polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel,
-    reduced, groebner, GroebnerBasis)
+    reduced, groebner,
+    GroebnerBasis, is_zero_dimensional)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -2503,6 +2504,19 @@ def test_fglm():
         x**2 - x - 3*y + 1,
         y**2 - 2*x + y - 1,
     ]
+
+def test_is_zero_dimensional():
+    assert is_zero_dimensional([x, y], x, y) == True
+    assert is_zero_dimensional([x**3 + y**2], x, y) == False
+
+    assert is_zero_dimensional([x, y, z], x, y, z) == True
+    assert is_zero_dimensional([x, y, z], x, y, z, t) == False
+
+    F = [x*y - z, y*z - x, x*y - y]
+    assert is_zero_dimensional(F, x, y, z) == True
+
+    F = [x**2 - 2*x*z + 5, x*y**2 + y*z**3, 3*y**2 - 8*z**2]
+    assert is_zero_dimensional(F, x, y, z) == True
 
 def test_GroebnerBasis():
     F = [x*y - 2*y, 2*y**2 - x**2]

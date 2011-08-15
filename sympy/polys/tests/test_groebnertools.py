@@ -9,8 +9,8 @@ from sympy.polys.groebnertools import (
     lbp, lbp_cmp, lbp_key, critical_pair,
     cp_cmp, cp_key, is_rewritable_or_comparable,
     Sign, Polyn, Num, s_poly, f5_reduce,
-    matrix_fglm, is_zero_dimensional,
     _basis, _representing_matrices,
+    matrix_fglm,
 )
 
 from sympy.polys.monomialtools import (
@@ -428,19 +428,6 @@ def test_f5_reduce():
 
 def test_matrix_fglm():
     pass  # see test_polytools.py
-
-def test_is_zero_dimensional():
-    F = [[((3, 0), QQ.one), ((0, 2), QQ.one)]]
-
-    assert is_zero_dimensional(F, 1, lex, QQ) == False
-
-    F = [[((1, 0), QQ.one)], [((0, 1), QQ.one)]]
-
-    assert is_zero_dimensional(F, 1, lex, QQ) == True
-
-    F = [[((1, 0, 0, 0), QQ.one)], [((0, 1, 0, 0), QQ.one)], [((0, 0, 0, 1), QQ.one)]]
-
-    assert is_zero_dimensional(F, 3, grevlex, QQ) == False
 
 def test_representing_matrices():
     basis = [(0, 0), (0, 1), (1, 0), (1, 1)]
