@@ -1798,10 +1798,10 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(4*x**2 + 2*x*y**2 + x*y + 3*y, x, y).LM()
-        (2, 0)
+        x**2*y**0
 
         """
-        return f.monoms(order)[0]
+        return Monomial(f.monoms(order)[0], f.gens)
 
     def EM(f, order=None):
         """
@@ -1813,10 +1813,10 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(4*x**2 + 2*x*y**2 + x*y + 3*y, x, y).EM()
-        (0, 1)
+        x**0*y**1
 
         """
-        return f.monoms(order)[-1]
+        return Monomial(f.monoms(order)[-1], f.gens)
 
     def LT(f, order=None):
         """
@@ -1828,10 +1828,11 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(4*x**2 + 2*x*y**2 + x*y + 3*y, x, y).LT()
-        ((2, 0), 4)
+        (x**2*y**0, 4)
 
         """
-        return f.terms(order)[0]
+        monom, coeff = f.terms(order)[0]
+        return Monomial(monom, f.gens), coeff
 
     def ET(f, order=None):
         """
@@ -1843,10 +1844,11 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(4*x**2 + 2*x*y**2 + x*y + 3*y, x, y).ET()
-        ((0, 1), 3)
+        (x**0*y**1, 3)
 
         """
-        return f.terms(order)[-1]
+        monom, coeff = f.terms(order)[-1]
+        return Monomial(monom, f.gens), coeff
 
     def max_norm(f):
         """
@@ -3865,9 +3867,8 @@ def LM(f, *gens, **args):
     except PolificationFailed, exc:
         raise ComputationFailed('LM', 1, exc)
 
-    monom = Monomial(*F.LM(order=opt.order))
-
-    return monom.as_expr(*opt.gens)
+    monom = F.LM(order=opt.order)
+    return monom.as_expr()
 
 def LT(f, *gens, **args):
     """
@@ -3890,8 +3891,7 @@ def LT(f, *gens, **args):
         raise ComputationFailed('LT', 1, exc)
 
     monom, coeff = F.LT(order=opt.order)
-
-    return coeff*Monomial(*monom).as_expr(*opt.gens)
+    return coeff*monom.as_expr()
 
 def pdiv(f, g, *gens, **args):
     """

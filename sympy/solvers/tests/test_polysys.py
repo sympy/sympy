@@ -7,7 +7,6 @@ from sympy.polys import PolynomialError
 from sympy.solvers.polysys import solve_poly_system, solve_triangulated
 from sympy.utilities.pytest import raises
 
-
 def test_solve_poly_system():
     assert solve_poly_system([x-1], x) == [(S.One,)]
 

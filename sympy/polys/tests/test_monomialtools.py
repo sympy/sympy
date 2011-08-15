@@ -11,7 +11,7 @@ from sympy.polys.monomialtools import (
 
 from sympy.polys.polyerrors import ExactQuotientFailed
 
-from sympy.abc import x, y, z
+from sympy.abc import a, b, c, x, y, z
 from sympy.utilities.pytest import raises
 
 def test_monomials():
@@ -120,23 +120,41 @@ def test_monomial_min():
     assert monomial_min((3,4,5), (0,5,1), (6,3,9)) == (0,3,1)
 
 def test_Monomial():
-    assert Monomial(1, 2, 3).data == (1, 2, 3)
+    m = Monomial((3, 4, 1), (x, y, z))
+    n = Monomial((1, 2, 0), (x, y, z))
 
-    m, n = Monomial(3, 4, 1), Monomial(1, 2, 0)
+    assert m.as_expr() == x**3*y**4*z
+    assert n.as_expr() == x**1*y**2
 
-    assert m*n == Monomial(4, 6, 1)
-    assert m/n == Monomial(2, 2, 1)
+    assert m.as_expr(a, b, c) == a**3*b**4*c
+    assert n.as_expr(a, b, c) == a**1*b**2
 
-    assert m.gcd(n) == Monomial(1, 2, 0)
-    assert m.lcm(n) == Monomial(3, 4, 1)
+    assert m.exponents == (3, 4, 1)
+    assert m.gens == (x, y, z)
 
-    a, b, c = [ Monomial(*monom) for monom in [(3,4,5), (0,5,1), (6,3,9)] ]
+    assert n.exponents == (1, 2, 0)
+    assert n.gens == (x, y, z)
 
-    assert Monomial.max(a, b, c) == Monomial(6, 5, 9)
-    assert Monomial.min(a, b, c) == Monomial(0, 3, 1)
+    assert m == (3, 4, 1)
+    assert n != (3, 4, 1)
+    assert m != (1, 2, 0)
+    assert n == (1, 2, 0)
 
-    n = Monomial(5, 2, 0)
+    assert m*n == Monomial((4, 6, 1))
+    assert m/n == Monomial((2, 2, 1))
 
-    raises(ExactQuotientFailed, "m / n")
+    assert m*(1, 2, 0) == Monomial((4, 6, 1))
+    assert m/(1, 2, 0) == Monomial((2, 2, 1))
 
-    assert n.as_expr(x, y, z) == x**5*y**2
+    assert m.gcd(n) == Monomial((1, 2, 0))
+    assert m.lcm(n) == Monomial((3, 4, 1))
+
+    assert m.gcd((1, 2, 0)) == Monomial((1, 2, 0))
+    assert m.lcm((1, 2, 0)) == Monomial((3, 4, 1))
+
+    assert m**0 == Monomial((0, 0, 0))
+    assert m**1 == m
+    assert m**2 == Monomial((6, 8, 2))
+    assert m**3 == Monomial((9,12, 3))
+
+    raises(ExactQuotientFailed, "m/Monomial((5, 2, 0))")
