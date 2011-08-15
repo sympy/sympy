@@ -429,11 +429,12 @@ In :command:`isympy`, with the :command:`ipython` shell::
     - ----- + 3
       x + 1
 
-:mod:`Add` vs. ``+``; :mod:`Mul` vs ``*``
+:class:`Add` vs. ``+``; :class:`Mul` vs ``*``
 -----------------------------------------
 In an expression like ``a*b*c``, python process this through sympy
 as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
-1) Sometimes terms are not combined as one would like
+
+1) Sometimes terms are not combined as one would like:
 
     >>> 2*(x + 1) # this is the 2-arg Mul behavior
     2*x + 2
@@ -455,10 +456,10 @@ as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
     (x*y**(1/2))**(3/2)
 
 2) If more than two terms are being multiplied (or added) then all the previous terms
-will be reprocessed for each new argument. So if each of
-``a``, ``b`` and ``c`` were :mod:`Mul` expression, ``a*b*c`` will process all
-the arguments of ``a`` and ``b`` twice: once when ``a*b`` is computed and again
-when ``c`` is multiplied. Using ``Mul(a, b, c)`` will process all arguments once.
+will be re-processed for each new argument. So if each of ``a``, ``b`` and ``c`` were
+:class:`Mul` expression, ``a*b*c`` (or building up the product with ``*=``) will
+process all the arguments of ``a`` and ``b`` twice: once when ``a*b`` is computed
+and again when ``c`` is multiplied. Using ``Mul(a, b, c)`` will process all arguments once.
 
 Inverse Trig Functions
 ----------------------
