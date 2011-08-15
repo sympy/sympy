@@ -6,7 +6,7 @@ from sympy.polys.partfrac import (
     apart,
 )
 
-from sympy import S, Poly, E, pi, I, Matrix, Eq
+from sympy import S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, a, b, c
 
@@ -60,6 +60,24 @@ def test_apart_extension():
     assert apart(f, extension=I) == g
     assert apart(f, gaussian=True) == g
 
+def test_apart_full():
+    f = 1/(x**2 + 1)
+
+    assert apart(f, full=False) == f
+    assert apart(f, full=True) == -RootSum(x**2 + 1, Lambda(a, a/(x - a)), auto=False)/2
+
+    f = 1/(x**3 + x + 1)
+
+    assert apart(f, full=False) == f
+    assert apart(f, full=True) == RootSum(x**3 + x + 1, Lambda(a, (6*a**2/31 - 9*a/31 + S(4)/31)/(x - a)), auto=False)
+
+    f = 1/(x**5 + 1)
+
+    assert apart(f, full=False) == \
+        (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 - x + 1)) + (S(1)/5)/(x + 1)
+    assert apart(f, full=True) == \
+        -RootSum(x**4 - x**3 + x**2 - x + 1, Lambda(a, a/(x - a)), auto=False)/5 + (S(1)/5)/(x + 1)
+
 def test_apart_undetermined_coeffs():
     p = Poly(2*x - 3)
     q = Poly(x**9 - x**8 - x**6 + x**5 - 2*x**2 + 3*x - 1)
@@ -72,10 +90,3 @@ def test_apart_undetermined_coeffs():
     r = 1/((x + b)*(a - b)) + 1/((x + a)*(b - a))
 
     assert apart_undetermined_coeffs(p, q) == r
-
-def test_apart_full_decomposition():
-    p = Poly(1, x)
-    q = Poly(x**5 + 1, x)
-
-    assert apart_full_decomposition(p, q) == \
-        (-S(1)/5)*((x**3 - 2*x**2 + 3*x - 4)/(x**4 - x**3 + x**2 - x + 1)) + (S(1)/5)/(x + 1)
