@@ -2435,6 +2435,9 @@ def test_groebner():
     assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex', polys=True) == \
         [Poly(-1 + y**4, x, y, z), Poly(z**3, x, y, z), Poly(1 + x**2, x, y, z)]
 
+    assert groebner([x**3 - 1, x**2 - 1]) == [x - 1]
+    assert groebner([Eq(x**3, 1), Eq(x**2, 1)]) == [x - 1]
+
     F = [3*x**2 + y*z - 5*x - 1, 2*x + 3*x*y + y**2, x - 3*y + x*z - 2*z**2]
     f = z**9 - x**2*y**3 - 3*x*y**2*z + 11*y*z**2 + x**2*z**2 - 5
 

@@ -1,6 +1,6 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import S, I, Integer, sin, cos, sqrt, symbols, pi
+from sympy import S, I, Integer, sin, cos, sqrt, symbols, pi, Eq
 from sympy.utilities.pytest import raises
 
 from sympy.polys.polyutils import (
@@ -221,7 +221,9 @@ def test__parallel_dict_from_expr_no_gens():
         ([{(1,1,0): Integer(1)}, {(0,0,1): Integer(2)}, {(0,0,0): Integer(3)}], (x,y,z))
 
 def test_parallel_dict_from_expr():
+    parallel_dict_from_expr([Eq(x, 1), Eq(x**2, 2)]) == ([{(1,): Integer(1)}, {(2,): Integer(2)}], (x,))
     raises(PolynomialError, "parallel_dict_from_expr([A*B - B*A])")
 
 def test_dict_from_expr():
+    dict_from_expr(Eq(x, 1)) == ({(1,): Integer(1)}, (x,))
     raises(PolynomialError, "dict_from_expr(A*B - B*A)")
