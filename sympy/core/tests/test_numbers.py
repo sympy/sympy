@@ -837,3 +837,5 @@ def test_issue_1023():
     x = Symbol('x', infinitesimal=True, real=True)
     assert -oo + x == -oo
 
+def test_GoldenRatio_expand():
+    assert GoldenRatio.expand(func=True) == S.Half + sqrt(5)/2
