@@ -1,7 +1,8 @@
 from sympy.integrals.transforms import (mellin_transform,
-    inverse_mellin_transform, laplace_transform, inverse_laplace_transform)
+    inverse_mellin_transform, laplace_transform, inverse_laplace_transform,
+    fourier_transform, inverse_fourier_transform)
 from sympy import (gamma, exp, oo, Heaviside, symbols, re, factorial, pi,
-                   cos, S, And, sin)
+                   cos, S, And, sin, sqrt, I)
 from sympy.abc import x, s, a
 nu, beta, rho = symbols('nu beta rho')
 
@@ -153,3 +154,38 @@ def test_inverse_laplace_transform():
         Heaviside(t - a)*besselj(0, a - t) # note: besselj(0, x) is even
 
     # TODO everything from the direct transforms
+
+def test_fourier_transform():
+    from sympy import simplify, expand, expand_complex, factor, expand_trig
+    FT = fourier_transform
+    IFT = inverse_fourier_transform
+    def simp(x): return simplify(expand_trig(expand_complex(expand(x))))
+    def sinc(x): return sin(pi*x)/(pi*x)
+    k = symbols('k', real=True)
+
+    # TODO for this to work with real a, need to expand abs(a*x) to abs(a)*abs(x)
+    a = symbols('a', positive=True)
+
+    posk = symbols('k', positive=True)
+
+    # basic examples from wikipedia
+    assert simp(FT(Heaviside(1 - abs(2*a*x)), x, k)) == sinc(k/a)/a
+    # TODO IFT
+    assert simp(FT(Heaviside(1-abs(a*x))*(1-abs(a*x)), x, k)) == sinc(k/a)**2/a
+    # TODO IFT
+
+    assert factor(FT(exp(-a*x)*Heaviside(x), x, k), extension=I) \
+           == 1/(a + 2*pi*I*k)
+    # TODO the IFT comes only out in pieces. Morever, it does not work naively
+    #      for negative k
+    assert IFT(1/(a + 2*pi*I*x), x, posk, noconds=False) == (exp(-a*posk), True)
+    assert IFT(1/(a + 2*pi*I*x), x, exp(-I*pi, evaluate=False)*posk,
+               noconds=False) == (0, True)
+    # TODO IFT without factoring comes out as meijer g
+
+    assert FT(exp(-a*x**2), x, k) == sqrt(pi)*exp(-pi**2*k**2/a)/sqrt(a)
+    assert IFT(sqrt(pi/a)*exp(-(pi*k)**2/a), k, x) == exp(-a*x**2)
+    assert FT(exp(-a*abs(x)), x, k) == 2*a/(a**2 + 4*pi**2*k**2)
+    # TODO IFT (comes out as meijer G)
+
+    # TODO more tests when tables are extended

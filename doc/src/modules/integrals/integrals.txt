@@ -61,6 +61,8 @@ Sympy has special support for definite integrals, and integral transforms.
 .. autofunction:: sympy.integrals.transforms.inverse_mellin_transform
 .. autofunction:: sympy.integrals.transforms.laplace_transform
 .. autofunction:: sympy.integrals.transforms.inverse_laplace_transform
+.. autofunction:: sympy.integrals.transforms.fourier_transform
+.. autofunction:: sympy.integrals.transforms.inverse_fourier_transform
 
 
 Internals

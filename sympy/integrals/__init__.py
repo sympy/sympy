@@ -11,4 +11,8 @@
 """
 from integrals import integrate, Integral, line_integrate
 from transforms import (mellin_transform, inverse_mellin_transform,
-                        laplace_transform, inverse_laplace_transform)
+                        MellinTransform, InverseMellinTransform,
+                        laplace_transform, inverse_laplace_transform,
+                        LaplaceTransform, InverseLaplaceTransform,
+                        fourier_transform, inverse_fourier_transform,
+                        FourierTransform, InverseFourierTransform)

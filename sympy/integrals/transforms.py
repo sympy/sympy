@@ -1066,3 +1066,128 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     Heaviside(-a + t)
     """
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
+
+
+##########################################################################
+# Fourier Transform
+##########################################################################
+
+@_noconds_(True)
+def _fourier_transform(f, x, k, a, b, name, simplify=True):
+    """
+    Compute a general fourier-type transform
+        F(k) = a int_-oo^oo exp(b*I*x*k) f(x) dx.
+
+    For suitable choice of a and b, this reduces to the standard fourier
+    and inverse fourier transforms.
+    """
+    from sympy import exp, I, oo
+    F = integrate(a*f*exp(b*I*x*k), (x, -oo, oo))
+
+    if not F.has(Integral):
+        return _simplify(F, simplify), True
+
+    if not F.is_Piecewise:
+        raise IntegralTransformError(name, f, 'could not compute integral')
+
+    F, cond = F.args[0]
+    if F.has(Integral):
+        raise IntegralTransformError(name, f, 'integral in unexpected form')
+
+    return _simplify(F, simplify), cond
+
+class FourierTypeTransform(IntegralTransform):
+    """ Base class for fourier transforms.
+        Specify cls._a and cls._b.
+    """
+
+    def _compute_transform(self, f, x, k, **hints):
+        return _fourier_transform(f, x, k,
+                                  self.__class__._a, self.__class__._b,
+                                  self.__class__._name, **hints)
+
+    def _as_integral(self, f, x, k):
+        from sympy import Integral, exp, I
+        a = self.__class__._a
+        b = self.__class__._b
+        return Integral(a*f*exp(b*I*x*k), (x, -oo, oo))
+
+class FourierTransform(FourierTypeTransform):
+    """
+    Class representing unevaluated fourier transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute fourier transforms, see the :func:`fourier_transform`
+    docstring.
+    """
+
+    _name = 'Fourier'
+    _a = 1
+    _b = -2*S.Pi
+
+def fourier_transform(f, x, k, **hints):
+    r"""
+    Compute the unitary, ordinary-frequency fourier transform of `f`, defined
+    as
+
+    .. math:: F(k) = \int_{-\infty}^\infty f(x) e^{-2\pi i x k} \mathrm{d} x.
+
+    If the transform cannot be computed in closed form, this
+    function returns an unevaluated FourierTransform object.
+
+    For other fourier transform conventions, see the function
+    :func:`sympy.integrals.transforms._fourier_transform`.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.transforms.IntegralTransform.doit`.
+    Note that for this transform, by default ``noconds=True``.
+
+    >>> from sympy import fourier_transform, exp
+    >>> from sympy.abc import x, k
+    >>> fourier_transform(exp(-x**2), x, k)
+    sqrt(pi)*exp(-pi**2*k**2)
+    >>> fourier_transform(exp(-x**2), x, k, noconds=False)
+    (sqrt(pi)*exp(-pi**2*k**2), True)
+    """
+    return FourierTransform(f, x, k).doit(**hints)
+
+class InverseFourierTransform(FourierTypeTransform):
+    """
+    Class representing unevaluated inverse fourier transforms.
+
+    For usage of this class, see the :class:`IntegralTransform` docstring.
+
+    For how to compute inverse fourier transforms, see the
+    :func:`inverse_fourier_transform` docstring.
+    """
+
+    _name = 'Inverse Fourier'
+    _a = 1
+    _b = 2*S.Pi
+
+def inverse_fourier_transform(F, k, x, **hints):
+    r"""
+    Compute the unitary, ordinary-frequency inverse fourier transform of `F`,
+    defined as
+
+    .. math:: f(x) = \int_{-\infty}^\infty F(k) e^{2\pi i x k} \mathrm{d} k.
+
+    If the transform cannot be computed in closed form, this
+    function returns an unevaluated InverseFourierTransform object.
+
+    For other fourier transform conventions, see the function
+    :func:`sympy.integrals.transforms._fourier_transform`.
+
+    For a description of possible hints, refer to the docstring of
+    :func:`sympy.transforms.IntegralTransform.doit`.
+    Note that for this transform, by default ``noconds=True``.
+
+    >>> from sympy import inverse_fourier_transform, exp, sqrt, pi
+    >>> from sympy.abc import x, k
+    >>> inverse_fourier_transform(sqrt(pi)*exp(-(pi*k)**2), k, x)
+    exp(-x**2)
+    >>> inverse_fourier_transform(sqrt(pi)*exp(-(pi*k)**2), k, x, noconds=False)
+    (exp(-x**2), True)
+    """
+    return InverseFourierTransform(F, k, x).doit(**hints)
