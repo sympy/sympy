@@ -4,14 +4,17 @@ from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
 from sympy.abc import x, y, z
 
 from sympy.polys.domains import (
-    ZZ, QQ, RR, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
+    ZZ, QQ, RR, FF, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
     RR_mpmath, RR_sympy, PolynomialRing, FractionField, EX)
+
+from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
     GeneratorsNeeded,
     GeneratorsError,
     CoercionFailed,
+    NotInvertible,
     DomainError)
 
 from sympy.polys.polyclasses import DMP, DMF
@@ -603,6 +606,11 @@ def test_sympy_of_type():
     assert QQ_sympy().of_type(Rational(1, 2))
     assert QQ_sympy().of_type(Rational(3, 2))
 
+def test_FF_of_type():
+    assert FF(3).of_type(FF(3)(1)) is True
+    assert FF(5).of_type(FF(5)(3)) is True
+    assert FF(5).of_type(FF(7)(3)) is False
+
 def test___eq__():
     assert not QQ['x'] == ZZ['x']
     assert not QQ.frac_field(x) == ZZ.frac_field(x)
@@ -629,3 +637,146 @@ def test_RealDomain_from_sympy():
     raises(CoercionFailed, "RR.convert(x)")
     raises(CoercionFailed, "RR.convert(oo)")
     raises(CoercionFailed, "RR.convert(-oo)")
+
+def test_ModularInteger():
+    GF = ModularIntegerFactory(3)
+
+    a = GF(0)
+    assert isinstance(a, GF) and a == 0
+    a = GF(1)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)
+    assert isinstance(a, GF) and a == 2
+    a = GF(3)
+    assert isinstance(a, GF) and a == 0
+    a = GF(4)
+    assert isinstance(a, GF) and a == 1
+
+    a = GF(GF(0))
+    assert isinstance(a, GF) and a == 0
+    a = GF(GF(1))
+    assert isinstance(a, GF) and a == 1
+    a = GF(GF(2))
+    assert isinstance(a, GF) and a == 2
+    a = GF(GF(3))
+    assert isinstance(a, GF) and a == 0
+    a = GF(GF(4))
+    assert isinstance(a, GF) and a == 1
+
+    a = -GF(1)
+    assert isinstance(a, GF) and a == 2
+    a = -GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 2 + GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2) + 2
+    assert isinstance(a, GF) and a == 1
+    a = GF(2) + GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2) + GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 3 - GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(3) - 2
+    assert isinstance(a, GF) and a == 1
+    a = GF(3) - GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(3) - GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 2*GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)*2
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)*GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)*GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 2/GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)/2
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)/GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)/GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = 1 % GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(1) % 2
+    assert isinstance(a, GF) and a == 1
+    a = GF(1) % GF(2)
+    assert isinstance(a, GF) and a == 1
+    a = GF(1) % GF(2)
+    assert isinstance(a, GF) and a == 1
+
+    a = GF(2)**0
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)**1
+    assert isinstance(a, GF) and a == 2
+    a = GF(2)**2
+    assert isinstance(a, GF) and a == 1
+
+    assert bool(GF(3)) is False
+    assert bool(GF(4)) is True
+
+    GF = ModularIntegerFactory(5)
+
+    a = GF(1)**(-1)
+    assert isinstance(a, GF) and a == 1
+    a = GF(2)**(-1)
+    assert isinstance(a, GF) and a == 3
+    a = GF(3)**(-1)
+    assert isinstance(a, GF) and a == 2
+    a = GF(4)**(-1)
+    assert isinstance(a, GF) and a == 4
+
+    assert (GF(1) <  GF(2)) == True
+    assert (GF(1) <= GF(2)) == True
+    assert (GF(1) >  GF(2)) == False
+    assert (GF(1) >= GF(2)) == False
+
+    assert (GF(3) <  GF(2)) == False
+    assert (GF(3) <= GF(2)) == False
+    assert (GF(3) >  GF(2)) == True
+    assert (GF(3) >= GF(2)) == True
+
+    assert (GF(1) <  GF(7)) == True
+    assert (GF(1) <= GF(7)) == True
+    assert (GF(1) >  GF(7)) == False
+    assert (GF(1) >= GF(7)) == False
+
+    assert (GF(3) <  GF(7)) == False
+    assert (GF(3) <= GF(7)) == False
+    assert (GF(3) >  GF(7)) == True
+    assert (GF(3) >= GF(7)) == True
+
+    assert (GF(1) <  2) == True
+    assert (GF(1) <= 2) == True
+    assert (GF(1) >  2) == False
+    assert (GF(1) >= 2) == False
+
+    assert (GF(3) <  2) == False
+    assert (GF(3) <= 2) == False
+    assert (GF(3) >  2) == True
+    assert (GF(3) >= 2) == True
+
+    assert (GF(1) <  7) == True
+    assert (GF(1) <= 7) == True
+    assert (GF(1) >  7) == False
+    assert (GF(1) >= 7) == False
+
+    assert (GF(3) <  7) == False
+    assert (GF(3) <= 7) == False
+    assert (GF(3) >  7) == True
+    assert (GF(3) >= 7) == True
+
+    raises(NotInvertible, "GF(0)**(-1)")
+    raises(NotInvertible, "GF(5)**(-1)")
+
+    raises(ValueError, "ModularIntegerFactory(0)")
+    raises(ValueError, "ModularIntegerFactory(2.1)")
+    raises(TypeError, "ModularIntegerFactory(3, QQ)")
