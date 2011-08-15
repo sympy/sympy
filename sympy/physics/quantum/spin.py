@@ -56,51 +56,45 @@ def m_values(j):
     return size, [j-i for i in range(int(2*j+1))]
 
 
-def vect_to_state(vect, evect, j1=None, j2=None):
-    if isinstance(vect, Matrix):
-        if vect.cols == 1:
-            vect = vect.transpose().tolist()[0]
-        elif vect.rows == 1:
-            vect = vect.tolist()[0]
-    if not isinstance(vect, tuple) and not isinstance(vect, list):
-        raise TypeError('Vector must be a Matrix, list or tuple')
-    result = []
-    if j1 is not None and j2 is not None:
-        for i in range(2*j1+1):
-            m1 = j1-i
-            for k in range(2*j2+1):
-                m2 = j2-k
-                result.append(vect[i*(2*j2+1)+k] * TensorProduct(evect(j1,m1),evect(j2,m2)))
-    else:
-        j = S(len(vect)-1)/2
-        for i in range(2*j+1):
-            m = j-i
-            result.append(vect[i] * evect(j,m))
-    return Add(*result)
-
-
 def couple(tp):
+    """ Couple an uncoupled spin states
+
+    This function can be used to couple an uncoupled tensor product of spin
+    states. All of the eigenstates to be coupled must be of the same class. It
+    will return a linear combination of eigenstates that are subclasses of
+    CoupledSpinState.
+
+    Parameters
+    ==========
+
+    tp: TensorProduct
+        TensorProduct of spin states to be coupled
+
+    Examples
+    ========
+
+    Couple a tensor product of numerical states:
+
+        >>> from sympy.physics.quantum.spin import JzKet, couple
+        >>> from sympy.physics.quantum.tensorproduct import TensorProduct
+        >>> couple(TensorProduct(JzKet(1,0), JzKet(1,1)))
+        -2**(1/2)*|1,1,1,1>/2 + 2**(1/2)*|2,1,1,1>/2
+
+    Couple a tensor product of symbolic states:
+
+        >>> from sympy import symbols
+        >>> j1,m1,j2,m2 = symbols('j1 m1 j2 m2')
+        >>> couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2)))
+        Sum(CG(j1, m1, j2, m2, j, m1 + m2)*|j,m1 + m2>, (j, 0, j1 + j2))
+
+    """
     states = tp.args
     evect = states[0].__class__
     if not all([arg.__class__ is evect for arg in states]):
         raise TypeError('All operands must be of the same class')
     evect = evect.coupled_class()
-    # Symbolic coupling
-    if any(not (state.j.is_number and state.m.is_number) for state in states):
-        maxj = Add(*[state.j for state in states])
-        m = Add(*[state.m for state in states])
-        j = symbols('j')
-        if not maxj.is_number or maxj == int(maxj):
-            minj = 0
-        else:
-            minj = S(1)/2
-        j1 = states[0].j
-        j2 = states[1].j
-        m1 = states[0].m
-        m2 = states[1].m
-        return Sum(CG(j1,m1,j2,m2,j,m) * evect(j,m), (j,minj,maxj))
-    # Numerical coupling
-    else:
+    if all(state.j.is_number for state in states):
+        # Numerical coupling
         vect = TensorProduct(*[state._represent() for state in states])
         maxj = states[0].j + states[1].j
         j1, j2 = states[0].j, states[1].j
@@ -116,19 +110,91 @@ def couple(tp):
                 max_m1 = min(j1, m+j2)
                 min_m1 = max(-j1, m-j2)
                 min_m2 = m-max_m1
-                result.append(Add(*[vect[(j1-(max_m1-l))*(2*j2+1)+(j2-(min_m2+l)),0] * CG(j1,max_m1-l,j2,min_m2+l,j,m).doit() * evect(j,m,j1,j2) for l in range(max_m1-min_m1+1)]))
-        return Add(*result)
+                result.append(Add(*[vect[(j1-(max_m1-l))*(2*j2+1)+(j2-(min_m2+l)),0] * CG(j1,max_m1-l,j2,min_m2+l,j,m) * evect(j,m,j1,j2) for l in range(max_m1-min_m1+1)]))
+        if all(state.m.is_number for state in states):
+            return Add(*result).doit()
+        else:
+            return Add(*result)
+    else:
+        # Symbolic coupling
+        maxj = Add(*[state.j for state in states])
+        m = Add(*[state.m for state in states])
+        j = symbols('j')
+        if not maxj.is_number or maxj == int(maxj):
+            minj = 0
+        else:
+            minj = S(1)/2
+        j1 = states[0].j
+        j2 = states[1].j
+        m1 = states[0].m
+        m2 = states[1].m
+        return Sum(CG(j1,m1,j2,m2,j,m) * evect(j,m), (j,minj,maxj))
 
 
-def uncouple(state, j1, j2):
-    evect = state.__class__
+def uncouple(*args):
+    """ Uncouple a coupled spin state
+
+    Gives the uncoupled representation of a coupled spin state. Arguments must
+    be either a spin state that is a subclass of CoupledSpinState or a spin
+    state that is a subclass of SpinState and an array giving the j values
+    of the spaces that are to be coupled
+
+    Parameters
+    ==========
+
+    args: CoupledSpinState or SpinState
+        The state that is to be coupled. If a subclass of SpinState is used,
+        the state must be followed by the j values of the spaces that are to
+        be coupled.
+
+    Examples
+    ========
+
+    Uncouple a numerical state using a CoupledSpinState state:
+
+        >>> from sympy.physics.quantum.spin import JzKetCoupled, uncouple
+        >>> from sympy import S
+        >>> uncouple(JzKetCoupled(1, 0, S(1)/2, S(1)/2))
+        2**(1/2)*|1/2,-1/2>x|1/2,1/2>/2 + 2**(1/2)*|1/2,1/2>x|1/2,-1/2>/2
+
+    Perform the same calculation using a SpinState state:
+
+        >>> from sympy.physics.quantum.spin import JzKet
+        >>> uncouple(JzKet(1, 0), S(1)/2, S(1)/2)
+        2**(1/2)*|1/2,-1/2>x|1/2,1/2>/2 + 2**(1/2)*|1/2,1/2>x|1/2,-1/2>/2
+
+    Uncouple a symbolic state using a CoupledSpinState state:
+
+        >>> from sympy import symbols
+        >>> j,m,j1,j2 = symbols('j m j1 j2')
+        >>> uncouple(JzKetCoupled(j, m, j1, j2))
+        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>x|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
+
+    Perform the same calculation using a SpinState state
+
+        >>> uncouple(JzKet(j, m), j1, j2)
+        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>x|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
+
+    """
+    if len(args) == 3:
+        state, j1, j2 = args
+        evect = state.__class__
+    elif len(args) == 1:
+        state = args[0]
+        evect = state.uncoupled_class()
+        j1, j2 =  state.jvals
+        state = evect(state.j, state.m)
+    else:
+        raise TypeError
+    j = state.j
+    m = state.m
     if state.j.is_number and state.m.is_number:
         result = []
         for i_m1 in range(2*j1+1):
             m1 = j1-i_m1
             for i_m2 in range(2*j2+1):
                 m2 = j2-i_m2
-                result.append(CG(j1,m1,j2,m2,j,m) * TensorProduct(evect(j1,m1), evect(j2,m2)))
+                result.append(CG(j1,m1,j2,m2,j,m).doit() * TensorProduct(evect(j1,m1), evect(j2,m2)))
         return Add(*result)
     else:
         m1,m2,mi = symbols('m1 m2 mi')
@@ -186,22 +252,22 @@ class SpinOpBase(object):
                 result[p, q] = me
         return result
 
-    def _apply_op(self, ket, **options):
+    def _apply_op(self, ket, orig_basis, **options):
         state = ket.rewrite(self.basis)
         # If the state has only one term
         if isinstance(state, State):
             return self._apply_operator(state, **options)
         # state is a linear combination of states
-        return qapply(self*state)
+        return qapply(self*state).rewrite(orig_basis)
 
     def _apply_operator_JxKet(self, ket, **options):
-        return self._apply_op(ket, **options)
+        return self._apply_op(ket, 'Jx', **options)
 
     def _apply_operator_JyKet(self, ket, **options):
-        return self._apply_op(ket, **options)
+        return self._apply_op(ket, 'Jy', **options)
 
     def _apply_operator_JzKet(self, ket, **options):
-        return self._apply_op(ket, **options)
+        return self._apply_op(ket, 'Jz', **options)
 
     def _apply_operator_TensorProduct(self, tp, **options):
         if isinstance(self, J2Op):
@@ -843,24 +909,7 @@ class SpinState(State):
     def _eval_hilbert_space(cls, label):
         return ComplexSpace(2*label[0]+1)
 
-    def _represent_base(self, j1=None, j2=None, **options):
-        result = self._rotate_base(**options)
-        if j1 is not None and j2 is not None:
-            if self.j == int(self.j):
-                start = self.j**2
-            else:
-                start = (2*self.j-1)*(1+2*self.j)/4
-            uncouple = zeros(((2*j1+1)*(2*j2+1),1))
-            for i in range(2*j1+1):
-                for k in range(2*j2+1):
-                    m1 = j1-i+j2-k
-                    if self.j >= abs(m1):
-                        uncouple[i*(2*j2+1)+k,0] = \
-                            result[self.j-m1] * CG(j1, j1-i, j2, j2-k, self.j, m1).doit()
-            return uncouple
-        return result
-
-    def _rotate_base(self, **options):
+    def _represent_base(self, **options):
         j = sympify(self.j)
         m = sympify(self.m)
         alpha = sympify(options.get('alpha', 0))
@@ -913,7 +962,6 @@ class SpinState(State):
                 lt = Rotation.D(j, mi, self.m, *angles)
                 result = lt * state
                 return Sum(lt * state, (mi,-j,j))
-
 
     def _eval_innerproduct_JxBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
@@ -1026,9 +1074,12 @@ class JyBra(SpinState, Bra):
 class JzKet(SpinState, Ket):
     """Eigenket of Jz.
 
-    Spin state which is an eigenstate of the Jz operator. Can be defined as a
-    coupled state by specifying j1 and j2. Uncoupled states are defined as a
-    tensor product of states.
+    Spin state which is an eigenstate of the Jz operator. Uncoupled states,
+    that is states representing the interation of multiple seperate spin
+    states, are defined as a tensor product of states.
+
+    See uncouple and couple for coupling of states and JzKetCoupled for coupled
+    states.
 
     Parameters
     ==========
@@ -1080,34 +1131,6 @@ class JzKet(SpinState, Ket):
         >>> i.doit()
         1/2
 
-    Coupled States
-    --------------
-
-    There are no specifc ways to define states to be coupled, however, one can
-    use rewrite and represent to uncouple states by passing the j values of the
-    coupled spaces.
-
-    The rewrite method can be used to convert a coupled state to  an uncoupled
-    state. This can be done by either using a coupled state or passing j1 and
-    j2 parameters to the rewrite function:
-
-        >>> JzKet(1,0).rewrite('Jz',j1=1,j2=1)
-        -2**(1/2)*|1,-1>x|1,1>/2 + 2**(1/2)*|1,1>x|1,-1>/2
-
-    As with rewrite, represent can be used to give the uncoupled representation
-    of the state:
-
-        >>> represent(JzKet(1,0), basis=Jz, j1=1, j2=1, coupled=False)
-        [          0]
-        [          0]
-        [ 2**(1/2)/2]
-        [          0]
-        [          0]
-        [          0]
-        [-2**(1/2)/2]
-        [          0]
-        [          0]
-
     Uncoupled States
     ---------------
 
@@ -1126,17 +1149,20 @@ class JzKet(SpinState, Ket):
         >>> TensorProduct(JzKet(1,1),JxKet(1,1)).rewrite('Jz')
         |1,1>x|1,-1>/2 + 2**(1/2)*|1,1>x|1,0>/2 + |1,1>x|1,1>/2
 
-    In addition, rewrite can be used to couple the state:
-
-        >>> TensorProduct(JzKet(1,1),JzKet(1,1)).rewrite('Jz',coupled=True)
-        |2,2>
-        >>> TensorProduct(JzKet(1,1),JzKet(1,0)).rewrite('Jz',coupled=True)
-        2**(1/2)*|1,1>/2 + 2**(1/2)*|2,1>/2
-
     The represent method for TensorProduct's gives the vector representation of
     the state. Note that the state in the product basis is the eqivalent of the
     tensor product of the vector representation of the component eigenstates:
 
+        >>> represent(TensorProduct(JzKet(1,0),JzKet(1,1)))
+        [0]
+        [0]
+        [0]
+        [1]
+        [0]
+        [0]
+        [0]
+        [0]
+        [0]
         >>> represent(TensorProduct(JzKet(1,1),JxKet(1,1)), basis=Jz)
         [       1/2]
         [2**(1/2)/2]
@@ -1144,20 +1170,6 @@ class JzKet(SpinState, Ket):
         [         0]
         [         0]
         [         0]
-        [         0]
-        [         0]
-        [         0]
-
-    The represent method can also give the coupled representation of a given
-    TensorProduct:
-
-        >>> represent(TensorProduct(JzKet(1,1),JzKet(1,0)),basis=Jz,coupled=True)
-        [         0]
-        [2**(1/2)/2]
-        [         0]
-        [         0]
-        [         0]
-        [2**(1/2)/2]
         [         0]
         [         0]
         [         0]
@@ -1206,14 +1218,25 @@ class CoupledSpinState(SpinState):
     def __new__(cls, j, m, *jvals):
         return State.__new__(cls, j, m, *jvals)
 
+    @property
+    def jvals(self):
+        return self.label[2:]
+
     @classmethod
     def _eval_hilbert_space(cls, label):
-        if len(label) == 2:
-            return 0
-        ret = ComplexSpace(2*label[2]+1)
-        for j in label[3:]:
-            ret += ComplexSpace(2*j+1)
-        return ret
+        j = Add(*label[2:])
+        if j.is_number:
+            ret = ComplexSpace(2*j+1)
+            while j >= 1:
+                j -= 1
+                ret += ComplexSpace(2*j+1)
+            return ret
+        else:
+            # TODO
+            # Need hilbert space fix
+            #ji = symbols('ji')
+            #ret = Sum(ComplexSpace(2*ji + 1), (ji, j, 0))
+            return ComplexSpace(2*j+1)
 
     def _represent_coupled_base(self, **options):
         evect = self.uncoupled_class()
@@ -1225,11 +1248,52 @@ class CoupledSpinState(SpinState):
         result[start:start+2*self.j+1,0] = evect(self.j, self.m)._represent_base(**options)
         return result
 
+    def _eval_rewrite_as_Jx(self, *args, **options):
+        if isinstance(self, Bra):
+            return self._rewrite_basis(Jx, JxBraCoupled, **options)
+        return self._rewrite_basis(Jx, JxKetCoupled, **options)
+
+    def _eval_rewrite_as_Jy(self, *args, **options):
+        if isinstance(self, Bra):
+            return self._rewrite_basis(Jy, JyBraCoupled, **options)
+        return self._rewrite_basis(Jy, JyKetCoupled, **options)
+
+    def _eval_rewrite_as_Jz(self, *args, **options):
+        if isinstance(self, Bra):
+            return self._rewrite_basis(Jz, JzBraCoupled, **options)
+        return self._rewrite_basis(Jz, JzKetCoupled, **options)
+
+    def _rewrite_basis(self, basis, evect, **options):
+        from sympy.physics.quantum.represent import represent
+        j = sympify(self.j)
+        jvals = self.jvals
+        if j.is_number:
+            if j == int(j):
+                start = j**2
+            else:
+                start = (2*j-1)*(2*j+1)/4
+            vect = represent(self, basis=basis, **options)
+            result = Add(*[vect[start+i] * evect(j,j-i,*jvals) for i in range(2*j+1)])
+            if options.get('coupled') is False:
+                return uncouple(result)
+            return result
+        else:
+            # TODO: better way to get angles of rotation
+            mi = symbols('mi')
+            angles = represent(self.__class__(0,mi),basis=basis)[0].args[3:6]
+            if angles == (0,0,0):
+                return self
+            else:
+                state = evect(j, mi, *jvals)
+                lt = Rotation.D(j, mi, self.m, *angles)
+                result = lt * state
+                return Sum(lt * state, (mi,-j,j))
+
 
 class JxKetCoupled(CoupledSpinState, Ket):
-    """Eigenket of Jx.
+    """Coupled eigenket of Jx.
 
-    See JzKet for the usage of spin eigenstates.
+    See JzKetCoupled for the usage of coupled spin eigenstates.
     """
 
     @classmethod
@@ -1252,10 +1316,11 @@ class JxKetCoupled(CoupledSpinState, Ket):
     def _represent_JzOp(self, basis, **options):
         return self._represent_coupled_base(beta=pi/2, **options)
 
-class JxBraCoupled(CoupledSpinState, Bra):
-    """Eigenbra of Jx.
 
-    See JzKet for the usage of spin eigenstates.
+class JxBraCoupled(CoupledSpinState, Bra):
+    """Coupled eigenbra of Jx.
+
+    See JzKetCoupled for the usage of coupled spin eigenstates.
     """
 
     @classmethod
@@ -1268,9 +1333,9 @@ class JxBraCoupled(CoupledSpinState, Bra):
 
 
 class JyKetCoupled(CoupledSpinState, Ket):
-    """Eigenket of Jy.
+    """Coupled eigenket of Jy.
 
-    See JzKet for the usage of spin eigenstates.
+    See JzKetCoupled for the usage of coupled spin eigenstates.
     """
 
     @classmethod
@@ -1295,9 +1360,9 @@ class JyKetCoupled(CoupledSpinState, Ket):
 
 
 class JyBraCoupled(CoupledSpinState, Bra):
-    """Eigenbra of Jy.
+    """Coupled eigenbra of Jy.
 
-    See JzKet for the usage of spin eigenstates.
+    See JzKetCoupled for the usage of coupled spin eigenstates.
     """
 
     @classmethod
@@ -1310,7 +1375,62 @@ class JyBraCoupled(CoupledSpinState, Bra):
 
 
 class JzKetCoupled(CoupledSpinState, Ket):
-    """Coupled eigenket of Jz"""
+    """Coupled eigenket of Jz
+
+    Spin state that is an eigenket of Jz which represents the coupling of
+    seperate spin spaces.
+
+    See uncouple and couple for coupling of states and JzKetCoupled for coupled
+    states.
+
+    Parameters
+    ==========
+
+    j : Number, Symbol
+        Total spin angular momentum
+    m : Number, Symbol
+        Eigenvalue of the Jz spin operator
+    *jvals : tuple
+        The j values of the spaces that are coupled
+
+    Examples
+    ========
+
+    Defining simple spin states, both numerical and symbolic:
+
+        >>> from sympy.physics.quantum.spin import JzKetCoupled
+        >>> from sympy import symbols
+        >>> JzKetCoupled(1, 0, 1, 1)
+        |1,0,1,1>
+        >>> j, m, j1, j2 = symbols('j m j1 j2')
+        >>> JzKetCoupled(j, m, j1, j2)
+        |j,m,j1,j2>
+
+    Rewriting the JzKetCoupled in terms of eigenkets of the Jx operator:
+    Note: that the resulting eigenstates are JxKetCoupled
+
+        >>> JzKetCoupled(1,1,1,1).rewrite("Jx")
+        |1,-1,1,1>/2 - 2**(1/2)*|1,0,1,1>/2 + |1,1,1,1>/2
+
+    The rewrite method can be used to convert a coupled state to an uncoupled
+    state. This is done by passing coupled=False to the rewrite function:
+
+        >>> JzKetCoupled(1, 0, 1, 1).rewrite('Jz', coupled=False)
+        -2**(1/2)*|1,-1>x|1,1>/2 + 2**(1/2)*|1,1>x|1,-1>/2
+
+    Get the vector representation of a state in terms of the basis elements
+    of the Jx operator:
+
+        >>> from sympy.physics.quantum.represent import represent
+        >>> from sympy.physics.quantum.spin import Jx
+        >>> from sympy import S
+        >>> represent(JzKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jx)
+        [         0]
+        [       1/2]
+        [2**(1/2)/2]
+        [       1/2]
+
+    """
 
     @classmethod
     def dual_class(self):
@@ -1334,9 +1454,9 @@ class JzKetCoupled(CoupledSpinState, Ket):
 
 
 class JzBraCoupled(CoupledSpinState, Bra):
-    """Eigenbra of Jz.
+    """Coupled eigenbra of Jz.
 
-    See the JzKet for the usage of spin eigenstates.
+    See the JzKetCoupled for the usage of coupled spin eigenstates.
     """
 
     @classmethod
