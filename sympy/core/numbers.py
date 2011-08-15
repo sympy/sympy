@@ -1838,7 +1838,8 @@ class GoldenRatio(NumberSymbol):
         return mlib.from_man_exp(phi_fixed(prec+10), -prec-10)
 
     def _eval_expand_func(self, deep=True, **hints):
-        return S.Half + S.Half*S.Sqrt(5)
+        from sympy import sqrt
+        return S.Half + S.Half*sqrt(5)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):
