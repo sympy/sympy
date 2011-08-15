@@ -1,12 +1,8 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from sympy.core.mul import Mul
-from sympy.core.singleton import S
-from sympy.core.basic import C
-
-from sympy.polys.polyerrors import ExactQuotientFailed
-
+from sympy.core import S, C, Symbol, Mul
 from sympy.utilities import cythonized
+from sympy.polys.polyerrors import ExactQuotientFailed
 
 def monomials(variables, degree):
     r"""
@@ -151,6 +147,9 @@ def monomial_key(order=None):
     """
     if order is None:
         return lex
+
+    if isinstance(order, Symbol):
+        order = str(order)
 
     if isinstance(order, str):
         try:

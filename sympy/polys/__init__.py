@@ -25,7 +25,7 @@ from polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel,
-    reduced, groebner, fglm
+    reduced, groebner, GroebnerBasis,
 )
 
 from polyfuncs import (

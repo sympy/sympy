@@ -916,7 +916,8 @@ def matrix_fglm(F, u, O_from, O_to, K):
         L = [(k, l) for (k, l) in L if \
             all(monomial_div(_incr_k(S[l], k), sdp_LM(g, u)) is None for g in G)]
 
-        if L == []:
+        if not L:
+            G = [ sdp_monic(g, K) for g in G ]
             return sorted(G, key=lambda g: O_to(sdp_LM(g, u)), reverse=True)
 
         t = L.pop()
