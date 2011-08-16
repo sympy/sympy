@@ -1627,7 +1627,7 @@ def test_terms_gcd():
     assert terms_gcd(x - 1) == x - 1
     assert terms_gcd(-x - 1) == -x - 1
 
-    assert terms_gcd(2*x + 3) != Mul(1, 2*x + 3, evaluate=False)
+    assert terms_gcd(2*x + 3) == 2*x + 3
     assert terms_gcd(6*x + 4) == Mul(2, 3*x + 2, evaluate=False)
 
     assert terms_gcd(x**3*y + x*y**3) == x*y*(x**2 + y**2)
@@ -1855,7 +1855,7 @@ def test_sqf():
     assert sqf(x - 1) == x - 1
     assert sqf(-x - 1) == -x - 1
 
-    assert sqf(x - 1) != Mul(1, x - 1, evaluate=False)
+    assert sqf(x - 1) == x - 1
     assert sqf(6*x - 10) == Mul(2, 3*x - 5, evaluate=False)
 
     assert sqf((6*x - 10)/(3*x - 6)) == S(2)/3*((3*x - 5)/(x - 2))
