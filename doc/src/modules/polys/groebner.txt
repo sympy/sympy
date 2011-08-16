@@ -40,7 +40,7 @@ Monomial Orderings
 ==================
 In order to make sense of a Groebner basis it is important to have the notion
 of a monomial ordering. A monomial order `<` is a relation on the set of all
-monomials such that the following holds:
+monomials such that the following hold:
 
  * `1 < m` for all monomials `m \not= 1`
  * Any two monomials can be compared
@@ -188,7 +188,7 @@ Converting Groebner bases
 -------------------------
 Most of the time, a Groebner basis with respect to the lexicographic
 term order is most useful (e.g. for solving) but also the most expensive
-to compute. SymPy has an implementation if the FGLM algorithm [FGLM94]_,
+to compute. SymPy has an implementation of the FGLM algorithm [FGLM94]_,
 which converts Groebner bases of zero-dimensional ideals (ideals generated
 by polynomials which have only finitely many common roots).
 
@@ -211,13 +211,3 @@ convert to something else than ``'lex'``, do::
         2
     16⋅y  - 23⋅y + 7, x - 4⋅y + 2
 
-
-
-.. [BW93] Thomas Becker, Volker Weispfennig. Groebner Bases, A Computational
-    Approach to Commutative Algebra. Graduate Texts in Mathematics.
-    Springer-Verlag, 1993.
-.. [FGLM94] J. Faugere, P. Gianni, D. Lazard, T. Mora. Efficient Computation of
-    Zero-Dimensional Groebner Bases by Change of Ordering. J. Symb. Comp. 16,
-    p. 329-344, 1993.
-.. [SW10] Sun, Y. Wang, D.K., 2010. A New PRoof for the Correctness of F5 (F5-Like)
-    Algorithm, http://arxiv.org/abs/1004.0084
