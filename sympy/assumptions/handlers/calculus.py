@@ -121,14 +121,14 @@ class AskBoundedHandler(CommonHandler):
         """
         base_bounded = ask(Q.bounded(expr.base), assumptions)
         if not base_bounded:
-            return base_bounded
-        if ask(Q.bounded(expr.exp), assumptions) and base_bounded:
+            return False
+        if ask(Q.bounded(expr.exp), assumptions):# and base_bounded:
             return True
-        if base_bounded and expr.base.is_number:
+        if expr.base.is_number:# and base_bounded and not exp_bounded:
             # We need to implement relations for this
             if abs(expr.base) > 1:
                 return False
-            return True
+            return ask(~Q.negative(expr.exp), assumptions)
 
     @staticmethod
     def log(expr, assumptions):
