@@ -23,6 +23,10 @@ class Add(AssocOp):
 
         Applies associativity, all terms are commutable with respect to
         addition.
+
+        ** Developer Notes **
+            See Mul.flatten
+
         """
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
