@@ -1248,6 +1248,9 @@ def test_parallel_poly_from_expr():
     assert parallel_poly_from_expr([Poly(x**2-1, x), 1])[0] == [Poly(x**2-1, x), Poly(1, x)]
     assert parallel_poly_from_expr([Poly(x**2-1, x), 1])[0] == [Poly(x**2-1, x), Poly(1, x)]
 
+    assert parallel_poly_from_expr([Poly(x, x, y), Poly(y, x, y)], x, y, order='lex')[0] == \
+        [Poly(x, x, y, domain='ZZ'), Poly(y, x, y, domain='ZZ')]
+
     raises(PolificationFailed, "parallel_poly_from_expr([0, 1])")
 
 def test_pdiv():
