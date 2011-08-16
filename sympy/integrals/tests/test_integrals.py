@@ -118,7 +118,7 @@ def test_issue433():
 
 def test_issue461():
     assert integrate(x**Rational(3,2), x) == 2*x**Rational(5,2)/5
-    assert integrate(x**Rational(1,2), x) == 2*x**Rational(3,2)/3
+    assert integrate(sqrt(x), x) == 2*x**Rational(3,2)/3
     assert integrate(x**Rational(-3,2), x) == -2*x**Rational(-1,2)
 
 def test_integrate_poly():
@@ -180,8 +180,8 @@ def test_integrate_linearterm_pow():
     assert integrate((exp(y)*x + 1/y)**(1+sin(y)), x)   == exp(-y)*(exp(y)*x + 1/y)**(2+sin(y)) / (2+sin(y))
 
 def test_issue519():
-    assert integrate(pi*x**Rational(1,2),x) == 2*pi*x**Rational(3,2)/3
-    assert integrate(pi*x**Rational(1,2) + E*x**Rational(3,2),x) == \
+    assert integrate(pi*sqrt(x),x) == 2*pi*x**Rational(3,2)/3
+    assert integrate(pi*sqrt(x) + E*x**Rational(3,2),x) == \
                                                2*pi*x**Rational(3,2)/3  + \
                                                2*E *x**Rational(5,2)/5
 def test_issue524():
@@ -608,7 +608,7 @@ def test_issue_1277():
                                     (2**(1 + S(1)/n) + n*2**(1 + S(1)/n))))
 
 def test_issue_1418():
-    assert integrate((x**Rational(1,2) - x**3)/x**Rational(1,3), x) == \
+    assert integrate((sqrt(x) - x**3)/x**Rational(1,3), x) == \
         6*x**(Rational(7,6))/7 - 3*x**(Rational(11,3))/11
 
 def test_issue_1100():

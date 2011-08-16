@@ -153,15 +153,15 @@ def test_generalexponent():
     e = (2/x+3/x**p)/(1/x+1/x**p)
     assert e.nseries(x,0,2) == 2 + sqrt(x) + O(x)
 
-    e=1+x**Rational(1,2)
-    assert e.nseries(x,0,4) == 1+x**Rational(1,2)
+    e=1+sqrt(x)
+    assert e.nseries(x,0,4) == 1+sqrt(x)
 
 # more complicated example
 def test_genexp_x():
     x = Symbol("x")
-    e=1/(1+x**Rational(1,2))
+    e=1/(1+sqrt(x))
     assert e.nseries(x,0,2) == \
-                1+x-x**Rational(1,2)-x**Rational(3,2)+O(x**2, x)
+                1+x-sqrt(x)-x**Rational(3,2)+O(x**2, x)
 
 # more complicated example
 def test_genexp_x2():
@@ -255,7 +255,7 @@ def test_issue416():
 
 def test_issue406():
     x = Symbol("x")
-    e = sin(x)**(-4)*(cos(x)**Rational(1,2)*sin(x)**2 - \
+    e = sin(x)**(-4)*(sqrt(cos(x))*sin(x)**2 - \
             cos(x)**Rational(1,3)*sin(x)**2)
     assert e.nseries(x, n=8) == -Rational(1)/12 - 7*x**2/288 - \
             43*x**4/10368 + O(x**5)
@@ -294,7 +294,7 @@ def test_issue409():
 
 def test_issue408():
     x = Symbol("x")
-    e = x**(-4)*(x**2 - x**2*cos(x)**Rational(1,2))
+    e = x**(-4)*(x**2 - x**2*sqrt(cos(x)))
     assert e.nseries(x, n=7) == Rational(1,4) + x**2/96 + 19*x**4/5760 + O(x**5)
 
 def test_issue540():

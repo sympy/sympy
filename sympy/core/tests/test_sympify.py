@@ -343,7 +343,7 @@ def test_issue883():
 
 def test_S_sympify():
     assert S(1)/2 == sympify(1)/2
-    assert (-2)**(S(1)/2) == sqrt(2)*I
+    assert sqrt(-2) == sqrt(2)*I
 
 def test_issue1689():
     assert srepr(S(1.0+0J)) == srepr(S(1.0)) == srepr(Float(1.0))
