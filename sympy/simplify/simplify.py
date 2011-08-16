@@ -801,13 +801,12 @@ def ratsimpmodprime(expr, G, *gens, **args):
             Cs = symbols("c:%d" % len(M1))
             Ds = symbols("d:%d" % len(M2))
 
-            c_hat = sum([Cs[i] * M1[i] for i in xrange(len(M1))])
-            d_hat = sum([Ds[i] * M2[i] for i in xrange(len(M2))])
+            c_hat = Poly(sum([Cs[i] * M1[i] for i in xrange(len(M1))]), opt.gens)
+            d_hat = Poly(sum([Ds[i] * M2[i] for i in xrange(len(M2))]), opt.gens)
 
-            # Polys + reduced + order doesn't work
-            r = reduced(a.as_expr() * d_hat - b.as_expr() * c_hat, G, opt.gens, order=opt.order)[1]
+            r = reduced(a * d_hat - b * c_hat, G, opt.gens, order=opt.order, polys=True)[1]
 
-            S = Poly(r, opt.gens).coeffs()
+            S = r.coeffs()
             sol = solve(S, Cs + Ds)
 
             # If nontrivial solutions exist, solve will give them
