@@ -7,7 +7,7 @@ from sympy.physics.quantum.piab import PIABHamiltonian, PIABKet, PIABBra, m, L
 from sympy.physics.quantum.cartesian import XOp, XKet
 from sympy.physics.quantum.state import Wavefunction
 
-x_1 = Symbol('x_1', real=True)
+x = Symbol('x', real=True)
 n = Symbol('n', integer=True)
 i, j = symbols('i,j')
 
@@ -22,10 +22,10 @@ def test_states():
     assert PIABKet(n).hilbert_space ==\
         L2(Interval(S.NegativeInfinity,S.Infinity))
     assert represent(PIABKet(n)) == \
-           Wavefunction(sqrt(2/L)*sin(n*pi*x_1/L), (x_1, 0, L))
+           Wavefunction(sqrt(2/L)*sin(n*pi*x/L), (x, 0, L))
     assert represent(PIABKet(n), basis=XKet) == \
-           Wavefunction(sqrt(2/L)*sin(n*pi*x_1 /L), (x_1, 0, L))
+           Wavefunction(sqrt(2/L)*sin(n*pi*x/L), (x, 0, L))
     assert represent(PIABKet(n), basis=XOp) == \
-           Wavefunction(sqrt(2/L)*sin(n*pi*x_1/L), (x_1, 0, L))
+           Wavefunction(sqrt(2/L)*sin(n*pi*x/L), (x, 0, L))
     assert (PIABBra(i)*PIABKet(j)).doit() == KroneckerDelta(i, j)
     assert PIABBra(n).dual_class() == PIABKet

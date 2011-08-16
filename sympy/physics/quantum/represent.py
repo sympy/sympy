@@ -136,9 +136,10 @@ def represent(expr, **options):
         >>> x = XKet()
         >>> y = XBra('y')
         >>> represent(X*x)
-        DiracDelta(x - x_2)*Wavefunction(x, x)
+        DiracDelta(x - x_1)*Wavefunction(x, x)
         >>> represent(X*x*y)
-        DiracDelta(x - x_3)*DiracDelta(-x_1 + y)*Wavefunction(x, x)
+        DiracDelta(x - x_2)*DiracDelta(-x_1 + y)*Wavefunction(x, x)
+
     """
 
     rep_expr, basis = _represent_helper(expr, **options)
@@ -159,7 +160,12 @@ def _represent_helper(expr, **options):
     basis = options['basis']
 
     if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
-        return (expr._represent(**options), basis)
+        should_collapse = options.pop('collapse', True)
+        result = expr._represent(**options)
+        if should_collapse:
+            result = _collapse_indices(result, basis)
+
+        return (result, basis)
     elif isinstance(expr, Add):
         result = represent(expr.args[0], **options)
         for args in expr.args[1:]:
@@ -208,7 +214,12 @@ def _represent_helper(expr, **options):
     if not "delta_unities" in options:
         options["delta_unities"] = []
 
-    result = represent(expr.args[-1], **options)
+    should_apply = options.pop('qapply', True)
+    should_integrate = options.pop('integrate', True)
+    should_wrap = options.pop('wrap_wf', True)
+    should_collapse = options.pop('collapse', True)
+
+    result = represent(expr.args[-1], collapse=False, **options)
     last_arg = expr.args[-1]
 
     for arg in reversed(expr.args[:-1]):
@@ -223,7 +234,7 @@ def _represent_helper(expr, **options):
         elif isinstance(last_arg, KetBase) and isinstance(arg, BraBase):
             unity = options["index"]
 
-        tmp_result = represent(arg, **options)
+        tmp_result = represent(arg, collapse=False, **options)
         if unity is not None:
             if isinstance(tmp_result, Expr) and tmp_result.has(DiracDelta):
                 options["delta_unities"].append(unity)
@@ -237,10 +248,6 @@ def _represent_helper(expr, **options):
     # vectors are taken. In these cases, we simply return a scalar.
     result = flatten_scalar(result)
 
-    should_apply = options.pop('qapply', True)
-    should_integrate = options.pop('integrate', True)
-    should_wrap = options.pop('wrap_wf', True)
-
     if should_integrate:
         result = integrate_result(expr, result, delta=True, **options)
 
@@ -252,6 +259,9 @@ def _represent_helper(expr, **options):
 
     if should_integrate:
         result = integrate_result(expr, unwrapped_res, **options)
+
+    if should_collapse:
+        result = _collapse_indices(result, basis)
 
     if not should_wrap:
         return (result, basis)
@@ -721,7 +731,8 @@ def _rewrap_wf(expr, unwrapped_vars, **options):
 def _append_index(symbol, index, **assumptions):
     """
 
-    A helper function to append an index to a symbol
+    A helper function to append an index to a symbol. If symbol
+    already has an index, that index will be replaced.
 
     """
 
@@ -729,6 +740,53 @@ def _append_index(symbol, index, **assumptions):
         raise TypeError("Argument passed not a Symbol!")
 
     symbol_str = str(symbol)
-    symbol_str += "_" + str(index)
+    pos = symbol_str.find("_")
+
+    if index is None and pos == -1:
+        return Symbol(symbol_str, **assumptions)
+    elif index is None: #Strip the index if the symbol has one
+        return Symbol(symbol_str[:pos], **assumptions)
+
+    if pos == -1:
+        symbol_str += "_" + str(index)
+    else:
+        symbol_str = symbol_str[:pos] + "_" + str(index)
 
     return Symbol(symbol_str, **assumptions)
+
+def _collapse_indices(expr, basis):
+    """
+    A helper function to collapse the indices of inserted coordinates to the
+    lowest available number. For example, an expression only containing x_3
+    would have substitutions made so that x_3 -> x
+    """
+
+    if not isinstance(expr, Expr):
+        return expr
+
+    coords = basis.label
+    sorted_sym = sorted(expr.free_symbols, key=default_sort_key)
+
+    for coord in coords:
+        coord_str = str(coord)
+        l = len(coord_str)
+        indexed = filter(lambda x : str(x)[:l] == coord_str, sorted_sym)
+
+        ind = None
+        sub_info = []
+
+        for sym in indexed:
+            new_sym = _append_index(sym, ind, **basis.label_assumptions)
+
+            if ind is None:
+                ind = 1
+            else:
+                ind += 1
+
+            if sym != new_sym:
+                sub_info.append((sym, new_sym))
+
+        if len(sub_info) > 0:
+            expr = expr.subs(sub_info)
+
+    return expr

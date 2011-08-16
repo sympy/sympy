@@ -28,19 +28,19 @@ def test_x():
     assert (PxBra(px)*XKet(x)).doit() ==\
         exp(-I*x*px/hbar)/sqrt(2*pi*hbar)
     assert represent(XKet(x)) == DiracDelta(x - x_1)
-    assert represent(XOp()) == DiracDelta(x_1 - x_2)*Wavefunction(x_1, x_1)
+    assert represent(XOp()) == DiracDelta(x - x_1)*Wavefunction(x, x)
     assert represent(XBra(x)) == DiracDelta(x - x_1)
     assert XBra(x).position == x
-    assert represent(XOp()*XKet()) == DiracDelta(x-x_2)*Wavefunction(x, x)
+    assert represent(XOp()*XKet()) == DiracDelta(x-x_1)*Wavefunction(x, x)
     assert represent(XOp()*XKet()*XBra('y')) == \
-           DiracDelta(x - x_3)*DiracDelta(y - x_1)*Wavefunction(x, x)
+           DiracDelta(x - x_2)*DiracDelta(y - x_1)*Wavefunction(x, x)
     assert represent(XBra("y")*XKet()) == DiracDelta(y - x)
     assert represent(XKet()*XBra()) == \
            DiracDelta(x - x_1)*DiracDelta(x - x_2)
 
     rep_p = represent(XOp(), basis = PxOp)
-    diff_op1 = DifferentialOperator(Derivative(f(px_1), px_1), f(px_1))
-    assert rep_p == hbar*I*DiracDelta(px_1 - px_2)*diff_op1
+    diff_op1 = DifferentialOperator(Derivative(f(px), px), f(px))
+    assert rep_p == hbar*I*DiracDelta(px - px_1)*diff_op1
     assert rep_p == represent(XOp(), basis = PxOp())
     assert rep_p == represent(XOp(), basis = PxKet)
     assert rep_p == represent(XOp(), basis = PxKet())
@@ -59,8 +59,8 @@ def test_p():
     assert represent(PxKet(px)) == DiracDelta(px - px_1)
 
     rep_x = represent(PxOp(), basis = XOp)
-    diff_op1 = DifferentialOperator(Derivative(f(x_1), x_1), f(x_1))
-    assert rep_x == -hbar*I*DiracDelta(x_1 - x_2)*diff_op1
+    diff_op1 = DifferentialOperator(Derivative(f(x), x), f(x))
+    assert rep_x == -hbar*I*DiracDelta(x - x_1)*diff_op1
     assert rep_x == represent(PxOp(), basis = XOp())
     assert rep_x == represent(PxOp(), basis = XKet)
     assert rep_x == represent(PxOp(), basis = XKet())
