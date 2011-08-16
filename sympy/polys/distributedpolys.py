@@ -1,12 +1,10 @@
 """Sparse distributed multivariate polynomials. """
 
+
 from sympy.polys.monomialtools import (
     monomial_mul,
     monomial_div,
     monomial_lcm,
-    monomial_lex_key as O_lex,
-    monomial_grlex_key as O_grlex,
-    monomial_grevlex_key as O_grevlex,
 )
 
 from sympy.polys.polyerrors import (
@@ -14,6 +12,7 @@ from sympy.polys.polyerrors import (
 )
 
 from operator import itemgetter
+
 
 def sdp_LC(f, K):
     """Returns the leading coeffcient of `f`. """
