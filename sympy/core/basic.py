@@ -75,6 +75,8 @@ class Basic(object):
     @deprecated
     def is_Real(self):  # pragma: no cover
         """Deprecated alias for ``is_Float``"""
+        # When this is removed, remove the piece of code disabling the warning
+        # from test_pickling.py
         return self.is_Float
 
     def __new__(cls, *args, **assumptions):

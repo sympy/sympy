@@ -1,6 +1,7 @@
 import copy
 import pickle
 import types
+import warnings
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
@@ -31,6 +32,9 @@ from sympy import symbols
 def check(a, check_attr = True):
     """ Check that pickling and copying round-trips.
     """
+    # The below hasattr() check will warn about is_Real in Python 2.5, so
+    # disable this to keep the tests clean
+    warnings.filterwarnings("ignore", ".*is_Real.*", DeprecationWarning)
     #FIXME-py3k: Add support for protocol 3.
     for protocol in [0, 1, 2, copy.copy, copy.deepcopy]:
         if callable(protocol):
