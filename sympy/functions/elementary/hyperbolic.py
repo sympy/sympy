@@ -545,9 +545,9 @@ class asinh(Function):
             elif arg is S.Zero:
                 return S.Zero
             elif arg is S.One:
-                return C.log(2**S.Half + 1)
+                return C.log(sqrt(2) + 1)
             elif arg is S.NegativeOne:
-                return C.log(2**S.Half - 1)
+                return C.log(sqrt(2) - 1)
             elif arg.is_negative:
                 return -cls(-arg)
         else:

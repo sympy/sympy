@@ -130,8 +130,8 @@ def test_solve_polynomial1():
                                            -2 - 3**Rational(1,2) ]
 
     assert sorted(solve((x**2 - 1)**2 - a, x)) == \
-           sorted([(1 + a**S.Half)**S.Half, -(1 + a**S.Half)**S.Half,
-                   (1 - a**S.Half)**S.Half, -(1 - a**S.Half)**S.Half])
+           sorted([sqrt(1 + sqrt(a)), -sqrt(1 + sqrt(a)),
+                   sqrt(1 - sqrt(a)), -sqrt(1 - sqrt(a))])
 
 def test_solve_polynomial2():
     x = Symbol('x')
