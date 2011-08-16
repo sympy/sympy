@@ -27,7 +27,79 @@ class Mul(AssocOp):
 
     @classmethod
     def flatten(cls, seq):
+        """Return commutative, noncommutative and order arguments by
+        combining related terms.
 
+        ** Developer Notes **
+            * In an expression like ``a*b*c``, python process this through sympy
+              as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
+
+              -  Sometimes terms are not combined as one would like:
+                 {c.f. http://code.google.com/p/sympy/issues/detail?id=1497}
+
+                >>> from sympy import Mul, sqrt
+                >>> from sympy.abc import x, y, z
+                >>> 2*(x + 1) # this is the 2-arg Mul behavior
+                2*x + 2
+                >>> y*(x + 1)*2
+                2*y*(x + 1)
+                >>> 2*(x + 1)*y # 2-arg result will be obtained first
+                y*(2*x + 2)
+                >>> Mul(2, x + 1, y) # all 3 args simultaneously processed
+                2*y*(x + 1)
+                >>> 2*((x + 1)*y) # parentheses can control this behavior
+                2*y*(x + 1)
+
+                Powers with compound bases may not find a single base to
+                combine with unless all arguments are processed at once.
+                Post-processing may be necessary in such cases.
+                {c.f. http://code.google.com/p/sympy/issues/detail?id=2629}
+
+                >>> a = sqrt(x*sqrt(y))
+                >>> a**3
+                (x*y**(1/2))**(3/2)
+                >>> Mul(a,a,a)
+                (x*y**(1/2))**(3/2)
+                >>> a*a*a
+                x*y**(1/2)*(x*y**(1/2))**(1/2)
+                >>> _.subs(a.base, z).subs(z, a.base)
+                (x*y**(1/2))**(3/2)
+
+              -  If more than two terms are being multiplied then all the
+                 previous terms will be re-processed for each new argument.
+                 So if each of ``a``, ``b`` and ``c`` were :class:`Mul`
+                 expression, then ``a*b*c`` (or building up the product
+                 with ``*=``) will  process all the arguments of ``a`` and
+                 ``b`` twice: once when ``a*b`` is computed and again when
+                 ``c`` is multiplied.
+
+                 Using ``Mul(a, b, c)`` will process all arguments once.
+
+            * The results of Mul are cached according to arguments, so flatten
+              will only be called once for ``Mul(a, b, c)``. If you can
+              structure a calculation so the arguments are most likely to be
+              repeats then this can save time in computing the answer. For
+              example, say you had a Mul, M, that you wished to divide by ``d[i]``
+              and multiply by ``n[i]`` and you suspect there are many repeats
+              in ``n``. It would be better to compute ``M*n[i]/d[i]`` rather
+              than ``M/d[i]*n[i]`` since every time n[i] is a repeat, the
+              product, ``M*n[i]`` will be returned without flattening -- the
+              cached value will be returned. If you divide by the ``d[i]``
+              first (and those are more unique than the ``n[i]``) then that will
+              create a new Mul, ``M/d[i]`` the args of which will be traversed
+              again when it is multiplied by ``n[i]``.
+
+              {c.f. http://code.google.com/p/sympy/issues/detail?id=2607}
+
+              This consideration is moot if the cache is turned off.
+
+            NB
+              The validity of the above notes depends on the implementation
+              details of Mul and flatten which may change at any time. Therefore,
+              you should only consider them when your code is highly performance
+              sensitive.
+
+        """
         # apply associativity, separate commutative part of seq
         c_part = []         # out: commutative factors
         nc_part = []        # out: non-commutative factors
