@@ -54,18 +54,19 @@ TERMINAL_EXAMPLES = [
     "beginner.print_pretty",
     "beginner.series",
     "beginner.substitution",
-    "beginner.expansion",
     "intermediate.coupled_cluster",
     "intermediate.differential_equations",
+    "intermediate.infinite_1D_box",
     "intermediate.partial_differential_eqs",
     "intermediate.trees",
     "intermediate.vandermonde",
+    "advanced.curvilinear_coordinates",
     "advanced.fem",
     "advanced.gibbs_phenomenon",
+    "advanced.grover_example",
     "advanced.pidigits",
     "advanced.qft",
     "advanced.relativity",
-    "advanced.curvilinear_coordinates",
     ]
 
 WINDOWED_EXAMPLES = [
@@ -73,6 +74,8 @@ WINDOWED_EXAMPLES = [
     "intermediate.print_gtk",
     "intermediate.mplot2d",
     "intermediate.mplot3d",
+    "advanced.autowrap_integrators",
+    "advanced.autowrap_ufuncify",
     "advanced.plotting",
     ]
 
