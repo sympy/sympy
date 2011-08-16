@@ -189,7 +189,7 @@ def roots_quartic(f):
         ans = []
 
         if f is S.Zero:
-            y1, y2 = [tmp**S.Half for tmp in
+            y1, y2 = [sqrt(tmp) for tmp in
                       roots([1, e, g], multiple = True)]
             return [tmp - aon4 for tmp in [-y1, -y2, y1, y2]]
         if g is S.Zero:

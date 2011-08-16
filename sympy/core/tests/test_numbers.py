@@ -525,7 +525,7 @@ def test_no_len():
     raises(TypeError, "len(Integer(2))")
 
 def test_issue222():
-    assert sqrt(Rational(1, 5)) == Rational(1, 5)**S.Half
+    assert sqrt(Rational(1, 5)) == sqrt(Rational(1, 5))
     assert 5 * Rational(1,5)**Rational(1,2) == 5 * sqrt(Rational(1,5))
 
 def test_issue593():

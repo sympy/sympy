@@ -1654,12 +1654,12 @@ def simplify(expr, ratio=1.7):
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')
 
-        r = denom.match(a + b*c**S.Half)
+        r = denom.match(a + b*sqrt(c))
 
         if r is not None and r[b]:
             a, b, c = r[a], r[b], r[c]
 
-            numer *= a-b*c**S.Half
+            numer *= a-b*sqrt(c)
             numer = numer.expand()
 
             denom = a**2 - c*b**2

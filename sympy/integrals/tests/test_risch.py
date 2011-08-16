@@ -104,8 +104,8 @@ def test_heurisch_radicals():
     assert heurisch(x**Rational(3,2), x) == 2*x**Rational(5,2) / 5
 
     assert heurisch(sin(x)*sqrt(cos(x)), x) == -2*cos(x)**Rational(3,2) / 3
-    assert heurisch(sin(y*sqrt(x)), x) == 2*y**(-2)*sin(y*x**S.Half) - \
-                                          2*x**S.Half*cos(y*x**S.Half)/y
+    assert heurisch(sin(y*sqrt(x)), x) == 2*y**(-2)*sin(y*sqrt(x)) - \
+                                          2*sqrt(x)*cos(y*sqrt(x))/y
 
 def test_heurisch_special():
     assert heurisch(erf(x), x) == x*erf(x) + exp(-x**2)/sqrt(pi)
@@ -117,8 +117,8 @@ def test_heurisch_symbolic_coeffs():
     assert simplify(diff(heurisch(log(x+y+z), y), y)) == log(x+y+z)
 
 def test_heurisch_symbolic_coeffs_1130():
-    assert heurisch(1/(x**2+y), x) in [I*y**(-S.Half)*log(x + (-y)**S.Half)/2 - \
-    I*y**(-S.Half)*log(x - (-y)**S.Half)/2, I*log(x + I*y**Rational(1,2)) / \
+    assert heurisch(1/(x**2+y), x) in [I*y**(-S.Half)*log(x + sqrt(-y))/2 - \
+    I*y**(-S.Half)*log(x - sqrt(-y))/2, I*log(x + I*y**Rational(1,2)) / \
     (2*y**Rational(1,2)) - I*log(x - I*y**Rational(1,2))/(2*y**Rational(1,2))]
 
 def test_heurisch_hacking():

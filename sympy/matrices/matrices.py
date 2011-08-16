@@ -1479,7 +1479,7 @@ class Matrix(object):
         # Row or Column Vector Norms
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None: # Common case sqrt(<x,x>)
-                return Add(*(abs(i)**2 for i in self.mat))**S.Half
+                return sqrt(Add(*(abs(i)**2 for i in self.mat)))
 
             elif ord == 1: # sum(abs(x))
                 return Add(*(abs(i) for i in self.mat))

@@ -24,8 +24,8 @@ def test_roots_quadratic():
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
 
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(a + c)/(a - c) - ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half,
-         -e*(a + c)/(a - c) + ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half]
+        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
+         -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
@@ -225,10 +225,10 @@ def test_roots():
         {S.One: 2, -1 - sqrt(2): 1, S.Zero: 2, -1 + sqrt(2): 1}
 
     assert roots(x**8-1, x) == {
-         2**S.Half/2 + I*2**S.Half/2: 1,
-         2**S.Half/2 - I*2**S.Half/2: 1,
-        -2**S.Half/2 + I*2**S.Half/2: 1,
-        -2**S.Half/2 - I*2**S.Half/2: 1,
+         sqrt(2)/2 + I*sqrt(2)/2: 1,
+         sqrt(2)/2 - I*sqrt(2)/2: 1,
+        -sqrt(2)/2 + I*sqrt(2)/2: 1,
+        -sqrt(2)/2 - I*sqrt(2)/2: 1,
         S.One: 1, -S.One: 1, I: 1, -I: 1
     }
 
@@ -288,8 +288,8 @@ def test_roots():
 
     assert roots(f, z) == {
         S.One: 1,
-        S.Half + S.Half*y + S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
-        S.Half + S.Half*y - S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
+        S.Half + S.Half*y + S.Half*sqrt(1 - 2*y + y**2 + 8*x**2): 1,
+        S.Half + S.Half*y - S.Half*sqrt(1 - 2*y + y**2 + 8*x**2): 1,
     }
 
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=False) == {}

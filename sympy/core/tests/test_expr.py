@@ -283,7 +283,6 @@ def test_is_polynomial():
     assert (x**2 + 3*x - 8).is_polynomial() == True
 
     assert sqrt(x).is_polynomial(x) == False
-    assert (x**S.Half).is_polynomial(x) == False
     assert (x**Rational(3,2)).is_polynomial(x) == False
 
     assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(x) == True
@@ -415,7 +414,7 @@ def test_as_numer_denom():
     assert (x**n).as_numer_denom() == (x**n, 1)
     assert sqrt(1/n).as_numer_denom() == (I, sqrt(-n))
     n = Symbol('0 or neg', nonpositive=True)
-    assert ((x/n)**-S.Half).as_numer_denom() == (1, (x/n)**S.Half)
+    assert ((x/n)**-S.Half).as_numer_denom() == (1, sqrt(x/n))
 
     A, B, C = symbols('A,B,C', commutative=False)
 
