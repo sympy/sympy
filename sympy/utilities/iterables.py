@@ -519,7 +519,7 @@ def sift(expr, keyfunc):
     Sometimes you won't know how many keys you will get:
     >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
     ... lambda x: x.as_base_exp()[0])
-    {E: [exp(x)], x: [x**(1/2), x**2], y: [y**(2*x)]}
+    {E: [exp(x)], x: [sqrt(x), x**2], y: [y**(2*x)]}
     >>> _.keys()
     [E, x, y]
 

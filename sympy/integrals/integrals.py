@@ -10,7 +10,7 @@ from sympy.integrals.risch import heurisch
 from sympy.utilities import xthreaded, flatten
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
-from sympy.functions import Piecewise, sign
+from sympy.functions import Piecewise, sign, sqrt
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
@@ -736,9 +736,9 @@ class Integral(Expr):
             >>> from sympy.integrals import Integral
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
             >>> e
-            Integral((x**3 + 1)**(1/2), (x, 2, 10))
+            Integral(sqrt(x**3 + 1), (x, 2, 10))
             >>> e.as_sum(4, method="midpoint")
-            4*7**(1/2) + 6*14**(1/2) + 4*86**(1/2) + 2*730**(1/2)
+            4*sqrt(7) + 6*sqrt(14) + 4*sqrt(86) + 2*sqrt(730)
             >>> e.as_sum(4, method="midpoint").n()
             124.164447891310
             >>> e.n()
@@ -756,9 +756,9 @@ class Integral(Expr):
             >>> from sympy.abc import x
             >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
             >>> e
-            Integral((x**3 + 1)**(1/2), (x, 2, 10))
+            Integral(sqrt(x**3 + 1), (x, 2, 10))
             >>> e.as_sum(4, method="left")
-            6 + 2*65**(1/2) + 2*217**(1/2) + 6*57**(1/2)
+            6 + 2*sqrt(65) + 2*sqrt(217) + 6*sqrt(57)
             >>> e.as_sum(4, method="left").n()
             96.8853618335341
             >>> e.n()
@@ -861,7 +861,7 @@ def line_integrate(field, curve, vars):
        >>> from sympy.abc import x, y, t
        >>> C = Curve([E**t + 1, E**t - 1], (t, 0, ln(2)))
        >>> line_integrate(x + y, C, [x, y])
-       3*2**(1/2)
+        3*sqrt(2)
 
     """
     F = sympify(field)
@@ -887,7 +887,7 @@ def line_integrate(field, curve, vars):
         # ...arc length
         dldt = dldt + (_dn * _dn)
         Ft = Ft.subs(var, _f)
-    Ft = Ft * dldt**(S(1)/2)
+    Ft = Ft * sqrt(dldt)
 
     integral = Integral(Ft, curve.limits).doit(deep = False)
     return integral

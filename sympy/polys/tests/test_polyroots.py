@@ -72,9 +72,9 @@ def test_roots_quartic():
 def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]
     assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True)) == [-1]
-    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True)) == [-S(1)/2 - I*3**(S(1)/2)/2, -S(1)/2 + I*3**(S(1)/2)/2]
+    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True)) == [-S(1)/2 - I*sqrt(3)/2, -S(1)/2 + I*sqrt(3)/2]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True)) == [-I, I]
-    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 - I*3**(S(1)/2)/2, S(1)/2 + I*3**(S(1)/2)/2]
+    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 - I*sqrt(3)/2, S(1)/2 + I*sqrt(3)/2]
 
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
         -cos(pi/7)   - I*sin(pi/7),
@@ -86,17 +86,17 @@ def test_roots_cyclotomic():
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(8, x, polys=True)) == [
-        -2**(S(1)/2)/2 - I*2**(S(1)/2)/2,
-        -2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
-         2**(S(1)/2)/2 - I*2**(S(1)/2)/2,
-         2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
+        -sqrt(2)/2 - I*sqrt(2)/2,
+        -sqrt(2)/2 + I*sqrt(2)/2,
+         sqrt(2)/2 - I*sqrt(2)/2,
+         sqrt(2)/2 + I*sqrt(2)/2,
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(12, x, polys=True)) == [
-        -3**(S(1)/2)/2 - I/2,
-        -3**(S(1)/2)/2 + I/2,
-         3**(S(1)/2)/2 - I/2,
-         3**(S(1)/2)/2 + I/2,
+        -sqrt(3)/2 - I/2,
+        -sqrt(3)/2 + I/2,
+         sqrt(3)/2 - I/2,
+         sqrt(3)/2 + I/2,
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True), factor=True) == [1]

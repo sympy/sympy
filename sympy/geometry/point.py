@@ -241,7 +241,7 @@ class Point(GeometryEntity):
         >>> from sympy.abc import x, y
         >>> p3 = Point(x, y)
         >>> p3.distance(Point(0, 0))
-        (x**2 + y**2)**(1/2)
+        sqrt(x**2 + y**2)
 
         """
         return sqrt(sum([(a - b)**2 for a, b in zip(self, p)]))

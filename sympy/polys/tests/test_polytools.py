@@ -1926,13 +1926,13 @@ def test_factor():
     assert factor((y*x**2 + y)**t) == (y*(x**2 + 1))**t
 
     f = sqrt(expand((r**2 + 1)*(p + 1)*(p - 1)*(p - 2)**3))
-    g = ((p - 2)**3*(p - 1))**(S(1)/2)*(p + 1)**(S(1)/2)*(r**2 + 1)**(S(1)/2)
+    g = sqrt((p - 2)**3*(p - 1))*sqrt(p + 1)*sqrt(r**2 + 1)
 
     assert factor(f) == g
     assert factor(g) == g
 
     f = sqrt(expand((x - 1)**5*(r**2 + 1)))
-    g = (r**2 + 1)**(S(1)/2)*(x - 1)**(S(5)/2)
+    g = sqrt(r**2 + 1)*(x - 1)**(S(5)/2)
 
     assert factor(f) == g
     assert factor(g) == g

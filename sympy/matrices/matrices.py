@@ -2147,7 +2147,7 @@ class Matrix(object):
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
         >>> print A.singular_values()
-        [1, (x**2 + 1)**(1/2), 0]
+        [1, sqrt(x**2 + 1), 0]
         """
         # Compute eigenvalues of A.H A
         valmultpairs = (self.H*self).eigenvals()

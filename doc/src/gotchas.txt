@@ -300,18 +300,18 @@ to them.  The solution is to :func:`sympify` one of the numbers, or use
     ``<number>/<number>``) in it, you will not get the same result.
 
     >>> x = Symbol('x')
-    >>> print solve(x**2-2,x)
-    [-2**(1/2), 2**(1/2)]
-    >>> [-2**(1/2), 2**(1/2)] # If we just copy and paste, the expression is evaluated by Python #doctest: +SKIP
-    [-1.41421356237, 1.41421356237]
+    >>> print solve(7*x -22,x)
+    [22/7]
+    >>> 22/7 # If we just copy and paste, the expression is evaluated by Python #doctest: +SKIP
+    3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
-    >>> a = solve(x**2-2,x)
+    >>> a = solve(7*x - 22,x)
     >>> a
-    [-2**(1/2), 2**(1/2)]
+    [22/7]
     >>> # The other solution is to put quotes around the expression and run it through S() (sympify)
-    >>> S("[-2**(1/2), 2**(1/2)]")
-    [-2**(1/2), 2**(1/2)]
+    >>> S("22/7")
+    22/7
 
 
 
@@ -337,9 +337,9 @@ __future__ import division`` to prevent the ``/`` sign from performing
     >>> x**(1/2) # Be careful with <number>/<number>, even in SymPy expressions #doctest: +SKIP
     x**0.5
     >>> x**(S(1)/2)
-    x**(1/2)
+    sqrt(x)
     >>> sqrt(x) # sqrt(x) does the exact same thing as x**(S(1)/2)
-    x**(1/2)
+    sqrt(x)
     >>> sqrt(x) == x**(S(1)/2)
     True
 
@@ -468,7 +468,7 @@ Example:
     >>> print a
     [2, 1]
     >>> print solve(x**2+2*x-1,x) # Some functions return lists
-    [-1 + 2**(1/2), -2**(1/2) - 1]
+    [-1 + sqrt(2), -sqrt(2) - 1]
 
 
 .. note::
@@ -550,7 +550,7 @@ that you want, and they will all be evaluated according to the function.
     >>> # sqrt(x**2) doesn't auto simplify to x because x is assumed to be
     >>> # complex by default, and, for example, sqrt((-1)**2) == sqrt(1) == 1 != -1.
     >>> sqrt(x**2)
-    (x**2)**(1/2)
+    sqrt(x**2)
     >>> x = Symbol('x', positive=True) # One example of keyword arguments is assumptions for Symbols
     >>> sqrt(x**2) # only == x if x >= 0
     x

@@ -199,7 +199,7 @@ def test_wavefunction():
     assert lims_g[x] == (0, 1)
     assert lims_g[y] == (0, 2)
     assert g.is_normalized == False
-    assert g.norm == 42**(S(1)/2)/3
+    assert g.norm == sqrt(42)/3
     assert g(2,4) == 0
     assert g(1,1) == 2
     assert diff(diff(g, x), y) == Wavefunction(2*x + 2*y, (x, 0, 1), (y, 0, 2))
@@ -218,7 +218,7 @@ def test_wavefunction():
     assert piab(0.5) == sin(0.5*n*pi/L)
     assert piab(0.5, n=1, L=1) == sin(0.5*pi)
     assert piab.normalize() == \
-           Wavefunction(2**(S(1)/2)/L**(S(1)/2)*sin(n*pi*x/L), (x, 0, L))
+           Wavefunction(sqrt(2)/sqrt(L)*sin(n*pi*x/L), (x, 0, L))
     assert conjugate(piab) == Wavefunction(conjugate(piab.expr), (x, 0, L))
     assert conjugate(piab) == Dagger(piab)
 

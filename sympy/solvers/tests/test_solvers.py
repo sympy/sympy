@@ -47,7 +47,7 @@ def test_guess_poly():
     assert guess_solve_strategy( x**2 - 1, x ) == GS_POLY
     assert guess_solve_strategy( x*y + y, x ) == GS_POLY
     assert guess_solve_strategy( x*exp(y) + y, x) == GS_POLY
-    assert guess_solve_strategy( (x - y**3)/(y**2*(1 - y**2)**(S(1)/2)), x) == GS_POLY
+    assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), x) == GS_POLY
 
 def test_guess_poly_cv():
     x, y = symbols('x,y')
@@ -63,7 +63,7 @@ def test_guess_rational_cv():
     # rational functions
     x, y = symbols('x,y')
     assert guess_solve_strategy( (x+1)/(x**2 + 2), x) == GS_RATIONAL
-    assert guess_solve_strategy( (x - y**3)/(y**2*(1 - y**2)**(S(1)/2)), y) == GS_RATIONAL_CV_1
+    assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), y) == GS_RATIONAL_CV_1
 
     # rational functions via the change of variable y -> x**n
     assert guess_solve_strategy( (x**Rational(1,2) + 1)/(x**Rational(1,3) + x**Rational(1,2) + 1), x ) \
@@ -153,7 +153,7 @@ def test_solve_polynomial_cv_1a():
 
 def test_solve_polynomial_cv_1b():
     x, a = symbols('x a')
-    assert set(solve(4*x*(1 - a*x**(S(1)/2)), x)) == set([S(0), 1/a**2])
+    assert set(solve(4*x*(1 - a*sqrt(x)), x)) == set([S(0), 1/a**2])
     assert set(solve(x * (x**(S(1)/3) - 3), x)) == set([S(0), S(27)])
 
 def test_solve_polynomial_cv_2():
@@ -400,8 +400,8 @@ def test_issue_2098():
     x = Symbol('x', positive=True)
     y = Symbol('y')
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) is None
-    assert solve((x + y)*n - y**2 + 2, x, y) == [(2**(S(1)/2), -2**(S(1)/2))]
-    # This solution must not appear: (-2**(1/2), 2**(1/2))
+    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    # This solution must not appear: (-sqrt(2), sqrt(2))
     y = Symbol('y', positive=True)
     assert solve(x**2 - y**2/exp(x), x, y) == [x*exp(x/2)]
     # This solution must not appear: -x*exp(x/2)

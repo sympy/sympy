@@ -56,8 +56,8 @@ There is also possibility for expanding expressions in terms of expressions of
 different kind. This is very general type of expanding and usually you would
 use ``rewrite()`` to do specific type of rewrite::
 
-    GoldenRatio.expand(func=True)
-    1/2 + (1/2)*5**(1/2)
+    >>> GoldenRatio.expand(func=True)
+    1/2 + sqrt(5)/2
 
 Common Subexpression Detection and Collection
 ---------------------------------------------

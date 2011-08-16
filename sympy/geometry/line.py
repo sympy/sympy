@@ -1121,7 +1121,7 @@ class Ray(LinearEntity):
         >>> from sympy import Point, Ray, pi
         >>> r = Ray((0, 0), angle=pi/4)
         >>> r.plot_interval()
-        [t, 0, 5*2**(1/2)/(1 + 5*2**(1/2))]
+        [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
 
         """
         t = _symbol(parameter)
@@ -1212,7 +1212,7 @@ class Segment(LinearEntity):
     >>> s.slope
     2/3
     >>> s.length
-    13**(1/2)
+    sqrt(13)
     >>> s.midpoint
     Point(5/2, 2)
 
