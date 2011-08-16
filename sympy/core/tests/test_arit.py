@@ -862,10 +862,12 @@ def test_Pow_is_integer():
     assert Pow(3, 0, evaluate=False).is_integer is True
     assert Pow(3, -2, evaluate=False).is_integer is False
     assert Pow(S.Half, 3, evaluate=False).is_integer is False
-    # these can't be decided without re-evaluating
+    # decided by re-evaluating
     assert Pow(3, S.Half, evaluate=False).is_integer is False
-    assert Pow(4, S.Half, evaluate=False).is_integer is False
-    
+    assert Pow(3, S.Half, evaluate=False).is_integer is False
+    assert Pow(4, S.Half, evaluate=False).is_integer is True
+    assert Pow(S.Half, -2, evaluate=False).is_integer is True
+
 def test_Pow_is_real():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True, positive=True)
