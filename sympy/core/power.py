@@ -158,8 +158,9 @@ class Pow(Expr):
                 return False
 
     def _eval_is_integer(self):
-        c1 = self.base.is_integer
-        c2 = self.exp.is_integer
+        b, e = self.as_base_exp()
+        c1 = b.is_integer
+        c2 = e.is_integer
         if c1 is None or c2 is None:
             return None
         if not c1:
@@ -170,6 +171,16 @@ class Pow(Expr):
                 return True
             if self.exp.is_negative:
                 return False
+        if b.is_Number and e.is_Number:
+            if b.is_Float or e.is_Float:
+                return False
+            if b.is_Integer and e.is_Integer: # int**int
+                return e.is_nonnegative
+            if e.is_Integer: # rat**int
+                return False
+            return False # XXX assuming it is not an unevaluated Pow
+            # Pow(4, S.Half, evaluate=False) would be True
+            # Pow(3, S.Half, evaluate=False) would be False
 
     def _eval_is_real(self):
         real_b = self.base.is_real
