@@ -1175,7 +1175,7 @@ class PyTestReporter(Reporter):
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
             for e in self._xpassed:
-                self.write("%s:%s\n" % (e[0], e[1]))
+                self.write("%s: %s\n" % (e[0], e[1]))
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
@@ -1243,8 +1243,9 @@ class PyTestReporter(Reporter):
         self._xfailed += 1
         self.write("f", "Green")
 
-    def test_xpass(self, fname):
-        self._xpassed.append((self._active_file, fname))
+    def test_xpass(self, v):
+        message = getattr(v, 'msg', getattr(v, 'message', ''))
+        self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
     def test_fail(self, exc_info):
@@ -1267,11 +1268,12 @@ class PyTestReporter(Reporter):
             self.write(".", "Green")
 
     def test_skip(self, v):
+        message = getattr(v, 'msg', getattr(v, 'message', ''))
         self._skipped += 1
         self.write("s", "Green")
         if self._verbose:
             self.write(" - ", "Green")
-            self.write(v.message, "Green")
+            self.write(message, "Green")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
