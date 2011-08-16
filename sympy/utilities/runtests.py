@@ -233,6 +233,11 @@ def doctest(*paths, **kwargs):
                     "sympy/galgebra/latex_ex.py", # needs numpy
                     "sympy/conftest.py", # needs py.test
                     "sympy/utilities/benchmarking.py", # needs py.test
+                    "examples/advanced/autowrap_integrators.py", # needs numpy
+                    "examples/advanced/autowrap_ufuncify.py", # needs numpy
+                    "examples/intermediate/mplot2d.py", # needs numpy and matplotlib
+                    "examples/intermediate/mplot3d.py", # needs numpy and matplotlib
+                    "examples/intermediate/sample.py", # needs numpy
                     ])
     blacklist = convert_to_native_paths(blacklist)
 
