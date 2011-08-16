@@ -107,6 +107,10 @@ def test_Abs():
     assert x**(2*n) == Abs(x)**(2*n)
     assert Abs(x).diff(x) == sign(x)
     assert abs(x) == Abs(x) # Python built-in
+    assert Abs(x)**3 == x**2*Abs(x)
+    assert (Abs(x)**(3*n)).args == (Abs(x), 3*n) # leave symbolic odd unchanged
+    assert (1/Abs(x)).args == (Abs(x), -1)
+    assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
 
 def test_abs_real():
     # test some properties of abs that only apply
