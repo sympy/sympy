@@ -177,7 +177,7 @@ Symbols are variables, and like all other variables, they need to be
 assigned before you can use them.  For example:
 
     >>> import sympy
-    >>> z**2 # z is not defined yet
+    >>> z**2 # z is not defined yet #doctest: +SKIP
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     NameError: name 'z' is not defined
