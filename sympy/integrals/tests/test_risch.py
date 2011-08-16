@@ -83,8 +83,8 @@ def test_heurisch_trigonometric():
     assert heurisch(x*sin(7*x), x) == sin(7*x) / 49 - x*cos(7*x) / 7
     assert heurisch(1/pi/4 * x**2*cos(x), x) == 1/pi/4*(x**2*sin(x) - 2*sin(x) + 2*x*cos(x))
 
-    assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - ((16-x**2)**Rational(1,2))*asin(x/4) \
-        + ((16 - x**2)**Rational(1,2))*acos(x/4) + x*asin(x/4)*acos(x/4)
+    assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16-x**2))*asin(x/4) \
+        + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
 
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)
@@ -93,13 +93,13 @@ def test_heurisch_hyperbolic():
     assert heurisch(x*sinh(x), x) == x*cosh(x) - sinh(x)
     assert heurisch(x*cosh(x), x) == x*sinh(x) - cosh(x)
 
-    assert heurisch(x*asinh(x/2), x) == x**2*asinh(x/2)/2 + asinh(x/2) - x*(4+x**2)**Rational(1,2)/4
+    assert heurisch(x*asinh(x/2), x) == x**2*asinh(x/2)/2 + asinh(x/2) - x*sqrt(4+x**2)/4
 
 def test_heurisch_mixed():
     assert heurisch(sin(x)*exp(x), x) == exp(x)*sin(x)/2 - exp(x)*cos(x)/2
 
 def test_heurisch_radicals():
-    assert heurisch(x**Rational(-1,2), x) == 2*x**Rational(1,2)
+    assert heurisch(x**Rational(-1,2), x) == 2*sqrt(x)
     assert heurisch(x**Rational(-3,2), x) == -2*x**Rational(-1,2)
     assert heurisch(x**Rational(3,2), x) == 2*x**Rational(5,2) / 5
 
@@ -118,8 +118,8 @@ def test_heurisch_symbolic_coeffs():
 
 def test_heurisch_symbolic_coeffs_1130():
     assert heurisch(1/(x**2+y), x) in [I*y**(-S.Half)*log(x + sqrt(-y))/2 - \
-    I*y**(-S.Half)*log(x - sqrt(-y))/2, I*log(x + I*y**Rational(1,2)) / \
-    (2*y**Rational(1,2)) - I*log(x - I*y**Rational(1,2))/(2*y**Rational(1,2))]
+    I*y**(-S.Half)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) / \
+    (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
 
 def test_heurisch_hacking():
     assert heurisch(sqrt(1 + 7*x**2), x, hints=[]) == \

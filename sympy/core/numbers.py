@@ -1148,8 +1148,8 @@ class Integer(Rational):
         we try to find a simpler representation by factoring the argument
         up to factors of 2**15, e.g.
 
-          - 4**Rational(1,2) becomes 2
-          - (-4)**Rational(1,2) becomes 2*I
+          - sqrt(4) becomes 2
+          - sqrt(-4) becomes 2*I
           - (2**(3+7)*3**(6+7))**Rational(1,7) becomes 6*18**(3/7)
 
         Further simplification would require a special call to factorint on

@@ -547,8 +547,8 @@ class Matrix(object):
             for j in xrange(i):
                 L[i, j] = (1 / L[j, j]) * (self[i, j] - sum(L[i, k] * L[j, k]
                     for k in xrange(j)))
-            L[i, i] = (self[i, i] - sum(L[i, k] ** 2
-                for k in xrange(i))) ** (S(1)/2)
+            L[i, i] = sqrt(self[i, i] - sum(L[i, k] ** 2
+                for k in xrange(i)))
         return L
 
     def LDLdecomposition(self):

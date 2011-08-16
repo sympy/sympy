@@ -20,7 +20,7 @@ def test_printmethod():
 def test_ccode_sqrt():
     assert ccode(sqrt(x)) == "sqrt(x)"
     assert ccode(x**0.5) == "sqrt(x)"
-    assert ccode(x**Rational(1,2)) == "sqrt(x)"
+    assert ccode(sqrt(x)) == "sqrt(x)"
 
 def test_ccode_Pow():
     assert ccode(x**3) == "pow(x, 3)"

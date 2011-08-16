@@ -29,7 +29,7 @@ def test_legendre():
 
 def test_assoc_legendre():
     Plm=assoc_legendre
-    Q=(1-x**2)**Rational(1,2)
+    Q=sqrt(1-x**2)
 
     assert Plm(0, 0, x) ==  1
     assert Plm(1, 0, x) ==  x

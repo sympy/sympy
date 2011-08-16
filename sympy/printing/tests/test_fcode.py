@@ -27,7 +27,7 @@ def test_fcode_Pow():
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(n)) == '      sqrt(dble(n))'
     assert fcode(x**0.5) == '      sqrt(x)'
-    assert fcode(x**Rational(1,2)) == '      sqrt(x)'
+    assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
 
 def test_fcode_Rational():
