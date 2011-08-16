@@ -257,12 +257,12 @@ def guess_solve_strategy(expr, symbol):
 
     Examples
     ========
-    >>> from sympy import Symbol, Rational
+    >>> from sympy import Symbol, Rational, sqrt
     >>> from sympy.solvers.solvers import guess_solve_strategy
     >>> from sympy.abc import x
     >>> guess_solve_strategy(x**2 + 1, x)
     0
-    >>> guess_solve_strategy(x**Rational(1,2) + 1, x)
+    >>> guess_solve_strategy(sqrt(x) + 1, x)
     2
 
     """

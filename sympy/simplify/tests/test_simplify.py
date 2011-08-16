@@ -575,8 +575,8 @@ def test_logcombine_1():
     assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**Rational(2, 3)*\
         y**Rational(3, 2)), force=True) == \
         log(x**(1/(pi*x**Rational(2, 3)*y**Rational(3, 2)))*y**(-1/(pi*\
-        x**Rational(2, 3)*y**Rational(3, 2)))) + (x**4 + y**4)**Rational(1, 2)/(pi*\
-        x**Rational(2, 3)*y**Rational(3, 2)) + x**Rational(1, 3)/(pi*y**Rational(1, 2))
+        x**Rational(2, 3)*y**Rational(3, 2)))) + sqrt(x**4 + y**4)/(pi*\
+        x**Rational(2, 3)*y**Rational(3, 2)) + x**Rational(1, 3)/(pi*sqrt(y))
     assert logcombine(Eq(log(x), -2*log(y)), force=True) == \
         Eq(log(x*y**2), Integer(0))
     assert logcombine(Eq(y, x*acos(-log(x/y))), force=True) == \

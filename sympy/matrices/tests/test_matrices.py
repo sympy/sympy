@@ -1664,7 +1664,7 @@ def test_matrix_norm():
     A = Matrix([[1,2,-3],[4,5,Rational(13,2)]])
     assert A.norm(2) == sqrt(S(389)/8 + sqrt(78665)/8)
     assert A.norm(-2) == S(0)
-    assert A.norm('frobenius') == 389**Rational(1,2)/2
+    assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
     # http://en.wikipedia.org/wiki/Matrix_norm#Definition

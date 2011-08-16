@@ -52,8 +52,8 @@ def test_guess_poly():
 def test_guess_poly_cv():
     x, y = symbols('x,y')
     # polynomial equations via a change of variable
-    assert guess_solve_strategy( x**Rational(1,2) + 1, x ) == GS_POLY_CV_1
-    assert guess_solve_strategy( x**Rational(1,3) + x**Rational(1,2) + 1, x ) == GS_POLY_CV_1
+    assert guess_solve_strategy( sqrt(x) + 1, x ) == GS_POLY_CV_1
+    assert guess_solve_strategy( x**Rational(1,3) + sqrt(x) + 1, x ) == GS_POLY_CV_1
     assert guess_solve_strategy( 4*x*(1 - sqrt(x)), x ) == GS_POLY_CV_1
 
     # polynomial equation multiplying both sides by x**n
@@ -66,7 +66,7 @@ def test_guess_rational_cv():
     assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), y) == GS_RATIONAL_CV_1
 
     # rational functions via the change of variable y -> x**n
-    assert guess_solve_strategy( (x**Rational(1,2) + 1)/(x**Rational(1,3) + x**Rational(1,2) + 1), x ) \
+    assert guess_solve_strategy( (sqrt(x) + 1)/(x**Rational(1,3) + sqrt(x) + 1), x ) \
                                 == GS_RATIONAL_CV_1
 
 def test_guess_transcendental():
@@ -125,9 +125,9 @@ def test_solve_polynomial1():
     assert solve((x - y, x+y), (x, y)) == solution
     assert solve((x - y, x+y), [x, y]) == solution
 
-    assert solve( x**3 - 15*x - 4, x) == [-2 + 3**Rational(1,2),
+    assert solve( x**3 - 15*x - 4, x) == [-2 + sqrt(3),
                                            4,
-                                           -2 - 3**Rational(1,2) ]
+                                           -2 - sqrt(3) ]
 
     assert sorted(solve((x**2 - 1)**2 - a, x)) == \
            sorted([sqrt(1 + sqrt(a)), -sqrt(1 + sqrt(a)),
@@ -144,12 +144,12 @@ def test_solve_polynomial_cv_1a():
     """
 
     x = Symbol('x')
-    assert solve( x**Rational(1,2) - 1, x) == [1]
-    assert solve( x**Rational(1,2) - 2, x) == [4]
+    assert solve( sqrt(x) - 1, x) == [1]
+    assert solve( sqrt(x) - 2, x) == [4]
     assert solve( x**Rational(1,4) - 2, x) == [16]
     assert solve( x**Rational(1,3) - 3, x) == [27]
     # XXX there are imaginary roots that are being missed
-    assert solve(x**Rational(1,2)+x**Rational(1,3)+x**Rational(1,4),x) == [0]
+    assert solve(sqrt(x)+x**Rational(1,3)+x**Rational(1,4),x) == [0]
 
 def test_solve_polynomial_cv_1b():
     x, a = symbols('x a')

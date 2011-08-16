@@ -157,10 +157,10 @@ def test_pow2():
     assert (-x)**Rational(5,7) != -x**Rational(5,7)
 
 def test_pow_issue417():
-    assert 4**Rational(1, 4) == 2**Rational(1, 2)
+    assert 4**Rational(1, 4) == sqrt(2)
 
 def test_pow3():
-    assert 2**(Rational(3)/2) == 2 * 2**Rational(1, 2)
+    assert 2**(Rational(3)/2) == 2 * sqrt(2)
     assert 2**(Rational(3)/2) == sqrt(8)
 
 def test_expand():
@@ -321,9 +321,9 @@ def test_Mul_doesnt_expand_exp():
     assert x**2*x**3 == x**5
     assert 2**x*3**x == 6**x
     assert x**(y)*x**(2*y) == x**(3*y)
-    assert 2**Rational(1,2)*2**Rational(1,2) == 2
+    assert sqrt(2)*sqrt(2) == 2
     assert 2**x*2**(2*x) == 2**(3*x)
-    assert 2**Rational(1,2)*2**Rational(1,4)*5**Rational(3,4) == 10**Rational(3,4)
+    assert sqrt(2)*2**Rational(1,4)*5**Rational(3,4) == 10**Rational(3,4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
 def test_Add_Mul_is_integer():
@@ -1059,7 +1059,7 @@ def test_Mul_is_comparable():
 def test_Pow_is_comparable():
     assert (x**y).is_comparable == False
     assert (x**2).is_comparable == False
-    assert (Rational(1,3)**Rational(1,2)).is_comparable == True
+    assert (sqrt(Rational(1,3))).is_comparable == True
 
 
 def test_Add_is_positive_2():

@@ -268,8 +268,8 @@ def test_Rational():
     assert str(S("0.[9]", rational=1)) == "1"
     assert str(S("-0.[9]", rational=1)) == "-1"
 
-    assert str(Rational(1,4) ** Rational(1,2)) == "1/2"
-    assert str(Rational(1,36) ** Rational(1,2)) == "1/6"
+    assert str(sqrt(Rational(1,4))) == "1/2"
+    assert str(sqrt(Rational(1,36))) == "1/6"
 
     assert str((123**25) ** Rational(1,25)) == "123"
     assert str((123**25+1)**Rational(1,25)) != "123"
@@ -279,7 +279,7 @@ def test_Rational():
     assert str(Rational(81,36)**(Rational(3,2))) == "27/8"
     assert str(Rational(81,36)**(-Rational(3,2))) == "8/27"
 
-    assert str((-4)**Rational(1,2)) == str(2*I)
+    assert str(sqrt(-4)) == str(2*I)
     assert str(2**Rational(1,10**10)) == "2**(1/10000000000)"
 
 def test_Float():

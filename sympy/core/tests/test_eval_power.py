@@ -4,14 +4,17 @@ from sympy.functions.elementary.miscellaneous import sqrt
 def test_rational():
     a = Rational(1, 5)
 
-    assert a**Rational(1, 2) == a**Rational(1, 2)
-    assert 2 * a**Rational(1, 2) == 2 * a**Rational(1, 2)
+    r = sqrt(5)/5
+    assert sqrt(a) == r
+    assert 2*sqrt(a) == 2*r
 
-    assert a**Rational(3, 2) == a * a**Rational(1, 2)
-    assert 2 * a**Rational(3, 2) == 2*a * a**Rational(1, 2)
+    r = a*a**Rational(1, 2)
+    assert a**Rational(3, 2) == r
+    assert 2*a**Rational(3, 2) == 2*r
 
-    assert a**Rational(17, 3) == a**5 * a**Rational(2, 3)
-    assert 2 * a**Rational(17, 3) == 2*a**5 * a**Rational(2, 3)
+    r = a**5*a**Rational(2, 3)
+    assert a**Rational(17, 3) == r
+    assert 2 * a**Rational(17, 3) == 2*r
 
 def test_large_rational():
     e = (Rational(123712**12-1,7)+Rational(1,7))**Rational(1,3)

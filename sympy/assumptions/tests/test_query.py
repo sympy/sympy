@@ -400,7 +400,7 @@ def test_bounded():
     assert ask(Q.bounded(2**x), Q.bounded(x)) == True
     assert ask(Q.bounded(x**x)) == False
     assert ask(Q.bounded(Rational(1,2) ** x)) == True
-    assert ask(Q.bounded(x ** Rational(1,2))) == False
+    assert ask(Q.bounded(sqrt(x))) == False
 
     # sign function
     assert ask(Q.bounded(sign(x))) == True

@@ -29,7 +29,7 @@ def test_pow_eval():
     # XXX Pow does not fully support conversion of negative numbers
     #     to their complex equivalent
 
-    assert (-1)**Rational(1,2) == I
+    assert sqrt(-1) == I
 
     assert sqrt(-4) == 2*I
     assert sqrt( 4) == 2
@@ -50,7 +50,7 @@ def test_pow_eval():
 
 @XFAIL
 def test_pow_eval_X1():
-    assert (-1)**Rational(1,3) == Rational(1,2)+Rational(1,2)*I*3**Rational(1,2)
+    assert (-1)**Rational(1,3) == Rational(1,2)+Rational(1,2)*I*sqrt(3)
 
 def test_mulpow_eval():
     x = Symbol('x')
