@@ -15,7 +15,7 @@ the combination of orientation, and sense; here orientation is where it is
 pointing, and sense is which way along that orientation the magnitude is in.
 They are represented in one of a few ways in a two dimensional medium.
 
-.. image:: vec_rep.png
+.. image:: vec_rep.svg
 
 Vector Algebra
 ==============
@@ -32,7 +32,7 @@ vectors, scalar multiplication, and vector multiplication.
 
 Vector addition as based on the parallelogram law.
 
-.. image:: vec_add.png
+.. image:: vec_add.svg
 
 Vector addition is also commutative:
 
@@ -45,7 +45,7 @@ Scalar Multiplication is the product of a vector and a scalar; the result is a
 new vector, with the same direction and a new magnitude which is the product of
 the old magnitude and the scalar.
 
-.. image:: vec_mul.png
+.. image:: vec_mul.svg
 
 At this point we will introduce the unit vector, a vector whose magnitude is a
 pure, non-dimensional 1. For any vector :math:`\mathbf{v}` we can define a unit
@@ -76,7 +76,7 @@ direction; for other vectors, it is the product of unit magnitude of the common
 direction and the two vectors' magnitudes. Two perpendicular vectors will have
 a zero dot product. The figure below shows some examples:
 
-.. image:: vec_dot.png
+.. image:: vec_dot.svg
 
 The dot product is commutative:
 
@@ -97,7 +97,7 @@ is defined as :math:`\Vert \mathbf{c} \Vert = \Vert \mathbf{a} \Vert \Vert
 the right hand rule between :math:`\Vert \mathbf{a} \Vert \Vert \mathbf{b}
 \Vert`. The figure below shows this:
 
-.. image:: vec_cross.png
+.. image:: vec_cross.svg
 
 The cross product has the following properties:
 
@@ -143,7 +143,7 @@ Alternative Representation
 --------------------------
 If we have three non-coplanar unit vectors
 :math:`\mathbf{\hat{n}_x},\mathbf{\hat{n}_y},\mathbf{\hat{n}_z}`,
- we car represent any vector
+we can represent any vector
 :math:`\mathbf{a}` as :math:`\mathbf{a} = a_x \mathbf{\hat{n}_x} + a_y
 \mathbf{\hat{n}_y} + a_z \mathbf{\hat{n}_z}`. In this situation
 :math:`\mathbf{\hat{n}_x},\mathbf{\hat{n}_y},\mathbf{\hat{n}_z}`
@@ -233,7 +233,7 @@ properties when observed from that frame. Calculus is the study of change, and
 in order to deal with the peculiarities of vectors fixed and not fixed in
 different reference frames, we need to be more explicit in our definitions.
 
-.. image:: vec_fix_notfix.png
+.. image:: vec_fix_notfix.svg
 
 In the above figure, we have vectors :math:`\mathbf{c,d,e,f}`. If one were to
 take the derivative of :math:`\mathbf{e}` with respect to :math:`\theta`:
@@ -294,7 +294,7 @@ aligned, then one frame has all of its basis vectors rotated around an axis
 which is aligned with a basis vector, we say the frames are related by a simple
 rotation. The figure below shows this:
 
-.. image:: simp_rot.png
+.. image:: simp_rot.svg
 
 The above rotation is a simple rotation about the Z axis by an angle
 :math:`\theta`. Note that after the rotation, the basis vectors
@@ -419,7 +419,7 @@ Examples
 
 An example of vector calculus:
 
-.. image:: vec_simp_der.png
+.. image:: vec_simp_der.svg
 
 In this example we have two bodies, each with an attached reference frame.
 We will say that :math:`\theta` and :math:`x` are functions of time.
