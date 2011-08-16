@@ -487,6 +487,7 @@ def _check_antecedents_1(g, x, helper=False):
     If ``helper`` is True, only check if the MT exists at infinity, i.e. if
     int_1^\infty g dx exists.
     """
+    # NOTE if you update these conditions, please update the documentation as well
     from sympy import Eq, Not, ceiling, Ne, re, unbranched_argument as arg
     delta = g.delta
     eta, _ = _get_coeff_exp(g.argument, x)
@@ -684,6 +685,7 @@ def _check_antecedents(g1, g2, x):
     from sympy import unbranched_argument as arg
     #  Yes, this is madness.
     # XXX TODO this is a testing *nightmare*
+    # NOTE if you update these conditions, please update the documentation as well
 
     # The following conditions are found in
     # [P], Section 2.24.1
