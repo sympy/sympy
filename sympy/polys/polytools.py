@@ -199,9 +199,6 @@ class Poly(Expr):
             else:
                 rep = rep.reorder(*gens)
 
-        if 'order' in opt:
-            rep = rep.set_order(order)
-
         if 'domain' in opt and domain:
             rep = rep.set_domain(domain)
         elif field is True:
