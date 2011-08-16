@@ -46,7 +46,7 @@ class Wigner3j(Expr):
         (6, 4, 2)
         (0, 0, 0)
         >>> w3j.doit()
-        715**(1/2)/143
+        sqrt(715)/143
 
     References
     ==========
@@ -173,7 +173,7 @@ class CG(Wigner3j):
         >>> cg
         CG(3/2, 3/2, 1/2, -1/2, 1, 1)
         >>> cg.doit()
-        3**(1/2)/2
+        sqrt(3)/2
 
     References
     ==========

@@ -57,13 +57,13 @@ class Mul(AssocOp):
 
                 >>> a = sqrt(x*sqrt(y))
                 >>> a**3
-                (x*y**(1/2))**(3/2)
+                (x*sqrt(y))**(3/2)
                 >>> Mul(a,a,a)
-                (x*y**(1/2))**(3/2)
+                (x*sqrt(y))**(3/2)
                 >>> a*a*a
-                x*y**(1/2)*(x*y**(1/2))**(1/2)
+                x*sqrt(y)*sqrt(x*sqrt(y))
                 >>> _.subs(a.base, z).subs(z, a.base)
-                (x*y**(1/2))**(3/2)
+                (x*sqrt(y))**(3/2)
 
               -  If more than two terms are being multiplied then all the
                  previous terms will be re-processed for each new argument.
@@ -375,7 +375,7 @@ class Mul(AssocOp):
                 if obj.is_Number:
                     coeff *= obj
                 else:
-                    if obj.is_Mul: # 12**(1/2) -> 2*sqrt(3)
+                    if obj.is_Mul: # sqrt(12) -> 2*sqrt(3)
                         c, obj = obj.args # expecting only 2 args
                         coeff *= c
                         assert obj.is_Pow

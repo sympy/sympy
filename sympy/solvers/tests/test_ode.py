@@ -503,8 +503,8 @@ def test_1st_homogeneous_coeff_ode1_sol_fail():
     eq9 = f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x)
     sol2 = Eq(x/tan(f(x)/(2*x)), C1)
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
-    sol9 = Eq(-Integral(-1/(-(1 - (1 - _u2**2)**(1/2))*_u2 + _u2), (_u2, __a, \
-    x/f(x))) + log(C1*f(x)), 0)
+    sol9 = Eq(-Integral(-1/(-(1 - sqrt(1 - _u2**2))*_u2 + _u2), (_u2, __a,
+        x/f(x))) + log(C1*f(x)), 0)
     assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq7, f(x), sol7, order=1, solve_for_func=False)[0]
     assert checkodesol(eq9, f(x), sol9, order=1, solve_for_func=False)[0]
@@ -540,7 +540,7 @@ def test_1st_homogeneous_coeff_ode3():
     # test_homogeneous_order_ode1_sol above. It has to compare string
     # expressions because u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    solstr = "log(C1*f(x)) - Integral(-1/(_u2*(-_u2**2 + 1)**(1/2)), (_u2, x/f(x))) == 0"
+    solstr = "log(C1*f(x)) - Integral(-1/(_u2*sqrt(-_u2**2 + 1)), (_u2, x/f(x))) == 0"
     assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
 
 def test_1st_homogeneous_coeff_ode4_explicit():

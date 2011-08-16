@@ -265,7 +265,7 @@ def test_transform():
     Integral(x**(-3), (x, 1/_3, oo))
 
 def test_issue953():
-    f = S(1)/2*asin(x) + x*(1 - x**2)**(S(1)/2)/2
+    f = S(1)/2*asin(x) + x*sqrt(1 - x**2)/2
 
     assert integrate(cos(asin(x)), x) == f
     assert integrate(sin(acos(x)), x) == f
@@ -432,12 +432,12 @@ def test_expand_integral():
 
 def test_as_sum_midpoint1():
     e = Integral(sqrt(x**3+1), (x, 2, 10))
-    assert e.as_sum(1, method="midpoint") == 8*217**(S(1)/2)
-    assert e.as_sum(2, method="midpoint") == 4*65**(S(1)/2) + 12*57**(S(1)/2)
-    assert e.as_sum(3, method="midpoint") == 8*217**(S(1)/2)/3 + \
-            8*3081**(S(1)/2)/27 + 8*52809**(S(1)/2)/27
-    assert e.as_sum(4, method="midpoint") == 2*730**(S(1)/2) + \
-            4*7**(S(1)/2) + 4*86**(S(1)/2) + 6*14**(S(1)/2)
+    assert e.as_sum(1, method="midpoint") == 8*sqrt(217)
+    assert e.as_sum(2, method="midpoint") == 4*sqrt(65) + 12*sqrt(57)
+    assert e.as_sum(3, method="midpoint") == 8*sqrt(217)/3 + \
+            8*sqrt(3081)/27 + 8*sqrt(52809)/27
+    assert e.as_sum(4, method="midpoint") == 2*sqrt(730) + \
+            4*sqrt(7) + 4*sqrt(86) + 6*sqrt(14)
     assert abs(e.as_sum(4, method="midpoint").n() - e.n()) < 0.5
 
     e = Integral(sqrt(x**3+y**3), (x, 2, 10), (y, 0, 10))
@@ -561,12 +561,12 @@ def test_series():
 
 def test_issue_1304():
     z = Symbol('z', positive=True)
-    assert integrate(sqrt(x**2 + z**2),x) == z**2*asinh(x/z)/2 + x*(x**2 + z**2)**(S(1)/2)/2
-    assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*(x**2 - z**2)**(S(1)/2)/2
+    assert integrate(sqrt(x**2 + z**2),x) == z**2*asinh(x/z)/2 + x*sqrt(x**2 + z**2)/2
+    assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
 
 @XFAIL
 def test_issue_1304_2():
-    assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/(-4 - x**2)**(S(1)/2)) + x*(-4 - x**2)**(S(1)/2)/2
+    assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/sqrt(-4 - x**2)) + x*sqrt(-4 - x**2)/2
 
 def tets_issue_1001():
     R = Symbol('R', positive=True)
@@ -596,10 +596,10 @@ def test_issue2068():
 
 def test_issue_1791():
     z = Symbol('z', positive=True)
-    assert integrate(exp(-log(x)**2),x) == pi**(S(1)/2)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
-    assert integrate(exp(log(x)**2),x) == -I*pi**(S(1)/2)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
+    assert integrate(exp(-log(x)**2),x) == sqrt(pi)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
+    assert integrate(exp(log(x)**2),x) == -I*sqrt(pi)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
     assert integrate(exp(-z*log(x)**2),x) == \
-           pi**(S(1)/2)*erf(z**(S(1)/2)*log(x) - 1/(2*z**(S(1)/2)))*exp(S(1)/(4*z))/(2*z**(S(1)/2))
+           sqrt(pi)*erf(sqrt(z)*log(x) - 1/(2*sqrt(z)))*exp(S(1)/(4*z))/(2*sqrt(z))
 
 def test_issue_1277():
     from sympy import simplify
@@ -620,11 +620,11 @@ def test_issue_841():
     b = Symbol('b')
     c = Symbol('c')
     d = Symbol('d', positive = True)
-    assert integrate(exp(-x**2 + I*c*x), x) == pi**(S(1)/2)*erf(x - I*c/2)*exp(-c**S(2)/4)/2
+    assert integrate(exp(-x**2 + I*c*x), x) == sqrt(pi)*erf(x - I*c/2)*exp(-c**S(2)/4)/2
     assert integrate(exp(a*x**2 + b*x + c), x) == \
-          I*pi**(S(1)/2)*erf(-I*x*a**(S(1)/2) - I*b/(2*a**(S(1)/2)))*exp(c)*exp(-b**2/(4*a))/(2*a**(S(1)/2))
-    assert simplify(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == pi**(S(1)/2)*(1 + erf(oo - d/a**(S(1)/2))) \
-           *exp(d**2/a)/(2*a**(S(1)/2))
+          I*sqrt(pi)*erf(-I*x*sqrt(a) - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
+    assert simplify(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == sqrt(pi)*(1 + erf(oo - d/sqrt(a))) \
+           *exp(d**2/a)/(2*sqrt(a))
 
 def test_issue_2314():
     # Note that this is not the same as testing ratint() becuase integrate()

@@ -411,7 +411,7 @@ def solve(f, *symbols, **flags):
 
                     that are nonlinear
                         >>> solve((a + b)*x - b**2 + 2, a, b)
-                        [(-2**(1/2), 2**(1/2)), (2**(1/2), -2**(1/2))]
+                        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
 
                 if there is no linear solution then the first successful
                 attempt for a nonlinear solution will be returned

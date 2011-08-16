@@ -1,3 +1,4 @@
+from __future__ import division
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
     Matrix, nan, O, oo, pi, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
@@ -218,6 +219,18 @@ def test_Pow():
     assert str((x+y)**-2) == "(x + y)**(-2)"
     assert str((x+y)**2) == "(x + y)**2"
     assert str((x+y)**(1+x)) == "(x + y)**(x + 1)"
+    assert str(x**Rational(1, 3)) == "x**(1/3)"
+    assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
+    assert str(sqrt(sqrt(x))) == "x**(1/4)"
+
+def test_sqrt():
+    assert str(sqrt(x)) == "sqrt(x)"
+    assert str(sqrt(x**2)) == "sqrt(x**2)"
+    assert str(1/sqrt(x)) == "1/sqrt(x)"
+    assert str(1/sqrt(x**2)) == "1/sqrt(x**2)"
+    assert str(y/sqrt(x)) == "y/sqrt(x)"
+    assert str(x**(1/2)) == "x**0.5"
+    assert str(1/x**(1/2)) == "x**-0.5"
 
 def test_Rational():
     n1 = Rational(1,4)
@@ -355,17 +368,12 @@ def test_bug2():
     b = str(e)
     assert a == b
 
-def test_bug3():
-    e = sqrt(x)
-    assert str(e) == "x**(1/2)"
 
 def test_bug4():
     e = -2*sqrt(x)-y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y","-2*x**1/2-1/2*x**-1/2*w"]
-    assert str(e) in ["-2*x**(1/2) - 1/2*x**(-1/2)*y", "-2*x**(1/2) - 1/2*y*x**(-1/2)",
-                      "-1/2*x**(-1/2)*y - 2*x**(1/2)", "-1/2*y*x**(-1/2) - 2*x**(1/2)",
-                      "-2*x**(1/2) - y/(2*x**(1/2))"]
+    assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 def test_issue922():
     e = Integral(x,x) + 1
@@ -405,6 +413,8 @@ def test_noncommutative():
     assert sstr(A*B*C**-1) == "A*B*C**(-1)"
     assert sstr(C**-1*A*B) == "C**(-1)*A*B"
     assert sstr(A*C**-1*B) == "A*C**(-1)*B"
+    assert sstr(sqrt(A)) == "sqrt(A)"
+    assert sstr(1/sqrt(A)) == "A**(-1/2)"
 
 def test_empty_printer():
     str_printer = StrPrinter()

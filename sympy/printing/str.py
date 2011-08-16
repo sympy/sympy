@@ -333,13 +333,21 @@ class StrPrinter(Printer):
         else:
             return self._print(expr.as_expr())
 
-    def _print_Pow(self, expr):
+    def _print_Pow(self, expr, rational=False):
         PREC = precedence(expr)
 
-        if expr.is_commutative and expr.exp is S.NegativeOne:
-            return '1/%s' % self.parenthesize(expr.base, PREC)
-        else:
-            return '%s**%s' % (self.parenthesize(expr.base, PREC),
+        if expr.exp is S.Half and not rational:
+            return "sqrt(%s)" % self._print(expr.base)
+
+        if expr.is_commutative:
+            if -expr.exp is S.Half and not rational:
+                # Note: Don't test "expr.exp == -S.Half" here, because that will
+                # match -0.5, which we don't want.
+                return "1/sqrt(%s)" % self._print(expr.base)
+            if expr.exp is S.NegativeOne:
+                return '1/%s' % self.parenthesize(expr.base, PREC)
+
+        return '%s**%s' % (self.parenthesize(expr.base, PREC),
                                self.parenthesize(expr.exp, PREC))
 
     def _print_Integer(self, expr):

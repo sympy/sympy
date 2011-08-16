@@ -67,7 +67,7 @@ geometry module.
     >>> c.is_tangent(l) # is l tangent to c?
     False
     >>> intersection(c, l)
-    [Point(-5*2**(1/2)/2, -5*2**(1/2)/2), Point(5*2**(1/2)/2, 5*2**(1/2)/2)]
+    [Point(-5*sqrt(2)/2, -5*sqrt(2)/2), Point(5*sqrt(2)/2, 5*sqrt(2)/2)]
 
 Intersection of medians
 -----------------------

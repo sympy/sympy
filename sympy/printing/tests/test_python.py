@@ -71,8 +71,10 @@ def test_python_relational():
 def test_python_functions():
     # Simple
     assert python((2*x + exp(x))) in "x = Symbol('x')\ne = 2*x + exp(x)"
-    assert python(sqrt(2)) == 'e = 2**(Rational(1, 2))'
-    assert python(sqrt(2+pi)) == 'e = (2 + pi)**(Rational(1, 2))'
+    assert python(sqrt(2)) == 'e = sqrt(2)'
+    assert python(2**Rational(1, 3)) == 'e = 2**(Rational(1, 3))'
+    assert python(sqrt(2+pi)) == 'e = sqrt(2 + pi)'
+    assert python((2 + pi)**Rational(1, 3)) == 'e = (2 + pi)**(Rational(1, 3))'
     assert python(Abs(x)) == "x = Symbol('x')\ne = Abs(x)"
     assert python(Abs(x/(x**2+1))) in ["x = Symbol('x')\ne = Abs(x/(1 + x**2))",
             "x = Symbol('x')\ne = Abs(x/(x**2 + 1))"]
@@ -87,8 +89,14 @@ def test_python_functions():
 
     # Nesting of square roots
     assert python(sqrt((sqrt(x+1))+1)) in [
-            "x = Symbol('x')\ne = (1 + (1 + x)**(Rational(1, 2)))**(Rational(1, 2))",
-            "x = Symbol('x')\ne = ((x + 1)**(Rational(1, 2)) + 1)**(Rational(1, 2))"]
+            "x = Symbol('x')\ne = sqrt(1 + sqrt(1 + x))",
+            "x = Symbol('x')\ne = sqrt(sqrt(x + 1) + 1)"]
+
+    # Nesting of powers
+    assert python((((x+1)**Rational(1, 3))+1)**Rational(1, 3)) in [
+            "x = Symbol('x')\ne = (1 + (1 + x)**(Rational(1, 3)))**(Rational(1, 3))",
+            "x = Symbol('x')\ne = ((x + 1)**(Rational(1, 3)) + 1)**(Rational(1, 3))"]
+
     # Function powers
     assert python(sin(x)**2) == "x = Symbol('x')\ne = sin(x)**2"
 
