@@ -177,7 +177,7 @@ Symbols are variables, and like all other variables, they need to be
 assigned before you can use them.  For example:
 
     >>> import sympy
-    >>> z**2 # z is not defined yet #doctest: +SKIP
+    >>> z**2 # z is not defined yet
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     NameError: name 'z' is not defined
@@ -231,7 +231,6 @@ Or better yet, always use lowercase letters for Symbol names.  Python will
 not prevent you from overriding default SymPy names or functions, so be
 careful.
 
-    >>> from sympy import *
     >>> cos(pi) # cos and pi are a built-in sympy names.
     -1
     >>> pi = 3 # Notice that there is no warning for overriding pi.
@@ -293,6 +292,24 @@ evaluate the two numbers into a float before SymPy has a chance to get
 to them.  The solution is to :func:`sympify` one of the numbers, or use
 :mod:`Rational`.
 
+    >>> x**(1/2) # evaluates to x**0 since 1/2
+    1
+    >>> x**(S(1)/2) # sympyify one of the ints
+    sqrt(x)
+    >>> x**Rational(1, 2) # use the Rational class
+    sqrt(x)
+
+With a power of ``1/2`` you can also use ``sqrt`` shorthand:
+
+    >>> sqrt(x) == x**Rational(1, 2)
+    True
+
+If the two integers are not directly separated by a division sign then
+you don't have to worry about this problem:
+
+    >>> x**(2*x/3)
+    x**(2*x/3)
+
 .. note::
 
     A common mistake is copying an expression that is printed and
@@ -302,8 +319,8 @@ to them.  The solution is to :func:`sympify` one of the numbers, or use
     >>> x = Symbol('x')
     >>> print solve(7*x -22,x)
     [22/7]
-    >>> 22/7 # If we just copy and paste, the expression is evaluated by Python #doctest: +SKIP
-    3.142857142857143
+    >>> 22/7 # If we just copy and paste, the expression is evaluated by Python
+    3
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
     >>> a = solve(7*x - 22,x)
@@ -313,35 +330,21 @@ to them.  The solution is to :func:`sympify` one of the numbers, or use
     >>> S("22/7")
     22/7
 
-
-
-Also, if you do not use :command:`isympy`, you should do ``from
+Also, if you do not use :command:`isympy`, you could use ``from
 __future__ import division`` to prevent the ``/`` sign from performing
 `integer division <http://en.wikipedia.org/wiki/Integer_division>`_.
 
-    >>> 1/2 # in regular python, this defaults to integer division, which truncates the fractional part #doctest: +SKIP
-    0
-    >>> from __future__ import division
-    >>> from sympy import *
-    >>> 1/2 # This uses regular division, but it still evaluates to a python float #doctest: +SKIP
+    >>> from __future__ import division #doctest: +SKIP
+    >>> 1/2 # with division imported it evaluates to a python float #doctest: +SKIP
     0.5
     >>> 1//2 # You can still achieve integer division with //
     0
-    >>> # Either of these will produce the rational number one half:
-    >>> S(1)/2
-    1/2
-    >>> Rational(1,2)
-    1/2
-    >>> var('x')
-    x
-    >>> x**(1/2) # Be careful with <number>/<number>, even in SymPy expressions #doctest: +SKIP
+
+    But be careful: you will now receive floats where you might have desired
+    a Rational:
+
+    >>> x**(1/2) #doctest: +SKIP
     x**0.5
-    >>> x**(S(1)/2)
-    sqrt(x)
-    >>> sqrt(x) # sqrt(x) does the exact same thing as x**(S(1)/2)
-    sqrt(x)
-    >>> sqrt(x) == x**(S(1)/2)
-    True
 
 :mod:`Rational` only works for number/number and is only meant for
 rational numbers.  If you want a fraction with symbols or expressions in
@@ -370,8 +373,6 @@ Expressions in SymPy are immutable, and cannot be modified by an in-place
 operation.  This means that a function will always return an object, and the
 original expression will not be modified. The following example snippet
 demonstrates how this works::
-
-	from sympy import *
 
 	def main():
 	    var('x y a b')
