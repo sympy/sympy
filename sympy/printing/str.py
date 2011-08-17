@@ -347,8 +347,15 @@ class StrPrinter(Printer):
             if expr.exp is S.NegativeOne:
                 return '1/%s' % self.parenthesize(expr.base, PREC)
 
-        return '%s**%s' % (self.parenthesize(expr.base, PREC),
-                               self.parenthesize(expr.exp, PREC))
+        e = self.parenthesize(expr.exp, PREC)
+        if self.printmethod == '_sympyrepr' and expr.exp.is_Rational and expr.exp.q != 1:
+            try:
+                # the parenthesized exp should be '(Rational(a, b))' so strip parens
+                assert e.startswith('(Rational')
+                return '%s**%s' % (self.parenthesize(expr.base, PREC), e[1:-1])
+            except AssertionError:
+                pass
+        return '%s**%s' % (self.parenthesize(expr.base, PREC), e)
 
     def _print_Integer(self, expr):
         return str(expr.p)
