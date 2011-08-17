@@ -5416,7 +5416,7 @@ def groebner(F, *gens, **args):
         poly = poly.set_domain(opt.domain).rep.to_dict()
         polys[i] = sdp_from_dict(poly, opt.order)
 
-    level = len(flatten(gens)) - 1
+    level = len(opt.gens) - 1
 
     G = sdp_groebner(polys, level, opt.order, opt.domain, opt.method)
     G = [ Poly._from_dict(dict(g), opt) for g in G ]
@@ -5483,7 +5483,7 @@ def fglm(G, order, *gens, **args):
         poly = poly.set_domain(opt.domain).rep.to_dict()
         polys[i] = sdp_from_dict(poly, monomial_key(from_order))
 
-    level = len(flatten(gens)) - 1
+    level = len(opt.gens) - 1
 
     if not is_zero_dimensional(polys, level, monomial_key(from_order), opt.domain):
         raise NotImplementedError("Can't convert Groebner bases of ideals with positive dimension")
