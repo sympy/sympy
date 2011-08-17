@@ -15,9 +15,9 @@ import anticommutator
 from anticommutator import *
 __all__.extend(anticommutator.__all__)
 
-import qapply as qapmod
+from qapply import __all__ as qap_all
 from qapply import *
-__all__.extend(qapmod.__all__)
+__all__.extend(qap_all)
 
 import commutator
 from commutator import *
@@ -43,9 +43,9 @@ import operator
 from operator import *
 __all__.extend(operator.__all__)
 
-import represent as repmod
+from represent import __all__ as rep_all
 from represent import *
-__all__.extend(repmod.__all__)
+__all__.extend(rep_all)
 
 import state
 from state import *
