@@ -682,3 +682,39 @@ def test_limit_bug():
     #      actually gruntz() can do this limit, see issue 2079
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
            Integral(-cos(pi*y*z)/(y*z) + 1/(y*z), (y, 0, pi))
+
+# The following tests work using meijerint.
+def test_issue841():
+    from sympy import expand_mul
+    from sympy.abc import k
+    assert expand_mul(integrate(exp(-x**2)*exp(I*k*x), (x, -oo, oo))) == \
+           sqrt(pi)*exp(-k**2/4)
+    a, d = symbols('a d', positive=True)
+    assert expand_mul(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == \
+           sqrt(pi)*exp(d**2/a)/sqrt(a)
+
+def test_issue1304():
+    assert integrate(1/(x**2+y**2)**S('3/2'), x) == 1/(y**2*sqrt(1 + y**2/x**2))
+
+def test_issue459():
+    from sympy import Si
+    integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
+
+def test_issue1394():
+    from sympy import simplify
+    assert simplify(integrate(x*sqrt(1+2*x), x)) == \
+           sqrt(2*x + 1)*(6*x**2 + x - 1)/15
+
+def test_issue1638():
+    assert integrate(sin(x)/x, (x, -oo, oo)) == pi
+    assert integrate(sin(x)/x, (x, 0, oo)) == pi/2
+
+def test_issue1893():
+    from sympy import simplify, expand_func, polygamma, gamma
+    a = Symbol('a', positive=True)
+    assert simplify(expand_func(integrate(exp(-x)*log(x)*x**a, (x, 0, oo)))) == \
+           (a*polygamma(0, a) + 1)*gamma(a)
+
+def test_issue1388():
+    from sympy import lowergamma, simplify
+    assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
