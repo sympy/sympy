@@ -276,8 +276,8 @@ def test_Rational():
     assert str((123**25-1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "122"
 
-    assert str(Rational(81,36)**(Rational(3,2))) == "27/8"
-    assert str(Rational(81,36)**(-Rational(3,2))) == "8/27"
+    assert str(sqrt(Rational(81,36))**3) == "27/8"
+    assert str(1/sqrt(Rational(81,36))**3) == "8/27"
 
     assert str(sqrt(-4)) == str(2*I)
     assert str(2**Rational(1,10**10)) == "2**(1/10000000000)"

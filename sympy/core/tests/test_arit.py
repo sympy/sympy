@@ -109,21 +109,21 @@ def test_pow():
     assert e.expand() == 2*a*b+a**2+b**2
 
     e=(a+b)**(n1/n2)
-    assert e == (a+b)**(Rational(1)/2)
-    assert e.expand() == (a+b)**(Rational(1)/2)
+    assert e == sqrt(a+b)
+    assert e.expand() == sqrt(a+b)
 
     n=n5**(n1/n2)
-    assert n == Rational(5)**(Rational(1)/2)
+    assert n == sqrt(5)
     e=n*a*b-n*b*a
     assert e == Rational(0)
     e=n*a*b+n*b*a
-    assert e == 2*a*b*5**(Rational(1)/2)
-    assert e.diff(a) == 2*b*5**(Rational(1)/2)
-    assert e.diff(a) == 2*b*5**(Rational(1)/2)
+    assert e == 2*a*b*sqrt(5)
+    assert e.diff(a) == 2*b*sqrt(5)
+    assert e.diff(a) == 2*b*sqrt(5)
     e=a/b**2
     assert e == a*b**(-2)
 
-    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**(Rational(1,2))))**(Rational(1,2))
+    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**Rational(1,2)))**Rational(1,2)
 
     x = Symbol('x')
     y = Symbol('y')
@@ -160,8 +160,8 @@ def test_pow_issue417():
     assert 4**Rational(1, 4) == sqrt(2)
 
 def test_pow3():
-    assert 2**(Rational(3)/2) == 2 * sqrt(2)
-    assert 2**(Rational(3)/2) == sqrt(8)
+    assert sqrt(2)**3 == 2 * sqrt(2)
+    assert sqrt(2)**3 == sqrt(8)
 
 def test_expand():
     p = Rational(5)

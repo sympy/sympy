@@ -281,7 +281,7 @@ def test_1st_exact2():
     by first order homogeneous albeit with a much contorted solution.  The
     exact engine fails because of a poorly simplified integral of q(0,y)dy,
     where q is the function multiplying f'.  The solutions should be
-    Eq((x**2+f(x)**2)**Rational(3,2)+y**3, C1).  The equation below is
+    Eq(sqrt(x**2+f(x)**2)**3+y**3, C1).  The equation below is
     equivalent, but it is so complex that checkodesol fails, and takes a long time
     to do so.
     """
@@ -413,7 +413,7 @@ def test_homogeneous_order():
     assert homogeneous_order(x**2 + sin(x)*cos(y), x, y) == None
     assert homogeneous_order(x - y - x*sin(y/x), x, y) == 1
     assert homogeneous_order((x*y + sqrt(x**4+y**4) + x**2*(log(x) - log(y)))/\
-        (pi*x**Rational(2,3)*y**Rational(3,2)), x, y) == Rational(-1,6)
+        (pi*x**Rational(2,3)*sqrt(y)**3), x, y) == Rational(-1,6)
     assert homogeneous_order(y/x*cos(y/x) - x/y*sin(y/x) + cos(y/x), x, y) == 0
     assert homogeneous_order(f(x), x, f(x)) == 1
     assert homogeneous_order(f(x)**2, x, f(x)) == 2
