@@ -1029,6 +1029,8 @@ class PyTestReporter(Reporter):
             try:
                 process = subprocess.Popen(['stty', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
+                if sys.version_info[0] > 2:
+                    stdout = stdout.decode("utf-8")
             except (OSError, IOError):
                 pass
             else:
