@@ -847,13 +847,12 @@ def ratsimpmodprime(expr, G, *gens, **args):
     denom = reduced(denom, G, opt.gens, order=opt.order)[1]
 
     c, d = _ratsimpmodprime(Poly(num, opt.gens), Poly(denom, opt.gens))
-    #c, d = _ratsimpmodprime(polys[0], polys[1])
 
     if not domain.has_Field:
         c = c.clear_denoms(convert=True)[1]
         d = d.clear_denoms(convert=True)[1]
 
-    return cancel(c/d)
+    return c/d
 
 def trigsimp(expr, deep=False, recursive=False):
     """
