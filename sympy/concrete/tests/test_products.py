@@ -1,7 +1,8 @@
 from sympy import (symbols, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational)
+                   Function, Product, Rational, Sum)
 
 a, k, n = symbols('a,k,n', integer=True)
+f = Function('f')
 
 def test_simple_products():
     assert product(2, (k, a, n)) == 2**(n-a+1)
@@ -36,3 +37,7 @@ def test__eval_product():
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
     # 1711
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
+
+def test_product_pow():
+    assert product(2**f(k), (k, 1, n)) == 2**Sum(f(k), (k, 1, n))
+    assert product(2**(2*f(k)), (k, 1, n)) == 2**Sum(2*f(k), (k, 1, n))

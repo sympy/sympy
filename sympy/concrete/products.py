@@ -127,8 +127,7 @@ class Product(Expr):
             if not term.base.has(k):
                 s = summation(term.exp, (k, a, n))
 
-                if not isinstance(s, Sum):
-                    return term.base**s
+                return term.base**s
             elif not term.exp.has(k):
                 p = self._eval_product(a, n, term.base)
 
