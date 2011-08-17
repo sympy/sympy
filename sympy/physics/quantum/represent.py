@@ -264,10 +264,9 @@ def _represent_helper(expr, **options):
     if should_integrate:
         result = integrate_result(expr, unwrapped_res, **options)
 
-    if should_collapse:
-        result = _collapse_indices(result, basis)
-
     if not should_wrap:
+        if should_collapse:
+            result = _collapse_indices(result, basis)
         return (result, basis)
 
     if len(unwrapped_vars) != 0:
@@ -287,6 +286,9 @@ def _represent_helper(expr, **options):
 
         if len(unwrapped_vars) != 0:
             result = _rewrap_wf(result, unwrapped_vars, **options)
+
+    if should_collapse:
+        result = _collapse_indices(result, basis)
 
     return (result, basis)
 
