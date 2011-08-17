@@ -617,9 +617,8 @@ def test_issue_1418():
 
 def test_issue_1100():
     ypos = Symbol('y', positive=True)
-    assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)).subs(y, ypos) == \
+    assert integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo)) == \
            Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
-    raises(NotImplementedError, 'integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))')
 
 def test_issue_841():
     a,b,c,d = symbols('a:d', positive=True, bounded=True)
@@ -677,3 +676,9 @@ def test_atom_bug():
     from sympy import meijerg
     from sympy.integrals.risch import heurisch
     assert heurisch(meijerg([], [], [1], [], x), x) is None
+
+def test_limit_bug():
+    # NOTE this used to raise NotImplementedError because of a limit problem.
+    #      actually gruntz() can do this limit, see issue 2079
+    assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
+           Integral(-cos(pi*y*z)/(y*z) + 1/(y*z), (y, 0, pi))
