@@ -48,6 +48,8 @@ from sympy.polys.monomialtools import (
 
 from sympy.polys.polyclasses import DMP, DMF
 
+from sympy.polys.polyconfig import setup
+
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy import (
@@ -2425,7 +2427,7 @@ def test_reduced():
     assert reduced(1, [1], x) == ([1], 0)
     raises(ComputationFailed, "reduced(1, [1])")
 
-def test_groebner():
+def helper_test_groebner():
     assert groebner([], x, y, z) == []
 
     assert groebner([x**2 + 1, y**4*x + x**3],
@@ -2463,8 +2465,20 @@ def test_groebner():
 
     assert groebner([1], x) == [1]
 
+
+    f = expand((1 - x**2)**5 * (1 - y**2)**5 * (x**2 + y**2)**5)
+    g = x**2 + y**2 - 1
+
+    assert groebner([f, g]) == [x**2 + y**2 - 1, y**20 - 5*y**18 + 10*y**16 - 10*y**14 + 5*y**12 - y**10]
+
     raises(DomainError, "groebner([x**2 + 2.0*y], x, y)")
     raises(ComputationFailed, "groebner([1])")
+
+def test_groebner():
+    setup('GB_METHOD', 'f5b')
+    helper_test_groebner()
+    setup('GB_METHOD', 'buchberger')
+    helper_test_groebner()
 
 def test_fglm():
     a, b, c, d = symbols('a b c d')
