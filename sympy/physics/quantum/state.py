@@ -183,6 +183,12 @@ class KetBase(StateBase):
     def dual_class(self):
         return BraBase
 
+    def _represent_XKet(self, basis, **options):
+        from sympy.physics.quantum.represent import _append_index
+        coord = _append_index(basis.label[0], options.pop('index', 1))
+        psi = Function(str(self.label[0]))
+        return Wavefunction(psi(coord), coord)
+
     def __mul__(self, other):
         """KetBase*other"""
         from sympy.physics.quantum.operator import OuterProduct
