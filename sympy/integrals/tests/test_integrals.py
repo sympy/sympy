@@ -653,3 +653,7 @@ def test_issue_1793b():
 
     expr = (sin(y)*x**3 + 2*cos(y)*x**2 + 12)/(x**2 + 2)
     assert trigsimp(factor(integrate(expr, x).diff(x) - expr)) == 0
+
+def test_issue_2079():
+    assert integrate(sin(x)*f(y, z), (x, 0, pi), (y, 0, pi), (z, 0, pi)) == \
+        Integral(2*f(y, z), (y, 0, pi), (z, 0, pi))
