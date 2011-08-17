@@ -185,12 +185,12 @@ O(x**2 + y**2)
 
 def pretty(expr, order=None):
     """ASCII pretty-printing"""
-    return xpretty(expr, order=order, use_unicode=False)
+    return xpretty(expr, order=order, use_unicode=False, wrap_line=False)
 
 
 def upretty(expr, order=None):
     """Unicode pretty-printing"""
-    return xpretty(expr, order=order, use_unicode=True)
+    return xpretty(expr, order=order, use_unicode=True, wrap_line=False)
 
 
 def test_pretty_ascii_str():
