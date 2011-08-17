@@ -9,8 +9,8 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import L2
 from sympy.physics.quantum.cartesian import XKet
 
-m = Symbol('m', real=True)
-L = Symbol('L', real=True)
+m = Symbol('m', real=True, positive=True)
+L = Symbol('L', real=True, positive=True)
 
 
 __all__ = [

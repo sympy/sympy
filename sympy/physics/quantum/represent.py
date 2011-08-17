@@ -258,11 +258,11 @@ def _represent_helper(expr, **options):
     if should_apply:
         result = do_qapply(result)
 
-    unwrapped_res, unwrapped_vars = _unwrap_wf(result)
+    unwrapped_res, unwrapped_vars, limits = _unwrap_wf(result)
     vars_beforeint = set(unwrapped_vars)
 
     if should_integrate:
-        result = integrate_result(expr, unwrapped_res, **options)
+        result = integrate_result(expr, unwrapped_res, limit_dict=limits, **options)
 
     if not should_wrap:
         if should_collapse:
@@ -273,19 +273,10 @@ def _represent_helper(expr, **options):
         vars_afterint = result.free_symbols
         intersect = list(vars_beforeint.intersection(vars_afterint))
         intersect.sort(key=default_sort_key)
-
-        if len(intersect) == 0 and len(vars_afterint) != 0:
-            #If none of the original variables are left in the integrated
-            #expression, then make the Wf variable the first coordinate that we
-            #inserted
-            vars_afterint = list(vars_afterint)
-            vars_afterint.sort(key=default_sort_key)
-            intersect.append(vars_afterint[0])
-
         unwrapped_vars = intersect
 
         if len(unwrapped_vars) != 0:
-            result = _rewrap_wf(result, unwrapped_vars, **options)
+            result = _rewrap_wf(result, unwrapped_vars, limit_dict=limits, **options)
 
     if should_collapse:
         result = _collapse_indices(result, basis)
@@ -478,6 +469,8 @@ def integrate_result(orig_expr, result, **options):
     else:
         unities = options.pop("unities", [])
 
+    limits = options.pop('limit_dict', {})
+
     if len(unities) == 0:
         return result
 
@@ -495,13 +488,12 @@ def integrate_result(orig_expr, result, **options):
     kets = enumerate_states(basis, unities)
     coords = [k.label[0] for k in kets]
 
-    for coord in coords:
-        if coord in result.free_symbols:
-            #TODO: Add support for sets of operators
-            basis_op = state_to_operators(basis)
-            start = basis_op.hilbert_space.interval.start
-            end = basis_op.hilbert_space.interval.end
-            result = integrate(result, (coord, start, end))
+    syms = result.free_symbols
+    for ket in kets:
+        for coord in ket.label: #Support basis states with multiple eigenvalues
+            if coord in syms:
+                start, end = limits.pop(coord, (-oo, oo))
+                result = integrate(result, (coord, start, end))
 
     return result
 
@@ -686,25 +678,35 @@ def do_qapply(expr):
         return expr
 
 def _unwrap_wf(expr):
+    if isinstance(expr, Wavefunction):
+        return (expr.expr, expr.variables, expr.limits)
+
     if not isinstance(expr, Expr):
-        return (expr, [])
+        return (expr, [], {})
+
+    if not expr.has(Wavefunction):
+        return (expr, [], {})
 
     new_args = [None for arg in expr.args]
     unwrapped_vars = []
-    has_wf = False
+    limits = {}
+
     for i,arg in enumerate(expr.args):
         if isinstance(arg, Wavefunction):
             new_args[i] = arg.expr
+            curr_lims = arg.limits
             for v in arg.variables:
+                low_lim, high_lim = curr_lims[v]
+                if v in limits:
+                    dict_low, dict_high = limits[v]
+                    limits[v] = (max(dict_low, low_lim), min(dict_high, high_lim))
+                else:
+                    limits[v] = (low_lim, high_lim)
                 unwrapped_vars.append(v)
-            has_wf = True
         else:
             new_args[i] = arg
 
-    if not has_wf:
-        return (expr, [])
-    else:
-        return (expr.__class__(*new_args), unwrapped_vars)
+    return (expr.__class__(*new_args), unwrapped_vars, limits)
 
 def _rewrap_wf(expr, unwrapped_vars, **options):
     if not isinstance(expr, Expr):
@@ -714,22 +716,26 @@ def _rewrap_wf(expr, unwrapped_vars, **options):
     tmp_args = []
 
     delta = options.pop("keep_delta", False)
+    limits = options.pop("limit_dict", {})
+
+    var_lims = [(var, limits[var][0], limits[var][1]) if (var in limits and \
+                limits[var] != (-oo, oo)) else var for var in unwrapped_vars]
 
     if not expr.has(DifferentialOperator):
-        return Wavefunction(expr, *unwrapped_vars, keep_delta=delta)
+        return Wavefunction(expr, *var_lims, keep_delta=delta)
 
     for arg in expr.args:
         if not isinstance(arg, DifferentialOperator):
             tmp_args.append(arg)
         else:
             expr_part = expr.__class__(*tmp_args)
-            wf = Wavefunction(expr_part, *unwrapped_vars, keep_delta=delta)
+            wf = Wavefunction(expr_part, *var_lims, keep_delta=delta)
             new_args.append(wf)
             new_args.append(arg)
             tmp_args = []
 
     if len(tmp_args) != 0:
-        wf = Wavefunction(expr.__class__(*tmp_args), *unwrapped_vars, keep_delta=delta)
+        wf = Wavefunction(expr.__class__(*tmp_args), *var_lims, keep_delta=delta)
         new_args.append(wf)
 
     return expr.__class__(*new_args)
