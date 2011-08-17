@@ -527,7 +527,7 @@ class asinh(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return (self.args[0]**2 + 1)**(-S.Half)
+            return 1/sqrt(self.args[0]**2 + 1)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -600,7 +600,7 @@ class acosh(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return (self.args[0]**2 - 1)**(-S.Half)
+            return 1/sqrt(self.args[0]**2 - 1)
         else:
             raise ArgumentIndexError(self, argindex)
 

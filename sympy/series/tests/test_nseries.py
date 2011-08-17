@@ -24,8 +24,8 @@ def test_pow_0():
     assert (x**2).nseries(x, n=5) == x**2
     assert (1/x).nseries(x, n=5) == 1/x
     assert (1/x**2).nseries(x, n=5) == 1/x**2
-    assert (x**(Rational(2,3))).nseries(x, n=5) == (x**(Rational(2,3)))
-    assert (x**(Rational(3,2))).nseries(x, n=5) == (x**(Rational(3,2)))
+    assert (x**Rational(2,3)).nseries(x, n=5) == (x**Rational(2,3))
+    assert (sqrt(x)**3).nseries(x, n=5) == (sqrt(x)**3)
 
 def test_pow_1():
     assert ((1+x)**2).nseries(x, n=5) == 1+2*x+x**2
@@ -161,7 +161,7 @@ def test_genexp_x():
     x = Symbol("x")
     e=1/(1+sqrt(x))
     assert e.nseries(x,0,2) == \
-                1+x-sqrt(x)-x**Rational(3,2)+O(x**2, x)
+                1+x-sqrt(x)-sqrt(x)**3+O(x**2, x)
 
 # more complicated example
 def test_genexp_x2():
@@ -228,8 +228,8 @@ def test_issue105():
 
 def test_issue125():
     y = Symbol("y")
-    f=(1-y**(Rational(1)/2))**(Rational(1)/2)
-    assert f.nseries(y,0,2) == 1 - sqrt(y)/2-y/8-y**Rational(3,2)/16+O(y**2)
+    f = sqrt(1-sqrt(y))
+    assert f.nseries(y,0,2) == 1 - sqrt(y)/2-y/8-sqrt(y)**3/16+O(y**2)
 
 def test_issue364():
     w = Symbol("w")

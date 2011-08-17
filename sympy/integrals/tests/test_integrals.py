@@ -117,9 +117,9 @@ def test_issue433():
     assert integrate(exp(-x), (x,0,oo)) == 1
 
 def test_issue461():
-    assert integrate(x**Rational(3,2), x) == 2*x**Rational(5,2)/5
-    assert integrate(sqrt(x), x) == 2*x**Rational(3,2)/3
-    assert integrate(x**Rational(-3,2), x) == -2*x**Rational(-1,2)
+    assert integrate(sqrt(x)**3, x) == 2*x**Rational(5,2)/5
+    assert integrate(sqrt(x), x) == 2*sqrt(x)**3/3
+    assert integrate(x**Rational(-3,2), x) == -2/sqrt(x)
 
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
@@ -180,9 +180,9 @@ def test_integrate_linearterm_pow():
     assert integrate((exp(y)*x + 1/y)**(1+sin(y)), x)   == exp(-y)*(exp(y)*x + 1/y)**(2+sin(y)) / (2+sin(y))
 
 def test_issue519():
-    assert integrate(pi*sqrt(x),x) == 2*pi*x**Rational(3,2)/3
-    assert integrate(pi*sqrt(x) + E*x**Rational(3,2),x) == \
-                                               2*pi*x**Rational(3,2)/3  + \
+    assert integrate(pi*sqrt(x),x) == 2*pi*sqrt(x)**3/3
+    assert integrate(pi*sqrt(x) + E*sqrt(x)**3,x) == \
+                                               2*pi*sqrt(x)**3/3  + \
                                                2*E *x**Rational(5,2)/5
 def test_issue524():
     assert integrate(cos((n+1) * x), x)   == sin(x*(n+1)) / (n+1)
@@ -281,7 +281,7 @@ def test_evalf_integrals():
     # A monster of an integral from http://mathworld.wolfram.com/DefiniteIntegral.html
     t = Symbol('t')
     a = 8*sqrt(3)/(1+3*t**2)
-    b = 16*sqrt(2)*(3*t+1)*(4*t**2+t+1)**Rational(3,2)
+    b = 16*sqrt(2)*(3*t+1)*sqrt(4*t**2+t+1)**3
     c = (3*t**2+1)*(11*t**2+2*t+3)**2
     d = sqrt(2)*(249*t**2+54*t+65)/(11*t**2+2*t+3)**2
     f = a - b/c - d
@@ -609,7 +609,7 @@ def test_issue_1277():
 
 def test_issue_1418():
     assert integrate((sqrt(x) - x**3)/x**Rational(1,3), x) == \
-        6*x**(Rational(7,6))/7 - 3*x**(Rational(11,3))/11
+        6*x**Rational(7,6)/7 - 3*x**Rational(11,3)/11
 
 def test_issue_1100():
     assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)) is S.NaN
