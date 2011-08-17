@@ -164,6 +164,14 @@ class hyper(TupleParametersBase):
         # TODO should we check convergence conditions?
         return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z)
 
+    @classmethod
+    def eval(cls, ap, bq, z):
+        from sympy import unpolarify
+        if len(ap) <= len(bq):
+            nz = unpolarify(z)
+            if z != nz:
+                return hyper(ap, bq, nz)
+
     def fdiff(self, argindex=3):
         if argindex != 3:
             raise ArgumentIndexError(self, argindex)
@@ -369,7 +377,7 @@ class meijerg(TupleParametersBase):
     >>> from sympy import hyperexpand
     >>> from sympy.abc import a, b, c
     >>> hyperexpand(meijerg([a], [], [c], [b], x), allow_hyper=True)
-    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,), (-b + c + 1,), x*exp_polar(I*pi))/gamma(-b + c + 1)
+    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,), (-b + c + 1,), -x)/gamma(-b + c + 1)
 
     Thus the Meijer G-function also subsumes many named functions as special
     cases. You can use expand_func or hyperexpand to (try to) rewrite a

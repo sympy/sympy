@@ -165,6 +165,15 @@ def test_meijerg_period():
     assert meijerg([], [], [S(1)/2], [0], x).get_period() == 4*pi # sin(sqrt(x))
     assert meijerg([1, 1], [], [1], [0], x).get_period() == oo # log(1 + x)
 
+def test_hyper_unpolarify():
+    from sympy import exp_polar
+    a = exp_polar(2*pi*I)*x
+    b = x
+    assert hyper([], [], a).argument == b
+    assert hyper([0], [], a).argument == a
+    assert hyper([0], [0], a).argument == b
+    assert hyper([0, 1], [0], a).argument == a
+
 def test_hyperrep():
     from sympy.functions.special.hyper import (HyperRep, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
