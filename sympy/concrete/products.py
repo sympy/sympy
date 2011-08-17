@@ -37,7 +37,7 @@ class Product(Expr):
 
             k, a, n = map(sympify, (k, a, n))
 
-            if isinstance(a, C.Number) and isinstance(n, C.Number):
+            if isinstance(a, C.Integer) and isinstance(n, C.Integer):
                 return Mul(*[term.subs(k, i) for i in xrange(int(a), int(n)+1)])
         else:
             raise NotImplementedError
