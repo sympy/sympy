@@ -166,6 +166,13 @@ def test_si():
     assert tn_arg(Si)
     assert tn_arg(Shi)
 
+    from sympy import O
+    assert Si(x).nseries(x, n=8) == x - x**3/18 + x**5/600 - x**7/35280 + O(x**9)
+    assert Shi(x).nseries(x, n=8) == x + x**3/18 + x**5/600 + x**7/35280 + O(x**9)
+    assert Si(sin(x)).nseries(x, n=5) == x - 2*x**3/9 + 17*x**5/450 + O(x**6)
+    assert Si(x).nseries(x, 1, n=3) == \
+           Si(1) + x*sin(1) + x**2/2*cos(1) - x**2/2*sin(1) + O(x**3)
+
 def test_ci():
     m1 = exp_polar(I*pi)
     m1_ = exp_polar(-I*pi)
@@ -195,3 +202,8 @@ def test_ci():
 
     assert tn_arg(Ci)
     assert tn_arg(Chi)
+
+    from sympy import O, EulerGamma, log, limit
+    assert Ci(x).nseries(x, n=4) == EulerGamma + log(x) - x**2/4 + x**4/96 + O(x**5)
+    assert Chi(x).nseries(x, n=4) == EulerGamma + log(x) + x**2/4 + x**4/96 + O(x**5)
+    assert limit(log(x) - Ci(2*x), x, 0) == -log(2) - EulerGamma

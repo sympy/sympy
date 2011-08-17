@@ -446,6 +446,20 @@ class TrigonometricIntegral(Function):
         from sympy import uppergamma
         return self._eval_rewrite_as_expint(z).rewrite(uppergamma)
 
+    def _eval_nseries(self, x, n, logx):
+        # NOTE this is fairly inefficient
+        from sympy import log, EulerGamma, Pow
+        n += 1
+        if self.args[0].subs(x, 0) != 0:
+            return super(TrigonometricIntegral, self)._eval_nseries(x, n, logx)
+        baseseries = self._trigfunc(x)._eval_nseries(x, n, logx)
+        if self._trigfunc(0) != 0:
+            baseseries -= 1
+        baseseries = baseseries.replace(Pow, lambda t, n: t**n/n)
+        if self._trigfunc(0) != 0:
+            baseseries += EulerGamma + log(x)
+        return baseseries.subs(x, self.args[0])._eval_nseries(x, n, logx)
+
 class Si(TrigonometricIntegral):
     r"""
     Sine integral.
@@ -591,7 +605,7 @@ class Ci(TrigonometricIntegral):
     """
 
     _trigfunc = C.cos
-    _atzero = C.ComplexInfinity
+    _atzero = S.ComplexInfinity
 
     @classmethod
     def _minusfactor(cls, z):
@@ -745,7 +759,7 @@ class Chi(TrigonometricIntegral):
     """
 
     _trigfunc = C.cosh
-    _atzero = C.ComplexInfinity
+    _atzero = S.ComplexInfinity
 
     @classmethod
     def _minusfactor(cls, z):
