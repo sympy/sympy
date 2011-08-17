@@ -36,7 +36,7 @@ def _peeloff_pi(arg):
             if p is S.Pi and K.is_Rational:
                 break
     else:
-        return arg, 0
+        return arg, S.Zero
 
     m1 = (K % S.Half) * S.Pi
     m2 = K*S.Pi - m1
