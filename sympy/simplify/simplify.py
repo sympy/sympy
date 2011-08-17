@@ -745,7 +745,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     try:
         polys, opt = parallel_poly_from_expr([num, denom] + G, *gens, **args)
     except PolificationFailed, exc:
-        raise ComputationFailed('ratsimpmodprime', len(G) + 2, exc)
+        return expr
 
     domain = opt.domain
 
