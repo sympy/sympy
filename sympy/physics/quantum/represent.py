@@ -218,6 +218,7 @@ def _represent_helper(expr, **options):
     should_integrate = options.pop('integrate', True)
     should_wrap = options.pop('wrap_wf', True)
     should_collapse = options.pop('collapse', True)
+    should_combine = options.pop('combine', True)
 
     result = represent(expr.args[-1], collapse=False, **options)
     last_arg = expr.args[-1]
@@ -250,6 +251,9 @@ def _represent_helper(expr, **options):
 
     if should_integrate:
         result = integrate_result(expr, result, delta=True, **options)
+
+    if should_combine:
+        result = _combine_wf(result)
 
     if should_apply:
         result = do_qapply(result)
@@ -790,3 +794,23 @@ def _collapse_indices(expr, basis):
             expr = expr.subs(sub_info)
 
     return expr
+
+def _combine_wf(expr):
+    if not isinstance(expr, Mul):
+        return expr
+
+    #Unless there is a DO or a Wf, there's no need to try to
+    #combine the Wf objects so that application happens correctly
+    if not (expr.has(DifferentialOperator) or expr.has(Wavefunction)):
+        return expr
+
+    args = expr.args
+
+    if isinstance(args[0], Wavefunction) and isinstance(args[1], Wavefunction):
+        new_wf = args[0]._combine_wf(args[1], Mul)
+        if len(args) > 2:
+            return _combine_wf(Mul(new_wf, *args[2:]))
+        else:
+            return new_wf
+    else:
+        return args[0]*_combine_wf(Mul(*args[1:]))

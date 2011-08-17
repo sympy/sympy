@@ -754,6 +754,9 @@ class Wavefunction(Function):
         else:
             return Wavefunction(exp, *wf_vars)
 
+    def _eval_power(self, power):
+        return Wavefunction((self.expr)**power, *self.args[1:])
+
     @property
     def free_symbols(self):
         return self.expr.free_symbols
@@ -972,3 +975,43 @@ class Wavefunction(Function):
                 return Mul(wf, *delta)
 
         return self
+
+    def _combine_wf(self, other, expr_class):
+        """Utility function to combine two Wavefunction objects into a single Wf
+        whose expression is of expr_class (e.g. Add, Mul, etc.)"""
+
+        expr1 = self.expr
+        expr2 = other.expr
+        limits1 = self.limits
+        limits2 = other.limits
+
+        new_lims = []
+
+        for key in limits1:
+            if not key in limits2:
+                lims = limits1[key]
+                if lims == (-oo, oo):
+                    new_lims.append(key)
+                else:
+                    new_lims.append((key, lims[0], lims[1]))
+            else:
+                lims1 = limits1[key]
+                lims2 = limits2[key]
+                low_lim = max(lims1[0], lims2[0])
+                up_lim = min(lims1[1], lims2[1])
+                if low_lim == -oo and up_lim == oo:
+                    new_lims.append(key)
+                else:
+                    new_lims.append((key, low_lim, up_lim))
+                limits2.pop(key)
+
+        for key in limits2:
+            lims = limits2[key]
+            if lims == (-oo, oo):
+                new_lims.append(key)
+            else:
+                new_lims.append((key, lims[0], lims[1]))
+
+        new_expr = expr_class(expr1, expr2)
+
+        return Wavefunction(new_expr, *new_lims)
