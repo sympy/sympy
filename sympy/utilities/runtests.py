@@ -174,6 +174,7 @@ def test(*paths, **kwargs):
     sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     test_files = t.get_test_files('sympy')
+
     if len(paths) == 0:
         t._testfiles.extend(test_files)
     else:
@@ -232,6 +233,11 @@ def doctest(*paths, **kwargs):
                     "sympy/galgebra/latex_ex.py", # needs numpy
                     "sympy/conftest.py", # needs py.test
                     "sympy/utilities/benchmarking.py", # needs py.test
+                    "examples/advanced/autowrap_integrators.py", # needs numpy
+                    "examples/advanced/autowrap_ufuncify.py", # needs numpy
+                    "examples/intermediate/mplot2d.py", # needs numpy and matplotlib
+                    "examples/intermediate/mplot3d.py", # needs numpy and matplotlib
+                    "examples/intermediate/sample.py", # needs numpy
                     ])
     blacklist = convert_to_native_paths(blacklist)
 
@@ -244,6 +250,8 @@ def doctest(*paths, **kwargs):
     t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')
+    test_files.extend(t.get_test_files('examples', init_only=False))
+
     not_blacklisted = [f for f in test_files
                          if not any(b in f for b in blacklist)]
     if len(paths) == 0:
@@ -636,7 +644,14 @@ class SymPyDocTests(object):
         from StringIO import StringIO
 
         rel_name = filename[len(self._root_dir)+1:]
+        dirname, file = os.path.split(filename)
         module = rel_name.replace(os.sep, '.')[:-3]
+
+        if rel_name.startswith("examples"):
+            # Example files do not have __init__.py files,
+            # So we have to temporarily extend sys.path to import them
+            sys.path.insert(0, dirname)
+            module = file[:-3] # remove ".py"
         setup_pprint()
         try:
             module = pdoctest._normalize_module(module)
@@ -644,6 +659,9 @@ class SymPyDocTests(object):
         except:
             self._reporter.import_error(filename, sys.exc_info())
             return
+        finally:
+            if rel_name.startswith("examples"):
+                del sys.path[0]
 
         tests = [test for test in tests if len(test.examples) > 0]
         # By default (except for python 2.4 in which it was broken) tests

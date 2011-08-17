@@ -127,22 +127,22 @@ def test_ode_solutions():
         Eq(f(x),acos(C1/cos(x)))
     assert constant_renumber(constantsimp(Eq(log(f(x)/C1) + 2*exp(x/f(x)), 0), x, 1),
         'C', 1, 1) ==  Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
-    assert constant_renumber(constantsimp(Eq(log(x*2**Rational(1,2)*(1/x)**Rational(1,2)*f(x)\
-        **Rational(1,2)/C1) + x**2/(2*f(x)**2), 0), x, 1), 'C', 1, 1) == \
-        Eq(log(C1*x*(1/x)**Rational(1,2)*f(x)**Rational(1,2)) + x**2/(2*f(x)**2), 0)
+    assert constant_renumber(constantsimp(Eq(log(x*sqrt(2)*sqrt(1/x)*sqrt(f(x))\
+        /C1) + x**2/(2*f(x)**2), 0), x, 1), 'C', 1, 1) == \
+        Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     assert constant_renumber(constantsimp(Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(x/C1) - \
         cos(f(x)/x)*exp(-f(x)/x)/2, 0), x, 1), 'C', 1, 1) == \
         Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     u2 = Symbol('u2')
     _a = Symbol('_a')
-    assert constant_renumber(constantsimp(Eq(-Integral(-1/((1 - u2**2)**Rational(1,2)*u2), \
+    assert constant_renumber(constantsimp(Eq(-Integral(-1/(sqrt(1 - u2**2)*u2), \
         (u2, _a, x/f(x))) + log(f(x)/C1), 0), x, 1), 'C', 1, 1) == \
-        Eq(-Integral(-1/(u2*(1 - u2**2)**Rational(1,2)), (u2, _a, x/f(x))) + \
+        Eq(-Integral(-1/(u2*sqrt(1 - u2**2)), (u2, _a, x/f(x))) + \
         log(C1*f(x)), 0)
     assert [constant_renumber(constantsimp(i, x, 1), 'C', 1, 1) for i in
-        [Eq(f(x), (-C1*x + x**2)**Rational(1,2)), Eq(f(x), -(-C1*x +
-        x**2)**Rational(1,2))]] == [Eq(f(x), (C1*x + x**2)**Rational(1,2)),
-        Eq(f(x), -(C1*x + x**2)**Rational(1,2))]
+        [Eq(f(x), sqrt(-C1*x + x**2)), Eq(f(x), -sqrt(-C1*x +
+        x**2))]] == [Eq(f(x), sqrt(C1*x + x**2)),
+        Eq(f(x), -sqrt(C1*x + x**2))]
 
 def test_constant_Eq():
     # C1 on the rhs is well-tested, but the lhs is only tested here

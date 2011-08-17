@@ -101,7 +101,7 @@ class chebyshevt_root(Function):
 
     >>> from sympy import chebyshevt, chebyshevt_root
     >>> chebyshevt_root(3, 2)
-    -3**(1/2)/2
+    -sqrt(3)/2
     >>> chebyshevt(3, chebyshevt_root(3, 2))
     0
 
@@ -126,7 +126,7 @@ class chebyshevu_root(Function):
 
         >>> from sympy import chebyshevu, chebyshevu_root
         >>> chebyshevu_root(3, 2)
-        -2**(1/2)/2
+        -sqrt(2)/2
         >>> chebyshevu(3, chebyshevu_root(3, 2))
         0
 
@@ -192,7 +192,7 @@ class assoc_legendre(Function):
         >>> assoc_legendre(1,0, x)
         x
         >>> assoc_legendre(1,1, x)
-        -(-x**2 + 1)**(1/2)
+        -sqrt(-x**2 + 1)
 
     References
     ==========

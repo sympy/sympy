@@ -249,7 +249,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Pow(self, expr):
-        # Treat x**(Rational(1,n)) as special case
+        # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1:
             base = self._print(expr.base)
             expq = expr.exp.q

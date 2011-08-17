@@ -523,7 +523,7 @@ class WignerD(AtomicExpr):
         >>> rot
         WignerD(1, 1, 0, pi, pi/2, 0)
         >>> rot.doit()
-        2**(1/2)/2
+        sqrt(2)/2
 
     Evaluate the Wigner-d matrix elements of a simple rotation
 
@@ -531,7 +531,7 @@ class WignerD(AtomicExpr):
         >>> rot
         WignerD(1, 1, 0, 0, pi/2, 0)
         >>> rot.doit()
-        -2**(1/2)/2
+        -sqrt(2)/2
 
     References
     ==========
@@ -848,7 +848,7 @@ class JzKet(SpinState, Ket):
     Note: that the resulting eigenstates are JxKet's
 
         >>> JzKet(1,1).rewrite("Jx")
-        |1,-1>/2 - 2**(1/2)*|1,0>/2 + |1,1>/2
+        |1,-1>/2 - sqrt(2)*|1,0>/2 + |1,1>/2
 
     Get the vector representation of a state in terms of the basis elements
     of the Jx operator:
@@ -856,9 +856,9 @@ class JzKet(SpinState, Ket):
         >>> from sympy.physics.quantum.represent import represent
         >>> from sympy.physics.quantum.spin import Jx
         >>> represent(JzKet(1,-1), basis=Jx)
-        [       1/2]
-        [2**(1/2)/2]
-        [       1/2]
+        [      1/2]
+        [sqrt(2)/2]
+        [      1/2]
 
     Apply innerproducts between states:
 

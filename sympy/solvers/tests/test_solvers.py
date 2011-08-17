@@ -47,13 +47,13 @@ def test_guess_poly():
     assert guess_solve_strategy( x**2 - 1, x ) == GS_POLY
     assert guess_solve_strategy( x*y + y, x ) == GS_POLY
     assert guess_solve_strategy( x*exp(y) + y, x) == GS_POLY
-    assert guess_solve_strategy( (x - y**3)/(y**2*(1 - y**2)**(S(1)/2)), x) == GS_POLY
+    assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), x) == GS_POLY
 
 def test_guess_poly_cv():
     x, y = symbols('x,y')
     # polynomial equations via a change of variable
-    assert guess_solve_strategy( x**Rational(1,2) + 1, x ) == GS_POLY_CV_1
-    assert guess_solve_strategy( x**Rational(1,3) + x**Rational(1,2) + 1, x ) == GS_POLY_CV_1
+    assert guess_solve_strategy( sqrt(x) + 1, x ) == GS_POLY_CV_1
+    assert guess_solve_strategy( x**Rational(1,3) + sqrt(x) + 1, x ) == GS_POLY_CV_1
     assert guess_solve_strategy( 4*x*(1 - sqrt(x)), x ) == GS_POLY_CV_1
 
     # polynomial equation multiplying both sides by x**n
@@ -63,10 +63,10 @@ def test_guess_rational_cv():
     # rational functions
     x, y = symbols('x,y')
     assert guess_solve_strategy( (x+1)/(x**2 + 2), x) == GS_RATIONAL
-    assert guess_solve_strategy( (x - y**3)/(y**2*(1 - y**2)**(S(1)/2)), y) == GS_RATIONAL_CV_1
+    assert guess_solve_strategy( (x - y**3)/(y**2*sqrt(1 - y**2)), y) == GS_RATIONAL_CV_1
 
     # rational functions via the change of variable y -> x**n
-    assert guess_solve_strategy( (x**Rational(1,2) + 1)/(x**Rational(1,3) + x**Rational(1,2) + 1), x ) \
+    assert guess_solve_strategy( (sqrt(x) + 1)/(x**Rational(1,3) + sqrt(x) + 1), x ) \
                                 == GS_RATIONAL_CV_1
 
 def test_guess_transcendental():
@@ -125,13 +125,13 @@ def test_solve_polynomial1():
     assert solve((x - y, x+y), (x, y)) == solution
     assert solve((x - y, x+y), [x, y]) == solution
 
-    assert solve( x**3 - 15*x - 4, x) == [-2 + 3**Rational(1,2),
+    assert solve( x**3 - 15*x - 4, x) == [-2 + sqrt(3),
                                            4,
-                                           -2 - 3**Rational(1,2) ]
+                                           -2 - sqrt(3) ]
 
     assert sorted(solve((x**2 - 1)**2 - a, x)) == \
-           sorted([(1 + a**S.Half)**S.Half, -(1 + a**S.Half)**S.Half,
-                   (1 - a**S.Half)**S.Half, -(1 - a**S.Half)**S.Half])
+           sorted([sqrt(1 + sqrt(a)), -sqrt(1 + sqrt(a)),
+                   sqrt(1 - sqrt(a)), -sqrt(1 - sqrt(a))])
 
 def test_solve_polynomial2():
     x = Symbol('x')
@@ -144,16 +144,16 @@ def test_solve_polynomial_cv_1a():
     """
 
     x = Symbol('x')
-    assert solve( x**Rational(1,2) - 1, x) == [1]
-    assert solve( x**Rational(1,2) - 2, x) == [4]
+    assert solve( sqrt(x) - 1, x) == [1]
+    assert solve( sqrt(x) - 2, x) == [4]
     assert solve( x**Rational(1,4) - 2, x) == [16]
     assert solve( x**Rational(1,3) - 3, x) == [27]
     # XXX there are imaginary roots that are being missed
-    assert solve(x**Rational(1,2)+x**Rational(1,3)+x**Rational(1,4),x) == [0]
+    assert solve(sqrt(x)+x**Rational(1,3)+x**Rational(1,4),x) == [0]
 
 def test_solve_polynomial_cv_1b():
     x, a = symbols('x a')
-    assert set(solve(4*x*(1 - a*x**(S(1)/2)), x)) == set([S(0), 1/a**2])
+    assert set(solve(4*x*(1 - a*sqrt(x)), x)) == set([S(0), 1/a**2])
     assert set(solve(x * (x**(S(1)/3) - 3), x)) == set([S(0), S(27)])
 
 def test_solve_polynomial_cv_2():
@@ -229,21 +229,21 @@ def test_tsolve():
     assert solve(x+2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(3*x+5+2**(-5*x+3), x) in [
         [Rational(-5, 3) + LambertW(log(2**(-10240*2**(Rational(1, 3))/3)))/(5*log(2))],
-        [-Rational(5,3) + LambertW(-10240*2**Rational(1,3)*log(2)/3)/(5*log(2))],
-        [(-25*log(2) + 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2))],
-        [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3)))/(15*log(2))],
+        [-Rational(5,3) + LambertW(-10240*2**Rational(1, 3)*log(2)/3)/(5*log(2))],
+        [(-25*log(2) + 3*LambertW(-10240*2**Rational(1, 3)*log(2)/3))/(15*log(2))],
+        [-((25*log(2) - 3*LambertW(-10240*2**Rational(1, 3)*log(2)/3)))/(15*log(2))],
         [-(25*log(2) - 3*LambertW(log(2**(-10240*2**Rational(1, 3)/3))))/(15*log(2))],
         [(25*log(2) - 3*LambertW(log(2**(-10240*2**Rational(1, 3)/3))))/(-15*log(2))]
         ]
     assert solve(5*x-1+3*exp(2-7*x), x) == \
-        [Rational(1,5) + LambertW(-21*exp(Rational(3,5))/5)/7]
+        [Rational(1,5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve(2*x+5+log(3*x-2), x) == \
-        [Rational(2,3) + LambertW(2*exp(-Rational(19,3))/3)/2]
+        [Rational(2,3) + LambertW(2*exp(-Rational(19, 3))/3)/2]
     assert solve(3*x+log(4*x), x) == [LambertW(Rational(3,4))/3]
     assert solve((2*x+8)*(8+exp(x)), x) == [-4, log(8) + pi*I]
     assert solve(2*exp(3*x+4)-3, x) in [
-        [Rational(-4, 3) + log(2**(Rational(2, 3))*3**(Rational(1, 3))/2)],
-        [-Rational(4,3)+log(Rational(3,2))/3],
+        [Rational(-4, 3) + log(2**Rational(2, 3)*3**Rational(1, 3)/2)],
+        [-Rational(4, 3)+log(Rational(3, 2))/3],
         [Rational(-4, 3) - log(2)/3 + log(3)/3],
         ]
     assert solve(2*log(3*x+4)-3, x) == [(exp(Rational(3,2))-4)/3]
@@ -400,8 +400,8 @@ def test_issue_2098():
     x = Symbol('x', positive=True)
     y = Symbol('y')
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) is None
-    assert solve((x + y)*n - y**2 + 2, x, y) == [(2**(S(1)/2), -2**(S(1)/2))]
-    # This solution must not appear: (-2**(1/2), 2**(1/2))
+    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    # This solution must not appear: (-sqrt(2), sqrt(2))
     y = Symbol('y', positive=True)
     assert solve(x**2 - y**2/exp(x), x, y) == [x*exp(x/2)]
     # This solution must not appear: -x*exp(x/2)

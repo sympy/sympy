@@ -304,9 +304,9 @@ class Basic(object):
         [1/2, -I, I]
 
         >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
-        [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
+        [x, 1/x, x**(-2), x**2, sqrt(x), x**(1/4), x**(3/2)]
         >>> sorted(_, key=lambda x: x.sort_key())
-        [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
+        [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]
 
         """
         from sympy.core.singleton import S

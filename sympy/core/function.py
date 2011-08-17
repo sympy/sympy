@@ -673,7 +673,7 @@ class Derivative(Expr):
         >>> F(cos(x))
         2*cos(x)
         >>> G(sin(x))
-        2*(-sin(x)**2 + 1)**(1/2)
+        2*sqrt(-sin(x)**2 + 1)
         >>> F(c).diff(c)
         2
         >>> F(c).diff(c)

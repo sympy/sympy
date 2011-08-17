@@ -257,12 +257,12 @@ def guess_solve_strategy(expr, symbol):
 
     Examples
     ========
-    >>> from sympy import Symbol, Rational
+    >>> from sympy import Symbol, Rational, sqrt
     >>> from sympy.solvers.solvers import guess_solve_strategy
     >>> from sympy.abc import x
     >>> guess_solve_strategy(x**2 + 1, x)
     0
-    >>> guess_solve_strategy(x**Rational(1,2) + 1, x)
+    >>> guess_solve_strategy(sqrt(x) + 1, x)
     2
 
     """
@@ -411,7 +411,7 @@ def solve(f, *symbols, **flags):
 
                     that are nonlinear
                         >>> solve((a + b)*x - b**2 + 2, a, b)
-                        [(-2**(1/2), 2**(1/2)), (2**(1/2), -2**(1/2))]
+                        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
 
                 if there is no linear solution then the first successful
                 attempt for a nonlinear solution will be returned

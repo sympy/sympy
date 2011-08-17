@@ -101,12 +101,12 @@ The printing of SymPy expressions might be also affected, so be careful
 with doctests. If you get the following on a 32-bit system::
 
     >> print dsolve(f(x).diff(x, 2) + 2*f(x).diff(x) - f(x), f(x))
-    f(x) == C1*exp(-x + x*2**(1/2)) + C2*exp(-x - x*2**(1/2))
+    f(x) == C1*exp(-x + x*sqrt(2)) + C2*exp(-x - x*sqrt(2))
 
 you might get the following on a 64-bit platform::
 
     >> print dsolve(f(x).diff(x, 2) + 2*f(x).diff(x) - f(x), f(x))
-    f(x) == C1*exp(-x - x*2**(1/2)) + C2*exp(-x + x*2**(1/2))
+    f(x) == C1*exp(-x - x*sqrt(2)) + C2*exp(-x + x*sqrt(2))
 
 Method Resolution
 =================

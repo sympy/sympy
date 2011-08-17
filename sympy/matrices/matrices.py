@@ -547,8 +547,8 @@ class Matrix(object):
             for j in xrange(i):
                 L[i, j] = (1 / L[j, j]) * (self[i, j] - sum(L[i, k] * L[j, k]
                     for k in xrange(j)))
-            L[i, i] = (self[i, i] - sum(L[i, k] ** 2
-                for k in xrange(i))) ** (S(1)/2)
+            L[i, i] = sqrt(self[i, i] - sum(L[i, k] ** 2
+                for k in xrange(i)))
         return L
 
     def LDLdecomposition(self):
@@ -1479,7 +1479,7 @@ class Matrix(object):
         # Row or Column Vector Norms
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None: # Common case sqrt(<x,x>)
-                return Add(*(abs(i)**2 for i in self.mat))**S.Half
+                return sqrt(Add(*(abs(i)**2 for i in self.mat)))
 
             elif ord == 1: # sum(abs(x))
                 return Add(*(abs(i) for i in self.mat))
@@ -2147,7 +2147,7 @@ class Matrix(object):
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
         >>> print A.singular_values()
-        [1, (x**2 + 1)**(1/2), 0]
+        [1, sqrt(x**2 + 1), 0]
         """
         # Compute eigenvalues of A.H A
         valmultpairs = (self.H*self).eigenvals()

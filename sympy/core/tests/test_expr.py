@@ -283,8 +283,7 @@ def test_is_polynomial():
     assert (x**2 + 3*x - 8).is_polynomial() == True
 
     assert sqrt(x).is_polynomial(x) == False
-    assert (x**S.Half).is_polynomial(x) == False
-    assert (x**Rational(3,2)).is_polynomial(x) == False
+    assert (sqrt(x)**3).is_polynomial(x) == False
 
     assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(x) == True
     assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(y) == False
@@ -415,7 +414,7 @@ def test_as_numer_denom():
     assert (x**n).as_numer_denom() == (x**n, 1)
     assert sqrt(1/n).as_numer_denom() == (I, sqrt(-n))
     n = Symbol('0 or neg', nonpositive=True)
-    assert ((x/n)**-S.Half).as_numer_denom() == (1, (x/n)**S.Half)
+    assert (1/sqrt(x/n)).as_numer_denom() == (1, sqrt(x/n))
 
     A, B, C = symbols('A,B,C', commutative=False)
 
@@ -738,8 +737,8 @@ def test_extractions():
     assert (2*x).extract_multiplicatively(3) == None
     assert (2*x).extract_multiplicatively(-1) == None
     assert (Rational(1,2)*x).extract_multiplicatively(3) == x/6
-    assert (x**(Rational(1,2))).extract_multiplicatively(x) == None
-    assert (x**(Rational(1,2))).extract_multiplicatively(1/x) == x**(Rational(3,2))
+    assert (sqrt(x)).extract_multiplicatively(x) == None
+    assert (sqrt(x)).extract_multiplicatively(1/x) == sqrt(x)**3
 
     assert ((x*y)**3).extract_additively(1) == None
     assert (x+1).extract_additively(x) == 1
@@ -985,7 +984,7 @@ def test_as_coeff_Mul():
 def test_expr_sorting():
     f, g = symbols('f,g', cls=Function)
 
-    exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
+    exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, sqrt(x)**3, x**2]
     assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]

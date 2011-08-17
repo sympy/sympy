@@ -1,4 +1,4 @@
-from sympy import Rational, Symbol, integrate, pprint
+from sympy import Rational, Symbol, integrate, pprint, sqrt
 from sympy.physics.units import m, s, day, km, foot, meter, au, \
         speed_of_light, minute, joule
 
@@ -10,8 +10,8 @@ def test_units():
     t = (1*au / speed_of_light).evalf() / minute
     assert abs(t - 8.31) < 0.1
 
-    assert (m**2)**Rational(1,2) == m
-    assert (m**Rational(1,2))**2 == m
+    assert sqrt(m**2) == m
+    assert (sqrt(m))**2 == m
 
     t = Symbol('t')
     assert integrate(t*m/s,(t, 1*s, 5*s)) == 12*m*s

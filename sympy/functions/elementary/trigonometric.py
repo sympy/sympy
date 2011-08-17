@@ -940,7 +940,7 @@ class asin(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return (1 - self.args[0]**2)**(-S.Half)
+            return 1/sqrt(1 - self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -1058,7 +1058,7 @@ class acos(Function):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return -(1 - self.args[0]**2)**(-S.Half)
+            return -1/sqrt(1 - self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
 

@@ -2573,7 +2573,7 @@ class Poly(Expr):
         >>> s
         1
         >>> f
-        Poly(x**2 - 2*3**(1/2)*x + 4, x, domain='QQ<3**(1/2)>')
+        Poly(x**2 - 2*sqrt(3)*x + 4, x, domain='QQ<sqrt(3)>')
         >>> r
         Poly(x**4 - 4*x**2 + 16, x, domain='QQ')
 
@@ -4820,7 +4820,7 @@ def sqf_norm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_norm(x**2 + 1, extension=[sqrt(3)])
-    (1, x**2 - 2*3**(1/2)*x + 4, x**4 - 4*x**2 + 16)
+    (1, x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -5064,7 +5064,7 @@ def factor(f, *gens, **args):
     (x - I)*(x + I)
 
     >>> factor(x**2 - 2, extension=sqrt(2))
-    (x - 2**(1/2))*(x + 2**(1/2))
+    (x - sqrt(2))*(x + sqrt(2))
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
     (x - 1)*(x + 1)/(x + 2)**2

@@ -375,7 +375,7 @@ class Mul(AssocOp):
                 if obj.is_Number:
                     coeff *= obj
                 else:
-                    if obj.is_Mul: # 12**(1/2) -> 2*sqrt(3)
+                    if obj.is_Mul: # sqrt(12) -> 2*sqrt(3)
                         c, obj = obj.args # expecting only 2 args
                         coeff *= c
                         assert obj.is_Pow

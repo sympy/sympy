@@ -281,7 +281,7 @@ def test_1st_exact2():
     by first order homogeneous albeit with a much contorted solution.  The
     exact engine fails because of a poorly simplified integral of q(0,y)dy,
     where q is the function multiplying f'.  The solutions should be
-    Eq((x**2+f(x)**2)**Rational(3,2)+y**3, C1).  The equation below is
+    Eq(sqrt(x**2+f(x)**2)**3+y**3, C1).  The equation below is
     equivalent, but it is so complex that checkodesol fails, and takes a long time
     to do so.
     """
@@ -413,7 +413,7 @@ def test_homogeneous_order():
     assert homogeneous_order(x**2 + sin(x)*cos(y), x, y) == None
     assert homogeneous_order(x - y - x*sin(y/x), x, y) == 1
     assert homogeneous_order((x*y + sqrt(x**4+y**4) + x**2*(log(x) - log(y)))/\
-        (pi*x**Rational(2,3)*y**Rational(3,2)), x, y) == Rational(-1,6)
+        (pi*x**Rational(2,3)*sqrt(y)**3), x, y) == Rational(-1,6)
     assert homogeneous_order(y/x*cos(y/x) - x/y*sin(y/x) + cos(y/x), x, y) == 0
     assert homogeneous_order(f(x), x, f(x)) == 1
     assert homogeneous_order(f(x)**2, x, f(x)) == 2
@@ -503,8 +503,8 @@ def test_1st_homogeneous_coeff_ode1_sol_fail():
     eq9 = f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x)
     sol2 = Eq(x/tan(f(x)/(2*x)), C1)
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
-    sol9 = Eq(-Integral(-1/(-(1 - (1 - _u2**2)**(1/2))*_u2 + _u2), (_u2, __a, \
-    x/f(x))) + log(C1*f(x)), 0)
+    sol9 = Eq(-Integral(-1/(-(1 - sqrt(1 - _u2**2))*_u2 + _u2), (_u2, __a,
+        x/f(x))) + log(C1*f(x)), 0)
     assert checkodesol(eq2, f(x), sol2, order=1, solve_for_func=False)[0]
     assert checkodesol(eq7, f(x), sol7, order=1, solve_for_func=False)[0]
     assert checkodesol(eq9, f(x), sol9, order=1, solve_for_func=False)[0]
@@ -540,7 +540,7 @@ def test_1st_homogeneous_coeff_ode3():
     # test_homogeneous_order_ode1_sol above. It has to compare string
     # expressions because u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    solstr = "log(C1*f(x)) - Integral(-1/(_u2*(-_u2**2 + 1)**(1/2)), (_u2, x/f(x))) == 0"
+    solstr = "log(C1*f(x)) - Integral(-1/(_u2*sqrt(-_u2**2 + 1)), (_u2, x/f(x))) == 0"
     assert str(dsolve(eq, f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
 
 def test_1st_homogeneous_coeff_ode4_explicit():

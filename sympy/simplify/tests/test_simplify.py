@@ -179,11 +179,11 @@ def test_simplify_other():
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
-    roots = ['(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2)'
-             ' + 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))',
-             '(5/2 + 21**(1/2)/2)**(1/3)*(1/2 + I*3**(1/2)/2)'
-             ' + 1/((1/2 + I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))',
-             '-1/(5/2 + 21**(1/2)/2)**(1/3) - (5/2 + 21**(1/2)/2)**(1/3)']
+    roots = ['(1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3) + 1/((1/2 - '
+             'sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3))',
+             '1/((1/2 + sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3)) + '
+             '(1/2 + sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3)',
+             '-(sqrt(21)/2 + 5/2)**(1/3) - 1/(sqrt(21)/2 + 5/2)**(1/3)']
 
     for r in roots:
         r = S(r)
@@ -515,8 +515,8 @@ def test_nsimplify():
     assert nsimplify(1-GoldenRatio) == (1-sqrt(5))/2
     assert nsimplify((1+sqrt(5))/4, [GoldenRatio]) == GoldenRatio/2
     assert nsimplify(2/GoldenRatio, [GoldenRatio]) == 2*GoldenRatio - 2
-    assert nsimplify(exp(5*pi*I/3, evaluate=False)) == sympify('1/2 - I*3**(1/2)/2')
-    assert nsimplify(sin(3*pi/5, evaluate=False)) == sympify('(5/8 + 1/8*5**(1/2))**(1/2)')
+    assert nsimplify(exp(5*pi*I/3, evaluate=False)) == sympify('1/2 - sqrt(3)*I/2')
+    assert nsimplify(sin(3*pi/5, evaluate=False)) == sympify('sqrt(sqrt(5)/8 + 5/8)')
     assert nsimplify(sqrt(atan('1', evaluate=False))*(2+I), [pi]) == sqrt(pi) + sqrt(pi)/2*I
     assert nsimplify(2 + exp(2*atan('1/4')*I)) == sympify('49/17 + 8*I/17')
     assert nsimplify(pi, tolerance=0.01) == Rational(22, 7)
@@ -573,10 +573,10 @@ def test_logcombine_1():
     assert logcombine(log(x)*2*log(y)+log(z), force=True) == \
         log(z*y**log(x**2))
     assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**Rational(2, 3)*\
-        y**Rational(3, 2)), force=True) == \
-        log(x**(1/(pi*x**Rational(2, 3)*y**Rational(3, 2)))*y**(-1/(pi*\
-        x**Rational(2, 3)*y**Rational(3, 2)))) + (x**4 + y**4)**Rational(1, 2)/(pi*\
-        x**Rational(2, 3)*y**Rational(3, 2)) + x**Rational(1, 3)/(pi*y**Rational(1, 2))
+        sqrt(y)**3), force=True) == \
+        log(x**(1/(pi*x**Rational(2, 3)*sqrt(y)**3))*y**(-1/(pi*\
+        x**Rational(2, 3)*sqrt(y)**3))) + sqrt(x**4 + y**4)/(pi*\
+        x**Rational(2, 3)*sqrt(y)**3) + x**Rational(1, 3)/(pi*sqrt(y))
     assert logcombine(Eq(log(x), -2*log(y)), force=True) == \
         Eq(log(x*y**2), Integer(0))
     assert logcombine(Eq(y, x*acos(-log(x/y))), force=True) == \

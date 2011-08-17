@@ -28,11 +28,11 @@ def Ylm(l, m, theta, phi):
         >>> from sympy import symbols, Ylm
         >>> theta, phi = symbols("theta phi")
         >>> Ylm(0, 0, theta, phi)
-        1/(2*pi**(1/2))
+        1/(2*sqrt(pi))
         >>> Ylm(1, -1, theta, phi)
-        6**(1/2)*exp(-I*phi)*sin(theta)/(4*pi**(1/2))
+        sqrt(6)*exp(-I*phi)*sin(theta)/(4*sqrt(pi))
         >>> Ylm(1, 0, theta, phi)
-        3**(1/2)*cos(theta)/(2*pi**(1/2))
+        sqrt(3)*cos(theta)/(2*sqrt(pi))
 
     """
     l, m, theta, phi = [sympify(x) for x in (l, m, theta, phi)]

@@ -39,9 +39,9 @@ def test_basic1():
     # Pow
     assert limit(x**(-2), x, 0, dir='-') == oo
     assert limit(x**(-3), x, 0, dir='-') == -oo
-    assert limit(x**(-Rational(1, 2)), x, 0, dir='-') == (-oo)*I
+    assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
-    assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
+    assert limit(sqrt(x), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == zoo
     assert limit((1 + cos(x))**oo, x, 0) == oo
 

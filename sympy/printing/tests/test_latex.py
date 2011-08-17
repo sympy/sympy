@@ -2,7 +2,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
-    Lambda, Poly, RootOf, RootSum)
+    Lambda, Poly, RootOf, RootSum, sqrt)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -30,14 +30,14 @@ def test_latex_basic():
     assert latex(2*x*y) == "2 x y"
     assert latex(2*x*y, mul_symbol='dot') == r"2 \cdot x \cdot y"
 
-    assert latex(x**(Rational(1,2))) == r"\sqrt{x}"
-    assert latex(x**(Rational(1,3))) == r"\sqrt[3]{x}"
-    assert latex(x**(Rational(3,2))) == r"x^{\frac{3}{2}}"
-    assert latex(x**(Rational(1,2)),itex=True) == r"\sqrt{x}"
-    assert latex(x**(Rational(1,3)),itex=True) == r"\root{3}{x}"
-    assert latex(x**(Rational(3,2)),itex=True) == r"x^{\frac{3}{2}}"
-    assert latex(x**(Rational(3,4))) == r"x^{\frac{3}{4}}"
-    assert latex(x**(Rational(3,4)), fold_frac_powers=True) == "x^{3/4}"
+    assert latex(sqrt(x)) == r"\sqrt{x}"
+    assert latex(x**Rational(1,3)) == r"\sqrt[3]{x}"
+    assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
+    assert latex(sqrt(x),itex=True) == r"\sqrt{x}"
+    assert latex(x**Rational(1,3),itex=True) == r"\root{3}{x}"
+    assert latex(sqrt(x)**3,itex=True) == r"x^{\frac{3}{2}}"
+    assert latex(x**Rational(3,4)) == r"x^{\frac{3}{4}}"
+    assert latex(x**Rational(3,4), fold_frac_powers=True) == "x^{3/4}"
 
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"

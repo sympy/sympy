@@ -879,11 +879,11 @@ def radsimp(expr):
     Examples:
         >>> from sympy import radsimp, sqrt, Symbol
         >>> radsimp(1/(2+sqrt(2)))
-        -2**(1/2)/2 + 1
+        -sqrt(2)/2 + 1
         >>> x,y = map(Symbol, 'xy')
         >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
         >>> radsimp(e)
-        2**(1/2)*x + 2**(1/2)*y
+        sqrt(2)*x + sqrt(2)*y
 
     """
     n,d = fraction(expr)
@@ -984,8 +984,8 @@ def powdenest(eq, force=False):
 
     Assumptions may prevent expansion:
 
-    >> powdenest(sqrt(x**2))  # activate when log rules are fixed
-    (x**2)**(1/2)
+    >>> powdenest(sqrt(x**2))  # activate when log rules are fixed
+    sqrt(x**2)
 
     >>> p = symbols('p', positive=True)
     >>> powdenest(sqrt(p**2))
@@ -1593,8 +1593,8 @@ def simplify(expr, ratio=1.7):
        ::
 
             >>> from sympy import S, simplify, count_ops, oo
-            >>> root = S("(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2)"
-            ... "+ 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))")
+            >>> root = S("(1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3) + "
+            ... "1/((1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3))")
 
        Since ``simplify(root)`` would result in a slightly longer expression,
        root is returned inchanged instead::
@@ -1654,12 +1654,12 @@ def simplify(expr, ratio=1.7):
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')
 
-        r = denom.match(a + b*c**S.Half)
+        r = denom.match(a + b*sqrt(c))
 
         if r is not None and r[b]:
             a, b, c = r[a], r[b], r[c]
 
-            numer *= a-b*c**S.Half
+            numer *= a-b*sqrt(c)
             numer = numer.expand()
 
             denom = a**2 - c*b**2
@@ -1684,7 +1684,7 @@ def _real_to_rational(expr):
     >>> from sympy.abc import x
 
     >>> nsimplify(.76 + .1*x**.5, rational=1)
-    x**(1/2)/10 + 19/25
+    sqrt(x)/10 + 19/25
 
     """
     p = sympify(expr)
@@ -1729,7 +1729,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
         -2 + 2*GoldenRatio
         >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-        1/2 - I*(5**(1/2)/10 + 1/4)**(1/2)
+        1/2 - I*sqrt(sqrt(5)/10 + 1/4)
         >>> nsimplify(I**I, [pi])
         exp(-pi/2)
         >>> nsimplify(pi, tolerance=0.01)

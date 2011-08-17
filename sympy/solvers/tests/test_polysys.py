@@ -19,10 +19,10 @@ def test_solve_poly_system():
         [(Rational(3, 2), Integer(2), Integer(10))]
 
     assert solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y) == \
-       [(0, 0), (2, -2**S.Half), (2, 2**S.Half)]
+       [(0, 0), (2, -sqrt(2)), (2, sqrt(2))]
 
     assert solve_poly_system([y - x**2, y + x**2 + 1], x, y) == \
-           [(I*S.Half**S.Half, -S.Half), (-I*S.Half**S.Half, -S.Half)]
+           [(I*sqrt(S.Half), -S.Half), (-I*sqrt(S.Half), -S.Half)]
 
     f_1 = x**2 + y + z - 1
     f_2 = x + y**2 + z - 1
@@ -51,15 +51,15 @@ def test_solve_biquadratic():
     f_2 = (x - 2)**2 + (y - 2)**2 - r**2
 
     assert solve_poly_system([f_1, f_2], x, y) == \
-        [(S(3)/2 + (-1 + 2*r**2)**(S(1)/2)/2, S(3)/2 - (-1 + 2*r**2)**(S(1)/2)/2),
-         (S(3)/2 - (-1 + 2*r**2)**(S(1)/2)/2, S(3)/2 + (-1 + 2*r**2)**(S(1)/2)/2)]
+        [(S(3)/2 + sqrt(-1 + 2*r**2)/2, S(3)/2 - sqrt(-1 + 2*r**2)/2),
+         (S(3)/2 - sqrt(-1 + 2*r**2)/2, S(3)/2 + sqrt(-1 + 2*r**2)/2)]
 
     f_1 = (x - 1)**2 + (y - 2)**2 - r**2
     f_2 = (x - 1)**2 + (y - 1)**2 - r**2
 
     assert solve_poly_system([f_1, f_2], x, y) == \
-        [(1 + (((2*r - 1)*(2*r + 1)))**(S(1)/2)/2, S(3)/2),
-         (1 - (((2*r - 1)*(2*r + 1)))**(S(1)/2)/2, S(3)/2)]
+        [(1 + sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2),
+         (1 - sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2)]
 
     query = lambda expr: expr.is_Pow and expr.exp is S.Half
 

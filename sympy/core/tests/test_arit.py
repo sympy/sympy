@@ -109,21 +109,21 @@ def test_pow():
     assert e.expand() == 2*a*b+a**2+b**2
 
     e=(a+b)**(n1/n2)
-    assert e == (a+b)**(Rational(1)/2)
-    assert e.expand() == (a+b)**(Rational(1)/2)
+    assert e == sqrt(a+b)
+    assert e.expand() == sqrt(a+b)
 
     n=n5**(n1/n2)
-    assert n == Rational(5)**(Rational(1)/2)
+    assert n == sqrt(5)
     e=n*a*b-n*b*a
     assert e == Rational(0)
     e=n*a*b+n*b*a
-    assert e == 2*a*b*5**(Rational(1)/2)
-    assert e.diff(a) == 2*b*5**(Rational(1)/2)
-    assert e.diff(a) == 2*b*5**(Rational(1)/2)
+    assert e == 2*a*b*sqrt(5)
+    assert e.diff(a) == 2*b*sqrt(5)
+    assert e.diff(a) == 2*b*sqrt(5)
     e=a/b**2
     assert e == a*b**(-2)
 
-    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**(Rational(1,2))))**(Rational(1,2))
+    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**Rational(1,2)))**Rational(1,2)
 
     x = Symbol('x')
     y = Symbol('y')
@@ -157,11 +157,11 @@ def test_pow2():
     assert (-x)**Rational(5,7) != -x**Rational(5,7)
 
 def test_pow_issue417():
-    assert 4**Rational(1, 4) == 2**Rational(1, 2)
+    assert 4**Rational(1, 4) == sqrt(2)
 
 def test_pow3():
-    assert 2**(Rational(3)/2) == 2 * 2**Rational(1, 2)
-    assert 2**(Rational(3)/2) == sqrt(8)
+    assert sqrt(2)**3 == 2 * sqrt(2)
+    assert sqrt(2)**3 == sqrt(8)
 
 def test_expand():
     p = Rational(5)
@@ -321,9 +321,9 @@ def test_Mul_doesnt_expand_exp():
     assert x**2*x**3 == x**5
     assert 2**x*3**x == 6**x
     assert x**(y)*x**(2*y) == x**(3*y)
-    assert 2**Rational(1,2)*2**Rational(1,2) == 2
+    assert sqrt(2)*sqrt(2) == 2
     assert 2**x*2**(2*x) == 2**(3*x)
-    assert 2**Rational(1,2)*2**Rational(1,4)*5**Rational(3,4) == 10**Rational(3,4)
+    assert sqrt(2)*2**Rational(1,4)*5**Rational(3,4) == 10**Rational(3,4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
 def test_Add_Mul_is_integer():
@@ -1070,7 +1070,7 @@ def test_Mul_is_comparable():
 def test_Pow_is_comparable():
     assert (x**y).is_comparable == False
     assert (x**2).is_comparable == False
-    assert (Rational(1,3)**Rational(1,2)).is_comparable == True
+    assert (sqrt(Rational(1,3))).is_comparable == True
 
 
 def test_Add_is_positive_2():
@@ -1159,7 +1159,7 @@ def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
 def test_issue415():
-    assert (S.Half)**S.Half * sqrt(6) == 2 * sqrt(3)/2
+    assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
     assert S(1)/2*sqrt(6)*sqrt(2) == sqrt(3)
     assert sqrt(6)/2*sqrt(2) == sqrt(3)
     assert sqrt(6)*sqrt(2)/2 == sqrt(3)
