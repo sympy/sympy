@@ -102,7 +102,7 @@ def test_ImaginaryUnit():
 
 def test_Infinity():
     assert str(oo) == "oo"
-    assert str(I * oo) == "(oo)*I"
+    assert str(I * oo) == "oo*I"
 
 def test_Integer():
     assert str(Integer(-1)) == "-1"
@@ -388,7 +388,7 @@ def test_sstrrepr():
     assert sstrrepr(e)  == "['a', 'b', 'c', x]"
 
 def test_infinity():
-    assert sstr(I*oo) == "(oo)*I"
+    assert sstr(I*oo) == "oo*I"
 
 def test_full_prec():
     assert sstr(S("0.3"), full_prec=True) == "0.300000000000000"
