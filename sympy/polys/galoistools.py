@@ -1990,7 +1990,7 @@ def gf_factor(f, p, K):
 
 def gf_value(f, a):
     """
-    Value of polynomial 'f' at 'a' irrespective of field.
+    Value of polynomial 'f' at 'a' in field R.
 
     **Example**
 
@@ -2035,24 +2035,13 @@ def linear_congruence(a, b, m):
 def csolve_prime(f, p):
     """
     Solutions of f(x) congruent 0 mod(p).
-
-    'p' is a prime number and this function will be used in more general function csolve.
-
-    **Examples**
-
-    >>> from sympy.polys.galoistools import csolve_prime
-
-    >>> csolve_prime([1, 3, 1, 5], 5)
-    [0, 1]
-
     """
     from sympy.polys.domains import ZZ
     return [i for i in range(p) if gf_eval(f, i, p, ZZ) == 0]
 
 def get_above(x,s,p,f):
     """
-    To generate solutions of f(x) congruent 0 mod(p**(s+1)) from the solutions of f(x) congruent 0 mod(p**s)
-    This function is used in gf_csolve.
+    Used in gf_csolve to generate solutions of f(x) cong 0 mod(p**(s+1)) from the solutions of f(x) cong 0 mod(p**s).
     """
     from sympy.polys.domains import ZZ
     f_f = gf_diff(f, p, ZZ)
@@ -2063,17 +2052,6 @@ def get_above(x,s,p,f):
 def csolve_primepower(f,p,e):
     """
     Solving f(x) congruent 0 mod(p**e).
-
-    We need to solve the f(x) congruent 0 mod(p) and then by generating the solutions for f(x) congruent 0 mod(p**2) and so on. Following is an example of how to it generates the solutions for x**2 + x + 223 congruent 0 mod(3**i) for i = 1, 2, 3, 4
-
-    >>> from sympy.polys.galoistools import csolve_primepower
-
-    >>> csolve_primepower([1,1,223], 3, 4)
-    [76, 49, 22, 67, 40, 13, 58, 31, 4]
-
-    **Reference**
-    1) 'An Introdunction to the Theory of Numbers' 5th Edition by Ivan Niven, Herbert S. Zuckerman and Hugh L. Montgomery. Chaper 2. Prime Power Moduli
-
     """
     X = []
     X1 = csolve_prime(f,p)
@@ -2095,9 +2073,8 @@ def gf_csolve(f,n):
     """
     To solve f(x) congruent 0 mod(n).
 
-    'f' is taken in the form of raw matrix and 'n' is any natural number.
-    n is devided into canonical factors and f(x) congrunent 0 mod(p**e) will be solved for each factors.
-    Applying chinese remainder theorem on the result optained from individual factors give the final result.
+    n is devided into canonical factors and f(x) cong 0 mod(p**e) will be solved for each factor.
+    Applying CRT on the result optained individually gives the final answers.
 
     **Example**
 
@@ -2105,6 +2082,9 @@ def gf_csolve(f,n):
 
     >>> gf_csolve([1, 1, 7], 189)
     [76, 49, 13, 175, 139, 112]
+
+    **Reference**
+    1) 'An Introdunction to the Theory of Numbers' 5th Edition by Ivan Niven, Herbert S. Zuckerman and Hugh L. Montgomery.
 
     """
     P = factorint(n)
