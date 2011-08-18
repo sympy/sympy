@@ -4,7 +4,8 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor)
+    factor, ratsimpmodprime)
+
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -42,6 +43,25 @@ def test_ratsimp():
     f = A*B/D - A*C/D + A*C*erf(x)/D - A*B*erf(x)/D + 2*A/D
 
     assert ratsimp(f) == A*B/8 - A*C/8 - A/(4*erf(x) - 4)
+
+def test_ratsimpmodprime():
+    a = y**5 + x + y
+    b = x - y
+    F = [x*y**5 - x - y]
+    assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
+        (x**2 + x*y + x + y) / (x**2 - x*y)
+
+    a = x + y**2 - 2
+    b = x + y**2 - y - 1
+    F = [x*y - 1]
+    assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
+        (x - y - 1)/(x - y)
+
+    a = 5*x**3 + 21*x**2 + 4*x*y + 23*x + 12*y + 15
+    b = 7*x**3 - y*x**2 + 31*x**2 + 2*x*y + 15*y + 37*x + 21
+    F = [x**2 + y**2 - 1]
+    assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
+        (3*x + 4*y + 5)/(5*x + 5*y + 7)
 
 def test_trigsimp1():
     x, y = symbols('x,y')

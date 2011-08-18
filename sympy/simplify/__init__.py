@@ -6,7 +6,7 @@ the expression (x+x)**2 will be converted into 4*x**2
 """
 from simplify import collect, rcollect, separate, radsimp, ratsimp, fraction, \
     simplify, trigsimp, powsimp, combsimp, hypersimp, hypersimilar, nsimplify, \
-    logcombine, separatevars, numer, denom, powdenest, posify
+    logcombine, separatevars, numer, denom, powdenest, posify, ratsimpmodprime
 
 from sqrtdenest import sqrtdenest
 
