@@ -164,3 +164,5 @@ def test_pow_as_base_exp():
     x = Symbol('x')
     assert (S.Infinity**(2 - x)).as_base_exp() == (S.Infinity, 2 - x)
     assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
+    p = S.Half**x
+    assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
