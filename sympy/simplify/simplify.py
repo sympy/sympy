@@ -1291,6 +1291,8 @@ def powsimp(expr, deep=False, combine='all', force=False):
                             e = c_powers.pop(binv)
                             c_powers[b] -= e
 
+            # filter c_powers and convert to a list
+            c_powers = [(b, e) for b, e in c_powers.iteritems() if e]
 
             # ==============================================================
             # check for Mul bases of Rational powers that can be combined with
@@ -1313,8 +1315,8 @@ def powsimp(expr, deep=False, combine='all', force=False):
                 '''
                 from sympy import Rational as r
                 MUL = lambda *args: object.__new__(Mul)._new_rawargs(*args)
-                if e: # coming from c_powers or from below
-                    if e is Integer:
+                if e is not None: # coming from c_powers or from below
+                    if e.is_Integer:
                         return (b, S.One), e
                     elif e.is_Rational:
                        return (b, Integer(e.q)), Integer(e.p)
@@ -1328,12 +1330,12 @@ def powsimp(expr, deep=False, combine='all', force=False):
                     return bkey(*b.as_base_exp())
 
             def update(b):
-                """Decide what to do with base, b. If its exponent is now an
+                '''Decide what to do with base, b. If its exponent is now an
                 integer multiple of the Rational denominator, then remove it
                 and put the factors of its base in the common_b dictionary or
                 update the existing bases if necessary. If it has been zeroed
                 out, simply remove the base.
-                """
+                '''
                 newe, r = divmod(common_b[b], b[1])
                 if not r:
                     common_b.pop(b)
@@ -1351,9 +1353,8 @@ def powsimp(expr, deep=False, combine='all', force=False):
             common_b = {}
             done = []
             bases = []
-            for b, e in c_powers.iteritems():
+            for b, e in c_powers:
                 b, e = bkey(b, e)
-                assert b not in common_b # everything should already be collected
                 common_b[b] = e
                 if b[1] != 1 and b[0].is_Mul:
                     bases.append(b)
