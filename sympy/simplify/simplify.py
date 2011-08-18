@@ -1208,11 +1208,11 @@ def powsimp(expr, deep=False, combine='all', force=False):
             >>> a**4 # auto expands to a Mul, no longer a Pow
             x**2*y
             >>> _*a # so Mul doesn't combine them
-            x**2*y*(x*y**(1/2))**(1/2)
+            x**2*y*sqrt(x*sqrt(y))
             >>> powsimp(_) # but powsimp will
-            (x*y**(1/2))**(5/2)
+            (x*sqrt(y))**(5/2)
             >>> powsimp(x*y*a) # but won't when doing so would violate assumptions
-            x*y*(x*y**(1/2))**(1/2)
+            x*y*sqrt(x*sqrt(y))
 
     """
     if combine not in ['all', 'exp', 'base']:
