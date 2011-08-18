@@ -1051,7 +1051,7 @@ class acos(Function):
         >>> acos(0)
         pi/2
         >>> acos(oo)
-        (oo)*I
+        oo*I
     """
 
     nargs = 1
