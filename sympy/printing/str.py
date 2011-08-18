@@ -349,12 +349,10 @@ class StrPrinter(Printer):
 
         e = self.parenthesize(expr.exp, PREC)
         if self.printmethod == '_sympyrepr' and expr.exp.is_Rational and expr.exp.q != 1:
-            try:
-                # the parenthesized exp should be '(Rational(a, b))' so strip parens
-                assert e.startswith('(Rational')
+            # the parenthesized exp should be '(Rational(a, b))' so strip parens,
+            # but just check to be sure.
+            if e.startswith('(Rational'):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC), e[1:-1])
-            except AssertionError:
-                pass
         return '%s**%s' % (self.parenthesize(expr.base, PREC), e)
 
     def _print_Integer(self, expr):
