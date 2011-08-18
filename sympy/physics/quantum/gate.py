@@ -28,7 +28,7 @@ from sympy.physics.quantum.operator import UnitaryOperator, Operator, HermitianO
 from sympy.physics.quantum.matrixutils import (
     matrix_tensor_product, matrix_eye
 )
-from sympy.physics.quantum.matrixcache import matrix_cache
+from sympy.physics.quantum.matrixcache import matrix_cache, sqrt2_inv
 
 __all__ = [
     'Gate',
@@ -60,8 +60,6 @@ __all__ = [
     'gate_simp',
     'random_circuit',
 ]
-
-sqrt2_inv = Pow(2, Rational(-1,2), evaluate=False)
 
 #-----------------------------------------------------------------------------
 # Gate Super-Classes

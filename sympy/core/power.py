@@ -249,9 +249,16 @@ class Pow(Expr):
         return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
-        if self.base.is_Rational and self.base.p==1 and self.base is not S.Infinity:
-            return 1/self.base, -self.exp
-        return self.base, self.exp
+        """Return base and exp of self unless base is 1/Integer, then return Integer, -exp.
+
+        If this extra processing is not needed, the base and exp properties will
+        give the raw arguments, e.g. (1/2, 2) for (1/2)**2 rather than (2, -2).
+        """
+
+        b, e = self.args
+        if b.is_Rational and b.p == 1 and b is not S.Infinity:
+            return Integer(b.q), -e
+        return b, e
 
     def _eval_conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c

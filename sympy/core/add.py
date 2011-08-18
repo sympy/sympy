@@ -83,8 +83,16 @@ class Add(AssocOp):
                     seq.extend([c*a for a in s.args])
                     continue
 
-            # everything else
+            # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
+            elif o.is_Pow:
+                b, e = o.as_base_exp()
+                if b.is_Number and (e.is_Integer or (e.is_Rational and e.is_negative)):
+                    seq.append(Pow(b, e))
+                    continue
+                c, s = S.One, o
+
             else:
+                # everything else
                 c = S.One
                 s = o
 
@@ -568,3 +576,4 @@ class Add(AssocOp):
 
 from function import FunctionClass
 from mul import Mul
+from power import Pow
