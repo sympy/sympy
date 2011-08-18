@@ -638,7 +638,7 @@ def test_issue_2425():
 
     assert upretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 u"""\
-        ⎛         ⎽⎽⎽    ⎞           2\n\
+        ⎛         ___    ⎞           2\n\
 (x - 5)⋅⎝-x - 2⋅╲╱ 2  + 5⎠ - (-y + 5) \
 """
 
@@ -1055,7 +1055,7 @@ x\
 """
     ucode_str = \
 u"""\
-⎽\n\
+_\n\
 x\
 """
     assert  pretty(expr) == ascii_str
@@ -1075,12 +1075,12 @@ f(x + 1)\
 """
     ucode_str_1 = \
 u"""\
-⎽⎽⎽⎽⎽⎽⎽⎽\n\
+________\n\
 f(1 + x)\
 """
     ucode_str_2 = \
 u"""\
-⎽⎽⎽⎽⎽⎽⎽⎽\n\
+________\n\
 f(x + 1)\
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
@@ -1160,7 +1160,7 @@ a - I*b\
 """
     ucode_str = \
 u"""\
-⎽     ⎽\n\
+_     _\n\
 a - ⅈ⋅b\
 """
     assert  pretty(expr) == ascii_str
@@ -1175,7 +1175,7 @@ e       \
 """
     ucode_str = \
 u"""\
- ⎽     ⎽\n\
+ _     _\n\
  a - ⅈ⋅b\n\
 ℯ       \
 """
@@ -1197,14 +1197,14 @@ f\\f(x) + 1/\
 """
     ucode_str_1 = \
 u"""\
-⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽\n\
- ⎛    ⎽⎽⎽⎽⎞\n\
+___________\n\
+ ⎛    ____⎞\n\
 f⎝1 + f(x)⎠\
 """
     ucode_str_2 = \
 u"""\
-⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽\n\
- ⎛⎽⎽⎽⎽    ⎞\n\
+___________\n\
+ ⎛____    ⎞\n\
 f⎝f(x) + 1⎠\
 """
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
@@ -1280,7 +1280,7 @@ def test_pretty_sqrt():
 """
     ucode_str = \
 u"""\
-  ⎽⎽⎽\n\
+  ___\n\
 ╲╱ 2 \
 """
     assert  pretty(expr) == ascii_str
@@ -1294,7 +1294,7 @@ u"""\
 """
     ucode_str = \
 u"""\
-3 ⎽⎽⎽\n\
+3 ___\n\
 ╲╱ 2 \
 """
     assert  pretty(expr) == ascii_str
@@ -1308,7 +1308,7 @@ u"""\
 """
     ucode_str = \
 u"""\
-1000⎽⎽⎽\n\
+1000___\n\
   ╲╱ 2 \
 """
     assert  pretty(expr) == ascii_str
@@ -1323,7 +1323,7 @@ u"""\
 """
     ucode_str = \
 u"""\
-   ⎽⎽⎽⎽⎽⎽⎽⎽\n\
+   ________\n\
   ╱  2     \n\
 ╲╱  x  + 1 \
 """
@@ -1339,8 +1339,8 @@ u"""\
 """
     ucode_str = \
 u"""\
-   ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽\n\
-3 ╱       ⎽⎽⎽ \n\
+   ___________\n\
+3 ╱       ___ \n\
 ╲╱  1 + ╲╱ 5  \
 """
     assert  pretty(expr) == ascii_str
@@ -1354,7 +1354,7 @@ x ___\n\
 """
     ucode_str = \
 u"""\
-x ⎽⎽⎽\n\
+x ___\n\
 ╲╱ 2 \
 """
     assert  pretty(expr) == ascii_str
@@ -1368,7 +1368,7 @@ x ⎽⎽⎽\n\
 """
     ucode_str = \
 u"""\
-  ⎽⎽⎽⎽⎽⎽⎽\n\
+  _______\n\
 ╲╱ 2 + π \
 """
     assert  pretty(expr) == ascii_str
@@ -1387,11 +1387,11 @@ u"""\
 """
     ucode_str = \
 u"""\
-     ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽              \n\
-    ╱      2        1000⎽⎽⎽    \n\
+     ____________              \n\
+    ╱      2        1000___    \n\
    ╱      x  + 1      ╲╱ x  + 1\n\
 4 ╱   2 + ──────  + ───────────\n\
-╲╱        x + 2        ⎽⎽⎽⎽⎽⎽⎽⎽\n\
+╲╱        x + 2        ________\n\
                       ╱  2     \n\
                     ╲╱  x  + 3 \
 """

@@ -207,7 +207,11 @@ _xobj_unicode = {
     # horizontal objects
     #'-' :  '-',
     '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
-    '_' :   U('HORIZONTAL SCAN LINE-9'),        # XXX symbol ok?
+    '_' :   U('LOW LINE'),
+    # We used to use this, but LOW LINE looks better for roots, as it's a
+    # little lower (i.e., it lines up with the / perfectly.  But perhaps this
+    # one would still be wanted for some cases?
+    # '_' :   U('HORIZONTAL SCAN LINE-9'),
 
     # diagonal objects '\' & '/' ?
     '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
