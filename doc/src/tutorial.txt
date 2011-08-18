@@ -125,7 +125,8 @@ Using SymPy as a calculator
 
 Sympy has three built-in numeric types: Float, Rational and Integer.
 
-The Rational class represents a rational number as a pair of two Integers: the numerator and the denominator, so Rational(1,2) represents 1/2, Rational(5,2) 5/2 and so on.
+The Rational class represents a rational number as a pair of two Integers: the numerator and the denominator.
+So Rational(1,2) represents 1/2, Rational(5,2) represents 5/2, and so on.
 
 ::
 
@@ -142,23 +143,33 @@ The Rational class represents a rational number as a pair of two Integers: the n
     1/88817841970012523233890533447265625
 
 
-proceed with caution while working with python int's since they truncate
-integer division, and that's why::
+Proceed with caution while working with python int's and floating
+point numbers, especially in division, since you may create a
+Python number, not a SymPy number. A ratio of two Python ints will
+create either a float -- the "true division" standard of Python3k
+and the default behavior of ``isympy`` which imports division
+from __future__::
 
-   >>> 1/2
-   0
+    >>> 1/2 #doctest: +SKIP
+    0.5
 
-   >>> 1.0/2
-   0.5
+But in earlier Python versions where division has not been imported, a
+truncated int will result::
 
-You can however do::
+    >>> 1/2 #doctest: +SKIP
+    0
 
-  >>> 
+In both cases, however, you are not dealing with a SymPy Number because
+Python created its own number. Most of the time you will probably be
+working with Rational numbers, so make sure to use Rational to get
+the SymPy result. One might find it convenient to equate ``R`` and
+Rational:: 
 
-  >>> 1/2 #doctest: +SKIP
-  0.5
-
-True division is going to be standard in python3k and ``isympy`` does that too.
+    >>> R = Rational
+    >>> R(1, 2)
+    1/2
+    >>> R(1)/2 # R(1) is a sympy Integer and Integer/int gives a Rational
+    1/2
 
 We also have some special constants, like e and pi, that are treated as symbols
 (1+pi won't evaluate to something numeric, rather it will remain as 1+pi), and
@@ -175,7 +186,7 @@ have arbitrary precission::
 
 as you see, evalf evaluates the expression to a floating-point number
 
-There is also a class representing mathematical infinity, called ``oo``::
+The symbol ``oo`` is used for a class defining mathematical infinity::
 
     >>> oo > 99999
     True
@@ -192,7 +203,9 @@ symbolic variables explicitly::
     >>> x = Symbol('x')
     >>> y = Symbol('y')
 
-Then you can play with them::
+On the left is the normal Python variable which has been assigned to the
+SymPy Symbol class. Instances of the Symbol class "play well together"
+and are the building blocks of expresions::
 
     >>> x+y+x-y
     2*x
@@ -203,7 +216,7 @@ Then you can play with them::
     >>> ((x+y)**2).expand()
     x**2 + 2*x*y + y**2
 
-And substitute them for other symbols or numbers using ``subs(old, new)``::
+They can be substituted with other numbers, symbols or expressions using ``subs(old, new)``::
 
     >>> ((x+y)**2).subs(x, 1)
     (y + 1)**2
@@ -211,13 +224,17 @@ And substitute them for other symbols or numbers using ``subs(old, new)``::
     >>> ((x+y)**2).subs(x, y)
     4*y**2
 
+    >>> ((x+y)**2).subs(x, 1 - y)
+    1
+
 For the remainder of the tutorial, we assume that we have run::
 
     >>> import sys
     >>> oldhook = sys.displayhook
     >>> sys.displayhook = pprint
 
-So that things pretty print.  See the :ref:`printing-tutorial` section below.  If you have a unicode font installed, your output may look a litte different (it will look slightly nicer).
+This gives output that looks better (c.f. :ref:`printing-tutorial` section below).
+If you have a unicode font installed your output may look a little nicer.
 
 Algebra
 =======
