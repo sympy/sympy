@@ -4,7 +4,7 @@ from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
 
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.iterables import cartes
+from sympy.core.compatibility import product as cartes
 
 def test_basic1():
     assert limit(x, x, oo) == oo
