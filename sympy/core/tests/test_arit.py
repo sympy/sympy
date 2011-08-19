@@ -1201,6 +1201,13 @@ def test_Add_primitive():
     assert (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
     assert S.Zero.gcd(1.0) == 1 # the loop in primitive assumes this to be true
 
+    # the coefficient may sort to a position other than 0
+    p = 3 + x + y
+    assert (2*p).expand().primitive() == (2, p)
+    assert (2.0*p).expand().primitive() == (1, 2.*p)
+    p *= -1
+    assert (2*p).expand().primitive() == (2, p)
+
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)
     assert 2 + u == 4 + 2*x
