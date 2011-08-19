@@ -118,13 +118,13 @@ def test_complex():
     a,b,c = map(Symbol, 'abc')
     x,y = map(Wild, 'xy')
 
-    (1+I).match(x+I) == {x : 1}
-    (a+I).match(x+I) == {x : a}
-    (a+b*I).match(x+y*I) == {x : a, y : b}
-    (2*I).match(x*I) == {x : 2}
-    (a*I).match(x*I) == {x : a}
-    (a*I).match(x*y) == {x : a, y : I}
-    (2*I).match(x*y) == {x : 2, y : I}
+    assert (1+I).match(x+I) == {x : 1}
+    assert (a+I).match(x+I) == {x : a}
+    assert (a+b*I).match(x+y*I) == {x : a, y : b}
+    assert (2*I).match(x*I) == {x : 2}
+    assert (a*I).match(x*I) == {x : a}
+    assert (a*I).match(x*y) == {x : I, y : a}
+    assert (2*I).match(x*y) == {x : 2, y : I}
 
 def test_functions():
     from sympy.core.function import WildFunction

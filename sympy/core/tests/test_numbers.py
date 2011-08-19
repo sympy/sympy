@@ -35,7 +35,7 @@ def test_seterr():
     seterr(divide = True)
     raises(ValueError,"S.Zero/S.Zero")
     seterr(divide = False)
-    S.Zero / S.Zero == S.NaN
+    assert S.Zero / S.Zero == S.NaN
 
 def test_mod():
     x = Rational(1, 2)

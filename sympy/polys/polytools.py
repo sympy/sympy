@@ -4674,6 +4674,12 @@ def primitive(f, *gens, **args):
     >>> primitive(6*x**2 + 8*x + 12)
     (2, 3*x**2 + 4*x + 6)
 
+    >>> eq = (2 + 2*x)*x + 2
+    >>> primitive(eq)
+    (2, x**2 + x + 1)
+    >>> primitive(eq, expand=0)
+    (1, x*(2*x + 2) + 2)
+
     """
     options.allowed_flags(args, ['polys'])
 

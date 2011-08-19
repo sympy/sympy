@@ -607,8 +607,8 @@ def test_dup_cancel():
     F = [ ZZ(1), ZZ(2)]
     G = [-ZZ(3), ZZ(4)]
 
-    dup_cancel(f, g, ZZ) == (f, g)
-    dup_cancel(F, G, ZZ) == (f, g)
+    assert dup_cancel(f, g, ZZ) == (f, g)
+    assert dup_cancel(F, G, ZZ) == (f, g)
 
 def test_dmp_cancel():
     f = ZZ.map([[2], [0], [-2]])

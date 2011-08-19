@@ -241,9 +241,9 @@ def test_power_expand():
     assert (A**(a+b)).expand() != A**(a+b)
 
 def test_real_mul():
-    Float(0) * pi * x == Float(0)
-    Float(1) * pi * x == pi * x
-    len((Float(2) * pi * x).args) == 3
+    assert Float(0) * pi * x == Float(0)
+    assert Float(1) * pi * x == pi * x
+    assert len((Float(2) * pi * x).args) == 3
 
 def test_ncmul():
     A = Symbol("A", commutative=False)
@@ -1183,25 +1183,23 @@ def test_issue2027():
     assert (-2)**i*(-3)**i == 6**i
 
 def test_Add_primitive():
-    (x + 2).primitive() == (1, x + 2)
+    assert (x + 2).primitive() == (1, x + 2)
 
-    (3*x + 2).primitive() == (1, x + 2)
-    (2*x + 2).primitive() == (2, x + 1)
-    (3*x + 3).primitive() == (3, x + 1)
-    (4*x + 8).primitive() == (4, x + 2)
+    assert (3*x + 2).primitive() == (1, 3*x + 2)
+    assert (3*x + 3).primitive() == (3, x + 1)
+    assert (3*x + 6).primitive() == (3, x + 2)
 
-    (3*x + 2*y).primitive() == (1, x + 2*y)
-    (2*x + 2*y).primitive() == (2, x + y)
-    (3*x + 3*y).primitive() == (3, x + y)
-    (4*x + 8*y).primitive() == (4, x + 2*y)
+    assert (3*x + 2*y).primitive() == (1, 3*x + 2*y)
+    assert (3*x + 3*y).primitive() == (3, x + y)
+    assert (3*x + 6*y).primitive() == (3, x + 2*y)
 
-    (3/x + 2*x*y*z**2).primitive() == (1, 1/x + 2*x*y*z**2)
-    (2/x + 2*x*y*z**2).primitive() == (2, 1/x + x*y*z**2)
-    (3/x + 3*x*y*z**2).primitive() == (3, 1/x + x*y*z**2)
-    (4/x + 8*x*y*z**2).primitive() == (4, 1/x + 2*x*y*z**2)
+    assert (3/x + 2*x*y*z**2).primitive() == (1, 3/x + 2*x*y*z**2)
+    assert (3/x + 3*x*y*z**2).primitive() == (3, 1/x + x*y*z**2)
+    assert (3/x + 6*x*y*z**2).primitive() == (3, 1/x + 2*x*y*z**2)
 
-    (2*x/3 + 4*y/9).primitive() == (2/9, 3*x + 2*y)
-    (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
+    assert (2*x/3 + 4*y/9).primitive() == (Rational(2, 9), 3*x + 2*y)
+    assert (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
+    assert S.Zero.gcd(1.0) == 1 # the loop in primitive assumes this to be true
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)

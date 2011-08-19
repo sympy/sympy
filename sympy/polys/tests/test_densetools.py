@@ -278,7 +278,8 @@ def test_dup_content():
     assert dup_content([1,2,1], ZZ) == ZZ(1)
     assert dup_content([2,4,2], ZZ) == ZZ(2)
 
-    assert dup_content([QQ(2,3),QQ(4,5)], QQ) == QQ(1)
+    assert dup_content([QQ(2,3),QQ(4,9)], QQ) == QQ(2,9)
+    assert dup_content([QQ(2,3),QQ(4,5)], QQ) == QQ(2,15)
 
 def test_dmp_ground_content():
     assert dmp_ground_content([[]], 1, ZZ) == ZZ(0)
@@ -290,7 +291,8 @@ def test_dmp_ground_content():
     assert dmp_ground_content([[1],[2],[1]], 1, ZZ) == ZZ(1)
     assert dmp_ground_content([[2],[4],[2]], 1, ZZ) == ZZ(2)
 
-    assert dmp_ground_content([[QQ(2,3)],[QQ(4,5)]], 1, QQ) == QQ(1)
+    assert dmp_ground_content([[QQ(2,3)],[QQ(4,9)]], 1, QQ) == QQ(2,9)
+    assert dmp_ground_content([[QQ(2,3)],[QQ(4,5)]], 1, QQ) == QQ(2,15)
 
     assert dmp_ground_content(f_0, 2, ZZ) == ZZ(1)
     assert dmp_ground_content(dmp_mul_ground(f_0, ZZ(2), 2, ZZ), 2, ZZ) == ZZ(2)
@@ -324,11 +326,12 @@ def test_dup_primitive():
     assert dup_primitive([], QQ) == (QQ(0), [])
     assert dup_primitive([QQ(1)], QQ) == (QQ(1), [QQ(1)])
     assert dup_primitive([QQ(1),QQ(1)], QQ) == (QQ(1), [QQ(1),QQ(1)])
-    assert dup_primitive([QQ(2),QQ(2)], QQ) == (QQ(1), [QQ(2),QQ(2)])
+    assert dup_primitive([QQ(2),QQ(2)], QQ) == (QQ(2), [QQ(1),QQ(1)])
     assert dup_primitive([QQ(1),QQ(2),QQ(1)], QQ) == (QQ(1), [QQ(1),QQ(2),QQ(1)])
-    assert dup_primitive([QQ(2),QQ(4),QQ(2)], QQ) == (QQ(1), [QQ(2),QQ(4),QQ(2)])
+    assert dup_primitive([QQ(2),QQ(4),QQ(2)], QQ) == (QQ(2), [QQ(1),QQ(2),QQ(1)])
 
-    assert dup_primitive([QQ(2,3),QQ(4,5)], QQ) == (QQ(1), [QQ(2,3),QQ(4,5)])
+    assert dup_primitive([QQ(2,3),QQ(4,9)], QQ) == (QQ(2,9), [QQ(3),QQ(2)])
+    assert dup_primitive([QQ(2,3),QQ(4,5)], QQ) == (QQ(2,15), [QQ(5),QQ(6)])
 
 def test_dmp_ground_primitive():
     assert dmp_ground_primitive([[]], 1, ZZ) == (ZZ(0), [[]])
@@ -355,7 +358,10 @@ def test_dmp_ground_primitive():
     assert dmp_ground_primitive(dmp_mul_ground(f_6, ZZ(8), 3, ZZ), 3, ZZ) == (ZZ(8), f_6)
 
     assert dmp_ground_primitive([[ZZ(2)]], 1, ZZ) == (ZZ(2), [[ZZ(1)]])
-    assert dmp_ground_primitive([[QQ(2)]], 1, QQ) == (QQ(1), [[QQ(2)]])
+    assert dmp_ground_primitive([[QQ(2)]], 1, QQ) == (QQ(2), [[QQ(1)]])
+
+    assert dmp_ground_primitive([[QQ(2,3)], [QQ(4,9)]], 1, QQ) == (QQ(2,9), [[QQ(3)], [QQ(2)]])
+    assert dmp_ground_primitive([[QQ(2,3)], [QQ(4,5)]], 1, QQ) == (QQ(2,15), [[QQ(5)], [QQ(6)]])
 
 def test_dup_extract():
     f = dup_normal([2930944, 0, 2198208, 0, 549552, 0, 45796], ZZ)
