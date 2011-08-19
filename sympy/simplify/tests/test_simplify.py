@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor)
+    factor, Mul)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -474,11 +474,6 @@ def test_separatevars():
     assert separatevars(sqrt(x*y)).is_Pow
     assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
 
-@XFAIL
-def test_separation_by_factor():
-    x,y = symbols('x,y')
-    assert factor(sqrt(x*y), expand=False).is_Pow
-
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')
     assert separatevars(1 + log(x)*log(y) + log(x) + log(y)) == (log(x) + 1)*(log(y) + 1)
@@ -684,3 +679,30 @@ def test_issue_2516():
     aA, Re, a, b, D = symbols('aA Re a b D')
     e=((D**3*a + b*aA**3)/Re).expand()
     assert collect(e, [aA**3/Re, a]) == e
+
+def test_issue_2629():
+    b = x*sqrt(y)
+    a = sqrt(b)
+    c = sqrt(sqrt(x)*y)
+    assert powsimp(a*b) == sqrt(b)**3
+    assert powsimp(a*b**2*sqrt(y)) == sqrt(y)*a**5
+    assert powsimp(a*x**2*c**3*y) == c**3*a**5
+    assert powsimp(a*x*c**3*y**2) == c**7*a
+    assert powsimp(x*c**3*y**2) == c**7
+    assert powsimp(x*c**3*y) == x*y*c**3
+    assert powsimp(sqrt(x)*c**3*y) == c**5
+    assert powsimp(sqrt(x)*a**3*sqrt(y)) == sqrt(x)*sqrt(y)*a**3
+    assert powsimp(Mul(sqrt(x)*c**3*sqrt(y), y, evaluate=False)) == sqrt(x)*sqrt(y)**3*c**3
+    assert powsimp(a**2*a*x**2*y) == a**7
+
+    # symbolic powers work, too
+    b = x**y*y
+    a = b*sqrt(b)
+    assert a.is_Mul is True
+    assert powsimp(a) == sqrt(b)**3
+
+    # as does exp
+    a = x*exp(2*y/3)
+    assert powsimp(a*sqrt(a)) == sqrt(a)**3
+    assert powsimp(a**2*sqrt(a)) == sqrt(a)**5
+    assert powsimp(a**2*sqrt(sqrt(a))) == sqrt(sqrt(a))**9

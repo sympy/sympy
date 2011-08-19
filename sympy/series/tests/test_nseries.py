@@ -232,11 +232,12 @@ def test_issue125():
     assert f.nseries(y,0,2) == 1 - sqrt(y)/2-y/8-sqrt(y)**3/16+O(y**2)
 
 def test_issue364():
-    w = Symbol("w")
-    x = Symbol("x")
-    e = 1/x*(-log(w**(1 + 1/log(3)*log(5))) + log(w + w**(1/log(3)*log(5))))
-    e_ser = -log(5)*log(w)/(x*log(3)) + w**(log(5)/log(3) - 1)/x - \
-            w**(2*log(5)/log(3) - 2)/(2*x) + O(w**(-3+3*log(5)/log(3)))
+    from sympy import summation, symbols
+    w,x,i = symbols('w,x,i')
+    r = log(5)/log(3)
+    p = w**(-1 + r)
+    e = 1/x*(-log(w**(1 + r)) + log(w + w**r))
+    e_ser = -r*log(w)/x + p/x - p**2/(2*x) + O(p**3)
     assert e.nseries(w, n=3) == e_ser
 
 def test_sin():
