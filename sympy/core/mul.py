@@ -269,7 +269,7 @@ class Mul(AssocOp):
                 d[di] = Add(*li)
         for b, e in common_b.items():
             for t, c in e.items():
-                new_c_powers.append((b,c*Mul(*t)))
+                new_c_powers.append((b, c*Mul(*t)))
         c_powers = new_c_powers
 
         # and in num_exp
