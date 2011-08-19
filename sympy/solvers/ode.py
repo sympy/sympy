@@ -2185,8 +2185,8 @@ def ode_Liouville(eq, func, order, match):
         >>> f = Function('f')
         >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
         ... diff(f(x), x)/x, f(x), hint='Liouville'))
-                   ___   ________________           ___   ________________
-        [f(x) = -\/ 2 *\/ C1 + C2*log(x) , f(x) = \/ 2 *\/ C1 + C2*log(x) ]
+                   ________________           ________________
+        [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
 
 
     **References**
