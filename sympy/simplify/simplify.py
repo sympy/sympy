@@ -4,7 +4,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops)
+    Function, Equality, Dummy, Atom, count_ops, Expr)
 
 from sympy.core.compatibility import iterable
 from sympy.core.numbers import igcd

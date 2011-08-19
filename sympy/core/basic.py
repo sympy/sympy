@@ -7,6 +7,7 @@ from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
 from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
+from sympy.core.singleton import S
 
 class Basic(object):
     """
@@ -312,7 +313,6 @@ class Basic(object):
         [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]
 
         """
-        from sympy.core.singleton import S
 
         # XXX: remove this when issue #2070 is fixed
         def inner_key(arg):
@@ -669,6 +669,12 @@ class Basic(object):
                 return poly
         except PolynomialError:
             return None
+
+    def as_content_primitive(self):
+        return S.One, self
+
+    def _as_content_primitive(self):
+        return S.One, self
 
     def subs(self, *args):
         """

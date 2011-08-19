@@ -1098,6 +1098,60 @@ class Expr(Basic, EvalfMixin):
                 return self, tuple()
         return S.Zero, (self,)
 
+    def as_content_primitive(self):
+        """
+        Return expr separated into ``R`` and ``expr/R`` where R is
+        the Rational that can be extracted from all terms to which
+        as_content_primitive has been applied. In addition, each of the
+        sub-argument of an Add expr will also be returned in
+        as_content_primitive form (i.e. with a Rational in front of a Mul if
+        possible. The as_content_primitive form is not necessarily canonical
+        since the structure of the underlying expr is retained and
+        expansion is not done on the original expression.
+
+
+        Examples::
+            >>> from sympy.abc import x, y
+
+            >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
+
+            The as_content_primitive function is recursive and retains structure:
+                >>> eq.as_content_primitive()
+                (2, x + 3*y*(y + 1) + 1)
+
+            Integer powers will have Rationals extracted from the base:
+                >>> ((2 + 6*x)**2).as_content_primitive()
+                (4, (3*x + 1)**2)
+                >>> ((2 + 6*x)**(2*y)).as_content_primitive()
+                (1, (2*(3*x + 1))**(2*y))
+
+            Terms may end up joining once their as_content_primitives are added:
+                >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
+                (11, x*(y + 1))
+                >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
+                (121, x**2*(y + 1)**2)
+
+        """
+        from sympy.polys.polytools import _keep_coeff as MUL
+        expr = sympify(self)
+        if not expr.args:
+            return expr._as_content_primitive()
+        args = list(Add.make_args(expr))
+        if len(args) == 1:
+            p = expr.func(*[MUL(*a._as_content_primitive()) for a in expr.args])
+            c = S.One
+        else:
+            c = S.Zero
+            for i, a in enumerate(args):
+                ci, p = a._as_content_primitive()
+                args[i] = (ci, p)
+                c = c.gcd(ci)
+            p = expr.func(*[MUL(ci/c, p) for ci, p in args])
+        if p.is_Mul:
+            ci, p = p.as_coeff_Mul()
+            c *= ci
+        return c, p
+
     def as_numer_denom(self):
         """ a/b -> a,b
 
@@ -2044,7 +2098,6 @@ class Expr(Basic, EvalfMixin):
         """See the invert function in sympy.polys"""
         from sympy.polys import invert
         return invert(self, g)
-
 
 class AtomicExpr(Atom, Expr):
     """

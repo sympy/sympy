@@ -1276,9 +1276,33 @@ class Mul(AssocOp):
             s *= x._sage_()
         return s
 
+    def _as_content_primitive(self):
+        """Return ``(R, self/R)`` where ``R`` is the product of the Rational
+        GCD that can be extracted from self's arguments while retaining
+        self's structure.
+
+        Example:
+
+        >>> from sympy.abc import x
+        >>> ((3+3*x)*(2+2*x)*(1+x)**2).as_content_primitive()
+        (6, (x + 1)**4)
+        """
+
+        coef = S.One
+        args = []
+        for i, a in enumerate(self.args):
+            c, p = a._as_content_primitive()
+            coef *= c
+            if p is not S.One:
+                args.append(p)
+        # don't use self._from_args here to reconstruct args
+        # since there may be identical args now that should be combined
+        # e.g. (2+2*x)*(3+3*x) should be (6, (1 + x)**2) not (6, (1+x)*(1+x))
+        return coef, Mul(*args)
+
 def prod(a):
-    """Return product of elements of a. Start with int 1 so if only ints are included,
-    an int result is returned.
+    """Return product of elements of a. Start with int 1 so if only
+       ints are included then an int result is returned.
 
     Example:
     >>> from sympy import prod, S

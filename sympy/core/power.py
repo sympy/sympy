@@ -864,6 +864,26 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
+    def _as_content_primitive(self):
+        """Return ``(R**i, (b/R)**i)`` where ``R`` is the Rational GCD
+        that can be extracted from the base ``b`` of self if the exponent of
+        self, ``i`` is an Integer, else return ``(1, self)``.
+
+        Example:
+
+        >>> from sympy.abc import x, y
+        >>> ((2*x + 2)**2).as_content_primitive()
+        (4, (x + 1)**2)
+        >>> ((2 + 2*x)**y).as_content_primitive()
+        (1, (2*(x + 1))**y)
+        """
+
+        if self.exp.is_Integer:
+            c, p = self.base._as_content_primitive()
+            c = c**self.exp
+            return c, Pow(p, self.exp)
+        return S.One, self
+
 from add import Add
 from numbers import Integer
 from mul import Mul

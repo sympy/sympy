@@ -557,7 +557,6 @@ class Add(AssocOp):
             s += x._sage_()
         return s
 
-
     def primitive(self):
         """
         Return ``(R, self/R)`` where ``R``` is the Rational GCD of ``self```.
@@ -582,7 +581,13 @@ class Add(AssocOp):
         >>> ((2 + 2*x)*x + 2).primitive()
         (1, x*(2*x + 2) + 2)
 
-        See also: primtive()
+        Recursive subprocessing can be done with the as_content_primitive()
+        method:
+
+        >>> ((2 + 2*x)*x + 2).as_content_primitive()
+        (2, x*(x + 1) + 1)
+
+        See also: primitive() function in polytools.py
 
         """
         cont = S.Zero
@@ -616,6 +621,15 @@ class Add(AssocOp):
         if c:
             terms = [c] + terms
         return cont, self._new_rawargs(*terms)
+
+    def _as_content_primitive(self):
+        from sympy import gcd
+        c_args = [a._as_content_primitive() for a in self.args]
+        g = reduce(gcd, [c[0] for c in c_args])
+        if g is S.One:
+            return g, Add(*[c[0]*c[1] for c in c_args])
+        else:
+            return g, Add(*[c[0]/g*c[1] for c in c_args])
 
 from function import FunctionClass
 from mul import Mul
