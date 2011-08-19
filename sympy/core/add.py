@@ -583,8 +583,17 @@ class Add(AssocOp):
         # we don't need a complete re-flattening since no new terms will join
         # so we just use the same sort as is used in Add.flatten. When the
         # coefficient changes, the ordering of terms may change, e.g.
-        # (3*x, 6*y) -> (2*y, x)
+        #     (3*x, 6*y) -> (2*y, x)
+        #
+        # We do need to make sure that term[0] stays in position 0, however.
+        #
+        if terms[0].is_Rational:
+            c = terms.pop(0)
+        else:
+            c = None
         terms.sort(key=hash)
+        if c:
+            terms = [c] + terms
         return cont, self._new_rawargs(*terms)
 
 from function import FunctionClass

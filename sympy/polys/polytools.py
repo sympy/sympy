@@ -4668,7 +4668,7 @@ def primitive(f, *gens, **args):
 
     **Examples**
 
-    >>> from sympy import primitive
+    >>> from sympy.polys.polytools import primitive
     >>> from sympy.abc import x
 
     >>> primitive(6*x**2 + 8*x + 12)
@@ -4677,7 +4677,7 @@ def primitive(f, *gens, **args):
     >>> eq = (2 + 2*x)*x + 2
     >>> primitive(eq)
     (2, x**2 + x + 1)
-    >>> primitive(eq, expand=0)
+    >>> primitive(eq, expand=False)
     (1, x*(2*x + 2) + 2)
 
     """
