@@ -504,61 +504,57 @@ def solve(f, *symbols, **flags):
             filtered = []
             if type(solution[0]) is tuple:
                 for sol in solution:
-                    full_check = True
+                    checked_all_symbols = True
                     for symb, val in zip(symbols, sol):
                         test = check_assumptions(val, **symb.assumptions0)
                         if test is None:
-                            full_check = False
-                        if test is False: # not None nor True
+                            checked_all_symbols = False
+                        if test is False:
                             break
                     if test is not False:
                         filtered.append(sol)
-                    if not full_check:
+                    if not checked_all_symbols:
                         unchecked.append(sol)
-            elif not isinstance(solution[0], dict):
-                if len(symbols) != 1: # find which one was solved for
-                    symbols = list(f.free_symbols - set.union(*(s.free_symbols for s in solution)))
-                if len(symbols) == 1:
-                    for sol in solution:
-                        test = check_assumptions(sol, **symbols[0].assumptions0)
-                        if test is None:
-                            unchecked.append(sol)
-                        if test is not False: # None or True
-                            filtered.append(sol)
-                else:
-                    if warn:
-                        print("\n\tWarning: assumptions can't be checked"
-                              "\n\t(can't find for which variable equation was solved).")
-            else:
+            elif isinstance(solution[0], dict):
                 for s in solution:
                     v = s.values()[0]
                     assumptions = s.keys()[0].assumptions0
-                    if check_assumptions(v, **assumptions):
+                    test = check_assumptions(v, **assumptions)
+                    if test is not False:
                         filtered.append(s)
-                    else:
+                    if test is None:
                         unchecked.append(s)
+            else:
+                for sol in solution:
+                    test = check_assumptions(sol, **symbols[0].assumptions0)
+                    if test is not False:
+                        filtered.append(sol)
+                    if test is None:
+                        unchecked.append(sol)
+
             solution = filtered
             if warn and unchecked:
                 print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
                       + '\n\t' + ', '.join(str(s) for s in unchecked))
 
     elif type(solution) is dict:
-        full_check = True
+        checked_all_symbols = True
         for symb, val in solution.iteritems():
             test = check_assumptions(val, **symb.assumptions0)
             if test is None:
-                full_check = False
+                checked_all_symbols = False
             if test is False: # not None nor True
                 solution = None
                 break
-
-        if warn and not full_check:
+        if warn and not checked_all_symbols:
             print("\n\tWarning: assumptions concerning solution can't be checked.")
+
     elif isinstance(solution, (Relational, And, Or)):
         assert len(symbols) == 1
         if warn and symbols[0].assumptions0:
             print("\n\tWarning: assumptions about variable '%s' are not handled currently." %symbols[0])
         # TODO: check also variable assumptions for inequalities
+
     elif solution is not None:
         raise TypeError('Unrecognized solution') # improve the checker to handle this
 
@@ -1059,6 +1055,7 @@ def _generate_patterns():
 def tsolve(eq, sym):
     import warnings
     warnings.warn("tsolve is deprecated, use solve.", DeprecationWarning)
+    return _tsolve(eq, sym)
 
 def _tsolve(eq, sym, **flags):
     """
