@@ -28,10 +28,7 @@ class Transpose(MatrixExpr):
             return mat.arg
 
         if hasattr(mat, 'transpose'):
-            try:
-                return mat.transpose()
-            except:
-                pass
+            return mat.transpose()
 
         if mat.is_Mul:
             return MatMul(*[Transpose(arg) for arg in mat.args[::-1]])

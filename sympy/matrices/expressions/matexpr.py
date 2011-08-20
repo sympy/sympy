@@ -1,4 +1,4 @@
-from sympy import Expr, Symbol, Eq, Mul, Add, expand, sympify, Tuple
+from sympy import Expr, Symbol, Eq, Mul, Add, Pow, expand, sympify, Tuple
 from sympy.core.basic import Basic
 from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
@@ -81,7 +81,7 @@ class MatrixExpr(Expr):
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
         raise NotImplementedError()
-        return MatMul(other, Pow(self, S.NegativeOne))
+        #return MatMul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
@@ -205,7 +205,8 @@ def matrixify(expr):
     if len(matrix_symbols(expr))==0: # No matrix symbols present
         return expr
 
-    class_dict = {Mul:MatMul, Add:MatAdd, MatMul:MatMul, MatAdd:MatAdd}
+    class_dict = {Mul:MatMul, Add:MatAdd, MatMul:MatMul, MatAdd:MatAdd,
+            Pow:MatPow, MatPow:MatPow}
 
     if expr.__class__ not in class_dict.keys():
         return expr
@@ -241,20 +242,40 @@ def linear_factors(expr, *syms):
             for arg in expr.args:
                 factor = arg.coeff(sym)
                 if not factor:
-                    factor = 0
+                    # .coeff fails when powers are in the expression
+                    if sym in arg.free_symbols:
+                        raise ValueError("Expression not linear in symbols")
+                    else:
+                        factor = 0
                 factor = sympify(factor)
                 if not factor.is_Matrix:
-                    factor = Identity(sym.n)*factor
+                    if factor.is_zero:
+                        factor = ZeroMatrix(expr.n, sym.n)
+                        if not sym.m == expr.m:
+                            raise ShapeError(
+                            "%s not compatible as factor of %s"%(sym, expr))
+                    else:
+                        factor = Identity(sym.n)*factor
                 total_factor += factor
             d[sym] = total_factor
     elif expr.is_Mul:
         for sym in syms:
             factor = expr.coeff(sym)
             if not factor:
-                factor = 0
+                # .coeff fails when powers are in the expression
+                if sym in expr.free_symbols:
+                    raise ValueError("Expression not linear in symbols")
+                else:
+                    factor = 0
             factor = sympify(factor)
             if not factor.is_Matrix:
-                factor = Identity(sym.n)*factor
+                if factor.is_zero:
+                    factor = ZeroMatrix(expr.n, sym.n)
+                    if not sym.m == expr.m:
+                        raise ShapeError("%s not compatible as factor of %s"%
+                                (sym, expr))
+                else:
+                    factor = Identity(sym.n)*factor
             d[sym] = factor
 
     if any(sym in matrix_symbols(Tuple(*d.values())) for sym in syms):

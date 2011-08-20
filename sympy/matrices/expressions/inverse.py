@@ -33,10 +33,7 @@ class Inverse(MatPow):
             pass
 
         if hasattr(mat, 'inv'):
-            try:
-                return mat.inv()
-            except:
-                pass
+            return mat.inv()
 
         if mat.is_Inverse:
             return mat.arg

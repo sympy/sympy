@@ -93,8 +93,8 @@ class BlockMatrix(MatrixExpr):
         mat = mat.transpose()
         return BlockMatrix(mat)
 
-    def transpose(self):
-        return self.eval_transpose()
+    #def transpose(self):
+    #    return self.eval_transpose()
 
     def eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
@@ -174,7 +174,8 @@ class BlockDiagMatrix(BlockMatrix):
         return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
 
     def _blockmul(self, other):
-        if  (other.is_Matrix and other.is_BlockDiagMatrix and
+        if  (other.is_Matrix and other.is_BlockMatrix and
+                other.is_BlockDiagMatrix and
                 self.blockshape[1] == other.blockshape[0] and
                 self.colblocksizes == other.rowblocksizes):
             return BlockDiagMatrix(*[a*b for a, b in zip(self.diag,other.diag)])
@@ -183,7 +184,8 @@ class BlockDiagMatrix(BlockMatrix):
 
     def _blockadd(self, other):
 
-        if  (other.is_Matrix and other.is_BlockDiagMatrix and
+        if  (other.is_Matrix and other.is_BlockMatrix and
+                other.is_BlockDiagMatrix and
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
@@ -222,7 +224,10 @@ def block_collapse(expr):
         return expr
 
     if expr.is_Transpose:
-        return Transpose(block_collapse(expr.arg))
+        expr = Transpose(block_collapse(expr.arg))
+        if expr.is_Transpose and expr.arg.is_BlockMatrix:
+            expr = expr.arg.eval_transpose()
+        return expr
 
     if expr.is_Inverse:
         return Inverse(block_collapse(expr.arg))
@@ -255,8 +260,8 @@ def block_collapse(expr):
         if not blocks:
             return MatAdd(*nonblocks)
         block = blocks[0]
-        for b in blocks[:1]:
-            block._blockadd(b)
+        for b in blocks[1:]:
+            block = block._blockadd(b)
         if block.blockshape == (1,1):
             # Bring all the non-blocks into the block_matrix
             mat = Matrix(1, 1, (block[0,0] + MatAdd(*nonblocks), ))

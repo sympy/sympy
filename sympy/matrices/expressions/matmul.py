@@ -24,6 +24,9 @@ class MatMul(MatrixExpr, Mul):
             if A.m != B.n:
                 raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
+        if any(arg.is_zero for arg in args):
+            return ZeroMatrix(matrices[0].n, matrices[-1].m)
+
         expr = matrixify(Mul.__new__(cls, *args))
         if expr.is_Add:
             return MatAdd(*expr.args)
