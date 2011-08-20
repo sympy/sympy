@@ -1006,7 +1006,7 @@ def powdenest(eq, force=False):
 
     Assumptions may prevent expansion:
 
-    >>> powdenest(sqrt(x**2))  # activate when log rules are fixed
+    >>> powdenest(sqrt(x**2))
     sqrt(x**2)
 
     >>> p = symbols('p', positive=True)
@@ -1015,7 +1015,7 @@ def powdenest(eq, force=False):
 
     No other expansion is done.
 
-    >>> i, j = symbols('i,j', integer=1)
+    >>> i, j = symbols('i,j', integer=True)
     >>> powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j
     x**(x*(i + j))
 
@@ -1036,7 +1036,7 @@ def powdenest(eq, force=False):
     >>> p = Symbol('p', positive=True)
     >>> powdenest(((x**(2*i))**(3*y))**x)
     ((x**(2*i))**(3*y))**x
-    >>> powdenest(((x**(2*i))**(3*y))**x, force=1)
+    >>> powdenest(((x**(2*i))**(3*y))**x, force=True)
     x**(6*i*x*y)
 
     >> powdenest(((p**(2*a))**(3*y))**x)  # activate when log rules are fixed
@@ -1047,11 +1047,11 @@ def powdenest(eq, force=False):
     >>> powdenest((x**(2*i)*y**(4*i))**z,1)
     (x*y**2)**(2*i*z)
 
-    >>> n = Symbol('n', negative=1)
+    >>> n = Symbol('n', negative=True)
 
-    >> powdenest((x**i)**y, force=1)  # activate when log rules are fixed
+    >>> powdenest((x**i)**y, force=True)
     x**(i*y)
-    >> powdenest((n**i)**x, force=1)  # activate when log rules are fixed
+    >>> powdenest((n**i)**x, force=True)
     (n**i)**x
 
     """
@@ -1130,7 +1130,7 @@ def powdenest(eq, force=False):
         return sub.subs([(new, old) for old, new in rep])
     # let log handle the case of the base of the argument being a mul, e.g.
     # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i)
-    gcd = terms_gcd(log(b).expand(log=1))
+    gcd = terms_gcd(log(b).expand(log=True))
     if gcd.func is C.log or not gcd.is_Mul:
         if hasattr(gcd.args[0], 'exp'):
             gcd = powdenest(gcd.args[0])
@@ -1952,7 +1952,7 @@ def _real_to_rational(expr):
     >>> from sympy import nsimplify
     >>> from sympy.abc import x
 
-    >>> nsimplify(.76 + .1*x**.5, rational=1)
+    >>> nsimplify(.76 + .1*x**.5, rational=True)
     sqrt(x)/10 + 19/25
 
     """
