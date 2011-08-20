@@ -202,7 +202,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import iterable, cmp_to_key
+from sympy.core.compatibility import iterable, cmp_to_key, is_sequence
 from sympy.core.function import Derivative, Function, UndefinedFunction, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
@@ -998,15 +998,18 @@ def odesimp(eq, func, order, hint):
 
     return eq
 
-def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
+def checkodesol(ode, sol, order='auto', solve_for_func=True):
     """
-    Substitutes sol for func in ode and checks that the result is 0.
+    Substitutes sol into the ode and checks that the result is 0.
 
     This only works when func is one function, like f(x).  sol can be a
-    single solution or a list of solutions.  Either way, each solution
-    must be an Equality instance (e.g., Eq(f(x), C1*cos(x) +
-    C2*sin(x))).  If it is a list of solutions, it will return a list of
-    the checkodesol() result for each solution.
+    single solution or a list of solutions.  Each solution may be an expression
+    (in which case the function will be deduced); in that case an Equality
+    instance with the function on the lhs (e.g., Eq(f(x), C1*cos(x) + C2*sin(x)))
+    must be passed.
+
+    If a sequence of solutions is passed, the same sort of container will be used
+    to return the result for each solution.
 
     It tries the following methods, in order, until it finds zero
     equivalence:
@@ -1041,26 +1044,34 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         >>> from sympy import Eq, Function, checkodesol, symbols
         >>> x, C1 = symbols('x,C1')
         >>> f = Function('f')
-        >>> checkodesol(f(x).diff(x), f(x), Eq(f(x), C1))
+        >>> checkodesol(f(x).diff(x), Eq(f(x), C1))
         (True, 0)
-        >>> assert checkodesol(f(x).diff(x), f(x), Eq(f(x), C1))[0]
-        >>> assert not checkodesol(f(x).diff(x), f(x), Eq(f(x), x))[0]
-        >>> checkodesol(f(x).diff(x, 2), f(x), Eq(f(x), x**2))
+        >>> assert checkodesol(f(x).diff(x), C1)[0]
+        >>> assert not checkodesol(f(x).diff(x), x)[0]
+        >>> checkodesol(f(x).diff(x, 2), x**2)
         (False, 2)
 
     """
-    if type(sol) in (tuple, list, set):
-        return type(sol)(map(lambda i: checkodesol(ode, func, i, order=order,
+    if is_sequence(sol, set):
+        return type(sol)(map(lambda i: checkodesol(ode, i, order=order,
             solve_for_func=solve_for_func), sol))
+    if not isinstance(ode, Equality):
+        ode = Eq(ode, 0)
+    try:
+        _, func = preprocess(ode.lhs)
+        if not isinstance(sol, Equality):
+            sol = Eq(func, sol)
+    except ValueError:
+        if not isinstance(sol, Equality) or \
+           not (sol.lhs.is_Function and isinstance(sol.lhs.func, UndefinedFunction)):
+            raise ValueError('must provide solution as Eq(f(x), sol) in this case.')
+        else:
+            func = sol.lhs
     if not func.is_Function or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not " + str(func))
     x = func.args[0]
     s = True
     testnum = 0
-    if not isinstance(ode, Equality):
-        ode = Eq(ode, 0)
-    if not isinstance(sol, Equality):
-        raise ValueError("sol must be an Equality, got " + str(sol))
     if order == 'auto':
         order = ode_order(ode, func)
     if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
