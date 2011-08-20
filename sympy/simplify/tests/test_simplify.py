@@ -473,6 +473,17 @@ def test_separatevars():
     # 1766
     assert separatevars(sqrt(x*y)).is_Pow
     assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
+    # 1858
+    # any type sequence for symbols is fine
+    assert separatevars(((2*x+2)*y), dict=True, symbols=()) == {'coeff': 2, x: x + 1, y: y}
+    # separable
+    assert separatevars(((2*x+2)*y), dict=True, symbols=[]) == {'coeff': 2, x: x + 1, y: y}
+    assert separatevars(((2*x+2)*y), dict=True) == {'coeff': 2, x: x + 1, y: y}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=None) == {'coeff': 2*y*(x + 1)}
+    # not separable
+    assert separatevars(2*x+y, dict=True, symbols=()) is None
+    assert separatevars(2*x+y, dict=True) is None
+    assert separatevars(2*x+y, dict=True, symbols=None) == {'coeff': 2*x + y}
 
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')
