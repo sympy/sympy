@@ -203,7 +203,7 @@ anything is broken, one of those tests will surely fail.
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
 from sympy.core.compatibility import iterable, cmp_to_key
-from sympy.core.function import Derivative, diff, expand_mul
+from sympy.core.function import Derivative, Function, UndefinedFunction, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -242,6 +242,59 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_specia
 "nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
 
+def preprocess(expr, func=None):
+    """Prepare expr for solving by making sure that trivial differentiation
+    is done so that only undefined functions remain in unevaluated derivatives
+    and identify which function the equation should be solved with respect to
+    if it is not given.
+
+    >>> from sympy.solvers.ode import preprocess
+    >>> from sympy import Derivative, Function, Integral, sin
+    >>> from sympy.abc import x, y, z
+    >>> f, g = map(Function, 'fg')
+    >>> aderiv = Derivative(f(x) + x, x)
+
+    Apply doit if the Derivative wrt the variable of the function of
+    interest contains more than the function of interest:
+        >>> preprocess(aderiv + Derivative(sin(x), x) + f(x))
+        (f(x) + cos(x) + Derivative(f(x), x) + 1, f(x))
+        >>> preprocess(aderiv + Derivative(Integral(z, y), x))
+        (Derivative(f(x), x) + 1, f(x))
+
+    And evaluate Derivatives wrt another variable if they have a
+    function of the variable of interest in them:
+        >>> eq = aderiv + Derivative(g(x), x) + Derivative(Integral(g(x), y), y)
+        >>> preprocess(eq, g(x))
+        (g(x) + Derivative(f(x), x) + Derivative(g(x), x) + 1, g(x))
+
+    Note: in such cases, the function of interest must be unambiguosly identified,
+    otherwise a ValueError will be raised:
+        >>> try: preprocess(eq)
+        ... except ValueError: print "A ValueError was raised."
+        A ValueError was raised.
+
+    Otherwise leave unevaluated derivatives alone:
+        >>> preprocess(aderiv + Derivative(Integral(z, y), y))
+        (Derivative(f(x), x) + Derivative(Integral(z, y), y) + 1, f(x))
+    """
+
+    def ufuncs(eq):
+        """Return the set of undefined functions (f(x), not sin(x)) in eq."""
+        return set([f for f in eq.atoms(Function) if isinstance(f.func, UndefinedFunction)])
+
+    derivs = expr.atoms(Derivative)
+    derivs_with_funcs = [d for d in derivs if ufuncs(d)]
+    reps = [(d, d.doit()) for d in derivs_with_funcs if not isinstance(d.expr.func, Function)]
+    eq = expr.subs(reps)
+    if not func:
+        funcs = reduce(lambda x, y: x|ufuncs(y), [r[1] for r in reps], set())
+        if len(funcs) != 1:
+            raise ValueError('The function cannot be automatically detected for %s.' % expr)
+        func = funcs.pop()
+    vars = func.free_symbols
+    eq = eq.subs([(d, d.doit()) for d in eq.atoms(Derivative) if d.expr != func and d.has(*vars)])
+    return eq, func
+
 def sub_func_doit(eq, func, new):
     """When replacing the func with something else, we usually
     want the derivative evaluated, so this function helps in
@@ -260,7 +313,7 @@ def sub_func_doit(eq, func, new):
 
     return eq.subs(reps).subs(func, new).subs(repu)
 
-def dsolve(eq, func, hint="default", simplify=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     Solves any (supported) kind of ordinary differential equation.
 
@@ -278,7 +331,9 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
             equal to 0.
 
         ``f(x)`` is a function of one variable whose derivatives in that
-            variable make up the ordinary differential equation eq.
+            variable make up the ordinary differential equation eq. In many
+            cases it is not necessary to provide this; it will be autodetected
+            (and an error raised if it couldn't be detected).
 
         ``hint`` is the solving method that you want dsolve to use.  Use
             classify_ode(eq, f(x)) to get all of the possible hints for
@@ -393,6 +448,9 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         if eq.rhs != 0:
             return dsolve(eq.lhs-eq.rhs, func, hint=hint, simplify=simplify, **kwargs)
         eq = eq.lhs
+
+    # preprocess the equation and find func if not given
+    eq, func = preprocess(eq, func)
 
     # Magic that should only be used internally.  Prevents classify_ode from
     # being called more than it needs to be by passing its results through
