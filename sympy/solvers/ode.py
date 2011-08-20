@@ -1084,10 +1084,10 @@ def checkodesol(ode, sol, order='auto', solve_for_func=True):
             pass
         else:
             if len(solved) == 1:
-                result = checkodesol(ode, func, Eq(func, solved[0]), \
+                result = checkodesol(ode, Eq(func, solved[0]), \
                     order=order, solve_for_func=False)
             else:
-                result = checkodesol(ode, func, [Eq(func, t) for t in solved],
+                result = checkodesol(ode, [Eq(func, t) for t in solved],
                 order=order, solve_for_func=False)
 
             return result
@@ -2196,7 +2196,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     f(x) = -----------------------------------------------------------------------
                                             2*b*x
 
-    >>> checkodesol(genform, y, sol, order=1)[0]
+    >>> checkodesol(genform, sol, order=1)[0]
     True
 
     References:
