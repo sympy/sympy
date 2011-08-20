@@ -6,7 +6,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
 
     SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
-    matrix_multiply_elementwise)
+    matrix_multiply_elementwise, randSymMatrix)
 from sympy.utilities.pytest import raises
 #from sympy.functions.elementary.miscellaneous import Max, Min
 #from sympy.functions.elementary.miscellaneous import Max, Min
@@ -281,6 +281,12 @@ def test_random():
     M = randMatrix(3,3)
     M = randMatrix(3,3,seed=3)
     M = randMatrix(3,4,0,150)
+
+def test_randSymMatrix():
+    A = randSymMatrix(10, 10)
+    assert A.is_symmetric()
+    A = randSymMatrix(100, 100, seed = 12)
+    assert A.is_symmetric()
 
 def test_LUdecomp():
     testmat = Matrix([[0,2,5,3],

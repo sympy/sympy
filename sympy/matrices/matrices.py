@@ -2724,6 +2724,20 @@ def randMatrix(r,c,min=0,max=99,seed=[]):
         prng = random.Random(seed)
     return Matrix(r,c,lambda i,j: prng.randint(min,max))
 
+def randSymMatrix(r, c, min=0, max=99, seed=[]):
+    """Create random symmetric matrix r x c where r==c"""
+    if seed == []:
+        prng = random.Random()  # use system time
+    else:
+        prng = random.Random(seed)
+    if not r == c:
+        raise ValueError("Symmetric matrices are sqaure.")
+    A = Matrix(r, c, lambda i, j: prng.randint(min, max) if i >= j else 0)
+    for j in xrange(A.cols):
+        for i in xrange(j):
+            A[i, j] = A[j, i]
+    return A
+
 def hessian(f, varlist):
     """Compute Hessian matrix for a function f
 
