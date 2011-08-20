@@ -975,7 +975,7 @@ def powdenest(eq, force=False):
 
     Given (bb**be)**e, this can be simplified as follows:
         o if bb is positive or e is an integer, bb**(be*e)
-        o if be has an integer in the denominatory, then
+        o if be has an integer in the denominator, then
           all integers from its numerator can be joined with e
     Given a product of powers raised to a power, (bb1**be1 * bb2**be2...)**e,
     simplification can be done as follows:
@@ -1039,7 +1039,7 @@ def powdenest(eq, force=False):
     >>> powdenest(((x**(2*i))**(3*y))**x, force=True)
     x**(6*i*x*y)
 
-    >> powdenest(((p**(2*a))**(3*y))**x)  # activate when log rules are fixed
+    >>> powdenest(((p**(2*a))**(3*y))**x)
     p**(6*a*x*y)
 
     >>> powdenest(((x**(2*a/3))**(3*y/i))**x)
@@ -1124,11 +1124,20 @@ def powdenest(eq, force=False):
         rep = []
         sub = eq
 
+    # see if there is a positive, non-Mul base at the very bottom
+    exponents = []
+    kernel = sub
+    while kernel.is_Pow:
+        kernel, e = kernel.as_base_exp()
+        exponents.append(e)
+    if kernel.is_positive and not kernel.is_Mul:
+        return Pow(kernel, Mul(*exponents))
+
     # if any factor is a bare symbol then there is nothing to be done
     b, e = sub.as_base_exp()
     if e is S.One or any(s.is_Symbol for s in Mul.make_args(b)):
         return sub.subs([(new, old) for old, new in rep])
-    # let log handle the case of the base of the argument being a mul, e.g.
+    # let log handle the case of the base of the argument being a Mul, e.g.
     # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i)
     gcd = terms_gcd(log(b).expand(log=True))
     if gcd.func is C.log or not gcd.is_Mul:
