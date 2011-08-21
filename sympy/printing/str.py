@@ -68,6 +68,11 @@ class StrPrinter(Printer):
         l = [self._print(o) for o in expr.args]
         return expr.__class__.__name__ + "(%s)"%", ".join(l)
 
+    def _print_BlockMatrix(self, B):
+        if B.mat.shape == (1, 1):
+            self._print(B.mat[0,0])
+        return self._print(B.mat)
+
     def _print_Catalan(self, expr):
         return 'Catalan'
 
@@ -166,6 +171,9 @@ class StrPrinter(Printer):
         return "%s%s, %s%s" % \
                (left, self._print(i.start), self._print(i.end), right)
 
+    def _print_Inverse(self, I):
+        return "%s^-1" % self.parenthesize(I.arg, PRECEDENCE["Pow"])
+
     def _print_Lambda(self, obj):
         args, expr = obj.args
         if len(args) == 1:
@@ -240,6 +248,11 @@ class StrPrinter(Printer):
                 return sign + '*'.join(a_str) + "/%s"%b_str[0]
         else:
             return sign + '*'.join(a_str) + "/(%s)"%'*'.join(b_str)
+
+    def _print_MatMul(self, expr):
+        return '*'.join([self.parenthesize(arg, precedence(expr))
+            for arg in expr.args])
+
 
     def _print_NaN(self, expr):
         return 'nan'
@@ -355,6 +368,11 @@ class StrPrinter(Printer):
                 return '%s**%s' % (self.parenthesize(expr.base, PREC), e[1:-1])
         return '%s**%s' % (self.parenthesize(expr.base, PREC), e)
 
+    def _print_MatPow(self, expr):
+        PREC = precedence(expr)
+        return '%s**%s'%(self.parenthesize(expr.base, PREC),
+                         self.parenthesize(expr.exp, PREC))
+
     def _print_Integer(self, expr):
         return str(expr.p)
 
@@ -462,6 +480,9 @@ class StrPrinter(Printer):
 
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
+
+    def _print_Transpose(self, T):
+        return "%s'" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
 
     def _print_Uniform(self, expr):
         return "Uniform(%s, %s)"%(expr.a, expr.b)

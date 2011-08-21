@@ -1855,6 +1855,9 @@ def simplify(expr, ratio=1.7):
     if count_ops(expr) > ratio*count_ops(original_expr):
         return original_expr
 
+    if original_expr.is_Matrix:
+        expr = matrixify(expr)
+
     return expr
 
 def _real_to_rational(expr):

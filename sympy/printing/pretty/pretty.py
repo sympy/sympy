@@ -511,6 +511,38 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[',']'))
         return D
 
+    def _print_Transpose(self, T):
+        pform = self._print(T.arg)
+        if (T.arg.is_Add or T.arg.is_Mul or T.arg.is_Pow):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right("'"))
+        return pform
+
+    def _print_Inverse(self, I):
+        pform = self._print(I.arg)
+        if (I.arg.is_Add or I.arg.is_Mul or I.arg.is_Pow):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right("^-1"))
+        return pform
+
+    def _print_BlockMatrix(self, B):
+        if B.mat.shape == (1,1):
+            return self._print(B.mat[0,0])
+        return self._print(B.mat)
+
+    def _print_MatMul(self, expr):
+        a = list(expr.args)
+        for i in xrange(0, len(a)):
+            if a[i].is_Add and len(a) > 1:
+                a[i] = prettyForm(*self._print(a[i]).parens())
+            else:
+                a[i] = self._print(a[i])
+
+        return prettyForm.__mul__(*a)
+
+    def _print_MatAdd(self, expr):
+        return self._print_seq(expr.args, None, None, ' + ')
+
     def _print_Piecewise(self, pexpr):
 
         P = {}
