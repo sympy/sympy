@@ -97,7 +97,7 @@ dots (time derivatives of the generalized speeds). ::
   >>> kdd = KM.kindiffdict()
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
-  >>> mprint(rhs)
+  >>> mprint(rhs, order=None)
   [(4*g*sin(q2) + 10*r*u2*u3 - 5*r*u3**2*tan(q2))/(5*r)]
   [                                          -2*u1*u3/3]
   [                             (-2*u2 + u3*tan(q2))*u1]
@@ -168,11 +168,11 @@ represent the constraint forces in those directions. ::
   >>> kdd = KM.kindiffdict()
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
-  >>> mprint(rhs)
+  >>> mprint(rhs, order=None)
   [(4*g*sin(q2) + 10*r*u2*u3 - 5*r*u3**2*tan(q2))/(5*r)]
   [                                          -2*u1*u3/3]
   [                             (-2*u2 + u3*tan(q2))*u1]
-  >>> KM.auxiliary_eqs
+  >>> mprint(KM.auxiliary_eqs, order=None)
   [                                                            -m*(r*u1*u3 + r*u2') + f1]
   [      -m*(-r*(-u3*q3' + u1') + r*u2*u3)*cos(q2) + m*(-r*u1**2 - r*u2**2)*sin(q2) + f2]
   [-g*m - m*(-r*(-u3*q3' + u1') + r*u2*u3)*sin(q2) - m*(-r*u1**2 - r*u2**2)*cos(q2) + f3]

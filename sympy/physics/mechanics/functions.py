@@ -153,6 +153,8 @@ def mprint(expr, **settings):
     u1
 
     """
+    if 'order' not in settings:
+        settings['order'] = 'unsorted'
 
     pr = MechanicsStrPrinter(settings)
     outstr = pr.doprint(expr)
@@ -182,6 +184,9 @@ def mpprint(expr, **settings):
 
     """
 
+    if 'order' not in settings:
+        settings['order'] = 'unsorted'
+
     mp = MechanicsPrettyPrinter(settings)
     print(mp.doprint(expr))
 
@@ -203,9 +208,12 @@ def mlatex(expr, **settings):
     >>> from sympy.physics.mechanics import mlatex, ReferenceFrame
     >>> N = ReferenceFrame('N')
     >>> mlatex(N.x + N.y)
-    '\\mathbf{\\hat{n_{x}}} + \\mathbf{\\hat{n_{y}}}'
+    '\\mathbf{\\hat{n}_x} + \\mathbf{\\hat{n}_y}'
 
     """
+
+    if 'order' not in settings:
+        settings['order'] = 'unsorted'
 
     return MechanicsLatexPrinter(settings).doprint(expr)
 
@@ -232,19 +240,13 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     Examples
     ========
 
-    >>> # 2 lines below are for tests to function properly
-    >>> import sys
-    >>> sys.displayhook = sys.__displayhook__
-    >>> from sympy.physics.mechanics import dynamicsymbols, kinematic_equations
-    >>> from sympy.physics.mechanics import mechanics_printing
-    >>> mechanics_printing()
+    >>> from sympy.physics.mechanics import dynamicsymbols
+    >>> from sympy.physics.mechanics import kinematic_equations, mprint
     >>> u1, u2, u3 = dynamicsymbols('u1 u2 u3')
     >>> q1, q2, q3 = dynamicsymbols('q1 q2 q3')
-    >>> kinematic_equations([u1,u2,u3],[q1,q2,q3],'body','313')
+    >>> mprint(kinematic_equations([u1,u2,u3], [q1,q2,q3], 'body', '313'),
+    ...     order=None)
     [-(u1*sin(q3) + u2*cos(q3))/sin(q2) + q1', -u1*cos(q3) + u2*sin(q3) + q2', (u1*sin(q3) + u2*cos(q3))*cos(q2)/sin(q2) - u3 + q3']
-    >>> # 2 lines below are for tests to function properly
-    >>> import sys
-    >>> sys.displayhook = sys.__displayhook__
 
     """
 
@@ -386,9 +388,9 @@ def code_output(typ, KM, fname, params=[]):
     # Note for future developers: the code output is written assuming the 5
     # basic equations as described in the sphinx documentation. As long as the
     # class object provided can supply the kinematic differential equations,
-    # mass matrix, and forcing vector, it should be compatible with this code
-    # output function. Keep this in mind if you write other methods of forming
-    # the equations of motion (Newton-Euler or Lagrange).
+    # mass matrix, and forcing vector, q's, and u's it should be compatible
+    # with this code output function. Keep this in mind if you write other
+    # methods of forming the equations of motion (Newton-Euler or Lagrange).
 
     def _py_code_output(KM, fname, params):
         """Function for generating code for numerical integration.

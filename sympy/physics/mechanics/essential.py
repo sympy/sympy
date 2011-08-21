@@ -5,13 +5,14 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyad', 'dynamicsymbols',
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
                    expand, S, zeros, Basic, Derivative, Function, symbols, Add,
                    solve)
-from sympy.core import C
+from sympy.core import C, S, Rational, Pow, Basic
 from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Zero
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
+from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
 
@@ -31,9 +32,10 @@ class Dyad(object):
     def __init__(self, inlist):
         """
         Just like Vector's init, you shouldn't call this.
-        Stores a Dyad as a list of lists; the inner list has the measure
-        number and the two unit vectors; the outerlist holds each unique unit
-        vector pair.
+
+        Stores a Dyad as a list of lists; the inner list has the measure number
+        and the two unit vectors; the outerlist holds each unique unit vector
+        pair.
 
         """
 
@@ -90,7 +92,7 @@ class Dyad(object):
 
         """
 
-        if isinstance(other, int):
+        if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return 0
         ol = 0
@@ -158,43 +160,41 @@ class Dyad(object):
     def _latex(self, printer=None):
         ar = self.args # just to shorten things
         if len(ar) == 0:
-            return r"0"
+            return str(0)
         ol = [] # output list, to be concatenated to a string
+        mlp = MechanicsLatexPrinter({'order':None})
         for i, v in enumerate(ar):
             # if the coef of the dyad is 1, we skip the 1
             if ar[i][0] == 1:
-                if len(ol) != 0:
-                    ol.append(r" + ")
-                ol.append(MechanicsLatexPrinter().doprint(ar[i][1]) +
-                          r"\otimes " +
-                          MechanicsLatexPrinter().doprint(ar[i][2]))
+                ol.append(' + ' + mlp.doprint(ar[i][1]) + r"\otimes " +
+                        mlp.doprint(ar[i][2]))
             # if the coef of the dyad is -1, we skip the 1
             elif ar[i][0] == -1:
-                if len(ol) != 0:
-                    ol.append(u" ")
-                ol.append(u"- " +
-                          MechanicsLatexPrinter().doprint(ar[i][1]) +
+                ol.append(' - ' +
+                          mlp.doprint(ar[i][1]) +
                           r"\otimes " +
-                          MechanicsLatexPrinter().doprint(ar[i][2]))
+                          mlp.doprint(ar[i][2]))
             # If the coefficient of the dyad is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
-                arg_str = MechanicsLatexPrinter().doprint(ar[i][0])
-                str_start = r" + "
+                arg_str = mlp.doprint(ar[i][0])
                 if isinstance(ar[i][0], Add):
-                    arg_str = r"(%s)" % arg_str
-                if arg_str[0] == r"-":
+                    arg_str = '(%s)' % arg_str
+                if arg_str[0] == '-':
                     arg_str = arg_str[1:]
-                    str_start = r" - "
-                if len(ol) == 0:
-                    str_start = str_start[1:]
-                if (len(ol) != 0) or (str_start.find(r"-") != -1):
-                    ol.append(str_start)
-                ol.append(arg_str + r" " +
-                          MechanicsLatexPrinter().doprint(ar[i][1]) +
+                    str_start = ' - '
+                else:
+                    str_start = ' + '
+                ol.append(str_start + arg_str + r" " +
+                          mlp.doprint(ar[i][1]) +
                           r"\otimes " +
-                          MechanicsLatexPrinter().doprint(ar[i][2]))
-        return r"".join(ol)
+                          mlp.doprint(ar[i][2]))
+        outstr = ''.join(ol)
+        if outstr[0:3] == ' + ':
+            outstr = outstr[3:]
+        elif outstr[0] == ' ':
+            outstr = outstr[1:]
+        return outstr
 
     def _pretty(self, printer=None):
         e = self
@@ -203,44 +203,44 @@ class Dyad(object):
             def render(self, *args, **kwargs):
                 self = e
                 ar = self.args # just to shorten things
+                mpp = MechanicsPrettyPrinter({'order':None})
                 if len(ar) == 0:
                     return unicode(0)
                 ol = [] # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
                     # if the coef of the dyad is 1, we skip the 1
                     if ar[i][0] == 1:
-                        if len(ol) != 0:
-                            ol.append(u" + ")
-                        ol.append(MechanicsPrettyPrinter().doprint(ar[i][1]) +
+                        ol.append(u" + " +
+                                  mpp.doprint(ar[i][1]) +
                                   u"\u2a02 " +
-                                  MechanicsPrettyPrinter().doprint(ar[i][2]))
+                                  mpp.doprint(ar[i][2]))
                     # if the coef of the dyad is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        if len(ol) != 0:
-                            ol.append(u" ")
-                        ol.append(u"- " +
-                                  MechanicsPrettyPrinter().doprint(ar[i][1]) +
+                        ol.append(u" - " +
+                                  mpp.doprint(ar[i][1]) +
                                   u"\u2a02 " +
-                                  MechanicsPrettyPrinter().doprint(ar[i][2]))
+                                  mpp.doprint(ar[i][2]))
                     # If the coefficient of the dyad is not 1 or -1,
                     # we might wrap it in parentheses, for readability.
                     elif ar[i][0] != 0:
-                        arg_str = MechanicsPrettyPrinter().doprint(ar[i][0])
-                        str_start = u" + "
+                        arg_str = mpp.doprint(ar[i][0])
                         if isinstance(ar[i][0], Add):
                             arg_str = u"(%s)" % arg_str
                         if arg_str[0] == u"-":
                             arg_str = arg_str[1:]
                             str_start = u" - "
-                        if len(ol) == 0:
-                            str_start = str_start[1:]
-                        if (len(ol) != 0) or (str_start.find(u"-") != -1):
-                            ol.append(str_start)
-                        ol.append(arg_str + u" " +
-                                  MechanicsPrettyPrinter().doprint(ar[i][1]) +
+                        else:
+                            str_start = u" + "
+                        ol.append(str_start + arg_str + u" " +
+                                  mpp.doprint(ar[i][1]) +
                                   u"\u2a02 " +
-                                  MechanicsPrettyPrinter().doprint(ar[i][2]))
-                return u"".join(ol)
+                                  mpp.doprint(ar[i][2]))
+                outstr = u"".join(ol)
+                if outstr[0:3] == u" + ":
+                    outstr = outstr[3:]
+                elif outstr[0] == " ":
+                    outstr = outstr[1:]
+                return outstr
         return Fake()
 
     def __rand__(self, other):
@@ -264,7 +264,7 @@ class Dyad(object):
 
         """
 
-        if isinstance(other, int):
+        if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return 0
         ol = 0
@@ -297,6 +297,9 @@ class Dyad(object):
 
         """
 
+        if isinstance(other, (int, type(Zero()))):
+            if (other == 0):
+                return 0
         self._check_vector(other)
         ol = 0
         for i, v in enumerate(self.args):
@@ -312,31 +315,30 @@ class Dyad(object):
         for i, v in enumerate(ar):
             # if the coef of the dyad is 1, we skip the 1
             if ar[i][0] == 1:
-                if len(ol) != 0:
-                    ol.append(' + ')
-                ol.append('(' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
+                ol.append(' + (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
             # if the coef of the dyad is -1, we skip the 1
             elif ar[i][0] == -1:
-                if len(ol) != 0:
-                    ol.append(' ')
-                ol.append('- (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
+                ol.append(' - (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
             # If the coefficient of the dyad is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
-                arg_str = MechanicsStrPrinter().doprint(ar[i][0])
-                str_start = ' + '
+                arg_str = MechanicsStrPrinter(
+                        {'order':None}).doprint(ar[i][0])
                 if isinstance(ar[i][0], Add):
-                    arg_str = "(%s)"%arg_str
+                    arg_str = "(%s)" % arg_str
                 if arg_str[0] == '-':
                     arg_str = arg_str[1:]
                     str_start = ' - '
-                if len(ol) == 0:
-                    str_start = str_start[1:]
-                if (len(ol) != 0) or (str_start.find('-') != -1):
-                    ol.append(str_start)
-                ol.append(arg_str + '*(' + str(ar[i][1]) +
+                else:
+                    str_start = ' + '
+                ol.append(str_start + arg_str + '*(' + str(ar[i][1]) +
                           '|' + str(ar[i][2]) + ')')
-        return ''.join(ol)
+        outstr = ''.join(ol)
+        if outstr[0:3] == ' + ':
+            outstr = outstr[3:]
+        elif outstr[0] == ' ':
+            outstr = outstr[1:]
+        return outstr
 
     def __sub__(self, other):
         """The subtraction operator. """
@@ -361,6 +363,9 @@ class Dyad(object):
 
         """
 
+        if isinstance(other, (int, type(Zero()))):
+            if (other == 0):
+                return 0
         self._check_vector(other)
         ol = 0
         for i, v in enumerate(self.args):
@@ -396,8 +401,8 @@ class Dyad(object):
 
         The first frame is the list side expression, the second frame is the
         right side; if Dyad is in form A.x|B.y, you can express it in two
-        different frames. If no second frame is given, the Dyad is
-        expressed in only one frame.
+        different frames. If no second frame is given, the Dyad is expressed in
+        only one frame.
 
         Parameters
         ==========
@@ -489,17 +494,80 @@ class ReferenceFrame(object):
     ReferenceFrame is a class used to represent a reference frame in classical
     mechanics. It has a standard basis of three unit vectors in the frame's
     x, y, and z directions.
-    It also can have a rotation relative to a parent
-    frame; this rotation is defined by a direction cosine matrix relating this
-    frame's basis vectors to the parent frame's basis vectors.
-    It can also have an angular velocity vector, defined in another frame.
+
+    It also can have a rotation relative to a parent frame; this rotation is
+    defined by a direction cosine matrix relating this frame's basis vectors to
+    the parent frame's basis vectors.  It can also have an angular velocity
+    vector, defined in another frame.
 
     """
 
-    def __init__(self, name):
-        """ReferenceFrame's need a name which defines its basis vectors."""
-        if not isinstance(name, str):
+    def __init__(self, name, indices=None, latexs=None):
+        """ReferenceFrame initialization method.
+
+        A ReferenceFrame has a set of orthonormal basis vectors, along with
+        orientations relative to other ReferenceFrames and angular velocities
+        relative to other ReferenceFrames.
+
+        Parameters
+        ==========
+
+        Examples
+        ========
+
+        """
+
+        if not isinstance(name, (str, unicode)):
             raise TypeError('Need to supply a valid name')
+        # The if statements below are for custom printing of basis-vectors for
+        # each frame.
+        # First case, when custom indices are supplied
+        if indices != None:
+            if not isinstance(indices, (tuple, list)):
+                raise TypeError('Supply the indices as a list')
+            if len(indices) != 3:
+                raise ValueError('Supply 3 indices')
+            for i in indices:
+                if not isinstance(i, (str, unicode)):
+                    raise TypeError('Indices must be strings')
+            self.str_vecs = [(name + '[\'' + indices[0] + '\']'),
+                             (name + '[\'' + indices[1] + '\']'),
+                             (name + '[\'' + indices[2] + '\']')]
+            self.pretty_vecs = [(u"\033[94m\033[1m" + name.lower() + u"_" +
+                                indices[0] + u"\033[0;0m\x1b[0;0m"),
+                                (u"\033[94m\033[1m" + name.lower() + u"_" +
+                                indices[1] + u"\033[0;0m\x1b[0;0m"),
+                                (u"\033[94m\033[1m" + name.lower() + u"_" +
+                                indices[2] + u"\033[0;0m\x1b[0;0m")]
+            self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                               indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
+                               (name.lower(), indices[1])),
+                               (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                               indices[2]))]
+            self.indices = indices
+        # Second case, when no custom indices are supplied
+        else:
+            self.str_vecs = [(name + '.x'), (name + '.y'), (name + '.z')]
+            self.pretty_vecs = [(u"\033[94m\033[1m" + name.lower() +
+                                u"_x\033[0;0m\x1b[0;0m"),
+                                (u"\033[94m\033[1m" + name.lower() +
+                                u"_y\033[0;0m\x1b[0;0m"),
+                                (u"\033[94m\033[1m" + name.lower() +
+                                u"_z\033[0;0m\x1b[0;0m")]
+            self.latex_vecs = [(r"\mathbf{\hat{%s}_x}" % name.lower()),
+                               (r"\mathbf{\hat{%s}_y}" % name.lower()),
+                               (r"\mathbf{\hat{%s}_z}" % name.lower())]
+            self.indices = ['x', 'y', 'z']
+        # Different step, for custom latex basis vectors
+        if latexs != None:
+            if not isinstance(latexs, (tuple, list)):
+                raise TypeError('Supply the indices as a list')
+            if len(latexs) != 3:
+                raise ValueError('Supply 3 indices')
+            for i in latexs:
+                if not isinstance(i, (str, unicode)):
+                    raise TypeError('Latex entries must be strings')
+            self.latex_vecs = latexs
         self.name = name
         self._dcm_dict = {}
         self._ang_vel_dict = {}
@@ -509,6 +577,19 @@ class ReferenceFrame(object):
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
+
+    def __getitem__(self, ind):
+        """Returns basis vector for the provided index (index being an str)"""
+        if not isinstance(ind, (str, unicode)):
+            raise TypeError('Supply a valid str for the index')
+        if self.indices[0] == ind:
+            return self.x
+        if self.indices[1] == ind:
+            return self.x
+        if self.indices[2] == ind:
+            return self.x
+        else:
+            raise ValueError('Not a defined index')
 
     def __iter__(self):
         return self
@@ -719,9 +800,9 @@ class ReferenceFrame(object):
         >>> B.orient(N, 'Space', [q1, q2, q3], '312')
 
         Next is Quaternion. This orients the new ReferenceFrame with
-        Quaternions, defined as a finite rotation about
-        lambda, a unit vector, by some amount
-        theta. This orientation is described by four parameters:
+        Quaternions, defined as a finite rotation about lambda, a unit vector,
+        by some amount theta. 
+        This orientation is described by four parameters:
         q0 = cos(theta/2)
         q1 = lambda_x sin(theta/2)
         q2 = lambda_y sin(theta/2)
@@ -965,24 +1046,19 @@ class Vector(object):
 
     Attributes
     ==========
-    subscript_indices : str
-        A 3 character string used for advanced printing of the basis vectors
-        This needs to be changed as Vector.subscript_indices = "123", and not
-        as SomeVectorInstance.subscript_indices = "xyz"
     simp : Boolean
         Let certain methods use trigsimp on their outputs
 
     """
 
-    subscript_indices = "xyz"
     simp = True
 
     def __init__(self, inlist):
-        """This is the constructor for the Vector class.
-        You shouldn't be calling this, it should only be used by other
-        functions. You should be treating Vectors like you would with if you
-        were doing the math by hand, and getting the first 3 from the
-        standard basis vectors from a ReferenceFrame.
+        """This is the constructor for the Vector class.  You shouldn't be
+        calling this, it should only be used by other functions. You should be
+        treating Vectors like you would with if you were doing the math by
+        hand, and getting the first 3 from the standard basis vectors from a
+        ReferenceFrame.
 
         """
 
@@ -1009,8 +1085,8 @@ class Vector(object):
 
     def __add__(self, other):
         """The add operator for Vector. """
-        if isinstance(other, int):
-            if other == 0:
+        if isinstance(other, (int, type(Zero()))):
+            if (other == 0):
                 return self
         self._check_vector(other)
         return Vector(self.args + other.args)
@@ -1044,6 +1120,9 @@ class Vector(object):
 
         if isinstance(other, Dyad):
             return NotImplemented
+        if isinstance(other, (int, type(Zero()))):
+            if (other == 0):
+                return 0
         self._check_vector(other)
         out = 0
         for i, v1 in enumerate(self.args):
@@ -1072,7 +1151,7 @@ class Vector(object):
 
         """
 
-        if isinstance(other, int):
+        if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 if self.args == []:
                     return True
@@ -1080,7 +1159,7 @@ class Vector(object):
                     return False
         check = True
         frame = self.args[0][1]
-        for i, v in enumerate(frame):
+        for v in frame:
             if expand((self - other) & v) != 0:
                 return False
         return True
@@ -1137,8 +1216,9 @@ class Vector(object):
 
         """
 
-        if other == 0:
-            return 0
+        if isinstance(other, (int, type(Zero()))):
+            if (other == 0):
+                return 0
         ol = 0
         for i, v in enumerate(self.args):
             for i2, v2 in enumerate(other.args):
@@ -1158,46 +1238,38 @@ class Vector(object):
 
     def _latex(self, printer=None):
         """Latex Printing method. """
-        str_ind = Vector.subscript_indices
         ar = self.args # just to shorten things
         if len(ar) == 0:
-            return r"0"
+            return str(0)
         ol = [] # output list, to be concatenated to a string
         for i, v in enumerate(ar):
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
                 if ar[i][0][j] == 1:
-                    if len(ol) != 0:
-                        ol.append(r" + ")
-                    ol.append(r"\mathbf{\hat{%s}}" %
-                            (str(ar[i][1]).lower() + r"_{" +
-                              str_ind[j] + r"}"))
+                    ol.append(' + ' + ar[i][1].latex_vecs[j])
                 # if the coef of the basis vector is -1, we skip the 1
                 elif ar[i][0][j] == -1:
-                    if len(ol) != 0:
-                        ol.append(r" ")
-                    ol.append(r"- " + r"\mathbf{\hat{%s}}" %
-                            (str(ar[i][1]).lower() + r"_{" +
-                                str_ind[j] + r"}"))
+                    ol.append(' - ' + ar[i][1].latex_vecs[j])
                 elif ar[i][0][j] != 0:
-                    # If the basis vector coeff is not 1 or -1,
-                    # we might wrap it in parentheses, for readability.
-                    arg_str = (
-                        MechanicsLatexPrinter().doprint(ar[i][0][j]))
-                    str_start = r" + "
+                    # If the coefficient of the basis vector is not 1 or -1;
+                    # also, we might wrap it in parentheses, for readability.
+                    arg_str = MechanicsStrPrinter(
+                            {'order':None}).doprint(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
-                        arg_str = r"(%s)"%arg_str
-                    if arg_str[0] == r"-":
+                        arg_str = "(%s)"%arg_str
+                    if arg_str[0] == '-':
                         arg_str = arg_str[1:]
-                        str_start = r" - "
-                    if len(ol) == 0:
-                        str_start = str_start[1:]
-                    if (len(ol) != 0) or (str_start.find(r"-") != -1):
-                        ol.append(str_start)
-                    ol.append(arg_str + r" " + r"\mathbf{\hat{%s}}" %
-                            (str(ar[i][1]).lower() + r"_{" +
-                                str_ind[j] + r"}"))
-        return r"".join(ol)
+                        str_start = ' - '
+                    else:
+                        str_start = ' + '
+                    ol.append(str_start + arg_str + '*' +
+                              ar[i][1].latex_vecs[j])
+        outstr = ''.join(ol)
+        if outstr[0:3] == ' + ':
+            outstr = outstr[3:]
+        elif outstr[0] == ' ':
+            outstr = outstr[1:]
+        return outstr
 
     def _pretty(self, printer=None):
         """Pretty Printing method. """
@@ -1206,7 +1278,6 @@ class Vector(object):
             baseline = 0
             def render(self, *args, **kwargs):
                 self = e
-                str_ind = Vector.subscript_indices
                 ar = self.args # just to shorten things
                 if len(ar) == 0:
                     return unicode(0)
@@ -1215,38 +1286,30 @@ class Vector(object):
                     for j in 0, 1, 2:
                         # if the coef of the basis vector is 1, we skip the 1
                         if ar[i][0][j] == 1:
-                            if len(ol) != 0:
-                                ol.append(u" + ")
-                            ol.append(u"\033[94m\033[1m" +
-                                      unicode(ar[i][1]).lower() + u"_" +
-                                      str_ind[j] + u"\033[0;0m\x1b[0;0m")
+                            ol.append(u" + " + ar[i][1].pretty_vecs[j])
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
-                            if len(ol) != 0:
-                                ol.append(u" ")
-                            ol.append(u"- " + u"\033[94m\033[1m" +
-                                      unicode(ar[i][1]).lower()
-                                      + u"_" + str_ind[j] +
-                                      u"\033[0;0m\x1b[0;0m")
+                            ol.append(u" - " + ar[i][1].pretty_vecs[j])
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
-                            arg_str = (
-                                MechanicsPrettyPrinter().doprint(ar[i][0][j]))
-                            str_start = u" + "
+                            arg_str = (MechanicsPrettyPrinter(
+                                    {'order':None}).doprint(ar[i][0][j]))
                             if isinstance(ar[i][0][j], Add):
                                 arg_str = u"(%s)"%arg_str
                             if arg_str[0] == u"-":
                                 arg_str = arg_str[1:]
                                 str_start = u" - "
-                            if len(ol) == 0:
-                                str_start = str_start[1:]
-                            if (len(ol) != 0) or (str_start.find(u"-") != -1):
-                                ol.append(str_start)
-                            ol.append(arg_str + u" " + u"\033[94m\033[1m" +
-                                      unicode(ar[i][1]).lower() + u"_" +
-                                      str_ind[j] + u"\033[0;0m\x1b[0;0m")
-                return u"".join(ol)
+                            else:
+                                str_start = u" + "
+                            ol.append(str_start + arg_str + '*' +
+                                      ar[i][1].pretty_vecs[j])
+                outstr = u"".join(ol)
+                if outstr[0:3] == u" + ":
+                    outstr = outstr[3:]
+                elif outstr[0] == " ":
+                    outstr = outstr[1:]
+                return outstr
         return Fake()
 
     def __ror__(self, other):
@@ -1269,9 +1332,9 @@ class Vector(object):
 
         """
 
-        if other == 0:
-            return 0
-        ol = 0
+        if isinstance(other, (int, type(Zero()))):
+            if (other == 0):
+                return 0
         for i, v in enumerate(other.args):
             for i2, v2 in enumerate(self.args):
                 # it looks this way because if we are in the same frame and
@@ -1293,7 +1356,6 @@ class Vector(object):
 
     def __str__(self, printer=None):
         """Printing method. """
-        str_ind = 'xyz'
         ar = self.args # just to shorten things
         if len(ar) == 0:
             return str(0)
@@ -1302,30 +1364,29 @@ class Vector(object):
             for j in 0, 1, 2:
                 # if the coef of the basis vector is 1, we skip the 1
                 if ar[i][0][j] == 1:
-                    if len(ol) != 0:
-                        ol.append(' + ')
-                    ol.append(str(ar[i][1]) + '.' + str_ind[j])
+                    ol.append(' + ' + ar[i][1].str_vecs[j])
                 # if the coef of the basis vector is -1, we skip the 1
                 elif ar[i][0][j] == -1:
-                    if len(ol) != 0:
-                        ol.append(' ')
-                    ol.append('- ' + str(ar[i][1]) + '.' + str_ind[j])
+                    ol.append(' - ' + ar[i][1].str_vecs[j])
                 elif ar[i][0][j] != 0:
-                    # If the coefficient of the basis vector is not 1 or -1,
-                    # we might wrap it in parentheses, for readability.
-                    arg_str = MechanicsStrPrinter().doprint(ar[i][0][j])
-                    str_start = ' + '
+                    # If the coefficient of the basis vector is not 1 or -1;
+                    # also, we might wrap it in parentheses, for readability.
+                    arg_str = MechanicsStrPrinter(
+                            {'order':None}).doprint(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)"%arg_str
                     if arg_str[0] == '-':
                         arg_str = arg_str[1:]
                         str_start = ' - '
-                    if len(ol) == 0:
-                        str_start = str_start[1:]
-                    if (len(ol) != 0) or (str_start.find('-') != -1):
-                        ol.append(str_start)
-                    ol.append(arg_str + '*' + str(ar[i][1]) + '.' + str_ind[j])
-        return ''.join(ol)
+                    else:
+                        str_start = ' + '
+                    ol.append(str_start + arg_str + '*' + ar[i][1].str_vecs[j])
+        outstr = ''.join(ol)
+        if outstr[0:3] == ' + ':
+            outstr = outstr[3:]
+        elif outstr[0] == ' ':
+            outstr = outstr[1:]
+        return outstr
 
     def __sub__(self, other):
         """The subraction operator. """
@@ -1360,8 +1421,8 @@ class Vector(object):
 
         if isinstance(other, Dyad):
             return NotImplemented
-        if isinstance(other, int):
-            if other == 0:
+        if isinstance(other, (int, type(Zero()))):
+            if (other == 0):
                 return self * 0
         self._check_vector(other)
 
@@ -1573,6 +1634,78 @@ class Vector(object):
 
 class MechanicsStrPrinter(StrPrinter):
     """String Printer for mechanics. """
+
+    def _print_Add(self, expr, order=None):
+        if self.order == 'unsorted':
+            terms = list(expr.args)
+        else:
+            terms = self._as_ordered_terms(expr, order=order)
+
+        PREC = precedence(expr)
+        l = []
+        for term in terms:
+            t = self._print(term)
+            if t.startswith('-'):
+                sign = "-"
+                t = t[1:]
+            else:
+                sign = "+"
+            if precedence(term) < PREC:
+                l.extend([sign, "(%s)"%t])
+            else:
+                l.extend([sign, t])
+        sign = l.pop(0)
+        if sign=='+':
+            sign = ""
+        return sign + ' '.join(l)
+
+    def _print_Mul(self, expr):
+        coeff, terms = expr.as_coeff_mul()
+        if coeff.is_negative:
+            coeff = -coeff
+            if coeff is not S.One:
+                terms = (coeff,) + terms
+            sign = "-"
+        else:
+            terms = (coeff,) + terms
+            sign = ""
+
+        a = [] # items in the numerator
+        b = [] # items that are in the denominator (if any)
+
+        if (self.order != 'old') and (self.order != 'unsorted'):
+            args = expr._new_rawargs(*terms).as_ordered_factors()
+        else:
+            args = terms
+
+        # Gather args for numerator/denominator
+        for item in args:
+            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+                b.append(Pow(item.base, -item.exp))
+            elif item.is_Rational and item is not S.Infinity:
+                if item.p != 1:
+                    a.append(Rational(item.p))
+                if item.q != 1:
+                    b.append(Rational(item.q))
+            else:
+                a.append(item)
+
+        if len(a)==0:
+            a = [S.One]
+
+        a_str = map(lambda x:self.parenthesize(x, precedence(expr)), a)
+        b_str = map(lambda x:self.parenthesize(x, precedence(expr)), b)
+
+        if len(b)==0:
+            return sign + '*'.join(a_str)
+        elif len(b)==1:
+            if len(a)==1 and not (a[0].is_Atom or a[0].is_Add):
+                return sign + "%s/"%a_str[0] + '*'.join(b_str)
+            else:
+                return sign + '*'.join(a_str) + "/%s"%b_str[0]
+        else:
+            return sign + '*'.join(a_str) + "/(%s)"%'*'.join(b_str)
+
     def _print_Derivative(self, e):
         t = dynamicsymbols._t
         if (bool(sum([i == t for i in e.variables])) &
@@ -1593,6 +1726,109 @@ class MechanicsStrPrinter(StrPrinter):
 
 class MechanicsLatexPrinter(LatexPrinter):
     """Latex Printer for mechanics. """
+
+    def _print_Add(self, expr, order=None):
+        if order == 'unsorted':
+            terms = list(expr.args)
+        else:
+            terms = self._as_ordered_terms(expr, order=order)
+        tex = self._print(terms[0])
+
+        for term in terms[1:]:
+            coeff = term.as_coeff_mul()[0]
+
+            if coeff >= 0:
+                tex += " +"
+
+            tex += " " + self._print(term)
+
+        return tex
+
+    def _print_Mul(self, expr):
+        coeff, tail = expr.as_coeff_Mul()
+
+        if not coeff.is_negative:
+            tex = ""
+        else:
+            coeff = -coeff
+            tex = "- "
+
+        numer, denom = fraction(tail, exact=True)
+        separator = self._settings['mul_symbol_latex']
+
+        def convert(expr):
+            if not expr.is_Mul:
+                return str(self._print(expr))
+            else:
+                _tex = last_term_tex = ""
+
+                if (self.order != 'old') and (self.order != 'unsorted'):
+                    args = expr.as_ordered_factors()
+                else:
+                    args = expr.args
+
+                for term in args:
+                    pretty = self._print(term)
+
+                    if term.is_Add:
+                        term_tex = (r"\left(%s\right)" % pretty)
+                    else:
+                        term_tex = str(pretty)
+
+                    # between two digits, \times must always be used,
+                    # to avoid confusion
+                    if separator == " " and \
+                            re.search("[0-9][} ]*$", last_term_tex) and \
+                            re.match("[{ ]*[-+0-9]", term_tex):
+                        _tex += r" \times "
+                    elif _tex:
+                        _tex += separator
+
+                    _tex += term_tex
+                    last_term_tex = term_tex
+                return _tex
+
+        if denom is S.One:
+            if numer.is_Add:
+                _tex = r"\left(%s\right)" % convert(numer)
+            else:
+                _tex = r"%s" % convert(numer)
+
+            if coeff is not S.One:
+                tex += str(self._print(coeff))
+
+                # between two digits, \times must always be used, to avoid
+                # confusion
+                if separator == " " and re.search("[0-9][} ]*$", tex) and \
+                        re.match("[{ ]*[-+0-9]", _tex):
+                    tex +=  r" \times " + _tex
+                else:
+                    tex += separator + _tex
+            else:
+                tex += _tex
+
+        else:
+            if numer is S.One:
+                if coeff.is_Integer:
+                    numer *= coeff.p
+                elif coeff.is_Rational:
+                    if coeff.p != 1:
+                        numer *= coeff.p
+
+                    denom *= coeff.q
+                elif coeff is not S.One:
+                    tex += str(self._print(coeff)) + " "
+            else:
+                if coeff.is_Rational and coeff.p == 1:
+                    denom *= coeff.q
+                elif coeff is not S.One:
+                    tex += str(self._print(coeff)) + " "
+
+            tex += r"\frac{%s}{%s}" % \
+                (convert(numer), convert(denom))
+
+        return tex
+
     def _print_Function(self, expr, exp=None):
         func = expr.func.__name__
         t = dynamicsymbols._t
@@ -1711,6 +1947,111 @@ class MechanicsLatexPrinter(LatexPrinter):
 
 class MechanicsPrettyPrinter(PrettyPrinter):
     """Pretty Printer for mechanics. """
+
+    def _print_Add(self, expr, order=None):
+        if order == 'unsorted':
+            terms = list(expr.args)
+        else:
+            terms = self._as_ordered_terms(expr, order=order)
+        pforms, indices = [], []
+
+        def pretty_negative(pform, index):
+            """Prepend a minus sign to a pretty form. """
+            if index == 0:
+                if pform.height() > 1:
+                    pform_neg = '- '
+                else:
+                    pform_neg = '-'
+            else:
+                pform_neg = ' - '
+
+            pform = stringPict.next(pform_neg, pform)
+            return prettyForm(binding=prettyForm.NEG, *pform)
+
+        for i, term in enumerate(terms):
+            if term.is_Mul and term.as_coeff_mul()[0] < 0:
+                pform = self._print(-term)
+                pforms.append(pretty_negative(pform, i))
+            elif term.is_Rational and term.q > 1:
+                pforms.append(None)
+                indices.append(i)
+            elif term.is_Number and term < 0:
+                pform = self._print(-term)
+                pforms.append(pretty_negative(pform, i))
+            else:
+                pforms.append(self._print(term))
+
+        if indices:
+            large = True
+
+            for pform in pforms:
+                if pform is not None and pform.height() > 1:
+                    break
+            else:
+                large = False
+
+            for i in indices:
+                term, negative = terms[i], False
+
+                if term < 0:
+                    term, negative = -term, True
+
+                if large:
+                    pform = prettyForm(str(term.p))/prettyForm(str(term.q))
+                else:
+                    pform = self._print(term)
+
+                if negative:
+                    pform = pretty_negative(pform, i)
+
+                pforms[i] = pform
+
+        return prettyForm.__add__(*pforms)
+
+    def _print_Mul(self, product):
+        a = [] # items in the numerator
+        b = [] # items that are in the denominator (if any)
+
+        if (self.order != 'old') and (self.order != 'unsorted'):
+            args = product.as_ordered_factors()
+        else:
+            args = product.args
+
+        # Gather terms for numerator/denominator
+        for item in args:
+            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+                b.append(C.Pow(item.base, -item.exp))
+            elif item.is_Rational and item is not S.Infinity:
+                if item.p != 1:
+                    a.append( C.Rational(item.p) )
+                if item.q != 1:
+                    b.append( C.Rational(item.q) )
+            else:
+                a.append(item)
+
+        # Convert to pretty forms. Add parens to Add instances if there
+        # is more than one term in the numer/denom
+        for i in xrange(0, len(a)):
+            if a[i].is_Add and len(a) > 1:
+                a[i] = prettyForm(*self._print(a[i]).parens())
+            else:
+                a[i] = self._print(a[i])
+
+        for i in xrange(0, len(b)):
+            if b[i].is_Add and len(b) > 1:
+                b[i] = prettyForm(*self._print(b[i]).parens())
+            else:
+                b[i] = self._print(b[i])
+
+        # Construct a pretty form
+        if len(b) == 0:
+            return prettyForm.__mul__(*a)
+        else:
+            if len(a) == 0:
+                a.append( self._print(S.One) )
+            return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
+
+
     def _print_Derivative(self, deriv):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
         t = dynamicsymbols._t
@@ -1865,8 +2206,6 @@ def dynamicsymbols(names, level=0):
 
 dynamicsymbols._t = Symbol('t')
 
-
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
