@@ -205,7 +205,7 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import iterable, cmp_to_key, is_sequence
+from sympy.core.compatibility import iterable, cmp_to_key, is_sequence, set_union
 from sympy.core.function import Derivative, Function, UndefinedFunction, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
@@ -311,19 +311,9 @@ def preprocess(expr, func=None, hint='_Integral'):
 
     """
 
-    def denest(eq):
-        """Return what is the innermost expr of a Derivative.
-        So denest(Derivative(Derivative(x, x), x)) -> x"""
-        while isinstance(eq, Derivative):
-            eq = eq.expr
-        return eq
-
-    derivs = []
-    funcs = set()
-    for d in expr.atoms(Derivative):
-        derivs.append(d)
-        funcs |= unfuncs(d)
+    derivs = expr.atoms(Derivative)
     if not func:
+        funcs = set_union(*[unfuncs(d) for d in derivs])
         if len(funcs) != 1:
             raise ValueError('The function cannot be automatically detected for %s.' % expr)
         func = funcs.pop()
@@ -380,6 +370,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
             an ODE.  The default hint, 'default', will use whatever hint
             is returned first by classify_ode().  See Hints below for
             more options that you can use for hint.
+
         ``simplify`` enables simplification by odesimp().  See its
             docstring for more information.  Turn this off, for example,
             to disable solving of solutions for func or simplification
@@ -387,6 +378,10 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
             hint. Note that the solution may contain more arbitrary
             constants than the order of the ODE with this option
             enabled.
+
+        ``prep``, when False and when ``func`` is given, will skip the
+            preprocessing step where the equation is cleaned up so it
+            is ready for solving.
 
     **Hints**
 
@@ -591,13 +586,13 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     use dsolve(ODE, func, hint=<classification>).  See also the dsolve()
     docstring for different meta-hints you can use.
 
-    If dict is true, classify_ode() will return a dictionary of
+    If ``dict`` is true, classify_ode() will return a dictionary of
     hint:match expression terms. This is intended for internal use by
     dsolve().  Note that because dictionaries are ordered arbitrarily,
     this will most likely not be in the same order as the tuple.
 
-    If prep is False or func is None then the equation will be preprocessed
-    to put it in standard for for classification.
+    If ``prep`` is False or ``func`` is None then the equation
+    will be preprocessed to put it in standard form for classification.
 
     You can get help on different hints by doing help(ode.ode_hintname),
     where hintname is the name of the hint without "_Integral".
