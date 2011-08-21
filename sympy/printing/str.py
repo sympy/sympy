@@ -41,7 +41,10 @@ class StrPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        terms = self._as_ordered_terms(expr, order=order)
+        if self.order == 'unsorted':
+            terms = list(expr.args)
+        else:
+            terms = self._as_ordered_terms(expr, order=order)
 
         PREC = precedence(expr)
         l = []
@@ -216,7 +219,7 @@ class StrPrinter(Printer):
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
-        if self.order != 'old':
+        if (self.order != 'old') and (self.order != 'unsorted'):
             args = expr._new_rawargs(*terms).as_ordered_factors()
         else:
             args = terms
@@ -505,6 +508,9 @@ class StrPrinter(Printer):
 
 def sstr(expr, **settings):
     """Returns the expression as a string.
+
+    For large expressions, use the setting order='unsorted'.
+
     Example:
 
     >>> from sympy import symbols, Eq, sstr
