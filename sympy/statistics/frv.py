@@ -22,6 +22,10 @@ class FiniteDomain(Domain):
     def elements(self):
         return self.args[1]
 
+    @property
+    def dict(self):
+        return FiniteSet(Dict(dict(el)) for el in self.elements)
+
     def __contains__(self, other):
         return other in self.elements
 
@@ -69,7 +73,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         if val in [True, False]:
             return val
         elif val.is_Equality:
-            return False #equalities check if lhs is rhs. This must not be true.
+            return val.lhs == val.rhs
         raise ValueError("Undeciable if %s"%str(val))
 
     def __contains__(self, other):
@@ -80,7 +84,13 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
 
     @property
     def set(self):
-        return FiniteSet(elem for elem in self.fulldomain if elem in self)
+        if self.fulldomain.__class__ is SingleFiniteDomain:
+            return FiniteSet(elem for elem in self.fulldomain.set
+                    if frozenset(((self.fulldomain.symbol, elem),)) in self)
+        else:
+            raise NotImplementedError(
+                    "Not implemented on multi-dimensional conditional domain")
+        #return FiniteSet(elem for elem in self.fulldomain if elem in self)
 
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
