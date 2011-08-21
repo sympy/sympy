@@ -1,4 +1,4 @@
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict
+from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import is_sequence, iterable
@@ -86,8 +86,9 @@ def test_Dict():
     raises(KeyError, 'd[2]')
     assert len(d) == 3
     assert set(d.keys()) == set((x,y,z))
-    assert set(d.values()) == set((1,2,3))
+    assert set(d.values()) == set((S(1),S(2),S(3)))
     assert d.get(5,'default') == 'default'
     assert d.has_key(x) and not d.has_key(5)
     assert x in d and z in d and not 5 in d
 
+    assert Dict(((x,1), (y,2), (z,3))) == Dict({x:1, y:2, z:3})

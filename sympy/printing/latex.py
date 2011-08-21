@@ -817,7 +817,9 @@ class LatexPrinter(Printer):
     def _print_tuple(self, expr):
         return r"\begin{pmatrix}%s\end{pmatrix}" % \
             r", & ".join([ self._print(i) for i in expr ])
-    _print_Tuple = _print_tuple
+
+    def _print_Tuple(self, expr):
+        return _print_tuple(self, expr)
 
     def _print_list(self, expr):
         return r"\begin{bmatrix}%s\end{bmatrix}" % \
@@ -833,7 +835,9 @@ class LatexPrinter(Printer):
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
         return r"\begin{Bmatrix}%s\end{Bmatrix}" % r", & ".join(items)
-    _print_Dict = _print_dict
+
+    def _print_Dict(self, expr):
+        return _print_dict(self, expr)
 
     def _print_DiracDelta(self, expr):
         if len(expr.args) == 1 or expr.args[1] == 0:

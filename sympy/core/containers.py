@@ -8,6 +8,7 @@
 
 from basic import Basic
 from sympify import sympify
+from sympy.utilities.iterables import iterable
 
 class Tuple(Basic):
     """
@@ -128,8 +129,11 @@ class Dict(Basic):
 
     """
 
-    def __new__(cls, d):
-        items = [Tuple(k,v) for k, v in d.items()]
+    def __new__(cls, arg):
+        if arg.__class__ is dict:
+            items = [Tuple(k, v) for k, v in arg.items()]
+        elif iterable(arg):
+            items = [Tuple(k, v) for k, v in arg]
         obj = Basic.__new__(cls, *items)
         obj._dict = dict(items) # In case Tuple decides it wants to Sympify
         return obj
@@ -151,7 +155,7 @@ class Dict(Basic):
 
     def iterkeys(self):
         '''D.iterkeys() -> an iterator over the keys of D'''
-        return (k for k,v in self.iteritems())
+        return (k for k, v in self.iteritems())
 
     def keys(self):
         '''D.keys() -> list of D's keys'''
@@ -159,7 +163,7 @@ class Dict(Basic):
 
     def itervalues(self):
         '''D.itervalues() -> an iterator over the values of D'''
-        return (v for k,v in self.iteritems())
+        return (v for k, v in self.iteritems())
 
     def values(self):
         '''D.values() -> list of D's values'''
