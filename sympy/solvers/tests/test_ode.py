@@ -33,6 +33,8 @@ g = Function('g')
 def test_checkodesol():
     # For the most part, checkodesol is well tested in the tests below.
     # These tests only handle cases not checked below.
+    raises(ValueError, 'checkodesol(f(x, y).diff(x), Eq(f(x, y), x))')
+    raises(ValueError, 'checkodesol(f(x).diff(x), Eq(f(x, y), x), f(x, y))')
     assert checkodesol(f(x).diff(x), Eq(f(x, y), x)) == \
         (False, -f(x).diff(x) + f(x, y).diff(x) - 1)
     assert checkodesol(f(x).diff(x), Eq(f(x), x)) is not True
@@ -125,7 +127,10 @@ def test_dsolve_options():
     raises(ValueError, "dsolve(eq, hint='Liouville')")
     assert dsolve(f(x).diff(x) - 1/f(x)**2, hint='all')['best'] == \
         dsolve(f(x).diff(x) - 1/f(x)**2, hint='best')
-
+    assert dsolve(f(x) + f(x).diff(x) + sin(x).diff(x) + 1, f(x),
+                  hint="1st_linear_Integral") == \
+        Eq(f(x), (C1 + Integral((-sin(x).diff(x) - \
+        1)*exp(Integral(1, x)), x))*exp(-Integral(1, x)))
 
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
@@ -157,6 +162,23 @@ def test_classify_ode():
                                 '1st_exact',
                                 'separable_Integral',
                                 '1st_exact_Integral')
+    # preprocessing
+    ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
+        '1st_homogeneous_coeff_best', '1st_homogeneous_coeff_subs_indep_div_dep',
+        '1st_homogeneous_coeff_subs_dep_div_indep',
+        'nth_linear_constant_coeff_undetermined_coefficients',
+        'nth_linear_constant_coeff_variation_of_parameters',
+        'separable_Integral', '1st_exact_Integral',
+        '1st_linear_Integral',
+        'Bernoulli_Integral',
+        '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+       '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
+       'nth_linear_constant_coeff_variation_of_parameters_Integral')
+    #     w/o f(x) given
+    assert classify_ode(diff(f(x) + x, x) + diff(f(x), x)) == ans
+    #     w/ f(x) and prep=True
+    assert classify_ode(diff(f(x) + x, x) + diff(f(x), x), f(x),
+                        prep=True) == ans
 
 def test_ode_order():
     f = Function('f')
