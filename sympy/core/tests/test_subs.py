@@ -430,3 +430,8 @@ def test_no_arith_subs_on_floats():
 
     (x + y + 3.0).subs(x + 3.0, a) == a + y
     (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
+
+def test_exact():
+    x, y = symbols('x y')
+    assert ((x + 1)**2).subs(x + 2, y) == (y - 1)**2
+    assert ((x + 1)**2).subs(x + 2, y, exact=True) == (x + 1)**2

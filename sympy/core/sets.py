@@ -217,7 +217,7 @@ class Set(Basic):
                 if not hit and newa != arg:
                     hit = True
                 new_args.append(newa)
-            else:
+            else: # e.g. bool will come here
                 new_args.append(arg)
         if not hit:
             return self

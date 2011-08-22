@@ -204,7 +204,7 @@ class GeometryEntity(tuple):
 
         Note: since GeometryEntity doesn't derive from Basic, it needs its own subs method.
         """
-        if self == old:
+        if type(old) == type(self) == type(new) and self == old:
             return new
         return type(self)(*[a.subs(old, new) for a in self.args])
 

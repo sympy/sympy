@@ -678,7 +678,7 @@ class Basic(object):
         """
         return S.One, self
 
-    def subs(self, *args):
+    def subs(self, *args, **hints):
         """
         Substitutes old for new in an expression after sympifying args.
 
@@ -692,10 +692,13 @@ class Basic(object):
                In this case the old/new pairs will be sorted by op count and in
                case of a tie, by number of args. The resulting sorted list is
                then processed as an iterable container (see previous).
+        `hints` can be:
+            `exact` - when True, only do the substitution if expr or a complete
+                      subexpression matches `old`
 
         Examples:
 
-        >>> from sympy import pi
+        >>> from sympy import pi, exp
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
@@ -709,7 +712,22 @@ class Basic(object):
         >>> (x + y).subs(reversed(reps))
         x**2 + 2
 
-        ** Developer Notes **
+        >>> (x**2 + x**4).subs(x**2, y)
+        y**2 + y
+        >>> (x**2 + x**4).subs(x**2, y, exact=True)
+        x**4 + y
+
+        A complete match of the expr or any of its
+        subargs is targeted with 'exact' but not subsets
+        of the arguments
+        >>> (x + 2).subs(x + 2, y, exact=True)
+        y
+        >>> (x + y + 2).subs(x + 2, y, exact=True)
+        x + y + 2
+        >>> (x + 2 + exp(x + 2)).subs(x + 2, y, exact=True)
+        x + exp(y) + 2
+
+        ** Developers Notes **
         When unordered iterables are given we sort them so a canonical result
         is obtained. When the old-new pairs are given in a dictionary we sort
         them with naive O(n**2) sorting algorithm, as 'in' gives only partial
@@ -764,7 +782,7 @@ class Basic(object):
 
         rv = self
         for old, new in sequence:
-            rv = rv._subs(old, new)
+            rv = rv._subs(old, new, **hints)
             if not isinstance(rv, Basic):
                 break
         if unordered == 'dict':
@@ -782,7 +800,7 @@ class Basic(object):
         return rv
 
     @cacheit
-    def _subs(self, old, new):
+    def _subs(self, old, new, **hints):
         """Substitutes an expression old -> new.
 
         If self is not equal to old then _eval_subs is called.
@@ -857,7 +875,7 @@ class Basic(object):
             hit = False
             args = list(self.args)
             for i, arg in enumerate(args):
-                arg = arg._subs(old, new)
+                arg = arg._subs(old, new, **hints)
                 if arg is not args[i]:
                     hit = True
                     args[i] = arg
@@ -870,7 +888,13 @@ class Basic(object):
         if not self.args:
             return self
         rv = None
-        if hasattr(self, '_eval_subs'):
+        # this should be 'not hints.get('exact', False) and not hasattr(self, '_eval_subs_exact')
+        # once _eval_subs_exact routines are written
+        # or
+        # not hints.get('exact', False) and not hasattr(self, '_eval_subs') followed by a call
+        # to _eval_subs with the hint so that routine handles both cases
+        #
+        if not hints.get('exact', False) and hasattr(self, '_eval_subs'):
             rv = self._eval_subs(old, new)
         if rv is None:
             rv = fallback(self, old, new)
