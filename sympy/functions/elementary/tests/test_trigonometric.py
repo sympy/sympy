@@ -190,6 +190,9 @@ def test_cos():
 
     assert cos(r).is_real == True
 
+    assert cos(k*pi) == (-1)**k
+    assert cos(2*k*pi) == 1
+
 def test_cos_rewrite():
     x = Symbol('x')
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
