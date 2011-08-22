@@ -354,9 +354,9 @@ def innerproduct_helper(expr, **options):
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
     >>> innerproduct_helper(XKet(), basis=XKet())
     DiracDelta(x - x_1)
-    >>> rep_innerproduct(XKet(), basis=PxOp())
+    >>> innerproduct_helper(XKet(), basis=PxKet())
     sqrt(2)*exp(-I*px_1*x/hbar)/(2*sqrt(hbar)*sqrt(pi))
-    >>> rep_innerproduct(PxKet(), basis=XOp())
+    >>> innerproduct_helper(PxKet(), basis=XKet())
     sqrt(2)*exp(I*px*x_1/hbar)/(2*sqrt(hbar)*sqrt(pi))
 
     """
