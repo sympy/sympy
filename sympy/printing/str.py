@@ -94,7 +94,7 @@ class StrPrinter(Printer):
         return "{%s}"%", ".join(items)
 
     def _print_Dict(self, expr):
-        return _print_dict(self, expr)
+        return self._print_dict(expr)
 
     def _print_Dummy(self, expr):
         return '_' + expr.name

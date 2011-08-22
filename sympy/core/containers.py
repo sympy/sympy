@@ -114,9 +114,10 @@ class Dict(Basic):
     """
     Wrapper around the builtin dict object
 
-    The Dict is a subclass of Basic, so that it works well in the
-    Sympy framework.  The wrapped dict is accessible through the normal
-    dict accessor methods.
+    The Dict is a subclass of Basic.
+    This means so that it works well in the Sympy framework and that it
+    is immutable. With the exception of changing and setting values it behaves
+    identically to the python dict.
 
     >>> from sympy.core.containers import Dict
 
@@ -129,11 +130,15 @@ class Dict(Basic):
 
     """
 
-    def __new__(cls, arg):
-        if arg.__class__ is dict:
-            items = [Tuple(k, v) for k, v in arg.items()]
-        elif iterable(arg):
-            items = [Tuple(k, v) for k, v in arg]
+    def __new__(cls, *args):
+        if len(args)==1 and args[0].__class__ is dict:
+            items = [Tuple(k, v) for k, v in args[0].items()]
+        elif len(args)==1 and iterable(args[0]):
+            items = [Tuple(k, v) for k, v in args[0]]
+        elif all(len(arg)==2 for arg in args):
+            items = [Tuple(k, v) for k, v in args]
+        else:
+            raise TypeError()
         obj = Basic.__new__(cls, *items)
         obj._dict = dict(items) # In case Tuple decides it wants to Sympify
         return obj

@@ -91,4 +91,11 @@ def test_Dict():
     assert d.has_key(x) and not d.has_key(5)
     assert x in d and z in d and not 5 in d
 
-    assert Dict(((x,1), (y,2), (z,3))) == Dict({x:1, y:2, z:3})
+    # Test three input types
+    # input - Iterable of tuples (works like python dict
+    # input - a python dict
+    # input - items as args - SymPy style
+    assert (Dict(((x,1), (y,2), (z,3))) ==
+            Dict({x:1, y:2, z:3}) ==
+            Dict((x,1), (y,2), (z,3)))
+

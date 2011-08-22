@@ -4,7 +4,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg)
+    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1996,6 +1996,7 @@ u"""\
     assert upretty(expr) == ucode_str
 
     expr = {}
+    expr_2 = {}
     ascii_str = \
 """\
 {}\
@@ -2005,7 +2006,9 @@ u"""\
 {}\
 """
     assert  pretty(expr) == ascii_str
+    assert  pretty(expr_2) == ascii_str
     assert upretty(expr) == ucode_str
+    assert upretty(expr_2) == ucode_str
 
     expr = (1/x,)
     ascii_str = \
@@ -2084,6 +2087,7 @@ u"""\
     assert upretty(expr) == ucode_str
 
     expr = {x: sin(x)}
+    expr_2 = Dict({x: sin(x)})
     ascii_str = \
 """\
 {x: sin(x)}\
@@ -2093,9 +2097,12 @@ u"""\
 {x: sin(x)}\
 """
     assert  pretty(expr) == ascii_str
+    assert  pretty(expr_2) == ascii_str
     assert upretty(expr) == ucode_str
+    assert upretty(expr_2) == ucode_str
 
     expr = {1/x: 1/y, x: sin(x)**2}
+    expr_2 = Dict({1/x: 1/y, x: sin(x)**2})
     ascii_str = \
 """\
  1  1        2    \n\
@@ -2109,7 +2116,9 @@ u"""\
 ⎩x  y            ⎭\
 """
     assert  pretty(expr) == ascii_str
+    assert  pretty(expr_2) == ascii_str
     assert upretty(expr) == ucode_str
+    assert upretty(expr_2) == ucode_str
 
     # There used to be a bug with pretty-printing sequences of even height.
     expr = [x**2]
@@ -2155,6 +2164,7 @@ u"""\
     assert upretty(expr) == ucode_str
 
     expr = {x**2: 1}
+    expr_2 = Dict({x**2: 1})
     ascii_str = \
 """\
   2    \n\
@@ -2167,7 +2177,9 @@ u"""\
 ⎩     ⎭\
 """
     assert  pretty(expr) == ascii_str
+    assert  pretty(expr_2) == ascii_str
     assert upretty(expr) == ucode_str
+    assert upretty(expr_2) == ucode_str
 
 def test_any_object_in_sequence():
     # Cf. issue 2207
@@ -2183,8 +2195,11 @@ def test_any_object_in_sequence():
     assert upretty(expr) == u"set(Basic(), Basic(Basic()))"
 
     expr = {b2:b1, b1:b2}
+    expr2 = Dict({b2:b1, b1:b2})
     assert pretty(expr) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+    assert pretty(expr2) == "{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
     assert upretty(expr) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
+    assert upretty(expr2) == u"{Basic(): Basic(Basic()), Basic(Basic()): Basic()}"
 
 def test_pretty_limits():
     expr = Limit(x, x, oo)

@@ -837,7 +837,7 @@ class LatexPrinter(Printer):
         return r"\begin{Bmatrix}%s\end{Bmatrix}" % r", & ".join(items)
 
     def _print_Dict(self, expr):
-        return _print_dict(self, expr)
+        return self._print_dict(expr)
 
     def _print_DiracDelta(self, expr):
         if len(expr.args) == 1 or expr.args[1] == 0:
