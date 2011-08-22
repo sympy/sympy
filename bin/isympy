@@ -94,8 +94,8 @@ def main():
         dest='order',
         action='store',
         default=None,
-        choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'old'],
-        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old')
+        choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'old', 'none'],
+        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old | none')
 
     parser.add_option(
         '-q', '--quiet',

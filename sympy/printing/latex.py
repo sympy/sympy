@@ -125,7 +125,7 @@ class LatexPrinter(Printer):
             return expr
 
     def _print_Add(self, expr, order=None):
-        if self.order == 'unsorted':
+        if self.order == 'none':
             terms = list(expr.args)
         else:
             terms = self._as_ordered_terms(expr, order=order)
@@ -184,7 +184,7 @@ class LatexPrinter(Printer):
             else:
                 _tex = last_term_tex = ""
 
-                if (self.order != 'old') and (self.order != 'unsorted'):
+                if (self.order != 'old') and (self.order != 'none'):
                     args = expr.as_ordered_factors()
                 else:
                     args = expr.args
@@ -944,7 +944,7 @@ def latex(expr, **settings):
         code will be enclosed in the 'equation' or 'equation*' environment
         (remember to import 'amsmath' for 'equation*'), unless the 'itex'
         option is set. In the latter case, the $$ $$ syntax is used. For very
-        large expressions, set the 'order' keyword to 'unsorted'.
+        large expressions, set the 'order' keyword to 'none'.
 
         >>> from sympy import latex, Rational
         >>> from sympy.abc import x, y, mu, tau
