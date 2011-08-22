@@ -335,11 +335,16 @@ class QExpr(Expr):
     #-------------------------------------------------------------------------
 
     def _get_default_basis(self, **options):
-        raise NotImplementedError('This object does not have a default basis')
+        """
+        Returns the default basis for the object to be represented in.
 
-    #def _represent_default_basis(self, **options):
-    #    def_basis = self._get_default_basis(**options)
-    #    return self._represent(basis=def_basis(), **options)
+        This function can return either a class or instance, but it should
+        always return a class or instance of a State. This is meant to be
+        overridden in subclasses to give a default basis to be represented in if
+        no basis is specified to the top level represent.
+        """
+
+        raise NotImplementedError('This object does not have a default basis')
 
     def _represent(self, **options):
         """Represent this object in a given basis.

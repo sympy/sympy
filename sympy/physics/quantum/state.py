@@ -607,6 +607,12 @@ class Wavefunction(Function):
     This class takes an expression and coordinates in its constructor. It can be
     used to easily calculate normalizations and probabilities.
 
+    If the ``keep_delta`` options is specified as False in the
+    constructor, then any DiracDeltas which appear in a Mul will be
+    factored out of the Wavefunction. This options exists to make
+    integration easier when representing in continuous bases. See the
+    examples below. ``keep_delta`` is True by default
+
     Parameters
     ==========
 
@@ -685,6 +691,16 @@ class Wavefunction(Function):
 
         >>> diff(f, x)
         Wavefunction(2*x, x)
+
+    The ``keep_delta`` option can be used to factor DiracDelta functions out of
+    the Wavefunction
+
+    >>> from sympy.functions import DiracDelta
+    >>> Wavefunction(x*DiracDelta(x), x)
+    Wavefunction(x*DiracDelta(x), x)
+    >>> Wavefunction(x*DiracDelta(x), x, keep_delta=False)
+    DiracDelta(x)*Wavefunction(x, x)
+
     """
 
     #Any passed tuples for coordinates and their bounds need to be

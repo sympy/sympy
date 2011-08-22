@@ -57,9 +57,9 @@ def represent(expr, **options):
     In quantum mechanics abstract states and operators can be represented in
     various basis sets. Under this operation the follow transforms happen:
 
-    * Ket -> column vector or function
-    * Bra -> row vector of function
-    * Operator -> matrix or differential operator
+    * Ket -> column vector or Wavefunction
+    * Bra -> row vector or Wavefunction
+    * Operator -> matrix or DifferentialOperator
 
     This function is the top-level interface for this action.
 
@@ -75,11 +75,52 @@ def represent(expr, **options):
     This function will have the logic for representing instances of its class
     in the basis set having a class named ``FooBasis``.
 
-    The function also keeps track of an 'index' option, which
-    represents the index of dummy kets that are inserted into the
-    expression. This index defaults to 1 at the start of the
-    representation of the expression. If the user specifies an index,
-    represent will start counting indices at the passed index.
+    Representations in continuous bases go through additional processing after
+    the results are returned from the internal ``_represent_FooBasis``
+    method. Continuous representations are made with the following logic in
+    mind. If we wish to represent an arbitrary expression like A*|alpha> in a
+    continuous basis, we do so by inserting dummy kets of that continuous
+    basis. In the case of the 1D position basis, the preceding expression would
+    be represented by computing <x_2|A|x_1><x_1|alpha>.
+
+    The represent function keeps track of an ``index`` option, which represents the
+    index of dummy kets that are inserted into the expression. This index
+    defaults to 1 at the start of the representation of the expression. If the
+    user specifies an index, represent will start counting indices at the passed
+    index. All lower level ``_represent_FooBasis`` functions must adhere to the
+    indexing conventions, and helper functions are provided for this purpose.
+
+    The logic of the continuous representation process is as follows:
+    * Call internal ``_represent_FooBasis`` method on the given ``QExpr``,
+    passing an index with the options. The resulting expression will be a
+    Wavefunction, DifferentialOperator, or DiracDelta expression.
+    * If the original expression in the recursion tree was a Mul, then combine
+    all of the resulting expressions multiplicatively.
+    * Integrate over any unities (|x_1><x_1|) that resulted in a DiracDelta
+    function being produced.
+    * Combine any subsequent Wavefunctions in the Mul into a single
+    Wavefunction, so that DifferentialOperator can be applied appropriately.
+    * Call qapply on the expression, so the DifferentialOperators are applied to
+    Wavefunctions.
+    * Unwrap any remaining Wavefunction objects to get their contained
+    expressions, so that they can be integrated.
+    * Integrate over any remaining unities.
+    * Collapse the indices of the dummy coordinates to the lowest
+    available. This is so that you don't end up with expressions in terms of x_2
+    or higher indices if you had many ``QExpr``s in your original expression.
+    * Wrap a single Wavefunction object around the resulting expression if it is
+    still a function. Otherwise, return the Expr as is.
+
+    Some of these steps can be controlled by options passed to the
+    function. Those options are:
+    * ``integrate``: if False, unities will not be integrated over
+    * ``qapply``: if False, DifferentialOperators will not be applied to
+    Wavefunctions in the represented expression.
+    * ``combine``: if False, Wavefunctions will not be combined before the
+    qapply call
+    * ``collapse``: if False, the index of the dummy coordinates inserted will
+    not be collapsed to the lowest available
+    * ``wrap_wf``: if False, the final result will not be wrapped in a Wavefunction
 
     Parameters
     ==========
@@ -804,6 +845,8 @@ def _collapse_indices(expr, basis):
     return expr
 
 def _combine_wf(expr):
+    """Helper function to combine subsequent Wavefunction objects in a Mul"""
+
     if not isinstance(expr, Mul):
         return expr
 

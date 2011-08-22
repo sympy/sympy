@@ -33,7 +33,60 @@ class PIABHamiltonian(HermitianOperator):
 
 
 class PIABKet(Ket):
-    """Particle in a box eigenket."""
+    """Particle in a box eigenket.
+
+    Can be represented in continuous bases and manipulated with continuous
+    operators as well.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.quantum.piab import PIABKet, PIABBra
+    >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp
+
+    A default instance will simply give the ket an index of n, where n is an
+    integer
+
+    >>> p = PIABKet()
+    >>> p
+    |n>
+    >>> p.label[0].is_integer
+    True
+
+    When you represent the ket, you get a Wavefunction object. By default, it
+    will be represented in the XKet (1D cartesian) basis
+
+    >>> from sympy.physics.quantum import represent
+    >>> represent(p)
+    Wavefunction(2**(1/2)*sin(pi*n*x/L)/L**(1/2), (x, 0, L))
+
+    You can also then compute more complicated representations.
+    In this example, we get an extra factor of x in the resulting Wavefunction,
+    as expected.
+
+    >>> represent(XOp()*p, basis=XKet)
+    Wavefunction(2**(1/2)*x*sin(pi*n*x/L)/L**(1/2), (x, 0, L))
+
+    In this example, the momentum operator in the position basis is a
+    differential operator, so we actually end up with the derivative of the
+    original represented expression.
+
+    >>> represent(PxOp()*p, basis=XKet)
+    Wavefunction(-2**(1/2)*hbar*I*pi*n*cos(pi*n*x/L)/L**(3/2), (x, 0, L))
+
+    We can even compute expectation values for this state!
+
+    >>> p_bra = PIABBra()
+    >>> represent(p_bra*XOp()*p, basis=XKet)
+    L*cos(pi*n)**2/2
+
+    cos(pi*n)**2 is 1, so this gives L/2, as expected!
+
+    >>> represent(p_bra*PxOp()*p, basis=XKet)
+    0
+
+    The expectation value of the momentum for a piab state is 0, as expected!
+    """
 
     @classmethod
     def default_args(self):
