@@ -386,11 +386,7 @@ class cos(TrigonometricFunction):
         if pi_coeff is not None:
             if not pi_coeff.is_Rational:
                 if pi_coeff.is_integer:
-                    even = pi_coeff.is_even
-                    if even:
-                        return S.One
-                    elif even is False:
-                        return S.NegativeOne
+                    return (S.NegativeOne)**pi_coeff
                 narg = pi_coeff*S.Pi
                 if narg != arg:
                     return cls(narg)
