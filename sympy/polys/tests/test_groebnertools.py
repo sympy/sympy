@@ -1,19 +1,16 @@
-"""Tests for sparse distributed polynomials and Groebner bases. """
+"""Tests for Groebner bases. """
+
+from sympy.polys.distributedpolys import (
+    sdp_from_dict,
+)
 
 from sympy.polys.groebnertools import (
-    sdp_LC, sdp_LM, sdp_LT, sdp_del_LT,
-    sdp_coeffs, sdp_monoms,
-    sdp_sort, sdp_strip, sdp_normal,
-    sdp_from_dict, sdp_to_dict,
-    sdp_indep_p, sdp_one_p, sdp_one, sdp_term_p,
-    sdp_abs, sdp_neg,
-    sdp_add_term, sdp_sub_term, sdp_mul_term,
-    sdp_add, sdp_sub, sdp_mul, sdp_sqr, sdp_pow,
-    sdp_monic, sdp_content, sdp_primitive,
-    _term_rr_div, _term_ff_div,
-    sdp_div, sdp_quo, sdp_rem,
-    sdp_lcm, sdp_gcd,
-    sdp_groebner,
+    sdp_groebner, sig, sig_key, sig_cmp,
+    lbp, lbp_cmp, lbp_key, critical_pair,
+    cp_cmp, cp_key, is_rewritable_or_comparable,
+    Sign, Polyn, Num, s_poly, f5_reduce,
+    matrix_fglm, is_zero_dimensional,
+    _basis, _representing_matrices,
 )
 
 from sympy.polys.monomialtools import (
@@ -32,189 +29,10 @@ from sympy import S, Symbol, symbols, groebner
 
 from sympy.utilities.pytest import raises, skip, XFAIL
 
-def test_sdp_LC():
-    assert sdp_LC([], QQ) == QQ(0)
-    assert sdp_LC([((1,0), QQ(1,2))], QQ) == QQ(1,2)
-    assert sdp_LC([((1,1), QQ(1,4)), ((1,0), QQ(1,2))], QQ) == QQ(1,4)
+from sympy.polys.polyconfig import setup
 
-def test_sdp_LM():
-    assert sdp_LM([], 1) == (0, 0)
-    assert sdp_LM([((1,0), QQ(1,2))], 1) == (1, 0)
-    assert sdp_LM([((1,1), QQ(1,4)), ((1,0), QQ(1,2))], 1) == (1, 1)
 
-def test_sdp_LT():
-    assert sdp_LT([], 1, QQ) == ((0, 0), QQ(0))
-    assert sdp_LT([((1,0), QQ(1,2))], 1, QQ) == ((1, 0), QQ(1,2))
-    assert sdp_LT([((1,1), QQ(1,4)), ((1,0), QQ(1,2))], 1, QQ) == ((1, 1), QQ(1,4))
-
-def test_sdp_del_LT():
-    assert sdp_del_LT([]) == []
-    assert sdp_del_LT([((1,0), QQ(1,2))]) == []
-    assert sdp_del_LT([((1,1), QQ(1,4)), ((1,0), QQ(1,2))]) == [((1,0), QQ(1,2))]
-
-def test_sdp_coeffs():
-    assert sdp_coeffs([]) == []
-    assert sdp_coeffs([((1,0), QQ(1,2))]) == [QQ(1,2)]
-    assert sdp_coeffs([((1,1), QQ(1,4)), ((1,0), QQ(1,2))]) == [QQ(1,4), QQ(1,2)]
-
-def test_sdp_monoms():
-    assert sdp_monoms([]) == []
-    assert sdp_monoms([((1,0), QQ(1,2))]) == [(1,0)]
-    assert sdp_monoms([((1,1), QQ(1,4)), ((1,0), QQ(1,2))]) == [(1,1), (1,0)]
-
-def test_sdp_sort():
-    pass
-
-def test_sdp_strip():
-    assert sdp_strip([((2,2), 0), ((1,1), 1), ((0,0), 0)]) == [((1,1), 1)]
-
-def test_sdp_normal():
-    pass
-
-def test_sdp_from_dict():
-    pass
-
-def test_sdp_indep_p():
-    pass
-
-def test_sdp_one_p():
-    pass
-
-def test_sdp_one():
-    pass
-
-def test_sdp_term_p():
-    pass
-
-def test_sdp_abs():
-    pass
-
-def test_sdp_neg():
-    pass
-
-def test_sdp_add_term():
-    pass
-
-def test_sdp_sub_term():
-    pass
-
-def test_sdp_mul_term():
-    pass
-
-def test_sdp_add():
-    pass
-
-def test_sdp_sub():
-    pass
-
-def test_sdp_mul():
-    pass
-
-def test_sdp_sqr():
-    pass
-
-def test_sdp_pow():
-    f = sdp_from_dict({(1,): 2, (0,): 3}, O_grlex)
-
-    assert sdp_pow(f, 0, 0, O_grlex, ZZ) == sdp_one(0, ZZ)
-    assert sdp_pow(f, 1, 0, O_grlex, ZZ) == f
-
-    assert sdp_pow(f, 2, 0, O_grlex, ZZ) == \
-        sdp_from_dict({(2,): 4, (1,): 12, (0,): 9}, O_grlex)
-    assert sdp_pow(f, 3, 0, O_grlex, ZZ) == \
-        sdp_from_dict({(3,): 8, (2,): 36, (1,): 54, (0,): 27}, O_grlex)
-    assert sdp_pow(f, 4, 0, O_grlex, ZZ) == \
-        sdp_from_dict({(4,): 16, (3,): 96, (2,): 216, (1,): 216, (0,): 81}, O_grlex)
-    assert sdp_pow(f, 5, 0, O_grlex, ZZ) == \
-        sdp_from_dict({(5,): 32, (4,): 240, (3,): 720, (2,): 1080, (1,): 810, (0,): 243}, O_grlex)
-
-    f = sdp_from_dict({(3,1,0): 1, (1,2,0): -2, (0,0,1): -3, (0,0,0): 1}, O_grlex)
-    g = sdp_from_dict({(6,2,0): 1, (4,3,0): -4, (2,4,0): 4, (3,1,1): -6, (3,1,0): 2,
-                      (1,2,1): 12, (1,2,0): -4, (0,0,2): 9, (0,0,1): -6, (0,0,0): 1}, O_grlex)
-
-    assert sdp_pow(f, 2, 2, O_grlex, ZZ) == g
-
-    raises(ValueError, "sdp_pow(f, -2, 2, O_grlex, ZZ)")
-
-def test_sdp_monic():
-    pass
-
-def test_sdp_content():
-    pass
-
-def test_sdp_primitive():
-    pass
-
-def test_sdp_div():
-    f = sdp_from_dict({(2,1): 4, (1,1): -2, (1,0): 4, (0,1): -2, (0,0): 8}, O_grlex)
-
-    assert sdp_div(f, [sdp_from_dict({(0,0): 2}, O_grlex)], 1, O_grlex, ZZ) == \
-        ([sdp_from_dict({(2,1): 2, (1,1): -1, (1,0): 2, (0,1): -1, (0,0): 4}, O_grlex)], [])
-
-    assert sdp_div(f, [sdp_from_dict({(0,1): 2}, O_grlex)], 1, O_grlex, ZZ) == \
-        ([sdp_from_dict({(2,0): 2, (1,0): -1, (0,0): -1}, O_grlex)],
-          sdp_from_dict({(1,0): 4, (0,0): 8}, O_grlex))
-
-    f = sdp_from_dict({(1,0): 1, (0,0): -1}, O_grlex)
-    g = sdp_from_dict({(0,1): 1, (0,0): -1}, O_grlex)
-
-    assert sdp_div(f, [g], 1, O_grlex, ZZ) == ([[]], f)
-
-    f = sdp_from_dict({(3,): 1, (2,): -12, (0,): -42}, O_grlex)
-    g = sdp_from_dict({(1,): 1, (0,): -3}, O_grlex)
-
-    q = sdp_from_dict({(2,): 1, (1,): -9, (0,): -27}, O_grlex)
-    r = sdp_from_dict({(0,): -123}, O_grlex)
-
-    assert sdp_div(f, [g], 0, O_grlex, ZZ) == ([q], r)
-
-    f = sdp_from_dict({(2,): QQ(1), (1,): QQ(2), (0,): QQ(2)}, O_grlex)
-
-    g = sdp_from_dict({(0,): QQ(1)}, O_grlex)
-    h = sdp_from_dict({(0,): QQ(2)}, O_grlex)
-
-    q = sdp_from_dict({(2,): QQ(1,2), (1,): QQ(1), (0,): QQ(1)}, O_grlex)
-
-    assert sdp_div(f, [g], 0, O_grlex, QQ) == ([f], [])
-    assert sdp_div(f, [h], 0, O_grlex, QQ) == ([q], [])
-
-    f = sdp_from_dict({(1,2): 1, (0,0): 1}, O_grlex)
-    G = [sdp_from_dict({(1,1): 1, (0,0): 1}, O_grlex),
-         sdp_from_dict({(0,1): 1, (0,0): 1}, O_grlex)]
-
-    Q = [sdp_from_dict({(0,1): 1}, O_grlex),
-         sdp_from_dict({(0,0): -1}, O_grlex)]
-    r = sdp_from_dict({(0,0): 2}, O_grlex)
-
-    assert sdp_div(f, G, 1, O_grlex, ZZ) == (Q, r)
-
-    f = sdp_from_dict({(2,1): 1, (1,2): 1, (0,2): 1}, O_grlex)
-
-    G = [sdp_from_dict({(1,1): 1, (0,0): -1}, O_grlex),
-         sdp_from_dict({(0,2): 1, (0,0): -1}, O_grlex)]
-
-    Q = [sdp_from_dict({(1,0): 1, (0,1): 1}, O_grlex),
-         sdp_from_dict({(0,0): 1}, O_grlex)]
-    r = sdp_from_dict({(1,0): 1, (0,1): 1, (0,0): 1}, O_grlex)
-
-    assert sdp_div(f, G, 1, O_grlex, ZZ) == (Q, r)
-
-    G = [sdp_from_dict({(0,2): 1, (0,0): -1}, O_grlex),
-         sdp_from_dict({(1,1): 1, (0,0): -1}, O_grlex)]
-
-    Q = [sdp_from_dict({(1,0): 1, (0,0): 1}, O_grlex),
-         sdp_from_dict({(1,0): 1}, O_grlex)]
-    r = sdp_from_dict({(1,0): 2, (0,0): 1}, O_grlex)
-
-    assert sdp_div(f, G, 1, O_grlex, ZZ) == (Q, r)
-
-def test_sdp_lcm():
-    pass
-
-def test_sdp_gcd():
-    pass
-
-def test_sdp_groebner():
+def helper_test_sdp_groebner():
     f = sdp_from_dict({(1,2): QQ(2,), (2,0): QQ(1)}, O_lex)
     g = sdp_from_dict({(0,3): QQ(2), (1,1): QQ(1), (0,0): QQ(-1)},  O_lex)
 
@@ -365,10 +183,16 @@ def test_sdp_groebner():
 
     raises(DomainError, "sdp_groebner([], 1, O_lex, ZZ)")
 
-def test_benchmark_minpoly():
+def test_sdp_groebner():
+    setup('GB_METHOD', 'f5b')
+    helper_test_sdp_groebner()
+    setup('GB_METHOD', 'buchberger')
+    helper_test_sdp_groebner()
+
+def helper_test_benchmark_minpoly():
     x, y, z = symbols('x,y,z')
 
-    I = [x**3+x+1, y**2+y+1, (x+y)*z-(x**2+y)]
+    I = [x**3 + x + 1, y**2 + y + 1, (x + y) * z - (x**2 + y)]
 
     assert groebner(I, x, y, z, order='lex') == [
         -975 + 2067*x + 6878*z - 11061*z**2 + 6062*z**3 - 1065*z**4 + 155*z**5,
@@ -381,6 +205,12 @@ def test_benchmark_minpoly():
         -S(308)/159 + y + 1043*z/159 - 387*z**2/53 + 523*z**3/159 - 91*z**4/159 + 4*z**5/53,
         13 - 46*z + 89*z**2 - 82*z**3 + 41*z**4 - 7*z**5 + z**6,
     ]
+
+def test_benchmark_minpoly():
+    setup('GB_METHOD', 'f5b')
+    helper_test_benchmark_minpoly()
+    setup('GB_METHOD', 'buchberger')
+    helper_test_benchmark_minpoly()
 
 @XFAIL
 def test_benchmark_coloring():
@@ -418,7 +248,7 @@ def test_benchmark_coloring():
 
     assert groebner(I, V, order='lex') == [1]
 
-def test_benchmark_katsura_3():
+def helper_test_benchmark_katsura_3():
     x0, x1, x2 = symbols('x:3')
 
     I = [x0 + 2*x1 + 2*x2 - 1,
@@ -438,7 +268,13 @@ def test_benchmark_katsura_3():
         -1 + x0 + 2*x1 + 2*x2,
     ]
 
-def test_benchmark_katsura_4():
+def test_benchmark_katsura3():
+    setup('GB_METHOD', 'f5b')
+    helper_test_benchmark_katsura_3()
+    setup('GB_METHOD', 'buchberger')
+    helper_test_benchmark_katsura_3()
+
+def helper_test_benchmark_katsura_4():
     x0, x1, x2, x3 = symbols('x:4')
 
     I = [x0 + 2*x1 + 2*x2 + 2*x3 - 1,
@@ -464,3 +300,164 @@ def test_benchmark_katsura_4():
         x0 + 2*x1 + 2*x2 + 2*x3 - 1,
     ]
 
+def test_benchmark_kastura_4():
+    setup('GB_METHOD', 'f5b')
+    helper_test_benchmark_katsura_4()
+    setup('GB_METHOD', 'buchberger')
+    helper_test_benchmark_katsura_4()
+
+def helper_test_benchmark_czichowski():
+    x, t = symbols('x t')
+
+    I = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9, (-72 - 72*t)*x**7 + (-256 - 252*t)*x**6 + (192 + 192*t)*x**5 + (1280 + 1260*t)*x**4 + (312 + 312*t)*x**3 + (-404*t)*x**2 + (-576 - 576*t)*x + 96 + 108*t]
+
+    assert groebner(I, x, t, order='lex') == [
+        -160420835591776763325581422211936558925462474417709511019228211783493866564923546661604487873*t**7 - 1406108495478033395547109582678806497509499966197028487131115097902188374051595011248311352864*t**6 - 5241326875850889518164640374668786338033653548841427557880599579174438246266263602956254030352*t**5 - 10758917262823299139373269714910672770004760114329943852726887632013485035262879510837043892416*t**4 - 13119383576444715672578819534846747735372132018341964647712009275306635391456880068261130581248*t**3 - 9491412317016197146080450036267011389660653495578680036574753839055748080962214787557853941760*t**2 - 3767520915562795326943800040277726397326609797172964377014046018280260848046603967211258368000*t + 3725588592068034903797967297424801242396746870413359539263038139343329273586196480000*x - 632314652371226552085897259159210286886724229880266931574701654721512325555116066073245696000,
+        610733380717522355121*t**8 + 6243748742141230639968*t**7 + 27761407182086143225024*t**6 + 70066148869420956398592*t**5 + 109701225644313784229376*t**4 + 109009005495588442152960*t**3 + 67072101084384786432000*t**2 + 23339979742629593088000*t + 3513592776846090240000
+    ]
+
+    assert groebner(I, x, t, order='grlex') == [
+        16996618586000601590732959134095643086442*t**3*x - 32936701459297092865176560282688198064839*t**3 + 78592411049800639484139414821529525782364*t**2*x - 120753953358671750165454009478961405619916*t**2 + 120988399875140799712152158915653654637280*t*x - 144576390266626470824138354942076045758736*t + 60017634054270480831259316163620768960*x**2 + 61976058033571109604821862786675242894400*x - 56266268491293858791834120380427754600960,
+        576689018321912327136790519059646508441672750656050290242749*t**4 + 2326673103677477425562248201573604572527893938459296513327336*t**3 + 110743790416688497407826310048520299245819959064297990236000*t**2*x + 3308669114229100853338245486174247752683277925010505284338016*t**2 + 323150205645687941261103426627818874426097912639158572428800*t*x + 1914335199925152083917206349978534224695445819017286960055680*t + 861662882561803377986838989464278045397192862768588480000*x**2 + 235296483281783440197069672204341465480107019878814196672000*x + 361850798943225141738895123621685122544503614946436727532800,
+        -117584925286448670474763406733005510014188341867*t**3 + 68566565876066068463853874568722190223721653044*t**2*x - 435970731348366266878180788833437896139920683940*t**2 + 196297602447033751918195568051376792491869233408*t*x - 525011527660010557871349062870980202067479780112*t + 517905853447200553360289634770487684447317120*x**3 + 569119014870778921949288951688799397569321920*x**2 + 138877356748142786670127389526667463202210102080*x - 205109210539096046121625447192779783475018619520,
+        -3725142681462373002731339445216700112264527*t**3 + 583711207282060457652784180668273817487940*t**2*x - 12381382393074485225164741437227437062814908*t**2 + 151081054097783125250959636747516827435040*t*x**2 + 1814103857455163948531448580501928933873280*t*x - 13353115629395094645843682074271212731433648*t + 236415091385250007660606958022544983766080*x**2 + 1390443278862804663728298060085399578417600*x - 4716885828494075789338754454248931750698880
+    ]
+
+@XFAIL
+def test_benchmark_czichowski():
+    skip('This takes too much time (without gmpy)')
+
+    setup('GB_METHOD', 'f5b')
+    helper_test_benchmark_czichowski()
+    setup('GB_METHOD', 'buchberger')
+    helper_test_benchmark_czichowski()
+
+def helper_test_benchmark_cyclic_4():
+    a, b, c, d = symbols('a b c d')
+
+    I = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + b*c*d, a*b*c*d - 1]
+
+    assert groebner(I, a, b, c, d, order='lex') == [
+        4*a + 3*d**9 - 4*d**5 - 3*d,
+        4*b + 4*c - 3*d**9 + 4*d**5 + 7*d,
+        4*c**2 + 3*d**10 - 4*d**6 - 3*d**2,
+        4*c*d**4 + 4*c - d**9 + 4*d**5 + 5*d, d**12 - d**8 - d**4 + 1
+    ]
+
+    assert groebner(I, a, b, c, d, order='grlex') == [
+        3*b*c - c**2 + d**6 - 3*d**2,
+        -b + 3*c**2*d**3 - c - d**5 - 4*d,
+        -b + 3*c*d**4 + 2*c + 2*d**5 + 2*d,
+        c**4 + 2*c**2*d**2 - d**4 - 2,
+        c**3*d + c*d**3 + d**4 + 1,
+        b*c**2 - c**3 - c**2*d - 2*c*d**2 - d**3,
+        b**2 - c**2, b*d + c**2 + c*d + d**2,
+        a + b + c + d
+    ]
+
+def test_benchmark_cyclic_4():
+    setup('GB_METHOD', 'f5b')
+    helper_test_benchmark_cyclic_4()
+    setup('GB_METHOD', 'buchberger')
+    helper_test_benchmark_cyclic_4()
+
+def test_sig_key():
+    s1 = sig((0,) * 3, 2)
+    s2 = sig((1,) * 3, 4)
+    s3 = sig((2,) * 3, 2)
+
+    assert sig_key(s1, O_lex) > sig_key(s2, O_lex)
+    assert sig_key(s2, O_lex) < sig_key(s3, O_lex)
+
+def test_lbp_key():
+    p1 = lbp(sig((0,) * 4, 3), [], 12)
+    p2 = lbp(sig((0,) * 4, 4), [], 13)
+    p3 = lbp(sig((0,) * 4, 4), [], 12)
+
+    assert lbp_key(p1, O_lex) > lbp_key(p2, O_lex)
+    assert lbp_key(p2, O_lex) < lbp_key(p3, O_lex)
+
+def test_critical_pair():
+    # from cyclic4 with grlex
+    p1 = (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1,1)), ((0, 0, 2, 2), QQ(1,1)), ((0, 0, 0, 4), QQ(-1,1)), ((0, 0, 0, 0), QQ(-1,1))], 4)
+    q1 = (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1,1)), ((0, 1, 0, 1), QQ(-1,1)), ((0, 0, 1, 1), QQ(-1,1)), ((0, 0, 0, 2), QQ(-1,1))], 2)
+
+    p2 = (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1,1)), ((0, 0, 2, 3), QQ(1,1)), ((0, 0, 1, 0), QQ(-1,1)), ((0, 0, 0, 1), QQ(-1,1))], 5)
+    q2 = (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1,1)), ((0, 0, 0, 6), QQ(1,1)), ((0, 1, 1, 0), QQ(1,1)), ((0, 0, 1, 1), QQ(1,1))], 13)
+
+    assert critical_pair(p1, q1, 3, O_grlex, QQ) == (((0, 0, 1, 2), 2), ((0, 0, 1, 2), QQ(-1,1)), (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1,1)), ((0, 1, 0, 1), QQ(-1,1)), ((0, 0, 1, 1), QQ(-1,1)), ((0, 0, 0, 2), QQ(-1,1))], 2), ((0, 1, 0, 0), 4), ((0, 1, 0, 0), QQ(1,1)), (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1,1)), ((0, 0, 2, 2), QQ(1,1)), ((0, 0, 0, 4), QQ(-1,1)), ((0, 0, 0, 0), QQ(-1,1))], 4))
+    assert critical_pair(p2, q2, 3, O_grlex, QQ) == (((0, 0, 4, 2), 2), ((0, 0, 2, 0), QQ(1,1)), (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1,1)), ((0, 0, 0, 6), QQ(1,1)), ((0, 1, 1, 0), QQ(1,1)), ((0, 0, 1, 1), QQ(1,1))], 13), ((0, 0, 0, 5), 3), ((0, 0, 0, 3), QQ(1,1)), (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1,1)), ((0, 0, 2, 3), QQ(1,1)), ((0, 0, 1, 0), QQ(-1,1)), ((0, 0, 0, 1), QQ(-1,1))], 5))
+
+def test_cp_key():
+    # from cyclic4 with grlex
+    p1 = (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1,1)), ((0, 0, 2, 2), QQ(1,1)), ((0, 0, 0, 4), QQ(-1,1)), ((0, 0, 0, 0), QQ(-1,1))], 4)
+    q1 = (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1,1)), ((0, 1, 0, 1), QQ(-1,1)), ((0, 0, 1, 1), QQ(-1,1)), ((0, 0, 0, 2), QQ(-1,1))], 2)
+
+    p2 = (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1,1)), ((0, 0, 2, 3), QQ(1,1)), ((0, 0, 1, 0), QQ(-1,1)), ((0, 0, 0, 1), QQ(-1,1))], 5)
+    q2 = (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1,1)), ((0, 0, 0, 6), QQ(1,1)), ((0, 1, 1, 0), QQ(1,1)), ((0, 0, 1, 1), QQ(1,1))], 13)
+
+    cp1 = critical_pair(p1, q1, 3, O_grlex, QQ)
+    cp2 = critical_pair(p2, q2, 3, O_grlex, QQ)
+
+    assert cp_key(cp1, O_grlex) < cp_key(cp2, O_grlex)
+
+    cp1 = critical_pair(p1, p2, 3, O_grlex, QQ)
+    cp2 = critical_pair(q1, q2, 3, O_grlex, QQ)
+
+    assert cp_key(cp1, O_grlex) < cp_key(cp2, O_grlex)
+
+def test_is_rewritable_or_comparable():
+    # from katsura4 with grlex
+    p = lbp(sig((0, 0, 2, 1), 2), [], 2)
+    B = [lbp(sig((0, 0, 0, 1), 2), [((0, 0, 2, 1), QQ(1,1)), ((0, 0, 1, 2), QQ(76,35)), ((0, 0, 0, 3), QQ(13,7)), ((0, 2, 0, 0), QQ(2,45)), ((0, 1, 1, 0), QQ(1,5)), ((0, 1, 0, 1), QQ(5,63)), ((0, 0, 2, 0), QQ(4,45)), ((0, 0, 1, 1), QQ(-32,105)), ((0, 0, 0, 2), QQ(-13,21))], 6)]
+
+    # rewritable:
+    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) == True
+
+    p = lbp(sig((0, 1, 1, 0), 2), [], 7)
+    B = [lbp(sig((0, 0, 0, 0), 3), [((0, 1, 1, 0), QQ(10,3)), ((0, 1, 0, 1), QQ(4,3)), ((0, 0, 2, 0), QQ(4,1)), ((0, 0, 1, 1), QQ(22,3)), ((0, 0, 0, 2), QQ(4,1)), ((0, 1, 0, 0), QQ(-1,3)), ((0, 0, 1, 0), QQ(-4,3)), ((0, 0, 0, 1), QQ(-4,3))], 3)]
+    # comparable:
+    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) == True
+
+def test_f5_reduce():
+    # katsura3 with lex
+    F = [(((0, 0, 0), 1), [((1, 0, 0), QQ(1,1)), ((0, 1, 0), QQ(2,1)), ((0, 0, 1), QQ(2,1)), ((0, 0, 0), QQ(-1,1))], 1), (((0, 0, 0), 2), [((0, 2, 0), QQ(6,1)), ((0, 1, 1), QQ(8,1)), ((0, 1, 0), QQ(-2,1)), ((0, 0, 2), QQ(6,1)), ((0, 0, 1), QQ(-2,1))], 2), (((0, 0, 0), 3), [((0, 1, 1), QQ(10,3)), ((0, 1, 0), QQ(-1,3)), ((0, 0, 2), QQ(4,1)), ((0, 0, 1), QQ(-4,3))], 3), (((0, 0, 1), 2), [((0, 1, 0), QQ(1,1)), ((0, 0, 3), QQ(30,1)), ((0, 0, 2), QQ(-79,7)), ((0, 0, 1), QQ(3,7))], 4), (((0, 0, 2), 2), [((0, 0, 4), QQ(1,1)), ((0, 0, 3), QQ(-10,21)), ((0, 0, 2), QQ(1,84)), ((0, 0, 1), QQ(1,84))], 5)]
+
+    cp = critical_pair(F[0], F[1], 2, O_lex, QQ)
+    s = s_poly(cp, 2, O_lex, QQ)
+
+    assert f5_reduce(s, F, 2, O_lex, QQ) == (((0, 2, 0), 1), [], 1)
+
+    s = lbp(sig(Sign(s)[0], 100), Polyn(s), Num(s))
+    assert f5_reduce(s, F, 2, O_lex, QQ) == s
+
+def test_matrix_fglm():
+    pass  # see test_polytools.py
+
+def test_is_zero_dimensional():
+    F = [[((3, 0), QQ.one), ((0, 2), QQ.one)]]
+
+    assert is_zero_dimensional(F, 1, O_lex, QQ) == False
+
+    F = [[((1, 0), QQ.one)], [((0, 1), QQ.one)]]
+
+    assert is_zero_dimensional(F, 1, O_lex, QQ) == True
+
+    F = [[((1, 0, 0, 0), QQ.one)], [((0, 1, 0, 0), QQ.one)], [((0, 0, 0, 1), QQ.one)]]
+
+    assert is_zero_dimensional(F, 3, O_grevlex, QQ) == False
+
+def test_representing_matrices():
+    basis = [(0, 0), (0, 1), (1, 0), (1, 1)]
+    F = [[((2, 0), QQ(1,1)), ((1, 0), QQ(-1,1)), ((0, 1), QQ(-3,1)), ((0, 0), QQ(1,1))],
+        [((0, 2), QQ(1,1)), ((1, 0), QQ(-2,1)), ((0, 1), QQ(1,1)), ((0, 0), QQ(-1,1))]]
+
+    assert _representing_matrices(basis, F, 1, O_grlex, QQ) ==[ \
+        [[QQ(0,1), QQ(0,1), QQ(-1,1), QQ(3,1)],
+        [QQ(0,1), QQ(0,1), QQ(3,1), QQ(-4,1)],
+        [QQ(1,1), QQ(0,1), QQ(1,1), QQ(6,1)],
+        [QQ(0,1), QQ(1,1), QQ(0,1), QQ(1,1)]],
+        [[QQ(0,1), QQ(1,1), QQ(0,1), QQ(-2,1)],
+        [QQ(1,1), QQ(-1,1), QQ(0,1), QQ(6,1)],
+        [QQ(0,1), QQ(2,1), QQ(0,1), QQ(3,1)],
+        [QQ(0,1), QQ(0,1), QQ(1,1), QQ(-1,1)]]]

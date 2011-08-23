@@ -74,6 +74,8 @@ class Matrix(object):
     # TODO: investigate about __array_priority__
     __array_priority__ = 10.0
 
+    is_Matrix = True
+
     def __init__(self, *args):
         """
         Matrix can be constructed with values or a rule.
@@ -547,8 +549,8 @@ class Matrix(object):
             for j in xrange(i):
                 L[i, j] = (1 / L[j, j]) * (self[i, j] - sum(L[i, k] * L[j, k]
                     for k in xrange(j)))
-            L[i, i] = (self[i, i] - sum(L[i, k] ** 2
-                for k in xrange(i))) ** (S(1)/2)
+            L[i, i] = sqrt(self[i, i] - sum(L[i, k] ** 2
+                for k in xrange(i)))
         return L
 
     def LDLdecomposition(self):
@@ -1118,6 +1120,7 @@ class Matrix(object):
         Returns the decomposition LU and the row swaps p.
 
         Example:
+
         >>> from sympy import Matrix
         >>> a = Matrix([[4, 3], [6, 3]])
         >>> L, U, _ = a.LUdecomposition()
@@ -1292,8 +1295,10 @@ class Matrix(object):
         """
         Return Q,R where A = Q*R, Q is orthogonal and R is upper triangular.
 
-        Examples::
-        This is the example from wikipedia
+        Examples
+
+        This is the example from wikipedia::
+
         >>> from sympy import Matrix, eye
         >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
         >>> Q, R = A.QRdecomposition()
@@ -1476,7 +1481,7 @@ class Matrix(object):
         # Row or Column Vector Norms
         if self.rows == 1 or self.cols == 1:
             if ord == 2 or ord == None: # Common case sqrt(<x,x>)
-                return Add(*(abs(i)**2 for i in self.mat))**S.Half
+                return sqrt(Add(*(abs(i)**2 for i in self.mat)))
 
             elif ord == 1: # sum(abs(x))
                 return Add(*(abs(i) for i in self.mat))
@@ -1599,6 +1604,7 @@ class Matrix(object):
         Check if matrix is an upper triangular matrix.
 
         Example:
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -1634,6 +1640,7 @@ class Matrix(object):
         Check if matrix is a lower triangular matrix.
 
         Example:
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
         >>> m
@@ -1673,6 +1680,7 @@ class Matrix(object):
         below the first subdiagonal.
 
         Example:
+
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
         >>> a
@@ -1697,6 +1705,7 @@ class Matrix(object):
         above the first superdiagonal.
 
         Example:
+
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
         >>> a
@@ -2133,12 +2142,14 @@ class Matrix(object):
         return out
 
     def singular_values(self):
-        """Compute the singular values of a Matrix
+        """
+        Compute the singular values of a Matrix
+
         >>> from sympy import Matrix, Symbol, eye
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
         >>> print A.singular_values()
-        [1, (x**2 + 1)**(1/2), 0]
+        [1, sqrt(x**2 + 1), 0]
         """
         # Compute eigenvalues of A.H A
         valmultpairs = (self.H*self).eigenvals()
@@ -2155,7 +2166,9 @@ class Matrix(object):
         return vals
 
     def condition_number(self):
-        """Returns the condition number of a matrix.
+        """
+        Returns the condition number of a matrix.
+
         This is the maximum singular value divided by the minimum singular value
 
         >>> from sympy import Matrix, S
@@ -2516,6 +2529,7 @@ class Matrix(object):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
+
         >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
         >>> A = Matrix(((1, x), (0.2, 3)))
@@ -2546,7 +2560,7 @@ def matrix_multiply(A, B):
     >>> B*A
     Traceback (most recent call last):
     ...
-    ShapeError
+    ShapeError: Matrices size mismatch.
     >>>
 
     """
@@ -2565,7 +2579,7 @@ def matrix_multiply(A, B):
     #        product[i, j] = s
     #return product
     if A.shape[1] != B.shape[0]:
-        raise ShapeError()
+        raise ShapeError("Matrices size mismatch.")
     blst = B.T.tolist()
     alst = A.tolist()
     return Matrix(A.shape[0], B.shape[1], lambda i, j:

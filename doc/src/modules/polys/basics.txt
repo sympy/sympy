@@ -27,7 +27,7 @@ Division
 
 The function :func:`div` provides division of polynomials with remainder.
 That is, for polynomials ``f`` and ``g``, it computes ``q`` and ``r``, such
-that $f = g \cdot q + r$ and $\deg(r) < q$. For polynomials in one variables
+that `f = g \cdot q + r` and `\deg(r) < q`. For polynomials in one variables
 with coefficients in a field, say, the rational numbers, ``q`` and ``r`` are
 uniquely defined this way::
 
@@ -58,7 +58,7 @@ additional parameter::
 
 But be warned, that this ring is no longer Euclidean and that the degree of the
 remainder doesn't need to be smaller than that of ``f``. Since 2 doesn't divide 5,
-$2 x$ doesn't divide $5 x^2$, even if the degree is smaller. But::
+`2 x` doesn't divide `5 x^2`, even if the degree is smaller. But::
 
     >>> g = 5*x + 1
 

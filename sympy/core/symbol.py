@@ -12,16 +12,17 @@ import warnings
 
 class Symbol(AtomicExpr, Boolean):
     """
-    Assumptions::
+    Assumptions:
        commutative = True
 
-    You can override the default assumptions in the constructor::
-       >>> from sympy import symbols
-       >>> A,B = symbols('A,B', commutative = False)
-       >>> bool(A*B != B*A)
-       True
-       >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
-       True
+    You can override the default assumptions in the constructor:
+
+    >>> from sympy import symbols
+    >>> A,B = symbols('A,B', commutative = False)
+    >>> bool(A*B != B*A)
+    True
+    >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
+    True
 
     """
 
@@ -115,7 +116,7 @@ class Symbol(AtomicExpr, Boolean):
         return set([self])
 
 class Dummy(Symbol):
-    """Dummy symbols are each unique, identified by an internal count index ::
+    """Dummy symbols are each unique, identified by an internal count index:
 
     >>> from sympy import Dummy
     >>> bool(Dummy("x") == Dummy("x")) == True
@@ -123,7 +124,8 @@ class Dummy(Symbol):
 
     If a name is not supplied then a string value of the count index will be
     used. This is useful when a temporary variable is needed and the name
-    of the variable used in the expression is not important. ::
+    of the variable used in the expression is not important.
+
     >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
     >>> Dummy()          # used here to make sure that the doctest passes.
     _0

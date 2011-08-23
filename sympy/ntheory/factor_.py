@@ -449,7 +449,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
             factors:
 
             >>> from sympy.core.numbers import ilcm, igcd
-            >>> from sympy import factorint
+            >>> from sympy import factorint, Pow
             >>> M = reduce(ilcm, range(2, 256))
             >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
             ...      igcd(pow(a, M, n) - 1, n) != n])
@@ -458,7 +458,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
             But does aM % d for every divisor of n give 1?
 
             >>> aM = pow(a, M, n)
-            >>> [(d, aM%(1*d)) for d in factorint(n, visual=True).args]
+            >>> [(d, aM%Pow(*d.args)) for d in factorint(n, visual=True).args]
             [(257**1, 1), (1009**1, 1)]
 
             No, only one of them. So perhaps the principle is that a root will

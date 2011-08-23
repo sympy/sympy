@@ -27,7 +27,7 @@ class LatexPrinter(Printer):
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
         "mat_str": "smallmatrix",
-        "mat_delim": "(",
+        "mat_delim": "[",
     }
 
     def __init__(self, settings=None):
@@ -249,10 +249,8 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Pow(self, expr):
-        # Treat x**(Rational(1,n)) as special case
-        if expr.exp.is_Rational\
-           and abs(expr.exp.p) == 1\
-           and expr.exp.q != 1:
+        # Treat x**Rational(1,n) as special case
+        if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1:
             base = self._print(expr.base)
             expq = expr.exp.q
 
@@ -276,7 +274,7 @@ class LatexPrinter(Printer):
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
             else:
-                if expr.exp == S.NegativeOne:
+                if expr.is_commutative and expr.exp is S.NegativeOne:
                     #solves issue 1030
                     #As Mul always simplify 1/x to x**-1
                     #The objective is achieved with this hack
@@ -348,25 +346,33 @@ class LatexPrinter(Printer):
     def _print_Integral(self, expr):
         tex, symbols = "", []
 
-        for lim in reversed(expr.limits):
-            symbol = lim[0]
-            tex += r"\int"
+        # Only up to \iiiint exists
+        if len(expr.limits) <= 4 and all(len(lim) == 1 for lim in expr.limits):
+            # Use len(expr.limits)-1 so that syntax highlighters don't think
+            # \" is an escaped quote
+            tex = r"\i" + "i"*(len(expr.limits)-1) + "nt"
+            symbols = [r"\, d%s" % self._print(symbol[0]) for symbol in expr.limits]
 
-            if len(lim) > 1:
-                if self._settings['mode'] in ['equation','equation*'] \
-                   and not self._settings['itex']:
-                    tex += r"\limits"
+        else:
+            for lim in reversed(expr.limits):
+                symbol = lim[0]
+                tex += r"\int"
 
-                if len(lim) == 3:
-                    tex += "_{%s}^{%s}" % (self._print(lim[1]),
-                                           self._print(lim[2]))
-                if len(lim) == 2:
-                    tex += "^{%s}" % (self._print(lim[1]))
+                if len(lim) > 1:
+                    if self._settings['mode'] in ['equation','equation*'] \
+                       and not self._settings['itex']:
+                        tex += r"\limits"
 
-            symbols.insert(0, "d%s" % self._print(symbol))
+                    if len(lim) == 3:
+                        tex += "_{%s}^{%s}" % (self._print(lim[1]),
+                                               self._print(lim[2]))
+                    if len(lim) == 2:
+                        tex += "^{%s}" % (self._print(lim[1]))
 
-        return r"%s %s\,%s" % (tex,
-            str(self._print(expr.function)), " ".join(symbols))
+                symbols.insert(0, r"\, d%s" % self._print(symbol))
+
+        return r"%s %s%s" % (tex,
+            str(self._print(expr.function)), "".join(symbols))
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
@@ -429,8 +435,18 @@ class LatexPrinter(Printer):
 
             return name % ",".join(args)
 
-    def _print_Poly(self, expr):
-        return self._print(expr.as_expr())
+    def _print_Lambda(self, expr):
+        symbols, expr = expr.args
+
+        if len(symbols) == 1:
+            symbols = self._print(symbols[0])
+        else:
+            symbols = self._print(tuple(symbols))
+
+        args = (symbols, self._print(expr))
+        tex = r"\operatorname{\Lambda}\left(%s\right)" % ", ".join(args)
+
+        return tex
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
@@ -731,6 +747,73 @@ class LatexPrinter(Printer):
                       r'\right' + right_delim
         return out_str % r"\\".join(lines)
 
+    def _print_BlockMatrix(self, expr):
+        return self._print(expr.mat)
+
+    def _print_Transpose(self, expr):
+        mat = expr.arg
+        if mat.is_Add or mat.is_Mul:
+            return r"\left(%s\right)^T"%self._print(mat)
+        else:
+            return "%s^T"%self._print(mat)
+
+    def _print_MatAdd(self, expr):
+        terms = expr.args
+        tex = self._print(terms[0])
+
+        for term in terms[1:]:
+            coeff, M = term.as_coeff_Mul()
+
+            if coeff >= 0:
+                tex += " +"
+            else:
+                tex += " -"
+
+            tex += " " + self._print(M)
+
+        return tex
+
+    def _print_MatMul(self, expr):
+        coeff, tail = expr.as_coeff_Mul()
+
+        if not coeff.is_negative:
+            tex = ""
+        else:
+            coeff = -coeff
+            tex = "- "
+
+        if not tail.is_Mul:
+            return tex + self._print(tail)
+
+        separator = " "
+
+        args = tail.args
+        for term in args:
+            pretty = self._print(term)
+
+            if term.is_Add:
+                term_tex = (r"\left(%s\right)" % pretty)
+            else:
+                term_tex = str(pretty)
+
+            tex += separator
+            tex += term_tex
+
+        return tex[1:]
+
+    def _print_MatPow(self, expr):
+        base, exp = expr.base, expr.exp
+        if base.is_Add or base.is_Mul:
+            return r"\left(%s\right)^{%s}"%(self._print(base), self._print(exp))
+        else:
+            return "%s^{%s}"%(self._print(base), self._print(exp))
+
+    def _print_ZeroMatrix(self, Z):
+        return r"\bold{0}"
+
+    def _print_Identity(self, I):
+        return r"\mathbb{I}"
+
     def _print_tuple(self, expr):
         return r"\begin{pmatrix}%s\end{pmatrix}" % \
             r", & ".join([ self._print(i) for i in expr ])
@@ -795,6 +878,56 @@ class LatexPrinter(Printer):
     def _print_EmptySet(self, e):
         return r"\emptyset"
 
+    def _print_FiniteField(self, expr):
+        return r"\mathbb{F}_{%s}" % expr.mod
+
+    def _print_IntegerRing(self, expr):
+        return r"\mathbb{Z}"
+
+    def _print_RationalField(self, expr):
+        return r"\mathbb{Q}"
+
+    def _print_RealDomain(self, expr):
+        return r"\mathbb{R}"
+
+    def _print_ComplexDomain(self, expr):
+        return r"\mathbb{C}"
+
+    def _print_PolynomialRing(self, expr):
+        domain = self._print(expr.dom)
+        gens = ", ".join(map(self._print, expr.gens))
+        return r"%s\left\[%s\right\]" % (domain, gens)
+
+    def _print_FractionField(self, expr):
+        domain = self._print(expr.dom)
+        gens = ", ".join(map(self._print, expr.gens))
+        return r"%s\left(%s\right)" % (domain, gens)
+
+    def _print_Poly(self, poly):
+        cls = poly.__class__.__name__
+        expr = self._print(poly.as_expr())
+        gens = map(self._print, poly.gens)
+        domain = "domain=%s" % self._print(poly.get_domain())
+
+        args = ", ".join([expr] + gens + [domain])
+        tex = r"\operatorname{%s}\left(%s\right)" % (cls, args)
+
+        return tex
+
+    def _print_RootOf(self, root):
+        cls = root.__class__.__name__
+        expr = self._print(root.expr)
+        index = root.index
+        return r"\operatorname{%s}\left(%s, %d\right)" % (cls, expr, index)
+
+    def _print_RootSum(self, expr):
+        cls = expr.__class__.__name__
+        args = [self._print(expr.expr)]
+
+        if expr.fun is not S.IdentityFunction:
+            args.append(self._print(expr.fun))
+
+        return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
 
 def latex(expr, **settings):
     r"""Convert the given expression to LaTeX representation.

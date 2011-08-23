@@ -89,7 +89,7 @@ class besselj(BesselBase):
     Rewrite in terms of spherical bessel functions:
 
     >>> b.rewrite(jn)
-    2**(1/2)*z**(1/2)*jn(n - 1/2, z)/pi**(1/2)
+    sqrt(2)*sqrt(z)*jn(n - 1/2, z)/sqrt(pi)
 
     Access the parameter and argument:
 
@@ -137,7 +137,7 @@ class bessely(BesselBase):
     >>> b.diff(z)
     bessely(n - 1, z)/2 - bessely(n + 1, z)/2
     >>> b.rewrite(yn)
-    2**(1/2)*z**(1/2)*yn(n - 1/2, z)/pi**(1/2)
+    sqrt(2)*sqrt(z)*yn(n - 1/2, z)/sqrt(pi)
 
     **See also:** :class:`besselj`
     """

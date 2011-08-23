@@ -190,6 +190,9 @@ def test_cos():
 
     assert cos(r).is_real == True
 
+    assert cos(k*pi) == (-1)**k
+    assert cos(2*k*pi) == 1
+
 def test_cos_rewrite():
     x = Symbol('x')
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
@@ -369,8 +372,8 @@ def test_asin_series():
 
 def test_asin_rewrite():
     x = Symbol('x')
-    assert asin(x).rewrite(log) == -I*log(I*x + (1 - x**2)**(S(1)/2))
-    assert asin(x).rewrite(atan) == 2*atan(x/(1 + (1 - x**2)**(S(1)/2)))
+    assert asin(x).rewrite(log) == -I*log(I*x + sqrt(1 - x**2))
+    assert asin(x).rewrite(atan) == 2*atan(x/(1 + sqrt(1 - x**2)))
     assert asin(x).rewrite(acos) == S.Pi/2 - acos(x)
 
 def test_acos():
@@ -406,7 +409,7 @@ def test_acos_series():
 
 def test_acos_rewrite():
     x = Symbol('x')
-    assert acos(x).rewrite(log) == pi/2 + I*log(I*x + (1 - x**2)**(S(1)/2))
+    assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)

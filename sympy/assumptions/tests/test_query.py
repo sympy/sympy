@@ -378,38 +378,43 @@ def test_I():
 
 def test_bounded():
     x, y = symbols('x,y')
-    assert ask(Q.bounded(x)) == False
+    assert ask(Q.bounded(x)) == None
     assert ask(Q.bounded(x), Q.bounded(x)) == True
-    assert ask(Q.bounded(x), Q.bounded(y)) == False
-    assert ask(Q.bounded(x), Q.complex(x)) == False
+    assert ask(Q.bounded(x), Q.bounded(y)) == None
+    assert ask(Q.bounded(x), Q.complex(x)) == None
 
-    assert ask(Q.bounded(x+1)) == False
+    assert ask(Q.bounded(x+1)) == None
     assert ask(Q.bounded(x+1), Q.bounded(x)) == True
     assert ask(Q.bounded(x+y)) == None
-    assert ask(Q.bounded(x+y), Q.bounded(x)) == False
+    assert ask(Q.bounded(x+y), Q.bounded(x)) == None
     assert ask(Q.bounded(x+1), Q.bounded(x) & Q.bounded(y)) == True
 
-    assert ask(Q.bounded(2*x)) == False
+    assert ask(Q.bounded(2*x)) == None
     assert ask(Q.bounded(2*x), Q.bounded(x)) == True
     assert ask(Q.bounded(x*y)) == None
-    assert ask(Q.bounded(x*y), Q.bounded(x)) == False
+    assert ask(Q.bounded(x*y), Q.bounded(x)) == None
     assert ask(Q.bounded(x*y), Q.bounded(x) & Q.bounded(y)) == True
 
-    assert ask(Q.bounded(x**2)) == False
-    assert ask(Q.bounded(2**x)) == False
+    assert ask(Q.bounded(x**2)) == None
+    assert ask(Q.bounded(2**x)) == None
     assert ask(Q.bounded(2**x), Q.bounded(x)) == True
-    assert ask(Q.bounded(x**x)) == False
-    assert ask(Q.bounded(Rational(1,2) ** x)) == True
-    assert ask(Q.bounded(x ** Rational(1,2))) == False
+    assert ask(Q.bounded(x**x)) == None
+    assert ask(Q.bounded(Rational(1,2) ** x)) == None
+    assert ask(Q.bounded(Rational(1,2) ** x), Q.positive(x)) == True
+    assert ask(Q.bounded(Rational(1,2) ** x), Q.negative(x)) == None
+    assert ask(Q.bounded(S(2) ** x), Q.negative(x)) == True
+    assert ask(Q.bounded(sqrt(x))) == None
+    assert ask(Q.bounded(2**x), ~Q.bounded(x))==False
+    assert ask(Q.bounded(x**2), ~Q.bounded(x))==False
 
     # sign function
     assert ask(Q.bounded(sign(x))) == True
     assert ask(Q.bounded(sign(x)), ~Q.bounded(x)) == True
 
     # exponential functions
-    assert ask(Q.bounded(log(x))) == False
+    assert ask(Q.bounded(log(x))) == None
     assert ask(Q.bounded(log(x)), Q.bounded(x)) == True
-    assert ask(Q.bounded(exp(x))) == False
+    assert ask(Q.bounded(exp(x))) == None
     assert ask(Q.bounded(exp(x)), Q.bounded(x)) == True
     assert ask(Q.bounded(exp(2))) == True
 

@@ -189,7 +189,7 @@ def roots_quartic(f):
         ans = []
 
         if f is S.Zero:
-            y1, y2 = [tmp**S.Half for tmp in
+            y1, y2 = [sqrt(tmp) for tmp in
                       roots([1, e, g], multiple = True)]
             return [tmp - aon4 for tmp in [-y1, -y2, y1, y2]]
         if g is S.Zero:
@@ -449,15 +449,15 @@ def roots(f, *gens, **flags):
     a complete set of roots use RootOf class or numerical methods
     instead. By default cubic and quartic formulas are used in
     the algorithm. To disable them because of unreadable output
-    set `cubics=False` or `quartics=False` respectively.
+    set ``cubics=False`` or ``quartics=False`` respectively.
 
-    To get roots from a specific domain set the `filter` flag with
+    To get roots from a specific domain set the ``filter`` flag with
     one of the following specifiers: Z, Q, R, I, C. By default all
-    roots are returned (this is equivalent to setting `filter='C'`).
+    roots are returned (this is equivalent to setting ``filter='C'``).
 
     By default a dictionary is returned giving a compact result in
     case of multiple roots.  However to get a tuple containing all
-    those roots set the `multiple` flag to True.
+    those roots set the ``multiple`` flag to True.
 
     **Examples**
 
@@ -474,10 +474,10 @@ def roots(f, *gens, **flags):
     >>> p = Poly(x**2-y, x, y)
 
     >>> roots(Poly(p, x))
-    {-y**(1/2): 1, y**(1/2): 1}
+    {-sqrt(y): 1, sqrt(y): 1}
 
     >>> roots(x**2 - y, x)
-    {-y**(1/2): 1, y**(1/2): 1}
+    {-sqrt(y): 1, sqrt(y): 1}
 
     >>> roots([1, 0, -1])
     {-1: 1, 1: 1}
@@ -663,7 +663,7 @@ def root_factors(f, *gens, **args):
     >>> from sympy.polys.polyroots import root_factors
 
     >>> root_factors(x**2-y, x)
-    [x - y**(1/2), x + y**(1/2)]
+    [x - sqrt(y), x + sqrt(y)]
 
     """
     args = dict(args)

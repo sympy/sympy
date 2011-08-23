@@ -23,6 +23,10 @@ class Add(AssocOp):
 
         Applies associativity, all terms are commutable with respect to
         addition.
+
+        ** Developer Notes **
+            See Mul.flatten
+
         """
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
@@ -79,8 +83,16 @@ class Add(AssocOp):
                     seq.extend([c*a for a in s.args])
                     continue
 
-            # everything else
+            # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
+            elif o.is_Pow:
+                b, e = o.as_base_exp()
+                if b.is_Number and (e.is_Integer or (e.is_Rational and e.is_negative)):
+                    seq.append(Pow(b, e))
+                    continue
+                c, s = S.One, o
+
             else:
+                # everything else
                 c = S.One
                 s = o
 
@@ -170,7 +182,8 @@ class Add(AssocOp):
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better
         # solution is not to sort things at all - but this needs some more
-        # fixing.
+        # fixing. NOTE: this is used in primitive, too, so if it changes
+        # here it should be changed there.
         newseq.sort(key=hash)
 
         # current code expects coeff to be always in slot-0
@@ -525,10 +538,11 @@ class Add(AssocOp):
 
     def primitive(self):
         """
-        Divide ``self`` by the GCD of coefficients of ``self``.
+        Return ``(R, self/R)`` where ``R``` is the Rational GCD of ``self```.
 
-        Example
-        =======
+        ``R`` is collected only from the leading coefficient of each term.
+
+        **Examples**
 
         >>> from sympy.abc import x, y
 
@@ -541,27 +555,48 @@ class Add(AssocOp):
         >>> (2*x/3 + 4.1*y).primitive()
         (1, 2*x/3 + 4.1*y)
 
+        No subprocessing of term factors is performed:
+
+        >>> ((2 + 2*x)*x + 2).primitive()
+        (1, x*(2*x + 2) + 2)
+
+        See also: primtive()
+
         """
-        terms = []
         cont = S.Zero
+        terms = [a.as_coeff_Mul() for a in self.args]
+        for coeff, _ in terms:
+            cont = cont.gcd(coeff)
+            if cont == 1: # not S.One in case Float is ever handled
+                return S.One, self
 
-        for term in self.args:
-            coeff = term.as_coeff_mul()[0]
+        MUL = object.__new__(Mul)._new_rawargs
+        for i, (coeff, term) in enumerate(terms):
+            c = coeff/cont
+            if c == 1:  # not S.One in case Float is ever handled
+                terms[i] = term
+            elif term is S.One:
+                terms[i] = c
+            else:
+                terms[i] = MUL(*((c,) + Mul.make_args(term)))
 
-            if coeff.is_Rational:
-                cont = cont.gcd(coeff)
-
-                if cont is not S.One:
-                    terms.append(term)
-                    continue
-
-            return S.One, self
-
-        for i, term in enumerate(terms):
-            # XXX: this is extremely slow
-            terms[i] = term/cont
-
+        # we don't need a complete re-flattening since no new terms will join
+        # so we just use the same sort as is used in Add.flatten. When the
+        # coefficient changes, the ordering of terms may change, e.g.
+        #     (3*x, 6*y) -> (2*y, x)
+        #
+        # We do need to make sure that term[0] stays in position 0, however.
+        #
+        if terms[0].is_Rational:
+            c = terms.pop(0)
+        else:
+            c = None
+        terms.sort(key=hash)
+        if c:
+            terms = [c] + terms
         return cont, self._new_rawargs(*terms)
 
 from function import FunctionClass
 from mul import Mul
+from power import Pow
+from sympy.core.numbers import Rational

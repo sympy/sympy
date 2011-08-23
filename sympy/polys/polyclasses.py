@@ -116,7 +116,7 @@ from sympy.polys.sqfreetools import (
     dmp_sqf_list, dmp_sqf_list_include)
 
 from sympy.polys.factortools import (
-    dup_zz_cyclotomic_p,
+    dup_cyclotomic_p, dmp_irreducible_p,
     dup_factor_list, dup_factor_list_include,
     dmp_factor_list, dmp_factor_list_include)
 
@@ -497,6 +497,22 @@ class DMP(object):
         """Returns the total degree of `f`. """
         return max([sum(m) for m in f.monoms()])
 
+    def homogeneous_order(f):
+        """Returns the homogeneous order of `f`. """
+        if f.is_zero:
+            return -1
+
+        monoms = f.monoms()
+        tdeg = sum(monoms[0])
+
+        for monom in monoms:
+            _tdeg = sum(monom)
+
+            if _tdeg != tdeg:
+                return None
+
+        return tdeg
+
     def LC(f):
         """Returns the leading coefficent of `f`. """
         return dmp_ground_LC(f.rep, f.lev, f.dom)
@@ -793,14 +809,19 @@ class DMP(object):
 
     @property
     def is_homogeneous(f):
-        """Returns `True` if `f` has zero trailing coefficient. """
-        return f.dom.is_zero(dmp_ground_TC(f.rep, f.lev, f.dom))
+        """Returns ``True`` if ``f`` is a homogeneous polynomial. """
+        return f.homogeneous_order() is not None
+
+    @property
+    def is_irreducible(f):
+        """Returns ``True`` if ``f`` has no factors over its domain. """
+        return dmp_irreducible_p(f.rep, f.lev, f.dom)
 
     @property
     def is_cyclotomic(f):
-        """Returns ``True`` if ``f`` is a cyclotomic polnomial. """
+        """Returns ``True`` if ``f`` is a cyclotomic polynomial. """
         if not f.lev:
-            return dup_zz_cyclotomic_p(f.rep, f.dom)
+            return dup_cyclotomic_p(f.rep, f.dom)
         else:
             return False
 

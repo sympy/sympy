@@ -6,8 +6,8 @@ import sys
 # For example, you might set both to False before running the tests so that
 # warnings are not printed to the console, or set both to True for debugging.
 
-WARN_NOT_INSTALLED = False
-WARN_OLD_VERSION = True
+WARN_NOT_INSTALLED = None # Default is False
+WARN_OLD_VERSION = None # Default is True
 
 def __sympy_debug():
     # helper function from sympy/__init__.py
@@ -88,10 +88,13 @@ def import_module(module, min_module_version=None, min_python_version=None,
     ... __import__kwargs={'fromlist':['something']})
 
     """
-    if warn_old_version is None:
-        warn_old_version = WARN_OLD_VERSION
-    if warn_not_installed is None:
-        warn_not_installed = WARN_NOT_INSTALLED
+    # keyword argument overrides default, and global variable overrides
+    # keyword argument.
+    warn_old_version = (WARN_OLD_VERSION if WARN_OLD_VERSION is not None
+        else warn_old_version or True)
+    warn_not_installed = (WARN_NOT_INSTALLED if WARN_NOT_INSTALLED is not None
+        else warn_not_installed or False)
+
     import warnings
 
     # Check Python first so we don't waste time importing a module we can't use

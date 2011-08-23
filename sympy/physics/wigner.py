@@ -239,9 +239,9 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
         >>> clebsch_gordan(S(3)/2, S(1)/2, 2, S(3)/2, S(1)/2, 2)
         1
         >>> clebsch_gordan(S(3)/2, S(1)/2, 1, S(3)/2, -S(1)/2, 1)
-        3**(1/2)/2
+        sqrt(3)/2
         >>> clebsch_gordan(S(3)/2, S(1)/2, 1, -S(1)/2, S(1)/2, 0)
-        -2**(1/2)/2
+        -sqrt(2)/2
 
     NOTES:
 

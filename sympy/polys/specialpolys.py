@@ -1,6 +1,7 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
 from sympy.core import Add, Mul, Symbol, Rational, sympify, Dummy, symbols
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S
 
 from sympy.polys.polytools import Poly, PurePoly
@@ -38,14 +39,14 @@ def swinnerton_dyer_poly(n, x=None, **args):
     else:
         x, cls = Dummy('x'), PurePoly
 
-    p, elts = 2, [[x, -2**Rational(1,2)],
-                  [x,  2**Rational(1,2)]]
+    p, elts = 2, [[x, -sqrt(2)],
+                  [x,  sqrt(2)]]
 
     for i in xrange(2, n+1):
         p, _elts = nextprime(p), []
 
-        neg_sqrt = -p**Rational(1,2)
-        pos_sqrt = +p**Rational(1,2)
+        neg_sqrt = -sqrt(p)
+        pos_sqrt = +sqrt(p)
 
         for elt in elts:
             _elts.append(elt + [neg_sqrt])

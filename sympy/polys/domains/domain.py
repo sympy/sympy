@@ -108,7 +108,7 @@ class Domain(object):
 
     def of_type(self, a):
         """Check if `a` is of type `dtype`. """
-        return type(a) is type(self.one)
+        return type(a) == type(self.one)
 
     def __contains__(self, a):
         """Check if `a` belongs to this domain. """

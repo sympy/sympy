@@ -163,10 +163,10 @@ def represent(expr, **options):
             result = result + represent(args, **options)
         return result
     elif isinstance(expr, Pow):
-        exp = expr.exp
+        base, exp = expr.as_base_exp()
         if format == 'numpy' or format == 'scipy.sparse':
             exp = _sympy_to_scalar(exp)
-        return represent(expr.base, **options)**exp
+        return represent(base, **options)**exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
         return TensorProduct(*new_args)
@@ -246,9 +246,9 @@ def rep_innerproduct(expr, **options):
     >>> rep_innerproduct(XKet())
     DiracDelta(x - x_1)
     >>> rep_innerproduct(XKet(), basis=PxOp())
-    2**(1/2)*exp(-I*px_1*x/hbar)/(2*hbar**(1/2)*pi**(1/2))
+    sqrt(2)*exp(-I*px_1*x/hbar)/(2*sqrt(hbar)*sqrt(pi))
     >>> rep_innerproduct(PxKet(), basis=XOp())
-    2**(1/2)*exp(I*px*x_1/hbar)/(2*hbar**(1/2)*pi**(1/2))
+    sqrt(2)*exp(I*px*x_1/hbar)/(2*sqrt(hbar)*sqrt(pi))
 
     """
 

@@ -6,15 +6,15 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 
 from sympy.core.compatibility import iterable
 from sympy.core.numbers import igcd
-from sympy.core.function import expand_log
+from sympy.core.function import expand_log, count_ops
 
-from sympy.utilities import flatten
+from sympy.utilities import flatten, default_sort_key
 from sympy.functions import gamma, exp, sqrt, log
 
 from sympy.simplify.cse_main import cse
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, terms_gcd)
+    ComputationFailed, terms_gcd, lcm)
 
 from sympy.core.compatibility import reduce
 
@@ -73,7 +73,7 @@ def fraction(expr, exact=False):
     numer, denom = [], []
 
     for term in Mul.make_args(expr):
-        if term.is_Pow or term.func is exp:
+        if term.is_commutative and (term.is_Pow or term.func is exp):
             b, ex = term.as_base_exp()
             if ex.is_negative:
                 if ex is S.NegativeOne:
@@ -171,55 +171,57 @@ def separate(expr, deep=False, force=False):
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
     power_base=True, basic=False, multinomial=False, log=False, force=force)
 
-def collect(expr, syms, evaluate=True, exact=False):
+def collect(expr, syms, func=None, evaluate=True, exact=False):
     """
-        Collect additive terms with respect to a list of symbols up
-        to powers with rational exponents. By the term symbol here
-        are meant arbitrary expressions, which can contain powers,
-        products, sums etc. In other words symbol is a pattern
-        which will be searched for in the expression's terms.
+    Collect additive terms of an expression.
 
-        This function will not apply any redundant expanding to the
-        input expression, so user is assumed to enter expression in
-        final form. This makes 'collect' more predictable as there
-        is no magic behind the scenes. However it is important to
-        note, that powers of products are converted to products of
-        powers using 'separate' function.
+    This function collects additive terms of an expression with respect
+    to a list of expression up to powers with rational exponents. By the
+    term symbol here are meant arbitrary expressions, which can contain
+    powers, products, sums etc. In other words symbol is a pattern which
+    will be searched for in the expression's terms.
 
-        There are two possible types of output. First, if 'evaluate'
-        flag is set, this function will return a single expression
-        or else it will return a dictionary with separated symbols
-        up to rational powers as keys and collected sub-expressions
-        as values respectively.
+    The input expression is not expanded by :func:`collect`, so user is
+    expected to provide an expression is an appropriate form. This makes
+    :func:`collect` more predictable as there is no magic happening behind
+    the scenes. However, it is important to note, that powers of products
+    are converted to products of powers using :func:`separate` function.
 
-        >>> from sympy import collect, sympify, Wild
-        >>> from sympy.abc import a, b, c, x, y, z
+    There are two possible types of output. First, if ``evaluate`` flag is
+    set, this function will return an expression with collected terms or
+    else it will return a dictionary with expressions up to rational powers
+    as keys and collected coefficients as values.
 
-        This function can collect symbolic coefficients in polynomial
-        or rational expressions. It will manage to find all integer or
-        rational powers of collection variable:
+    **Examples**
+
+    >>> from sympy import S, collect, expand, factor, Wild
+    >>> from sympy.abc import a, b, c, x, y, z
+
+    This function can collect symbolic coefficients in polynomials or
+    rational expressions. It will manage to find all integer or rational
+    powers of collection variable::
 
         >>> collect(a*x**2 + b*x**2 + a*x - b*x + c, x)
         c + x**2*(a + b) + x*(a - b)
 
-        The same result can be achieved in dictionary form:
+    The same result can be achieved in dictionary form::
 
         >>> d = collect(a*x**2 + b*x**2 + a*x - b*x + c, x, evaluate=False)
         >>> d[x**2]
         a + b
         >>> d[x]
         a - b
-        >>> d[sympify(1)]
+        >>> d[S.One]
         c
 
-        You can also work with multi-variate polynomials. However
-        remember that this function is greedy so it will care only
-        about a single symbol at time, in specification order:
+    You can also work with multivariate polynomials. However, remember that
+    this function is greedy so it will care only about a single symbol at time,
+    in specification order::
 
         >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
         x**2*(y + 1) + x*y + y*(a + 1)
 
-        Also more complicated expressions can be used as patterns:
+    Also more complicated expressions can be used as patterns::
 
         >>> from sympy import sin, log
         >>> collect(a*sin(2*x) + b*sin(2*x), sin(2*x))
@@ -228,50 +230,46 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> collect(a*x*log(x) + b*(x*log(x)), x*log(x))
         x*(a + b)*log(x)
 
-        You can use wildcards in the pattern
+    You can use wildcards in the pattern::
 
         >>> w = Wild('w1')
         >>> collect(a*x**y - b*x**y, w**y)
         x**y*(a - b)
 
-        It is also possible to work with symbolic powers, although
-        it has more complicated behavior, because in this case
-        power's base and symbolic part of the exponent are treated
-        as a single symbol:
+    It is also possible to work with symbolic powers, although it has more
+    complicated behavior, because in this case power's base and symbolic part
+    of the exponent are treated as a single symbol::
 
         >>> collect(a*x**c + b*x**c, x)
         a*x**c + b*x**c
-
         >>> collect(a*x**c + b*x**c, x**c)
         x**c*(a + b)
 
-        However if you incorporate rationals to the exponents, then
-        you will get well known behavior:
+    However if you incorporate rationals to the exponents, then you will get
+    well known behavior::
 
         >>> collect(a*x**(2*c) + b*x**(2*c), x**c)
         (a + b)*(x**2)**c
 
-        Note also that all previously stated facts about 'collect'
-        function apply to the exponential function, so you can get:
+    Note also that all previously stated facts about :func:`collect` function
+    apply to the exponential function, so you can get::
 
         >>> from sympy import exp
         >>> collect(a*exp(2*x) + b*exp(2*x), exp(x))
         (a + b)*exp(2*x)
 
-        If you are interested only in collecting specific powers
-        of some symbols then set 'exact' flag in arguments:
+    If you are interested only in collecting specific powers of some symbols
+    then set ``exact`` flag in arguments::
 
         >>> collect(a*x**7 + b*x**7, x, exact=True)
         a*x**7 + b*x**7
-
         >>> collect(a*x**7 + b*x**7, x**7, exact=True)
         x**7*(a + b)
 
-        You can also apply this function to differential equations, where
-        derivatives of arbitrary order can be collected.  Note that if you
-        collect with respect to a function or a derivative of a function,
-        all derivatives of that function will also be collected. Use
-        exact=True to prevent this from happening:
+    You can also apply this function to differential equations, where derivatives
+    of arbitrary order can be collected. Note that if you collect with respect
+    to a function or a derivative of a function, all derivatives of that function
+    will also be collected. Use ``exact=True`` to prevent this from happening::
 
         >>> from sympy import Derivative as D, collect, Function
         >>> f = Function('f') (x)
@@ -285,18 +283,25 @@ def collect(expr, syms, evaluate=True, exact=False):
         >>> collect(a*D(D(f,x),x) + b*D(D(f,x),x), D(f,x), exact=True)
         a*Derivative(f(x), x, x) + b*Derivative(f(x), x, x)
 
-        >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f,x)
+        >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
         (a + b)*f(x) + (a + b)*Derivative(f(x), x)
 
-        Or you can even match both derivative order and exponent at time::
+    Or you can even match both derivative order and exponent at the same time::
 
         >>> collect(a*D(D(f,x),x)**2 + b*D(D(f,x),x)**2, D(f,x))
         (a + b)*Derivative(f(x), x, x)**2
 
+    Finally, you can apply a function to each of the collected coefficients.
+    For example you can factorize symbolic coefficients of polynomial::
 
-    == Notes ==
-        - arguments are expected to be in expanded form, so you might have to
-          call expand() prior to calling this function.
+        >>> f = expand((x + a + 1)**3)
+
+        >>> collect(f, x, factor)
+        x**3 + 3*x**2*(a + 1) + 3*x*(a + 1)**2 + (a + 1)**3
+
+    .. note:: Arguments are expected to be in expanded form, so you might have
+              to call :func:`expand` prior to calling this function.
+
     """
     def make_expression(terms):
         product = []
@@ -464,10 +469,10 @@ def collect(expr, syms, evaluate=True, exact=False):
         if expr.is_Mul:
             ret = 1
             for term in expr.args:
-                ret *= collect(term, syms, True, exact)
+                ret *= collect(term, syms, func, True, exact)
             return ret
         elif expr.is_Pow:
-            b = collect(expr.base, syms, True, exact)
+            b = collect(expr.base, syms, func, True, exact)
             return Pow(b, expr.exp)
 
     summa = [separate(i) for i in Add.make_args(sympify(expr))]
@@ -518,6 +523,9 @@ def collect(expr, syms, evaluate=True, exact=False):
     if disliked is not S.Zero:
         collected[S.One] = disliked
 
+    if func is not None:
+        collected = dict([ (key, func(val)) for key, val in collected.iteritems() ])
+
     if evaluate:
         return Add(*[a*b for a, b in collected.iteritems()])
     else:
@@ -562,7 +570,8 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     keys; if symbols are provided, then all those symbols will
     be used as keys, and any terms in the expression containing
     other symbols or non-symbols will be returned keyed to the
-    string 'coeff'.
+    string 'coeff'. (Passing None for symbols will return the
+    expression in a dictionary keyed to 'coeff'.)
 
     If force=True, then power bases will only be separated if assumptions allow.
 
@@ -604,7 +613,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     """
 
     if dict:
-        return _separatevars_dict(_separatevars(expr, force), *symbols)
+        return _separatevars_dict(_separatevars(expr, force), symbols)
     else:
         return _separatevars(expr, force)
 
@@ -666,11 +675,18 @@ def _separatevars(expr, force):
     else:
         return expr
 
-def _separatevars_dict(expr, *symbols):
+def _separatevars_dict(expr, symbols):
     if symbols:
         assert all((t.is_Atom for t in symbols)), "symbols must be Atoms."
+        symbols = list(symbols)
+    elif symbols is None:
+        return {'coeff': expr}
+    else:
+        symbols = list(expr.free_symbols)
+        if not symbols:
+            return None
 
-    ret = dict(((i, S.One) for i in symbols + ('coeff',)))
+    ret = dict(((i, S.One) for i in symbols + ['coeff']))
 
     for i in Mul.make_args(expr):
         expsym = i.free_symbols
@@ -871,11 +887,11 @@ def radsimp(expr):
     Examples:
         >>> from sympy import radsimp, sqrt, Symbol
         >>> radsimp(1/(2+sqrt(2)))
-        -2**(1/2)/2 + 1
+        -sqrt(2)/2 + 1
         >>> x,y = map(Symbol, 'xy')
         >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
         >>> radsimp(e)
-        2**(1/2)*x + 2**(1/2)*y
+        sqrt(2)*x + sqrt(2)*y
 
     """
     n,d = fraction(expr)
@@ -957,7 +973,7 @@ def powdenest(eq, force=False):
           of the exponent can be removed from any term and the gcd of such
           integers can be joined with e
 
-    Setting `force` to True will make symbols that are not explicitly
+    Setting ``force`` to True will make symbols that are not explicitly
     negative behave as though they are positive, resulting in more
     denesting.
 
@@ -976,8 +992,8 @@ def powdenest(eq, force=False):
 
     Assumptions may prevent expansion:
 
-    >> powdenest(sqrt(x**2))  # activate when log rules are fixed
-    (x**2)**(1/2)
+    >>> powdenest(sqrt(x**2))  # activate when log rules are fixed
+    sqrt(x**2)
 
     >>> p = symbols('p', positive=True)
     >>> powdenest(sqrt(p**2))
@@ -1185,6 +1201,27 @@ def powsimp(expr, deep=False, combine='all', force=False):
         >>> powsimp(log(exp(x)*exp(y)), deep=True)
         x + y
 
+        Radicals with Mul bases will be combined if combine='exp'
+
+            >>> from sympy import sqrt, Mul
+            >>> x, y = symbols('x y')
+
+            Two radicals are automatically joined through Mul:
+            >>> a=sqrt(x*sqrt(y))
+            >>> a*a**3 == a**4
+            True
+
+            But if an integer power of that radical has been
+            autoexpanded then Mul does not join the resulting factors:
+            >>> a**4 # auto expands to a Mul, no longer a Pow
+            x**2*y
+            >>> _*a # so Mul doesn't combine them
+            x**2*y*sqrt(x*sqrt(y))
+            >>> powsimp(_) # but powsimp will
+            (x*sqrt(y))**(5/2)
+            >>> powsimp(x*y*a) # but won't when doing so would violate assumptions
+            x*y*sqrt(x*sqrt(y))
+
     """
     if combine not in ['all', 'exp', 'base']:
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
@@ -1218,10 +1255,10 @@ def powsimp(expr, deep=False, combine='all', force=False):
                 return powsimp(expand_mul(expr, deep=False), deep, combine, force)
             c_powers = {}
             nc_part = []
-            newexpr = sympify(1)
+            newexpr = []
             for term in expr.args:
                 if term.is_Add and deep:
-                    newexpr *= powsimp(term, deep, combine, force)
+                    newexpr.append(powsimp(term, deep, combine, force))
                 else:
                     if term.is_commutative:
                         b, e = term.as_base_exp()
@@ -1262,7 +1299,145 @@ def powsimp(expr, deep=False, combine='all', force=False):
                             e = c_powers.pop(binv)
                             c_powers[b] -= e
 
-            newexpr = Mul(*([newexpr] + [Pow(b, e) for b, e in c_powers.iteritems()]))
+            # filter c_powers and convert to a list
+            c_powers = [(b, e) for b, e in c_powers.iteritems() if e]
+
+            # ==============================================================
+            # check for Mul bases of Rational powers that can be combined with
+            # separated bases, e.g. x*sqrt(x*y)*sqrt(x*sqrt(x*y)) -> (x*sqrt(x*y))**(3/2)
+            # ---------------- helper functions
+            def ratq(x):
+                '''Return Rational part of x's exponent as it appears in the bkey.
+                '''
+                return bkey(x)[0][1]
+
+            def bkey(b, e=None):
+                '''Return b, e where e is the exponent of b or else is retrieved
+                from b with as_base_exponent. If e is a Rational then only the
+                numerator is sent back with e and the denominator is retained on b
+                e.g.
+                    x**3/2 -> x**(1/2), 3
+                    x**y -> x, y
+                    x**(2*y/3) -> x, 2*y/3
+
+                '''
+                from sympy import Rational as r
+                MUL = lambda *args: object.__new__(Mul)._new_rawargs(*args)
+                if e is not None: # coming from c_powers or from below
+                    if e.is_Integer:
+                        return (b, S.One), e
+                    elif e.is_Rational:
+                       return (b, Integer(e.q)), Integer(e.p)
+                    else:
+                        c, m = e.as_coeff_mul()
+                        if c is not S.One:
+                            return (b**MUL(*m), Integer(c.q)), Integer(c.p)
+                        else:
+                            return (b**e, S.One), S.One
+                else:
+                    return bkey(*b.as_base_exp())
+
+            def update(b):
+                '''Decide what to do with base, b. If its exponent is now an
+                integer multiple of the Rational denominator, then remove it
+                and put the factors of its base in the common_b dictionary or
+                update the existing bases if necessary. If it has been zeroed
+                out, simply remove the base.
+                '''
+                newe, r = divmod(common_b[b], b[1])
+                if not r:
+                    common_b.pop(b)
+                    if newe:
+                        for m in Mul.make_args(b[0]**newe):
+                            b, e = bkey(m)
+                            if b not in common_b:
+                                common_b[b] = 0
+                            common_b[b] += e
+                            if b[1] != 1:
+                                bases.append(b)
+            # ---------------- end of helper functions
+
+            # assemble a dictionary of the factors having a Rational power
+            common_b = {}
+            done = []
+            bases = []
+            for b, e in c_powers:
+                b, e = bkey(b, e)
+                common_b[b] = e
+                if b[1] != 1 and b[0].is_Mul:
+                    bases.append(b)
+            bases.sort(key=default_sort_key) # this makes tie-breaking canonical
+            bases.sort(key=count_ops, reverse= True) # handle longest first
+            for base in bases:
+                if base not in common_b: # it may have been removed already
+                    continue
+                b, exponent = base
+                last = False # True when no factor of base is a radical
+                qlcm = 1 # the lcm of the radical denominators
+                while True:
+                    bstart = b
+                    qstart = qlcm
+
+                    bb = [] # list of factors
+                    ee = [] # (factor's exponent, current value of that exponent in common_b)
+                    for bi in Mul.make_args(b):
+                        bib, bie = bkey(bi)
+                        if bib not in common_b or common_b[bib] < bie:
+                            ee = bb = [] # failed
+                            break
+                        ee.append([bie, common_b[bib]])
+                        bb.append(bib)
+                    if ee:
+                        # find the number of extractions possible
+                        # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
+                        min1 = ee[0][1]/ee[0][0]
+                        for i in xrange(len(ee)):
+                            rat = ee[i][1]/ee[i][0]
+                            if rat < 1:
+                                break
+                            min1 = min(min1, rat)
+                        else:
+                            # update base factor counts
+                            # e.g. if ee = [(2, 5), (3, 6)] then min1 = 2
+                            # and the new base counts will be 5-2*2 and 6-2*3
+                            for i in xrange(len(bb)):
+                                common_b[bb[i]] -= min1*ee[i][0]
+                                update(bb[i])
+                            # update the count of the base
+                            # e.g. x**2*y*sqrt(x*sqrt(y)) the count of x*sqrt(y)
+                            # will increase by 4 to give bkey (x*sqrt(y), 2, 5)
+                            common_b[base] += min1*qstart*exponent
+                    if (last # no more radicals in base
+                        or len(common_b) == 1 # nothing left to join with
+                        or all(k[1] == 1 for k in common_b) # no radicals left in common_b
+                        ):
+                        break
+                    # see what we can exponentiate base by to remove any radicals
+                    # so we know what to search for
+                    # e.g. if base were x**(1/2)*y**(1/3) then we should exponentiate
+                    # by 6 and look for powers of x and y in the ratio of 2 to 3
+                    qlcm = lcm([ratq(bi) for bi in Mul.make_args(bstart)])
+                    if qlcm == 1:
+                        break # we are done
+                    b = bstart**qlcm
+                    qlcm *= qstart
+                    if all(ratq(bi) == 1 for bi in Mul.make_args(b)):
+                        last = True # we are going to be done after this next pass
+                # this base no longer can find anything to join with and
+                # since it was longer than any other we are done with it
+                b, q = base
+                done.append((b, common_b.pop(base)*Rational(1, q)))
+
+            # update c_powers and get ready to continue with powsimp
+            c_powers = done
+            # there may be terms still in common_b that were bases that were
+            # identified as needing processing, so remove those, too
+            c_powers.extend([(b, Rational(e, q)) for (b, q), e in common_b.items()])
+            c_powers = dict(c_powers)
+            # ==============================================================
+
+            # rebuild the expression
+            newexpr = Mul(*(newexpr + [Pow(b, e) for b, e in c_powers.iteritems()]))
             if combine is 'exp':
                 return Mul(newexpr, Mul(*nc_part))
             else:
@@ -1420,7 +1595,7 @@ def hypersimp(f, k):
     g = powsimp(g, deep=True, combine='exp')
 
     if g.is_rational_function(k):
-        return simplify(g)
+        return simplify(g, ratio=S.Infinity)
     else:
         return None
 
@@ -1579,29 +1754,30 @@ def simplify(expr, ratio=1.7):
        if (result length)/(input length) > ratio, then input is returned
        unmodified (:func:`count_ops` is used to measure length).
 
-       For example, if ``ratio=1``, `simplify` output can't be longer
+       For example, if ``ratio=1``, ``simplify`` output can't be longer
        than input.
 
        ::
 
-           >>> from sympy import S, simplify, count_ops, oo
-           >>> root = S("(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2) \
-                        + 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))")
+            >>> from sympy import S, simplify, count_ops, oo
+            >>> root = S("(1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3) + "
+            ... "1/((1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3))")
 
        Since ``simplify(root)`` would result in a slightly longer expression,
-       root is returned inchanged instead::
+       root is returned unchanged instead::
 
-           >>> simplify(root, ratio=1) is root
+           >>> simplify(root, ratio=1) == root
            True
 
        If ``ratio=oo``, simplify will be applied anyway::
 
-           >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
-           True
+            >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
+            True
 
        Note that the shortest expression is not necessary the simplest, so
        setting ``ratio`` to 1 may not be a good idea.
        Heuristically, default value ``ratio=1.7`` seems like a reasonable choice.
+
     """
     expr = sympify(expr)
 
@@ -1621,10 +1797,25 @@ def simplify(expr, ratio=1.7):
 
     original_expr = expr
 
-    if expr.is_commutative is False:
-        return together(powsimp(expr))
+    def shorter(*choices):
+        '''Return the choice that has the fewest ops. In case of a tie,
+        the expression listed first is selected.'''
+        if len(set(choices)) == 1:
+            return choices[0]
+        return min(choices, key=count_ops)
 
-    expr = together(cancel(powsimp(expr)).expand())
+    if expr.is_commutative is False:
+        expr = powsimp(expr)
+        if ratio is S.Infinity:
+            return expr
+        return shorter(together(expr), expr)
+
+    expr1 = cancel(powsimp(expr))
+    expr2 = together(expr1.expand(), deep=True)
+    if ratio is S.Infinity:
+        expr = expr2
+    else:
+        expr = shorter(expr2, expr1, expr)
 
     if not isinstance(expr, Basic): # XXX: temporary hack
         return expr
@@ -1633,8 +1824,7 @@ def simplify(expr, ratio=1.7):
         expr = trigsimp(expr)
 
     if expr.has(C.log):
-        expr = min([expand_log(expr, deep=True), logcombine(expr)],
-                       key=count_ops)
+        expr = shorter(expand_log(expr, deep=True), logcombine(expr))
 
     if expr.has(C.CombinatorialFunction, gamma):
         expr = combsimp(expr)
@@ -1645,12 +1835,12 @@ def simplify(expr, ratio=1.7):
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')
 
-        r = denom.match(a + b*c**S.Half)
+        r = denom.match(a + b*sqrt(c))
 
         if r is not None and r[b]:
             a, b, c = r[a], r[b], r[c]
 
-            numer *= a-b*c**S.Half
+            numer *= a-b*sqrt(c)
             numer = numer.expand()
 
             denom = a**2 - c*b**2
@@ -1665,6 +1855,9 @@ def simplify(expr, ratio=1.7):
     if count_ops(expr) > ratio*count_ops(original_expr):
         return original_expr
 
+    if original_expr.is_Matrix:
+        expr = matrixify(expr)
+
     return expr
 
 def _real_to_rational(expr):
@@ -1675,7 +1868,7 @@ def _real_to_rational(expr):
     >>> from sympy.abc import x
 
     >>> nsimplify(.76 + .1*x**.5, rational=1)
-    x**(1/2)/10 + 19/25
+    sqrt(x)/10 + 19/25
 
     """
     p = sympify(expr)
@@ -1720,7 +1913,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
         -2 + 2*GoldenRatio
         >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-        1/2 - I*(5**(1/2)/10 + 1/4)**(1/2)
+        1/2 - I*sqrt(sqrt(5)/10 + 1/4)
         >>> nsimplify(I**I, [pi])
         exp(-pi/2)
         >>> nsimplify(pi, tolerance=0.01)

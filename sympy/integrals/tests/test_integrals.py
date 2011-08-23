@@ -117,9 +117,9 @@ def test_issue433():
     assert integrate(exp(-x), (x,0,oo)) == 1
 
 def test_issue461():
-    assert integrate(x**Rational(3,2), x) == 2*x**Rational(5,2)/5
-    assert integrate(x**Rational(1,2), x) == 2*x**Rational(3,2)/3
-    assert integrate(x**Rational(-3,2), x) == -2*x**Rational(-1,2)
+    assert integrate(sqrt(x)**3, x) == 2*sqrt(x)**5/5
+    assert integrate(sqrt(x), x) == 2*sqrt(x)**3/3
+    assert integrate(1/sqrt(x)**3, x) == -2/sqrt(x)
 
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
@@ -180,10 +180,10 @@ def test_integrate_linearterm_pow():
     assert integrate((exp(y)*x + 1/y)**(1+sin(y)), x)   == exp(-y)*(exp(y)*x + 1/y)**(2+sin(y)) / (2+sin(y))
 
 def test_issue519():
-    assert integrate(pi*x**Rational(1,2),x) == 2*pi*x**Rational(3,2)/3
-    assert integrate(pi*x**Rational(1,2) + E*x**Rational(3,2),x) == \
-                                               2*pi*x**Rational(3,2)/3  + \
-                                               2*E *x**Rational(5,2)/5
+    assert integrate(pi*sqrt(x),x) == 2*pi*sqrt(x)**3/3
+    assert integrate(pi*sqrt(x) + E*sqrt(x)**3,x) == \
+                                               2*pi*sqrt(x)**3/3  + \
+                                               2*E *sqrt(x)**5/5
 def test_issue524():
     assert integrate(cos((n+1) * x), x)   == sin(x*(n+1)) / (n+1)
     assert integrate(cos((n-1) * x), x)   == sin(x*(n-1)) / (n-1)
@@ -265,7 +265,7 @@ def test_transform():
     Integral(x**(-3), (x, 1/_3, oo))
 
 def test_issue953():
-    f = S(1)/2*asin(x) + x*(1 - x**2)**(S(1)/2)/2
+    f = S(1)/2*asin(x) + x*sqrt(1 - x**2)/2
 
     assert integrate(cos(asin(x)), x) == f
     assert integrate(sin(acos(x)), x) == f
@@ -281,7 +281,7 @@ def test_evalf_integrals():
     # A monster of an integral from http://mathworld.wolfram.com/DefiniteIntegral.html
     t = Symbol('t')
     a = 8*sqrt(3)/(1+3*t**2)
-    b = 16*sqrt(2)*(3*t+1)*(4*t**2+t+1)**Rational(3,2)
+    b = 16*sqrt(2)*(3*t+1)*sqrt(4*t**2+t+1)**3
     c = (3*t**2+1)*(11*t**2+2*t+3)**2
     d = sqrt(2)*(249*t**2+54*t+65)/(11*t**2+2*t+3)**2
     f = a - b/c - d
@@ -348,6 +348,15 @@ def test_integrate_DiracDelta():
            == x**3*z*DiracDelta(x - z)**2
     assert integrate((x+1)*DiracDelta(2*x), (x, -oo, oo)) == S(1)/2
     assert integrate((x+1)*DiracDelta(2*x/3 + 4/S(9)), (x, -oo, oo)) == S(1)/2
+
+    a, b, c = symbols('a b c', commutative=False)
+    assert integrate(DiracDelta(x - y)*f(x - b)*f(x - a), (x, -oo, oo)) == \
+           f(y - b)*f(y - a)
+    assert integrate(f(x - a)*DiracDelta(x - y)*f(x - c)*f(x - b), \
+                     (x, -oo, oo)) == f(y - a)*f(y - c)*f(y - b)
+
+    assert integrate(DiracDelta(x - z)*f(x - b)*f(x - a)*DiracDelta(x - y), \
+                     (x, -oo, oo)) == DiracDelta(y - z)*f(y - b)*f(y - a)
 
 def test_subs1():
     e = Integral(exp(x-y), x)
@@ -423,12 +432,12 @@ def test_expand_integral():
 
 def test_as_sum_midpoint1():
     e = Integral(sqrt(x**3+1), (x, 2, 10))
-    assert e.as_sum(1, method="midpoint") == 8*217**(S(1)/2)
-    assert e.as_sum(2, method="midpoint") == 4*65**(S(1)/2) + 12*57**(S(1)/2)
-    assert e.as_sum(3, method="midpoint") == 8*217**(S(1)/2)/3 + \
-            8*3081**(S(1)/2)/27 + 8*52809**(S(1)/2)/27
-    assert e.as_sum(4, method="midpoint") == 2*730**(S(1)/2) + \
-            4*7**(S(1)/2) + 4*86**(S(1)/2) + 6*14**(S(1)/2)
+    assert e.as_sum(1, method="midpoint") == 8*sqrt(217)
+    assert e.as_sum(2, method="midpoint") == 4*sqrt(65) + 12*sqrt(57)
+    assert e.as_sum(3, method="midpoint") == 8*sqrt(217)/3 + \
+            8*sqrt(3081)/27 + 8*sqrt(52809)/27
+    assert e.as_sum(4, method="midpoint") == 2*sqrt(730) + \
+            4*sqrt(7) + 4*sqrt(86) + 6*sqrt(14)
     assert abs(e.as_sum(4, method="midpoint").n() - e.n()) < 0.5
 
     e = Integral(sqrt(x**3+y**3), (x, 2, 10), (y, 0, 10))
@@ -475,8 +484,6 @@ def test_issue1566():
     assert f.doit() == Rational(-1, 3)
     assert Integral(x*y, (x, None, y)).subs(y, t) == Integral(x*t, (x, None, t))
     assert Integral(x*y, (x, y, None)).subs(y, t) == Integral(x*t, (x, t, None))
-    #FIXME-py3k: This fails somewhere down the line with:
-    #FIXME-py3k: TypeError: type Float doesn't define __round__ method
     assert integrate(x**2, (x, None, 1)) == Rational(1, 3)
     assert integrate(x**2, (x, 1, None)) == Rational(-1, 3)
     assert integrate("x**2", ("x", "1", None)) == Rational(-1, 3)
@@ -496,7 +503,7 @@ def test_doit():
     assert Integral(0, (x, 1, Integral(f(x), x))).doit() == 0
 
 def issue_1785():
-    assert integrate(sqrt(x)*(1+x)) == 2*x**Rational(3, 2)/3 + 2*x**Rational(5, 2)/5
+    assert integrate(sqrt(x)*(1+x)) == 2*sqrt(x)**3/3 + 2*sqrt(x)**5/5
     assert integrate(x**x*(1+log(x))) == x**x
 
 def test_is_number():
@@ -554,12 +561,12 @@ def test_series():
 
 def test_issue_1304():
     z = Symbol('z', positive=True)
-    assert integrate(sqrt(x**2 + z**2),x) == z**2*asinh(x/z)/2 + x*(x**2 + z**2)**(S(1)/2)/2
-    assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*(x**2 - z**2)**(S(1)/2)/2
+    assert integrate(sqrt(x**2 + z**2),x) == z**2*asinh(x/z)/2 + x*sqrt(x**2 + z**2)/2
+    assert integrate(sqrt(x**2 - z**2),x) == -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
 
 @XFAIL
 def test_issue_1304_2():
-    assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/(-4 - x**2)**(S(1)/2)) + x*(-4 - x**2)**(S(1)/2)/2
+    assert integrate(sqrt(-x**2 - 4), x) == -2*atan(x/sqrt(-4 - x**2)) + x*sqrt(-4 - x**2)/2
 
 def tets_issue_1001():
     R = Symbol('R', positive=True)
@@ -589,10 +596,10 @@ def test_issue2068():
 
 def test_issue_1791():
     z = Symbol('z', positive=True)
-    assert integrate(exp(-log(x)**2),x) == pi**(S(1)/2)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
-    assert integrate(exp(log(x)**2),x) == -I*pi**(S(1)/2)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
+    assert integrate(exp(-log(x)**2),x) == sqrt(pi)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
+    assert integrate(exp(log(x)**2),x) == -I*sqrt(pi)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
     assert integrate(exp(-z*log(x)**2),x) == \
-           pi**(S(1)/2)*erf(z**(S(1)/2)*log(x) - 1/(2*z**(S(1)/2)))*exp(S(1)/(4*z))/(2*z**(S(1)/2))
+           sqrt(pi)*erf(sqrt(z)*log(x) - 1/(2*sqrt(z)))*exp(S(1)/(4*z))/(2*sqrt(z))
 
 def test_issue_1277():
     from sympy import simplify
@@ -601,23 +608,23 @@ def test_issue_1277():
                                     (2**(1 + S(1)/n) + n*2**(1 + S(1)/n))))
 
 def test_issue_1418():
-    assert integrate((x**Rational(1,2) - x**3)/x**Rational(1,3), x) == \
-        6*x**(Rational(7,6))/7 - 3*x**(Rational(11,3))/11
+    assert integrate((sqrt(x) - x**3)/x**Rational(1,3), x) == \
+        6*x**Rational(7,6)/7 - 3*x**Rational(11,3)/11
 
 def test_issue_1100():
     assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)) is S.NaN
 
 def test_issue_841():
-    from sympy import simplify
-    a = Symbol('a', positive = True)
-    b = Symbol('b')
-    c = Symbol('c')
-    d = Symbol('d', positive = True)
-    assert integrate(exp(-x**2 + I*c*x), x) == pi**(S(1)/2)*erf(x - I*c/2)*exp(-c**S(2)/4)/2
+    from sympy import factor
+    a,b,c,d = symbols('a:d', positive=True, bounded=True)
+    assert integrate(exp(-x**2 + I*c*x), x) == sqrt(pi)*erf(x - I*c/2)*exp(-c**S(2)/4)/2
     assert integrate(exp(a*x**2 + b*x + c), x) == \
-          I*pi**(S(1)/2)*erf(-I*x*a**(S(1)/2) - I*b/(2*a**(S(1)/2)))*exp(c)*exp(-b**2/(4*a))/(2*a**(S(1)/2))
-    assert simplify(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == pi**(S(1)/2)*(1 + erf(oo - d/a**(S(1)/2))) \
-           *exp(d**2/a)/(2*a**(S(1)/2))
+          I*sqrt(pi)*erf(-I*x*sqrt(a) - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
+    a,b,c,d = symbols('a:d', positive=True)
+    i = integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))
+    ans = sqrt(pi)*exp(d**2/a)*(1 + erf(oo - d/sqrt(a)))/(2*sqrt(a))
+    n, d = i.as_numer_denom()
+    assert factor(n, expand=False)/d == ans
 
 def test_issue_2314():
     # Note that this is not the same as testing ratint() becuase integrate()
@@ -646,3 +653,7 @@ def test_issue_1793b():
 
     expr = (sin(y)*x**3 + 2*cos(y)*x**2 + 12)/(x**2 + 2)
     assert trigsimp(factor(integrate(expr, x).diff(x) - expr)) == 0
+
+def test_issue_2079():
+    assert integrate(sin(x)*f(y, z), (x, 0, pi), (y, 0, pi), (z, 0, pi)) == \
+        Integral(2*f(y, z), (y, 0, pi), (z, 0, pi))

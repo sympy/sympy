@@ -1,14 +1,15 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
-        Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
-        Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
-        Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg)
+    Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
+    Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
+    Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
+    Lambda, Poly, RootOf, RootSum, sqrt)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta
 
-x,y = symbols('x,y')
-k,n = symbols('k,n', integer=True)
+x, y, z, t = symbols('x y z t')
+k, n = symbols('k n', integer=True)
 
 def test_printmethod():
     class R(Abs):
@@ -29,14 +30,14 @@ def test_latex_basic():
     assert latex(2*x*y) == "2 x y"
     assert latex(2*x*y, mul_symbol='dot') == r"2 \cdot x \cdot y"
 
-    assert latex(x**(Rational(1,2))) == r"\sqrt{x}"
-    assert latex(x**(Rational(1,3))) == r"\sqrt[3]{x}"
-    assert latex(x**(Rational(3,2))) == r"x^{\frac{3}{2}}"
-    assert latex(x**(Rational(1,2)),itex=True) == r"\sqrt{x}"
-    assert latex(x**(Rational(1,3)),itex=True) == r"\root{3}{x}"
-    assert latex(x**(Rational(3,2)),itex=True) == r"x^{\frac{3}{2}}"
-    assert latex(x**(Rational(3,4))) == r"x^{\frac{3}{4}}"
-    assert latex(x**(Rational(3,4)), fold_frac_powers=True) == "x^{3/4}"
+    assert latex(sqrt(x)) == r"\sqrt{x}"
+    assert latex(x**Rational(1,3)) == r"\sqrt[3]{x}"
+    assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
+    assert latex(sqrt(x),itex=True) == r"\sqrt{x}"
+    assert latex(x**Rational(1,3),itex=True) == r"\root{3}{x}"
+    assert latex(sqrt(x)**3,itex=True) == r"x^{\frac{3}{2}}"
+    assert latex(x**Rational(3,4)) == r"x^{\frac{3}{4}}"
+    assert latex(x**Rational(3,4), fold_frac_powers=True) == "x^{3/4}"
 
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
@@ -44,7 +45,7 @@ def test_latex_basic():
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \times 10^{100}"
     assert latex(Float(1.0e-100)) == r"1.0 \times 10^{-100}"
-    latex(Float(1.0e-100), mul_symbol="dot") == r"1.0 \cdot 10^{-100}"
+    assert latex(Float(1.0e-100), mul_symbol="dot") == r"1.0 \cdot 10^{-100}"
     assert latex(1.0*oo) == r"\infty"
     assert latex(-1.0*oo) == r"- \infty"
 
@@ -142,14 +143,23 @@ def test_latex_derivatives():
     r"\frac{\partial}{\partial x}\left(x^{2} + \operatorname{sin}\left(x\right)\right)"
 
 def test_latex_integrals():
-    assert latex(Integral(log(x), x)) == r"\int \operatorname{log}\left(x\right)\,dx"
-    assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\,dx"
-    assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\,dx"
-    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\,dx dy"
+    assert latex(Integral(log(x), x)) == r"\int \operatorname{log}\left(x\right)\, dx"
+    assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\, dx"
+    assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\, dx"
+    assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\, dx\, dy"
     assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*') \
-        == r"\begin{equation*}\int\int\limits_{0}^{1} x^{2} y\,dx dy\end{equation*}"
+        == r"\begin{equation*}\int\int\limits_{0}^{1} x^{2} y\, dx\, dy\end{equation*}"
     assert latex(Integral(y*x**2, (x,0,1), y), mode='equation*', itex=True) \
-        == r"$$\int\int_{0}^{1} x^{2} y\,dx dy$$"
+        == r"$$\int\int_{0}^{1} x^{2} y\, dx\, dy$$"
+    assert latex(Integral(x, (x, 0))) == r"\int^{0} x\, dx"
+    assert latex(Integral(x*y, x, y)) == r"\iint x y\, dx\, dy"
+    assert latex(Integral(x*y*z, x, y, z)) == r"\iiint x y z\, dx\, dy\, dz"
+    assert latex(Integral(x*y*z*t, x, y, z, t)) == \
+        r"\iiiint t x y z\, dx\, dy\, dz\, dt"
+    assert latex(Integral(x, x, x, x, x, x, x)) == \
+        r"\int\int\int\int\int\int x\, dx\, dx\, dx\, dx\, dx\, dx"
+    assert latex(Integral(x, x, y, (z, 0, 1))) == \
+        r"\int_{0}^{1}\int\int x\, dx\, dy\, dz"
 
 def test_latex_intervals():
     a = Symbol('a', real=True)
@@ -240,16 +250,16 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1+x, y],[y, x-1]])
-    assert latex(M) == '\\left(\\begin{smallmatrix}x + 1 & y\\\\y & x -'\
-                       '1\\end{smallmatrix}\\right)'
+    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -'\
+                       '1\\end{smallmatrix}\\right]'
     settings = {'mat_str' : 'bmatrix'}
-    assert latex(M, **settings) == '\\left(\\begin{bmatrix}x + 1 & y\\\\y &'\
-           ' x -1\\end{bmatrix}\\right)'
+    assert latex(M, **settings) == '\\left[\\begin{bmatrix}x + 1 & y\\\\y &'\
+           ' x -1\\end{bmatrix}\\right]'
     settings['mat_delim'] = None
     assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x -1'\
                        '\\end{bmatrix}'
-    assert latex(M) == '\\left(\\begin{smallmatrix}x + 1 & y\\\\y & x -1'\
-                       '\\end{smallmatrix}\\right)'
+    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -1'\
+                       '\\end{smallmatrix}\\right]'
 
 def test_latex_mul_symbol():
     assert latex(4*4**x, mul_symbol='times') == "4 \\times 4^{x}"
@@ -302,11 +312,38 @@ def test_latex_pow_fraction():
     # Testing general, non-exp, power
     assert '3^{-x}' in latex(3**-x/2).replace(' ', '')
 
+def test_noncommutative():
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    assert latex(A*B*C**-1) == "A B C^{-1}"
+    assert latex(C**-1*A*B) == "C^{-1} A B"
+    assert latex(A*C**-1*B) == "A C^{-1} B"
+
 def test_latex_order():
     expr = x**3 + x**2*y + 3*x*y**3 + y**4
 
     assert latex(expr, order='lex') == "x^{3} + x^{2} y + 3 x y^{3} + y^{4}"
     assert latex(expr, order='rev-lex') == "y^{4} + 3 x y^{3} + x^{2} y + x^{3}"
+
+def test_latex_Lambda():
+    assert latex(Lambda(x, x + 1)) == \
+        r"\operatorname{\Lambda}\left(x, x + 1\right)"
+    assert latex(Lambda((x, y), x + 1)) == \
+        r"\operatorname{\Lambda}\left(\begin{pmatrix}x, & y\end{pmatrix}, x + 1\right)"
+
+def test_latex_Poly():
+    assert latex(Poly(x/y, x)) == \
+        r"\operatorname{Poly}\left(\frac{x}{y}, x, domain=\mathbb{Z}\left(y\right)\right)"
+    assert latex(Poly(2.0*x + y)) == \
+        r"\operatorname{Poly}\left(2.0 x + 1.0 y, x, y, domain=\mathbb{R}\right)"
+
+def test_latex_RootOf():
+    assert latex(RootOf(x**5 + x + 3, 0)) == \
+        r"\operatorname{RootOf}\left(x^{5} + x + 3, 0\right)"
+
+def test_latex_RootSum():
+    assert latex(RootSum(x**5 + x + 3, sin)) == \
+        r"\operatorname{RootSum}\left(x^{5} + x + 3, \operatorname{\Lambda}\left(x, \operatorname{sin}\left(x\right)\right)\right)"
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')

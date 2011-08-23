@@ -6,7 +6,7 @@ from sympy.polys.monomialtools import (
     monomial_key, monomial_min, monomial_div
 )
 
-from sympy.polys.groebnertools import sdp_sort
+from sympy.polys.distributedpolys import sdp_sort
 
 from sympy.utilities import cythonized
 
@@ -1648,7 +1648,7 @@ def dmp_list_terms(f, u, K, order=None):
     >>> dmp_list_terms(f, 1, ZZ)
     [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]
     >>> dmp_list_terms(f, 1, ZZ, order='grevlex')
-    [((1, 1), 1), ((0, 1), 2), ((1, 0), 1), ((0, 0), 3)]
+    [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]
 
     """
     terms = _rec_list_terms(f, u, ())

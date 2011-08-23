@@ -283,8 +283,7 @@ def test_is_polynomial():
     assert (x**2 + 3*x - 8).is_polynomial() == True
 
     assert sqrt(x).is_polynomial(x) == False
-    assert (x**S.Half).is_polynomial(x) == False
-    assert (x**Rational(3,2)).is_polynomial(x) == False
+    assert (sqrt(x)**3).is_polynomial(x) == False
 
     assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(x) == True
     assert (x**2 + 3*x*sqrt(y) - 8).is_polynomial(y) == False
@@ -415,7 +414,16 @@ def test_as_numer_denom():
     assert (x**n).as_numer_denom() == (x**n, 1)
     assert sqrt(1/n).as_numer_denom() == (I, sqrt(-n))
     n = Symbol('0 or neg', nonpositive=True)
-    assert ((x/n)**-S.Half).as_numer_denom() == (1, (x/n)**S.Half)
+    assert (1/sqrt(x/n)).as_numer_denom() == (1, sqrt(x/n))
+
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    assert (A*B*C**-1).as_numer_denom() == (A*B*C**-1, 1)
+    assert (A*B*C**-1/x).as_numer_denom() == (A*B*C**-1, x)
+    assert (C**-1*A*B).as_numer_denom() == (C**-1*A*B, 1)
+    assert (C**-1*A*B/x).as_numer_denom() == (C**-1*A*B, x)
+    assert ((A*B*C)**-1).as_numer_denom() == ((A*B*C)**-1, 1)
+    assert ((A*B*C)**-1/x).as_numer_denom() == ((A*B*C)**-1, x)
 
 def test_as_independent():
     assert (2*x*sin(x)+y+x).as_independent(x) == (y, x + 2*x*sin(x))
@@ -729,8 +737,8 @@ def test_extractions():
     assert (2*x).extract_multiplicatively(3) == None
     assert (2*x).extract_multiplicatively(-1) == None
     assert (Rational(1,2)*x).extract_multiplicatively(3) == x/6
-    assert (x**(Rational(1,2))).extract_multiplicatively(x) == None
-    assert (x**(Rational(1,2))).extract_multiplicatively(1/x) == x**(Rational(3,2))
+    assert (sqrt(x)).extract_multiplicatively(x) == None
+    assert (sqrt(x)).extract_multiplicatively(1/x) == sqrt(x)**3
 
     assert ((x*y)**3).extract_additively(1) == None
     assert (x+1).extract_additively(x) == 1
@@ -958,25 +966,25 @@ def test_issue_2061():
     assert sqrt(1.0*x) == 1.0*sqrt(x)
 
 def test_as_coeff_Mul():
-    Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
-    Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
-    Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
+    assert Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
+    assert Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
+    assert Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
 
-    (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
-    (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
-    (Float(5.0)*x).as_coeff_Mul() == (Float(5.0), x)
+    assert (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
+    assert (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
+    assert (Float(5.0)*x).as_coeff_Mul() == (Float(5.0), x)
 
-    (Integer(3)*x*y).as_coeff_Mul() == (Integer(3), x*y)
-    (Rational(3, 4)*x*y).as_coeff_Mul() == (Rational(3, 4), x*y)
-    (Float(5.0)*x*y).as_coeff_Mul() == (Float(5.0), x*y)
+    assert (Integer(3)*x*y).as_coeff_Mul() == (Integer(3), x*y)
+    assert (Rational(3, 4)*x*y).as_coeff_Mul() == (Rational(3, 4), x*y)
+    assert (Float(5.0)*x*y).as_coeff_Mul() == (Float(5.0), x*y)
 
-    (x).as_coeff_Mul() == (S.One, x)
-    (x*y).as_coeff_Mul() == (S.One, x*y)
+    assert (x).as_coeff_Mul() == (S.One, x)
+    assert (x*y).as_coeff_Mul() == (S.One, x*y)
 
 def test_expr_sorting():
     f, g = symbols('f,g', cls=Function)
 
-    exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, x**Rational(3,2), x**2]
+    exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, sqrt(x)**3, x**2]
     assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [x, 2*x, 2*x**2, 2*x**3, x**n, 2*x**n, sin(x), sin(x)**n, sin(x**2), cos(x), cos(x**2), tan(x)]

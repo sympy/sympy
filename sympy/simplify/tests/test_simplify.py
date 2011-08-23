@@ -3,7 +3,8 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     simplify, trigsimp, cos, tan, cot, log, ratsimp, Matrix, pi, integrate,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
-    separatevars, erf, rcollect, count_ops, combsimp, posify)
+    separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
+    factor, Mul)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -146,7 +147,7 @@ def test_simplify():
     A = Matrix([[2*k-m*w**2, -k], [-k, k-m*w**2]]).inv()
 
     assert simplify((A*Matrix([0,f]))[1]) == \
-        (f*(2*k - m*w**2))/(k**2 - 3*k*m*w**2 + m**2*w**4)
+        f/(-k**2/(2*k - m*w**2) + k - m*w**2)
 
     a, b, c, d, e, f, g, h, i = symbols('a,b,c,d,e,f,g,h,i')
 
@@ -178,11 +179,11 @@ def test_simplify_other():
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
-    roots = ['(5/2 + 21**(1/2)/2)**(1/3)*(1/2 - I*3**(1/2)/2)'
-             ' + 1/((1/2 - I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))',
-             '(5/2 + 21**(1/2)/2)**(1/3)*(1/2 + I*3**(1/2)/2)'
-             ' + 1/((1/2 + I*3**(1/2)/2)*(5/2 + 21**(1/2)/2)**(1/3))',
-             '-1/(5/2 + 21**(1/2)/2)**(1/3) - (5/2 + 21**(1/2)/2)**(1/3)']
+    roots = ['(1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3) + 1/((1/2 - '
+             'sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3))',
+             '1/((1/2 + sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3)) + '
+             '(1/2 + sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3)',
+             '-(sqrt(21)/2 + 5/2)**(1/3) - 1/(sqrt(21)/2 + 5/2)**(1/3)']
 
     for r in roots:
         r = S(r)
@@ -193,7 +194,11 @@ def test_simplify_ratio():
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
         (1 + E)*exp(-Rational(3, 2))
-    assert simplify(exp(1)+exp(-exp(1))) == (1 + exp(1 + E))*exp(-E)
+
+def test_issue_2553():
+    assert simplify(E + exp(-E)) == E + exp(-E)
+    n = symbols('n', commutative=False)
+    assert simplify(n + n**(-n)) == n + n**(-n)
 
 def test_simplify_fail1():
     x = Symbol('x')
@@ -203,6 +208,7 @@ def test_simplify_fail1():
 
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
+    A = Symbol('A', commutative=False)
 
     assert fraction(Rational(1, 2)) == (1, 2)
 
@@ -221,6 +227,9 @@ def test_fraction():
     assert fraction(x*(y+1)/y**7) == (x*(y+1), y**7)
 
     assert fraction(exp(-x), exact=True) == (exp(-x), 1)
+
+    assert fraction(x*A/y) == (x*A, y)
+    assert fraction(x*A**-1/y) == (x*A**-1, y)
 
 def test_separate():
     x, y, z = symbols('x,y,z')
@@ -429,6 +438,19 @@ def test_collect_Wild():
     assert collect(a*(x + 1)**y + (x + 1)**y, (x + 1)**w2) == (1 + a)*(x + 1)**y
     assert collect(a*(x + 1)**y + (x + 1)**y, w1**w2) == (1 + a)*(x + 1)**y
 
+def test_collect_func():
+    f = expand((x + a + 1)**3)
+
+    assert collect(f, x) == a**3 + 3*a**2 + 3*a + x**3 + x**2*(3*a + 3) + x*(3*a**2 + 6*a + 3) + 1
+    assert collect(f, x, factor) == x**3 + 3*x**2*(a + 1) + 3*x*(a + 1)**2 + (a + 1)**3
+
+    assert collect(f, x, evaluate=False) == {S.One: a**3 + 3*a**2 + 3*a + 1, x: 3*a**2 + 6*a + 3, x**2: 3*a + 3, x**3: 1}
+
+@XFAIL
+def test_collect_func_xfail():
+    # XXX: this test will pass when automatic constant distribution is removed (#1497)
+    assert collect(f, x, factor, evaluate=False) == {S.One: (a + 1)**3, x: 3*(a + 1)**2, x**2: 3*(a + 1), x**3: 1}
+
 def test_rcollect():
     assert rcollect((x**2*y + x*y + x + y)/(x + y), y) == (x + y*(1 + x + x**2))/(x + y)
     assert rcollect(sqrt(-((x + 1)*(y + 1))), z) == sqrt(-((x + 1)*(y + 1)))
@@ -440,7 +462,7 @@ def test_separatevars():
     assert separatevars(pi*x*z+pi*x*y*z) == pi*x*z*(1+y)
     assert separatevars(x*y**2*sin(x) + x*sin(x)*sin(y)) == x*(sin(y) + y**2)*sin(x)
     assert separatevars(x*exp(x+y)+x*exp(x)) == x*(1 + exp(y))*exp(x)
-    assert separatevars((x*(y+1))**z) == x**z*(1 + y)**z
+    assert separatevars((x*(y+1))**z).is_Pow # != x**z*(1 + y)**z
     assert separatevars(1+x+y+x*y) == (x+1)*(y+1)
     assert separatevars(y / pi * exp(-(z - x) / cos(n))) == y * exp((x - z) / cos(n)) / pi
     # 1759
@@ -451,11 +473,17 @@ def test_separatevars():
     # 1766
     assert separatevars(sqrt(x*y)).is_Pow
     assert separatevars(sqrt(x*y), force=True) == sqrt(x)*sqrt(y)
-
-@XFAIL
-def test_separation_by_factor():
-    x,y = symbols('x,y')
-    assert factor(sqrt(x*y), expand=False).is_Pow
+    # 1858
+    # any type sequence for symbols is fine
+    assert separatevars(((2*x+2)*y), dict=True, symbols=()) == {'coeff': 2, x: x + 1, y: y}
+    # separable
+    assert separatevars(((2*x+2)*y), dict=True, symbols=[]) == {'coeff': 2, x: x + 1, y: y}
+    assert separatevars(((2*x+2)*y), dict=True) == {'coeff': 2, x: x + 1, y: y}
+    assert separatevars(((2*x+2)*y), dict=True, symbols=None) == {'coeff': 2*y*(x + 1)}
+    # not separable
+    assert separatevars(2*x+y, dict=True, symbols=()) is None
+    assert separatevars(2*x+y, dict=True) is None
+    assert separatevars(2*x+y, dict=True, symbols=None) == {'coeff': 2*x + y}
 
 def test_separatevars_advanced_factor():
     x,y,z = symbols('x,y,z')
@@ -473,7 +501,7 @@ def test_hypersimp():
 
     assert hypersimp(1/factorial(k), k) == 1/(k + 1)
 
-    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k**2+2*k+1)
+    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k**2 + 2*k + 1)
 
     assert hypersimp(binomial(n, k), k) == (n-k)/(k+1)
     assert hypersimp(binomial(n+1, k), k) == (n-k+1)/(k+1)
@@ -485,7 +513,7 @@ def test_hypersimp():
     assert hypersimp(term, k) == (2*k - 1)/(3 + 11*k + 12*k**2 + 4*k**3)/2
 
     term = binomial(n, k)*(-1)**k/factorial(k)
-    assert hypersimp(term, k) == (k - n)/(k**2+2*k+1)
+    assert hypersimp(term, k) == (k - n)/(k**2 + 2*k + 1)
 
 def test_nsimplify():
     x = Symbol("x")
@@ -497,8 +525,8 @@ def test_nsimplify():
     assert nsimplify(1-GoldenRatio) == (1-sqrt(5))/2
     assert nsimplify((1+sqrt(5))/4, [GoldenRatio]) == GoldenRatio/2
     assert nsimplify(2/GoldenRatio, [GoldenRatio]) == 2*GoldenRatio - 2
-    assert nsimplify(exp(5*pi*I/3, evaluate=False)) == sympify('1/2 - I*3**(1/2)/2')
-    assert nsimplify(sin(3*pi/5, evaluate=False)) == sympify('(5/8 + 1/8*5**(1/2))**(1/2)')
+    assert nsimplify(exp(5*pi*I/3, evaluate=False)) == sympify('1/2 - sqrt(3)*I/2')
+    assert nsimplify(sin(3*pi/5, evaluate=False)) == sympify('sqrt(sqrt(5)/8 + 5/8)')
     assert nsimplify(sqrt(atan('1', evaluate=False))*(2+I), [pi]) == sqrt(pi) + sqrt(pi)/2*I
     assert nsimplify(2 + exp(2*atan('1/4')*I)) == sympify('49/17 + 8*I/17')
     assert nsimplify(pi, tolerance=0.01) == Rational(22, 7)
@@ -555,10 +583,10 @@ def test_logcombine_1():
     assert logcombine(log(x)*2*log(y)+log(z), force=True) == \
         log(z*y**log(x**2))
     assert logcombine((x*y+sqrt(x**4+y**4)+log(x)-log(y))/(pi*x**Rational(2, 3)*\
-        y**Rational(3, 2)), force=True) == \
-        log(x**(1/(pi*x**Rational(2, 3)*y**Rational(3, 2)))*y**(-1/(pi*\
-        x**Rational(2, 3)*y**Rational(3, 2)))) + (x**4 + y**4)**Rational(1, 2)/(pi*\
-        x**Rational(2, 3)*y**Rational(3, 2)) + x**Rational(1, 3)/(pi*y**Rational(1, 2))
+        sqrt(y)**3), force=True) == \
+        log(x**(1/(pi*x**Rational(2, 3)*sqrt(y)**3))*y**(-1/(pi*\
+        x**Rational(2, 3)*sqrt(y)**3))) + sqrt(x**4 + y**4)/(pi*\
+        x**Rational(2, 3)*sqrt(y)**3) + x**Rational(1, 3)/(pi*sqrt(y))
     assert logcombine(Eq(log(x), -2*log(y)), force=True) == \
         Eq(log(x*y**2), Integer(0))
     assert logcombine(Eq(y, x*acos(-log(x/y))), force=True) == \
@@ -662,3 +690,30 @@ def test_issue_2516():
     aA, Re, a, b, D = symbols('aA Re a b D')
     e=((D**3*a + b*aA**3)/Re).expand()
     assert collect(e, [aA**3/Re, a]) == e
+
+def test_issue_2629():
+    b = x*sqrt(y)
+    a = sqrt(b)
+    c = sqrt(sqrt(x)*y)
+    assert powsimp(a*b) == sqrt(b)**3
+    assert powsimp(a*b**2*sqrt(y)) == sqrt(y)*a**5
+    assert powsimp(a*x**2*c**3*y) == c**3*a**5
+    assert powsimp(a*x*c**3*y**2) == c**7*a
+    assert powsimp(x*c**3*y**2) == c**7
+    assert powsimp(x*c**3*y) == x*y*c**3
+    assert powsimp(sqrt(x)*c**3*y) == c**5
+    assert powsimp(sqrt(x)*a**3*sqrt(y)) == sqrt(x)*sqrt(y)*a**3
+    assert powsimp(Mul(sqrt(x)*c**3*sqrt(y), y, evaluate=False)) == sqrt(x)*sqrt(y)**3*c**3
+    assert powsimp(a**2*a*x**2*y) == a**7
+
+    # symbolic powers work, too
+    b = x**y*y
+    a = b*sqrt(b)
+    assert a.is_Mul is True
+    assert powsimp(a) == sqrt(b)**3
+
+    # as does exp
+    a = x*exp(2*y/3)
+    assert powsimp(a*sqrt(a)) == sqrt(a)**3
+    assert powsimp(a**2*sqrt(a)) == sqrt(a)**5
+    assert powsimp(a**2*sqrt(sqrt(a))) == sqrt(sqrt(a))**9

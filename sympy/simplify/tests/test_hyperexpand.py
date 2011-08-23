@@ -46,8 +46,8 @@ def can_do(ap, bq, numerical=True):
         return True
 
     repl = {}
-    for a in r.free_symbols - set([z]):
-        repl[a] = randcplx()
+    for n, a in enumerate(r.free_symbols - set([z])):
+        repl[a] = randcplx(n)
     return tn(hyper(ap, bq, z).subs(repl), r.subs(repl), z)
 
 def test_roach():
@@ -84,29 +84,29 @@ def test_hyperexpand_bases():
     # TODO [a+1, a-S.Half], [2*a]
     assert hyperexpand(hyper([1, 2], [3], z)) == -2/z - 2*log(-z + 1)/z**2
     assert hyperexpand(hyper([S.Half, 2], [S(3)/2], z)) == \
-      -1/(2*z - 2) + log((z**(S(1)/2) + 1)/(-z**(S(1)/2) + 1))/(4*z**(S(1)/2))
+      -1/(2*z - 2) + log((sqrt(z) + 1)/(-sqrt(z) + 1))/(4*sqrt(z))
     assert hyperexpand(hyper([S(1)/2, S(1)/2], [S(5)/2], z)) == \
-               (-3*z + 3)/(4*z*(-z + 1)**(S(1)/2)) \
-               + (6*z - 3)*asin(z**(S(1)/2))/(4*z**(S(3)/2))
+               (-3*z + 3)/(4*z*sqrt(-z + 1)) \
+               + (6*z - 3)*asin(sqrt(z))/(4*z**(S(3)/2))
     assert hyperexpand(hyper([1, 2], [S(3)/2], z)) == -1/(2*z - 2) \
-            - asin(z**(S(1)/2))/(z**(S(1)/2)*(2*z - 2)*(-z + 1)**(S(1)/2))
+            - asin(sqrt(z))/(sqrt(z)*(2*z - 2)*sqrt(-z + 1))
     assert hyperexpand(hyper([-S.Half - 1, 1, 2], [S.Half, 3], z)) == \
-             z**(S(1)/2)*(6*z/7 - S(6)/5)*atanh(z**(S(1)/2)) \
+             sqrt(z)*(6*z/7 - S(6)/5)*atanh(sqrt(z)) \
            + (-30*z**2 + 32*z - 6)/(35*z) - 6*log(-z + 1)/(35*z**2)
     assert hyperexpand(hyper([1+S.Half, 1, 1], [2, 2], z)) == \
-           -4*log((-z + 1)**(S(1)/2)/2 + S(1)/2)/z
+           -4*log(sqrt(-z + 1)/2 + S(1)/2)/z
     # TODO hyperexpand(hyper([a], [2*a + 1], z))
     # TODO [S.Half, a], [S(3)/2, a+1]
     assert hyperexpand(hyper([2], [b, 1], z)) == \
-             z**(-b/2 + S(1)/2)*besseli(b - 1, 2*z**(S(1)/2))*gamma(b) \
-           + z**(-b/2 + 1)*besseli(b, 2*z**(S(1)/2))*gamma(b)
+             z**(-b/2 + S(1)/2)*besseli(b - 1, 2*sqrt(z))*gamma(b) \
+           + z**(-b/2 + 1)*besseli(b, 2*sqrt(z))*gamma(b)
     # TODO [a], [a - S.Half, 2*a]
 
 def test_hyperexpand_parametric():
     assert hyperexpand(hyper([a, S(1)/2 + a], [S(1)/2], z)) \
-        == (1 + z**(S(1)/2))**(-2*a)/2 + (1 - z**(S(1)/2))**(-2*a)/2
+        == (1 + sqrt(z))**(-2*a)/2 + (1 - sqrt(z))**(-2*a)/2
     assert hyperexpand(hyper([a, -S(1)/2 + a], [2*a], z)) \
-        == 2**(2*a - 1)*((-z + 1)**(S(1)/2) + 1)**(-2*a + 1)
+        == 2**(2*a - 1)*(sqrt(-z + 1) + 1)**(-2*a + 1)
 
 def test_shifted_sum():
     from sympy import simplify
@@ -117,9 +117,9 @@ def randrat():
     """ Steer clear of integers. """
     return S(randrange(25) + 10)/50
 
-def randcplx():
+def randcplx(offset=-1):
     """ Polys is not good with real coefficients. """
-    return randrat() + I*randrat()
+    return randrat() + I*randrat() + I*(1 + offset)
 
 def test_formulae():
     from sympy.simplify.hyperexpand import FormulaCollection
@@ -127,8 +127,8 @@ def test_formulae():
     for formula in formulae:
         h = hyper(formula.indices.ap, formula.indices.bq, formula.z)
         rep = {}
-        for sym in formula.symbols:
-            rep[sym] = randcplx()
+        for n, sym in enumerate(formula.symbols):
+            rep[sym] = randcplx(n)
 
         #print h, closed_form
 
@@ -155,17 +155,18 @@ def test_plan():
     raises(KeyError,
            'devise_plan(IndexPair([2], []), IndexPair([S("1/2")], []), z)')
 
-    a1, a2, b1 = map(lambda _: randcplx(), range(3))
+    # We cannot use pi/(10000 + n) because polys is insanely slow.
+    a1, a2, b1 = map(lambda n: randcplx(n), range(3))
     b1 += 2*I
-    h = hyper([a1], [b1], z)
+    h = hyper([a1, a2], [b1], z)
 
     h2 = hyper((a1 + 1, a2), [b1], z)
-    tn(apply_operators(h, devise_plan(IndexPair((a1 + 1, a2), [b1]),
+    assert tn(apply_operators(h, devise_plan(IndexPair((a1 + 1, a2), [b1]),
                                       IndexPair((a1, a2), [b1]), z), op),
        h2, z)
 
     h2 = hyper((a1 + 1, a2 - 1), [b1], z)
-    tn(apply_operators(h, devise_plan(IndexPair((a1 + 1, a2 - 1), [b1]),
+    assert tn(apply_operators(h, devise_plan(IndexPair((a1 + 1, a2 - 1), [b1]),
                                       IndexPair((a1, a2), [b1]), z), op),
        h2, z)
 
@@ -178,15 +179,15 @@ def test_plan_derivatives():
                       IndexPair((a1, a2, a3), (b1, b2)), z)
     f = Formula((a1, a2, a3), (b1, b2), z, h, [])
     deriv = make_derivative_operator(f.M, z)
-    tn(apply_operators(f.C, ops, deriv)[0], h2, z)
+    assert tn((apply_operators(f.C, ops, deriv)*f.B)[0], h2, z)
 
     h2 = hyper((a1, a2 - 1, a3 - 2), (b1 - 1, b2 - 1), z)
     ops = devise_plan(IndexPair((a1, a2 - 1, a3 - 2), (b1 - 1, b2 - 1)),
                       IndexPair((a1, a2, a3), (b1, b2)), z)
-    tn(apply_operators(f.C, ops, deriv)[0], h2, z)
+    assert tn((apply_operators(f.C, ops, deriv)*f.B)[0], h2, z)
 
 def test_reduction_operators():
-    a1, a2, b1 = map(lambda _: randcplx(), range(3))
+    a1, a2, b1 = map(lambda n: randcplx(n), range(3))
     h = hyper([a1], [b1], z)
 
     assert ReduceOrder(2, 0) is None
@@ -211,7 +212,7 @@ def test_reduction_operators():
     assert tn(apply_operators(h, ops, op), hyper(ap, bq, z), z)
 
 def test_shift_operators():
-    a1, a2, b1, b2, b3 = map(lambda _: randcplx(), range(5))
+    a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, 'ShiftA(0)')
@@ -224,7 +225,7 @@ def test_shift_operators():
     assert tn(ShiftB(b3).apply(h, op), hyper((a1, a2), (b1, b2, b3 - 1), z), z)
 
 def test_ushift_operators():
-    a1, a2, b1, b2, b3 = map(lambda _: randcplx(), range(5))
+    a1, a2, b1, b2, b3 = map(lambda n: randcplx(n), range(5))
     h = hyper((a1, a2), (b1, b2, b3), z)
 
     raises(ValueError, 'UnShiftA((1,), (), 0, z)')
@@ -262,8 +263,8 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
         return True
 
     repl = {}
-    for a in meijerg(a1, a2, b1, b2, z).free_symbols - set([z]):
-        repl[a] = randcplx()
+    for n, a in enumerate(meijerg(a1, a2, b1, b2, z).free_symbols - set([z])):
+        repl[a] = randcplx(n)
     return tn(meijerg(a1, a2, b1, b2, z).subs(repl), r.subs(repl), z)
 
 def test_meijerg_expand():
@@ -332,9 +333,9 @@ def test_meijerg():
     # carefully set up the parameters.
     # NOTE: this used to fail sometimes. I believe it is fixed, but if you
     #       hit an inexplicable test failure here, please let me know the seed.
-    a1, a2 = map(lambda _: randcplx() - 5*I, range(2))
-    b1, b2 = map(lambda _: randcplx() + 5*I, range(2))
-    b3, b4, b5, a3, a4, a5 = map(lambda _: randcplx(), range(6))
+    a1, a2 = map(lambda n: randcplx() - 5*I - n*I, range(2))
+    b1, b2 = map(lambda n: randcplx() + 5*I + n*I, range(2))
+    b3, b4, b5, a3, a4, a5 = map(lambda n: randcplx(), range(6))
     g = meijerg([a1], [a3, a4], [b1], [b3, b4], z)
 
     assert ReduceOrder.meijer_minus(3, 4) is None

@@ -14,7 +14,7 @@ class Unit(AtomicExpr):
     Create own units like:
     m = Unit("meter", "m")
     """
-    is_positive = True    # make (m**2)**Rational(1,2) --> m
+    is_positive = True    # make sqrt(m**2) --> m
     is_commutative = True
 
     __slots__ = ["name", "abbrev"]

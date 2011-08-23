@@ -4,7 +4,7 @@ from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
 
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.iterables import cartes
+from sympy.core.compatibility import product as cartes
 
 def test_basic1():
     assert limit(x, x, oo) == oo
@@ -39,9 +39,9 @@ def test_basic1():
     # Pow
     assert limit(x**(-2), x, 0, dir='-') == oo
     assert limit(x**(-3), x, 0, dir='-') == -oo
-    assert limit(x**(-Rational(1, 2)), x, 0, dir='-') == (-oo)*I
+    assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
-    assert limit(x**(Rational(1, 2)), x, 0, dir='-') == 0
+    assert limit(sqrt(x), x, 0, dir='-') == 0
     assert limit(x**-pi, x, 0, dir='-') == zoo
     assert limit((1 + cos(x))**oo, x, 0) == oo
 

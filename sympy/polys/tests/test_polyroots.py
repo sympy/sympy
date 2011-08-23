@@ -1,10 +1,10 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
-    powsimp, Lambda, sin, cos, pi, I)
+    powsimp, Lambda, sin, cos, pi, I, Interval, re, im)
 from sympy.utilities.pytest import raises
 
-from sympy.polys import Poly, cyclotomic_poly
+from sympy.polys import Poly, cyclotomic_poly, intervals, nroots
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
@@ -24,8 +24,8 @@ def test_roots_quadratic():
     f = x**2 + (2*a*e + 2*c*e)/(a - c)*x + (d - b + a*e**2 - c*e**2)/(a - c)
 
     assert roots_quadratic(Poly(f, x)) == \
-        [-e*(a + c)/(a - c) - ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half,
-         -e*(a + c)/(a - c) + ((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)**S.Half]
+        [-e*(a + c)/(a - c) - sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2),
+         -e*(a + c)/(a - c) + sqrt((a*b + c*d - a*d - b*c + 4*a*c*e**2)/(a - c)**2)]
 
 def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3, x)) == [0, 0, 0]
@@ -72,9 +72,9 @@ def test_roots_quartic():
 def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]
     assert roots_cyclotomic(cyclotomic_poly(2, x, polys=True)) == [-1]
-    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True)) == [-S(1)/2 - I*3**(S(1)/2)/2, -S(1)/2 + I*3**(S(1)/2)/2]
+    assert roots_cyclotomic(cyclotomic_poly(3, x, polys=True)) == [-S(1)/2 - I*sqrt(3)/2, -S(1)/2 + I*sqrt(3)/2]
     assert roots_cyclotomic(cyclotomic_poly(4, x, polys=True)) == [-I, I]
-    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 - I*3**(S(1)/2)/2, S(1)/2 + I*3**(S(1)/2)/2]
+    assert roots_cyclotomic(cyclotomic_poly(6, x, polys=True)) == [S(1)/2 - I*sqrt(3)/2, S(1)/2 + I*sqrt(3)/2]
 
     assert roots_cyclotomic(cyclotomic_poly(7, x, polys=True)) == [
         -cos(pi/7)   - I*sin(pi/7),
@@ -86,17 +86,17 @@ def test_roots_cyclotomic():
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(8, x, polys=True)) == [
-        -2**(S(1)/2)/2 - I*2**(S(1)/2)/2,
-        -2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
-         2**(S(1)/2)/2 - I*2**(S(1)/2)/2,
-         2**(S(1)/2)/2 + I*2**(S(1)/2)/2,
+        -sqrt(2)/2 - I*sqrt(2)/2,
+        -sqrt(2)/2 + I*sqrt(2)/2,
+         sqrt(2)/2 - I*sqrt(2)/2,
+         sqrt(2)/2 + I*sqrt(2)/2,
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(12, x, polys=True)) == [
-        -3**(S(1)/2)/2 - I/2,
-        -3**(S(1)/2)/2 + I/2,
-         3**(S(1)/2)/2 - I/2,
-         3**(S(1)/2)/2 + I/2,
+        -sqrt(3)/2 - I/2,
+        -sqrt(3)/2 + I/2,
+         sqrt(3)/2 - I/2,
+         sqrt(3)/2 + I/2,
     ]
 
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True), factor=True) == [1]
@@ -225,10 +225,10 @@ def test_roots():
         {S.One: 2, -1 - sqrt(2): 1, S.Zero: 2, -1 + sqrt(2): 1}
 
     assert roots(x**8-1, x) == {
-         2**S.Half/2 + I*2**S.Half/2: 1,
-         2**S.Half/2 - I*2**S.Half/2: 1,
-        -2**S.Half/2 + I*2**S.Half/2: 1,
-        -2**S.Half/2 - I*2**S.Half/2: 1,
+         sqrt(2)/2 + I*sqrt(2)/2: 1,
+         sqrt(2)/2 - I*sqrt(2)/2: 1,
+        -sqrt(2)/2 + I*sqrt(2)/2: 1,
+        -sqrt(2)/2 - I*sqrt(2)/2: 1,
         S.One: 1, -S.One: 1, I: 1, -I: 1
     }
 
@@ -288,8 +288,8 @@ def test_roots():
 
     assert roots(f, z) == {
         S.One: 1,
-        S.Half + S.Half*y + S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
-        S.Half + S.Half*y - S.Half*(1 - 2*y + y**2 + 8*x**2)**S.Half: 1,
+        S.Half + S.Half*y + S.Half*sqrt(1 - 2*y + y**2 + 8*x**2): 1,
+        S.Half + S.Half*y - S.Half*sqrt(1 - 2*y + y**2 + 8*x**2): 1,
     }
 
     assert roots(a*b*c*x**3 + 2*x**2 + 4*x + 8, x, cubics=False) == {}
@@ -330,10 +330,8 @@ def test_roots():
         -I: 1, I: 1,
     }
 
-def test_roots2():
-    """Just test that calculating these roots does not hang
-    (final result is not checked)
-    """
+def test_roots_slow():
+    """Just test that calculating these roots does not hang. """
     a, b, c, d, x = symbols("a,b,c,d,x")
 
     f1 = x**2*c + (a/b) + x*c*d - a
@@ -348,6 +346,13 @@ def test_roots2():
     e2 = (zz-k)*yx*yx + zx*(yy-k)*zx + zy*zy*(xx-k)
 
     assert roots(e1 - e2, k).values() == [1, 1, 1]
+
+    f = x**3 + 2*x**2 + 8
+    R = roots(f).keys()
+
+    assert f.subs(x, R[0]).simplify() == 0
+    assert f.subs(x, R[1]).simplify() == 0
+    assert f.subs(x, R[2]).simplify() == 0
 
 def test_roots_inexact():
     R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1,   x) ])
@@ -391,6 +396,29 @@ def test_roots_preprocessed():
     for r1, r2 in zip(R1, R2):
         match = r1.match(p)
         assert match is not None and abs(match[w] - r2) < 1e-10
+
+def test_roots_mixed():
+    f = -1936 - 5056*x - 7592*x**2 + 2704*x**3 - 49*x**4
+
+    _re, _im = intervals(f, all=True)
+    _nroots = nroots(f)
+    _sroots = roots(f, multiple=True)
+
+    _re = [ Interval(a, b) for (a, b), _ in _re ]
+    _im = [ Interval(re(a), re(b))*Interval(im(a), im(b)) for (a, b), _ in _im ]
+
+    _intervals = _re + _im
+    _sroots = [ r.evalf() for r in _sroots ]
+
+    _nroots = sorted(_nroots, key=lambda x: x.sort_key())
+    _sroots = sorted(_sroots, key=lambda x: x.sort_key())
+
+    for _roots in (_nroots, _sroots):
+        for i, r in zip(_intervals, _roots):
+            if r.is_real:
+                assert r in i
+            else:
+                assert (re(r), im(r)) in i
 
 def test_root_factors():
     assert root_factors(Poly(1, x)) == [Poly(1, x)]

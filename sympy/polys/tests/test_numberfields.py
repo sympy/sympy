@@ -11,7 +11,7 @@ from sympy.polys.numberfields import (
     field_isomorphism,
     to_number_field,
     AlgebraicNumber,
-    isolate,
+    isolate, IntervalPrinter,
 )
 
 from sympy.polys.polyerrors import (
@@ -92,7 +92,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(sqrt(a) + sqrt(sqrt(a)), x) == f
     assert minimal_polynomial(sqrt(b) + sqrt(sqrt(b)), x) == f
 
-    assert minimal_polynomial(a**Rational(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
+    assert minimal_polynomial(a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
@@ -471,6 +471,11 @@ def test_to_algebraic_integer():
     assert a.minpoly == x**2 - 12
     assert a.root    == 2*sqrt(3)
     assert a.rep     == DMP([QQ(7,19),QQ(3)], QQ)
+
+def test_IntervalPrinter():
+    ip = IntervalPrinter()
+    assert ip.doprint(x**Q(1, 3)) == "x**(mpi('1/3'))"
+    assert ip.doprint(sqrt(x)) == "x**(mpi('1/2'))"
 
 def test_isolate():
     assert isolate(1) == (1, 1)

@@ -29,10 +29,12 @@ def l2_norm(f, lim):
 
     Example:
 
+    >>> from sympy.abc import x
+    >>> from gibbs_phenomenon import l2_norm
     >>> l2_norm(1, (x, -1, 1))
-    2**(1/2)
+    sqrt(2)
     >>> l2_norm(x, (x, -1, 1))
-    1/3*6**(1/2)
+    sqrt(6)/3
 
     """
     return sqrt(integrate(Abs(f)**2, lim))
@@ -57,8 +59,11 @@ def l2_gram_schmidt(list, lim):
     Orthonormalizes the "list" of functions using the Gram-Schmidt process.
 
     Example:
+
+    >>> from sympy.abc import x
+    >>> from gibbs_phenomenon import l2_gram_schmidt
     >>> l2_gram_schmidt([1, x, x**2], (x, -1, 1))
-    [1/2*2**(1/2), x*6**(1/2)/2, -3*10**(1/2)*(1/3 - x**2)/4]
+    [sqrt(2)/2, sqrt(6)*x/2, (x**2 - 1/3)/sqrt(Integral(Abs(x**2 - 1/3)**2, (x, -1, 1)))]
 
     """
     r = []

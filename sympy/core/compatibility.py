@@ -26,14 +26,14 @@ def iterable(i, exclude=(basestring, dict)):
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
     >>> for i in things:
     ...     print iterable(i), type(i)
-    True <type 'list'>
-    True <type 'tuple'>
-    True <type 'set'>
+    True <... 'list'>
+    True <... 'tuple'>
+    True <... 'set'>
     True <class 'sympy.core.containers.Tuple'>
-    True <type 'generator'>
-    False <type 'dict'>
-    False <type 'str'>
-    False <type 'int'>
+    True <... 'generator'>
+    False <... 'dict'>
+    False <... 'str'>
+    False <... 'int'>
 
     >>> iterable({}, exclude=None)
     True
@@ -140,8 +140,28 @@ try:
     from itertools import product
 except ImportError: # Python 2.5
     def product(*args, **kwds):
-        # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
-        # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
+        """
+        Cartesian product of input iterables.
+
+        Equivalent to nested for-loops in a generator expression. For example,
+        product(A, B) returns the same as ((x,y) for x in A for y in B).
+
+        The nested loops cycle like an odometer with the rightmost element
+        advancing on every iteration. This pattern creates a lexicographic
+        ordering so that if the input's iterables are sorted, the product
+        tuples are emitted in sorted order.
+
+        To compute the product of an iterable with itself, specify the number
+        of repetitions with the optional repeat keyword argument. For example,
+        product(A, repeat=4) means the same as product(A, A, A, A).
+
+        Examples:
+        >>> from sympy.core.compatibility import product
+        >>> [''.join(p) for p in list(product('ABC', 'xy'))]
+        ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
+        >>> list(product(range(2), repeat=2))
+        [(0, 0), (0, 1), (1, 0), (1, 1)]
+        """
         pools = map(tuple, args) * kwds.get('repeat', 1)
         result = [[]]
         for pool in pools:
@@ -153,8 +173,28 @@ try:
     from itertools import permutations
 except ImportError: # Python 2.5
     def permutations(iterable, r=None):
-        # permutations('ABCD', 2) --> AB AC AD BA BC BD CA CB CD DA DB DC
-        # permutations(range(3)) --> 012 021 102 120 201 210
+        """
+        Return successive r length permutations of elements in the iterable.
+
+        If r is not specified or is None, then r defaults to the length of
+        the iterable and all possible full-length permutations are generated.
+
+        Permutations are emitted in lexicographic sort order. So, if the input
+        iterable is sorted, the permutation tuples will be produced in sorted
+        order.
+
+        Elements are treated as unique based on their position, not on their
+        value. So if the input elements are unique, there will be no repeat
+        values in each permutation.
+
+        Examples;
+        >>> from sympy.core.compatibility import permutations
+        >>> [''.join(p) for p in list(permutations('ABC', 2))]
+        ['AB', 'AC', 'BA', 'BC', 'CA', 'CB']
+        >>> list(permutations(range(3)))
+        [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]
+        """
+
         pool = tuple(iterable)
         n = len(pool)
         r = n if r is None else r
@@ -176,3 +216,78 @@ except ImportError: # Python 2.5
                     break
             else:
                 return
+
+try:
+    from itertools import combinations, combinations_with_replacement
+except ImportError: # < python 2.6
+    def combinations(iterable, r):
+        """
+        Return r length subsequences of elements from the input iterable.
+
+        Combinations are emitted in lexicographic sort order. So, if the
+        input iterable is sorted, the combination tuples will be produced
+        in sorted order.
+
+        Elements are treated as unique based on their position, not on their
+        value. So if the input elements are unique, there will be no repeat
+        values in each combination.
+
+        See also: combinations_with_replacements
+
+        Examples:
+        >>> from sympy.core.compatibility import combinations
+        >>> list(combinations('ABC', 2))
+        [('A', 'B'), ('A', 'C'), ('B', 'C')]
+        >>> list(combinations(range(4), 3))
+        [(0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3)]
+        """
+        pool = tuple(iterable)
+        n = len(pool)
+        if r > n:
+            return
+        indices = range(r)
+        yield tuple(pool[i] for i in indices)
+        while True:
+            for i in reversed(range(r)):
+                if indices[i] != i + n - r:
+                    break
+            else:
+                return
+            indices[i] += 1
+            for j in range(i+1, r):
+                indices[j] = indices[j-1] + 1
+            yield tuple(pool[i] for i in indices)
+
+    def combinations_with_replacement(iterable, r):
+        """Return r length subsequences of elements from the input iterable
+        allowing individual elements to be repeated more than once.
+
+        Combinations are emitted in lexicographic sort order. So, if the
+        input iterable is sorted, the combination tuples will be produced
+        in sorted order.
+
+        Elements are treated as unique based on their position, not on their
+        value. So if the input elements are unique, the generated combinations
+        will also be unique.
+
+        See also: combinations
+
+        Example:
+        >>> from sympy.core.compatibility import combinations_with_replacement
+        >>> list(combinations_with_replacement('AB', 2))
+        [('A', 'A'), ('A', 'B'), ('B', 'B')]
+        """
+        pool = tuple(iterable)
+        n = len(pool)
+        if not n and r:
+            return
+        indices = [0] * r
+        yield tuple(pool[i] for i in indices)
+        while True:
+            for i in reversed(range(r)):
+                if indices[i] != n - 1:
+                    break
+            else:
+                return
+            indices[i:] = [indices[i] + 1] * (r - i)
+            yield tuple(pool[i] for i in indices)

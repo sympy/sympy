@@ -14,8 +14,8 @@ def monomials(variables, degree):
     r"""
     Generate a set of monomials of the given total degree or less.
 
-    Given a set of variables ``V`` and a total degree ``N`` generate
-    a set of monomials of degree at most ``N``. The total number of
+    Given a set of variables `V` and a total degree `N` generate
+    a set of monomials of degree at most `N`. The total number of
     monomials is huge and is given by the following formula:
 
     .. math::
@@ -23,14 +23,14 @@ def monomials(variables, degree):
         \frac{(\#V + N)!}{\#V! N!}
 
     For example if we would like to generate a dense polynomial of
-    a total degree $N = 50$ in 5 variables, assuming that exponents
+    a total degree `N = 50` in 5 variables, assuming that exponents
     and all of coefficients are 32-bit long and stored in an array we
     would need almost 80 GiB of memory! Fortunately most polynomials,
     that we will encounter, are sparse.
 
     **Examples**
 
-    Consider monomials in variables ``x`` and ``y``::
+    Consider monomials in variables `x` and `y`::
 
         >>> from sympy import monomials
         >>> from sympy.abc import x, y
@@ -64,7 +64,7 @@ def monomial_count(V, N):
 
         \frac{(\#V + N)!}{\#V! N!}
 
-    where ``N`` is a total degree and ``V`` is a set of variables.
+    where `N` is a total degree and `V` is a set of variables.
 
     **Examples**
 
@@ -94,7 +94,7 @@ def monomial_grlex_key(monom):
 
 def monomial_grevlex_key(monom):
     """Key function for sorting monomials in reversed graded lexicographic order. """
-    return (sum(monom), tuple(reversed(monom)))
+    return (sum(monom), tuple(reversed([-m for m in monom])))
 
 _monomial_key = {
     'lex'     : monomial_lex_key,

@@ -506,7 +506,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
         H(0)*H(1)*|00>
         >>> q = qapply(c)
         >>> measure_partial(q, (0,))
-        [(2**(1/2)*|00>/2 + 2**(1/2)*|10>/2, 1/2), (2**(1/2)*|01>/2 + 2**(1/2)*|11>/2, 1/2)]
+        [(sqrt(2)*|00>/2 + sqrt(2)*|10>/2, 1/2), (sqrt(2)*|01>/2 + sqrt(2)*|11>/2, 1/2)]
     """
     m = qubit_to_matrix(qubit, format)
 

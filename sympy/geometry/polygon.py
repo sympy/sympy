@@ -226,7 +226,7 @@ class Polygon(GeometryEntity):
         >>> poly.angles[p1]
         pi/2
         >>> poly.angles[p2]
-        acos(-4*17**(1/2)/17)
+        acos(-4*sqrt(17)/17)
 
         """
         def tarea(a, b, c):
@@ -262,7 +262,7 @@ class Polygon(GeometryEntity):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.perimeter
-        17**(1/2) + 7
+        sqrt(17) + 7
         """
         p = 0
         for i in xrange(len(self)):
@@ -626,7 +626,7 @@ class Polygon(GeometryEntity):
             >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
             >>> triangle = Polygon(Point(1, 2), Point(2, 2), Point(2, 1))
             >>> square._do_poly_distance(triangle)
-            2**(1/2)/2
+            sqrt(2)/2
 
         Description of method used
         --------------------------
@@ -1028,7 +1028,7 @@ class RegularPolygon(Polygon):
         >>> radius = Symbol('r')
         >>> rp = RegularPolygon(Point(0, 0), radius, 4)
         >>> rp.apothem
-        2**(1/2)*r/2
+        sqrt(2)*r/2
 
         """
         return self.radius * cos(S.Pi/self._n)
@@ -1186,7 +1186,7 @@ class RegularPolygon(Polygon):
         Point(1, 0)
         >>> r.spin(pi/6)
         >>> r[0]
-        Point(3**(1/2)/2, 1/2)
+        Point(sqrt(3)/2, 1/2)
 
         """
         self._rot += angle
@@ -1554,7 +1554,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, a)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumradius
-        (a**2/4 + 1/4)**(1/2)
+        sqrt(a**2/4 + 1/4)
 
         """
         return Point.distance(self.circumcenter, self.vertices[0])
@@ -1577,7 +1577,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumcircle
-        Circle(Point(1/2, 1/2), 2**(1/2)/2)
+        Circle(Point(1/2, 1/2), sqrt(2)/2)
 
         """
         return Circle(self.circumcenter, self.circumradius)
@@ -1639,7 +1639,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incenter
-        Point(-2**(1/2)/2 + 1, -2**(1/2)/2 + 1)
+        Point(-sqrt(2)/2 + 1, -sqrt(2)/2 + 1)
 
         """
         s = self.sides
@@ -1694,7 +1694,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incircle
-        Circle(Point(-2**(1/2) + 2, -2**(1/2) + 2), -2**(1/2) + 2)
+        Circle(Point(-sqrt(2) + 2, -sqrt(2) + 2), -sqrt(2) + 2)
 
         """
         return Circle(self.incenter, self.inradius)

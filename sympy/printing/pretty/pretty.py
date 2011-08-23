@@ -511,6 +511,38 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('[',']'))
         return D
 
+    def _print_Transpose(self, T):
+        pform = self._print(T.arg)
+        if (T.arg.is_Add or T.arg.is_Mul or T.arg.is_Pow):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right("'"))
+        return pform
+
+    def _print_Inverse(self, I):
+        pform = self._print(I.arg)
+        if (I.arg.is_Add or I.arg.is_Mul or I.arg.is_Pow):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right("^-1"))
+        return pform
+
+    def _print_BlockMatrix(self, B):
+        if B.mat.shape == (1,1):
+            return self._print(B.mat[0,0])
+        return self._print(B.mat)
+
+    def _print_MatMul(self, expr):
+        a = list(expr.args)
+        for i in xrange(0, len(a)):
+            if a[i].is_Add and len(a) > 1:
+                a[i] = prettyForm(*self._print(a[i]).parens())
+            else:
+                a[i] = self._print(a[i])
+
+        return prettyForm.__mul__(*a)
+
+    def _print_MatAdd(self, expr):
+        return self._print_seq(expr.args, None, None, ' + ')
+
     def _print_Piecewise(self, pexpr):
 
         P = {}
@@ -602,7 +634,7 @@ class PrettyPrinter(Printer):
                 D = prettyForm(*D.below(D_row))
 
         # make sure that the argument `z' is centred vertically
-        D.baseline = D.height()/2
+        D.baseline = D.height()//2
 
         # insert horizontal separator
         P = prettyForm(*P.left(' '))
@@ -615,7 +647,7 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('(', ')'))
 
         # create the F symbol
-        above = D.height()/2 - 1
+        above = D.height()//2 - 1
         below = D.height() - above - 1
 
         if self._use_unicode:
@@ -627,7 +659,7 @@ class PrettyPrinter(Printer):
         sz, t, b, img = pic
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline = above + sz)
-        add = (sz+1)/2
+        add = (sz+1)//2
 
         F = prettyForm(*F.left(self._print(len(e.ap))))
         F = prettyForm(*F.right(self._print(len(e.bq))))
@@ -668,7 +700,7 @@ class PrettyPrinter(Printer):
         D  = prettyForm(*D1.below(D2))
 
         # make sure that the argument `z' is centred vertically
-        D.baseline = D.height()/2
+        D.baseline = D.height()//2
 
         # insert horizontal separator
         P = prettyForm(*P.left(' '))
@@ -681,7 +713,7 @@ class PrettyPrinter(Printer):
         D = prettyForm(*D.parens('(', ')'))
 
         # create the G symbol
-        above = D.height()/2 - 1
+        above = D.height()//2 - 1
         below = D.height() - above - 1
 
         if self._use_unicode:
@@ -769,6 +801,12 @@ class PrettyPrinter(Printer):
         pform.prettyFunc = prettyFunc
         pform.prettyArgs = prettyArgs
 
+        return pform
+
+    def _print_Order(self, e):
+        pform = self._print(e.expr)
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('O'))
         return pform
 
     def _print_gamma(self, e):
@@ -868,7 +906,7 @@ class PrettyPrinter(Printer):
 
         # Gather terms for numerator/denominator
         for item in args:
-            if item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 b.append(C.Pow(item.base, -item.exp))
             elif item.is_Rational and item is not S.Infinity:
                 if item.p != 1:
@@ -898,51 +936,52 @@ class PrettyPrinter(Printer):
         else:
             if len(a) == 0:
                 a.append( self._print(S.One) )
-            return prettyForm.__mul__(*a) / prettyForm.__mul__(*b)
+            return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
 
     def _print_Pow(self, power):
         # square roots, other roots or n-th roots
         #test for fraction 1/n or power x**-1
-        if (isinstance(power.exp, C.Rational) and power.exp.p==1 and power.exp.q !=1) or \
-           (   isinstance(power.exp, C.Pow) and
-               isinstance(power.exp.args[0], C.Symbol) and
-               power.exp.args[1]==S.NegativeOne):
-            bpretty = self._print(power.base)
+        if power.is_commutative:
+            if (isinstance(power.exp, C.Rational) and power.exp.p==1 and power.exp.q !=1) or \
+               (   isinstance(power.exp, C.Pow) and
+                   isinstance(power.exp.args[0], C.Symbol) and
+                   power.exp.args[1]==S.NegativeOne):
+                bpretty = self._print(power.base)
 
-            #construct root sign, start with the \/ shape
-            _zZ= xobj('/',1)
-            rootsign = xobj('\\',1)+_zZ
-            #make exponent number to put above it
-            if isinstance(power.exp, C.Rational):
-                exp = str(power.exp.q)
-                if exp=='2': exp = ''
-            else: exp = str(power.exp.args[0])
-            exp = exp.ljust(2)
-            if len(exp)>2: rootsign = ' '*(len(exp)-2)+rootsign
-            #stack the exponent
-            rootsign = stringPict(exp+'\n'+rootsign)
-            rootsign.baseline = 0
-            #diagonal: length is one less than height of base
-            linelength = bpretty.height()-1
-            diagonal = stringPict('\n'.join(
-                ' '*(linelength-i-1)+_zZ+' '*i
-                for i in range(linelength)
-                ))
-            #put baseline just below lowest line: next to exp
-            diagonal.baseline = linelength-1
-            #make the root symbol
-            rootsign = prettyForm(*rootsign.right(diagonal))
-            #set the baseline to match contents to fix the height
-            #but if the height of bpretty is one, the rootsign must be one higher
-            rootsign.baseline = max(1, bpretty.baseline)
-            #build result
-            s = prettyForm(hobj('_', 2+ bpretty.width()))
-            s = prettyForm(*bpretty.above(s))
-            s = prettyForm(*s.left(rootsign))
-            return s
-        elif power.exp.is_Rational and power.exp.is_negative:
-            # Things like 1/x
-            return prettyForm("1") / self._print(C.Pow(power.base, -power.exp))
+                #construct root sign, start with the \/ shape
+                _zZ= xobj('/',1)
+                rootsign = xobj('\\',1)+_zZ
+                #make exponent number to put above it
+                if isinstance(power.exp, C.Rational):
+                    exp = str(power.exp.q)
+                    if exp=='2': exp = ''
+                else: exp = str(power.exp.args[0])
+                exp = exp.ljust(2)
+                if len(exp)>2: rootsign = ' '*(len(exp)-2)+rootsign
+                #stack the exponent
+                rootsign = stringPict(exp+'\n'+rootsign)
+                rootsign.baseline = 0
+                #diagonal: length is one less than height of base
+                linelength = bpretty.height()-1
+                diagonal = stringPict('\n'.join(
+                    ' '*(linelength-i-1)+_zZ+' '*i
+                    for i in range(linelength)
+                    ))
+                #put baseline just below lowest line: next to exp
+                diagonal.baseline = linelength-1
+                #make the root symbol
+                rootsign = prettyForm(*rootsign.right(diagonal))
+                #set the baseline to match contents to fix the height
+                #but if the height of bpretty is one, the rootsign must be one higher
+                rootsign.baseline = max(1, bpretty.baseline)
+                #build result
+                s = prettyForm(hobj('_', 2+ bpretty.width()))
+                s = prettyForm(*bpretty.above(s))
+                s = prettyForm(*s.left(rootsign))
+                return s
+            elif power.exp.is_Rational and power.exp.is_negative:
+                # Things like 1/x
+                return prettyForm("1") / self._print(C.Pow(power.base, -power.exp))
 
         # None of the above special forms, do a standard power
         b,e = power.as_base_exp()
@@ -1054,6 +1093,9 @@ class PrettyPrinter(Printer):
             return prettyForm(*ptuple.parens('(', ')', ifascii_nougly=True))
         else:
             return self._print_seq(t, '(', ')')
+
+    def _print_Tuple(self, expr):
+        return self._print_tuple(expr)
 
     def _print_dict(self, d):
         items = []

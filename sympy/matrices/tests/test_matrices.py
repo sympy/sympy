@@ -1253,9 +1253,9 @@ def test_get_diag_blocks1():
     a = Matrix([[1, 2], [2, 3]])
     b = Matrix([[3, x], [y, 3]])
     c = Matrix([[3, x, 3], [y, 3, z], [x, y, z]])
-    a.get_diag_blocks() == [a]
-    b.get_diag_blocks() == [b]
-    c.get_diag_blocks() == [c]
+    assert a.get_diag_blocks() == [a]
+    assert b.get_diag_blocks() == [b]
+    assert c.get_diag_blocks() == [c]
 
 def test_get_diag_blocks2():
     x, y, z = symbols("x y z")
@@ -1658,13 +1658,13 @@ def test_matrix_norm():
     y = Symbol('y')
     A = Matrix([[3,y,y],[x,S(1)/2, -pi]])
     assert (A.norm('fro')
-           == (S(37)/4 + 2*abs(y)**2 + pi**2 + x**2)**(S(1)/2))
+           == sqrt(S(37)/4 + 2*abs(y)**2 + pi**2 + x**2))
 
     # Check non-square
     A = Matrix([[1,2,-3],[4,5,Rational(13,2)]])
-    assert A.norm(2) == sympify('(389/8 + 78665**(1/2)/8)**(1/2)')
+    assert A.norm(2) == sqrt(S(389)/8 + sqrt(78665)/8)
     assert A.norm(-2) == S(0)
-    assert A.norm('frobenius') == 389**Rational(1,2)/2
+    assert A.norm('frobenius') == sqrt(389)/2
 
     # Test properties of matrix norms
     # http://en.wikipedia.org/wiki/Matrix_norm#Definition
