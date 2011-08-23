@@ -10,7 +10,10 @@ def test_dyad():
     d2 = A.y | A.y
     d3 = A.x | A.y
     assert d1 * 0 == 0
+    assert d1 != 0
     assert d1 * 2 == 2 * A.x | A.x
+    assert d1 / 2. == 0.5 * d1
+    assert d1 & 0 == 0
     assert d1 & d2 == 0
     assert d1 & A.x == A.x
     assert d1 ^ A.x == 0

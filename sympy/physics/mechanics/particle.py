@@ -53,7 +53,3 @@ class Particle(object):
         if not isinstance(p, Point):
             raise TypeError("Particle point attribute must be a Point object.")
         self._point = p
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

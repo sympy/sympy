@@ -544,8 +544,8 @@ product can work as follows: ::
 
 The "official" interface is the last one; or the function interface; this is
 what will be used in all examples. This is to avoid confusion with the
-attribute and methods being next to each other, and in the case of the
-operator operation priority. The operators used in :mod:`mechanics` for vector
+attribute and methods being next to each other, and in the case of the operator
+operation priority. The operators used in :mod:`mechanics` for vector
 multiplication do not posses the correct order of operations; this can lead to
 errors. Care with parentheses is needed when using operators to represent
 vector multiplication.

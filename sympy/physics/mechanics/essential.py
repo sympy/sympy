@@ -801,7 +801,7 @@ class ReferenceFrame(object):
 
         Next is Quaternion. This orients the new ReferenceFrame with
         Quaternions, defined as a finite rotation about lambda, a unit vector,
-        by some amount theta. 
+        by some amount theta.
         This orientation is described by four parameters:
         q0 = cos(theta/2)
         q1 = lambda_x sin(theta/2)
@@ -1635,84 +1635,13 @@ class Vector(object):
 class MechanicsStrPrinter(StrPrinter):
     """String Printer for mechanics. """
 
-    def _print_Add(self, expr, order=None):
-        if self.order == 'unsorted':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
-
-        PREC = precedence(expr)
-        l = []
-        for term in terms:
-            t = self._print(term)
-            if t.startswith('-'):
-                sign = "-"
-                t = t[1:]
-            else:
-                sign = "+"
-            if precedence(term) < PREC:
-                l.extend([sign, "(%s)"%t])
-            else:
-                l.extend([sign, t])
-        sign = l.pop(0)
-        if sign=='+':
-            sign = ""
-        return sign + ' '.join(l)
-
-    def _print_Mul(self, expr):
-        coeff, terms = expr.as_coeff_mul()
-        if coeff.is_negative:
-            coeff = -coeff
-            if coeff is not S.One:
-                terms = (coeff,) + terms
-            sign = "-"
-        else:
-            terms = (coeff,) + terms
-            sign = ""
-
-        a = [] # items in the numerator
-        b = [] # items that are in the denominator (if any)
-
-        if (self.order != 'old') and (self.order != 'unsorted'):
-            args = expr._new_rawargs(*terms).as_ordered_factors()
-        else:
-            args = terms
-
-        # Gather args for numerator/denominator
-        for item in args:
-            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                b.append(Pow(item.base, -item.exp))
-            elif item.is_Rational and item is not S.Infinity:
-                if item.p != 1:
-                    a.append(Rational(item.p))
-                if item.q != 1:
-                    b.append(Rational(item.q))
-            else:
-                a.append(item)
-
-        if len(a)==0:
-            a = [S.One]
-
-        a_str = map(lambda x:self.parenthesize(x, precedence(expr)), a)
-        b_str = map(lambda x:self.parenthesize(x, precedence(expr)), b)
-
-        if len(b)==0:
-            return sign + '*'.join(a_str)
-        elif len(b)==1:
-            if len(a)==1 and not (a[0].is_Atom or a[0].is_Add):
-                return sign + "%s/"%a_str[0] + '*'.join(b_str)
-            else:
-                return sign + '*'.join(a_str) + "/%s"%b_str[0]
-        else:
-            return sign + '*'.join(a_str) + "/(%s)"%'*'.join(b_str)
-
     def _print_Derivative(self, e):
         t = dynamicsymbols._t
         if (bool(sum([i == t for i in e.variables])) &
             isinstance(type(e.args[0]), UndefinedFunction)):
             ol = str(e.args[0].func)
             for i, v in enumerate(e.variables):
-                ol += '\''
+                ol += dynamicsymbols._str
             return ol
         else:
             return StrPrinter().doprint(e)
@@ -1726,108 +1655,6 @@ class MechanicsStrPrinter(StrPrinter):
 
 class MechanicsLatexPrinter(LatexPrinter):
     """Latex Printer for mechanics. """
-
-    def _print_Add(self, expr, order=None):
-        if order == 'unsorted':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
-        tex = self._print(terms[0])
-
-        for term in terms[1:]:
-            coeff = term.as_coeff_mul()[0]
-
-            if coeff >= 0:
-                tex += " +"
-
-            tex += " " + self._print(term)
-
-        return tex
-
-    def _print_Mul(self, expr):
-        coeff, tail = expr.as_coeff_Mul()
-
-        if not coeff.is_negative:
-            tex = ""
-        else:
-            coeff = -coeff
-            tex = "- "
-
-        numer, denom = fraction(tail, exact=True)
-        separator = self._settings['mul_symbol_latex']
-
-        def convert(expr):
-            if not expr.is_Mul:
-                return str(self._print(expr))
-            else:
-                _tex = last_term_tex = ""
-
-                if (self.order != 'old') and (self.order != 'unsorted'):
-                    args = expr.as_ordered_factors()
-                else:
-                    args = expr.args
-
-                for term in args:
-                    pretty = self._print(term)
-
-                    if term.is_Add:
-                        term_tex = (r"\left(%s\right)" % pretty)
-                    else:
-                        term_tex = str(pretty)
-
-                    # between two digits, \times must always be used,
-                    # to avoid confusion
-                    if separator == " " and \
-                            re.search("[0-9][} ]*$", last_term_tex) and \
-                            re.match("[{ ]*[-+0-9]", term_tex):
-                        _tex += r" \times "
-                    elif _tex:
-                        _tex += separator
-
-                    _tex += term_tex
-                    last_term_tex = term_tex
-                return _tex
-
-        if denom is S.One:
-            if numer.is_Add:
-                _tex = r"\left(%s\right)" % convert(numer)
-            else:
-                _tex = r"%s" % convert(numer)
-
-            if coeff is not S.One:
-                tex += str(self._print(coeff))
-
-                # between two digits, \times must always be used, to avoid
-                # confusion
-                if separator == " " and re.search("[0-9][} ]*$", tex) and \
-                        re.match("[{ ]*[-+0-9]", _tex):
-                    tex +=  r" \times " + _tex
-                else:
-                    tex += separator + _tex
-            else:
-                tex += _tex
-
-        else:
-            if numer is S.One:
-                if coeff.is_Integer:
-                    numer *= coeff.p
-                elif coeff.is_Rational:
-                    if coeff.p != 1:
-                        numer *= coeff.p
-
-                    denom *= coeff.q
-                elif coeff is not S.One:
-                    tex += str(self._print(coeff)) + " "
-            else:
-                if coeff.is_Rational and coeff.p == 1:
-                    denom *= coeff.q
-                elif coeff is not S.One:
-                    tex += str(self._print(coeff)) + " "
-
-            tex += r"\frac{%s}{%s}" % \
-                (convert(numer), convert(denom))
-
-        return tex
 
     def _print_Function(self, expr, exp=None):
         func = expr.func.__name__
@@ -1947,110 +1774,6 @@ class MechanicsLatexPrinter(LatexPrinter):
 
 class MechanicsPrettyPrinter(PrettyPrinter):
     """Pretty Printer for mechanics. """
-
-    def _print_Add(self, expr, order=None):
-        if order == 'unsorted':
-            terms = list(expr.args)
-        else:
-            terms = self._as_ordered_terms(expr, order=order)
-        pforms, indices = [], []
-
-        def pretty_negative(pform, index):
-            """Prepend a minus sign to a pretty form. """
-            if index == 0:
-                if pform.height() > 1:
-                    pform_neg = '- '
-                else:
-                    pform_neg = '-'
-            else:
-                pform_neg = ' - '
-
-            pform = stringPict.next(pform_neg, pform)
-            return prettyForm(binding=prettyForm.NEG, *pform)
-
-        for i, term in enumerate(terms):
-            if term.is_Mul and term.as_coeff_mul()[0] < 0:
-                pform = self._print(-term)
-                pforms.append(pretty_negative(pform, i))
-            elif term.is_Rational and term.q > 1:
-                pforms.append(None)
-                indices.append(i)
-            elif term.is_Number and term < 0:
-                pform = self._print(-term)
-                pforms.append(pretty_negative(pform, i))
-            else:
-                pforms.append(self._print(term))
-
-        if indices:
-            large = True
-
-            for pform in pforms:
-                if pform is not None and pform.height() > 1:
-                    break
-            else:
-                large = False
-
-            for i in indices:
-                term, negative = terms[i], False
-
-                if term < 0:
-                    term, negative = -term, True
-
-                if large:
-                    pform = prettyForm(str(term.p))/prettyForm(str(term.q))
-                else:
-                    pform = self._print(term)
-
-                if negative:
-                    pform = pretty_negative(pform, i)
-
-                pforms[i] = pform
-
-        return prettyForm.__add__(*pforms)
-
-    def _print_Mul(self, product):
-        a = [] # items in the numerator
-        b = [] # items that are in the denominator (if any)
-
-        if (self.order != 'old') and (self.order != 'unsorted'):
-            args = product.as_ordered_factors()
-        else:
-            args = product.args
-
-        # Gather terms for numerator/denominator
-        for item in args:
-            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
-                b.append(C.Pow(item.base, -item.exp))
-            elif item.is_Rational and item is not S.Infinity:
-                if item.p != 1:
-                    a.append( C.Rational(item.p) )
-                if item.q != 1:
-                    b.append( C.Rational(item.q) )
-            else:
-                a.append(item)
-
-        # Convert to pretty forms. Add parens to Add instances if there
-        # is more than one term in the numer/denom
-        for i in xrange(0, len(a)):
-            if a[i].is_Add and len(a) > 1:
-                a[i] = prettyForm(*self._print(a[i]).parens())
-            else:
-                a[i] = self._print(a[i])
-
-        for i in xrange(0, len(b)):
-            if b[i].is_Add and len(b) > 1:
-                b[i] = prettyForm(*self._print(b[i]).parens())
-            else:
-                b[i] = self._print(b[i])
-
-        # Construct a pretty form
-        if len(b) == 0:
-            return prettyForm.__mul__(*a)
-        else:
-            if len(a) == 0:
-                a.append( self._print(S.One) )
-            return prettyForm.__mul__(*a)/prettyForm.__mul__(*b)
-
 
     def _print_Derivative(self, deriv):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
@@ -2197,7 +1920,7 @@ def dynamicsymbols(names, level=0):
             for j, v in enumerate(esses):
                 ol.append(diff(v, dynamicsymbols._t))
             esses = ol
-        return tuple(ol)
+        return list(ol)
     except:
         esses = esses.__call__(dynamicsymbols._t)
         for i in range(level):
@@ -2205,7 +1928,4 @@ def dynamicsymbols(names, level=0):
         return esses
 
 dynamicsymbols._t = Symbol('t')
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+dynamicsymbols._str = '\''

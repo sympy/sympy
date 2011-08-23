@@ -29,6 +29,7 @@ def test_one_dof():
     forcing = KM.forcing
     rhs = MM.inv() * forcing
     assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
+    assert KM.linearize() == (Matrix([[0, 1], [k, c]]), Matrix([]))
 
 def test_two_dof():
     # This is for a 2 d.o.f., 2 particle spring-mass-damper.

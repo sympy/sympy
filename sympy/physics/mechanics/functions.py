@@ -7,8 +7,7 @@ __all__ = ['cross',
            'mprint',
            'mpprint',
            'mlatex',
-           'kinematic_equations',
-           'code_output']
+           'kinematic_equations']
 
 from sympy.physics.mechanics.essential import (Vector, Dyad, ReferenceFrame,
                                                MechanicsStrPrinter,
@@ -135,6 +134,10 @@ def mechanics_printing():
 def mprint(expr, **settings):
     r"""Function for printing of expressions generated in mechanics.
 
+    Extends SymPy's StrPrinter; mprint is equivalent to:
+    print sstr()
+    mprint takes the same options as sstr.
+
     Parameters
     ==========
     expr : valid sympy object
@@ -154,7 +157,7 @@ def mprint(expr, **settings):
 
     """
     if 'order' not in settings:
-        settings['order'] = 'unsorted'
+        settings['order'] = 'none'
 
     pr = MechanicsStrPrinter(settings)
     outstr = pr.doprint(expr)
@@ -168,7 +171,8 @@ def mpprint(expr, **settings):
     r"""Function for pretty printing of expressions generated in mechanics.
 
     Mainly used for expressions not inside a vector; the output of running
-    scripts and generating equations of motion.
+    scripts and generating equations of motion. Takes the same options as
+    SymPy's pretty_print(); see that function for more information.
 
     Parameters
     ==========
@@ -185,7 +189,7 @@ def mpprint(expr, **settings):
     """
 
     if 'order' not in settings:
-        settings['order'] = 'unsorted'
+        settings['order'] = 'none'
 
     mp = MechanicsPrettyPrinter(settings)
     print(mp.doprint(expr))
@@ -193,14 +197,15 @@ def mpprint(expr, **settings):
 def mlatex(expr, **settings):
     r"""Function for printing latex representation of mechanics objects.
 
-    For latex representation of Vectors, Dyads, and dynamicsymbols.
+    For latex representation of Vectors, Dyads, and dynamicsymbols. Takes the
+    same options as SymPy's latex(); see that function for more information;
 
     Parameters
     ==========
     expr : valid sympy object
         SymPy expression to represent in LaTeX form
     settings : args
-        Same as pretty print
+        Same as latex()
 
     Examples
     ========
@@ -213,7 +218,7 @@ def mlatex(expr, **settings):
     """
 
     if 'order' not in settings:
-        settings['order'] = 'unsorted'
+        settings['order'] = 'none'
 
     return MechanicsLatexPrinter(settings).doprint(expr)
 
@@ -366,287 +371,3 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     else:
         raise ValueError('Not an approved rotation type for this function')
 
-def code_output(typ, KM, fname, params=[]):
-    """Function for generating files with code to integrate.
-
-    Note: the interface for this function is likely to change in the future.
-    Please keep that in mind.
-
-    Parameters
-    ==========
-    typ : str
-        Type of output file
-    KM : Kane
-        Kane object to get equations from
-    fname : str
-        The filename to write to code to, no extension please
-    params : tuple
-        A list of symbols needed by the rhs function
-
-    """
-
-    # Note for future developers: the code output is written assuming the 5
-    # basic equations as described in the sphinx documentation. As long as the
-    # class object provided can supply the kinematic differential equations,
-    # mass matrix, and forcing vector, q's, and u's it should be compatible
-    # with this code output function. Keep this in mind if you write other
-    # methods of forming the equations of motion (Newton-Euler or Lagrange).
-
-    def _py_code_output(KM, fname, params):
-        """Function for generating code for numerical integration.
-
-        This is for SciPy's odeint function and uses NumPy.
-
-        """
-
-        mstr = MechanicsStrPrinter().doprint
-        f = open("./%s.py" % fname, 'w')
-        f.write('from scipy.integrate import odeint\n')
-        f.write('from numpy import *\n')
-        f.write('acos = arccos\n')
-        f.write('asin = arcsin\n')
-        f.write('atan = arctan\n\n')
-        f.write('def rhs(y, t, params):\n')
-        qsus = KM._q + KM._u
-        kdd = KM.kindiffdict()
-        MM = KM.mass_matrix_full.subs(kdd)
-        fo = KM.forcing_full.subs(kdd)
-        others = list(set(KM._find_dynamicsymbols(MM, qsus) +
-                          KM._find_dynamicsymbols(fo, qsus)))
-        if params == []:
-            syms = list(set(KM._find_othersymbols(MM) +
-                            KM._find_othersymbols(fo)))
-        else:
-            syms = params
-        others2 = {}
-        for i in others:
-            stri = mstr(i)
-            others2.update({i: symbols(stri.replace('\'','p'))})
-
-        l1 = '    ' + mstr(qsus)[1:-1] + ' = y\n'
-        f.write(l1)
-        l2 = '    ' + mstr(syms)[1:-1] + ' = params\n'
-        f.write(l2)
-
-        for i in others2.keys():
-            outl = '    ' + str(i) + ' = ?\n'
-            f.write(outl)
-        fo = fo.subs(others2)
-        MM = MM.subs(others2)
-        f.write('    M = zeros(%s)\n' % str(MM.shape))
-        f.write('    fo = zeros(%s)\n' % str(fo.shape))
-        ma, mb = MM.shape
-        fa, fb = fo.shape
-        for i in range(ma):
-            for j in range(mb):
-                f.write('    M[%s][%s] = %s\n' %
-                        (i, j, mstr(MM.extract([i],[j]))[1:-1]))
-        for i in range(fa):
-            f.write('    fo[%s] = %s\n' % (i, mstr(fo[i])))
-        f.write('    return linalg.solve(M, fo).T.flatten().tolist()\n\n')
-        for i in syms:
-            f.write('%s = ?\n' % i)
-        f.write('params = (%s)\n' % (mstr(syms)[1:-1]))
-
-    def _py_cse_code_output(KM, fname, params):
-        """Function for generating code for numerical integration.
-
-        This is for SciPy's odeint function and uses NumPy. Uses SymPy's cse() to
-        generate shorter expressions, but takes longer.
-
-        """
-
-        mstr = MechanicsStrPrinter().doprint
-        f = open("./%s.py" % fname, 'w')
-        f.write('from scipy.integrate import odeint\n')
-        f.write('from numpy import *\n')
-        f.write('acos = arccos\n')
-        f.write('asin = arcsin\n')
-        f.write('atan = arctan\n\n')
-        f.write('def rhs(y, t, params):\n')
-        qsus = KM._q + KM._u
-        kdd = KM.kindiffdict()
-        MM = KM.mass_matrix_full.subs(kdd)
-        fo = KM.forcing_full.subs(kdd)
-        others = list(set(KM._find_dynamicsymbols(MM, qsus) +
-                          KM._find_dynamicsymbols(fo, qsus)))
-        if params == []:
-            syms = list(set(KM._find_othersymbols(MM) +
-                            KM._find_othersymbols(fo)))
-        else:
-            syms = params
-        others2 = {}
-        for i in others:
-            stri = mstr(i)
-            others2.update({i: symbols(stri.replace('\'','p'))})
-
-        l1 = '    ' + mstr(qsus)[1:-1] + ' = y\n'
-        f.write(l1)
-        l2 = '    ' + mstr(syms)[1:-1] + ' = params\n'
-        f.write(l2)
-
-        for i in others2.keys():
-            outl = '    ' + str(i) + ' = ?\n'
-            f.write(outl)
-        fo = fo.subs(others2)
-        MM = MM.subs(others2)
-        f.write('    M = zeros(%s)\n' % str(MM.shape))
-        f.write('    fo = zeros(%s)\n' % str(fo.shape))
-        ma, mb = MM.shape
-        fa, fb = fo.shape
-        # cse stuff
-        z = numbered_symbols('z')
-        exprs = fo[:] + MM[:]
-        cseout = cse(exprs, z)
-        mats = cseout[1]
-        zs = cseout[0]
-        fo = mats[:fa]
-        MM = mats[fa:]
-        for i in zs:
-            f.write('    %s = %s\n' % (mstr(i[0]), mstr(i[1])))
-        # end cse stuff
-        for i in range(ma):
-            for j in range(mb):
-                # line below also formatted differently for cse
-                f.write('    M[%s][%s] = %s\n' %
-                        (i, j, mstr(MM[i * ma + j])))
-        for i in range(fa):
-            f.write('    fo[%s] = %s\n' % (i, mstr(fo[i])))
-        f.write('    return linalg.solve(M, fo).T.flatten().tolist()\n\n')
-        for i in syms:
-            f.write('%s = ?\n' % i)
-        f.write('params = (%s)\n' % (mstr(syms)[1:-1]))
-
-    def _matlab_code_output(KM, fname, params):
-        """Function for generating code for numerical integration.
-
-        This is for MATLAB's ode45 function.
-
-        """
-
-        mstr = MechanicsStrPrinter().doprint
-        qsus = KM._q + KM._u
-        kdd = KM.kindiffdict()
-        MM = KM.mass_matrix_full.subs(kdd)
-        fo = KM.forcing_full.subs(kdd)
-        others = list(set(KM._find_dynamicsymbols(MM, qsus) +
-                          KM._find_dynamicsymbols(fo, qsus)))
-        if params == []:
-            syms = list(set(KM._find_othersymbols(MM) +
-                            KM._find_othersymbols(fo)))
-        else:
-            syms = params
-        others2 = {}
-        for i in others:
-            stri = mstr(i)
-            others2.update({i: symbols(stri.replace('\'','p'))})
-
-        syms_str = mstr(syms)[1:-1]
-
-        f = open("./%s.m" % fname, 'w')
-        f.write('function ydot = %s(t, y, pars):\n' % fname)
-        for i, v in enumerate(qsus):
-            f.write('%s = y(%s);\n' % (mstr(v), i + 1))
-        for i in others2.keys():
-            f.write(mstr(i) + ' = ?;\n')
-        for i, v in enumerate(syms):
-            f.write('%s = pars(%s)' % (mstr(v), i + 1))
-        fo = fo.subs(others2)
-        MM = MM.subs(others2)
-        f.write('M = zeros%s;\n' % str(MM.shape))
-        f.write('fo = zeros%s;\n' % str(fo.shape))
-        ma, mb = MM.shape
-        fa, fb = fo.shape
-        for i in range(ma):
-            for j in range(mb):
-                f.write('M(%s, %s) = %s;\n' %
-                    (i + 1, j + 1, (mstr(MM.extract([i],
-                        [j]))[1:-1]).replace('**', '^')))
-        for i in range(fa):
-            f.write('fo(%s) = %s;\n' % (i + 1, mstr(fo[i]).replace('**', '^')))
-        f.write('ydot = M\\fo;\nend\n')
-        for i in syms:
-            f.write('%s = ?\n' % i)
-        f.write('%' + 'Order of symbols for rhs function: %s\n' % (syms_str))
-        f.write('% ' + 'might be helpful: pars = [%s];' % syms_str)
-
-    def _matlab_cse_code_output(KM, fname, params):
-        """Function for generating code for numerical integration.
-
-        This is for MATLAB's ode45 function.
-
-        """
-
-        mstr = MechanicsStrPrinter().doprint
-        qsus = KM._q + KM._u
-        kdd = KM.kindiffdict()
-        MM = KM.mass_matrix_full.subs(kdd)
-        fo = KM.forcing_full.subs(kdd)
-        others = list(set(KM._find_dynamicsymbols(MM, qsus) +
-                          KM._find_dynamicsymbols(fo, qsus)))
-        if params == []:
-            syms = list(set(KM._find_othersymbols(MM) +
-                            KM._find_othersymbols(fo)))
-        else:
-            syms = params
-        others2 = {}
-        for i in others:
-            stri = mstr(i)
-            others2.update({i: symbols(stri.replace('\'','p'))})
-
-        syms_str = mstr(syms)[1:-1]
-
-        f = open("./%s.m" % fname, 'w')
-        f.write('function ydot = %s(t, y, pars):\n' % fname)
-        for i, v in enumerate(qsus):
-            f.write('%s = y(%s);\n' % (mstr(v), i + 1))
-        for i in others2.keys():
-            f.write(mstr(i) + ' = ?;\n')
-        for i, v in enumerate(syms):
-            f.write('%s = pars(%s)' % (mstr(v), i + 1))
-        fo = fo.subs(others2)
-        MM = MM.subs(others2)
-        f.write('M = zeros%s;\n' % str(MM.shape))
-        f.write('fo = zeros%s;\n' % str(fo.shape))
-        ma, mb = MM.shape
-        fa, fb = fo.shape
-
-        # cse stuff
-
-        z = numbered_symbols('z')
-        exprs = fo[:] + MM[:]
-        cseout = cse(exprs, z)
-        mats = cseout[1]
-        zs = cseout[0]
-        fo = mats[:fa]
-        MM = mats[fa:]
-        for i in zs:
-            f.write('%s = %s\n' % (mstr(i[0]), mstr(i[1]).replace('**', '^')))
-        # end cse stuff
-
-        for i in range(ma):
-            for j in range(mb):
-                f.write('M[%s][%s] = %s\n' %
-                        (i, j, mstr(MM[i * ma + j]).replace('**', '^')))
-        for i in range(fa):
-            f.write('fo(%s) = %s;\n' % (i + 1, mstr(fo[i]).replace('**', '^')))
-        f.write('ydot = M\\fo;\nend\n')
-        for i in syms:
-            f.write('%s = ?\n' % i)
-        f.write('% ' + 'Order of symbols for rhs function: %s\n' % (syms_str))
-        f.write('% ' + 'might be helpful: pars = [%s];' % syms_str)
-
-    if typ == 'py':
-        _py_code_output(KM, fname, params)
-    elif typ == 'py_cse':
-        _py_cse_code_output(KM, fname, params)
-    elif typ == 'matlab':
-        _matlab_code_output(KM, fname, params)
-    elif typ == 'matlab_cse':
-        _matlab_cse_code_output(KM, fname, params)
-    else:
-        raise ValueError('Unsupported code output type')
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

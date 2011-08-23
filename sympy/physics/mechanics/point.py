@@ -445,6 +445,3 @@ class Point(object):
                              ' defined in ReferenceFrame ' + frame.name)
         return self._vel_dict[frame]
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

@@ -90,6 +90,13 @@ class Kane(object):
     >>> rhs = MM.inv() * forcing
     >>> rhs
     [-(c*u(t) + k*q(t))/m]
+    >>> KM.linearize()[0]
+    [0, 1]
+    [k, c]
+
+    Please look at the documentation pages for more information on how to
+    perform linearization and how to deal with dependent coordinates & speeds,
+    and how do deal with bringing non-contributing forces into evidence.
 
     """
 
@@ -608,6 +615,12 @@ class Kane(object):
 
         """
 
+        if (self._q == None) or (self._u == None):
+            raise ValueError('Speeds and coordinates must be supplied first')
+        if (self._k_kqdot == None):
+            raise ValueError('Supply kinematic differential equations please')
+
+
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
         if self._uaux != []:
@@ -828,7 +841,3 @@ class Kane(object):
         f1 = self._k_ku * Matrix(self._u) + self._f_k
         return -Matrix([f1, self._f_d, self._f_dnh])
 
-
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

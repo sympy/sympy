@@ -87,6 +87,3 @@ class RigidBody(object):
         self._inertia = I[0]
         self._inertia_point = I[1]
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
