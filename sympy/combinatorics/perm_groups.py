@@ -4,6 +4,14 @@ from sympy.core import Basic
 class PermutationGroup(Basic):
     """
     The class defining a Permutation group.
+
+    We use Jerrum's filter in our implementation of the
+    Schreier Sims algorithm. This is used to reduce the
+    memory footprint of the algorithm. The current
+    implementation is deterministic and runs in
+    O(n**5|A|) time where |A| is the size of the generator
+    set. A randomized implementation of the algorithm is
+    planned as well which has a faster runtime.
     """
 
     _generators = []
