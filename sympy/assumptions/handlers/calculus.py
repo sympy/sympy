@@ -65,8 +65,8 @@ class AskBoundedHandler(CommonHandler):
     >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
     >>> from sympy.abc import x
     >>> a = AskBoundedHandler()
-    >>> a.Symbol(x, Q.positive(x))
-    False
+    >>> a.Symbol(x, Q.positive(x)) == None
+    True
     >>> a.Symbol(x, Q.bounded(x))
     True
 
@@ -83,15 +83,15 @@ class AskBoundedHandler(CommonHandler):
         >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
         >>> from sympy.abc import x
         >>> a = AskBoundedHandler()
-        >>> a.Symbol(x, Q.positive(x))
-        False
+        >>> a.Symbol(x, Q.positive(x)) == None
+        True
         >>> a.Symbol(x, Q.bounded(x))
         True
 
         """
         if Q.bounded(expr) in conjuncts(assumptions):
             return True
-        return False
+        return None
 
     @staticmethod
     def Add(expr, assumptions):
@@ -115,20 +115,27 @@ class AskBoundedHandler(CommonHandler):
     @staticmethod
     def Pow(expr, assumptions):
         """
-        Unbounded ** Whatever -> Unbounded
-        Bounded ** Unbounded -> Unbounded if base > 1
-        Bounded ** Unbounded -> Unbounded if base < 1
+        Unbounded ** NonZero -> Unbounded
+        Bounded ** Bounded -> Bounded
+        Abs()<=1 ** Positive -> Bounded
+        Abs()>=1 ** Negative -> Bounded
+        Otherwise unknown
         """
         base_bounded = ask(Q.bounded(expr.base), assumptions)
-        if not base_bounded:
+        exp_bounded = ask(Q.bounded(expr.exp), assumptions)
+        if base_bounded==None and exp_bounded==None: # Common Case
+            return None
+        if base_bounded==False and ask(Q.nonzero(expr.exp), assumptions):
             return False
-        if ask(Q.bounded(expr.exp), assumptions):# and base_bounded:
+        if base_bounded and exp_bounded:
             return True
-        if expr.base.is_number:# and base_bounded and not exp_bounded:
-            # We need to implement relations for this
-            if abs(expr.base) > 1:
-                return False
-            return ask(~Q.negative(expr.exp), assumptions)
+        if abs(expr.base)<=1 and ask(Q.positive(expr.exp), assumptions):
+            return True
+        if abs(expr.base)>=1 and ask(Q.negative(expr.exp), assumptions):
+            return True
+        if abs(expr.base)>=1 and exp_bounded==False:
+            return False
+        return None
 
     @staticmethod
     def log(expr, assumptions):
