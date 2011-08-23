@@ -272,8 +272,12 @@ def preprocess(expr, func=None, hint='_Integral'):
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives and
     (if hint doesn't end with _Integral) that doit is applied to all
-    other derivatives. In case func is None, an attempt will be made
-    to autodetect the function to be solved for.
+    other derivatives. If hint is None, don't do any differentiation.
+    (Currently this may cause some simple differential equations to
+    fail.)
+
+    In case func is None, an attempt will be made to autodetect the
+    function to be solved for.
 
     >>> from sympy.solvers.ode import preprocess
     >>> from sympy import Derivative, Function, Integral, sin
@@ -291,8 +295,6 @@ def preprocess(expr, func=None, hint='_Integral'):
         (0, f(y))
         >>> preprocess(Derivative(f(y), z), f(y))
         (0, f(y))
-        >>> preprocess(Derivative(f(y), z), f(x))
-        (Derivative(f(y), z), f(x))
 
     Do others if the hint doesn't end in '_Integral' (the default
     assumes that it does):
@@ -300,6 +302,10 @@ def preprocess(expr, func=None, hint='_Integral'):
         (Derivative(g(x), y), f(x))
         >>> preprocess(Derivative(f(x), y), f(x), hint='')
         (0, f(x))
+
+    Don't do any derivatives if hint is None:
+        >>> preprocess(Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x), hint=None)
+        (Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x))
 
     If it's not clear what the function of interest is, it must be given:
         >>> eq = Derivative(f(x) + g(x), x)
@@ -318,6 +324,8 @@ def preprocess(expr, func=None, hint='_Integral'):
             raise ValueError('The function cannot be automatically detected for %s.' % expr)
         func = funcs.pop()
     fvars = set(func.args)
+    if hint is None:
+        return expr, func
     reps = [(d, d.doit()) for d in derivs if
                                 not hint.endswith('_Integral') or
                                 d.has(func) or
