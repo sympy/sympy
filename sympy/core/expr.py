@@ -996,14 +996,22 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def as_coeff_terms(self, *deps):
+        """
+        This method is deprecated. Use .as_coeff_mul() instead.
+        """
         import warnings
         warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
                       DeprecationWarning)
+        return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
+        """
+        This method is deprecated.  Use .as_coeff_add() instead.
+        """
         import warnings
         warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
                       DeprecationWarning)
+        return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
