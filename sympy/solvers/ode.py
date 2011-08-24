@@ -1114,8 +1114,23 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             if len(funcs) != 1:
                 raise ValueError('must pass func arg to checkodesol for this case.')
             func = funcs.pop()
-    if not is_unfunc(func) or len(func.args) != 1:
-        raise ValueError("func must be a function of one variable, not %s" % func)
+    # ========== deprecation handling
+    # After the deprecation period this handling section becomes:
+    # ----------
+    # if not is_unfunc(func) or len(func.args) != 1:
+    #     raise ValueError("func must be a function of one variable, not %s" % func)
+    # ----------
+    # assume, during deprecation that sol and func are reversed
+    if hasattr(sol, '_is_Function') and is_unfunc(sol) and len(sol.args) == 1:
+        import warnings
+        msg = "sol appears to be a valid function. " +\
+              "The order of sol and func will be reversed. " +\
+              "If this is not desired, send sol as Eq(sol, 0)."
+        warnings.warn(msg, category=DeprecationWarning)
+        sol, func = func, sol
+    elif not (is_unfunc(func) and len(func.args) == 1):
+        raise ValueError("func (or sol, during deprecation) must be a function of one variable. Got sol = %s, func = %s" % (sol, func))
+    # ========== end of deprecation handling
     if is_sequence(sol, set):
         return type(sol)(map(lambda i: checkodesol(ode, i, order=order,
             solve_for_func=solve_for_func), sol))
