@@ -438,12 +438,52 @@ def test_bounded():
     assert ask(Q.bounded(a), Q.bounded(z)) == None
     assert ask(Q.bounded(a), ~Q.bounded(z)) == None
 
+    x, y, z = symbols('x,y,z')
     assert ask(Q.bounded(2*x)) == None
     assert ask(Q.bounded(2*x), Q.bounded(x)) == True
-    assert ask(Q.bounded(x*y)) == None
-    assert ask(Q.bounded(x*y), Q.bounded(x)) == None
-    assert ask(Q.bounded(x*y), Q.bounded(x) & Q.bounded(y)) == True
+    a = x*y
+    x, y = a.args
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y)) == False
+    assert ask(Q.bounded(a), Q.bounded(x)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(y)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x)) == None
+    assert ask(Q.bounded(a), Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a)) == None
+    a = x*y*z
+    x, y, z = a.args
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.bounded(z)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & Q.bounded(z)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(z)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), Q.bounded(x)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(y) & Q.bounded(z)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & Q.bounded(z)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x)) == None
+    assert ask(Q.bounded(a), Q.bounded(y) & Q.bounded(z)) == None
+    assert ask(Q.bounded(a), Q.bounded(y) & ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(z) & Q.nonzero(x) & Q.nonzero(y) & Q.nonzero(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & ~Q.bounded(z) & Q.nonzero(x) & Q.nonzero(y) & Q.nonzero(z)) == False
 
+    x, y, z = symbols('x,y,z')
     assert ask(Q.bounded(x**2)) == None
     assert ask(Q.bounded(2**x)) == None
     assert ask(Q.bounded(2**x), Q.bounded(x)) == True

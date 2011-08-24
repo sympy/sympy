@@ -145,18 +145,35 @@ class AskBoundedHandler(CommonHandler):
     @staticmethod
     def Mul(expr, assumptions):
         """
-        Bounded + Bounded     -> Bounded
-        Unbounded + Bounded   -> Unbounded
-        Unbounded + Unbounded -> ?
+        Return True if expr is bounded, False if not and None if unknown.
+
+               TRUTH TABLE
+
+              B   U     ?
+                      s   /s
+            +---+---+---+---+
+         B  | B | U |   ?   |  legend:
+            +---+---+---+---+    B  = Bounded
+         U      | U | U | ? |    U  = Unbounded
+                +---+---+---+    ?  = unknown boundedness
+         ?          |   ?   |    s  = signed (hence nonzero)
+                    +---+---+    /s = not signed
+
         """
         result = True
         for arg in expr.args:
             _bounded = ask(Q.bounded(arg), assumptions)
-            if _bounded: continue
-            elif _bounded is None: return
-            elif _bounded is False:
-                if result: result = False
-                else: return
+            if _bounded:
+                continue
+            elif _bounded is None:
+                if result is None:
+                    return None
+                if ask(Q.nonzero(arg), assumptions) is None:
+                    return None
+                if result is not False:
+                    result = None
+            else:
+                result = False
         return result
 
     @staticmethod
