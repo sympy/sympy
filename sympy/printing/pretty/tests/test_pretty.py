@@ -2758,6 +2758,36 @@ u"""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = hyper([1,2],[3,4],  1/(1/(1/(1/x + 1) + 1) + 1))
+    ucode_str = \
+u"""\
+     ⎛     │       1      ⎞\n\
+     ⎜     │ ─────────────⎟\n\
+     ⎜     │         1    ⎟\n\
+ ┌─  ⎜1, 2 │ 1 + ─────────⎟\n\
+ ├─  ⎜     │           1  ⎟\n\
+2╵ 2 ⎜3, 4 │     1 + ─────⎟\n\
+     ⎜     │             1⎟\n\
+     ⎜     │         1 + ─⎟\n\
+     ⎝     │             x⎠\
+"""
+
+    ascii_str = \
+"""\
+                           \n\
+     /     |       1      \\\n\
+     |     | -------------|\n\
+  _  |     |         1    |\n\
+ |_  |1, 2 | 1 + ---------|\n\
+ |   |     |           1  |\n\
+2  2 |3, 4 |     1 + -----|\n\
+     |     |             1|\n\
+     |     |         1 + -|\n\
+     \\     |             x/\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
 def test_meijerg():
     expr = meijerg([pi, pi, x], [1], [0, 1], [1, 2, 3], z)
     ucode_str = \
@@ -2812,6 +2842,76 @@ u"""\
     expr = meijerg([1]*10, [1], [1], [1], z)
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+
+    expr = meijerg([1, 2,], [4, 3], [3], [4, 5], 1/(1/(1/(1/x + 1) + 1) + 1))
+
+    ucode_str = \
+u"""\
+        ⎛           │       1      ⎞\n\
+        ⎜           │ ─────────────⎟\n\
+        ⎜           │         1    ⎟\n\
+╭─╮1, 2 ⎜1, 2  4, 3 │ 1 + ─────────⎟\n\
+│╶┐     ⎜           │           1  ⎟\n\
+╰─╯4, 3 ⎜ 3    4, 5 │     1 + ─────⎟\n\
+        ⎜           │             1⎟\n\
+        ⎜           │         1 + ─⎟\n\
+        ⎝           │             x⎠\
+"""
+
+    ascii_str = \
+"""\
+        /           |       1      \\\n\
+        |           | -------------|\n\
+        |           |         1    |\n\
+ __1, 2 |1, 2  4, 3 | 1 + ---------|\n\
+/__     |           |           1  |\n\
+\_|4, 3 | 3    4, 5 |     1 + -----|\n\
+        |           |             1|\n\
+        |           |         1 + -|\n\
+        \\           |             x/\
+"""
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Integral(expr, x)
+
+    ucode_str = \
+u"""\
+⌠                                        \n\
+⎮         ⎛           │       1      ⎞   \n\
+⎮         ⎜           │ ─────────────⎟   \n\
+⎮         ⎜           │         1    ⎟   \n\
+⎮ ╭─╮1, 2 ⎜1, 2  4, 3 │ 1 + ─────────⎟   \n\
+⎮ │╶┐     ⎜           │           1  ⎟ dx\n\
+⎮ ╰─╯4, 3 ⎜ 3    4, 5 │     1 + ─────⎟   \n\
+⎮         ⎜           │             1⎟   \n\
+⎮         ⎜           │         1 + ─⎟   \n\
+⎮         ⎝           │             x⎠   \n\
+⌡                                        \
+"""
+
+    ascii_str = \
+"""\
+  /                                       \n\
+ |                                        \n\
+ |         /           |       1      \\   \n\
+ |         |           | -------------|   \n\
+ |         |           |         1    |   \n\
+ |  __1, 2 |1, 2  4, 3 | 1 + ---------|   \n\
+ | /__     |           |           1  | dx\n\
+ | \_|4, 3 | 3    4, 5 |     1 + -----|   \n\
+ |         |           |             1|   \n\
+ |         |           |         1 + -|   \n\
+ |         \\           |             x/   \n\
+ |                                        \n\
+/                                         \
+"""
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
 
 def test_noncommutative():
     A, B, C = symbols('A,B,C', commutative=False)

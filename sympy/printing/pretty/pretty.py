@@ -622,6 +622,7 @@ class PrettyPrinter(Printer):
         bq = [self._print(b) for b in e.bq]
 
         P = self._print(e.argument)
+        P.baseline = P.height()//2
 
         # Drawing result - first create the ap, bq vectors
         D = None
@@ -679,6 +680,7 @@ class PrettyPrinter(Printer):
         v[(1, 1)] = [self._print(b) for b in e.bother]
 
         P = self._print(e.argument)
+        P.baseline = P.height()//2
 
         vp = {}
         for idx in v:
