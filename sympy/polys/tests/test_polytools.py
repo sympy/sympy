@@ -23,9 +23,8 @@ from sympy.polys.polytools import (
     intervals, refine_root, count_roots,
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
-    cancel,
-    reduced, groebner,
-    GroebnerBasis, is_zero_dimensional)
+    cancel, reduced, groebner,
+    GroebnerBasis, is_zero_dimensional, _keep_coeff)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -2654,3 +2653,10 @@ def test_poly():
     assert poly(1, x) == Poly(1, x)
     raises(GeneratorsNeeded, "poly(1)")
 
+def test_keep_coeff():
+    assert _keep_coeff(1, x) == x
+    assert _keep_coeff(-1, x) == -x
+    assert _keep_coeff(1, 2*x) == 2*x
+    assert _keep_coeff(S(2), x/2) == x
+    assert _keep_coeff(S(2), sin(x)) == 2*sin(x)
+    assert _keep_coeff(S(2), x + 1) == Mul(2, x + 1, evaluate=False)
