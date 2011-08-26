@@ -1322,7 +1322,7 @@ def powsimp(expr, deep=False, combine='all', force=False):
 
                 '''
                 from sympy import Rational as r
-                MUL = lambda *args: object.__new__(Mul)._new_rawargs(*args)
+                MUL = object.__new__(Mul)._new_rawargs
                 if e is not None: # coming from c_powers or from below
                     if e.is_Integer:
                         return (b, S.One), e
@@ -1358,10 +1358,25 @@ def powsimp(expr, deep=False, combine='all', force=False):
             # ---------------- end of helper functions
 
             # assemble a dictionary of the factors having a Rational power
-            common_b = {}
             done = []
             bases = []
+            ADD = object.__new__(Add)._new_rawargs
+            rejoin = []
+            common_b = {}
             for b, e in c_powers:
+                if e.is_Add and not b.is_number:
+                    c, a = e.as_coeff_add()
+                    if c and c.is_Rational:
+                        rejoin.append([(b, c), (b, ADD(*a))])
+                        for b, e in rejoin[-1]:
+                            b, e = bkey(b, e)
+                            if b in common_b:
+                                common_b[b] += e
+                            else:
+                                common_b[b] = e
+                            if b[1] != 1 and b[0].is_Mul:
+                                bases.append(b)
+                        continue
                 b, e = bkey(b, e)
                 common_b[b] = e
                 if b[1] != 1 and b[0].is_Mul:
@@ -1430,8 +1445,28 @@ def powsimp(expr, deep=False, combine='all', force=False):
 
             # update c_powers and get ready to continue with powsimp
             c_powers = done
+
             # there may be terms still in common_b that were bases that were
-            # identified as needing processing, so remove those, too
+            # identified as needing processing, so remove those, too. But first see
+            # if rejoin pairs are still present
+            if rejoin:
+                for r in rejoin:
+                    k1, k2 = [bkey(i, j)[0] for i, j in r]
+                    if k1 in common_b and k2 in common_b:
+                        e1 = common_b.pop(k1)
+                        b1, q1 = k1
+                        e2 = common_b.pop(k2)
+                        b2, q2 = k2
+                        if b1.is_Pow:
+                            assert q1 == 1
+                            b, e11 = b1.as_base_exp()
+                            e1 *= e11
+                        else:
+                            assert q2 == 1
+                            assert b2.is_Pow
+                            b, e22 = b2.as_base_exp()
+                            e2 *= e22
+                        c_powers.append((b, e1 + e2))
             c_powers.extend([(b, Rational(e, q)) for (b, q), e in common_b.items()])
             c_powers = dict(c_powers)
             # ==============================================================
