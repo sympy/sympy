@@ -78,7 +78,7 @@ def couple(tp):
         >>> from sympy.physics.quantum.spin import JzKet, couple
         >>> from sympy.physics.quantum.tensorproduct import TensorProduct
         >>> couple(TensorProduct(JzKet(1,0), JzKet(1,1)))
-        -2**(1/2)*|1,1,1,1>/2 + 2**(1/2)*|2,1,1,1>/2
+        -sqrt(2)*|1,1,1,1>/2 + sqrt(2)*|2,1,1,1>/2
 
     Couple a tensor product of symbolic states:
 
@@ -155,13 +155,13 @@ def uncouple(*args):
         >>> from sympy.physics.quantum.spin import JzKetCoupled, uncouple
         >>> from sympy import S
         >>> uncouple(JzKetCoupled(1, 0, S(1)/2, S(1)/2))
-        2**(1/2)*|1/2,-1/2>x|1/2,1/2>/2 + 2**(1/2)*|1/2,1/2>x|1/2,-1/2>/2
+        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
 
     Perform the same calculation using a SpinState state:
 
         >>> from sympy.physics.quantum.spin import JzKet
         >>> uncouple(JzKet(1, 0), S(1)/2, S(1)/2)
-        2**(1/2)*|1/2,-1/2>x|1/2,1/2>/2 + 2**(1/2)*|1/2,1/2>x|1/2,-1/2>/2
+        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
 
     Uncouple a symbolic state using a CoupledSpinState state:
 
@@ -1147,7 +1147,7 @@ class JzKet(SpinState, Ket):
     up the tensor product is rewritten to the new basis:
 
         >>> TensorProduct(JzKet(1,1),JxKet(1,1)).rewrite('Jz')
-        |1,1>x|1,-1>/2 + 2**(1/2)*|1,1>x|1,0>/2 + |1,1>x|1,1>/2
+        |1,1>x|1,-1>/2 + sqrt(2)*|1,1>x|1,0>/2 + |1,1>x|1,1>/2
 
     The represent method for TensorProduct's gives the vector representation of
     the state. Note that the state in the product basis is the equivalent of the
@@ -1164,15 +1164,15 @@ class JzKet(SpinState, Ket):
         [0]
         [0]
         >>> represent(TensorProduct(JzKet(1,1),JxKet(1,1)), basis=Jz)
-        [       1/2]
-        [2**(1/2)/2]
-        [       1/2]
-        [         0]
-        [         0]
-        [         0]
-        [         0]
-        [         0]
-        [         0]
+        [      1/2]
+        [sqrt(2)/2]
+        [      1/2]
+        [        0]
+        [        0]
+        [        0]
+        [        0]
+        [        0]
+        [        0]
 
     """
 
@@ -1410,13 +1410,13 @@ class JzKetCoupled(CoupledSpinState, Ket):
     Note: that the resulting eigenstates are JxKetCoupled
 
         >>> JzKetCoupled(1,1,1,1).rewrite("Jx")
-        |1,-1,1,1>/2 - 2**(1/2)*|1,0,1,1>/2 + |1,1,1,1>/2
+        |1,-1,1,1>/2 - sqrt(2)*|1,0,1,1>/2 + |1,1,1,1>/2
 
     The rewrite method can be used to convert a coupled state to an uncoupled
     state. This is done by passing coupled=False to the rewrite function:
 
         >>> JzKetCoupled(1, 0, 1, 1).rewrite('Jz', coupled=False)
-        -2**(1/2)*|1,-1>x|1,1>/2 + 2**(1/2)*|1,1>x|1,-1>/2
+        -sqrt(2)*|1,-1>x|1,1>/2 + sqrt(2)*|1,1>x|1,-1>/2
 
     Get the vector representation of a state in terms of the basis elements
     of the Jx operator:
@@ -1425,10 +1425,10 @@ class JzKetCoupled(CoupledSpinState, Ket):
         >>> from sympy.physics.quantum.spin import Jx
         >>> from sympy import S
         >>> represent(JzKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jx)
-        [         0]
-        [       1/2]
-        [2**(1/2)/2]
-        [       1/2]
+        [        0]
+        [      1/2]
+        [sqrt(2)/2]
+        [      1/2]
 
     """
 
