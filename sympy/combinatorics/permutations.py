@@ -659,6 +659,19 @@ class Permutation(Basic):
             cycles.append([next_elem])
         return cycles
 
+    def conjugate(self, x):
+        """
+        Computes the conjugate Permutation.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([0,2,3,1])
+        >>> a.conjugate(b)
+        Permutation([0, 1, 3, 2])
+        """
+        return ~x * self * x
+
     @property
     def inversion_vector(self):
         """
