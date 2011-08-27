@@ -104,7 +104,11 @@ class Matrix(object):
             if len(mat) != len(self):
                 raise ValueError('List length should be equal to rows*columns')
             self.mat = map(lambda i: sympify(i), mat)
-        elif len(args) == 1:
+        elif args:
+            if len(args) != 1:
+                args = [args]
+            if not is_sequence(args[0]):
+                args = [ [a] for a in args ]
             mat = args[0]
             if isinstance(mat, Matrix):
                 self.rows = mat.rows
