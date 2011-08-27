@@ -267,6 +267,9 @@ class Permutation(Basic):
             raise ValueError("Arguments must be integers")
         return self.array_form[arg]
 
+    def __index__(self):
+        return self
+
     def atoms(self):
         """
         Returns all the elements of a permutation

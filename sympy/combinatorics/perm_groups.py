@@ -1,4 +1,4 @@
-from sympy.combinatorics import Permutations
+from sympy.combinatorics import Permutation
 from sympy.core import Basic
 
 class PermutationGroup(Basic):
@@ -18,12 +18,13 @@ class PermutationGroup(Basic):
     _coset_repr = []
     _coset_repr_n = 0
     _perm_size = None
+    _is_abelian = None
 
-    def __new__(cls, *args, *kw_args):
+    def __new__(cls, *args, **kw_args):
         """
         The default constructor.
         """
-        obj = Basic.__new__(cls, *args, *kw_args)
+        obj = Basic.__new__(cls, *args, **kw_args)
         obj._generators = args[0]
         obj._perm_size = args[1]
         return obj
@@ -46,6 +47,33 @@ class PermutationGroup(Basic):
         """
         return self._generators
 
+    @property
+    def is_abelian(self):
+        """
+        Checks if the generators are Abelian or not.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0,1])
+        >>> b = Permutation([1,0])
+        >>> c = PermutationGroup([a,b], 2)
+        >>> c.is_abelian
+        True
+        """
+        if self._is_abelian is not None:
+            return self._is_abelian
+
+        self._is_abelian = True
+        for i in self.generators:
+            for j in self.generators:
+                if i == j:
+                    continue
+                if i * j != j * i:
+                    self._is_abelian = False
+                    break
+        return self._is_abelian
+
     def schreier_tree(alpha):
         """
         Computes the Schreier Tree.
@@ -66,3 +94,44 @@ class PermutationGroup(Basic):
                 schreier_tree(ag)
                 gen *= ~self.generators[j]
 
+    def generate(self, n = 1024):
+        """
+        An implementation of Dimino's algorithm to generate all the elements
+        of the group given the generators.
+
+        Reference:
+        [1] The implementation of various algorithms for Permutation Groups in
+        the Computer Algebra System: AXIOM, NJ Doye, M.Sc. Thesis
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([0,2,3,1])
+        >>> c = PermutationGroup([a,b], 4)
+        >>> list(c.generate())
+        [Permutation([0, 2, 1, 3]), Permutation([0, 2, 3, 1]), Permutation([0,\
+        3, 2, 1]), Permutation([0, 1, 3, 2]), Permutation([0, 3, 1, 2])]
+        """
+        id = Permutation(list(xrange(0, self.perm_size)))
+        order = 0
+        element_list = [id]
+
+        for i in xrange(len(self.generators)):
+            D = element_list[:]
+            N = [Permutation(list(xrange(0, self.perm_size)))]
+            while len(N) > 0:
+                A = N[:]
+                N = []
+                for  a in A:
+                    for g in self.generators[:i+1]:
+                        ag   = a * g
+                        if ag not in element_list:
+                            for d in D:
+                                order += 1
+                                yield d * ag
+                                element_list.append(d * ag)
+                                if order >= n:
+                                    yield d * ag
+                                    return
+                                N.append(ag)
