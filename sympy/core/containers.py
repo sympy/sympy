@@ -133,12 +133,10 @@ class Dict(Basic):
     def __new__(cls, *args):
         if len(args)==1 and args[0].__class__ is dict:
             items = [Tuple(k, v) for k, v in args[0].items()]
-        elif len(args)==1 and iterable(args[0]):
-            items = [Tuple(k, v) for k, v in args[0]]
-        elif all(len(arg)==2 for arg in args):
+        elif iterable(args) and all(len(arg)==2 for arg in args):
             items = [Tuple(k, v) for k, v in args]
         else:
-            raise TypeError()
+            raise TypeError('Pass Dict args as Dict((k1, v1), (k2, v2), ...)')
         obj = Basic.__new__(cls, *items)
         obj._dict = dict(items) # In case Tuple decides it wants to Sympify
         return obj
