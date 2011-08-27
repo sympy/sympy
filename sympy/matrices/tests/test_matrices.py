@@ -1,15 +1,11 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational,
     Float, wronskian, cos, sin, exp, hessian, sqrt, zeros, ones, randMatrix,
-    Poly, S, pi, E, I, oo, trigsimp, Integer, block_diag, N, zeros, sympify,
+    Poly, S, pi, E, oo, trigsimp, Integer, N, sympify,
     Pow, simplify, Min, Max, Abs)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
-    matrix_multiply_elementwise, diag,
-
-    SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
-    matrix_multiply_elementwise)
+    matrix_multiply_elementwise, diag, NonSquareMatrixError, _dims_to_nm)
 from sympy.utilities.pytest import raises
-#from sympy.functions.elementary.miscellaneous import Max, Min
-#from sympy.functions.elementary.miscellaneous import Max, Min
+from sympy.matrices import rot_axis1, rot_axis2, rot_axis3
 
 def test_division():
     x, y, z = symbols('x y z')
@@ -1168,11 +1164,9 @@ def test_nonvectorJacobian():
     x, y, z = symbols('x y z')
     X = Matrix([ [exp(x + y + z), exp(x + y + z)],
                  [exp(x + y + z), exp(x + y + z)] ])
-    Y = Matrix([x, y, z])
-    raises(TypeError, 'X.jacobian(Y)')
+    raises(TypeError, 'X.jacobian(Matrix([x, y, z]))')
     X = X[0,:]
-    Y = Matrix([ [x, y], [x,z] ])
-    raises(TypeError, 'X.jacobian(Y)')
+    raises(TypeError, 'X.jacobian(Matrix([ [x, y], [x, z] ]))')
 
 def test_vec():
     m = Matrix([ [1,3], [2,4] ])
@@ -1199,10 +1193,8 @@ def test_vech():
     assert m_vech[0] == y*x
 
 def test_vech_errors():
-    m = Matrix([ [1,3] ])
-    raises(ShapeError, 'm.vech()')
-    m = Matrix([ [1,3], [2,4] ])
-    raises(ValueError, 'm.vech()')
+    raises(ShapeError, 'Matrix([ [1,3] ]).vech()')
+    raises(ValueError, 'Matrix([ [1,3], [2,4] ]).vech()')
 
 def test_diag():
     x, y, z = symbols("x y z")
@@ -1754,14 +1746,6 @@ def test_condition_number():
     assert all(Float(1.).epsilon_eq(Mc.subs(x, val).evalf()) for val in \
             [Rational(1,5), Rational(1, 2), Rational(1, 10), pi/2, pi, 7*pi/4 ])
 
-def test_len():
-    assert len(Matrix()) == 0
-    assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
-    assert len(Matrix(0, 2, lambda i, j: 0)) == len(Matrix(2, 0, lambda i, j: 0)) == 0
-    assert len(Matrix([[0, 1, 2], [3, 4, 5]])) == 6
-    assert Matrix([1])
-    assert not Matrix()
-
 def test_equality():
     A = Matrix(((1,2,3),(4,5,6),(7,8,9)))
     B = Matrix(((9,8,7),(6,5,4),(3,2,1)))
@@ -1778,3 +1762,25 @@ def test_equality():
     assert C == D
     assert not C != D
 
+def test_rotation_matrices():
+    # This tests the rotation matrices by rotating about an axis and back.
+    theta = pi/3
+    r3_plus = rot_axis3(theta)
+    r3_minus = rot_axis3(-theta)
+    r2_plus = rot_axis2(theta)
+    r2_minus = rot_axis2(-theta)
+    r1_plus = rot_axis1(theta)
+    r1_minus = rot_axis1(-theta)
+    assert r3_minus*r3_plus*eye(3) == eye(3)
+    assert r2_minus*r2_plus*eye(3) == eye(3)
+    assert r1_minus*r1_plus*eye(3) == eye(3)
+
+    # Check the correctness of the trace of the rotation matrix
+    assert r1_plus.trace() == 1 + 2*cos(theta)
+    assert r2_plus.trace() == 1 + 2*cos(theta)
+    assert r3_plus.trace() == 1 + 2*cos(theta)
+
+    # Check that a rotation with zero angle doesn't change anything.
+    assert rot_axis1(0) == eye(3)
+    assert rot_axis2(0) == eye(3)
+    assert rot_axis3(0) == eye(3)

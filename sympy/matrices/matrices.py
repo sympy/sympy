@@ -1,14 +1,12 @@
 from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
-from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import is_sequence
 
 from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
-from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
-from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
+from sympy.functions.elementary.trigonometric import cos, sin
 
 from sympy.core.compatibility import callable, reduce
 
@@ -578,7 +576,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
         return self._LDLdecomposition()
@@ -606,7 +604,7 @@ class Matrix(object):
         """
 
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if rhs.rows != self.rows:
             raise ShapeError("Matrices size mismatch.")
         if not self.is_lower():
@@ -633,7 +631,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if rhs.rows != self.rows:
             raise TypeError("Matrix size mismatch.")
         if not self.is_upper():
@@ -3277,9 +3275,93 @@ def symarray(prefix, shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
 
-def _separate_eig_results(res):
-    eigvals = [item[0] for item in res]
-    multiplicities = [item[1] for item in res]
-    eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
-    eigvects = flatten([item[2] for item in res])
-    return eigvals, eigvects
+def rot_axis3(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 3-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis3
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis3(theta)
+    [       1/2, sqrt(3)/2, 0]
+    [-sqrt(3)/2,       1/2, 0]
+    [         0,         0, 1]
+
+    If we rotate by pi/2 (90 degrees):
+    >> rot_axis3(pi/2)
+    [ 0, 1, 0]
+    [-1, 0, 0]
+    [ 0, 0, 1]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,st,0),
+           (-st,ct,0),
+           (0,0,1))
+    return Matrix(mat)
+
+def rot_axis2(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 2-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis2
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis2(theta)
+    [      1/2, 0, -sqrt(3)/2]
+    [        0, 1,          0]
+    [sqrt(3)/2, 0,        1/2]
+
+    If we rotate by pi/2 (90 degrees):
+    >>> rot_axis2(pi/2)
+    [0, 0, -1]
+    [0, 1,  0]
+    [1, 0,  0]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,0,-st),
+           (0,1,0),
+           (st,0,ct))
+    return Matrix(mat)
+
+def rot_axis1(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 1-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis1
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis1(theta)
+    [1,          0,         0]
+    [0,        1/2, sqrt(3)/2]
+    [0, -sqrt(3)/2,       1/2]
+
+    If we rotate by pi/2 (90 degrees):
+    >>> rot_axis1(pi/2)
+    [1,  0, 0]
+    [0,  0, 1]
+    [0, -1, 0]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((1,0,0),
+           (0,ct,st),
+           (0,-st,ct))
+    return Matrix(mat)
+
