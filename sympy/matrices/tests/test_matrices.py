@@ -1009,6 +1009,8 @@ def test_col_row():
     M.col(0,lambda c, j: c+y**j)
     assert M == Matrix([[x+1,0,0],
                         [1+y,y+2,3]])
+    assert M.row(0) == Matrix([[x+1, 0, 0]])
+    assert M.col(2) == Matrix([0, 3])
 
 def test_issue851():
     m = Matrix([1, 2, 3])
