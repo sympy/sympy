@@ -777,7 +777,7 @@ class Matrix(object):
 
         """
         if f is None:
-            return self[i, :]
+            return Matrix(self[i, :])
         for j in range(0, self.cols):
             self[i, j] = f(self[i, j], j)
 
@@ -800,7 +800,7 @@ class Matrix(object):
 
         """
         if f is None:
-            return self[:, j]
+            return Matrix(self[:, j])
         for i in range(0, self.rows):
             self[i, j] = f(self[i, j], i)
 
