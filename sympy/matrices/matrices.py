@@ -3288,9 +3288,9 @@ def rot_axis3(theta):
     A rotation of pi/3 (60 degrees):
     >>> theta = pi/3
     >>> rot_axis3(theta)
-    [        1/2, 3**(1/2)/2, 0]
-    [-3**(1/2)/2,        1/2, 0]
-    [          0,          0, 1]
+    [       1/2, sqrt(3)/2, 0]
+    [-sqrt(3)/2,       1/2, 0]
+    [         0,         0, 1]
 
     If we rotate by pi/2 (90 degrees):
     >> rot_axis3(pi/2)
@@ -3318,9 +3318,9 @@ def rot_axis2(theta):
     A rotation of pi/3 (60 degrees):
     >>> theta = pi/3
     >>> rot_axis2(theta)
-    [       1/2, 0, -3**(1/2)/2]
-    [         0, 1,           0]
-    [3**(1/2)/2, 0,         1/2]
+    [      1/2, 0, -sqrt(3)/2]
+    [        0, 1,          0]
+    [sqrt(3)/2, 0,        1/2]
 
     If we rotate by pi/2 (90 degrees):
     >>> rot_axis2(pi/2)
@@ -3348,9 +3348,9 @@ def rot_axis1(theta):
     A rotation of pi/3 (60 degrees):
     >>> theta = pi/3
     >>> rot_axis1(theta)
-    [1,           0,          0]
-    [0,         1/2, 3**(1/2)/2]
-    [0, -3**(1/2)/2,        1/2]
+    [1,          0,         0]
+    [0,        1/2, sqrt(3)/2]
+    [0, -sqrt(3)/2,       1/2]
 
     If we rotate by pi/2 (90 degrees):
     >>> rot_axis1(pi/2)
