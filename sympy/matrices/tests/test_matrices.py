@@ -1009,6 +1009,8 @@ def test_col_row():
     M.col(0,lambda c, j: c+y**j)
     assert M == Matrix([[x+1,0,0],
                         [1+y,y+2,3]])
+    assert M.row(0) == Matrix([[x+1, 0, 0]])
+    assert M.col(2) == Matrix([0, 3])
 
 def test_issue851():
     m = Matrix([1, 2, 3])
@@ -1299,7 +1301,7 @@ def test_creation_args():
     assert eye(Integer(3)) == eye(3)
     assert eye(3.) == eye(3)
     assert ones((3L, Integer(4))) == ones((3, 4))
-    raises(TypeError, 'Matrix(1, 2)')
+    assert Matrix(1, 2) == Matrix([[1], [2]])
 
 def test_diagonal_symmetrical():
     m = Matrix(2,2,[0, 1, 1, 0])

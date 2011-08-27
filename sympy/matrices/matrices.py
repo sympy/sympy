@@ -104,7 +104,11 @@ class Matrix(object):
             if len(mat) != len(self):
                 raise ValueError('List length should be equal to rows*columns')
             self.mat = map(lambda i: sympify(i), mat)
-        elif len(args) == 1:
+        elif args:
+            if len(args) != 1:
+                args = [args]
+            if not is_sequence(args[0]):
+                args = [ [a] for a in args ]
             mat = args[0]
             if isinstance(mat, Matrix):
                 self.rows = mat.rows
@@ -756,35 +760,47 @@ class Matrix(object):
             mml += "</matrixrow>"
         return "<matrix>" + mml + "</matrix>"
 
-    def row(self, i, f):
+    def row(self, i, f=None):
         """
-        Elementary row operation using functor
+        Elementary row selector (default) or operation using functor
+        which is a function two args interpreted as (self[i, j], j).
 
-        >>> from sympy import ones
-        >>> I = ones(3)
-        >>> I.row(1,lambda i,j: i*3)
+        >>> from sympy import TableForm, ones
+        >>> I = TableForm(ones(3))
+        >>> I.row(1,lambda v,i: v*3)
         >>> I
         [1, 1, 1]
         [3, 3, 3]
         [1, 1, 1]
+        >>> I.row(1)
+        [3, 3, 3]
 
         """
+        if f is None:
+            return Matrix(self[i, :])
         for j in range(0, self.cols):
             self[i, j] = f(self[i, j], j)
 
-    def col(self, j, f):
+    def col(self, j, f=None):
         """
-        Elementary column operation using functor
+        Elementary column selector (default) or operation using functor
+        which is a function two args interpreted as (self[i, j], i).
 
-        >>> from sympy import ones
-        >>> I = ones(3)
-        >>> I.col(0,lambda i,j: i*3)
+        >>> from sympy import TableForm, ones
+        >>> I = TableForm(ones(3))
+        >>> I.col(0,lambda v, i: v*3)
         >>> I
         [3, 1, 1]
         [3, 1, 1]
         [3, 1, 1]
+        >>> I.col(0)
+        [3]
+        [3]
+        [3]
 
         """
+        if f is None:
+            return Matrix(self[:, j])
         for i in range(0, self.rows):
             self[i, j] = f(self[i, j], i)
 
