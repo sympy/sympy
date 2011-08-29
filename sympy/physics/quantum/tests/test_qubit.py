@@ -8,7 +8,7 @@ from sympy import symbols, Rational, sqrt
 from sympy.core.numbers import Integer
 from sympy.physics.quantum.shor import Qubit
 from sympy.core.containers import Tuple
-from sympy.matrices.matrices import Matrix
+from sympy.matrices.matrices import Matrix, Vector
 import random
 x, y = symbols('x,y')
 
@@ -76,16 +76,16 @@ def test_apply_represent_equality():
 
 
 def test_matrix_to_qubits():
-    assert matrix_to_qubit(Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))\
+    assert matrix_to_qubit(Vector(*[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))\
     == Qubit(0,0,0,0)
     assert qubit_to_matrix(Qubit(0,0,0,0)) ==\
-    Matrix([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    assert matrix_to_qubit(sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])) ==\
+    Vector(*[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
+    assert matrix_to_qubit(sqrt(2)*2*Vector(*[1,1,1,1,1,1,1,1])) ==\
     (2*sqrt(2)*(Qubit(0,0,0) + Qubit(0,0,1) + Qubit(0,1,0) + Qubit(0,1,1)\
     + Qubit(1,0,0) + Qubit(1,0,1) + Qubit(1,1,0) + Qubit(1,1,1))).expand()
     assert qubit_to_matrix(2*sqrt(2)*(Qubit(0,0,0) + Qubit(0,0,1) + Qubit(0,1,0)\
     + Qubit(0,1,1) + Qubit(1,0,0) + Qubit(1,0,1) + Qubit(1,1,0) + Qubit(1,1,1)))\
-    == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
+    == sqrt(2)*2*Vector(*[1,1,1,1,1,1,1,1])
 
 def test_measure_normalize():
     a,b = symbols('a b')

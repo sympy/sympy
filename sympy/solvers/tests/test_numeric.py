@@ -20,7 +20,7 @@ def test_nsolve():
     x2 = Symbol('x2')
     f1 = 3 * x1**2 - 2 * x2**2 - 1
     f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
-    f = Matrix((f1, f2)).T
+    f = Matrix((f1, f2))
     F = lambdify((x1, x2), f.T, modules='mpmath')
     for x0 in [(-1, 1), (1, -2), (4, 4), (-4, -4)]:
         x = nsolve(f, (x1, x2), x0, tol=1.e-8)
@@ -33,10 +33,10 @@ def test_nsolve():
     f1 = -x + 2*y
     f2 = (x**2 + x*(y**2 - 2) - 4*y)  /  (x + 4)
     f3 = sqrt(x**2 + y**2)*z
-    f = Matrix((f1, f2, f3)).T
+    f = Matrix((f1, f2, f3))
     F = lambdify((x, y, z), f.T, modules='mpmath')
     def getroot(x0):
-        root = nsolve((f1, f2, f3), (x, y, z), x0)
+        root = nsolve(f, (x, y, z), x0)
         assert mnorm(F(*root),1) <= 1.e-8
         return root
     assert map(round, getroot((1, 1, 1))) == [2.0, 1.0, 0.0]

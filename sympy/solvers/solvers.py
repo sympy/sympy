@@ -1291,7 +1291,7 @@ def nsolve(*args, **kwargs):
                         % len(args))
     modules = kwargs.get('modules', ['mpmath'])
     if isinstance(f,  (list,  tuple)):
-        f = Matrix(f).T
+        f = Matrix(f)
     if not isinstance(f, Matrix):
         # assume it's a sympy expression
         if isinstance(f, Equality):

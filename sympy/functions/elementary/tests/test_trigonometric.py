@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix
+        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, Vector
 
 def test_sin():
     x, y = symbols('x,y')
@@ -545,7 +545,7 @@ def test_atan2_expansion():
                   + atan2(x, 1) - atan(x)) == O(y**4)
     assert cancel(atan((x+y)/y).series(y, 1, 3) - atan2(x+y, y).series(y, 1, 3) \
                   + atan2(1+x, 1) - atan(1+x)) == O(y**3)
-    assert Matrix([atan2(x, y)]).jacobian([x, y]) \
+    assert Vector(*[atan2(x, y)]).jacobian([x, y]) \
                   == Matrix([[y/(x**2+y**2), -x/(x**2+y**2)]])
 
 def test_aseries():

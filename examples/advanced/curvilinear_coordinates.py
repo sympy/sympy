@@ -9,7 +9,7 @@ and calculates all kinds of interesting properties, like Jacobian, metric
 tensor, Laplace operator, ...
 """
 
-from sympy import var, sin, cos, pprint, Matrix, eye, trigsimp, Eq, \
+from sympy import var, sin, cos, pprint, Vector, eye, trigsimp, Eq, \
         Function, simplify, sinh, cosh, expand
 
 def laplace(f, g_inv, g_det, X):
@@ -76,35 +76,35 @@ def transform(name, X, Y, g_correct=None, recursive=False):
 def main():
     var("mu nu rho theta phi sigma tau a t x y z w")
 
-    transform("polar", Matrix([rho*cos(phi), rho*sin(phi)]), [rho, phi])
+    transform("polar", Vector(*[rho*cos(phi), rho*sin(phi)]), [rho, phi])
 
-    transform("cylindrical", Matrix([rho*cos(phi), rho*sin(phi), z]),
+    transform("cylindrical", Vector(*[rho*cos(phi), rho*sin(phi), z]),
             [rho, phi, z])
 
     transform("spherical",
-            Matrix([rho*sin(theta)*cos(phi), rho*sin(theta)*sin(phi),
+            Vector(*[rho*sin(theta)*cos(phi), rho*sin(theta)*sin(phi),
                 rho*cos(theta)]),
             [rho, theta, phi],
             recursive=True
             )
 
     transform("rotating disk",
-            Matrix([t, x*cos(w*t)-y*sin(w*t), x*sin(w*t)+y*cos(w*t), z]),
+            Vector(*[t, x*cos(w*t)-y*sin(w*t), x*sin(w*t)+y*cos(w*t), z]),
             [t, x, y, z])
 
     transform("parabolic",
-            Matrix([sigma*tau, (tau**2-sigma**2)/2]),
+            Vector(*[sigma*tau, (tau**2-sigma**2)/2]),
             [sigma, tau])
 
     # too complex:
     #transform("bipolar",
-    #        Matrix([a*sinh(tau)/(cosh(tau)-cos(sigma)),
+    #        Vector(*[a*sinh(tau)/(cosh(tau)-cos(sigma)),
     #            a*sin(sigma)/(cosh(tau)-cos(sigma))]),
     #        [sigma, tau]
     #        )
 
     transform("elliptic",
-            Matrix([a*cosh(mu)*cos(nu), a*sinh(mu)*sin(nu)]),
+            Vector(*[a*cosh(mu)*cos(nu), a*sinh(mu)*sin(nu)]),
             [mu, nu]
             )
 

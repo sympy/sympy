@@ -6,7 +6,7 @@ Demonstrates matrix computations using the Vandermonde matrix.
   * http://en.wikipedia.org/wiki/Vandermonde_matrix
 """
 
-from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros
+from sympy import Vector, pprint, Rational, sqrt, symbols, Symbol, zeros
 
 def symbol_gen(sym_str):
     """Symbol generator
@@ -95,7 +95,7 @@ def gen_poly(points, order, syms):
     V_pts = V.subs(subs_dict)
     V_inv = V_pts.inv()
 
-    coeffs = V_inv.multiply(Matrix([points[i][-1] for i in xrange(num_pts)]))
+    coeffs = V_inv.multiply(Vector(*[points[i][-1] for i in xrange(num_pts)]))
 
     f = 0
     for j,term in enumerate(terms):

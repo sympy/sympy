@@ -39,26 +39,26 @@ def u(p,r):
     assert r in [1,2]
     p1,p2,p3 = p
     if r == 1:
-        ksi = Matrix([ [1],[0] ])
+        ksi = Matrix([[1],[0]])
     else:
-        ksi = Matrix([ [0],[1] ])
+        ksi = Matrix([[0],[1]])
     a = (sigma1*p1 + sigma2*p2 + sigma3*p3) / (E+m) * ksi
     if a ==0:
         a = zeros((2, 1))
-    return sqrt(E+m) * Matrix([ [ksi[0,0]], [ksi[1,0]], [a[0,0]], [a[1,0]] ])
+    return sqrt(E+m) * Matrix([[ksi[0,0]], [ksi[1,0]], [a[0,0]], [a[1,0]]])
 
 def v(p,r):
     """ p = (p1, p2, p3); r = 0,1 """
     assert r in [1,2]
     p1,p2,p3 = p
     if r == 1:
-        ksi = Matrix([ [1],[0] ])
+        ksi = Matrix([[1],[0]])
     else:
-        ksi = -Matrix([ [0],[1] ])
+        ksi = -Matrix([[0],[1]])
     a = (sigma1*p1 + sigma2*p2 + sigma3*p3) / (E+m) * ksi
     if a ==0:
         a = zeros((2,1))
-    return sqrt(E+m) * Matrix([ [a[0,0]], [a[1,0]], [ksi[0,0]], [ksi[1,0]] ])
+    return sqrt(E+m) * Matrix([[a[0,0]], [a[1,0]], [ksi[0,0]], [ksi[1,0]]])
 
 def pslash(p):
     p1,p2,p3 = p

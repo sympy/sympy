@@ -26,7 +26,7 @@ def add_formulae(formulae):
     def addb(ap, bq, B, C, M):
         formulae.append(Formula(ap, bq, z, None, (a, b, c), B, C, M))
 
-    from sympy.matrices import diag, Matrix
+    from sympy.matrices import diag, Matrix, Vector
 
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
@@ -42,24 +42,24 @@ def add_formulae(formulae):
 
     # 2F1
     addb((a, a - S.Half), (2*a,),
-         Matrix([2**(2*a-1)*(1 + sqrt(1-z))**(1-2*a),
+         Vector(*[2**(2*a-1)*(1 + sqrt(1-z))**(1-2*a),
                  2**(2*a-1)*(1 + sqrt(1-z))**(-2*a)]),
          Matrix([[1, 0]]),
          Matrix([[(a-S.Half)*z/(1-z), (S.Half-a)*z/(1-z)],
                  [a/(1-z), a*(z-2)/(1-z)]]))
     addb((1, 1), (2,),
-         Matrix([log(1 - z), 1]), Matrix([[-1/z, 0]]),
+         Vector(*[log(1 - z), 1]), Matrix([[-1/z, 0]]),
          Matrix([[0, z/(z - 1)], [0, 0]]))
     addb((S.Half, 1), (S('3/2'),),
-         Matrix([log((1 + sqrt(z))/(1 - sqrt(z)))/sqrt(z), 1]),
+         Vector(*[log((1 + sqrt(z))/(1 - sqrt(z)))/sqrt(z), 1]),
          Matrix([[S(1)/2, 0]]),
          Matrix([[-S(1)/2, 1/(1 - z)], [0, 0]]))
     addb((S.Half, S.Half), (S('3/2'),),
-         Matrix([asin(sqrt(z))/sqrt(z), 1/sqrt(1 - z)]),
+         Vector(*[asin(sqrt(z))/sqrt(z), 1/sqrt(1 - z)]),
          Matrix([[1, 0]]),
          Matrix([[-S(1)/2, S(1)/2], [0, z/(1 - z)/2]]))
     addb((-a, S.Half - a), (S.Half,),
-         Matrix([(1 + sqrt(z))**(2*a) + (1 - sqrt(z))**(2*a),
+         Vector(*[(1 + sqrt(z))**(2*a) + (1 - sqrt(z))**(2*a),
                  sqrt(z)*(1 + sqrt(z))**(2*a-1)
                  - sqrt(z)*(1 - sqrt(z))**(2*a-1)]),
          Matrix([[S.Half, 0]]),
@@ -70,27 +70,27 @@ def add_formulae(formulae):
     # Gordon and Breach Science Publisher
     add([a, -a], [S.Half], cos(2*a*asin(sqrt(z))))
     addb([1, 1], [3*S.Half],
-         Matrix([asin(sqrt(z))/sqrt(z*(1-z)), 1]), Matrix([[1, 0]]),
+         Vector(*[asin(sqrt(z))/sqrt(z*(1-z)), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
     # 3F2
     addb([-S.Half, 1, 1], [S.Half, 2],
-         Matrix([sqrt(z)*atanh(sqrt(z)), log(1 - z), 1]),
+         Vector(*[sqrt(z)*atanh(sqrt(z)), log(1 - z), 1]),
          Matrix([[-S(2)/3, -S(1)/(3*z), S(2)/3]]),
          Matrix([[S(1)/2, 0, z/(1 - z)/2],
                  [0, 0, z/(z - 1)],
                  [0, 0, 0]]))
     # actually the formula for 3/2 is much nicer ...
     addb([-S.Half, 1, 1], [2, 2],
-         Matrix([sqrt(1 - z), log(sqrt(1 - z)/2 + S.Half), 1]),
+         Vector(*[sqrt(1 - z), log(sqrt(1 - z)/2 + S.Half), 1]),
          Matrix([[S(4)/9 - 16/(9*z), 4/(3*z), 16/(9*z)]]),
          Matrix([[z/2/(z - 1), 0, 0], [1/(2*(z - 1)), 0, S.Half], [0, 0, 0]]))
 
     # 1F1
-    addb([1], [b], Matrix([z**(1 - b) * exp(z) * lowergamma(b - 1, z), 1]),
+    addb([1], [b], Vector(*[z**(1 - b) * exp(z) * lowergamma(b - 1, z), 1]),
          Matrix([[b - 1, 0]]),Matrix([[1 - b + z, 1], [0, 0]]))
     addb([a], [2*a],
-         Matrix([z**(S.Half - a)*exp(z/2)*besseli(a - S.Half, z/2)
+         Vector(*[z**(S.Half - a)*exp(z/2)*besseli(a - S.Half, z/2)
                  * gamma(a + S.Half)/4**(S.Half - a),
                  z**(S.Half - a)*exp(z/2)*besseli(a + S.Half, z/2)
                  * gamma(a + S.Half)/4**(S.Half - a)]),
@@ -100,7 +100,7 @@ def add_formulae(formulae):
 
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
-         Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
+         Vector(*[a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
                  a/(2*a - 1)*(-z)**(-a)*lowergamma(a, -z), a/(2*a - 1)*exp(z)]),
          Matrix([[1, -1, 0]]),
          Matrix([[-S.Half, 0, 1], [0, -a, 1], [0, 0, z]]))
@@ -108,7 +108,7 @@ def add_formulae(formulae):
     # 0F1
     add((), (S.Half,), cosh(2*sqrt(z)))
     addb([], [b],
-         Matrix([gamma(b)*z**((1-b)/2)*besseli(b-1, 2*sqrt(z)),
+         Vector(*[gamma(b)*z**((1-b)/2)*besseli(b-1, 2*sqrt(z)),
                  gamma(b)*z**(1 - b/2)*besseli(b  , 2*sqrt(z))]),
          Matrix([[1, 0]]), Matrix([[0, 1], [z, (1-b)]]))
 
@@ -117,7 +117,7 @@ def add_formulae(formulae):
     def fp(a,z): return besseli(a, x) + besselj(a, x)
     def fm(a,z): return besseli(a, x) - besselj(a, x)
     addb([], [S.Half, a, a+S.Half],
-         Matrix([fp(2*a - 1, z), fm(2*a, z)*z**(S(1)/4),
+         Vector(*[fp(2*a - 1, z), fm(2*a, z)*z**(S(1)/4),
                  fm(2*a - 1, z)*sqrt(z), fp(2*a, z)*z**(S(3)/4)])
            * 2**(-2*a)*gamma(2*a)*z**((1-2*a)/4),
          Matrix([[1, 0, 0, 0]]),
@@ -128,7 +128,7 @@ def add_formulae(formulae):
     x = 2*(-4*z)**(S(1)/4)
     addb([], [a, a + S.Half, 2*a],
          (2*sqrt(-z))**(1-2*a)*gamma(2*a)**2 *
-         Matrix([besselj(2*a-1, x)*besseli(2*a-1, x),
+         Vector(*[besselj(2*a-1, x)*besseli(2*a-1, x),
                  x*(besseli(2*a, x)*besselj(2*a-1, x)
                     - besseli(2*a-1, x)*besselj(2*a, x)),
                  x**2*besseli(2*a, x)*besselj(2*a, x),
@@ -142,7 +142,7 @@ def add_formulae(formulae):
 
     # 1F2
     addb([a], [a - S.Half, 2*a],
-         Matrix([z**(S.Half - a)*besseli(a-S.Half, sqrt(z))**2,
+         Vector(*[z**(S.Half - a)*besseli(a-S.Half, sqrt(z))**2,
                  z**(1-a)*besseli(a-S.Half, sqrt(z))
                          *besseli(a-S(3)/2, sqrt(z)),
                  z**(S(3)/2-a)*besseli(a-S(3)/2, sqrt(z))**2]),
@@ -152,7 +152,7 @@ def add_formulae(formulae):
          Matrix([[1 - 2*a, 1, 0], [z/2, S.Half - a, S.Half], [0, z, 0]]))
     addb([S.Half], [b, 2 - b],
          pi*(1-b)/sin(pi*b) *
-         Matrix([besseli(1-b, sqrt(z))*besseli(b-1, sqrt(z)),
+         Vector(*[besseli(1-b, sqrt(z))*besseli(b-1, sqrt(z)),
                  sqrt(z)*(besseli(-b, sqrt(z))*besseli(b-1, sqrt(z))
                           + besseli(1-b, sqrt(z))*besseli(b, sqrt(z))),
                  besseli(-b, sqrt(z))*besseli(b, sqrt(z))]),
@@ -167,7 +167,7 @@ def add_formulae(formulae):
     #     instantiations ... But it's not too bad.
     addb([a, a + S.Half], [2*a, b, 2*a - b + 1],
          gamma(b)*gamma(2*a - b + 1) * (sqrt(z)/2)**(1-2*a) *
-         Matrix([besseli(b-1, sqrt(z))*besseli(2*a-b, sqrt(z)),
+         Vector(*[besseli(b-1, sqrt(z))*besseli(2*a-b, sqrt(z)),
                  sqrt(z)*besseli(b, sqrt(z))*besseli(2*a-b, sqrt(z)),
                  sqrt(z)*besseli(b-1, sqrt(z))*besseli(2*a-b+1, sqrt(z)),
                  besseli(b, sqrt(z))*besseli(2*a-b+1, sqrt(z))]),
@@ -464,7 +464,7 @@ class Formula(object):
            closed_form = C B
            z d/dz B = M B.
         """
-        from sympy.matrices import Matrix, eye, zeros
+        from sympy.matrices import Matrix, Vector, eye, zeros
 
         afactors = map(lambda a: x + a, self.indices.ap)
         bfactors = map(lambda b: x + b - 1, self.indices.bq)
@@ -476,14 +476,14 @@ class Formula(object):
         for _ in xrange(n):
             b.append(self.z*b[-1].diff(self.z))
 
-        self.B = Matrix(b)
+        self.B = Matrix(b).T
         self.C = Matrix([[1] + [0]*n])
 
         m = eye(n)
         m = m.col_insert(0, zeros((n, 1)))
         l = poly.all_coeffs()[1:]
         l.reverse()
-        self.M = m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])
+        self.M = m.row_insert(n, -Matrix(l)/poly.all_coeffs()[0])
 
     def __init__(self, ap, bq, z, res, symbols, B=None, C=None, M=None):
         ap = Tuple(*map(expand, sympify(ap)))

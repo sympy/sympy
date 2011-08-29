@@ -99,11 +99,11 @@ def represent(expr, **options):
     method, the ket can be represented in the z-spin basis.
 
         >>> from sympy.physics.quantum import Operator, represent, Ket
-        >>> from sympy import Matrix
+        >>> from sympy import Vector
 
         >>> class SzUpKet(Ket):
         ...     def _represent_SzOp(self, basis, **options):
-        ...         return Matrix([1,0])
+        ...         return Vector(*[1,0])
         ...
         >>> class SzOp(Operator):
         ...     pass

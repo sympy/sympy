@@ -1,5 +1,5 @@
 from sympy import exp, symbols, sqrt, I, pi, Mul, Integer
-from sympy.matrices.matrices import Matrix
+from sympy.matrices.matrices import Matrix, Vector
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
         CNOT, IdentityGate, H, X, Y, S, T, Z, SwapGate, gate_simp, gate_sort,
@@ -103,13 +103,13 @@ def test_represent_hadamard():
     circuit = HadamardGate(0)*Qubit('00')
     answer = represent(circuit, nqubits=2)
     # Check that the answers are same to within an epsilon.
-    assert answer == Matrix([sqrt2_inv, sqrt2_inv, 0, 0])
+    assert answer == Vector(*[sqrt2_inv, sqrt2_inv, 0, 0])
 
 def test_represent_xgate():
     """Test the representation of the X gate."""
     circuit = XGate(0)*Qubit('00')
     answer = represent(circuit, nqubits=2)
-    assert Matrix([0, 1, 0, 0]) == answer
+    assert Vector(*[0, 1, 0, 0]) == answer
 
 
 def test_represent_ygate():
@@ -124,27 +124,27 @@ def test_represent_zgate():
     """Test the representation of the Z gate."""
     circuit = ZGate(0)*Qubit('00')
     answer = represent(circuit, nqubits=2)
-    assert Matrix([1, 0, 0, 0]) == answer
+    assert Vector(*[1, 0, 0, 0]) == answer
 
 
 def test_represent_phasegate():
     """Test the representation of the S gate."""
     circuit = PhaseGate(0)*Qubit('01')
     answer = represent(circuit, nqubits=2)
-    assert Matrix([0, I,0,0]) == answer
+    assert Vector(*[0, I,0,0]) == answer
 
 
 def test_represent_tgate():
     """Test the representation of the T gate."""
     circuit = TGate(0)*Qubit('01')
-    assert Matrix([0, exp(I*pi/4), 0, 0]) == represent(circuit, nqubits=2)
+    assert Vector(*[0, exp(I*pi/4), 0, 0]) == represent(circuit, nqubits=2)
 
 
 def test_compound_gates():
     """Test a compound gate representation."""
     circuit = YGate(0)*ZGate(0)*XGate(0)*HadamardGate(0)*Qubit('00')
     answer = represent(circuit, nqubits=2)
-    assert Matrix([I/sqrt(2),I/sqrt(2), 0, 0]) == answer
+    assert Vector(*[I/sqrt(2),I/sqrt(2), 0, 0]) == answer
 
 
 def test_cnot_gate():

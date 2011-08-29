@@ -1,12 +1,13 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational,
     Float, wronskian, cos, sin, exp, hessian, sqrt, zeros, ones, randMatrix,
     Poly, S, pi, E, I, oo, trigsimp, Integer, block_diag, N, zeros, sympify,
-    Pow, simplify, Min, Max, Abs)
+    Pow, simplify, Min, Max, Abs, Vector)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
 
     SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
     matrix_multiply_elementwise)
+from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises
 #from sympy.functions.elementary.miscellaneous import Max, Min
 #from sympy.functions.elementary.miscellaneous import Max, Min
@@ -482,10 +483,10 @@ def test_nullspace():
 
     # now check the vectors
     basis = M.nullspace()
-    assert basis[0] == Matrix([-3,1,0,0,0,0,0])
-    assert basis[1] == Matrix([0,0,1,0,0,0,0])
-    assert basis[2] == Matrix([-2,0,0,-2,1,0,0])
-    assert basis[3] == Matrix([0,0,0,0,0,R(-1)/3, 1])
+    assert basis[0] == Vector(*[-3,1,0,0,0,0,0])
+    assert basis[1] == Vector(*[0,0,1,0,0,0,0])
+    assert basis[2] == Vector(*[-2,0,0,-2,1,0,0])
+    assert basis[3] == Vector(*[0,0,0,0,0,R(-1)/3, 1])
 
     # issue 1698; just see that we can do it when rows > cols
     M = Matrix([[1,2],[2,4],[3,6]])
@@ -535,9 +536,9 @@ def test_eigen():
     assert M.eigenvals() == {S.One: 3}
 
     assert canonicalize(M.eigenvects()) == canonicalize(
-        [(1, 3, [Matrix([1,0,0]),
-                 Matrix([0,1,0]),
-                 Matrix([0,0,1])])])
+        [(1, 3, [Vector(*[1,0,0]),
+                 Vector(*[0,1,0]),
+                 Vector(*[0,0,1])])])
 
     M = Matrix([[0,1,1],
                 [1,0,0],
@@ -546,16 +547,16 @@ def test_eigen():
     assert M.eigenvals() == {2*S.One: 1, -S.One: 1, S.Zero: 1}
 
     assert canonicalize(M.eigenvects()) == canonicalize(
-        [( 2, 1, [Matrix([R(2,3), R(1,3), 1])]),
-         (-1, 1, [Matrix([-1, 1, 0])]),
-         ( 0, 1, [Matrix([ 0,-1, 1])])])
+        [( 2, 1, [Vector(*[R(2,3), R(1,3), 1])]),
+         (-1, 1, [Vector(*[-1, 1, 0])]),
+         ( 0, 1, [Vector(*[ 0,-1, 1])])])
 
-    M = Matrix([ [1, -1],
+    M = Matrix([[1, -1],
                  [1,  3]])
     assert canonicalize(M.eigenvects()) == canonicalize(
         [[2, 2, [Matrix(1,2,[-1,1])]]])
 
-    M = Matrix([ [1, 2, 3], [4, 5, 6], [7, 8, 9] ])
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     a=R(15,2)
     b=3*33**R(1,2)
     c=R(13,2)
@@ -564,10 +565,10 @@ def test_eigen():
     def NS(e, n):
         return str(N(e, n))
     r = [
-        (a - b/2, 1, [Matrix([(12 + 24/(c - b/2))/((c - b/2)*e) + 3/(c - b/2),
+        (a - b/2, 1, [Vector(*[(12 + 24/(c - b/2))/((c - b/2)*e) + 3/(c - b/2),
                               (6 + 12/(c - b/2))/e,1])]),
-        (      0, 1, [Matrix([1,-2,1])]),
-        (a + b/2, 1, [Matrix([(12 + 24/(c + b/2))/((c + b/2)*d) + 3/(c + b/2),
+        (      0, 1, [Vector(*[1,-2,1])]),
+        (a + b/2, 1, [Vector(*[(12 + 24/(c + b/2))/((c + b/2)*d) + 3/(c + b/2),
                               (6 + 12/(c + b/2))/d,1])]),
         ]
     r1 = [(NS(r[i][0],2),NS(r[i][1],2),[NS(j,2) for j in r[i][2][0]]) for i in range(len(r))]
@@ -677,7 +678,7 @@ def test_sparse_matrix():
     # test_determinant
     x, y = Symbol('x'), Symbol('y')
 
-    assert SparseMatrix([ [1] ]).det() == 1
+    assert SparseMatrix([[1]]).det() == 1
 
     assert SparseMatrix(( (-3,  2),
                     ( 8, -5) )).det() == -1
@@ -896,7 +897,7 @@ def test_sparse_matrix():
     assert eye3.charpoly(x) == (1-x)**3
     assert eye3.charpoly(y) == (1-y)**3
     # test values
-    M = Matrix([(0,1,-1),
+    M = Vector(*[(0,1,-1),
                 (1,1,0),
                 (-1,0,1) ])
     vals = M.eigenvals()
@@ -904,11 +905,11 @@ def test_sparse_matrix():
     assert vals == [-1, 1, 2]
 
     R = Rational
-    M = Matrix([ [1,0,0],
+    M = Matrix([[1,0,0],
                  [0,1,0],
                  [0,0,1]])
     assert M.eigenvects() == [[1, 3, [Matrix(1,3,[1,0,0]), Matrix(1,3,[0,1,0]), Matrix(1,3,[0,0,1])]]]
-    M = Matrix([ [5,0,2],
+    M = Matrix([[5,0,2],
                  [3,2,0],
                  [0,0,1]])
     assert M.eigenvects() == [[1, 1, [Matrix(1,3,[R(-1)/2,R(3)/2,1])]],
@@ -927,7 +928,7 @@ def test_subs():
 
 def test_simplify():
     x,y,f,n = symbols('x y f n')
-    M = Matrix([ [    1/x + 1/y,               (x + x*y)/ x           ],
+    M = Matrix([[    1/x + 1/y,               (x + x*y)/ x           ],
                  [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
     M.simplify()
@@ -956,26 +957,26 @@ def test_transpose():
     assert M.T == M.transpose()
 
 def test_conjugate():
-    M = Matrix([ [0,I,5],
+    M = Matrix([[0,I,5],
                  [1,2,0]])
 
-    assert M.T == Matrix([ [0,1],
+    assert M.T == Matrix([[0,1],
                            [I,2],
                            [5,0]])
 
-    assert M.C == Matrix([ [0,-I,5],
+    assert M.C == Matrix([[0,-I,5],
                            [1,2,0]])
     assert M.C == M.conjugate()
 
     assert M.H == M.T.C
-    assert M.H == Matrix([ [0,1],
+    assert M.H == Matrix([[0,1],
                            [-I,2],
                            [5,0]])
 
 def test_conj_dirac():
     raises(AttributeError, "eye(3).D")
 
-    M = Matrix([ [1,I,I,I],
+    M = Matrix([[1,I,I,I],
                  [0,1,I,I],
                  [0,0,1,I],
                  [0,0,0,1] ])
@@ -1018,7 +1019,7 @@ def test_col_row():
     r1[0] = 42
     assert M[0,0] == x + 1
     c1 = M.col(0)
-    assert c1 == Matrix([x + 1, 1 + y])
+    assert c1 == Vector(*[x + 1, 1 + y])
     c1[0] = 0
     assert M[0,0] == x + 1
     c1 = M[:, 0]
@@ -1026,9 +1027,9 @@ def test_col_row():
     assert M[0,0] == x + 1
 
 def test_issue851():
-    m = Matrix([1, 2, 3])
-    a = Matrix([1, 2, 3])
-    b = Matrix([2, 2, 3])
+    m = Vector(*[1, 2, 3])
+    a = Vector(*[1, 2, 3])
+    b = Vector(*[2, 2, 3])
     assert not (m in [])
     assert not (m in [1])
     assert m != 1
@@ -1045,7 +1046,7 @@ def test_issue882():
     index1 = Index1()
     index2 = Index2()
 
-    m = Matrix([1, 2, 3])
+    m = Vector(*[1, 2, 3])
 
     assert m[index2] == 3
 
@@ -1144,8 +1145,8 @@ def test_inv_iszerofunc():
 
 def test_jacobian_metrics():
     rho, phi = symbols("rho phi")
-    X = Matrix([rho*cos(phi), rho*sin(phi)])
-    Y = Matrix([rho, phi])
+    X = Vector(*[rho*cos(phi), rho*sin(phi)])
+    Y = Vector(*[rho, phi])
     J = X.jacobian(Y)
     assert J == X.jacobian(Y.T)
     assert J == (X.T).jacobian(Y)
@@ -1156,8 +1157,8 @@ def test_jacobian_metrics():
 
 def test_jacobian2():
     rho, phi = symbols("rho phi")
-    X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
-    Y = Matrix([rho, phi])
+    X = Vector(*[rho*cos(phi), rho*sin(phi), rho**2])
+    Y = Vector(*[rho, phi])
     J = Matrix([
             [cos(phi), -rho*sin(phi)],
             [sin(phi),  rho*cos(phi)],
@@ -1167,8 +1168,8 @@ def test_jacobian2():
 
 def test_issue1465():
     x, y, z = symbols('x y z')
-    X = Matrix([exp(x + y + z), exp(x + y + z), exp(x + y + z)])
-    Y = Matrix([x, y, z])
+    X = Vector(*[exp(x + y + z), exp(x + y + z), exp(x + y + z)])
+    Y = Vector(*[x, y, z])
     for i in range(1, 3):
         for j in range(1, 3):
             X_slice = X[:i,:]
@@ -1181,23 +1182,23 @@ def test_issue1465():
 
 def test_nonvectorJacobian():
     x, y, z = symbols('x y z')
-    X = Matrix([ [exp(x + y + z), exp(x + y + z)],
+    X = Matrix([[exp(x + y + z), exp(x + y + z)],
                  [exp(x + y + z), exp(x + y + z)] ])
-    Y = Matrix([x, y, z])
+    Y = Vector(*[x, y, z])
     raises(TypeError, 'X.jacobian(Y)')
     X = X[0,:]
-    Y = Matrix([ [x, y], [x,z] ])
+    Y = Matrix([[x, y], [x,z]])
     raises(TypeError, 'X.jacobian(Y)')
 
 def test_vec():
-    m = Matrix([ [1,3], [2,4] ])
+    m = Matrix([[1,3], [2,4]])
     m_vec = m.vec()
     assert m_vec.cols == 1
     for i in xrange(4):
         assert m_vec[i] == i + 1
 
 def test_vech():
-    m = Matrix([ [1,2], [2,3] ])
+    m = Matrix([[1,2], [2,3]])
     m_vech = m.vech()
     assert m_vech.cols == 1
     for i in xrange(3):
@@ -1205,18 +1206,18 @@ def test_vech():
     m_vech = m.vech(diagonal=False)
     assert m_vech[0] == 2
     x,y = symbols('x,y')
-    m = Matrix([ [1, x*(x+y)], [y*x+x**2, 1] ])
+    m = Matrix([[1, x*(x+y)], [y*x+x**2, 1]])
     m_vech = m.vech(diagonal=False)
     assert m_vech[0] == x*(x + y)
     x,y = symbols('x,y')
-    m = Matrix([ [1, x*(x+y)], [y*x, 1] ])
+    m = Matrix([[1, x*(x+y)], [y*x, 1]])
     m_vech = m.vech(diagonal=False, check_symmetry=False)
     assert m_vech[0] == y*x
 
 def test_vech_errors():
-    m = Matrix([ [1,3] ])
+    m = Matrix([[1,3]])
     raises(ShapeError, 'm.vech()')
-    m = Matrix([ [1,3], [2,4] ])
+    m = Matrix([[1,3], [2,4]])
     raises(ValueError, 'm.vech()')
 
 def test_diag():
@@ -1250,7 +1251,7 @@ def test_diag():
             [0, 0, 0, 0, 0, 3, x],
             [0, 0, 0, 0, 0, y, 3],
             ])
-    a = Matrix([x, y, z])
+    a = Vector(*[x, y, z])
     b = Matrix([[1, 2], [3, 4]])
     c = Matrix([[5, 6]])
     assert diag(a, 7, b, c) == Matrix([
@@ -1522,32 +1523,32 @@ def test_errors():
     # Note, some errors not tested.  See 'XXX' in code.
     raises(ValueError, "_dims_to_nm([1, 0, 2])")
     raises(ValueError, "Matrix([[1, 2], [1]])")
-    raises(ShapeError, "Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2]))")
+    raises(ShapeError, "Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Vector(*[1, 2]))")
     raises(TypeError, "Matrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
     raises(NonSquareMatrixError, "Matrix([[1, 2, 3], [2, 3, 0]]).inv()")
     raises(ShapeError, "Matrix(1, 2, [1, 2]).row_join(Matrix([[1, 2], [3, 4]]))")
-    raises(ShapeError, "Matrix([1, 2]).col_join(Matrix([[1, 2], [3, 4]]))")
-    raises(ShapeError, "Matrix([1]).row_insert(1, Matrix([[1, 2], [3, 4]]))")
-    raises(ShapeError, "Matrix([1]).col_insert(1, Matrix([[1, 2], [3, 4]]))")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).trace()")
+    raises(ShapeError, "Vector(*[1, 2]).col_join(Matrix([[1, 2], [3, 4]]))")
+    raises(ShapeError, "Vector(*[1]).row_insert(1, Matrix([[1, 2], [3, 4]]))")
+    raises(ShapeError, "Vector(*[1]).col_insert(1, Matrix([[1, 2], [3, 4]]))")
+    raises(NonSquareMatrixError, "Vector(*[1, 2]).trace()")
     raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
-    raises(TypeError, "Matrix([1]).applyfunc(1)")
-    raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
+    raises(TypeError, "Vector(*[1]).applyfunc(1)")
+    raises(ShapeError, "Vector(*[1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
     raises(MatrixError, "Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition()")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).LUdecomposition_Simple()")
+    raises(NonSquareMatrixError, "Vector(*[1, 2]).LUdecomposition_Simple()")
     raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorEntry(4, 5)")
     raises(ValueError, "Matrix([[1, 2], [3, 4]]).minorMatrix(4, 5)")
-    raises(TypeError, "Matrix([1, 2, 3]).cross(1)")
-    raises(TypeError, "Matrix([1, 2, 3]).dot(1)")
-    raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
+    raises(TypeError, "Vector(*[1, 2, 3]).cross(1)")
+    raises(TypeError, "Vector(*[1, 2, 3]).dot(1)")
+    raises(ShapeError, "Vector(*[1, 2, 3]).dot(Vector(*[1, 2]))")
     raises(NotImplementedError, "Matrix([[0,1,2],[0,0,-1], [0,0,0]]).exp()")
-    raises(NonSquareMatrixError, "Matrix([1, 2, 3]).exp()")
+    raises(NonSquareMatrixError, "Vector(*[1, 2, 3]).exp()")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).normalized()")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_GE()")
+    raises(NonSquareMatrixError, "Vector(*[1, 2]).inverse_GE()")
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_GE()")
-    raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_ADJ()")
+    raises(NonSquareMatrixError, "Vector(*[1, 2]).inverse_ADJ()")
     raises(ValueError, "Matrix([[1, 2], [1, 2]]).inverse_ADJ()")
-    raises(NonSquareMatrixError, "Matrix([1,2]).is_nilpotent()")
+    raises(NonSquareMatrixError, "Vector(*[1,2]).is_nilpotent()")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), Matrix([[1, 2], [2, 1]]))")
     raises(ValueError, "hessian(Matrix([[1, 2], [3, 4]]), [])")
     raises(TypeError, "SparseMatrix(1.4, 2, lambda i, j: 0)")
@@ -1567,7 +1568,7 @@ def test_len():
     assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
     assert len(Matrix(0, 2, lambda i, j: 0)) == len(Matrix(2, 0, lambda i, j: 0)) == 0
     assert len(Matrix([[0, 1, 2], [3, 4, 5]])) == 6
-    assert Matrix([1])
+    assert Vector(*[1]) == Matrix([1]) == Matrix([[1]])
     assert not Matrix()
 
 def test_integrate():
@@ -1651,7 +1652,7 @@ def test_matrix_norm():
     # Vector Tests
     # Test columns and symbols
     x = Symbol('x', real=True)
-    v = Matrix([cos(x), sin(x)])
+    v = Vector(*[cos(x), sin(x)])
     assert trigsimp(v.norm(2)) == 1
     assert v.norm(10) == Pow(cos(x)**10 + sin(x)**10, S(1)/10)
 
@@ -1714,17 +1715,17 @@ def test_matrix_norm():
     # Test Properties of Vector Norms
     # http://en.wikipedia.org/wiki/Vector_norm
     # Two column vectors
-    a = Matrix([1,1-1*I,-3])
-    b = Matrix([S(1)/2, 1*I, 1])
-    c = Matrix([-1,-1,-1])
-    d = Matrix([3, 2, I])
-    e = Matrix([Integer(1e2),Rational(1,1e2),1])
+    a = Vector(*[1,1-1*I,-3])
+    b = Vector(*[S(1)/2, 1*I, 1])
+    c = Vector(*[-1,-1,-1])
+    d = Vector(*[3, 2, I])
+    e = Vector(*[Integer(1e2),Rational(1,1e2),1])
     L = [a,b,c,d,e]
     alpha = Symbol('alpha', real=True)
 
     for order in [1,2,-1, -2, S.Infinity, S.NegativeInfinity, pi]:
         # Zero Check
-        assert Matrix([0,0,0]).norm(order) == S(0)
+        assert Vector(*[0,0,0]).norm(order) == S(0)
         # Triangle inequality on all pairs
         if order >= 1: # Triangle InEq holds only for these norms
             for v in L:
