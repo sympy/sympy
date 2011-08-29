@@ -1457,16 +1457,46 @@ class Matrix(object):
                                (self[0]*b[1] - self[1]*b[0])))
 
     def dot(self, b):
-        if not is_sequence(b, include=Matrix):
-            raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
+        """Return the dot product of Matrix self and b relaxing the condition
+        of compatible dimensions: if either the number of rows or columns are
+        the same as the length of b then the dot product is returned. If self
+        is a row or column vector, a scalar is returned. Otherwise, a list
+        of results is returned (and in that case the number of columns in self
+        must match the length of b).
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1,2,3], [4,5,6], [7,8,9]])
+        >>> v = [1, 1, 1]
+        >>> M.row(0).dot(v)
+        6
+        >>> M.col(0).dot(v)
+        12
+        >>> M.dot(v)
+        [6, 15, 24]
+
+        """
+        if not isinstance(b, Matrix):
+            if is_sequence(b):
+                if len(b) != self.cols and len(b) != self.rows:
+                    raise ShapeError("Dimensions incorrect for dot product.")
+                return self.dot(Vector(*b))
+            else:
+                raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        m = len(b)
-        if len(self) != m:
+        if self.cols == b.rows:
+            if b.cols != 1:
+                self = self.T
+                b = b.T
+            prod = flatten((self*b).tolist())
+            if len(prod) == 1:
+                return prod[0]
+            return prod
+        if self.cols == b.cols:
+            return self.dot(b.T)
+        elif self.rows == b.rows:
+            return self.T.dot(b)
+        else:
             raise ShapeError("Dimensions incorrect for dot product.")
-        prod = 0
-        for i in range(m):
-            prod += self[i] * b[i]
-        return prod
 
     def multiply_elementwise(self, b):
         """Return the Hadamard product (elementwise product) of A and B
