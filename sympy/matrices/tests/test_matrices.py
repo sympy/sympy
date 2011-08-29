@@ -1066,9 +1066,12 @@ def test_issue882():
     assert m[1, 2] == 8
 
 def test_evalf():
-    a = Matrix([sqrt(5), 6])
-    assert abs(a.evalf()[0] - a[0].evalf()) < 1e-10
-    assert abs(a.evalf()[1] - a[1].evalf()) < 1e-10
+    def check(l, r):
+        # renormalize each Float so they compare the same
+        return l.__add__(0) == r.__add__(0)
+    a = Vector(*[sqrt(5), 6])
+    assert all(check(a.evalf()[i], a[i].evalf()) for i in range(2))
+    assert all(check(a.evalf(1)[i], a[i].evalf(1)) for i in range(2))
 
 def test_is_symbolic():
     x = Symbol('x')
@@ -1796,6 +1799,13 @@ def test_equality():
     D = Matrix(((1,0,0),(0,1,0),(0,0,1)))
     assert C == D
     assert not C != D
+
+def test_col_join():
+    assert eye(3).col_join(Matrix([7,7,7])) == \
+    Matrix([1,0,0],
+           [0,1,0],
+           [0,0,1],
+           [7,7,7])
 
 def test_row_insert():
     r4 = Matrix([4, 4, 4])
