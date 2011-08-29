@@ -1636,8 +1636,13 @@ class Matrix(object):
             D[i, i] = C.exp(D[i, i])
         return U * D * U.inv()
 
-    def zeros(self, dims):
+    def zeros(self, *dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
+        if len(dims) == 1:
+            if not is_sequence(dims[0]):
+                dims = dims*2
+            else:
+                dims = dims[0]
         n, m = _dims_to_nm( dims )
         return Matrix(n,m,[S.Zero]*n*m)
 
@@ -2692,13 +2697,23 @@ def matrix_add(A,B):
         ret[i] = map(lambda j,k: j+k, alst[i], blst[i])
     return Matrix(ret)
 
-def zeros(dims):
+def zeros(*dims):
     """Create zero matrix of dimensions dims = (d1,d2)"""
+    if len(dims) == 1:
+        if not is_sequence(dims[0]):
+            dims = dims*2
+        else:
+            dims = dims[0]
     n, m = _dims_to_nm(dims)
     return Matrix(n, m, [S.Zero]*m*n)
 
-def ones(dims):
+def ones(*dims):
     """Create all-one matrix of dimensions dims = (d1,d2)"""
+    if len(dims) == 1:
+        if not is_sequence(dims[0]):
+            dims = dims*2
+        else:
+            dims = dims[0]
     n, m = _dims_to_nm( dims )
     return Matrix(n, m, [S.One]*m*n)
 
@@ -3254,8 +3269,13 @@ class SparseMatrix(Matrix):
                                (self[0]*b[1] - self[1]*b[0])))
 
 
-    def zeros(self, dims):
+    def zeros(self, *dims):
         """Returns a dims = (d1,d2) matrix of zeros."""
+        if len(dims) == 1:
+            if not is_sequence(dims[0]):
+                dims = dims*2
+            else:
+                dims = dims[0]
         n, m = _dims_to_nm( dims )
         return SparseMatrix(n,m,{})
 

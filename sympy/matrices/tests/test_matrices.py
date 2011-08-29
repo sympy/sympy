@@ -1120,6 +1120,10 @@ def test_zeros_ones_fill():
     assert a.rows == b.rows == 3
     assert a.cols == b.cols == 5
     assert a.shape == b.shape == (3, 5)
+    assert zeros(2) == zeros(2,2)
+    assert ones(2) == ones(2,2)
+    assert zeros(2,3) == zeros((2,3))
+    assert ones(2,3) == ones((2,3))
 
 def test_empty_zeros():
     a = zeros(0)
