@@ -761,9 +761,9 @@ class Matrix(object):
         Elementary row selector (default) or operation using functor
         which is a function two args interpreted as (self[i, j], j).
 
-        >>> from sympy import TableForm, ones
-        >>> I = TableForm(ones(3))
-        >>> I.row(1,lambda v,i: v*3)
+        >>> from sympy import ones
+        >>> I = ones(3)
+        >>> I.row(1, lambda v,i: v*3)
         >>> I
         [1, 1, 1]
         [3, 3, 3]
@@ -782,9 +782,9 @@ class Matrix(object):
         Elementary column selector (default) or operation using functor
         which is a function two args interpreted as (self[i, j], i).
 
-        >>> from sympy import TableForm, ones
-        >>> I = TableForm(ones(3))
-        >>> I.col(0,lambda v, i: v*3)
+        >>> from sympy import ones
+        >>> I = ones(3)
+        >>> I.col(0, lambda v, i: v*3)
         >>> I
         [3, 1, 1]
         [3, 1, 1]
