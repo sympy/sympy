@@ -1593,7 +1593,16 @@ class Matrix(object):
         return out
 
     def project(self, v):
-        """Project onto v."""
+        """Return the projection of ``self`` onto the line containing ``v``.
+
+        >>> from sympy import Matrix, S, sqrt
+        >>> V = Matrix([sqrt(3)/2,S.Half])
+        >>> x = Matrix([1, 0])
+        >>> V.project(x)
+        [sqrt(3)/2, 0]
+        >>> V.project(-x)
+        [sqrt(3)/2, 0]
+        """
         return v * (self.dot(v) / v.dot(v))
 
     def permuteBkwd(self, perm):
