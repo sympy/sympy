@@ -161,14 +161,16 @@ class Matrix(object):
                 for i in xrange(self.cols):
                     self.mat.append(sympify(mat[j][i]))
 
-    def key2ij(self,key):
-        """Converts key=(4,6) to 4,6 and ensures the key is correct."""
+    def key2ij(self, key):
+        """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
+        indices are also supported and are remapped to positives provided they
+        are valid indices."""
+
         if not (is_sequence(key) and len(key) == 2):
             raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
                     %repr(key))
-        i,j=key
+        i, j = [(k + n) if k < 0 else k for k, n in zip(key, (self.rows, self.cols))]
         if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
-            print self.rows, " ", self.cols
             raise IndexError("Index out of range: a[%s]"%repr(key))
         return i,j
 
@@ -265,7 +267,7 @@ class Matrix(object):
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
 
-
+                i, j = self.key2ij((i, j))
                 if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
                     raise IndexError("Index out of range: a[%s]" % (key,))
                 else:
@@ -320,6 +322,7 @@ class Matrix(object):
                         raise IndexError("Invalid index a[%r]" % (key,))
 
 
+                i, j = self.key2ij((i,j))
                 if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
                     raise IndexError("Index out of range: a[%s]" % (key,))
                 else:
@@ -900,6 +903,12 @@ class Matrix(object):
         """
         if pos is 0:
             return mti.col_join(self)
+        elif pos < 0:
+            pos = self.rows + pos
+        if pos < 0:
+            pos = 0
+        elif pos > self.rows:
+            pos = self.rows
 
         if self.cols != mti.cols:
             raise ShapeError("`self` and `mti` must have the same number of columns.")
@@ -931,6 +940,12 @@ class Matrix(object):
         """
         if pos is 0:
             return mti.row_join(self)
+        elif pos < 0:
+            pos = self.cols + pos
+        if pos < 0:
+            pos = 0
+        elif pos > self.cols:
+            pos = self.cols
 
         if self.rows != mti.rows:
             raise ShapeError("self and mti must have the same number of rows.")
@@ -984,12 +999,14 @@ class Matrix(object):
 
     def extract(self, rowsList, colsList):
         """
-        Extract a submatrix by specifying a list of rows and columns
+        Extract a submatrix by specifying a list of rows and columns.
+        Negative indices can be given. All indices must be in the range
+        -n <= i < n where n is the number of rows or columns.
 
         Examples:
 
         >>> from sympy import Matrix
-        >>> m = Matrix(4, 3, lambda i, j: i*3 + j)
+        >>> m = Matrix(4, 3, range(12))
         >>> m   #doctest: +NORMALIZE_WHITESPACE
         [0,  1,  2]
         [3,  4,  5]
@@ -1000,15 +1017,26 @@ class Matrix(object):
         [3,  4]
         [9, 10]
 
+        Rows or columns can be repeated:
+
+        >>> m.extract([0,0,1], [-1])   #doctest: +NORMALIZE_WHITESPACE
+        [2]
+        [2]
+        [5]
+
+        Every other row can be taken by using range to provide the indices:
+
+        >>> m.extract(range(0, m.rows, 2),[-1])   #doctest: +NORMALIZE_WHITESPACE
+        [2]
+        [8]
+
         See also: .submatrix()
         """
         cols = self.cols
         rows = self.rows
         mat = self.mat
-        if not all(i < rows for i in rowsList):
-            raise IndexError("Row indices out of range")
-        if not all(j < cols for j in colsList):
-            raise IndexError("Column indices out of range")
+        rowsList = [self.key2ij((k,0))[0] for k in rowsList]
+        colsList = [self.key2ij((0,k))[1] for k in colsList]
         return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]])
 
     def slice2bounds(self, key, defmax):
@@ -1017,23 +1045,11 @@ class Matrix(object):
             Takes a default maxval to deal with the slice ':' which is (none, none)
         """
         if isinstance(key, slice):
-            lo, hi = 0, defmax
-            if key.start is not None:
-                if key.start >= 0:
-                    lo = key.start
-                else:
-                    lo = defmax + key.start
-            if key.stop is not None:
-                if key.stop >= 0:
-                    hi = key.stop
-                else:
-                    hi = defmax + key.stop
-            return lo, hi
+            return key.indices(defmax)[:2]
         elif isinstance(key, int):
-            if key >= 0:
-                return key, key+1
-            else:
-                return defmax+key, defmax+key+1
+            if key == -1:
+                key = defmax - 1
+            return slice(key, key + 1).indices(defmax)[:2]
         else:
             raise IndexError("Improper index type")
 
@@ -1077,7 +1093,7 @@ class Matrix(object):
 
         """
         if len(self) != _rows*_cols:
-            print "Invalid reshape parameters %d %d" % (_rows, _cols)
+            raise ValueError("Invalid reshape parameters %d %d" % (_rows, _cols))
         return Matrix(_rows, _cols, lambda i,j: self.mat[i*_cols + j])
 
     def print_nonzero (self, symb="X"):
@@ -1100,16 +1116,16 @@ class Matrix(object):
             [   x]
 
         """
-        s = ""
+        s = []
         for i in range(self.rows):
-            s += "["
+            line = []
             for j in range(self.cols):
                 if self[i,j] == 0:
-                    s += " "
+                    line.append(" ")
                 else:
-                    s += symb + ""
-            s += "]\n"
-        print s
+                    line.append(str(symb))
+            s.append("[%s]" % ''.join(line))
+        print '\n'.join(s)
 
     def LUsolve(self, rhs, iszerofunc=_iszero):
         """
@@ -2979,6 +2995,7 @@ class SparseMatrix(Matrix):
 
     def row_del(self, k):
         newD = {}
+        k = self.key2ij((k,0))[0]
         for (i,j) in self.mat.keys():
             if i==k:
                 pass
@@ -2991,6 +3008,7 @@ class SparseMatrix(Matrix):
 
     def col_del(self, k):
         newD = {}
+        k = self.key2ij((0,k))[1]
         for (i,j) in self.mat.keys():
             if j==k:
                 pass
@@ -3173,7 +3191,7 @@ class SparseMatrix(Matrix):
 
     def reshape(self, _rows, _cols):
         if len(self) != _rows*_cols:
-            print "Invalid reshape parameters %d %d" % (_rows, _cols)
+            raise ValueError("Invalid reshape parameters %d %d" % (_rows, _cols))
         newD = {}
         for i in range(_rows):
             for j in range(_cols):

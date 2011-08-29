@@ -1015,7 +1015,7 @@ def test_col_row():
     r1 = M.row(0)
     r1[0] = 42
     assert M[0,0] == x + 1
-    r1 = M[0, :]
+    r1 = M[0, :-1] # also testing negative slice
     r1[0] = 42
     assert M[0,0] == x + 1
     c1 = M.col(0)
@@ -1596,7 +1596,10 @@ def test_getattr():
 def test_hessenberg():
     A = Matrix([[3, 4, 1],[2, 4 ,5],[0, 1, 2]])
     assert A.is_upper_hessenberg()
-    assert A.transpose().is_lower_hessenberg()
+    A = A.T
+    assert A.is_lower_hessenberg()
+    A[0, -1] = 1
+    assert A.is_lower_hessenberg() is False
 
     A = Matrix([[3, 4, 1],[2, 4 ,5],[3, 1, 2]])
     assert not A.is_upper_hessenberg()
@@ -1794,3 +1797,25 @@ def test_equality():
     assert C == D
     assert not C != D
 
+def test_row_insert():
+    r4 = Matrix([4, 4, 4])
+    for i in range(-4, 5):
+        l=[1,0,0]
+        l.insert(i,4)
+        assert flatten(eye(3).row_insert(i, r4).col(0).tolist()) == l
+
+def test_col_insert():
+    c4 = Matrix([4, 4, 4]).T
+    for i in range(-4, 5):
+        l=[0,0,0]
+        l.insert(i,4)
+        assert flatten(zeros(3).col_insert(i, c4).row(0).tolist()) == l
+
+def test_normalized():
+    assert Vector(*[3,4]).normalized() == Vector(*[Rational(3, 5), Rational(4, 5)])
+
+def test_print_nonzero():
+    assert capture(lambda:eye(3).print_nonzero()) == \
+            '[X  ]\n[ X ]\n[  X]\n'
+    assert capture(lambda:eye(3).print_nonzero('.')) == \
+            '[.  ]\n[ . ]\n[  .]\n'
