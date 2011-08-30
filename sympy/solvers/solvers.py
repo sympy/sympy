@@ -37,16 +37,15 @@ from sympy.assumptions import Q, ask
 from warnings import warn
 from types import GeneratorType
 
-def denoms(eq, x=None):
+def denoms(eq, symbols=None):
     """Return (recursively) set of all denominators that appear in eq
-    that contain any symbol in iterable x; if x is None (default) then all
-    denominators with symbols will be returned."""
+    that contain any symbol in iterable ``symbols``; if ``symbols`` is
+    None (default) then all denominators with symbols will be returned."""
     from sympy.utilities.iterables import preorder_traversal
 
-    if not x:
-        x = eq.free_symbols
+    symbols = symbols or eq.free_symbols
     dens = set()
-    if not x or not eq.has(*x):
+    if not symbols or not eq.has(*symbols):
         return dens
     pt = preorder_traversal(eq)
     for e in pt:
@@ -54,7 +53,7 @@ def denoms(eq, x=None):
             n, d = e.as_numer_denom()
             if d in dens:
                 pt.skip()
-            elif d.has(*x):
+            elif d.has(*symbols):
                 dens.add(d.as_base_exp()[0])
     return dens
 
