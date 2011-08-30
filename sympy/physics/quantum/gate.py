@@ -365,7 +365,7 @@ class CGate(Gate):
 
     def eval_controls(self, qubit):
         """Return True/False to indicate if the controls are satisfied."""
-        return all([qubit[bit]==self.control_value for bit in self.controls])
+        return all(qubit[bit]==self.control_value for bit in self.controls)
 
     def decompose(self, **options):
         """Decompose the controlled gate into CNOT and single qubits gates."""
@@ -448,7 +448,7 @@ class UGate(Gate):
         if not isinstance(mat, Matrix):
             raise TypeError('Matrix expected, got: %r' % mat)
         dim = 2**len(targets)
-        if not all([dim == shape for shape in mat.shape]):
+        if not all(dim == shape for shape in mat.shape):
             raise IndexError(
                 'Number of targets must match the matrix size: %r %r' %\
                 (targets, mat)

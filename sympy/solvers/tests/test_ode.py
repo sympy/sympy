@@ -386,9 +386,9 @@ def test_separable5():
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
                             x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
-    sol21 = Eq(-exp(-f(x)), C1 + exp(x))
+    sol21 = Eq(f(x), log(-1/(C1 + exp(x))))
     assert dsolve(eq15, f(x), hint='separable') == sol15
-    assert dsolve(eq16, f(x), hint='separable') == sol16
+    assert dsolve(eq16, f(x), hint='separable', simplify=False) == sol16
     assert dsolve(eq17, f(x), hint='separable') == sol17
     assert dsolve(eq18, f(x), hint='separable') == sol18
     assert dsolve(eq19, f(x), hint='separable') in [sol19a, sol19b, sol19c,
@@ -1077,11 +1077,10 @@ def test_Liouville_ODE():
     eq3 = diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 + 1/x*diff(f(x), x)
     eq4 = x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 + x*diff(f(x), x)
     eq5 = Eq((x*exp(f(x))).diff(x, x), 0)
-    sol1 = Eq(C1 + C2/x - exp(-f(x)), 0)
-    # If solve() is ever improved, this is a better solution
-    sol1a = Eq(f(x), -log((C1*x+C2)/x))
-    sol2 = Eq(C1 + C2/x - exp(-f(x)), 0) # This is equivalent to sol1
-    sol3 = set([Eq(f(x), sqrt(C1 + C2*log(x))), Eq(f(x), -sqrt(C1 + C2*log(x)))])
+    sol1 = Eq(f(x), log(x/(C1 + C2*x)))
+    sol1a = Eq(C1 + C2/x - exp(-f(x)), 0)
+    sol2 = sol1
+    sol3 = set([Eq(f(x), -sqrt(C1 + C2*log(x))), Eq(f(x), sqrt(C1 + C2*log(x)))])
     sol4 = set([Eq(f(x), -sqrt(2)*sqrt(C1 + C2*exp(-x))), Eq(f(x), sqrt(2)*sqrt(C1 + C2*exp(-x)))])
     sol5 = Eq(f(x), log(C1 + C2/x))
     sol1s = constant_renumber(sol1, 'C', 1, 2)
@@ -1095,11 +1094,9 @@ def test_Liouville_ODE():
     assert set(dsolve(eq3, f(x), hint)) in (sol3, sol3s)
     assert set(dsolve(eq4, f(x), hint)) in (sol4, sol4s) # XXX: remove sqrt(2) factor
     assert dsolve(eq5, f(x), hint) in (sol5, sol5s)
-    assert checkodesol(sol1, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq1, f(x), sol1a, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq1, f(x), sol1, order=2, solve_for_func=False)[0]
     assert checkodesol(eq1a, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(sol2, f(x), sol1a, order=2, solve_for_func=False)[0]
-    assert checkodesol(eq2, f(x), sol1a, order=2, solve_for_func=False)[0]
+    assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]
     assert all(i[0] for i in checkodesol(eq3, f(x), sol3, order=2, solve_for_func=False))
     assert all(i[0] for i in checkodesol(eq4, f(x), sol4, order=2, solve_for_func=False))
     assert checkodesol(eq5, f(x), sol5, order=2, solve_for_func=False)[0]
@@ -1112,12 +1109,11 @@ def test_Liouville_ODE():
     assert hint+'_Integral' not in not_Liouville1
     assert hint+'_Integral' not in not_Liouville2
 
-
 def test_unexpanded_Liouville_ODE():
     # This is the same as eq1 from test_Liouville_ODE() above.
     eq1 = diff(f(x),x)/x+diff(f(x),x,x)/2- diff(f(x),x)**2/2
     eq2 = eq1*exp(-f(x))/exp(f(x))
-    sol2 = Eq(C1 + C2/x - exp(-f(x)), 0)
+    sol2 = Eq(f(x), log(x/(C1 + C2*x)))
     sol2s = constant_renumber(sol2, 'C', 1, 2)
     assert dsolve(eq2, f(x)) in (sol2, sol2s)
     assert checkodesol(eq2, f(x), sol2, order=2, solve_for_func=False)[0]

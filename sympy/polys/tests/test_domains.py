@@ -419,11 +419,11 @@ def test_inject():
 def test_Domain_map():
     seq = ZZ.map([1, 2, 3, 4])
 
-    assert all([ ZZ.of_type(elt) for elt in seq ])
+    assert all(ZZ.of_type(elt) for elt in seq)
 
     seq = ZZ.map([[1, 2, 3, 4]])
 
-    assert all([ ZZ.of_type(elt) for elt in seq[0] ]) and len(seq) == 1
+    assert all(ZZ.of_type(elt) for elt in seq[0]) and len(seq) == 1
 
 def test_Domain___eq__():
     assert (ZZ[x,y] == ZZ[x,y]) == True

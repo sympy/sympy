@@ -172,8 +172,8 @@ def test_Subs():
     raises(ValueError, 'Subs(f(x, y), (x, x, y), (0, 0, 1))')
 
     assert len(Subs(f(x, y), (x, y), (0, 1)).variables) == 2
-    assert all([ isinstance(v, Dummy) for v in Subs(f(x, y),
-        (x, y), (0, 1)).variables ])
+    assert all(isinstance(v, Dummy) for v in Subs(f(x, y),
+        (x, y), (0, 1)).variables)
     assert Subs(f(x, y), (x, y), (0, 1)).point == Tuple(0, 1)
 
     assert Subs(f(x), x, 0) == Subs(f(y), y, 0)
@@ -358,10 +358,10 @@ def test_issue2300():
         n_at = [i for i in range(len(a)) if not a[i].is_Symbol]
         # every symbol is followed by symbol or int
         # every number is followed by a symbol
-        return (all([a[i+1].is_Symbol or a[i+1].is_Integer
-            for i in s_at if i+1<len(a)]) and
-            all([a[i+1].is_Symbol
-            for i in n_at if i+1<len(a)]))
+        return (all(a[i+1].is_Symbol or a[i+1].is_Integer
+            for i in s_at if i+1<len(a)) and
+            all(a[i+1].is_Symbol
+            for i in n_at if i+1<len(a)))
     eq = x**10*y**8
     for a in subsets(args):
         for v in variations(a, len(a)):
