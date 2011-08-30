@@ -115,7 +115,7 @@ def checksol(f, symbol, sol=None, **flags):
                 continue
             if check is False:
                 return False
-            rv = check
+            rv = None # don't return, wait to see if there's a False
         return rv
 
     if isinstance(f, Poly):
@@ -671,7 +671,6 @@ def _solve(f, *symbols, **flags):
             gens = [g for g in poly.gens if g.has(symbol)]
 
             if len(gens) > 1:
-                #
                 # If there is more than one generator, it could be that the
                 # generators have the same base but different powers, e.g.
                 #   >>> Poly(exp(x)+1/exp(x))
@@ -680,7 +679,6 @@ def _solve(f, *symbols, **flags):
                 #   Poly(sqrt(x) + x**(1/4), sqrt(x), x**(1/4), domain='ZZ')
                 # If the exponents are Rational then a change of variables
                 # will make this a polynomial equation in a single base.
-                #
                 def as_base_rexp(x):
                     """Return x as b**R where r is the leading Rational of the
                     exponent of x, e.g. exp(-2*x/3) -> (exp(x), -2/3)
@@ -705,13 +703,15 @@ def _solve(f, *symbols, **flags):
                     cov = p**m
                     fnew = f_num.subs(base, cov)
                     poly = Poly(fnew, p) # we now have a single generator, p
+
                     # for cubics and quartics, if the flag wasn't set, DON'T do it
                     # by default since the results are quite long. Perhaps one could
                     # base this decision on a certain critical length of the roots.
                     if poly.degree() > 2:
                         flags['simplify'] = flags.get('simplify', False)
+
                     soln = roots(poly, cubics=True, quartics=True).keys()
-                    #
+
                     # We now know what the values of p are equal to. Now find out
                     # how they are related to the original x, e.g. if p**2 = cos(x) then
                     # x = acos(p**2)
@@ -721,17 +721,15 @@ def _solve(f, *symbols, **flags):
                     if check:
                        result = [r for r in result if checksol(f_num, {symbol: r}, **flags) is not False]
             elif len(gens) == 1:
-                #
+
                 # There is only one generator that we are interested in, but there may
                 # have been more than one generator identified by polys (e.g. for symbols
                 # other than the one we are interested in) so recast the poly in terms
                 # of our generator of interest.
-                #
                 if len(poly.gens) > 1:
                     poly = Poly(poly, gens[0])
-                #
+
                 # if we haven't tried tsolve yet, do so now
-                #
                 if not flags.pop('tsolve', False):
                     # for cubics and quartics, if the flag wasn't set, DON'T do it
                     # by default since the results are quite long. Perhaps one could
@@ -740,7 +738,7 @@ def _solve(f, *symbols, **flags):
                         flags['simplify'] = flags.get('simplify', False)
                     soln = roots(poly, cubics=True, quartics=True).keys()
                     gen = poly.gen
-                    if not gen == symbol:
+                    if gen != symbol:
                         u = Dummy()
                         flags['tsolve'] = True
                         inversion = _solve(gen - u, symbol, **flags)
@@ -767,9 +765,12 @@ def _solve(f, *symbols, **flags):
                      all(not checksol(den, {symbol: s}, **flags)
                      for den in dens)]
         return result
+
     else:
+
         if not f:
             return []
+
         else:
 
             polys = []
