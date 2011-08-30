@@ -590,7 +590,7 @@ def _solve(f, *symbols, **flags):
             # find first successful solution
             failed = []
             for s in symbols:
-                n, d = solve_linear(f, x=[s])
+                n, d = solve_linear(f, symbols=[s])
                 if n.is_Symbol:
                     return [{n: cancel(d)}]
                 failed.append(s)
@@ -648,7 +648,7 @@ def _solve(f, *symbols, **flags):
         else:
             # first see if it really depends on symbol and whether there
             # is a linear solution
-            f_num, sol = solve_linear(f, x=symbols)
+            f_num, sol = solve_linear(f, symbols=symbols)
             if not symbol in f_num.free_symbols:
                 return []
             elif f_num.is_Symbol:
@@ -754,22 +754,22 @@ def _solve(f, *symbols, **flags):
                 result = solve_poly_system(polys)
                 return result
 
-def solve_linear(lhs, rhs=0, x=[], exclude=[]):
+def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     """ Return a tuple containing derived from f = lhs - rhs that is either:
 
-        (numerator, denominator) of f; if this comes back as (0, 1) it means
-            that f is independent of the symbols of x, e.g.
+        (numerator, denominator) of ``f``; if this comes back as (0, 1) it means
+            that ``f`` is independent of the symbols in ``symbols``, e.g.
                 y*cos(x)**2 + y*sin(x)**2 - y = y*(0) = 0
                 cos(x)**2 + sin(x)**2 = 1
             If the numerator is not zero then the function is guaranteed
-            to be dependent on a symbol in x.
+            to be dependent on a symbol in ``symbols``.
 
         or
 
-        (symbol, solution) where symbol appears linearly in the numerator of f,
-            is in x (if given) and is not in exclude (if given).
+        (symbol, solution) where symbol appears linearly in the numerator of ``f``,
+            is in ``symbols`` (if given) and is not in ``exclude`` (if given).
 
-        No simplification is done to f other than and mul=True expansion, so
+        No simplification is done to ``f`` other than and mul=True expansion, so
         the solution will correspond strictly to a unique solution.
 
     Examples:
@@ -798,7 +798,7 @@ def solve_linear(lhs, rhs=0, x=[], exclude=[]):
 
     You can give a list of what you prefer for x candidates:
 
-        >>> solve_linear(x + y + z, x=[y])
+        >>> solve_linear(x + y + z, symbols=[y])
         (y, -x - z)
 
     You can also indicate what variables you don't want to consider:
@@ -819,16 +819,16 @@ def solve_linear(lhs, rhs=0, x=[], exclude=[]):
         return ex, S.One
 
     exclude = set(exclude)
-    syms = ex.free_symbols
-    if not x:
-        x = syms
+    free = ex.free_symbols
+    if not symbols:
+        symbols = free
     else:
-        x = syms.intersection(x)
-    x = x.difference(exclude)
+        symbols = free.intersection(symbols)
+    symbols = symbols.difference(exclude)
     d_free = d.free_symbols
-    if x:
+    if symbols:
         all_zero = True
-        for xi in x:
+        for xi in symbols:
             dn = n.diff(xi)
             if dn:
                 all_zero = False
