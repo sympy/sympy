@@ -681,11 +681,13 @@ def _solve(f, *symbols, **flags):
                 # If the exponents are Rational then a change of variables
                 # will make this a polynomial equation in a single base.
                 #
-                MUL = object.__new__(Mul)._new_rawargs
                 def as_base_rexp(x):
                     b, e = x.as_base_exp()
-                    c, e = e.as_coeff_mul()
-                    e = MUL(*e)
+                    c, ee = e.as_coeff_Mul()
+                    if c.is_Rational:
+                        e = ee
+                    else:
+                        c = S.One
                     return b**e, c
                 be = [as_base_rexp(g) for g in gens]
                 bases = set([i[0] for i in be])
