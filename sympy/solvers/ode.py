@@ -1175,7 +1175,7 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
         >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
         >>> from sympy.solvers.ode import ode_sol_simplicity
-        >>> x, C1 = symbols('x,C1')
+        >>> x, C1, C2 = symbols('x, C1, C2')
         >>> f = Function('f')
 
         >>> ode_sol_simplicity(Eq(f(x), C1*x**2), f(x))
@@ -1184,16 +1184,12 @@ def ode_sol_simplicity(sol, func, trysolving=True):
         -1
         >>> ode_sol_simplicity(Eq(f(x), C1*Integral(2*x, x)), f(x))
         oo
-        >>> # This is from dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), \
-        >>> # f(x), hint='1st_homogeneous_coeff_subs_indep_div_dep')
-        >>> eq1 = Eq(x/tan(f(x)/(2*x)), C1)
-        >>> # This is from the same ode with the
-        >>> # '1st_homogeneous_coeff_subs_dep_div_indep' hint.
-        >>> eq2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
-        >>> ode_sol_simplicity(eq1, f(x))
-        23
+        >>> eq1 = Eq(f(x)/tan(f(x)/(2*x)), C1)
+        >>> eq2 = Eq(f(x)/tan(f(x)/(2*x) + f(x)), C2)
+        >>> [ode_sol_simplicity(eq, f(x)) for eq in [eq1, eq2]]
+        [26, 33]
         >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
-        x/tan(f(x)/(2*x)) == C1
+        f(x)/tan(f(x)/(2*x)) == C1
 
     """
     #TODO: write examples
@@ -1878,7 +1874,7 @@ def _homogeneous_order(eq, *symbols):
 
     for i in symbols:
         if i.is_Function:
-            if not all([j in symbols for j in i.args]):
+            if not all(j in symbols for j in i.args):
                 return None
             else:
                 dummyvar = numbered_symbols(prefix='d', cls=Dummy).next()
@@ -2583,7 +2579,7 @@ def _undetermined_coefficients_match(expr, x):
         Test if expr fits the proper form for undetermined coefficients.
         """
         if expr.is_Add:
-            return all([_test_term(i, x) for i in expr.args])
+            return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Mul:
             if expr.has(sin, cos):
                 foundtrig = False
@@ -2595,7 +2591,7 @@ def _undetermined_coefficients_match(expr, x):
                             return False
                         else:
                             foundtrig = True
-            return all([_test_term(i, x) for i in expr.args])
+            return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Function:
             if expr.func in (sin, cos, exp):
                 if expr.args[0].match(a*x + b):

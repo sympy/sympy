@@ -46,7 +46,7 @@ def denester (nested):
                 if R is not None: assert R == v[r] #All the 'r's should be the same.
                 else: R = v[r]
         d, f = denester([sqrt((v[a]**2).expand()-(R*v[b]**2).expand()) for v in values] + [sqrt(R)])
-        if not any([f[i] for i in range(len(nested))]): #If f[i]=0 for all i < len(nested)
+        if not any(f[i] for i in range(len(nested))): #If f[i]=0 for all i < len(nested)
             v = values[-1]
             return sqrt(v[a] + v[b]*d), f
         else:

@@ -1014,7 +1014,7 @@ class FiniteSet(CountableSet):
         if len(args) == 0:
             return EmptySet()
 
-        if all([arg.is_real and arg.is_number for arg in args]):
+        if all(arg.is_real and arg.is_number for arg in args):
             cls = RealFiniteSet
 
         elements = frozenset(map(sympify, args))

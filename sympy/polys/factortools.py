@@ -456,7 +456,7 @@ def dup_zz_cyclotomic_factor(f, K):
     if lc_f != 1 or tc_f not in [-1, 1]:
         return None
 
-    if any([ bool(cf) for cf in f[1:-1] ]):
+    if any(bool(cf) for cf in f[1:-1]):
         return None
 
     n = dup_degree(f)
@@ -650,7 +650,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
 
         C.append(c)
 
-    if any([ not j for j in J ]):
+    if any(not j for j in J):
         raise ExtraneousFactors # pragma: no cover
 
     CC, HH = [], []
@@ -1034,7 +1034,7 @@ def dmp_zz_factor(f, u, K):
     if dmp_ground_LC(g, u, K) < 0:
         cont, g = -cont, dmp_neg(g, u, K)
 
-    if all([ d <= 0 for d in dmp_degree_list(g, u) ]):
+    if all(d <= 0 for d in dmp_degree_list(g, u)):
         return cont, []
 
     G, g = dmp_primitive(g, u, K)
@@ -1103,7 +1103,7 @@ def dmp_ext_factor(f, u, K):
     lc = dmp_ground_LC(f, u, K)
     f = dmp_ground_monic(f, u, K)
 
-    if all([ d <= 0 for d in dmp_degree_list(f, u) ]):
+    if all(d <= 0 for d in dmp_degree_list(f, u)):
         return lc, []
 
     f, F = dmp_sqf_part(f, u, K), f

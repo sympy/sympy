@@ -795,12 +795,12 @@ class DMP(object):
     @property
     def is_linear(f):
         """Returns `True` if `f` is linear in all its variables. """
-        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+        return all(sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
 
     @property
     def is_quadratic(f):
         """Returns `True` if `f` is quadratic in all its variables. """
-        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+        return all(sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
 
     @property
     def is_monomial(f):
