@@ -61,7 +61,12 @@ def checksol(f, symbol, sol=None, **flags):
     """Checks whether sol is a solution of equation f == 0.
 
     Input can be either a single symbol and corresponding value
-    or a dictionary of symbols and values.
+    or a dictionary of symbols and values. ``f`` can be a single
+    equation or an iterable of equations. A solution must satisfy
+    all equations in ``f`` to be considered valid; if a solution
+    does not satisfy any equation, False is returned; if one or
+    more checks are inconclusive (and none are False) then None
+    is returned.
 
     Examples:
     ---------
@@ -100,19 +105,18 @@ def checksol(f, symbol, sol=None, **flags):
         msg = 'Expecting sym, val or {sym: val}, None but got %s, %s'
         raise ValueError(msg % (symbol, sol))
 
-    if hasattr(f, '__iter__') and hasattr(f, '__len__'):
+    if is_sequence(f):
         if not f:
             raise ValueError('no functions to check')
-        rv = set()
+        rv = True
         for fi in f:
             check = checksol(fi, sol, **flags)
+            if check:
+                continue
             if check is False:
                 return False
-            rv.add(check)
-        if None in rv: # rv might contain True and/or None
-            return None
-        assert len(rv) == 1 # True
-        return True
+            rv = check
+        return rv
 
     if isinstance(f, Poly):
         f = f.as_expr()
