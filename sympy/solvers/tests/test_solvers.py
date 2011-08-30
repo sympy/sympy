@@ -8,7 +8,7 @@ from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
 
 from sympy.utilities.pytest import XFAIL, raises
 
-from sympy.abc import x
+from sympy.abc import x, y
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -430,3 +430,7 @@ def test_failing():
     # this case has a double generator: (7**x, x); this will pass if the
     # x-terms are factored
     assert solve((2*(3*x+4)**5 - 6*7**(3*x+9)).expand(), x)
+
+def test_checking():
+    assert solve(x*(x-y/x),x, check=False) == [sqrt(y), 0, -sqrt(y)]
+    assert solve(x*(x-y/x),x, check=True) == [sqrt(y), -sqrt(y)]

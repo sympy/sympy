@@ -149,9 +149,8 @@ def checksol(f, symbol, sol=None, **flags):
             # `checksol()` as a dict, but as keywords.
             # So, any modification to `flags` here will be lost when returning
             # from `checksol()`.
-            if flags.get('simplified', True):
-                for k in sol:
-                    sol[k] = simplify(sympify(sol[k]))
+            for k in sol:
+                sol[k] = simplify(sympify(sol[k]))
             val = simplify(f.subs(sol))
             if flags.get('force', False):
                 val = posify(val)[0]
@@ -260,6 +259,7 @@ def solve(f, *symbols, **flags):
                   e.g. solve(f, [x, y])
 
             flags
+                - ``check``, when False, will return all results without checking
                 - ``simplified``, when False, will not simplify solutions
                                  (default=True except for polynomials of
                                   order 3 or greater)
@@ -497,6 +497,9 @@ def solve(f, *symbols, **flags):
     # Note that if assumptions about a solution can't be verified, it is still returned.
     # XXX: Currently, there are some cases which are not handled,
     # see issue 2098 comment 13: http://code.google.com/p/sympy/issues/detail?id=2098#c13.
+    check = flags.get('check', True)
+    if not check:
+        return solution
     warn = flags.get('warning', False)
     if type(solution) is list:
         if solution:
@@ -567,6 +570,7 @@ def solve(f, *symbols, **flags):
 def _solve(f, *symbols, **flags):
     """ Return a checked solution for f in terms of one or more of the symbols."""
 
+    check  = flags.get('check', True)
     if not iterable(f):
 
         if len(symbols) != 1:
@@ -611,7 +615,8 @@ def _solve(f, *symbols, **flags):
             for m in f.args:
                 soln = _solve(m, symbol, **flags)
                 result.update(set(soln))
-            result = [s for s in result if all(not checksol(den, {symbol: s}) for den in dens)]
+            if check:
+               result = [s for s in result if all(not checksol(den, {symbol: s}, **flags) for den in dens)]
 
         elif f.is_Piecewise:
             result = set()
@@ -671,8 +676,9 @@ def _solve(f, *symbols, **flags):
                         flags['simplified'] = flags.get('simplified', False)
                     soln = roots(poly, cubics=True, quartics=True).keys()
                     inversion = _solve(p - be[0][0], symbol, **flags)
-                    soln = [i.subs(p, s) for i in inversion for s in soln]
-                    result = [r for r in soln if checksol(f_num, {symbol: r}) is not False]
+                    result = [i.subs(p, s) for i in inversion for s in soln]
+                    if check:
+                       result = [r for r in result if checksol(f_num, {symbol: r}, **flags) is not False]
             if len(gens) == 1:
                 if len(poly.gens) > 1:
                     poly = Poly(poly, gens[0])
@@ -706,9 +712,10 @@ def _solve(f, *symbols, **flags):
 
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it
-        result = [s for s in result if
-                  all(not checksol(den, {symbol: s}, **dict(simplified=False))
-                      for den in dens)]
+        if check:
+           result = [s for s in result if
+                     all(not checksol(den, {symbol: s}, **flags)
+                     for den in dens)]
         return result
     else:
         if not f:
