@@ -159,3 +159,27 @@ class PermutationGroup(Basic):
             if stabilizes:
                 stabs.append(g)
         return stabs
+
+    def setwise_stabilizers(self, point_set, npoints):
+        """
+        Returns setwise stabilizer elements under action of group elements.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([2,0,1,3])
+        >>> c = PermutationGroup([a,b], 4)
+        >>> c.setwise_stabilizers([2], 1)
+        [Permutation([2, 0, 1, 3]), Permutation([2, 1, 0, 3])]
+        """
+        stabs = []
+        for g in self.generate():
+            stabilizes = True
+            for point in xrange(0, npoints):
+                if g.array_form[point] not in point_set:
+                    stabilizes = False
+                    break
+            if stabilizes:
+                stabs.append(g)
+        return stabs
