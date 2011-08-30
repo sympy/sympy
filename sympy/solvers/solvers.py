@@ -678,15 +678,22 @@ def _solve(f, *symbols, **flags):
                 # If the exponents are Rational then a change of variables
                 # will make this a polynomial equation in a single base.
                 #
-                be = [g.as_base_exp() for g in gens]
+                MUL = object.__new__(Mul)._new_rawargs
+                def as_base_rexp(x):
+                    b, e = x.as_base_exp()
+                    c, e = e.as_coeff_mul()
+                    e = MUL(*e)
+                    return b**e, c
+                be = [as_base_rexp(g) for g in gens]
                 bases = set([i[0] for i in be])
-                if len(bases) == 1 and all(i[1].is_Rational for i in be):
+                if len(bases) == 1 and all(e.is_Rational for _, e in be):
                     # e.g. for x**(1/2) + x**(1/4) a change of variables
                     # can be made using p**4 to give p**2 + p
                     base = bases.pop()
-                    m = reduce(ilcm, (i[1].q for i in be))
+                    m = reduce(ilcm, (e.q for _, e in be))
                     p = Dummy('p', positive=True)
-                    fnew = f_num.subs(base, p**m)
+                    cov = p**m
+                    fnew = f_num.subs(base, cov)
                     poly = Poly(fnew, p) # we now have a single generator, p
                     # for cubics and quartics, if the flag wasn't set, DON'T do it
                     # by default since the results are quite long. Perhaps one could
@@ -696,14 +703,11 @@ def _solve(f, *symbols, **flags):
                     soln = roots(poly, cubics=True, quartics=True).keys()
                     #
                     # We now know what the values of p are equal to. Now find out
-                    # how they are related to the original x, e.g. if p = cos(x) then
-                    # x = acos(p)
+                    # how they are related to the original x, e.g. if p**2 = cos(x) then
+                    # x = acos(p**2)
                     #
-                    if base == symbol:
-                        result = soln
-                    else:
-                        inversion = _solve(p - base, symbol, **flags)
-                        result = [i.subs(p, s) for i in inversion for s in soln]
+                    inversion = _solve(cov - base, symbol, **flags)
+                    result = [i.subs(p, s) for i in inversion for s in soln]
                     if check:
                        result = [r for r in result if checksol(f_num, {symbol: r}, **flags) is not False]
             elif len(gens) == 1:

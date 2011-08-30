@@ -1,7 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, var, simplify, Integral, sstr, Wild, solve_linear, Interval,
-    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan)
+    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan, Poly)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
@@ -400,6 +400,11 @@ def test_issue_1694():
     assert solve((3 - 5*x/f(x))*f(x), f(x)) == [5*x/3]
     # 1398
     assert solve(1/(5 + x)**(S(1)/5) - 9, x) == [-295244/S(59049)]
+
+    assert solve(sqrt(x) + sqrt(sqrt(x)) - 4) == [-9*sqrt(17)/2 + 49*S.Half]
+    assert solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4)) == \
+            [2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]
+    assert solve(Poly(exp(x) + exp(-x) - 4)) == [log(-sqrt(3) + 2), log(sqrt(3) + 2)]
 
 def test_issue_2098():
     x = Symbol('x', real=True)
