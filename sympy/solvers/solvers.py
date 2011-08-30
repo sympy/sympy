@@ -656,33 +656,68 @@ def _solve(f, *symbols, **flags):
 
             result = False # no solution was obtained
             msg = '' # there is no failure message
-            dens = denoms(f, symbols)
+            dens = denoms(f, symbols) # store these for checking later
+
+            # Poly is generally robust enough to convert anything to
+            # a polynomial and tell us the different generators that it
+            # contains, so we will inspect the generators identified by
+            # polys to figure out what to do.
             poly = Poly(f_num)
             if poly is None:
                 raise ValueError('could not convert %s to Poly' % f_num)
             gens = [g for g in poly.gens if g.has(symbol)]
+
             if len(gens) > 1:
+                #
+                # If there is more than one generator, it could be that the
+                # generators have the same base but different powers, e.g.
+                #   >>> Poly(exp(x)+1/exp(x))
+                #   Poly(exp(-x) + exp(x), exp(-x), exp(x), domain='ZZ')
+                #   >>> Poly(sqrt(x)+sqrt(sqrt(x)))
+                #   Poly(sqrt(x) + x**(1/4), sqrt(x), x**(1/4), domain='ZZ')
+                # If the exponents are Rational then a change of variables
+                # will make this a polynomial equation in a single base.
+                #
                 be = [g.as_base_exp() for g in gens]
                 bases = set([i[0] for i in be])
                 if len(bases) == 1 and all(i[1].is_Rational for i in be):
+                    # e.g. for x**(1/2) + x**(1/4) a change of variables
+                    # can be made using p**4 to give p**2 + p
+                    base = bases.pop()
                     m = reduce(ilcm, (i[1].q for i in be))
                     p = Dummy('p', positive=True)
-                    cv = p**m
-                    fnew = f_num.subs(be[0][0], cv)
-                    poly = Poly(fnew, p)
+                    fnew = f_num.subs(base, p**m)
+                    poly = Poly(fnew, p) # we now have a single generator, p
                     # for cubics and quartics, if the flag wasn't set, DON'T do it
                     # by default since the results are quite long. Perhaps one could
                     # base this decision on a certain critical length of the roots.
                     if poly.degree() > 2:
                         flags['simplify'] = flags.get('simplify', False)
                     soln = roots(poly, cubics=True, quartics=True).keys()
-                    inversion = _solve(p - be[0][0], symbol, **flags)
-                    result = [i.subs(p, s) for i in inversion for s in soln]
+                    #
+                    # We now know what the values of p are equal to. Now find out
+                    # how they are related to the original x, e.g. if p = cos(x) then
+                    # x = acos(p)
+                    #
+                    if base == symbol:
+                        result = soln
+                    else:
+                        inversion = _solve(p - base, symbol, **flags)
+                        result = [i.subs(p, s) for i in inversion for s in soln]
                     if check:
                        result = [r for r in result if checksol(f_num, {symbol: r}, **flags) is not False]
-            if len(gens) == 1:
+            elif len(gens) == 1:
+                #
+                # There is only one generator that we are interested in, but there may
+                # have been more than one generator identified by polys (e.g. for symbols
+                # other than the one we are interested in) so recast the poly in terms
+                # of our generator of interest.
+                #
                 if len(poly.gens) > 1:
                     poly = Poly(poly, gens[0])
+                #
+                # if we haven't tried tsolve yet, do so now
+                #
                 if not flags.pop('tsolve', False):
                     # for cubics and quartics, if the flag wasn't set, DON'T do it
                     # by default since the results are quite long. Perhaps one could
