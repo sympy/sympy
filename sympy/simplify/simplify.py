@@ -1454,18 +1454,10 @@ def powsimp(expr, deep=False, combine='all', force=False):
                     k1, k2 = [bkey(i, j)[0] for i, j in r]
                     if k1 in common_b and k2 in common_b:
                         e1 = common_b.pop(k1)
-                        b1, q1 = k1
                         e2 = common_b.pop(k2)
-                        b2, q2 = k2
-                        if b1.is_Pow:
-                            assert q1 == 1
-                            b, e11 = b1.as_base_exp()
-                            e1 *= e11
-                        else:
-                            assert q2 == 1
-                            assert b2.is_Pow
-                            b, e22 = b2.as_base_exp()
-                            e2 *= e22
+                        b2, _ = k2
+                        b, e22 = b2.as_base_exp()
+                        e2 *= e22
                         c_powers.append((b, e1 + e2))
             c_powers.extend([(b, Rational(e, q)) for (b, q), e in common_b.items()])
             c_powers = dict(c_powers)
