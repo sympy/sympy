@@ -86,8 +86,9 @@ def checksol(f, symbol, sol=None, **flags):
                a very fast, minimal testing.
            'warning=True (default is False)'
                print a warning if checksol() could not conclude.
-           'simplified=True (default)'
-               solution should be simplified before substituting into function
+           'simplify=True (default)'
+               simplify solution before substituting into function (which
+               will then be simplified regardless of the flag setting)
            'force=True (default is False)'
                make positive all symbols without assumptions regarding sign.
     """
@@ -140,7 +141,7 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 2:
             if flags.get('minimal', False):
                 return
-            # the flag 'simplified=False' is used in solve to avoid
+            # the flag 'simplify=False' is used in solve to avoid
             # simplifying the solution. So if it is set to False there
             # the simplification will not be attempted here, either. But
             # if the simplification is done here then the flag should be
@@ -260,7 +261,7 @@ def solve(f, *symbols, **flags):
 
             flags
                 - ``check``, when False, will return all results without checking
-                - ``simplified``, when False, will not simplify solutions
+                - ``simplify``, when False, will not simplify solutions
                                  (default=True except for polynomials of
                                   order 3 or greater)
                 - ``warning``, when True, will warn every time a solution can
@@ -673,7 +674,7 @@ def _solve(f, *symbols, **flags):
                     # by default since the results are quite long. Perhaps one could
                     # base this decision on a certain critical length of the roots.
                     if poly.degree() > 2:
-                        flags['simplified'] = flags.get('simplified', False)
+                        flags['simplify'] = flags.get('simplify', False)
                     soln = roots(poly, cubics=True, quartics=True).keys()
                     inversion = _solve(p - be[0][0], symbol, **flags)
                     result = [i.subs(p, s) for i in inversion for s in soln]
@@ -687,7 +688,7 @@ def _solve(f, *symbols, **flags):
                     # by default since the results are quite long. Perhaps one could
                     # base this decision on a certain critical length of the roots.
                     if poly.degree() > 2:
-                        flags['simplified'] = flags.get('simplified', False)
+                        flags['simplify'] = flags.get('simplify', False)
                     soln = roots(poly, cubics=True, quartics=True).keys()
                     gen = poly.gen
                     if not gen == symbol:
@@ -707,7 +708,7 @@ def _solve(f, *symbols, **flags):
             raise NotImplementedError(msg +
             "\nNo algorithms are implemented to solve equation %s" % f)
 
-        if flags.get('simplified', True):
+        if flags.get('simplify', True):
             result = map(simplify, result)
 
         # reject any result that makes any denom. affirmatively 0;
@@ -927,7 +928,7 @@ def solve_linear_system(system, *symbols, **flags):
     # in row-echelon form so we can check how many solutions
     # there are and extract them using back substitution
 
-    simplified = flags.get('simplified', True)
+    do_simplify = flags.get('simplify', True)
 
     if len(syms) == matrix.rows:
         # this system is Cramer equivalent so there is
@@ -941,7 +942,7 @@ def solve_linear_system(system, *symbols, **flags):
             for j in xrange(k+1, m):
                 content -= matrix[k, j]*solutions[syms[j]]
 
-            if simplified:
+            if do_simplify:
                 solutions[syms[k]] = simplify(content)
             else:
                 solutions[syms[k]] = content
@@ -965,7 +966,7 @@ def solve_linear_system(system, *symbols, **flags):
             for j in xrange(i, m):
                 content -= matrix[k, j]*syms[j]
 
-            if simplified:
+            if do_simplify:
                 solutions[syms[k]] = simplify(content)
             else:
                 solutions[syms[k]] = content
