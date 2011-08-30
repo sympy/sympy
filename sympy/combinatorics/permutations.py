@@ -267,6 +267,9 @@ class Permutation(Basic):
             raise ValueError("Arguments must be integers")
         return self.array_form[arg]
 
+    def __index__(self):
+        return self
+
     def atoms(self):
         """
         Returns all the elements of a permutation
@@ -655,6 +658,19 @@ class Permutation(Basic):
                 cycles.append(temp_cycle)
             cycles.append([next_elem])
         return cycles
+
+    def conjugate(self, x):
+        """
+        Computes the conjugate Permutation.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([0,2,3,1])
+        >>> a.conjugate(b)
+        Permutation([0, 1, 3, 2])
+        """
+        return ~x * self * x
 
     @property
     def inversion_vector(self):
