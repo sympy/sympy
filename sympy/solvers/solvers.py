@@ -89,7 +89,7 @@ def checksol(f, symbol, sol=None, **flags):
                do a fast numerical check if f has only one symbol.
            'minimal=True (default is False)'
                a very fast, minimal testing.
-           'warning=True (default is False)'
+           'warn=True (default is False)'
                print a warning if checksol() could not conclude.
            'simplify=True (default)'
                simplify solution before substituting into function (which
@@ -176,7 +176,7 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt > 0 and numerical and val.is_nonzero:
             return False
 
-    if flags.get('warning', False):
+    if flags.get('warn', False):
         print("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
@@ -508,33 +508,19 @@ def solve(f, *symbols, **flags):
     # see issue 2098 comment 13: http://code.google.com/p/sympy/issues/detail?id=2098#c13.
     check = flags.get('check', True)
 
-    if check:
-        warn = flags.get('warning', False)
+    if not check:
+        return solution
 
-        if type(solution) is list:
-            if solution:
-                unchecked = []
-                filtered = []
-                if type(solution[0]) is tuple:
-                    for sol in solution:
-                        checked_all_symbols = True
-                        for symb, val in zip(symbols, sol):
-                            test = check_assumptions(val, **symb.assumptions0)
-                            if test is None:
-                                checked_all_symbols = False
-                            if test is False:
-                                break
-                        if test is not False:
-                            filtered.append(sol)
-                        if not checked_all_symbols:
-                            unchecked.append(sol)
-                elif isinstance(solution[0], dict):
-                    for s in solution:
-                        v = s.values()[0]
-                        assumptions = s.keys()[0].assumptions0
-                        test = check_assumptions(v, **assumptions)
-                        if test is not False:
-                            filtered.append(s)
+    warn = flags.get('warn', False)
+    if type(solution) is list:
+        if solution:
+            unchecked = []
+            filtered = []
+            if type(solution[0]) is tuple:
+                for sol in solution:
+                    checked_all_symbols = True
+                    for symb, val in zip(symbols, sol):
+                        test = check_assumptions(val, **symb.assumptions0)
                         if test is None:
                             unchecked.append(s)
                 else:
