@@ -135,3 +135,27 @@ class PermutationGroup(Basic):
                                     yield d * ag
                                     return
                                 N.append(ag)
+
+    def pointwise_stabilizers(self, points):
+        """
+        Returns the point wise stabilizers under action of the group.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([2,0,1,3])
+        >>> c = PermutationGroup([a,b], 4)
+        >>> c.pointwise_stabilizers([2])
+        [Permutation([1, 0, 2, 3])]
+        """
+        stabs = []
+        for g in self.generate():
+            stabilizes = True
+            for point in points:
+                if g.array_form[point] != point:
+                    stabilizes = False
+                    break
+            if stabilizes:
+                stabs.append(g)
+        return stabs
