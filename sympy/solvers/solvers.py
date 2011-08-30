@@ -679,26 +679,28 @@ def _solve(f, *symbols, **flags):
                 #   Poly(sqrt(x) + x**(1/4), sqrt(x), x**(1/4), domain='ZZ')
                 # If the exponents are Rational then a change of variables
                 # will make this a polynomial equation in a single base.
-                def as_base_rexp(x):
-                    """Return x as b**R where r is the leading Rational of the
-                    exponent of x, e.g. exp(-2*x/3) -> (exp(x), -2/3)
+
+                def as_base_q(x):
+                    """Return (b**e, q) for x = b**(p*e/q) where p/q is the leading
+                    Rational of the exponent of x, e.g. exp(-2*x/3) -> (exp(x), 3)
                     """
                     b, e = x.as_base_exp()
-                    if e is S.One:
-                        return b, e
+                    if e.is_Rational:
+                        return b, e.q
+                    if not e.is_Mul:
+                        return x, 1
                     c, ee = e.as_coeff_Mul()
-                    if c.is_Rational:
-                        e = ee
-                    else:
-                        c = S.One
-                    return b**e, c
-                be = [as_base_rexp(g) for g in gens]
-                bases = set([i[0] for i in be])
-                if len(bases) == 1 and all(e.is_Rational for _, e in be):
+                    if c.is_Rational and not c is S.One: # c could be a Float
+                        return b**ee, c.q
+                    return x, 1
+
+                bases, qs = zip(*[as_base_q(g) for g in gens])
+                bases = set(bases)
+                if len(bases) == 1 and any(q != 1 for q in qs):
                     # e.g. for x**(1/2) + x**(1/4) a change of variables
                     # can be made using p**4 to give p**2 + p
                     base = bases.pop()
-                    m = reduce(ilcm, (e.q for _, e in be))
+                    m = reduce(ilcm, qs)
                     p = Dummy('p', positive=True)
                     cov = p**m
                     fnew = f_num.subs(base, cov)
