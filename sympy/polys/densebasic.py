@@ -1223,7 +1223,7 @@ def dmp_deflate(f, u, K):
 
     B = tuple(B)
 
-    if all([ b == 1 for b in B ]):
+    if all(b == 1 for b in B):
         return B, f
 
     H = {}
@@ -1311,7 +1311,7 @@ def dmp_multi_deflate(polys, u, K):
 
     B = tuple(B)
 
-    if all([ b == 1 for b in B ]):
+    if all(b == 1 for b in B):
         return B, polys
 
     H = []
@@ -1397,7 +1397,7 @@ def dmp_inflate(f, M, u, K):
     if not u:
         return dup_inflate(f, M[0], K)
 
-    if all([ m == 1 for m in M ]):
+    if all(m == 1 for m in M):
         return f
     else:
         return _rec_inflate(f, M, u, 0, K)
@@ -1604,7 +1604,7 @@ def dmp_terms_gcd(f, u, K):
     F = dmp_to_dict(f, u)
     G = monomial_min(*F.keys())
 
-    if all([ g == 0 for g in G ]):
+    if all(g == 0 for g in G):
         return G, f
 
     f = {}

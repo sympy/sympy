@@ -100,8 +100,8 @@ class AskNonZeroHandler(CommonHandler):
 
     @staticmethod
     def Add(expr, assumptions):
-        if all([ask(Q.positive(x), assumptions) for x in expr.args]) \
-            or all([ask(Q.negative(x), assumptions) for x in expr.args]):
+        if all(ask(Q.positive(x), assumptions) for x in expr.args) \
+            or all(ask(Q.negative(x), assumptions) for x in expr.args):
             return True
 
     @staticmethod

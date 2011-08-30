@@ -67,7 +67,7 @@ def test_roots_quartic():
             d = a*(a*(3*a**2/S(256) - b/S(16)) + c/S(4))
         eq = x**4 + a*x**3 + b*x**2 + c*x + d
         ans = roots_quartic(Poly(eq, x))
-        assert all([eq.subs(x, ai).n(chop=True) == 0 for ai in ans])
+        assert all(eq.subs(x, ai).n(chop=True) == 0 for ai in ans)
 
 def test_roots_cyclotomic():
     assert roots_cyclotomic(cyclotomic_poly(1, x, polys=True)) == [1]

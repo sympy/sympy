@@ -1874,7 +1874,7 @@ def _homogeneous_order(eq, *symbols):
 
     for i in symbols:
         if i.is_Function:
-            if not all([j in symbols for j in i.args]):
+            if not all(j in symbols for j in i.args):
                 return None
             else:
                 dummyvar = numbered_symbols(prefix='d', cls=Dummy).next()
@@ -2579,7 +2579,7 @@ def _undetermined_coefficients_match(expr, x):
         Test if expr fits the proper form for undetermined coefficients.
         """
         if expr.is_Add:
-            return all([_test_term(i, x) for i in expr.args])
+            return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Mul:
             if expr.has(sin, cos):
                 foundtrig = False
@@ -2591,7 +2591,7 @@ def _undetermined_coefficients_match(expr, x):
                             return False
                         else:
                             foundtrig = True
-            return all([_test_term(i, x) for i in expr.args])
+            return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Function:
             if expr.func in (sin, cos, exp):
                 if expr.args[0].match(a*x + b):

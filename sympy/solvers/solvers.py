@@ -664,7 +664,7 @@ def _solve(f, *symbols, **flags):
             if len(gens) > 1:
                 be = [g.as_base_exp() for g in gens]
                 bases = set([i[0] for i in be])
-                if len(bases) == 1 and all([i[1].is_Rational for i in be]):
+                if len(bases) == 1 and all(i[1].is_Rational for i in be):
                     m = reduce(ilcm, (i[1].q for i in be))
                     p = Dummy('p', positive=True)
                     cv = p**m
@@ -1007,7 +1007,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     system = collect(equ.expand(), sym, evaluate=False).values()
 
-    if not any([ equ.has(sym) for equ in system ]):
+    if not any(equ.has(sym) for equ in system):
         # consecutive powers in the input expressions have
         # been successfully collected, so solve remaining
         # system using Gaussian elimination algorithm

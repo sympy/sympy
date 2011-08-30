@@ -204,7 +204,7 @@ def monomial_div(A, B):
     """
     C = [ a - b for a, b in zip(A, B) ]
 
-    if all([ c >= 0 for c in C ]):
+    if all(c >= 0 for c in C):
         return tuple(C)
     else:
         return None
