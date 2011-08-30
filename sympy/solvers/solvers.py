@@ -682,7 +682,12 @@ def _solve(f, *symbols, **flags):
                 # will make this a polynomial equation in a single base.
                 #
                 def as_base_rexp(x):
+                    """Return x as b**R where r is the leading Rational of the
+                    exponent of x, e.g. exp(-2*x/3) -> (exp(x), -2/3)
+                    """
                     b, e = x.as_base_exp()
+                    if e is S.One:
+                        return b, e
                     c, ee = e.as_coeff_Mul()
                     if c.is_Rational:
                         e = ee

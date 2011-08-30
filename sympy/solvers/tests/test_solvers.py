@@ -405,6 +405,8 @@ def test_issue_1694():
     assert solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4)) == \
             [2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]
     assert solve(Poly(exp(x) + exp(-x) - 4)) == [log(-sqrt(3) + 2), log(sqrt(3) + 2)]
+    assert solve(x**y + x**(2*y) - 1, x) == [(-sqrt(5)/2 - S.Half)**(1/y),
+                                             (-S.Half + sqrt(5)/2)**(1/y)]
 
 def test_issue_2098():
     x = Symbol('x', real=True)
