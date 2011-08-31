@@ -86,7 +86,7 @@ def checksol(f, symbol, sol=None, **flags):
 
        flags:
            'numerical=True (default)'
-               do a fast numerical check if f has only one symbol.
+               do a fast numerical check if ``f`` has only one symbol.
            'minimal=True (default is False)'
                a very fast, minimal testing.
            'warn=True (default is False)'
@@ -264,13 +264,19 @@ def solve(f, *symbols, **flags):
                   e.g. solve(f, [x, y])
 
             flags
-                - ``check``, when False, will return all results without checking
-                - ``simplify``, when False, will not simplify solutions
-                                 (default=True except for polynomials of
-                                  order 3 or greater)
-                - ``warning``, when True, will warn every time a solution can
-                               not be checked, or assumptions about a variable
-                               can't be verified for a solution.
+               'check=True (default)'
+                   if False, don't do any testing of solutions
+               'numerical=True (default)'
+                   do a fast numerical check if ``f`` has only one symbol.
+               'minimal=True (default is False)'
+                   a very fast, minimal testing.
+               'warning=True (default is False)'
+                   print a warning if checksol() could not conclude.
+               'simplify=True (default)'
+                   simplify all but cubic and quartic solutions and use
+                   the simplified form when checking the solutions
+               'force=True (default is False)'
+                   make positive all symbols without assumptions regarding sign.
 
         The output varies according to the input and can be seen by example:
 
@@ -1105,7 +1111,6 @@ def _generate_patterns():
     ]
 
 def tsolve(eq, sym):
-    import warnings
     warnings.warn("tsolve is deprecated, use solve.", DeprecationWarning)
     return _tsolve(eq, sym)
 
