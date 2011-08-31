@@ -219,7 +219,7 @@ class StrPrinter(Printer):
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
-        if (self.order != 'old') and (self.order != 'none'):
+        if self.order not in ('old', 'none'):
             args = expr._new_rawargs(*terms).as_ordered_factors()
         else:
             args = terms
@@ -509,7 +509,8 @@ class StrPrinter(Printer):
 def sstr(expr, **settings):
     """Returns the expression as a string.
 
-    For large expressions, use the setting order='none'.
+    For large expressions where speed is a concern, use the setting
+    order='none'.
 
     Example:
 

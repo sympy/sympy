@@ -173,6 +173,7 @@ class Number(AtomicExpr):
     def class_key(cls):
         return 1, 0, 'Number'
 
+    @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (0, ()), (), self
 

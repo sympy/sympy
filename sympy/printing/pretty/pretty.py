@@ -902,7 +902,7 @@ class PrettyPrinter(Printer):
         a = [] # items in the numerator
         b = [] # items that are in the denominator (if any)
 
-        if (self.order != 'old') and (self.order != 'none'):
+        if self.order not in ('old', 'none'):
             args = product.as_ordered_factors()
         else:
             args = product.args
@@ -1221,7 +1221,7 @@ def pretty(expr, **settings):
     use_unicode: use unicode characters, such as the Greek letter pi instead of
         the string pi. Values should be boolean or None
     full_prec: use full precision. Default to "auto"
-    order: set to 'none' for long expressions; default is None
+    order: set to 'none' for long expressions if slow; default is None
     """
     pp = PrettyPrinter(settings)
 

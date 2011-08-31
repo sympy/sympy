@@ -184,7 +184,7 @@ class LatexPrinter(Printer):
             else:
                 _tex = last_term_tex = ""
 
-                if (self.order != 'old') and (self.order != 'none'):
+                if self.order not in ('old', 'none'):
                     args = expr.as_ordered_factors()
                 else:
                     args = expr.args
@@ -944,7 +944,8 @@ def latex(expr, **settings):
         code will be enclosed in the 'equation' or 'equation*' environment
         (remember to import 'amsmath' for 'equation*'), unless the 'itex'
         option is set. In the latter case, the $$ $$ syntax is used. For very
-        large expressions, set the 'order' keyword to 'none'.
+        large expressions, set the 'order' keyword to 'none' if speed is a
+        concern.
 
         >>> from sympy import latex, Rational
         >>> from sympy.abc import x, y, mu, tau
