@@ -44,6 +44,7 @@ if sys.version_info[:2] < (2,5):
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
     'sympy.external',
@@ -59,6 +60,7 @@ modules = [
     'sympy.logic.algorithms',
     'sympy.logic.utilities',
     'sympy.matrices',
+    'sympy.matrices.expressions',
     'sympy.mpmath',
     'sympy.mpmath.calculus',
     'sympy.mpmath.functions',
@@ -81,7 +83,7 @@ modules = [
     'sympy.tensor',
     'sympy.utilities',
     'sympy.utilities.mathml',
-    ]
+  ]
 
 class audit(Command):
     """Audits Sympy's source code for following issues:
@@ -197,6 +199,7 @@ class run_benchmarks(Command):
 # $ python bin/generate_test_list.py
 tests = [
     'sympy.assumptions.tests',
+    'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
     'sympy.external.tests',
@@ -207,6 +210,7 @@ tests = [
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.logic.tests',
+    'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
