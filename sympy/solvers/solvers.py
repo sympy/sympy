@@ -58,7 +58,7 @@ def denoms(eq, symbols=None):
                 dens.add(d.as_base_exp()[0])
     return dens
 
-def checksol(f, symbol, sol=None, **flags):
+def checksol(f, symbol, sol=None, flags={}, **hints):
     """Checks whether sol is a solution of equation f == 0.
 
     Input can be either a single symbol and corresponding value
@@ -84,7 +84,7 @@ def checksol(f, symbol, sol=None, **flags):
 
        None is returned if checksol() could not conclude.
 
-       flags:
+       flags/hints:
            'numerical=True (default)'
                do a fast numerical check if ``f`` has only one symbol.
            'minimal=True (default is False)'
@@ -92,11 +92,19 @@ def checksol(f, symbol, sol=None, **flags):
            'warn=True (default is False)'
                print a warning if checksol() could not conclude.
            'simplify=True (default)'
-               simplify solution before substituting into function (which
-               will then be simplified regardless of the flag setting)
+               simplify solution before substituting into function and
+               simplify the function before trying specific simplifications
            'force=True (default is False)'
                make positive all symbols without assumptions regarding sign.
+
+       Note: to allow for communication between a calling routine (like solve)
+       and this routine, the hints can be passed in a dictionary named ``flags``.
+       This, for example, allows the 'simplified' flag to be set so the calling
+       routine knowns that the solutions have been simplified. ``hints`` if they
+       are given will override any flags that are sent.
     """
+
+    flags.update(hints)
 
     if sol is not None:
         sol = {symbol: sol}
@@ -111,7 +119,7 @@ def checksol(f, symbol, sol=None, **flags):
             raise ValueError('no functions to check')
         rv = True
         for fi in f:
-            check = checksol(fi, sol, **flags)
+            check = checksol(fi, sol, flags=flags)
             if check:
                 continue
             if check is False:
@@ -145,18 +153,13 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 2:
             if flags.get('minimal', False):
                 return
-            # the flag 'simplify=False' is used in solve to avoid
-            # simplifying the solution. So if it is set to False there
-            # the simplification will not be attempted here, either. But
-            # if the simplification is done here then the flag should be
-            # set to False so it isn't done again there.
-            # FIXME: this can't work, since `flags` is not passed to
-            # `checksol()` as a dict, but as keywords.
-            # So, any modification to `flags` here will be lost when returning
-            # from `checksol()`.
-            for k in sol:
-                sol[k] = simplify(sympify(sol[k]))
-            val = simplify(f.subs(sol))
+            if flags.get('simplify', True):
+                flags['simplified'] = True
+                for k in sol:
+                    sol[k] = simplify(sympify(sol[k]))
+                val = simplify(f.subs(sol))
+            else:
+                val = f.subs(sol)
             if flags.get('force', False):
                 val = posify(val)[0]
         elif attempt == 3:
@@ -273,8 +276,11 @@ def solve(f, *symbols, **flags):
                'warning=True (default is False)'
                    print a warning if checksol() could not conclude.
                'simplify=True (default)'
-                   simplify all but cubic and quartic solutions and use
-                   the simplified form when checking the solutions
+                   simplify all but cubic and quartic solutions before
+                   returning them and (if check is not False) use the
+                   general simplify function on the solutions and the
+                   expression obtained when they are substituted into the
+                   function which should be zero
                'force=True (default is False)'
                    make positive all symbols without assumptions regarding sign.
 
@@ -618,7 +624,7 @@ def _solve(f, *symbols, **flags):
                 soln = _solve(m, symbol, **flags)
                 result.update(set(soln))
             if check:
-               result = [s for s in result if all(not checksol(den, {symbol: s}, **flags) for den in dens)]
+               result = [s for s in result if all(not checksol(den, {symbol: s}, flags=flags) for den in dens)]
 
         elif f.is_Piecewise:
             result = set()
@@ -719,7 +725,7 @@ def _solve(f, *symbols, **flags):
                     inversion = _solve(cov - base, symbol, **flags)
                     result = [i.subs(p, s) for i in inversion for s in soln]
                     if check:
-                       result = [r for r in result if checksol(f_num, {symbol: r}, **flags) is not False]
+                       result = [r for r in result if checksol(f_num, {symbol: r}, flags=flags) is not False]
             elif len(gens) == 1:
 
                 # There is only one generator that we are interested in, but there may
@@ -755,14 +761,14 @@ def _solve(f, *symbols, **flags):
             raise NotImplementedError(msg +
             "\nNo algorithms are implemented to solve equation %s" % f)
 
-        if flags.get('simplify', True):
+        if flags.get('simplify', True) and not flags.get('simplified', False):
             result = map(simplify, result)
 
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it
         if check:
            result = [s for s in result if
-                     all(not checksol(den, {symbol: s}, **flags)
+                     all(not checksol(den, {symbol: s}, flags=flags)
                      for den in dens)]
         return result
 
