@@ -1405,11 +1405,9 @@ def powsimp(expr, deep=False, combine='all', force=False):
                     if ee:
                         # find the number of extractions possible
                         # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
-                        min1 = ee[0][1]/ee[0][0]
+                        min1 = ee[0][1]//ee[0][0]
                         for i in xrange(len(ee)):
-                            rat = ee[i][1]/ee[i][0]
-                            if rat < 1:
-                                break
+                            rat = ee[i][1]//ee[i][0]
                             min1 = min(min1, rat)
                         else:
                             # update base factor counts
