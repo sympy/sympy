@@ -656,8 +656,8 @@ def test_posify():
 def test_powdenest():
     from sympy import powdenest
     from sympy.abc import x, y, z, a, b
-    p = symbols('p', positive=True)
-    i, j = symbols('i,j', integer=1)
+    p, q = symbols('p q', positive=True)
+    i, j = symbols('i,j', integer=True)
 
     assert powdenest(x) == x
     assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == x + 2*(x**(a/3))**(6*x)
@@ -665,7 +665,8 @@ def test_powdenest():
     assert powdenest((x**(2*a/3))**(3*x)) == (x**(a/3))**(6*x)
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
-    i, j = symbols('i,j', integer=1)
+    i, j = symbols('i,j', integer=True)
+    assert powdenest(p**(2*i)*q**(4*i)) == (p*q**2)**(2*i)
     assert powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
     assert powdenest(exp(3*y*log(x))) == x**(3*y)
     assert powdenest(exp(y*(log(a) + log(b)))) == (a*b)**y
@@ -674,17 +675,19 @@ def test_powdenest():
     assert powdenest(((x**(2*i))**(3*y))**x, force=True) == x**(6*i*x*y)
     assert powdenest(((x**(2*a/3))**(3*y/i))**x) == ((x**(a/3))**(y/i))**(6*x)
     assert powdenest((x**(2*i)*y**(4*i))**z, force=True) == (x*y**2)**(2*i*z)
+    assert powdenest((p**(2*i)*q**(4*i))**j) == (p*q**2)**(2*i*j)
+    assert powdenest(((p**(2*a))**(3*y))**x) == p**(6*a*x*y)
     e = ((x**2*y**4)**a)**(x*y)
     assert powdenest(e) == e
     e = (((x**2*y**4)**a)**(x*y))**3
     assert powdenest(e) == ((x**2*y**4)**a)**(3*x*y)
-
-@XFAIL
-def test_powdenest_fail_in_polys():
-    from sympy import powdenest
-    from sympy.abc import x, y, z, a, b
-    assert powdenest((((x**2*y**4)**a)**(x*y)), force=True) == (x**2*y**4)**(a*x*y)
-    assert powdenest((((x**2*y**4)**a)**(x*y))**3, force=True) == (x**2*y**4)**(3*a*x*y)
+    assert powdenest((((x**2*y**4)**a)**(x*y)), force=True) == (x*y**2)**(2*a*x*y)
+    assert powdenest((((x**2*y**4)**a)**(x*y))**3, force=True) == (x*y**2)**(6*a*x*y)
+    assert powdenest((x**2*y**6)**i) != (x*y**3)**(2*i)
+    x, y = symbols('x,y', positive=True)
+    assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
+    assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**4*y**3)**(i**2/3)
+    assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
 
 def test_issue_1095():
     # simplify should call cancel

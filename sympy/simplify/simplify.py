@@ -1058,13 +1058,13 @@ def powdenest(eq, force=False):
 
     if force:
         eq, rep = posify(eq)
-        return powdenest(eq, force=0).subs(rep)
+        return powdenest(eq, force=False).subs(rep)
 
     eq = S(eq)
     if eq.is_Atom:
         return eq
 
-    # handle everything that is not a power
+    # handle everything that is not a power or Mul
     #   if subs would work then one could replace the following with
     #      return eq.subs(dict([(p, powdenest(p)) for p in eq.atoms(Pow)]))
     #   but subs expands (3**x)**2 to 3**x * 3**x so the 3**(5*x)
@@ -1074,7 +1074,7 @@ def powdenest(eq, force=False):
     #   or simplicity? On the other hand, this only does a shallow replacement
     #   and doesn't enter Integrals or functions, etc... so perhaps the subs
     #   approach (or adding a deep flag) is the thing to do.
-    if not eq.is_Pow and not eq.func is exp:
+    if not eq.is_Pow and not eq.func is exp and not eq.is_Mul:
         args = list(Add.make_args(eq))
         rebuild = False
         for i, arg in enumerate(args):
@@ -1110,38 +1110,39 @@ def powdenest(eq, force=False):
         logs = logcombine(efunc(*logs), force=force)
         return Pow(C.exp(logs), efunc(*other))
 
-    bb, be = b.as_base_exp()
+    _, be = b.as_base_exp()
     if be is S.One and not (b.is_Mul or b.is_Rational):
         return eq
 
-    # denest eq which is either Pow**e or Mul**e
-    if force or e.is_integer:
-        # replace all non-explicitly negative symbols with positive dummies
-        syms = eq.atoms(Symbol)
-        rep = [(s, C.Dummy(s.name, positive=True)) for s in syms if not s.is_negative]
-        sub = eq.subs(rep)
-    else:
-        rep = []
-        sub = eq
+    # denest eq which is either Pow**e or Mul**e or Mul(b1**e1, b2**e2)
 
     # see if there is a positive, non-Mul base at the very bottom
-    exponents = []
-    kernel = sub
-    while kernel.is_Pow:
-        kernel, e = kernel.as_base_exp()
-        exponents.append(e)
-    if kernel.is_positive and not kernel.is_Mul:
-        return Pow(kernel, Mul(*exponents))
+    exponents = False
+    if not eq.is_Mul:
+        exponents = []
+        kernel = eq
+        while kernel.is_Pow:
+            kernel, ex = kernel.as_base_exp()
+            exponents.append(ex)
+        if kernel.is_positive:
+            e = Mul(*exponents)
+            if kernel.is_Mul:
+                b = kernel
+            else:
+                return Pow(kernel, e)
 
     # if any factor is a bare symbol then there is nothing to be done
-    b, e = sub.as_base_exp()
-    if e is S.One or any(s.is_Symbol for s in Mul.make_args(b)):
-        return sub.subs([(new, old) for old, new in rep])
-    # let log handle the case of the base of the argument being a Mul, e.g.
-    # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i)
-    gcd = terms_gcd(log(b).expand(log=True))
+    # but the kernel check may have created a new exponent
+    if any(s.is_Symbol for s in Mul.make_args(b)):
+        if exponents:
+            return b**e
+        return eq
+
+    # let log handle the case of the base of the argument being a mul, e.g.
+    # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive
+    gcd = terms_gcd(expand_log(log(b)), expand=False)
     if gcd.func is C.log or not gcd.is_Mul:
-        if hasattr(gcd.args[0], 'exp'):
+        if gcd.args[0].is_Pow or gcd.args[0].func is exp:
             gcd = powdenest(gcd.args[0])
             c, _ = gcd.exp.as_coeff_mul()
             ok = c.p != 1
@@ -1152,8 +1153,6 @@ def powdenest(eq, force=False):
                     ok = d is not S.One and any(di.is_integer for di in Mul.make_args(d))
             if ok:
                 return Pow(Pow(gcd.base, gcd.exp/c.p), c.p*e)
-        elif e.is_Mul:
-            return Pow(b, e).subs([(new, old) for old, new in rep])
         return eq
     else:
         add= []
@@ -1163,7 +1162,7 @@ def powdenest(eq, force=False):
                 add.append(g)
             else:
                 other.append(g)
-        return powdenest(Pow(exp(logcombine(Mul(*add))), e*Mul(*other))).subs([(new, old) for old, new in rep])
+        return powdenest(Pow(exp(logcombine(Mul(*add))), e*Mul(*other)))
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
