@@ -5,6 +5,7 @@ from os import walk, sep, chdir, pardir
 from os.path import split, join, abspath, exists
 from glob import glob
 import re
+import random
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -120,143 +121,94 @@ def test_files():
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 
+def _with_space(c):
+    # return c with a random amount of leading space
+    return random.randint(0, 10)*' ' + c
+
 def test_raise_statement_regular_expression():
     candidates_ok = [
         "some text # raise Exception, 'text'",
-        "    some text # raise Exception, 'text'",
         "raise ValueError('text') # raise Exception, 'text'",
-        "    raise ValueError('text') # raise Exception, 'text'",
         "raise ValueError('text')",
-        "    raise ValueError('text')",
         "raise ValueError",
-        "    raise ValueError",
         "raise ValueError('text')",
-        "    raise ValueError('text')",
         "raise ValueError('text') #,",
-        "    raise ValueError('text') #,",
         # Talking about an exception in a docstring
         ''''"""This function will raise ValueError, except when it doesn't"""''',
     ]
     str_candidates_fail = [
         "raise 'exception'",
-        "    raise 'exception'",
         "raise 'Exception'",
-        "    raise 'Exception'",
         'raise "exception"',
-        '    raise "exception"',
         'raise "Exception"',
-        '    raise "Exception"',
         "raise 'ValueError'",
-        "    raise 'ValueError'",
     ]
     gen_candidates_fail = [
         "raise Exception('text') # raise Exception, 'text'",
-        "    raise Exception('text') # raise Exception, 'text'",
         "raise Exception('text')",
-        "    raise Exception('text')",
         "raise Exception",
-        "    raise Exception",
         "raise Exception('text')",
-        "    raise Exception('text')",
         "raise Exception('text') #,",
-        "    raise Exception('text') #,",
         "raise Exception, 'text'",
-        "    raise Exception, 'text'",
         "raise Exception, 'text' # raise Exception('text')",
-        "    raise Exception, 'text' # raise Exception('text')",
         "raise Exception, 'text' # raise Exception, 'text'",
-        "    raise Exception, 'text' # raise Exception, 'text'",
         ">>> raise Exception, 'text'",
-        "    >>> raise Exception, 'text'",
         ">>> raise Exception, 'text' # raise Exception('text')",
-        "    >>> raise Exception, 'text' # raise Exception('text')",
         ">>> raise Exception, 'text' # raise Exception, 'text'",
-        "    >>> raise Exception, 'text' # raise Exception, 'text'",
     ]
     old_candidates_fail = [
         "raise Exception, 'text'",
-        "    raise Exception, 'text'",
         "raise Exception, 'text' # raise Exception('text')",
-        "    raise Exception, 'text' # raise Exception('text')",
         "raise Exception, 'text' # raise Exception, 'text'",
-        "    raise Exception, 'text' # raise Exception, 'text'",
         ">>> raise Exception, 'text'",
-        "    >>> raise Exception, 'text'",
         ">>> raise Exception, 'text' # raise Exception('text')",
-        "    >>> raise Exception, 'text' # raise Exception('text')",
         ">>> raise Exception, 'text' # raise Exception, 'text'",
-        "    >>> raise Exception, 'text' # raise Exception, 'text'",
         "raise ValueError, 'text'",
-        "    raise ValueError, 'text'",
         "raise ValueError, 'text' # raise Exception('text')",
-        "    raise ValueError, 'text' # raise Exception('text')",
         "raise ValueError, 'text' # raise Exception, 'text'",
-        "    raise ValueError, 'text' # raise Exception, 'text'",
         ">>> raise ValueError, 'text'",
-        "    >>> raise ValueError, 'text'",
         ">>> raise ValueError, 'text' # raise Exception('text')",
-        "    >>> raise ValueError, 'text' # raise Exception('text')",
         ">>> raise ValueError, 'text' # raise Exception, 'text'",
-        "    >>> raise ValueError, 'text' # raise Exception, 'text'",
     ]
+
     for c in candidates_ok:
-        assert str_raise_re.search(c) is None, c
-        assert gen_raise_re.search(c) is None, c
-        assert old_raise_re.search(c) is None, c
+        assert str_raise_re.search(_with_space(c)) is None, c
+        assert gen_raise_re.search(_with_space(c)) is None, c
+        assert old_raise_re.search(_with_space(c)) is None, c
     for c in str_candidates_fail:
-        assert str_raise_re.search(c) is not None, c
+        assert str_raise_re.search(_with_space(c)) is not None, c
     for c in gen_candidates_fail:
-        assert gen_raise_re.search(c) is not None, c
+        assert gen_raise_re.search(_with_space(c)) is not None, c
     for c in old_candidates_fail:
-        assert old_raise_re.search(c) is not None, c
+        assert old_raise_re.search(_with_space(c)) is not None, c
 
 
 def test_implicit_imports_regular_expression():
     candidates_ok = [
         "from sympy import something",
-        "    from sympy import something",
         ">>> from sympy import something",
-        "    >>> from sympy import something",
         "from sympy.somewhere import something",
-        "    from sympy.somewhere import something",
         ">>> from sympy.somewhere import something",
-        "    >>> from sympy.somewhere import something",
         "import sympy",
-        "    import sympy",
         ">>> import sympy",
-        "    >>> import sympy",
         "import sympy.something.something",
-        "    import sympy.something.something",
         "... import sympy",
-        "    ... import sympy",
         "... import sympy.something.something",
-        "    ... import sympy.something.something",
         "... from sympy import something",
-        "    ... from sympy import something",
         "... from sympy.somewhere import something",
-        "    ... from sympy.somewhere import something",
         ">> from sympy import *", # To allow 'fake' docstrings
-        "    >> from sympy import *",
         "# from sympy import *",
-        "    # from sympy import *",
         "some text # from sympy import *",
-        "    some text # from sympy import *",
     ]
     candidates_fail = [
         "from sympy import *",
-        "    from sympy import *",
         ">>> from sympy import *",
-        "    >>> from sympy import *",
         "from sympy.somewhere import *",
-        "    from sympy.somewhere import *",
         ">>> from sympy.somewhere import *",
-        "     >>> from sympy.somewhere import *",
         "... from sympy import *",
-        "    ... from sympy import *",
         "... from sympy.somwhere import *",
-        "    ... from sympy.somwhere import *",
     ]
     for c in candidates_ok:
-        assert implicit_test_re.search(c) is None, c
+        assert implicit_test_re.search(_with_space(c)) is None, c
     for c in candidates_fail:
-        assert implicit_test_re.search(c) is not None, c
+        assert implicit_test_re.search(_with_space(c)) is not None, c
