@@ -123,3 +123,12 @@ def test_beta():
     assert E(B) == a / (a + b)
     assert var(B) == (a*b) / ((a+b)**2 * (a+b+1))
 
+def test_uniform():
+    l = Symbol('l', real=True, bounded=True)
+    w = Symbol('w', positive=True, bounded=True)
+    X = Uniform(l, l+w)
+
+    assert simplify(E(X)) == l + w/2
+    assert simplify(E(X)) == w**2/12
+
+    assert P(X<l) == 0 and P(X>l+w) == 0

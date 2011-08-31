@@ -1,4 +1,4 @@
-from sympy import exp, sqrt, pi, S, Dummy, Interval, S, sympify, gamma
+from sympy import exp, sqrt, pi, S, Dummy, Interval, S, sympify, gamma, Piecewise
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace, integrate
 from sympy.core.decorators import _sympifyit
@@ -117,3 +117,19 @@ class GammaPSpace(SingleContinuousPSpace):
 
 def Gamma(k, theta, symbol=None):
     return GammaPSpace(k, theta, symbol).value
+
+class UniformPSpace(SingleContinuousPSpace):
+    def __new__(cls, left, right, symbol=None):
+        x = symbol or SingleContinuousPSpace.create_symbol()
+        pdf = Piecewise(
+                (S.Zero, x<left),
+                (S.Zero, x>right),
+                (S.One/(right-left), True))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        obj.left = left
+        obj.right = right
+        return obj
+
+def Uniform(left, right, symbol=None):
+    return UniformPSpace(left, right, symbol).value
