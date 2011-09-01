@@ -40,8 +40,10 @@ def _indent(s, indent=4):
     If the string `s` is Unicode, it is encoded using the stdout
     encoding and the `backslashreplace` error handler.
     """
-    if isinstance(s, unicode):
-        s = s.encode(pdoctest._encoding, 'backslashreplace')
+    # After a 2to3 run the below code is bogus, so wrap it with a version check
+    if sys.version_info[0] < 3:
+        if isinstance(s, unicode):
+            s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
@@ -443,7 +445,11 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    text, filename = pdoctest._load_testfile(filename, package, module_relative)
+    if sys.version_info[0] < 3:
+        text, filename = pdoctest._load_testfile(filename, package, module_relative)
+    else:
+        encoding = None
+        text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
@@ -1023,6 +1029,8 @@ class PyTestReporter(Reporter):
             try:
                 process = subprocess.Popen(['stty', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
+                if sys.version_info[0] > 2:
+                    stdout = stdout.decode("utf-8")
             except (OSError, IOError):
                 pass
             else:
