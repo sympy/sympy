@@ -1323,6 +1323,7 @@ def test_creation_args():
     assert eye(3.) == eye(3)
     assert ones((3L, Integer(4))) == ones((3, 4))
     raises(TypeError, 'Matrix(1, 2)')
+    raises(TypeError, 'SparseMatrix(1, 2)')
 
 def test_diagonal_symmetrical():
     m = Matrix(2,2,[0, 1, 1, 0])
@@ -1575,8 +1576,11 @@ def test_len():
     assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
     assert len(Matrix(0, 2, lambda i, j: 0)) == len(Matrix(2, 0, lambda i, j: 0)) == 0
     assert len(Matrix([[0, 1, 2], [3, 4, 5]])) == 6
-    assert Matrix([1]) == Matrix([1]) == Matrix([[1]])
+    assert Matrix([1]) == Matrix([[1]])
     assert not Matrix()
+    assert Matrix() == Matrix([]) == Matrix([[]])
+    assert not SparseMatrix()
+    assert SparseMatrix() == SparseMatrix([]) == SparseMatrix([[]])
 
 def test_integrate():
     x, y = symbols('x,y')

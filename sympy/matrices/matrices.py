@@ -2968,8 +2968,12 @@ class SparseMatrix(Matrix):
                 mat = args[0]
             else:
                 mat = args
+            if not mat:
+                self.mat = {}
+                self.rows = self.cols = 0
+                return
             if not is_sequence(mat[0]):
-                mat = [ [element] for element in mat ]
+                raise TypeError('Matrix rows must be given in an iterable.')
             self.rows = len(mat)
             self.cols = len(mat[0])
             self.mat = {}
