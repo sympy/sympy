@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, Vector)
+    factor, Mul)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -146,7 +146,7 @@ def test_simplify():
 
     A = Matrix([[2*k-m*w**2, -k], [-k, k-m*w**2]]).inv()
 
-    assert simplify((A*Vector(*[0,f]))[1]) == \
+    assert simplify((A*Matrix([0,f]))[1]) == \
         f/(-k**2/(2*k - m*w**2) + k - m*w**2)
 
     a, b, c, d, e, f, g, h, i = symbols('a,b,c,d,e,f,g,h,i')

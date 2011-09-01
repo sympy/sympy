@@ -211,10 +211,10 @@ def test_integrals():
         check(c)
 
 #================== matrices ====================
-from sympy.matrices.matrices import Matrix, SparseMatrix, Vector
+from sympy.matrices.matrices import Matrix, SparseMatrix
 
 def test_matrices():
-    for c in (Matrix, Vector(*[1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
+    for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
         #FIXME-py3k: This raises sympy.matrices.matrices.ShapeError
         check(c)
 

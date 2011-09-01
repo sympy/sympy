@@ -194,7 +194,7 @@ class Qubit(QubitState, Ket):
         result = [0]*(2**self.dimension)
         result[int(definite_state)] = 1
         if format == 'sympy':
-            return Matrix(result).T
+            return Matrix(result)
         elif format == 'numpy':
             import numpy as np
             return np.matrix(result, dtype='complex').transpose()

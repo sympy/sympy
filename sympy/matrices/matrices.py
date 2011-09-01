@@ -104,42 +104,34 @@ class Matrix(object):
             if len(mat) != len(self):
                 raise ValueError('List length should be equal to rows*columns')
             self.mat = map(lambda i: sympify(i), mat)
-        elif not args or len(args) == 1 and not args[0]:
-            # Empty Matrix
-            self.rows = self.cols = 0
-            self.mat = []
-        else:
-            if len(args) == 1:
-                mat = args[0]
-                if isinstance(mat, Matrix):
-                    self.rows = mat.rows
-                    self.cols = mat.cols
-                    self.mat = mat[:]
+        elif len(args) == 1:
+            mat = args[0]
+            if isinstance(mat, Matrix):
+                self.rows = mat.rows
+                self.cols = mat.cols
+                self.mat = mat[:]
+                return
+            elif hasattr(mat, "__array__"):
+                # NumPy array or matrix or some other object that implements
+                # __array__. So let's first use this method to get a
+                # numpy.array() and then make a python list out of it.
+                arr = mat.__array__()
+                if len(arr.shape) == 2:
+                    self.rows, self.cols = arr.shape[0], arr.shape[1]
+                    self.mat = map(lambda i: sympify(i), arr.ravel())
                     return
-                elif hasattr(mat, "__array__"):
-                    # NumPy array or matrix or some other object that implements
-                    # __array__. So let's first use this method to get a
-                    # numpy.array() and then make a python list out of it.
-                    arr = mat.__array__()
-                    if len(arr.shape) == 2:
-                        self.rows, self.cols = arr.shape[0], arr.shape[1]
-                        self.mat = map(lambda i: sympify(i), arr.ravel())
-                        return
-                    elif len(arr.shape) == 1:
-                        self.rows, self.cols = 1, arr.shape[0]
-                        self.mat = [0]*self.cols
-                        for i in xrange(len(arr)):
-                            self.mat[i] = sympify(arr[i])
-                        return
-                    else:
-                        raise NotImplementedError("Sympy supports just 1D and 2D matrices")
-            if not is_sequence(args[0]):
-                raise TypeError("Matrix args must be one or more lists, not %s" % str(type(args)))
-            if len(args) == 1:
-                if is_sequence(args[0][0]):
-                    args = args[0]
+                elif len(arr.shape) == 1:
+                    self.rows, self.cols = 1, arr.shape[0]
+                    self.mat = [0]*self.cols
+                    for i in xrange(len(arr)):
+                        self.mat[i] = sympify(arr[i])
+                    return
+                else:
+                    raise NotImplementedError("Sympy supports just 1D and 2D matrices")
+            elif not is_sequence(mat, include=Matrix):
+                raise TypeError("Matrix constructor doesn't accept %s as input" % str(type(mat)))
             mat = []
-            for row in args:
+            for row in args[0]:
                 if isinstance(row, Matrix):
                     mat.extend(row.tolist())
                 else:
@@ -160,6 +152,12 @@ class Matrix(object):
                         args)
                 for i in xrange(self.cols):
                     self.mat.append(sympify(mat[j][i]))
+        elif len(args) == 0:
+            # Empty Matrix
+            self.rows = self.cols = 0
+            self.mat = []
+        else:
+            raise TypeError("Data type not understood")
 
     def key2ij(self, key):
         """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
@@ -384,10 +382,7 @@ class Matrix(object):
     def copyin_list(self, key, value):
         if not is_sequence(value):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
-        if is_sequence(value[0]):
-            self.copyin_matrix(key, Matrix(value))
-        else:
-            self.copyin_matrix(key, Vector(value))
+        return self.copyin_matrix(key, Matrix(value))
 
     def hash(self):
         """Compute a hash every time, because the matrix elements
@@ -865,14 +860,14 @@ class Matrix(object):
         """
         Concatenates two matrices along self's last and bott's first row
 
-        >>> from sympy import Matrix
-        >>> M = Matrix(3,3,lambda i,j: i+j)
-        >>> V = Matrix(1,3,lambda i,j: 3+i+j)
+        >>> from sympy import Matrix, ones
+        >>> M = ones(3, 3)
+        >>> V = Matrix([[7,7,7]])
         >>> M.col_join(V)
-        [0, 1, 2]
-        [1, 2, 3]
-        [2, 3, 4]
-        [3, 4, 5]
+        [1, 1, 1]
+        [1, 1, 1]
+        [1, 1, 1]
+        [7, 7, 7]
 
         """
         if self.cols != bott.cols:
@@ -1294,15 +1289,15 @@ class Matrix(object):
 
         Examples::
 
-            >>> from sympy import sin, cos, Vector
+            >>> from sympy import sin, cos, Matrix
             >>> from sympy.abc import rho, phi
-            >>> X = Vector(*[rho*cos(phi), rho*sin(phi), rho**2])
-            >>> Y = Vector(*[rho, phi])
+            >>> X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
+            >>> Y = Matrix([rho, phi])
             >>> X.jacobian(Y)
             [cos(phi), -rho*sin(phi)]
             [sin(phi),  rho*cos(phi)]
             [   2*rho,             0]
-            >>> X = Vector(*[rho*cos(phi), rho*sin(phi)])
+            >>> X = Matrix([rho*cos(phi), rho*sin(phi)])
             >>> X.jacobian(Y)
             [cos(phi), -rho*sin(phi)]
             [sin(phi),  rho*cos(phi)]
@@ -1479,7 +1474,7 @@ class Matrix(object):
             if is_sequence(b):
                 if len(b) != self.cols and len(b) != self.rows:
                     raise ShapeError("Dimensions incorrect for dot product.")
-                return self.dot(Vector(*b))
+                return self.dot(Matrix(b))
             else:
                 raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
@@ -1530,9 +1525,9 @@ class Matrix(object):
         other  - does not exist              sum(abs(x)**ord)**(1./ord)
         =====  ============================  ==========================
 
-        >>> from sympy import Matrix, Vector, Symbol, trigsimp, cos, sin
+        >>> from sympy import Matrix, Symbol, trigsimp, cos, sin
         >>> x = Symbol('x', real=True)
-        >>> v = Vector(*[cos(x), sin(x)])
+        >>> v = Matrix([cos(x), sin(x)])
         >>> print trigsimp( v.norm() )
         1
         >>> print v.norm(10)
@@ -1597,7 +1592,7 @@ class Matrix(object):
 
         >>> from sympy import Matrix, S, sqrt
         >>> V = Matrix([sqrt(3)/2,S.Half])
-        >>> x = Matrix([1, 0])
+        >>> x = Matrix([[1, 0]])
         >>> V.project(x)
         [sqrt(3)/2, 0]
         >>> V.project(-x)
@@ -2166,7 +2161,7 @@ class Matrix(object):
 
             transforms[k-1] = T
 
-        polys = [ Vector(*[S.One, -A[0,0]]) ]
+        polys = [ Matrix([S.One, -A[0,0]]) ]
 
         for i, T in enumerate(transforms):
             polys.append(T * polys[i])
@@ -2735,14 +2730,14 @@ def diag(*values):
 
     Example:
 
-    >>> from sympy.matrices import diag, Matrix, Vector
+    >>> from sympy.matrices import diag, Matrix
     >>> diag(1, 2, 3)
     [1, 0, 0]
     [0, 2, 0]
     [0, 0, 3]
 
     >>> from sympy.abc import x, y, z
-    >>> a = Vector(*[x, y, z])
+    >>> a = Matrix([x, y, z])
     >>> b = Matrix([[1, 2], [3, 4]])
     >>> c = Matrix([[5, 6]])
     >>> diag(a, 7, b, c)
@@ -2969,15 +2964,12 @@ class SparseMatrix(Matrix):
             for key in args[2].keys():
                 self.mat[key] = args[2][key]
         else:
-            if not is_sequence(args[0], include=Matrix):
-                raise TypeError("SparseMatrix args must be one or more lists, not %s" % str(type(args)))
             if len(args) == 1:
-                if is_sequence(args[0][0]):
-                    mat = args[0]
-                else:
-                    mat = args
+                mat = args[0]
             else:
                 mat = args
+            if not is_sequence(mat[0]):
+                mat = [ [element] for element in mat ]
             self.rows = len(mat)
             self.cols = len(mat[0])
             self.mat = {}
@@ -3385,6 +3377,3 @@ def _separate_eig_results(res):
     eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
     eigvects = flatten([item[2] for item in res])
     return eigvals, eigvects
-
-def Vector(*args):
-    return Matrix(args).T

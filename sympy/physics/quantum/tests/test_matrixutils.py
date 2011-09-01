@@ -1,4 +1,4 @@
-from sympy import Matrix, Vector, zeros, ones, Integer
+from sympy import Matrix, zeros, ones, Integer
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,
@@ -41,7 +41,7 @@ def test_matrix_tensor_product():
     l3 = zeros(2)
     for i in range(4):
         l3[i] = i
-    vec = Vector(*[1,2,3])
+    vec = Matrix([1,2,3])
 
     #test for Matrix known 4x4 matricies
     numpyl1 = np.matrix(l1.tolist())

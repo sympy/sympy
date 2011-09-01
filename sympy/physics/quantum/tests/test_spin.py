@@ -1,5 +1,5 @@
 from __future__ import division
-from sympy import cos, exp, I, Matrix, Vector, pi, S, sin, sqrt, Sum, symbols
+from sympy import cos, exp, I, Matrix, pi, S, sin, sqrt, Sum, symbols
 
 from sympy.physics.quantum import hbar, represent, Commutator, InnerProduct
 from sympy.physics.quantum.qapply import qapply
@@ -26,205 +26,205 @@ def test_represent():
     assert represent(Jz, j=1) == hbar*Matrix([[1,0,0],[0,0,0],[0,0,-1]])
     # Spin states
     # Jx basis
-    assert represent(JxKet(S(1)/2,S(1)/2), basis=Jx) == Vector(*[1,0])
-    assert represent(JxKet(S(1)/2,-S(1)/2), basis=Jx) == Vector(*[0,1])
-    assert represent(JxKet(1,1), basis=Jx) == Vector(*[1,0,0])
-    assert represent(JxKet(1,0), basis=Jx) == Vector(*[0,1,0])
-    assert represent(JxKet(1,-1), basis=Jx) == Vector(*[0,0,1])
-    assert represent(JyKet(S(1)/2,S(1)/2), basis=Jx) == Vector(*[exp(-I*pi/4),0])
-    assert represent(JyKet(S(1)/2,-S(1)/2), basis=Jx) == Vector(*[0,exp(I*pi/4)])
-    assert represent(JyKet(1,1), basis=Jx) == Vector(*[-I,0,0])
-    assert represent(JyKet(1,0), basis=Jx) == Vector(*[0,1,0])
-    assert represent(JyKet(1,-1), basis=Jx) == Vector(*[0,0,I])
-    assert represent(JzKet(S(1)/2,S(1)/2), basis=Jx) == sqrt(2)*Vector(*[-1,1])/2
-    assert represent(JzKet(S(1)/2,-S(1)/2), basis=Jx) == sqrt(2)*Vector(*[-1,-1])/2
-    assert represent(JzKet(1,1), basis=Jx) == Vector(*[1,-sqrt(2),1])/2
-    assert represent(JzKet(1,0), basis=Jx) == sqrt(2)*Vector(*[1,0,-1])/2
-    assert represent(JzKet(1,-1), basis=Jx) == Vector(*[1,sqrt(2),1])/2
+    assert represent(JxKet(S(1)/2,S(1)/2), basis=Jx) == Matrix([1,0])
+    assert represent(JxKet(S(1)/2,-S(1)/2), basis=Jx) == Matrix([0,1])
+    assert represent(JxKet(1,1), basis=Jx) == Matrix([1,0,0])
+    assert represent(JxKet(1,0), basis=Jx) == Matrix([0,1,0])
+    assert represent(JxKet(1,-1), basis=Jx) == Matrix([0,0,1])
+    assert represent(JyKet(S(1)/2,S(1)/2), basis=Jx) == Matrix([exp(-I*pi/4),0])
+    assert represent(JyKet(S(1)/2,-S(1)/2), basis=Jx) == Matrix([0,exp(I*pi/4)])
+    assert represent(JyKet(1,1), basis=Jx) == Matrix([-I,0,0])
+    assert represent(JyKet(1,0), basis=Jx) == Matrix([0,1,0])
+    assert represent(JyKet(1,-1), basis=Jx) == Matrix([0,0,I])
+    assert represent(JzKet(S(1)/2,S(1)/2), basis=Jx) == sqrt(2)*Matrix([-1,1])/2
+    assert represent(JzKet(S(1)/2,-S(1)/2), basis=Jx) == sqrt(2)*Matrix([-1,-1])/2
+    assert represent(JzKet(1,1), basis=Jx) == Matrix([1,-sqrt(2),1])/2
+    assert represent(JzKet(1,0), basis=Jx) == sqrt(2)*Matrix([1,0,-1])/2
+    assert represent(JzKet(1,-1), basis=Jx) == Matrix([1,sqrt(2),1])/2
     # Jy basis
-    assert represent(JxKet(S(1)/2,S(1)/2), basis=Jy) == Vector(*[exp(-3*I*pi/4),0])
-    assert represent(JxKet(S(1)/2,-S(1)/2), basis=Jy) == Vector(*[0,exp(3*I*pi/4)])
-    assert represent(JxKet(1,1), basis=Jy) == Vector(*[I,0,0])
-    assert represent(JxKet(1,0), basis=Jy) == Vector(*[0,1,0])
-    assert represent(JxKet(1,-1), basis=Jy) == Vector(*[0,0,-I])
-    assert represent(JyKet(S(1)/2,S(1)/2), basis=Jy) == Vector(*[1,0])
-    assert represent(JyKet(S(1)/2,-S(1)/2), basis=Jy) == Vector(*[0,1])
-    assert represent(JyKet(1,1), basis=Jy) == Vector(*[1,0,0])
-    assert represent(JyKet(1,0), basis=Jy) == Vector(*[0,1,0])
-    assert represent(JyKet(1,-1), basis=Jy) == Vector(*[0,0,1])
-    assert represent(JzKet(S(1)/2,S(1)/2), basis=Jy) == sqrt(2)*Vector(*[-1,I])/2
-    assert represent(JzKet(S(1)/2,-S(1)/2), basis=Jy) == sqrt(2)*Vector(*[I,-1])/2
-    assert represent(JzKet(1,1), basis=Jy) == Vector(*[1,-I*sqrt(2),-1])/2
-    assert represent(JzKet(1,0), basis=Jy) == Vector(*[-sqrt(2)*I,0,-sqrt(2)*I])/2
-    assert represent(JzKet(1,-1), basis=Jy) == Vector(*[-1,-sqrt(2)*I,1])/2
+    assert represent(JxKet(S(1)/2,S(1)/2), basis=Jy) == Matrix([exp(-3*I*pi/4),0])
+    assert represent(JxKet(S(1)/2,-S(1)/2), basis=Jy) == Matrix([0,exp(3*I*pi/4)])
+    assert represent(JxKet(1,1), basis=Jy) == Matrix([I,0,0])
+    assert represent(JxKet(1,0), basis=Jy) == Matrix([0,1,0])
+    assert represent(JxKet(1,-1), basis=Jy) == Matrix([0,0,-I])
+    assert represent(JyKet(S(1)/2,S(1)/2), basis=Jy) == Matrix([1,0])
+    assert represent(JyKet(S(1)/2,-S(1)/2), basis=Jy) == Matrix([0,1])
+    assert represent(JyKet(1,1), basis=Jy) == Matrix([1,0,0])
+    assert represent(JyKet(1,0), basis=Jy) == Matrix([0,1,0])
+    assert represent(JyKet(1,-1), basis=Jy) == Matrix([0,0,1])
+    assert represent(JzKet(S(1)/2,S(1)/2), basis=Jy) == sqrt(2)*Matrix([-1,I])/2
+    assert represent(JzKet(S(1)/2,-S(1)/2), basis=Jy) == sqrt(2)*Matrix([I,-1])/2
+    assert represent(JzKet(1,1), basis=Jy) == Matrix([1,-I*sqrt(2),-1])/2
+    assert represent(JzKet(1,0), basis=Jy) == Matrix([-sqrt(2)*I,0,-sqrt(2)*I])/2
+    assert represent(JzKet(1,-1), basis=Jy) == Matrix([-1,-sqrt(2)*I,1])/2
     # Jz basis
-    assert represent(JxKet(S(1)/2,S(1)/2), basis=Jz) == sqrt(2)*Vector(*[1,1])/2
-    assert represent(JxKet(S(1)/2,-S(1)/2), basis=Jz) == sqrt(2)*Vector(*[-1,1])/2
-    assert represent(JxKet(1,1), basis=Jz) == Vector(*[1,sqrt(2),1])/2
-    assert represent(JxKet(1,0), basis=Jz) == sqrt(2)*Vector(*[-1,0,1])/2
-    assert represent(JxKet(1,-1), basis=Jz) == Vector(*[1,-sqrt(2),1])/2
-    assert represent(JyKet(S(1)/2,S(1)/2), basis=Jz) == sqrt(2)*Vector(*[-1,-I])/2
-    assert represent(JyKet(S(1)/2,-S(1)/2), basis=Jz) == sqrt(2)*Vector(*[-I,-1])/2
-    assert represent(JyKet(1,1), basis=Jz) == Vector(*[1,sqrt(2)*I,-1])/2
-    assert represent(JyKet(1,0), basis=Jz) == sqrt(2)*Vector(*[I,0,I])/2
-    assert represent(JyKet(1,-1), basis=Jz) == Vector(*[-1,sqrt(2)*I,1])/2
-    assert represent(JzKet(S(1)/2,S(1)/2), basis=Jz) == Vector(*[1,0])
-    assert represent(JzKet(S(1)/2,-S(1)/2), basis=Jz) == Vector(*[0,1])
-    assert represent(JzKet(1,1), basis=Jz) == Vector(*[1,0,0])
-    assert represent(JzKet(1,0), basis=Jz) == Vector(*[0,1,0])
-    assert represent(JzKet(1,-1), basis=Jz) == Vector(*[0,0,1])
+    assert represent(JxKet(S(1)/2,S(1)/2), basis=Jz) == sqrt(2)*Matrix([1,1])/2
+    assert represent(JxKet(S(1)/2,-S(1)/2), basis=Jz) == sqrt(2)*Matrix([-1,1])/2
+    assert represent(JxKet(1,1), basis=Jz) == Matrix([1,sqrt(2),1])/2
+    assert represent(JxKet(1,0), basis=Jz) == sqrt(2)*Matrix([-1,0,1])/2
+    assert represent(JxKet(1,-1), basis=Jz) == Matrix([1,-sqrt(2),1])/2
+    assert represent(JyKet(S(1)/2,S(1)/2), basis=Jz) == sqrt(2)*Matrix([-1,-I])/2
+    assert represent(JyKet(S(1)/2,-S(1)/2), basis=Jz) == sqrt(2)*Matrix([-I,-1])/2
+    assert represent(JyKet(1,1), basis=Jz) == Matrix([1,sqrt(2)*I,-1])/2
+    assert represent(JyKet(1,0), basis=Jz) == sqrt(2)*Matrix([I,0,I])/2
+    assert represent(JyKet(1,-1), basis=Jz) == Matrix([-1,sqrt(2)*I,1])/2
+    assert represent(JzKet(S(1)/2,S(1)/2), basis=Jz) == Matrix([1,0])
+    assert represent(JzKet(S(1)/2,-S(1)/2), basis=Jz) == Matrix([0,1])
+    assert represent(JzKet(1,1), basis=Jz) == Matrix([1,0,0])
+    assert represent(JzKet(1,0), basis=Jz) == Matrix([0,1,0])
+    assert represent(JzKet(1,-1), basis=Jz) == Matrix([0,0,1])
     # Uncoupled states
     # Jx basis
     assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jx) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,-S(1)/2)), basis=Jx) == \
-        Vector(*[0,1,0,0])
+        Matrix([0,1,0,0])
     assert represent(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jx) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,-S(1)/2)), basis=Jx) == \
-        Vector(*[0,0,0,1])
+        Matrix([0,0,0,1])
     assert represent(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,S(1)/2)), basis=Jx) == \
-        Vector(*[-I,0,0,0])
+        Matrix([-I,0,0,0])
     assert represent(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,-S(1)/2)), basis=Jx) == \
-        Vector(*[0,1,0,0])
+        Matrix([0,1,0,0])
     assert represent(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,S(1)/2)), basis=Jx) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,-S(1)/2)), basis=Jx) == \
-        Vector(*[0,0,0,I])
+        Matrix([0,0,0,I])
     assert represent(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)), basis=Jx) == \
-        Vector(*[S(1)/2,-S(1)/2,-S(1)/2,S(1)/2])
+        Matrix([S(1)/2,-S(1)/2,-S(1)/2,S(1)/2])
     assert represent(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jx) == \
-        Vector(*[S(1)/2,S(1)/2,-S(1)/2,-S(1)/2])
+        Matrix([S(1)/2,S(1)/2,-S(1)/2,-S(1)/2])
     assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,S(1)/2)), basis=Jx) == \
-        Vector(*[S(1)/2,-S(1)/2,S(1)/2,-S(1)/2])
+        Matrix([S(1)/2,-S(1)/2,S(1)/2,-S(1)/2])
     assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jx) == \
-        Vector(*[S(1)/2,S(1)/2,S(1)/2,S(1)/2])
+        Matrix([S(1)/2,S(1)/2,S(1)/2,S(1)/2])
     # Jy basis
     assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jy) == \
-        Vector(*[I,0,0,0])
+        Matrix([I,0,0,0])
     assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,-S(1)/2)), basis=Jy) == \
-        Vector(*[0,1,0,0])
+        Matrix([0,1,0,0])
     assert represent(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jy) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,-S(1)/2)), basis=Jy) == \
-        Vector(*[0,0,0,-I])
+        Matrix([0,0,0,-I])
     assert represent(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,S(1)/2)), basis=Jy) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,-S(1)/2)), basis=Jy) == \
-        Vector(*[0,1,0,0])
+        Matrix([0,1,0,0])
     assert represent(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,S(1)/2)), basis=Jy) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,-S(1)/2)), basis=Jy) == \
-        Vector(*[0,0,0,1])
+        Matrix([0,0,0,1])
     assert represent(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)), basis=Jy) == \
-        Vector(*[S(1)/2,-I/2,-I/2,-S(1)/2])
+        Matrix([S(1)/2,-I/2,-I/2,-S(1)/2])
     assert represent(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jy) == \
-        Vector(*[-I/2,S(1)/2,-S(1)/2,-I/2])
+        Matrix([-I/2,S(1)/2,-S(1)/2,-I/2])
     assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,S(1)/2)), basis=Jy) == \
-        Vector(*[-I/2,-S(1)/2,S(1)/2,-I/2])
+        Matrix([-I/2,-S(1)/2,S(1)/2,-I/2])
     assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jy) == \
-        Vector(*[-S(1)/2,-I/2,-I/2,S(1)/2])
+        Matrix([-S(1)/2,-I/2,-I/2,S(1)/2])
     # Jz basis
     assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jz) == \
-        Vector(*[S(1)/2,S(1)/2,S(1)/2,S(1)/2])
+        Matrix([S(1)/2,S(1)/2,S(1)/2,S(1)/2])
     assert represent(TensorProduct(JxKet(S(1)/2,S(1)/2),JxKet(S(1)/2,-S(1)/2)), basis=Jz) == \
-        Vector(*[-S(1)/2,S(1)/2,-S(1)/2,S(1)/2])
+        Matrix([-S(1)/2,S(1)/2,-S(1)/2,S(1)/2])
     assert represent(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,S(1)/2)), basis=Jz) == \
-        Vector(*[-S(1)/2,-S(1)/2,S(1)/2,S(1)/2])
+        Matrix([-S(1)/2,-S(1)/2,S(1)/2,S(1)/2])
     assert represent(TensorProduct(JxKet(S(1)/2,-S(1)/2),JxKet(S(1)/2,-S(1)/2)), basis=Jz) == \
-        Vector(*[S(1)/2,-S(1)/2,-S(1)/2,S(1)/2])
+        Matrix([S(1)/2,-S(1)/2,-S(1)/2,S(1)/2])
     assert represent(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,S(1)/2)), basis=Jz) == \
-        Vector(*[S(1)/2,I/2,I/2,-S(1)/2])
+        Matrix([S(1)/2,I/2,I/2,-S(1)/2])
     assert represent(TensorProduct(JyKet(S(1)/2,S(1)/2),JyKet(S(1)/2,-S(1)/2)), basis=Jz) == \
-        Vector(*[I/2,S(1)/2,-S(1)/2,I/2])
+        Matrix([I/2,S(1)/2,-S(1)/2,I/2])
     assert represent(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,S(1)/2)), basis=Jz) == \
-        Vector(*[I/2,-S(1)/2,S(1)/2,I/2])
+        Matrix([I/2,-S(1)/2,S(1)/2,I/2])
     assert represent(TensorProduct(JyKet(S(1)/2,-S(1)/2),JyKet(S(1)/2,-S(1)/2)), basis=Jz) == \
-        Vector(*[-S(1)/2,I/2,I/2,S(1)/2])
+        Matrix([-S(1)/2,I/2,I/2,S(1)/2])
     assert represent(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)), basis=Jz) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(TensorProduct(JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jz) == \
-        Vector(*[0,1,0,0])
+        Matrix([0,1,0,0])
     assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,S(1)/2)), basis=Jz) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(TensorProduct(JzKet(S(1)/2,-S(1)/2),JzKet(S(1)/2,-S(1)/2)), basis=Jz) == \
-        Vector(*[0,0,0,1])
+        Matrix([0,0,0,1])
     # Coupled spin states
     # Jx basis
     assert represent(JxKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JxKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,1,0,0])
+        Matrix([0,1,0,0])
     assert represent(JxKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(JxKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,0,0,1])
+        Matrix([0,0,0,1])
     assert represent(JyKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JyKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,-I,0,0])
+        Matrix([0,-I,0,0])
     assert represent(JyKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(JyKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,0,0,I])
+        Matrix([0,0,0,I])
     assert represent(JzKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JzKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,S(1)/2,-sqrt(2)/2,S(1)/2])
+        Matrix([0,S(1)/2,-sqrt(2)/2,S(1)/2])
     assert represent(JzKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,sqrt(2)/2,0,-sqrt(2)/2])
+        Matrix([0,sqrt(2)/2,0,-sqrt(2)/2])
     assert represent(JzKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jx) == \
-        Vector(*[0,S(1)/2,sqrt(2)/2,S(1)/2])
+        Matrix([0,S(1)/2,sqrt(2)/2,S(1)/2])
     # Jy basis
     assert represent(JxKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JxKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,I,0,0])
+        Matrix([0,I,0,0])
     assert represent(JxKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(JxKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,0,0,-I])
+        Matrix([0,0,0,-I])
     assert represent(JyKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JyKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,1,0,0])
+        Matrix([0,1,0,0])
     assert represent(JyKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(JyKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,0,0,1])
+        Matrix([0,0,0,1])
     assert represent(JzKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JzKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,S(1)/2,-I*sqrt(2)/2,-S(1)/2])
+        Matrix([0,S(1)/2,-I*sqrt(2)/2,-S(1)/2])
     assert represent(JzKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,-I*sqrt(2)/2,0,-I*sqrt(2)/2])
+        Matrix([0,-I*sqrt(2)/2,0,-I*sqrt(2)/2])
     assert represent(JzKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jy) == \
-        Vector(*[0,-S(1)/2,-I*sqrt(2)/2,S(1)/2])
+        Matrix([0,-S(1)/2,-I*sqrt(2)/2,S(1)/2])
     # Jz basis
     assert represent(JxKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JxKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,S(1)/2,sqrt(2)/2,S(1)/2])
+        Matrix([0,S(1)/2,sqrt(2)/2,S(1)/2])
     assert represent(JxKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,-sqrt(2)/2,0,sqrt(2)/2])
+        Matrix([0,-sqrt(2)/2,0,sqrt(2)/2])
     assert represent(JxKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,S(1)/2,-sqrt(2)/2,S(1)/2])
+        Matrix([0,S(1)/2,-sqrt(2)/2,S(1)/2])
     assert represent(JyKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JyKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,S(1)/2,I*sqrt(2)/2,-S(1)/2])
+        Matrix([0,S(1)/2,I*sqrt(2)/2,-S(1)/2])
     assert represent(JyKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,I*sqrt(2)/2,0,I*sqrt(2)/2])
+        Matrix([0,I*sqrt(2)/2,0,I*sqrt(2)/2])
     assert represent(JyKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,-S(1)/2,I*sqrt(2)/2,S(1)/2])
+        Matrix([0,-S(1)/2,I*sqrt(2)/2,S(1)/2])
     assert represent(JzKetCoupled(0,0,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[1,0,0,0])
+        Matrix([1,0,0,0])
     assert represent(JzKetCoupled(1,1,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,1,0,0])
+        Matrix([0,1,0,0])
     assert represent(JzKetCoupled(1,0,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,0,1,0])
+        Matrix([0,0,1,0])
     assert represent(JzKetCoupled(1,-1,S(1)/2,S(1)/2), basis=Jz) == \
-        Vector(*[0,0,0,1])
+        Matrix([0,0,0,1])
 
 def test_rewrite():
     j, m, mi = symbols('j m mi')

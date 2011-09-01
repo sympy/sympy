@@ -16,10 +16,6 @@ import and declare our first Matrix object:
     [1  0]
     [    ]
     [0  1]
-    >>> Matrix([1,0], [0,1]) # inclusion of bounding [] is optional
-    [1  0]
-    [    ]
-    [0  1]
     >>> Matrix((
     ...   Matrix((
     ...     (1, 0, 0),
@@ -32,9 +28,9 @@ import and declare our first Matrix object:
     [0  0  0 ]
     [        ]
     [0  0  -1]
-    >>> Matrix([1, 2, 3])
+    >>> Matrix([[1, 2, 3]])
     [1 2 3]
-    >>> Vector(1, 2, 3) # shorthand for Matrix([1], [2], [3])
+    >>> Matrix([1, 2, 3])
     [1]
     [ ]
     [2]
@@ -438,7 +434,7 @@ optional argument which specifies whether or not the output should also be
 normalized, it defaults to False. Let's take some vectors and orthogonalize
 them - one normalized and one not:
 
-    >>> L = [Vector(2,3,5), Vector(3,6,2), Vector(8,3,6)]
+    >>> L = [Matrix([2,3,5]), Matrix([3,6,2]), Matrix([8,3,6])]
     >>> out1 = GramSchmidt(L)
     >>> out2 = GramSchmidt(L, True)
 
