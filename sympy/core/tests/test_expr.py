@@ -553,6 +553,7 @@ def test_count():
 
     assert expr.count(Integer) == 2
     assert expr.count(Symbol) == 3
+    assert expr.count(2) == 1
 
     a = Wild('a')
 

@@ -956,6 +956,8 @@ class Basic(object):
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
+        if not callable(query):
+            query = sympify(query)
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
         elif isinstance(query, Basic):
@@ -966,7 +968,8 @@ class Basic(object):
         results = []
 
         def rec_find(expr):
-            if _query(expr):
+            q = _query(expr)
+            if q or q == {}:
                 results.append(expr)
 
             for arg in expr.args:
