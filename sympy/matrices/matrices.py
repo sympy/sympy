@@ -223,8 +223,13 @@ class Matrix(object):
     def D(self):
         """Dirac conjugation."""
         from sympy.physics.matrices import mgamma
-        out = self.H * mgamma(0)
-        return out
+        try:
+            out = self.H * mgamma(0)
+            return out
+        # In Python 3.2, properties can only return an AttributeError, so we
+        # have to catch the ShapeError; see also the commit making this change
+        except ShapeError:
+            raise AttributeError("Dirac conjugation not possible.")
 
     def __getitem__(self,key):
         """

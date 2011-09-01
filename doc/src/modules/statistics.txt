@@ -8,8 +8,7 @@ and related tools. Its contents can be imported with the following statement::
 
     >>> from sympy import *
     >>> from sympy.statistics import *
-    >>> import sys
-    >>> sys.displayhook = pprint
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 Normal distributions
 --------------------

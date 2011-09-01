@@ -180,7 +180,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2), \
                   j_3 + abs(m_3))
-    _calc_factlist(maxfact)
+    _calc_factlist(int(maxfact))
 
     argsqrt = Integer(_Factlist[int(j_1 + j_2 - j_3)] * \
                           _Factlist[int(j_1 - j_2 + j_3)] * \
@@ -200,7 +200,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)
     imax = min(j_2 + m_2, j_1 - m_1, j_1 + j_2 - j_3)
     sumres = 0
-    for ii in range(imin, imax + 1):
+    for ii in range(int(imin), int(imax) + 1):
         den = _Factlist[ii] * \
             _Factlist[int(ii + j_3 - j_1 - m_2)] * \
             _Factlist[int(j_2 + m_2 - ii)] * \
