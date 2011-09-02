@@ -18,7 +18,7 @@ from sympy.core.numbers import ilcm
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 
-from sympy.functions import log, exp, LambertW
+from sympy.functions import log, exp, LambertW, cos, sin, tan, cot, cosh, sinh, tanh, coth
 from sympy.simplify import simplify, collect, powsimp, fraction, posify
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together
@@ -700,6 +700,17 @@ def _solve(f, *symbols, **flags):
 
                 bases, qs = zip(*[as_base_q(g) for g in gens])
                 bases = set(bases)
+                if len(bases) > 1:
+                    funcs = set(b.func for b in bases)
+                    trig = set([cos, sin, tan, cot])
+                    other = funcs - trig
+                    if not other and len(funcs.intersection(trig)) > 1:
+                        return solve(f_num.rewrite(tan), symbol, flags=flags)
+                    trigh = set([cosh, sinh, tanh, coth])
+                    other = funcs - trigh
+                    if not other and len(funcs.intersection(trigh)) > 1:
+                        return solve(f_num.rewrite(tanh), symbol, flags=flags)
+
                 if len(bases) == 1 and any(q != 1 for q in qs):
                     # e.g. for x**(1/2) + x**(1/4) a change of variables
                     # can be made using p**4 to give p**2 + p

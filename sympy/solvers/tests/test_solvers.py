@@ -1,7 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, var, simplify, Integral, sstr, Wild, solve_linear, Interval,
-    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan, Poly)
+    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan, Poly, cosh, sinh, atanh)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
@@ -218,7 +218,7 @@ def test_tsolve():
     assert solve((a*x+b)*(exp(x)-3), x) == [-b/a, log(3)]
     assert solve(cos(x)-y, x) == [acos(y)]
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
-    raises(NotImplementedError, "solve(Eq(cos(x), sin(x)), x)")
+    assert solve(Eq(cos(x), sin(x)), x) == [pi/4, -3*pi/4]
 
     assert solve(exp(x) + exp(-x) - y, x) == [
                         log(y/2 - sqrt(y**2 - 4)/2),
@@ -434,16 +434,34 @@ def test_checking():
     assert solve(x*(x - y/x),x, check=False) == [sqrt(y), 0, -sqrt(y)]
     assert solve(x*(x - y/x),x, check=True) == [sqrt(y), -sqrt(y)]
 
-def test_issue_1572_1364():
-    assert solve((sqrt(x**2 - 1) - 2)) == [-sqrt(5), sqrt(5)]
-    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == \
+def test_issue_1572_1364_1368():
+    assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
+                                           [-sqrt(5), sqrt(5)])
+    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) in (
         [-sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
-          sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
+          sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))],
+        [sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
+         -sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
+          )
     C1, C2 = symbols('C1 C2')
     f = Function('f')
     assert solve(C1 + C2/x**2 - exp(-f(x)), f(x)) == [log(x**2/(C1*x**2 + C2))]
     a = symbols('a')
     E = S.Exp1
-    assert solve(1 - log(a + 4*x**2), x) == [sqrt(-a + E)/2, -sqrt(-a + E)/2]
-    assert solve(log(a**(-3) - x**2)/a, x) == [-sqrt(-1 + a**(-3)), sqrt(-1 + a**(-3))]
-    assert solve(1 - log(a + 4*x**2), x) == [-sqrt(-a + E)/2, sqrt(-a + E)/2]
+    assert solve(1 - log(a + 4*x**2), x) in (
+                                        [-sqrt(-a + E)/2, sqrt(-a + E)/2],
+                                        [sqrt(-a + E)/2, -sqrt(-a + E)/2]
+                                        )
+    assert solve(log(a**(-3) - x**2)/a, x) in (
+                            [-sqrt(-1 + a**(-3)), sqrt(-1 + a**(-3))],
+                            [sqrt(-1 + a**(-3)), -sqrt(-1 + a**(-3))],)
+    assert solve(1 - log(a + 4*x**2), x) in (
+                                             [-sqrt(-a + E)/2, sqrt(-a + E)/2],
+                                             [sqrt(-a + E)/2, -sqrt(-a + E)/2],)
+    assert solve((a**2 + 1) * (sin(a*x) + cos(a*x)), x) == [3*pi/(4*a), -pi/(4*a)]
+    assert solve(3 - (sinh(a*x) + cosh(a*x)), x) == [2*atanh(S.Half)/a]
+    assert solve(3-(sinh(a*x) + cosh(a*x)**2), x) == \
+             [2*atanh(-1 + sqrt(2))/a,
+             2*atanh(-sqrt(5)/2 + S.Half)/a,
+             2*atanh(-sqrt(2) - 1)/a,
+             2*atanh(S.Half + sqrt(5)/2)/a]
