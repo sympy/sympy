@@ -480,7 +480,7 @@ class Formula(object):
         self.C = Matrix([[1] + [0]*n])
 
         m = eye(n)
-        m = m.col_insert(0, zeros((n, 1)))
+        m = m.col_insert(0, zeros(n, 1))
         l = poly.all_coeffs()[1:]
         l.reverse()
         self.M = m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])

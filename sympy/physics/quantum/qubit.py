@@ -625,7 +625,7 @@ def _get_possible_outcomes(m, bits):
     # bit being true
     output_matrices = []
     for i in range(1<<len(bits)):
-        output_matrices.append(zeros((2**nqubits, 1)))
+        output_matrices.append(zeros(2**nqubits, 1))
 
     # Bitmasks will help sort how to determine possible outcomes.
     # When the bit mask is and-ed with a matrix-index,
