@@ -788,7 +788,7 @@ def _solve(f, *symbols, **flags):
 
             if all(p.is_linear for p in polys):
                 n, m = len(f), len(symbols)
-                matrix = zeros((n, m + 1))
+                matrix = zeros(n, m + 1)
 
                 for i, poly in enumerate(polys):
                     for monom, coeff in poly.terms():

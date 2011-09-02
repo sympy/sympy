@@ -916,7 +916,7 @@ def test_sparse_matrix():
                               [2, 1, [Matrix(1,3,[0,1,0])]],
                               [5, 1, [Matrix(1,3,[1,1,0])]]]
 
-    assert M.zeros((3, 5)) == SparseMatrix(3, 5, {})
+    assert M.zeros(3, 5) == SparseMatrix(3, 5, {})
 
 def test_subs():
     x = Symbol('x')
@@ -1111,10 +1111,10 @@ def test_is_nilpotent():
 def test_zeros_ones_fill():
     n, m = 3, 5
 
-    a = zeros( (n, m) )
+    a = zeros(n, m)
     a.fill( 5 )
 
-    b = 5 * ones( (n, m) )
+    b = 5 * ones(n, m)
 
     assert a == b
     assert a.rows == b.rows == 3
@@ -1122,16 +1122,16 @@ def test_zeros_ones_fill():
     assert a.shape == b.shape == (3, 5)
     assert zeros(2) == zeros(2,2)
     assert ones(2) == ones(2,2)
-    assert zeros(2,3) == zeros((2,3))
-    assert ones(2,3) == ones((2,3))
+    assert zeros(2,3) == Matrix(2, 3, [0]*6)
+    assert ones(2,3) == Matrix(2, 3, [1]*6)
 
 def test_empty_zeros():
     a = zeros(0)
     assert a == Matrix()
-    a = zeros([0, 2])
+    a = zeros(0, 2)
     assert a.rows == 0
     assert a.cols == 2
-    a = zeros([2, 0])
+    a = zeros(2, 0)
     assert a.rows == 2
     assert a.cols == 0
 
@@ -1313,15 +1313,15 @@ def test_creation_args():
     Check that matrix dimensions can be specified using any reasonable type
     (see issue 1515).
     """
-    raises(ValueError, 'zeros((3, -1))')
-    raises(ValueError, 'zeros((1, 2, 3, 4))')
+    raises(ValueError, 'zeros(3, -1)')
+    raises(ValueError, 'zeros(1, 2, 3, 4)')
     assert zeros(3L) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
     assert zeros(3.) == zeros(3)
     assert eye(3L) == eye(3)
     assert eye(Integer(3)) == eye(3)
     assert eye(3.) == eye(3)
-    assert ones((3L, Integer(4))) == ones((3, 4))
+    assert ones(3L, Integer(4)) == ones(3, 4)
     raises(TypeError, 'Matrix(1, 2)')
     raises(TypeError, 'SparseMatrix(1, 2)')
 

@@ -245,7 +245,7 @@ class SpinOpBase(object):
     def _represent_base(self, basis, **options):
         j = options.get('j', Rational(1,2))
         size, mvals = m_values(j)
-        result = zeros((size, size))
+        result = zeros(size, size)
         for p in range(size):
             for q in range(size):
                 me = self.matrix_element(j, mvals[p], j, mvals[q])
@@ -668,7 +668,7 @@ class Rotation(UnitaryOperator):
     def _represent_base(self, basis, **options):
         j = sympify(options.get('j', Rational(1,2)))
         size, mvals = m_values(j)
-        result = zeros((size, size))
+        result = zeros(size, size)
         for p in range(size):
             for q in range(size):
                 me = self.matrix_element(j, mvals[p], j, mvals[q])
@@ -917,7 +917,7 @@ class SpinState(State):
         gamma = sympify(options.get('gamma', 0))
         if self.j.is_number:
             size, mvals = m_values(j)
-            result = zeros((size,1))
+            result = zeros(size, 1)
             for p in range(size):
                 if m.is_number and alpha.is_number and beta.is_number and gamma.is_number:
                     result[p,0] = Rotation.D(self.j, mvals[p], self.m, alpha, beta, gamma).doit()
@@ -926,7 +926,7 @@ class SpinState(State):
             return result
         else:
             mi = symbols("mi")
-            result = zeros((1,1))
+            result = zeros(1, 1)
             result[0] = (Rotation.D(self.j, mi, self.m, alpha, beta, gamma), mi)
             return result
 
@@ -1240,7 +1240,7 @@ class CoupledSpinState(SpinState):
 
     def _represent_coupled_base(self, **options):
         evect = self.uncoupled_class()
-        result = zeros((self.hilbert_space.dimension,1))
+        result = zeros(self.hilbert_space.dimension, 1)
         if self.j == int(self.j):
             start = self.j**2
         else:

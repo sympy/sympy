@@ -44,7 +44,7 @@ def u(p,r):
         ksi = Matrix([[0],[1]])
     a = (sigma1*p1 + sigma2*p2 + sigma3*p3) / (E+m) * ksi
     if a ==0:
-        a = zeros((2, 1))
+        a = zeros(2, 1)
     return sqrt(E+m) * Matrix([[ksi[0,0]], [ksi[1,0]], [a[0,0]], [a[1,0]]])
 
 def v(p,r):
@@ -57,7 +57,7 @@ def v(p,r):
         ksi = -Matrix([[0],[1]])
     a = (sigma1*p1 + sigma2*p2 + sigma3*p3) / (E+m) * ksi
     if a ==0:
-        a = zeros((2,1))
+        a = zeros(2, 1)
     return sqrt(E+m) * Matrix([[a[0,0]], [a[1,0]], [ksi[0,0]], [ksi[1,0]]])
 
 def pslash(p):
