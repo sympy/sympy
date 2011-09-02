@@ -1181,7 +1181,7 @@ def _tsolve(eq, sym, **flags):
 
     #                    -1
     # f(x) = g  ->  x = f  (g)
-    if lhs.is_Function and lhs.nargs==1 and hasattr(lhs, 'inverse'):
+    if lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and hasattr(lhs, 'inverse'):
         rhs = lhs.inverse() (rhs)
         lhs = lhs.args[0]
 
@@ -1221,6 +1221,11 @@ def _tsolve(eq, sym, **flags):
                     for sol in cv_sols:
                         sols.append(cv_inv.subs(t, sol))
                     return sols
+    elif lhs.is_Pow:
+        if not lhs.exp.has(sym):
+            return solve(lhs.base - rhs**(1/lhs.exp), sym)
+        elif rhs is not S.Zero and lhs.base.is_positive and lhs.exp.is_real:
+            return solve(lhs.exp*log(lhs.base) - log(rhs), sym)
 
     if flags.pop('posify', True):
         flags['posify'] = False

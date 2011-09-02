@@ -431,5 +431,19 @@ def test_failing():
     assert solve((2*(3*x+4)**5 - 6*7**(3*x+9)).expand(), x)
 
 def test_checking():
-    assert solve(x*(x - y/x),x, check=False) == [0, -sqrt(y), sqrt(y)]
-    assert solve(x*(x - y/x),x, check=True) == [-sqrt(y), sqrt(y)]
+    assert solve(x*(x - y/x),x, check=False) == [sqrt(y), 0, -sqrt(y)]
+    assert solve(x*(x - y/x),x, check=True) == [sqrt(y), -sqrt(y)]
+
+def test_issue_1572_1364():
+    assert solve((sqrt(x**2 - 1) - 2)) == [-sqrt(5), sqrt(5)]
+    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == \
+        [-sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
+          sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
+    C1, C2 = symbols('C1 C2')
+    f = Function('f')
+    assert solve(C1 + C2/x**2 - exp(-f(x)), f(x)) == [log(x**2/(C1*x**2 + C2))]
+    a = symbols('a')
+    E = S.Exp1
+    assert solve(1 - log(a + 4*x**2), x) == [sqrt(-a + E)/2, -sqrt(-a + E)/2]
+    assert solve(log(a**(-3) - x**2)/a, x) == [-sqrt(-1 + a**(-3)), sqrt(-1 + a**(-3))]
+    assert solve(1 - log(a + 4*x**2), x) == [-sqrt(-a + E)/2, sqrt(-a + E)/2]
