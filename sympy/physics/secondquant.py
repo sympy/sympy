@@ -1531,7 +1531,7 @@ def matrix_rep(op, basis):
     """
     Find the representation of an operator in a basis.
     """
-    a = zeros((len(basis), len(basis)))
+    a = zeros(len(basis))
     for i in range(len(basis)):
         for j in range(len(basis)):
             a[i,j] = apply_operators(Dagger(basis[i])*op*basis[j])

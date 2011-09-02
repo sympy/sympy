@@ -14,4 +14,4 @@ def timeit_Matrix__getslice():
     M[:,:]
 
 def timeit_Matrix_zeronm():
-    zeros((100, 100))
+    zeros(100, 100)
