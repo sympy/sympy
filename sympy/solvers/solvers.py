@@ -1128,7 +1128,7 @@ def _generate_patterns():
     ]
 
 def tsolve(eq, sym):
-    warnings.warn("tsolve is deprecated, use solve.", DeprecationWarning)
+    warn("tsolve is deprecated, use solve.", DeprecationWarning)
     return _tsolve(eq, sym)
 
 def _tsolve(eq, sym, **flags):
