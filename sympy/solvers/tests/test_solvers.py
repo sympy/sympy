@@ -1,7 +1,7 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, var, simplify, Integral, sstr, Wild, solve_linear, Interval,
-    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan, Poly, cosh, sinh, atanh)
+    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan, Poly, cosh, sinh, atanh, atan)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
@@ -466,3 +466,40 @@ def test_issue_1572_1364_1368():
              2*atanh(-sqrt(2) - 1)/a,
              2*atanh(S.Half + sqrt(5)/2)/a]
     assert solve(atan(x) - 2) == [tan(2)]
+
+def test_issue_2033():
+    r, t = symbols('r,t')
+    assert solve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
+     [(sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t), sqrt(r*tan(t)**2/(tan(t)**2 + 1))),
+     (-sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t), -sqrt(r*tan(t)**2/(tan(t)**2 + 1)))]
+
+@XFAIL
+def test_issue_2033x():
+    """
+    >>> list(ssolve([exp(x)-sin(y), x**2+y**2-3], [x,y]))
+    [{x: [log(sin(y))], y: [(3 - x**2)**(1/2), -(3 - x**2)**(1/2)]}, {x: [(3 - y**2)**(1/2), -(3 - y**2)**(1/2)], y: [asin(exp(x))]}]
+
+    >>> list(ssolve([exp(x)-sin(y), 1/y-3], [x,y]))
+    [{x: [log(sin(y))], y: [1/3]}]
+    """
+    assert solve([exp(x) - sin(y), x**2 + y**2 - 3], [x, y])
+    assert solve([exp(x) - sin(y), 1/y - 3], [x, y])
+
+@XFAIL
+def test_issue_2236():
+    """ This system can be solved in steps:
+        >>> yy = solve(reqs[0],y)[0]
+        >>> a00 = solve(reqs[1].subs(y,yy),a0)[0]
+        >>> xx = solve(reqs[2].subs(((y,yy), (a0,a00))),x)
+        >>> len(xx)
+        2
+
+        So there are two values for x, y and a0.
+    """
+    lam, a0, conc = symbols('lam a0 conc')
+    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
+           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+           x + y - conc]
+    sym = [x, y, a0]
+    reqs = [nsimplify(e, rational=True) for e in eqs]
+    assert solve(reqs, sym) # doesn't fail

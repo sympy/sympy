@@ -116,7 +116,7 @@ def checksol(f, symbol, sol=None, flags={}, **hints):
         msg = 'Expecting sym, val or {sym: val}, None but got %s, %s'
         raise ValueError(msg % (symbol, sol))
 
-    if is_sequence(f):
+    if iterable(f):
         if not f:
             raise ValueError('no functions to check')
         rv = True
@@ -791,8 +791,10 @@ def _solve(f, *symbols, **flags):
         else:
 
             polys = []
-
+            dens = set()
             for g in f:
+                dens.update(denoms(g, symbols))
+                g = g.as_numer_denom()[0]
 
                 poly = g.as_poly(*symbols, **{'extension': True})
 
@@ -815,11 +817,32 @@ def _solve(f, *symbols, **flags):
 
                 # a dictionary of symbols: values or None
                 result = solve_linear_system(matrix, *symbols, **flags)
-                return result
+                if result:
+                    check = checksol(polys, result)
+                    if not check:
+                        if check is False:
+                            result = None
+                        elif flags.get('warn', False):
+                            print("\n\tWarning: could not verify solution %s." % result)
+                    elif dens:
+                        if any(checksol(d, result) for d in dens):
+                            result = None
+
             else:
-                # a list of tuples, T, where T[i] [j] corresponds to the ith solution for symbols[j]
+                # a list of tuples, T, where T[i][j] corresponds to the ith solution for symbols[j]
                 result = solve_poly_system(polys)
-                return result
+                checked = []
+                do_warn = flags.get('warn', False)
+                for r in result:
+                    sol = dict(zip(symbols, r))
+                    check = checksol(polys, sol)
+                    if dens and check is not False:
+                        if not checksol(dens, sol): # if it's a solution to any denom then exclude
+                            checked.append(r)
+                            if check is None and do_warn:
+                                print("\n\tWarning: could not verify solution %s." % sol)
+
+            return result
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     """ Return a tuple containing derived from f = lhs - rhs that is either:
