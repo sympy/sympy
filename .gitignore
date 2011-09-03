@@ -1,6 +1,7 @@
 *.pyc
 *.pyo
 *.sw[op]
+*$py.class
 tags
 
 MANIFEST
