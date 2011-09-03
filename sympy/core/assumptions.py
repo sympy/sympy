@@ -225,7 +225,12 @@ class AssumeMixin(object):
                                     # through prerequisites -- see CycleDetected)
                  '_assume_type_keys', # assumptions typeinfo keys
                 ]
-    __slots__ = []
+    try:
+        # This particular __slots__ definition breaks SymPy in Jython.
+        # See issue 1233.
+        import java
+    except ImportError:
+        __slots__ = []
 
     def  _init_assumptions(self, assumptions):
         # initially assumptions are shared between instances and class
