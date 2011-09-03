@@ -199,13 +199,11 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
-    def subs(self, old, new):
-        if hasattr(self, '_eval_subs_'):
-            return self.subs(old, new)
-        elif isinstance(self, GeometryEntity):
-            return type(self)(*[a.subs(old, new) for a in self.args])
-        else:
-            return self
+    def subs(self, *args):
+        return type(self)(*[a.subs(*args) for a in self.args])
+
+    def _eval_subs(self, old, new):
+        return type(self)(*[a.subs(old, new) for a in self.args])
 
     @property
     def args(self):
