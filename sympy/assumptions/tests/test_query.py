@@ -377,7 +377,7 @@ def test_I():
     assert ask(Q.composite(z))        == False
 
 def test_bounded():
-    x, y = symbols('x,y')
+    x, y, z = symbols('x,y,z')
     assert ask(Q.bounded(x)) == None
     assert ask(Q.bounded(x), Q.bounded(x)) == True
     assert ask(Q.bounded(x), Q.bounded(y)) == None
@@ -385,16 +385,270 @@ def test_bounded():
 
     assert ask(Q.bounded(x+1)) == None
     assert ask(Q.bounded(x+1), Q.bounded(x)) == True
-    assert ask(Q.bounded(x+y)) == None
-    assert ask(Q.bounded(x+y), Q.bounded(x)) == None
-    assert ask(Q.bounded(x+1), Q.bounded(x) & Q.bounded(y)) == True
+    a = x + y
+    x, y = a.args
+    # B + B
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.positive(x)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.positive(y)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.positive(x) & Q.positive(y)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.positive(x) & ~Q.positive(y)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.positive(x) & Q.positive(y)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.positive(x) & ~Q.positive(y)) == True
+    # B + U
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & Q.positive(x)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & Q.positive(y)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & Q.positive(x) & Q.positive(y)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & Q.positive(x) & ~Q.positive(y)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & ~Q.positive(x) & Q.positive(y)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & ~Q.positive(x) & ~Q.positive(y)) == False
+    # B + ?
+    assert ask(Q.bounded(a), Q.bounded(x)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.positive(x)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.positive(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.positive(x) & ~Q.positive(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.positive(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.positive(x) & ~Q.positive(y)) == None
+    # U + U
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & Q.positive(x)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & Q.positive(x) & Q.positive(y)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & Q.positive(x) & ~Q.positive(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & ~Q.positive(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & ~Q.positive(x) & ~Q.positive(y)) == False
+    # U + ?
+    assert ask(Q.bounded(a), ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & Q.positive(x)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & Q.positive(x) & Q.positive(y)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(y) & Q.positive(x) & ~Q.positive(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & ~Q.positive(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & ~Q.positive(x) & ~Q.positive(y)) == False
+    # ? + ?
+    assert ask(Q.bounded(a),) == None
+    assert ask(Q.bounded(a),Q.positive(x)) == None
+    assert ask(Q.bounded(a),Q.positive(y)) == None
+    assert ask(Q.bounded(a),Q.positive(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a),Q.positive(x) & ~Q.positive(y)) == None
+    assert ask(Q.bounded(a),~Q.positive(x) & Q.positive(y)) == None
+    assert ask(Q.bounded(a),~Q.positive(x) & ~Q.positive(y)) == None
+    a = x + y + z
+    x, y, z = a.args
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & Q.negative(z) & Q.bounded(z)) == True
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & Q.bounded(z)) == True
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & ~Q.negative(z) & Q.bounded(z)) == True
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.bounded(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.bounded(y) & Q.bounded(z)) == True
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.bounded(y) & ~Q.negative(z) & Q.bounded(z)) == True
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.bounded(y) & Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z))== False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.bounded(y) & Q.negative(z))== False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.bounded(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & ~Q.negative(z) & Q.bounded(z)) == True
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z)& ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)& ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)& Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)& ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.bounded(z)) == True
+    ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.negative(z) & Q.bounded(z))== True
+    ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.negative(z) & ~Q.bounded(z))== False
+    ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & ~Q.negative(z)& Q.bounded(z)) == True
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & ~Q.negative(z)& ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & Q.bounded(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z)& ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y)) == None
+    ask(Q.bounded(a), Q.bounded(x) & Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.bounded(x)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.bounded(x) & ~Q.negative(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)& ~Q.negative(z) & Q.bounded(z)) == True
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)& Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)& ~Q.bounded(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)& ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)& Q.negative(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & Q.bounded(y)& ~Q.negative(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& ~Q.bounded(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& Q.negative(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & Q.bounded(x) & ~Q.negative(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & ~Q.bounded(y)& ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & Q.negative(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & Q.negative(y)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.bounded(x) & ~Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z) & ~Q.bounded(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.bounded(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & Q.negative(y)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.bounded(x) & ~Q.negative(y) & ~Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.negative(y) & Q.negative(z)) == False
+    ask(Q.bounded(a), Q.negative(x) & Q.negative(y)) == None
+    ask(Q.bounded(a), Q.negative(x) & Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), Q.negative(x) & ~Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ) == None
+    ask(Q.bounded(a), ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(y) & ~Q.negative(z)) == None
+    ask(Q.bounded(a), ~Q.negative(x) & ~Q.negative(y) & ~Q.negative(z)) == False
 
+    x, y, z = symbols('x,y,z')
     assert ask(Q.bounded(2*x)) == None
     assert ask(Q.bounded(2*x), Q.bounded(x)) == True
-    assert ask(Q.bounded(x*y)) == None
-    assert ask(Q.bounded(x*y), Q.bounded(x)) == None
-    assert ask(Q.bounded(x*y), Q.bounded(x) & Q.bounded(y)) == True
+    a = x*y
+    x, y = a.args
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y)) == False
+    assert ask(Q.bounded(a), Q.bounded(x)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(y)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x)) == None
+    assert ask(Q.bounded(a), Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a)) == None
+    a = x*y*z
+    x, y, z = a.args
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & Q.bounded(z)) == True
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & Q.bounded(z)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == False
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & Q.bounded(z)) == None
+    assert ask(Q.bounded(a), Q.bounded(x) & ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), Q.bounded(x)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(y) & Q.bounded(z)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(y) & ~Q.bounded(z)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & Q.bounded(z)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y) & ~Q.bounded(z)) == False
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x) & ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(x)) == None
+    assert ask(Q.bounded(a), Q.bounded(y) & Q.bounded(z)) == None
+    assert ask(Q.bounded(a), Q.bounded(y) & ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), Q.bounded(y)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y)) == None
+    assert ask(Q.bounded(a), Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(z) & Q.nonzero(x) & Q.nonzero(y) & Q.nonzero(z)) == None
+    assert ask(Q.bounded(a), ~Q.bounded(y) & ~Q.bounded(z) & Q.nonzero(x) & Q.nonzero(y) & Q.nonzero(z)) == False
 
+    x, y, z = symbols('x,y,z')
     assert ask(Q.bounded(x**2)) == None
     assert ask(Q.bounded(2**x)) == None
     assert ask(Q.bounded(2**x), Q.bounded(x)) == True
