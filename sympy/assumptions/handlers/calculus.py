@@ -96,21 +96,85 @@ class AskBoundedHandler(CommonHandler):
     @staticmethod
     def Add(expr, assumptions):
         """
-        Bounded + Bounded     -> Bounded
-        Unbounded + Bounded   -> Unbounded
-        Unbounded + Unbounded -> ?
+        Return True if expr is bounded, False if not and None if unknown.
+
+               TRUTH TABLE
+
+              B    U     ?
+                 + - x + - x
+            +---+-----+-----+
+        B   | B |  U  |? ? ?|  legend:
+            +---+-----+-----+    B  = Bounded
+          +     |U ? ?|U ? ?|    U  = Unbounded
+        U -     |? U ?|? U ?|    ?  = unknown boundedness
+          x     |? ? ?|? ? ?|    +  = positive sign
+                +-----+--+--+    -  = negative sign
+        ?             |? ? ?|    x  = sign unknown
+                      +--+--+
+
+
+        All Bounded -> True
+        Any Unbounded and all same sign -> False
+        Any Unknown and unknown sign -> None
+        Else -> None
+
+        When the signs are not the same you can have an undefined
+        (hence bounded undefined) result as in oo - oo
+        """
+
+        result = True
+        sign = -1 # not assigned yet
+        for arg in expr.args:
+            _bounded = ask(Q.bounded(arg), assumptions)
+            if _bounded:
+                continue
+            if result is None and _bounded is None and sign is None:
+                return None
+            if result is not False:
+                result = _bounded
+            pos = ask(Q.positive(arg), assumptions)
+            if sign == -1:
+                sign = pos
+                continue
+            if sign != pos:
+                return None
+            if sign is None and pos is None:
+                return None
+        return result
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        """
+        Return True if expr is bounded, False if not and None if unknown.
+
+               TRUTH TABLE
+
+              B   U     ?
+                      s   /s
+            +---+---+---+---+
+         B  | B | U |   ?   |  legend:
+            +---+---+---+---+    B  = Bounded
+         U      | U | U | ? |    U  = Unbounded
+                +---+---+---+    ?  = unknown boundedness
+         ?          |   ?   |    s  = signed (hence nonzero)
+                    +---+---+    /s = not signed
+
         """
         result = True
         for arg in expr.args:
             _bounded = ask(Q.bounded(arg), assumptions)
-            if _bounded: continue
-            elif _bounded is None: return
-            elif _bounded is False:
-                if result: result = False
-                else: return
+            if _bounded:
+                continue
+            elif _bounded is None:
+                if result is None:
+                    return None
+                if ask(Q.nonzero(arg), assumptions) is None:
+                    return None
+                if result is not False:
+                    result = None
+            else:
+                result = False
         return result
-
-    Mul = Add
 
     @staticmethod
     def Pow(expr, assumptions):

@@ -102,7 +102,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return True
         if Not(key) in known_facts_dict[local_facts]:
             return False
-    elif local_facts.func is And:
+    elif local_facts.func is And and all(k in known_facts_dict for k in local_facts.args):
         for assum in local_facts.args:
             if assum.is_Atom:
                 if key in known_facts_dict[assum]:
