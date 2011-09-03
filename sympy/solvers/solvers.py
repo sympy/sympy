@@ -156,10 +156,8 @@ def checksol(f, symbol, sol=None, flags={}, **hints):
             if flags.get('simplify', True):
                 flags['simplified'] = True
                 for k in sol:
-                    sol[k] = simplify(sympify(sol[k]))
-                val = simplify(f.subs(sol))
-            else:
-                val = f.subs(sol)
+                    sol[k] = simplify(sol[k])
+            val = f.subs(sol)
             if flags.get('force', False):
                 val = posify(val)[0]
         elif attempt == 3:
