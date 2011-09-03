@@ -472,18 +472,12 @@ def test_issue_2033():
     assert solve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
      [(sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t), sqrt(r*tan(t)**2/(tan(t)**2 + 1))),
      (-sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t), -sqrt(r*tan(t)**2/(tan(t)**2 + 1)))]
-
-@XFAIL
-def test_issue_2033x():
-    """
-    >>> list(ssolve([exp(x)-sin(y), x**2+y**2-3], [x,y]))
-    [{x: [log(sin(y))], y: [(3 - x**2)**(1/2), -(3 - x**2)**(1/2)]}, {x: [(3 - y**2)**(1/2), -(3 - y**2)**(1/2)], y: [asin(exp(x))]}]
-
-    >>> list(ssolve([exp(x)-sin(y), 1/y-3], [x,y]))
-    [{x: [log(sin(y))], y: [1/3]}]
-    """
-    assert solve([exp(x) - sin(y), x**2 + y**2 - 3], [x, y])
-    assert solve([exp(x) - sin(y), 1/y - 3], [x, y])
+    assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
+    [(log(sin(S(1)/3)), S(1)/3)]
+    assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
+    [(log(-sin(log(3))), -log(3))]
+    assert solve([exp(x) - sin(y), y**2 - 4], [x, y]) == \
+    [(log(-sin(2)), -2), (log(sin(2)), 2)]
 
 @XFAIL
 def test_issue_2236():

@@ -792,18 +792,20 @@ def _solve(f, *symbols, **flags):
 
             polys = []
             dens = set()
-            for g in f:
+            failed = []
+            for i, g in enumerate(f):
                 dens.update(denoms(g, symbols))
-                g = g.as_numer_denom()[0]
+                g = f[i] = g.as_numer_denom()[0]
                 poly = g.as_poly(*symbols, **{'extension': True})
 
                 if poly is not None:
                     polys.append(poly)
                 else:
-                    raise NotImplementedError()
+                    free = g.free_symbols
+                    failed.append((len(free), free, g))
 
             if all(p.is_linear for p in polys):
-                n, m = len(f), len(symbols)
+                n, m = len(polys), len(symbols)
                 matrix = zeros(n, m + 1)
 
                 for i, poly in enumerate(polys):
@@ -826,14 +828,33 @@ def _solve(f, *symbols, **flags):
                     elif dens:
                         if any(checksol(d, result) for d in dens):
                             result = None
+                if failed:
+                    if result:
+                        syms = result.keys()
+                    else:
+                        syms = ()
 
             else:
                 # a list of tuples, T, where T[i][j] corresponds to the ith solution for symbols[j]
-                result = solve_poly_system(polys, *symbols)
+                if len(symbols) != len(polys):
+                    from sympy.utilities.iterables import subsets
+                    for syms in subsets(symbols, len(polys)):
+                        try:
+                            result = solve_poly_system(polys, *syms)
+                            if result:
+                                break
+                        except NotImplementedError:
+                            pass
+                    else:
+                        raise NotImplementedError('no valid subset found')
+                else:
+                    print 'normal',polys
+                    result = solve_poly_system(polys, *symbols)
+                    syms = symbols
                 checked = []
                 do_warn = flags.get('warn', False)
                 for r in result:
-                    sol = dict(zip(symbols, r))
+                    sol = dict(zip(syms, r))
                     check = checksol(polys, sol)
                     if dens and check is not False:
                         if not checksol(dens, sol): # if it's a solution to any denom then exclude
@@ -841,6 +862,38 @@ def _solve(f, *symbols, **flags):
                             if check is None and do_warn:
                                 print("\n\tWarning: could not verify solution %s." % sol)
 
+            if failed:
+                # we aren't trying to be too heroic here: we just take a
+                # failed equation, select an arbitrary constant from it that
+                # has not been solved for yet, and see if we can solve this
+                # single solution. If so, we update the solution set and
+                # continue until we get an equation that can't be solved or
+                # solve all remaining equations.
+                if result:
+                    if not type(result) is dict:
+                        result = [dict(zip(syms, r)) for r in result]
+                    else:
+                        result = [result]
+                else:
+                    result = [{}]
+                failed.sort()
+                symset = set(syms)
+                while failed and failed[0][0] - len(symset) == 1:
+                    _, todo, eq = failed.pop(0)
+                    s = (todo - symset).pop()
+                    newresult = []
+                    for r in result:
+                        print s, eq.subs(r)
+                        soln = _solve(eq.subs(r), s, flags=flags)
+                        for sol in soln:
+                            r[s] = sol
+                            newresult.append(r)
+                    result = newresult
+                    symset.add(s)
+                if failed:
+                    result = None
+                else:
+                    result = [tuple([r[k] for k in symbols]) for r in result]
             return result
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
