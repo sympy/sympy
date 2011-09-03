@@ -465,3 +465,4 @@ def test_issue_1572_1364_1368():
              2*atanh(-sqrt(5)/2 + S.Half)/a,
              2*atanh(-sqrt(2) - 1)/a,
              2*atanh(S.Half + sqrt(5)/2)/a]
+    assert solve(atan(x) - 2) == [tan(2)]

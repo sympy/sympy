@@ -18,7 +18,9 @@ from sympy.core.numbers import ilcm
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 
-from sympy.functions import log, exp, LambertW, cos, sin, tan, cot, cosh, sinh, tanh, coth
+from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot,
+                             cosh, sinh, tanh, coth, acos, asin, atan, acot,
+                             acosh, asinh, atanh, acoth)
 from sympy.simplify import simplify, collect, powsimp, fraction, posify
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together
@@ -1190,8 +1192,21 @@ def _tsolve(eq, sym, **flags):
 
     #                    -1
     # f(x) = g  ->  x = f  (g)
-    if lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and hasattr(lhs, 'inverse'):
-        rhs = lhs.inverse() (rhs)
+    inverses = {
+    asin: sin,
+    acos:cos,
+    atan:tan,
+    acot:cot,
+    asinh: sinh,
+    acosh:cosh,
+    atanh:tanh,
+    acoth:coth,}
+    if lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and (hasattr(lhs, 'inverse') or lhs.func in inverses):
+        if lhs.func in inverses:
+            inv = inverses[lhs.func]
+        else:
+            inv = lhs.inverse()
+        rhs = inv(rhs)
         lhs = lhs.args[0]
 
         sol = solve(lhs-rhs, sym)

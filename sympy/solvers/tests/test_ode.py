@@ -337,7 +337,7 @@ def test_separable1():
     assert dsolve(eq1, hint='separable') == sol1
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
-    assert dsolve(eq4, hint='separable') == sol4
+    assert dsolve(eq4, hint='separable', simplify=False) == sol4
     assert dsolve(eq5, hint='separable') == simplify(sol5)
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
@@ -362,7 +362,7 @@ def test_separable2():
     sol10 = Eq(-log(-1 + sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
     assert str(dsolve(eq6, hint='separable_Integral')) == sol6str
     assert dsolve(eq7, hint='separable', simplify=False) == sol7
-    assert dsolve(eq8, hint='separable') == sol8
+    assert dsolve(eq8, hint='separable', simplify=False) == sol8
     assert str(dsolve(eq9, hint='separable_Integral')) == sol9str
     assert dsolve(eq10, hint='separable', simplify=False) == sol10
     assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
@@ -386,7 +386,7 @@ def test_separable4():
     # This has a slow integral (1/((1 + y**2)*atan(y))), so we isolate it.
     eq14 = x*f(x).diff(x) + (1 + f(x)**2)*atan(f(x))
     sol14 = Eq(log(atan(f(x))), C1 - log(x))
-    assert dsolve(eq14, hint='separable') == sol14
+    assert dsolve(eq14, hint='separable', simplify=False) == sol14
     assert checkodesol(eq14, sol14, order=1, solve_for_func=False)[0]
 
 def test_separable5():
