@@ -602,8 +602,8 @@ def test_issue_1791():
            sqrt(pi)*erf(sqrt(z)*log(x) - 1/(2*sqrt(z)))*exp(S(1)/(4*z))/(2*sqrt(z))
 
 def test_issue_1277():
-    assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) == \
-        simplify((n**2 - 2**(S(1)/n)*n**2 - n*2**(S(1)/n))/(2**(1 + S(1)/n) + n*2**(1 + S(1)/n)))
+    assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half)) -
+                (n**2 - 2**(1/n)*n**2 - n*2**(1/n))/(2**(1 + 1/n) + n*2**(1 + 1/n))) == 0
 
 def test_issue_1418():
     assert integrate((sqrt(x) - x**3)/x**Rational(1,3), x) == \
