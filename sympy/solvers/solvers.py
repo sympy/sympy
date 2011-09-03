@@ -795,7 +795,6 @@ def _solve(f, *symbols, **flags):
             for g in f:
                 dens.update(denoms(g, symbols))
                 g = g.as_numer_denom()[0]
-
                 poly = g.as_poly(*symbols, **{'extension': True})
 
                 if poly is not None:
@@ -830,7 +829,7 @@ def _solve(f, *symbols, **flags):
 
             else:
                 # a list of tuples, T, where T[i][j] corresponds to the ith solution for symbols[j]
-                result = solve_poly_system(polys)
+                result = solve_poly_system(polys, *symbols)
                 checked = []
                 do_warn = flags.get('warn', False)
                 for r in result:

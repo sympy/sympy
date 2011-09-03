@@ -503,3 +503,6 @@ def test_issue_2236():
     sym = [x, y, a0]
     reqs = [nsimplify(e, rational=True) for e in eqs]
     assert solve(reqs, sym) # doesn't fail
+
+def test_issue_2668():
+    assert solve([x**2 + y + 4], [x]) == [(sqrt(-y - 4),), (-sqrt(-y - 4),)]
