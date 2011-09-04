@@ -106,15 +106,14 @@ class Subset(Basic):
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset([1,2,3], [1,2,3,4])
         >>> a.iterate_graycode(3)
-        Subset([3, 4], [1, 2, 3, 4])
+        Subset([1, 4], [1, 2, 3, 4])
         >>> a.iterate_graycode(-2)
-        Subset([2], [1, 2, 3, 4])
+        Subset([1, 2, 4], [1, 2, 3, 4])
         """
-        unranked_code = GrayCode.unrank_gray((self.rank_gray + k)\
-                                             % self.cardinality,
-                                             self.superset_size)
+        unranked_code = GrayCode.unrank(self.superset_size,
+                                       (self.rank_gray + k) % self.cardinality)
         return Subset.subset_from_bitlist(self.superset,
-                                          unranked_code._current)
+                                          unranked_code)
 
     def next_gray(self):
         """
@@ -136,7 +135,7 @@ class Subset(Basic):
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset([2,3,4], [1,2,3,4,5])
         >>> a.prev_gray()
-        Subset([1, 2, 3, 4], [1, 2, 3, 4, 5])
+        Subset([2, 3, 4, 5], [1, 2, 3, 4, 5])
         """
         return self.iterate_graycode(-1)
 
@@ -196,14 +195,14 @@ class Subset(Basic):
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset(['c','d'], ['a','b','c','d'])
         >>> a.rank_gray
-        8
+        2
         >>> a = Subset([2,4,5], [1,2,3,4,5,6])
         >>> a.rank_gray
-        19
+        27
         """
         if self._rank_graycode == None:
             bits = Subset.bitlist_from_subset(self.subset, self.superset)
-            self._rank_graycode = GrayCode(start=bits).rank_current
+            self._rank_graycode = GrayCode(len(bits), start=bits).rank
         return self._rank_graycode
 
     @property
@@ -298,11 +297,11 @@ class Subset(Basic):
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> Subset.unrank_gray(4, ['a','b','c'])
-        Subset(['b', 'c'], ['a', 'b', 'c'])
+        Subset(['a', 'b'], ['a', 'b', 'c'])
         >>> Subset.unrank_gray(0, ['a','b','c'])
         Subset([], ['a', 'b', 'c'])
         """
-        graycode_bitlist = GrayCode.unrank_gray(rank, len(superset))._current
+        graycode_bitlist = GrayCode.unrank(len(superset), rank)
         return Subset.subset_from_bitlist(superset, graycode_bitlist)
 
 def ksubsets(superset, k):
