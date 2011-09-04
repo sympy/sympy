@@ -11,7 +11,7 @@ def symmetric(n):
     [Permutation([0, 1, 2]), Permutation([0, 2, 1]), Permutation([1, 0, 2]), \
     Permutation([1, 2, 0]), Permutation([2, 0, 1]), Permutation([2, 1, 0])]
     """
-    gen = [i for i in xrange(n)]
+    gen = list(xrange(n))
     for perm in variations(gen, n):
         yield Permutation(perm)
 
@@ -26,11 +26,10 @@ def cyclic(n):
     Permutation([2, 3, 4, 0, 1]), Permutation([3, 4, 0, 1, 2]), \
     Permutation([4, 0, 1, 2, 3])]
     """
-    gen = [i for i in xrange(n)]
+    gen = list(xrange(n))
     for i in xrange(n):
         yield Permutation(gen)
         gen = rotate_left(gen, 1)
-
 
 def alternating(n):
     """
@@ -46,7 +45,7 @@ def alternating(n):
     Permutation([2, 3, 0, 1]), Permutation([3, 0, 2, 1]), \
     Permutation([3, 1, 0, 2]), Permutation([3, 2, 1, 0])]
     """
-    gen = [i for i in xrange(n)]
+    gen = list(xrange(n))
     for perm in variations(gen, n):
         p = Permutation(perm)
         if p.is_even:
@@ -64,7 +63,7 @@ def dihedral(n):
     Permutation([2, 3, 0, 1]), Permutation([1, 0, 3, 2]), \
     Permutation([3, 0, 1, 2]), Permutation([2, 1, 0, 3])]
     """
-    gen = [i for i in xrange(n)]
+    gen = list(xrange(n))
     for i in xrange(n):
         yield Permutation(gen)
         yield Permutation(gen[::-1])
