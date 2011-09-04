@@ -20,6 +20,7 @@ class PermutationGroup(Basic):
     _perm_size = None
     _is_abelian = None
     _center = []
+    _commutators = []
 
     def __new__(cls, *args, **kw_args):
         """
@@ -219,3 +220,27 @@ class PermutationGroup(Basic):
             if commute:
                 self._center.append(x)
         return self._center
+
+    @property
+    def commutators(self):
+        """
+        Gets the commutators of the group.
+
+        Examples:
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([1,0,2,3])
+        >>> b = Permutation([1,0,3,2])
+        >>> c = PermutationGroup([a,b], 4)
+        >>> c.commutators
+        [Permutation([0, 1, 2, 3])]
+        """
+        if self._commutators != []:
+            return self._commutators
+        group_elems = list(self.generate())
+        for x in group_elems:
+            for y in group_elems:
+                c = x * y * ~x * ~y
+                if not c in self._commutators:
+                    self._commutators.append(c)
+        return self._commutators
