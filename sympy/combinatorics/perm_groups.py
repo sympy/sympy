@@ -37,6 +37,13 @@ class PermutationGroup(Basic):
         Returns the size of the permutations in the group.
 
         Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0,1])
+        >>> b = Permutation([1,0])
+        >>> c = PermutationGroup([a,b], 2)
+        >>> c.perm_size
+        2
         """
         return self._perm_size
 
@@ -46,6 +53,13 @@ class PermutationGroup(Basic):
         Returns the generators of the group.
 
         Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> a = Permutation([0,1])
+        >>> b = Permutation([1,0])
+        >>> c = PermutationGroup([a,b], 2)
+        >>> c.generators
+        [Permutation([0, 1]), Permutation([1, 0])]
         """
         return self._generators
 
