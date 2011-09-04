@@ -349,7 +349,7 @@ def from_RGS(rgs, superset):
     Creates a set partition from a restricted growth string.
 
     Examples:
-    >>> from sympy.combinatorics.partitions import *
+    >>> from sympy.combinatorics.partitions import from_RGS, Partition
     >>> from_RGS([0,1,2,0,1],['a','b','c','d','e'])
     Partition([['a', 'd'], ['b', 'e'], ['c']], \
     ['a', 'b', 'c', 'd', 'e'])
@@ -645,7 +645,7 @@ def RGS_unrank(rank, m):
     superset size.
 
     Examples:
-    >>> from sympy.combinatorics.partitions import *
+    >>> from sympy.combinatorics.partitions import RGS_unrank
     >>> RGS_unrank(14, 4)
     [0, 1, 2, 3]
     >>> RGS_unrank(0, 4)
