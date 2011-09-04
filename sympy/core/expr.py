@@ -1905,6 +1905,7 @@ class Expr(Basic, EvalfMixin):
     def _eval_expand_func(self, deep=True, **hints):
         return self
 
+    @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
             mul=True, log=True, multinomial=True, basic=True, **hints):
         """
