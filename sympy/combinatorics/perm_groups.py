@@ -19,6 +19,7 @@ class PermutationGroup(Basic):
     _coset_repr_n = 0
     _perm_size = None
     _is_abelian = None
+    _center = []
 
     def __new__(cls, *args, **kw_args):
         """
@@ -183,3 +184,38 @@ class PermutationGroup(Basic):
             if stabilizes:
                 stabs.append(g)
         return stabs
+
+    @property
+    def center(self):
+        """
+        Returns the central subgroup of the group.
+
+        TODO: This is a very naive implementation and is quadratic
+        in order. Superior algorithms must exist.
+
+        Examples:
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,1,2,3])
+        >>> b = Permutation([2,1,3,0])
+        >>> c = PermutationGroup([a,b], 4)
+        >>> c.center
+        [Permutation([2, 1, 3, 0]), Permutation([3, 1, 0, 2])]
+        >>> d = Permutation([2, 1, 0, 3])
+        >>> d * a == a * d
+        True
+        """
+        if self._center != []:
+            return self._center
+        group_elems = list(self.generate())
+        for x in group_elems:
+            commute = True
+            for y in group_elems:
+                xy = x * y
+                yx = y * x
+                if xy != yx:
+                    commute = False
+                    break
+            if commute:
+                self._center.append(x)
+        return self._center
