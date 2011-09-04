@@ -222,7 +222,7 @@ def test_implemented_function_evalf():
     del f._imp_     # XXX: due to caching _imp_ would influence all other tests
 
 def test_evaluate_false():
-    for no in [[], 0, False, None]:
+    for no in [0, False, None]:
         assert Add(3, 2, evaluate=no).is_Add
         assert Mul(3, 2, evaluate=no).is_Mul
         assert Pow(3, 2, evaluate=no).is_Pow

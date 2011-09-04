@@ -6,7 +6,6 @@
 CACHE = []  # [] of
             #    (item, {} or tuple of {})
 
-from sympy.core.logic import fuzzy_bool
 from sympy.core.decorators import wraps
 
 def print_cache():
@@ -75,19 +74,9 @@ def __cacheit(func):
     def wrapper(*args, **kw_args):
         """
         Assemble the args and kw_args to compute the hash.
-        It is important that kw_args be standardized since if they
-        have the same meaning but in different forms (e.g. one
-        kw_arg having a value of 1 for an object and another object
-        with identical args but a kw_arg of True) then two different
-        hashes will be computed and the two objects will not be identical.
         """
         if kw_args:
             keys = kw_args.keys()
-
-            # make keywords all the same
-            for k in keys:
-                kw_args[k] = fuzzy_bool(kw_args[k])
-
             keys.sort()
             items = [(k+'=', kw_args[k]) for k in keys]
             k = args + tuple(items)
