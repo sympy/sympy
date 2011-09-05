@@ -1632,6 +1632,7 @@ class Matrix(object):
             D[i, i] = C.exp(D[i, i])
         return U * D * U.inv()
 
+    @classmethod
     def zeros(self, *dims):
         """Returns a matrix of zeros with dims = (rows, cols).
         If cols is omitted the matrix will be square."""
@@ -1645,6 +1646,7 @@ class Matrix(object):
         n, m = _dims_to_nm( dims )
         return Matrix(n,m,[S.Zero]*n*m)
 
+    @classmethod
     def eye(self, n):
         """Returns the identity matrix of size n."""
         tmp = self.zeros(n)
@@ -2696,10 +2698,10 @@ def matrix_add(A,B):
         ret[i] = map(lambda j,k: j+k, alst[i], blst[i])
     return Matrix(ret)
 
-def zeros(*dims):
+def zeros(*dims, **kwargs):
     """Returns a matrix of zeros with dims = (rows, cols).
     If cols is omitted the matrix will be square."""
-
+    cls = kwargs.get('cls', Matrix)
     if len(dims) == 1:
         if not is_sequence(dims[0]):
             dims = dims*2
@@ -2707,7 +2709,7 @@ def zeros(*dims):
             warnings.warn("pass row and column as zeros(%i, %i)" % dims[0], DeprecationWarning)
             dims = dims[0]
     n, m = _dims_to_nm(dims)
-    return Matrix(n, m, [S.Zero]*m*n)
+    return cls.zeros(n, m)
 
 def ones(*dims):
     """Returns a matrix of ones with dims = (rows, cols).
@@ -2722,13 +2724,14 @@ def ones(*dims):
     n, m = _dims_to_nm( dims )
     return Matrix(n, m, [S.One]*m*n)
 
-def eye(n):
+def eye(n, **kwargs):
     """Create square identity matrix n x n
 
     See also: diag()
     """
+    cls = kwargs.get('cls', Matrix)
     n = int(n)
-    out = zeros(n)
+    out = cls.zeros(n)
     for i in range(n):
         out[i, i] = S.One
     return out
@@ -3274,6 +3277,7 @@ class SparseMatrix(Matrix):
                                (self[0]*b[1] - self[1]*b[0])))
 
 
+    @classmethod
     def zeros(self, *dims):
         """Returns a matrix of zeros with dims = (rows, cols).
         If cols is omitted the matrix will be square."""
@@ -3287,6 +3291,7 @@ class SparseMatrix(Matrix):
         n, m = _dims_to_nm( dims )
         return SparseMatrix(n,m,{})
 
+    @classmethod
     def eye(self, n):
         tmp = SparseMatrix(n,n,lambda i,j:0)
         for i in range(tmp.rows):

@@ -1837,3 +1837,11 @@ def test_print_nonzero():
             '[X  ]\n[ X ]\n[  X]\n'
     assert capture(lambda:eye(3).print_nonzero('.')) == \
             '[.  ]\n[ . ]\n[  .]\n'
+
+def test_zeros_eye():
+    assert Matrix.eye(3) == eye(3)
+    assert SparseMatrix.eye(3) == eye(3, cls=SparseMatrix)
+    assert Matrix.zeros(3) == zeros(3)
+    assert SparseMatrix.zeros(3) == zeros(3, cls=SparseMatrix)
+    # ones doesn't have a cls argument since it is, by definition, never Sparse
+    assert ones(3, 4) == Matrix(3, 4, [1]*12)
