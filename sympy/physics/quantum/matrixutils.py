@@ -295,7 +295,7 @@ def _scipy_sparse_matrix_to_zero(e):
 def matrix_to_zero(e):
     """Convert a zero matrix to the scalar zero."""
     if isinstance(e, Matrix):
-        if matrices.zeros(e.shape) == e:
+        if matrices.zeros(*e.shape) == e:
             e = Integer(0)
     elif isinstance(e, numpy_ndarray):
         e = _numpy_matrix_to_zero(e)
