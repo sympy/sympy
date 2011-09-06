@@ -149,21 +149,7 @@ class IntegralTransform(Function):
     def _eval_rewrite_as_Integral(self, *args):
         return self.as_integral
 
-def _solve_inequality(ie, s):
-    """ A hacky replacement for solve, since the latter only works for
-        univariate inequalities. """
-    from sympy import Poly
-    expr = ie.lhs - ie.rhs
-    p = Poly(expr, s)
-    if p.degree() != 1:
-        raise NotImplementedError('%s' % ie)
-    a, b = p.all_coeffs()
-    if a.is_positive:
-        return s < -b/a
-    elif a.is_negative:
-        return s > -b/a
-    else:
-        raise NotImplementedError
+from sympy.solvers.inequalities import _solve_inequality
 
 def _simplify(expr, doit):
     from sympy import powdenest, powsimp
