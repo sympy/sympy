@@ -124,7 +124,7 @@ class Dict(Basic):
     >>> from sympy.core.containers import Dict
 
     >>> D = Dict({1:'one', 2:'two'})
-    >>> for k, v in D: print k, v
+    >>> for key in D: print key, D[key]
     1 one
     2 two
 
@@ -161,7 +161,7 @@ class Dict(Basic):
 
     def items(self):
         '''D.items() -> list of D's (key, value) pairs, as 2-tuples'''
-        return self.args
+        return Tuple(*self.args)
 
     def iteritems(self):
         '''D.iteritems() -> an iterator over the (key, value) items of D'''
@@ -173,7 +173,7 @@ class Dict(Basic):
 
     def keys(self):
         '''D.keys() -> list of D's keys'''
-        return list(self.iterkeys())
+        return Tuple(*self.iterkeys())
 
     def itervalues(self):
         '''D.itervalues() -> an iterator over the values of D'''
@@ -181,20 +181,23 @@ class Dict(Basic):
 
     def values(self):
         '''D.values() -> list of D's values'''
-        return list(self.itervalues())
+        return Tuple(*self.itervalues())
 
     def __iter__(self):
         '''x.__iter__() <==> iter(x)'''
-        return self.iteritems()
+        return self.iterkeys()
 
     def __len__(self):
         '''x.__len__() <==> len(x)'''
         return self._dict.__len__()
 
+    def __str__(self):
+        return str(self._dict)
+
     def __repr__(self):
         return self._dict.__repr__()
 
-    def get(self, key, default):
+    def get(self, key, default=None):
         '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
         return self._dict.get(sympify(key), default)
 

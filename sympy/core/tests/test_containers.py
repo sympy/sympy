@@ -97,3 +97,11 @@ def test_Dict():
     assert (Dict({x:1, y:2, z:3}) ==
             Dict((x,1), (y,2), (z,3)))
 
+    raises(TypeError, "Dict(((x,1), (y,2), (z,3)))")
+    raises(NotImplementedError, "d[5] = 6") # assert immutability
+
+    assert d.items() == Tuple(Tuple(x,S(1)), Tuple(y,S(2)), Tuple(z,S(3)))
+    assert list(d) == [x,y,z]
+    assert str(d) == '{x: 1, y: 2, z: 3}'
+    assert d.__repr__() == '{x: 1, y: 2, z: 3}'
+
