@@ -25,30 +25,6 @@ class ShapeError(ValueError, MatrixError):
 class NonSquareMatrixError(ShapeError):
     pass
 
-def _dims_to_nm(dims):
-    """Converts dimensions tuple (or any object with length 1 or 2) or scalar
-    in dims to matrix dimensions n and m."""
-
-    try:
-        l = len(dims)
-    except TypeError:
-        dims = (dims,)
-        l = 1
-
-    # This will work for nd-array too when they are added to sympy.
-    for dim in dims:
-        if dim < 0:
-            raise ValueError("Matrix dimensions should be non-negative integers.")
-
-    if l == 2:
-        n, m = map(int, dims)
-    elif l == 1:
-        n = m = int(dims[0])
-    else:
-        raise ValueError("Matrix dimensions should be a two-element tuple of ints or a single int!")
-
-    return n, m
-
 def _iszero(x):
     """Returns True if x is zero."""
     return x.is_zero
@@ -1633,18 +1609,16 @@ class Matrix(object):
         return U * D * U.inv()
 
     @classmethod
-    def zeros(cls, *dims):
-        """Returns a matrix of zeros with dims = (rows, cols).
-        If cols is omitted the matrix will be square."""
-
-        if len(dims) == 1:
-            if not is_sequence(dims[0]):
-                dims = dims*2
-            else:
-                warnings.warn("pass row and column as zeros(%i, %i)" % dims[0], DeprecationWarning)
-                dims = dims[0]
-        n, m = _dims_to_nm( dims )
-        return cls(n, m, [S.Zero]*n*m)
+    def zeros(cls, r, c=None):
+        """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
+        if ``c`` is omitted a square matrix will be returned."""
+        if is_sequence(r):
+            warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+            r, c = r
+        else:
+            c = r if c is None else c
+        r, c = [int(i) for i in [r, c]]
+        return cls(r, c, [S.Zero]*r*c)
 
     @classmethod
     def eye(cls, n):
@@ -2702,32 +2676,24 @@ def zeros(r, c=None, cls=Matrix):
     """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
     if ``c`` is omitted a square matrix will be returned."""
     if is_sequence(r):
-        warnings.warn("pass row and column as zeros(%i, %i)" % dims[0], DeprecationWarning)
-        dims = r
+        warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+        r, c = r
     else:
-        try:
-            r = int(r)
-            dims = (r, r if c is None else c)
-        except AttributeError:
-            dims = r
-    n, m = _dims_to_nm(dims)
-    return cls.zeros(n, m)
+        c = r if c is None else c
+    r, c = [int(i) for i in [r, c]]
+    return cls.zeros(r, c)
 
 def ones(r, c=None):
     """Returns a matrix of ones with ``r`` rows and ``c`` columns;
     if ``c`` is omitted a square matrix will be returned."""
 
     if is_sequence(r):
-        warnings.warn("pass row and column as ones(%i, %i)" % dims[0], DeprecationWarning)
-        dims = r
+        warnings.warn("pass row and column as ones(%i, %i)" % r, DeprecationWarning)
+        r, c = r
     else:
-        try:
-            r = int(r)
-            dims = (r, r if c is None else c)
-        except AttributeError:
-            dims = r
-    n, m = _dims_to_nm(dims)
-    return Matrix(n, m, [S.One]*m*n)
+        c = r if c is None else c
+    r, c = [int(i) for i in [r, c]]
+    return Matrix(r, c, [S.One]*r*c)
 
 def eye(n, cls=Matrix):
     """Create square identity matrix n x n
@@ -3282,26 +3248,24 @@ class SparseMatrix(Matrix):
 
 
     @classmethod
-    def zeros(cls, *dims):
-        """Returns a matrix of zeros with dims = (rows, cols).
-        If cols is omitted the matrix will be square."""
-
-        if len(dims) == 1:
-            if not is_sequence(dims[0]):
-                dims = dims*2
-            else:
-                warnings.warn("pass row and column as zeros(%i, %i)" % dims[0], DeprecationWarning)
-                dims = dims[0]
-        n, m = _dims_to_nm( dims )
-        return cls(n, m, {})
+    def zeros(cls, r, c=None):
+        """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
+        if ``c`` is omitted a square matrix will be returned."""
+        if is_sequence(r):
+            warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+            r, c = r
+        else:
+            c = r if c is None else c
+        r, c = [int(i) for i in [r, c]]
+        return cls(r, c, {})
 
     @classmethod
     def eye(cls, n):
-        tmp = cls(n, n, lambda i,j: 0)
+        n = int(n)
+        tmp = cls.zeros(n)
         for i in range(tmp.rows):
             tmp[i,i] = 1
         return tmp
-
 
 def list2numpy(l):
     """Converts python list of SymPy expressions to a NumPy array."""

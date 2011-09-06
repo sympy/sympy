@@ -4,8 +4,7 @@ from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational,
     Pow, simplify, Min, Max, Abs)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
-
-    SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
+    SparseMatrix, SparseMatrix, NonSquareMatrixError,
     matrix_multiply_elementwise)
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises
@@ -1529,7 +1528,6 @@ def test_has():
 
 def test_errors():
     # Note, some errors not tested.  See 'XXX' in code.
-    raises(ValueError, "_dims_to_nm([1, 0, 2])")
     raises(ValueError, "Matrix([[1, 2], [1]])")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2]))")
     raises(TypeError, "Matrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
