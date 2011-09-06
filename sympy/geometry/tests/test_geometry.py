@@ -695,3 +695,13 @@ def test_free_symbols():
 def test_subsx():
     """ this is fixed in smichr's subs_cleanup """
     assert Point(1, 2).subs(Point(1,2), Point(3,4)) == Point(3, 4)
+
+def test_entity_centroid():
+    p = Polygon((0,0),(10,0),(10,10))
+    q = p.translate(0,20)
+    assert GeometryEntity(p, q).centroid == Point(20, 40)/3
+    p = Segment((0,0),(2,0))
+    q = Segment((0,0),(2,2))
+    assert GeometryEntity(p, q).centroid == Point(1, 2*sqrt(2)/(2 + 2*sqrt(2)))
+    assert GeometryEntity(Point(0,0), Point(2,0)).centroid == Point(2, 0)/2
+    assert GeometryEntity(Point(0,0), Point(0,0), Point(2,0)).centroid == Point(2, 0)/3
