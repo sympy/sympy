@@ -1633,7 +1633,7 @@ class Matrix(object):
         return U * D * U.inv()
 
     @classmethod
-    def zeros(self, *dims):
+    def zeros(cls, *dims):
         """Returns a matrix of zeros with dims = (rows, cols).
         If cols is omitted the matrix will be square."""
 
@@ -1644,14 +1644,14 @@ class Matrix(object):
                 warnings.warn("pass row and column as zeros(%i, %i)" % dims[0], DeprecationWarning)
                 dims = dims[0]
         n, m = _dims_to_nm( dims )
-        return Matrix(n,m,[S.Zero]*n*m)
+        return cls(n, m, [S.Zero]*n*m)
 
     @classmethod
-    def eye(self, n):
+    def eye(cls, n):
         """Returns the identity matrix of size n."""
-        tmp = self.zeros(n)
+        tmp = cls.zeros(n)
         for i in range(tmp.rows):
-            tmp[i,i] = S.One
+            tmp[i, i] = S.One
         return tmp
 
     @property
@@ -2698,38 +2698,42 @@ def matrix_add(A,B):
         ret[i] = map(lambda j,k: j+k, alst[i], blst[i])
     return Matrix(ret)
 
-def zeros(*dims, **kwargs):
-    """Returns a matrix of zeros with dims = (rows, cols).
-    If cols is omitted the matrix will be square."""
-    cls = kwargs.get('cls', Matrix)
-    if len(dims) == 1:
-        if not is_sequence(dims[0]):
-            dims = dims*2
-        else:
-            warnings.warn("pass row and column as zeros(%i, %i)" % dims[0], DeprecationWarning)
-            dims = dims[0]
+def zeros(r, c=None, cls=Matrix):
+    """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
+    if ``c`` is omitted a square matrix will be returned."""
+    if is_sequence(r):
+        warnings.warn("pass row and column as zeros(%i, %i)" % dims[0], DeprecationWarning)
+        dims = r
+    else:
+        try:
+            r = int(r)
+            dims = (r, r if c is None else c)
+        except AttributeError:
+            dims = r
     n, m = _dims_to_nm(dims)
     return cls.zeros(n, m)
 
-def ones(*dims):
-    """Returns a matrix of ones with dims = (rows, cols).
-    If cols is omitted the matrix will be square."""
+def ones(r, c=None):
+    """Returns a matrix of ones with ``r`` rows and ``c`` columns;
+    if ``c`` is omitted a square matrix will be returned."""
 
-    if len(dims) == 1:
-        if not is_sequence(dims[0]):
-            dims = dims*2
-        else:
-            warnings.warn("pass row and column as ones(%i, %i)" % dims[0], DeprecationWarning)
-            dims = dims[0]
-    n, m = _dims_to_nm( dims )
+    if is_sequence(r):
+        warnings.warn("pass row and column as ones(%i, %i)" % dims[0], DeprecationWarning)
+        dims = r
+    else:
+        try:
+            r = int(r)
+            dims = (r, r if c is None else c)
+        except AttributeError:
+            dims = r
+    n, m = _dims_to_nm(dims)
     return Matrix(n, m, [S.One]*m*n)
 
-def eye(n, **kwargs):
+def eye(n, cls=Matrix):
     """Create square identity matrix n x n
 
     See also: diag()
     """
-    cls = kwargs.get('cls', Matrix)
     n = int(n)
     out = cls.zeros(n)
     for i in range(n):
@@ -3278,7 +3282,7 @@ class SparseMatrix(Matrix):
 
 
     @classmethod
-    def zeros(self, *dims):
+    def zeros(cls, *dims):
         """Returns a matrix of zeros with dims = (rows, cols).
         If cols is omitted the matrix will be square."""
 
@@ -3289,11 +3293,11 @@ class SparseMatrix(Matrix):
                 warnings.warn("pass row and column as zeros(%i, %i)" % dims[0], DeprecationWarning)
                 dims = dims[0]
         n, m = _dims_to_nm( dims )
-        return SparseMatrix(n,m,{})
+        return cls(n, m, {})
 
     @classmethod
-    def eye(self, n):
-        tmp = SparseMatrix(n,n,lambda i,j:0)
+    def eye(cls, n):
+        tmp = cls(n, n, lambda i,j: 0)
         for i in range(tmp.rows):
             tmp[i,i] = 1
         return tmp

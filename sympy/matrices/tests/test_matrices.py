@@ -1314,7 +1314,7 @@ def test_creation_args():
     (see issue 1515).
     """
     raises(ValueError, 'zeros(3, -1)')
-    raises(ValueError, 'zeros(1, 2, 3, 4)')
+    raises(TypeError, 'zeros(1, 2, 3, 4)')
     assert zeros(3L) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
     assert zeros(3.) == zeros(3)
