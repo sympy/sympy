@@ -4,8 +4,7 @@ from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational,
     Pow, simplify, Min, Max, Abs)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
-
-    SparseMatrix, SparseMatrix, NonSquareMatrixError, _dims_to_nm,
+    SparseMatrix, SparseMatrix, NonSquareMatrixError,
     matrix_multiply_elementwise)
 from sympy.utilities.iterables import flatten, capture
 from sympy.utilities.pytest import raises
@@ -1314,7 +1313,7 @@ def test_creation_args():
     (see issue 1515).
     """
     raises(ValueError, 'zeros(3, -1)')
-    raises(ValueError, 'zeros(1, 2, 3, 4)')
+    raises(TypeError, 'zeros(1, 2, 3, 4)')
     assert zeros(3L) == zeros(3)
     assert zeros(Integer(3)) == zeros(3)
     assert zeros(3.) == zeros(3)
@@ -1529,7 +1528,6 @@ def test_has():
 
 def test_errors():
     # Note, some errors not tested.  See 'XXX' in code.
-    raises(ValueError, "_dims_to_nm([1, 0, 2])")
     raises(ValueError, "Matrix([[1, 2], [1]])")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).copyin_matrix([1, 0], Matrix([1, 2]))")
     raises(TypeError, "Matrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
@@ -1837,3 +1835,11 @@ def test_print_nonzero():
             '[X  ]\n[ X ]\n[  X]\n'
     assert capture(lambda:eye(3).print_nonzero('.')) == \
             '[.  ]\n[ . ]\n[  .]\n'
+
+def test_zeros_eye():
+    assert Matrix.eye(3) == eye(3)
+    assert SparseMatrix.eye(3) == eye(3, cls=SparseMatrix)
+    assert Matrix.zeros(3) == zeros(3)
+    assert SparseMatrix.zeros(3) == zeros(3, cls=SparseMatrix)
+    # ones doesn't have a cls argument since it is, by definition, never Sparse
+    assert ones(3, 4) == Matrix(3, 4, [1]*12)
