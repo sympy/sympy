@@ -2,6 +2,8 @@ from sympy import Symbol
 from sympy.combinatorics.polyhedron import Polyhedron
 from sympy.combinatorics.permutations import Permutation
 
+import random
+
 C1 = Symbol('C1')
 C2 = Symbol('C2')
 C3 = Symbol('C3')
@@ -48,4 +50,8 @@ def test_polyhedron():
         cube.rotate(cube.pgroups[i]**2)
 
     assert cube.corners == ['A', 'F', 'C', 'B', 'E', 'G', 'H', 'D']
+
+    random.seed(0)
+    assert cube.make_perm(5) == Permutation([6, 5, 4, 3, 1, 2, 7, 0])
+    assert cube.make_perm(7) == Permutation([4, 2, 7, 6, 0, 3, 1, 5])
 
