@@ -114,6 +114,10 @@ class Polyhedron(Basic):
         >>> tetra.rotate(Permutation([3,2,1,0]))
         >>> tetra.corners
         [z, y, x, w]
+        >>> import random
+        >>> random.seed(0)
+        >>> tetra.make_perm(3)
+        Permutation([3, 1, 2, 0])
         """
         ret_obj = Basic.__new__(cls, *args)
         ret_obj._corners = args[0]
