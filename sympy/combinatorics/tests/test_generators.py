@@ -37,3 +37,12 @@ def test_generators():
                                   Permutation([2, 1, 3, 0]), Permutation([2, 3, 0, 1]), Permutation([2, 3, 1, 0]), \
                                   Permutation([3, 0, 1, 2]), Permutation([3, 0, 2, 1]), Permutation([3, 1, 0, 2]), \
                                   Permutation([3, 1, 2, 0]), Permutation([3, 2, 0, 1]), Permutation([3, 2, 1, 0])]
+
+    assert list(dihedral(3)) == [Permutation([0, 1, 2]), Permutation([2, 1, 0]), Permutation([1, 2, 0]), \
+                                 Permutation([0, 2, 1]), Permutation([2, 0, 1]), Permutation([1, 0, 2])]
+
+    assert list(dihedral(5)) == [Permutation([0, 1, 2, 3, 4]), Permutation([4, 3, 2, 1, 0]), \
+                                 Permutation([1, 2, 3, 4, 0]), Permutation([0, 4, 3, 2, 1]), \
+                                 Permutation([2, 3, 4, 0, 1]), Permutation([1, 0, 4, 3, 2]), \
+                                 Permutation([3, 4, 0, 1, 2]), Permutation([2, 1, 0, 4, 3]), \
+                                 Permutation([4, 0, 1, 2, 3]), Permutation([3, 2, 1, 0, 4])]
