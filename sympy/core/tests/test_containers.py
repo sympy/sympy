@@ -1,4 +1,4 @@
-from sympy import Matrix, Tuple, symbols, sympify, Basic
+from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import is_sequence, iterable
@@ -77,3 +77,31 @@ def test_iterable_is_sequence():
     assert all(iterable(i) for i in ordered + unordered)
     assert all(not iterable(i) for i in not_sympy_iterable)
     assert all(iterable(i, exclude=None) for i in not_sympy_iterable)
+
+def test_Dict():
+    x,y,z = symbols('x y z')
+    d = Dict({x:1, y:2, z:3})
+    assert d[x] == 1
+    assert d[y] == 2
+    raises(KeyError, 'd[2]')
+    assert len(d) == 3
+    assert set(d.keys()) == set((x,y,z))
+    assert set(d.values()) == set((S(1),S(2),S(3)))
+    assert d.get(5,'default') == 'default'
+    assert d.has_key(x) and not d.has_key(5)
+    assert x in d and z in d and not 5 in d
+
+    # Test input types
+    # input - a python dict
+    # input - items as args - SymPy style
+    assert (Dict({x:1, y:2, z:3}) ==
+            Dict((x,1), (y,2), (z,3)))
+
+    raises(TypeError, "Dict(((x,1), (y,2), (z,3)))")
+    raises(NotImplementedError, "d[5] = 6") # assert immutability
+
+    assert d.items() == Tuple(Tuple(x,S(1)), Tuple(y,S(2)), Tuple(z,S(3)))
+    assert list(d) == [x,y,z]
+    assert str(d) == '{x: 1, y: 2, z: 3}'
+    assert d.__repr__() == '{x: 1, y: 2, z: 3}'
+

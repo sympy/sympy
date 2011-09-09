@@ -1114,6 +1114,9 @@ class PrettyPrinter(Printer):
 
         return self._print_seq(items, '{', '}')
 
+    def _print_Dict(self, d):
+        return self._print_dict(d)
+
     def __print_set(self, set_):
         items = list(set_)
         items.sort( key=cmp_to_key(Basic.compare_pretty) )
