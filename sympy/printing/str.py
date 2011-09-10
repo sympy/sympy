@@ -83,9 +83,7 @@ class StrPrinter(Printer):
         return 'Derivative(%s)'%", ".join(map(self._print, expr.args))
 
     def _print_dict(self, expr):
-        keys = expr.keys()
-        keys.sort( key=cmp_to_key(Basic.compare_pretty) )
-
+        keys = sorted(expr.keys(), key=cmp_to_key(Basic.compare_pretty))
         items = []
         for key in keys:
             item = "%s: %s" % (self._print(key), self._print(expr[key]))
