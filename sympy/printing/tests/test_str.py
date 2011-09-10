@@ -3,7 +3,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
     Matrix, nan, O, oo, pi, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
     summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
-    Dummy)
+    Dummy, Dict)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum
@@ -62,6 +62,12 @@ def test_dict():
     assert str({1: 1+x}) == sstr({1: 1+x}) == "{1: x + 1}"
     assert str({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
     assert sstr({1: x**2, 2: y*x}) == "{1: x**2, 2: x*y}"
+
+def test_Dict():
+    assert str(Dict({1: 1+x})) == sstr({1: 1+x}) == "{1: x + 1}"
+    assert str(Dict({1: x**2, 2: y*x})) in (
+            "{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
+    assert sstr(Dict({1: x**2, 2: y*x})) == "{1: x**2, 2: x*y}"
 
 def test_Dummy():
     assert str(d) == "_d"

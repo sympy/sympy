@@ -21,7 +21,7 @@ from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     expand_trig, expand_complex, expand_multinomial
 from sets import Set, Interval, Union, EmptySet, FiniteSet, ProductSet
 from evalf import PrecisionExhausted, N
-from containers import Tuple
+from containers import Tuple, Dict
 from exprtools import gcd_terms
 
 # expose singletons

@@ -2,7 +2,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
-    Lambda, Poly, RootOf, RootSum, sqrt)
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -210,6 +210,8 @@ def test_latex():
 def test_latex_dict():
     d = {Rational(1): 1, x**2: 2, x: 3, x**3: 4}
     assert latex(d) == '\\begin{Bmatrix}1 : 1, & x : 3, & x^{2} : 2, & x^{3} : 4\\end{Bmatrix}'
+    D = Dict(d)
+    assert latex(D) == '\\begin{Bmatrix}1 : 1, & x : 3, & x^{2} : 2, & x^{3} : 4\\end{Bmatrix}'
 
 def test_latex_rational():
     #tests issue 874
