@@ -1102,9 +1102,7 @@ class PrettyPrinter(Printer):
     def _print_dict(self, d):
         items = []
 
-        keys = d.keys()
-        keys.sort( key=cmp_to_key(Basic.compare_pretty) )
-
+        keys = sorted(d.keys(), key=cmp_to_key(Basic.compare_pretty) )
         for k in keys:
             K = self._print(k)
             V = self._print(d[k])

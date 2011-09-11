@@ -828,8 +828,7 @@ class LatexPrinter(Printer):
     def _print_dict(self, expr):
         items = []
 
-        keys = expr.keys()
-        keys.sort(key=cmp_to_key(Basic.compare_pretty))
+        keys = sorted(expr.keys(), key=cmp_to_key(Basic.compare_pretty))
         for key in keys:
             val = expr[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
