@@ -129,7 +129,7 @@ class Dict(Basic):
     2 two
 
     The args are sympified so the 1 and 2 are Integers and the values
-    are Symbols. Queries automatialy sympify args so the following work:
+    are Symbols. Queries automatically sympify args so the following work:
     >>> 1 in D
     True
     >>> D.has('one') # searches keys and values
@@ -161,31 +161,19 @@ class Dict(Basic):
 
     def items(self):
         '''D.items() -> list of D's (key, value) pairs, as 2-tuples'''
-        return Tuple(*self.args)
-
-    def iteritems(self):
-        '''D.iteritems() -> an iterator over the (key, value) items of D'''
-        return self.args.__iter__()
-
-    def iterkeys(self):
-        '''D.iterkeys() -> an iterator over the keys of D'''
-        return (k for k, v in self.iteritems())
+        return list(self.args)
 
     def keys(self):
         '''D.keys() -> list of D's keys'''
-        return Tuple(*self.iterkeys())
-
-    def itervalues(self):
-        '''D.itervalues() -> an iterator over the values of D'''
-        return (v for k, v in self.iteritems())
+        return self._dict.keys()
 
     def values(self):
         '''D.values() -> list of D's values'''
-        return Tuple(*self.itervalues())
+        return self._dict.values()
 
     def __iter__(self):
         '''x.__iter__() <==> iter(x)'''
-        return self.iterkeys()
+        return iter(self._dict)
 
     def __len__(self):
         '''x.__len__() <==> len(x)'''
@@ -201,10 +189,6 @@ class Dict(Basic):
         '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
         return self._dict.get(sympify(key), default)
 
-    def has_key(self, key):
-        '''D.has_key(k) -> True if D has a key k, else False'''
-        return self._dict.has_key(sympify(key))
-
     def __contains__(self, key):
         '''D.__contains__(k) -> True if D has a key k, else False'''
-        return self.has_key(sympify(key))
+        return sympify(key) in self._dict
