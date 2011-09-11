@@ -88,7 +88,7 @@ def test_Dict():
     assert set(d.keys()) == set((x,y,z))
     assert set(d.values()) == set((S(1),S(2),S(3)))
     assert d.get(5,'default') == 'default'
-    assert d.has_key(x) and not d.has_key(5)
+    assert d.has(x) and not d.has(5)
     assert x in d and z in d and not 5 in d
 
     # Test input types
