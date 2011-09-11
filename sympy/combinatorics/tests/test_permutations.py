@@ -1,4 +1,5 @@
 from sympy.combinatorics.permutations import Permutation
+from sympy.utilities.pytest import raises
 
 def test_Permutation():
     p = Permutation([2,5,1,6,3,0,4])
@@ -121,3 +122,18 @@ def test_unrank_lex():
     assert Permutation.unrank_lex(15, 225).rank == 225
     assert Permutation.unrank_lex(10, 0).is_Identity
     assert Permutation.unrank_lex(4, 23).array_form == [0, 3, 2, 1]
+
+def test_args():
+    p = Permutation([(0, 3, 1, 2), (4,5)])
+    assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
+    assert p._array_form == None
+    p = Permutation((0, 3, 1, 2))
+    assert p._cyclic_form == None
+    assert p._array_form == [0, 3, 1, 2]
+    assert Permutation([0]) == Permutation((0,))
+    assert Permutation([[0], [1]]) == Permutation(((0,), (1,))) == Permutation(((0,), [1]))
+    raises(ValueError, 'Permutation([[1, 2], [3]])') # 0, 1, 2 should be present
+    raises(ValueError, 'Permutation([1, 2, 3])') # 0, 1, 2 should be present
+    raises(ValueError, 'Permutation(0, 1, 2)') # enclosing brackets needed
+    raises(ValueError, 'Permutation([1, 2], [0])') # enclosing brackets needed
+    raises(ValueError, 'Permutation([[1, 2], 0])') # enclosing brackets needed on 0
