@@ -16,6 +16,9 @@ pointing, and sense is which way along that orientation the magnitude is in.
 They are represented in one of a few ways in a two dimensional medium.
 
 .. image:: vec_rep.svg
+   :height: 175
+   :width: 350
+   :align: center
 
 Vector Algebra
 ==============
@@ -33,6 +36,9 @@ vectors, scalar multiplication, and vector multiplication.
 Vector addition as based on the parallelogram law.
 
 .. image:: vec_add.svg
+   :height: 200
+   :width: 200
+   :align: center
 
 Vector addition is also commutative:
 
@@ -46,16 +52,19 @@ new vector, with the same direction and a new magnitude which is the product of
 the old magnitude and the scalar.
 
 .. image:: vec_mul.svg
+   :height: 150
+   :width: 200
+   :align: center
 
 At this point we will introduce the unit vector, a vector whose magnitude is a
 pure, non-dimensional 1. For any vector :math:`\mathbf{v}` we can define a unit
 vector as:
 
 .. math::
-  \mathbf{\hat{n_v}} = \frac{\mathbf{v}}{\Vert \mathbf{v} \Vert}
+  \mathbf{\hat{n}_v} = \frac{\mathbf{v}}{\Vert \mathbf{v} \Vert}
 
 Alternatively, a vector can be defined as: :math:`\mathbf{v} =
-\mathbf{\hat{n_v}}`. Every vector can be written as the product of a scalar and
+\mathbf{\hat{n}_v}`. Every vector can be written as the product of a scalar and
 unit vector.
 
 There are three types of vector multiplication used in :mod:`mechanics`: dot
@@ -77,6 +86,9 @@ direction and the two vectors' magnitudes. Two perpendicular vectors will have
 a zero dot product. The figure below shows some examples:
 
 .. image:: vec_dot.svg
+   :height: 250
+   :width: 450
+   :align: center
 
 The dot product is commutative:
 
@@ -92,12 +104,15 @@ vector:
 The vector :math:`\mathbf{c}` has the following properties: it's orientation is
 perpendicular to both :math:`\mathbf{a}` and :math:`\mathbf{b}`, it's magnitude
 is defined as :math:`\Vert \mathbf{c} \Vert = \Vert \mathbf{a} \Vert \Vert
-\mathbf{b} \Vert sin(\theta)` (where :math:`\theta` is the angle between
+\mathbf{b} \Vert \sin(\theta)` (where :math:`\theta` is the angle between
 :math:`\mathbf{a}` and :math:`\mathbf{b}`), and has a sense defined by using
 the right hand rule between :math:`\Vert \mathbf{a} \Vert \Vert \mathbf{b}
 \Vert`. The figure below shows this:
 
 .. image:: vec_cross.svg
+   :height: 350
+   :width: 700
+   :align: center
 
 The cross product has the following properties:
 
@@ -198,7 +213,7 @@ Some numeric examples of these operations follow:
   \mathbf{a} &= \mathbf{\hat{n}_x} + 5 \mathbf{\hat{n}_y}\\
   \mathbf{b} &= \mathbf{\hat{n}_y} + \alpha \mathbf{\hat{n}_z}\\
   \mathbf{a} + \mathbf{b} &= \mathbf{\hat{n}_x} + 6 \mathbf{\hat{n}_y} + \alpha
-  \mathbf{\hat{n)z}}\\
+  \mathbf{\hat{n}_z}\\
   \mathbf{a} \cdot \mathbf{b} &= 5\\
   \mathbf{a} \cdot \mathbf{\hat{n}_y} &= 5\\
   \mathbf{a} \cdot \mathbf{\hat{n}_z} &= 0\\
@@ -234,6 +249,9 @@ in order to deal with the peculiarities of vectors fixed and not fixed in
 different reference frames, we need to be more explicit in our definitions.
 
 .. image:: vec_fix_notfix.svg
+   :height: 300
+   :width: 450
+   :align: center
 
 In the above figure, we have vectors :math:`\mathbf{c,d,e,f}`. If one were to
 take the derivative of :math:`\mathbf{e}` with respect to :math:`\theta`:
@@ -295,6 +313,9 @@ which is aligned with a basis vector, we say the frames are related by a simple
 rotation. The figure below shows this:
 
 .. image:: simp_rot.svg
+   :height: 250
+   :width: 250
+   :align: center
 
 The above rotation is a simple rotation about the Z axis by an angle
 :math:`\theta`. Note that after the rotation, the basis vectors
@@ -306,8 +327,8 @@ This rotation can be characterized by the following direction cosine matrix:
 
   ^{\mathbf{A}}\mathbf{C}^{\mathbf{B}} =
   \begin{bmatrix}
-  cos(\theta) & -sin(\theta) & 0\\
-  sin(\theta) & cos(\theta) & 0\\
+  \cos(\theta) & - \sin(\theta) & 0\\
+  \sin(\theta) & \cos(\theta) & 0\\
   0 & 0 & 1\\
   \end{bmatrix}
 
@@ -318,15 +339,15 @@ Simple rotations about the X and Y axes are defined by:
   \textrm{DCM for x-axis rotation: }
   \begin{bmatrix}
   1 & 0 & 0\\
-  0 & cos(\theta) & -sin(\theta)\\
-  0 & sin(\theta) & cos(\theta)
+  0 & \cos(\theta) & -\sin(\theta)\\
+  0 & \sin(\theta) & \cos(\theta)
   \end{bmatrix}
 
   \textrm{DCM for y-axis rotation: }
   \begin{bmatrix}
-  cos(\theta) & 0 & sin(\theta)\\
+  \cos(\theta) & 0 & \sin(\theta)\\
   0 & 1 & 0\\
-  -sin(\theta) & 0 & cos(\theta)\\
+  -\sin(\theta) & 0 & \cos(\theta)\\
   \end{bmatrix}
 
 Rotation in the positive direction here will be defined by using the right-hand
@@ -378,8 +399,8 @@ vectors: :math:`\mathbf{a} = \mathbf{\hat{a}_x} + \mathbf{\hat{a}_y} +
   + \mathbf{\hat{b}_z})\end{bmatrix} \mathbf{\hat{a}_y} +
   \begin{bmatrix}\mathbf{\hat{a}_z}\cdot (\mathbf{\hat{b}_x} + \mathbf{\hat{b}_y}
   + \mathbf{\hat{b}_z})\end{bmatrix} \mathbf{\hat{a}_z}\\ \mathbf{b} &=
-  (cos(\theta) - sin(\theta))\mathbf{\hat{a}_x} +
-  (sin(\theta)+cos(\theta))\mathbf{\hat{a}_y} + \mathbf{\hat{a}_z}
+  (\cos(\theta) - \sin(\theta))\mathbf{\hat{a}_x} +
+  (\sin(\theta) + \cos(\theta))\mathbf{\hat{a}_y} + \mathbf{\hat{a}_z}
 
 And if we wish to express :math:`\mathbf{a}` in the :math:`\mathbf{B}`, we do:
 
@@ -391,8 +412,8 @@ And if we wish to express :math:`\mathbf{a}` in the :math:`\mathbf{B}`, we do:
   \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\end{bmatrix} \mathbf{\hat{b}_y} +
   \begin{bmatrix}\mathbf{\hat{b}_z}\cdot (\mathbf{\hat{a}_x} +
   \mathbf{\hat{a}_y} + \mathbf{\hat{a}_z})\end{bmatrix} \mathbf{\hat{b}_z}\\
-  \mathbf{a} &= (cos(\theta) + sin(\theta))\mathbf{\hat{b}_x} +
-  (-sin(\theta)+cos(\theta))\mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}
+  \mathbf{a} &= (\cos(\theta) + \sin(\theta))\mathbf{\hat{b}_x} +
+  (-\sin(\theta)+\cos(\theta))\mathbf{\hat{b}_y} + \mathbf{\hat{b}_z}
 
 
 Derivatives with Multiple Frames
@@ -420,6 +441,9 @@ Examples
 An example of vector calculus:
 
 .. image:: vec_simp_der.svg
+   :height: 500
+   :width: 350
+   :align: center
 
 In this example we have two bodies, each with an attached reference frame.
 We will say that :math:`\theta` and :math:`x` are functions of time.
@@ -441,9 +465,9 @@ the two frames:
 .. math::
   ^{\mathbf{A}} \mathbf{C} ^{\mathbf{B}} =
   \begin{bmatrix}
-  cos(\theta) & 0 & sin(\theta)\\
+  \cos(\theta) & 0 & \sin(\theta)\\
   0 & 1 & 0\\
-  -sin(\theta) & 0 & cos(\theta)\\
+  -\sin(\theta) & 0 & \cos(\theta)\\
   \end{bmatrix}
 
 Now we can do the following:
@@ -453,11 +477,11 @@ Now we can do the following:
   \mathbf{\hat{a}_x})}{dt} \mathbf{\hat{a}_x} + \frac{d (\mathbf{c} \cdot
   \mathbf{\hat{a}_y})}{dt} \mathbf{\hat{a}_y} + \frac{d (\mathbf{c} \cdot
   \mathbf{\hat{a}_z})}{dt} \mathbf{\hat{a}_z}\\
-  &= \frac{d (cos(\theta) x)}{dt} \mathbf{\hat{a}_x} +
+  &= \frac{d (\cos(\theta) x)}{dt} \mathbf{\hat{a}_x} +
   \frac{d (l)}{dt} \mathbf{\hat{a}_y} +
-  \frac{d (-sin(\theta) x)}{dt} \mathbf{\hat{a}_z}\\
-  &= (-\dot{\theta}sin(\theta)x + cos(\theta)\dot{x}) \mathbf{\hat{a}_x} +
-  (\dot{\theta}cos(\theta)x + sin(\theta)\dot{x}) \mathbf{\hat{a}_z}
+  \frac{d (-\sin(\theta) x)}{dt} \mathbf{\hat{a}_z}\\
+  &= (-\dot{\theta}\sin(\theta)x + \cos(\theta)\dot{x}) \mathbf{\hat{a}_x} +
+  (\dot{\theta}\cos(\theta)x + \sin(\theta)\dot{x}) \mathbf{\hat{a}_z}
 
 Note that this is the time derivative of :math:`\mathbf{c}` in
 :math:`\mathbf{A}`, and is expressed in the :math:`\mathbf{A}` frame. We can
@@ -465,9 +489,9 @@ express it in the :math:`\mathbf{B}` frame however, and the expression will
 still be valid:
 
 .. math::
-  \frac{^{\mathbf{A}} d \mathbf{c}}{dt} &= (-\dot{\theta}sin(\theta)x +
-  cos(\theta)\dot{x}) \mathbf{\hat{a}_x} + (\dot{\theta}cos(\theta)x +
-  sin(\theta)\dot{x}) \mathbf{\hat{a}_z}\\
+  \frac{^{\mathbf{A}} d \mathbf{c}}{dt} &= (-\dot{\theta}\sin(\theta)x +
+  \cos(\theta)\dot{x}) \mathbf{\hat{a}_x} + (\dot{\theta}\cos(\theta)x +
+  \sin(\theta)\dot{x}) \mathbf{\hat{a}_z}\\
   &= \dot{x}\mathbf{\hat{b}_x} - \theta x \mathbf{\hat{b}_z}\\
 
 Note the difference in expression complexity between the two forms. They are
