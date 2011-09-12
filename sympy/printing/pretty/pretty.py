@@ -23,6 +23,7 @@ class PrettyPrinter(Printer):
         "full_prec": "auto",
         "use_unicode": None,
         "wrap_line": True,
+        "num_columns": None,
     }
 
     def __init__(self, settings=None):
@@ -1218,6 +1219,8 @@ def pretty(expr, **settings):
     ---------
     expr: the expression to print
     wrap_line: line wrapping enabled/disabled, should be a boolean value (default to True)
+    num_columns: number of columns before line breaking (default to None which reads the
+        terminal width), it is useful when using SymPy without terminal.
     use_unicode: use unicode characters, such as the Greek letter pi instead of
         the string pi. Values should be boolean or None
     full_prec: use full precision. Default to "auto"

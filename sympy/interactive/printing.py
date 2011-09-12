@@ -61,7 +61,7 @@ def _init_ipython_printing(ip, stringify_func):
     else:
         ip.set_hook('result_display', result_display)
 
-def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=None, no_global=False, ip=None):
+def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=None, num_columns=None, no_global=False, ip=None):
     """Initializes pretty-printer depending on the environment. """
     from sympy.printing.printer import Printer
 
@@ -71,12 +71,12 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, wrap_line=Non
         from sympy.printing import sstrrepr as stringify_func
 
     if not no_global:
-        Printer.set_global_settings(order=order, use_unicode=use_unicode, wrap_line=wrap_line)
+        Printer.set_global_settings(order=order, use_unicode=use_unicode, wrap_line=wrap_line, num_columns=num_columns)
     else:
         _stringify_func = stringify_func
 
         if pretty_print:
-            stringify_func = lambda expr: _stringify_func(expr, order=order, use_unicode=use_unicode, wrap_line=wrap_line)
+            stringify_func = lambda expr: _stringify_func(expr, order=order, use_unicode=use_unicode, wrap_line=wrap_line, num_columns=num_columns)
         else:
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
