@@ -121,7 +121,9 @@ def test_unrank_lex():
     assert Permutation.unrank_lex(5, 10).rank == 10
     assert Permutation.unrank_lex(15, 225).rank == 225
     assert Permutation.unrank_lex(10, 0).is_Identity
-    assert Permutation.unrank_lex(4, 23).array_form == [0, 3, 2, 1]
+    p = Permutation.unrank_lex(4, 23)
+    assert p.rank == 23
+    assert p.array_form == [3, 2, 1, 0]
 
 def test_args():
     p = Permutation([(0, 3, 1, 2), (4,5)])

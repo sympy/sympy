@@ -972,12 +972,11 @@ don\'t match.")
         Permutation([0, 2, 4, 1, 3])
         """
         perm_array = [0] * size
-        perm_array[size - 1] = 1
-        for i in xrange(size - 1):
-            d = (rank % factorial(i + 1)) // factorial(i)
-            rank = rank - d*factorial(i)
-            perm_array[size - i - 1] = d + 1
+        for i in xrange(size):
+            d = (rank % int(factorial(i + 1))) / int(factorial(i))
+            rank = rank - d*int(factorial(i))
+            perm_array[size - i - 1] = d
             for j in xrange(size - i, size):
-                if perm_array[j] > d:
+                if perm_array[j] > d-1:
                     perm_array[j] += 1
         return Permutation(perm_array)
