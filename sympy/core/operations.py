@@ -26,42 +26,36 @@ class AssocOp(Expr):
 
     @cacheit
     def __new__(cls, *args, **options):
+        args = map(_sympify, args)
+        args = [a for a in args if a is not cls.identity]
+
+        if not options.pop('evaluate', True):
+            return cls._from_args(args)
 
         if len(args) == 0:
             return cls.identity
-
-        args = map(_sympify, args)
-
-        try:
-            args = [a for a in args if a is not cls.identity]
-        except AttributeError:
-            pass
-
-        if len(args) == 0: # recheck after filtering
-            return cls.identity
-
         if len(args) == 1:
             return args[0]
 
-        if not options.pop('evaluate', True):
-            obj = Expr.__new__(cls, *args)
-            obj.is_commutative = all(a.is_commutative for a in args)
-            return obj
-
         c_part, nc_part, order_symbols = cls.flatten(args)
-        if len(c_part) + len(nc_part) <= 1:
-            if c_part:
-                obj = c_part[0]
-            elif nc_part:
-                obj = nc_part[0]
-            else:
-                obj = cls.identity
-        else:
-            obj = Expr.__new__(cls, *(c_part + nc_part))
-            obj.is_commutative = not nc_part
+        obj = cls._from_args(c_part + nc_part, not nc_part)
 
         if order_symbols is not None:
-            obj = C.Order(obj, *order_symbols)
+            return C.Order(obj, *order_symbols)
+        return obj
+
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        """Create new instance with already-processed args"""
+        if len(args) == 0:
+            return cls.identity
+        elif len(args) == 1:
+            return args[0]
+
+        obj = Expr.__new__(cls, *args)
+        if is_commutative is None:
+            is_commutative = all(a.is_commutative for a in args)
+        obj.is_commutative = is_commutative
         return obj
 
     def _new_rawargs(self, *args, **kwargs):
@@ -138,23 +132,12 @@ class AssocOp(Expr):
                False
 
         """
-        if len(args) > 1:
-            obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
-
-            if (hasattr(self, 'is_commutative') and
-                (self.is_commutative or
-                not kwargs.pop('reeval', True))):
-                obj.is_commutative = self.is_commutative
-            else:
-                obj.is_commutative = all(a.is_commutative for a in args)
-
-        elif len(args) == 1:
-            obj = args[0]
+        if not hasattr(self, 'is_commutative') or (kwargs.pop('reeval', True)
+                and self.is_commutative is False):
+            is_commutative = None
         else:
-            obj = self.identity
-
-        return obj
-
+            is_commutative = self.is_commutative
+        return self._from_args(args, is_commutative)
 
     @classmethod
     def flatten(cls, seq):
