@@ -40,6 +40,7 @@ class Expr(Basic, EvalfMixin):
         """
         return False
 
+    @cacheit
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work
         from sympy.core import S
