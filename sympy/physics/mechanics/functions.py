@@ -156,8 +156,6 @@ def mprint(expr, **settings):
     u1
 
     """
-    if 'order' not in settings:
-        settings['order'] = 'none'
 
     pr = MechanicsStrPrinter(settings)
     outstr = pr.doprint(expr)
@@ -188,9 +186,6 @@ def mpprint(expr, **settings):
 
     """
 
-    if 'order' not in settings:
-        settings['order'] = 'none'
-
     mp = MechanicsPrettyPrinter(settings)
     print(mp.doprint(expr))
 
@@ -216,9 +211,6 @@ def mlatex(expr, **settings):
     '\\mathbf{\\hat{n}_x} + \\mathbf{\\hat{n}_y}'
 
     """
-
-    if 'order' not in settings:
-        settings['order'] = 'none'
 
     return MechanicsLatexPrinter(settings).doprint(expr)
 

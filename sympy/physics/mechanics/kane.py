@@ -252,7 +252,7 @@ class Kane(object):
         self._qdep = qdep
         self._f_h = coneqs
 
-    def speeds(self, uind, udep=[], coneqs=[], diffconeqs=None, aux=[]):
+    def speeds(self, uind, udep=[], coneqs=[], diffconeqs=None, u_auxiliary=[]):
         """Supply all the generalized speeds in a list.
 
         If there are motion constraints or auxiliary speeds, they are provided
@@ -260,7 +260,7 @@ class Kane(object):
 
         Parameters
         ==========
-        unid : list
+        uind : list
             A list of independent generalized speeds
         udep : list
             Optional list of dependent speeds
@@ -271,8 +271,8 @@ class Kane(object):
             Optional, calculated automatically otherwise; list of constraint
             equations; again equal to zero, but define an acceleration
             constraint.
-        auxlist : list
-            An optional list of auxialliary speeds used for brining
+        u_auxiliary : list
+            An optional list of auxiliary speeds used for brining
             non-contributing forces into evidence
 
         """
@@ -281,7 +281,7 @@ class Kane(object):
             raise TypeError('Generalized speeds must be supplied in a list')
         self._u = uind + udep
         self._udot = [diff(i, dynamicsymbols._t) for i in self._u]
-        self._uaux = aux
+        self._uaux = u_auxiliary
 
         if not isinstance(udep, (list, tuple)):
             raise TypeError('Dependent speeds and constraints must each be '
@@ -626,7 +626,7 @@ class Kane(object):
         if self._uaux != []:
             km = Kane(self._inertial)
             km.coords(self._q)
-            km.speeds(self._uaux, aux=self._uaux)
+            km.speeds(self._uaux, u_auxiliary=self._uaux)
             fraux = km._form_fr(FL)
             frstaraux = km._form_frstar(BL)
             self._aux_eq = fraux + frstaraux

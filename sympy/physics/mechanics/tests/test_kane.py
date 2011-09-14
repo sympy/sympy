@@ -219,7 +219,7 @@ def test_aux():
 
     KM2 = Kane(N)
     KM2.coords([q1, q2, q3])
-    KM2.speeds([u1, u2, u3], aux=[u4, u5])
+    KM2.speeds([u1, u2, u3], u_auxiliary=[u4, u5])
     KM2.kindiffeq(kd)
     (fr2, frstar2) = KM2.kanes_equations(ForceList, BodyList)
     fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5:0})

@@ -28,10 +28,13 @@ dependent coordinate(s).
 
 Kane's method forms two expressions, :math:`F_r` and :math:`F_r^*`, whose sum
 is zero. In this module, these expressions are rearranged into the following
-form: :math:`\mathbf{M}(q, t) \dot{u} = \mathbf{f}(q, \dot{q}, u, t)`. For a
-non-holonolic system with "o" total speeds and "m" motion constraints, we will
-get o - m equations. The mass-matrix/forcing equations are then augmented in
-the following fashion:
+form:
+
+ :math:`\mathbf{M}(q, t) \dot{u} = \mathbf{f}(q, \dot{q}, u, t)`
+
+For a non-holonolic system with "o" total speeds and "m" motion constraints, we
+will get o - m equations. The mass-matrix/forcing equations are then augmented
+in the following fashion:
 
 .. math::
   \mathbf{M}(q, t) &= \begin{bmatrix} \mathbf{k_d}(q, t) \\
@@ -76,7 +79,7 @@ See the examples for more information on this. In this example u4 is the
 auxiliary speed. ::
 
   >>> u1, u2, u3, u4 = dynamicsymbols('u1 u2 u3 u4')
-  >>> KM.speeds([u1, u2, u3], aux=[u4])
+  >>> KM.speeds([u1, u2, u3], u_auxiliary=[u4])
 
 Kinematic differential equations must also be supplied; there are to be
 provided as a list of expressions which are each equal to zero. A trivial

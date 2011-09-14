@@ -99,10 +99,9 @@ def test_ang_vel():
         2 * (q2d * q0 + q3d * q1 - q1d * q3 - q0d * q2) * E.y +
         2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3) * E.z)
 
-    F = N.orientnew('F', 'Body', (q1, q2, q3), '123')
-    assert F.ang_vel_in(N) == (
-        (sin(q3) * q2d + cos(q2) * cos(q3) * q1d) * F.x + (cos(q3) * q2d -
-        sin(q3) * cos(q2) * q1d) * F.y + (q3d + sin(q2) * q1d) * F.z)
+    F = N.orientnew('F', 'Body', (q1, q2, q3), '313')
+    assert F.ang_vel_in(N) == ((sin(q2)*sin(q3)*q1d + cos(q3)*q2d)*F.x +
+        (sin(q2)*cos(q3)*q1d - sin(q3)*q2d)*F.y + (cos(q2)*q1d + q3d)*F.z)
     G = N.orientnew('G', 'Axis', (q1, N.x + N.y))
     assert G.ang_vel_in(N) == q1d * (N.x + N.y).unit
     assert N.ang_vel_in(G) == -q1d * (N.x + N.y).unit
@@ -114,6 +113,7 @@ def test_dcm():
     B = A.orientnew('B', 'Axis', [q2, A.x])
     C = B.orientnew('C', 'Axis', [q3, B.y])
     D = N.orientnew('D', 'Axis', [q4, N.y])
+    E = N.orientnew('E', 'Space', [q1, q2, q3], '123')
     assert N.dcm(C) == Matrix([
         [- sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), - sin(q1) *
         cos(q2), sin(q1) * sin(q2) * cos(q3) + sin(q3) * cos(q1)], [sin(q1) *
@@ -131,6 +131,12 @@ def test_dcm():
         sin(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4)), sin(q2) *
         cos(q4) - sin(q1) * sin(q4) * cos(q2), sin(q3) * sin(q4) * cos(q1) +
         cos(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4))]])
+    assert E.dcm(N) == Matrix(
+        [[cos(q2)*cos(q3), sin(q3)*cos(q2), -sin(q2)],
+        [sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1), sin(q1)*sin(q2)*sin(q3) +
+        cos(q1)*cos(q3), sin(q1)*cos(q2)], [sin(q1)*sin(q3) +
+        sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
+        cos(q1)*cos(q2)]])
 
 def test_Vector():
     assert A.x != A.y

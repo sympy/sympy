@@ -162,7 +162,7 @@ class Dyad(object):
         if len(ar) == 0:
             return str(0)
         ol = [] # output list, to be concatenated to a string
-        mlp = MechanicsLatexPrinter({'order':None})
+        mlp = MechanicsLatexPrinter()
         for i, v in enumerate(ar):
             # if the coef of the dyad is 1, we skip the 1
             if ar[i][0] == 1:
@@ -203,7 +203,7 @@ class Dyad(object):
             def render(self, *args, **kwargs):
                 self = e
                 ar = self.args # just to shorten things
-                mpp = MechanicsPrettyPrinter({'order':None})
+                mpp = MechanicsPrettyPrinter()
                 if len(ar) == 0:
                     return unicode(0)
                 ol = [] # output list, to be concatenated to a string
@@ -322,8 +322,7 @@ class Dyad(object):
             # If the coefficient of the dyad is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
-                arg_str = MechanicsStrPrinter(
-                        {'order':None}).doprint(ar[i][0])
+                arg_str = MechanicsStrPrinter().doprint(ar[i][0])
                 if isinstance(ar[i][0], Add):
                     arg_str = "(%s)" % arg_str
                 if arg_str[0] == '-':
@@ -812,7 +811,8 @@ class ReferenceFrame(object):
         >>> B.orient(N, 'Quaternion', [q0, q1, q2, q3])
 
         Last is Axis. This is a rotation about an arbitrary, non-time-varying
-        axis by some angle. The axis is supplied as a Vector.
+        axis by some angle. The axis is supplied as a Vector. This is how
+        simple rotations are defined.
 
         >>> B.orient(N, 'Axis', [q1, N.x + 2 * N.y])
 
@@ -950,11 +950,17 @@ class ReferenceFrame(object):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.x])
 
+
+        .orient() documentation:\n
+        ========================
+
         """
 
         newframe = ReferenceFrame(newname)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
+
+    orientnew.__doc__ += orient.__doc__
 
     def set_ang_acc(self, otherframe, value):
         """Define the angular acceleration Vector in a ReferenceFrame.
@@ -1253,8 +1259,7 @@ class Vector(object):
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = MechanicsStrPrinter(
-                            {'order':None}).doprint(ar[i][0][j])
+                    arg_str = MechanicsStrPrinter().doprint(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)"%arg_str
                     if arg_str[0] == '-':
@@ -1293,8 +1298,8 @@ class Vector(object):
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
-                            arg_str = (MechanicsPrettyPrinter(
-                                    {'order':None}).doprint(ar[i][0][j]))
+                            arg_str = (MechanicsPrettyPrinter().doprint(
+                                ar[i][0][j]))
                             if isinstance(ar[i][0][j], Add):
                                 arg_str = u"(%s)"%arg_str
                             if arg_str[0] == u"-":
@@ -1371,8 +1376,7 @@ class Vector(object):
                 elif ar[i][0][j] != 0:
                     # If the coefficient of the basis vector is not 1 or -1;
                     # also, we might wrap it in parentheses, for readability.
-                    arg_str = MechanicsStrPrinter(
-                            {'order':None}).doprint(ar[i][0][j])
+                    arg_str = MechanicsStrPrinter().doprint(ar[i][0][j])
                     if isinstance(ar[i][0][j], Add):
                         arg_str = "(%s)"%arg_str
                     if arg_str[0] == '-':

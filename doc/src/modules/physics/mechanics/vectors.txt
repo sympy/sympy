@@ -571,9 +571,9 @@ Two additional operations can be done with vectors: normalizing the vector to
 length 1, and getting its magnitude. These are done as follows:
 
   >>> (N.x + N.y).unit
-  2**(1/2)/2*N.x + 2**(1/2)/2*N.y
+  sqrt(2)/2*N.x + sqrt(2)/2*N.y
   >>> (N.x + N.y).mag
-  2**(1/2)
+  sqrt(2)
 
 Vector Calculus, in Mechanics
 -----------------------------
