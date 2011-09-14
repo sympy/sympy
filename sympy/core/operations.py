@@ -97,43 +97,10 @@ class AssocOp(Expr):
            Although this routine tries to do as little as possible with the
            input, getting the commutativity right is important, so this level
            of safety is enforced: commutativity will always be recomputed if
-           either a) self has no is_commutate attribute or b) self is
-           non-commutative and kwarg `reeval=False` has not been passed.
-
-           If you don't have an existing Add or Mul and need one quickly, try
-           the following.
-
-               >>> m = object.__new__(Mul)
-               >>> m._new_rawargs(x, y)
-               x*y
-
-           Note that the commutativity is always computed in this case since
-           m doesn't have an is_commutative attribute; reeval is ignored:
-
-               >>> _.is_commutative
-               True
-               >>> hasattr(m, 'is_commutative')
-               False
-               >>> m._new_rawargs(x, y, reeval=False).is_commutative
-               True
-
-           It is possible to define the commutativity of m. If it's False then
-           the new Mul's commutivity will be re-evaluated:
-
-               >>> m.is_commutative = False
-               >>> m._new_rawargs(x, y).is_commutative
-               True
-
-           But if reeval=False then a non-commutative self can pass along
-           its non-commutativity to the result (but at least you have to *work*
-           to get this wrong):
-
-               >>> m._new_rawargs(x, y, reeval=False).is_commutative
-               False
-
+           self is non-commutative and kwarg `reeval=False` has not been
+           passed.
         """
-        if not hasattr(self, 'is_commutative') or (kwargs.pop('reeval', True)
-                and self.is_commutative is False):
+        if kwargs.pop('reeval', True) and self.is_commutative is False:
             is_commutative = None
         else:
             is_commutative = self.is_commutative
