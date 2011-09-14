@@ -13,13 +13,19 @@ class Sample(tuple):
     """
     def __new__(cls, sample):
         s = tuple.__new__(cls, sorted(sample))
-        s.mean = mean = sum(s) / Integer(len(s))
-        s.variance = sum([(x-mean)**2 for x in s]) / Integer(len(s))
+        #Caching for performance increase
+	length = len(s)
+        s.mean = mean = sum(s) / Integer(length)
+        #Using unbiased estimator for variance
+	if length == 1:
+	    s.variance = (x-mean)**2
+	else:
+            s.variance = sum([(x-mean)**2 for x in s]) / Integer(length- 1)
         s.stddev = sqrt(s.variance)
-        if len(s) % 2:
-            s.median = s[len(s)//2]
+        if length % 2:
+            s.median = s[length//2]
         else:
-            s.median = sum(s[len(s)//2-1:len(s)//2+1]) / Integer(2)
+            s.median = sum(s[length//2-1:length//2+1]) / Integer(2)
         return s
 
     def __repr__(self):
