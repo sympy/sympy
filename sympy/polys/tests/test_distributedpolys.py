@@ -207,6 +207,51 @@ def test_sdp_div():
 
     assert sdp_div(f, G, 1, O_grlex, ZZ) == (Q, r)
 
+def test_sdp_rem():
+    f = sdp_from_dict({(2,1): 4, (1,1): -2, (1,0): 4, (0,1): -2, (0,0): 8}, O_grlex)
+
+    assert sdp_rem(f, [sdp_from_dict({(0,0): 2}, O_grlex)], 1, O_grlex, ZZ) == \
+        []
+
+    assert sdp_rem(f, [sdp_from_dict({(0,1): 2}, O_grlex)], 1, O_grlex, ZZ) == \
+          sdp_from_dict({(1,0): 4, (0,0): 8}, O_grlex)
+
+    f = sdp_from_dict({(1,0): 1, (0,0): -1}, O_grlex)
+    g = sdp_from_dict({(0,1): 1, (0,0): -1}, O_grlex)
+
+    assert sdp_rem(f, [g], 1, O_grlex, ZZ) == f
+
+    f = sdp_from_dict({(3,): 1, (2,): -12, (0,): -42}, O_grlex)
+    g = sdp_from_dict({(1,): 1, (0,): -3}, O_grlex)
+
+    r = sdp_from_dict({(0,): -123}, O_grlex)
+
+    assert sdp_rem(f, [g], 0, O_grlex, ZZ) == r
+
+    f = sdp_from_dict({(1,2): 1, (0,0): 1}, O_grlex)
+    G = [sdp_from_dict({(1,1): 1, (0,0): 1}, O_grlex),
+         sdp_from_dict({(0,1): 1, (0,0): 1}, O_grlex)]
+
+    r = sdp_from_dict({(0,0): 2}, O_grlex)
+
+    assert sdp_rem(f, G, 1, O_grlex, ZZ) == r
+
+    f = sdp_from_dict({(2,1): 1, (1,2): 1, (0,2): 1}, O_grlex)
+
+    G = [sdp_from_dict({(1,1): 1, (0,0): -1}, O_grlex),
+         sdp_from_dict({(0,2): 1, (0,0): -1}, O_grlex)]
+
+    r = sdp_from_dict({(1,0): 1, (0,1): 1, (0,0): 1}, O_grlex)
+
+    assert sdp_rem(f, G, 1, O_grlex, ZZ) == r
+
+    G = [sdp_from_dict({(0,2): 1, (0,0): -1}, O_grlex),
+         sdp_from_dict({(1,1): 1, (0,0): -1}, O_grlex)]
+
+    r = sdp_from_dict({(1,0): 2, (0,0): 1}, O_grlex)
+
+    assert sdp_rem(f, G, 1, O_grlex, ZZ) == r
+
 def test_sdp_lcm():
     pass
 

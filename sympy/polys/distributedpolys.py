@@ -389,9 +389,56 @@ def sdp_div(f, G, u, O, K):
 
     return Q, r
 
-def sdp_rem(f, g, u, O, K):
+
+
+def sdp_rem(f, G, u, O, K):
     """Returns polynomial remainder in `K[X]`. """
-    return sdp_div(f, g, u, O, K)[1]
+    r = {}
+
+    if K.has_Field:
+        term_div = _term_ff_div
+    else:
+        term_div = _term_rr_div
+
+    ltf = sdp_LT(f, u, K)
+    f = dict(f)
+    get = f.get
+    while f:
+        for g in G:
+            tq = term_div(ltf, sdp_LT(g, u, K), K)
+
+            if tq is not None:
+                m, c = tq
+                for mg, cg in g:
+                    m1 = monomial_mul(mg, m)
+                    c1 = get(m1, 0) - c*cg
+                    if not c1:
+                        del f[m1]
+                    else:
+                        f[m1] = c1
+                if f:
+                    if O is O_lex:
+                        ltm = max(f)
+                    else:
+                        ltm = max(f, key=lambda mx: O(mx))
+                    ltf = ltm, f[ltm]
+
+                break
+        else:
+            ltm, ltc = ltf
+            if ltm in r:
+                r[ltm] += ltc
+            else:
+                r[ltm] = ltc
+            del f[ltm]
+            if f:
+                if O is O_lex:
+                    ltm = max(f)
+                else:
+                    ltm = max(f, key=lambda mx: O(mx))
+                ltf = ltm, f[ltm]
+    return sdp_from_dict(r, O)
+
 
 def sdp_quo(f, g, u, O, K):
     """Returns polynomial quotient in `K[x]`. """
