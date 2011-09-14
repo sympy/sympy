@@ -292,6 +292,7 @@ class Basic(object):
         """Nice order of classes. """
         return 5, 0, cls.__name__
 
+    @cacheit
     def sort_key(self, order=None):
         """
         Return a sort key.
@@ -1171,6 +1172,7 @@ class Atom(Basic):
     def class_key(cls):
         return 2, 0, cls.__name__
 
+    @cacheit
     def sort_key(self, order=None):
         from sympy.core import S
         return self.class_key(), (1, (self,)), S.One.sort_key(), S.One

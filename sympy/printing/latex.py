@@ -125,7 +125,10 @@ class LatexPrinter(Printer):
             return expr
 
     def _print_Add(self, expr, order=None):
-        terms = self._as_ordered_terms(expr, order=order)
+        if self.order == 'none':
+            terms = list(expr.args)
+        else:
+            terms = self._as_ordered_terms(expr, order=order)
         tex = self._print(terms[0])
 
         for term in terms[1:]:
@@ -181,7 +184,7 @@ class LatexPrinter(Printer):
             else:
                 _tex = last_term_tex = ""
 
-                if self.order != 'old':
+                if self.order not in ('old', 'none'):
                     args = expr.as_ordered_factors()
                 else:
                     args = expr.args
@@ -945,7 +948,9 @@ def latex(expr, **settings):
         used.  If 'mode' is set to 'equation' or 'equation*', the resulting
         code will be enclosed in the 'equation' or 'equation*' environment
         (remember to import 'amsmath' for 'equation*'), unless the 'itex'
-        option is set. In the latter case, the $$ $$ syntax is used.
+        option is set. In the latter case, the $$ $$ syntax is used. For very
+        large expressions, set the 'order' keyword to 'none' if speed is a
+        concern.
 
         >>> from sympy import latex, Rational
         >>> from sympy.abc import x, y, mu, tau
