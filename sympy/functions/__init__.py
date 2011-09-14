@@ -21,7 +21,7 @@ from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell
 
 from elementary.miscellaneous import sqrt, Min, Max, Id
 from elementary.complexes import re, im, sign, Abs, conjugate, arg
-from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan, atan2
+from elementary.trigonometric import acot, cot, tan, cos, sin, sec, csc, asin, acos, atan, acot, asec, acsc, atan2
 from elementary.exponential import exp, log, LambertW
 from elementary.hyperbolic import sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth
 from elementary.integers import floor, ceiling
