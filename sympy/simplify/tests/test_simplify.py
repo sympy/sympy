@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float)
+    factor, Mul, O, hyper, Add, Float, model)
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL
 
@@ -808,3 +808,48 @@ def test_as_content_primitive():
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
             (S(1)/14, 7.0*x + 21*y + 10*z)
+
+def test_model():
+    x,y,z,C,k = symbols('x y z C k')
+    C0, C1, C2, C3, C4 = symbols('C:5')
+    k0, k1, k2 = symbols('k:3')
+
+    assert model(y + C, x) == C0
+    assert model(y + C + C4, x) == C0
+    assert model(y + z, x, 'C') == C0
+    assert model(y + z, x) == C0
+    assert model(k + z, k, 'k') == k + k0
+    raises(ValueError, 'model(k2 + z, k2, "k")')
+    assert model(Integral(x, (x, 1, 2)), x) == C0
+    assert model(x**2*y*exp(x+z) + x*y + x*z, x, 'C') == C0*x + C1*x**2*exp(x)
+    assert model(x**2*y*exp(x+z) + x*y + x*z, x, 'k') == k0*x + k1*x**2*exp(x)
+    assert model(3 + y*x + x*z, x) == 3 + C0*x
+    assert model(3 + y*x + x*z, x, numbers=True) == C0 + C1*x
+    assert model(3 + y*x + x*z + x**2*z, x) == 3 + C0*x + C1*x**2
+    assert model(3 + y*x + x*z + x**2*z, x, numbers=True) == C0 + C1*x + C2*x**2
+    assert model(x - y, x) == C0 + x
+    assert model(-x + y, x) == C0 - x
+    assert model(-2*x + y, x) == C0 - 2*x
+    assert model(-2*x + y, x, numbers=True) == C0 + C1*x
+    assert model(exp(x + 3) + exp(x + 4), x) == exp(x + 3) + exp(x + 4)
+    assert model(exp(x + 3) + exp(x + 4), x, numbers=True) == C0*exp(x)
+    assert model(a*exp(x) + b*exp(x + 4), x) == C0*exp(x)
+    assert model((x + C1)/(x + C2), x) == (C1 + x)/(C0 + x)
+    assert model(exp(x + C1)/exp(x + C2), x) == C0
+    assert model((x + 2 + C1)/(x + C2), x) != 1
+    assert model(2*sqrt(a*x), x) == C0*sqrt(x)
+    assert model((2 + x + 3*x**2 + a*x**2), x) == C0*x**2 + x + 2
+    assert model((2 + x + 3*x**2 + a*x**2), x, numbers=True) == C0 + C1*x**2 + x
+    assert model((2 + x + 3*x**2), x) == 3*x**2 + x + 2
+    assert model((2 + x + 3*x**2), x, numbers=True) == C0 + C1*x**2 + x
+    assert model(a*x + b*x, x) == C0*x
+    assert model(2*sqrt(a*x), x) == C0*sqrt(x)
+    assert model(2*(a*x)**(1+x), x) == C0*x**(x + 1)
+    assert model(2*(a*x)**(1+x), x, numbers=True) == C0*x**x
+    assert model(2*(a*x)**(a+x), x) == C0*x**x
+    assert model(C1*exp(3 + x), x) == C0*exp(x)
+    assert model(3*exp(C1 + x), x) == C0*exp(x)
+    assert model(a*exp(4 + x)*exp(2*x + 3), x) == C0*exp(3*x)
+    assert model(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C2 + C3*x)/(C0 + C1*x)
+    assert model(a*(y*x + z), x) == C0 + C1*x
+    assert model(a*cos(x), x) == C0*cos(x)

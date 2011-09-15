@@ -12,7 +12,7 @@ from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 
-from sympy.utilities import flatten, default_sort_key
+from sympy.utilities import flatten, default_sort_key, preorder_traversal
 from sympy.functions import gamma, exp, sqrt, log, root
 
 from sympy.simplify.cse_main import cse
@@ -21,6 +21,8 @@ from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, terms_gcd, lcm, gcd)
 
 import sympy.mpmath as mpmath
+
+from string import digits
 
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
@@ -2234,3 +2236,237 @@ def _logcombine(expr, force=False):
         _logcombine(expr.args[1], force)
 
     return expr
+
+def model(expr, variable, constant_name='C', numbers=False):
+    """Return ``expr`` with all symbols that are the ``variable``
+    absorbed into constant(s) with name ``constant_name`` having consecutive
+    numbers e.g. C0, C1, C2, .... The absorbing is done by combining added or
+    multiplied constants, and by expanding powers that have an added constant
+    in the exponent. Bare numbers that are not multiplied or added to a
+    constant will not be absorbed unless ``numbers`` is True.
+
+    Examples::
+
+    >>> from sympy import model, exp
+    >>> from sympy.abc import x, y, z
+    >>> model(y + 3, x)
+    C0
+    >>> model(y + 3, x, 'k')
+    k0
+    >>> model(x + 3, x)
+    x + 3
+    >>> model(x + 3, x, numbers=True)
+    C0 + x
+    >>> model(-x + 3, x, numbers=True)
+    C0 - x
+    >>> model(x + 3*y, x)
+    C0 + x
+    >>> model(x + 3*y, x, 'x')
+    x + x0
+    >>> model(exp(x + 3), x)
+    exp(x + 3)
+    >>> model(y*exp(x + 3), x)
+    C0*exp(x)
+    """
+    from string import digits
+
+    eq = expr
+    x = variable
+
+    # if x is a numbered symbol having the same root name as u
+    # then we raise an error
+    if (x.name.startswith(constant_name) and
+        len(x.name) > len(constant_name) and
+        all(ch in digits for ch in x.name[len(constant_name):])):
+        raise ValueError('Chosen constant name clashes with the variable %s' % x)
+
+    def hit(i, donum=None):
+        """Should the x-independent quantity ``i`` be replaced with a symbol: if
+        ``donum`` is True, then all but +/-1 and already identified replacement
+        symbols should be replaced."""
+        donum = numbers if donum is None else donum
+        if not donum:
+            if i.is_Number or i.is_number:
+                return False
+        if i.is_Number:
+            return abs(i) != 1
+        return True
+
+    def renumu(eq, k=0):
+        """Number the u-symbols that have been introduced.
+        """
+        if eq in u_all:
+            return Symbol(constant_name + str(k)), k + 1
+        elif eq.is_Atom:
+            return eq, k
+        else:
+            args = list(eq.args)
+            if eq.is_Add or eq.is_Mul:
+                unify = zip(u_all, [S.One]*len(u_all))
+                args = [i[1] for i in sorted([(e.subs(unify), e) for e in eq.args], key=default_sort_key)]
+            for i, a in enumerate(args):
+                a, k = renumu(a, k)
+                args[i] = a
+            return eq.func(*args), k
+
+    def do_muls(eq, donum=None, deep=True):
+        """Return eq with all Muls in the form g(~x)*f(x) as u*f(x) where
+        g(~x) is any non-x containing expression. By using the same symbols, u,
+        similar Muls in an Add will combine, e.g. 2*a*x + 3*b*x -> 5*u*x
+        """
+        if not deep:
+            terms = {}
+            for ai in Add.make_args(eq):
+                i, d = ai.as_independent(x, as_Add=False)
+                terms.setdefault(d, []).append(i)
+            args = []
+            for k, v in terms.items():
+                if len(v) > 1 or hit(v[0], donum):
+                    args.append(u*k)
+                else:
+                    args.append(k*v[0])
+            return Add(*args)
+
+        for _ in range(2):
+            reps = []
+            muls = sorted(eq.atoms(Mul), key=count_ops, reverse=True)
+            for m in muls:
+                i, d = m.as_independent(x)
+                drop = False
+                for a in Mul.make_args(d):
+                    if not a.is_Add:
+                        continue
+                    c_in_all = True
+                    for ai in a.args:
+                        if not any(t in u_all for t in Mul.make_args(ai)):
+                            c_in_all = False
+                            break
+                    if c_in_all:
+                        drop = True
+                        break
+                if drop:
+                    reps.append((m, d))
+                elif hit(i, donum):
+                    reps.append((m, u*d))
+
+            eq = eq.subs(reps)
+        return eq
+
+    def do_add(eq):
+        """Return eq with all Adds in the form g(~x) + f(x) as u + f(x) where
+        g(~x) is any non-x containing expression.
+        """
+        reps=[]
+        for a in sorted(eq.atoms(Add), key=count_ops, reverse=True):
+            awas = a
+            newa = do_muls(a, deep=False)
+            if not newa.is_Add:
+                reps.append((a, newa.as_coeff_Mul()[1]))
+                continue
+            if len(newa.args) != len(a.args):
+                a = newa
+            i, d = a.as_independent(x)
+            if i and hit(i):
+                ui = Dummy()
+                u_all.append(ui)
+                reps.append((awas, ui + d))
+            elif newa != awas:
+                reps.append((awas, a))
+        return eq.subs(reps)
+
+    u = Dummy('u') # the generic new constant
+    u_all = [u] # the list of all constants created
+
+    # handle independent of x
+    if not (eq.has(x) and x in eq.free_symbols):
+        return renumu(u)[0]
+
+    # handle all Adds; they each need their own u since there
+    # may be ratios like (x+a)/(x+b) which would otherwise
+    # simplify to 1
+    eq = do_add(eq)
+
+    # handle any other muls
+    if numbers:
+        eq = do_muls(eq)
+
+    # handle all Pow or exp
+    # -----------------------------------------------------------------------
+    # expand powers in Muls, e.g. C1*exp(3 + x) or 2*exp(C1 + x) -> C1*exp(x)
+    muls = [m for m in eq.atoms(Mul)]
+    reps = []
+    for m in muls:
+        nums = []
+        cons = []
+        pows = []
+        other = []
+        for mi in m.args:
+            if mi.is_number:
+                nums.append(mi)
+            elif (mi.is_Pow or mi.func is exp) and mi.exp.is_Add:
+                pows.append(mi)
+            elif not x in mi.free_symbols and (hit(mi) or mi in u_all):
+                cons.append(mi)
+            else:
+                other.append(mi)
+        if cons and nums:
+            nums = []
+        rebuild = False
+        if cons and pows:
+            for i, p in enumerate(pows):
+                e = [a for a in p.exp.args if not a.is_number]
+                if len(e) != len(p.exp.args):
+                    pows[i] = p.base**Add(*e)
+                    rebuild = True
+        elif nums and pows:
+            for i, p in enumerate(pows):
+                e = [a for a in p.exp.args if a in u_all]
+                if len(e):
+                    csum = Add(*e)
+                    pows[i] = p.base**(p.exp - csum)
+                    nums.append(csum)
+                    rebuild = True
+        if rebuild or len(pows) > 1:
+            pow = Mul(*pows)
+            if len(pows) > 1:
+                pow = powsimp(pow)
+                if not (pow.is_Mul and len(pow.args) == len(pows)):
+                    newpow = do_add(pow)
+                    if newpow != pow:
+                        pow = newpow
+                        rebuild = True
+            if rebuild:
+                reps.append((m, Mul(*cons)*Mul(*nums)*pow*Mul(*other)))
+    eq = eq.subs(reps)
+    # expand any power, not only those in Muls; they each need their own u since there
+    # may be ratios like exp(x+2)/exp(x+3) which would otherwise
+    # simplify to another Pow, e.g. C0**2
+    reps = []
+    for p in sorted([p for p in eq.atoms(Function, Pow)
+                     if p.is_Pow or p.func is exp],
+                     key=count_ops,reverse=1):
+        b, e = p.as_base_exp()
+        pre = 1
+        if b.is_Mul:
+            bi, bd = b.as_independent(x)
+            if hit(bi) or bi in u_all:
+                ui = Dummy()
+                u_all.append(ui)
+                pre *= ui
+                b = bd
+        if e.is_Add:
+            i, d = e.as_independent(x)
+            if i and (hit(i) or numbers and i.is_number):
+                ui = Dummy()
+                u_all.append(ui)
+                reps.append((p, pre*ui*b**d))
+                continue
+        if pre != 1:
+            reps.append((p, pre*b**e))
+        else:
+            if e in u_all:
+                reps.append((p, e))
+    eq = do_muls(eq.subs(reps))
+
+    # add numbers to u
+    return renumu(eq)[0]
