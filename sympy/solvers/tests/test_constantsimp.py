@@ -57,7 +57,7 @@ def test_constant_add():
     assert constant_renumber(constantsimp(C1 + y, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(C1 + x, x, 1), 'C', 1, 1) == C1 + x
     assert constant_renumber(constantsimp(C1 + x + y + x*y + 2, x, 1), 'C', 1, 1) == \
-        C1 + x + x*y
+        C1 + x*(y + 1)
     assert constant_renumber(constantsimp(C1 + x + 2**x + y + 2, x, 1), 'C', 1, 1) == \
         C1 + x + 2**x
     assert constant_renumber(constantsimp(C1 + C1, x, 1), 'C', 1, 1) == C1
@@ -89,7 +89,7 @@ def test_constant_power_as_exp():
     assert constant_renumber(constantsimp(2**C1, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(S(2)**C1, x, 1), 'C', 1, 1) == C1
     assert constant_renumber(constantsimp(exp(C1), x, 1), 'C', 1, 1) == C1
-    assert constant_renumber(constantsimp(exp(C1+x), x, 1), 'C', 1, 1) == exp(C1+x)
+    assert constant_renumber(constantsimp(exp(C1+x), x, 1), 'C', 1, 1) == C1*exp(x)
     assert constant_renumber(constantsimp(Pow(2, C1), x, 1), 'C', 1, 1) == C1
 
 def test_constant_function():
