@@ -10,10 +10,8 @@ how to use them with this module's code.
 Vector
 ======
 
-A vector is a magnitude, in a direction. Direction will sometimes be defined as
-the combination of orientation, and sense; here orientation is where it is
-pointing, and sense is which way along that orientation the magnitude is in.
-They are represented in one of a few ways in a two dimensional medium.
+A vector is a geometric object that has a magnitude (or length) and a
+direction.  Vectors in 3-space are often represented on paper as:
 
 .. image:: vec_rep.svg
    :height: 175
@@ -25,8 +23,8 @@ Vector Algebra
 
 Vector algebra is the first topic to be discussed.
 
-Two vectors are said to be equal if and only if (iff) the have the same
-characteristics: they need to have the same magnitude, orientation, and sense.
+Two vectors are said to be equal if and only if (iff) they have the same same
+magnitude and orientation.
 
 Vector Operations
 -----------------
@@ -47,31 +45,29 @@ Vector addition is also commutative:
   (\mathbf{a} + \mathbf{b}) + \mathbf{c} &= \mathbf{a} + (\mathbf{b} +
   \mathbf{c})
 
-Scalar Multiplication is the product of a vector and a scalar; the result is a
-new vector, with the same direction and a new magnitude which is the product of
-the old magnitude and the scalar.
+Scalar multiplication is the product of a vector and a scalar; the result is a
+vector with the same orientation but whose magnitude is scaled by the scalar.
+Note that multiplication by -1 is equivalent to rotating the vector by 180
+degrees about an arbitrary axis in the plane perpendicular to the vector.
 
 .. image:: vec_mul.svg
    :height: 150
    :width: 200
    :align: center
 
-At this point we will introduce the unit vector, a vector whose magnitude is a
-pure, non-dimensional 1. For any vector :math:`\mathbf{v}` we can define a unit
-vector as:
+A unit vector is simply a vector whose magnitude is equal to 1.  Given any
+vector :math:`\mathbf{v}` we can define a unit vector as:
 
 .. math::
   \mathbf{\hat{n}_v} = \frac{\mathbf{v}}{\Vert \mathbf{v} \Vert}
 
-Alternatively, a vector can be defined as: :math:`\mathbf{v} =
-\mathbf{\hat{n}_v}`. Every vector can be written as the product of a scalar and
-unit vector.
+Note that every vector can be written as the product of a scalar and unit
+vector.
 
-There are three types of vector multiplication used in :mod:`mechanics`: dot
-products, cross products, and outer products.
+Three vector products are implemented in :mod:`mechanics`: the dot product, the
+cross product, and the outer product.
 
-The dot product operation involves two vectors, and returns a scalar. The dot
-product is defined as:
+The dot product operation maps two vectors to a scalar.  It is defined as:
 
 .. math::
   \mathbf{a} \cdot \mathbf{b} = \Vert \mathbf{a} \Vert \Vert \mathbf{b}
@@ -81,9 +77,9 @@ where :math:`\theta` is the angle between :math:`\mathbf{a}` and
 :math:`\mathbf{b}`.
 
 The dot product of two unit vectors represent the magnitude of the common
-direction; for other vectors, it is the product of unit magnitude of the common
-direction and the two vectors' magnitudes. Two perpendicular vectors will have
-a zero dot product. The figure below shows some examples:
+direction; for other vectors, it is the product of the magnitude of the common
+direction and the two vectors' magnitudes. The dot product of two perpendicular
+is zero. The figure below shows some examples:
 
 .. image:: vec_dot.svg
    :height: 250
@@ -295,7 +291,7 @@ Relating Sets of Basis Vectors
 
 We need to now define the relationship between two different reference frames;
 or how to relate the basis vectors of one frame to another. We can do this
-using a direction cosine matrix (or DCM). The direction cosine matrix relates
+using a direction cosine matrix (DCM). The direction cosine matrix relates
 the basis vectors of one frame to another, in the following fashion:
 
 .. math::
@@ -550,8 +546,8 @@ Remember to refer to SymPy's Gotchas and Pitfalls when dealing with symbols.::
   x*N.x + x*N.y
 
 In :mod:`mechanics` multiple interfaces to vector multiplication have been
-implemented, at the operator level, method level, and function level. The dot
-product can work as follows: ::
+implemented, at the operator level, method level, and function level. The
+vector dot product can work as follows: ::
 
   >>> N.x & N.x
   1
@@ -566,13 +562,12 @@ product can work as follows: ::
   >>> dot(N.x, N.y)
   0
 
-The "official" interface is the last one; or the function interface; this is
-what will be used in all examples. This is to avoid confusion with the
-attribute and methods being next to each other, and in the case of the operator
-operation priority. The operators used in :mod:`mechanics` for vector
-multiplication do not posses the correct order of operations; this can lead to
-errors. Care with parentheses is needed when using operators to represent
-vector multiplication.
+The "official" interface is the function interface; this is what will be used
+in all examples. This is to avoid confusion with the attribute and methods
+being next to each other, and in the case of the operator operation priority.
+The operators used in :mod:`mechanics` for vector multiplication do not posses
+the correct order of operations; this can lead to errors. Care with parentheses
+is needed when using operators to represent vector multiplication.
 
 The cross product is the other vector multiplication which will be discussed
 here. It offers similar interfaces to the dot product, and comes with the same
@@ -609,7 +604,10 @@ derivative in that frame right now, if we desire: ::
   N.x
 
 SymPy has a ``diff`` function, but it does not currently work with
-:mod:`mechanics` Vectors, so please use ``Vector``'s ``diff`` method.
+:mod:`mechanics` Vectors, so please use ``Vector``'s ``diff`` method.  The
+reason for this is that when differentiating a ``Vector``, the frame of
+reference must be specified in addition to what you are taking the derivative
+with respect to; Sympy's ``diff`` function doesn't fit this mold.
 
 The more interesting case arise with multiple reference frames. If we introduce
 a second reference frame, :math:`\mathbf{A}`, we now have two frames. Note that
@@ -627,7 +625,7 @@ functionality. ::
 
   >>> A.orient(N, 'Axis', [x, N.y])
 
-If we desire, we can view the dcm between these two frames at any time. This
+If we desire, we can view the DCM between these two frames at any time. This
 can be calculated with the ``dcm`` method. This code: ``N.dcm(A)`` gives the
 dcm :math:`^{\mathbf{N}} \mathbf{C} ^{\mathbf{A}}`.
 
@@ -736,14 +734,14 @@ How Vectors are Coded in Mechanics
 What follows is a short description of how vectors are defined by the code in
 :mod:`mechanics`. It is provided for those who want to learn more about how
 this part of :mod:`mechanics` works, and does not need to be read to use this
-module; don't read it unless you want to learn how this module was coded.
+module; don't read it unless you want to learn how this module was implemented.
 
 Every ``Vector``'s main information is stored in the ``args`` attribute, which
 stores the three measure numbers for each basis vector in a frame, for every
 relevant frame. A vector does not exist in code until a ``ReferenceFrame``
 is created. At this point, the ``x``, ``y``, and ``z`` attributes of the
 reference frame are immutable ``Vector``'s which have measure numbers of
-[1,0,0], [0,1,0], and [0,0,1] associated with that ``ReferenceFrame``. One
+[1,0,0], [0,1,0], and [0,0,1] associated with that ``ReferenceFrame``. Once
 these vectors are accessible, new vectors can be created by doing algebraic
 operations with the basis vectors. A vector can have components from multiple
 frames though. That is why ``args`` is a list; it has as many elements in the
@@ -752,7 +750,7 @@ are ``A`` and ``B`` frame basis vectors in our new vector, ``args`` is of
 length 2; if it has ``A``, ``B``, and ``C`` frame basis vector, ``args`` is of
 length three.
 
-Each element in the ``args`` list is a tuple; the first element is a SymPy
+Each element in the ``args`` list is a 2-tuple; the first element is a SymPy
 ``Matrix`` (this is where the measure numbers for each set of basis vectors are
 stored) and the second element is a ``ReferenceFrame`` to associate those
 measure numbers with.
@@ -766,6 +764,4 @@ method after creation. The direction cosine matrices are represented by SymPy's
 bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
 orientation dictionary to include ``N`` and its ``Matrix``, but also you also
 are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
-(that dcm being the transpose of the other).
-
-
+(that DCM being the transpose of the other).

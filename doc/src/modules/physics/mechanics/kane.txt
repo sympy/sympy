@@ -24,7 +24,9 @@ differentiated non-holonomic equations.
 
 In :mod:`mechanics` holonomic constraints are only used for the linearization
 process; it is assumed that they will be too complicated to solve for the
-dependent coordinate(s).
+dependent coordinate(s).  If you are able to easily solve a holonomic
+constraint, you should consider redefining your problem in terms of a smaller
+set of coordinates.
 
 Kane's method forms two expressions, :math:`F_r` and :math:`F_r^*`, whose sum
 is zero. In this module, these expressions are rearranged into the following
@@ -32,14 +34,14 @@ form:
 
  :math:`\mathbf{M}(q, t) \dot{u} = \mathbf{f}(q, \dot{q}, u, t)`
 
-For a non-holonolic system with "o" total speeds and "m" motion constraints, we
+For a non-holonomic system with "o" total speeds and "m" motion constraints, we
 will get o - m equations. The mass-matrix/forcing equations are then augmented
 in the following fashion:
 
 .. math::
   \mathbf{M}(q, t) &= \begin{bmatrix} \mathbf{k_d}(q, t) \\
   \mathbf{k_{dnh}}(q, t) \end{bmatrix}\\
-  \mathbf{f_{(orcing)}}(q, \dot{q}, u, t) &= \begin{bmatrix}
+  \mathbf{_{(forcing)}}(q, \dot{q}, u, t) &= \begin{bmatrix}
   - \mathbf{f_d}(q, \dot{q}, u, t) \\ - \mathbf{f_{dnh}}(q, \dot{q}, u, t)
   \end{bmatrix}\\
 
@@ -64,7 +66,7 @@ Next is the specification of coordinates and speeds for Kane's Method.
 
 It is also important to supply the order of coordinates and speeds properly if
 there are dependent coordinates and speeds. They must be supplied after
-independent coordinates and speeds or as a keyword arguement; this is shown
+independent coordinates and speeds or as a keyword argument; this is shown
 later: ::
 
   >>> q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
@@ -115,9 +117,9 @@ below: ::
   >>> KM.coords([q1, q3, q4], qdep=[q2], coneqs=coord_cons)
   >>> KM.speeds([u1, u4], udep=[u2, u3], coneqs=speed_cons)
 
-The final step if forming the equations of motion is supplying a list of
-bodies and particles, and a list of tuples of ``Point``s/``ReferenceFrame``s
-and ``Vector``s representing forces/torques.
+The final step in forming the equations of motion is supplying a list of
+bodies and particles, and a list of 2-tuples of the form ``(Point, Vector)``
+or ``(ReferenceFrame, Vector)`` to represent applied forces and torques.
 
   >>> N = ReferenceFrame('N')
   >>> q, u = dynamicsymbols('q u')
@@ -154,12 +156,12 @@ o) x (n + o), or square and the size of all coordinates and speeds. ::
   [ u]
   [-7]
 
-The forcing vector can be linearized as well; its jacobian is taken only with
+The forcing vector can be linearized as well; its Jacobian is taken only with
 respect to the independent coordinates and speeds. The linearized forcing
 vector is of size (n + o) x (n - l + o - m), where l is the number of
 configuration constraints and m is the number of motion constraints. Two
-matrices are returned; the first is an "A" matrix, or the jacobian with respect
-to the independent states, the second is a "B" matrix, or the jacobian with
+matrices are returned; the first is an "A" matrix, or the Jacobian with respect
+to the independent states, the second is a "B" matrix, or the Jacobian with
 respect to 'forces'; this can be an empty matrix if there are no 'forces'.
 Forces here are undefined functions of time (dynamic symbols); they are only
 allowed to be in the forcing vector and their derivatives are not allowed to be
