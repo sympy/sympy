@@ -85,10 +85,11 @@ def legendre_symbol(a, p):
     """
     if not isprime(p) or p == 2:
         raise ValueError("p should be an odd prime")
-    if a % p == 0:
+    _, r = divmod(a, p)
+    if not r:
         return 0
-    if a > p:
-        a = a % p
+    else:
+        a = r
     if is_quad_residue(a, p):
         return 1
     else:
