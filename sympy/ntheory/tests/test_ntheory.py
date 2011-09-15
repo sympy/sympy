@@ -361,6 +361,7 @@ def test_residue():
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1
     assert legendre_symbol(67, 101) == -1
+    assert legendre_symbol(0, 13) == 0
 
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'
