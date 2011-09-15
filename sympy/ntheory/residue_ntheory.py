@@ -85,7 +85,7 @@ def legendre_symbol(a, p):
     """
     if not isprime(p) or p == 2:
         raise ValueError("p should be an odd prime")
-    if a%p == 0:
+    if a % p == 0:
         return 0
     if a > p:
         a = a % p
