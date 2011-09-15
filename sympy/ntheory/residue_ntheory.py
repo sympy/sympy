@@ -85,10 +85,9 @@ def legendre_symbol(a, p):
     """
     if not isprime(p) or p == 2:
         raise ValueError("p should be an odd prime")
-    if igcd(a, p) != 1:
-        raise ValueError("The two numbers should be relatively prime")
-    if a > p:
-        a = a % p
+    _, a = divmod(a, p)
+    if not a:
+        return 0
     if is_quad_residue(a, p):
         return 1
     else:
