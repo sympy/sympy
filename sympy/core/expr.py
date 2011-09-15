@@ -907,6 +907,14 @@ class Expr(Basic, EvalfMixin):
         >>> (y*(-3+x)).as_independent(x)
         (y, x - 3)
 
+        -- force a strict separation based on free symbols
+
+        >>> from sympy import Integral
+        >>> (x + Integral(x, (x, 1, 2))).as_independent(x)
+        (0, x + Integral(x, (x, 1, 2)))
+        >>> (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True)
+        (Integral(x, (x, 1, 2)), x)
+
         Note: when trying to get independent terms, a separation method
         might need to be used first. In this case, it is important to keep
         track of what you send to this routine so you know how to interpret
@@ -933,13 +941,21 @@ class Expr(Basic, EvalfMixin):
         from sympy.utilities.iterables import sift
 
         func = self.func
+        strict = hint.get('strict', False)
+        def has(e, *deps):
+            """return the standard has() or the strict has() result"""
+            if not strict:
+                return e.has(*deps)
+            free = e.free_symbols
+            return e.has(*deps) and any(d in free for d in deps)
+
         if hint.get('as_Add', func is Add):
             want = Add
         else:
             want = Mul
         if (want is not func or
             func is not Add and func is not Mul):
-            if self.has(*deps):
+            if has(self, *deps):
                 return (want.identity, self)
             else:
                 return (self, want.identity)
@@ -949,7 +965,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 args, nc = self.args_cnc()
 
-        d = sift(args, lambda x: x.has(*deps))
+        d = sift(args, lambda x: has(x, *deps))
         depend = d.pop(True, [])
         indep = d.pop(False, [])
         if func is Add: # all terms were treated as commutative
@@ -957,7 +973,7 @@ class Expr(Basic, EvalfMixin):
                     Add(*depend))
         else: # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
-                if n.has(*deps):
+                if has(n, *deps):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
