@@ -149,16 +149,6 @@ class sin(TrigonometricFunction):
 
     nargs = 1
 
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return cos(self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return asin
-
-
     @classmethod
     def eval(cls, arg):
     # RECHECK
@@ -248,17 +238,23 @@ class sin(TrigonometricFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-    # RECHECK
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2
+            return (-1)**k*x**(2*k+1)/C.factorial(2*k+1)
 
-            if len(previous_terms) > 2:
-                p = previous_terms[-2]
-                return -p * x**2 / (n*(n-1))
-            else:
-                return (-1)**(n//2) * x**(n)/C.factorial(n)
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return cos(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        return asin
 
 
     def _eval_rewrite_as_exp(self, arg):
@@ -302,6 +298,7 @@ class sin(TrigonometricFunction):
         coth_half = coth(S.ImaginaryUnit*S.Half*arg)
         return 2*S.ImaginaryUnit*coth_half / (1 - coth_half**2)
 
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -336,16 +333,6 @@ class sin(TrigonometricFunction):
         if x is not None:
             return (sin(x)*cos(y) + sin(y)*cos(x)).expand(trig=True)
         return sin(arg)
-
-
-    def _eval_as_leading_term(self, x):
-    # RECHECK
-        arg = self.args[0].as_leading_term(x)
-
-        if C.Order(1,x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
 
 
     def _eval_is_real(self):
@@ -403,16 +390,6 @@ class cos(TrigonometricFunction):
     """
 
     nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return -sin(self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return acos
-
 
     @classmethod
     def eval(cls, arg):
@@ -503,17 +480,23 @@ class cos(TrigonometricFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-    # RECHECK
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2
+            return (-1)**k*x**(2*k)/C.factorial(2*k)
 
-            if len(previous_terms) > 2:
-                p = previous_terms[-2]
-                return -p * x**2 / (n*(n-1))
-            else:
-                return (-1)**(n//2)*x**(n)/C.factorial(n)
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -sin(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        return acos
 
 
     def _eval_rewrite_as_exp(self, arg):
@@ -557,6 +540,7 @@ class cos(TrigonometricFunction):
         coth_half_sq = coth(S.ImaginaryUnit*S.Half*arg)**2
         return (coth_half_sq + 1) / (coth_half_sq - 1)
 
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -594,9 +578,7 @@ class cos(TrigonometricFunction):
 
 
     def _eval_as_leading_term(self, x):
-        # RECHECK
         arg = self.args[0].as_leading_term(x)
-
         if C.Order(1,x).contains(arg):
             return S.One
         else:
@@ -614,7 +596,6 @@ class cos(TrigonometricFunction):
 
 
     def _sage_(self):
-        # RECHECK
         import sage.all as sage
         return sage.cos(self.args[0]._sage_())
 
@@ -653,16 +634,6 @@ class tan(TrigonometricFunction):
     """
 
     nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex==1:
-            return sec(self.args[0])**2
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return atan
-
 
     @classmethod
     def eval(cls, arg):
@@ -739,18 +710,23 @@ class tan(TrigonometricFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-    # RECHECK
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2 + 1
+            return (-1)**(k-1) * 2**(2*k) * (2**(2*k)-1) * C.bernoulli(2*k) / C.factorial(2*k) * x**(2*k-1)
 
-            a, b = ((n-1)//2), 2**(n+1)
 
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
+    def fdiff(self, argindex=1):
+        if argindex==1:
+            return sec(self.args[0])**2
+        else:
+            raise ArgumentIndexError(self, argindex)
 
-            return (-1)**a * b*(b-1) * B/F * x**n
+
+    def inverse(self, argindex=1):
+        return atan
 
 
     def _eval_nseries(self, x, n, logx):
@@ -824,24 +800,12 @@ class tan(TrigonometricFunction):
         return -S.ImaginaryUnit / coth(S.ImaginaryUnit*arg)
 
 
-    def _eval_as_leading_term(self, x):
-    # RECHECK
-        arg = self.args[0].as_leading_term(x)
-
-        if C.Order(1,x).contains(arg):
-            return arg
-        else:
-            return self.func(arg)
-
-
     def _eval_is_real(self):
         return self.args[0].is_real
 
 
     def _eval_is_bounded(self):
-    # RECHECK
         arg = self.args[0]
-
         if arg.is_imaginary:
             return True
 
@@ -858,7 +822,6 @@ class tan(TrigonometricFunction):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
         return sage.tan(self.args[0]._sage_())
 
@@ -876,20 +839,9 @@ class cot(TrigonometricFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
 
     nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex == 1:
-            return -csc(self.args[0])**2
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return acot
-
 
     @classmethod
     def eval(cls, arg):
@@ -966,18 +918,25 @@ class cot(TrigonometricFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-    # RECHECK
         if n == 0:
             return 1 / sympify(x)
         elif n < 0 or n % 2 == 0:
             return S.Zero
         else:
             x = sympify(x)
+            k = n // 2 + 1
+            return (-1)**k * 2**(2*k) * C.bernoulli(2*k) / C.factorial(2*k) * x**(2*k-1)
 
-            B = C.bernoulli(n+1)
-            F = C.factorial(n+1)
 
-            return (-1)**((n+1)//2) * 2**(n+1) * B/F * x**n
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -csc(self.args[0])**2
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        return acot
 
 
     def _eval_nseries(self, x, n, logx):
@@ -1049,9 +1008,7 @@ class cot(TrigonometricFunction):
 
 
     def _eval_as_leading_term(self, x):
-    # RECHECK
         arg = self.args[0].as_leading_term(x)
-
         if C.Order(1,x).contains(arg):
             return 1/arg
         else:
@@ -1073,8 +1030,13 @@ class cot(TrigonometricFunction):
         return cot(argnew)
 
 
+    def _eval_is_bounded(self):
+        arg = self.args[0]
+        if arg.is_imaginary:
+            return True
+
+
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
         return sage.cot(self.args[0]._sage_())
 
@@ -1113,16 +1075,6 @@ class sec(TrigonometricFunction):
     """
 
     nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex==1:
-            return self*tan(self.args[0])
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return asec
-
 
     @classmethod
     def eval(cls, arg):
@@ -1202,7 +1154,6 @@ class sec(TrigonometricFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-    # RECHECK
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -1214,6 +1165,17 @@ class sec(TrigonometricFunction):
             # F = C.factorial(n+1)
 
             # return (-1)**a * b*(b-1) * B/F * x**n
+
+
+    def fdiff(self, argindex=1):
+        if argindex==1:
+            return self*tan(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        return asec
 
 
     def _eval_nseries(self, x, n, logx):
@@ -1292,11 +1254,10 @@ class sec(TrigonometricFunction):
 
 
     def _eval_as_leading_term(self, x):
-    # RECHECK
         arg = self.args[0].as_leading_term(x)
 
         if C.Order(1,x).contains(arg):
-            return arg
+            return S.One
         else:
             return self.func(arg)
 
@@ -1306,9 +1267,7 @@ class sec(TrigonometricFunction):
 
 
     def _eval_is_bounded(self):
-    # RECHECK
         arg = self.args[0]
-
         if arg.is_imaginary:
             return True
 
@@ -1326,7 +1285,6 @@ class sec(TrigonometricFunction):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
         return sage.sec(self.args[0]._sage_())
 
@@ -1365,16 +1323,6 @@ class csc(TrigonometricFunction):
     """
 
     nargs = 1
-
-    def fdiff(self, argindex=1):
-        if argindex==1:
-            return -cot(self.args[0])*self
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        return acsc
-
 
     @classmethod
     def eval(cls, arg):
@@ -1466,6 +1414,17 @@ class csc(TrigonometricFunction):
             # return (-1)**a * b*(b-1) * B/F * x**n
 
 
+    def fdiff(self, argindex=1):
+        if argindex==1:
+            return -cot(self.args[0])*self
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+
+    def inverse(self, argindex=1):
+        return acsc
+
+
     def _eval_nseries(self, x, n, logx):
     # RECHECK
         pass
@@ -1542,11 +1501,9 @@ class csc(TrigonometricFunction):
 
 
     def _eval_as_leading_term(self, x):
-    # RECHECK
         arg = self.args[0].as_leading_term(x)
-
         if C.Order(1,x).contains(arg):
-            return arg
+            return 1/arg
         else:
             return self.func(arg)
 
@@ -1556,9 +1513,7 @@ class csc(TrigonometricFunction):
 
 
     def _eval_is_bounded(self):
-    # RECHECK
         arg = self.args[0]
-
         if arg.is_imaginary:
             return True
 
@@ -1576,7 +1531,6 @@ class csc(TrigonometricFunction):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
         return sage.csc(self.args[0]._sage_())
 
@@ -1730,9 +1684,8 @@ class asin(InverseTrigonometricFunction):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
-        return sage.asin(self.args[0]._sage_())
+        return sage.arcsin(self.args[0]._sage_())
 
 
 class acos(InverseTrigonometricFunction):
@@ -1865,9 +1818,8 @@ class acos(InverseTrigonometricFunction):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
-        return sage.acos(self.args[0]._sage_())
+        return sage.arccos(self.args[0]._sage_())
 
 
 class atan(InverseTrigonometricFunction):
@@ -2012,9 +1964,8 @@ class atan(InverseTrigonometricFunction):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
-        return sage.atan(self.args[0]._sage_())
+        return sage.arctan(self.args[0]._sage_())
 
 
 class acot(InverseTrigonometricFunction):
@@ -2146,10 +2097,10 @@ class acot(InverseTrigonometricFunction):
         else:
             return super(atan, self)._eval_aseries(n, args0, x, logx)
 
+
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
-        return sage.acot(self.args[0]._sage_())
+        return sage.arccot(self.args[0]._sage_())
 
 
 class asec(InverseTrigonometricFunction):
@@ -2277,9 +2228,8 @@ class asec(InverseTrigonometricFunction):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
-        return sage.asec(self.args[0]._sage_())
+        return sage.arcsec(self.args[0]._sage_())
 
 
 class acsc(InverseTrigonometricFunction):
@@ -2407,9 +2357,8 @@ class acsc(InverseTrigonometricFunction):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
-        return sage.asec(self.args[0]._sage_())
+        return sage.arccsc(self.args[0]._sage_())
 
 
 class atan2(Function):
@@ -2477,6 +2426,5 @@ class atan2(Function):
 
 
     def _sage_(self):
-    # RECHECK
         import sage.all as sage
         return sage.atan2(self.args[0]._sage_(), self.args[1]._sage_())

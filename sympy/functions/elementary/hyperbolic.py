@@ -10,6 +10,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 class HyperbolicFunction(Function):
     """Base class for hyperbolic functions. """
 
+
 class sinh(HyperbolicFunction):
     """
     Usage
@@ -22,7 +23,6 @@ class sinh(HyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
     nargs = 1
 
@@ -141,9 +141,11 @@ class sinh(HyperbolicFunction):
         if arg.is_imaginary:
             return True
 
+
     def _sage_(self):
         import sage.all as sage
         return sage.sinh(self.args[0]._sage_())
+
 
 class cosh(HyperbolicFunction):
     """
@@ -157,7 +159,6 @@ class cosh(HyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
     nargs = 1
 
@@ -275,9 +276,11 @@ class cosh(HyperbolicFunction):
         if arg.is_imaginary:
             return True
 
+
     def _sage_(self):
         import sage.all as sage
         return sage.cosh(self.args[0]._sage_())
+
 
 class tanh(HyperbolicFunction):
     """
@@ -291,7 +294,6 @@ class tanh(HyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
     nargs = 1
 
@@ -416,6 +418,7 @@ class tanh(HyperbolicFunction):
         import sage.all as sage
         return sage.tanh(self.args[0]._sage_())
 
+
 class coth(HyperbolicFunction):
     """
     Usage
@@ -428,7 +431,6 @@ class coth(HyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
     nargs = 1
 
@@ -545,7 +547,6 @@ class coth(HyperbolicFunction):
         return sage.coth(self.args[0]._sage_())
 
 
-
 class sech(HyperbolicFunction):
     """
     Usage
@@ -558,10 +559,11 @@ class sech(HyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
-    pass
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.sech(self.args[0]._sage_())
 
 
 class csch(HyperbolicFunction):
@@ -576,10 +578,11 @@ class csch(HyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
-    pass
 
+    def _sage_(self):
+        import sage.all as sage
+        return sage.csch(self.args[0]._sage_())
 
 ###############################################################################
 ############################# HYPERBOLIC INVERSES #############################
@@ -603,7 +606,6 @@ class asinh(InverseHyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
     nargs = 1
 
@@ -668,9 +670,11 @@ class asinh(InverseHyperbolicFunction):
         else:
             return self.func(arg)
 
+
     def _sage_(self):
         import sage.all as sage
-        return sage.asinh(self.args[0]._sage_())
+        return sage.arcsinh(self.args[0]._sage_())
+
 
 class acosh(InverseHyperbolicFunction):
     """
@@ -684,7 +688,6 @@ class acosh(InverseHyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{asech}, L{atanh}, L{acoth}
-
     """
     nargs = 1
 
@@ -780,9 +783,11 @@ class acosh(InverseHyperbolicFunction):
         else:
             return self.func(arg)
 
+
     def _sage_(self):
         import sage.all as sage
-        return sage.acosh(self.args[0]._sage_())
+        return sage.arccosh(self.args[0]._sage_())
+
 
 class atanh(InverseHyperbolicFunction):
     """
@@ -796,7 +801,6 @@ class atanh(InverseHyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{acoth}
-
     """
     nargs = 1
 
@@ -854,9 +858,10 @@ class atanh(InverseHyperbolicFunction):
         else:
             return self.func(arg)
 
+
     def _sage_(self):
         import sage.all as sage
-        return sage.atanh(self.args[0]._sage_())
+        return sage.arctanh(self.args[0]._sage_())
 
 
 class acoth(InverseHyperbolicFunction):
@@ -871,7 +876,6 @@ class acoth(InverseHyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}
-
     """
     nargs = 1
 
@@ -931,10 +935,10 @@ class acoth(InverseHyperbolicFunction):
         else:
             return self.func(arg)
 
+
     def _sage_(self):
         import sage.all as sage
-        return sage.acoth(self.args[0]._sage_())
-
+        return sage.arccoth(self.args[0]._sage_())
 
 
 class asech(InverseHyperbolicFunction):
@@ -949,9 +953,11 @@ class asech(InverseHyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acsch}, L{acosh}, L{atanh}, L{acoth}
-
     """
-    pass
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.arcsech(self.args[0]._sage_())
 
 
 class acsch(InverseHyperbolicFunction):
@@ -966,6 +972,8 @@ class acsch(InverseHyperbolicFunction):
        L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
        L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
        L{asinh}, L{acosh}, L{asech}, L{atanh}, L{acoth}
-
     """
-    pass
+
+    def _sage_(self):
+        import sage.all as sage
+        return sage.arccsch(self.args[0]._sage_())
