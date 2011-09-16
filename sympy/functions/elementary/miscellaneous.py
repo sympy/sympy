@@ -24,21 +24,31 @@ class IdentityFunction(Lambda):
 Id = S.IdentityFunction
 
 ###############################################################################
-############################# SQUARE ROOT FUNCTION ############################
+############################# ROOT and SQUARE ROOT FUNCTION ###################
 ###############################################################################
 
 def sqrt(arg):
+    """The square root function
+
+    sqrt(x) -> Returns the positive square root of x.
+
+    >>> from sympy import sqrt, Symbol
+    >>> x = Symbol('x')
+    >>> sqrt(x)
+    sqrt(x)
+
+    See also
+    ========
+       L{root}
+    """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
 
 
-###############################################################################
-############################# ROOT FUNCTION ###################################
-###############################################################################
-
 def root(arg, n=2):
-    """
-    root(a, n) -> Returns the n-th root of a.
+    """The n-th root function
+
+    root(x, n) -> Returns the n-th root of x.
 
     See also
     ========
