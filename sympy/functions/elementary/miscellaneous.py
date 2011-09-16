@@ -220,11 +220,9 @@ class MinMaxBase(LatticeOp):
         """
         Sequentially allocate values to localzeros.
 
-        If value is greater than all of the localzeros, then it is new localzero
-        and it is apending to them.
-
-        if value is greater than one of the localzeros,
-        then update localzero's set.
+        When a value is identified as being more extreme than another member it
+        replaces that member; if this is never true, then the value is simply
+        appended to the localzeros.
         """
         localzeros = set()
         for v in values:
