@@ -9,7 +9,9 @@ from containers import Tuple
 
 class Set(Basic):
     """
-    Represents any kind of set.
+    The base class for any kind of set. This is not meant to be used directly
+    as a container of items. It does not behave like the builtin set; see
+    FiniteSet for that.
 
     Real intervals are represented by the Interval class and unions of sets
     by the Union class. The empty set is represented by the EmptySet class
@@ -1018,9 +1020,18 @@ class FiniteSet(CountableSet):
             cls = RealFiniteSet
 
         elements = frozenset(map(sympify, args))
-        obj = Basic.__new__(cls, *elements)
+        obj = Basic.__new__(cls, elements)
         obj.elements = elements
         return obj
+
+    @property
+    def args(self):
+        return tuple(self.elements)
+
+    def __eq__(self, other):
+        if isinstance(other, Basic):
+            return super(FiniteSet, self).__eq__(other)
+        return self.elements == other
 
     def __iter__(self):
         return self.elements.__iter__()
@@ -1158,6 +1169,6 @@ class RealFiniteSet(FiniteSet, RealSet):
 genclass = (1 for i in xrange(2)).__class__
 def is_flattenable(obj):
     """
-    Checks that an argument to a Set constructor  should be flattened
+    Checks that an argument to a Set constructor should be flattened
     """
     return obj.__class__ in [list, set, genclass]

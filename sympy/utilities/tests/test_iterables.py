@@ -80,6 +80,8 @@ def test_flatten():
     assert flatten([MyOp(x, y), z]) == [MyOp(x, y), z]
     assert flatten([MyOp(x, y), z], cls=MyOp) == [x, y, z]
 
+    assert flatten(set([1,11,2])) == list(set([1,11,2]))
+
 def test_group():
     assert group([]) == []
     assert group([], multiple=False) == []

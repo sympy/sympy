@@ -1,4 +1,4 @@
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S
+from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises
 from sympy.core.compatibility import is_sequence, iterable
@@ -105,3 +105,12 @@ def test_Dict():
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
 
+def issue_2689():
+    args = [(1,2),(2,1)]
+    for o in [Dict, Tuple, FiniteSet]:
+        # __eq__ and arg handling
+        if o != Tuple:
+            assert o(*args) == o(*reversed(args))
+        pair = [o(*args), o(*reversed(args))]
+        assert sorted(pair) == sorted(reversed(pair))
+        assert set(o(*args)) # doesn't fail

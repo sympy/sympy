@@ -143,12 +143,14 @@ class Dict(Basic):
 
     def __new__(cls, *args):
         if len(args)==1 and args[0].__class__ is dict:
-            items = [Tuple(k, v) for k, v in args[0].iteritems()]
+            items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
             items = [Tuple(k, v) for k, v in args]
         else:
             raise TypeError('Pass Dict args as Dict((k1, v1), ...) or Dict({k1: v1, ...})')
-        obj = Basic.__new__(cls, *items)
+        elements = frozenset(items)
+        obj = Basic.__new__(cls, elements)
+        obj.elements = elements
         obj._dict = dict(items) # In case Tuple decides it wants to sympify
         return obj
 
@@ -159,9 +161,18 @@ class Dict(Basic):
     def __setitem__(self, key, value):
         raise NotImplementedError("SymPy Dicts are Immutable")
 
+    @property
+    def args(self):
+        return tuple(self.elements)
+
+    def __eq__(self, other):
+        if isinstance(other, Basic):
+            return super(Dict, self).__eq__(other)
+        return self.elements == other
+
     def items(self):
         '''D.items() -> list of D's (key, value) pairs, as 2-tuples'''
-        return list(self.args)
+        return self._dict.items()
 
     def keys(self):
         '''D.keys() -> list of D's keys'''
