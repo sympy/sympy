@@ -15,6 +15,14 @@ class sinh(HyperbolicFunction):
     Usage
     =====
       sinh(x) -> Returns the hyperbolic sine of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
+       L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
+
     """
     nargs = 1
 
@@ -142,6 +150,14 @@ class cosh(HyperbolicFunction):
     Usage
     =====
       cosh(x) -> Returns the hyperbolic cosine of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{sech}, L{tanh}, L{coth}
+       L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
+
     """
     nargs = 1
 
@@ -268,6 +284,14 @@ class tanh(HyperbolicFunction):
     Usage
     =====
       tanh(x) -> Returns the hyperbolic tangent of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{sech}, L{coth}
+       L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
+
     """
     nargs = 1
 
@@ -397,6 +421,14 @@ class coth(HyperbolicFunction):
     Usage
     =====
       coth(x) -> Returns the hyperbolic cotangent of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}
+       L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
+
     """
     nargs = 1
 
@@ -513,15 +545,65 @@ class coth(HyperbolicFunction):
         return sage.coth(self.args[0]._sage_())
 
 
+
+class sech(HyperbolicFunction):
+    """
+    Usage
+    =====
+      sech(x) -> Returns the hyperbolic secant of x (measured in radians)
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{tanh}, L{coth}
+       L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
+
+    """
+    pass
+
+
+
+class csch(HyperbolicFunction):
+    """
+    Usage
+    =====
+      csch(x) -> Returns the hyperbolic cosecant of x (measured in radians)
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{cosh}, L{sech}, L{tanh}, L{coth}
+       L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
+
+    """
+    pass
+
+
 ###############################################################################
 ############################# HYPERBOLIC INVERSES #############################
 ###############################################################################
 
-class asinh(Function):
+class InverseHyperbolicFunction(Function):
+    """Base class for inverse hyperbolic functions. """
+    pass
+
+
+
+class asinh(InverseHyperbolicFunction):
     """
     Usage
     =====
       asinh(x) -> Returns the inverse hyperbolic sine of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
+       L{acsch}, L{acosh}, L{asech}, L{atanh}, L{acoth}
+
     """
     nargs = 1
 
@@ -590,11 +672,19 @@ class asinh(Function):
         import sage.all as sage
         return sage.asinh(self.args[0]._sage_())
 
-class acosh(Function):
+class acosh(InverseHyperbolicFunction):
     """
     Usage
     =====
       acosh(x) -> Returns the inverse hyperbolic cosine of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
+       L{asinh}, L{acsch}, L{asech}, L{atanh}, L{acoth}
+
     """
     nargs = 1
 
@@ -694,11 +784,19 @@ class acosh(Function):
         import sage.all as sage
         return sage.acosh(self.args[0]._sage_())
 
-class atanh(Function):
+class atanh(InverseHyperbolicFunction):
     """
     Usage
     =====
       atanh(x) -> Returns the inverse hyperbolic tangent of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
+       L{asinh}, L{acsch}, L{acosh}, L{asech}, L{acoth}
+
     """
     nargs = 1
 
@@ -760,11 +858,20 @@ class atanh(Function):
         import sage.all as sage
         return sage.atanh(self.args[0]._sage_())
 
-class acoth(Function):
+
+class acoth(InverseHyperbolicFunction):
     """
     Usage
     =====
       acoth(x) -> Returns the inverse hyperbolic cotangent of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
+       L{asinh}, L{acsch}, L{acosh}, L{asech}, L{atanh}
+
     """
     nargs = 1
 
@@ -827,3 +934,38 @@ class acoth(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.acoth(self.args[0]._sage_())
+
+
+
+class asech(InverseHyperbolicFunction):
+    """
+    Usage
+    =====
+      asech(x) -> Returns the inverse hyperbolic secant of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
+       L{asinh}, L{acsch}, L{acosh}, L{atanh}, L{acoth}
+
+    """
+    pass
+
+
+class acsch(InverseHyperbolicFunction):
+    """
+    Usage
+    =====
+      acsch(x) -> Returns the inverse hyperbolic cosecant of x
+
+    See also
+    ========
+       L{sin}, L{csc}, L{cos}, L{sec}, L{tan}, L{cot}
+       L{asin}, L{acsc}, L{acos}, L{asec}, L{atan}, L{acot}
+       L{sinh}, L{csch}, L{cosh}, L{sech}, L{tanh}, L{coth}
+       L{asinh}, L{acosh}, L{asech}, L{atanh}, L{acoth}
+
+    """
+    pass
