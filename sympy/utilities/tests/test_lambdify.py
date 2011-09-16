@@ -4,7 +4,10 @@ from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
+from sympy.external import import_module
 import math, sympy
+
+numpy = import_module('numpy', min_python_version=(2, 6))
 
 x,y,z = symbols('x,y,z')
 
@@ -157,6 +160,18 @@ def test_mpmath_transl():
         assert mat in mpmath.__dict__
 
 def test_numpy_transl():
+    if not numpy:
+        skip("numpy not installed or Python too old.")
+
+    from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
+    for sym, nump in NUMPY_TRANSLATIONS.iteritems():
+        assert sym in sympy.__dict__
+        assert nump in numpy.__dict__
+
+def test_numpy_translation_abs():
+    if not numpy:
+        skip("numpy not installed or Python too old.")
+
     f = lambdify(x, Abs(x), "numpy")
     assert f(-1) == 1
     assert f(1) == 1
