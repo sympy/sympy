@@ -1,7 +1,8 @@
 from sympy import S
 from sympy.core.symbol import Symbol
+from sympy.core.numbers import Rational
 from sympy.utilities.pytest import raises
-from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max
 from sympy import I, cos, sin, oo
 
 def test_Min():
@@ -129,3 +130,26 @@ def test_Max():
     # True
     # Max(n, -oo, n_,  p, 1000) == Max(p, 1000)
     # False
+
+
+def test_root():
+    from sympy.abc import x, y, z
+    n = Symbol('n', integer=True)
+
+    assert root(2) == sqrt(2)
+    assert root(2, 2) == sqrt(2)
+    assert root(2, 1) == 2
+    assert root(2, 3) == 2**Rational(1,3)
+    assert root(2, -5) == 2**Rational(4,5)/2
+
+    assert root(-2) == sqrt(2)*I
+    assert root(-2, 1) == -2
+
+    assert root(x) == sqrt(x)
+    assert root(x, 2) == sqrt(x)
+    assert root(x, 1) == x
+    assert root(x, 3) == x**Rational(1,3)
+    assert root(x, -5) == x**Rational(-1,5)
+
+    assert root(x, n) == x**(1/n)
+    assert root(x, -n) == x**(-1/n)
