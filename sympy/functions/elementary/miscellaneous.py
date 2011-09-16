@@ -36,7 +36,7 @@ def sqrt(arg):
 ############################# ROOT FUNCTION ###################################
 ###############################################################################
 
-class root(Function):
+def root(arg, n=2):
     """
     root(a, n) -> Returns the n-th root of a.
 
@@ -44,12 +44,8 @@ class root(Function):
     ========
        L{sqrt}
     """
-
-    nargs = 2
-
-    @classmethod
-    def eval(cls, arg, n):
-        return C.Pow(arg, 1/n)
+    n = sympify(n)
+    return C.Pow(arg, 1/n)
 
 
 ###############################################################################
