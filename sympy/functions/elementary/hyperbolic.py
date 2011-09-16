@@ -402,7 +402,7 @@ class coth(HyperbolicFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/sinh(self.args[0])**2
+            return -1/sinh(self.args[0])**2
         else:
             raise ArgumentIndexError(self, argindex)
 
