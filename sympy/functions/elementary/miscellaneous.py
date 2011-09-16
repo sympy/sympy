@@ -429,4 +429,3 @@ class Min(MinMaxBase, Application, Basic):
         Check if x > y.
         """
         return (x > y)
-
