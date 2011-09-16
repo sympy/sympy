@@ -98,10 +98,10 @@ class MinMaxBase(LatticeOp):
         """
         Sequentially allocate values to localzeros.
 
-        If value is greter than all of the localzeros, then it is new localzero
+        If value is greater than all of the localzeros, then it is new localzero
         and it is apending to them.
 
-        if value is greter than one of the localzeros,
+        if value is greater than one of the localzeros,
         then update localzero's set.
         """
         localzeros = set()
@@ -307,4 +307,3 @@ class Min(MinMaxBase, Application, Basic):
         Check if x > y.
         """
         return (x > y)
-
