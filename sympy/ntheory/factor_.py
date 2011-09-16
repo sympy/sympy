@@ -1210,8 +1210,9 @@ def divisors(n, generator=False):
             return sorted(rv)
         return rv
 
-def divisor_count(n):
-    """Return the number of divisors of n.
+def divisor_count(n, modulus=1):
+    """Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
+       those that are divisible by ``modulus`` are counted.
 
     Reference:
     http://www.mayer.dial.pipex.com/maths/formulae.htm
@@ -1221,7 +1222,12 @@ def divisor_count(n):
     4
     """
 
-    n = abs(n)
+    if not modulus:
+        return 0
+    elif modulus != 1:
+        n, r = divmod(n, modulus)
+        if r:
+            return 0
     if n == 0:
         return 0
     return Mul(*[v+1 for k, v in factorint(n).items() if k > 1])

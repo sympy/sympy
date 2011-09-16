@@ -323,6 +323,9 @@ def divisors_and_divisor_count():
     assert divisor_count(6) == 4
     assert divisor_count(12) == 6
 
+    assert divisor_count(180, 3) == divisor_count(180//3)
+    assert divisor_count(2*3*5, 7) == 0
+
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
         [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10]
