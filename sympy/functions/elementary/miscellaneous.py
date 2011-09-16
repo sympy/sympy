@@ -2,7 +2,7 @@ from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
-from sympy.core.function import Application, Lambda
+from sympy.core.function import Application, Function, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 
@@ -30,6 +30,27 @@ Id = S.IdentityFunction
 def sqrt(arg):
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
+
+
+###############################################################################
+############################# ROOT FUNCTION ###################################
+###############################################################################
+
+class root(Function):
+    """
+    root(a, n) -> Returns the n-th root of a.
+
+    See also
+    ========
+       L{sqrt}
+    """
+
+    nargs = 2
+
+    @classmethod
+    def eval(cls, arg, n):
+        return C.Pow(arg, 1/n)
+
 
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################
