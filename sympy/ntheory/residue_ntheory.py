@@ -79,7 +79,7 @@ def is_quad_residue(a, p):
 
 def legendre_symbol(a, p):
     """
-    return 1 if a is a quadratic residue of p
+    return 1 if a is a quadratic residue of p, 0 is a is multiple of p,
     else return -1
     p should be an odd prime by definition
     """
