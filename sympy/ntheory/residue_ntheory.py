@@ -92,3 +92,32 @@ def legendre_symbol(a, p):
         return 1
     else:
         return -1
+
+def jacobi_symbol(m, n):
+    """
+    Generalization of legendre_symbol.
+    n should be odd number by definition.
+    """
+    if not n % 2:
+        raise ValueError("n should be an odd integer")
+    if m < 0 or m > n:
+        m = m % n
+    if igcd(m, n) != 1:
+        return 0
+
+    j = 1
+    while m % 2 == 0:
+            if n % 8 == 3 or n % 8 == 5:
+                j *= -1
+            m /= 2
+
+    while m != 1:
+        if m % 4 == 3 and n % 4 == 3:
+            j *= -1
+        m, n = n % m, m
+        while m % 2 == 0:
+            if n % 8 == 3 or n % 8 == 5:
+                j *= -1
+            m /= 2
+    return j
+
