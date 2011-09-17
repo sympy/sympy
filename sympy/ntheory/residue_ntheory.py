@@ -79,7 +79,7 @@ def is_quad_residue(a, p):
 
 def legendre_symbol(a, p):
     """
-    return 1 if a is a quadratic residue of p, 0 is a is multiple of p,
+    return 1 if a is a quadratic residue of p, 0 if a is multiple of p,
     else return -1
     p should be an odd prime by definition
     """
@@ -95,8 +95,17 @@ def legendre_symbol(a, p):
 
 def jacobi_symbol(m, n):
     """
-    Generalization of legendre_symbol.
-    n should be odd number by definition.
+    Returns 0 if m cong 0 mod(n),
+    Return 1 if x**2 cong m mod(n) has a solution else return -1.
+
+    jacobi_symbol(m, n) is product of the legendre_symbol(m, p) for all the prime factors p of n.
+
+    **Examples**
+    >>> jacobi_symbol(45, 77)
+    -1
+    >>> jacobi_symbol(60, 121)
+    1
+
     """
     if not n % 2:
         raise ValueError("n should be an odd integer")
