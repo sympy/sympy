@@ -475,12 +475,12 @@ def test_coth_rewrite():
 
 def test_derivs():
     x = Symbol('x')
-    assert [f(x).diff(x) for f in [coth, sinh, cosh, tanh, acoth, asinh, acosh, atanh]] == \
-    [-sinh(x)**(-2),
-     cosh(x),
-     sinh(x),
-     -tanh(x)**2 + 1,
-     1/(-x**2 + 1),
-     1/sqrt(x**2 + 1),
-     1/sqrt(x**2 - 1),
-     1/(-x**2 + 1)]
+    assert coth(x).diff(x) == -sinh(x)**(-2)
+    assert sinh(x).diff(x) == cosh(x)
+    assert cosh(x).diff(x) == sinh(x)
+    assert tanh(x).diff(x) == -tanh(x)**2 + 1
+    assert acoth(x).diff(x) == 1/(-x**2 + 1)
+    assert asinh(x).diff(x) == 1/sqrt(x**2 + 1)
+    assert acosh(x).diff(x) == 1/sqrt(x**2 - 1)
+    assert atanh(x).diff(x) == 1/(-x**2 + 1)
+
