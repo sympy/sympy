@@ -423,3 +423,60 @@ class harmonic(Function):
                     return prev[-1] + S.One / n**m
                 cls._functions[m] = f
             return cls._functions[m](int(n))
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Euler numbers                                    #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+class euler(Function):
+    r"""
+    Euler numbers
+
+    Usage
+    =====
+        euler(n) gives the n-th euler number, E_n
+
+    Examples
+    ========
+        >>> from sympy import euler
+        >>> [euler(n) for n in range(10)]
+        [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
+
+    Mathematical description
+    ========================
+        The euler numbers are given by
+
+                  2*n+1   k
+                   ___   ___            j          2*n+1
+                  \     \     / k \ (-1)  * (k-2*j)
+          E   = I  )     )    |   | --------------------
+           2n     /___  /___  \ j /      k    k
+                  k = 1 j = 0           2  * I  * k
+
+          E     = 0
+           2n+1
+
+    References and further reading
+    ==============================
+        * http://en.wikipedia.org/wiki/Euler_numbers
+
+    """
+
+    nargs = 1
+
+    @classmethod
+    def eval(cls, m):
+        Em = 0
+
+        if m % 2 == 1:
+            # Case E_{2*n+1}
+            return Em
+        else:
+            # Case E_{2*n}
+            for k in xrange(1, m+1+1):
+                for j in xrange(k+1):
+                    Em = Em + C.binomial(k, j) * (-1)**j * (k-2*j)**(m+1) / (2**k * S.ImaginaryUnit**k * k)
+
+            return (S.ImaginaryUnit*Em).simplify()
