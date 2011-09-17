@@ -1,5 +1,5 @@
 from sympy import bernoulli, Symbol, harmonic, Rational, oo, zoo, pi, bell, \
-        fibonacci, lucas
+        fibonacci, lucas, euler
 
 x = Symbol('x')
 
@@ -59,3 +59,15 @@ def test_harmonic():
     assert harmonic(10,0) == 10
     assert harmonic(oo,1) == zoo
     assert harmonic(oo,2) == (pi**2)/6
+
+def test_euler():
+    assert euler(0) == 1
+    assert euler(1) == 0
+    assert euler(2) == -1
+    assert euler(3) == 0
+    assert euler(4) == 5
+    assert euler(5) == 0
+    assert euler(6) == -61
+    assert euler(7) == 0
+    assert euler(8) == 1385
+    assert euler(9) == 0
