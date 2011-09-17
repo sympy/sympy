@@ -101,6 +101,8 @@ def jacobi_symbol(m, n):
     jacobi_symbol(m, n) is product of the legendre_symbol(m, p) for all the prime factors p of n.
 
     **Examples**
+
+    >>> from sympy.ntheory import jacobi_symbol
     >>> jacobi_symbol(45, 77)
     -1
     >>> jacobi_symbol(60, 121)
