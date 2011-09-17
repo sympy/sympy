@@ -1,5 +1,5 @@
 from sympy import bernoulli, Symbol, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
-        fibonacci, lucas, euler
+        fibonacci, lucas, euler, catalan, binomial
 
 x = Symbol('x')
 
@@ -81,3 +81,11 @@ def test_euler():
     assert euler(n).rewrite(Sum) == euler(n)
     #assert euler(2*n).rewrite(Sum) ==  I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
     assert euler(2*n+1).rewrite(Sum) == 0
+
+def test_catalan():
+    assert catalan(1) == 1
+    assert catalan(2) == 2
+    assert catalan(3) == 5
+    assert catalan(4) == 14
+
+    assert catalan(x) == binomial(2*x, x)/(x + 1)

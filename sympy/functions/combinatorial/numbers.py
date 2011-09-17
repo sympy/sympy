@@ -507,3 +507,49 @@ class euler(Function):
             res = mp.eulernum(m)
             mp.prec = oprec
             return Expr._from_mpmath(res, prec)
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Catalan numbers                                  #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+class catalan(Function):
+    r"""
+    Catalan numbers
+
+    Usage
+    =====
+        catalan(n) gives the n-th Catalan number, C_n
+
+    Examples
+    ========
+        >>> from sympy import catalan
+
+        >>> [ catalan(n) for n in range(1,10) ]
+        [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
+        >>> catalan(n)
+        binomial(2*n, n)/(n + 1)
+
+    Mathematical description
+    ========================
+        The n-th catalan number is given by
+
+                 1   / 2*n \
+          C  = ----- |     |
+           n   n + 1 \  n  /
+
+    References and further reading
+    ==============================
+        * http://en.wikipedia.org/wiki/Catalan_number
+        * http://mathworld.wolfram.com/CatalanNumber.html
+
+    """
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_Integer and n.is_nonnegative:
+            # The gamma function would allow to generalize this to complex n
+            return 4**n * C.gamma(n + S.Half) / (C.gamma(S.Half) * C.gamma(n+2))
+        else:
+            return 1 / (n+1) * C.binomial(2*n, n)
