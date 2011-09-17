@@ -468,15 +468,30 @@ class euler(Function):
 
     @classmethod
     def eval(cls, m):
-        Em = 0
+        if m.is_Integer and m.is_nonnegative:
+            Em = S.Zero
 
-        if m % 2 == 1:
-            # Case E_{2*n+1}
-            return Em
-        else:
-            # Case E_{2*n}
-            for k in xrange(1, m+1+1):
-                for j in xrange(k+1):
-                    Em = Em + C.binomial(k, j) * (-1)**j * (k-2*j)**(m+1) / (2**k * S.ImaginaryUnit**k * k)
+            if m % 2 == 1:
+                # Case E_{2*n+1}
+                return Em
+            else:
+                # Case E_{2*n}
+                for k in xrange(1, m+1+1):
+                    for j in xrange(k+1):
+                        Em = Em + C.binomial(k, j) * (-1)**j * (k-2*j)**(m+1) / (2**k * S.ImaginaryUnit**k * k)
 
-            return (S.ImaginaryUnit*Em).simplify()
+                return (S.ImaginaryUnit*Em).simplify()
+
+
+    def _eval_evalf(self, prec):
+        m = self.args[0]
+
+        if m.is_Integer and m.is_nonnegative:
+            from sympy.mpmath import mp
+            from sympy import Expr
+            m = m._to_mpmath(prec)
+            oprec = mp.prec
+            mp.prec = prec
+            res = mp.eulernum(m)
+            mp.prec = oprec
+            return Expr._from_mpmath(res, prec)
