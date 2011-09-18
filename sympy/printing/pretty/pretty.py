@@ -1214,6 +1214,15 @@ class PrettyPrinter(Printer):
         pform.baseline = b
         return pform
 
+    def _print_euler(self, e):
+        pform_arg = self._print(e.args[0])
+        pform_arg = prettyForm(*pform_arg.above(" "*pform_arg.width()))
+        pform = prettyForm(" ")
+        pform = prettyForm(*pform.above("E"))
+        pform = prettyForm(*pform.right(pform_arg))
+        return pform
+
+
 def pretty(expr, **settings):
     """
     Returns a string containing the prettified form of expr.
