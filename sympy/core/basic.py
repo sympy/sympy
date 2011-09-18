@@ -1125,7 +1125,10 @@ class Basic(object):
             return self
         else:
             pattern = args[:-1]
-            rule = '_eval_rewrite_as_' + str(args[-1])
+            if isinstance(args[-1], basestring):
+                rule = '_eval_rewrite_as_' + args[-1]
+            else:
+                rule = '_eval_rewrite_as_' + args[-1].__name__
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
