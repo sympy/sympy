@@ -443,9 +443,9 @@ class euler(Function):
         >>> from sympy import euler
         >>> [euler(n) for n in range(10)]
         [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
-	>>> n = Symbol("n")
-	>>> euler(n+2*n)
-	euler(3*n)
+        >>> n = Symbol("n")
+        >>> euler(n+2*n)
+        euler(3*n)
 
     Mathematical description
     ========================
@@ -465,7 +465,7 @@ class euler(Function):
     ==============================
         * http://en.wikipedia.org/wiki/Euler_numbers
         * http://mathworld.wolfram.com/EulerNumber.html
-	* http://en.wikipedia.org/wiki/Alternating_permutation
+        * http://en.wikipedia.org/wiki/Alternating_permutation
         * http://mathworld.wolfram.com/AlternatingPermutation.html
     """
 
@@ -475,11 +475,24 @@ class euler(Function):
     def eval(cls, m, evaluate=True):
         if not evaluate:
             return
+        if m.is_odd:
+            return S.Zero
         if m.is_Integer and m.is_nonnegative:
             from sympy.mpmath import mp
             m = m._to_mpmath(mp.prec)
             res = mp.eulernum(m, exact=True)
             return Integer(res)
+
+
+    def _eval_rewrite_as_Sum(self, arg):
+        if arg.is_even:
+            k = C.Dummy("k", integer=True)
+            j = C.Dummy("j", integer=True)
+            n = self.args[0] / 2
+            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k,j) * ((-1)**j * (k-2*j)**(2*n+1)) /
+                  (2**k*S.ImaginaryUnit**k * k), (j,0,k)), (k, 1, 2*n+1)))
+
+            return  Em
 
 
     def _eval_evalf(self, prec):
