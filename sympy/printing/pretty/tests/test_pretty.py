@@ -4,7 +4,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict)
+    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict, euler)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1270,6 +1270,46 @@ u"""\
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = euler(n)
+    ascii_str = \
+"""\
+E \n\
+ n\
+"""
+    ucode_str = \
+u"""\
+E \n\
+ n\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = euler(1/(1 + 1/(1 + 1/n)))
+    ascii_str = \
+"""\
+          \n\
+E    1    \n\
+ ---------\n\
+       1  \n\
+ 1 + -----\n\
+         1\n\
+     1 + -\n\
+         n\
+"""
+
+    ucode_str = \
+u"""\
+          \n\
+E    1    \n\
+ ─────────\n\
+       1  \n\
+ 1 + ─────\n\
+         1\n\
+     1 + ─\n\
+         n\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_sqrt():
     expr = sqrt(2)

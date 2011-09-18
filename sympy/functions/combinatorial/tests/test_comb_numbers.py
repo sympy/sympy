@@ -1,4 +1,4 @@
-from sympy import bernoulli, Symbol, harmonic, Rational, oo, zoo, pi, bell, \
+from sympy import bernoulli, Symbol, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
         fibonacci, lucas, euler
 
 x = Symbol('x')
@@ -77,3 +77,7 @@ def test_euler():
 
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
+
+    assert euler(n).rewrite(Sum) == euler(n)
+    #assert euler(2*n).rewrite(Sum) ==  I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+    assert euler(2*n+1).rewrite(Sum) == 0
