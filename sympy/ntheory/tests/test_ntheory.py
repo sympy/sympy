@@ -358,8 +358,13 @@ def test_residue():
 
     assert is_quad_residue(3, 7) == False
     assert is_quad_residue(10, 13) == True
-    assert is_quad_residue(12364, 139) == is_quad_residue(132, 139)
+    assert is_quad_residue(12364, 139) == is_quad_residue(12364 % 139, 139)
     assert is_quad_residue(207, 251) == True
+    assert is_quad_residue(0, 2) == is_quad_residue(1, 2) == True
+    assert is_quad_residue(1, 4) == True
+    assert [j for j in range(14) if is_quad_residue(j, 14)] == \
+           [0, 1, 2, 4, 7, 8, 9, 11]
+    raises(ValueError, 'is_quad_residue(1.1, 2)')
 
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1

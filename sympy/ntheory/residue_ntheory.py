@@ -53,16 +53,29 @@ def is_primitive_root(a, p):
 
 def is_quad_residue(a, p):
     """
-    returns True if a is a quadratic residue of p
-    p should be a prime and a should be relatively
-    prime to p
+    Returns True if ``a`` (mod ``p``) is in the set of squares mod ``p``,
+    i.e a % p in set([i**2 % p for i in range(p)]). If ``p`` is an odd
+    prime, an iterative method is used to make the determination.
+
+    >>> from sympy.ntheory import is_quad_residue
+    >>> set([i**2 % 7 for i in range(7)])
+    [0, 1, 2, 4]
+    >>> [j for j in range(7) if is_quad_residue(j, 7)]
+    [0, 1, 2, 4]
     """
-    if not isprime(p) or p == 2:
-        raise ValueError("p should be an odd prime")
-    if igcd(a, p) != 1:
-        raise ValueError("The two numbers should be relatively prime")
-    if a > p:
+    if any(int(i) != i for i in [a, p]) or p < 1:
+        raise ValueError('a and p must be integers and p must be > 1')
+    if a == 0 or a == 1 or p == 2:
+        return True
+    if p == 1:
+        return a == 0
+    if a > p or a < 0:
         a = a % p
+    if not isprime(p):
+        for i in range(2, p//2):
+            if i**2 % p == a:
+                return True
+        return False
 
     def square_and_multiply(a, n, p):
         if n == 0:
