@@ -436,13 +436,16 @@ class euler(Function):
 
     Usage
     =====
-        euler(n) gives the n-th euler number, E_n
+        euler(n) gives the n-th Euler number, E_n
 
     Examples
     ========
         >>> from sympy import euler
         >>> [euler(n) for n in range(10)]
         [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
+	>>> n = Symbol("n")
+	>>> euler(n+2*n)
+	euler(3*n)
 
     Mathematical description
     ========================
@@ -462,8 +465,8 @@ class euler(Function):
     ==============================
         * http://en.wikipedia.org/wiki/Euler_numbers
         * http://mathworld.wolfram.com/EulerNumber.html
+	* http://en.wikipedia.org/wiki/Alternating_permutation
         * http://mathworld.wolfram.com/AlternatingPermutation.html
-
     """
 
     nargs = 1

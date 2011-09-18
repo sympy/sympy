@@ -66,8 +66,14 @@ def test_euler():
     assert euler(2) == -1
     assert euler(3) == 0
     assert euler(4) == 5
-    assert euler(5) == 0
     assert euler(6) == -61
-    assert euler(7) == 0
     assert euler(8) == 1385
-    assert euler(9) == 0
+
+    assert euler(20, evaluate=False) != 370371188237525
+
+    n = Symbol('n', integer=True)
+    assert euler(n) != -1
+    assert euler(n).subs(n, 2) == -1
+
+    assert euler(20).evalf() == 370371188237525.0
+    assert euler(20, evaluate=False).evalf() == 370371188237525.0
