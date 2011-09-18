@@ -461,26 +461,22 @@ class euler(Function):
     References and further reading
     ==============================
         * http://en.wikipedia.org/wiki/Euler_numbers
+        * http://mathworld.wolfram.com/EulerNumber.html
+        * http://mathworld.wolfram.com/AlternatingPermutation.html
 
     """
 
     nargs = 1
 
     @classmethod
-    def eval(cls, m):
+    def eval(cls, m, evaluate=True):
+        if not evaluate:
+            return
         if m.is_Integer and m.is_nonnegative:
-            Em = S.Zero
-
-            if m % 2 == 1:
-                # Case E_{2*n+1}
-                return Em
-            else:
-                # Case E_{2*n}
-                for k in xrange(1, m+1+1):
-                    for j in xrange(k+1):
-                        Em = Em + C.binomial(k, j) * (-1)**j * (k-2*j)**(m+1) / (2**k * S.ImaginaryUnit**k * k)
-
-                return (S.ImaginaryUnit*Em).simplify()
+            from sympy.mpmath import mp
+            m = m._to_mpmath(mp.prec)
+            res = mp.eulernum(m, exact=True)
+            return Integer(res)
 
 
     def _eval_evalf(self, prec):
