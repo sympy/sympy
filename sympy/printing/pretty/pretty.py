@@ -1215,10 +1215,10 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_euler(self, e):
-        pform_arg = self._print(e.args[0])
-        pform_arg = prettyForm(*pform_arg.above(" "*pform_arg.width()))
-        pform = prettyForm(" ")
-        pform = prettyForm(*pform.above("E"))
+        pform = prettyForm("E")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
         pform = prettyForm(*pform.right(pform_arg))
         return pform
 
