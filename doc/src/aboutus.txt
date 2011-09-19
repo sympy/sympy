@@ -140,6 +140,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Emma Hogan: Fixes to the documentation
 #. Julien Rioux: Fix behavior of some deprecated methods
 #. Roberto Colistete, Jr.: Add num_columns option to the pretty printer
+#. Raoul Bourquin: Implement Euler numbers
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
