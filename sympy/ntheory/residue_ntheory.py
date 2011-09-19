@@ -1,6 +1,6 @@
 from sympy.core.numbers import igcd
 from primetest import isprime
-from factor_ import factorint
+from factor_ import factorint, trailing
 
 
 def totient_(n):
@@ -117,18 +117,18 @@ def jacobi_symbol(m, n):
         return 0
 
     j = 1
-    while m % 2 == 0:
-            if n % 8 == 3 or n % 8 == 5:
-                j *= -1
-            m /= 2
+    s = trailing(m)
+    m = m >> s
+    if s % 2 and n % 8 in [3, 5]:
+        j = (-1)**s
 
     while m != 1:
         if m % 4 == 3 and n % 4 == 3:
             j *= -1
         m, n = n % m, m
-        while m % 2 == 0:
-            if n % 8 == 3 or n % 8 == 5:
-                j *= -1
-            m /= 2
+        s = trailing(m)
+        m = m >> s
+        if s % 2 and n % 8 in [3, 5]:
+            j = (-1)**s
     return j
 
