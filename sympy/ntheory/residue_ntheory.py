@@ -2,10 +2,19 @@ from sympy.core.numbers import igcd
 from primetest import isprime
 from factor_ import factorint, trailing
 
+def int_tested(*j):
+    "Return all args as integers after confirming that they are integers."
+    i = tuple([int(i) for i in j])
+    if i != j:
+        raise ValueError('all arguments were not integers')
+    if len(i) == 1:
+        return i[0]
+    return i
 
 def totient_(n):
     """returns the number of integers less than n
     and relatively prime to n"""
+    n = int_tested(n)
     if n < 1:
         raise ValueError("n must be a positive integer")
     tot = 0
@@ -20,6 +29,7 @@ def n_order(a, n):
     Order of a modulo n is the smallest integer
     k such that a^k leaves a remainder of 1 with n.
     """
+    a, n = int_tested(a, n)
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     group_order = totient_(n)
@@ -41,6 +51,7 @@ def is_primitive_root(a, p):
     """
     returns True if a is a primitive root of p
     """
+    a, p = int_tested(a, p)
     if igcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
     if a > p:
@@ -58,32 +69,32 @@ def is_quad_residue(a, p):
     prime, an iterative method is used to make the determination.
 
     >>> from sympy.ntheory import is_quad_residue
-    >>> set([i**2 % 7 for i in range(7)])
+    >>> list(set([i**2 % 7 for i in range(7)]))
     [0, 1, 2, 4]
     >>> [j for j in range(7) if is_quad_residue(j, 7)]
     [0, 1, 2, 4]
     """
-    if any(int(i) != i for i in [a, p]) or p < 1:
-        raise ValueError('a and p must be integers and p must be > 1')
-    if a == 0 or a == 1 or p == 2:
+    a, p = int_tested(a, p)
+    if p < 1:
+        raise ValueError('p must be > 0')
+    if a == 0 or p == 2:
         return True
     if p == 1:
         return a == 0
+    elif a == 1:
+        return True
     if a > p or a < 0:
         a = a % p
     if not isprime(p):
-        if jacobi_symbol(a, p) == -1:
-            print 'yo'
+        if p % 2 and jacobi_symbol(a, p) == -1:
             return False
-        for i in range(2, p//2):
+        for i in range(2, p//2 + 1):
             if i**2 % p == a:
                 return True
         return False
 
     def square_and_multiply(a, n, p):
-        if n == 0:
-            return 1
-        elif n == 1:
+        if n == 1:
             return a
         elif n % 2 == 1:
             return ((square_and_multiply(a, n // 2, p) ** 2) * a) % p
@@ -99,6 +110,7 @@ def legendre_symbol(a, p):
     else return -1
     p should be an odd prime by definition
     """
+    a, p = int_tested(a, p)
     if not isprime(p) or p == 2:
         raise ValueError("p should be an odd prime")
     _, a = divmod(a, p)
@@ -112,23 +124,43 @@ def legendre_symbol(a, p):
 def jacobi_symbol(m, n):
     """
     Returns 0 if m cong 0 mod(n),
-    Return 1 if x**2 cong m mod(n) has a solution else return -1.
+            1 if x**2 cong m mod(n) has a solution, else
+           -1.
 
-    jacobi_symbol(m, n) is product of the legendre_symbol(m, p) for all the prime factors p of n.
+    jacobi_symbol(m, n) is product of the legendre_symbol(m, p)
+    for all the prime factors p of n.
 
     **Examples**
 
-    >>> from sympy.ntheory import jacobi_symbol
+    >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
+    >>> from sympy import Mul, S
     >>> jacobi_symbol(45, 77)
     -1
     >>> jacobi_symbol(60, 121)
     1
 
+    The relationship between the jacobi_symbol and legendre_symbol can
+    be seen by taking the product of the legendre_symbol for the prime factors
+    of a number. e.g. for 90 mod 7 we have:
+        >>> L = legendre_symbol
+        >>> fac_l_m = [(f, L(f, 7), m) for f, m in S(90).factors().items()]
+        >>> fac_l_m
+        [(2, 1, 1), (3, -1, 2), (5, -1, 1)]
+
+    The jacobi_symbol(90, 7) is the product of the legendre_symbols, l, of the
+    prime factors of 90 (raised to their multiplicity):
+        >>> jacobi_symbol(90, 7) == Mul(*[l**m for (f, l, m) in fac_l_m]) == -1
+        True
     """
+    m, n = int_tested(m, n)
     if not n % 2:
         raise ValueError("n should be an odd integer")
     if m < 0 or m > n:
         m = m % n
+    if not m:
+        return int(n == 1)
+    if n == 1 or m == 1:
+        return 1
     if igcd(m, n) != 1:
         return 0
 
@@ -136,7 +168,7 @@ def jacobi_symbol(m, n):
     s = trailing(m)
     m = m >> s
     if s % 2 and n % 8 in [3, 5]:
-        j = (-1)**s
+        j *= -1
 
     while m != 1:
         if m % 4 == 3 and n % 4 == 3:
@@ -145,5 +177,5 @@ def jacobi_symbol(m, n):
         s = trailing(m)
         m = m >> s
         if s % 2 and n % 8 in [3, 5]:
-            j = (-1)**s
+            j *= -1
     return j

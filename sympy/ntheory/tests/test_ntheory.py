@@ -360,8 +360,11 @@ def test_residue():
     assert is_quad_residue(10, 13) == True
     assert is_quad_residue(12364, 139) == is_quad_residue(12364 % 139, 139)
     assert is_quad_residue(207, 251) == True
+    assert is_quad_residue(0, 1) == True
+    assert is_quad_residue(1, 1) == False
     assert is_quad_residue(0, 2) == is_quad_residue(1, 2) == True
     assert is_quad_residue(1, 4) == True
+    assert is_quad_residue(2, 27) == False
     assert [j for j in range(14) if is_quad_residue(j, 14)] == \
            [0, 1, 2, 4, 7, 8, 9, 11]
     raises(ValueError, 'is_quad_residue(1.1, 2)')
@@ -377,6 +380,12 @@ def test_residue():
     assert jacobi_symbol(-23, 83) == -1
     assert jacobi_symbol(3, 9) == 0
     assert jacobi_symbol(42, 97) == -1
+    assert jacobi_symbol(3, 5) == -1
+    assert jacobi_symbol(7, 9) == 1
+    assert jacobi_symbol(0, 3) == 0
+    assert jacobi_symbol(0, 1) == 1
+    assert jacobi_symbol(2, 1) == 1
+    assert jacobi_symbol(1, 3) == 1
     raises(ValueError, 'jacobi_symbol(3, 8)')
 
 def test_hex_pi_nth_digits():
