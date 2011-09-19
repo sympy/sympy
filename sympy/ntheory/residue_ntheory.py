@@ -1,6 +1,6 @@
 from sympy.core.numbers import igcd
 from primetest import isprime
-from factor_ import factorint
+from factor_ import factorint, trailing
 
 
 def totient_(n):
@@ -79,7 +79,7 @@ def is_quad_residue(a, p):
 
 def legendre_symbol(a, p):
     """
-    return 1 if a is a quadratic residue of p
+    return 1 if a is a quadratic residue of p, 0 if a is multiple of p,
     else return -1
     p should be an odd prime by definition
     """
@@ -92,3 +92,43 @@ def legendre_symbol(a, p):
         return 1
     else:
         return -1
+
+def jacobi_symbol(m, n):
+    """
+    Returns 0 if m cong 0 mod(n),
+    Return 1 if x**2 cong m mod(n) has a solution else return -1.
+
+    jacobi_symbol(m, n) is product of the legendre_symbol(m, p) for all the prime factors p of n.
+
+    **Examples**
+
+    >>> from sympy.ntheory import jacobi_symbol
+    >>> jacobi_symbol(45, 77)
+    -1
+    >>> jacobi_symbol(60, 121)
+    1
+
+    """
+    if not n % 2:
+        raise ValueError("n should be an odd integer")
+    if m < 0 or m > n:
+        m = m % n
+    if igcd(m, n) != 1:
+        return 0
+
+    j = 1
+    s = trailing(m)
+    m = m >> s
+    if s % 2 and n % 8 in [3, 5]:
+        j = (-1)**s
+
+    while m != 1:
+        if m % 4 == 3 and n % 4 == 3:
+            j *= -1
+        m, n = n % m, m
+        s = trailing(m)
+        m = m >> s
+        if s % 2 and n % 8 in [3, 5]:
+            j = (-1)**s
+    return j
+

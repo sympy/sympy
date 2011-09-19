@@ -3,7 +3,7 @@ from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
 from sympy import factorial as fac
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
-    is_quad_residue, legendre_symbol, npartitions, totient, \
+    is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1
@@ -367,6 +367,12 @@ def test_residue():
     assert legendre_symbol(0, 13) == 0
     assert legendre_symbol(9, 3) == 0
     raises(ValueError, 'legendre_symbol(2, 4)')
+
+    assert jacobi_symbol(25, 41) == 1
+    assert jacobi_symbol(-23, 83) == -1
+    assert jacobi_symbol(3, 9) == 0
+    assert jacobi_symbol(42, 97) == -1
+    raises(ValueError, 'jacobi_symbol(3, 8)')
 
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'
