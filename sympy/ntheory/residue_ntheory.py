@@ -72,6 +72,9 @@ def is_quad_residue(a, p):
     if a > p or a < 0:
         a = a % p
     if not isprime(p):
+        if jacobi_symbol(a, p) == -1:
+            print 'yo'
+            return False
         for i in range(2, p//2):
             if i**2 % p == a:
                 return True
