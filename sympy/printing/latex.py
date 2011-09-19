@@ -937,6 +937,10 @@ class LatexPrinter(Printer):
 
         return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
 
+    def _print_euler(self, expr):
+        return r"E_{%s}" % self._print(expr.args[0])
+
+
 def latex(expr, **settings):
     r"""Convert the given expression to LaTeX representation.
 

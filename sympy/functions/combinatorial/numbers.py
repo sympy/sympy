@@ -423,3 +423,87 @@ class harmonic(Function):
                     return prev[-1] + S.One / n**m
                 cls._functions[m] = f
             return cls._functions[m](int(n))
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Euler numbers                                    #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+class euler(Function):
+    r"""
+    Euler numbers
+
+    Usage
+    =====
+        euler(n) gives the n-th Euler number, E_n
+
+    Examples
+    ========
+        >>> from sympy import Symbol, euler
+        >>> [euler(n) for n in range(10)]
+        [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
+        >>> n = Symbol("n")
+        >>> euler(n+2*n)
+        euler(3*n)
+
+    Mathematical description
+    ========================
+        The euler numbers are given by
+
+                  2*n+1   k
+                   ___   ___            j          2*n+1
+                  \     \     / k \ (-1)  * (k-2*j)
+          E   = I  )     )    |   | --------------------
+           2n     /___  /___  \ j /      k    k
+                  k = 1 j = 0           2  * I  * k
+
+          E     = 0
+           2n+1
+
+    References and further reading
+    ==============================
+        * http://en.wikipedia.org/wiki/Euler_numbers
+        * http://mathworld.wolfram.com/EulerNumber.html
+        * http://en.wikipedia.org/wiki/Alternating_permutation
+        * http://mathworld.wolfram.com/AlternatingPermutation.html
+    """
+
+    nargs = 1
+
+    @classmethod
+    def eval(cls, m, evaluate=True):
+        if not evaluate:
+            return
+        if m.is_odd:
+            return S.Zero
+        if m.is_Integer and m.is_nonnegative:
+            from sympy.mpmath import mp
+            m = m._to_mpmath(mp.prec)
+            res = mp.eulernum(m, exact=True)
+            return Integer(res)
+
+
+    def _eval_rewrite_as_Sum(self, arg):
+        if arg.is_even:
+            k = C.Dummy("k", integer=True)
+            j = C.Dummy("j", integer=True)
+            n = self.args[0] / 2
+            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k,j) * ((-1)**j * (k-2*j)**(2*n+1)) /
+                  (2**k*S.ImaginaryUnit**k * k), (j,0,k)), (k, 1, 2*n+1)))
+
+            return  Em
+
+
+    def _eval_evalf(self, prec):
+        m = self.args[0]
+
+        if m.is_Integer and m.is_nonnegative:
+            from sympy.mpmath import mp
+            from sympy import Expr
+            m = m._to_mpmath(prec)
+            oprec = mp.prec
+            mp.prec = prec
+            res = mp.eulernum(m)
+            mp.prec = oprec
+            return Expr._from_mpmath(res, prec)
