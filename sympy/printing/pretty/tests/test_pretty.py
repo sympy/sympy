@@ -4,7 +4,8 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict, euler)
+    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
+    fibonacci, lucas, bernoulli, bell, harmonic, euler)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1266,6 +1267,159 @@ u"""\
 ⎡   1   ⎤\n\
 ⎢───────⎥\n\
 ⎢y - ⌈x⌉⎥\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = fibonacci(n)
+    ascii_str = \
+"""\
+F \n\
+ n\
+"""
+    ucode_str = \
+u"""\
+F \n\
+ n\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = fibonacci(n, x/2)
+    ascii_str = \
+"""\
+  /x\\\n\
+F |-|\n\
+ n\\2/\
+"""
+    ucode_str = \
+u"""\
+  ⎛x⎞\n\
+F ⎜─⎟\n\
+ n⎝2⎠\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = lucas(n)
+    ascii_str = \
+"""\
+L \n\
+ n\
+"""
+    ucode_str = \
+u"""\
+L \n\
+ n\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = lucas(n, x/2)
+    ascii_str = \
+"""\
+  /x\\\n\
+L |-|\n\
+ n\\2/\
+"""
+    ucode_str = \
+u"""\
+  ⎛x⎞\n\
+L ⎜─⎟\n\
+ n⎝2⎠\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = bernoulli(n)
+    ascii_str = \
+"""\
+B \n\
+ n\
+"""
+    ucode_str = \
+u"""\
+B \n\
+ n\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = bernoulli(n, x/2)
+    ascii_str = \
+"""\
+  /x\\\n\
+B |-|\n\
+ n\\2/\
+"""
+    ucode_str = \
+u"""\
+  ⎛x⎞\n\
+B ⎜─⎟\n\
+ n⎝2⎠\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = bell(n)
+    ascii_str = \
+"""\
+B \n\
+ n\
+"""
+    ucode_str = \
+u"""\
+B \n\
+ n\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = bell(n, x/2)
+    ascii_str = \
+"""\
+  /x\\\n\
+B |-|\n\
+ n\\2/\
+"""
+    ucode_str = \
+u"""\
+  ⎛x⎞\n\
+B ⎜─⎟\n\
+ n⎝2⎠\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = harmonic(n)
+    ascii_str = \
+"""\
+H \n\
+ n\
+"""
+    ucode_str = \
+u"""\
+H \n\
+ n\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    m = Symbol('m', integer=True)
+    expr = harmonic(n/2,m/3)
+    ascii_str = \
+"""\
+H      \n\
+ /n  m\\\n\
+ |-, -|\n\
+ \\2  3/\
+"""
+    ucode_str = \
+u"""\
+H      \n\
+ ⎛n  m⎞\n\
+ ⎜─, ─⎟\n\
+ ⎝2  3⎠\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
