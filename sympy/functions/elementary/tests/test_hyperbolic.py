@@ -472,3 +472,15 @@ def test_coth_rewrite():
     assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2-x)/sinh(x)
     assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2-x)
     assert coth(x).rewrite(tanh) == 1/tanh(x)
+
+def test_derivs():
+    x = Symbol('x')
+    assert coth(x).diff(x) == -sinh(x)**(-2)
+    assert sinh(x).diff(x) == cosh(x)
+    assert cosh(x).diff(x) == sinh(x)
+    assert tanh(x).diff(x) == -tanh(x)**2 + 1
+    assert acoth(x).diff(x) == 1/(-x**2 + 1)
+    assert asinh(x).diff(x) == 1/sqrt(x**2 + 1)
+    assert acosh(x).diff(x) == 1/sqrt(x**2 - 1)
+    assert atanh(x).diff(x) == 1/(-x**2 + 1)
+
