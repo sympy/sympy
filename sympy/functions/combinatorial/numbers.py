@@ -81,7 +81,7 @@ class fibonacci(Function):
         if n.is_Integer:
             n = int(n)
             if n < 0:
-                return S.NegativeOne**(n+1) * fibonacci(-n)
+                return S.NegativeOne**(n+1)*fibonacci(-n)
             if sym is None:
                 return Integer(cls._fib(n))
             else:
@@ -240,7 +240,7 @@ class bernoulli(Function):
         s = 0
         a = int(C.binomial(n+3, n-6))
         for j in xrange(1, n//6+1):
-            s += a * bernoulli(n - 6*j)
+            s += a*bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
             a *= _product(n-6 - 6*j + 1, n-6*j)
             a //= _product(6*j+4, 6*j+9)
@@ -248,7 +248,7 @@ class bernoulli(Function):
             s = -Rational(n+3, 6) - s
         else:
             s = Rational(n+3, 3) - s
-        return s / C.binomial(n+3, n)
+        return s/C.binomial(n+3, n)
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
@@ -366,8 +366,8 @@ class bell(Function):
         s = 1
         a = 1
         for k in xrange(1, n):
-            a = a * (n-k) // k
-            s += a * prev[k]
+            a = a*(n-k) // k
+            s += a*prev[k]
         return s
 
     @staticmethod
@@ -376,9 +376,9 @@ class bell(Function):
         s = 1
         a = 1
         for k in xrange(2, n+1):
-            a = a * (n-k+1) // (k-1)
-            s += a * prev[k-1]
-        return (_sym * s).expand()
+            a = a*(n-k+1) // (k-1)
+            s += a*prev[k-1]
+        return (_sym*s).expand()
 
     @classmethod
     def eval(cls, n, sym=None):
@@ -454,7 +454,7 @@ class harmonic(Function):
             if not m in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
-                    return prev[-1] + S.One / n**m
+                    return prev[-1] + S.One/n**m
                 cls._functions[m] = f
             return cls._functions[m](int(n))
 
@@ -480,14 +480,13 @@ class euler(Function):
         >>> [euler(n) for n in range(10)]
         [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
 
-        >>> n = Symbol("n")
-        >>> euler(n+2*n)
+        >>> euler(3*Symbol("n"))
         euler(3*n)
 
         >>> euler(5, Symbol("x"))
         x**5 - 5*x**4/2 + 5*x**2/2 - 1/2
 
-        >>> euler(n, Symbol("x"))
+        >>> euler(Symbol("n"), Symbol("x"))
         2*(-2**(n + 1)*bernoulli(n + 1, x/2) + bernoulli(n + 1, x))/(n + 1)
 
     Mathematical description
@@ -526,16 +525,16 @@ class euler(Function):
                 return Integer(res)
         else:
             m = sympify(m)
-            return 2 / (m+1) * (bernoulli(m+1,sym) - 2**(m+1)*bernoulli(m+1, S.Half*sym))
+            return 2/(m+1)*(bernoulli(m+1,sym) - 2**(m+1)*bernoulli(m+1, S.Half*sym))
 
 
     def _eval_rewrite_as_Sum(self, arg):
         if arg.is_even:
             k = C.Dummy("k", integer=True)
             j = C.Dummy("j", integer=True)
-            n = self.args[0] / 2
-            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k,j) * ((-1)**j * (k-2*j)**(2*n+1)) /
-                  (2**k*S.ImaginaryUnit**k * k), (j,0,k)), (k, 1, 2*n+1)))
+            n = self.args[0]/2
+            Em = (S.ImaginaryUnit*C.Sum(C.Sum(C.binomial(k,j)*((-1)**j*(k-2*j)**(2*n+1)) /
+                  (2**k*S.ImaginaryUnit**k*k), (j,0,k)), (k,1,2*n+1)))
 
             return  Em
 
