@@ -8,6 +8,7 @@ the separate 'factorials' module.
 """
 
 from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add
+from sympy.core.basic import sympify
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
@@ -42,10 +43,11 @@ class fibonacci(Function):
 
     Examples
     ========
-        >>> from sympy import fibonacci, Symbol
+        >>> from sympy import Symbol, fibonacci
 
         >>> [fibonacci(x) for x in range(11)]
         [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+
         >>> fibonacci(5, Symbol('t'))
         t**4 + 3*t**2 + 1
 
@@ -101,20 +103,18 @@ class lucas(Function):
 
     Usage
     =====
-        lucas(n) gives the nth Lucas number
+        lucas(n) gives the nth Lucas number, L_n
         lucas(n, x) gives the nth Lucas polynomial in x, L_n(x)
-
 
     Examples
     ========
-        >>> from sympy import lucas
+        >>> from sympy import Symbol, lucas
 
         >>> [lucas(x) for x in range(11)]
         [2, 1, 3, 4, 7, 11, 18, 29, 47, 76, 123]
 
         >>> lucas(6, Symbol('t'))
         t**6 + 6*t**4 + 9*t**2 + 2
-
 
     Mathematical description
     ========================
@@ -126,7 +126,6 @@ class lucas(Function):
         The Lucas polynomials are defined by L_0(x) = 2,
         L_1(x) = x, and L_n(x) = x*L_{n-1}(x) + L_{n-2}(x) for n => 2.
         For all positive integers n, L_n(1) = L_n.
-
 
     References and further reading
     ==============================
@@ -169,12 +168,16 @@ class bernoulli(Function):
 
     Examples
     ========
-        >>> from sympy import bernoulli
+        >>> from sympy import Symbol, bernoulli
 
         >>> [bernoulli(n) for n in range(11)]
         [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
+
         >>> bernoulli(1000001)
         0
+
+        >>> bernoulli(4, Symbol("x"))
+        x**4 - 2*x**3 + x**2 - 1/30
 
     Mathematical description
     ========================
@@ -317,8 +320,10 @@ class bell(Function):
 
         >>> [bell(n) for n in range(11)]
         [1, 1, 2, 5, 15, 52, 203, 877, 4140, 21147, 115975]
+
         >>> bell(30)
         846749014511809332450147
+
         >>> bell(4, Symbol('t'))
         t**4 + 6*t**3 + 7*t**2 + t
 
@@ -406,8 +411,10 @@ class harmonic(Function):
 
         >>> [harmonic(n) for n in range(6)]
         [0, 1, 3/2, 11/6, 25/12, 137/60]
+
         >>> [harmonic(n, 2) for n in range(6)]
         [0, 1, 5/4, 49/36, 205/144, 5269/3600]
+
         >>> harmonic(oo, 2)
         pi**2/6
 
@@ -464,15 +471,24 @@ class euler(Function):
     Usage
     =====
         euler(n) gives the n-th Euler number, E_n
+        euler(n, x) gives the n-th Euler polynomial, E_n(x)
 
     Examples
     ========
         >>> from sympy import Symbol, euler
+
         >>> [euler(n) for n in range(10)]
         [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
+
         >>> n = Symbol("n")
         >>> euler(n+2*n)
         euler(3*n)
+
+        >>> euler(5, Symbol("x"))
+        x**5 - 5*x**4/2 + 5*x**2/2 - 1/2
+
+        >>> euler(n, Symbol("x"))
+        2*(-2**(n + 1)*bernoulli(n + 1, x/2) + bernoulli(n + 1, x))/(n + 1)
 
     Mathematical description
     ========================
@@ -496,19 +512,21 @@ class euler(Function):
         * http://mathworld.wolfram.com/AlternatingPermutation.html
     """
 
-    nargs = 1
-
     @classmethod
-    def eval(cls, m, evaluate=True):
+    def eval(cls, m, sym=None, evaluate=True):
         if not evaluate:
             return
-        if m.is_odd:
-            return S.Zero
-        if m.is_Integer and m.is_nonnegative:
-            from sympy.mpmath import mp
-            m = m._to_mpmath(mp.prec)
-            res = mp.eulernum(m, exact=True)
-            return Integer(res)
+        if sym is None:
+            if m.is_odd:
+                return S.Zero
+            if m.is_Integer and m.is_nonnegative:
+                from sympy.mpmath import mp
+                m = m._to_mpmath(mp.prec)
+                res = mp.eulernum(m, exact=True)
+                return Integer(res)
+        else:
+            m = sympify(m)
+            return 2 / (m+1) * (bernoulli(m+1,sym) - 2**(m+1)*bernoulli(m+1, S.Half*sym))
 
 
     def _eval_rewrite_as_Sum(self, arg):
