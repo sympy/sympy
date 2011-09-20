@@ -60,7 +60,7 @@ def denoms(eq, symbols=None):
                 dens.add(d.as_base_exp()[0])
     return dens
 
-def checksol(f, symbol, sol=None, flags={}, **hints):
+def checksol(f, symbol, sol=None, **flags):
     """Checks whether sol is a solution of equation f == 0.
 
     Input can be either a single symbol and corresponding value
@@ -86,7 +86,7 @@ def checksol(f, symbol, sol=None, flags={}, **hints):
 
        None is returned if checksol() could not conclude.
 
-       flags/hints:
+       flags:
            'numerical=True (default)'
                do a fast numerical check if ``f`` has only one symbol.
            'minimal=True (default is False)'
@@ -99,14 +99,7 @@ def checksol(f, symbol, sol=None, flags={}, **hints):
            'force=True (default is False)'
                make positive all symbols without assumptions regarding sign.
 
-       Note: to allow for communication between a calling routine (like solve)
-       and this routine, the hints can be passed in a dictionary named ``flags``.
-       This, for example, allows the 'simplified' flag to be set so the calling
-       routine knowns that the solutions have been simplified. ``hints`` if they
-       are given will override any flags that are sent.
     """
-
-    flags.update(hints)
 
     if sol is not None:
         sol = {symbol: sol}
@@ -121,7 +114,7 @@ def checksol(f, symbol, sol=None, flags={}, **hints):
             raise ValueError('no functions to check')
         rv = True
         for fi in f:
-            check = checksol(fi, sol, flags=flags)
+            check = checksol(fi, sol, **flags)
             if check:
                 continue
             if check is False:
@@ -156,7 +149,6 @@ def checksol(f, symbol, sol=None, flags={}, **hints):
             if flags.get('minimal', False):
                 return
             if flags.get('simplify', True):
-                flags['simplified'] = True
                 for k in sol:
                     sol[k] = simplify(sol[k])
             val = f.subs(sol)
@@ -578,7 +570,7 @@ def solve(f, *symbols, **flags):
 def _solve(f, *symbols, **flags):
     """ Return a checked solution for f in terms of one or more of the symbols."""
 
-    check  = flags.get('check', True)
+    check = flags.get('check', True)
     if not iterable(f):
 
         if len(symbols) != 1:
@@ -623,8 +615,12 @@ def _solve(f, *symbols, **flags):
             for m in f.args:
                 soln = _solve(m, symbol, **flags)
                 result.update(set(soln))
+            result = list(result)
             if check:
-               result = [s for s in result if all(not checksol(den, {symbol: s}, flags=flags) for den in dens)]
+               result = [s for s in result if all(not checksol(den, {symbol: s}, **flags) for den in dens)]
+            # set flags for quick exit at end
+            check = False
+            flags['simplify'] = False
 
         elif f.is_Piecewise:
             result = set()
@@ -705,11 +701,11 @@ def _solve(f, *symbols, **flags):
                     trig = set([cos, sin, tan, cot])
                     other = funcs - trig
                     if not other and len(funcs.intersection(trig)) > 1:
-                        return solve(f_num.rewrite(tan), symbol, flags=flags)
+                        return _solve(f_num.rewrite(tan), symbol, **flags)
                     trigh = set([cosh, sinh, tanh, coth])
                     other = funcs - trigh
                     if not other and len(funcs.intersection(trigh)) > 1:
-                        return solve(f_num.rewrite(tanh), symbol, flags=flags)
+                        return _solve(f_num.rewrite(tanh), symbol, **flags)
 
                 if len(bases) == 1 and any(q != 1 for q in qs):
                     # e.g. for x**(1/2) + x**(1/4) a change of variables
@@ -735,8 +731,15 @@ def _solve(f, *symbols, **flags):
                     #
                     inversion = _solve(cov - base, symbol, **flags)
                     result = [i.subs(p, s) for i in inversion for s in soln]
+                    # The dens will be checked below to see if they remove any solution, but
+                    # we need to check the solutions here, first. We handle simplification
+                    # here and set the flag so checksol doesn't repeat the simplification:
+                    if flags.get('simplify', True):
+                        result = map(simplify, result)
+                        flags['simplify'] = False
                     if check:
-                       result = [r for r in result if checksol(f_num, {symbol: r}, flags=flags) is not False]
+                        result = [r for r in result if checksol(f_num, {symbol: r}, **flags) is not False]
+
             elif len(gens) == 1:
 
                 # There is only one generator that we are interested in, but there may
@@ -772,14 +775,18 @@ def _solve(f, *symbols, **flags):
             raise NotImplementedError(msg +
             "\nNo algorithms are implemented to solve equation %s" % f)
 
-        if flags.get('simplify', True) and not flags.get('simplified', False):
+        if flags.get('simplify', True):
             result = map(simplify, result)
+            # we just simplified the solution so we now set the flag to
+            # False so the simplification doesn't happen again in checksol()
+            flags['simplify'] = False
+
 
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it
         if check:
            result = [s for s in result if
-                     all(not checksol(den, {symbol: s}, flags=flags)
+                     all(not checksol(den, {symbol: s}, **flags)
                      for den in dens)]
         return result
 
@@ -848,7 +855,6 @@ def _solve(f, *symbols, **flags):
                     else:
                         raise NotImplementedError('no valid subset found')
                 else:
-                    print 'normal',polys
                     result = solve_poly_system(polys, *symbols)
                     syms = symbols
                 checked = []
@@ -883,8 +889,7 @@ def _solve(f, *symbols, **flags):
                     s = (todo - symset).pop()
                     newresult = []
                     for r in result:
-                        print s, eq.subs(r)
-                        soln = _solve(eq.subs(r), s, flags=flags)
+                        soln = _solve(eq.subs(r), s, **flags)
                         for sol in soln:
                             r[s] = sol
                             newresult.append(r)
@@ -1284,7 +1289,7 @@ def _tsolve(eq, sym, **flags):
         rhs = inv(rhs)
         lhs = lhs.args[0]
 
-        sol = solve(lhs-rhs, sym)
+        sol = solve(lhs - rhs, sym)
         return sol
 
     elif lhs.is_Add:
