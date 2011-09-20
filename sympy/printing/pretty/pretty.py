@@ -1222,6 +1222,72 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right(pform_arg))
         return pform
 
+    def _print_fibonacci(self, e):
+        pform = prettyForm("F")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        if len(e.args) == 2:
+            argp = prettyForm(*self._print(e.args[1]).parens())
+            pform = prettyForm(*pform.right(argp))
+        return pform
+
+    def _print_lucas(self, e):
+        pform = prettyForm("L")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        if len(e.args) == 2:
+            argp = prettyForm(*self._print(e.args[1]).parens())
+            pform = prettyForm(*pform.right(argp))
+        return pform
+
+    def _print_bernoulli(self, e):
+        pform = prettyForm("B")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        if len(e.args) == 2:
+            argp = prettyForm(*self._print(e.args[1]).parens())
+            pform = prettyForm(*pform.right(argp))
+        return pform
+
+    def _print_bell(self, e):
+        pform = prettyForm("B")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        if len(e.args) == 2:
+            argp = prettyForm(*self._print(e.args[1]).parens())
+            pform = prettyForm(*pform.right(argp))
+        return pform
+
+    def _print_harmonic(self, e):
+        pform = prettyForm("H")
+        if len(e.args) == 1:
+            arg = self._print(e.args[0])
+        else:
+            arg = prettyForm(*self._print_seq(e.args).parens())
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        return pform
+
+    def _print_euler(self, e):
+        pform = prettyForm("E")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        if len(e.args) == 2:
+            argp = prettyForm(*self._print(e.args[1]).parens())
+            pform = prettyForm(*pform.right(argp))
+        return pform
+
 
 def pretty(expr, **settings):
     """
