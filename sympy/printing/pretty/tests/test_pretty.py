@@ -2,7 +2,7 @@
 from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, Tuple,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
-    I, S, Limit, oo, cos, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
+    I, S, Limit, oo, cos, atan2, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict, euler)
 
@@ -3027,6 +3027,29 @@ u"""\
 A⋅C  ⋅B\n\
 ───────\n\
    x   \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+
+def test_pretty_special_functions():
+    x,y = symbols("x y")
+
+    # atan2
+    expr = atan2(y/sqrt(200),sqrt(x))
+    ascii_str = \
+"""\
+     /  ___         \\\n\
+     |\\/ 2 *y    ___|\n\
+atan2|-------, \\/ x |\n\
+     \\   20         /\
+"""
+    ucode_str = \
+u"""\
+     ⎛  ___         ⎞\n\
+     ⎜╲╱ 2 ⋅y    ___⎟\n\
+atan2⎜───────, ╲╱ x ⎟\n\
+     ⎝   20         ⎠\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
