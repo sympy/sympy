@@ -705,6 +705,11 @@ def test_issue_2629():
     assert powsimp(sqrt(x)*a**3*sqrt(y)) == sqrt(x)*sqrt(y)*a**3
     assert powsimp(Mul(sqrt(x)*c**3*sqrt(y), y, evaluate=False)) == sqrt(x)*sqrt(y)**3*c**3
     assert powsimp(a**2*a*x**2*y) == a**7
+    assert powsimp(x**a*x**b*x*y*sqrt(x*y)) == x**(a + b)*sqrt(x*y)**3
+    assert powsimp(x**a*x**b*x*y*sqrt(x*y**2)) == x**(a + b + 1)*y*sqrt(x*y**2)
+    assert powsimp(x**(y + S.Half)*y*sqrt(sqrt(x)*y)) == x**y*sqrt(sqrt(x)*y)**3
+    assert powsimp(x**7*y**4*sqrt(x*sqrt(x*y))) == x*y**2*sqrt(x*sqrt(x*y))**9
+    assert powsimp(x**7*y**4*sqrt(x**3*sqrt(x*y))) == y**3*sqrt(x**3*sqrt(x*y))**5
 
     # symbolic powers work, too
     b = x**y*y
