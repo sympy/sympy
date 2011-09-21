@@ -1,6 +1,7 @@
 from sympy.core import Basic, S
+from sympy.core.compatibility import is_sequence
 from sympy.functions import factorial
-from sympy.utilities.iterables import rotate_left
+from sympy.utilities.iterables import rotate_left, flatten
 from sympy.polys.polytools import lcm
 from sympy.matrices import Matrix, zeros
 
@@ -125,16 +126,23 @@ class Permutation(Basic):
         >>> q
         Permutation([[0, 1], [2]])
         """
-        ret_obj = Basic.__new__(cls, *args, **kw_args)
-        temp = args[0][:]
-        if type(temp[0]) is list:
-            ret_obj._cyclic_form = args[0]
-            temp = reduce(lambda x, y: x + y, temp, [])
+        if not args or not is_sequence(args[0]) or len(args) > 1 or \
+           len(set(is_sequence(a) for a in args[0])) > 1:
+            raise ValueError('Permutation argument must be a list of ints or a list of lists.')
+
+        # 0, 1, ..., n-1 should all be present
+        temp = [int(i) for i in flatten(args[0])]
+        if set(range(len(temp))) != set(temp):
+            raise ValueError("Integers 0 through %s must be present." % len(temp))
+
+        cform = aform = None
+        if args[0] and is_sequence(args[0][0]):
+            cform = [list(a) for a in args[0]]
         else:
-            ret_obj._array_form = args[0]
-        temp.sort()
-        if temp != list(xrange(len(temp))):
-            raise ValueError("Invalid permutation.")
+            aform = list(args[0])
+
+        ret_obj = Basic.__new__(cls, (cform or aform), **kw_args)
+        ret_obj._cyclic_form, ret_obj._array_form = cform, aform
         return ret_obj
 
     def __add__(self, other):
@@ -159,7 +167,7 @@ class Permutation(Basic):
         Permutation([2, 0, 1, 3])
         """
         if self.size != other.size:
-            raise ValueError("The permutations must be of equal size")
+            raise ValueError("The permutations must be of equal size.")
         result_inv = []
         for i in xrange(self.size - 1):
             val = self.inversion_vector[i] + other.inversion_vector[i]
@@ -188,7 +196,7 @@ class Permutation(Basic):
         Permutation([2, 0, 3, 1])
         """
         if self.size != other.size:
-            raise ValueError("The permutations must be of equal size")
+            raise ValueError("The permutations must be of equal size.")
         result_inv = []
         for i in xrange(self.size - 1):
             val = self.inversion_vector[i] - other.inversion_vector[i]
@@ -217,7 +225,7 @@ class Permutation(Basic):
         """
         if self.size != other.size:
             raise ValueError("The number of elements in the permutations \
-            dont match")
+don\'t match.")
         return Permutation([other.array_form[self.array_form[i]]
                             for i in range(self.size)])
 
@@ -264,7 +272,7 @@ class Permutation(Basic):
         2
         """
         if not isinstance(arg, int):
-            raise ValueError("Arguments must be integers")
+            raise ValueError("Arguments must be integers.")
         return self.array_form[arg]
 
     def atoms(self):
@@ -291,14 +299,16 @@ class Permutation(Basic):
         >>> Permutation.unrank_nonlex(6, 2)
         Permutation([1, 5, 3, 4, 0, 2])
         """
+        def unrank1(n, r, a):
+            if n > 0:
+                a[n-1], a[r % n] = a[r % n], a[n-1]
+                unrank1(n-1, r//n, a)
+
         id_perm = [i for i in xrange(n)]
-        while n > 1:
-            id_perm[n-1],id_perm[r % n] = id_perm[r % n], id_perm[n-1]
-            n -= 1
-            r = r//n
+        unrank1(n, r, id_perm)
         return Permutation(id_perm)
 
-    def rank_nonlex(self, inv_perm = None, n = 0):
+    def rank_nonlex(self):
         """
         This is a linear time ranking algorithm that does not
         enforce lexicographic order [3].
@@ -313,20 +323,19 @@ class Permutation(Basic):
         >>> p.rank_nonlex()
         23
         """
-        if inv_perm is None:
-            inv_perm = (~self).array_form
-        if n == 0:
-            n = self.size
-        if n == 1:
-            return 0
-        perm_form = self.array_form[:]
-        temp_inv_form = inv_perm[:]
-        s = perm_form[n-1]
-        perm_form[n-1], perm_form[temp_inv_form[n-1]] = \
-            perm_form[temp_inv_form[n-1]], perm_form[n-1]
-        temp_inv_form[s], temp_inv_form[n-1] = \
-            temp_inv_form[n-1], temp_inv_form[s]
-        return s + n*self.rank_nonlex(temp_inv_form, n - 1)
+        def rank1(n, perm, inv_perm):
+            if n == 1:
+                return 0
+            s = perm[n-1]
+            perm[n-1], perm[inv_perm[n-1]] = perm[inv_perm[n-1]], perm[n-1]
+            inv_perm[s], inv_perm[n-1] = inv_perm[n-1], inv_perm[s]
+            return s + n*rank1(n-1, perm, inv_perm)
+
+        inv_perm = (~self).array_form
+        perm = self.array_form[:]
+        n = len(perm)
+        r = rank1(n, perm, inv_perm)
+        return r
 
     @property
     def rank(self):
@@ -764,7 +773,7 @@ class Permutation(Basic):
         7
         """
         if self.size != other.size:
-            raise ValueError("The permutations must be of the same size")
+            raise ValueError("The permutations must be of the same size.")
         self_prec_mat = self.get_precedence_matrix()
         other_prec_mat = other.get_precedence_matrix()
         n_prec = 0
@@ -831,7 +840,7 @@ class Permutation(Basic):
         4
         """
         if self.size != other.size:
-            raise ValueError("The permutations must be of the same size")
+            raise ValueError("The permutations must be of the same size.")
         self_adj_mat = self.get_adjacency_matrix()
         other_adj_mat = other.get_adjacency_matrix()
         n_adj = 0
@@ -859,7 +868,7 @@ class Permutation(Basic):
         12
         """
         if self.size != other.size:
-            raise ValueError("The permutations must be of the same size")
+            raise ValueError("The permutations must be of the same size.")
         perm_array = self.array_form
         other_array = other.array_form
         return sum([abs(perm_array[i] - other_array[i]) for i in xrange(self.size)])
@@ -928,7 +937,7 @@ class Permutation(Basic):
                 perm.append(val)
                 N.remove(val)
         except IndexError:
-            raise ValueError("The inversion vector is not valid")
+            raise ValueError("The inversion vector is not valid.")
         perm.extend(N)
         return Permutation(perm)
 
