@@ -291,3 +291,37 @@ except ImportError: # < python 2.6
                 return
             indices[i:] = [indices[i] + 1] * (r - i)
             yield tuple(pool[i] for i in indices)
+
+def set_intersection(*sets):
+    """Return the intersection of all the given sets.
+
+    As of Python 2.6 you can write set.intersection(*sets).
+
+    >>> from sympy.core.compatibility import set_intersection
+    >>> set_intersection(set([1, 2]), set([2, 3]))
+    set([2])
+    >>> set_intersection()
+    set()
+    """
+    if not sets:
+        return set()
+    rv = sets[0]
+    for s in sets:
+        rv &= s
+    return rv
+
+def set_union(*sets):
+    """Return the union of all the given sets.
+
+    As of Python 2.6 you can write set.union(*sets).
+
+    >>> from sympy.core.compatibility import set_union
+    >>> set_union(set([1, 2]), set([2, 3]))
+    set([1, 2, 3])
+    >>> set_union()
+    set()
+    """
+    rv = set()
+    for s in sets:
+        rv |= s
+    return rv

@@ -30,6 +30,9 @@ specific hint.  See also the docstring on dsolve().
     - constantsimp() - Simplifies arbitrary constants.
     - constant_renumber() - Renumber arbitrary constants
     - _handle_Integral() - Evaluate unevaluated Integrals.
+    - is_unfunc() - True for f(x), False for x, f and sin(x)
+    - unfuncs() - returns all UndefinedFunctions
+    - preprocess - prepare the equation and detect function to solve for
 
     See also the docstrings of these functions.
 
@@ -202,8 +205,8 @@ anything is broken, one of those tests will surely fail.
 
 """
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import iterable, cmp_to_key
-from sympy.core.function import Derivative, diff, expand_mul
+from sympy.core.compatibility import iterable, cmp_to_key, is_sequence, set_union
+from sympy.core.function import Derivative, Function, UndefinedFunction, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -242,6 +245,94 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_specia
 "nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
 
+def unfuncs(eq):
+    """Return the set of undefined functions (f(x), not sin(x)) in eq.
+
+    >>> from sympy.solvers.ode import unfuncs
+    >>> from sympy import Function, sin
+    >>> from sympy.abc import x, y
+    >>> f, g = map(Function, 'fg')
+    >>> unfuncs(f(x) + sin(g(x)) + sin(x) + 2 + y)
+    set([f(x), g(x)])
+    """
+    return set([f for f in eq.atoms(Function) if isinstance(f.func, UndefinedFunction)])
+
+def is_unfunc(f):
+    """Return True if ``f`` is an UndefinedFunction
+    >>> from sympy.solvers.ode import is_unfunc
+    >>> from sympy import Function, sin
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> [(i, is_unfunc(i)) for i in (f(x), f, x, sin(x))]
+    [(f(x), True), (f, False), (x, False), (sin(x), False)]
+    """
+    return f.is_Function and isinstance(f.func, UndefinedFunction)
+
+def preprocess(expr, func=None, hint='_Integral'):
+    """Prepare expr for solving by making sure that differentiation
+    is done so that only func remains in unevaluated derivatives and
+    (if hint doesn't end with _Integral) that doit is applied to all
+    other derivatives. If hint is None, don't do any differentiation.
+    (Currently this may cause some simple differential equations to
+    fail.)
+
+    In case func is None, an attempt will be made to autodetect the
+    function to be solved for.
+
+    >>> from sympy.solvers.ode import preprocess
+    >>> from sympy import Derivative, Function, Integral, sin
+    >>> from sympy.abc import x, y, z
+    >>> f, g = map(Function, 'fg')
+
+    Apply doit to derivatives that contain more than the function
+    of interest:
+        >>> preprocess(Derivative(f(x) + x, x))
+        (Derivative(f(x), x) + 1, f(x))
+
+    Do others if the differentiation variable(s) intersect with those
+    of the function of interest or contain the function of interest:
+        >>> preprocess(Derivative(g(x), y, z), f(y))
+        (0, f(y))
+        >>> preprocess(Derivative(f(y), z), f(y))
+        (0, f(y))
+
+    Do others if the hint doesn't end in '_Integral' (the default
+    assumes that it does):
+        >>> preprocess(Derivative(g(x), y), f(x))
+        (Derivative(g(x), y), f(x))
+        >>> preprocess(Derivative(f(x), y), f(x), hint='')
+        (0, f(x))
+
+    Don't do any derivatives if hint is None:
+        >>> preprocess(Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x), hint=None)
+        (Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x))
+
+    If it's not clear what the function of interest is, it must be given:
+        >>> eq = Derivative(f(x) + g(x), x)
+        >>> preprocess(eq, g(x))
+        (Derivative(f(x), x) + Derivative(g(x), x), g(x))
+        >>> try: preprocess(eq)
+        ... except ValueError: print "A ValueError was raised."
+        A ValueError was raised.
+
+    """
+
+    derivs = expr.atoms(Derivative)
+    if not func:
+        funcs = set_union(*[unfuncs(d) for d in derivs])
+        if len(funcs) != 1:
+            raise ValueError('The function cannot be automatically detected for %s.' % expr)
+        func = funcs.pop()
+    fvars = set(func.args)
+    if hint is None:
+        return expr, func
+    reps = [(d, d.doit()) for d in derivs if
+                                not hint.endswith('_Integral') or
+                                d.has(func) or
+                                set(d.variables) & fvars]
+    eq = expr.subs(reps)
+    return eq, func
+
 def sub_func_doit(eq, func, new):
     """When replacing the func with something else, we usually
     want the derivative evaluated, so this function helps in
@@ -260,7 +351,7 @@ def sub_func_doit(eq, func, new):
 
     return eq.subs(reps).subs(func, new).subs(repu)
 
-def dsolve(eq, func, hint="default", simplify=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     """
     Solves any (supported) kind of ordinary differential equation.
 
@@ -278,13 +369,16 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
             equal to 0.
 
         ``f(x)`` is a function of one variable whose derivatives in that
-            variable make up the ordinary differential equation eq.
+            variable make up the ordinary differential equation eq. In many
+            cases it is not necessary to provide this; it will be autodetected
+            (and an error raised if it couldn't be detected).
 
         ``hint`` is the solving method that you want dsolve to use.  Use
             classify_ode(eq, f(x)) to get all of the possible hints for
             an ODE.  The default hint, 'default', will use whatever hint
             is returned first by classify_ode().  See Hints below for
             more options that you can use for hint.
+
         ``simplify`` enables simplification by odesimp().  See its
             docstring for more information.  Turn this off, for example,
             to disable solving of solutions for func or simplification
@@ -292,6 +386,10 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
             hint. Note that the solution may contain more arbitrary
             constants than the order of the ODE with this option
             enabled.
+
+        ``prep``, when False and when ``func`` is given, will skip the
+            preprocessing step where the equation is cleaned up so it
+            is ready for solving.
 
     **Hints**
 
@@ -390,15 +488,18 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
     # TODO: Implement initial conditions
     # See issue 1621.  We first need a way to represent things like f'(0).
     if isinstance(eq, Equality):
-        if eq.rhs != 0:
-            return dsolve(eq.lhs-eq.rhs, func, hint=hint, simplify=simplify, **kwargs)
-        eq = eq.lhs
+        eq = eq.lhs - eq.rhs
+
+    # preprocess the equation and find func if not given
+    if prep or func is None:
+        eq, func = preprocess(eq, func)
+        prep = False
 
     # Magic that should only be used internally.  Prevents classify_ode from
     # being called more than it needs to be by passing its results through
     # recursive calls.
     if kwargs.get('classify', True):
-        hints = classify_ode(eq, func, dict=True)
+        hints = classify_ode(eq, func, dict=True, prep=prep)
     else:
         # Here is what all this means:
         #
@@ -426,8 +527,9 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
         raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
     if hint == 'default':
-        return dsolve(eq, func, hint=hints['default'], simplify=simplify, classify=False,
-        order=hints['order'], match=hints[hints['default']])
+        return dsolve(eq, func, hint=hints['default'], simplify=simplify,
+                      prep=prep, classify=False, order=hints['order'],
+                      match=hints[hints['default']])
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         failedhints = {}
@@ -441,8 +543,8 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
                 gethints.remove("1st_homogeneous_coeff_best")
         for i in gethints:
             try:
-                sol = dsolve(eq, func, hint=i, simplify=simplify, classify=False,
-                   order=hints['order'], match=hints[i])
+                sol = dsolve(eq, func, hint=i, simplify=simplify, prep=prep,
+                   classify=False, order=hints['order'], match=hints[i])
             except NotImplementedError, detail: # except NotImplementedError as detail:
                 failedhints[i] = detail
             else:
@@ -480,7 +582,7 @@ def dsolve(eq, func, hint="default", simplify=True, **kwargs):
             match=hints[hint]), func, hints['order'], hint)
     return rv
 
-def classify_ode(eq, func, dict=False):
+def classify_ode(eq, func=None, dict=False, prep=True):
     """
     Returns a tuple of possible dsolve() classifications for an ODE.
 
@@ -492,10 +594,13 @@ def classify_ode(eq, func, dict=False):
     use dsolve(ODE, func, hint=<classification>).  See also the dsolve()
     docstring for different meta-hints you can use.
 
-    If dict is true, classify_ode() will return a dictionary of
+    If ``dict`` is true, classify_ode() will return a dictionary of
     hint:match expression terms. This is intended for internal use by
     dsolve().  Note that because dictionaries are ordered arbitrarily,
     this will most likely not be in the same order as the tuple.
+
+    If ``prep`` is False or ``func`` is None then the equation
+    will be preprocessed to put it in standard form for classification.
 
     You can get help on different hints by doing help(ode.ode_hintname),
     where hintname is the name of the hint without "_Integral".
@@ -581,7 +686,7 @@ def classify_ode(eq, func, dict=False):
         '1st_linear_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-        >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4, f(x))
+        >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
         ('nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
@@ -589,16 +694,19 @@ def classify_ode(eq, func, dict=False):
     """
     from sympy import expand
 
-    if len(func.args) != 1:
+    if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " + \
             "of one variable")
-
+    if prep or func is None:
+        eq, func_ = preprocess(eq, func)
+        if func is None:
+            func = func_
     x = func.args[0]
     f = func.func
     y = Dummy('y')
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs-eq.rhs, func)
+            return classify_ode(eq.lhs-eq.rhs, func, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -940,15 +1048,19 @@ def odesimp(eq, func, order, hint):
 
     return eq
 
-def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
+def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     """
-    Substitutes sol for func in ode and checks that the result is 0.
+    Substitutes sol into the ode and checks that the result is 0.
 
     This only works when func is one function, like f(x).  sol can be a
-    single solution or a list of solutions.  Either way, each solution
-    must be an Equality instance (e.g., Eq(f(x), C1*cos(x) +
-    C2*sin(x))).  If it is a list of solutions, it will return a list of
-    the checkodesol() result for each solution.
+    single solution or a list of solutions.  Each solution may be an Equality
+    that the solution satisfies, e.g. Eq(f(x), C1), Eq(f(x) + C1, 0); or simply
+    an Expr, e.g. f(x) - C1. In most cases it will not be necessary to
+    explicitly identify the function, but if the function cannot be inferred
+    from the original equation it can be supplied through the 'func' argument.
+
+    If a sequence of solutions is passed, the same sort of container will be used
+    to return the result for each solution.
 
     It tries the following methods, in order, until it finds zero
     equivalence:
@@ -983,26 +1095,51 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
         >>> from sympy import Eq, Function, checkodesol, symbols
         >>> x, C1 = symbols('x,C1')
         >>> f = Function('f')
-        >>> checkodesol(f(x).diff(x), f(x), Eq(f(x), C1))
+        >>> checkodesol(f(x).diff(x), Eq(f(x), C1))
         (True, 0)
-        >>> assert checkodesol(f(x).diff(x), f(x), Eq(f(x), C1))[0]
-        >>> assert not checkodesol(f(x).diff(x), f(x), Eq(f(x), x))[0]
-        >>> checkodesol(f(x).diff(x, 2), f(x), Eq(f(x), x**2))
+        >>> assert checkodesol(f(x).diff(x), C1)[0]
+        >>> assert not checkodesol(f(x).diff(x), x)[0]
+        >>> checkodesol(f(x).diff(x, 2), x**2)
         (False, 2)
 
     """
-    if type(sol) in (tuple, list, set):
-        return type(sol)(map(lambda i: checkodesol(ode, func, i, order=order,
+    if not isinstance(ode, Equality):
+        ode = Eq(ode, 0)
+    if func is None:
+        try:
+            _, func = preprocess(ode.lhs)
+        except ValueError:
+            funcs = [unfuncs(s) for s in (sol if is_sequence(sol, set) else [sol])]
+            funcs = reduce(lambda x, y: x|y, funcs, set())
+            if len(funcs) != 1:
+                raise ValueError('must pass func arg to checkodesol for this case.')
+            func = funcs.pop()
+    # ========== deprecation handling
+    # After the deprecation period this handling section becomes:
+    # ----------
+    # if not is_unfunc(func) or len(func.args) != 1:
+    #     raise ValueError("func must be a function of one variable, not %s" % func)
+    # ----------
+    # assume, during deprecation that sol and func are reversed
+    if hasattr(sol, '_is_Function') and is_unfunc(sol) and len(sol.args) == 1:
+        import warnings
+        msg = "sol appears to be a valid function. " +\
+              "The order of sol and func will be reversed. " +\
+              "If this is not desired, send sol as Eq(sol, 0)."
+        warnings.warn(msg, category=DeprecationWarning)
+        sol, func = func, sol
+    elif not (is_unfunc(func) and len(func.args) == 1):
+        raise ValueError("func (or sol, during deprecation) must be a function of one variable. Got sol = %s, func = %s" % (sol, func))
+    # ========== end of deprecation handling
+    if is_sequence(sol, set):
+        return type(sol)(map(lambda i: checkodesol(ode, i, order=order,
             solve_for_func=solve_for_func), sol))
-    if not func.is_Function or len(func.args) != 1:
-        raise ValueError("func must be a function of one variable, not " + str(func))
+
+    if not isinstance(sol, Equality):
+        sol = Eq(func, sol)
     x = func.args[0]
     s = True
     testnum = 0
-    if not isinstance(ode, Equality):
-        ode = Eq(ode, 0)
-    if not isinstance(sol, Equality):
-        raise ValueError("sol must be an Equality, got " + str(sol))
     if order == 'auto':
         order = ode_order(ode, func)
     if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
@@ -1015,10 +1152,10 @@ def checkodesol(ode, func, sol, order='auto', solve_for_func=True):
             pass
         else:
             if len(solved) == 1:
-                result = checkodesol(ode, func, Eq(func, solved[0]), \
+                result = checkodesol(ode, Eq(func, solved[0]), \
                     order=order, solve_for_func=False)
             else:
-                result = checkodesol(ode, func, [Eq(func, t) for t in solved],
+                result = checkodesol(ode, [Eq(func, t) for t in solved],
                 order=order, solve_for_func=False)
 
             return result
@@ -2127,7 +2264,7 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     f(x) = -----------------------------------------------------------------------
                                             2*b*x
 
-    >>> checkodesol(genform, y, sol, order=1)[0]
+    >>> checkodesol(genform, sol, order=1)[0]
     True
 
     References:
