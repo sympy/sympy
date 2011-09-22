@@ -306,7 +306,7 @@ don\'t match.")
         unrank1(n, r, id_perm)
         return Permutation(id_perm)
 
-    def rank_nonlex(self, inv_perm = None, n = 0):
+    def rank_nonlex(self, inv_perm = None):
         """
         This is a linear time ranking algorithm that does not
         enforce lexicographic order [3].
@@ -329,9 +329,12 @@ don\'t match.")
             inv_perm[s], inv_perm[n-1] = inv_perm[n-1], inv_perm[s]
             return s + n*rank1(n-1, perm, inv_perm)
 
-        inv_perm = (~self).array_form
+        if inv_perm is None:
+            inv_perm = (~self).array_form
         perm = self.array_form[:]
         n = len(perm)
+        if n == 0:
+            return 0
         r = rank1(n, perm, inv_perm)
         return r
 
