@@ -294,16 +294,16 @@ don\'t match.")
         >>> Permutation.unrank_nonlex(4, 5)
         Permutation([2, 0, 3, 1])
 
-        Consider in the cyclic form
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.unrank_nonlex(6, 2)
         Permutation([1, 5, 3, 4, 0, 2])
         """
+        def unrank1(n, r, a):
+            if n > 0:
+                a[n-1], a[r % n] = a[r % n], a[n-1]
+                unrank1(n-1, r//n, a)
+
         id_perm = [i for i in xrange(n)]
-        while n > 1:
-            id_perm[n-1],id_perm[r % n] = id_perm[r % n], id_perm[n-1]
-            n -= 1
-            r = r//n
+        unrank1(n, r, id_perm)
         return Permutation(id_perm)
 
     def rank_nonlex(self, inv_perm = None, n = 0):
@@ -321,20 +321,19 @@ don\'t match.")
         >>> p.rank_nonlex()
         23
         """
-        if inv_perm is None:
-            inv_perm = (~self).array_form
-        if n == 0:
-            n = self.size
-        if n == 1:
-            return 0
-        perm_form = self.array_form[:]
-        temp_inv_form = inv_perm[:]
-        s = perm_form[n-1]
-        perm_form[n-1], perm_form[temp_inv_form[n-1]] = \
-            perm_form[temp_inv_form[n-1]], perm_form[n-1]
-        temp_inv_form[s], temp_inv_form[n-1] = \
-            temp_inv_form[n-1], temp_inv_form[s]
-        return s + n*self.rank_nonlex(temp_inv_form, n - 1)
+        def rank1(n, perm, inv_perm):
+            if n == 1:
+                return 0
+            s = perm[n-1]
+            perm[n-1], perm[inv_perm[n-1]] = perm[inv_perm[n-1]], perm[n-1]
+            inv_perm[s], inv_perm[n-1] = inv_perm[n-1], inv_perm[s]
+            return s + n*rank1(n-1, perm, inv_perm)
+
+        inv_perm = (~self).array_form
+        perm = self.array_form[:]
+        n = len(perm)
+        r = rank1(n, perm, inv_perm)
+        return r
 
     @property
     def rank(self):
