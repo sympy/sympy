@@ -1,5 +1,4 @@
 from sympy.combinatorics.permutations import Permutation
-from sympy.utilities.pytest import raises
 
 def test_Permutation():
     p = Permutation([2,5,1,6,3,0,4])
@@ -53,9 +52,22 @@ def test_Permutation():
     assert q.max == 4
     assert q.min == 0
 
-    assert p.rank_nonlex() == 14830
-    assert q.rank_nonlex() == 8441
-    assert Permutation.unrank_nonlex(7, 41) == Permutation([4, 2, 3, 5, 1, 0, 6])
+    prank = p.rank_nonlex()
+    assert prank == 1600
+    assert Permutation.unrank_nonlex(7, 1600) == p
+    qrank = q.rank_nonlex()
+    assert qrank == 41
+    assert Permutation.unrank_nonlex(7, 41) == Permutation(q.array_form)
+
+    a = [Permutation.unrank_nonlex(4, i).array_form for i in range(24)]
+    assert a == \
+    [[1, 2, 3, 0], [3, 2, 0, 1], [1, 3, 0, 2], [1, 2, 0, 3], [2, 3, 1, 0], \
+     [2, 0, 3, 1], [3, 0, 1, 2], [2, 0, 1, 3], [1, 3, 2, 0], [3, 0, 2, 1], \
+     [1, 0, 3, 2], [1, 0, 2, 3], [2, 1, 3, 0], [2, 3, 0, 1], [3, 1, 0, 2], \
+     [2, 1, 0, 3], [3, 2, 1, 0], [0, 2, 3, 1], [0, 3, 1, 2], [0, 2, 1, 3], \
+     [3, 1, 2, 0], [0, 3, 2, 1], [0, 1, 3, 2], [0, 1, 2, 3]]
+
+    assert [Permutation(pa).rank_nonlex() for pa in a] == range(24)
 
     assert q.rank == 870
     assert p.rank == 1964
@@ -125,17 +137,3 @@ def test_unrank_lex():
     assert p.rank == 23
     assert p.array_form == [3, 2, 1, 0]
 
-def test_args():
-    p = Permutation([(0, 3, 1, 2), (4,5)])
-    assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
-    assert p._array_form == None
-    p = Permutation((0, 3, 1, 2))
-    assert p._cyclic_form == None
-    assert p._array_form == [0, 3, 1, 2]
-    assert Permutation([0]) == Permutation((0,))
-    assert Permutation([[0], [1]]) == Permutation(((0,), (1,))) == Permutation(((0,), [1]))
-    raises(ValueError, 'Permutation([[1, 2], [3]])') # 0, 1, 2 should be present
-    raises(ValueError, 'Permutation([1, 2, 3])') # 0, 1, 2 should be present
-    raises(ValueError, 'Permutation(0, 1, 2)') # enclosing brackets needed
-    raises(ValueError, 'Permutation([1, 2], [0])') # enclosing brackets needed
-    raises(ValueError, 'Permutation([[1, 2], 0])') # enclosing brackets needed on 0
