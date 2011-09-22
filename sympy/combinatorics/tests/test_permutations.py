@@ -2,8 +2,8 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.pytest import raises
 
 def test_Permutation():
-    p = Permutation([2,5,1,6,3,0,4])
-    q = Permutation([[1,4,5],[2,0,6],[3]])
+    p = Permutation([2, 5, 1, 6, 3, 0, 4])
+    q = Permutation([[1, 4, 5], [2, 0, 6], [3]])
 
     assert q.cycles == 3
     assert p*q == Permutation([4, 6, 1, 2, 5, 3, 0])
@@ -39,7 +39,7 @@ def test_Permutation():
 
     assert s.is_Singleton
 
-    r = Permutation([3,2,1,0])
+    r = Permutation([3, 2, 1, 0])
     assert (r**2).is_Identity
 
     assert (p*(~p)).is_Identity
@@ -48,11 +48,12 @@ def test_Permutation():
     assert p.max == 6
     assert p.min == 0
 
-    q = Permutation([[4,1,2,3],[0,5,6]])
+    q = Permutation([[4, 1, 2, 3], [0, 5, 6]])
 
     assert q.max == 4
     assert q.min == 0
 
+    assert Permutation([]).rank_nonlex() == 0
     prank = p.rank_nonlex()
     assert prank == 1600
     assert Permutation.unrank_nonlex(7, 1600) == p
@@ -73,8 +74,8 @@ def test_Permutation():
     assert q.rank == 870
     assert p.rank == 1964
 
-    p = Permutation([1,5,2,0,3,6,4])
-    q = Permutation([[2,3,5],[1,0,6],[4]])
+    p = Permutation([1, 5, 2, 0, 3, 6, 4])
+    q = Permutation([[2, 3, 5], [1, 0, 6], [4]])
 
     assert p.ascents == [0, 3, 4]
     assert q.ascents == [1, 2, 4]
@@ -139,14 +140,14 @@ def test_unrank_lex():
     assert p.array_form == [3, 2, 1, 0]
 
 def test_args():
-    p = Permutation([(0, 3, 1, 2), (4,5)])
+    p = Permutation([(0, 3, 1, 2), (4, 5)])
     assert p.cyclic_form == [[0, 3, 1, 2], [4, 5]]
     assert p._array_form == None
     p = Permutation((0, 3, 1, 2))
     assert p._cyclic_form == None
     assert p._array_form == [0, 3, 1, 2]
-    assert Permutation([0]) == Permutation((0,))
-    assert Permutation([[0], [1]]) == Permutation(((0,), (1,))) == Permutation(((0,), [1]))
+    assert Permutation([0]) == Permutation((0, ))
+    assert Permutation([[0], [1]]) == Permutation(((0, ), (1, ))) == Permutation(((0, ), [1]))
     raises(ValueError, 'Permutation([[1, 2], [3]])') # 0, 1, 2 should be present
     raises(ValueError, 'Permutation([1, 2, 3])') # 0, 1, 2 should be present
     raises(ValueError, 'Permutation(0, 1, 2)') # enclosing brackets needed
