@@ -293,6 +293,8 @@ don\'t match.")
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.unrank_nonlex(4, 5)
         Permutation([2, 0, 3, 1])
+        >>> Permutation.unrank_nonlex(4, -1)
+        Permutation([0, 1, 2, 3])
 
         >>> Permutation.unrank_nonlex(6, 2)
         Permutation([1, 5, 3, 4, 0, 2])
@@ -303,6 +305,7 @@ don\'t match.")
                 unrank1(n - 1, r//n, a)
 
         id_perm = range(n)
+        r = r % factorial(n)
         unrank1(n, r, id_perm)
         return Permutation(id_perm)
 
@@ -354,11 +357,15 @@ don\'t match.")
         """
         rank = 0
         rho = self.array_form[:]
+        n = self.size - 1
+        psize = factorial(n)
         for j in xrange(self.size - 1):
-            rank += (rho[j])*factorial(self.size - j - 1)
+            rank += rho[j]*psize
             for i in xrange(j + 1, self.size):
                 if rho[i] > rho[j]:
-                    rho[i] = rho[i] - 1
+                    rho[i] -= 1
+            psize /= n
+            n -= 1
         return rank
 
     @property
@@ -974,11 +981,14 @@ don\'t match.")
         Permutation([0, 2, 4, 1, 3])
         """
         perm_array = [0] * size
+        psize = 1
         for i in xrange(size):
-            d = (rank % int(factorial(i + 1))) / int(factorial(i))
-            rank = rank - d*int(factorial(i))
+            new_psize = psize*(i + 1)
+            d = (rank % new_psize) // psize
+            rank -= d*psize
             perm_array[size - i - 1] = d
             for j in xrange(size - i, size):
                 if perm_array[j] > d-1:
                     perm_array[j] += 1
+            psize = new_psize
         return Permutation(perm_array)
