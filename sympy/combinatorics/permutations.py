@@ -305,7 +305,7 @@ don\'t match.")
                 unrank1(n - 1, r//n, a)
 
         id_perm = range(n)
-        r = r % factorial(n)
+        r = r % int(factorial(n))
         unrank1(n, r, id_perm)
         return Permutation(id_perm)
 
@@ -358,13 +358,13 @@ don\'t match.")
         rank = 0
         rho = self.array_form[:]
         n = self.size - 1
-        psize = factorial(n)
+        psize = int(factorial(n))
         for j in xrange(self.size - 1):
             rank += rho[j]*psize
             for i in xrange(j + 1, self.size):
                 if rho[i] > rho[j]:
                     rho[i] -= 1
-            psize /= n
+            psize //= n
             n -= 1
         return rank
 
