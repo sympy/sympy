@@ -299,10 +299,10 @@ don\'t match.")
         """
         def unrank1(n, r, a):
             if n > 0:
-                a[n-1], a[r % n] = a[r % n], a[n-1]
-                unrank1(n-1, r//n, a)
+                a[n - 1], a[r % n] = a[r % n], a[n - 1]
+                unrank1(n - 1, r//n, a)
 
-        id_perm = [i for i in xrange(n)]
+        id_perm = range(n)
         unrank1(n, r, id_perm)
         return Permutation(id_perm)
 
@@ -324,18 +324,18 @@ don\'t match.")
         def rank1(n, perm, inv_perm):
             if n == 1:
                 return 0
-            s = perm[n-1]
-            perm[n-1], perm[inv_perm[n-1]] = perm[inv_perm[n-1]], perm[n-1]
-            inv_perm[s], inv_perm[n-1] = inv_perm[n-1], inv_perm[s]
-            return s + n*rank1(n-1, perm, inv_perm)
+            s = perm[n - 1]
+            t = inv_perm[n - 1]
+            perm[n - 1], perm[t] = perm[t], s
+            inv_perm[n - 1], inv_perm[s] = inv_perm[s], t
+            return s + n*rank1(n - 1, perm, inv_perm)
 
         if inv_perm is None:
             inv_perm = (~self).array_form
-        perm = self.array_form[:]
-        n = len(perm)
-        if n == 0:
+        if not inv_perm:
             return 0
-        r = rank1(n, perm, inv_perm)
+        perm = self.array_form[:]
+        r = rank1(len(perm), perm, inv_perm)
         return r
 
     @property
@@ -904,7 +904,7 @@ don\'t match.")
         m -= 1
         if s <= 0:
             s = 1
-        Q = deque([i for i in xrange(n)])
+        Q = deque(range(n))
         perm = []
         while len(Q) > s:
             for dp in xrange(m):
@@ -956,7 +956,7 @@ don\'t match.")
         >>> (a*(~a)).is_Identity
         True
         """
-        perm_array = [i for i in xrange(n)]
+        perm_array = range(n)
         random.shuffle(perm_array)
         return Permutation(perm_array)
 
