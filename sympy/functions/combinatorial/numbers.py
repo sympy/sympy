@@ -134,11 +134,6 @@ class lucas(Function):
         * http://mathworld.wolfram.com/LucasPolynomial.html
     """
 
-    @staticmethod
-    @recurrence_memo([2*S.One, _sym])
-    def _lucaspoly(n, prev):
-        return (prev[-2] + _sym*prev[-1]).expand()
-
     @classmethod
     def eval(cls, n, sym=None):
         if n.is_Integer:
@@ -148,7 +143,13 @@ class lucas(Function):
                 if n < 0:
                     raise ValueError("Lucas polynomials are defined "
                        "only for non-negative integer indices.")
-                return cls._lucaspoly(n).subs(_sym, sym)
+
+                _seq = [2*S.One, _sym]
+
+                for i in xrange(2, n+1):
+                    _seq.append(_seq[-2] + _sym*_seq[-1])
+
+                return _seq[n].expand().subs(_sym, sym)
 
 
 #----------------------------------------------------------------------------#
