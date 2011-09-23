@@ -23,7 +23,10 @@ vectors. For example:
   \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_y} &= \mathbf{\hat{a}_x}
   \mathbf{\hat{a}_y}\\
 
-Note that the order is significant.
+Where :math:`\mathbf{\hat{a}_x}\mathbf{\hat{a}_x}` and
+`\mathbf{\hat{a}_x}\mathbf{\hat{a}_y}` are the square matrix obtained by
+multiplying the left side as a column vector by the right side as a row vector. Note that the order is significant.
+
 Some additional properties of the outer product operation are:
 
 .. math::
