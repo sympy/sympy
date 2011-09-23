@@ -12,8 +12,8 @@ how to manipulate the inertia tensor.
 Dyad
 ====
 
-In :mod:`mechanics`, dyadics are used to represent inertias [Kane 1985,
-WikiDyadics, WikiDyadicProducts]. The dyadic, or outer, product between two
+In :mod:`mechanics`, dyadics are used to represent inertias ([Kane1985]_,
+[WikiDyadics]_, [WikiDyadicProducts]_). The dyadic, or outer, product between two
 vectors returns a new quantity which represents the juxtaposition of these two
 vectors. For example:
 
