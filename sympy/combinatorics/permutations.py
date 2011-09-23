@@ -305,7 +305,8 @@ don\'t match.")
                 unrank1(n - 1, r//n, a)
 
         id_perm = range(n)
-        r = r % int(factorial(n))
+        n = int(n)
+        r = int(r % factorial(n))
         unrank1(n, r, id_perm)
         return Permutation(id_perm)
 
