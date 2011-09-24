@@ -45,10 +45,30 @@ def sqrt(arg):
     return C.Pow(arg, S.Half)
 
 
-def root(arg, n=2):
+def root(arg, n):
     """The n-th root function
 
     root(x, n) -> Returns the n-th root of x.
+
+
+    Examples
+    ========
+
+    >>> from sympy import root, Symbol, Rational
+    >>> x = Symbol('x')
+
+    >>> root(x, 2)
+    sqrt(x)
+
+    >>> root(x, 3)
+    x**(1/3)
+
+    >>> root(x, Symbol("n"))
+    x**(1/n)
+
+    >>> root(x, -Rational(2,3))
+    x**(-3/2)
+
 
     See also
     ========
