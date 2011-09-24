@@ -74,9 +74,23 @@ def sqrt(arg):
     >>> powdenest(sqrt(x**2), force=True)
     x
 
+    To get both branches of the square root you can use the RootOf function:
+
+    >>> from sympy import RootOf
+
+    >>> [ RootOf(x**2-3,i) for i in (0,1) ]
+    [-sqrt(3), sqrt(3)]
+
+
     See also
     ========
-       L{root}
+       L{root}, L{RootOf}
+
+       External links
+       --------------
+
+       * http://en.wikipedia.org/wiki/Square_root
+       * http://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
@@ -107,9 +121,33 @@ def root(arg, n):
     x**(-3/2)
 
 
+    To get all n n-th roots you can use the RootOf function.
+    The following examples show the roots of unity for n
+    equal 2, 3 and 4:
+
+    >>> from sympy import RootOf, I
+
+    >>> [ RootOf(x**2-1,i) for i in (0,1) ]
+    [-1, 1]
+
+    >>> [ RootOf(x**3-1,i) for i in (0,1,2) ]
+    [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
+
+    >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
+    [-1, 1, -I, I]
+
+
     See also
     ========
-       L{sqrt}
+       L{sqrt}, L{RootOf}
+
+       External links
+       --------------
+
+       * http://en.wikipedia.org/wiki/Square_root
+       * http://en.wikipedia.org/wiki/Nth_root
+       * http://en.wikipedia.org/wiki/Principal_root_of_unity
+       * http://en.wikipedia.org/wiki/Principal_value
     """
     n = sympify(n)
     return C.Pow(arg, 1/n)
