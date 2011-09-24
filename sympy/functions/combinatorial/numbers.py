@@ -522,9 +522,10 @@ class catalan(Function):
     =====
         catalan(n) gives the n-th Catalan number, C_n
 
+
     Examples
     ========
-        >>> from sympy import Symbol, binomial, catalan
+        >>> from sympy import Symbol, binomial, gamma, catalan
 
         >>> [ catalan(i) for i in range(1,10) ]
         [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
@@ -536,6 +537,10 @@ class catalan(Function):
 
         >>> catalan(n).rewrite(binomial)
         binomial(2*n, n)/(n + 1)
+
+        >>> catalan(n).rewrite(gamma)
+        4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
+
 
     Mathematical description
     ========================
@@ -553,12 +558,13 @@ class catalan(Function):
     """
 
     @classmethod
-    def eval(cls, n):
-        # The gamma function would allow to generalize this to complex n
-        return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+    def eval(cls, n, evaluate=True):
+        if n.is_Integer and n.is_nonnegative:
+            return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
 
     def _eval_rewrite_as_binomial(self,n):
         return C.binomial(2*n,n)/(n + 1)
 
     def _eval_rewrite_as_gamma(self,n):
+        # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
