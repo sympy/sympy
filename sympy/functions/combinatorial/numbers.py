@@ -554,9 +554,11 @@ class catalan(Function):
 
     @classmethod
     def eval(cls, n):
-        if n.is_Integer and n.is_nonnegative:
-            # The gamma function would allow to generalize this to complex n
-            return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+        # The gamma function would allow to generalize this to complex n
+        return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
 
     def _eval_rewrite_as_binomial(self,n):
         return C.binomial(2*n,n)/(n + 1)
+
+    def _eval_rewrite_as_gamma(self,n):
+        return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
