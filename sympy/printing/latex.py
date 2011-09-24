@@ -940,6 +940,8 @@ class LatexPrinter(Printer):
     def _print_euler(self, expr):
         return r"E_{%s}" % self._print(expr.args[0])
 
+    def _print_catalan(self, expr):
+        return r"C_{%s}" % self._print(expr.args[0])
 
 def latex(expr, **settings):
     r"""Convert the given expression to LaTeX representation.

@@ -2,7 +2,7 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict)
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -349,3 +349,6 @@ def test_latex_RootSum():
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')
+
+def test_latex_numbers():
+    assert latex(catalan(n)) == r"C_{n}"
