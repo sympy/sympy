@@ -143,6 +143,9 @@ def test_root():
 
     assert root(-2, 1) == -2
 
+    assert root(-2, 2) == sqrt(2)*I
+    assert root(-2, 1) == -2
+
     assert root(x, 2) == sqrt(x)
     assert root(x, 1) == x
     assert root(x, 3) == x**Rational(1,3)
