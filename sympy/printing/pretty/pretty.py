@@ -1256,11 +1256,18 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right(pform_arg))
         return pform
 
+    def _print_catalan(self, e):
+        pform = prettyForm("C")
+        arg = self._print(e.args[0])
+        pform_arg = prettyForm(" "*arg.width())
+        pform_arg = prettyForm(*pform_arg.below(arg))
+        pform = prettyForm(*pform.right(pform_arg))
+        return pform
+
     def _print_atan2(self, e):
         pform = prettyForm(*self._print_seq(e.args).parens())
         pform = prettyForm(*pform.left('atan2'))
         return pform
-
 
 def pretty(expr, **settings):
     """
