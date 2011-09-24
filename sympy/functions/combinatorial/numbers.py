@@ -507,3 +507,86 @@ class euler(Function):
             res = mp.eulernum(m)
             mp.prec = oprec
             return Expr._from_mpmath(res, prec)
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Catalan numbers                                  #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+class catalan(Function):
+    r"""
+    Catalan numbers
+
+    Usage
+    =====
+        catalan(n) gives the n-th Catalan number, C_n
+
+
+    Examples
+    ========
+        >>> from sympy import Symbol, binomial, gamma, hyper, polygamma, catalan, diff
+
+        >>> [ catalan(i) for i in range(1,10) ]
+        [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
+
+        >>> n = Symbol("n", integer=True)
+
+        >>> catalan(n)
+        catalan(n)
+
+        Catalan numbers can be transformed into several other, identical
+        expressions involving other mathematical functions
+
+        >>> catalan(n).rewrite(binomial)
+        binomial(2*n, n)/(n + 1)
+
+        >>> catalan(n).rewrite(gamma)
+        4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
+
+        >>> catalan(n).rewrite(hyper)
+        hyper((-n + 1, -n), (2,), 1)
+
+        We can differentiate the Catalan numbers C(n) interpreted as a
+        continuous real funtion in n:
+
+        >>> diff(catalan(n), n)
+        (polygamma(0, n + 1/2) - polygamma(0, n + 2) + 2*log(2))*catalan(n)
+
+
+    Mathematical description
+    ========================
+        The n-th catalan number is given by
+
+                 1   / 2*n \
+          C  = ----- |     |
+           n   n + 1 \  n  /
+
+    References and further reading
+    ==============================
+        * http://en.wikipedia.org/wiki/Catalan_number
+        * http://mathworld.wolfram.com/CatalanNumber.html
+        * http://geometer.org/mathcircles/catalan.pdf
+    """
+
+    @classmethod
+    def eval(cls, n, evaluate=True):
+        if n.is_Integer and n.is_nonnegative:
+            return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+
+    def fdiff(self, argindex=1):
+        n = self.args[0]
+        return catalan(n)*(C.polygamma(0,n+Rational(1,2))-C.polygamma(0,n+2)+C.log(4))
+
+    def _eval_rewrite_as_binomial(self,n):
+        return C.binomial(2*n,n)/(n + 1)
+
+    def _eval_rewrite_as_gamma(self,n):
+        # The gamma function allows to generalize Catalan numbers to complex n
+        return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+
+    def _eval_rewrite_as_hyper(self,n):
+        return C.hyper([1-n,-n],[2],1)
+
+    def _eval_evalf(self, prec):
+        return self.rewrite(C.gamma).evalf(prec)
