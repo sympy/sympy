@@ -587,3 +587,6 @@ class catalan(Function):
 
     def _eval_rewrite_as_hyper(self,n):
         return C.hyper([1-n,-n],[2],1)
+
+    def _eval_evalf(self, prec):
+        return self.rewrite(C.gamma).evalf(prec)
