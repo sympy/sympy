@@ -281,12 +281,12 @@ class GeometricRay(Matrix):
         Matrix.__init__(self, temp)
 
     @property
-    def dist(self):
+    def heigth(self):
         """The distance from the optical axis."""
         return self[0]
 
     @property
-    def ang(self):
+    def angle(self):
         """The angle with the optical axis."""
         return self[1]
 
@@ -365,7 +365,7 @@ class BeamParameter(Expr):
         return self.z + I*self.z_r
 
     @property
-    def R(self):
+    def radius(self):
         """The radius of curvature of the phase front."""
         return self.z*(1+(self.z/self.z_r)**2)
 
@@ -391,10 +391,10 @@ class BeamParameter(Expr):
     @property
     def gouy(self):
         """The Gouy phase."""
-        return atan2(self.z, self/z_r)
+        return atan2(self.z, self.z_r)
 
     @property
-    def waist_aproximation_limit(self):
+    def waist_approximation_limit(self):
         """
         The minimal waist for which the gauss beam approximation is valid.
 
