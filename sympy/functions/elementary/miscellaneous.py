@@ -2,7 +2,7 @@ from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
-from sympy.core.function import Application, Function, Lambda
+from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 
@@ -30,12 +30,21 @@ Id = S.IdentityFunction
 def sqrt(arg):
     """The square root function
 
-    sqrt(x) -> Returns the positive square root of x.
+    sqrt(x) -> Returns the principal square root of x.
+
+
+    Examples
+    ========
 
     >>> from sympy import sqrt, Symbol
     >>> x = Symbol('x')
+
     >>> sqrt(x)
     sqrt(x)
+
+    >>> sqrt(x)**2
+    x
+
 
     See also
     ========
@@ -48,14 +57,14 @@ def sqrt(arg):
 def root(arg, n):
     """The n-th root function
 
-    root(x, n) -> Returns the n-th root of x.
+    root(x, n) -> Returns the principal n-th root of x.
 
 
     Examples
     ========
 
-    >>> from sympy import root, Symbol, Rational
-    >>> x = Symbol('x')
+    >>> from sympy import root, Rational
+    >>> from sympy.abc import x, n
 
     >>> root(x, 2)
     sqrt(x)
@@ -63,7 +72,7 @@ def root(arg, n):
     >>> root(x, 3)
     x**(1/3)
 
-    >>> root(x, Symbol("n"))
+    >>> root(x, n)
     x**(1/n)
 
     >>> root(x, -Rational(2,3))
