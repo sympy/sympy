@@ -89,3 +89,6 @@ def test_catalan():
     assert catalan(4) == 14
 
     assert catalan(x) == binomial(2*x, x)/(x + 1)
+
+    # assert catalan(x) == catalan(x)
+    assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)

@@ -524,11 +524,17 @@ class catalan(Function):
 
     Examples
     ========
-        >>> from sympy import catalan
+        >>> from sympy import Symbol, binomial, catalan
 
-        >>> [ catalan(n) for n in range(1,10) ]
+        >>> [ catalan(i) for i in range(1,10) ]
         [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
+
+        >>> n = Symbol("n", integer=True)
+
         >>> catalan(n)
+        catalan(n)
+
+        >>> catalan(n).rewrite(binomial)
         binomial(2*n, n)/(n + 1)
 
     Mathematical description
@@ -543,13 +549,14 @@ class catalan(Function):
     ==============================
         * http://en.wikipedia.org/wiki/Catalan_number
         * http://mathworld.wolfram.com/CatalanNumber.html
-
+        * http://geometer.org/mathcircles/catalan.pdf
     """
 
     @classmethod
     def eval(cls, n):
         if n.is_Integer and n.is_nonnegative:
             # The gamma function would allow to generalize this to complex n
-            return 4**n * C.gamma(n + S.Half) / (C.gamma(S.Half) * C.gamma(n+2))
-        else:
-            return 1 / (n+1) * C.binomial(2*n, n)
+            return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+
+    def _eval_rewrite_as_binomial(self,n):
+        return C.binomial(2*n,n)/(n + 1)
