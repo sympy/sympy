@@ -1,5 +1,5 @@
 from sympy import bernoulli, Symbol, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
-        fibonacci, lucas, euler, catalan, binomial, gamma, sqrt
+        fibonacci, lucas, euler, catalan, binomial, gamma, sqrt, hyper, log, polygamma, diff
 
 x = Symbol('x')
 
@@ -91,3 +91,6 @@ def test_catalan():
     # assert catalan(x) == catalan(x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
     assert catalan(3*x).rewrite(gamma) == 4**(3*x)*gamma(3*x + Rational(1,2))/(sqrt(pi)*gamma(3*x + 2))
+    assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
+
+    assert diff(catalan(x),x) == (polygamma(0, x + Rational(1,2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
