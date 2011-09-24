@@ -32,7 +32,6 @@ def sqrt(arg):
 
     sqrt(x) -> Returns the principal square root of x.
 
-
     Examples
     ========
 
@@ -45,6 +44,35 @@ def sqrt(arg):
     >>> sqrt(x)**2
     x
 
+    Note that sqrt(x**2) does not simplify to x.
+
+    >>> sqrt(x**2)
+    sqrt(x**2)
+
+    This is because the two are not equal to each other in general.
+    For example, consider x == -1:
+
+    >>> sqrt(x**2).subs(x, -1)
+    1
+    >>> x.subs(x, -1)
+    -1
+
+    This is because sqrt computes the principle square root, so the square may
+    put the argument in a different branch.  This identity does hold if x is
+    positive:
+
+    >>> y = Symbol('y', positive=True)
+    >>> sqrt(y**2)
+    y
+
+    You can force this simplification by using the powdenest() function with
+    the force option set to True:
+
+    >>> from sympy import powdenest
+    >>> sqrt(x**2)
+    sqrt(x**2)
+    >>> powdenest(sqrt(x**2), force=True)
+    x
 
     See also
     ========
