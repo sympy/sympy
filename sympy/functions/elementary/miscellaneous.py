@@ -146,7 +146,7 @@ def root(arg, n):
 
        * http://en.wikipedia.org/wiki/Square_root
        * http://en.wikipedia.org/wiki/Nth_root
-       * http://en.wikipedia.org/wiki/Principal_root_of_unity
+       * http://en.wikipedia.org/wiki/Root_of_unity
        * http://en.wikipedia.org/wiki/Principal_value
     """
     n = sympify(n)
