@@ -525,7 +525,7 @@ class catalan(Function):
 
     Examples
     ========
-        >>> from sympy import Symbol, binomial, gamma, hyper, polygamma, catalan, diff
+        >>> from sympy import Symbol, binomial, gamma, hyper, polygamma, catalan, diff, combsimp
 
         >>> [ catalan(i) for i in range(1,10) ]
         [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
@@ -547,11 +547,33 @@ class catalan(Function):
         >>> catalan(n).rewrite(hyper)
         hyper((-n + 1, -n), (2,), 1)
 
+        For some non-integer values of n we can get closed form
+        expressions by rewriting in terms of gamma functions:
+
+        >>> catalan(Rational(1,2)).rewrite(gamma)
+        8/(3*pi)
+
         We can differentiate the Catalan numbers C(n) interpreted as a
         continuous real funtion in n:
 
         >>> diff(catalan(n), n)
         (polygamma(0, n + 1/2) - polygamma(0, n + 2) + 2*log(2))*catalan(n)
+
+        As a more advanced example consider the following ratio
+        between consecutive numbers:
+
+        >>> combsimp((catalan(n + 1)/catalan(n)).rewrite(binomial))
+        2*(2*n + 1)/(n + 2)
+
+        The Catalan numbers can be generalized to complex numbers:
+
+        >>> catalan(I).rewrite(gamma)
+        4**I*gamma(1/2 + I)/(sqrt(pi)*gamma(2 + I))
+
+        and evaluated with arbitrary precision:
+
+        >>> catalan(I).evalf(20)
+        0.39764993382373624267 - 0.020884341620842555705*I
 
 
     Mathematical description

@@ -90,7 +90,11 @@ def test_catalan():
 
     # assert catalan(x) == catalan(x)
     assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
+    assert catalan(Rational(1,2)).rewrite(gamma) == 8/(3*pi)
     assert catalan(3*x).rewrite(gamma) == 4**(3*x)*gamma(3*x + Rational(1,2))/(sqrt(pi)*gamma(3*x + 2))
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
 
     assert diff(catalan(x),x) == (polygamma(0, x + Rational(1,2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
+
+    c = catalan(0.5).evalf()
+    assert str(c) == '0.848826363156775'
