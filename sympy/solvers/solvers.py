@@ -594,11 +594,9 @@ def solve(f, *symbols, **flags):
     # try to get a solution
     ###########################################################################
     if bare_f:
-        # pass f the way it was passed to solve; if it wasn't a list then
-        # a list of solutions will be returned, otherwise a dictionary is
-        # going to be returned
-        f = f[0]
-    solution = _solve(f, *symbols, **flags)
+        solution = _solve(f[0], *symbols, **flags)
+    else:
+        solution = _solve_system(f, symbols, **flags)
 
     #
     # postprocessing
@@ -749,11 +747,6 @@ def solve(f, *symbols, **flags):
 
 def _solve(f, *symbols, **flags):
     """ Return a checked solution for f in terms of one or more of the symbols."""
-
-    check = flags.get('check', True)
-    if iterable(f):
-        return _solve_system(f, symbols, **flags)
-
     if len(symbols) != 1:
         soln = None
         free = f.free_symbols
@@ -789,9 +782,9 @@ def _solve(f, *symbols, **flags):
         else:
             msg = "No algorithms are implemented to solve equation %s"
             raise NotImplementedError(msg % f)
-
     symbol = symbols[0]
 
+    check  = flags.get('check', True)
     # build up solutions if f is a Mul
     if f.is_Mul:
         result = set()
