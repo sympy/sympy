@@ -14,7 +14,7 @@ def Plmcos(l, m, th):
     sin = C.sin
     cos = C.cos
     P = Plm(l, m, _x).subs(_x, cos(th))
-    # assume th in (0,pi) => sin(th) is nonegative
+    # assume th in (0,pi) => sin(th) is nonnegative
     _sinth = Dummy("_sinth", nonnegative=True)
     P = P.subs(1-cos(th)**2, _sinth**2).subs(_sinth, sin(th))
     return P
