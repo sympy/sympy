@@ -88,8 +88,8 @@ def test_Dict():
     assert set(d.keys()) == set((x,y,z))
     assert set(d.values()) == set((S(1),S(2),S(3)))
     assert d.get(5,'default') == 'default'
-    assert d.has_key(x) and not d.has_key(5)
     assert x in d and z in d and not 5 in d
+    assert d.has(x) and d.has(1) # SymPy Basic .has method
 
     # Test input types
     # input - a python dict
@@ -100,7 +100,7 @@ def test_Dict():
     raises(TypeError, "Dict(((x,1), (y,2), (z,3)))")
     raises(NotImplementedError, "d[5] = 6") # assert immutability
 
-    assert d.items() == Tuple(Tuple(x,S(1)), Tuple(y,S(2)), Tuple(z,S(3)))
+    assert set(d.items()) == set((Tuple(x,S(1)), Tuple(y,S(2)), Tuple(z,S(3))))
     assert list(d) == [x,y,z]
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
