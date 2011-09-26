@@ -5,8 +5,9 @@ from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
     Equality, solve, O, LambertW, Dummy)
 from sympy.abc import x, y, z
-from sympy.solvers.ode import ode_order, homogeneous_order, \
-    _undetermined_coefficients_match, classify_ode, checkodesol, constant_renumber
+from sympy.solvers.ode import (ode_order, homogeneous_order,
+    _undetermined_coefficients_match, classify_ode, checkodesol,
+    constant_renumber, constantsimp)
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 C1 = Symbol('C1')
@@ -326,7 +327,7 @@ def test_separable1():
     eq3 = f(x).diff(x) + sin(x)
     eq4 = f(x)**2 + 1 - (x**2 + 1)*f(x).diff(x)
     eq5 = f(x).diff(x)/tan(x) - f(x) - 2
-    sol1 = Eq(f(x), exp(C1 + x))
+    sol1 = Eq(f(x), C1*exp(x))
     sol2 = Eq(f(x), C1*x)
     sol3 = Eq(f(x), C1 + cos(x))
     sol4 = Eq(atan(f(x)), C1 + atan(x))
@@ -396,13 +397,13 @@ def test_separable5():
     eq19 = (1 - x)*f(x).diff(x) - x*(f(x) + 1)
     eq20 = f(x)*diff(f(x), x) + x - 3*x*f(x)**2
     eq21 = f(x).diff(x) - exp(x + f(x))
-    sol15 = Eq(f(x), -1 + exp(C1 - x**2/2))
+    sol15 = Eq(f(x), -1 + C1*exp(-x**2/2))
     sol16 = Eq(-exp(-f(x)**2)/2, C1 - x - x**2/2)
-    sol17 = Eq(f(x), exp(C1 - x))
+    sol17 = Eq(f(x), C1*exp(-x))
     sol18 = Eq(-log(-1 + sin(2*f(x))**2)/4, C1 + log(-1 + sin(x)**2)/2)
-    sol19a = Eq(f(x), -(1 - x - exp(C1 - x))/(1 - x))
-    sol19b = Eq(f(x), -1 + exp(C1 - x)/(-1 + x))
-    sol19c = Eq(f(x), -1/(1 - x) + x/(1 - x) + exp(C1 - x)/(1 - x))
+    sol19a = Eq(f(x), -(1 - x - C1*exp(-x))/(1 - x))
+    sol19b = Eq(f(x), -1 + C1*exp(-x)/(-1 + x))
+    sol19c = Eq(f(x), -1/(1 - x) + x/(1 - x) + C1*exp(-x)/(1 - x))
     sol19d = Eq(f(x), (C1*(1 - x) + x*(-x*exp(x) + exp(x))- exp(x) + x*exp(x))/
                         ((1 - x)*(-x*exp(x) + exp(x))))
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
@@ -897,7 +898,7 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
     sol2 = Eq(f(x), -1 - x + (C1 + C2*x - x**2/8)*exp(-x) + C3*exp(x/3))
     sol3 = Eq(f(x), 2 + C1*exp(-x) + C2*exp(-2*x))
     sol4 = Eq(f(x), 2*exp(x) + C1*exp(-x) + C2*exp(-2*x))
-    sol5 = Eq(f(x), C1*exp(-x) + C2*exp(-2*x) + exp(I*x)/10 - 3*I*exp(I*x)/10)
+    sol5 = Eq(f(x), C1*exp(-x) + C2*exp(-2*x) + (S(1)/10 - 3*I/10)*exp(I*x))
     sol6 = Eq(f(x), -3*cos(x)/10 + sin(x)/10 + C1*exp(-x) + C2*exp(-2*x))
     sol7 = Eq(f(x), cos(x)/10 + 3*sin(x)/10 + C1*exp(-x) + C2*exp(-2*x))
     sol8 = Eq(f(x), 4 - 3*cos(x)/5 + sin(x)/5 + exp(x) + C1*exp(-x) + C2*exp(-2*x))
@@ -1173,3 +1174,17 @@ def test_constant_renumber_order_issue2209():
     e = C1*(C2 + x)*(C3 + y)
     for a, b, c in variations([C1, C2, C3], 3):
         assert constant_renumber(a*(b + x)*(c + y), "C", 1, 3) == e
+
+def test_issue_2671():
+    k = Symbol("k", real=True)
+    t = Symbol('t')
+    w = Function('w')
+    sol = dsolve(w(t).diff(t, 6) - k**6*w(t), w(t))
+    assert len([s for s in sol.atoms(Symbol) if s.name.startswith('C')]) == 6
+    assert constantsimp((C1*cos(x) + C2*cos(x))*exp(x), x, 2) == C1*cos(x)*exp(x)
+    assert constantsimp(C1*cos(x) + C2*cos(x) + C3*sin(x), x, 2) == C1*cos(x) + C3*sin(x)
+    assert constantsimp(exp(C1 + x), x, 1) == C1*exp(x)
+    assert constantsimp(2**(C1 + x), x, 1) == C1*2**x
+    assert constantsimp(2**(C1 + x), x, 1) == C1*2**x
+    assert constantsimp(x + C1 + y, x, 1) == C1 + x
+    assert constantsimp(x + C1 + Integral(x, (x, 1, 2)), x, 1) == C1 + x

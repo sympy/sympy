@@ -214,7 +214,7 @@ from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, tan, sign, sqrt
 from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf
+from sympy.polys import Poly, RootOf, terms_gcd
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
@@ -1408,14 +1408,13 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     single arbitrary constant.  Then the new constant is combined into
     other terms if necessary.
 
-    Absorption is done naively.  constantsimp() does not attempt to
-    expand or simplify the expression first to obtain better absorption.
-    So for example, exp(C1)*exp(x) will be simplified to C1*exp(x), but
-    exp(C1 + x) will be left alone.
+    Absorption is done with limited assistance: terms of Adds are collected
+    to try join constants and powers with exponents that are Adds are expanded
+    so (C1*cos(x) + C2*cos(x))*exp(x) will simplify to C1*cos(x)*exp(x) and
+    exp(C1 + x) will be simplified to C1*exp(x).
 
-    Use constant_renumber() to renumber constants after simplification.
-    Without using that function, simplified constants may end up
-    having any numbering to them.
+    Use constant_renumber() to renumber constants after simplification or else
+    arbitrary numbers on constants may appear, e.g. C1 + C3*x.
 
     In rare cases, a single constant can be "simplified" into two
     constants.  Every differential equation solution should have as many
@@ -1434,7 +1433,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
         >>> constantsimp(C1 + 2 + x + y, x, 3)
         C1 + x
         >>> constantsimp(C1*C2 + 2 + x + y + C3*x, x, 3)
-        C2 + C3*x + x
+        C1 + C3*x
 
     """
     # This function works recursively.  The idea is that, for Mul,
@@ -1443,11 +1442,10 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    constantsymbols = [Symbol(symbolname+"%d" % t) for t in range(startnumber,
-    endnumber + 1)]
+    constant_iter = numbered_symbols('C', start=startnumber)
+    constantsymbols = [constant_iter.next() for t in range(startnumber, endnumber + 1)]
     constantsymbols_set = set(constantsymbols)
     x = independentsymbol
-
     if isinstance(expr, Equality):
         # For now, only treat the special case where one side of the equation
         # is a constant
@@ -1467,13 +1465,60 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 symbolname), constantsimp(expr.rhs, x, endnumber,
                 startnumber, symbolname))
 
-    if type(expr) not in (Mul, Add, Pow) and not expr.is_Function:
-        # We don't know how to handle other classes
-        # This also serves as the base case for the recursion
-        return expr
-    elif not expr.has(*constantsymbols):
+    if not expr.has(*constantsymbols):
         return expr
     else:
+        # ================ pre-processing ================
+        # collect terms to get constants together
+        def take(i):
+            t = sorted([s for s in i.atoms(Symbol) if s in constantsymbols])
+            if not t:
+                return i
+            return t[0]
+
+        if not (expr.has(x) and x in expr.free_symbols):
+            return constantsymbols[0]
+        if expr.is_Mul:
+            i, d = expr.as_independent(x, strict=True)
+            newi = take(i)
+            if newi != i:
+                expr = newi*d
+        elif expr.is_Add:
+            i, d = expr.as_independent(x, strict=True)
+            expr = take(i) + d
+            if expr.is_Add:
+                terms = {}
+                for ai in expr.args:
+                    i, d = ai.as_independent(x, strict=True, as_Add=False)
+                    terms.setdefault(d, []).append(i)
+                expr = Add(*[k*Add(*v) for k, v in terms.items()])
+        # handle powers like exp(C0 + g(x)) -> C0*exp(g(x))
+        pows = [p for p in expr.atoms(C.Function, C.Pow) if
+                  (p.is_Pow or p.func is exp) and
+                   p.exp.is_Add and
+                   p.exp.as_independent(x, strict=True)[1]]
+        if pows:
+            reps = []
+            for p in pows:
+                b, e = p.as_base_exp()
+                ei, ed = e.as_independent(x, strict=True)
+                e = take(ei)
+                if e != ei or e in constantsymbols:
+                    reps.append((p, e*b**ed))
+            expr = expr.subs(reps)
+            # a C1*C2 may have been introduced and the code below won't
+            # handle that so handle it now: once to handle the C1*C2
+            # and once to handle any C0*f(x) + C0*f(x)
+            for _ in range(2):
+                muls = [m for m in expr.atoms(Mul) if m.has(*constantsymbols)]
+                reps = []
+                for m in muls:
+                    i, d = m.as_independent(x, strict=True)
+                    newi = take(i)
+                    if newi != i:
+                        reps.append((m, take(i)*d))
+                expr = expr.subs(reps)
+        # ================ end of pre-processing ================
         newargs = []
         hasconst = False
         isPowExp = False
@@ -1522,7 +1567,8 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
 
 def constant_renumber(expr, symbolname, startnumber, endnumber):
     """
-    Renumber arbitrary constants in expr.
+    Renumber arbitrary constants in expr to have numbers 1 through N
+    where N is ``endnumber`` - ``startnumber`` + 1 at most.
 
     This is a simple function that goes through and renumbers any Symbol
     with a name in the form symbolname + num where num is in the range
@@ -1540,7 +1586,12 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     **Example**
         >>> from sympy import symbols, Eq, pprint
         >>> from sympy.solvers.ode import constant_renumber
-        >>> x, C1, C2, C3 = symbols('x,C1,C2,C3')
+        >>> x, C1, C2, C3, C4 = symbols('x,C1,C2,C3,C4')
+
+        Only constants in the given range are renumbered:
+
+        >>> constant_renumber(C1 + C3 + C4, 'C', 1, 3)
+        C1 + C2 + C4
         >>> pprint(C2 + C1*x + C3*x**2)
                         2
         C1*x + C2 + C3*x
@@ -2448,7 +2499,6 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         ... hint='nth_linear_constant_coeff_homogeneous'))
                             x                            -2*x
         f(x) = (C1 + C2*x)*e  + (C3*cos(x) + C4*sin(x))*e
-
 
     **References**
         - http://en.wikipedia.org/wiki/Linear_differential_equation
