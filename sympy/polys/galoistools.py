@@ -12,6 +12,8 @@ from sympy.utilities import cythonized
 
 from sympy.ntheory import factorint
 
+
+
 def gf_crt(U, M, K):
     """
     Chinese Remainder Theorem.
@@ -2008,7 +2010,10 @@ def gf_value(f, a):
 
 def linear_congruence(a, b, m):
     """
-    Solutions of  a*x congruent b mod(m) distinct mod m.
+    Returns the values of x satisfying a*x congruent b mod(m)
+
+    Here m is positive integer and a, b are natural numbers.
+    This function returns only those values of x which are distinct mod(m).
 
     **Examples**
 
@@ -2017,20 +2022,22 @@ def linear_congruence(a, b, m):
     >>> linear_congruence(3, 12, 15)
     [4, 9, 14]
 
+    There are 3 solutions distinct mod(15) since gcd(a, m) = gcd(3, 15) = 3.
+
     **Reference**
     1) Wikipedia http://en.wikipedia.org/wiki/Linear_congruence_theorem
 
     """
-    if a%m == 0:
-        if b%m == 0:
-            return [i for i in range (0,m)]
+    from sympy.polys.polytools import gcdex
+    if a % m == 0:
+        if b % m == 0:
+            return range(m)
         else:
             return []
-    from sympy.polys.polytools import gcdex
     r, _, g = gcdex(a, m)
-    if b%g != 0:
+    if b % g != 0:
         return []
-    return [ (r*b/g + t*m/g)%m for t in range (0, g)]
+    return [(r * b / g + t * m / g) % m for t in range (g)]
 
 def csolve_prime(f, p):
     """
@@ -2039,42 +2046,42 @@ def csolve_prime(f, p):
     from sympy.polys.domains import ZZ
     return [i for i in range(p) if gf_eval(f, i, p, ZZ) == 0]
 
-def get_above(x,s,p,f):
+def get_above(x, s, p, f):
     """
-    Used in gf_csolve to generate solutions of f(x) cong 0 mod(p**(s+1)) from the solutions of f(x) cong 0 mod(p**s).
+    Used in gf_csolve to generate solutions of f(x) cong 0 mod(p**(s + 1)) from
+    the solutions of f(x) cong 0 mod(p**s).
     """
     from sympy.polys.domains import ZZ
     f_f = gf_diff(f, p, ZZ)
     alpha = gf_value(f_f, x)
-    beta = -gf_value(f, x)/p**(s-1)
+    beta = - gf_value(f, x) / p**(s - 1)
     return linear_congruence(alpha, beta, p)
 
-def csolve_primepower(f,p,e):
+def csolve_primepower(f, p, e):
     """
     Solving f(x) congruent 0 mod(p**e).
     """
     X = []
-    X1 = csolve_prime(f,p)
-    S = zip( X1, [1 for i in X1] )
+    X1 = csolve_prime(f, p)
+    S = zip(X1, [1]*len(X1))
     while len(S) != 0:
         x, s = S.pop()
         s += 1
-        if s == e+1:
+        if s == e + 1:
             X.append(x)
         else:
-             V = get_above(x,s,p,f)
+             V = get_above(x, s, p, f)
              for v in V:
-                 x_abv = x + v*p**(s-1)
-                 S.append((x_abv,s))
+                 x_abv = x + v * p**(s - 1)
+                 S.append((x_abv, s))
     return X
 
-
-def gf_csolve(f,n):
+def gf_csolve(f, n):
     """
     To solve f(x) congruent 0 mod(n).
 
-    n is devided into canonical factors and f(x) cong 0 mod(p**e) will be solved for each factor.
-    Applying CRT on the result optained individually gives the final answers.
+    n is divided into canonical factors and f(x) cong 0 mod(p**e) will be solved for each factor.
+    Applying Chinese Remainder Theorem on the obtained results returns the final answers.
 
     **Example**
 
@@ -2084,15 +2091,15 @@ def gf_csolve(f,n):
     [76, 49, 13, 175, 139, 112]
 
     **Reference**
-    1) 'An Introdunction to the Theory of Numbers' 5th Edition by Ivan Niven, Herbert S. Zuckerman and Hugh L. Montgomery.
+    1) 'An introdunction to the Theory of Numbers' 5th Edition by Ivan Niven, Zuckerman and Montgomery.
 
     """
+    from sympy.polys.domains import ZZ
     P = factorint(n)
     X = [csolve_primepower(f, i, P[i]) for i in P]
     pools = map(tuple, X)
     perms = [[]]
     for pool in pools:
-        perms = [x+[y] for x in perms for y in pool]
-    dist_factors = [p**P[p] for p in P.keys()]
-    from sympy.polys.domains import ZZ
+        perms = [x + [y] for x in perms for y in pool]
+    dist_factors = [p**m for p, m in P.items()]
     return [gf_crt(per, dist_factors, ZZ) for per in perms]

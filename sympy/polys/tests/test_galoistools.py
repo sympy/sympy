@@ -784,6 +784,7 @@ def test_gf_csolve():
     assert linear_congruence(0, 3, 5) == []
     assert linear_congruence(0, 5, 5) == [0, 1, 2, 3, 4]
     assert linear_congruence(3, 12, 15) == [4, 9, 14]
+    assert linear_congruence(6, 0, 18) == [0, 3, 6, 9, 12, 15]
 
     assert csolve_prime([1, 3, 2, 17], 7) == [3]
     assert csolve_prime([1, 3, 1, 5], 5) == [0, 1]
