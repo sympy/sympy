@@ -104,7 +104,7 @@ class hyper(TupleParametersBase):
     hyper((n, a), (n**2,), x)
 
 
-    The hypergeometric function generalises many named special functions.
+    The hypergeometric function generalizes many named special functions.
     The function hyperexpand() tries to express a hypergeometric function
     using named special functions.
     For example:
@@ -252,7 +252,7 @@ class hyper(TupleParametersBase):
 class meijerg(TupleParametersBase):
     r"""
     The Meijer G-function is defined by a Mellin-Barnes type integral that
-    resembles an inverse Mellin transform. It generalises the hypergeometric
+    resembles an inverse Mellin transform. It generalizes the hypergeometric
     functions.
 
     The Meijer G-function depends on four sets of parameters. There are
@@ -343,7 +343,7 @@ class meijerg(TupleParametersBase):
     (4,)
 
 
-    The Meijer G-function generalises the hypergeometric functions.
+    The Meijer G-function generalizes the hypergeometric functions.
     In some cases it can be expressed in terms of hypergeometric functions,
     using Slater's theorem. For example:
 
