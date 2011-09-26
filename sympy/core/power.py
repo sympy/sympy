@@ -688,7 +688,7 @@ class Pow(Expr):
 
     def _eval_nseries(self, x, n, logx):
         # NOTE! This function is an important part of the gruntz algorithm
-        #       for computing limits. It has to return a generalised power series
+        #       for computing limits. It has to return a generalized power series
         #       with coefficients in C(log, log(x)). In more detail:
         # It has to return an expression
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
@@ -838,7 +838,7 @@ class Pow(Expr):
             n, unbounded = e2int(e2)
         if unbounded:
             # requested accuracy gives infinite series,
-            # order is probably nonpolynomial e.g. O(exp(-1/x), x).
+            # order is probably non-polynomial e.g. O(exp(-1/x), x).
             r = 1 + z
         else:
             l = []

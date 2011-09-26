@@ -10,7 +10,7 @@ from sympy.ntheory import multiplicity, perfect_power
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
-# algorithm for determining limits. _eval_nseries has to return a generalised
+# algorithm for determining limits. _eval_nseries has to return a generalized
 # power series with coefficients in C(log(x), log).
 # In more detail, the result of _eval_nseries(self, x, n) must be
 #   c_0*x**e_0 + ... (finitely many terms)
