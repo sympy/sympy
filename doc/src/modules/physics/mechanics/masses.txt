@@ -9,8 +9,8 @@ It is assumed that the reader is familiar with the basics of these topics, such
 as finding the mass center for a system of particles, the inertia tensor, and
 how to manipulate the inertia tensor.
 
-Dyad
-====
+Dyadics
+=======
 
 In :mod:`mechanics`, dyadics are used to represent inertias ([Kane1985]_,
 [WikiDyadics]_, [WikiDyadicProducts]_). The dyadic, or outer, product between two
@@ -24,23 +24,24 @@ vectors. For example:
   \mathbf{\hat{a}_y}\\
 
 Where :math:`\mathbf{\hat{a}_x}\mathbf{\hat{a}_x}` and
-`\mathbf{\hat{a}_x}\mathbf{\hat{a}_y}` are the square matrix obtained by
-multiplying the left side as a column vector by the right side as a row vector. Note that the order is significant.
+`\mathbf{\hat{a}_x}\mathbf{\hat{a}_y}` are the outer products obtained by
+multiplying the left side as a column vector by the right side as a row vector.
+Note that the order is significant.
 
 Some additional properties of the outer product operation are:
 
 .. math::
-  (x \mathbf{v}) \otimes \mathbf{w} &= \mathbf{v} \otimes (x \mathbf{w}) = w
+  (x \mathbf{v}) \otimes \mathbf{w} &= \mathbf{v} \otimes (x \mathbf{w}) = x
   (\mathbf{v} \otimes \mathbf{w})\\
   \mathbf{v} \otimes (\mathbf{w} + \mathbf{u}) &= \mathbf{v} \otimes \mathbf{w}
   + \mathbf{v} \otimes \mathbf{u}\\
   (\mathbf{v} + \mathbf{w}) \otimes \mathbf{u} &= \mathbf{v} \otimes \mathbf{u}
   + \mathbf{w} \otimes \mathbf{u}\\
 
-Just as with a vector, which can be represented as
-:math:`\begin{bmatrix}a\\b\\c\end{bmatrix}` or :math:`a \mathbf{\hat{i}} +
-b \mathbf{\hat{j}} + c \mathbf{\hat{k}}` when dealing with one frame, a dyadic
-could be represented as:
+A vector in a reference frame can be represented as
+:math:`\begin{bmatrix}a\\b\\c\end{bmatrix}` or :math:`a \mathbf{\hat{i}} + b
+\mathbf{\hat{j}} + c \mathbf{\hat{k}}`. Similarly, a dyadic can be
+represented as
 
 .. math::
   \begin{bmatrix}
@@ -48,7 +49,10 @@ could be represented as:
   a_{21} & a_{22} & a_{23} \\
   a_{31} & a_{32} & a_{33}
   \end{bmatrix}\\
-  \textrm{or:}\\
+
+or
+
+.. math::
   a_{11} \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} +
   a_{12} \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} +
   a_{13} \mathbf{\hat{a}_x}\mathbf{\hat{a}_z} +
@@ -59,9 +63,10 @@ could be represented as:
   a_{32} \mathbf{\hat{a}_z}\mathbf{\hat{a}_y} +
   a_{33} \mathbf{\hat{a}_z}\mathbf{\hat{a}_z}\\
 
-Just as before with vectors, the later representation makes it possible to have
-the dyadic defined in multiple frames. In fact, the two components of each term
-in the dyadic need not be the same frame; the following is valid:
+Just as with vectors, the later representation makes it possible to keep track
+of which frames the dyadic is defined with respect to. In fact, the two
+components of each term in the dyadic need not be in the same frame; the
+following is valid:
 
 .. math::
   \mathbf{\hat{a}_x} \otimes \mathbf{\hat{b}_y} = \mathbf{\hat{a}_x}
@@ -89,7 +94,6 @@ Dyadics can also be crossed and dotted with vectors; again, order matters:
 One can also take the time derivative of dyadics or express them in different
 frames, just like with vectors.
 
-
 Mass & Inertia in Mechanics
 ===========================
 
@@ -99,7 +103,7 @@ Within SymPy's :mod:`mechanics` package, there are two topics to discuss: the
 Particle and RigidBody
 ----------------------
 
-Particles and rigid bodies are represented with two object in :mod:`mechanics`.
+Particles and rigid bodies are represented with two objects in :mod:`mechanics`.
 The ``Particle`` object has an associated point and an associated mass.::
 
   >>> from sympy.physics.mechanics import Particle, Point
