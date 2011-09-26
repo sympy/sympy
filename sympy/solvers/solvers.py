@@ -904,10 +904,14 @@ def _solve(f, *symbols, **flags):
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     """ Return a tuple containing derived from f = lhs - rhs that is either:
 
-        (numerator, denominator) of ``f``; if this comes back as (0, 1) it means
+        (numerator, denominator) of ``f``
+            If this comes back as (0, 1) it means
             that ``f`` is independent of the symbols in ``symbols``, e.g.
                 y*cos(x)**2 + y*sin(x)**2 - y = y*(0) = 0
                 cos(x)**2 + sin(x)**2 = 1
+            If it comes back as (0, 0) there is no solution to the equation
+            amongst the symbols given.
+
             If the numerator is not zero then the function is guaranteed
             to be dependent on a symbol in ``symbols``.
 
@@ -936,6 +940,16 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         >>> solve_linear(x**2/y**2 - 3)
         (x**2 - 3*y**2, y**2)
 
+    If the numerator is a symbol then (0, 0) is returned if the solution for
+    that symbol would have set any denominator to 0:
+
+        >>> solve_linear(1/(1/x - 2))
+        (0, 0)
+        >>> 1/(1/x) # to SymPy, this looks like x ...
+        x
+        >>> solve_linear(1/(1/x)) # so a solution is given
+        (x, 0)
+
     If x is allowed to cancel, then this appears linear, but this sort of
     cancellation is not done so the solution will always satisfy the original
     expression without causing a division by zero error.
@@ -956,11 +970,15 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     If only x was excluded then a solution for y or z might be obtained.
 
     """
-    from sympy import expand_mul, Equality
+    from sympy import Equality
     if isinstance(lhs, Equality):
-        rhs += lhs.rhs
+        if rhs:
+            raise ValueError('If lhs is an Equality, rhs must be 0 but was %s' % rhs)
+        rhs = lhs.rhs
         lhs = lhs.lhs
-    n, d = (lhs - rhs).as_numer_denom()
+    dens = None
+    eq = lhs - rhs
+    n, d = eq.as_numer_denom()
     ex = expand_mul(n)
     if not ex:
         return ex, S.One
@@ -972,7 +990,6 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     else:
         symbols = free.intersection(symbols)
     symbols = symbols.difference(exclude)
-    d_free = d.free_symbols
     if symbols:
         all_zero = True
         for xi in symbols:
@@ -981,11 +998,15 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
                 all_zero = False
                 if not xi in dn.free_symbols:
                     vi = -(n.subs(xi, 0))/dn
-                    if not checksol(d, {xi: vi}, minimal=True) is True:
+                    if dens is None:
+                        dens = denoms(eq, symbols)
+                    if not any(checksol(d, {xi: vi}, minimal=True) is True for d in dens):
                         return xi, vi
 
         if all_zero:
             return S.Zero, S.One
+    if n.is_Symbol: # there was no valid solution
+        n = d = S.Zero
     return n, d # should we cancel now?
 
 def solve_linear_system(system, *symbols, **flags):

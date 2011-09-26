@@ -342,6 +342,9 @@ def test_solve_linear():
     assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y) == \
            (y, -2 - cos(x)**2 - sin(x)**2)
     assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, symbols=[x]) == (0, 1)
+    assert solve_linear(Eq(x, 3)) == (x, 3)
+    assert solve_linear(1/(1/x - 2)) == (0, 0)
+    raises(ValueError, 'solve_linear(Eq(x, 3), 3)')
 
 def test_solve_undetermined_coeffs():
     a, b, c, x = symbols('a, b, c, x')
