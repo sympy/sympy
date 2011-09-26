@@ -91,13 +91,26 @@ def test_solve_args():
     assert solve([x+y-3,x-y-5]) == {x: 4, y: -1}
     #no symbol to solve for
     assert solve(42) == []
-    assert solve([1,2]) is None
+    assert solve([1, 2]) is None
     #multiple symbols: take the first linear solution
     assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
     # unless it is an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
+    # failing undetermined system
+    assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
+        [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**3 + 4*x**2)}]
+    # failed single equation
+    assert solve(1/(1/x - y + exp(y))) ==  []
+    raises(NotImplementedError, 'solve(exp(x) + sin(x) + exp(y) + sin(y))')
+    # failed system
+    # --  when no symbols given
+    assert solve([y, exp(x) + x]) == [{x: -LambertW(1), y: 0}]
+    # --  when symbols given
+    solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     #symbol is not a symbol or function
     raises(TypeError, "solve(x**2-pi, pi)")
+    # no equations
+    assert solve([], [x]) == []
 
 def test_solve_polynomial1():
     x, y, a = symbols('x,y,a')
@@ -388,6 +401,7 @@ def test_issue_1694():
     assert solve(x**2*z**2 - z**2*y**2) == [{x: -y}, {x: y}]
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     raises(NotImplementedError, 'solve(log(x) - exp(x), x)')
+    raises(NotImplementedError, 'solve(x**(y*z) - x, x)')
     # 2072
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
     assert solve(sqrt(x - 1)) == [1]
@@ -436,6 +450,10 @@ def test_failing():
 def test_checking():
     assert solve(x*(x - y/x),x, check=False) == [sqrt(y), 0, -sqrt(y)]
     assert solve(x*(x - y/x),x, check=True) == [sqrt(y), -sqrt(y)]
+    # {x: 0, y: 4} sets denominator to 0 in the following so system should return None
+    assert solve((1/(1/x + 2), 1/(y - 3) - 1)) is None
+    # 0 sets denominator of 1/x to zero so [] is returned
+    assert solve(1/(1/x + 2)) == []
 
 def test_issue_1572_1364_1368():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
@@ -471,16 +489,48 @@ def test_issue_1572_1364_1368():
     assert solve(atan(x) - 2) == [tan(2)]
 
 def test_issue_2033():
-    r, t = symbols('r,t')
+    r, t, z = symbols('r,t,z')
     assert solve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
      [(sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t), sqrt(r*tan(t)**2/(tan(t)**2 + 1))),
      (-sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t), -sqrt(r*tan(t)**2/(tan(t)**2 + 1)))]
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
-    [(log(sin(S(1)/3)), S(1)/3)]
+        [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
-    [(log(-sin(log(3))), -log(3))]
+        [(log(-sin(log(3))), -log(3))]
     assert solve([exp(x) - sin(y), y**2 - 4], [x, y]) == \
-    [(log(-sin(2)), -2), (log(sin(2)), 2)]
+        [(log(-sin(2)), -2), (log(sin(2)), 2)]
+    eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
+    assert solve(eqs) == \
+        [
+        {x: log(-sqrt(-z**2 - sin(log(3)))), y: -log(3)},
+        {x: log(sqrt(-z**2 - sin(log(3)))), y: -log(3)}]
+    assert solve(eqs, x, z) == \
+        [
+        {x: log(-sqrt(-z**2 + sin(y)))},
+        {x: log(sqrt(-z**2 + sin(y)))}]
+    assert solve(eqs, x, y) == \
+        [
+        (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
+        (log(sqrt(-z**2 - sin(log(3)))), -log(3))]
+    assert solve(eqs, y, z) == \
+        [
+        (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
+        (-log(3), sqrt(-exp(2*x) - sin(log(3))))]
+    eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
+    assert solve(eqs) == \
+        [
+        {x: log(sqrt(-z - sin(log(3)))), y: -log(3)},
+        {x: log(-sqrt(-z - sin(log(3)))), y: -log(3)}]
+    assert solve(eqs, x, z) == \
+        [
+        {x: log(-sqrt(-z + sin(y)))},
+        {x: log(sqrt(-z + sin(y)))}]
+    assert solve(eqs, x, y) == \
+        [
+        (log(sqrt(-z - sin(log(3)))), -log(3)),
+        (log(-sqrt(-z - sin(log(3)))), -log(3))]
+    assert solve(eqs, z, y) == \
+        [(-exp(2*x) - sin(log(3)), -log(3))]
 
 @XFAIL
 def test_issue_2236():
