@@ -468,6 +468,10 @@ def test_as_independent():
     assert (DiracDelta(x - n1)*DiracDelta(y - n1)*DiracDelta(x - n2)).as_independent(y) == \
            (DiracDelta(x - n1), DiracDelta(y - n1)*DiracDelta(x - n2))
 
+    # issue 2685
+    assert (x + Integral(x, (x, 1, 2))).as_independent(x, strict=True) == \
+           (Integral(x, (x, 1, 2)), x)
+
 def test_subs_dict():
     a,b,c,d,e = symbols('a,b,c,d,e')
 

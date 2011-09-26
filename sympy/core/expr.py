@@ -908,6 +908,21 @@ class Expr(Basic, EvalfMixin):
         >>> (y*(-3+x)).as_independent(x)
         (y, x - 3)
 
+        -- use .as_independent() for true independence testing instead
+           of .has(). The former considers only symbols in the free
+           symbols while the latter considers all symbols
+
+        >>> from sympy import Integral
+        >>> I = Integral(x, (x, 1, 2))
+        >>> I.has(x)
+        True
+        >>> x in I.free_symbols
+        False
+        >>> I.as_independent(x) == (I, 1)
+        True
+        >>> (I + x).as_independent(x) == (I, x)
+        True
+
         Note: when trying to get independent terms, a separation method
         might need to be used first. In this case, it is important to keep
         track of what you send to this routine so you know how to interpret
@@ -934,13 +949,30 @@ class Expr(Basic, EvalfMixin):
         from sympy.utilities.iterables import sift
 
         func = self.func
+        # sift out deps into symbolic and other and ignore
+        # all symbols but those that are in the free symbols
+        sym = set()
+        other = []
+        for d in deps:
+            if isinstance(d, C.Symbol): # Symbol.is_Symbol is True
+                sym.add(d)
+            else:
+                other.append(d)
+        def has(e):
+            """return the standard has() if there are no literal symbols, else
+            check to see that symbol-deps are in the free symbols."""
+            has_other = e.has(*other)
+            if not sym:
+                return has_other
+            return has_other or e.has(*(e.free_symbols & sym))
+
         if hint.get('as_Add', func is Add):
             want = Add
         else:
             want = Mul
         if (want is not func or
             func is not Add and func is not Mul):
-            if self.has(*deps):
+            if has(self):
                 return (want.identity, self)
             else:
                 return (self, want.identity)
@@ -950,7 +982,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 args, nc = self.args_cnc()
 
-        d = sift(args, lambda x: x.has(*deps))
+        d = sift(args, lambda x: has(x))
         depend = d.pop(True, [])
         indep = d.pop(False, [])
         if func is Add: # all terms were treated as commutative
@@ -958,7 +990,7 @@ class Expr(Basic, EvalfMixin):
                     Add(*depend))
         else: # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
-                if n.has(*deps):
+                if has(n):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
