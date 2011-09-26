@@ -5,6 +5,8 @@ def test_Permutation():
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
     q = Permutation([[1, 4, 5], [2, 0, 6], [3]])
 
+    assert p.cardinality == 5040
+    assert q.cardinality == 5040
     assert q.cycles == 3
     assert p*q == Permutation([4, 6, 1, 2, 5, 3, 0])
     assert q*p == Permutation([6, 5, 3, 0, 2, 4, 1])
@@ -115,8 +117,12 @@ def test_Permutation():
     assert q.index == 8
     assert r.index == 3
 
-    assert q.rank_trotterjohnson == 259
-    assert p.rank_trotterjohnson == 1087
+    a = [Permutation.unrank_trotterjohnson(4, i).array_form for i in range(5)]
+    assert a == [[0,1,2,3], [0,1,3,2], [0,3,1,2], [3,0,1,2], [3,0,2,1] ]
+    assert [Permutation(pa).rank_trotterjohnson for pa in a] == range(5)
+
+    assert q.rank_trotterjohnson == 2283
+    assert p.rank_trotterjohnson == 3389
 
     assert p.get_precedence_distance(q) == q.get_precedence_distance(p)
     assert p.get_adjacency_distance(q) == p.get_adjacency_distance(q)

@@ -1,9 +1,9 @@
 from sympy.core import Basic, S
 from sympy.core.compatibility import is_sequence
-from sympy.functions import factorial
 from sympy.utilities.iterables import rotate_left, flatten
 from sympy.polys.polytools import lcm
 from sympy.matrices import Matrix, zeros
+from sympy.mpmath.libmp.libintmath import ifac
 
 import itertools, random
 
@@ -38,6 +38,14 @@ class Permutation(Basic):
         Reading, MA: Addison-Wesley, pp. 3-16, 1990.
     [2] Knuth, D. E. The Art of Computer Programming, Vol. 4: Combinatorial Algorithms,
         1st ed. Reading, MA: Addison-Wesley, 2011.
+    [3] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
+        permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
+        281-284. DOI=10.1016/S0020-0190(01)00141-7
+    [4] D. L. Kreher, D. R. Stinson 'Combinatorial Algorithms'
+        CRC Press, 1999
+    [5] Graham, R. L.; Knuth, D. E.; and Patashnik, O.
+        Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
+        Reading, MA: Addison-Wesley, 1994.
     """
     is_Permutation = True
 
@@ -168,11 +176,10 @@ class Permutation(Basic):
         """
         if self.size != other.size:
             raise ValueError("The permutations must be of equal size.")
-        result_inv = []
-        for i in xrange(self.size - 1):
-            val = self.inversion_vector[i] + other.inversion_vector[i]
-            val = val % (self.size - i)
-            result_inv.append(val)
+        n = self.size
+        a = self.inversion_vector
+        b = other.inversion_vector
+        result_inv = [(a[i] + b[i]) % (n - i) for i in xrange(n - 1)]
         return Permutation.from_inversion_vector(result_inv)
 
     def __sub__(self, other):
@@ -197,11 +204,10 @@ class Permutation(Basic):
         """
         if self.size != other.size:
             raise ValueError("The permutations must be of equal size.")
-        result_inv = []
-        for i in xrange(self.size - 1):
-            val = self.inversion_vector[i] - other.inversion_vector[i]
-            val = val % (self.size - i)
-            result_inv.append(val)
+        n = self.size
+        a = self.inversion_vector
+        b = other.inversion_vector
+        result_inv = [(a[i] - b[i]) % (n - i) for i in xrange(n - 1)]
         return Permutation.from_inversion_vector(result_inv)
 
     def __mul__(self, other):
@@ -226,8 +232,9 @@ class Permutation(Basic):
         if self.size != other.size:
             raise ValueError("The number of elements in the permutations \
 don\'t match.")
-        return Permutation([other.array_form[self.array_form[i]]
-                            for i in range(self.size)])
+        a = other.array_form
+        b = self.array_form
+        return Permutation([a[b[i]] for i in range(self.size)])
 
     def __pow__(self, n):
         """
@@ -239,7 +246,23 @@ don\'t match.")
         >>> p**4
         Permutation([0, 1, 2, 3])
         """
-        return reduce(lambda x, y: x*y, [self]*n)
+        n = int(n)
+        if n == 0:
+            return Permutation(range(self.size))
+        if n < 0:
+            return pow(~self, -n)
+        if n < 8:
+            return reduce(lambda x, y: x*y, [self]*n)
+        p = Permutation(range(self.size))
+        while 1:
+            if n&1:
+                p = p*self
+                n -= 1
+                if not n:
+                    break
+            self = self*self
+            n = n // 2
+        return p
 
     def __invert__(self):
         """
@@ -257,8 +280,9 @@ don\'t match.")
         True
         """
         inv_form = [0] * self.size
+        a = self.array_form
         for i in xrange(self.size):
-            inv_form[self.array_form[i]] = i
+            inv_form[a[i]] = i
         return Permutation(inv_form)
 
     def __call__(self, arg):
@@ -287,8 +311,6 @@ don\'t match.")
         This is a linear time unranking algorithm that does not
         respect lexicographic order [3].
 
-        [3] See below
-
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
         >>> Permutation.unrank_nonlex(4, 5)
@@ -306,7 +328,7 @@ don\'t match.")
 
         id_perm = range(n)
         n = int(n)
-        r = int(r % factorial(n))
+        r = r % ifac(n)
         unrank1(n, r, id_perm)
         return Permutation(id_perm)
 
@@ -315,9 +337,6 @@ don\'t match.")
         This is a linear time ranking algorithm that does not
         enforce lexicographic order [3].
 
-        [3] Wendy Myrvold and Frank Ruskey. 2001. Ranking and unranking
-            permutations in linear time. Inf. Process. Lett. 79, 6 (September 2001),
-            281-284. DOI=10.1016/S0020-0190(01)00141-7
 
         Examples
         >>> from sympy.combinatorics.permutations import Permutation
@@ -359,15 +378,23 @@ don\'t match.")
         rank = 0
         rho = self.array_form[:]
         n = self.size - 1
-        psize = int(factorial(n))
-        for j in xrange(self.size - 1):
+        size = self.size
+        psize = ifac(n)
+        for j in xrange(size - 1):
             rank += rho[j]*psize
-            for i in xrange(j + 1, self.size):
+            for i in xrange(j + 1, size):
                 if rho[i] > rho[j]:
                     rho[i] -= 1
             psize //= n
             n -= 1
         return rank
+
+    @property
+    def cardinality(self):
+        """
+        Returns the number of all possible permutations.
+        """
+        return ifac(self.size)
 
     @property
     def parity(self):
@@ -387,6 +414,9 @@ don\'t match.")
         >>> p.parity
         1
         """
+        if self._cyclic_form is not None:
+            return (self.size - len(self._cyclic_form)) % 2
+
         temp_perm = self.array_form[:]
         a = [0] * self.size
         c = 0
@@ -399,6 +429,7 @@ don\'t match.")
                     i = temp_perm[i]
                     a[i] = 1
         return (self.size - c) % 2
+
 
     @property
     def is_even(self):
@@ -456,10 +487,8 @@ don\'t match.")
         >>> p.ascents
         [1, 2]
         """
-        pos = []
-        for i in xrange(self.size-1):
-            if self.array_form[i] < self.array_form[i+1]:
-                pos.append(i)
+        a = self.array_form
+        pos = [i for i in xrange(self.size-1) if a[i] < a[i+1]]
         return pos
 
     @property
@@ -474,10 +503,8 @@ don\'t match.")
         >>> p.descents
         [0, 3]
         """
-        pos = []
-        for i in xrange(self.size-1):
-            if self.array_form[i] > self.array_form[i+1]:
-                pos.append(i)
+        a = self.array_form
+        pos = [i for i in xrange(self.size-1) if a[i] > a[i+1]]
         return pos
 
     @property
@@ -492,9 +519,10 @@ don\'t match.")
         1
         """
         max = 0
+        a = self.array_form
         for i in xrange(self.size):
-            if self.array_form[i] != i and self.array_form[i] > max:
-                max = self.array_form[i]
+            if a[i] != i and a[i] > max:
+                max = a[i]
         return max
 
     @property
@@ -509,9 +537,10 @@ don\'t match.")
         2
         """
         min = self.size
+        a = self.array_form
         for i in xrange(self.size):
-            if self.array_form[i] != i and self.array_form[i] < min:
-                min = self.array_form[i]
+            if a[i] != i and a[i] < min:
+                min = a[i]
         return min
 
     @property
@@ -534,9 +563,12 @@ don\'t match.")
         8
         """
         inversions = 0
-        for i in xrange(self.size - 1):
-            for j in xrange(i + 1, self.size):
-                if self.array_form[i] > self.array_form[j]:
+        a = self.array_form
+        n = self.size
+        for i in xrange(n - 1):
+            b = a[i]
+            for j in xrange(i + 1, n):
+                if b > a[j]:
                     inversions += 1
         return inversions
 
@@ -626,11 +658,8 @@ don\'t match.")
         """
         Returns the runs of a permutation.
 
-        An ascending sequence in a permutation is called a run [1]
+        An ascending sequence in a permutation is called a run [5]
 
-        [1] Graham, R. L.; Knuth, D. E.; and Patashnik, O.
-            Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
-            Reading, MA: Addison-Wesley, 1994.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -692,11 +721,14 @@ don\'t match.")
         >>> p.inversion_vector
         [3, 2, 1]
         """
-        inversion_vector = [0] * (self.size - 1)
-        for i in xrange(self.size - 1):
+        n = self.size
+        inversion_vector = [0] * (n - 1)
+        self_array_form = self.array_form
+
+        for i in xrange(n - 1):
             val = 0
-            for j in xrange(i, self.size):
-                if self.array_form[j] < self.array_form[i]:
+            for j in xrange(i+1, n):
+                if self_array_form[j] < self_array_form[i]:
                     val += 1
             inversion_vector[i] = val
         return inversion_vector
@@ -705,7 +737,7 @@ don\'t match.")
     def rank_trotterjohnson(self):
         """
         Returns the Trotter Johnson rank, which we get from the minimal
-        change algorithm.
+        change algorithm. See [4].
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -714,30 +746,58 @@ don\'t match.")
         0
         >>> p = Permutation([0,2,1,3])
         >>> p.rank_trotterjohnson
-        3
+        7
 
-        >>> from sympy.combinatorics.permutations import Permutation
-        >>> a = Permutation([2, 3, 1, 0])
-        >>> a.rank_trotterjohnson
+        >>> p = Permutation([2, 3, 1, 0])
+        >>> p.rank_trotterjohnson
         13
         """
         if self.array_form == [] or self.is_Identity:
             return 0
         if self.array_form == [1, 0]:
             return 1
-        temp_perm = self.array_form[:]
-        index_n = self.array_form.index(self.size - 1)
-        temp_perm.remove(self.size - 1)
-        rank = Permutation(temp_perm).rank_trotterjohnson
-        if rank % 2 == 0:
-            rank = (self.size - 1) * rank + \
-                   len([i for i in self.array_form
-                        if self.array_form.index(i) < index_n])
-        else:
-            rank = (self.size - 1) * rank + \
-                   len([i for i in self.array_form
-                        if self.array_form.index(i) > index_n])
+        perm = self.array_form
+        n = self.size
+        rank = 0
+        for j in range(1, n):
+           k = 1
+           i = 0
+           while perm[i] != j:
+               if perm[i] < j:
+                   k += 1
+               i += 1
+           j1 = j + 1
+           if rank % 2 == 0:
+               rank = j1*rank + j1 - k
+           else:
+               rank = j1*rank + k - 1
         return rank
+
+    @classmethod
+    def unrank_trotterjohnson(self, size, rank):
+        """
+        Trotter Johnson permutation unranking. See [4].
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> Permutation.unrank_trotterjohnson(5,10)
+        Permutation([0, 3, 1, 2, 4])
+        """
+        perm = [0]*size
+        r2 = 0
+        for j in range(2, size+1):
+            r1 = (rank * ifac(j))//ifac(size)
+            k = r1 - j*r2
+            if r2 % 2 == 0:
+                for i in range(j-1, j-k-1, -1):
+                    perm[i] = perm[i-1]
+                perm[j-k-1] = j-1
+            else:
+                for i in range(j-1, k, -1):
+                    perm[i] = perm[i-1]
+                perm[k] = j-1
+            r2 = r1
+        return Permutation(perm)
 
     def get_precedence_matrix(self):
         """
