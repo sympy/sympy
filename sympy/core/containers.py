@@ -114,7 +114,7 @@ class Dict(Basic):
     """
     Wrapper around the builtin dict object
 
-    The Tuple is a subclass of Basic, so that it works well in the
+    The Dict is a subclass of Basic, so that it works well in the
     SymPy framework.  Because it is immutable, it may be included
     in sets, but its values must all be given at instantiation and
     cannot be changed afterwards.  Otherwise it behaves identically
@@ -164,11 +164,6 @@ class Dict(Basic):
     @property
     def args(self):
         return tuple(self.elements)
-
-    def __eq__(self, other):
-        if isinstance(other, Basic):
-            return super(Dict, self).__eq__(other)
-        return self.elements == other
 
     def items(self):
         '''D.items() -> list of D's (key, value) pairs, as 2-tuples'''

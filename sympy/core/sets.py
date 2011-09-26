@@ -1028,11 +1028,6 @@ class FiniteSet(CountableSet):
     def args(self):
         return tuple(self.elements)
 
-    def __eq__(self, other):
-        if isinstance(other, Basic):
-            return super(FiniteSet, self).__eq__(other)
-        return self.elements == other
-
     def __iter__(self):
         return self.elements.__iter__()
 
