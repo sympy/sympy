@@ -77,14 +77,10 @@ def is_quad_residue(a, p):
     a, p = int_tested(a, p)
     if p < 1:
         raise ValueError('p must be > 0')
-    if a == 0 or p == 2:
-        return True
-    if p == 1:
-        return a == 0
-    elif a == 1:
-        return True
     if a > p or a < 0:
         a = a % p
+    if a < 2 or p < 3:
+        return True
     if not isprime(p):
         if p % 2 and jacobi_symbol(a, p) == -1:
             return False
