@@ -4,6 +4,7 @@ from sympy.utilities.iterables import rotate_left, flatten
 from sympy.polys.polytools import lcm
 from sympy.matrices import Matrix, zeros
 from sympy.mpmath.libmp.libintmath import ifac
+from sympy.core.numbers import Integer
 
 import itertools, random
 
@@ -246,23 +247,34 @@ don\'t match.")
         >>> p**4
         Permutation([0, 1, 2, 3])
         """
+        rn = range(self.size)
         n = int(n)
         if n == 0:
-            return Permutation(range(self.size))
+            return Permutation(rn)
         if n < 0:
             return pow(~self, -n)
-        if n < 8:
-            return reduce(lambda x, y: x*y, [self]*n)
-        p = Permutation(range(self.size))
-        while 1:
-            if n&1:
-                p = p*self
-                n -= 1
-                if not n:
-                    break
-            self = self*self
-            n = n // 2
-        return p
+        a = self.array_form
+        if n == 2:
+            b = [a[a[i]] for i in rn]
+        elif n == 3:
+            b = [a[a[a[i]]] for i in rn]
+        elif n == 4:
+            b = [a[a[a[a[i]]]] for i in rn]
+        else:
+            b = range(self.size)
+            while 1:
+                if n&1:
+                    b = [b[a[i]] for i in rn]
+                    n -= 1
+                    if not n:
+                        break
+                if n%4 == 0:
+                    a = [a[a[a[a[i]]]] for i in rn]
+                    n = n // 4
+                elif n%2 == 0:
+                    a = [a[a[i]] for i in rn]
+                    n = n // 2
+        return Permutation(b)
 
     def __invert__(self):
         """
@@ -338,7 +350,7 @@ don\'t match.")
         enforce lexicographic order [3].
 
 
-        Examples
+        Examples:
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([0,1,2,3])
         >>> p.rank_nonlex()
@@ -393,8 +405,14 @@ don\'t match.")
     def cardinality(self):
         """
         Returns the number of all possible permutations.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.cardinality
+        24
         """
-        return ifac(self.size)
+        return Integer(ifac(self.size))
 
     @property
     def parity(self):
