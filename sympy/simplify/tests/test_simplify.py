@@ -4,8 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O)
-
+    factor, Mul, O, hyper)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -688,6 +687,12 @@ def test_powdenest():
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
     assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(2)/3)*sqrt(y))**(2*i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
+    # issue 2706
+    assert powdenest(((gamma(x)*hyper((),(),x))*pi)**2) == (pi*gamma(x)*hyper((), (), x))**2
+
+@XFAIL
+def test_issue_2706():
+    assert (((gamma(x)*hyper((),(),x))*pi)**2).is_positive is None
 
 def test_issue_1095():
     # simplify should call cancel

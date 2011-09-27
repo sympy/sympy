@@ -1162,6 +1162,8 @@ def powdenest(eq, force=False):
         if g != 1:
             cg, rg = g.as_coeff_Mul()
             glogb = _keep_coeff(cg, rg*Add(*[a/g for a in args]))
+
+    # now put the log back together again
     if glogb.func is C.log or not glogb.is_Mul:
         if glogb.args[0].is_Pow or glogb.args[0].func is exp:
             glogb = powdenest(glogb.args[0])
@@ -1175,18 +1177,15 @@ def powdenest(eq, force=False):
             if ok:
                 return Pow(Pow(glogb.base, glogb.exp/c.p), c.p*e)
         return eq
-    else:
-        add= []
-        other = []
-        for g in glogb.args:
-            if g.is_Add:
-                add.append(g)
-            else:
-                other.append(g)
-        neweq = Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
-        if neweq != eq:
-            return powdenest(neweq)
-        return eq
+    # the log(b) was a Mul so join any adds with logcombine
+    add= []
+    other = []
+    for a in glogb.args:
+        if a.is_Add:
+            add.append(a)
+        else:
+            other.append(a)
+    return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
