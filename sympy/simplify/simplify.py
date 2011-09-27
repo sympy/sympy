@@ -14,7 +14,7 @@ from sympy.functions import gamma, exp, sqrt, log
 from sympy.simplify.cse_main import cse
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, terms_gcd, lcm)
+    ComputationFailed, terms_gcd, lcm, gcd)
 
 from sympy.core.compatibility import reduce
 
@@ -1111,7 +1111,7 @@ def powdenest(eq, force=False):
         return Pow(C.exp(logs), efunc(*other))
 
     _, be = b.as_base_exp()
-    if be is S.One and not (b.is_Mul or b.is_Rational):
+    if be is S.One and not (b.is_Mul or b.is_Rational and b.q != 1):
         return eq
 
     # denest eq which is either Pow**e or Mul**e or Mul(b1**e1, b2**e2)
@@ -1124,45 +1124,69 @@ def powdenest(eq, force=False):
         while kernel.is_Pow:
             kernel, ex = kernel.as_base_exp()
             exponents.append(ex)
-        if kernel.is_positive:
-            e = Mul(*exponents)
-            if kernel.is_Mul:
-                b = kernel
-            else:
-                return Pow(kernel, e)
+        try:
+            if kernel.is_positive:
+                e = Mul(*exponents)
+                if kernel.is_Mul:
+                    b = kernel
+                else:
+                    return Pow(kernel, e)
+        except AssertionError: # issue 2706
+            pass
 
-    # if any factor is a bare symbol then there is nothing to be done
+    # if any factor is an atom then there is nothing to be done
     # but the kernel check may have created a new exponent
-    if any(s.is_Symbol for s in Mul.make_args(b)):
+    if any(s.is_Atom for s in Mul.make_args(b)):
         if exponents:
             return b**e
         return eq
 
     # let log handle the case of the base of the argument being a mul, e.g.
-    # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive
-    gcd = terms_gcd(expand_log(log(b)), expand=False)
-    if gcd.func is C.log or not gcd.is_Mul:
-        if gcd.args[0].is_Pow or gcd.args[0].func is exp:
-            gcd = powdenest(gcd.args[0])
-            c, _ = gcd.exp.as_coeff_mul()
+    # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive; we
+    # will take the log, expand it, and then factor out the common powers that
+    # now appear as coefficient. We do this manually since terms_gcd pulls out
+    # fractions, terms_gcd(x+x*y/2) -> x*(y + 2)/2 and we don't want the 1/2;
+    # gcd won't pull out numerators from a fraction: gcd(3*x, 9*x/2) -> x but
+    # we want 3*x. Neither work with noncommutatives.
+    from sympy.polys.polytools import _keep_coeff
+    def nc_gcd(aa, bb):
+        a, b = [i.as_coeff_Mul() for i in [aa, bb]]
+        c = gcd(a[0], b[0]).as_numer_denom()[0]
+        g = Mul(*(a[1].args_cnc()[0] & b[1].args_cnc()[0]))
+        return _keep_coeff(c, g)
+
+    glogb = expand_log(log(b))
+    if glogb.is_Add:
+        args = glogb.args
+        g = reduce(nc_gcd, args)
+        if g != 1:
+            cg, rg = g.as_coeff_Mul()
+            glogb = _keep_coeff(cg, rg*Add(*[a/g for a in args]))
+    if glogb.func is C.log or not glogb.is_Mul:
+        if glogb.args[0].is_Pow or glogb.args[0].func is exp:
+            glogb = powdenest(glogb.args[0])
+            c, _ = glogb.exp.as_coeff_mul()
             ok = c.p != 1
             if ok:
                 ok = c.q != 1
                 if not ok:
-                    n, d = gcd.exp.as_numer_denom()
+                    n, d = glogb.exp.as_numer_denom()
                     ok = d is not S.One and any(di.is_integer for di in Mul.make_args(d))
             if ok:
-                return Pow(Pow(gcd.base, gcd.exp/c.p), c.p*e)
+                return Pow(Pow(glogb.base, glogb.exp/c.p), c.p*e)
         return eq
     else:
         add= []
         other = []
-        for g in gcd.args:
+        for g in glogb.args:
             if g.is_Add:
                 add.append(g)
             else:
                 other.append(g)
-        return powdenest(Pow(exp(logcombine(Mul(*add))), e*Mul(*other)))
+        neweq = Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
+        if neweq != eq:
+            return powdenest(neweq)
+        return eq
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """

@@ -686,7 +686,7 @@ def test_powdenest():
     assert powdenest((x**2*y**6)**i) != (x*y**3)**(2*i)
     x, y = symbols('x,y', positive=True)
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
-    assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**4*y**3)**(i**2/3)
+    assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(2)/3)*sqrt(y))**(2*i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
 
 def test_issue_1095():
