@@ -12,6 +12,8 @@ from sympy.core.cache import clear_cache
 
 from sympy.utilities.pytest import XFAIL, raises
 
+from copy import deepcopy
+
 class DummyNumber(object):
     """
     Minimal implementation of a number that works with SymPy.
@@ -1048,3 +1050,8 @@ def test_issue_1100():
     a = x - y
     assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
     raises(ValueError, 'x._eval_interval(x, None, None)')
+
+def test_copy():
+    mul = Mul(3, 4, evaluate=False)
+    mul_copy = deepcopy(mul)
+    assert isinstance(mul_copy, Mul)

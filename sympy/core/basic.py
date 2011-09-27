@@ -8,6 +8,10 @@ from sympify import _sympify, sympify, SympifyError
 from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 
+def _new_Basic(cls, args, kwargs):
+    obj =  cls.__new__(cls, *args, **kwargs)
+    return obj
+
 class Basic(object):
     """
     Base class for all objects in sympy.
@@ -45,6 +49,7 @@ class Basic(object):
     __metaclass__ = WithAssumptions
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
+                 '_evaluate',
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -84,10 +89,18 @@ class Basic(object):
         obj = object.__new__(cls)
         obj._init_assumptions(assumptions)
 
+        obj._evaluate = assumptions.pop('evaluate', True)
+
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+    def __reduce__(self):
+        if self._evaluate:
+            kwargs = {}
+        else:
+            kwargs = {'evaluate': self._evaluate}
+        return _new_Basic, (self.__class__, self.__getnewargs__(), kwargs)
 
     def __getnewargs__(self):
         """ Pickling support.
