@@ -1051,7 +1051,11 @@ def test_issue_1100():
     assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
     raises(ValueError, 'x._eval_interval(x, None, None)')
 
-def test_copy():
+def test_evaluate_false():
+    #Issue 2684
     mul = Mul(3, 4, evaluate=False)
     mul_copy = deepcopy(mul)
     assert isinstance(mul_copy, Mul)
+    #Multiplying by identity but is really not evaluated
+    mul = Mul(1, Add(1, 2, evaluate=False), evaluate=False)
+    assert type(mul) == Mul
