@@ -136,16 +136,11 @@ def jacobi_symbol(m, n):
     1
 
     The relationship between the jacobi_symbol and legendre_symbol can
-    be seen by taking the product of the legendre_symbol for the prime factors
-    of a number. e.g. for 90 mod 7 we have:
+    be demonstrated as follows:
         >>> L = legendre_symbol
-        >>> fac_l_m = [(f, L(f, 7), m) for f, m in S(90).factors().items()]
-        >>> fac_l_m
-        [(2, 1, 1), (3, -1, 2), (5, -1, 1)]
-
-    The jacobi_symbol(90, 7) is the product of the legendre_symbols, l, of the
-    prime factors of 90 (raised to their multiplicity):
-        >>> jacobi_symbol(90, 7) == Mul(*[l**m for (f, l, m) in fac_l_m]) == -1
+        >>> S(45).factors()
+        {3: 2, 5: 1}
+        >>> jacobi_symbol(7, 45) == L(7, 3)**2 * L(7, 5)**1
         True
     """
     m, n = int_tested(m, n)
