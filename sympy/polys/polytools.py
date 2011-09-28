@@ -4925,10 +4925,11 @@ def _symbolic_factor_list(expr, opt, method):
             func = getattr(poly, method + '_list')
 
             _coeff, _factors = func()
-            if exp.is_Integer:
-                coeff *= _coeff**exp
-            else:
-                factors.append((_coeff, exp))
+            if _coeff is not S.One:
+                if exp.is_Integer:
+                    coeff *= _coeff**exp
+                else:
+                    factors.append((_coeff, exp))
 
             if exp is S.One:
                 factors.extend(_factors)
