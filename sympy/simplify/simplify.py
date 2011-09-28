@@ -467,10 +467,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     if evaluate:
         if expr.is_Mul:
-            ret = 1
-            for term in expr.args:
-                ret *= collect(term, syms, func, True, exact, distribute_order_term)
-            return ret
+            return Mul(*[ collect(term, syms, func, True, exact, distribute_order_term) for term in expr.args ])
         elif expr.is_Pow:
             b = collect(expr.base, syms, func, True, exact, distribute_order_term)
             return Pow(b, expr.exp)
