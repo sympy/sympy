@@ -1827,12 +1827,6 @@ def dmp_cancel(f, g, u, K, include=True):
     ([[2], [2]], [[1], [-1]])
 
     """
-    if dmp_zero_p(f, u) or dmp_zero_p(g, u):
-        if include:
-            return f, g
-        else:
-            return K.one, K.one, f, g
-
     K0 = None
 
     if K.has_Field and K.has_assoc_Ring:
