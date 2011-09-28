@@ -24,7 +24,8 @@ from sympy.polys.polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel,
-    reduced, groebner, fglm)
+    reduced, groebner,
+    GroebnerBasis, is_zero_dimensional)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -43,12 +44,10 @@ from sympy.polys.polyerrors import (
     OptionError,
     FlagError)
 
-from sympy.polys.monomialtools import (
-    monomial_lex_key)
-
 from sympy.polys.polyclasses import DMP, DMF
 
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
+from sympy.polys.monomialtools import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
@@ -2438,6 +2437,9 @@ def test_groebner():
     assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex', polys=True) == \
         [Poly(-1 + y**4, x, y, z), Poly(z**3, x, y, z), Poly(1 + x**2, x, y, z)]
 
+    assert groebner([x**3 - 1, x**2 - 1]) == [x - 1]
+    assert groebner([Eq(x**3, 1), Eq(x**2, 1)]) == [x - 1]
+
     F = [3*x**2 + y*z - 5*x - 1, 2*x + 3*x*y + y**2, x - 3*y + x*z - 2*z**2]
     f = z**9 - x**2*y**3 - 3*x*y**2*z + 11*y*z**2 + x**2*z**2 - 5
 
@@ -2466,32 +2468,95 @@ def test_groebner():
     raises(DomainError, "groebner([x**2 + 2.0*y], x, y)")
     raises(ComputationFailed, "groebner([1])")
 
+    assert groebner([x**2 - 1, x**3 + 1], method='buchberger') == [x + 1]
+    assert groebner([x**2 - 1, x**3 + 1], method='f5b') == [x + 1]
+
+    raises(ValueError, "groebner([x, y], method='unknown')")
+
 def test_fglm():
-    a, b, c, d = symbols('a b c d')
-    F = [a+b+c+d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + b*c*d, a*b*c*d - 1]
+    F = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + b*c*d, a*b*c*d - 1]
     G = groebner(F, a, b, c, d, order='grlex')
 
-    assert fglm(G, ('grlex'), a, b, c, d) == \
-        [4*a + 3*d**9 - 4*d**5 - 3*d, 4*b + 4*c - 3*d**9 + 4*d**5 + 7*d,
-        4*c**2 + 3*d**10 - 4*d**6 - 3*d**2, 4*c*d**4 + 4*c - d**9 + 4*d**5 + 5*d,
-        d**12 - d**8 - d**4 + 1]
+    assert G.fglm('lex') == [
+        4*a + 3*d**9 - 4*d**5 - 3*d,
+        4*b + 4*c - 3*d**9 + 4*d**5 + 7*d,
+        4*c**2 + 3*d**10 - 4*d**6 - 3*d**2,
+        4*c*d**4 + 4*c - d**9 + 4*d**5 + 5*d,
+        d**12 - d**8 - d**4 + 1,
+    ]
 
-    x, t = symbols('x t')
     F = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
         -72*t*x**7 - 252*t*x**6 + 192*t*x**5 + 1260*t*x**4 + 312*t*x**3 - 404*t*x**2 - 576*t*x + \
         108*t - 72*x**7 - 256*x**6 + 192*x**5 + 1280*x**4 + 312*x**3 - 576*x + 96]
     G = groebner(F, t, x, order='grlex')
 
-    assert fglm(G, 'grlex', t, x) == [203577793572507451707*t + 627982239411707112*x**7 - \
-        666924143779443762*x**6 - 10874593056632447619*x**5 + 5119998792707079562*x**4 + \
-        72917161949456066376*x**3 + 20362663855832380362*x**2 - 142079311455258371571*x + 183756699868981873194,
-        9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9]
+    assert G.fglm('lex') == [
+        203577793572507451707*t + 627982239411707112*x**7 - 666924143779443762*x**6 - \
+        10874593056632447619*x**5 + 5119998792707079562*x**4 + 72917161949456066376*x**3 + \
+        20362663855832380362*x**2 - 142079311455258371571*x + 183756699868981873194,
+        9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9,
+    ]
 
-    x, y = symbols('x y')
     F = [x**2 - x - 3*y + 1, -2*x + y**2 + y - 1]
     G = groebner(F, x, y, order='lex')
 
-    assert fglm(G, ('lex', 'grlex'), x, y) == [x**2 - x - 3*y + 1, -2*x + y**2 + y - 1]
+    assert G.fglm('grlex') == [
+        x**2 - x - 3*y + 1,
+        y**2 - 2*x + y - 1,
+    ]
+
+def test_is_zero_dimensional():
+    assert is_zero_dimensional([x, y], x, y) == True
+    assert is_zero_dimensional([x**3 + y**2], x, y) == False
+
+    assert is_zero_dimensional([x, y, z], x, y, z) == True
+    assert is_zero_dimensional([x, y, z], x, y, z, t) == False
+
+    F = [x*y - z, y*z - x, x*y - y]
+    assert is_zero_dimensional(F, x, y, z) == True
+
+    F = [x**2 - 2*x*z + 5, x*y**2 + y*z**3, 3*y**2 - 8*z**2]
+    assert is_zero_dimensional(F, x, y, z) == True
+
+def test_GroebnerBasis():
+    F = [x*y - 2*y, 2*y**2 - x**2]
+
+    G = groebner(F, x, y, order='grevlex')
+    H = [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
+    P = [ Poly(h, x, y) for h in H ]
+
+    assert isinstance(G, GroebnerBasis) == True
+
+    assert len(G) == 3
+
+    assert G[0] == H[0] and not G[0].is_Poly
+    assert G[1] == H[1] and not G[1].is_Poly
+    assert G[2] == H[2] and not G[2].is_Poly
+
+    assert G[1:] == H[1:] and not any(g.is_Poly for g in G[1:])
+    assert G[:2] == H[:2] and not any(g.is_Poly for g in G[1:])
+
+    assert G.exprs == H
+    assert G.polys == P
+    assert G.gens == (x, y)
+    assert G.domain == ZZ
+    assert G.order == grevlex
+
+    assert G == H
+    assert G == tuple(H)
+    assert G == P
+    assert G == tuple(P)
+
+    assert G != []
+
+    G = groebner(F, x, y, order='grevlex', polys=True)
+
+    assert G[0] == P[0] and G[0].is_Poly
+    assert G[1] == P[1] and G[1].is_Poly
+    assert G[2] == P[2] and G[2].is_Poly
+
+    assert G[1:] == P[1:] and all(g.is_Poly for g in G[1:])
+    assert G[:2] == P[:2] and all(g.is_Poly for g in G[1:])
 
 def test_poly():
     assert poly(x) == Poly(x, x)

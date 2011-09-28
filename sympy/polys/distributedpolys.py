@@ -1,12 +1,7 @@
 """Sparse distributed multivariate polynomials. """
 
 from sympy.polys.monomialtools import (
-    monomial_mul,
-    monomial_div,
-    monomial_lcm,
-    monomial_lex_key as O_lex,
-    monomial_grlex_key as O_grlex,
-    monomial_grevlex_key as O_grevlex,
+    monomial_mul, monomial_div, monomial_lcm, lex,
 )
 
 from sympy.polys.polyerrors import (
@@ -417,7 +412,7 @@ def sdp_rem(f, G, u, O, K):
                     else:
                         f[m1] = c1
                 if f:
-                    if O is O_lex:
+                    if O == lex:
                         ltm = max(f)
                     else:
                         ltm = max(f, key=lambda mx: O(mx))
@@ -432,7 +427,7 @@ def sdp_rem(f, G, u, O, K):
                 r[ltm] = ltc
             del f[ltm]
             if f:
-                if O is O_lex:
+                if O == lex:
                     ltm = max(f)
                 else:
                     ltm = max(f, key=lambda mx: O(mx))
@@ -497,10 +492,10 @@ def sdp_lcm(f, g, u, O, K):
     g_terms = tuple( ((0,) + m,  c) for m, c in g ) \
             + tuple( ((1,) + m, -c) for m, c in g )
 
-    F = sdp_sort(f_terms, O_lex)
-    G = sdp_sort(g_terms, O_lex)
+    F = sdp_sort(f_terms, lex)
+    G = sdp_sort(g_terms, lex)
 
-    basis = sdp_groebner([F, G], u, O_lex, K)
+    basis = sdp_groebner([F, G], u, lex, K)
 
     H = [ h for h in basis if sdp_indep_p(h, 0, u) ]
 

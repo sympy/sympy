@@ -1070,11 +1070,12 @@ class PrettyPrinter(Printer):
                 parenthesize = lambda set:set.is_ProductSet)
 
     def _print_seq(self, seq, left=None, right=None, delimiter=', ',
-            parenthesize = lambda x:False):
+            parenthesize=lambda x: False):
         s = None
 
         for item in seq:
             pform = self._print(item)
+
             if parenthesize(item):
                 pform = prettyForm(*pform.parens())
             if s is None:
@@ -1089,6 +1090,21 @@ class PrettyPrinter(Printer):
 
         s = prettyForm(*s.parens(left, right, ifascii_nougly=True))
         return s
+
+    def join(self, delimiter, args):
+        pform = None
+
+        for arg in args:
+            if pform is None:
+                pform = arg
+            else:
+                pform = prettyForm(*pform.right(delimiter))
+                pform = prettyForm(*pform.right(arg))
+
+        if pform is None:
+            return prettyForm("")
+        else:
+            return pform
 
     def _print_list(self, l):
         return self._print_seq(l, '[', ']')
@@ -1194,6 +1210,24 @@ class PrettyPrinter(Printer):
     def _print_FractionField(self, expr):
         pform = self._print_seq(expr.gens, '(', ')')
         pform = prettyForm(*pform.left(self._print(expr.dom)))
+
+        return pform
+
+    def _print_GroebnerBasis(self, basis):
+        cls = basis.__class__.__name__
+
+        exprs = [ self._print_Add(arg, order=basis.order) for arg in basis.exprs ]
+        exprs = prettyForm(*self.join(", ", exprs).parens(left="[", right="]"))
+
+        gens = [ self._print(gen) for gen in basis.gens ]
+
+        domain = prettyForm(*prettyForm("domain=").right(self._print(basis.domain)))
+        order = prettyForm(*prettyForm("order=").right(self._print(basis.order)))
+
+        pform = self.join(", ", [exprs] + gens + [domain, order])
+
+        pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left(basis.__class__.__name__))
 
         return pform
 

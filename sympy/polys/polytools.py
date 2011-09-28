@@ -39,7 +39,6 @@ from sympy.polys.distributedpolys import (
 
 from sympy.polys.groebnertools import (
     sdp_groebner, matrix_fglm,
-    is_zero_dimensional,
 )
 
 from sympy.polys.monomialtools import (
@@ -1798,10 +1797,10 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(4*x**2 + 2*x*y**2 + x*y + 3*y, x, y).LM()
-        (2, 0)
+        x**2*y**0
 
         """
-        return f.monoms(order)[0]
+        return Monomial(f.monoms(order)[0], f.gens)
 
     def EM(f, order=None):
         """
@@ -1813,10 +1812,10 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(4*x**2 + 2*x*y**2 + x*y + 3*y, x, y).EM()
-        (0, 1)
+        x**0*y**1
 
         """
-        return f.monoms(order)[-1]
+        return Monomial(f.monoms(order)[-1], f.gens)
 
     def LT(f, order=None):
         """
@@ -1828,10 +1827,11 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(4*x**2 + 2*x*y**2 + x*y + 3*y, x, y).LT()
-        ((2, 0), 4)
+        (x**2*y**0, 4)
 
         """
-        return f.terms(order)[0]
+        monom, coeff = f.terms(order)[0]
+        return Monomial(monom, f.gens), coeff
 
     def ET(f, order=None):
         """
@@ -1843,10 +1843,11 @@ class Poly(Expr):
         >>> from sympy.abc import x, y
 
         >>> Poly(4*x**2 + 2*x*y**2 + x*y + 3*y, x, y).ET()
-        ((0, 1), 3)
+        (x**0*y**1, 3)
 
         """
-        return f.terms(order)[-1]
+        monom, coeff = f.terms(order)[-1]
+        return Monomial(monom, f.gens), coeff
 
     def max_norm(f):
         """
@@ -3865,9 +3866,8 @@ def LM(f, *gens, **args):
     except PolificationFailed, exc:
         raise ComputationFailed('LM', 1, exc)
 
-    monom = Monomial(*F.LM(order=opt.order))
-
-    return monom.as_expr(*opt.gens)
+    monom = F.LM(order=opt.order)
+    return monom.as_expr()
 
 def LT(f, *gens, **args):
     """
@@ -3890,8 +3890,7 @@ def LT(f, *gens, **args):
         raise ComputationFailed('LT', 1, exc)
 
     monom, coeff = F.LT(order=opt.order)
-
-    return coeff*Monomial(*monom).as_expr(*opt.gens)
+    return coeff*monom.as_expr()
 
 def pdiv(f, g, *gens, **args):
     """
@@ -5378,25 +5377,26 @@ def groebner(F, *gens, **args):
     >>> from sympy import groebner
     >>> from sympy.abc import x, y
 
-    >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='lex')
-    [x**2 - 2*y**2, x*y - 2*y, y**3 - 2*y]
-    >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grlex')
-    [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
-    >>> groebner([x*y - 2*y, 2*y**2 - x**2], order='grevlex')
-    [y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y]
+    >>> F = [x*y - 2*y, 2*y**2 - x**2]
 
-    By default, an improved implementation of the Buchberger algorithm
-    is used. Optionally, an implementation of the F5B algorithm can
-    be used. The algorithm can be changed with the `setup` function
-    from sympy.polys.polyconfig:
+    >>> groebner(F, x, y, order='lex')
+    GroebnerBasis([x**2 - 2*y**2, x*y - 2*y, y**3 - 2*y], x, y, domain='ZZ', order='lex')
+    >>> groebner(F, x, y, order='grlex')
+    GroebnerBasis([y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y], x, y, domain='ZZ', order='grlex')
+    >>> groebner(F, x, y, order='grevlex')
+    GroebnerBasis([y**3 - 2*y, x**2 - 2*y**2, x*y - 2*y], x, y, domain='ZZ', order='grevlex')
 
-    >>> from sympy.polys.polyconfig import setup
-    >>> groebner([x**2 - x - 1, (2*x - 1) * y - (x**10 - (1-x)**10)], x, y, order='lex') # default
-    [x**2 - x - 1, y - 55]
-    >>> setup('GB_METHOD', 'f5b')
-    >>> groebner([x**2 - x - 1, (2*x - 1) * y - (x**10 - (1-x)**10)], x, y, order='lex') # f5b
-    [x**2 - x - 1, y - 55]
-    >>> setup('GB_METHOD', 'buchberger') # back to the default algorithm
+    By default, an improved implementation of the Buchberger algorithm is
+    used. Optionally, an implementation of the F5B algorithm can be used.
+    The algorithm can be set using ``method`` flag or with the :func:`setup`
+    function from :mod:`sympy.polys.polyconfig`:
+
+    >>> F = [x**2 - x - 1, (2*x - 1) * y - (x**10 - (1 - x)**10)]
+
+    >>> groebner(F, x, y, method='buchberger')
+    GroebnerBasis([x**2 - x - 1, y - 55], x, y, domain='ZZ', order='lex')
+    >>> groebner(F, x, y, method='f5b')
+    GroebnerBasis([x**2 - x - 1, y - 55], x, y, domain='ZZ', order='lex')
 
     **References**
 
@@ -5404,107 +5404,219 @@ def groebner(F, *gens, **args):
     2. [Cox97]_
 
     """
-    options.allowed_flags(args, ['polys'])
+    return GroebnerBasis(F, *gens, **args)
 
-    try:
-        polys, opt = parallel_poly_from_expr(F, *gens, **args)
-    except PolificationFailed, exc:
-        raise ComputationFailed('groebner', len(F), exc)
-
-    domain = opt.domain
-
-    if domain.has_assoc_Field:
-        opt.domain = domain.get_field()
-    else:
-        raise DomainError("can't compute a Groebner basis over %s" % domain)
-
-    for i, poly in enumerate(polys):
-        poly = poly.set_domain(opt.domain).rep.to_dict()
-        polys[i] = sdp_from_dict(poly, opt.order)
-
-    level = len(flatten(gens)) - 1
-
-    G = sdp_groebner(polys, level, opt.order, opt.domain)
-    G = [ Poly._from_dict(dict(g), opt) for g in G ]
-
-    if not domain.has_Field:
-        G = [ g.clear_denoms(convert=True)[1] for g in G ]
-
-    if not opt.polys:
-        return [ g.as_expr() for g in G ]
-    else:
-        return G
-
-def fglm(G, order, *gens, **args):
+def is_zero_dimensional(F, *gens, **args):
     """
-    Convert reduced Groebner basis ``G`` of zero-dimensional ideal from
-    ``from_order`` to ``to_order``.
-    ``fglm`` does not check if ``G`` is a Groebner basis or if
-    it is reduced but does check if the ideal generated by ``G``
-    is zero-dimensional.
+    Checks if the ideal generated by a Groebner basis is zero-dimensional.
 
-    **Examples**
-
-    >>> from sympy.abc import x, y
-    >>> from sympy import groebner, fglm
-    >>> F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
-    >>> G = groebner(F, x, y, order='grlex')
-    >>> fglm(G, ('grlex', 'lex'), x, y)
-    [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
-    >>> groebner(F, x, y, order='lex')
-    [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
+    The algorithm checks if the set of monomials not divisible by the
+    leading monomial of any element of ``F`` is bounded.
 
     **References**
-    J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
-    Computation of Zero-dimensional Groebner Bases by Change of
-    Ordering
 
-    J.C. Faugere's lecture notes:
-    http://www-salsa.lip6.fr/~jcf/Papers/2010_MPRI5e.pdf
+    David A. Cox, John B. Little, Donal O'Shea. Ideals, Varieties and
+    Algorithms, 3rd edition, p. 230
+
     """
-    options.allowed_flags(args, ['polys'])
+    return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
-    if type(order) == str:
-        from_order, to_order = order, 'lex'
-    elif type(order) == tuple and len(order) == 2:
-        from_order, to_order = order
-    elif type(order) == tuple and len(order) == 1:
-        from_order, to_order = order[0], 'lex'
-    else:
-        raise TypeError("order has to be a string or a tuple of at most two strings")
+class GroebnerBasis(Basic):
+    """Represents a reduced Groebner basis. """
 
-    try:
-        polys, opt = parallel_poly_from_expr(G, *gens, **args)
-    except PolificationFailed, exc:
-        raise ComputationFailed('fglm', len(G), exc)
+    __slots__ = ['_basis', '_options']
 
-    domain = opt.domain
+    def __new__(cls, F, *gens, **args):
+        """Compute a reduced Groebner basis for a system of polynomials. """
+        options.allowed_flags(args, ['polys', 'method'])
 
-    if domain.has_assoc_Field:
-        opt.domain = domain.get_field()
-    else:
-        raise DomainError("can't convert Groebner basis over %s" % domain)
+        try:
+            polys, opt = parallel_poly_from_expr(F, *gens, **args)
+        except PolificationFailed, exc:
+            raise ComputationFailed('groebner', len(F), exc)
 
-    for i, poly in enumerate(polys):
-        poly = poly.set_domain(opt.domain).rep.to_dict()
-        polys[i] = sdp_from_dict(poly, monomial_key(from_order))
+        domain = opt.domain
 
-    level = len(flatten(gens)) - 1
+        if domain.has_assoc_Field:
+            opt.domain = domain.get_field()
+        else:
+            raise DomainError("can't compute a Groebner basis over %s" % opt.domain)
 
-    if not is_zero_dimensional(polys, level, monomial_key(from_order), opt.domain):
-        raise NotImplementedError("Can't convert Groebner bases of ideals with positive dimension")
+        for i, poly in enumerate(polys):
+            poly = poly.set_domain(opt.domain).rep.to_dict()
+            polys[i] = sdp_from_dict(poly, opt.order)
 
-    G = matrix_fglm(polys, level, monomial_key(from_order), monomial_key(to_order), opt.domain)
-    opt.order = monomial_key(to_order)
-    G = [Poly._from_dict(dict(g), opt).primitive()[1] for g in G]
+        level = len(opt.gens) - 1
 
-    if not domain.has_Field:
-        G = [g.clear_denoms(convert=True)[1] for g in G]
+        G = sdp_groebner(polys, level, opt.order, opt.domain, method=opt.method)
+        G = [ Poly._from_dict(dict(g), opt) for g in G ]
 
-    if not opt.polys:
-        return [g.as_expr() for g in G]
-    else:
-        return G
+        if not domain.has_Field:
+            G = [ g.clear_denoms(convert=True)[1] for g in G ]
+            opt.domain = domain
+
+        return cls._new(G, opt)
+
+    @classmethod
+    def _new(cls, basis, options):
+        obj = Basic.__new__(cls)
+
+        obj._basis = tuple(basis)
+        obj._options = options
+
+        return obj
+
+    @property
+    def args(self):
+        return (Tuple(*self._basis), Tuple(*self._options.gens))
+
+    @property
+    def exprs(self):
+        return [ poly.as_expr() for poly in self._basis ]
+
+    @property
+    def polys(self):
+        return list(self._basis)
+
+    @property
+    def gens(self):
+        return self._options.gens
+
+    @property
+    def domain(self):
+        return self._options.domain
+
+    @property
+    def order(self):
+        return self._options.order
+
+    def __len__(self):
+        return len(self._basis)
+
+    def __iter__(self):
+        if self._options.polys:
+            return iter(self.polys)
+        else:
+            return iter(self.exprs)
+
+    def __getitem__(self, item):
+        if self._options.polys:
+            basis = self.polys
+        else:
+            basis = self.exprs
+
+        return basis[item]
+
+    def __hash__(self):
+        return hash((self._basis, tuple(self._options.items())))
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self._basis == other._basis and self._options == other._options
+        elif iterable(other):
+            return self.polys == list(other) or self.exprs == list(other)
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    @property
+    def is_zero_dimensional(self):
+        """
+        Checks if the ideal generated by a Groebner basis is zero-dimensional.
+
+        The algorithm checks if the set of monomials not divisible by the
+        leading monomial of any element of ``F`` is bounded.
+
+        **References**
+
+        David A. Cox, John B. Little, Donal O'Shea. Ideals, Varieties and
+        Algorithms, 3rd edition, p. 230
+
+        """
+        def single_var(monomial):
+            return sum(map(bool, monomial)) == 1
+
+        exponents = Monomial([0]*len(self.gens))
+        order = self._options.order
+
+        for poly in self.polys:
+            monomial = poly.LM(order=order)
+
+            if single_var(monomial):
+                exponents *= monomial
+
+        # If any element of the exponents vector is zero, then there's
+        # a variable for which there's no degree bound and the ideal
+        # generated by this Groebner basis isn't zero-dimensional.
+        return all(exponents)
+
+    def fglm(self, order):
+        """
+        Convert a Groebner basis from one ordering to another.
+
+        The FGLM algorithm converts reduced Groebner bases of zero-dimensional
+        ideals from one ordering to another. This method is often used when it
+        is infeasible to compute a Groebner basis with respect to a particular
+        ordering directly.
+
+        **Examples**
+
+        >>> from sympy.abc import x, y
+        >>> from sympy import groebner
+
+        >>> F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
+        >>> G = groebner(F, x, y, order='grlex')
+
+        >>> list(G.fglm('lex'))
+        [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
+        >>> list(groebner(F, x, y, order='lex'))
+        [2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7]
+
+        **References**
+
+        J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
+        Computation of Zero-dimensional Groebner Bases by Change of
+        Ordering
+
+        J.C. Faugere's lecture notes:
+        http://www-salsa.lip6.fr/~jcf/Papers/2010_MPRI5e.pdf
+
+        """
+        opt = self._options
+
+        src_order = opt.order
+        dst_order = monomial_key(order)
+
+        if src_order == dst_order:
+            return self
+
+        if not self.is_zero_dimensional:
+            raise NotImplementedError("can't convert Groebner bases of ideals with positive dimension")
+
+        polys = list(self._basis)
+        domain = opt.domain
+
+        opt = opt.clone(dict(
+            domain = domain.get_field(),
+            order  = dst_order,
+        ))
+
+        for i, poly in enumerate(polys):
+            poly = poly.set_domain(opt.domain).rep.to_dict()
+            polys[i] = sdp_from_dict(poly, src_order)
+
+        level = len(opt.gens) - 1
+
+        G = matrix_fglm(polys, level, src_order, dst_order, opt.domain)
+        G = [ Poly._from_dict(dict(g), opt) for g in G ]
+
+        if not domain.has_Field:
+            G = [ g.clear_denoms(convert=True)[1] for g in G ]
+            opt.domain = domain
+
+        return self._new(G, opt)
 
 def poly(expr, *gens, **args):
     """
