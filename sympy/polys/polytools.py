@@ -3771,8 +3771,8 @@ def _update_args(args, key, value):
     return args
 
 def _keep_coeff(coeff, factors):
-    """Return ``coeff*factors`` unevaluated if necessary.
-    N.B. ``coeff`` is assumed to be a Number."""
+    """Return ``coeff*factors`` unevaluated if necessary."""
+    # it is assumed that coeff is a Number
     if coeff == 1:
         return factors
     elif coeff == -1:
@@ -4911,6 +4911,9 @@ def _symbolic_factor_list(expr, opt, method):
             continue
         elif arg.is_Pow:
             base, exp = arg.args
+            if base.is_Number:
+                factors.append((base, exp))
+                continue
         else:
             base, exp = arg, S.One
 
@@ -4922,7 +4925,10 @@ def _symbolic_factor_list(expr, opt, method):
             func = getattr(poly, method + '_list')
 
             _coeff, _factors = func()
-            coeff *= _coeff**exp
+            if exp.is_Integer:
+                coeff *= _coeff**exp
+            else:
+                factors.append((_coeff, exp))
 
             if exp is S.One:
                 factors.extend(_factors)

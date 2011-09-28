@@ -1929,6 +1929,9 @@ def test_factor():
 
     assert factor_list(1) == (1, [])
     assert factor_list(6) == (6, [])
+    assert factor_list(sqrt(3), x) == (1, [(3, S.Half)])
+    assert factor_list((-1)**x, x) == (1, [(-1, x)])
+    assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
 
     assert factor(1) == 1
     assert factor(6) == 6
