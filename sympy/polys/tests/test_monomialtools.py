@@ -140,6 +140,17 @@ def test_Monomial():
     assert m != (1, 2, 0)
     assert n == (1, 2, 0)
 
+    assert m[0] == m[-3] == 3
+    assert m[1] == m[-2] == 4
+    assert m[2] == m[-1] == 1
+
+    assert n[0] == n[-3] == 1
+    assert n[1] == n[-2] == 2
+    assert n[2] == n[-1] == 0
+
+    assert m[:2] == (3, 4)
+    assert n[:2] == (1, 2)
+
     assert m*n == Monomial((4, 6, 1))
     assert m/n == Monomial((2, 2, 1))
 

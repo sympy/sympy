@@ -304,10 +304,7 @@ class Monomial(object):
         return iter(self.exponents)
 
     def __getitem__(self, item):
-        if isinstance(item, slice):
-            return [ self.exponents[i] for i in xrange(*item.indices(len(self))) ]
-        else:
-            return self.exponents[item]
+        return self.exponents[item]
 
     def __hash__(self):
         return hash((self.__class__.__name__, self.exponents, self.gens))
