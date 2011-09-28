@@ -12,7 +12,6 @@ from sympy.core.cache import clear_cache
 
 from sympy.utilities.pytest import XFAIL, raises
 
-
 class DummyNumber(object):
     """
     Minimal implementation of a number that works with SymPy.
