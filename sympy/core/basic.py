@@ -89,6 +89,7 @@ class Basic(object):
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
+        assumptions.pop('evaluate', None)
         obj._init_assumptions(assumptions)
 
         obj._mhash = None # will be set by __hash__ method.
