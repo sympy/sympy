@@ -21,7 +21,7 @@ from sympy.logic.boolalg import And, Or
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot,
                              cosh, sinh, tanh, coth, acos, asin, atan, acot,
                              acosh, asinh, atanh, acoth)
-from sympy.simplify import simplify, collect, powsimp, fraction, posify
+from sympy.simplify import simplify, collect, powsimp, fraction, posify, powdenest
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together
 from sympy.functions.elementary.piecewise import piecewise_fold
@@ -1307,7 +1307,7 @@ def _tsolve(eq, sym, **flags):
                 break
 
             lhs = dep
-            rhs-= indep
+            rhs -= indep
 
         # dep * indep == rhs
         else:
@@ -1316,7 +1316,20 @@ def _tsolve(eq, sym, **flags):
                 break
 
             lhs = dep
-            rhs/= indep
+            rhs /= indep
+
+    # if it's a two-term Add with rhs = 0 we can get the dependent terms together,
+    # e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
+    if not rhs and len(lhs.args) == 2:
+        a, b = lhs.as_two_terms()
+        ai, ad = a.as_independent(sym)
+        bi, bd = b.as_independent(sym)
+        # a = -b
+        lhs = ad/bd
+        rhs = -ai/bi
+
+    if lhs.is_Mul:
+        lhs = powsimp(powdenest(lhs))
 
     #                    -1
     # f(x) = g  ->  x = f  (g)
