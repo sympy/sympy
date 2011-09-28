@@ -28,6 +28,8 @@ from sympy.core.compatibility import callable
 
 from sympy import symbols
 
+from copy import deepcopy
+
 
 def check(a, check_attr = True):
     """ Check that pickling and copying round-trips.
@@ -407,3 +409,8 @@ def test_concrete():
     for c in (Product, Product(1,2), Sum, Sum(x, (x, 2, 4))):
         check(c)
 
+def test_deepcopy():
+    #Issue 2684
+    mul = Mul(3, 4, evaluate=False)
+    mul_copy = deepcopy(mul)
+    assert isinstance(mul_copy, Mul)
