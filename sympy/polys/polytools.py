@@ -5501,10 +5501,7 @@ class GroebnerBasis(Basic):
         else:
             basis = self.exprs
 
-        if isinstance(item, slice):
-            return [ basis[i] for i in xrange(*item.indices(len(self))) ]
-        else:
-            return basis[item]
+        return basis[item]
 
     def __hash__(self):
         return hash((self._basis, tuple(self._options.items())))
