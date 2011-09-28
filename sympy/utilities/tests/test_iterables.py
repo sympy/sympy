@@ -322,3 +322,4 @@ def test_unflatten():
     assert unflatten(r) == zip(r[::2], r[1::2])
     assert unflatten(r, 5) == [tuple(r[:5]), tuple(r[5:])]
     raises(ValueError, "unflatten(range(10), 3)")
+    raises(ValueError, "unflatten(range(10), -2)")
