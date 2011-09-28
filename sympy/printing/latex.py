@@ -937,8 +937,53 @@ class LatexPrinter(Printer):
 
         return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
 
+    def _print_fibonacci(self, expr):
+        if len(expr.args) == 1:
+            # Fibonacci number
+            return r"F_{%s}" % self._print(expr.args[0])
+        else:
+            # Fibonacci polynomial
+            return r"F_{%s}\left(%s\right)" % (self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_lucas(self, expr):
+        if len(expr.args) == 1:
+            # Lucas number
+            return r"L_{%s}" % self._print(expr.args[0])
+        else:
+            # Lucas polynomial
+            return r"L_{%s}\left(%s\right)" % (self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_bernoulli(self, expr):
+        if len(expr.args) == 1:
+            # Bernoulli number
+            return r"B_{%s}" % self._print(expr.args[0])
+        else:
+            # Bernoulli polynomial
+            return r"B_{%s}\left(%s\right)" % (self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_bell(self, expr):
+        if len(expr.args) == 1:
+            # Bell number
+            return r"B_{%s}" % self._print(expr.args[0])
+        else:
+            # Bell polynomial
+            return r"B_{%s}\left(%s\right)" % (self._print(expr.args[0]), self._print(expr.args[1]))
+
+    def _print_harmonic(self, expr):
+        if len(expr.args) == 1:
+            # Harmonic number
+            return r"H_{%s}" % self._print(expr.args[0])
+        else:
+            # Generalized harmonic numbers
+            return r"H_{%s,%s}" % (self._print(expr.args[0]), self._print(expr.args[1]))
+
     def _print_euler(self, expr):
-        return r"E_{%s}" % self._print(expr.args[0])
+        if len(expr.args) == 1:
+            # Euler number
+            return r"E_{%s}" % self._print(expr.args[0])
+        else:
+            # Euler polynomial
+            return r"E_{%s}\left(%s\right)" % (self._print(expr.args[0]), self._print(expr.args[1]))
 
 
 def latex(expr, **settings):

@@ -2,14 +2,15 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict)
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, fibonacci, lucas, bernoulli,
+    bell, harmonic, euler)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta
 
 x, y, z, t = symbols('x y z t')
-k, n = symbols('k n', integer=True)
+k, n, m = symbols('k n m', integer=True)
 
 def test_printmethod():
     class R(Abs):
@@ -349,3 +350,18 @@ def test_latex_RootSum():
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')
+
+
+def test_latex_numbers():
+    assert latex(fibonacci(n)) == r"F_{n}"
+    assert latex(fibonacci(n,x)) == r"F_{n}\left(x\right)"
+    assert latex(lucas(n)) == r"L_{n}"
+    assert latex(lucas(n,x)) == r"L_{n}\left(x\right)"
+    assert latex(bernoulli(n)) == r"B_{n}"
+    assert latex(bernoulli(n,x)) == r"B_{n}\left(x\right)"
+    assert latex(bell(n)) == r"B_{n}"
+    assert latex(bell(n,x)) == r"B_{n}\left(x\right)"
+    assert latex(harmonic(n)) == r"H_{n}"
+    assert latex(harmonic(n,m)) == r"H_{n,m}"
+    assert latex(euler(n)) == r"E_{n}"
+    assert latex(euler(n,x)) == r"2 \frac{- 2^{n + 1} B_{n + 1}\left(\frac{1}{2} x\right) + B_{n + 1}\left(x\right)}{n + 1}"
