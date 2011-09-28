@@ -2268,7 +2268,6 @@ def model(expr, variable, constant_name='C', numbers=False):
     >>> model(y*exp(x + 3), x)
     C0*exp(x)
     """
-    from string import digits
 
     eq = expr
     x = variable
