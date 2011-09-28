@@ -2238,7 +2238,7 @@ def _logcombine(expr, force=False):
     return expr
 
 def model(expr, variable, constant_name='C', numbers=False):
-    """Return ``expr`` with all symbols that are the ``variable``
+    """Return ``expr`` with all symbols different than ``variable``
     absorbed into constant(s) with name ``constant_name`` having consecutive
     numbers e.g. C0, C1, C2, .... The absorbing is done by combining added or
     multiplied constants, and by expanding powers that have an added constant
@@ -2377,7 +2377,7 @@ def model(expr, variable, constant_name='C', numbers=False):
     u_all = [u] # the list of all constants created
 
     # handle independent of x
-    if not (eq.has(x) and x in eq.free_symbols):
+    if eq.as_independent(x, as_Add=True)[1] == 0:
         return renumu(u)[0]
 
     # handle all Adds; they each need their own u since there

@@ -844,12 +844,13 @@ def test_model():
     assert model((2 + x + 3*x**2), x, numbers=True) == C0 + C1*x**2 + x
     assert model(a*x + b*x, x) == C0*x
     assert model(2*sqrt(a*x), x) == C0*sqrt(x)
-    assert model(2*(a*x)**(1+x), x) == C0*x**(x + 1)
-    assert model(2*(a*x)**(1+x), x, numbers=True) == C0*x**x
-    assert model(2*(a*x)**(a+x), x) == C0*x**x
+    assert model(2*(a*x)**(1 + x), x) == C0*x**(x + 1)
+    assert model(2*(a*x)**(1 + x), x, numbers=True) == C0*x**x
+    assert model(2*(a*x)**(a + x), x) == C0*x**x
     assert model(C1*exp(3 + x), x) == C0*exp(x)
     assert model(3*exp(C1 + x), x) == C0*exp(x)
     assert model(a*exp(4 + x)*exp(2*x + 3), x) == C0*exp(3*x)
     assert model(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C2 + C3*x)/(C0 + C1*x)
     assert model(a*(y*x + z), x) == C0 + C1*x
     assert model(a*cos(x), x) == C0*cos(x)
+    assert model(2*a*x, x) == C0*x
