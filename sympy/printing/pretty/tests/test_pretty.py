@@ -4,7 +4,8 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, atan2, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
-    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict, euler)
+    Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
+    euler, groebner)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -184,12 +185,12 @@ O(x**2 + y**2)
 
 def pretty(expr, order=None):
     """ASCII pretty-printing"""
-    return xpretty(expr, order=order, use_unicode=False)
+    return xpretty(expr, order=order, use_unicode=False, wrap_line=False)
 
 
 def upretty(expr, order=None):
     """Unicode pretty-printing"""
-    return xpretty(expr, order=order, use_unicode=True)
+    return xpretty(expr, order=order, use_unicode=True, wrap_line=False)
 
 
 def test_pretty_ascii_str():
@@ -2346,6 +2347,54 @@ RootSum\\x  + 11*x - 2, Lambda\\z, e //\
 u"""\
        ⎛ 5              ⎛    z⎞⎞\n\
 RootSum⎝x  + 11⋅x - 2, Λ⎝z, ℯ ⎠⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+def test_GroebnerBasis():
+    expr = groebner([], x, y)
+
+    ascii_str = \
+"""\
+GroebnerBasis([], x, y, domain=ZZ, order=lex)\
+"""
+    ucode_str = \
+u"""\
+GroebnerBasis([], x, y, domain=ℤ, order=lex)\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
+    expr = groebner(F, x, y, order='grlex')
+
+    ascii_str = \
+"""\
+             /[ 2                 2              ]                              \\\n\
+GroebnerBasis\\[x  - x - 3*y + 1, y  - 2*x + y - 1], x, y, domain=ZZ, order=grlex/\
+"""
+    ucode_str = \
+u"""\
+             ⎛⎡ 2                 2              ⎤                             ⎞\n\
+GroebnerBasis⎝⎣x  - x - 3⋅y + 1, y  - 2⋅x + y - 1⎦, x, y, domain=ℤ, order=grlex⎠\
+"""
+
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = expr.fglm('lex')
+
+    ascii_str = \
+"""\
+             /[       2           4      3      2           ]                            \\\n\
+GroebnerBasis\\[2*x - y  - y + 1, y  + 2*y  - 3*y  - 16*y + 7], x, y, domain=ZZ, order=lex/\
+"""
+    ucode_str = \
+u"""\
+             ⎛⎡       2           4      3      2           ⎤                           ⎞\n\
+GroebnerBasis⎝⎣2⋅x - y  - y + 1, y  + 2⋅y  - 3⋅y  - 16⋅y + 7⎦, x, y, domain=ℤ, order=lex⎠\
 """
 
     assert  pretty(expr) == ascii_str

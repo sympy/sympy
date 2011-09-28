@@ -440,6 +440,20 @@ class StrPrinter(Printer):
 
         return "RootSum(%s)" % ", ".join(args)
 
+    def _print_GroebnerBasis(self, basis):
+        cls = basis.__class__.__name__
+
+        exprs = [ self._print_Add(arg, order=basis.order) for arg in basis.exprs ]
+        exprs = "[%s]" % ", ".join(exprs)
+
+        gens = [ self._print(gen) for gen in basis.gens ]
+        domain = "domain='%s'" % self._print(basis.domain)
+        order = "order='%s'" % self._print(basis.order)
+
+        args = [exprs] + gens + [domain, order]
+
+        return "%s(%s)" % (cls, ", ".join(args))
+
     def _print_Sample(self, expr):
         return "Sample([%s])"%self.stringify(expr, ", ", 0)
 

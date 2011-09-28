@@ -6,7 +6,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Dummy, Dict)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum
+from sympy.polys import Poly, RootOf, RootSum, groebner
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
@@ -309,6 +309,16 @@ def test_RootSum():
 
     assert str(RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
     assert str(RootSum(f, Lambda(z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
+
+def test_GroebnerBasis():
+    assert str(groebner([], x, y)) == "GroebnerBasis([], x, y, domain='ZZ', order='lex')"
+
+    F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
+
+    assert str(groebner(F, order='grlex')) == \
+        "GroebnerBasis([x**2 - x - 3*y + 1, y**2 - 2*x + y - 1], x, y, domain='ZZ', order='grlex')"
+    assert str(groebner(F, order='lex')) == \
+        "GroebnerBasis([2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7], x, y, domain='ZZ', order='lex')"
 
 def test_Sample():
     assert str(Sample([x, y, 1])) in [

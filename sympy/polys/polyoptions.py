@@ -332,7 +332,7 @@ class Order(Option):
 
     @classmethod
     def default(cls):
-        return sympy.polys.monomialtools.monomial_key('lex')
+        return sympy.polys.monomialtools.lex
 
     @classmethod
     def preprocess(cls, order):
@@ -685,6 +685,20 @@ class Symbols(Flag):
             return iter(symbols)
         else:
             raise OptionError("expected an iterator or iterable container, got %s" % symbols)
+
+class Method(Flag):
+    """``method`` flag to polynomial manipulation functions. """
+
+    __metaclass__ = OptionType
+
+    option = 'method'
+
+    @classmethod
+    def preprocess(cls, method):
+        if isinstance(method, str):
+            return method.lower()
+        else:
+            raise OptionError("expected a string, got %s" % method)
 
 def build_options(gens, args=None):
     """Construct options from keyword arguments or ... options. """
