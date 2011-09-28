@@ -235,7 +235,7 @@ class Permutation(Basic):
 don\'t match.")
         a = other.array_form
         b = self.array_form
-        return Permutation([a[b[i]] for i in range(self.size)])
+        return Permutation([a[i] for i in b])
 
     def __pow__(self, n):
         """
@@ -247,32 +247,31 @@ don\'t match.")
         >>> p**4
         Permutation([0, 1, 2, 3])
         """
-        rn = range(self.size)
         n = int(n)
         if n == 0:
-            return Permutation(rn)
+            return Permutation(range(self.size))
         if n < 0:
             return pow(~self, -n)
         a = self.array_form
         if n == 2:
-            b = [a[a[i]] for i in rn]
+            b = [a[i] for i in a]
         elif n == 3:
-            b = [a[a[a[i]]] for i in rn]
+            b = [a[a[i]] for i in a]
         elif n == 4:
-            b = [a[a[a[a[i]]]] for i in rn]
+            b = [a[a[a[i]]] for i in a]
         else:
             b = range(self.size)
             while 1:
                 if n&1:
-                    b = [b[a[i]] for i in rn]
+                    b = [b[i] for i in a]
                     n -= 1
                     if not n:
                         break
                 if n%4 == 0:
-                    a = [a[a[a[a[i]]]] for i in rn]
+                    a = [a[a[a[i]]] for i in a]
                     n = n // 4
                 elif n%2 == 0:
-                    a = [a[a[i]] for i in rn]
+                    a = [a[i] for i in a]
                     n = n // 2
         return Permutation(b)
 
