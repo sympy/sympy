@@ -3,14 +3,17 @@ from sympy.utilities.pytest import raises
 
 def test_Permutation():
     p = Permutation([2, 5, 1, 6, 3, 0, 4])
-    q = Permutation([[1, 4, 5], [2, 0, 6], [3]])
+    q = Permutation([[1], [0, 3, 5, 6, 2, 4]])
 
+    assert Permutation(p.cyclic_form).array_form == p.array_form
     assert p.cardinality == 5040
     assert q.cardinality == 5040
-    assert q.cycles == 3
+    assert q.cycles == 2
     assert q*p == Permutation([4, 6, 1, 2, 5, 3, 0])
     assert p*q == Permutation([6, 5, 3, 0, 2, 4, 1])
 
+    assert (Permutation([[1,2,3],[0,4]])*Permutation([[1,2,4],[0],[3]])).cyclic_form == \
+        [[1, 3], [0, 4, 2]]
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
     assert p.cyclic_form == [[3, 6, 4], [0, 2, 1, 5]]
 
@@ -52,7 +55,7 @@ def test_Permutation():
     assert p.max() == 6
     assert p.min() == 0
 
-    q = Permutation([[4, 1, 2, 3], [0, 5, 6]])
+    q = Permutation([[6], [5], [0, 1, 2, 3, 4]])
 
     assert q.max() == 4
     assert q.min() == 0
@@ -79,7 +82,7 @@ def test_Permutation():
     assert p.rank() == 1964
 
     p = Permutation([1, 5, 2, 0, 3, 6, 4])
-    q = Permutation([[2, 3, 5], [1, 0, 6], [4]])
+    q = Permutation([[1, 2, 3, 5, 6], [0, 4]])
 
     assert p.ascents() == [0, 3, 4]
     assert q.ascents() == [1, 2, 4]
@@ -97,7 +100,7 @@ def test_Permutation():
     assert (p*(~p)).signature() == 1
 
     assert p.order() == 6
-    assert q.order() == 3
+    assert q.order() == 10
     assert (p**(p.order())).is_Identity
 
     assert p.length() == 6

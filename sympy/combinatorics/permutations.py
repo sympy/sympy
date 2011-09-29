@@ -17,12 +17,12 @@ class Permutation(Basic):
 
     A representation of a permutation as a product of permutation cycles
     is unique (up to the ordering of the cycles). An example of a cyclic
-    decomposition is the permutation [4, 2, 1, 3] of the set [1, 2, 3, 4].
-    This is denoted as [[2], [1, 4, 3]], corresponding to the disjoint
-    permutation cycles [2] and [1, 4, 3]. We can choose the cyclic form as
+    decomposition is the permutation [3, 1, 0, 2] of the set [0, 1, 2, 3].
+    This is denoted as [[1], [0, 3, 2]], corresponding to the disjoint
+    permutation cycles [1] and [0, 3, 2]. We can choose the cyclic form as
     we want since the cycles are disjoint and can therefore be specified
     in any order and a rotation of a given cycle specifies the same cycle [1]
-    Therefore, (431)(2), (314)(2), (143)(2), (2)(431), (2)(314), and (2)(143)
+    Therefore, (320)(1), (203)(1), (032)(1), (1)(320), (1)(203), and (1)(032)
     all describe the same permutation.
 
     Another notation that explicitly identifies the positions occupied by
@@ -69,23 +69,28 @@ class Permutation(Basic):
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([[2,0],[3,1]])
         >>> p.array_form
-        [1, 3, 0, 2]
+        [2, 3, 0, 1]
+        >>> Permutation([[2,0,3,1]]).array_form
+        [3, 2, 0, 1]
+        >>> Permutation([2,0,3,1]).array_form
+        [2, 0, 3, 1]
         """
         if self._array_form is not None:
             return self._array_form
         if not isinstance(self.args[0][0], list):
             self._array_form = self.args[0]
             return self._array_form
+        size = 0
         cycles = self.args[0]
-        linear_form = []
-        for cycle in cycles:
-            min_element = min(cycle)
-            while cycle[0] != min_element:
-                cycle = rotate_left(cycle, 1)
-            linear_form.append(cycle)
-        linear_form.sort(key=lambda t: -t[0])
-        self._array_form = list(itertools.chain(*linear_form))
-        return self._array_form
+        for c in cycles:
+            size += len(c)
+        perm = [None]*size
+        for c in cycles:
+            for i in range(len(c)-1):
+                perm[c[i]] = c[i+1]
+            perm[c[-1]] = c[0]
+        self._array_form = perm
+        return perm
 
     @property
     def cyclic_form(self):
@@ -232,7 +237,7 @@ class Permutation(Basic):
         converted to an array form and then multiplied.
         >>> q = Permutation([[1,3,2],[0]])
         >>> p*q
-        Permutation([2, 0, 3, 1])
+        Permutation([1, 0, 2, 3])
         """
         if self.size != other.size:
             raise ValueError("The number of elements in the permutations \
@@ -291,7 +296,7 @@ don\'t match.")
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([[2,0],[3,1]])
         >>> ~p
-        Permutation([2, 0, 3, 1])
+        Permutation([2, 3, 0, 1])
         >>> p*(~p) == Permutation([0,1,2,3])
         True
         """
@@ -309,7 +314,7 @@ don\'t match.")
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([[2,0],[3,1]])
         >>> p(3)
-        2
+        1
         """
         if not isinstance(arg, int):
             raise ValueError("Arguments must be integers.")
@@ -587,7 +592,7 @@ don\'t match.")
         >>> from sympy.combinatorics.permutations import Permutation
         >>> p = Permutation([[4,0,2],[3,5],[1]])
         >>> p.inversions()
-        8
+        7
         """
         inversions = 0
         a = self.array_form
