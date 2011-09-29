@@ -5619,13 +5619,20 @@ class GroebnerBasis(Basic):
 
         **Examples**
 
-        >>> from sympy import groebner
+        >>> from sympy import groebner, expand
         >>> from sympy.abc import x, y
 
+        >>> f = 2*x**4 - x**2 + y**3 + y**2
         >>> G = groebner([x**3 - x, y**3 - y])
 
-        >>> G.reduce(2*x**4 + y**2 - x**2 + y**3)
+        >>> G.reduce(f)
         ([2*x, 1], x**2 + y**2 + y)
+        >>> Q, r = _
+
+        >>> expand(sum(q*g for q, g in zip(Q, G)) + r)
+        2*x**4 - x**2 + y**3 + y**2
+        >>> _ == f
+        True
 
         """
         poly = Poly._from_expr(expr, self._options)
