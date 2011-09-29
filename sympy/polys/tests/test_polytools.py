@@ -2481,6 +2481,9 @@ def test_reduced():
     assert reduced(f, G, auto=False)[1] != 0
     assert G.reduce(f, auto=False)[1] != 0
 
+    assert G.contains(f) == True
+    assert G.contains(f + 1) == False
+
     assert reduced(1, [1], x) == ([1], 0)
     raises(ComputationFailed, "reduced(1, [1])")
 
