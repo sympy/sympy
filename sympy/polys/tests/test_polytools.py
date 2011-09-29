@@ -53,15 +53,28 @@ from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
     exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
+from sympy.core.compatibility import iterable
 from sympy.utilities.pytest import raises, XFAIL
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
 
-def _eq(a, b):
+def _epsilon_eq(a, b):
     for x, y in zip(a, b):
         if abs(x-y) > 1e-10:
             return False
     return True
+
+def _strict_eq(a, b):
+    if type(a) == type(b):
+        if iterable(a):
+            if len(a) == len(b):
+                return all(_strict_eq(c, d) for c, d in zip(a, b))
+            else:
+                return False
+        else:
+            return isinstance(a, Poly) and a.eq(b, strict=True)
+    else:
+        return False
 
 def test_Poly_from_dict():
     K = FF(3)
@@ -254,7 +267,7 @@ def test_Poly__new__():
 
     raises(CoercionFailed, "Poly(3*x**2/5 + 2*x/5 + 1, domain='ZZ')")
     assert Poly(3*x**2/5 + 2*x/5 + 1, domain='QQ').all_coeffs() == [S(3)/5, S(2)/5, 1]
-    assert _eq(Poly(3*x**2/5 + 2*x/5 + 1, domain='RR').all_coeffs(), [0.6, 0.4, 1.0])
+    assert _epsilon_eq(Poly(3*x**2/5 + 2*x/5 + 1, domain='RR').all_coeffs(), [0.6, 0.4, 1.0])
 
     assert Poly(3.0*x**2 + 2.0*x + 1, domain='ZZ').all_coeffs() == [3, 2, 1]
     assert Poly(3.0*x**2 + 2.0*x + 1, domain='QQ').all_coeffs() == [3, 2, 1]
@@ -407,6 +420,15 @@ def test_Poly__eq__():
     assert (Poly(x**2 + 1, x) == Poly(y**2 + 1, y)) == False
     assert (Poly(y**2 + 1, y) == Poly(x**2 + 1, x)) == False
 
+    f = Poly(x, x, domain=ZZ)
+    g = Poly(x, x, domain=QQ)
+
+    assert f.eq(g) == True
+    assert f.ne(g) == False
+
+    assert f.eq(g, strict=True) == False
+    assert f.ne(g, strict=True) == True
+
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) == True
     assert (PurePoly(x, x, domain=QQ) == PurePoly(x, x)) == True
@@ -422,6 +444,24 @@ def test_PurePoly__eq__():
 
     assert (PurePoly(x**2 + 1, x) == PurePoly(y**2 + 1, y)) == True
     assert (PurePoly(y**2 + 1, y) == PurePoly(x**2 + 1, x)) == True
+
+    f = PurePoly(x, x, domain=ZZ)
+    g = PurePoly(x, x, domain=QQ)
+
+    assert f.eq(g) == True
+    assert f.ne(g) == False
+
+    assert f.eq(g, strict=True) == False
+    assert f.ne(g, strict=True) == True
+
+    f = PurePoly(x, x, domain=ZZ)
+    g = PurePoly(y, y, domain=QQ)
+
+    assert f.eq(g) == True
+    assert f.ne(g) == False
+
+    assert f.eq(g, strict=True) == False
+    assert f.ne(g, strict=True) == True
 
 def test_PurePoly_Poly():
     assert isinstance(PurePoly(Poly(x**2 + 1)), PurePoly) == True
