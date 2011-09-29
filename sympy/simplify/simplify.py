@@ -2299,10 +2299,13 @@ def model(expr, variable, constant_name='C', numbers=False):
         elif eq.is_Atom:
             return eq, k
         else:
+            # sort args without regard to u by using as a key the expression
+            # with the u's replaced with 1's.
             args = list(eq.args)
             if eq.is_Add or eq.is_Mul:
                 unify = zip(u_all, [S.One]*len(u_all))
-                args = [i[1] for i in sorted([(e.subs(unify), e) for e in eq.args], key=default_sort_key)]
+                args = [i[1] for i in sorted([(e.subs(unify), e)
+                                      for e in eq.args], key=default_sort_key)]
             for i, a in enumerate(args):
                 a, k = renumu(a, k)
                 args[i] = a
@@ -2314,18 +2317,22 @@ def model(expr, variable, constant_name='C', numbers=False):
         similar Muls in an Add will combine, e.g. 2*a*x + 3*b*x -> 5*u*x
         """
         if not deep:
+            # just process top level Muls
             terms = {}
-            for ai in Add.make_args(eq):
-                i, d = ai.as_independent(x, as_Add=False)
+            for m in Add.make_args(eq):
+                i, d = m.as_independent(x)
                 terms.setdefault(d, []).append(i)
             args = []
-            for k, v in terms.items():
-                if len(v) > 1 or hit(v[0], donum):
+            for k, i in terms.items():
+                if len(i) > 1 or hit(i[0], donum):
+                    # replace multi-independents or a number with u
                     args.append(u*k)
                 else:
-                    args.append(k*v[0])
+                    # leave i unchanged
+                    args.append(k*i[0])
             return Add(*args)
 
+        # do all muls everywhere
         for _ in range(2):
             reps = []
             muls = sorted(eq.atoms(Mul), key=count_ops, reverse=True)
