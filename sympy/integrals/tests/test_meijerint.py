@@ -80,12 +80,13 @@ def test_inflate():
     assert t([[a], [b]], [[c, y], [d]], 2*x**3, 3)
 
 def test_recursive():
-    from sympy import symbols, exp_polar
+    from sympy import symbols, exp_polar, expand
     a, b, c = symbols('a b c', positive=True)
     assert simplify(integrate(exp(-(x-a)**2)*exp(-(x-b)**2), (x, 0, oo))) \
            == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*(a + b))) \
               *exp(-a**2 - b**2 + (a + b)**2/2)
-    assert simplify(integrate(exp(-(x-a)**2)*exp(-(x-b)**2)*exp(c*x), (x, 0, oo))) \
+    assert simplify(integrate
+                  (exp(-(x-a)**2)*exp(-(x-b)**2)*exp(c*x), (x, 0, oo))) \
            == sqrt(2*pi)/4*(1 + erf(sqrt(2)/4*(2*a + 2*b + c))) \
               *exp(-a**2 - b**2 + (2*a + 2*b + c)**2/8)
     assert simplify(integrate(exp(-(x-a-b-c)**2), (x, 0, oo))) \
@@ -428,8 +429,8 @@ def test_probability():
 
     # misc tests
     k = Symbol('k', integer=True)
-    assert simplify(integrate(log(x) * x**(k-1) * exp(-x) / gamma(k), (x, 0, oo),
-                              conds='none')) == polygamma(0, k)
+    assert combsimp(expand_mul(integrate(log(x) * x**(k-1) * exp(-x) / gamma(k),
+                                     (x, 0, oo), conds='none'))) == polygamma(0, k)
 
 def test_expint():
     """ Test various exponential integrals. """
@@ -486,12 +487,12 @@ def test_messy():
     from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
                        atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
                        fourier_transform, sqrt)
-    assert laplace_transform(Si(x), x, s) == ((pi*s/2 - s*atan(s))/s**2, 0, True)
+    assert laplace_transform(Si(x), x, s) == ((pi - 2*atan(s))/(2*s), 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True) \
     # where should the logs be simplified?
     assert laplace_transform(Chi(x), x, s) == \
-           ((log(s**(-2))/2 - log(1 - 1/s**2)/2)/s, 1, True)
+           ((log(s**(-2)) - log((s**2 - 1)/s**2))/(2*s), 1, True)
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
            (0, And(0 < re(a/2) + S(1)/2, 0 < re(a/2) + 1))

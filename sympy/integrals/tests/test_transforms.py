@@ -148,7 +148,7 @@ def test_mellin_transform_bessel():
                 / (sqrt(pi)*gamma(S(3)/2 - s)*gamma(a - s + S(1)/2)),
             (S(1)/2 - re(a), S(1)/2), True)
     assert MT(besselj(a, sqrt(x))*besselj(b, sqrt(x)), x, s) == \
-           (4**s*gamma(1 - 2*s)*gamma((a+b)/2 + s)
+           (2**(2*s)*gamma(1 - 2*s)*gamma((a+b)/2 + s)
                 / (gamma(1 - s + (b-a)/2)*gamma(1 - s + (a-b)/2)
                    *gamma( 1 - s + (a+b)/2)),
             (-(re(a) + re(b))/2, S(1)/2), True)
@@ -160,12 +160,12 @@ def test_mellin_transform_bessel():
            (-cos(pi*a/2 - pi*s)*gamma(s - a/2)*gamma(s + a/2)/pi,
             (Max(-re(a)/2, re(a)/2), S(3)/4), True)
     assert MT(sin(sqrt(x))*bessely(a, sqrt(x)), x, s) == \
-           (-4**s*sin(pi*a/2 - pi*s)*gamma(S(1)/2 - 2*s)
+           (-2**(2*s)*sin(pi*a/2 - pi*s)*gamma(S(1)/2 - 2*s)
                 * gamma((1-a)/2 + s)*gamma((1+a)/2 + s)
                 / (sqrt(pi)*gamma(1 - s - a/2)*gamma(1 - s + a/2)),
             (Max(-(re(a) + 1)/2, (re(a) - 1)/2), S(1)/4), True)
     assert MT(cos(sqrt(x))*bessely(a, sqrt(x)), x, s) == \
-           (-4**s*cos(pi*a/2 - pi*s)*gamma(s - a/2)*gamma(s + a/2)*gamma(S(1)/2 - 2*s)
+           (-2**(2*s)*cos(pi*a/2 - pi*s)*gamma(s - a/2)*gamma(s + a/2)*gamma(S(1)/2 - 2*s)
                 / (sqrt(pi)*gamma(S(1)/2 - s - a/2)*gamma(S(1)/2 - s + a/2)),
             (Max(-re(a)/2, re(a)/2), S(1)/4), True)
     assert MT(besselj(a, sqrt(x))*bessely(a, sqrt(x)), x, s) == \
@@ -173,7 +173,7 @@ def test_mellin_transform_bessel():
                 / (pi**S('3/2')*gamma(1 + a - s)),
             (Max(-re(a), 0), S(1)/2), True)
     assert MT(besselj(a, sqrt(x))*bessely(b, sqrt(x)), x, s) == \
-           (-4**s*cos(pi*a/2 - pi*b/2 + pi*s)*gamma(1 - 2*s)
+           (-2**(2*s)*cos(pi*a/2 - pi*b/2 + pi*s)*gamma(1 - 2*s)
                 * gamma(a/2 - b/2 + s)*gamma(a/2 + b/2 + s)
                 / (pi*gamma(a/2 - b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
             (Max((-re(a) + re(b))/2, (-re(a) - re(b))/2), S(1)/2), True)
@@ -189,7 +189,7 @@ def test_mellin_transform_bessel():
     assert MT(besselk(a, 2*sqrt(x)), x, s) == \
            (gamma(s - a/2)*gamma(s + a/2)/2, (Max(-re(a)/2, re(a)/2), oo), True)
     assert MT(besselj(a, 2*sqrt(2*sqrt(x)))*besselk(a, 2*sqrt(2*sqrt(x))), x, s) == \
-           (2**(-2*s - 1)*gamma(2*s)*gamma(a/2 + s)/gamma(a/2 - s + 1),
+           (4**(-s)*gamma(2*s)*gamma(a/2 + s)/gamma(a/2 - s + 1)/2,
             (Max(-re(a)/2, 0), oo), True)
     # TODO bessely(a, x)*besselk(a, x) is a mess
     assert MT(besseli(a, sqrt(x))*besselk(a, sqrt(x)), x, s) == \
@@ -258,8 +258,8 @@ def test_inverse_mellin_transform():
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
     assert IMT(gamma(-s), s, x, (-oo, 0)) == exp(-1/x)
-    assert IMT(s/(2*s**2 - 2), s, x, (2, oo)) \
-           == (x**2/2 + S(1)/2)*Heaviside(1 - x)/(2*x)
+    assert simplify(IMT(s/(2*s**2 - 2), s, x, (2, oo))) \
+           == (x**2 + 1)*Heaviside(1 - x)/(4*x)
 
     # test passing "None"
     assert IMT(1/(s**2 - 1), s, x, (-1, None)) \
@@ -400,7 +400,7 @@ def test_laplace_transform():
     assert LT(exp(2*t), t, s)[0:2] == (1/(s-2), 2)
     assert LT(exp(a*t), t, s)[0:2] == (1/(s-a), a)
 
-    assert LT(log(t/a), t, s) == (-(log(a) + log(s) + EulerGamma)/s, 0, True)
+    assert LT(log(t/a), t, s) == ((log(a) + log(s) + EulerGamma)/(-s), 0, True)
 
     assert LT(erf(t), t, s) == ((-erf(s/2) + 1)*exp(s**2/4)/s, 0, True)
 
@@ -409,7 +409,7 @@ def test_laplace_transform():
     # TODO would be nice to have these come out better
     assert LT(exp(-a*t)*sin(b*t), t, s) == (1/b/(1 + (a + s)**2/b**2), -a, True)
     assert LT(exp(-a*t)*cos(b*t), t, s) == \
-           ((s + a)/(a**2 + 2*a*s + b**2 + s**2), -a, True)
+           (1/(s + a)/(1 + b**2/(a + s)**2), -a, True)
     # TODO sinh, cosh have delicate cancellation
 
     assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
@@ -418,7 +418,8 @@ def test_laplace_transform():
     # TODO besseli also works, but is an eaven greater mess
 
 def test_inverse_laplace_transform():
-    from sympy import expand, sinh, cosh, besselj, besseli, exp_polar, unpolarify
+    from sympy import (expand, sinh, cosh, besselj, besseli, exp_polar,
+                       unpolarify, simplify)
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -431,7 +432,7 @@ def test_inverse_laplace_transform():
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
     assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/factorial(4)
     assert ILT(exp(-a*s)/s, s, t) == Heaviside(t-a)
-    assert ILT(exp(-a*s)/(s+b), s, t) == exp(b*(a - t))*Heaviside(t - a)
+    assert ILT(exp(-a*s)/(s+b), s, t) == exp(-b*(-a + t))*Heaviside(t - a)
     assert ILT(a/(s**2 + a**2), s, t) == sin(a*t)*Heaviside(t)
     assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
     # TODO is there a way around simp_hyp?
@@ -449,7 +450,8 @@ def test_inverse_laplace_transform():
 
     # TODO besselsimp would be good to have
     # XXX ILT turns these branch factor into trig functions ...
-    assert ILT(a**b*(s + sqrt(s**2 - a**2))**(-b)/sqrt(s**2 - a**2), s, t).rewrite(exp) == \
+    assert simplify(ILT(a**b*(s + sqrt(s**2 - a**2))**(-b)/sqrt(s**2 - a**2),
+                    s, t).rewrite(exp)) == \
         exp(-I*pi*b)*Heaviside(t)*besseli(b, a*t*exp_polar(I*pi))
     assert ILT(a**b*(s + sqrt(s**2 + a**2))**(-b)/sqrt(s**2 + a**2),
                           s, t).rewrite(besselj).rewrite(exp) == \
