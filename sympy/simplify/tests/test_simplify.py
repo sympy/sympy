@@ -809,6 +809,12 @@ def test_as_content_primitive():
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
             (S(1)/14, 7.0*x + 21*y + 10*z)
 
+model1=model
+def model(expr, variable, constant_name='C', numbers=False, reps=False):
+    rv = model1(expr, variable, constant_name, numbers, reps)
+    if not reps:
+        print expr,';',model1(expr, variable, constant_name, numbers, reps=True)
+    return rv
 def test_model():
     x,y,z,C,k = symbols('x y z C k')
     C0, C1, C2, C3, C4 = symbols('C:5')
@@ -821,6 +827,7 @@ def test_model():
     assert model(k + z, k, 'k') == k + k0
     raises(ValueError, 'model(k2 + z, k2, "k")')
     assert model(Integral(x, (x, 1, 2)), x) == C0
+    print model(x**2*y*exp(x+z) + x*y + x*z, x, 'C')
     assert model(x**2*y*exp(x+z) + x*y + x*z, x, 'C') == C0*x + C1*x**2*exp(x)
     assert model(x**2*y*exp(x+z) + x*y + x*z, x, 'k') == k0*x + k1*x**2*exp(x)
     assert model(3 + y*x + x*z, x) == 3 + C0*x
@@ -854,3 +861,12 @@ def test_model():
     assert model(a*(y*x + z), x) == C0 + C1*x
     assert model(a*cos(x), x) == C0*cos(x)
     assert model(2*a*x, x) == C0*x
+
+    assert model(1/(x + y + exp(x + 2 + y)), x, reps=True) == \
+        (1/(C0 + C1*exp(x) + x), {C0: y, C1: exp(y + 2)})
+    e = exp(2 + y + x)
+    assert model(e - 1/e, x, reps=True) == \
+        (C0*exp(x) - exp(-x)/C0, {C0: exp(y + 2)})
+    assert model(e - 1/exp(3 + y + x), x, reps=True) == \
+        (C0*exp(x) + C1*exp(-x), {C0: exp(y + 2), C1: -exp(-y - 3)})
+    assert model(3*y*x, x, reps=True) == (C0*x, {C0: 3*y})

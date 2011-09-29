@@ -1310,8 +1310,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             for b, e in be:
                 if b in skip:
                     continue
-                bpos = b.is_positive
-                if bpos:
+                if b.is_positive:
                     binv = 1/b
                     if b != binv and binv in c_powers:
                         if b.as_numer_denom()[0] is S.One:
@@ -2237,13 +2236,15 @@ def _logcombine(expr, force=False):
 
     return expr
 
-def model(expr, variable, constant_name='C', numbers=False):
+def model(expr, variable, constant_name='C', numbers=False, reps=False):
     """Return ``expr`` with all symbols different than ``variable``
     absorbed into constant(s) with name ``constant_name`` having consecutive
     numbers e.g. C0, C1, C2, .... The absorbing is done by combining added or
     multiplied constants, and by expanding powers that have an added constant
     in the exponent. Bare numbers that are not multiplied or added to a
     constant will not be absorbed unless ``numbers`` is True.
+
+    If ``reps`` is True, a dictionary identifying the symbols will be returned.
 
     Examples::
 
@@ -2271,12 +2272,15 @@ def model(expr, variable, constant_name='C', numbers=False):
 
     eq = expr
     x = variable
+    rv_reps = reps
 
     # if x is a numbered symbol having the same root name as u
     # then we raise an error
-    if (x.name.startswith(constant_name) and
-        len(x.name) > len(constant_name) and
-        all(ch in digits for ch in x.name[len(constant_name):])):
+    def is_csym(x):
+        return x.is_Symbol and (x.name.startswith(constant_name) and
+            len(x.name) > len(constant_name) and
+            all(ch in digits for ch in x.name[len(constant_name):]))
+    if is_csym(x):
         raise ValueError('Chosen constant name clashes with the variable %s' % x)
 
     def hit(i, donum=None):
@@ -2475,4 +2479,60 @@ def model(expr, variable, constant_name='C', numbers=False):
     eq = do_muls(eq.subs(reps))
 
     # add numbers to u
-    return renumu(eq)[0]
+    rv = renumu(eq)[0]
+
+    # try solve for u values
+    if rv_reps:
+        num, den = (rv-expr).as_numer_denom()
+        eqs = []
+        syms = []
+        e = num.expand()
+        for a in e.atoms(Add) or [e]:
+            i, d = a.as_independent(x, as_Add=True)
+            for ii in i.free_symbols:
+                if is_csym(ii):
+                    eqs.append(i)
+                    syms.append(ii)
+                    break
+            for t in Add.make_args(d):
+                i, d = t.as_independent(x)
+                for ii in Mul.make_args(i):
+                    if is_csym(ii):
+                        syms.append(ii)
+                        c = collect(a, d).coeff(d)
+                        if c and c.is_Add:
+                            eqs.append(c)
+                        break
+
+        # consolidate constants
+        def canonical(eq):
+            if not (eq.is_Pow or eq.func is exp):
+                c, r = eq.as_coeff_Mul()
+                if c == -1:
+                    r = canonical(r)[1:]
+                else:
+                    r = r, 1
+                return tuple((c, ) + r)
+            b, e = eq.as_base_exp()
+            if e.could_extract_minus_sign():
+                return 1, b**-e, -1
+            return 1, eq, 1
+        if eqs:
+            from sympy import solve
+            try:
+                sol = solve(eqs, *set(syms))
+            except NotImplementedError:
+                sol = {}
+            reps = []
+            seen = {}
+            for k,v in sorted(sol.iteritems()):
+                s,v,p = canonical(v)
+                if v in seen:
+                    reps.append((k, s*seen[v]**p))
+                else:
+                    seen[s*v**p] = k
+            rv = rv.subs(reps)
+            seen = dict([(v, k) for k, v in seen.iteritems()])
+            return rv, seen
+
+    return rv
