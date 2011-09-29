@@ -158,6 +158,7 @@ class Permutation(Basic):
         ret_obj._cyclic_form, ret_obj._array_form = cform, aform
         return ret_obj
 
+
     def __add__(self, other):
         """
         Routine for addition of permutations.
@@ -237,7 +238,8 @@ class Permutation(Basic):
 don\'t match.")
         a = self.array_form
         b = other.array_form
-        return Permutation([a[i] for i in b])
+        perm = [a[i] for i in b]
+        return _new_from_array_form(perm)
 
     def __pow__(self, n):
         """
@@ -275,7 +277,7 @@ don\'t match.")
                 elif n%2 == 0:
                     a = [a[i] for i in a]
                     n = n // 2
-        return Permutation(b)
+        return _new_from_array_form(b)
 
     def __invert__(self):
         """
@@ -296,7 +298,7 @@ don\'t match.")
         a = self.array_form
         for i in xrange(self.size):
             inv_form[a[i]] = i
-        return Permutation(inv_form)
+        return _new_from_array_form(inv_form)
 
     def __call__(self, arg):
         """
@@ -343,7 +345,7 @@ don\'t match.")
         n = int(n)
         r = r % ifac(n)
         unrank1(n, r, id_perm)
-        return Permutation(id_perm)
+        return _new_from_array_form(id_perm)
 
     def rank_nonlex(self, inv_perm = None):
         """
@@ -816,7 +818,7 @@ don\'t match.")
                     perm[i] = perm[i-1]
                 perm[k] = j-1
             r2 = r1
-        return Permutation(perm)
+        return _new_from_array_form(perm)
 
     def get_precedence_matrix(self):
         """
@@ -1027,7 +1029,7 @@ don\'t match.")
         except IndexError:
             raise ValueError("The inversion vector is not valid.")
         perm.extend(N)
-        return Permutation(perm)
+        return _new_from_array_form(perm)
 
     @classmethod
     def random_permutation(self, n):
@@ -1045,7 +1047,7 @@ don\'t match.")
         """
         perm_array = range(n)
         random.shuffle(perm_array)
-        return Permutation(perm_array)
+        return _new_from_array_form(perm_array)
 
     @classmethod
     def unrank_lex(self, size, rank):
@@ -1071,4 +1073,22 @@ don\'t match.")
                 if perm_array[j] > d-1:
                     perm_array[j] += 1
             psize = new_psize
-        return Permutation(perm_array)
+        return _new_from_array_form(perm_array)
+
+def _new_from_array_form(perm):
+    """
+    factory function to produce a Permutation object from a list;
+    the list is bound to the _array_form attribute, so it must
+    not be modified; this method is meant for internal use only;
+    the list a is supposed to be generated as a temporary value in a method,
+    so p = _new_from_array_form(a) is the only object to hold a
+    reference to a.
+    >>> from sympy.combinatorics.permutations import _new_from_array_form
+    >>> a = [2,1,3,0]
+    >>> p = _new_from_array_form(a)
+    >>> p
+    Permutation([2, 1, 3, 0])
+    """
+    p = Basic.__new__(Permutation, perm)
+    p._array_form = perm
+    return p
