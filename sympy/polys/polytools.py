@@ -5347,22 +5347,38 @@ def reduced(f, G, *gens, **args):
     ([2*x, 1], x**2 + y**2 + y)
 
     """
-    options.allowed_flags(args, ['polys'])
+    options.allowed_flags(args, ['polys', 'auto'])
 
     try:
         polys, opt = parallel_poly_from_expr([f] + list(G), *gens, **args)
     except PolificationFailed, exc:
         raise ComputationFailed('reduced', 0, exc)
 
+    domain = opt.domain
+    retract = False
+
+    if opt.auto and domain.has_Ring and not domain.has_Field:
+        opt = opt.clone(dict(domain = domain.get_field()))
+        retract = True
+
     for i, poly in enumerate(polys):
-        polys[i] = sdp_from_dict(poly.rep.to_dict(), opt.order)
+        poly = poly.set_domain(opt.domain).rep.to_dict()
+        polys[i] = sdp_from_dict(poly, opt.order)
 
     level = len(opt.gens)-1
 
     Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
 
-    Q = [ Poly.new(DMP(dict(q), opt.domain, level), *opt.gens) for q in Q ]
-    r =   Poly.new(DMP(dict(r), opt.domain, level), *opt.gens)
+    Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
+    r =   Poly._from_dict(dict(r), opt)
+
+    if retract:
+        try:
+            _Q, _r = [ q.to_ring() for q in Q ], r.to_ring()
+        except CoercionFailed:
+            pass
+        else:
+            Q, r = _Q, _r
 
     if not opt.polys:
         return [ q.as_expr() for q in Q ], r.as_expr()
@@ -5623,7 +5639,7 @@ class GroebnerBasis(Basic):
 
         return self._new(G, opt)
 
-    def reduce(self, expr):
+    def reduce(self, expr, auto=True):
         """
         Reduces a polynomial modulo a Groebner basis.
 
@@ -5653,9 +5669,14 @@ class GroebnerBasis(Basic):
         poly = Poly._from_expr(expr, self._options)
         polys = [poly] + list(self._basis)
 
-        opt = self._options.clone(dict(
-            domain = self._options.domain.get_field(),
-        ))
+        opt = self._options
+        domain = opt.domain
+
+        retract = False
+
+        if auto and domain.has_Ring and not domain.has_Field:
+            opt = opt.clone(dict(domain = domain.get_field()))
+            retract = True
 
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
@@ -5668,12 +5689,13 @@ class GroebnerBasis(Basic):
         Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
         r =   Poly._from_dict(dict(r), opt)
 
-        try:
-            _Q, _r = [ q.to_ring() for q in Q ], r.to_ring()
-        except (DomainError, CoercionFailed):
-            pass
-        else:
-            Q, r = _Q, _r
+        if retract:
+            try:
+                _Q, _r = [ q.to_ring() for q in Q ], r.to_ring()
+            except CoercionFailed:
+                pass
+            else:
+                Q, r = _Q, _r
 
         if not opt.polys:
             return [ q.as_expr() for q in Q ], r.as_expr()
