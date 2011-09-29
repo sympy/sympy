@@ -8,8 +8,8 @@ def test_Permutation():
     assert p.cardinality == 5040
     assert q.cardinality == 5040
     assert q.cycles == 3
-    assert p*q == Permutation([4, 6, 1, 2, 5, 3, 0])
-    assert q*p == Permutation([6, 5, 3, 0, 2, 4, 1])
+    assert q*p == Permutation([4, 6, 1, 2, 5, 3, 0])
+    assert p*q == Permutation([6, 5, 3, 0, 2, 4, 1])
 
     assert q.array_form == [3, 1, 4, 5, 0, 6, 2]
     assert p.cyclic_form == [[3, 6, 4], [0, 2, 1, 5]]

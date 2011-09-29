@@ -34,6 +34,9 @@ class Permutation(Basic):
 
     Permutations are commonly denoted in lexicographic or transposition order.
 
+    The product of two permutations a and q is defined as their composition as
+    functions, (p*q)(i) = p(q(i)), see [6].
+
     [1] Skiena, S. 'Permutations.' 1.1 in Implementing Discrete Mathematics
         Combinatorics and Graph Theory with Mathematica.
         Reading, MA: Addison-Wesley, pp. 3-16, 1990.
@@ -47,6 +50,7 @@ class Permutation(Basic):
     [5] Graham, R. L.; Knuth, D. E.; and Patashnik, O.
         Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
         Reading, MA: Addison-Wesley, 1994.
+    [6] http://en.wikipedia.org/wiki/Permutation#Product_and_inverse
     """
     is_Permutation = True
 
@@ -217,24 +221,22 @@ class Permutation(Basic):
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
-        >>> q = Permutation([3,2,1,0])
+        >>> p = Permutation([1,2,3,0])
+        >>> q = Permutation([3,2,0,1])
         >>> p*q
-        Permutation([3, 2, 1, 0])
+        Permutation([0, 3, 1, 2])
 
         If one of the permutations is in a cyclic form then it is first
         converted to an array form and then multiplied.
-        >>> from sympy.combinatorics.permutations import Permutation
         >>> q = Permutation([[1,3,2],[0]])
-        >>> p = Permutation([0,3,1,2])
         >>> p*q
-        Permutation([1, 0, 3, 2])
+        Permutation([2, 0, 3, 1])
         """
         if self.size != other.size:
             raise ValueError("The number of elements in the permutations \
 don\'t match.")
-        a = other.array_form
-        b = self.array_form
+        a = self.array_form
+        b = other.array_form
         return Permutation([a[i] for i in b])
 
     def __pow__(self, n):
