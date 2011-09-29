@@ -3772,22 +3772,28 @@ def _update_args(args, key, value):
 
 def _keep_coeff(coeff, factors):
     """Return ``coeff*factors`` unevaluated if necessary."""
-    # it is assumed that coeff is a Number
+    if not coeff.is_Number:
+        if factors.is_Number:
+            factors, coeff = coeff, factors
+        else:
+            return coeff*factors
     if coeff == 1:
         return factors
-    elif coeff == -1:
+    elif coeff == -1: # don't keep sign?
         return -factors
+    elif factors.is_Add:
+        return object.__new__(Mul)._new_rawargs(coeff, factors)
     elif factors.is_Mul:
         margs = list(factors.args)
         if margs[0].is_Number:
-            return _keep_coeff(margs[0]*coeff, Mul(*margs[1:]))
+            margs[0] *= coeff
+            if margs[0] == 1:
+                margs.pop(0)
         else:
-            margs = [coeff] + margs
+            margs.insert(0, coeff)
         return object.__new__(Mul)._new_rawargs(*margs)
-    elif not factors.is_Add:
-        return coeff*factors
     else:
-        return object.__new__(Mul)._new_rawargs(coeff, factors)
+        return coeff*factors
 
 def degree(f, *gens, **args):
     """

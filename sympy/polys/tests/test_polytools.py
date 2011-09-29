@@ -2658,9 +2658,12 @@ def test_poly():
     raises(GeneratorsNeeded, "poly(1)")
 
 def test_keep_coeff():
-    assert _keep_coeff(1, x) == x
-    assert _keep_coeff(-1, x) == -x
-    assert _keep_coeff(1, 2*x) == 2*x
+    u = Mul(2, x + 1, evaluate=False)
+    assert _keep_coeff(S(1), x) == x
+    assert _keep_coeff(S(-1), x) == -x
+    assert _keep_coeff(S(1), 2*x) == 2*x
     assert _keep_coeff(S(2), x/2) == x
     assert _keep_coeff(S(2), sin(x)) == 2*sin(x)
-    assert _keep_coeff(S(2), x + 1) == Mul(2, x + 1, evaluate=False)
+    assert _keep_coeff(S(2), x + 1) == u
+    assert _keep_coeff(x, 1/x) == 1
+    assert _keep_coeff(x + 1, S(2)) == u
