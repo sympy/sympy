@@ -5608,6 +5608,56 @@ class GroebnerBasis(Basic):
 
         return self._new(G, opt)
 
+    def reduce(self, expr):
+        """
+        Reduces a polynomial modulo a Groebner basis.
+
+        Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
+        computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
+        such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+        is a completely reduced polynomial with respect to ``G``.
+
+        **Examples**
+
+        >>> from sympy import groebner
+        >>> from sympy.abc import x, y
+
+        >>> G = groebner([x**3 - x, y**3 - y])
+
+        >>> G.reduce(2*x**4 + y**2 - x**2 + y**3)
+        ([2*x, 1], x**2 + y**2 + y)
+
+        """
+        poly = Poly._from_expr(expr, self._options)
+        polys = [poly] + list(self._basis)
+
+        opt = self._options.clone(dict(
+            domain = self._options.domain.get_field(),
+        ))
+
+        for i, poly in enumerate(polys):
+            poly = poly.set_domain(opt.domain).rep.to_dict()
+            polys[i] = sdp_from_dict(poly, opt.order)
+
+        level = len(opt.gens) - 1
+
+        Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
+
+        Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
+        r =   Poly._from_dict(dict(r), opt)
+
+        try:
+            _Q, _r = [ q.to_ring() for q in Q ], r.to_ring()
+        except (DomainError, CoercionFailed):
+            pass
+        else:
+            Q, r = _Q, _r
+
+        if not opt.polys:
+            return [ q.as_expr() for q in Q ], r.as_expr()
+        else:
+            return Q, r
+
 def poly(expr, *gens, **args):
     """
     Efficiently transform an expression into a polynomial.

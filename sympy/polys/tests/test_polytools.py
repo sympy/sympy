@@ -2415,11 +2415,19 @@ def test_reduced():
     assert reduced(f, G) == (Q, r)
     assert reduced(f, G, x, y) == (Q, r)
 
+    H = groebner(G)
+
+    assert H.reduce(f) == (Q, r)
+
     Q = [Poly(2*x, x, y), Poly(1, x, y)]
     r = Poly(x**2 + y**2 + y, x, y)
 
     assert reduced(f, G, polys=True) == (Q, r)
     assert reduced(f, G, x, y, polys=True) == (Q, r)
+
+    H = groebner(G, polys=True)
+
+    assert H.reduce(f) == (Q, r)
 
     assert reduced(1, [1], x) == ([1], 0)
     raises(ComputationFailed, "reduced(1, [1])")
