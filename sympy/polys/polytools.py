@@ -12,9 +12,7 @@ from sympy.core.decorators import (
     _sympifyit,
 )
 
-from sympy.polys.polyclasses import (
-    DMP, ANP, DMF,
-)
+from sympy.polys.polyclasses import DMP
 
 from sympy.polys.polyutils import (
     basic_from_dict,
@@ -49,22 +47,14 @@ from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
     GeneratorsNeeded, PolynomialError,
-    PolificationFailed, FlagError,
     MultivariatePolynomialError,
     ExactQuotientFailed,
+    PolificationFailed,
     ComputationFailed,
     GeneratorsError,
 )
 
-from sympy.polys.polycontext import (
-    register_context,
-)
-
-from sympy.utilities import (
-    group, flatten,
-)
-
-from sympy.ntheory import isprime
+from sympy.utilities import group
 
 import sympy.polys
 import sympy.mpmath
