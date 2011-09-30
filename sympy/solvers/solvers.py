@@ -1293,67 +1293,9 @@ def _tsolve(eq, sym, **flags):
                    sym in soln.free_symbols):
                 return [soln]
 
-    # let's also try to invert the equation
-    lhs = eq
-    rhs = S.Zero
+    lhs, rhs = _invert(eq, sym)
 
-    while True:
-        indep, dep = lhs.as_independent(sym)
-
-        # dep + indep == rhs
-        if lhs.is_Add:
-            # this indicates we have done it all
-            if indep is S.Zero:
-                break
-
-            lhs = dep
-            rhs -= indep
-
-        # dep * indep == rhs
-        else:
-            # this indicates we have done it all
-            if indep is S.One:
-                break
-
-            lhs = dep
-            rhs /= indep
-
-    # if it's a two-term Add with rhs = 0 we can get the dependent terms together,
-    # e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
-    if not rhs and len(lhs.args) == 2:
-        a, b = lhs.as_two_terms()
-        ai, ad = a.as_independent(sym)
-        bi, bd = b.as_independent(sym)
-        # a = -b
-        lhs = ad/bd
-        rhs = -bi/ai
-
-    if lhs.is_Mul:
-        lhs = powsimp(powdenest(lhs))
-
-    #                    -1
-    # f(x) = g  ->  x = f  (g)
-    inverses = {
-    asin: sin,
-    acos:cos,
-    atan:tan,
-    acot:cot,
-    asinh: sinh,
-    acosh:cosh,
-    atanh:tanh,
-    acoth:coth,}
-    if lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and (hasattr(lhs, 'inverse') or lhs.func in inverses):
-        if lhs.func in inverses:
-            inv = inverses[lhs.func]
-        else:
-            inv = lhs.inverse()
-        rhs = inv(rhs)
-        lhs = lhs.args[0]
-
-        sol = _solve(lhs - rhs, sym)
-        return sol
-
-    elif lhs.is_Add:
+    if lhs.is_Add:
         # just a simple case - we do variable substitution for first function,
         # and if it removes all functions - let's call solve.
         #      x    -x                   -1
@@ -1387,7 +1329,9 @@ def _tsolve(eq, sym, **flags):
                         sols.append(cv_inv.subs(t, sol))
                     return sols
     elif lhs.is_Pow:
-        if not lhs.exp.has(sym):
+        if lhs.exp.is_Integer:
+            return _solve(lhs - rhs, sym)
+        elif not lhs.exp.has(sym):
             return _solve(lhs.base - rhs**(1/lhs.exp), sym)
         elif rhs is not S.Zero and lhs.base.is_positive and lhs.exp.is_real:
             return _solve(lhs.exp*log(lhs.base) - log(rhs), sym)
@@ -1498,3 +1442,67 @@ def nsolve(*args, **kwargs):
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
     return x
+
+def _invert(eq, sym):
+    # let's also try to invert the equation
+    lhs = eq
+    rhs = S.Zero
+
+    while True:
+        was = lhs
+        while True:
+            indep, dep = lhs.as_independent(sym)
+
+            # dep + indep == rhs
+            if lhs.is_Add:
+                # this indicates we have done it all
+                if indep is S.Zero:
+                    break
+
+                lhs = dep
+                rhs -= indep
+
+            # dep * indep == rhs
+            else:
+                # this indicates we have done it all
+                if indep is S.One:
+                    break
+
+                lhs = dep
+                rhs /= indep
+
+        # if it's a two-term Add with rhs = 0 we can get the dependent terms together,
+        # e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
+        if lhs.is_Add and not rhs and len(lhs.args) == 2:
+            a, b = lhs.as_two_terms()
+            ai, ad = a.as_independent(sym)
+            bi, bd = b.as_independent(sym)
+            # a = -b
+            lhs = ad/bd
+            rhs = -bi/ai
+
+        if lhs.is_Mul:
+            lhs = powsimp(powdenest(lhs))
+
+        #                    -1
+        # f(x) = g  ->  x = f  (g)
+        inverses = {
+        asin: sin,
+        acos:cos,
+        atan:tan,
+        acot:cot,
+        asinh: sinh,
+        acosh:cosh,
+        atanh:tanh,
+        acoth:coth,}
+        if lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and (hasattr(lhs, 'inverse') or lhs.func in inverses):
+            if lhs.func in inverses:
+                inv = inverses[lhs.func]
+            else:
+                inv = lhs.inverse()
+            rhs = inv(rhs)
+            lhs = lhs.args[0]
+
+        if lhs == was:
+            break
+    return lhs, rhs
