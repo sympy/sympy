@@ -873,7 +873,7 @@ class Matrix(object):
         [2, 3, 4]
 
         """
-        if pos is 0:
+        if pos == 0:
             return mti.col_join(self)
         elif pos < 0:
             pos = self.rows + pos
@@ -910,7 +910,7 @@ class Matrix(object):
         [2, 0, 3, 4]
 
         """
-        if pos is 0:
+        if pos == 0:
             return mti.row_join(self)
         elif pos < 0:
             pos = self.cols + pos
