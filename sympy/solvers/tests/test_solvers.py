@@ -103,8 +103,10 @@ def test_solve_args():
     assert solve(1/(1/x - y + exp(y))) ==  []
     raises(NotImplementedError, 'solve(exp(x) + sin(x) + exp(y) + sin(y))')
     # failed system
-    # --  when no symbols given
+    # --  when no symbols given, 1 fails
     assert solve([y, exp(x) + x]) == [{x: -LambertW(1), y: 0}]
+    #     both fail
+    assert solve((exp(x) - x, exp(y) - y)) == [{x: -LambertW(-1), y: -LambertW(-1)}]
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     #symbol is not a symbol or function

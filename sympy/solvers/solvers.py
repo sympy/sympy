@@ -817,7 +817,7 @@ def _solve(f, *symbols, **flags):
                     failed.append(g)
 
             if not polys:
-               solved_syms = []
+                solved_syms = []
             else:
                 if all(p.is_linear for p in polys):
                     n, m = len(polys), len(symbols)
