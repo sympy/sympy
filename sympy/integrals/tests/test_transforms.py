@@ -9,11 +9,14 @@ from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
 
 def test_undefined_function():
-    from sympy import Function, MellinTransform
+    from sympy import Function, MellinTransform, LaplaceTransform
     f = Function('f')
     assert mellin_transform(f(x), x, s) == MellinTransform(f(x), x, s)
     assert mellin_transform(f(x) + exp(-x), x, s) == \
            (MellinTransform(f(x), x, s) + gamma(s), (0, oo), True)
+
+    assert laplace_transform(2*f(x), x, s) == 2*LaplaceTransform(f(x), x, s)
+    # TODO test derivative and other rules when implemented
 
 def test_free_symbols():
     from sympy import Function
