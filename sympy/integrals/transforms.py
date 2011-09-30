@@ -1041,8 +1041,8 @@ def laplace_transform(f, t, s, **hints):
 
     >>> from sympy.integrals import laplace_transform
     >>> from sympy.abc import t, s, a
-    >>> laplace_transform(t**a, t, s)[0:2]
-    (s**(-a - 1)*gamma(a + 1), 0)
+    >>> laplace_transform(t**a, t, s)
+    (s**(-a - 1)*gamma(a + 1), 0, -re(a) < 1)
 
     See Also
     ========
