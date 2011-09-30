@@ -400,8 +400,9 @@ def test_issue_1694():
                                                     {y: sqrt(exp(x)*log(x**2))}]
     assert solve(x**2*z**2 - z**2*y**2) == [{x: -y}, {x: y}]
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
+    assert solve(x**(y*z) - x, x) == [1]
     raises(NotImplementedError, 'solve(log(x) - exp(x), x)')
-    raises(NotImplementedError, 'solve(x**(y*z) - x, x)')
+
     # 2072
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]
     assert solve(sqrt(x - 1)) == [1]
@@ -424,8 +425,8 @@ def test_issue_1694():
     assert solve(Poly(exp(x) + exp(-x) - 4)) == [log(-sqrt(3) + 2), log(sqrt(3) + 2)]
     assert solve(x**y + x**(2*y) - 1, x) == [(-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y)]
 
-    assert solve(exp(x/y)*exp(-z/y) - 2, y) == [(-x + z)/log(2)]
-    assert solve(x**i*y**i - 2, i) == [log(2)/(log(x*y))]
+    assert solve(exp(x/y)*exp(-z/y) - 2, y) == [(x - z)/log(2)]
+    assert solve(x**z*y**z - 2, z) in [[log(2)/(log(x) + log(y))], [log(2)/(log(x*y))]]
 
 def test_issue_2098():
     x = Symbol('x', real=True)

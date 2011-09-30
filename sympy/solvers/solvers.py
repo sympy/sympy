@@ -214,8 +214,8 @@ def check_assumptions(expr, **assumptions):
     for key, expected in assumptions.iteritems():
         if expected is None:
             continue
-        assert isinstance(expected, bool), 'Argument %s=%s is incorrect. \
-                                            A boolean is expected.' %(key, expected)
+        if not(expected in [0, 1] or isinstance(expected, bool)):
+            raise ValueError('A boolean is expected for %s but got %s.' % (key, expected))
         if hasattr(Q, key):
             test = ask(getattr(Q, key)(expr))
             if test is expected:
@@ -1326,7 +1326,7 @@ def _tsolve(eq, sym, **flags):
         bi, bd = b.as_independent(sym)
         # a = -b
         lhs = ad/bd
-        rhs = -ai/bi
+        rhs = -bi/ai
 
     if lhs.is_Mul:
         lhs = powsimp(powdenest(lhs))
