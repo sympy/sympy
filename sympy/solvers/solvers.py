@@ -40,6 +40,10 @@ from sympy.assumptions import Q, ask
 from warnings import warn
 from types import GeneratorType
 
+def _ispow(e):
+    """Return True if e is a Pow or is exp."""
+    return e.is_Pow or e.func is exp
+
 def denoms(eq, symbols=None):
     """Return (recursively) set of all denominators that appear in eq
     that contain any symbol in iterable ``symbols``; if ``symbols`` is
@@ -52,7 +56,7 @@ def denoms(eq, symbols=None):
         return dens
     pt = preorder_traversal(eq)
     for e in pt:
-        if e.is_Pow or e.func is exp:
+        if _ispow(e):
             n, d = e.as_numer_denom()
             if d in dens:
                 pt.skip()
@@ -1473,7 +1477,7 @@ def _invert(eq, *symbols, **kwargs):
     >>> invert(sqrt(x) + y, y)
     (-sqrt(x), y)
     >>> invert(sqrt(x) + y, x, y)
-    (-1, sqrt(x)/y)
+    (0, sqrt(x) + y)
 
     If there is more than one symbol in a power's base and the exponent
     is not an Integer, then the principle root will be used for the
@@ -1499,9 +1503,18 @@ def _invert(eq, *symbols, **kwargs):
 
     dointpow = bool(kwargs.get('integer_power', False))
 
+    inverses = {
+    asin: sin,
+    acos:cos,
+    atan:tan,
+    acot:cot,
+    asinh: sinh,
+    acosh:cosh,
+    atanh:tanh,
+    acoth:coth,}
+
     lhs = eq
     rhs = S.Zero
-
     while True:
         was = lhs
         while True:
@@ -1525,31 +1538,24 @@ def _invert(eq, *symbols, **kwargs):
                 lhs = dep
                 rhs /= indep
 
-        # if it's a two-term Add with rhs = 0 we can get the dependent terms together,
-        # e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
+        # if it's a two-term Add with rhs = 0 and two powers we can get the
+        # dependent terms together, e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
         if lhs.is_Add and not rhs and len(lhs.args) == 2:
             a, b = lhs.as_two_terms()
             ai, ad = a.as_independent(*symbols)
             bi, bd = b.as_independent(*symbols)
-            # a = -b
-            lhs = ad/bd
-            rhs = -bi/ai
+            if any(_ispow(i) for i in (ad, bd)) and \
+               ad.as_base_exp()[0] == bd.as_base_exp()[0]:
+                # a = -b
+                lhs = powsimp(powdenest(ad/bd))
+                rhs = -bi/ai
 
-        if lhs.is_Mul:
+        elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
-        #                    -1
-        # f(x) = g  ->  x = f  (g)
-        inverses = {
-        asin: sin,
-        acos:cos,
-        atan:tan,
-        acot:cot,
-        asinh: sinh,
-        acosh:cosh,
-        atanh:tanh,
-        acoth:coth,}
-        if lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and (hasattr(lhs, 'inverse') or lhs.func in inverses):
+        elif lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and (hasattr(lhs, 'inverse') or lhs.func in inverses):
+            #                    -1
+            # f(x) = g  ->  x = f  (g)
             if lhs.func in inverses:
                 inv = inverses[lhs.func]
             else:
