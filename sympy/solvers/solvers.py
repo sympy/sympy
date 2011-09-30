@@ -1350,7 +1350,7 @@ def _tsolve(eq, sym, **flags):
         rhs = inv(rhs)
         lhs = lhs.args[0]
 
-        sol = solve(lhs - rhs, sym)
+        sol = _solve(lhs - rhs, sym)
         return sol
 
     elif lhs.is_Add:
@@ -1375,22 +1375,22 @@ def _tsolve(eq, sym, **flags):
             # if no Functions left, we can proceed with usual solve
             if not (lhs_.is_Function or
                     any(term.is_Function for term in lhs_.args)):
-                cv_sols = solve(lhs_ - rhs, t)
+                cv_sols = _solve(lhs_ - rhs, t)
                 for sol in cv_sols:
                     if sol.has(sym):
                         # there is more than one function
                         break
                 else:
-                    cv_inv = solve( t - f1, sym )[0]
+                    cv_inv = _solve(t - f1, sym)[0]
                     sols = list()
                     for sol in cv_sols:
                         sols.append(cv_inv.subs(t, sol))
                     return sols
     elif lhs.is_Pow:
         if not lhs.exp.has(sym):
-            return solve(lhs.base - rhs**(1/lhs.exp), sym)
+            return _solve(lhs.base - rhs**(1/lhs.exp), sym)
         elif rhs is not S.Zero and lhs.base.is_positive and lhs.exp.is_real:
-            return solve(lhs.exp*log(lhs.base) - log(rhs), sym)
+            return _solve(lhs.exp*log(lhs.base) - log(rhs), sym)
 
     if flags.pop('posify', True):
         flags['posify'] = False
