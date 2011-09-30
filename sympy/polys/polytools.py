@@ -12,9 +12,7 @@ from sympy.core.decorators import (
     _sympifyit,
 )
 
-from sympy.polys.polyclasses import (
-    DMP, ANP, DMF,
-)
+from sympy.polys.polyclasses import DMP
 
 from sympy.polys.polyutils import (
     basic_from_dict,
@@ -49,22 +47,14 @@ from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,
     CoercionFailed, UnificationFailed,
     GeneratorsNeeded, PolynomialError,
-    PolificationFailed, FlagError,
     MultivariatePolynomialError,
     ExactQuotientFailed,
+    PolificationFailed,
     ComputationFailed,
     GeneratorsError,
 )
 
-from sympy.polys.polycontext import (
-    register_context,
-)
-
-from sympy.utilities import (
-    group, flatten,
-)
-
-from sympy.ntheory import isprime
+from sympy.utilities import group
 
 import sympy.polys
 import sympy.mpmath
@@ -3526,6 +3516,18 @@ class Poly(Expr):
     def __nonzero__(f):
         return not f.is_zero
 
+    def eq(f, g, strict=False):
+        if not strict:
+            return f.__eq__(g)
+        else:
+            return f._strict_eq(sympify(g))
+
+    def ne(f, g, strict=False):
+        return not f.eq(g, strict=strict)
+
+    def _strict_eq(f, g):
+        return isinstance(g, f.__class__) and f.gens == g.gens and f.rep.eq(g.rep, strict=True)
+
 class PurePoly(Poly):
     """Class for representing pure polynomials. """
 
@@ -3577,6 +3579,9 @@ class PurePoly(Poly):
             g = g.set_domain(dom)
 
         return f.rep == g.rep
+
+    def _strict_eq(f, g):
+        return isinstance(g, f.__class__) and f.rep.eq(g.rep, strict=True)
 
     def _unify(f, g):
         g = sympify(g)
@@ -5342,22 +5347,38 @@ def reduced(f, G, *gens, **args):
     ([2*x, 1], x**2 + y**2 + y)
 
     """
-    options.allowed_flags(args, ['polys'])
+    options.allowed_flags(args, ['polys', 'auto'])
 
     try:
         polys, opt = parallel_poly_from_expr([f] + list(G), *gens, **args)
     except PolificationFailed, exc:
         raise ComputationFailed('reduced', 0, exc)
 
+    domain = opt.domain
+    retract = False
+
+    if opt.auto and domain.has_Ring and not domain.has_Field:
+        opt = opt.clone(dict(domain = domain.get_field()))
+        retract = True
+
     for i, poly in enumerate(polys):
-        polys[i] = sdp_from_dict(poly.rep.to_dict(), opt.order)
+        poly = poly.set_domain(opt.domain).rep.to_dict()
+        polys[i] = sdp_from_dict(poly, opt.order)
 
     level = len(opt.gens)-1
 
     Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
 
-    Q = [ Poly.new(DMP(dict(q), opt.domain, level), *opt.gens) for q in Q ]
-    r =   Poly.new(DMP(dict(r), opt.domain, level), *opt.gens)
+    Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
+    r =   Poly._from_dict(dict(r), opt)
+
+    if retract:
+        try:
+            _Q, _r = [ q.to_ring() for q in Q ], r.to_ring()
+        except CoercionFailed:
+            pass
+        else:
+            Q, r = _Q, _r
 
     if not opt.polys:
         return [ q.as_expr() for q in Q ], r.as_expr()
@@ -5617,6 +5638,89 @@ class GroebnerBasis(Basic):
             opt.domain = domain
 
         return self._new(G, opt)
+
+    def reduce(self, expr, auto=True):
+        """
+        Reduces a polynomial modulo a Groebner basis.
+
+        Given a polynomial ``f`` and a set of polynomials ``G = (g_1, ..., g_n)``,
+        computes a set of quotients ``q = (q_1, ..., q_n)`` and the remainder ``r``
+        such that ``f = q_1*f_1 + ... + q_n*f_n + r``, where ``r`` vanishes or ``r``
+        is a completely reduced polynomial with respect to ``G``.
+
+        **Examples**
+
+        >>> from sympy import groebner, expand
+        >>> from sympy.abc import x, y
+
+        >>> f = 2*x**4 - x**2 + y**3 + y**2
+        >>> G = groebner([x**3 - x, y**3 - y])
+
+        >>> G.reduce(f)
+        ([2*x, 1], x**2 + y**2 + y)
+        >>> Q, r = _
+
+        >>> expand(sum(q*g for q, g in zip(Q, G)) + r)
+        2*x**4 - x**2 + y**3 + y**2
+        >>> _ == f
+        True
+
+        """
+        poly = Poly._from_expr(expr, self._options)
+        polys = [poly] + list(self._basis)
+
+        opt = self._options
+        domain = opt.domain
+
+        retract = False
+
+        if auto and domain.has_Ring and not domain.has_Field:
+            opt = opt.clone(dict(domain = domain.get_field()))
+            retract = True
+
+        for i, poly in enumerate(polys):
+            poly = poly.set_domain(opt.domain).rep.to_dict()
+            polys[i] = sdp_from_dict(poly, opt.order)
+
+        level = len(opt.gens) - 1
+
+        Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
+
+        Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
+        r =   Poly._from_dict(dict(r), opt)
+
+        if retract:
+            try:
+                _Q, _r = [ q.to_ring() for q in Q ], r.to_ring()
+            except CoercionFailed:
+                pass
+            else:
+                Q, r = _Q, _r
+
+        if not opt.polys:
+            return [ q.as_expr() for q in Q ], r.as_expr()
+        else:
+            return Q, r
+
+    def contains(self, poly):
+        """
+        Check if ``poly`` belongs the ideal generated by ``self``.
+
+        **Examples**
+
+        >>> from sympy import groebner
+        >>> from sympy.abc import x, y
+
+        >>> f = 2*x**3 + y**3 + 3*y
+        >>> G = groebner([x**2 + y**2 - 1, x*y - 2])
+
+        >>> G.contains(f)
+        True
+        >>> G.contains(f + 1)
+        False
+
+        """
+        return self.reduce(poly)[1] == 0
 
 def poly(expr, *gens, **args):
     """
