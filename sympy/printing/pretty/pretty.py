@@ -6,7 +6,8 @@ from sympy.printing.str import sstr
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
-        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U
+        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U, \
+        annotated
 
 from sympy.core.compatibility import cmp_to_key
 
@@ -655,10 +656,9 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             pic = (2, 0, 2, u'\u250c\u2500\n\u251c\u2500\n\u2575')
         else:
-            pic = ((3, 0, 3, ' _\n|_\n|\n'))
+            pic = (3, 0, 3, ' _\n|_\n|\n')
 
-        add = 0
-        sz, t, b, img = pic
+        sz, t, b, add, img = annotated('F')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline = above + sz)
         add = (sz+1)//2
@@ -719,14 +719,7 @@ class PrettyPrinter(Printer):
         above = D.height()//2 - 1
         below = D.height() - above - 1
 
-        if self._use_unicode:
-            pic = (3, 0, 3, 1,
-                   u'\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
-        else:
-            pic = (3, 0, 3, 1, ' __\n/__\n\_|')
-
-        add = 0
-        sz, t, b, add, img = pic
+        sz, t, b, add, img = annotated('G')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline = above + sz)
 
