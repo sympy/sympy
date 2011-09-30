@@ -308,27 +308,31 @@ def solve(f, *symbols, **flags):
                 >>> solve(x - 3, y)
                 []
 
-            o when no symbol is given then all free symbols will be used
-              and sorted with default_sort_key; the result will the same as
-              if the user had provided those symbols. A univariate equation
-              will always return a list of solutions; otherwise, a list of
-              mappings showing unambiguously the variable that was solved for
-              will be returned unless an 'undetermined coefficients' situation
-              is detected (see below).
+            o when no symbol is given (or are given as an unordered set) then
+              all free symbols will be used. A univariate equation will always
+              return a list of solutions; otherwise, a list of mappings will be
+              returned.
 
-                >>> solve(x - 3)
-                [3]
-                >>> solve(x**2 - y**2)
-                [{x: -y}, {x: y}]
-                >>> solve(z**2*x**2 - z**2*y**2)
-                [{x: -y}, {x: y}]
-                >>> solve(z**2*x - z**2*y**2)
-                [{x: y**2}]
+                for single equations
+                    >>> solve(x - 3)
+                    [3]
+                    >>> solve(x**2 - y**2)
+                    [{x: y}, {x: -y}]
+                    >>> solve(z**2*x**2 - z**2*y**2)
+                    [{x: y}, {x: -y}]
+                    >>> solve(z**2*x - z**2*y**2)
+                    [{x: y**2}]
+
+                for systems of equations
+                    >>> solve([x - 2, x**2 + y])
+                    [{x: 2, y: -4}]
+                    >>> f = Function('f')
+                    >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
+                    [{x: 2, f(x): -4}]
 
             o when a Function or Derivative is given as a symbol, it is isolated
               algebraically and an implicit solution may be obtained
 
-                >>> f = Function('f')
                 >>> solve(f(x) - x, f(x))
                 [x]
                 >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
@@ -384,19 +388,8 @@ def solve(f, *symbols, **flags):
                     >>> solve([x**2 + y -2, y**2 - 4], x, y)
                     [(-2, -2), (0, 2), (0, 2), (2, -2)]
 
-                Warning:
-                If no symbols are given for a nonlinear system of equations or
-                are given as a set, the solution tuples will contain values for
-                the symbols as if the symbols had been sorted with sort_key. In
-                the following examples, the solution for x appears first in the
-                tuple:
-                    >>> solve([x - 2, x**2 + y])
-                    [(2, -4)]
-                    >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
-                    [(2, -4)]
-
-                Presently, assumptions aren't checked when `solve()` input
-                involves relationals or bools.
+            Note: assumptions aren't checked when `solve()` input involves
+                  relationals or bools.
 
        See also:
           rsolve() for solving recurrence relationships
@@ -811,11 +804,11 @@ def _solve(f, *symbols, **flags):
             dens = set()
             failed = []
             result = False
-            for i, g in enumerate(f):
+            for j, g in enumerate(f):
                 dens.update(denoms(g, symbols))
-                l, r = _invert(g, *symbols)
-                g = l - r
-                g = f[i] = g.as_numer_denom()[0]
+                i, d = _invert(g, *symbols)
+                g = d - i
+                g = f[j] = g.as_numer_denom()[0]
                 poly = g.as_poly(*symbols, **{'extension': True})
 
                 if poly is not None:
@@ -849,7 +842,7 @@ def _solve(f, *symbols, **flags):
                         if result:
                             solved_syms = result.keys()
                         else:
-                            solved_syms = ()
+                            solved_syms = []
 
                 else:
                     if len(symbols) != len(polys):
@@ -863,10 +856,8 @@ def _solve(f, *symbols, **flags):
                                 # returns [] or list of tuples of solutions for syms
                                 result = solve_poly_system(polys, *syms)
                                 if result:
-                                    # make it unambiguous
-                                    result = [dict(zip(syms, r)) for r in result]
-                                    solved_syms = syms
-                                    break
+                                   solved_syms = syms
+                                   break
                             except NotImplementedError:
                                 pass
                         else:
@@ -875,20 +866,22 @@ def _solve(f, *symbols, **flags):
                         result = solve_poly_system(polys, *symbols)
                         solved_syms = symbols
 
-                    checked = []
-                    do_warn = flags.get('warn', False)
-                    for r in result:
-                        if type(r) is not dict:
-                            sol = dict(zip(solved_syms, r))
-                        else:
-                            sol = r
-                        check = checksol(polys, sol, **flags)
-                        if check is not False:
-                            if check is None and do_warn:
-                                print("\n\tWarning: could not verify solution %s." % sol)
-                            if not dens or not checksol(dens, sol, **flags): # if it's a solution to any denom then exclude
-                                checked.append(r)
-                    result = checked
+                    if result:
+                        # we don't know here if the symbols provided were given
+                        # or not, so let solve resolve that. A list of dictionaries
+                        # is going to always be returned from here.
+                        result = [dict(zip(solved_syms, r)) for r in result]
+
+                        checked = []
+                        do_warn = flags.get('warn', False)
+                        for r in result:
+                            check = checksol(polys, r, **flags)
+                            if check is not False:
+                                if check is None and do_warn:
+                                    print("\n\tWarning: could not verify solution %s." % sol)
+                                if not dens or not checksol(dens, r, **flags): # if it's a solution to any denom then exclude
+                                    checked.append(r)
+                        result = checked
 
             if failed:
                 # For each failed equation, see if we can solve for one of the
@@ -1300,7 +1293,7 @@ def _tsolve(eq, sym, **flags):
                    sym in soln.free_symbols):
                 return [soln]
 
-    lhs, rhs = _invert(eq, sym)
+    rhs, lhs = _invert(eq, sym)
 
     if lhs.is_Add:
         # just a simple case - we do variable substitution for first function,
@@ -1450,8 +1443,53 @@ def nsolve(*args, **kwargs):
     x = findroot(f, x0, J=J, **kwargs)
     return x
 
-def _invert(eq, *symbols):
-    # let's also try to invert the equation
+def _invert(eq, *symbols, **kwargs):
+    """Return tuple (i, d) where ``i`` is independent of ``symbols`` and ``d``
+    contains symbols. ``i`` and ``d`` are obtained after recursively using
+    algebraic inversion until an uninvertible ``d`` remains.
+
+    Examples:
+
+    >>> from sympy.solvers.solvers import _invert as invert
+    >>> from sympy import sqrt, cos
+    >>> from sympy.abc import x, y
+    >>> invert(x - 3)
+    (3, x)
+    >>> invert(2*cos(x) - 1)
+    (pi/3, x)
+    >>> invert(sqrt(x) - 3)
+    (3, sqrt(x))
+    >>> invert(sqrt(x) + y, x)
+    (-y, sqrt(x))
+    >>> invert(sqrt(x) + y, y)
+    (-sqrt(x), y)
+    >>> invert(sqrt(x) + y, x, y)
+    (-1, sqrt(x)/y)
+
+    If there is more than one symbol in a power's base and the exponent
+    is not an Integer, then the principle root will be used for the
+    inversion:
+
+    >>> invert(sqrt(x + y) - 2)
+    (4, x + y)
+    >>> invert(sqrt(x + y) - 2)
+    (4, x + y)
+
+    If the exponent is an integer, setting ``integer_power`` to True
+    will force the principle root to be selected:
+
+    >>> invert(x**2 - 4, integer_power=True)
+    (2, x)
+
+    """
+    eq = sympify(eq)
+    if not symbols:
+        symbols = eq.free_symbols
+        if not symbols:
+            return S.Zero, eq
+
+    dointpow = bool(kwargs.get('integer_power', False))
+
     lhs = eq
     rhs = S.Zero
 
@@ -1510,6 +1548,12 @@ def _invert(eq, *symbols):
             rhs = inv(rhs)
             lhs = lhs.args[0]
 
+        if lhs.is_Pow and (
+           lhs.exp.is_Integer and dointpow or not lhs.exp.is_Integer and
+           len(symbols) > 1 and len(lhs.base.free_symbols & set(symbols)) > 1):
+            rhs = rhs**(1/lhs.exp)
+            lhs = lhs.base
+
         if lhs == was:
             break
-    return lhs, rhs
+    return rhs, lhs

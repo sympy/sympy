@@ -495,8 +495,9 @@ def test_issue_1572_1364_1368():
 def test_issue_2033():
     r, t, z = symbols('r,t,z')
     assert solve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
-     [(sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t), sqrt(r*tan(t)**2/(tan(t)**2 + 1))),
-     (-sqrt(r*tan(t)**2/(tan(t)**2 + 1))/tan(t), -sqrt(r*tan(t)**2/(tan(t)**2 + 1)))]
+     [
+     (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2)),
+     (-sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2))]
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
@@ -536,7 +537,9 @@ def test_issue_2033():
     assert solve(eqs, z, y) == \
         [(-exp(2*x) - sin(log(3)), -log(3))]
     assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4)) == \
-        [{x: 3, y: 1}, {x: 1, y: 3}]
+        [{x: 1, y: 3}, {x: 3, y: 1}]
+    assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4), x, y) == \
+        [(1, 3), (3, 1)]
 
 @XFAIL
 def test_issue_2236():
