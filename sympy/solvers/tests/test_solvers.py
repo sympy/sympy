@@ -535,6 +535,8 @@ def test_issue_2033():
         (log(-sqrt(-z - sin(log(3)))), -log(3))]
     assert solve(eqs, z, y) == \
         [(-exp(2*x) - sin(log(3)), -log(3))]
+    assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4)) == \
+        [{x: 3, y: 1}, {x: 1, y: 3}]
 
 @XFAIL
 def test_issue_2236():

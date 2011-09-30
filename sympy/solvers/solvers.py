@@ -921,8 +921,13 @@ def _solve(f, *symbols, **flags):
                             # result in the new result list; use copy since the
                             # solution for s in being added in-place
                             for sol in soln:
-                                r[s] = sol
-                                newresult.append(r.copy())
+                                # update existing solutions with this new one
+                                rnew = r.copy()
+                                for k, v in r.iteritems():
+                                    rnew[k] = v.subs(s, sol)
+                                # and add this new solution
+                                rnew[s] = sol
+                                newresult.append(rnew)
                             break
                         else:
                             raise NotImplementedError('could not solve %s' % eq2)
