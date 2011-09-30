@@ -863,8 +863,12 @@ def _solve(f, *symbols, **flags):
                         else:
                             raise NotImplementedError('no valid subset found')
                     else:
-                        result = solve_poly_system(polys, *symbols)
-                        solved_syms = symbols
+                        try:
+                            result = solve_poly_system(polys, *symbols)
+                            solved_syms = symbols
+                        except NotImplementedError:
+                            failed.extend([g.as_expr() for g in polys])
+                            solved_syms = []
 
                     if result:
                         # we don't know here if the symbols provided were given
@@ -903,6 +907,11 @@ def _solve(f, *symbols, **flags):
                     for r in result:
                         # update eq with everything that is known so far
                         eq2 = eq.subs(r)
+                        b = Equality(eq2, 0)
+                        if type(b) is bool:
+                            if b:
+                                newresult.append(r)
+                            continue
                         # search for a symbol amongst those available that
                         # can be solved for
                         for s in (eq2.free_symbols - solved_syms) & legal:

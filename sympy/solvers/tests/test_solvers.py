@@ -111,6 +111,11 @@ def test_solve_args():
     raises(TypeError, "solve(x**2-pi, pi)")
     # no equations
     assert solve([], [x]) == []
+    # overdetermined system
+    # - nonlinear
+    assert solve([(x + y)**2 - 4, x + y - 2]) == [{x: -y + 2}]
+    # - linear
+    assert solve((x + y - 2, 2*x + 2*y - 4)) == {x: -y + 2}
 
 def test_solve_polynomial1():
     x, y, a = symbols('x,y,a')
