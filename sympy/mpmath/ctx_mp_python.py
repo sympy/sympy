@@ -870,7 +870,7 @@ class PythonMPContext:
             s = ctx.make_mpc((s, mpf_sum(imag, prec, rnd)))
         else:
             s = ctx.make_mpf(s)
-        if other is 0:
+        if other == 0:
             return s
         else:
             return s + other
@@ -964,7 +964,7 @@ class PythonMPContext:
             s = ctx.make_mpc((s, mpf_sum(imag, prec, rnd)))
         else:
             s = ctx.make_mpf(s)
-        if other is 0:
+        if other == 0:
             return s
         else:
             return s + other

@@ -48,7 +48,7 @@ class BooleanOption(Option):
 
     @classmethod
     def preprocess(cls, value):
-        if value is True or value is False or value is 1 or value is 0:
+        if value in [True, False]:
             return bool(value)
         else:
             raise OptionError("'%s' must have a boolean value assigned, got %s" % (cls.option, value))
@@ -489,9 +489,9 @@ class Extension(Option):
 
     @classmethod
     def preprocess(cls, extension):
-        if extension is True or extension is 1:
+        if extension == 1:
             return bool(extension)
-        elif extension is False or extension is 0:
+        elif extension == 0:
             raise OptionError("'False' is an invalid argument for 'extension'")
         else:
             if not hasattr(extension, '__iter__'):

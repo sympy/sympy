@@ -7,19 +7,15 @@ The reference D&L is "Geometric Algebra for Physicists" by Doran and Lasenby
 
 import sys
 
-try:
-    import numpy
-    disabled = False
-except ImportError:
-    #py.test will not execute any tests now
+from sympy.external import import_module
+numpy = import_module('numpy')
+if not numpy:
     disabled = True
-
-if not disabled:
+else:
     sys.path.append('../')
     from sympy.galgebra.GA import set_main, MV, make_symbols, types, ZERO, ONE, HALF, S
     import sympy
     from sympy import collect, sympify
-
 
     set_main(sys.modules[__name__])
 
