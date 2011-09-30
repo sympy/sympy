@@ -813,6 +813,8 @@ def _solve(f, *symbols, **flags):
             result = False
             for i, g in enumerate(f):
                 dens.update(denoms(g, symbols))
+                l, r = _invert(g, *symbols)
+                g = l - r
                 g = f[i] = g.as_numer_denom()[0]
                 poly = g.as_poly(*symbols, **{'extension': True})
 
@@ -1443,7 +1445,7 @@ def nsolve(*args, **kwargs):
     x = findroot(f, x0, J=J, **kwargs)
     return x
 
-def _invert(eq, sym):
+def _invert(eq, *symbols):
     # let's also try to invert the equation
     lhs = eq
     rhs = S.Zero
@@ -1451,7 +1453,7 @@ def _invert(eq, sym):
     while True:
         was = lhs
         while True:
-            indep, dep = lhs.as_independent(sym)
+            indep, dep = lhs.as_independent(*symbols)
 
             # dep + indep == rhs
             if lhs.is_Add:
@@ -1475,8 +1477,8 @@ def _invert(eq, sym):
         # e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
         if lhs.is_Add and not rhs and len(lhs.args) == 2:
             a, b = lhs.as_two_terms()
-            ai, ad = a.as_independent(sym)
-            bi, bd = b.as_independent(sym)
+            ai, ad = a.as_independent(*symbols)
+            bi, bd = b.as_independent(*symbols)
             # a = -b
             lhs = ad/bd
             rhs = -bi/ai
