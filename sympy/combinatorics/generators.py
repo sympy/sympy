@@ -46,7 +46,7 @@ def alternating(n):
     """
     for perm in variations(range(n), n):
         p = Permutation(perm)
-        if p.is_even:
+        if p.is_even():
             yield p
 
 def dihedral(n):

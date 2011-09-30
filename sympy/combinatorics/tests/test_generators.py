@@ -21,12 +21,6 @@ def test_generators():
                                     Permutation([2, 0, 1, 3]), Permutation([2, 1, 3, 0]), \
                                     Permutation([2, 3, 0, 1]), Permutation([3, 0, 2, 1]), \
                                     Permutation([3, 1, 0, 2]), Permutation([3, 2, 1, 0])]
-    assert list(alternating(4)) == [Permutation([0, 1, 2, 3]), Permutation([0, 2, 3, 1]), \
-                                    Permutation([0, 3, 1, 2]), Permutation([1, 0, 3, 2]), \
-                                    Permutation([1, 2, 0, 3]), Permutation([1, 3, 2, 0]), \
-                                    Permutation([2, 0, 1, 3]), Permutation([2, 1, 3, 0]), \
-                                    Permutation([2, 3, 0, 1]), Permutation([3, 0, 2, 1]), \
-                                    Permutation([3, 1, 0, 2]), Permutation([3, 2, 1, 0])]
     assert list(symmetric(3)) == [Permutation([0, 1, 2]), Permutation([0, 2, 1]), Permutation([1, 0, 2]), \
                                   Permutation([1, 2, 0]), Permutation([2, 0, 1]), Permutation([2, 1, 0])]
     assert list(symmetric(4)) == [Permutation([0, 1, 2, 3]), Permutation([0, 1, 3, 2]), Permutation([0, 2, 1, 3]), \
