@@ -81,7 +81,7 @@ class RayTransferMatrix(Matrix):
              and args[0].shape == (2,2):
             temp = args[0]
         else:
-            raise Exception('Bad arguments for the constructor.')
+            raise ValueError('Expecting 2x2 Matrix or the 4 elements of the Matrix but got %s' % str(args))
         Matrix.__init__(self, temp)
 
     def __mul__(self,other):
@@ -161,7 +161,7 @@ class CurvedRefraction(RayTransferMatrix):
                refractive indices of both media
 
     See Also: RayTransferMatrix
- 
+
     Example:
     >>> from sympy.physics.gaussopt import CurvedRefraction
     >>> from sympy import symbols
@@ -179,7 +179,7 @@ class FlatMirror(RayTransferMatrix):
     Ray Transfer Matrix for reflection.
 
     See Also: RayTransferMatrix
- 
+
     Example:
     >>> from sympy.physics.gaussopt import FlatMirror
     >>> FlatMirror()
@@ -196,7 +196,7 @@ class CurvedMirror(RayTransferMatrix):
     Arguments: radius of curvature (positive for concave)
 
     See Also: RayTransferMatrix
- 
+
     Example:
     >>> from sympy.physics.gaussopt import CurvedMirror
     >>> from sympy import symbols
@@ -216,7 +216,7 @@ class ThinLens(RayTransferMatrix):
     Arguments: the focal distance
 
     See Also: RayTransferMatrix
- 
+
     Example:
     >>> from sympy.physics.gaussopt import ThinLens
     >>> from sympy import symbols
@@ -243,7 +243,6 @@ class GeometricRay(Matrix):
     either a 2x1 matrix
       or
     the height followed by the angle of the ray
-    
 
     Example
     =======
@@ -277,11 +276,11 @@ class GeometricRay(Matrix):
         elif len(args) == 2:
             temp = ((args[0],),(args[1],))
         else:
-            raise Exception('Bad arguments for the constructor.')
+            raise ValueError('Expecting 2x1 Matrix or the 2 elements of the Matrix but got %s' % str(args))
         Matrix.__init__(self, temp)
 
     @property
-    def heigth(self):
+    def height(self):
         """The distance from the optical axis."""
         return self[0]
 
@@ -350,15 +349,15 @@ class BeamParameter(Expr):
         inst.wavelen = wavelen
         inst.z = z
         if len(kwargs) !=1:
-            raise Exception('Bad arguments for the constructor.')
+            raise ValueError('The constructor expects one and only one named argument')
         elif 'z_r' in kwargs:
             inst.z_r = sympify(kwargs['z_r'])
         elif 'w' in kwargs:
             inst.z_r = waist2rayleigh(sympify(kwargs['w']), wavelen)
         else:
-            raise Exception('The constructor needs w or z_r.')
+            raise ValueError('The constructor needs named argument w or z_r')
         return inst
-    
+
     @property
     def q(self):
         """The complex parameter representing the beam."""
@@ -428,7 +427,7 @@ def rayleigh2waist(z_r, wavelen):
     """Calculate the waist from the rayleigh range of a gaussian beam.
 
     See Also: waist2rayleigh, BeamParameter
- 
+
     Examples:
     >>> from sympy.physics.gaussopt import rayleigh2waist
     >>> from sympy import symbols
@@ -449,7 +448,7 @@ def geometric_conj_ab(a,b):
 
     See Also:
     geometric_conj_af, geometric_conj_bf
-    
+
     Examples:
     >>> from sympy.physics.gaussopt import geometric_conj_ab
     >>> from sympy import symbols
@@ -470,10 +469,10 @@ def geometric_conj_af(a,f):
     Takes the object distance (for geometric_conj_af) or the image distance
     (for geometric_conj_bf) to the optical element and the focal distance.
     Then it returns the other distance needed for conjugation.
-    
+
     See Also:
     geometric_conj_ab
-    
+
     Examples:
     >>> from sympy.physics.gaussopt import geometric_conj_af, geometric_conj_bf
     >>> from sympy import symbols
@@ -507,29 +506,29 @@ def gaussian_conj(s_in, z_r_in, f):
 
     Examples
     ========
-    >>> from sympy.physics.gaussopt import gaussian_conj 
+    >>> from sympy.physics.gaussopt import gaussian_conj
     >>> from sympy import symbols
     >>> s_in, z_r_in, f = symbols('s_in z_r_in f')
 
     >>> gaussian_conj(s_in, z_r_in, f)[0]
     1/(-1/(s_in + z_r_in**2/(-f + s_in)) + 1/f)
-    
+
     >>> gaussian_conj(s_in, z_r_in, f)[1]
     z_r_in/(1 - s_in**2/f**2 + z_r_in**2/f**2)
-    
+
     >>> gaussian_conj(s_in, z_r_in, f)[2]
     1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)
     """
     s_in, z_r_in, f = sympify((s_in, z_r_in, f))
     s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in-f)) + 1/f )
     m = 1/sqrt((1-(s_in/f)**2) + (z_r_in/f)**2)
-    z_r_out = z_r_in / ((1-(s_in/f)**2) + (z_r_in/f)**2) 
+    z_r_out = z_r_in / ((1-(s_in/f)**2) + (z_r_in/f)**2)
     return (s_out, z_r_out, m)
 
 def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     """
     Find the optical setup conjugating the object/image waists.
-    
+
     Arguments
     =========
     wavelen - the wavelength of the beam
@@ -542,29 +541,28 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
      - s_in - distance before the optical element
      - s_out - distance after the optical element
      - f -  focal distance of the optical element
- 
+
     Examples
     ========
-    >>> from sympy.physics.gaussopt import conjugate_gauss_beams 
+    >>> from sympy.physics.gaussopt import conjugate_gauss_beams
     >>> from sympy import symbols, factor
     >>> l, w_i, w_o, f = symbols('l w_i w_o f')
 
-    >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[0] 
+    >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[0]
     f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
 
-    >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1]) 
+    >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1])
     f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))/w_i**2
 
-    >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[2] 
+    >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[2]
     f
-
-   """
+    """
     #TODO add the other possible arguments
     wavelen, waist_in, waist_out = sympify((wavelen, waist_in, waist_out))
     m = waist_out / waist_in
     z = waist2rayleigh(waist_in, wavelen)
     if len(kwargs) != 1:
-        raise Exception("Bad arguments")
+        raise ValueError("The function expects only one named argument")
     elif 'dist' in kwargs:
         raise NotImplementedError("Currently only focal length is supported as a parameter")
     elif 'f' in kwargs:
@@ -574,7 +572,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     elif 's_in' in kwargs:
         raise NotImplementedError("Currently only focal length is supported as a parameter")
     else:
-        raise Exception("Bad arguments")
+        raise ValueError("The functions expects the focal length as a named argument")
     return (s_in, s_out, f)
 
 #TODO
@@ -586,7 +584,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
 #def plot_beam_conjugation():
 #    """
 #    Plot the intersection of two beams.
-#    
+#
 #    Represents the conjugation relation.
 #    See Also: conjugate_gauss_beams
 #    """
