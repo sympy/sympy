@@ -55,7 +55,7 @@ class Permutation(Basic):
     """
     A permutation, alternatively known as an 'arrangement number'
     or 'ordering' is an arrangement of the elements of an ordered list
-    into a one-to-one mapping with  itself. The number of permutations
+    into a one-to-one mapping with itself. The number of permutations
     on a set of n elements is given by n!.
 
     A representation of a permutation as a product of permutation cycles
