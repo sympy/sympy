@@ -570,7 +570,6 @@ class Add(AssocOp):
             if cont == 1: # not S.One in case Float is ever handled
                 return S.One, self
 
-        MUL = object.__new__(Mul)._new_rawargs
         for i, (coeff, term) in enumerate(terms):
             c = coeff/cont
             if c == 1:  # not S.One in case Float is ever handled
@@ -578,7 +577,7 @@ class Add(AssocOp):
             elif term is S.One:
                 terms[i] = c
             else:
-                terms[i] = MUL(*((c,) + Mul.make_args(term)))
+                terms[i] = Mul._from_args((c,) + Mul.make_args(term))
 
         # we don't need a complete re-flattening since no new terms will join
         # so we just use the same sort as is used in Add.flatten. When the

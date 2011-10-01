@@ -1321,8 +1321,6 @@ def powsimp(expr, deep=False, combine='all', force=False):
                     x**(2*y/3) -> x, 2*y/3
 
                 '''
-                from sympy import Rational as r
-                MUL = lambda *args: object.__new__(Mul)._new_rawargs(*args)
                 if e is not None: # coming from c_powers or from below
                     if e.is_Integer:
                         return (b, S.One), e
@@ -1331,7 +1329,7 @@ def powsimp(expr, deep=False, combine='all', force=False):
                     else:
                         c, m = e.as_coeff_mul()
                         if c is not S.One:
-                            return (b**MUL(*m), Integer(c.q)), Integer(c.p)
+                            return (b**Mul._from_args(m), Integer(c.q)), Integer(c.p)
                         else:
                             return (b**e, S.One), S.One
                 else:
