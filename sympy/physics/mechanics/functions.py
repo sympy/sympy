@@ -9,7 +9,7 @@ __all__ = ['cross',
            'mlatex',
            'kinematic_equations']
 
-from sympy.physics.mechanics.essential import (Vector, Dyad, ReferenceFrame,
+from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
                                                MechanicsStrPrinter,
                                                MechanicsPrettyPrinter,
                                                MechanicsLatexPrinter,
@@ -20,21 +20,21 @@ from sympy import (sympify, symbols, numbered_symbols, cse, diff, sin, cos,
 
 def cross(vec1, vec2):
     """Cross product convenience wrapper for Vector.cross(): \n"""
-    if not isinstance(vec1, (Vector, Dyad)):
+    if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Cross product is between two vectors')
     return vec1 ^ vec2
 cross.__doc__ += Vector.cross.__doc__
 
 def dot(vec1, vec2):
     """Dot product convenience wrapper for Vector.dot(): \n"""
-    if not isinstance(vec1, (Vector, Dyad)):
+    if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Dot product is between two vectors')
     return vec1 & vec2
 dot.__doc__ += Vector.dot.__doc__
 
 def express(vec, frame, frame2=None):
     """Express convenience wrapper for Vector.express(): \n"""
-    if not isinstance(vec, (Vector, Dyad)):
+    if not isinstance(vec, (Vector, Dyadic)):
         raise TypeError('Can only express Vectors')
     if isinstance(vec, Vector):
         return vec.express(frame)
@@ -51,27 +51,27 @@ def outer(vec1, vec2):
 outer.__doc__ += Vector.express.__doc__
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
-    """Simple way to create inertia Dyad object.
+    """Simple way to create inertia Dyadic object.
 
-    If you don't know what a Dyad is, just treat this like the inertia tensor.
-    Then, do the easy thing and define it in a body-fixed frame.
+    If you don't know what a Dyadic is, just treat this like the inertia
+    tensor.  Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters
     ==========
     frame : ReferenceFrame
         The frame the inertia is defined in
     ixx : Sympifyable
-        the xx element in the inertia dyad
+        the xx element in the inertia dyadic
     iyy : Sympifyable
-        the yy element in the inertia dyad
+        the yy element in the inertia dyadic
     izz : Sympifyable
-        the zz element in the inertia dyad
+        the zz element in the inertia dyadic
     ixy : Sympifyable
-        the xy element in the inertia dyad
+        the xy element in the inertia dyadic
     iyz : Sympifyable
-        the yz element in the inertia dyad
+        the yz element in the inertia dyadic
     izx : Sympifyable
-        the zx element in the inertia dyad
+        the zx element in the inertia dyadic
 
     Examples
     ========
@@ -192,7 +192,7 @@ def mpprint(expr, **settings):
 def mlatex(expr, **settings):
     r"""Function for printing latex representation of mechanics objects.
 
-    For latex representation of Vectors, Dyads, and dynamicsymbols. Takes the
+    For latex representation of Vectors, Dyadics, and dynamicsymbols. Takes the
     same options as SymPy's latex(); see that function for more information;
 
     Parameters

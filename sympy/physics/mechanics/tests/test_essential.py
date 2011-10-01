@@ -5,7 +5,7 @@ from sympy.physics.mechanics import (Vector, ReferenceFrame, dot, cross,
 phi, x, y, z = symbols('phi x y z')
 A = ReferenceFrame('A')
 
-def test_dyad():
+def test_dyadic():
     d1 = A.x | A.x
     d2 = A.y | A.y
     d3 = A.x | A.y

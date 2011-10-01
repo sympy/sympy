@@ -1,4 +1,4 @@
-__all__ = ['ReferenceFrame', 'Vector', 'Dyad', 'dynamicsymbols',
+__all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
            'MechanicsLatexPrinter']
 
@@ -16,15 +16,15 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
 
-class Dyad(object):
-    """A Dyad object.
+class Dyadic(object):
+    """A Dyadic object.
 
     See:
     http://en.wikipedia.org/wiki/Dyadic_tensor
     Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill
 
     A more powerful way to represent a rigid body's inertia. While it is more
-    complex, by choosing Dyad components to be in body fixed basis vectors,
+    complex, by choosing Dyadic components to be in body fixed basis vectors,
     the resulting matrix is equivalent to the inertia tensor.
 
     """
@@ -33,7 +33,7 @@ class Dyad(object):
         """
         Just like Vector's init, you shouldn't call this.
 
-        Stores a Dyad as a list of lists; the inner list has the measure number
+        Stores a Dyadic as a list of lists; the inner list has the measure number
         and the two unit vectors; the outerlist holds each unique unit vector
         pair.
 
@@ -63,20 +63,20 @@ class Dyad(object):
             i += 1
 
     def __add__(self, other):
-        """The add operator for Dyad. """
+        """The add operator for Dyadic. """
         if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return self
-        self._check_dyad(other)
-        return Dyad(self.args + other.args)
+        self._check_dyadic(other)
+        return Dyadic(self.args + other.args)
 
     def __and__(self, other):
-        """The inner product operator for a Dyad and a Dyad or Vector.
+        """The inner product operator for a Dyadic and a Dyadic or Vector.
 
         Parameters
         ==========
-        other : Dyad or Vector
-            The other Dyad or Vector to take the inner product with
+        other : Dyadic or Vector
+            The other Dyadic or Vector to take the inner product with
 
         Examples
         ========
@@ -96,7 +96,7 @@ class Dyad(object):
             if other == 0:
                 return 0
         ol = 0
-        if isinstance(other, Dyad):
+        if isinstance(other, Dyadic):
             for i, v in enumerate(self.args):
                 for i2, v2 in enumerate(other.args):
                     ol += v[0] * v2[0] * (v[2] & v2[1]) * (v[1] | v2[2])
@@ -104,11 +104,11 @@ class Dyad(object):
             for i, v in enumerate(self.args):
                 ol += v[0] * v[1] * (v[2] & other)
         else:
-            raise TypeError('Need to supply a Vector or Dyad')
+            raise TypeError('Need to supply a Vector or Dyadic')
         return ol
 
     def __div__(self, other):
-        """Divides the Dyad by a sympifyable expression. """
+        """Divides the Dyadic by a sympifyable expression. """
         return self.__mul__(1 / other)
 
     def __eq__(self, other):
@@ -123,16 +123,16 @@ class Dyad(object):
                 return True
             elif other == 0:
                 return False
-        self._check_dyad(other)
+        self._check_dyadic(other)
         return set(self.args) == set(other.args)
 
     def __mul__(self, other):
-        """Multiplies the Dyad by a sympifyable expression.
+        """Multiplies the Dyadic by a sympifyable expression.
 
         Parameters
         ==========
         other : Sympafiable
-            The scalar to multiply this Dyad with
+            The scalar to multiply this Dyadic with
 
         Examples
         ========
@@ -149,7 +149,7 @@ class Dyad(object):
         for i, v in enumerate(newlist):
             newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1],
                     newlist[i][2])
-        return Dyad(newlist)
+        return Dyadic(newlist)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -164,17 +164,17 @@ class Dyad(object):
         ol = [] # output list, to be concatenated to a string
         mlp = MechanicsLatexPrinter()
         for i, v in enumerate(ar):
-            # if the coef of the dyad is 1, we skip the 1
+            # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
                 ol.append(' + ' + mlp.doprint(ar[i][1]) + r"\otimes " +
                         mlp.doprint(ar[i][2]))
-            # if the coef of the dyad is -1, we skip the 1
+            # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
                 ol.append(' - ' +
                           mlp.doprint(ar[i][1]) +
                           r"\otimes " +
                           mlp.doprint(ar[i][2]))
-            # If the coefficient of the dyad is not 1 or -1,
+            # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
                 arg_str = mlp.doprint(ar[i][0])
@@ -208,19 +208,19 @@ class Dyad(object):
                     return unicode(0)
                 ol = [] # output list, to be concatenated to a string
                 for i, v in enumerate(ar):
-                    # if the coef of the dyad is 1, we skip the 1
+                    # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
                         ol.append(u" + " +
                                   mpp.doprint(ar[i][1]) +
                                   u"\u2a02 " +
                                   mpp.doprint(ar[i][2]))
-                    # if the coef of the dyad is -1, we skip the 1
+                    # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
                         ol.append(u" - " +
                                   mpp.doprint(ar[i][1]) +
                                   u"\u2a02 " +
                                   mpp.doprint(ar[i][2]))
-                    # If the coefficient of the dyad is not 1 or -1,
+                    # If the coefficient of the dyadic is not 1 or -1,
                     # we might wrap it in parentheses, for readability.
                     elif ar[i][0] != 0:
                         arg_str = mpp.doprint(ar[i][0])
@@ -244,9 +244,9 @@ class Dyad(object):
         return Fake()
 
     def __rand__(self, other):
-        """The inner product operator for a Vector or Dyad, and a Dyad
+        """The inner product operator for a Vector or Dyadic, and a Dyadic
 
-        This is for: Vector dot Dyad
+        This is for: Vector dot Dyadic
 
         Parameters
         ==========
@@ -272,19 +272,19 @@ class Dyad(object):
             for i, v in enumerate(self.args):
                 ol += v[0] * v[2] * (v[1] & other)
         else:
-            raise TypeError('Need to supply a Vector or Dyad')
+            raise TypeError('Need to supply a Vector or Dyadic')
         return ol
 
     def __rsub__(self, other):
         return (-1 * self) + other
 
     def __rxor__(self, other):
-        """For a cross product in the form: Vector x Dyad
+        """For a cross product in the form: Vector x Dyadic
 
         Parameters
         ==========
         other : Vector
-            The Vector that we are crossing this Dyad with
+            The Vector that we are crossing this Dyadic with
 
         Examples
         ========
@@ -313,13 +313,13 @@ class Dyad(object):
             return str(0)
         ol = [] # output list, to be concatenated to a string
         for i, v in enumerate(ar):
-            # if the coef of the dyad is 1, we skip the 1
+            # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
                 ol.append(' + (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
-            # if the coef of the dyad is -1, we skip the 1
+            # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
                 ol.append(' - (' + str(ar[i][1]) + '|' + str(ar[i][2]) + ')')
-            # If the coefficient of the dyad is not 1 or -1,
+            # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
                 arg_str = MechanicsStrPrinter().doprint(ar[i][0])
@@ -344,12 +344,12 @@ class Dyad(object):
         return self.__add__(other * -1)
 
     def __xor__(self, other):
-        """For a cross product in the form: Dyad x Vector.
+        """For a cross product in the form: Dyadic x Vector.
 
         Parameters
         ==========
         other : Vector
-            The Vector that we are crossing this Dyad with
+            The Vector that we are crossing this Dyadic with
 
         Examples
         ========
@@ -375,12 +375,12 @@ class Dyad(object):
         if not isinstance(other, ReferenceFrame):
             raise TypeError('A ReferenceFrame must be supplied')
 
-    def _check_dyad(self, other):
+    def _check_dyadic(self, other):
         if isinstance(other, (int, type(Zero()))):
             if other == 0:
                 return
-        if not isinstance(other, Dyad):
-            raise TypeError('A Dyad must be supplied')
+        if not isinstance(other, Dyadic):
+            raise TypeError('A Dyadic must be supplied')
 
     def _check_vector(self, other):
         if isinstance(other, (int, type(Zero()))):
@@ -396,19 +396,19 @@ class Dyad(object):
     __rmul__ = __mul__
 
     def express(self, frame1, frame2=None):
-        """Expresses this Dyad in alternate frame(s)
+        """Expresses this Dyadic in alternate frame(s)
 
         The first frame is the list side expression, the second frame is the
-        right side; if Dyad is in form A.x|B.y, you can express it in two
-        different frames. If no second frame is given, the Dyad is expressed in
+        right side; if Dyadic is in form A.x|B.y, you can express it in two
+        different frames. If no second frame is given, the Dyadic is expressed in
         only one frame.
 
         Parameters
         ==========
         frame1 : ReferenceFrame
-            The frame to express the left side of the Dyad in
+            The frame to express the left side of the Dyadic in
         frame2 : ReferenceFrame
-            If provided, the frame to express the right side of the Dyad in
+            If provided, the frame to express the right side of the Dyadic in
 
         Examples
         ========
@@ -434,7 +434,7 @@ class Dyad(object):
         return ol
 
     def dt(self, frame):
-        """Take the time derivative of this Dyad in a frame.
+        """Take the time derivative of this Dyadic in a frame.
 
         Parameters
         ==========
@@ -465,7 +465,7 @@ class Dyad(object):
         return ol
 
     def subs(self, dictin):
-        """Substituion on the Dyad, with a dict.
+        """Substituion on the Dyadic, with a dict.
 
         Examples
         ========
@@ -480,7 +480,7 @@ class Dyad(object):
 
         """
 
-        return sum([ Dyad( [ (v[0].subs(dictin), v[1], v[2]) ]) for v in
+        return sum([ Dyadic( [ (v[0].subs(dictin), v[1], v[2]) ]) for v in
                    self.args])
 
     dot = __and__
@@ -1124,7 +1124,7 @@ class Vector(object):
 
         """
 
-        if isinstance(other, Dyad):
+        if isinstance(other, Dyadic):
             return NotImplemented
         if isinstance(other, (int, type(Zero()))):
             if (other == 0):
@@ -1205,7 +1205,7 @@ class Vector(object):
     def __or__(self, other):
         """Outer product between two Vectors.
 
-        A rank increasing operation, which returns a Dyad from two Vectors
+        A rank increasing operation, which returns a Dyadic from two Vectors
 
         Parameters
         ==========
@@ -1231,15 +1231,15 @@ class Vector(object):
                 # it looks this way because if we are in the same frame and
                 # use the enumerate function on the same frame in a nested
                 # fashion, then bad things happen
-                ol += Dyad([(v[0][0] * v2[0][0], v[1].x, v2[1].x)])
-                ol += Dyad([(v[0][0] * v2[0][1], v[1].x, v2[1].y)])
-                ol += Dyad([(v[0][0] * v2[0][2], v[1].x, v2[1].z)])
-                ol += Dyad([(v[0][1] * v2[0][0], v[1].y, v2[1].x)])
-                ol += Dyad([(v[0][1] * v2[0][1], v[1].y, v2[1].y)])
-                ol += Dyad([(v[0][1] * v2[0][2], v[1].y, v2[1].z)])
-                ol += Dyad([(v[0][2] * v2[0][0], v[1].z, v2[1].x)])
-                ol += Dyad([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
-                ol += Dyad([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
+                ol += Dyadic([(v[0][0] * v2[0][0], v[1].x, v2[1].x)])
+                ol += Dyadic([(v[0][0] * v2[0][1], v[1].x, v2[1].y)])
+                ol += Dyadic([(v[0][0] * v2[0][2], v[1].x, v2[1].z)])
+                ol += Dyadic([(v[0][1] * v2[0][0], v[1].y, v2[1].x)])
+                ol += Dyadic([(v[0][1] * v2[0][1], v[1].y, v2[1].y)])
+                ol += Dyadic([(v[0][1] * v2[0][2], v[1].y, v2[1].z)])
+                ol += Dyadic([(v[0][2] * v2[0][0], v[1].z, v2[1].x)])
+                ol += Dyadic([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
+                ol += Dyadic([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
         return ol
 
     def _latex(self, printer=None):
@@ -1320,7 +1320,7 @@ class Vector(object):
     def __ror__(self, other):
         """Outer product between two Vectors.
 
-        A rank increasing operation, which returns a Dyad from two Vectors
+        A rank increasing operation, which returns a Dyadic from two Vectors
 
         Parameters
         ==========
@@ -1345,15 +1345,15 @@ class Vector(object):
                 # it looks this way because if we are in the same frame and
                 # use the enumerate function on the same frame in a nested
                 # fashion, then bad things happen
-                ol += Dyad([(v[0][0] * v2[0][0], v[1].x, v2[1].x)])
-                ol += Dyad([(v[0][0] * v2[0][1], v[1].x, v2[1].y)])
-                ol += Dyad([(v[0][0] * v2[0][2], v[1].x, v2[1].z)])
-                ol += Dyad([(v[0][1] * v2[0][0], v[1].y, v2[1].x)])
-                ol += Dyad([(v[0][1] * v2[0][1], v[1].y, v2[1].y)])
-                ol += Dyad([(v[0][1] * v2[0][2], v[1].y, v2[1].z)])
-                ol += Dyad([(v[0][2] * v2[0][0], v[1].z, v2[1].x)])
-                ol += Dyad([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
-                ol += Dyad([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
+                ol += Dyadic([(v[0][0] * v2[0][0], v[1].x, v2[1].x)])
+                ol += Dyadic([(v[0][0] * v2[0][1], v[1].x, v2[1].y)])
+                ol += Dyadic([(v[0][0] * v2[0][2], v[1].x, v2[1].z)])
+                ol += Dyadic([(v[0][1] * v2[0][0], v[1].y, v2[1].x)])
+                ol += Dyadic([(v[0][1] * v2[0][1], v[1].y, v2[1].y)])
+                ol += Dyadic([(v[0][1] * v2[0][2], v[1].y, v2[1].z)])
+                ol += Dyadic([(v[0][2] * v2[0][0], v[1].z, v2[1].x)])
+                ol += Dyadic([(v[0][2] * v2[0][1], v[1].z, v2[1].y)])
+                ol += Dyadic([(v[0][2] * v2[0][2], v[1].z, v2[1].z)])
         return ol
 
     def __rsub__(self, other):
@@ -1423,7 +1423,7 @@ class Vector(object):
 
         """
 
-        if isinstance(other, Dyad):
+        if isinstance(other, Dyadic):
             return NotImplemented
         if isinstance(other, (int, type(Zero()))):
             if (other == 0):

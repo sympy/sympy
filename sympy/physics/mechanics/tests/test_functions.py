@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, sin, cos
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
-                                     ReferenceFrame, inertia, Dyad,
+                                     ReferenceFrame, inertia,
                                      kinematic_equations)
 
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')

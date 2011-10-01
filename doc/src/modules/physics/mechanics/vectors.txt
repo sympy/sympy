@@ -670,7 +670,7 @@ things you can do in ``orient``, you can do in ``orientnew``. ::
 
 Quaternions (or Euler Parameters) use 4 value to characterize the orientation
 of the frame. This and arbitrary axis rotations are described in the ``orient``
-and ``orientnew`` method help, or in the references [Kane 1983].
+and ``orientnew`` method help, or in the references [Kane1983]_.
 
 
 Finally, before starting multiframe calculus operations, we will introduce

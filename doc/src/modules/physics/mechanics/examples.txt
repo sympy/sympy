@@ -13,6 +13,9 @@ infinitely thin, in contact with the ground at only 1 point, and it is rolling
 without slip on the ground. See the image below.
 
 .. image:: ex_rd.svg
+   :height: 550
+   :width: 550
+   :align: center
 
 Here the definition of the rolling disc's kinematics is formed from the contact
 point up, removing the need to introduce generalized speeds. Only 3
@@ -108,7 +111,7 @@ The Rolling Disc, again
 =======================
 
 We will now revisit the rolling disc example, except this time we are bringing
-the non-contributing (constraint) forces into evidence. See [Kane 1985] for a
+the non-contributing (constraint) forces into evidence. See [Kane1985]_ for a
 more thorough  explanation of this.::
 
   >>> from sympy.physics.mechanics import *
@@ -183,7 +186,7 @@ The Bicycle
 
 The bicycle is an interesting system in that it has mulitple rigid bodies,
 non-holonomic constraints, and a holonomic constraint. The linearized equations
-of motion are presented in [Meijaard 2007]. This example will go through
+of motion are presented in [Meijaard2007]_. This example will go through
 construction of the equations of motion in :mod:`mechanics`. ::
 
   >>> from sympy import *

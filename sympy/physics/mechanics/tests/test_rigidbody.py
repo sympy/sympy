@@ -1,11 +1,11 @@
 from sympy import Symbol
-from sympy.physics.mechanics import Point, ReferenceFrame, Dyad, RigidBody
+from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 
 def test_rigidbody():
     m = Symbol('m')
     A = ReferenceFrame('A')
     P = Point('P')
-    I = Dyad([])
+    I = Dyadic([])
     B = RigidBody()
     assert B.mass == None
     assert B.mc == None

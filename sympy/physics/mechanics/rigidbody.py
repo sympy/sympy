@@ -2,7 +2,7 @@ __all__ = ['RigidBody']
 
 from sympy import sympify
 from sympy.physics.mechanics.point import Point
-from sympy.physics.mechanics.essential import ReferenceFrame, Dyad
+from sympy.physics.mechanics.essential import ReferenceFrame, Dyadic
 
 class RigidBody(object):
     """An idealized rigid body.
@@ -14,7 +14,7 @@ class RigidBody(object):
     ==========
     mass : Sympifyable
         The body's mass
-    inertia : (Dyad, Point)
+    inertia : (Dyadic, Point)
         The body's inertia about a point; stored in a tuple as shown above
     mc : Point
         The point which represents the mass center of the rigid body
@@ -80,8 +80,8 @@ class RigidBody(object):
 
     @inertia.setter
     def inertia(self, I):
-        if not isinstance(I[0], Dyad):
-            raise TypeError("RigidBody inertia must be a Dyad object.")
+        if not isinstance(I[0], Dyadic):
+            raise TypeError("RigidBody inertia must be a Dyadic object.")
         if not isinstance(I[1], Point):
             raise TypeError("RigidBody inertia must be about a Point.")
         self._inertia = I[0]
