@@ -3,6 +3,7 @@ from sympy import (Abs, C, Dummy, Max, Min, Rational, Float, S, Symbol, cos, oo,
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection)
+from sympy.geometry.line import Undecidable
 from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x', real=True)
@@ -212,7 +213,8 @@ def test_line():
     assert Point(0, (a + b)/2) in s
     s = Segment((a, 0), (b, 0))
     assert Point((a + b)/2, 0) in s
-    assert (Point(2*a, 0) in s) is False # XXX should be None?
+
+    raises(Undecidable, "Point(2*a, 0) in s")
 
     # Testing distance from a Segment to an object
     s1 = Segment(Point(0, 0), Point(1, 1))
