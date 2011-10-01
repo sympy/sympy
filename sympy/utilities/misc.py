@@ -1,7 +1,5 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
-from sympy.core import sympify
-
 def default_sort_key(item):
     """
     A default sort key for lists of SymPy objects to pass to functions like sorted().
@@ -41,7 +39,24 @@ def default_sort_key(item):
     # >>> sorted([x, x**2, 1], key=mykey)
     # [1, x, x**2]
 
-    return sympify(item).sort_key()
+    from sympy.core import S, Basic, sympify, Tuple
+    from sympy.core.compatibility import iterable
+
+    item = sympify(item)
+
+    if isinstance(item, Basic):
+        return item.sort_key()
+    elif iterable(item, exclude=basestring):
+        if isinstance(item, dict):
+            args = map(Tuple, item.items())
+        else:
+            args = list(item)
+
+        args = len(args), map(default_sort_key, args)
+
+        return (10, 0, item.__class__.__name__), args, S.One.sort_key(), S.One
+    else:
+        raise ValueError("can't compute default sort key for '%s'" % item)
 
 import sys
 size = getattr(sys, "maxint", None)

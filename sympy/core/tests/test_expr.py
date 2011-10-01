@@ -1010,6 +1010,18 @@ def test_expr_sorting():
     exprs = [Tuple(x, y), Tuple(x, z), Tuple(x, y, z)]
     assert sorted(exprs, key=default_sort_key) == exprs
 
+    exprs = [[3], [1, 2]]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [[1, 2], [2, 3]]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [[1, 2], [1, 2, 3]]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [{x: -y}, {x: y}]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
 def test_as_ordered_factors():
     f, g = symbols('f,g', cls=Function)
 
