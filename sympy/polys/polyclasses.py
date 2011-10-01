@@ -1,7 +1,5 @@
 """OO layer for several polynomial representations. """
 
-from sympy.core.compatibility import cmp
-
 class GenericPoly(object):
     """Base class for low-level polynomial representations. """
 
@@ -897,15 +895,21 @@ class DMP(object):
         return False
 
     def __ne__(f, g):
-        try:
-            _, _, _, F, G = f.unify(g)
+        return not f.__eq__(g)
 
-            if f.lev == g.lev:
-                return F != G
-        except UnificationFailed:
-            pass
+    def eq(f, g, strict=False):
+        if not strict:
+            return f.__eq__(g)
+        else:
+            return f._strict_eq(g)
 
-        return True
+    def ne(f, g, strict=False):
+        return not f.eq(g, strict=strict)
+
+    def _strict_eq(f, g):
+        return isinstance(g, f.__class__) and f.lev == g.lev \
+                                          and f.dom == g.dom \
+                                          and f.rep == g.rep
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
