@@ -312,8 +312,8 @@ class Basic(object):
 
         """
         from sympy.core.singleton import S
-        return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
-
+        args = len(self.args), tuple([ arg.sort_key() for arg in self.args ])
+        return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal

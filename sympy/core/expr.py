@@ -75,7 +75,7 @@ class Expr(Basic, EvalfMixin):
             if expr.is_Mul:
                 args = sorted(args)
 
-        args = (len(args), args)
+        args = (len(args), tuple(args))
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff

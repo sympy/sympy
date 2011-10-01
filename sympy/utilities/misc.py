@@ -52,7 +52,7 @@ def default_sort_key(item):
         else:
             args = list(item)
 
-        args = len(args), map(default_sort_key, args)
+        args = len(args), tuple(map(default_sort_key, args))
 
         return (10, 0, item.__class__.__name__), args, S.One.sort_key(), S.One
     else:
