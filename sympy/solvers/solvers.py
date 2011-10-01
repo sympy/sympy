@@ -1553,9 +1553,9 @@ def _invert(eq, *symbols, **kwargs):
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
+        #                    -1
+        # f(x) = g  ->  x = f  (g)
         elif lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and (hasattr(lhs, 'inverse') or lhs.func in inverses):
-            #                    -1
-            # f(x) = g  ->  x = f  (g)
             if lhs.func in inverses:
                 inv = inverses[lhs.func]
             else:
@@ -1563,6 +1563,14 @@ def _invert(eq, *symbols, **kwargs):
             rhs = inv(rhs)
             lhs = lhs.args[0]
 
+        # base**a = b -> base = b**(1/a) if
+        #    a is an Integer and dointpow=True (this gives real branch of root)
+        #    a is not an Integer and the equation is multivariate and the
+        #      base has more than 1 symbol in it
+        # The rationale for this is that right now the multi-system solvers
+        # doesn't try to resolve generators to see, for example, if the whole
+        # system is written in terms of sqrt(x + y) so it will just fail, so we
+        # do that step here.
         if lhs.is_Pow and (
            lhs.exp.is_Integer and dointpow or not lhs.exp.is_Integer and
            len(symbols) > 1 and len(lhs.base.free_symbols & set(symbols)) > 1):

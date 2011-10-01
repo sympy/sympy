@@ -434,6 +434,10 @@ def test_issue_1694():
 
     assert solve(exp(x/y)*exp(-z/y) - 2, y) == [(x - z)/log(2)]
     assert solve(x**z*y**z - 2, z) in [[log(2)/(log(x) + log(y))], [log(2)/(log(x*y))]]
+    # if you do inversion too soon then multiple roots as for the following will
+    # be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
+    assert solve(exp(3*x) - exp(3), x) == \
+           [1, log(-E/2 + sqrt(3)*E*I/2), log(-E/2 - sqrt(3)*E*I/2)]
 
 def test_issue_2098():
     x = Symbol('x', real=True)
