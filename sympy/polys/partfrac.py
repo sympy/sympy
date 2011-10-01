@@ -2,12 +2,13 @@
 
 from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polytools import parallel_poly_from_expr
+from sympy.polys.polyoptions import allowed_flags, set_defaults
 
 from sympy.core import S, Add, sympify, Symbol, Function, Lambda, Dummy
 from sympy.utilities import numbered_symbols, take, threaded
 
 @threaded
-def apart(f, x=None, full=False, **args):
+def apart(f, x=None, full=False, **options):
     """
     Compute partial fraction decomposition of a rational function.
 
@@ -25,6 +26,8 @@ def apart(f, x=None, full=False, **args):
     -y/(x + 2) + y/(x + 1)
 
     """
+    allowed_flags(options, [])
+
     f = sympify(f)
 
     if f.is_Atom:
@@ -32,7 +35,8 @@ def apart(f, x=None, full=False, **args):
     else:
         P, Q = f.as_numer_denom()
 
-    (P, Q), opt = parallel_poly_from_expr((P, Q), x, **args)
+    options = set_defaults(options, extension=True)
+    (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
 
     if P.is_multivariate:
         raise NotImplementedError("multivariate partial fraction decomposition")

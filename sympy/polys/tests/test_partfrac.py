@@ -6,7 +6,7 @@ from sympy.polys.partfrac import (
     apart,
 )
 
-from sympy import S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda
+from sympy import S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda, factor, together
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, a, b, c
 
@@ -59,6 +59,10 @@ def test_apart_extension():
 
     assert apart(f, extension=I) == g
     assert apart(f, gaussian=True) == g
+
+    f = x/((x - 2)*(x + I))
+
+    assert factor(together(apart(f))) == f
 
 def test_apart_full():
     f = 1/(x**2 + 1)
