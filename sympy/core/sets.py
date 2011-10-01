@@ -317,7 +317,7 @@ class ProductSet(Set):
         Passes operation on to constitent sets
         """
 
-        if len(element) is not len(self.args):
+        if len(element) != len(self.args):
             return False
         from sympy.logic.boolalg import And
         return And(*[set.contains(item) for set,item in zip(self.sets,element)])
