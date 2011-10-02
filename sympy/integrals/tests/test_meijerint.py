@@ -70,10 +70,10 @@ def test_recursive():
     from sympy import symbols, exp_polar
     a, b, c = symbols('a b c', positive=True)
     assert simplify(integrate(exp(-(x-a)**2)*exp(-(x-b)**2), (x, 0, oo))) \
-           == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*a + sqrt(2)/2*b)) \
+           == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*(a + b))) \
               *exp(-a**2/2 + a*b - b**2/2)
     assert simplify(integrate(exp(-(x-a)**2)*exp(-(x-b)**2)*exp(c*x), (x, 0, oo))) \
-           == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*a + sqrt(2)/2*b + sqrt(2)/4*c)) \
+           == sqrt(2*pi)/4*(1 + erf(sqrt(2)/4*(2*a + 2*b + c))) \
               *exp(-a**2/2 - b**2/2 + c**2/8 + a*b + a*c/2 + b*c/2)
     assert simplify(integrate(exp(-(x-a-b-c)**2), (x, 0, oo))) \
            == sqrt(pi)/2*(1 + erf(a + b + c))
@@ -160,7 +160,8 @@ def test_bessel():
     assert simplify(integrate(sin(z*x)*(x**2-1)**(-(y+S(1)/2))*Heaviside(x**2-1),
                               (x, 0, oo), meijerg=True, conds='none')
                     *2/((z/2)**y*sqrt(pi)*gamma(S(1)/2-y))) == \
-        2**(y)*4**(-y/2)*z**(-y - 1)*(z**2)**((y+1)/2)*besseli(y, polar_lift(I)*z)*exp_polar(-I*pi*y/2)
+          2*(z**2/4)**(y + S(1)/2)*(z/2)**(-y)*besseli(y, z*exp_polar(I*pi/2)) \
+          /(z*sqrt((z**2*exp_polar(I*pi)/4)**y))
 
     # Werner Rosenheinrich
     # SOME INDEFINITE INTEGRALS OF BESSEL FUNCTIONS

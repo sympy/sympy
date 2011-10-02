@@ -668,7 +668,7 @@ class Pow(Expr):
         else:
             c, t = exp.as_coeff_mul()
             if c.is_negative:
-                return 1, base**-exp
+                return S.One, base**-exp
         # unprocessed Float and NumberSymbol
         return self, S.One
 
