@@ -293,9 +293,9 @@ def solve(f, *symbols, **flags):
                 >>> solve(Poly(x - 3), x)
                 [3]
                 >>> solve(x**2 - y**2, x)
-                [y, -y]
+                [-y, y]
                 >>> solve(x**4 - 1, x)
-                [1, -1, -I, I]
+                [-1, 1, -I, I]
 
             o single expression with no symbol that is in the expression
 
@@ -315,9 +315,9 @@ def solve(f, *symbols, **flags):
                 >>> solve(x - 3)
                 [3]
                 >>> solve(x**2 - y**2)
-                [{x: y}, {x: -y}]
+                [{x: -y}, {x: y}]
                 >>> solve(z**2*x**2 - z**2*y**2)
-                [{x: y}, {x: -y}]
+                [{x: -y}, {x: y}]
                 >>> solve(z**2*x - z**2*y**2)
                 [{x: y**2}]
 
@@ -350,9 +350,9 @@ def solve(f, *symbols, **flags):
                 if there is no linear solution then the first successful
                 attempt for a nonlinear solution will be returned
                     >>> solve(x**2 - y**2, x, y)
-                    [{x: y}, {x: -y}]
+                    [{x: -y}, {x: y}]
                     >>> solve(x**2 - y**2/exp(x), x, y)
-                    [{y: x*exp(x/2)}, {y: -x*exp(x/2)}]
+                    [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
             o iterable of one or more of the above
 
