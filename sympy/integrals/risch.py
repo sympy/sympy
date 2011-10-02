@@ -75,7 +75,7 @@ def _symbols(name, n):
     return lsyms[:n]
 
 
-def heurisch(f, x, rewrite=False, hints=None, mappings=None):
+def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
     """Compute indefinite integral using heuristic Risch algorithm.
 
        This is a heuristic approach to indefinite integration in finite
@@ -225,6 +225,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None):
     for g in set(terms):
         terms |= components(cancel(g.diff(x)), x)
 
+    # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
 
     mapping = dict(zip(terms, V))
@@ -235,13 +236,20 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None):
         rev_mapping[v] = k
 
     if mappings is None:
-        mapping = sorted(mapping.items(), key=default_sort_key)
+        # Pre-sort mapping in order of largest to smallest expressions (last is always x).
+        def sort_key(arg):
+            return default_sort_key(arg[0].as_independent(x)[1])
+        mapping = sorted(mapping.items(), key=sort_key, reverse=True)
         mappings = permutations(mapping)
 
     def substitute(expr):
         return expr.subs(mapping)
 
     for mapping in mappings:
+        # TODO: optimize this by not generating permutations where mapping[-1] != x.
+        if mapping[-1][0] != x:
+            continue
+
         mapping = list(mapping)
 
         diffs = [ substitute(cancel(g.diff(x))) for g in terms ]
@@ -441,9 +449,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None):
 
         return indep * antideriv
     else:
-        result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints)
+        if retries >= 0:
+            result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries-1)
 
-        if result is not None:
-            return indep*result
-        else:
-            return None
+            if result is not None:
+                return indep*result
+
+        return None
