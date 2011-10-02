@@ -3782,7 +3782,7 @@ def _keep_coeff(coeff, factors):
     elif coeff == -1: # don't keep sign?
         return -factors
     elif factors.is_Add:
-        return object.__new__(Mul)._new_rawargs(coeff, factors)
+        return Mul._from_args((coeff, factors))
     elif factors.is_Mul:
         margs = list(factors.args)
         if margs[0].is_Number:
@@ -3791,7 +3791,7 @@ def _keep_coeff(coeff, factors):
                 margs.pop(0)
         else:
             margs.insert(0, coeff)
-        return object.__new__(Mul)._new_rawargs(*margs)
+        return Mul._from_args(margs)
     else:
         return coeff*factors
 
