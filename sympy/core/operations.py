@@ -26,42 +26,36 @@ class AssocOp(Expr):
 
     @cacheit
     def __new__(cls, *args, **options):
+        args = map(_sympify, args)
+        args = [a for a in args if a is not cls.identity]
+
+        if not options.pop('evaluate', True):
+            return cls._from_args(args)
 
         if len(args) == 0:
             return cls.identity
-
-        args = map(_sympify, args)
-
-        try:
-            args = [a for a in args if a is not cls.identity]
-        except AttributeError:
-            pass
-
-        if len(args) == 0: # recheck after filtering
-            return cls.identity
-
         if len(args) == 1:
             return args[0]
 
-        if not options.pop('evaluate', True):
-            obj = Expr.__new__(cls, *args)
-            obj.is_commutative = all(a.is_commutative for a in args)
-            return obj
-
         c_part, nc_part, order_symbols = cls.flatten(args)
-        if len(c_part) + len(nc_part) <= 1:
-            if c_part:
-                obj = c_part[0]
-            elif nc_part:
-                obj = nc_part[0]
-            else:
-                obj = cls.identity
-        else:
-            obj = Expr.__new__(cls, *(c_part + nc_part))
-            obj.is_commutative = not nc_part
+        obj = cls._from_args(c_part + nc_part, not nc_part)
 
         if order_symbols is not None:
-            obj = C.Order(obj, *order_symbols)
+            return C.Order(obj, *order_symbols)
+        return obj
+
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        """Create new instance with already-processed args"""
+        if len(args) == 0:
+            return cls.identity
+        elif len(args) == 1:
+            return args[0]
+
+        obj = Expr.__new__(cls, *args)
+        if is_commutative is None:
+            is_commutative = all(a.is_commutative for a in args)
+        obj.is_commutative = is_commutative
         return obj
 
     def _new_rawargs(self, *args, **kwargs):
@@ -103,58 +97,14 @@ class AssocOp(Expr):
            Although this routine tries to do as little as possible with the
            input, getting the commutativity right is important, so this level
            of safety is enforced: commutativity will always be recomputed if
-           either a) self has no is_commutate attribute or b) self is
-           non-commutative and kwarg `reeval=False` has not been passed.
-
-           If you don't have an existing Add or Mul and need one quickly, try
-           the following.
-
-               >>> m = object.__new__(Mul)
-               >>> m._new_rawargs(x, y)
-               x*y
-
-           Note that the commutativity is always computed in this case since
-           m doesn't have an is_commutative attribute; reeval is ignored:
-
-               >>> _.is_commutative
-               True
-               >>> hasattr(m, 'is_commutative')
-               False
-               >>> m._new_rawargs(x, y, reeval=False).is_commutative
-               True
-
-           It is possible to define the commutativity of m. If it's False then
-           the new Mul's commutivity will be re-evaluated:
-
-               >>> m.is_commutative = False
-               >>> m._new_rawargs(x, y).is_commutative
-               True
-
-           But if reeval=False then a non-commutative self can pass along
-           its non-commutativity to the result (but at least you have to *work*
-           to get this wrong):
-
-               >>> m._new_rawargs(x, y, reeval=False).is_commutative
-               False
-
+           self is non-commutative and kwarg `reeval=False` has not been
+           passed.
         """
-        if len(args) > 1:
-            obj = Expr.__new__(type(self), *args)  # NB no assumptions for Add/Mul
-
-            if (hasattr(self, 'is_commutative') and
-                (self.is_commutative or
-                not kwargs.pop('reeval', True))):
-                obj.is_commutative = self.is_commutative
-            else:
-                obj.is_commutative = all(a.is_commutative for a in args)
-
-        elif len(args) == 1:
-            obj = args[0]
+        if kwargs.pop('reeval', True) and self.is_commutative is False:
+            is_commutative = None
         else:
-            obj = self.identity
-
-        return obj
-
+            is_commutative = self.is_commutative
+        return self._from_args(args, is_commutative)
 
     @classmethod
     def flatten(cls, seq):

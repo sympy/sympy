@@ -915,30 +915,12 @@ def test_as_powers_dict():
 def test_new_rawargs():
     x, y = symbols('x,y')
     n = Symbol('n', commutative=False)
-    a = object.__new__(Add)
-    assert 2 + x == a._new_rawargs(*[S(2), x])
-    assert x == a._new_rawargs(*[x])
-    assert 0 == a._new_rawargs()
-    assert 0 == a._new_rawargs(*[])
-    assert a._new_rawargs(x).is_commutative
-    assert a._new_rawargs(x, y).is_commutative
-    assert a._new_rawargs(x, n).is_commutative is False
-    assert a._new_rawargs(x, y, n).is_commutative is False
     a = x + n
     assert a.is_commutative is False
     assert a._new_rawargs(x).is_commutative
     assert a._new_rawargs(x, y).is_commutative
     assert a._new_rawargs(x, n).is_commutative is False
     assert a._new_rawargs(x, y, n).is_commutative is False
-    m = object.__new__(Mul)
-    assert 2*x == m._new_rawargs(*[S(2), x])
-    assert x == m._new_rawargs(*[x])
-    assert 1 == m._new_rawargs()
-    assert 1 == m._new_rawargs(*[])
-    assert m._new_rawargs(x).is_commutative
-    assert m._new_rawargs(x, y).is_commutative
-    assert m._new_rawargs(x, n).is_commutative is False
-    assert m._new_rawargs(x, y, n).is_commutative is False
     m = x*n
     assert m.is_commutative is False
     assert m._new_rawargs(x).is_commutative
