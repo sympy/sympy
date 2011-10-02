@@ -1016,7 +1016,7 @@ class Expr(Basic, EvalfMixin):
            >>> from sympy.abc import z, w
 
            >>> (z + w*I).as_real_imag()
-           (-im(w) + re(z), im(z) + re(w))
+           (re(z) - im(w), re(w) + im(z))
 
         """
         return (C.re(self), C.im(self))
