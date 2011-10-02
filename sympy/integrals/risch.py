@@ -17,6 +17,7 @@ from sympy.polys import quo, gcd, lcm, \
 from sympy.polys.polyroots import root_factors
 
 from sympy.core.compatibility import reduce
+from sympy.utilities.misc import default_sort_key
 
 def components(f, x):
     """Returns a set of all functional components of the given expression
@@ -234,7 +235,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None):
         rev_mapping[v] = k
 
     if mappings is None:
-        mappings = permutations(mapping.items())
+        mapping = sorted(mapping.items(), key=default_sort_key)
+        mappings = permutations(mapping)
 
     def substitute(expr):
         return expr.subs(mapping)
