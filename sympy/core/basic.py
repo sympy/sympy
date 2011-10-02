@@ -8,14 +8,12 @@ from sympify import _sympify, sympify, SympifyError
 from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 
-def _new_Basic(cls, args, kwargs, assumptions):
+def _new_Basic(cls, args, state):
     try:
-        obj = cls.__new__(cls, *args, **kwargs)
+        obj = cls.__new__(cls, *args, evaluate=False)
     except TypeError:
-        kwargs.pop('evaluate')
-        obj = cls.__new__(cls, *args, **kwargs)
-    if assumptions is not None:
-        obj._assumptions = assumptions
+        obj = cls.__new__(cls, *args)
+    obj.__setstate__(state)
     return obj
 
 class Basic(object):
@@ -100,9 +98,7 @@ class Basic(object):
         return obj
 
     def __reduce__(self):
-        assumptions = getattr(self, '_assumptions', None)
-        kwargs = {'evaluate': False}
-        return _new_Basic, (self.__class__, self.__getnewargs__(), kwargs, assumptions), None
+        return _new_Basic, (self.__class__, self.__getnewargs__(), self.__getstate__()), None
 
     def __getnewargs__(self):
         """ Pickling support.
