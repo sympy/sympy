@@ -1,8 +1,8 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
-        Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff,
-        Matrix, sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
-        Lambda, sstr, Add, Tuple, Eq, Interval, Sum, factor, trigsimp)
-from sympy.utilities.pytest import XFAIL, skip, raises
+        Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix,
+        sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
+        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify)
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
 x,y,a,t,x_1,x_2,z = symbols('x,y,a,t,x_1,x_2,z')
@@ -602,10 +602,8 @@ def test_issue_1791():
            sqrt(pi)*erf(sqrt(z)*log(x) - 1/(2*sqrt(z)))*exp(S(1)/(4*z))/(2*sqrt(z))
 
 def test_issue_1277():
-    from sympy import simplify
-    assert (simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) ==
-                simplify((n**2 - 2**(S(1)/n)*n**2 - n*2**(S(1)/n)) /
-                                    (2**(1 + S(1)/n) + n*2**(1 + S(1)/n))))
+    assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) == \
+        simplify((n**2 - 2**(S(1)/n)*n**2 - n*2**(S(1)/n))/(2**(1 + S(1)/n) + n*2**(1 + S(1)/n)))
 
 def test_issue_1418():
     assert integrate((sqrt(x) - x**3)/x**Rational(1,3), x) == \
@@ -615,11 +613,9 @@ def test_issue_1100():
     assert integrate(exp(-I*2*pi*y*x)*x, (x, -oo, oo)) is S.NaN
 
 def test_issue_841():
-    from sympy import factor
     a,b,c,d = symbols('a:d', positive=True, bounded=True)
     assert integrate(exp(-x**2 + I*c*x), x) == sqrt(pi)*erf(x - I*c/2)*exp(-c**S(2)/4)/2
-    assert integrate(exp(a*x**2 + b*x + c), x) == \
-          I*sqrt(pi)*erf(-I*x*sqrt(a) - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
+    assert integrate(exp(a*x**2 + b*x + c), x) == I*sqrt(pi)*erf(-I*x*sqrt(a) - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
     a,b,c,d = symbols('a:d', positive=True)
     i = integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))
     ans = sqrt(pi)*exp(d**2/a)*(1 + erf(oo - d/sqrt(a)))/(2*sqrt(a))
@@ -629,10 +625,9 @@ def test_issue_841():
 def test_issue_2314():
     # Note that this is not the same as testing ratint() becuase integrate()
     # pulls out the coefficient.
-    a = Symbol('a')
     assert integrate(-a/(a**2+x**2), x) == \
-        -a*(sqrt(-1/a**2)*log(x + a**2*sqrt(-1/a**2))/2 - sqrt(-1/a**2)*log(x -
-        a**2*sqrt(-1/a**2))/2)
+        -a*(sqrt(-1/a**2)*log(x + a**2*sqrt(-1/a**2))/2 - \
+            sqrt(-1/a**2)*log(x - a**2*sqrt(-1/a**2))/2)
 
 def test_issue_1793a():
     A, z, c = symbols('A z c')

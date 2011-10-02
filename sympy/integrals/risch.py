@@ -4,8 +4,9 @@ from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.basic import C, sympify
 from sympy.core.numbers import Rational, I, pi
 from sympy.core.singleton import S
+from sympy.core.compatibility import permutations
 
-from sympy.functions import exp, sin , cos , tan , cot , asin, acos, atan
+from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf
 
@@ -73,7 +74,7 @@ def _symbols(name, n):
     return lsyms[:n]
 
 
-def heurisch(f, x, **kwargs):
+def heurisch(f, x, rewrite=False, hints=None, mappings=None):
     """Compute indefinite integral using heuristic Risch algorithm.
 
        This is a heuristic approach to indefinite integration in finite
@@ -94,8 +95,7 @@ def heurisch(f, x, **kwargs):
        'integrate' function in most cases,  as this procedure needs some
        preprocessing steps and otherwise may fail.
 
-       Specification
-       ============
+       **Specification**
 
          heurisch(f, x, rewrite=False, hints=None)
 
@@ -110,8 +110,7 @@ def heurisch(f, x, **kwargs):
               - hints = [ ]           --> try to figure out
               - hints = [f1, ..., fn] --> we know better
 
-       Examples
-       ========
+       **Examples**
 
        >>> from sympy import tan
        >>> from sympy.integrals.risch import heurisch
@@ -156,8 +155,6 @@ def heurisch(f, x, **kwargs):
         (sinh, cosh, coth)  : tanh,
     }
 
-    rewrite = kwargs.pop('rewrite', False)
-
     if rewrite:
         for candidates, rule in rewritables.iteritems():
             f = f.rewrite(candidates, rule)
@@ -169,8 +166,6 @@ def heurisch(f, x, **kwargs):
             rewrite = True
 
     terms = components(f, x)
-
-    hints = kwargs.get('hints', None)
 
     if hints is not None:
         if not hints:
@@ -238,19 +233,31 @@ def heurisch(f, x, **kwargs):
     for k, v in mapping.iteritems():
         rev_mapping[v] = k
 
+    if mappings is None:
+        mappings = permutations(mapping.items())
+
     def substitute(expr):
         return expr.subs(mapping)
 
-    diffs = [ substitute(cancel(g.diff(x))) for g in terms ]
+    for mapping in mappings:
+        mapping = list(mapping)
 
-    denoms = [ g.as_numer_denom()[1] for g in diffs ]
-    try:
-        denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
-    except PolynomialError:
-        # lcm can fail with this. See issue 1418.
+        diffs = [ substitute(cancel(g.diff(x))) for g in terms ]
+        denoms = [ g.as_numer_denom()[1] for g in diffs ]
+
+        if all(h.is_polynomial(*V) for h in denoms) and substitute(f).is_rational_function(*V):
+            denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
+            break
+    else:
+        if not rewrite:
+            result = heurisch(f, x, rewrite=True, hints=hints)
+
+            if result is not None:
+                return indep*result
+
         return None
 
-    numers = [ cancel(denom * g) for g in diffs ]
+    numers = [ cancel(denom*g) for g in diffs ]
 
     def derivation(h):
         return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
@@ -313,8 +320,10 @@ def heurisch(f, x, **kwargs):
 
     s = u_split[0] * Mul(*[ k for k, v in special.iteritems() if v ])
     polified = [ p.as_poly(*V) for p in [s, P, Q] ]
+
     if None in polified:
-        return
+        return None
+
     a, b, c = [ p.total_degree() for p in polified ]
 
     poly_denom = (s * v_split[0] * deflation(v_split[1])).as_expr()
@@ -430,10 +439,9 @@ def heurisch(f, x, **kwargs):
 
         return indep * antideriv
     else:
-        if not rewrite:
-            result = heurisch(f, x, rewrite=True, **kwargs)
+        result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints)
 
-            if result is not None:
-                return indep * result
-
-        return None
+        if result is not None:
+            return indep*result
+        else:
+            return None
