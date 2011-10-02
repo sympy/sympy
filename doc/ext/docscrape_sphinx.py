@@ -207,15 +207,15 @@ class SphinxObjDoc(SphinxDocString):
         SphinxDocString.__init__(self, doc, config=config)
 
 def get_doc_object(obj, what=None, doc=None, config={}):
-    if what is None:
-        if inspect.isclass(obj):
-            what = 'class'
-        elif inspect.ismodule(obj):
-            what = 'module'
-        elif callable(obj):
-            what = 'function'
-        else:
-            what = 'object'
+    if inspect.isclass(obj):
+        what = 'class'
+    elif inspect.ismodule(obj):
+        what = 'module'
+    elif callable(obj):
+        what = 'function'
+    else:
+        what = 'object'
+
     if what == 'class':
         return SphinxClassDoc(obj, func_doc=SphinxFunctionDoc, doc=doc,
                               config=config)
