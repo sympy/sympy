@@ -38,7 +38,7 @@ always perform arithmetic expand to obtain the desired normal form:
     re(x) + I*re(y) + I*im(x) - im(y)
 
     >>> sin(x + I*y).expand(complex=True)
-    -sin(-re(x) + im(y))*cosh(re(y) + im(x)) + I*cos(-re(x) + im(y))*sinh(re(y) + im(x))
+    sin(re(x) - im(y))*cosh(re(y) + im(x)) + I*cos(re(x) - im(y))*sinh(re(y) + im(x))
 
 Note also that the same behavior can be obtained by using ``as_real_imag()``
 method. However it will return a tuple containing the real part in the first

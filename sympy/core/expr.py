@@ -1353,8 +1353,8 @@ class Expr(Basic, EvalfMixin):
                 negative_args = filter(None, arg_signs)
                 return len(negative_args) % 2 == 1
 
-            # As a last resort, we choose the one with greater hash
-            return hash(self) < hash(negative_self)
+            # As a last resort, we choose the one with greater value of .sort_key()
+            return self.sort_key() < negative_self.sort_key()
 
     def _eval_is_polynomial(self, syms):
         if self.free_symbols.intersection(syms) == set([]):
