@@ -399,6 +399,7 @@ def test_ellipse():
     ans = [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
     assert e1.intersection(e2) == ans
     e2 = Ellipse(Point(x, y), 4, 8)
+    ans = list(reversed(ans))
     assert [p.subs({x: 2, y:1}) for p in e1.intersection(e2)] == ans
 
     # Combinations of above

@@ -1,10 +1,12 @@
 from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
     sqrt, oo, LambertW, pi, I, sin, asin, Function, diff, Derivative, symbols,
     S, sympify, var, simplify, Integral, sstr, Wild, solve_linear, Interval,
-    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan, Poly, cosh, sinh, atanh, atan)
+    And, Or, Lt, Gt, Q, re, im, expand, zoo, tan, Poly, cosh, sinh, atanh,
+    atan, Dummy)
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
+from sympy.solvers.solvers import unrad
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -238,7 +240,7 @@ def test_tsolve():
     assert solve((a*x+b)*(exp(x)-3), x) == [-b/a, log(3)]
     assert solve(cos(x)-y, x) == [acos(y)]
     assert solve(2*cos(x)-y,x)== [acos(y/2)]
-    assert solve(Eq(cos(x), sin(x)), x) == [pi/4, -3*pi/4]
+    assert solve(Eq(cos(x), sin(x)), x) == [-3*pi/4, pi/4]
 
     assert solve(exp(x) + exp(-x) - y, x) == [
                         log(y/2 - sqrt(y**2 - 4)/2),
@@ -398,7 +400,7 @@ def test_issue_1694():
     assert solve((x/(x + 1) + 3)**(-2)) == []
     assert solve(x/sqrt(x**2 + 1),x) == [0]
     assert solve(exp(x) - y, x) == [log(y)]
-    assert solve(exp(x)) == [zoo]
+    assert solve(exp(x)) == []
     assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
     eq = 4*3**(5*x + 2) - 7
     ans = solve(eq, x)
@@ -436,8 +438,9 @@ def test_issue_1694():
     assert solve(x**z*y**z - 2, z) in [[log(2)/(log(x) + log(y))], [log(2)/(log(x*y))]]
     # if you do inversion too soon then multiple roots as for the following will
     # be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
+    E = S.Exp1
     assert solve(exp(3*x) - exp(3), x) == \
-           [1, log(-E/2 + sqrt(3)*E*I/2), log(-E/2 - sqrt(3)*E*I/2)]
+           [1, log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)]
 
 def test_issue_2098():
     x = Symbol('x', real=True)
@@ -463,8 +466,8 @@ def test_failing():
     assert solve((2*(3*x+4)**5 - 6*7**(3*x+9)).expand(), x)
 
 def test_checking():
-    assert solve(x*(x - y/x),x, check=False) == [sqrt(y), 0, -sqrt(y)]
-    assert solve(x*(x - y/x),x, check=True) == [sqrt(y), -sqrt(y)]
+    assert solve(x*(x - y/x),x, check=False) == [0, -sqrt(y), sqrt(y)]
+    assert solve(x*(x - y/x),x, check=True) == [-sqrt(y), sqrt(y)]
     # {x: 0, y: 4} sets denominator to 0 in the following so system should return None
     assert solve((1/(1/x + 2), 1/(y - 3) - 1)) is None
     # 0 sets denominator of 1/x to zero so [] is returned
@@ -473,12 +476,11 @@ def test_checking():
 def test_issue_1572_1364_1368():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
-    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) in (
-        [-sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
-          sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))],
-        [sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
-         -sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
+    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == (
+        [-sqrt(x)*sqrt(log((log(2) + I*pi)/log(2))),
+          sqrt(x)*sqrt(log((log(2) + I*pi)/log(2)))]
           )
+
     C1, C2 = symbols('C1 C2')
     f = Function('f')
     assert solve(C1 + C2/x**2 - exp(-f(x)), f(x)) == [log(x**2/(C1*x**2 + C2))]
@@ -494,21 +496,23 @@ def test_issue_1572_1364_1368():
     assert solve(1 - log(a + 4*x**2), x) in (
                                              [-sqrt(-a + E)/2, sqrt(-a + E)/2],
                                              [sqrt(-a + E)/2, -sqrt(-a + E)/2],)
-    assert solve((a**2 + 1) * (sin(a*x) + cos(a*x)), x) == [3*pi/(4*a), -pi/(4*a)]
+    assert solve((a**2 + 1) * (sin(a*x) + cos(a*x)), x) == [-pi/(4*a), 3*pi/(4*a)]
     assert solve(3 - (sinh(a*x) + cosh(a*x)), x) == [2*atanh(S.Half)/a]
     assert solve(3-(sinh(a*x) + cosh(a*x)**2), x) == \
-             [2*atanh(-1 + sqrt(2))/a,
-             2*atanh(-sqrt(5)/2 + S.Half)/a,
+             [
+             2*atanh(-1 + sqrt(2))/a,
+             2*atanh(S(1)/2 + sqrt(5)/2)/a,
              2*atanh(-sqrt(2) - 1)/a,
-             2*atanh(S.Half + sqrt(5)/2)/a]
-    assert solve(atan(x) - 2) == [tan(2)]
+             2*atanh(-sqrt(5)/2 + S(1)/2)/a
+             ]
+    assert solve(atan(x) - 1) == [tan(1)]
 
 def test_issue_2033():
     r, t, z = symbols('r,t,z')
     assert solve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
      [
-     (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2)),
-     (-sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2))]
+     (-sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2)),
+     (sqrt(r*sin(t)**2)/tan(t), sqrt(r*sin(t)**2))]
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
@@ -535,16 +539,16 @@ def test_issue_2033():
     eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
     assert solve(eqs) == \
         [
-        {x: log(sqrt(-z - sin(log(3)))), y: -log(3)},
-        {x: log(-sqrt(-z - sin(log(3)))), y: -log(3)}]
+        {x: log(-sqrt(-z - sin(log(3)))), y: -log(3)},
+        {x: log(sqrt(-z - sin(log(3)))), y: -log(3)}]
     assert solve(eqs, x, z) == \
         [
         {x: log(-sqrt(-z + sin(y)))},
         {x: log(sqrt(-z + sin(y)))}]
     assert solve(eqs, x, y) == \
         [
-        (log(sqrt(-z - sin(log(3)))), -log(3)),
-        (log(-sqrt(-z - sin(log(3)))), -log(3))]
+        (log(-sqrt(-z - sin(log(3)))), -log(3)),
+        (log(sqrt(-z - sin(log(3)))), -log(3))]
     assert solve(eqs, z, y) == \
         [(-exp(2*x) - sin(log(3)), -log(3))]
     assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4)) == \
@@ -572,4 +576,119 @@ def test_issue_2236():
     assert solve(reqs, sym) # doesn't fail
 
 def test_issue_2668():
-    assert solve([x**2 + y + 4], [x]) == [(sqrt(-y - 4),), (-sqrt(-y - 4),)]
+    assert solve([x**2 + y + 4], [x]) == [(-sqrt(-y - 4),), (sqrt(-y - 4),)]
+
+def test_polysys():
+    from sympy.abc import x, y
+    assert solve([x**2 + 2/y - 2 , x + y - 3], [x, y]) == \
+        [(1, 2), (1 + sqrt(5), 2 - sqrt(5)), (1 - sqrt(5), 2 + sqrt(5))]
+    assert solve([x**2 + y - 2, x**2 + y]) is None
+    # the ordering should be whatever the user requested
+    assert solve([x**2 + y - 3, x - y - 4], (x, y)) != solve([x**2 + y - 3, x - y - 4], (y, x))
+
+def test_unrad():
+    from sympy.abc import x, y, a, b, c, d
+    s = symbols('s', cls=Dummy)
+
+    # checkers to deal with possibility of answer coming
+    # back with a sign change (cf issue 2104)
+    def check(rv, ans):
+        rv, ans = list(rv), list(ans)
+        rv[0] = rv[0].expand()
+        ans[0] = ans[0].expand()
+        return rv[0] in [ans[0], -ans[0]] and rv[1:] == ans[1:]
+    def s_check(rv, ans):
+        # get the dummy
+        rv = list(rv)
+        d = rv[0].atoms(Dummy)
+        reps = zip(d, [s]*len(d))
+        # replace s with this dummy
+        rv = (rv[0].subs(reps).expand(), [(p[0].subs(reps), p[1].subs(reps))
+                                   for p in rv[1]],
+                                   [a.subs(reps) for a in rv[2]])
+        ans = (ans[0].subs(reps).expand(), [(p[0].subs(reps), p[1].subs(reps))
+                                   for p in ans[1]],
+                                   [a.subs(reps) for a in ans[2]])
+        return str(rv[0]) in [str(ans[0]), str(-ans[0])] and \
+               str(rv[1:]) == str(ans[1:])
+
+    assert s_check(unrad(sqrt(x)),
+                   (s, [(s, -s**2 + x)], []))
+    assert s_check(unrad(sqrt(x) + 1),
+                   (1 + s, [(s, x - s**2)], []))
+    assert s_check(unrad(sqrt(x) + x**Rational(1,3) + 2),
+                   (2 + s**2 + s**3, [(s, x - s**6)], []))
+    assert s_check(unrad(sqrt(x)*x**Rational(1, 3) + 2),
+                   (2 + s**5, [(s, x - s**6)], []))
+    assert check(unrad(sqrt(x) + (x + 1)**Rational(1,3)),
+                   (-x**3 + (x + 1)**2, [], []))
+    assert check(unrad(sqrt(x) + sqrt(x + 1) + sqrt(2*x)),
+                (-x*(1 + sqrt(2))**2 + x + 1, [], []))
+    assert s_check(unrad(sqrt(x) + sqrt(x + 1) + 2),
+               (4*s + 5, [(s, -s**2 + x + 1)], []))
+    assert check(unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - x)),
+               (4*x - 5*x**2, [], []))
+    assert check(unrad(a*sqrt(x) + b*sqrt(x) + c*sqrt(y) + d*sqrt(y)),
+                (x*(a + b)**2 - y*(c + d)**2, [], []))
+    assert check(unrad(sqrt(x) + sqrt(1 - x)),
+                (2*x - 1, [], []))
+    assert s_check(unrad(sqrt(x) + sqrt(1 - x) - 3),
+                (6*s + 2*x -10, [(s, -s**2 - x + 1)], []))
+    assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x)),
+                (25*x**4 - 40*x**3 + 22*x**2 - 8*x + 1, [], []))
+    assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - 3),
+        ((25*x**4 - 24*x**3 + 4456*x**2 - 4512*x + 784)*
+        (25*x**4 + 376*x**3 + 1256*x**2 - 2272*x + 784), [], []))
+    assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - sqrt(1 - 2*x)),
+                ((41*x**4 - 168*x**3 + 232*x**2 - 96*x + 16)*
+                (41*x**4 + 40*x**3 + 232*x**2 - 160*x + 16), [], []))
+    assert check(unrad(sqrt(x) + sqrt(x + 1)), (S(1), [], []))
+
+    # the two s values are actually different dummies in the following
+    # double change of variables result; the first case has false solutions
+    eq = sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x))
+    assert s_check(unrad(eq),
+               (3*s**2 - 4*s**3, [(s, x - s**2), (s, x - s**2)], []))
+    assert solve(eq, check=False) == [0, S(9)/16]
+    assert solve(eq) == []
+    # but this one really does have those solutions
+    assert solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x))) == [0, S(9)/16]
+    ans = solve(sqrt(x) + sqrt(x + 1) + sqrt(1 - x) - 6*sqrt(5)/5)
+    assert len(ans) == 2 and S(4)/5 in ans
+    ans = solve(sqrt(x) + sqrt(x + 1) - \
+                 sqrt(1 - x) - sqrt(2 + x))
+    assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
+    # the fence optimization problem
+    # http://code.google.com/p/sympy/issues/detail?id=1694#c159
+    x, y, a, F = symbols('x y a F')
+    eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
+    X = solve(eq, x, hint='minimal')[0]
+    Y = solve((x*y).subs(x, X).diff(y), y, simplify=False, minimal=True)
+    ans = 2*F/7 - sqrt(2)*F/14
+    assert any((a - ans).expand().is_zero for a in Y)
+
+    raises(ValueError, 'unrad(sqrt(x) + sqrt(x+1) + sqrt(1-sqrt(x)) + 3)')
+    raises(ValueError, 'unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y))')
+    # same as last but consider only y
+    assert s_check(unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y), y),
+           (2*s + x**S('1/2') + (1 + x)**S('1/3'), [(s, y - s**2)], []))
+    assert check(unrad(sqrt(x/(1 - x)) + (x+1)**Rational(1,3)),
+                (-x**3/(1 - x)**3 + (1 + x)**2, [], [(1 - x)**3]))
+                #(-x**3 + (1 + x)**2*(1 - x)**3, [], [sqrt(1 - x)]))
+    # same as last but consider only y; no y-containing denominators now
+    assert s_check(unrad(sqrt(x/(1 - x)) + 2*sqrt(y), y),
+           (2*s + sqrt(x)*sqrt(1/(1 - x)), [(s, y - s**2)], []))
+           #(2*(1 - x)**S('1/2')*s + x**S('1/2'), [(s, y - s**2)], []))
+    assert unrad(sqrt(x)*sqrt(1-x) + 2, x) == (-4 + x*(1 - x), [], [])
+
+@XFAIL
+def test_multivariate():
+    from sympy.abc import x
+    assert solve((x**2 - 2*x + 1).subs(x, log(x) + 3*x)) == [LambertW(3*S.Exp1)/3]
+    assert solve((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1)) == \
+          [LambertW(3*exp(-sqrt(2)))/3, LambertW(3*exp(sqrt(2)))/3]
+    assert solve((x**2 - 2*x - 2).subs(x, log(x) + 3*x)) == \
+          [LambertW(3*exp(1 - sqrt(3)))/3, LambertW(3*exp(1 + sqrt(3)))/3]
+    assert solve(x*log(x) + 3*x + 1, x) == [exp(-3 + LambertW(-exp(3)))]
+    # symmetry
+    assert solve(3*sin(x) - x*sin(3), x) == [3]

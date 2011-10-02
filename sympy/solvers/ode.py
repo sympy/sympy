@@ -1809,13 +1809,14 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-        ... hint='1st_homogeneous_coeff_best'))
-              ___________
-             /     2
-            /   3*x
-           /   ----- + 1 *f(x) = C1
-        3 /     2
-        \/     f (x)
+        ... hint='1st_homogeneous_coeff_best', simplify=False))
+                       /    2    \
+                       | 3*x     |
+                    log|----- + 1|
+                       | 2       |
+           /f(x)\      \f (x)    /
+        log|----| + -------------- = 0
+           \ C1 /         3
 
     **References**
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation

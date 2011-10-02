@@ -14,6 +14,7 @@
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
+from sympy.core.function import expand_mul
 from sympy.core.numbers import ilcm
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -321,9 +322,9 @@ def solve(f, *symbols, **flags):
                     >>> solve(x - 3)
                     [3]
                     >>> solve(x**2 - y**2)
-                    [{x: y}, {x: -y}]
+                    [{x: -y}, {x: y}]
                     >>> solve(z**2*x**2 - z**2*y**2)
-                    [{x: y}, {x: -y}]
+                    [{x: -y}, {x: y}]
                     >>> solve(z**2*x - z**2*y**2)
                     [{x: y**2}]
 
@@ -1306,6 +1307,19 @@ def _tsolve(eq, sym, **flags):
                    sym in soln.free_symbols):
                 return [soln]
 
+    try:
+        u = unrad(eq, sym)
+    except ValueError:
+        raise NotImplementedError('Radicals cannot be cleared from %s' % eq)
+    if u:
+        eq, cov, dens = u
+        if cov:
+            isym, ieq = zip(*cov)
+            sol = _solve([eq] + list(ieq), *((sym,) + isym), **flags)
+            return sorted(list(set([s[sym] for s in sol])))
+        else:
+            return _solve(eq, sym, **flags)
+
     rhs, lhs = _invert(eq, sym)
 
     if lhs.is_Add:
@@ -1580,3 +1594,160 @@ def _invert(eq, *symbols, **kwargs):
         if lhs == was:
             break
     return rhs, lhs
+
+def unrad(eq, *syms, **flags):
+    """ Remove radicals with symbolic arguments and return (eq, cov, dens),
+    None or raise an error:
+
+    None is returned if there are no radicals to remove
+
+    ValueError is raised if there are radicals and they cannot be removed
+
+    Otherwise
+
+        ``eq``, ``cov``
+            equation without radicals, perhaps written in terms of
+            change variables; the relationship to the original variables
+            is given by the expressions in list (``cov``) whose tuples,
+            (``v``, ``expr``) give the change variable introduced (``v``)
+            and the expression (``expr``) which equates the base of the radical
+            to the power of the change variable needed to clear the radical.
+            For example, for sqrt(2 - x) the tuple (_p, -_p**2 - x + 2), would
+            be obtained.
+        ``dens``
+            A set containing all denominators encountered while removing
+            radicals. This may be of interest since any solution obtained in
+            the modified expression should not set any denominator to zero.
+        ``syms``
+            an iterable of symbols which, if provided, will limit the focus of
+            radical removal: only radicals with one or more of the symbols of
+            interest will be cleared.
+
+    ``flags`` are used internally for communication during recursive calls.
+
+    Radicals can be removed from an expression if:
+        o   all bases of the radicals are the same; a change of variables is
+            done in this case.
+        o   if all radicals appear in one term of the expression
+        o   there are only 4 terms with sqrt() factors or there are less than
+            four terms having sqrt() factors
+
+    Examples:
+
+        >>> from sympy.solvers.solvers import unrad
+        >>> from sympy.abc import x
+        >>> from sympy import sqrt, Rational
+        >>> unrad(sqrt(x)*x**Rational(1,3)+2)
+        (_p**5 + 2, [(_p, -_p**6 + x)], [])
+        >>> unrad(sqrt(x)+(x+1)**Rational(1,3))
+        (x**3 - (x + 1)**2, [], [])
+
+    """
+    if eq.is_Atom:
+        return
+    dens, cov = [flags.get(k, v) for k, v in dict(dens=None, cov=None).items()]
+
+    def take(d):
+        # see if this is a term that has symbols of interest
+        # and merits further processing
+        free = d.free_symbols
+        if not free:
+            return False
+        return not syms or free.intersection(syms)
+
+    if dens is None:
+        dens = set()
+    if cov is None:
+        cov = []
+
+    eq, reps = posify(eq)
+    if syms:
+        syms = [s.subs([(v, k) for k, v in reps.items()]) for s in syms]
+    eq = powdenest(eq)
+    eq, d = eq.as_numer_denom()
+    if take(d):
+        dens.add(d)
+
+    poly = eq.as_poly()
+
+    rads = set([g for g in poly.gens if take(g) and
+                g.is_Pow and g.exp.as_coeff_mul()[0].q != 1])
+
+    if not rads:
+        return
+
+    # if all the bases are the same or all the radicals are in one
+    # term, this is the lcm of the radical's exponent denominators
+    lcm = reduce(ilcm, [r.exp.q for r in rads])
+
+    # find the bases of the radicals
+    bases = set()
+    for r in rads:
+        b, e = r.as_base_exp()
+        if b.is_Pow and b.exp == -1: #XXX after using numer_denom can we ever have this case?
+            b = 1/b
+        bases.add(b)
+
+    # handle the cases that can be resolved
+    if len(bases) == 1:
+        p = Dummy('p', positive=True)
+        b = bases.pop()
+        cov.append((p, b - p**lcm))
+        eq = poly.subs(b, p**lcm).as_expr()
+
+    else:
+
+        # get terms together that have common generators
+        drad = dict(zip(rads,range(len(rads))))
+        rterms = {-1: []}
+        args = Add.make_args(poly.as_expr())
+        for t in args:
+            if take(t):
+                common = set(t.as_poly().gens).intersection(rads)
+                key = tuple(sorted([drad[i] for i in common]))
+            else:
+                key = -1
+            rterms.setdefault(key, []).append(t)
+        args = Add(*rterms.pop(-1))
+        rterms = [Add(*rterms[k]) for k in rterms.keys()]
+        # the output will depend on the order terms are processed, so
+        # make it canonical quickly
+        rterms.sort(key=default_sort_key)
+
+        # continue handling
+
+        if len(rterms) == 1:
+            eq = rterms[0]**lcm - args**lcm
+
+        elif len(rterms) == 2 and not args:
+            eq = rterms[0]**lcm - rterms[1]**lcm
+
+        elif lcm == 2 and (not args and len(rterms) == 4 or len(rterms) < 4):
+            if len(rterms) == 4:
+                # (r0+r1)**2 - (r2+r3)**2
+                t1, t2, t3, t4 = [t**2 for t in rterms]
+                eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
+                    (t3 + t4 + 2*rterms[2]*rterms[3])
+            elif len(rterms) == 3:
+                # (r0+r1)**2 - (r2+a)**2
+                t1, t2, t3 = [t**2 for t in rterms]
+                eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
+                    (t3 + args**2 + 2*args*rterms[2])
+            elif len(rterms) == 2:
+                t1, t2 = [t**2 for t in rterms[:2]]
+                # r0**2 - (r1+a)**2
+                eq = t1 - (t2 + args**2 + 2*args*rterms[1])
+
+        else:
+            raise ValueError('Cannot remove all radicals from %s' % eq)
+
+    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens))
+    if neq:
+        eq = neq[0]
+    eq = eq.subs(reps)
+    if eq.could_extract_minus_sign():
+        eq = -eq
+    return (eq,
+            [(c[0], c[1].subs(reps)) for c in cov],
+            [d.subs(reps) for d in dens]
+            )
