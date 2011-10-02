@@ -9,9 +9,16 @@ from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 
 def _new_Basic(cls, args, state):
+    """
+    Creates a new object while pickling. We need to call the __new__ method
+    with keyword argument evaluate=False because some evaluation can occur
+    at creation time and we don't want that while deepcopying an object..
+    This function is called by the __reduce__method.
+    """
     try:
         obj = cls.__new__(cls, *args, evaluate=False)
     except TypeError:
+        # Some objects like Numbers do not accept evaluate keyword argument.
         obj = cls.__new__(cls, *args)
     obj.__setstate__(state)
     return obj
@@ -98,6 +105,12 @@ class Basic(object):
         return obj
 
     def __reduce__(self):
+        """
+        Fixes Issue 2684.
+        Sends all arguments to recreate a deepcopy of self. We need this
+        because __new__ needs to be called with keyword argument evaluate=False.
+        See :http://stackoverflow.com/questions/5238252/unpickling-new-style-with-kwargs-not-possible
+        """
         return _new_Basic, (self.__class__, self.__getnewargs__(), self.__getstate__()), None
 
     def __getnewargs__(self):
