@@ -324,7 +324,7 @@ and accelerations can be written as:
   ^\mathbf{N}\mathbf{a}^O &= \dot{u_1} \mathbf{\hat{n}_x} + \dot{u_2}
   \mathbf{\hat{n}_y}\\
 
-We can use the 2 point theorem to calculate the velocity and accleration of
+We can use the 2 point theorem to calculate the velocity and acceleration of
 point :math:`P` now.
 
 .. math::
@@ -420,8 +420,8 @@ Kinematics in SymPy's Mechanics
 
 It should be clear by now that the topic of kinematics here has been mostly
 describing the correct way to manipulate vectors into representing the
-velocities of points. Within :mod:`mechanics` there are convienent methods for
-storing thes velocities associated with frames and points. We'll now revisit
+velocities of points. Within :mod:`mechanics` there are convenient methods for
+storing these velocities associated with frames and points. We'll now revisit
 the above examples and show how to represent them in :mod:`sympy`.
 
 The topic of reference frame creation has already been covered. When a
@@ -481,7 +481,7 @@ the angular velocity. That would mean if we went back and set: ::
 
 The path that was just defined is what is used.
 This can cause problems though, as now the angular
-velocity definitions are inconsistent. It is reccomended that you avoid
+velocity definitions are inconsistent. It is recommended that you avoid
 doing this.
 
 .. % put some stuff to go with derivative theorem here

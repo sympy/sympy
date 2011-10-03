@@ -675,7 +675,7 @@ and ``orientnew`` method help, or in the references [Kane1983]_.
 
 Finally, before starting multiframe calculus operations, we will introduce
 another :mod:`mechanics` tool: ``dynamicsymbols``. ``dynamicsymbols`` is
-a shortcut function to create undefined functions of time within sympy. The
+a shortcut function to create undefined functions of time within SymPy. The
 derivative of such a 'dynamicsymbol' is shown below. ::
 
   >>> from sympy import diff

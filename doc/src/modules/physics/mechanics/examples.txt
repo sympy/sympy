@@ -20,7 +20,7 @@ without slip on the ground. See the image below.
 Here the definition of the rolling disc's kinematics is formed from the contact
 point up, removing the need to introduce generalized speeds. Only 3
 configuration and three speed variables are need to describe this system, along
-with the disc's mass and radius, and the local graivty (note that mass will
+with the disc's mass and radius, and the local gravity (note that mass will
 drop out). ::
 
   >>> from sympy import symbols, sin, cos, tan
@@ -184,7 +184,7 @@ represent the constraint forces in those directions. ::
 The Bicycle
 ===========
 
-The bicycle is an interesting system in that it has mulitple rigid bodies,
+The bicycle is an interesting system in that it has multiple rigid bodies,
 non-holonomic constraints, and a holonomic constraint. The linearized equations
 of motion are presented in [Meijaard2007]_. This example will go through
 construction of the equations of motion in :mod:`mechanics`. ::
@@ -358,7 +358,7 @@ The holonomic constraint is that the position from the rear wheel contact point
 to the front wheel contact point when dotted into the normal-to-ground plane
 direction must be zero; effectively that the front and rear wheel contact
 points are always touching the ground plane. This is actually not part of the
-dynamic equations, but instead is necessary for the lineraization process. ::
+dynamic equations, but instead is necessary for the linearization process. ::
 
   >>> conlist_coord = [WF_cont.pos_from(WR_cont) & Y.z]
 
@@ -389,8 +389,8 @@ process. ::
   Base Equations of Motion Computed
 
 This is the start of entering in the numerical values from the benchmark paper
-to validate the eigen values of the linearized equations from this model to the
-reference eigen values. Look at the aforementioned paper for more information.
+to validate the eigenvalues of the linearized equations from this model to the
+reference eigenvalues. Look at the aforementioned paper for more information.
 Some of these are intermediate values, used to transform values from the paper
 into the coordinate systems used in this model. ::
 
@@ -429,10 +429,10 @@ here, due to different orientations of coordinate systems. ::
 Linearizes the forcing vector; the equations are set up as MM udot = forcing,
 where MM is the mass matrix, udot is the vector representing the time
 derivatives of the generalized speeds, and forcing is a vector which contains
-both external forcing terms and internal forcing terms, such as centripital or
-coriolis forces.  This actually returns a matrix with as many rows as *total*
+both external forcing terms and internal forcing terms, such as centripetal or
+Coriolis forces.  This actually returns a matrix with as many rows as *total*
 coordinates and speeds, but only as many columns as independent coordinates and
-speeds. (Note that below this is commented out, as it takes a few mintues to
+speeds. (Note that below this is commented out, as it takes a few minutes to
 run, which is not good when performing the doctests) ::
 
   >>> # forcing_lin = KM.linearize()[0].subs(sub_dict)

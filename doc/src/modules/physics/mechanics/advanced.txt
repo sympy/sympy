@@ -159,7 +159,7 @@ operations on ``Vector`` and ``Dyad`` objects. The majority of the code in this
 module is actually coded with them, as it can (subjectively) result in cleaner,
 shorter, more readable code. If using this interface in your code, remember to
 take care and use parentheses; the default order of operations in Python
-results in addition occuring before some of the vector products, so use
+results in addition occurring before some of the vector products, so use
 parentheses liberally.
 
 
@@ -175,7 +175,7 @@ priority feature to implement next. There are a number of considerations here.
 
 Code output for C (using the GSL libraries), Fortran 90 (using LSODA), MATLAB,
 and SciPy is the goal. Things to be considered include: use of ``cse`` on large
-expressions for MATLAB and SciPy, which are uncompiled. It is currently unclear
+expressions for MATLAB and SciPy, which are interpretive. It is currently unclear
 whether compiled languages will benefit from common subexpression elimination,
 especially considering that it is a common part of compiler optimization, and
 there can be a significant time penalty when calling ``cse``.
