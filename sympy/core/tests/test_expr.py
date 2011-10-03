@@ -767,6 +767,8 @@ def test_extractions():
     # so both are included.
     assert ((-x-y)/(x-y)).could_extract_minus_sign() == False or\
            ((-x-y)/(y-x)).could_extract_minus_sign() == False # is_Mul even case
+    assert ( x - y).could_extract_minus_sign() == False
+    assert (-x + y).could_extract_minus_sign() == True
 
 def test_coeff():
     from sympy.abc import x, y, z
@@ -990,6 +992,18 @@ def test_expr_sorting():
     assert sorted(exprs, key=default_sort_key) == exprs
 
     exprs = [Tuple(x, y), Tuple(x, z), Tuple(x, y, z)]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [[3], [1, 2]]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [[1, 2], [2, 3]]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [[1, 2], [1, 2, 3]]
+    assert sorted(exprs, key=default_sort_key) == exprs
+
+    exprs = [{x: -y}, {x: y}]
     assert sorted(exprs, key=default_sort_key) == exprs
 
 def test_as_ordered_factors():

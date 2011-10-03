@@ -163,7 +163,7 @@ In both cases, however, you are not dealing with a SymPy Number because
 Python created its own number. Most of the time you will probably be
 working with Rational numbers, so make sure to use Rational to get
 the SymPy result. One might find it convenient to equate ``R`` and
-Rational:: 
+Rational::
 
     >>> R = Rational
     >>> R(1, 2)
@@ -639,11 +639,10 @@ Algebraic equations
 In ``isympy``::
 
     >>> solve(x**4 - 1, x)
-    [1, -1, -I, I]
+    [-1, 1, -I, I]
 
     >>> solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
     {x: -3, y: 1}
-
 
 .. index:: linear algebra
 

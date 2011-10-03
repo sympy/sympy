@@ -1,6 +1,6 @@
 from sympy import symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan, \
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos, \
-        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix
+        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im
 
 def test_sin():
     x, y = symbols('x,y')
@@ -74,6 +74,9 @@ def test_sin():
     assert sin(k*pi*I) == sinh(k*pi)*I
 
     assert sin(r).is_real == True
+
+    assert isinstance(sin( re(x) - im(y)), sin) == True
+    assert isinstance(sin(-re(x) + im(y)), sin) == False
 
 def test_sin_rewrite():
     x = Symbol('x')

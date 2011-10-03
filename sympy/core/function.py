@@ -220,6 +220,7 @@ class Function(Application, Expr):
             'exp': 10, 'log': 11,
             'sin': 20, 'cos': 21, 'tan': 22, 'cot': 23,
             'sinh': 30, 'cosh': 31, 'tanh': 32, 'coth': 33,
+            'conjugate': 40, 're': 41, 'im': 42, 'arg': 43,
         }
         name = cls.__name__
 
@@ -1440,7 +1441,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     complex - Split an expression into real and imaginary parts:
 
     >>> (x + y).expand(complex=True)
-    I*im(x) + I*im(y) + re(x) + re(y)
+    re(x) + re(y) + I*im(x) + I*im(y)
     >>> cos(x).expand(complex=True)
     -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
 
@@ -1654,7 +1655,7 @@ def expand_complex(expr, deep=True):
     >>> from sympy import expand_complex, I, im, re
     >>> from sympy.abc import z
     >>> expand_complex(z**(2*I))
-    I*im(z**(2*I)) + re(z**(2*I))
+    re(z**(2*I)) + I*im(z**(2*I))
 
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
