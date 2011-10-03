@@ -8,7 +8,7 @@ from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
         pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U
 
-from sympy.core.compatibility import cmp_to_key
+from sympy.utilities import default_sort_key
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -1120,9 +1120,9 @@ class PrettyPrinter(Printer):
         return self._print_tuple(expr)
 
     def _print_dict(self, d):
+        keys = sorted(d.keys(), key=default_sort_key)
         items = []
 
-        keys = sorted(d.keys(), key=cmp_to_key(Basic.compare_pretty) )
         for k in keys:
             K = self._print(k)
             V = self._print(d[k])
@@ -1135,16 +1135,13 @@ class PrettyPrinter(Printer):
     def _print_Dict(self, d):
         return self._print_dict(d)
 
-    def __print_set(self, set_):
-        items = list(set_)
-        items.sort( key=cmp_to_key(Basic.compare_pretty) )
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
+        pretty = self._print_seq(items, '(', ')')
+        pretty = prettyForm(*stringPict.next(type(s).__name__, pretty))
+        return pretty
 
-        s = self._print_seq(items, '(', ')')
-        s = prettyForm(*stringPict.next(type(set_).__name__, s))
-        return s
-
-    _print_set       = __print_set
-    _print_frozenset = __print_set
+    _print_frozenset = _print_set
 
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:

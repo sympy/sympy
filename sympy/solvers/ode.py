@@ -220,7 +220,7 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols
+from sympy.utilities import numbered_symbols, default_sort_key
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -1574,11 +1574,10 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     with a name in the form symbolname + num where num is in the range
     from startnumber to endnumber.
 
-    Symbols are renumbered based on Basic._compare_pretty, so they
-    should be numbered roughly in the order that they appear in the
-    final, printed expression.  Note that this ordering is based in part
-    on hashes, so it can produce different results on different
-    machines.
+    Symbols are renumbered based on ``.sort_key()``, so they should be
+    numbered roughly in the order that they appear in the final, printed
+    expression.  Note that this ordering is based in part on hashes, so
+    it can produce different results on different machines.
 
     The structure of this function is very similar to that of
     constantsimp().
@@ -1640,11 +1639,9 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 # that to make sure that term ordering is not dependent on
                 # the indexed value of C
                 C_1 = [(ci, S.One) for ci in constantsymbols]
-                sortedargs.sort(key=cmp_to_key(lambda x, y:\
-                               Basic._compare_pretty(x.subs(C_1), y.subs(C_1))))
+                sortedargs.sort(key=lambda arg: default_sort_key(arg.subs(C_1)))
                 return expr.func(*[_constant_renumber(x, symbolname, startnumber,
-                endnumber) for x in sortedargs])
-
+                    endnumber) for x in sortedargs])
 
     return _constant_renumber(expr, symbolname, startnumber, endnumber)
 
