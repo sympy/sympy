@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from basic import Basic, C
 from singleton import S
 from operations import AssocOp
@@ -24,6 +26,9 @@ class Mul(AssocOp):
 
     #identity = S.One
     # cyclic import, so defined in numbers.py
+
+    # Key for sorting commutative args in canonical order
+    _args_sortkey = cmp_to_key(Basic.compare)
 
     @classmethod
     def flatten(cls, seq):
@@ -452,7 +457,7 @@ class Mul(AssocOp):
             return [coeff], [], order_symbols
 
         # order commutative part canonically
-        c_part.sort(key=cmp_to_key(Basic.compare))
+        c_part.sort(key=cls._args_sortkey)
 
         # current code expects coeff to be always in slot-0
         if coeff is not S.One:
