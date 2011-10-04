@@ -662,7 +662,7 @@ def root_factors(f, *gens, **args):
     >>> from sympy.abc import x, y
     >>> from sympy.polys.polyroots import root_factors
 
-    >>> root_factors(x**2-y, x)
+    >>> root_factors(x**2 - y, x)
     [x - sqrt(y), x + sqrt(y)]
 
     """
@@ -694,7 +694,6 @@ def root_factors(f, *gens, **args):
             factors.append(F.quo(G))
 
     if not isinstance(f, Poly):
-        return [ f.as_expr() for f in factors ]
-    else:
-        return factors
+        factors = [ f.as_expr() for f in factors ]
 
+    return sorted(factors, key=default_sort_key)

@@ -75,7 +75,7 @@ class Expr(Basic, EvalfMixin):
             if expr.is_Mul:
                 args = sorted(args)
 
-        args = (len(args), args)
+        args = (len(args), tuple(args))
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
@@ -1016,7 +1016,7 @@ class Expr(Basic, EvalfMixin):
            >>> from sympy.abc import z, w
 
            >>> (z + w*I).as_real_imag()
-           (-im(w) + re(z), im(z) + re(w))
+           (re(z) - im(w), re(w) + im(z))
 
         """
         return (C.re(self), C.im(self))
@@ -1353,8 +1353,8 @@ class Expr(Basic, EvalfMixin):
                 negative_args = filter(None, arg_signs)
                 return len(negative_args) % 2 == 1
 
-            # As a last resort, we choose the one with greater hash
-            return hash(self) < hash(negative_self)
+            # As a last resort, we choose the one with greater value of .sort_key()
+            return self.sort_key() < negative_self.sort_key()
 
     def _eval_is_polynomial(self, syms):
         if self.free_symbols.intersection(syms) == set([]):

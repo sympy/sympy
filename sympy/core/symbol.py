@@ -85,7 +85,6 @@ class Symbol(AtomicExpr, Boolean):
 
     @cacheit
     def sort_key(self, order=None):
-        from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):

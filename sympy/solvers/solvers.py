@@ -25,6 +25,7 @@ from sympy.polys import roots, cancel, Poly, together
 from sympy.functions.elementary.piecewise import piecewise_fold
 
 from sympy.utilities.lambdify import lambdify
+from sympy.utilities.misc import default_sort_key
 from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
@@ -292,9 +293,9 @@ def solve(f, *symbols, **flags):
                 >>> solve(Poly(x - 3), x)
                 [3]
                 >>> solve(x**2 - y**2, x)
-                [y, -y]
+                [-y, y]
                 >>> solve(x**4 - 1, x)
-                [1, -1, -I, I]
+                [-1, 1, -I, I]
 
             o single expression with no symbol that is in the expression
 
@@ -314,9 +315,9 @@ def solve(f, *symbols, **flags):
                 >>> solve(x - 3)
                 [3]
                 >>> solve(x**2 - y**2)
-                [{x: y}, {x: -y}]
+                [{x: -y}, {x: y}]
                 >>> solve(z**2*x**2 - z**2*y**2)
-                [{x: y}, {x: -y}]
+                [{x: -y}, {x: y}]
                 >>> solve(z**2*x - z**2*y**2)
                 [{x: y**2}]
 
@@ -349,9 +350,9 @@ def solve(f, *symbols, **flags):
                 if there is no linear solution then the first successful
                 attempt for a nonlinear solution will be returned
                     >>> solve(x**2 - y**2, x, y)
-                    [{x: y}, {x: -y}]
+                    [{x: -y}, {x: y}]
                     >>> solve(x**2 - y**2/exp(x), x, y)
-                    [{y: x*exp(x/2)}, {y: -x*exp(x/2)}]
+                    [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
             o iterable of one or more of the above
 
@@ -497,73 +498,78 @@ def solve(f, *symbols, **flags):
                 solution[i] = dict([(swap_back_dict[k], v.subs(swap_back_dict))
                               for k, v in sol.iteritems()])
 
+    # Make sure that a list of solutions is ordered in a canonical way.
+    if isinstance(solution, list):
+        solution = sorted(solution, key=default_sort_key)
+
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still returned.
     # XXX: Currently, there are some cases which are not handled,
     # see issue 2098 comment 13: http://code.google.com/p/sympy/issues/detail?id=2098#c13.
     check = flags.get('check', True)
-    if not check:
-        return solution
-    warn = flags.get('warning', False)
-    if type(solution) is list:
-        if solution:
-            unchecked = []
-            filtered = []
-            if type(solution[0]) is tuple:
-                for sol in solution:
-                    checked_all_symbols = True
-                    for symb, val in zip(symbols, sol):
-                        test = check_assumptions(val, **symb.assumptions0)
+
+    if check:
+        warn = flags.get('warning', False)
+
+        if type(solution) is list:
+            if solution:
+                unchecked = []
+                filtered = []
+                if type(solution[0]) is tuple:
+                    for sol in solution:
+                        checked_all_symbols = True
+                        for symb, val in zip(symbols, sol):
+                            test = check_assumptions(val, **symb.assumptions0)
+                            if test is None:
+                                checked_all_symbols = False
+                            if test is False:
+                                break
+                        if test is not False:
+                            filtered.append(sol)
+                        if not checked_all_symbols:
+                            unchecked.append(sol)
+                elif isinstance(solution[0], dict):
+                    for s in solution:
+                        v = s.values()[0]
+                        assumptions = s.keys()[0].assumptions0
+                        test = check_assumptions(v, **assumptions)
+                        if test is not False:
+                            filtered.append(s)
                         if test is None:
-                            checked_all_symbols = False
-                        if test is False:
-                            break
-                    if test is not False:
-                        filtered.append(sol)
-                    if not checked_all_symbols:
-                        unchecked.append(sol)
-            elif isinstance(solution[0], dict):
-                for s in solution:
-                    v = s.values()[0]
-                    assumptions = s.keys()[0].assumptions0
-                    test = check_assumptions(v, **assumptions)
-                    if test is not False:
-                        filtered.append(s)
-                    if test is None:
-                        unchecked.append(s)
-            else:
-                for sol in solution:
-                    test = check_assumptions(sol, **symbols[0].assumptions0)
-                    if test is not False:
-                        filtered.append(sol)
-                    if test is None:
-                        unchecked.append(sol)
+                            unchecked.append(s)
+                else:
+                    for sol in solution:
+                        test = check_assumptions(sol, **symbols[0].assumptions0)
+                        if test is not False:
+                            filtered.append(sol)
+                        if test is None:
+                            unchecked.append(sol)
 
-            solution = filtered
-            if warn and unchecked:
-                print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
-                      + '\n\t' + ', '.join(str(s) for s in unchecked))
+                solution = filtered
+                if warn and unchecked:
+                    print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
+                          + '\n\t' + ', '.join(str(s) for s in unchecked))
 
-    elif type(solution) is dict:
-        checked_all_symbols = True
-        for symb, val in solution.iteritems():
-            test = check_assumptions(val, **symb.assumptions0)
-            if test is None:
-                checked_all_symbols = False
-            if test is False: # not None nor True
-                solution = None
-                break
-        if warn and not checked_all_symbols:
-            print("\n\tWarning: assumptions concerning solution can't be checked.")
+        elif type(solution) is dict:
+            checked_all_symbols = True
+            for symb, val in solution.iteritems():
+                test = check_assumptions(val, **symb.assumptions0)
+                if test is None:
+                    checked_all_symbols = False
+                if test is False: # not None nor True
+                    solution = None
+                    break
+            if warn and not checked_all_symbols:
+                print("\n\tWarning: assumptions concerning solution can't be checked.")
 
-    elif isinstance(solution, (Relational, And, Or)):
-        assert len(symbols) == 1
-        if warn and symbols[0].assumptions0:
-            print("\n\tWarning: assumptions about variable '%s' are not handled currently." %symbols[0])
-        # TODO: check also variable assumptions for inequalities
+        elif isinstance(solution, (Relational, And, Or)):
+            assert len(symbols) == 1
+            if warn and symbols[0].assumptions0:
+                print("\n\tWarning: assumptions about variable '%s' are not handled currently." %symbols[0])
+            # TODO: check also variable assumptions for inequalities
 
-    elif solution is not None:
-        raise TypeError('Unrecognized solution') # improve the checker to handle this
+        elif solution is not None:
+            raise TypeError('Unrecognized solution') # improve the checker to handle this
 
     #
     # done

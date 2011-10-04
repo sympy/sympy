@@ -25,7 +25,6 @@ Expanding of arithmetic expressions involving products and powers:
     >>> ((x + y + z)**2).expand(basic=True)
     x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
 
-
 Arithmetic expand is done by default in ``expand()`` so the keyword ``basic`` can
 be omitted. However you can set ``basic=False`` to avoid this type of expand if
 you use rules described below. This give complete control on what is done with
@@ -36,10 +35,10 @@ them into a normal form. For this ``complex`` keyword is used. Note that it will
 always perform arithmetic expand to obtain the desired normal form:
 
     >>> (x + I*y).expand(complex=True)
-    I*im(x) - im(y) + re(x) + I*re(y)
+    re(x) + I*re(y) + I*im(x) - im(y)
 
     >>> sin(x + I*y).expand(complex=True)
-    -sin(im(y) - re(x))*cosh(im(x) + re(y)) + I*cos(im(y) - re(x))*sinh(im(x) + re(y))
+    sin(re(x) - im(y))*cosh(re(y) + im(x)) + I*cos(re(x) - im(y))*sinh(re(y) + im(x))
 
 Note also that the same behavior can be obtained by using ``as_real_imag()``
 method. However it will return a tuple containing the real part in the first
@@ -47,10 +46,10 @@ place and the imaginary part in the other. This can be also done in a two step
 process by using ``collect`` function:
 
     >>> (x + I*y).as_real_imag()
-    (-im(y) + re(x), im(x) + re(y))
+    (re(x) - im(y), re(y) + im(x))
 
     >>> collect((x + I*y).expand(complex=True), I, evaluate=False)
-    {1: -im(y) + re(x), I: im(x) + re(y)}
+    {1: re(x) - im(y), I: re(y) + im(x)}
 
 There is also possibility for expanding expressions in terms of expressions of
 different kind. This is very general type of expanding and usually you would

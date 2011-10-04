@@ -382,7 +382,7 @@ def test_issue_1694():
     assert len(ans) == 5 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
     assert solve(log(x**2) - y**2/exp(x), x, y) == [{y: -sqrt(exp(x)*log(x**2))},
                                                     {y: sqrt(exp(x)*log(x**2))}]
-    assert solve(x**2*z**2 - z**2*y**2) == [{x: y}, {x: -y}]
+    assert solve(x**2*z**2 - z**2*y**2) == [{x: -y}, {x: y}]
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     raises(NotImplementedError, 'solve(log(x) - exp(x), x)')
     # 2072
@@ -394,7 +394,7 @@ def test_issue_1694():
     # 1387
     assert solve(2*x/(x + 2) - 1,x) == [2]
     # 1397
-    assert solve((x**2/(7 - x)).diff(x)) == [14, 0]
+    assert solve((x**2/(7 - x)).diff(x)) == [0, 14]
     # 1596
     f = Function('f')
     assert solve((3 - 5*x/f(x))*f(x), f(x)) == [5*x/3]
@@ -405,8 +405,7 @@ def test_issue_1694():
     assert solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4)) == \
             [2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]
     assert solve(Poly(exp(x) + exp(-x) - 4)) == [log(-sqrt(3) + 2), log(sqrt(3) + 2)]
-    assert solve(x**y + x**(2*y) - 1, x) == [(-sqrt(5)/2 - S.Half)**(1/y),
-                                             (-S.Half + sqrt(5)/2)**(1/y)]
+    assert solve(x**y + x**(2*y) - 1, x) == [(-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y)]
 
 def test_issue_2098():
     x = Symbol('x', real=True)
@@ -432,5 +431,5 @@ def test_failing():
     assert solve((2*(3*x+4)**5 - 6*7**(3*x+9)).expand(), x)
 
 def test_checking():
-    assert solve(x*(x - y/x),x, check=False) == [sqrt(y), 0, -sqrt(y)]
-    assert solve(x*(x - y/x),x, check=True) == [sqrt(y), -sqrt(y)]
+    assert solve(x*(x - y/x),x, check=False) == [0, -sqrt(y), sqrt(y)]
+    assert solve(x*(x - y/x),x, check=True) == [-sqrt(y), sqrt(y)]
