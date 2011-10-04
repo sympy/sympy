@@ -1,7 +1,6 @@
 __all__ = ['Point']
 
-from sympy.physics.mechanics.essential import (Vector, ReferenceFrame,
-                                               dynamicsymbols)
+from sympy.physics.mechanics.essential import Vector, ReferenceFrame
 
 class Point(object):
     """This object represents a point in a dynamic system.

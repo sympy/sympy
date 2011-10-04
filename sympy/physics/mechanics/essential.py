@@ -3,16 +3,15 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsLatexPrinter']
 
 from sympy import (Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
-                   expand, S, zeros, Basic, Derivative, Function, symbols, Add,
+                   expand, zeros, Derivative, Function, symbols, Add,
                    solve)
-from sympy.core import C, S, Rational, Pow, Basic
+from sympy.core import C
 from sympy.core.function import UndefinedFunction
 from sympy.core.numbers import Zero
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
-from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
 

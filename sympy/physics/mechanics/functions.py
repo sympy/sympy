@@ -14,9 +14,7 @@ from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
                                                MechanicsPrettyPrinter,
                                                MechanicsLatexPrinter,
                                                dynamicsymbols)
-from sympy.physics.mechanics.kane import Kane
-from sympy import (sympify, symbols, numbered_symbols, cse, diff, sin, cos,
-                   Matrix)
+from sympy import sympify, diff, sin, cos, Matrix
 
 def cross(vec1, vec2):
     """Cross product convenience wrapper for Vector.cross(): \n"""
