@@ -777,7 +777,7 @@ class Basic(object):
 
         for pattern in sequence:
             for i, (expr, _) in enumerate(subst):
-                if pattern[0] in expr:
+                if expr.has(pattern[0]):
                     subst.insert(i, pattern)
                     break
             else:
