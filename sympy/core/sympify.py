@@ -135,6 +135,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass
+    if isinstance(a, dict):
+        try:
+            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+                rational=rational) for x in a.iteritems()])
+        except TypeError:
+            # Not all iterables are rebuildable with their type.
+            pass
 
     # At this point we were given an arbitrary expression
     # which does not inherit from Basic and doesn't implement
