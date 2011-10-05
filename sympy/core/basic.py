@@ -768,6 +768,8 @@ class Basic(object):
            a*c*sin(d*e) + b
 
         """
+        sequence = sympify(sequence)
+
         if isinstance(sequence, dict):
             sequence = sequence.items()
 

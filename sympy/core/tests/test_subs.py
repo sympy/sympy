@@ -372,3 +372,7 @@ def test_subs_iter():
     it = iter([[x, y]])
     assert x.subs(it) == y
     assert x.subs(Tuple((x, y))) == y
+
+def test_subs_dict():
+    x, y, z = symbols('x,y,z')
+    (2*x + y + z).subs(dict(x=1, y=2)) == 4 + z
