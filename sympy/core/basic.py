@@ -786,6 +786,7 @@ class Basic(object):
 
         return self._subs_list(subst)
 
+    @deprecated
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -1223,6 +1224,7 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
+    @deprecated
     def __contains__(self, obj):
         return (self == obj)
 
