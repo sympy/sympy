@@ -67,15 +67,19 @@ class SphinxDocString(NumpyDocString):
 
             if prefix:
                 prefix = '~%s.' % prefix
-
-            autosum = []
+            
+            ## Lines that are commented out are used to make the
+            ## autosummary:: table. Since Sympy does not use the
+            ## autosummary:: functionality, it is easiest to just comment it
+            ## out.
+            #autosum = []
             others = []
             for param, param_type, desc in self[name]:
                 param = param.strip()
-                if not self._obj or hasattr(self._obj, param):
-                    autosum += ["   %s%s" % (prefix, param)]
-                else:
-                    others.append((param, param_type, desc))
+                #if not self._obj or hasattr(self._obj, param):
+                #    autosum += ["   %s%s" % (prefix, param)]
+                #else:
+                others.append((param, param_type, desc))
 
             #if autosum:
             #    out += ['.. autosummary::', '   :toctree:', '']
