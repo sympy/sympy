@@ -1123,7 +1123,7 @@ def dup_sign_variations(f, K):
     prev, k = K.zero, 0
 
     for coeff in f:
-        if coeff*prev < 0:
+        if K.is_negative(coeff*prev):
             k += 1
 
         if coeff:
