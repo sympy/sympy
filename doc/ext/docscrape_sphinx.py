@@ -190,8 +190,7 @@ class SphinxDocString(NumpyDocString):
         out += self._str_section('Notes')
         out += self._str_references()
         out += self._str_examples()
-        for param_list in ('Attributes', 'Methods'):
-            out += self._str_member_list(param_list)
+        out += self._str_member_list('Attributes')
         out = self._str_indent(out,indent)
         return '\n'.join(out)
 
