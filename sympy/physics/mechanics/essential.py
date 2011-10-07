@@ -1524,7 +1524,7 @@ class Vector(object):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(wrt), otherframe)])
             else:
-                if otherframe.dcm(v[1]).diff(wrt) == zeros((3, 3)):
+                if otherframe.dcm(v[1]).diff(wrt) == zeros(3, 3):
                     d = v[0].diff(wrt)
                     outvec += Vector([(d, v[1])])
                 else:

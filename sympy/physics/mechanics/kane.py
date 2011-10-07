@@ -391,7 +391,7 @@ class Kane(object):
         u = self._u
         o = len(u)
 
-        FR = zeros((o, 1))
+        FR = zeros(o, 1)
         # goes through each Fr (where this loop's i is r)
         for i, v in enumerate(u):
             # does this for each force pair in list (pair is w)
@@ -463,8 +463,8 @@ class Kane(object):
         # Each tuple has two elements, lists which represent the partial
         # velocity for each ur; The first list is translational partial
         # velocities, the second list is rotational translational velocities
-        MM = zeros((o, o))
-        nonMM = zeros((o, 1))
+        MM = zeros(o, o)
+        nonMM = zeros(o, 1)
         rsts = []
         partials = []
         for i, v in enumerate(bl): # go through list of bodies, particles
@@ -545,7 +545,7 @@ class Kane(object):
             rsts.append((rs, ts))
 
         # Use R*, T* and partial velocities to form FR*
-        FRSTAR = zeros((o, 1))
+        FRSTAR = zeros(o, 1)
         # does this for each body in the list
         for i, v in enumerate(rsts):
             rs, ts = v # unpact r*, t*
@@ -821,8 +821,8 @@ class Kane(object):
             raise ValueError('Need to compute Fr, Fr* first')
         o = len(self._u)
         n = len(self._q)
-        return ((self._k_kqdot).row_join(zeros((n, o)))).col_join((zeros((o,
-                n))).row_join(self.mass_matrix))
+        return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
+                n)).row_join(self.mass_matrix))
 
     @property
     def forcing(self):
