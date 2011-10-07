@@ -110,6 +110,8 @@ class Dyadic(object):
         """Divides the Dyadic by a sympifyable expression. """
         return self.__mul__(1 / other)
 
+    __truediv__ = __div__
+
     def __eq__(self, other):
         """Tests for equality.
 
@@ -1088,6 +1090,9 @@ class Vector(object):
                 i -= 1
             i += 1
 
+    def __hash__(self):
+        return hash(tuple(self.args))
+
     def __add__(self, other):
         """The add operator for Vector. """
         if isinstance(other, (int, type(Zero()))):
@@ -1143,6 +1148,8 @@ class Vector(object):
     def __div__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
         return self.__mul__(1 / other)
+
+    __truediv__ = __div__
 
     def __eq__(self, other):
         """Tests for equality.
