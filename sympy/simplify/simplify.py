@@ -1838,14 +1838,13 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> print count_ops(h, visual=True)
     ADD + DIV + 2*LOG + MUL + POW
 
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, S
     >>> def my_measure(expr):
     ...     POW = Symbol('POW')
     ...     # Discourage powers by giving POW a weight of 10
     ...     count = count_ops(expr, visual=True).subs(POW, 10)
     ...     # Every other operation gets a weight of 1 (the default)
-    ...     ops = count.atoms(Symbol)
-    ...     count = count.subs(zip(ops, [1]*len(ops)))
+    ...     count = count.replace(Symbol, type(S.One))
     ...     return count
     >>> my_measure(g)
     8
