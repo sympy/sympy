@@ -471,7 +471,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
-        f(x) == C1*cos(3*x) + C2*sin(3*x)
+        f(x) == C1*sin(3*x) + C2*cos(3*x)
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='separable')
         -log(sin(f(x))**2 - 1)/2 == C1 + log(sin(x)**2 - 1)/2
@@ -2495,7 +2495,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         ... 2*f(x).diff(x, 2) - 6*f(x).diff(x) + 5*f(x), f(x),
         ... hint='nth_linear_constant_coeff_homogeneous'))
                             x                            -2*x
-        f(x) = (C1 + C2*x)*e  + (C3*cos(x) + C4*sin(x))*e
+        f(x) = (C1 + C2*x)*e  + (C3*sin(x) + C4*cos(x))*e
 
     **References**
         - http://en.wikipedia.org/wiki/Linear_differential_equation

@@ -389,7 +389,8 @@ class IndexQuadruple(object):
         >>> from sympy.abc import y
         >>> from sympy import S
         >>> IndexQuadruple([1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3], [2], [y]).compute_buckets()
-        ({0: [3, 2, 1], 1/2: [3/2]}, {y + 1 % 1: [y, y + 1, y + 3], 0: [2]}, {0: [2]}, {y + 1 % 1: [y]})
+        ({0: [3, 2, 1], 1/2: [3/2]}, {0: [2], y + 1 % 1: [y, y + 1, y + 3]}, {0: [2]}, {y + 1 % 1: [y]})
+
         """
         mod1s = []
         pan, pap, pbm, pbq = {}, {}, {}, {}
