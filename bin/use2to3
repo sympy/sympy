@@ -18,7 +18,10 @@ is recommended to use the Python 3.2 version (or newer) as it is much faster.
 TODO: Add --destination argument (others?)
  --destination # copy over the source to a user-specified destination
 """
+
 import os
+import re
+import sys
 import fnmatch
 import shutil
 
@@ -54,7 +57,7 @@ relevant_txt_files = []
 for root, dirs, files in os.walk('./doc/src/modules'):
     # NOTE: this will consider mpmath-related files relevant, but it doesn't matter
     for filename in fnmatch.filter(files, '*.txt'):
-        relevant_txt_files.append(os.path.join(root,filename))
+        relevant_txt_files.append(os.path.join(root, filename))
 
 # some files aren't in /doc/src/modules, add them explicitly
 relevant_txt_files.append('./doc/src/tutorial.txt')
@@ -93,7 +96,6 @@ for root, dirs, files in os.walk('.'):
             if src in relevant_txt_files:
                 modified_txt_files.append(dst)
 
-
 # arguments to call 2to3 with
 args_2to3 = [
     "-w",         # writes back the changes
@@ -112,6 +114,21 @@ args_2to3_doctests.extend(modified_txt_files)
 from lib2to3.main import main as main2to3
 main2to3("lib2to3.fixes", args_2to3)
 main2to3("lib2to3.fixes", args_2to3_doctests)
+
+# remove trailing whitespace that was added by 2to3
+whitespace = re.compile(" +$", re.MULTILINE)
+
+for filepath in modified_files + modified_txt_files:
+    with open(filepath, 'r') as f:
+        text = f.read()
+
+    text, n = whitespace.subn("", text)
+
+    if n > 0:
+        sys.stdout.write("Removed trailing whitespace from %s\n" % filepath)
+
+        with open(filepath, 'w') as f:
+            f.write(text)
 
 # once we are finished with everything, we should finally copy over the files
 # provided by mpmath; these should all be in the following two directories
