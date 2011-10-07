@@ -1,6 +1,6 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
-def default_sort_key(item):
+def default_sort_key(item, order=None):
     """
     A default sort key for lists of SymPy objects to pass to functions like sorted().
 
@@ -39,11 +39,12 @@ def default_sort_key(item):
     # >>> sorted([x, x**2, 1], key=mykey)
     # [1, x, x**2]
 
-    from sympy.core import S, Basic, sympify
+    from sympy.core import S, Basic
+    from sympy.core.sympify import sympify, SympifyError
     from sympy.core.compatibility import iterable
 
     if isinstance(item, Basic):
-        return item.sort_key()
+        return item.sort_key(order=order)
 
     if iterable(item, exclude=basestring):
         if isinstance(item, dict):
@@ -51,22 +52,23 @@ def default_sort_key(item):
         else:
             args = list(item)
 
-        args = map(default_sort_key, args)
+        args = [ default_sort_key(arg, order=order) for arg in  args ]
 
         if isinstance(item, dict):
             args = sorted(args)
 
-        cls_index = 10
-        args = len(args), tuple(args)
+        cls_index, args = 10, (len(args), tuple(args))
     else:
         if not isinstance(item, basestring):
-            item = sympify(item)
+            try:
+                item = sympify(item)
+            except SympifyError:
+                pass
 
         if isinstance(item, Basic):
-            return item.sort_key()
+            return item.sort_key(order=order)
 
-        cls_index = 0
-        args = 0, str(item) # worst case scenario, compare textual representation
+        cls_index, args = 0, (1, (str(item),))
 
     return (cls_index, 0, item.__class__.__name__), args, S.One.sort_key(), S.One
 
