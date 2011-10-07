@@ -220,7 +220,7 @@ from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
 from sympy.solvers import solve
 
-from sympy.utilities import numbered_symbols
+from sympy.utilities import numbered_symbols, default_sort_key
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -471,7 +471,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
-        f(x) == C1*cos(3*x) + C2*sin(3*x)
+        f(x) == C1*sin(3*x) + C2*cos(3*x)
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='separable')
         -log(sin(f(x))**2 - 1)/2 == C1 + log(sin(x)**2 - 1)/2
@@ -1574,11 +1574,10 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     with a name in the form symbolname + num where num is in the range
     from startnumber to endnumber.
 
-    Symbols are renumbered based on Basic._compare_pretty, so they
-    should be numbered roughly in the order that they appear in the
-    final, printed expression.  Note that this ordering is based in part
-    on hashes, so it can produce different results on different
-    machines.
+    Symbols are renumbered based on ``.sort_key()``, so they should be
+    numbered roughly in the order that they appear in the final, printed
+    expression.  Note that this ordering is based in part on hashes, so
+    it can produce different results on different machines.
 
     The structure of this function is very similar to that of
     constantsimp().
@@ -1640,11 +1639,9 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
                 # that to make sure that term ordering is not dependent on
                 # the indexed value of C
                 C_1 = [(ci, S.One) for ci in constantsymbols]
-                sortedargs.sort(key=cmp_to_key(lambda x, y:\
-                               Basic._compare_pretty(x.subs(C_1), y.subs(C_1))))
+                sortedargs.sort(key=lambda arg: default_sort_key(arg.subs(C_1)))
                 return expr.func(*[_constant_renumber(x, symbolname, startnumber,
-                endnumber) for x in sortedargs])
-
+                    endnumber) for x in sortedargs])
 
     return _constant_renumber(expr, symbolname, startnumber, endnumber)
 
@@ -2498,7 +2495,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
         ... 2*f(x).diff(x, 2) - 6*f(x).diff(x) + 5*f(x), f(x),
         ... hint='nth_linear_constant_coeff_homogeneous'))
                             x                            -2*x
-        f(x) = (C1 + C2*x)*e  + (C3*cos(x) + C4*sin(x))*e
+        f(x) = (C1 + C2*x)*e  + (C3*sin(x) + C4*cos(x))*e
 
     **References**
         - http://en.wikipedia.org/wiki/Linear_differential_equation

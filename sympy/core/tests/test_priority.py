@@ -42,6 +42,9 @@ class Higher(Expr):
     def __rdiv__(self, other):
         return self.result
 
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
 class Lower(Higher):
 
     _op_priority = 5.0
@@ -84,7 +87,6 @@ def test_div():
     x = Symbol('x')
     h = Higher()
     l = Lower()
-    #FIXME-py3k: AssertionError
     assert l/h == h/l == 'high'
     assert x/h == h/x == 'high'
     assert l/x != 'low'

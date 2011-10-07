@@ -213,6 +213,7 @@ class Basic(object):
         return Basic.compare(a,b)
 
     @staticmethod
+    @deprecated
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?

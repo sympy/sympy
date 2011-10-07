@@ -16,6 +16,7 @@ import sympy.galgebra.GA
 import numpy
 
 from sympy.core.compatibility import cmp_to_key, cmp
+from sympy.utilities import default_sort_key
 
 def debug(txt):
     sys.stderr.write(txt+'\n')
@@ -954,7 +955,7 @@ class LatexPrinter(Printer):
         items = []
 
         keys = expr.keys()
-        keys.sort(Basic.compare_pretty)
+        keys.sort(key=default_sort_key)
         for key in keys:
             val = expr[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))

@@ -629,7 +629,7 @@ In ``isympy``::
            dx
 
     >>> dsolve(f(x).diff(x, x) + f(x), f(x))
-    f(x) = C1*cos(x) + C2*sin(x)
+    f(x) = C1*sin(x) + C2*cos(x)
 
 .. index:: equations; algebraic, solve
 
