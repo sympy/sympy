@@ -191,6 +191,13 @@ def test_simplify_ratio():
         # If ratio=oo, simplify() is always applied:
         assert simplify(r, ratio=oo) is not r
 
+def test_simplify_measure():
+    measure1 = lambda expr: len(str(expr))
+    measure2 = lambda expr: -count_ops(expr) # Return the most complicated result
+    expr = (x + 1)/(x + sin(x)**2 + cos(x)**2)
+    assert measure1(simplify(expr, measure=measure1)) <= measure1(expr)
+    assert measure2(simplify(expr, measure=measure2)) <= measure2(expr)
+
 def test_simplify_issue_1308():
     assert simplify(exp(-Rational(1, 2)) + exp(-Rational(3, 2))) == \
         (1 + E)*exp(-Rational(3, 2))
