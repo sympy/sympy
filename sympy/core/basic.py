@@ -769,6 +769,8 @@ class Basic(object):
            a*c*sin(d*e) + b
 
         """
+        sequence = sympify(sequence)
+
         if isinstance(sequence, dict):
             sequence = sequence.items()
 
@@ -776,7 +778,7 @@ class Basic(object):
 
         for pattern in sequence:
             for i, (expr, _) in enumerate(subst):
-                if pattern[0] in expr:
+                if expr.has(pattern[0]):
                     subst.insert(i, pattern)
                     break
             else:
@@ -785,7 +787,7 @@ class Basic(object):
 
         return self._subs_list(subst)
 
-
+    @deprecated
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -822,25 +824,68 @@ class Basic(object):
         False
 
         """
-        def search(expr, test):
-            if not isinstance(expr, Basic):
-                try:
-                    return any(search(i, test) for i in expr)
-                except TypeError:
-                    return False
-            elif test(expr):
+        def _ncsplit(expr):
+            if expr.is_Add or expr.is_Mul:
+                cpart, ncpart = [], []
+
+                for arg in expr.args:
+                    if arg.is_commutative:
+                        cpart.append(arg)
+                    else:
+                        ncpart.append(arg)
+            elif expr.is_commutative:
+                cpart, ncpart = [expr], []
+            else:
+                cpart, ncpart = [], [expr]
+
+            return set(cpart), ncpart
+
+        def _contains(expr, subexpr, iterative, c, nc):
+            if expr == subexpr:
                 return True
-            else:
-                return any(search(i, test) for i in expr.iter_basic_args())
+            elif not isinstance(expr, Basic):
+                return False
+            elif iterative and (expr.is_Add or expr.is_Mul):
+                _c, _nc = _ncsplit(expr)
 
-        def _match(p):
-            if isinstance(p, BasicType):
-                return lambda w: isinstance(w, p)
-            else:
-                return lambda w: p.matches(w) is not None
+                if (c & _c) == c:
+                    if not nc:
+                        return True
+                    elif len(nc) <= len(_nc):
+                        for i in xrange(len(_nc) - len(nc)):
+                            if _nc[i:i+len(nc)] == nc:
+                                return True
 
-        patterns = map(sympify, patterns)
-        return any(search(self, _match(p)) for p in patterns)
+            return False
+
+        def _match(pattern):
+            pattern = sympify(pattern)
+
+            if isinstance(pattern, BasicType):
+                return lambda expr: (isinstance(expr, pattern) or
+                    (isinstance(expr, BasicType) and expr == pattern))
+            else:
+                if pattern.is_Add or pattern.is_Mul:
+                    iterative, (c, nc) = True, _ncsplit(pattern)
+                else:
+                    iterative, (c, nc) = False, (None, None)
+
+                return lambda expr: _contains(expr, pattern, iterative, c, nc)
+
+        def _search(expr, match):
+            if match(expr):
+                return True
+
+            if isinstance(expr, Basic):
+                args = expr.args
+            elif iterable(expr):
+                args = expr
+            else:
+                return False
+
+            return any(_search(arg, match) for arg in args)
+
+        return any(_search(self, _match(pattern)) for pattern in patterns)
 
     def replace(self, query, value, map=False):
         """
@@ -1180,6 +1225,7 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
+    @deprecated
     def __contains__(self, obj):
         return (self == obj)
 

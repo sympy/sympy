@@ -34,7 +34,7 @@ from assumptions import WithAssumptions
 from basic import Basic
 from singleton import S
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit
+from decorators import _sympifyit, deprecated
 from compatibility import iterable,is_sequence
 from cache import cacheit
 from numbers import Rational
@@ -68,6 +68,7 @@ class FunctionClass(WithAssumptions):
     def __repr__(cls):
         return cls.__name__
 
+    @deprecated
     def __contains__(self, obj):
         return (self == obj)
 
@@ -143,6 +144,7 @@ class Application(Basic):
                     return new(*self.args)
         return self.func(*[s.subs(old, new) for s in self.args])
 
+    @deprecated
     def __contains__(self, obj):
         if self.func == obj:
             return True
