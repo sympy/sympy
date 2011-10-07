@@ -1270,7 +1270,10 @@ class PyTestReporter(Reporter):
         self.write("f", "Green")
 
     def test_xpass(self, v):
-        message = getattr(v, 'msg', getattr(v, 'message', ''))
+        if sys.version_info[:2] < (2, 6):
+            message = getattr(v, 'message', '')
+        else:
+            message = str(v)
         self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
@@ -1294,7 +1297,10 @@ class PyTestReporter(Reporter):
             self.write(".", "Green")
 
     def test_skip(self, v):
-        message = getattr(v, 'msg', getattr(v, 'message', ''))
+        if sys.version_info[:2] < (2, 6):
+            message = getattr(v, 'message', '')
+        else:
+            message = str(v)
         self._skipped += 1
         self.write("s", "Green")
         if self._verbose:
