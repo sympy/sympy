@@ -1,4 +1,4 @@
-from sympy import symbols, S, I, atan, log, Poly, sqrt
+from sympy import S, symbols, I, atan, log, Poly, sqrt, simplify
 
 from sympy.integrals.rationaltools import ratint, \
     ratint_ratpart, ratint_logpart, log_to_atan, log_to_real
@@ -106,3 +106,9 @@ def test_issue_2150():
     assert ratint(1/(x**2 + a**2), x) == \
         sqrt(-1/a**2)*log(x + a**2*sqrt(-1/a**2))/2 - sqrt(-1/a**2)*log(x -
         a**2*sqrt(-1/a**2))/2
+
+def test_issue_2718():
+    a, b, c = symbols('a,b,c', positive=True)
+
+    assert simplify(ratint(a/(b*c*x**2 + a**2 + b*a), x)) == \
+        sqrt(a)*atan(sqrt(b)*sqrt(c)*x/(sqrt(a)*sqrt(a + b)))/(sqrt(b)*sqrt(c)*sqrt(a + b))
