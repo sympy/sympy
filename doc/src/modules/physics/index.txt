@@ -1,0 +1,16 @@
+.. _physics-docs:
+
+==============
+Physics Module
+==============
+
+Various tools for solving physics problems go here.
+
+Contents
+========
+
+.. toctree::
+    :maxdepth: 3
+
+    units.txt
+    mechanics/index.txt
