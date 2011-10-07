@@ -1664,7 +1664,7 @@ def _handle_Integral(expr, func, order, hint):
         sol = 0
         assert tmpsol.is_Add
         for i in tmpsol.args:
-            if x0 not in i and y0 not in i:
+            if not i.has(x0) and not i.has(y0):
                 sol += i
         assert sol != 0
         sol = Eq(sol.subs(y, f(x)),expr.rhs) # expr.rhs == C1
@@ -2103,7 +2103,7 @@ def _homogeneous_order(eq, *symbols):
     eqs = eq.subs(dict(zip(symbols,(t*i for i in symbols))))
 
     if eqs.is_Mul:
-        if t not in eqs:
+        if not eqs.has(t):
             n.add(sympify(0))
         else:
             m = eqs.match(r*t**a)

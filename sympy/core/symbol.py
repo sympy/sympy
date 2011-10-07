@@ -198,7 +198,7 @@ class Wild(Symbol):
                 return None
         if self.exclude:
             for x in self.exclude:
-                if x in expr:
+                if expr.has(x):
                     return None
         if self.properties:
             for f in self.properties:

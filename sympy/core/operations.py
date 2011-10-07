@@ -184,7 +184,7 @@ class AssocOp(Expr):
         from function import WildFunction
         from symbol import Wild
         for p in self.args:
-            if p.has(Wild, WildFunction) and (not p in expr):
+            if p.has(Wild, WildFunction) and (not expr.has(p)):
                 # not all Wild should stay Wilds, for example:
                 # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
                 wild_part.append(p)

@@ -1,16 +1,14 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify,
-    WildFunction, Poly, Function, Derivative, Number, pi, var,
-    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
-    radsimp, powsimp, simplify, together, separate, collect, factorial,
-    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key, DiracDelta)
+    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify, WildFunction,
+    Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
+    Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
+    separate, collect, factorial, apart, combsimp, factor, refine, cancel,
+    Tuple, default_sort_key, DiracDelta, gamma)
 from sympy.physics.secondquant import FockState
 
-from sympy.core.cache import clear_cache
-
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 class DummyNumber(object):
     """
@@ -97,7 +95,7 @@ class F1_1(DummyNumber):
     def __float__(self):
         return self.number
 
-x,y,z,t,n = symbols('x,y,z,t,n')
+x,y,z,t,u,n = symbols('x,y,z,t,u,n')
 
 i5 = I5()
 f1_1 = F1_1()
@@ -565,10 +563,9 @@ def test_count():
     assert expr.count(sin(a)) == 1
     assert expr.count(lambda u: type(u) is sin) == 1
 
-def test_has_any():
-    x,y,z,t,u = symbols('x y z t u')
-    f = Function("f")
-    g = Function("g")
+def test_has_basics():
+    f = Function('f')
+    g = Function('g')
     p = Wild('p')
 
     assert sin(x).has(x)
@@ -591,41 +588,110 @@ def test_has_any():
     assert not (x**2).has(Wild)
     assert (2*p).has(Wild)
 
+    assert not x.has()
+
+def test_has_multiple():
+    f = x**2*y + sin(2**t + log(z))
+
+    assert f.has(x)
+    assert f.has(y)
+    assert f.has(z)
+    assert f.has(t)
+
+    assert not f.has(u)
+
+    assert f.has(x, y, z, t)
+    assert f.has(x, y, z, t, u)
+
     i = Integer(4400)
 
-    assert i.has(x) is False
+    assert not i.has(x)
 
     assert (i*x**i).has(x)
-    assert (i*y**i).has(x) is False
+    assert not (i*y**i).has(x)
     assert (i*y**i).has(x, y)
+    assert not (i*y**i).has(x, z)
 
-    expr = x**2*y + sin(2**t + log(z))
+def test_has_piecewise():
+    f = (x*y + 3/y)**(3 + 2)
+    g = Function('g')
+    h = Function('h')
+    p = Piecewise((g, x < -1), (1, x <= 1), (f, True))
 
-    assert expr.has(u) is False
+    assert p.has(x)
+    assert p.has(y)
+    assert not p.has(z)
+    assert p.has(1)
+    assert p.has(3)
+    assert not p.has(4)
+    assert p.has(f)
+    assert p.has(g)
+    assert not p.has(h)
 
-    assert expr.has(x)
-    assert expr.has(y)
-    assert expr.has(z)
-    assert expr.has(t)
+def test_has_iterative():
+    A, B, C = symbols('A,B,C', commutative=False)
+    f = x*gamma(x)*sin(x)*exp(x*y)*A*B*C*cos(x*A*B)
 
-    assert expr.has(x, y, z, t)
-    assert expr.has(x, y, z, t, u)
+    assert f.has(x)
+    assert f.has(x*y)
+    assert f.has(x*sin(x))
+    assert not f.has(x*sin(y))
+    assert f.has(x*A)
+    assert f.has(x*A*B)
+    assert not f.has(x*A*C)
+    assert f.has(x*A*B*C)
+    assert not f.has(x*A*C*B)
+    assert f.has(x*sin(x)*A*B*C)
+    assert not f.has(x*sin(x)*A*C*B)
+    assert not f.has(x*sin(y)*A*B*C)
+    assert f.has(x*gamma(x))
 
+def test_has_integrals():
+    f = Integral(x**2 + sin(x*y*z), (x, 0, x + y + z))
+
+    assert f.has(x + y)
+    assert f.has(x + z)
+    assert f.has(y + z)
+
+    assert f.has(x*y)
+    assert f.has(x*z)
+    assert f.has(y*z)
+
+    assert not f.has(2*x + y)
+    assert not f.has(2*x*y)
+
+def test_has_tuple():
+    f = Function('f')
+    g = Function('g')
+    h = Function('h')
+
+    assert Tuple(x, y).has(x)
+    assert not Tuple(x, y).has(z)
+    assert Tuple(f(x), g(x)).has(x)
+    assert not Tuple(f(x), g(x)).has(y)
+    assert Tuple(f(x), g(x)).has(f)
+    assert Tuple(f(x), g(x)).has(f(x))
+    assert not Tuple(f, g).has(x)
+    assert Tuple(f, g).has(f)
+    assert not Tuple(f, g).has(h)
+
+def test_has_units():
     from sympy.physics.units import m, s
 
     assert (x*m/s).has(x)
     assert (x*m/s).has(y, z) is False
 
+def test_has_polys():
     poly = Poly(x**2 + x*y*sin(z), x, y, t)
 
     assert poly.has(x)
     assert poly.has(x, y, z)
     assert poly.has(x, y, z, t)
 
+def test_has_physics():
     assert FockState((x, y)).has(x)
 
 def test_as_poly_as_expr():
-
     f = x**2 + 2*x*y
 
     assert f.as_poly().as_expr() == f
@@ -862,21 +928,6 @@ def test_coeff_expand():
 def test_integrate():
     assert x.integrate(x) == x**2/2
     assert x.integrate((x, 0, 1)) == S(1)/2
-
-def test_contains():
-    f = (x*y + 3/y)**(3 + 2)
-    g = Function('g')
-    h = Function('h')
-    p = Piecewise( (g, x<-1), (1, x<=1), (f, True))
-    assert x in p
-    assert y in p
-    assert not z in p
-    assert 1 in p
-    assert 3 in p
-    assert not 4 in p
-    assert f in p
-    assert g in p
-    assert not h in p
 
 def test_as_base_exp():
     assert x.as_base_exp() == (x, S.One)
