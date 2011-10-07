@@ -43,7 +43,6 @@ class Expr(Basic, EvalfMixin):
     @cacheit
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work
-        from sympy.core import S
 
         def key_inner(arg):
             if isinstance(arg, Basic):
@@ -54,16 +53,14 @@ class Expr(Basic, EvalfMixin):
                 return arg
 
         coeff, expr = self.as_coeff_Mul()
+
         if expr.is_Pow:
             expr, exp = expr.args
         else:
             expr, exp = expr, S.One
 
         if expr.is_Atom:
-            if expr.is_Symbol:
-                args = (str(expr),)
-            else:
-                args = (expr,)
+            args = (str(expr),)
         else:
             if expr.is_Add:
                 args = expr.as_ordered_terms(order=order)
