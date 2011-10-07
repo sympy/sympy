@@ -74,12 +74,12 @@ for root, dirs, files in os.walk('.'):
         for filename in fnmatch.filter(files, pattern):
             files.remove(filename)
     for directory in dirs:
-        dstdir = os.path.join(destination, root, directory)
+        dstdir = os.path.normpath(os.path.join(destination, root, directory))
         if not os.path.exists(dstdir):
             os.makedirs(dstdir)
     for filename in files:
         src = os.path.join(root, filename)
-        dst = os.path.join(destination, root, filename)
+        dst = os.path.normpath(os.path.join(destination, root, filename))
         if os.path.isfile(dst):
             if os.path.getmtime(src) - os.path.getmtime(dst) < 1:
                 # the file hasn't been modified since the last run, so skip it
