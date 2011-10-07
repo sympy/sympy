@@ -291,16 +291,16 @@ don\'t match.")
         perm = [a[i] for i in b]
         return _new_from_array_form(perm)
 
-    def isCommutingWith(self, other):
+    def commutes_with(self, other):
         """
         Checks if the elements are commuting
         >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([1,4,3,0,2,5])
         >>> b = Permutation([0,1,2,3,4,5])
-        >>> a.isCommutingWith(b)
+        >>> a.commutes_with(b)
         True
         >>> b = Permutation([2,3,5,4,1,0])
-        >>> a.isCommutingWith(b)
+        >>> a.commutes_with(b)
         False
         """
         a = self.array_form
@@ -735,13 +735,15 @@ don\'t match.")
 
     def conjugate(self, x):
         """
-        Computes the conjugate Permutation.
+        Computes the conjugate Permutation `~x*p*x'
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
         >>> a = Permutation([0,2,1,3])
         >>> b = Permutation([0,2,3,1])
         >>> a.conjugate(b)
+        Permutation([0, 3, 2, 1])
+        >>> ~b*a*b
         Permutation([0, 3, 2, 1])
         """
 

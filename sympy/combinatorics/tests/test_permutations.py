@@ -121,7 +121,7 @@ def test_Permutation():
     a = [Permutation.unrank_nonlex(4, i) for i in range(5)]
     for i in range(5):
         for j in range(i+1, 5):
-            assert a[i].isCommutingWith(a[j]) == (a[i]*a[j] == a[j]*a[i])
+            assert a[i].commutes_with(a[j]) == (a[i]*a[j] == a[j]*a[i])
 
 def test_josephus():
     assert Permutation.josephus(4, 6, 1) == Permutation([3, 1, 0, 2, 5, 4])
