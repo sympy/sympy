@@ -11,7 +11,7 @@ from sympy.mpmath.libmp import prec_to_dps
 
 from sympy.polys.polyerrors import PolynomialError
 
-from sympy.core.compatibility import cmp_to_key
+from sympy.utilities import default_sort_key
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
@@ -85,11 +85,12 @@ class StrPrinter(Printer):
     def _print_Derivative(self, expr):
         return 'Derivative(%s)'%", ".join(map(self._print, expr.args))
 
-    def _print_dict(self, expr):
-        keys = sorted(expr.keys(), key=cmp_to_key(Basic.compare_pretty))
+    def _print_dict(self, d):
+        keys = sorted(d.keys(), key=default_sort_key)
         items = []
+
         for key in keys:
-            item = "%s: %s" % (self._print(key), self._print(expr[key]))
+            item = "%s: %s" % (self._print(key), self._print(d[key]))
             items.append(item)
 
         return "{%s}"%", ".join(items)
@@ -187,7 +188,7 @@ class StrPrinter(Printer):
             return "Lambda((%s), %s" % (arg_string, expr)
 
     def _print_LatticeOp(self, expr):
-        args = sorted(expr.args, key=cmp_to_key(expr._compare_pretty))
+        args = sorted(expr.args, key=default_sort_key)
         return expr.func.__name__ + "(%s)"%", ".join(self._print(arg) for arg in args)
 
     def _print_Limit(self, expr):
@@ -457,17 +458,15 @@ class StrPrinter(Printer):
     def _print_Sample(self, expr):
         return "Sample([%s])"%self.stringify(expr, ", ", 0)
 
-    def __print_set(self, expr):
-        items = list(expr)
-        items.sort( key=cmp_to_key(Basic.compare_pretty) )
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
 
         args = ', '.join(self._print(item) for item in items)
         if args:
             args = '[%s]' % args
-        return '%s(%s)' % (type(expr).__name__, args)
+        return '%s(%s)' % (type(s).__name__, args)
 
-    _print_set       = __print_set
-    _print_frozenset = __print_set
+    _print_frozenset = _print_set
 
     def _print_SparseMatrix(self, expr):
         return self._print(expr.toMatrix())

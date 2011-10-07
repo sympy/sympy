@@ -358,7 +358,7 @@ def solve(f, *symbols, **flags):
 
                 involving relationals or bools
                     >>> solve([x < 3, x - 2])
-                    And(im(x) == 0, re(x) == 2)
+                    And(re(x) == 2, im(x) == 0)
                     >>> solve([x > 3, x - 2])
                     False
 

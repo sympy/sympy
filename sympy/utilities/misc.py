@@ -39,24 +39,36 @@ def default_sort_key(item):
     # >>> sorted([x, x**2, 1], key=mykey)
     # [1, x, x**2]
 
-    from sympy.core import S, Basic, sympify, Tuple
+    from sympy.core import S, Basic, sympify
     from sympy.core.compatibility import iterable
-
-    item = sympify(item)
 
     if isinstance(item, Basic):
         return item.sort_key()
-    elif iterable(item, exclude=basestring):
+
+    if iterable(item, exclude=basestring):
         if isinstance(item, dict):
-            args = map(Tuple, item.items())
+            args = item.items()
         else:
             args = list(item)
 
-        args = len(args), tuple(map(default_sort_key, args))
+        args = map(default_sort_key, args)
 
-        return (10, 0, item.__class__.__name__), args, S.One.sort_key(), S.One
+        if isinstance(item, dict):
+            args = sorted(args)
+
+        cls_index = 10
+        args = len(args), tuple(args)
     else:
-        raise ValueError("can't compute default sort key for '%s'" % item)
+        if not isinstance(item, basestring):
+            item = sympify(item)
+
+        if isinstance(item, Basic):
+            return item.sort_key()
+
+        cls_index = 0
+        args = 0, str(item) # worst case scenario, compare textual representation
+
+    return (cls_index, 0, item.__class__.__name__), args, S.One.sort_key(), S.One
 
 import sys
 size = getattr(sys, "maxint", None)

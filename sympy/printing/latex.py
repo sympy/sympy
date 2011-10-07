@@ -11,7 +11,7 @@ from sympy import Interval
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import cmp_to_key
+from sympy.utilities import default_sort_key
 
 import re, warnings
 
@@ -822,18 +822,18 @@ class LatexPrinter(Printer):
             r", & ".join([ self._print(i) for i in expr ])
 
     def _print_Tuple(self, expr):
-        return _print_tuple(self, expr)
+        return self._print_tuple(expr)
 
     def _print_list(self, expr):
         return r"\begin{bmatrix}%s\end{bmatrix}" % \
             r", & ".join([ self._print(i) for i in expr ])
 
-    def _print_dict(self, expr):
+    def _print_dict(self, d):
+        keys = sorted(d.keys(), key=default_sort_key)
         items = []
 
-        keys = sorted(expr.keys(), key=cmp_to_key(Basic.compare_pretty))
         for key in keys:
-            val = expr[key]
+            val = d[key]
             items.append("%s : %s" % (self._print(key), self._print(val)))
 
         return r"\begin{Bmatrix}%s\end{Bmatrix}" % r", & ".join(items)
