@@ -1896,6 +1896,10 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
+    def as_coeff_Add(self):
+        """Efficiently extract the coefficient of a summation. """
+        return S.Zero, self
+
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
@@ -2000,10 +2004,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import separate
         return separate(self, deep)
 
-    def collect(self, syms, func=None, evaluate=True, exact=False):
+    def collect(self, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
         """See the collect function in sympy.simplify"""
         from sympy.simplify import collect
-        return collect(self, syms, func, evaluate, exact)
+        return collect(self, syms, func, evaluate, exact, distribute_order_term)
 
     def together(self, *args, **kwargs):
         """See the together function in sympy.polys"""

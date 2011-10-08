@@ -1021,6 +1021,22 @@ def test_as_coeff_Mul():
     assert (x).as_coeff_Mul() == (S.One, x)
     assert (x*y).as_coeff_Mul() == (S.One, x*y)
 
+def test_as_coeff_Add():
+    Integer(3).as_coeff_Add() == (Integer(3), Integer(0))
+    Rational(3, 4).as_coeff_Add() == (Rational(3, 4), Integer(0))
+    Float(5.0).as_coeff_Add() == (Float(5.0), Integer(0))
+
+    (Integer(3) + x).as_coeff_Add() == (Integer(3), x)
+    (Rational(3, 4) + x).as_coeff_Add() == (Rational(3, 4), x)
+    (Float(5.0) + x).as_coeff_Add() == (Float(5.0), x)
+
+    (Integer(3) + x + y).as_coeff_Add() == (Integer(3), x + y)
+    (Rational(3, 4) + x + y).as_coeff_Add() == (Rational(3, 4), x + y)
+    (Float(5.0) + x + y).as_coeff_Add() == (Float(5.0), x + y)
+
+    (x).as_coeff_Add() == (S.Zero, x)
+    (x*y).as_coeff_Add() == (S.Zero, x*y)
+
 def test_expr_sorting():
     f, g = symbols('f,g', cls=Function)
 
