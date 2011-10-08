@@ -414,8 +414,7 @@ class Dyadic(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import ReferenceFrame, outer,\
-                dynamicsymbols
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Axis', [q, N.z])
@@ -445,8 +444,7 @@ class Dyadic(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import ReferenceFrame, outer,\
-                dynamicsymbols
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
         >>> N = ReferenceFrame('N')
         >>> q = dynamicsymbols('q')
         >>> B = N.orientnew('B', 'Axis', [q, N.z])
@@ -1505,8 +1503,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
-                dynamicsymbols
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
@@ -1546,8 +1543,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
-                dynamicsymbols
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
         >>> q1 = Symbol('q1')
         >>> u1 = dynamicsymbols('u1')
@@ -1586,8 +1582,7 @@ class Vector(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import ReferenceFrame, Vector,\
-                dynamicsymbols
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
