@@ -442,7 +442,7 @@ include both q's and u's, so the mass matrix must have this done as well.  This
 will likely be changed to be part of the linearized process, for future
 reference. ::
 
-  >>> MM_full = (KM._k_kqdot).row_join(zeros((4, 6))).col_join((zeros((6, 4))).row_join(KM.mass_matrix))
+  >>> MM_full = (KM._k_kqdot).row_join(zeros(4, 6)).col_join((zeros(6, 4)).row_join(KM.mass_matrix))
   >>> print('Before Substitution of Numerical Values')
   Before Substitution of Numerical Values
 
