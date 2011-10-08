@@ -4,7 +4,8 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul)
+    factor, Mul, O)
+
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -450,6 +451,25 @@ def test_collect_func():
 def test_collect_func_xfail():
     # XXX: this test will pass when automatic constant distribution is removed (#1497)
     assert collect(f, x, factor, evaluate=False) == {S.One: (a + 1)**3, x: 3*(a + 1)**2, x**2: 3*(a + 1), x**3: 1}
+
+def test_collect_order():
+    a, b, x, t = symbols('a,b,x,t')
+
+    assert collect(t + t*x + t*x**2 + O(x**3), t) == t*(1 + x + x**2 + O(x**3))
+    assert collect(t + t*x + x**2 + O(x**3), t) == t*(1 + x + O(x**3)) + x**2 + O(x**3)
+
+    f = a*x + b*x + c*x**2 + d*x**2 + O(x**3)
+    g = x*(a + b) + x**2*(c + d) + O(x**3)
+
+    assert collect(f, x) == g
+    assert collect(f, x, distribute_order_term=False) == g
+
+    f = sin(a + b).series(b, 0, 10)
+
+    assert collect(f, [sin(a), cos(a)]) == \
+        sin(a)*cos(b).series(b, 0, 10) + cos(a)*sin(b).series(b, 0, 10)
+    assert collect(f, [sin(a), cos(a)], distribute_order_term=False) == \
+        sin(a)*cos(b).series(b, 0, 10).removeO() + cos(a)*sin(b).series(b, 0, 10).removeO() + O(b**10)
 
 def test_rcollect():
     assert rcollect((x**2*y + x*y + x + y)/(x + y), y) == (x + y*(1 + x + x**2))/(x + y)

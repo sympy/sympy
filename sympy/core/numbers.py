@@ -232,6 +232,10 @@ class Number(AtomicExpr):
         """Efficiently extract the coefficient of a product. """
         return self, S.One
 
+    def as_coeff_Add(self):
+        """Efficiently extract the coefficient of a summation. """
+        return self, S.Zero
+
 class Float(Number):
     """
     Represents a floating point number. It is capable of representing
