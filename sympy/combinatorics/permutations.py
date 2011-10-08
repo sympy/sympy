@@ -229,9 +229,9 @@ class Permutation(Basic):
         >>> a+b
         Permutation([2, 0, 1, 3])
         """
-        if self.size != other.size:
-            raise ValueError("The permutations must be of equal size.")
         n = self.size
+        if n != other.size:
+            raise ValueError("The permutations must be of equal size.")
         a = self.inversion_vector()
         b = other.inversion_vector()
         result_inv = [(a[i] + b[i]) % (n - i) for i in xrange(n - 1)]
@@ -257,9 +257,9 @@ class Permutation(Basic):
         >>> a-b
         Permutation([2, 0, 3, 1])
         """
-        if self.size != other.size:
-            raise ValueError("The permutations must be of equal size.")
         n = self.size
+        if n != other.size:
+            raise ValueError("The permutations must be of equal size.")
         a = self.inversion_vector()
         b = other.inversion_vector()
         result_inv = [(a[i] - b[i]) % (n - i) for i in xrange(n - 1)]
@@ -336,7 +336,7 @@ don\'t match.")
         elif n == 4:
             b = [a[a[a[i]]] for i in a]
         else:
-            b = range(self.size)
+            b = range(len(a))
             while 1:
                 if n&1:
                     b = [b[i] for i in a]
@@ -429,8 +429,8 @@ don\'t match.")
         >>> p = p.next_lex(); p.rank()
         18
         """
-        n = self.size
         perm = self.array_form[:]
+        n = len(perm)
         i = n - 2
         while perm[i+1] < perm[i]:
             i -= 1
@@ -520,6 +520,8 @@ don\'t match.")
         6
         """
         r = self.rank_nonlex()
+        if r == ifac(self.size) - 1:
+            return None
         return Permutation.unrank_nonlex(self.size, r+1)
 
     def rank(self):
@@ -538,7 +540,7 @@ don\'t match.")
         rank = 0
         rho = self.array_form[:]
         n = self.size - 1
-        size = self.size
+        size = n + 1
         psize = int(ifac(n))
         for j in xrange(size - 1):
             rank += rho[j]*psize
@@ -637,9 +639,10 @@ don\'t match.")
         >>> p.is_Identity
         False
         """
-        if self.cyclic_form:
-            return self.size == len(self.cyclic_form)
-        return self.array_form == range(self.size)
+        if self._cyclic_form:
+            return self.size == len(self._cyclic_form)
+        a = self.array_form
+        return a == range(len(a))
 
     def ascents(self):
         """
@@ -653,7 +656,7 @@ don\'t match.")
         [1, 2]
         """
         a = self.array_form
-        pos = [i for i in xrange(self.size-1) if a[i] < a[i+1]]
+        pos = [i for i in xrange(len(a)-1) if a[i] < a[i+1]]
         return pos
 
     def descents(self):
@@ -668,7 +671,7 @@ don\'t match.")
         [0, 3]
         """
         a = self.array_form
-        pos = [i for i in xrange(self.size-1) if a[i] > a[i+1]]
+        pos = [i for i in xrange(len(a)-1) if a[i] > a[i+1]]
         return pos
 
     def max(self):
@@ -683,7 +686,7 @@ don\'t match.")
         """
         max = 0
         a = self.array_form
-        for i in xrange(self.size):
+        for i in xrange(len(a)):
             if a[i] != i and a[i] > max:
                 max = a[i]
         return max
@@ -698,9 +701,9 @@ don\'t match.")
         >>> p.min()
         2
         """
-        min = self.size
         a = self.array_form
-        for i in xrange(self.size):
+        min = len(a)
+        for i in xrange(len(a)):
             if a[i] != i and a[i] < min:
                 min = a[i]
         return min
@@ -725,7 +728,7 @@ don\'t match.")
         """
         inversions = 0
         a = self.array_form
-        n = self.size
+        n = len(a)
         for i in xrange(n - 1):
             b = a[i]
             for j in xrange(i + 1, n):
@@ -798,8 +801,9 @@ don\'t match.")
         Returns the number of integers moved by a permutation.
         """
         length = 0
-        for i in xrange(self.size):
-            if self.array_form[i] != i:
+        a = self.array_form
+        for i in xrange(len(a)):
+            if a[i] != i:
                 length += 1
         return length
 
@@ -853,9 +857,10 @@ don\'t match.")
         """
         cycles = []
         temp_cycle = []
-        for i in xrange(self.size - 1):
-            current_elem = self.array_form[i]
-            next_elem    = self.array_form[i+1]
+        perm = self.array_form
+        for i in xrange(len(perm) - 1):
+            current_elem = perm[i]
+            next_elem    = perm[i+1]
 
             if current_elem < next_elem:
                 temp_cycle.append(current_elem)
@@ -1162,11 +1167,11 @@ don\'t match.")
         >>> p.get_positional_distance(r)
         12
         """
-        if self.size != other.size:
+        a = self.array_form
+        b = other.array_form
+        if len(a) != len(b):
             raise ValueError("The permutations must be of the same size.")
-        perm_array = self.array_form
-        other_array = other.array_form
-        return sum([abs(perm_array[i] - other_array[i]) for i in xrange(self.size)])
+        return sum([abs(a[i] - b[i]) for i in xrange(len(a))])
 
     @classmethod
     def josephus(self, m, n, s = 1):
