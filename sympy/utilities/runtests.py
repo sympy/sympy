@@ -523,14 +523,14 @@ class SymPyTests(object):
 
     def test_file(self, filename):
         clear_cache()
-        name = "test%d" % self._count
-        name = os.path.splitext(os.path.basename(filename))[0]
         self._count += 1
         gl = {'__file__':filename}
         random.seed(self._seed)
         try:
             execfile(filename, gl)
-        except (ImportError, SyntaxError):
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except:
             self._reporter.import_error(filename, sys.exc_info())
             return
         pytestfile = ""

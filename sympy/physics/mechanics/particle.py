@@ -34,22 +34,22 @@ class Particle(object):
         self._mass = None
         self._point = None
 
-    @property
-    def mass(self):
+    def get_mass(self):
         """Mass of the particle."""
         return self._mass
 
-    @mass.setter
-    def mass(self, mass):
+    def set_mass(self, mass):
         self._mass = sympify(mass)
 
-    @property
-    def point(self):
+    mass = property(get_mass, set_mass)
+
+    def get_point(self):
         """Point of the particle."""
         return self._point
 
-    @point.setter
-    def point(self, p):
+    def set_point(self, p):
         if not isinstance(p, Point):
             raise TypeError("Particle point attribute must be a Point object.")
         self._point = p
+
+    point = property(get_point, set_point)

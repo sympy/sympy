@@ -46,40 +46,38 @@ class RigidBody(object):
         self._inertia = None
         self._inertia_point = None
 
-    @property
-    def frame(self):
+    def get_frame(self):
         return self._frame
 
-    @frame.setter
-    def frame(self, F):
+    def set_frame(self, F):
         if not isinstance(F, ReferenceFrame):
             raise TypeError("RigdBody frame must be a ReferenceFrame object.")
         self._frame = F
 
-    @property
-    def mc(self):
+    frame = property(get_frame, set_frame)
+
+    def get_mc(self):
         return self._mc
 
-    @mc.setter
-    def mc(self, p):
+    def set_mc(self, p):
         if not isinstance(p, Point):
             raise TypeError("RigidBody mass center must be a Point object")
         self._mc = p
 
-    @property
-    def mass(self):
+    mc = property(get_mc, set_mc)
+
+    def get_mass(self):
         return self._mass
 
-    @mass.setter
-    def mass(self, m):
+    def set_mass(self, m):
         self._mass = sympify(m)
 
-    @property
-    def inertia(self):
+    mass = property(get_mass, set_mass)
+
+    def get_inertia(self):
         return (self._inertia, self._inertia_point)
 
-    @inertia.setter
-    def inertia(self, I):
+    def set_inertia(self, I):
         if not isinstance(I[0], Dyadic):
             raise TypeError("RigidBody inertia must be a Dyadic object.")
         if not isinstance(I[1], Point):
@@ -87,3 +85,4 @@ class RigidBody(object):
         self._inertia = I[0]
         self._inertia_point = I[1]
 
+    inertia = property(get_inertia, set_inertia)
