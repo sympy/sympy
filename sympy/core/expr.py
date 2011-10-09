@@ -43,37 +43,27 @@ class Expr(Basic, EvalfMixin):
     @cacheit
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work
-        from sympy.core import S
 
-        def key_inner(arg):
-            if isinstance(arg, Basic):
-                return arg.sort_key(order=order)
-            elif hasattr(arg, '__iter__'):
-                return tuple(key_inner(arg) for arg in args)
-            else:
-                return arg
+        from sympy.utilities import default_sort_key
 
         coeff, expr = self.as_coeff_Mul()
+
         if expr.is_Pow:
             expr, exp = expr.args
         else:
             expr, exp = expr, S.One
 
         if expr.is_Atom:
-            if expr.is_Symbol:
-                args = (str(expr),)
-            else:
-                args = (expr,)
+            args = (str(expr),)
         else:
             if expr.is_Add:
                 args = expr.as_ordered_terms(order=order)
+            elif expr.is_Mul:
+                args = expr.as_ordered_factors(order=order)
             else:
                 args = expr.args
 
-            args = tuple(key_inner(arg) for arg in args)
-
-            if expr.is_Mul:
-                args = sorted(args)
+            args = tuple([ default_sort_key(arg, order=order) for arg in args ])
 
         args = (len(args), tuple(args))
         exp = exp.sort_key(order=order)

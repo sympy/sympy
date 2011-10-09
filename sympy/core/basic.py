@@ -1236,4 +1236,4 @@ class Atom(Basic):
     @cacheit
     def sort_key(self, order=None):
         from sympy.core import S
-        return self.class_key(), (1, (self,)), S.One.sort_key(), S.One
+        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
