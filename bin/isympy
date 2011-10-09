@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
-"""
-Python shell for SymPy.
+"""Python shell for SymPy.
 
 This is just a normal Python shell (IPython shell if you have the
 IPython package installed),  that executes the following commands
@@ -64,16 +63,15 @@ if os.path.isdir(sympy_dir):
 def main():
     from optparse import OptionParser
 
-    usage = 'usage: isympy [options] -- [ipython options]'
-    description = """A Python (or IPython, if it's installed) shell for SymPy
-that automatically executes `from sympy import *` and defines common symbols."""
-    parser = OptionParser(
-        usage=usage,
-        description=description,
-        # XXX: We can't use description=__doc__ (the docstring of this module
-        # above), because optparse line wraps it weird.  The argparse module
+    if '-h' in sys.argv or '--help' in sys.argv:
+        # XXX: We can't use description=__doc__  in the OptionParser call
+        # below because optparse line wraps it weird.  The argparse module
         # allows you to disable this, though, but it's only available in
         # Python 2.7+.
+        print __doc__ # the docstring of this module above
+    usage = 'usage: isympy [options] -- [ipython options]'
+    parser = OptionParser(
+        usage=usage,
         version='0.7.1-git',
         # XXX: We need a more centralized place to store the version.
         # It is currently stored in sympy.__version__, but we can't yet
