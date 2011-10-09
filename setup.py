@@ -164,7 +164,11 @@ class test_sympy(Command):
         if sympy.test():
             # all regular tests run successfuly, so let's also run doctests
             # (if some regular test fails, the doctests are not run)
-            sympy.doctest()
+            if sympy.doctest():
+                # All ok
+                return
+        # Return nonzero exit code
+        sys.exit(1)
 
 
 class run_benchmarks(Command):
