@@ -634,8 +634,14 @@ def test_issue_1793a():
     P1 = -A*exp(-z)
     P2 = -A/(c*t)*(sin(x)**2 + cos(y)**2)
 
-    assert integrate(c*(P2 - P1), t) == \
-        c*(A*(-cos(y)**2 - sin(x)**2)*log(c*t)/c + A*t*exp(-z))
+    # TODO: make trigsimp() deterministic
+    h1 = -sin(x)**2 - cos(y)**2
+    h2 = -sin(x)**2 + sin(y)**2 - 1
+
+    assert integrate(c*(P2 - P1), t) in [
+        c*(A*h1*log(c*t)/c + A*t*exp(-z)),
+        c*(A*h2*log(c*t)/c + A*t*exp(-z)),
+    ]
 
 def test_issue_1793b():
     # Issues relating to issue 1497 are making the actual result of this hard

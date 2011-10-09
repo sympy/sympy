@@ -7,6 +7,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
     Tuple, default_sort_key, DiracDelta, gamma)
 from sympy.physics.secondquant import FockState
+from sympy.physics.units import m, s
 
 from sympy.utilities.pytest import raises
 
@@ -1118,6 +1119,9 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
     assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
+
+def test_sort_key_atomic_expr():
+    assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
 
 def test_issue_1100():
     # first subs and limit gives NaN
