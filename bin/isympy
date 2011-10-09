@@ -125,6 +125,13 @@ def main():
         default=False,
         help='automatically construct missing symbols')
 
+    parser.add_option(
+        '-D', '--debug',
+        dest='debug',
+        action='store_true',
+        default=False,
+        help='enable debugging output')
+
     (options, ipy_args) = parser.parse_args()
 
     if not options.cache:
@@ -132,6 +139,9 @@ def main():
 
     if options.types:
         os.environ['SYMPY_GROUND_TYPES'] = options.types
+
+    if options.debug:
+        os.environ['SYMPY_DEBUG'] = str(options.debug)
 
     if options.doctest:
         options.pretty = 'no'
