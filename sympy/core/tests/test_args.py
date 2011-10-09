@@ -1309,7 +1309,6 @@ def test_sympy__polys__rootoftools__RootSum():
     from sympy.polys.rootoftools import RootSum
     assert _test_args(RootSum(x**3 + x + 1, sin))
 
-@XFAIL
 def test_sympy__series__limits__Limit():
     from sympy.series.limits import Limit
     assert _test_args(Limit(x, x, 0, dir='-'))
