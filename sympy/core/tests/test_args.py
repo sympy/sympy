@@ -1,3 +1,8 @@
+"""Test whether all elements of cls.args are instances of Basic. """
+
+# NOTE: keep tests sorted by (module, class name) key. If a class can't
+# be instantiated, leave a comment in-place (see e.g. Function).
+
 from sympy import Basic, symbols, sqrt, sin
 from sympy.utilities.pytest import XFAIL, SKIP
 
