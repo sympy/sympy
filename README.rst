@@ -83,15 +83,26 @@ in the current directory.
 For more fine-grained running of tests, use ``bin/test`` or respectively
 ``bin/doctest``.
 
+5. Usage in Python 3
+-------------------
 
-5. Clean
+SymPy also supports Python 3. Currently, this is implemented by maintaining a
+Python 2 compatible codebase and running our own 2to3 script on it. Run it with::
+
+    $ bin/use2to3
+
+When ran, it will create a new directory, sympy-py3k, which holds a Python 3
+compatible version of the code. SymPy can then be used normally with Python 3
+from that directory (installation, interactive shell, etc.).
+
+6. Clean
 --------
 
 To clean everything (thus getting the same tree as in the repository)::
 
     $./setup.py clean
 
-6. Brief History
+7. Brief History
 ----------------
 
 SymPy was started by Ondrej Certik in 2005, he wrote some code during the
@@ -112,7 +123,7 @@ http://docs.sympy.org/aboutus.html#sympy-development-team
 For people that don't want to be listed there, see the git history.
 
 
-7. Citation
+8. Citation
 -----------
 
 To cite SymPy in publications use::
