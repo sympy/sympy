@@ -255,425 +255,327 @@ def test_sympy__core__symbol__Wild():
     from sympy.core.symbol import Wild
     assert _test_args(Wild('x', exclude=[x]))
 
-@SKIP("TODO: sympy.functions")
-def test_sympy__functions__combinatorial__factorials__CombinatorialFunction():
-    from sympy.functions.combinatorial.factorials import CombinatorialFunction
-    assert _test_args(CombinatorialFunction())
+# test_sympy__functions__combinatorial__factorials__CombinatorialFunction
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__factorials__FallingFactorial():
     from sympy.functions.combinatorial.factorials import FallingFactorial
-    assert _test_args(FallingFactorial())
+    assert _test_args(FallingFactorial(2, x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__factorials__MultiFactorial():
     from sympy.functions.combinatorial.factorials import MultiFactorial
-    assert _test_args(MultiFactorial())
+    assert _test_args(MultiFactorial(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__factorials__RisingFactorial():
     from sympy.functions.combinatorial.factorials import RisingFactorial
-    assert _test_args(RisingFactorial())
+    assert _test_args(RisingFactorial(2, x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__factorials__binomial():
     from sympy.functions.combinatorial.factorials import binomial
-    assert _test_args(binomial())
+    assert _test_args(binomial(2, x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__factorials__factorial():
     from sympy.functions.combinatorial.factorials import factorial
-    assert _test_args(factorial())
+    assert _test_args(factorial(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__factorials__factorial2():
     from sympy.functions.combinatorial.factorials import factorial2
-    assert _test_args(factorial2())
+    assert _test_args(factorial2(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__numbers__bell():
     from sympy.functions.combinatorial.numbers import bell
-    assert _test_args(bell())
+    assert _test_args(bell(x, y))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__numbers__bernoulli():
     from sympy.functions.combinatorial.numbers import bernoulli
-    assert _test_args(bernoulli())
+    assert _test_args(bernoulli(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__numbers__catalan():
     from sympy.functions.combinatorial.numbers import catalan
-    assert _test_args(catalan())
+    assert _test_args(catalan(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__numbers__euler():
     from sympy.functions.combinatorial.numbers import euler
-    assert _test_args(euler())
+    assert _test_args(euler(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__numbers__fibonacci():
     from sympy.functions.combinatorial.numbers import fibonacci
-    assert _test_args(fibonacci())
+    assert _test_args(fibonacci(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__numbers__harmonic():
     from sympy.functions.combinatorial.numbers import harmonic
-    assert _test_args(harmonic())
+    assert _test_args(harmonic(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__combinatorial__numbers__lucas():
     from sympy.functions.combinatorial.numbers import lucas
-    assert _test_args(lucas())
+    assert _test_args(lucas(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__complexes__Abs():
     from sympy.functions.elementary.complexes import Abs
-    assert _test_args(Abs())
+    assert _test_args(Abs(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__complexes__arg():
     from sympy.functions.elementary.complexes import arg
-    assert _test_args(arg())
+    assert _test_args(arg(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__complexes__conjugate():
     from sympy.functions.elementary.complexes import conjugate
-    assert _test_args(conjugate())
+    assert _test_args(conjugate(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__complexes__im():
     from sympy.functions.elementary.complexes import im
-    assert _test_args(im())
+    assert _test_args(im(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__complexes__re():
     from sympy.functions.elementary.complexes import re
-    assert _test_args(re())
+    assert _test_args(re(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__complexes__sign():
     from sympy.functions.elementary.complexes import sign
-    assert _test_args(sign())
+    assert _test_args(sign(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__exponential__LambertW():
     from sympy.functions.elementary.exponential import LambertW
-    assert _test_args(LambertW())
+    assert _test_args(LambertW(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__exponential__exp():
     from sympy.functions.elementary.exponential import exp
-    assert _test_args(exp())
+    assert _test_args(exp(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__exponential__log():
     from sympy.functions.elementary.exponential import log
-    assert _test_args(log())
+    assert _test_args(log(2))
 
-@SKIP("TODO: sympy.functions")
-def test_sympy__functions__elementary__hyperbolic__HyperbolicFunction():
-    from sympy.functions.elementary.hyperbolic import HyperbolicFunction
-    assert _test_args(HyperbolicFunction())
+# test_sympy__functions__elementary__hyperbolic__HyperbolicFunction
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__hyperbolic__acosh():
     from sympy.functions.elementary.hyperbolic import acosh
-    assert _test_args(acosh())
+    assert _test_args(acosh(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__hyperbolic__acoth():
     from sympy.functions.elementary.hyperbolic import acoth
-    assert _test_args(acoth())
+    assert _test_args(acoth(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__hyperbolic__asinh():
     from sympy.functions.elementary.hyperbolic import asinh
-    assert _test_args(asinh())
+    assert _test_args(asinh(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__hyperbolic__atanh():
     from sympy.functions.elementary.hyperbolic import atanh
-    assert _test_args(atanh())
+    assert _test_args(atanh(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__hyperbolic__cosh():
     from sympy.functions.elementary.hyperbolic import cosh
-    assert _test_args(cosh())
+    assert _test_args(cosh(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__hyperbolic__coth():
     from sympy.functions.elementary.hyperbolic import coth
-    assert _test_args(coth())
+    assert _test_args(coth(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__hyperbolic__sinh():
     from sympy.functions.elementary.hyperbolic import sinh
-    assert _test_args(sinh())
+    assert _test_args(sinh(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__hyperbolic__tanh():
     from sympy.functions.elementary.hyperbolic import tanh
-    assert _test_args(tanh())
+    assert _test_args(tanh(2))
 
-@SKIP("TODO: sympy.functions")
+@SKIP("does this work at all?")
 def test_sympy__functions__elementary__integers__RoundFunction():
     from sympy.functions.elementary.integers import RoundFunction
     assert _test_args(RoundFunction())
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__integers__ceiling():
     from sympy.functions.elementary.integers import ceiling
-    assert _test_args(ceiling())
+    assert _test_args(ceiling(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__integers__floor():
     from sympy.functions.elementary.integers import floor
-    assert _test_args(floor())
+    assert _test_args(floor(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__miscellaneous__IdentityFunction():
     from sympy.functions.elementary.miscellaneous import IdentityFunction
     assert _test_args(IdentityFunction())
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__miscellaneous__Max():
     from sympy.functions.elementary.miscellaneous import Max
-    assert _test_args(Max())
+    assert _test_args(Max(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__miscellaneous__Min():
     from sympy.functions.elementary.miscellaneous import Min
-    assert _test_args(Min())
+    assert _test_args(Min(x, 2))
 
-@SKIP("TODO: sympy.functions")
-def test_sympy__functions__elementary__miscellaneous__MinMaxBase():
-    from sympy.functions.elementary.miscellaneous import MinMaxBase
-    assert _test_args(MinMaxBase())
+# test_sympy__functions__elementary__miscellaneous__MinMaxBase
 
-@SKIP("TODO: sympy.functions")
+@XFAIL
 def test_sympy__functions__elementary__piecewise__ExprCondPair():
     from sympy.functions.elementary.piecewise import ExprCondPair
-    assert _test_args(ExprCondPair())
+    assert _test_args(ExprCondPair(1, True))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__piecewise__Piecewise():
     from sympy.functions.elementary.piecewise import Piecewise
-    assert _test_args(Piecewise())
+    assert _test_args(Piecewise((1, x >= 0), (0, True)))
 
-@SKIP("TODO: sympy.functions")
-def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
-    from sympy.functions.elementary.trigonometric import TrigonometricFunction
-    assert _test_args(TrigonometricFunction())
+# test_sympy__functions__elementary__trigonometric__TrigonometricFunction
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos
-    assert _test_args(acos())
+    assert _test_args(acos(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__acot():
     from sympy.functions.elementary.trigonometric import acot
-    assert _test_args(acot())
+    assert _test_args(acot(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__asin():
     from sympy.functions.elementary.trigonometric import asin
-    assert _test_args(asin())
+    assert _test_args(asin(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__atan():
     from sympy.functions.elementary.trigonometric import atan
-    assert _test_args(atan())
+    assert _test_args(atan(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__atan2():
     from sympy.functions.elementary.trigonometric import atan2
-    assert _test_args(atan2())
+    assert _test_args(atan2(2, 3))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__cos():
     from sympy.functions.elementary.trigonometric import cos
-    assert _test_args(cos())
+    assert _test_args(cos(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__cot():
     from sympy.functions.elementary.trigonometric import cot
-    assert _test_args(cot())
+    assert _test_args(cot(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__sin():
     from sympy.functions.elementary.trigonometric import sin
-    assert _test_args(sin())
+    assert _test_args(sin(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__elementary__trigonometric__tan():
     from sympy.functions.elementary.trigonometric import tan
-    assert _test_args(tan())
+    assert _test_args(tan(2))
 
-@SKIP("TODO: sympy.functions")
-def test_sympy__functions__special__bessel__BesselBase():
-    from sympy.functions.special.bessel import BesselBase
-    assert _test_args(BesselBase())
+# test_sympy__functions__special__bessel__BesselBase
 
-@SKIP("TODO: sympy.functions")
-def test_sympy__functions__special__bessel__SphericalBesselBase():
-    from sympy.functions.special.bessel import SphericalBesselBase
-    assert _test_args(SphericalBesselBase())
+# test_sympy__functions__special__bessel__SphericalBesselBase
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__bessel__besseli():
     from sympy.functions.special.bessel import besseli
-    assert _test_args(besseli())
+    assert _test_args(besseli(x, 1))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__bessel__besselj():
     from sympy.functions.special.bessel import besselj
-    assert _test_args(besselj())
+    assert _test_args(besselj(x, 1))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__bessel__besselk():
     from sympy.functions.special.bessel import besselk
-    assert _test_args(besselk())
+    assert _test_args(besselk(x, 1))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__bessel__bessely():
     from sympy.functions.special.bessel import bessely
-    assert _test_args(bessely())
+    assert _test_args(bessely(x, 1))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__bessel__hankel1():
     from sympy.functions.special.bessel import hankel1
-    assert _test_args(hankel1())
+    assert _test_args(hankel1(x, 1))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__bessel__hankel2():
     from sympy.functions.special.bessel import hankel2
-    assert _test_args(hankel2())
+    assert _test_args(hankel2(x, 1))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__bessel__jn():
     from sympy.functions.special.bessel import jn
-    assert _test_args(jn())
+    assert _test_args(jn(0, x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__bessel__yn():
     from sympy.functions.special.bessel import yn
-    assert _test_args(yn())
+    assert _test_args(yn(0, x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
-    assert _test_args(DiracDelta())
+    assert _test_args(DiracDelta(x, 1))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__delta_functions__Heaviside():
     from sympy.functions.special.delta_functions import Heaviside
-    assert _test_args(Heaviside())
+    assert _test_args(Heaviside(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
-    assert _test_args(erf())
+    assert _test_args(erf(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__gamma_functions__gamma():
     from sympy.functions.special.gamma_functions import gamma
-    assert _test_args(gamma())
+    assert _test_args(gamma(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__gamma_functions__loggamma():
     from sympy.functions.special.gamma_functions import loggamma
-    assert _test_args(loggamma())
+    assert _test_args(loggamma(2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__gamma_functions__lowergamma():
     from sympy.functions.special.gamma_functions import lowergamma
-    assert _test_args(lowergamma())
+    assert _test_args(lowergamma(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__gamma_functions__polygamma():
     from sympy.functions.special.gamma_functions import polygamma
-    assert _test_args(polygamma())
+    assert _test_args(polygamma(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
-    assert _test_args(uppergamma())
+    assert _test_args(uppergamma(x, 2))
 
-@SKIP("TODO: sympy.functions")
-def test_sympy__functions__special__hyper__TupleParametersBase():
-    from sympy.functions.special.hyper import TupleParametersBase
-    assert _test_args(TupleParametersBase())
+# test_sympy__functions__special__hyper__TupleParametersBase
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__hyper__hyper():
     from sympy.functions.special.hyper import hyper
-    assert _test_args(hyper())
+    assert _test_args(hyper([1, 2, 3], [4, 5], x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__hyper__meijerg():
     from sympy.functions.special.hyper import meijerg
-    assert _test_args(meijerg())
+    assert _test_args(meijerg([1, 2, 3], [4, 5], [6], [], x))
 
-@SKIP("TODO: sympy.functions")
-def test_sympy__functions__special__polynomials__PolynomialSequence():
-    from sympy.functions.special.polynomials import PolynomialSequence
-    assert _test_args(PolynomialSequence())
+# test_sympy__functions__special__polynomials__PolynomialSequence
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__polynomials__assoc_legendre():
     from sympy.functions.special.polynomials import assoc_legendre
-    assert _test_args(assoc_legendre())
+    assert _test_args(assoc_legendre(x, 0, y))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__polynomials__chebyshevt():
     from sympy.functions.special.polynomials import chebyshevt
-    assert _test_args(chebyshevt())
+    assert _test_args(chebyshevt(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__polynomials__chebyshevt_root():
     from sympy.functions.special.polynomials import chebyshevt_root
-    assert _test_args(chebyshevt_root())
+    assert _test_args(chebyshevt_root(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__polynomials__chebyshevu():
     from sympy.functions.special.polynomials import chebyshevu
-    assert _test_args(chebyshevu())
+    assert _test_args(chebyshevu(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__polynomials__chebyshevu_root():
     from sympy.functions.special.polynomials import chebyshevu_root
-    assert _test_args(chebyshevu_root())
+    assert _test_args(chebyshevu_root(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__polynomials__hermite():
     from sympy.functions.special.polynomials import hermite
-    assert _test_args(hermite())
+    assert _test_args(hermite(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__polynomials__legendre():
     from sympy.functions.special.polynomials import legendre
-    assert _test_args(legendre())
+    assert _test_args(legendre(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__tensor_functions__Dij():
     from sympy.functions.special.tensor_functions import Dij
-    assert _test_args(Dij())
+    assert _test_args(Dij(x, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__tensor_functions__LeviCivita():
     from sympy.functions.special.tensor_functions import LeviCivita
-    assert _test_args(LeviCivita())
+    assert _test_args(LeviCivita(x, y, 2))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__zeta_functions__dirichlet_eta():
     from sympy.functions.special.zeta_functions import dirichlet_eta
-    assert _test_args(dirichlet_eta())
+    assert _test_args(dirichlet_eta(x))
 
-@SKIP("TODO: sympy.functions")
 def test_sympy__functions__special__zeta_functions__zeta():
     from sympy.functions.special.zeta_functions import zeta
-    assert _test_args(zeta())
+    assert _test_args(zeta(101))
 
 def test_sympy__integrals__integrals__Integral():
     from sympy.integrals.integrals import Integral
