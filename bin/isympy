@@ -65,7 +65,20 @@ def main():
     from optparse import OptionParser
 
     usage = 'usage: isympy [options] -- [ipython options]'
-    parser = OptionParser(usage)
+    description = """A Python (or IPython, if it's installed) shell for SymPy
+that automatically executes `from sympy import *` and defines common symbols."""
+    parser = OptionParser(
+        usage=usage,
+        description=description,
+        # XXX: We can't use description=__doc__ (the docstring of this module
+        # above), because optparse line wraps it weird.  The argparse module
+        # allows you to disable this, though, but it's only available in
+        # Python 2.7+.
+        version='0.7.1-git',
+        # XXX: We need a more centralized place to store the version.
+        # It is currently stored in sympy.__version__, but we can't yet
+        # import sympy at this point.
+        )
 
     parser.add_option(
         '-c', '--console',
