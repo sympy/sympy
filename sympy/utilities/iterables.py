@@ -48,7 +48,7 @@ def flatten(iterable, levels=None, cls=None):
             raise ValueError("expected non-negative number of levels, got %s" % levels)
 
     if cls is None:
-        reducible = lambda x: hasattr(x, "__iter__") and not isinstance(x, basestring)
+        reducible = lambda x: is_sequence(x, set)
     else:
         reducible = lambda x: isinstance(x, cls)
 
