@@ -69,7 +69,7 @@ def main():
         # allows you to disable this, though, but it's only available in
         # Python 2.7+.
         print __doc__ # the docstring of this module above
-    usage = 'usage: isympy [options] -- [ipython options]'
+    usage = 'usage: isympy [options] -- [python/ipython options]'
     parser = OptionParser(
         usage=usage,
         version='0.7.1-git',
@@ -84,7 +84,8 @@ def main():
         action='store',
         default=None,
         choices=['ipython', 'python'],
-        help='select type of interactive session: ipython | python')
+        help='select type of interactive session: ipython | python; defaults '
+        'to ipython if IPython is installed, otherwise python')
 
     parser.add_option(
         '-p', '--pretty',
@@ -92,7 +93,8 @@ def main():
         action='store',
         default=None,
         choices=['unicode', 'ascii', 'no'],
-        help='setup pretty printing: unicode | ascii | no')
+        help='setup pretty printing: unicode | ascii | no; defaults to '
+        'unicode printing if the terminal supports it, otherwise ascii')
 
     parser.add_option(
         '-t', '--types',
@@ -100,7 +102,9 @@ def main():
         action='store',
         default=None,
         choices=['gmpy', 'python', 'sympy'],
-        help='setup ground types: gmpy | python | sympy')
+        help='setup ground types: gmpy | python | sympy; defaults to gmpy if '
+        'gmpy is installed, otherwise python (note that sympy ground types are '
+        'not supported and should be used for experimental purposes only)')
 
     parser.add_option(
         '-o', '--order',
@@ -108,7 +112,7 @@ def main():
         action='store',
         default=None,
         choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'old', 'none'],
-        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old | none')
+        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old | none; defaults to lex')
 
     parser.add_option(
         '-q', '--quiet',
