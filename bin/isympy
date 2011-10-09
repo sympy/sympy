@@ -1,50 +1,52 @@
 #! /usr/bin/env python
 
-"""Python shell for SymPy.
+"""
+Python shell for SymPy.
 
-   This is just a normal Python shell (IPython shell if you have the
-   IPython package installed),  that executes the following commands
-   for the user:
+This is just a normal Python shell (IPython shell if you have the
+IPython package installed),  that executes the following commands
+for the user:
 
-       >>> from __future__ import division
-       >>> from sympy import *
-       >>> x, y, z, t = symbols('x y z t')
-       >>> k, m, n = symbols('k m n', integer=True)
-       >>> f, g, h = symbols('f g h', cls=Function)
+    >>> from __future__ import division
+    >>> from sympy import *
+    >>> x, y, z, t = symbols('x y z t')
+    >>> k, m, n = symbols('k m n', integer=True)
+    >>> f, g, h = symbols('f g h', cls=Function)
 
-   So starting 'isympy' is equivalent to starting Python (or IPython)
-   and executing the above commands by hand.  It is intended for easy
-   and quick experimentation with SymPy.
+So starting 'isympy' is equivalent to starting Python (or IPython)
+and executing the above commands by hand.  It is intended for easy
+and quick experimentation with SymPy.
 
-   COMMAND LINE OPTIONS
-   --------------------
+COMMAND LINE OPTIONS
+--------------------
 
-   -c CONSOLE, --console=CONSOLE
+-c CONSOLE, --console=CONSOLE
 
      Use the specified Python or IPython shell as console backend instead
      of the default one (IPython if present or Python otherwise), e.g.:
 
         isympy -c python
 
-   -p PRETTY, --pretty PRETTY
+-p PRETTY, --pretty PRETTY
 
-     Setup pretty printing in SymPy. By default the most pretty,  Unicode
-     printing is enabled. User can use less pretty ASCII printing instead
-     or no pretty printing at all, e.g.:
+    Setup pretty printing in SymPy. By default the most pretty,  Unicode
+    printing is enabled. User can use less pretty ASCII printing instead
+    or no pretty printing at all, e.g.:
 
-   -q, --quiet
+-q, --quiet
 
-     Print only Python's and SymPy's versions to stdout at startup.
+    Print only Python's and SymPy's versions to stdout at startup.
 
-   -- IPython's options
+-- IPython's options
 
-     Additionally you can pass command line options directly to IPython
-     interpreter (standard Python shell is not supported).  However you
-     need to add '--' separator between two types of options. To run
-     SymPy without startup banner and colors, for example, issue:
+    Additionally you can pass command line options directly to IPython
+    interpreter (standard Python shell is not supported).  However you
+    need to add '--' separator between two types of options. To run
+    SymPy without startup banner and colors, for example, issue:
 
         isympy -q -- -colors NoColor
 
+See also the isympy --help for more options.
 """
 
 import os, sys
