@@ -188,12 +188,6 @@ class Dict(Basic):
         '''x.__len__() <==> len(x)'''
         return self._dict.__len__()
 
-    def __str__(self):
-        return str(self._dict)
-
-    def __repr__(self):
-        return self._dict.__repr__()
-
     def get(self, key, default=None):
         '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
         return self._dict.get(sympify(key), default)
