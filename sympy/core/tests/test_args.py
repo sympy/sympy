@@ -1,12 +1,74 @@
 """Test whether all elements of cls.args are instances of Basic. """
 
 # NOTE: keep tests sorted by (module, class name) key. If a class can't
-# be instantiated, leave a comment in-place (see e.g. Function).
+# be instantiated, add it here anyway with @SKIP("abstract class) (see
+# e.g. Function).
+
+from __future__ import with_statement
+
+import os
+import re
 
 from sympy import Basic, symbols, sqrt, sin
 from sympy.utilities.pytest import XFAIL, SKIP
 
 x, y, z = symbols('x,y,z')
+
+def test_all_classes_are_tested():
+    this = os.path.split(__file__)[0]
+    path = os.path.join(this, os.pardir, os.pardir)
+    sympy_path = os.path.abspath(path)
+    prefix = os.path.split(sympy_path)[0] + os.sep
+
+    re_cls = re.compile("^class ([A-Za-z][A-Za-z0-9_]*)\s*\(", re.MULTILINE)
+
+    modules = {}
+
+    for root, dirs, files in os.walk(sympy_path):
+        module = root.replace(prefix, "").replace(os.sep, ".")
+
+        for file in files:
+            if file.startswith(("_", "test_", "bench_")):
+                continue
+            if not file.endswith(".py"):
+                continue
+
+            with open(os.path.join(root, file), "r") as f:
+                text = f.read()
+
+            submodule = module + '.' + file[:-3]
+            names = re_cls.findall(text)
+
+            if not names:
+                continue
+
+            try:
+                mod = __import__(submodule, fromlist=names)
+            except ImportError:
+                continue
+
+            def is_Basic(name):
+                cls = getattr(mod, name)
+                return issubclass(cls, Basic)
+
+            names = filter(is_Basic, names)
+
+            if names:
+                modules[submodule] = names
+
+    ns = globals()
+    failed = []
+
+    for module, names in modules.iteritems():
+        mod = module.replace('.', '__')
+
+        for name in names:
+            test = 'test_' + mod + '__' + name
+
+            if test not in ns:
+                failed.append(module + '.' + name)
+
+    assert not failed, "Missing classes: %s" % ", ".join(failed)
 
 def _test_args(obj):
     return all(isinstance(arg, Basic) for arg in obj.args)
@@ -78,7 +140,9 @@ def test_sympy__core__function__Derivative():
     from sympy.core.function import Derivative
     assert _test_args(Derivative(2, x, y, 3))
 
-# test_sympy__core__function__Function
+@SKIP("abstract class")
+def test_sympy__core__function__Function():
+    pass
 
 def test_sympy__core__function__Lambda():
     from sympy.core.function import Lambda
@@ -136,7 +200,9 @@ def test_sympy__core__numbers__Integer():
     from sympy.core.numbers import Integer
     assert _test_args(Integer(7))
 
-# test_sympy__core__numbers__IntegerConstant
+@SKIP("abstract class")
+def test_sympy__core__numbers__IntegerConstant():
+    pass
 
 def test_sympy__core__numbers__NaN():
     from sympy.core.numbers import NaN
@@ -178,9 +244,13 @@ def test_sympy__core__numbers__Zero():
     from sympy.core.numbers import Zero
     assert _test_args(Zero())
 
-# test_sympy__core__operations__AssocOp
+@SKIP("abstract class")
+def test_sympy__core__operations__AssocOp():
+    pass
 
-# test_sympy__core__operations__LatticeOp
+@SKIP("abstract class")
+def test_sympy__core__operations__LatticeOp():
+    pass
 
 def test_sympy__core__power__Pow():
     from sympy.core.power import Pow
@@ -194,7 +264,9 @@ def test_sympy__core__relational__Inequality():
     from sympy.core.relational import Inequality
     assert _test_args(Inequality(x, 2))
 
-# test_sympy__core__relational__Relational
+@SKIP("abstract class")
+def test_sympy__core__relational__Relational():
+    pass
 
 def test_sympy__core__relational__StrictInequality():
     from sympy.core.relational import StrictInequality
@@ -260,7 +332,9 @@ def test_sympy__core__symbol__Wild():
     from sympy.core.symbol import Wild
     assert _test_args(Wild('x', exclude=[x]))
 
-# test_sympy__functions__combinatorial__factorials__CombinatorialFunction
+@SKIP("abstract class")
+def test_sympy__functions__combinatorial__factorials__CombinatorialFunction():
+    pass
 
 def test_sympy__functions__combinatorial__factorials__FallingFactorial():
     from sympy.functions.combinatorial.factorials import FallingFactorial
@@ -350,7 +424,9 @@ def test_sympy__functions__elementary__exponential__log():
     from sympy.functions.elementary.exponential import log
     assert _test_args(log(2))
 
-# test_sympy__functions__elementary__hyperbolic__HyperbolicFunction
+@SKIP("abstract class")
+def test_sympy__functions__elementary__hyperbolic__HyperbolicFunction():
+    pass
 
 def test_sympy__functions__elementary__hyperbolic__acosh():
     from sympy.functions.elementary.hyperbolic import acosh
@@ -409,7 +485,9 @@ def test_sympy__functions__elementary__miscellaneous__Min():
     from sympy.functions.elementary.miscellaneous import Min
     assert _test_args(Min(x, 2))
 
-# test_sympy__functions__elementary__miscellaneous__MinMaxBase
+@SKIP("abstract class")
+def test_sympy__functions__elementary__miscellaneous__MinMaxBase():
+    pass
 
 @XFAIL
 def test_sympy__functions__elementary__piecewise__ExprCondPair():
@@ -420,7 +498,9 @@ def test_sympy__functions__elementary__piecewise__Piecewise():
     from sympy.functions.elementary.piecewise import Piecewise
     assert _test_args(Piecewise((1, x >= 0), (0, True)))
 
-# test_sympy__functions__elementary__trigonometric__TrigonometricFunction
+@SKIP("abstract class")
+def test_sympy__functions__elementary__trigonometric__TrigonometricFunction():
+    pass
 
 def test_sympy__functions__elementary__trigonometric__acos():
     from sympy.functions.elementary.trigonometric import acos
@@ -458,9 +538,13 @@ def test_sympy__functions__elementary__trigonometric__tan():
     from sympy.functions.elementary.trigonometric import tan
     assert _test_args(tan(2))
 
-# test_sympy__functions__special__bessel__BesselBase
+@SKIP("abstract class")
+def test_sympy__functions__special__bessel__BesselBase():
+    pass
 
-# test_sympy__functions__special__bessel__SphericalBesselBase
+@SKIP("abstract class")
+def test_sympy__functions__special__bessel__SphericalBesselBase():
+    pass
 
 def test_sympy__functions__special__bessel__besseli():
     from sympy.functions.special.bessel import besseli
@@ -526,7 +610,9 @@ def test_sympy__functions__special__gamma_functions__uppergamma():
     from sympy.functions.special.gamma_functions import uppergamma
     assert _test_args(uppergamma(x, 2))
 
-# test_sympy__functions__special__hyper__TupleParametersBase
+@SKIP("abstract class")
+def test_sympy__functions__special__hyper__TupleParametersBase():
+    pass
 
 def test_sympy__functions__special__hyper__hyper():
     from sympy.functions.special.hyper import hyper
@@ -536,7 +622,9 @@ def test_sympy__functions__special__hyper__meijerg():
     from sympy.functions.special.hyper import meijerg
     assert _test_args(meijerg([1, 2, 3], [4, 5], [6], [], x))
 
-# test_sympy__functions__special__polynomials__PolynomialSequence
+@SKIP("abstract class")
+def test_sympy__functions__special__polynomials__PolynomialSequence():
+    pass
 
 def test_sympy__functions__special__polynomials__assoc_legendre():
     from sympy.functions.special.polynomials import assoc_legendre
@@ -590,7 +678,9 @@ def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
     assert _test_args(And(x, y, 2))
 
-# test_sympy__logic__boolalg__Boolean
+@SKIP("abstract class")
+def test_sympy__logic__boolalg__Boolean():
+    pass
 
 def test_sympy__logic__boolalg__BooleanFunction():
     from sympy.logic.boolalg import BooleanFunction
@@ -661,7 +751,9 @@ def test_sympy__matrices__expressions__matexpr__Identity():
     from sympy.matrices.expressions.matexpr import Identity
     assert _test_args(Identity(3))
 
-# test_sympy__matrices__expressions__matexpr__MatrixExpr
+@SKIP("abstract class")
+def test_sympy__matrices__expressions__matexpr__MatrixExpr():
+    pass
 
 @XFAIL
 def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
@@ -772,9 +864,19 @@ def test_sympy__physics__quantum__cg__Wigner3j():
     assert _test_args(Wigner3j())
 
 @SKIP("TODO: sympy.physics")
+def test_sympy__physics__quantum__commutator__Commutator():
+    from sympy.physics.quantum.commutator import Commutator
+    assert _test_args(Commutator())
+
+@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__constants__HBar():
     from sympy.physics.quantum.constants import HBar
     assert _test_args(HBar())
+
+@SKIP("TODO: sympy.physics")
+def test_sympy__physics__quantum__dagger__Dagger():
+    from sympy.physics.quantum.dagger import Dagger
+    assert _test_args(Dagger())
 
 @SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__gate__CGate():
@@ -892,6 +994,16 @@ def test_sympy__physics__quantum__hilbert__TensorProductHilbertSpace():
     assert _test_args(TensorProductHilbertSpace())
 
 @SKIP("TODO: sympy.physics")
+def test_sympy__physics__quantum__innerproduct__InnerProduct():
+    from sympy.physics.quantum.innterproduct import InnerProduct
+    assert _test_args(InnerProduct())
+
+@SKIP("TODO: sympy.physics")
+def test_sympy__physics__quantum__kronecker__KroneckerDelta():
+    from sympy.physics.quantum.kronecker import KroneckerDelta
+    assert _test_args(KroneckerDelta())
+
+@SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__operator__DifferentialOperator():
     from sympy.physics.quantum.operator import DifferentialOperator
     assert _test_args(DifferentialOperator())
@@ -900,6 +1012,11 @@ def test_sympy__physics__quantum__operator__DifferentialOperator():
 def test_sympy__physics__quantum__operator__HermitianOperator():
     from sympy.physics.quantum.operator import HermitianOperator
     assert _test_args(HermitianOperator())
+
+@SKIP("TODO: sympy.physics")
+def test_sympy__physics__quantum__operator__Operator():
+    from sympy.physics.quantum.operator import Operator
+    assert _test_args(Operator())
 
 @SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__operator__OuterProduct():
