@@ -3771,15 +3771,29 @@ def _update_args(args, key, value):
     return args
 
 def _keep_coeff(coeff, factors):
-    """Return ``coeff*factors`` unevaluated if necessary. """
+    """Return ``coeff*factors`` unevaluated if necessary."""
+    if not coeff.is_Number:
+        if factors.is_Number:
+            factors, coeff = coeff, factors
+        else:
+            return coeff*factors
     if coeff == 1:
         return factors
-    elif coeff == -1:
+    elif coeff == -1: # don't keep sign?
         return -factors
-    elif not factors.is_Add:
-        return coeff*factors
+    elif factors.is_Add:
+        return Mul._from_args((coeff, factors))
+    elif factors.is_Mul:
+        margs = list(factors.args)
+        if margs[0].is_Number:
+            margs[0] *= coeff
+            if margs[0] == 1:
+                margs.pop(0)
+        else:
+            margs.insert(0, coeff)
+        return Mul._from_args(margs)
     else:
-        return Mul(coeff, factors, evaluate=False)
+        return coeff*factors
 
 def degree(f, *gens, **args):
     """
@@ -4898,42 +4912,49 @@ def _symbolic_factor_list(expr, opt, method):
     coeff, factors = S.One, []
 
     for arg in Mul.make_args(expr):
-        if arg.is_Pow:
+        if arg.is_Number:
+            coeff *= arg
+            continue
+        elif arg.is_Pow:
             base, exp = arg.args
+            if base.is_Number:
+                factors.append((base, exp))
+                continue
         else:
             base, exp = arg, S.One
 
-        if base.is_Number:
-            coeff *= arg
+        try:
+            poly, _ = _poly_from_expr(base, opt)
+        except PolificationFailed, exc:
+            factors.append((exc.expr, exp))
         else:
-            try:
-                poly, _ = _poly_from_expr(base, opt)
-            except PolificationFailed, exc:
-                coeff *= exc.expr**exp
-            else:
-                func = getattr(poly, method + '_list')
+            func = getattr(poly, method + '_list')
 
-                _coeff, _factors = func()
-                coeff *= _coeff**exp
-
-                if exp is S.One:
-                    factors.extend(_factors)
-                elif exp.is_integer or len(_factors) == 1:
-                    factors.extend([ (f, k*exp) for f, k in _factors ])
+            _coeff, _factors = func()
+            if _coeff is not S.One:
+                if exp.is_Integer:
+                    coeff *= _coeff**exp
                 else:
-                    other = []
+                    factors.append((_coeff, exp))
 
-                    for f, k in _factors:
-                        if f.as_expr().is_positive:
-                            factors.append((f, k*exp))
-                        else:
-                            other.append((f, k))
+            if exp is S.One:
+                factors.extend(_factors)
+            elif exp.is_integer or len(_factors) == 1:
+                factors.extend([ (f, k*exp) for f, k in _factors ])
+            else:
+                other = []
 
-                    if len(other) == 1:
-                        f, k = other[0]
+                for f, k in _factors:
+                    if f.as_expr().is_positive:
                         factors.append((f, k*exp))
                     else:
-                        factors.append((_factors_product(other), exp))
+                        other.append((f, k))
+
+                if len(other) == 1:
+                    f, k = other[0]
+                    factors.append((f, k*exp))
+                else:
+                    factors.append((_factors_product(other), exp))
 
     return coeff, factors
 
