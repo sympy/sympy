@@ -48,6 +48,7 @@ MPMATH_TRANSLATIONS = {
 }
 
 NUMPY_TRANSLATIONS = {
+    "Abs":"abs",
     "acos":"arccos",
     "acosh":"arccosh",
     "arg":"angle",
