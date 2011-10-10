@@ -114,7 +114,8 @@ class AskBoundedHandler(CommonHandler):
 
 
         All Bounded -> True
-        Any Unboundeds, all with same sign -> False
+        1 Unbounded and the rest Bounded -> False
+        >1 Unbounded, all with same known sign -> False
         Any Unknown and unknown sign -> None
         Else -> None
 
@@ -122,25 +123,25 @@ class AskBoundedHandler(CommonHandler):
         result as in oo - oo, hence 'bounded' is also undefined.
         """
 
-        signs = set() # signs of unknown or unbounded
-        count = {False: 0, None: 0} # the number of unknown or unbounded terms
+        sign = -1 # sign of unknown or unbounded
+        result = True
         for arg in expr.args:
             _bounded = ask(Q.bounded(arg), assumptions)
             if _bounded:
                 continue
-            signs.add(ask(Q.positive(arg), assumptions))
-            count[_bounded] += 1
-        if count[None] == count[False] == 0:
-            return True
-        if count[None] and None in signs:
-            return None
-        if count[False]:
-            if len(signs) > 1:
+            s = ask(Q.positive(arg), assumptions)
+            # if there has been more than one sign or if the sign of this arg
+            # is None and Bounded is None or there was already
+            # an unknown sign, return None
+            if sign != -1 and s != sign or \
+               s == None and (s == _bounded or s == sign):
                 return None
-            if signs.pop() is None:
-                if count[False] != 1:
-                    return None
-            return False
+            else:
+                sign = s
+            # once False, do not change
+            if result is not False:
+                result = _bounded
+        return result
 
     @staticmethod
     def Mul(expr, assumptions):
