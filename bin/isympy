@@ -118,6 +118,13 @@ def main():
         default=True,
         help='disable caching mechanism')
 
+    parser.add_option(
+        '-a', '--auto',
+        dest='auto',
+        action='store_true',
+        default=False,
+        help='automatically construct missing symbols')
+
     (options, ipy_args) = parser.parse_args()
 
     if not options.cache:
@@ -155,6 +162,7 @@ def main():
         args['order'] = options.order
 
     args['quiet'] = options.quiet
+    args['auto'] = options.auto
 
     from sympy.interactive import init_session
     init_session(ipython, **args)
