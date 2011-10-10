@@ -170,8 +170,8 @@ def test_intersect():
            S.EmptySet
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
            S.EmptySet
-    assert Union(Interval(0,5), FiniteSet(['Ham'])).intersect(
-            FiniteSet(2,3,4,5,6)) == FiniteSet(2,3,4,5)
+    assert Union(Interval(0,5), FiniteSet(['Ham'])).intersect(FiniteSet(2,3,4,5,6)) == \
+           FiniteSet(2,3,4,5)
 
 def test_interval_subs():
     a = Symbol('a', real=True)
@@ -191,8 +191,7 @@ def test_measure():
     assert Interval(1, a).measure == a - 1
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
-    assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5,6,7)).measure\
-            == 2
+    assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5,6,7)).measure == 2
 
     assert FiniteSet(1,2,oo,a,-oo,-5).measure == 0
 
