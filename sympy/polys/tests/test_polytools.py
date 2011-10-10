@@ -23,9 +23,8 @@ from sympy.polys.polytools import (
     intervals, refine_root, count_roots,
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
-    cancel,
-    reduced, groebner,
-    GroebnerBasis, is_zero_dimensional)
+    cancel, reduced, groebner,
+    GroebnerBasis, is_zero_dimensional, _keep_coeff)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -1930,6 +1929,10 @@ def test_factor():
 
     assert factor_list(1) == (1, [])
     assert factor_list(6) == (6, [])
+    assert factor_list(sqrt(3), x) == (1, [(3, S.Half)])
+    assert factor_list((-1)**x, x) == (1, [(-1, x)])
+    assert factor_list((2*x)**y, x) == (1, [(2, y), (x, y)])
+    assert factor_list(sqrt(x*y),x) == (1, [(x*y, S.Half)])
 
     assert factor(1) == 1
     assert factor(6) == 6
@@ -2654,3 +2657,13 @@ def test_poly():
     assert poly(1, x) == Poly(1, x)
     raises(GeneratorsNeeded, "poly(1)")
 
+def test_keep_coeff():
+    u = Mul(2, x + 1, evaluate=False)
+    assert _keep_coeff(S(1), x) == x
+    assert _keep_coeff(S(-1), x) == -x
+    assert _keep_coeff(S(1), 2*x) == 2*x
+    assert _keep_coeff(S(2), x/2) == x
+    assert _keep_coeff(S(2), sin(x)) == 2*sin(x)
+    assert _keep_coeff(S(2), x + 1) == u
+    assert _keep_coeff(x, 1/x) == 1
+    assert _keep_coeff(x + 1, S(2)) == u
