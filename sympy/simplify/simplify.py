@@ -1156,7 +1156,7 @@ def powdenest(eq, force=False):
                 other.append(g)
         return powdenest(Pow(exp(logcombine(Mul(*add))), e*Mul(*other))).subs([(new, old) for old, new in rep])
 
-def powsimp(expr, deep=False, combine='all', force=False):
+def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     == Usage ==
         powsimp(expr, deep) -> reduces expression by combining powers with
@@ -1379,7 +1379,7 @@ def powsimp(expr, deep=False, combine='all', force=False):
                 if b[1] != 1 and b[0].is_Mul:
                     bases.append(b)
             bases.sort(key=default_sort_key) # this makes tie-breaking canonical
-            bases.sort(key=count_ops, reverse= True) # handle longest first
+            bases.sort(key=measure, reverse= True) # handle longest first
             for base in bases:
                 if base not in common_b: # it may have been removed already
                     continue
@@ -1739,47 +1739,130 @@ def combsimp(expr):
 
     return factor(expr)
 
-def simplify(expr, ratio=1.7):
-    """Naively simplifies the given expression.
+def simplify(expr, ratio=1.7, measure=count_ops):
+    """
+    Simplifies the given expression.
 
-       Simplification is not a well defined term and the exact strategies
-       this function tries can change in the future versions of SymPy. If
-       your algorithm relies on "simplification" (whatever it is), try to
-       determine what you need exactly  -  is it powsimp()?, radsimp()?,
-       together()?, logcombine()?, or something else? And use this particular
-       function directly, because those are well defined and thus your algorithm
-       will be robust.
+    Simplification is not a well defined term and the exact strategies
+    this function tries can change in the future versions of SymPy. If
+    your algorithm relies on "simplification" (whatever it is), try to
+    determine what you need exactly  -  is it powsimp()?, radsimp()?,
+    together()?, logcombine()?, or something else? And use this particular
+    function directly, because those are well defined and thus your algorithm
+    will be robust.
 
-       In some cases, applying :func:`simplify` may actually result in some more
-       complicated expression.
-       By default ``ratio=1.7`` prevents more extreme cases:
-       if (result length)/(input length) > ratio, then input is returned
-       unmodified (:func:`count_ops` is used to measure length).
+    Nonetheless, especially for interactive use, or when you don't know
+    anything about the structure of the expression, simplify() tries to apply
+    intelligent heuristics to make the input expression "simpler".  For
+    example:
 
-       For example, if ``ratio=1``, ``simplify`` output can't be longer
-       than input.
+    >>> from sympy import simplify, cos, sin
+    >>> from sympy.abc import x, y
+    >>> a = (x + x**2)/(x*sin(y)**2 + x*cos(y)**2)
+    >>> a
+    (x**2 + x)/(x*sin(y)**2 + x*cos(y)**2)
+    >>> simplify(a)
+    x + 1
 
-       ::
+    Note that we could have obtained the same result by using specific
+    simplification functions:
 
-            >>> from sympy import S, simplify, count_ops, oo
-            >>> root = S("(1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3) + "
-            ... "1/((1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3))")
+    >>> from sympy import trigsimp, cancel
+    >>> b = trigsimp(a)
+    >>> b
+    (x**2 + x)/x
+    >>> c = cancel(b)
+    >>> c
+    x + 1
 
-       Since ``simplify(root)`` would result in a slightly longer expression,
-       root is returned unchanged instead::
+    In some cases, applying :func:`simplify` may actually result in some more
+    complicated expression. The default ``ratio=1.7`` prevents more extreme
+    cases: if (result length)/(input length) > ratio, then input is returned
+    unmodified.  The ``measure`` parameter lets you specify the function used
+    to determine how complex an expression is.  The function should take a
+    single argument as an expression and return a number such that if
+    expression ``a`` is more complex than expression ``b``, then
+    ``measure(a) > measure(b)``.  The default measure function is
+    :func:`count_ops`, which returns the total number of operations in the
+    expression.
 
-           >>> simplify(root, ratio=1) == root
-           True
+    For example, if ``ratio=1``, ``simplify`` output can't be longer
+    than input.
 
-       If ``ratio=oo``, simplify will be applied anyway::
+    ::
 
-            >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
-            True
+        >>> from sympy import S, simplify, count_ops, oo
+        >>> root = S("(1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3) + "
+        ... "1/((1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3))")
 
-       Note that the shortest expression is not necessary the simplest, so
-       setting ``ratio`` to 1 may not be a good idea.
-       Heuristically, default value ``ratio=1.7`` seems like a reasonable choice.
+    Since ``simplify(root)`` would result in a slightly longer expression,
+    root is returned unchanged instead::
 
+       >>> simplify(root, ratio=1) == root
+       True
+
+    If ``ratio=oo``, simplify will be applied anyway::
+
+        >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
+        True
+
+    Note that the shortest expression is not necessary the simplest, so
+    setting ``ratio`` to 1 may not be a good idea.
+    Heuristically, the default value ``ratio=1.7`` seems like a reasonable
+    choice.
+
+    You can easily define your own measure function based on what you feel
+    should represent the "size" or "complexity" of the input expression.  Note
+    that some choices, such as ``lambda expr: len(str(expr))`` may appear to be
+    good metrics, but have other problems (in this case, the measure function
+    may slow down simplify too much for very large expressions).  If you don't
+    know what a good metric would be, the default, ``count_ops``, is a good one.
+
+    For example:
+
+    >>> from sympy import symbols, log
+    >>> a, b = symbols('a b', positive=True)
+    >>> g = log(a) + log(b) + log(a)*log(1/b)
+    >>> h = simplify(g)
+    >>> h
+    log(a*b**(log(1/a) + 1))
+    >>> count_ops(g)
+    8
+    >>> count_ops(h)
+    6
+
+    So you can see that ``h`` is simpler than ``g`` using the count_ops metric.
+    However, we may not like how ``simplify`` (in this case, using
+    ``logcombine``) has created the ``b**(log(1/a) + 1)`` term.  A simple way to
+    reduce this would be to give more weight to powers as operations in
+    ``count_ops``.  We can do this by using the ``visual=True`` option:
+
+    >>> print count_ops(g, visual=True)
+    2*ADD + DIV + 4*LOG + MUL
+    >>> print count_ops(h, visual=True)
+    ADD + DIV + 2*LOG + MUL + POW
+
+    >>> from sympy import Symbol, S
+    >>> def my_measure(expr):
+    ...     POW = Symbol('POW')
+    ...     # Discourage powers by giving POW a weight of 10
+    ...     count = count_ops(expr, visual=True).subs(POW, 10)
+    ...     # Every other operation gets a weight of 1 (the default)
+    ...     count = count.replace(Symbol, type(S.One))
+    ...     return count
+    >>> my_measure(g)
+    8
+    >>> my_measure(h)
+    15
+    >>> 15./8 > 1.7 # 1.7 is the default ratio
+    True
+    >>> simplify(g, measure=my_measure)
+    -log(a)*log(b) + log(a) + log(b)
+
+    Note that because ``simplify()`` internally tries many different
+    simplification strategies and then compares them using the measure function,
+    we get a completely different result that is still different from the input
+    expression by doing this.
     """
     expr = sympify(expr)
 
@@ -1804,7 +1887,7 @@ def simplify(expr, ratio=1.7):
         the expression listed first is selected.'''
         if len(set(choices)) == 1:
             return choices[0]
-        return min(choices, key=count_ops)
+        return min(choices, key=measure)
 
     if expr.is_commutative is False:
         expr = powsimp(expr)
@@ -1854,7 +1937,7 @@ def simplify(expr, ratio=1.7):
         if d != 0:
             expr = -n/(-d)
 
-    if count_ops(expr) > ratio*count_ops(original_expr):
+    if measure(expr) > ratio*measure(original_expr):
         return original_expr
 
     if original_expr.is_Matrix:
