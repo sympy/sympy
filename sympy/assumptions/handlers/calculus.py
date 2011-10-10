@@ -114,33 +114,33 @@ class AskBoundedHandler(CommonHandler):
 
 
         All Bounded -> True
-        Any Unbounded and all same sign -> False
+        Any Unboundeds, all with same sign -> False
         Any Unknown and unknown sign -> None
         Else -> None
 
         When the signs are not the same you can have an undefined
-        (hence bounded undefined) result as in oo - oo
+        result as in oo - oo, hence 'bounded' is also undefined.
         """
 
-        result = True
-        sign = -1 # not assigned yet
+        signs = set() # signs of unknown or unbounded
+        count = {False: 0, None: 0} # the number of unknown or unbounded terms
         for arg in expr.args:
             _bounded = ask(Q.bounded(arg), assumptions)
             if _bounded:
                 continue
-            if result is None and _bounded is None and sign is None:
+            signs.add(ask(Q.positive(arg), assumptions))
+            count[_bounded] += 1
+        if count[None] == count[False] == 0:
+            return True
+        if count[None] and None in signs:
+            return None
+        if count[False]:
+            if len(signs) > 1:
                 return None
-            if result is not False:
-                result = _bounded
-            pos = ask(Q.positive(arg), assumptions)
-            if sign == -1:
-                sign = pos
-                continue
-            if sign != pos:
-                return None
-            if sign is None and pos is None:
-                return None
-        return result
+            if signs.pop() is None:
+                if count[False] != 1:
+                    return None
+            return False
 
     @staticmethod
     def Mul(expr, assumptions):
