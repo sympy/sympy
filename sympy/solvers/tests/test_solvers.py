@@ -6,7 +6,7 @@ from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
-from sympy.solvers.solvers import unrad
+from sympy.solvers.solvers import unrad, _invert
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -449,7 +449,7 @@ def test_issue_2098():
     assert solve((n - 1)*(n + 2)*(2*n - 1), n) == [1]
     x = Symbol('x', positive=True)
     y = Symbol('y')
-    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) is None
+    assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == None # not {x: -3, y: 1} b/c x is positive
     # The solution following should not contain (-sqrt(2), sqrt(2))
     assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
@@ -692,3 +692,7 @@ def test_multivariate():
     assert solve(x*log(x) + 3*x + 1, x) == [exp(-3 + LambertW(-exp(3)))]
     # symmetry
     assert solve(3*sin(x) - x*sin(3), x) == [3]
+
+def test__invert():
+    assert _invert(x - 2) == (2, x)
+    assert _invert(2) == (2, 0)

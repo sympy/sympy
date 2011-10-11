@@ -516,59 +516,75 @@ def solve(f, *symbols, **flags):
 
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still returned.
-    # XXX: Currently, there are some cases which are not handled,
-    # see issue 2098 comment 13: http://code.google.com/p/sympy/issues/detail?id=2098#c13.
     check = flags.get('check', True)
 
-    if not check:
+    if not check or not solution:
         return solution
 
     warn = flags.get('warn', False)
+    got_None = [] # solutions for which one or more symbols gave None
+    no_False = [] # solutions for which no symbols gave False
     if type(solution) is list:
-        if solution:
-            unchecked = []
-            filtered = []
-            if type(solution[0]) is tuple:
-                for sol in solution:
-                    checked_all_symbols = True
-                    for symb, val in zip(symbols, sol):
-                        test = check_assumptions(val, **symb.assumptions0)
-                        if test is None:
-                            unchecked.append(s)
+        if type(solution[0]) is tuple:
+            for sol in solution:
+                for symb, val in zip(symbols, sol):
+                    test = check_assumptions(val, **symb.assumptions0)
+                    if test is False:
+                        break
+                    if test is None:
+                        got_None.append(sol)
                 else:
-                    for sol in solution:
-                        test = check_assumptions(sol, **symbols[0].assumptions0)
-                        if test is not False:
-                            filtered.append(sol)
-                        if test is None:
-                            unchecked.append(sol)
-
-                solution = filtered
-                if warn and unchecked:
-                    print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
-                          + '\n\t' + ', '.join(str(s) for s in unchecked))
-
-        elif type(solution) is dict:
-            checked_all_symbols = True
-            for symb, val in solution.iteritems():
-                test = check_assumptions(val, **symb.assumptions0)
+                    no_False.append(sol)
+        elif type(solution[0]) is dict:
+            for sol in solution:
+                a_None = False
+                for symb, val in sol.iteritems():
+                    test = check_assumptions(val, **symb.assumptions0)
+                    if test:
+                        continue
+                    if test is False:
+                        break
+                    a_None = True
+                else:
+                    no_False.append(sol)
+                    if a_None:
+                        got_None.append(sol)
+        else: # list of expressions
+            for sol in solution:
+                test = check_assumptions(sol, **symbols[0].assumptions0)
+                if test is False:
+                    continue
+                no_False.append(sol)
                 if test is None:
-                    checked_all_symbols = False
-                if test is False: # not None nor True
-                    solution = None
-                    break
-            if warn and not checked_all_symbols:
-                print("\n\tWarning: assumptions concerning solution can't be checked.")
+                    got_None.append(sol)
 
-        elif isinstance(solution, (Relational, And, Or)):
-            assert len(symbols) == 1
-            if warn and symbols[0].assumptions0:
-                print("\n\tWarning: assumptions about variable '%s' are not handled currently." %symbols[0])
-            # TODO: check also variable assumptions for inequalities
+    elif type(solution) is dict:
+        a_None = False
+        for symb, val in solution.iteritems():
+            test = check_assumptions(val, **symb.assumptions0)
+            if test:
+                continue
+            if test is False:
+                return None
+            a_None = True
+        else:
+            no_False = solution
+            if a_None:
+                got_None.append(solution)
 
-        elif solution is not None:
-            raise TypeError('Unrecognized solution') # improve the checker to handle this
+    elif isinstance(solution, (Relational, And, Or)):
+        assert len(symbols) == 1
+        if warn and symbols[0].assumptions0:
+            print("\n\tWarning: assumptions about variable '%s' are not handled currently." %symbols[0])
+        # TODO: check also variable assumptions for inequalities
 
+    else:
+        raise TypeError('Unrecognized solution') # improve the checker to handle this
+
+    solution = no_False
+    if warn and got_None:
+        print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
+              + '\n\t' + ', '.join(str(s) for s in got_None))
     #
     # done
     ###########################################################################
@@ -655,7 +671,7 @@ def _solve(f, *symbols, **flags):
                     for candidate in candidates:
                         if bool(cond.subs(symbol, candidate)):
                             result.add(candidate)
-            dens = set() # all checking has already been done
+            check = False
         else:
             # first see if it really depends on symbol and whether there
             # is a linear solution
@@ -663,6 +679,7 @@ def _solve(f, *symbols, **flags):
             if not symbol in f_num.free_symbols:
                 return []
             elif f_num.is_Symbol:
+                # no need to check
                 return [cancel(sol)]
 
             result = False # no solution was obtained
@@ -741,14 +758,6 @@ def _solve(f, *symbols, **flags):
                     #
                     inversion = _solve(cov - base, symbol, **flags)
                     result = [i.subs(p, s) for i in inversion for s in soln]
-                    # The dens will be checked below to see if they remove any solution, but
-                    # we need to check the solutions here, first. We handle simplification
-                    # here and set the flag so checksol doesn't repeat the simplification:
-                    if flags.get('simplify', True):
-                        result = map(simplify, result)
-                        flags['simplify'] = False
-                    if check:
-                        result = [r for r in result if checksol(f_num, {symbol: r}, **flags) is not False]
 
             elif len(gens) == 1:
 
@@ -790,12 +799,14 @@ def _solve(f, *symbols, **flags):
             flags['simplify'] = False
 
 
-        # reject any result that makes any denom. affirmatively 0;
-        # if in doubt, keep it
         if check:
-           result = [s for s in result if
-                     all(not checksol(den, {symbol: s}, **flags)
-                     for den in dens)]
+            # reject any result that makes any denom. affirmatively 0;
+            # if in doubt, keep it
+            result = [s for s in result if
+                      all(not checksol(den, {symbol: s}, **flags)
+                      for den in dens)]
+            # keep only results if the check is not False
+            result = [r for r in result if checksol(f_num, {symbol: r}, **flags) is not False]
         return result
 
     else:
@@ -882,11 +893,11 @@ def _solve(f, *symbols, **flags):
                         result = [dict(zip(solved_syms, r)) for r in result]
 
                         checked = []
-                        do_warn = flags.get('warn', False)
+                        warn = flags.get('warn', False)
                         for r in result:
                             check = checksol(polys, r, **flags)
                             if check is not False:
-                                if check is None and do_warn:
+                                if check is None and warn:
                                     print("\n\tWarning: could not verify solution %s." % sol)
                                 if not dens or not checksol(dens, r, **flags): # if it's a solution to any denom then exclude
                                     checked.append(r)
@@ -1473,7 +1484,8 @@ def nsolve(*args, **kwargs):
 def _invert(eq, *symbols, **kwargs):
     """Return tuple (i, d) where ``i`` is independent of ``symbols`` and ``d``
     contains symbols. ``i`` and ``d`` are obtained after recursively using
-    algebraic inversion until an uninvertible ``d`` remains.
+    algebraic inversion until an uninvertible ``d`` remains. If there are no
+    free symbols then ``d`` will be zero.
 
     Examples:
 
@@ -1482,6 +1494,8 @@ def _invert(eq, *symbols, **kwargs):
     >>> from sympy.abc import x, y
     >>> invert(x - 3)
     (3, x)
+    >>> invert(3)
+    (3, 0)
     >>> invert(2*cos(x) - 1)
     (pi/3, x)
     >>> invert(sqrt(x) - 3)
@@ -1513,7 +1527,7 @@ def _invert(eq, *symbols, **kwargs):
     if not symbols:
         symbols = eq.free_symbols
         if not symbols:
-            return S.Zero, eq
+            return eq, S.Zero
 
     dointpow = bool(kwargs.get('integer_power', False))
 
