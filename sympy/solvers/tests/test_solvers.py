@@ -612,43 +612,39 @@ def test_unrad():
         return str(rv[0]) in [str(ans[0]), str(-ans[0])] and \
                str(rv[1:]) == str(ans[1:])
 
-    assert s_check(unrad(sqrt(x)),
-                   (s, [(s, -s**2 + x)], []))
-    assert s_check(unrad(sqrt(x) + 1),
-                   (1 + s, [(s, x - s**2)], []))
+    assert check(unrad(sqrt(x)),
+                   (x, [], []))
+    assert check(unrad(sqrt(x) + 1),
+                   (x - 1, [], []))
     assert s_check(unrad(sqrt(x) + x**Rational(1,3) + 2),
                    (2 + s**2 + s**3, [(s, x - s**6)], []))
-    assert s_check(unrad(sqrt(x)*x**Rational(1, 3) + 2),
-                   (2 + s**5, [(s, x - s**6)], []))
+    assert check(unrad(sqrt(x)*x**Rational(1, 3) + 2),
+                   (x**5 - 64, [], []))
     assert check(unrad(sqrt(x) + (x + 1)**Rational(1,3)),
-                   (-x**3 + (x + 1)**2, [], []))
+                   (x**3 - (x + 1)**2, [], []))
     assert check(unrad(sqrt(x) + sqrt(x + 1) + sqrt(2*x)),
-                (-x*(1 + sqrt(2))**2 + x + 1, [], []))
-    assert s_check(unrad(sqrt(x) + sqrt(x + 1) + 2),
-               (4*s + 5, [(s, -s**2 + x + 1)], []))
+                (-2*sqrt(2)*x - 2*x + 1, [], []))
+    assert check(unrad(sqrt(x) + sqrt(x + 1) + 2),
+               (16*x - 9, [], []))
     assert check(unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - x)),
-               (4*x - 5*x**2, [], []))
+               (-4*x + 5*x**2, [], []))
     assert check(unrad(a*sqrt(x) + b*sqrt(x) + c*sqrt(y) + d*sqrt(y)),
-                (x*(a + b)**2 - y*(c + d)**2, [], []))
+                ((a*sqrt(x) + b*sqrt(x))**2 - (c*sqrt(y) + d*sqrt(y))**2, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x)),
                 (2*x - 1, [], []))
-    assert s_check(unrad(sqrt(x) + sqrt(1 - x) - 3),
-                (6*s + 2*x -10, [(s, -s**2 - x + 1)], []))
+    assert check(unrad(sqrt(x) + sqrt(1 - x) - 3),
+                (36*x + (2*x - 10)**2 - 36, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x)),
-                (25*x**4 - 40*x**3 + 22*x**2 - 8*x + 1, [], []))
+                (-5*x**2 + 2*x - 1, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - 3),
-        ((25*x**4 - 24*x**3 + 4456*x**2 - 4512*x + 784)*
-        (25*x**4 + 376*x**3 + 1256*x**2 - 2272*x + 784), [], []))
+        (-25*x**4 - 376*x**3 - 1256*x**2 + 2272*x - 784, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - sqrt(1 - 2*x)),
-                ((41*x**4 - 168*x**3 + 232*x**2 - 96*x + 16)*
-                (41*x**4 + 40*x**3 + 232*x**2 - 160*x + 16), [], []))
+                (-41*x**4 - 40*x**3 - 232*x**2 + 160*x - 16, [], []))
     assert check(unrad(sqrt(x) + sqrt(x + 1)), (S(1), [], []))
 
-    # the two s values are actually different dummies in the following
-    # double change of variables result; the first case has false solutions
     eq = sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x))
-    assert s_check(unrad(eq),
-               (3*s**2 - 4*s**3, [(s, x - s**2), (s, x - s**2)], []))
+    assert check(unrad(eq),
+               (16*x**3 - 9*x**2, [], []))
     assert solve(eq, check=False) == [0, S(9)/16]
     assert solve(eq) == []
     # but this one really does have those solutions
@@ -670,16 +666,49 @@ def test_unrad():
     raises(ValueError, 'unrad(sqrt(x) + sqrt(x+1) + sqrt(1-sqrt(x)) + 3)')
     raises(ValueError, 'unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y))')
     # same as last but consider only y
-    assert s_check(unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y), y),
-           (2*s + x**S('1/2') + (1 + x)**S('1/3'), [(s, y - s**2)], []))
+    assert check(unrad(sqrt(x) + (x+1)**Rational(1,3) + 2*sqrt(y), y),
+           (4*y - (sqrt(x) + (x + 1)**(S(1)/3))**2, [], []))
     assert check(unrad(sqrt(x/(1 - x)) + (x+1)**Rational(1,3)),
-                (-x**3/(1 - x)**3 + (1 + x)**2, [], [(1 - x)**3]))
-                #(-x**3 + (1 + x)**2*(1 - x)**3, [], [sqrt(1 - x)]))
+                (x**3/(-x + 1)**3 - (x + 1)**2, [], [(-x + 1)**3]))
     # same as last but consider only y; no y-containing denominators now
     assert s_check(unrad(sqrt(x/(1 - x)) + 2*sqrt(y), y),
-           (2*s + sqrt(x)*sqrt(1/(1 - x)), [(s, y - s**2)], []))
-           #(2*(1 - x)**S('1/2')*s + x**S('1/2'), [(s, y - s**2)], []))
-    assert unrad(sqrt(x)*sqrt(1-x) + 2, x) == (-4 + x*(1 - x), [], [])
+           (x/(-x + 1) - 4*y, [], []))
+    assert check(unrad(sqrt(x)*sqrt(1-x) + 2, x),
+           (x*(-x + 1) - 4, [], []))
+
+    # http://tutorial.math.lamar.edu/Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
+    assert solve(Eq(x, sqrt(x + 6))) == [3]
+    assert solve(Eq(x + sqrt(x - 4), 4)) == [4]
+    assert solve(Eq(1, x + sqrt(2*x - 3))) == []
+    assert solve(Eq(sqrt(5*x + 6) - 2, x)) == [-1, 2]
+    assert solve(Eq(sqrt(2*x - 1) - sqrt(x - 4), 2)) == [5, 13]
+    assert solve(Eq(sqrt(x + 7) + 2, sqrt(3 - x))) == [-6]
+    # http://www.purplemath.com/modules/solverad.htm
+    assert solve((2*x-5)**Rational(1,3)-3) == [16]
+    assert solve((x**3-3*x**2)**Rational(1,3)+1-x) == []
+    assert solve(x+1-(x**4+4*x**3-x)**Rational(1,4)) == [-S(1)/2, -S(1)/3]
+    assert solve(sqrt(2*x**2-7)-(3-x)) == [-8, 2]
+    assert solve(sqrt(2*x+9)-sqrt(x+1)-sqrt(x+4)) == [0]
+    assert solve(sqrt(x+4)+sqrt(2*x-1)-3*sqrt(x-1)) == [5]
+    assert solve(sqrt(x)*sqrt(x-7)-12) == [16]
+    assert solve(sqrt(x-3)+sqrt(x)-3) == [4]
+    assert solve(sqrt(9*x**2+4)-(3*x+2)) == [0]
+    assert solve(sqrt(x)-2-5) == [49]
+    assert solve(sqrt(x-3)-sqrt(x)-3) == []
+    assert solve(sqrt(x-1)-x+7) == [10]
+    assert solve(sqrt(x-2)-5) == [27]
+
+@XFAIL
+def test_unrad1():
+    # unrad not implemented
+    assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) is not None
+@XFAIL
+def test_unrad3():
+    # unrad not implemented
+    assert solve(sqrt(17*x-sqrt(x**2-5))-7) == [3]
+@XFAIL
+def test_unrad2():
+    assert solve((x**3-3*x**2)**Rational(1,3)+1-x) == [S(1)/3] # b/c (-8/27)**(1/3) -> 2*(-1)**(1/3)/3 instead of -2/3
 
 @XFAIL
 def test_multivariate():

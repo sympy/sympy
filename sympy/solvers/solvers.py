@@ -1325,9 +1325,17 @@ def _tsolve(eq, sym, **flags):
     if u:
         eq, cov, dens = u
         if cov:
-            isym, ieq = zip(*cov)
-            sol = _solve([eq] + list(ieq), *((sym,) + isym), **flags)
-            return sorted(list(set([s[sym] for s in sol])))
+            if len(cov) > 1:
+                raise NotImplementedError('Not sure how to handle this.')
+            isym, ieq = cov[0]
+            flags['check'] = False # don't disallow 0 as solution
+            sol = _solve(eq, isym, **flags)
+            inv = _solve(ieq, sym, **flags)
+            result = []
+            for s in sol:
+              for i in inv:
+                  result.append(i.subs(isym, s))
+            return result
         else:
             return _solve(eq, sym, **flags)
 
@@ -1659,7 +1667,7 @@ def unrad(eq, *syms, **flags):
     """
     if eq.is_Atom:
         return
-    dens, cov = [flags.get(k, v) for k, v in dict(dens=None, cov=None).items()]
+    cov, dens, nwas = [flags.get(k, v) for k, v in sorted(dict(dens=None, cov=None, n=None).items())]
 
     def take(d):
         # see if this is a term that has symbols of interest
@@ -1702,60 +1710,76 @@ def unrad(eq, *syms, **flags):
             b = 1/b
         bases.add(b)
 
-    # handle the cases that can be resolved
-    if len(bases) == 1:
-        p = Dummy('p', positive=True)
-        b = bases.pop()
-        cov.append((p, b - p**lcm))
-        eq = poly.subs(b, p**lcm).as_expr()
-
-    else:
-
-        # get terms together that have common generators
-        drad = dict(zip(rads,range(len(rads))))
-        rterms = {-1: []}
-        args = Add.make_args(poly.as_expr())
-        for t in args:
-            if take(t):
-                common = set(t.as_poly().gens).intersection(rads)
-                key = tuple(sorted([drad[i] for i in common]))
-            else:
-                key = -1
-            rterms.setdefault(key, []).append(t)
-        args = Add(*rterms.pop(-1))
-        rterms = [Add(*rterms[k]) for k in rterms.keys()]
-        # the output will depend on the order terms are processed, so
-        # make it canonical quickly
-        rterms.sort(key=default_sort_key)
-
-        # continue handling
-
-        if len(rterms) == 1:
-            eq = rterms[0]**lcm - args**lcm
-
-        elif len(rterms) == 2 and not args:
-            eq = rterms[0]**lcm - rterms[1]**lcm
-
-        elif lcm == 2 and (not args and len(rterms) == 4 or len(rterms) < 4):
-            if len(rterms) == 4:
-                # (r0+r1)**2 - (r2+r3)**2
-                t1, t2, t3, t4 = [t**2 for t in rterms]
-                eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
-                    (t3 + t4 + 2*rterms[2]*rterms[3])
-            elif len(rterms) == 3:
-                # (r0+r1)**2 - (r2+a)**2
-                t1, t2, t3 = [t**2 for t in rterms]
-                eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
-                    (t3 + args**2 + 2*args*rterms[2])
-            elif len(rterms) == 2:
-                t1, t2 = [t**2 for t in rterms[:2]]
-                # r0**2 - (r1+a)**2
-                eq = t1 - (t2 + args**2 + 2*args*rterms[1])
-
+    # get terms together that have common generators
+    drad = dict(zip(rads,range(len(rads))))
+    rterms = {(): []}
+    args = Add.make_args(poly.as_expr())
+    for t in args:
+        if take(t):
+            common = set(t.as_poly().gens).intersection(rads)
+            key = tuple(sorted([drad[i] for i in common]))
         else:
-            raise ValueError('Cannot remove all radicals from %s' % eq)
+            key = ()
+        rterms.setdefault(key, []).append(t)
+    args = Add(*rterms.pop(()))
+    rterms = [Add(*rterms[k]) for k in rterms.keys()]
+    if nwas is not None and len(rterms) == nwas:
+        raise ValueError('Cannot remove all radicals from %s' % eq)
+    # the output will depend on the order terms are processed, so
+    # make it canonical quickly
+    rterms.sort(key=default_sort_key)
 
-    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens))
+    # continue handling
+    ok = True
+    if len(rterms) == 1:
+        eq = rterms[0]**lcm - args**lcm
+
+    elif len(rterms) == 2 and not args:
+        eq = rterms[0]**lcm - rterms[1]**lcm
+
+    elif lcm == 2 and (not args and len(rterms) == 4 or len(rterms) < 4):
+        if len(rterms) == 4:
+            # (r0+r1)**2 - (r2+r3)**2
+            t1, t2, t3, t4 = [t**2 for t in rterms]
+            eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
+                (t3 + t4 + 2*rterms[2]*rterms[3])
+        elif len(rterms) == 3:
+            # (r0+r1)**2 - (r2+a)**2
+            t1, t2, t3 = [t**2 for t in rterms]
+            eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
+                (t3 + args**2 + 2*args*rterms[2])
+        elif len(rterms) == 2:
+            t1, t2 = [t**2 for t in rterms[:2]]
+            # r0**2 - (r1+a)**2
+            eq = t1 - (t2 + args**2 + 2*args*rterms[1])
+
+    elif len(bases) == 1: # change of variables may work
+        ok = False
+        covwas = len(cov)
+        b = bases.pop()
+        for p, bexpr in cov:
+            pow = (b - bexpr)
+            if pow.is_Pow:
+                pb, pe = pow.as_base_exp()
+                if pe == lcm and pb == p:
+                    p = pb
+                    break
+        else:
+            p = Dummy('p', positive=True)
+            cov.append((p, b - p**lcm))
+        eq = poly.subs(b, p**lcm).as_expr()
+        if not eq.free_symbols.intersection(syms):
+            ok = True
+        else:
+            if len(cov) > covwas:
+                cov = cov[:-1]
+    else:
+        ok = False
+
+    if not ok:
+        raise ValueError('Cannot remove all radicals from %s' % eq)
+
+    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms)))
     if neq:
         eq = neq[0]
     eq = eq.subs(reps)
