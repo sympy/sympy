@@ -77,7 +77,7 @@ def is_quad_residue(a, p):
     a, p = int_tested(a, p)
     if p < 1:
         raise ValueError('p must be > 0')
-    if a > p or a < 0:
+    if a >= p or a < 0:
         a = a % p
     if a < 2 or p < 3:
         return True
