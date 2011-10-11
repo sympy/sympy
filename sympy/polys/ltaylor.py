@@ -345,13 +345,17 @@ def taylor(p, var=None, start=0, prec=6, dir="+", pol_pars=[]):
     lps = LPoly(lpol_vars, sympify, lex)
     tev = (TaylorEval(gens, lpq), TaylorEval(gens, lps))
 
+    # factor out powers of log(x) and replace them with a polynomial
+    # variable `tlog`
+    # e.g. p = sin(x)**10 * log(x)*log(sin(x)+x) ->
+    # sin(x)**10 * log((sin(x)+x)/x) * tlog**2
     classes = [q.__class__ for q in p.args]
     if log in classes:
         lpl = LPoly('tlog', sympify, lex)
         tlog = lpl.gens()[0]
         p12 = lpl(1)
         for q in p.args:
-            if q.__class__ not in log:
+            if q.__class__ is not log:
                 p12 = p12*q
             else:
                 qarg = q.args[0]
