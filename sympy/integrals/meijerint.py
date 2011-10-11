@@ -1264,6 +1264,12 @@ def _rewrite2(f, x):
 def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
+
+    >>> from sympy.integrals.meijerint import meijerint_indefinite
+    >>> from sympy import sin
+    >>> from sympy.abc import x
+    >>> meijerint_indefinite(sin(x), x)
+    -cos(x)
     """
     from sympy import Integral
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
@@ -1316,6 +1322,12 @@ def meijerint_definite(f, x, a, b):
     of two G functions, or as a single G function.
 
     Return res, cond, where cond are convergence conditions.
+
+    >>> from sympy.integrals.meijerint import meijerint_definite
+    >>> from sympy import exp, oo
+    >>> from sympy.abc import x
+    >>> meijerint_definite(exp(-x**2), x, -oo, oo)
+    (sqrt(pi), True)
 
     This function is implemented as a succession of functions
     meijerint_definite, _meijerint_definite_2, _meijerint_definite_3,
@@ -1536,6 +1548,11 @@ def meijerint_inversion(f, x, t):
     Note that `t` is always assumed real and positive.
 
     Return None if the integral does not exist or could not be evaluated.
+
+    >>> from sympy.abc import x, t
+    >>> from sympy.integrals.meijerint import meijerint_inversion
+    >>> meijerint_inversion(1/x, x, t)
+    Heaviside(t)
     """
     from sympy import I, Integral, exp, expand, log, Add, Mul, Heaviside
     f_ = f
