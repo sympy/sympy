@@ -870,3 +870,6 @@ def test_model():
     assert model(e - 1/exp(3 + y + x), x, reps=True) == \
         (C0*exp(x) + C1*exp(-x), {C0: exp(y + 2), C1: -exp(-y - 3)})
     assert model(3*y*x, x, reps=True) == (C0*x, {C0: 3*y})
+    assert model(x + a/(y + b + x), x, vars=True) == (C0/(C1 + x) + x, (C0, C1))
+    # reps overrides vars
+    assert model(x + a/(y + b + x), x, vars=True, reps=True) == (C0/(C1 + x) + x, {C0: a, C1: b + y})

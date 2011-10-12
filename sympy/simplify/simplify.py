@@ -4,7 +4,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms)
+    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms, symbols)
 
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd, Float
@@ -2236,7 +2236,7 @@ def _logcombine(expr, force=False):
 
     return expr
 
-def model(expr, variable, constant_name='C', numbers=False, reps=False):
+def model(expr, variable, constant_name='C', numbers=False, vars=False, reps=False):
     """Return ``expr`` with all symbols different than ``variable``
     absorbed into constant(s) with name ``constant_name`` having consecutive
     numbers e.g. C0, C1, C2, .... The absorbing is done by combining added or
@@ -2245,6 +2245,9 @@ def model(expr, variable, constant_name='C', numbers=False, reps=False):
     constant will not be absorbed unless ``numbers`` is True.
 
     If ``reps`` is True, a dictionary identifying the symbols will be returned.
+
+    If ``vars`` is True (and ``reps`` is not) then a list of the symbols that
+    were introduced will be returned.
 
     Examples::
 
@@ -2272,7 +2275,10 @@ def model(expr, variable, constant_name='C', numbers=False, reps=False):
 
     eq = expr
     x = variable
+    rv_vars = vars
     rv_reps = reps
+    if rv_reps:
+        rv_vars = False
 
     # if x is a numbered symbol having the same root name as u
     # then we raise an error
@@ -2485,20 +2491,19 @@ def model(expr, variable, constant_name='C', numbers=False, reps=False):
     if rv_reps:
         num, den = (rv-expr).as_numer_denom()
         eqs = []
-        syms = []
+        syms = set()
         e = num.expand()
         for a in e.atoms(Add) or [e]:
             i, d = a.as_independent(x, as_Add=True)
             for ii in i.free_symbols:
                 if is_csym(ii):
                     eqs.append(i)
-                    syms.append(ii)
-                    break
+                    syms.add(ii)
             for t in Add.make_args(d):
                 i, d = t.as_independent(x)
                 for ii in Mul.make_args(i):
                     if is_csym(ii):
-                        syms.append(ii)
+                        syms.add(ii)
                         c = collect(a, d).coeff(d)
                         if c and c.is_Add:
                             eqs.append(c)
@@ -2520,7 +2525,7 @@ def model(expr, variable, constant_name='C', numbers=False, reps=False):
         if eqs:
             from sympy import solve
             try:
-                sol = solve(eqs, *set(syms))
+                sol = solve(eqs, syms)
             except NotImplementedError:
                 sol = {}
             reps = []
@@ -2534,5 +2539,8 @@ def model(expr, variable, constant_name='C', numbers=False, reps=False):
             rv = rv.subs(reps)
             seen = dict([(v, k) for k, v in seen.iteritems()])
             return rv, seen
+
+    if rv_vars:
+        return rv, symbols(constant_name+':%i' % len(u_all))
 
     return rv
