@@ -266,12 +266,29 @@ def test_Float():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
-    assert Float(1) is S.One
     assert Float(0) is S.Zero
+    assert Float(1) is S.One
+
+    assert Float(S.Zero) is S.Zero
+    assert Float(S.One) is S.One
 
 def test_Float_eval():
     a = Float(3.2)
     assert (a**2).is_Float
+
+def test_Float_issue_2107():
+    a = Float(0.1, 10)
+    b = Float("0.1", 10)
+
+    assert a - a == 0
+    assert a + (-a) == 0
+    assert S.Zero + a - a == 0
+    assert S.Zero + a + (-a) == 0
+
+    assert b - b == 0
+    assert b + (-b) == 0
+    assert S.Zero + b - b == 0
+    assert S.Zero + b + (-b) == 0
 
 def test_Infinity():
     assert oo != 1
