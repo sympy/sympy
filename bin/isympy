@@ -114,7 +114,11 @@ COMMAND LINE OPTIONS
     Additionally you can pass command line options directly to the
     IPython interpreter (the standard Python shell is not supported).
     However you need to add '--' separator between two types of options.
-    To run SymPy without startup banner and colors, for example, issue in IPython 0.10 or lower:
+    To run SymPy without startup banner and colors, for example, issue in IPython 0.11 or higher:
+
+        $isympy -q -- --colors=NoColor
+
+    Or in an older version of IPython:
 
         $isympy -q -- -colors NoColor
 
