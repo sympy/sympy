@@ -1630,6 +1630,26 @@ class Matrix(object):
 
     @property
     def is_square(self):
+        """
+        Checks if a matrix is square.
+
+        A matrix is square if the number of rows equals the number of columns.
+        The empty matrix is square by definition, since the number of rows and
+        the number of columns are both zero.
+
+        Example::
+            >>> from sympy import Matrix
+            >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
+            >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+            >>> c = Matrix([])
+            >>> a.is_square
+            False
+            >>> b.is_square
+            True
+            >>> c.is_square
+            True
+
+        """
         return self.rows == self.cols
 
     def is_nilpotent(self):
