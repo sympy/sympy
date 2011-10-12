@@ -376,8 +376,8 @@ class Matrix(object):
         out = Matrix(self.rows,self.cols,map(lambda i: a*i,self.mat))
         return out
 
-    def expand(self):
-        out = Matrix(self.rows,self.cols,map(lambda i: i.expand(), self.mat))
+    def expand(self, **hints):
+        out = Matrix(self.rows,self.cols,map(lambda i: i.expand(**hints), self.mat))
         return out
 
     def combine(self):
