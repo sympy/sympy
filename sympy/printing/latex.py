@@ -684,6 +684,8 @@ class LatexPrinter(Printer):
                       'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
                       'phi', 'chi', 'psi', 'omega' ])
 
+        greek_translated = {'lamda': 'lambda', 'Lamda': 'Lambda'}
+
         other = set( ['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth',
                       'hbar', 'hslash', 'mho' ])
 
@@ -691,6 +693,8 @@ class LatexPrinter(Printer):
             tmp = s.lower()
             if tmp in greek or tmp in other:
                 return "\\" + s
+            if s in greek_translated:
+                return "\\" + greek_translated[s]
             else:
                 return s
 
