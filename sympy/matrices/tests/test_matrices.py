@@ -277,6 +277,10 @@ def test_expand():
     m1 = m0.expand()
     assert m1 == Matrix([[x*y+x**2,2],[x*y**2+y*x**2,x*y+y*x**2+x**3]])
 
+    a = Symbol('a', real=True)
+
+    assert Matrix([exp(I*a)]).expand(complex=True) == Matrix([cos(a) + I*sin(a)])
+
 def test_random():
     M = randMatrix(3,3)
     M = randMatrix(3,3,seed=3)
