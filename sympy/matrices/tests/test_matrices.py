@@ -1847,3 +1847,9 @@ def test_zeros_eye():
     assert SparseMatrix.zeros(3) == zeros(3, cls=SparseMatrix)
     # ones doesn't have a cls argument since it is, by definition, never Sparse
     assert ones(3, 4) == Matrix(3, 4, [1]*12)
+
+def test_is_zero():
+    assert Matrix().is_zero
+    assert Matrix([[0, 0], [0, 0]]).is_zero
+    assert zeros((3, 4)).is_zero
+    assert not eye(3).is_zero
