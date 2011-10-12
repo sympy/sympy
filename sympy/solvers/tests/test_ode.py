@@ -337,7 +337,7 @@ def test_separable1():
     assert dsolve(eq1, hint='separable') == sol1
     assert dsolve(eq2, hint='separable') == sol2
     assert dsolve(eq3, hint='separable') == sol3
-    assert dsolve(eq4, hint='separable') == sol4
+    assert dsolve(eq4, hint='separable', simplify=False) == sol4
     assert dsolve(eq5, hint='separable') == simplify(sol5)
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
@@ -361,10 +361,10 @@ def test_separable2():
     sol9str = "Integral(cos(_y)/tan(_y), (_y, f(x))) == C1 + Integral(-E*exp(x), x)"
     sol10 = Eq(-log(-1 + sin(f(x))**2)/2, C1 - log(x**2 - a**2)/2)
     assert str(dsolve(eq6, hint='separable_Integral')) == sol6str
-    assert dsolve(eq7, hint='separable') == sol7
-    assert dsolve(eq8, hint='separable') == sol8
+    assert dsolve(eq7, hint='separable', simplify=False) == sol7
+    assert dsolve(eq8, hint='separable', simplify=False) == sol8
     assert str(dsolve(eq9, hint='separable_Integral')) == sol9str
-    assert dsolve(eq10, hint='separable') == sol10
+    assert dsolve(eq10, hint='separable', simplify=False) == sol10
     assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
     assert checkodesol(eq8, sol8, order=1, solve_for_func=False)[0]
     assert checkodesol(eq10, sol10, order=1, solve_for_func=False)[0]
@@ -377,8 +377,8 @@ def test_separable3():
     sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
     sol13 = Eq(log(log(f(x))), C1 - log(1 + tan(x)**2)/2 + log(tan(x)))
     assert dsolve(eq11, hint='separable') == simplify(sol11)
-    assert dsolve(eq12, hint='separable') == sol12
-    assert dsolve(eq13, hint='separable') == sol13
+    assert dsolve(eq12, hint='separable', simplify=False) == sol12
+    assert dsolve(eq13, hint='separable', simplify=False) == sol13
     assert checkodesol(eq11, sol11, order=1, solve_for_func=False)[0]
     assert checkodesol(eq13, sol13, order=1, solve_for_func=False)[0]
 
@@ -386,7 +386,7 @@ def test_separable4():
     # This has a slow integral (1/((1 + y**2)*atan(y))), so we isolate it.
     eq14 = x*f(x).diff(x) + (1 + f(x)**2)*atan(f(x))
     sol14 = Eq(log(atan(f(x))), C1 - log(x))
-    assert dsolve(eq14, hint='separable') == sol14
+    assert dsolve(eq14, hint='separable', simplify=False) == sol14
     assert checkodesol(eq14, sol14, order=1, solve_for_func=False)[0]
 
 def test_separable5():
@@ -409,15 +409,15 @@ def test_separable5():
     sol19e = Eq(f(x), (C1*(1 - x) - x*(-x*exp(x) + exp(x)) -
                             x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
-    sol21 = Eq(-exp(-f(x)), C1 + exp(x))
+    sol21 = Eq(f(x), log(-1/(C1 + exp(x))))
     assert dsolve(eq15, hint='separable') == sol15
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
     assert dsolve(eq17, hint='separable') == sol17
-    assert dsolve(eq18, hint='separable') == sol18
+    assert dsolve(eq18, hint='separable', simplify=False) == sol18
     assert dsolve(eq19, hint='separable') in [sol19a, sol19b, sol19c,
                                                     sol19d, sol19e]
-    assert dsolve(eq20, hint='separable') == sol20
-    assert dsolve(eq21, hint='separable', simplify=False) == sol21
+    assert dsolve(eq20, hint='separable', simplify=False) == sol20
+    assert dsolve(eq21, hint='separable') == sol21
     assert checkodesol(eq15, sol15, order=1, solve_for_func=False)[0]
     assert checkodesol(eq16, sol16, order=1, solve_for_func=False)[0]
     assert checkodesol(eq17, sol17, order=1, solve_for_func=False)[0]
