@@ -114,32 +114,33 @@ class AskBoundedHandler(CommonHandler):
 
 
         All Bounded -> True
-        Any Unbounded and all same sign -> False
+        1 Unbounded and the rest Bounded -> False
+        >1 Unbounded, all with same known sign -> False
         Any Unknown and unknown sign -> None
         Else -> None
 
         When the signs are not the same you can have an undefined
-        (hence bounded undefined) result as in oo - oo
+        result as in oo - oo, hence 'bounded' is also undefined.
         """
 
+        sign = -1 # sign of unknown or unbounded
         result = True
-        sign = -1 # not assigned yet
         for arg in expr.args:
             _bounded = ask(Q.bounded(arg), assumptions)
             if _bounded:
                 continue
-            if result is None and _bounded is None and sign is None:
+            s = ask(Q.positive(arg), assumptions)
+            # if there has been more than one sign or if the sign of this arg
+            # is None and Bounded is None or there was already
+            # an unknown sign, return None
+            if sign != -1 and s != sign or \
+               s == None and (s == _bounded or s == sign):
                 return None
+            else:
+                sign = s
+            # once False, do not change
             if result is not False:
                 result = _bounded
-            pos = ask(Q.positive(arg), assumptions)
-            if sign == -1:
-                sign = pos
-                continue
-            if sign != pos:
-                return None
-            if sign is None and pos is None:
-                return None
         return result
 
     @staticmethod
