@@ -14,7 +14,7 @@
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
-from sympy.core.function import expand_mul, expand_multinomial
+from sympy.core.function import expand_mul, expand_multinomial, expand_log
 from sympy.core.numbers import ilcm
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -24,7 +24,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot,
                              acosh, asinh, atanh, acoth)
 from sympy.simplify import simplify, collect, powsimp, fraction, posify, powdenest
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, Poly, together
+from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold
 
 from sympy.utilities.lambdify import lambdify
@@ -138,12 +138,21 @@ def checksol(f, symbol, sol=None, **flags):
     if not f.has(*sol.keys()):
         return False
 
+    illegal = set([S.NaN,
+               S.ComplexInfinity,
+               S.Infinity,
+               S.NegativeInfinity])
+    if any(sympify(v).atoms() & illegal for k, v in sol.iteritems()):
+        return False
+
     attempt = -1
     numerical = flags.get('numerical', True)
     while 1:
         attempt += 1
         if attempt == 0:
             val = f.subs(sol)
+            if val.atoms() & illegal:
+                return False
         elif attempt == 1:
             if not val.atoms(Symbol) and numerical:
                 # val is a constant, so a fast numerical test may suffice
@@ -365,7 +374,9 @@ def solve(f, *symbols, **flags):
                     >>> solve(x**2 - y**2, x, y)
                     [{x: -y}, {x: y}]
                     >>> solve(x**2 - y**2/exp(x), x, y)
-                    [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+                    [{x: 2*LambertW(y/2)}]
+                    >>> solve(x**2 - y**2/exp(x), y, x)
+					[{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
             o iterable of one or more of the above
 
@@ -723,10 +734,12 @@ def _solve(f, *symbols, **flags):
                 bases = set(bases)
                 if len(bases) > 1:
                     funcs = set(b.func for b in bases)
+
                     trig = set([cos, sin, tan, cot])
                     other = funcs - trig
                     if not other and len(funcs.intersection(trig)) > 1:
                         return _solve(f_num.rewrite(tan), symbol, **flags)
+
                     trigh = set([cosh, sinh, tanh, coth])
                     other = funcs - trigh
                     if not other and len(funcs.intersection(trigh)) > 1:
@@ -1262,6 +1275,10 @@ def _generate_patterns():
     tmp2 = (-_e*tmp1/_a)**(1/_d)
     global _patterns
     _patterns = [
+        (_a*_x*exp(_b*_x) - _c,
+            LambertW(_b*_c/_a)/_b),
+        (_a*_x*log(_b*_x) - _c,
+            exp(LambertW(_b*_c/_a))/_b),
         (_a*(_b*_x+_c)**_d + _e   ,
             ((-(_e/_a))**(1/_d)-_c)/_b),
         (_b+_c*exp(_d*_x+_e) ,
@@ -1312,10 +1329,7 @@ def _tsolve(eq, sym, **flags):
         m = eq2.match(p)
         if m:
             soln = sol.subs(m).subs(_x, sym)
-            if not(soln is S.NaN or
-                   soln.has(S.Infinity) or
-                   soln.has(S.NegativeInfinity) or
-                   sym in soln.free_symbols):
+            if sym not in soln.free_symbols:
                 return [soln]
 
     try:
@@ -1328,7 +1342,10 @@ def _tsolve(eq, sym, **flags):
             if len(cov) > 1:
                 raise NotImplementedError('Not sure how to handle this.')
             isym, ieq = cov[0]
-            flags['check'] = False # don't disallow 0 as solution
+            # since cov is written in terms of positive symbols, set
+            # check to False or else 0 would be excluded; _solve will check
+            # the results
+            flags['check'] = False
             sol = _solve(eq, isym, **flags)
             inv = _solve(ieq, sym, **flags)
             result = []
@@ -1374,23 +1391,40 @@ def _tsolve(eq, sym, **flags):
                     for sol in cv_sols:
                         sols.append(cv_inv.subs(t, sol))
                     return sols
+        # it's time to try factoring
+        fac = factor(lhs - rhs)
+        if fac.is_Mul:
+            return _solve(fac, sym)
+
     elif lhs.is_Pow:
         if lhs.exp.is_Integer:
             return _solve(lhs - rhs, sym)
-        elif not lhs.exp.has(sym):
+        elif sym not in lhs.exp.free_symbols:
             return _solve(lhs.base - rhs**(1/lhs.exp), sym)
-        elif rhs is not S.Zero and lhs.base.is_positive and lhs.exp.is_real:
+        elif not rhs and sym in lhs.exp.free_symbols:
+            # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
+            # the same place
+            sol_base = _solve(lhs.base, sym)
+            if not sol_base:
+                return sol_base
+            return list(set(sol_base) - set(_solve(lhs.exp, sym)))
+        elif (rhs is not S.Zero and
+              lhs.base.is_positive and
+              lhs.exp.is_real):
             return _solve(lhs.exp*log(lhs.base) - log(rhs), sym)
 
-    if flags.pop('posify', True):
-        flags['posify'] = False
-        pos, reps = posify(lhs)
-        u = sym
+    elif lhs.is_Mul and rhs.is_positive:
+        return _solve(expand_log(log(lhs)) - log(rhs), sym)
+
+    if flags.pop('force', True):
+        flags['force'] = False
+        pos, reps = posify(lhs - rhs)
+        u = sym # in case there were no reps
         for u, s in reps.iteritems():
             if s == sym:
                 break
         try:
-            soln = _solve(pos - rhs, u, **flags)
+            soln = _solve(pos, u, **flags)
         except NotImplementedError:
             return
         return [s.subs(reps) for s in soln]

@@ -250,8 +250,8 @@ def test_tsolve():
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x)-3, x) == [exp(3)]
     assert solve(sqrt(3*x)-4, x) == [Rational(16,3)]
-    assert solve(3**(x+2), x) == [zoo]
-    assert solve(3**(2-x), x) == [oo]
+    assert solve(3**(x+2), x) == []
+    assert solve(3**(2-x), x) == []
     assert solve(x+2**x, x) == [-LambertW(log(2))/log(2)]
     assert solve(3*x+5+2**(-5*x+3), x) in [
         [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(2)/3))/(15*log(2)))],
@@ -454,9 +454,10 @@ def test_issue_2098():
     assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
     # The solution following should not contain {y: -x*exp(x/2)}
-    assert solve(x**2 - y**2/exp(x), x, y) == [{y: x*exp(x/2)}]
+    assert solve(x**2 - y**2/exp(x), y, x) == [{y: x*exp(x/2)}]
+    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
     x, y, z = symbols('x y z', positive=True)
-    assert solve(z**2*x**2 - z**2*y**2/exp(x), x, y, z) == [{y: x*exp(x/2)}]
+    assert solve(z**2*x**2 - z**2*y**2/exp(x), y, x, z) == [{y: x*exp(x/2)}]
 
 @XFAIL
 def test_failing():
@@ -725,3 +726,12 @@ def test_multivariate():
 def test__invert():
     assert _invert(x - 2) == (2, x)
     assert _invert(2) == (2, 0)
+
+def test_issue_1364():
+    a = Symbol('a')
+    assert solve(-a*x + 2*x*log(x), x) == [exp(a/2)]
+    assert solve(a/x + exp(x/2), x) == [2*LambertW(-a/2)]
+    assert solve(x**x) == []
+    assert solve(x**x - 2) == [exp(LambertW(log(2)))]
+    assert solve(((x - 3)*(x - 2))**((x - 3)*(x - 4))) == [2]
+    assert solve((a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
