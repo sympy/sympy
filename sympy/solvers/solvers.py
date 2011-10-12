@@ -14,7 +14,7 @@
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
-from sympy.core.function import expand_mul
+from sympy.core.function import expand_mul, expand_multinomial
 from sympy.core.numbers import ilcm
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -1662,7 +1662,7 @@ def unrad(eq, *syms, **flags):
         >>> unrad(sqrt(x)*x**Rational(1,3) + 2)
         (x**5 - 64, [], [])
         >>> unrad(sqrt(x) + (x + 1)**Rational(1,3))
-        (x**3 - (x + 1)**2, [], [])
+        (x**3 - x**2 - 2*x - 1, [], [])
         >>> unrad(sqrt(x) + x**Rational(1,3) + 2)
         (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
 
@@ -1779,6 +1779,7 @@ def unrad(eq, *syms, **flags):
         ok = False
 
     if not ok:
+        # XXX: XFAIL tests indicate other cases that should be handled.
         raise ValueError('Cannot remove all radicals from %s' % eq)
 
     neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms)))
@@ -1787,7 +1788,7 @@ def unrad(eq, *syms, **flags):
     eq = eq.subs(reps)
     if eq.could_extract_minus_sign():
         eq = -eq
-    return (eq,
+    return (expand_mul(expand_multinomial(eq)),
             [(c[0], c[1].subs(reps)) for c in cov],
             [d.subs(reps) for d in dens]
             )
