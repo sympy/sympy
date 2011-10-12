@@ -1659,10 +1659,12 @@ def unrad(eq, *syms, **flags):
         >>> from sympy.solvers.solvers import unrad
         >>> from sympy.abc import x
         >>> from sympy import sqrt, Rational
-        >>> unrad(sqrt(x)*x**Rational(1,3)+2)
-        (_p**5 + 2, [(_p, -_p**6 + x)], [])
-        >>> unrad(sqrt(x)+(x+1)**Rational(1,3))
+        >>> unrad(sqrt(x)*x**Rational(1,3) + 2)
+        (x**5 - 64, [], [])
+        >>> unrad(sqrt(x) + (x + 1)**Rational(1,3))
         (x**3 - (x + 1)**2, [], [])
+        >>> unrad(sqrt(x) + x**Rational(1,3) + 2)
+        (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
 
     """
     if eq.is_Atom:
