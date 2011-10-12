@@ -7,7 +7,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms, symbols)
 
 from sympy.core.compatibility import iterable, reduce
-from sympy.core.numbers import igcd, Float
+from sympy.core.numbers import igcd, Float, pi
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
@@ -2495,10 +2495,12 @@ def collect_constants(expr, variable, constant_name='C', numbers=False, vars=Fal
         e = num.expand()
         for a in e.atoms(Add) or [e]:
             i, d = a.as_independent(x, as_Add=True)
+            len_old = len(syms)
             for ii in i.free_symbols:
                 if is_csym(ii):
-                    eqs.append(i)
                     syms.add(ii)
+            if len(syms) > len_old:
+                eqs.append(i)
             for t in Add.make_args(d):
                 i, d = t.as_independent(x)
                 for ii in Mul.make_args(i):
@@ -2544,3 +2546,154 @@ def collect_constants(expr, variable, constant_name='C', numbers=False, vars=Fal
         return rv, symbols(constant_name+':%i' % len(u_all))
 
     return rv
+
+def _condense(expr, var, _symbols={}):
+    """
+    Replaces subexpressions not containing var with symbols.
+    Returns the modified expression along with a dict of substitutions.
+    """
+    from sympy.utilities.iterables import sift
+    expr = sympify(expr)
+    var = sympify(var)
+    if not _symbols:
+        _symbols = {}
+    if expr is not S.NegativeOne and var not in expr.free_symbols:
+        s = Symbol("C" + str(len(_symbols)))
+        _symbols[s] = expr
+        return s, _symbols
+    if expr.is_Atom:
+        return expr, _symbols
+    if (expr.is_Pow or expr.func is exp) and expr.exp.is_Add:
+        i, d = expr.exp.as_independent(var)
+        if d:
+            expr = expr.base**i*expr.base**d
+    elif expr.is_Add:
+        expr = collect(expr, var)
+    if expr.is_Add or expr.is_Mul:
+        d = sift(expr.args, lambda w: var in w.free_symbols)
+        with_var = d.get(True, [])
+        without_var = d.get(False, [])
+        args = []
+        for a in with_var:
+            a, _symbols = _condense(a, var, _symbols)
+            args.append(a)
+        if without_var:
+            a, _symbols = _condense(expr.func(*without_var), var, _symbols)
+            without_var = [a]
+        return expr.func(*(args + without_var)), _symbols
+    args = []
+    for a in expr.args:
+        a, _symbols = _condense(a, var, _symbols)
+        args.append(a)
+    return expr.func(*args), _symbols
+
+def condense(eq, x, constant_name='C', reps=False):
+    """Return ``expr`` with all symbols different than ``variable``
+    absorbed into constant(s) with name ``constant_name`` having consecutive
+    numbers e.g. C0, C1, C2, .... The absorbing is done by combining added or
+    multiplied constants, and by expanding powers that have an added constant
+    in the exponent. Rational powers are not replaced..
+
+    If ``reps`` is True, a dictionary identifying the symbols will be returned.
+
+    Examples::
+
+    >>> from sympy import condense, exp
+    >>> from sympy.abc import x, y, z
+    >>> condense(y + 3, x)
+    C0
+    >>> condense(y + 3, x, 'k')
+    k0
+    >>> condense(x + 3, x)
+    C0 + x
+    >>> condense(-x + 3, x)
+    C0 - x
+    >>> condense(x + 3*y, x)
+    C0 + x
+    >>> condense(x + 3*y, x, 'x')
+    x + x0
+    >>> condense(exp(x + 3), x)
+    C0*exp(x)
+    >>> condense(y*exp(x + 3), x)
+    C0*exp(x)
+    """
+
+    def renumu(eq, k=0, map={}):
+        """Number the u-symbols that have been introduced.
+        """
+        if eq in u_all and eq not in map:
+            ss = Symbol(constant_name + str(k))
+            map[eq] = ss
+            return ss, k + 1, map
+        elif eq.is_Atom:
+            return eq, k, map
+        else:
+            # sort args without regard to u by using as a key the expression
+            # with the u's replaced with 1's.
+            args = list(eq.args)
+            if eq.is_Add or eq.is_Mul:
+                unify = zip(u_all, [S.One]*len(u_all))
+                args = [i[1] for i in sorted([(e.subs(unify), e)
+                                      for e in eq.args], key=default_sort_key)]
+            for i, a in enumerate(args):
+                a, k, map = renumu(a, k, map)
+                args[i] = a
+            return eq.func(*args), k, map
+
+    # begin
+    rv_reps = reps
+
+    # if x is a numbered symbol having the same root name as u
+    # then we raise an error
+    def is_csym(x):
+        return x.is_Symbol and (x.name.startswith(constant_name) and
+            len(x.name) > len(constant_name) and
+            all(ch in digits for ch in x.name[len(constant_name):]))
+    if is_csym(x):
+        raise ValueError('Chosen constant name clashes with the variable %s' % x)
+
+    # first pass
+    eq, d = _condense(eq, x)
+
+    # do it again to resolve double constants
+    eq, d = _condense(eq, x, d)
+
+    # resolve constants that got identified as constants
+    for k, v in d.items():
+        d[k] = v.subs(d)
+
+    # unify duplicates
+    # -- collect them
+    dups = {}
+    for k, v in d.items():
+        dups.setdefault(v, []).append(k)
+    # -- replace them
+    d={}
+    for k, v in dups.items():
+        v0=v[0]
+        if len(v) > 1:
+            for vi in v:
+                eq = eq.subs(vi, v0)
+        d[v[0]] = k
+
+    # restore Rational powers
+    reps = {}
+    for p in eq.atoms(Pow):
+        i = d.get(p.exp,pi)
+        if i.is_Rational:
+            reps[p] = p.base**i
+    eq = eq.subs(reps)
+
+    # renumber constants
+    u_all = d.keys()
+    renum, _, map = renumu(eq)
+    map = dict([(v, k) for k, v in map.items()])
+
+    # update the original mapping
+    for k, v in map.items():
+        map[k] = v.subs(d)
+
+    # done
+    if rv_reps:
+        return renum, map
+    return renum
