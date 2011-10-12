@@ -126,10 +126,8 @@ def test_tolist():
 def test_determinant():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
 
-    M = Matrix((1,))
-
-    assert M.det(method="bareis") == 1
-    assert M.det(method="berkowitz") == 1
+    for M in [Matrix(), Matrix([[1]])]:
+        assert M.det() == M.det_bareis() == M.berkowitz_det() == 1
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
