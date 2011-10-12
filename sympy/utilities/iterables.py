@@ -326,6 +326,9 @@ def variations(seq, n=None, repetition=False):
     from sympy.core.compatibility import permutations
 
     if not repetition:
+        seq = tuple(seq)
+        if len(seq) < n:
+            return
         for i in permutations(seq, n):
             yield i
     else:
