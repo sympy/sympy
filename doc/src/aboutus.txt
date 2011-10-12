@@ -142,6 +142,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Roberto Colistete, Jr.: Add num_columns option to the pretty printer
 #. Raoul Bourquin: Implement Euler numbers
 #. Gert-Ludwig Ingold: Correct derivative of coth
+#. Miha Marolt: Add numpydoc extension to the Sphinx docs
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
