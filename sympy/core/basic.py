@@ -13,7 +13,7 @@ def _new_Basic(cls, args, state):
     Creates a new object while pickling. We need to call the __new__ method
     with keyword argument evaluate=False because some evaluation can occur
     at creation time and we don't want that while deepcopying an object..
-    This function is called by the __reduce__method.
+    This function is called by the __reduce__ method.
     """
     try:
         obj = cls.__new__(cls, *args, evaluate=False)
