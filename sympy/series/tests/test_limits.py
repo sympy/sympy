@@ -237,7 +237,6 @@ def test_issue2130():
 
 def test_issue1447():
     # using list(...) so py.test can recalculate values
-    from sympy import sign
     tests = list(cartes([cot, tan],
                         [-pi/2, 0, pi/2, pi, 3*pi/2],
                         ['-', '+']))
@@ -282,3 +281,7 @@ def test_order_oo():
 def test_issue2337():
     raises(NotImplementedError, 'limit(exp(x*y), x, oo)')
     raises(NotImplementedError, 'limit(exp(-x*y), x, oo)')
+
+def test_Limit_dir():
+    raises(TypeError, "Limit(x, x, 0, dir=0)")
+    raises(ValueError, "Limit(x, x, 0, dir='0')")

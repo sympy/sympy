@@ -193,7 +193,7 @@ class StrPrinter(Printer):
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
-        if dir == "+":
+        if str(dir) == "+":
             return "Limit(%s, %s, %s)" % (e, z, z0)
         else:
             return "Limit(%s, %s, %s, dir='%s')" % (e, z, z0, dir)
