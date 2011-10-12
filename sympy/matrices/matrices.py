@@ -2699,7 +2699,7 @@ def matrix_multiply(A, B):
                                         reduce(lambda k, l: k+l,
                                         map(lambda n, m: n*m,
                                         alst[i],
-                                        blst[j])))
+                                        blst[j]), 0))
 
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
