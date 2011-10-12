@@ -159,6 +159,18 @@ class Relational(Expr, EvalfMixin):
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
+    def doit(self, **hints):
+        lhs = self.lhs
+        rhs = self.rhs
+        if hints.get('deep', True):
+            lhs = lhs.doit(**hints)
+            rhs = rhs.doit(**hints)
+        return self._eval_relation_doit(lhs, rhs)
+
+    @classmethod
+    def _eval_relation_doit(cls, lhs, rhs):
+        return cls._eval_relation(lhs, rhs)
+
 class Equality(Relational):
 
     rel_op = '=='
@@ -170,6 +182,10 @@ class Equality(Relational):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return lhs == rhs
+
+    @classmethod
+    def _eval_relation_doit(cls, lhs, rhs):
+        return Eq(lhs, rhs)
 
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)==0
@@ -183,6 +199,10 @@ class Unequality(Relational):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return lhs != rhs
+
+    @classmethod
+    def _eval_relation_doit(cls, lhs, rhs):
+        return Ne(lhs, rhs)
 
     def __nonzero__(self):
         return self.lhs.compare(self.rhs)!=0

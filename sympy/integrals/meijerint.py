@@ -432,16 +432,9 @@ def _is_analytic(f, x):
 
 def _eval_cond(cond):
     """ Re-evaluate the conditions. """
-    # XXX is there a better way?
-    from sympy.core.relational import Relational
-    def tr(expr):
-        if expr.rel_op == '<':
-            return expr.lhs < expr.rhs
-        else:
-            return expr
     if isinstance(cond, bool):
         return cond
-    return cond.replace(lambda x: x.is_Relational, tr)
+    return cond.doit()
 
 ####################################################################
 # Now the "backbone" functions to do actual integration.
