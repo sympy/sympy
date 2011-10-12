@@ -352,3 +352,7 @@ def test_settings():
 
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
+
+def test_lamda():
+    assert latex(Symbol('lamda')) == r"\lambda"
+    assert latex(Symbol('Lamda')) == r"\Lambda"
