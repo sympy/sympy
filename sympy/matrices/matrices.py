@@ -2,7 +2,7 @@ from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import is_sequence
 
-from sympy.polys import Poly, roots, cancel
+from sympy.polys import PurePoly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -2222,9 +2222,9 @@ class Matrix(object):
 
         return tuple(minors)
 
-    def berkowitz_charpoly(self, x, simplify=sympy_simplify):
+    def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=sympy_simplify):
         """Computes characteristic polynomial minors using Berkowitz method."""
-        return Poly(map(simplify, self.berkowitz()[-1]), x)
+        return PurePoly(map(simplify, self.berkowitz()[-1]), x)
 
     charpoly = berkowitz_charpoly
 
