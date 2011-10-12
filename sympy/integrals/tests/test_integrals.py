@@ -1,7 +1,7 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix,
         sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
-        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify)
+        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
@@ -658,3 +658,12 @@ def test_issue_1793b():
 def test_issue_2079():
     assert integrate(sin(x)*f(y, z), (x, 0, pi), (y, 0, pi), (z, 0, pi)) == \
         Integral(2*f(y, z), (y, 0, pi), (z, 0, pi))
+
+def test_integrate_series():
+    f = sin(x).series(x, 0, 10)
+    g = x**2/2 - x**4/24 + x**6/720 - x**8/40320 + x**10/3628800 + O(x**11)
+
+    assert integrate(f, x) == g
+    assert diff(integrate(f, x), x) == f
+
+    assert integrate(O(x**5), x) == O(x**6)

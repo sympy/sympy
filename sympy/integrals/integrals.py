@@ -553,6 +553,24 @@ class Integral(Expr):
                 parts.append(coeff*x)
                 continue
 
+            # g(x) = expr + O(x**n)
+            order_term = g.getO()
+
+            if order_term is not None:
+                h = self._eval_integral(g.removeO(), x)
+
+                if h is not None:
+                    h_order_expr = self._eval_integral(order_term.expr, x)
+
+                    if h_order_expr is not None:
+                        h_order_term = order_term.func(h_order_expr, *order_term.variables)
+                        parts.append(coeff*(h + h_order_term))
+                        continue
+
+                # NOTE: if there is O(x**n) and we fail to integrate then there is
+                # no point in trying other methods because they will fail anyway.
+                return None
+
             #               c
             # g(x) = (a*x+b)
             if g.is_Pow and not g.exp.has(x):
