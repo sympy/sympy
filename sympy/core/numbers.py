@@ -298,9 +298,15 @@ class Float(Number):
 
     def __new__(cls, num, prec=15):
         prec = mlib.libmpf.dps_to_prec(prec)
-        if isinstance(num, (int, long)):
+
+        if isinstance(num, (int, long, Integer)):
             return Integer(num)
-        if isinstance(num, (str, decimal.Decimal)):
+
+        if isinstance(num, float):
+            _mpf_ = mlib.from_float(num, prec, rnd)
+        elif isinstance(num, Rational):
+            _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
+        elif isinstance(num, (str, decimal.Decimal)):
             _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, tuple) and len(num) == 4:
             if type(num[1]) is str:
@@ -314,6 +320,7 @@ class Float(Number):
                     S.NegativeOne ** num[0] * num[1] * 2 ** num[2])._mpf_
         else:
             _mpf_ = mpmath.mpf(num)._mpf_
+
         if not num:
             return C.Zero()
         obj = Expr.__new__(cls)
