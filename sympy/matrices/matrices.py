@@ -1943,10 +1943,10 @@ class Matrix(object):
         # if methods were made internal and all determinant calculations
         # passed through here, then these lines could be factored out of
         # the method routines
-        if not self:
-            return S.One
         if not self.is_square:
             raise NonSquareMatrixError()
+        if not self:
+            return S.One
         if method == "bareis":
             return self.det_bareis()
         elif method == "berkowitz":
@@ -1964,10 +1964,10 @@ class Matrix(object):
 
            TODO: Implement algorithm for sparse matrices (SFF).
         """
-        if not self:
-            return S.One
         if not self.is_square:
             raise NonSquareMatrixError()
+        if not self:
+            return S.One
 
         M, n = self[:,:], self.rows
 
@@ -2204,6 +2204,8 @@ class Matrix(object):
 
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method."""
+        if not self.is_square:
+            raise NonSquareMatrixError()
         if not self:
             return S.One
         poly = self.berkowitz()[-1]
