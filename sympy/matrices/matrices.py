@@ -1940,6 +1940,13 @@ class Matrix(object):
           berkowitz ... berkowitz_det
         """
 
+        # if methods were made internal and all determinant calculations
+        # passed through here, then these lines could be factored out of
+        # the method routines
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        if not self:
+            return S.One
         if method == "bareis":
             return self.det_bareis()
         elif method == "berkowitz":
@@ -1959,6 +1966,8 @@ class Matrix(object):
         """
         if not self.is_square:
             raise NonSquareMatrixError()
+        if not self:
+            return S.One
 
         M, n = self[:,:], self.rows
 
@@ -2195,6 +2204,10 @@ class Matrix(object):
 
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method."""
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        if not self:
+            return S.One
         poly = self.berkowitz()[-1]
         sign = (-1)**(len(poly)-1)
         return sign * poly[-1]
@@ -2688,7 +2701,7 @@ def matrix_multiply(A, B):
                                         reduce(lambda k, l: k+l,
                                         map(lambda n, m: n*m,
                                         alst[i],
-                                        blst[j])))
+                                        blst[j]), 0))
 
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B

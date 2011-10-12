@@ -126,10 +126,8 @@ def test_tolist():
 def test_determinant():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
 
-    M = Matrix((1,))
-
-    assert M.det(method="bareis") == 1
-    assert M.det(method="berkowitz") == 1
+    for M in [Matrix(), Matrix([[1]])]:
+        assert M.det() == M.det_bareis() == M.berkowitz_det() == 1
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
@@ -1873,3 +1871,8 @@ def test_rotation_matrices():
     assert rot_axis1(0) == eye(3)
     assert rot_axis2(0) == eye(3)
     assert rot_axis3(0) == eye(3)
+
+def test_zero_dimension_multiply():
+    assert (Matrix()*zeros(0, 3)).shape == (0, 3)
+    assert zeros(3, 0)*zeros(0, 3) == zeros(3, 3)
+    assert zeros(0, 3)*zeros(3, 0) == Matrix()
