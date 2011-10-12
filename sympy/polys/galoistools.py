@@ -2053,10 +2053,28 @@ def csolve_prime(f, p):
     from sympy.polys.domains import ZZ
     return [i for i in range(p) if gf_eval(f, i, p, ZZ) == 0]
 
-def get_above(x, s, p, f):
+def _get_above(x, s, p, f):
     """
     Used in gf_csolve to generate solutions of f(x) cong 0 mod(p**(s + 1)) from
     the solutions of f(x) cong 0 mod(p**s).
+    
+    **Example**
+
+    >>> from sympy.polys.galoistools import _get_above
+
+    >>> x = 1; p = 3; f = [1, 1, 7];
+    
+    >>> csolve_prime([1, 1, 7], 3)
+    [1]
+    
+    >>> V = _get_above(x = 1, s = 2, p = 3, f = [1, 1, 7])
+    
+    >>> [x + v * p**(s - 1) for v in V]
+    [1, 4, 7]
+    
+    >>> [ i for i in range(9) if not (i**2 + i + 7)%9]
+    [1, 4, 7]
+
     """
     from sympy.polys.domains import ZZ
     f_f = gf_diff(f, p, ZZ)
@@ -2088,7 +2106,7 @@ def csolve_primepower(f, p, e):
         if s == e + 1:
             X.append(x)
         else:
-             V = get_above(x, s, p, f)
+             V = _get_above(x, s, p, f)
              for v in V:
                  x_abv = x + v * p**(s - 1)
                  S.append((x_abv, s))
