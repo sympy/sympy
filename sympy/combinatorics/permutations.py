@@ -8,6 +8,49 @@ from sympy.core.numbers import Integer
 
 import itertools, random
 
+def perm_af_parity(pi):
+    """
+    Computes the parity of a permutation in array form.
+
+    The parity of a permutation reflects the parity of the
+    number of inversions in the permutation, i.e., the
+    number of pairs of x and y such that x > y but p[x] < p[y].
+
+    Examples:
+    >>> from sympy.combinatorics.permutations import perm_af_parity
+    >>> perm_af_parity([0,1,2,3])
+    0
+    >>> perm_af_parity([3,2,0,1])
+    1
+    """
+    n = len(pi)
+    a = [0] * n
+    c = 0
+    for j in xrange(n):
+        if a[j] == 0:
+            c += 1
+            a[j] = 1
+            i = j
+            while pi[i] != j:
+                i = pi[i]
+                a[i] = 1
+    return (n - c) % 2
+
+def perm_af_mul(a, b):
+    """
+    Product of two permutations in array form
+
+    Examples:
+    >>> from sympy.combinatorics.permutations import perm_af_mul
+    >>> perm_af_mul([1,2,3,0], [3,2,0,1])
+    [0, 3, 1, 2]
+    """
+    if len(a) != len(b):
+        raise ValueError("The number of elements in the permutations \
+don\'t match.")
+
+    return [a[i] for i in b]
+
 class Permutation(Basic):
     """
     A permutation, alternatively known as an 'arrangement number'
@@ -186,9 +229,9 @@ class Permutation(Basic):
         >>> a+b
         Permutation([2, 0, 1, 3])
         """
-        if self.size != other.size:
-            raise ValueError("The permutations must be of equal size.")
         n = self.size
+        if n != other.size:
+            raise ValueError("The permutations must be of equal size.")
         a = self.inversion_vector()
         b = other.inversion_vector()
         result_inv = [(a[i] + b[i]) % (n - i) for i in xrange(n - 1)]
@@ -214,9 +257,9 @@ class Permutation(Basic):
         >>> a-b
         Permutation([2, 0, 3, 1])
         """
-        if self.size != other.size:
-            raise ValueError("The permutations must be of equal size.")
         n = self.size
+        if n != other.size:
+            raise ValueError("The permutations must be of equal size.")
         a = self.inversion_vector()
         b = other.inversion_vector()
         result_inv = [(a[i] - b[i]) % (n - i) for i in xrange(n - 1)]
@@ -239,13 +282,36 @@ class Permutation(Basic):
         >>> p*q
         Permutation([1, 0, 2, 3])
         """
-        if self.size != other.size:
-            raise ValueError("The number of elements in the permutations \
-don\'t match.")
         a = self.array_form
         b = other.array_form
+        if len(a) != len(b):
+            raise ValueError("The number of elements in the permutations \
+don\'t match.")
+
         perm = [a[i] for i in b]
         return _new_from_array_form(perm)
+
+    def commutes_with(self, other):
+        """
+        Checks if the elements are commuting
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([1,4,3,0,2,5])
+        >>> b = Permutation([0,1,2,3,4,5])
+        >>> a.commutes_with(b)
+        True
+        >>> b = Permutation([2,3,5,4,1,0])
+        >>> a.commutes_with(b)
+        False
+        """
+        a = self.array_form
+        b = other.array_form
+        if len(a) != len(b):
+            raise ValueError("The number of elements in the permutations \
+don\'t match.")
+        for i in range(len(a)-1):
+            if a[b[i]] != b[a[i]]:
+                return False
+        return True
 
     def __pow__(self, n):
         """
@@ -270,7 +336,7 @@ don\'t match.")
         elif n == 4:
             b = [a[a[a[i]]] for i in a]
         else:
-            b = range(self.size)
+            b = range(len(a))
             while 1:
                 if n&1:
                     b = [b[i] for i in a]
@@ -284,6 +350,27 @@ don\'t match.")
                     a = [a[i] for i in a]
                     n = n // 2
         return _new_from_array_form(b)
+
+    def transpositions(self):
+        """a list of transpositions representing the permutation
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([[1,2,3],[0,4,5,6,7]])
+        >>> p.transpositions()
+        [(1, 3), (1, 2), (0, 7), (0, 6), (0, 5), (0, 4)]
+        """
+        a = self.cyclic_form
+        res = []
+        for x in a:
+            nx = len(x)
+            if nx == 2:
+                res.append(tuple(x))
+            elif nx > 2:
+                first = x[0]
+                for y in x[nx-1:0:-1]:
+                    res.append((first,y))
+        return res
 
     def __invert__(self):
         """
@@ -300,9 +387,10 @@ don\'t match.")
         >>> p*(~p) == Permutation([0,1,2,3])
         True
         """
-        inv_form = [0] * self.size
         a = self.array_form
-        for i in xrange(self.size):
+        n = len(a)
+        inv_form = [0] * n
+        for i in xrange(n):
             inv_form[a[i]] = i
         return _new_from_array_form(inv_form)
 
@@ -325,6 +413,41 @@ don\'t match.")
         Returns all the elements of a permutation
         """
         return set(self.array_form)
+
+    def next_lex(self):
+        """
+        Returns the next permutation in lexicographical order.
+        If self is the last permutation in lexicographical order
+        it returns None.
+        See [4] section 2.4.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([2, 3, 1, 0])
+        >>> p = Permutation([2, 3, 1, 0]); p.rank()
+        17
+        >>> p = p.next_lex(); p.rank()
+        18
+        """
+        perm = self.array_form[:]
+        n = len(perm)
+        i = n - 2
+        while perm[i+1] < perm[i]:
+            i -= 1
+        if i == -1:
+            return None
+        else:
+            j = n - 1
+            while perm[j] < perm[i]:
+                j -= 1
+            perm[j], perm[i] = perm[i], perm[j]
+            i += 1
+            j = n - 1
+            while i < j:
+                perm[j], perm[i] = perm[i], perm[j]
+                i += 1
+                j -= 1
+        return _new_from_array_form(perm)
 
     @classmethod
     def unrank_nonlex(self, n, r):
@@ -382,6 +505,25 @@ don\'t match.")
         r = rank1(len(perm), perm, inv_perm)
         return r
 
+    def next_nonlex(self):
+        """
+        Returns the next permutation in nonlex order [3].
+        If self is the last permutation in this order it returns None.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([2, 0, 3, 1]); p.rank_nonlex()
+        5
+        >>> p = p.next_nonlex(); p
+        Permutation([3, 0, 1, 2])
+        >>> p.rank_nonlex()
+        6
+        """
+        r = self.rank_nonlex()
+        if r == ifac(self.size) - 1:
+            return None
+        return Permutation.unrank_nonlex(self.size, r+1)
+
     def rank(self):
         """
         Returns the lexicographic rank of the permutation.
@@ -398,8 +540,8 @@ don\'t match.")
         rank = 0
         rho = self.array_form[:]
         n = self.size - 1
-        size = self.size
-        psize = ifac(n)
+        size = n + 1
+        psize = int(ifac(n))
         for j in xrange(size - 1):
             rank += rho[j]*psize
             for i in xrange(j + 1, size):
@@ -420,7 +562,7 @@ don\'t match.")
         >>> p.cardinality
         24
         """
-        return Integer(ifac(self.size))
+        return int(ifac(self.size))
 
     def parity(self):
         """
@@ -442,18 +584,7 @@ don\'t match.")
         if self._cyclic_form is not None:
             return (self.size - len(self._cyclic_form)) % 2
 
-        temp_perm = self.array_form[:]
-        a = [0] * self.size
-        c = 0
-        for j in xrange(self.size):
-            if a[j] == 0:
-                c += 1
-                a[j] = 1
-                i = j
-                while temp_perm[i] != j:
-                    i = temp_perm[i]
-                    a[i] = 1
-        return (self.size - c) % 2
+        return perm_af_parity(self.array_form)
 
 
     def is_even(self):
@@ -508,9 +639,10 @@ don\'t match.")
         >>> p.is_Identity
         False
         """
-        if self.cyclic_form:
-            return self.size == len(self.cyclic_form)
-        return self.array_form == range(self.size)
+        if self._cyclic_form:
+            return self.size == len(self._cyclic_form)
+        a = self.array_form
+        return a == range(len(a))
 
     def ascents(self):
         """
@@ -524,7 +656,7 @@ don\'t match.")
         [1, 2]
         """
         a = self.array_form
-        pos = [i for i in xrange(self.size-1) if a[i] < a[i+1]]
+        pos = [i for i in xrange(len(a)-1) if a[i] < a[i+1]]
         return pos
 
     def descents(self):
@@ -539,7 +671,7 @@ don\'t match.")
         [0, 3]
         """
         a = self.array_form
-        pos = [i for i in xrange(self.size-1) if a[i] > a[i+1]]
+        pos = [i for i in xrange(len(a)-1) if a[i] > a[i+1]]
         return pos
 
     def max(self):
@@ -554,7 +686,7 @@ don\'t match.")
         """
         max = 0
         a = self.array_form
-        for i in xrange(self.size):
+        for i in xrange(len(a)):
             if a[i] != i and a[i] > max:
                 max = a[i]
         return max
@@ -569,9 +701,9 @@ don\'t match.")
         >>> p.min()
         2
         """
-        min = self.size
         a = self.array_form
-        for i in xrange(self.size):
+        min = len(a)
+        for i in xrange(len(a)):
             if a[i] != i and a[i] < min:
                 min = a[i]
         return min
@@ -596,13 +728,38 @@ don\'t match.")
         """
         inversions = 0
         a = self.array_form
-        n = self.size
+        n = len(a)
         for i in xrange(n - 1):
             b = a[i]
             for j in xrange(i + 1, n):
                 if b > a[j]:
                     inversions += 1
         return inversions
+
+    def conjugate(self, x):
+        """
+        Computes the conjugate Permutation `~x*p*x'
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([0,2,3,1])
+        >>> a.conjugate(b)
+        Permutation([0, 3, 2, 1])
+        >>> ~b*a*b
+        Permutation([0, 3, 2, 1])
+        """
+
+        a = self.array_form
+        b = x.array_form
+        n = len(a)
+        if len(b) != n:
+            raise ValueError("The number of elements in the permutations \
+don\'t match.")
+        invb = [None]*n
+        for i in xrange(n):
+            invb[b[i]] = i
+        return _new_from_array_form([invb[a[i]] for i in b])
 
     def signature(self):
         """
@@ -644,8 +801,9 @@ don\'t match.")
         Returns the number of integers moved by a permutation.
         """
         length = 0
-        for i in xrange(self.size):
-            if self.array_form[i] != i:
+        a = self.array_form
+        for i in xrange(len(a)):
+            if a[i] != i:
                 length += 1
         return length
 
@@ -677,8 +835,9 @@ don\'t match.")
         >>> p.index()
         2
         """
-        return sum([j for j in xrange(self.size - 1) if
-                    self.array_form[j] > self.array_form[j+1]])
+        a = self.array_form
+
+        return sum([j for j in xrange(len(a) - 1) if a[j] > a[j+1]])
 
     def runs(self):
         """
@@ -698,9 +857,10 @@ don\'t match.")
         """
         cycles = []
         temp_cycle = []
-        for i in xrange(self.size - 1):
-            current_elem = self.array_form[i]
-            next_elem    = self.array_form[i+1]
+        perm = self.array_form
+        for i in xrange(len(perm) - 1):
+            current_elem = perm[i]
+            next_elem    = perm[i+1]
 
             if current_elem < next_elem:
                 temp_cycle.append(current_elem)
@@ -746,9 +906,9 @@ don\'t match.")
         >>> p.inversion_vector()
         [3, 2, 1]
         """
-        n = self.size
-        inversion_vector = [0] * (n - 1)
         self_array_form = self.array_form
+        n = len(self_array_form)
+        inversion_vector = [0] * (n - 1)
 
         for i in xrange(n - 1):
             val = 0
@@ -761,7 +921,7 @@ don\'t match.")
     def rank_trotterjohnson(self):
         """
         Returns the Trotter Johnson rank, which we get from the minimal
-        change algorithm. See [4].
+        change algorithm. See [4] section 2.4.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -800,7 +960,7 @@ don\'t match.")
     @classmethod
     def unrank_trotterjohnson(self, size, rank):
         """
-        Trotter Johnson permutation unranking. See [4].
+        Trotter Johnson permutation unranking. See [4] section 2.4.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -809,8 +969,11 @@ don\'t match.")
         """
         perm = [0]*size
         r2 = 0
+        n = ifac(size)
+        pj = 1
         for j in range(2, size+1):
-            r1 = (rank * ifac(j))//ifac(size)
+            pj *= j
+            r1 = (rank * pj) // n
             k = r1 - j*r2
             if r2 % 2 == 0:
                 for i in range(j-1, j-k-1, -1):
@@ -822,6 +985,50 @@ don\'t match.")
                 perm[k] = j-1
             r2 = r1
         return _new_from_array_form(perm)
+
+    def next_trotterjohnson(self):
+        """
+        Returns the next permutation in Trotter-Johnson order.
+        If self is the last permutation it returns None.
+        See [4] section 2.4.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([3, 0, 2, 1])
+        >>> p.rank_trotterjohnson()
+        4
+        >>> p = p.next_trotterjohnson(); p
+        Permutation([0, 3, 2, 1])
+        >>> p.rank_trotterjohnson()
+        5
+        """
+        pi = self.array_form[:]
+        n = len(pi)
+        st = 0
+        rho = pi[:]
+        done = False
+        m = n-1
+        while m > 0 and not done:
+            d = rho.index(m)
+            for i in range(d, m):
+                rho[i] = rho[i+1]
+            par = perm_af_parity(rho[:m])
+            if par == 1:
+                if d == m:
+                    m -= 1
+                else:
+                    pi[st+d], pi[st+d+1] = pi[st+d+1], pi[st+d]
+                    done = True
+            else:
+               if d == 0:
+                   m -= 1
+                   st += 1
+               else:
+                   pi[st+d], pi[st+d-1] = pi[st+d-1], pi[st+d]
+                   done = True
+        if m == 0:
+            return None
+        return _new_from_array_form(pi)
 
     def get_precedence_matrix(self):
         """
@@ -960,11 +1167,11 @@ don\'t match.")
         >>> p.get_positional_distance(r)
         12
         """
-        if self.size != other.size:
+        a = self.array_form
+        b = other.array_form
+        if len(a) != len(b):
             raise ValueError("The permutations must be of the same size.")
-        perm_array = self.array_form
-        other_array = other.array_form
-        return sum([abs(perm_array[i] - other_array[i]) for i in xrange(self.size)])
+        return sum([abs(a[i] - b[i]) for i in xrange(len(a))])
 
     @classmethod
     def josephus(self, m, n, s = 1):
