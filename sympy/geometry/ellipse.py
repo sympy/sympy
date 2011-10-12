@@ -792,7 +792,7 @@ class Ellipse(GeometryEntity):
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
         result = solve([seq, oeq], [x, y])
-        return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
+        return [Point(*r) for r in result if im(r[0]).is_zero is not False and im(r[1]).is_zero is not False]
 
     def intersection(self, o):
         """The intersection of this ellipse and another geometrical entity

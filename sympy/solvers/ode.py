@@ -473,7 +473,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
         >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
         f(x) == C1*sin(3*x) + C2*cos(3*x)
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-        ...     hint='separable')
+        ...     hint='separable', simplify=False)
         -log(sin(f(x))**2 - 1)/2 == C1 + log(sin(x)**2 - 1)/2
         >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
         ...     hint='1st_exact')
@@ -1809,13 +1809,14 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-        ... hint='1st_homogeneous_coeff_best'))
-              ___________
-             /     2
-            /   3*x
-           /   ----- + 1 *f(x) = C1
-        3 /     2
-        \/     f (x)
+        ... hint='1st_homogeneous_coeff_best', simplify=False))
+                       /    2    \
+                       | 3*x     |
+                    log|----- + 1|
+                       | 2       |
+           /f(x)\      \f (x)    /
+        log|----| + -------------- = 0
+           \ C1 /         3
 
     **References**
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
@@ -1893,13 +1894,14 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-        ... hint='1st_homogeneous_coeff_subs_dep_div_indep'))
-                ________________
-               /           3
-              /  3*f(x)   f (x)
-        x*   /   ------ + -----  = C1
-          3 /      x         3
-          \/                x
+        ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
+                     /          3   \
+                     |3*f(x)   f (x)|
+                  log|------ + -----|
+                     |  x         3 |
+           /x \      \           x  /
+        log|--| + ------------------- = 0
+           \C1/            3
 
     **References**
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
@@ -3016,7 +3018,7 @@ def ode_separable(eq, func, order, match):
         >>> from sympy.abc import x
         >>> f = Function('f')
         >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
-        ... hint='separable'))
+        ... hint='separable', simplify=False))
            /   2       \         2
         log\3*f (x) - 1/        x
         ---------------- = C1 + --

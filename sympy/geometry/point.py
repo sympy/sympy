@@ -74,9 +74,6 @@ class Point(GeometryEntity):
     def free_symbols(self):
         return self.x.free_symbols.union(self.y.free_symbols)
 
-    def _eval_subs(self, old, new):
-        return type(self)(self.x.subs(old, new), self.y.subs(old, new))
-
     def is_collinear(*points):
         """Is a sequence of points collinear?
 
