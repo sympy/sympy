@@ -4,9 +4,9 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, model)
+    factor, Mul, O, hyper, Add, Float, collect_constants)
 from sympy.core.mul import _keep_coeff
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
 
@@ -809,67 +809,67 @@ def test_as_content_primitive():
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
             (S(1)/14, 7.0*x + 21*y + 10*z)
 
-model1=model
-def model(expr, variable, constant_name='C', numbers=False, reps=False):
-    rv = model1(expr, variable, constant_name, numbers, reps)
+collect_constants1=collect_constants
+def collect_constants(expr, variable, constant_name='C', numbers=False, reps=False):
+    rv = collect_constants1(expr, variable, constant_name, numbers, reps)
     if not reps:
-        print expr,';',model1(expr, variable, constant_name, numbers, reps=True)
+        print expr,';',collect_constants1(expr, variable, constant_name, numbers, reps=True)
     return rv
-def test_model():
+def test_collect_constants():
     x,y,z,C,k = symbols('x y z C k')
     C0, C1, C2, C3, C4 = symbols('C:5')
     k0, k1, k2 = symbols('k:3')
 
-    assert model(y + C, x) == C0
-    assert model(y + C + C4, x) == C0
-    assert model(y + z, x, 'C') == C0
-    assert model(y + z, x) == C0
-    assert model(k + z, k, 'k') == k + k0
-    raises(ValueError, 'model(k2 + z, k2, "k")')
-    assert model(Integral(x, (x, 1, 2)), x) == C0
-    print model(x**2*y*exp(x+z) + x*y + x*z, x, 'C')
-    assert model(x**2*y*exp(x+z) + x*y + x*z, x, 'C') == C0*x + C1*x**2*exp(x)
-    assert model(x**2*y*exp(x+z) + x*y + x*z, x, 'k') == k0*x + k1*x**2*exp(x)
-    assert model(3 + y*x + x*z, x) == 3 + C0*x
-    assert model(3 + y*x + x*z, x, numbers=True) == C0 + C1*x
-    assert model(3 + y*x + x*z + x**2*z, x) == 3 + C0*x + C1*x**2
-    assert model(3 + y*x + x*z + x**2*z, x, numbers=True) == C0 + C1*x + C2*x**2
-    assert model(x - y, x) == C0 + x
-    assert model(-x + y, x) == C0 - x
-    assert model(-2*x + y, x) == C0 - 2*x
-    assert model(-2*x + y, x, numbers=True) == C0 + C1*x
-    assert model(exp(x + 3) + exp(x + 4), x) == exp(x + 3) + exp(x + 4)
-    assert model(exp(x + 3) + exp(x + 4), x, numbers=True) == C0*exp(x)
-    assert model(a*exp(x) + b*exp(x + 4), x) == C0*exp(x)
-    assert model((x + C1)/(x + C2), x) == (C1 + x)/(C0 + x)
-    assert model(exp(x + C1)/exp(x + C2), x) == C0
-    assert model((x + 2 + C1)/(x + C2), x) != 1
-    assert model(2*sqrt(a*x), x) == C0*sqrt(x)
-    assert model((2 + x + 3*x**2 + a*x**2), x) == C0*x**2 + x + 2
-    assert model((2 + x + 3*x**2 + a*x**2), x, numbers=True) == C0 + C1*x**2 + x
-    assert model((2 + x + 3*x**2), x) == 3*x**2 + x + 2
-    assert model((2 + x + 3*x**2), x, numbers=True) == C0 + C1*x**2 + x
-    assert model(a*x + b*x, x) == C0*x
-    assert model(2*sqrt(a*x), x) == C0*sqrt(x)
-    assert model(2*(a*x)**(1 + x), x) == C0*x**(x + 1)
-    assert model(2*(a*x)**(1 + x), x, numbers=True) == C0*x**x
-    assert model(2*(a*x)**(a + x), x) == C0*x**x
-    assert model(C1*exp(3 + x), x) == C0*exp(x)
-    assert model(3*exp(C1 + x), x) == C0*exp(x)
-    assert model(a*exp(4 + x)*exp(2*x + 3), x) == C0*exp(3*x)
-    assert model(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C2 + C3*x)/(C0 + C1*x)
-    assert model(a*(y*x + z), x) == C0 + C1*x
-    assert model(a*cos(x), x) == C0*cos(x)
-    assert model(2*a*x, x) == C0*x
+    assert collect_constants(y + C, x) == C0
+    assert collect_constants(y + C + C4, x) == C0
+    assert collect_constants(y + z, x, 'C') == C0
+    assert collect_constants(y + z, x) == C0
+    assert collect_constants(k + z, k, 'k') == k + k0
+    raises(ValueError, 'collect_constants(k2 + z, k2, "k")')
+    assert collect_constants(Integral(x, (x, 1, 2)), x) == C0
+    print collect_constants(x**2*y*exp(x+z) + x*y + x*z, x, 'C')
+    assert collect_constants(x**2*y*exp(x+z) + x*y + x*z, x, 'C') == C0*x + C1*x**2*exp(x)
+    assert collect_constants(x**2*y*exp(x+z) + x*y + x*z, x, 'k') == k0*x + k1*x**2*exp(x)
+    assert collect_constants(3 + y*x + x*z, x) == 3 + C0*x
+    assert collect_constants(3 + y*x + x*z, x, numbers=True) == C0 + C1*x
+    assert collect_constants(3 + y*x + x*z + x**2*z, x) == 3 + C0*x + C1*x**2
+    assert collect_constants(3 + y*x + x*z + x**2*z, x, numbers=True) == C0 + C1*x + C2*x**2
+    assert collect_constants(x - y, x) == C0 + x
+    assert collect_constants(-x + y, x) == C0 - x
+    assert collect_constants(-2*x + y, x) == C0 - 2*x
+    assert collect_constants(-2*x + y, x, numbers=True) == C0 + C1*x
+    assert collect_constants(exp(x + 3) + exp(x + 4), x) == exp(x + 3) + exp(x + 4)
+    assert collect_constants(exp(x + 3) + exp(x + 4), x, numbers=True) == C0*exp(x)
+    assert collect_constants(a*exp(x) + b*exp(x + 4), x) == C0*exp(x)
+    assert collect_constants((x + C1)/(x + C2), x) == (C1 + x)/(C0 + x)
+    assert collect_constants(exp(x + C1)/exp(x + C2), x) == C0
+    assert collect_constants((x + 2 + C1)/(x + C2), x) != 1
+    assert collect_constants(2*sqrt(a*x), x) == C0*sqrt(x)
+    assert collect_constants((2 + x + 3*x**2 + a*x**2), x) == C0*x**2 + x + 2
+    assert collect_constants((2 + x + 3*x**2 + a*x**2), x, numbers=True) == C0 + C1*x**2 + x
+    assert collect_constants((2 + x + 3*x**2), x) == 3*x**2 + x + 2
+    assert collect_constants((2 + x + 3*x**2), x, numbers=True) == C0 + C1*x**2 + x
+    assert collect_constants(a*x + b*x, x) == C0*x
+    assert collect_constants(2*sqrt(a*x), x) == C0*sqrt(x)
+    assert collect_constants(2*(a*x)**(1 + x), x) == C0*x**(x + 1)
+    assert collect_constants(2*(a*x)**(1 + x), x, numbers=True) == C0*x**x
+    assert collect_constants(2*(a*x)**(a + x), x) == C0*x**x
+    assert collect_constants(C1*exp(3 + x), x) == C0*exp(x)
+    assert collect_constants(3*exp(C1 + x), x) == C0*exp(x)
+    assert collect_constants(a*exp(4 + x)*exp(2*x + 3), x) == C0*exp(3*x)
+    assert collect_constants(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C2 + C3*x)/(C0 + C1*x)
+    assert collect_constants(a*(y*x + z), x) == C0 + C1*x
+    assert collect_constants(a*cos(x), x) == C0*cos(x)
+    assert collect_constants(2*a*x, x) == C0*x
 
-    assert model(1/(x + y + exp(x + 2 + y)), x, reps=True) == \
+    assert collect_constants(1/(x + y + exp(x + 2 + y)), x, reps=True) == \
         (1/(C0 + C1*exp(x) + x), {C0: y, C1: exp(y + 2)})
     e = exp(2 + y + x)
-    assert model(e - 1/e, x, reps=True) == \
+    assert collect_constants(e - 1/e, x, reps=True) == \
         (C0*exp(x) - exp(-x)/C0, {C0: exp(y + 2)})
-    assert model(e - 1/exp(3 + y + x), x, reps=True) == \
+    assert collect_constants(e - 1/exp(3 + y + x), x, reps=True) == \
         (C0*exp(x) + C1*exp(-x), {C0: exp(y + 2), C1: -exp(-y - 3)})
-    assert model(3*y*x, x, reps=True) == (C0*x, {C0: 3*y})
-    assert model(x + a/(y + b + x), x, vars=True) == (C0/(C1 + x) + x, (C0, C1))
+    assert collect_constants(3*y*x, x, reps=True) == (C0*x, {C0: 3*y})
+    assert collect_constants(x + a/(y + b + x), x, vars=True) == (C0/(C1 + x) + x, (C0, C1))
     # reps overrides vars
-    assert model(x + a/(y + b + x), x, vars=True, reps=True) == (C0/(C1 + x) + x, {C0: a, C1: b + y})
+    assert collect_constants(x + a/(y + b + x), x, vars=True, reps=True) == (C0/(C1 + x) + x, {C0: a, C1: b + y})

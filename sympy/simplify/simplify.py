@@ -2236,7 +2236,7 @@ def _logcombine(expr, force=False):
 
     return expr
 
-def model(expr, variable, constant_name='C', numbers=False, vars=False, reps=False):
+def collect_constants(expr, variable, constant_name='C', numbers=False, vars=False, reps=False):
     """Return ``expr`` with all symbols different than ``variable``
     absorbed into constant(s) with name ``constant_name`` having consecutive
     numbers e.g. C0, C1, C2, .... The absorbing is done by combining added or
@@ -2251,25 +2251,25 @@ def model(expr, variable, constant_name='C', numbers=False, vars=False, reps=Fal
 
     Examples::
 
-    >>> from sympy import model, exp
+    >>> from sympy import collect_constants, exp
     >>> from sympy.abc import x, y, z
-    >>> model(y + 3, x)
+    >>> collect_constants(y + 3, x)
     C0
-    >>> model(y + 3, x, 'k')
+    >>> collect_constants(y + 3, x, 'k')
     k0
-    >>> model(x + 3, x)
+    >>> collect_constants(x + 3, x)
     x + 3
-    >>> model(x + 3, x, numbers=True)
+    >>> collect_constants(x + 3, x, numbers=True)
     C0 + x
-    >>> model(-x + 3, x, numbers=True)
+    >>> collect_constants(-x + 3, x, numbers=True)
     C0 - x
-    >>> model(x + 3*y, x)
+    >>> collect_constants(x + 3*y, x)
     C0 + x
-    >>> model(x + 3*y, x, 'x')
+    >>> collect_constants(x + 3*y, x, 'x')
     x + x0
-    >>> model(exp(x + 3), x)
+    >>> collect_constants(exp(x + 3), x)
     exp(x + 3)
-    >>> model(y*exp(x + 3), x)
+    >>> collect_constants(y*exp(x + 3), x)
     C0*exp(x)
     """
 
