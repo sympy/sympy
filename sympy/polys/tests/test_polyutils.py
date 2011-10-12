@@ -1,6 +1,6 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import S, I, Integer, sin, cos, sqrt, symbols, pi, Eq
+from sympy import S, I, Integer, sin, cos, sqrt, symbols, pi, Eq, Integral
 from sympy.utilities.pytest import raises
 
 from sympy.polys.polyutils import (
@@ -183,6 +183,7 @@ def test__dict_from_expr_if_gens():
         ({(1,1,0): Integer(1), (1,0,1): Integer(2), (0,1,1): Integer(3)}, (x,y,z))
 
     assert dict_from_expr(2**y*x, gens=(x,)) == ({(1,): 2**y}, (x,))
+    assert dict_from_expr(Integral(x, (x, 1, 2)) + x) == ({(0, 1): 1, (1, 0): 1}, (x, Integral(x, (x, 1, 2))))
     raises(PolynomialError, "dict_from_expr(2**y*x, gens=(x,y))")
 
 def test__dict_from_expr_no_gens():
