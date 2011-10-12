@@ -156,3 +156,15 @@ else:
         if has_functools:
             func_wrapper = functools.update_wrapper(func_wrapper, func)
         return func_wrapper
+
+def SKIP(reason):
+    """Similar to :func:`skip`, but this is a decorator. """
+    def wrapper(func):
+        def func_wrapper():
+            raise Skipped(reason)
+
+        if has_functools:
+            func_wrapper = functools.update_wrapper(func_wrapper, func)
+        return func_wrapper
+
+    return wrapper
