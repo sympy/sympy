@@ -38,11 +38,6 @@ class AssocOp(Expr):
         if len(args) == 1:
             return args[0]
 
-        if not options.get('evaluate', True):
-            obj = Expr.__new__(cls, *args, **options)
-            obj.is_commutative = all(a.is_commutative for a in args)
-            return obj
-
         c_part, nc_part, order_symbols = cls.flatten(args)
         obj = cls._from_args(c_part + nc_part, not nc_part)
 
