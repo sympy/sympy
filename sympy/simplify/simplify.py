@@ -1124,15 +1124,12 @@ def powdenest(eq, force=False):
         while kernel.is_Pow:
             kernel, ex = kernel.as_base_exp()
             exponents.append(ex)
-        try:
-            if kernel.is_positive:
-                e = Mul(*exponents)
-                if kernel.is_Mul:
-                    b = kernel
-                else:
-                    return Pow(kernel, e)
-        except AssertionError: # issue 2706
-            pass
+        if kernel.is_positive:
+            e = Mul(*exponents)
+            if kernel.is_Mul:
+                b = kernel
+            else:
+                return Pow(kernel, e)
 
     # if any factor is an atom then there is nothing to be done
     # but the kernel check may have created a new exponent

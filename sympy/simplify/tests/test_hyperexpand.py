@@ -3,7 +3,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        devise_plan, make_derivative_operator, Formula,
                        hyperexpand, IndexPair, IndexQuadruple,
                        reduce_order_meijer)
-from sympy import hyper, I, S, meijerg, Piecewise, Abs
+from sympy import hyper, I, S, meijerg, Piecewise
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
 from sympy.utilities.randtest import test_numerically as tn
