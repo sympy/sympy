@@ -782,6 +782,7 @@ def test_gf_csolve():
 
     assert linear_congruence(4, 3, 5) == [2]
     assert linear_congruence(0, 3, 5) == []
+    assert linear_congruence(6, 1, 4) == []
     assert linear_congruence(0, 5, 5) == [0, 1, 2, 3, 4]
     assert linear_congruence(3, 12, 15) == [4, 9, 14]
     assert linear_congruence(6, 0, 18) == [0, 3, 6, 9, 12, 15]
