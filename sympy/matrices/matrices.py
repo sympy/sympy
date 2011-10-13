@@ -2239,6 +2239,16 @@ class Matrix(object):
 
         >>> A.berkowitz_charpoly().as_expr()
         _lambda**2 - _lambda - 6
+
+        No test is done to see that ``x`` doesn't clash with an existing
+        symbol, so using the default (``lambda``) or your own Dummy symbol is
+        the safest option:
+
+        >>> A = Matrix([[1, 2], [x, 0]])
+        >>> A.charpoly().as_expr()
+        _lambda**2 - _lambda - 2*x
+        >>> A.charpoly(x).as_expr()
+        x**2 - 3*x
         """
         return PurePoly(map(simplify, self.berkowitz()[-1]), x)
 
