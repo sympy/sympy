@@ -2553,39 +2553,77 @@ def _condense(expr, var, _symbols={}):
     Returns the modified expression along with a dict of substitutions.
     """
     from sympy.utilities.iterables import sift
+    def collect(expr, var):
+        """A non-greedy collection of like var-containing terms in an Add expr.
+        the _symbols dictionary is modified in-place."""
+        if not expr.is_Add:
+            return expr
+        terms = {}
+        for m in expr.args:
+            i, d = m.as_independent(var)
+            terms.setdefault(d, []).append(i)
+        args = []
+        hit = False
+        for k, v in terms.iteritems():
+            if len(v) > 1:
+                c = Add(*v)
+                s = Symbol("C" + str(len(_symbols)))
+                _symbols[s] = c
+                hit = True
+            else:
+                s = v[0]
+            args.append(k*s)
+        if hit:
+            return Add(*args)
+        return expr
+
     expr = sympify(expr)
     var = sympify(var)
     if not _symbols:
         _symbols = {}
     if expr is not S.NegativeOne and var not in expr.free_symbols:
-        s = Symbol("C" + str(len(_symbols)))
+        s = Symbol("C" + str(len(_symbols)), positive=True)
         _symbols[s] = expr
         return s, _symbols
     if expr.is_Atom:
         return expr, _symbols
-    if (expr.is_Pow or expr.func is exp) and expr.exp.is_Add:
-        i, d = expr.exp.as_independent(var)
-        if d:
-            expr = expr.base**i*expr.base**d
-    elif expr.is_Add:
+    if expr.is_Mul:
+        # look for an Add to put the leading constant into
+        i, d = expr.as_independent(var)
+        hit = True
+        if i != 1:
+            args = list(Mul.make_args(d))
+            for _, a in enumerate(args):
+                b, e = a.as_base_exp()
+                if b.is_Add:
+                    ie = 1/e
+                    args[_] = Add(*[i**ie*ai for ai in b.args])**e
+                    break
+            else:
+                hit = False
+            if hit:
+                expr = Mul(*args)
+    if expr.is_Add:
         expr = collect(expr, var)
     if expr.is_Add or expr.is_Mul:
-        d = sift(expr.args, lambda w: var in w.free_symbols)
-        with_var = d.get(True, [])
-        without_var = d.get(False, [])
-        args = []
-        for a in with_var:
-            a, _symbols = _condense(a, var, _symbols)
-            args.append(a)
-        if without_var:
-            a, _symbols = _condense(expr.func(*without_var), var, _symbols)
-            without_var = [a]
-        return expr.func(*(args + without_var)), _symbols
+        i, d = expr.as_independent(var)
+        if not i.is_Number or abs(i) != expr.identity:
+            s = Symbol("C" + str(len(_symbols)))
+            _symbols[s] = i
+            i = s
+            if expr.is_Add and d or expr.is_Mul and d != 1:
+                d, _symbols = _condense(d, var, _symbols)
+            if d.is_Mul:
+                d = powsimp(d)
+            return expr.func(i, d), _symbols
     args = []
     for a in expr.args:
         a, _symbols = _condense(a, var, _symbols)
         args.append(a)
-    return expr.func(*args), _symbols
+    rv = expr.func(*args)
+    if rv.is_Mul:
+        rv = powsimp(rv)
+    return rv, _symbols
 
 def condense(eq, x, constant_name='C', reps=False):
     """Return ``expr`` with all symbols different than ``variable``
@@ -2621,10 +2659,14 @@ def condense(eq, x, constant_name='C', reps=False):
     def renumu(eq, k=0, map={}):
         """Number the u-symbols that have been introduced.
         """
-        if eq in u_all and eq not in map:
-            ss = Symbol(constant_name + str(k))
-            map[eq] = ss
-            return ss, k + 1, map
+        if eq in u_all:
+            if eq not in map:
+                ss = Symbol(constant_name + str(k))
+                map[eq] = ss
+                k += 1
+            else:
+                ss = map[eq]
+            return ss, k, map
         elif eq.is_Atom:
             return eq, k, map
         else:
@@ -2652,29 +2694,11 @@ def condense(eq, x, constant_name='C', reps=False):
     if is_csym(x):
         raise ValueError('Chosen constant name clashes with the variable %s' % x)
 
-    # first pass
+    # expand any powers
+    eq = eq.expand(power_base=True, power_exp=True, log=True, force=True, mul=False, multinomial=False, basic=False)
+
+    # identify constants
     eq, d = _condense(eq, x)
-
-    # do it again to resolve double constants
-    eq, d = _condense(eq, x, d)
-
-    # resolve constants that got identified as constants
-    for k, v in d.items():
-        d[k] = v.subs(d)
-
-    # unify duplicates
-    # -- collect them
-    dups = {}
-    for k, v in d.items():
-        dups.setdefault(v, []).append(k)
-    # -- replace them
-    d={}
-    for k, v in dups.items():
-        v0=v[0]
-        if len(v) > 1:
-            for vi in v:
-                eq = eq.subs(vi, v0)
-        d[v[0]] = k
 
     # restore Rational powers
     reps = {}
@@ -2683,6 +2707,38 @@ def condense(eq, x, constant_name='C', reps=False):
         if i.is_Rational:
             reps[p] = p.base**i
     eq = eq.subs(reps)
+
+    # unify duplicates
+    dups = {}
+    for k, v in d.items():
+        #k, v = C, expression
+        dups.setdefault(v, []).append(k)
+        # if this is shorter than any alternates, replace
+        # alternates with this
+        vv = -v
+        if vv in dups:
+            if count_ops(v) < count_ops(vv):
+                eq = eq.subs(dups[vv][0], -dups[v][0])
+                dups[v].extend(dups.pop(vv)[1:])
+                continue
+        vv = 1/v
+        if vv in dups:
+            if count_ops(v) < count_ops(vv):
+                eq = eq.subs(dups[vv][0], 1/dups[v][0])
+                dups[v].extend(dups.pop(vv)[1:])
+                continue
+        vv = -1/v
+        if vv in dups:
+            if count_ops(v) < count_ops(vv):
+                eq = eq.subs(dups[vv][0], -1/dups[v][0])
+                dups[v].extend(dups.pop(vv)[1:])
+                continue
+    d = {}
+    for k, v in dups.iteritems():
+        if len(v) > 1:
+            for vi in v[1:]:
+                eq = eq.subs(vi, v[0])
+        d[v[0]] = k
 
     # renumber constants
     u_all = d.keys()

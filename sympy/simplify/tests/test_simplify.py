@@ -833,32 +833,40 @@ def test_collect_constants():
     assert collect_constants(x - y, x) == C0 + x
     assert collect_constants(-x + y, x) == C0 - x
     assert collect_constants(-2*x + y, x) == C0 + C1*x
-    #XXXassert collect_constants(exp(x + 3) + exp(x + 4), x) == C0*exp(x)
-    #XXXassert collect_constants(a*exp(x) + b*exp(x + 4), x) == C0*exp(x)
+    assert collect_constants(exp(x + 3) + exp(x + 4), x) == C0*exp(x)
+    assert collect_constants(a*exp(x) + b*exp(x + 4), x) == C0*exp(x)
     assert collect_constants((x + C1)/(x + C2), x) == (C1 + x)/(C0 + x)
     assert collect_constants(exp(x + C1)/exp(x + C2), x) == C0
     assert collect_constants((x + 2 + C1)/(x + C2), x) != 1
-    #XXXassert collect_constants(2*sqrt(a*x), x) == C0*sqrt(x)
+    assert collect_constants(2*sqrt(a*x), x) == C0*sqrt(x) # XXX is it ok to pull out the constant?
     assert collect_constants((2 + x + 3*x**2 + a*x**2), x) == C0 + C1*x**2 + x
     assert collect_constants((2 + x + 3*x**2), x) == C0 + C1*x**2 + x
     assert collect_constants(a*x + b*x, x) == C0*x
-    #XXXassert collect_constants(2*sqrt(a*x), x) == C0*sqrt(x)
-    #XXXassert collect_constants(2*(a*x)**(1 + x), x) == C0*x**x
-    #XXXassert collect_constants(2*(a*x)**(a + x), x) == C0*x**x
+    assert collect_constants(2*(a*x)**(1 + x), x, reps=True) == (C0*C1**x*x**(x + 1), {C0: 2*a, C1: a})
+    assert collect_constants(2*(a*x)**(a + x), x, reps=True) == (C0*C1**x*x**(C1 + x), {C0: 2*a**a, C1: a})
     assert collect_constants(C1*exp(3 + x), x) == C0*exp(x)
     assert collect_constants(3*exp(C1 + x), x) == C0*exp(x)
-    #XXXassert collect_constants(a*exp(4 + x)*exp(2*x + 3), x) == C0*exp(3*x) # C0*exp(x)*exp(c1*x)
-    #XXXassert collect_constants(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C2 + C3*x)/(C0 + C1*x)
-    #XXXassert collect_constants(a*(y*x + z), x) == C0 + C1*x
+    assert collect_constants(a*exp(4 + x)*exp(2*x + 3), x, reps=True) == (C0*exp(C1*x), {C0: a*exp(7), C1: 3})
+    assert collect_constants(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C2 + C3*x)/(C0 + C1*x) # XXX the **-1 term gets numbered first :-(
+    assert collect_constants(C4/(C2 + C3*x), x) == 1/(C0 + C1*x)
+    assert collect_constants(C4/(C2 + C3*x)**2, x, reps=True) == \
+          ((C0 + C1*x)**(-2), {C0: C2/sqrt(C4), C1: C3/sqrt(C4)})
+    assert collect_constants(C4/(C2 + C3*x)**a, x, reps=True) == \
+          ((C0 + C1*x)**C2, {C2: -a, C0: C2*C4**(-1/a), C1: C3*C4**(-1/a)})
+    assert collect_constants(a*(y*x + z), x) == C0 + C1*x
     assert collect_constants(a*cos(x), x) == C0*cos(x)
     assert collect_constants(2*a*x, x) == C0*x
 
     assert collect_constants(1/(x + y + exp(x + 2 + y)), x, reps=True) == \
-        (1/(C0 + C1*exp(x) + x), {C0: y, C1: exp(y + 2)})
+        (1/(C0 + C1*exp(x) + x), {C0: y, C1: exp(2)*exp(y)})
     e = exp(2 + y + x)
-    #assert collect_constants(e - 1/e, x, reps=True) == \
-    #    (C0*exp(x) - exp(-x)/C0, {C0: exp(y + 2)}) # (C0*exp(x) + C1*exp(C2*x), {C2: -1, C0: exp(y + 2), C1: -exp(-y - 2)})
-    #assert collect_constants(e - 1/exp(3 + y + x), x, reps=True) == \
-    #    (C0*exp(x) + C1*exp(-x), {C0: exp(y + 2), C1: -exp(-y - 3)})
+    # keep the shorter representation if given the choice
+    # (so exp(2+y) is better than 1/exp(2+y)
+    assert collect_constants(e - 1/e, x, reps=True) == \
+        (C0*exp(x) - exp(-x)/C0, {C0: exp(2)*exp(y)})
+    # but keep constants in the numerator if there is no alternate,
+    # so C0*exp(-x) instead of exp(-x)/C0 (with C0 = exp(3+y))
+    assert collect_constants(e - 1/exp(3 + y + x), x, reps=True) == \
+        (C0*exp(-x) + C1*exp(x), {C0: -exp(-3)*exp(-y), C1: exp(2)*exp(y)})
     assert collect_constants(3*y*x, x, reps=True) == (C0*x, {C0: 3*y})
-    assert collect_constants(x + a/(y + b + x), x, reps=True) == (C0/(C1 + x) + x, {C0: a, C1: b + y})
+    assert collect_constants(x + a/(y + b + x), x, reps=True) ==(x + 1/(C0 + C1*x), {C0: b/a + y/a, C1: 1/a})
