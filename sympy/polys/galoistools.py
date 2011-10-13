@@ -2103,14 +2103,14 @@ def csolve_primepower(f, p, e):
     S = zip(X1, [1]*len(X1))
     while len(S) != 0:
         x, s = S.pop()
-        s += 1
-        if s == e + 1:
+        if s == e:
             X.append(x)
         else:
-             V = _raise_mod_power(x, s, p, f)
-             for v in V:
-                 x_abv = x + v * p**(s - 1)
-                 S.append((x_abv, s))
+            s += 1
+            V = _raise_mod_power(x, s, p, f)
+            for v in V:
+                x_abv = x + v * p**(s - 1)
+                S.append((x_abv, s))
     return X
 
 def gf_csolve(f, n):
