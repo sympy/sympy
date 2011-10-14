@@ -2385,9 +2385,9 @@ def condense(eq, x, constant_name='C'):
     if is_csym(x):
         raise ValueError('Chosen constant name clashes with the variable %s' % x)
 
-    # expand any powers
-    eq = eq.expand(power_base=True, power_exp=True, force=True,
-                   log=False, mul=False, multinomial=False, basic=False)
+    # expand any powers and logs
+    eq = eq.expand(power_base=True, power_exp=True, log=True, force=True,
+                   mul=False, multinomial=False, basic=False)
 
     # identify constants
     eq, d = _condense(eq, x)
