@@ -137,7 +137,7 @@ def checksol(f, symbol, sol=None, **flags):
         return True
 
     if not f.has(*sol.keys()):
-        return False
+        return None # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
 
     illegal = set([S.NaN,
                S.ComplexInfinity,
@@ -155,11 +155,15 @@ def checksol(f, symbol, sol=None, **flags):
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
-            if not val.atoms(Symbol) and numerical:
+            if not val.free_symbols and numerical:
                 # val is a constant, so a fast numerical test may suffice
                 if val not in [S.Infinity, S.NegativeInfinity]:
                     # issue 2088 shows that +/-oo chops to 0
                     val = val.evalf(36).n(30, chop=True)
+            else:
+                val = expand_mul(expand_multinomial(val))
+                if not val:
+                    return True
         elif attempt == 2:
             if flags.get('minimal', False):
                 return
@@ -181,10 +185,18 @@ def checksol(f, symbol, sol=None, **flags):
             val = powsimp(val)
         else:
             break
-        if val.is_zero:
+        if not val:
             return True
-        elif attempt > 0 and numerical and val.is_nonzero:
-            return False
+        elif attempt > 0:
+            if numerical and val.is_number and val:
+                return False
+            else:
+                try:
+                    nz = val.is_nonzero
+                except: # any problem at all: recursion, inconsistency of facts, etc...
+                    nz = None
+                if nz is not None:
+                    return not nz
 
     if flags.get('warn', False):
         print("\n\tWarning: could not verify solution %s." % sol)
@@ -854,10 +866,6 @@ def _solve(f, *symbols, **flags):
             failed = []
             result = False
             manual = flags.get('manual', False)
-            def univariate(p, symset):
-                return all(len(t.free_symbols & symset) < 2
-                           for t in Add.make_args(p.as_expr()))
-            symset = set(symbols)
             for j, g in enumerate(f):
                 dens.update(denoms(g, symbols))
                 i, d = _invert(g, *symbols)
@@ -869,7 +877,7 @@ def _solve(f, *symbols, **flags):
 
                 poly = g.as_poly(*symbols, **{'extension': True})
 
-                if poly is not None and univariate(poly, symset):
+                if poly is not None:
                     polys.append(poly)
                 else:
                     failed.append(g)
@@ -958,19 +966,23 @@ def _solve(f, *symbols, **flags):
                     result = [{}]
                 solved_syms = set(solved_syms) # set of symbols we have solved for
                 legal = set(symbols) # what we are interested in
+                simplify_flag = flags.get('simplify', None)
+                do_simplify = flags.get('simplify', True)
                 # sort so equation with the fewest potential symbols is first
                 failed.sort(key=lambda x: len((x.free_symbols - solved_syms) & legal))
                 for eq in failed:
                     newresult = []
                     got_s = None
+                    u = Dummy()
                     for r in result:
                         # update eq with everything that is known so far
                         eq2 = eq.subs(r)
-                        b = Equality(eq2, 0)
-                        if type(b) is bool:
-                            if b:
-                                newresult.append(r)
-                            continue
+                        if eq2.is_number:
+                            b = checksol(u, u, eq2, minimal=True)
+                            if b is not None:
+                                if b:
+                                    newresult.append(r)
+                                continue
                         # search for a symbol amongst those available that
                         # can be solved for
                         for s in (eq2.free_symbols - solved_syms) & legal:
@@ -981,7 +993,22 @@ def _solve(f, *symbols, **flags):
                             # put each solution in r and append the now-expanded
                             # result in the new result list; use copy since the
                             # solution for s in being added in-place
+                            if do_simplify:
+                                solutions = map(simplify, soln)
+                                flags['simplify'] = False # for checksol's sake
                             for sol in soln:
+                                # check that it satisfies *other* equations
+                                if check:
+                                    ok = False
+                                    for p in polys:
+                                        if checksol(p, s, sol, **flags) is False:
+                                            break
+                                    else:
+                                        ok = True
+                                    if not ok:
+                                        continue
+                                    if any(checksol(d, s, sol, **flags) for d in dens):
+                                        continue
                                 # update existing solutions with this new one
                                 rnew = r.copy()
                                 for k, v in r.iteritems():
@@ -989,6 +1016,8 @@ def _solve(f, *symbols, **flags):
                                 # and add this new solution
                                 rnew[s] = sol
                                 newresult.append(rnew)
+                            if simplify_flag is not None:
+                                flags['simplify'] = simplify_flag
                             got_s = s
                             break
                         else:
