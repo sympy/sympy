@@ -835,7 +835,7 @@ def test_collect_constants():
     assert collect_constants(-2*x + y, x) == C0 + C1*x
     assert collect_constants(exp(x + 3) + exp(x + 4), x) == C0*exp(x)
     assert collect_constants(a*exp(x) + b*exp(x + 4), x) == C0*exp(x)
-    assert collect_constants((x + C1)/(x + C2), x) == (C1 + x)/(C0 + x)
+    assert collect_constants((x + C1)/(x + C2), x) == (C0 + x)/(C1 + x)
     assert collect_constants(exp(x + C1)/exp(x + C2), x) == C0
     assert collect_constants((x + 2 + C1)/(x + C2), x) != 1
     assert collect_constants(2*sqrt(a*x), x) == C0*sqrt(x) # XXX is it ok to pull out the constant?
@@ -847,7 +847,7 @@ def test_collect_constants():
     assert collect_constants(C1*exp(3 + x), x) == C0*exp(x)
     assert collect_constants(3*exp(C1 + x), x) == C0*exp(x)
     assert collect_constants(a*exp(4 + x)*exp(2*x + 3), x, reps=True) == (C0*exp(C1*x), {C0: a*exp(7), C1: 3})
-    assert collect_constants(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C2 + C3*x)/(C0 + C1*x) # XXX the **-1 term gets numbered first :-(
+    assert collect_constants(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C0 + C1*x)/(C2 + C3*x)
     assert collect_constants(C4/(C2 + C3*x), x) == 1/(C0 + C1*x)
     assert collect_constants(C4/(C2 + C3*x)**2, x, reps=True) == \
           ((C0 + C1*x)**(-2), {C0: C2/sqrt(C4), C1: C3/sqrt(C4)})

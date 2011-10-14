@@ -2675,8 +2675,14 @@ def condense(eq, x, constant_name='C', reps=False):
             args = list(eq.args)
             if eq.is_Add or eq.is_Mul:
                 unify = zip(u_all, [S.One]*len(u_all))
-                args = [i[1] for i in sorted([(e.subs(unify), e)
-                                      for e in eq.args], key=default_sort_key)]
+                sargs = sorted([(e.subs(unify), e)
+                                      for e in eq.args], key=default_sort_key)
+                # put integer negative powers last
+                if eq.is_Mul:
+                    from sympy.utilities.iterables import sift
+                    d = sift(sargs, lambda w: w[0].is_Pow and w[0].exp.is_Integer and w[0].exp < 0)
+                    sargs = d.get(False, []) + d.get(True, [])
+                args = [i[1] for i in sargs]
             for i, a in enumerate(args):
                 a, k, map = renumu(a, k, map)
                 args[i] = a
