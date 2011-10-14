@@ -15,14 +15,15 @@ from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.function import expand_mul, expand_multinomial, expand_log
-from sympy.core.numbers import ilcm
+from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot,
                              cosh, sinh, tanh, coth, acos, asin, atan, acot,
                              acosh, asinh, atanh, acoth)
-from sympy.simplify import simplify, collect, powsimp, fraction, posify, powdenest
+from sympy.simplify import (simplify, collect, powsimp, fraction, posify,
+                            powdenest, nsimplify)
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold
@@ -289,6 +290,10 @@ def solve(f, *symbols, **flags):
                    function which should be zero
                'force=True (default is False)'
                    make positive all symbols without assumptions regarding sign.
+               'rational=True (default)'
+                   recast Floats as Rational; if this option is not used, the
+                   system containing floats may fail to solve because of issues
+                   with polys.
 
         The output varies according to the input and can be seen by example:
 
@@ -376,7 +381,7 @@ def solve(f, *symbols, **flags):
                     >>> solve(x**2 - y**2/exp(x), x, y)
                     [{x: 2*LambertW(y/2)}]
                     >>> solve(x**2 - y**2/exp(x), y, x)
-					[{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+                    [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
             o iterable of one or more of the above
 
@@ -482,6 +487,12 @@ def solve(f, *symbols, **flags):
         swap_dict = zip(symbols, symbols_new)
         f = [fi.subs(swap_dict) for fi in f]
         symbols = symbols_new
+
+    # rationalize Floats
+    if flags.get('rational', True):
+        for i, fi in enumerate(f):
+            if fi.has(Float):
+                f[i] = nsimplify(fi, rational=True)
 
     #
     # try to get a solution
@@ -596,6 +607,7 @@ def solve(f, *symbols, **flags):
     if warn and got_None:
         print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
               + '\n\t' + ', '.join(str(s) for s in got_None))
+
     #
     # done
     ###########################################################################
@@ -833,6 +845,10 @@ def _solve(f, *symbols, **flags):
             dens = set()
             failed = []
             result = False
+            def univariate(p, symset):
+                return all(len(t.free_symbols & symset) < 2
+                           for t in Add.make_args(p.as_expr()))
+            symset = set(symbols)
             for j, g in enumerate(f):
                 dens.update(denoms(g, symbols))
                 i, d = _invert(g, *symbols)
@@ -840,7 +856,7 @@ def _solve(f, *symbols, **flags):
                 g = f[j] = g.as_numer_denom()[0]
                 poly = g.as_poly(*symbols, **{'extension': True})
 
-                if poly is not None:
+                if poly is not None and univariate(poly, symset):
                     polys.append(poly)
                 else:
                     failed.append(g)
@@ -933,6 +949,7 @@ def _solve(f, *symbols, **flags):
                 failed.sort(key=lambda x: len((x.free_symbols - solved_syms) & legal))
                 for eq in failed:
                     newresult = []
+                    got_s = None
                     for r in result:
                         # update eq with everything that is known so far
                         eq2 = eq.subs(r)
@@ -959,11 +976,13 @@ def _solve(f, *symbols, **flags):
                                 # and add this new solution
                                 rnew[s] = sol
                                 newresult.append(rnew)
+                            got_s = s
                             break
                         else:
                             raise NotImplementedError('could not solve %s' % eq2)
-                    result = newresult
-                    solved_syms.add(s)
+                    if got_s:
+                        result = newresult
+                        solved_syms.add(got_s)
             return result
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):

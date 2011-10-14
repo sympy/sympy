@@ -557,24 +557,23 @@ def test_issue_2033():
     assert solve((sqrt(x**2 + y**2) - sqrt(10), x + y - 4), x, y) == \
         [(1, 3), (3, 1)]
 
-@XFAIL
 def test_issue_2236():
-    """ This system can be solved in steps:
-        >>> yy = solve(reqs[0],y)[0]
-        >>> a00 = solve(reqs[1].subs(y,yy),a0)[0]
-        >>> xx = solve(reqs[2].subs(((y,yy), (a0,a00))),x)
-        >>> len(xx)
-        2
-
-        So there are two values for x, y and a0.
-    """
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
            a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
            x + y - conc]
     sym = [x, y, a0]
-    reqs = [nsimplify(e, rational=True) for e in eqs]
-    assert solve(reqs, sym) # doesn't fail
+    assert len(solve(eqs, sym)) == 2
+
+@XFAIL
+def test_issue_2236_float():
+    # polys doesn't like the floats
+    lam, a0, conc = symbols('lam a0 conc')
+    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
+           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+           x + y - conc]
+    sym = [x, y, a0]
+    assert len(solve(eqs, sym, rational=False)) == 2
 
 def test_issue_2668():
     assert solve([x**2 + y + 4], [x]) == [(-sqrt(-y - 4),), (sqrt(-y - 4),)]
