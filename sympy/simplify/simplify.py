@@ -2412,19 +2412,28 @@ def condense(eq, x, constant_name='C'):
             if count_ops(v) < count_ops(vv):
                 eq = eq.subs(dups[vv][0], -dups[v][0])
                 dups[v].extend(dups.pop(vv)[1:])
-                continue
+            else:
+                eq = eq.subs(dups[v][0], 1/dups[vv][0])
+                dups[vv].extend(dups.pop(v)[1:])
+            continue
         vv = 1/v
         if vv in dups:
             if count_ops(v) < count_ops(vv):
                 eq = eq.subs(dups[vv][0], 1/dups[v][0])
                 dups[v].extend(dups.pop(vv)[1:])
-                continue
+            else:
+                eq = eq.subs(dups[v][0], 1/dups[vv][0])
+                dups[vv].extend(dups.pop(v)[1:])
+            continue
         vv = -1/v
         if vv in dups:
             if count_ops(v) < count_ops(vv):
                 eq = eq.subs(dups[vv][0], -1/dups[v][0])
                 dups[v].extend(dups.pop(vv)[1:])
-                continue
+            else:
+                eq = eq.subs(dups[v][0], 1/dups[vv][0])
+                dups[vv].extend(dups.pop(v)[1:])
+            continue
     d = {}
     for k, v in dups.iteritems():
         if len(v) > 1:
