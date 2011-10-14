@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, collect_constants, condense)
+    factor, Mul, O, hyper, Add, Float, condense)
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -811,7 +811,9 @@ def test_as_content_primitive():
 
 collect_constants1=condense
 def collect_constants(expr, variable, constant_name='C', numbers=False, reps=False):
-    rv = collect_constants1(expr, variable, constant_name, reps)
+    rv = collect_constants1(expr, variable, constant_name)
+    if not reps:
+        rv = rv[0]
     return rv
 
 def test_collect_constants():
