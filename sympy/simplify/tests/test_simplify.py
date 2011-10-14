@@ -874,3 +874,11 @@ def test_condense():
     assert check_condense(x + a/(y + b + x), x, reps=True) ==(x + 1/(C0 + C1*x), {C0: b/a + y/a, C1: 1/a})
     assert check_condense(x*(a + b) + sin(x)*(-a - b), x, reps=True) == (C0*x - C0*sin(x), {C0: a + b})
     assert check_condense(x*(a+b)+sin(x)/(a+b),x, reps=True) == (C0*x + sin(x)/C0, {C0: a + b})
+
+    p = a + b
+    m = -p
+    assert check_condense(sin(x)*p + exp(x)*m, x, reps=True) == (C0*sin(x) + exp(x)/C0, {C0: a + b})
+    m = 1/p
+    assert check_condense(x*m + sin(x)*p, x, reps=True) == (C0*sin(x) + x/C0, {C0: a + b})
+    m = -1/p
+    assert check_condense(x*m + sin(x)*p, x, reps=True) == (C0*sin(x) + x/C0, {C0: a + b})
