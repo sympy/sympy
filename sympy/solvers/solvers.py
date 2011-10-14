@@ -1480,10 +1480,11 @@ def _tsolve(eq, sym, **flags):
     if flags.pop('force', True):
         flags['force'] = False
         pos, reps = posify(lhs - rhs)
-        u = sym # in case there were no reps
         for u, s in reps.iteritems():
             if s == sym:
                 break
+        else:
+            u = sym
         try:
             soln = _solve(pos, u, **flags)
         except NotImplementedError:

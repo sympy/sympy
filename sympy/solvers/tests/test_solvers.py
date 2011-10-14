@@ -747,3 +747,7 @@ def test_issue_2015():
     k*(1/m + 1/o + 1/p) - h/m - n/p,
     n*(1/p + 1/q) - k/p]
     assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
+
+def test_misc():
+    # make sure that the right variables is picked up in tsolve
+    raises(NotImplementedError, 'solve((exp(x) + 1)**x)')
