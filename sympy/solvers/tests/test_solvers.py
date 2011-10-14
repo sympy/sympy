@@ -8,7 +8,7 @@ from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
 from sympy.solvers.solvers import unrad, _invert
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import XFAIL, raises, skip
 
 from sympy.abc import x, y
 
@@ -565,8 +565,8 @@ def test_issue_2236():
     sym = [x, y, a0]
     assert len(solve(eqs, sym, manual=True, check=False, simplify=False)) == 2
 
-def skiptest_issue_2236_float():
-    skip("This test hangs")
+def test_issue_2236_float():
+    skip("This test hangs.")
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
            a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
