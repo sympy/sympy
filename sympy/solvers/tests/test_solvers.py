@@ -100,7 +100,7 @@ def test_solve_args():
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
     # failing undetermined system
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
-        [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**3 + 4*x**2)}]
+        [{a: (-b**2*x + 3*x**2*(x + 4) + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
     assert solve(1/(1/x - y + exp(y))) ==  []
     raises(NotImplementedError, 'solve(exp(x) + sin(x) + exp(y) + sin(y))')
@@ -332,7 +332,7 @@ def test_solve_for_functions_derivatives():
     x = Symbol('x')
     f = Function('f')
     F = x**2 + f(x)**2 - 4*x - 1
-    assert solve(F.diff(x), diff(f(x), x)) == [-((x - 2)/f(x))]
+    assert solve(F.diff(x), diff(f(x), x)) == [(-x + 2)/f(x)]
 
     # Mixed cased with a Symbol and a Function
     x = Symbol('x')
@@ -564,16 +564,7 @@ def test_issue_2236():
            x + y - conc]
     sym = [x, y, a0]
     assert len(solve(eqs, sym)) == 2
-
-@XFAIL
-def test_issue_2236_float():
-    # polys doesn't like the floats
-    lam, a0, conc = symbols('lam a0 conc')
-    eqs = [lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
-           a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
-           x + y - conc]
-    sym = [x, y, a0]
-    assert len(solve(eqs, sym, rational=False)) == 2
+    assert len(solve(eqs, sym, rational=False, check=False, simplify=False)) == 2
 
 def test_issue_2668():
     assert solve([x**2 + y + 4], [x]) == [(-sqrt(-y - 4),), (sqrt(-y - 4),)]
@@ -736,11 +727,15 @@ def test_issue_1364():
     assert solve((a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
 
 def test_issue_2015():
-    syms = a, b, c, f, h, k, n = symbols('a, b, c, f, h, k, n')
+    a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r =\
+    symbols('a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r')
+    # there is no 'a' in the equation set but this is how the
+    # problem was originally posed
+    syms = a, b, c, f, h, k, n
     eqs = [b + r/d - c/d,
     c*(1/d + 1/e + 1/g) - f/g - r/d,
     f*(1/g + 1/i + 1/j) - c/g - h/i,
     h*(1/i + 1/l + 1/m) - f/i - k/m,
     k*(1/m + 1/o + 1/p) - h/m - n/p,
     n*(1/p + 1/q) - k/p]
-    assert len(solve(eqs, syms, manual=True)) == 1
+    assert len(solve(eqs, syms, manual=True, simplify=False)) == 1

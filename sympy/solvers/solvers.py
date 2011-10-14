@@ -641,6 +641,9 @@ def _solve(f, *symbols, **flags):
             for s in symbols:
                 n, d = solve_linear(f, symbols=[s])
                 if n.is_Symbol:
+                    # no need to check but we should simplify if desired
+                    if flags.get('simplify', True):
+                        d = simplify(d)
                     return [{n: d}]
                 elif n and d: # otherwise there was no solution for s
                     failed.append(s)
@@ -705,7 +708,9 @@ def _solve(f, *symbols, **flags):
             if not symbol in f_num.free_symbols:
                 return []
             elif f_num.is_Symbol:
-                # no need to check
+                # no need to check but simplify if desired
+                if flags.get('simplify', True):
+                    sol = simplify(sol)
                 return [sol]
 
             result = False # no solution was obtained
