@@ -141,37 +141,37 @@ def test_split_rules_tf():
 def test_FactRules_parse():
     f = FactRules('a -> b')
 #   assert f.negs       == {}
-    assert f.rel_tt     == {'a': set(['b'])}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {'b': set(['a'])}
-    assert f.rel_ft     == {}
+    assert f.rel_tt     == {'a': set(['b']), 'b': set([])}
+    assert f.rel_tf     == {'a': set([]), 'b': set([])}
+    assert f.rel_ff     == {'b': set(['a']), 'a': set([])}
+    assert f.rel_ft     == {'a': set([]), 'b': set([])}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('a -> !b')
-    assert f.rel_tt     == {}
+    assert f.rel_tt     == {'a': set([]), 'b': set([])}
     assert f.rel_tf     == {'a': set(['b']), 'b': set(['a'])}
-    assert f.rel_ff     == {}
-    assert f.rel_ft     == {}
+    assert f.rel_ff     == {'a': set([]), 'b': set([])}
+    assert f.rel_ft     == {'a': set([]), 'b': set([])}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> b')
-    assert f.rel_tt     == {}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {}
+    assert f.rel_tt     == {'a': set([]), 'b': set([])}
+    assert f.rel_tf     == {'a': set([]), 'b': set([])}
+    assert f.rel_ff     == {'a': set([]), 'b': set([])}
     assert f.rel_ft     == {'a': set(['b']), 'b': set(['a'])}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!a -> !b')
-    assert f.rel_tt     == {'b': set(['a'])}
-    assert f.rel_tf     == {}
-    assert f.rel_ff     == {'a': set(['b'])}
-    assert f.rel_ft     == {}
+    assert f.rel_tt     == {'a': set([]), 'b': set(['a'])}
+    assert f.rel_tf     == {'a': set([]), 'b': set([])}
+    assert f.rel_ff     == {'a': set(['b']), 'b': set([])}
+    assert f.rel_ft     == {'a': set([]), 'b': set([])}
     assert f.prereq     == {'b': set(['a']), 'a': set(['b'])}
 
     f = FactRules('!z == nz')
-    assert f.rel_tt     == {}
+    assert f.rel_tt     == {'z': set([]), 'nz': set([])}
     assert f.rel_tf     == {'nz': set(['z']), 'z': set(['nz'])}
-    assert f.rel_ff     == {}
+    assert f.rel_ff     == {'z': set([]), 'nz': set([])}
     assert f.rel_ft     == {'nz': set(['z']), 'z': set(['nz'])}
     assert f.prereq     == {'z': set(['nz']), 'nz': set(['z'])}
 

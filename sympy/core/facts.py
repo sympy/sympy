@@ -47,6 +47,8 @@ http://en.wikipedia.org/wiki/Propositional_formula
 http://en.wikipedia.org/wiki/Inference_rule
 http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
+from collections import defaultdict
+
 from logic import fuzzy_not, name_not, Logic, And, Not
 
 # XXX this prepares forward-chaining rules for alpha-network
@@ -70,12 +72,12 @@ def deduce_alpha_implications(implications):
        implications: [] of (a,b)
        return:       {} of a -> set([b, c, ...])
     """
-    res = {}
+    res = defaultdict(set)
     for a, b in implications:
         if a == b:
             continue    # skip a->a cyclic input
 
-        res.setdefault(a, set()).add(b)
+        res[a].add(b)
 
         # (x >> a) & (a >> b) => x >> b
         for fact in res:
@@ -219,10 +221,10 @@ def rules_2prereq(rules):
        fact. An example is 'a -> b' rule, where prereq(a) is b, and prereq(b)
        is a. That's because a=T -> b=T, and b=F -> a=F, but a=F -> b=?
     """
-    prereq = {}
+    prereq = defaultdict(set)
     for a, impl in rules.iteritems():
         for i in impl:
-            prereq.setdefault(i, set()).add(a)
+            prereq[i].add(a)
     return prereq
 
 def split_rules_tt_tf_ft_ff(rules):
@@ -247,33 +249,29 @@ def split_rules_tt_tf_ft_ff(rules):
 
        'b' -> ['a'] # ft: !b -> a
     """
-    tt = {}
-    tf = {}
-    ft = {}
+    tt = defaultdict(set)
+    tf = defaultdict(set)
+    ft = defaultdict(set)
     for k, impl in rules.iteritems():
         if k[:1] != '!':
             for i in impl:
                 if i[:1] != '!':
-                    dd = tt
+                    tt[k].add(i)
                 else:
-                    dd = tf
-                    i  = i[1:]
-                dd.setdefault(k, set()).add(i)
+                    tf[k].add(i[1:])
         else:
             k = k[1:]
             for i in impl:
                 if i[:1] != '!':
-                    dd = ft
+                    ft[i].add(k)
                 else:
-                    dd = tt
-                    i  = i[1:]
-                dd.setdefault(i, set()).add(k)
+                    tt[i[1:]].add(k)
 
     # FF is related to TT
-    ff = {}
+    ff = defaultdict(set)
     for k, impl in tt.iteritems():
         for i in impl:
-            ff.setdefault(i, set()).add(k)
+            ff[i].add(k)
 
     return tt, tf, ft, ff
 
@@ -527,10 +525,10 @@ class FactRules(object):
         rels = {}
         empty= ()
         for k in K:
-            tt = rel_tt.get(k,empty)
-            tf = rel_tf.get(k,empty)
-            ft = rel_ft.get(k,empty)
-            ff = rel_ff.get(k,empty)
+            tt = rel_tt[k]
+            tf = rel_tf[k]
+            ft = rel_ft[k]
+            ff = rel_ff[k]
 
             tbeta = rel_tbeta.get(k,empty)
             fbeta = rel_fbeta.get(k,empty)
@@ -540,12 +538,11 @@ class FactRules(object):
         self.rels = rels
 
         # build prereq (backward chains)
-        prereq = {}
+        prereq = defaultdict(set)
         for rel in [rel_tt, rel_tf, rel_ff, rel_ft]:
             rel_prereq = rules_2prereq(rel)
             for k, pitems in rel_prereq.iteritems():
-                kp = prereq.setdefault(k, set())
-                kp |= pitems
+                prereq[k] |= pitems
         self.prereq = prereq
 
     # --- DEDUCTION ENGINE: RUNTIME CORE ---
