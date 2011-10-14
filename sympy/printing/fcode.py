@@ -157,9 +157,9 @@ class FCodePrinter(CodePrinter):
         pure_imaginary = []
         mixed = []
         for arg in expr.args:
-            if arg.is_real and arg.is_number:
+            if arg.is_number and arg.is_real:
                 pure_real.append(arg)
-            elif arg.is_imaginary and arg.is_number:
+            elif arg.is_number and arg.is_imaginary:
                 pure_imaginary.append(arg)
             else:
                 mixed.append(arg)
@@ -215,7 +215,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Mul(self, expr):
         # purpose: print complex numbers nicely in Fortran.
-        if expr.is_imaginary and expr.is_number:
+        if expr.is_number and expr.is_imaginary:
             return "cmplx(0,%s)" % (
                 self._print(-S.ImaginaryUnit*expr)
             )
