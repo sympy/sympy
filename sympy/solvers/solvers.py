@@ -294,6 +294,9 @@ def solve(f, *symbols, **flags):
                    recast Floats as Rational; if this option is not used, the
                    system containing floats may fail to solve because of issues
                    with polys.
+               'manual=True (default is False)'
+                   do not use the polys/matrix method to solve a system of equations,
+                   solve them one at a time as you might "manually".
 
         The output varies according to the input and can be seen by example:
 
@@ -638,7 +641,7 @@ def _solve(f, *symbols, **flags):
             for s in symbols:
                 n, d = solve_linear(f, symbols=[s])
                 if n.is_Symbol:
-                    return [{n: cancel(d)}]
+                    return [{n: d}]
                 elif n and d: # otherwise there was no solution for s
                     failed.append(s)
             if not failed:
@@ -703,7 +706,7 @@ def _solve(f, *symbols, **flags):
                 return []
             elif f_num.is_Symbol:
                 # no need to check
-                return [cancel(sol)]
+                return [sol]
 
             result = False # no solution was obtained
             msg = '' # there is no failure message
@@ -845,6 +848,7 @@ def _solve(f, *symbols, **flags):
             dens = set()
             failed = []
             result = False
+            manual = flags.get('manual', False)
             def univariate(p, symset):
                 return all(len(t.free_symbols & symset) < 2
                            for t in Add.make_args(p.as_expr()))
@@ -854,6 +858,10 @@ def _solve(f, *symbols, **flags):
                 i, d = _invert(g, *symbols)
                 g = d - i
                 g = f[j] = g.as_numer_denom()[0]
+                if manual:
+                    failed.append(g)
+                    continue
+
                 poly = g.as_poly(*symbols, **{'extension': True})
 
                 if poly is not None and univariate(poly, symset):

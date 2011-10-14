@@ -734,3 +734,13 @@ def test_issue_1364():
     assert solve(x**x - 2) == [exp(LambertW(log(2)))]
     assert solve(((x - 3)*(x - 2))**((x - 3)*(x - 4))) == [2]
     assert solve((a/x + exp(x/2)).diff(x), x) == [4*LambertW(sqrt(2)*sqrt(a)/4)]
+
+def test_issue_2015():
+    syms = a, b, c, f, h, k, n = symbols('a, b, c, f, h, k, n')
+    eqs = [b + r/d - c/d,
+    c*(1/d + 1/e + 1/g) - f/g - r/d,
+    f*(1/g + 1/i + 1/j) - c/g - h/i,
+    h*(1/i + 1/l + 1/m) - f/i - k/m,
+    k*(1/m + 1/o + 1/p) - h/m - n/p,
+    n*(1/p + 1/q) - k/p]
+    assert len(solve(eqs, syms, manual=True)) == 1
