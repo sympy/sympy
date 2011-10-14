@@ -882,14 +882,14 @@ class Expr(Basic, EvalfMixin):
 
         -- force self to be treated as an Add:
 
-        >>> (3*x).as_independent(x, as_Add=1)
+        >>> (3*x).as_independent(x, as_Add=True)
         (0, 3*x)
 
         -- force self to be treated as a Mul:
 
-        >>> (3+x).as_independent(x, as_Add=0)
+        >>> (3+x).as_independent(x, as_Add=False)
         (1, x + 3)
-        >>> (-3+x).as_independent(x, as_Add=0)
+        >>> (-3+x).as_independent(x, as_Add=False)
         (1, x - 3)
 
         Note how the below differs from the above in making the
