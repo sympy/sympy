@@ -2028,137 +2028,62 @@ def homogeneous_order(eq, *symbols):
         >>> from sympy import Function, homogeneous_order, sqrt
         >>> from sympy.abc import x, y
         >>> f = Function('f')
-        >>> homogeneous_order(f(x), f(x)) == None
+        >>> homogeneous_order(f(x), f(x)) is None
         True
-        >>> homogeneous_order(f(x,y), f(y, x), x, y) == None
+        >>> homogeneous_order(f(x,y), f(y, x), x, y) is None
         True
         >>> homogeneous_order(f(x), f(x), x)
         1
         >>> homogeneous_order(x**2*f(x)/sqrt(x**2+f(x)**2), x, f(x))
         2
-        >>> homogeneous_order(x**2+f(x), x, f(x)) == None
+        >>> homogeneous_order(x**2+f(x), x, f(x)) is None
         True
 
     """
-    if eq.has(log):
-        eq = logcombine(eq, force=True)
-    return _homogeneous_order(eq, *symbols)
+    from sympy.simplify.simplify import separatevars
 
-def _homogeneous_order(eq, *symbols):
-    """
-    The real work for homogeneous_order.
-
-    This runs as a separate function call so that logcombine doesn't
-    endlessly put back together what homogeneous_order is trying to take
-    apart.
-    """
     if not symbols:
         raise ValueError("homogeneous_order: no symbols were given.")
-
-    n = set()
-
-    # Replace all functions with dummy variables
-
-    for i in symbols:
-        if i.is_Function:
-            if not all(j in symbols for j in i.args):
-                return None
-            else:
-                dummyvar = numbered_symbols(prefix='d', cls=Dummy).next()
-                eq = eq.subs(i, dummyvar)
-                symbols = list(symbols)
-                symbols.remove(i)
-                symbols.append(dummyvar)
-                symbols = tuple(symbols)
+    symset = set(symbols)
+    eq = sympify(eq)
 
     # The following are not supported
     if eq.has(Order, Derivative):
         return None
 
     # These are all constants
-    if type(eq) in (int, float) or eq.is_Number or eq.is_Integer or \
-    eq.is_Rational or eq.is_NumberSymbol or eq.is_Float:
-        return sympify(0)
+    if (eq.is_Number or
+        eq.is_NumberSymbol or
+        eq.is_number
+        ):
+        return S.Zero
 
-    # Break the equation into additive parts
-    if eq.is_Add:
-        s = set()
-        for i in eq.args:
-            s.add(_homogeneous_order(i, *symbols))
-        if len(s) != 1:
+    # Replace all functions with dummy variables
+    dum = numbered_symbols(prefix='d', cls=Dummy)
+    newsyms = set()
+    for i in [j for j in symset if getattr(j, 'is_Function')]:
+        iargs = set(i.args)
+        if iargs.difference(symset):
             return None
         else:
-            n = s
+            dummyvar = dum.next()
+            eq = eq.subs(i, dummyvar)
+            symset.remove(i)
+            newsyms.add(dummyvar)
+    symset.update(newsyms)
 
-    if eq.is_Pow:
-        if not eq.exp.is_number:
-            return None
-        o = _homogeneous_order(eq.base, *symbols)
-        if o == None:
-            return None
-        else:
-            n.add(sympify(o*eq.exp))
-
-    t = Dummy('t', positive=True) # It is sufficient that t > 0
-    r = Wild('r', exclude=[t])
-    a = Wild('a', exclude=[t])
-    eqs = eq.subs(dict(zip(symbols,(t*i for i in symbols))))
-
-    if eqs.is_Mul:
-        if not eqs.has(t):
-            n.add(sympify(0))
-        else:
-            m = eqs.match(r*t**a)
-            if m:
-                n.add(sympify(m[a]))
-            else:
-                s = 0
-                for i in eq.args:
-                    o = _homogeneous_order(i, *symbols)
-                    if o == None:
-                        return None
-                    else:
-                        s += o
-                n.add(sympify(s))
-
-    if eq.is_Function:
-        if eq.func is log:
-            # The only possibility to pull a t out of a function is a power in
-            # a logarithm.  This is very likely due to calling of logcombine().
-            args = Mul.make_args(eq.args[0])
-            if all(i.is_Pow for i in args):
-                base = 1
-                expos = set()
-                for pow in args:
-                    if sign(pow.exp).is_negative:
-                        s = -1
-                    else:
-                        s = 1
-                    expos.add(s*pow.exp)
-                    base *= pow.base**s
-                if len(expos) != 1:
-                    return None
-                else:
-                    return _homogeneous_order(expos.pop()*log(base), *symbols)
-            else:
-                if _homogeneous_order(eq.args[0], *symbols) == 0:
-                    return sympify(0)
-                else:
-                    return None
-        else:
-            if _homogeneous_order(eq.args[0], *symbols) == 0:
-                return sympify(0)
-            else:
-                return None
-
-    if len(n) != 1 or n == None:
+    if not eq.free_symbols & symset:
         return None
-    else:
-        return n.pop()
 
-    return None
-
-
+    # make the replacement of x with x*t and see if t can be factored out
+    t = Dummy('t', positive=True) # It is sufficient that t > 0
+    eqs = separatevars(eq.subs([(i, t*i) for i in symset]), [t], dict=True)[t]
+    if eqs is S.One:
+        return S.Zero # there was no term with only t
+    i, d = eqs.as_independent(t, as_Add=False)
+    b, e = d.as_base_exp()
+    if b == t:
+        return e
 
 def ode_1st_linear(eq, func, order, match):
     r"""

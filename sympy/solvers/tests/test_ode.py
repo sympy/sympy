@@ -3,7 +3,7 @@ from __future__ import division
 from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
-    Equality, solve, O, LambertW, Dummy)
+    Equality, solve, O, LambertW, Dummy, acosh)
 from sympy.abc import x, y, z
 from sympy.solvers.ode import (ode_order, homogeneous_order,
     _undetermined_coefficients_match, classify_ode, checkodesol,
@@ -1188,3 +1188,7 @@ def test_issue_2671():
     assert constantsimp(2**(C1 + x), x, 1) == C1*2**x
     assert constantsimp(x + C1 + y, x, 1) == C1 + x
     assert constantsimp(x + C1 + Integral(x, (x, 1, 2)), x, 1) == C1 + x
+
+def test_issue_2013_2331():
+    assert homogeneous_order(-log(x) + acosh(x), x) is None
+    assert homogeneous_order(y - log(x), x, y) is None
