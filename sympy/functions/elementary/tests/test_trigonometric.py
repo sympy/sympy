@@ -11,9 +11,9 @@ def test_sin():
 
     assert sin(nan) == nan
 
+    assert sin(oo) == nan
     assert sin(oo*I) == oo*I
     assert sin(-oo*I) == -oo*I
-    assert sin(oo).args[0] == oo
 
     assert sin(0) == 0
 
@@ -133,6 +133,7 @@ def test_cos():
 
     assert cos(nan) == nan
 
+    assert cos(oo) == nan
     assert cos(oo*I) == oo
     assert cos(-oo*I) == oo
 

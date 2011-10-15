@@ -156,7 +156,11 @@ class sin(TrigonometricFunction):
             elif arg is S.Zero:
                 return S.Zero
             elif arg is S.Infinity:
-                return
+                return S.NaN
+            elif arg is S.NegativeInfinity:
+                return S.NaN
+            elif arg is S.ComplexInfinity:
+                return S.NaN
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
@@ -373,7 +377,11 @@ class cos(TrigonometricFunction):
             elif arg is S.Zero:
                 return S.One
             elif arg is S.Infinity:
-                return
+                return S.NaN
+            elif arg is S.NegativeInfinity:
+                return S.NaN
+            elif arg is S.ComplexInfinity:
+                return S.NaN
 
         if arg.could_extract_minus_sign():
             return cls(-arg)
