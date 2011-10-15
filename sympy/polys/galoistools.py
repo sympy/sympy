@@ -2037,7 +2037,7 @@ def linear_congruence(a, b, m):
     r, _, g = gcdex(a, m)
     if b % g != 0:
         return []
-    return [(r * b / g + t * m / g) % m for t in range (g)]
+    return [(r * b // g + t * m // g) % m for t in range (g)]
 
 def _raise_mod_power(x, s, p, f):
     """
@@ -2074,7 +2074,7 @@ def _raise_mod_power(x, s, p, f):
     from sympy.polys.domains import ZZ
     f_f = gf_diff(f, p, ZZ)
     alpha = gf_value(f_f, x)
-    beta = - gf_value(f, x) / p**s
+    beta = - gf_value(f, x) // p**s
     return linear_congruence(alpha, beta, p)
 
 def csolve_prime(f, p, e=1):
