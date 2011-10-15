@@ -80,7 +80,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
        This is a heuristic approach to indefinite integration in finite
        terms using the extended heuristic (parallel) Risch algorithm, based
-       on Manuel Bronstein's "Poor Man's Integrator".
+       on Manuel Bronstein's 'Poor Man's Integrator'.
 
        The algorithm supports various classes of functions including
        transcendental elementary or special functions like Airy,
@@ -120,7 +120,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
        >>> heurisch(y*tan(x), x)
        y*log(tan(x)**2 + 1)/2
 
-       See Manuel Bronstein's "Poor Man's Integrator":
+       See Manuel Bronstein's 'Poor Man's Integrator':
 
        [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
