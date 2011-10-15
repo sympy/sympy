@@ -395,7 +395,7 @@ def legendre_symbol(a, p):
     else:
         return -1
 
-<<<<<<< HEAD
+
 def jacobi_symbol(m, n):
     """
     Returns 0 if m cong 0 mod(n),
@@ -449,7 +449,7 @@ def jacobi_symbol(m, n):
         if s % 2 and n % 8 in [3, 5]:
             j *= -1
     return j
-=======
+
 def bin_gcd(a, b):
     """
     Extended version of Euclid's Algorithm (binary GCD)
@@ -470,4 +470,4 @@ def bin_gcd(a, b):
     gcd = (m * a) % b
     n = (gcd - m * a) // b
     return (m, n, gcd)
->>>>>>> saptman/ntheory
+
