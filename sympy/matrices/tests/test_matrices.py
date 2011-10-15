@@ -1,7 +1,7 @@
 from sympy import (symbols, Matrix, SparseMatrix, eye, I, Symbol, Rational,
     Float, wronskian, cos, sin, exp, hessian, sqrt, zeros, ones, randMatrix,
     Poly, S, pi, E, oo, trigsimp, Integer, N, sympify,
-    Pow, simplify, Min, Max, Abs)
+    Pow, simplify, Min, Max, Abs, PurePoly)
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     matrix_multiply_elementwise, diag,
     SparseMatrix, SparseMatrix, NonSquareMatrixError,
@@ -1496,8 +1496,16 @@ def test_Matrix_berkowitz_charpoly():
     A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
-    assert A.berkowitz_charpoly(x) == \
+    charpoly = A.berkowitz_charpoly(x)
+
+    assert charpoly == \
         Poly(x**2 + (K_i*UA + K_w*UA + 2*K_i*K_w)/(K_i + K_w)*x + K_i*K_w*UA/(K_i + K_w), x, domain='ZZ(K_i,K_w,UA)')
+
+    assert type(charpoly) is PurePoly
+
+    A = Matrix([[1, 3], [2, 0]])
+
+    assert A.charpoly() == A.charpoly(x) == PurePoly(x**2 - x - 6)
 
 def test_exp():
     m = Matrix([[3,4],[0,-2]])
