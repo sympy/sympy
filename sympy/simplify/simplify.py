@@ -14,7 +14,7 @@ from sympy.functions import gamma, exp, sqrt, log
 from sympy.simplify.cse_main import cse
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, terms_gcd, lcm)
+    ComputationFailed, terms_gcd, lcm, gcd)
 
 from sympy.core.compatibility import reduce
 
@@ -975,7 +975,7 @@ def powdenest(eq, force=False):
 
     Given (bb**be)**e, this can be simplified as follows:
         o if bb is positive or e is an integer, bb**(be*e)
-        o if be has an integer in the denominatory, then
+        o if be has an integer in the denominator, then
           all integers from its numerator can be joined with e
     Given a product of powers raised to a power, (bb1**be1 * bb2**be2...)**e,
     simplification can be done as follows:
@@ -1006,7 +1006,7 @@ def powdenest(eq, force=False):
 
     Assumptions may prevent expansion:
 
-    >>> powdenest(sqrt(x**2))  # activate when log rules are fixed
+    >>> powdenest(sqrt(x**2))
     sqrt(x**2)
 
     >>> p = symbols('p', positive=True)
@@ -1015,7 +1015,7 @@ def powdenest(eq, force=False):
 
     No other expansion is done.
 
-    >>> i, j = symbols('i,j', integer=1)
+    >>> i, j = symbols('i,j', integer=True)
     >>> powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j
     x**(x*(i + j))
 
@@ -1036,10 +1036,10 @@ def powdenest(eq, force=False):
     >>> p = Symbol('p', positive=True)
     >>> powdenest(((x**(2*i))**(3*y))**x)
     ((x**(2*i))**(3*y))**x
-    >>> powdenest(((x**(2*i))**(3*y))**x, force=1)
+    >>> powdenest(((x**(2*i))**(3*y))**x, force=True)
     x**(6*i*x*y)
 
-    >> powdenest(((p**(2*a))**(3*y))**x)  # activate when log rules are fixed
+    >>> powdenest(((p**(2*a))**(3*y))**x)
     p**(6*a*x*y)
 
     >>> powdenest(((x**(2*a/3))**(3*y/i))**x)
@@ -1047,24 +1047,24 @@ def powdenest(eq, force=False):
     >>> powdenest((x**(2*i)*y**(4*i))**z,1)
     (x*y**2)**(2*i*z)
 
-    >>> n = Symbol('n', negative=1)
+    >>> n = Symbol('n', negative=True)
 
-    >> powdenest((x**i)**y, force=1)  # activate when log rules are fixed
+    >>> powdenest((x**i)**y, force=True)
     x**(i*y)
-    >> powdenest((n**i)**x, force=1)  # activate when log rules are fixed
+    >>> powdenest((n**i)**x, force=True)
     (n**i)**x
 
     """
 
     if force:
         eq, rep = posify(eq)
-        return powdenest(eq, force=0).subs(rep)
+        return powdenest(eq, force=False).subs(rep)
 
     eq = S(eq)
     if eq.is_Atom:
         return eq
 
-    # handle everything that is not a power
+    # handle everything that is not a power or Mul
     #   if subs would work then one could replace the following with
     #      return eq.subs(dict([(p, powdenest(p)) for p in eq.atoms(Pow)]))
     #   but subs expands (3**x)**2 to 3**x * 3**x so the 3**(5*x)
@@ -1074,7 +1074,7 @@ def powdenest(eq, force=False):
     #   or simplicity? On the other hand, this only does a shallow replacement
     #   and doesn't enter Integrals or functions, etc... so perhaps the subs
     #   approach (or adding a deep flag) is the thing to do.
-    if not eq.is_Pow and not eq.func is exp:
+    if not eq.is_Pow and not eq.func is exp and not eq.is_Mul:
         args = list(Add.make_args(eq))
         rebuild = False
         for i, arg in enumerate(args):
@@ -1110,51 +1110,79 @@ def powdenest(eq, force=False):
         logs = logcombine(efunc(*logs), force=force)
         return Pow(C.exp(logs), efunc(*other))
 
-    bb, be = b.as_base_exp()
-    if be is S.One and not (b.is_Mul or b.is_Rational):
+    _, be = b.as_base_exp()
+    if be is S.One and not (b.is_Mul or b.is_Rational and b.q != 1):
         return eq
 
-    # denest eq which is either Pow**e or Mul**e
-    if force or e.is_integer:
-        # replace all non-explicitly negative symbols with positive dummies
-        syms = eq.atoms(Symbol)
-        rep = [(s, C.Dummy(s.name, positive=True)) for s in syms if not s.is_negative]
-        sub = eq.subs(rep)
-    else:
-        rep = []
-        sub = eq
+    # denest eq which is either Pow**e or Mul**e or Mul(b1**e1, b2**e2)
 
-    # if any factor is a bare symbol then there is nothing to be done
-    b, e = sub.as_base_exp()
-    if e is S.One or any(s.is_Symbol for s in Mul.make_args(b)):
-        return sub.subs([(new, old) for old, new in rep])
+    # see if there is a positive, non-Mul base at the very bottom
+    exponents = False
+    if not eq.is_Mul:
+        exponents = []
+        kernel = eq
+        while kernel.is_Pow:
+            kernel, ex = kernel.as_base_exp()
+            exponents.append(ex)
+        if kernel.is_positive:
+            e = Mul(*exponents)
+            if kernel.is_Mul:
+                b = kernel
+            else:
+                return Pow(kernel, e)
+
+    # if any factor is an atom then there is nothing to be done
+    # but the kernel check may have created a new exponent
+    if any(s.is_Atom for s in Mul.make_args(b)):
+        if exponents:
+            return b**e
+        return eq
+
     # let log handle the case of the base of the argument being a mul, e.g.
-    # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i)
-    gcd = terms_gcd(log(b).expand(log=1))
-    if gcd.func is C.log or not gcd.is_Mul:
-        if hasattr(gcd.args[0], 'exp'):
-            gcd = powdenest(gcd.args[0])
-            c, _ = gcd.exp.as_coeff_mul()
+    # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive; we
+    # will take the log, expand it, and then factor out the common powers that
+    # now appear as coefficient. We do this manually since terms_gcd pulls out
+    # fractions, terms_gcd(x+x*y/2) -> x*(y + 2)/2 and we don't want the 1/2;
+    # gcd won't pull out numerators from a fraction: gcd(3*x, 9*x/2) -> x but
+    # we want 3*x. Neither work with noncommutatives.
+    from sympy.polys.polytools import _keep_coeff
+    def nc_gcd(aa, bb):
+        a, b = [i.as_coeff_Mul() for i in [aa, bb]]
+        c = gcd(a[0], b[0]).as_numer_denom()[0]
+        g = Mul(*(a[1].args_cnc()[0] & b[1].args_cnc()[0]))
+        return _keep_coeff(c, g)
+
+    glogb = expand_log(log(b))
+    if glogb.is_Add:
+        args = glogb.args
+        g = reduce(nc_gcd, args)
+        if g != 1:
+            cg, rg = g.as_coeff_Mul()
+            glogb = _keep_coeff(cg, rg*Add(*[a/g for a in args]))
+
+    # now put the log back together again
+    if glogb.func is C.log or not glogb.is_Mul:
+        if glogb.args[0].is_Pow or glogb.args[0].func is exp:
+            glogb = powdenest(glogb.args[0])
+            c, _ = glogb.exp.as_coeff_mul()
             ok = c.p != 1
             if ok:
                 ok = c.q != 1
                 if not ok:
-                    n, d = gcd.exp.as_numer_denom()
+                    n, d = glogb.exp.as_numer_denom()
                     ok = d is not S.One and any(di.is_integer for di in Mul.make_args(d))
             if ok:
-                return Pow(Pow(gcd.base, gcd.exp/c.p), c.p*e)
-        elif e.is_Mul:
-            return Pow(b, e).subs([(new, old) for old, new in rep])
+                return Pow(Pow(glogb.base, glogb.exp/c.p), c.p*e)
         return eq
-    else:
-        add= []
-        other = []
-        for g in gcd.args:
-            if g.is_Add:
-                add.append(g)
-            else:
-                other.append(g)
-        return powdenest(Pow(exp(logcombine(Mul(*add))), e*Mul(*other))).subs([(new, old) for old, new in rep])
+    # the log(b) was a Mul so join any adds with logcombine
+    add= []
+    other = []
+    for a in glogb.args:
+        if a.is_Add:
+            add.append(a)
+        else:
+            other.append(a)
+    return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
@@ -1952,7 +1980,7 @@ def _real_to_rational(expr):
     >>> from sympy import nsimplify
     >>> from sympy.abc import x
 
-    >>> nsimplify(.76 + .1*x**.5, rational=1)
+    >>> nsimplify(.76 + .1*x**.5, rational=True)
     sqrt(x)/10 + 19/25
 
     """

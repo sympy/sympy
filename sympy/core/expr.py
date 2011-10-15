@@ -316,16 +316,7 @@ class Expr(Basic, EvalfMixin):
         """
         if not self.is_Mul:
             return [self]
-
-        cpart = []
-        ncpart = []
-
-        for arg in self.args:
-            if arg.is_commutative:
-                cpart.append(arg)
-            else:
-                ncpart.append(arg)
-
+        cpart, ncpart = self.args_cnc()
         return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
 
     def as_ordered_terms(self, order=None, data=False):
