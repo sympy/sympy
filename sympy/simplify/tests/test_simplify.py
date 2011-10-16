@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, collect_terms)
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL
 
@@ -879,3 +879,30 @@ def test_issue2834():
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
     assert abs(denom(x).n()) > 1e-12
     assert abs(denom(radsimp(x))) > 1e-12 # in case simplify didn't handle it
+
+def test_collect_terms():
+    eq = a*sin(x) + b*sin(x) + a*y + b*y
+    assert collect_terms(eq, a) == a*(y + sin(x)) + b*y + b*sin(x)
+    assert collect_terms(eq, x) == a*y + b*y + (a + b)*sin(x)
+    assert collect_terms(eq, x, y) == y*(a + b) + (a + b)*sin(x)
+    assert collect_terms(eq, x, y, a) == (a + b)*(y + sin(x))
+    assert collect_terms(a*(2*x + 2) + 2*b*(x + 1)) == 2*((a + b)*(x + 1))
+    assert collect_terms(a*(2*x + 2)) == 2*a*(x + 1)
+
+    f = Function('f')
+    eq = a*(x + 1) + b*(x + 1) + x + 1
+    assert collect_terms(eq, x) == (x + 1)*(a + b + 1)
+    assert collect_terms(eq + 1, x) == (x + 1)*(a + b + 1) + 1
+    assert collect_terms(a/x + b/x + x + a*x, x) == x*(a + 1) + (a + b)/x
+    df = f(x).diff(x)
+    assert collect_terms(a/x + b/x + df + a*df, x) == (a + 1)*df + (a + b)/x
+
+    n = sqrt(3)+sqrt(3)*sqrt(1+sqrt(2))+sqrt(7)
+    cn = sqrt(7) + sqrt(3)*(1 + sqrt(1 + sqrt(2)))
+    assert collect_terms(n) == n
+    assert collect_terms(n, None) == cn
+    assert collect_terms(n + x + a*x) == n + x*(a + 1)
+    assert collect_terms(n + x + a*x, None) == cn + x*a + x
+    assert collect_terms(n + x + a*x, x) == n + x*(a + 1)
+    assert collect_terms(n + x + a*x, x, const=True) == cn + x*(a + 1)
+    assert collect_terms(sqrt(3), None) == sqrt(3)

@@ -25,6 +25,8 @@ from sympy.polys.polytools import _keep_coeff
 
 import sympy.mpmath as mpmath
 
+from collections import defaultdict
+
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
@@ -561,6 +563,7 @@ def rcollect(expr, *vars):
     (x + y*(x**2 + x + 1))/(x + y)
 
     """
+    expr = sympify(expr)
     if expr.is_Atom or not expr.has(*vars):
         return expr
     else:
@@ -570,6 +573,140 @@ def rcollect(expr, *vars):
             return collect(expr, vars)
         else:
             return expr
+
+def collect_const(expr, *vars):
+    """A non-greedy collection of terms with similar number coefficients in
+    an Add expr. If ``vars`` is given then only those constants will be
+    targeted.
+
+    **Examples**
+    >>> from sympy import sqrt
+    >>> from sympy.abc import s
+    >>> from sympy.simplify.simplify import collect_const
+    >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
+    sqrt(3)*(sqrt(2) + 2)
+    >>> collect_const(sqrt(3)*s + sqrt(7)*s + sqrt(3) + sqrt(7))
+    (sqrt(3) + sqrt(7))*(s + 1)
+    >>> s = sqrt(2) + 2
+    >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
+    (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
+    >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
+    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    """
+    expr = _keep_coeff(*sympify(expr).as_content_primitive())
+    if not (expr.is_Add or expr.is_Mul):
+        return expr
+    recurse = False
+    if not vars:
+        recurse = True
+        vars = set()
+        for a in Add.make_args(expr):
+            for m in Mul.make_args(a):
+                if m.is_number:
+                    vars.add(m)
+        vars = sorted(vars, key=count_ops)
+    # Rationals get autodistributed on Add so don't bother with them
+    vars = [v for v in vars if not v.is_Rational]
+
+    if not vars:
+        return expr
+
+    for v in vars:
+        terms = defaultdict(list)
+        for m in Add.make_args(expr):
+            i = []
+            d = []
+            for a in Mul.make_args(m):
+                if a == v:
+                    d.append(a)
+                else:
+                    i.append(a)
+            ai, ad = [Mul(*w) for w in [i, d]]
+            terms[ad].append(ai)
+        args = []
+        hit = False
+        for k, v in terms.iteritems():
+            if len(v) > 1:
+                v = Add(*v)
+                hit = True
+                if recurse and v != expr:
+                    vars.append(v)
+            else:
+                v = v[0]
+            args.append(k*v)
+        if hit:
+            expr = Add(*args)
+            if not expr.is_Add:
+                break
+    return expr
+
+def collect_terms(expr, *vars, **hint):
+    """A non-greedy collection of like var-containing terms in an Add expr.
+
+    **Examples**
+    >>> from sympy.simplify.simplify import collect_terms
+    >>> from sympy.abc import a, b, x, y
+    >>> from sympy import sin
+
+    >>> eq = a*sin(x) + b*sin(x) + a*y + b*y
+    >>> collect_terms(eq, a)
+    a*(y + sin(x)) + b*y + b*sin(x)
+    >>> collect_terms(eq, x)
+    a*y + b*y + (a + b)*sin(x)
+    >>> collect_terms(eq, x, y)
+    y*(a + b) + (a + b)*sin(x)
+    >>> collect_terms(eq, x, y, a)
+    (a + b)*(y + sin(x))
+
+    Collection of any GCD Rational is automatically performed, but no
+    other expansion or factoring is done:
+    >>> collect_terms(a*(2*x + 2) + 2*b*(x + 1))
+    2*(a + b)*(x + 1)
+    """
+    if vars and vars[0] is None:
+        return collect_const(expr)
+    elif hint.pop('const', False):
+        return collect_const(collect_terms(expr, *vars))
+
+    expr = _keep_coeff(*sympify(expr).as_content_primitive())
+    if expr.is_Atom:
+        return expr
+
+    if not vars:
+        vars = list(expr.free_symbols)
+        vars.sort(key=default_sort_key)
+        if not vars:
+            return _keep_coeff(*expr.as_content_primitive())
+
+    expr = expr.func(*[collect_terms(a, *vars) for a in expr.args])
+    if not expr.is_Add:
+        return expr
+
+    rat, expr = expr.as_content_primitive() # maybe only primitive now?
+    for var in vars:
+        terms = defaultdict(list)
+        for m in expr.args:
+            i, d = m.as_independent(var)
+            terms[d].append(i)
+        missed = []
+        hit = []
+        for k, v in terms.items():
+            if k is not S.One:
+                if len(v) == 1:
+                    missed.append(k*terms.pop(k)[0])
+                else:
+                    hit.append(k)
+        missed = Add(*missed)
+        if missed:
+            for h in hit:
+                xa = missed.extract_additively(h)
+                if xa is not None:
+                    terms[h].append(1)
+                    missed = xa
+        expr = Add(*[k*Add(*v) for k, v in terms.iteritems()]) + missed
+        if not expr.is_Add:
+            break
+    return _keep_coeff(rat, expr)
 
 def separatevars(expr, symbols=[], dict=False, force=False):
     """
