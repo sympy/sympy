@@ -199,14 +199,27 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
-    def subs(self, old, new):
+    def subs(self, *args, **hints):
         """Replace old -> new in self.
 
         Note: since GeometryEntity doesn't derive from Basic, it needs its own subs method.
         """
-        if type(old) == type(self) == type(new) and self == old:
-            return new
-        return type(self)(*[a.subs(old, new) for a in self.args])
+        # do our own equality check first
+        if len(args) == 1:
+            sequence = args[0]
+            if isinstance(sequence, dict):
+                sequence = [i for i in sequence.iteritems()]
+            elif not iterable(sequence):
+                raise TypeError("GeometryEntity.subs accepts an iterable with 1 or 2 arguments")
+        elif len(args) == 2:
+            sequence = [args]
+        else:
+            raise ValueError("GeometryEntity.subs accepts either 1 or 2 arguments")
+        for old, new in sequence:
+            if self == old:
+                return new
+        # now pass it off to regular subs on the arguments
+        return type(self)(*[a.subs(*args, **hints) for a in self.args])
 
     def _subs(self, old, new):
         """Call to GeometryEntity's subs method in case a Basic object
