@@ -56,18 +56,23 @@ def n_order(a, n):
 
 def is_primitive_root(a, p):
     """
-    Returns True if a is a primitive root of p
+    Returns True if ``a`` is a primitive root of ``n``
+
+    ``a`` is said to be the primitive root of ``n`` if totient(n) is
+    the smallest positive number s.t.
+
+        a**totient(n) cong 1 mod(n)
 
     **Examples**
-    >>> from sympy.ntheory import is_primitive_root, n_order
-    >>> is_primitive_root(3, 7)
+    >>> from sympy.ntheory import is_primitive_root, n_order, totient
+    >>> is_primitive_root(3, 10)
     True
-    >>> is_primitive_root(4, 7)
+    >>> is_primitive_root(9, 10)
     False
-    >>> n_order(3, 7)
-    6
-    >>> n_order(4, 7)
-    3
+    >>> n_order(3, 10) == totient(10)
+    True
+    >>> n_order(9, 10) == totient(10)
+    False
     """
     a, p = int_tested(a, p)
     if igcd(a, p) != 1:
