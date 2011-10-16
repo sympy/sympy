@@ -34,13 +34,14 @@ def test_trigonometric():
     assert cos(exp(pi)).subs(exp, sin) == 1
 
     i = Symbol('i', integer=True)
-    assert tan(x).subs(x, pi/2) is S.NaN
-    assert cot(x).subs(x, pi) is S.NaN
-    assert cot(i*x).subs(x, pi) is S.NaN
+    zoo = S.ComplexInfinity
+    assert tan(x).subs(x, pi/2) is zoo
+    assert cot(x).subs(x, pi) is zoo
+    assert cot(i*x).subs(x, pi) is zoo
     assert tan(i*x).subs(x, pi/2) == tan(i*pi/2)
-    assert tan(i*x).subs(x, pi/2).subs(i, 1) is S.NaN
+    assert tan(i*x).subs(x, pi/2).subs(i, 1) is zoo
     o = Symbol('o', odd=True)
-    assert tan(o*x).subs(x, pi/2) is S.NaN
+    assert tan(o*x).subs(x, pi/2) == tan(o*pi/2)
 
 def test_powers():
     x = Symbol('x')
