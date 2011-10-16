@@ -28,6 +28,13 @@ def n_order(a, n):
     """ returns the order of a modulo n
     Order of a modulo n is the smallest integer
     k such that a^k leaves a remainder of 1 with n.
+
+    **Examples**
+    >>> from sympy.ntheory import n_order
+    >>> n_order(3, 7)
+    6
+    >>> n_order(4, 7)
+    3
     """
     a, n = int_tested(a, n)
     if igcd(a, n) != 1:
@@ -49,7 +56,18 @@ def n_order(a, n):
 
 def is_primitive_root(a, p):
     """
-    returns True if a is a primitive root of p
+    Returns True if a is a primitive root of p
+
+    **Examples**
+    >>> from sympy.ntheory import is_primitive_root, n_order
+    >>> is_primitive_root(3, 7)
+    True
+    >>> is_primitive_root(4, 7)
+    False
+    >>> n_order(3, 7)
+    6
+    >>> n_order(4, 7)
+    3
     """
     a, p = int_tested(a, p)
     if igcd(a, p) != 1:
@@ -102,9 +120,18 @@ def is_quad_residue(a, p):
 
 def legendre_symbol(a, p):
     """
-    return 1 if a is a quadratic residue of p, 0 if a is multiple of p,
-    else return -1
+    Returns 0 if a is multiple of p,
+            1 if a is a quadratic residue of p, else
+           -1
+
     p should be an odd prime by definition
+
+    **Examples**
+    >>> from sympy.ntheory import legendre_symbol
+    >>> [legendre_symbol(i, 7) for i in range(7)]
+    [0, 1, 1, -1, 1, -1, -1]
+    >>> list(set([i**2 % 7 for i in range(7)]))
+    [0, 1, 2, 4]
     """
     a, p = int_tested(a, p)
     if not isprime(p) or p == 2:
