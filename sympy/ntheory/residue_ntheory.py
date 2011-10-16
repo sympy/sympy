@@ -60,7 +60,7 @@ def is_primitive_root(a, p):
 
     ``a`` is said to be the primitive root of ``n`` if gcd(a, n) == 1 and
     totient(n) is the smallest positive number s.t.
-    
+
         a**totient(n) cong 1 mod(n)
 
     **Examples**
