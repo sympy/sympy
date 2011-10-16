@@ -34,13 +34,13 @@ message_tabs = "File contains tabs instead of spaces: %s, line %s."
 message_carriage = "File contains carriage returns at end of line: %s, line %s"
 message_str_raise = "File contains string exception: %s, line %s"
 message_gen_raise = "File contains generic exception: %s, line %s"
-message_old_raise = "File contains old style raise statement: %s, line %s, \"%s\""
+message_old_raise = "File contains old-style raise statement: %s, line %s, \"%s\""
 message_eof = "File does not end with a newline: %s, line %s"
 
 implicit_test_re = re.compile('^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
 gen_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
-old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise(\s+\w+\s*,)')
+old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
 
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
@@ -135,6 +135,7 @@ def test_raise_statement_regular_expression():
         "raise ValueError('text') #,",
         # Talking about an exception in a docstring
         ''''"""This function will raise ValueError, except when it doesn't"""''',
+        "raise (ValueError('text')",
     ]
     str_candidates_fail = [
         "raise 'exception'",
@@ -169,6 +170,14 @@ def test_raise_statement_regular_expression():
         ">>> raise ValueError, 'text'",
         ">>> raise ValueError, 'text' # raise Exception('text')",
         ">>> raise ValueError, 'text' # raise Exception, 'text'",
+        "raise(ValueError,",
+        "raise (ValueError,",
+        "raise( ValueError,",
+        "raise ( ValueError,",
+        "raise(ValueError ,",
+        "raise (ValueError ,",
+        "raise( ValueError ,",
+        "raise ( ValueError ,",
     ]
 
     for c in candidates_ok:
