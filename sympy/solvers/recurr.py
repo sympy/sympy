@@ -593,69 +593,58 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return result
 
 def rsolve(f, y, init=None):
-    """Solve univariate recurrence with rational coefficients.
+    """
+    Solve univariate recurrence with rational coefficients.
 
-       Given k-th order linear recurrence Ly = f, or equivalently:
+    Given k-th order linear recurrence Ly = f, or equivalently:
 
-         a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) + ... + a_{0}(n) y(n) = f
+     a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) + ... + a_{0}(n) y(n) = f
 
-       where a_{i}(n), for i=0..k, are polynomials or rational functions
-       in n, and f is a hypergeometric function or a sum of a fixed number
-       of pairwise dissimilar hypergeometric terms in n, finds all solutions
-       or returns None, if none were found.
+    where a_{i}(n), for i=0..k, are polynomials or rational functions
+    in n, and f is a hypergeometric function or a sum of a fixed number
+    of pairwise dissimilar hypergeometric terms in n, finds all solutions
+    or returns None, if none were found.
 
-       Initial conditions can be given as a dictionary in two forms:
+    Initial conditions can be given as a dictionary in two forms:
 
-          [1] {   n_0  : v_0,   n_1  : v_1, ...,   n_m  : v_m }
-          [2] { y(n_0) : v_0, y(n_1) : v_1, ..., y(n_m) : v_m }
+      [1] {   n_0  : v_0,   n_1  : v_1, ...,   n_m  : v_m }
+      [2] { y(n_0) : v_0, y(n_1) : v_1, ..., y(n_m) : v_m }
 
-       or as a list L of values:
+    or as a list L of values:
 
-          L = [ v_0, v_1, ..., v_m ]
+      L = [ v_0, v_1, ..., v_m ]
 
-       where L[i] = v_i, for i=0..m, maps to y(n_i).
+    where L[i] = v_i, for i=0..m, maps to y(n_i).
 
-       As an example lets consider the following recurrence:
+    As an example lets consider the following recurrence:
 
-         (n - 1) y(n + 2) - (n**2 + 3 n - 2) y(n + 1) + 2 n (n + 1) y(n) == 0
+     (n - 1) y(n + 2) - (n**2 + 3 n - 2) y(n + 1) + 2 n (n + 1) y(n) == 0
 
-       >>> from sympy import Function, rsolve
-       >>> from sympy.abc import n
-       >>> y = Function('y')
+    >>> from sympy import Function, rsolve
+    >>> from sympy.abc import n
+    >>> y = Function('y')
 
-       >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
+    >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
 
-       >>> rsolve(f, y(n))
-       2**n*C1 + C0*n!
+    >>> rsolve(f, y(n))
+    2**n*C1 + C0*n!
 
-       >>> rsolve(f, y(n), { y(0):0, y(1):3 })
-       3*2**n - 3*n!
+    >>> rsolve(f, y(n), { y(0):0, y(1):3 })
+    3*2**n - 3*n!
 
     """
     if isinstance(f, Equality):
         f = f.lhs - f.rhs
-
-    if f.is_Add:
-        F = f.args
-    else:
-        F = [f]
 
     k = Wild('k')
     n = y.args[0]
 
     h_part = defaultdict(lambda: S.Zero)
     i_part = S.Zero
-
-    for g in F:
-        if g.is_Mul:
-            G = g.args
-        else:
-            G = [g]
-
+    for g in Add.make_args(f):
         coeff = S.One
         kspec = None
-
-        for h in G:
+        for h in Mul.make_args(g):
             if h.is_Function:
                 if h.func == y.func:
                     result = h.args[0].match(n + k)
@@ -719,35 +708,35 @@ def rsolve(f, y, init=None):
 
     if result is None:
         return None
-    else:
-        solution, symbols = result
 
-        if symbols and init is not None:
-            equations = []
+    solution, symbols = result
 
-            if type(init) is list:
-                for i in xrange(0, len(init)):
-                    eq = solution.subs(n, i) - init[i]
-                    equations.append(eq)
-            else:
-                for k, v in init.iteritems():
-                    try:
-                        i = int(k)
-                    except TypeError:
-                        if k.is_Function and k.func == y.func:
-                            i = int(k.args[0])
-                        else:
-                            raise ValueError("Integer or term expected, got '%s'" % k)
+    if symbols and init is not None:
+        equations = []
 
-                    eq = solution.subs(n, i) - v
-                    equations.append(eq)
+        if type(init) is list:
+            for i in xrange(0, len(init)):
+                eq = solution.subs(n, i) - init[i]
+                equations.append(eq)
+        else:
+            for k, v in init.iteritems():
+                try:
+                    i = int(k)
+                except TypeError:
+                    if k.is_Function and k.func == y.func:
+                        i = int(k.args[0])
+                    else:
+                        raise ValueError("Integer or term expected, got '%s'" % k)
 
-            result = solve(equations, *symbols)
+                eq = solution.subs(n, i) - v
+                equations.append(eq)
 
-            if result is None:
-                return None
-            else:
-                for k, v in result.iteritems():
-                    solution = solution.subs(k, v)
+        result = solve(equations, *symbols)
+
+        if result is None:
+            return None
+        else:
+            for k, v in result.iteritems():
+                solution = solution.subs(k, v)
 
     return (solution.expand()) / common
