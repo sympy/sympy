@@ -10,7 +10,7 @@ from symbol import Symbol, Wild, Dummy, symbols, var
 from numbers import Number, Float, Rational, Integer, NumberSymbol,\
         RealNumber, Real, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo
 from power import Pow, integer_nthroot
-from mul import Mul
+from mul import Mul, prod
 from add import Add
 from relational import Rel, Eq, Ne, Lt, Le, Gt, Ge, \
     Equality, Inequality, Unequality, StrictInequality
