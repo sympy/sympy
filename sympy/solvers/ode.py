@@ -1110,7 +1110,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             _, func = preprocess(ode.lhs)
         except ValueError:
             funcs = [unfuncs(s) for s in (sol if is_sequence(sol, set) else [sol])]
-            funcs = reduce(lambda x, y: x|y, funcs, set())
+            funcs = reduce(set.union, funcs, set())
             if len(funcs) != 1:
                 raise ValueError('must pass func arg to checkodesol for this case.')
             func = funcs.pop()
