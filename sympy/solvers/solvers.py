@@ -160,6 +160,11 @@ def checksol(f, symbol, sol=None, **flags):
                 if val not in [S.Infinity, S.NegativeInfinity]:
                     # issue 2088 shows that +/-oo chops to 0
                     val = val.evalf(36).n(30, chop=True)
+                    # is there any reason to not decide right now?
+                    # is it possible to have anything but a Float (possibly complex)
+                    # at this point?
+                    if val.is_number:
+                        return val == 0
             else:
                 val = expand_mul(expand_multinomial(val))
                 if not val:
@@ -184,19 +189,15 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 7:
             val = powsimp(val)
         else:
+            try:
+                nz = val.is_nonzero
+            except: # any problem at all: recursion, inconsistency of facts, etc...
+                nz = None
+            if nz is not None:
+                return not nz
             break
-        if not val:
+        if val == 0:
             return True
-        elif attempt > 0:
-            if numerical and val.is_number and val:
-                return False
-            else:
-                try:
-                    nz = val.is_nonzero
-                except: # any problem at all: recursion, inconsistency of facts, etc...
-                    nz = None
-                if nz is not None:
-                    return not nz
 
     if flags.get('warn', False):
         print("\n\tWarning: could not verify solution %s." % sol)
