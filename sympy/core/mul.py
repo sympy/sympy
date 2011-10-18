@@ -7,6 +7,8 @@ from cache import cacheit
 from logic import fuzzy_not
 from compatibility import cmp_to_key
 
+import operator
+
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
 class NC_Marker:
@@ -1273,6 +1275,23 @@ class Mul(AssocOp):
         for x in self.args:
             s *= x._sage_()
         return s
+
+def prod(a):
+    """Return product of elements of a. Start with int 1 so if only ints are included,
+    an int result is returned.
+
+    Example:
+    >>> from sympy import prod, S
+    >>> prod(range(3))
+    0
+    >>> type(_) is int
+    True
+    >>> prod([S(2), 3])
+    6
+    >>> _.is_Integer
+    True
+    """
+    return reduce(operator.mul, a, 1)
 
 from numbers import Rational, igcd
 from power import Pow

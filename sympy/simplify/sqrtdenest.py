@@ -1,5 +1,6 @@
 from sympy.functions import sqrt, sign
 from sympy.core import S, Wild, Rational, sympify, Mul
+from sympy.core.mul import prod
 
 def sqrtdenest(expr):
     """
@@ -81,15 +82,3 @@ def subsets(n):
     binary = lambda x: x>0 and binary(x>>1) + [x&1] or []
     pad = lambda l: [0]*(n-len(l)) + l #Always returns a list of length 'n'
     return [pad(binary(i)) for i in range(1, 2**n)]
-
-def prod(n):
-    """
-    Returns the product of all elements of n, as a Rational.
-
-    Example:
-    >>> from sympy.simplify.sqrtdenest import prod
-    >>> from sympy.abc import x
-    >>> prod([1, x, 3])
-    3*x
-    """
-    return Mul(*n)
