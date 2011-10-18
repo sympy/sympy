@@ -42,13 +42,13 @@ class Polyhedron(Basic):
         Given the faces of the polyhedra we can get the edges.
         """
         if self._edges is None:
-            output = []
+            output = set()
             for face in self.faces:
                 for i in xrange(len(face)):
                     edge = tuple(sorted([face[i], face[i - 1]]))
                     if edge not in output:
                         output.append(edge)
-            self._edges = output
+            self._edges = list(output)
         return self._edges
 
     @property
@@ -131,7 +131,7 @@ class Polyhedron(Basic):
         >>> tetra.corners
         [z, y, x, w]
         >>> import random
-        >>> random.seed(0) #This is a very unstable way to test
+        >>> random.seed(0) #We fix the seed to make it predictable
         >>> tetra.make_perm(3)
         Permutation([1, 3, 0, 2])
         """
