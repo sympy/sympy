@@ -1590,7 +1590,9 @@ def _invert(eq, *symbols, **kwargs):
     """Return tuple (i, d) where ``i`` is independent of ``symbols`` and ``d``
     contains symbols. ``i`` and ``d`` are obtained after recursively using
     algebraic inversion until an uninvertible ``d`` remains. If there are no
-    free symbols then ``d`` will be zero.
+    free symbols then ``d`` will be zero. Some (but not necessarily all)
+    solutions to the expression ``i - d`` will be related the solutions of the
+    original expression.
 
     Examples:
 
