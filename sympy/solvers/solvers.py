@@ -1673,6 +1673,21 @@ def _invert(eq, *symbols, **kwargs):
                 lhs = dep
                 rhs /= indep
 
+        # collect like-terms in symbols
+        if lhs.is_Add:
+            terms = {}
+            for a in lhs.args:
+                i, d = a.as_independent(*symbols)
+                terms.setdefault(d, []).append(i)
+            if any(len(v) > 1 for v in terms.values()):
+                args = []
+                for d, i in terms.iteritems():
+                    if len(i) > 1:
+                        args.append(Add(*i)*d)
+                    else:
+                        args.append(i[0]*d)
+                lhs = Add(*args)
+
         # if it's a two-term Add with rhs = 0 and two powers we can get the
         # dependent terms together, e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
         if lhs.is_Add and not rhs and len(lhs.args) == 2:
@@ -1697,6 +1712,10 @@ def _invert(eq, *symbols, **kwargs):
                 inv = lhs.inverse()
             rhs = inv(rhs)
             lhs = lhs.args[0]
+
+        if rhs and lhs.is_Pow and lhs.exp.is_Integer and lhs.exp < 0:
+            lhs = 1/lhs
+            rhs = 1/rhs
 
         # base**a = b -> base = b**(1/a) if
         #    a is an Integer and dointpow=True (this gives real branch of root)

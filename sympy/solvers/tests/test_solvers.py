@@ -722,8 +722,11 @@ def test_multivariate():
     assert solve(3*sin(x) - x*sin(3), x) == [3]
 
 def test__invert():
+    from sympy.abc import a
     assert _invert(x - 2) == (2, x)
     assert _invert(2) == (2, 0)
+    assert _invert(exp(1/x) - 3, x) == (1/log(3), x)
+    assert _invert(exp(1/x + a/x) - 3, x) == ((a + 1)/log(3), x)
 
 def test_issue_1364():
     a = Symbol('a')
