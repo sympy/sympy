@@ -90,21 +90,23 @@ class Polyhedron(Basic):
         the corners, the faces and a representation of
         the rotational symmetries.
 
-        To visualize this, imagine a tetrahedron oriented
-        towards you, and give a unique color to all its
-        vertices. Now imagine permuting the colors of the
-        vertices (the tetrahedron's orientation does not
-        change though to make it simpler, but there are
-        rotations going on). If you assign each vertex a
-        number, then all the possible permutations of the
-        vertices at each unique state will correspond to
-        one of the permutations in the pgroup. Some careful
-        consideration will reveal that we need 24 (4!)
-        permutations but only 8 have been supplied.
-        This is because we only consider those permutations
-        that we can get through axial rotations (rotations
-        about a line connected from any vertex to the
-        centroid of the tetrahedron.
+        Now imagine permuting the colors of the vertices:
+        although the orientation of the faces has not changed one
+        may imagine that the tetrahedron has been rotated to bring
+        the new colored vertices into position.
+        (In one dimension, imagine rotating a segment, connecting
+        red and blue vertices, by 180 degrees about the center: this
+        effectively swaps the vertices from red-blue to blue-red.)
+
+        If you assign each vertex a number, then all the possible
+        permutations of the vertices at each unique state will
+        correspond to one of the permutations in the pgroup.
+        Some careful consideration will reveal that we need 24 (4!)
+        permutations but only 8 need to be supplied since we only
+        consider those permutations that we can get through axial
+        rotations (rotations about a line connected from any vertex
+        to the centroid of the tetrahedron. Each unique permutation
+        represents a unique rotational symmetry.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
