@@ -108,14 +108,17 @@ class AssocOp(Expr):
 
     @classmethod
     def flatten(cls, seq):
-        # apply associativity, no commutivity property is used
+        """Return seq so that none of the elements are of type `cls`. This is
+        the vanilla routine that will be used if a class derived from AssocOp
+        does not define its own flatten routine."""
+        # apply associativity, no commutativity property is used
         new_seq = []
         while seq:
-            o = seq.pop(0)
+            o = seq.pop()
             if o.__class__ is cls: # classes must match exactly
-                seq = list(o[:]) + seq
-                continue
-            new_seq.append(o)
+                seq.extend(o.args)
+            else:
+                new_seq.append(o)
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
