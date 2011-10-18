@@ -408,6 +408,18 @@ don\'t match.")
             raise ValueError("Arguments must be integers.")
         return self.array_form[arg]
 
+    def __getitem__(self, key):
+        """
+        Makes the Permutation object subscriptable.
+
+        Examples:
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p[2]
+        2
+        """
+        return self.array_form[key]
+
     def atoms(self):
         """
         Returns all the elements of a permutation
