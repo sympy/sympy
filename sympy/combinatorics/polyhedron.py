@@ -88,7 +88,23 @@ class Polyhedron(Basic):
         The constructor of the Polyhedron group object.
         It takes three parameters, a representation of
         the corners, the faces and a representation of
-        the edges.
+        the rotational symmetries.
+
+        To visualize this, imagine a tetrahedron oriented
+        towards you, and give a unique color to all its
+        vertices. Now imagine permuting the colors of the
+        vertices (the tetrahedron's orientation does not
+        change though to make it simpler, but there are
+        rotations going on). If you assign each vertex a
+        number, then all the possible permutations of the
+        vertices at each unique state will correspond to
+        one of the permutations in the pgroup. Some careful
+        consideration will reveal that we need 24 (4!)
+        permutations but only 8 have been supplied.
+        This is because we only consider those permutations
+        that we can get through axial rotations (rotations
+        about a line connected from any vertex to the
+        centroid of the tetrahedron.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -115,9 +131,9 @@ class Polyhedron(Basic):
         >>> tetra.corners
         [z, y, x, w]
         >>> import random
-        >>> random.seed(0)
+        >>> random.seed(0) #This is a very unstable way to test
         >>> tetra.make_perm(3)
-        Permutation([3, 1, 2, 0])
+        Permutation([1, 3, 0, 2])
         """
         ret_obj = Basic.__new__(cls, *args)
         ret_obj._corners = args[0]
