@@ -1145,3 +1145,10 @@ def test_primitive():
     assert eq.primitive()[0] == 1
     assert (4.0*x).primitive() == (1, 4.0*x)
     assert (-2*x).primitive() == (2, -x)
+
+def test_issue_2744():
+    a = 1 + x
+    assert (2*a).extract_multiplicatively(a) == 2
+    assert (4*a).extract_multiplicatively(2*a) == 2
+    assert ((3*a)*(2*a)).extract_multiplicatively(a) == 6*a
+
