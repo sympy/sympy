@@ -43,6 +43,7 @@ skip_files = (
     '.*',
     'ast_parser_python25.py', # this files produces doctest errors under py3k
                               # as we need it only for 2.5, just skip copying it
+    'use2to3',
     )
 
 modified_files = []
