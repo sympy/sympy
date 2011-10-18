@@ -1284,8 +1284,8 @@ def prod(a):
     >>> from sympy import prod, S
     >>> prod(range(3))
     0
-    >>> type(_)
-    <type 'int'>
+    >>> type(_) is int
+    True
     >>> prod([S(2), 3])
     6
     >>> _.is_Integer
