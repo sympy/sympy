@@ -1,17 +1,10 @@
-from sympy import Symbol
+from sympy import symbols
 from sympy.combinatorics.polyhedron import Polyhedron
 from sympy.combinatorics.permutations import Permutation
 
 import random
 
-C1 = Symbol('C1')
-C2 = Symbol('C2')
-C3 = Symbol('C3')
-C4 = Symbol('C4')
-C5 = Symbol('C5')
-C6 = Symbol('C6')
-C7 = Symbol('C7')
-C8 = Symbol('C8')
+C1, C2, C3, C4, C5, C6, C7, C8, C9 = symbols('C1:9')
 
 def test_polyhedron():
     pgroup = [Permutation([[0,7,2,5],[6,1,4,3]]),\
