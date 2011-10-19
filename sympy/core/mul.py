@@ -327,7 +327,7 @@ class Mul(AssocOp):
             inv_exp_dict[e] = Mul(*b)
         c_part.extend([Pow(b, e) for e, b in inv_exp_dict.iteritems() if e])
 
-        # b, e -> e, b
+        # b, e -> e' = sum(e), b
         # {(1/5, [1/3]), (1/2, [1/12, 1/4]} -> {(1/3, [1/5, 1/2])}
         comb_e = {}
         for b, e in pnum_rat.iteritems():
@@ -847,21 +847,23 @@ class Mul(AssocOp):
         return lhs/rhs
 
     def as_powers_dict(self):
-        d = {}
+        d = defaultdict(list)
         for term in self.args:
             b, e = term.as_base_exp()
-            if b not in d:
-                d[b] = e
+            d[b].append(e)
+        for b, e in d.iteritems():
+            if len(e) == 1:
+                e = e[0]
             else:
-                d[b] += e
+                e = Add(*e)
+            d[b] = e
         return d
 
     def as_numer_denom(self):
-        numers, denoms = [],[]
-        for t in self.args:
-            n,d = t.as_numer_denom()
-            numers.append(n)
-            denoms.append(d)
+        # don't use _from_args to rebuild the numerators and denominators
+        # as the order is not guaranteed to be the same once they have
+        # been separated from each other
+        numers, denoms = zip(*[f.as_numer_denom() for f in self.args])
         return Mul(*numers), Mul(*denoms)
 
     def as_base_exp(self):
