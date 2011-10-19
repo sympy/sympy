@@ -914,10 +914,9 @@ def _solve(f, *symbols, **flags):
                 else:
                     if len(symbols) != len(polys):
                         from sympy.utilities.iterables import subsets
-                        free = set()
-                        for p in polys:
-                            free |= p.free_symbols
-                        free = free & set(symbols)
+                        free = reduce(set.union,
+                                     [p.free_symbols for p in polys], set()
+                                     ).intersection(symbols)
                         for syms in subsets(free, len(polys)):
                             try:
                                 # returns [] or list of tuples of solutions for syms
@@ -986,7 +985,10 @@ def _solve(f, *symbols, **flags):
                                 continue
                         # search for a symbol amongst those available that
                         # can be solved for
-                        for s in (eq2.free_symbols - solved_syms) & legal:
+                        ok_syms = (eq2.free_symbols - solved_syms) & legal
+                        if not ok_syms:
+                            break # skip this equation as it's independent of desired symbols
+                        for s in ok_syms:
                             try:
                                 soln = _solve(eq2, s, **flags)
                             except NotImplementedError:
@@ -1026,6 +1028,7 @@ def _solve(f, *symbols, **flags):
                     if got_s:
                         result = newresult
                         solved_syms.add(got_s)
+                # if there is only one result should we return just the dictionary?
             return result
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):

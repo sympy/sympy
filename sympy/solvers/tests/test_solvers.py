@@ -787,3 +787,13 @@ def test_issue_2750():
     Q2: 2*I3 + 2*I5 + 3*I6,
     dQ4: I3 - I5,
     I4: I3 - I5}
+    assert [ei.subs(ans) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
+    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4, manual=True) == [{
+    dI4: -I3 + 3*I5 - 2*Q4,
+    dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
+    dQ2: I2,
+    I1: I2 + I3,
+    Q2: 2*I3 + 2*I5 + 3*I6,
+    dQ4: I3 - I5,
+    I4: I3 - I5,
+    }]
