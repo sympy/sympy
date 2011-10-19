@@ -690,6 +690,9 @@ def test_powdenest():
     # issue 2706
     assert powdenest(((gamma(x)*hyper((),(),x))*pi)**2) == (pi*gamma(x)*hyper((), (), x))**2
 
+    assert powdenest(4**x) == 2**(2*x)
+    assert powdenest((4**x)**y) == 2**(2*x*y)
+
 @XFAIL
 def test_issue_2706():
     assert (((gamma(x)*hyper((),(),x))*pi)**2).is_positive is None

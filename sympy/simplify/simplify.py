@@ -1111,10 +1111,12 @@ def powdenest(eq, force=False):
         return Pow(C.exp(logs), efunc(*other))
 
     _, be = b.as_base_exp()
-    if be is S.One and not (b.is_Mul or b.is_Rational and b.q != 1):
+    if be is S.One and not (b.is_Mul or
+                            b.is_Rational and b.q != 1 or
+                            b.is_positive):
         return eq
 
-    # denest eq which is either Pow**e or Mul**e or Mul(b1**e1, b2**e2)
+    # denest eq which is either pos**e or Pow**e or Mul**e or Mul(b1**e1, b2**e2)
 
     # see if there is a positive, non-Mul base at the very bottom
     exponents = False
@@ -1129,6 +1131,13 @@ def powdenest(eq, force=False):
             if kernel.is_Mul:
                 b = kernel
             else:
+                if kernel.is_Integer:
+                    # use log to see if there is a power here
+                    logkernel = log(kernel)
+                    if logkernel.is_Mul:
+                        c, logk = logkernel.args
+                        e *= c
+                        kernel = logk.args[0]
                 return Pow(kernel, e)
 
     # if any factor is an atom then there is nothing to be done
