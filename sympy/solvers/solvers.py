@@ -1191,13 +1191,16 @@ def solve_linear_system(system, *symbols, **flags):
                 if matrix[i, k]:
                     break
             else:
-                if matrix[i, m]:
-                    return None   # no solutions
-                else:
-                    # zero row or was a linear combination of
-                    # other rows so now we can safely skip it
-                    matrix.row_del(i)
-                    continue
+                if matrix[i, m].free_symbols.intersection(syms):
+                    # no solution
+                    return None
+                # zero row or was a linear combination of
+                # other rows or doesn't contain any symbols of
+                # interest so now we can safely skip it
+                matrix.row_del(i)
+                if not matrix:
+                    return None
+                continue
 
             # we want to change the order of colums so
             # the order of variables must also change

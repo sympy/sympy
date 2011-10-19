@@ -754,3 +754,36 @@ def test_issue_2015():
 def test_misc():
     # make sure that the right variables is picked up in tsolve
     raises(NotImplementedError, 'solve((exp(x) + 1)**x)')
+
+def test_issue_2750():
+    I1 = Symbol('I1')
+    I2 = Symbol('I2')
+    I3 = Symbol('I3')
+    I4 = Symbol('I4')
+    I5 = Symbol('I5')
+    I6 = Symbol('I6')
+    dI1 = Symbol('dI1')
+    dQ4 = Symbol('dQ4')
+    dQ2 = Symbol('dQ2')
+    Q2 = Symbol('Q2')
+    Q4 = Symbol('Q4')
+    dI4 = Symbol('dI4')
+    e = (
+    I1 - I2 - I3,
+    I3 - I4 - I5,
+    I4 + I5 - I6,
+    -I1 + I2 + I6,
+    -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
+    -I4 + dQ4,
+    -I2 + dQ2,
+    2*I3 + 2*I5 + 3*I6 - Q2,
+    I4 - 2*I5 + 2*Q4 + dI4
+    )
+    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == {
+    dI4: -I3 + 3*I5 - 2*Q4,
+    dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
+    dQ2: I2,
+    I1: I2 + I3,
+    Q2: 2*I3 + 2*I5 + 3*I6,
+    dQ4: I3 - I5,
+    I4: I3 - I5}
