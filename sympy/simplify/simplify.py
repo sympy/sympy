@@ -9,7 +9,7 @@ from sympy.core.numbers import igcd
 from sympy.core.function import expand_log, count_ops
 
 from sympy.utilities import flatten, default_sort_key
-from sympy.functions import gamma, exp, sqrt, log
+from sympy.functions import gamma, exp, sqrt, log, root
 
 from sympy.simplify.cse_main import cse
 
@@ -1381,13 +1381,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 return bkey(x)[0][1]
 
             def bkey(b, e=None):
-                '''Return b, e where e is the exponent of b or else is retrieved
-                from b with as_base_exponent. If e is a Rational then only the
-                numerator is sent back with e and the denominator is retained on b
+                '''Return (b**s, c.q), c.p where e -> c*s. If e is not given then
+                it will be taken by using as_base_exp() on the input b.
                 e.g.
-                    x**3/2 -> x**(1/2), 3
-                    x**y -> x, y
-                    x**(2*y/3) -> x, 2*y/3
+                    x**3/2 -> (x, 2), 3
+                    x**y -> (x**y, 1), 1
+                    x**(2*y/3) -> (x**y, 3), 2
+
+                >>> x+2
 
                 '''
                 if e is not None: # coming from c_powers or from below
@@ -1499,8 +1500,16 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             c_powers = done
             # there may be terms still in common_b that were bases that were
             # identified as needing processing, so remove those, too
-            c_powers.extend([(b, Rational(e, q)) for (b, q), e in common_b.items()])
+            for (b, q), e in common_b.items():
+                if b.is_Pow and q is not S.One and not b.exp.is_Rational:
+                    b, be = b.as_base_exp()
+                    b = b**(be/q)
+                else:
+                    b = root(b, q)
+                c_powers.append((b, e))
+            check = len(c_powers)
             c_powers = dict(c_powers)
+            assert len(c_powers) == check # there should have been no duplicates
             # ==============================================================
 
             # rebuild the expression

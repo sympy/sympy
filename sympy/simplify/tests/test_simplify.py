@@ -310,6 +310,10 @@ def test_powsimp():
     # force=True overrides assumptions
     assert powsimp((-1)**(2*x), force=True) == 1
 
+    eq = x**(2*a/3)
+    assert powsimp(eq).exp == eq.exp == 2*a/3 # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
+    assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
+
 def test_powsimp_nc():
     x, y, z = symbols('x,y,z')
     A, B, C = symbols('A B C', commutative=False)
