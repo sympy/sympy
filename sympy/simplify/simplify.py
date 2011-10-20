@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
@@ -491,7 +493,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     summa = map(separate, Add.make_args(expr))
 
-    collected, disliked = {}, S.Zero
+    collected, disliked = defaultdict(lambda: S.Zero), S.Zero
     for product in summa:
         terms = [parse_term(i) for i in Mul.make_args(product)]
 
@@ -519,12 +521,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
                     index = make_expression(elems)
                 terms = separate(make_expression(terms))
                 index = separate(index)
-
-                if index in collected.keys():
-                    collected[index] += terms
-                else:
-                    collected[index] = terms
-
+                collected[index] += terms
                 break
         else:
             # none of the patterns matched
@@ -1322,7 +1319,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 # Once we get to 'base', there is no more 'exp', so we need to
                 # distribute here.
                 return powsimp(expand_mul(expr, deep=False), deep, combine, force)
-            c_powers = {}
+            c_powers = defaultdict(list)
             nc_part = []
             newexpr = []
             for term in expr.args:
@@ -1333,7 +1330,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         b, e = term.as_base_exp()
                         if deep:
                             b, e = [powsimp(i, deep, combine, force) for i in  [b, e]]
-                        c_powers.setdefault(b, []).append(e)
+                        c_powers[b].append(e)
                     else:
                         # This is the logic that combines exponents for equal,
                         # but non-commutative bases: A**x*A**y == A**(x+y).
@@ -1569,15 +1566,15 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # assumptions allow
 
             # first gather the potential bases under the common exponent
-            c_exp = {}
+            c_exp = defaultdict(list)
             for b, e in c_powers:
                 if deep:
                     e = powsimp(e, deep, combine, force)
-                c_exp.setdefault(e, []).append(b)
+                c_exp[e].append(b)
             del c_powers
 
             # Merge back in the results of the above to form a new product
-            c_powers = {}
+            c_powers = defaultdict(list)
             for e in c_exp:
                 bases = c_exp[e]
 
@@ -1611,11 +1608,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
                     # these shouldn't be joined
                     for b in unk:
-                        c_powers.setdefault(b, []).append(e)
+                        c_powers[b].append(e)
                     # here is a new joined base
                     new_base = Mul(*(nonneg + neg))
 
-                c_powers.setdefault(new_base, []).append(e)
+                c_powers[new_base].append(e)
 
             # break out the powers from c_powers now
             c_part = []

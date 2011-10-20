@@ -91,6 +91,7 @@ def test_rsolve():
     assert rsolve(f, y(n), [      0,      5 ]) == h
     assert rsolve(f, y(n), {   0 :0,   1 :5 }) == h
     assert rsolve(f, y(n), { y(0):0, y(1):5 }) == h
+    assert rsolve(y(n) - y(n-1) - y(n-2), y(n), [0, 5]) == h
 
     f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
     g = C0*factorial(n) + C1*2**n

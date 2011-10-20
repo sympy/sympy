@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -407,15 +409,11 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
         numer = h.as_numer_denom()[0].expand(force=True)
 
-        equations = {}
+        equations = defaultdict(lambda: S.Zero)
 
         for term in Add.make_args(numer):
             coeff, dependent = term.as_independent(*V)
-
-            if dependent in equations:
-                equations[dependent] += coeff
-            else:
-                equations[dependent] = coeff
+            equations[dependent] += coeff
 
         solution = solve(equations.values(), *coeffs)
 
