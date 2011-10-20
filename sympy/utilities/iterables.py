@@ -66,6 +66,14 @@ def flatten(iterable, levels=None, cls=None):
 
     return result
 
+def unflatten(iter, n=2):
+    """Group ``iter`` into tuples of length ``n``. Raise an error if
+    the length of ``iter`` is not a multiple of ``n``.
+    """
+    if n < 1 or len(iter) % n:
+        raise ValueError('iter length is not a multiple of %i' % n)
+    return zip(*(iter[i::n] for i in xrange(n)))
+
 def group(container, multiple=True):
     """
     Splits a container into a list of lists of equal, adjacent elements.
