@@ -1094,33 +1094,32 @@ def powdenest(eq, force=False):
             eq = eq.func(*args)
         return eq
 
-    b, e = eq.as_base_exp()
+    def handle(eq):
+        b, e = eq.as_base_exp()
 
-    # denest exp with log terms in exponent
-    if b is S.Exp1 and e.is_Mul:
-        logs = []
-        other = []
-        efunc = C.Mul
-        for ei in Mul.make_args(e):
-            if any(aj.func is C.log for a in Mul.make_args(ei)
-                   for ai in Add.make_args(a) for aj in Mul.make_args(ai)):
-                logs.append(ei)
-            else:
-                other.append(ei)
-        logs = logcombine(efunc(*logs), force=force)
-        return Pow(C.exp(logs), efunc(*other))
+        # denest exp with log terms in exponent
+        if b is S.Exp1 and e.is_Mul:
+            logs = []
+            other = []
+            efunc = C.Mul
+            for ei in Mul.make_args(e):
+                if any(aj.func is C.log for a in Mul.make_args(ei)
+                       for ai in Add.make_args(a) for aj in Mul.make_args(ai)):
+                    logs.append(ei)
+                else:
+                    other.append(ei)
+            logs = logcombine(efunc(*logs), force=force)
+            return Pow(C.exp(logs), efunc(*other))
 
-    _, be = b.as_base_exp()
-    if be is S.One and not (b.is_Mul or
-                            b.is_Rational and b.q != 1 or
-                            b.is_positive):
-        return eq
+        _, be = b.as_base_exp()
+        if be is S.One and not (b.is_Mul or
+                                b.is_Rational and b.q != 1 or
+                                b.is_positive):
+            return eq
 
-    # denest eq which is either pos**e or Pow**e or Mul**e or Mul(b1**e1, b2**e2)
+        # denest eq which is either pos**e or Pow**e or Mul**e or Mul(b1**e1, b2**e2)
 
-    # see if there is a positive, non-Mul base at the very bottom
-    exponents = False
-    if not eq.is_Mul:
+        # see if there is a positive, non-Mul base at the very bottom
         exponents = []
         kernel = eq
         while kernel.is_Pow:
@@ -1140,58 +1139,77 @@ def powdenest(eq, force=False):
                         kernel = logk.args[0]
                 return Pow(kernel, e)
 
-    # if any factor is an atom then there is nothing to be done
-    # but the kernel check may have created a new exponent
-    if any(s.is_Atom for s in Mul.make_args(b)):
-        if exponents:
-            return b**e
-        return eq
+        # if any factor is an atom then there is nothing to be done
+        # but the kernel check may have created a new exponent
+        if any(s.is_Atom for s in Mul.make_args(b)):
+            if exponents:
+                return b**e
+            return eq
 
-    # let log handle the case of the base of the argument being a mul, e.g.
-    # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive; we
-    # will take the log, expand it, and then factor out the common powers that
-    # now appear as coefficient. We do this manually since terms_gcd pulls out
-    # fractions, terms_gcd(x+x*y/2) -> x*(y + 2)/2 and we don't want the 1/2;
-    # gcd won't pull out numerators from a fraction: gcd(3*x, 9*x/2) -> x but
-    # we want 3*x. Neither work with noncommutatives.
-    from sympy.polys.polytools import _keep_coeff
-    def nc_gcd(aa, bb):
-        a, b = [i.as_coeff_Mul() for i in [aa, bb]]
-        c = gcd(a[0], b[0]).as_numer_denom()[0]
-        g = Mul(*(a[1].args_cnc()[0] & b[1].args_cnc()[0]))
-        return _keep_coeff(c, g)
+        # let log handle the case of the base of the argument being a mul, e.g.
+        # sqrt(x**(2*i)*y**(6*i)) -> x**i*y**(3**i) if x and y are positive; we
+        # will take the log, expand it, and then factor out the common powers that
+        # now appear as coefficient. We do this manually since terms_gcd pulls out
+        # fractions, terms_gcd(x+x*y/2) -> x*(y + 2)/2 and we don't want the 1/2;
+        # gcd won't pull out numerators from a fraction: gcd(3*x, 9*x/2) -> x but
+        # we want 3*x. Neither work with noncommutatives.
+        from sympy.polys.polytools import _keep_coeff
+        def nc_gcd(aa, bb):
+            a, b = [i.as_coeff_Mul() for i in [aa, bb]]
+            c = gcd(a[0], b[0]).as_numer_denom()[0]
+            g = Mul(*(a[1].args_cnc()[0] & b[1].args_cnc()[0]))
+            return _keep_coeff(c, g)
 
-    glogb = expand_log(log(b))
-    if glogb.is_Add:
-        args = glogb.args
-        g = reduce(nc_gcd, args)
-        if g != 1:
-            cg, rg = g.as_coeff_Mul()
-            glogb = _keep_coeff(cg, rg*Add(*[a/g for a in args]))
+        glogb = expand_log(log(b))
+        if glogb.is_Add:
+            args = glogb.args
+            g = reduce(nc_gcd, args)
+            if g != 1:
+                cg, rg = g.as_coeff_Mul()
+                glogb = _keep_coeff(cg, rg*Add(*[a/g for a in args]))
 
-    # now put the log back together again
-    if glogb.func is C.log or not glogb.is_Mul:
-        if glogb.args[0].is_Pow or glogb.args[0].func is exp:
-            glogb = powdenest(glogb.args[0])
-            c, _ = glogb.exp.as_coeff_mul()
-            ok = c.p != 1
-            if ok:
-                ok = c.q != 1
-                if not ok:
-                    n, d = glogb.exp.as_numer_denom()
-                    ok = d is not S.One and any(di.is_integer for di in Mul.make_args(d))
-            if ok:
-                return Pow(Pow(glogb.base, glogb.exp/c.p), c.p*e)
-        return eq
-    # the log(b) was a Mul so join any adds with logcombine
-    add= []
-    other = []
-    for a in glogb.args:
-        if a.is_Add:
-            add.append(a)
-        else:
-            other.append(a)
-    return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
+        # now put the log back together again
+        if glogb.func is C.log or not glogb.is_Mul:
+            if glogb.args[0].is_Pow or glogb.args[0].func is exp:
+                glogb = handle(glogb.args[0])
+                c, _ = glogb.exp.as_coeff_mul()
+                ok = c.p != 1
+                if ok:
+                    ok = c.q != 1
+                    if not ok:
+                        n, d = glogb.exp.as_numer_denom()
+                        ok = d is not S.One and any(di.is_integer for di in Mul.make_args(d))
+                if ok:
+                    return Pow(Pow(glogb.base, glogb.exp/c.p), c.p*e)
+            return eq
+        # the log(b) was a Mul so join any adds with logcombine
+        add= []
+        other = []
+        for a in glogb.args:
+            if a.is_Add:
+                add.append(a)
+            else:
+                other.append(a)
+        return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
+
+    new = powsimp(eq)
+    args = list(Add.make_args(new))
+    ahit = False
+    for i, a in enumerate(args):
+        margs = list(Mul.make_args(a))
+        hit = False
+        for j, m in enumerate(margs):
+            if m.is_Pow or m.func is exp:
+                mnew = handle(m)
+                if mnew != m:
+                    hit = True
+                    margs[j] = mnew
+        if hit:
+            ahit = True
+            args[i] = Mul(*margs)
+    if ahit:
+        new = Add(*args)
+    return new
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
