@@ -310,6 +310,10 @@ def test_powsimp():
     # force=True overrides assumptions
     assert powsimp((-1)**(2*x), force=True) == 1
 
+    eq = x**(2*a/3)
+    assert powsimp(eq).exp == eq.exp == 2*a/3 # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
+    assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
+
 def test_powsimp_nc():
     x, y, z = symbols('x,y,z')
     A, B, C = symbols('A B C', commutative=False)
@@ -665,7 +669,8 @@ def test_powdenest():
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
     i, j = symbols('i,j', integer=True)
-    assert powdenest(p**(2*i)*q**(4*i)) == (p*q**2)**(2*i)
+    eq = p**(2*i)*q**(4*i)
+    assert powdenest(eq) == (p*q**2)**(2*i)
     assert powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
     assert powdenest(exp(3*y*log(x))) == x**(3*y)
     assert powdenest(exp(y*(log(a) + log(b)))) == (a*b)**y
@@ -685,10 +690,14 @@ def test_powdenest():
     assert powdenest((x**2*y**6)**i) != (x*y**3)**(2*i)
     x, y = symbols('x,y', positive=True)
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
-    assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(2)/3)*sqrt(y))**(2*i**2)
+    assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(4)/3)*y)**(i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
     # issue 2706
     assert powdenest(((gamma(x)*hyper((),(),x))*pi)**2) == (pi*gamma(x)*hyper((), (), x))**2
+
+    assert powdenest(4**x) == 2**(2*x)
+    assert powdenest((4**x)**y) == 2**(2*x*y)
+    assert powdenest(4**x*y) == 2**(2*x)*y
 
 @XFAIL
 def test_issue_2706():
