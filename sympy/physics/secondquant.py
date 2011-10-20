@@ -4,6 +4,7 @@ Second quantization operators and states for bosons.
 This follow the formulation of Fetter and Welecka, "Quantum Theory
 of Many-Particle Systems."
 """
+from collections import defaultdict
 
 from sympy import (
     Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
@@ -2648,12 +2649,9 @@ def _get_ordered_dummies(mul, verbose = False):
     result = sorted(all_dums, key=lambda x: dumkey[x])
     if len(set(dumkey.itervalues())) < len(dumkey):
         # We have ambiguities
-        unordered = {}
+        unordered = defaultdict(set)
         for d, k in dumkey.iteritems():
-            if k in unordered:
-                unordered[k].add(d)
-            else:
-                unordered[k] = set([d])
+            unordered[k].add(d)
         for k in [ k for k in unordered if len(unordered[k]) < 2 ]:
             del unordered[k]
 

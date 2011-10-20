@@ -365,7 +365,7 @@ class AssumeMixin(object):
                         return a
 
             # Try assumption's prerequisites
-            for pk in _assume_rules.prereq.get(k, ()):
+            for pk in _assume_rules.prereq[k]:
                 if hasattr(self, '_eval_is_' + pk):
                     # cycle
                     if pk in seen:

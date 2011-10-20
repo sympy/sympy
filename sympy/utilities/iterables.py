@@ -1,7 +1,9 @@
+from collections import defaultdict
+import random
+
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
 from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
-import random
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -477,11 +479,11 @@ def sift(expr, keyfunc):
     [E, x, y]
 
     """
-    d = {}
+    d = defaultdict(list)
     if hasattr(expr, 'args'):
         expr = expr.args or [expr]
     for e in expr:
-        d.setdefault(keyfunc(e), []).append(e)
+        d[keyfunc(e)].append(e)
     return d
 
 def take(iter, n):
