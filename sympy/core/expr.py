@@ -1098,6 +1098,28 @@ class Expr(Basic, EvalfMixin):
                 return self, tuple()
         return S.Zero, (self,)
 
+    def primitive(self):
+        """Return the positive Rational that can be extracted non-recursively
+        from every term of self.
+
+        **Examples**
+        >>> from sympy.abc import x
+        >>> (3*(x + 1)**2).primitive()
+        (3, (x + 1)**2)
+        >>> (6*x + 2).primitive()
+        (2, 3*x + 1)
+        >>> (x/2 + 3).primitive()
+        (1/2, x + 6)
+        >>> eq = (6*x + 2)*(x/2 + 3)
+        >>> eq.primitive()[0] == 1
+        True
+        """
+        c, r = self.as_coeff_mul()
+        r = Mul._from_args(r)
+        if c.is_negative:
+            c, r = -c, -r
+        return c, r
+
     def as_content_primitive(self):
         """
         Return expr separated into ``R`` and ``expr/R`` where R is
