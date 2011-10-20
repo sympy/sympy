@@ -33,7 +33,7 @@ class Basic(object):
         y
 
 
-    2) Never use internal methods or variables (the ones prefixed with "_"):
+    2) Never use internal methods or variables (the ones prefixed with ``_``):
 
         >>> cot(x)._args    # do not use this, use cot(x).args instead
         (x,)

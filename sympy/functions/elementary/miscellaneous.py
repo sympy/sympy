@@ -298,7 +298,8 @@ class Max(MinMaxBase, Application, Basic):
 
     Also, only comparable arguments are permitted.
 
-    **Example**:
+    Example
+    -------
 
     >>> from sympy import Max, Symbol, oo
     >>> from sympy.abc import x, y
@@ -329,10 +330,10 @@ class Max(MinMaxBase, Application, Basic):
     >>> Max (1, x, oo)
     oo
 
-    **Algorithm**:
-
+    Algorithm
+    ---------
     The task can be considered as searching of supremums in the
-    directed complete partial orders `[1]`_.
+    directed complete partial orders [1]_.
 
     The source values are sequentially allocated by the isolated subsets
     in which supremums are searched and result as Max arguments.
@@ -349,14 +350,16 @@ class Max(MinMaxBase, Application, Basic):
     In case of it the allocation operation is terminated and only this value is
     returned.
 
-    Assumptions:
+    Assumption:
        - if A > B > C then A > C
        - if A==B then B can be removed
 
-    .. _[1]: http://en.wikipedia.org/wiki/Directed_complete_partial_order
+    [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
+    [2] http://en.wikipedia.org/wiki/Lattice_(order)
 
-    **See Also**:
-        Min() : find minimum values
+    See Also
+    --------
+    Min() : find minimum values
 
     """
     zero = S.Infinity
@@ -381,7 +384,8 @@ class Min(MinMaxBase, Application, Basic):
     """
     Return, if possible, the minimum value of the list.
 
-    **Example**:
+    Example
+    -------
 
     >>> from sympy import Min, Symbol, oo
     >>> from sympy.abc import x, y
@@ -403,8 +407,9 @@ class Min(MinMaxBase, Application, Basic):
     >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
     Min(n, -7)
 
-    **See Also**:
-        Max() : find maximum values
+    See Also
+    --------
+    Max() : find maximum values
     """
     zero = S.NegativeInfinity
     identity = S.Infinity

@@ -161,7 +161,7 @@ class sign(Function):
        * 0 if expression is equal to zero
        * -1 if expression is negative
 
-       **Example**:
+       **Examples**
 
        >>> from sympy.functions import sign
        >>> sign(-1)
