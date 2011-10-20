@@ -150,19 +150,19 @@ def _factor_var(q, var):
     return (pwn, num)
 
 def tobasic(num, tev, typn):
-    p2 = 0
+    a = []
     gens = tev[typn].gens
     if typn == 0:
         for m1, c1 in num.iteritems():
             c1 = QQ.to_sympy(c1)
             m1 = monomial_tobasic(m1, *gens)
-            p2 += c1*m1
+            a.append(c1*m1)
     else:
         for m1, c1 in num.iteritems():
             c1 = c1.expand()
             m1 = monomial_tobasic(m1, *gens)
-            p2 += c1*m1
-    return p2
+            a.append(c1*m1)
+    return Add(*a)
 
 
 _PWMAX = [8, 4]
