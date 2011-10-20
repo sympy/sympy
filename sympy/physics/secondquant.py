@@ -2520,7 +2520,7 @@ def _get_ordered_dummies(mul, verbose = False):
     """Returns all dummies in the mul sorted in canonical order
 
     The purpose of the canonical ordering is that dummies can be substituted
-    consistently accross terms with the result that equivalent terms can be
+    consistently across terms with the result that equivalent terms can be
     simplified.
 
     It is not possible to determine if two terms are equivalent based solely on
@@ -2582,8 +2582,7 @@ def _get_ordered_dummies(mul, verbose = False):
     args = Mul.make_args(mul)
     fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
     fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
-    all_dums = list(reduce(
-        lambda x, y: x | y, fac_dum.values(), set()))
+    all_dums = reduce(set.union, fac_dum.values(), set())
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
@@ -2596,8 +2595,7 @@ def _get_ordered_dummies(mul, verbose = False):
 
     def key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
-        other_dums = reduce(lambda x, y: x | y,
-                [ fac_dum[fac] for fac in dumstruct ])
+        other_dums = reduce(set.union, [ fac_dum[fac] for fac in dumstruct ], set())
         fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()
