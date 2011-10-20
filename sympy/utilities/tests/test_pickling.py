@@ -234,9 +234,7 @@ def test_physics():
         check(c)
 
 #================== plotting ====================
-# XXX: These tests are not complete.
-
-# these depend on ctypes, that are not in python2.4 by default, so XFAIled
+# XXX: These tests are not complete, so XFAIL them
 
 @XFAIL
 def test_plotting():
