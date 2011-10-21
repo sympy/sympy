@@ -622,14 +622,25 @@ class Add(AssocOp):
             terms = [c] + terms
         return cont, self._new_rawargs(*terms)
 
-    def _as_content_primitive(self):
+    def as_content_primitive(self):
         from sympy import gcd
-        c_args = [a._as_content_primitive() for a in self.args]
+        c_args = [a.as_content_primitive() for a in self.args]
         g = reduce(gcd, [c[0] for c in c_args])
         if g is S.One:
-            return g, Add(*[c[0]*c[1] for c in c_args])
+            a = Add(*[c[0]*c[1] for c in c_args])
         else:
-            return g, Add(*[c[0]/g*c[1] for c in c_args])
+            a = Add(*[c[0]/g*c[1] for c in c_args])
+        c, ai = a.as_coeff_Mul()
+        if c.is_Rational:
+            if c.is_negative:
+                c = -c
+                ai = -ai
+            g *= c
+            a = ai
+        else:
+            a *= g
+            g = S.One
+        return g, a
 
 from function import FunctionClass
 from mul import Mul

@@ -673,9 +673,6 @@ class Basic(object):
     def as_content_primitive(self):
         return S.One, self
 
-    def _as_content_primitive(self):
-        return S.One, self
-
     def subs(self, *args):
         """
         Substitutes an expression.

@@ -1122,7 +1122,7 @@ class Expr(Basic, EvalfMixin):
 
     def as_content_primitive(self):
         """
-        Return expr separated into ``R`` and ``expr/R`` where R is
+        Return self separated into ``R`` and ``expr/R`` where R is
         the Rational that can be extracted from all terms to which
         as_content_primitive has been applied. In addition, each of the
         sub-argument of an Add expr will also be returned in
@@ -1133,7 +1133,7 @@ class Expr(Basic, EvalfMixin):
 
 
         Examples::
-            >>> from sympy.abc import x, y
+            >>> from sympy.abc import x, y, z
 
             >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
 
@@ -1150,29 +1150,15 @@ class Expr(Basic, EvalfMixin):
             Terms may end up joining once their as_content_primitives are added:
                 >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
                 (11, x*(y + 1))
+                >>> ((3*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
+                (9, x*(y + 1))
+                >>> ((3*(z*(1 + y)) + 2.0*x*(3 + 3*y))).as_content_primitive()
+                (3, 2.0*x*(y + 1) + z*(y + 1))
                 >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
                 (121, x**2*(y + 1)**2)
 
         """
-        from sympy.polys.polytools import _keep_coeff as MUL
-        expr = self
-        if not expr.args:
-            return expr._as_content_primitive()
-        args = list(Add.make_args(expr))
-        if len(args) == 1:
-            p = expr.func(*[MUL(*a._as_content_primitive()) for a in expr.args])
-            c = S.One
-        else:
-            c = S.Zero
-            for i, a in enumerate(args):
-                ci, p = a._as_content_primitive()
-                args[i] = (ci, p)
-                c = c.gcd(ci)
-            p = expr.func(*[MUL(ci/c, p) for ci, p in args])
-        if p.is_Mul:
-            ci, p = p.as_coeff_Mul()
-            c *= ci
-        return c, p
+        return S.One, self
 
     def as_numer_denom(self):
         """ a/b -> a,b

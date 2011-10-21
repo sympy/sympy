@@ -864,38 +864,70 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
-    def _as_content_primitive(self):
-        """Return ``(R**i, (b/R)**i)`` where ``R`` is the Rational GCD
-        that can be extracted from the base ``b`` of self if the exponent of
-        self, ``i`` is an Integer, else return ``(1, self)`` or by expanding
-        out the constant of an Add exponent on a Rational base.
+    def as_content_primitive(self):
+        """Rewrite self as (R, b**e) where R is the largest Rational that can
+        extracted from self and b and e are in primitive form.
 
-        Example:
+        **Examples**
 
+        >>> from sympy import separate, powsimp, Mul
         >>> from sympy.abc import x, y
+
         >>> ((2*x + 2)**2).as_content_primitive()
         (4, (x + 1)**2)
-        >>> ((2 + 2*x)**y).as_content_primitive()
-        (1, (2*(x + 1))**y)
-        >>> (2**(3 + y)).as_content_primitive()
-        (8, 2**y)
         >>> (4**((1 + y)/2)).as_content_primitive()
         (2, 4**(y/2))
         >>> (3**((1 + y)/2)).as_content_primitive()
-        (1, 3**(y/2 + 1/2))
-        """
+        (1, 3**((y + 1)/2))
+        >>> (3**((5 + y)/2)).as_content_primitive()
+        (9, 3**((y + 1)/2))
+        >>> eq = 3**(2 + 2*x)
+        >>> powsimp(eq) == eq
+        True
+        >>> eq.as_content_primitive()
+        (9, 3**(2*x))
+        >>> powsimp(Mul(*_))
+        9*9**x
 
-        if self.exp.is_Integer:
-            c, p = self.base._as_content_primitive()
-            c = c**self.exp
-            return c, Pow(p, self.exp)
-        elif self.base.is_Rational and self.exp.is_Add:
-            c, p = self.exp.as_coeff_Add()
-            if c and c.is_Rational:
-                r = Pow(self.base, c)
-                if r.is_Rational:
-                    return r, Pow(self.base, p)
-        return S.One, self
+        >>> eq = (2 + 2*x)**y
+        >>> s = separate(eq); s.is_Mul, s
+        (False, (2*x + 2)**y)
+        >>> eq.as_content_primitive()
+        (1, (2*(x + 1))**y)
+        >>> s = separate(_[1]); s.is_Mul, s
+        (True, 2**y*(x + 1)**y)
+        """
+        from sympy.polys.polytools import _keep_coeff
+        b, e = self.as_base_exp()
+        b = _keep_coeff(*b.as_content_primitive())
+        ce, pe = e.as_content_primitive()
+        if b.is_Rational:
+            # e
+            #= ce*pe
+            #= ce*(h + t)
+            #= ce*h + ce*t
+            #=> self
+            #= b**(ce*h)*b**(ce*t)
+            #= b**(cehp/cehq)*b**(ce*t)
+            #= b**(iceh+r/cehq)*b**(ce*t)
+            #= b**(iceh)*b**(r/cehq)*b**(ce*t)
+            #= b**(iceh)*b**(ce*t + r/cehq)
+            h, t = pe.as_coeff_Add()
+            if h.is_Rational:
+                ceh = ce*h
+                c = Pow(b, ceh)
+                r = S.Zero
+                if not c.is_Rational:
+                    iceh, r = divmod(ceh.p, ceh.q)
+                    c = Pow(b, iceh)
+                return c, Pow(b, _keep_coeff(ce, t + r/ce/ceh.q))
+        e = _keep_coeff(ce, pe)
+        if e.is_Rational and b.is_Mul:
+            h, t = b.as_two_terms()
+            c = Pow(h, e)
+            if c.is_Rational:
+                return c, Pow(t, e)
+        return S.One, Pow(b, e)
 
 from add import Add
 from numbers import Integer

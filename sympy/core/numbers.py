@@ -926,7 +926,7 @@ class Rational(Number):
         import sage.all as sage
         return sage.Integer(self.p)/sage.Integer(self.q)
 
-    def _as_content_primitive(self):
+    def as_content_primitive(self):
         if self and self.q:
             if self.is_positive:
                 return self, S.One

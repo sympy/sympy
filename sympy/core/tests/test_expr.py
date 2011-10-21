@@ -392,6 +392,7 @@ def test_noncommutative_expand_issue658():
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
 
 def test_as_numer_denom():
+    a, b, c = symbols('a, b, c')
     assert oo.as_numer_denom() == (1, 0)
     assert (-oo).as_numer_denom() == (-1, 0)
     assert zoo.as_numer_denom() == (zoo, 1)

@@ -1276,7 +1276,7 @@ class Mul(AssocOp):
             s *= x._sage_()
         return s
 
-    def _as_content_primitive(self):
+    def as_content_primitive(self):
         """Return ``(R, self/R)`` where ``R`` is the product of the Rational
         GCD that can be extracted from self's arguments while retaining
         self's structure.
@@ -1291,7 +1291,7 @@ class Mul(AssocOp):
         coef = S.One
         args = []
         for i, a in enumerate(self.args):
-            c, p = a._as_content_primitive()
+            c, p = a.as_content_primitive()
             coef *= c
             if p is not S.One:
                 args.append(p)
