@@ -867,7 +867,8 @@ class Pow(Expr):
     def _as_content_primitive(self):
         """Return ``(R**i, (b/R)**i)`` where ``R`` is the Rational GCD
         that can be extracted from the base ``b`` of self if the exponent of
-        self, ``i`` is an Integer, else return ``(1, self)``.
+        self, ``i`` is an Integer, else return ``(1, self)`` or by expanding
+        out the constant of an Add exponent on a Rational base.
 
         Example:
 
@@ -876,12 +877,24 @@ class Pow(Expr):
         (4, (x + 1)**2)
         >>> ((2 + 2*x)**y).as_content_primitive()
         (1, (2*(x + 1))**y)
+        >>> (2**(3 + y)).as_content_primitive()
+        (8, 2**y)
+        >>> (4**((1 + y)/2)).as_content_primitive()
+        (2, 4**(y/2))
+        >>> (3**((1 + y)/2)).as_content_primitive()
+        (1, 3**(y/2 + 1/2))
         """
 
         if self.exp.is_Integer:
             c, p = self.base._as_content_primitive()
             c = c**self.exp
             return c, Pow(p, self.exp)
+        elif self.base.is_Rational and self.exp.is_Add:
+            c, p = self.exp.as_coeff_Add()
+            if c and c.is_Rational:
+                r = Pow(self.base, c)
+                if r.is_Rational:
+                    return r, Pow(self.base, p)
         return S.One, self
 
 from add import Add

@@ -1155,7 +1155,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         from sympy.polys.polytools import _keep_coeff as MUL
-        expr = sympify(self)
+        expr = self
         if not expr.args:
             return expr._as_content_primitive()
         args = list(Add.make_args(expr))
