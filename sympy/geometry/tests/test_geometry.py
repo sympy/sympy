@@ -2,7 +2,7 @@ from sympy import (Abs, C, Dummy, Max, Min, Rational, Float, S, Symbol, cos, oo,
                    pi, simplify, sqrt, symbols)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
-                            are_similar, convex_hull, intersection)
+                            are_similar, convex_hull, intersection, centroid)
 from sympy.geometry.line import Undecidable
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -695,3 +695,13 @@ def test_free_symbols():
 def test_subsx():
     """ this is fixed in smichr's subs_cleanup """
     assert Point(1, 2).subs(Point(1,2), Point(3,4)) == Point(3, 4)
+
+def test_util_centroid():
+    p = Polygon((0,0),(10,0),(10,10))
+    q = p.translate(0,20)
+    assert centroid(p, q) == Point(20, 40)/3
+    p = Segment((0,0),(2,0))
+    q = Segment((0,0),(2,2))
+    assert centroid(p, q) == Point(1, 2*sqrt(2)/(2 + 2*sqrt(2)))
+    assert centroid(Point(0,0), Point(2,0)) == Point(2, 0)/2
+    assert centroid(Point(0,0), Point(0,0), Point(2,0)) == Point(2, 0)/3
