@@ -4,36 +4,48 @@ from sympy.physics.quantum.gate import X, Y, Z, H, S, T, CNOT, IdentityGate, gat
 from sympy.physics.quantum.represent import represent
 
 # Number of qubits in the spaces (to be operated on).
-numqubits = 2
+def default_numqubits():
+    return 2
 
 # Dynamically generate and concatenate a list of all possible sympy gate objects in given space.
-Xs = [X(i) for i in xrange(numqubits)]
-Ys = [Y(i) for i in xrange(numqubits)]
-Zs = [Z(i) for i in xrange(numqubits)]
-Hs = [H(i) for i in xrange(numqubits)]
-Ss = [S(i) for i in xrange(numqubits)]
-Ts = [T(i) for i in xrange(numqubits)]
-CNOTs = [CNOT(i,j) for i in xrange(numqubits) for j in xrange(numqubits) if i != j]
+def construct_gate_list(numqubits):
+    Xs = [X(i) for i in xrange(numqubits)]
+    Ys = [Y(i) for i in xrange(numqubits)]
+    Zs = [Z(i) for i in xrange(numqubits)]
+    Hs = [H(i) for i in xrange(numqubits)]
+    Ss = [S(i) for i in xrange(numqubits)]
+    Ts = [T(i) for i in xrange(numqubits)]
+    CNOTs = [CNOT(i,j) for i in xrange(numqubits) for j in xrange(numqubits) if i != j]
+    
+    gate_list = Xs+Ys+Zs+Hs+Ss+Ts+CNOTs
 
-gate_list = Xs+Ys+Zs+Hs+Ss+Ts+CNOTs
+    return gate_list
 
 # Number base the counter will use or number of gates possible in given space.
-base = len(gate_list)
+def base(gate_list):
+    return len(gate_list)
 
 # Dynamically generate and concatenate a list of all possible scipy.sparse gate matrices in given space.
-xs = [represent(X(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-ys = [represent(Y(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-zs = [represent(Z(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-hs = [represent(H(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-ss = [represent(S(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-ts = [represent(T(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-cnots = [represent(CNOT(i,j), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits) for j in xrange(numqubits) if i != j]
+def construct matrix_list(numqubits):
+    xs = [represent(X(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
+    ys = [represent(Y(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
+    zs = [represent(Z(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
+    hs = [represent(H(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
+    ss = [represent(S(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
+    ts = [represent(T(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
+    cnots = [represent(CNOT(i,j), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits) for j in xrange(numqubits) if i != j]
+    
+    matrix_list = xs+ys+zs+hs+ss+ts+cnots
 
-matrix_list = xs+ys+zs+hs+ss+ts+cnots
+    return matrix_list
 
-# Initialize the number.
-num = [0,1]
+# Create the first instance of the number list
+def initial_num(base):
+    return [i for i in range(base)]
 
+# Default number list has 2 gates
+def default_num():
+    return initial_num(default_numqubits)
 
 def count(base, number):
     # Uses a list of numbers (as digits) to count in a specified base.
@@ -82,6 +94,8 @@ filename = '/home/matt/Documents/gate_identities/' + str(numqubits) + '-qubit_id
 f = open(filename, 'a')
 f.close()
 
+# Save the identities to a set
+
 def write_identity(name, identity):
     # Writes gate identity to specified file.
     identities = open(name, 'a')
@@ -96,18 +110,19 @@ def check_identity(name, identity):
         return False
     return True
 
-# Begin searching for gate identities in given space.
-while True:
-    if num[0] is 0:
-        matrices = number_to_matrices(num[1:])
-        cached = matrix_mul(matrices)
-    gates = number_to_gates(num)
-    if len(gate_simp(Mul(*gates)).args) == len(gates):
-        circuit = number_to_matrices(num[0])*cached
-        if is_scalar_matrix(circuit) and check_identity(filename, str(gate_simp(Mul(*gates)).args)):
-            write_identity(filename, str(gate_simp(Mul(*gates)).args))
-            print num
-            print gate_simp(Mul(*gates)).args
-            print circuit
-            print ''
-    count(base, num)
+def search_identity():
+    # Begin searching for gate identities in given space.
+    while True:
+        if num[0] is 0:
+            matrices = number_to_matrices(num[1:])
+            cached = matrix_mul(matrices)
+        gates = number_to_gates(num)
+        if len(gate_simp(Mul(*gates)).args) == len(gates):
+            circuit = number_to_matrices(num[0])*cached
+            if is_scalar_matrix(circuit) and check_identity(filename, str(gate_simp(Mul(*gates)).args)):
+                write_identity(filename, str(gate_simp(Mul(*gates)).args))
+                print num
+                print gate_simp(Mul(*gates)).args
+                print circuit
+                print ''
+        count(base, num)
