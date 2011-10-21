@@ -24,6 +24,7 @@ import re
 import sys
 import fnmatch
 import shutil
+import fileinput
 
 destination = "py3k-sympy" # directory to copy to
 
@@ -96,6 +97,7 @@ for root, dirs, files in os.walk('.'):
             # as there are eg. multiple index.txt files and not all are relevant
             if src in relevant_txt_files:
                 modified_txt_files.append(dst)
+        # FIXME: Also run 2to3 on files with no extensions; now we just skip them
 
 # arguments to call 2to3 with
 args_2to3 = [
@@ -146,3 +148,16 @@ except OSError: # directories don't exist
 
 shutil.copytree("sympy/mpmath", os.path.join(destination, "./sympy/mpmath"))
 shutil.copytree("doc/src/modules/mpmath", os.path.join(destination, "./doc/src/modules/mpmath"))
+
+# change the shebang lines to point to "python3"
+
+# to do so, we first need to manually add the scripts in bin/
+# as 2to3 will not actually be ran on files with no extension
+for filename in os.listdir(destination + '/bin'):
+    modified_files.append(destination + '/bin/' + filename)
+
+for line in fileinput.input(modified_files, inplace=1):
+    if "#!/usr/bin/env python" in line:
+        line = line.replace("#!/usr/bin/env python", "#!/usr/bin/env python3")
+    # fileinput works by redirecting stdout to the file
+    sys.stdout.write(line)
