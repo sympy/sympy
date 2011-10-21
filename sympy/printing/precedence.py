@@ -1,5 +1,7 @@
 """A module providing information about the necessity of brackets"""
 
+from sympy import S
+
 # Default precedence values for some basic types
 PRECEDENCE = {
     "Lambda":1,
@@ -33,14 +35,15 @@ PRECEDENCE_VALUES = {
 
 # Precedence functions
 def precedence_Mul(item):
-    coeff, rest = item.as_coeff_terms()
-    if coeff.is_negative:
+    if item.as_coeff_mul()[0].is_negative:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
 def precedence_Rational(item):
     if item.p < 0:
         return PRECEDENCE["Add"]
+    if item is S.Infinity:
+        return PRECEDENCE["Atom"]
     return PRECEDENCE["Mul"]
 
 def precedence_Integer(item):

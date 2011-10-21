@@ -4,8 +4,8 @@ Plotting
 .. module:: sympy.plotting
 
 SymPy can do nice 2D and 3D plots that can be controlled by console commands as
-well as keyboard and mouse, with the only dependency being ``ctypes``, which is
-included in Python2.5 (you need to install it in Python2.4).
+well as keyboard and mouse, with the only dependencies being ``ctypes`` (which is
+included in Python2.5 (you need to install it in Python2.4)) and ``pyglet``.
 
 Here is the simplest usage:
 
@@ -20,7 +20,7 @@ it in interactive mode (python -i plotting.py)::
 
 And type for instance ``example(7)`` or ``example(11)``.
 
-See also the `Plotting Module <http://wiki.sympy.org/wiki/Plotting_Module>`_
+See also the `Plotting Module <https://github.com/sympy/sympy/wiki/Plotting-Module>`_
 wiki page for screenshots.
 
 
@@ -150,13 +150,12 @@ gray-scale because we have applied the default color gradient uniformly for
 each color component. When defining a color scheme in this way, you might want
 to supply a color gradient as well:
 
-    >>> p[1].color = (Fx**2 + Fy**2 + Fz**2)**(0.5),
-    ................ (0.1,0.1,0.9), (0.9,0.1,0.1)
+    >>> p[1].color = (Fx**2 + Fy**2 + Fz**2)**(0.5), (0.1,0.1,0.9), (0.9,0.1,0.1)
 
 Here's a color gradient with four steps:
 
     >>> gradient = [ 0.0, (0.1,0.1,0.9), 0.3, (0.1,0.9,0.1),
-    ................ 0.7, (0.9,0.9,0.1), 1.0, (1.0,0.0,0.0) ]
+    ...              0.7, (0.9,0.9,0.1), 1.0, (1.0,0.0,0.0) ]
     >>> p[1].color = (Fx**2 + Fy**2 + Fz**2)**(0.5), gradient
 
 The other way to specify a color scheme is to give a separate function for each

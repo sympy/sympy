@@ -1,9 +1,9 @@
-from sympy import (diff, Integral, integrate, log, oo, Piecewise,
-    piecewise_fold, symbols, pi, solve, Rational, Interval,
-    lambdify, expand)
+from sympy import (diff, expand, Eq, Integral, integrate, Interval, lambdify,
+                   log, oo, Piecewise, piecewise_fold, symbols, pi, solve,
+                   Rational, Basic)
 from sympy.utilities.pytest import XFAIL, raises
 
-x,y = symbols('xy')
+x,y = symbols('x,y')
 
 def test_piecewise():
 
@@ -22,7 +22,7 @@ def test_piecewise():
     assert p.subs(x,-1) == 1
     assert p.subs(x,1) == log(1)
 
-    # More subs test
+    # More subs tests
     p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
     assert p2.subs(x,2) == 1
     assert p2.subs(x,4) == -1
@@ -71,6 +71,14 @@ def test_piecewise():
     p = Piecewise((x, x < -10),(x**2, x <= -1),(x, 1 < x))
     raises(ValueError, "integrate(p,(x,-2,2))")
 
+    # Test commutativity
+    assert p.is_commutative is True
+
+def test_piecewise_free_symbols():
+    a = symbols('a')
+    f = Piecewise((x , a<0), (y, True))
+    assert f.free_symbols == set([x, y, a])
+
 def test_piecewise_integrate():
     # XXX Use '<=' here! '>=' is not yet implemented ..
     f = Piecewise(((x - 2)**2, 0 <= x), (1, True))
@@ -96,6 +104,12 @@ def test_piecewise_integrate():
     assert integrate(g, (x, -2, 2)) == 2 * Rational(14, 3)
     assert integrate(g, (x, -2, 5)) == -Rational(673, 6)
 
+    g = Piecewise((1, x > 0), (0, Eq(x, 0)), (-1, x < 0))
+    assert integrate(g, (x, -1, 1)) == 0
+
+    g = Piecewise((1, x - y < 0), (0, True))
+    assert integrate(g, (y, -oo, oo)) == oo
+
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
@@ -119,6 +133,8 @@ def test_piecewise_solve():
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
     assert solve(g, x) == [5]
+
+    assert solve(Piecewise((x, x < 0), (x, -1))) == [0]
 
 # See issue 1253 (enhance the solver to handle inequalities).
 @XFAIL
@@ -175,10 +191,28 @@ def test_piecewise_collapse():
     assert p1 == Piecewise((Piecewise((x,x<0),(1,True)),True))
 
 def test_piecewise_lambdify():
-    p = Piecewise((x**2,x<0),(x,Interval(0,1,False,True)),(2-x,x>=1),(0,True))
+    p = Piecewise(
+        (x**2, x < 0),
+        (x, Interval(0, 1, False, True)),
+        (2 - x, x >= 1),
+        (0, True)
+    )
     f = lambdify(x, p)
     assert f(-2.0) == 4.0
     assert f(0.0) == 0.0
     assert f(0.5) == 0.5
     assert f(2.0) == 0.0
 
+def test_piecewise_series():
+    from sympy import sin, cos, O
+    p1 = Piecewise((sin(x), x<0),(cos(x),x>0))
+    p2 = Piecewise((x+O(x**2), x<0),(1+O(x**2),x>0))
+    assert p1.nseries(x,n=2) == p2
+
+def test_piecewise_evaluate():
+    assert Piecewise((x, True)) == x
+    assert Piecewise((x, True), evaluate=True) == x
+    p = Piecewise((x, True), evaluate=False)
+    assert p != x
+    assert p.is_Piecewise
+    assert all(isinstance(i, Basic) for i in p.args)

@@ -8,12 +8,12 @@ Features:
 References:
   - http://en.wikipedia.org/wiki/DPLL_algorithm
 """
+from collections import defaultdict
+from heapq import heappush, heappop
+
 from sympy.core import Symbol
 from sympy import Predicate
-from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
-    to_int_repr
-from sympy.logic.inference import pl_true, literal_symbol
-from heapq import heappush, heappop
+from sympy.logic.boolalg import conjuncts, to_cnf, to_int_repr
 
 def dpll_satisfiable(expr):
     """
@@ -99,14 +99,8 @@ class SATSolver(object):
 
     def initialize_variables(self, variables):
         """Set up the variable data structures needed."""
-        self.sentinels = {}
-        self.occurrence_count = {}
-        for i in xrange(1, len(variables)+1):
-            self.sentinels[i] = set()
-            self.sentinels[-i] = set()
-            self.occurrence_count[i] = 0
-            self.occurrence_count[-i] = 0
-
+        self.sentinels = defaultdict(set)
+        self.occurrence_count = defaultdict(int)
         self.variable_set = [False] * (len(variables) + 1)
 
     def initialize_clauses(self, clauses):

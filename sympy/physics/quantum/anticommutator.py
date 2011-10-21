@@ -39,7 +39,7 @@ class AntiCommutator(Expr):
         >>> from sympy import symbols
         >>> from sympy.physics.quantum import AntiCommutator
         >>> from sympy.physics.quantum import Operator, Dagger
-        >>> x, y = symbols('xy')
+        >>> x, y = symbols('x,y')
         >>> A = Operator('A')
         >>> B = Operator('B')
 
@@ -58,7 +58,7 @@ class AntiCommutator(Expr):
     Scalar constants are factored out::
 
         >>> AntiCommutator(3*x*A,x*y*B)
-        3*y*x**2*{A,B}
+        3*x**2*y*{A,B}
 
     Dagger is alto handled::
 

@@ -1,17 +1,17 @@
 import copy
 import pickle
-import types
+import warnings
+import sys
 from sympy.utilities.pytest import XFAIL
 
-from sympy.core.assumptions import AssumeMeths
 from sympy.core.basic import Atom, Basic
 from sympy.core.core import BasicMeta, BasicType, ClassRegistry
 from sympy.core.singleton import SingletonRegistry
-from sympy.core.symbol import Dummy, Symbol, Temporary, Wild
+from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.numbers import Catalan, ComplexInfinity, EulerGamma, Exp1,\
         GoldenRatio, Half, ImaginaryUnit, Infinity, Integer, NaN,\
         NegativeInfinity,  NegativeOne, Number, NumberSymbol, One, Pi,\
-        Rational, Real, Zero
+        Rational, Float, Zero
 from sympy.core.relational import Equality, Inequality, Relational,\
         StrictInequality, Unequality
 from sympy.core.add import Add
@@ -21,8 +21,9 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
         WildFunction
 from sympy.core.sets import Interval
 from sympy.core.multidimensional import vectorize
-from sympy.core.cache import Memoizer
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
+
+from sympy.core.compatibility import callable
 
 from sympy import symbols
 
@@ -30,7 +31,14 @@ from sympy import symbols
 def check(a, check_attr = True):
     """ Check that pickling and copying round-trips.
     """
-    for protocol in [0, 1, 2, copy.copy, copy.deepcopy]:
+    # The below hasattr() check will warn about is_Real in Python 2.5, so
+    # disable this to keep the tests clean
+    warnings.filterwarnings("ignore", ".*is_Real.*", DeprecationWarning)
+    protocols = [0, 1, 2, copy.copy, copy.deepcopy]
+    # Python 2.x doesn't support the third pickling protocol
+    if sys.version_info[0] > 2:
+        protocols.extend([3])
+    for protocol in protocols:
         if callable(protocol):
             if isinstance(a, BasicType):
                 # Classes can't be copied, but that's okay.
@@ -59,19 +67,20 @@ def check(a, check_attr = True):
 
 #================== core =========================
 
-def test_core_assumptions():
-    for c in (AssumeMeths, AssumeMeths()):
-        check(c)
-
 def test_core_basic():
-    for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicMeta("test"),
-              BasicType, BasicType("test"), ClassRegistry, ClassRegistry(),
+    for c in (Atom, Atom(),
+              Basic, Basic(),
+              # XXX: dynamically created types are not picklable
+              # BasicMeta, BasicMeta("test", (), {}),
+              # BasicType, BasicType("test", (), {}),
+              ClassRegistry, ClassRegistry(),
               SingletonRegistry, SingletonRegistry()):
         check(c)
 
 def test_core_symbol():
-    for c in (Dummy, Dummy("x", False), Symbol, Symbol("x", False),
-              Temporary, Temporary(), Wild, Wild("x")):
+    for c in (Dummy, Dummy("x", False),
+              Symbol, Symbol("x", False),
+              Wild, Wild("x")):
         check(c)
 
 def test_core_numbers():
@@ -81,7 +90,7 @@ def test_core_numbers():
               Integer, Integer(2), NaN, NaN(), NegativeInfinity,
               NegativeInfinity(), NegativeOne, NegativeOne(), Number, Number(15),
               NumberSymbol, NumberSymbol(), One, One(), Pi, Pi(), Rational,
-              Rational(1,2), Real, Real("1.2"), Zero, Zero()):
+              Rational(1,2), Float, Float("1.2"), Zero, Zero()):
         check(c)
 
 def test_core_relational():
@@ -127,11 +136,6 @@ def test_core_multidimensional():
     for c in (vectorize, vectorize(0)):
         check(c)
 
-@XFAIL
-def test_core_cache():
-    for c in (Memoizer, Memoizer()):
-        check(c)
-
 # This doesn't have to be pickable.
 #@XFAIL
 #def test_core_astparser():
@@ -143,13 +147,13 @@ def test_core_cache():
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh,
-        chebyshevu, chebyshevt, ln, chebyshevt_root, Binomial, legendre,
+        chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
         Heaviside, Dij, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
         arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ylm,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
-        LambertW, zeta, log, Factorial, asinh, acoth, Zlm,
-        cosh, dirichlet_eta, Eijk, loggamma, erf, Max, ceiling, im, fibonacci,
-        conjugate, tan, chebyshevu_root, floor, atanh, sqrt, Min,
+        LambertW, zeta, log, factorial, asinh, acoth, Zlm,
+        cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
+        conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
         RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
         polygamma, exp)
 from sympy.core import pi, oo, nan, zoo, E, I
@@ -158,12 +162,12 @@ def test_functions():
     zero_var = (pi, oo, nan, zoo, E, I)
     one_var = (acosh, ln, Heaviside, Dij, factorial, bernoulli, coth, tanh,
             sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
-            gamma, bell, harmonic, LambertW, zeta, log, Factorial, asinh,
+            gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,
             conjugate, tan, floor, atanh, sin, atan, lucas, exp)
-    two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial, Max,
-            Min, atan2, polygamma, hermite, legendre, uppergamma)
-    x, y, z = symbols("x y z")
+    two_var = (rf, ff, lowergamma, chebyshevu, chebyshevt, binomial,
+            atan2, polygamma, hermite, legendre, uppergamma)
+    x, y, z = symbols("x,y,z")
     others = (chebyshevt_root, chebyshevu_root, Eijk(x, y, z),
             Piecewise( (0, x<-1), (x**2, x<=1), (x**3, True)),
             assoc_legendre)
@@ -198,7 +202,6 @@ def test_geometry():
               Polygon, Polygon(p1,p2,p3,p4), RegularPolygon, RegularPolygon(p1,4,5),
               Triangle, Triangle(p1,p2,p3)):
         check(c, check_attr = False)
-        pass
 
 #================== integrals ====================
 from sympy.integrals.integrals import Integral
@@ -209,13 +212,13 @@ def test_integrals():
         check(c)
 
 #================== matrices ====================
-from sympy.matrices.matrices import Matrix, SMatrix
+from sympy.matrices.matrices import Matrix, SparseMatrix
 
 def test_matrices():
-    for c in (Matrix, Matrix([1,2,3]), SMatrix, SMatrix([[1,2],[3,4]])):
+    for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
         check(c)
 
-#================== ntheorie ====================
+#================== ntheory =====================
 from sympy.ntheory.generate import Sieve
 
 def test_ntheory():
@@ -282,11 +285,13 @@ def test_plotting2():
 
 #================== polys =======================
 from sympy.polys.polytools import Poly
-from sympy.polys.polyclasses import GFP, DUP, DMP, DMF, ANP
-from sympy.polys.polyroots import RootOf, RootsOf, RootSum
+from sympy.polys.polyclasses import DMP, DMF, ANP
+from sympy.polys.rootoftools import RootOf, RootSum
 
-from sympy.polys.algebratools import (
-    ZZ_python, ZZ_sympy, QQ_sympy,
+from sympy.polys.domains import (
+    PythonIntegerRing,
+    SymPyIntegerRing,
+    SymPyRationalField,
     PolynomialRing,
     FractionField,
     ExpressionDomain,
@@ -295,17 +300,14 @@ from sympy.polys.algebratools import (
 @XFAIL
 def test_polys():
     x = Symbol("x")
-    f = Poly(x, x)
-    g = lambda x: x
-    ZZ = ZZ_python()
-    QQ = QQ_sympy()
+
+    ZZ = PythonIntegerRing()
+    QQ = SymPyRationalField()
 
     for c in (Poly, Poly(x, x)):
         check(c)
 
     for c in (GFP, GFP([ZZ(1),ZZ(2),ZZ(3)], ZZ(7), ZZ)):
-        check(c)
-    for c in (DUP, DUP([ZZ(1),ZZ(2),ZZ(3)], ZZ(7), ZZ)):
         check(c)
     for c in (DMP, DMP([ZZ(1),ZZ(2),ZZ(3)], 0, ZZ)):
         check(c)
@@ -314,11 +316,11 @@ def test_polys():
     for c in (ANP, ANP([QQ(1),QQ(2)], [QQ(1),QQ(2),QQ(3)], QQ)):
         check(c)
 
-    for c in (ZZ_python, ZZ_python()):
+    for c in (PythonIntegerRing, PythonIntegerRing()):
         check(c)
-    for c in (ZZ_sympy, ZZ_sympy()):
+    for c in (SymPyIntegerRing, SymPyIntegerRing()):
         check(c)
-    for c in (QQ_sympy, QQ_sympy()):
+    for c in (SymPyRationalField, SymPyRationalField()):
         check(c)
 
     for c in (PolynomialRing, PolynomialRing(ZZ, 'x', 'y')):
@@ -329,25 +331,26 @@ def test_polys():
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c)
 
-    try:
-        from sympy.polys.algebratools import QQ_python
+    from sympy.polys.domains import HAS_FRACTION, HAS_GMPY
 
-        for c in (QQ_python, QQ_python()):
+    if HAS_FRACTION:
+        from sympy.polys.domains import PythonRationalField
+
+        for c in (PythonRationalField, PythonRationalField()):
             check(c)
-    except ImportError:
-        pass
 
-    try:
-        from sympy.polys.algebratools import QQ_python
+    if HAS_GMPY:
+        from sympy.polys.domains import GMPYIntegerRing, GMPYRationalField
 
-        for c in (ZZ_gmpy, ZZ_gmpy()):
+        for c in (GMPYIntegerRing, GMPYIntegerRing()):
             check(c)
-        for c in (QQ_gmpy, QQ_gmpy()):
+        for c in (GMPYRationalField, GMPYRationalField()):
             check(c)
-    except ImportError:
-        pass
 
-    for c in (RootOf, RootOf(f, 0), RootsOf, RootsOf(x, x), RootSum, RootSum(g, f)):
+    f = x**3 + x + 3
+    g = lambda x: x
+
+    for c in (RootOf, RootOf(f, 0), RootSum, RootSum(f, g)):
         check(c)
 
 #================== printing ====================
@@ -395,11 +398,9 @@ def test_statistics():
 #================== concrete ==================
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy.concrete.sums_products import Sum2, _BigOperator
 
 def test_concrete():
     x = Symbol("x")
-    for c in (Product, Product(1,2), Sum, Sum(x, (x, 2, 4)), Sum2, Sum2(x,(x,2,4)),
-              _BigOperator):
+    for c in (Product, Product(1,2), Sum, Sum(x, (x, 2, 4))):
         check(c)
 

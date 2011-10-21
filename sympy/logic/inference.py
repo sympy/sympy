@@ -25,6 +25,7 @@ def satisfiable(expr, algorithm="dpll2"):
     Returns a model when it succeeds
 
     Examples
+
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
     >>> satisfiable(A & ~B)
@@ -99,7 +100,7 @@ def pl_true(expr, model={}):
             return None
         return pt == qt
     else:
-        raise ValueError, "Illegal operator in logic expression" + str(expr)
+        raise ValueError("Illegal operator in logic expression" + str(expr))
 
 
 class KB(object):
@@ -143,3 +144,4 @@ class PropKB(KB):
         for c in conjuncts(to_cnf(sentence)):
             if c in self.clauses:
                 self.clauses.remove(c)
+

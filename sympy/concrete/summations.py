@@ -1,46 +1,35 @@
-from sympy.core import Expr, S, C, Symbol, Equality, Interval, sympify, Wild, Tuple
+from sympy.core import (Expr, S, C, sympify, Wild, Dummy, Derivative)
+from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.concrete.gosper import gosper_sum
+from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
-from sympy.utilities import flatten
 
 class Sum(Expr):
     """Represents unevaluated summation."""
 
-    def __new__(cls, f, *symbols, **assumptions):
-        f = sympify(f)
+    def __new__(cls, function, *symbols, **assumptions):
+        from sympy.integrals.integrals import _process_limits
+
+        # Any embedded piecewise functions need to be brought out to the
+        # top level so that integration can go into piecewise mode at the
+        # earliest possible moment.
+        function = piecewise_fold(sympify(function))
+
+        if function is S.NaN:
+            return S.NaN
 
         if not symbols:
-            raise ValueError("No symbols given.")
+            raise ValueError("Summation variables must be given")
 
-        else:
-            limits = []
+        limits, sign = _process_limits(*symbols)
 
-            for V in symbols:
-                if isinstance(V, Symbol):
-                    limits.append(Tuple(V))
-                    continue
-                elif isinstance(V, Equality):
-                    if isinstance(V.lhs, Symbol):
-                        if isinstance(V.rhs, Interval):
-                            limits.append(Tuple(V.lhs, V.rhs.start, V.rhs.end))
-                        else:
-                            limits.append(Tuple(V.lhs, V.rhs))
-
-                        continue
-                elif isinstance(V, (tuple, list, Tuple)):
-                    V = flatten(V)
-                    if len(V) == 1:
-                        if isinstance(V[0], Symbol):
-                            limits.append(Tuple(V[0]))
-                            continue
-                    elif len(V) in (2, 3):
-                        if isinstance(V[0], Symbol):
-                            limits.append(Tuple(*map(sympify, V)))
-                            continue
-
-                raise ValueError("Invalid summation variable or limits")
+        # Only limits with lower and upper bounds are supported; the indefinite Sum
+        # is not supported
+        if any(len(l) != 3 or None in l for l in limits):
+            raise ValueError('Sum requires values for lower and upper bounds.')
 
         obj = Expr.__new__(cls, **assumptions)
-        arglist = [f]
+        arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
 
@@ -54,12 +43,40 @@ class Sum(Expr):
     def limits(self):
         return self._args[1:]
 
+    @property
+    def variables(self):
+        """Return a list of the summation variables
+
+        >>> from sympy import Sum
+        >>> from sympy.abc import x, i
+        >>> Sum(x**i, (i, 1, 3)).variables
+        [i]
+        """
+        return [l[0] for l in self.limits]
+
+    @property
+    def free_symbols(self):
+        """
+        This method returns the symbols that will exist when the
+        summation is evaluated. This is useful if one is trying to
+        determine whether a sum is dependent on a certain
+        symbol or not.
+
+        >>> from sympy import Sum
+        >>> from sympy.abc import x, y
+        >>> Sum(x, (x, y, 1)).free_symbols
+        set([y])
+        """
+        from sympy.integrals.integrals import _free_symbols
+
+        return _free_symbols(self.function, self.limits)
+
     def doit(self, **hints):
         #if not hints.get('sums', True):
         #    return self
         f = self.function
-        for i, a, b in self.limits:
-            f = eval_sum(f, (i, a, b))
+        for limit in self.limits:
+            f = eval_sum(f, limit)
             if f is None:
                 return self
 
@@ -70,6 +87,44 @@ class Sum(Expr):
 
     def _eval_summation(self, f, x):
         return
+
+    def _eval_derivative(self, x):
+        """
+        Differentiate wrt x as long as x is not in the free symbols of any of
+        the upper or lower limits.
+
+        Sum(a*b*x, (x, 1, a)) can be differentiated wrt x or b but not `a`
+        since the value of the sum is discontinuous in `a`. In a case
+        involving a limit variable, the unevaluated derivative is returned.
+
+        """
+
+        # diff already confirmed that x is in the free symbols of self, but we
+        # don't want to differentiate wrt any free symbol in the upper or lower
+        # limits
+        # XXX remove this test for free_symbols when the default _eval_derivative is in
+        if x not in self.free_symbols:
+            return S.Zero
+
+        # get limits and the function
+        f, limits = self.function, list(self.limits)
+
+        limit = limits.pop(-1)
+
+        if limits: # f is the argument to a Sum
+            f = Sum(f, *limits)
+
+        if len(limit) == 3:
+            _, a, b = limit
+            if x in a.free_symbols or x in b.free_symbols:
+                return None
+            df = Derivative(f, x, **{'evaluate': True})
+            rv = Sum(df, limit)
+            if limit[0] not in df.free_symbols:
+                rv = rv.doit()
+            return rv
+        else:
+            return NotImplementedError('Lower and upper bound expected.')
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
@@ -90,7 +145,7 @@ class Sum(Expr):
             1.28333333333333
             >>> s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()
             >>> s
-            7/20 - log(2) + log(5)
+            -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
             >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
             (1.26629073187416, 0.0175000000000000)
@@ -99,7 +154,7 @@ class Sum(Expr):
 
             >>> s, e = Sum(1/k, (k, a, b)).euler_maclaurin()
             >>> s
-            -log(a) + log(b) + 1/(2*a) + 1/(2*b)
+            -log(a) + log(b) + 1/(2*b) + 1/(2*a)
             >>> e
             Abs(-1/(12*b**2) + 1/(12*a**2))
 
@@ -107,9 +162,9 @@ class Sum(Expr):
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):
 
             >>> Sum(k, (k, 2, b)).euler_maclaurin()
-            (-1 + b/2 + b**2/2, 0)
+            (b**2/2 + b/2 - 1, 0)
             >>> Sum(k, (k, 2, b)).doit()
-            -1 + b/2 + b**2/2
+            b**2/2 + b/2 - 1
 
         With a nonzero eps specified, the summation is ended
         as soon as the remainder term is less than the epsilon.
@@ -127,7 +182,7 @@ class Sum(Expr):
                     return s, abs(term)
                 s += term
             a += m
-        x = Symbol('x', dummy=True)
+        x = Dummy('x')
         I = C.Integral(f.subs(i, x), (x, a, b))
         if eval_integral:
             I = I.doit()
@@ -141,7 +196,7 @@ class Sum(Expr):
         g = f.diff(i)
         for k in xrange(1, n+2):
             ga, gb = fpoint(g)
-            term = C.bernoulli(2*k)/C.Factorial(2*k)*(gb-ga)
+            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb-ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
@@ -149,6 +204,8 @@ class Sum(Expr):
         return s + iterm, abs(term)
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         newlimits = []
         for lim in self.limits:
             if lim[0] == old:
@@ -167,12 +224,10 @@ def summation(f, *symbols, **kwargs):
     i.e.,
 
                                 b
-                              -----
-                              \
-    summation(f, (i, a, b)) =  \    f
-                               /
-                              /
-                              -----
+                              ____
+                              \   `
+    summation(f, (i, a, b)) =  )    f
+                              /___,
                               i = a
 
 
@@ -189,16 +244,17 @@ def summation(f, *symbols, **kwargs):
     >>> summation(1/log(n)**n, (n, 2, oo))
     Sum(log(n)**(-n), (n, 2, oo))
     >>> summation(i, (i, 0, n), (n, 0, m))
-    m/3 + m**2/2 + m**3/6
+    m**3/6 + m**2/2 + m/3
+
+    >>> from sympy.abc import x
+    >>> from sympy import factorial
+    >>> summation(x**n/factorial(n), (n, 0, oo))
+    exp(x)
 
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
 
-def getab(expr):
-    cls = expr.func
-    return cls(expr.args[0]), cls(*expr.args[1:])
-
-def telescopic_direct(L, R, n, (i, a, b)):
+def telescopic_direct(L, R, n, limits):
     """Returns the direct summation of the terms of a telescopic sum
 
     L is the term with lower index
@@ -210,53 +266,65 @@ def telescopic_direct(L, R, n, (i, a, b)):
     >>> from sympy.concrete.summations import telescopic_direct
     >>> from sympy.abc import k, a, b
     >>> telescopic_direct(1/k, -1/(k+2), 2, (k, a, b))
-    1/a + 1/(1 + a) - 1/(1 + b) - 1/(2 + b)
+    -1/(b + 2) - 1/(b + 1) + 1/(a + 1) + 1/a
 
     """
+    (i, a, b) = limits
     s = 0
     for m in xrange(n):
         s += L.subs(i,a+m) + R.subs(i,b-m)
     return s
 
-def telescopic(L, R, (i, a, b)):
+def telescopic(L, R, limits):
     '''Tries to perform the summation using the telescopic property
 
     return None if not possible
     '''
+    (i, a, b) = limits
     if L.is_Add or R.is_Add:
         return None
-    s = None
-    #First we try to solve using match
-    #Maybe this should go inside solve
+
+    # We want to solve(L.subs(i, i + m) + R, m)
+    # First we try a simple match since this does things that
+    # solve doesn't do, e.g. solve(f(k+m)-f(k), m) fails
+
     k = Wild("k")
     sol = (-R).match(L.subs(i, i + k))
+    s = None
     if sol and k in sol:
-        if L.subs(i,i + sol[k]) == -R:
+        s = sol[k]
+        if not (s.is_Integer and L.subs(i,i + s) == -R):
             #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
-            s = sol[k]
-    #Then we try to solve using solve
-    if not s or not s.is_Integer:
-        m = Symbol("m")
+            s = None
+
+    # But there are things that match doesn't do that solve
+    # can do, e.g. determine that 1/(x + m) = 1/(1 - x) when m = 1
+
+    if s is None:
+        m = Dummy('m')
         try:
-            s = solve(L.subs(i, i + m) + R, m)[0]
-        except IndexError:#(ValueError, IndexError):
-            pass
-    if s and s.is_Integer:
-        if s < 0:
-            return telescopic_direct(R, L, abs(s), (i, a, b))
-        elif s > 0:
-            return telescopic_direct(L, R, s, (i, a, b))
-    return None
+            sol = solve(L.subs(i, i + m) + R, m) or []
+        except NotImplementedError:
+            return None
+        sol = [si for si in sol if si.is_Integer and
+                                   (L.subs(i,i + si) + R).expand().is_zero]
+        if len(sol) != 1:
+            return None
+        s = sol[0]
 
-def eval_sum(f, (i, a, b)):
-    if f.is_Number:
-        if f is S.NaN:
-            return S.NaN
-        elif f is S.Zero:
-            return S.Zero
+    if s < 0:
+        return telescopic_direct(R, L, abs(s), (i, a, b))
+    elif s > 0:
+        return telescopic_direct(L, R, s, (i, a, b))
 
-    if not f.has(i):
-        return f*(b-a+1)
+def eval_sum(f, limits):
+    (i, a, b) = limits
+    if f is S.Zero:
+        return S.Zero
+
+    if i not in f.free_symbols:
+        return f*(b - a + 1)
+
     definite = a.is_Integer and b.is_Integer
     # Doing it directly may be faster if there are very few terms.
     if definite and (b-a < 100):
@@ -271,51 +339,157 @@ def eval_sum(f, (i, a, b)):
     if definite:
         return eval_sum_direct(f, (i, a, b))
 
-def eval_sum_symbolic(f, (i, a, b)):
+def eval_sum_symbolic(f, limits):
+    (i, a, b) = limits
     if not f.has(i):
         return f*(b-a+1)
+
     # Linearity
     if f.is_Mul:
-        L, R = getab(f)
+        L, R = f.as_two_terms()
+
         if not L.has(i):
             sR = eval_sum_symbolic(R, (i, a, b))
             if sR: return L*sR
+
         if not R.has(i):
             sL = eval_sum_symbolic(L, (i, a, b))
             if sL: return R*sL
+
+        try:
+            f = apart(f, i) # see if it becomes an Add
+        except PolynomialError:
+            pass
+
     if f.is_Add:
-        L, R = getab(f)
+        L, R = f.as_two_terms()
         lrsum = telescopic(L, R, (i, a, b))
-        if lrsum: return lrsum
+
+        if lrsum:
+            return lrsum
+
         lsum = eval_sum_symbolic(L, (i, a, b))
         rsum = eval_sum_symbolic(R, (i, a, b))
+
         if None not in (lsum, rsum):
             return lsum + rsum
+
     # Polynomial terms with Faulhaber's formula
-    p = C.Wild('p')
-    e = f.match(i**p)
-    if e is not None:
-        c = p.subs(e)
-        B = C.bernoulli
-        if c.is_integer and c >= 0:
-            s = (B(c+1, b+1) - B(c+1, a))/(c+1)
-            return s.expand()
+    n = Wild('n')
+    result = f.match(i**n)
+
+    if result is not None:
+        n = result[n]
+
+        if n.is_Integer:
+            if n >= 0:
+                return ((C.bernoulli(n+1, b+1) - C.bernoulli(n+1, a))/(n+1)).expand()
+            elif a.is_Integer and a >= 1:
+                if n == -1:
+                    return C.harmonic(b) - C.harmonic(a - 1)
+                else:
+                    return C.harmonic(b, abs(n)) - C.harmonic(a - 1, abs(n))
+
     # Geometric terms
     c1 = C.Wild('c1', exclude=[i])
     c2 = C.Wild('c2', exclude=[i])
     c3 = C.Wild('c3', exclude=[i])
+
     e = f.match(c1**(c2*i+c3))
+
     if e is not None:
         c1 = c1.subs(e)
         c2 = c2.subs(e)
         c3 = c3.subs(e)
+
         # TODO: more general limit handling
         return c1**c3 * (c1**(a*c2) - c1**(c2+b*c2)) / (1 - c1**c2)
-    return None
 
-def eval_sum_direct(expr, (i, a, b)):
+    r = gosper_sum(f, (i, a, b))
+    if not r in (None, S.NaN):
+        return r
+
+    return eval_sum_hyper(f, (i, a, b))
+
+def _eval_sum_hyper(f, i, a):
+    """ Returns (res, cond). Sums from a to oo. """
+    from sympy.functions import hyper
+    from sympy.simplify import hyperexpand, hypersimp, fraction
+    from sympy.polys.polytools import Poly, factor
+
+    if a != 0:
+        return _eval_sum_hyper(f.subs(i, i + a), i, 0)
+
+    if f.subs(i, 0) == 0:
+        return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
+
+    hs = hypersimp(f, i)
+    if hs is None:
+        return None
+
+    numer, denom = fraction(factor(hs))
+    top, topl = numer.as_coeff_mul(i)
+    bot, botl = denom.as_coeff_mul(i)
+    ab = [top, bot]
+    factors = [topl, botl]
+    params = [[], []]
+    for k in range(2):
+        for fac in factors[k]:
+            mul = 1
+            if fac.is_Pow:
+                mul = fac.exp
+                fac = fac.base
+                if not mul.is_Integer:
+                    return None
+            p = Poly(fac, i)
+            if p.degree() != 1:
+                return None
+            m, n = p.all_coeffs()
+            ab[k] *= m**mul
+            params[k] += [n/m]*mul
+
+    # Add "1" to numerator parameters, to account for implicit n! in
+    # hypergeometric series.
+    ap = params[0] + [1]
+    bq = params[1]
+    x  = ab[0]/ab[1]
+    h = hyper(ap, bq, x)
+
+    return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
+
+def eval_sum_hyper(f, (i, a, b)):
+    from sympy.functions import Piecewise
+    from sympy import oo, And
+
+    if b != oo:
+        if a == -oo:
+            res = _eval_sum_hyper(f.subs(i, -i), i, -b)
+            if res is not None:
+                return Piecewise(res, (Sum(f, (i, a, b)), True))
+        else:
+            return None
+
+    if a == -oo:
+        res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)
+        res2 = _eval_sum_hyper(f, i, 0)
+        if res1 is None or res2 is None:
+            return None
+        res1, cond1 = res1
+        res2, cond2 = res2
+        cond = And(cond1, cond2)
+        if cond is False:
+            return None
+        return Piecewise((res1 + res2, cond), (Sum(f, (i, a, b)), True))
+
+    # Now b == oo, a != -oo
+    res = _eval_sum_hyper(f, i, a)
+    if res is not None:
+        return Piecewise(res, (Sum(f, (i, a, b)), True))
+
+def eval_sum_direct(expr, limits):
+    (i, a, b) = limits
     s = S.Zero
-    if expr.has(i):
+    if i in expr.free_symbols:
         for j in xrange(a, b+1):
             s += expr.subs(i, j)
     else:

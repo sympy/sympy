@@ -6,9 +6,6 @@
    hypergeometric terms, or combinations of hypergeometric term which
    are pairwise dissimilar.
 
-   Main function on this module is rsolve(), which is not implemented
-   yet, see issue #1271 for more info on this.
-
    rsolve_X functions were meant as a low level interface for rsolve()
    which would use Mathematica's syntax.
 
@@ -34,10 +31,10 @@
     >>> n = Symbol('n', integer=True)
 
     >>> rsolve_poly([-1, 1], 4*n**3, n)
-    C0 + n**2 - 2*n**3 + n**4
+    C0 + n**4 - 2*n**3 + n**2
 
     >>> bernoulli(4, n)
-    -1/30 + n**2 - 2*n**3 + n**4
+    n**4 - 2*n**3 + n**2 - 1/30
 
    For the sake of completeness, f(n) can be:
 
@@ -45,13 +42,20 @@
     [2] a rational function       -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
+from collections import defaultdict
 
-from sympy.core import S,  Rational, Symbol, Wild, Equality, Add, Mul, sympify
+from sympy.core.singleton import S
+from sympy.core.numbers import Rational
+from sympy.core.symbol import Symbol, Wild, Dummy
+from sympy.core.relational import Equality
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar
 from sympy.solvers import solve, solve_undetermined_coeffs
-from sympy.polys import Poly, exquo, gcd, lcm, roots, resultant
-from sympy.functions import Binomial, FallingFactorial
+from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
+from sympy.functions import binomial, FallingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
 
@@ -89,7 +93,7 @@ def rsolve_poly(coeffs, f, n, **hints):
        >>> n = Symbol('n', integer=True)
 
        >>> rsolve_poly([-1, 1], 4*n**3, n)
-       C0 + n**2 - 2*n**3 + n**4
+       C0 + n**4 - 2*n**3 + n**2
 
        For more information on implemented algorithms refer to:
 
@@ -120,7 +124,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     for i in xrange(0, r+1):
         for j in xrange(i, r+1):
-            polys[i] += coeffs[j]*Binomial(j, i)
+            polys[i] += coeffs[j]*binomial(j, i)
 
         if not polys[i].is_zero:
             (exp,), coeff = polys[i].LT()
@@ -137,7 +141,7 @@ def rsolve_poly(coeffs, f, n, **hints):
 
     d, b = int(d), int(b)
 
-    x = Symbol('x', dummy=True)
+    x = Dummy('x')
 
     degree_poly = S.Zero
 
@@ -178,7 +182,7 @@ def rsolve_poly(coeffs, f, n, **hints):
             y += C[i] * n**i
 
         for i in xrange(0, r+1):
-            E += coeffs[i].as_basic()*y.subs(n, n+i)
+            E += coeffs[i].as_expr()*y.subs(n, n+i)
 
         solutions = solve_undetermined_coeffs(E-f, C, n)
 
@@ -227,8 +231,8 @@ def rsolve_poly(coeffs, f, n, **hints):
 
             for j in xrange(0, A+1):
                 for k in xrange(0, d+1):
-                    B = Binomial(k, i+j)
-                    D = delta(polys[j].as_basic(), k)
+                    B = binomial(k, i+j)
+                    D = delta(polys[j].as_expr(), k)
 
                     alpha[i] += I[k]*B*D
 
@@ -378,13 +382,13 @@ def rsolve_ratio(coeffs, f, n, **hints):
     A, B = coeffs[r], coeffs[0]
     A = A.subs(n, n-r).expand()
 
-    h = Symbol('h', dummy=True)
+    h = Dummy('h')
 
     res = resultant(A, B.subs(n, n+h), n)
 
     if not res.is_polynomial(h):
         p, q = res.as_numer_denom()
-        res = exquo(p, q, h)
+        res = quo(p, q, h)
 
     nni_roots = roots(res, h, filter='Z',
         predicate=lambda r: r >= 0).keys()
@@ -397,8 +401,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
         for i in xrange(int(max(nni_roots)), -1, -1):
             d = gcd(A, B.subs(n, n+i), n)
 
-            A = exquo(A, d, n)
-            B = exquo(B, d.subs(n, n-i), n)
+            A = quo(A, d, n)
+            B = quo(B, d.subs(n, n-i), n)
 
             C *= Mul(*[ d.subs(n, n-j) for j in xrange(0, i+1) ])
 
@@ -407,8 +411,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
         for i in range(0, r+1):
             g = gcd(coeffs[i], denoms[i], n)
 
-            numers[i] = exquo(coeffs[i], g, n)
-            denoms[i] = exquo(denoms[i], g, n)
+            numers[i] = quo(coeffs[i], g, n)
+            denoms[i] = quo(denoms[i], g, n)
 
         for i in xrange(0, r+1):
             numers[i] *= Mul(*(denoms[:i] + denoms[i+1:]))
@@ -522,7 +526,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     else:
         result = S.Zero
 
-    Z = Symbol('Z', dummy=True)
+    Z = Dummy('Z')
 
     p, q = coeffs[0], coeffs[r].subs(n, n-r+1)
 
@@ -551,7 +555,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
             a = Mul(*[ A.subs(n, n+j) for j in xrange(0, i) ])
             b = Mul(*[ B.subs(n, n+j) for j in xrange(i, r) ])
 
-            poly = exquo(coeffs[i]*a*b, D, n)
+            poly = quo(coeffs[i]*a*b, D, n)
             polys.append(poly.as_poly(n))
 
             if not poly.is_zero:
@@ -589,69 +593,58 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return result
 
 def rsolve(f, y, init=None):
-    """Solve univariate recurrence with rational coefficients.
+    """
+    Solve univariate recurrence with rational coefficients.
 
-       Given k-th order linear recurrence Ly = f, or equivalently:
+    Given k-th order linear recurrence Ly = f, or equivalently:
 
-         a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) + ... + a_{0}(n) y(n) = f
+     a_{k}(n) y(n+k) + a_{k-1}(n) y(n+k-1) + ... + a_{0}(n) y(n) = f
 
-       where a_{i}(n), for i=0..k, are polynomials or rational functions
-       in n, and f is a hypergeometric function or a sum of a fixed number
-       of pairwise dissimilar hypergeometric terms in n, finds all solutions
-       or returns None, if none were found.
+    where a_{i}(n), for i=0..k, are polynomials or rational functions
+    in n, and f is a hypergeometric function or a sum of a fixed number
+    of pairwise dissimilar hypergeometric terms in n, finds all solutions
+    or returns None, if none were found.
 
-       Initial conditions can be given as a dictionary in two forms:
+    Initial conditions can be given as a dictionary in two forms:
 
-          [1] {   n_0  : v_0,   n_1  : v_1, ...,   n_m  : v_m }
-          [2] { y(n_0) : v_0, y(n_1) : v_1, ..., y(n_m) : v_m }
+      [1] {   n_0  : v_0,   n_1  : v_1, ...,   n_m  : v_m }
+      [2] { y(n_0) : v_0, y(n_1) : v_1, ..., y(n_m) : v_m }
 
-       or as a list L of values:
+    or as a list L of values:
 
-          L = [ v_0, v_1, ..., v_m ]
+      L = [ v_0, v_1, ..., v_m ]
 
-       where L[i] = v_i, for i=0..m, maps to y(n_i).
+    where L[i] = v_i, for i=0..m, maps to y(n_i).
 
-       As an example lets consider the following recurrence:
+    As an example lets consider the following recurrence:
 
-         (n - 1) y(n + 2) - (n**2 + 3 n - 2) y(n + 1) + 2 n (n + 1) y(n) == 0
+     (n - 1) y(n + 2) - (n**2 + 3 n - 2) y(n + 1) + 2 n (n + 1) y(n) == 0
 
-       >>> from sympy import Function, rsolve
-       >>> from sympy.abc import n
-       >>> y = Function('y')
+    >>> from sympy import Function, rsolve
+    >>> from sympy.abc import n
+    >>> y = Function('y')
 
-       >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
+    >>> f = (n-1)*y(n+2) - (n**2+3*n-2)*y(n+1) + 2*n*(n+1)*y(n)
 
-       >>> rsolve(f, y(n))
-       C0*gamma(1 + n) + C1*2**n
+    >>> rsolve(f, y(n))
+    2**n*C1 + C0*n!
 
-       >>> rsolve(f, y(n), { y(0):0, y(1):3 })
-       -3*gamma(1 + n) + 3*2**n
+    >>> rsolve(f, y(n), { y(0):0, y(1):3 })
+    3*2**n - 3*n!
 
     """
     if isinstance(f, Equality):
         f = f.lhs - f.rhs
 
-    if f.is_Add:
-        F = f.args
-    else:
-        F = [f]
-
     k = Wild('k')
     n = y.args[0]
 
-    h_part = {}
+    h_part = defaultdict(lambda: S.Zero)
     i_part = S.Zero
-
-    for g in F:
-        if g.is_Mul:
-            G = g.args
-        else:
-            G = [g]
-
+    for g in Add.make_args(f):
         coeff = S.One
         kspec = None
-
-        for h in G:
+        for h in Mul.make_args(g):
             if h.is_Function:
                 if h.func == y.func:
                     result = h.args[0].match(n + k)
@@ -666,10 +659,7 @@ def rsolve(f, y, init=None):
                 coeff *= h
 
         if kspec is not None:
-            if kspec in h_part:
-                h_part[kspec] += coeff
-            else:
-                h_part[kspec] = coeff
+            h_part[kspec] += coeff
         else:
             i_part += coeff
 
@@ -693,16 +683,16 @@ def rsolve(f, y, init=None):
     if common is not S.One:
         for k, coeff in h_part.iteritems():
             numer, denom = coeff.as_numer_denom()
-            h_part[k] = numer*exquo(common, denom, n)
+            h_part[k] = numer*quo(common, denom, n)
 
-        i_part = i_numer*exquo(common, i_denom, n)
+        i_part = i_numer*quo(common, i_denom, n)
 
     K_min = min(h_part.keys())
 
     if K_min < 0:
         K = abs(K_min)
 
-        H_part = {}
+        H_part = defaultdict(lambda: S.Zero)
         i_part = i_part.subs(n, n+K).expand()
         common = common.subs(n, n+K).expand()
 
@@ -711,48 +701,42 @@ def rsolve(f, y, init=None):
     else:
         H_part = h_part
 
-    K_max = max(H_part.keys())
-    coeffs = []
-
-    for i in xrange(0, K_max+1):
-        if i in H_part:
-            coeffs.append(H_part[i])
-        else:
-            coeffs.append(S.Zero)
+    K_max = max(H_part.iterkeys())
+    coeffs = [H_part[i] for i in xrange(K_max+1)]
 
     result = rsolve_hyper(coeffs, i_part, n, symbols=True)
 
     if result is None:
         return None
-    else:
-        solution, symbols = result
 
-        if symbols and init is not None:
-            equations = []
+    solution, symbols = result
 
-            if type(init) is list:
-                for i in xrange(0, len(init)):
-                    eq = solution.subs(n, i) - init[i]
-                    equations.append(eq)
-            else:
-                for k, v in init.iteritems():
-                    try:
-                        i = int(k)
-                    except TypeError:
-                        if k.is_Function and k.func == y.func:
-                            i = int(k.args[0])
-                        else:
-                            raise ValueError("Integer or term expected, got '%s'" % k)
+    if symbols and init is not None:
+        equations = []
 
-                    eq = solution.subs(n, i) - v
-                    equations.append(eq)
+        if type(init) is list:
+            for i in xrange(0, len(init)):
+                eq = solution.subs(n, i) - init[i]
+                equations.append(eq)
+        else:
+            for k, v in init.iteritems():
+                try:
+                    i = int(k)
+                except TypeError:
+                    if k.is_Function and k.func == y.func:
+                        i = int(k.args[0])
+                    else:
+                        raise ValueError("Integer or term expected, got '%s'" % k)
 
-            result = solve(equations, *symbols)
+                eq = solution.subs(n, i) - v
+                equations.append(eq)
 
-            if result is None:
-                return None
-            else:
-                for k, v in result.iteritems():
-                    solution = solution.subs(k, v)
+        result = solve(equations, *symbols)
+
+        if result is None:
+            return None
+        else:
+            for k, v in result.iteritems():
+                solution = solution.subs(k, v)
 
     return (solution.expand()) / common

@@ -1,97 +1,200 @@
-from sympy.core import S, Symbol, Mul, sympify
+"""Gosper's algorithm for hypergeometric summation. """
 
-from sympy.polys import gcd, quo, roots, resultant
+from sympy.core import S, Dummy, symbols
+from sympy.core.compatibility import is_sequence
+from sympy.polys import Poly, parallel_poly_from_expr, factor
+from sympy.solvers import solve
+from sympy.simplify import hypersimp
 
-def normal(f, g, n=None):
-    """Given relatively prime univariate polynomials 'f' and 'g',
-       rewrite their quotient to a normal form defined as follows:
+def gosper_normal(f, g, n, polys=True):
+    r"""
+    Compute the Gosper's normal form of ``f`` and ``g``.
 
-                       f(n)       A(n) C(n+1)
-                       ----  =  Z -----------
-                       g(n)       B(n)  C(n)
+    Given relatively prime univariate polynomials ``f`` and ``g``,
+    rewrite their quotient to a normal form defined as follows::
 
-       where Z is arbitrary constant and A, B, C are monic
-       polynomials in 'n' with following properties:
+    .. math::
 
-           (1) gcd(A(n), B(n+h)) = 1 for all 'h' in N
-           (2) gcd(B(n), C(n+1)) = 1
-           (3) gcd(A(n), C(n)) = 1
+        \frac{f(n)}{g(n)} = Z \cdot \frac{A(n) C(n+1)}{B(n) C(n)}
 
-       This normal form, or rational factorization in other words,
-       is crucial step in Gosper's algorithm and in difference
-       equations solving. It can be also used to decide if two
-       hypergeometric are similar or not.
+    where ``Z`` is an arbitrary constant and ``A``, ``B``, ``C`` are
+    monic polynomials in ``n`` with the following properties:
 
-       This procedure will return a tuple containing elements
-       of this factorization in the form (Z*A, B, C). For example:
+    1. `\gcd(A(n), B(n+h)) = 1 \forall h \in \mathbb{N}`
+    2. `\gcd(B(n), C(n+1)) = 1`
+    3. `\gcd(A(n), C(n)) = 1`
 
-       >>> from sympy import Symbol, normal
-       >>> n = Symbol('n', integer=True)
+    This normal form, or rational factorization in other words, is a
+    crucial step in Gosper's algorithm and in solving of difference
+    equations. It can be also used to decide if two hypergeometric
+    terms are similar or not.
 
-       >>> normal(4*n+5, 2*(4*n+1)*(2*n+3), n)
-       (1/4, 3/2 + n, 1/4 + n)
+    This procedure will return a tuple containing elements of this
+    factorization in the form ``(Z*A, B, C)``.
+
+    **Examples**
+
+    >>> from sympy.concrete.gosper import gosper_normal
+    >>> from sympy.abc import n
+
+    >>> gosper_normal(4*n+5, 2*(4*n+1)*(2*n+3), n, polys=False)
+    (1/4, n + 3/2, n + 1/4)
 
     """
-    f, g = map(sympify, (f, g))
+    (p, q), opt = parallel_poly_from_expr((f, g), n, field=True, extension=True)
 
-    p = f.as_poly(n, field=True)
-    q = g.as_poly(n, field=True)
+    a, A = p.LC(), p.monic()
+    b, B = q.LC(), q.monic()
 
-    a, p = p.LC(), p.monic()
-    b, q = q.LC(), q.monic()
+    C, Z = A.one, a/b
+    h = Dummy('h')
 
-    A = p.as_basic()
-    B = q.as_basic()
+    D = Poly(n + h, n, h, domain=opt.domain)
 
-    C, Z = S.One, a / b
+    R = A.resultant(B.compose(D))
+    roots = set(R.ground_roots().keys())
 
-    h = Symbol('h', dummy=True)
+    for r in set(roots):
+        if not r.is_Integer or r < 0:
+            roots.remove(r)
 
-    res = resultant(A, B.subs(n, n+h), n)
+    for i in sorted(roots):
+        d = A.gcd(B.shift(+i))
 
-    nni_roots = roots(res, h, filter='Z',
-        predicate=lambda r: r >= 0).keys()
+        A = A.quo(d)
+        B = B.quo(d.shift(-i))
 
-    if not nni_roots:
-        return (f, g, S.One)
+        for j in xrange(1, i+1):
+            C *= d.shift(-j)
+
+    A = A.mul_ground(Z)
+
+    if not polys:
+        A = A.as_expr()
+        B = B.as_expr()
+        C = C.as_expr()
+
+    return A, B, C
+
+def gosper_term(f, n):
+    """
+    Compute Gosper's hypergeometric term for ``f``.
+
+    Suppose ``f`` is a hypergeometric term such that::
+
+    .. math::
+
+        s_n = \sum_{k=0}^{n-1} f_k
+
+    and `f_k` doesn't depend on `n`. Returns a hypergeometric
+    term `g_n` such that `g_{n+1} - g_n = f_n`.
+
+    **Examples**
+
+    >>> from sympy.concrete.gosper import gosper_term
+    >>> from sympy.functions import factorial
+    >>> from sympy.abc import n
+
+    >>> gosper_term((4*n + 1)*factorial(n)/factorial(2*n + 1), n)
+    (-n - 1/2)/(n + 1/4)
+
+    """
+    r = hypersimp(f, n)
+
+    if r is None:
+        return None    # 'f' is *not* a hypergeometric term
+
+    p, q = r.as_numer_denom()
+
+    A, B, C = gosper_normal(p, q, n)
+    B = B.shift(-1)
+
+    N = S(A.degree())
+    M = S(B.degree())
+    K = S(C.degree())
+
+    if (N != M) or (A.LC() != B.LC()):
+        D = set([K - max(N, M)])
+    elif not N:
+        D = set([K - N + 1, S(0)])
     else:
-        for i in sorted(nni_roots):
-            d = gcd(A, B.subs(n, n+i), n)
+        D = set([K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()])
 
-            A = quo(A, d, n)
-            B = quo(B, d.subs(n, n-i), n)
+    for d in set(D):
+        if not d.is_Integer or d < 0:
+            D.remove(d)
 
-            C *= Mul(*[ d.subs(n, n-j) for j in xrange(1, i+1) ])
+    if not D:
+        return None    # 'f(n)' is *not* Gosper-summable
 
-        return (Z*A, B, C)
+    d = max(D)
 
-def gosper(term, k, a, n):
-    from sympy.solvers import rsolve_poly
+    coeffs = symbols('c:%s' % (d + 1), cls=Dummy)
+    domain = A.get_domain().inject(*coeffs)
 
-    if not term:
+    x = Poly(coeffs, n, domain=domain)
+    H = A*x.shift(1) - B*x - C
+
+    solution = solve(H.coeffs(), coeffs)
+
+    if solution is None:
+        return None    # 'f(n)' is *not* Gosper-summable
+
+    x = x.as_expr().subs(solution)
+
+    for coeff in coeffs:
+        if coeff not in solution:
+            x = x.subs(coeff, 0)
+
+    if x is S.Zero:
+        return None    # 'f(n)' is *not* Gosper-summable
+    else:
+        return B.as_expr()*x/C.as_expr()
+
+def gosper_sum(f, k):
+    """
+    Gosper's hypergeometric summation algorithm.
+
+    Given a hypergeometric term ``f`` such that::
+
+    .. math::
+
+        s_n = \sum_{k=0}^{n-1} f_k
+
+    and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where
+    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` can not be expressed
+    in closed form as a sum of hypergeometric terms.
+
+    **Examples**
+
+    >>> from sympy.concrete.gosper import gosper_sum
+    >>> from sympy.functions import factorial
+    >>> from sympy.abc import n, k
+
+    >>> gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n))
+    (-n! + 2*(2*n + 1)!)/(2*n + 1)!
+
+    **References**
+
+    .. [1] Marko Petkovsek, Herbert S. Wilf, Doron Zeilberger, A = B,
+           AK Peters, Ltd., Wellesley, MA, USA, 1997, pp. 73--100
+
+    """
+    indefinite = False
+
+    if is_sequence(k):
+        k, a, b = k
+    else:
+        indefinite = True
+
+    g = gosper_term(f, k)
+
+    if g is None:
         return None
+
+    if indefinite:
+        result = f*g
     else:
-        p, q = term.as_numer_denom()
-        A, B, C = normal(p, q, k)
+        result = (f*(g+1)).subs(k, b) - (f*g).subs(k, a)
 
-        B = B.subs(k, k-1)
-
-        R = rsolve_poly([-B, A], C, k)
-        symbol = []
-
-        if not (R is None  or  R is S.Zero):
-            if symbol != []:
-                symbol = symbol[0]
-
-                W = R.subs(symbol, S.Zero)
-
-                if W is S.Zero:
-                    R = R.subs(symbol, S.One)
-                else:
-                    R = W
-
-            Z = B*R*term/C
-            return simplify(Z.subs(k, n+1) - Z.subs(k, a))
-        else:
-            return None
-
+    return factor(result)

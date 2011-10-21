@@ -233,9 +233,7 @@ def find_pure_symbol_int_repr(symbols, unknown_clauses):
     (1, True)
 
     """
-    all_symbols = set()
-    for c in unknown_clauses:
-        all_symbols.update(c)
+    all_symbols = reduce(set.union, unknown_clauses, set())
     found_pos = all_symbols.intersection(symbols)
     found_neg = all_symbols.intersection([-s for s in symbols])
     for p in found_pos:

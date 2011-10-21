@@ -14,15 +14,15 @@ class Unit(AtomicExpr):
     Create own units like:
     m = Unit("meter", "m")
     """
-    is_positive = True    # make (m**2)**Rational(1,2) --> m
+    is_positive = True    # make sqrt(m**2) --> m
     is_commutative = True
 
     __slots__ = ["name", "abbrev"]
 
     def __new__(cls, name, abbrev, **assumptions):
         obj = AtomicExpr.__new__(cls, **assumptions)
-        assert isinstance(name, str),`type(name)`
-        assert isinstance(abbrev, str),`type(abbrev)`
+        assert isinstance(name, str),repr(type(name))
+        assert isinstance(abbrev, str),repr(type(abbrev))
         obj.name = name
         obj.abbrev = abbrev
         return obj

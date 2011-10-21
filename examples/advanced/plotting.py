@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Plotting Examples
 
@@ -12,11 +13,12 @@ Suggested Usage:    python -i plotting.py
 from sympy import symbols
 from sympy import Plot
 from sympy import sin, cos, pi, sqrt, exp
+from sympy.core.compatibility import callable
 
 from time import sleep, clock
 
 def main():
-    x,y,z = symbols('xyz')
+    x,y,z = symbols('x,y,z')
 
     # toggle axes visibility with F5, colors with F6
     axes_options = 'visible=false; colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'
@@ -201,21 +203,8 @@ def main():
         else: print "Not a valid example.\n"
         print p
 
-    #ding_dong_surface()
-    mirrored_saddles()
-    #parametric_spiral()
-    #multistep_gradient()
-    #gradient_vectors()
-    #example(0)
+    example(0) # 0 - 15 are defined above
     print help_str()
-
-    #def profile_plotting():
-        #import cProfile
-        #from pstats import Stats
-        #cProfile.run("p.append(1, 'mode=polar')", 'plot.profile2')
-        #cProfile.run("p.append(x**2+y**2)", 'plot.profile2')
-        #s = Stats('plot.profile2')
-        #s.sort_stats('cumulative').print_stats(20)
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 from sympy import (legendre, Symbol, hermite, chebyshevu, chebyshevt,
         chebyshevt_root, chebyshevu_root, assoc_legendre, Rational,
-        roots, sympify, S, laguerre_l, laguerre_poly)
+        roots, sympify, S, laguerre_l, laguerre_poly, sqrt)
 
 x = Symbol('x')
 
@@ -21,15 +21,15 @@ def test_legendre():
     assert legendre(11, 0) == 0
 
     assert roots(legendre(4,x), x) == {
-         (Rational(3, 7) - Rational(2, 35)*30**S.Half)**S.Half: 1,
-        -(Rational(3, 7) - Rational(2, 35)*30**S.Half)**S.Half: 1,
-         (Rational(3, 7) + Rational(2, 35)*30**S.Half)**S.Half: 1,
-        -(Rational(3, 7) + Rational(2, 35)*30**S.Half)**S.Half: 1,
+         sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
+        -sqrt(Rational(3, 7) - Rational(2, 35)*sqrt(30)): 1,
+         sqrt(Rational(3, 7) + Rational(2, 35)*sqrt(30)): 1,
+        -sqrt(Rational(3, 7) + Rational(2, 35)*sqrt(30)): 1,
     }
 
 def test_assoc_legendre():
     Plm=assoc_legendre
-    Q=(1-x**2)**Rational(1,2)
+    Q=sqrt(1-x**2)
 
     assert Plm(0, 0, x) ==  1
     assert Plm(1, 0, x) ==  x
@@ -74,16 +74,17 @@ def test_laguerre():
     # generalized Laguerre polynomials:
     assert laguerre_l(0, alpha, x) == 1
     assert laguerre_l(1, alpha, x) == -x + alpha + 1
-    assert laguerre_l(2, alpha, x) == x**2/2 - (alpha+2)*x + (alpha+2)*(alpha+1)/2
-    assert laguerre_l(3, alpha, x) == -x**3/6 + (alpha+3)*x**2/2 - (alpha+2)*(alpha+3)*x/2 + (alpha+1)*(alpha+2)*(alpha+3)/6
+    assert laguerre_l(2, alpha, x).expand() == (x**2/2 - (alpha+2)*x + (alpha+2)*(alpha+1)/2).expand()
+    assert laguerre_l(3, alpha, x).expand() == (-x**3/6 + (alpha+3)*x**2/2 - (alpha+2)*(alpha+3)*x/2 + (alpha+1)*(alpha+2)*(alpha+3)/6).expand()
 
     # Laguerre polynomials:
     assert laguerre_l(0, 0, x) == 1
     assert laguerre_l(1, 0, x) == 1 - x
-    assert laguerre_l(2, 0, x) == 1 - 2*x + x**2/2
-    assert laguerre_l(3, 0, x) == 1 - 3*x + 3*x**2/2 - x**3/6
+    assert laguerre_l(2, 0, x).expand() == 1 - 2*x + x**2/2
+    assert laguerre_l(3, 0, x).expand() == 1 - 3*x + 3*x**2/2 - x**3/6
 
     # Test the lowest 10 polynomials with laguerre_poly, to make sure that it
     # works:
     for i in range(10):
-        assert laguerre_l(i, 0, x) == laguerre_poly(i, x)
+        assert laguerre_l(i, 0, x).expand() == laguerre_poly(i, x)
+

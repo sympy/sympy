@@ -1,4 +1,4 @@
-from functions import defun, defun_wrapped
+from .functions import defun, defun_wrapped
 
 def _hermite_param(ctx, n, z, parabolic_cylinder):
     """

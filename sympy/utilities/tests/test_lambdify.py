@@ -1,15 +1,16 @@
 from sympy.utilities.pytest import XFAIL, raises
-from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Real,
-        Matrix, Lambda, exp, Integral, oo)
+from sympy import (symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
+        Matrix, Lambda, exp, Integral, oo, I, Abs)
+from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
+from sympy.utilities.pytest import skip
+from sympy.external import import_module
 import math, sympy
 
-# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
-mpmath.mp.dps = 50
-sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+numpy = import_module('numpy', min_python_version=(2, 6))
 
-x,y,z = symbols('xyz')
+x,y,z = symbols('x,y,z')
 
 #================== Test different arguments ==============
 def test_no_args():
@@ -70,44 +71,78 @@ def test_bad_args():
     except TypeError:
         pass
 
+def test_atoms():
+    # Non-Symbol atoms should not be pulled out from the expression namespace
+    f = lambdify(x, pi + x, {"pi": 3.14})
+    assert f(0) == 3.14
+    f = lambdify(x, I + x, {"I": 1j})
+    assert f(1) == 1 + 1j
+
 #================== Test different modules ================
+
+# high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
+
 def test_sympy_lambda():
-    f = lambdify(x, sin(x), "sympy")
-    assert f(x) is sin(x)
-    prec = 1e-15
-    assert -prec < f(Rational(1,5)).evalf() - Real(str(sin02)) < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        # arctan is in numpy module and should not be available
-        f = lambdify(x, arctan(x), "sympy")
-        assert False
-    except NameError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "sympy")
+        assert f(x) == sin(x)
+        prec = 1e-15
+        assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
+        try:
+            # arctan is in numpy module and should not be available
+            f = lambdify(x, arctan(x), "sympy")
+            assert False
+        except NameError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 def test_math_lambda():
-    f = lambdify(x, sin(x), "math")
-    prec = 1e-15
-    assert -prec < f(0.2) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        f(x) # if this succeeds, it can't be a python math function
-        assert False
-    except ValueError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "math")
+        prec = 1e-15
+        assert -prec < f(0.2) - sin02 < prec
+        try:
+            f(x) # if this succeeds, it can't be a python math function
+            assert False
+        except ValueError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 def test_mpmath_lambda():
-    f = lambdify(x, sin(x), "mpmath")
-    prec = 1e-49 # mpmath precision is around 50 decimal places
-    assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
     try:
-        f(x) # if this succeeds, it can't be a mpmath function
-        assert False
-    except TypeError:
-        pass
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin(x), "mpmath")
+        prec = 1e-49 # mpmath precision is around 50 decimal places
+        assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
+        try:
+            f(x) # if this succeeds, it can't be a mpmath function
+            assert False
+        except TypeError:
+            pass
+    finally:
+        mpmath.mp.dps = dps
 
 @XFAIL
 def test_number_precision():
-    f = lambdify(x, sin02, "mpmath")
-    prec = 1e-49 # mpmath precision is around 50 decimal places
-    assert -prec < f(0) - sin02 < prec
+    dps = mpmath.mp.dps
+    mpmath.mp.dps = 50
+    try:
+        sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
+        f = lambdify(x, sin02, "mpmath")
+        prec = 1e-49 # mpmath precision is around 50 decimal places
+        assert -prec < f(0) - sin02 < prec
+    finally:
+        mpmath.mp.dps = dps
 
 #================== Test Translations =====================
 # We can only check if all translated functions are valid. It has to be checked
@@ -124,6 +159,23 @@ def test_mpmath_transl():
     for sym, mat in MPMATH_TRANSLATIONS.iteritems():
         assert sym in sympy.__dict__ or sym == 'Matrix'
         assert mat in mpmath.__dict__
+
+def test_numpy_transl():
+    if not numpy:
+        skip("numpy not installed or Python too old.")
+
+    from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
+    for sym, nump in NUMPY_TRANSLATIONS.iteritems():
+        assert sym in sympy.__dict__
+        assert nump in numpy.__dict__
+
+def test_numpy_translation_abs():
+    if not numpy:
+        skip("numpy not installed or Python too old.")
+
+    f = lambdify(x, Abs(x), "numpy")
+    assert f(-1) == 1
+    assert f(1) == 1
 
 #================== Test some functions ===================
 def test_exponentiation():
@@ -142,10 +194,6 @@ def test_sqrt():
     assert f(4) == 2.0
     assert abs(f(2) - 1.414) < 0.001
     assert f(6.25) == 2.5
-    try:
-        f(-1)
-        assert False
-    except ValueError: pass
 
 def test_trig():
     f = lambdify([x], [cos(x),sin(x)])
@@ -307,3 +355,29 @@ def test_lambdify_imps():
     # Unless flag passed
     lam = lambdify(x, f(x), d, use_imps=False)
     assert lam(3) == 102
+
+#================== Test special printers ==========================
+def test_special_printers():
+    class IntervalPrinter(LambdaPrinter):
+        """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
+
+        def _print_Integer(self, expr):
+            return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
+
+        def _print_Rational(self, expr):
+            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+
+    def intervalrepr(expr):
+        return IntervalPrinter().doprint(expr)
+
+    expr = sympy.sqrt(sympy.sqrt(2) + sympy.sqrt(3)) + sympy.S(1)/2
+
+    func0 = lambdify((), expr, modules="mpmath", printer=intervalrepr)
+    func1 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter)
+    func2 = lambdify((), expr, modules="mpmath", printer=IntervalPrinter())
+
+    mpi = type(mpmath.mpi(1, 2))
+
+    assert isinstance(func0(), mpi)
+    assert isinstance(func1(), mpi)
+    assert isinstance(func2(), mpi)

@@ -1,8 +1,8 @@
 """Singleton mechanism"""
 
-from core import BasicMeta, Registry
+from core import Registry
+from assumptions import WithAssumptions
 from sympify import sympify
-from basic import Basic
 
 class SingletonRegistry(Registry):
     """
@@ -19,12 +19,12 @@ class SingletonRegistry(Registry):
 S = SingletonRegistry()
 
 
-class Singleton(BasicMeta):
+class Singleton(WithAssumptions):
     """
     Metaclass for singleton classes.
 
     A singleton class has only one instance which is returned every time the
-    class is instanciated. Additionally, this instance can be accessed through
+    class is instantiated. Additionally, this instance can be accessed through
     the global registry object S as S.<class_name>.
 
     Example::

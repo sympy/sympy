@@ -4,8 +4,7 @@ from sympy.utilities.pytest import XFAIL
 
 
 def test_re():
-
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
 
@@ -43,8 +42,7 @@ def test_re():
     assert re((2+I)**2).expand(complex=True) == 3
 
 def test_im():
-
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
 
     r = Symbol('r', real=True)
 
@@ -100,7 +98,7 @@ def test_sign():
 
 
 def test_Abs():
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert Abs(0) == 0
     assert Abs(1) == 1
     assert Abs(-1)== 1
@@ -109,6 +107,10 @@ def test_Abs():
     assert x**(2*n) == Abs(x)**(2*n)
     assert Abs(x).diff(x) == sign(x)
     assert abs(x) == Abs(x) # Python built-in
+    assert Abs(x)**3 == x**2*Abs(x)
+    assert (Abs(x)**(3*n)).args == (Abs(x), 3*n) # leave symbolic odd unchanged
+    assert (1/Abs(x)).args == (Abs(x), -1)
+    assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
 
 def test_abs_real():
     # test some properties of abs that only apply
@@ -158,7 +160,7 @@ def test_conjugate():
     assert conjugate(a) == a
     assert conjugate(I*a) == -I*a
 
-    x, y = symbols('xy')
+    x, y = symbols('x,y')
     assert conjugate(conjugate(x)) == x
     assert conjugate(x + y) == conjugate(x) + conjugate(y)
     assert conjugate(x - y) == conjugate(x) - conjugate(y)

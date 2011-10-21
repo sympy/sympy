@@ -1,64 +1,429 @@
-from sympy.core import S, C, sympify, Function
+from sympy.core import S, C, sympify
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.operations import LatticeOp, ShortCircuit
+from sympy.core.function import Application, Lambda
+from sympy.core.expr import Expr
+from sympy.core.singleton import Singleton
+
+class IdentityFunction(Lambda):
+    """The identity function
+
+    >>> from sympy import Id, Symbol
+    >>> x = Symbol('x')
+    >>> Id(x)
+    x
+    """
+    __metaclass__ = Singleton
+    __slots__ = []
+    nargs = 1
+    def __new__(cls):
+        x = C.Dummy('x')
+        #construct "by hand" to avoid infinite loop
+        return Expr.__new__(cls, Tuple(x), x)
+Id = S.IdentityFunction
 
 ###############################################################################
-############################# SQUARE ROOT FUNCTION ############################
+############################# ROOT and SQUARE ROOT FUNCTION ###################
 ###############################################################################
 
 def sqrt(arg):
+    """The square root function
+
+    sqrt(x) -> Returns the principal square root of x.
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt, Symbol
+    >>> x = Symbol('x')
+
+    >>> sqrt(x)
+    sqrt(x)
+
+    >>> sqrt(x)**2
+    x
+
+    Note that sqrt(x**2) does not simplify to x.
+
+    >>> sqrt(x**2)
+    sqrt(x**2)
+
+    This is because the two are not equal to each other in general.
+    For example, consider x == -1:
+
+    >>> sqrt(x**2).subs(x, -1)
+    1
+    >>> x.subs(x, -1)
+    -1
+
+    This is because sqrt computes the principle square root, so the square may
+    put the argument in a different branch.  This identity does hold if x is
+    positive:
+
+    >>> y = Symbol('y', positive=True)
+    >>> sqrt(y**2)
+    y
+
+    You can force this simplification by using the powdenest() function with
+    the force option set to True:
+
+    >>> from sympy import powdenest
+    >>> sqrt(x**2)
+    sqrt(x**2)
+    >>> powdenest(sqrt(x**2), force=True)
+    x
+
+    To get both branches of the square root you can use the RootOf function:
+
+    >>> from sympy import RootOf
+
+    >>> [ RootOf(x**2-3,i) for i in (0,1) ]
+    [-sqrt(3), sqrt(3)]
+
+
+    See also
+    ========
+       L{root}, L{RootOf}
+
+       External links
+       --------------
+
+       * http://en.wikipedia.org/wiki/Square_root
+       * http://en.wikipedia.org/wiki/Principal_value
+    """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
+
+
+def root(arg, n):
+    """The n-th root function
+
+    root(x, n) -> Returns the principal n-th root of x.
+
+
+    Examples
+    ========
+
+    >>> from sympy import root, Rational
+    >>> from sympy.abc import x, n
+
+    >>> root(x, 2)
+    sqrt(x)
+
+    >>> root(x, 3)
+    x**(1/3)
+
+    >>> root(x, n)
+    x**(1/n)
+
+    >>> root(x, -Rational(2,3))
+    x**(-3/2)
+
+
+    To get all n n-th roots you can use the RootOf function.
+    The following examples show the roots of unity for n
+    equal 2, 3 and 4:
+
+    >>> from sympy import RootOf, I
+
+    >>> [ RootOf(x**2-1,i) for i in (0,1) ]
+    [-1, 1]
+
+    >>> [ RootOf(x**3-1,i) for i in (0,1,2) ]
+    [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
+
+    >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
+    [-1, 1, -I, I]
+
+
+    See also
+    ========
+       L{sqrt}, L{RootOf}
+
+       External links
+       --------------
+
+       * http://en.wikipedia.org/wiki/Square_root
+       * http://en.wikipedia.org/wiki/Nth_root
+       * http://en.wikipedia.org/wiki/Root_of_unity
+       * http://en.wikipedia.org/wiki/Principal_value
+    """
+    n = sympify(n)
+    return C.Pow(arg, 1/n)
+
 
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################
 ###############################################################################
 
-class Max(Function):
+class MinMaxBase(LatticeOp):
+    def __new__(cls, *args, **assumptions):
+        if not args:
+            raise ValueError("The Max/Min functions must have arguments.")
 
-    nargs = 2
+        args = (sympify(arg) for arg in args)
+
+        # first standard filter, for cls.zero and cls.identity
+        # also reshape Max(a, Max(b, c)) to Max(a, b, c)
+        try:
+            _args = frozenset(cls._new_args_filter(args))
+        except ShortCircuit:
+            return cls.zero
+
+        # second filter
+        # variant I: remove ones which can be removed
+        # args = cls._collapse_arguments(set(_args), **assumptions)
+
+        # variant II: find local zeros
+        args = cls._find_localzeros(set(_args), **assumptions)
+
+        _args = frozenset(args)
+
+        if not _args:
+            return cls.identity
+        elif len(_args) == 1:
+            return set(_args).pop()
+        else:
+            # base creation
+            obj = Expr.__new__(cls, _args, **assumptions)
+            obj._argset = _args
+            return obj
 
     @classmethod
-    def eval(cls, x, y):
-        """Return, if possible, the value from (a, b) that is >= the other.
-
-        >>> from sympy import Max, Symbol
-        >>> from sympy.abc import x
-        >>> Max(x, -2)
-        Max(x, -2)
-        >>> _.subs(x, 3)
-        3
-
-        Assumptions are used to make the decision:
-
-        >>> p = Symbol('p', positive=True)
-        >>> Max(p, -2)
-        p
+    def _new_args_filter(cls, arg_sequence):
         """
+        Generator filtering args.
 
-        if x == y:
-            return x
+        first standard filter, for cls.zero and cls.identity.
+        Also reshape Max(a, Max(b, c)) to Max(a, b, c),
+        and check arguments for comparability
+        """
+        for arg in arg_sequence:
+
+            # pre-filter, checking comparability of arguments
+            if (arg.is_real == False) or (arg is S.ComplexInfinity):
+                raise ValueError("The argument '%s' is not comparable." % arg)
+
+            if arg == cls.zero:
+                raise ShortCircuit(arg)
+            elif arg == cls.identity:
+                continue
+            elif arg.func == cls:
+                for x in arg.iter_basic_args():
+                    yield x
+            else:
+                yield arg
+
+    @classmethod
+    def _find_localzeros(cls, values, **options):
+        """
+        Sequentially allocate values to localzeros.
+
+        When a value is identified as being more extreme than another member it
+        replaces that member; if this is never true, then the value is simply
+        appended to the localzeros.
+        """
+        localzeros = set()
+        for v in values:
+            is_newzero = True
+            localzeros_ = list(localzeros)
+            for z in localzeros_:
+                if id(v) == id(z):
+                    is_newzero = False
+                elif cls._is_connected(v, z):
+                    is_newzero = False
+                    if cls._is_asneeded(v, z):
+                        localzeros.remove(z)
+                        localzeros.update([v])
+            if is_newzero:
+                localzeros.update([v])
+        return localzeros
+
+    @classmethod
+    def _is_connected(cls, x, y):
+        """
+        Check if x and y are connected somehow.
+        """
+        if (x == y) or isinstance(x > y, bool) or isinstance(x < y, bool):
+            return True
         if x.is_Number and y.is_Number:
-            return max(x, y)
-        xy = x > y
+            return True
+        return False
+
+    @classmethod
+    def _is_asneeded(cls, x, y):
+        """
+        Check if x and y satisfy relation condition.
+
+        The relation condition for Max function is x > y,
+        for Min function is x < y. They are defined in children Max and Min
+        classes through the method _rel(cls, x, y)
+        """
+        if (x == y):
+            return False
+        if x.is_Number and y.is_Number:
+            if cls._rel(x, y):
+                return True
+        xy = cls._rel(x, y)
         if isinstance(xy, bool):
             if xy:
-                return x
-            return y
-        yx = y > x
+                return True
+            return False
+        yx = cls._rel_inversed(x, y)
         if isinstance(yx, bool):
             if yx:
-                return y # never occurs?
-            return x
+                return False # never occurs?
+            return True
+        return False
 
+class Max(MinMaxBase, Application, Basic):
+    """
+    Return, if possible, the maximum value of the list.
 
-class Min(Function):
+    When number of arguments is equal one, then
+    return this argument.
 
-    nargs = 2
+    When number of arguments is equal two, then
+    return, if possible, the value from (a, b) that is >= the other.
+
+    In common case, when the length of list greater than 2, the task
+    is more complicated. Return only the arguments, which are greater
+    than others, if it is possible to determine directional relation.
+
+    If is not possible to determine such a relation, return a partially
+    evaluated result.
+
+    Assumptions are used to make the decision too.
+
+    Also, only comparable arguments are permitted.
+
+    Example
+    -------
+
+    >>> from sympy import Max, Symbol, oo
+    >>> from sympy.abc import x, y
+    >>> p = Symbol('p', positive=True)
+    >>> n = Symbol('n', negative=True)
+
+    >>> Max(x, -2)                  #doctest: +SKIP
+    Max(x, -2)
+
+    >>> Max(x, -2).subs(x, 3)
+    3
+
+    >>> Max(p, -2)
+    p
+
+    >>> Max(x, y)                   #doctest: +SKIP
+    Max(x, y)
+
+    >>> Max(x, y) == Max(y, x)
+    True
+
+    >>> Max(x, Max(y, z))           #doctest: +SKIP
+    Max(x, y, z)
+
+    >>> Max(n, 8, p, 7, -oo)        #doctest: +SKIP
+    Max(8, p)
+
+    >>> Max (1, x, oo)
+    oo
+
+    Algorithm
+    ---------
+    The task can be considered as searching of supremums in the
+    directed complete partial orders [1]_.
+
+    The source values are sequentially allocated by the isolated subsets
+    in which supremums are searched and result as Max arguments.
+
+    If the resulted supremum is single, then it is returned.
+
+    The isolated subsets are the sets of values which are only the comparable
+    with each other in the current set. E.g. natural numbers are comparable with
+    each other, but not comparable with the `x` symbol. Another example: the
+    symbol `x` with negative assumption is comparable with a natural number.
+
+    Also there are "least" elements, which are comparable with all others,
+    and have a zero property (maximum or minimum for all elements). E.g. `oo`.
+    In case of it the allocation operation is terminated and only this value is
+    returned.
+
+    Assumption:
+       - if A > B > C then A > C
+       - if A==B then B can be removed
+
+    [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
+    [2] http://en.wikipedia.org/wiki/Lattice_(order)
+
+    See Also
+    --------
+    Min() : find minimum values
+
+    """
+    zero = S.Infinity
+    identity = S.NegativeInfinity
 
     @classmethod
-    def eval(cls, x, y):
-        """Return, if possible, the value from (a, b) that is <= the other."""
-        rv = Max(x, y)
-        if rv == x:
-            return y
-        elif rv == y:
-            return x
+    def _rel(cls, x, y):
+        """
+        Check if x > y.
+        """
+        return (x > y)
+
+    @classmethod
+    def _rel_inversed(cls, x, y):
+        """
+        Check if x < y.
+        """
+        return (x < y)
+
+
+class Min(MinMaxBase, Application, Basic):
+    """
+    Return, if possible, the minimum value of the list.
+
+    Example
+    -------
+
+    >>> from sympy import Min, Symbol, oo
+    >>> from sympy.abc import x, y
+    >>> p = Symbol('p', positive=True)
+    >>> n = Symbol('n', negative=True)
+
+    >>> Min(x, -2)                  #doctest: +SKIP
+    Min(x, -2)
+
+    >>> Min(x, -2).subs(x, 3)
+    -2
+
+    >>> Min(p, -3)
+    -3
+
+    >>> Min(x, y)                   #doctest: +SKIP
+    Min(x, y)
+
+    >>> Min(n, 8, p, -7, p, oo)     #doctest: +SKIP
+    Min(n, -7)
+
+    See Also
+    --------
+    Max() : find maximum values
+    """
+    zero = S.NegativeInfinity
+    identity = S.Infinity
+
+    @classmethod
+    def _rel(cls, x, y):
+        """
+        Check if x < y.
+        """
+        return (x < y)
+
+    @classmethod
+    def _rel_inversed(cls, x, y):
+        """
+        Check if x > y.
+        """
+        return (x > y)

@@ -42,6 +42,9 @@ class Higher(Expr):
     def __rdiv__(self, other):
         return self.result
 
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
+
 class Lower(Higher):
 
     _op_priority = 5.0

@@ -1,12 +1,13 @@
 from sympy import Integer
+from sympy.core.compatibility import is_sequence
 
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
-from sympy.thirdparty import import_thirdparty
-pyglet = import_thirdparty("pyglet")
-
-from pyglet.gl import *
+try:
+    from pyglet.gl import *
+except ImportError:
+    raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
 from plot_object import PlotObject
 from plot_axes import PlotAxes
@@ -28,7 +29,7 @@ class Plot(object):
     See examples/plotting.py for many more examples.
 
 
-    >>> from sympy import symbols, Plot
+    >>> from sympy import Plot
     >>> from sympy.abc import x, y, z
 
     >>> Plot(x*y**3-y*x**3)
@@ -290,7 +291,7 @@ class Plot(object):
         if isinstance(args, PlotObject):
             f = args
         else:
-            if (not isinstance(args, (list, tuple))) or isinstance(args, GeometryEntity):
+            if (not is_sequence(args)) or isinstance(args, GeometryEntity):
                 args = [args]
             if len(args) == 0:
                 return # no arguments given
@@ -404,10 +405,8 @@ class ScreenShot:
         glReadPixels(0,0,size_x,size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
         from PIL import Image
         im = Image.frombuffer('RGBA',(size_x,size_y),image.raw, 'raw', 'RGBA', 0, 1)
-        if type(self.outfile) in (str, unicode):
-            im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile)
-        elif type(self.outfile)==file:
-            im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
+        im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
+
         self.flag = 0
         self.screenshot_requested = False
         if self.invisibleMode:
@@ -418,6 +417,8 @@ class ScreenShot:
         self.outfile = outfile
         self.format = format
         self.size = size
+        self.screenshot_requested = True
+
         if not self._plot._window or self._plot._window.has_exit:
             self._plot._win_args['visible'] = False
 
@@ -428,13 +429,8 @@ class ScreenShot:
             self._plot._window = PlotWindow(self._plot, **self._plot._win_args)
             self.invisibleMode = True
 
-        if type(self.outfile) in (str, unicode):
-            self.screenshot_requested = True
-        elif type(self.outfile)==file and self.format:
-            self.screenshot_requested = True
-        elif self.outfile==None:
+        if self.outfile is None:
             self.outfile=self._create_unique_path()
-            self.screenshot_requested = True
             print self.outfile
 
     def _create_unique_path(self):

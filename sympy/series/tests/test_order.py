@@ -1,5 +1,5 @@
 from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
 def test_caching_bug():
@@ -8,7 +8,6 @@ def test_caching_bug():
     e = O(w)
     #and test that this won't raise an exception
     f = O(w**(-1/x/log(3)*log(5)), w)
-
 
 def test_simple_1():
     o = Rational(0)
@@ -21,6 +20,9 @@ def test_simple_1():
     assert Order(x*exp(1/x)).expr == x*exp(1/x)
     assert Order(x**(o/3)).expr == x**(o/3)
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
+    assert Order(x**2 + x + y, x) == O(1, x)
+    assert Order(x**2 + x + y, y) == O(1, y)
+    raises(NotImplementedError, 'Order(x, 2 - x)')
 
 def test_simple_2():
     assert Order(2*x)*x == Order(x**2)
@@ -180,7 +182,29 @@ def test_nan():
     assert not O(x).contains(nan)
 
 def test_O1():
-    assert O(1) == O(1, x)
-    assert O(1) == O(1, y)
-    assert hash(O(1)) == hash(O(1, x))
-    assert hash(O(1)) == hash(O(1, y))
+    assert O(1, x) * x == O(x)
+    assert O(1, y) * x == O(1, y)
+
+def test_getn():
+    # other lines are tested incidentally by the suite
+    assert O(x).getn() == 1
+    assert O(x/log(x)).getn() == 1
+    assert O(x**2/log(x)**2).getn() == 2
+    assert O(x*log(x)).getn() == 1
+    raises(NotImplementedError, '(O(x) + O(y)).getn()')
+
+def test_diff():
+    assert O(x**2).diff(x) == O(x)
+
+def test_getO():
+    assert (x).getO() is None
+    assert (x).removeO() == x
+    assert (O(x)).getO() == O(x)
+    assert (O(x)).removeO() == 0
+    assert (z + O(x) + O(y)).getO() == O(x) + O(y)
+    assert (z + O(x) + O(y)).removeO() == z
+    raises(NotImplementedError, '(O(x)+O(y)).getn()')
+
+def test_leading_term():
+    from sympy import digamma
+    assert O(1/digamma(1/x)) == O(1/log(x))

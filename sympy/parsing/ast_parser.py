@@ -19,7 +19,7 @@ of any node. Then write a string of what you want to get, e.g.
 bother with lineno and col_offset, just call fix_missing_locations() before
 returning the node.
 
-If the ast module is not available (python2.4 and 2.5), we use the old compiler
+If the ast module is not available (Python 2.5), we use the old compiler
 module.
 """
 
@@ -28,7 +28,7 @@ from sympy.core.sympify import SympifyError
 
 try:
     from ast import parse, NodeTransformer, Call, Name, Load, \
-            fix_missing_locations, Str
+            fix_missing_locations, Str, Tuple
     ast_enabled = True
 except ImportError:
     ast_enabled = False
@@ -47,7 +47,7 @@ if ast_enabled:
                 return fix_missing_locations(Call(Name('Integer', Load()),
                         [node], [], None, None))
             elif isinstance(node.n, float):
-                return fix_missing_locations(Call(Name('Real', Load()),
+                return fix_missing_locations(Call(Name('Float', Load()),
                     [node], [], None, None))
             return node
 
@@ -65,13 +65,9 @@ if ast_enabled:
                     [Str(node.id)], [], None, None))
 
         def visit_Lambda(self, node):
-            if len(node.args.args) == 0:
-                args = [Str("x")]
-            else:
-                args = node.args.args
-            args = [self.visit(arg) for arg in args]
+            args = [self.visit(arg) for arg in node.args.args]
             body = self.visit(node.body)
-            n = Call(Name('Lambda', Load()), args + [body], [], None, None)
+            n = Call(Name('Lambda', Load()), [Tuple(args, Load()), body], [], None, None)
             return fix_missing_locations(n)
 
 def parse_expr(s, local_dict):
@@ -92,9 +88,9 @@ def parse_expr(s, local_dict):
         e = compile(a, "<string>", "eval")
         return eval(e, global_dict, local_dict)
     else:
-        # in python2.4 and 2.5, the "ast" module is not available, so we need
+        # in Python 2.5, the "ast" module is not available, so we need
         # to use our old implementation:
-        from ast_parser_python24 import SymPyParser
+        from ast_parser_python25 import SymPyParser
         try:
             return SymPyParser(local_dict=local_dict).parse_expr(s)
         except SyntaxError:

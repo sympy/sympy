@@ -71,12 +71,14 @@ printing.
 - Python
 - ...
 """
+from __future__ import with_statement
 
 import os
 from StringIO import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Expr, Tuple, Equality, Function
+from sympy.core.compatibility import is_sequence
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
@@ -138,7 +140,7 @@ class Routine(object):
         """
         arg_list = []
 
-        if isinstance(expr, (list, tuple)):
+        if is_sequence(expr):
             if not expr:
                 raise ValueError("No expression given")
             expressions = Tuple(*expr)
@@ -234,12 +236,12 @@ class Routine(object):
         For routines with unnamed return values, the dummies that may or may
         not be used will be included in the set.
         """
-        vars = set(self.local_vars)
+        v = set(self.local_vars)
         for arg in self.arguments:
-            vars.add(arg.name)
+            v.add(arg.name)
         for res in self.results:
-            vars.add(res.result_var)
-        return vars
+            v.add(res.result_var)
+        return v
 
     @property
     def result_variables(self):
@@ -437,9 +439,8 @@ class CodeGen(object):
         if to_files:
             for dump_fn in self.dump_fns:
                 filename = "%s.%s" % (prefix, dump_fn.extension)
-                f = file(filename, "w")
-                dump_fn(self, routines, f, prefix, header, empty)
-                f.close()
+                with open(filename, "w") as f:
+                    dump_fn(self, routines, f, prefix, header, empty)
         else:
             result = []
             for dump_fn in self.dump_fns:
@@ -493,7 +494,7 @@ class CodeGen(object):
             code_lines = ''.join(self._get_header() + [code_lines])
 
         if code_lines:
-            print >> f, code_lines
+            f.write(code_lines)
 
 class CodeGenError(Exception):
     pass
@@ -816,9 +817,10 @@ class FCodeGen(CodeGen):
         # check that symbols are unique with ignorecase
         for r in routines:
             lowercase = set(map(lambda x: str(x).lower(), r.variables))
-            if len(lowercase) < len(r.variables):
-                raise CodeGenError("Fortran ignores case. Got symbols: %s"
-                        ", ".join([str(var) for var in r.variables]))
+            orig_case = set(map(lambda x: str(x), r.variables))
+            if len(lowercase) < len(orig_case):
+                raise CodeGenError("Fortran ignores case. Got symbols: %s"%
+                        (", ".join([str(var) for var in r.variables])))
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension
     dump_f95.__doc__ = CodeGen.dump_code.__doc__
@@ -853,7 +855,7 @@ class FCodeGen(CodeGen):
         # declaration of the function prototypes
         for routine in routines:
             prototype  = self.get_interface(routine)
-            print >> f, prototype,
+            f.write(prototype)
         if empty: print >> f
     dump_h.extension = interface_extension
 

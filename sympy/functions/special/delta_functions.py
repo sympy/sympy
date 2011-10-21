@@ -1,5 +1,6 @@
-from sympy.core import S, sympify, Function, diff
-import sympy.polys
+from sympy.core import S, sympify, diff
+from sympy.core.function import Function, ArgumentIndexError
+from sympy.polys.polyerrors import PolynomialError
 
 ###############################################################################
 ################################ DELTA FUNCTION ###############################
@@ -69,14 +70,16 @@ class DiracDelta(Function):
            >>> DiracDelta(x*y).simplify(y)
            DiracDelta(y)/Abs(x)
 
-           >>> DiracDelta(x**2+x-2).simplify(x)
-           DiracDelta(-1 + x)/3 + DiracDelta(2 + x)/3
+           >>> DiracDelta(x**2 + x - 2).simplify(x)
+           DiracDelta(x - 1)/3 + DiracDelta(x + 2)/3
 
         """
+        from sympy.polys.polyroots import roots
+
         if not self.args[0].has(x) or (len(self.args)>1 and self.args[1] != 0 ):
             return self
         try:
-            argroots = sympy.polys.polyroots.roots(self.args[0],x, \
+            argroots = roots(self.args[0],x, \
                                                      multiple=True)
             result = 0
             valid = True
@@ -90,9 +93,7 @@ class DiracDelta(Function):
                     break
             if valid:
                 return result
-        except Exception,e :
-            print e
-            raise
+        except PolynomialError:
             pass
         return self
 
@@ -128,6 +129,10 @@ class DiracDelta(Function):
         if p:
             return p.degree() == 1
         return False
+
+    def _eval_conjugate(self):
+        return self
+
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
 ###############################################################################

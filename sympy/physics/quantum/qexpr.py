@@ -2,6 +2,7 @@
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import is_sequence
 
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix,
@@ -22,7 +23,7 @@ class QuantumError(Exception):
     pass
 
 
-def _qsympify_sequence(*seq):
+def _qsympify_sequence(seq):
     """Convert elements of a sequence to standard form.
 
     This is like sympify, but it performs special logic for arguments passed
@@ -36,19 +37,36 @@ def _qsympify_sequence(*seq):
 
     Strings are passed to Symbol, not sympify to make sure that variables like
     'pi' are kept as Symbols, not the Sympy built-in number subclasses.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.quantum.qexpr import _qsympify_sequence
+    >>> _qsympify_sequence((1,2,[3,4,[1,]]))
+    (1, 2, (3, 4, (1,)))
+
     """
-    result = []
-    for item in seq:
-        if isinstance(item, (list, tuple, Tuple)):
-            newitem = Tuple(*[_qsympify_sequence(it) for it in item])
-        elif isinstance(item, Matrix):
-            newitem = item
-        elif isinstance(item, basestring):
-            newitem = Symbol(item)
+
+    return tuple(__qsympify_sequence_helper(seq))
+
+def __qsympify_sequence_helper(seq):
+    """
+       Helper function for _qsympify_sequence
+       This function does the actual work.
+    """
+    #base case. If not a list, do Sympification
+    if not is_sequence(seq):
+        if isinstance(seq, Matrix):
+            return seq
+        elif isinstance(seq, basestring):
+            return Symbol(seq)
         else:
-            newitem = sympify(item)
-        result.append(newitem)
-    return tuple(result)
+            return sympify(seq)
+
+    #if list, recurse on each item in the list
+    result = [__qsympify_sequence_helper(item) for item in seq]
+
+    return Tuple(*result)
 
 
 #-----------------------------------------------------------------------------
@@ -97,6 +115,8 @@ class QExpr(Expr):
 
         # First compute args and call Expr.__new__ to create the instance
         args = cls._eval_args(args)
+        if len(args) == 0:
+            args = cls._eval_args(tuple(cls.default_args()))
         inst = Expr.__new__(cls, *args, **{'commutative':False})
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
@@ -130,11 +150,23 @@ class QExpr(Expr):
 
         This must be a tuple, rather than a Tuple.
         """
-        return self.args
+        if len(self.args) == 0: # If there is no label specified, return the default
+            return self._eval_args(list(self.default_args()))
+        else:
+            return self.args
 
     @property
     def is_symbolic(self):
         return True
+
+    @classmethod
+    def default_args(self):
+        """If no arguments are specified, then this will return a default set of arguments to be run through the constructor.
+
+        NOTE: Any classes that override this MUST return a tuple of arguments.
+        Should be overidden by subclasses to specify the default arguments for kets and operators
+        """
+        raise NotImplementedError("No default arguments for this class!")
 
     #-------------------------------------------------------------------------
     # _eval_* methods
@@ -146,7 +178,7 @@ class QExpr(Expr):
 
         This simply runs args through _qsympify_sequence.
         """
-        return _qsympify_sequence(*args)
+        return _qsympify_sequence(args)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
@@ -256,13 +288,13 @@ class QExpr(Expr):
         # than str(). See L1072 of basic.py.
         # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self ]
+            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
         else:
             args = self.args
 
         if pattern is None or isinstance(self, pattern):
             if hasattr(self, rule):
-                rewritten = getattr(self, rule)(*args)
+                rewritten = getattr(self, rule)(*args, **hints)
 
                 if rewritten is not None:
                     return rewritten
@@ -317,15 +349,19 @@ class QExpr(Expr):
 
         # If we get a matrix representation, convert it to the right format.
         format = options.get('format', 'sympy')
-        if format == 'sympy' and not isinstance(result, Matrix):
-            result = to_sympy(result)
-        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
-            result = to_numpy(result)
-        elif format == 'scipy.sparse' and\
-            not isinstance(result, scipy_sparse_matrix):
-            result = to_scipy_sparse(result)
+        result = self._format_represent(result, format)
         return result
 
+    def _format_represent(self, result, format):
+        if format == 'sympy' and not isinstance(result, Matrix):
+            return to_sympy(result)
+        elif format == 'numpy' and not isinstance(result, numpy_ndarray):
+            return to_numpy(result)
+        elif format == 'scipy.sparse' and\
+        not isinstance(result, scipy_sparse_matrix):
+            return to_scipy_sparse(result)
+
+        return result
 
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""

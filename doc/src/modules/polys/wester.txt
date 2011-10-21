@@ -22,8 +22,7 @@ computations were done using the following setup::
 
     >>> from sympy import *
 
-    >>> Basic.keep_sign = True
-    >>> init_printing(True, 'lex')
+    >>> init_printing(use_unicode=True, wrap_line=False, no_global=True)
 
     >>> var('x,y,z,s,c,n')
     (x, y, z, s, c, n)
@@ -48,7 +47,7 @@ polynomial::
 
 .. note::
 
-    The content and the primitive part can be computed only in a ring. To
+    The content and the primitive part can be computed only over a ring. To
     simplify coefficients of a polynomial over a field use :func:`monic`.
 
 Univariate GCD, resultant and factorization
@@ -89,7 +88,7 @@ Multivariate GCD and factorization
 
 What can be done in univariate case, can be also done for multivariate
 polynomials. Consider the following polynomials ``f``, ``g`` and ``h``
-in :math:`\mathbb{Z}[x,y,z]`::
+in `\mathbb{Z}[x,y,z]`::
 
     >>> f = 24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     >>> g = 34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
@@ -108,8 +107,8 @@ However, ``f*h`` and ``g*h`` have an obvious factor ``h``::
 Multivariate factorization of large polynomials is also possible::
 
     >>> factor(expand(f*g))
-          7 ⎛   9  9  3       7  6         5  12       7⎞ ⎛   22       17  5  8      15  9  2         19  8    ⎞
-    -2⋅z⋅y ⋅⎝6⋅x ⋅y ⋅z  + 10⋅x ⋅z  + 17⋅y⋅x ⋅z   + 40⋅y ⎠⋅⎝3⋅x   + 47⋅x  ⋅y ⋅z  - 6⋅x  ⋅y ⋅z  - 24⋅x⋅y  ⋅z  - 5⎠
+        7   ⎛   9  9  3       7  6       5    12       7⎞ ⎛   22       17  5  8      15  9  2         19  8    ⎞
+    -2⋅y ⋅z⋅⎝6⋅x ⋅y ⋅z  + 10⋅x ⋅z  + 17⋅x ⋅y⋅z   + 40⋅y ⎠⋅⎝3⋅x   + 47⋅x  ⋅y ⋅z  - 6⋅x  ⋅y ⋅z  - 24⋅x⋅y  ⋅z  - 5⎠
 
 Support for symbols in exponents
 --------------------------------
@@ -119,7 +118,8 @@ used with integer exponents. However, it's perfectly valid to compute with
 symbolic exponents, e.g.::
 
     >>> gcd(2*x**(n + 4) - x**(n + 2), 4*x**(n + 1) + 3*x**n)
-    x**n
+     n
+    x
 
 Testing if polynomials have common zeros
 ----------------------------------------
@@ -141,8 +141,8 @@ We can visualize this fact by factoring the polynomials::
             ⎛ 2          ⎞
     (x + 1)⋅⎝x  - 4⋅x + 5⎠
 
-In both cases we obtained the factor :math:`x + 1` which tells us that the
-common root is :math:`x = -1`.
+In both cases we obtained the factor `x + 1` which tells us that the common
+root is `x = -1`.
 
 Normalizing simple rational functions
 -------------------------------------
@@ -179,14 +179,14 @@ The same can be achieved in factored form::
 Factoring in terms of cyclotomic polynomials
 --------------------------------------------
 
-SymPy can very efficiently decompose polynomials of the form :math:`x^n \pm 1`
-in terms of cyclotomic polynomials::
+SymPy can very efficiently decompose polynomials of the form `x^n \pm 1` in
+terms of cyclotomic polynomials::
 
     >>> factor(x**15 - 1)
             ⎛ 2        ⎞ ⎛ 4    3    2        ⎞ ⎛ 8    7    5    4    3       ⎞
     (x - 1)⋅⎝x  + x + 1⎠⋅⎝x  + x  + x  + x + 1⎠⋅⎝x  - x  + x  - x  + x - x + 1⎠
 
-The original Wester`s example was :math:`x^{100} - 1`, but was truncated for
+The original Wester`s example was `x^{100} - 1`, but was truncated for
 readability purpose. Note that this is not a big struggle for :func:`factor`
 to decompose polynomials of degree 1000 or greater.
 
@@ -203,7 +203,7 @@ to ``True``::
 
     >>> factor(f, gaussian=True)
       ⎛    3⋅ⅈ⎞ ⎛    3⋅ⅈ⎞
-    4⋅⎜x - ───⎟⋅⎜x + ───⎟⋅(x - 4⋅ⅈ + 1)⋅(x + 4⋅ⅈ + 1)
+    4⋅⎜x - ───⎟⋅⎜x + ───⎟⋅(x + 1 - 4⋅ⅈ)⋅(x + 1 + 4⋅ⅈ)
       ⎝     2 ⎠ ⎝     2 ⎠
 
 As the result we got a splitting factorization of ``f`` with monic factors
@@ -213,7 +213,7 @@ be computed using more general syntax::
 
     >>> factor(f, extension=I)
       ⎛    3⋅ⅈ⎞ ⎛    3⋅ⅈ⎞
-    4⋅⎜x - ───⎟⋅⎜x + ───⎟⋅(x - 4⋅ⅈ + 1)⋅(x + 4⋅ⅈ + 1)
+    4⋅⎜x - ───⎟⋅⎜x + ───⎟⋅(x + 1 - 4⋅ⅈ)⋅(x + 1 + 4⋅ⅈ)
       ⎝     2 ⎠ ⎝     2 ⎠
 
 Computing with automatic field extensions
@@ -228,35 +228,35 @@ We would like to reduce degrees of the numerator and the denominator of a
 rational function ``f/g``. Do do this we employ :func:`cancel` function::
 
     >>> cancel(f/g)
-     3     ⎽⎽⎽  2      2         ⎽⎽⎽             ⎽⎽⎽
-    x  + ╲╱ 2 ⋅x  - 2⋅x  - 2⋅x⋅╲╱ 2  - 3⋅x - 3⋅╲╱ 2
+     3      2     ___  2             ___         ___
+    x  - 2⋅x  + ╲╱ 2 ⋅x  - 3⋅x - 2⋅╲╱ 2 ⋅x - 3⋅╲╱ 2
     ────────────────────────────────────────────────
                           2
-                         x - 2
+                         x  - 2
 
 Unfortunately nothing interesting happened. This is because by default SymPy
-treats :math:`\sqrt{2}` as a generator, obtaining a bivariate polynomial for
-the numerator. To make :func:`cancel` recognize algebraic properties of
-:math:`\sqrt{2}`, one needs to use ``extension`` keyword::
+treats `\sqrt{2}` as a generator, obtaining a bivariate polynomial for the
+numerator. To make :func:`cancel` recognize algebraic properties of `\sqrt{2}`,
+one needs to use ``extension`` keyword::
 
     >>> cancel(f/g, extension=True)
      2
     x  - 2⋅x - 3
     ────────────
-           ⎽⎽⎽
+           ___
      x - ╲╱ 2
 
 Setting ``extension=True`` tells :func:`cancel` to find minimal algebraic
 number domain for the coefficients of ``f/g``. The automatically inferred
-domain is :math:`\mathbb{Q}(\sqrt{2})`. If one doesn't want to rely on
-automatic inference, the same result can be obtained by setting the
-``extension`` keyword with an explicit algebraic number::
+domain is `\mathbb{Q}(\sqrt{2})`. If one doesn't want to rely on automatic
+inference, the same result can be obtained by setting the ``extension``
+keyword with an explicit algebraic number::
 
     >>> cancel(f/g, extension=sqrt(2))
      2
     x  - 2⋅x - 3
     ────────────
-           ⎽⎽⎽
+           ___
      x - ╲╱ 2
 
 Univariate factoring over various domains
@@ -273,7 +273,7 @@ domains, which includes:
 
     >>> factor(f)
     ⎛ 2        ⎞ ⎛ 2        ⎞
-    ⎝x  + x - 1⎠⋅⎝x  - x - 1⎠
+    ⎝x  - x - 1⎠⋅⎝x  + x - 1⎠
 
 * finite fields::
 
@@ -286,7 +286,7 @@ domains, which includes:
     >>> alg = AlgebraicNumber((sqrt(5) - 1)/2, alias='alpha')
 
     >>> factor(f, extension=alg)
-    (x - α - 1)⋅(x - α)⋅(x + α)⋅(x + α + 1)
+    (x - 1 - α)⋅(x - α)⋅(x + α)⋅(x + 1 + α)
 
 Factoring polynomials into linear factors
 -----------------------------------------
@@ -300,7 +300,7 @@ implemented::
     >>> factor(x**3 + x**2 - 7, split=True)
     Traceback (most recent call last):
     ...
-    NotImplementedError: splitting extensions are not supported
+    NotImplementedError: 'split' option is not implemented yet
 
 Note this is different from ``extension=True``, because the later only tells how
 expression parsing should be done, not what should be the domain of computation.
@@ -314,7 +314,7 @@ Consider a univariate polynomial ``f`` with integer coefficients::
 
     >>> f = x**11 + x + 1
 
-We can factor ``f`` over a large finite field :math:`F_{65537}`::
+We can factor ``f`` over a large finite field `F_{65537}`::
 
     >>> factor(f, modulus=65537)
     ⎛ 2        ⎞ ⎛ 9    8    6    5    3    2    ⎞
@@ -345,7 +345,7 @@ truncate coefficients of the expanded polynomial modulo 65537::
 Working with expressions as polynomials
 ---------------------------------------
 
-Consider a multivariate polynomial ``f`` in :math:`\mathbb{Z}[x,y,z]`::
+Consider a multivariate polynomial ``f`` in `\mathbb{Z}[x,y,z]`::
 
     >>> f = expand((x - 2*y**2 + 3*z**3)**20)
 
@@ -368,9 +368,9 @@ important when computing with expressions like::
     >>> g = expand((sin(x) - 2*cos(y)**2 + 3*tan(z)**3)**20)
 
     >>> factor(g, expand=False)
-                                    20
-    ⎛     2                    3   ⎞
-    ⎝2⋅cos (y) - sin(x) - 3⋅tan (z)⎠
+                                     20
+    ⎛               2           3   ⎞
+    ⎝-sin(x) + 2⋅cos (y) - 3⋅tan (z)⎠
 
 Computing reduced Gröbner bases
 -------------------------------
@@ -387,21 +387,21 @@ of the basis is a univariate polynomial. Consider the following example::
     >>> f = expand((1 - c**2)**5 * (1 - s**2)**5 * (c**2 + s**2)**10)
 
     >>> groebner([f, c**2 + s**2 - 1])
-    ⎡ 2    2       20      18       16       14      12    10⎤
-    ⎣c  + s  - 1, c   - 5⋅c   + 10⋅c   - 10⋅c   + 5⋅c   - c  ⎦
+                 ⎛⎡ 2    2       20      18       16       14      12    10⎤                           ⎞
+    GroebnerBasis⎝⎣c  + s  - 1, c   - 5⋅c   + 10⋅c   - 10⋅c   + 5⋅c   - c  ⎦, s, c, domain=ℤ, order=lex⎠
 
 The result is an ordinary Python list, so we can easily apply a function to
 all its elements, for example we can factor those elements::
 
     >>> map(factor, _)
-    ⎡ 2    2        10        5         5⎤
-    ⎣c  + s  - 1, -c  ⋅(c + 1) ⋅(-c + 1) ⎦
+    ⎡ 2    2       10        5        5⎤
+    ⎣c  + s  - 1, c  ⋅(c - 1) ⋅(c + 1) ⎦
 
 From the above we can easily find all solutions of the system of polynomial
 equations. Or we can use :func:`solve` to achieve this in a more systematic
 way::
 
-    >>> solve([f, s**2 + c**2 - 1])
+    >>> solve([f, s**2 + c**2 - 1], c, s)
     [(-1, 0), (0, -1), (0, 1), (1, 0)]
 
 Multivariate factoring over algebraic numbers
@@ -409,13 +409,13 @@ Multivariate factoring over algebraic numbers
 
 Computing with multivariate polynomials over various domains is as simple as
 in univariate case. For example consider the following factorization over
-:math:`\mathbb{Q}(\sqrt{-3})`::
+`\mathbb{Q}(\sqrt{-3})`::
 
     >>> factor(x**3 + y**3, extension=sqrt(-3))
-            ⎛      ⎛    ⎽⎽⎽      ⎞⎞ ⎛      ⎛      ⎽⎽⎽      ⎞⎞
-            ⎜      ⎜ⅈ⋅╲╱ 3       ⎟⎟ ⎜      ⎜  ⅈ⋅╲╱ 3       ⎟⎟
-    (x + y)⋅⎜x - y⋅⎜─────── + 1/2⎟⎟⋅⎜x - y⋅⎜- ─────── + 1/2⎟⎟
-            ⎝      ⎝   2         ⎠⎠ ⎝      ⎝     2         ⎠⎠
+            ⎛      ⎛        ___  ⎞⎞ ⎛      ⎛        ___  ⎞⎞
+            ⎜      ⎜  1   ╲╱ 3 ⋅ⅈ⎟⎟ ⎜      ⎜  1   ╲╱ 3 ⋅ⅈ⎟⎟
+    (x + y)⋅⎜x + y⋅⎜- ─ - ───────⎟⎟⋅⎜x + y⋅⎜- ─ + ───────⎟⎟
+            ⎝      ⎝  2      2   ⎠⎠ ⎝      ⎝  2      2   ⎠⎠
 
 .. note:: Currently multivariate polynomials over finite fields aren't supported.
 
@@ -429,10 +429,10 @@ Consider a univariate rational function ``f`` with integer coefficients::
 To decompose ``f`` into partial fractions use :func:`apart` function::
 
     >>> apart(f)
-       2         2       3
-    ──────── - ───── + ─────
-           2   x + 1   x + 2
-    (x + 1)
+      3       2        2
+    ───── - ───── + ────────
+    x + 2   x + 1          2
+                    (x + 1)
 
 To return from partial fractions to the rational function use
 a composition of :func:`together` and :func:`cancel`::
@@ -443,6 +443,9 @@ a composition of :func:`together` and :func:`cancel`::
     ───────────────────
      3      2
     x  + 4⋅x  + 5⋅x + 2
+
+Literature
+==========
 
 .. [Wester1999] Michael J. Wester, A Critique of the Mathematical Abilities of
     CA Systems, 1999, `<http://www.math.unm.edu/~wester/cas/book/Wester.pdf>`_

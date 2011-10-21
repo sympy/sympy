@@ -1,11 +1,10 @@
-from sympy import (Symbol, Sum, oo, Real, Rational, summation, pi, cos, zeta,
-    Catalan, exp, log, factorial, sqrt, E, sympify, binomial, EulerGamma,
-    Function, Integral, Product, product, Tuple, Eq, Interval, nan)
-from sympy.concrete.summations import getab
-from sympy.concrete.sums_products import Sum2
+from sympy import (S, Symbol, Sum, oo, Float, Rational, summation, pi, cos,
+    zeta, exp, log, factorial, sqrt, E, sympify, binomial, harmonic, Catalan,
+    EulerGamma, Function, Integral, Product, product, nan, diff, Derivative)
+from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
-a, b, c, d, m, k = map(Symbol, 'abcdmk')
+a, b, c, d, m, k, x, y = map(Symbol, 'abcdmkxy')
 n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():
@@ -38,6 +37,12 @@ def test_geometric_sums():
     assert summation(2**(-4*n+3), (n, 1, oo)) == Rational(8,15)
     assert summation(2**(n+1), (n, 1, b)).expand() == 4*(2**b-1)
 
+def test_harmonic_sums():
+    assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
+    assert summation(1/k, (k, 1, n)) == harmonic(n)
+    assert summation(n/k, (k, 1, n)) == n*harmonic(n)
+    assert summation(1/k, (k, 5, n)) == harmonic(n) - harmonic(4)
+
 def test_composite_sums():
     f = Rational(1,2)*(7 - 6*n + Rational(1,7)*n**3)
     s = summation(f, (n, a, b))
@@ -47,6 +52,16 @@ def test_composite_sums():
         A += f.subs(n, i)
     B = s.subs(a,-3).subs(b,4)
     assert A == B
+
+def test_hypergeometric_sums():
+    assert summation(binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
+
+def test_other_sums():
+    f = m**2 + m*exp(m)
+    g = 3*exp(S(3)/2)/2 + exp(S(1)/2)/2 - exp(-S(1)/2)/2 - 3*exp(-S(3)/2)/2 + 5
+
+    assert summation(f, (m, -S(3)/2, S(3)/2)).expand() == g
+    assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)
 
 fac = factorial
 
@@ -167,32 +182,26 @@ def test_telescopic_sums():
     assert Sum(cos(k)-cos(k+3),(k,1,n)).doit() == -cos(1 + n) - cos(2 + n) - \
                                            cos(3 + n) + cos(1) + cos(2) + cos(3)
 
+    # dummy variable shouldn't matter
+    assert telescopic(1/m, -m/(1+m),(m, n-1, n)) == \
+           telescopic(1/k, -k/(1+k),(k, n-1, n))
+
+    assert Sum(1/x/(x - 1), (x, a, b)).doit() == 1/(-1 + a) - 1/b
+
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))
     assert s == Sum(*s.args)
+    raises(ValueError, 'Sum(x, x)')
+    raises(ValueError, 'Sum(x, (x, 1))')
 
 def test_Sum_limit_subs():
-    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b,2)
+    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
+    assert Sum(a, (a, Sum(b, (b, 1, 2)), 4)).subs(Sum(b, (b, 1, 2)), c) == \
+           Sum(a, (a, c, 4))
 
-def test_Sum2():
-    x = Symbol('x')
-    y = Symbol('y')
-    assert Sum2(x**y, (x, 1, 3)) == 1 + 2**y + 3**y
-
-def test_sum_constructor():
-    s1 = Sum(n,n)
-    assert s1.limits == (Tuple(n),)
-    s2 = Sum(n,(n,))
-    assert s2.limits == (Tuple(n),)
-    s3 = Sum(n,((n,)))
-    assert s3.limits == (Tuple(n),)
-    s4 = Sum(n,(Tuple(n,)))
-    assert s4.limits == (Tuple(n),)
-
-    s5 = Sum(n,Eq(n,1))
-    assert s5.limits == (Tuple(n,1),)
-    s6 = Sum(n,Eq(n,Interval(1,2)))
-    assert s6.limits == (Tuple(n,1,2),)
+@XFAIL
+def test_issue2166():
+    assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 def test_Sum_doit():
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit() == a**3
@@ -208,12 +217,40 @@ def test_Product_doit():
 
 def test_Sum_interface():
     assert isinstance(Sum(0, (n, 0, 2)), Sum)
-    assert isinstance(Sum(nan, (n, 0, 2)), Sum)
+    assert Sum(nan, (n, 0, 2)) is nan
+    assert Sum(nan, (n, 0, oo)) is nan
     assert Sum(0, (n, 0, 2)).doit() == 0
-    assert Sum(nan, (n, 0, 2)).doit() == nan
     assert isinstance(Sum(0, (n, 0, oo)), Sum)
-    assert isinstance(Sum(nan, (n, 0, oo)), Sum)
     assert Sum(0, (n, 0, oo)).doit() == 0
-    assert Sum(nan, (n, 0, oo)).doit() == nan
     raises(ValueError, "Sum(1)")
     raises(ValueError, "summation(1)")
+
+def test_eval_diff():
+    assert Sum(x, (x, 1, 2)).diff(x) == 0
+    assert Sum(x*y, (x, 1, 2)).diff(x) == 0
+    assert Sum(x*y, (y, 1, 2)).diff(x) == Sum(y, (y, 1, 2))
+    e = Sum(x*y, (x, 1, a))
+    assert e.diff(a) == Derivative(e, a)
+    assert Sum(x*y, (x, 1, 3), (a, 2, 5)).diff(y) == \
+           Sum(x*y, (x, 1, 3), (a, 2, 5)).doit().diff(y) == \
+           24
+
+def test_hypersum():
+    from sympy import simplify, sin, hyper
+    assert simplify(summation(x**n/fac(n), (n, 1, oo))) == -1 + exp(x)
+    assert summation((-1)**n * x**(2*n) / fac(2*n), (n, 0, oo)) == cos(x)
+    assert simplify(summation((-1)**n*x**(2*n+1)/factorial(2*n+1),
+                              (n, 3, oo))) \
+           == -x + sin(x) + x**3/6 - x**5/120
+
+    # TODO to get this without hyper need to improve hyperexpand
+    assert summation(1/(n+2)**3, (n, 1, oo)) == \
+           hyper([3, 3, 3, 1], [4, 4, 4], 1)/27
+
+    s = summation(x**n*n, (n, -oo, 0))
+    assert s.is_Piecewise
+    assert s.args[0].args[0] == -1/(x*(1-1/x)**2)
+    assert s.args[0].args[1] == (abs(1/x) < 1)
+
+def test_issue_1071():
+    assert summation(1/factorial(k), (k, 0, oo)) == E

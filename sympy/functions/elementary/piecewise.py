@@ -1,6 +1,7 @@
 from sympy.core import Basic, S, Function, diff, Number, sympify
-from sympy.core.relational import Relational
-from sympy.core.sets import Interval, Set
+from sympy.core.relational import Equality, Relational
+from sympy.logic.boolalg import Boolean
+from sympy.core.sets import Set
 
 class ExprCondPair(Function):
     """Represents an expression, condition pair."""
@@ -23,6 +24,18 @@ class ExprCondPair(Function):
     @property
     def cond(self):
         return self.args[1]
+
+    @property
+    def is_commutative(self):
+        return self.expr.is_commutative
+
+    @property
+    def free_symbols(self):
+        # Overload Basic.free_symbols because self.args[1] may contain non-Basic
+        result = self.expr.free_symbols
+        if hasattr(self.cond, 'free_symbols'):
+            result |= self.cond.free_symbols
+        return result
 
     def __iter__(self):
         yield self.expr
@@ -67,13 +80,17 @@ class Piecewise(Function):
             pair = ExprCondPair(*ec)
             cond_type = type(pair.cond)
             if not (cond_type is bool or issubclass(cond_type, Relational) or \
-                    issubclass(cond_type, Number) or issubclass(cond_type, Set)):
-                raise TypeError, \
+                    issubclass(cond_type, Number) or \
+                    issubclass(cond_type, Set) or issubclass(cond_type, Boolean)):
+                raise TypeError(
                     "Cond %s is of type %s, but must be a bool," \
-                    " Relational, Number or Set" % (pair.cond, cond_type)
+                    " Relational, Number or Set" % (pair.cond, cond_type))
             newargs.append(pair)
 
-        r = cls.eval(*newargs)
+        if options.pop('evaluate', True):
+            r = cls.eval(*newargs)
+        else:
+            r = None
 
         if r is None:
             return Basic.__new__(cls, *newargs, **options)
@@ -90,7 +107,7 @@ class Piecewise(Function):
     @classmethod
     def eval(cls, *args):
         # Check for situations where we can evaluate the Piecewise object.
-        # 1) Hit an unevaluatable cond (e.g. x<1) -> keep object
+        # 1) Hit an unevaluable cond (e.g. x<1) -> keep object
         # 2) Hit a true condition -> return that expr
         # 3) Remove false conditions, if no conditions left -> raise ValueError
         all_conds_evaled = True    # Do all conds eval to a bool?
@@ -123,15 +140,6 @@ class Piecewise(Function):
         if len(non_false_ecpairs) != len(args) or piecewise_again:
             return Piecewise(*non_false_ecpairs)
 
-        # Count number of arguments.
-        nargs = 0
-        for expr, cond in args:
-            if hasattr(expr, 'nargs'):
-                nargs = max(nargs, expr.nargs)
-            elif hasattr(expr, 'args'):
-                nargs = max(nargs, len(expr.args))
-        if nargs:
-            cls.narg = nargs
         return None
 
     def doit(self, **hints):
@@ -151,7 +159,11 @@ class Piecewise(Function):
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
-        # FIXME: Currently only supports conds of type sym < Num, or Num < sym
+        # FIXME: Currently complex intervals are not supported.  A possible
+        # replacement algorithm, discussed in issue 2128, can be found in the
+        # following papers;
+        #     http://portal.acm.org/citation.cfm?id=281649
+        #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
         int_expr = []
         mul = 1
         if a > b:
@@ -160,7 +172,7 @@ class Piecewise(Function):
 
         # Determine what intervals the expr,cond pairs affect.
         # 1) If cond is True, then log it as default
-        # 1.1) Currently if cond can't be evaluated, throw NotImplentedError.
+        # 1.1) Currently if cond can't be evaluated, throw NotImplementedError.
         # 2) For each inequality, if previous cond defines part of the interval
         #    update the new conds interval.
         #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]
@@ -172,15 +184,16 @@ class Piecewise(Function):
                     break
                 else:
                     continue
+            elif isinstance(cond, Equality):
+                continue
             curr = list(cond.args)
-            if cond.args[0] == sym:
+            if cond.args[0].has(sym):
                 curr[0] = S.NegativeInfinity
-            elif cond.args[1] == sym:
+            elif cond.args[1].has(sym):
                 curr[1] = S.Infinity
             else:
-                raise NotImplementedError, \
-                    "Currently only supporting evaluation with only " \
-                    "sym on one side of the relation."
+                raise NotImplementedError(\
+                        "Unable handle interval evaluation of expression.")
             curr = [max(a, curr[0]), min(b, curr[1])]
             for n in xrange(len(int_expr)):
                 if self.__eval_cond(curr[0] < int_expr[n][1]) and \
@@ -209,9 +222,9 @@ class Piecewise(Function):
         if holes and default is not None:
             int_expr.extend(holes)
         elif holes and default == None:
-            raise ValueError, "Called interval evaluation over piecewise " \
-                              "function on undefined intervals %s" % \
-                              ", ".join([str((h[0], h[1])) for h in holes])
+            raise ValueError("Called interval evaluation over piecewise " \
+                             "function on undefined intervals %s" % \
+                             ", ".join([str((h[0], h[1])) for h in holes]))
 
         # Finally run through the intervals and sum the evaluation.
         ret_fun = 0
@@ -236,6 +249,11 @@ class Piecewise(Function):
             else:
                 new_args.append((e._eval_subs(old, new), c._eval_subs(old, new)))
         return Piecewise( *new_args )
+
+    def _eval_nseries(self, x, n, logx):
+        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond), \
+                   self.args)
+        return self.func(*args)
 
     @classmethod
     def __eval_cond(cls, cond):
@@ -277,3 +295,4 @@ def piecewise_fold(expr):
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)
+

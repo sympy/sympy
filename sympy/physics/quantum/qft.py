@@ -13,9 +13,9 @@ Todo:
 from sympy import Expr, Matrix, exp, I, pi, Integer, Symbol
 from sympy.functions import sqrt
 
-from sympy.physics.quantum.applyops import apply_operators
+from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError, QExpr
-from sympy.matrices.matrices import zeros, eye
+from sympy.matrices.matrices import eye
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 
 from sympy.physics.quantum.gate import (
@@ -163,12 +163,12 @@ class QFT(Fourier):
             circuit = HadamardGate(level)*circuit
             for i in range(level-start):
                 circuit = CGate(level-i-1, RkGate(level, i+2))*circuit
-        for i in range((finish-start)/2):
+        for i in range((finish-start)//2):
             circuit = SwapGate(i+start, finish-i-1)*circuit
         return circuit
 
     def _apply_operator_Qubit(self, qubits, **options):
-        return apply_operators(self.decompose()*qubits)
+        return qapply(self.decompose()*qubits)
 
     def _eval_inverse(self):
         return IQFT(*self.args)
@@ -189,7 +189,7 @@ class IQFT(Fourier):
         start = self.args[0]
         finish = self.args[1]
         circuit = 1
-        for i in range((finish-start)/2):
+        for i in range((finish-start)//2):
             circuit = SwapGate(i+start, finish-i-1)*circuit
         for level in range(start, finish):
             for i in reversed(range(level-start)):

@@ -23,9 +23,9 @@ def A(x):
 def main():
     x=Symbol("x")
     s = Poly(A(x), x)
-    num = [s.coeff(n) for n in range(11)]
+    num = list(reversed(s.coeffs()))[:11]
 
-    print s.as_basic()
+    print s.as_expr()
     print num
 
 if __name__ == "__main__":

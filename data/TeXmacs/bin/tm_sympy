@@ -57,8 +57,8 @@ from sympy import *
 
 _ = None
 
-x, y, z, t = symbols('xyzt')
-k, i, m, n = symbols('kimn', integer=True)
+x, y, z, t = symbols('x,y,z,t')
+k, i, m, n = symbols('k,i,m,n', integer=True)
 
 f = Function('f')
 

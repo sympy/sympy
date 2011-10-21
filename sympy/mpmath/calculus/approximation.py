@@ -1,4 +1,5 @@
-from calculus import defun
+from ..libmp.backend import xrange
+from .calculus import defun
 
 #----------------------------------------------------------------------------#
 #                              Approximation methods                         #
@@ -119,8 +120,7 @@ def chebyfit(ctx, f, interval, N, error=False):
         d[0] = -c[0]/2
         h = ctx.mpf(0.5)
         T = chebT(ctx, ctx.mpf(2)/(b-a), ctx.mpf(-1)*(b+a)/(b-a))
-        for k in range(N):
-            Tk = T.next()
+        for (k, Tk) in zip(range(N), T):
             for i in range(len(Tk)):
                 d[i] += c[k]*Tk[i]
         d = d[::-1]

@@ -9,19 +9,22 @@ Todo:
 * Get initial and final states to plot.
 * Get measurements to plot. Might need to rethink measurement as a gate issue.
 * Get scale and figsize to be handled in a better way.
+* Write some tests/examples!
 """
+
+from sympy import Mul
+from sympy.physics.quantum.gate import Gate
+from sympy.external import import_module
 
 __all__ = [
     'CircuitPlot',
     'circuit_plot'
 ]
 
-try:
-    import numpy as np
-    from matplotlib import pyplot
-    from matplotlib.lines import Line2D
-    from matplotlib.patches import Circle
-except ImportError:
+np = import_module('numpy', min_python_version=(2, 6))
+matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']})
+
+if not np or not matplotlib:
     class CircuitPlot(object):
         def __init__(*args, **kwargs):
             raise ImportError('numpy or matplotlib not available.')
@@ -29,6 +32,10 @@ except ImportError:
     def circuit_plot(*args, **kwargs):
         raise ImportError('numpy or matplotlib not available.')
 else:
+
+    pyplot = matplotlib.pyplot
+    Line2D = matplotlib.lines.Line2D
+    Circle = matplotlib.patches.Circle
 
     class CircuitPlot(object):
         """A class for managing a circuit plot."""
@@ -96,8 +103,14 @@ else:
                 self._axes.add_line(line)
 
         def _plot_gates(self):
-            """Interate through the gates and plot each of them."""
-            gates = reversed(self.circuit.args)
+            """Iterate through the gates and plot each of them."""
+            gates = []
+            if isinstance(self.circuit, Mul):
+                for g in reversed(self.circuit.args):
+                    if isinstance(g, Gate):
+                        gates.append(g)
+            elif isinstance(self.circuit, Gate):
+                gates.append(self.circuit)
             for i, gate in enumerate(gates):
                 gate.plot_gate(self, i)
 
@@ -199,4 +212,3 @@ else:
             as big as the largest `min_qubits`` of the gates.
         """
         return CircuitPlot(c, nqubits, **kwargs)
-

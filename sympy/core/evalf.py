@@ -3,19 +3,16 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 
-from sympy.mpmath.libmp import (from_int, from_rational, fzero, normalize,
-        bitcount, round_nearest, to_str, fone, fnone, fhalf, to_int, mpf_lt,
-        mpf_sqrt, mpf_cmp, mpf_abs, mpf_pow_int, mpf_shift, mpf_add, mpf_mul,
-        mpf_neg)
-
 import sympy.mpmath.libmp as libmp
-from sympy.mpmath.libmp.libmpf import dps_to_prec
-from sympy.mpmath import mpf, mpc, quadts, quadosc, mp, make_mpf, make_mpc
-from sympy.mpmath.libmp import (mpf_pi, mpf_log, mpf_pow, mpf_sin, mpf_cos,
-        mpf_atan, mpf_atan2, mpf_e, mpf_exp, from_man_exp, from_int)
-from sympy.mpmath.libmp.backend import MPZ
-from sympy.mpmath import nsum
+from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
 from sympy.mpmath import inf as mpmath_inf
+from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp, \
+        from_rational, fhalf, fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, \
+        mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, \
+        mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, \
+        normalize, round_nearest, to_int, to_str)
+from sympy.mpmath.libmp.backend import MPZ
+from sympy.mpmath.libmp.libmpf import dps_to_prec
 
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
@@ -31,8 +28,8 @@ LG10 = math.log(10,2)
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
 # passing these to mpmath functions or returning them in final results.
-INF = 1e1000
-MINUS_INF = -1e1000
+INF = float(mpmath_inf)
+MINUS_INF = float(-mpmath_inf)
 
 # ~= 100 digits. Real men set this to INF.
 DEFAULT_MAXPREC = 333
@@ -620,21 +617,7 @@ def evalf_piecewise(expr, prec, options):
         if hasattr(expr,'func'):
             return evalf(expr, prec, options)
         if type(expr) == float:
-            return evalf(C.Real(expr), prec, options)
-        if type(expr) == int:
-            return evalf(C.Integer(expr), prec, options)
-
-    # We still have undefined symbols
-    raise NotImplementedError
-
-def evalf_piecewise(expr, prec, options):
-    if 'subs' in options:
-        expr = expr.subs(options['subs'])
-        del options['subs']
-        if hasattr(expr,'func'):
-            return evalf(expr, prec, options)
-        if type(expr) == float:
-            return evalf(C.Real(expr), prec, options)
+            return evalf(C.Float(expr), prec, options)
         if type(expr) == int:
             return evalf(C.Integer(expr), prec, options)
 
@@ -798,7 +781,7 @@ def check_convergence(numer, denom, n):
         return rate, constant, 0
     pc = npol.all_coeffs()[1]
     qc = dpol.all_coeffs()[1]
-    return rate, constant, qc-pc
+    return rate, constant, (qc-pc)/dpol.LC()
 
 def hypsum(expr, n, start, prec):
     """
@@ -826,7 +809,6 @@ def hypsum(expr, n, start, prec):
 
     # Direct summation if geometric or faster
     if h > 0 or (h == 0 and abs(g) > 1):
-        one = MPZ(1) << prec
         term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec) // term.q
         s = term
@@ -847,7 +829,6 @@ def hypsum(expr, n, start, prec):
         # Need to use at least quad precision because a lot of cancellation
         # might occur in the extrapolation process
         prec2 = 4*prec
-        one = MPZ(1) << prec2
         term = expr.subs(n, 0)
         term = (MPZ(term.p) << prec2) // term.q
 
@@ -885,7 +866,7 @@ def evalf_sum(expr, prec, options):
         return v, None, min(prec, delta), None
     except NotImplementedError:
         # Euler-Maclaurin summation for general series
-        eps = C.Real(2.0)**(-prec)
+        eps = C.Float(2.0)**(-prec)
         for i in range(1, 5):
             m = n = 2**i * prec
             s, err = expr.euler_maclaurin(m=m, n=n, eps=eps, \
@@ -895,8 +876,10 @@ def evalf_sum(expr, prec, options):
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
         re, im, re_acc, im_acc = evalf(s, prec2, options)
-        re_acc = max(re_acc, -err)
-        im_acc = max(im_acc, -err)
+        if re_acc is None:
+            re_acc = -err
+        if im_acc is None:
+            im_acc = -err
         return re, im, re_acc, im_acc
 
 
@@ -930,7 +913,7 @@ def _create_evalf_table():
     evalf_table = {
     C.Symbol : evalf_symbol,
     C.Dummy : evalf_symbol,
-    C.Real : lambda x, prec, options: (x._mpf_, None, prec, None),
+    C.Float : lambda x, prec, options: (x._mpf_, None, prec, None),
     C.Rational : lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
     C.Integer : lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
     C.Zero : lambda x, prec, options: (None, None, prec, None),
@@ -1054,13 +1037,13 @@ class EvalfMixin(object):
         if re:
             p = max(min(prec, re_acc), 1)
             #re = mpf_pos(re, p, round_nearest)
-            re = C.Real._new(re, p)
+            re = C.Float._new(re, p)
         else:
             re = S.Zero
         if im:
             p = max(min(prec, im_acc), 1)
             #im = mpf_pos(im, p, round_nearest)
-            im = C.Real._new(im, p)
+            im = C.Float._new(im, p)
             return re + im*S.ImaginaryUnit
         else:
             return re
@@ -1077,43 +1060,51 @@ class EvalfMixin(object):
     def _eval_evalf(self, prec):
         return
 
-    def _seq_eval_evalf(self, prec):
-        return self.func(*[s._evalf(prec) for s in self.args])
-
     def _to_mpmath(self, prec, allow_ints=True):
         # mpmath functions accept ints as input
         errmsg = "cannot convert to mpmath number"
         if allow_ints and self.is_Integer:
             return self.p
-        v = self._eval_evalf(prec)
-        if v is None:
-            raise ValueError(errmsg)
-        if v.is_Real:
-            return make_mpf(v._mpf_)
-        # Number + Number*I is also fine
-        re, im = v.as_real_imag()
-        if allow_ints and re.is_Integer:
-            re = from_int(re.p)
-        elif re.is_Real:
-            re = re._mpf_
-        else:
-            raise ValueError(errmsg)
-        if allow_ints and im.is_Integer:
-            im = from_int(im.p)
-        elif im.is_Real:
-            im = im._mpf_
-        else:
-            raise ValueError(errmsg)
-        return make_mpc((re, im))
+        try:
+            re, im, _, _ = evalf(self, prec, {})
+            if im:
+                if not re:
+                    re = fzero
+                return make_mpc((re, im))
+            else:
+                return make_mpf(re)
+        except NotImplementedError:
+            v = self._eval_evalf(prec)
+            if v is None:
+                raise ValueError(errmsg)
+            if v.is_Float:
+                return make_mpf(v._mpf_)
+            # Number + Number*I is also fine
+            re, im = v.as_real_imag()
+            if allow_ints and re.is_Integer:
+                re = from_int(re.p)
+            elif re.is_Float:
+                re = re._mpf_
+            else:
+                raise ValueError(errmsg)
+            if allow_ints and im.is_Integer:
+                im = from_int(im.p)
+            elif im.is_Float:
+                im = im._mpf_
+            else:
+                raise ValueError(errmsg)
+            return make_mpc((re, im))
 
 
 def N(x, n=15, **options):
     """
-    Calls x.evalf(n, **options).
+    Calls x.evalf(n, \*\*options).
 
     Both .evalf() and N() are equivalent, use the one that you like better.
+    See also the docstring of .evalf() for information on the options.
 
     Example:
+
     >>> from sympy import Sum, Symbol, oo, N
     >>> from sympy.abc import k
     >>> Sum(1/k**k, (k, 1, oo))

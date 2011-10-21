@@ -1,4 +1,5 @@
 from sympy.core import Expr, S, C, Mul, sympify
+from sympy.core.compatibility import is_sequence
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 
@@ -29,14 +30,14 @@ class Product(Expr):
                 k = symbol.lhs
                 a = symbol.rhs.start
                 n = symbol.rhs.end
-            elif isinstance(symbol, (tuple, list)):
+            elif is_sequence(symbol):
                 k, a, n = symbol
             else:
                 raise ValueError("Invalid arguments")
 
             k, a, n = map(sympify, (k, a, n))
 
-            if isinstance(a, C.Number) and isinstance(n, C.Number):
+            if isinstance(a, C.Integer) and isinstance(n, C.Integer):
                 return Mul(*[term.subs(k, i) for i in xrange(int(a), int(n)+1)])
         else:
             raise NotImplementedError
@@ -88,7 +89,6 @@ class Product(Expr):
             poly = term.as_poly(k)
 
             A = B = Q = S.One
-            C_= poly.LC()
 
             all_roots = roots(poly, multiple=True)
 
@@ -121,14 +121,13 @@ class Product(Expr):
             if not exclude:
                 return None
             else:
-                A, B = Mul(*exclude), Mul(*include)
+                A, B = Mul(*exclude), term._new_rawargs(*include)
                 return A * Product(B, (k, a, n))
         elif term.is_Pow:
             if not term.base.has(k):
                 s = summation(term.exp, (k, a, n))
 
-                if not isinstance(s, Sum):
-                    return term.base**s
+                return term.base**s
             elif not term.exp.has(k):
                 p = self._eval_product(a, n, term.base)
 

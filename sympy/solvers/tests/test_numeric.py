@@ -2,6 +2,7 @@ from sympy.mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
 from sympy import Symbol, Matrix, sqrt, Eq
+from sympy.utilities.pytest import raises
 
 def test_nsolve():
     # onedimensional
@@ -9,6 +10,9 @@ def test_nsolve():
     x = Symbol('x')
     assert nsolve(sin(x), 2) - pi.evalf() < 1e-16
     assert nsolve(Eq(2*x, 2), x, -10) == nsolve(2*x - 2, -10)
+    # Testing checks on number of inputs
+    raises(TypeError, "nsolve(Eq(2*x,2))")
+    raises(TypeError, "nsolve(Eq(2*x,2),x,1,2)")
     # Issue 1730
     assert nsolve(x**2/(1-x)/(1-2*x)**2-100, x, 0) # doesn't fail
     # multidimensional
@@ -32,7 +36,7 @@ def test_nsolve():
     f = Matrix((f1, f2, f3)).T
     F = lambdify((x, y, z), f.T, modules='mpmath')
     def getroot(x0):
-        root = nsolve((f1, f2, f3), (x, y, z), x0)
+        root = nsolve(f, (x, y, z), x0)
         assert mnorm(F(*root),1) <= 1.e-8
         return root
     assert map(round, getroot((1, 1, 1))) == [2.0, 1.0, 0.0]

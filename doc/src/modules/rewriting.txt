@@ -19,45 +19,44 @@ expand rules.
 
 Expanding of arithmetic expressions involving products and powers:
     >>> from sympy import *
-    >>> x, y, z = symbols('xyz')
+    >>> x, y, z = symbols('x,y,z')
     >>> ((x + y)*(x - y)).expand(basic=True)
     x**2 - y**2
     >>> ((x + y + z)**2).expand(basic=True)
-    2*x*y + 2*x*z + 2*y*z + x**2 + y**2 + z**2
+    x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
 
-
-Arithmetic expand is done by default in `expand()` so the keyword `basic` can
-be omitted. However you can set `basic=False` to avoid this type of expand if
+Arithmetic expand is done by default in ``expand()`` so the keyword ``basic`` can
+be omitted. However you can set ``basic=False`` to avoid this type of expand if
 you use rules described below. This give complete control on what is done with
 the expression.
 
 Another type of expand rule is expanding complex valued expressions and putting
-them into a normal form. For this `complex` keyword is used. Note that it will
+them into a normal form. For this ``complex`` keyword is used. Note that it will
 always perform arithmetic expand to obtain the desired normal form:
 
     >>> (x + I*y).expand(complex=True)
-    -im(y) + I*im(x) + I*re(y) + re(x)
+    re(x) + I*re(y) + I*im(x) - im(y)
 
     >>> sin(x + I*y).expand(complex=True)
-    -cosh(im(x) + re(y))*sin(-re(x) + im(y)) + I*cos(-re(x) + im(y))*sinh(im(x) + re(y))
+    sin(re(x) - im(y))*cosh(re(y) + im(x)) + I*cos(re(x) - im(y))*sinh(re(y) + im(x))
 
-Note also that the same behavior can be obtained by using `as_real_imag()`
+Note also that the same behavior can be obtained by using ``as_real_imag()``
 method. However it will return a tuple containing the real part in the first
 place and the imaginary part in the other. This can be also done in a two step
-process by using `collect` function:
+process by using ``collect`` function:
 
     >>> (x + I*y).as_real_imag()
-    (-im(y) + re(x), im(x) + re(y))
+    (re(x) - im(y), re(y) + im(x))
 
     >>> collect((x + I*y).expand(complex=True), I, evaluate=False)
-    {1: -im(y) + re(x), I: im(x) + re(y)}
+    {1: re(x) - im(y), I: re(y) + im(x)}
 
 There is also possibility for expanding expressions in terms of expressions of
 different kind. This is very general type of expanding and usually you would
 use ``rewrite()`` to do specific type of rewrite::
 
-    GoldenRatio.expand(func=True)
-    1/2 + (1/2)*5**(1/2)
+    >>> GoldenRatio.expand(func=True)
+    1/2 + sqrt(5)/2
 
 Common Subexpression Detection and Collection
 ---------------------------------------------
@@ -65,27 +64,26 @@ Common Subexpression Detection and Collection
 .. module:: sympy.simplify.cse_main
 
 Before evaluating a large expression, it is often useful to identify common
-subexpressions, collect them and evaluate them at once. This is implemented in the ``cse`` method. Examples::
+subexpressions, collect them and evaluate them at once. This is implemented in the ``cse`` function. Examples::
 
-    In [1]: cse(sqrt(sin(x)))
-    Out[1]:
-    ⎛    ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
+    >>> from sympy import cse, sqrt, sin, pprint
+    >>> from sympy.abc import x
+
+    >>> pprint(cse(sqrt(sin(x))), use_unicode=True)
+    ⎛    ⎡  ________⎤⎞
     ⎝[], ⎣╲╱ sin(x) ⎦⎠
 
-    In [2]: cse(sqrt(sin(x)+5)*sqrt(sin(x)+4))
-    Out[2]:
-    ⎛                ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽   ⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
-    ⎝[(x₀, sin(x))], ⎣╲╱ 4 + x₀ *╲╱ 5 + x₀ ⎦⎠
+    >>> pprint(cse(sqrt(sin(x)+5)*sqrt(sin(x)+4)), use_unicode=True)
+    ⎛                ⎡  ________   ________⎤⎞
+    ⎝[(x₀, sin(x))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
-    In [3]: cse(sqrt(sin(x)+5+cos(y))*sqrt(sin(x)+4+cos(y)))
-    Out[3]:
-    ⎛                              ⎡  ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽   ⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎽⎤⎞
-    ⎝[(x₀, cos(y)), (x₁, sin(x))], ⎣╲╱ 4 + x₀ + x₁ *╲╱ 5 + x₀ + x₁ ⎦⎠
+    >>> pprint(cse(sqrt(sin(x)+5+cos(y))*sqrt(sin(x)+4+cos(y))), use_unicode=True)
+    ⎛                                             ⎡  ________   ________⎤⎞
+    ⎝[(x₀, cos(y)), (x₁, sin(x)), (x₂, x₀ + x₁)], ⎣╲╱ x₂ + 4 ⋅╲╱ x₂ + 5 ⎦⎠
 
-    In [4]: cse((x-y)*(z-y) + sqrt((x-y)*(z-y)))
-    Out[4]:
-    ⎛                            ⎡          ⎽⎽⎽⎽   ⎽⎽⎽⎽⎤⎞
-    ⎝[(x₀, z - y), (x₁, x - y)], ⎣x₀*x₁ + ╲╱ x₀ *╲╱ x₁ ⎦⎠
+    >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
+    ⎛                         ⎡  ____     ⎤⎞
+    ⎝[(x₀, (x - y)⋅(-y + z))], ⎣╲╱ x₀  + x₀⎦⎠
 
 More information:
 

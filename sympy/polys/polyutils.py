@@ -1,8 +1,14 @@
 """Useful utilities for higher level polynomial classes. """
 
-from sympy import S, sympify, Integer, Rational, Symbol, Add, Mul, Pow, ask
-
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+from sympy.polys.polyoptions import build_options
+
+from sympy.core.exprtools import decompose_power
+
+from sympy.core import S, Add, Mul, Pow
+from sympy.assumptions import ask, Q
+
+import re
 
 _gens_order = {
     'a': 301, 'b': 302, 'c': 303, 'd': 304,
@@ -15,38 +21,47 @@ _gens_order = {
 }
 
 _max_order = 1000
+_re_gen = re.compile(r"^(.+?)(\d*)$")
 
 def _sort_gens(gens, **args):
     """Sort generators in a reasonably intelligent way. """
-    sort = args.get('sort')
-    wrt = args.get('wrt')
+    opt = build_options(args)
 
-    gens_order = {}
+    gens_order, wrt = {}, None
 
-    if sort is not None:
-        for i, elt in enumerate(sort.split('<')):
-            gens_order[elt.strip()] = i+1
+    if opt is not None:
+        gens_order, wrt = {}, opt.wrt
 
-    if wrt is not None:
-        wrt = str(wrt)
+        for i, gen in enumerate(opt.sort):
+            gens_order[gen] = i+1
 
-    def order_key(x):
-        x = str(x)
+    def order_key(gen):
+        gen = str(gen)
 
-        if x == wrt:
-            return (0, x)
+        if wrt is not None:
+            try:
+                return (-len(wrt) + wrt.index(gen), gen, 0)
+            except ValueError:
+                pass
+
+        name, index = _re_gen.match(gen).groups()
+
+        if index:
+            index = int(index)
+        else:
+            index = 0
 
         try:
-            return ( gens_order[x], x)
+            return ( gens_order[name], name, index)
         except KeyError:
             pass
 
         try:
-            return (_gens_order[x], x)
+            return (_gens_order[name], name, index)
         except KeyError:
             pass
 
-        return (_max_order, x)
+        return (_max_order, name, index)
 
     try:
         gens = sorted(gens, key=order_key)
@@ -100,7 +115,8 @@ def _analyze_gens(gens):
 
 def _sort_factors(factors, **args):
     """Sort low-level factors in increasing 'complexity' order. """
-    def order_if_multiple_key((f, n)):
+    def order_if_multiple_key(factor):
+        (f, n) = factor
         return (len(f), n, f)
 
     def order_no_multiple_key(f):
@@ -111,149 +127,182 @@ def _sort_factors(factors, **args):
     else:
         return sorted(factors, key=order_no_multiple_key)
 
-def _analyze_power(base, exp):
-    """Extract non-integer part of `exp` to the `base`. """
-    if exp.is_Number:
-        if exp.is_Rational:
-            if not exp.is_Integer:
-                base = Pow(base, Rational(1, exp.q))
+def _parallel_dict_from_expr_if_gens(exprs, opt):
+    """Transform expressions into a multinomial form given generators. """
+    k, indices = len(opt.gens), {}
 
-            exp = exp.p
-        else:
-            base, exp = Pow(base, exp), 1
-    else:
-        exp, tail = exp.as_coeff_terms()
-
-        if exp.is_Number:
-            if exp.is_Rational:
-                if not exp.is_Integer:
-                    tail += (Rational(1, exp.q),)
-
-                exp = exp.p
-            else:
-                tail, exp = (exp,) + tail, 1
-        else: # pragma: no cover
-            raise PolynomialError("got invalid polynomial term")
-
-        base = Pow(base, Mul(*tail))
-
-    if exp < 0:
-        exp, base = -exp, Pow(base, -S.One)
-
-    return base, exp
-
-def _dict_from_basic_if_gens(ex, gens, **args):
-    """Convert `ex` to a multinomial given a generators list. """
-    k, indices = len(gens), {}
-
-    for i, g in enumerate(gens):
+    for i, g in enumerate(opt.gens):
         indices[g] = i
 
-    result = {}
+    polys = []
 
-    for term in Add.make_args(ex):
-        coeff, monom = [], [0]*k
+    for expr in exprs:
+        poly = {}
 
-        for factor in Mul.make_args(term):
-            if factor.is_Number:
-                coeff.append(factor)
+        if expr.is_Equality:
+            expr = expr.lhs - expr.rhs
+
+        for term in Add.make_args(expr):
+            coeff, monom = [], [0]*k
+
+            for factor in Mul.make_args(term):
+                if factor.is_Number:
+                    coeff.append(factor)
+                else:
+                    try:
+                        base, exp = decompose_power(factor)
+
+                        if exp < 0:
+                            exp, base = -exp, Pow(base, -S.One)
+
+                        monom[indices[base]] = exp
+                    except KeyError:
+                        if not factor.free_symbols.intersection(opt.gens):
+                            coeff.append(factor)
+                        else:
+                            raise PolynomialError("%s contains an element of the generators set" % factor)
+
+            monom = tuple(monom)
+
+            if monom in poly:
+                poly[monom] += Mul(*coeff)
             else:
-                try:
-                    base, exp = _analyze_power(*factor.as_base_exp())
-                    monom[indices[base]] = exp
-                except KeyError:
-                    if not factor.has(*gens):
-                        coeff.append(factor)
-                    else:
-                        raise PolynomialError("%s contains an element of the generators set" % factor)
+                poly[monom] = Mul(*coeff)
 
-        monom = tuple(monom)
+        polys.append(poly)
 
-        if result.has_key(monom):
-            result[monom] += Mul(*coeff)
-        else:
-            result[monom] = Mul(*coeff)
+    return polys, opt.gens
 
-    return result
-
-def _dict_from_basic_no_gens(ex, **args):
-    """Figure out generators and convert `ex` to a multinomial. """
-    domain = args.get('domain')
-
-    if domain is not None:
+def _parallel_dict_from_expr_no_gens(exprs, opt):
+    """Transform expressions into a multinomial form and figure out generators. """
+    if opt.domain is not None:
         def _is_coeff(factor):
-            return factor in domain
+            return factor in opt.domain
+    elif opt.extension is True:
+        def _is_coeff(factor):
+            return ask(Q.algebraic(factor))
+    elif opt.greedy is not False:
+        def _is_coeff(factor):
+            return False
     else:
-        extension = args.get('extension')
+        def _is_coeff(factor):
+            return factor.is_number
 
-        if extension is True:
-            def _is_coeff(factor):
-                return ask(factor, 'algebraic')
-        else:
-            greedy = args.get('greedy', True)
+    gens, reprs = set([]), []
 
-            if greedy is True:
-                def _is_coeff(factor):
-                    return False
-            else:
-                def _is_coeff(factor):
-                    return factor.is_number
+    for expr in exprs:
+        terms = []
 
-    gens, terms = set([]), []
+        if expr.is_Equality:
+            expr = expr.lhs - expr.rhs
 
-    for term in Add.make_args(ex):
-        coeff, elements = [], {}
+        for term in Add.make_args(expr):
+            coeff, elements = [], {}
 
-        for factor in Mul.make_args(term):
-            if factor.is_Number or _is_coeff(factor):
-                coeff.append(factor)
-            else:
-                base, exp = _analyze_power(*factor.as_base_exp())
+            for factor in Mul.make_args(term):
+                if factor.is_Number or _is_coeff(factor):
+                    coeff.append(factor)
+                else:
+                    base, exp = decompose_power(factor)
 
-                elements[base] = exp
-                gens.add(base)
+                    if exp < 0:
+                        exp, base = -exp, Pow(base, -S.One)
 
-        terms.append((coeff, elements))
+                    elements[base] = exp
+                    gens.add(base)
+
+            terms.append((coeff, elements))
+
+        reprs.append(terms)
 
     if not gens:
-        raise GeneratorsNeeded("specify generators to give %s a meaning" % ex)
+        if len(exprs) == 1:
+            arg = exprs[0]
+        else:
+            arg = (exprs,)
 
-    gens = _sort_gens(gens, **args)
+        raise GeneratorsNeeded("specify generators to give %s a meaning" % arg)
 
+    gens = _sort_gens(gens, opt=opt)
     k, indices = len(gens), {}
 
     for i, g in enumerate(gens):
         indices[g] = i
 
-    result = {}
+    polys = []
 
-    for coeff, term in terms:
-        monom = [0]*k
+    for terms in reprs:
+        poly = {}
 
-        for base, exp in term.iteritems():
-            monom[indices[base]] = exp
+        for coeff, term in terms:
+            monom = [0]*k
 
-        monom = tuple(monom)
+            for base, exp in term.iteritems():
+                monom[indices[base]] = exp
 
-        if result.has_key(monom):
-            result[monom] += Mul(*coeff)
-        else:
-            result[monom] = Mul(*coeff)
+            monom = tuple(monom)
 
-    return result, tuple(gens)
+            if monom in poly:
+                poly[monom] += Mul(*coeff)
+            else:
+                poly[monom] = Mul(*coeff)
 
-def dict_from_basic(ex, gens=None, **args):
-    """Converts a SymPy expression to a multinomial. """
-    if args.get('expand', True):
-        ex = ex.expand()
+        polys.append(poly)
 
-    if gens is not None:
-        return _dict_from_basic_if_gens(ex, gens, **args)
+    return polys, tuple(gens)
+
+def _dict_from_expr_if_gens(expr, opt):
+    """Transform an expression into a multinomial form given generators. """
+    (poly,), gens = _parallel_dict_from_expr_if_gens((expr,), opt)
+    return poly, gens
+
+def _dict_from_expr_no_gens(expr, opt):
+    """Transform an expression into a multinomial form and figure out generators. """
+    (poly,), gens = _parallel_dict_from_expr_no_gens((expr,), opt)
+    return poly, gens
+
+def parallel_dict_from_expr(exprs, **args):
+    """Transform expressions into a multinomial form. """
+    reps, opt = _parallel_dict_from_expr(exprs, build_options(args))
+    return reps, opt.gens
+
+def _parallel_dict_from_expr(exprs, opt):
+    """Transform expressions into a multinomial form. """
+    if opt.expand is not False:
+        exprs = [ expr.expand() for expr in exprs ]
+
+    if any(expr.is_commutative is False for expr in exprs):
+        raise PolynomialError('non-commutative expressions are not supported')
+
+    if opt.gens:
+        reps, gens = _parallel_dict_from_expr_if_gens(exprs, opt)
     else:
-        return _dict_from_basic_no_gens(ex, **args)
+        reps, gens = _parallel_dict_from_expr_no_gens(exprs, opt)
 
-def basic_from_dict(rep, *gens):
-    """Converts a multinomial to a SymPy expression. """
+    return reps, opt.clone({'gens': gens})
+
+def dict_from_expr(expr, **args):
+    """Transform an expression into a multinomial form. """
+    rep, opt = _dict_from_expr(expr, build_options(args))
+    return rep, opt.gens
+
+def _dict_from_expr(expr, opt):
+    """Transform an expression into a multinomial form. """
+    if opt.expand is not False:
+        expr = expr.expand()
+
+    if expr.is_commutative is False:
+        raise PolynomialError('non-commutative expressions are not supported')
+
+    if opt.gens:
+        rep, gens = _dict_from_expr_if_gens(expr, opt)
+    else:
+        rep, gens = _dict_from_expr_no_gens(expr, opt)
+
+    return rep, opt.clone({'gens': gens})
+
+def expr_from_dict(rep, *gens):
+    """Convert a multinomial form into an expression. """
     result = []
 
     for monom, coeff in rep.iteritems():
@@ -265,6 +314,10 @@ def basic_from_dict(rep, *gens):
         result.append(Mul(*term))
 
     return Add(*result)
+
+parallel_dict_from_basic = parallel_dict_from_expr
+dict_from_basic = dict_from_expr
+basic_from_dict = expr_from_dict
 
 def _dict_reorder(rep, gens, new_gens):
     """Reorder levels using dict representation. """
@@ -286,4 +339,3 @@ def _dict_reorder(rep, gens, new_gens):
                 new_M.append(0)
 
     return map(tuple, new_monoms), coeffs
-

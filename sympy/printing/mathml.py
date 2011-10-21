@@ -28,7 +28,7 @@ class MathMLPrinter(Printer):
 
     def doprint(self, expr):
         mathML = Printer._print(self, expr)
-        return mathML.toxml(encoding=self._settings['encoding'])
+        return mathML.toxml()
 
     def mathml_tag(self, e):
         """Returns the MathML tag for an expression."""
@@ -70,7 +70,7 @@ class MathMLPrinter(Printer):
         return n.lower()
 
     def _print_Mul(self, expr):
-        coeff, terms  = expr.as_coeff_terms()
+        coeff, terms  = expr.as_coeff_mul()
 
         if coeff.is_negative:
             x = self.dom.createElement('apply')
@@ -87,6 +87,9 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(denom))
             return x
 
+        if self.order != 'old':
+            terms = expr._new_rawargs(*terms).as_ordered_factors()
+
         if coeff == 1 and len(terms) == 1:
             return self._print(terms[0])
         x = self.dom.createElement('apply')
@@ -97,17 +100,12 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print(term))
         return x
 
-    # This is complicated because we attempt to order then results in order of Basic._compare_pretty
-    # and use minus instead of negative
-    def _print_Add(self, e):
-        args = list(e.args)
-        args.sort(Basic._compare_pretty)
+    def _print_Add(self, expr, order=None):
+        args = self._as_ordered_terms(expr, order=order)
         lastProcessed = self._print(args[0])
-        args.pop(0)
-        plusNodes = list()
-        for i in range(0,len(args)):
-            arg = args[i]
-            coeff, terms = arg.as_coeff_terms()
+        plusNodes = []
+        for arg in args[1:]:
+            coeff, _ = arg.as_coeff_mul()
             if(coeff.is_negative):
                 #use minus
                 x = self.dom.createElement('apply')
@@ -310,7 +308,7 @@ class MathMLPrinter(Printer):
         x.appendChild(self.dom.createElement(self.mathml_tag(e)))
 
         x_1 = self.dom.createElement('bvar')
-        for sym in e.symbols:
+        for sym in e.variables:
             x_1.appendChild(self._print(sym))
 
         x.appendChild(x_1)
@@ -372,14 +370,14 @@ def print_mathml(expr, **settings):
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
         <plus/>
-        <cn>
-                1
-        </cn>
         <ci>
                 x
         </ci>
+        <cn>
+                1
+        </cn>
     </apply>
 
     """
     s = MathMLPrinter(settings)
-    print s._print(sympify(expr)).toprettyxml(encoding="utf-8")
+    print s._print(sympify(expr)).toprettyxml()

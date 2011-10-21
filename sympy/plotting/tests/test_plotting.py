@@ -10,16 +10,13 @@ except:
 
 try:
     # if pyglet.gl fails to import, e.g. opengl is missing, we disable the tests
-    from sympy.thirdparty import import_thirdparty
-    pyglet = import_thirdparty("pyglet")
-
     import pyglet.gl
     import pyglet.window
 except:
     disabled = True
 
 from sympy import symbols, sin, cos
-x,y = symbols('xy')
+x,y = symbols('x,y')
 
 def test_import():
     from sympy import Plot

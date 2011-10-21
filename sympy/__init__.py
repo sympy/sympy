@@ -9,17 +9,7 @@ See the webpage for more information and documentation:
 
     http://code.google.com/p/sympy/"""
 
-__version__ = "0.6.7-git"
-
-import sys
-import warnings
-
-if sys.version_info[1] == 4:
-    warnings.warn("Support for Python 2.4 in SymPy is deprecated.",
-        DeprecationWarning)
-
-del sys
-del warnings
+__version__ = "0.7.1-git"
 
 def __sympy_debug():
     # helper function so we don't import os globally
@@ -28,11 +18,11 @@ def __sympy_debug():
 SYMPY_DEBUG = __sympy_debug()
 
 from sympy.core import *
+from logic import *
 from assumptions import *
 from polys import *
 from series import *
 from functions import *
-from logic import *
 from ntheory import *
 from concrete import *
 from simplify import *
@@ -42,6 +32,7 @@ from geometry import *
 from utilities import *
 from integrals import *
 from tensor import *
+from parsing import *
 # This module is slow to import:
 #from physics import units
 from plotting import Plot, textplot

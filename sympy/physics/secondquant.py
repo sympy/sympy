@@ -4,17 +4,19 @@ Second quantization operators and states for bosons.
 This follow the formulation of Fetter and Welecka, "Quantum Theory
 of Many-Particle Systems."
 """
+from collections import defaultdict
 
 from sympy import (
     Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
-    zeros, Pow, I, S, Symbol, Tuple
+    zeros, Pow, I, S, Symbol, Tuple, Dummy
 )
 
-from sympy.utilities import iff
 from sympy.core.sympify import sympify
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy
 from sympy.printing.str import StrPrinter
+
+from sympy.core.compatibility import reduce
 
 __all__ = [
     'Dagger',
@@ -134,6 +136,8 @@ class Dagger(Expr):
             return d
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = Dagger(self.args[0].subs(old, new))
         return r
 
@@ -158,9 +162,9 @@ class AntiSymmetricTensor(TensorSymbol):
     >>> i, j = symbols('i j', below_fermi=True)
     >>> a, b = symbols('a b', above_fermi=True)
     >>> AntiSymmetricTensor('v', (a, i), (b, j))
-    AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+    AntiSymmetricTensor(v, (a, i), (b, j))
     >>> AntiSymmetricTensor('v', (i, a), (b, j))
-    -AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+    -AntiSymmetricTensor(v, (a, i), (b, j))
 
     As you can see, the indices are automatically sorted to a canonical form.
 
@@ -173,17 +177,6 @@ class AntiSymmetricTensor(TensorSymbol):
         try:
             upper, signu = _sort_anticommuting_fermions(upper, key=cls._sortkey)
             lower, signl = _sort_anticommuting_fermions(lower, key=cls._sortkey)
-            sign = 1
-            if signu:
-                upper = Tuple(*upper)
-                if signu %2:
-                    sign = -sign
-            if signl:
-                lower = Tuple(*lower)
-                if signl %2:
-                    sign = -sign
-            if signl or signu:
-                return sign*cls(symbol, upper, lower)
 
         except ViolationOfPauliPrinciple:
             return S.Zero
@@ -238,10 +231,10 @@ class AntiSymmetricTensor(TensorSymbol):
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
-        >>> i, j = symbols('i j', below_fermi=True)
-        >>> a, b = symbols('a b', above_fermi=True)
+        >>> i, j = symbols('i,j', below_fermi=True)
+        >>> a, b = symbols('a,b', above_fermi=True)
         >>> AntiSymmetricTensor('v', (a, i), (b, j))
-        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        AntiSymmetricTensor(v, (a, i), (b, j))
         >>> AntiSymmetricTensor('v', (a, i), (b, j)).symbol
         v
 
@@ -257,12 +250,12 @@ class AntiSymmetricTensor(TensorSymbol):
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
-        >>> i, j = symbols('i j', below_fermi=True)
-        >>> a, b = symbols('a b', above_fermi=True)
+        >>> i, j = symbols('i,j', below_fermi=True)
+        >>> a, b = symbols('a,b', above_fermi=True)
         >>> AntiSymmetricTensor('v', (a, i), (b, j))
-        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        AntiSymmetricTensor(v, (a, i), (b, j))
         >>> AntiSymmetricTensor('v', (a, i), (b, j)).upper
-        Tuple(a, i)
+        (a, i)
 
 
         """
@@ -277,12 +270,12 @@ class AntiSymmetricTensor(TensorSymbol):
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
-        >>> i, j = symbols('i j', below_fermi=True)
-        >>> a, b = symbols('a b', above_fermi=True)
+        >>> i, j = symbols('i,j', below_fermi=True)
+        >>> a, b = symbols('a,b', above_fermi=True)
         >>> AntiSymmetricTensor('v', (a, i), (b, j))
-        AntiSymmetricTensor(v, Tuple(a, i), Tuple(b, j))
+        AntiSymmetricTensor(v, (a, i), (b, j))
         >>> AntiSymmetricTensor('v', (a, i), (b, j)).lower
-        Tuple(b, j)
+        (b, j)
 
         """
         return self.args[2]
@@ -300,7 +293,7 @@ class KroneckerDelta(Function):
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import KroneckerDelta
-    >>> i, j, k = symbols('i j k')
+    >>> i, j, k = symbols('i,j,k')
     >>> KroneckerDelta(i, j)
     KroneckerDelta(i, j)
     >>> KroneckerDelta(i, i)
@@ -308,7 +301,7 @@ class KroneckerDelta(Function):
     >>> KroneckerDelta(i, i+1)
     0
     >>> KroneckerDelta(i, i+1+k)
-    KroneckerDelta(i, 1 + i + k)
+    KroneckerDelta(i, i + k + 1)
 
     """
 
@@ -322,7 +315,7 @@ class KroneckerDelta(Function):
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import KroneckerDelta
-        >>> i, j, k = symbols('i j k')
+        >>> i, j, k = symbols('i,j,k')
         >>> KroneckerDelta(i, j)
         KroneckerDelta(i, j)
         >>> KroneckerDelta(i, i)
@@ -330,7 +323,7 @@ class KroneckerDelta(Function):
         >>> KroneckerDelta(i, i+1)
         0
         >>> KroneckerDelta(i, i+1+k)
-        KroneckerDelta(i, 1 + i + k)
+        KroneckerDelta(i, i + k + 1)
 
         # indirect doctest
 
@@ -349,6 +342,8 @@ class KroneckerDelta(Function):
             return S.Zero
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old, new))
         return r
 
@@ -589,6 +584,8 @@ class SqOperator(Expr):
         return obj
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = self.__class__(self.args[0].subs(old, new))
         return r
 
@@ -836,15 +833,16 @@ class FermionicOperator(SqOperator):
 
     def _sortkey(self):
         h = hash(self)
+        label = str(self.args[0])
 
         if self.is_only_q_creator:
-            return 1, h
+            return 1, label, h
         if self.is_only_q_annihilator:
-            return 4, h
+            return 4, label, h
         if isinstance(self, Annihilator):
-            return 3, h
+            return 3, label, h
         if isinstance(self, Creator):
-            return 2, h
+            return 2, label, h
 
 
 class AnnihilateFermion(FermionicOperator, Annihilator):
@@ -1112,11 +1110,13 @@ class FockState(Expr):
           Element 0 is the state that was occupied first, element i
           is the i'th occupied state.
         """
-        o = map(sympify, occupations)
-        obj = Basic.__new__(cls, tuple(o), commutative=False)
+        occupations = map(sympify, occupations)
+        obj = Basic.__new__(cls, Tuple(*occupations), commutative=False)
         return obj
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = self.__class__([o.subs(old, new) for o in self.args[0]])
         return r
 
@@ -1237,10 +1237,10 @@ class FermionState(FockState):
                 return S.Zero
         else:
             if present:
-                hole = Symbol("i",below_fermi=True,dummy=True)
+                hole = Dummy("i",below_fermi=True)
                 return KroneckerDelta(i,hole)*self._remove_orbit(i)
             else:
-                particle = Symbol("a",above_fermi=True,dummy=True)
+                particle = Dummy("a",above_fermi=True)
                 return KroneckerDelta(i,particle)*self._add_orbit(i)
 
     def down(self, i):
@@ -1285,10 +1285,10 @@ class FermionState(FockState):
                 return self._add_orbit(i)
         else:
             if present:
-                hole = Symbol("i",below_fermi=True,dummy=True)
+                hole = Dummy("i",below_fermi=True)
                 return KroneckerDelta(i,hole)*self._add_orbit(i)
             else:
-                particle = Symbol("a",above_fermi=True,dummy=True)
+                particle = Dummy("a",above_fermi=True)
                 return KroneckerDelta(i,particle)*self._remove_orbit(i)
 
 
@@ -1348,7 +1348,7 @@ class FermionState(FockState):
         return len([ i for i in list if  cls._only_below_fermi(i)])
 
     def _negate_holes(self,list):
-        return tuple([ iff(i<=self.fermi_level, -i, i) for i in list ])
+        return tuple([ -i if i<=self.fermi_level else i for i in list ])
 
     def __repr__(self):
         if self.fermi_level:
@@ -1514,6 +1514,8 @@ class InnerProduct(Basic):
         return self.args[1]
 
     def _eval_subs(self, old, new):
+        if self == old:
+            return new
         r = self.__class__(self.bra.subs(old,new), self.ket.subs(old,new))
         return r
 
@@ -1530,7 +1532,7 @@ def matrix_rep(op, basis):
     """
     Find the representation of an operator in a basis.
     """
-    a = zeros((len(basis), len(basis)))
+    a = zeros(len(basis))
     for i in range(len(basis)):
         for j in range(len(basis)):
             a[i,j] = apply_operators(Dagger(basis[i])*op*basis[j])
@@ -1586,19 +1588,16 @@ class FixedBosonicBasis(BosonicBasis):
         self._build_states()
 
     def _build_particle_locations(self):
-        tup = ["i"+str(i) for i in range(self.n_particles)]
+        tup = ["i%i" % i for i in range(self.n_particles)]
         first_loop = "for i0 in range(%i)" % self.n_levels
         other_loops = ''
-        for i in range(len(tup)-1):
-            temp = "for %s in range(%s + 1) " % (tup[i+1],tup[i])
+        for cur, prev in zip(tup[1:], tup):
+            temp = "for %s in range(%s + 1) " % (cur, prev)
             other_loops = other_loops + temp
-        var = "("
-        for i in tup[:-1]:
-            var = var + i + ","
-        var = var + tup[-1] + ")"
-        cmd = "result = [%s %s %s]" % (var, first_loop, other_loops)
-        exec cmd
-        if self.n_particles==1:
+        tup_string = "(%s)" % ", ".join(tup)
+        list_comp = "[%s %s %s]" % (tup_string, first_loop, other_loops)
+        result = eval(list_comp)
+        if self.n_particles == 1:
             result = [(item,) for item in result]
         self.particle_locations = result
 
@@ -1686,7 +1685,7 @@ class Commutator(Function):
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import Commutator
-    >>> A, B = symbols('A B', commutative=False)
+    >>> A, B = symbols('A,B', commutative=False)
     >>> Commutator(B, A)
     -Commutator(A, B)
 
@@ -1704,7 +1703,7 @@ class Commutator(Function):
     >>> from sympy.physics.secondquant import Fd, F
     >>> a = symbols('a',above_fermi=True)
     >>> i = symbols('i',below_fermi=True)
-    >>> p,q = symbols('pq')
+    >>> p,q = symbols('p,q')
 
     >>> Commutator(Fd(a),Fd(i))
     2*NO(CreateFermion(a)*CreateFermion(i))
@@ -1715,7 +1714,7 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    KroneckerDelta(i, q)*CreateFermion(p) - KroneckerDelta(i, p)*CreateFermion(q)
+    -KroneckerDelta(i, p)*CreateFermion(q) + KroneckerDelta(i, q)*CreateFermion(p)
 
     """
 
@@ -1777,7 +1776,7 @@ class Commutator(Function):
         #
         # Canonical ordering of arguments
         #
-        if cmp(a, b) > 0:
+        if a > b:
             return S.NegativeOne*cls(b, a)
 
 
@@ -1823,7 +1822,7 @@ class NO(Expr):
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import NO, F, Fd
-    >>> p,q = symbols('pq')
+    >>> p,q = symbols('p,q')
     >>> NO(Fd(p)*F(q))
     NO(CreateFermion(p)*AnnihilateFermion(q))
     >>> NO(F(q)*Fd(p))
@@ -1977,8 +1976,6 @@ class NO(Expr):
         for i in self.iter_q_creators():
             if self[i].is_q_annihilator:
                 assume = self[i].state.assumptions0
-                assume["dummy"]=True
-                Dummy = type(Symbol('x',dummy=True))
 
                 # only operators with a dummy index can be split in two terms
                 if isinstance(self[i].state, Dummy):
@@ -1986,10 +1983,10 @@ class NO(Expr):
                     # create indices with fermi restriction
                     assume.pop("above_fermi", None)
                     assume["below_fermi"]=True
-                    below = Symbol('i',**assume)
+                    below = Dummy('i',**assume)
                     assume.pop("below_fermi", None)
                     assume["above_fermi"]=True
-                    above = Symbol('a',**assume)
+                    above = Dummy('a',**assume)
 
                     cls = type(self[i])
                     split = (
@@ -2049,11 +2046,10 @@ class NO(Expr):
         Iterates over the annihilation operators.
 
         >>> from sympy import symbols
-        >>> i,j,k,l = symbols('ijkl',below_fermi=True)
-        >>> p,q,r,s = symbols('pqrs', dummy=True)
-        >>> a,b,c,d = symbols('abcd',above_fermi=True)
+        >>> i, j = symbols('i j', below_fermi=True)
+        >>> a, b = symbols('a b', above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
-        >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
+        >>> no = NO(Fd(a)*F(i)*F(b)*Fd(j))
 
         >>> no.iter_q_creators()
         <generator object... at 0x...>
@@ -2076,11 +2072,10 @@ class NO(Expr):
         Iterates over the creation operators.
 
         >>> from sympy import symbols
-        >>> i,j,k,l = symbols('ijkl',below_fermi=True)
-        >>> p,q,r,s = symbols('pqrs', dummy=True)
-        >>> a,b,c,d = symbols('abcd',above_fermi=True)
+        >>> i, j = symbols('i j',below_fermi=True)
+        >>> a, b = symbols('a b',above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
-        >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
+        >>> no = NO(Fd(a)*F(i)*F(b)*Fd(j))
 
         >>> no.iter_q_creators()
         <generator object... at 0x...>
@@ -2105,13 +2100,14 @@ class NO(Expr):
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import F, NO
-        >>> p,q,r = symbols('pqr')
+        >>> p,q,r = symbols('p,q,r')
 
         >>> NO(F(p)*F(q)*F(r)).get_subNO(1)  # doctest: +SKIP
         NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
         """
-        mul = Mul(*(self.args[0].args[0:i] + self.args[0].args[i+1:]))
+        arg0 = self.args[0] # it's a Mul by definition of how it's created
+        mul = arg0._new_rawargs(arg0.args[:i] + arg0.args[i + 1:])
         return NO(mul)
 
     def _latex(self,printer):
@@ -2131,9 +2127,9 @@ def contraction(a,b):
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import F, Fd, contraction
-    >>> p,q = symbols('pq')
-    >>> a,b = symbols('ab',above_fermi=True)
-    >>> i,j = symbols('ij',below_fermi=True)
+    >>> p,q = symbols('p,q')
+    >>> a,b = symbols('a,b', above_fermi=True)
+    >>> i,j = symbols('i,j', below_fermi=True)
 
     A contraction is non-zero only if a quasi-creator is to the right of a
     quasi-annihilator:
@@ -2171,7 +2167,7 @@ def contraction(a,b):
                 return KroneckerDelta(a.state,b.state)
 
             return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Symbol('a',dummy=True,above_fermi=True)))
+                    KroneckerDelta(b.state,Dummy('a',above_fermi=True)))
         if isinstance(b,AnnihilateFermion) and isinstance(a,CreateFermion):
             if b.state.assumptions0.get("above_fermi"):
                 return S.Zero
@@ -2183,7 +2179,7 @@ def contraction(a,b):
                 return KroneckerDelta(a.state,b.state)
 
             return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Symbol('i',dummy=True,below_fermi=True)))
+                    KroneckerDelta(b.state,Dummy('i',below_fermi=True)))
 
         # vanish if 2xAnnihilator or 2xCreator
         return S.Zero
@@ -2268,11 +2264,11 @@ def evaluate_deltas(e):
 
     We assume that
 
-    >>> from sympy import symbols, Function
+    >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import evaluate_deltas, KroneckerDelta
-    >>> i,j = symbols('ij',below_fermi=True, dummy=True)
-    >>> a,b = symbols('ab',above_fermi=True, dummy=True)
-    >>> p,q = symbols('pq', dummy=True)
+    >>> i,j = symbols('i j', below_fermi=True, cls=Dummy)
+    >>> a,b = symbols('a b', above_fermi=True, cls=Dummy)
+    >>> p,q = symbols('p q', cls=Dummy)
     >>> f = Function('f')
     >>> t = Function('t')
 
@@ -2305,9 +2301,9 @@ def evaluate_deltas(e):
     imply a loss of information:
 
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(q))
-    KroneckerDelta(_i, _p)*f(_q)
+    f(_q)*KroneckerDelta(_i, _p)
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(i))
-    KroneckerDelta(_i, _p)*f(_i)
+    f(_i)*KroneckerDelta(_i, _p)
     """
 
 
@@ -2318,8 +2314,8 @@ def evaluate_deltas(e):
     accepted_functions = (
             Add,
             )
-    if isinstance(e,accepted_functions):
-        return e.new(*[evaluate_deltas(arg) for arg in e.args])
+    if isinstance(e, accepted_functions):
+        return e.func(*[evaluate_deltas(arg) for arg in e.args])
 
     elif isinstance(e,Mul):
         # find all occurences of delta function and count each index present in
@@ -2369,10 +2365,10 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     Examples
     --------
 
-    >>> from sympy import symbols, Function
+    >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import substitute_dummies
-    >>> a,b,c,d = symbols('abcd',dummy=True, above_fermi=True)
-    >>> i,j = symbols('ij',dummy=True, below_fermi=True)
+    >>> a,b,c,d = symbols('a b c d', above_fermi=True, cls=Dummy)
+    >>> i,j = symbols('i j', below_fermi=True, cls=Dummy)
     >>> f = Function('f')
 
     >>> expr = f(a,b) + f(c,d); expr
@@ -2409,7 +2405,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     If we run out of letters, or if there is no keyword for some index_group
     the default dummy generator will be used as a fallback:
 
-    >>> p,q = symbols('pq',dummy=True)  # general indices
+    >>> p,q = symbols('p q', cls=Dummy)  # general indices
     >>> expr = f(p,q)
     >>> substitute_dummies(expr, new_indices=True, pretty_indices=my_dummies)
     f(_p_0, _p_1)
@@ -2455,7 +2451,6 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     a = i = p = 0
     for d in dummies:
         assum = d.assumptions0
-        assum["dummy"]=True
 
         if assum.get("above_fermi"):
             if new_indices: sym = _a(a); a +=1
@@ -2468,7 +2463,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
             l1 = generals
 
         if new_indices:
-            l1.append(Symbol(sym, **assum))
+            l1.append(Dummy(sym, **assum))
         else:
             l1.append(d)
 
@@ -2500,7 +2495,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
                 # correct substitution order.
                 if subsdict[v] in subsdict:
                     # (x, y) -> (y, x),  we need a temporary variable
-                    x = Symbol('x', dummy=True)
+                    x = Dummy('x')
                     subslist.append((k, x))
                     final_subs.append((x, v))
                 else:
@@ -2526,7 +2521,7 @@ def _get_ordered_dummies(mul, verbose = False):
     """Returns all dummies in the mul sorted in canonical order
 
     The purpose of the canonical ordering is that dummies can be substituted
-    consistently accross terms with the result that equivalent terms can be
+    consistently across terms with the result that equivalent terms can be
     simplified.
 
     It is not possible to determine if two terms are equivalent based solely on
@@ -2588,8 +2583,7 @@ def _get_ordered_dummies(mul, verbose = False):
     args = Mul.make_args(mul)
     fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
     fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
-    all_dums = list(reduce(
-        lambda x, y: x | y, fac_dum.values(), set()))
+    all_dums = reduce(set.union, fac_dum.values(), set())
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
@@ -2602,8 +2596,8 @@ def _get_ordered_dummies(mul, verbose = False):
 
     def key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
-        other_dums = reduce(lambda x, y: x | y,
-                [ fac_dum[fac] for fac in dumstruct ])
+        other_dums = reduce(set.union, [ fac_dum[fac] for fac in dumstruct ], set())
+        fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()
         other_dums.remove(d)
@@ -2655,12 +2649,9 @@ def _get_ordered_dummies(mul, verbose = False):
     result = sorted(all_dums, key=lambda x: dumkey[x])
     if len(set(dumkey.itervalues())) < len(dumkey):
         # We have ambiguities
-        unordered = {}
+        unordered = defaultdict(set)
         for d, k in dumkey.iteritems():
-            if k in unordered:
-                unordered[k].add(d)
-            else:
-                unordered[k] = set([d])
+            unordered[k].add(d)
         for k in [ k for k in unordered if len(unordered[k]) < 2 ]:
             del unordered[k]
 
@@ -2812,9 +2803,9 @@ def wicks(e, **kw_args):
     Returns the normal ordered equivalent of an expression using Wicks Theorem.
 
 
-    >>> from sympy import symbols, Function
+    >>> from sympy import symbols, Function, Dummy
     >>> from sympy.physics.secondquant import wicks, F, Fd, NO
-    >>> p,q,r = symbols('pqr')
+    >>> p,q,r = symbols('p,q,r')
     >>> wicks(Fd(p)*F(q))  # doctest: +SKIP
     KroneckerDelta(p, q)*KroneckerDelta(q, _i) + NO(CreateFermion(p)*AnnihilateFermion(q))
 
@@ -2830,7 +2821,7 @@ def wicks(e, **kw_args):
      -- KroneckerDelta functions are evaluated
      -- Dummy variables are substituted consistently across terms
 
-    >>> p,q,r = symbols('pqr', dummy=True)
+    >>> p,q,r = symbols('p q r', cls=Dummy)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True) # doctest: +SKIP
     KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
 
@@ -2942,7 +2933,7 @@ class PermutationOperator(Expr):
 
         >>> from sympy import symbols, Function
         >>> from sympy.physics.secondquant import PermutationOperator
-        >>> p,q = symbols('pq')
+        >>> p,q = symbols('p,q')
         >>> f = Function('f')
         >>> PermutationOperator(p,q).get_permuted(f(p,q))
         -f(q, p)
@@ -2951,7 +2942,7 @@ class PermutationOperator(Expr):
         i = self.args[0]
         j = self.args[1]
         if expr.has(i) and expr.has(j):
-            tmp = Symbol('t',dummy=True)
+            tmp = Dummy()
             expr = expr.subs(i,tmp)
             expr = expr.subs(j,i)
             expr = expr.subs(tmp,j)
@@ -2980,19 +2971,19 @@ def simplify_index_permutations(expr, permutation_operators):
     >>> from sympy import symbols, Function
     >>> from sympy.physics.secondquant import simplify_index_permutations
     >>> from sympy.physics.secondquant import PermutationOperator
-    >>> p,q,r,s = symbols('pqrs')
+    >>> p,q,r,s = symbols('p,q,r,s')
     >>> f = Function('f')
     >>> g = Function('g')
 
     >>> expr = f(p)*g(q) - f(q)*g(p); expr
     f(p)*g(q) - f(q)*g(p)
     >>> simplify_index_permutations(expr,[PermutationOperator(p,q)])
-    PermutationOperator(p, q)*f(p)*g(q)
+    f(p)*g(q)*PermutationOperator(p, q)
 
     >>> PermutList = [PermutationOperator(p,q),PermutationOperator(r,s)]
     >>> expr = f(p,r)*g(q,s) - f(q,r)*g(p,s) + f(q,s)*g(p,r) - f(p,s)*g(q,r)
     >>> simplify_index_permutations(expr,PermutList)
-    PermutationOperator(p, q)*PermutationOperator(r, s)*f(p, r)*g(q, s)
+    f(p, r)*g(q, s)*PermutationOperator(p, q)*PermutationOperator(r, s)
 
     """
 

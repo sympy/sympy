@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 Calculates the Coupled-Cluster energy- and amplitude equations
 See 'An Introduction to Coupled Cluster Theory' by
@@ -10,7 +11,7 @@ from sympy.physics.secondquant import (AntiSymmetricTensor, wicks,
         F, Fd, NO, evaluate_deltas, substitute_dummies, Commutator,
         simplify_index_permutations, PermutationOperator)
 from sympy import (
-    symbols, expand, pprint, Rational, latex
+    symbols, expand, pprint, Rational, latex, Dummy
 )
 
 pretty_dummies_dict={
@@ -24,12 +25,12 @@ def get_CC_operators():
     """
     Returns a tuple (T1,T2) of unique operators.
     """
-    i = symbols('i',below_fermi=True,dummy=True)
-    a = symbols('a',above_fermi=True,dummy=True)
+    i = symbols('i',below_fermi=True,cls=Dummy)
+    a = symbols('a',above_fermi=True,cls=Dummy)
     t_ai = AntiSymmetricTensor('t',(a,),(i,))
     ai = NO(Fd(a)*F(i))
-    i,j = symbols('ij',below_fermi=True,dummy=True)
-    a,b = symbols('ab',above_fermi=True,dummy=True)
+    i,j = symbols('i,j',below_fermi=True,cls=Dummy)
+    a,b = symbols('a,b',above_fermi=True,cls=Dummy)
     t_abij = AntiSymmetricTensor('t',(a,b),(i,j))
     abji = NO(Fd(a)*Fd(b)*F(j)*F(i))
 
@@ -46,7 +47,7 @@ def main():
     print
 
     # setup hamiltonian
-    p,q,r,s = symbols('pqrs',dummy=True)
+    p,q,r,s = symbols('p,q,r,s',cls=Dummy)
     f = AntiSymmetricTensor('f',(p,),(q,))
     pr = NO((Fd(p)*F(q)))
     v = AntiSymmetricTensor('v',(p,q),(r,s))
@@ -96,8 +97,8 @@ def main():
     print
 
     print "extracting CC equations from full Hbar"
-    i,j,k,l = symbols('ijkl',below_fermi=True)
-    a,b,c,d = symbols('abcd',above_fermi=True)
+    i,j,k,l = symbols('i,j,k,l',below_fermi=True)
+    a,b,c,d = symbols('a,b,c,d',above_fermi=True)
     print
     print "CC Energy:"
     print latex(wicks(eq, simplify_dummies=True,

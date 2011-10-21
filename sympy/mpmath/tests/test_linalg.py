@@ -114,13 +114,13 @@ def test_householder():
     def coeff(n):
         # similiar to Hilbert matrix
         A = []
-        for i in xrange(1, 13):
-            A.append([1. / (i + j - 1) for j in xrange(1, n + 1)])
+        for i in range(1, 13):
+            A.append([1. / (i + j - 1) for j in range(1, n + 1)])
         return matrix(A)
 
     residuals = []
     refres = []
-    for n in xrange(2, 7):
+    for n in range(2, 7):
         A = coeff(n)
         H, p, x, r = householder(extend(A, y))
         x = matrix(x)
@@ -221,20 +221,26 @@ def test_improve_solution():
 def test_exp_pade():
     for i in range(3):
         dps = 15
-        extra = 5
+        extra = 15
         mp.dps = dps + extra
         dm = 0
-        while not dm:
-            m = randmatrix(3)
+        N = 3
+        dg = range(1,N+1)
+        a = diag(dg)
+        expa = diag([exp(x) for x in dg])
+        # choose a random matrix not close to be singular
+        # to avoid adding too much extra precision in computing
+        # m**-1 * M * m
+        while abs(dm) < 0.01:
+            m = randmatrix(N)
             dm = det(m)
         m = m/dm
-        a = diag([1,2,3])
         a1 = m**-1 * a * m
+        e2 = m**-1 * expa * m
         mp.dps = dps
         e1 = expm(a1, method='pade')
         mp.dps = dps + extra
-        e2 = m * a1 * m**-1
-        d = e2 - a
+        d = e2 - e1
         #print d
         mp.dps = dps
         assert norm(d, inf).ae(0)

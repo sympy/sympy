@@ -1,17 +1,20 @@
-from sympy.core import Rational, Symbol, Basic, S, Real, Integer
+from sympy.core import Rational, Symbol, Basic, S, Float, Integer
 from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_rational():
     a = Rational(1, 5)
 
-    assert a**Rational(1, 2) == a**Rational(1, 2)
-    assert 2 * a**Rational(1, 2) == 2 * a**Rational(1, 2)
+    r = sqrt(5)/5
+    assert sqrt(a) == r
+    assert 2*sqrt(a) == 2*r
 
-    assert a**Rational(3, 2) == a * a**Rational(1, 2)
-    assert 2 * a**Rational(3, 2) == 2*a * a**Rational(1, 2)
+    r = a*a**Rational(1, 2)
+    assert a**Rational(3, 2) == r
+    assert 2*a**Rational(3, 2) == 2*r
 
-    assert a**Rational(17, 3) == a**5 * a**Rational(2, 3)
-    assert 2 * a**Rational(17, 3) == 2*a**5 * a**Rational(2, 3)
+    r = a**5*a**Rational(2, 3)
+    assert a**Rational(17, 3) == r
+    assert 2 * a**Rational(17, 3) == 2*r
 
 def test_large_rational():
     e = (Rational(123712**12-1,7)+Rational(1,7))**Rational(1,3)
@@ -21,7 +24,7 @@ def test_negative_real():
     def feq(a,b):
         return abs(a - b) < 1E-10
 
-    assert feq(S.One / Real(-0.5), -Integer(2))
+    assert feq(S.One / Float(-0.5), -Integer(2))
 
 def test_expand():
     x = Symbol('x')
@@ -34,24 +37,32 @@ def test_issue153():
 def test_issue350():
     #test if powers are simplified correctly
     #see also issue 896
-    a = Symbol('a')
-    assert ((a**Rational(1,3))**Rational(2)) == a**Rational(2,3)
-    assert ((a**Rational(3))**Rational(2,5)) == (a**Rational(3))**Rational(2,5)
+    x = Symbol('x')
+    assert ((x**Rational(1,3))**Rational(2)) == x**Rational(2,3)
+    assert ((x**Rational(3))**Rational(2,5)) == (x**Rational(3))**Rational(2,5)
 
     a = Symbol('a', real=True)
     b = Symbol('b', real=True)
-    assert (a**2)**b == abs(a)**(2*b)
-    assert sqrt(1/a) != 1/sqrt(a)
+    assert (a**2)**b == (abs(a)**b)**2
+    assert sqrt(1/a) != 1/sqrt(a) # e.g. for a = -1
     assert (a**3)**Rational(1,3) != a
+    assert (x**a)**b != x**(a*b) # e.g. x = -1, a=1/2, b=2
+    assert (x**.5)**b == x**(.5*b)
+    assert (x**.5)**.5 == x**.25
+    assert (x**2.5)**.5 != x**1.25 # e.g. for x = 5*I
 
-    z = Symbol('z')
     k = Symbol('k',integer=True)
     m = Symbol('m',integer=True)
-    assert (z**k)**m == z**(k*m)
+    assert (x**k)**m == x**(k*m)
     #assert Number(5)**Rational(2,3)==Number(25)**Rational(1,3)
+
+    assert (x**.5)**2 == x**1.0
+    assert (x**2)**k == (x**k)**2 == x**(2*k)
 
     a = Symbol('a', positive=True)
     assert (a**3)**Rational(2,5) == a**Rational(6,5)
+    assert (a**2)**b == (a**b)**2
+    assert (a**Rational(2, 3))**x == (a**x)**Rational(2, 3) == (a**(2*x/3))
 
 def test_issue767():
     assert --sqrt(sqrt(5)-1)==sqrt(sqrt(5)-1)
@@ -103,23 +114,38 @@ def test_issue1263():
     eq=eqn(nneg, dpos, -pow);assert not eq.is_Pow or eq.as_numer_denom() == (dpos**pow, nneg**pow)
     eq=eqn(nneg, dneg, -pow);assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-nneg)**pow)
     # unknown exponent
-    eq=eqn(npos, dpos, 2*any);assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
-    eq=eqn(npos, dneg, 2*any);assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
-    eq=eqn(nneg, dpos, 2*any);assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
-    eq=eqn(nneg, dneg, 2*any);assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
-    eq=eqn(npos, dpos, -2*any);assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
-    eq=eqn(npos, dneg, -2*any);assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
-    eq=eqn(nneg, dpos, -2*any);assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
-    eq=eqn(nneg, dneg, -2*any);assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
+    pow = 2*any
+    eq=eqn(npos, dpos, pow)
+    assert eq.is_Pow and eq.as_numer_denom() == (npos**pow, dpos**pow)
+    eq=eqn(npos, dneg, pow)
+    assert eq.is_Pow and eq.as_numer_denom() == (eq, 1)
+    eq=eqn(nneg, dpos, pow)
+    assert eq.is_Pow and eq.as_numer_denom() == (nneg**pow, dpos**pow)
+    eq=eqn(nneg, dneg, pow)
+    assert eq.is_Pow and eq.as_numer_denom() == ((-nneg)**pow, (-dneg)**pow)
+    eq=eqn(npos, dpos, -pow)
+    assert eq.as_numer_denom() == (dpos**pow, npos**pow)
+    eq=eqn(npos, dneg, -pow)
+    assert eq.is_Pow and eq.as_numer_denom() == (1, eq.base**pow)
+    eq=eqn(nneg, dpos, -pow)
+    assert eq.is_Pow and eq.as_numer_denom() == (dpos**pow, nneg**pow)
+    eq=eqn(nneg, dneg, -pow)
+    assert eq.is_Pow and eq.as_numer_denom() == ((-dneg)**pow, (-nneg)**pow)
 
-def test_issue1496():
+    x = Symbol('x')
+    assert ((1/(1 + x/3))**(-S.One)).as_numer_denom() == (3 + x, 3)
+    np = Symbol('np',positive=False)
+    assert (((1 + x/np)**-2)**(-S.One)).as_numer_denom() == ((np + x)**2, np**2)
+
+def test_Pow_signs():
+    """Cf. issues 1496 and 2151"""
     x = Symbol('x')
     y = Symbol('y')
     n = Symbol('n', even=True)
-    assert (3-y)**2 == (y-3)**2
-    assert (3-y)**n == (y-3)**n
-    assert (-3+y-x)**2 == (3-y+x)**2
-    assert (y-3)**3 == -(3-y)**3
+    assert (3-y)**2 != (y-3)**2
+    assert (3-y)**n != (y-3)**n
+    assert (-3+y-x)**2 != (3-y+x)**2
+    assert (y-3)**3 != -(3-y)**3
 
 def test_power_with_noncommutative_mul_as_base():
     x = Symbol('x', commutative=False)
@@ -133,6 +159,13 @@ def test_zero():
     assert 0**x != 0
     assert 0**(2*x) == 0**x
     assert (0**(2 - x)).as_base_exp() == (0, 2 - x)
-    assert 0**(x - 2) == S.Infinity**(2 - x)
+    assert 0**(x - 2) != S.Infinity**(2 - x)
     assert 0**(2*x*y) == 0**(x*y)
     assert 0**(-2*x*y) == S.Infinity**(x*y)
+
+def test_pow_as_base_exp():
+    x = Symbol('x')
+    assert (S.Infinity**(2 - x)).as_base_exp() == (S.Infinity, 2 - x)
+    assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
+    p = S.Half**x
+    assert p.base, p.exp == p.as_base_exp() == (S(2), -x)

@@ -26,7 +26,6 @@ AUTHORS:
 - Jens Rasch (2009-05-31): updated to sage-4.0
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
-
 from sympy import Integer, pi, sqrt
 #from sage.rings.complex_number import ComplexNumber
 #from sage.rings.finite_rings.integer_mod import Mod
@@ -181,7 +180,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2), \
                   j_3 + abs(m_3))
-    _calc_factlist(maxfact)
+    _calc_factlist(int(maxfact))
 
     argsqrt = Integer(_Factlist[int(j_1 + j_2 - j_3)] * \
                           _Factlist[int(j_1 - j_2 + j_3)] * \
@@ -201,7 +200,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)
     imax = min(j_2 + m_2, j_1 - m_1, j_1 + j_2 - j_3)
     sumres = 0
-    for ii in range(imin, imax + 1):
+    for ii in range(int(imin), int(imax) + 1):
         den = _Factlist[ii] * \
             _Factlist[int(ii + j_3 - j_1 - m_2)] * \
             _Factlist[int(j_2 + m_2 - ii)] * \
@@ -240,9 +239,9 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
         >>> clebsch_gordan(S(3)/2, S(1)/2, 2, S(3)/2, S(1)/2, 2)
         1
         >>> clebsch_gordan(S(3)/2, S(1)/2, 1, S(3)/2, -S(1)/2, 1)
-        3**(1/2)/2
+        sqrt(3)/2
         >>> clebsch_gordan(S(3)/2, S(1)/2, 1, -S(1)/2, S(1)/2, 0)
-        -2**(1/2)/2
+        -sqrt(2)/2
 
     NOTES:
 
@@ -314,12 +313,10 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
                           _Factlist[int(bb + cc - aa)]) / \
                           Integer(_Factlist[int(aa + bb + cc + 1)])
 
-    ressqrt = argsqrt.sqrt(prec)
-    if type(ressqrt) is ComplexNumber:
-        res = ressqrt.real()
-    else:
-        res = ressqrt
-    return res
+    ressqrt = sqrt(argsqrt)
+    if prec:
+        ressqrt = ressqrt.evalf(prec).as_real_imag()[0]
+    return ressqrt
 
 
 def racah(aa, bb, cc, dd, ee, ff, prec=None):
@@ -685,7 +682,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     if int(m_1) != m_1 or int(m_2) != m_2 or int(m_3) != m_3:
         raise ValueError("m values must be integer")
 
-    bigL = (l_1 + l_2 + l_3) / 2
+    bigL = (l_1 + l_2 + l_3) // 2
     a1 = l_1 + l_2 - l_3
     if a1 < 0:
         return 0
@@ -695,7 +692,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     a3 = -l_1 + l_2 + l_3
     if a3 < 0:
         return 0
-    if Mod(2 * bigL, 2) != 0:
+    if (2 * bigL) % 2 != 0:
         return 0
     if (m_1 + m_2 + m_3) != 0:
         return 0
@@ -712,7 +709,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
         _Factlist[l_1 - m_1] * _Factlist[l_1 + m_1] * _Factlist[l_2 - m_2] * \
         _Factlist[l_2 + m_2] * _Factlist[l_3 - m_3] * _Factlist[l_3 + m_3] / \
         (4*pi)
-    ressqrt = argsqrt.sqrt()
+    ressqrt = sqrt(argsqrt)
 
     prefac = Integer(_Factlist[bigL] * _Factlist[l_2 - l_1 + l_3] * \
                      _Factlist[l_1 - l_2 + l_3] * _Factlist[l_1 + l_2 - l_3])/ \

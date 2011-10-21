@@ -1,4 +1,4 @@
-from functions import defun, defun_wrapped
+from .functions import defun, defun_wrapped
 
 @defun
 def _jacobi_theta2(ctx, z, q):

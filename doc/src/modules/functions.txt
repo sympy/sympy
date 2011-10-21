@@ -145,13 +145,13 @@ This module implements various combinatorial functions.
 Binomial
 --------
 
-.. autoclass:: sympy.functions.combinatorial.factorials.Binomial
+.. autoclass:: sympy.functions.combinatorial.factorials.binomial
 
 
 Factorial
 ---------
 
-.. autoclass:: sympy.functions.combinatorial.factorials.Factorial
+.. autoclass:: sympy.functions.combinatorial.factorials.factorial
 
 
 FallingFactorial
@@ -198,3 +198,23 @@ polygamma
 uppergamma
 ----------
 .. autoclass:: sympy.functions.special.gamma_functions.uppergamma
+
+lowergamma
+----------
+.. autoclass:: sympy.functions.special.gamma_functions.lowergamma
+
+Bessel Type Functions
+---------------------
+.. autoclass:: sympy.functions.special.bessel.besselj
+.. autoclass:: sympy.functions.special.bessel.bessely
+.. autoclass:: sympy.functions.special.bessel.besseli
+.. autoclass:: sympy.functions.special.bessel.besselk
+.. autoclass:: sympy.functions.special.bessel.hankel1
+.. autoclass:: sympy.functions.special.bessel.hankel2
+.. autoclass:: sympy.functions.special.bessel.jn
+.. autoclass:: sympy.functions.special.bessel.yn
+
+Hypergeometric Functions
+------------------------
+.. autoclass:: sympy.functions.special.hyper.hyper
+.. autoclass:: sympy.functions.special.hyper.meijerg

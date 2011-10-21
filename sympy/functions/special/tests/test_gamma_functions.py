@@ -1,12 +1,15 @@
-from sympy import Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, log,\
-        polygamma, EulerGamma, pi, uppergamma, S, expand_func
+from sympy import (Symbol, gamma, oo, nan, zoo, factorial, sqrt, Rational, log,
+        polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
+        cos, O, cancel, lowergamma, exp,  erf, beta)
+from sympy.utilities.randtest import (test_derivative_numerically as td,
+                                      random_complex_number as randcplx,
+                                      test_numerically as tn)
 
 x = Symbol('x')
 y = Symbol('y')
 n = Symbol('n', integer=True)
 
 def test_gamma():
-
     assert gamma(nan) == nan
     assert gamma(oo) == oo
 
@@ -36,14 +39,55 @@ def test_gamma():
     assert gamma(x - 1).expand(func=True) == gamma(x)/(x-1)
     assert gamma(x + 2).expand(func=True, mul=False) == x*(x+1)*gamma(x)
 
-    assert expand_func(gamma(x + Rational(3, 2))) ==\
-    (x + Rational(1, 2))*gamma(x + Rational(1, 2))
+    assert expand_func(gamma(x + Rational(3, 2))) == \
+        (x + Rational(1, 2))*gamma(x + Rational(1, 2))
+
+    assert expand_func(gamma(x - Rational(1, 2))) == \
+        gamma(Rational(1, 2) + x)/(x - Rational(1, 2))
+
+def test_gamma_series():
+    assert gamma(x + 1).series(x, 0, 3) == \
+        1 - x*EulerGamma + x**2*EulerGamma**2/2 + pi**2*x**2/12 + O(x**3)
+    assert gamma(x).series(x, -1, 3) == \
+        -1/x + EulerGamma - 1 + EulerGamma*x - EulerGamma**2*x/2 - pi**2*x/12 \
+        - x + EulerGamma*x**2 + EulerGamma*pi**2*x**2/12 - \
+        x**2*polygamma(2, 1)/6 + EulerGamma**3*x**2/6 - EulerGamma**2*x**2/2 \
+        - pi**2*x**2/12 - x**2 + O(x**3)
 
 def test_lowergamma():
-    pass
+    from sympy import meijerg
+    assert lowergamma(x, y).diff(y) == y**(x-1)*exp(-y)
+    assert td(lowergamma(randcplx(), y), y)
+    assert lowergamma(x, y).diff(x) == \
+           gamma(x)*polygamma(0, x) - uppergamma(x, y)*log(y) \
+           + meijerg([], [1, 1], [0, 0, x], [], y)
+
+    assert lowergamma(S.Half, x) == sqrt(pi)*erf(sqrt(x))
+    assert not lowergamma(S.Half - 3, x).has(lowergamma)
+    assert not lowergamma(S.Half + 3, x).has(lowergamma)
+    assert lowergamma(S.Half, x, evaluate=False).has(lowergamma)
+    assert tn(lowergamma(S.Half + 3, x, evaluate=False),
+              lowergamma(S.Half + 3, x), x)
+    assert tn(lowergamma(S.Half - 3, x, evaluate=False),
+              lowergamma(S.Half - 3, x), x)
 
 def test_uppergamma():
+    from sympy import meijerg
     assert uppergamma(4, 0) == 6
+    assert uppergamma(x, y).diff(y) == -y**(x-1)*exp(-y)
+    assert td(uppergamma(randcplx(), y), y)
+    assert uppergamma(x, y).diff(x) == \
+           uppergamma(x, y)*log(y) + meijerg([], [1, 1], [0, 0, x], [], y)
+    assert td(uppergamma(x, randcplx()), x)
+
+    assert uppergamma(S.Half, x) == sqrt(pi)*(1 - erf(sqrt(x)))
+    assert not uppergamma(S.Half - 3, x).has(uppergamma)
+    assert not uppergamma(S.Half + 3, x).has(uppergamma)
+    assert uppergamma(S.Half, x, evaluate=False).has(uppergamma)
+    assert tn(uppergamma(S.Half + 3, x, evaluate=False),
+              uppergamma(S.Half + 3, x), x)
+    assert tn(uppergamma(S.Half - 3, x, evaluate=False),
+              uppergamma(S.Half - 3, x), x)
 
 def test_polygamma():
 
@@ -81,7 +125,7 @@ def test_polygamma_expand_func():
     assert polygamma(2, x).expand(func=True) == \
            polygamma(2, x)
     assert polygamma(0, -1 + x).expand(func=True) == \
-           polygamma(0, x) + 1/(1 - x)
+           polygamma(0, x) - 1/(x - 1)
     assert polygamma(0, 1 + x).expand(func=True) == \
            1/x + polygamma(0, x )
     assert polygamma(0, 2 + x).expand(func=True) == \
@@ -117,4 +161,33 @@ def test_polygamma_expand_func():
     assert e.expand(func = True, basic = False) == e
 
 def test_loggamma():
-    pass
+    s1 = loggamma(1/(x+sin(x))+cos(x)).nseries(x,n=4)
+    s2 = (-log(2*x)-1)/(2*x) - log(x/pi)/2 + (4-log(2*x))*x/24 + O(x**2)
+    assert (s1 - s2).expand(force=True).removeO() == 0
+    s1 = loggamma(1/x).series(x)
+    s2 = (1/x-S(1)/2)*log(1/x) - 1/x  + log(2*pi)/2 + \
+         x/12 - x**3/360 + x**5/1260 +  O(x**7)
+    assert ((s1 - s2).expand(force=True)).removeO() == 0
+
+    def tN(N, M):
+        assert loggamma(1/x)._eval_nseries(x,n=N,logx=None).getn() == M
+    tN(0, 0)
+    tN(1, 1)
+    tN(2, 3)
+    tN(3, 3)
+    tN(4, 5)
+    tN(5, 5)
+
+def test_polygamma_expansion():
+    # A. & S., pa. 259 and 260
+    assert polygamma(0, 1/x).nseries(x, n=3) \
+           == -log(x) - x/2 - x**2/12 + O(x**4)
+    assert polygamma(1, 1/x).series(x, n=5) \
+           == x + x**2/2 + x**3/6 + O(x**5)
+    assert polygamma(3, 1/x).nseries(x, n=8) \
+           == 2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
+
+def test_beta_function():
+    x, y = Symbol('x'), Symbol('y')
+    assert beta(x,y) == gamma(x)*gamma(y)/gamma(x+y)
+    assert beta(x,y) == beta(y,x) # Symmetric

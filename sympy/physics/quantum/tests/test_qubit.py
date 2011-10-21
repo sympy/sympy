@@ -1,16 +1,16 @@
-from sympy.physics.quantum.qubit import *
-from sympy.physics.quantum.gate import *
-from sympy.physics.quantum.qft import *
-from sympy.physics.quantum.represent import *
-from sympy.physics.quantum.applyops import *
-from sympy import symbols, Rational
-from sympy.core.numbers import *
-from sympy.functions.elementary import *
-from sympy.physics.quantum.shor import *
+from sympy.physics.quantum.qubit import (measure_all, measure_partial,
+        matrix_to_qubit, qubit_to_matrix, IntQubit, IntQubitBra, QubitBra)
+from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, ZGate,
+        YGate, PhaseGate)
+from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.qapply import qapply
+from sympy import symbols, Rational, sqrt
+from sympy.core.numbers import Integer
+from sympy.physics.quantum.shor import Qubit
 from sympy.core.containers import Tuple
 from sympy.matrices.matrices import Matrix
 import random
-x, y = symbols('xy')
+x, y = symbols('x,y')
 
 epsilon = .000001
 
@@ -27,8 +27,8 @@ def test_Qubit():
     qb = Qubit('110')
 
 def test_QubitBra():
-    assert Qubit(0).dual_class == QubitBra
-    assert QubitBra(0).dual_class == Qubit
+    assert Qubit(0).dual_class() == QubitBra
+    assert QubitBra(0).dual_class() == Qubit
     assert represent(Qubit(1,1,0), nqubits=3).H ==\
            represent(QubitBra(1,1,0), nqubits=3)
     assert Qubit(0,1)._eval_innerproduct_QubitBra(QubitBra(1,0)) == Integer(0)
@@ -41,11 +41,11 @@ def test_IntQubit():
     assert IntQubit(3) == IntQubit(3,2)
 
     #test Dual Classes
-    assert IntQubit(3).dual_class == IntQubitBra
-    assert IntQubitBra(3).dual_class == IntQubit
+    assert IntQubit(3).dual_class() == IntQubitBra
+    assert IntQubitBra(3).dual_class() == IntQubit
 
 def test_superposition_of_states():
-    assert apply_operators(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
+    assert qapply(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\
      Qubit('10')/2)
 
     assert matrix_to_qubit(represent(CNOT(0,1)*HadamardGate(0)\
@@ -68,7 +68,7 @@ def test_apply_represent_equality():
 
 
     mat = represent(circuit, nqubits=6)
-    states = apply_operators(circuit)
+    states = qapply(circuit)
     state_rep = matrix_to_qubit(mat)
     states = states.expand()
     state_rep = state_rep.expand()
@@ -86,6 +86,14 @@ def test_matrix_to_qubits():
     assert qubit_to_matrix(2*sqrt(2)*(Qubit(0,0,0) + Qubit(0,0,1) + Qubit(0,1,0)\
     + Qubit(0,1,1) + Qubit(1,0,0) + Qubit(1,0,1) + Qubit(1,1,0) + Qubit(1,1,1)))\
     == sqrt(2)*2*Matrix([1,1,1,1,1,1,1,1])
+
+def test_measure_normalize():
+    a,b = symbols('a b')
+    state = a*Qubit('110') + b*Qubit('111')
+    assert measure_partial(state, (0,), normalize=False) ==\
+     [(a*Qubit('110'), a*a.conjugate()), (b*Qubit('111'),b*b.conjugate())]
+    assert measure_all(state, normalize=False) ==\
+    [(Qubit('110'), a*a.conjugate()),(Qubit('111'), b*b.conjugate())]
 
 def test_measure_partial():
     #Basic test of collapse of entangled two qubits (Bell States)

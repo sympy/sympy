@@ -1,4 +1,4 @@
-from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Real, \
+from sympy import abc, Function, Symbol, Wild, Derivative, sin, cos, Float, \
         Rational, exp, I, Integer, diff, Mul, var, oo, S, Add, Poly
 from sympy.utilities.pytest import XFAIL
 
@@ -9,6 +9,7 @@ def test_symbol():
 
     e = x
     assert e.match(x) == {}
+    assert e.matches(x) == {}
     assert e.match(a) == {a: x}
 
     e = Rational(5)
@@ -117,13 +118,17 @@ def test_complex():
     a,b,c = map(Symbol, 'abc')
     x,y = map(Wild, 'xy')
 
-    (1+I).match(x+I) == {x : 1}
-    (a+I).match(x+I) == {x : a}
-    (a+b*I).match(x+y*I) == {x : a, y : b}
-    (2*I).match(x*I) == {x : 2}
-    (a*I).match(x*I) == {x : a}
-    (a*I).match(x*y) == {x : a, y : I}
-    (2*I).match(x*y) == {x : 2, y : I}
+    assert (1+I).match(x+I) == {x : 1}
+    assert (a+I).match(x+I) == {x : a}
+    assert (2*I).match(x*I) == {x : 2}
+    assert (a*I).match(x*I) == {x : a}
+    assert (a*I).match(x*y) == {x : I, y : a}
+    assert (2*I).match(x*y) == {x : 2, y : I}
+
+    #Result is ambiguous, so we need to use Wild's exclude keyword
+    x = Wild('x', exclude=[I])
+    y = Wild('y', exclude=[I])
+    assert (a+b*I).match(x+y*I) == {x : a, y : b}
 
 def test_functions():
     from sympy.core.function import WildFunction
@@ -299,9 +304,9 @@ def test_exclude():
 def test_floats():
     a,b = map(Wild, 'ab')
 
-    e = cos(0.12345)**2
+    e = cos(0.12345, evaluate=False)**2
     r = e.match(a*cos(b)**2)
-    assert r == {a: 1, b: Real(0.12345)}
+    assert r == {a: 1, b: Float(0.12345)}
 
 def test_Derivative_bug1():
     f = Function("f")

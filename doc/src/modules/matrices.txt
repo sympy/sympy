@@ -9,18 +9,38 @@ Creating Matrices
 The linear algebra module is designed to be as simple as possible. First, we
 import and declare our first Matrix object:
 
-    >>> from sympy import pprint
-    >>> import sys
-    >>> sys.displayhook = pprint
+    >>> from sympy.interactive.printing import init_printing
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
     >>> from sympy.matrices import *
     >>> Matrix([[1,0], [0,1]])
     [1  0]
     [    ]
     [0  1]
+    >>> Matrix((
+    ...   Matrix((
+    ...     (1, 0, 0),
+    ...     (0, 0, 0)
+    ...   )),
+    ...   (0, 0, -1)
+    ... ))
+    [1  0  0 ]
+    [        ]
+    [0  0  0 ]
+    [        ]
+    [0  0  -1]
+    >>> Matrix([[1, 2, 3]])
+    [1 2 3]
+    >>> Matrix([1, 2, 3])
+    [1]
+    [ ]
+    [2]
+    [ ]
+    [3]
 
 This is the standard manner one creates a matrix, i.e. with a list of
-appropriately-sizes lists. SymPy also supports more advanced methods of matrix
-creation including a single list of values and dimension inputs:
+appropriately-sizes lists and/or matrices. SymPy also supports more advanced
+methods of matrix creation including a single list of values and dimension
+inputs:
 
     >>> Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     [1  2  3]
@@ -72,7 +92,7 @@ zeros and ones, respectively:
     [0  0]
     [    ]
     [0  0]
-    >>> zeros((2, 5))
+    >>> zeros(2, 5)
     [0  0  0  0  0]
     [             ]
     [0  0  0  0  0]
@@ -82,7 +102,7 @@ zeros and ones, respectively:
     [1  1  1]
     [       ]
     [1  1  1]
-    >>> ones((1, 3))
+    >>> ones(1, 3)
     [1  1  1]
 
 
@@ -204,13 +224,11 @@ All the standard arithmetic operations are supported:
 As well as some useful vector operations:
 
     >>> M.row_del(0)
-    None
     >>> M
     [4  5  6]
     [       ]
     [7  8  9]
     >>> M.col_del(1)
-    None
     >>> M
     [4  6]
     [    ]
@@ -230,14 +248,14 @@ simply change the matrix object. We can also ''glue'' together matrices of the
 appropriate size:
 
     >>> M1 = eye(3)
-    >>> M2 = zeros((3, 4))
+    >>> M2 = zeros(3, 4)
     >>> M1.row_join(M2)
     [1  0  0  0  0  0  0]
     [                   ]
     [0  1  0  0  0  0  0]
     [                   ]
     [0  0  1  0  0  0  0]
-    >>> M3 = zeros((4, 3))
+    >>> M3 = zeros(4, 3)
     >>> M1.col_join(M3)
     [1  0  0]
     [       ]
@@ -416,7 +434,7 @@ optional argument which specifies whether or not the output should also be
 normalized, it defaults to False. Let's take some vectors and orthogonalize
 them - one normalized and one not:
 
-    >>> L = [Matrix((2,3,5)), Matrix((3,6,2)), Matrix((8,3,6))]
+    >>> L = [Matrix([2,3,5]), Matrix([3,6,2]), Matrix([8,3,6])]
     >>> out1 = GramSchmidt(L)
     >>> out2 = GramSchmidt(L, True)
 
@@ -435,17 +453,17 @@ Let's take a look at the vectors:
     [-1551/706]
     [ -423/706]
     >>> for i in out2:
-    ...      print i #doctest: +SKIP
+    ...      print i
     ...
-    [2*(1/38)**(1/2)]
-    [3*(1/38)**(1/2)]
-    [5*(1/38)**(1/2)]
-    [(23/19)*19**(1/2)*(1/353)**(1/2)]
-    [(63/19)*19**(1/2)*(1/353)**(1/2)]
-    [ -47/19*19**(1/2)*(1/353)**(1/2)]
-    [(12/353)*706**(1/2)]
-    [ -11/706*706**(1/2)]
-    [  -3/706*706**(1/2)]
+    [  sqrt(38)/19]
+    [3*sqrt(38)/38]
+    [5*sqrt(38)/38]
+    [ 23*sqrt(6707)/6707]
+    [ 63*sqrt(6707)/6707]
+    [-47*sqrt(6707)/6707]
+    [ 12*sqrt(706)/353]
+    [-11*sqrt(706)/706]
+    [ -3*sqrt(706)/706]
 
 We can spot-check their orthogonality with dot() and their normality with
 norm():

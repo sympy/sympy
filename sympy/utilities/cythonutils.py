@@ -1,13 +1,10 @@
 """Helper module for cooperation with Cython. """
 
-has_cython = True
+from sympy.external import import_module
 
-try:
-    import cython
-except ImportError:
-    has_cython = False
+cython = import_module('cython')
 
-if has_cython:
+if cython:
     def cythonized(specs):
         arg_types = {}
 
@@ -18,4 +15,3 @@ if has_cython:
 else:
     def cythonized(specs):
         return lambda f: f
-

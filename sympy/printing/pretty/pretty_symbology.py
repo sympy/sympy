@@ -7,38 +7,15 @@ warnings = ''
 try:
     import unicodedata
 
-    # Python2.4 unicodedata misses some symbols, like subscript 'i', etc,
-    # and we still want SymPy to be fully functional under Python2.4
-    if sys.hexversion < 0x02050000:
-        unicodedata_missing = {
-            'GREEK SUBSCRIPT SMALL LETTER BETA' : u'\u1d66',
-            'GREEK SUBSCRIPT SMALL LETTER GAMMA': u'\u1d67',
-            'GREEK SUBSCRIPT SMALL LETTER RHO'  : u'\u1d68',
-            'GREEK SUBSCRIPT SMALL LETTER PHI'  : u'\u1d69',
-            'GREEK SUBSCRIPT SMALL LETTER CHI'  : u'\u1d6a',
-
-            'LATIN SUBSCRIPT SMALL LETTER A'    : u'\u2090',
-            'LATIN SUBSCRIPT SMALL LETTER E'    : u'\u2091',
-            'LATIN SUBSCRIPT SMALL LETTER I'    : u'\u1d62',
-            'LATIN SUBSCRIPT SMALL LETTER O'    : u'\u2092',
-            'LATIN SUBSCRIPT SMALL LETTER R'    : u'\u1d63',
-            'LATIN SUBSCRIPT SMALL LETTER U'    : u'\u1d64',
-            'LATIN SUBSCRIPT SMALL LETTER V'    : u'\u1d65',
-            'LATIN SUBSCRIPT SMALL LETTER X'    : u'\u2093',
-        }
-    else:
-        unicodedata_missing = {}
-
     def U(name):
         """unicode character by name or None if not found"""
         try:
             u = unicodedata.lookup(name)
         except KeyError:
-            u = unicodedata_missing.get(name)
+            u = None
 
-            if u is None:
-                global warnings
-                warnings += 'W: no \'%s\' in unocodedata\n' % name
+            global warnings
+            warnings += 'W: no \'%s\' in unocodedata\n' % name
 
         return u
 
@@ -56,7 +33,8 @@ from sympy.printing.conventions import split_super_sub
 # S   - SYMBOL    +
 
 
-__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol']
+__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol',
+           'annotated']
 
 
 _use_unicode = False
@@ -118,16 +96,6 @@ def xstr(*args):
         return unicode(*args)
     else:
         return str(*args)
-
-# COMPATIBILITY TWEAKS
-def fixup_tables():
-    # python2.4 unicodedata lacks some definitions
-
-    for d in sub, sup:
-        for k in d.keys():
-            if d[k] is None:
-                del d[k]
-
 
 # GREEK
 g   = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
@@ -240,7 +208,11 @@ _xobj_unicode = {
     # horizontal objects
     #'-' :  '-',
     '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
-    '_' :   U('HORIZONTAL SCAN LINE-9'),        # XXX symbol ok?
+    '_' :   U('LOW LINE'),
+    # We used to use this, but LOW LINE looks better for roots, as it's a
+    # little lower (i.e., it lines up with the / perfectly.  But perhaps this
+    # one would still be wanted for some cases?
+    # '_' :   U('HORIZONTAL SCAN LINE-9'),
 
     # diagonal objects '\' & '/' ?
     '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
@@ -493,5 +465,26 @@ def pretty_symbol(symb_name):
     return ''.join([name, sups_result, subs_result])
 
 
-# final fixup
-fixup_tables()
+def annotated(letter):
+    """
+    Return a stylised drawing of the letter `letter`, together with
+    information on how to put annotations (super- and subscripts to the
+    left and to the right) on it.
+
+    See pretty.py functions _print_meijerg, _print_hyper on how to use this
+    information.
+    """
+    ucode_pics = {
+        'F': (2, 0, 2, 0, u'\u250c\u2500\n\u251c\u2500\n\u2575'),
+        'G': (3, 0, 3, 1,
+              u'\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
+    }
+    ascii_pics = {
+        'F': (3, 0, 3, 0, ' _\n|_\n|\n'),
+        'G': (3, 0, 3, 1, ' __\n/__\n\_|')
+    }
+
+    if _use_unicode:
+        return ucode_pics[letter]
+    else:
+        return ascii_pics[letter]

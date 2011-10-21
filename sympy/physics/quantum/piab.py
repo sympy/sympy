@@ -1,6 +1,6 @@
 """1D quantum particle in a box."""
 
-from sympy import Symbol, pi, sqrt, sin, conjugate, Interval, S
+from sympy import Symbol, pi, sqrt, sin, Interval, S
 
 from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.state import Ket, Bra
@@ -38,7 +38,7 @@ class PIABKet(Ket):
     def _eval_hilbert_space(cls, args):
         return L2(Interval(S.NegativeInfinity,S.Infinity))
 
-    @property
+    @classmethod
     def dual_class(self):
         return PIABBra
 
@@ -62,7 +62,7 @@ class PIABBra(Bra):
     def _eval_hilbert_space(cls, label):
         return L2(Interval(S.NegativeInfinity,S.Infinity))
 
-    @property
+    @classmethod
     def dual_class(self):
         return PIABKet
 
