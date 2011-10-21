@@ -58,14 +58,14 @@ def count(base, number):
     if number[i] == 0:
         number.append(1)
 
-def number_to_gates(number):
+def number_to_gates(number, gate_list):
     # Converts a list of numbers into a list of corresponding gate objects.
     gates = []
     for digit in number:
         gates.append(gate_list[digit])
     return gates
 
-def number_to_matrices(number):
+def number_to_matrices(number, gate_list):
     # Converts a list of numbers into a list of corresponding matrices.
     matrices = []
     if isinstance(number, int):
@@ -110,13 +110,20 @@ def check_identity(name, identity):
         return False
     return True
 
-def search_identity():
+def iterative_identity_search(numqubits):
     # Begin searching for gate identities in given space.
+
+    # Create the list of gates and matrices
+    gate_list = construct_gate_list(numqubits)
+    matrix_list = construct_matrix_list(numqubits)
+
+    # Iteratively search for identities by increasing the
+    # number of gates in the list
     while True:
         if num[0] is 0:
-            matrices = number_to_matrices(num[1:])
+            matrices = number_to_matrices(num[1:], matrix_list)
             cached = matrix_mul(matrices)
-        gates = number_to_gates(num)
+        gates = number_to_gates(num, gate_list)
         if len(gate_simp(Mul(*gates)).args) == len(gates):
             circuit = number_to_matrices(num[0])*cached
             if is_scalar_matrix(circuit) and check_identity(filename, str(gate_simp(Mul(*gates)).args)):
