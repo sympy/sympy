@@ -103,6 +103,32 @@ COMMAND LINE OPTIONS
     This is equivalent to setting the environment variable
     SYMPY_USE_CACHE='no'.
 
+-a, --auto
+
+    Automatically create missing symbols.  Normally, typing a name of a
+    Symbol that has not been instantiated first would raise NameError,
+    but with this option enabled, any undefined name will be
+    automatically created as a Symbol.  This only works in IPython 0.11.
+
+    Note that this is intended only for interactive, calculator style
+    usage. In a script that uses SymPy, Symbols should be instantiated
+    at the top, so that it's clear what they are.
+
+    This will not override any names that are already defined, which
+    includes the single character letters represented by the mnemonic
+    QCOSINE (see the "Gotchas and Pitfalls" document in the
+    documentation). You can delete existing names by executing "del
+    name".  You can see if a name is defined by typing "'name' in
+    globals()".
+
+    The Symbols that are created using this have default assumptions.
+    If you want to place assumptions on symbols, you should create them
+    using symbols() or var().
+
+    Finally, this only works in the top level namespace. So, for
+    example, if you define a function in isympy with an undefined
+    Symbol, it will not work.
+
 -D, --debug
 
     Enable debugging output.  This is the same as setting the
