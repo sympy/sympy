@@ -46,6 +46,7 @@ class Residue(Basic):
         ret_obj = Basic.__new__(cls, *args)
         val = args[0]
         n = args[1]
+        n = int_tested(n)
         ret_obj._v = val
         ret_obj._n = n
         return ret_obj
@@ -68,6 +69,8 @@ class Residue(Basic):
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class")
+        if self.n != other.n:
+            raise ValueError("Can't multiply two elements from differnt residue classes")
         if isinstance(self.v, int) and isinstance(other.v, int):
             return Residue((self.v * other.v) % self.n, self.n)
         return Residue(self.v * other.v, self.n)
@@ -88,6 +91,8 @@ class Residue(Basic):
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class")
+        if self.n != other.n:
+            raise ValueError("Can't divide two elements from differnt residue classes")
         return self * other.inv()
 
     def __add__(self, other):
@@ -108,6 +113,8 @@ class Residue(Basic):
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a Residue class")
+        if self.n != other.n:
+            raise ValueError("Can't add two elements from differnt residue classes")
         if isinstance(self.v, int) and isinstance(other.v, int):
             return Residue((self.v + other.v) % self.n, self.n)
         return Residue(self.v + other.v, self.n)
@@ -126,6 +133,8 @@ class Residue(Basic):
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a Residue class")
+        if self.n != other.n:
+            raise ValueError("Can't substract two elements from differnt residue classes")
         return self.__add__(-other)
 
     def __neg__(self):
@@ -153,6 +162,8 @@ class Residue(Basic):
         >>> (b**2).values()
         [0, 1, 3, 4]
         """
+        n = int_tested(n)
+        n = n % totient_(self.n)
         new = Residue(1, self.n)
         if n == 0:
             return new
