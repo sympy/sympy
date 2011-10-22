@@ -86,9 +86,9 @@ class Polyhedron(Basic):
     def __new__(cls, *args):
         """
         The constructor of the Polyhedron group object.
-        It takes three parameters, a representation of
-        the corners, the faces and a representation of
-        the rotational symmetries.
+
+        It takes three parameters, a representation of the corners,
+        the faces and a representation of the rotational symmetries.
 
         Now imagine permuting the colors of the vertices:
         although the orientation of the faces has not changed one
@@ -105,8 +105,12 @@ class Polyhedron(Basic):
         permutations but only 8 need to be supplied since we only
         consider those permutations that we can get through axial
         rotations (rotations about a line connected from any vertex
-        to the centroid of the tetrahedron. Each unique permutation
-        represents a unique rotational symmetry.
+        to the centroid of the tetrahedron). Each unique permutation
+        represents a unique rotational symmetry. By following how
+        the number representing a vertex exchange their positions
+        it can be seen that there is a one-to-one correspondence of
+        the permutations of these numbers with the rotational
+        symmetries.
 
         Examples:
         >>> from sympy.combinatorics.permutations import Permutation
@@ -136,6 +140,9 @@ class Polyhedron(Basic):
         >>> random.seed(0) #We fix the seed to make it predictable
         >>> tetra.make_perm(3)
         Permutation([1, 3, 0, 2])
+
+        References:
+        [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
         """
         ret_obj = Basic.__new__(cls, *args)
         ret_obj._corners = args[0]
