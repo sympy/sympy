@@ -175,20 +175,26 @@ class Residue(Basic):
 
     def ord(self):
         """
-        Exponent of g: power of g > 0 that equals 1
+        Returns the smallest exponent ``e`` > 0 of element ``a`` such that 
+        a**e cong 1 mod(n)
 
         Examples:
         >>> from sympy.ntheory.residue_ntheory import Residue
         >>> a = Residue(4, 7)
         >>> a.ord()
         3
+        >>> a**a.ord() % 7 == 1
+        True
         """
         i = 1
         if isinstance(self.v, int):
+            if igcd(self.v, self.n) != 1:
+                raise ValueError('Order does not exits')
             while (self**i).v != 1:
                 i += 1
             return i
-
+        raise ValueError('Order of class is not defined')
+            
     def inv(self):
         """
         Computes the inverse of a residue class.
