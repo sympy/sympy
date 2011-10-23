@@ -28,6 +28,7 @@ class LatexPrinter(Printer):
         "inv_trig_style": "abbreviated",
         "mat_str": "smallmatrix",
         "mat_delim": "[",
+        "symbol_names": {},
     }
 
     def __init__(self, settings=None):
@@ -676,6 +677,9 @@ class LatexPrinter(Printer):
             self._print(expr.args[0])
 
     def _print_Symbol(self, expr):
+        if expr in self._settings['symbol_names']:
+            return self._settings['symbol_names'][expr]
+
         name, supers, subs = split_super_sub(expr.name)
 
         # translate name, supers and subs to tex keywords
@@ -948,47 +952,54 @@ class LatexPrinter(Printer):
         return r"C_{%s}" % self._print(expr.args[0])
 
 def latex(expr, **settings):
-    r"""Convert the given expression to LaTeX representation.
+    r"""
+    Convert the given expression to LaTeX representation.
 
-        You can specify how the generated code will be delimited using
-        the 'mode' keyword. 'mode' can be one of 'plain', 'inline',
-        'equation' or 'equation*'.  If 'mode' is set to 'plain', then
-        the resulting code will not be delimited at all (this is the
-        default). If 'mode' is set to 'inline' then inline LaTeX $ $ will be
-        used.  If 'mode' is set to 'equation' or 'equation*', the resulting
-        code will be enclosed in the 'equation' or 'equation*' environment
-        (remember to import 'amsmath' for 'equation*'), unless the 'itex'
-        option is set. In the latter case, the $$ $$ syntax is used. For very
-        large expressions, set the 'order' keyword to 'none' if speed is a
-        concern.
+    You can specify how the generated code will be delimited using
+    the 'mode' keyword. 'mode' can be one of 'plain', 'inline',
+    'equation' or 'equation*'.  If 'mode' is set to 'plain', then
+    the resulting code will not be delimited at all (this is the
+    default). If 'mode' is set to 'inline' then inline LaTeX $ $ will be
+    used.  If 'mode' is set to 'equation' or 'equation*', the resulting
+    code will be enclosed in the 'equation' or 'equation*' environment
+    (remember to import 'amsmath' for 'equation*'), unless the 'itex'
+    option is set. In the latter case, the $$ $$ syntax is used. For very
+    large expressions, set the 'order' keyword to 'none' if speed is a
+    concern.
 
-        >>> from sympy import latex, Rational
-        >>> from sympy.abc import x, y, mu, tau
+    >>> from sympy import latex, Rational
+    >>> from sympy.abc import x, y, mu, tau
 
-        >>> latex((2*tau)**Rational(7,2))
-        '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
+    >>> latex((2*tau)**Rational(7,2))
+    '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
 
-        >>> latex((2*mu)**Rational(7,2), mode='plain')
-        '8 \\sqrt{2} \\mu^{\\frac{7}{2}}'
+    >>> latex((2*mu)**Rational(7,2), mode='plain')
+    '8 \\sqrt{2} \\mu^{\\frac{7}{2}}'
 
-        >>> latex((2*tau)**Rational(7,2), mode='inline')
-        '$8 \\sqrt{2} \\tau^{\\frac{7}{2}}$'
+    >>> latex((2*tau)**Rational(7,2), mode='inline')
+    '$8 \\sqrt{2} \\tau^{\\frac{7}{2}}$'
 
-        >>> latex((2*mu)**Rational(7,2), mode='equation*')
-        '\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}'
+    >>> latex((2*mu)**Rational(7,2), mode='equation*')
+    '\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}'
 
-        >>> latex((2*mu)**Rational(7,2), mode='equation')
-        '\\begin{equation}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation}'
+    >>> latex((2*mu)**Rational(7,2), mode='equation')
+    '\\begin{equation}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation}'
 
-        >>> latex((2*mu)**Rational(7,2), mode='equation', itex=True)
-        '$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$'
+    >>> latex((2*mu)**Rational(7,2), mode='equation', itex=True)
+    '$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$'
 
-        Besides all Basic based expressions, you can recursively
-        convert Python containers (lists, tuples and dicts) and
-        also SymPy matrices:
+    Besides all Basic based expressions, you can recursively
+    convert Python containers (lists, tuples and dicts) and
+    also SymPy matrices:
 
-        >>> latex([2/x, y], mode='inline')
-        '$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$'
+    >>> latex([2/x, y], mode='inline')
+    '$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$'
+
+    You can print symbols with custom strings by passing a dictionary
+    to the argument symbol_names.
+
+    >>> latex(x**2, symbol_names={x:'x_i'})
+    'x_i^{2}'
 
     """
 
