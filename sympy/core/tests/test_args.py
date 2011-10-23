@@ -83,6 +83,18 @@ def test_sympy__assumptions__assume__Predicate():
     assert _test_args(Predicate("test"))
 
 @XFAIL
+def test_sympy__combinatorics__graycode__GrayCode():
+    from sympy.combinatorics.graycode import GrayCode
+    # an integer is given and returned from GrayCode as the arg
+    assert _test_args(GrayCode(3, start='100'))
+    assert _test_args(GrayCode(3, rank=1))
+
+def test_sympy__combinatorics__subsets__Subset():
+    from sympy.combinatorics.subsets import Subset
+    assert _test_args(Subset([0, 1], [0, 1, 2, 3]))
+    assert _test_args(Subset(['c','d'], ['a','b','c','d']))
+
+@XFAIL
 def test_sympy__combinatorics__permutations__Permutation():
     from sympy.combinatorics.permutations import Permutation
     assert _test_args(Permutation([0, 1, 2, 3]))
