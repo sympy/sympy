@@ -236,6 +236,12 @@ class Subset(Basic):
     def subset(self):
         """
         Gets the subset represented by the current instance.
+
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.subset
+        ['c', 'd']
         """
         return self._subset
 
@@ -243,6 +249,12 @@ class Subset(Basic):
     def size(self):
         """
         Gets the size of the subset.
+
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.size
+        2
         """
         return len(self.subset)
 
@@ -250,6 +262,12 @@ class Subset(Basic):
     def superset(self):
         """
         Gets the superset of the subset.
+
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.superset
+        ['a', 'b', 'c', 'd']
         """
         return self._superset
 
@@ -257,6 +275,12 @@ class Subset(Basic):
     def superset_size(self):
         """
         Returns the size of the superset.
+
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.superset_size
+        4
         """
         return len(self.superset)
 
@@ -264,6 +288,12 @@ class Subset(Basic):
     def cardinality(self):
         """
         Returns the number of all possible subsets.
+
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.cardinality
+        16
         """
         return 2**(self.superset_size)
 
