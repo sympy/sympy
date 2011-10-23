@@ -321,7 +321,8 @@ def test_division():
     assert ( -(1/x**2)).subs(x,-2) == -Rational(1,4)
 
 def test_add():
-    a, b, c, d, x = abc.a, abc.b, abc.c, abc.d, abc.x
+    a, b, c, d, x, y, t = symbols('a,b,c,d,x,y,t')
+
     assert (a**2 - b - c).subs(a**2 - b, d) in [d - c, a**2 - b - c]
     assert (a**2 - c).subs(a**2 - c, d) == d
     assert (a**2 - b - c).subs(a**2 - c, d) in [d - b, a**2 - b - c]
@@ -329,6 +330,11 @@ def test_add():
     assert (a**2 - b - sqrt(a)).subs(a**2 - sqrt(a), c) == c - b
     assert (a+b+exp(a+b)).subs(a+b,c) == c + exp(c)
     assert (c+b+exp(c+b)).subs(c+b,a) == a + exp(a)
+
+    assert ((x + 1)*y).subs(x + 1, t) == t*y
+    assert ((-x - 1)*y).subs(x + 1, t) == -t*y
+    assert ((x - 1)*y).subs(x + 1, t) == y*(t - 2)
+    assert ((-x + 1)*y).subs(x + 1, t) == y*(-t + 2)
 
     # this should work everytime:
     e = a**2 - b - c
@@ -372,3 +378,22 @@ def test_subs_iter():
     it = iter([[x, y]])
     assert x.subs(it) == y
     assert x.subs(Tuple((x, y))) == y
+
+def test_subs_dict():
+    x, y, z = symbols('x,y,z')
+    (2*x + y + z).subs(dict(x=1, y=2)) == 4 + z
+
+def test_no_arith_subs_on_floats():
+    a, x, y = symbols('a,x,y')
+
+    (x + 3).subs(x + 3, a) == a
+    (x + 3).subs(x + 2, a) == a + 1
+
+    (x + y + 3).subs(x + 3, a) == a + y
+    (x + y + 3).subs(x + 2, a) == a + y + 1
+
+    (x + 3.0).subs(x + 3.0, a) == a
+    (x + 3.0).subs(x + 2.0, a) == x + y + 3.0
+
+    (x + y + 3.0).subs(x + 3.0, a) == a + y
+    (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0

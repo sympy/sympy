@@ -173,6 +173,7 @@ class Number(AtomicExpr):
     def class_key(cls):
         return 1, 0, 'Number'
 
+    @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (0, ()), (), self
 
@@ -230,6 +231,10 @@ class Number(AtomicExpr):
     def as_coeff_Mul(self):
         """Efficiently extract the coefficient of a product. """
         return self, S.One
+
+    def as_coeff_Add(self):
+        """Efficiently extract the coefficient of a summation. """
+        return self, S.Zero
 
 class Float(Number):
     """
@@ -293,9 +298,15 @@ class Float(Number):
 
     def __new__(cls, num, prec=15):
         prec = mlib.libmpf.dps_to_prec(prec)
-        if isinstance(num, (int, long)):
+
+        if isinstance(num, (int, long, Integer)):
             return Integer(num)
-        if isinstance(num, (str, decimal.Decimal)):
+
+        if isinstance(num, float):
+            _mpf_ = mlib.from_float(num, prec, rnd)
+        elif isinstance(num, Rational):
+            _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
+        elif isinstance(num, (str, decimal.Decimal)):
             _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, tuple) and len(num) == 4:
             if type(num[1]) is str:
@@ -309,6 +320,7 @@ class Float(Number):
                     S.NegativeOne ** num[0] * num[1] * 2 ** num[2])._mpf_
         else:
             _mpf_ = mpmath.mpf(num)._mpf_
+
         if not num:
             return C.Zero()
         obj = Expr.__new__(cls)
@@ -448,6 +460,9 @@ class Float(Number):
     def __hash__(self):
         return super(Float, self).__hash__()
 
+    def __round__(self, *args):
+        return round(float(self), *args)
+
     def epsilon_eq(self, other, epsilon="10e-16"):
         return abs(self - other) < Float(epsilon)
 
@@ -508,7 +523,7 @@ class Rational(Number):
     Note that p and q return integers (not sympy Integers) so some care
     is needed when using them in expressions:
 
-    >>> r.p/r.q
+    >>> r.p//r.q
     0
 
     """
@@ -1022,7 +1037,18 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __divmod__(self, other):
-        return divmod(self.p, other.p)
+        from containers import Tuple
+        if isinstance(other, Integer):
+            return Tuple(*(divmod(self.p, other.p)))
+        else:
+            return Tuple(*(divmod(self.p, other)))
+
+    def __rdivmod__(self, other):
+        from containers import Tuple
+        if isinstance(other, Integer):
+            return Tuple(*divmod(other.p, self.p))
+        else:
+            return Tuple(*divmod(other, self.p))
 
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):
@@ -1145,8 +1171,8 @@ class Integer(Rational):
         we try to find a simpler representation by factoring the argument
         up to factors of 2**15, e.g.
 
-          - 4**Rational(1,2) becomes 2
-          - (-4)**Rational(1,2) becomes 2*I
+          - sqrt(4) becomes 2
+          - sqrt(-4) becomes 2*I
           - (2**(3+7)*3**(6+7))**Rational(1,7) becomes 6*18**(3/7)
 
         Further simplification would require a special call to factorint on
@@ -1835,7 +1861,8 @@ class GoldenRatio(NumberSymbol):
         return mlib.from_man_exp(phi_fixed(prec+10), -prec-10)
 
     def _eval_expand_func(self, deep=True, **hints):
-        return S.Half + S.Half*S.Sqrt(5)
+        from sympy import sqrt
+        return S.Half + S.Half*sqrt(5)
 
     def approximation_interval(self, number_cls):
         if issubclass(number_cls, Integer):

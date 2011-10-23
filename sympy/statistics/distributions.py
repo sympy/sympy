@@ -75,7 +75,7 @@ class Normal(ContinuousProbability):
         >>> N.probability(-oo, oo)
         1
         >>> N.probability(-1, 3)
-        erf(2**(1/2)/2)
+        erf(sqrt(2)/2)
         >>> _.evalf()
         0.682689492137086
 

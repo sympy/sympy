@@ -32,6 +32,20 @@ class Symbol(AtomicExpr, Boolean):
 
     is_Symbol = True
 
+    @property
+    def _diff_wrt(self):
+        """Allow derivatives wrt Symbols.
+
+        Examples
+        ========
+
+            >>> from sympy import Symbol
+            >>> x = Symbol('x')
+            >>> x._diff_wrt
+            True
+        """
+        return True
+
     def __new__(cls, name, commutative=True, **assumptions):
         """Symbols are identified by name and assumptions::
 
@@ -69,8 +83,8 @@ class Symbol(AtomicExpr, Boolean):
     def _hashable_content(self):
         return (self.is_commutative, self.name)
 
+    @cacheit
     def sort_key(self, order=None):
-        from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def as_dummy(self):
@@ -184,7 +198,7 @@ class Wild(Symbol):
                 return None
         if self.exclude:
             for x in self.exclude:
-                if x in expr:
+                if expr.has(x):
                     return None
         if self.properties:
             for f in self.properties:

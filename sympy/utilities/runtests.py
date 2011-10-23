@@ -24,6 +24,9 @@ import doctest as pdoctest # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
 import random
+import subprocess
+
+from sympy.core.cache import clear_cache
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -37,8 +40,10 @@ def _indent(s, indent=4):
     If the string `s` is Unicode, it is encoded using the stdout
     encoding and the `backslashreplace` error handler.
     """
-    if isinstance(s, unicode):
-        s = s.encode(pdoctest._encoding, 'backslashreplace')
+    # After a 2to3 run the below code is bogus, so wrap it with a version check
+    if sys.version_info[0] < 3:
+        if isinstance(s, unicode):
+            s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
@@ -171,6 +176,7 @@ def test(*paths, **kwargs):
     sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     test_files = t.get_test_files('sympy')
+
     if len(paths) == 0:
         t._testfiles.extend(test_files)
     else:
@@ -229,6 +235,11 @@ def doctest(*paths, **kwargs):
                     "sympy/galgebra/latex_ex.py", # needs numpy
                     "sympy/conftest.py", # needs py.test
                     "sympy/utilities/benchmarking.py", # needs py.test
+                    "examples/advanced/autowrap_integrators.py", # needs numpy
+                    "examples/advanced/autowrap_ufuncify.py", # needs numpy
+                    "examples/intermediate/mplot2d.py", # needs numpy and matplotlib
+                    "examples/intermediate/mplot3d.py", # needs numpy and matplotlib
+                    "examples/intermediate/sample.py", # needs numpy
                     ])
     blacklist = convert_to_native_paths(blacklist)
 
@@ -241,6 +252,8 @@ def doctest(*paths, **kwargs):
     t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')
+    test_files.extend(t.get_test_files('examples', init_only=False))
+
     not_blacklisted = [f for f in test_files
                          if not any(b in f for b in blacklist)]
     if len(paths) == 0:
@@ -306,7 +319,8 @@ def doctest(*paths, **kwargs):
                 # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
                 #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
                 out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
-                    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
+                    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE \
+                              | pdoctest.IGNORE_EXCEPTION_DETAIL)
             finally:
                 # make sure we return to the original displayhook in case some
                 # doctest has changed that
@@ -318,14 +332,14 @@ def doctest(*paths, **kwargs):
                 if first_report:
                     first_report = False
                     msg = 'txt doctests start'
-                    lhead = '='*((80 - len(msg))//2 - 1)
-                    rhead = '='*(79 - len(msg) - len(lhead) - 1)
+                    lhead = '='*((r.terminal_width - len(msg))//2 - 1)
+                    rhead = '='*(r.terminal_width - 1 - len(msg) - len(lhead) - 1)
                     print ' '.join([lhead, msg, rhead])
                     print
                 # use as the id, everything past the first 'sympy'
                 file_id = txt_file[txt_file.find('sympy') + len('sympy') + 1:]
                 print file_id, # get at least the name out so it is know who is being tested
-                wid = 80 - len(file_id) - 1 #update width
+                wid = r.terminal_width - len(file_id) - 1 #update width
                 test_file = '[%s]' % (tested)
                 report = '[%s]' % (txtfailed or 'OK')
                 print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
@@ -431,7 +445,11 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    text, filename = pdoctest._load_testfile(filename, package, module_relative)
+    if sys.version_info[0] < 3:
+        text, filename = pdoctest._load_testfile(filename, package, module_relative)
+    else:
+        encoding = None
+        text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
@@ -504,14 +522,15 @@ class SymPyTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
-        name = "test%d" % self._count
-        name = os.path.splitext(os.path.basename(filename))[0]
+        clear_cache()
         self._count += 1
         gl = {'__file__':filename}
         random.seed(self._seed)
         try:
             execfile(filename, gl)
-        except (ImportError, SyntaxError):
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except:
             self._reporter.import_error(filename, sys.exc_info())
             return
         pytestfile = ""
@@ -625,12 +644,20 @@ class SymPyDocTests(object):
         return self._reporter.finish()
 
     def test_file(self, filename):
+        clear_cache()
 
         import unittest
         from StringIO import StringIO
 
         rel_name = filename[len(self._root_dir)+1:]
+        dirname, file = os.path.split(filename)
         module = rel_name.replace(os.sep, '.')[:-3]
+
+        if rel_name.startswith("examples"):
+            # Example files do not have __init__.py files,
+            # So we have to temporarily extend sys.path to import them
+            sys.path.insert(0, dirname)
+            module = file[:-3] # remove ".py"
         setup_pprint()
         try:
             module = pdoctest._normalize_module(module)
@@ -638,6 +665,9 @@ class SymPyDocTests(object):
         except:
             self._reporter.import_error(filename, sys.exc_info())
             return
+        finally:
+            if rel_name.startswith("examples"):
+                del sys.path[0]
 
         tests = [test for test in tests if len(test.examples) > 0]
         # By default (except for python 2.4 in which it was broken) tests
@@ -653,7 +683,7 @@ class SymPyDocTests(object):
         for test in tests:
             assert len(test.examples) != 0
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS | \
-                    pdoctest.NORMALIZE_WHITESPACE)
+                    pdoctest.NORMALIZE_WHITESPACE | pdoctest.IGNORE_EXCEPTION_DETAIL)
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
@@ -958,6 +988,8 @@ class PyTestReporter(Reporter):
         self._passed = 0
         self._skipped = 0
         self._exceptions = []
+        self._terminal_width = None
+        self._default_width = 80
 
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
@@ -967,7 +999,70 @@ class PyTestReporter(Reporter):
     def root_dir(self, dir):
         self._root_dir = dir
 
-    def write(self, text, color="", align="left", width=80):
+    @property
+    def terminal_width(self):
+        if self._terminal_width is not None:
+            return self._terminal_width
+
+        def findout_terminal_width():
+            if sys.platform == "win32":
+                # Windows support is based on:
+                #
+                #  http://code.activestate.com/recipes/440694-determine-size-of-console-window-on-windows/
+
+                from ctypes import windll, create_string_buffer
+
+                h = windll.kernel32.GetStdHandle(-12)
+                csbi = create_string_buffer(22)
+                res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
+
+                if res:
+                    import struct
+                    (_, _, _, _, _, left, _, right, _, _, _) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+                    return right - left
+                else:
+                    return self._default_width
+
+            if hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
+                return self._default_width # leave PIPEs alone
+
+            try:
+                process = subprocess.Popen(['stty', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout = process.stdout.read()
+                if sys.version_info[0] > 2:
+                    stdout = stdout.decode("utf-8")
+            except (OSError, IOError):
+                pass
+            else:
+                # We support the following output formats from stty:
+                #
+                # 1) Linux   -> columns 80
+                # 2) OS X    -> 80 columns
+                # 3) Solaris -> columns = 80
+
+                re_linux   = r"columns\s+(?P<columns>\d+);"
+                re_osx     = r"(?P<columns>\d+)\s*columns;"
+                re_solaris = r"columns\s+=\s+(?P<columns>\d+);"
+
+                for regex in (re_linux, re_osx, re_solaris):
+                    match = re.search(regex, stdout)
+
+                    if match is not None:
+                        columns = match.group('columns')
+
+                        try:
+                            return int(columns)
+                        except ValueError:
+                            pass
+
+            return self._default_width
+
+        width = findout_terminal_width()
+        self._terminal_width = width
+
+        return width
+
+    def write(self, text, color="", align="left", width=None):
         """
         Prints a text on the screen.
 
@@ -1003,6 +1098,9 @@ class PyTestReporter(Reporter):
         c_normal = '\033[0m'
         c_color = '\033[%sm'
 
+        if width is None:
+            width = self.terminal_width
+
         if align == "right":
             if self._write_pos+len(text) > width:
                 # we don't fit on the current line, create a new line
@@ -1037,7 +1135,7 @@ class PyTestReporter(Reporter):
         self._write_pos %= width
 
     def write_center(self, text, delim="="):
-        width = 80
+        width = self.terminal_width
         if text != "":
             text = " %s " % text
         idx = (width-len(text)) // 2
@@ -1061,10 +1159,13 @@ class PyTestReporter(Reporter):
         self.write("executable:   %s  (%s)\n" % (executable, python_version))
         from .misc import ARCH
         self.write("architecture: %s\n" % ARCH)
+        from sympy.core.cache import USE_CACHE
+        self.write("cache:        %s\n" % USE_CACHE)
         from sympy.polys.domains import GROUND_TYPES
         self.write("ground types: %s\n" % GROUND_TYPES)
         if seed is not None:
-            self.write("random seed: %d\n\n" % seed)
+            self.write("random seed:  %d\n" % seed)
+        self.write('\n')
         self._t_start = clock()
 
     def finish(self):
@@ -1076,7 +1177,7 @@ class PyTestReporter(Reporter):
         def add_text(mytext):
             global text, linelen
             """Break new text if too long."""
-            if linelen + len(mytext) > 80:
+            if linelen + len(mytext) > self.terminal_width:
                 text += '\n'
                 linelen = 0
             text += mytext
@@ -1100,7 +1201,7 @@ class PyTestReporter(Reporter):
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
             for e in self._xpassed:
-                self.write("%s:%s\n" % (e[0], e[1]))
+                self.write("%s: %s\n" % (e[0], e[1]))
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
@@ -1168,8 +1269,12 @@ class PyTestReporter(Reporter):
         self._xfailed += 1
         self.write("f", "Green")
 
-    def test_xpass(self, fname):
-        self._xpassed.append((self._active_file, fname))
+    def test_xpass(self, v):
+        if sys.version_info[:2] < (2, 6):
+            message = getattr(v, 'message', '')
+        else:
+            message = str(v)
+        self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
     def test_fail(self, exc_info):
@@ -1192,11 +1297,15 @@ class PyTestReporter(Reporter):
             self.write(".", "Green")
 
     def test_skip(self, v):
+        if sys.version_info[:2] < (2, 6):
+            message = getattr(v, 'message', '')
+        else:
+            message = str(v)
         self._skipped += 1
         self.write("s", "Green")
         if self._verbose:
             self.write(" - ", "Green")
-            self.write(v.message, "Green")
+            self.write(message, "Green")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

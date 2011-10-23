@@ -442,7 +442,7 @@ def test_NO():
 
     assert NO(Fd(a)*F(b)) == - NO(F(b)*Fd(a))
 
-    no =  NO(Fd(a)*F(i)*Fd(j)*F(b))
+    no =  NO(Fd(a)*F(i)*F(b)*Fd(j))
     l1 = [ ind for ind in no.iter_q_creators() ]
     assert l1 == [0,1]
     l2 = [ ind for ind in no.iter_q_annihilators() ]
@@ -518,10 +518,10 @@ def test_Tensors():
     assert AT('t',(a,b,c),(i,j,k)) == AT('t',(b,a,c),(i,k,j))
 
     tabij = AT('t',(a,b),(i,j))
-    assert a in tabij
-    assert b in tabij
-    assert i in tabij
-    assert j in tabij
+    assert tabij.has(a)
+    assert tabij.has(b)
+    assert tabij.has(i)
+    assert tabij.has(j)
     assert tabij.subs(b,c) == AT('t',(a,c),(i,j))
     assert (2*tabij).subs(i,c) == 2*AT('t',(a,b),(c,j))
 

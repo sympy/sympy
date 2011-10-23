@@ -10,7 +10,7 @@ from symbol import Symbol, Wild, Dummy, symbols, var
 from numbers import Number, Float, Rational, Integer, NumberSymbol,\
         RealNumber, Real, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo
 from power import Pow, integer_nthroot
-from mul import Mul
+from mul import Mul, prod
 from add import Add
 from relational import Rel, Eq, Ne, Lt, Le, Gt, Ge, \
     Equality, Inequality, Unequality, StrictInequality
@@ -21,7 +21,7 @@ from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     expand_trig, expand_complex, expand_multinomial
 from sets import Set, Interval, Union, EmptySet, FiniteSet, ProductSet
 from evalf import PrecisionExhausted, N
-from containers import Tuple
+from containers import Tuple, Dict
 from exprtools import gcd_terms
 
 # expose singletons

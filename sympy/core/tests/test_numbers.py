@@ -1,6 +1,6 @@
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow)
+                   Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
@@ -35,7 +35,7 @@ def test_seterr():
     seterr(divide = True)
     raises(ValueError,"S.Zero/S.Zero")
     seterr(divide = False)
-    S.Zero / S.Zero == S.NaN
+    assert S.Zero / S.Zero == S.NaN
 
 def test_mod():
     x = Rational(1, 2)
@@ -54,7 +54,6 @@ def test_mod():
 
     a = Float('2.6')
 
-    #FIXME-py3k: TypeError: type Float doesn't define __round__ method
     assert round(a % Float('0.2'), 15) == 0.2
     assert round(a % 2, 15) == 0.6
     assert round(a % 0.5, 15) == 0.1
@@ -81,11 +80,13 @@ def test_mod():
     assert 15 % Integer(4) == Integer(3)
 
 def test_divmod():
-    assert divmod(S(12), S(8)) == (1, 4)
-    assert divmod(-S(12), S(8)) == (-2, 4)
-    assert divmod(S(0), S(1)) == (0, 0)
+    assert divmod(S(12), S(8)) == Tuple(1, 4)
+    assert divmod(-S(12), S(8)) == Tuple(-2, 4)
+    assert divmod(S(0), S(1)) == Tuple(0, 0)
     raises(ZeroDivisionError, "divmod(S(0), S(0))")
     raises(ZeroDivisionError, "divmod(S(1), S(0))")
+    assert divmod(S(12), 8) == Tuple(1, 4)
+    assert divmod(12, S(8)) == Tuple(1, 4)
 
 def test_igcd():
     assert igcd(0, 0) == 0
@@ -267,12 +268,29 @@ def test_Float():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
-    assert Float(1) is S.One
     assert Float(0) is S.Zero
+    assert Float(1) is S.One
+
+    assert Float(S.Zero) is S.Zero
+    assert Float(S.One) is S.One
 
 def test_Float_eval():
     a = Float(3.2)
     assert (a**2).is_Float
+
+def test_Float_issue_2107():
+    a = Float(0.1, 10)
+    b = Float("0.1", 10)
+
+    assert a - a == 0
+    assert a + (-a) == 0
+    assert S.Zero + a - a == 0
+    assert S.Zero + a + (-a) == 0
+
+    assert b - b == 0
+    assert b + (-b) == 0
+    assert S.Zero + b - b == 0
+    assert S.Zero + b + (-b) == 0
 
 def test_Infinity():
     assert oo != 1
@@ -377,8 +395,8 @@ def test_powers_Integer():
 
     # check for exact roots
     assert S(-1)  ** Rational(6, 5) == - (-1)**(S(1)/5)
-    assert S(4)   ** Rational(1, 2) == 2
-    assert S(-4)  ** Rational(1, 2) == I * 2
+    assert sqrt(S(4)) == 2
+    assert sqrt(S(-4)) == I * 2
     assert S(16)  ** Rational(1, 4) == 2
     assert S(-16) ** Rational(1, 4) == 2 * (-1)**Rational(1,4)
     assert S(9)   ** Rational(3, 2) == 27
@@ -388,7 +406,7 @@ def test_powers_Integer():
     assert (-2) ** Rational(-2, 1) == Rational(1, 4)
 
     # not exact roots
-    assert (-3) ** (S(1)/2)  == sqrt(-3)
+    assert sqrt(-3)  == I*sqrt(3)
     assert (3)  ** (S(3)/2)  == 3 * sqrt(3)
     assert (-3) ** (S(3)/2)  == - 3 * sqrt(-3)
     assert (-3) ** (S(5)/2)  ==  9 * I * sqrt(3)
@@ -434,9 +452,9 @@ def test_powers_Integer():
     # check that bases sharing a gcd are exptracted
     assert 2**Rational(1, 3)*3**Rational(1, 4)*6**Rational(1, 5) == \
            2**Rational(8, 15)*3**Rational(9, 20)
-    assert 8**Rational(1, 2)*24**Rational(1, 3)*6**Rational(1, 5) == \
+    assert sqrt(8)*24**Rational(1, 3)*6**Rational(1, 5) == \
            4*2**Rational(7, 10)*3**Rational(8, 15)
-    assert 8**Rational(1, 2)*(-24)**Rational(1, 3)*(-6)**Rational(1, 5) == \
+    assert sqrt(8)*(-24)**Rational(1, 3)*(-6)**Rational(1, 5) == \
            4*(-3)**Rational(8, 15)*2**Rational(7, 10)
     assert 2**Rational(1, 3)*2**Rational(8, 9) == 2*2**Rational(2, 9)
     assert 2**Rational(2, 3)*6**Rational(1, 3) == 2*3**Rational(1, 3)
@@ -460,23 +478,23 @@ def test_powers_Rational():
     assert Rational(-2,3) ** S.NaN == S.NaN
 
     # exact roots on numerator
-    assert Rational(4,3)  ** Rational(1,2) == 2 * sqrt(3) / 3
+    assert sqrt(Rational(4,3)) == 2 * sqrt(3) / 3
     assert Rational(4,3)  ** Rational(3,2) == 8 * sqrt(3) / 9
-    assert Rational(-4,3) ** Rational(1,2) == I * 2 * sqrt(3) / 3
+    assert sqrt(Rational(-4,3)) == I * 2 * sqrt(3) / 3
     assert Rational(-4,3) ** Rational(3,2) == - I * 8 * sqrt(3) / 9
     assert Rational(27,2) ** Rational(1,3) == 3 * (2 ** Rational(2,3)) / 2
     assert Rational(5**3, 8**3) ** Rational(4,3) == Rational(5**4, 8**4)
 
     # exact root on denominator
-    assert Rational(1,4)  ** Rational(1,2) == Rational(1,2)
-    assert Rational(1,-4) ** Rational(1,2) == I * Rational(1,2)
-    assert Rational(3,4)  ** Rational(1,2) == sqrt(3) / 2
-    assert Rational(3,-4) ** Rational(1,2) == I * sqrt(3) / 2
+    assert sqrt(Rational(1,4)) == Rational(1,2)
+    assert sqrt(Rational(1,-4)) == I * Rational(1,2)
+    assert sqrt(Rational(3,4)) == sqrt(3) / 2
+    assert sqrt(Rational(3,-4)) == I * sqrt(3) / 2
     assert Rational(5,27) ** Rational(1,3) == (5 ** Rational(1,3)) / 3
 
     # not exact roots
-    assert Rational(1,2)  ** Rational(1,2) == sqrt(2) / 2
-    assert Rational(-4,7) ** Rational(1,2) == I * Rational(4,7) ** Rational(1,2)
+    assert sqrt(Rational(1,2)) == sqrt(2) / 2
+    assert sqrt(Rational(-4,7)) == I * sqrt(Rational(4,7))
     assert Rational(-3, 2)**Rational(-7, 3) == \
            -4*(-1)**Rational(2, 3)*2**Rational(1, 3)*3**Rational(2, 3)/27
     assert Rational(-3, 2)**Rational(-2, 3) == \
@@ -526,8 +544,8 @@ def test_no_len():
     raises(TypeError, "len(Integer(2))")
 
 def test_issue222():
-    assert sqrt(Rational(1, 5)) == Rational(1, 5)**S.Half
-    assert 5 * Rational(1,5)**Rational(1,2) == 5 * sqrt(Rational(1,5))
+    assert sqrt(Rational(1, 5)) == sqrt(Rational(1, 5))
+    assert 5 * sqrt(Rational(1,5)) == sqrt(5)
 
 def test_issue593():
     assert ((-1)**Rational(1,6)).expand(complex=True) == I/2 + sqrt(3)/2
@@ -537,8 +555,8 @@ def test_issue593():
 
 def test_issue324():
     x = Symbol("x")
-    assert sqrt(x-1) == (x-1)**Rational(1,2)
-    assert sqrt(x-1) != I*(1-x)**Rational(1,2)
+    assert sqrt(x-1).as_base_exp() == (x - 1, S.Half)
+    assert sqrt(x-1) != I*sqrt(1-x)
 
 def test_issue350():
     x = Symbol("x", real=True)
@@ -838,3 +856,5 @@ def test_issue_1023():
     x = Symbol('x', infinitesimal=True, real=True)
     assert -oo + x == -oo
 
+def test_GoldenRatio_expand():
+    assert GoldenRatio.expand(func=True) == S.Half + sqrt(5)/2

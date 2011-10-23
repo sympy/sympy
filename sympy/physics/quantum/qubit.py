@@ -169,7 +169,7 @@ class Qubit(QubitState, Ket):
     """
 
 
-    @property
+    @classmethod
     def dual_class(self):
         return QubitBra
 
@@ -219,7 +219,7 @@ class QubitBra(QubitState, Bra):
     See ``Qubit`` for examples.
 
     """
-    @property
+    @classmethod
     def dual_class(self):
         return Qubit
 
@@ -317,7 +317,7 @@ class IntQubit(IntQubitState, Qubit):
         >>> Qubit(q)
         |101>
     """
-    @property
+    @classmethod
     def dual_class(self):
         return IntQubitBra
 
@@ -325,7 +325,7 @@ class IntQubit(IntQubitState, Qubit):
 class IntQubitBra(IntQubitState, QubitBra):
     """A qubit bra that store integers as binary numbers in qubit values."""
 
-    @property
+    @classmethod
     def dual_class(self):
         return IntQubit
 
@@ -506,7 +506,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
         H(0)*H(1)*|00>
         >>> q = qapply(c)
         >>> measure_partial(q, (0,))
-        [(2**(1/2)*|00>/2 + 2**(1/2)*|10>/2, 1/2), (2**(1/2)*|01>/2 + 2**(1/2)*|11>/2, 1/2)]
+        [(sqrt(2)*|00>/2 + sqrt(2)*|10>/2, 1/2), (sqrt(2)*|01>/2 + sqrt(2)*|11>/2, 1/2)]
     """
     m = qubit_to_matrix(qubit, format)
 
@@ -625,7 +625,7 @@ def _get_possible_outcomes(m, bits):
     # bit being true
     output_matrices = []
     for i in range(1<<len(bits)):
-        output_matrices.append(zeros((2**nqubits, 1)))
+        output_matrices.append(zeros(2**nqubits, 1))
 
     # Bitmasks will help sort how to determine possible outcomes.
     # When the bit mask is and-ed with a matrix-index,

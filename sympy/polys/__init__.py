@@ -26,6 +26,7 @@ from polytools import (
     nth_power_roots_poly,
     cancel,
     reduced, groebner,
+    GroebnerBasis, is_zero_dimensional,
 )
 
 from polyfuncs import (
@@ -62,6 +63,7 @@ from numberfields import (
 
 from monomialtools import (
     Monomial, monomials, monomial_count,
+    lex, grlex, grevlex,
 )
 
 from rootoftools import (

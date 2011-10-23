@@ -1,5 +1,5 @@
-from sympy import bernoulli, Symbol, harmonic, Rational, oo, zoo, pi, bell, \
-        fibonacci, lucas
+from sympy import bernoulli, Symbol, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
+        fibonacci, lucas, euler, catalan, binomial, gamma, sqrt, hyper, log, polygamma, diff
 
 x = Symbol('x')
 
@@ -59,3 +59,42 @@ def test_harmonic():
     assert harmonic(10,0) == 10
     assert harmonic(oo,1) == zoo
     assert harmonic(oo,2) == (pi**2)/6
+
+def test_euler():
+    assert euler(0) == 1
+    assert euler(1) == 0
+    assert euler(2) == -1
+    assert euler(3) == 0
+    assert euler(4) == 5
+    assert euler(6) == -61
+    assert euler(8) == 1385
+
+    assert euler(20, evaluate=False) != 370371188237525
+
+    n = Symbol('n', integer=True)
+    assert euler(n) != -1
+    assert euler(n).subs(n, 2) == -1
+
+    assert euler(20).evalf() == 370371188237525.0
+    assert euler(20, evaluate=False).evalf() == 370371188237525.0
+
+    assert euler(n).rewrite(Sum) == euler(n)
+    #assert euler(2*n).rewrite(Sum) ==  I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
+    assert euler(2*n+1).rewrite(Sum) == 0
+
+def test_catalan():
+    assert catalan(1) == 1
+    assert catalan(2) == 2
+    assert catalan(3) == 5
+    assert catalan(4) == 14
+
+    # assert catalan(x) == catalan(x)
+    assert catalan(2*x).rewrite(binomial) == binomial(4*x, 2*x)/(2*x + 1)
+    assert catalan(Rational(1,2)).rewrite(gamma) == 8/(3*pi)
+    assert catalan(3*x).rewrite(gamma) == 4**(3*x)*gamma(3*x + Rational(1,2))/(sqrt(pi)*gamma(3*x + 2))
+    assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
+
+    assert diff(catalan(x),x) == (polygamma(0, x + Rational(1,2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
+
+    c = catalan(0.5).evalf()
+    assert str(c) == '0.848826363156775'

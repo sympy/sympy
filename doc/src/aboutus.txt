@@ -138,6 +138,11 @@ want to be mentioned here, so see our repository history for a full list).
 #. Bradley Froehle: Fix shell command to generate modules in setup.py
 #. Min Ragan-Kelley: Fix isympy to work with IPython 0.11
 #. Emma Hogan: Fixes to the documentation
+#. Julien Rioux: Fix behavior of some deprecated methods
+#. Roberto Colistete, Jr.: Add num_columns option to the pretty printer
+#. Raoul Bourquin: Implement Euler numbers
+#. Gert-Ludwig Ingold: Correct derivative of coth
+#. Miha Marolt: Add numpydoc extension to the Sphinx docs
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

@@ -74,9 +74,6 @@ class Point(GeometryEntity):
     def free_symbols(self):
         return self.x.free_symbols.union(self.y.free_symbols)
 
-    def _eval_subs(self, old, new):
-        return type(self)(self.x.subs(old, new), self.y.subs(old, new))
-
     def is_collinear(*points):
         """Is a sequence of points collinear?
 
@@ -241,7 +238,7 @@ class Point(GeometryEntity):
         >>> from sympy.abc import x, y
         >>> p3 = Point(x, y)
         >>> p3.distance(Point(0, 0))
-        (x**2 + y**2)**(1/2)
+        sqrt(x**2 + y**2)
 
         """
         return sqrt(sum([(a - b)**2 for a, b in zip(self, p)]))

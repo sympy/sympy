@@ -17,29 +17,29 @@ def R_nl(n, l, r, Z=1):
     >>> var("r Z")
     (r, Z)
     >>> R_nl(1, 0, r, Z)
-    2*(Z**3)**(1/2)*exp(-Z*r)
+    2*sqrt(Z**3)*exp(-Z*r)
     >>> R_nl(2, 0, r, Z)
-    2**(1/2)*(-Z*r + 2)*(Z**3)**(1/2)*exp(-Z*r/2)/4
+    sqrt(2)*(-Z*r + 2)*sqrt(Z**3)*exp(-Z*r/2)/4
     >>> R_nl(2, 1, r, Z)
-    6**(1/2)*Z*r*(Z**3)**(1/2)*exp(-Z*r/2)/12
+    sqrt(6)*Z*r*sqrt(Z**3)*exp(-Z*r/2)/12
 
     For Hydrogen atom, you can just use the default value of Z=1::
 
     >>> R_nl(1, 0, r)
     2*exp(-r)
     >>> R_nl(2, 0, r)
-    2**(1/2)*(-r + 2)*exp(-r/2)/4
+    sqrt(2)*(-r + 2)*exp(-r/2)/4
     >>> R_nl(3, 0, r)
-    2*3**(1/2)*(2*r**2/9 - 2*r + 3)*exp(-r/3)/27
+    2*sqrt(3)*(2*r**2/9 - 2*r + 3)*exp(-r/3)/27
 
     For Silver atom, you would use Z=47::
 
     >>> R_nl(1, 0, r, Z=47)
-    94*47**(1/2)*exp(-47*r)
+    94*sqrt(47)*exp(-47*r)
     >>> R_nl(2, 0, r, Z=47)
-    47*94**(1/2)*(-47*r + 2)*exp(-47*r/2)/4
+    47*sqrt(94)*(-47*r + 2)*exp(-47*r/2)/4
     >>> R_nl(3, 0, r, Z=47)
-    94*141**(1/2)*(4418*r**2/9 - 94*r + 3)*exp(-47*r/3)/27
+    94*sqrt(141)*(4418*r**2/9 - 94*r + 3)*exp(-47*r/3)/27
 
     The normalization of the radial wavefunction is::
 

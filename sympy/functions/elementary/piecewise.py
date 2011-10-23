@@ -172,7 +172,7 @@ class Piecewise(Function):
 
         # Determine what intervals the expr,cond pairs affect.
         # 1) If cond is True, then log it as default
-        # 1.1) Currently if cond can't be evaluated, throw NotImplentedError.
+        # 1.1) Currently if cond can't be evaluated, throw NotImplementedError.
         # 2) For each inequality, if previous cond defines part of the interval
         #    update the new conds interval.
         #    -  eg x < 1, x < 3 -> [oo,1],[1,3] instead of [oo,1],[oo,3]

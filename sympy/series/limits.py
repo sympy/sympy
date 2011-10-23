@@ -1,6 +1,6 @@
-from sympy.core import S, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.functions import tan, cot
 from gruntz import gruntz
-from sympy.functions import sign, tan, cot
 
 def limit(e, z, z0, dir="+"):
     """
@@ -235,6 +235,12 @@ class Limit(Expr):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
+        if isinstance(dir, basestring):
+            dir = Symbol(dir)
+        elif not isinstance(dir, Symbol):
+            raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))
+        if str(dir) not in ('+', '-'):
+            raise ValueError("direction must be either '+' or '-', not %s" % dir)
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
         return obj
@@ -245,4 +251,4 @@ class Limit(Expr):
             e = e.doit(**hints)
             z = z.doit(**hints)
             z0 = z0.doit(**hints)
-        return limit(e, z, z0, dir)
+        return limit(e, z, z0, str(dir))

@@ -9,41 +9,63 @@ from compatibility import reduce
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
+    @property
+    def _diff_wrt(self):
+        """Is it allowed to take derivative wrt to this instance.
+
+        This determines if it is allowed to take derivatives wrt this object.
+        Subclasses such as Symbol, Function and Derivative should return True
+        to enable derivatives wrt them. The implementation in Derivative
+        separates the Symbol and non-Symbol _diff_wrt=True variables and
+        temporarily converts the non-Symbol vars in Symbols when performing
+        the differentiation.
+
+        Note, see the docstring of Derivative for how this should work
+        mathematically.  In particular, note that expr.subs(yourclass, Symbol)
+        should be well-defined on a structural level, or this will lead to
+        inconsistent results.
+
+        Examples
+        ========
+
+            >>> from sympy import Expr
+            >>> e = Expr()
+            >>> e._diff_wrt
+            False
+            >>> class MyClass(Expr):
+            ...     _diff_wrt = True
+            ...
+            >>> (2*MyClass()).diff(MyClass())
+            2
+        """
+        return False
+
+    @cacheit
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work
-        from sympy.core import S
 
-        def key_inner(arg):
-            if isinstance(arg, Basic):
-                return arg.sort_key(order=order)
-            elif hasattr(arg, '__iter__'):
-                return tuple(key_inner(arg) for arg in args)
-            else:
-                return arg
+        from sympy.utilities import default_sort_key
 
         coeff, expr = self.as_coeff_Mul()
+
         if expr.is_Pow:
             expr, exp = expr.args
         else:
             expr, exp = expr, S.One
 
         if expr.is_Atom:
-            if expr.is_Symbol:
-                args = (str(expr),)
-            else:
-                args = (expr,)
+            args = (str(expr),)
         else:
             if expr.is_Add:
                 args = expr.as_ordered_terms(order=order)
+            elif expr.is_Mul:
+                args = expr.as_ordered_factors(order=order)
             else:
                 args = expr.args
 
-            args = tuple(key_inner(arg) for arg in args)
+            args = tuple([ default_sort_key(arg, order=order) for arg in args ])
 
-            if expr.is_Mul:
-                args = sorted(args)
-
-        args = (len(args), args)
+        args = (len(args), tuple(args))
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
@@ -294,16 +316,7 @@ class Expr(Basic, EvalfMixin):
         """
         if not self.is_Mul:
             return [self]
-
-        cpart = []
-        ncpart = []
-
-        for arg in self.args:
-            if arg.is_commutative:
-                cpart.append(arg)
-            else:
-                ncpart.append(arg)
-
+        cpart, ncpart = self.args_cnc()
         return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
 
     def as_ordered_terms(self, order=None, data=False):
@@ -860,14 +873,14 @@ class Expr(Basic, EvalfMixin):
 
         -- force self to be treated as an Add:
 
-        >>> (3*x).as_independent(x, as_Add=1)
+        >>> (3*x).as_independent(x, as_Add=True)
         (0, 3*x)
 
         -- force self to be treated as a Mul:
 
-        >>> (3+x).as_independent(x, as_Add=0)
+        >>> (3+x).as_independent(x, as_Add=False)
         (1, x + 3)
-        >>> (-3+x).as_independent(x, as_Add=0)
+        >>> (-3+x).as_independent(x, as_Add=False)
         (1, x - 3)
 
         Note how the below differs from the above in making the
@@ -875,6 +888,21 @@ class Expr(Basic, EvalfMixin):
 
         >>> (y*(-3+x)).as_independent(x)
         (y, x - 3)
+
+        -- use .as_independent() for true independence testing instead
+           of .has(). The former considers only symbols in the free
+           symbols while the latter considers all symbols
+
+        >>> from sympy import Integral
+        >>> I = Integral(x, (x, 1, 2))
+        >>> I.has(x)
+        True
+        >>> x in I.free_symbols
+        False
+        >>> I.as_independent(x) == (I, 1)
+        True
+        >>> (I + x).as_independent(x) == (I, x)
+        True
 
         Note: when trying to get independent terms, a separation method
         might need to be used first. In this case, it is important to keep
@@ -902,13 +930,30 @@ class Expr(Basic, EvalfMixin):
         from sympy.utilities.iterables import sift
 
         func = self.func
+        # sift out deps into symbolic and other and ignore
+        # all symbols but those that are in the free symbols
+        sym = set()
+        other = []
+        for d in deps:
+            if isinstance(d, C.Symbol): # Symbol.is_Symbol is True
+                sym.add(d)
+            else:
+                other.append(d)
+        def has(e):
+            """return the standard has() if there are no literal symbols, else
+            check to see that symbol-deps are in the free symbols."""
+            has_other = e.has(*other)
+            if not sym:
+                return has_other
+            return has_other or e.has(*(e.free_symbols & sym))
+
         if hint.get('as_Add', func is Add):
             want = Add
         else:
             want = Mul
         if (want is not func or
             func is not Add and func is not Mul):
-            if self.has(*deps):
+            if has(self):
                 return (want.identity, self)
             else:
                 return (self, want.identity)
@@ -918,7 +963,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 args, nc = self.args_cnc()
 
-        d = sift(args, lambda x: x.has(*deps))
+        d = sift(args, lambda x: has(x))
         depend = d.pop(True, [])
         indep = d.pop(False, [])
         if func is Add: # all terms were treated as commutative
@@ -926,7 +971,7 @@ class Expr(Basic, EvalfMixin):
                     Add(*depend))
         else: # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
-                if n.has(*deps):
+                if has(n):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
@@ -952,7 +997,7 @@ class Expr(Basic, EvalfMixin):
            >>> from sympy.abc import z, w
 
            >>> (z + w*I).as_real_imag()
-           (-im(w) + re(z), im(z) + re(w))
+           (re(z) - im(w), re(w) + im(z))
 
         """
         return (C.re(self), C.im(self))
@@ -965,14 +1010,22 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def as_coeff_terms(self, *deps):
+        """
+        This method is deprecated. Use .as_coeff_mul() instead.
+        """
         import warnings
         warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
                       DeprecationWarning)
+        return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
+        """
+        This method is deprecated.  Use .as_coeff_add() instead.
+        """
         import warnings
         warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
                       DeprecationWarning)
+        return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
@@ -1281,8 +1334,8 @@ class Expr(Basic, EvalfMixin):
                 negative_args = filter(None, arg_signs)
                 return len(negative_args) % 2 == 1
 
-            # As a last resort, we choose the one with greater hash
-            return hash(self) < hash(negative_self)
+            # As a last resort, we choose the one with greater value of .sort_key()
+            return self.sort_key() < negative_self.sort_key()
 
     def _eval_is_polynomial(self, syms):
         if self.free_symbols.intersection(syms) == set([]):
@@ -1824,6 +1877,10 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
+    def as_coeff_Add(self):
+        """Efficiently extract the coefficient of a summation. """
+        return S.Zero, self
+
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
@@ -1866,6 +1923,7 @@ class Expr(Basic, EvalfMixin):
     def _eval_expand_func(self, deep=True, **hints):
         return self
 
+    @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
             mul=True, log=True, multinomial=True, basic=True, **hints):
         """
@@ -1927,10 +1985,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import separate
         return separate(self, deep)
 
-    def collect(self, syms, evaluate=True, exact=False):
+    def collect(self, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
         """See the collect function in sympy.simplify"""
         from sympy.simplify import collect
-        return collect(self, syms, evaluate, exact)
+        return collect(self, syms, func, evaluate, exact, distribute_order_term)
 
     def together(self, *args, **kwargs):
         """See the together function in sympy.polys"""

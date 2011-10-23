@@ -24,12 +24,134 @@ class IdentityFunction(Lambda):
 Id = S.IdentityFunction
 
 ###############################################################################
-############################# SQUARE ROOT FUNCTION ############################
+############################# ROOT and SQUARE ROOT FUNCTION ###################
 ###############################################################################
 
 def sqrt(arg):
+    """The square root function
+
+    sqrt(x) -> Returns the principal square root of x.
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt, Symbol
+    >>> x = Symbol('x')
+
+    >>> sqrt(x)
+    sqrt(x)
+
+    >>> sqrt(x)**2
+    x
+
+    Note that sqrt(x**2) does not simplify to x.
+
+    >>> sqrt(x**2)
+    sqrt(x**2)
+
+    This is because the two are not equal to each other in general.
+    For example, consider x == -1:
+
+    >>> sqrt(x**2).subs(x, -1)
+    1
+    >>> x.subs(x, -1)
+    -1
+
+    This is because sqrt computes the principle square root, so the square may
+    put the argument in a different branch.  This identity does hold if x is
+    positive:
+
+    >>> y = Symbol('y', positive=True)
+    >>> sqrt(y**2)
+    y
+
+    You can force this simplification by using the powdenest() function with
+    the force option set to True:
+
+    >>> from sympy import powdenest
+    >>> sqrt(x**2)
+    sqrt(x**2)
+    >>> powdenest(sqrt(x**2), force=True)
+    x
+
+    To get both branches of the square root you can use the RootOf function:
+
+    >>> from sympy import RootOf
+
+    >>> [ RootOf(x**2-3,i) for i in (0,1) ]
+    [-sqrt(3), sqrt(3)]
+
+
+    See also
+    ========
+       L{root}, L{RootOf}
+
+       External links
+       --------------
+
+       * http://en.wikipedia.org/wiki/Square_root
+       * http://en.wikipedia.org/wiki/Principal_value
+    """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
+
+
+def root(arg, n):
+    """The n-th root function
+
+    root(x, n) -> Returns the principal n-th root of x.
+
+
+    Examples
+    ========
+
+    >>> from sympy import root, Rational
+    >>> from sympy.abc import x, n
+
+    >>> root(x, 2)
+    sqrt(x)
+
+    >>> root(x, 3)
+    x**(1/3)
+
+    >>> root(x, n)
+    x**(1/n)
+
+    >>> root(x, -Rational(2,3))
+    x**(-3/2)
+
+
+    To get all n n-th roots you can use the RootOf function.
+    The following examples show the roots of unity for n
+    equal 2, 3 and 4:
+
+    >>> from sympy import RootOf, I
+
+    >>> [ RootOf(x**2-1,i) for i in (0,1) ]
+    [-1, 1]
+
+    >>> [ RootOf(x**3-1,i) for i in (0,1,2) ]
+    [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]
+
+    >>> [ RootOf(x**4-1,i) for i in (0,1,2,3) ]
+    [-1, 1, -I, I]
+
+
+    See also
+    ========
+       L{sqrt}, L{RootOf}
+
+       External links
+       --------------
+
+       * http://en.wikipedia.org/wiki/Square_root
+       * http://en.wikipedia.org/wiki/Nth_root
+       * http://en.wikipedia.org/wiki/Root_of_unity
+       * http://en.wikipedia.org/wiki/Principal_value
+    """
+    n = sympify(n)
+    return C.Pow(arg, 1/n)
+
 
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################
@@ -98,16 +220,15 @@ class MinMaxBase(LatticeOp):
         """
         Sequentially allocate values to localzeros.
 
-        If value is greter than all of the localzeros, then it is new localzero
-        and it is apending to them.
-
-        if value is greter than one of the localzeros,
-        then update localzero's set.
+        When a value is identified as being more extreme than another member it
+        replaces that member; if this is never true, then the value is simply
+        appended to the localzeros.
         """
         localzeros = set()
         for v in values:
             is_newzero = True
-            for z in localzeros:
+            localzeros_ = list(localzeros)
+            for z in localzeros_:
                 if id(v) == id(z):
                     is_newzero = False
                 elif cls._is_connected(v, z):
@@ -115,7 +236,6 @@ class MinMaxBase(LatticeOp):
                     if cls._is_asneeded(v, z):
                         localzeros.remove(z)
                         localzeros.update([v])
-                        break
             if is_newzero:
                 localzeros.update([v])
         return localzeros
@@ -307,4 +427,3 @@ class Min(MinMaxBase, Application, Basic):
         Check if x > y.
         """
         return (x > y)
-

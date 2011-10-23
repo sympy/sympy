@@ -11,7 +11,6 @@ y = Symbol('y')
 mp = MathMLPrinter()
 
 def test_printmethod():
-    #FIXME-py3k: AssertionError
     assert mp.doprint(1+x) == '<apply><plus/><ci>x</ci><cn>1</cn></apply>'
 
 def test_mathml_core():
@@ -124,8 +123,7 @@ def test_mathml_constants():
     mml = mp._print(pi)
     assert mml.nodeName == 'pi'
 
-    #FIXME-py3k: AssertionError
-    assert mathml(GoldenRatio) == '<cn>\xcf\x86</cn>'
+    assert mathml(GoldenRatio) == u'<cn>\u03c6</cn>'
 
     mml = mathml(EulerGamma)
     assert mml == '<eulergamma/>'

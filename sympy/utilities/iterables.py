@@ -1,7 +1,9 @@
-from sympy.core import Basic, C
-from sympy.core.compatibility import is_sequence, iterable #logically, they belong here
-
+from collections import defaultdict
 import random
+
+from sympy.core import Basic, C
+from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
+from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -48,7 +50,7 @@ def flatten(iterable, levels=None, cls=None):
             raise ValueError("expected non-negative number of levels, got %s" % levels)
 
     if cls is None:
-        reducible = lambda x: hasattr(x, "__iter__") and not isinstance(x, basestring)
+        reducible = lambda x: is_sequence(x, set)
     else:
         reducible = lambda x: isinstance(x, cls)
 
@@ -63,6 +65,14 @@ def flatten(iterable, levels=None, cls=None):
             result.append(el)
 
     return result
+
+def unflatten(iter, n=2):
+    """Group ``iter`` into tuples of length ``n``. Raise an error if
+    the length of ``iter`` is not a multiple of ``n``.
+    """
+    if n < 1 or len(iter) % n:
+        raise ValueError('iter length is not a multiple of %i' % n)
+    return zip(*(iter[i::n] for i in xrange(n)))
 
 def group(container, multiple=True):
     """
@@ -297,36 +307,7 @@ def interactive_traversal(expr):
 
     return _interactive_traversal(expr, 0)
 
-def cartes(*seqs):
-    """Return Cartesian product (combinations) of items from iterable
-    sequences, seqs, as a generator.
-
-    Examples::
-    >>> from sympy import Add, Mul
-    >>> from sympy.abc import x, y
-    >>> from sympy.utilities.iterables import cartes
-    >>> do=list(cartes([Mul, Add], [x, y], [2]))
-    >>> for di in do:
-    ...     print di[0](*di[1:])
-    ...
-    2*x
-    2*y
-    x + 2
-    y + 2
-    >>>
-
-    >>> list(cartes([1, 2], [3, 4, 5]))
-    [[1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]]
-    """
-
-    if not seqs:
-        yield []
-    else:
-        for item in seqs[0]:
-            for subitem in cartes(*seqs[1:]):
-                yield [item] + subitem
-
-def variations(seq, n, repetition=False):
+def variations(seq, n=None, repetition=False):
     """Returns a generator of the variations (size n) of the list `seq` (size N).
     `repetition` controls whether items in seq can appear more than once;
 
@@ -336,36 +317,37 @@ def variations(seq, n, repetition=False):
     repetition of seq's elements:
         >>> from sympy.utilities.iterables import variations
         >>> list(variations([1, 2], 2))
-        [[1, 2], [2, 1]]
+        [(1, 2), (2, 1)]
 
     variations(seq, n, True) will return the N**n permutations obtained
     by allowing repetition of elements:
         >>> list(variations([1, 2], 2, repetition=True))
-        [[1, 1], [1, 2], [2, 1], [2, 2]]
+        [(1, 1), (1, 2), (2, 1), (2, 2)]
 
     If you ask for more items than are in the set you get the empty set unless
     you allow repetitions:
         >>> list(variations([0, 1], 3, repetition=False))
         []
         >>> list(variations([0, 1], 3, repetition=True))[:4]
-        [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1]]
+        [(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]
 
 
-    Reference:
-        http://code.activestate.com/recipes/190465/
     """
+    from sympy.core.compatibility import permutations
 
-    if n == 0:
-        yield []
+    if not repetition:
+        seq = tuple(seq)
+        if len(seq) < n:
+            return
+        for i in permutations(seq, n):
+            yield i
     else:
-        if not repetition:
-            for i in xrange(len(seq)):
-                for cc in variations(seq[:i] + seq[i + 1:], n - 1, False):
-                    yield [seq[i]] + cc
+        if n == 0:
+            yield ()
         else:
             for i in xrange(len(seq)):
                 for cc in variations(seq, n - 1, True):
-                    yield [seq[i]] + cc
+                    yield (seq[i],) + cc
 
 def subsets(seq, k=None, repetition=False):
     """Generates all k-subsets (combinations) from an n-element set, seq.
@@ -382,55 +364,36 @@ def subsets(seq, k=None, repetition=False):
        without repetition, i.e. once an item has been removed, it can no
        longer be "taken":
            >>> list(subsets([1, 2], 2))
-           [[1, 2]]
+           [(1, 2)]
            >>> list(subsets([1, 2]))
-           [[], [1], [2], [1, 2]]
+           [(), (1,), (2,), (1, 2)]
            >>> list(subsets([1, 2, 3], 2))
-           [[1, 2], [1, 3], [2, 3]]
+           [(1, 2), (1, 3), (2, 3)]
 
 
        subsets(seq, k, repetition=True) will return the (n - 1 + k)!/k!/(n - 1)!
        combinations *with* repetition:
            >>> list(subsets([1, 2], 2, repetition=True))
-           [[1, 1], [1, 2], [2, 2]]
+           [(1, 1), (1, 2), (2, 2)]
 
        If you ask for more items than are in the set you get the empty set unless
        you allow repetitions:
            >>> list(subsets([0, 1], 3, repetition=False))
            []
            >>> list(subsets([0, 1], 3, repetition=True))
-           [[0, 0, 0], [0, 0, 1], [0, 1, 1], [1, 1, 1]]
+           [(0, 0, 0), (0, 0, 1), (0, 1, 1), (1, 1, 1)]
        """
-
-    if type(seq) is not list:
-        seq = list(seq)
-    if k == 0:
-        yield []
-    elif k is None:
-        yield []
-        for k in range(1, len(seq) + 1):
-            for s in subsets(seq, k, repetition=repetition):
-                yield list(s)
+    if k is None:
+        for k in range(len(seq) + 1):
+            for i in subsets(seq, k, repetition):
+                yield i
     else:
         if not repetition:
-            for i in xrange(len(seq)):
-                for cc in subsets(seq[i + 1:], k - 1, False):
-                    yield [seq[i]] + cc
+            for i in combinations(seq, k):
+                yield i
         else:
-            nmax = len(seq) - 1
-            indices = [0] * k
-            yield seq[:1] * k
-            while 1:
-                indices[-1] += 1
-                if indices[-1] > nmax:
-                    #find first digit that can be incremented
-                    for j in range(-2, -k - 1, -1):
-                        if indices[j] < nmax:
-                            indices[j:] = [indices[j] + 1] * -j
-                            break # increment and copy to the right
-                    else:
-                        break # we didn't for-break so we are done
-                yield [seq[li] for li in indices]
+            for i in combinations_with_replacement(seq, k):
+                yield i
 
 def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     """
@@ -519,16 +482,16 @@ def sift(expr, keyfunc):
     Sometimes you won't know how many keys you will get:
     >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
     ... lambda x: x.as_base_exp()[0])
-    {E: [exp(x)], x: [x**(1/2), x**2], y: [y**(2*x)]}
+    {E: [exp(x)], x: [sqrt(x), x**2], y: [y**(2*x)]}
     >>> _.keys()
     [E, x, y]
 
     """
-    d = {}
+    d = defaultdict(list)
     if hasattr(expr, 'args'):
         expr = expr.args or [expr]
     for e in expr:
-        d.setdefault(keyfunc(e), []).append(e)
+        d[keyfunc(e)].append(e)
     return d
 
 def take(iter, n):
@@ -1070,8 +1033,7 @@ def generate_involutions(n):
     http://mathworld.wolfram.com/PermutationInvolution.html
 
     Examples:
-    >>> from sympy.utilities.iterables import \
-    generate_involutions
+    >>> from sympy.utilities.iterables import generate_involutions
     >>> generate_involutions(3)
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
     >>> len(generate_involutions(4))

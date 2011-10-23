@@ -277,7 +277,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.circumference
-        12*Integral(((-8*_x**2/9 + 1)/(-_x**2 + 1))**(1/2), (_x, 0, 1))
+        12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))
 
         """
         if self.eccentricity == 1:
@@ -302,7 +302,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, sqrt(2))
         >>> e1.eccentricity
-        7**(1/2)/3
+        sqrt(7)/3
 
         """
         return self.focus_distance / self.major
@@ -323,7 +323,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.periapsis
-        -2*2**(1/2) + 3
+        -2*sqrt(2) + 3
 
         """
         return self.major * (1 - self.eccentricity)
@@ -344,7 +344,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.apoapsis
-        2*2**(1/2) + 3
+        2*sqrt(2) + 3
 
         """
         return self.major * (1 + self.eccentricity)
@@ -365,7 +365,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.focus_distance
-        2*2**(1/2)
+        2*sqrt(2)
 
         """
         return Point.distance(self.center, self.foci[0])
@@ -393,7 +393,7 @@ class Ellipse(GeometryEntity):
         >>> p1 = Point(0, 0)
         >>> e1 = Ellipse(p1, 3, 1)
         >>> e1.foci
-        (Point(-2*2**(1/2), 0), Point(2*2**(1/2), 0))
+        (Point(-2*sqrt(2), 0), Point(2*sqrt(2), 0))
 
         """
         c = self.center
@@ -792,7 +792,7 @@ class Ellipse(GeometryEntity):
         seq = self.equation(x, y)
         oeq = o.equation(x, y)
         result = solve([seq, oeq], [x, y])
-        return [Point(*r) for r in result if im(r[0]).is_zero and im(r[1]).is_zero]
+        return [Point(*r) for r in result if im(r[0]).is_zero is not False and im(r[1]).is_zero is not False]
 
     def intersection(self, o):
         """The intersection of this ellipse and another geometrical entity
@@ -827,13 +827,13 @@ class Ellipse(GeometryEntity):
         []
         >>> e = Ellipse(Point(-1, 0), 4, 3)
         >>> e.intersection(Ellipse(Point(1, 0), 4, 3))
-        [Point(0, -3*15**(1/2)/4), Point(0, 3*15**(1/2)/4)]
+        [Point(0, -3*sqrt(15)/4), Point(0, 3*sqrt(15)/4)]
         >>> e.intersection(Ellipse(Point(5, 0), 4, 3))
-        [Point(2, -3*7**(1/2)/4), Point(2, 3*7**(1/2)/4)]
+        [Point(2, -3*sqrt(7)/4), Point(2, 3*sqrt(7)/4)]
         >>> e.intersection(Ellipse(Point(100500, 0), 4, 3))
         []
         >>> e.intersection(Ellipse(Point(0, 0), 3, 4))
-        [Point(-363/175, -48*111**(1/2)/175), Point(-363/175, 48*111**(1/2)/175),
+        [Point(-363/175, -48*sqrt(111)/175), Point(-363/175, 48*sqrt(111)/175),
         Point(3, 0)]
         >>> e.intersection(Ellipse(Point(-1, 0), 3, 4))
         [Point(-17/5, -12/5), Point(-17/5, 12/5), Point(7/5, -12/5),
@@ -920,7 +920,7 @@ class Circle(Ellipse):
     >>> # a circle costructed from three points
     >>> c2 = Circle(Point(0, 0), Point(1, 1), Point(1, 0))
     >>> c2.hradius, c2.vradius, c2.radius, c2.center
-    (2**(1/2)/2, 2**(1/2)/2, 2**(1/2)/2, Point(1/2, 1/2))
+    (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point(1/2, 1/2))
 
     """
     def __new__(cls, *args, **kwargs):
@@ -1045,7 +1045,7 @@ class Circle(Ellipse):
         >>> c1.intersection(p4)
         [Point(5, 0)]
         >>> c1.intersection(Ray(p1, p2))
-        [Point(5*2**(1/2)/2, 5*2**(1/2)/2)]
+        [Point(5*sqrt(2)/2, 5*sqrt(2)/2)]
         >>> c1.intersection(Line(p2, p3))
         []
 

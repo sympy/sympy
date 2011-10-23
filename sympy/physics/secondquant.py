@@ -4,6 +4,7 @@ Second quantization operators and states for bosons.
 This follow the formulation of Fetter and Welecka, "Quantum Theory
 of Many-Particle Systems."
 """
+from collections import defaultdict
 
 from sympy import (
     Basic, Expr, Function, Mul, sympify, Integer, Add, sqrt,
@@ -832,15 +833,16 @@ class FermionicOperator(SqOperator):
 
     def _sortkey(self):
         h = hash(self)
+        label = str(self.args[0])
 
         if self.is_only_q_creator:
-            return 1, h
+            return 1, label, h
         if self.is_only_q_annihilator:
-            return 4, h
+            return 4, label, h
         if isinstance(self, Annihilator):
-            return 3, h
+            return 3, label, h
         if isinstance(self, Creator):
-            return 2, h
+            return 2, label, h
 
 
 class AnnihilateFermion(FermionicOperator, Annihilator):
@@ -1530,7 +1532,7 @@ def matrix_rep(op, basis):
     """
     Find the representation of an operator in a basis.
     """
-    a = zeros((len(basis), len(basis)))
+    a = zeros(len(basis))
     for i in range(len(basis)):
         for j in range(len(basis)):
             a[i,j] = apply_operators(Dagger(basis[i])*op*basis[j])
@@ -2043,12 +2045,11 @@ class NO(Expr):
         """
         Iterates over the annihilation operators.
 
-        >>> from sympy import symbols, Dummy
-        >>> i,j,k,l = symbols('i j k l', below_fermi=True)
-        >>> p,q,r,s = symbols('p q r s', cls=Dummy)
-        >>> a,b,c,d = symbols('a b c d', above_fermi=True)
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j', below_fermi=True)
+        >>> a, b = symbols('a b', above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
-        >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
+        >>> no = NO(Fd(a)*F(i)*F(b)*Fd(j))
 
         >>> no.iter_q_creators()
         <generator object... at 0x...>
@@ -2070,12 +2071,11 @@ class NO(Expr):
         """
         Iterates over the creation operators.
 
-        >>> from sympy import symbols, Dummy
-        >>> i,j,k,l = symbols('i j k l',below_fermi=True)
-        >>> p,q,r,s = symbols('p q r s', cls=Dummy)
-        >>> a,b,c,d = symbols('a b c d',above_fermi=True)
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j',below_fermi=True)
+        >>> a, b = symbols('a b',above_fermi=True)
         >>> from sympy.physics.secondquant import NO, F, Fd
-        >>> no = NO(Fd(a)*F(i)*Fd(j)*F(b))
+        >>> no = NO(Fd(a)*F(i)*F(b)*Fd(j))
 
         >>> no.iter_q_creators()
         <generator object... at 0x...>
@@ -2107,8 +2107,7 @@ class NO(Expr):
 
         """
         arg0 = self.args[0] # it's a Mul by definition of how it's created
-        mul = Mul._new_rawargs(arg0, Mul._new_rawargs(arg0, arg0.args[:i]),
-                                     Mul._new_rawargs(arg0, arg0.args[i + 1:]))
+        mul = arg0._new_rawargs(arg0.args[:i] + arg0.args[i + 1:])
         return NO(mul)
 
     def _latex(self,printer):
@@ -2522,7 +2521,7 @@ def _get_ordered_dummies(mul, verbose = False):
     """Returns all dummies in the mul sorted in canonical order
 
     The purpose of the canonical ordering is that dummies can be substituted
-    consistently accross terms with the result that equivalent terms can be
+    consistently across terms with the result that equivalent terms can be
     simplified.
 
     It is not possible to determine if two terms are equivalent based solely on
@@ -2584,8 +2583,7 @@ def _get_ordered_dummies(mul, verbose = False):
     args = Mul.make_args(mul)
     fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
     fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
-    all_dums = list(reduce(
-        lambda x, y: x | y, fac_dum.values(), set()))
+    all_dums = reduce(set.union, fac_dum.values(), set())
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
@@ -2598,8 +2596,7 @@ def _get_ordered_dummies(mul, verbose = False):
 
     def key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
-        other_dums = reduce(lambda x, y: x | y,
-                [ fac_dum[fac] for fac in dumstruct ])
+        other_dums = reduce(set.union, [ fac_dum[fac] for fac in dumstruct ], set())
         fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()
@@ -2652,12 +2649,9 @@ def _get_ordered_dummies(mul, verbose = False):
     result = sorted(all_dums, key=lambda x: dumkey[x])
     if len(set(dumkey.itervalues())) < len(dumkey):
         # We have ambiguities
-        unordered = {}
+        unordered = defaultdict(set)
         for d, k in dumkey.iteritems():
-            if k in unordered:
-                unordered[k].add(d)
-            else:
-                unordered[k] = set([d])
+            unordered[k].add(d)
         for k in [ k for k in unordered if len(unordered[k]) < 2 ]:
             del unordered[k]
 

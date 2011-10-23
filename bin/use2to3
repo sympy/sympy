@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+
+"""
+This script converts SymPy code to a Python 3-compatible version.
+
+The script copies all files except the ones related to mpmath to a sympy-py3k
+directory, runs 2to3 on them and then copies the vanilla mpmath files over. We
+need this because running 2to3 on mpmath (which is already Python 3 compatible)
+produces errors. You can then use SymPy normally from the sympy-py3k directory
+(installing it or importing it directly).
+
+Because copying and running 2to3 can take a lot of time, we try to do it only on
+files that have been modified since the last run.
+
+Note that the 2to3 shipped with Python 2.6 crashes when converting doctests. It
+is recommended to use the Python 3.2 version (or newer) as it is much faster.
+
+TODO: Add --destination argument (others?)
+ --destination # copy over the source to a user-specified destination
+"""
+
+import os
+import re
+import sys
+import fnmatch
+import shutil
+
+destination = "sympy-py3k" # directory to copy to
+
+# TODO: build this from .gitignore
+skip_dirs = (
+    '.*',       # skip hidden dirs; .git and .tox in particular can be quite big
+    'mpmath',   # everything related to mpmath, both in doc/ and sympy/
+    '_build',   # files built by Sphinx
+    '__pycache__',
+    'covhtml',  # files produced by bin/test_coverage
+    'my',       # the user can have stuff here we don't want to copy
+    destination # this prevents infinite recursion if the dir already exists
+    )
+
+skip_files = (
+    '*.pyc',
+    '.*',
+    'ast_parser_python25.py', # this files produces doctest errors under py3k
+                              # as we need it only for 2.5, just skip copying it
+    )
+
+modified_files = []
+modified_txt_files = []
+
+# we need to run 2to3 on .txt files; however, not all .txt files are doctests,
+# so we need a list of files we care about
+relevant_txt_files = []
+
+# generate the relevant txt files
+# most of them should be in this directory:
+for root, dirs, files in os.walk('./doc/src/modules'):
+    # NOTE: this will consider mpmath-related files relevant, but it doesn't matter
+    for filename in fnmatch.filter(files, '*.txt'):
+        relevant_txt_files.append(os.path.join(root, filename))
+
+# some files aren't in /doc/src/modules, add them explicitly
+relevant_txt_files.append('./doc/src/tutorial.txt')
+relevant_txt_files.append('./doc/src/gotchas.txt')
+relevant_txt_files.append('./doc/src/guide.txt')
+relevant_txt_files.append('./doc/src/python-comparisons.txt')
+
+# walk the tree and copy over files as necessary
+for root, dirs, files in os.walk('.'):
+    for pattern in skip_dirs:
+        for directory in fnmatch.filter(dirs, pattern):
+            dirs.remove(directory)
+    for pattern in skip_files:
+        for filename in fnmatch.filter(files, pattern):
+            files.remove(filename)
+    for directory in dirs:
+        dstdir = os.path.normpath(os.path.join(destination, root, directory))
+        if not os.path.exists(dstdir):
+            os.makedirs(dstdir)
+    for filename in files:
+        src = os.path.join(root, filename)
+        dst = os.path.normpath(os.path.join(destination, root, filename))
+        if os.path.isfile(dst):
+            if os.path.getmtime(src) - os.path.getmtime(dst) < 1:
+                # the file hasn't been modified since the last run, so skip it
+                # we check for one second of difference because Python can be
+                # imprecise (when copying) with smaller time periods
+                continue
+        shutil.copy2(src, dst)
+        # add to the list of files to pass to 2to3 if needed
+        if filename.endswith(".py"):
+            modified_files.append(dst)
+        elif filename.endswith(".txt"):
+            # we need to check the exact path here, not just the filename
+            # as there are eg. multiple index.txt files and not all are relevant
+            if src in relevant_txt_files:
+                modified_txt_files.append(dst)
+
+# arguments to call 2to3 with
+args_2to3 = [
+    "-w",         # writes back the changes
+    "-n",         # doesn't write a backup file
+    "--no-diffs", # don't show the diffs for individual files
+]
+
+args_2to3_doctests = args_2to3 + ["-d"] # convert doctests too
+
+# extend the argument list with the list of files that need it
+args_2to3.extend(modified_files)
+args_2to3_doctests.extend(modified_files)
+args_2to3_doctests.extend(modified_txt_files)
+
+# call 2to3, once for regular files and once for doctests
+from lib2to3.main import main as main2to3
+main2to3("lib2to3.fixes", args_2to3)
+main2to3("lib2to3.fixes", args_2to3_doctests)
+
+# remove trailing whitespace that was added by 2to3
+whitespace = re.compile(" +$", re.MULTILINE)
+
+for filepath in modified_files + modified_txt_files:
+    with open(filepath, 'r') as f:
+        text = f.read()
+
+    text, n = whitespace.subn("", text)
+
+    if n > 0:
+        sys.stdout.write("Removed trailing whitespace from %s\n" % filepath)
+
+        with open(filepath, 'w') as f:
+            f.write(text)
+
+# once we are finished with everything, we should finally copy over the files
+# provided by mpmath; these should all be in the following two directories
+
+# to skip checking if something has been updated, just copy everything always
+# the main bottleneck is running 2to3, not copying files
+# TODO: only copy updated files; this would need a heavy modification to the
+#       above code, or copy-pasting the relevant part over
+try:
+    shutil.rmtree(os.path.join(destination, "./sympy/mpmath"))
+    shutil.rmtree(os.path.join(destination, "./doc/src/modules/mpmath"))
+except OSError: # directories don't exist
+    pass
+
+shutil.copytree("sympy/mpmath", os.path.join(destination, "./sympy/mpmath"))
+shutil.copytree("doc/src/modules/mpmath", os.path.join(destination, "./doc/src/modules/mpmath"))

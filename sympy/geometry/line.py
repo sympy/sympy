@@ -18,6 +18,10 @@ from entity import GeometryEntity
 from point import Point
 from util import _symbol
 
+# TODO: this should be placed elsewhere and reused in other modules
+class Undecidable(ValueError):
+    pass
+
 class LinearEntity(GeometryEntity):
     """An abstract base class for all linear entities (line, ray and segment)
     in a 2-dimensional Euclidean space.
@@ -1121,7 +1125,7 @@ class Ray(LinearEntity):
         >>> from sympy import Point, Ray, pi
         >>> r = Ray((0, 0), angle=pi/4)
         >>> r.plot_interval()
-        [t, 0, 5*2**(1/2)/(1 + 5*2**(1/2))]
+        [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
 
         """
         t = _symbol(parameter)
@@ -1212,7 +1216,7 @@ class Segment(LinearEntity):
     >>> s.slope
     2/3
     >>> s.length
-    13**(1/2)
+    sqrt(13)
     >>> s.midpoint
     Point(5/2, 2)
 
@@ -1398,21 +1402,29 @@ class Segment(LinearEntity):
     def __hash__(self):
         return super(Segment, self).__hash__()
 
-    def __contains__(self, o):
+    def contains(self, other):
         """Is the other GeometryEntity contained within this Ray?"""
-        if isinstance(o, Segment):
-            return o.p1 in self and o.p2 in self
-        elif isinstance(o, Point):
-            if Point.is_collinear(self.p1, self.p2, o):
+        if isinstance(other, Segment):
+            return other.p1 in self and other.p2 in self
+        elif isinstance(other, Point):
+            if Point.is_collinear(self.p1, self.p2, other):
                 t = Dummy('t')
                 x, y = self.arbitrary_point(t)
                 if self.p1.x != self.p2.x:
-                    ti = solve(x - o.x, t)[0]
+                    ti = solve(x - other.x, t)[0]
                 else:
-                    ti = solve(y - o.y, t)[0]
+                    ti = solve(y - other.y, t)[0]
                 if ti.is_number:
                     return 0 <= ti <= 1
                 return None
 
         # No other known entity can be contained in a Ray
         return False
+
+    def __contains__(self, other):
+        result = self.contains(other)
+
+        if result is not None:
+            return result
+        else:
+            raise Undecidable("can't decide whether '%s' contains '%s'" % (self, other))

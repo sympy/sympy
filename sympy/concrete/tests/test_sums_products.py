@@ -56,6 +56,13 @@ def test_composite_sums():
 def test_hypergeometric_sums():
     assert summation(binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
 
+def test_other_sums():
+    f = m**2 + m*exp(m)
+    g = 3*exp(S(3)/2)/2 + exp(S(1)/2)/2 - exp(-S(1)/2)/2 - 3*exp(-S(3)/2)/2 + 5
+
+    assert summation(f, (m, -S(3)/2, S(3)/2)).expand() == g
+    assert summation(f, (m, -1.5, 1.5)).evalf().epsilon_eq(g.evalf(), 1e-10)
+
 fac = factorial
 
 def NS(e, n=15, **options):

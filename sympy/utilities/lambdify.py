@@ -4,7 +4,7 @@ lambda functions which can be used to calculate numerical values very fast.
 """
 
 from __future__ import division
-from sympy.core.sympify import sympify
+from sympy.external import import_module
 from sympy.core.compatibility import is_sequence
 
 import inspect
@@ -48,6 +48,7 @@ MPMATH_TRANSLATIONS = {
 }
 
 NUMPY_TRANSLATIONS = {
+    "Abs":"abs",
     "acos":"arccos",
     "acosh":"arccosh",
     "arg":"angle",
@@ -69,12 +70,12 @@ NUMPY_TRANSLATIONS = {
 
 # Available modules:
 MODULES = {
-    "math":(MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
-    "mpmath":(MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
-    "numpy":(NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("from numpy import *",)),
-    "sympy":(SYMPY, SYMPY_DEFAULT, {}, ("from sympy.functions import *",
-                         "from sympy.matrices import Matrix",
-                         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "math"   : (MATH,   MATH_DEFAULT,   MATH_TRANSLATIONS,   ("from math import *",)),
+    "mpmath" : (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
+    "numpy"  : (NUMPY,  NUMPY_DEFAULT,  NUMPY_TRANSLATIONS,  ("import_module('numpy')",)),
+    "sympy"  : (SYMPY,  SYMPY_DEFAULT,  {},                  ("from sympy.functions import *",
+                                                              "from sympy.matrices import Matrix",
+                                                              "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
 }
 
 def _import(module, reload="False"):
@@ -86,10 +87,11 @@ def _import(module, reload="False"):
     These dictionaries map names of python functions to their equivalent in
     other modules.
     """
-    # TODO: rewrite this using import_module from sympy.external
-    if not module in MODULES:
-        raise NameError("This module can't be used for lambdification.")
-    namespace, namespace_default, translations, import_commands = MODULES[module]
+    try:
+        namespace, namespace_default, translations, import_commands = MODULES[module]
+    except KeyError:
+        raise NameError("'%s' module can't be used for lambdification" % module)
+
     # Clear namespace or exit
     if namespace != namespace_default:
         # The namespace was already generated, don't do it again if not forced.
@@ -99,12 +101,21 @@ def _import(module, reload="False"):
         else:
             return
 
-    # It's possible that numpy is not available.
     for import_command in import_commands:
-        try:
-            exec import_command in {}, namespace
-        except ImportError:
-            raise ImportError("Can't import %s with command %s" % (module, import_command))
+        if import_command.startswith('import_module'):
+            module = eval(import_command)
+
+            if module is not None:
+                namespace.update(module.__dict__)
+                continue
+        else:
+            try:
+                exec import_command in {}, namespace
+                continue
+            except ImportError:
+                pass
+
+        raise ImportError("can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
     for sympyname, translation in translations.iteritems():
@@ -193,16 +204,20 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     parameter is False.
     """
     from sympy.core.symbol import Symbol
+
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
         # Use either numpy (if available) or python.math where possible.
         # XXX: This leads to different behaviour on different systems and
         #      might be the reason for irreproducible errors.
+        modules = ["math", "mpmath", "sympy"]
+
         try:
             _import("numpy")
-            modules = ("math", "numpy", "mpmath", "sympy")
         except ImportError:
-            modules = ("math", "mpmath", "sympy")
+            pass
+        else:
+            modules.insert(1, "numpy")
 
     # Get the needed namespaces.
     namespaces = []

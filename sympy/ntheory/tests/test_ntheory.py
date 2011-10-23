@@ -3,7 +3,7 @@ from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
 from sympy import factorial as fac
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
-    is_quad_residue, legendre_symbol, npartitions, totient, \
+    is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
     factorint, primefactors, divisors, randprime, nextprime, prevprime, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1
@@ -323,6 +323,9 @@ def divisors_and_divisor_count():
     assert divisor_count(6) == 4
     assert divisor_count(12) == 6
 
+    assert divisor_count(180, 3) == divisor_count(180//3)
+    assert divisor_count(2*3*5, 7) == 0
+
 def test_totient():
     assert [totient(k) for k in range(1, 12)] == \
         [1, 1, 2, 2, 4, 2, 6, 4, 6, 4, 10]
@@ -355,12 +358,35 @@ def test_residue():
 
     assert is_quad_residue(3, 7) == False
     assert is_quad_residue(10, 13) == True
-    assert is_quad_residue(12364, 139) == is_quad_residue(132, 139)
+    assert is_quad_residue(12364, 139) == is_quad_residue(12364 % 139, 139)
     assert is_quad_residue(207, 251) == True
+    assert is_quad_residue(0, 1) == True
+    assert is_quad_residue(1, 1) == True
+    assert is_quad_residue(0, 2) == is_quad_residue(1, 2) == True
+    assert is_quad_residue(1, 4) == True
+    assert is_quad_residue(2, 27) == False
+    assert [j for j in range(14) if is_quad_residue(j, 14)] == \
+           [0, 1, 2, 4, 7, 8, 9, 11]
+    raises(ValueError, 'is_quad_residue(1.1, 2)')
 
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1
     assert legendre_symbol(67, 101) == -1
+    assert legendre_symbol(0, 13) == 0
+    assert legendre_symbol(9, 3) == 0
+    raises(ValueError, 'legendre_symbol(2, 4)')
+
+    assert jacobi_symbol(25, 41) == 1
+    assert jacobi_symbol(-23, 83) == -1
+    assert jacobi_symbol(3, 9) == 0
+    assert jacobi_symbol(42, 97) == -1
+    assert jacobi_symbol(3, 5) == -1
+    assert jacobi_symbol(7, 9) == 1
+    assert jacobi_symbol(0, 3) == 0
+    assert jacobi_symbol(0, 1) == 1
+    assert jacobi_symbol(2, 1) == 1
+    assert jacobi_symbol(1, 3) == 1
+    raises(ValueError, 'jacobi_symbol(3, 8)')
 
 def test_hex_pi_nth_digits():
     assert pi_hex_digits(0) == '3243f6a8885a30'

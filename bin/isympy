@@ -51,9 +51,10 @@ import os, sys
 
 # hook in-tree SymPy into Python path, if possible
 
-isympy_dir = os.path.dirname(__file__)         # bin/isympy
-sympy_top  = os.path.split(isympy_dir)[0]      # ../
-sympy_dir  = os.path.join(sympy_top, 'sympy')  # ../sympy/
+isympy_path = os.path.abspath(__file__)
+isympy_dir  = os.path.dirname(isympy_path)
+sympy_top   = os.path.split(isympy_dir)[0]
+sympy_dir   = os.path.join(sympy_top, 'sympy')
 
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
@@ -93,8 +94,8 @@ def main():
         dest='order',
         action='store',
         default=None,
-        choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'old'],
-        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old')
+        choices=['lex', 'grlex', 'grevlex', 'rev-lex', 'rev-grlex', 'rev-grevlex', 'old', 'none'],
+        help='setup ordering of terms: [rev-]lex | [rev-]grlex | [rev-]grevlex | old | none')
 
     parser.add_option(
         '-q', '--quiet',
@@ -116,6 +117,13 @@ def main():
         action='store_false',
         default=True,
         help='disable caching mechanism')
+
+    parser.add_option(
+        '-a', '--auto',
+        dest='auto',
+        action='store_true',
+        default=False,
+        help='automatically construct missing symbols')
 
     (options, ipy_args) = parser.parse_args()
 
@@ -154,6 +162,7 @@ def main():
         args['order'] = options.order
 
     args['quiet'] = options.quiet
+    args['auto'] = options.auto
 
     from sympy.interactive import init_session
     init_session(ipython, **args)

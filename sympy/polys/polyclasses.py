@@ -1,7 +1,5 @@
 """OO layer for several polynomial representations. """
 
-from sympy.core.compatibility import cmp
-
 class GenericPoly(object):
     """Base class for low-level polynomial representations. """
 
@@ -116,7 +114,7 @@ from sympy.polys.sqfreetools import (
     dmp_sqf_list, dmp_sqf_list_include)
 
 from sympy.polys.factortools import (
-    dup_zz_cyclotomic_p,
+    dup_cyclotomic_p, dmp_irreducible_p,
     dup_factor_list, dup_factor_list_include,
     dmp_factor_list, dmp_factor_list_include)
 
@@ -495,7 +493,23 @@ class DMP(object):
 
     def total_degree(f):
         """Returns the total degree of `f`. """
-        return sum(dmp_degree_list(f.rep, f.lev))
+        return max([sum(m) for m in f.monoms()])
+
+    def homogeneous_order(f):
+        """Returns the homogeneous order of `f`. """
+        if f.is_zero:
+            return -1
+
+        monoms = f.monoms()
+        tdeg = sum(monoms[0])
+
+        for monom in monoms:
+            _tdeg = sum(monom)
+
+            if _tdeg != tdeg:
+                return None
+
+        return tdeg
 
     def LC(f):
         """Returns the leading coefficent of `f`. """
@@ -779,12 +793,12 @@ class DMP(object):
     @property
     def is_linear(f):
         """Returns `True` if `f` is linear in all its variables. """
-        return all([ sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+        return all(sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
 
     @property
     def is_quadratic(f):
         """Returns `True` if `f` is quadratic in all its variables. """
-        return all([ sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys() ])
+        return all(sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
 
     @property
     def is_monomial(f):
@@ -793,14 +807,19 @@ class DMP(object):
 
     @property
     def is_homogeneous(f):
-        """Returns `True` if `f` has zero trailing coefficient. """
-        return f.dom.is_zero(dmp_ground_TC(f.rep, f.lev, f.dom))
+        """Returns ``True`` if ``f`` is a homogeneous polynomial. """
+        return f.homogeneous_order() is not None
+
+    @property
+    def is_irreducible(f):
+        """Returns ``True`` if ``f`` has no factors over its domain. """
+        return dmp_irreducible_p(f.rep, f.lev, f.dom)
 
     @property
     def is_cyclotomic(f):
-        """Returns ``True`` if ``f`` is a cyclotomic polnomial. """
+        """Returns ``True`` if ``f`` is a cyclotomic polynomial. """
         if not f.lev:
-            return dup_zz_cyclotomic_p(f.rep, f.dom)
+            return dup_cyclotomic_p(f.rep, f.dom)
         else:
             return False
 
@@ -876,15 +895,21 @@ class DMP(object):
         return False
 
     def __ne__(f, g):
-        try:
-            _, _, _, F, G = f.unify(g)
+        return not f.__eq__(g)
 
-            if f.lev == g.lev:
-                return F != G
-        except UnificationFailed:
-            pass
+    def eq(f, g, strict=False):
+        if not strict:
+            return f.__eq__(g)
+        else:
+            return f._strict_eq(g)
 
-        return True
+    def ne(f, g, strict=False):
+        return not f.eq(g, strict=strict)
+
+    def _strict_eq(f, g):
+        return isinstance(g, f.__class__) and f.lev == g.lev \
+                                          and f.dom == g.dom \
+                                          and f.rep == g.rep
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)

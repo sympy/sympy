@@ -1,13 +1,14 @@
 """Base class for all the objects in SymPy"""
 
-from assumptions import AssumeMeths, make__get_assumption
+from decorators import _sympifyit
+from assumptions import WithAssumptions
 from cache import cacheit
-from core import BasicMeta, BasicType, C
+from core import BasicType, C
 from sympify import _sympify, sympify, SympifyError
 from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 
-class Basic(AssumeMeths):
+class Basic(object):
     """
     Base class for all objects in sympy.
 
@@ -41,12 +42,9 @@ class Basic(AssumeMeths):
 
 
     """
-
-    __metaclass__ = BasicMeta
-
+    __metaclass__ = WithAssumptions
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
-                 '_assume_type_keys',   # assumptions typeinfo keys
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -72,104 +70,24 @@ class Basic(AssumeMeths):
     is_Equality = False
     is_Boolean = False
     is_Not = False
+    is_Matrix = False
 
     @property
     @deprecated
     def is_Real(self):  # pragma: no cover
         """Deprecated alias for ``is_Float``"""
+        # When this is removed, remove the piece of code disabling the warning
+        # from test_pickling.py
         return self.is_Float
 
     def __new__(cls, *args, **assumptions):
         obj = object.__new__(cls)
-
-        # FIXME we are slowed a *lot* by Add/Mul passing is_commutative as the
-        # only assumption.
-        #
-        # .is_commutative is not an assumption -- it's like typeinfo!!!
-        # we should remove it.
-
-        # initially assumptions are shared between instances and class
-        obj._assumptions  = cls.default_assumptions
-        obj._a_inprogress = []
-
-        # NOTE this could be made lazy -- probably not all instances will need
-        # fully derived assumptions?
-        if assumptions:
-            obj._learn_new_facts(assumptions)
-            #                      ^
-            # FIXME this is slow   |    another NOTE: speeding this up is *not*
-            #        |             |    important. say for %timeit x+y most of
-            # .------'             |    the time is spent elsewhere
-            # |                    |
-            # |  XXX _learn_new_facts  could be asked about what *new* facts have
-            # v  XXX been learned -- we'll need this to append to _hashable_content
-            basek = set(cls.default_assumptions.keys())
-            k2    = set(obj._assumptions.keys())
-            newk  = k2.difference(basek)
-
-            obj._assume_type_keys = frozenset(newk)
-        else:
-            obj._assume_type_keys = None
+        obj._init_assumptions(assumptions)
 
         obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
         return obj
 
-
-    # XXX better name?
-    @property
-    def assumptions0(self):
-        """
-        Return object ``type`` assumptions.
-
-        For example:
-
-          Symbol('x', real=True)
-          Symbol('x', integer=True)
-
-        are different objects. In other words, besides Python type (Symbol in
-        this case), the initial assumptions are also forming their typeinfo.
-
-        Example:
-
-        >>> from sympy import Symbol
-        >>> from sympy.abc import x
-        >>> x.assumptions0
-        {}
-        >>> x = Symbol("x", positive=True)
-        >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'imaginary': False,
-        'negative': False, 'nonnegative': True, 'nonpositive': False,
-        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
-
-        """
-
-        cls = type(self)
-        A   = self._assumptions
-
-        # assumptions shared:
-        if A is cls.default_assumptions or (self._assume_type_keys is None):
-            assumptions0 = {}
-        else:
-            assumptions0 = dict( (k, A[k]) for k in self._assume_type_keys )
-
-        return assumptions0
-
-
-    # NOTE NOTE NOTE
-    # --------------
-    #
-    # new-style classes + __getattr__ is *very* slow!
-
-    # def __getattr__(self, name):
-    #     raise Warning('no way, *all* attribute access will be 2.5x slower')
-
-    # here is what we do instead:
-    for k in AssumeMeths._assume_defined:
-        exec "is_%s  = property(make__get_assumption('Basic', '%s'))" % (k,k)
-    del k
-
-    # NB: there is no need in protective __setattr__
 
     def __getnewargs__(self):
         """ Pickling support.
@@ -206,6 +124,31 @@ class Basic(AssumeMeths):
         # then this method should be updated accordingly to return
         # relevant attributes as tuple.
         return self._args
+
+    def __getstate__(self, cls=None):
+        if cls is None:
+            # This is the case for the instance that gets pickled
+            cls = self.__class__
+
+        d = {}
+        # Get all data that should be stored from super classes
+        for c in cls.__bases__:
+            if hasattr(c, "__getstate__"):
+                d.update(c.__getstate__(self, c))
+
+        # Get all information that should be stored from cls and return the dic
+        for name in cls.__slots__:
+            if hasattr(self, name):
+                d[name] = getattr(self, name)
+        return d
+
+    def __setstate__(self, d):
+        # All values that were pickled are now assigned to a fresh instance
+        for name, value in d.iteritems():
+            try:
+                setattr(self, name, value)
+            except:
+                pass
 
     def compare(self, other):
         """
@@ -270,6 +213,7 @@ class Basic(AssumeMeths):
         return Basic.compare(a,b)
 
     @staticmethod
+    @deprecated
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?
@@ -349,6 +293,7 @@ class Basic(AssumeMeths):
         """Nice order of classes. """
         return 5, 0, cls.__name__
 
+    @cacheit
     def sort_key(self, order=None):
         """
         Return a sort key.
@@ -362,14 +307,22 @@ class Basic(AssumeMeths):
         [1/2, -I, I]
 
         >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
-        [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
+        [x, 1/x, x**(-2), x**2, sqrt(x), x**(1/4), x**(3/2)]
         >>> sorted(_, key=lambda x: x.sort_key())
-        [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
+        [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]
 
         """
         from sympy.core.singleton import S
-        return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
 
+        # XXX: remove this when issue #2070 is fixed
+        def inner_key(arg):
+            if isinstance(arg, Basic):
+                return arg.sort_key()
+            else:
+                return arg
+
+        args = len(self.args), tuple([ inner_key(arg) for arg in self.args ])
+        return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal
@@ -665,10 +618,11 @@ class Basic(AssumeMeths):
         >>> (x*y).args[1]
         y
 
-        Note for developers: Never use self._args, always use self.args.
-        Only when you are creating your own new function, use _args
-        in the __new__. Don't override .args() from Basic (so that it's
-        easy to change the interface in the future if needed).
+        ** Developer Notes **
+            Never use self._args, always use self.args.
+            Only use _args in __new__ when creating a new function.
+            Don't override .args() from Basic (so that it's easy to
+            change the interface in the future if needed).
         """
         return self._args
 
@@ -681,7 +635,7 @@ class Basic(AssumeMeths):
         >>> from sympy.abc import x
         >>> a = 2*x
         >>> a.iter_basic_args()
-        <tupleiterator object at 0x...>
+        <...iterator object at 0x...>
         >>> list(a.iter_basic_args())
         [2, x]
 
@@ -815,6 +769,8 @@ class Basic(AssumeMeths):
            a*c*sin(d*e) + b
 
         """
+        sequence = sympify(sequence)
+
         if isinstance(sequence, dict):
             sequence = sequence.items()
 
@@ -822,7 +778,7 @@ class Basic(AssumeMeths):
 
         for pattern in sequence:
             for i, (expr, _) in enumerate(subst):
-                if pattern[0] in expr:
+                if expr.has(pattern[0]):
                     subst.insert(i, pattern)
                     break
             else:
@@ -831,7 +787,7 @@ class Basic(AssumeMeths):
 
         return self._subs_list(subst)
 
-
+    @deprecated
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -868,25 +824,68 @@ class Basic(AssumeMeths):
         False
 
         """
-        def search(expr, test):
-            if not isinstance(expr, Basic):
-                try:
-                    return any(search(i, test) for i in expr)
-                except TypeError:
-                    return False
-            elif test(expr):
+        def _ncsplit(expr):
+            if expr.is_Add or expr.is_Mul:
+                cpart, ncpart = [], []
+
+                for arg in expr.args:
+                    if arg.is_commutative:
+                        cpart.append(arg)
+                    else:
+                        ncpart.append(arg)
+            elif expr.is_commutative:
+                cpart, ncpart = [expr], []
+            else:
+                cpart, ncpart = [], [expr]
+
+            return set(cpart), ncpart
+
+        def _contains(expr, subexpr, iterative, c, nc):
+            if expr == subexpr:
                 return True
-            else:
-                return any(search(i, test) for i in expr.iter_basic_args())
+            elif not isinstance(expr, Basic):
+                return False
+            elif iterative and (expr.is_Add or expr.is_Mul):
+                _c, _nc = _ncsplit(expr)
 
-        def _match(p):
-            if isinstance(p, BasicType):
-                return lambda w: isinstance(w, p)
-            else:
-                return lambda w: p.matches(w) is not None
+                if (c & _c) == c:
+                    if not nc:
+                        return True
+                    elif len(nc) <= len(_nc):
+                        for i in xrange(len(_nc) - len(nc)):
+                            if _nc[i:i+len(nc)] == nc:
+                                return True
 
-        patterns = map(sympify, patterns)
-        return any(search(self, _match(p)) for p in patterns)
+            return False
+
+        def _match(pattern):
+            pattern = sympify(pattern)
+
+            if isinstance(pattern, BasicType):
+                return lambda expr: (isinstance(expr, pattern) or
+                    (isinstance(expr, BasicType) and expr == pattern))
+            else:
+                if pattern.is_Add or pattern.is_Mul:
+                    iterative, (c, nc) = True, _ncsplit(pattern)
+                else:
+                    iterative, (c, nc) = False, (None, None)
+
+                return lambda expr: _contains(expr, pattern, iterative, c, nc)
+
+        def _search(expr, match):
+            if match(expr):
+                return True
+
+            if isinstance(expr, Basic):
+                args = expr.args
+            elif iterable(expr):
+                args = expr
+            else:
+                return False
+
+            return any(_search(arg, match) for arg in args)
+
+        return any(_search(self, _match(pattern)) for pattern in patterns)
 
     def replace(self, query, value, map=False):
         """
@@ -1012,6 +1011,8 @@ class Basic(AssumeMeths):
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
+        if not callable(query):
+            query = sympify(query)
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
         elif isinstance(query, Basic):
@@ -1022,7 +1023,8 @@ class Basic(AssumeMeths):
         results = []
 
         def rec_find(expr):
-            if _query(expr):
+            q = _query(expr)
+            if q or q == {}:
                 results.append(expr)
 
             for arg in expr.args:
@@ -1180,7 +1182,10 @@ class Basic(AssumeMeths):
             return self
         else:
             pattern = args[:-1]
-            rule = '_eval_rewrite_as_' + str(args[-1])
+            if isinstance(args[-1], basestring):
+                rule = '_eval_rewrite_as_' + args[-1]
+            else:
+                rule = '_eval_rewrite_as_' + args[-1].__name__
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
@@ -1220,6 +1225,7 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
+    @deprecated
     def __contains__(self, obj):
         return (self == obj)
 
@@ -1227,6 +1233,7 @@ class Atom(Basic):
     def class_key(cls):
         return 2, 0, cls.__name__
 
+    @cacheit
     def sort_key(self, order=None):
         from sympy.core import S
-        return self.class_key(), (1, (self,)), S.One.sort_key(), S.One
+        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One

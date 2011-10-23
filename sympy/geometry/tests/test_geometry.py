@@ -2,7 +2,8 @@ from sympy import (Abs, C, Dummy, Max, Min, Rational, Float, S, Symbol, cos, oo,
                    pi, simplify, sqrt, symbols)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
-                            are_similar, convex_hull, intersection)
+                            are_similar, convex_hull, intersection, centroid)
+from sympy.geometry.line import Undecidable
 from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x', real=True)
@@ -212,7 +213,8 @@ def test_line():
     assert Point(0, (a + b)/2) in s
     s = Segment((a, 0), (b, 0))
     assert Point((a + b)/2, 0) in s
-    assert (Point(2*a, 0) in s) is False # XXX should be None?
+
+    raises(Undecidable, "Point(2*a, 0) in s")
 
     # Testing distance from a Segment to an object
     s1 = Segment(Point(0, 0), Point(1, 1))
@@ -394,7 +396,11 @@ def test_ellipse():
     e2 = Ellipse(Point(2, 1), 4, 8)
     a = S(53)/17
     c = 2*sqrt(3991)/17
-    assert e1.intersection(e2) == [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
+    ans = [Point(a - c/8, a/2 + c), Point(a + c/8, a/2 - c)]
+    assert e1.intersection(e2) == ans
+    e2 = Ellipse(Point(x, y), 4, 8)
+    ans = list(reversed(ans))
+    assert [p.subs({x: 2, y:1}) for p in e1.intersection(e2)] == ans
 
     # Combinations of above
     assert e3.is_tangent(e3.tangent_lines(p1 + Point(y1, 0))[0])
@@ -658,6 +664,7 @@ def test_subs():
               Circle(p, 3),
               Ellipse(p, 3, 4)]:
         assert 'y' in str(o.subs(x, y))
+    assert p.subs({x: 1}) == Point(1, 2)
 
 def test_encloses():
     # square with a dimpled left side
@@ -683,3 +690,18 @@ def test_free_symbols():
     assert Circle((a,b),(c,d),(e,f)).free_symbols == set([e, d, c, b, f, a])
     assert Polygon((a,b),(c,d),(e,f)).free_symbols == set([e, b, d, f, a, c])
     assert RegularPolygon((a,b),c,d,e).free_symbols == set([e, a, b, c, d])
+
+@XFAIL
+def test_subsx():
+    """ this is fixed in smichr's subs_cleanup """
+    assert Point(1, 2).subs(Point(1,2), Point(3,4)) == Point(3, 4)
+
+def test_util_centroid():
+    p = Polygon((0,0),(10,0),(10,10))
+    q = p.translate(0,20)
+    assert centroid(p, q) == Point(20, 40)/3
+    p = Segment((0,0),(2,0))
+    q = Segment((0,0),(2,2))
+    assert centroid(p, q) == Point(1, 2*sqrt(2)/(2 + 2*sqrt(2)))
+    assert centroid(Point(0,0), Point(2,0)) == Point(2, 0)/2
+    assert centroid(Point(0,0), Point(0,0), Point(2,0)) == Point(2, 0)/3

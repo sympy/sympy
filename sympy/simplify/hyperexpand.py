@@ -118,7 +118,7 @@ def add_formulae(formulae):
     def fm(a,z): return besseli(a, x) - besselj(a, x)
     addb([], [S.Half, a, a+S.Half],
          Matrix([fp(2*a - 1, z), fm(2*a, z)*z**(S(1)/4),
-                 fm(2*a - 1, z)*z**(S(1)/2), fp(2*a, z)*z**(S(3)/4)])
+                 fm(2*a - 1, z)*sqrt(z), fp(2*a, z)*z**(S(3)/4)])
            * 2**(-2*a)*gamma(2*a)*z**((1-2*a)/4),
          Matrix([[1, 0, 0, 0]]),
          Matrix([[0, 1, 0, 0],
@@ -215,6 +215,10 @@ class Mod1(object):
 
     def __repr__(self):
         return str(self.expr) + ' % 1'
+
+    #Needed to allow adding Mod1 objects to a dict in Python 3
+    def __hash__(self):
+        return super(Mod1, self).__hash__()
 
     def __eq__(self, other):
         from sympy import simplify
@@ -385,7 +389,8 @@ class IndexQuadruple(object):
         >>> from sympy.abc import y
         >>> from sympy import S
         >>> IndexQuadruple([1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3], [2], [y]).compute_buckets()
-        ({0: [3, 2, 1], 1/2: [3/2]}, {y + 1 % 1: [y, y + 1, y + 3], 0: [2]}, {0: [2]}, {y + 1 % 1: [y]})
+        ({0: [3, 2, 1], 1/2: [3/2]}, {0: [2], y + 1 % 1: [y, y + 1, y + 3]}, {0: [2]}, {y + 1 % 1: [y]})
+
         """
         mod1s = []
         pan, pap, pbm, pbq = {}, {}, {}, {}
@@ -476,7 +481,7 @@ class Formula(object):
         self.C = Matrix([[1] + [0]*n])
 
         m = eye(n)
-        m = m.col_insert(0, zeros((n, 1)))
+        m = m.col_insert(0, zeros(n, 1))
         l = poly.all_coeffs()[1:]
         l.reverse()
         self.M = m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])
@@ -681,7 +686,7 @@ class FormulaCollection(object):
 
         >>> from sympy import S
         >>> f.lookup_origin(IndexPair([S('1/4'), S('3/4 + 4')], [S.Half])).closed_form
-        1/(2*(_z**(1/2) + 1)**(17/2)) + 1/(2*(-_z**(1/2) + 1)**(17/2))
+        1/(2*(sqrt(_z) + 1)**(17/2)) + 1/(2*(-sqrt(_z) + 1)**(17/2))
         """
         inv = ip.build_invariants()
         sizes = ip.sizes

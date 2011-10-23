@@ -9,7 +9,10 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from sympy import Expr
+from itertools import count
+
+from sympy import Expr, Symbol, diff, Integer, Function, Tuple, Derivative
+from sympy.core.function import UndefinedFunction
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 
@@ -21,7 +24,8 @@ __all__ = [
     'Operator',
     'HermitianOperator',
     'UnitaryOperator',
-    'OuterProduct'
+    'OuterProduct',
+    'DifferentialOperator'
 ]
 
 #-----------------------------------------------------------------------------
@@ -82,7 +86,7 @@ class Operator(QExpr):
     Operator inverses are handle symbolically::
 
         >>> A.inv()
-        1/A
+        A**(-1)
         >>> A*A.inv()
         1
 
@@ -93,6 +97,9 @@ class Operator(QExpr):
     [2] http://en.wikipedia.org/wiki/Observable
     """
 
+    @classmethod
+    def default_args(self):
+        return ("O",)
     #-------------------------------------------------------------------------
     # Printing
     #-------------------------------------------------------------------------
@@ -234,7 +241,7 @@ class UnitaryOperator(Operator):
 
 
 class OuterProduct(Operator):
-    """An unevaluated outer product between a ket and kra.
+    """An unevaluated outer product between a ket and bra.
 
     This constructs an outer product between any subclass of KetBase and
     BraBase as |a><b|. An OuterProduct inherits from Operator as they act as
@@ -302,7 +309,7 @@ class OuterProduct(Operator):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
-        if not ket.dual_class == bra.__class__:
+        if not ket.dual_class() == bra.__class__:
             raise TypeError(
                 'ket and bra are not dual classes: %r, %r' % \
                 (ket.__class__, bra.__class__)
@@ -345,3 +352,163 @@ class OuterProduct(Operator):
         k = self.ket._represent(**options)
         b = self.bra._represent(**options)
         return k*b
+
+class DifferentialOperator(Operator):
+    """
+    An operator for representing the differential operator, i.e. d/dx
+
+    It is initialized by passing two arguments. The first is an
+    arbitrary expression that involves a function, such as
+    Derivative(f(x), x). The second is the function (e.g. f(x)) which
+    we are to replace with the Wavefunction that this
+    DifferentialOperator is applied to.
+
+    Parameters
+    ==========
+
+    expr : Expr
+           The arbitrary expression which the appropriate Wavefunction
+           is to be substituted into
+
+    func : Expr
+           A function (e.g. f(x)) which is to be replaced with the
+           appropriate Wavefunction when this DifferentialOperator is applied
+
+    Examples
+    ========
+
+    You can define a completely arbitrary expression and specify where
+    the Wavefunction is to be substituted
+
+    >>> from sympy import Derivative, Function, Symbol
+    >>> from sympy.physics.quantum.operator import DifferentialOperator
+    >>> from sympy.physics.quantum.state import Wavefunction
+    >>> from sympy.physics.quantum.qapply import qapply
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+    >>> d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))
+    >>> w = Wavefunction(x**2, x)
+    >>> d.function
+    f(x)
+    >>> d.variables
+    (x,)
+    >>> qapply(d*w)
+    Wavefunction(2, x)
+
+    """
+
+    @property
+    def variables(self):
+        """
+        Returns the variables with which the function
+        in the specified arbitrary expression is evaluated
+
+        Examples
+        ========
+
+        >>> from sympy.physics.quantum.operator import DifferentialOperator
+        >>> from sympy import Symbol, Function, Derivative
+        >>> x = Symbol('x')
+        >>> f = Function('f')
+        >>> d = DifferentialOperator(1/x*Derivative(f(x), x), f(x))
+        >>> d.variables
+        (x,)
+        >>> y = Symbol('y')
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
+        >>> d.variables
+        (x, y)
+        """
+
+        return self.args[-1].args
+
+    @property
+    def function(self):
+        """
+        Returns the function which is to be replaced with the Wavefunction
+
+        Examples
+        ========
+
+        >>> from sympy.physics.quantum.operator import DifferentialOperator
+        >>> from sympy import Function, Symbol, Derivative
+        >>> x = Symbol('x')
+        >>> f = Function('f')
+        >>> d = DifferentialOperator(Derivative(f(x), x), f(x))
+        >>> d.function
+        f(x)
+        >>> y = Symbol('y')
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
+        >>> d.function
+        f(x, y)
+        """
+
+        return self.args[-1]
+
+    @property
+    def expr(self):
+        """
+        Returns the arbitary expression which is to have the
+        Wavefunction substituted into it
+
+        Examples
+        ========
+
+        >>> from sympy.physics.quantum.operator import DifferentialOperator
+        >>> from sympy import Function, Symbol, Derivative
+        >>> x = Symbol('x')
+        >>> f = Function('f')
+        >>> d = DifferentialOperator(Derivative(f(x), x), f(x))
+        >>> d.expr
+        Derivative(f(x), x)
+        >>> y = Symbol('y')
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
+        >>> d.expr
+        Derivative(f(x, y), x) + Derivative(f(x, y), y)
+        """
+
+        return self.args[0]
+
+    @property
+    def free_symbols(self):
+        """
+        Return the free symbols of the expression.
+        """
+
+        return self.expr.free_symbols
+
+    def _apply_operator_Wavefunction(self, func):
+        from sympy.physics.quantum.state import Wavefunction
+        var = self.variables
+        wf_vars = func.args[1:]
+
+        f = self.function
+        new_expr = self.expr.subs(f, func(*var))
+        new_expr = new_expr.doit()
+
+        return Wavefunction(new_expr, *wf_vars)
+
+    def _eval_derivative(self, symbol):
+        new_expr = Derivative(self.expr, symbol)
+        return DifferentialOperator(new_expr, self.args[-1])
+
+    #-------------------------------------------------------------------------
+    # Printing
+    #-------------------------------------------------------------------------
+
+    def _print_contents(self, printer, *args):
+        return '%s(%s)' % (
+            self._print_operator_name(printer, *args),
+            self._print_label(printer, *args)
+          )
+
+    def _print_contents_pretty(self, printer, *args):
+        pform = self._print_operator_name_pretty(printer, *args)
+        label_pform = self._print_label_pretty(printer, *args)
+        label_pform = prettyForm(
+            *label_pform.parens(left='(', right=')')
+        )
+        pform = prettyForm(*pform.right((label_pform)))
+        return pform

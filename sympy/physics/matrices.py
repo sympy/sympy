@@ -26,6 +26,33 @@ def msigma(i):
         raise IndexError("Invalid Pauli index")
     return Matrix(mat)
 
+def pat_matrix(m, dx, dy, dz):
+    """Returns the Parallel Axis Theorem matrix to translate the inertia
+    matrix a distance of (dx, dy, dz) for a body of mass m.
+
+    Examples
+    --------
+    If the point we want the inertia about is a distance of 2 units of
+    length and 1 unit along the x-axis we get:
+    >>> from sympy.physics.matrices import pat_matrix
+    >>> pat_matrix(2,1,0,0)
+    [0, 0, 0]
+    [0, 2, 0]
+    [0, 0, 2]
+
+    In case we want to find the inertia along a vector of (1,1,1):
+    >>> pat_matrix(2,1,1,1)
+    [ 4, -2, -2]
+    [-2,  4, -2]
+    [-2, -2,  4]
+    """
+    dxdy = -dx*dy ; dydz = -dy*dz ; dzdx = -dz*dx
+    dxdx =  dx**2 ; dydy =  dy**2 ; dzdz =  dz**2
+    mat = ((dydy + dzdz, dxdy, dzdx),
+           (dxdy, dxdx + dzdz, dydz),
+           (dzdx, dydz, dydy + dxdx))
+    return m*Matrix(mat)
+
 def mgamma(mu,lower=False):
     """Returns a Dirac gamma matrix gamma^mu in the standard
     (Dirac) representation.

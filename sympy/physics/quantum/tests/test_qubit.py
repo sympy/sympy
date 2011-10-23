@@ -27,8 +27,8 @@ def test_Qubit():
     qb = Qubit('110')
 
 def test_QubitBra():
-    assert Qubit(0).dual_class == QubitBra
-    assert QubitBra(0).dual_class == Qubit
+    assert Qubit(0).dual_class() == QubitBra
+    assert QubitBra(0).dual_class() == Qubit
     assert represent(Qubit(1,1,0), nqubits=3).H ==\
            represent(QubitBra(1,1,0), nqubits=3)
     assert Qubit(0,1)._eval_innerproduct_QubitBra(QubitBra(1,0)) == Integer(0)
@@ -41,8 +41,8 @@ def test_IntQubit():
     assert IntQubit(3) == IntQubit(3,2)
 
     #test Dual Classes
-    assert IntQubit(3).dual_class == IntQubitBra
-    assert IntQubitBra(3).dual_class == IntQubit
+    assert IntQubit(3).dual_class() == IntQubitBra
+    assert IntQubitBra(3).dual_class() == IntQubit
 
 def test_superposition_of_states():
     assert qapply(CNOT(0,1)*HadamardGate(0)*(1/sqrt(2)*Qubit('01') + 1/sqrt(2)*Qubit('10'))).expand() == (Qubit('01')/2 + Qubit('00')/2 - Qubit('11')/2 +\

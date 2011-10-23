@@ -69,7 +69,7 @@ from sympy import S, Basic, Mul, Add
 
 from sympy.core.exprtools import decompose_power
 from sympy.polys.monomialtools import monomial_key
-from sympy.core.basic import BasicMeta
+from sympy.core.core import BasicMeta
 
 from sympy.core.compatibility import cmp_to_key
 
@@ -217,7 +217,10 @@ class Printer(object):
 
     @property
     def order(self):
-        return self._settings['order']
+        if 'order' in self._settings:
+            return self._settings['order']
+        else:
+            raise AttributeError("No order defined.")
 
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""

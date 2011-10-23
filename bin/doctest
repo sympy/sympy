@@ -12,11 +12,11 @@ work in any circumstances. See "sympy.dotest?" for documentation.
 blacklist = []
 
 import sys
+import os
 from optparse import OptionParser
 
 from get_sympy import path_hack
 path_hack()
-import sympy
 
 parser = OptionParser()
 parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
@@ -28,14 +28,31 @@ parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
 # when the user enters -h or --help, print the `help` text
 parser.add_option("-n", "--normal", action="store_true", dest="normal",
         help="run normal doctests; do not require explicit imports", default=False)
+parser.add_option('-t', '--types', dest='types', action='store',
+        default=None, choices=['gmpy', 'python', 'sympy'],
+        help='setup ground types: gmpy | python | sympy')
+parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
+        default=True, help='disable caching mechanism')
 parser.set_usage("test [options ...] [files ...]")
-parser.epilog = '"options" are any of the options above.  "files" are 0 or more glob strings of files to run doctests on.  If no file arguments are given, all doctests will be run.  This program runs both doctests in the source and doctests in the Sphinx documentation (doc/src/ directory).'
-
+parser.epilog = """\
+"options" are any of the options above. "files" are 0 or more glob strings of \
+files to run doctests on. If no file arguments are given, all doctests will be \
+run. This program runs both doctests in the source and doctests in the Sphinx \
+documentation (doc/src/ directory).\
+"""
 
 options, args = parser.parse_args()
 
+if not options.cache:
+    os.environ['SYMPY_USE_CACHE'] = 'no'
+if options.types:
+    os.environ['SYMPY_GROUND_TYPES'] = options.types
+
+import sympy
+
 ok = sympy.doctest(*args, **{"verbose": options.verbose,
     "blacklist": blacklist, "normal": options.normal})
+
 if ok:
     sys.exit(0)
 else:

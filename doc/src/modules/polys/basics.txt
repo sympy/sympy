@@ -12,9 +12,7 @@ polynomials within SymPy. All code examples assume::
 
     >>> from sympy import *
     >>> x, y, z = symbols('x,y,z')
-
-    >>> import sys
-    >>> sys.displayhook = pprint
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 Basic functionality
 ===================
@@ -178,12 +176,13 @@ Groebner bases
 Buchberger's algorithm is implemented, supporting various monomial orders::
 
     >>> groebner([x**2 + 1, y**4*x + x**3], x, y, order='lex')
-      2       4
-    [x  + 1, y  - 1]
+                 /[ 2       4    ]                            \
+    GroebnerBasis\[x  + 1, y  - 1], x, y, domain=ZZ, order=lex/
+
 
     >>> groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex')
-      4       3   2
-    [y  - 1, z , x  + 1]
+                 /[ 4       3   2    ]                                   \
+    GroebnerBasis\[y  - 1, z , x  + 1], x, y, z, domain=ZZ, order=grevlex/
 
 Solving Equations
 -----------------

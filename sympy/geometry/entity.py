@@ -75,9 +75,9 @@ class GeometryEntity(tuple):
         >>> from sympy import Point, RegularPolygon, Polygon, pi
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t # vertex on x axis
-        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
         >>> t.rotate(pi/2) # vertex on y axis now
-        Triangle(Point(0, 1), Point(-3**(1/2)/2, -1/2), Point(3**(1/2)/2, -1/2))
+        Triangle(Point(0, 1), Point(-sqrt(3)/2, -1/2), Point(sqrt(3)/2, -1/2))
 
         """
         from sympy import cos, sin, Point
@@ -109,11 +109,11 @@ class GeometryEntity(tuple):
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
-        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
         >>> t.scale(2)
-        Triangle(Point(2, 0), Point(-1, 3**(1/2)/2), Point(-1, -3**(1/2)/2))
+        Triangle(Point(2, 0), Point(-1, sqrt(3)/2), Point(-1, -sqrt(3)/2))
         >>> t.scale(2,2)
-        Triangle(Point(2, 0), Point(-1, 3**(1/2)), Point(-1, -3**(1/2)))
+        Triangle(Point(2, 0), Point(-1, sqrt(3)), Point(-1, -sqrt(3)))
 
         """
         from sympy import Point
@@ -133,11 +133,11 @@ class GeometryEntity(tuple):
         >>> from sympy import RegularPolygon, Point, Polygon
         >>> t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)
         >>> t
-        Triangle(Point(1, 0), Point(-1/2, 3**(1/2)/2), Point(-1/2, -3**(1/2)/2))
+        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))
         >>> t.translate(2)
-        Triangle(Point(3, 0), Point(3/2, 3**(1/2)/2), Point(3/2, -3**(1/2)/2))
+        Triangle(Point(3, 0), Point(3/2, sqrt(3)/2), Point(3/2, -sqrt(3)/2))
         >>> t.translate(2,2)
-        Triangle(Point(3, 2), Point(3/2, 3**(1/2)/2 + 2), Point(3/2, -3**(1/2)/2 + 2))
+        Triangle(Point(3, 2), Point(3/2, sqrt(3)/2 + 2), Point(3/2, -sqrt(3)/2 + 2))
 
         """
         from sympy import Point
@@ -199,13 +199,11 @@ class GeometryEntity(tuple):
         """
         raise NotImplementedError()
 
-    def subs(self, old, new):
-        if hasattr(self, '_eval_subs_'):
-            return self.subs(old, new)
-        elif isinstance(self, GeometryEntity):
-            return type(self)(*[a.subs(old, new) for a in self.args])
-        else:
-            return self
+    def subs(self, *args):
+        return type(self)(*[a.subs(*args) for a in self.args])
+
+    def _eval_subs(self, old, new):
+        return type(self)(*[a.subs(old, new) for a in self.args])
 
     @property
     def args(self):

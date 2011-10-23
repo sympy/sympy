@@ -67,7 +67,7 @@ geometry module.
     >>> c.is_tangent(l) # is l tangent to c?
     False
     >>> intersection(c, l)
-    [Point(-5*2**(1/2)/2, -5*2**(1/2)/2), Point(5*2**(1/2)/2, 5*2**(1/2)/2)]
+    [Point(-5*sqrt(2)/2, -5*sqrt(2)/2), Point(5*sqrt(2)/2, 5*sqrt(2)/2)]
 
 Intersection of medians
 -----------------------
@@ -89,9 +89,9 @@ Intersection of medians
     b*c/2
 
     >>> t.medians #doctest: +NORMALIZE_WHITESPACE
-    {Point(a, b): Segment(Point(a, b), Point(c/2, 0)),
-    Point(c, 0): Segment(Point(c, 0), Point(a/2, b/2)),
-    Point(0, 0): Segment(Point(0, 0), Point(a/2 + c/2, b/2))}
+    {Point(0, 0): Segment(Point(0, 0), Point(a/2 + c/2, b/2)),
+     Point(a, b): Segment(Point(a, b), Point(c/2, 0)),
+     Point(c, 0): Segment(Point(c, 0), Point(a/2, b/2))}
 
     >>> intersection(t.medians[x], t.medians[y], t.medians[z])
     [Point(a/3 + c/3, b/3)]

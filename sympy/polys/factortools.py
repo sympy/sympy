@@ -331,21 +331,21 @@ def dup_zz_irreducible_p(f, K):
                 return True
 
 @cythonized("n,i")
-def dup_zz_cyclotomic_p(f, K, irreducible=False):
+def dup_cyclotomic_p(f, K, irreducible=False):
     """
     Efficiently test if ``f`` is a cyclotomic polnomial.
 
     **Examples**
 
-    >>> from sympy.polys.factortools import dup_zz_cyclotomic_p
+    >>> from sympy.polys.factortools import dup_cyclotomic_p
     >>> from sympy.polys.domains import ZZ
 
     >>> f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
-    >>> dup_zz_cyclotomic_p(f, ZZ)
+    >>> dup_cyclotomic_p(f, ZZ)
     False
 
     >>> g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
-    >>> dup_zz_cyclotomic_p(g, ZZ)
+    >>> dup_cyclotomic_p(g, ZZ)
     True
 
     """
@@ -395,12 +395,12 @@ def dup_zz_cyclotomic_p(f, K, irreducible=False):
     if K.is_negative(dup_LC(g, K)):
         g = dup_neg(g, K)
 
-    if F == g and dup_zz_cyclotomic_p(g, K):
+    if F == g and dup_cyclotomic_p(g, K):
         return True
 
     G = dup_sqf_part(F, K)
 
-    if dup_sqr(G, K) == F and dup_zz_cyclotomic_p(G, K):
+    if dup_sqr(G, K) == F and dup_cyclotomic_p(G, K):
         return True
 
     return False
@@ -456,7 +456,7 @@ def dup_zz_cyclotomic_factor(f, K):
     if lc_f != 1 or tc_f not in [-1, 1]:
         return None
 
-    if any([ bool(cf) for cf in f[1:-1] ]):
+    if any(bool(cf) for cf in f[1:-1]):
         return None
 
     n = dup_degree(f)
@@ -650,7 +650,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
 
         C.append(c)
 
-    if any([ not j for j in J ]):
+    if any(not j for j in J):
         raise ExtraneousFactors # pragma: no cover
 
     CC, HH = [], []
@@ -1034,7 +1034,7 @@ def dmp_zz_factor(f, u, K):
     if dmp_ground_LC(g, u, K) < 0:
         cont, g = -cont, dmp_neg(g, u, K)
 
-    if all([ d <= 0 for d in dmp_degree_list(g, u) ]):
+    if all(d <= 0 for d in dmp_degree_list(g, u)):
         return cont, []
 
     G, g = dmp_primitive(g, u, K)
@@ -1103,7 +1103,7 @@ def dmp_ext_factor(f, u, K):
     lc = dmp_ground_LC(f, u, K)
     f = dmp_ground_monic(f, u, K)
 
-    if all([ d <= 0 for d in dmp_degree_list(f, u) ]):
+    if all(d <= 0 for d in dmp_degree_list(f, u)):
         return lc, []
 
     f, F = dmp_sqf_part(f, u, K), f
@@ -1291,3 +1291,18 @@ def dmp_factor_list_include(f, u, K):
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
         return [(g, factors[0][1])] + factors[1:]
 
+def dup_irreducible_p(f, K):
+    """Returns ``True`` if ``f`` has no factors over its domain. """
+    return dmp_irreducible_p(f, 0, K)
+
+def dmp_irreducible_p(f, u, K):
+    """Returns ``True`` if ``f`` has no factors over its domain. """
+    _, factors = dmp_factor_list(f, u, K)
+
+    if not factors:
+        return True
+    elif len(factors) > 1:
+        return False
+    else:
+        _, k = factors[0]
+        return k == 1

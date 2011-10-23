@@ -1,10 +1,19 @@
 from sympy.functions import sqrt, sign
-from sympy.core import S, Wild, Rational, sympify
+from sympy.core import S, Wild, Rational, sympify, Mul
+from sympy.core.mul import prod
 
-def sqrtdenest (expr):
+def sqrtdenest(expr):
     """
     Denests an expression that contains nested square roots.
     This algorithm is based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
+
+    Example:
+    >>> from sympy.simplify.sqrtdenest import sqrtdenest
+    >>> from sympy import sqrt
+    >>> sqrtdenest(sqrt(5 + 2 * sqrt(6)))
+    sqrt(2) + sqrt(3)
+
+    See also: unrad in sympy.solvers.solvers
     """
     expr = sympify(expr)
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
@@ -46,7 +55,7 @@ def denester (nested):
                 if R is not None: assert R == v[r] #All the 'r's should be the same.
                 else: R = v[r]
         d, f = denester([sqrt((v[a]**2).expand()-(R*v[b]**2).expand()) for v in values] + [sqrt(R)])
-        if not any([f[i] for i in range(len(nested))]): #If f[i]=0 for all i < len(nested)
+        if not any(f[i] for i in range(len(nested))): #If f[i]=0 for all i < len(nested)
             v = values[-1]
             return sqrt(v[a] + v[b]*d), f
         else:
@@ -62,17 +71,14 @@ def denester (nested):
 
 def subsets(n):
     """
-    Returns all possible subsets of the set (0, 1, ..., n-1) except the empty set.
+    Returns all possible subsets of the set (0, 1, ..., n-1) except the empty,
+    listed in numerical order according to binary representation.
+
+    Example:
+    >>> from sympy.simplify.sqrtdenest import subsets
+    >>> subsets(3)
+    [[0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]
     """
     binary = lambda x: x>0 and binary(x>>1) + [x&1] or []
     pad = lambda l: [0]*(n-len(l)) + l #Always returns a list of length 'n'
     return [pad(binary(i)) for i in range(1, 2**n)]
-
-def prod(n):
-    """
-    Returns the product of all elements of n, as a Rational.
-    """
-    product = S.One
-    for i in n:
-        product = product * i
-    return product
