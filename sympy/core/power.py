@@ -922,11 +922,15 @@ class Pow(Expr):
                     c = Pow(b, iceh)
                 return c, Pow(b, _keep_coeff(ce, t + r/ce/ceh.q))
         e = _keep_coeff(ce, pe)
+        # b**e = (h*t)**e = h**e*t**e = c*m*t**e
         if e.is_Rational and b.is_Mul:
-            h, t = b.as_two_terms()
-            c = Pow(h, e)
-            if c.is_Rational:
-                return c, Pow(t, e)
+            h, t = b.as_content_primitive() # h is positive
+            c, m = Pow(h, e).as_coeff_Mul() # so c is positive
+            m, me = m.as_base_exp()
+            if m is S.One or me == e: # probably always true
+                # return the following, not return c, m*Pow(t, e)
+                # which would change Pow into Mul
+                return c, Pow(m*t, e)
         return S.One, Pow(b, e)
 
 from add import Add

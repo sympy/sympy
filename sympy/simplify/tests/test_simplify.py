@@ -787,10 +787,13 @@ def test_as_content_primitive():
     assert (S.Infinity).as_content_primitive() == (1, oo)
     eq = x**(2+y)
     assert (eq).as_content_primitive() == (1, eq)
-    assert (S.Half**(2 + x)).as_content_primitive() == (S(1)/4, S.Half**x)
-    assert ((-S.Half)**(2 + x)).as_content_primitive() == (S(1)/4, (-S.Half)**x)
-    assert ((-S.Half)**(2 + x)).as_content_primitive() == (S(1)/4, (-S.Half)**x)
+    assert (S.Half**(2 + x)).as_content_primitive() == (S(1)/4, 2**-x)
+    assert ((-S.Half)**(2 + x)).as_content_primitive() == \
+            (S(1)/4, (-S.Half)**x)
+    assert ((-S.Half)**(2 + x)).as_content_primitive() == \
+            (S(1)/4, (-S.Half)**x)
     assert (4**((1 + y)/2)).as_content_primitive() == (2, 4**(y/2))
-    assert (3**((1 + y)/2)).as_content_primitive() == (1, 3**(y/2 + 1/2))
+    assert (3**((1 + y)/2)).as_content_primitive() == \
+            (1, 3**(Mul(S(1)/2, 1 + y, evaluate=False)))
     assert (5**(S(3)/4)).as_content_primitive() == (1, 5**(S(3)/4))
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
