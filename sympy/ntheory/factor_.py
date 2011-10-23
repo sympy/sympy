@@ -449,16 +449,19 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
             factors:
 
             >>> from sympy.core.numbers import ilcm, igcd
-            >>> from sympy import factorint
-            >>> M = reduce(ilcm, range(2, 256))
+            >>> from sympy import factorint, Pow
+            >>> M = 1
+            >>> for i in range(2, 256):
+            ...     M = ilcm(M, i)
+            ...
             >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
             ...      igcd(pow(a, M, n) - 1, n) != n])
             set([1009])
 
             But does aM % d for every divisor of n give 1?
 
-            >>> aM = pow(a, M, n)
-            >>> [(d, aM%(1*d)) for d in factorint(n, visual=True).args]
+            >>> aM = pow(255, M, n)
+            >>> [(d, aM%Pow(*d.args)) for d in factorint(n, visual=True).args]
             [(257**1, 1), (1009**1, 1)]
 
             No, only one of them. So perhaps the principle is that a root will
@@ -1207,8 +1210,9 @@ def divisors(n, generator=False):
             return sorted(rv)
         return rv
 
-def divisor_count(n):
-    """Return the number of divisors of n.
+def divisor_count(n, modulus=1):
+    """Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
+       those that are divisible by ``modulus`` are counted.
 
     Reference:
     http://www.mayer.dial.pipex.com/maths/formulae.htm
@@ -1218,7 +1222,12 @@ def divisor_count(n):
     4
     """
 
-    n = abs(n)
+    if not modulus:
+        return 0
+    elif modulus != 1:
+        n, r = divmod(n, modulus)
+        if r:
+            return 0
     if n == 0:
         return 0
     return Mul(*[v+1 for k, v in factorint(n).items() if k > 1])

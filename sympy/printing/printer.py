@@ -217,7 +217,10 @@ class Printer(object):
 
     @property
     def order(self):
-        return self._settings['order']
+        if 'order' in self._settings:
+            return self._settings['order']
+        else:
+            raise AttributeError("No order defined.")
 
     def doprint(self, expr):
         """Returns printer's representation for expr (as a string)"""

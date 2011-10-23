@@ -53,7 +53,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
         * ask(proposition, assumptions)
 
-            where `proposition` is any boolean expression
+            where ``proposition`` is any boolean expression
 
     **Examples**
         >>> from sympy import ask, Q, pi
@@ -68,7 +68,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following
         will not give a meaningful result.
-        >> ask(Q.positive(x), Q.is_true(x > 0))
+
+        >>> ask(Q.positive(x), Q.is_true(x > 0)) # doctest: +SKIP
+
         It is however a work in progress and should be available before
         the official release
 
@@ -100,7 +102,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return True
         if Not(key) in known_facts_dict[local_facts]:
             return False
-    elif local_facts.func is And:
+    elif local_facts.func is And and all(k in known_facts_dict for k in local_facts.args):
         for assum in local_facts.args:
             if assum.is_Atom:
                 if key in known_facts_dict[assum]:

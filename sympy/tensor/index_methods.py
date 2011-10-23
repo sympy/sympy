@@ -290,7 +290,7 @@ def get_contraction_structure(expr):
     :Examples:
 
     >>> from sympy.tensor.index_methods import get_contraction_structure
-    >>> from sympy import symbols
+    >>> from sympy import symbols, default_sort_key
     >>> from sympy.tensor import IndexedBase, Idx
     >>> x, y, A = map(IndexedBase, ['x', 'y', 'A'])
     >>> i, j, k, l = map(Idx, ['i', 'j', 'k', 'l'])
@@ -303,11 +303,11 @@ def get_contraction_structure(expr):
     the internal contractions.
 
     >>> d = get_contraction_structure(x[i, i]*y[j, j])
-    >>> sorted(d.keys())
+    >>> sorted(d.keys(), key=default_sort_key)
     [None, x[i, i]*y[j, j]]
     >>> d[None]  # Note that the product has no contractions
     set([x[i, i]*y[j, j]])
-    >>> sorted(d[x[i, i]*y[j, j]])  # factors are contracted ``first''
+    >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)  # factors are contracted ``first''
     [{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]
 
     A parenthesized Add object is also returned as a nested dictionary.  The
@@ -316,8 +316,8 @@ def get_contraction_structure(expr):
     dictionary resulting from a recursive call on the Add expression.
 
     >>> d = get_contraction_structure(x[i]*(y[i] + A[i, j]*x[j]))
-    >>> sorted(d.keys())
-    [(i,), x[i]*(y[i] + A[i, j]*x[j])]
+    >>> sorted(d.keys(), key=default_sort_key)
+    [x[i]*(y[i] + A[i, j]*x[j]), (i,)]
     >>> d[(i,)]
     set([x[i]*(y[i] + A[i, j]*x[j])])
     >>> d[x[i]*(A[i, j]*x[j] + y[i])]

@@ -40,8 +40,10 @@ def _indent(s, indent=4):
     If the string `s` is Unicode, it is encoded using the stdout
     encoding and the `backslashreplace` error handler.
     """
-    if isinstance(s, unicode):
-        s = s.encode(pdoctest._encoding, 'backslashreplace')
+    # After a 2to3 run the below code is bogus, so wrap it with a version check
+    if sys.version_info[0] < 3:
+        if isinstance(s, unicode):
+            s = s.encode(pdoctest._encoding, 'backslashreplace')
     # This regexp matches the start of non-blank lines:
     return re.sub('(?m)^(?!$)', indent*' ', s)
 
@@ -174,6 +176,7 @@ def test(*paths, **kwargs):
     sympy.external.importtools.WARN_NOT_INSTALLED = False
 
     test_files = t.get_test_files('sympy')
+
     if len(paths) == 0:
         t._testfiles.extend(test_files)
     else:
@@ -232,6 +235,11 @@ def doctest(*paths, **kwargs):
                     "sympy/galgebra/latex_ex.py", # needs numpy
                     "sympy/conftest.py", # needs py.test
                     "sympy/utilities/benchmarking.py", # needs py.test
+                    "examples/advanced/autowrap_integrators.py", # needs numpy
+                    "examples/advanced/autowrap_ufuncify.py", # needs numpy
+                    "examples/intermediate/mplot2d.py", # needs numpy and matplotlib
+                    "examples/intermediate/mplot3d.py", # needs numpy and matplotlib
+                    "examples/intermediate/sample.py", # needs numpy
                     ])
     blacklist = convert_to_native_paths(blacklist)
 
@@ -244,6 +252,8 @@ def doctest(*paths, **kwargs):
     t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')
+    test_files.extend(t.get_test_files('examples', init_only=False))
+
     not_blacklisted = [f for f in test_files
                          if not any(b in f for b in blacklist)]
     if len(paths) == 0:
@@ -309,7 +319,8 @@ def doctest(*paths, **kwargs):
                 # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
                 #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
                 out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
-                    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
+                    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE \
+                              | pdoctest.IGNORE_EXCEPTION_DETAIL)
             finally:
                 # make sure we return to the original displayhook in case some
                 # doctest has changed that
@@ -434,7 +445,11 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    text, filename = pdoctest._load_testfile(filename, package, module_relative)
+    if sys.version_info[0] < 3:
+        text, filename = pdoctest._load_testfile(filename, package, module_relative)
+    else:
+        encoding = None
+        text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
@@ -508,14 +523,14 @@ class SymPyTests(object):
 
     def test_file(self, filename):
         clear_cache()
-        name = "test%d" % self._count
-        name = os.path.splitext(os.path.basename(filename))[0]
         self._count += 1
         gl = {'__file__':filename}
         random.seed(self._seed)
         try:
             execfile(filename, gl)
-        except (ImportError, SyntaxError):
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except:
             self._reporter.import_error(filename, sys.exc_info())
             return
         pytestfile = ""
@@ -635,7 +650,14 @@ class SymPyDocTests(object):
         from StringIO import StringIO
 
         rel_name = filename[len(self._root_dir)+1:]
+        dirname, file = os.path.split(filename)
         module = rel_name.replace(os.sep, '.')[:-3]
+
+        if rel_name.startswith("examples"):
+            # Example files do not have __init__.py files,
+            # So we have to temporarily extend sys.path to import them
+            sys.path.insert(0, dirname)
+            module = file[:-3] # remove ".py"
         setup_pprint()
         try:
             module = pdoctest._normalize_module(module)
@@ -643,6 +665,9 @@ class SymPyDocTests(object):
         except:
             self._reporter.import_error(filename, sys.exc_info())
             return
+        finally:
+            if rel_name.startswith("examples"):
+                del sys.path[0]
 
         tests = [test for test in tests if len(test.examples) > 0]
         # By default (except for python 2.4 in which it was broken) tests
@@ -658,7 +683,7 @@ class SymPyDocTests(object):
         for test in tests:
             assert len(test.examples) != 0
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS | \
-                    pdoctest.NORMALIZE_WHITESPACE)
+                    pdoctest.NORMALIZE_WHITESPACE | pdoctest.IGNORE_EXCEPTION_DETAIL)
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
@@ -1004,6 +1029,8 @@ class PyTestReporter(Reporter):
             try:
                 process = subprocess.Popen(['stty', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
+                if sys.version_info[0] > 2:
+                    stdout = stdout.decode("utf-8")
             except (OSError, IOError):
                 pass
             else:
@@ -1174,7 +1201,7 @@ class PyTestReporter(Reporter):
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
             for e in self._xpassed:
-                self.write("%s:%s\n" % (e[0], e[1]))
+                self.write("%s: %s\n" % (e[0], e[1]))
             self.write("\n")
 
         if self._tb_style != "no" and len(self._exceptions) > 0:
@@ -1242,8 +1269,12 @@ class PyTestReporter(Reporter):
         self._xfailed += 1
         self.write("f", "Green")
 
-    def test_xpass(self, fname):
-        self._xpassed.append((self._active_file, fname))
+    def test_xpass(self, v):
+        if sys.version_info[:2] < (2, 6):
+            message = getattr(v, 'message', '')
+        else:
+            message = str(v)
+        self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
     def test_fail(self, exc_info):
@@ -1266,11 +1297,15 @@ class PyTestReporter(Reporter):
             self.write(".", "Green")
 
     def test_skip(self, v):
+        if sys.version_info[:2] < (2, 6):
+            message = getattr(v, 'message', '')
+        else:
+            message = str(v)
         self._skipped += 1
         self.write("s", "Green")
         if self._verbose:
             self.write(" - ", "Green")
-            self.write(v.message, "Green")
+            self.write(message, "Green")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

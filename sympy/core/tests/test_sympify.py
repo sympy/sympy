@@ -132,6 +132,7 @@ def test_sympyify_iterables():
     assert sympify(['.3', '.2'], rational=1) == ans
     assert sympify(set(['.3', '.2']), rational=1) == set(ans)
     assert sympify(tuple(['.3', '.2']), rational=1) == Tuple(*ans)
+    assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
 
 def test_sympify4():

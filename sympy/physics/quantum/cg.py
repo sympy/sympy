@@ -46,7 +46,7 @@ class Wigner3j(Expr):
         (6, 4, 2)
         (0, 0, 0)
         >>> w3j.doit()
-        715**(1/2)/143
+        sqrt(715)/143
 
     References
     ==========
@@ -173,7 +173,7 @@ class CG(Wigner3j):
         >>> cg
         CG(3/2, 3/2, 1/2, -1/2, 1, 1)
         >>> cg.doit()
-        3**(1/2)/2
+        sqrt(3)/2
 
     References
     ==========
@@ -426,7 +426,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             if not sympify(index_expr.subs(sub_dep).subs(sub_2)).is_number:
                 continue
             cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt,1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
-        if cg_index.count(None) == 0:
+        if all(i is not None for i in cg_index):
             min_lt = min(*[ abs(term[2]) for term in cg_index ])
             indicies = [ term[0] for term in cg_index]
             indicies.sort()

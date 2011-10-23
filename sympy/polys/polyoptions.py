@@ -48,7 +48,7 @@ class BooleanOption(Option):
 
     @classmethod
     def preprocess(cls, value):
-        if value is True or value is False or value is 1 or value is 0:
+        if value in [True, False]:
             return bool(value)
         else:
             raise OptionError("'%s' must have a boolean value assigned, got %s" % (cls.option, value))
@@ -126,19 +126,37 @@ class Options(dict):
             args = dict(args)
             args['gens'] = gens
 
-        for option, value in args.iteritems():
-            try:
-                cls = self.__options__[option]
-            except KeyError:
-                raise OptionError("'%s' is not a valid option" % option)
+        defaults = args.pop('defaults', {})
 
-            if issubclass(cls, Flag):
-                if flags is None or option not in flags:
-                    if strict:
-                        raise OptionError("'%s' flag is not allowed in this context" % option)
+        def preprocess_options(args):
+            for option, value in args.iteritems():
+                try:
+                    cls = self.__options__[option]
+                except KeyError:
+                    raise OptionError("'%s' is not a valid option" % option)
 
-            if value is not None:
-                self[option] = cls.preprocess(value)
+                if issubclass(cls, Flag):
+                    if flags is None or option not in flags:
+                        if strict:
+                            raise OptionError("'%s' flag is not allowed in this context" % option)
+
+                if value is not None:
+                    self[option] = cls.preprocess(value)
+
+        preprocess_options(args)
+
+        for key, value in dict(defaults).iteritems():
+            if key in self:
+                del defaults[key]
+            else:
+                for option in self.keys():
+                    cls = self.__options__[option]
+
+                    if key in cls.excludes:
+                        del defaults[key]
+                        break
+
+        preprocess_options(defaults)
 
         for option in self.keys():
             cls = self.__options__[option]
@@ -332,7 +350,7 @@ class Order(Option):
 
     @classmethod
     def default(cls):
-        return sympy.polys.monomialtools.monomial_key('lex')
+        return sympy.polys.monomialtools.lex
 
     @classmethod
     def preprocess(cls, order):
@@ -489,9 +507,9 @@ class Extension(Option):
 
     @classmethod
     def preprocess(cls, extension):
-        if extension is True or extension is 1:
+        if extension == 1:
             return bool(extension)
-        elif extension is False or extension is 0:
+        elif extension == 0:
             raise OptionError("'False' is an invalid argument for 'extension'")
         else:
             if not hasattr(extension, '__iter__'):
@@ -686,6 +704,20 @@ class Symbols(Flag):
         else:
             raise OptionError("expected an iterator or iterable container, got %s" % symbols)
 
+class Method(Flag):
+    """``method`` flag to polynomial manipulation functions. """
+
+    __metaclass__ = OptionType
+
+    option = 'method'
+
+    @classmethod
+    def preprocess(cls, method):
+        if isinstance(method, str):
+            return method.lower()
+        else:
+            raise OptionError("expected a string, got %s" % method)
+
 def build_options(gens, args=None):
     """Construct options from keyword arguments or ... options. """
     if args is None:
@@ -724,5 +756,12 @@ def allowed_flags(args, flags):
         except KeyError:
             raise OptionError("'%s' is not a valid option" % arg)
 
-Options._init_dependencies_order()
+def set_defaults(options, **defaults):
+    """Update options with default values. """
+    if 'defaults' not in options:
+        options = dict(options)
+        options['defaults'] = defaults
 
+    return options
+
+Options._init_dependencies_order()

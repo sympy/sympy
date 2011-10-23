@@ -191,10 +191,11 @@ def test_matrix_copy():
     assert A != B
 
 def test_matrix_numpy():
-    try:
-        import numpy
-    except ImportError:
+    from sympy.external import import_module
+    numpy = import_module('numpy')
+    if not numpy:
         return
+
     l = [[1, 2], [3, 4], [5, 6]]
     a = numpy.matrix(l)
     assert matrix(l) == matrix(a)

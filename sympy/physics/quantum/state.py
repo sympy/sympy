@@ -595,7 +595,7 @@ class Wavefunction(Function):
     >>> x = Symbol('x')
     >>> n = 1
     >>> L = 1
-    >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2/L)*sin(n*pi*x/L), True))
+    >>> g = Piecewise((0, x < 0), (0, x > L), (sqrt(2//L)*sin(n*pi*x/L), True))
     >>> f = Wavefunction(g, x)
     >>> f.norm
     1
@@ -628,13 +628,13 @@ class Wavefunction(Function):
     >>> f(L+1)
     0
     >>> f(L-1)
-    2**(1/2)*(1/L)**(1/2)*sin(pi*n*(L - 1)/L)
+    sqrt(2)*sqrt(1/L)*sin(pi*n*(L - 1)/L)
     >>> f(-1)
     0
     >>> f(0.85)
-    2**(1/2)*(1/L)**(1/2)*sin(0.85*pi*n/L)
+    sqrt(2)*sqrt(1/L)*sin(0.85*pi*n/L)
     >>> f(0.85, n=1, L=1)
-    2**(1/2)*sin(0.85*pi)
+    sqrt(2)*sin(0.85*pi)
     >>> f.is_commutative
     False
 
@@ -842,7 +842,7 @@ class Wavefunction(Function):
         >>> g = sin(n*pi*x/L)
         >>> f = Wavefunction(g, (x, 0, L))
         >>> f.norm
-        2**(1/2)*L**(1/2)/2
+        sqrt(2)*sqrt(L)/2
 
         """
 
@@ -871,7 +871,7 @@ class Wavefunction(Function):
         >>> g = sin(n*pi*x/L)
         >>> f = Wavefunction(g, (x, 0, L))
         >>> f.normalize()
-        Wavefunction(2**(1/2)*sin(pi*n*x/L)/L**(1/2), (x, 0, L))
+        Wavefunction(sqrt(2)*sin(pi*n*x/L)/sqrt(L), (x, 0, L))
 
         """
         const = self.norm

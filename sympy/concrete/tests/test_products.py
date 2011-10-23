@@ -1,7 +1,8 @@
 from sympy import (symbols, product, factorial, rf, sqrt, cos,
-                   Function, Product, Rational)
+                   Function, Product, Rational, Sum, oo)
 
 a, k, n = symbols('a,k,n', integer=True)
+f = Function('f')
 
 def test_simple_products():
     assert product(2, (k, a, n)) == 2**(n-a+1)
@@ -13,7 +14,7 @@ def test_simple_products():
 
     assert product(cos(k), (k, 0, 5)) == cos(1)*cos(2)*cos(3)*cos(4)*cos(5)
     assert product(cos(k), (k, 3, 5)) == cos(3)*cos(4)*cos(5)
-    assert product(cos(k), (k, 1, Rational(5, 2))) == cos(1)*cos(2)
+    assert product(cos(k), (k, 1, Rational(5, 2))) != cos(1)*cos(2)
 
     assert isinstance(product(k**k, (k, 1, n)), Product)
 
@@ -36,3 +37,12 @@ def test__eval_product():
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
     # 1711
     assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
+
+def test_product_pow():
+    # Issue 1718
+    assert product(2**f(k), (k, 1, n)) == 2**Sum(f(k), (k, 1, n))
+    assert product(2**(2*f(k)), (k, 1, n)) == 2**Sum(2*f(k), (k, 1, n))
+
+def test_infinite_product():
+    # Issue 2638
+    assert isinstance(Product(2**(1/factorial(n)), (n, 0, oo)), Product)

@@ -158,18 +158,26 @@ class Pow(Expr):
                 return False
 
     def _eval_is_integer(self):
-        c1 = self.base.is_integer
-        c2 = self.exp.is_integer
+        b, e = self.args
+        c1 = b.is_integer
+        c2 = e.is_integer
         if c1 is None or c2 is None:
             return None
-        if not c1:
-            if self.exp.is_nonnegative:
-                return False
-        if c1 and c2:
-            if self.exp.is_nonnegative or self.exp.is_positive:
+        if not c1 and e.is_nonnegative: #rat**nonneg
+            return False
+        if c1 and c2: # int**int
+            if e.is_nonnegative or e.is_positive:
                 return True
             if self.exp.is_negative:
                 return False
+        if c1 and e.is_negative and e.is_bounded: #int**neg
+            return False
+        if b.is_Number and e.is_Number:
+            # int**nonneg or rat**?
+            check = Pow(*self.args)
+            if self == check:
+                return False
+            return check.is_Integer
 
     def _eval_is_real(self):
         real_b = self.base.is_real
@@ -241,9 +249,16 @@ class Pow(Expr):
         return Pow(self.base._eval_subs(old, new), self.exp._eval_subs(old, new))
 
     def as_base_exp(self):
-        if self.base.is_Rational and self.base.p==1 and self.base is not S.Infinity:
-            return 1/self.base, -self.exp
-        return self.base, self.exp
+        """Return base and exp of self unless base is 1/Integer, then return Integer, -exp.
+
+        If this extra processing is not needed, the base and exp properties will
+        give the raw arguments, e.g. (1/2, 2) for (1/2)**2 rather than (2, -2).
+        """
+
+        b, e = self.args
+        if b.is_Rational and b.p == 1 and b is not S.Infinity:
+            return Integer(b.q), -e
+        return b, e
 
     def _eval_conjugate(self):
         from sympy.functions.elementary.complexes import conjugate as c
@@ -614,6 +629,8 @@ class Pow(Expr):
             return True
 
     def as_numer_denom(self):
+        if not self.is_commutative:
+            return self, S.One
         base, exp = self.as_base_exp()
         n, d = base.as_numer_denom()
         if d.is_negative and n.is_negative:
@@ -671,7 +688,7 @@ class Pow(Expr):
 
     def _eval_nseries(self, x, n, logx):
         # NOTE! This function is an important part of the gruntz algorithm
-        #       for computing limits. It has to return a generalised power series
+        #       for computing limits. It has to return a generalized power series
         #       with coefficients in C(log, log(x)). In more detail:
         # It has to return an expression
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
@@ -821,7 +838,7 @@ class Pow(Expr):
             n, unbounded = e2int(e2)
         if unbounded:
             # requested accuracy gives infinite series,
-            # order is probably nonpolynomial e.g. O(exp(-1/x), x).
+            # order is probably non-polynomial e.g. O(exp(-1/x), x).
             r = 1 + z
         else:
             l = []

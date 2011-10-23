@@ -11,6 +11,7 @@ from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit, IntQubit, qubit_to_matrix,\
      matrix_to_qubit
 from sympy.physics.quantum.matrixutils import matrix_to_zero
+from sympy.physics.quantum.matrixcache import sqrt2_inv
 from sympy.physics.quantum import Dagger
 
 def test_gate():
@@ -102,8 +103,7 @@ def test_represent_hadamard():
     circuit = HadamardGate(0)*Qubit('00')
     answer = represent(circuit, nqubits=2)
     # Check that the answers are same to within an epsilon.
-    assert answer == Matrix([1/sqrt(2),1/sqrt(2), 0, 0])
-
+    assert answer == Matrix([sqrt2_inv, sqrt2_inv, 0, 0])
 
 def test_represent_xgate():
     """Test the representation of the X gate."""
@@ -218,9 +218,9 @@ def test_one_qubit_commutators():
             a = matrix_to_zero(represent(e, nqubits=1, format='sympy'))
             b = matrix_to_zero(represent(e.doit(), nqubits=1, format='sympy'))
             assert a == b
+
             e = Commutator(g1(0),g2(1))
             assert e.doit() == 0
-
 
 def test_one_qubit_anticommutators():
     """Test single qubit gate anticommutation relations."""

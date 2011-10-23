@@ -1,6 +1,7 @@
 import copy
 import pickle
-import types
+import warnings
+import sys
 from sympy.utilities.pytest import XFAIL
 
 from sympy.core.basic import Atom, Basic
@@ -20,7 +21,6 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
         WildFunction
 from sympy.core.sets import Interval
 from sympy.core.multidimensional import vectorize
-from sympy.core.cache import Memoizer
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
 from sympy.core.compatibility import callable
@@ -31,8 +31,14 @@ from sympy import symbols
 def check(a, check_attr = True):
     """ Check that pickling and copying round-trips.
     """
-    #FIXME-py3k: Add support for protocol 3.
-    for protocol in [0, 1, 2, copy.copy, copy.deepcopy]:
+    # The below hasattr() check will warn about is_Real in Python 2.5, so
+    # disable this to keep the tests clean
+    warnings.filterwarnings("ignore", ".*is_Real.*", DeprecationWarning)
+    protocols = [0, 1, 2, copy.copy, copy.deepcopy]
+    # Python 2.x doesn't support the third pickling protocol
+    if sys.version_info[0] > 2:
+        protocols.extend([3])
+    for protocol in protocols:
         if callable(protocol):
             if isinstance(a, BasicType):
                 # Classes can't be copied, but that's okay.
@@ -62,8 +68,12 @@ def check(a, check_attr = True):
 #================== core =========================
 
 def test_core_basic():
-    for c in (Atom, Atom(), Basic, Basic(), BasicMeta, BasicMeta("test"),
-              BasicType, BasicType("test"), ClassRegistry, ClassRegistry(),
+    for c in (Atom, Atom(),
+              Basic, Basic(),
+              # XXX: dynamically created types are not picklable
+              # BasicMeta, BasicMeta("test", (), {}),
+              # BasicType, BasicType("test", (), {}),
+              ClassRegistry, ClassRegistry(),
               SingletonRegistry, SingletonRegistry()):
         check(c)
 
@@ -124,11 +134,6 @@ def test_core_interval():
 
 def test_core_multidimensional():
     for c in (vectorize, vectorize(0)):
-        check(c)
-
-@XFAIL
-def test_core_cache():
-    for c in (Memoizer, Memoizer()):
         check(c)
 
 # This doesn't have to be pickable.
@@ -211,7 +216,6 @@ from sympy.matrices.matrices import Matrix, SparseMatrix
 
 def test_matrices():
     for c in (Matrix, Matrix([1,2,3]), SparseMatrix, SparseMatrix([[1,2],[3,4]])):
-        #FIXME-py3k: This raises sympy.matrices.matrices.ShapeError
         check(c)
 
 #================== ntheory =====================
@@ -361,9 +365,6 @@ def test_printing():
     for c in (LatexPrinter, LatexPrinter(), MathMLPrinter,
               PrettyPrinter, prettyForm, stringPict, stringPict("a"),
               Printer, Printer(), PythonPrinter, PythonPrinter()):
-        #FIXME-py3k: sympy/printing/printer.py", line 220, in order
-        #FIXME-py3k: return self._settings['order']
-        #FIXME-py3k: KeyError: 'order'
         check(c)
 
 @XFAIL

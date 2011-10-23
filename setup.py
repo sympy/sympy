@@ -40,10 +40,11 @@ if sys.version_info[:2] < (2,5):
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev`; do echo "'${i//\//.}',"; done | sort
+# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" `; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
     'sympy.external',
@@ -59,6 +60,7 @@ modules = [
     'sympy.logic.algorithms',
     'sympy.logic.utilities',
     'sympy.matrices',
+    'sympy.matrices.expressions',
     'sympy.mpmath',
     'sympy.mpmath.calculus',
     'sympy.mpmath.functions',
@@ -68,6 +70,7 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
+    'sympy.physics.mechanics',
     'sympy.physics.quantum',
     'sympy.plotting',
     'sympy.polys',
@@ -81,7 +84,7 @@ modules = [
     'sympy.tensor',
     'sympy.utilities',
     'sympy.utilities.mathml',
-    ]
+  ]
 
 class audit(Command):
     """Audits Sympy's source code for following issues:
@@ -162,7 +165,11 @@ class test_sympy(Command):
         if sympy.test():
             # all regular tests run successfuly, so let's also run doctests
             # (if some regular test fails, the doctests are not run)
-            sympy.doctest()
+            if sympy.doctest():
+                # All ok
+                return
+        # Return nonzero exit code
+        sys.exit(1)
 
 
 class run_benchmarks(Command):
@@ -197,6 +204,7 @@ class run_benchmarks(Command):
 # $ python bin/generate_test_list.py
 tests = [
     'sympy.assumptions.tests',
+    'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
     'sympy.external.tests',
@@ -207,6 +215,7 @@ tests = [
     'sympy.geometry.tests',
     'sympy.integrals.tests',
     'sympy.logic.tests',
+    'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
@@ -245,4 +254,3 @@ setup(
                      'audit' : audit,
                      },
       )
-

@@ -86,7 +86,7 @@ class Operator(QExpr):
     Operator inverses are handle symbolically::
 
         >>> A.inv()
-        1/A
+        A**(-1)
         >>> A*A.inv()
         1
 
@@ -241,7 +241,7 @@ class UnitaryOperator(Operator):
 
 
 class OuterProduct(Operator):
-    """An unevaluated outer product between a ket and kra.
+    """An unevaluated outer product between a ket and bra.
 
     This constructs an outer product between any subclass of KetBase and
     BraBase as |a><b|. An OuterProduct inherits from Operator as they act as
@@ -414,8 +414,8 @@ class DifferentialOperator(Operator):
         >>> d.variables
         (x,)
         >>> y = Symbol('y')
-        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
-                                     Derivative(f(x, y), y), f(x, y))
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
         >>> d.variables
         (x, y)
         """
@@ -438,8 +438,8 @@ class DifferentialOperator(Operator):
         >>> d.function
         f(x)
         >>> y = Symbol('y')
-        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
-                                     Derivative(f(x, y), y), f(x, y))
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
         >>> d.function
         f(x, y)
         """
@@ -463,8 +463,8 @@ class DifferentialOperator(Operator):
         >>> d.expr
         Derivative(f(x), x)
         >>> y = Symbol('y')
-        >>> d = DifferentialOperator(Derivative(f(x, y), x) + \
-                                     Derivative(f(x, y), y), f(x, y))
+        >>> d = DifferentialOperator(Derivative(f(x, y), x) +
+        ...                          Derivative(f(x, y), y), f(x, y))
         >>> d.expr
         Derivative(f(x, y), x) + Derivative(f(x, y), y)
         """

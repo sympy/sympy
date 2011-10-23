@@ -423,3 +423,193 @@ class harmonic(Function):
                     return prev[-1] + S.One / n**m
                 cls._functions[m] = f
             return cls._functions[m](int(n))
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Euler numbers                                    #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+class euler(Function):
+    r"""
+    Euler numbers
+
+    Usage
+    =====
+        euler(n) gives the n-th Euler number, E_n
+
+    Examples
+    ========
+        >>> from sympy import Symbol, euler
+        >>> [euler(n) for n in range(10)]
+        [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
+        >>> n = Symbol("n")
+        >>> euler(n+2*n)
+        euler(3*n)
+
+    Mathematical description
+    ========================
+        The euler numbers are given by
+
+                  2*n+1   k
+                   ___   ___            j          2*n+1
+                  \     \     / k \ (-1)  * (k-2*j)
+          E   = I  )     )    |   | --------------------
+           2n     /___  /___  \ j /      k    k
+                  k = 1 j = 0           2  * I  * k
+
+          E     = 0
+           2n+1
+
+    References and further reading
+    ==============================
+        * http://en.wikipedia.org/wiki/Euler_numbers
+        * http://mathworld.wolfram.com/EulerNumber.html
+        * http://en.wikipedia.org/wiki/Alternating_permutation
+        * http://mathworld.wolfram.com/AlternatingPermutation.html
+    """
+
+    nargs = 1
+
+    @classmethod
+    def eval(cls, m, evaluate=True):
+        if not evaluate:
+            return
+        if m.is_odd:
+            return S.Zero
+        if m.is_Integer and m.is_nonnegative:
+            from sympy.mpmath import mp
+            m = m._to_mpmath(mp.prec)
+            res = mp.eulernum(m, exact=True)
+            return Integer(res)
+
+
+    def _eval_rewrite_as_Sum(self, arg):
+        if arg.is_even:
+            k = C.Dummy("k", integer=True)
+            j = C.Dummy("j", integer=True)
+            n = self.args[0] / 2
+            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k,j) * ((-1)**j * (k-2*j)**(2*n+1)) /
+                  (2**k*S.ImaginaryUnit**k * k), (j,0,k)), (k, 1, 2*n+1)))
+
+            return  Em
+
+
+    def _eval_evalf(self, prec):
+        m = self.args[0]
+
+        if m.is_Integer and m.is_nonnegative:
+            from sympy.mpmath import mp
+            from sympy import Expr
+            m = m._to_mpmath(prec)
+            oprec = mp.prec
+            mp.prec = prec
+            res = mp.eulernum(m)
+            mp.prec = oprec
+            return Expr._from_mpmath(res, prec)
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Catalan numbers                                  #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+class catalan(Function):
+    r"""
+    Catalan numbers
+
+    Usage
+    =====
+        catalan(n) gives the n-th Catalan number, C_n
+
+
+    Examples
+    ========
+        >>> from sympy import (Symbol, binomial, gamma, hyper, polygamma,
+        ...             catalan, diff, combsimp, Rational, I)
+
+        >>> [ catalan(i) for i in range(1,10) ]
+        [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
+
+        >>> n = Symbol("n", integer=True)
+
+        >>> catalan(n)
+        catalan(n)
+
+        Catalan numbers can be transformed into several other, identical
+        expressions involving other mathematical functions
+
+        >>> catalan(n).rewrite(binomial)
+        binomial(2*n, n)/(n + 1)
+
+        >>> catalan(n).rewrite(gamma)
+        4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
+
+        >>> catalan(n).rewrite(hyper)
+        hyper((-n + 1, -n), (2,), 1)
+
+        For some non-integer values of n we can get closed form
+        expressions by rewriting in terms of gamma functions:
+
+        >>> catalan(Rational(1,2)).rewrite(gamma)
+        8/(3*pi)
+
+        We can differentiate the Catalan numbers C(n) interpreted as a
+        continuous real funtion in n:
+
+        >>> diff(catalan(n), n)
+        (polygamma(0, n + 1/2) - polygamma(0, n + 2) + 2*log(2))*catalan(n)
+
+        As a more advanced example consider the following ratio
+        between consecutive numbers:
+
+        >>> combsimp((catalan(n + 1)/catalan(n)).rewrite(binomial))
+        2*(2*n + 1)/(n + 2)
+
+        The Catalan numbers can be generalized to complex numbers:
+
+        >>> catalan(I).rewrite(gamma)
+        4**I*gamma(1/2 + I)/(sqrt(pi)*gamma(2 + I))
+
+        and evaluated with arbitrary precision:
+
+        >>> catalan(I).evalf(20)
+        0.39764993382373624267 - 0.020884341620842555705*I
+
+
+    Mathematical description
+    ========================
+        The n-th catalan number is given by
+
+                 1   / 2*n \
+          C  = ----- |     |
+           n   n + 1 \  n  /
+
+    References and further reading
+    ==============================
+        * http://en.wikipedia.org/wiki/Catalan_number
+        * http://mathworld.wolfram.com/CatalanNumber.html
+        * http://geometer.org/mathcircles/catalan.pdf
+    """
+
+    @classmethod
+    def eval(cls, n, evaluate=True):
+        if n.is_Integer and n.is_nonnegative:
+            return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+
+    def fdiff(self, argindex=1):
+        n = self.args[0]
+        return catalan(n)*(C.polygamma(0,n+Rational(1,2))-C.polygamma(0,n+2)+C.log(4))
+
+    def _eval_rewrite_as_binomial(self,n):
+        return C.binomial(2*n,n)/(n + 1)
+
+    def _eval_rewrite_as_gamma(self,n):
+        # The gamma function allows to generalize Catalan numbers to complex n
+        return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+
+    def _eval_rewrite_as_hyper(self,n):
+        return C.hyper([1-n,-n],[2],1)
+
+    def _eval_evalf(self, prec):
+        return self.rewrite(C.gamma).evalf(prec)

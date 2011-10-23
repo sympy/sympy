@@ -204,7 +204,6 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     >>> fcode(x - pi**2, human=False)
     (set([(pi, '3.14159265358979d0')]), set(), '      x - pi**2')
 
-
 Preview
 -------
 

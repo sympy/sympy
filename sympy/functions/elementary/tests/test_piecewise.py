@@ -134,6 +134,8 @@ def test_piecewise_solve():
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
     assert solve(g, x) == [5]
 
+    assert solve(Piecewise((x, x < 0), (x, -1))) == [0]
+
 # See issue 1253 (enhance the solver to handle inequalities).
 @XFAIL
 def test_piecewise_solve2():

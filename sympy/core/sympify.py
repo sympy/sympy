@@ -33,7 +33,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - any object defined in sympy (except matrices [TODO])
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
-       - booleans, including `None` (will leave them unchanged)
+       - booleans, including ``None`` (will leave them unchanged)
        - lists, sets or tuples containing any of the above
 
     If the argument is already a type that sympy understands, it will do
@@ -62,7 +62,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     SympifyError: SympifyError: "could not parse u'x***2'"
 
 
-    If the option `strict` is set to `True`, only the types for which an
+    If the option ``strict`` is set to ``True``, only the types for which an
     explicit conversion has been defined are converted. In the other
     cases, a SympifyError is raised.
 
@@ -87,8 +87,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     >>> converter[GeometryEntity] = lambda x: x
 
     """
-    from containers import Tuple
-
     try:
         cls = a.__class__
     except AttributeError:  #a is probably an old-style class object
@@ -126,12 +124,20 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
         raise SympifyError(a)
 
     if isinstance(a, tuple):
+        from containers import Tuple
         return Tuple(*[sympify(x, locals=locals, convert_xor=convert_xor,
             rational=rational) for x in a])
     if iterable(a):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
                 rational=rational) for x in a])
+        except TypeError:
+            # Not all iterables are rebuildable with their type.
+            pass
+    if isinstance(a, dict):
+        try:
+            return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
+                rational=rational) for x in a.iteritems()])
         except TypeError:
             # Not all iterables are rebuildable with their type.
             pass

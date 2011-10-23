@@ -70,11 +70,14 @@ class Basic(object):
     is_Equality = False
     is_Boolean = False
     is_Not = False
+    is_Matrix = False
 
     @property
     @deprecated
     def is_Real(self):  # pragma: no cover
-        """Deprecated alias for is_Float"""
+        """Deprecated alias for ``is_Float``"""
+        # When this is removed, remove the piece of code disabling the warning
+        # from test_pickling.py
         return self.is_Float
 
     def __new__(cls, *args, **assumptions):
@@ -210,21 +213,24 @@ class Basic(object):
         return Basic.compare(a,b)
 
     @staticmethod
+    @deprecated
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?
 
-        yes ..... return 1
-        no ...... return -1
-        equal ... return 0
+        ::
+
+          yes ..... return 1
+          no ...... return -1
+          equal ... return 0
 
         Strategy:
 
         It uses Basic.compare as a fallback, but improves it in many cases,
         like x**3, x**4, O(x**3) etc. In those simple cases, it just parses the
-        expression and returns the "sane" ordering such as:
+        expression and returns the "sane" ordering such as::
 
-        1 < x < x**2 < x**3 < O(x**4) etc.
+          1 < x < x**2 < x**3 < O(x**4) etc.
 
         Example:
 
@@ -287,6 +293,7 @@ class Basic(object):
         """Nice order of classes. """
         return 5, 0, cls.__name__
 
+    @cacheit
     def sort_key(self, order=None):
         """
         Return a sort key.
@@ -300,14 +307,22 @@ class Basic(object):
         [1/2, -I, I]
 
         >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
-        [x, 1/x, x**(-2), x**2, x**(1/2), x**(1/4), x**(3/2)]
+        [x, 1/x, x**(-2), x**2, sqrt(x), x**(1/4), x**(3/2)]
         >>> sorted(_, key=lambda x: x.sort_key())
-        [x**(-2), 1/x, x**(1/4), x**(1/2), x, x**(3/2), x**2]
+        [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]
 
         """
         from sympy.core.singleton import S
-        return self.class_key(), (len(self.args), self.args), S.One.sort_key(), S.One
 
+        # XXX: remove this when issue #2070 is fixed
+        def inner_key(arg):
+            if isinstance(arg, Basic):
+                return arg.sort_key()
+            else:
+                return arg
+
+        args = len(self.args), tuple([ inner_key(arg) for arg in self.args ])
+        return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
         """a == b  -> Compare two symbolic trees and see whether they are equal
@@ -422,7 +437,7 @@ class Basic(object):
            and number symbols like I and pi. It is possible to request
            atoms of any type, however, as demonstrated below.
 
-           Examples::
+           Examples:
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
@@ -430,9 +445,9 @@ class Basic(object):
            set([1, 2, I, pi, x, y])
 
            If one or more types are given, the results will contain only
-           those types of atoms::
+           those types of atoms.
 
-           Examples::
+           Examples:
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -450,15 +465,15 @@ class Basic(object):
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
 
-           The type can be given implicitly, too::
+           The type can be given implicitly, too:
 
            >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
            set([x, y])
 
            Be careful to check your assumptions when using the implicit option
-           since S(1).is_Integer = True but type(S(1)) is One, a special type
-           of sympy atom, while type(S(2)) is type Integer and will find all
-           integers in an expression::
+           since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
+           of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
+           integers in an expression:
 
            >>> from sympy import S
            >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
@@ -470,7 +485,7 @@ class Basic(object):
            Finally, arguments to atoms() can select more than atomic atoms: any
            sympy type (loaded in core/__init__.py) can be listed as an argument
            and those types of "atoms" as found in scanning the arguments of the
-           expression recursively::
+           expression recursively:
 
            >>> from sympy import Function, Mul
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
@@ -537,7 +552,7 @@ class Basic(object):
 
     @property
     def is_number(self):
-        """Returns True if 'self' is a number.
+        """Returns ``True`` if 'self' is a number.
 
            >>> from sympy import log, Integral
            >>> from sympy.abc import x, y
@@ -603,10 +618,11 @@ class Basic(object):
         >>> (x*y).args[1]
         y
 
-        Note for developers: Never use self._args, always use self.args.
-        Only when you are creating your own new function, use _args
-        in the __new__. Don't override .args() from Basic (so that it's
-        easy to change the interface in the future if needed).
+        ** Developer Notes **
+            Never use self._args, always use self.args.
+            Only use _args in __new__ when creating a new function.
+            Don't override .args() from Basic (so that it's easy to
+            change the interface in the future if needed).
         """
         return self._args
 
@@ -619,7 +635,7 @@ class Basic(object):
         >>> from sympy.abc import x
         >>> a = 2*x
         >>> a.iter_basic_args()
-        <tupleiterator object at 0x...>
+        <...iterator object at 0x...>
         >>> list(a.iter_basic_args())
         [2, x]
 
@@ -627,7 +643,7 @@ class Basic(object):
         return iter(self.args)
 
     def as_poly(self, *gens, **args):
-        """Converts `self` to a polynomial or returns `None`.
+        """Converts ``self`` to a polynomial or returns ``None``.
 
            >>> from sympy import Poly, sin
            >>> from sympy.abc import x, y
@@ -753,6 +769,8 @@ class Basic(object):
            a*c*sin(d*e) + b
 
         """
+        sequence = sympify(sequence)
+
         if isinstance(sequence, dict):
             sequence = sequence.items()
 
@@ -760,7 +778,7 @@ class Basic(object):
 
         for pattern in sequence:
             for i, (expr, _) in enumerate(subst):
-                if pattern[0] in expr:
+                if expr.has(pattern[0]):
                     subst.insert(i, pattern)
                     break
             else:
@@ -769,7 +787,7 @@ class Basic(object):
 
         return self._subs_list(subst)
 
-
+    @deprecated
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -788,6 +806,7 @@ class Basic(object):
         Test whether any subexpression matches any of the patterns.
 
         Examples:
+
         >>> from sympy import sin, S
         >>> from sympy.abc import x, y, z
         >>> (x**2 + sin(x*y)).has(z)
@@ -800,35 +819,79 @@ class Basic(object):
         Note that ``expr.has(*patterns)`` is exactly equivalent to
         ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
         returned when the list of patterns is empty.
+
         >>> x.has()
         False
 
         """
-        def search(expr, test):
-            if not isinstance(expr, Basic):
-                try:
-                    return any(search(i, test) for i in expr)
-                except TypeError:
-                    return False
-            elif test(expr):
+        def _ncsplit(expr):
+            if expr.is_Add or expr.is_Mul:
+                cpart, ncpart = [], []
+
+                for arg in expr.args:
+                    if arg.is_commutative:
+                        cpart.append(arg)
+                    else:
+                        ncpart.append(arg)
+            elif expr.is_commutative:
+                cpart, ncpart = [expr], []
+            else:
+                cpart, ncpart = [], [expr]
+
+            return set(cpart), ncpart
+
+        def _contains(expr, subexpr, iterative, c, nc):
+            if expr == subexpr:
                 return True
-            else:
-                return any(search(i, test) for i in expr.iter_basic_args())
+            elif not isinstance(expr, Basic):
+                return False
+            elif iterative and (expr.is_Add or expr.is_Mul):
+                _c, _nc = _ncsplit(expr)
 
-        def _match(p):
-            if isinstance(p, BasicType):
-                return lambda w: isinstance(w, p)
-            else:
-                return lambda w: p.matches(w) is not None
+                if (c & _c) == c:
+                    if not nc:
+                        return True
+                    elif len(nc) <= len(_nc):
+                        for i in xrange(len(_nc) - len(nc)):
+                            if _nc[i:i+len(nc)] == nc:
+                                return True
 
-        patterns = map(sympify, patterns)
-        return any(search(self, _match(p)) for p in patterns)
+            return False
+
+        def _match(pattern):
+            pattern = sympify(pattern)
+
+            if isinstance(pattern, BasicType):
+                return lambda expr: (isinstance(expr, pattern) or
+                    (isinstance(expr, BasicType) and expr == pattern))
+            else:
+                if pattern.is_Add or pattern.is_Mul:
+                    iterative, (c, nc) = True, _ncsplit(pattern)
+                else:
+                    iterative, (c, nc) = False, (None, None)
+
+                return lambda expr: _contains(expr, pattern, iterative, c, nc)
+
+        def _search(expr, match):
+            if match(expr):
+                return True
+
+            if isinstance(expr, Basic):
+                args = expr.args
+            elif iterable(expr):
+                args = expr
+            else:
+                return False
+
+            return any(_search(arg, match) for arg in args)
+
+        return any(_search(self, _match(pattern)) for pattern in patterns)
 
     def replace(self, query, value, map=False):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
-        If map=True then also return the mapping {old: new} where `old``
+        If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
         value for it.
 
@@ -948,6 +1011,8 @@ class Basic(object):
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
+        if not callable(query):
+            query = sympify(query)
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
         elif isinstance(query, Basic):
@@ -958,7 +1023,8 @@ class Basic(object):
         results = []
 
         def rec_find(expr):
-            if _query(expr):
+            q = _query(expr)
+            if q or q == {}:
                 results.append(expr)
 
             for arg in expr.args:
@@ -988,11 +1054,12 @@ class Basic(object):
         Helper method for match() - switches the pattern and expr.
 
         Can be used to solve linear equations:
-          >>> from sympy import Symbol, Wild, Integer
-          >>> a,b = map(Symbol, 'ab')
-          >>> x = Wild('x')
-          >>> (a+b*x).matches(Integer(0))
-          {x_: -a/b}
+
+        >>> from sympy import Symbol, Wild, Integer
+        >>> a,b = map(Symbol, 'ab')
+        >>> x = Wild('x')
+        >>> (a+b*x).matches(Integer(0))
+        {x_: -a/b}
 
         """
         if evaluate:
@@ -1023,8 +1090,8 @@ class Basic(object):
 
         Wild symbols match all.
 
-        Return None when expression (self) does not match
-        with pattern. Otherwise return a dictionary such that
+        Return ``None`` when expression (self) does not match
+        with pattern. Otherwise return a dictionary such that::
 
           pattern.subs(self.match(pattern)) == self
 
@@ -1115,7 +1182,10 @@ class Basic(object):
             return self
         else:
             pattern = args[:-1]
-            rule = '_eval_rewrite_as_' + str(args[-1])
+            if isinstance(args[-1], basestring):
+                rule = '_eval_rewrite_as_' + args[-1]
+            else:
+                rule = '_eval_rewrite_as_' + args[-1].__name__
 
             if not pattern:
                 return self._eval_rewrite(None, rule, **hints)
@@ -1155,6 +1225,7 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
+    @deprecated
     def __contains__(self, obj):
         return (self == obj)
 
@@ -1162,6 +1233,7 @@ class Atom(Basic):
     def class_key(cls):
         return 2, 0, cls.__name__
 
+    @cacheit
     def sort_key(self, order=None):
         from sympy.core import S
-        return self.class_key(), (1, (self,)), S.One.sort_key(), S.One
+        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One

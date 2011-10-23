@@ -2,8 +2,7 @@
 
 from sympy.polys.monomialtools import (
     monomials, monomial_count,
-    monomial_lex_key, monomial_grlex_key, monomial_grevlex_key, monomial_key,
-    monomial_lex_cmp, monomial_grlex_cmp, monomial_grevlex_cmp, monomial_cmp,
+    monomial_key, lex, grlex, grevlex,
     monomial_mul, monomial_div,
     monomial_gcd, monomial_lcm,
     monomial_max, monomial_min,
@@ -12,7 +11,7 @@ from sympy.polys.monomialtools import (
 
 from sympy.polys.polyerrors import ExactQuotientFailed
 
-from sympy.abc import x, y, z
+from sympy.abc import a, b, c, x, y, z
 from sympy.utilities.pytest import raises
 
 def test_monomials():
@@ -35,76 +34,72 @@ def test_monomial_count():
     assert monomial_count(2, 2) == 6
     assert monomial_count(2, 3) == 10
 
-def test_monomial_lex_key():
-    assert monomial_lex_key((1,2,3)) == (1,2,3)
+def test_lex_order():
+    assert lex((1,2,3)) == (1,2,3)
+    assert str(lex) == 'lex'
 
-def test_monomial_grlex_key():
-    assert monomial_grlex_key((1,2,3)) == (6, (1,2,3))
+    assert lex((1,2,3)) == lex((1,2,3))
 
-def test_monomial_grevlex_key():
-    assert monomial_grevlex_key((1,2,3)) == (6, (3,2,1))
+    assert lex((2,2,3)) > lex((1,2,3))
+    assert lex((1,3,3)) > lex((1,2,3))
+    assert lex((1,2,4)) > lex((1,2,3))
+
+    assert lex((0,2,3)) < lex((1,2,3))
+    assert lex((1,1,3)) < lex((1,2,3))
+    assert lex((1,2,2)) < lex((1,2,3))
+
+def test_grlex_order():
+    assert grlex((1,2,3)) == (6, (1,2,3))
+    assert str(grlex) == 'grlex'
+
+    assert grlex((1,2,3)) == grlex((1,2,3))
+
+    assert grlex((2,2,3)) > grlex((1,2,3))
+    assert grlex((1,3,3)) > grlex((1,2,3))
+    assert grlex((1,2,4)) > grlex((1,2,3))
+
+    assert grlex((0,2,3)) < grlex((1,2,3))
+    assert grlex((1,1,3)) < grlex((1,2,3))
+    assert grlex((1,2,2)) < grlex((1,2,3))
+
+    assert grlex((2,2,3)) > grlex((1,2,4))
+    assert grlex((1,3,3)) > grlex((1,2,4))
+
+    assert grlex((0,2,3)) < grlex((1,2,2))
+    assert grlex((1,1,3)) < grlex((1,2,2))
+
+def test_grevlex_order():
+    assert grevlex((1,2,3)) == (6, (-3,-2,-1))
+    assert str(grevlex) == 'grevlex'
+
+    assert grevlex((1,2,3)) == grevlex((1,2,3))
+
+    assert grevlex((2,2,3)) > grevlex((1,2,3))
+    assert grevlex((1,3,3)) > grevlex((1,2,3))
+    assert grevlex((1,2,4)) > grevlex((1,2,3))
+
+    assert grevlex((0,2,3)) < grevlex((1,2,3))
+    assert grevlex((1,1,3)) < grevlex((1,2,3))
+    assert grevlex((1,2,2)) < grevlex((1,2,3))
+
+    assert grevlex((2,2,3)) > grevlex((1,2,4))
+    assert grevlex((1,3,3)) > grevlex((1,2,4))
+
+    assert grevlex((0,2,3)) < grevlex((1,2,2))
+    assert grevlex((1,1,3)) < grevlex((1,2,2))
+
+    assert grevlex((0,1,1)) > grevlex((0,0,2))
+    assert grevlex((0,3,1)) < grevlex((2,2,1))
 
 def test_monomial_key():
-    assert monomial_key() == monomial_lex_key
+    assert monomial_key() == lex
 
-    assert monomial_key('lex') == monomial_lex_key
-    assert monomial_key('grlex') == monomial_grlex_key
-    assert monomial_key('grevlex') == monomial_grevlex_key
+    assert monomial_key('lex') == lex
+    assert monomial_key('grlex') == grlex
+    assert monomial_key('grevlex') == grevlex
 
     raises(ValueError, "monomial_key('foo')")
     raises(ValueError, "monomial_key(1)")
-
-def test_monomial_lex_cmp():
-    assert monomial_lex_cmp((1,2,3), (1,2,3)) == 0
-
-    assert monomial_lex_cmp((2,2,3), (1,2,3)) == 1
-    assert monomial_lex_cmp((1,3,3), (1,2,3)) == 1
-    assert monomial_lex_cmp((1,2,4), (1,2,3)) == 1
-
-    assert monomial_lex_cmp((0,2,3), (1,2,3)) == -1
-    assert monomial_lex_cmp((1,1,3), (1,2,3)) == -1
-    assert monomial_lex_cmp((1,2,2), (1,2,3)) == -1
-
-def test_monomial_grlex_cmp():
-    assert monomial_grlex_cmp((1,2,3), (1,2,3)) == 0
-
-    assert monomial_grlex_cmp((2,2,3), (1,2,3)) == 1
-    assert monomial_grlex_cmp((1,3,3), (1,2,3)) == 1
-    assert monomial_grlex_cmp((1,2,4), (1,2,3)) == 1
-
-    assert monomial_grlex_cmp((0,2,3), (1,2,3)) == -1
-    assert monomial_grlex_cmp((1,1,3), (1,2,3)) == -1
-    assert monomial_grlex_cmp((1,2,2), (1,2,3)) == -1
-
-    assert monomial_grlex_cmp((2,2,3), (1,2,4)) == 1
-    assert monomial_grlex_cmp((1,3,3), (1,2,4)) == 1
-
-    assert monomial_grlex_cmp((0,2,3), (1,2,2)) == -1
-    assert monomial_grlex_cmp((1,1,3), (1,2,2)) == -1
-
-def test_monomial_grevlex_cmp():
-    assert monomial_grevlex_cmp((1,2,3), (1,2,3)) == 0
-
-    assert monomial_grevlex_cmp((2,2,3), (1,2,3)) == 1
-    assert monomial_grevlex_cmp((1,3,3), (1,2,3)) == 1
-    assert monomial_grevlex_cmp((1,2,4), (1,2,3)) == 1
-
-    assert monomial_grevlex_cmp((0,2,3), (1,2,3)) == -1
-    assert monomial_grevlex_cmp((1,1,3), (1,2,3)) == -1
-    assert monomial_grevlex_cmp((1,2,2), (1,2,3)) == -1
-
-    assert monomial_grevlex_cmp((2,2,3), (1,2,4)) == 1
-    assert monomial_grevlex_cmp((1,3,3), (1,2,4)) == 1
-
-    assert monomial_grevlex_cmp((0,2,3), (1,2,2)) == -1
-    assert monomial_grevlex_cmp((1,1,3), (1,2,2)) == -1
-
-def test_monomial_cmp():
-    assert monomial_cmp('lex') == monomial_lex_cmp
-    assert monomial_cmp('grlex') == monomial_grlex_cmp
-    assert monomial_cmp('grevlex') == monomial_grevlex_cmp
-
-    raises(ValueError, "monomial_cmp('unknown')")
 
 def test_monomial_mul():
     assert monomial_mul((3,4,1), (1,2,0)) == (4,6,1)
@@ -125,23 +120,52 @@ def test_monomial_min():
     assert monomial_min((3,4,5), (0,5,1), (6,3,9)) == (0,3,1)
 
 def test_Monomial():
-    assert Monomial(1, 2, 3).data == (1, 2, 3)
+    m = Monomial((3, 4, 1), (x, y, z))
+    n = Monomial((1, 2, 0), (x, y, z))
 
-    m, n = Monomial(3, 4, 1), Monomial(1, 2, 0)
+    assert m.as_expr() == x**3*y**4*z
+    assert n.as_expr() == x**1*y**2
 
-    assert m*n == Monomial(4, 6, 1)
-    assert m/n == Monomial(2, 2, 1)
+    assert m.as_expr(a, b, c) == a**3*b**4*c
+    assert n.as_expr(a, b, c) == a**1*b**2
 
-    assert m.gcd(n) == Monomial(1, 2, 0)
-    assert m.lcm(n) == Monomial(3, 4, 1)
+    assert m.exponents == (3, 4, 1)
+    assert m.gens == (x, y, z)
 
-    a, b, c = [ Monomial(*monom) for monom in [(3,4,5), (0,5,1), (6,3,9)] ]
+    assert n.exponents == (1, 2, 0)
+    assert n.gens == (x, y, z)
 
-    assert Monomial.max(a, b, c) == Monomial(6, 5, 9)
-    assert Monomial.min(a, b, c) == Monomial(0, 3, 1)
+    assert m == (3, 4, 1)
+    assert n != (3, 4, 1)
+    assert m != (1, 2, 0)
+    assert n == (1, 2, 0)
 
-    n = Monomial(5, 2, 0)
+    assert m[0] == m[-3] == 3
+    assert m[1] == m[-2] == 4
+    assert m[2] == m[-1] == 1
 
-    raises(ExactQuotientFailed, "m / n")
+    assert n[0] == n[-3] == 1
+    assert n[1] == n[-2] == 2
+    assert n[2] == n[-1] == 0
 
-    assert n.as_expr(x, y, z) == x**5*y**2
+    assert m[:2] == (3, 4)
+    assert n[:2] == (1, 2)
+
+    assert m*n == Monomial((4, 6, 1))
+    assert m/n == Monomial((2, 2, 1))
+
+    assert m*(1, 2, 0) == Monomial((4, 6, 1))
+    assert m/(1, 2, 0) == Monomial((2, 2, 1))
+
+    assert m.gcd(n) == Monomial((1, 2, 0))
+    assert m.lcm(n) == Monomial((3, 4, 1))
+
+    assert m.gcd((1, 2, 0)) == Monomial((1, 2, 0))
+    assert m.lcm((1, 2, 0)) == Monomial((3, 4, 1))
+
+    assert m**0 == Monomial((0, 0, 0))
+    assert m**1 == m
+    assert m**2 == Monomial((6, 8, 2))
+    assert m**3 == Monomial((9,12, 3))
+
+    raises(ExactQuotientFailed, "m/Monomial((5, 2, 0))")

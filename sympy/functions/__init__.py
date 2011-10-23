@@ -17,9 +17,9 @@ from special.polynomials import (legendre, assoc_legendre, hermite, chebyshevt,
 from combinatorial.factorials import factorial, factorial2, rf, ff, binomial
 from combinatorial.factorials import factorial, RisingFactorial, FallingFactorial
 from combinatorial.factorials import binomial, factorial2
-from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell
+from combinatorial.numbers import fibonacci, lucas, harmonic, bernoulli, bell, euler, catalan
 
-from elementary.miscellaneous import sqrt, Min, Max, Id
+from elementary.miscellaneous import sqrt, root, Min, Max, Id
 from elementary.complexes import re, im, sign, Abs, conjugate, arg
 from elementary.trigonometric import acot, cot, tan, cos, sin, asin, acos, atan, atan2
 from elementary.exponential import exp, log, LambertW
@@ -29,7 +29,7 @@ from elementary.piecewise import Piecewise, piecewise_fold
 
 from special.error_functions import erf
 from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, \
-         loggamma, digamma, trigamma
+         loggamma, digamma, trigamma, beta
 from special.zeta_functions import dirichlet_eta, zeta
 from special.spherical_harmonics import Ylm, Zlm
 from special.tensor_functions import Dij, Eijk, LeviCivita

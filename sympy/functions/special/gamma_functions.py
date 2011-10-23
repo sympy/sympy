@@ -125,7 +125,7 @@ class lowergamma(Function):
     >>> lowergamma(3, x)
     -x**2*exp(-x) - 2*x*exp(-x) + 2 - 2*exp(-x)
     >>> lowergamma(-S(1)/2, x)
-    -2*pi**(1/2)*erf(x**(1/2)) - 2*exp(-x)/x**(1/2)
+    -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
 
     **References**
 
@@ -204,7 +204,7 @@ class uppergamma(Function):
     >>> uppergamma(3, x)
     x**2*exp(-x) + 2*x*exp(-x) + 2*exp(-x)
     >>> uppergamma(-S(1)/2, x)
-    -2*pi**(1/2)*(-erf(x**(1/2)) + 1) + 2*exp(-x)/x**(1/2)
+    -2*sqrt(pi)*(-erf(sqrt(x)) + 1) + 2*exp(-x)/sqrt(x)
 
     **See also:** :class:`gamma`, :class:`lowergamma`, :class:`hyper`.
 
@@ -433,3 +433,10 @@ def digamma(x):
 
 def trigamma(x):
     return polygamma(1, x)
+
+def beta(x, y):
+    """ Euler Beta function
+    beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)
+    """
+    return gamma(x)*gamma(y) / gamma(x+y)
+

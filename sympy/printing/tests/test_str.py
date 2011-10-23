@@ -1,11 +1,12 @@
+from __future__ import division
 from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
     Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
     Matrix, nan, O, oo, pi, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
     summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
-    Dummy)
+    Dummy, Dict)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum
+from sympy.polys import Poly, RootOf, RootSum, groebner
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
@@ -62,6 +63,12 @@ def test_dict():
     assert str({1: x**2, 2: y*x}) in ("{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
     assert sstr({1: x**2, 2: y*x}) == "{1: x**2, 2: x*y}"
 
+def test_Dict():
+    assert str(Dict({1: 1+x})) == sstr({1: 1+x}) == "{1: x + 1}"
+    assert str(Dict({1: x**2, 2: y*x})) in (
+            "{1: x**2, 2: x*y}", "{2: x*y, 1: x**2}")
+    assert sstr(Dict({1: x**2, 2: y*x})) == "{1: x**2, 2: x*y}"
+
 def test_Dummy():
     assert str(d) == "_d"
     assert str(d+x) == "_d + x"
@@ -101,7 +108,7 @@ def test_ImaginaryUnit():
 
 def test_Infinity():
     assert str(oo) == "oo"
-    assert str(I * oo) == "(oo)*I"
+    assert str(I * oo) == "oo*I"
 
 def test_Integer():
     assert str(Integer(-1)) == "-1"
@@ -218,6 +225,18 @@ def test_Pow():
     assert str((x+y)**-2) == "(x + y)**(-2)"
     assert str((x+y)**2) == "(x + y)**2"
     assert str((x+y)**(1+x)) == "(x + y)**(x + 1)"
+    assert str(x**Rational(1, 3)) == "x**(1/3)"
+    assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
+    assert str(sqrt(sqrt(x))) == "x**(1/4)"
+
+def test_sqrt():
+    assert str(sqrt(x)) == "sqrt(x)"
+    assert str(sqrt(x**2)) == "sqrt(x**2)"
+    assert str(1/sqrt(x)) == "1/sqrt(x)"
+    assert str(1/sqrt(x**2)) == "1/sqrt(x**2)"
+    assert str(y/sqrt(x)) == "y/sqrt(x)"
+    assert str(x**(1/2)) == "x**0.5"
+    assert str(1/x**(1/2)) == "x**-0.5"
 
 def test_Rational():
     n1 = Rational(1,4)
@@ -255,18 +274,18 @@ def test_Rational():
     assert str(S("0.[9]", rational=1)) == "1"
     assert str(S("-0.[9]", rational=1)) == "-1"
 
-    assert str(Rational(1,4) ** Rational(1,2)) == "1/2"
-    assert str(Rational(1,36) ** Rational(1,2)) == "1/6"
+    assert str(sqrt(Rational(1,4))) == "1/2"
+    assert str(sqrt(Rational(1,36))) == "1/6"
 
     assert str((123**25) ** Rational(1,25)) == "123"
     assert str((123**25+1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "123"
     assert str((123**25-1)**Rational(1,25)) != "122"
 
-    assert str(Rational(81,36)**(Rational(3,2))) == "27/8"
-    assert str(Rational(81,36)**(-Rational(3,2))) == "8/27"
+    assert str(sqrt(Rational(81,36))**3) == "27/8"
+    assert str(1/sqrt(Rational(81,36))**3) == "8/27"
 
-    assert str((-4)**Rational(1,2)) == str(2*I)
+    assert str(sqrt(-4)) == str(2*I)
     assert str(2**Rational(1,10**10)) == "2**(1/10000000000)"
 
 def test_Float():
@@ -290,6 +309,16 @@ def test_RootSum():
 
     assert str(RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
     assert str(RootSum(f, Lambda(z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
+
+def test_GroebnerBasis():
+    assert str(groebner([], x, y)) == "GroebnerBasis([], x, y, domain='ZZ', order='lex')"
+
+    F = [x**2 - 3*y - x + 1, y**2 - 2*x + y - 1]
+
+    assert str(groebner(F, order='grlex')) == \
+        "GroebnerBasis([x**2 - x - 3*y + 1, y**2 - 2*x + y - 1], x, y, domain='ZZ', order='grlex')"
+    assert str(groebner(F, order='lex')) == \
+        "GroebnerBasis([2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7], x, y, domain='ZZ', order='lex')"
 
 def test_Sample():
     assert str(Sample([x, y, 1])) in [
@@ -355,17 +384,12 @@ def test_bug2():
     b = str(e)
     assert a == b
 
-def test_bug3():
-    e = sqrt(x)
-    assert str(e) == "x**(1/2)"
 
 def test_bug4():
     e = -2*sqrt(x)-y/sqrt(x)/2
     assert str(e) not in ["(-2)*x**1/2(-1/2)*x**(-1/2)*y",
             "-2*x**1/2(-1/2)*x**(-1/2)*y","-2*x**1/2-1/2*x**-1/2*w"]
-    assert str(e) in ["-2*x**(1/2) - 1/2*x**(-1/2)*y", "-2*x**(1/2) - 1/2*y*x**(-1/2)",
-                      "-1/2*x**(-1/2)*y - 2*x**(1/2)", "-1/2*y*x**(-1/2) - 2*x**(1/2)",
-                      "-2*x**(1/2) - y/(2*x**(1/2))"]
+    assert str(e) == "-2*sqrt(x) - y/(2*sqrt(x))"
 
 def test_issue922():
     e = Integral(x,x) + 1
@@ -380,7 +404,7 @@ def test_sstrrepr():
     assert sstrrepr(e)  == "['a', 'b', 'c', x]"
 
 def test_infinity():
-    assert sstr(I*oo) == "(oo)*I"
+    assert sstr(I*oo) == "oo*I"
 
 def test_full_prec():
     assert sstr(S("0.3"), full_prec=True) == "0.300000000000000"
@@ -398,6 +422,15 @@ def test_full_prec():
             "0.3*x",
             "x*0.3"
             ]
+
+def test_noncommutative():
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    assert sstr(A*B*C**-1) == "A*B*C**(-1)"
+    assert sstr(C**-1*A*B) == "C**(-1)*A*B"
+    assert sstr(A*C**-1*B) == "A*C**(-1)*B"
+    assert sstr(sqrt(A)) == "sqrt(A)"
+    assert sstr(1/sqrt(A)) == "A**(-1/2)"
 
 def test_empty_printer():
     str_printer = StrPrinter()

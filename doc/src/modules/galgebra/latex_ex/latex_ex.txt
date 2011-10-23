@@ -42,6 +42,10 @@
 .. % The abstract should be a paragraph or two long, and describe the
 .. % scope of the document.
 
+.. math ::
+
+    \newcommand{\W}{\wedge}
+    \newcommand{\bm}{\boldsymbol}
 
 .. topic:: Abstract
 

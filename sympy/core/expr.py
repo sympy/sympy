@@ -40,41 +40,32 @@ class Expr(Basic, EvalfMixin):
         """
         return False
 
+    @cacheit
     def sort_key(self, order=None):
         # XXX: The order argument does not actually work
-        from sympy.core import S
 
-        def key_inner(arg):
-            if isinstance(arg, Basic):
-                return arg.sort_key(order=order)
-            elif hasattr(arg, '__iter__'):
-                return tuple(key_inner(arg) for arg in args)
-            else:
-                return arg
+        from sympy.utilities import default_sort_key
 
         coeff, expr = self.as_coeff_Mul()
+
         if expr.is_Pow:
             expr, exp = expr.args
         else:
             expr, exp = expr, S.One
 
         if expr.is_Atom:
-            if expr.is_Symbol:
-                args = (str(expr),)
-            else:
-                args = (expr,)
+            args = (str(expr),)
         else:
             if expr.is_Add:
                 args = expr.as_ordered_terms(order=order)
+            elif expr.is_Mul:
+                args = expr.as_ordered_factors(order=order)
             else:
                 args = expr.args
 
-            args = tuple(key_inner(arg) for arg in args)
+            args = tuple([ default_sort_key(arg, order=order) for arg in args ])
 
-            if expr.is_Mul:
-                args = sorted(args)
-
-        args = (len(args), args)
+        args = (len(args), tuple(args))
         exp = exp.sort_key(order=order)
 
         return expr.class_key(), args, exp, coeff
@@ -445,12 +436,12 @@ class Expr(Basic, EvalfMixin):
         is no O(...) term, it returns None.
 
         Example:
+
         >>> from sympy import O
         >>> from sympy.abc import x
         >>> (1 + x + O(x**2)).getn()
         2
         >>> (1 + x).getn()
-        >>>
 
         """
         o = self.getO()
@@ -485,7 +476,7 @@ class Expr(Basic, EvalfMixin):
 
     def args_cnc(self):
         """treat self as Mul and split it into tuple (set, list)
-        where `set` contains the commutative parts and `list` contains
+        where ``set`` contains the commutative parts and ``list`` contains
         the ordered non-commutative args.
 
         A special treatment is that -1 is separated from a Rational:
@@ -640,7 +631,7 @@ class Expr(Basic, EvalfMixin):
             return margs
 
         def find(l, sub, first=True):
-            """ Find where list sub appears in list l. When `first` is True
+            """ Find where list sub appears in list l. When ``first`` is True
             the first occurance from the left is returned, else the last
             occurance is returned. Return None if sub is not in l.
 
@@ -822,12 +813,14 @@ class Expr(Basic, EvalfMixin):
 
     def as_independent(self, *deps, **hint):
         """
-        A mostly naive separation of a Mul or Add into arguments that are not/
+        A mostly naive separation of a Mul or Add into arguments that are not
         are dependent on deps. To obtain as complete a separation of variables
         as possible, use a separation method first, e.g.:
-            separatevars() to change Mul, Add and Pow (including exp) into Mul
-            .expand(mul=True) to change Add or Mul into Add
-            .expand(log=True) to change log expr into an Add
+
+        * separatevars() to change Mul, Add and Pow (including exp) into Mul
+        * .expand(mul=True) to change Add or Mul into Add
+        * .expand(log=True) to change log expr into an Add
+
         The only non-naive thing that is done here is to respect noncommutative
         ordering of variables.
 
@@ -844,81 +837,101 @@ class Expr(Basic, EvalfMixin):
 
         Examples:
 
-          -- self is an Add
-            >>> from sympy import sin, cos, exp
-            >>> from sympy.abc import x, y, z
+        -- self is an Add
 
-            >>> (x + x*y).as_independent(x)
-            (0, x*y + x)
-            >>> (x + x*y).as_independent(y)
-            (x, x*y)
-            >>> (2*x*sin(x) + y + x + z).as_independent(x)
-            (y + z, 2*x*sin(x) + x)
-            >>> (2*x*sin(x) + y + x + z).as_independent(x, y)
-            (z, 2*x*sin(x) + x + y)
+        >>> from sympy import sin, cos, exp
+        >>> from sympy.abc import x, y, z
 
-          -- self is a Mul
-            >>> (x*sin(x)*cos(y)).as_independent(x)
-            (cos(y), x*sin(x))
+        >>> (x + x*y).as_independent(x)
+        (0, x*y + x)
+        >>> (x + x*y).as_independent(y)
+        (x, x*y)
+        >>> (2*x*sin(x) + y + x + z).as_independent(x)
+        (y + z, 2*x*sin(x) + x)
+        >>> (2*x*sin(x) + y + x + z).as_independent(x, y)
+        (z, 2*x*sin(x) + x + y)
 
-                non-commutative terms cannot always be separated out
-                when self is a Mul
+        -- self is a Mul
 
-            >>> from sympy import symbols
-            >>> n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
-            >>> (n1 + n1*n2).as_independent(n2)
-            (n1, n1*n2)
-            >>> (n2*n1 + n1*n2).as_independent(n2)
-            (0, n1*n2 + n2*n1)
-            >>> (n1*n2*n3).as_independent(n1)
-            (1, n1*n2*n3)
-            >>> (n1*n2*n3).as_independent(n2)
-            (n1, n2*n3)
-            >>> ((x-n1)*(x-y)).as_independent(x)
-            (1, (x - y)*(x - n1))
+        >>> (x*sin(x)*cos(y)).as_independent(x)
+        (cos(y), x*sin(x))
 
-          -- self is anything else:
-            >>> (sin(x)).as_independent(x)
-            (1, sin(x))
-            >>> (sin(x)).as_independent(y)
-            (sin(x), 1)
-            >>> exp(x+y).as_independent(x)
-            (1, exp(x + y))
+        non-commutative terms cannot always be separated out when self is a Mul
 
-          -- force self to be treated as an Add:
-            >>> (3*x).as_independent(x, as_Add=1)
-            (0, 3*x)
+        >>> from sympy import symbols
+        >>> n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
+        >>> (n1 + n1*n2).as_independent(n2)
+        (n1, n1*n2)
+        >>> (n2*n1 + n1*n2).as_independent(n2)
+        (0, n1*n2 + n2*n1)
+        >>> (n1*n2*n3).as_independent(n1)
+        (1, n1*n2*n3)
+        >>> (n1*n2*n3).as_independent(n2)
+        (n1, n2*n3)
+        >>> ((x-n1)*(x-y)).as_independent(x)
+        (1, (x - y)*(x - n1))
 
-          -- force self to be treated as a Mul:
-            >>> (3+x).as_independent(x, as_Add=0)
-            (1, x + 3)
-            >>> (-3+x).as_independent(x, as_Add=0)
-            (1, x - 3)
+        -- self is anything else:
 
-            Note how the below differs from the above in making the
-            constant on the dep term positive.
-            >>> (y*(-3+x)).as_independent(x)
-            (y, x - 3)
+        >>> (sin(x)).as_independent(x)
+        (1, sin(x))
+        >>> (sin(x)).as_independent(y)
+        (sin(x), 1)
+        >>> exp(x+y).as_independent(x)
+        (1, exp(x + y))
 
-            Note: when trying to get independent terms, a separation method
-            might need to be used first. In this case, it is important to keep
-            track of what you send to this routine so you know how to interpret
-            the returned values
+        -- force self to be treated as an Add:
 
-            >>> from sympy import separatevars, log
-            >>> separatevars(exp(x+y)).as_independent(x)
-            (exp(y), exp(x))
-            >>> (x + x*y).as_independent(y)
-            (x, x*y)
-            >>> separatevars(x + x*y).as_independent(y)
-            (x, y + 1)
-            >>> (x*(1 + y)).as_independent(y)
-            (x, y + 1)
-            >>> (x*(1 + y)).expand(mul=True).as_independent(y)
-            (x, x*y)
-            >>> a, b=symbols('a b',positive=True)
-            >>> (log(a*b).expand(log=True)).as_independent(b)
-            (log(a), log(b))
+        >>> (3*x).as_independent(x, as_Add=1)
+        (0, 3*x)
+
+        -- force self to be treated as a Mul:
+
+        >>> (3+x).as_independent(x, as_Add=0)
+        (1, x + 3)
+        >>> (-3+x).as_independent(x, as_Add=0)
+        (1, x - 3)
+
+        Note how the below differs from the above in making the
+        constant on the dep term positive.
+
+        >>> (y*(-3+x)).as_independent(x)
+        (y, x - 3)
+
+        -- use .as_independent() for true independence testing instead
+           of .has(). The former considers only symbols in the free
+           symbols while the latter considers all symbols
+
+        >>> from sympy import Integral
+        >>> I = Integral(x, (x, 1, 2))
+        >>> I.has(x)
+        True
+        >>> x in I.free_symbols
+        False
+        >>> I.as_independent(x) == (I, 1)
+        True
+        >>> (I + x).as_independent(x) == (I, x)
+        True
+
+        Note: when trying to get independent terms, a separation method
+        might need to be used first. In this case, it is important to keep
+        track of what you send to this routine so you know how to interpret
+        the returned values
+
+        >>> from sympy import separatevars, log
+        >>> separatevars(exp(x+y)).as_independent(x)
+        (exp(y), exp(x))
+        >>> (x + x*y).as_independent(y)
+        (x, x*y)
+        >>> separatevars(x + x*y).as_independent(y)
+        (x, y + 1)
+        >>> (x*(1 + y)).as_independent(y)
+        (x, y + 1)
+        >>> (x*(1 + y)).expand(mul=True).as_independent(y)
+        (x, x*y)
+        >>> a, b=symbols('a b',positive=True)
+        >>> (log(a*b).expand(log=True)).as_independent(b)
+        (log(a), log(b))
 
         See also: .separatevars(), .expand(log=True),
                   .as_two_terms(), .as_coeff_add(), .as_coeff_mul()
@@ -926,13 +939,30 @@ class Expr(Basic, EvalfMixin):
         from sympy.utilities.iterables import sift
 
         func = self.func
+        # sift out deps into symbolic and other and ignore
+        # all symbols but those that are in the free symbols
+        sym = set()
+        other = []
+        for d in deps:
+            if isinstance(d, C.Symbol): # Symbol.is_Symbol is True
+                sym.add(d)
+            else:
+                other.append(d)
+        def has(e):
+            """return the standard has() if there are no literal symbols, else
+            check to see that symbol-deps are in the free symbols."""
+            has_other = e.has(*other)
+            if not sym:
+                return has_other
+            return has_other or e.has(*(e.free_symbols & sym))
+
         if hint.get('as_Add', func is Add):
             want = Add
         else:
             want = Mul
         if (want is not func or
             func is not Add and func is not Mul):
-            if self.has(*deps):
+            if has(self):
                 return (want.identity, self)
             else:
                 return (self, want.identity)
@@ -942,7 +972,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 args, nc = self.args_cnc()
 
-        d = sift(args, lambda x: x.has(*deps))
+        d = sift(args, lambda x: has(x))
         depend = d.pop(True, [])
         indep = d.pop(False, [])
         if func is Add: # all terms were treated as commutative
@@ -950,7 +980,7 @@ class Expr(Basic, EvalfMixin):
                     Add(*depend))
         else: # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
-                if n.has(*deps):
+                if has(n):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
@@ -976,7 +1006,7 @@ class Expr(Basic, EvalfMixin):
            >>> from sympy.abc import z, w
 
            >>> (z + w*I).as_real_imag()
-           (-im(w) + re(z), im(z) + re(w))
+           (re(z) - im(w), re(w) + im(z))
 
         """
         return (C.re(self), C.im(self))
@@ -989,17 +1019,25 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def as_coeff_terms(self, *deps):
+        """
+        This method is deprecated. Use .as_coeff_mul() instead.
+        """
         import warnings
         warnings.warn("\nuse as_coeff_mul() instead of as_coeff_terms().",
                       DeprecationWarning)
+        return self.as_coeff_mul(*deps)
 
     def as_coeff_factors(self, *deps):
+        """
+        This method is deprecated.  Use .as_coeff_add() instead.
+        """
         import warnings
         warnings.warn("\nuse as_coeff_add() instead of as_coeff_factors().",
                       DeprecationWarning)
+        return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
-        """Return the tuple (c, args) where self is written as a Mul, `m`.
+        """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
         c should be a Rational multiplied by any terms of the Mul that are
         independent of deps.
@@ -1015,7 +1053,7 @@ class Expr(Basic, EvalfMixin):
         - if you don't want to process the arguments of the tail but need the
           tail then use self.as_two_terms() which gives the head and tail;
         - if you want to split self into an independent and dependent parts
-          use self.as_independent(*deps)
+          use self.as_independent(\*deps)
 
         >>> from sympy import S
         >>> from sympy.abc import x, y
@@ -1034,12 +1072,12 @@ class Expr(Basic, EvalfMixin):
         return S.One, (self,)
 
     def as_coeff_add(self, *deps):
-        """Return the tuple (c, args) where self is written as an Add, `a`.
+        """Return the tuple (c, args) where self is written as an Add, ``a``.
 
         c should be a Rational added to any terms of the Add that are
         independent of deps.
 
-        args should be a tuple of all other terms of `a`; args is empty
+        args should be a tuple of all other terms of ``a``; args is empty
         if self is a Number or if self is independent of deps (when given).
 
         This should be used when you don't know if self is an Add or not but
@@ -1050,7 +1088,7 @@ class Expr(Basic, EvalfMixin):
         - if you don't want to process the arguments of the tail but need the
           tail then use self.as_two_terms() which gives the head and tail.
         - if you want to split self into an independent and dependent parts
-          use self.as_independent(*deps)
+          use self.as_independent(\*deps)
 
         >>> from sympy import S
         >>> from sympy.abc import x, y
@@ -1274,8 +1312,8 @@ class Expr(Basic, EvalfMixin):
            e.could_extract_minus_sign() == True, else
            e.could_extract_minus_sign() == False.
 
-           For any expression, the set {e.could_extract_minus_sign(),
-           (-e).could_extract_minus_sign()} must be {True, False}.
+           For any expression, the set ``{e.could_extract_minus_sign(),
+           (-e).could_extract_minus_sign()}`` must be ``{True, False}``.
 
            >>> from sympy.abc import x, y
            >>> (x-y).could_extract_minus_sign() != (y-x).could_extract_minus_sign()
@@ -1305,8 +1343,8 @@ class Expr(Basic, EvalfMixin):
                 negative_args = filter(None, arg_signs)
                 return len(negative_args) % 2 == 1
 
-            # As a last resort, we choose the one with greater hash
-            return hash(self) < hash(negative_self)
+            # As a last resort, we choose the one with greater value of .sort_key()
+            return self.sort_key() < negative_self.sort_key()
 
     def _eval_is_polynomial(self, syms):
         if self.free_symbols.intersection(syms) == set([]):
@@ -1320,8 +1358,8 @@ class Expr(Basic, EvalfMixin):
         This checks if self is an exact polynomial in syms.  This function
         returns False for expressions that are "polynomials" with symbolic
         exponents.  Thus, you should be able to apply polynomial algorithms to
-        expressions for which this returns True, and Poly(expr, *syms) should
-        work only if and only if expr.is_polynomial(*syms) returns True. The
+        expressions for which this returns True, and Poly(expr, \*syms) should
+        work only if and only if expr.is_polynomial(\*syms) returns True. The
         polynomial does not have to be in expanded form.  If no symbols are
         given, all free symbols in the expression will be used.
 
@@ -1329,6 +1367,7 @@ class Expr(Basic, EvalfMixin):
         Symbol('z', polynomial=True).
 
         **Examples**
+
         >>> from sympy import Symbol
         >>> x = Symbol('x')
         >>> ((x**2 + 1)**4).is_polynomial(x)
@@ -1451,7 +1490,7 @@ class Expr(Basic, EvalfMixin):
 
     def series(self, x=None, x0=0, n=6, dir="+"):
         """
-        Series expansion of "self" around `x = x0` yielding either terms of
+        Series expansion of "self" around ``x = x0`` yielding either terms of
         the series one by one (the lazy series given when n=None), else
         all the terms at once when n != None.
 
@@ -1459,14 +1498,13 @@ class Expr(Basic, EvalfMixin):
         in it and the entire expression represents x - x0, the displacement
         from x0. (If there is no O() term then the series was exact and x has
         it's normal meaning.) This is currently necessary since sympy's O()
-        can only represent terms at x0=0. So instead of
+        can only represent terms at x0=0. So instead of::
 
-            >> cos(x).series(x0=1, n=2)
-            (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
+          cos(x).series(x0=1, n=2) --> (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
 
-        which graphically looks like this:
+        which graphically looks like this::
 
-               \
+               |
               .|.         . .
              . | \      .     .
             ---+----------------------
@@ -1474,11 +1512,11 @@ class Expr(Basic, EvalfMixin):
                |    \
               x=0
 
-        the following is returned instead
+        the following is returned instead::
 
-            -x*sin(1) + cos(1) + O(x**2)
+        -x*sin(1) + cos(1) + O(x**2)
 
-        whose graph is this
+        whose graph is this::
 
                \ |
               . .|        . .
@@ -1488,13 +1526,13 @@ class Expr(Basic, EvalfMixin):
                  |  \
                 x=0
 
-        which is identical to cos(x + 1).series(n=2).
+        which is identical to ``cos(x + 1).series(n=2)``.
 
         Usage:
-            Returns the series expansion of "self" around the point `x = x0`
-            with respect to `x` up to O(x**n) (default n is 6).
+            Returns the series expansion of "self" around the point ``x = x0``
+            with respect to ``x`` up to O(x**n) (default n is 6).
 
-            If `x=None` and `self` is univariate, the univariate symbol will
+            If ``x=None`` and ``self`` is univariate, the univariate symbol will
             be supplied, otherwise an error will be raised.
 
             >>> from sympy import cos, exp
@@ -1509,14 +1547,14 @@ class Expr(Basic, EvalfMixin):
             >>> e.series(x, n=2)
             cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
-            If `n=None` then an iterator of the series terms will be returned.
+            If ``n=None`` then an iterator of the series terms will be returned.
 
             >>> term=cos(x).series(n=None)
             >>> [term.next() for i in range(2)]
             [1, -x**2/2]
 
-            For `dir=+` (default) the series is calculated from the right and
-            for `dir=-` the series from the left. For smooth functions this
+            For ``dir=+`` (default) the series is calculated from the right and
+            for ``dir=-`` the series from the left. For smooth functions this
             flag will not alter the results.
 
             >>> abs(x).series(dir="+")
@@ -1538,7 +1576,7 @@ class Expr(Basic, EvalfMixin):
                 return self
 
         ## it seems like the following should be doable, but several failures
-        ## then occur. Is this related to issue 1747 et al? See also XPOS below.
+        ## then occur. Is this related to issue 1747 et al See also XPOS below.
         #if x.is_positive is x.is_negative is None:
         #    # replace x with an x that has a positive assumption
         #    xpos = C.Dummy('x', positive=True)
@@ -1655,10 +1693,10 @@ class Expr(Basic, EvalfMixin):
 
         Note: an infinite series will yield an infinite iterator. The following,
         for exaxmple, will never terminate. It will just keep printing terms
-        of the sin(x) series:
+        of the sin(x) series::
 
-            for term in sin(x).lseries(x):
-                print term
+          for term in sin(x).lseries(x):
+              print term
 
         The advantage of lseries() over nseries() is that many times you are
         just interested in the next term in the series (i.e. the first term for
@@ -1848,6 +1886,10 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
+    def as_coeff_Add(self):
+        """Efficiently extract the coefficient of a summation. """
+        return S.Zero, self
+
     ###################################################################################
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
@@ -1890,6 +1932,7 @@ class Expr(Basic, EvalfMixin):
     def _eval_expand_func(self, deep=True, **hints):
         return self
 
+    @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True, \
             mul=True, log=True, multinomial=True, basic=True, **hints):
         """
@@ -1951,10 +1994,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import separate
         return separate(self, deep)
 
-    def collect(self, syms, evaluate=True, exact=False):
+    def collect(self, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
         """See the collect function in sympy.simplify"""
         from sympy.simplify import collect
-        return collect(self, syms, evaluate, exact)
+        return collect(self, syms, func, evaluate, exact, distribute_order_term)
 
     def together(self, *args, **kwargs):
         """See the together function in sympy.polys"""

@@ -23,6 +23,8 @@ from sympy.polys.polyerrors import (
     NotAlgebraic,
 )
 
+from sympy.printing.lambdarepr import LambdaPrinter
+
 from sympy.utilities import (
     numbered_symbols, variations, lambdify,
 )
@@ -150,7 +152,7 @@ minpoly = minimal_polynomial
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """
     for coeffs in variations([1,-1], n, repetition=True):
-        yield coeffs
+        yield list(coeffs)
 
 def primitive_element(extension, x=None, **args):
     """Construct a common number field for all extensions. """
@@ -442,7 +444,7 @@ class AlgebraicNumber(Expr):
         return obj
 
     def __eq__(a, b):
-        if not b.is_AlgebraicNumber:
+        if not getattr(b, 'is_AlgebraicNumber', False):
             try:
                 b = to_number_field(b, a)
             except (NotAlgebraic, IsomorphismFailed):
@@ -502,6 +504,18 @@ class AlgebraicNumber(Expr):
 
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
+class IntervalPrinter(LambdaPrinter):
+    """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
+
+    def _print_Integer(self, expr):
+        return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
+
+    def _print_Rational(self, expr):
+        return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
+
+    def _print_Pow(self, expr):
+        return super(IntervalPrinter, self)._print_Pow(expr, rational=True)
+
 def isolate(alg, eps=None, fast=False):
     """Give a rational isolating interval for an algebraic number. """
     alg = sympify(alg)
@@ -511,16 +525,6 @@ def isolate(alg, eps=None, fast=False):
     elif not ask(Q.real(alg)):
         raise NotImplementedError("complex algebraic numbers are not supported")
 
-    from sympy.printing.lambdarepr import LambdaPrinter
-
-    class IntervalPrinter(LambdaPrinter):
-        """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
-
-        def _print_Integer(self, expr):
-            return "mpi('%s')" % super(IntervalPrinter, self)._print_Integer(expr)
-
-        def _print_Rational(self, expr):
-            return "mpi('%s')" % super(IntervalPrinter, self)._print_Rational(expr)
 
     func = lambdify((), alg, modules="mpmath", printer=IntervalPrinter())
 

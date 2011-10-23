@@ -12,9 +12,7 @@ polynomials within SymPy. All code examples assume::
 
     >>> from sympy import *
     >>> x, y, z = symbols('x,y,z')
-
-    >>> import sys
-    >>> sys.displayhook = pprint
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 Basic functionality
 ===================
@@ -27,7 +25,7 @@ Division
 
 The function :func:`div` provides division of polynomials with remainder.
 That is, for polynomials ``f`` and ``g``, it computes ``q`` and ``r``, such
-that $f = g \cdot q + r$ and $\deg(r) < q$. For polynomials in one variables
+that `f = g \cdot q + r` and `\deg(r) < q`. For polynomials in one variables
 with coefficients in a field, say, the rational numbers, ``q`` and ``r`` are
 uniquely defined this way::
 
@@ -58,7 +56,7 @@ additional parameter::
 
 But be warned, that this ring is no longer Euclidean and that the degree of the
 remainder doesn't need to be smaller than that of ``f``. Since 2 doesn't divide 5,
-$2 x$ doesn't divide $5 x^2$, even if the degree is smaller. But::
+`2 x` doesn't divide `5 x^2`, even if the degree is smaller. But::
 
     >>> g = 5*x + 1
 
@@ -178,12 +176,13 @@ Groebner bases
 Buchberger's algorithm is implemented, supporting various monomial orders::
 
     >>> groebner([x**2 + 1, y**4*x + x**3], x, y, order='lex')
-      2       4
-    [x  + 1, y  - 1]
+                 /[ 2       4    ]                            \
+    GroebnerBasis\[x  + 1, y  - 1], x, y, domain=ZZ, order=lex/
+
 
     >>> groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex')
-      4       3   2
-    [y  - 1, z , x  + 1]
+                 /[ 4       3   2    ]                                   \
+    GroebnerBasis\[y  - 1, z , x  + 1], x, y, z, domain=ZZ, order=grevlex/
 
 Solving Equations
 -----------------

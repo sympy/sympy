@@ -241,8 +241,13 @@ class stringPict(object):
         if kwargs["wrap_line"] is False:
             return "\n".join(self.picture)
 
-        # Attempt to get a terminal width
-        ncols = self.terminal_width()
+        if kwargs["num_columns"] is not None:
+            # Read the argument num_columns if it is not None
+            ncols = kwargs["num_columns"]
+        else:
+            # Attempt to get a terminal width
+            ncols = self.terminal_width()
+
         ncols -= 2
         if ncols <= 0:
             ncols = 78
@@ -282,6 +287,7 @@ class stringPict(object):
         ncols = 0
         try:
             import curses
+            import io
             try:
                 curses.setupterm()
                 ncols = curses.tigetnum('cols')
@@ -302,6 +308,8 @@ class stringPict(object):
                      left, top, right, bottom, maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
                     ncols = right - left + 1
             except curses.error:
+                pass
+            except io.UnsupportedOperation:
                 pass
         except (ImportError, TypeError):
             pass

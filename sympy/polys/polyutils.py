@@ -139,6 +139,9 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
     for expr in exprs:
         poly = {}
 
+        if expr.is_Equality:
+            expr = expr.lhs - expr.rhs
+
         for term in Add.make_args(expr):
             coeff, monom = [], [0]*k
 
@@ -154,7 +157,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
 
                         monom[indices[base]] = exp
                     except KeyError:
-                        if not factor.has(*opt.gens):
+                        if not factor.free_symbols.intersection(opt.gens):
                             coeff.append(factor)
                         else:
                             raise PolynomialError("%s contains an element of the generators set" % factor)
@@ -189,6 +192,9 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
 
     for expr in exprs:
         terms = []
+
+        if expr.is_Equality:
+            expr = expr.lhs - expr.rhs
 
         for term in Add.make_args(expr):
             coeff, elements = [], {}

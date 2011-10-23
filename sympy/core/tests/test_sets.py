@@ -170,8 +170,8 @@ def test_intersect():
            S.EmptySet
     assert Union(Interval(0, 1), Interval(2, 3)).intersect(S.EmptySet) == \
            S.EmptySet
-    assert Union(Interval(0,5), FiniteSet(['Ham'])).intersect(
-            FiniteSet(2,3,4,5,6)) == FiniteSet(2,3,4,5)
+    assert Union(Interval(0,5), FiniteSet(['Ham'])).intersect(FiniteSet(2,3,4,5,6)) == \
+           FiniteSet(2,3,4,5)
 
 def test_interval_subs():
     a = Symbol('a', real=True)
@@ -191,8 +191,7 @@ def test_measure():
     assert Interval(1, a).measure == a - 1
 
     assert Union(Interval(1, 2), Interval(3, 4)).measure == 2
-    assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5,6,7)).measure\
-            == 2
+    assert Union(Interval(1, 2), Interval(3, 4), FiniteSet(5,6,7)).measure == 2
 
     assert FiniteSet(1,2,oo,a,-oo,-5).measure == 0
 
@@ -370,8 +369,6 @@ def test_product_basic():
        ((Interval(neginf,0,True,True) + Interval(1,inf, True, True))
                 * (Interval(neginf,0,True,True) + Interval(1,inf, True,True))))
 
-
-
     assert (Interval(-10,10)**3).subset(Interval(-5,5)**3)
     assert not (Interval(-5,5)**3).subset(Interval(-10,10)**3)
     raises(ValueError, "(Interval(-10,10)**2).subset(Interval(-5,5)**3)")
@@ -380,7 +377,6 @@ def test_product_basic():
 
 def test_real():
     x = Symbol('x', real=True)
-    y = Symbol('y')
 
     I = Interval(0, 5)
     J = Interval(10, 20)
@@ -388,7 +384,6 @@ def test_real():
     B = FiniteSet(-4, 0)
     C = FiniteSet(100, S.NegativeInfinity)
     D = FiniteSet('Ham', 'Eggs')
-
 
     assert all(s.is_real for s in [I,J,A,B,C])
     assert not D.is_real
@@ -412,27 +407,3 @@ def test_supinf():
     assert FiniteSet(5,1,x,y,S.Infinity, S.NegativeInfinity).sup == S.Infinity
     assert FiniteSet(5,1,x,y,S.Infinity, S.NegativeInfinity).inf == S.NegativeInfinity
     assert FiniteSet('Ham', 'Eggs').sup == Max('Ham', 'Eggs')
-
-def test_product_basic():
-    H,T = 'H', 'T'
-    unit_line = Interval(0,1)
-    d6 = FiniteSet(1,2,3,4,5,6)
-    d4 = FiniteSet(1,2,3,4)
-    coin = FiniteSet(H, T)
-
-    square = unit_line * unit_line
-
-    assert (0,0) in square
-    assert (H, T) in coin ** 2
-    assert (.5,.5,.5) in square * unit_line
-    assert (H, 3, 3) in coin * d6* d6
-    HH, TT = sympify(H), sympify(T)
-    assert set(coin**2) == set(((HH, HH), (HH, TT), (TT, HH), (TT, TT)))
-
-    assert (d6*d6).subset(d4*d4)
-
-    assert (Interval(-10,10)**3).subset(Interval(-5,5)**3)
-    assert not (Interval(-5,5)**3).subset(Interval(-10,10)**3)
-    raises(ValueError, "(Interval(-10,10)**2).subset(Interval(-5,5)**3)")
-
-    assert square.subset(Interval(.2,.5)*FiniteSet(.5)) # segment in square

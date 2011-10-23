@@ -10,7 +10,7 @@ import sys
 from sample import sample
 
 from sympy import log, pi, sqrt, sin, Symbol
-from sympy.core.compatibility import ordered_iter
+from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 
 def mplot2d(f, var, show=True):
@@ -25,7 +25,7 @@ def mplot2d(f, var, show=True):
     if not p:
         sys.exit("Matplotlib is required to use mplot2d.")
 
-    if not ordered_iter(f):
+    if not is_sequence(f):
         f = [f,]
 
     for f_i in f:

@@ -21,7 +21,7 @@ def solve_poly_system(seq, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y)
-    [(0, 0), (2, -2**(1/2)), (2, 2**(1/2))]
+    [(0, 0), (2, -sqrt(2)), (2, sqrt(2))]
 
     """
     try:
@@ -240,7 +240,7 @@ def solve_triangulated(polys, *gens, **args):
                 _vars = (var,) + vars
 
                 if g.has_only_gens(*_vars) and g.degree(var) != 0:
-                    h = g.ltrim(var).eval(mapping)
+                    h = g.ltrim(var).eval(dict(mapping))
 
                     if g.degree(var) == h.degree():
                         H.append(h)

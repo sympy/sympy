@@ -583,7 +583,7 @@ def dup_content(f, K):
     >>> dup_content(f, ZZ)
     2
     >>> dup_content(g, QQ)
-    1/1
+    2/1
 
     """
     if not f:
@@ -615,7 +615,7 @@ def dmp_ground_content(f, u, K):
     >>> dmp_ground_content(f, 1, ZZ)
     2
     >>> dmp_ground_content(g, 1, QQ)
-    1/1
+    2/1
 
     """
     if not u:
@@ -649,7 +649,7 @@ def dup_primitive(f, K):
     >>> dup_primitive(f, ZZ)
     (2, [3, 4, 6])
     >>> dup_primitive(g, QQ)
-    (1/1, [6/1, 8/1, 12/1])
+    (2/1, [3/1, 4/1, 6/1])
 
     """
     if not f:
@@ -678,7 +678,7 @@ def dmp_ground_primitive(f, u, K):
     >>> dmp_ground_primitive(f, 1, ZZ)
     (2, [[1, 3], [2, 6]])
     >>> dmp_ground_primitive(g, 1, QQ)
-    (1/1, [[2/1, 6/1], [4/1, 12/1]])
+    (2/1, [[1/1, 3/1], [2/1, 6/1]])
 
     """
     if not u:
@@ -1123,7 +1123,7 @@ def dup_sign_variations(f, K):
     prev, k = K.zero, 0
 
     for coeff in f:
-        if coeff*prev < 0:
+        if K.is_negative(coeff*prev):
             k += 1
 
         if coeff:

@@ -109,21 +109,21 @@ def test_pow():
     assert e.expand() == 2*a*b+a**2+b**2
 
     e=(a+b)**(n1/n2)
-    assert e == (a+b)**(Rational(1)/2)
-    assert e.expand() == (a+b)**(Rational(1)/2)
+    assert e == sqrt(a+b)
+    assert e.expand() == sqrt(a+b)
 
     n=n5**(n1/n2)
-    assert n == Rational(5)**(Rational(1)/2)
+    assert n == sqrt(5)
     e=n*a*b-n*b*a
     assert e == Rational(0)
     e=n*a*b+n*b*a
-    assert e == 2*a*b*5**(Rational(1)/2)
-    assert e.diff(a) == 2*b*5**(Rational(1)/2)
-    assert e.diff(a) == 2*b*5**(Rational(1)/2)
+    assert e == 2*a*b*sqrt(5)
+    assert e.diff(a) == 2*b*sqrt(5)
+    assert e.diff(a) == 2*b*sqrt(5)
     e=a/b**2
     assert e == a*b**(-2)
 
-    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**(Rational(1,2))))**(Rational(1,2))
+    assert sqrt(2*(1+sqrt(2))) == (2*(1+2**Rational(1,2)))**Rational(1,2)
 
     x = Symbol('x')
     y = Symbol('y')
@@ -157,11 +157,11 @@ def test_pow2():
     assert (-x)**Rational(5,7) != -x**Rational(5,7)
 
 def test_pow_issue417():
-    assert 4**Rational(1, 4) == 2**Rational(1, 2)
+    assert 4**Rational(1, 4) == sqrt(2)
 
 def test_pow3():
-    assert 2**(Rational(3)/2) == 2 * 2**Rational(1, 2)
-    assert 2**(Rational(3)/2) == sqrt(8)
+    assert sqrt(2)**3 == 2 * sqrt(2)
+    assert sqrt(2)**3 == sqrt(8)
 
 def test_expand():
     p = Rational(5)
@@ -241,9 +241,9 @@ def test_power_expand():
     assert (A**(a+b)).expand() != A**(a+b)
 
 def test_real_mul():
-    Float(0) * pi * x == Float(0)
-    Float(1) * pi * x == pi * x
-    len((Float(2) * pi * x).args) == 3
+    assert Float(0) * pi * x == Float(0)
+    assert Float(1) * pi * x == pi * x
+    assert len((Float(2) * pi * x).args) == 3
 
 def test_ncmul():
     A = Symbol("A", commutative=False)
@@ -321,9 +321,9 @@ def test_Mul_doesnt_expand_exp():
     assert x**2*x**3 == x**5
     assert 2**x*3**x == 6**x
     assert x**(y)*x**(2*y) == x**(3*y)
-    assert 2**Rational(1,2)*2**Rational(1,2) == 2
+    assert sqrt(2)*sqrt(2) == 2
     assert 2**x*2**(2*x) == 2**(3*x)
-    assert 2**Rational(1,2)*2**Rational(1,4)*5**Rational(3,4) == 10**Rational(3,4)
+    assert sqrt(2)*2**Rational(1,4)*5**Rational(3,4) == 10**Rational(3,4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
 def test_Add_Mul_is_integer():
@@ -856,6 +856,17 @@ def test_Pow_is_integer():
     assert (k**(n*m)).is_integer == True
     assert (k**(-n*m)).is_integer == None
 
+    assert sqrt(3).is_integer is False
+    assert sqrt(.3).is_integer is False
+    assert Pow(3, 2, evaluate=False).is_integer is True
+    assert Pow(3, 0, evaluate=False).is_integer is True
+    assert Pow(3, -2, evaluate=False).is_integer is False
+    assert Pow(S.Half, 3, evaluate=False).is_integer is False
+    # decided by re-evaluating
+    assert Pow(3, S.Half, evaluate=False).is_integer is False
+    assert Pow(3, S.Half, evaluate=False).is_integer is False
+    assert Pow(4, S.Half, evaluate=False).is_integer is True
+    assert Pow(S.Half, -2, evaluate=False).is_integer is True
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
@@ -1059,7 +1070,7 @@ def test_Mul_is_comparable():
 def test_Pow_is_comparable():
     assert (x**y).is_comparable == False
     assert (x**2).is_comparable == False
-    assert (Rational(1,3)**Rational(1,2)).is_comparable == True
+    assert (sqrt(Rational(1,3))).is_comparable == True
 
 
 def test_Add_is_positive_2():
@@ -1110,15 +1121,15 @@ def test_bug3():
     assert e == f
 
 def test_suppressed_evaluation():
-    a = Add(1,3,2,evaluate=False)
+    a = Add(0,3,2,evaluate=False)
     b = Mul(1,3,2,evaluate=False)
     c = Pow(3,2,evaluate=False)
     assert a != 6
     assert a.func is Add
-    assert a.args == (1,3,2)
+    assert a.args == (3,2)
     assert b != 6
     assert b.func is Mul
-    assert b.args == (1,3,2)
+    assert b.args == (3,2)
     assert c != 9
     assert c.func is Pow
     assert c.args == (3,2)
@@ -1148,7 +1159,7 @@ def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
 def test_issue415():
-    assert (S.Half)**S.Half * sqrt(6) == 2 * sqrt(3)/2
+    assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
     assert S(1)/2*sqrt(6)*sqrt(2) == sqrt(3)
     assert sqrt(6)/2*sqrt(2) == sqrt(3)
     assert sqrt(6)*sqrt(2)/2 == sqrt(3)
@@ -1172,25 +1183,30 @@ def test_issue2027():
     assert (-2)**i*(-3)**i == 6**i
 
 def test_Add_primitive():
-    (x + 2).primitive() == (1, x + 2)
+    assert (x + 2).primitive() == (1, x + 2)
 
-    (3*x + 2).primitive() == (1, x + 2)
-    (2*x + 2).primitive() == (2, x + 1)
-    (3*x + 3).primitive() == (3, x + 1)
-    (4*x + 8).primitive() == (4, x + 2)
+    assert (3*x + 2).primitive() == (1, 3*x + 2)
+    assert (3*x + 3).primitive() == (3, x + 1)
+    assert (3*x + 6).primitive() == (3, x + 2)
 
-    (3*x + 2*y).primitive() == (1, x + 2*y)
-    (2*x + 2*y).primitive() == (2, x + y)
-    (3*x + 3*y).primitive() == (3, x + y)
-    (4*x + 8*y).primitive() == (4, x + 2*y)
+    assert (3*x + 2*y).primitive() == (1, 3*x + 2*y)
+    assert (3*x + 3*y).primitive() == (3, x + y)
+    assert (3*x + 6*y).primitive() == (3, x + 2*y)
 
-    (3/x + 2*x*y*z**2).primitive() == (1, 1/x + 2*x*y*z**2)
-    (2/x + 2*x*y*z**2).primitive() == (2, 1/x + x*y*z**2)
-    (3/x + 3*x*y*z**2).primitive() == (3, 1/x + x*y*z**2)
-    (4/x + 8*x*y*z**2).primitive() == (4, 1/x + 2*x*y*z**2)
+    assert (3/x + 2*x*y*z**2).primitive() == (1, 3/x + 2*x*y*z**2)
+    assert (3/x + 3*x*y*z**2).primitive() == (3, 1/x + x*y*z**2)
+    assert (3/x + 6*x*y*z**2).primitive() == (3, 1/x + 2*x*y*z**2)
 
-    (2*x/3 + 4*y/9).primitive() == (2/9, 3*x + 2*y)
-    (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
+    assert (2*x/3 + 4*y/9).primitive() == (Rational(2, 9), 3*x + 2*y)
+    assert (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
+    assert S.Zero.gcd(1.0) == 1 # the loop in primitive assumes this to be true
+
+    # the coefficient may sort to a position other than 0
+    p = 3 + x + y
+    assert (2*p).expand().primitive() == (2, p)
+    assert (2.0*p).expand().primitive() == (1, 2.*p)
+    p *= -1
+    assert (2*p).expand().primitive() == (2, p)
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)

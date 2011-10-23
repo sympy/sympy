@@ -46,10 +46,10 @@ numerically, calling ``.evalf()`` or ``N()`` returns the original expression, or
 You can also use the standard Python functions ``float()``, ``complex()`` to
 convert SymPy expressions to regular Python numbers:
 
-    >>> float(pi)
-    3.14159265359
-    >>> complex(pi+E*I)
-    (3.14159265359+2.71828182846j)
+    >>> float(pi) #doctest: +SKIP
+    3.1415926535...
+    >>> complex(pi+E*I) #doctest: +SKIP
+    (3.1415926535...+2.7182818284...j)
 
 
 If these functions are used, failure to evaluate the expression to an explicit
@@ -125,10 +125,10 @@ where φ is the golden ratio. With ordinary floating-point arithmetic,
 subtracting these numbers from each other erroneously results in a complete
 cancellation:
 
-    >>> float(GoldenRatio**1000/sqrt(5))
-    4.34665576869e+208
-    >>> float(fibonacci(1000))
-    4.34665576869e+208
+    >>> float(GoldenRatio**1000/sqrt(5)) #doctest: +SKIP
+    4.34665576869...e+208
+    >>> float(fibonacci(1000)) #doctest: +SKIP
+    4.34665576869...e+208
     >>> float(fibonacci(1000)) - float(GoldenRatio**1000/sqrt(5))
     0.0
 
@@ -163,10 +163,10 @@ returning a value with less than the requested accuracy:
 
     >>> N(fibonacci(1000) - (GoldenRatio)**1000/sqrt(5), strict=True)
     Traceback (most recent call last):
-        ...
+    ...
     PrecisionExhausted: Failed to distinguish the expression:
     <BLANKLINE>
-    -5**(1/2)*GoldenRatio**1000/5 + 43466557686937456435688527675040625802564660517371780402481729089536555417949051890403879840079255169295922593080322634775209689623239873322471161642996440906533187938298969649928516003704476137795166849228875
+    -sqrt(5)*GoldenRatio**1000/5 + 43466557686937456435688527675040625802564660517371780402481729089536555417949051890403879840079255169295922593080322634775209689623239873322471161642996440906533187938298969649928516003704476137795166849228875
     <BLANKLINE>
     from zero. Try simplifying the input, using chop=True, or providing a higher maxn for evalf
 
@@ -255,9 +255,7 @@ Oscillatory quadrature requires an integrand containing a factor cos(ax+b) or
 sin(ax+b). Note that many other oscillatory integrals can be transformed to
 this form with a change of variables:
 
-    >>> from sympy import pprint
-    >>> import sys
-    >>> sys.displayhook = pprint
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
     >>> intgrl = Integral(sin(1/x), (x, 0, 1)).transform(x, 1/x)
     >>> intgrl
      oo

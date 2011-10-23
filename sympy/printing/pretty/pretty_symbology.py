@@ -33,7 +33,8 @@ from sympy.printing.conventions import split_super_sub
 # S   - SYMBOL    +
 
 
-__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol']
+__all__ = ['greek','sub','sup','xsym','vobj','hobj','pretty_symbol',
+           'annotated']
 
 
 _use_unicode = False
@@ -207,7 +208,11 @@ _xobj_unicode = {
     # horizontal objects
     #'-' :  '-',
     '-' :   U('BOX DRAWINGS LIGHT HORIZONTAL'),
-    '_' :   U('HORIZONTAL SCAN LINE-9'),        # XXX symbol ok?
+    '_' :   U('LOW LINE'),
+    # We used to use this, but LOW LINE looks better for roots, as it's a
+    # little lower (i.e., it lines up with the / perfectly.  But perhaps this
+    # one would still be wanted for some cases?
+    # '_' :   U('HORIZONTAL SCAN LINE-9'),
 
     # diagonal objects '\' & '/' ?
     '/' :   U('BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT'),
@@ -458,3 +463,28 @@ def pretty_symbol(symb_name):
 
 
     return ''.join([name, sups_result, subs_result])
+
+
+def annotated(letter):
+    """
+    Return a stylised drawing of the letter `letter`, together with
+    information on how to put annotations (super- and subscripts to the
+    left and to the right) on it.
+
+    See pretty.py functions _print_meijerg, _print_hyper on how to use this
+    information.
+    """
+    ucode_pics = {
+        'F': (2, 0, 2, 0, u'\u250c\u2500\n\u251c\u2500\n\u2575'),
+        'G': (3, 0, 3, 1,
+              u'\u256d\u2500\u256e\n\u2502\u2576\u2510\n\u2570\u2500\u256f')
+    }
+    ascii_pics = {
+        'F': (3, 0, 3, 0, ' _\n|_\n|\n'),
+        'G': (3, 0, 3, 1, ' __\n/__\n\_|')
+    }
+
+    if _use_unicode:
+        return ucode_pics[letter]
+    else:
+        return ascii_pics[letter]

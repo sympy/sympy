@@ -225,7 +225,12 @@ class AssumeMixin(object):
                                     # through prerequisites -- see CycleDetected)
                  '_assume_type_keys', # assumptions typeinfo keys
                 ]
-    __slots__ = []
+    try:
+        # This particular __slots__ definition breaks SymPy in Jython.
+        # See issue 1233.
+        import java
+    except ImportError:
+        __slots__ = []
 
     def  _init_assumptions(self, assumptions):
         # initially assumptions are shared between instances and class
@@ -379,12 +384,14 @@ class AssumeMixin(object):
 
         # For positive/negative try to ask evalf
         if k in _real_ordering and self.is_comparable:
-            #FIXME-py3k: this fails for complex numbers, when we define cmp
-            #FIXME-py3k: as (a>b) - (a<b)
-            a = _real_cmp0_table[k][cmp(self.evalf(), 0)]
-            if a is not None:
-                self._learn_new_facts( ((k,a),) )
-                return a
+            e = self.evalf()
+
+            if e.is_Number:
+                a = _real_cmp0_table[k][cmp(e, 0)]
+
+                if a is not None:
+                    self._learn_new_facts( ((k,a),) )
+                    return a
 
         # No result -- unknown
         # cache it  (NB ._learn_new_facts(k, None) to learn other properties,

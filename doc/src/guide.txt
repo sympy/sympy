@@ -60,7 +60,8 @@ Then I step into (F7) and after a little debugging I get for example:
 
 .. image:: pics/winpdb2.png
 
-.. tip:: Make the winpdb window larger on your screen, it was just made smaller to fit in this guide.
+.. tip:: Make the winpdb window larger on your screen, it was just made smaller to fit in
+         this guide.
 
 I see values of all local variables in the left panel, so it's very easy to see
 what's happening. You can see, that the ``y+2*x`` is emerging in the ``obj``
@@ -72,7 +73,7 @@ and seeing what ``c_part`` contains (``y`` and ``2*x``). So looking at the line
 
 you can see that the simplification happens in ``cls.flatten``. Now you can set
 the breakpoint on the line 28, quit winpdb (it will remember the breakpoint),
-start it again, hit F5, this will stop at this breakpoing, hit F7, this will go
+start it again, hit F5, this will stop at this breakpoint, hit F7, this will go
 into the function ``Add.flatten()``::
 
     @classmethod
@@ -104,9 +105,11 @@ almost any Python code.
 SymPy's Architecture
 ====================
 
-We try to make the sources easily understandable, so you can look into the sources and read the doctests, it should be well documented and if you don't understand something, ask on the mailinglist.
+We try to make the sources easily understandable, so you can look into the sources and
+read the doctests, it should be well documented and if you don't understand something,
+ask on the mailinglist_.
 
-You can find all the decisions archived in the Issues, to see rationale for
+You can find all the decisions archived in the issues_, to see rationale for
 doing this and that.
 
 Basics
@@ -135,17 +138,18 @@ So, you can write normal expressions using python arithmetics like this::
     e=(a+b)**2
     print e
 
-but from the sympy point of view, we just need the classes ``Add``, ``Mul``, ``Pow``, ``Rational``, ``Integer``.
+but from the sympy point of view, we just need the classes ``Add``, ``Mul``, ``Pow``,
+``Rational``, ``Integer``.
 
 Automatic evaluation to canonical form
 --------------------------------------
 
 For computation, all expressions need to be in a
 canonical form, this is done during the creation of the particular instance
-and only unexpensive operations are performed, necessary to put the expression
+and only inexpensive operations are performed, necessary to put the expression
 in the
 canonical form.  So the canonical form doesn't mean the simplest possible
-expresion. The exact list of operations performed depend on the
+expression. The exact list of operations performed depend on the
 implementation.  Obviously, the definition of the canonical form is arbitrary,
 the only requirement is that all equivalent expressions must have the same
 canonical form.  We tried the conversion to a canonical (standard) form to be
@@ -166,7 +170,7 @@ Whenever you construct an expression, for example ``Add(x, x)``, the
     <class 'sympy.core.mul.Mul'>
 
 ``e`` is actually an instance of ``Mul(2, x)``, because ``Add.__new__()``
-retuned ``Mul``.
+returned ``Mul``.
 
 Comparisons
 -----------
@@ -183,7 +187,7 @@ Expressions can be compared using a regular python syntax::
 We made the following decision in SymPy: ``a=Symbol("x")`` and another
 ``b=Symbol("x")`` (with the same string "x") is the same thing, i.e ``a==b`` is
 ``True``. We chose ``a==b``, because it is more natural - ``exp(x)==exp(x)`` is
-also ``True`` for the same intance of ``x`` but different instances of ``exp``,
+also ``True`` for the same instance of ``x`` but different instances of ``exp``,
 so we chose to have ``exp(x)==exp(x)`` even for different instances of ``x``.
 
 Sometimes, you need to have a unique symbol, for example as a temporary one in
@@ -202,8 +206,8 @@ up::
 Debugging
 ---------
 
-Starting with 0.6.4, you can turn on/off debugg messages with the environment variable
-SYMPY_DEBUG, which is expected to have the values True or False. For example, o turn on
+Starting with 0.6.4, you can turn on/off debug messages with the environment variable
+SYMPY_DEBUG, which is expected to have the values True or False. For example, to turn on
 debugging, you would issue::
 
     [user@localhost]: SYMPY_DEBUG=True ./bin/isympy
@@ -211,38 +215,38 @@ debugging, you would issue::
 Functionality
 -------------
 
-There are no given requiremens on classes in the library. For example, if they
+There are no given requirements on classes in the library. For example, if they
 don't implement the ``fdiff()`` method and you construct an expression using
 such a class, then trying to use the ``Basic.series()`` method will raise an
-exception of not founding the ``fdiff()`` method in your class.  This "duck
+exception of not finding the ``fdiff()`` method in your class.  This "duck
 typing" has an advantage that you just implement the functionality which you
 need.
 
-You can define the function ``cos`` like this::
+You can define the ``cos`` class like this::
 
     class cos(Function):
         pass
 
-and use it like ``1+cos(x)``, but if you don't implement the ``diff()`` method,
+and use it like ``1+cos(x)``, but if you don't implement the ``fdiff()`` method,
 you will not be able to call ``(1+cos(x)).series()``.
 
 The symbolic object is characterized (defined) by the things which it can do,
-so implementing more methods like ``fdiff``, ``subs`` etc., you are creating a
+so implementing more methods like ``fdiff()``, ``subs()`` etc., you are creating a
 "shape" of the symbolic object. Useful things to implement in new classes are:
-``hash`` (to use the class in comparisons), ``fdiff`` (to use it in series
-expansion), ``subs`` (to use it in expressions, where some parts are being
-substituted), ``series`` (if the series cannot be computed using the general
-``basic.series()`` method). When you create a new class, don't worry about this
-too much - just try to use it in your code, and you will realize immediately,
+``hash()`` (to use the class in comparisons), ``fdiff()`` (to use it in series
+expansion), ``subs()`` (to use it in expressions, where some parts are being
+substituted) and ``series()`` (if the series cannot be computed using the general
+``Basic.series()`` method). When you create a new class, don't worry about this
+too much - just try to use it in your code and you will realize immediately
 which methods need to be implemented in each situation.
 
-All objects in the sympy are immutable - in the sense, that any operation just
+All objects in sympy are immutable - in the sense that any operation just
 returns a new instance (it can return the same instance only if it didn't
 change). This is a common mistake to change the current instance, like
-``self.arg=self.arg +1`` (wrong!). Use ``arg=self.arg + 1;return arg`` instead.
+``self.arg=self.arg +1`` (wrong!). Use ``arg=self.arg + 1; return arg`` instead.
 The object is immutable in the
 sense of the symbolic expression it represents. It can modify itself to keep
-track of for example its hash. Or it can precalculate anything regarding the
+track of, for example, its hash. Or it can recalculate anything regarding the
 expression it contains. But the expression cannot be changed. So you can pass
 any instance to other objects, because you don't have to worry that it will
 change, or that this would break anything.
@@ -250,16 +254,16 @@ change, or that this would break anything.
 Conclusion
 ----------
 
-So, those are the main ideas behind SymPy, that we try to obey. The rest
-depends on the current implementation and can possibly change in the future.
-The point of all of this is that the interdependecies inside SymPy should be
+Above are the main ideas behind SymPy that we try to obey. The rest
+depends on the current implementation and may possibly change in the future.
+The point of all of this is that the interdependencies inside SymPy should be
 kept to a minimum. If one wants to add new functionality to SymPy, all that is
 necessary is to create a subclass of ``Basic`` and implement what you want.
 
 Functions
 ---------
 
-How to create a new function of a one variable::
+How to create a new function with one variable::
 
     class sign(Function):
 
@@ -294,20 +298,18 @@ should return either some simplified instance of some other class or if the
 class should be unmodified, return ``None`` (see ``core/function.py`` in
 ``Function.__new__`` for implementation details). See also tests in
 `sympy/functions/elementary/tests/test_interface.py
-<https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/tests/test_interface.py>`_,
-that test this interface and you can use them to create your own new functions.
+<https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/tests/test_interface.py>`_ that test this interface. You can use them to create your own new functions.
 
 The applied function ``sign(x)`` is constructed using
 ::
 
     sign(x)
 
-both inside and outside of SymPy. Unapplied functions ``sign`` is just the classitself::
+both inside and outside of SymPy. Unapplied functions ``sign`` is just the class itself::
 
     sign
 
-Both inside and outside of SymPy.
-This is the current structure of classes in SymPy::
+both inside and outside of SymPy. This is the current structure of classes in SymPy::
 
     class BasicType(type):
         pass
@@ -324,9 +326,10 @@ This is the current structure of classes in SymPy::
         __metaclass__ = FunctionClass
         ...
 
-The exact names of the classes and the names of the methods and how they work can be changed in the future.
+The exact names of the classes and the names of the methods and how they work can be
+changed in the future.
 
-This is how to create a function of two variables::
+This is how to create a function with two variables::
 
     class chebyshevt_root(Function):
         nargs = 2
@@ -361,8 +364,8 @@ So guess what this ``my_function`` is going to be? Well, it's derivative is
     >>> from sympy import pprint
     >>> pprint(my_function(x).series(x, 0, 10))
          3     5     7       9
-        x     x     x       x
-    x - -- + --- - ---- + ------ + O(x**10)
+        x     x     x       x       / 10\
+    x - -- + --- - ---- + ------ + O\x  /
         6    120   5040   362880
 
 Looks familiar indeed::
@@ -370,11 +373,12 @@ Looks familiar indeed::
     >>> from sympy import sin
     >>> pprint(sin(x).series(x, 0, 10))
          3     5     7       9
-        x     x     x       x
-    x - -- + --- - ---- + ------ + O(x**10)
+        x     x     x       x       / 10\
+    x - -- + --- - ---- + ------ + O\x  /
         6    120   5040   362880
 
-Let's try some more complicated example. Let's define the derivative in terms of the function itself::
+Let's try a more complicated example. Let's define the derivative in terms of the
+function itself::
 
     >>> class what_am_i(Function):
     ...     nargs = 1
@@ -392,8 +396,8 @@ So what is ``what_am_i``?  Let's try it::
 
     >>> pprint(what_am_i(x).series(x, 0, 10))
          3      5       7       9
-        x    2*x    17*x    62*x
-    x - -- + ---- - ----- + ----- + O(x**10)
+        x    2*x    17*x    62*x     / 10\
+    x - -- + ---- - ----- + ----- + O\x  /
         3     15     315     2835
 
 Well, it's ``tanh``::
@@ -401,8 +405,8 @@ Well, it's ``tanh``::
     >>> from sympy import tanh
     >>> pprint(tanh(x).series(x, 0, 10))
          3      5       7       9
-        x    2*x    17*x    62*x
-    x - -- + ---- - ----- + ----- + O(x**10)
+        x    2*x    17*x    62*x     / 10\
+    x - -- + ---- - ----- + ----- + O\x  /
         3     15     315     2835
 
 The new functions we just defined are regular SymPy objects, you
@@ -494,11 +498,11 @@ Contributing
 
 We welcome every SymPy user to participate in it's development. Don't worry if
 you've never contributed to any open source project, we'll help you learn
-anything necessary, just ask on our mailinglist.
+anything necessary, just ask on our mailinglist_.
 
 Don't be afraid to ask anything and don't worry that you are wasting our time
 if you are new to SymPy and ask questions that maybe most of the people know
-the answer for -- you are not, becase that's exactly what the mailinglist is
+the answer to -- you are not, because that's exactly what the mailinglist_ is
 for and people answer your emails because they want to. Also we try hard to
 answer every email, so you'll always get some feedback and pointers what to do
 next.
@@ -508,10 +512,10 @@ Improving the code
 
 Go to issues_ that are sorted by priority and simply find something that you
 would like to get fixed and fix it. If you find something odd, please report it
-into issues first before fixing it. Feel free to consult with us on the
-mailinglist_.  Then send your patch either to the issues or the malinglist. See
+into issues_ first before fixing it. Feel free to consult with us on the
+mailinglist_.  Then send your patch either to the issues_ or the mailinglist_. See
 the SympyDevelopment_ wiki, but don't worry about it too much if you find it
-too formal - simply get in touch with us on the mailinglist and we'll help you
+too formal - simply get in touch with us on the mailinglist_ and we'll help you
 get your patch accepted.
 
 .. _issues:             http://code.google.com/p/sympy/issues/list
@@ -519,7 +523,7 @@ get your patch accepted.
 .. _SympyDevelopment:   http://code.google.com/p/sympy/wiki/SympyDevelopment
 
 Please read our excellent `SymPy Patches Tutorial
-<https://github.com/sympy/sympy/wiki/Development-workflow>` at our
+<https://github.com/sympy/sympy/wiki/Development-workflow>`_ at our
 wiki for a guide on how to write patches to SymPy, how to work with Git,
 and how to make your life easier as you get started with SymPy.
 
