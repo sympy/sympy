@@ -81,19 +81,18 @@ class Residue(Basic):
 
         Examples:
         >>> from sympy.ntheory.residue_ntheory import Residue
-        >>> from sympy.abc import x
-        >>> a = x**17
-        >>> b = x**15
-        >>> c = Residue(a, 6)
-        >>> d = Residue(b, 6)
+        >>> c = Residue(3, 7)
+        >>> d = Residue(4, 7)
         >>> (c/d).values()
-        [0, 1, 3, 4]
+        6
         """
         if not isinstance(other, Residue):
             raise ValueError("The second operand is not a residue class")
         if self.n != other.n:
             raise ValueError("Can't divide two elements from differnt residue classes")
-        return self * other.inv()
+        if isinstance(self.v, int) and isinstance(other.v, int):
+            return self * other.inv()
+        return Residue(self.v * other.inv(), self.n)
 
     def __add__(self, other):
         """
