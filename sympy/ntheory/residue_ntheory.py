@@ -171,8 +171,6 @@ class Residue(Basic):
             new = Residue(pow(self.v, abs(n), self.n), self.n)
         else:
             new = Residue(pow(self.v, abs(n)), self.n)
-        if n < 0:
-            new = new.inv()
         return new
 
     def ord(self):
@@ -196,12 +194,19 @@ class Residue(Basic):
         Computes the inverse of a residue class.
 
         Examples:
-        >>> from sympy.ntheory.residue_ntheory import Residue
+        >>> from sympy.ntheory.residue_ntheory import Residue 
         >>> a = Residue(4, 7)
         >>> a.inv()
         Residue(2, 7)
         """
-        return pow(self, totient_(self.n) - 1)
+        if isinstance(self.v, int):
+            if igcd(self.v, self.n) != 1:
+                raise ValueError("Inverse of the element doesn't exist")
+            else:
+                return pow(self, totient_(self.n) - 1)
+        if isinstance(self.v, Residue):
+            raise ValueError("Inverse of a class is not defined")
+            
 
     def __gte__(self, other):
         """
