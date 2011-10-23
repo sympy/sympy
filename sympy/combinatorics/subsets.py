@@ -89,7 +89,7 @@ class Subset(Basic):
         bin_list = get_bitlist_from_subset(self.subset, self.superset)
         gc_iter = GrayCode(self.superset_size).\
                   generate_bitlist(bin_list)
-        gc_iter = gc_iter.next()
+        gc_iter.next()
         return get_subset_from_bitlist(self.superset, gc_iter.next())
 
     def prev_graycode(self):
@@ -260,10 +260,10 @@ def unrank_graycode_subset(rank, superset):
     specified rank.
 
     Examples:
-    >>> from sympy.combinatorics.subsets import unrank_graycode
-    >>> unrank_graycode(4, ['a','b','c'])
+    >>> from sympy.combinatorics.subsets import unrank_graycode_subset
+    >>> unrank_graycode_subset(4, ['a','b','c'])
     ['b', 'c']
-    >>> unrank_graycode(0, ['a','b','c'])
+    >>> unrank_graycode_subset(0, ['a','b','c'])
     []
     """
     graycode_bitlist = unrank_gray_code(rank,
