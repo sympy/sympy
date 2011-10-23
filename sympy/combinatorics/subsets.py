@@ -16,15 +16,43 @@ class Subset(Basic):
     Examples:
     >>> from sympy.combinatorics.subsets import Subset
     >>> a = Subset(['c','d'], ['a','b','c','d'])
-    >>> a.next_binary()
-    Subset(['b'], ['a', 'b', 'c', 'd'])
-    >>> a.prev_binary()
-    Subset(['c'], ['a', 'b', 'c', 'd'])
+    >>> a.next_binary().subset
+    ['b']
+    >>> a.prev_binary().subset
+    ['c']
     """
 
     _rank_binary = None
     _rank_lex = None
     _rank_graycode = None
+    _subset = None
+    _superset = None
+
+    def __new__(cls, subset, superset):
+        """
+        Default constructor.
+
+        It takes the subset and its superset as its parameters.
+
+        Examples:
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.subset
+        ['c', 'd']
+        >>> a.superset
+        ['a', 'b', 'c', 'd']
+        >>> a.size
+        2
+        """
+        if len(subset) > len(superset):
+            raise ValueError('Invalid arguments have been provided. The superset must be larger than the subset.')
+        for elem in subset:
+            if elem not in superset:
+                raise ValueError('The superset provided is invalid as it does not contain the element %i' % elem)
+        obj = Basic.__new__(cls)
+        obj._subset = subset
+        obj._superset = superset
+        return obj
 
     def iterate_binary(self, k):
         """
@@ -33,14 +61,13 @@ class Subset(Basic):
         both positive or negative.
 
         Examples:
-        Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset(['c','d'], ['a','b','c','d'])
-        >>> a.iterate_binary(-2)
-        Subset(['d'], ['a', 'b', 'c', 'd'])
+        >>> a.iterate_binary(-2).subset
+        ['d']
         >>> a = Subset(['a','b','c'], ['a','b','c','d'])
-        >>> a.iterate_binary(2)
-        Subset([], ['a', 'b', 'c', 'd'])
+        >>> a.iterate_binary(2).subset
+        []
         """
         bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
         next_bin_list = list(bin((int(reduce(lambda x, y:
@@ -58,11 +85,11 @@ class Subset(Basic):
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset(['c','d'], ['a','b','c','d'])
-        >>> a.next_binary()
-        Subset(['b'], ['a', 'b', 'c', 'd'])
+        >>> a.next_binary().subset
+        ['b']
         >>> a = Subset(['a','b','c','d'], ['a','b','c','d'])
-        >>> a.next_binary()
-        Subset([], ['a', 'b', 'c', 'd'])
+        >>> a.next_binary().subset
+        []
         """
         return self.iterate_binary(1)
 
@@ -73,11 +100,11 @@ class Subset(Basic):
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset([], ['a','b','c','d'])
-        >>> a.prev_binary()
-        Subset(['a', 'b', 'c', 'd'], ['a', 'b', 'c', 'd'])
+        >>> a.prev_binary().subset
+        ['a', 'b', 'c', 'd']
         >>> a = Subset(['c','d'], ['a','b','c','d'])
-        >>> a.prev_binary()
-        Subset(['c'], ['a', 'b', 'c', 'd'])
+        >>> a.prev_binary().subset
+        ['c']
         """
         return self.iterate_binary(-1)
 
@@ -105,10 +132,10 @@ class Subset(Basic):
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset([1,2,3], [1,2,3,4])
-        >>> a.iterate_graycode(3)
-        Subset([1, 4], [1, 2, 3, 4])
-        >>> a.iterate_graycode(-2)
-        Subset([1, 2, 4], [1, 2, 3, 4])
+        >>> a.iterate_graycode(3).subset
+        [1, 4]
+        >>> a.iterate_graycode(-2).subset
+        [1, 2, 4]
         """
         unranked_code = GrayCode.unrank(self.superset_size,
                                        (self.rank_gray + k) % self.cardinality)
@@ -122,8 +149,8 @@ class Subset(Basic):
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset([1,2,3], [1,2,3,4])
-        >>> a.next_gray()
-        Subset([1, 3], [1, 2, 3, 4])
+        >>> a.next_gray().subset
+        [1, 3]
         """
         return self.iterate_graycode(1)
 
@@ -134,8 +161,8 @@ class Subset(Basic):
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
         >>> a = Subset([2,3,4], [1,2,3,4,5])
-        >>> a.prev_gray()
-        Subset([2, 3, 4, 5], [1, 2, 3, 4, 5])
+        >>> a.prev_gray().subset
+        [2, 3, 4, 5]
         """
         return self.iterate_graycode(-1)
 
@@ -210,7 +237,7 @@ class Subset(Basic):
         """
         Gets the subset represented by the current instance.
         """
-        return self.args[0]
+        return self._subset
 
     @property
     def size(self):
@@ -224,7 +251,7 @@ class Subset(Basic):
         """
         Gets the superset of the subset.
         """
-        return self.args[1]
+        return self._superset
 
     @property
     def superset_size(self):
@@ -247,8 +274,8 @@ class Subset(Basic):
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
-        >>> Subset.subset_from_bitlist(['a','b','c','d'], '0011')
-        Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
+        >>> Subset.subset_from_bitlist(['a','b','c','d'], '0011').subset
+        ['c', 'd']
         """
         if len(super_set) != len(bitlist):
             raise ValueError("The sizes of the lists are not equal")
@@ -282,8 +309,8 @@ class Subset(Basic):
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
-        >>> Subset.unrank_binary(4, ['a','b','c','d'])
-        Subset(['b'], ['a', 'b', 'c', 'd'])
+        >>> Subset.unrank_binary(4, ['a','b','c','d']).subset
+        ['b']
         """
         bin_list = list(bin(rank))[2:]
         bin_list = [0] * (len(superset) - len(bin_list)) + bin_list
@@ -296,10 +323,10 @@ class Subset(Basic):
 
         Examples:
         >>> from sympy.combinatorics.subsets import Subset
-        >>> Subset.unrank_gray(4, ['a','b','c'])
-        Subset(['a', 'b'], ['a', 'b', 'c'])
-        >>> Subset.unrank_gray(0, ['a','b','c'])
-        Subset([], ['a', 'b', 'c'])
+        >>> Subset.unrank_gray(4, ['a','b','c']).subset
+        ['a', 'b']
+        >>> Subset.unrank_gray(0, ['a','b','c']).subset
+        []
         """
         graycode_bitlist = GrayCode.unrank(len(superset), rank)
         return Subset.subset_from_bitlist(superset, graycode_bitlist)
