@@ -936,7 +936,9 @@ class Pow(Expr):
             if m is S.One or me == e: # probably always true
                 # return the following, not return c, m*Pow(t, e)
                 # which would change Pow into Mul; we let sympy
-                # decide what to do by using the unevaluated Mul
+                # decide what to do by using the unevaluated Mul, e.g
+                # should it stay as sqrt(2 + 2*sqrt(5)) or become
+                # sqrt(2)*sqrt(1 + sqrt(5))
                 return c, Pow(_keep_coeff(m, t), e)
         return S.One, Pow(b, e)
 
