@@ -927,6 +927,17 @@ class Rational(Number):
         return sage.Integer(self.p)/sage.Integer(self.q)
 
     def as_content_primitive(self):
+        """Return the tuple (R, self/R) where R is the positive Rational
+        extracted from self.
+
+        **Example**
+        >>> from sympy import S
+        >>> (S(-3)/2).as_content_primitive()
+        (3/2, -1)
+
+        See docstring of Expr.as_content_primitive for more examples.
+        """
+
         if self and self.q:
             if self.is_positive:
                 return self, S.One

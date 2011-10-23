@@ -1100,18 +1100,19 @@ class Expr(Basic, EvalfMixin):
 
     def primitive(self):
         """Return the positive Rational that can be extracted non-recursively
-        from every term of self.
+        from every term of self (i.e., self is treated like an Add). This is
+        like the as_coeff_Mul() method but primitive always extracts a positive
+        Rational (never a negative or a Float).
 
         **Examples**
         >>> from sympy.abc import x
         >>> (3*(x + 1)**2).primitive()
         (3, (x + 1)**2)
-        >>> (6*x + 2).primitive()
+        >>> a = (6*x + 2); a.primitive()
         (2, 3*x + 1)
-        >>> (x/2 + 3).primitive()
+        >>> b = (x/2 + 3); b.primitive()
         (1/2, x + 6)
-        >>> eq = (6*x + 2)*(x/2 + 3)
-        >>> eq.primitive()[0] == 1
+        >>> (a*b).primitive() == (1, a*b)
         True
         """
         c, r = self.as_coeff_mul()
@@ -1121,42 +1122,40 @@ class Expr(Basic, EvalfMixin):
         return c, r
 
     def as_content_primitive(self):
-        """
-        Return self separated into ``R`` and ``expr/R`` where R is
-        the Rational that can be extracted from all terms to which
-        as_content_primitive has been applied. In addition, each of the
-        sub-argument of an Add expr will also be returned in
-        as_content_primitive form (i.e. with a Rational in front of a Mul if
-        possible. The as_content_primitive form is not necessarily canonical
-        since the structure of the underlying expr is retained and
-        expansion is not done on the original expression.
+        """This method should recursively remove a Rational from all arguments
+        and return that (content) and the new self (primitive). The content
+        should always be positive and Mul(*foo.as_content_primitive()) == foo.
+        The primitive need no be in canonical form and should try to preserve
+        the underlying structure if possible (i.e. expand_mul should not be
+        applied to self).
 
+        **Examples**
+        >>> from sympy.abc import x, y, z
 
-        Examples::
-            >>> from sympy.abc import x, y, z
+        >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
 
-            >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
+        The as_content_primitive function is recursive and retains structure:
 
-            The as_content_primitive function is recursive and retains structure:
-                >>> eq.as_content_primitive()
-                (2, x + 3*y*(y + 1) + 1)
+        >>> eq.as_content_primitive()
+        (2, x + 3*y*(y + 1) + 1)
 
-            Integer powers will have Rationals extracted from the base:
-                >>> ((2 + 6*x)**2).as_content_primitive()
-                (4, (3*x + 1)**2)
-                >>> ((2 + 6*x)**(2*y)).as_content_primitive()
-                (1, (2*(3*x + 1))**(2*y))
+        Integer powers will have Rationals extracted from the base:
 
-            Terms may end up joining once their as_content_primitives are added:
-                >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
-                (11, x*(y + 1))
-                >>> ((3*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
-                (9, x*(y + 1))
-                >>> ((3*(z*(1 + y)) + 2.0*x*(3 + 3*y))).as_content_primitive()
-                (3, 2.0*x*(y + 1) + z*(y + 1))
-                >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
-                (121, x**2*(y + 1)**2)
+        >>> ((2 + 6*x)**2).as_content_primitive()
+        (4, (3*x + 1)**2)
+        >>> ((2 + 6*x)**(2*y)).as_content_primitive()
+        (1, (2*(3*x + 1))**(2*y))
 
+        Terms may end up joining once their as_content_primitives are added:
+
+        >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
+        (11, x*(y + 1))
+        >>> ((3*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
+        (9, x*(y + 1))
+        >>> ((3*(z*(1 + y)) + 2.0*x*(3 + 3*y))).as_content_primitive()
+        (3, 2.0*x*(y + 1) + z*(y + 1))
+        >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
+        (121, x**2*(y + 1)**2)
         """
         return S.One, self
 

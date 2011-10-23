@@ -865,10 +865,16 @@ class Pow(Expr):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
     def as_content_primitive(self):
-        """Rewrite self as (R, b**e) where R is the largest Rational that can
-        extracted from self and b and e are in primitive form.
+        """Return the tuple (R, self/R) where R is the positive Rational
+        extracted from self.
 
         **Examples**
+
+        >>> from sympy import sqrt
+        >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
+        (2, sqrt(1 + sqrt(2)))
+        >>> sqrt(3 + 3*sqrt(2)).as_content_primitive()
+        (1, sqrt(3)*sqrt(1 + sqrt(2)))
 
         >>> from sympy import separate, powsimp, Mul
         >>> from sympy.abc import x, y
@@ -896,13 +902,16 @@ class Pow(Expr):
         (1, (2*(x + 1))**y)
         >>> s = separate(_[1]); s.is_Mul, s
         (True, 2**y*(x + 1)**y)
+
+        See docstring of Expr.as_content_primitive for more examples.
         """
+
         from sympy.polys.polytools import _keep_coeff
         b, e = self.as_base_exp()
         b = _keep_coeff(*b.as_content_primitive())
         ce, pe = e.as_content_primitive()
         if b.is_Rational:
-            # e
+            #e
             #= ce*pe
             #= ce*(h + t)
             #= ce*h + ce*t
@@ -929,8 +938,9 @@ class Pow(Expr):
             m, me = m.as_base_exp()
             if m is S.One or me == e: # probably always true
                 # return the following, not return c, m*Pow(t, e)
-                # which would change Pow into Mul
-                return c, Pow(m*t, e)
+                # which would change Pow into Mul; we let sympy
+                # decide what to do by using the unevaluated Mul
+                return c, Pow(_keep_coeff(m, t), e)
         return S.One, Pow(b, e)
 
 from add import Add

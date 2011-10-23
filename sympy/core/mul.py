@@ -1277,15 +1277,15 @@ class Mul(AssocOp):
         return s
 
     def as_content_primitive(self):
-        """Return ``(R, self/R)`` where ``R`` is the product of the Rational
-        GCD that can be extracted from self's arguments while retaining
-        self's structure.
+        """Return the tuple (R, self/R) where R is the positive Rational
+        extracted from self.
 
-        Example:
+        **Example**
+        >>> from sympy import sqrt
+        >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
+        (6, -sqrt(2)*(-sqrt(2) + 1))
 
-        >>> from sympy.abc import x
-        >>> ((3+3*x)*(2+2*x)*(1+x)**2).as_content_primitive()
-        (6, (x + 1)**4)
+        See docstring of Expr.as_content_primitive for more examples.
         """
 
         coef = S.One

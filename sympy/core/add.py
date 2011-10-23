@@ -623,6 +623,16 @@ class Add(AssocOp):
         return cont, self._new_rawargs(*terms)
 
     def as_content_primitive(self):
+        """Return the tuple (R, self/R) where R is the positive Rational
+        extracted from self.
+
+        **Example**
+        >>> from sympy import sqrt
+        >>> (3 + 3*sqrt(2)).as_content_primitive()
+        (3, 1 + sqrt(2))
+
+        See docstring of Expr.as_content_primitive for more examples.
+        """
         from sympy import gcd
         c_args = [a.as_content_primitive() for a in self.args]
         g = reduce(gcd, [c[0] for c in c_args])

@@ -671,6 +671,11 @@ class Basic(object):
             return None
 
     def as_content_primitive(self):
+        """A stub to allow Basic args (like Tuple) to be skipped when computing
+        the content and primitive components of an expression.
+
+        See docstring of Expr.as_content_primitive
+        """
         return S.One, self
 
     def subs(self, *args):
