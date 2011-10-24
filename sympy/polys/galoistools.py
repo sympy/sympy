@@ -5,6 +5,7 @@ from math import ceil, sqrt, log
 
 from sympy.core.mul import prod
 from sympy.core.numbers import igcd
+from sympy.ntheory.primetest import isprime
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 
@@ -2197,19 +2198,21 @@ def solve_congruence(*remainder_modulus_pairs):
         a, m = a1 + m1*b, m1*c
         return a % m, m
 
-    rm = remainder_modulus_pairs = [(int(r), int(m)) for r, m in remainder_modulus_pairs]
+    rm = remainder_modulus_pairs =[
+        (int(r), int(m)) for r, m in remainder_modulus_pairs
+        ]
 
-    # if the moduli are co-prime, the crt will work and it will be significantly
-    # faster if this is the case
-    r, m = zip(*remainder_modulus_pairs)
-    crt_ans = gf_crt(r, m, ZZ)
-    if all(crt_ans % m == r % m for r, m in remainder_modulus_pairs):
-        return crt_ans, prod(m)
+    # if the moduli are co-prime, the crt will be significantly faster;
+    # checking all pairs for being co-prime gets to be slow but a prime
+    # test is a good trade-off
+    if all(isprime(m) for r, m in remainder_modulus_pairs):
+        r, m = zip(*remainder_modulus_pairs)
+        return gf_crt(r, m, ZZ), prod(m)
 
     rv = (0, 1)
     for am in remainder_modulus_pairs:
-        am = [int(i) for i in am]
         rv = combine(rv, am)
         if rv is None:
-            return None
-    return rv
+            break
+    else:
+        return rv
