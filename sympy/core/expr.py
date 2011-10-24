@@ -1201,10 +1201,15 @@ class Expr(Basic, EvalfMixin):
             return self
         elif c == self:
             return S.One
-        elif c.is_Mul:
-            x = self.extract_multiplicatively(c.as_two_terms()[0])
+        if c.is_Add:
+            cc, pc = c.primitive()
+            if cc is not S.One:
+                c = Mul(cc, pc, evaluate=False)
+        if c.is_Mul:
+            a, b = c.as_two_terms()
+            x = self.extract_multiplicatively(a)
             if x != None:
-                return x.extract_multiplicatively(c.as_two_terms()[1])
+                return x.extract_multiplicatively(b)
         quotient = self / c
         if self.is_Number:
             if self is S.Infinity:
@@ -1248,6 +1253,9 @@ class Expr(Basic, EvalfMixin):
             elif quotient.is_Integer:
                 return quotient
         elif self.is_Add:
+            cs, ps = self.primitive()
+            if cs is not S.One:
+                return Mul(cs, ps, evaluate=False).extract_multiplicatively(c)
             newargs = []
             for arg in self.args:
                 newarg = arg.extract_multiplicatively(c)
@@ -1257,12 +1265,12 @@ class Expr(Basic, EvalfMixin):
                     return None
             return Add(*newargs)
         elif self.is_Mul:
-            for i in xrange(len(self.args)):
-                newargs = list(self.args)
-                del(newargs[i])
-                tmp = self._new_rawargs(*newargs).extract_multiplicatively(c)
-                if tmp != None:
-                    return tmp * self.args[i]
+            args = list(self.args)
+            for i, arg in enumerate(args):
+                newarg = arg.extract_multiplicatively(c)
+                if newarg is not None:
+                    args[i] = newarg
+                    return Mul(*args)
         elif self.is_Pow:
             if c.is_Pow and c.base == self.base:
                 new_exp = self.exp.extract_additively(c.exp)
