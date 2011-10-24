@@ -3,6 +3,9 @@
 from random import uniform
 from math import ceil, sqrt, log
 
+from sympy.core.mul import prod
+from sympy.core.numbers import igcd
+from sympy.ntheory.primetest import isprime
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 
@@ -21,6 +24,10 @@ def gf_crt(U, M, K):
     Given a set of integer residues ``u_0,...,u_n`` and a set of
     co-prime integer moduli ``m_0,...,m_n``, returns an integer
     ``u``, such that ``u = u_i mod m_i`` for ``i = ``0,...,n``.
+
+    It is assumed (but not tested) that all moduli are coprime. If
+    you are uncertain about whether the moduli are coprime, use the
+    solve_congruence routine.
 
     As an example consider a set of residues ``U = [49, 76, 65]``
     and a set of moduli ``M = [99, 97, 95]``. Then we have::
@@ -41,6 +48,18 @@ def gf_crt(U, M, K):
 
        >>> 639985 % 95
        65
+
+    If the moduli are not coprime, you may recieve an incorrect result:
+
+       >>> gf_crt([3, 4, 2], [12, 6, 17], ZZ)
+       954
+
+    There actually is no answer as may be confirmed using the solve_congruence
+    routine:
+
+       >>> from sympy.polys.galoistools import solve_congruence
+       >>> solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
+       True
 
     """
     p, v = K.one, K.zero
@@ -2138,3 +2157,56 @@ def gf_csolve(f, n):
         perms = [x + [y] for x in perms for y in pool]
     dist_factors = [pow(p, e) for p, e in P.iteritems()]
     return sorted([gf_crt(per, dist_factors, ZZ) for per in perms])
+
+def solve_congruence(*remainder_modulus_pairs):
+    """Return `ai`, `mi` for n = ai + ji*mi where ``remainder_modulus_pairs``
+    contain (ai, mi). If there is no solution, return None. The ``mi`` values
+    need not be coprime. If they are coprime, the Chinese Remainder Theorem
+    routine (gf_crt) is called.
+
+    Examples::
+    >>> from solvers import solve_congruence
+
+    What number is 2 mod 3, 3 mod 5 and 2 mod 7?
+    >>> solve_congruence((2, 3), (3, 5), (2, 7))
+    (23, 105)
+    >>> [23 % m for m in [3, 5, 7]]
+    [2, 3, 2]
+    >>> solve_congruence((2, 3), (5, 6))
+    (5, 6)
+    >>> solve_congruence((2, 3), (3, 6)) is None
+    True
+    """
+    from sympy.polys.domains import ZZ
+    def combine(c1, c2):
+        """Return the tuple (a, m) which satisfies the requirement
+        that n = a + i*m satisfy n = a1 + j*m1 and n = a2 = k*m2.
+
+        Reference:
+           http://en.wikipedia.org/wiki/Method_of_successive_substitution
+        """
+        from sympy.core.numbers import igcdex
+        a1, m1 = c1
+        a2, m2 = c2
+        a, b, c = m1, a2 - a1, m2
+        g = reduce(igcd, [a, b, c])
+        a, b, c = [i//g for i in [a, b, c]]
+        if a != 1:
+            x, y, g = igcdex(a, c)
+            if g != 1:
+                return None
+            b *= x
+        a, m = a1 + m1*b, m1*c
+        return a % m, m
+
+    if all(isprime(m) for r, m in remainder_modulus_pairs):
+        r, m = zip(*remainder_modulus_pairs)
+        return gf_crt(r, m, ZZ), prod(m)
+
+    rv = (0, 1)
+    for am in remainder_modulus_pairs:
+        am = [int(i) for i in am]
+        rv = combine(rv, am)
+        if rv is None:
+            return None
+    return rv
