@@ -383,7 +383,7 @@ def test_fdiff_argument_index_error():
             raise ArgumentIndexError
     mf = myfunc(x)
     assert mf.diff(x) == Derivative(mf, x)
-    raises(ValueError, 'myfunc(x, x)')
+    raises(TypeError, 'myfunc(x, x)')
 
 def test_deriv_wrt_function():
     t = Symbol('t')
@@ -537,4 +537,3 @@ def test_unhandled():
     expr = MyExpr(x,y,z)
     assert diff(expr,x,y,f(x),z) == Derivative(expr,f(x),z)
     assert diff(expr,f(x),x) == Derivative(expr,f(x),x)
-
