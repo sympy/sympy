@@ -762,3 +762,38 @@ def test_issue_2629():
     assert powsimp(a*sqrt(a)) == sqrt(a)**3
     assert powsimp(a**2*sqrt(a)) == sqrt(a)**5
     assert powsimp(a**2*sqrt(sqrt(a))) == sqrt(sqrt(a))**9
+
+def test_as_content_primitive():
+    # although the _as_content_primitive methods do not alter the underlying structure,
+    # the as_content_primitive function will touch up the expression and join
+    # bases that would otherwise have not been joined.
+    from sympy.polys.polytools import _keep_coeff as mul2
+    assert ((x*(2 + 2*x)*(3*x + 3)**2)).as_content_primitive() ==\
+    (18, x*(x + 1)**3)
+    assert (2 + 2*x + 2*y*(3 + 3*y)).as_content_primitive() ==\
+    (2, x + 3*y*(y + 1) + 1)
+    assert ((2 + 6*x)**2).as_content_primitive() ==\
+    (4, (3*x + 1)**2)
+    assert ((2 + 6*x)**(2*y)).as_content_primitive() ==\
+    (1, (mul2(S(2), (3*x + 1)))**(2*y))
+    assert (5 + 10*x + 2*y*(3+3*y)).as_content_primitive() ==\
+    (1, 10*x + 6*y*(y + 1) + 5)
+    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive() ==\
+    (11, x*(y + 1))
+    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive() ==\
+    (121, x**2*(y + 1)**2)
+    assert (y**2).as_content_primitive() ==\
+    (1, y**2)
+    assert (S.Infinity).as_content_primitive() == (1, oo)
+    eq = x**(2+y)
+    assert (eq).as_content_primitive() == (1, eq)
+    assert (S.Half**(2 + x)).as_content_primitive() == (S(1)/4, 2**-x)
+    assert ((-S.Half)**(2 + x)).as_content_primitive() == \
+            (S(1)/4, (-S.Half)**x)
+    assert ((-S.Half)**(2 + x)).as_content_primitive() == \
+            (S(1)/4, (-S.Half)**x)
+    assert (4**((1 + y)/2)).as_content_primitive() == (2, 4**(y/2))
+    assert (3**((1 + y)/2)).as_content_primitive() == \
+            (1, 3**(Mul(S(1)/2, 1 + y, evaluate=False)))
+    assert (5**(S(3)/4)).as_content_primitive() == (1, 5**(S(3)/4))
+    assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))

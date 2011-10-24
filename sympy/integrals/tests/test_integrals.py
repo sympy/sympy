@@ -1,7 +1,8 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix,
         sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
-        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O)
+        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O,
+        terms_gcd)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
@@ -620,7 +621,7 @@ def test_issue_841():
     i = integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))
     ans = sqrt(pi)*exp(d**2/a)*(1 + erf(oo - d/sqrt(a)))/(2*sqrt(a))
     n, d = i.as_numer_denom()
-    assert factor(n, expand=False)/d == ans
+    assert terms_gcd(n, expand=False)/d == ans
 
 def test_issue_2314():
     # Note that this is not the same as testing ratint() becuase integrate()
