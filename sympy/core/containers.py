@@ -9,6 +9,7 @@
 from basic import Basic
 from sympify import sympify
 from sympy.utilities.iterables import iterable
+from sympy.core.singleton import S
 
 class Tuple(Basic):
     """
@@ -79,7 +80,6 @@ class Tuple(Basic):
 
     def _to_mpmath(self, prec):
         return tuple([a._to_mpmath(prec) for a in self.args])
-
 
 def tuple_wrapper(method):
     """

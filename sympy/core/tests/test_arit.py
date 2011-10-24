@@ -1182,31 +1182,47 @@ def test_issue2027():
     i = Symbol('i', integer=1)
     assert (-2)**i*(-3)**i == 6**i
 
-def test_Add_primitive():
-    assert (x + 2).primitive() == (1, x + 2)
+def test_Rational_as_content_primitive():
+    c, p = S(1), S(0)
+    assert (c*p).as_content_primitive() == (c, p)
+    c, p = S(1)/2, S(1)
+    assert (c*p).as_content_primitive() == (c, p)
 
-    assert (3*x + 2).primitive() == (1, 3*x + 2)
-    assert (3*x + 3).primitive() == (3, x + 1)
-    assert (3*x + 6).primitive() == (3, x + 2)
+def test_Add_as_content_primitive():
+    assert (x + 2).as_content_primitive() == (1, x + 2)
 
-    assert (3*x + 2*y).primitive() == (1, 3*x + 2*y)
-    assert (3*x + 3*y).primitive() == (3, x + y)
-    assert (3*x + 6*y).primitive() == (3, x + 2*y)
+    assert (3*x + 2).as_content_primitive() == (1, 3*x + 2)
+    assert (3*x + 3).as_content_primitive() == (3, x + 1)
+    assert (3*x + 6).as_content_primitive() == (3, x + 2)
 
-    assert (3/x + 2*x*y*z**2).primitive() == (1, 3/x + 2*x*y*z**2)
-    assert (3/x + 3*x*y*z**2).primitive() == (3, 1/x + x*y*z**2)
-    assert (3/x + 6*x*y*z**2).primitive() == (3, 1/x + 2*x*y*z**2)
+    assert (3*x + 2*y).as_content_primitive() == (1, 3*x + 2*y)
+    assert (3*x + 3*y).as_content_primitive() == (3, x + y)
+    assert (3*x + 6*y).as_content_primitive() == (3, x + 2*y)
 
-    assert (2*x/3 + 4*y/9).primitive() == (Rational(2, 9), 3*x + 2*y)
-    assert (2*x/3 + 4.1*y).primitive() == (1, 2*x/3 + 4.1*y)
-    assert S.Zero.gcd(1.0) == 1 # the loop in primitive assumes this to be true
+    assert (3/x + 2*x*y*z**2).as_content_primitive() == (1, 3/x + 2*x*y*z**2)
+    assert (3/x + 3*x*y*z**2).as_content_primitive() == (3, 1/x + x*y*z**2)
+    assert (3/x + 6*x*y*z**2).as_content_primitive() == (3, 1/x + 2*x*y*z**2)
+
+    assert (2*x/3 + 4*y/9).as_content_primitive() == (Rational(2, 9), 3*x + 2*y)
+    assert (2*x/3 + 2.5*y).as_content_primitive() == (Rational(1, 3), 2*x + 7.5*y)
 
     # the coefficient may sort to a position other than 0
     p = 3 + x + y
-    assert (2*p).expand().primitive() == (2, p)
-    assert (2.0*p).expand().primitive() == (1, 2.*p)
+    assert (2*p).expand().as_content_primitive() == (2, p)
+    assert (2.0*p).expand().as_content_primitive() == (1, 2.*p)
     p *= -1
-    assert (2*p).expand().primitive() == (2, p)
+    assert (2*p).expand().as_content_primitive() == (2, p)
+
+def test_Mul_as_content_primitive():
+    assert (2*x).as_content_primitive() == (2, x)
+    assert (x*(2+2*x)).as_content_primitive() == (2, x*(1 + x))
+    assert (x*(2 + 2*y)*(3*x + 3)**2).as_content_primitive() == (18, x*(1 + y)*(x + 1)**2)
+    assert ((2+2*x)**2*(3+6*x)+S.Half).as_content_primitive() == (S.Half, 24*(x + 1)**2*(2*x + 1) + 1)
+
+def test_Pow_as_content_primitive():
+    assert (x**y).as_content_primitive() == (1, x**y)
+    assert ((2*x + 2)**y).as_content_primitive() == (1, (Mul(2,(x + 1), evaluate=False))**y)
+    assert ((2*x + 2)**3).as_content_primitive() == (8, (x + 1)**3)
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)

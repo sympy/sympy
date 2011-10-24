@@ -864,6 +864,85 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
+    def as_content_primitive(self):
+        """Return the tuple (R, self/R) where R is the positive Rational
+        extracted from self.
+
+        **Examples**
+
+        >>> from sympy import sqrt
+        >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
+        (2, sqrt(1 + sqrt(2)))
+        >>> sqrt(3 + 3*sqrt(2)).as_content_primitive()
+        (1, sqrt(3)*sqrt(1 + sqrt(2)))
+
+        >>> from sympy import separate, powsimp, Mul
+        >>> from sympy.abc import x, y
+
+        >>> ((2*x + 2)**2).as_content_primitive()
+        (4, (x + 1)**2)
+        >>> (4**((1 + y)/2)).as_content_primitive()
+        (2, 4**(y/2))
+        >>> (3**((1 + y)/2)).as_content_primitive()
+        (1, 3**((y + 1)/2))
+        >>> (3**((5 + y)/2)).as_content_primitive()
+        (9, 3**((y + 1)/2))
+        >>> eq = 3**(2 + 2*x)
+        >>> powsimp(eq) == eq
+        True
+        >>> eq.as_content_primitive()
+        (9, 3**(2*x))
+        >>> powsimp(Mul(*_))
+        9*9**x
+
+        >>> eq = (2 + 2*x)**y
+        >>> s = separate(eq); s.is_Mul, s
+        (False, (2*x + 2)**y)
+        >>> eq.as_content_primitive()
+        (1, (2*(x + 1))**y)
+        >>> s = separate(_[1]); s.is_Mul, s
+        (True, 2**y*(x + 1)**y)
+
+        See docstring of Expr.as_content_primitive for more examples.
+        """
+
+        from sympy.polys.polytools import _keep_coeff
+        b, e = self.as_base_exp()
+        b = _keep_coeff(*b.as_content_primitive())
+        ce, pe = e.as_content_primitive()
+        if b.is_Rational:
+            #e
+            #= ce*pe
+            #= ce*(h + t)
+            #= ce*h + ce*t
+            #=> self
+            #= b**(ce*h)*b**(ce*t)
+            #= b**(cehp/cehq)*b**(ce*t)
+            #= b**(iceh+r/cehq)*b**(ce*t)
+            #= b**(iceh)*b**(r/cehq)*b**(ce*t)
+            #= b**(iceh)*b**(ce*t + r/cehq)
+            h, t = pe.as_coeff_Add()
+            if h.is_Rational:
+                ceh = ce*h
+                c = Pow(b, ceh)
+                r = S.Zero
+                if not c.is_Rational:
+                    iceh, r = divmod(ceh.p, ceh.q)
+                    c = Pow(b, iceh)
+                return c, Pow(b, _keep_coeff(ce, t + r/ce/ceh.q))
+        e = _keep_coeff(ce, pe)
+        # b**e = (h*t)**e = h**e*t**e = c*m*t**e
+        if e.is_Rational and b.is_Mul:
+            h, t = b.as_content_primitive() # h is positive
+            c, m = Pow(h, e).as_coeff_Mul() # so c is positive
+            m, me = m.as_base_exp()
+            if m is S.One or me == e: # probably always true
+                # return the following, not return c, m*Pow(t, e)
+                # which would change Pow into Mul; we let sympy
+                # decide what to do by using the unevaluated Mul
+                return c, Pow(_keep_coeff(m, t), e)
+        return S.One, Pow(b, e)
+
 from add import Add
 from numbers import Integer
 from mul import Mul

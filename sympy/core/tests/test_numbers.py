@@ -858,3 +858,10 @@ def test_issue_1023():
 
 def test_GoldenRatio_expand():
     assert GoldenRatio.expand(func=True) == S.Half + sqrt(5)/2
+
+def test_as_content_primitive():
+    assert S.Zero.as_content_primitive() == (1, 0)
+    assert S.Half.as_content_primitive() == (S.Half, 1)
+    assert (-S.Half).as_content_primitive() == (S.Half, -1)
+    assert S(3).as_content_primitive() == (3, 1)
+    assert S(3.1).as_content_primitive() == (1, 3.1)
