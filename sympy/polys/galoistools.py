@@ -5,7 +5,6 @@ from math import ceil, sqrt, log
 
 from sympy.core.mul import prod
 from sympy.core.numbers import igcd
-from sympy.ntheory.primetest import isprime
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
 
@@ -49,7 +48,7 @@ def gf_crt(U, M, K):
        >>> 639985 % 95
        65
 
-    If the moduli are not coprime, you may recieve an incorrect result:
+    If the moduli are not co-prime, you may recieve an incorrect result:
 
        >>> gf_crt([3, 4, 2], [12, 6, 17], ZZ)
        954
@@ -2161,8 +2160,7 @@ def gf_csolve(f, n):
 def solve_congruence(*remainder_modulus_pairs):
     """Return `ai`, `mi` for n = ai + ji*mi where ``remainder_modulus_pairs``
     contain (ai, mi). If there is no solution, return None. The ``mi`` values
-    need not be coprime. If they are coprime, the Chinese Remainder Theorem
-    routine (gf_crt) is called.
+    need not be co-prime.
 
     Examples::
     >>> from solvers import solve_congruence
@@ -2199,9 +2197,14 @@ def solve_congruence(*remainder_modulus_pairs):
         a, m = a1 + m1*b, m1*c
         return a % m, m
 
-    if all(isprime(m) for r, m in remainder_modulus_pairs):
-        r, m = zip(*remainder_modulus_pairs)
-        return gf_crt(r, m, ZZ), prod(m)
+    rm = remainder_modulus_pairs = [(int(r), int(m)) for r, m in remainder_modulus_pairs]
+
+    # if the moduli are co-prime, the crt will work and it will be significantly
+    # faster if this is the case
+    r, m = zip(*remainder_modulus_pairs)
+    crt_ans = gf_crt(r, m, ZZ)
+    if all(crt_ans % m == r % m for r, m in remainder_modulus_pairs):
+        return crt_ans, prod(m)
 
     rv = (0, 1)
     for am in remainder_modulus_pairs:
