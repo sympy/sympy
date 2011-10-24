@@ -1,30 +1,30 @@
-from sets import Set
+from collections import deque
+from random import randint
 
 from sympy import Mul
 from sympy.matrices import Matrix, eye
 from sympy.physics.quantum.gate import X, Y, Z, H, S, T, CNOT, IdentityGate, gate_simp
 from sympy.physics.quantum.represent import represent
 
-# Possible inherit Python List
-class GateIdentity():
-    
-# Save the identities to a set
-class GateIdentitySet(Set):
-    def write_to_file(filename, append=False):
-        '''Write gate identities to a specified file.'''
+class GateIdentity(Basic):
+    """Wrapper class for circuits that reduce to a scalar value."""
 
-        # File is truncated unless given a flag to not truncate.
-        identities = open(filename, 'a') if append else open(filename, 'w+')
-        identities.write(identity+'\n')
-        identities.close()
+    def __new__(cls, circuit):
+        obj = Basic.__new__(cls, circuit)
+        obj._circuit = circuit
+        return obj
 
-# Number of qubits in the spaces (to be operated on).
-def default_numqubits():
-    return 2
+    @property
+    def circuit(self):
+        return self._circuit
 
-# Number base the counter will use or number of gates possible in given space.
-def base(gate_list):
-    return len(gate_list)
+    def generate_gate_rules():
+        raise NotImplementedError(
+            "Generation of gate rules from identity not implemented."
+        )
+
+    def __str__(self):
+        return str(self.circuit)
 
 # Dynamically generate and concatenate a list of all possible sympy gate objects in given space.
 def construct_gate_list(numqubits):
@@ -54,79 +54,77 @@ def construct matrix_list(numqubits):
 
     return matrix_list
 
-# Initial number list - start identity search with 2 gates
-def initial_num():
-    return [0, 1]
-
-def count(base, number):
-    # Uses a list of numbers (as digits) to count in a specified base.
-    for i in xrange(len(number)):
-        if number[i] == (base-1):
-            number[i] = 0
-        else:
-            number[i] += 1
-            break
-    if number[i] == 0:
-        number.append(1)
-
-def number_to_gates(number, gate_list):
-    # Converts a list of numbers into a list of corresponding gate objects.
-    gates = []
-    for digit in number:
-        gates.append(gate_list[digit])
-    return gates
-
-def number_to_matrices(number, gate_list):
-    # Converts a list of numbers into a list of corresponding matrices.
-    matrices = []
-    if isinstance(number, int):
-        return matrix_list[number]
-    for digit in number:
-        matrices.append(matrix_list[digit])
-    return matrices
-
-def matrix_mul(matrices):
-    # Multiplies given scipy.sparse matrices.
-    mul = represent(IdentityGate(0), nqubits=numqubits, format='scipy.sparse')
-    for matrix in matrices:
-        mul = mul*matrix
-    return mul
-
 def is_scalar_matrix(matrix):
-    # Checks if given scipy.sparse matrix is a scalar matrix.
+    """Checks if given scipy.sparse matrix is a scalar matrix."""
+
     if list(matrix.nonzero()[0]) == list(matrix.nonzero()[1]):
         diag = list(matrix.diagonal())
         if diag.count(diag[0]) == len(diag):
             return True
     return False
 
-def iterative_identity_search(numqubits):
+def write_to_file(identityset, filename, append=False):
+    """Write gate identities to a specified file."""
+
+    # File is truncated unless given a flag to not truncate.
+    identities = open(filename, 'a') if append else open(filename, 'w+')
+
+    for identity in identityset:
+        identities.write(str(identity) + "\n")
+
+    identities.close()
+
+def bfs_identity_search(gate_list, numqubits):
+    # Breadth first search might be more efficient because it eliminates
+    # a search down paths like ZZZZZZ or XXXXYY.
+    # Returns the set of gate identities from the list.
+
+    # For now, limit size of identity search based on size of list
+    max_length = len(gate_list)
+
+    # Root of BFS tree is an IdentityGate(0)
+    id_gate = IdentityGate(0)
+    queue = deque([id_gate])
+
+    # Create an empty set of gate identities
+    ids = set()
+
     # Begin searching for gate identities in given space.
+    while (queue.__len__() > 0):
+        current_circuit = queue.popleft()
 
-    # Create the list of gates and matrices
-    gate_list = construct_gate_list(numqubits)
-    matrix_list = construct_matrix_list(numqubits)
+        for next_gate in gate_list:
+            new_circuit = current_circuit*next_gate
+            matrix_version = represent(new_circuit, nqubits=numqubits,
+                                       format='scipy.sparse')
 
-    num = initial_num()
+            # If a matrix equivalent to a scalar value is found
+            if (is_scalar_matrix(matrix_version)):
+                ids.add(GateIdentity(new_circuit))
 
-    # Iteratively search for identities by increasing the
-    # number of gates in the list
-    while True:
-        if num[0] is 0:
-            matrices = number_to_matrices(num[1:], matrix_list)
-            cached = matrix_mul(matrices)
+            # Number of operators in the circuit gives the
+            # number of gates in the circuit
+            elif (new_circuit.count_op < max_length):
+                queue.append(circuit)
 
-        gates = number_to_gates(num, gate_list)
+    return ids
 
-        if len(gate_simp(Mul(*gates)).args) == len(gates):
-            circuit = number_to_matrices(num[0], matrix_list)*cached
-            if is_scalar_matrix(circuit) and check_identity(filename, str(gate_simp(Mul(*gates)).args)):
-                write_identity(filename, str(gate_simp(Mul(*gates)).args))
-                print num
-                print gate_simp(Mul(*gates)).args
-                print circuit
-                print ''
-        count(base, num)
+def random_identity_search(gate_list, numgates, numqubits):
+    """Randomly selects numgates from gate_list and checks if it is
+       a gate identity.
 
-def random_identity_search(numqubits):
+       If the circuit is a gate identity, the circuit is returned;
+       Otherwise, None is returned
+    """
 
+    gate_size = len(gate_list)
+    circuit = IdentityGate(0)
+
+    for i in range(numgates):
+        next_gate = gate_list[randint(0, gate_size - 1)]
+        circuit = initial_circuit*next_gate
+
+    matrix_version = represent(circuit, nqubits=numqubits,
+                               format='scipy.sparse')
+
+    return circuit if is_scalar_matrix(matrix_version) else None
