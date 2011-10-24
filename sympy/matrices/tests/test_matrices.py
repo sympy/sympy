@@ -1453,15 +1453,22 @@ def test_jordan_form():
     # Jordan cells
     # complexity: one of eigenvalues is zero
     m = Matrix(3, 3, [0, 1, 0, -4, 4, 0, -2, 1, 2])
-    Jmust = Matrix(3, 3, [2, 0, 0, 0, 2, 1, 0, 0, 2])
-    assert Jmust == m.jordan_form()[1]
+    # Jmust = Matrix(3, 3, [2, 0, 0, 0, 2, 1, 0, 0, 2])
+    # In my algorithm the blocks are ordered from big to small, so I had to change
+    # the ordering in the test accordingly
+    Jmust = Matrix(3, 3, [2, 1, 0, 0, 2, 0, 0, 0, 2])
+    (P, J) = m.jordan_form()
+    assert Jmust == J
     (P, Jcells) = m.jordan_cells()
-    assert Jcells[0] == Matrix(1, 1, [2])
-    assert Jcells[1] == Matrix(2, 2, [2, 1, 0, 2])
+    # same here see 1456ff
+    assert Jcells[1] == Matrix(1, 1, [2])
+    assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
 
     #complexity: all of eigenvalues are equal
     m = Matrix(3, 3, [2, 6, -15, 1, 1, -5, 1, 2, -6])
-    Jmust = Matrix(3, 3, [-1, 0, 0, 0, -1, 1, 0, 0, -1])
+    # Jmust = Matrix(3, 3, [-1, 0, 0, 0, -1, 1, 0, 0, -1])
+    # same here see 1456ff
+    Jmust = Matrix(3, 3, [ -1, 1, 0, 0, -1, 0, 0, 0, -1])
     (P, J) = m.jordan_form()
     assert Jmust == J
 
@@ -1472,20 +1479,52 @@ def test_jordan_form():
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
-    Jmust = Matrix(4, 4, [2, 1, 0, 0, 0, 2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2])
+    Jmust = Matrix(4, 4, [2, 1, 0, 0, 
+                          0, 2, 0, 0,
+			  0, 0, 2, 1, 
+			  0, 0, 0, 2]
+			  )
     (P, J) = m.jordan_form()
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 2, -8, -6, -3, 2, 9, 6, 2, -2, -8, -6, -1, 0, 3, 4])
-    Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
+    #Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
+    # same here see 1456ff
+    Jmust = Matrix(4, 4, [2, 1, 0, 0,
+                          0, 2, 0, 0, 
+			  0, 0, 2, 0, 
+			  0, 0, 0, -2])
     (P, J) = m.jordan_form()
     assert Jmust == J
-
+ 
     m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
     assert not m.is_diagonalizable()
     Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
     (P, J) = m.jordan_form()
     assert Jmust == J
+    
+    # the following tests are new and include (some) test the cases were the old 
+    # algorithm failed due to the fact that the block structure can 
+    # >>n o t<< be determined  from algebraic and geometric multiplicity alone
+    # This can be seen most easily when one lets compute the J.c.f. of a matrix that 
+    # is in J.c.f already.
+    m=Matrix(4,4,[2,1,0,0,
+                  0,2,1,0,
+                  0,0,2,0,
+                  0,0,0,2
+	])
+    (P, J) = m.jordan_form()
+    assert m == J
+    
+    m=Matrix(4,4,[2,1,0,0,
+                  0,2,0,0,
+                  0,0,2,1,
+                  0,0,0,2
+	])
+    (P, J) = m.jordan_form()
+    assert m == J
+    
+
 
 def test_Matrix_berkowitz_charpoly():
     x, UA, K_i, K_w = symbols('x UA K_i K_w')
