@@ -677,16 +677,25 @@ def collect_terms(expr, *vars, **hint):
         vars.sort(key=default_sort_key)
         if not vars:
             return _keep_coeff(*expr.as_content_primitive())
+    else:
+        vars = list(vars)
 
     expr = expr.func(*[collect_terms(a, *vars) for a in expr.args])
     if not expr.is_Add:
         return expr
 
     rat, expr = expr.as_content_primitive() # maybe only primitive now?
+    more = set()
     for var in vars:
         terms = defaultdict(list)
         for m in expr.args:
             i, d = m.as_independent(var)
+            # add the sub-args that depend on var in case
+            # this collection doesn't do anything
+            for di in Mul.make_args(d):
+                if di not in more:
+                    vars.append(di)
+                    more.add(di)
             terms[d].append(i)
         missed = []
         hit = []
