@@ -2227,13 +2227,13 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
     if hint.get('check', True):
         # normalize input
-        def reduced(a, b):
-            """Return a and b after removing gcd and making a positive,
-            e.g. -6, 8 -> 1, 4"""
+        def normalize(a, b):
+            """Return a and b after removing gcd from b and making ``a`` positive,
+            e.g. -6, 8 -> 2, 4; 10, 12 -> 4, 6"""
             g = igcd(a, b)
             b //= g
-            return a//g % b, b
-        rm = [reduced(r, m) for r, m in rm]
+            return a % b, b
+        rm = [normalize(r, m) for r, m in rm]
 
         # ignore redundant pairs but raise an error otherwise
         uniq = {}
