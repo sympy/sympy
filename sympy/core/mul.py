@@ -1300,7 +1300,7 @@ class Mul(AssocOp):
         # e.g. (2+2*x)*(3+3*x) should be (6, (1 + x)**2) not (6, (1+x)*(1+x))
         return coef, Mul(*args)
 
-def prod(a):
+def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only
        ints are included then an int result is returned.
 
@@ -1314,8 +1314,13 @@ def prod(a):
     6
     >>> _.is_Integer
     True
+
+    You can start the product at something other than 1:
+    >>> prod([1, 2], 3)
+    6
+
     """
-    return reduce(operator.mul, a, 1)
+    return reduce(operator.mul, a, start)
 
 from numbers import Rational, igcd
 from power import Pow
