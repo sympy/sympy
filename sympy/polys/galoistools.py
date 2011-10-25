@@ -4,7 +4,7 @@ from random import uniform
 from math import ceil, sqrt, log
 
 from sympy.core.mul import prod
-from sympy.core.numbers import igcd
+from sympy.core.numbers import igcd, Integer
 from sympy.ntheory.residue_ntheory import int_tested
 from sympy.ntheory.primetest import isprime
 from sympy.polys.polyutils import _sort_factors
@@ -2215,10 +2215,10 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         g = reduce(igcd, [a, b, c])
         a, b, c = [i//g for i in [a, b, c]]
         if a != 1:
-            x, y, g = igcdex(a, c)
+            inv_a, _, g = igcdex(a, c)
             if g != 1:
                 return None
-            b *= x
+            b *= inv_a
         a, m = a1 + m1*b, m1*c
         return a % m, m
 
@@ -2226,18 +2226,20 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
     rm = [int_tested(*pair) for pair in rm]
 
     if hint.get('check', True):
-        # normalize input
-        def normalize(a, b):
-            """Return a and b after removing gcd from b and making ``a`` positive,
-            e.g. -6, 8 -> 2, 4; 10, 12 -> 4, 6"""
-            g = igcd(a, b)
-            b //= g
-            return a % b, b
-        rm = [normalize(r, m) for r, m in rm]
-
-        # ignore redundant pairs but raise an error otherwise
+        # ignore redundant pairs but raise an error otherwise; also
+        # make sure that a unique set of bases is sent to gf_crt if
+        # they are all prime.
+        #
+        # The routine will work out less-trivial violations and
+        # return None, e.g. for the pairs (1,3) and (14,42) there
+        # is no answer because 14 mod 42 (having a gcd of 14) implies
+        # (14/2) mod (42/2), (14/7) mod (42/7) and (14/14) mod (42/14)
+        # which, being 0 mod 3, is inconsistent with 1 mod 3. But to
+        # preprocess the input beyond checking of another pair with 42
+        # or 3 as the modulus (for this example) is not necessary.
         uniq = {}
         for r, m in rm:
+            r %= m
             if m in uniq:
                 if r != uniq[m]:
                     return None
@@ -2254,9 +2256,9 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
             return gf_crt(r, m, ZZ, check=False), prod(m)
 
     rv = (0, 1)
-    for am in remainder_modulus_pairs:
-        rv = combine(rv, am)
+    for rmi in rm:
+        rv = combine(rv, rmi)
         if rv is None:
             break
     else:
-        return rv
+        return tuple(rv)
