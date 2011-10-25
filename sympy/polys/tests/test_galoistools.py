@@ -805,3 +805,7 @@ def test_solve_congruence():
     assert solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
     assert solve_congruence(*zip([3, 4, 2], [13, 7, 17])) == (172, 1547)
     assert solve_congruence(*zip([-10, -3, -15], [13, 7, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, -3, -15], [13, 7, 7, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, 8, -15], [13, 7, 14, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, 1, -15], [13, 7, 7, 17])) is None
+    raises(ValueError, 'solve_congruence(*zip([3, 4, 2], [12.1, 35, 17]))')
