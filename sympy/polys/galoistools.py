@@ -5,6 +5,7 @@ from math import ceil, sqrt, log
 
 from sympy.core.mul import prod
 from sympy.core.numbers import igcd
+from sympy.ntheory.residue_ntheory import int_tested
 from sympy.ntheory.primetest import isprime
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
@@ -29,7 +30,8 @@ def gf_crt(U, M, K=None, check=True):
     correct result will be returned if/when the test of the results is
     found to be incorrect if ``K == ZZ`` (default) otherwise None will be
     returned. The keyword ``check`` can be set to False if it is known that
-    the moduli are coprime.
+    the moduli are coprime. All other checking is omitted to not slow
+    down this low-level routine.
 
     As an example consider a set of residues ``U = [49, 76, 65]``
     and a set of moduli ``M = [99, 97, 95]``. Then we have::
@@ -59,8 +61,8 @@ def gf_crt(U, M, K=None, check=True):
 
     Programmer's note: rather than checking that all pairs of moduli share
     no GCD (an O(n**2) test) and rather than factoring all moduli and seeing
-    that there is no factor in common, a check that the results gives the
-    indicated residuals is performed which is an O(n) operation.
+    that there is no factor in common, a check that the result gives the
+    indicated residuals is performed, an O(n) operation.
     """
     from sympy.polys.domains import ZZ
     K = K or ZZ
@@ -2220,16 +2222,35 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         a, m = a1 + m1*b, m1*c
         return a % m, m
 
-    rm = remainder_modulus_pairs = [
-        (int(r), int(m)) for r, m in remainder_modulus_pairs
-        ]
+    rm = remainder_modulus_pairs
+    rm = [int_tested(*pair) for pair in rm]
 
-    # if the moduli are co-prime, the crt will be significantly faster;
-    # checking all pairs for being co-prime gets to be slow but a prime
-    # test is a good trade-off
     if hint.get('check', True):
-        if all(isprime(m) for r, m in remainder_modulus_pairs):
-            r, m = zip(*remainder_modulus_pairs)
+        # normalize input
+        def reduced(a, b):
+            """Return a and b after removing gcd and making a positive,
+            e.g. -6, 8 -> 1, 4"""
+            g = igcd(a, b)
+            b //= g
+            return a//g % b, b
+        rm = [reduced(r, m) for r, m in rm]
+
+        # ignore redundant pairs but raise an error otherwise
+        uniq = {}
+        for r, m in rm:
+            if m in uniq:
+                if r != uniq[m]:
+                    return None
+                continue
+            uniq[m] = r
+        rm = [(r, m) for m, r in uniq.iteritems()]
+        del uniq
+
+        # if the moduli are co-prime, the crt will be significantly faster;
+        # checking all pairs for being co-prime gets to be slow but a prime
+        # test is a good trade-off
+        if all(isprime(m) for r, m in rm):
+            r, m = zip(*rm)
             return gf_crt(r, m, ZZ, check=False), prod(m)
 
     rv = (0, 1)
