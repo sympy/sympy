@@ -2195,7 +2195,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
     may not be a solution:
     >>> solve_congruence((2, 3), (5, 6))
     (5, 6)
-    >>> solve_congruence((2, 3), (3, 6)) is None
+    >>> solve_congruence((2, 3), (2, 6)) is None
     True
 
     See also: sympy.polys.galoistools.gf_crt

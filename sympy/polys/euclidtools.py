@@ -682,7 +682,7 @@ def dmp_zz_modular_resultant(f, g, p, u, K):
 
 def _collins_crt(r, R, P, p, K):
     """Wrapper of CRT for Collins's resultant algorithm. """
-    return gf_int(gf_crt([r, R], [P, p], K), P*p, check=False)
+    return gf_int(gf_crt([r, R], [P, p], K, check=False), P*p)
 
 @cythonized("u,v,n,m")
 def dmp_zz_collins_resultant(f, g, u, K):
