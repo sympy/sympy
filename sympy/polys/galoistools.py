@@ -80,7 +80,7 @@ def gf_crt(U, M, K=None, check=True):
     if K == ZZ:
         if all(u % m == rv % m for u, m in zip(U, M)):
             return rv
-        rv = solve_congruence(*zip(U, M), check=False)
+        rv = solve_congruence(*zip(U, M), **dict(check=False))
         if rv is not None:
             rv = rv[0]
         return rv
@@ -2195,7 +2195,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
     may not be a solution:
     >>> solve_congruence((2, 3), (5, 6))
     (5, 6)
-    >>> solve_congruence((2, 3), (2, 6)) is None
+    >>> solve_congruence((2, 3), (4, 6)) is None
     True
 
     See also: sympy.polys.galoistools.gf_crt
