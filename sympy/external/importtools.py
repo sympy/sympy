@@ -112,7 +112,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     try:
         mod = __import__(module, **__import__kwargs)
-    except ImportError:
+    except (ImportError, OSError): # OSError can happen with broken installation of a module (#2752)
         installed = False
     else:
         installed = True
