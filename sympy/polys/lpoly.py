@@ -1250,6 +1250,35 @@ class Poly(dict):
         p.strip()
         return p
 
+    def pow_miller(p, m):
+        """power of an univariate polynomial
+
+        p = sum_i=0^L p_i*x**i
+        p**m = sum_k=0^(m*L) a(m,k)*x**k
+        Miller pure recurrence formula (see article by
+        D. Zeilberger)
+        a(m,k) = 1/(k*p_0)*sum_i=1^L p_i*((m+1)*i-k)*a(m,k-i)
+
+        Reference: D. Zeilberger 'The Miller Recurrence for
+        Exponentatiating a Polynomial, and its q-Analog'
+        """
+
+        lp = p.lp
+        degp = max(p)[0]
+        pv = [0]*(degp+1)
+        for k,v in p.iteritems():
+            pv[k[0]] = v
+        a = [lp(0) for i in range(m*degp+1)]
+        a[0] = pv[0]**m
+        res = lp(a[0])
+        for k in range(1, m*degp+1):
+            s = 0
+            for i in range(1, min(degp,k)+1):
+                s += pv[i]*((m+1)*i - k)*a[k-i]
+            a[k] = s/(k*pv[0])
+            res[(k,)] = a[k]
+        return res
+
     def __pow__(self, n):
         """power of a polynomial
 
