@@ -41,7 +41,7 @@ def crt(m, v, symmetric=False, check=True):
        >>> from sympy.ntheory.modular import crt, solve_congruence
 
        >>> crt([99, 97, 95], [49, 76, 65])
-       639985
+       (639985, 912285)
 
     This is the correct result because::
 
@@ -52,21 +52,21 @@ def crt(m, v, symmetric=False, check=True):
     if you use ``check=False``:
 
        >>> crt([12, 6, 17], [3, 4, 2], check=False)
-       954
+       (954, 1224)
        >>> [954 % m for m in [12, 6, 17]]
        [6, 0, 2]
        >>> crt([12, 6, 17], [3, 4, 2]) is None
        True
        >>> crt([3, 6], [2, 5])
-       5
+       (5, 6)
+
+    Note: the order of gf_crt's arguments is reversed relative to crt,
+    and that solve_congruence takes residue, modulus pairs.
 
     Programmer's note: rather than checking that all pairs of moduli share
     no GCD (an O(n**2) test) and rather than factoring all moduli and seeing
     that there is no factor in common, a check that the result gives the
     indicated residuals is performed -- an O(n) operation.
-
-    Note also that the order of gf_crt's arguments is reversed relative to crt,
-    and that solve_congruence takes residue, modulus pairs.
     """
     if check:
         m = int_tested(*m)
@@ -80,12 +80,13 @@ def crt(m, v, symmetric=False, check=True):
             result = solve_congruence(*zip(v, m),
                                       **dict(check=False,
                                              symmetric=symmetric))
-            if result is not None:
-                return result[0]
+            if result is None:
+                return result
+            result, mm = result
 
     if symmetric:
-        return symmetric_residue(result, mm)
-    return result
+        return symmetric_residue(result, mm), mm
+    return result, mm
 
 def crt1(m):
     """First part of Chinese Remainder Theorem, for multiple application. """
@@ -98,8 +99,8 @@ def crt2(m, v, mm, e, s, symmetric=False):
     result = gf_crt2(v, m, mm, e, s, ZZ)
 
     if symmetric:
-        return symmetric_residue(result, mm)
-    return result
+        return symmetric_residue(result, mm), mm
+    return result, mm
 
 def solve_congruence(*remainder_modulus_pairs, **hint):
     """Compute the integer ``n`` that has the residual ``ai`` when it is
@@ -196,7 +197,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         # test is a good trade-off
         if all(isprime(m) for r, m in rm):
             r, m = zip(*rm)
-            return crt(m, r, symmetric=symmetric, check=False), prod(m)
+            return crt(m, r, symmetric=symmetric, check=False)
 
     rv = (0, 1)
     for rmi in rm:
