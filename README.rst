@@ -91,7 +91,7 @@ Python 2 compatible codebase and running our own 2to3 script on it. Run it with:
 
     $ bin/use2to3
 
-When ran, it will create a new directory, sympy-py3k, which holds a Python 3
+When ran, it will create a new directory, py3k-sympy, which holds a Python 3
 compatible version of the code. SymPy can then be used normally with Python 3
 from that directory (installation, interactive shell, etc.).
 

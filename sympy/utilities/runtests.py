@@ -277,79 +277,77 @@ def doctest(*paths, **kwargs):
     else:
         failed = False
 
-    # test *txt files only if we are running python newer than 2.4
-    if sys.version_info[:2] > (2,4):
+    # N.B.
+    # --------------------------------------------------------------------
+    # Here we test *.txt files at or below doc/src. Code from these must
+    # be self supporting in terms of imports since there is no importing
+    # of necessary modules by doctest.testfile. If you try to pass *.py
+    # files through this they might fail because they will lack the needed
+    # imports and smarter parsing that can be done with source code.
+    #
+    test_files = t.get_test_files('doc/src', '*.txt', init_only=False)
+    test_files.sort()
 
-        # N.B.
-        # --------------------------------------------------------------------
-        # Here we test *.txt files at or below doc/src. Code from these must
-        # be self supporting in terms of imports since there is no importing
-        # of necessary modules by doctest.testfile. If you try to pass *.py
-        # files through this they might fail because they will lack the needed
-        # imports and smarter parsing that can be done with source code.
-        #
-        test_files = t.get_test_files('doc/src', '*.txt', init_only=False)
-        test_files.sort()
+    not_blacklisted = [f for f in test_files
+                            if not any(b in f for b in blacklist)]
 
-        not_blacklisted = [f for f in test_files
-                             if not any(b in f for b in blacklist)]
+    if len(paths) == 0:
+        matched = not_blacklisted
+    else:
+        # Take only what was requested as long as it's not on the blacklist.
+        # Paths were already made native in *py tests so don't repeat here.
+        # There's no chance of having a *py file slip through since we
+        # only have *txt files in test_files.
+        matched =  []
+        for f in not_blacklisted:
+            basename = os.path.basename(f)
+            for p in paths:
+                if p in f or fnmatch(basename, p):
+                    matched.append(f)
+                    break
 
-        if len(paths) == 0:
-            matched = not_blacklisted
-        else:
-            # Take only what was requested as long as it's not on the blacklist.
-            # Paths were already made native in *py tests so don't repeat here.
-            # There's no chance of having a *py file slip through since we
-            # only have *txt files in test_files.
-            matched =  []
-            for f in not_blacklisted:
-                basename = os.path.basename(f)
-                for p in paths:
-                    if p in f or fnmatch(basename, p):
-                        matched.append(f)
-                        break
+    setup_pprint()
+    first_report = True
+    for txt_file in matched:
+        if not os.path.isfile(txt_file):
+            continue
+        old_displayhook = sys.displayhook
+        try:
+            # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
+            #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
+            out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
+                optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE \
+                            | pdoctest.IGNORE_EXCEPTION_DETAIL)
+        finally:
+            # make sure we return to the original displayhook in case some
+            # doctest has changed that
+            sys.displayhook = old_displayhook
 
-        setup_pprint()
-        first_report = True
-        for txt_file in matched:
-            if not os.path.isfile(txt_file):
-                continue
-            old_displayhook = sys.displayhook
-            try:
-                # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
-                #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
-                out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
-                    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE \
-                              | pdoctest.IGNORE_EXCEPTION_DETAIL)
-            finally:
-                # make sure we return to the original displayhook in case some
-                # doctest has changed that
-                sys.displayhook = old_displayhook
+        txtfailed, tested = out
+        if tested:
+            failed = txtfailed or failed
+            if first_report:
+                first_report = False
+                msg = 'txt doctests start'
+                lhead = '='*((r.terminal_width - len(msg))//2 - 1)
+                rhead = '='*(r.terminal_width - 1 - len(msg) - len(lhead) - 1)
+                print ' '.join([lhead, msg, rhead])
+                print
+            # use as the id, everything past the first 'sympy'
+            file_id = txt_file[txt_file.find('sympy') + len('sympy') + 1:]
+            print file_id, # get at least the name out so it is know who is being tested
+            wid = r.terminal_width - len(file_id) - 1 #update width
+            test_file = '[%s]' % (tested)
+            report = '[%s]' % (txtfailed or 'OK')
+            print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
 
-            txtfailed, tested = out
-            if tested:
-                failed = txtfailed or failed
-                if first_report:
-                    first_report = False
-                    msg = 'txt doctests start'
-                    lhead = '='*((r.terminal_width - len(msg))//2 - 1)
-                    rhead = '='*(r.terminal_width - 1 - len(msg) - len(lhead) - 1)
-                    print ' '.join([lhead, msg, rhead])
-                    print
-                # use as the id, everything past the first 'sympy'
-                file_id = txt_file[txt_file.find('sympy') + len('sympy') + 1:]
-                print file_id, # get at least the name out so it is know who is being tested
-                wid = r.terminal_width - len(file_id) - 1 #update width
-                test_file = '[%s]' % (tested)
-                report = '[%s]' % (txtfailed or 'OK')
-                print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
+    # the doctests for *py will have printed this message already if there was
+    # a failure, so now only print it if there was intervening reporting by
+    # testing the *txt as evidenced by first_report no longer being True.
+    if not first_report and failed:
+        print
+        print("DO *NOT* COMMIT!")
 
-        # the doctests for *py will have printed this message already if there was
-        # a failure, so now only print it if there was intervening reporting by
-        # testing the *txt as evidenced by first_report no longer being True.
-        if not first_report and failed:
-            print
-            print("DO *NOT* COMMIT!")
     return not failed
 
 # The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
@@ -670,11 +668,11 @@ class SymPyDocTests(object):
                 del sys.path[0]
 
         tests = [test for test in tests if len(test.examples) > 0]
-        # By default (except for python 2.4 in which it was broken) tests
-        # are sorted by alphabetical order by function name. We sort by line number
-        # so one can edit the file sequentially from bottom to top...HOWEVER
-        # if there are decorated functions, their line numbers will be too large
-        # and for now one must just search for these by text and function name.
+        # By default tests are sorted by alphabetical order by function name.
+        # We sort by line number so one can edit the file sequentially from
+        # bottom to top. However, if there are decorated functions, their line
+        # numbers will be too large and for now one must just search for these
+        # by text and function name.
         tests.sort(key=lambda x: -x.lineno)
 
         if not tests:
