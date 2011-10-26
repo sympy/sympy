@@ -48,6 +48,11 @@ class PrettyPrinter(Printer):
     def _print_basestring(self, e):
         return prettyForm(e)
 
+    def _print_atan2(self, e):
+        pform = prettyForm(*self._print_seq(e.args).parens())
+        pform = prettyForm(*pform.left('atan2'))
+        return pform
+
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)
         return prettyForm(symb)
@@ -460,7 +465,7 @@ class PrettyPrinter(Printer):
         maxw = [-1] * M.cols
 
         for j in range(M.cols):
-            maxw[j] = max([Ms[i,j].width()  for i in range(M.rows)])
+            maxw[j] = max([Ms[i,j].width()  for i in range(M.rows)] or [0])
 
 
         # drawing result

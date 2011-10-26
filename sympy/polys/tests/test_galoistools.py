@@ -23,6 +23,8 @@ from sympy.polys.galoistools import (
     gf_edf_zassenhaus, gf_edf_shoup,
     gf_berlekamp, gf_zassenhaus, gf_shoup,
     gf_factor_sqf, gf_factor,
+    gf_value, linear_congruence, csolve_prime, gf_csolve,
+    solve_congruence
 )
 
 from sympy.polys.polyerrors import (
@@ -776,3 +778,36 @@ def test_gf_factor():
     raises(KeyError, "gf_factor([1,1], 11, ZZ)")
     setup('GF_FACTOR_METHOD')
 
+def test_gf_csolve():
+    assert gf_value([1, 7, 2, 4], 11) == 2204
+
+    assert linear_congruence(4, 3, 5) == [2]
+    assert linear_congruence(0, 3, 5) == []
+    assert linear_congruence(6, 1, 4) == []
+    assert linear_congruence(0, 5, 5) == [0, 1, 2, 3, 4]
+    assert linear_congruence(3, 12, 15) == [4, 9, 14]
+    assert linear_congruence(6, 0, 18) == [0, 3, 6, 9, 12, 15]
+    # with power = 1
+    assert csolve_prime([1, 3, 2, 17], 7) == [3]
+    assert csolve_prime([1, 3, 1, 5], 5) == [0, 1]
+    assert csolve_prime([3, 6, 9, 3], 3) == [0, 1, 2]
+    # with power > 1
+    assert csolve_prime([1, 1, 223], 3, 4) == [4, 13, 22, 31, 40, 49, 58, 67, 76]
+    assert csolve_prime([3, 5, 2, 25], 5, 3) == [16, 50, 99]
+    assert csolve_prime([3, 2, 2, 49], 7, 3) == [147, 190, 234]
+
+    assert gf_csolve([1, 1, 7], 189) == [13, 49, 76, 112, 139, 175]
+    assert gf_csolve([1, 3, 4, 1, 30], 60) ==  [10, 30]
+    assert gf_csolve([1, 1, 7], 15) == []
+
+def test_solve_congruence():
+    assert solve_congruence(*zip([3, 4, 2], [12, 35, 17])) == (1719, 7140)
+    assert solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
+    assert solve_congruence(*zip([3, 4, 2], [13, 7, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, -15], [13, 7, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, 1, -15], [13, 7, 7, 17])) is None
+    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
+    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+    assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+    assert solve_congruence(*zip((1, 1, 2),(3, 2, 4))) is None
+    raises(ValueError, 'solve_congruence(*zip([3, 4, 2], [12.1, 35, 17]))')

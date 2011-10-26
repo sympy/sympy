@@ -2,6 +2,7 @@ import operator
 from sympy.core.compatibility import reduce
 from sympy.core.function import Function
 from sympy.core import sympify, S, Integer
+from sympy.core.mul import prod
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -32,9 +33,6 @@ def Eijk(*args, **kwargs):
     This is just compatibility wrapper to LeviCivita().
     """
     return LeviCivita(*args, **kwargs)
-
-def prod(a):
-    return reduce(operator.mul, a, 1)
 
 def eval_levicivita(*args):
     """Evaluate Levi-Civita symbol."""

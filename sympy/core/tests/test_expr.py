@@ -392,6 +392,7 @@ def test_noncommutative_expand_issue658():
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
 
 def test_as_numer_denom():
+    a, b, c = symbols('a, b, c')
     assert oo.as_numer_denom() == (1, 0)
     assert (-oo).as_numer_denom() == (-1, 0)
     assert zoo.as_numer_denom() == (zoo, 1)
@@ -1133,3 +1134,21 @@ def test_issue_1100():
     a = x - y
     assert a._eval_interval(x, 1, oo)._eval_interval(y, oo, 1) is S.NaN
     raises(ValueError, 'x._eval_interval(x, None, None)')
+
+def test_primitive():
+    assert (3*(x + 1)**2).primitive() == (3, (x + 1)**2)
+    assert (6*x + 2).primitive() == (2, 3*x + 1)
+    assert (x/2 + 3).primitive() == (S(1)/2, x + 6)
+    eq = (6*x + 2)*(x/2 + 3)
+    assert eq.primitive()[0] == 1
+    eq = (2 + 2*x)**2
+    assert eq.primitive()[0] == 1
+    assert (4.0*x).primitive() == (1, 4.0*x)
+    assert (-2*x).primitive() == (2, -x)
+
+def test_issue_2744():
+    a = 1 + x
+    assert (2*a).extract_multiplicatively(a) == 2
+    assert (4*a).extract_multiplicatively(2*a) == 2
+    assert ((3*a)*(2*a)).extract_multiplicatively(a) == 6*a
+

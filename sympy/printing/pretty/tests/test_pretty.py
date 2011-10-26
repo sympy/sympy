@@ -1948,6 +1948,16 @@ def test_pretty_matrix():
     unicode_str = "[]"
     assert pretty(expr) == ascii_str
     assert upretty(expr) == unicode_str
+    expr = Matrix(2, 0, lambda i, j: 0)
+    ascii_str = "[]"
+    unicode_str = "[]"
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
+    expr = Matrix(0, 2, lambda i, j: 0)
+    ascii_str = "[]"
+    unicode_str = "[]"
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
     expr = Matrix([[x**2+1, 1], [y, x+y]])
     ascii_str_1 = \
 """\

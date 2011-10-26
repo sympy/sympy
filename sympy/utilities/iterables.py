@@ -1,7 +1,9 @@
+from collections import defaultdict
+import random
+
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
 from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
-import random
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -63,6 +65,14 @@ def flatten(iterable, levels=None, cls=None):
             result.append(el)
 
     return result
+
+def unflatten(iter, n=2):
+    """Group ``iter`` into tuples of length ``n``. Raise an error if
+    the length of ``iter`` is not a multiple of ``n``.
+    """
+    if n < 1 or len(iter) % n:
+        raise ValueError('iter length is not a multiple of %i' % n)
+    return zip(*(iter[i::n] for i in xrange(n)))
 
 def group(container, multiple=True):
     """
@@ -326,6 +336,9 @@ def variations(seq, n=None, repetition=False):
     from sympy.core.compatibility import permutations
 
     if not repetition:
+        seq = tuple(seq)
+        if len(seq) < n:
+            return
         for i in permutations(seq, n):
             yield i
     else:
@@ -474,11 +487,11 @@ def sift(expr, keyfunc):
     [E, x, y]
 
     """
-    d = {}
+    d = defaultdict(list)
     if hasattr(expr, 'args'):
         expr = expr.args or [expr]
     for e in expr:
-        d.setdefault(keyfunc(e), []).append(e)
+        d[keyfunc(e)].append(e)
     return d
 
 def take(iter, n):

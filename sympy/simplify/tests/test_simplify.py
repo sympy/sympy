@@ -4,8 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O)
-
+    factor, Mul, O, hyper)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -310,6 +309,10 @@ def test_powsimp():
     assert powsimp((-1)**(-x)) != (-1)**x  # could be 1/((-1)**x), but is not
     # force=True overrides assumptions
     assert powsimp((-1)**(2*x), force=True) == 1
+
+    eq = x**(2*a/3)
+    assert powsimp(eq).exp == eq.exp == 2*a/3 # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
+    assert powsimp(2**(2*x)) == 4**x # powdenest goes the other direction
 
 def test_powsimp_nc():
     x, y, z = symbols('x,y,z')
@@ -656,8 +659,8 @@ def test_posify():
 def test_powdenest():
     from sympy import powdenest
     from sympy.abc import x, y, z, a, b
-    p = symbols('p', positive=True)
-    i, j = symbols('i,j', integer=1)
+    p, q = symbols('p q', positive=True)
+    i, j = symbols('i,j', integer=True)
 
     assert powdenest(x) == x
     assert powdenest(x + 2*(x**(2*a/3))**(3*x)) == x + 2*(x**(a/3))**(6*x)
@@ -665,7 +668,9 @@ def test_powdenest():
     assert powdenest((x**(2*a/3))**(3*x)) == (x**(a/3))**(6*x)
     assert powdenest(exp(3*x*log(2))) == 2**(3*x)
     assert powdenest(sqrt(p**2)) == p
-    i, j = symbols('i,j', integer=1)
+    i, j = symbols('i,j', integer=True)
+    eq = p**(2*i)*q**(4*i)
+    assert powdenest(eq) == (p*q**2)**(2*i)
     assert powdenest((x**x)**(i + j)) # -X-> (x**x)**i*(x**x)**j == x**(x*(i + j))
     assert powdenest(exp(3*y*log(x))) == x**(3*y)
     assert powdenest(exp(y*(log(a) + log(b)))) == (a*b)**y
@@ -674,17 +679,29 @@ def test_powdenest():
     assert powdenest(((x**(2*i))**(3*y))**x, force=True) == x**(6*i*x*y)
     assert powdenest(((x**(2*a/3))**(3*y/i))**x) == ((x**(a/3))**(y/i))**(6*x)
     assert powdenest((x**(2*i)*y**(4*i))**z, force=True) == (x*y**2)**(2*i*z)
+    assert powdenest((p**(2*i)*q**(4*i))**j) == (p*q**2)**(2*i*j)
+    assert powdenest(((p**(2*a))**(3*y))**x) == p**(6*a*x*y)
     e = ((x**2*y**4)**a)**(x*y)
     assert powdenest(e) == e
     e = (((x**2*y**4)**a)**(x*y))**3
     assert powdenest(e) == ((x**2*y**4)**a)**(3*x*y)
+    assert powdenest((((x**2*y**4)**a)**(x*y)), force=True) == (x*y**2)**(2*a*x*y)
+    assert powdenest((((x**2*y**4)**a)**(x*y))**3, force=True) == (x*y**2)**(6*a*x*y)
+    assert powdenest((x**2*y**6)**i) != (x*y**3)**(2*i)
+    x, y = symbols('x,y', positive=True)
+    assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
+    assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(4)/3)*y)**(i**2)
+    assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
+    # issue 2706
+    assert powdenest(((gamma(x)*hyper((),(),x))*pi)**2) == (pi*gamma(x)*hyper((), (), x))**2
+
+    assert powdenest(4**x) == 2**(2*x)
+    assert powdenest((4**x)**y) == 2**(2*x*y)
+    assert powdenest(4**x*y) == 2**(2*x)*y
 
 @XFAIL
-def test_powdenest_fail_in_polys():
-    from sympy import powdenest
-    from sympy.abc import x, y, z, a, b
-    assert powdenest((((x**2*y**4)**a)**(x*y)), force=True) == (x**2*y**4)**(a*x*y)
-    assert powdenest((((x**2*y**4)**a)**(x*y))**3, force=True) == (x**2*y**4)**(3*a*x*y)
+def test_issue_2706():
+    assert (((gamma(x)*hyper((),(),x))*pi)**2).is_positive is None
 
 def test_issue_1095():
     # simplify should call cancel
@@ -745,3 +762,38 @@ def test_issue_2629():
     assert powsimp(a*sqrt(a)) == sqrt(a)**3
     assert powsimp(a**2*sqrt(a)) == sqrt(a)**5
     assert powsimp(a**2*sqrt(sqrt(a))) == sqrt(sqrt(a))**9
+
+def test_as_content_primitive():
+    # although the _as_content_primitive methods do not alter the underlying structure,
+    # the as_content_primitive function will touch up the expression and join
+    # bases that would otherwise have not been joined.
+    from sympy.polys.polytools import _keep_coeff as mul2
+    assert ((x*(2 + 2*x)*(3*x + 3)**2)).as_content_primitive() ==\
+    (18, x*(x + 1)**3)
+    assert (2 + 2*x + 2*y*(3 + 3*y)).as_content_primitive() ==\
+    (2, x + 3*y*(y + 1) + 1)
+    assert ((2 + 6*x)**2).as_content_primitive() ==\
+    (4, (3*x + 1)**2)
+    assert ((2 + 6*x)**(2*y)).as_content_primitive() ==\
+    (1, (mul2(S(2), (3*x + 1)))**(2*y))
+    assert (5 + 10*x + 2*y*(3+3*y)).as_content_primitive() ==\
+    (1, 10*x + 6*y*(y + 1) + 5)
+    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive() ==\
+    (11, x*(y + 1))
+    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive() ==\
+    (121, x**2*(y + 1)**2)
+    assert (y**2).as_content_primitive() ==\
+    (1, y**2)
+    assert (S.Infinity).as_content_primitive() == (1, oo)
+    eq = x**(2+y)
+    assert (eq).as_content_primitive() == (1, eq)
+    assert (S.Half**(2 + x)).as_content_primitive() == (S(1)/4, 2**-x)
+    assert ((-S.Half)**(2 + x)).as_content_primitive() == \
+            (S(1)/4, (-S.Half)**x)
+    assert ((-S.Half)**(2 + x)).as_content_primitive() == \
+            (S(1)/4, (-S.Half)**x)
+    assert (4**((1 + y)/2)).as_content_primitive() == (2, 4**(y/2))
+    assert (3**((1 + y)/2)).as_content_primitive() == \
+            (1, 3**(Mul(S(1)/2, 1 + y, evaluate=False)))
+    assert (5**(S(3)/4)).as_content_primitive() == (1, 5**(S(3)/4))
+    assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))

@@ -1,7 +1,8 @@
 from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Symbol,
         Function, Rational, log, sin, cos, pi, E, I, Poly, LambertW, diff, Matrix,
         sympify, sqrt, atan, asin, acos, asinh, acosh, DiracDelta, Heaviside,
-        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify)
+        Lambda, sstr, Add, Tuple, Interval, Sum, factor, trigsimp, simplify, O,
+        terms_gcd)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
 
@@ -602,8 +603,8 @@ def test_issue_1791():
            sqrt(pi)*erf(sqrt(z)*log(x) - 1/(2*sqrt(z)))*exp(S(1)/(4*z))/(2*sqrt(z))
 
 def test_issue_1277():
-    assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half))) == \
-        simplify((n**2 - 2**(S(1)/n)*n**2 - n*2**(S(1)/n))/(2**(1 + S(1)/n) + n*2**(1 + S(1)/n)))
+    assert simplify(integrate(n*(x**(1/n)-1), (x, 0, S.Half)) -
+                (n**2 - 2**(1/n)*n**2 - n*2**(1/n))/(2**(1 + 1/n) + n*2**(1 + 1/n))) == 0
 
 def test_issue_1418():
     assert integrate((sqrt(x) - x**3)/x**Rational(1,3), x) == \
@@ -620,7 +621,7 @@ def test_issue_841():
     i = integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))
     ans = sqrt(pi)*exp(d**2/a)*(1 + erf(oo - d/sqrt(a)))/(2*sqrt(a))
     n, d = i.as_numer_denom()
-    assert factor(n, expand=False)/d == ans
+    assert terms_gcd(n, expand=False)/d == ans
 
 def test_issue_2314():
     # Note that this is not the same as testing ratint() becuase integrate()
@@ -658,3 +659,12 @@ def test_issue_1793b():
 def test_issue_2079():
     assert integrate(sin(x)*f(y, z), (x, 0, pi), (y, 0, pi), (z, 0, pi)) == \
         Integral(2*f(y, z), (y, 0, pi), (z, 0, pi))
+
+def test_integrate_series():
+    f = sin(x).series(x, 0, 10)
+    g = x**2/2 - x**4/24 + x**6/720 - x**8/40320 + x**10/3628800 + O(x**11)
+
+    assert integrate(f, x) == g
+    assert diff(integrate(f, x), x) == f
+
+    assert integrate(O(x**5), x) == O(x**6)

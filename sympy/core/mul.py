@@ -7,6 +7,8 @@ from cache import cacheit
 from logic import fuzzy_not
 from compatibility import cmp_to_key
 
+import operator
+
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
 class NC_Marker:
@@ -1273,6 +1275,52 @@ class Mul(AssocOp):
         for x in self.args:
             s *= x._sage_()
         return s
+
+    def as_content_primitive(self):
+        """Return the tuple (R, self/R) where R is the positive Rational
+        extracted from self.
+
+        **Example**
+        >>> from sympy import sqrt
+        >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
+        (6, -sqrt(2)*(-sqrt(2) + 1))
+
+        See docstring of Expr.as_content_primitive for more examples.
+        """
+
+        coef = S.One
+        args = []
+        for i, a in enumerate(self.args):
+            c, p = a.as_content_primitive()
+            coef *= c
+            if p is not S.One:
+                args.append(p)
+        # don't use self._from_args here to reconstruct args
+        # since there may be identical args now that should be combined
+        # e.g. (2+2*x)*(3+3*x) should be (6, (1 + x)**2) not (6, (1+x)*(1+x))
+        return coef, Mul(*args)
+
+def prod(a, start=1):
+    """Return product of elements of a. Start with int 1 so if only
+       ints are included then an int result is returned.
+
+    Example:
+    >>> from sympy import prod, S
+    >>> prod(range(3))
+    0
+    >>> type(_) is int
+    True
+    >>> prod([S(2), 3])
+    6
+    >>> _.is_Integer
+    True
+
+    You can start the product at something other than 1:
+    >>> prod([1, 2], 3)
+    6
+
+    """
+    return reduce(operator.mul, a, start)
 
 from numbers import Rational, igcd
 from power import Pow

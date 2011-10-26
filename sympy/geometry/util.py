@@ -137,11 +137,11 @@ def intersection(*entities):
 
 
 def convex_hull(*args):
-    """The convex hull of a collection of 2-dimensional points.
+    """The convex hull surrounding the Points contained in the list of entities.
 
     Parameters
     ----------
-    args : a collection of Points
+    args : a collection of Points, Segments and/or Polygons
 
     Returns
     -------
@@ -269,3 +269,68 @@ def are_similar(e1, e2):
             n1 = e1.__class__.__name__
             n2 = e2.__class__.__name__
             raise GeometryError("Cannot test similarity between %s and %s" % (n1, n2))
+
+def centroid(*args):
+    """Find the centroid (center of mass) of the collection containing only Points,
+    Segments or Polygons. The centroid is the weighted average of the individual centroid
+    where the weights are the lengths (of segments) or areas (of polygons).
+    Overlapping regions will add to the weight of that region.
+
+    If there are no objects (or a mixture of objects) then None is returned.
+
+    Examples:
+
+    >>> from sympy import Point, Segment, Polygon
+    >>> from sympy.geometry.util import centroid
+    >>> p = Polygon((0, 0), (10, 0), (10, 10))
+    >>> q = p.translate(0, 20)
+    >>> p.centroid, q.centroid
+    (Point(20/3, 10/3), Point(20/3, 70/3))
+    >>> centroid(p, q)
+    Point(20/3, 40/3)
+    >>> p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))
+    >>> centroid(p, q)
+    Point(1, 2*sqrt(2)/(2 + 2*sqrt(2)))
+    >>> centroid(Point(0, 0), Point(2, 0))
+    Point(1, 0)
+
+    Stacking 3 polygons on top of each other effectively triples the
+    weight of that polygon:
+
+        >>> p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))
+        >>> q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))
+        >>> centroid(p, q)
+        Point(3/2, 1/2)
+        >>> centroid(p, p, p, q) # centroid x-coord shifts left
+        Point(11/10, 1/2)
+
+    Stacking the squares vertically above and below p has the same
+    effect:
+
+        >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
+        Point(11/10, 1/2)
+    """
+
+    from sympy.geometry import Polygon, Segment, Point
+    if args:
+        if all(isinstance(g, Point) for g in args):
+            c = Point(0, 0)
+            for g in args:
+                c += g
+            return c/len(args)
+        elif all(isinstance(g, Segment) for g in args):
+            c = Point(0, 0)
+            L = 0
+            for g in args:
+                l = g.length
+                c += g.midpoint*l
+                L += l
+            return c/L
+        elif all(isinstance(g, Polygon) for g in args):
+            c = Point(0, 0)
+            A = 0
+            for g in args:
+                a = g.area
+                c += g.centroid*a
+                A += a
+            return c/A

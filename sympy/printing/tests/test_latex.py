@@ -352,3 +352,16 @@ def test_settings():
 
 def test_latex_numbers():
     assert latex(catalan(n)) == r"C_{n}"
+
+def test_lamda():
+    assert latex(Symbol('lamda')) == r"\lambda"
+    assert latex(Symbol('Lamda')) == r"\Lambda"
+
+def test_custom_symbol_names():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert latex(x) == "x"
+    assert latex(x, symbol_names={x:"x_i"}) == "x_i"
+    assert latex(x + y, symbol_names={x:"x_i"}) == "x_i + y"
+    assert latex(x**2, symbol_names={x:"x_i"}) == "x_i^{2}"
+    assert latex(x + y, symbol_names={x:"x_i", y:"y_j"}) == "x_i + y_j"

@@ -70,6 +70,7 @@ modules = [
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
+    'sympy.physics.mechanics',
     'sympy.physics.quantum',
     'sympy.plotting',
     'sympy.polys',

@@ -1,15 +1,15 @@
 from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
-from sympy.core.numbers import Zero
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import is_sequence
 
-from sympy.polys import Poly, roots, cancel
+from sympy.polys import PurePoly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions import exp,factorial
 from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
+from sympy.functions.elementary.trigonometric import cos, sin
 
 from sympy.core.compatibility import callable, reduce
 
@@ -377,8 +377,8 @@ class Matrix(object):
         out = Matrix(self.rows,self.cols,map(lambda i: a*i,self.mat))
         return out
 
-    def expand(self):
-        out = Matrix(self.rows,self.cols,map(lambda i: i.expand(), self.mat))
+    def expand(self, **hints):
+        out = Matrix(self.rows,self.cols,map(lambda i: i.expand(**hints), self.mat))
         return out
 
     def combine(self):
@@ -564,7 +564,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if not self.is_symmetric():
             raise ValueError("Matrix must be symmetric.")
         return self._LDLdecomposition()
@@ -592,7 +592,7 @@ class Matrix(object):
         """
 
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if rhs.rows != self.rows:
             raise ShapeError("Matrices size mismatch.")
         if not self.is_lower():
@@ -619,7 +619,7 @@ class Matrix(object):
 
         """
         if not self.is_square:
-            raise NonSquareMatrixException("Matrix must be square.")
+            raise NonSquareMatrixError("Matrix must be square.")
         if rhs.rows != self.rows:
             raise TypeError("Matrix size mismatch.")
         if not self.is_upper():
@@ -1631,7 +1631,53 @@ class Matrix(object):
 
     @property
     def is_square(self):
+        """
+        Checks if a matrix is square.
+
+        A matrix is square if the number of rows equals the number of columns.
+        The empty matrix is square by definition, since the number of rows and
+        the number of columns are both zero.
+
+        Example::
+            >>> from sympy import Matrix
+            >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
+            >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+            >>> c = Matrix([])
+            >>> a.is_square
+            False
+            >>> b.is_square
+            True
+            >>> c.is_square
+            True
+
+        """
         return self.rows == self.cols
+
+    @property
+    def is_zero(self):
+        """
+        Checks if a matrix is a zero matrix.
+
+        A matrix is zero if every element is zero.  A matrix need not be square
+        to be considered zero.  The empty matrix is zero by the principle of
+        vacuous truth.
+
+        Example::
+            >>> from sympy import Matrix, zeros
+            >>> a = Matrix([[0, 0], [0, 0]])
+            >>> b = zeros((3, 4))
+            >>> c = Matrix([[0, 1], [0, 0]])
+            >>> d = Matrix([])
+            >>> a.is_zero
+            True
+            >>> b.is_zero
+            True
+            >>> c.is_zero
+            False
+            >>> d.is_zero
+            True
+        """
+        return all(i.is_zero for i in self)
 
     def is_nilpotent(self):
         """
@@ -1896,6 +1942,13 @@ class Matrix(object):
           berkowitz ... berkowitz_det
         """
 
+        # if methods were made internal and all determinant calculations
+        # passed through here, then these lines could be factored out of
+        # the method routines
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        if not self:
+            return S.One
         if method == "bareis":
             return self.det_bareis()
         elif method == "berkowitz":
@@ -1915,6 +1968,8 @@ class Matrix(object):
         """
         if not self.is_square:
             raise NonSquareMatrixError()
+        if not self:
+            return S.One
 
         M, n = self[:,:], self.rows
 
@@ -2151,6 +2206,10 @@ class Matrix(object):
 
     def berkowitz_det(self):
         """Computes determinant using Berkowitz method."""
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        if not self:
+            return S.One
         poly = self.berkowitz()[-1]
         sign = (-1)**(len(poly)-1)
         return sign * poly[-1]
@@ -2165,9 +2224,35 @@ class Matrix(object):
 
         return tuple(minors)
 
-    def berkowitz_charpoly(self, x, simplify=sympy_simplify):
-        """Computes characteristic polynomial minors using Berkowitz method."""
-        return Poly(map(simplify, self.berkowitz()[-1]), x)
+    def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=sympy_simplify):
+        """Computes characteristic polynomial minors using Berkowitz method.
+
+        A PurePoly is returned so using different variables for ``x`` does
+        not affect the comparison or the polynomials:
+
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x, y
+        >>> A = Matrix([[1, 3], [2, 0]])
+        >>> A.berkowitz_charpoly(x) == A.berkowitz_charpoly(y)
+        True
+
+        Specifying ``x`` is optional; a Dummy with name ``lambda`` is used by
+        default (which looks good when pretty-printed in unicode):
+
+        >>> A.berkowitz_charpoly().as_expr()
+        _lambda**2 - _lambda - 6
+
+        No test is done to see that ``x`` doesn't clash with an existing
+        symbol, so using the default (``lambda``) or your own Dummy symbol is
+        the safest option:
+
+        >>> A = Matrix([[1, 2], [x, 0]])
+        >>> A.charpoly().as_expr()
+        _lambda**2 - _lambda - 2*x
+        >>> A.charpoly(x).as_expr()
+        x**2 - 3*x
+        """
+        return PurePoly(map(simplify, self.berkowitz()[-1]), x)
 
     charpoly = berkowitz_charpoly
 
@@ -2815,7 +2900,7 @@ def matrix_multiply(A, B):
                                         reduce(lambda k, l: k+l,
                                         map(lambda n, m: n*m,
                                         alst[i],
-                                        blst[j])))
+                                        blst[j]), 0))
 
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
@@ -3532,9 +3617,93 @@ def symarray(prefix, shape):
         arr[index] = Symbol('%s_%s' % (prefix, '_'.join(map(str, index))))
     return arr
 
-def _separate_eig_results(res):
-    eigvals = [item[0] for item in res]
-    multiplicities = [item[1] for item in res]
-    eigvals = flatten([[val]*mult for val, mult in zip(eigVals, multiplicities)])
-    eigvects = flatten([item[2] for item in res])
-    return eigvals, eigvects
+def rot_axis3(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 3-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis3
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis3(theta)
+    [       1/2, sqrt(3)/2, 0]
+    [-sqrt(3)/2,       1/2, 0]
+    [         0,         0, 1]
+
+    If we rotate by pi/2 (90 degrees):
+    >> rot_axis3(pi/2)
+    [ 0, 1, 0]
+    [-1, 0, 0]
+    [ 0, 0, 1]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,st,0),
+           (-st,ct,0),
+           (0,0,1))
+    return Matrix(mat)
+
+def rot_axis2(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 2-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis2
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis2(theta)
+    [      1/2, 0, -sqrt(3)/2]
+    [        0, 1,          0]
+    [sqrt(3)/2, 0,        1/2]
+
+    If we rotate by pi/2 (90 degrees):
+    >>> rot_axis2(pi/2)
+    [0, 0, -1]
+    [0, 1,  0]
+    [1, 0,  0]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((ct,0,-st),
+           (0,1,0),
+           (st,0,ct))
+    return Matrix(mat)
+
+def rot_axis1(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) about
+    the 1-axis.
+
+    Examples
+    --------
+
+    >>> from sympy import pi
+    >>> from sympy.matrices import rot_axis1
+
+    A rotation of pi/3 (60 degrees):
+    >>> theta = pi/3
+    >>> rot_axis1(theta)
+    [1,          0,         0]
+    [0,        1/2, sqrt(3)/2]
+    [0, -sqrt(3)/2,       1/2]
+
+    If we rotate by pi/2 (90 degrees):
+    >>> rot_axis1(pi/2)
+    [1,  0, 0]
+    [0,  0, 1]
+    [0, -1, 0]
+    """
+    ct = cos(theta)
+    st = sin(theta)
+    mat = ((1,0,0),
+           (0,ct,st),
+           (0,-st,ct))
+    return Matrix(mat)
+

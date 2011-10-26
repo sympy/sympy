@@ -316,16 +316,7 @@ class Expr(Basic, EvalfMixin):
         """
         if not self.is_Mul:
             return [self]
-
-        cpart = []
-        ncpart = []
-
-        for arg in self.args:
-            if arg.is_commutative:
-                cpart.append(arg)
-            else:
-                ncpart.append(arg)
-
+        cpart, ncpart = self.args_cnc()
         return sorted(cpart, key=lambda expr: expr.sort_key(order=order)) + ncpart
 
     def as_ordered_terms(self, order=None, data=False):
@@ -882,14 +873,14 @@ class Expr(Basic, EvalfMixin):
 
         -- force self to be treated as an Add:
 
-        >>> (3*x).as_independent(x, as_Add=1)
+        >>> (3*x).as_independent(x, as_Add=True)
         (0, 3*x)
 
         -- force self to be treated as a Mul:
 
-        >>> (3+x).as_independent(x, as_Add=0)
+        >>> (3+x).as_independent(x, as_Add=False)
         (1, x + 3)
-        >>> (-3+x).as_independent(x, as_Add=0)
+        >>> (-3+x).as_independent(x, as_Add=False)
         (1, x - 3)
 
         Note how the below differs from the above in making the
@@ -1107,6 +1098,67 @@ class Expr(Basic, EvalfMixin):
                 return self, tuple()
         return S.Zero, (self,)
 
+    def primitive(self):
+        """Return the positive Rational that can be extracted non-recursively
+        from every term of self (i.e., self is treated like an Add). This is
+        like the as_coeff_Mul() method but primitive always extracts a positive
+        Rational (never a negative or a Float).
+
+        **Examples**
+        >>> from sympy.abc import x
+        >>> (3*(x + 1)**2).primitive()
+        (3, (x + 1)**2)
+        >>> a = (6*x + 2); a.primitive()
+        (2, 3*x + 1)
+        >>> b = (x/2 + 3); b.primitive()
+        (1/2, x + 6)
+        >>> (a*b).primitive() == (1, a*b)
+        True
+        """
+        c, r = self.as_coeff_mul()
+        r = Mul._from_args(r)
+        if c.is_negative:
+            c, r = -c, -r
+        return c, r
+
+    def as_content_primitive(self):
+        """This method should recursively remove a Rational from all arguments
+        and return that (content) and the new self (primitive). The content
+        should always be positive and Mul(*foo.as_content_primitive()) == foo.
+        The primitive need no be in canonical form and should try to preserve
+        the underlying structure if possible (i.e. expand_mul should not be
+        applied to self).
+
+        **Examples**
+        >>> from sympy.abc import x, y, z
+
+        >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
+
+        The as_content_primitive function is recursive and retains structure:
+
+        >>> eq.as_content_primitive()
+        (2, x + 3*y*(y + 1) + 1)
+
+        Integer powers will have Rationals extracted from the base:
+
+        >>> ((2 + 6*x)**2).as_content_primitive()
+        (4, (3*x + 1)**2)
+        >>> ((2 + 6*x)**(2*y)).as_content_primitive()
+        (1, (2*(3*x + 1))**(2*y))
+
+        Terms may end up joining once their as_content_primitives are added:
+
+        >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
+        (11, x*(y + 1))
+        >>> ((3*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
+        (9, x*(y + 1))
+        >>> ((3*(z*(1 + y)) + 2.0*x*(3 + 3*y))).as_content_primitive()
+        (3, 2.0*x*(y + 1) + z*(y + 1))
+        >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
+        (121, x**2*(y + 1)**2)
+        """
+        return S.One, self
+
     def as_numer_denom(self):
         """ a/b -> a,b
 
@@ -1149,10 +1201,15 @@ class Expr(Basic, EvalfMixin):
             return self
         elif c == self:
             return S.One
-        elif c.is_Mul:
-            x = self.extract_multiplicatively(c.as_two_terms()[0])
+        if c.is_Add:
+            cc, pc = c.primitive()
+            if cc is not S.One:
+                c = Mul(cc, pc, evaluate=False)
+        if c.is_Mul:
+            a, b = c.as_two_terms()
+            x = self.extract_multiplicatively(a)
             if x != None:
-                return x.extract_multiplicatively(c.as_two_terms()[1])
+                return x.extract_multiplicatively(b)
         quotient = self / c
         if self.is_Number:
             if self is S.Infinity:
@@ -1196,6 +1253,9 @@ class Expr(Basic, EvalfMixin):
             elif quotient.is_Integer:
                 return quotient
         elif self.is_Add:
+            cs, ps = self.primitive()
+            if cs is not S.One:
+                return Mul(cs, ps, evaluate=False).extract_multiplicatively(c)
             newargs = []
             for arg in self.args:
                 newarg = arg.extract_multiplicatively(c)
@@ -1205,12 +1265,12 @@ class Expr(Basic, EvalfMixin):
                     return None
             return Add(*newargs)
         elif self.is_Mul:
-            for i in xrange(len(self.args)):
-                newargs = list(self.args)
-                del(newargs[i])
-                tmp = self._new_rawargs(*newargs).extract_multiplicatively(c)
-                if tmp != None:
-                    return tmp * self.args[i]
+            args = list(self.args)
+            for i, arg in enumerate(args):
+                newarg = arg.extract_multiplicatively(c)
+                if newarg is not None:
+                    args[i] = newarg
+                    return Mul(*args)
         elif self.is_Pow:
             if c.is_Pow and c.base == self.base:
                 new_exp = self.exp.extract_additively(c.exp)
@@ -2053,7 +2113,6 @@ class Expr(Basic, EvalfMixin):
         """See the invert function in sympy.polys"""
         from sympy.polys import invert
         return invert(self, g)
-
 
 class AtomicExpr(Atom, Expr):
     """

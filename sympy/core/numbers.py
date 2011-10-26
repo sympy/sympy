@@ -298,9 +298,15 @@ class Float(Number):
 
     def __new__(cls, num, prec=15):
         prec = mlib.libmpf.dps_to_prec(prec)
-        if isinstance(num, (int, long)):
+
+        if isinstance(num, (int, long, Integer)):
             return Integer(num)
-        if isinstance(num, (str, decimal.Decimal)):
+
+        if isinstance(num, float):
+            _mpf_ = mlib.from_float(num, prec, rnd)
+        elif isinstance(num, Rational):
+            _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
+        elif isinstance(num, (str, decimal.Decimal)):
             _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, tuple) and len(num) == 4:
             if type(num[1]) is str:
@@ -314,6 +320,7 @@ class Float(Number):
                     S.NegativeOne ** num[0] * num[1] * 2 ** num[2])._mpf_
         else:
             _mpf_ = mpmath.mpf(num)._mpf_
+
         if not num:
             return C.Zero()
         obj = Expr.__new__(cls)
@@ -919,6 +926,24 @@ class Rational(Number):
         import sage.all as sage
         return sage.Integer(self.p)/sage.Integer(self.q)
 
+    def as_content_primitive(self):
+        """Return the tuple (R, self/R) where R is the positive Rational
+        extracted from self.
+
+        **Example**
+        >>> from sympy import S
+        >>> (S(-3)/2).as_content_primitive()
+        (3/2, -1)
+
+        See docstring of Expr.as_content_primitive for more examples.
+        """
+
+        if self and self.q:
+            if self.is_positive:
+                return self, S.One
+            return -self, S.NegativeOne
+        return  S.One, self
+
 # int -> Integer
 _intcache = {}
 
@@ -1030,7 +1055,18 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __divmod__(self, other):
-        return divmod(self.p, other.p)
+        from containers import Tuple
+        if isinstance(other, Integer):
+            return Tuple(*(divmod(self.p, other.p)))
+        else:
+            return Tuple(*(divmod(self.p, other)))
+
+    def __rdivmod__(self, other):
+        from containers import Tuple
+        if isinstance(other, Integer):
+            return Tuple(*divmod(other.p, self.p))
+        else:
+            return Tuple(*divmod(other, self.p))
 
     # TODO make it decorator + bytecodehacks?
     def __add__(a, b):

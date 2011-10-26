@@ -1,6 +1,6 @@
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
-                   Number, zoo, log, Mul, Pow)
+                   Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.power import integer_nthroot
 
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
@@ -80,11 +80,13 @@ def test_mod():
     assert 15 % Integer(4) == Integer(3)
 
 def test_divmod():
-    assert divmod(S(12), S(8)) == (1, 4)
-    assert divmod(-S(12), S(8)) == (-2, 4)
-    assert divmod(S(0), S(1)) == (0, 0)
+    assert divmod(S(12), S(8)) == Tuple(1, 4)
+    assert divmod(-S(12), S(8)) == Tuple(-2, 4)
+    assert divmod(S(0), S(1)) == Tuple(0, 0)
     raises(ZeroDivisionError, "divmod(S(0), S(0))")
     raises(ZeroDivisionError, "divmod(S(1), S(0))")
+    assert divmod(S(12), 8) == Tuple(1, 4)
+    assert divmod(12, S(8)) == Tuple(1, 4)
 
 def test_igcd():
     assert igcd(0, 0) == 0
@@ -266,12 +268,29 @@ def test_Float():
     teq(2*pi)
     teq(cos(0.1, evaluate=False))
 
-    assert Float(1) is S.One
     assert Float(0) is S.Zero
+    assert Float(1) is S.One
+
+    assert Float(S.Zero) is S.Zero
+    assert Float(S.One) is S.One
 
 def test_Float_eval():
     a = Float(3.2)
     assert (a**2).is_Float
+
+def test_Float_issue_2107():
+    a = Float(0.1, 10)
+    b = Float("0.1", 10)
+
+    assert a - a == 0
+    assert a + (-a) == 0
+    assert S.Zero + a - a == 0
+    assert S.Zero + a + (-a) == 0
+
+    assert b - b == 0
+    assert b + (-b) == 0
+    assert S.Zero + b - b == 0
+    assert S.Zero + b + (-b) == 0
 
 def test_Infinity():
     assert oo != 1
@@ -839,3 +858,10 @@ def test_issue_1023():
 
 def test_GoldenRatio_expand():
     assert GoldenRatio.expand(func=True) == S.Half + sqrt(5)/2
+
+def test_as_content_primitive():
+    assert S.Zero.as_content_primitive() == (1, 0)
+    assert S.Half.as_content_primitive() == (S.Half, 1)
+    assert (-S.Half).as_content_primitive() == (S.Half, -1)
+    assert S(3).as_content_primitive() == (3, 1)
+    assert S(3.1).as_content_primitive() == (1, 3.1)

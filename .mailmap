@@ -1,4 +1,11 @@
-Ondrej Certik <ondrej@certik.cz> ondrej.certik <devnull@localhost>
+# Prevent git from showing duplicate names with commands like "git shortlog"
+# See the manpage of git-shortlog for details.
+# The syntax is:
+# Name that should be used <email that should be used> Bad name <bad email>
+#
+# You can skip Bad name if it is the same as the one that should be used, and is unique.
+Ondřej Čertík <ondrej@certik.cz> Ondrej Certik <ondrej@certik.cz>
+Ondřej Čertík <ondrej@certik.cz> ondrej.certik <devnull@localhost>
 Fredrik Johansson <fredrik.johansson@gmail.com> fredrik.johansson <devnull@localhost>
 Kirill Smelkov <kirr@landau.phys.spbu.ru> kirill.smelkov <devnull@localhost>
 Kirill Smelkov <kirr@landau.phys.spbu.ru> convert-repo <devnull@localhost>
@@ -17,3 +24,32 @@ Chris Wu <chris.wu@gmail.com> Chris.Wu <devnull@localhost>
 Jezreel Ng <jezreel@gmail.com>
 James Pearson <xiong.chiamiov@gmail.com>
 Cristóvão Sousa <crisjss@gmail.com>
+Addison Cugini <ajcugini@gmail.com> <addisonc@csmpm4z6d1ax.local>
+Addison Cugini <ajcugini@gmail.com> <addisonc@pcp065368pcs.dhcp.calpoly.edu>
+Addison Cugini <ajcugini@gmail.com> Addison CUgini
+Alan Bromborsky <abrombo@verizon.net> Alan Bromborsky <brombo@GA.(none)>
+Alexey U. Gudchenko <proga@goodok.ru> Alexey U. Goodchenko <proga@goodok.ru>
+Vinzent Steinberg <vinzent.steinberg@gmail.com> <Vinzent.Steinberg@gmail.com>
+Vinzent Steinberg <vinzent.steinberg@gmail.com> <vinzent.steinberg@googlemail.com>
+Chris Smith <smichr@gmail.com> Christopher Smith <smichr@gmail.com>
+Chris Smith <smichr@gmail.com> smichr <smichr@gmail.com>
+Chris Smith <smichr@gmail.com> unknown <Donna Smith@.(none)>
+Fredrik Johansson <fredrik.johansson@gmail.com> Fredrik <fredrik.johansson@gmail.com>
+Fredrik Johansson <fredrik.johansson@gmail.com> Fredrik Johansson <fredrik@airy.(none)>
+Brian Granger <ellisonbg@gmail.com> Brian E. Granger
+Jurjen N.E. Bos <jnebos@gmail.com> Jurjen N.E. Bos <devnull@localhost>
+Benjamin McDonald <mcdonald.ben@gmail.com> benjaminmcdonald <mcdonald.ben@gmail.com>
+Prafullkumar P. Tale <hector1618@gmail.com> hector1618 <hector1618@gmail.com>
+Øyvind Jensen <jensen.oyvind@gmail.com> jegerjensen
+Jeremias Yehdegho <j.yehdegho@gmail.com> jerryy <aevirex@aleph.(none)>
+Oleksandr Gituliar <gituliar@gmail.com> oleksandr gituliar
+Renato Coutinho <renato.coutinho@gmail.com> renato <renato.coutinho@gmail.com>
+Thomas Wiecki <thomas.wieki@gmail.com> whyking <whyking@Lateralus.(none)>
+Felix Kaiser <felix.kaiser@fxkr.net> Felix Kaiser <kaiser.fx@gmail.com>
+Felix Kaiser <felix.kaiser@fxkr.net> Felix Kaiser <whatfxkr@gmail.com>
+Andy R. Terrel <andy.terrel@gmail.com> Andy R. Terrel <aterrel@enthought.com>
+Andy R. Terrel <andy.terrel@gmail.com> Andy R. Terrel <aterrel@uchicago.edu>
+Nicolas Pourcelot <nicolas.pourcelot@gmail.com> wxgeo <nicolas.pourcelot@gmail.com>
+Min Ragan-Kelley <benjaminrk@gmail.com> MinRK <benjaminrk@gmail.com>
+Bradley Froehle <brad.froehle@gmail.com> Bradley M. Froehle <brad.froehle@gmail.com>
+Matthew Rocklin <mrocklin@cs.uchicago.edu> <mrocklin@gmail.com>
