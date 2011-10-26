@@ -273,6 +273,36 @@ def test_pow_trunc():
         p1 = p.trunc(xx, 8)
         p2 = p0.pow_trunc(16, xx, 8)
         assert p1 == p2
+    lp, x = lgens('x', QQ, lex)
+    p0 = 1 + 3*x + 2*x**2 + 5*x**4
+    h = 25
+    for n in range(100, 20):
+        p1 = p0.pow_trunc(n, 'x', h)
+        p2 = p0.pow_miller_trunc(n, h)
+        assert p1 == p2
+
+def test_pow_miller():
+    lp, x = lgens('x', QQ, lex)
+    n = 5
+    for c in [0, 1]:
+        p1 = (c + 3*x + 2*x**2)**n
+        p2 = (c + 3*x + 2*x**2).pow_miller(n)
+        assert p1 == p2
+
+def test_pow_miller_trunc():
+    lp, x = lgens('x', QQ, lex)
+    p0 = 1 + 3*x + 2*x**2 + 5*x**4
+    for n in range(2, 100, 20):
+        for h in [n//4, n//2, n]:
+            p1 = p0.pow_trunc(n, 'x', h)
+            p2 = p0.pow_miller_trunc(n, h)
+            assert p1 == p2
+    p0 = 0
+    for i in range(2,10):
+        p0 += x**i
+    p1 = p0.pow_miller_trunc(5,15)
+    p2 = p0.pow_trunc(5,'x',15)
+    assert p1 == p2
 
 def test_has_constant_term():
     lp, x, y, z = lgens('x, y, z', QQ, lex)

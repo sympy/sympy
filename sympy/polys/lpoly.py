@@ -1261,9 +1261,26 @@ class Poly(dict):
 
         Reference: D. Zeilberger 'The Miller Recurrence for
         Exponentatiating a Polynomial, and its q-Analog'
+
+        Examples:
+        >>> from sympy.core.numbers import Rational as QQ
+        >>> from sympy.polys.monomialtools import lex
+        >>> from sympy.polys.lpoly import lgens
+        >>> lp, x = lgens('x', QQ, lex)
+        >>> p1 = (1 + x + x**2)**5
+        >>> p2 = (1 + x + x**2).pow_miller(5)
+        >>> p1 == p2
+        True
         """
 
         lp = p.lp
+        x = lp.gens()[0]
+        mindeg = min(p)[0]
+        if mindeg != 0:
+            if mindeg > 0:
+                p = p/x**mindeg
+            else:
+                p = p/x**(-mindeg)
         degp = max(p)[0]
         pv = [0]*(degp+1)
         for k,v in p.iteritems():
@@ -1277,6 +1294,56 @@ class Poly(dict):
                 s += pv[i]*((m+1)*i - k)*a[k-i]
             a[k] = s/(k*pv[0])
             res[(k,)] = a[k]
+        if mindeg != 0:
+            if mindeg > 0:
+                res = res*x**(mindeg*m)
+            else:
+                res = res/x**(-mindeg*m)
+        return res
+
+    def pow_miller_trunc(p, m, h):
+        """truncated power of an univariate polynomial
+
+        using Miller pure recurrence formula
+        Examples:
+        >>> from sympy.core.numbers import Rational as QQ
+        >>> from sympy.polys.monomialtools import lex
+        >>> from sympy.polys.lpoly import lgens
+        >>> lp, x = lgens('x', QQ, lex)
+        >>> p1 = (1 + x + x**2).pow_trunc(5, 'x', 8)
+        >>> p2 = (1 + x + x**2).pow_miller_trunc(5, 8)
+        >>> p1 == p2
+        True
+        """
+        lp = p.lp
+        x = lp.gens()[0]
+        mindeg = min(p)[0]
+        if mindeg != 0:
+            if mindeg > 0:
+                p = p/x**mindeg
+            else:
+                p = p/x**(-mindeg)
+        degp = max(p)[0]
+        pv = [0]*(degp+1)
+        for k,v in p.iteritems():
+            pv[k[0]] = v
+        N = min(m*degp, h-mindeg*m-1)
+        a = [lp(0) for i in range(N+1)]
+        if not a:
+            return lp(0)
+        a[0] = pv[0]**m
+        res = lp(a[0])
+        for k in range(1, N+1):
+            s = 0
+            for i in range(1, min(degp,k)+1):
+                s += pv[i]*((m+1)*i - k)*a[k-i]
+            a[k] = s/(k*pv[0])
+            res[(k,)] = a[k]
+        if mindeg != 0:
+            if mindeg > 0:
+                res = res*x**(mindeg*m)
+            else:
+                res = res/x**(-mindeg*m)
         return res
 
     def __pow__(self, n):
@@ -1561,7 +1628,6 @@ class Poly(dict):
         lp = self.lp
         if n != int(n):
             raise NotImplementedError
-        n = int(n)
         if n == 0:
             if self:
                 return lp(1)
@@ -1583,6 +1649,8 @@ class Poly(dict):
             p2 = self.square_trunc(i, h)
             return p2.mul_trunc(self, i, h)
         p = lp(1)
+        if h > 20 and lp.ngens == 1:
+            return self.pow_miller_trunc(n, h)
         while 1:
             if n&1:
                 p = self.mul_trunc(p, i, h)
