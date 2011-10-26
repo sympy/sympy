@@ -7,6 +7,7 @@ from sympy.polys import Poly, roots, cancel
 from sympy.simplify import simplify as sympy_simplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
+from sympy.functions import exp,factorial
 from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
 
@@ -2706,7 +2707,7 @@ class Matrix(object):
 	JordanBlockStructures=self.jordan_BlockStructure()
 	#print "JordanBlockStructures",JordanBlockStructures
         P=zeros(n)
-        for eigenval in JordanBlockStructures.keys(): #start with the biggest eigenvalue
+        for eigenval in reversed(sorted(JordanBlockStructures.keys())): #start with the biggest eigenvalue
             l_JordanChains=JordanBlockStructures[eigenval]
             for s in reversed(sorted((l_JordanChains).keys())):  #start with the biggest block
                 s_chains=l_JordanChains[s]
@@ -2728,7 +2729,30 @@ class Matrix(object):
            P[:,j]=Pcols_new[j]
         assert(J==P.inv()*self*P)
         return (P,Jcells)
-
+    def exp(self,sym):
+        (P,cells)=self.jordan_cells() 
+	print "cells",cells
+        b2=Matrix(2,2,  
+	      [exp(2*sym), sym*exp(2*sym),
+	                0,     exp(2*sym)]
+	)
+        b4=self.exp_block(cells[0],sym)
+        b3=self.exp_block(cells[1],sym)
+        emx=diag(b4,b3,b2)
+        return(emx)
+    def exp_block(self,cell,sym):
+        n=cell.rows
+	l=cell[0,0]	  
+	b=eye(n)
+	for j in range(1,n):
+	   print "j=",j
+	   for i in range(j):
+	      p=j-i
+	      print "i=",i
+	      b[i,j]=sym**(p)/factorial(p)
+        b=b*exp(l*sym)	
+        return b
+    
     def has(self, *patterns):
         """
         Test whether any subexpression matches any of the patterns.
