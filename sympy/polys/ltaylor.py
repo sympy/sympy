@@ -858,3 +858,151 @@ class TaylorEval:
             q = ev_args(self, f.args, prec)
             return q.lambert(self.lvname, prec)
         raise NotImplementedError('case in __call__ not considered f=%s' % f)
+
+###############################################################
+# Expansion of polynomials done in a similar way to the above
+
+class ExpandPolEvalError(TypeError):
+    pass
+
+def expand_pol(p, gens):
+    """
+    expansion of a polynomial
+
+    analogous to `taylor`
+
+    Examples:
+    >>> from sympy import symbols
+    >>> from sympy.polys.ltaylor import expand_pol
+    >>> x,y = symbols('x,y')
+    >>> expand_pol(x*(x+1)*(x+2)**2, [x])
+    x**4 + 5*x**3 + 8*x**2 + 4*x
+    >>> expand_pol((1+x+y)*(x+y),[x,y])
+    x**2 + 2*x*y + x + y**2 + y
+    """
+    p = sympify(p)
+    ngens = len(gens)
+    lpol_vars = ['X%d' % i for i in range(ngens)]
+
+    lpq = LPoly(lpol_vars, QQ, lex)
+    lps = LPoly(lpol_vars, sympify, lex)
+    tev = (ExpandPol(gens, lpq), ExpandPol(gens, lps))
+    p1 = expand_pol_term(p, gens, tev, 0)
+    return p1
+
+def expand_pol_term(p, gens, tev, typ):
+    """
+    expansion of a single polynomial term
+
+    analogous to `taylor_term`
+    """
+    p1, typ = expand_pol_eval(p, gens, tev, typ)
+    p2 = tobasic(p1, tev, typ)
+    return p2
+
+def expand_pol_eval(p, gens, tev, typ):
+    """
+    polynomial expansion attempted by lpoly
+    analogous to `taylor_eval`
+    """
+    typ1 = typ
+    for ring in [QQ, sympify][typ:]:
+        te = tev[typ1]
+        try:
+            p1 = te(p)
+            return (p1, typ1)
+        except ExpandPolEvalError:
+            typ1 += 1
+            if typ1 == 2:
+                return (None, 2)
+            continue
+        except NotImplementedError:
+            return (None, 2)
+    print 'ERROR got here'
+    return (None, 2)
+
+class ExpandPol:
+    """
+    analogous to TaylorEval
+    """
+    def __init__(self, gens, lp):
+        self.gens = gens
+        self.ngens = len(gens)
+        # try first with ring QQ
+        self.ring = lp.ring
+        self.lp = lp
+        self.lgens = lp.gens()
+        self.dgens = dict(zip(self.gens, self.lgens))
+
+    def coerce_number(self, a):
+        ring = self.ring
+        if self.lp.SR:
+            return a
+        if isinstance(a, Rational):
+            if ring == QQ:
+                return QQ(a.p, a.q)
+            return a
+        else:
+            raise ExpandPolEvalError
+
+    def __call__(self, f):
+        if isinstance(f, (int, Number)):
+            return self.lp(self.coerce_number(f))
+        if f in self.gens:
+            return self.dgens[f]
+
+        head = f.__class__
+        if head == Add:
+            s = self.lp(0)
+            for q in f.args:
+                if q in self.gens:
+                    q = self.dgens[q]
+                elif any(y in self.gens for y in q.atoms()):
+                    q = self(q)
+                else:
+                    q = self.coerce_number(q)
+                s += q
+            return s
+        if head == Mul:
+            s = self.lp(1)
+            pws = [0]*self.ngens
+            rest = []
+            for q in f.args:
+                if q.__class__ == Pow:
+                    qb, qp = q.args
+                    if qb in self.gens:
+                        if qp.is_integer:
+                            s = s * self.dgens[qb]**int(qp)
+                        else:
+                            rest.append(q)
+                    else:
+                        rest.append(q)
+                else:
+                    rest.append(q)
+
+            for q in rest:
+                if q in self.gens:
+                    q = self.dgens[q]
+                    s = s*q
+                elif any(x in self.gens for x in q.atoms()):
+                    q = self(q)
+                    s = s*q
+                else:
+                    q = self.coerce_number(q)
+                    s = s*q
+            return s
+        if head == Pow:
+            args = f.args
+            pw = args[1]
+            # pw should be an integer
+            if pw.__class__ == Integer:
+                pw = int(pw)
+            x = args[0]
+            if x in self.gens:
+                x = self.dgens[x]
+            else:
+                x = self(x)
+            x1 = x**pw
+            return x1
+
+        raise NotImplementedError('case in __call__ not considered f=%s' % f)

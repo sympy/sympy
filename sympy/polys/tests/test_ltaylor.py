@@ -842,3 +842,20 @@ def test_issue2084():
     assert series((1 + 1/x)) == 1 + 1/x
     assert Derivative(series(exp(x)), x).doit() == \
            1 + x + x**2/2 + x**3/6 + x**4/24 + O(x**5)
+
+#########################################################################
+
+from sympy.polys.ltaylor import expand_pol
+
+def test_expand_pol():
+    x,y = symbols('x,y')
+    assert expand_pol(1, [x]) == 1
+    assert expand_pol(x, [x]) == x
+    assert expand_pol(x, [x, y]) == x
+    assert expand_pol((x+1)**2, [x]) == x**2 + 2*x + 1
+    assert expand_pol((x+1)**3, [x]) == x**3 + 3*x**2 + 3*x + 1
+    assert expand_pol((x+1)**3, [x, y]) == x**3 + 3*x**2 + 3*x + 1
+    assert  expand_pol((x+y)**2 * (x+1), [x, y]) == \
+        x**3 + 2*x**2*y + x**2 + x*y**2 + 2*x*y + y**2
+    assert expand_pol((x+y)**3 + (x+1)*(y+1), [x, y]) == \
+        x**3 + 3*x**2*y + 3*x*y**2 + x*y + x + y**3 + y + 1
