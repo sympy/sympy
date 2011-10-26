@@ -1649,6 +1649,8 @@ class Poly(dict):
             p2 = self.square_trunc(i, h)
             return p2.mul_trunc(self, i, h)
         p = lp(1)
+        if h > 20 and lp.ngens == 1:
+            return self.pow_miller_trunc(n, h)
         while 1:
             if n&1:
                 p = self.mul_trunc(p, i, h)
