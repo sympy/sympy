@@ -1392,6 +1392,9 @@ class Poly(dict):
             return self.square()
         elif n == 3:
             return self*self.square()
+        # TODO if lp.SR then use in some cases multinomial coefficients
+        if lp.ngens == 1:
+            return self.pow_miller(n)
         p = lp(1)
         while 1:
             if n&1:
