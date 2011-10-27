@@ -180,10 +180,19 @@ class Function(Application, Expr):
             return UndefinedFunction(*args)
 
         if cls.nargs is not None:
-            if (isinstance(cls.nargs, tuple) and len(args) not in cls.nargs) \
-               or (not isinstance(cls.nargs, tuple) and cls.nargs != len(args)):
-               raise ValueError('Function %s expects %s argument(s), got %s.' % (
-                                 cls, cls.nargs, len(args)))
+            if isinstance(cls.nargs, tuple):
+                nargs = cls.nargs
+            else:
+                nargs = (cls.nargs,)
+
+            n = len(args)
+
+            if n not in nargs:
+                # XXX: exception message must be in exactly this format to make it work with
+                # NumPy's functions like vectorize(). Ideal solution would be just to attach
+                # metadata to the exception and change NumPy to take advantage of this.
+                raise TypeError('%(name)s takes exactly %(args)s argument%(plural)s (%(given)s given)' %
+                    {'name': cls, 'args': cls.nargs, 'plural': 's'*(n != 1), 'given': n})
 
         args = map(sympify, args)
         evaluate = options.pop('evaluate', True)

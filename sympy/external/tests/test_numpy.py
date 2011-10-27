@@ -284,3 +284,5 @@ def test_symarray():
     assert a3d[1,2,0] is a120
     assert a3d[1,2,1] is a121
 
+def test_vectorize():
+    assert (numpy.vectorize(sin)([1, 2, 3]) == numpy.array([sin(1), sin(2), sin(3)])).all()
