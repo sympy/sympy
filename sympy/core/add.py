@@ -398,7 +398,7 @@ class Add(AssocOp):
         """
         Returns the leading term and it's order.
 
-        Examples:
+        **Examples**
 
         >>> from sympy.abc import x
         >>> (x+1+1/x**5).extract_leading_order(x)

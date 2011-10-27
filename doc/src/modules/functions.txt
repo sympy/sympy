@@ -122,17 +122,6 @@ Returns the square root of an expression. It is equivalent to raise to Rational(
 sign
 ----
 
-Returns the sign of an expression, that is:
-    -1 if expr is negative
-     0 if expr is zero
-     1 if expr is positive
-
-     >>> from sympy.functions import sign
-     >>> sign(-1)
-     -1
-     >>> sign(0)
-     0
-
 .. autoclass:: sympy.functions.elementary.complexes.sign
 
 

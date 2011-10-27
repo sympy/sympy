@@ -36,24 +36,25 @@ specific hint.  See also the docstring on dsolve().
 
     See also the docstrings of these functions.
 
-**Solving methods currently implemented**
+**Currently implemented solver methods**
 
 The following methods are implemented for solving ordinary differential
 equations.  See the docstrings of the various ode_hint() functions for
 more information on each (run help(ode)):
-    - 1st order separable differential equations
-    - 1st order differential equations whose coefficients or dx and dy
-      are functions homogeneous of the same order.
-    - 1st order exact differential equations.
-    - 1st order linear differential equations
-    - 1st order Bernoulli differential equations.
-    - 2nd order Liouville differential equations.
-    - nth order linear homogeneous differential equation with constant
-      coefficients.
-    - nth order linear inhomogeneous differential equation with constant
-      coefficients using the method of undetermined coefficients.
-    - nth order linear inhomogeneous differential equation with constant
-      coefficients using the method of variation of parameters.
+
+  - 1st order separable differential equations
+  - 1st order differential equations whose coefficients or dx and dy
+    are functions homogeneous of the same order.
+  - 1st order exact differential equations.
+  - 1st order linear differential equations
+  - 1st order Bernoulli differential equations.
+  - 2nd order Liouville differential equations.
+  - nth order linear homogeneous differential equation with constant
+    coefficients.
+  - nth order linear inhomogeneous differential equation with constant
+    coefficients using the method of undetermined coefficients.
+  - nth order linear inhomogeneous differential equation with constant
+    coefficients using the method of variation of parameters.
 
 **Philosophy behind this module**
 
@@ -1806,7 +1807,6 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     '1st_homogeneous_coeff_best_Integral' hint.
 
     **Example**
-    ::
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -1891,7 +1891,6 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     ode_1st_homogeneous_coeff_subs_indep_div_dep().
 
     **Example**
-    ::
         >>> from sympy import Function, dsolve
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2263,7 +2262,8 @@ def ode_Liouville(eq, func, order, match):
     Solves 2nd order Liouville differential equations.
 
     The general form of a Liouville ODE is
-    d^2y/dx^2 + g(y)*(dy/dx)**2 + h(x)*dy/dx.  The general solution is::
+    d^2y/dx^2 + g(y)*(dy/dx)**2 + h(x)*dy/dx.  The general solution is:
+
         >>> from sympy import Function, dsolve, Eq, pprint, diff
         >>> from sympy.abc import x
         >>> f, g, h = map(Function, ['f', 'g', 'h'])
@@ -2289,7 +2289,6 @@ def ode_Liouville(eq, func, order, match):
                 /                     /
 
     **Example**
-    ::
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2937,7 +2936,6 @@ def ode_separable(eq, func, order, match):
          /                  /
 
     **Example**
-    ::
         >>> from sympy import Function, dsolve, Eq
         >>> from sympy.abc import x
         >>> f = Function('f')
