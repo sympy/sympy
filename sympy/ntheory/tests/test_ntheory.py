@@ -11,7 +11,7 @@ from sympy.ntheory.factor_ import smoothness, smoothness_p
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
-from sympy.ntheory.modular import crt, crt1, crt2
+from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
@@ -395,9 +395,9 @@ def test_hex_pi_nth_digits():
 
 def test_crt():
     def mcrt(m, v, r, symmetric=False):
-        assert crt(m, v, symmetric) == r
+        assert crt(m, v, symmetric)[0] == r
         mm, e, s = crt1(m)
-        assert crt2(m, v, mm, e, s, symmetric) == r
+        assert crt2(m, v, mm, e, s, symmetric) == (r, mm)
 
     mcrt([2, 3, 5], [0, 0, 0], 0)
     mcrt([2, 3, 5], [1, 1, 1], 1)
@@ -405,6 +405,7 @@ def test_crt():
     mcrt([2, 3, 5], [-1, -1, -1], -1, True)
     mcrt([2, 3, 5], [-1, -1, -1], 2*3*5 - 1, False)
 
+    assert crt([656, 350], [811, 133], symmetric=True) == (-56917, 114800)
 
 def test_binomial_coefficients_list():
     assert binomial_coefficients_list(0) == [1]
@@ -517,3 +518,15 @@ def test_visual_io():
     assert fi({4: 2}, visual=False) == fi(16)
     assert fi(Mul(*[Pow(k, v, **no) for k, v in {4: 2, 2: 6}.items()], **no),
               visual=False) == fi(2**10)
+
+def test_modular():
+    assert solve_congruence(*zip([3, 4, 2], [12, 35, 17])) == (1719, 7140)
+    assert solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
+    assert solve_congruence(*zip([3, 4, 2], [13, 7, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, -15], [13, 7, 17])) == (172, 1547)
+    assert solve_congruence(*zip([-10, -3, 1, -15], [13, 7, 7, 17])) is None
+    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
+    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+    assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
+    assert solve_congruence(*zip((1, 1, 2),(3, 2, 4))) is None
+    raises(ValueError, 'solve_congruence(*zip([3, 4, 2], [12.1, 35, 17]))')

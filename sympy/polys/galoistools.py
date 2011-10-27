@@ -18,7 +18,7 @@ from sympy.ntheory import factorint
 
 
 
-def gf_crt(U, M, K=None, check=True):
+def gf_crt(U, M, K=None):
     """
     Chinese Remainder Theorem.
 
@@ -26,18 +26,12 @@ def gf_crt(U, M, K=None, check=True):
     co-prime integer moduli ``m_0,...,m_n``, returns an integer
     ``u``, such that ``u = u_i mod m_i`` for ``i = ``0,...,n``.
 
-    It is assumed that all moduli are coprime. If this is not True, the
-    correct result will be returned if/when the test of the results is
-    found to be incorrect if ``K == ZZ`` (default) otherwise None will be
-    returned. The keyword ``check`` can be set to False if it is known that
-    the moduli are coprime. All other checking is omitted to not slow
-    down this low-level routine.
-
     As an example consider a set of residues ``U = [49, 76, 65]``
     and a set of moduli ``M = [99, 97, 95]``. Then we have::
 
        >>> from sympy.polys.domains import ZZ
-       >>> from sympy.polys.galoistools import gf_crt, solve_congruence
+       >>> from sympy.polys.galoistools import gf_crt
+       >>> from sympy.ntheory.modular import solve_congruence
 
        >>> gf_crt([49, 76, 65], [99, 97, 95], ZZ)
        639985
@@ -47,25 +41,10 @@ def gf_crt(U, M, K=None, check=True):
        >>> [639985 % m for m in [99, 97, 95]]
        [49, 76, 65]
 
-    If the moduli are not co-prime, you may receive an incorrect result
-    if you use ``check=False``:
+    Note: this is a low-level routine with no error checking.
 
-       >>> gf_crt([3, 4, 2], [12, 6, 17], check=False)
-       954
-       >>> [954 % m for m in [12, 6, 17]]
-       [6, 0, 2]
-       >>> gf_crt([3, 4, 2], [12, 6, 17]) is None
-       True
-       >>> gf_crt([2, 5], [3, 6])
-       5
-
-    Programmer's note: rather than checking that all pairs of moduli share
-    no GCD (an O(n**2) test) and rather than factoring all moduli and seeing
-    that there is no factor in common, a check that the result gives the
-    indicated residuals is performed, an O(n) operation.
+    See also: crt and solve_congruence in sympy.ntheory.modular.
     """
-    from sympy.polys.domains import ZZ
-    K = K or ZZ
     p = prod(M, start=K.one)
     v = K.zero
 
@@ -74,17 +53,7 @@ def gf_crt(U, M, K=None, check=True):
         s, _, _ = K.gcdex(e, m)
         v += e*(u*s % m)
 
-    rv = v % p
-    if not check:
-        return rv
-    if K == ZZ:
-        if all(u % m == rv % m for u, m in zip(U, M)):
-            return rv
-        rv = solve_congruence(*zip(U, M), **dict(check=False))
-        if rv is not None:
-            rv = rv[0]
-        return rv
-    # XXX TODO what should be done if K is not ZZ?
+    return v % p
 
 def gf_crt1(M, K):
     """
@@ -99,10 +68,8 @@ def gf_crt1(M, K):
     (912285, [9215, 9405, 9603], [62, 24, 12])
 
     """
-    p, E, S = K.one, [], []
-
-    for m in M:
-        p *= m
+    E, S = [], []
+    p = prod(M, start=K.one)
 
     for m in M:
         E.append(p // m)
@@ -2168,97 +2135,4 @@ def gf_csolve(f, n):
     for pool in pools:
         perms = [x + [y] for x in perms for y in pool]
     dist_factors = [pow(p, e) for p, e in P.iteritems()]
-    return sorted([gf_crt(per, dist_factors, ZZ, check=False) for per in perms])
-
-def solve_congruence(*remainder_modulus_pairs, **hint):
-    """Return `ai`, `mi` for n = ai + ji*mi where ``remainder_modulus_pairs``
-    contain (ai, mi). If there is no solution, return None. The ``mi`` values
-    need not be co-prime. If it is known that the moduli are not co-prime then
-    the hint check=False (default=True) can be used to bypass the check for a
-    quicker solution through use of gf_crt().
-
-    Examples::
-    >>> from sympy.polys.galoistools import solve_congruence
-
-    What number is 2 mod 3, 3 mod 5 and 2 mod 7?
-    >>> solve_congruence((2, 3), (3, 5), (2, 7))
-    (23, 105)
-    >>> [23 % m for m in [3, 5, 7]]
-    [2, 3, 2]
-
-    If you prefer to work with all remainder in one list and
-    all moduli in another, send the arguments like this:
-    >>> solve_congruence(*zip((2, 3, 2), (3, 5, 7)))
-    (23, 105)
-
-    The moduli need not be co-prime; in this case there may or
-    may not be a solution:
-    >>> solve_congruence((2, 3), (5, 6))
-    (5, 6)
-    >>> solve_congruence((2, 3), (4, 6)) is None
-    True
-
-    See also: sympy.polys.galoistools.gf_crt
-    """
-    from sympy.polys.domains import ZZ
-    def combine(c1, c2):
-        """Return the tuple (a, m) which satisfies the requirement
-        that n = a + i*m satisfy n = a1 + j*m1 and n = a2 = k*m2.
-
-        Reference:
-           http://en.wikipedia.org/wiki/Method_of_successive_substitution
-        """
-        from sympy.core.numbers import igcdex
-        a1, m1 = c1
-        a2, m2 = c2
-        a, b, c = m1, a2 - a1, m2
-        g = reduce(igcd, [a, b, c])
-        a, b, c = [i//g for i in [a, b, c]]
-        if a != 1:
-            inv_a, _, g = igcdex(a, c)
-            if g != 1:
-                return None
-            b *= inv_a
-        a, m = a1 + m1*b, m1*c
-        return a % m, m
-
-    rm = remainder_modulus_pairs
-    rm = [int_tested(*pair) for pair in rm]
-
-    if hint.get('check', True):
-        # ignore redundant pairs but raise an error otherwise; also
-        # make sure that a unique set of bases is sent to gf_crt if
-        # they are all prime.
-        #
-        # The routine will work out less-trivial violations and
-        # return None, e.g. for the pairs (1,3) and (14,42) there
-        # is no answer because 14 mod 42 (having a gcd of 14) implies
-        # (14/2) mod (42/2), (14/7) mod (42/7) and (14/14) mod (42/14)
-        # which, being 0 mod 3, is inconsistent with 1 mod 3. But to
-        # preprocess the input beyond checking of another pair with 42
-        # or 3 as the modulus (for this example) is not necessary.
-        uniq = {}
-        for r, m in rm:
-            r %= m
-            if m in uniq:
-                if r != uniq[m]:
-                    return None
-                continue
-            uniq[m] = r
-        rm = [(r, m) for m, r in uniq.iteritems()]
-        del uniq
-
-        # if the moduli are co-prime, the crt will be significantly faster;
-        # checking all pairs for being co-prime gets to be slow but a prime
-        # test is a good trade-off
-        if all(isprime(m) for r, m in rm):
-            r, m = zip(*rm)
-            return gf_crt(r, m, ZZ, check=False), prod(m)
-
-    rv = (0, 1)
-    for rmi in rm:
-        rv = combine(rv, rmi)
-        if rv is None:
-            break
-    else:
-        return tuple(rv)
+    return sorted([gf_crt(per, dist_factors, ZZ) for per in perms])
