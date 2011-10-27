@@ -75,7 +75,7 @@ from sympy.polys.polyerrors import (
 from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets, cythonized
 
-from math import ceil, log
+from math import ceil as _ceil, log as _log
 from random import randint
 
 @cythonized("k")
@@ -221,7 +221,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
 
     m = p
     k = r // 2
-    d = int(ceil(log(l, 2)))
+    d = int(_ceil(_log(l, 2)))
 
     g = gf_from_int_poly([lc], p)
 
@@ -258,8 +258,8 @@ def dup_zz_zassenhaus(f, K):
     b = dup_LC(f, K)
     B = int(abs(K.sqrt(K(n+1))*2**n*A*b))
     C = int((n+1)**(2*n)*A**(2*n-1))
-    gamma = int(ceil(2*log(C, 2)))
-    bound = int(2*gamma*log(gamma))
+    gamma = int(_ceil(2*_log(C, 2)))
+    bound = int(2*gamma*_log(gamma))
 
     for p in xrange(3, bound+1):
         if not isprime(p) or b % p == 0:
@@ -272,7 +272,7 @@ def dup_zz_zassenhaus(f, K):
         if gf_sqf_p(F, p, K):
             break
 
-    l = int(ceil(log(2*B + 1, p)))
+    l = int(_ceil(_log(2*B + 1, p)))
 
     modular = []
 

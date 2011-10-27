@@ -1,7 +1,7 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
 from random import uniform
-from math import ceil, sqrt, log
+from math import ceil as _ceil, log as _log, sqrt as _sqrt
 
 from sympy.core.mul import prod
 from sympy.core.numbers import igcd, Integer
@@ -1780,7 +1780,7 @@ def gf_ddf_shoup(f, p, K):
 
     """
     n = gf_degree(f)
-    k = int(ceil(sqrt(n//2)))
+    k = int(_ceil(_sqrt(n//2)))
 
     h = gf_pow_mod([K.one, K.zero], int(p), f, p, K)
 
