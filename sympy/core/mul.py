@@ -764,7 +764,7 @@ class Mul(AssocOp):
 
     def _matches(self, expr, repl_dict={}, evaluate=False):
         if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
+            return self.xreplace(repl_dict).matches(expr, repl_dict)
 
         # weed out negative one prefixes
         sign = 1

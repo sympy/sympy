@@ -1109,7 +1109,7 @@ class Basic(object):
 
         """
         if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
+            return self.xreplace(repl_dict).matches(expr, repl_dict)
 
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
@@ -1125,7 +1125,7 @@ class Basic(object):
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
-            d = arg.subs(d).matches(other_arg, d)
+            d = arg.xreplace(d).matches(other_arg, d)
             if d is None:
                 return None
         return d
@@ -1139,7 +1139,7 @@ class Basic(object):
         Return ``None`` when expression (self) does not match
         with pattern. Otherwise return a dictionary such that::
 
-          pattern.subs(self.match(pattern)) == self
+          pattern.xreplace(self.match(pattern)) == self
 
         Example:
 
@@ -1156,7 +1156,7 @@ class Basic(object):
         >>> e = (2*x)**2
         >>> e.match(p*q**r)
         {p_: 4, q_: x, r_: 2}
-        >>> (p*q**r).subs(e.match(p*q**r))
+        >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
         """
