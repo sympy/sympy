@@ -899,6 +899,8 @@ def collect_sqrt(expr, evaluate=True):
     terms will be returned and the returned expression will be an unevaluated
     Add with args ordered by default_sort_key.
 
+    Note: since I = sqrt(-1), it is collected, too.
+
     **Examples**
 
     >>> from sympy import sqrt
@@ -938,7 +940,8 @@ def collect_sqrt(expr, evaluate=True):
         notrad = []
         cset, nc = m.args_cnc()
         for ci in cset:
-            if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2:
+            if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2 or \
+               ci is S.ImaginaryUnit:
                 rad.append(ci)
             else:
                 notrad.append(ci)
@@ -975,13 +978,15 @@ def radsimp(expr):
 
     Examples:
 
-    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint
+    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
     >>> from sympy.abc import a, b
 
-    >>> radsimp(1/(2+sqrt(2)))
+    >>> radsimp(1/(I + 1))
+    (1 - I)/2
+    >>> radsimp(1/(2 + sqrt(2)))
     (-sqrt(2) + 2)/2
     >>> x,y = map(Symbol, 'xy')
-    >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
+    >>> e = ((2 + 2*sqrt(2))*x + (2 + sqrt(8))*y)/(2 + sqrt(2))
     >>> radsimp(e)
     sqrt(2)*(x + y)
 

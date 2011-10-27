@@ -848,3 +848,5 @@ def test_radsimp():
         sqrt(x) + y
     assert radsimp(-(y**2 - x)/(y - sqrt(x))) == \
         -(sqrt(x) + y)
+    assert radsimp(1/(1 - I + a*I)) == \
+        (I*(-a + 1) + 1)/(a**2 - 2*a + 2)
