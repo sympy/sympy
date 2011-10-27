@@ -4,7 +4,8 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms)
+    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
+    expand_multinomial)
 
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd, Float
@@ -19,6 +20,7 @@ from sympy.simplify.cse_main import cse
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, terms_gcd, lcm, gcd)
+from sympy.polys.polytools import _keep_coeff
 
 import sympy.mpmath as mpmath
 
@@ -891,35 +893,165 @@ def trigsimp_nonrecursive(expr, deep=False):
         return expr
     return expr
 
+def collect_sqrt(expr, evaluate=True):
+    """Return expr with terms having common square roots collected together.
+    If ``evaluate`` is False a count indicating the number of sqrt-containing
+    terms will be returned and the returned expression will be an unevaluated
+    Add with args ordered by default_sort_key.
+
+    **Examples**
+
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.simplify import collect_sqrt
+    >>> from sympy.abc import a, b
+
+    >>> r2, r3, r5 = [sqrt(i) for i in [2, 3, 5]]
+    >>> collect_sqrt(a*r2 + b*r2)
+    sqrt(2)*(a + b)
+    >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r3)
+    sqrt(2)*(a + b) + sqrt(3)*(a + b)
+    >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5)
+    sqrt(3)*a + sqrt(5)*b + sqrt(2)*(a + b)
+
+    If evaluate is False then the arguments will be sorted:
+
+    >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5, evaluate=False)
+    (sqrt(3)*a + sqrt(5)*b + sqrt(2)*(a + b), 3)
+    >>> _[0].args
+    (sqrt(2)*(a + b), sqrt(3)*a, sqrt(5)*b)
+
+    When evaluate is False, a count of the number of sqrt-containing
+    terms will be returned:
+
+    >>> collect_sqrt(a*sqrt(2) + b, evaluate=False)
+    (sqrt(2)*a + b, 1)
+    >>> collect_sqrt(a + b, evaluate=False)
+    (a + b, 0)
+
+    """
+
+    d = expr
+    terms = defaultdict(list)
+    nrad = 0
+    for m in Add.make_args(d):
+        rad = []
+        notrad = []
+        cset, nc = m.args_cnc()
+        for ci in cset:
+            if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2:
+                rad.append(ci)
+            else:
+                notrad.append(ci)
+        m = Mul(*rad)
+        nrad += bool(rad and m not in terms)
+        terms[m].append(Mul(*notrad))
+    hit = False
+    args = []
+    keys = terms.keys()
+    if not evaluate:
+        keys.sort(key=default_sort_key)
+    for k in keys:
+        v = terms[k]
+        if len(v) > 1:
+            hit = True
+            v = Add(*v)
+        else:
+            v = v[0]
+        args.append(k*v)
+    if hit:
+        if not evaluate:
+            args.sort(key=default_sort_key)
+        d = Add(*args, evaluate=False)
+
+    if not evaluate:
+        return d, nrad
+    return d
+
 def radsimp(expr):
     """
-    Rationalize the denominator.
+    Rationalize the denominator by removing square roots. If there are more
+    than 3 terms (after collecting common square root terms) that have
+    square roots then the removal is only partial.
 
     Examples:
-        >>> from sympy import radsimp, sqrt, Symbol
-        >>> radsimp(1/(2+sqrt(2)))
-        -sqrt(2)/2 + 1
-        >>> x,y = map(Symbol, 'xy')
-        >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
-        >>> radsimp(e)
-        sqrt(2)*x + sqrt(2)*y
+
+    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint
+    >>> from sympy.abc import a, b
+
+    >>> radsimp(1/(2+sqrt(2)))
+    (-sqrt(2) + 2)/2
+    >>> x,y = map(Symbol, 'xy')
+    >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
+    >>> radsimp(e)
+    sqrt(2)*(x + y)
+
+    Terms are collected automatically:
+
+    >>> r2 = sqrt(2)
+    >>> r5 = sqrt(5)
+    >>> pprint(radsimp(1/(y*r2 + x*r2 + a*r5 + b*r5)))
+             ___              ___
+           \/ 5 *(-a - b) + \/ 2 *(x + y)
+    --------------------------------------------
+         2               2      2              2
+    - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
+
+    But if there are more than 3 terms with square roots then the removal
+    will only be partial:
+
+    >>> three_rads = sqrt(2) + sqrt(3) + sqrt(5)
+    >>> den = sqrt(2) + sqrt(three_rads)
+    >>> denom(radsimp(1/den)) == 2 - three_rads
+    True
+
+    At the very least, square roots in an expression with no denominator
+    will be collected:
+
+    >>> radsimp(sqrt(2)*x + sqrt(2))
+    sqrt(2)*(x + 1)
 
     """
-    n,d = fraction(expr)
-    a,b,c = map(Wild, 'abc')
-    r = d.match(a+b*sqrt(c))
-    if r is not None:
-        a = r[a]
+
+    a, b, c = map(Wild, 'abc')
+    changed = False
+    coeff, expr = expr.as_content_primitive()
+    n, d = fraction(expr)
+    while 1:
+        # collect similar terms
+        d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
+
+        # check to see if we are done:
+        # - no radical terms
+        # - don't continue if there are more than 3 radical terms
+        #   XXX if there are radicals with terms inside that might
+        #       cancel existing terms they could be processed
+        # - don't continue if there are 3 terms and there is a constant
+        #   term, too.
+        if not nterms or nterms > 3 or nterms == 3 and len(d.args) > 3:
+            break
+        changed = True
+
+        # now match for a radical
+        r = d.match(a + b*sqrt(c))
         if r[b] == 0:
-            b,c = 0,0
+            r = d.match(b*sqrt(c))
+            r[a] = 0
+        va, vb, vc = r[a],r[b],r[c]
+
+        nmul = va - vb*sqrt(vc)
+        d = va**2 - vc*vb**2
+        n1 = n/d
+        if denom(n1) is not S.One:
+            n = -(-n/d)
         else:
-            b,c = r[b],r[c]
+            n = n1
+        n, d = fraction(n*nmul)
 
-        syms = list(n.atoms(Symbol))
-        n = collect((n*(a-b*sqrt(c))).expand(), syms)
-        d = a**2 - c*b**2
-
-    return n/d
+    expr = collect_sqrt(expand_mul(n))/d
+    if changed:
+        co, expr = expr.as_content_primitive()
+        coeff *= co
+    return _keep_coeff(coeff, expr)
 
 def posify(eq):
     """Return eq (with generic symbols made positive) and a restore dictionary.

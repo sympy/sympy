@@ -4,7 +4,8 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float)
+    factor, Mul, O, hyper, Add, Float,
+    radsimp)
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL
 
@@ -808,3 +809,42 @@ def test_as_content_primitive():
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
             (S(1)/14, 7.0*x + 21*y + 10*z)
+
+def test_radsimp():
+    r2=sqrt(2)
+    r3=sqrt(3)
+    r5=sqrt(5)
+    r7=sqrt(7)
+    assert radsimp(1/r2) == \
+        sqrt(2)/2
+    assert radsimp(1/(1 + r2)) == \
+        -1 + sqrt(2)
+    assert radsimp(1/(r2 + r3)) == \
+        -sqrt(2) + sqrt(3)
+    assert radsimp(1/(1 + r2 + r3)) == \
+        Mul(S(1)/4, (-sqrt(6) + sqrt(2) + 2), evaluate=False)
+    assert radsimp(1/(r2 + r3 + r5)) == \
+        Mul(S(1)/12, (-sqrt(30) + 2*sqrt(3) + 3*sqrt(2)), evaluate=False)
+    assert radsimp(1/(1 + r2 + r3 + r5)) == \
+        1/(1 + sqrt(2) + sqrt(3) + sqrt(5))
+    assert radsimp(1/(r2 + r3 + r5 + r7)) == \
+        1/(sqrt(2) + sqrt(3) + sqrt(5) + sqrt(7))
+    assert radsimp(1/(r2*3)) == \
+        sqrt(2)/6
+    assert radsimp(1/(r2*a + r2*b + r3 + r7)) == \
+        ((sqrt(42)*(a + b) +
+        sqrt(3)*(-a**2 - 2*a*b - b**2 - 2)  +
+        sqrt(7)*(-a**2 - 2*a*b - b**2 + 2)  +
+        sqrt(2)*(a**3 + 3*a**2*b + 3*a*b**2 - 5*a + b**3 - 5*b))/
+        ((a**4 + 4*a**3*b + 6*a**2*b**2 - 10*a**2  +
+        4*a*b**3 - 20*a*b + b**4 - 10*b**2 + 4)))/2
+    assert radsimp(1/(r2*a + r2*b + r2*c + r2*d)) == \
+        (sqrt(2)/(a + b + c + d))/2
+    assert radsimp(1/(1 + r2*a + r2*b + r2*c + r2*d)) == \
+        ((sqrt(2)*(-a - b - c - d) + 1)/
+        (-2*a**2 - 4*a*b - 4*a*c - 4*a*d - 2*b**2 -
+        4*b*c - 4*b*d - 2*c**2 - 4*c*d - 2*d**2 + 1))
+    assert radsimp((y**2 - x)/(y - sqrt(x))) == \
+        sqrt(x) + y
+    assert radsimp(-(y**2 - x)/(y - sqrt(x))) == \
+        -(sqrt(x) + y)
