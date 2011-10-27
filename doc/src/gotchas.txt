@@ -596,7 +596,7 @@ These will give you the function parameters and docstring for
 :func:`powsimp`.  The output will look something like this:
 
 .. module:: sympy.simplify.simplify
-.. autofunction:: powsimp
+.. autofunction:noindex: powsimp
 
 source()
 --------

@@ -15,32 +15,28 @@ class Basic(object):
 
     Conventions:
 
-    1)
-    When you want to access parameters of some instance, always use .args:
-    Example:
+    1) Always use ``.args``, when accessing parameters of some instance:
 
-    >>> from sympy import symbols, cot
-    >>> from sympy.abc import x, y
+        >>> from sympy import symbols, cot
+        >>> from sympy.abc import x, y
 
-    >>> cot(x).args
-    (x,)
+        >>> cot(x).args
+        (x,)
 
-    >>> cot(x).args[0]
-    x
+        >>> cot(x).args[0]
+        x
 
-    >>> (x*y).args
-    (x, y)
+        >>> (x*y).args
+        (x, y)
 
-    >>> (x*y).args[1]
-    y
+        >>> (x*y).args[1]
+        y
 
 
-    2) Never use internal methods or variables (the ones prefixed with "_").
-    Example:
+    2) Never use internal methods or variables (the ones prefixed with ``_``):
 
-    >>> cot(x)._args    #don't use this, use cot(x).args instead
-    (x,)
-
+        >>> cot(x)._args    # do not use this, use cot(x).args instead
+        (x,)
 
     """
     __metaclass__ = WithAssumptions
