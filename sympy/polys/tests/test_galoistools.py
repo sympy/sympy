@@ -24,7 +24,6 @@ from sympy.polys.galoistools import (
     gf_berlekamp, gf_zassenhaus, gf_shoup,
     gf_factor_sqf, gf_factor,
     gf_value, linear_congruence, csolve_prime, gf_csolve,
-    solve_congruence
 )
 
 from sympy.polys.polyerrors import (
@@ -799,15 +798,3 @@ def test_gf_csolve():
     assert gf_csolve([1, 1, 7], 189) == [13, 49, 76, 112, 139, 175]
     assert gf_csolve([1, 3, 4, 1, 30], 60) ==  [10, 30]
     assert gf_csolve([1, 1, 7], 15) == []
-
-def test_solve_congruence():
-    assert solve_congruence(*zip([3, 4, 2], [12, 35, 17])) == (1719, 7140)
-    assert solve_congruence(*zip([3, 4, 2], [12, 6, 17])) is None
-    assert solve_congruence(*zip([3, 4, 2], [13, 7, 17])) == (172, 1547)
-    assert solve_congruence(*zip([-10, -3, -15], [13, 7, 17])) == (172, 1547)
-    assert solve_congruence(*zip([-10, -3, 1, -15], [13, 7, 7, 17])) is None
-    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 7, 17])) == (835, 1547)
-    assert solve_congruence(*zip([-10, -5, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
-    assert solve_congruence(*zip([-10, 2, 2, -15], [13, 7, 14, 17])) == (2382, 3094)
-    assert solve_congruence(*zip((1, 1, 2),(3, 2, 4))) is None
-    raises(ValueError, 'solve_congruence(*zip([3, 4, 2], [12.1, 35, 17]))')
