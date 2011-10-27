@@ -6,9 +6,10 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr)
 
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd
 from sympy.core.function import expand_log, count_ops
+from sympy.core.rules import Transform
 
 from sympy.utilities import flatten, default_sort_key
 from sympy.functions import gamma, exp, sqrt, log, root
@@ -17,8 +18,6 @@ from sympy.simplify.cse_main import cse
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, terms_gcd, lcm, gcd)
-
-from sympy.core.compatibility import reduce
 
 import sympy.mpmath as mpmath
 
@@ -1060,36 +1059,8 @@ def powdenest(eq, force=False):
     eq = S(eq)
     if eq.is_Atom:
         return eq
-
-    # handle everything that is not a power or Mul
-    #   if subs would work then one could replace the following with
-    #      return eq.subs(dict([(p, powdenest(p)) for p in eq.atoms(Pow)]))
-    #   but subs expands (3**x)**2 to 3**x * 3**x so the 3**(5*x)
-    #   is not recognized; in addition, that would take 2 passes through
-    #   the expression (once to find Pows and again to replace them). The
-    #   following does it in one pass. Which is more important, efficiency
-    #   or simplicity? On the other hand, this only does a shallow replacement
-    #   and doesn't enter Integrals or functions, etc... so perhaps the subs
-    #   approach (or adding a deep flag) is the thing to do.
     if not eq.is_Pow and not eq.func is exp and not eq.is_Mul:
-        args = list(Add.make_args(eq))
-        rebuild = False
-        for i, arg in enumerate(args):
-            margs = list(Mul.make_args(arg))
-            changed = False
-            for j, m in enumerate(margs):
-                if not m.is_Pow:
-                    continue
-                m = powdenest(m, force=force)
-                if m != margs[j]:
-                    changed = True
-                    margs[j] = m
-            if changed:
-                rebuild = True
-                args[i] = C.Mul(*margs)
-        if rebuild:
-            eq = eq.func(*args)
-        return eq
+        return eq.xreplace(Transform(powdenest, filter=lambda x: x.is_Pow))
 
     def handle(eq):
         b, e = eq.as_base_exp()
@@ -1189,23 +1160,7 @@ def powdenest(eq, force=False):
         return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
 
     new = powsimp(eq)
-    args = list(Add.make_args(new))
-    ahit = False
-    for i, a in enumerate(args):
-        margs = list(Mul.make_args(a))
-        hit = False
-        for j, m in enumerate(margs):
-            if m.is_Pow or m.func is exp:
-                mnew = handle(m)
-                if mnew != m:
-                    hit = True
-                    margs[j] = mnew
-        if hit:
-            ahit = True
-            args[i] = Mul(*margs)
-    if ahit:
-        new = Add(*args)
-    return new
+    return new.xreplace(Transform(handle, filter=lambda m: m.is_Pow or m.func is exp))
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
