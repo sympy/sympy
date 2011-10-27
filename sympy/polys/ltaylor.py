@@ -869,6 +869,14 @@ def expand_pol(p, gens):
     """
     expansion of a polynomial
 
+    p polynomial
+    gens list of polynomial variables
+
+    ALGORITHM separate p in its addends; for each compute
+    the expansion first in the QQ ring; if this fails compute it
+    in the symbolic ring consisting of the sympy expressions which
+    do not depend on the polynomial variables in gens
+
     analogous to `taylor`
 
     Examples:
@@ -883,6 +891,19 @@ def expand_pol(p, gens):
     p = sympify(p)
     ngens = len(gens)
     lpol_vars = ['X%d' % i for i in range(ngens)]
+
+    # treat independently addends
+    # e.g. expand_pol((1 + 3*x + 2*x**2)**300 + (pi + x)**2)
+    # the first term is computed on the QQ ring, the second on SR
+    if p.__class__ == Add:
+        lpq = LPoly(lpol_vars, QQ, lex)
+        lps = LPoly(lpol_vars, sympify, lex)
+        tev = (ExpandPol(gens, lpq), ExpandPol(gens, lps))
+        p1 = 0
+        for q in p.args:
+            q1 = expand_pol_term(q, gens, tev, 0)
+            p1 += q1
+        return p1
 
     lpq = LPoly(lpol_vars, QQ, lex)
     lps = LPoly(lpol_vars, sympify, lex)
