@@ -52,7 +52,7 @@ from sympy.utilities import (
     cythonized, variations
 )
 
-from math import ceil, log
+from math import ceil as _ceil, log as _log
 
 @cythonized("m,n,i,j")
 def dup_integrate(f, m, K):
@@ -1239,7 +1239,7 @@ def dup_revert(f, n, K):
     g = [K.revert(dup_TC(f, K))]
     h = [K.one, K.zero, K.zero]
 
-    N = int(ceil(log(n, 2)))
+    N = int(_ceil(_log(n, 2)))
 
     for i in xrange(1, N + 1):
         a = dup_mul_ground(g, K(2), K)
