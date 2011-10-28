@@ -1192,3 +1192,7 @@ def test_issue_2671():
 def test_issue_2013_2331():
     assert homogeneous_order(-log(x) + acosh(x), x) is None
     assert homogeneous_order(y - log(x), x, y) is None
+
+def test_issue_2802():
+    assert solve(f(x)+f(x).diff(x), f(x)) == [C1*exp(-x)]
+    assert solve(f(x)+f(x).diff(x), f(x), simplify=False) == Eq(f(x), C1*exp(-x))

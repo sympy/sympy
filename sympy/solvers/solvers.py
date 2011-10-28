@@ -14,7 +14,7 @@
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
-from sympy.core.function import expand_mul, expand_multinomial, expand_log
+from sympy.core.function import expand_mul, expand_multinomial, expand_log, Derivative
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -40,7 +40,17 @@ from sympy.core.compatibility import reduce
 from sympy.assumptions import Q, ask
 
 from warnings import warn
+from textwrap import fill, dedent
 from types import GeneratorType
+
+# if you use
+# _filldedent('''
+#             the text''')
+# a space will be put before the first line because dedent will
+# put a \n as the first line and fill replaces \n with spaces
+# so we strip off any leading and trailing \n since printed wrapped
+# text should not have leading or trailing spaces.
+_filldedent = lambda s: '\n'+fill(dedent(s).strip('\n'))
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
@@ -365,13 +375,21 @@ def solve(f, *symbols, **flags):
                     >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
                     [{x: 2, f(x): -4}]
 
-            o when a Function or Derivative is given as a symbol, it is isolated
-              algebraically and an implicit solution may be obtained
+            o when a Function or Derivative is given as a symbol, it is
+              isolated algebraically and an implicit solution may be obtained
 
                 >>> solve(f(x) - x, f(x))
                 [x]
                 >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
                 [x + f(x)]
+
+                But if the function is within a derivative then a call to
+                dsolve is made and the best, checked solution is returned:
+
+                >>> solve(f(x).diff(x), f(x)) # doctest: +SKIP
+                [C1]
+                >>> solve(f(x).diff(x), f(x), simplify=False) # doctest: +SKIP
+                f(x) == C1
 
             o single expression and more than 1 symbol
 
@@ -479,17 +497,19 @@ def solve(f, *symbols, **flags):
         symbols = sorted(symbols, key=lambda i: i.sort_key())
 
     # we can solve for Function and Derivative instances by replacing them
-    # with Dummy symbols
+    # with Dummy symbols; but we should dispatch to dsolve if requested to
+    # solve for a function that is within the expression of a Derivative.
     symbols_new = []
     symbol_swapped = False
     symbols_passed = list(symbols)
-
+    funcs = []
     for i, s in enumerate(symbols):
         if s.is_Symbol:
             s_new = s
         elif s.is_Function:
             symbol_swapped = True
             s_new = Dummy('F%d' % i)
+            funcs.append(s)
         elif s.is_Derivative:
             symbol_swapped = True
             s_new = Dummy('D%d' % i)
@@ -499,6 +519,49 @@ def solve(f, *symbols, **flags):
         symbols_new.append(s_new)
 
     if symbol_swapped:
+        # check to see if dsolve should be called
+        if funcs:
+            derivs = reduce(set.union, [fi.atoms(Derivative) for fi in f], set())
+            dsolve_it = False
+            for fi in funcs:
+                for di in derivs:
+                    if di.has(fi):
+                        dsolve_it = True
+                        break
+                if dsolve_it:
+                    from sympy.solvers.ode import dsolve, checkodesol, constant_renumber
+                    if len(f) > 1 or len(symbols) > 1:
+                        raise NotImplementedError(_filldedent('''
+                        Systems of ODEs or solving for symbols in addition
+                        to functions is not supported.'''))
+                    warn("%s"%_filldedent('''
+                    Note: there is an ode module that offers several functions
+                    for handling this sort of equation, including a dsolve
+                    function that can be used rather than solve.
+                    '''))
+
+                    implicit_soln = dsolve(f[0], fi, hint='best', simplify=False)
+                    constants = implicit_soln.free_symbols - fi.free_symbols
+                    implicit_soln = constant_renumber(implicit_soln, 'C', 1, 2*len(constants))
+                    soln = solve(implicit_soln, fi, **flags)
+                    if flags.get('check', True):
+                        valid, got = checkodesol(f[0], implicit_soln, solve_for_func=False)
+                        if valid is False:
+                            # always give the warning since checkode doesn't return
+                            # None if it can't decide, so False might be False
+                            # or just not decidable
+                            print _filldedent('''
+                            The solution could not be validated: when <%s>
+                            was substituted into the original equation, <%s>
+                            was obtained. If you want the solution anyway
+                            use the flag 'check=False'.'''
+                                             % (soln, got))
+                            soln = []
+                    if not flags.get('simplify', True):
+                        soln = implicit_soln
+                    return soln
+
+        # carry on with the swap
         swap_back_dict = dict(zip(symbols_new, symbols))
         swap_dict = zip(symbols, symbols_new)
         f = [fi.subs(swap_dict) for fi in f]
@@ -559,7 +622,7 @@ def solve(f, *symbols, **flags):
     if not check or not solution:
         return solution
 
-    warn = flags.get('warn', False)
+    warning = flags.get('warn', False)
     got_None = [] # solutions for which one or more symbols gave None
     no_False = [] # solutions for which no symbols gave False
     if type(solution) is list:
@@ -612,7 +675,7 @@ def solve(f, *symbols, **flags):
 
     elif isinstance(solution, (Relational, And, Or)):
         assert len(symbols) == 1
-        if warn and symbols[0].assumptions0:
+        if warning and symbols[0].assumptions0:
             print("\n\tWarning: assumptions about variable '%s' are not handled currently." %symbols[0])
         # TODO: check also variable assumptions for inequalities
 
@@ -620,7 +683,7 @@ def solve(f, *symbols, **flags):
         raise TypeError('Unrecognized solution') # improve the checker to handle this
 
     solution = no_False
-    if warn and got_None:
+    if warning and got_None:
         print("\n\tWarning: assumptions concerning following solution(s) can't be checked:"
               + '\n\t' + ', '.join(str(s) for s in got_None))
 
