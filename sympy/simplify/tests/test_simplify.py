@@ -857,3 +857,5 @@ def test_radsimp():
     assert radsimp(1 + 1/(1 + sqrt(3))) == Mul(S(1)/2, 1 + sqrt(3), evaluate=False)
     A = symbols("A", commutative=False)
     assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == x**2 + sqrt(2)*(x**2 - x*A)
+    assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
+    assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -11*sqrt(2) + 9*sqrt(3)

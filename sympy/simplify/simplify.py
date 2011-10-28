@@ -17,6 +17,7 @@ from sympy.utilities import flatten, default_sort_key
 from sympy.functions import gamma, exp, sqrt, log, root
 
 from sympy.simplify.cse_main import cse
+from sympy.simplify.sqrtdenest import sqrtdenest
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, terms_gcd, lcm, gcd)
@@ -1032,6 +1033,8 @@ def radsimp(expr):
                 nargs.append(ni)
                 dargs.append(di)
             return n*Mul(*nargs)/Mul(*dargs)
+        elif d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
+            d = sqrtdenest(sqrt(d.base))**d.exp.p
 
         changed = False
         while 1:
