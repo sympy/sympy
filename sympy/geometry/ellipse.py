@@ -863,6 +863,8 @@ class Ellipse(GeometryEntity):
 
     def __eq__(self, o):
         """Is the other GeometryEntity the same as this ellipse?"""
+        if not isinstance(o, Ellipse):
+            return False
         return (self.center == o.center and self.hradius == o.hradius
                 and self.vradius == o.vradius)
 

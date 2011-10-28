@@ -724,15 +724,6 @@ class tan(TrigonometricFunction):
         if arg.is_imaginary:
             return True
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        arg = self.args[0]
-        argnew = arg.subs(old, new)
-        if arg != argnew and (argnew/(S.Pi/2)).is_odd:
-            return S.NaN
-        return tan(argnew)
-
     def _sage_(self):
         import sage.all as sage
         return sage.tan(self.args[0]._sage_())
@@ -893,15 +884,6 @@ class cot(TrigonometricFunction):
 
     def _eval_is_real(self):
         return self.args[0].is_real
-
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        arg = self.args[0]
-        argnew = arg.subs(old, new)
-        if arg != argnew and (argnew/S.Pi).is_integer:
-            return S.NaN
-        return cot(argnew)
 
     def _sage_(self):
         import sage.all as sage

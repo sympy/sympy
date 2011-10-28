@@ -356,10 +356,8 @@ class Add(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        if isinstance(old, FunctionClass):
-            return self.__class__(*[s._eval_subs(old, new) for s in self.args ])
+        if not old.is_Add:
+            return None
 
         coeff_self, terms_self = self.as_coeff_Add()
         coeff_old, terms_old = old.as_coeff_Add()
@@ -370,19 +368,22 @@ class Add(AssocOp):
             if terms_self == -terms_old:                      # (2 + a).subs(-3 - a, y) -> -1 - y
                 return Add(-new, coeff_self,  coeff_old)
 
-        if old.is_Add:
-            coeff_self, terms_self = self.as_coeff_add()
-            coeff_old, terms_old = old.as_coeff_add()
-
-            if len(terms_old) < len(terms_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
-                self_set = set(terms_self)
-                old_set = set(terms_old)
+            args_old, args_self = Add.make_args(terms_old), Add.make_args(terms_self)
+            if len(args_old) < len(args_self):    # (a+b+c+d).subs(b+c,x) -> a+x+d
+                self_set = set(args_self)
+                old_set = set(args_old)
 
                 if old_set < self_set:
                     ret_set = self_set - old_set
-                    return Add(new, coeff_self, -coeff_old, *[s._eval_subs(old, new) for s in ret_set])
+                    return Add(new, coeff_self, -coeff_old,
+                               *[s._subs(old, new) for s in ret_set])
 
-        return self.__class__(*[s._eval_subs(old, new) for s in self.args])
+                args_old = (-terms_old).args     # (a+b+c+d).subs(-b-c,x) -> a-x+d
+                old_set = set(args_old)
+                if old_set < self_set:
+                    ret_set = self_set - old_set
+                    return Add(-new, coeff_self, coeff_old,
+                               *[s._subs(old, new) for s in ret_set])
 
     def removeO(self):
         args = [a for a in self.args if not a.is_Order]
@@ -655,4 +656,3 @@ class Add(AssocOp):
 from function import FunctionClass
 from mul import Mul
 from power import Pow
-from sympy.core.numbers import Rational

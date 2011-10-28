@@ -144,11 +144,6 @@ class Relational(Expr, EvalfMixin):
     def rhs(self):
         return self._args[1]
 
-    def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        return self.__class__(self.lhs._eval_subs(old, new), self.rhs._eval_subs(old, new))
-
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
