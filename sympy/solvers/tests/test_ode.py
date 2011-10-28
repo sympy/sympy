@@ -463,8 +463,8 @@ def test_homogeneous_order():
     assert homogeneous_order(x**x, x) == None
     raises(ValueError, "homogeneous_order(x*y)")
 
-
-def test_1st_homogeneous_coeff_ode1():
+def test_1st_homogeneous_coeff_ode():
+    #skip("These tests pass but take too long.")
     # Type: First order homogeneous, y'=f(y/x)
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
@@ -492,46 +492,88 @@ def test_1st_homogeneous_coeff_ode1():
     assert dsolve(eq6, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol6
     assert dsolve(eq7, hint='1st_homogeneous_coeff_best') == sol7
     assert dsolve(eq8, hint='1st_homogeneous_coeff_best') == sol8
+    # checks are below
 
-def test_1st_homogeneous_coeff_ode1_sol():
+def test_1st_homogeneous_coeff_ode_check134568():
     skip("This test passes, but it takes too long")
     # These are the checkodesols from test_homogeneous_coeff_ode1.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
-    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x),x)
     eq4 = 2*f(x)*exp(x/f(x)) + f(x)*f(x).diff(x) - 2*x*exp(x/f(x))*f(x).diff(x)
     eq5 = 2*x**2*f(x) + f(x)**3 + (x*f(x)**2 - 2*x**3)*f(x).diff(x)
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
     eq8 = x+f(x)-(x-f(x))*f(x).diff(x)
     sol1 = Eq(f(x)*sin(f(x)/x), C1)
-    sol3 = Eq(-f(x)/(1+log(x/f(x))),C1)
     sol4 = Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
     sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) - cos(f(x)/x)*exp(-f(x)/x)/2, 0)
     sol8 = Eq(-atan(f(x)/x) + log(C1*x*sqrt(1 + f(x)**2/x**2)), 0)
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
     assert checkodesol(eq6, sol6, order=1, solve_for_func=False)[0]
     assert checkodesol(eq8, sol8, order=1, solve_for_func=False)[0]
 
 @XFAIL
-def test_1st_homogeneous_coeff_ode1_sol_fail():
-    #skip("Takes too long.")
+def test_1st_homogeneous_coeff_ode_check2():
+    skip('This is a known issue.')
+    # checker cannot determine that the following expression, z, is
+    # zero:
+    '''
+    >>> checkodesol(eq2, sol2, order=1, solve_for_func=False)
+    (False, x*(-sin(f(x)/x) + 2*cos(f(x)/(2*x))**2*tan(f(x)/(2*x))))
+    >>> checkodesol(eq2, sol2, order=1, solve_for_func=1)
+    (False, x*(-C1**2*sin(2*atan(x/C1)) + 2*C1*x - x**2*sin(2*atan(x/C1))))
+    >>> z = _[1]
+    >>> z.subs(zip((x,C1),(2,3))).n()
+    .0e-124
+    >>> z.subs(zip((x,C1),(2,.3))).n()
+    4.44089209850063e-16
+    >>> z.subs(zip((x,C1),(12,.3))).n()
+    0
+    '''
+    eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
+    sol2 = Eq(x/tan(f(x)/(2*x)), C1)
+    assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
+
+@XFAIL
+def test_1st_homogeneous_coeff_ode_check3():
+    skip('This is a known issue.')
+    # checker cannot determine that the following expression is zero:
+    # (False, x*(log(exp(-LambertW(C1*x))) + LambertW(C1*x))*exp(-LambertW(C1*x) + 1))
+    eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x),x)
+    sol3 = Eq(f(x), x*exp(1 - LambertW(C1*x)))
+    assert checkodesol(eq3, sol3, solve_for_func=False)[0]
+
+@XFAIL
+def test_1st_homogeneous_coeff_ode_check7():
+    skip('This is a known issue.')
+    # checker cannot solve for the function and cannot determine that
+    # the result is zero:
+    '''
+    >>> checkodesol(eq7, sol7, order=1, solve_for_func=True)
+    (False, (x + sqrt(-x*f(x) + f(x)**2))*(x*f(x) - sqrt(-x/f(x) + 1)*f(x)**2)*f(x)
+    - (x**2*f(x) - (-x + f(x))*f(x)**2)*f(x))
+    '''
+    eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
+    sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
+    assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
+
+@XFAIL
+def test_1st_homogeneous_coeff_ode_check9():
+    skip('This is a known issue.')
+    # checker cannot solve for the function and cannot determine that
+    # the result is zero:
+    '''
+    >>> checkodesol(eq9, sol9, order=1, solve_for_func=True)
+    (False, (x*sqrt(-x**2 + f(x)**2) - x*f(x))*(x*sqrt(-x**2/f(x)**2 + 1)*f(x) + x*f
+    (x))*f(x)**2 + (-x**2*(-x**2 + f(x)**2) + x**2*f(x)**2)*f(x)**2)
     _u2 = Dummy('u2')
     __a = Dummy('a')
-    eq2 = x*f(x).diff(x) - f(x) - x*sin(f(x)/x)
-    eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
-    # test_1st_homogeneous_coeff_ode3
+    '''
     eq9 = f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x)
-    sol2 = Eq(x/tan(f(x)/(2*x)), C1)
-    sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
     sol9 = Eq(-Integral(-1/(-(1 - sqrt(1 - _u2**2))*_u2 + _u2), (_u2, __a,
         x/f(x))) + log(C1*f(x)), 0)
-    assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
-    assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
     assert checkodesol(eq9, sol9, order=1, solve_for_func=False)[0]
-
 
 def test_1st_homogeneous_coeff_ode2():
     eq1 = f(x).diff(x) - f(x)/x+1/sin(f(x)/x)
@@ -550,7 +592,7 @@ def test_1st_homogeneous_coeff_ode2():
     # assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 @XFAIL
-def test_1st_homogeneous_coeff_ode2_eq3sol():
+def test_1st_homogeneous_coeff_ode2_check3():
     # simplify() will need to get way better before it can do this one
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
@@ -558,19 +600,19 @@ def test_1st_homogeneous_coeff_ode2_eq3sol():
 
 def test_1st_homogeneous_coeff_ode3():
     # This can be solved explicitly, but the the integration engine cannot handle
-    # it (see issue 1452).  The explicit solution is included in an XFAIL test
-    # below. checkodesol fails for this equation, so its test is in
-    # test_homogeneous_order_ode1_sol above. It has to compare string
-    # expressions because u2 is a dummy variable.
+    # it (see issue 1452).  The explicit solution is tested in
+    # test_1st_homogeneous_coeff_ode3_check below.
+    #
+    # The test here uses strings since u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
     solstr = "log(C1*f(x)) - Integral(-1/(_u2*sqrt(-_u2**2 + 1)), (_u2, x/f(x))) == 0"
     assert str(dsolve(eq, hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
 
-def test_1st_homogeneous_coeff_ode4_explicit():
-    x = Symbol('x', positive=True)
+@XFAIL
+def test_1st_homogeneous_coeff_ode3_check():
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    sol = dsolve(eq)
-    assert checkodesol(eq, sol)[0]
+    sol = Eq(f(x)**2 - C1*x, f(x)*sqrt(f(x)**2-x**2))
+    assert checkodesol(eq, sol, solve_for_func=False)[0]
 
 def test_1st_homogeneous_coeff_corner_case():
     eq1 = f(x).diff(x) - f(x)/x
