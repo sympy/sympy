@@ -850,3 +850,10 @@ def test_radsimp():
         -(sqrt(x) + y)
     assert radsimp(1/(1 - I + a*I)) == \
         (I*(-a + 1) + 1)/(a**2 - 2*a + 2)
+    assert radsimp(1/((-x + y)*(x - sqrt(y)))) == (x + sqrt(y))/((-x + y)*(x**2 - y))
+    e = (3 + 3*sqrt(2))*x*(3*x - 3*sqrt(y))
+    assert radsimp(e) == 9*x*(1 + sqrt(2))*(x - sqrt(y))
+    assert radsimp(1/e) == (-1 + sqrt(2))*(x + sqrt(y))/(9*x*(x**2 - y))
+    assert radsimp(1 + 1/(1 + sqrt(3))) == Mul(S(1)/2, 1 + sqrt(3), evaluate=False)
+    A = symbols("A", commutative=False)
+    assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == x**2 + sqrt(2)*(x**2 - x*A)

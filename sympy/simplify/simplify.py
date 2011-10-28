@@ -947,7 +947,7 @@ def collect_sqrt(expr, evaluate=True):
                 notrad.append(ci)
         m = Mul(*rad)
         nrad += bool(rad and m not in terms)
-        terms[m].append(Mul(*notrad))
+        terms[m].append(Mul(*notrad)*Mul._from_args(nc))
     hit = False
     args = []
     keys = terms.keys()
@@ -1017,45 +1017,74 @@ def radsimp(expr):
 
     """
 
+    def handle(expr):
+        if expr.is_Atom:
+            return expr
+        n, d = fraction(expr)
+        if d is S.One:
+            nexpr = expr.func(*[handle(ai) for ai in expr.args])
+            return nexpr
+        elif d.is_Mul:
+            nargs = []
+            dargs = []
+            for di in d.args:
+                ni, di = fraction(handle(1/di))
+                nargs.append(ni)
+                dargs.append(di)
+            return n*Mul(*nargs)/Mul(*dargs)
+
+        changed = False
+        while 1:
+            # collect similar terms
+            d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
+
+            # check to see if we are done:
+            # - no radical terms
+            # - don't continue if there are more than 3 radical terms
+            #   XXX if there are radicals with terms inside that might
+            #       cancel existing terms they could be processed
+            # - don't continue if there are 3 terms and there is a constant
+            #   term, too.
+            if not nterms or nterms > 3 or nterms == 3 and len(d.args) > 3:
+                break
+            changed = True
+
+            # now match for a radical
+            r = d.match(a + b*sqrt(c))
+            if not r or r[b] == 0:
+                r = d.match(b*sqrt(c))
+                if not r:
+                    break
+                r[a] = 0
+            va, vb, vc = r[a],r[b],r[c]
+
+            nmul = va - vb*sqrt(vc)
+            d = va**2 - vc*vb**2
+            n1 = n/d
+            if denom(n1) is not S.One:
+                n = -(-n/d)
+            else:
+                n = n1
+            n, d = fraction(n*nmul)
+
+        nexpr = collect_sqrt(expand_mul(n))/d
+        if changed or nexpr != expr:
+            expr = nexpr
+        return expr
+
     a, b, c = map(Wild, 'abc')
-    changed = False
+    # do this at the start in case no other change is made since
+    # it is done if a change is made
     coeff, expr = expr.as_content_primitive()
-    n, d = fraction(expr)
-    while 1:
-        # collect similar terms
-        d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
 
-        # check to see if we are done:
-        # - no radical terms
-        # - don't continue if there are more than 3 radical terms
-        #   XXX if there are radicals with terms inside that might
-        #       cancel existing terms they could be processed
-        # - don't continue if there are 3 terms and there is a constant
-        #   term, too.
-        if not nterms or nterms > 3 or nterms == 3 and len(d.args) > 3:
-            break
-        changed = True
-
-        # now match for a radical
-        r = d.match(a + b*sqrt(c))
-        if r[b] == 0:
-            r = d.match(b*sqrt(c))
-            r[a] = 0
-        va, vb, vc = r[a],r[b],r[c]
-
-        nmul = va - vb*sqrt(vc)
-        d = va**2 - vc*vb**2
-        n1 = n/d
-        if denom(n1) is not S.One:
-            n = -(-n/d)
-        else:
-            n = n1
-        n, d = fraction(n*nmul)
-
-    expr = collect_sqrt(expand_mul(n))/d
-    if changed:
-        co, expr = expr.as_content_primitive()
+    newe = handle(expr)
+    if newe != expr:
+        co, expr = newe.as_content_primitive()
         coeff *= co
+    else:
+        nexpr, hit = collect_sqrt(expand_mul(expr), evaluate=False)
+        if hit and expr.count_ops() >= nexpr.count_ops():
+            expr = Add(*Add.make_args(nexpr))
     return _keep_coeff(coeff, expr)
 
 def posify(eq):
