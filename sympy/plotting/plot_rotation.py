@@ -1,5 +1,5 @@
 from pyglet.gl import *
-from math import sqrt, acos
+from math import sqrt as _sqrt, acos as _acos
 
 def cross(a, b):
     return (a[1]*b[2] - a[2]*b[1],
@@ -10,7 +10,7 @@ def dot(a, b):
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
 
 def mag(a):
-    return sqrt(a[0]**2 + a[1]**2 + a[2]**2)
+    return _sqrt(a[0]**2 + a[1]**2 + a[2]**2)
 
 def norm(a):
     m = mag(a)
@@ -20,7 +20,7 @@ def get_sphere_mapping(x, y, width, height):
     x = min([max([x,0]), width])
     y = min([max([y,0]), height])
 
-    sr = sqrt( (width/2)**2 + (height/2)**2 )
+    sr = _sqrt( (width/2)**2 + (height/2)**2 )
     #sr *= 1.5
     sx = ( (x - width/2)  / sr )
     sy = ( (y - height/2) / sr )
@@ -28,7 +28,7 @@ def get_sphere_mapping(x, y, width, height):
     sz = 1.0 - sx**2 - sy**2
 
     if sz > 0.0:
-        sz = sqrt(sz)
+        sz = _sqrt(sz)
         return (sx, sy, sz)
     else:
         sz = 0
@@ -46,8 +46,8 @@ def get_spherical_rotatation(p1, p2, width, height, theta_multiplier):
         return None
 
     raxis = norm( cross(v1, v2) )
-    rtheta = theta_multiplier * rad2deg * acos(d)
-    #rtheta = 2.0 * rad2deg * acos(d)
+    rtheta = theta_multiplier * rad2deg * _acos(d)
+    #rtheta = 2.0 * rad2deg * _acos(d)
 
     glPushMatrix()
     glLoadIdentity()
