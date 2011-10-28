@@ -779,16 +779,8 @@ def test_issue_2750():
     2*I3 + 2*I5 + 3*I6 - Q2,
     I4 - 2*I5 + 2*Q4 + dI4
     )
-    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == {
-    dI4: -I3 + 3*I5 - 2*Q4,
-    dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
-    dQ2: I2,
-    I1: I2 + I3,
-    Q2: 2*I3 + 2*I5 + 3*I6,
-    dQ4: I3 - I5,
-    I4: I3 - I5}
-    assert [ei.subs(ans) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
-    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4, manual=True) == [{
+
+    ans = [{
     dI4: -I3 + 3*I5 - 2*Q4,
     dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
     dQ2: I2,
@@ -797,3 +789,43 @@ def test_issue_2750():
     dQ4: I3 - I5,
     I4: I3 - I5,
     }]
+    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4, manual=True) == ans
+    # the matrix solver (tested below) doesn't like this because it produces
+    # a zero row in the matrix. Is this related to issue 1452?
+    assert [ei.subs(ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
+
+@XFAIL
+def test_2750_matrix():
+    '''This is the same as the one in test_2750 but the matrix
+    solver doesn't handle it.'''
+    I1 = Symbol('I1')
+    I2 = Symbol('I2')
+    I3 = Symbol('I3')
+    I4 = Symbol('I4')
+    I5 = Symbol('I5')
+    I6 = Symbol('I6')
+    dI1 = Symbol('dI1')
+    dQ4 = Symbol('dQ4')
+    dQ2 = Symbol('dQ2')
+    Q2 = Symbol('Q2')
+    Q4 = Symbol('Q4')
+    dI4 = Symbol('dI4')
+    e = (
+    I1 - I2 - I3,
+    I3 - I4 - I5,
+    I4 + I5 - I6,
+    -I1 + I2 + I6,
+    -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
+    -I4 + dQ4,
+    -I2 + dQ2,
+    2*I3 + 2*I5 + 3*I6 - Q2,
+    I4 - 2*I5 + 2*Q4 + dI4
+    )
+    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == {
+    dI4: -I3 + 3*I5 - 2*Q4,
+    dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
+    dQ2: I2,
+    I1: I2 + I3,
+    Q2: 2*I3 + 2*I5 + 3*I6,
+    dQ4: I3 - I5,
+    I4: I3 - I5}

@@ -1257,12 +1257,11 @@ def solve_linear_system(system, *symbols, **flags):
                 if matrix[i, k]:
                     break
             else:
-                if matrix[i, m].free_symbols.intersection(syms):
+                if matrix[i, m]:
                     # no solution
                     return None
                 # zero row or was a linear combination of
-                # other rows or doesn't contain any symbols of
-                # interest so now we can safely skip it
+                # other rows so now we can safely skip it
                 matrix.row_del(i)
                 if not matrix:
                     return None
