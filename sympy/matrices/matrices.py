@@ -3399,39 +3399,38 @@ def symarray(prefix, shape):
 
     Examples
     --------
-
-    >> from sympy import symarray
-    >> symarray('', 3)
-    [_0 _1 _2]
+    >>> from sympy import symarray
+    >>> symarray('', 3) #doctest: +SKIP (requires numpy)
+    [_0, _1, _2]
 
     If you want multiple symarrays to contain distinct symbols, you *must*
     provide unique prefixes:
 
-    >> a = symarray('', 3)
-    >> b = symarray('', 3)
-    >> a[0] is b[0]
+    >>> a = symarray('', 3) #doctest: +SKIP
+    >>> b = symarray('', 3) #doctest: +SKIP
+    >>> a[0] is b[0] #doctest: +SKIP
     True
-    >> a = symarray('a', 3)
-    >> b = symarray('b', 3)
-    >> a[0] is b[0]
+    >>> a = symarray('a', 3) #doctest: +SKIP
+    >>> b = symarray('b', 3) #doctest: +SKIP
+    >>> a[0] is b[0] #doctest: +SKIP
     False
 
     Creating symarrays with a prefix:
-    >> symarray('a', 3)
-    [a_0 a_1 a_2]
+    >>> symarray('a', 3) #doctest: +SKIP
+    [a_0, a_1, a_2]
 
     For more than one dimension, the shape must be given as a tuple:
-    >> symarray('a', (2,3))
-    [[a_0_0 a_0_1 a_0_2]
-    [a_1_0 a_1_1 a_1_2]]
-    >> symarray('a', (2,3,2))
-    [[[a_0_0_0 a_0_0_1]
-      [a_0_1_0 a_0_1_1]
-      [a_0_2_0 a_0_2_1]]
+    >>> symarray('a', (2, 3)) #doctest: +SKIP
+    [[a_0_0, a_0_1, a_0_2],
+     [a_1_0, a_1_1, a_1_2]]
+    >>> symarray('a', (2, 3, 2)) #doctest: +SKIP
+    [[[a_0_0_0, a_0_0_1],
+      [a_0_1_0, a_0_1_1],
+      [a_0_2_0, a_0_2_1]],
     <BLANKLINE>
-     [[a_1_0_0 a_1_0_1]
-      [a_1_1_0 a_1_1_1]
-      [a_1_2_0 a_1_2_1]]]
+     [[a_1_0_0, a_1_0_1],
+      [a_1_1_0, a_1_1_1],
+      [a_1_2_0, a_1_2_1]]]
 
     """
     try:
