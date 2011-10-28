@@ -519,54 +519,19 @@ def solve(f, *symbols, **flags):
         symbols_new.append(s_new)
 
     if symbol_swapped:
-        # check to see if dsolve should be called
-        if funcs:
-            derivs = reduce(set.union, [fi.atoms(Derivative) for fi in f], set())
-            dsolve_it = False
-            for fi in funcs:
-                for di in derivs:
-                    if di.has(fi):
-                        dsolve_it = True
-                        break
-                if dsolve_it:
-                    from sympy.solvers.ode import dsolve, checkodesol, constant_renumber
-                    if len(f) > 1 or len(symbols) > 1:
-                        raise NotImplementedError(_filldedent('''
-                        Systems of ODEs or solving for symbols in addition
-                        to functions is not supported.'''))
-                    warn("%s"%_filldedent('''
-                    Note: there is an ode module that offers several functions
-                    for handling this sort of equation, including a dsolve
-                    function that can be used rather than solve.
-                    '''))
-
-                    implicit_soln = dsolve(f[0], fi, hint='best', simplify=False)
-                    constants = implicit_soln.free_symbols - fi.free_symbols
-                    implicit_soln = constant_renumber(implicit_soln, 'C', 1, 2*len(constants))
-                    soln = solve(implicit_soln, fi, **flags)
-                    if flags.get('check', True):
-                        valid, got = checkodesol(f[0], implicit_soln, solve_for_func=False)
-                        if valid is False:
-                            # always give the warning since checkode doesn't return
-                            # None if it can't decide, so False might be False
-                            # or just not decidable
-                            print _filldedent('''
-                            The solution could not be validated: when <%s>
-                            was substituted into the original equation, <%s>
-                            was obtained. If you want the solution anyway
-                            use the flag 'check=False'.'''
-                                             % (soln, got))
-                            soln = []
-                    if not flags.get('simplify', True):
-                        soln = implicit_soln
-                    return soln
-
-        # carry on with the swap
-        swap_back_dict = dict(zip(symbols_new, symbols))
-        swap_dict = zip(symbols, symbols_new)
-        f = [fi.subs(swap_dict) for fi in f]
+        swap_sym = zip(symbols, symbols_new)
+        f = [fi.subs(swap_sym) for fi in f]
         symbols = symbols_new
+        swap_sym = dict([(v, k) for k, v in swap_sym])
+    else:
+        swap_sym = {}
 
+    # mask off any derivative that has any symbols of interest
+    derivs = reduce(set.union, [fi.atoms(Derivative) for fi in f], set())
+    derivs = [d for d in derivs if d.has(*symbols)]
+    swap_deriv = dict(zip(derivs, [Dummy() for d in derivs]))
+    f = [fi.subs(swap_deriv) for fi in f]
+    swap_deriv = [(v, k.subs(swap_sym)) for k, v in swap_deriv.iteritems()]
     # rationalize Floats
     if flags.get('rational', True):
         for i, fi in enumerate(f):
@@ -586,19 +551,45 @@ def solve(f, *symbols, **flags):
     #
     # postprocessing
     ###########################################################################
+    # Restore masked off derivatives
+    if swap_deriv:
+        def do_dict(solution):
+            return dict([(k, v.subs(swap_deriv)) for k, v in solution.iteritems()])
+        for i in range(1):
+            if type(solution) is dict:
+                solution = do_dict(solution)
+                break
+            elif solution and type(solution) is list:
+                if type(solution[0]) is dict:
+                    solution = [do_dict(s) for s in solution]
+                    break
+                elif type(solution[0]) is tuple:
+                    solution = [tuple([v.subs(swap_deriv) for v in s]) for s in solution]
+                    break
+                else:
+                    solution = [v.subs(swap_deriv) for v in solution]
+                    break
+            elif not solution:
+                break
+        else:
+            raise NotImplementedError('no handling of %s was implemented' % solution)
+
     # Restore original Functions and Derivatives if a dictionary is returned.
     # This is not necessary for
     #   - the single univariate equation case
     #     since the symbol will have been removed from the solution;
     #   - the nonlinear poly_system since that only supports zero-dimensional
     #     systems and those results come back as a list
+    #
+    # ** unless there were Derivatives with the symbols, but those were handled
+    #    above.
     if symbol_swapped:
         if type(solution) is dict:
-            solution = dict([(swap_back_dict[k], v.subs(swap_back_dict))
+            solution = dict([(swap_sym[k], v.subs(swap_sym))
                               for k, v in solution.iteritems()])
         elif solution and type(solution) is list and type(solution[0]) is dict:
             for i, sol in enumerate(solution):
-                solution[i] = dict([(swap_back_dict[k], v.subs(swap_back_dict))
+                solution[i] = dict([(swap_sym[k], v.subs(swap_sym))
                               for k, v in sol.iteritems()])
     # undo the dictionary solutions returned when the system was only partially
     # solved with poly-system if all symbols are present

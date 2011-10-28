@@ -829,3 +829,31 @@ def test_2750_matrix():
     Q2: 2*I3 + 2*I5 + 3*I6,
     dQ4: I3 - I5,
     I4: I3 - I5}
+
+def test_issue_2802():
+    f, g, h = map(Function, 'fgh')
+    a = Symbol('a')
+    D = Derivative(f(x), x)
+    G = Derivative(g(a), a)
+    assert solve(f(x)+f(x).diff(x), f(x)) == \
+        [-D]
+    assert solve(f(x) - 3, f(x)) == \
+        [3]
+    assert solve(f(x) - 3*f(x).diff(x), f(x)) == \
+        [3*D]
+    assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
+        {f(x): 3*D}
+    assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
+        [{f(x): 3*D, y: 9*D**2 + 4}]
+    assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a), h(a), g(a)) == \
+        [{g(a): -sqrt(h(a)**2 + G/f(a)**2)},
+        {g(a): sqrt(h(a)**2 + G/f(a)**2)}]
+    args = [f(x).diff(x,2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
+    assert solve(*args) == \
+        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
+    eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
+    assert solve(eqs, f(x), g(x)) == \
+        [{g(x): 2, f(x): -sqrt(2*D - 2)},
+        {g(x): 2, f(x): sqrt(2*D - 2)},
+        {g(x): -2, f(x): -sqrt(2*D + 2)},
+        {g(x): -2, f(x): sqrt(2*D + 2)}]
