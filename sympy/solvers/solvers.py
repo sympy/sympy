@@ -45,6 +45,7 @@ from sympy.assumptions import Q, ask
 from warnings import warn
 from textwrap import fill, dedent
 from types import GeneratorType
+from collections import defaultdict
 
 # if you use
 # _filldedent('''
@@ -378,20 +379,16 @@ def solve(f, *symbols, **flags):
                     [{x: 2, f(x): -4}]
 
             o when a Function or Derivative is given as a symbol, it is
-              isolated algebraically and an implicit solution may be obtained
+              isolated algebraically and an implicit solution may be obtained;
+              to obtain the solution for a function within a derivative, use
+              dsolve.
 
                 >>> solve(f(x) - x, f(x))
                 [x]
                 >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
                 [x + f(x)]
-
-                But if the function is within a derivative then a call to
-                dsolve is made and the best, checked solution is returned:
-
-                >>> solve(f(x).diff(x), f(x)) # doctest: +SKIP
-                [C1]
-                >>> solve(f(x).diff(x), f(x), simplify=False) # doctest: +SKIP
-                f(x) == C1
+                >>> solve(f(x).diff(x) - f(x) - x, f(x))
+                [-x + Derivative(f(x), x)]
 
             o single expression and more than 1 symbol
 
@@ -499,8 +496,8 @@ def solve(f, *symbols, **flags):
         symbols = sorted(symbols, key=lambda i: i.sort_key())
 
     # we can solve for Function and Derivative instances by replacing them
-    # with Dummy symbols; but we should dispatch to dsolve if requested to
-    # solve for a function that is within the expression of a Derivative.
+    # with Dummy symbols or functions; anything containing such patterns should also be
+    # replaced
     symbols_new = []
     symbol_swapped = False
     symbols_passed = list(symbols)
@@ -531,9 +528,10 @@ def solve(f, *symbols, **flags):
     # mask off any derivative that has any symbols of interest
     derivs = reduce(set.union, [fi.atoms(Derivative) for fi in f], set())
     derivs = [d for d in derivs if d.has(*symbols)]
-    swap_deriv = dict(zip(derivs, [Dummy() for d in derivs]))
+    swap_deriv = dict(zip(derivs, [Derivative(Dummy()(*d.variables), *d.variables) for d in derivs]))
     f = [fi.subs(swap_deriv) for fi in f]
     swap_deriv = [(v, k.subs(swap_sym)) for k, v in swap_deriv.iteritems()]
+
     # rationalize Floats
     if flags.get('rational', True):
         for i, fi in enumerate(f):
@@ -1165,49 +1163,47 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     dens = None
     eq = lhs - rhs
     n, d = eq.as_numer_denom()
-    if not expand_mul(n):
+    if not n:
         return S.Zero, S.One
 
-    # swap out any non-symbol symbols; either do this or raise
-    # an error that only symbols are supported and that the solve
-    # should be called if trying to solve for a function
-    swap = dict()
-    new_syms = []
-    for s in symbols:
-        if s.is_Function or isinstance(s, Derivative):
-            u = Dummy()
-            swap.setdefault(s, swap.get(s, u))
-            s = u
-        new_syms.append(s)
-    symbols = new_syms
-    n = n.subs(swap)
-    exclude = set([e.subs(swap) for e in exclude])
-    iswap = [(v, k) for k, v in swap.iteritems()]
-    del swap
-
-    # we are now working only with symbols
     free = n.free_symbols
     if not symbols:
         symbols = free
     else:
+        bad = [s for s in symbols if not s.is_Symbol]
+        if bad:
+            if len(bad) == 1:
+                bad = bad[0]
+            if len(symbols) == 1:
+                eg = 'solve(%s, %s)' % (eq, symbols[0])
+            else:
+                eg = 'solve(%s, *%s)' % (eq, list(symbols))
+            raise ValueError(_filldedent('''
+                solve_linear only handles symbols, not %s. To isolate
+                non-symbols use solve, e.g. >>> %s <<<.
+                             ''' % (bad, eg)))
         symbols = free.intersection(symbols)
+    symbols = symbols.difference(exclude)
 
-    # exclude any symbols that appear as anything but an atom
+    # special objects which are not symbols but may prove
+    # to be equivalent to x*constant which, because they
+    # contain free symbols of interest may need care in
+    # when trying to eliminate from the expression. e.g.
+    # substituting 3*x + Integral(x, y) with x -> 0 will
+    # eliminate the 3*x but will lead to Integral(0, y)
+    # which we do not want.
     pot = preorder_traversal(n)
     seen = set()
+    special = defaultdict(list)
     for p in pot:
-        if not p.args:
+        if not p.args or p in seen:
             continue
-        if not (p.is_Add or p.is_Mul or p in seen):
+        if not (p.is_Add or p.is_Mul or p.is_Pow):
             seen.add(p)
-            bad = set()
-            for s in symbols:
-                if s in p.free_symbols:
-                    bad.add(s)
-            exclude.update(bad)
-            symbols = symbols - bad
+            common = p.free_symbols & symbols
+            for s in common:
+                special[s].append((p, S.Zero))
             pot.skip()
-    symbols = symbols.difference(exclude)
     del seen
 
     if symbols:
@@ -1217,17 +1213,17 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
             if dn:
                 all_zero = False
                 if not xi in dn.free_symbols:
-                    vi = -(n.subs(xi, 0))/dn
+                    vi = -(n.subs(special[xi]).subs(xi, 0))/dn
                     if dens is None:
                         dens = denoms(eq, symbols)
                     if not any(checksol(d, {xi: vi}, minimal=True) is True for d in dens):
-                        return xi.subs(iswap), vi
+                        return xi, vi
 
         if all_zero:
             return S.Zero, S.One
     if n.is_Symbol: # there was no valid solution
         n = d = S.Zero
-    return n.subs(iswap), d # should we cancel now?
+    return n, d # should we cancel now?
 
 def solve_linear_system(system, *symbols, **flags):
     """Solve system of N linear equations with M variables, which means

@@ -848,9 +848,9 @@ def test_issue_2802():
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a), h(a), g(a)) == \
         [{g(a): -sqrt(h(a)**2 + G/f(a)**2)},
         {g(a): sqrt(h(a)**2 + G/f(a)**2)}]
-    args = [f(x).diff(x,2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
+    args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert solve(*args) == \
-        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
+        [{f(x): (g(x)**2 - g(x)*Derivative(f(x), x, x) - 2)/Derivative(f(x), x, x)}]
     eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
     assert solve(eqs, f(x), g(x)) == \
         [{g(x): 2, f(x): -sqrt(2*D - 2)},
@@ -859,18 +859,19 @@ def test_issue_2802():
         {g(x): -2, f(x): sqrt(2*D + 2)}]
 
     # the underlying problem was in solve_linear that was not masking off
-    # anything but a Mul or Add
-    assert solve_linear(f(x)+f(x).diff(x),symbols=[f(x)]) == \
+    # anything but a Mul or Add; it now raises an error if it gets anything
+    # but a symbol and solve handles the substitutions necessary so solve_linear
+    # won't make this error
+    raises(ValueError, 'solve_linear(f(x) + f(x).diff(x), symbols=[f(x)])')
+    assert solve_linear(f(x) + f(x).diff(x), symbols=[x]) == \
         (f(x) + Derivative(f(x), x), 1)
-    assert solve_linear(f(x)+f(x).diff(x),symbols=[x]) == \
-        (f(x) + Derivative(f(x), x), 1)
-    assert solve_linear(f(x)+Integral(x, (x, y)),symbols=[f(x)]) == \
-        (f(x), -Integral(x, (x, y)))
-    assert solve_linear(f(x)+Integral(x, (x, y)),symbols=[x]) == \
+    assert solve_linear(f(x) + Integral(x, (x, y)), symbols=[x]) == \
         (f(x) + Integral(x, (x, y)), 1)
-    assert solve_linear(f(x)+Integral(x, (x, y)) + x,symbols=[x]) == \
+    assert solve_linear(f(x) + Integral(x, (x, y)) + x, symbols=[x]) == \
         (x + f(x) + Integral(x, (x, y)), 1)
-    assert solve_linear(f(y)+Integral(x, (x, y)) + x,symbols=[x]) == \
+    assert solve_linear(f(y) + Integral(x, (x, y)) + x, symbols=[x]) == \
         (x, -f(y) - Integral(x, (x, y)))
+    assert solve_linear(x - f(x)/a + (f(x) - 1)/a, symbols=[x]) == \
+        (x, 1/a)
     assert solve_linear(x + Integral(x, y), symbols=[x]) == \
-        (x + Integral(x, y), 1)
+        (x, 0)
