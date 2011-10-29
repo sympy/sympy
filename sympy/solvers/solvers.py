@@ -159,6 +159,7 @@ def checksol(f, symbol, sol=None, **flags):
     if any(sympify(v).atoms() & illegal for k, v in sol.iteritems()):
         return False
 
+    was = f
     attempt = -1
     numerical = flags.get('numerical', True)
     while 1:
@@ -169,28 +170,29 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if not val.free_symbols and numerical:
-                # val is a constant, so a fast numerical test may suffice
-                if val not in [S.Infinity, S.NegativeInfinity]:
-                    # issue 2088 shows that +/-oo chops to 0
-                    val = val.evalf(36).n(30, chop=True)
-                    # is there any reason to not decide right now?
-                    # is it possible to have anything but a Float (possibly complex)
-                    # at this point?
-                    if val.is_number:
-                        return val == 0
+                # val is a constant, so a fast numerical test may suffice;
+                # evalf is necessary since there can be expressions which, even
+                # when expanded are not clearly zero
+                return val.evalf(36).n(30, chop=True) == 0
             else:
+                # there are free symbols -- simple expansion might work
                 val = expand_mul(expand_multinomial(val))
-                if not val:
-                    return True
         elif attempt == 2:
             if flags.get('minimal', False):
                 return
             if flags.get('simplify', True):
                 for k in sol:
                     sol[k] = simplify(sol[k])
+            # start over without the failed expanded form, possibly
+            # with a simplified solution
             val = f.subs(sol)
-            if flags.get('force', False):
+            if flags.get('force', True):
                 val = posify(val)[0]
+                # expansion may work now, so try again and check
+                exval = expand_mul(expand_multinomial(val))
+                if exval.is_number and not exval.free_symbols:
+                    # we can decide now
+                    val = exval
         elif attempt == 3:
             val = powsimp(val)
         elif attempt == 4:
@@ -207,10 +209,22 @@ def checksol(f, symbol, sol=None, **flags):
             except: # any problem at all: recursion, inconsistency of facts, etc...
                 nz = None
             if nz is not None:
+                if val.is_number and val.has(LambertW): # issue 2574: it may be True even when False
+                    evaled = abs(val.n())
+                    if evaled > 1e-12:
+                        return False
+                    elif evaled < 1e-12:
+                        return True
                 return not nz
             break
-        if val == 0:
-            return True
+
+        if val == was:
+            continue
+        elif val.is_Number:
+            return val == 0
+        elif numerical and not val.has(Symbol):
+            return val.evalf(36).n(30, chop=True) == 0
+        was = val
 
     if flags.get('warn', False):
         print("\n\tWarning: could not verify solution %s." % sol)
