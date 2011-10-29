@@ -30,6 +30,7 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold
 
+from sympy.utilities.iterables import preorder_traversal
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import default_sort_key
 from sympy.mpmath import findroot
@@ -62,7 +63,6 @@ def denoms(eq, symbols=None):
     """Return (recursively) set of all denominators that appear in eq
     that contain any symbol in iterable ``symbols``; if ``symbols`` is
     None (default) then all denominators with symbols will be returned."""
-    from sympy.utilities.iterables import preorder_traversal
 
     symbols = symbols or eq.free_symbols
     dens = set()
@@ -1192,15 +1192,23 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     else:
         symbols = free.intersection(symbols)
 
-    # exclude any symbols that appear in functions or derivatives
-    for func_der in n.atoms(Function, Derivative):
-        bad = set()
-        for s in symbols:
-            if s in func_der.free_symbols:
-                bad.add(s)
-        exclude.update(bad)
-        symbols = symbols - bad
+    # exclude any symbols that appear as anything but an atom
+    pot = preorder_traversal(n)
+    seen = set()
+    for p in pot:
+        if not p.args:
+            continue
+        if not (p.is_Add or p.is_Mul or p in seen):
+            seen.add(p)
+            bad = set()
+            for s in symbols:
+                if s in p.free_symbols:
+                    bad.add(s)
+            exclude.update(bad)
+            symbols = symbols - bad
+            pot.skip()
     symbols = symbols.difference(exclude)
+    del seen
 
     if symbols:
         all_zero = True
