@@ -1188,16 +1188,24 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     # derivatives are easy to do but tricky to analyze to see if they are going
     # to disallow a linear solution, so for simplicity we just evaluate the ones
     # that have the symbols of interest
-    n = n.subs([(der, der.doit()) for der in n.atoms(Derivative) if der.free_symbols & symbols])
+    derivs = defaultdict(list)
+    for der in n.atoms(Derivative):
+        csym = der.free_symbols & symbols
+        for c in csym:
+            derivs[c].append(der)
 
     if symbols:
         all_zero = True
         for xi in symbols:
-            dn = n.diff(xi)
+            # if there are derivatives in this var, calculate them now
+            if type(derivs[xi]) is list:
+                derivs[xi] = dict([(der, der.doit()) for der in derivs[xi]])
+            nn = n.subs(derivs[xi])
+            dn = nn.diff(xi)
             if dn:
                 all_zero = False
                 if not xi in dn.free_symbols:
-                    vi = -(n.subs(xi, 0))/dn
+                    vi = -(nn.subs(xi, 0))/dn
                     if dens is None:
                         dens = denoms(eq, symbols)
                     if not any(checksol(d, {xi: vi}, minimal=True) is True for d in dens):
