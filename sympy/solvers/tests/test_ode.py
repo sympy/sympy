@@ -605,7 +605,7 @@ def test_1st_homogeneous_coeff_ode3():
     #
     # The test here uses strings since u2 is a dummy variable.
     eq = f(x)**2+(x*sqrt(f(x)**2-x**2)-x*f(x))*f(x).diff(x)
-    solstr = "log(C1*f(x)) - Integral(-1/(_u2*sqrt(-_u2**2 + 1)), (_u2, x/f(x))) == 0"
+    solstr = "f(x) == C1*exp(Integral(-1/(_u2*sqrt(-_u2**2 + 1)), (_u2, x/f(x))))"
     assert str(dsolve(eq, hint='1st_homogeneous_coeff_subs_indep_div_dep')) == solstr
 
 @XFAIL

@@ -335,8 +335,13 @@ def solve(f, *symbols, **flags):
                    system containing floats may fail to solve because of issues
                    with polys.
                'manual=True (default is False)'
-                   do not use the polys/matrix method to solve a system of equations,
-                   solve them one at a time as you might "manually".
+                   do not use the polys/matrix method to solve a system of
+                   equations, solve them one at a time as you might "manually".
+               'implicit=True (default is False)'
+                   allows solve to return a solution for a pattern in terms of
+                   other functions that contain that pattern; this is only
+                   needed if the pattern is inside of some invertible function
+                   like cos, exp, ....
 
         The output varies according to the input and can be seen by example:
 
@@ -403,6 +408,15 @@ def solve(f, *symbols, **flags):
                 [x + f(x)]
                 >>> solve(f(x).diff(x) - f(x) - x, f(x))
                 [-x + Derivative(f(x), x)]
+                >>> solve(x + exp(x)**2, exp(x))
+                [-sqrt(-x), sqrt(-x)]
+
+                To solve for a *symbol* implicitly, use 'implict=True':
+
+                >>> solve(x + exp(x), x)
+                [-LambertW(1)]
+                >>> solve(x + exp(x), x, implicit=True)
+                [-exp(x)]
 
             o single expression and more than 1 symbol
 
@@ -464,6 +478,8 @@ def solve(f, *symbols, **flags):
           dsolve() for solving differential equations
 
     """
+    from sympy.solvers.ode import is_unfunc
+
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
@@ -478,6 +494,8 @@ def solve(f, *symbols, **flags):
                        )
                       )
     f, symbols = (sympified_list(w) for w in [f, symbols])
+
+    implicit = flags.get('implicit', False)
 
     # preprocess equation(s)
     ###########################################################################
@@ -497,9 +515,7 @@ def solve(f, *symbols, **flags):
     if not symbols:
         # get symbols from equations or supply dummy symbols so solve(3) behaves
         # like solve(3, x).
-        symbols = set([])
-        for fi in f:
-            symbols |= fi.free_symbols or set([Dummy()])
+        symbols = reduce(set.union, [fi.free_symbols or set([Dummy()]) for fi in f], set())
         ordered_symbols = False
     elif len(symbols) == 1 and iterable(symbols[0]):
         symbols = symbols[0]
@@ -510,8 +526,7 @@ def solve(f, *symbols, **flags):
         symbols = sorted(symbols, key=lambda i: i.sort_key())
 
     # we can solve for Function and Derivative instances by replacing them
-    # with Dummy symbols or functions; anything containing such patterns should also be
-    # replaced
+    # with Dummy symbols or functions
     symbols_new = []
     symbol_swapped = False
     symbols_passed = list(symbols)
@@ -526,8 +541,11 @@ def solve(f, *symbols, **flags):
         elif s.is_Derivative:
             symbol_swapped = True
             s_new = Dummy('D%d' % i)
+        elif s.is_Pow:
+            symbol_swapped = True
+            s_new = Dummy('P%d' % i)
         else:
-            msg = 'expected Symbol, Function or Derivative but got %s'
+            msg = 'expected Symbol, Function, Power or Derivative but got %s'
             raise TypeError(msg % type(s))
         symbols_new.append(s_new)
 
@@ -539,12 +557,31 @@ def solve(f, *symbols, **flags):
     else:
         swap_sym = {}
 
-    # mask off any derivative that has any symbols of interest
-    derivs = reduce(set.union, [fi.atoms(Derivative) for fi in f], set())
-    derivs = [d for d in derivs if d.has(*symbols)]
-    swap_deriv = dict(zip(derivs, [Derivative(Dummy()(*d.variables), *d.variables) for d in derivs]))
-    f = [fi.subs(swap_deriv) for fi in f]
-    swap_deriv = [(v, k.subs(swap_sym)) for k, v in swap_deriv.iteritems()]
+    # mask off any Object that we aren't going to invert: Derivative, Integral, etc...
+    # so that solving for anything that they contain will give an implicit solution
+    seen = set()
+    non_inverts = set()
+    symset = set(symbols)
+    for fi in f:
+        pot = preorder_traversal(fi)
+        for p in pot:
+            if (not p.args or
+                p in symset or
+                p.is_Add or p.is_Mul or
+                p.is_Pow and not implicit or
+                p.is_Function and not is_unfunc(p) and not implicit):
+                continue
+            if not p in seen:
+                seen.add(p)
+                if p.free_symbols & symset:
+                    non_inverts.add(p)
+                else:
+                    continue
+            pot.skip()
+    del seen
+    non_inverts = dict(zip(non_inverts, [Dummy() for d in non_inverts]))
+    f = [fi.subs(non_inverts) for fi in f]
+    non_inverts = [(v, k.subs(swap_sym)) for k, v in non_inverts.iteritems()]
 
     # rationalize Floats
     if flags.get('rational', True):
@@ -566,9 +603,9 @@ def solve(f, *symbols, **flags):
     # postprocessing
     ###########################################################################
     # Restore masked off derivatives
-    if swap_deriv:
+    if non_inverts:
         def do_dict(solution):
-            return dict([(k, v.subs(swap_deriv)) for k, v in solution.iteritems()])
+            return dict([(k, v.subs(non_inverts)) for k, v in solution.iteritems()])
         for i in range(1):
             if type(solution) is dict:
                 solution = do_dict(solution)
@@ -578,10 +615,10 @@ def solve(f, *symbols, **flags):
                     solution = [do_dict(s) for s in solution]
                     break
                 elif type(solution[0]) is tuple:
-                    solution = [tuple([v.subs(swap_deriv) for v in s]) for s in solution]
+                    solution = [tuple([v.subs(non_inverts) for v in s]) for s in solution]
                     break
                 else:
-                    solution = [v.subs(swap_deriv) for v in solution]
+                    solution = [v.subs(non_inverts) for v in solution]
                     break
             elif not solution:
                 break

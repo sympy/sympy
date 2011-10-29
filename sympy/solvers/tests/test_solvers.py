@@ -15,11 +15,6 @@ from sympy.abc import x, y
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
 
-def test_free_symbols():
-    x = Symbol('x')
-    f = Function('f')
-    raises(NotImplementedError, "solve(Eq(log(f(x)), Integral(x, (x, 1, f(x)))), f(x))")
-
 def test_swap_back():
     f, g = map(Function, 'fg')
     x, y = symbols('x,y')
@@ -836,7 +831,7 @@ def test_issue_2802():
     a = Symbol('a')
     D = Derivative(f(x), x)
     G = Derivative(g(a), a)
-    assert solve(f(x)+f(x).diff(x), f(x)) == \
+    assert solve(f(x) + f(x).diff(x), f(x)) == \
         [-D]
     assert solve(f(x) - 3, f(x)) == \
         [3]
@@ -851,7 +846,7 @@ def test_issue_2802():
         {g(a): sqrt(h(a)**2 + G/f(a)**2)}]
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert solve(*args) == \
-        [{f(x): (g(x)**2 - g(x)*Derivative(f(x), x, x) - 2)/Derivative(f(x), x, x)}]
+        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
     eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
     assert solve(eqs, f(x), g(x)) == \
         [{g(x): 2, f(x): -sqrt(2*D - 2)},
@@ -880,3 +875,16 @@ def test_issue_2802():
         (x, 0)
     assert solve_linear(x + Integral(x, y) - 2, symbols=[x]) == \
         (x, 2/(y + 1))
+
+    assert solve(x + exp(x)**2, exp(x)) == \
+        [-sqrt(-x), sqrt(-x)]
+    assert solve(x + exp(x), x, implicit=True) == \
+        [-exp(x)]
+    assert solve(cos(x) - sin(x), x, implicit=True) == \
+        []
+    assert solve(x - sin(x), x, implicit=True) == \
+        [sin(x)]
+    assert solve(x**2 + x - 3, x, implicit=True) == \
+        [-x**2 + 3]
+    assert solve(x**2 + x - 3, x**2, implicit=True) == \
+        [-x + 3]
