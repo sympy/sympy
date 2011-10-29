@@ -857,3 +857,18 @@ def test_issue_2802():
         {g(x): 2, f(x): sqrt(2*D - 2)},
         {g(x): -2, f(x): -sqrt(2*D + 2)},
         {g(x): -2, f(x): sqrt(2*D + 2)}]
+
+    # the underlying problem was in solve_linear that was not masking off
+    # Function and Derivative instances
+    assert solve_linear(f(x)+f(x).diff(x),symbols=[f(x)]) == \
+        (f(x) + Derivative(f(x), x), 1)
+    assert solve_linear(f(x)+f(x).diff(x),symbols=[x]) == \
+        (f(x) + Derivative(f(x), x), 1)
+    assert solve_linear(f(x)+Integral(x, (x, y)),symbols=[f(x)]) == \
+        (f(x), -Integral(x, (x, y)))
+    assert solve_linear(f(x)+Integral(x, (x, y)),symbols=[x]) == \
+        (f(x) + Integral(x, (x, y)), 1)
+    assert solve_linear(f(x)+Integral(x, (x, y)) + x,symbols=[x]) == \
+        (x + f(x) + Integral(x, (x, y)), 1)
+    assert solve_linear(f(y)+Integral(x, (x, y)) + x,symbols=[x]) == \
+        (x, -f(y) - Integral(x, (x, y)))

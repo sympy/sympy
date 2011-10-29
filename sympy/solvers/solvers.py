@@ -14,7 +14,9 @@
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
-from sympy.core.function import expand_mul, expand_multinomial, expand_log, Derivative
+from sympy.core.function import (expand_mul, expand_multinomial, expand_log, Derivative,
+                                 Function,
+                                 )
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -1163,17 +1165,43 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     dens = None
     eq = lhs - rhs
     n, d = eq.as_numer_denom()
-    ex = expand_mul(n)
-    if not ex:
-        return ex, S.One
+    if not expand_mul(n):
+        return S.Zero, S.One
 
-    exclude = set(exclude)
-    free = ex.free_symbols
+    # swap out any non-symbol symbols; either do this or raise
+    # an error that only symbols are supported and that the solve
+    # should be called if trying to solve for a function
+    swap = dict()
+    new_syms = []
+    for s in symbols:
+        if s.is_Function or isinstance(s, Derivative):
+            u = Dummy()
+            swap.setdefault(s, swap.get(s, u))
+            s = u
+        new_syms.append(s)
+    symbols = new_syms
+    n = n.subs(swap)
+    exclude = set([e.subs(swap) for e in exclude])
+    iswap = [(v, k) for k, v in swap.iteritems()]
+    del swap
+
+    # we are now working only with symbols
+    free = n.free_symbols
     if not symbols:
         symbols = free
     else:
         symbols = free.intersection(symbols)
+
+    # exclude any symbols that appear in functions or derivatives
+    for func_der in n.atoms(Function, Derivative):
+        bad = set()
+        for s in symbols:
+            if s in func_der.free_symbols:
+                bad.add(s)
+        exclude.update(bad)
+        symbols = symbols - bad
     symbols = symbols.difference(exclude)
+
     if symbols:
         all_zero = True
         for xi in symbols:
@@ -1185,13 +1213,13 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
                     if dens is None:
                         dens = denoms(eq, symbols)
                     if not any(checksol(d, {xi: vi}, minimal=True) is True for d in dens):
-                        return xi, vi
+                        return xi.subs(iswap), vi
 
         if all_zero:
             return S.Zero, S.One
     if n.is_Symbol: # there was no valid solution
         n = d = S.Zero
-    return n, d # should we cancel now?
+    return n.subs(iswap), d # should we cancel now?
 
 def solve_linear_system(system, *symbols, **flags):
     """Solve system of N linear equations with M variables, which means
