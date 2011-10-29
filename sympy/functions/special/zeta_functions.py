@@ -8,6 +8,15 @@ class zeta(Function):
 
     nargs = (1, 2)
 
+    def fdiff(self, argindex=1):
+        z, a = map(sympify, self.args)
+
+        if argindex == 1:
+            raise NotImplementedError()
+        else:
+            if (not z.is_zero) and a != S.One:
+                return -z*zeta(z + 1, a)
+
     @classmethod
     def eval(cls, z, a=S.One):
         z, a = map(sympify, (z, a))
