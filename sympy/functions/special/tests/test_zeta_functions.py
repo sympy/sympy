@@ -1,6 +1,7 @@
 from sympy import Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log, zoo
 
 x = Symbol('x')
+a = Symbol('a')
 
 def test_zeta():
 
@@ -53,6 +54,9 @@ def test_zeta():
     assert zeta(0, -2) == Rational(3, 2)
 
     assert zeta(3).evalf(20).epsilon_eq(Float("1.2020569031595942854",20), 1e-19)
+
+    assert zeta(x, a).diff(a) == -x*zeta(x + 1, a)
+    assert zeta(0, a).diff(a) == -1
 
 def test_dirichlet_eta():
 
