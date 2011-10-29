@@ -13,7 +13,7 @@
 
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
-from sympy.core import S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
+from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log, Derivative,
                                  Function,
                                  )
@@ -1185,26 +1185,10 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         symbols = free.intersection(symbols)
     symbols = symbols.difference(exclude)
 
-    # special objects which are not symbols but may prove
-    # to be equivalent to x*constant which, because they
-    # contain free symbols of interest may need care in
-    # when trying to eliminate from the expression. e.g.
-    # substituting 3*x + Integral(x, y) with x -> 0 will
-    # eliminate the 3*x but will lead to Integral(0, y)
-    # which we do not want.
-    pot = preorder_traversal(n)
-    seen = set()
-    special = defaultdict(list)
-    for p in pot:
-        if not p.args or p in seen:
-            continue
-        if not (p.is_Add or p.is_Mul or p.is_Pow):
-            seen.add(p)
-            common = p.free_symbols & symbols
-            for s in common:
-                special[s].append((p, S.Zero))
-            pot.skip()
-    del seen
+    # derivatives are easy to do but tricky to analyze to see if they are going
+    # to disallow a linear solution, so for simplicity we just evaluate the ones
+    # that have the symbols of interest
+    n = n.subs([(der, der.doit()) for der in n.atoms(Derivative) if der.free_symbols & symbols])
 
     if symbols:
         all_zero = True
@@ -1213,10 +1197,14 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
             if dn:
                 all_zero = False
                 if not xi in dn.free_symbols:
-                    vi = -(n.subs(special[xi]).subs(xi, 0))/dn
+                    vi = -(n.subs(xi, 0))/dn
                     if dens is None:
                         dens = denoms(eq, symbols)
                     if not any(checksol(d, {xi: vi}, minimal=True) is True for d in dens):
+                        # simplify any trivial integral
+                        irep = [(i, i.doit()) for i in vi.atoms(C.Integral) if i.function.is_number]
+                        # do a slight bit of simplification
+                        vi = expand_mul(vi.subs(irep))
                         return xi, vi
 
         if all_zero:

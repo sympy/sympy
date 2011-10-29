@@ -873,5 +873,9 @@ def test_issue_2802():
         (x, -f(y) - Integral(x, (x, y)))
     assert solve_linear(x - f(x)/a + (f(x) - 1)/a, symbols=[x]) == \
         (x, 1/a)
+    assert solve_linear(x + Derivative(2*x, x)) == \
+        (x, -2)
     assert solve_linear(x + Integral(x, y), symbols=[x]) == \
         (x, 0)
+    assert solve_linear(x + Integral(x, y) - 2, symbols=[x]) == \
+        (x, 2/(y + 1))
