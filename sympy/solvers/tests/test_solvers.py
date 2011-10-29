@@ -100,7 +100,7 @@ def test_solve_args():
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
     # failing undetermined system
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b) == \
-        [{a: (-b**2*x + 3*x**2*(x + 4) + 4*x + 16)/(x**2*(x + 4))}]
+        [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
     assert solve(1/(1/x - y + exp(y))) ==  []
     raises(NotImplementedError, 'solve(exp(x) + sin(x) + exp(y) + sin(y))')
@@ -563,7 +563,8 @@ def test_issue_2236():
            a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
            x + y - conc]
     sym = [x, y, a0]
-    assert len(solve(eqs, sym, manual=True, check=False, simplify=False)) == 2
+    # there are 4 solutions but only two are valid
+    assert len(solve(eqs, sym, manual=True, minimal=True, simplify=False)) == 2
 
 def test_issue_2236_float():
     skip("This test hangs.")

@@ -1208,7 +1208,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
                     vi = -(nn.subs(xi, 0))/dn
                     if dens is None:
                         dens = denoms(eq, symbols)
-                    if not any(checksol(d, {xi: vi}, minimal=True) is True for d in dens):
+                    if not any(checksol(di, {xi: vi}, minimal=True) is True for di in dens):
                         # simplify any trivial integral
                         irep = [(i, i.doit()) for i in vi.atoms(C.Integral) if i.function.is_number]
                         # do a slight bit of simplification
