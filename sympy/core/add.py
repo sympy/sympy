@@ -4,6 +4,7 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from expr import Expr
+from numbers import ilcm
 
 class Add(AssocOp):
 
@@ -573,8 +574,8 @@ class Add(AssocOp):
         >>> (2*x/3 + 4*y/9).primitive()
         (2/9, 3*x + 2*y)
 
-        >>> (2*x/3 + 4.1*y).primitive()
-        (1, 2*x/3 + 4.1*y)
+        >>> (2*x/3 + 4.2*y).primitive()
+        (1/3, 2*x + 12.6*y)
 
         No subprocessing of term factors is performed:
 
@@ -592,10 +593,14 @@ class Add(AssocOp):
         """
         cont = S.Zero
         terms = [a.as_coeff_Mul() for a in self.args]
-        for coeff, _ in terms:
-            cont = cont.gcd(coeff)
-            if cont == 1: # not S.One in case Float is ever handled
-                return S.One, self
+        for i, (coeff, _) in enumerate(terms):
+            newcont = cont.gcd(coeff)
+            if newcont == 1: # not S.One in case Float is ever handled
+                cont = S.One/reduce(ilcm,
+                             [coeff.q for coeff, _ in terms[i + 1:]
+                              if coeff.is_Rational], S.One)/cont.q
+                break
+            cont = newcont
 
         for i, (coeff, term) in enumerate(terms):
             c = coeff/cont
@@ -633,9 +638,13 @@ class Add(AssocOp):
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        from sympy import gcd
         c_args = [a.as_content_primitive() for a in self.args]
-        g = reduce(gcd, [c[0] for c in c_args])
+        g = S.Zero
+        for i, c in enumerate(c_args):
+            g = g.gcd(c[0])
+            if g is S.One: # not S.One in case Float is ever handled
+                g = 1/reduce(ilcm, [c[0].q for c in c_args[i + 1:]], S.One)
+                break
         if g is S.One:
             a = Add(*[c[0]*c[1] for c in c_args])
         else:
