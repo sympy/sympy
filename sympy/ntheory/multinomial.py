@@ -1,4 +1,5 @@
 from sympy.mpmath.libmp import bitcount
+from sympy.core.compatibility import combinations_with_replacement
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs {(k1,k2) : C_kn} where
@@ -158,27 +159,6 @@ def _strip(a):
     b = [x for x in a if x]
     b.sort()
     return tuple(b)
-
-try:
-    # since Python2.6
-    from itertools import combinations_with_replacement
-except:
-    def combinations_with_replacement(iterable, r):
-        "combinations_with_replacement('ABC', 2) --> AA AB AC BB BC CC"
-        # number items returned:  (n+r-1)! / r! / (n-1)!
-        pool = tuple(iterable)
-        n = len(pool)
-        indices = [0] * r
-        yield tuple(pool[i] for i in indices)
-        while 1:
-            for i in reversed(range(r)):
-                if indices[i] != n - 1:
-                    break
-            else:
-                return
-            indices[i:] = [indices[i] + 1] * (r - i)
-            yield tuple(pool[i] for i in indices)
-
 
 def multinomial_coefficients_iterator(m, n, _tuple=tuple, _zip=zip):
     """multinomial coefficient iterator
