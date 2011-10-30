@@ -28,7 +28,7 @@ from sympy.simplify import (simplify, collect, powsimp, fraction, posify,
                             powdenest, nsimplify)
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
-from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.iterables import preorder_traversal
 from sympy.utilities.lambdify import lambdify
@@ -565,13 +565,16 @@ def solve(f, *symbols, **flags):
     for fi in f:
         pot = preorder_traversal(fi)
         for p in pot:
-            if (not p.args or
+            if isinstance(p, bool) or isinstance(p, Piecewise):
+                pass
+            elif (isinstance(p, bool) or
+                not p.args or
                 p in symset or
                 p.is_Add or p.is_Mul or
                 p.is_Pow and not implicit or
                 p.is_Function and not is_unfunc(p) and not implicit):
                 continue
-            if not p in seen:
+            elif not p in seen:
                 seen.add(p)
                 if p.free_symbols & symset:
                     non_inverts.add(p)
@@ -1275,7 +1278,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
 def solve_linear_system(system, *symbols, **flags):
     """Solve system of N linear equations with M variables, which means
        both Cramer and over defined systems are supported. The possible
-       number of solutions is zero, one or infinite. Respectively this
+       number of solutions is zero, one or infinite. Respectively, this
        procedure will return None or dictionary with solutions. In the
        case of over-defined systems all arbitrary parameters are skipped.
        This may cause situation in which an empty dictionary is returned.
@@ -1328,10 +1331,40 @@ def solve_linear_system(system, *symbols, **flags):
                     break
             else:
                 if matrix[i, m]:
-                    # no solution
-                    return None
+                    # we need to know this this is always zero or not. We
+                    # assume that if there are free symbols that it is not
+                    # identically zero (or that there is more than one way
+                    # to make this zero. Otherwise, if there are none, this
+                    # is a constant and we assume that it does not simplify
+                    # to zero XXX are there better ways to test this/
+                    if not matrix[i, m].free_symbols:
+                        return None # no solution
+
+                    # zero row with non-zero rhs can only be accepted
+                    # if there is another equivalent row, so look for
+                    # them and delete them
+                    nrows = matrix.rows
+                    rowi = matrix.row(i)
+                    ip = None
+                    for j in range(i + 1, matrix.rows):
+                        # do we need to see if the rhs of j
+                        # is a constant multiple of i's rhs?
+                        rowj = matrix.row(j)
+                        if rowj == rowi:
+                            matrix.row_del(j)
+                        elif rowj[:-1] == rowi[:-1]:
+                            if ip is None:
+                                _, ip = rowi[-1].as_content_primitive()
+                            _, jp = rowj[-1].as_content_primitive()
+                            if not (simplify(jp - ip) or simplify(jp + ip)):
+                                matrix.row_del(j)
+                    if nrows == matrix.rows:
+                        # no solution
+                        return None
                 # zero row or was a linear combination of
-                # other rows so now we can safely skip it
+                # other rows or was a row with a symbolic
+                # expression that matched other rows, e.g. [0, 0, x - y]
+                # so now we can safely skip it
                 matrix.row_del(i)
                 if not matrix:
                     return None

@@ -790,10 +790,8 @@ def test_issue_2750():
     # a zero row in the matrix. Is this related to issue 1452?
     assert [ei.subs(ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
 
-@XFAIL
 def test_2750_matrix():
-    '''This is the same as the one in test_2750 but the matrix
-    solver doesn't handle it.'''
+    '''Same as test_2750 but solved with the matrix solver.'''
     I1 = Symbol('I1')
     I2 = Symbol('I2')
     I3 = Symbol('I3')
