@@ -916,20 +916,16 @@ def collect_sqrt(expr, evaluate=True):
     >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5)
     sqrt(3)*a + sqrt(5)*b + sqrt(2)*(a + b)
 
-    If evaluate is False then the arguments will be sorted:
-
-    >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5, evaluate=False)
-    (sqrt(3)*a + sqrt(5)*b + sqrt(2)*(a + b), 3)
-    >>> _[0].args
-    (sqrt(2)*(a + b), sqrt(3)*a, sqrt(5)*b)
-
-    When evaluate is False, a count of the number of sqrt-containing
+    If evaluate is False then the arguments will be sorted and
+    returned as a list and a count of the number of sqrt-containing
     terms will be returned:
 
+    >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5, evaluate=False)
+    ((sqrt(2)*(a + b), sqrt(3)*a, sqrt(5)*b), 3)
     >>> collect_sqrt(a*sqrt(2) + b, evaluate=False)
-    (sqrt(2)*a + b, 1)
+    ((b, sqrt(2)*a), 1)
     >>> collect_sqrt(a + b, evaluate=False)
-    (a + b, 0)
+    ((a + b,), 0)
 
     """
 
@@ -965,9 +961,13 @@ def collect_sqrt(expr, evaluate=True):
     if hit:
         if not evaluate:
             args.sort(key=default_sort_key)
-        d = Add(*args, evaluate=False)
+            d = tuple(args)
+        else:
+            d = Add(*args)
 
     if not evaluate:
+        if not hit:
+            d = Add.make_args(d)
         return d, nrad
     return d
 
@@ -1040,6 +1040,7 @@ def radsimp(expr):
         while 1:
             # collect similar terms
             d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
+            d = Add._from_args(d)
 
             # check to see if we are done:
             # - no radical terms
@@ -1086,6 +1087,7 @@ def radsimp(expr):
         coeff *= co
     else:
         nexpr, hit = collect_sqrt(expand_mul(expr), evaluate=False)
+        nexpr = Add._from_args(nexpr)
         if hit and expr.count_ops() >= nexpr.count_ops():
             expr = Add(*Add.make_args(nexpr))
     return _keep_coeff(coeff, expr)
