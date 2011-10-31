@@ -25,19 +25,20 @@ def residue(expr, x, x0):
 
     This function is essential for the Residue Theorem [1].
 
-    The current implementation uses series expansion to calculate it. A more
-    general implementation is explained in the section 5.6 of the Bronstein's
-    book [2]. For purely rational functions, the algorithm is much easier. See
-    sections 2.4, 2.5, and 2.7 (this section actually gives an algorithm for
-    computing any Laurent series coefficient for a rational function). The
-    theory in section 2.4 will help to understand why the resultant works in
-    the general algorithm. For the definition of a resultant, see section 1.4
-    (and any previous sections for more review).
-
     [1] http://en.wikipedia.org/wiki/Residue_theorem
-    [2] M. Bronstein: Symbolic Integration I, Springer Verlag (2005)
 
     """
+    # The current implementation uses series expansion to calculate it. A more
+    # general implementation is explained in the section 5.6 of the Bronstein's
+    # book [2]. For purely rational functions, the algorithm is much easier. See
+    # sections 2.4, 2.5, and 2.7 (this section actually gives an algorithm for
+    # computing any Laurent series coefficient for a rational function). The
+    # theory in section 2.4 will help to understand why the resultant works in
+    # the general algorithm. For the definition of a resultant, see section 1.4
+    # (and any previous sections for more review).
+    #
+    # [2] M. Bronstein: Symbolic Integration I, Springer Verlag (2005)
+
     from sympy import collect
     expr = sympify(expr)
     if x0 != 0:
