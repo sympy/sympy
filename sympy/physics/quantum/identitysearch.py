@@ -1,15 +1,25 @@
 from collections import deque
 from random import randint
 
-from sympy import Mul
+from sympy import Mul, Basic
 from sympy.matrices import Matrix, eye
-from sympy.physics.quantum.gate import X, Y, Z, H, S, T, CNOT, IdentityGate, gate_simp
+from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
+        IdentityGate, gate_simp)
 from sympy.physics.quantum.represent import represent
 
+__all__ = [
+    'GateIdentity',
+    'is_scalar_matrix',
+    'bfs_identity_search',
+    'random_identity_search'
+]
+# ToDo: Need to define __iter__() and __next__() method in order
+# to turn GateIdentity into an iterator type - allows it to be used in sets
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value."""
 
     def __new__(cls, circuit):
+        # circuit should be a tuple
         obj = Basic.__new__(cls, circuit)
         obj._circuit = circuit
         return obj
@@ -23,10 +33,14 @@ class GateIdentity(Basic):
             "Generation of gate rules from identity not implemented."
         )
 
+    def __iter__(self):
+        return self.circuit.__iter__()
+
     def __str__(self):
         return str(self.circuit)
 
-# Dynamically generate and concatenate a list of all possible sympy gate objects in given space.
+# Dynamically generate and concatenate a list of all possible
+# sympy gate objects in given space.
 def construct_gate_list(numqubits):
     Xs = [X(i) for i in xrange(numqubits)]
     Ys = [Y(i) for i in xrange(numqubits)]
@@ -34,22 +48,30 @@ def construct_gate_list(numqubits):
     Hs = [H(i) for i in xrange(numqubits)]
     Ss = [S(i) for i in xrange(numqubits)]
     Ts = [T(i) for i in xrange(numqubits)]
-    CNOTs = [CNOT(i,j) for i in xrange(numqubits) for j in xrange(numqubits) if i != j]
-    
+    CNOTs = [CNOT(i,j) for i in xrange(numqubits)
+                           for j in xrange(numqubits) if i != j]
+   
     gate_list = Xs+Ys+Zs+Hs+Ss+Ts+CNOTs
 
     return gate_list
 
 # Dynamically generate and concatenate a list of all possible scipy.sparse gate matrices in given space.
-def construct matrix_list(numqubits):
-    xs = [represent(X(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-    ys = [represent(Y(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-    zs = [represent(Z(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-    hs = [represent(H(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-    ss = [represent(S(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-    ts = [represent(T(i), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits)]
-    cnots = [represent(CNOT(i,j), nqubits=numqubits, format='scipy.sparse') for i in xrange(numqubits) for j in xrange(numqubits) if i != j]
-    
+def construct_matrix_list(numqubits):
+    xs = [represent(X(i), nqubits=numqubits, format='scipy.sparse')
+          for i in xrange(numqubits)]
+    ys = [represent(Y(i), nqubits=numqubits, format='scipy.sparse')
+          for i in xrange(numqubits)]
+    zs = [represent(Z(i), nqubits=numqubits, format='scipy.sparse')
+          for i in xrange(numqubits)]
+    hs = [represent(H(i), nqubits=numqubits, format='scipy.sparse')
+          for i in xrange(numqubits)]
+    ss = [represent(S(i), nqubits=numqubits, format='scipy.sparse')
+          for i in xrange(numqubits)]
+    ts = [represent(T(i), nqubits=numqubits, format='scipy.sparse')
+          for i in xrange(numqubits)]
+    cnots = [represent(CNOT(i,j), nqubits=numqubits, format='scipy.sparse')
+             for i in xrange(numqubits) for j in xrange(numqubits) if i != j]
+
     matrix_list = xs+ys+zs+hs+ss+ts+cnots
 
     return matrix_list
@@ -85,7 +107,7 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
 
     # Root of BFS tree is an IdentityGate(0)
     id_gate = IdentityGate(0)
-    queue = deque([id_gate])
+    queue = deque([(id_gate,)])
 
     # Create an empty set of gate identities
     ids = set()
@@ -95,17 +117,22 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
         current_circuit = queue.popleft()
 
         for next_gate in gate_list:
-            new_circuit = current_circuit*next_gate
-            matrix_version = represent(new_circuit, nqubits=numqubits,
+            new_circuit = current_circuit + (next_gate,)
+            matrix_version = represent(Mul(*new_circuit), nqubits=numqubits,
                                        format='scipy.sparse')
 
-            # If a matrix equivalent to a scalar value is found
-            if (is_scalar_matrix(matrix_version)):
+            # In many cases when the matrix is a scalar value,
+            # the evaluated matrix will actually be an integer            
+            if (isinstance(matrix_version, int)):
+                ids.add(GateIdentity(new_circuit))
+
+            # If a matrix is equivalent to a scalar value is found
+            elif (is_scalar_matrix(matrix_version)):
                 ids.add(GateIdentity(new_circuit))
 
             # Number of operators in the circuit gives the
             # number of gates in the circuit
-            elif (new_circuit.count_op < max_depth):
+            elif (len(new_circuit) < max_depth + 1):
                 queue.append(new_circuit)
 
     return ids
