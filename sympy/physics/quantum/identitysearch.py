@@ -74,13 +74,14 @@ def write_to_file(identityset, filename, append=False):
 
     identities.close()
 
-def bfs_identity_search(gate_list, numqubits):
+def bfs_identity_search(gate_list, numqubits, max_depth=0):
     # Breadth first search might be more efficient because it eliminates
     # a search down paths like ZZZZZZ or XXXXYY.
     # Returns the set of gate identities from the list.
 
-    # For now, limit size of identity search based on size of list
-    max_length = len(gate_list)
+    # If max depth of a path isn't given, use the length of the gate_list
+    if (max_depth == 0):
+        max_depth = len(gate_list)
 
     # Root of BFS tree is an IdentityGate(0)
     id_gate = IdentityGate(0)
@@ -104,8 +105,8 @@ def bfs_identity_search(gate_list, numqubits):
 
             # Number of operators in the circuit gives the
             # number of gates in the circuit
-            elif (new_circuit.count_op < max_length):
-                queue.append(circuit)
+            elif (new_circuit.count_op < max_depth):
+                queue.append(new_circuit)
 
     return ids
 
