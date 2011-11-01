@@ -855,7 +855,7 @@ class ReferenceFrame(object):
             self._check_vector(axis)
             if not axis.dt(parent) == 0:
                 raise ValueError('Axis cannot be time-varying')
-            axis = axis.express(parent).unit
+            axis = axis.express(parent).normalize()
             axis = axis.args[0][0]
             parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
                     Matrix([[0, -axis[2], axis[1]],[axis[2], 0, -axis[0]],
@@ -904,7 +904,7 @@ class ReferenceFrame(object):
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
             thetad = (amounts[0]).diff(dynamicsymbols._t)
-            wvec = thetad * amounts[1].express(parent).unit
+            wvec = thetad * amounts[1].express(parent).normalize()
         else:
             try:
                 from sympy.physics.mechanics.functions import kinematic_equations
@@ -1626,15 +1626,13 @@ class Vector(object):
             ov += Vector([(v[0].subs(dictin), v[1])])
         return ov
 
-    @property
-    def mag(self):
-        """Returns the magnitude of this Vector, as a scalar. """
+    def magnitude(self):
+        """Returns the magnitude (Euclidean norm) of self."""
         return sqrt(self & self)
 
-    @property
-    def unit(self):
-        """Returns this Vector, with unit length. """
-        return Vector(self.args + []) / self.mag
+    def normalize(self):
+        """Returns a Vector of magnitude 1, codirectional with self."""
+        return Vector(self.args + []) / self.magnitude()
 
 
 class MechanicsStrPrinter(StrPrinter):
