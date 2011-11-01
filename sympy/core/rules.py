@@ -4,12 +4,17 @@ Replacement rules.
 
 class Transform(object):
     """
-    Generic transformation rule.
+    Immutable mapping that can be used as a generic transformation rule.
 
-    The Transform object is hybrid function/dictionary that is created
-    with a ``transform`` function and a ``filter``. When accessed with
-    an index Transform()[key] it behaves like a default dictionary (or
-    function) and when accessed with get() it behaves like a dictionary.
+    Parameters
+    ----------
+    transform : callable
+        Computes the value corresponding to any key.
+    filter : callable, optional
+        If supplied, specifies which objects are in the mapping.
+
+    Examples
+    --------
 
     >>> from sympy.core.rules import Transform
     >>> from sympy.abc import x
@@ -23,41 +28,37 @@ class Transform(object):
     x + 1
 
     By default, all values are considered to be in the dictionary. If a filter
-    is supplied, it will limit the scope of the application of the transform
-    when accessing the Transform with the get() method; the filter is ignored
-    when accessing it via index notation (and in this sense the Transform is
-    like a function or defaultdict):
+    is supplied, only the objects for which it returns True are considered as
+    being in the dictionary:
 
     >>> add1_odd = Transform(lambda x: x + 1, lambda x: x%2 == 1)
-    >>> add1_odd[2]
-    3
-    >>> add1_odd.get(2) is None
-    True
-    >>> add1_odd.get(2, 0)
-    0
-
-    The filter is also used to answer a query as to whether the Transform
-    contains a given value or not:
-
     >>> 2 in add1_odd
     False
+    >>> add1_odd.get(2, 0)
+    0
     >>> 3 in add1_odd
     True
+    >>> add1_odd[3]
+    4
+    >>> add1_odd.get(3, 0)
+    4
     """
 
     def __init__(self, transform, filter=lambda x: True):
-        self.transform = transform
-        self.filter = filter
+        self._transform = transform
+        self._filter = filter
 
     def __contains__(self, item):
-        return self.filter(item)
+        return self._filter(item)
 
     def __getitem__(self, key):
-        return self.transform(key)
+        if self._filter(key):
+            return self._transform(key)
+        else:
+            raise KeyError(key)
 
     def get(self, item, default=None):
         if item in self:
-            print 'yo'
             return self[item]
         else:
             return default
