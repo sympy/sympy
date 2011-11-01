@@ -1077,6 +1077,10 @@ class Basic(object):
         False
 
         """
+        return any(self._has(pattern) for pattern in patterns)
+
+    def _has(self, pattern):
+        """Helper for .has()"""
         def _ncsplit(expr):
             if expr.is_Add or expr.is_Mul:
                 cpart, ncpart = [], []
@@ -1117,13 +1121,11 @@ class Basic(object):
             if isinstance(pattern, BasicType):
                 return lambda expr: (isinstance(expr, pattern) or
                     (isinstance(expr, BasicType) and expr == pattern))
-            else:
-                if pattern.is_Add or pattern.is_Mul:
-                    iterative, (c, nc) = True, _ncsplit(pattern)
-                else:
-                    iterative, (c, nc) = False, (None, None)
-
+            elif pattern.is_Add or pattern.is_Mul:
+                iterative, (c, nc) = True, _ncsplit(pattern)
                 return lambda expr: _contains(expr, pattern, iterative, c, nc)
+
+            return lambda expr: expr == pattern
 
         def _search(expr, match):
             if match(expr):
@@ -1131,14 +1133,13 @@ class Basic(object):
 
             if isinstance(expr, Basic):
                 args = expr.args
-            elif iterable(expr):
-                args = expr
             else:
                 return False
 
             return any(_search(arg, match) for arg in args)
 
-        return any(_search(self, _match(pattern)) for pattern in patterns)
+        return _search(self, _match(pattern))
+
 
     def replace(self, query, value, map=False):
         """
