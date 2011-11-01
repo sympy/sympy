@@ -13,8 +13,7 @@ __all__ = [
     'bfs_identity_search',
     'random_identity_search'
 ]
-# ToDo: Need to define __iter__() and __next__() method in order
-# to turn GateIdentity into an iterator type - allows it to be used in sets
+
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value."""
 
@@ -33,10 +32,8 @@ class GateIdentity(Basic):
             "Generation of gate rules from identity not implemented."
         )
 
-    def __iter__(self):
-        return self.circuit.__iter__()
-
     def __str__(self):
+        """Returns the string of gates in a tuple."""
         return str(self.circuit)
 
 # Dynamically generate and concatenate a list of all possible
@@ -122,13 +119,17 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
                                        format='scipy.sparse')
 
             # In many cases when the matrix is a scalar value,
-            # the evaluated matrix will actually be an integer            
+            # the evaluated matrix will actually be an integer          
             if (isinstance(matrix_version, int)):
-                ids.add(GateIdentity(new_circuit))
+                # When adding a gate identity, remove the
+                # identity gate at the beginning of the tuple
+                ids.add(GateIdentity(new_circuit[1:]))
 
             # If a matrix is equivalent to a scalar value is found
             elif (is_scalar_matrix(matrix_version)):
-                ids.add(GateIdentity(new_circuit))
+                # When adding a gate identity, remove the
+                # identity gate at the beginning of the tuple
+                ids.add(GateIdentity(new_circuit[1:]))
 
             # Number of operators in the circuit gives the
             # number of gates in the circuit
