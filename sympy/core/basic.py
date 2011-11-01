@@ -1,10 +1,10 @@
 """Base class for all the objects in SymPy"""
-
-from assumptions import ManagedProperties
-from cache import cacheit
-from core import BasicType, C
-from sympify import _sympify, sympify, SympifyError
-from compatibility import callable, reduce, cmp, iterable
+from copy import copy
+from sympy.core.assumptions import ManagedProperties
+from sympy.core.cache import cacheit
+from sympy.core.core import BasicType, C
+from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.core.compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
@@ -1519,7 +1519,6 @@ def _aresame(a, b):
     False
 
     """
-    from sympy.utilities.iterables import preorder_traversal
     from itertools import izip
 
     for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
@@ -1549,7 +1548,6 @@ def _atomic(e):
 
     """
     from sympy import Derivative, Function, Symbol
-    from sympy.utilities.iterables import preorder_traversal
     pot = preorder_traversal(e)
     seen = set()
     try:
@@ -1568,3 +1566,74 @@ def _atomic(e):
             pot.skip()
             atoms.add(p)
     return atoms
+
+class preorder_traversal(object):
+    """
+    Do a pre-order traversal of a tree.
+
+    This iterator recursively yields nodes that it has visited in a pre-order
+    fashion. That is, it yields the current node then descends through the tree
+    breadth-first to yield all of a node's children's pre-order traversal.
+
+    Parameters
+    ----------
+    node : sympy expression
+        The expression to traverse.
+
+    Yields
+    ------
+    subtree : sympy expression
+        All of the subtrees in the tree.
+
+    Examples
+    --------
+    >>> from sympy import symbols
+    >>> from sympy.core.basic import preorder_traversal
+    >>> x, y, z = symbols('x y z')
+    >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
+    True
+
+    """
+    def __init__(self, node):
+        self._skip_flag = False
+        self._pt = self._preorder_traversal(node)
+
+    def _preorder_traversal(self, node):
+        yield node
+        if self._skip_flag:
+            self._skip_flag = False
+            return
+        if isinstance(node, Basic):
+            for arg in node.args:
+                for subtree in self._preorder_traversal(arg):
+                    yield subtree
+        elif iterable(node):
+            for item in node:
+                for subtree in self._preorder_traversal(item):
+                    yield subtree
+
+    def skip(self):
+        """
+        Skip yielding current node's (last yielded node's) subtrees.
+
+        Examples
+        --------
+        >>> from sympy.core import symbols
+        >>> from sympy.core.basic import preorder_traversal
+        >>> x, y, z = symbols('x y z')
+        >>> pt = preorder_traversal((x+y*z)*z)
+        >>> for i in pt:
+        ...     print i
+        ...     if i == x+y*z:
+        ...             pt.skip()
+        z*(x + y*z)
+        z
+        x + y*z
+        """
+        self._skip_flag = True
+
+    def next(self):
+        return self._pt.next()
+
+    def __iter__(self):
+        return self

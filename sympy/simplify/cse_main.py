@@ -3,11 +3,12 @@
 import bisect
 import difflib
 
-from sympy import Basic, Mul, Add, Tuple, sympify
+from sympy.core import Basic, Mul, Add, Tuple, sympify
+from sympy.core.basic import preorder_traversal
 from sympy.functions.elementary.complexes import sign
 from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import iterable
-from sympy.utilities.iterables import preorder_traversal, numbered_symbols, \
+from sympy.utilities.iterables import numbered_symbols, \
     sift, topological_sort
 
 import cse_opts
