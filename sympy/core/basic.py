@@ -1127,18 +1127,8 @@ class Basic(object):
 
             return lambda expr: expr == pattern
 
-        def _search(expr, match):
-            if match(expr):
-                return True
-
-            if isinstance(expr, Basic):
-                args = expr.args
-            else:
-                return False
-
-            return any(_search(arg, match) for arg in args)
-
-        return _search(self, _match(pattern))
+        match = _match(pattern)
+        return any(match(arg) for arg in preorder_traversal(self))
 
 
     def replace(self, query, value, map=False):
