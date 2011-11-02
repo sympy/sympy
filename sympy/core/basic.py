@@ -503,40 +503,15 @@ class Basic(object):
            set([I*pi, 2*sin(y + I*pi)])
 
         """
-
-        def _atoms(expr, typ):
-            """Helper function for recursively denesting atoms"""
-
-            result = set()
-            if isinstance(expr, Basic):
-                if expr.is_Atom and len(typ) == 0: # if we haven't specified types
-                    return set([expr])
-                else:
-                    try:
-                        if isinstance(expr, typ):
-                            result.add(expr)
-                    except TypeError:
-                        #one or more types is in implicit form
-                        for t in typ:
-                            if isinstance(t, type):
-                                if isinstance(expr, t):
-                                    result.add(expr)
-                            else:
-                                if isinstance(expr, type(t)):
-                                    result.add(expr)
-
-                iter = expr.iter_basic_args()
-            elif iterable(expr):
-                iter = expr.__iter__()
-            else:
-                iter = []
-
-            for obj in iter:
-                result.update(_atoms(obj, typ))
-
-            return result
-
-        return _atoms(self, typ=types)
+        if types:
+            types = tuple([t if isinstance(t, type) else type(t) for t in types])
+        else:
+            types = (Atom,)
+        result = set()
+        for expr in preorder_traversal(self):
+            if isinstance(expr, types):
+                result.add(expr)
+        return result
 
     @property
     def free_symbols(self):
