@@ -34,8 +34,12 @@ def test_graycode():
     assert a.current == '000000000001000'
 
     assert bin_to_gray('111') == '100'
-    random.seed(0)
-    assert [random_bitstring(5) for i in range(3)] == ['11001', '01001', '11011']
+
+    a = random_bitstring(5)
+    assert type(a) is str
+    assert len(a) == 5
+    assert all(i in ['0', '1'] for i in a)
+
     assert get_subset_from_bitstring(['a','b','c','d'], '0011') == ['c', 'd']
     assert get_subset_from_bitstring('abcd','1001') == ['a', 'd']
     assert list(graycode_subsets(['a','b','c'])) == \
