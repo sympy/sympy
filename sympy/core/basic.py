@@ -1239,26 +1239,18 @@ class Basic(object):
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
-        if not callable(query):
+        try:
             query = sympify(query)
+        except SympifyError:
+            pass
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
         elif isinstance(query, Basic):
-            _query = lambda expr: expr.match(query)
+            _query = lambda expr: expr.match(query) is not None
         else:
             _query = query
 
-        results = []
-
-        def rec_find(expr):
-            q = _query(expr)
-            if q or q == {}:
-                results.append(expr)
-
-            for arg in expr.args:
-                rec_find(arg)
-
-        rec_find(self)
+        results = filter(_query, preorder_traversal(self))
 
         if not group:
             return set(results)
