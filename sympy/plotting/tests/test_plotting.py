@@ -70,3 +70,9 @@ def _test_plot_log():
     from sympy import Plot
     p=Plot(log(x), [x,0,6.282,4], 'mode=polar', visible=False)
     p.wait_for_calculations()
+
+def test_plot_integral():
+    # Make sure it doesn't treat x as an independent variable
+    from sympy import Plot, Integral
+    p = Plot(Integral(x, (x, 1, y)), visible=False)
+    p.wait_for_calculations()
