@@ -16,7 +16,7 @@ except:
     disabled = True
 
 from sympy import symbols, sin, cos
-x,y = symbols('x,y')
+x, y, z = symbols('x, y, z')
 
 def test_import():
     from sympy import Plot
@@ -74,5 +74,5 @@ def _test_plot_log():
 def test_plot_integral():
     # Make sure it doesn't treat x as an independent variable
     from sympy import Plot, Integral
-    p = Plot(Integral(x, (x, 1, y)), visible=False)
+    p = Plot(Integral(z*x, (x, 1, z), (z, 1, y)), visible=False)
     p.wait_for_calculations()
