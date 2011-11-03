@@ -353,6 +353,8 @@ class Point(GeometryEntity):
         divisor = sympify(divisor)
         return Point([x/divisor for x in self])
 
+    __truediv__ = __div__
+
     def __neg__(self):
         """Negate the point."""
         return Point([-x for x in self])

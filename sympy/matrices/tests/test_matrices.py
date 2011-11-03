@@ -1343,7 +1343,7 @@ def test_diagonal_symmetrical():
     m = Matrix(3,3,[1, 0, 0, 0, 2, 0, 0, 0, 3])
     assert m == diag(1, 2, 3)
 
-    m = Matrix(2, 3, [0, 0, 0, 0, 0, 0])
+    m = Matrix(2, 3, zeros(2, 3))
     assert not m.is_symmetric()
     assert m.is_diagonal()
 
@@ -1854,7 +1854,7 @@ def test_zeros_eye():
 def test_is_zero():
     assert Matrix().is_zero
     assert Matrix([[0, 0], [0, 0]]).is_zero
-    assert zeros((3, 4)).is_zero
+    assert zeros(3, 4).is_zero
     assert not eye(3).is_zero
 
 def test_rotation_matrices():

@@ -325,3 +325,21 @@ def set_union(*sets):
     for s in sets:
         rv |= s
     return rv
+
+try:
+    bin = bin
+except NameError: # Python 2.5
+    def bin(x):
+        """
+        bin(number) -> string
+
+        Stringifies an int or long in base 2.
+        """
+        if x < 0: return '-' + bin(-x)
+        out = []
+        if x == 0: out.append('0')
+        while x > 0:
+            out.append('01'[x & 1])
+            x >>= 1
+            pass
+        return '0b' + ''.join(reversed(out))

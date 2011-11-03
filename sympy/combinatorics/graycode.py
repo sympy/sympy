@@ -1,6 +1,8 @@
 from sympy.core import Basic
 from sympy.functions import ceiling, log
 
+from sympy.core.compatibility import bin
+
 import random
 
 class GrayCode(Basic):
@@ -218,7 +220,7 @@ class GrayCode(Basic):
         '100'
         """
         if self._rank is None:
-            self._rank = int('0b' + gray_to_bin(self.current), 2)
+            self._rank = int(gray_to_bin(self.current), 2)
         return self._rank
 
     @property

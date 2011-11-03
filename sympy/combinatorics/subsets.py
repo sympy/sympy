@@ -1,6 +1,8 @@
 from sympy.core import Basic
 from sympy.combinatorics.graycode import GrayCode
 
+from sympy.core.compatibility import bin, combinations
+
 import itertools
 
 class Subset(Basic):
@@ -375,4 +377,4 @@ def ksubsets(superset, k):
     [(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), \
     (2, 5), (3, 4), (3, 5), (4, 5)]
     """
-    return (itertools.combinations(superset, k))
+    return combinations(superset, k)
