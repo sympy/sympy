@@ -11,7 +11,7 @@ from sympy.polys.monomialtools import (
 
 from sympy.core import Add, Mul, Pow, Rational
 from sympy.functions import sin, cos, exp, log
-from sympy.polys.domains import QQ
+from sympy.polys.domains import ZZ, QQ
 
 from copy import copy
 
@@ -1393,7 +1393,7 @@ class Poly(dict):
         elif n == 3:
             return self*self.square()
         # TODO if lp.SR then use in some cases multinomial coefficients
-        if lp.ngens == 1:
+        if lp.ngens == 1 and n >= 20 and lp.ring in (ZZ, QQ):
             return self.pow_miller(n)
         p = lp(1)
         while 1:
@@ -1652,8 +1652,8 @@ class Poly(dict):
             p2 = self.square_trunc(i, h)
             return p2.mul_trunc(self, i, h)
         p = lp(1)
-        if h > 20 and lp.ngens == 1:
-            return self.pow_miller_trunc(n, h)
+        #if h > 20 and lp.ngens == 1:
+        #    return self.pow_miller_trunc(n, h)
         while 1:
             if n&1:
                 p = self.mul_trunc(p, i, h)
