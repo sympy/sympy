@@ -1239,18 +1239,8 @@ class Basic(object):
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
-        try:
-            query = sympify(query)
-        except SympifyError:
-            pass
-        if isinstance(query, type):
-            _query = lambda expr: isinstance(expr, query)
-        elif isinstance(query, Basic):
-            _query = lambda expr: expr.match(query) is not None
-        else:
-            _query = query
-
-        results = filter(_query, preorder_traversal(self))
+        query = _make_find_query(query)
+        results = filter(query, preorder_traversal(self))
 
         if not group:
             return set(results)
@@ -1267,7 +1257,8 @@ class Basic(object):
 
     def count(self, query):
         """Count the number of matching subexpressions. """
-        return sum(self.find(query, group=True).values())
+        query = _make_find_query(query)
+        return sum(bool(query(sub)) for sub in preorder_traversal(self))
 
     def matches(self, expr, repl_dict={}):
         """
@@ -1594,3 +1585,15 @@ class preorder_traversal(object):
 
     def __iter__(self):
         return self
+
+def _make_find_query(query):
+    """Convert the argument of Basic.find() into a callable"""
+    try:
+        query = sympify(query)
+    except SympifyError:
+        pass
+    if isinstance(query, type):
+        return lambda expr: isinstance(expr, query)
+    elif isinstance(query, Basic):
+        return lambda expr: expr.match(query) is not None
+    return query
