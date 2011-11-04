@@ -1663,7 +1663,7 @@ class Matrix(object):
         Example::
             >>> from sympy import Matrix, zeros
             >>> a = Matrix([[0, 0], [0, 0]])
-            >>> b = zeros((3, 4))
+            >>> b = zeros(3, 4)
             >>> c = Matrix([[0, 1], [0, 0]])
             >>> d = Matrix([])
             >>> a.is_zero
