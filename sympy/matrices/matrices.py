@@ -2841,14 +2841,6 @@ def diag(*values):
             i_col += 1
     return res
 
-def block_diag(matrices):
-    """
-    Warning: this function is deprecated. See .diag()
-
-    """
-    warnings.warn("block_diag() is deprecated, use diag() instead", DeprecationWarning)
-    return diag(*matrices)
-
 def jordan_cell(eigenval, n):
     """
     Create matrix of Jordan cell kind:
