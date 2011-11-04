@@ -23,7 +23,7 @@ from sympy.logic.boolalg import And, Or
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot,
                              cosh, sinh, tanh, coth, acos, asin, atan, acot,
-                             acosh, asinh, atanh, acoth)
+                             acosh, asinh, atanh, acoth, sqrt)
 from sympy.simplify import (simplify, collect, powsimp, fraction, posify,
                             powdenest, nsimplify)
 from sympy.matrices import Matrix, zeros
@@ -169,13 +169,9 @@ def checksol(f, symbol, sol=None, **flags):
             if val.atoms() & illegal:
                 return False
         elif attempt == 1:
-            if not val.free_symbols and numerical:
-                # val is a constant, so a fast numerical test may suffice;
-                # evalf is necessary since there can be expressions which, even
-                # when expanded are not clearly zero
-                return val.evalf(36).n(30, chop=True) == 0
-            else:
+            if val.free_symbols:
                 # there are free symbols -- simple expansion might work
+                _, val = val.as_content_primitive()
                 val = expand_mul(expand_multinomial(val))
         elif attempt == 2:
             if flags.get('minimal', False):
@@ -222,8 +218,8 @@ def checksol(f, symbol, sol=None, **flags):
             continue
         elif val.is_Number:
             return val == 0
-        elif numerical and not val.has(Symbol):
-            return val.evalf(36).n(30, chop=True) == 0
+        if numerical and not val.free_symbols:
+            return abs(val.n(chop=True)) < 1e-9
         was = val
 
     if flags.get('warn', False):
@@ -587,9 +583,11 @@ def solve(f, *symbols, **flags):
     non_inverts = [(v, k.subs(swap_sym)) for k, v in non_inverts.iteritems()]
 
     # rationalize Floats
+    floats = False
     if flags.get('rational', True):
         for i, fi in enumerate(f):
             if fi.has(Float):
+                floats = True
                 f[i] = nsimplify(fi, rational=True)
 
     #
@@ -667,12 +665,15 @@ def solve(f, *symbols, **flags):
     if not check or not solution:
         return solution
 
+    float = floats and bool(flags.get('rational', False)) is not True
     warning = flags.get('warn', False)
     got_None = [] # solutions for which one or more symbols gave None
     no_False = [] # solutions for which no symbols gave False
     if type(solution) is list:
         if type(solution[0]) is tuple:
             for sol in solution:
+                if float:
+                    sol = tuple([soli.n() for soli in sol])
                 for symb, val in zip(symbols, sol):
                     test = check_assumptions(val, **symb.assumptions0)
                     if test is False:
@@ -683,6 +684,9 @@ def solve(f, *symbols, **flags):
                     no_False.append(sol)
         elif type(solution[0]) is dict:
             for sol in solution:
+                if float:
+                    for k in sol:
+                        sol[k] = sol[k].n()
                 a_None = False
                 for symb, val in sol.iteritems():
                     test = check_assumptions(val, **symb.assumptions0)
@@ -697,6 +701,8 @@ def solve(f, *symbols, **flags):
                         got_None.append(sol)
         else: # list of expressions
             for sol in solution:
+                if float:
+                    sol = sol.n()
                 test = check_assumptions(sol, **symbols[0].assumptions0)
                 if test is False:
                     continue
@@ -706,6 +712,9 @@ def solve(f, *symbols, **flags):
 
     elif type(solution) is dict:
         a_None = False
+        if float:
+            for k in solution:
+                solution[k] = solution[k].n()
         for symb, val in solution.iteritems():
             test = check_assumptions(val, **symb.assumptions0)
             if test:

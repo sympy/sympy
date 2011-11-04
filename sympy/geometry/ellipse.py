@@ -525,7 +525,7 @@ class Ellipse(GeometryEntity):
             eq = self.equation(x, y)
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
-            tangent_points = solve([w.as_numer_denom()[0] for w in [slope - dydx, eq]], [x, y])
+            tangent_points = solve([slope - dydx, eq], [x, y])
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
