@@ -3,7 +3,7 @@ from __future__ import division
 from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
-    Equality, solve, O, LambertW, Dummy, acosh)
+    Equality, solve, O, LambertW, Dummy, acosh, Derivative)
 from sympy.abc import x, y, z
 from sympy.solvers.ode import (ode_order, homogeneous_order,
     _undetermined_coefficients_match, classify_ode, checkodesol,
@@ -194,6 +194,15 @@ def test_ode_order():
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
     assert ode_order(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
+    # issue 2736: ode_order has to also work for unevaluated derivatives
+    # (ie, without using doit()).
+    assert ode_order(Derivative(x*f(x), x), f(x)) == 1 
+    assert ode_order(x*sin(Derivative(x*f(x)**2, x, x)), f(x)) == 2
+    assert ode_order(Derivative(x*Derivative(x*exp(f(x)), x,x), x), g(x)) == 0
+    assert ode_order(Derivative(f(x), x, x), g(x)) == 0
+    assert ode_order(Derivative(x*exp(f(x)),x,x), f(x)) == 2
+    assert ode_order(Derivative(f(x), x, x)*Derivative(g(x), x), g(x)) == 1
+    
 
 # In all tests below, checkodesol has the order option set to prevent superfluous
 # calls to ode_order(), and the solve_for_func flag set to False because
