@@ -3,7 +3,7 @@
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify
 from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.quantum.qexpr import QuantumError, split_commutative_parts
+from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -92,7 +92,7 @@ class TensorProduct(Expr):
     def __new__(cls, *args, **assumptions):
         if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
-        c_part, new_args = cls.flatten(args)
+        c_part, new_args = cls.flatten(sympify(args))
         c_part = Mul(*c_part)
         if len(new_args) == 0:
             return c_part
@@ -108,16 +108,9 @@ class TensorProduct(Expr):
         c_part = []
         nc_parts = []
         for arg in args:
-            if isinstance(arg, Mul):
-                cp, ncp = split_commutative_parts(arg)
-                ncp = Mul(*ncp)
-            else:
-                if sympify(arg).is_commutative:
-                    cp = [arg]; ncp = 1
-                else:
-                    cp = []; ncp = arg
-            c_part.extend(cp)
-            nc_parts.append(ncp)
+            cp, ncp = arg.args_cnc()
+            c_part.extend(list(cp))
+            nc_parts.append(Mul._from_args(ncp))
         return c_part, nc_parts
 
     def _eval_dagger(self):
@@ -242,7 +235,7 @@ def tensor_product_simp_Mul(e):
     # TODO: This only works for the equivalent of single Qbit gates.
     if not isinstance(e, Mul):
         return e
-    c_part, nc_part = split_commutative_parts(e)
+    c_part, nc_part = e.args_cnc()
     n_nc = len(nc_part)
     if n_nc == 0 or n_nc == 1:
         return e

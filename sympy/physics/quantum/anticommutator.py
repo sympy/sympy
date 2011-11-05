@@ -3,7 +3,6 @@
 from sympy import S, Expr, Mul, Integer
 from sympy.printing.pretty.stringpict import prettyForm
 
-from sympy.physics.quantum.qexpr import split_commutative_parts
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.dagger import Dagger
 
@@ -89,18 +88,11 @@ class AntiCommutator(Expr):
 
         # [xA,yB]  ->  xy*[A,B]
         # from sympy.physics.qmul import QMul
-        c_part = []
-        nc_part = []
-        nc_part2 = []
-        if isinstance(a, Mul):
-            c_part, nc_part = split_commutative_parts(a)
-        if isinstance(b, Mul):
-            c_part2, nc_part2 = split_commutative_parts(b)
-            c_part.extend(c_part2)
+        ca, nca = a.args_cnc()
+        cb, ncb = b.args_cnc()
+        c_part = list(ca) + list(cb)
         if c_part:
-            a = nc_part or [a]
-            b = nc_part2 or [b]
-            return Mul(Mul(*c_part), cls(Mul(*a), Mul(*b)))
+            return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
         # Canonical ordering of arguments
         if a.compare(b) == 1:

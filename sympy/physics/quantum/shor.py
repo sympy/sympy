@@ -10,7 +10,7 @@ Todo:
 import math
 import random
 
-from sympy import Mul
+from sympy import Mul, S
 from sympy import log, sqrt
 from sympy.core.numbers import igcd
 
@@ -130,7 +130,7 @@ def getr(x, y, N):
 
 def ratioize(list, N):
     if list[0] > N:
-        return 0
+        return S.Zero
     if len(list) == 1:
         return list[0]
     return list[0] + ratioize(list[1:], N)

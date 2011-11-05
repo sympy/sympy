@@ -365,10 +365,9 @@ class QExpr(Expr):
 
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
-    c_part = [p for p in e.args if p.is_commutative]
-    nc_part = [p for p in e.args if not p.is_commutative]
+    c_part, nc_part = e.args_cnc()
+    c_part = list(c_part)
     return c_part, nc_part
-
 
 def split_qexpr_parts(e):
     """Split an expression into Expr and noncommutative QExpr parts."""

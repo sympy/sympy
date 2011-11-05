@@ -17,6 +17,7 @@ from sympy.core.symbol import Dummy
 from sympy.printing.str import StrPrinter
 
 from sympy.core.compatibility import reduce
+from sympy.physics.quantum.qexpr import split_commutative_parts
 
 __all__ = [
     'Dagger',
@@ -986,11 +987,11 @@ class CreateFermion(FermionicOperator, Creator):
             c_part, nc_part = split_commutative_parts(state)
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
-                return Mul(*(c_part+[nc_part[0].up(element)]+nc_part[1:]))
+                return Mul(*(c_part + [nc_part[0].up(element)] + nc_part[1:]))
             else:
-                return Mul(self,state)
+                return Mul(self, state)
         else:
-            return Mul(self,state)
+            return Mul(self, state)
 
     @property
     def is_q_creator(self):
@@ -1401,12 +1402,6 @@ BKet = FockStateBosonKet
 FBra = FockStateFermionBra
 FKet = FockStateFermionKet
 
-def split_commutative_parts(m):
-    c_part = [p for p in m.args if p.is_commutative]
-    nc_part = [p for p in m.args if not p.is_commutative]
-    return c_part, nc_part
-
-
 def apply_Mul(m):
     """
     Take a Mul instance with operators and apply them to states.
@@ -1437,9 +1432,9 @@ def apply_Mul(m):
                 else:
                     result = next_to_last.apply_operator(last)
                     if result == 0:
-                        return 0
+                        return S.Zero
                     else:
-                        return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+                        return apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
             elif isinstance(next_to_last, Pow):
                 if isinstance(next_to_last.base, SqOperator) and \
                     next_to_last.exp.is_Integer:
@@ -1451,7 +1446,7 @@ def apply_Mul(m):
                             result = next_to_last.base.apply_operator(result)
                             if result == 0: break
                         if result == 0:
-                            return 0
+                            return S.Zero
                         else:
                             return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
                 else:
@@ -1459,7 +1454,7 @@ def apply_Mul(m):
             elif isinstance(next_to_last, FockStateBra):
                 result = InnerProduct(next_to_last, last)
                 if result == 0:
-                    return 0
+                    return S.Zero
                 else:
                     return apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
             else:
@@ -1746,18 +1741,11 @@ class Commutator(Function):
         #
         # [xA,yB]  ->  xy*[A,B]
         #
-        c_part = []
-        nc_part = []
-        nc_part2 = []
-        if isinstance(a,Mul):
-            c_part,nc_part = split_commutative_parts(a)
-        if isinstance(b,Mul):
-            c_part2,nc_part2 = split_commutative_parts(b)
-            c_part.extend(c_part2)
+        ca, nca = a.args_cnc()
+        cb, ncb = b.args_cnc()
+        c_part = list(ca) + list(cb)
         if c_part:
-            a = nc_part or [a]
-            b = nc_part2 or [b]
-            return Mul(*c_part)*cls(Mul(*a),Mul(*b))
+            return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
 
         #
@@ -1862,7 +1850,7 @@ class NO(Expr):
         if arg.is_Mul:
 
             # take coefficient outside of normal ordering brackets
-            c_part, seq = split_commutative_parts(arg)
+            c_part, seq = arg.args_cnc()
             if c_part:
                 coeff = Mul(*c_part)
                 if not seq:
@@ -1875,7 +1863,7 @@ class NO(Expr):
             newseq = []
             foundit = False
             for fac in seq:
-                if isinstance(fac,NO):
+                if isinstance(fac, NO):
                     newseq.extend(fac.args)
                     foundit = True
                 else:
