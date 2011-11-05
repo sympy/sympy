@@ -1,5 +1,6 @@
 from sympy import log, sqrt, Rational as R, Symbol
 
+from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
 
@@ -56,3 +57,13 @@ def test_expand_modulus():
 
 def test_issue_2644():
     assert (x*sqrt(x + y)*(1 + sqrt(x + y))).expand() == x**2 + x*y + x*sqrt(x + y)
+
+def test_expand_frac():
+    assert expand((x + y)*y/x/(x + 1), frac=True) == \
+        (x*y + y**2)/(x**2 + x)
+    assert expand((x + y)*y/x/(x + 1), numer=True) == \
+        (x*y + y**2)/(x*(x + 1))
+    assert expand((x + y)*y/x/(x + 1), denom=True) == \
+        y*(x + y)/(x**2 + x)
+    eq = (x+1)**2/y
+    assert expand_numer(eq, multinomial=False) == eq

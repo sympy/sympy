@@ -106,17 +106,20 @@ def numer(expr):
 def denom(expr):
     return fraction(expr)[1]
 
-def fraction_expand(expr):
-    a, b = fraction(expr)
-    return a.expand() / b.expand()
+def fraction_expand(expr, **hints):
+    return expr.expand(frac=True, **hints)
 
-def numer_expand(expr):
+def numer_expand(expr, **hints):
     a, b = fraction(expr)
-    return a.expand() / b
+    return a.expand(numer=True, **hints) / b
 
-def denom_expand(expr):
+def denom_expand(expr, **hints):
     a, b = fraction(expr)
-    return a / b.expand()
+    return a / b.expand(denom=True, **hints)
+
+expand_numer = numer_expand
+expand_denom = denom_expand
+expand_fraction = fraction_expand
 
 def separate(expr, deep=False, force=False):
     """A wrapper to expand(power_base=True) which separates a power
