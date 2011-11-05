@@ -1421,9 +1421,6 @@ class Atom(Basic):
         if self == expr:
             return repl_dict
 
-    def as_numer_denom(self):
-        return self, S.One
-
     def xreplace(self, rule):
         return rule.get(self, self)
 
