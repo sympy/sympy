@@ -1663,7 +1663,7 @@ class Matrix(object):
         Example::
             >>> from sympy import Matrix, zeros
             >>> a = Matrix([[0, 0], [0, 0]])
-            >>> b = zeros((3, 4))
+            >>> b = zeros(3, 4)
             >>> c = Matrix([[0, 1], [0, 0]])
             >>> d = Matrix([])
             >>> a.is_zero
@@ -2840,14 +2840,6 @@ def diag(*values):
             i_row += 1
             i_col += 1
     return res
-
-def block_diag(matrices):
-    """
-    Warning: this function is deprecated. See .diag()
-
-    """
-    warnings.warn("block_diag() is deprecated, use diag() instead", DeprecationWarning)
-    return diag(*matrices)
 
 def jordan_cell(eigenval, n):
     """
