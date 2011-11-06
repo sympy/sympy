@@ -216,7 +216,7 @@ def checksol(f, symbol, sol=None, **flags):
 
         if val == was:
             continue
-        elif val.is_Number:
+        elif val.is_Rational:
             return val == 0
         if numerical and not val.free_symbols:
             return abs(val.n(chop=True)) < 1e-9
