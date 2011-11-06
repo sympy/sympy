@@ -142,6 +142,9 @@ def test(*paths, **kwargs):
     Run specific test from a file:
     >> sympy.test("sympy/core/tests/test_basic.py", kw="test_equality")
 
+    Run specific test from any file:
+    >> sympy.test(kw="subs")
+
     Run the tests with verbose mode on:
     >> sympy.test(verbose=True)
 

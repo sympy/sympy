@@ -1954,16 +1954,18 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
      \f(x)/    \f(x)/ dx
     >>> pprint(dsolve(genform, f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral'))
-                     x
-                    ----
-                    f(x)
-                      /
-                     |
-                     |        g(u2)
-    log(C1*f(x)) -   |  ----------------- d(u2) = 0
-                     |  -u2*g(u2) - h(u2)
-                     |
-                    /
+                 x
+                ----
+                f(x)
+                  /
+                 |
+                 |        g(u2)
+                 |  ----------------- d(u2)
+                 |  -u2*g(u2) - h(u2)
+                 |
+                /
+    <BLANKLINE>
+    f(x) = C1*e
 
     Where u2*g(u2) + h(u2) != 0 and f(x) != 0.
 
