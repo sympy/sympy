@@ -6,6 +6,8 @@ from cache import cacheit
 from expr import Expr
 from numbers import ilcm
 
+from collections import defaultdict
+
 class Add(AssocOp):
 
     __slots__ = []
@@ -283,13 +285,42 @@ class Add(AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
-        numers, denoms = [],[]
-        for n,d in [f.as_numer_denom() for f in self.args]:
-            numers.append(n)
-            denoms.append(d)
-        r = xrange(len(numers))
-        return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
-                     for i in r]), Mul(*denoms)
+        """Put all terms over a common denominator and return the numerator and
+        denominator. No simplification other than collecting of terms with a
+        common denominator is done, so if there is some special structure in
+        the expression (a gcd that can be extracted, for example) then that
+        should be done before calling this routine or else cancel can be used
+        afterwards.
+
+        The approach taken here is to build up the common denominator by
+        combining pairs of terms at a time:
+
+        1/a + 1/b + 1/c + 1/d
+        = (b + a)/(ab) + (d + c)/(cd)
+        = (cd*(b + a) + ab*(d + c))/(abcd)
+        """
+        numers = defaultdict(list)
+        for n, d in [f.as_numer_denom() for f in self.args]:
+            numers[d].append(n)
+        denoms = numers.keys()
+        numers = [Add(*numers[d]) for d in denoms]
+        n = len(numers)
+        while n != 1:
+            k = 0
+            for i in xrange(0, n - 1, 2):
+                j = i + 1
+                numers[i] *= denoms[j]
+                numers[j] *= denoms[i]
+                denoms[k] = denoms[i]*denoms[j]
+                numers[k] = numers[i] + numers[j]
+                k += 1
+            nn, r = divmod(n, 2)
+            if r:
+                j += 1
+                numers[k] = numers[j]
+                denoms[k] = denoms[j]
+            n = nn + r
+        return numers[0], denoms[0]
 
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
