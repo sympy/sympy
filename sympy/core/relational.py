@@ -124,7 +124,7 @@ class Relational(Expr, EvalfMixin):
         else:
             rop_cls, swap = Relational.get_relational_class(rop)
             if swap: lhs, rhs = rhs, lhs
-        if lhs.is_real and lhs.is_number and rhs.is_real and rhs.is_number:
+        if lhs.is_number and rhs.is_number and lhs.is_real and rhs.is_real:
             # Just becase something is a number, doesn't mean you can evalf it.
             Nlhs = lhs.evalf()
             if Nlhs.is_Number:
