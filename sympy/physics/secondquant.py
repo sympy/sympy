@@ -988,10 +988,8 @@ class CreateFermion(FermionicOperator, Creator):
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
                 return Mul(*(c_part + [nc_part[0].up(element)] + nc_part[1:]))
-            else:
-                return Mul(self, state)
-        else:
-            return Mul(self, state)
+
+        return Mul(self, state)
 
     @property
     def is_q_creator(self):
