@@ -8,11 +8,25 @@ from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
 from sympy.physics.quantum.represent import represent
 
 __all__ = [
+    'generate_gate_rules'
     'GateIdentity',
     'is_scalar_matrix',
     'bfs_identity_search',
     'random_identity_search'
 ]
+
+def generate_gate_rules_recursive(gate_seq, recurse_pt):
+
+    seq = list(gate_seq)
+    for i in range(recurse_pt, len(gate_seq)):
+        generate_gate_rules_recursive(seq, i)
+        
+    return None
+
+def generate_gate_rules(gate_seq):
+    # Not recursive version - unsure if interpreter
+    # optimizes recursion 
+    return None 
 
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value."""
@@ -21,16 +35,17 @@ class GateIdentity(Basic):
         # circuit should be a tuple
         obj = Basic.__new__(cls, circuit)
         obj._circuit = circuit
+        obj._gate_rules = generate_gate_rules(circuit)
+
         return obj
 
     @property
     def circuit(self):
         return self._circuit
 
-    def generate_gate_rules():
-        raise NotImplementedError(
-            "Generation of gate rules from identity not implemented."
-        )
+    @property
+    def gate_rules(self):
+        return self._gate_rules
 
     def __str__(self):
         """Returns the string of gates in a tuple."""
@@ -52,7 +67,8 @@ def construct_gate_list(numqubits):
 
     return gate_list
 
-# Dynamically generate and concatenate a list of all possible scipy.sparse gate matrices in given space.
+# Dynamically generate and concatenate a list of all possible
+# scipy.sparse gate matrices in given space.
 def construct_matrix_list(numqubits):
     xs = [represent(X(i), nqubits=numqubits, format='scipy.sparse')
           for i in xrange(numqubits)]
@@ -76,22 +92,11 @@ def construct_matrix_list(numqubits):
 def is_scalar_matrix(matrix):
     """Checks if given scipy.sparse matrix is a scalar matrix."""
 
-    if list(matrix.nonzero()[0]) == list(matrix.nonzero()[1]):
+    if (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1])):
         diag = list(matrix.diagonal())
-        if diag.count(diag[0]) == len(diag):
+        if (diag.count(diag[0]) == len(diag)):
             return True
     return False
-
-def write_to_file(identityset, filename, append=False):
-    """Write gate identities to a specified file."""
-
-    # File is truncated unless given a flag to not truncate.
-    identities = open(filename, 'a') if append else open(filename, 'w+')
-
-    for identity in identityset:
-        identities.write(str(identity) + "\n")
-
-    identities.close()
 
 def bfs_identity_search(gate_list, numqubits, max_depth=0):
     # Breadth first search might be more efficient because it eliminates
@@ -110,7 +115,7 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
     ids = set()
 
     # Begin searching for gate identities in given space.
-    while (queue.__len__() > 0):
+    while (len(queue) > 0):
         current_circuit = queue.popleft()
 
         for next_gate in gate_list:
