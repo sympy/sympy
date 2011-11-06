@@ -1,6 +1,7 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
         multinomial_coefficients, Mul, S, Pow
 from sympy import factorial as fac
+from sympy import Rational
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
@@ -74,6 +75,58 @@ def test_perfect_power():
     assert perfect_power(2**3*5**5) is False
     assert perfect_power(2*13**4) is False
     assert perfect_power(2**5*3**3) is False
+
+def _last(s):
+    """ The last prime in the Sieve s.
+
+    Since Sieve does not offer an official interface for that, we access it
+    through an implementation detail.
+    """
+    return s[0]
+
+def _test_extend(offset):
+    """ Run a test battery for one offset."""
+    s = Sieve()
+    # We aim to test various code paths through extend().
+    # 1) No actual extension because we're below the end of s
+    oldend = _last(s)
+    s.extend(oldend - offset)
+    assert _last(s) == oldend
+    # 2) No actual extension because we're below the next prime above end of s
+    next = nextprime(oldend)
+    s.extend(next - offset)
+    assert _last(s) == oldend
+    # 3) Extension happens because we're above the next prime
+    s.extend(next + offset)
+    assert _last(s) > oldend
+
+def test_extend():
+    _test_extend(1) # Integer
+    _test_extend(0.1) # Float
+    _test_extend(Rational(1,10)) # Rational 0.1
+
+def test_extend_to_no():
+    # Does extends_to_no accept fractions?
+    s = Sieve()
+    s.extend_to_no(primepi(_last(s)) + 0.5)
+
+def test_contains():
+    # Does __contains__ accept fractions?
+    assert not 1.5 in Sieve()
+
+def test_search():
+    # Does search accept fractions?
+    assert Sieve().search(2.5) == (1, 2)
+
+def test_primerange():
+    # Does primerange accept fractions?
+    assert list(Sieve().primerange(2.9, 5.1)) == [3, 5]
+
+def test_nextprime():
+    # Does nextprime accept fractions for the first parameter?
+    assert nextprime(1.5) == 2
+    # Does nextprime refuse fractions for the second parameter?
+    raises(AssertionError, "nextprime(5, 1.5)")
 
 def test_isprime():
     s = Sieve()
