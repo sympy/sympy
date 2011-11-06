@@ -688,7 +688,7 @@ class Wavefunction(Function):
             if args[ct] < lower or args[ct] > upper:
                 return 0
 
-            ct+=1
+            ct += 1
 
         expr = self.expr
 
@@ -698,7 +698,7 @@ class Wavefunction(Function):
                 val = options[str(symbol)]
                 expr = expr.subs(symbol, val)
 
-        return expr.subs(tuple(zip(var, args)))
+        return expr.subs(zip(var, args))
 
     def _eval_derivative(self, symbol):
         expr = self.expr
