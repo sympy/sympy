@@ -494,7 +494,7 @@ def test_1st_homogeneous_coeff_ode():
     assert dsolve(eq8, hint='1st_homogeneous_coeff_best') == sol8
     # checks are below
 
-def test_1st_homogeneous_coeff_ode_check134568():
+def test_1st_homogeneous_coeff_ode_check14568():
     skip("This test passes, but it takes too long")
     # These are the checkodesols from test_homogeneous_coeff_ode1.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
@@ -542,7 +542,11 @@ def test_1st_homogeneous_coeff_ode_check3():
     # (False, x*(log(exp(-LambertW(C1*x))) + LambertW(C1*x))*exp(-LambertW(C1*x) + 1))
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x),x)
     sol3 = Eq(f(x), x*exp(1 - LambertW(C1*x)))
-    assert checkodesol(eq3, sol3, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, solve_for_func=True)[0]
+    # and without an assumption about x and f(x), the implicit form doesn't resolve, either:
+    # (False, (log(f(x)/x) + log(x/f(x)))*f(x))
+    sol3 = Eq(-f(x)/(1 + log(x/f(x))), C1)
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode_check7():
