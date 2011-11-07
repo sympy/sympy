@@ -5,6 +5,8 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct as TP
 from sympy.physics.quantum.tensorproduct import tensor_product_simp
 from sympy.physics.quantum.dagger import Dagger
+from sympy.physics.quantum.qubit import Qubit, QubitBra
+from sympy.physics.quantum.operator import OuterProduct
 
 
 A,B,C = symbols('A,B,C', commutative=False)
@@ -42,3 +44,10 @@ def test_tensor_product_commutator():
 
 def test_tensor_product_simp():
     assert tensor_product_simp(TP(A,B)*TP(B,C)) == TP(A*B,B*C)
+
+def test_issue_2824():
+    # most of the issue regarding sympification of args has been handled
+    # and is tested internally by the use of args_cnc through the quantum
+    # module, but the following is a test from the issue that used to raise.
+    assert TensorProduct(1, Qubit('1')*Qubit('1').dual) == \
+    TensorProduct(1, OuterProduct(Qubit(1), QubitBra(1)))
