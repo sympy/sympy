@@ -886,12 +886,11 @@ def test_issue_2802():
     assert solve(x**2 + x - 3, x**2, implicit=True) == \
         [-x + 3]
 
-@XFAIL
-def test_issue_2813x():
-    #polys's roots gives only one answer
-    assert len(solve(x**2 - x - 0.1, rational=False)) == 2
-
 def test_issue_2813():
     assert solve(x**2 - x - 0.1, rational=True) == \
         [S(1)/2 + sqrt(35)/10, -sqrt(35)/10 + S(1)/2]
-    assert all(s.is_Number for s in solve(x**2 - x - 0.1)) # [-0.0916079783099616, 1.09160797830996]
+    # [-0.0916079783099616, 1.09160797830996]
+    ans = solve(x**2 - x - 0.1, rational=False)
+    assert len(ans) == 2 and all(a.is_Number for a in ans)
+    ans = solve(x**2 - x - 0.1)
+    assert len(ans) == 2 and all(a.is_Number for a in ans)
