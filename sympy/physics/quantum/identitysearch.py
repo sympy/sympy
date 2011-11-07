@@ -18,10 +18,27 @@ __all__ = [
 def generate_gate_rules_recursive(gate_seq, recurse_pt):
 
     seq = list(gate_seq)
+
+    if (recurse_pt < 0):
+        return []
+
+    if (recurse_pt + 1 == len(gate_seq)):
+        return [seq]
+
+    permutations = []
+
     for i in range(recurse_pt, len(gate_seq)):
-        generate_gate_rules_recursive(seq, i)
-        
-    return None
+        print seq, recurse_pt
+        current_permutes = generate_gate_rules_recursive(seq, recurse_pt + 1)
+        permutations = permutations + current_permutes
+
+        if (i + 1 < len(gate_seq)):            
+            temp_gate = seq[i + 1]
+            for j in reversed(range(recurse_pt, i + 1)):
+                seq[j + 1] = seq[j]
+            seq[recurse_pt] = temp_gate
+
+    return permutations
 
 def generate_gate_rules(gate_seq):
     # Not recursive version - unsure if interpreter
