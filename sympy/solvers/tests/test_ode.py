@@ -196,7 +196,7 @@ def test_ode_order():
     assert ode_order(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
     # issue 2736: ode_order has to also work for unevaluated derivatives
     # (ie, without using doit()).
-    assert ode_order(Derivative(x*f(x), x), f(x)) == 1 
+    assert ode_order(Derivative(x*f(x), x), f(x)) == 1
     assert ode_order(x*sin(Derivative(x*f(x)**2, x, x)), f(x)) == 2
     assert ode_order(Derivative(x*Derivative(x*exp(f(x)), x,x), x), g(x)) == 0
     assert ode_order(Derivative(f(x), x, x), g(x)) == 0
@@ -204,7 +204,7 @@ def test_ode_order():
     assert ode_order(Derivative(f(x), x, x)*Derivative(g(x), x), g(x)) == 1
     assert ode_order(Derivative(x*Derivative(f(x), x, x), x), f(x)) == 3
     assert ode_order(x*sin(Derivative(x*Derivative(f(x), x)**2, x, x)), f(x)) == 3
-    
+
 
 # In all tests below, checkodesol has the order option set to prevent superfluous
 # calls to ode_order(), and the solve_for_func flag set to False because
