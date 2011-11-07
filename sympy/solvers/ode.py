@@ -1711,21 +1711,23 @@ def ode_order(expr, func):
 
     """
     a = Wild('a', exclude=[func])
+    if expr.match(a):
+        return 0
 
-    order = 0
-    if isinstance(expr, Derivative) and expr.args[0] == func:
-        order = len(expr.variables)
+    if isinstance(expr, Derivative):
+        if expr.args[0] == func:
+            return len(expr.variables)
+        else:
+            order = 0
+            for arg in expr.args[0].args:
+                order = max(order, ode_order(arg, func) + len(expr.variables))
+            return order
     else:
+        order = 0
         for arg in expr.args:
-            if isinstance(arg, Derivative) and arg.args[0] == func:
-                order = max(order, len(arg.variables))
-            elif expr.match(a):
-                order = 0
-            else :
-                for arg1 in arg.args:
-                    order = max(order, ode_order(arg1, func))
+            order = max(order, ode_order(arg, func))
+        return order
 
-    return order
 
 # FIXME: replace the general solution in the docstring with
 # dsolve(equation, hint='1st_exact_Integral').  You will need to be able
