@@ -3,7 +3,7 @@ from __future__ import division
 from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
     I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
     erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
-    Equality, solve, O, LambertW, Dummy, acosh)
+    Equality, solve, O, LambertW, Dummy, acosh, Derivative)
 from sympy.abc import x, y, z
 from sympy.solvers.ode import (ode_order, homogeneous_order,
     _undetermined_coefficients_match, classify_ode, checkodesol,
@@ -194,6 +194,17 @@ def test_ode_order():
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
     assert ode_order(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
     assert ode_order(diff(x*diff(x*exp(f(x)), x,x), x), g(x)) == 0
+    # issue 2736: ode_order has to also work for unevaluated derivatives
+    # (ie, without using doit()).
+    assert ode_order(Derivative(x*f(x), x), f(x)) == 1
+    assert ode_order(x*sin(Derivative(x*f(x)**2, x, x)), f(x)) == 2
+    assert ode_order(Derivative(x*Derivative(x*exp(f(x)), x,x), x), g(x)) == 0
+    assert ode_order(Derivative(f(x), x, x), g(x)) == 0
+    assert ode_order(Derivative(x*exp(f(x)),x,x), f(x)) == 2
+    assert ode_order(Derivative(f(x), x, x)*Derivative(g(x), x), g(x)) == 1
+    assert ode_order(Derivative(x*Derivative(f(x), x, x), x), f(x)) == 3
+    assert ode_order(x*sin(Derivative(x*Derivative(f(x), x)**2, x, x)), f(x)) == 3
+
 
 # In all tests below, checkodesol has the order option set to prevent superfluous
 # calls to ode_order(), and the solve_for_func flag set to False because
@@ -494,7 +505,7 @@ def test_1st_homogeneous_coeff_ode():
     assert dsolve(eq8, hint='1st_homogeneous_coeff_best') == sol8
     # checks are below
 
-def test_1st_homogeneous_coeff_ode_check134568():
+def test_1st_homogeneous_coeff_ode_check14568():
     skip("This test passes, but it takes too long")
     # These are the checkodesols from test_homogeneous_coeff_ode1.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
@@ -542,7 +553,11 @@ def test_1st_homogeneous_coeff_ode_check3():
     # (False, x*(log(exp(-LambertW(C1*x))) + LambertW(C1*x))*exp(-LambertW(C1*x) + 1))
     eq3 = f(x) + (x*log(f(x)/x) - 2*x)*diff(f(x),x)
     sol3 = Eq(f(x), x*exp(1 - LambertW(C1*x)))
-    assert checkodesol(eq3, sol3, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, solve_for_func=True)[0]
+    # and without an assumption about x and f(x), the implicit form doesn't resolve, either:
+    # (False, (log(f(x)/x) + log(x/f(x)))*f(x))
+    sol3 = Eq(-f(x)/(1 + log(x/f(x))), C1)
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode_check7():
