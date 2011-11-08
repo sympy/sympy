@@ -22,43 +22,6 @@ def binomial_coefficients_list(n):
         d[k] = d[n-k] = a
     return d
 
-# original algorithm using tuples
-def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
-    if m==2:
-        return binomial_coefficients(n)
-    symbols = [(0,)*i + (1,) + (0,)*(m-i-1) for i in range(m)]
-    s0 = symbols[0]
-    p0 = [_tuple(aa-bb for aa,bb in _zip(s,s0)) for s in symbols]
-    r = {_tuple(aa*n for aa in s0):1}
-    r_get = r.get
-    r_update = r.update
-    l = [0] * (n*(m-1)+1)
-    l[0] = r.items()
-    for k in xrange(1, n*(m-1)+1):
-        d = {}
-        d_get = d.get
-        for i in xrange(1, min(m,k+1)):
-            nn = (n+1)*i-k
-            if not nn:
-                continue
-            t = p0[i]
-            for t2, c2 in l[k-i]:
-                tt = _tuple([aa+bb for aa,bb in _zip(t2,t)])
-                cc = nn * c2
-                b = d_get(tt)
-                if b is None:
-                    d[tt] = cc
-                else:
-                    cc = b + cc
-                    if cc:
-                        d[tt] = cc
-                    else:
-                        del d[tt]
-        r1 = [(t, c//k) for (t, c) in d.iteritems()]
-        l[k] = r1
-        r_update(r1)
-    return r
-
 def _code_t(t, bits_exp):
     """encode a tuple in an integer to do fast addition
     """
@@ -99,8 +62,8 @@ def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
     ii) for `m` large with respect to `n` the monomial tuples `t` have
     many zeroes, and have the same coefficient as
     in `monomial_coefficients(n,n)` for `t` stripped of its zeroes;
-    therefore precomputing the latter coefficients memory and time are
-    saved.
+    therefore by precomputing the latter coefficients memory and time
+    are saved.
     """
     if m==2:
         return binomial_coefficients(n)
@@ -173,13 +136,12 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple, _zip=zip):
         d = multinomial_coefficients(m, 0)
         for x in d.items():
             yield x
-        return
-    if m < 2*n or n == 1:
-        if m==2:
+    elif m < 2*n or n == 1:
+        if m == 2:
             yield ((0, n), 1)
             yield ((n, 0), 1)
             a = 1
-            for k in xrange(1, n//2):
+            for k in range(1, n//2):
                 a = (a * (n-k+1))//k
                 yield ((k, n-k), a)
                 yield ((n-k, k), a)
