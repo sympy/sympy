@@ -8,7 +8,8 @@ from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
 from sympy.physics.quantum.represent import represent
 
 __all__ = [
-    'generate_gate_rules'
+    'generate_gate_rules_recursive',
+    'generate_gate_rules',
     'GateIdentity',
     'is_scalar_matrix',
     'bfs_identity_search',
@@ -41,9 +42,8 @@ def generate_gate_rules_recursive(gate_seq, recurse_pt):
     return permutations
 
 def generate_gate_rules(gate_seq):
-    # Not recursive version - unsure if interpreter
-    # optimizes recursion 
-    return None 
+    # Not recursive version - unsure if interpreter optimizes recursion 
+    return generate_gate_rules_recursive(gate_seq, 0)
 
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value."""
@@ -115,6 +115,14 @@ def is_scalar_matrix(matrix):
             return True
     return False
 
+def is_degenerate(identity_set, gate_identity):
+    # For now, just iteratively go through the set and check if the current
+    # gate_identity is a permutation of an identity in the set
+    for an_id in identity_set:
+        if (gate_identity.circuit in an_id.gate_rules):
+            return True
+    return False
+
 def bfs_identity_search(gate_list, numqubits, max_depth=0):
     # Breadth first search might be more efficient because it eliminates
     # a search down paths like ZZZZZZ or XXXXYY.
@@ -142,20 +150,20 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
 
             # In many cases when the matrix is a scalar value,
             # the evaluated matrix will actually be an integer          
-            if (isinstance(matrix_version, int)):
+            if (isinstance(matrix_version, int) and
+                not is_degenerate(ids)):
                 # When adding a gate identity, remove the
                 # identity gate at the beginning of the tuple
                 ids.add(GateIdentity(new_circuit[1:]))
 
             # If a matrix is equivalent to a scalar value is found
-            elif (is_scalar_matrix(matrix_version)):
+            elif (is_scalar_matrix(matrix_version) and
+                not is_degenerate(ids)):
                 # When adding a gate identity, remove the
                 # identity gate at the beginning of the tuple
                 ids.add(GateIdentity(new_circuit[1:]))
 
-            # Number of operators in the circuit gives the
-            # number of gates in the circuit
-            elif (len(new_circuit) < max_depth + 1):
+            elif (len(new_circuit) < max_depth):
                 queue.append(new_circuit)
 
     return ids

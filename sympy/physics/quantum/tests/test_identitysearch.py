@@ -24,14 +24,12 @@ def test_bfs_identity_search():
     id_set = set([GateIdentity((X(0), X(0)))])
     assert bfs_identity_search(gate_list, 1, 2) == id_set
 
+    # Set should not contain degenerate quantum circuits
     gate_list = gate_list + [Y(0), Z(0)]
-    additional_set = set([GateIdentity((X(0), Y(0), Z(0))),
-                          GateIdentity((X(0), Z(0), Y(0))),
-                          GateIdentity((Y(0), X(0), Z(0))),
-                          GateIdentity((Y(0), Y(0))),
-                          GateIdentity((Y(0), Z(0), X(0))),
-                          GateIdentity((Z(0), X(0), Y(0))),
-                          GateIdentity((Z(0), Y(0), X(0))),
-                          GateIdentity((Z(0), Z(0)))])
-    id_set = id_set | additional_set
+    id_set = set([GateIdentity((X(0), X(0))), 
+                  GateIdentity((X(0), Y(0), Z(0))),
+                  GateIdentity((Y(0), Y(0))),
+                  GateIdentity((Z(0), Z(0)))])
     assert bfs_identity_search(gate_list, 1) == id_set
+
+    assert bfs_identity_search(gate_list, 1, 4) == id_set
