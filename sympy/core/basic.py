@@ -815,11 +815,13 @@ class Basic(object):
 
         Notes
         -----
-        This function is primarily meant for substituting atoms. Trying to
-        substitute composite expressions is well-defined but sensitive to
-        implementation details.
+        This method operates at a low level and considers only the objects that
+        appear explicitly as nodes in the expression tree. It is unaware of any
+        specific meaning attached to an object or its arguments. For instance,
+        a product of several factors will only be substituted if it matches
+        exactly a key of the dictionary:
 
-        >>> (x*y+z).xreplace({x*y: pi})
+        >>> (x*y + z).xreplace({x*y: pi})
         z + pi
         >>> (x*y*z).xreplace({x*y: pi})
         x*y*z
