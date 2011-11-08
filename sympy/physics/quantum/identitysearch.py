@@ -8,7 +8,7 @@ from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
 from sympy.physics.quantum.represent import represent
 
 __all__ = [
-    'generate_gate_rules_recursive',
+    'permutations_recursive',
     'generate_gate_rules',
     'GateIdentity',
     'is_scalar_matrix',
@@ -16,34 +16,47 @@ __all__ = [
     'random_identity_search'
 ]
 
-def generate_gate_rules_recursive(gate_seq, recurse_pt):
+def permutations_recursive(elements, recurse_pt, dist_from_pt, max_length):
+    # COULD BE IMPROVED
+    # This recursive algorithm gives all the permutations
+    # regardless of repeats in the sequence.
+    # For example, elements = (X(0), X(0)) will produce
+    # [(X(0), X(0)), (X(0), X(0))]
+    # Could potentially return a set so that it's a unique permutation
 
-    seq = list(gate_seq)
+    seq = list(elements)
 
-    if (recurse_pt < 0):
+    invalid_args = (elements == [] or
+                    max_length <= 0 or
+                    recurse_pt < 0 or
+                    max_length > len(elements) or
+                    dist_from_pt > max_length or
+                    dist_from_pt < 0)
+
+    if (invalid_args):
         return []
 
-    if (recurse_pt + 1 == len(gate_seq)):
-        return [seq]
+    if (dist_from_pt == max_length):
+        return [seq[recurse_pt : recurse_pt + max_length]]
 
     permutations = []
 
-    for i in range(recurse_pt, len(gate_seq)):
-        print seq, recurse_pt
-        current_permutes = generate_gate_rules_recursive(seq, recurse_pt + 1)
+    for i in range(recurse_pt + dist_from_pt, len(elements)):
+        current_permutes = permutations_recursive(seq, recurse_pt,
+                               dist_from_pt + 1, max_length)
         permutations = permutations + current_permutes
 
-        if (i + 1 < len(gate_seq)):            
+        if (i + 1 < len(elements)):
             temp_gate = seq[i + 1]
-            for j in reversed(range(recurse_pt, i + 1)):
+            for j in reversed(range(recurse_pt + dist_from_pt, i + 1)):
                 seq[j + 1] = seq[j]
-            seq[recurse_pt] = temp_gate
+            seq[recurse_pt + dist_from_pt] = temp_gate
 
     return permutations
 
 def generate_gate_rules(gate_seq):
-    # Not recursive version - unsure if interpreter optimizes recursion 
-    return generate_gate_rules_recursive(gate_seq, 0)
+    # Recursive version but unsure if interpreter optimizes recursion 
+    return permutations_recursive(gate_seq, 0, 0, len(gate_seq))
 
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value."""
@@ -119,7 +132,7 @@ def is_degenerate(identity_set, gate_identity):
     # For now, just iteratively go through the set and check if the current
     # gate_identity is a permutation of an identity in the set
     for an_id in identity_set:
-        if (gate_identity.circuit in an_id.gate_rules):
+        if (gate_identity in an_id.gate_rules):
             return True
     return False
 
@@ -132,9 +145,8 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
     if (max_depth == 0):
         max_depth = len(gate_list)
 
-    # Root of BFS tree is an IdentityGate(0)
-    id_gate = IdentityGate(0)
-    queue = deque([(id_gate,)])
+    # Start with an empty sequence (implicit contains an IdentityGate(0))
+    queue = deque([()])
 
     # Create an empty set of gate identities
     ids = set()
@@ -151,17 +163,17 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
             # In many cases when the matrix is a scalar value,
             # the evaluated matrix will actually be an integer          
             if (isinstance(matrix_version, int) and
-                not is_degenerate(ids)):
+                not is_degenerate(ids, new_circuit)):
                 # When adding a gate identity, remove the
                 # identity gate at the beginning of the tuple
-                ids.add(GateIdentity(new_circuit[1:]))
+                ids.add(GateIdentity(new_circuit))
 
             # If a matrix is equivalent to a scalar value is found
             elif (is_scalar_matrix(matrix_version) and
-                not is_degenerate(ids)):
+                not is_degenerate(ids, new_circuit)):
                 # When adding a gate identity, remove the
                 # identity gate at the beginning of the tuple
-                ids.add(GateIdentity(new_circuit[1:]))
+                ids.add(GateIdentity(new_circuit))
 
             elif (len(new_circuit) < max_depth):
                 queue.append(new_circuit)

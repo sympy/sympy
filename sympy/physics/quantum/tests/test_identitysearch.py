@@ -4,6 +4,17 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.identitysearch import (GateIdentity,
         is_scalar_matrix, bfs_identity_search)
 
+def permutations_recursive():
+    assert permutations_recursive([], 0, 0, 1) == []
+    assert permutations_recursive([1], 0, 0, -1) == []
+    assert permutations_recursive([1], 0, -1, 1) == []
+    assert permutations_recursive([1], -1, 0, 1) == []
+    assert permutations_recursive([1], 0, 0, 2) == []
+    assert permutations_recursive([1], 0, 2, 1) == []
+
+def test_generate_gate_rules():
+    assert True
+
 def test_is_scalar_matrix():
     numqubits = 2
     id_gate = IdentityGate(1)
