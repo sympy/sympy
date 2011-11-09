@@ -1832,9 +1832,6 @@ class Matrix(object):
     def is_symbolic(self):
         return any(element.has(Symbol) for element in self.mat)
 
-    def contains_rationals(self):
-        return not self.is_symbolic() and any(i.is_Rational for i in self)
-
     def is_symmetric(self, simplify=True):
         """
         Check if matrix is symmetric matrix,
@@ -2095,7 +2092,7 @@ class Matrix(object):
             pivots += 1
         return r, pivotlist
 
-    def nullspace(self,simplified=False):
+    def nullspace(self, simplified=False):
         """
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
@@ -2268,7 +2265,7 @@ class Matrix(object):
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis)."""
 
-        simplify_to_integers = flags.pop('simplify_to_integers', False)
+        simplify = flags.pop('simplify', False)
 
         if 'multiple' in flags:
             del flags['multiple']
@@ -2286,10 +2283,20 @@ class Matrix(object):
                 basis = tmp.nullspace(simplified=True)
                 if not basis:
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
-            if simplify_to_integers and basis[0].contains_rationals():
-                a = reduce(ilcm, [i.q for i in basis[0] if i.is_Rational], 1)
-                if a != 1:
-                    basis[0] = basis[0]*a
+            if simplify:
+                # the relationship A*e = lambda*e will still hold if we change the
+                # eigenvector; so if simplify is True we tidy up any normalization
+                # artifacts with as_content_primtive and remove any pure Integer
+                # denominators
+                l = 1
+                for i, b in enumerate(basis[0]):
+                    c, p = b.as_content_primitive()
+                    if c is not S.One:
+                        b = c*p
+                        l = ilcm(l, c.q)
+                    basis[0][i] = b
+                if l != 1:
+                    basis[0] *= l
             out.append((r, k, basis))
         return out
 
@@ -2501,7 +2508,7 @@ class Matrix(object):
             raise MatrixError("Matrix is not diagonalizable")
         else:
             if self._eigenvects == None:
-                self._eigenvects = self.eigenvects(simplify_to_integers=True)
+                self._eigenvects = self.eigenvects(simplify=True)
             diagvals = []
             P = Matrix(self.rows, 0, [])
             for eigenval, multiplicity, vects in self._eigenvects:
@@ -2557,7 +2564,7 @@ class Matrix(object):
         #if self._is_symbolic:
         #    self._diagonalize_clear_subproducts()
         #    raise NotImplementedError("Symbolic matrices are not implemented for diagonalization yet")
-        self._eigenvects = self.eigenvects(simplify_to_integers=True)
+        self._eigenvects = self.eigenvects(simplify=True)
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:
             if len(vects) != multiplicity:
