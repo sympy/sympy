@@ -10,6 +10,7 @@ from sympy.functions import exp,factorial
 from sympy.functions.elementary.complexes import re, Abs
 from sympy.printing import sstr
 from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.simplify import simplify
 
 from sympy.core.compatibility import callable, reduce
 
@@ -1602,12 +1603,24 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError("Exponentiation is valid only for square matrices")
         try:
-            U, D = self.diagonalize()
+	   P,cells=self.jordan_cells()
         except MatrixError:
-            raise NotImplementedError("Exponentiation is implemented only for diagonalizable matrices")
-        for i in xrange(0, D.rows):
-            D[i, i] = C.exp(D[i, i])
-        return U * D * U.inv()
+             raise NotImplementedError("Exponentiation is implemented only for matrices for which the Jordan normal form can be computed")
+	blocks=map(jblock_exponential,cells)  
+        eJ=diag(* blocks)
+	n=self.rows
+	ret=P*eJ*P.inv()
+	for i in range(n):
+	    for j in range(n):
+	        sympy_simplify(ret[i,j])
+        return(ret)
+
+        #    U, D = self.diagonalize()
+        #except MatrixError:
+        #    raise NotImplementedError("Exponentiation is implemented only for diagonalizable matrices")
+        #for i in xrange(0, D.rows):
+        #    D[i, i] = C.exp(D[i, i])
+        #return U * D * U.inv()
 
     @classmethod
     def zeros(cls, r, c=None):
@@ -2603,6 +2616,7 @@ class Matrix(object):
         (P, Jcells) = self.jordan_cells(calc_transformation)
         J = diag(*Jcells)
         return (P, J)
+
     def jordan_cell(eigenval, n):
         n = int(n)
         out = zeros(n)
@@ -2611,6 +2625,8 @@ class Matrix(object):
             out[i, i+1] = 1
         out[n-1, n-1] = eigenval
         return out        
+
+
     def jordan_BlockStructure(self):
         n=self.rows
         Jcells = []
@@ -2623,7 +2639,9 @@ class Matrix(object):
         # that will eventually be used to form the transformation P
         JordanBlockStructures={} 
         _eigenvects=self.eigenvects()
-	#print _eigenvects
+	ev=self.eigenvals()
+	if len(ev)==0:
+            raise AttributeError("could not compute the eigenvalues")
         for eigenval, multiplicity, vects in _eigenvects:
 	    l_JordanChains={}
             geometrical = len(vects)
@@ -2670,7 +2688,7 @@ class Matrix(object):
                 l=eigenval
                 M=(self-l*I)
                 # We will store the matrices (self-l*I)^k  for further computations
-                # for convinience only we store Ms[0]=(sefl-lI)^0=I 
+                # for convenience only we store Ms[0]=(sefl-lI)^0=I 
                 # so the index is the same as the power for all further Ms entries
                 # We also store the vectors that span these kernels (Ns[0] =[] )
                 # and also their dimensions a_s
@@ -2790,14 +2808,12 @@ class Matrix(object):
         Jcells = []
         Pcols_new=[]
 	JordanBlockStructures=self.jordan_BlockStructure()
-	#print "JordanBlockStructures",JordanBlockStructures
         P=zeros(n)
         for eigenval in reversed(sorted(JordanBlockStructures.keys())): #start with the biggest eigenvalue
             l_JordanChains=JordanBlockStructures[eigenval]
             for s in reversed(sorted((l_JordanChains).keys())):  #start with the biggest block
                 s_chains=l_JordanChains[s]
                 block= jordan_cell(eigenval,s)
-		#print "block:\n " ,block
                 number_of_s_chains=len(s_chains)
                 for i in range(0,number_of_s_chains):
                     Jcells.append(block)
@@ -2812,31 +2828,17 @@ class Matrix(object):
         P=zeros(n)
         for j in range(0,n):
            P[:,j]=Pcols_new[j]
-        assert(J==P.inv()*self*P)
+	#assert(J==P.inv()*self*P)
+
         return (P,Jcells)
-    def exp(self,sym):
+
+    def Jexp(self,sym):
         (P,cells)=self.jordan_cells() 
-	print "cells",cells
-        b2=Matrix(2,2,  
-	      [exp(2*sym), sym*exp(2*sym),
-	                0,     exp(2*sym)]
-	)
-        b4=self.exp_block(cells[0],sym)
-        b3=self.exp_block(cells[1],sym)
-        emx=diag(b4,b3,b2)
+	f=fmaker(sym)
+	blocks=map(f,cells)
+        emx=diag(* blocks)
         return(emx)
-    def exp_block(self,cell,sym):
-        n=cell.rows
-	l=cell[0,0]	  
-	b=eye(n)
-	for j in range(1,n):
-	   print "j=",j
-	   for i in range(j):
-	      p=j-i
-	      print "i=",i
-	      b[i,j]=sym**(p)/factorial(p)
-        b=b*exp(l*sym)	
-        return b
+
     
     def has(self, *patterns):
         """
@@ -2855,6 +2857,44 @@ class Matrix(object):
         True
         """
         return any(a.has(*patterns) for a in self.mat)
+
+def jblock_exponential(b):
+    #This function computes the matrix exponential for one single Jordan block
+    nr=b.rows
+    l=b[0,0]
+    if nr==1:
+        res=C.exp(l)
+    else:
+      #extract the diagonal part
+      d=b[0,0]*eye(nr)
+      #and the nilpotent part
+      n=b-d
+      #compute its exponential
+      nex=eye(nr)
+      for i in range(1,nr):
+          nex=nex+n**i/factorial(i)
+      #combine the two parts
+      res=exp(b[0,0])*nex
+    return(res)
+	
+
+
+def fmaker(sym):
+    def f(c):
+       res=exp_block(c,sym)
+       return(res)
+    return(f)
+
+def exp_block(cell,sym):
+    n=cell.rows
+    l=cell[0,0]	  
+    b=eye(n)
+    for j in range(1,n):
+       for i in range(j):
+          p=j-i
+          b[i,j]=sym**(p)/factorial(p)
+    b=b*exp(l*sym)	
+    return b
 
 def matrix_multiply(A, B):
     """

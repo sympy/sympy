@@ -1502,8 +1502,10 @@ def test_jordan_form():
  
     m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
     assert not m.is_diagonalizable()
-    Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
+    Jmust = Matrix(4, 4, [4, 1, 0, 0, 0, 4, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1])
     (P, J) = m.jordan_form()
+    print "Jmust",Jmust
+    print "J",J
     assert Jmust == J
     
     # the following tests are new and include (some) test the cases were the old 
@@ -1597,7 +1599,6 @@ def test_errors():
     raises(TypeError, "Matrix([1, 2, 3]).cross(1)")
     raises(TypeError, "Matrix([1, 2, 3]).dot(1)")
     raises(ShapeError, "Matrix([1, 2, 3]).dot(Matrix([1, 2]))")
-    raises(NotImplementedError, "Matrix([[0,1,2],[0,0,-1], [0,0,0]]).exp()")
     raises(NonSquareMatrixError, "Matrix([1, 2, 3]).exp()")
     raises(ShapeError, "Matrix([[1, 2], [3, 4]]).normalized()")
     raises(NonSquareMatrixError, "Matrix([1, 2]).inverse_GE()")
