@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+
+"""
+This procedure test wiki pages against master or release
+ repositories.
+
+Assuming that wiki.sympy and release version are placed near
+master repository. E.g.
+
+    ./sympy/
+    ./wiki.sympy/
+    ./sympy-0.7.1/
+
+If the directories are not the same, then they can be tuned by
+those options:
+
+    -a AGAINST, --against=AGAINST
+                    What do the tests must be relative [master | release |
+                    master,release] [default: master]
+    -w WIKI_DIR, --wiki-dir=WIKI_DIR
+                    The path to the wiki pages directory
+    -m MASTER_DIR, --master-dir=MASTER_DIR
+                    The path to the sympy master repository
+    -r RELEASE_DIR, --release-dir=RELEASE_DIR
+                    The path to the sympy release directory
+
+The files are to be passing through the test contain the special directives.
+For reStructedText comments is shaped as:
+
+    .. wikitest release
+
+For markdown:
+
+    <!-- wikitest release -->
+
+"wikitest release" directive means that tests for current wiki-page have to be
+passed against release version only.
+"wikitest master" - against master.
+"wikitest master,release" - against master and release version
+"""
+
+# files listed here can be in unix forward slash format with paths
+# listed relative to sympy (which contains bin, etc...)
+blacklist = []
+
+import sys
+from os import getcwd
+from os.path import normpath, abspath, isdir, dirname, join
+from optparse import OptionParser
+import imp
+
+parser = OptionParser()
+parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+        default=False)
+
+# if you don't see a -n `default=False`;
+# if you do see a -n `store_true` means to store a True value for it;
+# dest is where in options to put it, options.normal will hold the bool;
+# when the user enters -h or --help, print the `help` text
+parser.add_option("-n", "--normal", action="store_true", dest="normal",
+        help="run normal wikitests; do not require explicit imports", default=False)
+parser.add_option("--no-colors", action="store_false", dest="colors",
+        default=True, help="Do not report colored [OK] and [FAIL]")
+parser.add_option("-f", "--firstonly", action="store_true", dest="first_only",
+        help="Report only first failure for every file [default: %default]",
+        default=False)
+
+
+parser.add_option("-a", "--against", type="string", dest="against",
+        help="What do the tests must be relative [master | release | master,release] [default: %default]",
+        default="master")
+parser.add_option("-w", "--wiki-dir", type="string", dest="wiki_dir",
+        help="The path to the wiki pages directory", default=None)
+parser.add_option("-m", "--master-dir", type="string", dest="master_dir",
+        help="The path to the sympy master repository", default=None)
+parser.add_option("-r", "--release-dir", type="string", dest="release_dir",
+        help="The path to the sympy release directory", default=None)
+
+parser.set_usage("wikitest [options ...] [files ...]")
+parser.epilog = '"options" are any of the options above.  "files" are 0 or more glob strings of files to run wikitests on.  If no file arguments are given, all wikitests will be run.'
+
+
+options, args = parser.parse_args()
+
+againstlist = options.against.split(",")
+dictargs = {"blacklist": blacklist, "againstlist": againstlist}
+dictargs.update(options.__dict__)
+
+# check paths
+
+def calcpath(path, default):
+    """
+    If path specified then it computes relative current directory
+    if no, then default path computes relative
+    """
+    if path:
+        res = join(getcwd(), normpath(path))
+    else:
+        res = join(dirname(__file__), normpath(default))
+    res = abspath(res)
+    return res
+
+dictargs["wiki_dir"] = calcpath(options.wiki_dir, "../../sympy.wiki")
+if not isdir(dictargs["wiki_dir"]):
+    parser.error("Directory of wiki pages '%s' is not found " % dictargs["wiki_dir"])
+for against in againstlist:
+    if not against in ["master", "release"]:
+        parser.error("The 'against' option must be in the set [master,release]")
+    elif against == "master":
+        dictargs["master_dir"] = calcpath(options.master_dir, "../")
+        if not isdir(dictargs["master_dir"]):
+            parser.error("Master repository '%s' is not found " % dictargs["master_dir"])
+    elif against == "release":
+        dictargs["release_dir"] = calcpath(options.release_dir, "../../sympy-0.7.1")
+        if not isdir(dictargs["release_dir"]):
+            parser.error("SymPy's release directory '%s' is not found " % dictargs["release_dir"])
+
+# Manually load modules, passing out sympy
+fn_runtests = join(dirname(__file__), "../sympy/utilities/runtests.py")
+runtests = imp.load_source("runtests", fn_runtests)
+
+ok = runtests.wikitest(*args, **dictargs)
+if ok:
+    sys.exit(0)
+else:
+    sys.exit(1)
