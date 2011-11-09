@@ -1482,11 +1482,11 @@ def test_jordan_form():
     assert Jmust == J
 
     m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
-    Jmust = Matrix(4, 4, [2, 1, 0, 0, 
+    Jmust = Matrix(4, 4, [2, 1, 0, 0,
                           0, 2, 0, 0,
-			  0, 0, 2, 1, 
-			  0, 0, 0, 2]
-			  )
+              0, 0, 2, 1,
+              0, 0, 0, 2]
+              )
     (P, J) = m.jordan_form()
     assert Jmust == J
 
@@ -1494,12 +1494,12 @@ def test_jordan_form():
     #Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 2, 1, 0, 0, 0, 2, 0, 0, 0, 0, -2])
     # same here see 1456ff
     Jmust = Matrix(4, 4, [2, 1, 0, 0,
-                          0, 2, 0, 0, 
-			  0, 0, 2, 0, 
-			  0, 0, 0, -2])
+                          0, 2, 0, 0,
+              0, 0, 2, 0,
+              0, 0, 0, -2])
     (P, J) = m.jordan_form()
     assert Jmust == J
- 
+
     m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
     assert not m.is_diagonalizable()
     Jmust = Matrix(4, 4, [4, 1, 0, 0, 0, 4, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1])
@@ -1507,28 +1507,28 @@ def test_jordan_form():
     print "Jmust",Jmust
     print "J",J
     assert Jmust == J
-    
-    # the following tests are new and include (some) test the cases were the old 
-    # algorithm failed due to the fact that the block structure can 
+
+    # the following tests are new and include (some) test the cases were the old
+    # algorithm failed due to the fact that the block structure can
     # >>n o t<< be determined  from algebraic and geometric multiplicity alone
-    # This can be seen most easily when one lets compute the J.c.f. of a matrix that 
+    # This can be seen most easily when one lets compute the J.c.f. of a matrix that
     # is in J.c.f already.
     m=Matrix(4,4,[2,1,0,0,
                   0,2,1,0,
                   0,0,2,0,
                   0,0,0,2
-	])
+    ])
     (P, J) = m.jordan_form()
     assert m == J
-    
+
     m=Matrix(4,4,[2,1,0,0,
                   0,2,0,0,
                   0,0,2,1,
                   0,0,0,2
-	])
+    ])
     (P, J) = m.jordan_form()
     assert m == J
-    
+
 
 
 def test_Matrix_berkowitz_charpoly():
