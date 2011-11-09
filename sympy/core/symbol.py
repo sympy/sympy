@@ -157,15 +157,11 @@ class Wild(Symbol):
     """
 
     __slots__ = ['exclude', 'properties']
-
     is_Wild = True
 
-    def __new__(cls, name, exclude=None, properties=None, **assumptions):
-        if type(exclude) is list:
-            exclude = tuple(exclude)
-        if type(properties) is list:
-            properties = tuple(properties)
-
+    def __new__(cls, name, exclude=(), properties=(), **assumptions):
+        exclude = tuple([sympify(x) for x in exclude])
+        properties = tuple(properties)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
     def __getnewargs__(self):
@@ -175,35 +171,19 @@ class Wild(Symbol):
     @cacheit
     def __xnew__(cls, name, exclude, properties, **assumptions):
         obj = Symbol.__xnew__(cls, name, **assumptions)
-
-        if exclude is None:
-            obj.exclude = None
-        else:
-            obj.exclude = tuple([sympify(x) for x in exclude])
-        if properties is None:
-            obj.properties = None
-        else:
-            obj.properties = tuple(properties)
+        obj.exclude = exclude
+        obj.properties = properties
         return obj
 
     def _hashable_content(self):
         return (self.name, self.exclude, self.properties )
 
     # TODO add check against another Wild
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if self in repl_dict:
-            if repl_dict[self] == expr:
-                return repl_dict
-            else:
-                return None
-        if self.exclude:
-            for x in self.exclude:
-                if expr.has(x):
-                    return None
-        if self.properties:
-            for f in self.properties:
-                if not f(expr):
-                    return None
+    def matches(self, expr, repl_dict={}):
+        if any(expr.has(x) for x in self.exclude):
+            return None
+        if any(not f(expr) for f in self.properties):
+            return None
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
         return repl_dict

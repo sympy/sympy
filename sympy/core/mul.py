@@ -755,17 +755,14 @@ class Mul(AssocOp):
             return terms[0].matches(newexpr, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
-            return AssocOp._matches_commutative(self, expr, repl_dict, evaluate)
+            return AssocOp._matches_commutative(self, expr, repl_dict)
         # todo for commutative parts, until then use the default matches method for non-commutative products
-        return self._matches(expr, repl_dict, evaluate)
+        return self._matches(expr, repl_dict)
 
-    def _matches(self, expr, repl_dict={}, evaluate=False):
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-
+    def _matches(self, expr, repl_dict={}):
         # weed out negative one prefixes
         sign = 1
         a, b = self.as_two_terms()
@@ -774,7 +771,7 @@ class Mul(AssocOp):
                 sign = -sign
             else:
                 # the remainder, b, is not a Mul anymore
-                return b.matches(-expr, repl_dict, evaluate)
+                return b.matches(-expr, repl_dict)
         expr = sympify(expr)
         if expr.is_Mul and expr.args[0] is S.NegativeOne:
             expr = -expr; sign = -sign
@@ -784,12 +781,12 @@ class Mul(AssocOp):
             if len(self.args) == 2:
                 # quickly test for equality
                 if b == expr:
-                    return a.matches(Rational(sign), repl_dict, evaluate)
+                    return a.matches(Rational(sign), repl_dict)
                 # do more expensive match
-                dd = b.matches(expr, repl_dict, evaluate)
+                dd = b.matches(expr, repl_dict)
                 if dd == None:
                     return None
-                dd = a.matches(Rational(sign), dd, evaluate)
+                dd = a.matches(Rational(sign), dd)
                 return dd
             return None
 
@@ -808,21 +805,14 @@ class Mul(AssocOp):
             if len(ee) == 1:
                 d[pp[0]] = sign * ee[0]
             else:
-                d[pp[0]] = sign * (type(expr)(*ee))
+                d[pp[0]] = sign * expr.func(*ee)
             return d
 
         if len(ee) != len(pp):
             return None
 
-        i = 0
         for p, e in zip(pp, ee):
-            if i == 0 and sign != 1:
-                try:
-                    e = sign * e
-                except TypeError:
-                    return None
-            d = p.matches(e, d, evaluate=not i)
-            i += 1
+            d = p.xreplace(d).matches(e, d)
             if d is None:
                 return None
         return d

@@ -662,10 +662,7 @@ class Pow(Expr):
         # unprocessed Float and NumberSymbol
         return self, S.One
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-
+    def matches(self, expr, repl_dict={}):
         expr = _sympify(expr)
         b, e = expr.as_base_exp()
 
@@ -681,9 +678,9 @@ class Pow(Expr):
         if d is None:
             return None
 
-        d = self.exp.subs(d).matches(e, d)
+        d = self.exp.xreplace(d).matches(e, d)
         if d is None:
-            return Expr.matches(self, expr, repl_dict, evaluate)
+            return Expr.matches(self, expr, repl_dict)
         return d
 
     def _eval_nseries(self, x, n, logx):

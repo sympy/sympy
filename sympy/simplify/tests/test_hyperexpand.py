@@ -86,13 +86,13 @@ def test_hyperexpand_bases():
     assert hyperexpand(hyper([S.Half, 2], [S(3)/2], z)) == \
       -1/(2*z - 2) + log((sqrt(z) + 1)/(-sqrt(z) + 1))/(4*sqrt(z))
     assert hyperexpand(hyper([S(1)/2, S(1)/2], [S(5)/2], z)) == \
-               (-3*z + 3)/(4*z*sqrt(-z + 1)) \
+               (-3*z + 3)/4/(z*sqrt(-z + 1)) \
                + (6*z - 3)*asin(sqrt(z))/(4*z**(S(3)/2))
     assert hyperexpand(hyper([1, 2], [S(3)/2], z)) == -1/(2*z - 2) \
             - asin(sqrt(z))/(sqrt(z)*(2*z - 2)*sqrt(-z + 1))
     assert hyperexpand(hyper([-S.Half - 1, 1, 2], [S.Half, 3], z)) == \
              sqrt(z)*(6*z/7 - S(6)/5)*atanh(sqrt(z)) \
-           + (-30*z**2 + 32*z - 6)/(35*z) - 6*log(-z + 1)/(35*z**2)
+           + (-30*z**2 + 32*z - 6)/35/z - 6*log(-z + 1)/(35*z**2)
     assert hyperexpand(hyper([1+S.Half, 1, 1], [2, 2], z)) == \
            -4*log(sqrt(-z + 1)/2 + S(1)/2)/z
     # TODO hyperexpand(hyper([a], [2*a + 1], z))
