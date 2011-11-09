@@ -67,8 +67,11 @@ def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
     """
     if m==2:
         return binomial_coefficients(n)
-    if m >= 2*n and n != 0:
+    if m >= 2*n and n > 1:
         return dict(multinomial_coefficients_iterator(m, n))
+    if m == 3 and n == 2:
+        return {(0, 0, 2): 1, (0, 1, 1): 2, (0, 2, 0): 1, (1, 0, 1): 2,
+                (1, 1, 0): 2, (2, 0, 0): 1}
     # The monomial tuples have entries between 0 and n;
     # in the algorithm new monomial tuples are obtained summing
     # them with tuples in `p0`, with the form (0,..,-1,0..,0,1,0...);
@@ -79,6 +82,11 @@ def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
     bits_exp = bitcount(n)
     mask_exp = (1<<bits_exp)-1
     symbols = [(0,)*i + (1,) + (0,)*(m-i-1) for i in range(m)]
+    if n == 1:
+        r = {}
+        for t in symbols:
+            r[t] = 1
+        return r
     s0 = symbols[0]
     p0 = [_tuple(aa-bb for aa, bb in _zip(s, s0)) for s in symbols]
     p0 = [_code_t(t, bits_exp) for t in p0]
