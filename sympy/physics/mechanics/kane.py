@@ -353,7 +353,11 @@ class Kane(object):
             raise ValueError('There must be an equal number of kinematic '
                              'differential equations and coordinates.')
 
-        kdeqs = Matrix(kdeqs)
+        uaux = self._uaux
+        # dictionary of auxiliary speeds which are equal to zero
+        uaz = dict(zip(uaux, [0] * len(uaux)))
+
+        kdeqs = Matrix(kdeqs).subs(uaz)
 
         qdot = self._qdot
         qdotzero = dict(zip(qdot, [0] * len(qdot)))
@@ -487,7 +491,7 @@ class Kane(object):
                     print('This functionality has not yet been tested yet, '
                           'use at your own risk')
                     f = v.frame
-                    d = v.mc.pos_from(p)
+                    d = v.mc.pos_from(P)
                     I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
                               (d & d) - (d | d))
                 templist = []
