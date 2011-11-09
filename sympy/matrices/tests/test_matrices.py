@@ -587,9 +587,9 @@ def test_eigen():
 
     M = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
     M._eigenvects = M.eigenvects(simplify_to_integers=False)
-    assert max(i.as_numer_denom()[1] for i in M._eigenvects[0][2][0])>1
+    assert max(i.as_numer_denom()[1] for i in M._eigenvects[0][2][0]) > 1
     M._eigenvects = M.eigenvects(simplify_to_integers=True)
-    assert max(i.as_numer_denom()[1] for i in M._eigenvects[0][2][0])==1
+    assert max(i.as_numer_denom()[1] for i in M._eigenvects[0][2][0]) == 1
 
 def test_sparse_matrix():
     return

@@ -932,13 +932,6 @@ class Matrix(object):
         newmat[:,pos+mti.cols:] = self[:,pos:]
         return newmat
 
-    def contains_rationals(self):
-        if not self.is_symbolic():
-            for i in self:
-                if i.is_rational:
-                        return True
-        return False
-
     def trace(self):
         if not self.is_square:
             raise NonSquareMatrixError()
@@ -1837,10 +1830,10 @@ class Matrix(object):
         return True
 
     def is_symbolic(self):
-        for element in self.mat:
-            if element.has(Symbol):
-                return True
-        return False
+        return any(element.has(Symbol) for element in self.mat)
+
+    def contains_rationals(self):
+        return not self.is_symbolic() and any(i.is_Rational for i in self)
 
     def is_symmetric(self, simplify=True):
         """
@@ -2275,6 +2268,8 @@ class Matrix(object):
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis)."""
 
+        simplify_to_integers = flags.pop('simplify_to_integers', False)
+
         if 'multiple' in flags:
             del flags['multiple']
 
@@ -2291,9 +2286,9 @@ class Matrix(object):
                 basis = tmp.nullspace(simplified=True)
                 if not basis:
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
-            if 'simplify_to_integers' in flags and flags['simplify_to_integers']:
-                if basis[0].contains_rationals():
-                    a = reduce(ilcm, [i.as_numer_denom()[1] for i in basis[0]],1)
+            if simplify_to_integers and basis[0].contains_rationals():
+                a = reduce(ilcm, [i.q for i in basis[0] if i.is_Rational], 1)
+                if a != 1:
                     basis[0] = basis[0]*a
             out.append((r, k, basis))
         return out
