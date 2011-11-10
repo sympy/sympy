@@ -100,7 +100,7 @@ class Kane(object):
 
     """
 
-    simp = True
+    simp = False
 
     def __init__(self, frame):
         """Supply the inertial frame for Kane initialization. """

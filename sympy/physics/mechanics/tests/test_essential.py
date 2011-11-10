@@ -2,6 +2,7 @@ from sympy import symbols, Matrix, sin, cos
 from sympy.physics.mechanics import (Vector, ReferenceFrame, dot, cross,
                                      dynamicsymbols)
 
+Vector.simp = True
 phi, x, y, z = symbols('phi x y z')
 A = ReferenceFrame('A')
 
