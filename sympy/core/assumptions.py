@@ -278,7 +278,7 @@ class AssumeMixin(object):
         >>> from sympy import Symbol
         >>> from sympy.abc import x
         >>> x.assumptions0
-        {}
+        {'commutative': True}
         >>> x = Symbol("x", positive=True)
         >>> x.assumptions0
         {'commutative': True, 'complex': True, 'imaginary': False,

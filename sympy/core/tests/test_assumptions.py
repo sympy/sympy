@@ -377,6 +377,17 @@ def test_prime_symbol():
     assert x.is_nonpositive == None
     assert x.is_nonnegative == None
 
+def test_symbol_noncommutative():
+    x = Symbol('x', commutative=True)
+    assert x.is_complex is None
+
+    x = Symbol('x', commutative=False)
+    assert x.is_integer is False
+    assert x.is_rational is False
+    assert x.is_irrational is False
+    assert x.is_real is False
+    assert x.is_complex is False
+
 def test_other_symbol():
     x = Symbol('x', integer=True)
     assert x.is_integer == True
@@ -533,3 +544,7 @@ def test_special_is_rational():
     assert (r**i).is_rational is True
     assert (r**r).is_rational is None
     assert (r**x).is_rational is None
+
+def test_inconsistent():
+    # cf. issues 2696 and 2446
+    raises(AssertionError, "Symbol('x', real=True, commutative=False)")
