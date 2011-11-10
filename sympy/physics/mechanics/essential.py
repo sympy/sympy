@@ -1067,7 +1067,7 @@ class Vector(object):
 
     """
 
-    simp = True
+    simp = False
 
     def __init__(self, inlist):
         """This is the constructor for the Vector class.  You shouldn't be
@@ -1517,6 +1517,7 @@ class Vector(object):
 
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
+        >>> Vector.simp = True
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
