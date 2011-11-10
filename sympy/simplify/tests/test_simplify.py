@@ -859,3 +859,9 @@ def test_radsimp():
     assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == x**2 + sqrt(2)*(x**2 - x*A)
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -11*sqrt(2) + 9*sqrt(3)
+
+def test_issue2834():
+    from sympy import Polygon, RegularPolygon, denom
+    x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
+    assert abs(denom(x).n()) > 1e-12
+    assert abs(denom(radsimp(x))) > 1e-12 # in case simplify didn't handle it

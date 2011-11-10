@@ -928,48 +928,112 @@ def collect_sqrt(expr, evaluate=True):
     ((a + b,), 0)
 
     """
-
-    d = expr
-    terms = defaultdict(list)
-    nrad = 0
-    for m in Add.make_args(d):
-        rad = []
-        notrad = []
-        cset, nc = m.args_cnc()
-        for ci in cset:
-            if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2 or \
-               ci is S.ImaginaryUnit:
-                rad.append(ci)
-            else:
-                notrad.append(ci)
-        m = Mul(*rad)
-        nrad += bool(rad and m not in terms)
-        terms[m].append(Mul(*notrad)*Mul._from_args(nc))
-    hit = False
-    args = []
-    keys = terms.keys()
+    coeff, expr = expr.as_content_primitive()
+    vars = set()
+    for a in Add.make_args(expr):
+        for m in a.args_cnc()[0]:
+            if m.is_number and (m.is_Pow and m.exp.is_Rational and m.exp.q == 2 or \
+                m is S.ImaginaryUnit):
+                vars.add(m)
+    vars = list(vars)
     if not evaluate:
-        keys.sort(key=default_sort_key)
-    for k in keys:
-        v = terms[k]
-        if len(v) > 1:
-            hit = True
-            v = Add(*v)
-        else:
-            v = v[0]
-        args.append(k*v)
-    if hit:
-        if not evaluate:
+        vars.sort(key=default_sort_key)
+        vars.reverse() # since it will be reversed below
+    vars.sort(key=count_ops)
+    vars.reverse()
+    d = collect_const(expr, *vars, first=False)
+    hit = expr != d
+    d *= coeff
+
+    if not evaluate:
+        nrad = 0
+        args = list(Add.make_args(d))
+        for m in args:
+            cset, nc = m.args_cnc()
+            for ci in cset:
+                if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2 or \
+                   ci is S.ImaginaryUnit:
+                    nrad += 1
+                    break
+        if hit or nrad:
             args.sort(key=default_sort_key)
-            d = tuple(args)
         else:
-            d = Add(*args)
+            args = [Add(*args)]
+        return tuple(args), nrad
 
-    if not evaluate:
-        if not hit:
-            d = Add.make_args(d)
-        return d, nrad
     return d
+
+def collect_const(expr, *vars, **first):
+    """A non-greedy collection of terms with similar number coefficients in
+    an Add expr. If ``vars`` is given then only those constants will be
+    targeted.
+
+    **Examples**
+    >>> from sympy import sqrt
+    >>> from sympy.abc import s
+    >>> from sympy.simplify.simplify import collect_const
+    >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
+    sqrt(3)*(sqrt(2) + 2)
+    >>> collect_const(sqrt(3)*s + sqrt(7)*s + sqrt(3) + sqrt(7))
+    (sqrt(3) + sqrt(7))*(s + 1)
+    >>> s = sqrt(2) + 2
+    >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
+    (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
+    >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
+    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    """
+    if first.get('first', True):
+        c, p = sympify(expr).as_content_primitive()
+    else:
+        c, p = S.One, expr
+    if c is not S.One:
+        return _keep_coeff(c, collect_const(p, *vars, first=False))
+
+    if not (expr.is_Add or expr.is_Mul):
+        return expr
+    recurse = False
+    if not vars:
+        recurse = True
+        vars = set()
+        for a in Add.make_args(expr):
+            for m in Mul.make_args(a):
+                if m.is_number:
+                    vars.add(m)
+        vars = sorted(vars, key=count_ops)
+    # Rationals get autodistributed on Add so don't bother with them
+    vars = [v for v in vars if not v.is_Rational]
+
+    if not vars:
+        return expr
+
+    for v in vars:
+        terms = defaultdict(list)
+        for m in Add.make_args(expr):
+            i = []
+            d = []
+            for a in Mul.make_args(m):
+                if a == v:
+                    d.append(a)
+                else:
+                    i.append(a)
+            ai, ad = [Mul(*w) for w in [i, d]]
+            terms[ad].append(ai)
+        args = []
+        hit = False
+        for k, v in terms.iteritems():
+            if len(v) > 1:
+                v = Add(*v)
+                hit = True
+                if recurse and v != expr:
+                    vars.append(v)
+            else:
+                v = v[0]
+            args.append(k*v)
+        if hit:
+            expr = Add(*args)
+            if not expr.is_Add:
+                break
+    return expr
 
 def radsimp(expr):
     """
@@ -1007,7 +1071,7 @@ def radsimp(expr):
 
     >>> three_rads = sqrt(2) + sqrt(3) + sqrt(5)
     >>> den = sqrt(2) + sqrt(three_rads)
-    >>> denom(radsimp(1/den)) == 2 - three_rads
+    >>> denom(radsimp(1/den)) == -2 + three_rads
     True
 
     At the very least, square roots in an expression with no denominator
@@ -2106,7 +2170,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')
 
-        r = denom.match(a + b*sqrt(c))
+        r = collect_sqrt(denom).match(a + b*sqrt(c))
 
         if r is not None and r[b]:
             a, b, c = r[a], r[b], r[c]
