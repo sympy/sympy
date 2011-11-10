@@ -2863,13 +2863,54 @@ def jordan_cell(eigenval, n):
     out[n-1, n-1] = eigenval
     return out
 
-def randMatrix(r,c,min=0,max=99,seed=[]):
-    """Create random matrix r x c"""
-    if seed == []:
+def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
+    """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted
+    the matrix will be square. If ``symmetric`` is True the matrix must be
+    square.
+
+    **Examples**
+    >>> from sympy.matrices import randMatrix
+    >>> randMatrix(3) # doctest:+SKIP
+    [25, 45, 27]
+    [44, 54,  9]
+    [23, 96, 46]
+    >>> randMatrix(3, 2) # doctest:+SKIP
+    [87, 29]
+    [23, 37]
+    [90, 26]
+    >>> randMatrix(3, 3, 0, 2) # doctest:+SKIP
+    [0, 2, 0]
+    [2, 0, 1]
+    [0, 0, 1]
+    >>> randMatrix(3, symmetric=True) # doctest:+SKIP
+    [85, 26, 29]
+    [26, 71, 43]
+    [29, 43, 57]
+    >>> A = randMatrix(3, seed=1)
+    >>> B = randMatrix(3, seed=2)
+    >>> A == B # doctest:+SKIP
+    False
+    >>> A == randMatrix(3, seed=1)
+    True
+    """
+    if c is None:
+        c = r
+    if seed is None:
         prng = random.Random()  # use system time
     else:
         prng = random.Random(seed)
-    return Matrix(r,c,lambda i,j: prng.randint(min,max))
+    if symmetric and r != c:
+        raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
+    if not symmetric:
+        return Matrix(r, c, lambda i, j: prng.randint(min, max))
+    m = zeros(r)
+    for i in xrange(r):
+        for j in xrange(i, r):
+            m[i, j] = prng.randint(min, max)
+    for i in xrange(r):
+        for j in xrange(i):
+            m[i, j] = m[j, i]
+    return m
 
 def hessian(f, varlist):
     """Compute Hessian matrix for a function f
