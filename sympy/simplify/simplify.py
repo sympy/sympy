@@ -2170,9 +2170,11 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')
 
-        r = collect_sqrt(denom).match(a + b*sqrt(c))
+        r = denom.match(a + b*sqrt(c))
+        if r:
+            rr = r[a].match(a + b*sqrt(c))
 
-        if r is not None and r[b]:
+        if r is not None and r[b] and (not rr or rr[b] == 0):
             a, b, c = r[a], r[b], r[c]
 
             numer *= a-b*sqrt(c)
