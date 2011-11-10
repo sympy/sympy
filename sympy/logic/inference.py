@@ -139,7 +139,7 @@ class PropKB(KB):
         ========
 
         >>> from sympy.logic.inference import PropKB
-        >>> from sympy.abc import x, y, z
+        >>> from sympy.abc import x, y
         >>> l = PropKB()
         >>> l.clauses
         []
@@ -148,9 +148,9 @@ class PropKB(KB):
         >>> l.clauses
         [Or(x, y)]
 
-        >>> l.tell(y & z)
+        >>> l.tell(y)
         >>> l.clauses
-        [Or(x, y), y, z]
+        [Or(x, y), y]
         """
         for c in conjuncts(to_cnf(sentence)):
             if not c in self.clauses: self.clauses.append(c)
