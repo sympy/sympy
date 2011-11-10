@@ -1,4 +1,9 @@
-from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
+from sympy.core.add import Add
+from sympy.core.basic import Basic, C
+from sympy.core.power import Pow
+from sympy.core.symbol import Symbol, Dummy
+from sympy.core.numbers import Integer, ilcm, Rational
+from sympy.core.singleton import S
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import is_sequence
 
@@ -1825,10 +1830,7 @@ class Matrix(object):
         return True
 
     def is_symbolic(self):
-        for element in self.mat:
-            if element.has(Symbol):
-                return True
-        return False
+        return any(element.has(Symbol) for element in self.mat)
 
     def is_symmetric(self, simplify=True):
         """
@@ -2090,7 +2092,7 @@ class Matrix(object):
             pivots += 1
         return r, pivotlist
 
-    def nullspace(self,simplified=False):
+    def nullspace(self, simplified=False):
         """
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
@@ -2263,6 +2265,8 @@ class Matrix(object):
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis)."""
 
+        simplify = flags.pop('simplify', False)
+
         if 'multiple' in flags:
             del flags['multiple']
 
@@ -2279,6 +2283,20 @@ class Matrix(object):
                 basis = tmp.nullspace(simplified=True)
                 if not basis:
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
+            if simplify:
+                # the relationship A*e = lambda*e will still hold if we change the
+                # eigenvector; so if simplify is True we tidy up any normalization
+                # artifacts with as_content_primtive and remove any pure Integer
+                # denominators
+                l = 1
+                for i, b in enumerate(basis[0]):
+                    c, p = b.as_content_primitive()
+                    if c is not S.One:
+                        b = c*p
+                        l = ilcm(l, c.q)
+                    basis[0][i] = b
+                if l != 1:
+                    basis[0] *= l
             out.append((r, k, basis))
         return out
 
@@ -2473,9 +2491,9 @@ class Matrix(object):
         [0, 2, 0]
         [0, 0, 3]
         >>> P
-        [-1/2, 0, -1/2]
-        [   0, 0, -1/2]
-        [   1, 1,    1]
+        [-1, 0, -1]
+        [ 0, 0, -1]
+        [ 2, 1,  2]
         >>> P.inv() * m * P
         [1, 0, 0]
         [0, 2, 0]
@@ -2490,7 +2508,7 @@ class Matrix(object):
             raise MatrixError("Matrix is not diagonalizable")
         else:
             if self._eigenvects == None:
-                self._eigenvects = self.eigenvects()
+                self._eigenvects = self.eigenvects(simplify=True)
             diagvals = []
             P = Matrix(self.rows, 0, [])
             for eigenval, multiplicity, vects in self._eigenvects:
@@ -2546,7 +2564,7 @@ class Matrix(object):
         #if self._is_symbolic:
         #    self._diagonalize_clear_subproducts()
         #    raise NotImplementedError("Symbolic matrices are not implemented for diagonalization yet")
-        self._eigenvects = self.eigenvects()
+        self._eigenvects = self.eigenvects(simplify=True)
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:
             if len(vects) != multiplicity:
