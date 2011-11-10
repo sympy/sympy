@@ -14,9 +14,8 @@
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
-from sympy.core.function import (expand_mul, expand_multinomial, expand_log, Derivative,
-                                 Function,
-                                 )
+from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
+        Derivative, Function, AppliedUndef)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -474,8 +473,6 @@ def solve(f, *symbols, **flags):
           dsolve() for solving differential equations
 
     """
-    from sympy.solvers.ode import is_unfunc
-
     # make f and symbols into lists of sympified quantities
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
@@ -568,7 +565,7 @@ def solve(f, *symbols, **flags):
                 p in symset or
                 p.is_Add or p.is_Mul or
                 p.is_Pow and not implicit or
-                p.is_Function and not is_unfunc(p) and not implicit):
+                p.is_Function and not isinstance(p, AppliedUndef) and not implicit):
                 continue
             elif not p in seen:
                 seen.add(p)
