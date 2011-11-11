@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper)
+    factor, Mul, O, hyper, Add)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -797,3 +797,5 @@ def test_as_content_primitive():
             (1, 3**(Mul(S(1)/2, 1 + y, evaluate=False)))
     assert (5**(S(3)/4)).as_content_primitive() == (1, 5**(S(3)/4))
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
+    assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
+            (S(1)/14, 7.0*x + 21*y + 10*z)
