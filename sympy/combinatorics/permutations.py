@@ -70,7 +70,7 @@ class Permutation(Basic):
 
     Another notation that explicitly identifies the positions occupied by
     elements before and after application of a permutation on n elements uses a
-    2xn matrix, where the first row is the identity permutation  and the second
+    2xn matrix, where the first row is the identity permutation and the second
     row is the new arrangement [2].
 
     Any permutation is also a product of transpositions.

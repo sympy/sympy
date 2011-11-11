@@ -246,7 +246,7 @@ class AssumeMixin(object):
             #        |             |    important. say for %timeit x+y most of
             # .------'             |    the time is spent elsewhere
             # |                    |
-            # |  XXX _learn_new_facts  could be asked about what *new* facts have
+            # |  XXX _learn_new_facts could be asked about what *new* facts have
             # v  XXX been learned -- we'll need this to append to _hashable_content
             basek = set(self.default_assumptions.keys())
             k2    = set(self._assumptions.keys())

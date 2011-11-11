@@ -1289,7 +1289,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
     f and g at certain points and computing (fast) integer GCD of those
     evaluations. The polynomial GCD is recovered from the integer image
     by interpolation. The evaluation proces reduces f and g variable by
-    variable into a large integer.  The final step  is to verify if the
+    variable into a large integer.  The final step is to verify if the
     interpolated polynomial is the correct GCD. This gives cofactors of
     the input polynomials as a side effect.
 

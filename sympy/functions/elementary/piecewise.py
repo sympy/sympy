@@ -155,7 +155,7 @@ class Piecewise(Function):
 
     def _eval_integral(self,x):
         from sympy.integrals import integrate
-        return  Piecewise(*[(integrate(e, x), c) for e, c in self.args])
+        return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""

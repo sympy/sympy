@@ -50,10 +50,10 @@
 .. topic:: Abstract
 
    This document describes the extension of the latex module for  :mod:`sympy`. The
-   python module :mod:`latex_ex` extends the  capabilities of the current
-   :mod:`latex` (while preserving the  current capabilities) to geometric algebra
+   python module :mod:`latex_ex` extends the capabilities of the current
+   :mod:`latex` (while preserving the current capabilities) to geometric algebra
    multivectors, :mod:`numpy` array's, and extends the ascii formatting of greek
-   symbols, accents, and subscripts and superscripts.   Additionally the module is
+   symbols, accents, and subscripts and superscripts.  Additionally the module is
    configured to use the print command to generate a LaTeX output file and display
    it using xdvi in Linux and yap in Windows.  To get LaTeX displayed text latex and 
    xdvi must be installed on a Linux system and MikTex on a Windows system.
@@ -102,8 +102,8 @@ setup when :func:`Format` is called.  In addition to setting format switches in
 :class:`LatexPrinter`, :func:`Format` does two other critical tasks. Firstly,
 the :mod:`sympy` function :func:`Basic.__str__` is redirected to the
 :class:`LatexPrinter` helper function :func:`LaTeX`.  If nothing more that this
-were done the  python print command would output LaTeX code.  Secondly,
-*sys.stdout* is redirected  to a file until :func:`xdvi` is called.  This file
+were done the python print command would output LaTeX code.  Secondly,
+*sys.stdout* is redirected to a file until :func:`xdvi` is called.  This file
 is then compiled with the :program:`latex` program (if present) and the dvi
 output file is displayed with the :program:`xdvi` program (if present).  Thus
 for :class:`LatexPrinter` to display the output in a window both
@@ -151,7 +151,7 @@ two new functions for extending the :mod:`latex` module are
    :class:`LatexPrinter`.  This is needed since :class:`LatexPrinter` takes over
    the :func:`str` fuction and there are instances when the unformatted string is
    needed such as during the automatic generation of multivector coefficients and
-   the reduction of multivector  coefficients for printing.
+   the reduction of multivector coefficients for printing.
 
 
 Helper Functions for Extending LatexPrinter Class
@@ -161,7 +161,7 @@ Helper Functions for Extending LatexPrinter Class
 .. function:: Format(fmt='1 1 1 1')
 
    ``Format`` iniailizes ``LatexPrinter`` and set the format for ``sympy`` symbols,
-   functions, and  derivatives and for ``GA`` multivectors. The switch are encoded
+   functions, and derivatives and for ``GA`` multivectors. The switch are encoded
    in the text string argument of ``Format`` as follows.  It is assumed that the
    text string ``fmt`` always contains four integers separated by blanks.
 
@@ -201,7 +201,7 @@ Helper Functions for Extending LatexPrinter Class
    :func:`xdvi` postprocesses the output of the print statements and generates the
    latex file with name *filename*.  If the :program:`latex` and :program:`xdvi`
    programs are present on the system they are invoked to display the latex file in
-   a  window.  If *debug=True* the associated output of :program:`latex` is sent to
+   a window.  If *debug=True* the associated output of :program:`latex` is sent to
    *stdout*, otherwise it is sent to  */dev/null* for linux and *NUL* for Windows.  
    If :class:`LatexPrinter` has not been initialized :func:`xdvi` does nothing.  After the
    .dvi file is generated it is displayed with :program:`xdvi` for linux (if latex and xdvi
@@ -279,7 +279,7 @@ conventions in :mod:`latex_ex`.   the statment ``Format()`` starts the
 :class:`LatexPrinter` driver with default formatting. Note that on the right
 hand side of the output that *xbm* gives :math:`\bm{x}`, *alpha_1* gives
 :math:`\alpha_{1}` and  *delta__nugamma_r* gives :math:`\delta^{\nu\gamma}_{r}`.
-Also the fraction is  printed correctly.  The statment ``print 'x =',x`` sends
+Also the fraction is printed correctly.  The statment ``print 'x =',x`` sends
 the string ``'x = '+str(x)`` to the output processor (:func:`xdvi`).  Because
 the string contains an :math:`=` sign the processor treats the string as an
 LaTeX equation (unnumbered).  If ``'x ='``  was not in the print statment a

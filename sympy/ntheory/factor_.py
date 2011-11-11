@@ -205,7 +205,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
     By default, the base is recursively decomposed and the exponents
     collected so the largest possible ``e`` is sought. If ``big=False``
-    then the smallest possible ``e`` (thus prime) will  be chosen.
+    then the smallest possible ``e`` (thus prime) will be chosen.
 
     If ``candidates`` for exponents are given, they are assumed to be sorted
     and the first one that is larger than the computed maximum will signal
