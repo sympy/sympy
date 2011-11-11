@@ -243,14 +243,6 @@ class Set(Basic):
     def is_Union(self):
         return False
 
-class RealSet(Set, EvalfMixin):
-    """
-    A set of real values
-    """
-    @property
-    def is_real(self):
-        return True
-
 class ProductSet(Set):
     """
     Represents a Cartesian Product of Sets.
