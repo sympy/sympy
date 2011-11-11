@@ -492,7 +492,7 @@ class euler(Function):
             Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k,j) * ((-1)**j * (k-2*j)**(2*n+1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j,0,k)), (k, 1, 2*n+1)))
 
-            return  Em
+            return Em
 
 
     def _eval_evalf(self, prec):

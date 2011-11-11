@@ -402,7 +402,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
         pattern = Mul.make_args(pattern)
 
         if len(terms) < len(pattern):
-            # pattern is longer than  matched product
+            # pattern is longer than matched product
             # so no chance for positive parsing result
             return None
         else:
@@ -2164,7 +2164,7 @@ def _logcombine(expr, force=False):
                 for j in largs:
                     loglargs *= log(j)
 
-                if  all(getattr(t,'is_positive') for t in largs)\
+                if all(getattr(t,'is_positive') for t in largs)\
                     and getattr(i.extract_multiplicatively(loglargs),'is_real', False)\
                     or (force\
                         and not all(getattr(t,'is_nonpositive') for t in largs)\

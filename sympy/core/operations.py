@@ -4,8 +4,8 @@ from sympify import _sympify, sympify
 from cache import cacheit
 from compatibility import cmp
 
-# from add import Add   /cyclic/
-# from mul import Mul   /cyclic/
+# from add import Add /cyclic/
+# from mul import Mul /cyclic/
 # from function import Lambda, WildFunction /cyclic/
 
 class AssocOp(Expr):

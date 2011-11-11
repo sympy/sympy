@@ -52,7 +52,7 @@ def default_sort_key(item, order=None):
         else:
             args = list(item)
 
-        args = [ default_sort_key(arg, order=order) for arg in  args ]
+        args = [default_sort_key(arg, order=order) for arg in args]
 
         if isinstance(item, dict):
             args = sorted(args)

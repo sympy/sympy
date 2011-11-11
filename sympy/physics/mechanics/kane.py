@@ -332,7 +332,7 @@ class Kane(object):
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
         if self._k_kqdot == None:
-            raise ValueError('Kin. diff. eqs  need to be supplied first')
+            raise ValueError('Kin. diff. eqs need to be supplied first')
         sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
             -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
         return sub_dict
