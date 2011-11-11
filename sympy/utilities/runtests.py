@@ -339,7 +339,7 @@ def doctest(*paths, **kwargs):
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     colors = kwargs.get("colors", True)
-    first_only = kwargs.get("first_only", True)
+    first_only = kwargs.get("first_only", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
                     "doc/src/modules/mpmath", # needs to be fixed upstream
@@ -367,20 +367,15 @@ def doctest(*paths, **kwargs):
     if first_only:
         t.optionflags |= pdoctest.REPORT_ONLY_FIRST_FAILURE
 
-    # Step 1
-    #
-    # Here we test doctests in all *py files
-    #
+    r.start()
+    # Step 1: Here we test doctests in all *py files
     test_files = t.get_test_files('sympy')
-
     test_files.extend(t.get_test_files('examples', init_only=False))
-
     matched = t.filter_files(test_files, blacklist, paths)
     t._testfiles.extend(matched)
 
     # setup prtinter
     print_manager.setup_pprint(False, hard=True)
-
 
     # run the tests and record the result for this *py portion of the tests
     if t._testfiles:
@@ -388,10 +383,9 @@ def doctest(*paths, **kwargs):
     else:
         failed = False
 
-
-    # Step 2
+    # Step 2: Here we test *.txt files at or below doc/src.
     #
-    # Here we test *.txt files at or below doc/src. Code from these must
+    # Code from these must
     # be self supporting in terms of imports since there is no importing
     # of necessary modules by doctest.testfile. If you try to pass *.py
     # files through this they might fail because they will lack the needed
@@ -400,7 +394,6 @@ def doctest(*paths, **kwargs):
     failed_2 = False
     test_files = t.get_test_files('doc/src', '*.txt', init_only=False)
     test_files.sort()
-
     matched = t.filter_files(test_files, blacklist, paths)
     t._testfiles = matched
     t.pprint_status = None
@@ -409,7 +402,10 @@ def doctest(*paths, **kwargs):
     if t._testfiles:
         failed_2 = not t.test_text_files()
 
-    return not (failed or failed_2)
+    r.finish()
+    ok = not (failed or failed_2)
+    assert r.ok == ok
+    return ok
 
 def wikitest(*paths, **kwargs):
     """
@@ -447,7 +443,8 @@ def wikitest(*paths, **kwargs):
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     colors = kwargs.get("colors", True)
-    first_only = kwargs["first_only"]
+    first_only = kwargs.get("first_only", False)
+
     againstlist = kwargs.get("againstlist", ["master"])
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([])
@@ -474,7 +471,9 @@ def wikitest(*paths, **kwargs):
         t.pprint_status = None
         print_manager.setup_pprint(False, hard=True)
         if t._testfiles:
+            r.start()
             failed = not t.test_text_files()
+            r.finish()
 
         if failed:
             failed_total = True
@@ -790,14 +789,13 @@ class SymPyDocTester(SymPyTesterBase):
         """
         Runs the tests and returns True if all tests pass, otherwise False.
         """
-        self._reporter.start()
         for f in self._testfiles:
             try:
                 self.test_docstrings_in_file(f)
             except KeyboardInterrupt:
                 print " interrupted by user"
                 break
-        return self._reporter.finish()
+        return self._reporter.ok
 
     def test_docstrings_in_file(self, filename):
         """
@@ -875,7 +873,6 @@ class SymPyDocTester(SymPyTesterBase):
         """
         Runs the tests and returns True if all tests pass, otherwise False.
         """
-        self._reporter.start()
         for f in self._testfiles:
             # make sure we return to the original displayhook in case some
             # doctest has changed that
@@ -896,7 +893,7 @@ class SymPyDocTester(SymPyTesterBase):
                 sys.displayhook = old_displayhook
                 self.optionflags = old_optionflags
 
-        return self._reporter.finish()
+        return self._reporter.ok
 
     def test_text_file(self, filename, module_relative=True, name=None, package=None,
                  globs=None, verbose=None, report=True, optionflags=0,
@@ -1880,8 +1877,14 @@ class PyTestReporter(Reporter):
         self.write_center(text)
         ok = len(self._failed) == 0 and len(self._exceptions) == 0 and \
                 len(self._failed_doctest) == 0
-        if not ok:
+        if not self.ok:
             self.write("DO *NOT* COMMIT!\n", "Red")
+        return ok
+
+    @property
+    def ok(self):
+        ok = len(self._failed) == 0 and len(self._exceptions) == 0 and \
+                len(self._failed_doctest) == 0
         return ok
 
     def entering_filename(self, filename, n):

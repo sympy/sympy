@@ -28,11 +28,16 @@ parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
 # when the user enters -h or --help, print the `help` text
 parser.add_option("-n", "--normal", action="store_true", dest="normal",
         help="run normal doctests; do not require explicit imports", default=False)
+parser.add_option("--no-colors", action="store_false", dest="colors",
+        default=True, help="Do not report colored [OK] and [FAIL]")
 parser.add_option('-t', '--types', dest='types', action='store',
         default=None, choices=['gmpy', 'python', 'sympy'],
         help='setup ground types: gmpy | python | sympy')
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
+parser.add_option("-f", "--firstonly", action="store_true", dest="first_only",
+        help="Report details only about the first failure or exception [default: %default]",
+        default=False)
 
 parser.set_usage("test [options ...] [files ...]")
 parser.epilog = """\

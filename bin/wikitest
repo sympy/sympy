@@ -61,8 +61,13 @@ parser.add_option("-n", "--normal", action="store_true", dest="normal",
         help="run normal wikitests; do not require explicit imports", default=False)
 parser.add_option("--no-colors", action="store_false", dest="colors",
         default=True, help="Do not report colored [OK] and [FAIL]")
+parser.add_option('-t', '--types', dest='types', action='store',
+        default=None, choices=['gmpy', 'python', 'sympy'],
+        help='setup ground types: gmpy | python | sympy')
+parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
+        default=True, help='disable caching mechanism')
 parser.add_option("-f", "--firstonly", action="store_true", dest="first_only",
-        help="Report only first failure for every file [default: %default]",
+        help="Report details only about the first failure or exception [default: %default]",
         default=False)
 
 
@@ -81,6 +86,11 @@ parser.epilog = '"options" are any of the options above.  "files" are 0 or more 
 
 
 options, args = parser.parse_args()
+
+if not options.cache:
+    os.environ['SYMPY_USE_CACHE'] = 'no'
+if options.types:
+    os.environ['SYMPY_GROUND_TYPES'] = options.types
 
 againstlist = options.against.split(",")
 dictargs = {"blacklist": blacklist, "againstlist": againstlist}
