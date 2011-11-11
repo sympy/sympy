@@ -57,3 +57,6 @@ def test_expand_modulus():
 
     raises(ValueError, "((x + y)**11).expand(modulus=0)")
     raises(ValueError, "((x + y)**11).expand(modulus=x)")
+
+def test_issue_2644():
+    assert (x*sqrt(x + y)*(1 + sqrt(x + y))).expand() == x**2 + x*y + x*sqrt(x + y)
