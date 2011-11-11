@@ -942,13 +942,13 @@ class Rational(Number):
             if self.is_positive:
                 return self, S.One
             return -self, S.NegativeOne
-        return  S.One, self
+        return S.One, self
 
 # int -> Integer
 _intcache = {}
 
 
-# TODO move this tracing facility to  sympy/core/trace.py  ?
+# TODO move this tracing facility to sympy/core/trace.py  ?
 def _intcache_printinfo():
     ints = sorted(_intcache.keys())
     nhit = _intcache_hits
@@ -1472,7 +1472,7 @@ class NegativeOne(IntegerConstant):
                 return Float(-1.0) ** e
             if e is S.NaN:
                 return S.NaN
-            if e is S.Infinity  or  e is S.NegativeInfinity:
+            if e is S.Infinity or e is S.NegativeInfinity:
                 return S.NaN
             if e is S.Half:
                 return S.ImaginaryUnit

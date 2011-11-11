@@ -76,7 +76,7 @@ class Mul(AssocOp):
                  previous terms will be re-processed for each new argument.
                  So if each of ``a``, ``b`` and ``c`` were :class:`Mul`
                  expression, then ``a*b*c`` (or building up the product
-                 with ``*=``) will  process all the arguments of ``a`` and
+                 with ``*=``) will process all the arguments of ``a`` and
                  ``b`` twice: once when ``a*b`` is computed and again when
                  ``c`` is multiplied.
 
@@ -1123,7 +1123,7 @@ class Mul(AssocOp):
         # 4) ... unmatched commutative terms
         # 5) and finally differences in sign
         if len(old_nc) > len(nc) or len(old_c) > len(c) or \
-                set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc)) or \
+                set(_[0] for _ in old_nc).difference(set(_[0] for _ in nc)) or \
                 set(old_c).difference(set(c)) or \
                 any(sign(c[b]) != sign(old_c[b]) for b in old_c):
             return fallback()

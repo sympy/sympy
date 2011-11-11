@@ -1344,10 +1344,10 @@ class FermionState(FockState):
         """
         returns number of identified hole states in list.
         """
-        return len([ i for i in list if  cls._only_below_fermi(i)])
+        return len([i for i in list if cls._only_below_fermi(i)])
 
     def _negate_holes(self,list):
-        return tuple([ -i if i<=self.fermi_level else i for i in list ])
+        return tuple([-i if i<=self.fermi_level else i for i in list])
 
     def __repr__(self):
         if self.fermi_level:

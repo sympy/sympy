@@ -195,7 +195,7 @@ some calculation, which is going to be substituted for something else at the
 end anyway. This is achieved using ``Dummy("x")``. So, to sum it
 up::
 
-    >>> from  sympy import Symbol, Dummy
+    >>> from sympy import Symbol, Dummy
     >>> Symbol("x") == Symbol("x")
     True
 

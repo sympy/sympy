@@ -82,9 +82,9 @@ def test_gosper_sum_AeqB_part1():
     g1h = -(2*m + 1)**2*(3*m + 4)*factorial(m - S(1)/2)**2/factorial(m + 1)**2
 
     g = gosper_sum(f1a, (n, 0, m))
-    assert g is not None  and simplify(g - g1a) == 0
+    assert g is not None and simplify(g - g1a) == 0
     g = gosper_sum(f1b, (n, 0, m))
-    assert g is not None  and simplify(g - g1b) == 0
+    assert g is not None and simplify(g - g1b) == 0
     g = gosper_sum(f1c, (n, 0, m))
     assert g is not None # and simplify(g - g1c) == 0
     g = gosper_sum(f1d, (n, 0, m))

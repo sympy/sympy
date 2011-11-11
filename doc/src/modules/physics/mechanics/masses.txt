@@ -82,7 +82,7 @@ frame, and an inertia tuple::
 The mass is specified exactly as is in a particle. Similar to the
 ``Particle``'s ``.point``, the ``RigidBody``'s mass center, ``.mc`` must be
 specified. The reference frame is stored in an analogous fashion and holds
-information about the  body's orientation and angular velocity. Finally, the
+information about the body's orientation and angular velocity. Finally, the
 inertia for a rigid body needs to be specified about a point. In
 :mod:`mechanics`, you are allowed to specify any point for this. The most
 common is the mass center, as shown in the above code. If a point is selected

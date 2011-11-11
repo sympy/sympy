@@ -264,7 +264,7 @@ def test_tsolve():
     assert solve((2*x+8)*(8+exp(x)), x) == [-4, log(8) + pi*I]
     eq = 2*exp(3*x+4)-3
     ans = solve(eq, x)
-    assert  len(ans) == 3 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
+    assert len(ans) == 3 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
     assert solve(2*log(3*x+4)-3, x) == [(exp(Rational(3,2))-4)/3]
     assert solve(exp(x)+1, x) == [pi*I]
     assert solve(x**2 - 2**x, x) == [2]

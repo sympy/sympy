@@ -33,7 +33,7 @@ def psi_n(n, x, m, omega):
     # normalization coefficient
     C =  (nu/pi)**(S(1)/4) * sqrt(1/(2**n*factorial(n)))
 
-    return  C * exp(-nu* x**2 /2) * hermite(n, sqrt(nu)*x)
+    return C * exp(-nu* x**2 /2) * hermite(n, sqrt(nu)*x)
 
 
 def E_n(n,omega):

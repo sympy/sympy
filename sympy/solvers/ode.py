@@ -1856,7 +1856,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     F(x, y) can be rewritten as G(y/x) or H(x/y).  See also the
     docstring of homogeneous_order().
 
-    If the coefficients P and Q in the  differential equation above are
+    If the coefficients P and Q in the differential equation above are
     homogeneous functions of the same order, then it can be shown that
     the substitution y = u1*x (u1 = y/x) will turn the differential
     equation into an equation separable in the variables x and u.  If
@@ -1936,7 +1936,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     F(x, y) can be rewritten as G(y/x) or H(x/y).  See also the
     docstring of homogeneous_order().
 
-    If the coefficients P and Q in the  differential equation above are
+    If the coefficients P and Q in the differential equation above are
     homogeneous functions of the same order, then it can be shown that
     the substitution x = u2*y (u2 = x/y) will turn the differential
     equation into an equation separable in the variables y and u2.  If
@@ -2378,7 +2378,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     These equations can be solved in a general manner, by taking the
     roots of the characteristic equation a_n*m**n + a_(n-1)*m**(n-1) +
     ... + a1*m + a0 = 0.  The solution will then be the sum of
-    Cn*x**i*exp(r*x) terms, for each  where Cn is an arbitrary constant,
+    Cn*x**i*exp(r*x) terms, for each where Cn is an arbitrary constant,
     r is a root of the characteristic equation and i is is one of each
     from 0 to the multiplicity of the root - 1 (for example, a root 3 of
     multiplicity 2 would create the terms C1*exp(3*x) + C2*x*exp(3*x)).

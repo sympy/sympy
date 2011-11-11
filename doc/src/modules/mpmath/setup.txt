@@ -52,7 +52,7 @@ of supported OpenSUSE versions and use http://download.opensuse.org/repositories
 Current development version
 ...........................
 
-See  http://code.google.com/p/mpmath/source/checkout for instructions on how to check out the mpmath Subversion repository. The source code can also be browsed online from the Google Code page.
+See http://code.google.com/p/mpmath/source/checkout for instructions on how to check out the mpmath Subversion repository. The source code can also be browsed online from the Google Code page.
 
 Checking that it works
 ......................
