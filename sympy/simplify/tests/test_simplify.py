@@ -4,8 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float,
-    radsimp)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL
 
@@ -859,6 +858,12 @@ def test_radsimp():
     assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == x**2 + sqrt(2)*(x**2 - x*A)
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -11*sqrt(2) + 9*sqrt(3)
+
+    # coverage not provided by above tests
+    assert collect_const(2*sqrt(3) + 4*a*sqrt(5)) == Mul(2, (2*sqrt(5)*a + sqrt(3)), evaluate=False)
+    assert collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3)) == 2*(2*sqrt(5)*a + sqrt(3))
+    assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
+        sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
 
 def test_issue2834():
     from sympy import Polygon, RegularPolygon, denom

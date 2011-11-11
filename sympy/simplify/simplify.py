@@ -970,7 +970,7 @@ def collect_const(expr, *vars, **first):
 
     **Examples**
     >>> from sympy import sqrt
-    >>> from sympy.abc import s
+    >>> from sympy.abc import a, s
     >>> from sympy.simplify.simplify import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(sqrt(2) + 2)
@@ -981,13 +981,24 @@ def collect_const(expr, *vars, **first):
     (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
     sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+
+    If no constants are provided then a leading Rational might be returned:
+
+    >>> collect_const(2*sqrt(3) + 4*a*sqrt(5))
+    2*(2*sqrt(5)*a + sqrt(3))
+    >>> collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3))
+    4*sqrt(5)*a + 2*sqrt(3)
     """
+
     if first.get('first', True):
         c, p = sympify(expr).as_content_primitive()
     else:
         c, p = S.One, expr
     if c is not S.One:
-        return _keep_coeff(c, collect_const(p, *vars, first=False))
+        if not vars:
+            return _keep_coeff(c, collect_const(p, *vars, first=False))
+        # else don't leave the Rational on the outside
+        return c*collect_const(p, *vars, first=False)
 
     if not (expr.is_Add or expr.is_Mul):
         return expr
@@ -1035,16 +1046,25 @@ def collect_const(expr, *vars, **first):
                 break
     return expr
 
-def radsimp(expr):
+def radsimp(expr, symbolic=True):
     """
     Rationalize the denominator by removing square roots. If there are more
     than 3 terms (after collecting common square root terms) that have
     square roots then the removal is only partial.
 
+    Note: the expression returned from radsimp must be used with caution
+    since if the denominator contains symbols, it will be possible to make
+    substitutions that violate the assumptions of the simplification process:
+    that for a denominator matching a + b*sqrt(c), a != +/-b*sqrt(c). (If there
+    are no symbols, this assumptions is made valid by collecting terms of
+    sqrt(c) so match variable ``a`` does not contain ``sqrt(c)``.) If you do
+    not want the simplification to occur for symbolic denominators, set
+    ``symbolic`` to False.
+
     Examples:
 
     >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
-    >>> from sympy.abc import a, b
+    >>> from sympy.abc import a, b, c
 
     >>> radsimp(1/(I + 1))
     (1 - I)/2
@@ -1071,7 +1091,7 @@ def radsimp(expr):
 
     >>> three_rads = sqrt(2) + sqrt(3) + sqrt(5)
     >>> den = sqrt(2) + sqrt(three_rads)
-    >>> denom(radsimp(1/den)) == -2 + three_rads
+    >>> denom(radsimp(1/den)) == 2 - three_rads
     True
 
     At the very least, square roots in an expression with no denominator
@@ -1080,10 +1100,24 @@ def radsimp(expr):
     >>> radsimp(sqrt(2)*x + sqrt(2))
     sqrt(2)*(x + 1)
 
+    Results with symbols will not always be valid for all substitutions:
+
+    >>> eq = 1/(a + b*sqrt(c))
+    >>> eq.subs(a, b*sqrt(c))
+    1/(2*b*sqrt(c))
+    >>> radsimp(eq).subs(a, b*sqrt(c))
+    nan
+
+    If symbolic=False, symbolic denominators will not be transformed (but
+    numeric denominators will still be processed):
+
+    >>> radsimp(eq, symbolic=False)
+    1/(a + b*sqrt(c))
+
     """
 
     def handle(expr):
-        if expr.is_Atom:
+        if expr.is_Atom or not symbolic and expr.free_symbols:
             return expr
         n, d = fraction(expr)
         if d is S.One:
@@ -1121,9 +1155,9 @@ def radsimp(expr):
             r = d.match(a + b*sqrt(c))
             if not r or r[b] == 0:
                 r = d.match(b*sqrt(c))
-                if not r:
+                if r is None:
                     break
-                r[a] = 0
+                r[a] = S.Zero
             va, vb, vc = r[a],r[b],r[c]
 
             nmul = va - vb*sqrt(vc)
@@ -2056,6 +2090,26 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
         True
 
+    Another issue to be aware of if using ``ratio=oo`` is that simplification
+    of a denominator containing a sqrt may lead to an expression which is not
+    strictly valid. If ``ratio`` is not changed, this transformation doesn't
+    (usually) happen since it would lead to a longer expression:
+
+        >>> from sympy.abc import a, b, c
+        >>> from sympy import sqrt
+        >>> eq = 1/(a + b*sqrt(c))
+        >>> simplify(eq) == eq
+        True
+        >>> forced = simplify(eq, ratio=oo)
+        >>> forced == eq
+        False
+        >>> eq.subs(a, b*sqrt(c))
+        1/(2*b*sqrt(c))
+        >>> forced.subs(a, b*sqrt(c))
+        nan
+        >>> forced
+        (a - b*sqrt(c))/(a**2 - b**2*c)
+
     Note that the shortest expression is not necessary the simplest, so
     setting ``ratio`` to 1 may not be a good idea.
     Heuristically, the default value ``ratio=1.7`` seems like a reasonable
@@ -2166,15 +2220,22 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     expr = powsimp(expr, combine='exp', deep=True)
     numer, denom = expr.as_numer_denom()
-
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')
 
+        # cancel already took care of things like 1/sqrt(3) -> sqrt(3)/3
+        # so we don't have to worry about `a` matching with `b`=0 as we
+        # do in radsimp
         r = denom.match(a + b*sqrt(c))
-        if r:
-            rr = r[a].match(a + b*sqrt(c))
 
-        if r is not None and r[b] and (not rr or rr[b] == 0):
+        if r is not None and r[b]:
+            # be careful not to multiply by 0/0 when removing denom;
+            # this will happen in a = +/- b*sqrt(c), so collect c so
+            # it's not also in `a`
+            if r[c].is_number:
+                newdenom = collect_const(denom, sqrt(r[c]))
+                if newdenom != denom:
+                    r = newdenom.match(a + b*sqrt(c))
             a, b, c = r[a], r[b], r[c]
 
             numer *= a-b*sqrt(c)
