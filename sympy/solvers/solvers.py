@@ -12,8 +12,9 @@
 """
 
 from sympy.core.compatibility import iterable, is_sequence
+from sympy.core.containers import Dict
 from sympy.core.sympify import sympify
-from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
+from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic, Expr
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
         Derivative, Function, AppliedUndef, UndefinedFunction)
 from sympy.core.numbers import ilcm, Float
@@ -303,6 +304,31 @@ def check_assumptions(expr, **assumptions):
         result = None # Can't conclude, unless an other test fails.
     return result
 
+def float_coeff(expr, deep=False, exponent=False):
+    if isinstance(expr, (Dict, dict)):
+        return type(expr)([(k, float_coeff(v, deep, exponent)) for k, v in expr.iteritems()])
+    elif iterable(expr):
+        return type(expr)([float_coeff(a, deep, exponent) for a in expr])
+    elif not isinstance(expr, Expr):
+        raise NotImplementedError('expr of type %s is not handled' % type(expr))
+    if expr.is_Rational:
+        return expr.n()
+    elif not expr.args:
+        return expr
+    elif expr.func is exp:
+        return exp(float_coeff(expr.args[0], deep, exponent))
+    elif expr.is_Pow:
+        b, e = expr.as_base_exp()
+        if exponent:
+            e = float_coeff(e)
+        return float_coeff(b, deep, exponent)**e
+    elif deep or expr.is_Mul:
+        return expr.func(*[float_coeff(a, deep, exponent) for a in expr.args])
+    elif expr.is_Add:
+        return Add(*[Mul(float(c), float_coeff(m, deep, exponent))
+               for c, m in [a.as_coeff_Mul() for a in Add.make_args(expr)]])
+    return expr
+
 def solve(f, *symbols, **flags):
     """
     Algebraically solves equations and systems of equations.
@@ -349,7 +375,9 @@ def solve(f, *symbols, **flags):
                'rational=True (default)'
                    recast Floats as Rational; if this option is not used, the
                    system containing floats may fail to solve because of issues
-                   with polys.
+                   with polys. If rational=None, Floats will be recast as
+                   rationals but the answer will be recast as Floats. If the
+                   flag is False then nothing will be done to the Floats.
                'manual=True (default is False)'
                    do not use the polys/matrix method to solve a system of
                    equations, solve them one at a time as you might "manually".
@@ -602,7 +630,7 @@ def solve(f, *symbols, **flags):
 
     # rationalize Floats
     floats = False
-    if flags.get('rational', True):
+    if flags.get('rational', True) is not False:
         for i, fi in enumerate(f):
             if fi.has(Float):
                 floats = True
@@ -678,18 +706,19 @@ def solve(f, *symbols, **flags):
     # Note that if assumptions about a solution can't be verified, it is still returned.
     check = flags.get('check', True)
 
+    # restore floats
+    if floats and flags.get('rational', None) is None:
+        solution = float_coeff(solution, deep=True, exponent=False)
+
     if not check or not solution:
         return solution
 
-    float = floats and bool(flags.get('rational', False)) is not True
     warning = flags.get('warn', False)
     got_None = [] # solutions for which one or more symbols gave None
     no_False = [] # solutions for which no symbols gave False
     if type(solution) is list:
         if type(solution[0]) is tuple:
             for sol in solution:
-                if float:
-                    sol = tuple([soli.n() for soli in sol])
                 for symb, val in zip(symbols, sol):
                     test = check_assumptions(val, **symb.assumptions0)
                     if test is False:
@@ -700,9 +729,6 @@ def solve(f, *symbols, **flags):
                     no_False.append(sol)
         elif type(solution[0]) is dict:
             for sol in solution:
-                if float:
-                    for k in sol:
-                        sol[k] = sol[k].n()
                 a_None = False
                 for symb, val in sol.iteritems():
                     test = check_assumptions(val, **symb.assumptions0)
@@ -717,8 +743,6 @@ def solve(f, *symbols, **flags):
                         got_None.append(sol)
         else: # list of expressions
             for sol in solution:
-                if float:
-                    sol = sol.n()
                 test = check_assumptions(sol, **symbols[0].assumptions0)
                 if test is False:
                     continue
@@ -728,9 +752,6 @@ def solve(f, *symbols, **flags):
 
     elif type(solution) is dict:
         a_None = False
-        if float:
-            for k in solution:
-                solution[k] = solution[k].n()
         for symb, val in solution.iteritems():
             test = check_assumptions(val, **symb.assumptions0)
             if test:

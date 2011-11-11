@@ -6,7 +6,7 @@ from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
-from sympy.solvers.solvers import unrad, _invert
+from sympy.solvers.solvers import unrad, _invert, float_coeff
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 
@@ -894,3 +894,21 @@ def test_issue_2813():
     assert len(ans) == 2 and all(a.is_Number for a in ans)
     ans = solve(x**2 - x - 0.1)
     assert len(ans) == 2 and all(a.is_Number for a in ans)
+
+def test_float_handling():
+    assert solve(x - 0.5, rational=True) == [S.Half]
+    assert solve(x - 0.5, rational=False) == [0.5]
+    assert solve(x - S.Half, rational=False) == [0.5]
+    assert solve(x - 0.5, rational=None) == [0.5]
+    assert solve(x - S.Half, rational=None) == [S.Half]
+    assert float_coeff(1 + 2*x) == 1.0 + 2.0*x
+    for contain in [list, tuple, set]:
+        assert float_coeff(contain([1 + 2*x])) == contain([1.0 + 2.0*x])
+    assert float_coeff({2*x: [1 + 2*x]}) == {2*x: [1.0 + 2.0*x]}
+    assert float_coeff(cos(2*x)) == cos(2*x)
+    assert float_coeff(cos(2*x), deep=True) == cos(2.0*x)
+    assert float_coeff(3*x**2) == 3.0*x**2
+    assert float_coeff(3*x**2, exponent=True) == 3.0*x**2.0
+    assert float_coeff(exp(2*x)) == exp(2*x)
+    assert float_coeff(exp(2*x), exponent=True) == exp(2*x)
+    assert float_coeff(exp(2*x), deep=True) == exp(2.0*x)
