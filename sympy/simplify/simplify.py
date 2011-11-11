@@ -2315,7 +2315,7 @@ def _condense(expr, var, _symbols={}):
     return rv, _symbols
 
 def condense(eq, x, constant_name='C'):
-    """Return ``expr`` with all symbols different than ``variable``
+    """Return ``expr`` with all symbols different than ``x``
     absorbed into constant(s) with name ``constant_name`` having consecutive
     numbers e.g. C0, C1, C2, .... The absorbing is done by combining added or
     multiplied constants, and by expanding powers that have an added constant
@@ -2391,6 +2391,13 @@ def condense(eq, x, constant_name='C'):
 
     # identify constants
     eq, d = _condense(eq, x)
+
+    # update rhs
+    free = eq.free_symbols
+    for k, v in d.items():
+        if v in d and v not in free:
+            d.pop(k)
+            eq  = eq.subs(k, v)
 
     # restore Rational powers
     reps = {}
