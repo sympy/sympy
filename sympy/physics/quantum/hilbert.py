@@ -301,8 +301,8 @@ class TensorProductHilbertSpace(HilbertSpace):
     C(2)*F
     >>> hs.dimension
     oo
-    >>> list(hs.spaces)
-    [C(2), F]
+    >>> hs.spaces
+    (C(2), F)
 
     >>> c1 = ComplexSpace(2)
     >>> n = symbols('n')
@@ -382,7 +382,7 @@ class TensorProductHilbertSpace(HilbertSpace):
     @property
     def spaces(self):
         """A tuple of the Hilbert spaces in this tensor product."""
-        return set(self.args)
+        return self.args
 
     def _spaces_printer(self, printer, *args):
         spaces_strs = []
@@ -499,7 +499,7 @@ class DirectSumHilbertSpace(HilbertSpace):
     @property
     def spaces(self):
         """A tuple of the Hilbert spaces in this direct sum."""
-        return set(self.args)
+        return self.args
 
     def _sympyrepr(self, printer, *args):
         spaces_reprs = [printer._print(arg, *args) for arg in self.args]
