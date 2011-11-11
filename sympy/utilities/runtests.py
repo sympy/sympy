@@ -474,9 +474,9 @@ def wikitest(*paths, **kwargs):
             r.start()
             failed = not t.test_text_files()
             r.finish()
+            if failed:
+                failed_total = True
 
-        if failed:
-            failed_total = True
     return not failed_total
 
 
