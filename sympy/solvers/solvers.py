@@ -305,6 +305,26 @@ def check_assumptions(expr, **assumptions):
     return result
 
 def float_coeff(expr, deep=False, exponent=False):
+    """Make all Rationals in expr Floats except if they are exponents
+    (unless the exponents flag is set to True). This function avoids the
+    'conjugates' that can appear when using evalf[1] to evaluate expressions.
+
+    Example:
+
+    >>> from sympy.solvers.solvers import float_coeff
+    >>> from sympy.abc import x
+    >>> from sympy import cos, pi
+    >>> float_coeff(x**4 + 2*x + cos(pi/8) + 1)
+    1.0*x**4 + 2.0*x + 1.0*cos(pi/8) + 1.0
+    >>> float_coeff(x**4 + 2*x + cos(pi/8) + 1, deep=True)
+    x**4 + 2.0*x + cos(0.125*pi) + 1.0
+    >>> float_coeff(x**4 + 2*x + cos(pi/8) + 1, exponent=True)
+    2.0*x + 1.0*x**4.0 + 1.0*cos(pi/8) + 1.0
+
+    Reference:
+    [1] http://groups.google.com/group/sympy/t/d778f1cd00358e97
+    """
+
     if isinstance(expr, (Dict, dict)):
         return type(expr)([(k, float_coeff(v, deep, exponent)) for k, v in expr.iteritems()])
     elif iterable(expr):
@@ -315,7 +335,7 @@ def float_coeff(expr, deep=False, exponent=False):
         return expr.n()
     elif not expr.args:
         return expr
-    elif expr.func is exp:
+    elif deep and expr.func is exp:
         return exp(float_coeff(expr.args[0], deep, exponent))
     elif expr.is_Pow:
         b, e = expr.as_base_exp()
