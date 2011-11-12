@@ -444,6 +444,7 @@ def wikitest(*paths, **kwargs):
     verbose = kwargs.get("verbose", False)
     colors = kwargs.get("colors", True)
     first_only = kwargs.get("first_only", False)
+    all_pages = kwargs.get("all_pages", False)
 
     againstlist = kwargs.get("againstlist", ["master"])
     blacklist = kwargs.get("blacklist", [])
@@ -464,7 +465,7 @@ def wikitest(*paths, **kwargs):
         t.load_sympy_version()
         t.load_sympy_modules()
 
-        test_files = t.get_test_files(wiki_dir, pat=r"^.*\.(md|rest|mediawiki)$",init_only=False)
+        test_files = t.get_test_files(wiki_dir, pat=r"^.*\.(md|rest|mediawiki)$",init_only=False, all_pages = all_pages)
 
         matched = t.filter_files(test_files, blacklist, paths)
         t._testfiles = matched
@@ -1065,7 +1066,7 @@ class SymPyWikiTester(SymPyDocTester):
         self.against = against
         self.against_dir = against_dir
 
-    def get_test_files(self, dir, pat=r'^.*\.md$', init_only=True):
+    def get_test_files(self, dir, pat=r'^.*\.md$', init_only=True, all_pages = False):
         """
         Returns the list of wiki-pages (default) from which docstrings
         will be tested which are at or below directory `dir`.
@@ -1082,7 +1083,7 @@ class SymPyWikiTester(SymPyDocTester):
         g = []
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files
-                      if _fnmatch(f) and self.has_directive(path, f)])
+                      if _fnmatch(f) and (all_pages or self.has_directive(path, f))])
         return [sys_normcase(gi) for gi in g]
 
     def has_directive(self, pathdir, fn):

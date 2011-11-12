@@ -37,6 +37,9 @@ For markdown:
 passed against release version only.
 "wikitest master" - against master.
 "wikitest master,release" - against master and release version
+
+
+
 """
 
 # files listed here can be in unix forward slash format with paths
@@ -72,8 +75,11 @@ parser.add_option("-f", "--firstonly", action="store_true", dest="first_only",
 
 
 parser.add_option("-a", "--against", type="string", dest="against",
-        help="What do the tests must be relative [master | release | master,release] [default: %default]",
+        help="SymPy version. What do the tests must be relative [master | release | master,release] [default: %default]",
         default="master")
+parser.add_option("--all", action="store_true", dest="all_pages",
+        help="Test all wiki pages in directory, that is inspire of pages's directive. [default: %default]",
+        default=False)
 parser.add_option("-w", "--wiki-dir", type="string", dest="wiki_dir",
         help="The path to the wiki pages directory", default=None)
 parser.add_option("-m", "--master-dir", type="string", dest="master_dir",
