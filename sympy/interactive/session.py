@@ -27,6 +27,7 @@ def _make_message(ipython=True, quiet=False, source=None):
     from sympy import __version__ as sympy_version
     from sympy.polys.domains import GROUND_TYPES
     from sympy.utilities.misc import ARCH
+    from sympy import SYMPY_DEBUG
 
     import sys
     import os
@@ -44,6 +45,9 @@ def _make_message(ipython=True, quiet=False, source=None):
 
     if cache is not None and cache.lower() == 'no':
         info.append('cache: off')
+
+    if SYMPY_DEBUG:
+        info.append('debugging: on')
 
     args = shell_name, sympy_version, python_version, ARCH, ', '.join(info)
     message = "%s console for SymPy %s (Python %s-%s) (%s)\n" % args

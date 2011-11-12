@@ -791,6 +791,50 @@ class Basic(object):
 
         return self._subs_list(subst)
 
+    def xreplace(self, rule):
+        """
+        Replace occurrences of objects within the expression.
+
+        Parameters
+        ----------
+        rule : dict-like
+            Expresses a replacement rule
+
+        Returns
+        -------
+        xreplace : the result of the replacement
+
+        Examples
+        --------
+        >>> from sympy import symbols, pi
+        >>> x,y, z = symbols('x y z')
+        >>> (1+x*y).xreplace({x: pi})
+        pi*y + 1
+        >>> (1+x*y).xreplace({x:pi, y:2})
+        1 + 2*pi
+
+        Notes
+        -----
+        This method operates at a low level and considers only the objects that
+        appear explicitly as nodes in the expression tree. It is unaware of any
+        specific meaning attached to an object or its arguments. For instance,
+        a product of several factors will only be substituted if it matches
+        exactly a key of the dictionary:
+
+        >>> (x*y + z).xreplace({x*y: pi})
+        z + pi
+        >>> (x*y*z).xreplace({x*y: pi})
+        x*y*z
+        >>> (2*x).xreplace({2*x: y, x: z})
+        y
+        >>> (2*2*x).xreplace({2*x: y, x: z})
+        4*z
+        """
+        if self in rule:
+            return rule[self]
+        else:
+            return self.func(*[arg.xreplace(rule) for arg in self.args])
+
     @deprecated
     def __contains__(self, obj):
         if self == obj:
@@ -1053,7 +1097,7 @@ class Basic(object):
         """Count the number of matching subexpressions. """
         return sum(self.find(query, group=True).values())
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         """
         Helper method for match() - switches the pattern and expr.
 
@@ -1066,9 +1110,6 @@ class Basic(object):
         {x_: -a/b}
 
         """
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             return None
@@ -1083,7 +1124,7 @@ class Basic(object):
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
-            d = arg.subs(d).matches(other_arg, d)
+            d = arg.xreplace(d).matches(other_arg, d)
             if d is None:
                 return None
         return d
@@ -1097,7 +1138,7 @@ class Basic(object):
         Return ``None`` when expression (self) does not match
         with pattern. Otherwise return a dictionary such that::
 
-          pattern.subs(self.match(pattern)) == self
+          pattern.xreplace(self.match(pattern)) == self
 
         Example:
 
@@ -1114,7 +1155,7 @@ class Basic(object):
         >>> e = (2*x)**2
         >>> e.match(p*q**r)
         {p_: 4, q_: x, r_: 2}
-        >>> (p*q**r).subs(e.match(p*q**r))
+        >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
         """
@@ -1216,7 +1257,7 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         if self == expr:
             return repl_dict
 
@@ -1225,6 +1266,9 @@ class Atom(Basic):
             return new
         else:
             return self
+
+    def xreplace(self, rule):
+        return rule.get(self, self)
 
     def doit(self, **hints):
         return self

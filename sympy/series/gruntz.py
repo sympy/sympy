@@ -307,7 +307,7 @@ class SubsSet(dict):
 
 @debug
 def mrv(e, x):
-    """Returns a SubsSet of  most rapidly varying (mrv) subexpressions of 'e',
+    """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
     e = powsimp(e, deep=True, combine='exp')
     assert isinstance(e, Basic)

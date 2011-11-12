@@ -1144,7 +1144,10 @@ def test_primitive():
     eq = (2 + 2*x)**2
     assert eq.primitive()[0] == 1
     assert (4.0*x).primitive() == (1, 4.0*x)
+    assert (4.0*x + y/2).primitive() == (S.Half, 8.0*x + y)
     assert (-2*x).primitive() == (2, -x)
+    assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).primitive() == \
+        (S(1)/14, 7.0*x + 21*y + 10*z)
 
 def test_issue_2744():
     a = 1 + x

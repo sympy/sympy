@@ -517,7 +517,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
             R = rsolve_poly(polys, Mul(*denoms), n)
 
-            if not (R is None  or  R is S.Zero):
+            if not (R is None or R is S.Zero):
                 inhomogeneous[i] *= R
             else:
                 return None
@@ -575,7 +575,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
             C = rsolve_poly([ polys[i]*z**i for i in xrange(r+1) ], 0, n)
 
-            if C is not None  and  C is not S.Zero:
+            if C is not None and C is not S.Zero:
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 K = product(simplify(ratio), (n, 0, n-1))
 

@@ -100,7 +100,7 @@ class Kane(object):
 
     """
 
-    simp = True
+    simp = False
 
     def __init__(self, frame):
         """Supply the inertial frame for Kane initialization. """
@@ -332,7 +332,7 @@ class Kane(object):
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
         if self._k_kqdot == None:
-            raise ValueError('Kin. diff. eqs  need to be supplied first')
+            raise ValueError('Kin. diff. eqs need to be supplied first')
         sub_dict = solve_linear_system_LU(Matrix([self._k_kqdot.T,
             -(self._k_ku * Matrix(self._u) + self._f_k).T]).T, self._qdot)
         return sub_dict
@@ -353,7 +353,11 @@ class Kane(object):
             raise ValueError('There must be an equal number of kinematic '
                              'differential equations and coordinates.')
 
-        kdeqs = Matrix(kdeqs)
+        uaux = self._uaux
+        # dictionary of auxiliary speeds which are equal to zero
+        uaz = dict(zip(uaux, [0] * len(uaux)))
+
+        kdeqs = Matrix(kdeqs).subs(uaz)
 
         qdot = self._qdot
         qdotzero = dict(zip(qdot, [0] * len(qdot)))
@@ -487,7 +491,7 @@ class Kane(object):
                     print('This functionality has not yet been tested yet, '
                           'use at your own risk')
                     f = v.frame
-                    d = v.mc.pos_from(p)
+                    d = v.mc.pos_from(P)
                     I -= m * (((f.x | f.x) + (f.y | f.y) + (f.z | f.z)) *
                               (d & d) - (d | d))
                 templist = []

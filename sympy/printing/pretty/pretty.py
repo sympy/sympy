@@ -61,7 +61,7 @@ class PrettyPrinter(Printer):
         # we will use StrPrinter's Float printer, but we need to handle the
         # full_prec ourselves, according to the self._print_level
         full_prec = self._settings["full_prec"]
-        if  full_prec == "auto":
+        if full_prec == "auto":
             full_prec = self._print_level == 1
         return prettyForm(sstr(e, full_prec=full_prec))
 
@@ -269,7 +269,7 @@ class PrettyPrinter(Printer):
         arg = prettyF
         for x in integral.limits:
             prettyArg = self._print(x[0])
-            # XXX qparens   (parens if needs-parens)
+            # XXX qparens (parens if needs-parens)
             if prettyArg.width() > 1:
                 prettyArg = prettyForm(*prettyArg.parens())
 

@@ -1,4 +1,9 @@
-from sympy import Basic, Symbol, Integer, C, S, Dummy, Rational, Add, Pow
+from sympy.core.add import Add
+from sympy.core.basic import Basic, C
+from sympy.core.power import Pow
+from sympy.core.symbol import Symbol, Dummy
+from sympy.core.numbers import Integer, ilcm, Rational
+from sympy.core.singleton import S
 from sympy.core.sympify import sympify, converter, SympifyError
 from sympy.core.compatibility import is_sequence
 
@@ -1825,10 +1830,7 @@ class Matrix(object):
         return True
 
     def is_symbolic(self):
-        for element in self.mat:
-            if element.has(Symbol):
-                return True
-        return False
+        return any(element.has(Symbol) for element in self.mat)
 
     def is_symmetric(self, simplify=True):
         """
@@ -2090,7 +2092,7 @@ class Matrix(object):
             pivots += 1
         return r, pivotlist
 
-    def nullspace(self,simplified=False):
+    def nullspace(self, simplified=False):
         """
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
@@ -2263,6 +2265,8 @@ class Matrix(object):
     def eigenvects(self, **flags):
         """Return list of triples (eigenval, multiplicity, basis)."""
 
+        simplify = flags.pop('simplify', False)
+
         if 'multiple' in flags:
             del flags['multiple']
 
@@ -2279,6 +2283,20 @@ class Matrix(object):
                 basis = tmp.nullspace(simplified=True)
                 if not basis:
                     raise NotImplementedError("Can't evaluate eigenvector for eigenvalue %s" % r)
+            if simplify:
+                # the relationship A*e = lambda*e will still hold if we change the
+                # eigenvector; so if simplify is True we tidy up any normalization
+                # artifacts with as_content_primtive and remove any pure Integer
+                # denominators
+                l = 1
+                for i, b in enumerate(basis[0]):
+                    c, p = b.as_content_primitive()
+                    if c is not S.One:
+                        b = c*p
+                        l = ilcm(l, c.q)
+                    basis[0][i] = b
+                if l != 1:
+                    basis[0] *= l
             out.append((r, k, basis))
         return out
 
@@ -2473,9 +2491,9 @@ class Matrix(object):
         [0, 2, 0]
         [0, 0, 3]
         >>> P
-        [-1/2, 0, -1/2]
-        [   0, 0, -1/2]
-        [   1, 1,    1]
+        [-1, 0, -1]
+        [ 0, 0, -1]
+        [ 2, 1,  2]
         >>> P.inv() * m * P
         [1, 0, 0]
         [0, 2, 0]
@@ -2490,7 +2508,7 @@ class Matrix(object):
             raise MatrixError("Matrix is not diagonalizable")
         else:
             if self._eigenvects == None:
-                self._eigenvects = self.eigenvects()
+                self._eigenvects = self.eigenvects(simplify=True)
             diagvals = []
             P = Matrix(self.rows, 0, [])
             for eigenval, multiplicity, vects in self._eigenvects:
@@ -2546,7 +2564,7 @@ class Matrix(object):
         #if self._is_symbolic:
         #    self._diagonalize_clear_subproducts()
         #    raise NotImplementedError("Symbolic matrices are not implemented for diagonalization yet")
-        self._eigenvects = self.eigenvects()
+        self._eigenvects = self.eigenvects(simplify=True)
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:
             if len(vects) != multiplicity:
@@ -2863,13 +2881,54 @@ def jordan_cell(eigenval, n):
     out[n-1, n-1] = eigenval
     return out
 
-def randMatrix(r,c,min=0,max=99,seed=[]):
-    """Create random matrix r x c"""
-    if seed == []:
+def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
+    """Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted
+    the matrix will be square. If ``symmetric`` is True the matrix must be
+    square.
+
+    **Examples**
+    >>> from sympy.matrices import randMatrix
+    >>> randMatrix(3) # doctest:+SKIP
+    [25, 45, 27]
+    [44, 54,  9]
+    [23, 96, 46]
+    >>> randMatrix(3, 2) # doctest:+SKIP
+    [87, 29]
+    [23, 37]
+    [90, 26]
+    >>> randMatrix(3, 3, 0, 2) # doctest:+SKIP
+    [0, 2, 0]
+    [2, 0, 1]
+    [0, 0, 1]
+    >>> randMatrix(3, symmetric=True) # doctest:+SKIP
+    [85, 26, 29]
+    [26, 71, 43]
+    [29, 43, 57]
+    >>> A = randMatrix(3, seed=1)
+    >>> B = randMatrix(3, seed=2)
+    >>> A == B # doctest:+SKIP
+    False
+    >>> A == randMatrix(3, seed=1)
+    True
+    """
+    if c is None:
+        c = r
+    if seed is None:
         prng = random.Random()  # use system time
     else:
         prng = random.Random(seed)
-    return Matrix(r,c,lambda i,j: prng.randint(min,max))
+    if symmetric and r != c:
+        raise ValueError('For symmetric matrices, r must equal c, but %i != %i' % (r, c))
+    if not symmetric:
+        return Matrix(r, c, lambda i, j: prng.randint(min, max))
+    m = zeros(r)
+    for i in xrange(r):
+        for j in xrange(i, r):
+            m[i, j] = prng.randint(min, max)
+    for i in xrange(r):
+        for j in xrange(i):
+            m[i, j] = m[j, i]
+    return m
 
 def hessian(f, varlist):
     """Compute Hessian matrix for a function f
@@ -3391,39 +3450,40 @@ def symarray(prefix, shape):
 
     Examples
     --------
+    These doctestst require numpy.
 
-    >> from sympy import symarray
-    >> symarray('', 3)
-    [_0 _1 _2]
+    >>> from sympy import symarray
+    >>> symarray('', 3) #doctest: +SKIP
+    [_0, _1, _2]
 
     If you want multiple symarrays to contain distinct symbols, you *must*
     provide unique prefixes:
 
-    >> a = symarray('', 3)
-    >> b = symarray('', 3)
-    >> a[0] is b[0]
+    >>> a = symarray('', 3) #doctest: +SKIP
+    >>> b = symarray('', 3) #doctest: +SKIP
+    >>> a[0] is b[0] #doctest: +SKIP
     True
-    >> a = symarray('a', 3)
-    >> b = symarray('b', 3)
-    >> a[0] is b[0]
+    >>> a = symarray('a', 3) #doctest: +SKIP
+    >>> b = symarray('b', 3) #doctest: +SKIP
+    >>> a[0] is b[0] #doctest: +SKIP
     False
 
     Creating symarrays with a prefix:
-    >> symarray('a', 3)
-    [a_0 a_1 a_2]
+    >>> symarray('a', 3) #doctest: +SKIP
+    [a_0, a_1, a_2]
 
     For more than one dimension, the shape must be given as a tuple:
-    >> symarray('a', (2,3))
-    [[a_0_0 a_0_1 a_0_2]
-    [a_1_0 a_1_1 a_1_2]]
-    >> symarray('a', (2,3,2))
-    [[[a_0_0_0 a_0_0_1]
-      [a_0_1_0 a_0_1_1]
-      [a_0_2_0 a_0_2_1]]
+    >>> symarray('a', (2, 3)) #doctest: +SKIP
+    [[a_0_0, a_0_1, a_0_2],
+     [a_1_0, a_1_1, a_1_2]]
+    >>> symarray('a', (2, 3, 2)) #doctest: +SKIP
+    [[[a_0_0_0, a_0_0_1],
+      [a_0_1_0, a_0_1_1],
+      [a_0_2_0, a_0_2_1]],
     <BLANKLINE>
-     [[a_1_0_0 a_1_0_1]
-      [a_1_1_0 a_1_1_1]
-      [a_1_2_0 a_1_2_1]]]
+     [[a_1_0_0, a_1_0_1],
+      [a_1_1_0, a_1_1_1],
+      [a_1_2_0, a_1_2_1]]]
 
     """
     try:

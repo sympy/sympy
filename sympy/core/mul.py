@@ -76,7 +76,7 @@ class Mul(AssocOp):
                  previous terms will be re-processed for each new argument.
                  So if each of ``a``, ``b`` and ``c`` were :class:`Mul`
                  expression, then ``a*b*c`` (or building up the product
-                 with ``*=``) will  process all the arguments of ``a`` and
+                 with ``*=``) will process all the arguments of ``a`` and
                  ``b`` twice: once when ``a*b`` is computed and again when
                  ``c`` is multiplied.
 
@@ -327,7 +327,7 @@ class Mul(AssocOp):
             inv_exp_dict[e] = Mul(*b)
         c_part.extend([Pow(b, e) for e, b in inv_exp_dict.iteritems() if e])
 
-        # b, e -> e, b
+        # b, e -> e' = sum(e), b
         # {(1/5, [1/3]), (1/2, [1/12, 1/4]} -> {(1/3, [1/5, 1/2])}
         comb_e = {}
         for b, e in pnum_rat.iteritems():
@@ -680,12 +680,18 @@ class Mul(AssocOp):
         if not rewrite:
             return self
         else:
+            plain = Mul(*plain)
             if sums:
                 terms = Mul._expandsums(sums)
-                plain = Mul(*plain)
-                return Add(*[Mul(plain, term) for term in terms])
+                args = []
+                for term in terms:
+                    t = Mul(plain, term)
+                    if t.is_Mul and any(a.is_Add for a in t.args):
+                        t = t._eval_expand_mul(deep=deep)
+                    args.append(t)
+                return Add(*args)
             else:
-                return Mul(*plain)
+                return plain
 
     def _eval_expand_multinomial(self, deep=True, **hints):
         sargs, terms = self.args, []
@@ -755,17 +761,14 @@ class Mul(AssocOp):
             return terms[0].matches(newexpr, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}, evaluate=False):
+    def matches(self, expr, repl_dict={}):
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
-            return AssocOp._matches_commutative(self, expr, repl_dict, evaluate)
+            return AssocOp._matches_commutative(self, expr, repl_dict)
         # todo for commutative parts, until then use the default matches method for non-commutative products
-        return self._matches(expr, repl_dict, evaluate)
+        return self._matches(expr, repl_dict)
 
-    def _matches(self, expr, repl_dict={}, evaluate=False):
-        if evaluate:
-            return self.subs(repl_dict).matches(expr, repl_dict)
-
+    def _matches(self, expr, repl_dict={}):
         # weed out negative one prefixes
         sign = 1
         a, b = self.as_two_terms()
@@ -774,7 +777,7 @@ class Mul(AssocOp):
                 sign = -sign
             else:
                 # the remainder, b, is not a Mul anymore
-                return b.matches(-expr, repl_dict, evaluate)
+                return b.matches(-expr, repl_dict)
         expr = sympify(expr)
         if expr.is_Mul and expr.args[0] is S.NegativeOne:
             expr = -expr; sign = -sign
@@ -784,12 +787,12 @@ class Mul(AssocOp):
             if len(self.args) == 2:
                 # quickly test for equality
                 if b == expr:
-                    return a.matches(Rational(sign), repl_dict, evaluate)
+                    return a.matches(Rational(sign), repl_dict)
                 # do more expensive match
-                dd = b.matches(expr, repl_dict, evaluate)
+                dd = b.matches(expr, repl_dict)
                 if dd == None:
                     return None
-                dd = a.matches(Rational(sign), dd, evaluate)
+                dd = a.matches(Rational(sign), dd)
                 return dd
             return None
 
@@ -808,21 +811,14 @@ class Mul(AssocOp):
             if len(ee) == 1:
                 d[pp[0]] = sign * ee[0]
             else:
-                d[pp[0]] = sign * (type(expr)(*ee))
+                d[pp[0]] = sign * expr.func(*ee)
             return d
 
         if len(ee) != len(pp):
             return None
 
-        i = 0
         for p, e in zip(pp, ee):
-            if i == 0 and sign != 1:
-                try:
-                    e = sign * e
-                except TypeError:
-                    return None
-            d = p.matches(e, d, evaluate=not i)
-            i += 1
+            d = p.xreplace(d).matches(e, d)
             if d is None:
                 return None
         return d
@@ -857,21 +853,23 @@ class Mul(AssocOp):
         return lhs/rhs
 
     def as_powers_dict(self):
-        d = {}
+        d = defaultdict(list)
         for term in self.args:
             b, e = term.as_base_exp()
-            if b not in d:
-                d[b] = e
+            d[b].append(e)
+        for b, e in d.iteritems():
+            if len(e) == 1:
+                e = e[0]
             else:
-                d[b] += e
+                e = Add(*e)
+            d[b] = e
         return d
 
     def as_numer_denom(self):
-        numers, denoms = [],[]
-        for t in self.args:
-            n,d = t.as_numer_denom()
-            numers.append(n)
-            denoms.append(d)
+        # don't use _from_args to rebuild the numerators and denominators
+        # as the order is not guaranteed to be the same once they have
+        # been separated from each other
+        numers, denoms = zip(*[f.as_numer_denom() for f in self.args])
         return Mul(*numers), Mul(*denoms)
 
     def as_base_exp(self):
@@ -1125,7 +1123,7 @@ class Mul(AssocOp):
         # 4) ... unmatched commutative terms
         # 5) and finally differences in sign
         if len(old_nc) > len(nc) or len(old_c) > len(c) or \
-                set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc)) or \
+                set(_[0] for _ in old_nc).difference(set(_[0] for _ in nc)) or \
                 set(old_c).difference(set(c)) or \
                 any(sign(c[b]) != sign(old_c[b]) for b in old_c):
             return fallback()

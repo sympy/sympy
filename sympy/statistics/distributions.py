@@ -250,7 +250,7 @@ class PDF(ContinuousProbability):
 
     def __init__(self, pdf, var):
         #XXX maybe add some checking of parameters
-        if  isinstance(var, (tuple, list)):
+        if isinstance(var, (tuple, list)):
             self.pdf = Lambda(var[0], pdf)
             self.domain = tuple(var[1:])
         else:

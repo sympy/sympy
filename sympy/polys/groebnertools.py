@@ -66,7 +66,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
     one polynomial lies in an ideal, divide by the elements in the
     base and see if the remainder vanishes.
 
-    They can also be used to  solve systems of polynomial equations
+    They can also be used to solve systems of polynomial equations
     as,  by choosing lexicographic ordering,  you can eliminate one
     variable at a time, provided that the ideal is zero-dimensional
     (finite number of solutions).

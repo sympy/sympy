@@ -141,7 +141,7 @@ class chebyshevu_root(Function):
         return C.cos(S.Pi*(k+1)/(n+1))
 
 #----------------------------------------------------------------------------
-# Legendre polynomials  and  Associated Legendre polynomials
+# Legendre polynomials and Associated Legendre polynomials
 #
 
 class legendre(PolynomialSequence):

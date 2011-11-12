@@ -509,9 +509,29 @@ class ReferenceFrame(object):
 
         Parameters
         ==========
+        indices : list (of strings)
+            If custom indices are desired for console, pretty, and LaTeX
+            printing, supply three as a list. The basis vectors can then be
+            accessed with the get_item method
+        latexs : list (of strings)
+            If custom names are desired for LaTeX printing of each basis
+            vector, supply the names here in a list
 
         Examples
         ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, mlatex
+        >>> N = ReferenceFrame('N')
+        >>> N.x
+        N.x
+        >>> O = ReferenceFrame('O', ('1', '2', '3'))
+        >>> O.x
+        O['1']
+        >>> O['1']
+        O['1']
+        >>> P = ReferenceFrame('P', latexs=('A1', 'A2', 'A3'))
+        >>> mlatex(P.x)
+        'A1'
 
         """
 
@@ -583,35 +603,20 @@ class ReferenceFrame(object):
         if self.indices[0] == ind:
             return self.x
         if self.indices[1] == ind:
-            return self.x
+            return self.y
         if self.indices[2] == ind:
-            return self.x
+            return self.z
         else:
             raise ValueError('Not a defined index')
 
     def __iter__(self):
-        return self
+        return iter([self.x, self.y, self.z])
 
     def __str__(self):
         """Returns the name of the frame. """
         return self.name
 
     __repr__ = __str__
-
-    def next(self):
-        """Iterator for the basis vectors. """
-        if self._cur == 0:
-            self._cur += 1
-            return self._x
-        elif self._cur == 1:
-            self._cur += 1
-            return self._y
-        elif self._cur == 2:
-            self._cur += 1
-            return self._z
-        else:
-            self._cur = 0
-            raise StopIteration
 
     def _check_frame(self, other):
         if not isinstance(other, ReferenceFrame):
@@ -818,6 +823,10 @@ class ReferenceFrame(object):
         """
 
         self._check_frame(parent)
+        amounts = list(amounts)
+        for i, v in enumerate(amounts):
+            if not isinstance(v, Vector):
+                amounts[i] = sympify(v)
         def _rot(axis, angle):
             """DCM for simple axis 1,2,or 3 rotations. """
             if axis == 1:
@@ -855,7 +864,7 @@ class ReferenceFrame(object):
             self._check_vector(axis)
             if not axis.dt(parent) == 0:
                 raise ValueError('Axis cannot be time-varying')
-            axis = axis.express(parent).unit
+            axis = axis.express(parent).normalize()
             axis = axis.args[0][0]
             parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
                     Matrix([[0, -axis[2], axis[1]],[axis[2], 0, -axis[0]],
@@ -904,7 +913,7 @@ class ReferenceFrame(object):
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
             thetad = (amounts[0]).diff(dynamicsymbols._t)
-            wvec = thetad * amounts[1].express(parent).unit
+            wvec = thetad * amounts[1].express(parent).normalize()
         else:
             try:
                 from sympy.physics.mechanics.functions import kinematic_equations
@@ -923,7 +932,8 @@ class ReferenceFrame(object):
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
 
-    def orientnew(self, newname, rot_type, amounts, rot_order=''):
+    def orientnew(self, newname, rot_type, amounts, rot_order='', indices=None,
+            latexs=None):
         """Creates a new ReferenceFrame oriented with respect to this Frame.
 
         See ReferenceFrame.orient() for acceptable rotation types, amounts,
@@ -940,6 +950,7 @@ class ReferenceFrame(object):
         rot_order : str
             If applicable, the order of a series of rotations.
 
+
         Examples
         ========
 
@@ -955,7 +966,7 @@ class ReferenceFrame(object):
 
         """
 
-        newframe = ReferenceFrame(newname)
+        newframe = ReferenceFrame(newname, indices, latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
 
@@ -1056,7 +1067,7 @@ class Vector(object):
 
     """
 
-    simp = True
+    simp = False
 
     def __init__(self, inlist):
         """This is the constructor for the Vector class.  You shouldn't be
@@ -1474,6 +1485,7 @@ class Vector(object):
     _sympyrepr = _sympystr
     __repr__ = __str__
     __radd__ = __add__
+    __rand__ = __and__
     __rmul__ = __mul__
 
     def dot(self, other):
@@ -1505,6 +1517,7 @@ class Vector(object):
 
         >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
         >>> from sympy import Symbol
+        >>> Vector.simp = True
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
@@ -1560,7 +1573,7 @@ class Vector(object):
 
         outvec = 0
         self._check_frame(otherframe)
-        for i,v in enumerate(self.args):
+        for i, v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(dynamicsymbols._t), otherframe)])
             else:
@@ -1626,15 +1639,13 @@ class Vector(object):
             ov += Vector([(v[0].subs(dictin), v[1])])
         return ov
 
-    @property
-    def mag(self):
-        """Returns the magnitude of this Vector, as a scalar. """
+    def magnitude(self):
+        """Returns the magnitude (Euclidean norm) of self."""
         return sqrt(self & self)
 
-    @property
-    def unit(self):
-        """Returns this Vector, with unit length. """
-        return Vector(self.args + []) / self.mag
+    def normalize(self):
+        """Returns a Vector of magnitude 1, codirectional with self."""
+        return Vector(self.args + []) / self.magnitude()
 
 
 class MechanicsStrPrinter(StrPrinter):
