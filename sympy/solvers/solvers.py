@@ -16,7 +16,7 @@ from sympy.core.sympify import sympify
 from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic, Expr
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
         Derivative, Function, AppliedUndef, UndefinedFunction, count_ops,
-	float)
+	nfloat)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -683,7 +683,7 @@ def solve(f, *symbols, **flags):
 
     # restore floats
     if floats and flags.get('rational', None) is None:
-        solution = float(solution, denom_of_1=True, exponent=False)
+        solution = nfloat(solution, denom_of_1=True, exponent=False)
 
     if not check or not solution:
         return solution

@@ -10,7 +10,6 @@ Exact SymPy expressions can be converted to floating-point approximations
 (decimal numbers) using either the ``.evalf()`` method or the ``N()`` function.
 ``N(expr, <args>)`` is equivalent to ``sympify(expr).evalf(<args>)``.
 
-    >>> python_float = float
     >>> from sympy import *
     >>> N(sqrt(2)*pi)
     4.44288293815837
@@ -127,17 +126,12 @@ subtracting these numbers from each other erroneously results in a complete
 cancellation:
 
     >>> a, b = GoldenRatio**1000/sqrt(5), fibonacci(1000)
-    >>> python_float(a) #doctest: +SKIP
+    >>> float(a) #doctest: +SKIP
     4.34665576869...e+208
-    >>> python_float(b) #doctest: +SKIP
+    >>> float(b) #doctest: +SKIP
     4.34665576869...e+208
-    >>> python_float(a) - python_float(b)
-    0.0
-
-The SymPy float function, however, gives the correct difference:
-
     >>> float(a) - float(b)
-    9.12488123524439e+192
+    0.0
 
 ``N`` and ``evalf`` keep track of errors and automatically increase the
 precision used internally in order to obtain a correct result:
