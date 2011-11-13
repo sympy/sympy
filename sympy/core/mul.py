@@ -551,7 +551,20 @@ class Mul(AssocOp):
 
 
     def _eval_evalf(self, prec):
-        return AssocOp._eval_evalf(self, prec).expand()
+        c, m = self.as_coeff_Mul()
+        if c is S.NegativeOne:
+            if m.is_Mul:
+                rv = -AssocOp._eval_evalf(m, prec)
+            else:
+                mnew = m._eval_evalf(prec)
+                if mnew is not None:
+                    m = mnew
+                rv = -m
+        else:
+            rv = AssocOp._eval_evalf(self, prec)
+        if rv.is_number:
+            return rv.expand()
+        return rv
 
     @cacheit
     def as_two_terms(self):

@@ -602,10 +602,11 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if exp < 0 and not base.is_real:
+        if exp < 0 and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
-        return Pow(base, exp).expand()
+            return Pow(base, exp).expand()
+        return Pow(base, exp)
 
     def _eval_is_polynomial(self, syms):
         if self.exp.has(*syms):
