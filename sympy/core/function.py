@@ -1835,7 +1835,7 @@ def count_ops(expr, visual=False):
 
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
-def float(expr, denom_of_1=False, exponent=False):
+def float(expr, n=15, denom_of_1=False, exponent=False):
     """Make all Rationals in expr Floats except if they are exponents
     (unless the exponents flag is set to True). If denom_of_1 is True then
     all Rationals not appearing as exponents will be changed, otherwise only
@@ -1855,16 +1855,16 @@ def float(expr, denom_of_1=False, exponent=False):
 
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):
-            return type(expr)([(k, float(v, denom_of_1, exponent)) for k, v in expr.iteritems()])
-        return type(expr)([float(a, denom_of_1, exponent) for a in expr])
+            return type(expr)([(k, float(v, n, denom_of_1, exponent)) for k, v in expr.iteritems()])
+        return type(expr)([float(a, n, denom_of_1, exponent) for a in expr])
     elif not isinstance(expr, Expr):
         return _float(expr)
     elif expr.is_Float:
-        return expr
+        return expr.n(n)
     elif expr.is_Integer:
-        return Float(_float(expr))
+        return Float(_float(expr)).n(n)
     elif expr.is_Rational:
-        return Float(expr)
+        return Float(expr).n(n)
 
     denoms = []
     if not denom_of_1:
@@ -1880,10 +1880,10 @@ def float(expr, denom_of_1=False, exponent=False):
                 e = Dummy()
                 rats[p.exp] = e
         reps = [(p, Pow(p.base, rats[p.exp], evaluate=False)) for p in pows]
-        rv = expr.subs(reps).subs(denoms).n()
+        rv = expr.subs(reps).subs(denoms).n(n)
         rv = rv.subs([(v, k) for k, v in rats.iteritems()]).subs([(n, o) for o, n in denoms])
     else:
-        expr = expr.subs(denoms).n().subs([(n, o) for o, n in denoms])
+        expr = expr.subs(denoms).n(n).subs([(n, o) for o, n in denoms])
         if exponent is True:
             pows = [p for p in expr.atoms(Pow) if p.exp.is_Integer]
             pows.sort(key=count_ops)
@@ -1898,7 +1898,7 @@ def float(expr, denom_of_1=False, exponent=False):
     funcs = [f for f in rv.atoms(Function)]
     funcs.sort(key=count_ops)
     funcs.reverse()
-    return rv.subs([(f, f.func(*[float(a, denom_of_1, exponent) for a in f.args])) for f in funcs])
+    return rv.subs([(f, f.func(*[float(a, n, denom_of_1, exponent) for a in f.args])) for f in funcs])
 
 from sympify import sympify
 from add import Add
