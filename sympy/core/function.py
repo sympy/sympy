@@ -37,14 +37,16 @@ from expr import Expr, AtomicExpr
 from decorators import _sympifyit, deprecated
 from compatibility import iterable,is_sequence
 from cache import cacheit
-from numbers import Rational
+from numbers import Rational, Float
 
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
+
+_float = float
 
 class PoleError(Exception):
     pass
@@ -1833,5 +1835,72 @@ def count_ops(expr, visual=False):
 
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
+def float(expr, denom_of_1=False, exponent=False):
+    """Make all Rationals in expr Floats except if they are exponents
+    (unless the exponents flag is set to True). If denom_of_1 is True then
+    all Rationals not appearing as exponents will be changed, otherwise only
+    those that don't have a numerator of 1.
+
+    Examples:
+
+    >>> from sympy.solvers.solvers import float
+    >>> from sympy.abc import x
+    >>> from sympy import cos, pi, S
+    >>> float(x**4 + x/2 + cos(pi/3) + 1)
+    x**4 + x/2 + 1.5
+    >>> float(x**4 + x/2 + cos(pi/3) + 1, denom_of_1=True, exponent=True)
+    0.5*x + x**4.0 + 1.5
+
+    """
+
+    if iterable(expr, exclude=basestring):
+        if isinstance(expr, (dict, Dict)):
+            return type(expr)([(k, float(v, denom_of_1, exponent)) for k, v in expr.iteritems()])
+        return type(expr)([float(a, denom_of_1, exponent) for a in expr])
+    elif not isinstance(expr, Expr):
+        return _float(expr)
+    elif expr.is_Float:
+        return expr
+    elif expr.is_Integer:
+        return Float(_float(expr))
+    elif expr.is_Rational:
+        return Float(expr)
+
+    denoms = []
+    if not denom_of_1:
+        denoms = [(r, Dummy()) for r in expr.atoms(Rational) if r.p == 1 and r.q != 1]
+
+    if exponent is False:
+        pows = [p for p in expr.atoms(Pow) if p.exp.is_Rational and p.exp.q != 1]
+        pows.sort(key=count_ops)
+        pows.reverse()
+        rats = {}
+        for p in pows:
+            if p.exp not in rats:
+                e = Dummy()
+                rats[p.exp] = e
+        reps = [(p, Pow(p.base, rats[p.exp], evaluate=False)) for p in pows]
+        rv = expr.subs(reps).subs(denoms).n()
+        rv = rv.subs([(v, k) for k, v in rats.iteritems()]).subs([(n, o) for o, n in denoms])
+    else:
+        expr = expr.subs(denoms).n().subs([(n, o) for o, n in denoms])
+        if exponent is True:
+            pows = [p for p in expr.atoms(Pow) if p.exp.is_Integer]
+            pows.sort(key=count_ops)
+            pows.reverse()
+            ints = {}
+            for p in pows:
+                if p.exp not in ints:
+                    ints[p.exp] = Float(_float(p.exp))
+            reps = [(p, p.base**ints[p.exp]) for p in pows]
+            rv = expr.subs(reps)
+
+    funcs = [f for f in rv.atoms(Function)]
+    funcs.sort(key=count_ops)
+    funcs.reverse()
+    return rv.subs([(f, f.func(*[float(a, denom_of_1, exponent) for a in f.args])) for f in funcs])
+
 from sympify import sympify
-from add    import Add
+from add import Add
+from power import Pow
+from sympy.core.symbol import Dummy

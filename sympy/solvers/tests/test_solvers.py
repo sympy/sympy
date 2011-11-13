@@ -6,7 +6,8 @@ from sympy import (Matrix, Symbol, solve, exp, log, cos, acos, Rational, Eq,
 
 from sympy.solvers import solve_linear_system, solve_linear_system_LU,dsolve,\
      tsolve, solve_undetermined_coeffs
-from sympy.solvers.solvers import unrad, _invert, float
+from sympy.solvers.solvers import unrad, _invert
+from sympy.core.function import float
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 
