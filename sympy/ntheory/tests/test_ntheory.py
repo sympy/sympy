@@ -1,7 +1,7 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
         multinomial_coefficients, Mul, S, Pow
 from sympy import factorial as fac
-from sympy import Rational
+from sympy import Rational, Symbol
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
@@ -85,18 +85,22 @@ def _last(s):
     return s[0]
 
 def _test_extend(offset):
-    """ Run a test battery for one offset."""
+    """ Run a series of extend() tests for one offset."""
     s = Sieve()
-    # We aim to test various code paths through extend().
-    # 1) No actual extension because we're below the end of s
+    # We test three cases since they may have different code paths:
+    # 1: Below last prime in s
+    # 2: Between last prime in s and next prime above
+    #    (Sieve does not extend itself in that case)
+    # 3: Above first prime beyond end of s
+    # Code path 1
     oldend = _last(s)
     s.extend(oldend - offset)
     assert _last(s) == oldend
-    # 2) No actual extension because we're below the next prime above end of s
+    # Code path 2
     next = nextprime(oldend)
     s.extend(next - offset)
     assert _last(s) == oldend
-    # 3) Extension happens because we're above the next prime
+    # Code path 3
     s.extend(next + offset)
     assert _last(s) > oldend
 
@@ -104,29 +108,41 @@ def test_extend():
     _test_extend(1) # Integer
     _test_extend(0.1) # Float
     _test_extend(Rational(1,10)) # Rational 0.1
+    raises(TypeError, "Sieve().extend(Symbol('x'))") # A Symbol (not a number)
 
 def test_extend_to_no():
     # Does extends_to_no accept fractions?
     s = Sieve()
     s.extend_to_no(primepi(_last(s)) + 0.5)
-
-def test_contains():
-    # Does __contains__ accept fractions?
-    assert not 1.5 in Sieve()
+    # Does extends_to_no refuse Symbols?
+    raises(TypeError, "s.extend_to_no(Symbol('x'))")
 
 def test_search():
     # Does search accept fractions?
     assert Sieve().search(2.5) == (1, 2)
+    # Does search refuse Symbols?
+    raises(TypeError, "Sieve().search(Symbol('x'))")
+
+def test_contains():
+    # Does __contains__ accept fractions?
+    assert not 1.5 in Sieve()
+    # Does __contains__ refuse Symbols?
+    raises(TypeError, "Symbol('x') in Sieve()")
 
 def test_primerange():
     # Does primerange accept fractions?
     assert list(Sieve().primerange(2.9, 5.1)) == [3, 5]
+    # Does primerange refuse Symbols?
+    raises(ValueError, "list(Sieve().primerange(Symbol('x'), 5))")
+    raises(ValueError, "list(Sieve().primerange(5, Symbol('x')))")
 
 def test_nextprime():
     # Does nextprime accept fractions for the first parameter?
     assert nextprime(1.5) == 2
     # Does nextprime refuse fractions for the second parameter?
-    raises(AssertionError, "nextprime(5, 1.5)")
+    raises(TypeError, "nextprime(5, 1.5)")
+    # Does nextprime refuse Symbols?
+    raises(TypeError, "nextprime(5, Symbol('x'))")
 
 def test_isprime():
     s = Sieve()

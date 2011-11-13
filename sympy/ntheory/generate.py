@@ -63,11 +63,14 @@ class Sieve:
 
     def extend_to_no(self, n):
         """Extend to include (at least) the nth prime number"""
+        n = int(n)
         while len(self._list) < n:
             self.extend(self._list[-1] * 1.5)
 
     def primerange(self, a, b):
         """Generate all prime numbers in the range [a, b)."""
+        a = float(a)
+        b = float(b)
         assert a <= b
         if b < 2:
             return
@@ -145,7 +148,8 @@ def nextprime(n, i=1):
         >>> nextprime(2, i=2) # the 2nd prime after 2
         5
     """
-    assert i == int(i)
+    if i != int(i):
+        raise TypeError("i is " + str(i) + ", but it must be an integer.")
     if i > 1:
         pr = n
         j = 1
