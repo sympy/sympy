@@ -90,25 +90,55 @@ class PermutationGroup(Basic):
                     break
         return self._is_abelian
 
-    def schreier_tree(alpha):
+    def coset_repr(self, alpha):
+        """
+        Computes the Schreier Tree for a given alpha and returns the
+        corresponding coset representation.
+
+        Examples:
+        >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,2,1,3])
+        >>> b = Permutation([0,2,3,1])
+        >>> c = Permutation([2,0,3,1])
+        >>> d = PermutationGroup([a,b,c],4)
+        >>> d.schreier_tree(3)
+        >>> d._coset_repr
+        [Permutation([2, 3, 1, 0]), Permutation([0, 2, 3, 1]), \
+        Permutation([0, 1, 3, 2]), Permutation([0, 1, 2, 3])]
+        """
+        return self._coset_repr_n
+
+    def schreier_tree(self, alpha, gen=None, ag=None):
         """
         Computes the Schreier Tree.
 
         Examples:
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([0,2,1,3,4])
+        >>> b = Permutation([0,2,3,1,4])
+        >>> c = Permutation([2,4,3,1,0])
+        >>> d = Permutation([0,2,4,3,1])
+        >>> e = PermutationGroup([a,b,c,d],5)
+        >>> e.schreier_tree(3)
+        >>> e._coset_repr
+        [Permutation([2, 3, 1, 0, 4]), Permutation([0, 2, 3, 1, 4]), \
+        Permutation([0, 1, 3, 2, 4]), Permutation([0, 1, 2, 3, 4]), \
+        Permutation([0, 2, 3, 4, 1])]
         """
-        gen = Permutation([i for i in xrange(self.perm_size)])
-        ag = None
-        if self._coset_repr is []:
-            self._coset_repr = [None] * len(self.generators)
+        if gen == None:
+            gen = Permutation([i for i in xrange(self.perm_size)])
+        if self._coset_repr == []:
+            self._coset_repr = [None] * self.perm_size
         self._coset_repr_n += 1
         self._coset_repr[alpha] = gen
         for i in xrange(len(self.generators)):
-            ag = self.generators[i][alpha]
-            if self._coset_repr_n[ag] is not None:
-                gen *= self.generators[j]
-                schreier_tree(ag)
-                gen *= ~self.generators[j]
+            ag = self.generators[i](alpha)
+            if self._coset_repr[ag] == None:
+                gen *= self.generators[i]
+                self.schreier_tree(ag, gen, ag)
+                gen *= ~self.generators[i]
 
     def generate(self, n = 1024):
         """
