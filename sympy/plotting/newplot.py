@@ -30,14 +30,11 @@ segment even if the the color is constant. process_series is called stupidly
 often. A new backend instance is initialized every time you call show().
 """
 
-#TODO the lambdifying of expression uses an ugly
-#trick (a float call), I put all the blame on lambdify
-#see workaround_lambdify
-
 import warnings
 from sympy import sympify, lambdify, Expr
 import numpy as np # It would be a sin to use lists instead of numpy arrays
 from inspect import getargspec # To check the arity of aesthetics
+from sympy.plotting.experimental_lambdify import experimental_lambdify
 
 
 class Plot(object):
@@ -430,7 +427,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
     def get_points(self):
         list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
-        f = workaround_lambdify([self.var], self.expr)
+        f = vectorized_lambdify([self.var], self.expr)
         list_y = f(list_x)
         return (list_x, list_y)
 
@@ -463,8 +460,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
     def get_points(self):
         param = self.get_parameter_points()
-        fx = workaround_lambdify([self.var], self.expr_x)
-        fy = workaround_lambdify([self.var], self.expr_y)
+        fx = vectorized_lambdify([self.var], self.expr_x)
+        fy = vectorized_lambdify([self.var], self.expr_y)
         list_x = fx(param)
         list_y = fy(param)
         return (list_x, list_y)
@@ -512,9 +509,9 @@ class Parametric3DLineSeries(Line3DBaseSeries):
 
     def get_points(self):
         param = self.get_parameter_points()
-        fx = workaround_lambdify([self.var], self.expr_x)
-        fy = workaround_lambdify([self.var], self.expr_y)
-        fz = workaround_lambdify([self.var], self.expr_z)
+        fx = vectorized_lambdify([self.var], self.expr_x)
+        fy = vectorized_lambdify([self.var], self.expr_y)
+        fz = vectorized_lambdify([self.var], self.expr_z)
         list_x = fx(param)
         list_y = fy(param)
         list_z = fz(param)
@@ -585,7 +582,7 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
                                                  num=self.nb_of_points_x),
                                      np.linspace(self.start_y, self.end_y,
                                                  num=self.nb_of_points_y))
-        f = workaround_lambdify((self.var_x, self.var_y), self.expr)
+        f = vectorized_lambdify((self.var_x, self.var_y), self.expr)
         return (mesh_x, mesh_y, f(mesh_x, mesh_y))
 
 
@@ -622,9 +619,9 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
                                                  num=self.nb_of_points_u),
                                      np.linspace(self.start_v, self.end_v,
                                                  num=self.nb_of_points_v))
-        fx = workaround_lambdify((self.var_u, self.var_v), self.expr_x)
-        fy = workaround_lambdify((self.var_u, self.var_v), self.expr_y)
-        fz = workaround_lambdify((self.var_u, self.var_v), self.expr_z)
+        fx = vectorized_lambdify((self.var_u, self.var_v), self.expr_x)
+        fy = vectorized_lambdify((self.var_u, self.var_v), self.expr_y)
+        fz = vectorized_lambdify((self.var_u, self.var_v), self.expr_z)
         return (fx(mesh_u, mesh_v), fy(mesh_u, mesh_v), fz(mesh_u, mesh_v))
 
 
@@ -663,7 +660,7 @@ class ContourSeries(BaseSeries):
                                                  num=self.nb_of_points_x),
                                      np.linspace(self.start_y, self.end_y,
                                                  num=self.nb_of_points_y))
-        f = workaround_lambdify((self.var_x, self.var_y), self.expr)
+        f = vectorized_lambdify((self.var_x, self.var_y), self.expr)
         return (mesh_x, mesh_y, f(mesh_x, mesh_y))
 
 
@@ -945,16 +942,8 @@ class TextBackend(BaseBackend):
 
 
 ##############################################################################
-# Proof that god does not exist.
-# If god existed he/she/it would immediately smite me for writing this.
-# I am still alive => god does not exist. QED
+# A helper for making vectorized functions
 ##############################################################################
-def workaround_lambdify(variables, expr):
-    first_pass_lambda = lambdify(variables, expr)
-    if len(variables) == 1:
-        second_pass_lambda = lambda var : float(first_pass_lambda(var))
-    elif len(variables) == 2:
-        second_pass_lambda = lambda var1, var2 : float(first_pass_lambda(var1, var2))
-    # I'm making special cases for the number of args so that introspection
-    # will give simpler answers.
-    return np.vectorize(second_pass_lambda)
+
+def vectorized_lambdify(args, expr):
+    return np.vectorize(experimental_lambdify(args, expr))
