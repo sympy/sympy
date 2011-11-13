@@ -16,8 +16,8 @@ from sympy.core.containers import Dict
 from sympy.core.sympify import sympify
 from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic, Expr
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
-        Derivative, Function, AppliedUndef, UndefinedFunction)
-from sympy.core.numbers import ilcm, Float
+        Derivative, Function, AppliedUndef, UndefinedFunction, count_ops)
+from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 
@@ -46,6 +46,7 @@ from warnings import warn
 from textwrap import fill, dedent
 from types import GeneratorType
 from collections import defaultdict
+float_py = float
 
 # if you use
 # _filldedent('''
@@ -304,50 +305,69 @@ def check_assumptions(expr, **assumptions):
         result = None # Can't conclude, unless an other test fails.
     return result
 
-def float_coeff(expr, deep=False, exponent=False):
+def float(expr, denom_of_1=False, exponent=False):
     """Make all Rationals in expr Floats except if they are exponents
-    (unless the exponents flag is set to True). This function avoids the
-    'conjugates' that can appear when using evalf[1] to evaluate expressions.
+    (unless the exponents flag is set to True). If denom_of_1 is False
+    then rational coefficients with a numerator of 1 will not be changed.
 
-    Example:
+    Examples:
 
-    >>> from sympy.solvers.solvers import float_coeff
+    >>> from sympy.solvers.solvers import float
     >>> from sympy.abc import x
-    >>> from sympy import cos, pi
-    >>> float_coeff(x**4 + 2*x + cos(pi/8) + 1)
-    1.0*x**4 + 2.0*x + 1.0*cos(pi/8) + 1.0
-    >>> float_coeff(x**4 + 2*x + cos(pi/8) + 1, deep=True)
-    x**4 + 2.0*x + cos(0.125*pi) + 1.0
-    >>> float_coeff(x**4 + 2*x + cos(pi/8) + 1, exponent=True)
-    2.0*x + 1.0*x**4.0 + 1.0*cos(pi/8) + 1.0
+    >>> from sympy import cos, pi, S
+    >>> float(x**4 + x/2 + cos(pi/3) + 1)
+    x**4 + x/2 + 1.5
+    >>> float(x**4 + x/2 + cos(pi/3) + 1, denom_of_1=True, exponent=True)
+    0.5*x + x**4.0 + 1.5
 
-    Reference:
-    [1] http://groups.google.com/group/sympy/t/d778f1cd00358e97
     """
 
-    if isinstance(expr, (Dict, dict)):
-        return type(expr)([(k, float_coeff(v, deep, exponent)) for k, v in expr.iteritems()])
-    elif iterable(expr):
-        return type(expr)([float_coeff(a, deep, exponent) for a in expr])
+    if iterable(expr, exclude=basestring):
+        if isinstance(expr, (dict, Dict)):
+            return type(expr)([(k, float(v, denom_of_1, exponent)) for k, v in expr.iteritems()])
+        return type(expr)([float(a, denom_of_1, exponent) for a in expr])
     elif not isinstance(expr, Expr):
-        raise NotImplementedError('expr of type %s is not handled' % type(expr))
-    if expr.is_Rational:
-        return expr.n()
-    elif not expr.args:
+        return float_py(expr)
+    elif expr.is_Float:
         return expr
-    elif deep and expr.func is exp:
-        return exp(float_coeff(expr.args[0], deep, exponent))
-    elif expr.is_Pow:
-        b, e = expr.as_base_exp()
-        if exponent:
-            e = float_coeff(e)
-        return float_coeff(b, deep, exponent)**e
-    elif deep or expr.is_Mul:
-        return expr.func(*[float_coeff(a, deep, exponent) for a in expr.args])
-    elif expr.is_Add:
-        return Add(*[Mul(float(c), float_coeff(m, deep, exponent))
-               for c, m in [a.as_coeff_Mul() for a in Add.make_args(expr)]])
-    return expr
+    elif expr.is_Integer:
+        return Float(float_py(expr))
+    elif expr.is_Rational:
+        return Float(expr)
+
+    denoms = []
+    if not denom_of_1:
+        denoms = [(r, Dummy()) for r in expr.atoms(Rational) if r.p == 1 and r.q != 1]
+
+    if exponent is False:
+        pows = [p for p in expr.atoms(Pow) if p.exp.is_Rational and p.exp.q != 1]
+        pows.sort(key=count_ops)
+        pows.reverse()
+        rats = {}
+        for p in pows:
+            if p.exp not in rats:
+                e = Dummy()
+                rats[p.exp] = e
+        reps = [(p, Pow(p.base, rats[p.exp], evaluate=False)) for p in pows]
+        rv = expr.subs(reps).subs(denoms).n()
+        rv = rv.subs([(v, k) for k, v in rats.iteritems()]).subs([(n, o) for o, n in denoms])
+    else:
+        expr = expr.subs(denoms).n().subs([(n, o) for o, n in denoms])
+        if exponent is True:
+            pows = [p for p in expr.atoms(Pow) if p.exp.is_Integer]
+            pows.sort(key=count_ops)
+            pows.reverse()
+            ints = {}
+            for p in pows:
+                if p.exp not in ints:
+                    ints[p.exp] = Float(float_py(p.exp))
+            reps = [(p, p.base**ints[p.exp]) for p in pows]
+            rv = expr.subs(reps)
+
+    funcs = [f for f in rv.atoms(Function)]
+    funcs.sort(key=count_ops)
+    funcs.reverse()
+    return rv.subs([(f, f.func(*[float(a, denom_of_1, exponent) for a in f.args])) for f in funcs])
 
 def solve(f, *symbols, **flags):
     """
@@ -728,7 +748,7 @@ def solve(f, *symbols, **flags):
 
     # restore floats
     if floats and flags.get('rational', None) is None:
-        solution = float_coeff(solution, deep=True, exponent=False)
+        solution = float(solution, denom_of_1=True, exponent=False)
 
     if not check or not solution:
         return solution
