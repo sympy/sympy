@@ -1,12 +1,4 @@
 disabled = False
-try:
-    # pyglet requires ctypes > 1.0.0
-    import ctypes
-    ctypes_major = int(ctypes.__version__.split('.')[0])
-    if ctypes_major < 1:
-        disabled = True
-except ImportError:
-    disabled = True
 
 try:
     # if pyglet.gl fails to import, e.g. opengl is missing, we disable the tests
@@ -25,7 +17,7 @@ from sympy import symbols, sin, cos
 x, y, z = symbols('x, y, z')
 
 def test_import():
-    from sympy import Plot
+    from sympy.plotting.pygletplot import Plot
 
 def test_plot_2d():
     from sympy import Plot

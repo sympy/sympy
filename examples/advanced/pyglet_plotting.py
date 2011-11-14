@@ -3,15 +3,12 @@
 """
 Plotting Examples
 
-Note: In Python < 2.5, you will need the ctypes library
-to use plotting. It is included with Python 2.5 and later.
-
 Suggested Usage:    python -i plotting.py
 """
 
 
 from sympy import symbols
-from sympy import Plot
+from sympy.plotting.pygletplot import Plot
 from sympy import sin, cos, pi, sqrt, exp
 from sympy.core.compatibility import callable
 
