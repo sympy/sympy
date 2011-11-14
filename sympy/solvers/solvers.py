@@ -1811,10 +1811,11 @@ def _invert(eq, *symbols, **kwargs):
 
     """
     eq = sympify(eq)
+    free = eq.free_symbols
     if not symbols:
-        symbols = eq.free_symbols
-        if not symbols:
-            return eq, S.Zero
+        symbols = free
+    if not free & set(symbols):
+        return eq, S.Zero
 
     dointpow = bool(kwargs.get('integer_power', False))
 
