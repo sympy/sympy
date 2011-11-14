@@ -362,7 +362,8 @@ def doctest(*paths, **kwargs):
                     "doc/src/modules/mpmath", # needs to be fixed upstream
                     "sympy/mpmath", # needs to be fixed upstream
                     "doc/src/modules/plotting.txt", # generates live plots
-                    "sympy/plotting", # generates live plots
+                    # "sympy/plotting", # generates live plots
+                    "sympy/plotting/pygletplot", # generates live plots
                     "sympy/utilities/compilef.py", # needs tcc
                     "sympy/utilities/autowrap.py", # needs installed compiler
                     "sympy/galgebra/GA.py", # needs numpy

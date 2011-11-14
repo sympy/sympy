@@ -175,12 +175,21 @@ def str2tree(exprstr):
     Expressions that do not contain functions are directly returned.
 
     Examples:
-    In [10]: str2tree(str(Integral(x, (x, 1, y))))
-    Out[10]: ('', ('Integral(', 'x', '(x, 1, y)'), ')')
-    In [11]: str2tree(str(x+y))
-    Out[11]: 'x + y'
-    In [12]: str2tree(str(x+y*sin(z)+1))
-    Out[12]: ('x + y*', ('sin(', 'z'), ') + 1')
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import Integral, sin
+    >>> from sympy.plotting.experimental_lambdify import str2tree
+
+    >>> str2tree(str(Integral(x, (x, 1, y))))
+    ('', ('Integral(', 'x, (x, 1, y)'), ')')
+
+    >>> # is it correct? Compare with
+    >>> # ('', ('Integral(', 'x', '(x, 1, y)'), ')')
+
+    >>> str2tree(str(x+y))
+    'x + y'
+    >>> str2tree(str(x+y*sin(z)+1))
+    ('x + y*', ('sin(', 'z'), ') + 1')
+
     """
     #matches the first 'function_name('
     first_par = re.match(r'[^\(]*?[\W]?(\w+\()', exprstr)
@@ -207,8 +216,14 @@ def tree2str(tree):
     """Converts a tree to string without translations.
 
     Examples:
-    In [13]: tree2str(str2tree(str(x+y*sin(z)+1)))
-    Out[13]: x + y*sin(z) + 1
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import Integral, sin
+    >>> from sympy.plotting.experimental_lambdify import str2tree, tree2str
+
+    >>> tree2str(str2tree(str(x+y*sin(z)+1)))
+    'x + y*sin(z) + 1'
+
     """
     if isinstance(tree, str):
         return tree
