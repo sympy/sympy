@@ -1,10 +1,15 @@
-Plotting
-========
+Pyglet Plotting Module
+======================
 
-.. module:: sympy.plotting
+.. module:: sympy.plotting.pygletplot
 
-SymPy can do nice 2D and 3D plots that can be controlled by console commands as
-well as keyboard and mouse, with the only dependency being ``pyglet``.
+This is the documentation for the old plotting module that uses pyglet.
+This module has some limitations and is not actively developed anymore.
+For an alternative you can look at the new plotting module.
+
+The pyglet plotting module can do nice 2D and 3D plots that can be
+controlled by console commands as well as keyboard and mouse, with
+the only dependency being ``pyglet``.
 
 Here is the simplest usage:
 
@@ -12,10 +17,10 @@ Here is the simplest usage:
     >>> var('x y z')
     >>> Plot(x*y**3-y*x**3)
 
-To see lots of plotting examples, see ``examples/plotting.py`` and try running
+To see lots of plotting examples, see ``examples/pyglet_plotting.py`` and try running
 it in interactive mode (python -i plotting.py)::
 
-    $ python -i examples/plotting.py
+    $ python -i examples/pyglet_plotting.py
 
 And type for instance ``example(7)`` or ``example(11)``.
 
