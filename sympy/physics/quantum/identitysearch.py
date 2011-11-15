@@ -54,8 +54,23 @@ def permutations_recursive(elements, recurse_pt, dist_from_pt, max_length):
 
     return permutations
 
+def is_scalar_matrix(matrix):
+    """Checks if given scipy.sparse matrix is a scalar matrix."""
+
+    if (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1])):
+        diag = list(matrix.diagonal())
+        if (diag.count(diag[0]) == len(diag)):
+            return True
+    return False
+
 def generate_gate_rules(gate_seq):
-    # Recursive version but unsure if interpreter optimizes recursion 
+    # In general, may use the four operations (LL, LR, RL, RR) to
+    # to find equivalent gate identities
+
+    # Possible short cut:
+    # The four operations cycle the gates around in a circle, which
+    # means this function will return a max list size of 2n, where n
+    # is the number of gates in the sequence.  
     return permutations_recursive(gate_seq, 0, 0, len(gate_seq))
 
 class GateIdentity(Basic):
@@ -118,15 +133,6 @@ def construct_matrix_list(numqubits):
     matrix_list = xs+ys+zs+hs+ss+ts+cnots
 
     return matrix_list
-
-def is_scalar_matrix(matrix):
-    """Checks if given scipy.sparse matrix is a scalar matrix."""
-
-    if (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1])):
-        diag = list(matrix.diagonal())
-        if (diag.count(diag[0]) == len(diag)):
-            return True
-    return False
 
 def is_degenerate(identity_set, gate_identity):
     # For now, just iteratively go through the set and check if the current

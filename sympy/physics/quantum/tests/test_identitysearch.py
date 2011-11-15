@@ -17,16 +17,21 @@ def test_generate_gate_rules():
 
 def test_is_scalar_matrix():
     numqubits = 2
+
     id_gate = IdentityGate(1)
     id_matrix = represent(id_gate, nqubits=numqubits, format='scipy.sparse')
     assert is_scalar_matrix(id_matrix) == True
 
-    id_matrix = represent(X(1)*Y(1), nqubits=numqubits, format='scipy.sparse')
-    assert is_scalar_matrix(id_matrix) == False
+    xy_matrix = represent(X(1)*Y(1), nqubits=numqubits, format='scipy.sparse')
+    assert is_scalar_matrix(xy_matrix) == False
 
-    id_matrix = represent(CNOT(1,0)*CNOT(1,0), nqubits=numqubits,
+    cnot_matrix = represent(CNOT(1,0)*CNOT(1,0), nqubits=numqubits,
                           format='scipy.sparse')
-    assert is_scalar_matrix(id_matrix) == True
+    assert is_scalar_matrix(cnot_matrix) == True
+
+    # Fails - wondering if it might be a floating point issue
+    h_matrix = represent(H(0)*H(0), nqubits=numqubits, format='scipy.sparse')
+    assert is_scalar_matrix(h_matrix) == True
 
 def test_bfs_identity_search():
     assert bfs_identity_search([], 1) == set()
