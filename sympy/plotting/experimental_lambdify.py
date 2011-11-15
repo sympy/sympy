@@ -7,7 +7,7 @@ It's completely self contained. Especially it does not use lambdarepr.
 
 It does not aim to replace the current lambdify. Most importantly it will never
 ever support anything else than sympy expressions (no Matrices, dictionaries
-and so on). That is why it does not use str for printing the expression.
+and so on).
 """
 
 import re
@@ -56,7 +56,8 @@ from sympy import Symbol, NumberSymbol, I, zoo, oo
 # bugs.
 
 # Q: What about _imp_ functions?
-# A: Those are taken care for by evalf.
+# A: Those are taken care for by evalf. A special case treatment will work
+# faster but it's not worth the code complexity.
 
 # Q: Will ast fix all possible problems?
 # A: No. You will always have to use some printer. Even srepr may not work in
@@ -68,7 +69,7 @@ from sympy import Symbol, NumberSymbol, I, zoo, oo
 # args) tree and creating the namespace at the same time. That actually sounds
 # good.
 
-def experimental_lambdify(args, expr):
+def experimental_lambdify(args, expr, print_lambda=False):
     # Constructing the argument string
     if not all([isinstance(a, Symbol) for a in args]):
         raise ValueError('The arguments must be Symbols.')
@@ -85,6 +86,7 @@ def experimental_lambdify(args, expr):
     namespace = {}
     namespace.update(sympy_atoms_namespace(expr))
     namespace.update(sympy_expression_namespace(expr))
+    # XXX Workaround
     # Ugly workaround because Pow(a,Half) prints as sqrt(a)
     # and sympy_expression_namespace can not catch it.
     from sympy import sqrt
@@ -95,8 +97,8 @@ def experimental_lambdify(args, expr):
     except ImportError:
         raise ImportError('experimental_lambdify needs numpy.')
 
-
-    # XXX debug: print newexpr
+    if print_lambda:
+        print newexpr
     return eval('lambda ' + argstr + ' : (' + newexpr + ')', namespace)
 
 
@@ -112,6 +114,7 @@ def experimental_lambdify(args, expr):
 numpy_functions_same = [
         'sin', 'cos', 'tan',
         'sinh', 'cosh', 'tanh',
+        'sqrt',
         'floor',
         'conjugate',
         ]
@@ -273,6 +276,7 @@ def sympy_expression_namespace(expr):
         return {}
     else:
         funcname = str(expr.func)
+        # XXX Workaround
         # Here we add an ugly workaround because str(func(x))
         # is not always the same as str(func). Eg
         # >>> str(Integral(x))

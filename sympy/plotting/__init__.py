@@ -1,3 +1,3 @@
+from plot import plot, plot_backends
 from proxy_pyglet import Plot
-from newplot import plot
 from textplot import textplot

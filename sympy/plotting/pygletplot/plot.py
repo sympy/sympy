@@ -22,7 +22,7 @@ from util import parse_option_string
 
 from sympy.geometry.entity import GeometryEntity
 
-class Plot(object):
+class PygletPlot(object):
     """
     Plot Examples
     =============
