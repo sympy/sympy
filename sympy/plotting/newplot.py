@@ -19,12 +19,12 @@ get_points, get_segments, get_meshes, etc.
 
 Especially if you need publication ready graphs and this module is not enough
 for you - just get the _backend attribute and add whatever you want directly to
-it. In the case of matplotlib (the right way to graph 2D data in python) just
+it. In the case of matplotlib (the right way to graph data in python) just
 copy _backend.fig which is the figure and _backend.ax which is the axis and
 work on them as on any other matplotlib objects.
 
-Simplicity of code takes much greater importance than performance. Don't use if
-you care at all about performance. That is especially true about aesthetics.
+Simplicity of code takes much greater importance than performance. Don't use it
+if you care at all about performance. That is especially true about aesthetics.
 The color aesthetic for example creates an array with colors for each line
 segment even if the the color is constant. process_series is called stupidly
 often. A new backend instance is initialized every time you call show().
@@ -83,11 +83,11 @@ class Plot(object):
         implemented in Parametric2DLineSeries
     - expr_x, expr_y, expr_z, (var, start, end) - 3D parametric line plot
         implemented in Parametric3DLineSeries
-    - expr, (var_x, start, end), (var_y, start, end) - contour plot
-        implemented in ContourSeries
-    - surface plot uses the same arguments as a contour plot, so to distinguish
-      them add the string '3d' as a last argument
+    - expr, (var_x, start, end), (var_y, start, end) - surface plot
         implemented in SurfaceOver2DRangeSeries
+    - contour plot uses the same arguments as a surface plot, so to distinguish
+      them add the string 'contour' as a last argument
+        implemented in ContourRangeSeries
     - expr_x, expr_y, expr_z, (var_u, start, end), (var_v, start, end) - 3D
       parametric surface plot
         implemented in ParametricSurfaceSeries
@@ -236,6 +236,44 @@ class Plot(object):
 
     def append_plot(self, *args):
         self._series.append(Series(*args))
+
+
+def plot(*args):
+    """Convenient interface for the Plot class.
+
+    It returns a Plot object with matplotlib backend.
+    For the more advanced options, detailed documentation and other types of
+    plots see the Plot class from sympy.plotting.newplot.
+
+    The new Plot class is not as of yet imported by 'from sympy import *'.
+    For compability with older versions of sympy 'from sympy import *' still
+    imports the old Plot class which now resides in sympy.plotting.pygletplot.
+
+    Examples:
+    ---------
+
+    IMPORTANT: for the moment only the explicit plots are supported.
+
+    Plot lists:
+    >> listx = range(10)
+    >> listy = [x**2 for x in listx]
+    >> p0 = plot(listx, listy)
+
+    Plot expressions:
+    >> p1 = plot(x**2) # with default [-10,+10] range
+    >> p2 = plot(x**2, (0, 5)) # it finds the free variable itself
+    >> p3 = plot(x**2, (x, 0, 5)) # fully explicit
+
+    Fully implicit examples (finding the free variable and using default
+    range). For the explicit versions just add the tuples with ranges:
+    >> p4 = plot(x**2) # cartesian line
+    >> p5 = plot(cos(u), sin(u)) # parametric line
+    >> p6 = plot(cos(u), sin(u), u) # parametric line in 3d
+    >> p7 = plot(x**2 + y**2) # cartesian surface
+    >> p8 = plot(u, v, u+v) # parametric surface
+    """
+    # TODO
+    return Plot(*args)
 
 
 ##############################################################################
@@ -693,7 +731,15 @@ class Series(BaseSeries):
               and isinstance(args[2], tuple)
               and len(args[1]) == 3
               and len(args[2]) == 3):
-            inst = ContourSeries(*args)
+            inst = SurfaceOver2DRangeSeries(*args)
+        elif (len(args) == 4
+              and (isinstance(args[0], Expr) or isinstance(args[0], str))
+              and isinstance(args[1], tuple)
+              and isinstance(args[2], tuple)
+              and len(args[1]) == 3
+              and len(args[2]) == 3
+              and args[3] == 'contour'):
+            inst = ContourSeries(*args[:3])
         elif (len(args) == 4
               and (isinstance(args[0], Expr) or isinstance(args[0], str))
               and (isinstance(args[1], Expr) or isinstance(args[1], str))
@@ -701,14 +747,6 @@ class Series(BaseSeries):
               and isinstance(args[3], tuple)
               and len(args[3]) == 3):
             inst = Parametric3DLineSeries(*args)
-        elif (len(args) == 4
-              and (isinstance(args[0], Expr) or isinstance(args[0], str))
-              and isinstance(args[1], tuple)
-              and isinstance(args[2], tuple)
-              and len(args[1]) == 3
-              and len(args[2]) == 3
-              and args[3] == '3d'):
-            inst = SurfaceOver2DRangeSeries(*args[:3])
         elif (len(args) == 5
               and (isinstance(args[0], Expr) or isinstance(args[0], str))
               and (isinstance(args[1], Expr) or isinstance(args[1], str))
