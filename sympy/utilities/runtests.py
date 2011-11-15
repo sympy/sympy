@@ -1975,12 +1975,17 @@ def relpath(path, start=os.path.curdir):
         pass
     if _relpath:
         return _relpath(path, start)
-    # when Python 2.5
+
+    # when Python 2.5 is used, calculate it manually
     if not path:
         raise ValueError("no path specified")
 
     start_list = [x for x in os.path.abspath(start).split(os.path.sep) if x]
     path_list = [x for x in os.path.abspath(path).split(os.path.sep) if x]
+
+    # fix for windows platform
+    start_list = [sys_normcase(p) for p in start_list]
+    path_list = [sys_normcase(p) for p in path_list]
 
     # Work out how much of the filepath is shared by start and path.
     i = len(os.path.commonprefix([start_list, path_list]))
