@@ -181,15 +181,10 @@ def str2tree(exprstr):
 
     >>> str2tree(str(Integral(x, (x, 1, y))))
     ('', ('Integral(', 'x, (x, 1, y)'), ')')
-
-    >>> # is it correct? Compare with
-    >>> # ('', ('Integral(', 'x', '(x, 1, y)'), ')')
-
     >>> str2tree(str(x+y))
     'x + y'
     >>> str2tree(str(x+y*sin(z)+1))
     ('x + y*', ('sin(', 'z'), ') + 1')
-
     """
     #matches the first 'function_name('
     first_par = re.match(r'[^\(]*?[\W]?(\w+\()', exprstr)
@@ -216,14 +211,12 @@ def tree2str(tree):
     """Converts a tree to string without translations.
 
     Examples:
-
     >>> from sympy.abc import x, y, z
     >>> from sympy import Integral, sin
     >>> from sympy.plotting.experimental_lambdify import str2tree, tree2str
 
     >>> tree2str(str2tree(str(x+y*sin(z)+1)))
     'x + y*sin(z) + 1'
-
     """
     if isinstance(tree, str):
         return tree
