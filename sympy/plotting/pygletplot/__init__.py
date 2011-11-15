@@ -1,7 +1,7 @@
 """Plotting module that can plot 2D and 3D functions
 """
 try:
-    def Plot(*args, **kwargs):
+    def PygletPlot(*args, **kwargs):
         """
         Plot Examples
         =============
@@ -123,9 +123,9 @@ try:
         """
 
         import plot
-        return plot.Plot(*args, **kwargs)
+        return plot.PygletPlot(*args, **kwargs)
 
 except Exception, e:
-    def Plot(*args, **kwargs):
+    def PygletPlot(*args, **kwargs):
         raise e
 
