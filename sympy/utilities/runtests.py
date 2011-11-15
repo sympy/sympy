@@ -453,7 +453,7 @@ def wikitest(*paths, **kwargs):
     wiki_dir = kwargs["wiki_dir"]
 
     r = PyTestReporter(verbose, colors=colors, first_only=first_only)
-    t = SymPyWikiTester(r, normal, wiki_dir)
+    t = SymPyWikiTester(r, normal, os.path.curdir)
     t.parser = SymPyTextTestParser()
     if first_only:
         t.optionflags |= pdoctest.REPORT_ONLY_FIRST_FAILURE
@@ -461,7 +461,8 @@ def wikitest(*paths, **kwargs):
     failed_total = False
 
     for against in againstlist:
-        t.set_against_dir(against, kwargs["%s_dir" % against])
+        _sympy_dir = kwargs["%s_dir" % against]
+        t.set_against_dir(against, _sympy_dir)
         t.load_sympy_version()
         t.load_sympy_modules()
 
@@ -533,6 +534,8 @@ class SymPyTesterBase(object):
     """
     def __init__(self):
         self.pprint_status = None
+        self._count = 0
+        self._testfiles = []
 
     def load_sympy_modules(self):
         """
@@ -600,11 +603,9 @@ class SymPyTester(SymPyTesterBase):
 
         self._post_mortem = post_mortem
         self._kw = kw
-        self._count = 0
         self._root_dir = sympy_dir
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
-        self._testfiles = []
         self._seed = seed
 
     def get_test_files(self, dir, pat = 'test_*.py'):
@@ -1042,16 +1043,11 @@ class SymPyWikiTester(SymPyDocTester):
     Class for the testing examples in the wiki pages.
     """
 
-    def __init__(self, reporter, normal, root_dir):
+    def __init__(self, reporter, normal, dir_for_reporter):
         SymPyDocTester.__init__(self, reporter, normal)
 
-        self._count = 0
-        self._root_dir = root_dir
-        self._reporter = reporter
-        self._reporter.root_dir(self._root_dir)
-        self._normal = normal
+        self._reporter.root_dir(dir_for_reporter)
 
-        self._testfiles = []
         re_directives = []
         re_directives.append(re.compile(r"<!--\s+wikitest\s+(?P<against>[\w,]+)(\s+\((?P<options>[\w,]+)\))?\s+-->", re.M))
         re_directives.append(re.compile(r"\.\.\s+wikitest\s+(?P<against>[\w,]+)(\s+\((?P<options>[\w,]+)\))?\s+$", re.M))
@@ -1065,6 +1061,7 @@ class SymPyWikiTester(SymPyDocTester):
         """
         self.against = against
         self.against_dir = against_dir
+        self._reporter._sympy_dir = against_dir
 
     def get_test_files(self, dir, pat=r'^.*\.md$', init_only=True, all_pages = False):
         """
@@ -1630,6 +1627,7 @@ class PyTestReporter(Reporter):
         self._exceptions = []
         self._terminal_width = None
         self._default_width = 80
+        self._sympy_dir = None
 
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
@@ -1803,6 +1801,8 @@ class PyTestReporter(Reporter):
         self.write("ground types: %s\n" % GROUND_TYPES)
         if seed is not None:
             self.write("random seed:  %d\n" % seed)
+        if self._sympy_dir <> None:
+            self.write("sympy:        %s\n" % self._sympy_dir)
         self.write('\n')
         self._t_start = clock()
 
@@ -1889,7 +1889,7 @@ class PyTestReporter(Reporter):
         return ok
 
     def entering_filename(self, filename, n):
-        rel_name = filename[len(self._root_dir)+1:]
+        rel_name = relpath(filename, self._root_dir)
         self._active_file = rel_name
         self._active_file_error = False
         self.write(rel_name)
@@ -1965,3 +1965,27 @@ class PyTestReporter(Reporter):
         self.write(" ")
         self.write("[FAIL]", "Red", align="right")
         self.write("\n")
+
+# since Python 2.6
+def relpath(path, start=os.path.curdir):
+    _relpath = None
+    try:
+        _relpath = os.path.relpath
+    except:
+        pass
+    if _relpath:
+        return _relpath(path, start)
+    # when Python 2.5
+    if not path:
+        raise ValueError("no path specified")
+
+    start_list = [x for x in os.path.abspath(start).split(os.path.sep) if x]
+    path_list = [x for x in os.path.abspath(path).split(os.path.sep) if x]
+
+    # Work out how much of the filepath is shared by start and path.
+    i = len(os.path.commonprefix([start_list, path_list]))
+
+    rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
+    if not rel_list:
+        return os.path.curdir
+    return os.path.join(*rel_list)
