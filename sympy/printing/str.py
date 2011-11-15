@@ -241,8 +241,9 @@ class StrPrinter(Printer):
         if len(a)==0:
             a = [S.One]
 
-        a_str = map(lambda x:self.parenthesize(x, precedence(expr)), a)
-        b_str = map(lambda x:self.parenthesize(x, precedence(expr)), b)
+        prec = precedence(expr)
+        a_str = map(lambda x:self.parenthesize(x, prec), a)
+        b_str = map(lambda x:self.parenthesize(x, prec), b)
 
         if len(b)==0:
             return sign + '*'.join(a_str)
