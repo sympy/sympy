@@ -4,6 +4,9 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from numbers import ilcm
+from expr import Expr
+from numbers import ilcm, igcd
+from collections import defaultdict
 
 class Add(AssocOp):
 
@@ -299,13 +302,50 @@ class Add(AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
-        numers, denoms = [],[]
-        for n,d in [f.as_numer_denom() for f in self.args]:
+        # collect numerators and denominators of the terms
+        nd = defaultdict(list)
+        for f in self.args:
+            ni, di = f.as_numer_denom()
+            nd[di].append(ni)
+
+        # check for quick exit
+        if len(nd) == 1:
+            d, n = nd.popitem()
+            return Add(*n), d
+
+        # separate out those that are Integers and add those that
+        # had a common denominator
+        nnum = []
+        dnum = []
+        for d, n in nd.items():
+            nd[d] = Add(*nd[d])
+            if d.is_Integer:
+                nnum.append(nd.pop(d))
+                dnum.append(int(d))
+
+        # prepare list of those terms that didn't have integer denoms
+        if nd:
+            denoms, numers = [list(i) for i in zip(*nd.iteritems())]
+        else:
+            numers = []
+            denoms = []
+
+        # process the Number denominators efficiently
+        if nnum:
+            den = reduce(ilcm, dnum, 1)
+            resid = [den/di for di in dnum]
+            n = Add(*[resid[i]*ni for i, ni in enumerate(nnum)])
             numers.append(n)
-            denoms.append(d)
-        r = xrange(len(numers))
-        return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
-                     for i in r]), Mul(*denoms)
+            denoms.append(S(den))
+
+        if len(numers) == 1:
+            n, d = numers[0], denoms[0]
+
+        else:
+            n, d = Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
+                       for i in xrange(len(numers))]), Mul(*denoms)
+
+        return n, d
 
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
