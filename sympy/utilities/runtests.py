@@ -1802,7 +1802,7 @@ class PyTestReporter(Reporter):
         if seed is not None:
             self.write("random seed:  %d\n" % seed)
         if self._sympy_dir <> None:
-            self.write("sympy:        %s\n" % self._sympy_dir)
+            self.write("sympy:        %s\n" % relpath(self._sympy_dir))
         self.write('\n')
         self._t_start = clock()
 
