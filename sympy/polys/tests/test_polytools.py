@@ -52,8 +52,8 @@ from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
     exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
-from sympy.core.mul import _keep_coeff
 from sympy.core.compatibility import iterable
+from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import raises, XFAIL
 
 x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e = symbols('x,y,z,p,q,r,s,t,u,v,w,a,b,c,d,e')
