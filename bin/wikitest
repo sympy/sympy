@@ -4,11 +4,11 @@
 This procedure test wiki pages against master or release
  repositories.
 
-Assuming that wiki.sympy and release version are placed near
+Assuming that sympy.wiki and release version are placed near
 master repository. E.g.
 
     ./sympy/
-    ./wiki.sympy/
+    ./sympy.wiki/
     ./sympy-0.7.1/
 
 If the directories are not the same, then they can be tuned by
