@@ -6,17 +6,25 @@ from sympy.matrices import Matrix, eye
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, gate_simp)
 from sympy.physics.quantum.represent import represent
+from sympy.physics.quantum.operator import (UnitaryOperator,
+        HermitianOperator)
 
 __all__ = [
     'permutations_recursive',
     'generate_gate_rules',
     'GateIdentity',
     'is_scalar_matrix',
+    'is_degenerate',
+    'is_reducible',
     'bfs_identity_search',
     'random_identity_search'
 ]
 
 def permutations_recursive(elements, recurse_pt, dist_from_pt, max_length):
+    # Possibly remove -
+    # Have not proved that permutations of an identity with all Unitary or
+    # Hermitian gates produce the same scalar matrix 
+
     # COULD BE IMPROVED
     # This recursive algorithm gives all the permutations
     # regardless of repeats in the sequence.
@@ -54,24 +62,110 @@ def permutations_recursive(elements, recurse_pt, dist_from_pt, max_length):
 
     return permutations
 
-def is_scalar_matrix(matrix):
-    """Checks if given scipy.sparse matrix is a scalar matrix."""
-
-    if (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1])):
-        diag = list(matrix.diagonal())
-        if (diag.count(diag[0]) == len(diag)):
-            return True
-    return False
-
 def generate_gate_rules(gate_seq):
-    # In general, may use the four operations (LL, LR, RL, RR) to
-    # to find equivalent gate identities
+    '''Returns a list of equivalent gate identities'''
 
-    # Possible short cut:
-    # The four operations cycle the gates around in a circle, which
-    # means this function will return a max list size of 2n, where n
-    # is the number of gates in the sequence.  
-    return permutations_recursive(gate_seq, 0, 0, len(gate_seq))
+    # In general, may use the four operations (LL, LR, RL, RR)
+    # to find equivalent gate identities.
+
+    # All equivalent identities reachable in n operations from the
+    # starting gate identity, where n is the number of gates in the
+    # sequence -> max cutoff.
+
+    # Each item in queue is a 3-tuple:
+    #      i)   first item is the left side of an equality
+    #     ii)   second item is the right side of an equality
+    #    iii)   third item is the number of operations performed
+    # The argument, gate_seq, will start on the left side, and
+    # the right side will be empty, implying the presence of an
+    # identity.
+    queue = deque()
+    # visited is a list of equalities that's been visited
+    vis = []
+    # A list of equivalent gate identities
+    gate_rules = []
+    # Maximum number of operations to perform
+    max_ops = len(gate_seq)
+
+    queue.append((gate_seq, (), 0))
+    vis.append((gate_seq, ()))
+    gate_rules.append(gate_seq)
+
+    while (len(queue) > 0):
+        rule = queue.popleft()
+
+        left = rule[0]
+        rite = rule[1]
+        ops = rule[2]
+
+        # Do a LL, if possible
+        if (len(left) > 0 and isinstance(left[0], UnitaryOperator)
+            and isinstance(left[0], HermitianOperator)):
+            # Get the new left side w/o the leftmost gate
+            new_left = left[1:len(left)]
+            # Add the leftmost gate to the left position on the right side
+            new_rite = (left[0],) + rite
+
+            new_rule = (new_left, new_rite)
+            # If the left side is empty (left side is scalar)
+            if (len(new_left) == 0 and new_rite not in gate_rules):
+                gate_rules.append(new_rite)                
+            # If the equality has not been seen and has not reached the
+            # max limit on operations
+            elif (new_rule not in vis and ops + 1 < max_ops):
+                queue.append(new_rule + (ops + 1,))
+
+            vis.append(new_rule)
+
+        # Do a LR, if possible
+        if (len(left) > 0 and isinstance(left[len(left)-1], UnitaryOperator)
+            and isinstance(left[len(left)-1], HermitianOperator)):
+            # Get the new left side w/o the rightmost gate
+            new_left = left[0:len(left)-1]
+            # Add the rightmost gate to the right position on the right side
+            new_rite = rite + (left[len(left)-1],)
+
+            new_rule = (new_left, new_rite)
+            if (len(new_left) == 0 and new_rite not in gate_rules):
+                gate_rules.append(new_rite)
+            elif (new_rule not in vis and ops + 1 < max_ops):
+                queue.append(new_rule + (ops + 1,))
+
+            vis.append(new_rule)
+
+        # Do a RL, if possible
+        if (len(rite) > 0 and isinstance(rite[0], UnitaryOperator)
+            and isinstance(rite[0], HermitianOperator)):
+            # Get the new right side w/o the leftmost gate
+            new_rite = rite[1:len(rite)]
+            # Add the leftmost gate to the left position on the left side
+            new_left = (rite[0],) + left
+
+            new_rule = (new_left, new_rite)
+            if (len(new_rite) == 0 and new_left not in gate_rules):
+                gate_rules.append(new_left)
+            elif (new_rule not in vis and ops + 1 < max_ops):
+                queue.append(new_rule + (ops + 1,))
+
+            vis.append(new_rule)
+
+        # Do a RR, if possible
+        if (len(rite) > 0 and isinstance(rite[len(rite)-1], UnitaryOperator)
+            and isinstance(rite[len(rite)-1], HermitianOperator)):
+            # Get the new right side w/o the rightmost gate
+            new_rite = rite[0:len(rite)-1]
+            # Add the rightmost gate to the right position on the right side
+            new_left = left + (rite[len(rite)-1],)
+
+            new_rule = (new_left, new_rite)
+            if (len(new_rite) == 0 and new_left not in gate_rules):
+                gate_rules.append(new_left)
+            elif (new_rule not in vis and ops + 1 < max_ops):
+                queue.append(new_rule + (ops + 1,))
+
+            vis.append(new_rule)
+
+    return gate_rules
 
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value."""
@@ -134,12 +228,42 @@ def construct_matrix_list(numqubits):
 
     return matrix_list
 
+def is_scalar_matrix(matrix):
+    """Checks if given scipy.sparse matrix is a scalar matrix."""
+
+    if (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1])):
+        diag = list(matrix.diagonal())
+        if (diag.count(diag[0]) == len(diag)):
+            return True
+    return False
+
 def is_degenerate(identity_set, gate_identity):
     # For now, just iteratively go through the set and check if the current
     # gate_identity is a permutation of an identity in the set
     for an_id in identity_set:
         if (gate_identity in an_id.gate_rules):
             return True
+    return False
+
+def is_reducible(circuit, numqubits, begin, end):
+    '''Determines if a subcircuit in some range is reducible
+       to a scalar value.'''
+
+    current_circuit = ()
+    # Start from the rightmost gate and go down to almost the leftmost gate
+    for ndx in reversed(range(begin, end)):
+        next_gate = circuit[ndx]
+        current_circuit = (next_gate,) + current_circuit
+        matrix_version = represent(Mul(*current_circuit), nqubits=numqubits,
+                                       format='scipy.sparse')
+
+        if (isinstance(matrix_version, int)):
+                return True
+
+        # If a matrix is equivalent to a scalar value is found
+        elif (is_scalar_matrix(matrix_version)):
+                return True
+
     return False
 
 def bfs_identity_search(gate_list, numqubits, max_depth=0):
@@ -175,13 +299,15 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
                 ids.add(GateIdentity(new_circuit))
 
             # If a matrix is equivalent to a scalar value is found
-            elif (is_scalar_matrix(matrix_version) and
+            elif (not isinstance(matrix_version, int) and
+                is_scalar_matrix(matrix_version) and
                 not is_degenerate(ids, new_circuit)):
                 # When adding a gate identity, remove the
                 # identity gate at the beginning of the tuple
                 ids.add(GateIdentity(new_circuit))
 
-            elif (len(new_circuit) < max_depth):
+            elif (len(new_circuit) < max_depth and
+                not is_reducible(new_circuit, numqubits, 1, len(new_circuit))):
                 queue.append(new_circuit)
 
     return ids
