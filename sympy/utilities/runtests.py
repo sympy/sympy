@@ -134,6 +134,18 @@ IGNORE_EXCEPTION_DETAIL = pdoctest.IGNORE_EXCEPTION_DETAIL
 PRETTY = pdoctest.register_optionflag('PRETTY')
 pdoctest.PRETTY = PRETTY
 
+RELEASE_ONLY = pdoctest.register_optionflag('RELEASE_ONLY')
+pdoctest.RELEASE_ONLY = RELEASE_ONLY
+FUTURE_ONLY = pdoctest.register_optionflag('FUTURE_ONLY')
+pdoctest.FUTURE_ONLY = FUTURE_ONLY
+
+IS_RELEASE_RUNNING = pdoctest.register_optionflag('IS_RELEASE_RUNNING')
+pdoctest.IS_RELEASE_RUNNING = IS_RELEASE_RUNNING
+
+IS_MASTER_RUNNING = pdoctest.register_optionflag('IS_MASTER_RUNNING')
+pdoctest.IS_MASTER_RUNNING = IS_MASTER_RUNNING
+
+
 ################################################################################
 ####                           Utilities                                    ####
 ################################################################################
@@ -451,7 +463,7 @@ def wikitest(*paths, **kwargs):
     verbose = kwargs.get("verbose", False)
     colors = kwargs.get("colors", True)
     first_only = kwargs.get("first_only", False)
-    all_pages = kwargs.get("all_pages", False)
+    all_pages_and_tests = kwargs.get("all_pages", False)
 
     againstlist = kwargs.get("againstlist", ["master"])
     blacklist = kwargs.get("blacklist", [])
@@ -469,11 +481,12 @@ def wikitest(*paths, **kwargs):
 
     for against in againstlist:
         _sympy_dir = kwargs["%s_dir" % against]
-        t.set_against_dir(against, _sympy_dir)
+        t.all_pages_and_tests = all_pages_and_tests
+        t.set_against(against, _sympy_dir)
         t.load_sympy_version()
         t.load_sympy_modules()
 
-        test_files = t.get_test_files(wiki_dir, pat=r"^.*\.(md|rest|mediawiki)$",init_only=False, all_pages = all_pages)
+        test_files = t.get_test_files(wiki_dir, pat=r"^.*\.(md|rest|mediawiki)$",init_only=False)
 
         matched = t.filter_files(test_files, blacklist, paths)
         t._testfiles = matched
@@ -1060,7 +1073,7 @@ class SymPyWikiTester(SymPyDocTester):
         re_directives.append(re.compile(r"\.\.\s+wikitest\s+(?P<against>[\w,]+)(\s+\((?P<options>[\w,]+)\))?\s+$", re.M))
         self.re_directives = re_directives
 
-    def set_against_dir(self, against, against_dir):
+    def set_against(self, against, against_dir):
         """Set against dir.
 
         While testing this dir will be injected into the test for catching right
@@ -1070,7 +1083,15 @@ class SymPyWikiTester(SymPyDocTester):
         self.against_dir = against_dir
         self._reporter._sympy_dir = against_dir
 
-    def get_test_files(self, dir, pat=r'^.*\.md$', init_only=True, all_pages = False):
+        if not self.all_pages_and_tests:
+            if against=='release':
+                self.optionflags |= IS_RELEASE_RUNNING
+            elif against=='master':
+                self.optionflags |= IS_MASTER_RUNNING
+        else:
+            self.optionflags |= IS_MASTER_RUNNING | IS_RELEASE_RUNNING
+
+    def get_test_files(self, dir, pat=r'^.*\.md$', init_only=True):
         """
         Returns the list of wiki-pages (default) from which docstrings
         will be tested which are at or below directory `dir`.
@@ -1087,7 +1108,8 @@ class SymPyWikiTester(SymPyDocTester):
         g = []
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files
-                      if _fnmatch(f) and (all_pages or self.has_directive(path, f))])
+                      if _fnmatch(f) and (self.all_pages_and_tests or \
+                                            self.has_directive(path, f))])
         return [sys_normcase(gi) for gi in g]
 
     def has_directive(self, pathdir, fn):
@@ -1507,6 +1529,14 @@ class SymPyDocTestRunner(DocTestRunner):
             # If 'SKIP' is set, then skip this example.
             if self.optionflags & SKIP:
                 continue
+
+            if self.optionflags & FUTURE_ONLY:
+                if not original_optionflags & IS_MASTER_RUNNING:
+                    continue
+
+            if self.optionflags & RELEASE_ONLY:
+                if not original_optionflags & IS_RELEASE_RUNNING:
+                    continue
 
             # Record that we started this example.
             tries += 1
