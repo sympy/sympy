@@ -903,7 +903,6 @@ class Pow(Expr):
         See docstring of Expr.as_content_primitive for more examples.
         """
 
-        from sympy.polys.polytools import _keep_coeff
         b, e = self.as_base_exp()
         b = _keep_coeff(*b.as_content_primitive())
         ce, pe = e.as_content_primitive()
@@ -942,7 +941,7 @@ class Pow(Expr):
                 return c, Pow(_keep_coeff(m, t), e)
         return S.One, Pow(b, e)
 
-from add import Add
+from add import Add, _keep_coeff
 from numbers import Integer
 from mul import Mul
 from symbol import Symbol, Dummy

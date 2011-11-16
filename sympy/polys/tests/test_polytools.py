@@ -24,7 +24,7 @@ from sympy.polys.polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel, reduced, groebner,
-    GroebnerBasis, is_zero_dimensional, _keep_coeff)
+    GroebnerBasis, is_zero_dimensional)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -52,6 +52,7 @@ from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
     exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
+from sympy.core.add import _keep_coeff
 from sympy.core.compatibility import iterable
 from sympy.utilities.pytest import raises, XFAIL
 
