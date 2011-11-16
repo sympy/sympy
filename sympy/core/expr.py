@@ -106,10 +106,14 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
+        if self == other:
+            return S.Zero
         return Add(self, -other)
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
+        if self == other:
+            return S.Zero
         return Add(other, -self)
 
     @_sympifyit('other', NotImplemented)
@@ -133,10 +137,14 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
+        if self == other:
+            return S.One
         return Mul(self, Pow(other, S.NegativeOne))
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
+        if self == other:
+            return S.One
         return Mul(other, Pow(self, S.NegativeOne))
 
     __truediv__ = __div__
