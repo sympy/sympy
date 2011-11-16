@@ -573,6 +573,9 @@ def test_nsimplify():
     assert nsimplify(Float(0.272198261287950).n(3), [pi,log(2)]) == \
         -pi/4 - log(2) + S(7)/4
     assert nsimplify(x/7.0) == x/7
+    assert nsimplify(pi/1e2) == pi/100
+    assert nsimplify(pi/1e2, rational=False) == pi/100.0
+    assert nsimplify(pi/1e-7) == 10000000*pi
 
 def test_extract_minus_sign():
     x = Symbol("x")

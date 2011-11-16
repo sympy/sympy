@@ -1974,7 +1974,7 @@ def _real_to_rational(expr):
     """
     p = expr
     for r in p.atoms(C.Float):
-        newr = nsimplify(r)
+        newr = nsimplify(r, rational=False)
         if not newr.is_Rational or \
            r.is_finite and not newr.is_finite:
             newr = r
@@ -1988,10 +1988,12 @@ def _real_to_rational(expr):
         p = p.subs(r, newr)
     return p
 
-def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
+def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     """
     Find a simple representation for a number or, if there are free symbols or
-    if rational=True, then replace Floats with their Rational equivalents.
+    if rational=True, then replace Floats with their Rational equivalents. If
+    no change is made and rational is not False then Floats will at least be
+    converted to Rationals.
 
     For numerical expressions, a simple formula that numerically matches the
     given numerical expression is sought (and the input should be possible
@@ -2067,16 +2069,29 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
                 raise ValueError
             if full:
                 newexpr = newexpr[0]
-            return sympify(newexpr)
+            expr = sympify(newexpr)
+            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
+                raise ValueError
+            return expr
         finally:
+            # even though there are returns above, this is executed
+            # before leaving
             mpmath.mp.dps = orig
     try:
         if re: re = nsimplify_real(re)
         if im: im = nsimplify_real(im)
     except ValueError:
+        if rational is None:
+            return _real_to_rational(expr)
         return expr
 
-    return re + im*S.ImaginaryUnit
+    rv = re + im*S.ImaginaryUnit
+    # if there was a change or rational is explicitly not wanted
+    # return the value, else return the Rational representation
+    if rv != expr or rational is False:
+        return rv
+    return _real_to_rational(expr)
+
 
 
 def logcombine(expr, force=False):
