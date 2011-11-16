@@ -343,3 +343,58 @@ except NameError: # Python 2.5
             x >>= 1
             pass
         return '0b' + ''.join(reversed(out))
+
+
+# since Python 2.6
+import os.path
+def relpath(path, start=os.path.curdir):
+    _relpath = None
+    try:
+        _relpath = os.path.relpath
+    except:
+        pass
+    if _relpath:
+        return _relpath(path, start)
+
+    # to be sure that the tests utilities, which use this functions fo reporting
+    # do not craching on the other platforms and interpreter's versions.
+    # when Python 2.5 is used, calculate it manually
+    if not path:
+        raise ValueError("no path specified")
+
+    start_list = [x for x in os.path.abspath(start).split(os.path.sep) if x]
+    path_list = [x for x in os.path.abspath(path).split(os.path.sep) if x]
+
+    # fix for windows platform
+    start_list = [sys_normcase(p) for p in start_list]
+    path_list = [sys_normcase(p) for p in path_list]
+
+    # Work out how much of the filepath is shared by start and path.
+    i = len(os.path.commonprefix([start_list, path_list]))
+
+    rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
+    if not rel_list:
+        return os.path.curdir
+    return os.path.join(*rel_list)
+
+# Those next two procedures are needed for relpath()  when Python 2.5 is used
+def sys_normcase(f):
+    if sys_case_insensitive:
+        return f.lower()
+    return f
+
+def check_sys_case_insensitive():
+    """
+    Returns the root sympy directory and set the global value
+    indicating whether the system is case sensitive or not.
+    """
+    global sys_case_insensitive
+
+    this_file = os.path.abspath(__file__)
+    sympy_dir = os.path.join(os.path.dirname(this_file), "..", "..")
+    sympy_dir = os.path.normpath(sympy_dir)
+    sys_case_insensitive = (os.path.isdir(sympy_dir) and
+                        os.path.isdir(sympy_dir.lower()) and
+                        os.path.isdir(sympy_dir.upper()))
+
+check_sys_case_insensitive()

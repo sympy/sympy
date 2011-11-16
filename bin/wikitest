@@ -78,7 +78,7 @@ parser.add_option("-a", "--against", type="string", dest="against",
         help="SymPy version. What do the tests must be relative [master | release | master,release] [default: %default]",
         default="master")
 parser.add_option("--all", action="store_true", dest="all_pages",
-        help="Test all wiki pages in directory, that is inspire of pages's directive. [default: %default]",
+        help="Test all the pages in the directory, regardless of the directive in the pages. [default: %default]",
         default=False)
 parser.add_option("-w", "--wiki-dir", type="string", dest="wiki_dir",
         help="The path to the wiki pages directory", default=None)

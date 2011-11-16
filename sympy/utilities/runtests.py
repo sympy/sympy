@@ -79,6 +79,13 @@ import string
 import codecs
 
 
+# Manually load modules, passing out sympy
+fn_compatibility = os.path.join(os.path.dirname(__file__), "../core/compatibility.py")
+fn_compatibility = os.path.abspath(fn_compatibility)
+compatibility = imp.load_source("compatibility", fn_compatibility)
+relpath = compatibility.relpath
+
+
 #
 # Tune standard doctest module (utf8 encoding, indent)
 #
@@ -1959,38 +1966,9 @@ class PyTestReporter(Reporter):
 
     def import_error(self, filename, exc_info):
         self._exceptions.append((filename, None, exc_info))
-        rel_name = filename[len(self._root_dir)+1:]
+        rel_name = relpath(filename, self._root_dir)
         self.write(rel_name)
         self.write("[?]   Failed to import", "Red")
         self.write(" ")
         self.write("[FAIL]", "Red", align="right")
         self.write("\n")
-
-# since Python 2.6
-def relpath(path, start=os.path.curdir):
-    _relpath = None
-    try:
-        _relpath = os.path.relpath
-    except:
-        pass
-    if _relpath:
-        return _relpath(path, start)
-
-    # when Python 2.5 is used, calculate it manually
-    if not path:
-        raise ValueError("no path specified")
-
-    start_list = [x for x in os.path.abspath(start).split(os.path.sep) if x]
-    path_list = [x for x in os.path.abspath(path).split(os.path.sep) if x]
-
-    # fix for windows platform
-    start_list = [sys_normcase(p) for p in start_list]
-    path_list = [sys_normcase(p) for p in path_list]
-
-    # Work out how much of the filepath is shared by start and path.
-    i = len(os.path.commonprefix([start_list, path_list]))
-
-    rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
-    if not rel_list:
-        return os.path.curdir
-    return os.path.join(*rel_list)
