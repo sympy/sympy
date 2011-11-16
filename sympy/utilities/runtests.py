@@ -122,9 +122,9 @@ Example = pdoctest.Example
 # (which doesn't exist in 2.5-)
 if sys.version_info[:2] > (2,5):
     from collections import namedtuple
-    SymPyTestResults = namedtuple('TestResults', 'failed attempted')
+    SymPyTestResults = namedtuple('TestResults', 'failed attempted skipped')
 else:
-    SymPyTestResults = lambda a, b: (a, b)
+    SymPyTestResults = lambda a, b, c: (a, b, c)
 
 # Take some constants from the pdoctest. And define the new ones.
 
@@ -882,9 +882,10 @@ class SymPyDocTester(SymPyTesterBase):
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             try:
-                f, t = runner.run(test, out=new.write, clear_globs=False)
+                f, t, s = runner.run(test, out=new.write, clear_globs=False)
             finally:
                 sys.stdout = old
+            for i in range(s): self._reporter.test_skip('')
             if f > 0:
                 self._reporter.doctest_fail(test.name, new.getvalue())
             else:
@@ -1044,10 +1045,11 @@ class SymPyDocTester(SymPyTesterBase):
                 new = StringIO()
                 sys.stdout = new
                 try:
-                    f, t = runner.run(test, out=new.write, clear_globs=False)
+                    f, t, s = runner.run(test, out=new.write, clear_globs=False)
                 finally:
                     sys.stdout = old
                 globs.update(test.globs)
+                for i in range(s): self._reporter.test_skip('')
                 if f > 0:
                     self._reporter.doctest_fail(test.name, new.getvalue())
                 else:
@@ -1495,7 +1497,7 @@ class SymPyDocTestRunner(DocTestRunner):
         in the namespace `test.globs`.
         """
         # Keep track of the number of failures and tries.
-        failures = tries = 0
+        failures = tries = skips = 0
 
         # Save the option flags (since option directives can be used
         # to modify them).
@@ -1528,14 +1530,17 @@ class SymPyDocTestRunner(DocTestRunner):
 
             # If 'SKIP' is set, then skip this example.
             if self.optionflags & SKIP:
+                skips += 1
                 continue
 
             if self.optionflags & FUTURE_ONLY:
                 if not original_optionflags & IS_MASTER_RUNNING:
+                    skips += 1
                     continue
 
             if self.optionflags & RELEASE_ONLY:
                 if not original_optionflags & IS_RELEASE_RUNNING:
+                    skips += 1
                     continue
 
             # Record that we started this example.
@@ -1625,7 +1630,7 @@ class SymPyDocTestRunner(DocTestRunner):
 
         # Record and return the number of failures and tries.
         self.__record_outcome(test, failures, tries)
-        return SymPyTestResults(failures, tries)
+        return SymPyTestResults(failures, tries, skips)
 
 # We have to override the name mangled methods.
 SymPyDocTestRunner._SymPyDocTestRunner__patched_linecache_getlines = \
