@@ -285,26 +285,29 @@ class Add(AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
+        from sympy.polys.polytools import _keep_coeff
+
+        # clear rational denominator
+        content, expr = self.primitive()
+        ncon, dcon = content.as_numer_denom()
+
         # collect numerators and denominators of the terms
         nd = defaultdict(list)
-        for f in self.args:
+        for f in expr.args:
             ni, di = f.as_numer_denom()
             nd[di].append(ni)
 
         # check for quick exit
         if len(nd) == 1:
             d, n = nd.popitem()
-            return Add(*n), d
+            return Add(*[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
 
-        # separate out those that are Integers and add those that
-        # had a common denominator
-        nnum = []
-        dnum = []
-        for d, n in nd.items():
-            nd[d] = Add(*nd[d])
-            if d.is_Integer:
-                nnum.append(nd.pop(d))
-                dnum.append(int(d))
+        # sum up the terms having a common denominator
+        for d, n in nd.iteritems():
+            if len(n) == 1:
+                nd[d] = n[0]
+            else:
+                nd[d] = Add(*n)
 
         # prepare list of those terms that didn't have integer denoms
         if nd:
@@ -313,14 +316,7 @@ class Add(AssocOp):
             numers = []
             denoms = []
 
-        # process the Number denominators efficiently
-        if nnum:
-            den = reduce(ilcm, dnum, 1)
-            resid = [den/di for di in dnum]
-            n = Add(*[resid[i]*ni for i, ni in enumerate(nnum)])
-            numers.append(n)
-            denoms.append(S(den))
-
+        # assemble single numerator and denominator
         if len(numers) == 1:
             n, d = numers[0], denoms[0]
 
@@ -328,7 +324,7 @@ class Add(AssocOp):
             n, d = Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
                        for i in xrange(len(numers))]), Mul(*denoms)
 
-        return n, d
+        return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
 
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
