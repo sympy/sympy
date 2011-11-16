@@ -90,7 +90,7 @@ class PermutationGroup(Basic):
                     break
         return self._is_abelian
 
-    def coset_repr(self, alpha):
+    def coset_repr(self, alpha=None):
         """
         Computes the Schreier Tree for a given alpha and returns the
         corresponding coset representation.
@@ -103,11 +103,13 @@ class PermutationGroup(Basic):
         >>> c = Permutation([2,0,3,1])
         >>> d = PermutationGroup([a,b,c],4)
         >>> d.schreier_tree(3)
-        >>> d._coset_repr
-        [Permutation([2, 3, 1, 0]), Permutation([0, 2, 3, 1]), \
+        >>> d.coset_repr
+        set[Permutation([2, 3, 1, 0]), Permutation([0, 2, 3, 1]), \
         Permutation([0, 1, 3, 2]), Permutation([0, 1, 2, 3])]
         """
-        return self._coset_repr_n
+        if (alpha != None):
+            self.schreier_tree(alpha)
+        return set(self._coset_repr)
 
     def schreier_tree(self, alpha, gen=None, ag=None):
         """

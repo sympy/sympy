@@ -270,6 +270,12 @@ class Permutation(Basic):
     def __index__(self):
         return self
 
+    def __key(self):
+        return (self.order, self.rank)
+
+    def __hash__(self):
+        return hash(self.__key())
+
     def atoms(self):
         """
         Returns all the elements of a permutation
