@@ -188,7 +188,7 @@ def checksol(f, symbol, sol=None, **flags):
                 val = posify(val)[0]
                 # expansion may work now, so try again and check
                 exval = expand_mul(expand_multinomial(val))
-                if not exval.free_symbols:
+                if exval.is_number or not exval.free_symbols:
                     # we can decide now
                     val = exval
         elif attempt == 3:
@@ -683,7 +683,7 @@ def solve(f, *symbols, **flags):
 
     # restore floats
     if floats and flags.get('rational', None) is None:
-        solution = nfloat(solution, denom_of_1=True, exponent=False)
+        solution = nfloat(solution, exponent=False)
 
     if not check or not solution:
         return solution

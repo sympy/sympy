@@ -914,7 +914,6 @@ def test_float_handling():
     assert test(nfloat(3*x**2), 3.0*x**2)
     assert test(nfloat(3*x**2, exponent=True), 3.0*x**2.0)
     assert test(nfloat(exp(2*x)), exp(2.0*x))
-    assert test(nfloat(x/3), x/3)
-    assert test(nfloat(x/3, denom_of_1=True), x/3.0)
-    assert test(nfloat(x**4 + 2*x + cos(S(1)/3) + 1, denom_of_1=False),
+    assert test(nfloat(x/3), x/3.0)
+    assert test(nfloat(x**4 + 2*x + cos(S(1)/3) + 1),
             x**4 + 2.0*x + 1.94495694631474)
