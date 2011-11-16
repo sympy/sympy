@@ -415,6 +415,10 @@ def test_as_numer_denom():
     assert sqrt(1/n).as_numer_denom() == (I, sqrt(-n))
     n = Symbol('0 or neg', nonpositive=True)
     assert (1/sqrt(x/n)).as_numer_denom() == (1, sqrt(x/n))
+    assert (a/x + b/2/x + c/3/x).as_numer_denom() == \
+            (6*a + 3*b + 2*c, 6*x)
+    assert (a/x+b/2/x+c/.5/x).as_numer_denom() == \
+            (2*a + b + 4.0*c, 2*x)
 
     A, B, C = symbols('A,B,C', commutative=False)
 
