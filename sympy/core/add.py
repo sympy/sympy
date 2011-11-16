@@ -302,7 +302,6 @@ class Add(AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
-        from sympy.polys.polytools import _keep_coeff
 
         # clear rational denominator
         content, expr = self.primitive()
@@ -658,25 +657,20 @@ class Add(AssocOp):
         See also: primitive() function in polytools.py
 
         """
-        cont = S.Zero
-        terms = [a.as_coeff_Mul() for a in self.args]
-        for i, (coeff, _) in enumerate(terms):
-            newcont = cont.gcd(coeff)
-            if newcont == 1: # not S.One in case Float is ever handled
-                cont = S.One/reduce(ilcm,
-                             [coeff.q for coeff, _ in terms[i + 1:]
-                              if coeff.is_Rational], S.One)/cont.q
-                break
-            cont = newcont
-
-        for i, (coeff, term) in enumerate(terms):
-            c = coeff/cont
-            if c == 1:  # not S.One in case Float is ever handled
-                terms[i] = term
-            elif term is S.One:
-                terms[i] = c
-            else:
-                terms[i] = Mul._from_args((c,) + Mul.make_args(term))
+        cont = S.One
+        terms = []
+        for a in self.args:
+            c, m = a.as_coeff_Mul()
+            if not c.is_Rational:
+                c = S.One
+                m = a
+            terms.append((c.p, c.q, m))
+        ngcd = reduce(igcd, [t[0] for t in terms], 0)
+        dlcm = reduce(ilcm, [t[1] for t in terms], 1)
+        if ngcd == dlcm:
+            return S.One, self
+        for i, (p, q, term) in enumerate(terms):
+            terms[i] = _keep_coeff(Rational((p//ngcd)*(dlcm//q)), term)
 
         # we don't need a complete re-flattening since no new terms will join
         # so we just use the same sort as is used in Add.flatten. When the
@@ -685,14 +679,14 @@ class Add(AssocOp):
         #
         # We do need to make sure that term[0] stays in position 0, however.
         #
-        if terms[0].is_Rational:
+        if terms[0].is_Number:
             c = terms.pop(0)
         else:
             c = None
         terms.sort(key=hash)
         if c:
-            terms = [c] + terms
-        return cont, self._new_rawargs(*terms)
+            terms.insert(0, c)
+        return Rational(ngcd, dlcm), self._new_rawargs(*terms)
 
     def as_content_primitive(self):
         """Return the tuple (R, self/R) where R is the positive Rational
@@ -705,28 +699,37 @@ class Add(AssocOp):
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        c_args = [a.as_content_primitive() for a in self.args]
-        g = S.Zero
-        for i, c in enumerate(c_args):
-            g = g.gcd(c[0])
-            if g is S.One: # not S.One in case Float is ever handled
-                g = 1/reduce(ilcm, [c[0].q for c in c_args[i + 1:]], S.One)
-                break
-        if g is S.One:
-            a = Add(*[c[0]*c[1] for c in c_args])
+        return Add(*[_keep_coeff(*a.as_content_primitive(), **{'merge_float': False}) for a in self.args]).primitive()
+
+def _keep_coeff(coeff, factors, merge_float=True):
+    """Return ``coeff*factors`` unevaluated if necessary.
+
+    Note: normally, 2*0.3 would result in 0.6, but when using this
+    to process terms it may be desireable to keep the two numbers from
+    combining. In this case use merge_float=False."""
+
+    if not coeff.is_Number:
+        if factors.is_Number:
+            factors, coeff = coeff, factors
         else:
-            a = Add(*[c[0]/g*c[1] for c in c_args])
-        c, ai = a.as_coeff_Mul()
-        if c.is_Rational:
-            if c.is_negative:
-                c = -c
-                ai = -ai
-            g *= c
-            a = ai
+            return coeff*factors
+    if coeff == 1:
+        return factors
+    elif coeff == -1: # don't keep sign?
+        return -factors
+    elif factors.is_Add:
+        return Mul._from_args((coeff, factors))
+    elif factors.is_Mul:
+        margs = list(factors.args)
+        if margs[0].is_Rational or margs[0].is_Number and merge_float:
+            margs[0] *= coeff
+            if margs[0] == 1:
+                margs.pop(0)
         else:
-            a *= g
-            g = S.One
-        return g, a
+            margs.insert(0, coeff)
+        return Mul._from_args(margs)
+    else:
+        return coeff*factors
 
 from function import FunctionClass
 from mul import Mul

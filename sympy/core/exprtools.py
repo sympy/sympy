@@ -1,6 +1,6 @@
 """Tools for manipulating of large commutative expressions. """
 
-from sympy.core.add import Add
+from sympy.core.add import Add, _keep_coeff
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
@@ -376,7 +376,6 @@ def gcd_terms(terms):
     y*(x + 1)*(x + y + 1)
 
     """
-    from sympy.polys.polytools import _keep_coeff
 
     cont, numer, denom = _gcd_terms(sympify(terms))
     coeff, factors = cont.as_coeff_Mul()
