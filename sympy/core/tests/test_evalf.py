@@ -156,6 +156,7 @@ def test_evalf_bugs():
     # 2107 related
     s = sqrt(2)
     assert s.n(2) - s.n(2) == 0
+    assert s.n(3) / s.n(3) == 1
     s = sqrt(3)
     ns = -s
     assert ns + s == 0
