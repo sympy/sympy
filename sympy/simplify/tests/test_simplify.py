@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add)
+    factor, Mul, O, hyper, Add, Float)
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL
 
@@ -569,6 +569,10 @@ def test_nsimplify():
     assert nsimplify(1/.3 + x, rational=True) == Rational(10, 3) + x
     assert nsimplify(log(3).n(), rational=True) == \
            sympify('109861228866811/100000000000000')
+    assert nsimplify(Float(0.272198261287950), [pi,log(2)]) == pi*log(2)/8
+    assert nsimplify(Float(0.272198261287950).n(3), [pi,log(2)]) == \
+        -pi/4 - log(2) + S(7)/4
+    assert nsimplify(x/7.0) == x/7
 
 def test_extract_minus_sign():
     x = Symbol("x")

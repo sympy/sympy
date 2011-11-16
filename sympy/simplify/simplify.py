@@ -8,7 +8,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 
 from sympy.core.mul import _keep_coeff
 from sympy.core.compatibility import iterable, reduce
-from sympy.core.numbers import igcd
+from sympy.core.numbers import igcd, Float
 from sympy.core.function import expand_log, count_ops
 from sympy.core.rules import Transform
 
@@ -1972,7 +1972,7 @@ def _real_to_rational(expr):
     sqrt(x)/10 + 19/25
 
     """
-    p = sympify(expr)
+    p = expr
     for r in p.atoms(C.Float):
         newr = nsimplify(r)
         if not newr.is_Rational or \
@@ -1990,19 +1990,19 @@ def _real_to_rational(expr):
 
 def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
     """
-    Replace numbers with simple representations.
+    Find a simple representation for a number or, if there are free symbols or
+    if rational=True, then replace Floats with their Rational equivalents.
 
-    If rational=True then numbers are simply replaced with their rational
-    equivalents.
-
-    If rational=False, a simple formula that numerically matches the
-    given expression is sought (and the input should be possible to evalf
-    to a precision of at least 30 digits).
+    For numerical expressions, a simple formula that numerically matches the
+    given numerical expression is sought (and the input should be possible
+    to evalf to a precision of at least 30 digits).
 
     Optionally, a list of (rationally independent) constants to
     include in the formula may be given.
 
-    A lower tolerance may be set to find less exact matches.
+    A lower tolerance may be set to find less exact matches. If no tolerance is
+    given then the least precise value will set the tolerance (e.g. Floats
+    default to 15 digits of precision, so would be tolerance=10**-15).
 
     With full=True, a more extensive search is performed
     (this is useful to find simpler numbers when the tolerance
@@ -2021,10 +2021,16 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
         22/7
 
     """
-    if rational:
+    expr = sympify(expr)
+    if rational or expr.free_symbols:
         return _real_to_rational(expr)
 
-    expr = sympify(expr)
+    # sympy's default tolarance for Rationals is 15; other numbers may have
+    # lower tolerances set, so use them to pick the largest tolerance if none
+    # was given
+    tolerance = tolerance or 10**-min([15] +
+                                     [mpmath.libmp.libmpf.prec_to_dps(n._prec)
+                                     for n in expr.atoms(Float)])
 
     prec = 30
     bprec = int(prec*3.33)
