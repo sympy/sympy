@@ -673,14 +673,10 @@ class Add(AssocOp):
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        return Add(*[_keep_coeff(*a.as_content_primitive(), **{'merge_float': False}) for a in self.args]).primitive()
+        return Add(*[_keep_coeff(*a.as_content_primitive()) for a in self.args]).primitive()
 
-def _keep_coeff(coeff, factors, merge_float=True):
-    """Return ``coeff*factors`` unevaluated if necessary.
-
-    Note: normally, 2*0.3 would result in 0.6, but when using this
-    to process terms it may be desireable to keep the two numbers from
-    combining. In this case use merge_float=False."""
+def _keep_coeff(coeff, factors):
+    """Return ``coeff*factors`` unevaluated if necessary."""
 
     if not coeff.is_Number:
         if factors.is_Number:
@@ -695,7 +691,7 @@ def _keep_coeff(coeff, factors, merge_float=True):
         return Mul._from_args((coeff, factors))
     elif factors.is_Mul:
         margs = list(factors.args)
-        if margs[0].is_Rational or margs[0].is_Number and merge_float:
+        if margs[0].is_Number:
             margs[0] *= coeff
             if margs[0] == 1:
                 margs.pop(0)

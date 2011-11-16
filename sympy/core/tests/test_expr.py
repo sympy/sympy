@@ -5,7 +5,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy)
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import m, s
 
@@ -419,6 +419,9 @@ def test_as_numer_denom():
             (6*a + 3*b + 2*c, 6*x)
     assert (a/x+b/2/x+c/.5/x).as_numer_denom() == \
             (2*a + b + 4.0*c, 2*x)
+    # this should take no more than a few seconds
+    assert int(log(Add(*[Dummy()/i/x for i in xrange(1, 705)]
+                       ).as_numer_denom()[1]/x).n(4)) == 705
 
     A, B, C = symbols('A,B,C', commutative=False)
 
