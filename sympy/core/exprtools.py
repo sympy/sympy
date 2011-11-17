@@ -4,6 +4,7 @@ from sympy.core.add import Add, _keep_coeff
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S

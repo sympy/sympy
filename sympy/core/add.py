@@ -34,7 +34,7 @@ class Add(AssocOp):
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
 
-        coeff = S.Zero  # standalone term
+        coeff = S.Zero  # standalone term (Number or zoo will always be in slot 0)
                         # e.g. 3 + ...
         order_factors = []
 
@@ -295,6 +295,12 @@ class Add(AssocOp):
         for f in expr.args:
             ni, di = f.as_numer_denom()
             nd[di].append(ni)
+        # put infinity in the numerator
+        if S.Zero in nd:
+            n = nd.pop(S.Zero)
+            assert len(n) == 1
+            n = n[0]
+            nd[S.One].append(n/S.Zero)
 
         # check for quick exit
         if len(nd) == 1:
@@ -308,20 +314,10 @@ class Add(AssocOp):
             else:
                 nd[d] = Add(*n)
 
-        # prepare list of those terms that didn't have integer denoms
-        if nd:
-            denoms, numers = [list(i) for i in zip(*nd.iteritems())]
-        else:
-            numers = []
-            denoms = []
-
         # assemble single numerator and denominator
-        if len(numers) == 1:
-            n, d = numers[0], denoms[0]
-
-        else:
-            n, d = Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
-                       for i in xrange(len(numers))]), Mul(*denoms)
+        denoms, numers = [list(i) for i in zip(*nd.iteritems())]
+        n, d = Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
+                   for i in xrange(len(numers))]), Mul(*denoms)
 
         return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
 
@@ -631,20 +627,36 @@ class Add(AssocOp):
         See also: primitive() function in polytools.py
 
         """
+
         cont = S.One
         terms = []
+        inf = False
         for a in self.args:
             c, m = a.as_coeff_Mul()
             if not c.is_Rational:
                 c = S.One
                 m = a
+            inf = inf or not c.q or m is S.ComplexInfinity
             terms.append((c.p, c.q, m))
-        ngcd = reduce(igcd, [t[0] for t in terms], 0)
-        dlcm = reduce(ilcm, [t[1] for t in terms], 1)
-        if ngcd == dlcm:
+
+        if not inf:
+            ngcd = reduce(igcd, [t[0] for t in terms], 0)
+            dlcm = reduce(ilcm, [t[1] for t in terms], 1)
+        else:
+            ngcd = reduce(igcd, [t[0] for t in terms if t[1]], 0)
+            dlcm = reduce(ilcm, [t[1] for t in terms if t[1]], 1)
+
+        if ngcd == dlcm == 1:
             return S.One, self
-        for i, (p, q, term) in enumerate(terms):
-            terms[i] = _keep_coeff(Rational((p//ngcd)*(dlcm//q)), term)
+        if not inf:
+            for i, (p, q, term) in enumerate(terms):
+                terms[i] = _keep_coeff(Rational((p//ngcd)*(dlcm//q)), term)
+        else:
+            for i, (p, q, term) in enumerate(terms):
+                if q:
+                    terms[i] = _keep_coeff(Rational((p//ngcd)*(dlcm//q)), term)
+                else:
+                    terms[i] = _keep_coeff(Rational(p, q), term)
 
         # we don't need a complete re-flattening since no new terms will join
         # so we just use the same sort as is used in Add.flatten. When the
@@ -653,7 +665,7 @@ class Add(AssocOp):
         #
         # We do need to make sure that term[0] stays in position 0, however.
         #
-        if terms[0].is_Number:
+        if terms[0].is_Number or terms[0] is S.ComplexInfinity:
             c = terms.pop(0)
         else:
             c = None
