@@ -463,7 +463,8 @@ def wikitest(*paths, **kwargs):
     verbose = kwargs.get("verbose", False)
     colors = kwargs.get("colors", True)
     first_only = kwargs.get("first_only", False)
-    all_pages_and_tests = kwargs.get("all_pages", False)
+    all_tests = kwargs.get("all_tests", False)
+    all_pages = kwargs.get("all_pages", False)
 
     againstlist = kwargs.get("againstlist", ["master"])
     blacklist = kwargs.get("blacklist", [])
@@ -481,7 +482,8 @@ def wikitest(*paths, **kwargs):
 
     for against in againstlist:
         _sympy_dir = kwargs["%s_dir" % against]
-        t.all_pages_and_tests = all_pages_and_tests
+        t.all_pages = all_pages
+        t.all_tests = all_tests
         t.set_against(against, _sympy_dir)
         t.load_sympy_version()
         t.load_sympy_modules()
@@ -1085,7 +1087,7 @@ class SymPyWikiTester(SymPyDocTester):
         self.against_dir = against_dir
         self._reporter._sympy_dir = against_dir
 
-        if not self.all_pages_and_tests:
+        if not self.all_tests:
             if against=='release':
                 self.optionflags |= IS_RELEASE_RUNNING
             elif against=='master':
@@ -1110,41 +1112,39 @@ class SymPyWikiTester(SymPyDocTester):
         g = []
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files
-                      if _fnmatch(f) and (self.all_pages_and_tests or \
-                                            self.has_directive(path, f))])
+                      if _fnmatch(f) and (self.all_pages or not \
+                                            self.has_skip_directive(path, f))])
         return [sys_normcase(gi) for gi in g]
 
-    def has_directive(self, pathdir, fn):
+    def has_skip_directive(self, pathdir, fn):
         """
         Checks if file contain the directive.
         """
         fn = os.path.join(pathdir, fn)
-        f = codecs.open(fn, mode="r", encoding="utf8")
-        s = f.read()
-        f.close()
-        for re_directive in self.re_directives:
-            m = re_directive.search(s)
-            if m:
-                against_permitted = m.group("against").split(",")
-                if self.against in against_permitted:
-                    return True
+        with codecs.open(fn, mode="r", encoding="utf8") as f:
+            s = f.read()
+            for re_directive in self.re_directives:
+                m = re_directive.search(s)
+                if m:
+                    against_permitted = m.group("against").split(",")
+                    if "skip" in against_permitted:
+                        return True
         return False
 
     def get_directive_options(self, filename):
         res = {}
-        f = codecs.open(filename, mode="r", encoding="utf8")
-        s = f.read()
-        f.close()
-        for re_directive in self.re_directives:
-            m = re_directive.search(s)
-            if m:
-                against_permitted = m.group("against").split(",")
-                if self.against in against_permitted:
-                    options = m.group("options")
-                    if options:
-                        options = options.split(",")
-                        for op in options:
-                            res[op] = True
+        with codecs.open(filename, mode="r", encoding="utf8") as f:
+            s = f.read()
+            for re_directive in self.re_directives:
+                m = re_directive.search(s)
+                if m:
+                    against_permitted = m.group("against").split(",")
+                    if self.against in against_permitted:
+                        options = m.group("options")
+                        if options:
+                            options = options.split(",")
+                            for op in options:
+                                res[op] = True
         return res
 
     def pre_options(self, fn):
