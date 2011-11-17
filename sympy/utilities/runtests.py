@@ -1073,8 +1073,8 @@ class SymPyWikiTester(SymPyDocTester):
         self._reporter.root_dir(dir_for_reporter)
 
         re_directives = []
-        re_directives.append(re.compile(r"<!--\s+wikitest\s+(?P<against>[\w,]+)(\s+\((?P<options>[\w,]+)\))?\s+-->", re.M))
-        re_directives.append(re.compile(r"\.\.\s+wikitest\s+(?P<against>[\w,]+)(\s+\((?P<options>[\w,]+)\))?\s+$", re.M))
+        re_directives.append(re.compile(r"<!--\s+wikitest(\s+(?P<skip>[\w,]+))?(\s+\((?P<options>[\w,]+)\))?\s+-->", re.M))
+        re_directives.append(re.compile(r"\.\.\s+wikitest(\s+(?P<skip>[\w,]+))?(\s+\((?P<options>[\w,]+)\))?\s+$", re.M))
         self.re_directives = re_directives
 
     def set_against(self, against, against_dir):
@@ -1126,8 +1126,8 @@ class SymPyWikiTester(SymPyDocTester):
             for re_directive in self.re_directives:
                 m = re_directive.search(s)
                 if m:
-                    against_permitted = m.group("against").split(",")
-                    if "skip" in against_permitted:
+                    skip = m.group("skip")
+                    if "skip" == skip:
                         return True
         return False
 
@@ -1138,13 +1138,11 @@ class SymPyWikiTester(SymPyDocTester):
             for re_directive in self.re_directives:
                 m = re_directive.search(s)
                 if m:
-                    against_permitted = m.group("against").split(",")
-                    if self.against in against_permitted:
-                        options = m.group("options")
-                        if options:
-                            options = options.split(",")
-                            for op in options:
-                                res[op] = True
+                    options = m.group("options")
+                    if options:
+                        options = options.split(",")
+                        for op in options:
+                            res[op] = True
         return res
 
     def pre_options(self, fn):
@@ -1152,8 +1150,11 @@ class SymPyWikiTester(SymPyDocTester):
         pretty_print = directive_options.get("pretty_print", False)
         if pretty_print:
             self.optionflags |= PRETTY
-
         print_manager.setup_pprint(pretty_print, hard=True)
+        if directive_options.get("future_only", False):
+            self.optionflags |= FUTURE_ONLY
+        if directive_options.get("RELEASE_only", False):
+            self.optionflags |= RELEASE_ONLY
 
     def load_sympy_version(self):
         """

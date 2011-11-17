@@ -47,6 +47,11 @@ Additional #doctest:+<...> options, which applied for tested examples lines:
         deprecated syntax of sympy  is used or test has deprecated output.
 
     PRETTY - for define what the output of test is expected.
+
+
+All those doctests options have their global analog:
+    <!-- wikitest (future_only, pretty_print) -->
+
 """
 
 # files listed here can be in unix forward slash format with paths
