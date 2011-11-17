@@ -8,8 +8,11 @@ from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple
+
+from collections import defaultdict
 
 def decompose_power(expr):
     """
@@ -323,8 +326,10 @@ class Term(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-def _gcd_terms(terms):
-    """Helper function for :func:`gcd_terms`. """
+def _gcd_terms(terms, isprimitive=False):
+    """Helper function for :func:`gcd_terms`. If `isprimitive` is True then the
+    call to primitive for an Add will be skipped. This is useful when the
+    content has already been extrated."""
     if isinstance(terms, Basic) and not isinstance(terms, Tuple):
         terms = Add.make_args(terms)
 
@@ -333,6 +338,11 @@ def _gcd_terms(terms):
             return S.Zero, S.Zero, S.One
         else:
             return terms[0], S.One, S.One
+
+    inf = dict(zip((S.Infinity, S.NegativeInfinity, S.ComplexInfinity),
+                   (Dummy('oo'), Dummy('-oo'), Dummy('zoo'))))
+    terms = [t.subs(inf) for t in terms]
+    inf = dict([(v, k) for k, v in inf.iteritems()])
 
     terms = map(Term, terms)
     cont = terms[0]
@@ -358,13 +368,13 @@ def _gcd_terms(terms):
     numer = Add(*numers)
     denom = denom.as_expr()
 
-    if numer.is_Add:
+    if not isprimitive and numer.is_Add:
         _cont, numer = numer.primitive()
         cont *= _cont
 
-    return cont, numer, denom
+    return cont, numer.subs(inf), denom.subs(inf)
 
-def gcd_terms(terms):
+def gcd_terms(terms, isprimitive=False):
     """
     Compute the GCD of ``terms`` and put them together.
 
@@ -377,7 +387,62 @@ def gcd_terms(terms):
     y*(x + 1)*(x + y + 1)
 
     """
+    terms = sympify(terms)
+    if not isinstance(terms, Expr) or terms.is_Add:
+        cont, numer, denom = _gcd_terms(terms, isprimitive)
+        coeff, factors = cont.as_coeff_Mul()
+        return _keep_coeff(coeff, factors*numer/denom)
 
-    cont, numer, denom = _gcd_terms(sympify(terms))
-    coeff, factors = cont.as_coeff_Mul()
-    return _keep_coeff(coeff, factors*numer/denom)
+    if terms.is_Atom:
+        return terms
+    return terms.func(*[gcd_terms(i) for i in terms.args])
+
+
+def factor_terms(expr):
+    """
+    >>> from sympy import factor_terms, Symbol
+    >>> from sympy.abc import x, y
+    >>> A = Symbol('A', commutative=False)
+    >>> factor_terms(9*(x + x*y + 1) + (3*x + 3)**(2 + 2*x))
+    9*x*y + 9*x + (3*(x + 1))**(2*(x + 1)) + 9
+    >>> factor_terms(9*(x + x*y + 1) + (3)**(2 + 2*x))
+    9*(3**(2*x) + x*y + x + 1)
+    >>> factor_terms(x + x*A)
+    x*(1 + A)
+
+    """
+
+    expr = sympify(expr)
+
+    if expr.is_Function:
+        return expr.func(*[factor_terms(i) for i in expr.args])
+
+    cont, p = expr.as_content_primitive()
+    args, nc = zip(*[ai.args_cnc(clist=True) for ai in Add.make_args(p)])
+    args = list(args)
+    nc = [((Dummy(), Mul._from_args(i)) if i else None) for i in nc]
+    ncreps = dict([i for i in nc if i is not None])
+    pows = dict()
+    for i, a in enumerate(args):
+        if nc[i] is not None:
+           a.append(nc[i][0])
+        m = Mul._from_args(a)
+        d = defaultdict(list)
+        uargs = []
+        for k, v in m.as_powers_dict().iteritems():
+            if v.is_Mul:
+                if m in pows:
+                    u = pows[m]
+                else:
+                    u = Dummy()
+                    pows[k**v] = u
+                uargs.append(u)
+            else:
+                d[k].append(v)
+        for k in d:
+            d[k] = Add(*d[k])
+        args[i] = Mul._from_args(uargs + [b**p for b, p in d.iteritems()])
+    p = Add._from_args(args)
+    pows = dict([(v, k) for k, v in pows.iteritems()])
+    p = gcd_terms(p, isprimitive=True).subs(pows).subs(ncreps) # needs exact=True
+    return _keep_coeff(cont, p)

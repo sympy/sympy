@@ -6,6 +6,8 @@ from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
 from compatibility import reduce
 
+from collections import defaultdict
+
 class Expr(Basic, EvalfMixin):
     __slots__ = []
 
@@ -465,10 +467,12 @@ class Expr(Basic, EvalfMixin):
         from sympy import count_ops
         return count_ops(self, visual)
 
-    def args_cnc(self):
+    def args_cnc(self, clist=False):
         """treat self as Mul and split it into tuple (set, list)
         where ``set`` contains the commutative parts and ``list`` contains
-        the ordered non-commutative args.
+        the ordered non-commutative args. If ``clist`` is True then the
+        commutative parts will be retained in their original order and be
+        returned in a list.
 
         A special treatment is that -1 is separated from a Rational:
 
@@ -502,7 +506,9 @@ class Expr(Basic, EvalfMixin):
         if c and c[0].is_Rational and c[0].is_negative and c[0] != S.NegativeOne:
             c[:1] = [S.NegativeOne, -c[0]]
 
-        return [set(c), nc]
+        if not clist:
+            return [set(c), nc]
+        return [c, nc]
 
     def coeff(self, x, right=False):
         """

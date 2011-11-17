@@ -7,6 +7,8 @@ from numbers import ilcm, igcd
 
 from collections import defaultdict
 
+from collections import defaultdict
+
 class Add(AssocOp):
 
     __slots__ = []
@@ -723,3 +725,4 @@ from function import FunctionClass
 from mul import Mul, _keep_coeff
 from power import Pow
 from sympy.core.numbers import Rational
+from sympy.core.symbol import Dummy

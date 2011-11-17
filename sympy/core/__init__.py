@@ -22,7 +22,7 @@ from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
 from sets import Set, Interval, Union, EmptySet, FiniteSet, ProductSet
 from evalf import PrecisionExhausted, N
 from containers import Tuple, Dict
-from exprtools import gcd_terms
+from exprtools import gcd_terms, factor_terms
 
 # expose singletons
 Catalan = S.Catalan
