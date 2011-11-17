@@ -131,8 +131,11 @@ else:
 REPORT_ONLY_FIRST_FAILURE = pdoctest.REPORT_ONLY_FIRST_FAILURE
 SKIP = pdoctest.SKIP
 IGNORE_EXCEPTION_DETAIL = pdoctest.IGNORE_EXCEPTION_DETAIL
+
 PRETTY = pdoctest.register_optionflag('PRETTY')
 pdoctest.PRETTY = PRETTY
+USE_UNICODE = pdoctest.register_optionflag('USE_UNICODE')
+pdoctest.USE_UNICODE = USE_UNICODE
 
 RELEASE_ONLY = pdoctest.register_optionflag('RELEASE_ONLY')
 pdoctest.RELEASE_ONLY = RELEASE_ONLY
@@ -211,6 +214,7 @@ class PrintManager(object):
     """
     def __init__(self):
         self._pprint_status = None
+        self._use_unicode = None
 
     def save_displayhook(self):
         self._displayhook = sys.displayhook
@@ -218,20 +222,21 @@ class PrintManager(object):
     def restore_displayhook(self):
         sys.displayhook = self._displayhook
 
-    def setup_pprint(self, pretty_print = False, hard=False):
+    def setup_pprint(self, pretty_print=False, hard=False, use_unicode=False):
         """
         Load and set printer according the options.
         """
-        if (self._pprint_status <> pretty_print) or hard:
-            self._setup_pprint(pretty_print)
+        if (self._pprint_status <> pretty_print) or (self._use_unicode <> use_unicode) or hard:
+            self._setup_pprint(pretty_print, use_unicode)
             self._pprint_status = pretty_print
+            self._use_unicode = use_unicode
 
-    def _setup_pprint(self, pretty_print = False):
+    def _setup_pprint(self, pretty_print=False, use_unicode=False):
 
         from sympy import pprint_use_unicode, init_printing
 
         # force pprint to be in ascii mode in doctests
-        pprint_use_unicode(False)
+        pprint_use_unicode(use_unicode)
 
         # hook our nice, hash-stable strprinter
         init_printing(pretty_print=pretty_print)
@@ -1148,9 +1153,12 @@ class SymPyWikiTester(SymPyDocTester):
     def pre_options(self, fn):
         directive_options = self.get_directive_options(fn)
         pretty_print = directive_options.get("pretty_print", False)
+        use_unicode = directive_options.get("use_unicode", False)
         if pretty_print:
             self.optionflags |= PRETTY
-        print_manager.setup_pprint(pretty_print, hard=True)
+        if use_unicode:
+            self.optionflags |= USE_UNICODE
+        print_manager.setup_pprint(pretty_print, True, use_unicode)
         if directive_options.get("future_only", False):
             self.optionflags |= FUTURE_ONLY
         if directive_options.get("RELEASE_only", False):
@@ -1556,11 +1564,9 @@ class SymPyDocTestRunner(DocTestRunner):
 
             # (a) the checking of `PRETTY` option for every example.
             # Set printer
-            if self.optionflags & PRETTY:
-                print_manager.setup_pprint(True)
-            else:
-                print_manager.setup_pprint(False)
-
+            _pretty_print = self.optionflags & PRETTY
+            _use_unicode = self.optionflags & USE_UNICODE
+            print_manager.setup_pprint(_pretty_print, False, _use_unicode)
 
             # Run the example in the given context (globs), and record
             # any exception that gets raised.  (But don't intercept

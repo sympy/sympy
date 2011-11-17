@@ -46,7 +46,10 @@ Additional #doctest:+<...> options, which applied for tested examples lines:
     RELEASE_ONLY - test only for release only. Usually when
         deprecated syntax of sympy  is used or test has deprecated output.
 
-    PRETTY - for define what the output of test is expected.
+    PRETTY - for define that the output of test is expected, like sympy's pretty
+        printer do.
+
+    USE_UNICODE - use unicode in tests's output
 
 
 All those doctests options have their global analog:
