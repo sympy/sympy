@@ -203,6 +203,18 @@ class Add(AssocOp):
         """Nice order of classes"""
         return 3, 1, cls.__name__
 
+    def as_coefficients_dict(a):
+        d = defaultdict(list)
+        for ai in a.args:
+            c, m = ai.as_coeff_Mul()
+            d[m].append(c)
+        for k, v in d.iteritems():
+            if len(v) == 1:
+                d[k] = v[0]
+            else:
+                d[k] = Add(*v)
+        return d
+
     @cacheit
     def as_coeff_add(self, *deps):
         """

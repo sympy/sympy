@@ -998,7 +998,20 @@ class Expr(Basic, EvalfMixin):
         return (C.re(self), C.im(self))
 
     def as_powers_dict(self):
-        return dict([self.as_base_exp()])
+        d = defaultdict(int)
+        d.update(dict([self.as_base_exp()]))
+        return d
+
+    def as_coefficients_dict(self):
+        """Return a dictionary mapping terms to their Number
+        coefficient, e.g. 3*x + a*x + 4 -> {x: 3, a*x: 1, 1: 4}."""
+        c, m = self.as_coeff_Mul()
+        if not c.is_Rational:
+            c = S.One
+            m = self
+        d = defaultdict(int)
+        d.update({m: c})
+        return d
 
     def as_base_exp(self):
         # a -> b ** e
