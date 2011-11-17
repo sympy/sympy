@@ -31,6 +31,10 @@ def test_rewrite():
     assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S(1)/2, z)
     assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S(1)/2, z)
 
+def test_expand():
+    assert expand_func(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert expand_func(bessely(S(1)/2, z)) == -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+
 def test_fn():
     x, z = symbols("x z")
     assert fn(1, z) == 1/z**2
@@ -54,11 +58,14 @@ def test_jn():
     assert mjn(6, z) == (-1/z + 10395/z**7 - 4725/z**5 + 210/z**3)*sin(z) + \
                 (-10395/z**6 + 1260/z**4 - 21/z**2)*cos(z)
 
+    assert expand_func(jn(n, z)) == jn(n, z)
+
 def test_yn():
     z = symbols("z")
     assert myn(0, z) == -cos(z)/z
     assert myn(1, z) == -cos(z)/z**2-sin(z)/z
     assert myn(2, z) == -((3/z**3-1/z)*cos(z)+(3/z**2)*sin(z))
+    assert expand_func(yn(n, z)) == yn(n, z)
 
 def test_sympify_yn():
     assert S(15) in myn(3, pi).atoms()
@@ -76,3 +83,18 @@ def test_jn_zeros():
     assert eq(jn_zeros(2, 4), [5.763459, 9.095011, 12.322940, 15.514603])
     assert eq(jn_zeros(3, 4), [6.987932, 10.417118, 13.698023, 16.923621])
     assert eq(jn_zeros(4, 4), [8.182561, 11.704907, 15.039664, 18.301255])
+
+def test_bessel_eval():
+    from sympy import I
+    assert besselj(-4, z) == besselj(4, z)
+    assert besselj(-3, z) == -besselj(3, z)
+
+    assert bessely(-2, z) == bessely(2, z)
+    assert bessely(-1, z) == -bessely(1, z)
+
+    assert besselj(0, -z) == besselj(0, z)
+    assert besselj(1, -z) == -besselj(1, z)
+
+    assert besseli(0, I*z) == besselj(0, z)
+    assert besseli(1, I*z) == I*besselj(1, z)
+    assert besselj(3, I*z) == -I*besseli(3, z)

@@ -21,6 +21,7 @@ def test_hyper():
     assert h.ap == Tuple(1, 2)
     assert h.bq == Tuple(3, 4, 5)
     assert h.argument == z
+    assert h.is_commutative is True
 
     # just a few checks to make sure that all arguments go where they should
     assert tn(hyper(Tuple(), Tuple(), z), exp(z), z)
@@ -90,6 +91,7 @@ def test_meijer():
     assert g.argument == z
     assert g.nu == 75
     assert g.delta == -1
+    assert g.is_commutative is True
 
     assert meijerg([1, 2], [3], [4], [5], z).delta == S(1)/2
 

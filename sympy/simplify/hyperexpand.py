@@ -1532,7 +1532,7 @@ def hyperexpand(f, allow_hyper=False):
     that are not recognised are left unchanged:
 
     >>> hyperexpand(1 + hyper([1, 1, 1], [], z))
-    1 + hyper((1, 1, 1), (), z)
+    hyper((1, 1, 1), (), z) + 1
     """
     from sympy.functions import hyper, meijerg
     from sympy import nan, zoo, oo

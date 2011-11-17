@@ -45,6 +45,9 @@ def test_gamma():
     assert expand_func(gamma(x - Rational(1, 2))) == \
         gamma(Rational(1, 2) + x)/(x - Rational(1, 2))
 
+    # Test a bug:
+    assert expand_func(gamma(x + Rational(3, 4))) == gamma(x + Rational(3, 4))
+
 def test_gamma_series():
     assert gamma(x + 1).series(x, 0, 3) == \
         1 - x*EulerGamma + x**2*EulerGamma**2/2 + pi**2*x**2/12 + O(x**3)
@@ -71,6 +74,8 @@ def test_lowergamma():
     assert tn(lowergamma(S.Half - 3, x, evaluate=False),
               lowergamma(S.Half - 3, x), x)
 
+    assert lowergamma(x, y).rewrite(uppergamma) == gamma(x) - uppergamma(x, y)
+
 def test_uppergamma():
     from sympy import meijerg
     assert uppergamma(4, 0) == 6
@@ -88,6 +93,8 @@ def test_uppergamma():
               uppergamma(S.Half + 3, x), x)
     assert tn(uppergamma(S.Half - 3, x, evaluate=False),
               uppergamma(S.Half - 3, x), x)
+
+    assert uppergamma(x, y).rewrite(lowergamma) == gamma(x) - lowergamma(x, y)
 
 def test_polygamma():
 

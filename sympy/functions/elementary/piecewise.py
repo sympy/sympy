@@ -2,9 +2,12 @@ from sympy.core import Basic, S, Function, diff, Number, sympify
 from sympy.core.relational import Equality, Relational
 from sympy.logic.boolalg import Boolean
 from sympy.core.sets import Set
+from sympy.core.symbol import Dummy
 
 class ExprCondPair(Function):
     """Represents an expression, condition pair."""
+
+    true_sentinel = Dummy('True')
 
     def __new__(cls, *args, **assumptions):
         if isinstance(args[0], cls):
@@ -15,6 +18,8 @@ class ExprCondPair(Function):
             cond = sympify(args[1])
         else:
             raise TypeError("args must be a (expr, cond) pair")
+        if cond is True:
+            cond = ExprCondPair.true_sentinel
         return Basic.__new__(cls, expr, cond, **assumptions)
 
     @property
@@ -23,6 +28,8 @@ class ExprCondPair(Function):
 
     @property
     def cond(self):
+        if self.args[1] == ExprCondPair.true_sentinel:
+            return True
         return self.args[1]
 
     @property
