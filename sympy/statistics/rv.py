@@ -1,4 +1,4 @@
-from sympy import Basic, S, Expr, Symbol, Tuple, And
+from sympy import Basic, S, Expr, Symbol, Tuple, And, Add
 from sympy.core.sets import FiniteSet, ProductSet
 
 class Domain(Basic):
@@ -392,6 +392,11 @@ def E(expr, given=None, **kwargs):
     # Create new expr and recompute E
     if given is not None: # If there is a condition
         return E(Given(expr, given, **kwargs), **kwargs)
+
+    # A few known statements for efficiency
+    if expr.is_Add:
+        return Add(*[E(arg) for arg in expr.args]) # E is Linear
+
     # Otherwise case is simple, pass work off to the ProbabilitySpace
     return pspace(expr).integrate(expr, **kwargs)
 
