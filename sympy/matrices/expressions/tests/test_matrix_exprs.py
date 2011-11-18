@@ -302,3 +302,10 @@ def test_linear_factors():
     raises(ShapeError, "linear_factors(2*A*B+C, D)")
 
     assert linear_factors(A, A) == {A:Identity(n)}
+
+def test_MatrixSymbol():
+    n,m,t = symbols('n,m,t')
+    X = MatrixSymbol('X', n, m)
+    assert X.shape == (n,m)
+    raises(TypeError, "MatrixSymbol('X', n, m)(t)") # issue 2756
+

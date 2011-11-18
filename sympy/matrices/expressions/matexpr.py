@@ -151,6 +151,10 @@ class MatrixSymbol(MatrixExpr, Symbol):
             shape = Tuple(*self.shape).subs(old, new)
             return MatrixSymbol(self.name, *shape)
 
+    def __call__(self, *args):
+        raise TypeError( "%s object is not callable"%self.__class__ )
+
+
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
     >>> from sympy.matrices import Identity, MatrixSymbol
