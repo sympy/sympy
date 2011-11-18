@@ -1,10 +1,14 @@
 from sympy.core import S, C, sympify
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
+from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
+from sympy.core.mul import Mul
 from sympy.core.singleton import Singleton
+from sympy.core.rules import Transform
+from sympy.ntheory.residue_ntheory import int_tested
 
 class IdentityFunction(Lambda):
     """The identity function
@@ -97,7 +101,7 @@ def sqrt(arg):
 
 
 def root(arg, n):
-    """The n-th root function
+    """The n-th root function (a shortcut for arg**(1/n))
 
     root(x, n) -> Returns the principal n-th root of x.
 
@@ -117,7 +121,7 @@ def root(arg, n):
     >>> root(x, n)
     x**(1/n)
 
-    >>> root(x, -Rational(2,3))
+    >>> root(x, -Rational(2, 3))
     x**(-3/2)
 
 
@@ -139,7 +143,7 @@ def root(arg, n):
 
     See also
     ========
-       L{sqrt}, L{RootOf}
+       L{sqrt}, L{RootOf}, L{nth_root}, L{integer_nthroot}
 
        External links
        --------------
@@ -152,6 +156,43 @@ def root(arg, n):
     n = sympify(n)
     return C.Pow(arg, 1/n)
 
+def nth_root(arg, n=None):
+    """Return the real nth-root of arg if possible. If n is omitted then
+    all instances of -1**(1/odd) will be changed to -1.
+
+    Examples
+    ========
+
+    >>> from sympy import root, nth_root, Rational
+    >>> from sympy.abc import x, n
+
+    >>> nth_root(-8, 3)
+    -2
+    >>> root(-8, 3)
+    2*(-1)**(1/3)
+    >>> nth_root(_)
+    -2
+
+
+    See also
+    ========
+       L{sqrt}, L{RootOf}, L{root}, L{integer_nthroot}
+
+    """
+    if not n is None:
+        n = int_tested(n)
+        rv = C.Pow(arg, Rational(1, n))
+        if n % 2 == 0:
+            return rv
+    else:
+        rv = sympify(arg)
+    n1pow = Transform(lambda x: S.NegativeOne,
+                      lambda x:
+                      x.is_Pow and
+                      x.base is S.NegativeOne and
+                      x.exp.is_Rational and
+                      x.exp.p == 1 and x.exp.q % 2)
+    return rv.xreplace(n1pow)
 
 ###############################################################################
 ############################# MINIMUM and MAXIMUM #############################
