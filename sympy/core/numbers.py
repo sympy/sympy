@@ -195,6 +195,9 @@ class Number(AtomicExpr):
     def __hash__(self):
         return super(Number, self).__hash__()
 
+    def is_constant(self, *wrt):
+        return True
+
     @property
     def is_number(self):
         return True

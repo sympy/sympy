@@ -107,6 +107,11 @@ class Symbol(AtomicExpr, Boolean):
         import sage.all as sage
         return sage.var(self.name)
 
+    def is_constant(self, *wrt):
+        if not wrt:
+            return False
+        return not self in wrt
+
     @property
     def is_number(self):
         return False
