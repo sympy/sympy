@@ -1,4 +1,4 @@
-from sympy.core import Expr, S, C, Mul, sympify
+from sympy.core import Expr, S, C, Mul, sympify, Symbol, Tuple
 from sympy.core.compatibility import is_sequence
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
@@ -11,17 +11,8 @@ class Product(Expr):
     def __new__(cls, term, *symbols, **assumptions):
         term = sympify(term)
 
-        if term.is_Number:
-            if term is S.NaN:
-                return S.NaN
-            elif term is S.Infinity:
-                return S.NaN
-            elif term is S.NegativeInfinity:
-                return S.NaN
-            elif term is S.Zero:
-                return S.Zero
-            elif term is S.One:
-                return S.One
+        if term is S.NaN:
+            return S.NaN
 
         if len(symbols) == 1:
             symbol = symbols[0]
@@ -37,31 +28,82 @@ class Product(Expr):
 
             k, a, n = map(sympify, (k, a, n))
 
-            if isinstance(a, C.Integer) and isinstance(n, C.Integer):
-                return Mul(*[term.subs(k, i) for i in xrange(int(a), int(n)+1)])
         else:
             raise NotImplementedError
 
         obj = Expr.__new__(cls, **assumptions)
-        obj._args = (term, k, a, n)
+        obj._args = (term, Tuple(k, a, n))
 
         return obj
 
     @property
     def term(self):
         return self._args[0]
+    function = term
 
     @property
     def index(self):
-        return self._args[1]
+        return self._args[1][0]
 
     @property
     def lower(self):
-        return self._args[2]
+        return self._args[1][1]
 
     @property
     def upper(self):
-        return self._args[3]
+        return self._args[1][2]
+
+    @property
+    def limits(self):
+        return (self._args[1],)
+
+    @property
+    def free_symbols(self):
+        """
+        This method returns the symbols that will affect the value of
+        the Product when evaluated. This is useful if one is trying to
+        determine whether a product depends on a certain symbol or not.
+
+        >>> from sympy import Product
+        >>> from sympy.abc import x, y
+        >>> Product(x, (x, y, 1)).free_symbols
+        set([y])
+        """
+        from sympy.concrete.summations import _free_symbols
+
+        if self.function.is_zero or self.function == 1:
+            return set()
+        return _free_symbols(self.function, self.limits)
+
+    @property
+    def is_zero(self):
+        """A Product is zero only if its term is zero.
+        """
+        return self.term.is_zero
+
+    @property
+    def is_number(self):
+        """
+        Return True if the Product will result in a number, else False.
+
+        sympy considers anything that will result in a number to have
+        is_number == True.
+
+        >>> from sympy import log, Product
+        >>> from sympy.abc import x, y, z
+        >>> log(2).is_number
+        True
+        >>> Product(x, (x, 1, 2)).is_number
+        True
+        >>> Product(y, (x, 1, 2)).is_number
+        False
+        >>> Product(1, (x, y, z)).is_number
+        True
+        >>> Product(2, (x, y, z)).is_number
+        False
+        """
+
+        return self.function.is_zero or self.function == 1 or not self.free_symbols
 
     def doit(self, **hints):
         term = self.term
@@ -71,6 +113,9 @@ class Product(Expr):
             term = term.doit(**hints)
             lower = lower.doit(**hints)
             upper = upper.doit(**hints)
+        dif = upper - lower
+        if dif.is_Number and dif < 0:
+            upper, lower = lower, upper
 
         prod = self._eval_product(lower, upper, term)
 
@@ -81,10 +126,19 @@ class Product(Expr):
 
     def _eval_product(self, a, n, term):
         from sympy import summation
+
         k = self.index
 
-        if not term.has(k):
-            return term**(n-a+1)
+        if k not in term.free_symbols:
+            return term**(n - a + 1)
+
+        if a == n:
+            return term.subs(k, a)
+
+        dif = n - a
+        if dif.is_Integer:
+            return Mul(*[term.subs(k, a + i) for i in xrange(dif  + 1)])
+
         elif term.is_polynomial(k):
             poly = term.as_poly(k)
 
@@ -97,9 +151,16 @@ class Product(Expr):
                 Q *= n - r
 
             if len(all_roots) < poly.degree():
-                B = Product(quo(poly, Q.as_poly(k)), (k, a, n))
+                arg = quo(poly, Q.as_poly(k))
+                if arg == 0:
+                    B = S.Zero
+                elif arg == 1:
+                    B = S.One
+                else:
+                    B = Product(arg, (k, a, n))
 
             return poly.LC()**(n-a+1) * A * B
+
         elif term.is_Add:
             p, q = term.as_numer_denom()
 
@@ -107,6 +168,7 @@ class Product(Expr):
             q = self._eval_product(a, n, q)
 
             return p / q
+
         elif term.is_Mul:
             exclude, include = [], []
 
@@ -122,7 +184,13 @@ class Product(Expr):
                 return None
             else:
                 A, B = Mul(*exclude), term._new_rawargs(*include)
-                return A * Product(B, (k, a, n))
+                if B == 0:
+                    return S.Zero
+                elif B == 1:
+                    return A
+                else:
+                    return A * Product(B, (k, a, n))
+
         elif term.is_Pow:
             if not term.base.has(k):
                 s = summation(term.exp, (k, a, n))
