@@ -941,6 +941,12 @@ class Pow(Expr):
                 return c, Pow(_keep_coeff(m, t), e)
         return S.One, Pow(b, e)
 
+    def is_constant(self, *wrt):
+        b, e = self.as_base_exp()
+        if b.is_constant(*wrt):
+            return e.is_constant(*wrt)
+        return e.is_constant and e == 0
+
 from add import Add
 from numbers import Integer
 from mul import Mul, _keep_coeff

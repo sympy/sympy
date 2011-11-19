@@ -220,6 +220,91 @@ class Expr(Basic, EvalfMixin):
             return False
         return all(obj.is_number for obj in self.iter_basic_args())
 
+    def is_constant(self, *wrt):
+        """Return True if self is constant, otherwise False.
+
+        If an expression has no free symbols then it is a constant. If
+        there are free symbols it is possible that the expression is a
+        constant, perhaps (but not necessarily) zero. If an expression
+        with free symbols is a number then it is not a constant.
+        Other free-symbol containing expressions are tested with
+        differentiation with respect to variables in `wrt` (or all free
+        symbols if omitted) to see if the expression is constant or not.
+
+
+        Although it is tempting to use numerical methods to test
+        expessions that have free symbols, but results thus obtained
+        could only be probabalistic since for any tested values that
+        returned 0, it is possible that these were simply roots of the
+        expression.
+
+
+        Examples:
+
+        >>> from sympy import cos, sin, Sum, S, pi
+        >>> from sympy.abc import a, n, x, y
+        >>> x.is_constant()
+        False
+        >>> S(2).is_constant()
+        True
+        >>> Sum(x, (x, 1, 10)).is_constant()
+        True
+        >>> Sum(x, (x, 1, n)).is_constant()
+        False
+        >>> Sum(x, (x, 1, n)).is_constant(y)
+        True
+        >>> Sum(x, (x, 1, n)).is_constant(n)
+        False
+        >>> Sum(x, (x, 1, n)).is_constant(x)
+        True
+        >>> eq = a*cos(x)**2 + a*sin(x)**2 - a
+        >>> eq.is_constant()
+        True
+        >>> eq.subs({x:pi, a:2}) == eq.subs({x:pi, a:3}) == 0
+        True
+
+        >>> (0**x).is_constant()
+        False
+        >>> x.is_constant()
+        False
+        >>> (x**x).is_constant()
+        False
+        >>> one = cos(x)**2+sin(x)**2
+        >>> one.is_constant()
+        True
+        >>> ((one-1)**(x+1)).is_constant() # could be 0 or 1
+        False
+        """
+
+        free = self.free_symbols
+        # only one of these should be necessary since is something is
+        # known to be a number it should also know that there are no
+        # free symbols. But is_number quits as soon as it hits a non-number
+        # whereas free_symbols goes until all free symbols have been collected,
+        # thus is_number should be faster. But a double check on free symbols
+        # is made just in case there is a discrepancy between the two.
+        if self.is_number:
+            return True
+        free = self.free_symbols
+        # if this fails, the free_symbols routine needs to recognize that
+        # if the expression is a number then there are no free_symbols
+        assert free
+        # if we are only interested in some symbols and they are not in the
+        # free symbols then this expression is constant wrt those symbols
+        if wrt and not set(wrt) & free:
+            return True
+        # now we will test each wrt symbol (or all free symbols) to see if the
+        # expression depends on them or not using differentiation.
+        if not wrt:
+            wrt = free
+        wrt = list(wrt)
+        for i in range(len(wrt)):
+            deriv = (self.diff(wrt[0])).simplify()
+            if deriv != 0:
+                return False
+            wrt.pop(0)
+        return True
+
     def _eval_interval(self, x, a, b):
         """
         Returns evaluation over an interval.  For most functions this is:
@@ -2162,6 +2247,6 @@ class AtomicExpr(Atom, Expr):
 from mul import Mul
 from add import Add
 from power import Pow
-from function import Derivative
+from function import Derivative, expand_mul, expand_multinomial, UndefinedFunction
 from sympify import sympify
 from symbol import Wild

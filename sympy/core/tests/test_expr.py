@@ -5,7 +5,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import m, s
 
@@ -1176,3 +1176,13 @@ def test_issue_2744():
     assert (4*a).extract_multiplicatively(2*a) == 2
     assert ((3*a)*(2*a)).extract_multiplicatively(a) == 6*a
 
+def test_is_constant():
+    from sympy.abc import a, n, x, y
+    Sum(x, (x, 1, 10)).is_constant() == True
+    Sum(x, (x, 1, n)).is_constant() == False
+    Sum(x, (x, 1, n)).is_constant(y) == True
+    Sum(x, (x, 1, n)).is_constant(n) == False
+    Sum(x, (x, 1, n)).is_constant(x) == True
+    eq = a*cos(x)**2 + a*sin(x)**2 - a
+    eq.is_constant() == True
+    assert eq.subs({x:pi, a:2}) == eq.subs({x:pi, a:3}) == 0
