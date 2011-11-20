@@ -5,7 +5,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
     factor, Mul, O, hyper, Add)
-from sympy.core.add import _keep_coeff
+from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e

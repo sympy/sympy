@@ -1,7 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
-from sympy.core.add import Add, _keep_coeff
-from sympy.core.mul import Mul
+from sympy.core.add import Add
+from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr

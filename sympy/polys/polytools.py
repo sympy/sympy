@@ -4,7 +4,7 @@ from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
 
-from sympy.core.add import _keep_coeff
+from sympy.core.mul import _keep_coeff
 
 from sympy.core.sympify import (
     sympify, SympifyError,
