@@ -133,10 +133,6 @@ def multinomial_coefficients(m, n, _tuple=tuple):
         l[k] = b
     return r
 
-def _strip(a):
-    b = [x for x in a if x]
-    b.sort()
-    return tuple(b)
 
 def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     """multinomial coefficient iterator
@@ -194,7 +190,7 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
         mc = multinomial_coefficients(n, n)
         mc1 = {}
         for k, v in mc.iteritems():
-            mc1[_strip(k)] = v
+            mc1[filter(None, k)] = v
         mc = mc1
         comb_it = combinations_with_replacement(range(m), n)
         # one can iterate the monomial tuples by iterating
@@ -207,5 +203,6 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
             a = [0]*m
             for i in t:
                 a[i] += 1
-            b = _strip(a)
-            yield (_tuple(a), mc[b])
+            a = _tuple(a)
+            b = filter(None, a)
+            yield (a, mc[b])
