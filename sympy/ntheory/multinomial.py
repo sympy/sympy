@@ -1,5 +1,6 @@
 from sympy.mpmath.libmp import bitcount
 from sympy.core.compatibility import combinations_with_replacement
+from collections import defaultdict
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs {(k1,k2) : C_kn} where
@@ -30,7 +31,37 @@ def _code_t(t, bits_exp):
         expv += n<<(i*bits_exp)
     return expv
 
-def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
+def _bmpnl_calc(m, n, _tuple):
+    bits_exp = bitcount(n)
+    mask_exp = (1 << bits_exp) - 1
+    def t(i):
+        rv = [0]*m
+        if i==0: return rv
+        rv[0]=-1
+        rv[i]=1
+        return rv
+    p0 = [_code_t(_tuple(t(i)), bits_exp) for i in xrange(m)]
+    n0 = [0]*m
+    n0[0] = n
+    l = [0]*(n*(m - 1) + 1)
+    l[0] = [(_code_t(_tuple(n0), bits_exp), 1)]
+    return bits_exp, mask_exp, p0, n0, l
+
+def _dcalc(m, n, k, p0, l):
+    d = defaultdict(int)
+    for i in xrange(1, min(m, k+1)):
+        nn = (n + 1)*i - k
+        if not nn:
+            continue
+        t = p0[i]
+        for t2, c2 in l[k - i]:
+            if not c2:
+                continue
+            tt = t2 + t
+            d[tt] += nn * c2
+    return d
+
+def multinomial_coefficients(m, n, _tuple=tuple):
     """Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
     where ``C_kn`` are multinomial coefficients such that
     ``n=k1+k2+..+km``.
@@ -65,7 +96,7 @@ def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
     therefore by precomputing the latter coefficients memory and time
     are saved.
     """
-    if m==2:
+    if m == 2:
         return binomial_coefficients(n)
     if m >= 2*n and n > 1:
         return dict(multinomial_coefficients_iterator(m, n))
@@ -79,34 +110,10 @@ def multinomial_coefficients(m, n, _tuple=tuple, _zip=zip):
     # between 0 and n, so that one can pack a tuple in an int,
     # giving bitcount(n) bits for each entry; in this way sums of
     # tuples become sums of ints, which are fast.
-    bits_exp = bitcount(n)
-    mask_exp = (1<<bits_exp)-1
-    symbols = [(0,)*i + (1,) + (0,)*(m-i-1) for i in range(m)]
-    if n == 1:
-        r = {}
-        for t in symbols:
-            r[t] = 1
-        return r
-    s0 = symbols[0]
-    p0 = [_tuple(aa-bb for aa, bb in _zip(s, s0)) for s in symbols]
-    p0 = [_code_t(t, bits_exp) for t in p0]
-    r = {_tuple(aa*n for aa in s0):1}
-    r_get = r.get
-    r_update = r.update
-    l = [0] * (n*(m-1)+1)
-    l[0] = [(_code_t(_tuple(aa*n for aa in s0), bits_exp), 1)]
+    bits_exp, mask_exp, p0, n0, l = _bmpnl_calc(m, n, _tuple)
+    r = {_tuple(n0):1}
     for k in xrange(1, n*(m-1)+1):
-        d = {}
-        d_get = d.get
-        for i in xrange(1, min(m, k+1)):
-            nn = (n+1)*i-k
-            if not nn:
-                continue
-            t = p0[i]
-            for t2, c2 in l[k-i]:
-                tt = t2 + t
-                cc = nn * c2
-                d[tt] = d_get(tt, 0) + cc
+        d = _dcalc(m, n, k, p0, l)
         b = []
         for t, c in d.iteritems():
             if not c:
@@ -131,7 +138,7 @@ def _strip(a):
     b.sort()
     return tuple(b)
 
-def multinomial_coefficients_iterator(m, n, _tuple=tuple, _zip=zip):
+def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     """multinomial coefficient iterator
 
     Examples:
@@ -162,27 +169,10 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple, _zip=zip):
                 yield ((n-k, k), a)
             return
 
-        bits_exp = bitcount(n)
-        mask_exp = (1<<bits_exp)-1
-        symbols = [(0,)*i + (1,) + (0,)*(m-i-1) for i in range(m)]
-        s0 = symbols[0]
-        p0 = [_tuple(aa-bb for aa,bb in _zip(s,s0)) for s in symbols]
-        p0 = [_code_t(t,bits_exp) for t in p0]
-        l = [0] * (n*(m-1)+1)
-        l[0] = [(_code_t(_tuple(aa*n for aa in s0), bits_exp), 1)]
-        yield (_tuple(aa*n for aa in s0), 1)
+        bits_exp, mask_exp, p0, n0, l = _bmpnl_calc(m, n, _tuple)
+        yield (_tuple(n0), 1)
         for k in xrange(1, n*(m-1)+1):
-            d = {}
-            d_get = d.get
-            for i in xrange(1, min(m, k+1)):
-                nn = (n+1)*i-k
-                if not nn:
-                    continue
-                t = p0[i]
-                for t2, c2 in l[k-i]:
-                    tt = t2 + t
-                    cc = nn * c2
-                    d[tt] = d_get(tt, 0) + cc
+            d = _dcalc(m, n, k, p0, l)
             b = []
             for t, c in d.iteritems():
                 if not c:
