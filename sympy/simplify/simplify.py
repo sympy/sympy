@@ -6,7 +6,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr)
 
-from sympy.core.add import _keep_coeff
+from sympy.core.mul import _keep_coeff
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd
 from sympy.core.function import expand_log, count_ops

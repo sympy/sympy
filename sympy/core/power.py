@@ -941,7 +941,7 @@ class Pow(Expr):
                 return c, Pow(_keep_coeff(m, t), e)
         return S.One, Pow(b, e)
 
-from add import Add, _keep_coeff
+from add import Add
 from numbers import Integer
-from mul import Mul
+from mul import Mul, _keep_coeff
 from symbol import Symbol, Dummy

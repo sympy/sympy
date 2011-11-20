@@ -52,7 +52,7 @@ from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
     exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
-from sympy.core.add import _keep_coeff
+from sympy.core.mul import _keep_coeff
 from sympy.core.compatibility import iterable
 from sympy.utilities.pytest import raises, XFAIL
 
