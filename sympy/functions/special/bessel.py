@@ -1,7 +1,6 @@
 """Bessel type functions"""
 
 from sympy import S, pi, I
-from sympy.core import sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.functions.elementary.miscellaneous import sqrt
