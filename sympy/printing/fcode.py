@@ -227,10 +227,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp is S.NegativeOne:
+        if expr.exp == -1:
             return '1.0/%s'%(self.parenthesize(expr.base, PREC))
-        elif expr.exp == Float(-1.0):
-            return '1.0d0/%s'%(self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             if expr.base.is_integer:
                 # Fortan intrinsic sqrt() does not accept integer argument

@@ -27,6 +27,7 @@ def test_ccode_Pow():
     assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
+    assert ccode(x**-1.0) == '1.0/x'
 
 def test_ccode_constants_mathh():
     assert ccode(exp(1)) == "M_E"
