@@ -6,6 +6,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr)
 
+from sympy.core.mul import _keep_coeff
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd
 from sympy.core.function import expand_log, count_ops
@@ -1030,7 +1031,6 @@ def _denest_pow(eq):
     # fractions, terms_gcd(x+x*y/2) -> x*(y + 2)/2 and we don't want the 1/2;
     # gcd won't pull out numerators from a fraction: gcd(3*x, 9*x/2) -> x but
     # we want 3*x. Neither work with noncommutatives.
-    from sympy.polys.polytools import _keep_coeff
     def nc_gcd(aa, bb):
         a, b = [i.as_coeff_Mul() for i in [aa, bb]]
         c = gcd(a[0], b[0]).as_numer_denom()[0]

@@ -5,7 +5,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy)
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import m, s
 
@@ -415,6 +415,22 @@ def test_as_numer_denom():
     assert sqrt(1/n).as_numer_denom() == (I, sqrt(-n))
     n = Symbol('0 or neg', nonpositive=True)
     assert (1/sqrt(x/n)).as_numer_denom() == (1, sqrt(x/n))
+    assert (a/x + b/2/x + c/3/x).as_numer_denom() == \
+            (6*a + 3*b + 2*c, 6*x)
+    assert (a/x + b/2/x + c/3/y).as_numer_denom() == \
+            (2*c*x + y*(6*a + 3*b), 6*x*y)
+    assert (a/x + b/2/x + c/.5/x).as_numer_denom() == \
+            (2*a + b + 4.0*c, 2*x)
+    # this should take no more than a few seconds
+    assert int(log(Add(*[Dummy()/i/x for i in xrange(1, 705)]
+                       ).as_numer_denom()[1]/x).n(4)) == 705
+    for i in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
+        assert (i + x/3).as_numer_denom() == \
+            (x + i, 3)
+    assert (S.Infinity + x/3 + y/4).as_numer_denom() == \
+        (4*x + 3*y + S.Infinity, 12)
+    assert (oo*x + zoo*y).as_numer_denom() == \
+        (zoo*y + oo*x, 1)
 
     A, B, C = symbols('A,B,C', commutative=False)
 
@@ -1148,6 +1164,11 @@ def test_primitive():
     assert (-2*x).primitive() == (2, -x)
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).primitive() == \
         (S(1)/14, 7.0*x + 21*y + 10*z)
+    for i in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
+        assert (i + x/3).primitive() == \
+            (S(1)/3, i + x)
+    assert (S.Infinity + 2*x/3 + 4*y/7).primitive() == \
+        (S(2)/21, 7*x + 6*y + oo)
 
 def test_issue_2744():
     a = 1 + x
