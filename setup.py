@@ -235,13 +235,35 @@ tests = [
     'sympy.utilities.tests',
     ]
 
+classifiers = [
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Mathematics',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.5',
+    'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.2',
+    ]
+
+long_description = '''SymPy is a Python library for symbolic mathematics. It aims
+to become a full-featured computer algebra system (CAS) while keeping the code
+as simple as possible in order to be comprehensible and easily extensible.
+SymPy is written entirely in Python and does not require any external libraries.'''
+
 setup(
       name = 'sympy',
       version = sympy.__version__,
       description = 'Computer algebra system (CAS) in Python',
+      long_description = long_description,
       author = 'SymPy development team',
       author_email = 'sympy@googlegroups.com',
       license = 'BSD',
+      keywords = "Math CAS",
       url = 'http://code.google.com/p/sympy',
       packages = ['sympy'] + modules + tests,
       scripts = ['bin/isympy'],
@@ -253,4 +275,5 @@ setup(
                      'clean': clean,
                      'audit' : audit,
                      },
+      classifiers = classifiers,
       )
