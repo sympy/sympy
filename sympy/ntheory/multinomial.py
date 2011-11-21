@@ -1,6 +1,7 @@
 from sympy.mpmath.libmp import bitcount
 from sympy.core.compatibility import combinations_with_replacement
 from collections import defaultdict
+from itertools import ifilter
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs {(k1,k2) : C_kn} where
@@ -190,7 +191,7 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
         mc = multinomial_coefficients(n, n)
         mc1 = {}
         for k, v in mc.iteritems():
-            mc1[filter(None, k)] = v
+            mc1[_tuple(ifilter(None, k))] = v
         mc = mc1
         comb_it = combinations_with_replacement(range(m), n)
         # one can iterate the monomial tuples by iterating
@@ -204,5 +205,5 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
             for i in t:
                 a[i] += 1
             a = _tuple(a)
-            b = filter(None, a)
+            b = _tuple(ifilter(None, a))
             yield (a, mc[b])
