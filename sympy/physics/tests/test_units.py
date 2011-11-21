@@ -1,6 +1,6 @@
 from sympy import Rational, Symbol, integrate, pprint, sqrt
 from sympy.physics.units import m, s, day, km, foot, meter, au, \
-        speed_of_light, minute, joule
+        speed_of_light, minute, joule, find, charge
 
 def test_units():
     assert (5*m/s * day) / km == 432
@@ -19,3 +19,7 @@ def test_units():
 
 def test_issue_2466():
     assert (m < s).is_Relational
+
+def test_find():
+    assert find('charge') == ['charge']
+    assert find(charge) == ['C', 'charge', 'coulomb', 'coulombs']

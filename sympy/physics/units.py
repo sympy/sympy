@@ -2,6 +2,47 @@
 Physical units and dimensions.
 
 The base class is Unit, where all here defined units (~200) inherit from.
+
+The find function can help you find units for a given quantity:
+
+    >>> import sympy.physics.units as u
+    >>> u.find('coul')
+    ['coulomb', 'coulombs']
+    >>> u.find(u.charge)
+    ['C', 'charge', 'coulomb', 'coulombs']
+    >>> u.coulomb
+    A*s
+
+Units are always given in terms of base units that have a name and
+an abbreviation:
+
+    >>> u.A.name
+    'ampere'
+    >>> u.ampere.abbrev
+    'A'
+
+The generic name for a unit (like 'length', 'mass', etc...)
+can help you find units:
+
+    >>> u.find('magnet')
+    ['magnetic_flux', 'magnetic_constant', 'magnetic_flux_density']
+    >>> u.find(u.magnetic_flux)
+    ['Wb', 'wb', 'weber', 'webers', 'magnetic_flux']
+
+If, for a given session, you wish to add a unit you may do so:
+
+    >>> u.find('gal')
+    []
+    >>> u.gal = 4*u.quart
+    >>> u.gal/u.inch**3
+    924
+
+To see a given quantity in terms of some other unit, divide by the desired
+unit:
+    >>> mph = u.miles/u.hours
+    >>> (u.m/u.s/mph).n(2)
+    2.2
+
 """
 
 from sympy import Rational, pi
@@ -9,10 +50,19 @@ from sympy.core import AtomicExpr
 
 class Unit(AtomicExpr):
     """
-    Base class for all physical units.
+    Base class for base unit of physical units.
 
-    Create own units like:
-    m = Unit("meter", "m")
+    >>> from sympy.physics.units import Unit
+    >>> Unit("meter", "m")
+    m
+
+    Other units are derived from base units:
+
+    >>> import sympy.physics.units as u
+    >>> cm = u.m/100
+    >>> 100*u.cm
+    m
+
     """
     is_positive = True    # make sqrt(m**2) --> m
     is_commutative = True
@@ -73,31 +123,33 @@ deg = degree = degrees = pi/180
 
 # Base units
 
-m = meter = meters = Unit('meter', 'm')
-kg = kilogram = kilograms = Unit('kilogram', 'kg')
-s = second = seconds = Unit('second', 's')
-A = ampere = amperes = Unit('ampere', 'A')
-K = kelvin = kelvins = Unit('kelvin', 'K')
-mol = mole = moles = Unit('mole', 'mol')
-cd = candela = candelas = Unit('candela', 'cd')
+length = m = meter = meters = Unit('meter', 'm')
+mass = kg = kilogram = kilograms = Unit('kilogram', 'kg')
+time = s = second = seconds = Unit('second', 's')
+current = A = ampere = amperes = Unit('ampere', 'A')
+temperature = K = kelvin = kelvins = Unit('kelvin', 'K')
+amount = mol = mole = moles = Unit('mole', 'mol')
+luminosity = cd = candela = candelas = Unit('candela', 'cd')
 
 
 # Derived units
-
-Hz = hz = hertz = 1/s
-N = newton = newtons = m*kg/s**2
-J = joule = joules = N*m
-W = watt = watts = J/s
-Pa = pa = pascal = pascals = N/m**2
-C = coulomb = coulombs = s*A
-v = V = volt = volts = W/A
-ohm = ohms = V/A
-S = siemens = mho = mhos = A/V
-F = farad = farads = C/V
-Wb = wb = weber = webers = J/A
-T = tesla = teslas = V*s/m**2
-H = henry = henrys = V*s/A
-
+volume = meter**3
+frequency = Hz = hz = hertz = 1/s
+force = N = newton = newtons = m*kg/s**2
+energy = J = joule = joules = N*m
+power = W = watt = watts = J/s
+pressure = Pa = pa = pascal = pascals = N/m**2
+charge = C = coulomb = coulombs = s*A
+voltage = v = V = volt = volts = W/A
+resistance = ohm = ohms = V/A
+conductance = S = siemens = mho = mhos = A/V
+capacitance = F = farad = farads = C/V
+magnetic_flux = Wb = wb = weber = webers = J/A
+magnetic_flux_density = T = tesla = teslas = V*s/m**2
+inductance = H = henry = henrys = V*s/A
+speed = m/s
+acceleration = m/s**2
+density = kg/m**3
 
 # Common length units
 
@@ -184,5 +236,36 @@ eV = 1.602176487e-19 * J
 ly = lightyear = lightyears = c*julian_year
 au = astronomical_unit = astronomical_units = 149597870691*m
 
+def find(quantity):
+    """Return a list of matching units names.
+        if quantity is a string -- units containing the string `quantity`
+        if quantity is a unit -- units having matching base units
+
+    Examples:
+    >>> from sympy.physics import units as u
+    >>> u.find('charge')
+    ['charge']
+    >>> u.find(u.charge)
+    ['C', 'charge', 'coulomb', 'coulombs']
+    >>> u.find('volt')
+    ['volt', 'volts', 'voltage']
+    >>> u.find(u.inch**3)[:5]
+    ['l', 'cl', 'dl', 'ml', 'liter']
+    """
+    import sympy.physics.units as u
+    rv = []
+    if isinstance(quantity, str):
+        rv = [i for i in dir(u) if quantity in i]
+    else:
+        units = quantity.as_coeff_Mul()[1]
+        for i in dir(u):
+            try:
+                if units == eval('u.' + i).as_coeff_Mul()[1]:
+                    rv.append(str(i))
+            except:
+                pass
+    return sorted(rv, key=len)
+
 # Delete this so it doesn't pollute the namespace
 del Rational, pi
+
