@@ -1,6 +1,5 @@
 import sympy
 from sympy.functions import DiracDelta, Heaviside
-from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.utilities.misc import default_sort_key
 
