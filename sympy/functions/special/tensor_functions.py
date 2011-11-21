@@ -1,5 +1,3 @@
-import operator
-from sympy.core.compatibility import reduce
 from sympy.core.function import Function
 from sympy.core import sympify, S, Integer
 from sympy.core.mul import prod
