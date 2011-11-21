@@ -1,12 +1,11 @@
 from sympy.core import Basic, S
 from sympy.core.compatibility import is_sequence
-from sympy.utilities.iterables import rotate_left, flatten
+from sympy.utilities.iterables import flatten
 from sympy.polys.polytools import lcm
-from sympy.matrices import Matrix, zeros
+from sympy.matrices import zeros
 from sympy.mpmath.libmp.libintmath import ifac
-from sympy.core.numbers import Integer
 
-import itertools, random
+import random
 
 def perm_af_parity(pi):
     """
