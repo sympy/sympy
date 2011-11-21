@@ -1191,7 +1191,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     expression without causing a division by zero error.
 
         >>> solve_linear(x**2*(1/x - z**2/x))
-        (x**2*(-x*z**2 + x), x**2)
+        (x**2*(-z**2 + 1), x)
 
     You can give a list of what you prefer for x candidates:
 
@@ -1800,10 +1800,11 @@ def _invert(eq, *symbols, **kwargs):
 
     """
     eq = sympify(eq)
+    free = eq.free_symbols
     if not symbols:
-        symbols = eq.free_symbols
-        if not symbols:
-            return eq, S.Zero
+        symbols = free
+    if not free & set(symbols):
+        return eq, S.Zero
 
     dointpow = bool(kwargs.get('integer_power', False))
 

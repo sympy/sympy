@@ -4,6 +4,8 @@ from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
 
+from sympy.core.mul import _keep_coeff
+
 from sympy.core.sympify import (
     sympify, SympifyError,
 )
@@ -3769,31 +3771,6 @@ def _update_args(args, key, value):
         args[key] = value
 
     return args
-
-def _keep_coeff(coeff, factors):
-    """Return ``coeff*factors`` unevaluated if necessary."""
-    if not coeff.is_Number:
-        if factors.is_Number:
-            factors, coeff = coeff, factors
-        else:
-            return coeff*factors
-    if coeff == 1:
-        return factors
-    elif coeff == -1: # don't keep sign?
-        return -factors
-    elif factors.is_Add:
-        return Mul._from_args((coeff, factors))
-    elif factors.is_Mul:
-        margs = list(factors.args)
-        if margs[0].is_Number:
-            margs[0] *= coeff
-            if margs[0] == 1:
-                margs.pop(0)
-        else:
-            margs.insert(0, coeff)
-        return Mul._from_args(margs)
-    else:
-        return coeff*factors
 
 def degree(f, *gens, **args):
     """

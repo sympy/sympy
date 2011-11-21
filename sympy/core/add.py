@@ -4,7 +4,9 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from expr import Expr
-from numbers import ilcm
+from numbers import ilcm, igcd
+
+from collections import defaultdict
 
 class Add(AssocOp):
 
@@ -32,7 +34,7 @@ class Add(AssocOp):
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
 
-        coeff = S.Zero  # standalone term
+        coeff = S.Zero  # standalone term (Number or zoo will always be in slot 0)
                         # e.g. 3 + ...
         order_factors = []
 
@@ -283,13 +285,41 @@ class Add(AssocOp):
         return self.args[0], self._new_rawargs(*self.args[1:])
 
     def as_numer_denom(self):
-        numers, denoms = [],[]
-        for n,d in [f.as_numer_denom() for f in self.args]:
-            numers.append(n)
-            denoms.append(d)
-        r = xrange(len(numers))
-        return Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
-                     for i in r]), Mul(*denoms)
+
+        # clear rational denominator
+        content, expr = self.primitive()
+        ncon, dcon = content.as_numer_denom()
+
+        # collect numerators and denominators of the terms
+        nd = defaultdict(list)
+        for f in expr.args:
+            ni, di = f.as_numer_denom()
+            nd[di].append(ni)
+        # put infinity in the numerator
+        if S.Zero in nd:
+            n = nd.pop(S.Zero)
+            assert len(n) == 1
+            n = n[0]
+            nd[S.One].append(n/S.Zero)
+
+        # check for quick exit
+        if len(nd) == 1:
+            d, n = nd.popitem()
+            return Add(*[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
+
+        # sum up the terms having a common denominator
+        for d, n in nd.iteritems():
+            if len(n) == 1:
+                nd[d] = n[0]
+            else:
+                nd[d] = Add(*n)
+
+        # assemble single numerator and denominator
+        denoms, numers = [list(i) for i in zip(*nd.iteritems())]
+        n, d = Add(*[Mul(*(denoms[:i]+[numers[i]]+denoms[i+1:]))
+                   for i in xrange(len(numers))]), Mul(*denoms)
+
+        return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
 
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
@@ -597,25 +627,36 @@ class Add(AssocOp):
         See also: primitive() function in polytools.py
 
         """
-        cont = S.Zero
-        terms = [a.as_coeff_Mul() for a in self.args]
-        for i, (coeff, _) in enumerate(terms):
-            newcont = cont.gcd(coeff)
-            if newcont == 1: # not S.One in case Float is ever handled
-                cont = S.One/reduce(ilcm,
-                             [coeff.q for coeff, _ in terms[i + 1:]
-                              if coeff.is_Rational], S.One)/cont.q
-                break
-            cont = newcont
 
-        for i, (coeff, term) in enumerate(terms):
-            c = coeff/cont
-            if c == 1:  # not S.One in case Float is ever handled
-                terms[i] = term
-            elif term is S.One:
-                terms[i] = c
-            else:
-                terms[i] = Mul._from_args((c,) + Mul.make_args(term))
+        cont = S.One
+        terms = []
+        inf = False
+        for a in self.args:
+            c, m = a.as_coeff_Mul()
+            if not c.is_Rational:
+                c = S.One
+                m = a
+            inf = inf or not c.q or m is S.ComplexInfinity
+            terms.append((c.p, c.q, m))
+
+        if not inf:
+            ngcd = reduce(igcd, [t[0] for t in terms], 0)
+            dlcm = reduce(ilcm, [t[1] for t in terms], 1)
+        else:
+            ngcd = reduce(igcd, [t[0] for t in terms if t[1]], 0)
+            dlcm = reduce(ilcm, [t[1] for t in terms if t[1]], 1)
+
+        if ngcd == dlcm == 1:
+            return S.One, self
+        if not inf:
+            for i, (p, q, term) in enumerate(terms):
+                terms[i] = _keep_coeff(Rational((p//ngcd)*(dlcm//q)), term)
+        else:
+            for i, (p, q, term) in enumerate(terms):
+                if q:
+                    terms[i] = _keep_coeff(Rational((p//ngcd)*(dlcm//q)), term)
+                else:
+                    terms[i] = _keep_coeff(Rational(p, q), term)
 
         # we don't need a complete re-flattening since no new terms will join
         # so we just use the same sort as is used in Add.flatten. When the
@@ -624,14 +665,14 @@ class Add(AssocOp):
         #
         # We do need to make sure that term[0] stays in position 0, however.
         #
-        if terms[0].is_Rational:
+        if terms[0].is_Number or terms[0] is S.ComplexInfinity:
             c = terms.pop(0)
         else:
             c = None
         terms.sort(key=hash)
         if c:
-            terms = [c] + terms
-        return cont, self._new_rawargs(*terms)
+            terms.insert(0, c)
+        return Rational(ngcd, dlcm), self._new_rawargs(*terms)
 
     def as_content_primitive(self):
         """Return the tuple (R, self/R) where R is the positive Rational
@@ -644,30 +685,9 @@ class Add(AssocOp):
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        c_args = [a.as_content_primitive() for a in self.args]
-        g = S.Zero
-        for i, c in enumerate(c_args):
-            g = g.gcd(c[0])
-            if g is S.One: # not S.One in case Float is ever handled
-                g = 1/reduce(ilcm, [c[0].q for c in c_args[i + 1:]], S.One)
-                break
-        if g is S.One:
-            a = Add(*[c[0]*c[1] for c in c_args])
-        else:
-            a = Add(*[c[0]/g*c[1] for c in c_args])
-        c, ai = a.as_coeff_Mul()
-        if c.is_Rational:
-            if c.is_negative:
-                c = -c
-                ai = -ai
-            g *= c
-            a = ai
-        else:
-            a *= g
-            g = S.One
-        return g, a
+        return Add(*[_keep_coeff(*a.as_content_primitive()) for a in self.args]).primitive()
 
 from function import FunctionClass
-from mul import Mul
+from mul import Mul, _keep_coeff
 from power import Pow
 from sympy.core.numbers import Rational
