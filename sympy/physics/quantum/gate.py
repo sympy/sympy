@@ -421,6 +421,15 @@ class CGate(Gate):
             circ_plot.control_point(gate_idx, int(c))
         self.gate.plot_gate(circ_plot, gate_idx)
 
+    #-------------------------------------------------------------------------
+    # Miscellaneous
+    #-------------------------------------------------------------------------
+
+    def _eval_dagger(self):
+        if (isinstance(self.gate, HermitianOperator)):
+            return self
+        else:
+            return self._eval_inverse()
 
 class UGate(Gate):
     """General gate specified by a set of targets and a target matrix.
@@ -872,7 +881,6 @@ class CNotGate(CGate, TwoQubitGate):
             return Integer(0)
         else:
             raise NotImplementedError('Commutator not implemented: %r' % other)
-
 
 class SwapGate(TwoQubitGate):
     """Two qubit SWAP gate.
