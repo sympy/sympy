@@ -127,10 +127,24 @@ class Integral(Expr):
 
     @property
     def function(self):
+        """Return the function to be integrated.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x
+        >>> Integral(x**2, (x,)).function
+        x**2
+        """
         return self._args[0]
 
     @property
     def limits(self):
+        """Return the limits of integration.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i
+        >>> Integral(x**i, (i, 1, 3)).limits
+        ((i, 1, 3),)
+        """
         return self._args[1:]
 
     @property
@@ -322,6 +336,14 @@ class Integral(Expr):
 
 
     def doit(self, **hints):
+        """
+        Preform the integration using any hints given.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i
+        >>> Integral(x**i, (i, 1, 3)).doit()
+        x**3/log(x) - x/log(x)
+        """
         if not hints.get('integrals', True):
             return self
 
