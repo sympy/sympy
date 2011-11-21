@@ -654,12 +654,7 @@ class Expr(Basic, EvalfMixin):
             return i
 
         co = []
-        try:
-            assert Add.make_args(S.Zero)
-            # replace try/except with this
-            args = Add.make_args(self)
-        except AssertionError:
-            args = Add.make_args(self) or [S.Zero]
+        args = Add.make_args(self)
         self_c = self.is_commutative
         x_c = x.is_commutative
         if self_c and not x_c:
