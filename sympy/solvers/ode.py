@@ -30,8 +30,6 @@ specific hint.  See also the docstring on dsolve().
     - constantsimp() - Simplifies arbitrary constants.
     - constant_renumber() - Renumber arbitrary constants
     - _handle_Integral() - Evaluate unevaluated Integrals.
-    - is_unfunc() - True for f(x), False for x, f and sin(x)
-    - unfuncs() - returns all UndefinedFunctions
     - preprocess - prepare the equation and detect function to solve for
 
     See also the docstrings of these functions.
@@ -209,7 +207,7 @@ from collections import defaultdict
 
 from sympy.core import Add, Basic, C, S, Mul, Pow, oo
 from sympy.core.compatibility import iterable, cmp_to_key, is_sequence, set_union
-from sympy.core.function import Derivative, Function, UndefinedFunction, diff, expand_mul
+from sympy.core.function import Derivative, Function, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -247,29 +245,6 @@ allhints = ("separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_specia
 "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
 "nth_linear_constant_coeff_variation_of_parameters_Integral",
 "Liouville_Integral")
-
-def unfuncs(eq):
-    """Return the set of undefined functions (f(x), not sin(x)) in eq.
-
-    >>> from sympy.solvers.ode import unfuncs
-    >>> from sympy import Function, sin
-    >>> from sympy.abc import x, y
-    >>> f, g = map(Function, 'fg')
-    >>> unfuncs(f(x) + sin(g(x)) + sin(x) + 2 + y)
-    set([f(x), g(x)])
-    """
-    return set([f for f in eq.atoms(Function) if isinstance(f.func, UndefinedFunction)])
-
-def is_unfunc(f):
-    """Return True if ``f`` is an UndefinedFunction
-    >>> from sympy.solvers.ode import is_unfunc
-    >>> from sympy import Function, sin
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> [(i, is_unfunc(i)) for i in (f(x), f, x, sin(x))]
-    [(f(x), True), (f, False), (x, False), (sin(x), False)]
-    """
-    return f.is_Function and isinstance(f.func, UndefinedFunction)
 
 def preprocess(expr, func=None, hint='_Integral'):
     """Prepare expr for solving by making sure that differentiation
@@ -322,7 +297,7 @@ def preprocess(expr, func=None, hint='_Integral'):
 
     derivs = expr.atoms(Derivative)
     if not func:
-        funcs = set_union(*[unfuncs(d) for d in derivs])
+        funcs = set_union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
             raise ValueError('The function cannot be automatically detected for %s.' % expr)
         func = funcs.pop()
@@ -1112,7 +1087,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         try:
             _, func = preprocess(ode.lhs)
         except ValueError:
-            funcs = [unfuncs(s) for s in (sol if is_sequence(sol, set) else [sol])]
+            funcs = [s.atoms(AppliedUndef) for s in (sol if is_sequence(sol, set) else [sol])]
             funcs = reduce(set.union, funcs, set())
             if len(funcs) != 1:
                 raise ValueError('must pass func arg to checkodesol for this case.')
@@ -1124,14 +1099,14 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     #     raise ValueError("func must be a function of one variable, not %s" % func)
     # ----------
     # assume, during deprecation that sol and func are reversed
-    if hasattr(sol, '_is_Function') and is_unfunc(sol) and len(sol.args) == 1:
+    if hasattr(sol, '_is_Function') and isinstance(sol, AppliedUndef) and len(sol.args) == 1:
         import warnings
         msg = "sol appears to be a valid function. " +\
               "The order of sol and func will be reversed. " +\
               "If this is not desired, send sol as Eq(sol, 0)."
         warnings.warn(msg, category=DeprecationWarning)
         sol, func = func, sol
-    elif not (is_unfunc(func) and len(func.args) == 1):
+    elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):
         raise ValueError("func (or sol, during deprecation) must be a function of one variable. Got sol = %s, func = %s" % (sol, func))
     # ========== end of deprecation handling
     if is_sequence(sol, set):
