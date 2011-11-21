@@ -1,6 +1,5 @@
-from matexpr import MatrixExpr, ShapeError
+from matexpr import ShapeError
 from matpow import MatPow
-from sympy import Basic
 
 class Inverse(MatPow):
     """Matrix Inverse
