@@ -74,7 +74,7 @@ def denester(nested):
         if R is None:
             return nested[-1], [0]*len(nested) #return the radicand from the previous invocation.
         d, f = denester([sqrt((v[a]**2).expand()-(R*v[b]**2).expand()) for v in values] + [sqrt(R)])
-        if not any(f[i] for i in range(len(nested))): #If f[i]=0 for all i < len(nested)
+        if all(fi == 0 for fi in f):
             v = values[-1]
             return sqrt(v[a] + v[b]*d), f
         else:
@@ -83,7 +83,10 @@ def denester(nested):
                 v[a] = -1 * v[a]
                 v[b] = -1 * v[b]
             if not f[len(nested)]: #Solution denests with square roots
-                return (sqrt((v[a]+d).expand()/2)+sign(v[b])*sqrt((v[b]**2*R/(2*(v[a]+d))).expand())).expand(), f
+                vad = (v[a] + d).expand()
+                if not vad:
+                    return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
+                return (sqrt(vad/2) + sign(v[b])*sqrt((v[b]**2*R/(2*vad)).expand())).expand(), f
             else: #Solution requires a fourth root
                 FR, s = (R.expand()**Rational(1,4)), sqrt((v[b]*R).expand()+d)
                 return (s/(sqrt(2)*FR) + v[a]*FR/(sqrt(2)*s)).expand(), f

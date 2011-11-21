@@ -31,6 +31,9 @@ def test_sqrtdenest():
     x6 = sqrt(-x5)
     ans = -x0*x6/3 + x0*sqrt(-x4 + 28 - 6*sqrt(210)*x6/x5)/3
     assert expand_mul(radsimp(ok) - ans) == 0
+    # issue 2554
+    eq = sqrt(sqrt(sqrt(2) + 2) + 2)
+    assert sqrtdenest(eq) == eq
 
 # more complex example:
 @XFAIL # this fails on amd64
