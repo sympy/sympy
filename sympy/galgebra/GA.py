@@ -16,7 +16,7 @@ import sys
 import types
 import numpy, sympy
 import re as regrep
-import sympy.galgebra.latex_ex
+import sympy.galgebra.latex_ex as tex
 
 NUMPAT = regrep.compile( '([\-0-9])|([\-0-9]/[0-9])')
 """Re pattern for rational number"""
@@ -26,7 +26,6 @@ ONE  = sympy.Rational(1)
 TWO  = sympy.Rational(2)
 HALF = sympy.Rational(1,2)
 
-from sympy.core import Symbol as sym_type
 from sympy.core import Pow as pow_type
 from sympy import Abs as abs_type
 from sympy.core import Mul as mul_type
@@ -311,9 +310,9 @@ def LaTeX_lst(lst,title=''):
     Output a list in LaTeX format.
     """
     if title != '':
-        LaTeX(title)
+        tex.LaTeX(title)
     for x in lst:
-        LaTeX(x)
+        tex.LaTeX(x)
     return
 
 def unabs(x):
@@ -459,7 +458,6 @@ class MV(object):
         while igrade <= MV.n:
             tmpdict = {}
             bases = MV.gabasis[igrade]
-            nbases = len(bases)
             ibases = 0
             for base in bases:
                 tmpdict[str(base)] = ibases
@@ -768,7 +766,6 @@ class MV(object):
             tmp = []
             if isinstance(mv.mv[igrade],numpy.ndarray):
                 j = 0
-                xsum = 0
                 for x in mv.mv[igrade]:
                     if x != ZERO:
                         xstr = x.__str__()
@@ -1110,7 +1107,6 @@ class MV(object):
         igrade = 1
         while igrade <= MV.n:
             base_index = MV.gabasis[igrade]
-            nbase_index = len(base_index)
             grade_bases = []
             rgrade_bases = []
             for index in base_index:
@@ -1252,6 +1248,8 @@ class MV(object):
 
         if MV.coords[0] == sympy.Symbol('t'):
             MV.dedt = []
+            # I can't fix this no name error because I have no clue what the
+            # original writer was trying to do.
             for coef in dedt_coef:
                 MV.dedt.append(MV(coef,'vector'))
         else:
@@ -1361,7 +1359,6 @@ class MV(object):
                 mv1.convert_from_blades()
             if bladeflg2:
                 mv2.convert_from_blades()
-            mul = MV()
             for igrade in MV.n1rg:
                 gradei = mv1.mv[igrade]
                 if isinstance(gradei,numpy.ndarray):
@@ -1428,8 +1425,6 @@ class MV(object):
             if igrade >= 2:
                 tmp = []
                 basis = MV.basis[igrade]
-                nblades = MV.nbasis[igrade]
-                iblade = 0
                 for blade in basis:
                     name = ''
                     for i in blade:
@@ -2483,9 +2478,6 @@ class MV(object):
                         dD.add_in_place(coef*connect.project(igrade-1))
                 igrade += 1
         return(dD)
-
-    def div(self):
-        return(self.grad_int())
 
     def mag2(self):
         """
