@@ -26,26 +26,9 @@ import fnmatch
 import shutil
 import fileinput
 
+from subprocess import check_output, CalledProcessError
+
 destination = "py3k-sympy" # directory to copy to
-
-# TODO: build this from .gitignore
-skip_dirs = (
-    '.*',       # skip hidden dirs; .git and .tox in particular can be quite big
-    'mpmath',   # everything related to mpmath, both in doc/ and sympy/
-    '_build',   # files built by Sphinx
-    '__pycache__',
-    'covhtml',  # files produced by bin/test_coverage
-    'my',       # the user can have stuff here we don't want to copy
-    destination # this prevents infinite recursion if the dir already exists
-    )
-
-skip_files = (
-    '*.pyc',
-    '.*',
-    'ast_parser_python25.py', # this files produces doctest errors under py3k
-                              # as we need it only for 2.5, just skip copying it
-    'use2to3',
-    )
 
 modified_files = []
 modified_txt_files = []
@@ -54,40 +37,52 @@ modified_txt_files = []
 # so we need a list of files we care about
 relevant_txt_files = []
 
+skip_files = (
+    # this files produces doctest errors under py3k
+    # as we need it only for 2.5, just skip copying it
+    'sympy/parsing/ast_parser_python25.py',
+    'bin/use2to3',
+    )
+
 # generate the relevant txt files
 # most of them should be in this directory:
-for root, dirs, files in os.walk('./doc/src/modules'):
+for root, dirs, files in os.walk('doc/src/modules'):
     # NOTE: this will consider mpmath-related files relevant, but it doesn't matter
     for filename in fnmatch.filter(files, '*.txt'):
         relevant_txt_files.append(os.path.join(root, filename))
 
 # some files aren't in /doc/src/modules, add them explicitly
-relevant_txt_files.append('./doc/src/tutorial.txt')
-relevant_txt_files.append('./doc/src/tutorial.bg.txt')
-relevant_txt_files.append('./doc/src/tutorial.cs.txt')
-relevant_txt_files.append('./doc/src/tutorial.ru.txt')
-relevant_txt_files.append('./doc/src/gotchas.txt')
-relevant_txt_files.append('./doc/src/guide.txt')
-relevant_txt_files.append('./doc/src/python-comparisons.txt')
+relevant_txt_files.append('doc/src/tutorial.txt')
+relevant_txt_files.append('doc/src/tutorial.bg.txt')
+relevant_txt_files.append('doc/src/tutorial.cs.txt')
+relevant_txt_files.append('doc/src/tutorial.ru.txt')
+relevant_txt_files.append('doc/src/gotchas.txt')
+relevant_txt_files.append('doc/src/guide.txt')
+relevant_txt_files.append('doc/src/python-comparisons.txt')
 
 # some files need 2to3, but don't have the .py suffix
-relevant_no_extension = ('doctest', 'isympy', 'test', 'test_import', 'test_isolated')
+relevant_no_extension = ('bin/doctest', 'bin/isympy', 'bin/test',
+                         'bin/test_import', 'bin/test_isolated')
 
-# walk the tree and copy over files as necessary
-for root, dirs, files in os.walk('.'):
-    for pattern in skip_dirs:
-        for directory in fnmatch.filter(dirs, pattern):
-            dirs.remove(directory)
-    for pattern in skip_files:
-        for filename in fnmatch.filter(files, pattern):
-            files.remove(filename)
-    for directory in dirs:
-        dstdir = os.path.normpath(os.path.join(destination, root, directory))
+# ask git for a list of tracked files
+try: 
+    files = check_output(['git', 'ls-files'])
+    filenames = files.decode('utf-8').split('\n')
+    filenames.pop() # the last element is an empty string, delete it
+
+    for filename in skip_files:
+        filenames.remove(filename)
+
+    for filename in filenames:
+        src = filename
+        dst = os.path.normpath(os.path.join(destination, filename))
+
+        dstdir = os.path.split(dst)[0]
+        if "mpmath" in dstdir:
+            continue
         if not os.path.exists(dstdir):
             os.makedirs(dstdir)
-    for filename in files:
-        src = os.path.join(root, filename)
-        dst = os.path.normpath(os.path.join(destination, root, filename))
+
         if os.path.isfile(dst):
             if os.path.getmtime(src) - os.path.getmtime(dst) < 1:
                 # the file hasn't been modified since the last run, so skip it
@@ -105,6 +100,9 @@ for root, dirs, files in os.walk('.'):
                 modified_txt_files.append(dst)
         elif filename in relevant_no_extension:
             modified_files.append(dst)
+except CalledProcessError:
+    print("git not found, exiting...")
+    exit(1)
 
 
 # arguments to call 2to3 with
