@@ -3,8 +3,6 @@ from sympy.combinatorics.graycode import GrayCode
 
 from sympy.core.compatibility import bin, combinations
 
-import itertools
-
 class Subset(Basic):
     """
     Represents a basic subset object.
@@ -203,7 +201,6 @@ class Subset(Basic):
         43
         """
         if self._rank_lex == None:
-            superset_index = list(xrange(self.superset_size))
             subset_index = [self.superset.index(j) for j in self.subset]
             def ranklex(self, subset_index, i, n):
                 if subset_index == [] or i > n:
