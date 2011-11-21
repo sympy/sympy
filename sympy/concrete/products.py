@@ -80,7 +80,7 @@ class Product(Expr):
             return self
 
     def _eval_product(self, a, n, term):
-        from sympy import summation, Sum
+        from sympy import summation
         k = self.index
 
         if not term.has(k):
