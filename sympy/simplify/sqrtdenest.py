@@ -62,7 +62,9 @@ def denester(nested):
         return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
     else:
         a, b, r, R = Wild('a'), Wild('b'), Wild('r'), None
-        values = filter(None, [expr.match(sqrt(a + b * sqrt(r))) for expr in nested])
+        values = [expr.match(sqrt(a + b * sqrt(r))) for expr in nested]
+        if any(v is None for v in values): # this pattern is not recognized
+            return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
         for v in values:
             if r in v: #Since if b=0, r is not defined
                 if R is not None:
@@ -70,7 +72,7 @@ def denester(nested):
                 else:
                     R = v[r]
         if R is None:
-            return nested[-1], [0]*len(nested) # return the radicand from the previous invocation.
+            return nested[-1], [0]*len(nested) #return the radicand from the previous invocation.
         d, f = denester([sqrt((v[a]**2).expand()-(R*v[b]**2).expand()) for v in values] + [sqrt(R)])
         if not any(f[i] for i in range(len(nested))): #If f[i]=0 for all i < len(nested)
             v = values[-1]
