@@ -1,7 +1,7 @@
 from collections import deque
 from random import randint
 
-from sympy import Mul, Basic
+from sympy import Mul, Basic, Number
 from sympy.matrices import Matrix, eye
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, gate_simp)
@@ -10,7 +10,6 @@ from sympy.physics.quantum.operator import (UnitaryOperator,
         HermitianOperator)
 
 __all__ = [
-    'permutations_recursive',
     'generate_gate_rules',
     'GateIdentity',
     'is_scalar_matrix',
@@ -20,49 +19,7 @@ __all__ = [
     'random_identity_search'
 ]
 
-def permutations_recursive(elements, recurse_pt, dist_from_pt, max_length):
-    # Possibly remove -
-    # Have not proved that permutations of an identity with all Unitary or
-    # Hermitian gates produce the same scalar matrix 
-
-    # COULD BE IMPROVED
-    # This recursive algorithm gives all the permutations
-    # regardless of repeats in the sequence.
-    # For example, elements = (X(0), X(0)) will produce
-    # [(X(0), X(0)), (X(0), X(0))]
-    # Could potentially return a set so that it's a unique permutation
-
-    seq = list(elements)
-
-    invalid_args = (elements == [] or
-                    max_length <= 0 or
-                    recurse_pt < 0 or
-                    max_length > len(elements) or
-                    dist_from_pt > max_length or
-                    dist_from_pt < 0)
-
-    if (invalid_args):
-        return []
-
-    if (dist_from_pt == max_length):
-        return [seq[recurse_pt : recurse_pt + max_length]]
-
-    permutations = []
-
-    for i in range(recurse_pt + dist_from_pt, len(elements)):
-        current_permutes = permutations_recursive(seq, recurse_pt,
-                               dist_from_pt + 1, max_length)
-        permutations = permutations + current_permutes
-
-        if (i + 1 < len(elements)):
-            temp_gate = seq[i + 1]
-            for j in reversed(range(recurse_pt + dist_from_pt, i + 1)):
-                seq[j + 1] = seq[j]
-            seq[recurse_pt + dist_from_pt] = temp_gate
-
-    return permutations
-
-def generate_gate_rules(gate_seq):
+def generate_gate_rules(*gate_seq):
     '''Returns a list of equivalent gate identities'''
 
     # In general, may use the four operations (LL, LR, RL, RR)
@@ -170,17 +127,16 @@ def generate_gate_rules(gate_seq):
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value."""
 
-    def __new__(cls, circuit):
-        # circuit should be a tuple
-        obj = Basic.__new__(cls, circuit)
-        obj._circuit = circuit
-        obj._gate_rules = generate_gate_rules(circuit)
+    def __new__(cls, *args):
+        # args should be a tuple - a variable length argument list
+        obj = Basic.__new__(cls, *args)
+        obj._gate_rules = generate_gate_rules(*args)
 
         return obj
 
     @property
     def circuit(self):
-        return self._circuit
+        return self.args
 
     @property
     def gate_rules(self):
@@ -228,7 +184,7 @@ def construct_matrix_list(numqubits):
 
     return matrix_list
 
-def is_scalar_matrix(matrix):
+def is_scalar_matrix_old(matrix):
     """Checks if given scipy.sparse matrix is a scalar matrix."""
 
     if (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1])):
@@ -236,6 +192,32 @@ def is_scalar_matrix(matrix):
         if (diag.count(diag[0]) == len(diag)):
             return True
     return False
+
+def is_scalar_matrix(circuit, numqubits):
+    '''Checks if a given circuit, in matrix form, is equivalent to
+       a scalar value.'''
+
+    # A sparse matrix is faster but there's a few problems with it,
+    # such as not being able to determine H(0)*H(0) is the identity matrix.
+
+    matrix_version = represent(Mul(*circuit), nqubits=numqubits)
+
+    # In some cases, represent returns a 1D scalar value in place
+    # of a multi-dimensional scalar matrix
+    if (isinstance(matrix_version, Number)):
+        return True
+
+    # If represent returns a matrix, check if the matrix is diagonal
+    # and if every item along the diagonal is the same
+    else:
+        # Added up the diagonal elements
+        matrix_trace = matrix_version.trace()
+        # Divide the trace by the first element in the matrix
+        adjusted_matrix_trace = matrix_trace/matrix_version[0]
+        # The matrix is scalar if it's diagonal and the adjusted trace
+        # value is equal to 2^numqubits
+        return (matrix_version.is_diagonal() and
+                adjusted_matrix_trace == pow(2, numqubits))
 
 def is_degenerate(identity_set, gate_identity):
     # For now, just iteratively go through the set and check if the current
@@ -254,15 +236,10 @@ def is_reducible(circuit, numqubits, begin, end):
     for ndx in reversed(range(begin, end)):
         next_gate = circuit[ndx]
         current_circuit = (next_gate,) + current_circuit
-        matrix_version = represent(Mul(*current_circuit), nqubits=numqubits,
-                                       format='scipy.sparse')
 
-        if (isinstance(matrix_version, int)):
-                return True
-
-        # If a matrix is equivalent to a scalar value is found
-        elif (is_scalar_matrix(matrix_version)):
-                return True
+        # If a circuit as a matrix is equivalent to a scalar value
+        if (is_scalar_matrix(current_circuit, numqubits)):
+            return True
 
     return False
 
@@ -275,7 +252,7 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
     if (max_depth == 0):
         max_depth = len(gate_list)
 
-    # Start with an empty sequence (implicit contains an IdentityGate(0))
+    # Start with an empty sequence (implicitly contains an IdentityGate)
     queue = deque([()])
 
     # Create an empty set of gate identities
@@ -287,27 +264,22 @@ def bfs_identity_search(gate_list, numqubits, max_depth=0):
 
         for next_gate in gate_list:
             new_circuit = current_circuit + (next_gate,)
-            matrix_version = represent(Mul(*new_circuit), nqubits=numqubits,
-                                       format='scipy.sparse')
+            #matrix_version = represent(Mul(*new_circuit), nqubits=numqubits,
+            #                           format='scipy.sparse')
+
+            # Determines if a (strict) subcircuit is a scalar matrix
+            circuit_reducible = is_reducible(new_circuit, numqubits, 
+                                             1, len(new_circuit))
 
             # In many cases when the matrix is a scalar value,
             # the evaluated matrix will actually be an integer          
-            if (isinstance(matrix_version, int) and
-                not is_degenerate(ids, new_circuit)):
-                # When adding a gate identity, remove the
-                # identity gate at the beginning of the tuple
-                ids.add(GateIdentity(new_circuit))
-
-            # If a matrix is equivalent to a scalar value is found
-            elif (not isinstance(matrix_version, int) and
-                is_scalar_matrix(matrix_version) and
-                not is_degenerate(ids, new_circuit)):
-                # When adding a gate identity, remove the
-                # identity gate at the beginning of the tuple
-                ids.add(GateIdentity(new_circuit))
+            if (is_scalar_matrix(new_circuit, numqubits) and
+                not is_degenerate(ids, new_circuit) and
+                not circuit_reducible):
+                ids.add(GateIdentity(*new_circuit))
 
             elif (len(new_circuit) < max_depth and
-                not is_reducible(new_circuit, numqubits, 1, len(new_circuit))):
+                not circuit_reducible):
                 queue.append(new_circuit)
 
     return ids
