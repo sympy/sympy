@@ -198,13 +198,7 @@ class Add(AssocOp):
 
     @classmethod
     def class_key(cls):
-        """
-        Nice order of classes
-        
-        **Example**
-            >>> (7 + 9*x).class_key()
-            (3, 1, Add)
-        """
+        """Nice order of classes"""
         return 3, 1, cls.__name__
 
     @cacheit
@@ -215,10 +209,9 @@ class Add(AssocOp):
             y is a tuple in the form of (num * var, num * var, ....) where num is the coefficients of all things multipled by var
 
         **Examples**
+            >>> from sympy.abc import x, y
             >>> (7*x + 8*y*x + 19*x + 17*y + 7).as_coeff_add()
             (7, (8*x*y, 17*y, 26*x))
-            >>> (7*x + 8*y + 19*x + 17*y + 7 + 9).as_coeff_add()
-            (16, (25*y, 26*x))
         """
         if deps:
             l1 = []
@@ -453,13 +446,6 @@ class Add(AssocOp):
     def as_real_imag(self, deep=True):
         """
         returns a tuple represeting a complex numbers
-            
-            **Examples**
-
-            >>> (7 + 9*I).as_real_imag()
-            (7, 9)
-            >>> Add(10*I + 7).as_real_imag()
-            (7, 10)
         """
         sargs, terms = self.args, []
         re_part, im_part = [], []
