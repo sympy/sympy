@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Dummy, Equality, Interval)
+                        oo, Tuple, Interval)
 
 from sympy.core.symbol import Dummy
 from sympy.core.compatibility import is_sequence
@@ -10,7 +10,7 @@ from sympy.integrals.risch import heurisch
 from sympy.utilities import xthreaded, flatten
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
-from sympy.functions import Piecewise, sign, sqrt
+from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
