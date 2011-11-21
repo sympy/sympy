@@ -17,21 +17,14 @@ def load(s):
     pComment = re.compile('c.*')
     pStats = re.compile('p\s*cnf\s*(\d*)\s*(\d*)')
 
-
-    numVars = 0
-    numClauses = 0
-
     while len(lines) > 0:
         line = lines.pop(0)
 
         # Only deal with lines that aren't comments
         if not pComment.match(line):
             m = pStats.match(line)
-            if m:
-                numVars = int(m.group(1))
-                numClauses = int(m.group(2))
 
-            else:
+            if not m:
                 nums = line.rstrip('\n').split(' ')
                 list = []
                 for lit in nums:
