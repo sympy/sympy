@@ -69,24 +69,40 @@ def change_mul(node, x):
 
 
 def deltaintegrate(f, x):
-    """The idea for integration is the following:
-    -If we are dealing with a DiracDelta expression, i.e.:
-    DiracDelta(g(x)), we try to simplify it.
-    If we could simplify it, then we integrate the resulting expression.
-    We already know we can integrate a simplified expression, because only
-    simple DiracDelta expressions are involved.
-    If we couldn't simplify it, there are two cases:
-    1) The expression is a simple expression, then we return the integral
-    Taking care if we are dealing with a Derivative or with a proper DiracDelta
-    2) The expression is not simple(i.e. DiracDelta(cos(x))), we can do nothing at all
+    """
+    deltaintegrate(f, x)
 
-    -If the node is a multiplication node having a DiracDelta term
-    First we expand it.
-    If the expansion did work, the we try to integrate the expansion
-    If not, we try to extract a simple DiracDelta term, then we have two cases
-    1)We have a simple DiracDelta term, so we return the integral
-    2)We didn't have a simple term, but we do have an expression with simplified
-    DiracDelta terms, so we integrate this expression
+    The idea for integration is the following:
+
+    - If we are dealing with a DiracDelta expression, i.e. DiracDelta(g(x)),
+      we try to simplify it.
+
+      If we could simplify it, then we integrate the resulting expression.
+      We already know we can integrate a simplified expression, because only
+      simple DiracDelta expressions are involved.
+
+      If we couldn't simplify it, there are two cases:
+
+      1) The expression is a simple expression: we return the integral,
+         taking care if we are dealing with a Derivative or with a proper
+         DiracDelta.
+
+      2) The expression is not simple (i.e. DiracDelta(cos(x))): we can do
+         nothing at all.
+
+    - If the node is a multiplication node having a DiracDelta term:
+
+      First we expand it.
+
+      If the expansion did work, the we try to integrate the expansion.
+
+      If not, we try to extract a simple DiracDelta term, then we have two
+      cases:
+
+      1) We have a simple DiracDelta term, so we return the integral.
+
+      2) We didn't have a simple term, but we do have an expression with
+         simplified DiracDelta terms, so we integrate this expression.
 
     """
     if not f.has(DiracDelta):
