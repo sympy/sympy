@@ -71,6 +71,12 @@ def test_exp_infinity():
     assert exp(I*oo) == nan
     assert exp(y*I*oo) == nan
 
+def test_exp_subs():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert (exp(3*log(x), evaluate=False)).subs(x**3,y**3) == x**3
+    assert (exp(3*log(x), evaluate=False)).subs(x**2,5) == x**3
+
 
 def test_log_values():
     assert log(nan) == nan
