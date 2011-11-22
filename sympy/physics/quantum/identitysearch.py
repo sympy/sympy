@@ -21,7 +21,7 @@ __all__ = [
 ]
 
 def generate_gate_rules(*gate_seq):
-    '''Returns a list of equivalent gate identities'''
+    """Returns a list of equivalent gate identities"""
 
     # In general, may use the four operations (LL, LR, RL, RR)
     # to find equivalent gate identities.
@@ -199,8 +199,8 @@ def is_scalar_matrix_old(matrix):
     return False
 
 def is_scalar_matrix(circuit, numqubits):
-    '''Checks if a given circuit, in matrix form, is equivalent to
-       a scalar value.'''
+    """Checks if a given circuit, in matrix form, is equivalent to
+       a scalar value."""
 
     # A sparse matrix is faster but there's a few problems with it,
     # such as not being able to determine H(0)*H(0) is the identity matrix.
@@ -233,8 +233,8 @@ def is_degenerate(identity_set, gate_identity):
     return False
 
 def is_reducible(circuit, numqubits, begin, end):
-    '''Determines if a subcircuit in some range is reducible
-       to a scalar value.'''
+    """Determines if a subcircuit in some range is reducible
+       to a scalar value."""
 
     current_circuit = ()
     # Start from the rightmost gate and go down to almost the leftmost gate

@@ -1,5 +1,5 @@
 from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
-        IdentityGate, gate_simp)
+        IdentityGate, CGate, gate_simp)
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.identitysearch import *
 from sympy.physics.quantum.dagger import Dagger
@@ -18,12 +18,20 @@ def test_generate_gate_rules():
     assert generate_gate_rules(*gate_seq) == gate_rules
 
     h = H(0)
-    h_dag = Dagger(h)
     gate_seq = (x, y, z, h)
     gate_rules = [(x, y, z, h), (y, z, h, x),
-                  (h, x, y, z), (h_dag, z, y, x),
-                  (z, y, x, h_dag), (y, x, h_dag, z),
-                  (z, h, x, y) ,(x, h_dag, z, y)]
+                  (h, x, y, z), (h, z, y, x),
+                  (z, y, x, h), (y, x, h, z),
+                  (z, h, x, y) ,(x, h, z, y)]
+    assert generate_gate_rules(*gate_seq) == gate_rules
+
+    gate_seq = (x, y, x, y)
+    gate_rules = [(x, y, x, y), (y, x, y, x)]
+    assert generate_gate_rules(*gate_seq) == gate_rules
+
+    cgate_y = CGate((1,), y)
+    gate_seq = (y, cgate_y, y, cgate_y)
+    gate_rules = [(y, cgate_y, y, cgate_y), (cgate_y, y, cgate_y, y)]
     assert generate_gate_rules(*gate_seq) == gate_rules
 
 def test_is_scalar_matrix():
@@ -54,75 +62,106 @@ def test_is_scalar_matrix():
     assert is_scalar_matrix(hh_circuit, numqubits) == True
 
 def test_is_degenerate():
-    gate_id = GateIdentity(X(0), Y(0), Z(0))
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
+
+    gate_id = GateIdentity(x, y, z)
     ids = set([gate_id])
 
-    another_id = (Z(0), Y(0), X(0))
+    another_id = (z, y, x)
     assert is_degenerate(ids, another_id) == True
 
 def test_is_reducible():
     nqubits = 2
 
-    circuit = (X(0), Y(0), Y(0))
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
+
+    circuit = (x, y, y)
     assert is_reducible(circuit, nqubits, 1, 3) == True
 
-    circuit = (X(0), Y(0), X(0))
+    circuit = (x, y, x)
     assert is_reducible(circuit, nqubits, 1, 3) == False
 
-    circuit = (X(0), Y(0), Y(0), X(0))
+    circuit = (x, y, y, x)
     assert is_reducible(circuit, nqubits, 0, 4) == True
 
-    circuit = (X(0), Y(0), Y(0), X(0))
+    circuit = (x, y, y, x)
     assert is_reducible(circuit, nqubits, 1, 3) == True
+
+    circuit = (x, y, z, y, y)
+    assert is_reducible(circuit, nqubits, 1, 5) == True
 
 def test_bfs_identity_search():
     assert bfs_identity_search([], 1) == set()
 
-    gate_list = [X(0)]
-    id_set = set([GateIdentity(X(0), X(0))])
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
+
+    gate_list = [x]
+    id_set = set([GateIdentity(x, x)])
     assert bfs_identity_search(gate_list, 1, 2) == id_set
 
     # Set should not contain degenerate quantum circuits
-    gate_list = [X(0), Y(0), Z(0)]
-    id_set = set([GateIdentity(X(0), X(0)), 
-                  GateIdentity(Y(0), Y(0)),
-                  GateIdentity(Z(0), Z(0)),
-                  GateIdentity(X(0), Y(0), Z(0))])
+    gate_list = [x, y, z]
+    id_set = set([GateIdentity(x, x), 
+                  GateIdentity(y, y),
+                  GateIdentity(z, z),
+                  GateIdentity(x, y, z)])
     assert bfs_identity_search(gate_list, 1) == id_set
 
-    id_set = set([GateIdentity(X(0), X(0)),
-                  GateIdentity(Y(0), Y(0)),
-                  GateIdentity(Z(0), Z(0)),
-                  GateIdentity(X(0), Y(0), Z(0)),
-                  GateIdentity(X(0), Y(0), X(0), Y(0)),
-                  GateIdentity(X(0), Z(0), X(0), Z(0)),
-                  GateIdentity(Y(0), Z(0), Y(0), Z(0))])
+    id_set = set([GateIdentity(x, x),
+                  GateIdentity(y, y),
+                  GateIdentity(z, z),
+                  GateIdentity(x, y, z),
+                  GateIdentity(x, y, x, y),
+                  GateIdentity(x, z, x, z),
+                  GateIdentity(y, z, y, z)])
     assert bfs_identity_search(gate_list, 1, 4) == id_set
     assert bfs_identity_search(gate_list, 1, 5) == id_set
 
-    gate_list = [X(0), Y(0), Z(0), H(0)]
-    id_set = set([GateIdentity(X(0), X(0)),
-                  GateIdentity(Y(0), Y(0)),
-                  GateIdentity(Z(0), Z(0)),
-                  GateIdentity(H(0), H(0)),
-                  GateIdentity(X(0), Y(0), Z(0)),
-                  GateIdentity(X(0), Y(0), X(0), Y(0)),
-                  GateIdentity(X(0), Z(0), X(0), Z(0)),
-                  GateIdentity(X(0), H(0), Z(0), H(0)),
-                  GateIdentity(Y(0), Z(0), Y(0), Z(0)),
-                  GateIdentity(Y(0), H(0), Y(0), H(0))])
+    h = H(0)
+    gate_list = [x, y, z, h]
+    id_set = set([GateIdentity(x, x),
+                  GateIdentity(y, y),
+                  GateIdentity(z, z),
+                  GateIdentity(h, h),
+                  GateIdentity(x, y, z),
+                  GateIdentity(x, y, x, y),
+                  GateIdentity(x, z, x, z),
+                  GateIdentity(x, h, z, h),
+                  GateIdentity(y, z, y, z),
+                  GateIdentity(y, h, y, h)])
     assert bfs_identity_search(gate_list, 1) == id_set
 
-    id_set = set([GateIdentity(X(0), X(0)),
-                  GateIdentity(Y(0), Y(0)),
-                  GateIdentity(Z(0), Z(0)),
-                  GateIdentity(H(0), H(0)),
-                  GateIdentity(X(0), Y(0), Z(0)),
-                  GateIdentity(X(0), Y(0), X(0), Y(0)),
-                  GateIdentity(X(0), Z(0), X(0), Z(0)),
-                  GateIdentity(X(0), H(0), Z(0), H(0)),
-                  GateIdentity(Y(0), Z(0), Y(0), Z(0)),
-                  GateIdentity(Y(0), H(0), Y(0), H(0)),
-                  GateIdentity(Z(0), H(0), X(0), H(0))])
-    #assert bfs_identity_search(gate_list, 1, 5) == id_set
+    id_set = set([GateIdentity(x, x),
+                  GateIdentity(y, y),
+                  GateIdentity(z, z),
+                  GateIdentity(h, h),
+                  GateIdentity(x, y, z),
+                  GateIdentity(x, y, x, y),
+                  GateIdentity(x, z, x, z),
+                  GateIdentity(x, h, z, h),
+                  GateIdentity(y, z, y, z),
+                  GateIdentity(y, h, y, h),
+                  GateIdentity(x, y, h, x, h),
+                  GateIdentity(x, z, h, y, h),
+                  GateIdentity(y, z, h, z, h)])
+    assert bfs_identity_search(gate_list, 1, 5) == id_set
 
+    cnot = CNOT(1,0)
+    gate_list = [x, cnot]
+    id_set = set([GateIdentity(x, x),
+                  GateIdentity(cnot, cnot),
+                  GateIdentity(x, cnot, x, cnot)])
+    assert bfs_identity_search(gate_list, 2, 4) == id_set
+
+    cgate_x = CGate((1,), x)
+    gate_list = [x, cgate_x]
+    id_set = set([GateIdentity(x, x),
+                  GateIdentity(cgate_x, cgate_x),
+                  GateIdentity(x, cgate_x, x, cgate_x)])
+    assert bfs_identity_search(gate_list, 2, 4) == id_set
