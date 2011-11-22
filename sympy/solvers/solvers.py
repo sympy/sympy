@@ -185,7 +185,7 @@ def checksol(f, symbol, sol=None, **flags):
             # with a simplified solution
             val = f.subs(sol)
             if flags.get('force', True):
-                val = posify(val)[0]
+                val, reps = posify(val)
                 # expansion may work now, so try again and check
                 exval = expand_mul(expand_multinomial(val))
                 if exval.is_number or not exval.free_symbols:
@@ -222,8 +222,9 @@ def checksol(f, symbol, sol=None, **flags):
             if none is False:
                 return False
             try:
-                nz = val.is_nonzero
-            except Exception: # any problem at all: recursion, inconsistency of facts, etc...
+                # don't do a zero check with the positive assumptions in place
+                nz = val.subs(reps).is_nonzero
+            except: # any problem at all: recursion, inconsistency of facts, etc...
                 nz = None
             if nz is not None:
                 if val.is_number and val.has(LambertW): # issue 2574: it may be True even when False
