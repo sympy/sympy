@@ -426,7 +426,7 @@ class CGate(Gate):
     #-------------------------------------------------------------------------
 
     def _eval_dagger(self):
-        if (isinstance(self.gate, HermitianOperator)):
+        if (self.gate == self.gate._eval_dagger()):
             return self
         else:
             return self._eval_inverse()
