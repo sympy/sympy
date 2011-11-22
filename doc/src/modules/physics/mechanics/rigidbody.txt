@@ -1,0 +1,9 @@
+==========
+Rigid Body
+==========
+
+Docstrings
+==========
+
+.. autoclass:: sympy.physics.mechanics.RigidBody
+   :members:

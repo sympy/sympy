@@ -1,0 +1,9 @@
+=====
+Point
+=====
+
+Docstrings
+==========
+
+.. autoclass:: sympy.physics.mechanics.Point
+   :members:

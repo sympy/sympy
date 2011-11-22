@@ -1,0 +1,9 @@
+========
+Particle
+========
+
+Docstrings
+==========
+
+.. autoclass:: sympy.physics.mechanics.Particle
+   :members:

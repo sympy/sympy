@@ -32,6 +32,9 @@ Contents
     kinematics.txt
     masses.txt
     kane.txt
+    particle.txt
+    point.txt
+    rigidbody.txt
     examples.txt
     advanced.txt
     reference.txt
