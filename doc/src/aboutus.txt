@@ -145,6 +145,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Miha Marolt: Add numpydoc extension to the Sphinx docs, fix ode_order
 #. Luis Garcia: update examples in symarry
 #. Matt Rajca: Code quality fixes
+#. David Li: Documentation fixes
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
