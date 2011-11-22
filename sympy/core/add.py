@@ -3,8 +3,6 @@ from basic import Basic
 from singleton import S
 from operations import AssocOp
 from cache import cacheit
-from numbers import ilcm
-from expr import Expr
 from numbers import ilcm, igcd
 from collections import defaultdict
 
@@ -654,7 +652,6 @@ class Add(AssocOp):
 
         """
 
-        cont = S.One
         terms = []
         inf = False
         for a in self.args:
