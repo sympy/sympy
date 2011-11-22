@@ -1,5 +1,5 @@
 from sympy.core import Symbol, S, Rational, Integer
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy import I, sqrt
 
 def test_symbol_unset():
@@ -438,7 +438,6 @@ def test_issue1723():
 
 def test_hash_vs_typeinfo():
     """seemingly different typeinfo, but in fact equal"""
-    x = Symbol('x')
 
     # the following two are semantically equal
     x1= Symbol('x', even=True)

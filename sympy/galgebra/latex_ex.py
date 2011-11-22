@@ -8,7 +8,7 @@ import sys
 
 import os,types,StringIO
 
-from sympy.core import S, C, Basic, Symbol, Mul
+from sympy.core import S, C, Basic, Symbol
 from sympy.printing.printer import Printer
 from sympy.simplify import fraction
 import re as regrep
@@ -17,7 +17,7 @@ import sympy.galgebra.GA
 #import sympy.galgebra.OGA
 import numpy
 
-from sympy.core.compatibility import cmp_to_key, cmp
+from sympy.core.compatibility import cmp_to_key
 from sympy.utilities import default_sort_key
 
 def debug(txt):
@@ -56,9 +56,6 @@ def find_executable(executable, path=None):
                     return f
     else:
         return None
-
-def debug(tstr):
-    return
 
 def len_cmp(str1,str2):
     return(len(str2)-len(str1))

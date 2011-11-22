@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Add 
+from sympy.core import S, C, Add
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
