@@ -2,7 +2,7 @@
 
 from assumptions import WithAssumptions
 from cache import cacheit
-from core import BasicType, C
+from core import BasicType
 from sympify import _sympify, sympify, SympifyError
 from compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
