@@ -1,7 +1,7 @@
 from sympy.core.facts import deduce_alpha_implications, apply_beta_to_alpha_route, \
         rules_2prereq, split_rules_tt_tf_ft_ff, FactRules
 from sympy.core.logic import And
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 T = True
 F = False

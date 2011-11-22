@@ -1,4 +1,4 @@
-from sympy.core import Rational, Symbol, Basic, S, Float, Integer
+from sympy.core import Rational, Symbol, S, Float, Integer
 from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_rational():
@@ -29,10 +29,6 @@ def test_negative_real():
 def test_expand():
     x = Symbol('x')
     assert (2**(-1-x)).expand() == Rational(1,2)*2**(-x)
-
-def test_issue153():
-    #test that is runs:
-    a = sqrt(2*(1+sqrt(2)))
 
 def test_issue350():
     #test if powers are simplified correctly
@@ -92,7 +88,6 @@ def test_issue1263():
     nneg=-1
     dpos=2-sqrt(3)
     dneg=1-sqrt(3)
-    I = S.ImaginaryUnit
     assert dpos > 0 and dneg < 0 and npos > 0 and nneg < 0
     # pos or neg integer
     eq=eqn(npos, dpos, 2);assert eq.is_Pow and eq.as_numer_denom() == (1, dpos**2)

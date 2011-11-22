@@ -125,7 +125,7 @@ def dotest(s):
             s(x,y)
 
 def test_basic():
-    def s(a,b):
+    def j(a,b):
         x = a
         x = +a
         x = -a
@@ -134,7 +134,7 @@ def test_basic():
         x = a*b
         x = a/b
         x = a**b
-    dotest(s)
+    dotest(j)
 
 def test_ibasic():
     def s(a,b):

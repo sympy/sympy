@@ -200,7 +200,6 @@ class Add(AssocOp):
     def class_key(cls):
         """
         Nice order of classes
-        
         **Example**
             >>> (7 + 9*x).class_key()
             (3, 1, Add)
@@ -453,7 +452,6 @@ class Add(AssocOp):
     def as_real_imag(self, deep=True):
         """
         returns a tuple represeting a complex numbers
-            
             **Examples**
 
             >>> (7 + 9*I).as_real_imag()
