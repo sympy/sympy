@@ -3,6 +3,8 @@
 www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 
 """
+from __future__ import with_statement
+
 from sympy.core import Symbol
 from sympy.logic.boolalg import And, Or
 import re
@@ -42,5 +44,7 @@ def load(s):
     return And(*clauses)
 
 def load_file(location):
-    s = open(location).read()
+    with open(location) as f:
+        s = f.read()
+
     return load(s)

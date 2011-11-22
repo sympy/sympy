@@ -1,5 +1,7 @@
 #latex_ex.py
 
+from __future__ import with_statement
+
 import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')
@@ -1135,9 +1137,9 @@ def xdvi(filename='tmplatex.tex',debug=False):
             except StopIteration:
                 break
     body = LatexPrinter.preamble+body+LatexPrinter.postscript
-    latex_file = open(filename,'w')
-    latex_file.write(body)
-    latex_file.close()
+
+    with open(filename,'w') as latex_file:
+        latex_file.write(body)
 
     latex_str = None
     xdvi_str  = None

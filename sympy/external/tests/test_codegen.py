@@ -22,6 +22,7 @@
 # is somewhere in the path and that it can compile ANSI C code.
 
 
+from __future__ import with_statement
 
 from sympy import symbols
 from sympy.utilities.pytest import skip
@@ -174,14 +175,15 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
         })
 
     if language == "F95":
-        f = open("main.f90", "w")
+        f_name = "main.f90"
     elif language == "C":
-        f = open("main.c", "w")
+        f_name = "main.c"
     else:
         raise NotImplemented(
                 "FIXME: filename extension unknown for language: %s"%language)
-    f.write(main_template[language] % {'statements': "".join(test_strings)})
-    f.close()
+
+    with open(f_name, "w") as f:
+        f.write(main_template[language] % {'statements': "".join(test_strings)})
 
     # 4) Compile and link
     compiled = try_run(commands)
