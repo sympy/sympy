@@ -8,6 +8,7 @@ from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.operator import (UnitaryOperator,
         HermitianOperator)
+from sympy.physics.quantum.dagger import Dagger
 
 __all__ = [
     'generate_gate_rules',
@@ -55,13 +56,20 @@ def generate_gate_rules(*gate_seq):
         rite = rule[1]
         ops = rule[2]
 
+        if (len(left) > 0):
+            ll_op = left[0]
+            lr_op = left[len(left)-1]
+
+        if (len(rite) > 0):
+            rl_op = rite[0]
+            rr_op = rite[len(rite)-1]
+
         # Do a LL, if possible
-        if (len(left) > 0 and isinstance(left[0], UnitaryOperator)
-            and isinstance(left[0], HermitianOperator)):
+        if (len(left) > 0 and Dagger(ll_op)*ll_op == 1):
             # Get the new left side w/o the leftmost gate
             new_left = left[1:len(left)]
             # Add the leftmost gate to the left position on the right side
-            new_rite = (left[0],) + rite
+            new_rite = (Dagger(ll_op),) + rite
 
             new_rule = (new_left, new_rite)
             # If the left side is empty (left side is scalar)
@@ -75,12 +83,11 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a LR, if possible
-        if (len(left) > 0 and isinstance(left[len(left)-1], UnitaryOperator)
-            and isinstance(left[len(left)-1], HermitianOperator)):
+        if (len(left) > 0 and Dagger(lr_op)*lr_op == 1):
             # Get the new left side w/o the rightmost gate
             new_left = left[0:len(left)-1]
             # Add the rightmost gate to the right position on the right side
-            new_rite = rite + (left[len(left)-1],)
+            new_rite = rite + (Dagger(lr_op),)
 
             new_rule = (new_left, new_rite)
             if (len(new_left) == 0 and new_rite not in gate_rules):
@@ -91,12 +98,11 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a RL, if possible
-        if (len(rite) > 0 and isinstance(rite[0], UnitaryOperator)
-            and isinstance(rite[0], HermitianOperator)):
+        if (len(rite) > 0 and Dagger(rl_op)*rl_op == 1):
             # Get the new right side w/o the leftmost gate
             new_rite = rite[1:len(rite)]
             # Add the leftmost gate to the left position on the left side
-            new_left = (rite[0],) + left
+            new_left = (Dagger(rl_op),) + left
 
             new_rule = (new_left, new_rite)
             if (len(new_rite) == 0 and new_left not in gate_rules):
@@ -107,12 +113,11 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a RR, if possible
-        if (len(rite) > 0 and isinstance(rite[len(rite)-1], UnitaryOperator)
-            and isinstance(rite[len(rite)-1], HermitianOperator)):
+        if (len(rite) > 0 and Dagger(rr_op)*rr_op == 1):
             # Get the new right side w/o the rightmost gate
             new_rite = rite[0:len(rite)-1]
             # Add the rightmost gate to the right position on the right side
-            new_left = left + (rite[len(rite)-1],)
+            new_left = left + (Dagger(rr_op),)
 
             new_rule = (new_left, new_rite)
             if (len(new_rite) == 0 and new_left not in gate_rules):

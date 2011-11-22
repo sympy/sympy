@@ -2,21 +2,29 @@ from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
         IdentityGate, gate_simp)
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.identitysearch import *
+from sympy.physics.quantum.dagger import Dagger
 
 def test_generate_gate_rules():
-    assert generate_gate_rules(X(0)) == [(X(0),)]
-    assert generate_gate_rules(X(0), Y(0)) == [(X(0), Y(0)), (Y(0), X(0))]
+    x = X(0)
+    y = Y(0)
+    z = Z(0)
 
-    gate_seq = (X(0), Y(0), Z(0))
-    gate_rules = [(X(0), Y(0), Z(0)), (Y(0), Z(0), X(0)),
-                  (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0)),
-                  (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
+    assert generate_gate_rules(x) == [(x,)]
+    assert generate_gate_rules(x, y) == [(x, y), (y, x)]
+
+    gate_seq = (x, y, z)
+    gate_rules = [(x, y, z), (y, z, x), (z, x, y), (z, y, x),
+                  (y, x, z), (x, z, y)]
     assert generate_gate_rules(*gate_seq) == gate_rules
 
-    gate_seq = (X(0), Y(0), Z(0), H(0))
-    gate_rules = [(X(0), Y(0), Z(0), H(0)), (Y(0), Z(0), X(0)),
-                  (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0)),
-                  (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
+    h = H(0)
+    h_dag = Dagger(h)
+    gate_seq = (x, y, z, h)
+    gate_rules = [(x, y, z, h), (y, z, h, x),
+                  (h, x, y, z), (h_dag, z, y, x),
+                  (z, y, x, h_dag), (y, x, h_dag, z),
+                  (z, h, x, y) ,(x, h_dag, z, y)]
+    assert generate_gate_rules(*gate_seq) == gate_rules
 
 def test_is_scalar_matrix():
     numqubits = 2
@@ -24,19 +32,25 @@ def test_is_scalar_matrix():
     id_gate = (IdentityGate(1),)
     assert is_scalar_matrix(id_gate, numqubits) == True
 
-    xx_circuit = (X(0), X(0))
+    x0 = X(0)
+    xx_circuit = (x0, x0)
     assert is_scalar_matrix(xx_circuit, numqubits) == True
 
-    xy_circuit = (X(1), Y(1))
+    x1 = X(1)
+    y1 = Y(1)
+    xy_circuit = (x1, y1)
     assert is_scalar_matrix(xy_circuit, numqubits) == False
 
-    xyz_circuit = (X(1), Y(1), Z(1))
+    z1 = Z(1)
+    xyz_circuit = (x1, y1, z1)
     assert is_scalar_matrix(xyz_circuit, numqubits) == True
 
-    cnot_circuit = (CNOT(1,0), CNOT(1,0))
+    cnot = CNOT(1,0)
+    cnot_circuit = (cnot, cnot)
     assert is_scalar_matrix(cnot_circuit, numqubits) == True
 
-    hh_circuit = (H(0), H(0))
+    h = H(0)
+    hh_circuit = (h, h)
     assert is_scalar_matrix(hh_circuit, numqubits) == True
 
 def test_is_degenerate():
@@ -96,8 +110,7 @@ def test_bfs_identity_search():
                   GateIdentity(X(0), Z(0), X(0), Z(0)),
                   GateIdentity(X(0), H(0), Z(0), H(0)),
                   GateIdentity(Y(0), Z(0), Y(0), Z(0)),
-                  GateIdentity(Y(0), H(0), Y(0), H(0)),
-                  GateIdentity(Z(0), H(0), X(0), H(0))])
+                  GateIdentity(Y(0), H(0), Y(0), H(0))])
     assert bfs_identity_search(gate_list, 1) == id_set
 
     id_set = set([GateIdentity(X(0), X(0)),
