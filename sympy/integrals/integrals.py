@@ -337,7 +337,7 @@ class Integral(Expr):
 
     def doit(self, **hints):
         """
-        Preform the integration using any hints given.
+        Perform the integration using any hints given.
 
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
