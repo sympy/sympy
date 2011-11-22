@@ -64,11 +64,24 @@ API reference
 
 .. automethod:: sympy.integrals.integrate
 
+.. automethod:: sympy.integrals.line_integrate
+
+.. automethod:: sympy.integrals.deltaintegrate
+
+.. automethod:: sympy.integrals.ratint
+
+.. automethod:: sympy.integrals.heurisch
+
+.. automethod:: sympy.integrals.trigintegrate
+
 Class Integral represents an unevaluated integral and has some methods that help in the integration of an expression.
 
 .. autoclass:: sympy.integrals.Integral
    :members:
 
+   .. data:: is_commutative
+
+      Returns whether all the free symbols in the integral are commutative.
 
 TODO and Bugs
 -------------
