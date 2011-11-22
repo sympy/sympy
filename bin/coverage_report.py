@@ -93,3 +93,6 @@ if __name__ == '__main__':
         source_dir = 'sympy/'
 
     make_report(source_dir, **options.__dict__)
+
+    print "The generated coverage report is in covhtml/."
+    print "Open covhtml/index.html in your web browser to view the report."
