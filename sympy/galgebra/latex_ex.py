@@ -18,8 +18,7 @@ import numpy
 from sympy.core.compatibility import cmp_to_key, cmp
 from sympy.utilities import default_sort_key
 
-accepted_latex_functions = ['arcsin','sin','Sin','cos','Cos','tan','Tan',
-                    'theta','Theta','beta','Beta']
+from sympy.printing.latex import accepted_latex_functions
 
 def debug(txt):
     sys.stderr.write(txt+'\n')

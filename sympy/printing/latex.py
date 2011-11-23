@@ -15,8 +15,8 @@ from sympy.utilities import default_sort_key
 
 import re, warnings
 
-accepted_latex_functions = ['arcsin','sin','Sin','cos','Cos','tan','Tan',
-                    'theta','Theta','beta','Beta']
+accepted_latex_functions = ['arcsin','arccos','arctan','sin','Sin','cos','Cos','tan','Tan',
+                    'theta','Theta','beta','Beta','alpha','Alpha','gamma','Gamma']
 
 class LatexPrinter(Printer):
     printmethod = "_latex"
