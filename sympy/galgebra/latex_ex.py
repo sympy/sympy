@@ -657,9 +657,9 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
+            return r"\Gamma^{%s}%s" % (exp, tex)
         else:
-            return r"\operatorname{\Gamma}%s" % tex
+            return r"\Gamma%s" % tex
 
     def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
@@ -730,7 +730,7 @@ class LatexPrinter(Printer):
         return r"\gamma"
 
     def _print_Order(self, expr):
-        return r"\operatorname{\mathcal{O}}\left(%s\right)" % \
+        return r"\\mathcal{O}\left(%s\right)" % \
             self._print(expr.args[0])
 
     @staticmethod

@@ -98,10 +98,10 @@ def test_latex_functions():
     assert latex(re(x)) == r"\Re{x}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
-    assert latex(gamma(x)) == r"\operatorname{\Gamma}\left(x\right)"
-    assert latex(Order(x)) == r"\operatorname{\mathcal{O}}\left(x\right)"
-    assert latex(lowergamma(x, y)) == r'\operatorname{\gamma}\left(x, y\right)'
-    assert latex(uppergamma(x, y)) == r'\operatorname{\Gamma}\left(x, y\right)'
+    assert latex(gamma(x)) == r"\Gamma\left(x\right)"
+    assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
+    assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
+    assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
 def test_hyper_printing():
     from sympy import pi, Tuple
@@ -329,9 +329,9 @@ def test_latex_order():
 
 def test_latex_Lambda():
     assert latex(Lambda(x, x + 1)) == \
-        r"\operatorname{\Lambda}\left(x, x + 1\right)"
+        r"\Lambda\left(x, x + 1\right)"
     assert latex(Lambda((x, y), x + 1)) == \
-        r"\operatorname{\Lambda}\left(\begin{pmatrix}x, & y\end{pmatrix}, x + 1\right)"
+        r"\Lambda\left(\begin{pmatrix}x, & y\end{pmatrix}, x + 1\right)"
 
 def test_latex_Poly():
     assert latex(Poly(x/y, x)) == \
@@ -345,7 +345,7 @@ def test_latex_RootOf():
 
 def test_latex_RootSum():
     assert latex(RootSum(x**5 + x + 3, sin)) == \
-        r"\operatorname{RootSum}\left(x^{5} + x + 3, \operatorname{\Lambda}\left(x, \operatorname{sin}\left(x\right)\right)\right)"
+        r"\operatorname{RootSum}\left(x^{5} + x + 3, \Lambda\left(x, \operatorname{sin}\left(x\right)\right)\right)"
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')
