@@ -15,6 +15,9 @@ from sympy.utilities import default_sort_key
 
 import re, warnings
 
+# Hand-picked functions which can be used directly in both LaTeX and MathJax
+# Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
+# This variable only contains those functions which sympy uses.
 accepted_latex_functions = ['arcsin','arccos','arctan','sin','Sin','cos','Cos','tan','Tan',
                     'theta','Theta','beta','Beta','alpha','Alpha','gamma','Gamma']
 
