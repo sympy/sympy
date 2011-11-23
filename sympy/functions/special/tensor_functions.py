@@ -8,24 +8,6 @@ from sympy.core.mul import prod
 ###################### Kronecker Delta, Levi-Civita etc. ######################
 ###############################################################################
 
-class Dij(Function):
-    """
-    Represents the Kronecker Delta Function
-
-    if i == j, Dij(i, j) = 1
-    otherwise Dij(i, j) = 0
-    where i, j are usually integers
-    """
-    nargs = (1, 2)
-
-    @classmethod
-    def eval(cls, i, j=0):
-        i, j = map(sympify, (i, j))
-        if i == j:
-            return S.One
-        elif i.is_number and j.is_number:
-            return S.Zero
-
 def Eijk(*args, **kwargs):
     """
     Represent the Levi-Civita symbol.
@@ -124,6 +106,21 @@ class KroneckerDelta(Function):
     def eval(cls, i, j):
         """
         Evaluates the discrete delta function.
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> i, j, k = symbols('i,j,k')
+        >>> KroneckerDelta(i, j)
+        KroneckerDelta(i, j)
+        >>> KroneckerDelta(i, i)
+        1
+        >>> KroneckerDelta(i, i+1)
+        0
+        >>> KroneckerDelta(i, i+1+k)
+        KroneckerDelta(i, i + k + 1)
+
+        # indirect doctest
+
         """
         if i > j:
             return cls(j,i)
@@ -133,10 +130,218 @@ class KroneckerDelta(Function):
         elif diff.is_number:
             return S.Zero
 
-    def _eval_subs(self, old, new):
-        r = KroneckerDelta(self.args[0].subs(old, new), self.args[1].subs(old,\
-        new))
-        return r
+        if i.assumptions0.get("below_fermi") and j.assumptions0.get("above_fermi"):
+            return S.Zero
+        if j.assumptions0.get("below_fermi") and i.assumptions0.get("above_fermi"):
+            return S.Zero
+    @property
+    def is_above_fermi(self):
+        """
+        True if Delta can be non-zero above fermi
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p,a).is_above_fermi
+        True
+        >>> KroneckerDelta(p,i).is_above_fermi
+        False
+        >>> KroneckerDelta(p,q).is_above_fermi
+        True
+
+        """
+        if self.args[0].assumptions0.get("below_fermi"):
+            return False
+        if self.args[1].assumptions0.get("below_fermi"):
+            return False
+        return True
+
+    @property
+    def is_below_fermi(self):
+        """
+        True if Delta can be non-zero below fermi
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p,a).is_below_fermi
+        False
+        >>> KroneckerDelta(p,i).is_below_fermi
+        True
+        >>> KroneckerDelta(p,q).is_below_fermi
+        True
+
+        """
+        if self.args[0].assumptions0.get("above_fermi"):
+            return False
+        if self.args[1].assumptions0.get("above_fermi"):
+            return False
+        return True
+
+    @property
+    def is_only_above_fermi(self):
+        """
+        True if Delta is restricted to above fermi
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p,a).is_only_above_fermi
+        True
+        >>> KroneckerDelta(p,q).is_only_above_fermi
+        False
+        >>> KroneckerDelta(p,i).is_only_above_fermi
+        False
+
+        """
+        return ( self.args[0].assumptions0.get("above_fermi")
+                or
+                self.args[1].assumptions0.get("above_fermi")
+                ) or False
+
+    @property
+    def is_only_below_fermi(self):
+        """
+        True if Delta is restricted to below fermi
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p,i).is_only_below_fermi
+        True
+        >>> KroneckerDelta(p,q).is_only_below_fermi
+        False
+        >>> KroneckerDelta(p,a).is_only_below_fermi
+        False
+
+        """
+        return ( self.args[0].assumptions0.get("below_fermi")
+                or
+                self.args[1].assumptions0.get("below_fermi")
+                ) or False
+
+    @property
+    def indices_contain_equal_information(self):
+        """
+        Returns True if indices are either both above or below fermi.
+
+        Example:
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> q = Symbol('q')
+        >>> KroneckerDelta(p, q).indices_contain_equal_information
+        True
+        >>> KroneckerDelta(p, q+1).indices_contain_equal_information
+        True
+        >>> KroneckerDelta(i, p).indices_contain_equal_information
+        False
+
+        """
+        if (self.args[0].assumptions0.get("below_fermi") and
+                self.args[1].assumptions0.get("below_fermi")):
+            return True
+        if (self.args[0].assumptions0.get("above_fermi")
+                and self.args[1].assumptions0.get("above_fermi")):
+            return True
+
+        # if both indices are general we are True, else false
+        return self.is_below_fermi and self.is_above_fermi
+
+
+    @property
+    def preferred_index(self):
+        """
+        Returns the index which is preferred to keep in the final expression.
+
+        The preferred index is the index with more information regarding fermi
+        level.  If indices contain same information, 'a' is preferred before
+        'b'.
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> j = Symbol('j',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> KroneckerDelta(p,i).preferred_index
+        i
+        >>> KroneckerDelta(p,a).preferred_index
+        a
+        >>> KroneckerDelta(i,j).preferred_index
+        i
+
+        """
+        if self._get_preferred_index():
+            return self.args[1]
+        else:
+            return self.args[0]
+
+    @property
+    def killable_index(self):
+        """
+        Returns the index which is preferred to substitute in the final expression.
+
+        The index to substitute is the index with less information regarding fermi
+        level.  If indices contain same information, 'a' is preferred before
+        'b'.
+
+        >>> from sympy.physics.secondquant import KroneckerDelta
+        >>> from sympy import Symbol
+        >>> a = Symbol('a',above_fermi=True)
+        >>> i = Symbol('i',below_fermi=True)
+        >>> j = Symbol('j',below_fermi=True)
+        >>> p = Symbol('p')
+        >>> KroneckerDelta(p,i).killable_index
+        p
+        >>> KroneckerDelta(p,a).killable_index
+        p
+        >>> KroneckerDelta(i,j).killable_index
+        j
+
+        """
+        if self._get_preferred_index():
+            return self.args[0]
+        else:
+            return self.args[1]
+
+    def _get_preferred_index(self):
+        """
+        Returns the index which is preferred to keep in the final expression.
+
+        The preferred index is the index with more information regarding fermi
+        level.  If indices contain same information, index 0 is returned.
+        """
+        if not self.is_above_fermi:
+            if self.args[0].assumptions0.get("below_fermi"):
+                return 0
+            else:
+                return 1
+        elif not self.is_below_fermi:
+            if self.args[0].assumptions0.get("above_fermi"):
+                return 0
+            else:
+                return 1
+        else:
+            return 0
+
+    def _dagger_(self):
+        return self
 
     def _eval_dagger(self):
         return self

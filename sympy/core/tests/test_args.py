@@ -666,17 +666,13 @@ def test_sympy__functions__special__polynomials__legendre():
     from sympy.functions.special.polynomials import legendre
     assert _test_args(legendre(x, 2))
 
-def test_sympy__functions__special__tensor_functions__Dij():
-    from sympy.functions.special.tensor_functions import Dij
-    assert _test_args(Dij(x, 2))
-
 def test_sympy__functions__special__tensor_functions__LeviCivita():
     from sympy.functions.special.tensor_functions import LeviCivita
     assert _test_args(LeviCivita(x, y, 2))
 
 def test_sympy__functions__special__tensor_functions__KroneckerDelta():
     from sympy.functions.special.tensor_functions import KroneckerDelta
-    assert _test_args(KroneckerDelta())
+    assert _test_args(KroneckerDelta(x, y))
 
 def test_sympy__functions__special__zeta_functions__dirichlet_eta():
     from sympy.functions.special.zeta_functions import dirichlet_eta
