@@ -1145,9 +1145,9 @@ def radsimp(expr, symbolic=True):
             # check to see if we are done:
             # - no radical terms
             # - don't continue if there are more than 3 radical terms
-            #   XXX if there are radicals with terms inside that might
-            #       cancel existing terms they could be processed
-            # - don't continue if there are 3 terms and there is a constant
+            #   unless there are radicals with terms inside that might
+            #   cancel existing terms XXX not yet implemented
+            # - don't continue if there are more than 3 terms and a constant
             #   term, too.
             if not nterms or nterms > 3 or nterms == 3 and len(d.args) > 4:
                 break
@@ -1155,7 +1155,7 @@ def radsimp(expr, symbolic=True):
 
             if len(d.args) == 4:
                 r = d.match(a + b*sqrt(c) + D*sqrt(E))
-                va, vb, vc, vd, ve = r[a],r[b],r[c],r[D], r[E]
+                va, vb, vc, vd, ve = r[a], r[b], r[c], r[D], r[E]
                 nmul = va - vb*sqrt(vc) - vd*sqrt(ve)
                 d = va**2 - vc*vb**2 - ve*vd**2 - 2*vb*vd*sqrt(vc*ve)
                 n1 = n/d
