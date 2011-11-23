@@ -32,7 +32,7 @@ from special.gamma_functions import gamma, lowergamma, uppergamma, polygamma, \
          loggamma, digamma, trigamma, beta
 from special.zeta_functions import dirichlet_eta, zeta
 from special.spherical_harmonics import Ylm, Zlm
-from special.tensor_functions import Dij, Eijk, LeviCivita
+from special.tensor_functions import Dij, Eijk, LeviCivita, KroneckerDelta
 from special.delta_functions import DiracDelta, Heaviside
 from special.bsplines import bspline_basis, bspline_basis_set
 from special.bessel import besselj, bessely, besseli, besselk, hankel1, \
