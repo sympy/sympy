@@ -43,8 +43,8 @@ def trigintegrate(f, x):
        See Also
        ========
 
-       :class:`Integral`, :function:`doit`, :function:`sin_pow_integrate`,
-       :function:`cos_pow_integrate`
+       :class:`Integral`, :function:`sympy.integrals.Integral.doit`,
+       :function:`sin_pow_integrate`, :function:`cos_pow_integrate`
     """
 
     pat, a,n,m = _pat_sincos(x)

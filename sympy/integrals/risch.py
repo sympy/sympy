@@ -150,7 +150,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
        See Also
        ========
 
-       :class:`Integrate`, :function:`doit`
+       :class:`Integrate`, :function:`sympy.integrals.Integral.doit`
 
     """
     f = sympify(f)

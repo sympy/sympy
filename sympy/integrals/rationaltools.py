@@ -27,8 +27,8 @@ def ratint(f, x, **flags):
        See Also
        ========
 
-       :class:`Integrate`, :function:`doit`, :function:`ratint_logpart`,
-       :function:`ratint_ratpart`
+       :class:`Integrate`, :function:`sympy.integrals.Integral.doit`,
+       :function:`ratint_logpart`, :function:`ratint_ratpart`
 
     """
     if type(f) is not tuple:

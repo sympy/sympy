@@ -388,8 +388,9 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`as_sum`, :function:`trigintegrate`, :function:`heurisch`,
-        :function:`ratint`
+        :function:`as_sum`, :function:`sympy.integrals.trigintegrate`,
+        :function:`sympy.integrals.heurisch`,
+        :function:`sympy.integrals.ratint`
         """
         if not hints.get('integrals', True):
             return self
