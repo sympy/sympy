@@ -7,7 +7,7 @@
 from sympy import Add, expand, Eq, Expr, Function, Mul, Piecewise, Pow, sqrt, Sum, symbols, sympify, Wild
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
-from sympy.physics.quantum.kronecker import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import wigner_3j, clebsch_gordan
 
 
