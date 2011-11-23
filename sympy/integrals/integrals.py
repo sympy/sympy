@@ -137,7 +137,7 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`limits`, :function:`variables`, :function:`free_symbols`
+        limits, variables, free_symbols
         """
         return self._args[0]
 
@@ -153,7 +153,7 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`function`, :function:`variables`, :function:`free_symbols`
+        function, variables, free_symbols
         """
         return self._args[1:]
 
@@ -169,8 +169,10 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`function`, :function:`limits`, :function:`free_symbols`,
-        :function:`as_dummy`
+        function, limits, free_symbols
+
+        as_dummy : Replaces the integration variables with dummy ones
+        transform : Perform a mapping on an integration variable
         """
         return [l[0] for l in self.limits]
 
@@ -190,7 +192,7 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`function`, :function:`limits`, :function:`variables`
+        function, limits, variables
         """
         return _free_symbols(self.function, self.limits)
 
@@ -206,7 +208,7 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`is_number`
+        is_number
         """
         if (self.function.is_zero or
             any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
@@ -254,7 +256,7 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`is_zero`
+        is_zero
         """
 
         integrand, limits = self.function, self.limits
@@ -297,7 +299,8 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`variables`, :function:`transform`
+        variables : Find the integration variables
+        transform : Perform a mapping on an integration variable
 
         """
         reps = {}
@@ -335,7 +338,9 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`as_dummy`
+        variables : Find the integration variables
+        as_dummy : Replaces the integration variables with dummy ones
+ 
         """
         if x not in self.variables:
             return self
@@ -388,9 +393,10 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`as_sum`, :function:`sympy.integrals.trigintegrate`,
-        :function:`sympy.integrals.heurisch`,
-        :function:`sympy.integrals.ratint`
+        as_sum : Approximate the integral using a sum
+        trigintegrate : Integrate a trigonometric function
+        heurisch : Compute indefinite integral using heuristic Risch algorithm
+        ratint : Find the indefinite integral of a rational function
         """
         if not hints.get('integrals', True):
             return self
@@ -855,7 +861,7 @@ class Integral(Expr):
         See Also
         ========
 
-        :function:`doit`
+        doit : Perform the integration exactly
 
         """
 
@@ -933,10 +939,10 @@ def integrate(*args, **kwargs):
        See also the doctest of Integral._eval_integral(), which explains
        thoroughly the strategy that SymPy uses for integration.
 
-        See Also
-        ========
+       See Also
+       ========
 
-        :class:`Integral`, :function:`doit`
+       :class:`Integral`, Integral.doit
 
     """
     integral = Integral(*args, **kwargs)

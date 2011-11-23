@@ -37,7 +37,7 @@ def components(f, x):
        See Also
        ========
 
-       :function:`heurisch`
+       heurisch
 
     """
     result = set()
@@ -150,7 +150,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
        See Also
        ========
 
-       :class:`Integral`, :function:`sympy.integrals.Integral.doit`
+       :class:`Integral`, Integral.doit
 
     """
     f = sympify(f)

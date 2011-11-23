@@ -27,8 +27,7 @@ def ratint(f, x, **flags):
        See Also
        ========
 
-       :class:`Integral`, :function:`sympy.integrals.Integral.doit`,
-       :function:`ratint_logpart`, :function:`ratint_ratpart`
+       :class:`Integral`, Integral.doit
 
     """
     if type(f) is not tuple:
@@ -113,7 +112,7 @@ def ratint_ratpart(f, g, x):
        See Also
        ========
 
-       :function:`ratint`, :function:`ratint_logpart`
+       ratint, ratint_logpart
 
     """
     f = Poly(f, x)
@@ -161,7 +160,7 @@ def ratint_logpart(f, g, x, t=None):
        See Also
        ========
 
-       :function:`ratint`, :function:`ratint_ratpart`
+       ratint, ratint_ratpart
 
     """
     f, g = Poly(f, x), Poly(g, x)
@@ -226,7 +225,7 @@ def log_to_atan(f, g):
        See Also
        ========
 
-       :function:`log_to_real`
+       log_to_real
 
     """
     if f.degree() < g.degree():
@@ -260,7 +259,7 @@ def log_to_real(h, q, x, t):
        See Also
        ========
 
-       :function:`log_to_atan`, :function:`ratint`
+       log_to_atan, ratint
 
     """
     u, v = symbols('u,v')
