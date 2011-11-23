@@ -166,7 +166,7 @@ def diagpq(p,q=0):
             else:
                 D += '0 '
         D = D[:-1]+','
-    return(D)
+    return(D[:-1])
 
 def make_scalars(symnamelst):
     """
