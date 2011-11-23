@@ -31,6 +31,11 @@ def change_mul(node, x):
        >>> change_mul(x*y*DiracDelta(cos(x))*cos(x),x)
        (None, None)
 
+       See Also
+       ========
+
+       :function:`deltaintegrate`
+
     """
     if not node.is_Mul:
         return node
@@ -103,6 +108,11 @@ def deltaintegrate(f, x):
 
       2) We didn't have a simple term, but we do have an expression with
          simplified DiracDelta terms, so we integrate this expression.
+
+       See Also
+       ========
+
+       :function:`changemul`, :class:`Integral`
 
     """
     if not f.has(DiracDelta):

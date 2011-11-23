@@ -39,6 +39,12 @@ def trigintegrate(f, x):
        x/2 - sin(x)*cos(x)/2
 
        http://en.wikibooks.org/wiki/Calculus/Further_integration_techniques
+
+       See Also
+       ========
+
+       :class:`Integral`, :function:`doit`, :function:`sin_pow_integrate`,
+       :function:`cos_pow_integrate`
     """
 
     pat, a,n,m = _pat_sincos(x)

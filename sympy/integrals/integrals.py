@@ -133,6 +133,11 @@ class Integral(Expr):
         >>> from sympy.abc import x
         >>> Integral(x**2, (x,)).function
         x**2
+
+        See Also
+        ========
+
+        :function:`limits`, :function:`variables`, :function:`free_symbols`
         """
         return self._args[0]
 
@@ -144,6 +149,11 @@ class Integral(Expr):
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).limits
         ((i, 1, 3),)
+
+        See Also
+        ========
+
+        :function:`function`, :function:`variables`, :function:`free_symbols`
         """
         return self._args[1:]
 
@@ -155,6 +165,12 @@ class Integral(Expr):
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).variables
         [i]
+
+        See Also
+        ========
+
+        :function:`function`, :function:`limits`, :function:`free_symbols`,
+        :function:`as_dummy`
         """
         return [l[0] for l in self.limits]
 
@@ -170,6 +186,11 @@ class Integral(Expr):
         >>> from sympy.abc import x, y
         >>> Integral(x, (x, y, 1)).free_symbols
         set([y])
+
+        See Also
+        ========
+
+        :function:`function`, :function:`limits`, :function:`variables`
         """
         return _free_symbols(self.function, self.limits)
 
@@ -181,6 +202,11 @@ class Integral(Expr):
 
         This is a very naive and quick test, not intended to check for special
         patterns like Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)) == 0.
+
+        See Also
+        ========
+
+        :function:`is_number`
         """
         if (self.function.is_zero or
             any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
@@ -224,6 +250,11 @@ class Integral(Expr):
         True
         >>> Integral(1, x, (x, 1, 2)).is_number
         True
+
+        See Also
+        ========
+
+        :function:`is_zero`
         """
 
         integrand, limits = self.function, self.limits
@@ -263,6 +294,11 @@ class Integral(Expr):
         output of this function will show which symbols cannot be
         changed by subs(), those with an underscore prefix.
 
+        See Also
+        ========
+
+        :function:`variables`, :function:`transform`
+
         """
         reps = {}
         f = self.function
@@ -295,6 +331,11 @@ class Integral(Expr):
 
         The mapping must be uniquely invertible (e.g. a linear or linear
         fractional transformation).
+
+        See Also
+        ========
+
+        :function:`as_dummy`
         """
         if x not in self.variables:
             return self
@@ -343,6 +384,12 @@ class Integral(Expr):
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
         x**3/log(x) - x/log(x)
+
+        See Also
+        ========
+
+        :function:`as_sum`, :function:`trigintegrate`, :function:`heurisch`,
+        :function:`ratint`
         """
         if not hints.get('integrals', True):
             return self
@@ -804,6 +851,11 @@ class Integral(Expr):
             >>> e.n()
             124.616199194723
 
+        See Also
+        ========
+
+        :function:`doit`
+
         """
 
         limits = self.limits
@@ -880,6 +932,11 @@ def integrate(*args, **kwargs):
        See also the doctest of Integral._eval_integral(), which explains
        thoroughly the strategy that SymPy uses for integration.
 
+        See Also
+        ========
+
+        :class:`Integral`, :function:`doit`
+
     """
     integral = Integral(*args, **kwargs)
 
@@ -902,6 +959,11 @@ def line_integrate(field, curve, vars):
        >>> C = Curve([E**t + 1, E**t - 1], (t, 0, ln(2)))
        >>> line_integrate(x + y, C, [x, y])
         3*sqrt(2)
+
+        See Also
+        ========
+
+        :class:`Integral`
 
     """
     F = sympify(field)

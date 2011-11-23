@@ -24,6 +24,12 @@ def ratint(f, x, **flags):
        .. [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
           Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
 
+       See Also
+       ========
+
+       :class:`Integrate`, :function:`doit`, :function:`ratint_logpart`,
+       :function:`ratint_ratpart`
+
     """
     if type(f) is not tuple:
         p, q = f.as_numer_denom()
@@ -104,6 +110,11 @@ def ratint_ratpart(f, g, x):
        are coprime and deg(f) < deg(g), returns fractions A and B in K(x),
        such that f/g = A' + B and B has square-free denominator.
 
+       See Also
+       ========
+
+       :function:`ratint`, :function:`ratint_logpart`
+
     """
     f = Poly(f, x)
     g = Poly(g, x)
@@ -146,6 +157,11 @@ def ratint_logpart(f, g, x, t=None):
                      -- - = --  )      )   a log(s_i(a, x))
                      dx g   dx /__,   /__,
                               i=1..n a | q_i(a) = 0
+
+       See Also
+       ========
+
+       :function:`ratint`, :function:`ratint_ratpart`
 
     """
     f, g = Poly(f, x), Poly(g, x)
@@ -207,6 +223,11 @@ def log_to_atan(f, g):
                        -- = -- I log( ------- )
                        dx   dx        f - I g
 
+       See Also
+       ========
+
+       :function:`log_to_real`
+
     """
     if f.degree() < g.degree():
         f, g = -g, f
@@ -235,6 +256,11 @@ def log_to_real(h, q, x, t):
                       -- = --  )  a log(h(a, x))
                       dx   dx /__,
                              a | q(a) = 0
+
+       See Also
+       ========
+
+       :function:`log_to_atan`, :function:`ratint`
 
     """
     u, v = symbols('u,v')
