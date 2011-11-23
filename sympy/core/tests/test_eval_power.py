@@ -1,6 +1,10 @@
 from sympy.core import Rational, Symbol, S, Float, Integer
 from sympy.functions.elementary.miscellaneous import sqrt
 
+def test_issue153():
+    #test that is runs:
+    a = sqrt(2*(1+sqrt(2)))
+
 def test_rational():
     a = Rational(1, 5)
 
