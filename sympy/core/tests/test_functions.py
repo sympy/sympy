@@ -234,7 +234,7 @@ def test_function_comparable():
     assert cos(Rational(1,3)).is_comparable == True
 
 @XFAIL
-def test_function_comparable_imported_functions():
+def test_function_comparable_infinities():
     assert sin(oo).is_comparable    == False
     assert sin(-oo).is_comparable   == False
     assert sin(zoo).is_comparable   == False
