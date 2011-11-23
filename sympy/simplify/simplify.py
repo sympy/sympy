@@ -1131,6 +1131,8 @@ def radsimp(expr, symbolic=True):
                 nargs.append(ni)
                 dargs.append(di)
             return n*Mul(*nargs)/Mul(*dargs)
+        elif d.is_Add:
+            d = radsimp(d)
         elif d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
             d = sqrtdenest(sqrt(d.base))**d.exp.p
 
