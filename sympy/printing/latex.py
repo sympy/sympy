@@ -15,6 +15,9 @@ from sympy.utilities import default_sort_key
 
 import re, warnings
 
+accepted_latex_functions = ['arcsin','sin','Sin','cos','Cos','tan','Tan',
+                    'theta','Theta','beta','Beta']
+
 class LatexPrinter(Printer):
     printmethod = "_latex"
 
@@ -427,7 +430,10 @@ class LatexPrinter(Printer):
             elif exp is not None:
                 name = r"\operatorname{%s}^{%s}" % (func, exp)
             else:
-                name = r"\operatorname{%s}" % func
+                if func in accepted_latex_functions:
+                    name = r"\%s" % func
+                else:
+                    name = r"\operatorname{%s}" % func
 
             if can_fold_brackets:
                 name += r"%s"
@@ -926,7 +932,10 @@ class LatexPrinter(Printer):
         domain = "domain=%s" % self._print(poly.get_domain())
 
         args = ", ".join([expr] + gens + [domain])
-        tex = r"\operatorname{%s}\left(%s\right)" % (cls, args)
+        if cls in accepted_latex_functions:
+            tex = r"\%s\left(%s\right)" % (cls, args)
+        else:
+            tex = r"\operatorname{%s}\left(%s\right)" % (cls, args)
 
         return tex
 
@@ -934,7 +943,11 @@ class LatexPrinter(Printer):
         cls = root.__class__.__name__
         expr = self._print(root.expr)
         index = root.index
-        return r"\operatorname{%s}\left(%s, %d\right)" % (cls, expr, index)
+        if cls in accepted_latex_functions:
+            return r"\%s\left(%s, %d\right)" % (cls, expr, index)
+        else:
+            return r"\operatorname{%s}\left(%s, %d\right)" % (cls, expr, index)
+        
 
     def _print_RootSum(self, expr):
         cls = expr.__class__.__name__
@@ -943,7 +956,10 @@ class LatexPrinter(Printer):
         if expr.fun is not S.IdentityFunction:
             args.append(self._print(expr.fun))
 
-        return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
+        if cls in accepted_latex_functions:
+            return r"\%s\left(%s\right)" % (cls, ", ".join(args))
+        else:
+            return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
 
     def _print_euler(self, expr):
         return r"E_{%s}" % self._print(expr.args[0])

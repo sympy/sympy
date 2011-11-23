@@ -18,6 +18,9 @@ import numpy
 from sympy.core.compatibility import cmp_to_key, cmp
 from sympy.utilities import default_sort_key
 
+accepted_latex_functions = ['arcsin','sin','Sin','cos','Cos','tan','Tan',
+                    'theta','Theta','beta','Beta']
+
 def debug(txt):
     sys.stderr.write(txt+'\n')
     return
@@ -584,7 +587,10 @@ class LatexPrinter(Printer):
                     if exp is not None:
                         name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
                     else:
-                        name = r"\operatorname{%s}" % LatexPrinter.fct_dict[func]
+                        if LatexPrinter.fct_dict[func] in accepted_latex_functions:
+                            name = r"\%s" % LatexPrinter.fct_dict[func]
+                        else:
+                            name = r"\operatorname{%s}" % LatexPrinter.fct_dict[func]
                     name += r"\left(%s\right)" % ",".join(args)
                     return name
                 else:

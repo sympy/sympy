@@ -73,13 +73,13 @@ def test_latex_functions():
 
     beta = Function('beta')
 
-    assert latex(beta(x)) == r"\operatorname{beta}\left(x\right)"
-    assert latex(sin(x)) == r"\operatorname{sin}\left(x\right)"
-    assert latex(sin(x), fold_func_brackets=True) == r"\operatorname{sin}x"
+    assert latex(beta(x)) == r"\beta\left(x\right)"
+    assert latex(sin(x)) == r"\sin\left(x\right)"
+    assert latex(sin(x), fold_func_brackets=True) == r"\sinx"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
-    r"\operatorname{sin}2 x^{2}"
+    r"\sin2 x^{2}"
     assert latex(sin(x**2), fold_func_brackets=True) == \
-    r"\operatorname{sin}x^{2}"
+    r"\sinx^{2}"
 
     assert latex(asin(x)**2) == r"\operatorname{asin}^{2}\left(x\right)"
     assert latex(asin(x)**2,inv_trig_style="full") == \
@@ -140,7 +140,7 @@ def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
     r"\frac{\partial}{\partial x} x^{3}"
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
-    r"\frac{\partial}{\partial x}\left(x^{2} + \operatorname{sin}\left(x\right)\right)"
+    r"\frac{\partial}{\partial x}\left(x^{2} + \sin\left(x\right)\right)"
 
 def test_latex_integrals():
     assert latex(Integral(log(x), x)) == r"\int \operatorname{log}\left(x\right)\, dx"
@@ -345,7 +345,7 @@ def test_latex_RootOf():
 
 def test_latex_RootSum():
     assert latex(RootSum(x**5 + x + 3, sin)) == \
-        r"\operatorname{RootSum}\left(x^{5} + x + 3, \Lambda\left(x, \operatorname{sin}\left(x\right)\right)\right)"
+        r"\operatorname{RootSum}\left(x^{5} + x + 3, \Lambda\left(x, \sin\left(x\right)\right)\right)"
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')
