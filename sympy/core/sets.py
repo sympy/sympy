@@ -1,7 +1,7 @@
 from basic import Basic
 from singleton import Singleton, S
 from evalf import EvalfMixin
-from numbers import Float, Integer
+from numbers import Float
 from sympify import _sympify, sympify, SympifyError
 from sympy.mpmath import mpi, mpf
 from containers import Tuple
@@ -615,7 +615,7 @@ class Interval(RealSet):
 
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
-        from sympy.core.relational import Eq, Lt, Le
+        from sympy.core.relational import Lt, Le
         from sympy.logic.boolalg import And
 
         if not self.is_left_unbounded:
@@ -1149,9 +1149,6 @@ class RealFiniteSet(FiniteSet, RealSet):
         from sympy.core.relational import Eq
         from sympy.logic.boolalg import Or
         return Or(*[Eq(symbol, elem) for elem in self])
-
-    def _eval_evalf(self, prec):
-        return FiniteSet(elem.evalf(prec) for elem in self)
 
 genclass = (1 for i in xrange(2)).__class__
 def is_flattenable(obj):

@@ -1,4 +1,4 @@
-from sympy.core import S, C, Add
+from sympy.core import C, Add
 from sympy.printing.str import StrPrinter
 from sympy.tensor import get_indices, get_contraction_structure
 

@@ -215,7 +215,6 @@ class Number(AtomicExpr):
 
     def gcd(self, other):
         """Compute greatest common divisor of input arguments. """
-        _ = _sympify(other)
         return S.One
 
     def lcm(self, other):

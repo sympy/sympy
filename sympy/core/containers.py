@@ -9,7 +9,6 @@
 from basic import Basic
 from sympify import sympify
 from sympy.utilities.iterables import iterable
-from sympy.core.singleton import S
 
 class Tuple(Basic):
     """
