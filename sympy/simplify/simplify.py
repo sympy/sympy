@@ -1149,34 +1149,47 @@ def radsimp(expr, symbolic=True):
             #       cancel existing terms they could be processed
             # - don't continue if there are 3 terms and there is a constant
             #   term, too.
-            if not nterms or nterms > 3 or nterms == 3 and len(d.args) > 3:
+            if not nterms or nterms > 3 or nterms == 3 and len(d.args) > 4:
                 break
             changed = True
 
-            # now match for a radical
-            r = d.match(a + b*sqrt(c))
-            if not r or r[b] == 0:
-                r = d.match(b*sqrt(c))
-                if r is None:
-                    break
-                r[a] = S.Zero
-            va, vb, vc = r[a],r[b],r[c]
+            if len(d.args) == 4:
+                r = d.match(a + b*sqrt(c) + D*sqrt(E))
+                va, vb, vc, vd, ve = r[a],r[b],r[c],r[D], r[E]
+                nmul = va - vb*sqrt(vc) - vd*sqrt(ve)
+                d = va**2 - vc*vb**2 - ve*vd**2 - 2*vb*vd*sqrt(vc*ve)
+                n1 = n/d
+                if denom(n1) is not S.One:
+                    n = -(-n/d)
+                else:
+                    n = n1
+                n, d = fraction(n*nmul)
 
-            nmul = va - vb*sqrt(vc)
-            d = va**2 - vc*vb**2
-            n1 = n/d
-            if denom(n1) is not S.One:
-                n = -(-n/d)
+            # now match for a radical
             else:
-                n = n1
-            n, d = fraction(n*nmul)
+                r = d.match(a + b*sqrt(c))
+                if not r or r[b] == 0:
+                    r = d.match(b*sqrt(c))
+                    if r is None:
+                        break
+                    r[a] = S.Zero
+                va, vb, vc = r[a],r[b],r[c]
+
+                nmul = va - vb*sqrt(vc)
+                d = va**2 - vc*vb**2
+                n1 = n/d
+                if denom(n1) is not S.One:
+                    n = -(-n/d)
+                else:
+                    n = n1
+                n, d = fraction(n*nmul)
 
         nexpr = collect_sqrt(expand_mul(n))/d
         if changed or nexpr != expr:
             expr = nexpr
         return expr
 
-    a, b, c = map(Wild, 'abc')
+    a, b, c, D, E = map(Wild, 'abcDE')
     # do this at the start in case no other change is made since
     # it is done if a change is made
     coeff, expr = expr.as_content_primitive()
