@@ -1,5 +1,48 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
+def func_equal(funcname, func, **args):
+    """ Apply func to all arguments, test results for equality, and return results.
+
+    If, for any keyword arguments, func(arg) != arg, raise a ValueError.
+    Otherwise, return args, with func() applied to each argument.
+
+    func_equal wants keyword arguments for more informative error messages.
+
+    >>> from sympy.utilities.misc import func_equal
+    >>> func_equal("int", int, a = 3.0)
+    2
+    >>> func_equal("float", float, a = 3, b = 4.0)
+    (3.0, 4.0)
+    >>> func_equal("int", int, a = 3, b = 4.1)
+    Traceback (most recent call last):
+    ...
+    ValueError: Invalid type for parameter b: int(4.1) yielded 4, which is not equal to 4.1
+    """
+    # To minimize the number of Python statements executed, we use list
+    # comprehension and tuple comparison.
+    result = tuple([func(value) for name, value in args.items()])
+    if result != args.values():
+        # Some tuple elements have an inequal value.
+        # Use the (slower) for loop to iterate over the parameters and
+        # report the first that has a problem with an exception.
+        for name, value in args.items ():
+            if value != func(value):
+                raise ValueError(
+                    "Invalid type for parameter %(name)s: "
+                    "%(funcname)s(%(value)s) yielded %(result)s, "
+                    "which is not equal to %(value)s"
+                    % {
+                        "funcname": funcname,
+                        "name": name,
+                        "value": value,
+                        "result": func(value)
+                    }
+                )
+    if len(result) == 1:
+        return result[0]
+    return result
+
+
 def default_sort_key(item, order=None):
     """
     A default sort key for lists of SymPy objects to pass to functions like sorted().
