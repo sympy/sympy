@@ -1,0 +1,6 @@
+=============
+Inner Product
+=============
+
+.. autoclass:: sympy.physics.quantum.InnerProduct
+   :members:

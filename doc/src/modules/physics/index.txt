@@ -14,3 +14,4 @@ Contents
 
     units.txt
     mechanics/index.txt
+    quantum/index.txt

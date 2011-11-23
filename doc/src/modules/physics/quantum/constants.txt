@@ -1,0 +1,9 @@
+=========
+Constants
+=========
+
+Plank's Constant
+================
+
+.. autoclass:: sympy.physics.quantum.HBar
+   :members:

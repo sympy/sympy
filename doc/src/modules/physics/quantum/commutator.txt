@@ -1,0 +1,6 @@
+==========
+Commutator
+==========
+
+.. autoclass:: sympy.physics.quantum.Commutator
+   :members:

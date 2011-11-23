@@ -1,0 +1,6 @@
+==============
+Anticommutator
+==============
+
+.. autoclass:: sympy.physics.quantum.AntiCommutator
+   :members:

@@ -1,0 +1,6 @@
+======
+Dagger
+======
+
+.. autoclass:: sympy.physics.quantum.Dagger
+   :members:

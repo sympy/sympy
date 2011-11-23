@@ -1,0 +1,6 @@
+==============
+Tensor Product
+==============
+
+.. autoclass:: sympy.physics.quantum.TensorProduct
+   :members:

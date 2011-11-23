@@ -1,0 +1,6 @@
+=============
+Kronecker.txt
+=============
+
+.. autoclass:: sympy.physics.quantum.KroneckerDelta
+   :members:

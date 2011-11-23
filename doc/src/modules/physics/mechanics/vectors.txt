@@ -765,3 +765,10 @@ bi-directionally; in that when you orient ``A`` to ``N`` you are setting ``A``'s
 orientation dictionary to include ``N`` and its ``Matrix``, but also you also
 are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 (that DCM being the transpose of the other).
+
+Docstring
+=========
+
+.. autoclass:: sympy.physics.mechanics.Vector
+   :members:
+
