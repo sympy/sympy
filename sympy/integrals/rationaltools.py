@@ -27,7 +27,7 @@ def ratint(f, x, **flags):
        See Also
        ========
 
-       :class:`Integrate`, :function:`sympy.integrals.Integral.doit`,
+       :class:`Integral`, :function:`sympy.integrals.Integral.doit`,
        :function:`ratint_logpart`, :function:`ratint_ratpart`
 
     """
