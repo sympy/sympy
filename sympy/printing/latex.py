@@ -950,7 +950,7 @@ class LatexPrinter(Printer):
             return r"\%s\left(%s, %d\right)" % (cls, expr, index)
         else:
             return r"\operatorname{%s}\left(%s, %d\right)" % (cls, expr, index)
-        
+
 
     def _print_RootSum(self, expr):
         cls = expr.__class__.__name__
