@@ -4,7 +4,6 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from numbers import ilcm, igcd
-
 from collections import defaultdict
 
 class Add(AssocOp):
@@ -206,15 +205,15 @@ class Add(AssocOp):
     @cacheit
     def as_coeff_add(self, *deps):
         """
-        returns a tuple (x, y) with all similar coefficients added in the form
-        x is all numbers without coefficients added
-        y is a tuple in the form of (num * varname, num * varname, ....)
+        Returns a tuple (coeff, args) where self is treated as an Add and coeff
+        is the Number term and args is a tuple of all other terms.
+
         **Examples**
-            >>> from sympy.abc import x, y
-            >>> (7*x + 8*y*x + 19*x + 17*y + 7).as_coeff_add()
-            (7, (8*x*y, 17*y, 26*x))
-            >>> (7*x + 8*y + 19*x + 17*y + 7 + 9).as_coeff_add()
-            (16, (25*y, 26*x))
+        >>> from sympy.abc import x, y
+        >>> (7 + 3*x + 4*x**2).as_coeff_add()
+        (7, (3*x, 4*x**2))
+        >>> (7*x).as_coeff_add()
+        (0, (7*x,))
         """
         if deps:
             l1 = []
@@ -477,7 +476,6 @@ class Add(AssocOp):
     def as_real_imag(self, deep=True):
         """
         returns a tuple represeting a complex numbers
-
         **Examples**
         >>> from sympy import I
         >>> (7 + 9*I).as_real_imag()
@@ -697,6 +695,7 @@ class Add(AssocOp):
         extracted from self.
 
         **Example**
+
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()
         (3, 1 + sqrt(2))

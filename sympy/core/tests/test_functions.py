@@ -233,6 +233,7 @@ def test_function_comparable():
     assert sin(Rational(1,3)).is_comparable == True
     assert cos(Rational(1,3)).is_comparable == True
 
+<<<<<<< HEAD
 @XFAIL
 def test_function_comparable_infinities():
     assert sin(oo).is_comparable    == False
@@ -240,6 +241,8 @@ def test_function_comparable_infinities():
     assert sin(zoo).is_comparable   == False
     assert sin(nan).is_comparable   == False
 
+=======
+>>>>>>> master
 def test_deriv1():
     # These all requre derivatives evaluated at a point (issue 1620) to work.
     # See issue 1525

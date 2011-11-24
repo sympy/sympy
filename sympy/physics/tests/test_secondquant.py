@@ -182,13 +182,14 @@ def test_kronecker_delta():
     assert EV(D(p,j)*D(p,i)*F(j)) == F(i)
     assert EV(D(p,q)*D(p,i))*F(i) == D(q,i)*F(i)
 
-
+@XFAIL
 def Xtest_move1():
     i, j = symbols('i,j')
     o = A(i)*C(j)
     # This almost works, but has a minus sign wrong
     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
 
+@XFAIL
 def Xtest_move2():
     i, j = symbols('i,j')
     o = C(j)*A(i)

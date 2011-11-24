@@ -1,6 +1,8 @@
 from sympy import Ylm, Zlm, Symbol, sympify, sqrt, pi, sin, cos, exp, I, S
 from sympy.functions.special.spherical_harmonics import Pl, Plm, Plmcos
 
+from sympy.utilities.pytest import XFAIL
+
 def test_Pl():
     x = Symbol("x")
     assert Pl(0, x) == 1

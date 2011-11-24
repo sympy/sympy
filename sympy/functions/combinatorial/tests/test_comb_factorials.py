@@ -1,6 +1,8 @@
 from sympy import (Symbol, symbols, factorial, factorial2, binomial,
     rf, ff, gamma, polygamma, EulerGamma, O, pi, nan, oo)
 
+from sympy.utilities.pytest import XFAIL
+
 def test_rf_eval_apply():
     x, y = symbols('x,y')
 
