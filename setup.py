@@ -162,14 +162,20 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        if sympy.test():
-            # all regular tests run successfuly, so let's also run doctests
-            # (if some regular test fails, the doctests are not run)
-            if sympy.doctest():
-                # All ok
-                return
-        # Return nonzero exit code
-        sys.exit(1)
+        tests_successful = True
+        if not sympy.test():
+            # some regular test fails, so set the tests_successful
+            # flag to false and continue running the doctests
+            tests_successful = False
+
+        if not sympy.doctest():
+            tests_successful = False
+
+        if tests_successful:
+            return
+        else:
+            # Return nonzero exit code
+            sys.exit(1)
 
 
 class run_benchmarks(Command):
