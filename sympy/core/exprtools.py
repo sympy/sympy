@@ -339,11 +339,6 @@ def _gcd_terms(terms, isprimitive=False):
         else:
             return terms[0], S.One, S.One
 
-    inf = dict(zip((S.Infinity, S.NegativeInfinity, S.ComplexInfinity),
-                   (Dummy('oo'), Dummy('-oo'), Dummy('zoo'))))
-    terms = [t.subs(inf) for t in terms]
-    inf = dict([(v, k) for k, v in inf.iteritems()])
-
     terms = map(Term, terms)
     cont = terms[0]
 
@@ -372,7 +367,7 @@ def _gcd_terms(terms, isprimitive=False):
         _cont, numer = numer.primitive()
         cont *= _cont
 
-    return cont, numer.subs(inf), denom.subs(inf)
+    return cont, numer, denom
 
 def gcd_terms(terms, isprimitive=False):
     """
