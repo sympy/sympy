@@ -5,7 +5,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     I, S, Limit, oo, cos, atan2, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
-    euler, groebner, catalan)
+    euler, groebner, catalan, KroneckerDelta)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -3124,6 +3124,22 @@ u"""\
      ⎜╲╱ 2 ⋅y    ___⎟\n\
 atan2⎜───────, ╲╱ x ⎟\n\
      ⎝   20         ⎠\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+def test_pretty_KroneckerDelta():
+    x,y = symbols("x, y")
+    expr = KroneckerDelta(x,y)
+    ascii_str = \
+"""\
+d   \n\
+ x,y\
+"""
+    ucode_str = \
+u"""\
+δ   \n\
+ x,y\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

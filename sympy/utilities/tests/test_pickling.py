@@ -148,7 +148,7 @@ def test_core_multidimensional():
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh,
         chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
-        Heaviside, Dij, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
+        Heaviside, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
         arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ylm,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
         LambertW, zeta, log, factorial, asinh, acoth, Zlm,
@@ -160,7 +160,7 @@ from sympy.core import pi, oo, nan, zoo, E, I
 
 def test_functions():
     zero_var = (pi, oo, nan, zoo, E, I)
-    one_var = (acosh, ln, Heaviside, Dij, factorial, bernoulli, coth, tanh,
+    one_var = (acosh, ln, Heaviside, factorial, bernoulli, coth, tanh,
             sign, arg, asin, DiracDelta, re, Abs, sinh, cos, cot, acos, acot,
             gamma, bell, harmonic, LambertW, zeta, log, factorial, asinh,
             acoth, cosh, dirichlet_eta, loggamma, erf, ceiling, im, fibonacci,

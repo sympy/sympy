@@ -1,3 +1,4 @@
+
 About
 =====
 
@@ -146,7 +147,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Luis Garcia: update examples in symarry
 #. Matt Rajca: Code quality fixes
 #. David Li: Documentation fixes
-#. David Ju: Increase test coverage
+#. David Ju: Increase test coverage, fixes to KroneckerDelta
 #. Alexandr Gudulin: Code quality fixes
 #. Bilal Akhtar: isympy man page
 #. Grzegorz Świrski: Fix to latex()
@@ -200,3 +201,4 @@ wiki), all images and all documentation including this User's Guide is licensed
 using the new BSD license:
 
 .. literalinclude:: ../../LICENSE
+

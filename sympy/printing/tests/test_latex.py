@@ -42,6 +42,9 @@ def test_latex_basic():
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
 
+    assert latex(1/sin(x)) == r"\frac{1}{\operatorname{sin}\left(x\right)}"
+    assert latex(sin(x)**-1) == r"\frac{1}{\operatorname{sin}\left(x\right)}"
+
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \times 10^{100}"
     assert latex(Float(1.0e-100)) == r"1.0 \times 10^{-100}"

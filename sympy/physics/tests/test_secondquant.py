@@ -122,6 +122,7 @@ def test_basic_state():
     assert s.down(0) == BosonState([n-1,m])
     assert s.up(0) == BosonState([n+1,m])
 
+<<<<<<< HEAD
 @XFAIL
 def test_kronecker_delta():
     i, j, k = symbols('i,j,k')
@@ -197,6 +198,19 @@ def Xtest_move2():
     o = C(j)*A(i)
     # This almost works, but has a minus sign wrong
     assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
+=======
+# def Xtest_move1():
+#     i, j = symbols('i,j')
+#     o = A(i)*C(j)
+#     # This almost works, but has a minus sign wrong
+#     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
+#
+# def Xtest_move2():
+#     i, j = symbols('i,j')
+#     o = C(j)*A(i)
+#     # This almost works, but has a minus sign wrong
+#     assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
+>>>>>>> 42f3ac398ed36d30d9b4558e1d6e9c38419e147c
 
 def test_basic_apply():
     n = symbols("n")
