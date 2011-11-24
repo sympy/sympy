@@ -562,6 +562,7 @@ def test_sn_cn_dn_identities():
 
     mp.dps = 15
 
+@XFAIL
 def test_sn_cn_dn_complex():
     mp.dps = 30
     # N[JacobiSN[1/4 + I/8, 1/3 + I/7], 35] in Mathematica
@@ -576,8 +577,8 @@ def test_sn_cn_dn_complex():
     res = mpf('0.9762691700944007312693721148331') - \
           mpf('0.0307203994181623243583169154824')*j
     r = jcn(u, m)
-    #assert r.real.ae(res.real)
-    #assert r.imag.ae(res.imag)
+    assert r.real.ae(res.real)
+    assert r.imag.ae(res.imag)
     assert(mpc_ae(r, res))
 
     #N[JacobiDN[1/4 + I/8, 1/3 + I/7], 35]

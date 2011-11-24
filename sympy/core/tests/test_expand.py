@@ -1,4 +1,4 @@
-from sympy import log, sqrt, Rational as R
+from sympy import log, sqrt, Rational as R, Symbol
 
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y

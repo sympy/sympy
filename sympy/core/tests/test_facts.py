@@ -137,10 +137,10 @@ def test_split_rules_tf():
     assert ft == {'b': set(['a'])    }   # XXX ok? maybe vice versa?
     assert ff == {'e': set(['b']), 'a': set(['c'])    }
 
-
+@XFAIL
 def test_FactRules_parse():
     f = FactRules('a -> b')
-#   assert f.negs       == {}
+    assert f.negs       == {}
     assert f.rel_tt     == {'a': set(['b']), 'b': set([])}
     assert f.rel_tf     == {'a': set([]), 'b': set([])}
     assert f.rel_ff     == {'b': set(['a']), 'a': set([])}
