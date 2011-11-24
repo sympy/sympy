@@ -991,6 +991,18 @@ def test_as_coefficients_dict():
     [0, 0, 0, 3, 0]
     assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
 
+def test_args_cnc():
+    a, x = symbols('a,x')
+    A = symbols('A', commutative=False)
+    assert (x+A).args_cnc() == \
+        [set([]), [x + A]]
+    assert (x+a).args_cnc() == \
+        [set([a + x]), []]
+    assert (x*a).args_cnc() == \
+        [set([x, a]), []]
+    assert (x*y*A*(A+1)).args_cnc(clist=True) == \
+        [[x, y], [A, 1 + A]]
+
 def test_new_rawargs():
     x, y = symbols('x,y')
     n = Symbol('n', commutative=False)
