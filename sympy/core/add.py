@@ -206,10 +206,9 @@ class Add(AssocOp):
     @cacheit
     def as_coeff_add(self, *deps):
         """
-        returns a tuple (x, y) with all similar coefficients added in the form 
+        returns a tuple (x, y) with all similar coefficients added in the form
         x is all numbers without coefficients added
-        y is a tuple in the form of (num * varname, num * varname, ....) 
-
+        y is a tuple in the form of (num * varname, num * varname, ....)
         **Examples**
             >>> from sympy.abc import x, y
             >>> (7*x + 8*y*x + 19*x + 17*y + 7).as_coeff_add()
