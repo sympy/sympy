@@ -654,7 +654,6 @@ class Expr(Basic, EvalfMixin):
             return i
 
         co = []
-        args = Add.make_args(self)
         self_c = self.is_commutative
         x_c = x.is_commutative
         if self_c and not x_c:
@@ -1832,7 +1831,7 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
+        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, logx, n))
 
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.

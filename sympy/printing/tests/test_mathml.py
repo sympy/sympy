@@ -4,7 +4,7 @@ from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
 from sympy.printing.mathml import mathml, MathMLPrinter
 from xml.dom.minidom import parseString
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x')
 y = Symbol('y')
@@ -198,12 +198,11 @@ def test_mathml_relational():
     assert mml_4.childNodes[2].nodeName == 'ci'
     assert mml_4.childNodes[2].childNodes[0].nodeValue == 'x'
 
-
 def test_c2p():
     """This tests some optional routines that depend on libxslt1 (which is optional)"""
     try:
         from sympy.modules.mathml import c2p
-        #assert c2p(f.mathml) == result
+        assert c2p(f.mathml) == result
     except ImportError:
         pass
 

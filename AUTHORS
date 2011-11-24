@@ -137,8 +137,17 @@ Miha Marolt <tloramus@gmail.com>
 Luis Garcia <ppn.online@me.com>
 Matt Rajca <matt.rajca@me.com>
 David Li <l33tnerd.li@gmail.com>
+<<<<<<< HEAD
+David Ju
+<<<<<<< HEAD
+=======
+Alexandr Gudulin <alexandr.gudulin@gmail.com>
+Bilal Akhtar <bilalakhtar@ubuntu.com>
+>>>>>>> xfail_tests
+=======
 David Ju <Sgtmook314@gmail.com>
 Alexandr Gudulin <alexandr.gudulin@gmail.com>
 Bilal Akhtar <bilalakhtar@ubuntu.com>
 Grzegorz Świrski <sognat@gmail.com>
 Matt Habel <habelinc@gmail.com>
+>>>>>>> 42f3ac398ed36d30d9b4558e1d6e9c38419e147c

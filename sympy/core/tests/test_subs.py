@@ -1,6 +1,7 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple)
+from sympy.utilities.pytest import XFAIL
 
 def test_subs():
     n3=Rational(3)
@@ -262,6 +263,7 @@ def test_subs_noncommutative():
     assert (w*x*y*z*x*y).subs(x*y*z,L) == w*L*x*y
     assert (w*x*y*y*w*x*x*y*x*y*y*x*y).subs(x*y,L) == w*L*y*w*x*L**2*y*L
 
+@XFAIL
 def test_subs_basic_funcs():
     # Define symbols
     a,b,c,d,K = symbols('a b c d K', commutative=True)
@@ -278,7 +280,7 @@ def test_subs_basic_funcs():
     assert (a*exp(x*y-w*z)+b*exp(x*y+w*z)).subs(z,0) == a*exp(x*y)+b*exp(x*y)
     assert ((a-b)/(c*d-a*b)).subs(c*d-a*b,K) == (a-b)/K
     assert (w*exp(a*b-c)*x*y/4).subs(x*y,L) == w*exp(a*b-c)*L/4
-    #assert (a/(b*c)).subs(b*c,K) == a/K,'Failed'; print '.' #FAILS DIVISION
+    assert (a/(b*c)).subs(b*c,K) == a/K,'Failed'; print '.' #FAILS DIVISION
 
 def test_subs_wild():
     # Define symbols

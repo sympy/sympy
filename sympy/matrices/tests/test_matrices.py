@@ -7,7 +7,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     SparseMatrix, SparseMatrix, NonSquareMatrixError,
     matrix_multiply_elementwise, diag, NonSquareMatrixError)
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.matrices import rot_axis1, rot_axis2, rot_axis3
 
 def test_division():
@@ -1372,7 +1372,7 @@ def test_diagonal_symmetrical():
     assert not m.is_symmetric(simplify=False)
     assert m.expand().is_symmetric(simplify=False)
 
-
+@XFAIL
 def test_diagonalization():
     x, y, z = symbols('x y z')
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
@@ -1431,9 +1431,9 @@ def test_diagonalization():
     raises(NotImplementedError, 'm.is_diagonalizable(True)')
     # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
     # see issue 2193
-    # assert not m.is_diagonalizable(True)
-    # raises(MatrixError, '(P, D) = m.diagonalize(True)')
-    # (P, D) = m.diagonalize(True)
+    assert not m.is_diagonalizable(True)
+    raises(MatrixError, '(P, D) = m.diagonalize(True)')
+    (P, D) = m.diagonalize(True)
 
     # not diagonalizable
     m = Matrix(2,2,[0, 1, 0, 0])
@@ -1595,6 +1595,7 @@ def test_errors():
     raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
     raises(NotImplementedError, "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
 
+@XFAIL
 def test_len():
     assert len(Matrix()) == 0
     assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
@@ -1604,11 +1605,11 @@ def test_len():
     assert not Matrix()
     assert Matrix() == Matrix([])
     # These two matrices have different shape
-    #assert Matrix() == Matrix([[]])
+    assert Matrix() == Matrix([[]])
     assert not SparseMatrix()
     assert SparseMatrix() == SparseMatrix([])
     # These two matrices have different shape
-    #assert SparseMatrix() == SparseMatrix([[]])
+    assert SparseMatrix() == SparseMatrix([[]])
 
 def test_integrate():
     x, y = symbols('x,y')

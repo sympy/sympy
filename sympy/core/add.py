@@ -4,7 +4,6 @@ from singleton import S
 from operations import AssocOp
 from cache import cacheit
 from numbers import ilcm, igcd
-
 from collections import defaultdict
 
 class Add(AssocOp):
@@ -211,10 +210,10 @@ class Add(AssocOp):
 
         **Examples**
         >>> from sympy.abc import x, y
+        >>> (7 + 3*x + 4*x**2).as_coeff_add()
+        (7, (4*x**2, 3*x))
         >>> (7 + 3*x).as_coeff_add()
         (7, (3*x,))
-        >>> (7*x).as_coeff_add()
-        (0, (7*x,))
         """
         if deps:
             l1 = []
@@ -477,9 +476,7 @@ class Add(AssocOp):
     def as_real_imag(self, deep=True):
         """
         returns a tuple represeting a complex numbers
-
         **Examples**
-
         >>> from sympy import I
         >>> (7 + 9*I).as_real_imag()
         (7, 9)
