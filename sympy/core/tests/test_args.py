@@ -665,13 +665,13 @@ def test_sympy__functions__special__polynomials__legendre():
     from sympy.functions.special.polynomials import legendre
     assert _test_args(legendre(x, 2))
 
-def test_sympy__functions__special__tensor_functions__Dij():
-    from sympy.functions.special.tensor_functions import Dij
-    assert _test_args(Dij(x, 2))
-
 def test_sympy__functions__special__tensor_functions__LeviCivita():
     from sympy.functions.special.tensor_functions import LeviCivita
     assert _test_args(LeviCivita(x, y, 2))
+
+def test_sympy__functions__special__tensor_functions__KroneckerDelta():
+    from sympy.functions.special.tensor_functions import KroneckerDelta
+    assert _test_args(KroneckerDelta(x, y))
 
 def test_sympy__functions__special__zeta_functions__dirichlet_eta():
     from sympy.functions.special.zeta_functions import dirichlet_eta
@@ -1008,11 +1008,6 @@ def test_sympy__physics__quantum__hilbert__TensorProductHilbertSpace():
 def test_sympy__physics__quantum__innerproduct__InnerProduct():
     from sympy.physics.quantum.innterproduct import InnerProduct
     assert _test_args(InnerProduct())
-
-@SKIP("TODO: sympy.physics")
-def test_sympy__physics__quantum__kronecker__KroneckerDelta():
-    from sympy.physics.quantum.kronecker import KroneckerDelta
-    assert _test_args(KroneckerDelta())
 
 @SKIP("TODO: sympy.physics")
 def test_sympy__physics__quantum__operator__DifferentialOperator():
@@ -1383,11 +1378,6 @@ def test_sympy__physics__secondquant__FockStateKet():
 def test_sympy__physics__secondquant__InnerProduct():
     from sympy.physics.secondquant import InnerProduct
     assert _test_args(InnerProduct())
-
-@SKIP("TODO: sympy.physics")
-def test_sympy__physics__secondquant__KroneckerDelta():
-    from sympy.physics.secondquant import KroneckerDelta
-    assert _test_args(KroneckerDelta())
 
 @SKIP("TODO: sympy.physics")
 def test_sympy__physics__secondquant__NO():
