@@ -18,6 +18,8 @@ import random
 
 from sympy.mpmath import *
 
+from sympy.utilities.pytest import XFAIL
+
 def mpc_ae(a, b, eps=eps):
     res = True
     res = res and a.real.ae(b.real, eps)
@@ -562,7 +564,6 @@ def test_sn_cn_dn_identities():
 
     mp.dps = 15
 
-@XFAIL
 def test_sn_cn_dn_complex():
     mp.dps = 30
     # N[JacobiSN[1/4 + I/8, 1/3 + I/7], 35] in Mathematica

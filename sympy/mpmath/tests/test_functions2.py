@@ -1,6 +1,8 @@
 import math
 from sympy.mpmath import *
 
+from sympy.utilities.pytest import XFAIL
+
 def test_bessel():
     mp.dps = 15
     assert j0(1).ae(0.765197686557966551)

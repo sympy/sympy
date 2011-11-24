@@ -4,7 +4,7 @@ from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     Derivative)
 from sympy.abc import x, y, z
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_simple_1():
     assert x.nseries(x, n=5) == x

@@ -1,4 +1,5 @@
 from sympy.mpmath import *
+from sympy.utilities.pytest import XFAIL
 
 def test_matrix_basic():
     A1 = matrix(3)
