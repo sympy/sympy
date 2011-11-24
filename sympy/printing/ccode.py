@@ -60,7 +60,7 @@ class CCodePrinter(CodePrinter):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("CCodePrinter cannot assign to object of type %s"%
-                    type(result_variable))
+                    type(assign_to))
 
         # keep a set of expressions that are not strictly translatable to C
         # and number constants that must be declared and initialized

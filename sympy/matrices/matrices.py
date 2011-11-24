@@ -1009,7 +1009,6 @@ class Matrix(object):
         See also: .submatrix()
         """
         cols = self.cols
-        rows = self.rows
         mat = self.mat
         rowsList = [self.key2ij((k,0))[0] for k in rowsList]
         colsList = [self.key2ij((0,k))[1] for k in colsList]

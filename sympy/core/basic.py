@@ -1,6 +1,5 @@
 """Base class for all the objects in SymPy"""
 
-from decorators import _sympifyit
 from assumptions import WithAssumptions
 from cache import cacheit
 from core import BasicType, C

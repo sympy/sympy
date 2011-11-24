@@ -351,7 +351,7 @@ class Prover(object):
         # this is the core of processing
         try:
             self._process_rule(a, b)
-        except TautologyDetected, t:
+        except TautologyDetected:
             pass
 
     def _process_rule(self, a, b):

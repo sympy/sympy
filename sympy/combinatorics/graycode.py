@@ -1,5 +1,4 @@
 from sympy.core import Basic
-from sympy.functions import ceiling, log
 
 from sympy.core.compatibility import bin
 
@@ -162,7 +161,6 @@ class GrayCode(Basic):
         self._current = int(current, 2)
         graycode_int = int(''.join(graycode_bin), 2)
         for i in xrange(graycode_int, 1 << bits):
-            retlist = list(self.current)
             if self._skip:
                 self._skip = False
             else:

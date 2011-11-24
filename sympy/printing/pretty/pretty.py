@@ -1,4 +1,4 @@
-from sympy.core import S, C, Basic, Interval
+from sympy.core import S, C
 from sympy.utilities import group
 
 from sympy.printing.printer import Printer
@@ -6,7 +6,7 @@ from sympy.printing.str import sstr
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
-        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U, \
+        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, \
         annotated
 
 from sympy.utilities import default_sort_key
@@ -353,7 +353,6 @@ class PrettyPrinter(Printer):
 
             h = max(hrequired, 2)
             d = h//2
-            wrequired = max(lower, upper)
             w = d + 1
             more = hrequired % 2
 
@@ -658,11 +657,6 @@ class PrettyPrinter(Printer):
         above = D.height()//2 - 1
         below = D.height() - above - 1
 
-        if self._use_unicode:
-            pic = (2, 0, 2, u'\u250c\u2500\n\u251c\u2500\n\u2575')
-        else:
-            pic = (3, 0, 3, ' _\n|_\n|\n')
-
         sz, t, b, add, img = annotated('F')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline = above + sz)
@@ -768,7 +762,6 @@ class PrettyPrinter(Printer):
         # XXX works only for applied functions
         func = e.func
         args = e.args
-        n = len(args)
 
         func_name = func.__name__
 
@@ -1209,8 +1202,6 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_GroebnerBasis(self, basis):
-        cls = basis.__class__.__name__
-
         exprs = [ self._print_Add(arg, order=basis.order) for arg in basis.exprs ]
         exprs = prettyForm(*self.join(", ", exprs).parens(left="[", right="]"))
 
@@ -1257,11 +1248,6 @@ class PrettyPrinter(Printer):
         pform_arg = prettyForm(" "*arg.width())
         pform_arg = prettyForm(*pform_arg.below(arg))
         pform = prettyForm(*pform.right(pform_arg))
-        return pform
-
-    def _print_atan2(self, e):
-        pform = prettyForm(*self._print_seq(e.args).parens())
-        pform = prettyForm(*pform.left('atan2'))
         return pform
 
 def pretty(expr, **settings):
