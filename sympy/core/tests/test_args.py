@@ -1451,3 +1451,9 @@ def test_sympy__tensor__indexed__Indexed():
 def test_sympy__tensor__indexed__IndexedBase():
     from sympy.tensor.indexed import IndexedBase
     assert _test_args(IndexedBase('A', shape=(x, y)))
+
+@XFAIL
+def test_as_coeff_add():
+    assert (7, (3*x, 4*x**2)) == (7 + 3*x + 4*x**2).as_coeff_add()
+
+
