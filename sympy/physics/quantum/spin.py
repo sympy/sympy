@@ -12,7 +12,7 @@ from sympy.physics.quantum.operator import (
     HermitianOperator, Operator, UnitaryOperator
 )
 from sympy.physics.quantum.state import Bra, Ket, State
-from sympy.physics.quantum.kronecker import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.tensorproduct import TensorProduct
