@@ -305,6 +305,34 @@ class Expr(Basic, EvalfMixin):
             wrt.pop(0)
         return True
 
+    def equals(self, other, failing_expression=False):
+        """Return True if self == other, False if it doesn't, or None. If
+        failing_expression is True then the expression which did not simplify
+        to a 0 will be returned instead of None."""
+        if self == other:
+            return True
+        # they aren't the same
+        diff = factor_terms((self - other).as_content_primitive()[1])
+        if not diff.is_constant:
+            return False
+        loop = 1
+        while 1:
+            if loop == 1:
+                diff = diff.simplify()
+            elif loop == 2:
+                try:
+                    diff = diff.factor()
+                except:
+                    pass
+
+            if diff.is_Number:
+                return diff is S.Zero
+            loop += 1
+            if loop > 2:
+                break
+        if failing_expression:
+            return diff # True, False, or expr
+
     def _eval_interval(self, x, a, b):
         """
         Returns evaluation over an interval.  For most functions this is:
@@ -2250,3 +2278,4 @@ from power import Pow
 from function import Derivative, expand_mul, expand_multinomial, UndefinedFunction
 from sympify import sympify
 from symbol import Wild
+from exprtools import factor_terms
