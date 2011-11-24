@@ -266,6 +266,7 @@ class stringPict(object):
         # 4*y*x  + x  + y     | + b*c*f + b*d*e + b  |                      |
         #                     |                      |                      |
         #                     | *d*f
+        do_vspacers = (self.height() > 1)
 
         i = 0
         svals = []

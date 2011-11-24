@@ -1,4 +1,4 @@
-from sympy.core import S, C
+from sympy.core import S, C, Basic, Interval
 from sympy.utilities import group
 
 from sympy.printing.printer import Printer
@@ -6,7 +6,7 @@ from sympy.printing.str import sstr
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
-        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, \
+        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U, \
         annotated
 
 from sympy.utilities import default_sort_key
@@ -337,6 +337,45 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*arg.left(s))
         return pform
 
+    def _print_Product(self, expr):
+        func = expr.term
+        pretty_func = self._print(func)
+
+        horizontal_chr = xobj('-', 1)
+        corner_chr = xobj('-', 1)
+        vertical_chr = xobj('|', 1)
+
+        if self._use_unicode:
+            # use unicode coreners
+            corner_chr = u'\u252c'
+
+        func_height = pretty_func.height()
+
+        width = (func_height + 2) * 5 // 3 - 2
+        sign_lines = []
+        sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
+        for i in range(func_height+1):
+            sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
+
+        pretty_sign = stringPict('')
+        pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
+
+        pretty_upper = self._print(expr.upper)
+        pretty_lower = self._print(C.Equality(expr.index, expr.lower))
+
+        pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
+        pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
+
+        height = pretty_sign.height()
+        padding = stringPict('')
+        padding = prettyForm(*padding.stack(*[' ']*(height-1)))
+        pretty_sign = prettyForm(*pretty_sign.right(padding))
+
+        pretty_func.baseline = 0
+
+        pretty_func = prettyForm(*pretty_sign.right(pretty_func))
+        return pretty_func
+
     def _print_Sum(self, expr):
         def asum(hrequired, lower, upper):
             def adjust(s, wid=None, how='<^>'):
@@ -353,6 +392,7 @@ class PrettyPrinter(Printer):
 
             h = max(hrequired, 2)
             d = h//2
+            wrequired = max(lower, upper)
             w = d + 1
             more = hrequired % 2
 
@@ -657,6 +697,11 @@ class PrettyPrinter(Printer):
         above = D.height()//2 - 1
         below = D.height() - above - 1
 
+        if self._use_unicode:
+            pic = (2, 0, 2, u'\u250c\u2500\n\u251c\u2500\n\u2575')
+        else:
+            pic = (3, 0, 3, ' _\n|_\n|\n')
+
         sz, t, b, add, img = annotated('F')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline = above + sz)
@@ -762,6 +807,7 @@ class PrettyPrinter(Printer):
         # XXX works only for applied functions
         func = e.func
         args = e.args
+        n = len(args)
 
         func_name = func.__name__
 
@@ -1202,6 +1248,8 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_GroebnerBasis(self, basis):
+        cls = basis.__class__.__name__
+
         exprs = [ self._print_Add(arg, order=basis.order) for arg in basis.exprs ]
         exprs = prettyForm(*self.join(", ", exprs).parens(left="[", right="]"))
 
@@ -1250,18 +1298,10 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right(pform_arg))
         return pform
 
-    def _print_KroneckerDelta(self, e):
-        pform = self._print(e.args[0])
-        pform = prettyForm(*pform.right((prettyForm(','))))
-        pform = prettyForm(*pform.right((self._print(e.args[1]))))
-        if self._use_unicode:
-            a = stringPict(pretty_symbol('delta'))
-        else:
-            a = stringPict('d')
-        b = pform
-        top = stringPict(*b.left(' '*a.width()))
-        bot = stringPict(*a.right(' '*b.width()))
-        return prettyForm(binding=prettyForm.POW, *bot.below(top))
+    def _print_atan2(self, e):
+        pform = prettyForm(*self._print_seq(e.args).parens())
+        pform = prettyForm(*pform.left('atan2'))
+        return pform
 
 def pretty(expr, **settings):
     """

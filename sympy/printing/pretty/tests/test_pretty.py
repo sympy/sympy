@@ -5,7 +5,7 @@ from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     I, S, Limit, oo, cos, atan2, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
-    euler, groebner, catalan, KroneckerDelta)
+    euler, groebner, catalan, Product)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -1452,6 +1452,17 @@ u"""\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+def test_pretty_product():
+    n, k, l = symbols('n k l')
+    f = symbols('f', cls=Function)
+    expr = Product(f(n), (n, k, l))
+
+    unicode_str = u'  l       \n\u252c\u2500\u2500\u2500\u252c     \n\u2502   \u2502 f(n)\n\u2502   \u2502     \nn = k     '
+    ascii_str = '  l       \n-----     \n|   | f(n)\n|   |     \nn = k     '
+
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == unicode_str
 
 def test_pretty_lambda():
     expr = Lambda(x, x)
@@ -3123,22 +3134,6 @@ u"""\
      ⎜╲╱ 2 ⋅y    ___⎟\n\
 atan2⎜───────, ╲╱ x ⎟\n\
      ⎝   20         ⎠\
-"""
-    assert pretty(expr) == ascii_str
-    assert upretty(expr) == ucode_str
-
-def test_pretty_KroneckerDelta():
-    x,y = symbols("x, y")
-    expr = KroneckerDelta(x,y)
-    ascii_str = \
-"""\
-d   \n\
- x,y\
-"""
-    ucode_str = \
-u"""\
-δ   \n\
- x,y\
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
