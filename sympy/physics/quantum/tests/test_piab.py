@@ -3,7 +3,7 @@
 from sympy import S, Interval, symbols, I, DiracDelta, exp, sqrt, pi, sin
 
 from sympy.physics.quantum import L2, qapply, hbar, represent
-from sympy.physics.quantum import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.piab import PIABHamiltonian, PIABKet, PIABBra, m, L
 
 
