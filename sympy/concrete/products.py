@@ -107,6 +107,10 @@ class Product(Expr):
 
     def doit(self, **hints):
         term = self.term
+        if term == 0:
+            return S.Zero
+        elif term == 1:
+            return S.One
         lower = self.lower
         upper = self.upper
         if hints.get('deep', True):
@@ -152,12 +156,7 @@ class Product(Expr):
 
             if len(all_roots) < poly.degree():
                 arg = quo(poly, Q.as_poly(k))
-                if arg == 0:
-                    B = S.Zero
-                elif arg == 1:
-                    B = S.One
-                else:
-                    B = Product(arg, (k, a, n))
+                B = Product(arg, (k, a, n)).doit()
 
             return poly.LC()**(n-a+1) * A * B
 
@@ -183,13 +182,10 @@ class Product(Expr):
             if not exclude:
                 return None
             else:
-                A, B = Mul(*exclude), term._new_rawargs(*include)
-                if B == 0:
-                    return S.Zero
-                elif B == 1:
-                    return A
-                else:
-                    return A * Product(B, (k, a, n))
+                arg = term._new_rawargs(*include)
+                A = Mul(*exclude)
+                B = Product(arg, (k, a, n)).doit()
+                return A * B
 
         elif term.is_Pow:
             if not term.base.has(k):
