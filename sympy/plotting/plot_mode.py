@@ -32,7 +32,8 @@ class PlotMode(PlotObject):
     ## is meant to be overridden in child
     ## classes, and PlotModeBase provides
     ## a base implementation.
-    def draw(self): raise NotImplementedError()
+    def draw(self):
+        raise NotImplementedError()
 
     ## Everything else in this file has to
     ## do with registration and retrieval
@@ -120,7 +121,8 @@ class PlotMode(PlotObject):
             m = None
             if issubclass(mode_arg, PlotMode):
                 m = mode_arg
-        except: pass
+        except:
+            pass
         if m:
             if not m._was_initialized:
                 raise ValueError(("To use unregistered plot mode %s "
@@ -147,10 +149,12 @@ class PlotMode(PlotObject):
                 raise ValueError(var_count_error(False, True))
             # If the string is '', try to find a suitable
             # default mode
-            if not mode_arg: return PlotMode._get_default_mode(i, d)
+            if not mode_arg:
+                return PlotMode._get_default_mode(i, d)
             # Otherwise, interpret the string as a mode
             # alias (e.g. 'cartesian', 'parametric', etc)
-            else: return PlotMode._get_aliased_mode(mode_arg, i, d)
+            else:
+                return PlotMode._get_aliased_mode(mode_arg, i, d)
         else:
             raise ValueError("PlotMode argument must be "
                              "a class or a string")
@@ -228,9 +232,9 @@ class PlotMode(PlotObject):
                 PlotMode._mode_default_map[d][i] = cls
 
         except Exception, e:
-            raise RuntimeError( ("Failed to register "
+            raise RuntimeError(("Failed to register "
                               "plot mode %s. Reason: %s")
-                               % (name, (str(e))) )
+                               % (name, (str(e))))
 
     @classmethod
     def _init_mode(cls):
@@ -243,7 +247,7 @@ class PlotMode(PlotObject):
         ModeSubclass._init_mode().
         """
         def symbols_list(symbol_str):
-            return [ Symbol(s) for s in symbol_str ]
+            return [Symbol(s) for s in symbol_str]
 
         # Convert the vars strs into
         # lists of symbols.
@@ -389,9 +393,13 @@ def var_count_error(is_independent, is_plotting):
     Used to format an error message which differs
     slightly in 4 places.
     """
-    if is_plotting: v = "Plotting"
-    else: v = "Registering plot modes"
-    if is_independent: n, s = PlotMode._i_var_max, "independent"
-    else: n, s = PlotMode._d_var_max, "dependent"
+    if is_plotting:
+        v = "Plotting"
+    else:
+        v = "Registering plot modes"
+    if is_independent:
+        n, s = PlotMode._i_var_max, "independent"
+    else:
+        n, s = PlotMode._d_var_max, "dependent"
     return ("%s with more than %i %s variables "
             "is not supported.") % (v, n, s)

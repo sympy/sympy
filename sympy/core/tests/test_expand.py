@@ -1,4 +1,4 @@
-from sympy import log, sqrt, Rational as R
+from sympy import log, sqrt, Rational as R, Symbol
 
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y
@@ -22,6 +22,11 @@ def test_expand_negative_integer_powers():
     assert expr.expand(multinomial=False) == (x+y)**(-2)
 
 def test_expand_non_commutative_multinomial():
+<<<<<<< HEAD
+    x = Symbol('x', commutative=False)
+    y = Symbol('x', commutative=False)
+=======
+>>>>>>> master
     assert ((x+y)**2).expand() == x*y + y*x + x**2 + y**2
     assert ((x+y)**3).expand() == x**2*y + y**2*x + x*y**2 + y*x**2 + x**3 + y**3 + x*y*x + y*x*y
 

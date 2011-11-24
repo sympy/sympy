@@ -96,8 +96,8 @@ def test_gruntz_eval_special_slow():
 @XFAIL
 def test_gruntz_eval_special_fail():
     # TODO exponential integral Ei
-    # assert gruntz((Ei(x-exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x,
-    #               x, oo) == -1
+    assert gruntz((Ei(x-exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x,
+                  x, oo) == -1
 
     # TODO zeta function series
     assert gruntz(exp((log(2)+1)*x) * (zeta(x+exp(-x)) - zeta(x)), x, oo) \
@@ -292,13 +292,21 @@ def test_limit4():
     #issue 364
     assert gruntz((3**(1/x)+5**(1/x))**x, x, 0) == 5
 
-#@XFAIL
-#def test_MrvTestCase_page47_ex3_21():
-#    h = exp(-x/(1+exp(-x)))
-#    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
-#    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
-#    # XXX Incorrect result
-#    assert mrv(expr,x).difference(expected) == set()
+@XFAIL
+def test_MrvTestCase_page47_ex3_21():
+<<<<<<< HEAD
+    h = exp(-x/(1+exp(-x)))
+    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
+    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
+    # XXX Incorrect result
+    assert mrv(expr,x).difference(expected) == set()
+=======
+     h = exp(-x/(1+exp(-x)))
+     expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
+     expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
+     # XXX Incorrect result
+     assert mrv(expr,x).difference(expected) == set()
+>>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
 def test_I():
     y = Symbol("y")

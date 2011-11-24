@@ -199,26 +199,21 @@ class Add(AssocOp):
 
     @classmethod
     def class_key(cls):
-        """
-        Nice order of classes
-        **Example**
-            >>> (7 + 9*x).class_key()
-            (3, 1, Add)
-        """
+        """Nice order of classes"""
         return 3, 1, cls.__name__
 
     @cacheit
     def as_coeff_add(self, *deps):
         """
-        returns a tuple with all similar coefficients added in the form of (x, y) where:
-            x is all numbers without coefficients added
-            y is a tuple in the form of (num * var, num * var, ....) where num is the coefficients of all things multipled by var
+        Returns a tuple (coeff, args) where self is treated as an Add and coeff
+        is the Number term and args is a tuple of all other terms.
 
         **Examples**
-            >>> (7*x + 8*y*x + 19*x + 17*y + 7).as_coeff_add()
-            (7, (8*x*y, 17*y, 26*x))
-            >>> (7*x + 8*y + 19*x + 17*y + 7 + 9).as_coeff_add()
-            (16, (25*y, 26*x))
+        >>> from sympy.abc import x, y
+        >>> (7 + 3*x + 4*x**2).as_coeff_add()
+        (7, (3*x, 4*x**2))
+        >>> (7*x).as_coeff_add()
+        (0, (7*x,))
         """
         if deps:
             l1 = []
@@ -481,12 +476,10 @@ class Add(AssocOp):
     def as_real_imag(self, deep=True):
         """
         returns a tuple represeting a complex numbers
-            **Examples**
-
-            >>> (7 + 9*I).as_real_imag()
-            (7, 9)
-            >>> Add(10*I + 7).as_real_imag()
-            (7, 10)
+        **Examples**
+        >>> from sympy import I
+        >>> (7 + 9*I).as_real_imag()
+        (7, 9)
         """
         sargs, terms = self.args, []
         re_part, im_part = [], []
@@ -702,6 +695,7 @@ class Add(AssocOp):
         extracted from self.
 
         **Example**
+
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()
         (3, 1 + sqrt(2))

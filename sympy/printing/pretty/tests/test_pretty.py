@@ -2556,6 +2556,7 @@ def test_pretty_no_wrap_line():
 def test_settings():
     raises(TypeError, 'pretty(S(4), method="garbage")')
 
+@XFAIL
 def test_pretty_sum():
     from sympy.abc import x, a, b, k, m, n
 
@@ -2571,7 +2572,11 @@ x = 0  \
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+<<<<<<< HEAD
+    assert  upretty(expr) == ucode_str
+=======
+    assert upretty(expr) == ucode_str
+>>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
     expr = Sum(x**2, (x, 0, oo))
     ascii_str = \
@@ -2586,7 +2591,11 @@ x = 0   \
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+<<<<<<< HEAD
+    assert  upretty(expr) == ucode_str
+=======
+    assert 	upretty(expr) == ucode_str
+>>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
     expr = Sum(x/2, (x, 0, oo))
     ascii_str = \
@@ -2602,7 +2611,11 @@ x = 0  \
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+<<<<<<< HEAD
+    assert  upretty(expr) == ucode_str
+=======
+    assert 	upretty(expr) == ucode_str
+>>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
     expr = Sum(x**3/2, (x, 0, oo))
     ascii_str = \
@@ -2619,7 +2632,11 @@ x = 0   \
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+<<<<<<< HEAD
+    assert  upretty(expr) == ucode_str
+=======
+    assert 	upretty(expr) == ucode_str
+>>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
     expr = Sum((x**3*y**(x/2))**n, (x, 0, oo))
     ascii_str = \
@@ -2637,7 +2654,7 @@ x = 0         \
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert  upretty(expr) == ucode_str
 
     expr = Sum(1/x**2, (x, 0, oo))
     ascii_str = \
@@ -2654,7 +2671,7 @@ x = 0   \
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert  upretty(expr) == ucode_str
 
     expr = Sum(1/y**(a/b), (x, 0, oo))
     ascii_str = \
@@ -2671,7 +2688,7 @@ x = 0    \
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert  upretty(expr) == ucode_str
 
     expr = Sum(1/y**(a/b), (x, 0, oo), (y,1,2))
     ascii_str = \
@@ -2688,7 +2705,7 @@ y = 1 x = 0    \
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert  upretty(expr) == ucode_str
 
     expr = Sum(1/(1 + 1/(1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1+m), oo)) + 1/(1 + 1/k)
     ascii_str = \
@@ -2712,7 +2729,7 @@ k = -----                                \n\
 """
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert  upretty(expr) == ucode_str
 
 def test_units():
     # issue 2461

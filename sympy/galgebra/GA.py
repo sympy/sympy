@@ -2224,6 +2224,11 @@ class MV(object):
                     div_lst.append(self.mv[grade][ibase].as_coefficient(divisor))
         return(div_lst)
 
+    # don't know which one is correctly named
+
+    def div(self):
+        return self.grad_int()
+
     def collect(self,lst):
         """
         Applies sympy collect function to each component
