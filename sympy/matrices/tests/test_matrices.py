@@ -7,7 +7,7 @@ from sympy.matrices.matrices import (ShapeError, MatrixError,
     SparseMatrix, SparseMatrix, NonSquareMatrixError,
     matrix_multiply_elementwise, diag, NonSquareMatrixError)
 from sympy.utilities.iterables import flatten, capture
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.matrices import rot_axis1, rot_axis2, rot_axis3
 
 def test_division():

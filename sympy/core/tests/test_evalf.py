@@ -7,7 +7,7 @@ from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
 
 from sympy.mpmath.libmp.libmpf import from_float
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x')
 y = Symbol('y')

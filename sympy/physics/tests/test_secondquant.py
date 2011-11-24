@@ -15,6 +15,8 @@ from sympy import (
     expand, Function, Dummy
 )
 
+from sympy.utilities.pytest import XFAIL
+
 def test_PermutationOperator():
     p,q,r,s = symbols('p,q,r,s')
     f,g,h,i = map(Function, 'fghi')

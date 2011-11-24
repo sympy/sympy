@@ -1,6 +1,7 @@
 from sympy.mpmath import *
 from sympy.mpmath.calculus.optimization import Secant, Muller, Bisection, Illinois, \
     Pegasus, Anderson, Ridder, ANewton, Newton, MNewton, MDNewton
+from sympy.utilities.pytest import XFAIL
 
 @XFAIL
 def test_findroot():

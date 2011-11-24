@@ -5,7 +5,7 @@ from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
 
 from sympy.printing.python import python
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x, y = symbols('x,y')
 th  = Symbol('theta')

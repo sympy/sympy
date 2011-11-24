@@ -15,6 +15,7 @@ from sympy.physics.quantum.spin import (
     Rotation, WignerD
 )
 
+from sympy.utilities.pytest import XFAIL
 
 def test_represent():
     # Spin operators

@@ -12,7 +12,7 @@ from sympy.printing.pretty import pprint
 
 from sympy.physics.units import joule
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
@@ -2572,11 +2572,7 @@ x = 0  \
 """
 
     assert  pretty(expr) == ascii_str
-<<<<<<< HEAD
     assert  upretty(expr) == ucode_str
-=======
-    assert upretty(expr) == ucode_str
->>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
     expr = Sum(x**2, (x, 0, oo))
     ascii_str = \
@@ -2591,11 +2587,7 @@ x = 0   \
 """
 
     assert  pretty(expr) == ascii_str
-<<<<<<< HEAD
     assert  upretty(expr) == ucode_str
-=======
-    assert 	upretty(expr) == ucode_str
->>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
     expr = Sum(x/2, (x, 0, oo))
     ascii_str = \
@@ -2611,11 +2603,7 @@ x = 0  \
 """
 
     assert  pretty(expr) == ascii_str
-<<<<<<< HEAD
     assert  upretty(expr) == ucode_str
-=======
-    assert 	upretty(expr) == ucode_str
->>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
     expr = Sum(x**3/2, (x, 0, oo))
     ascii_str = \
@@ -2632,11 +2620,7 @@ x = 0   \
 """
 
     assert  pretty(expr) == ascii_str
-<<<<<<< HEAD
     assert  upretty(expr) == ucode_str
-=======
-    assert 	upretty(expr) == ucode_str
->>>>>>> 36c5231cfbdd01601a89472cf6296d021f499920
 
     expr = Sum((x**3*y**(x/2))**n, (x, 0, oo))
     ascii_str = \

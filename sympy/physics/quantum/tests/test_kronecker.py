@@ -2,6 +2,8 @@ from sympy import symbols
 
 from sympy.physics.quantum.kronecker import KroneckerDelta
 
+from sympy.utilities.pytest import XFAIL
+
 @XFAIL
 def test_kronecker_delta():
     i, j, k = symbols('i j k')

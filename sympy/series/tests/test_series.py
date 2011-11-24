@@ -1,7 +1,7 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
                   Function, log, sqrt, Symbol
 from sympy.abc import x, y, n, k
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import XFAIL, raises
 
 def test_sin():
     e1 = sin(x).series(x, 0)

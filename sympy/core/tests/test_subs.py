@@ -1,6 +1,7 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple)
+from sympy.utilities.pytest import XFAIL
 
 def test_subs():
     n3=Rational(3)

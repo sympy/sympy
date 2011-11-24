@@ -51,7 +51,6 @@ def test_bell():
     assert bell(2, x) == x**2 + x
     assert bell(5, x) == x**5 + 10*x**4 + 25*x**3 + 15*x**2 + x
 
-@XFAIL
 def test_harmonic():
     assert harmonic(1,1) == 1
     assert harmonic(2,1) == Rational(3,2)
@@ -86,7 +85,6 @@ def test_euler():
     assert euler(2*n).rewrite(Sum) ==  I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
     assert euler(2*n+1).rewrite(Sum) == 0
 
-@XFAIL
 def test_catalan():
     assert catalan(1) == 1
     assert catalan(2) == 2
