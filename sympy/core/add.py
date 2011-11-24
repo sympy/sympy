@@ -204,6 +204,21 @@ class Add(AssocOp):
         return 3, 1, cls.__name__
 
     def as_coefficients_dict(a):
+        """Return a dictionary mapping terms to their Rational coefficient.
+        Since the dictionary is a defaultdict, inquiries about terms which
+        were not present will return a coefficient of 0. If an expression is
+        not an Add it is considered to have a single term.
+
+        **Example**
+        >>> from sympy.abc import a, x
+        >>> (3*x + a*x + 4).as_coefficients_dict()
+        {1: 4, x: 3, a*x: 1}
+        >>> _[a]
+        0
+        >>> (3*a*x).as_coefficients_dict()
+        {a*x: 3}
+        """
+
         d = defaultdict(list)
         for ai in a.args:
             c, m = ai.as_coeff_Mul()

@@ -4,7 +4,8 @@ from sympy.core.exprtools import (
     decompose_power, Factors, Term, _gcd_terms, gcd_terms, factor_terms)
 
 from sympy import S, Add, sin, Mul, Symbol
-from sympy.abc import x, y, z, t
+from sympy.abc import a, x, y, z, t
+from sympy.core.mul import _keep_coeff as _keep_coeff
 
 def test_decompose_power():
     assert decompose_power(x) == (x, 1)
@@ -92,12 +93,14 @@ def test_gcd_terms():
     assert gcd_terms(sin(arg)) == sin(garg)
 
 def test_factor_terms():
-    from sympy.core.mul import _keep_coeff as _keep_coeff
-    from sympy.abc import x, y
     A = Symbol('A', commutative=False)
     assert factor_terms(9*(x + x*y + 1) + (3*x + 3)**(2 + 2*x)) == \
         9*x*y + 9*x + _keep_coeff(S(3), x + 1)**_keep_coeff(S(2), x + 1) + 9
     assert factor_terms(9*(x + x*y + 1) + (3)**(2 + 2*x)) == \
         _keep_coeff(S(9), 3**(2*x) + x*y + x + 1)
+    assert factor_terms(3**(2 + 2*x) + a*3**(2 + 2*x)) == \
+        9*3**(2*x)*(a + 1)
     assert factor_terms(x + x*A) == \
         x*(1 + A)
+    assert factor_terms(sin(x + x*A)) == \
+        sin(x*(1 + A))

@@ -1215,10 +1215,12 @@ def test_is_constant():
     f = Function('f')
     assert checksol(x, x, f(x)) == False
 
-    assert Pow(x, S(0), evaluate=True).is_constant() == True # == 1
-    assert Pow(S(0), x, evaluate=True).is_constant() == False # == 0 or 1
     p = symbols('p', positive=True)
-    assert Pow(S(0), p, evaluate=True).is_constant() == True # == 1
+    assert Pow(x, S(0), evaluate=False).is_constant() == True # == 1
+    assert Pow(S(0), x, evaluate=False).is_constant() == False # == 0 or 1
+    assert Pow(S(0), p, evaluate=False).is_constant() == True # == 1
+    assert (2**x).is_constant() == False
+    assert Pow(S(2), S(3), evaluate=False).is_constant() == True
 
 def test_equals():
     a, x = symbols('a, x')

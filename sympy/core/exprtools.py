@@ -428,12 +428,13 @@ def factor_terms(expr):
         d = defaultdict(list)
         uargs = []
         for k, v in m.as_powers_dict().iteritems():
+            p = k**v
             if v.is_Mul:
-                if m in pows:
-                    u = pows[m]
+                if p in pows:
+                    u = pows[p]
                 else:
                     u = Dummy()
-                    pows[k**v] = u
+                    pows[p] = u
                 uargs.append(u)
             else:
                 d[k].append(v)
@@ -442,5 +443,5 @@ def factor_terms(expr):
         args[i] = Mul._from_args(uargs + [b**p for b, p in d.iteritems()])
     p = Add._from_args(args)
     pows = dict([(v, k) for k, v in pows.iteritems()])
-    p = gcd_terms(p, isprimitive=True).subs(pows).subs(ncreps) # needs exact=True
+    p = gcd_terms(p, isprimitive=True).subs(pows).subs(ncreps) # needs subs with exact=True
     return _keep_coeff(cont, p)

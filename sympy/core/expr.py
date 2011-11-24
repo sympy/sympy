@@ -310,29 +310,27 @@ class Expr(Basic, EvalfMixin):
         failing_expression is True then the expression which did not simplify
         to a 0 will be returned instead of None."""
 
+        other = sympify(other)
         if self == other:
             return True
-        if self.free_symbols != other.free_symbols:
-            return False
 
         # they aren't the same so see if we can make the difference 0
         diff = factor_terms((self - other).as_content_primitive()[1])
         if not diff.is_constant():
             return False
-        for loop in range(2): # change to 1 more than largest handled inside
-            if loop == 0:
-                diff = diff.simplify()
-            elif loop == 1:
-                try:
-                    diff = diff.factor()
-                except:
-                    pass
 
-            if diff.is_Number:
-                return diff is S.Zero
+        # don't worry about doing these steps a little at a time: if there
+        # is not going to be any control over what to try then just
+        # try everything and know that if a 0 is obtained, the additional
+        # step (e.g. factoring) is going to go quickly
+        diff = diff.simplify().factor()
+        if diff.is_Number:
+            return diff is S.Zero
 
         if failing_expression:
-            return diff # True, False, or expr
+            # return the expression that wouldn't simplify to zero
+            return diff
+        return None
 
     def _eval_interval(self, x, a, b):
         """
@@ -1124,8 +1122,21 @@ class Expr(Basic, EvalfMixin):
         return d
 
     def as_coefficients_dict(self):
-        """Return a dictionary mapping terms to their Number
-        coefficient, e.g. 3*x + a*x + 4 -> {x: 3, a*x: 1, 1: 4}."""
+        """Return a dictionary mapping terms to their Rational coefficient.
+        Since the dictionary is a defaultdict, inquiries about terms which
+        were not present will return a coefficient of 0. If an expression is
+        not an Add it is considered to have a single term.
+
+        **Example**
+        >>> from sympy.abc import a, x
+        >>> (3*x + a*x + 4).as_coefficients_dict()
+        {1: 4, x: 3, a*x: 1}
+        >>> _[a]
+        0
+        >>> (3*a*x).as_coefficients_dict()
+        {a*x: 3}
+
+        """
         c, m = self.as_coeff_Mul()
         if not c.is_Rational:
             c = S.One
