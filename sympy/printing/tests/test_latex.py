@@ -143,7 +143,7 @@ def test_latex_derivatives():
     r"\frac{\partial}{\partial x}\left(x^{2} + \sin\left(x\right)\right)"
 
 def test_latex_integrals():
-    assert latex(Integral(log(x), x)) == r"\int \operatorname{log}\left(x\right)\, dx"
+    assert latex(Integral(log(x), x)) == r"\int \log\left(x\right)\, dx"
     assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\, dx"
     assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\, dx"
     assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\, dx\, dy"
@@ -277,8 +277,8 @@ def test_latex_Poly():
 
 def test_latex_issue1282():
     y = 4*4**log(2)
-    assert latex(y) == '4 \\times 4^{\\operatorname{log}\\left(2\\right)}'
-    assert latex(1/y) == '\\frac{1}{4 \\times 4^{\\operatorname{log}\\left(2\\right)}}'
+    assert latex(y) == '4 \\times 4^{\\log\\left(2\\right)}'
+    assert latex(1/y) == '\\frac{1}{4 \\times 4^{\\log\\left(2\\right)}}'
 
 def test_latex_issue1477():
     assert latex(Symbol("beta_13_2")) == r"\beta_{13 2}"
