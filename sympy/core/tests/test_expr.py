@@ -1219,3 +1219,9 @@ def test_is_constant():
     assert Pow(S(0), x, evaluate=True).is_constant() == False # == 0 or 1
     p = symbols('p', positive=True)
     assert Pow(S(0), p, evaluate=True).is_constant() == True # == 1
+
+def test_equals():
+    a, x = symbols('a, x')
+    assert (x**2 - 1).equals((x + 1)*(x - 1))
+    assert (cos(x)**2 + sin(x)**2).equals(1)
+    assert (a*cos(x)**2 + a*sin(x)**2).equals(a)

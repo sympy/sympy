@@ -394,16 +394,19 @@ def gcd_terms(terms, isprimitive=False):
 
 
 def factor_terms(expr):
-    """
+    """Remove common factors from terms in all arguments without
+    changing the underlying structure of the expr. No expansion or
+    simplification (and no processing of non-commutative) is performed."""
+
+    **Examples**
+
     >>> from sympy import factor_terms, Symbol
     >>> from sympy.abc import x, y
+    >>> factor_terms(x + x*(2 + 4*y)**3)
+    x*(8*(2*y + 1)**3 + 1)
     >>> A = Symbol('A', commutative=False)
-    >>> factor_terms(9*(x + x*y + 1) + (3*x + 3)**(2 + 2*x))
-    9*x*y + 9*x + (3*(x + 1))**(2*(x + 1)) + 9
-    >>> factor_terms(9*(x + x*y + 1) + (3)**(2 + 2*x))
-    9*(3**(2*x) + x*y + x + 1)
-    >>> factor_terms(x + x*A)
-    x*(1 + A)
+    >>> factor_terms(x*A + x*A + x*y*A)
+    x*(y*A + 2*A)
 
     """
 
