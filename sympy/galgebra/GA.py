@@ -16,7 +16,7 @@ import sys
 import types
 import numpy, sympy
 import re as regrep
-import sympy.galgebra.latex_ex as tex
+import sympy.galgebra.latex_ex
 
 NUMPAT = regrep.compile( '([\-0-9])|([\-0-9]/[0-9])')
 """Re pattern for rational number"""
@@ -310,9 +310,9 @@ def LaTeX_lst(lst,title=''):
     Output a list in LaTeX format.
     """
     if title != '':
-        tex.LaTeX(title)
+        sympy.galgebra.latex_ex.LaTeX(title)
     for x in lst:
-        tex.LaTeX(x)
+        sympy.galgebra.latex_ex.LaTeX(x)
     return
 
 def unabs(x):
