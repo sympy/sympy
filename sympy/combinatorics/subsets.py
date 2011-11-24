@@ -201,7 +201,6 @@ class Subset(Basic):
         43
         """
         if self._rank_lex == None:
-            subset_index = [self.superset.index(j) for j in self.subset]
             def ranklex(self, subset_index, i, n):
                 if subset_index == [] or i > n:
                     return 0
@@ -209,7 +208,8 @@ class Subset(Basic):
                     subset_index.remove(i)
                     return 1 + ranklex(self, subset_index, i + 1, n)
                 return 2**(n - i - 1) + ranklex(self, subset_index, i + 1, n)
-            self._rank_lex = ranklex(self, subset_index, 0, self.superset_size)
+            indices = Subset.subset_indices(self.subset, self.superset)
+            self._rank_lex = ranklex(self, indices, 0, self.superset_size)
         return self._rank_lex
 
     @property
@@ -327,8 +327,8 @@ class Subset(Basic):
         bitlist = ['0'] * len(superset)
         if type(subset) is Subset:
             subset = subset.args[0]
-        for i in subset:
-            bitlist[superset.index(i)] = '1'
+        for i in Subset.subset_indices(subset, superset):
+            bitlist[i] = '1'
         return ''.join(bitlist)
 
     @classmethod
@@ -359,6 +359,33 @@ class Subset(Basic):
         """
         graycode_bitlist = GrayCode.unrank(len(superset), rank)
         return Subset.subset_from_bitlist(superset, graycode_bitlist)
+
+    @classmethod
+    def subset_indices(self, subset, superset):
+        """Return indices of subset in superset in a list; the list is empty
+        if all elements of subset are not in superset.
+
+        >>> from sympy.combinatorics import Subset
+        >>> superset = [1, 3, 2, 5, 4]
+        >>> Subset.subset_indices([3, 2, 1], superset)
+        [1, 2, 0]
+        >>> Subset.subset_indices([1, 6], superset)
+        []
+        >>> Subset.subset_indices([], superset)
+        []
+        """
+        a, b = superset, subset
+        sb = set(b)
+        d = {}
+        for i, ai in enumerate(a):
+            if ai in sb:
+                d[ai] = i
+                sb.remove(ai)
+                if not sb:
+                    break
+        else:
+            return list()
+        return [d[bi] for bi in b]
 
 def ksubsets(superset, k):
     """
