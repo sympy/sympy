@@ -338,8 +338,6 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Product(self, expr):
-        import pdb
-        pdb.set_trace()
         func = expr.term
         pretty_func = self._print(func)
 
@@ -373,9 +371,8 @@ class PrettyPrinter(Printer):
         padding = prettyForm(*padding.stack(*[' ']*(height-1)))
         pretty_sign = prettyForm(*pretty_sign.right(padding))
 
-        # pretty_func.baseline = 0
-        # ^^^ this works
-        # i belive it has somethig to do with the baseline which i don't exactly understand how it works
+        pretty_func.baseline = 0
+
         pretty_func = prettyForm(*pretty_sign.right(pretty_func))
         return pretty_func
 
