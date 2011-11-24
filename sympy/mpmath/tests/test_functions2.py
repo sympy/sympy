@@ -308,6 +308,7 @@ def test_e1():
     assert e1(-100j).ae(0.0051488251426104921444 + 0.0085708599058403258790j)
     assert e1(fmul(-10**20, j, exact=True)).ae(6.4525128526578084421e-21 + 7.6397040444172830039e-21j, abs_eps=0, rel_eps=8*eps)
 
+@XFAIL
 def test_expint():
     mp.dps = 15
     assert expint(0,0) == inf
@@ -333,9 +334,13 @@ def test_expint():
     assert expint(1,3j).ae(-0.11962978600800032763 + 0.27785620120457163717j)
     assert expint(1,3).ae(0.013048381094197037413)
     assert expint(1,-3).ae(-ei(3)-pi*j)
+<<<<<<< HEAD
     # Not sure what the writer of this test was trying to do not xfailing or
     # putting in its own test because it's probably just written incorrectly
     # assert expint(3) == expint(1,3)
+=======
+    assert expint(3) == expint(1,3)
+>>>>>>> Removed commented asserts in tests and put xfail tags
     assert expint(1,-20).ae(-25615652.66405658882 - 3.1415926535897932385j)
     assert expint(1000000,0).ae(1./999999)
     assert expint(0,2+3j).ae(-0.025019798357114678171 + 0.027980439405104419040j)
@@ -684,6 +689,7 @@ def test_hyper_2f2():
     assert hyp2f2(a1,a2,b1,b2,-20000).ae(-0.04182343755661214626)
     assert hyp2f2(a1,a2,b1,b2,10**20).ae('1.1148680024303263661e+43429448190325182840')
 
+@XFAIL
 def test_orthpoly():
     mp.dps = 15
     assert jacobi(-4,2,3,0.7).ae(22800./4913)
@@ -691,6 +697,10 @@ def test_orthpoly():
     assert jacobi(1.5,5/6.,4,0).ae(-1.0851951434075508417)
     assert jacobi(-2, 1, 2, 4).ae(-0.16)
     assert jacobi(2, -1, 2.5, 4).ae(34.59375)
+<<<<<<< HEAD
+=======
+    assert jacobi(2, -1, 2, 4) == 28.5
+>>>>>>> Removed commented asserts in tests and put xfail tags
     assert legendre(5, 7) == 129367
     assert legendre(0.5,0).ae(0.53935260118837935667)
     assert legendre(-1,-1) == 1
@@ -745,6 +755,7 @@ def test_hermite():
     assert hermite(-9.5, -100j).ae(-9.7900218581864768430e-23 + 9.7900218581864768430e-23j, abs_eps=0, rel_eps=eps)
     assert hermite(2+3j, -1-j).ae(851.3677063883687676 - 1496.4373467871007997j)
 
+@XFAIL
 def test_gegenbauer():
     mp.dps = 15
     assert gegenbauer(1,2,3).ae(12)
@@ -756,10 +767,13 @@ def test_gegenbauer():
     assert gegenbauer(1, -1.5, 3).ae(-9)
     assert gegenbauer(-0.5, -0.5, 3).ae(-2.6383553159023906245)
     assert gegenbauer(2+3j, 1-j, 3+4j).ae(14.880536623203696780 + 20.022029711598032898j)
+<<<<<<< HEAD
 
 @XFAIL
 def test_gegenbauer_unimplemented():
     assert gegenbauer(1, -0.5, 3).ae(-3)
+=======
+>>>>>>> Removed commented asserts in tests and put xfail tags
     assert gegenbauer(-2, -0.5, 3).ae(-12)
 
 def test_legenp():

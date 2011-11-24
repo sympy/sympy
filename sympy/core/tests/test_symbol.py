@@ -32,16 +32,29 @@ def test_Dummy():
     Dummy._count = 0
     assert d1 == Dummy()
 
+<<<<<<< HEAD
 def test_as_dummy():
+=======
+@XFAIL
+def test_as_dummy_nondummy():
+>>>>>>> Removed commented asserts in tests and put xfail tags
     x = Symbol('x')
     x1 = x.as_dummy()
     assert x1 != x
     assert x1 != x.as_dummy()
+<<<<<<< HEAD
+=======
+    assert x == x1.as_nondummy()
+>>>>>>> Removed commented asserts in tests and put xfail tags
 
     x = Symbol('x', commutative = False)
     x1 = x.as_dummy()
     assert x1 != x
     assert x1.is_commutative == False
+<<<<<<< HEAD
+=======
+    assert x == x1.as_nondummy()
+>>>>>>> Removed commented asserts in tests and put xfail tags
 
     # issue 2446
     x = Symbol('x', real=True, commutative=False)

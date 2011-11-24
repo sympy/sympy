@@ -263,6 +263,7 @@ def test_subs_noncommutative():
     assert (w*x*y*z*x*y).subs(x*y*z,L) == w*L*x*y
     assert (w*x*y*y*w*x*x*y*x*y*y*x*y).subs(x*y,L) == w*L*y*w*x*L**2*y*L
 
+@XFAIL
 def test_subs_basic_funcs():
     # Define symbols
     a,b,c,d,K = symbols('a b c d K', commutative=True)

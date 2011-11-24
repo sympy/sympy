@@ -45,17 +45,18 @@ def test_evalf_rump():
     a = 1335*y**6/4+x**2*(11*x**2*y**2-y**6-121*y**4-2)+11*y**8/2+x/(2*y)
     assert NS(a, 15, subs={x:77617, y:33096}) == '-0.827396059946821'
 
+@XFAIL
 def test_evalf_complex():
     assert NS('2*sqrt(pi)*I',10) == '3.544907702*I'
     assert NS('3+3*I',15) == '3.00000000000000 + 3.00000000000000*I'
     assert NS('E+pi*I',15) == '2.71828182845905 + 3.14159265358979*I'
     assert NS('pi * (3+4*I)',15) == '9.42477796076938 + 12.5663706143592*I'
     assert NS('I*(2+I)',15) == '-1.00000000000000 + 2.00000000000000*I'
-    assert NS('(pi+E*I)*(E+pi*I)',15,chop=True) == '17.2586605000200*I'
 
 @XFAIL
 def test_evalf_complex_bug():
     assert NS('(pi+E*I)*(E+pi*I)',15) in ('.0e-15 + 17.25866050002*I', '.0e-17 + 17.25866050002*I', '-.0e-17 + 17.25866050002*I')
+    assert NS('(pi+E*I)*(E+pi*I)',15,chop=True) == '17.2586605000200*I'
 
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \

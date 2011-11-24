@@ -17,6 +17,7 @@ def test_levicivita():
     assert LeviCivita(4, 5, 1, 2, 3) == 1
     assert LeviCivita(4, 5, 2, 1, 3) == -1
 
+@XFAIL
 def test_kronecker_delta():
     i, j = symbols('i,j')
     k = Symbol('k', nonzero=True)

@@ -2,6 +2,7 @@ from sympy import I
 from sympy.physics.paulialgebra import Pauli
 from sympy.utilities.pytest import XFAIL
 
+@XFAIL
 def test_Pauli():
     sigma1=Pauli(1)
     sigma2=Pauli(2)
@@ -28,7 +29,11 @@ def test_Pauli():
 
 
     assert sigma1*2*sigma1 == 2
+<<<<<<< HEAD
 
 @XFAIL
 def test_Pauli_should_work():
     assert sigma1*sigma3*sigma1 == -sigma3
+=======
+    assert sigma1*sigma3*sigma1 == -sigma3   # XXX should work
+>>>>>>> Removed commented asserts in tests and put xfail tags
