@@ -86,3 +86,7 @@ def test_gcd_terms():
     assert gcd_terms(1) == 1
     assert gcd_terms(x) == x
     assert gcd_terms(2 + 2*x) == Mul(2, 1 + x, evaluate=False)
+    arg = x*(2*x + 4*y)
+    garg = 2*x*(x + 2*y)
+    assert gcd_terms(arg) == garg
+    assert gcd_terms(sin(arg)) == sin(garg)
