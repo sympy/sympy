@@ -1,11 +1,14 @@
 from sympy.functions import sqrt, sign
-from sympy.core import S, Wild, Rational, sympify, Mul
+from sympy.core import S, Wild, Rational, sympify, Mul, Expr
 from sympy.core.mul import prod
 
 def sqrtdenest(expr):
     """
-    Denests an expression that contains nested square roots.
-    This algorithm is based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
+    Denests sqrts in an expression that contain other square roots
+    if possible, otherwise return the expr unchanged.
+
+    This algorithm is based on
+    <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 
     Example:
     >>> from sympy.simplify.sqrtdenest import sqrtdenest
@@ -17,13 +20,21 @@ def sqrtdenest(expr):
     """
     expr = sympify(expr)
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
-        return denester([expr])[0]
+        n, d = expr.as_numer_denom()
+        if d is S.One:
+            return denester([expr])[0]
+        else:
+            return sqrtdenest(n)/sqrtdenest(d)
+    elif isinstance(expr, Expr):
+        args = expr.args
+        if args:
+            return expr.func(*[sqrtdenest(a) for a in args])
     return expr
 
-def denester (nested):
+def denester(nested):
     """
     Denests a list of expressions that contain nested square roots.
-    This method should not be called directly - use 'denest' instead.
+    This method should not be called directly - use 'sqrtdenest' instead.
     This algorithm is based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 
     It is assumed that all of the elements of 'nested' share the same
@@ -44,16 +55,22 @@ def denester (nested):
     if all((n**2).is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
             p = prod(nested[i]**2 for i in range(len(f)) if f[i]).expand()
-            if 1 in f and f.count(1) > 1 and f[-1]: p = -p
-            if sqrt(p).is_Number: return sqrt(p), f #If we got a perfect square, return its square root.
+            if 1 in f and f.count(1) > 1 and f[-1]:
+                p = -p
+            if sqrt(p).is_Number:
+                return sqrt(p), f #If we got a perfect square, return its square root.
         return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
     else:
         a, b, r, R = Wild('a'), Wild('b'), Wild('r'), None
-        values = [expr.match(sqrt(a + b * sqrt(r))) for expr in nested]
+        values = filter(None, [expr.match(sqrt(a + b * sqrt(r))) for expr in nested])
         for v in values:
             if r in v: #Since if b=0, r is not defined
-                if R is not None: assert R == v[r] #All the 'r's should be the same.
-                else: R = v[r]
+                if R is not None:
+                    assert R == v[r] #All the 'r's should be the same.
+                else:
+                    R = v[r]
+        if R is None:
+            return nested[-1], [0]*len(nested) # return the radicand from the previous invocation.
         d, f = denester([sqrt((v[a]**2).expand()-(R*v[b]**2).expand()) for v in values] + [sqrt(R)])
         if not any(f[i] for i in range(len(nested))): #If f[i]=0 for all i < len(nested)
             v = values[-1]
