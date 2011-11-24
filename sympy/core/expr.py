@@ -309,17 +309,20 @@ class Expr(Basic, EvalfMixin):
         """Return True if self == other, False if it doesn't, or None. If
         failing_expression is True then the expression which did not simplify
         to a 0 will be returned instead of None."""
+
         if self == other:
             return True
-        # they aren't the same
-        diff = factor_terms((self - other).as_content_primitive()[1])
-        if not diff.is_constant:
+        if self.free_symbols != other.free_symbols:
             return False
-        loop = 1
-        while 1:
-            if loop == 1:
+
+        # they aren't the same so see if we can make the difference 0
+        diff = factor_terms((self - other).as_content_primitive()[1])
+        if not diff.is_constant():
+            return False
+        for loop in range(2): # change to 1 more than largest handled inside
+            if loop == 0:
                 diff = diff.simplify()
-            elif loop == 2:
+            elif loop == 1:
                 try:
                     diff = diff.factor()
                 except:
@@ -327,9 +330,7 @@ class Expr(Basic, EvalfMixin):
 
             if diff.is_Number:
                 return diff is S.Zero
-            loop += 1
-            if loop > 2:
-                break
+
         if failing_expression:
             return diff # True, False, or expr
 
@@ -581,23 +582,24 @@ class Expr(Basic, EvalfMixin):
         return count_ops(self, visual)
 
     def args_cnc(self, clist=False):
-        """treat self as Mul and split it into tuple (set, list)
-        where ``set`` contains the commutative parts and ``list`` contains
-        the ordered non-commutative args. If ``clist`` is True then the
-        commutative parts will be retained in their original order and be
-        returned in a list.
+        """Treat self as a Mul and return the commutative and noncommutative
+        arguments in a tuple as (set, list); if ``clist`` is True the set
+        will contain the commutative arguments in the same order as they
+        appeared in self.
 
-        A special treatment is that -1 is separated from a Rational:
+        Note: -1 is always separated from a Rational.
 
         >>> from sympy import symbols
         >>> A, B = symbols('A B', commutative=0)
         >>> x, y = symbols('x y')
         >>> (-2*x*y).args_cnc()
         [set([-1, 2, x, y]), []]
+        >>> (-2*x*y).args_cnc(clist=True)
+        [[-1, 2, x, y], []]
         >>> (-2*x*A*B*y).args_cnc()
         [set([-1, 2, x, y]), [A, B]]
 
-        The arg is treated as a Mul:
+        The arg is always treated as a Mul:
 
         >>> (-2 + x + A).args_cnc()
         [set(), [x - 2 + A]]

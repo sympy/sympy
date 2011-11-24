@@ -396,7 +396,7 @@ def gcd_terms(terms, isprimitive=False):
 def factor_terms(expr):
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
-    simplification (and no processing of non-commutative) is performed."""
+    simplification (and no processing of non-commutative) is performed.
 
     **Examples**
 
