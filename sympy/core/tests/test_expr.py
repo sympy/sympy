@@ -1186,6 +1186,7 @@ def test_issue_2744():
 
 def test_is_constant():
     from sympy.abc import a, n, x, y
+    from sympy.solvers.solvers import checksol
     Sum(x, (x, 1, 10)).is_constant() == True
     Sum(x, (x, 1, n)).is_constant() == False
     Sum(x, (x, 1, n)).is_constant(y) == True
@@ -1194,3 +1195,15 @@ def test_is_constant():
     eq = a*cos(x)**2 + a*sin(x)**2 - a
     eq.is_constant() == True
     assert eq.subs({x:pi, a:2}) == eq.subs({x:pi, a:3}) == 0
+    assert x.is_constant() is False
+    assert x.is_constant(y) is True
+
+    assert checksol(x, x, Sum(x, (x, 1, n))) == False
+    assert checksol(x, x, Sum(x, (x, 1, n))) == False
+    f = Function('f')
+    assert checksol(x, x, f(x)) == False
+
+    assert Pow(x, S(0), evaluate=True).is_constant() == True # == 1
+    assert Pow(S(0), x, evaluate=True).is_constant() == False # == 0 or 1
+    p = symbols('p', positive=True)
+    assert Pow(S(0), p, evaluate=True).is_constant() == True # == 1

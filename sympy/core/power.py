@@ -943,9 +943,12 @@ class Pow(Expr):
 
     def is_constant(self, *wrt):
         b, e = self.as_base_exp()
-        if b.is_constant(*wrt):
-            return e.is_constant(*wrt)
-        return e.is_constant and e == 0
+        econ = e.is_constant(*wrt)
+        bcon = b.is_constant(*wrt)
+        if bcon:
+            return econ
+        elif bcon is False:
+            return e.equals(0)
 
 from add import Add
 from numbers import Integer
