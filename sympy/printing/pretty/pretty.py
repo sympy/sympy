@@ -336,7 +336,49 @@ class PrettyPrinter(Printer):
 
         pform = prettyForm(*arg.left(s))
         return pform
+        
+    def _print_Product(self, expr):
+        import pdb
+        pdb.set_trace()
+        func = expr.term
+        pretty_func = self._print(func)
+        
+        horizontal_chr = xobj('-', 1)
+        corner_chr = xobj('-', 1)
+        vertical_chr = xobj('|', 1)
+        
+        if self._use_unicode:
+            # use unicode coreners
+            corner_chr = u'\u252c'
+        
+        func_height = pretty_func.height()
+        
+        width = (func_height + 2) * 5 // 3 - 2
+        sign_lines = []
+        sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
+        for i in range(func_height+1):
+            sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
+        
+        pretty_sign = stringPict('')
+        pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
+        
+        pretty_upper = self._print(expr.upper)
+        pretty_lower = self._print(C.Equality(expr.index, expr.lower))
 
+        pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
+        pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
+        
+        height = pretty_sign.height()
+        padding = stringPict('')
+        padding = prettyForm(*padding.stack(*[' ']*(height-1)))
+        pretty_sign = prettyForm(*pretty_sign.right(padding))
+        
+        # pretty_func.baseline = 0            
+        # ^^^ this works
+        # i belive it has somethig to do with the baseline which i don't exactly understand how it works
+        pretty_func = prettyForm(*pretty_sign.right(pretty_func))
+        return pretty_func
+    
     def _print_Sum(self, expr):
         def asum(hrequired, lower, upper):
             def adjust(s, wid=None, how='<^>'):
