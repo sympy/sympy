@@ -34,7 +34,10 @@ def test_expand():
     x = Symbol('x')
     assert (2**(-1-x)).expand() == Rational(1,2)*2**(-x)
 
+<<<<<<< HEAD
 @XFAIL
+=======
+>>>>>>> master
 def test_issue350():
     #test if powers are simplified correctly
     #see also issue 896
