@@ -5,6 +5,8 @@ import time
 import math
 import cmath
 
+from sympy.utilities.pytest import XFAIL
+
 def mpc_ae(a, b, eps=eps):
     res = True
     res = res and a.real.ae(b.real, eps)
@@ -460,6 +462,7 @@ def test_aliases():
     assert power(-1,0.5) == j
     assert fmod(25,7) == 4.0 and isinstance(fmod(25,7), mpf)
 
+@XFAIL
 def test_arg_sign():
     assert arg(3) == 0
     assert arg(-3).ae(pi)
@@ -474,7 +477,7 @@ def test_arg_sign():
     assert arg(inf) == 0
     assert arg(-inf).ae(pi)
     assert isnan(arg(nan))
-    #assert arg(inf*j).ae(pi/2)
+    assert arg(inf*j).ae(pi/2)
     assert sign(0) == 0
     assert sign(3) == 1
     assert sign(-3) == -1

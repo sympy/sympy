@@ -15,6 +15,8 @@ from sympy import (
     expand, Function, Dummy
 )
 
+from sympy.utilities.pytest import XFAIL
+
 def test_PermutationOperator():
     p,q,r,s = symbols('p,q,r,s')
     f,g,h,i = map(Function, 'fghi')
@@ -120,17 +122,19 @@ def test_basic_state():
     assert s.down(0) == BosonState([n-1,m])
     assert s.up(0) == BosonState([n+1,m])
 
-# def Xtest_move1():
-#     i, j = symbols('i,j')
-#     o = A(i)*C(j)
-#     # This almost works, but has a minus sign wrong
-#     assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
-#
-# def Xtest_move2():
-#     i, j = symbols('i,j')
-#     o = C(j)*A(i)
-#     # This almost works, but has a minus sign wrong
-#     assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
+@XFAIL
+def Xtest_move1():
+    i, j = symbols('i,j')
+    o = A(i)*C(j)
+    # This almost works, but has a minus sign wrong
+    assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
+
+@XFAIL
+def Xtest_move2():
+    i, j = symbols('i,j')
+    o = C(j)*A(i)
+    # This almost works, but has a minus sign wrong
+    assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
 
 def test_basic_apply():
     n = symbols("n")
@@ -196,6 +200,7 @@ def test_sho():
     for i in range(len(diag)):
         assert diag[i] == m[i, i]
 
+@XFAIL
 def test_commutation():
     n, m = symbols("n,m", above_fermi=True)
     c = Commutator(B(0), Bd(0))
@@ -222,8 +227,8 @@ def test_commutation():
     assert C(C(X,Y),Z) != 0
     assert C(C(X,Z),Y) != 0
     assert C(Y,C(X,Z)) != 0
-    # assert (C(C(Y,Z),X).eval_nested() + C(C(Z,X),Y).eval_nested() + C(C(X,Y),Z).eval_nested()) == 0
-    # assert (C(X,C(Y,Z)).eval_nested() + C(Y,C(Z,X)).eval_nested() + C(Z,C(X,Y)).eval_nested()) == 0
+    assert (C(C(Y,Z),X).eval_nested() + C(C(Z,X),Y).eval_nested() + C(C(X,Y),Z).eval_nested()) == 0
+    assert (C(X,C(Y,Z)).eval_nested() + C(Y,C(Z,X)).eval_nested() + C(Z,C(X,Y)).eval_nested()) == 0
 
     i,j,k,l = symbols('i,j,k,l',below_fermi=True)
     a,b,c,d = symbols('a,b,c,d',above_fermi=True)

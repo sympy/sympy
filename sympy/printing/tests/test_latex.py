@@ -75,6 +75,7 @@ def test_latex_Float():
     assert latex(1.0*oo) == r"\infty"
     assert latex(-1.0*oo) == r"- \infty"
 
+@XFAIL
 def test_latex_symbols():
     Gamma, lmbda, rho = map(Symbol, ('Gamma', 'lambda', 'rho'))
     mass, volume = map(Symbol, ('mass', 'volume'))
@@ -86,9 +87,9 @@ def test_latex_symbols():
     assert latex(Symbol('alpha_new')) == r"\alpha_{new}"
     assert latex(Symbol('C^orig')) == r"C^{orig}"
 
-    #assert latex(volume * rho == mass) == r"\rho \mathrm{volume} = \mathrm{mass}"
-    #assert latex(volume / mass * rho == 1) == r"\rho \mathrm{volume} {\mathrm{mass}}^{(-1)} = 1"
-    #assert latex(mass**3 * volume**3) == r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"
+    assert latex(volume * rho == mass) == r"\rho \mathrm{volume} = \mathrm{mass}"
+    assert latex(volume / mass * rho == 1) == r"\rho \mathrm{volume} {\mathrm{mass}}^{(-1)} = 1"
+    assert latex(mass**3 * volume**3) == r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"
 
 def test_latex_functions():
     assert latex(exp(x)) == "e^{x}"

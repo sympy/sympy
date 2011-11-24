@@ -292,13 +292,13 @@ def test_limit4():
     #issue 364
     assert gruntz((3**(1/x)+5**(1/x))**x, x, 0) == 5
 
-#@XFAIL
-#def test_MrvTestCase_page47_ex3_21():
-#    h = exp(-x/(1+exp(-x)))
-#    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
-#    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
-#    # XXX Incorrect result
-#    assert mrv(expr,x).difference(expected) == set()
+@XFAIL
+def test_MrvTestCase_page47_ex3_21():
+    h = exp(-x/(1+exp(-x)))
+    expr = exp(h)*exp(-x/(1+h))*exp(exp(-x+h))/h**2-exp(x)+x
+    expected = set([1/h,exp(x),exp(x-h),exp(x/(1+h))])
+    # XXX Incorrect result
+    assert mrv(expr,x).difference(expected) == set()
 
 def test_I():
     y = Symbol("y")
