@@ -211,7 +211,7 @@ class Add(AssocOp):
         **Examples**
         >>> from sympy.abc import x, y
         >>> (7 + 3*x + 4*x**2).as_coeff_add()
-        (7, (3*x, 4*x**2))
+        (7, (4*x**2, 3*x))
         >>> (7*x).as_coeff_add()
         (0, (7*x,))
         """
