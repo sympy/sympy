@@ -1050,7 +1050,7 @@ def radsimp(expr, symbolic=True):
     """
     Rationalize the denominator by removing square roots. If there are more
     than 3 terms (after collecting common square root terms) that have
-    square roots then the removal is only partial.
+    square roots then the removal is in general only partial.
 
     Note: the expression returned from radsimp must be used with caution
     since if the denominator contains symbols, it will be possible to make
@@ -1087,7 +1087,7 @@ def radsimp(expr, symbolic=True):
     - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
 
     But if there are more than 3 terms with square roots then the removal
-    will only be partial:
+    will in general only be partial:
 
     >>> three_rads = sqrt(2) + sqrt(3) + sqrt(5)
     >>> den = sqrt(2) + sqrt(three_rads)
@@ -1137,6 +1137,7 @@ def radsimp(expr, symbolic=True):
             d = sqrtdenest(sqrt(d.base))**d.exp.p
 
         changed = False
+        nterms4 = False
         while 1:
             # collect similar terms
             d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
@@ -1147,11 +1148,32 @@ def radsimp(expr, symbolic=True):
             # - don't continue if there are more than 3 radical terms
             #   unless there are radicals with terms inside that might
             #   cancel existing terms XXX not yet implemented
-            # - don't continue if there are more than 3 terms and a constant
-            #   term, too.
-            if not nterms or nterms > 3 or nterms == 3 and len(d.args) > 4:
+            # - don't continue if there are more than 4 radical
+            #   terms and a constant term, too; in the case of 4 radical
+            #   terms don't continue if they do not reduce after an
+            #   iteration
+            if not nterms:
+                break
+            elif nterms > 4 or nterms4 and nterms == 4 and len(d.args) > 5:
+                n, d = fraction(expr)
                 break
             changed = True
+
+            # now match for a radical
+            if nterms == 4 and len(d.args) == 5:
+                r = d.match(a + b*sqrt(c) + D*sqrt(E) + F*sqrt(G))
+                va, vb, vc, vd, ve, vf, vg = \
+                    r[a], r[b], r[c], r[D], r[E], r[F], r[G]
+                nmul = va - vb*sqrt(vc) - vd*sqrt(ve) - vf*sqrt(vg)
+                d = va**2 - vc*vb**2 - ve*vd**2 - vg*vf**2 - \
+                2*vb*vd*sqrt(vc*ve) - 2*vb*vf*sqrt(vc*vg) - 2*vd*vf*sqrt(ve*vg)
+                nterms4 = True
+                n1 = n/d
+                if denom(n1) is not S.One:
+                    n = -(-n/d)
+                else:
+                    n = n1
+                n, d = fraction(n*nmul)
 
             if len(d.args) == 4:
                 r = d.match(a + b*sqrt(c) + D*sqrt(E))
@@ -1165,7 +1187,6 @@ def radsimp(expr, symbolic=True):
                     n = n1
                 n, d = fraction(n*nmul)
 
-            # now match for a radical
             else:
                 r = d.match(a + b*sqrt(c))
                 if not r or r[b] == 0:
@@ -1189,7 +1210,7 @@ def radsimp(expr, symbolic=True):
             expr = nexpr
         return expr
 
-    a, b, c, D, E = map(Wild, 'abcDE')
+    a, b, c, D, E, F, G = map(Wild, 'abcDEFG')
     # do this at the start in case no other change is made since
     # it is done if a change is made
     coeff, expr = expr.as_content_primitive()

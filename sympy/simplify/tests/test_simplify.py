@@ -834,7 +834,9 @@ def test_radsimp():
         46*sqrt(6) +
         53*sqrt(5)), evaluate=False)
     assert radsimp(1/(r2 + r3 + r5 + r7)) == \
-        1/(sqrt(2) + sqrt(3) + sqrt(5) + sqrt(7))
+        Mul(S(1)/215, -50*sqrt(42) - 133*sqrt(5) - 34*sqrt(70) -
+        145*sqrt(3) + 22*sqrt(105) + 185*sqrt(2) +
+        62*sqrt(30) + 135*sqrt(7), evaluate=False)
     assert radsimp(1/(r2*3)) == \
         sqrt(2)/6
     assert radsimp(1/(r2*a + r2*b + r3 + r7)) == \
