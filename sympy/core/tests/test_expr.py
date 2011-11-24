@@ -983,6 +983,14 @@ def test_as_powers_dict():
     assert (x**y*z).as_powers_dict() == {x: y, z: 1}
     assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
 
+def test_as_coefficients_dict():
+    check = [S(1), x, y, x*y, 1]
+    assert [Add(3*x, 2*x, y, 3).as_coefficients_dict()[i] for i in check] == \
+    [3, 5, 1, 0, 0]
+    assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
+    [0, 0, 0, 3, 0]
+    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
+
 def test_new_rawargs():
     x, y = symbols('x,y')
     n = Symbol('n', commutative=False)

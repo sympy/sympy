@@ -7,8 +7,6 @@ from numbers import ilcm, igcd
 
 from collections import defaultdict
 
-from collections import defaultdict
-
 class Add(AssocOp):
 
     __slots__ = []
@@ -215,7 +213,9 @@ class Add(AssocOp):
                 d[k] = v[0]
             else:
                 d[k] = Add(*v)
-        return d
+        di = defaultdict(int)
+        di.update(d)
+        return di
 
     @cacheit
     def as_coeff_add(self, *deps):
