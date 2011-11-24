@@ -1,6 +1,7 @@
 from sympy import I
 from sympy.physics.paulialgebra import Pauli
 
+@XFAIL
 def test_Pauli():
     sigma1=Pauli(1)
     sigma2=Pauli(2)
@@ -27,4 +28,4 @@ def test_Pauli():
 
 
     assert sigma1*2*sigma1 == 2
-    #assert sigma1*sigma3*sigma1 == -sigma3     XXX should work
+    assert sigma1*sigma3*sigma1 == -sigma3     XXX should work

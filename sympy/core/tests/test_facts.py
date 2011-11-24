@@ -137,10 +137,10 @@ def test_split_rules_tf():
     assert ft == {'b': set(['a'])    }   # XXX ok? maybe vice versa?
     assert ff == {'e': set(['b']), 'a': set(['c'])    }
 
-
+@XFAIL
 def test_FactRules_parse():
     f = FactRules('a -> b')
-#   assert f.negs       == {}
+    assert f.negs       == {}
     assert f.rel_tt     == {'a': set(['b']), 'b': set([])}
     assert f.rel_tf     == {'a': set([]), 'b': set([])}
     assert f.rel_ff     == {'b': set(['a']), 'a': set([])}
@@ -311,6 +311,7 @@ def test_FactRules_deduce_staticext():
 #
 # However disabled test stays here just in case (maybe we'll return to this
 # idea some day)
+@XFAIL
 def X_test_FactRules_deduce_cow():
     f = FactRules(['real  == neg | zero | pos',
                    'neg   -> real & !zero & !pos',
@@ -333,4 +334,4 @@ def X_test_FactRules_deduce_cow():
     assert base == {'real': T, 'neg': F}
 
     assert X == {'real': T, 'neg': F, 'zero': F, 'pos': T}
-    #assert set(new_knowledge) == set([ ('zero',F), ('pos',T) ])    # XXX disabled
+    assert set(new_knowledge) == set([ ('zero',F), ('pos',T) ])    # XXX disabled

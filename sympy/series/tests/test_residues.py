@@ -28,14 +28,16 @@ def _test_f():
     f = Function("f")
     assert residue(f(x)/x**5, x, 0) == f.diff(x, 4)/24
 
+@XFAIL
 def test_functions():
     x = Symbol("x")
     assert residue(1/sin(x), x, 0) == 1
     assert residue(2/sin(x), x, 0) == 2
     assert residue(1/sin(x)**2, x, 0) == 0
     # FIXME: the series expansion fails to return the right answer:
-    #assert residue(1/sin(x)**5, x, 0) == S(3)/8
+    assert residue(1/sin(x)**5, x, 0) == S(3)/8
 
+@XFAIL
 def test_expressions():
     x = Symbol("x")
     assert residue(1/(x+1), x, 0) == 0
@@ -45,4 +47,4 @@ def test_expressions():
     assert residue(1/(x**2+1), x, -I) == I/2
     assert residue(1/(x**4+1), x, 0) == 0
     # FIXME: this fails:
-    #assert residue(1/(x**4+1), x, exp(I*pi/4)) == -(S(1)/4+I/4)/sqrt(2)
+    assert residue(1/(x**4+1), x, exp(I*pi/4)) == -(S(1)/4+I/4)/sqrt(2)
