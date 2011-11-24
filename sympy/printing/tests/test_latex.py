@@ -7,6 +7,7 @@ from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta
+from sympy.logic import *
 
 x, y, z, t = symbols('x y z t')
 k, n = symbols('k n', integer=True)
@@ -44,6 +45,15 @@ def test_latex_basic():
 
     assert latex(1/sin(x)) == r"\frac{1}{\operatorname{sin}\left(x\right)}"
     assert latex(sin(x)**-1) == r"\frac{1}{\operatorname{sin}\left(x\right)}"
+
+    assert latex(~x) == r"\neg x"
+    assert latex(~x, symbol_names={x:"x_i"}) == r"\neg x_i"
+    assert latex(x & y) == r"x \wedge y"
+    assert latex(x & y & z) == r"x \wedge y \wedge z"
+    assert latex(x | y) == r"x \vee y"
+    assert latex(x | y | z) == r"x \vee y \vee z"
+    assert latex((x & y) | z) == r"\left(x \wedge y\right) \vee z"
+    assert latex(Implies(x,y)) == r"x \Rightarrow y"
 
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \times 10^{100}"
