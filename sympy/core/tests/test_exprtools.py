@@ -106,3 +106,5 @@ def test_factor_terms():
         sin(x*(1 + A))
     assert factor_terms((3*x + 3)**((2 + 2*x)/3)) == \
         _keep_coeff(S(3), x + 1)**_keep_coeff(S(2)/3, x + 1)
+    assert factor_terms(x + (x*y + x)**(3*x + 3)) == \
+        x + (x*(y + 1))**_keep_coeff(S(3), x + 1)

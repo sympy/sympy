@@ -440,7 +440,7 @@ def factor_terms(expr):
             d[k].append(v)
         for k in d:
             d[k] = Add(*d[k])
-        args[i] = Mul._from_args([b**e for b, e in d.iteritems()])
+        args[i] = Mul._from_args([gcd_terms(b**e, isprimitive=True) for b, e in d.iteritems()])
     p = Add._from_args(args)
     p = gcd_terms(p, isprimitive=True).subs(ncreps) # exact subs could be used here
     return _keep_coeff(cont, p)
