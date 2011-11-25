@@ -434,13 +434,8 @@ def factor_terms(expr):
     for i, a in enumerate(args):
         if nc[i] is not None:
            a.append(nc[i][0])
-        m = Mul._from_args(a)
-        d = defaultdict(list)
-        for k, v in m.as_powers_dict().iteritems():
-            d[k].append(v)
-        for k in d:
-            d[k] = Add(*d[k])
-        args[i] = Mul._from_args([gcd_terms(b**e, isprimitive=True) for b, e in d.iteritems()])
-    p = Add._from_args(args)
+        a = Mul._from_args(a) # gcd_terms will fix up ordering
+        args[i] = gcd_terms(a, isprimitive=True)
+    p = Add._from_args(args) # gcd_terms will fix up ordering
     p = gcd_terms(p, isprimitive=True).subs(ncreps) # exact subs could be used here
     return _keep_coeff(cont, p)

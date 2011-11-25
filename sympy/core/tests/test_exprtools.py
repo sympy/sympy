@@ -108,3 +108,5 @@ def test_factor_terms():
         _keep_coeff(S(3), x + 1)**_keep_coeff(S(2)/3, x + 1)
     assert factor_terms(x + (x*y + x)**(3*x + 3)) == \
         x + (x*(y + 1))**_keep_coeff(S(3), x + 1)
+    assert factor_terms(a*(x + x*y) + b*(x*2 + y*x*2)) == \
+        x*(a + 2*b)*(y + 1)
