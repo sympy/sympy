@@ -1,6 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
 from sympy.core.add import Add
+from sympy.core.compatibility import iterable
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
@@ -377,7 +378,8 @@ def _gcd_terms(terms, isprimitive=False):
 
 def gcd_terms(terms, isprimitive=False):
     """
-    Compute the GCD of ``terms`` and put them together.
+    Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
+    True the _gcd_terms will not run the primitive method on the terms.
 
     **Example**
 
@@ -389,7 +391,8 @@ def gcd_terms(terms, isprimitive=False):
 
     """
     terms = sympify(terms)
-    if not isinstance(terms, Expr) or terms.is_Add:
+    isexpr = isinstance(terms, Expr)
+    if not isexpr or terms.is_Add:
         cont, numer, denom = _gcd_terms(terms, isprimitive)
         coeff, factors = cont.as_coeff_Mul()
         return _keep_coeff(coeff, factors*numer/denom)
@@ -399,9 +402,15 @@ def gcd_terms(terms, isprimitive=False):
 
     if terms.is_Mul:
         c, args = terms.as_coeff_mul()
-        return _keep_coeff(c, Mul(*[gcd_terms(i) for i in args]))
+        return _keep_coeff(c, Mul(*[gcd_terms(i, isprimitive) for i in args]))
 
-    return terms.func(*[gcd_terms(i) for i in terms.args])
+    def handle(a):
+        if iterable(a):
+            if isinstance(a, Basic):
+                return a.func(*[gcd_terms(i, isprimitive) for i in a.args])
+            return type(a)([gcd_terms(i, isprimitive) for i in a])
+        return gcd_terms(a, isprimitive)
+    return terms.func(*[handle(i) for i in terms.args])
 
 
 def factor_terms(expr):
@@ -423,19 +432,26 @@ def factor_terms(expr):
 
     expr = sympify(expr)
 
+    if iterable(expr):
+        return type(expr)([factor_terms(i) for i in expr])
+
+    if not isinstance(expr, Basic) or expr.is_Atom:
+        return expr
+
     if expr.is_Function:
         return expr.func(*[factor_terms(i) for i in expr.args])
 
     cont, p = expr.as_content_primitive()
-    args, nc = zip(*[ai.args_cnc(clist=True) for ai in Add.make_args(p)])
-    args = list(args)
+    list_args, nc = zip(*[ai.args_cnc(clist=True) for ai in Add.make_args(p)])
+    list_args = list(list_args)
     nc = [((Dummy(), Mul._from_args(i)) if i else None) for i in nc]
     ncreps = dict([i for i in nc if i is not None])
-    for i, a in enumerate(args):
+    for i, a in enumerate(list_args):
         if nc[i] is not None:
            a.append(nc[i][0])
         a = Mul._from_args(a) # gcd_terms will fix up ordering
-        args[i] = gcd_terms(a, isprimitive=True)
-    p = Add._from_args(args) # gcd_terms will fix up ordering
+        list_args[i] = gcd_terms(a, isprimitive=True)
+        # cancel terms that may not have cancelled
+    p = Add._from_args(list_args) # gcd_terms will fix up ordering
     p = gcd_terms(p, isprimitive=True).subs(ncreps) # exact subs could be used here
     return _keep_coeff(cont, p)

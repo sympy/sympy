@@ -3,8 +3,8 @@
 from sympy.core.exprtools import (
     decompose_power, Factors, Term, _gcd_terms, gcd_terms, factor_terms)
 
-from sympy import S, Add, sin, Mul, Symbol
-from sympy.abc import a, x, y, z, t
+from sympy import S, Add, sin, Mul, Symbol, oo, Integral
+from sympy.abc import a, b, x, y, z, t
 from sympy.core.mul import _keep_coeff as _keep_coeff
 
 def test_decompose_power():
@@ -110,3 +110,5 @@ def test_factor_terms():
         x + (x*(y + 1))**_keep_coeff(S(3), x + 1)
     assert factor_terms(a*(x + x*y) + b*(x*2 + y*x*2)) == \
         x*(a + 2*b)*(y + 1)
+    i = Integral(x, (x, 0, oo))
+    assert factor_terms(i) == i
