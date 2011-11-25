@@ -1,4 +1,4 @@
-from sympy.core.function import Function
+from sympy.core.function import Function, C
 from sympy.core import sympify, S, Integer
 from sympy.core.mul import prod
 
@@ -122,16 +122,21 @@ class KroneckerDelta(Function):
         """
         if i > j:
             return cls(j,i)
-        diff = i-j
+
+        diff = C.Abs(i - j)
         if diff == 0:
             return S.One
         elif diff.is_number:
             return S.Zero
+        elif i != 0 and diff.is_nonzero:
+            return KroneckerDelta(0, diff.args[0])
 
         if i.assumptions0.get("below_fermi") and j.assumptions0.get("above_fermi"):
             return S.Zero
         if j.assumptions0.get("below_fermi") and i.assumptions0.get("above_fermi"):
             return S.Zero
+
+
     @property
     def is_above_fermi(self):
         """
