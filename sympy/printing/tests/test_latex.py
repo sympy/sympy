@@ -77,9 +77,9 @@ def test_latex_functions():
     assert latex(sin(x)) == r"\sin\left(x\right)"
     assert latex(sin(x), fold_func_brackets=True) == r"\sinx"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
-    r"{\sin}2 x^{2}"
+    r"\sin {2 x^{2}}"
     assert latex(sin(x**2), fold_func_brackets=True) == \
-    r"{\sin}x^{2}"
+    r"\sin {x^{2}}"
 
     assert latex(asin(x)**2) == r"\operatorname{asin}^{2}\left(x\right)"
     assert latex(asin(x)**2,inv_trig_style="full") == \
