@@ -18,7 +18,7 @@ responsibility for generating properly cased Fortran code to the user.
 """
 
 
-from sympy.core import S, C, Add
+from sympy.core import S, C, Add, Float
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
@@ -227,7 +227,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp is S.NegativeOne:
+        if expr.exp == -1:
             return '1.0/%s'%(self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             if expr.base.is_integer:

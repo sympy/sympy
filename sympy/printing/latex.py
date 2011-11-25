@@ -281,7 +281,7 @@ class LatexPrinter(Printer):
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
             else:
-                if expr.is_commutative and expr.exp is S.NegativeOne:
+                if expr.is_commutative and expr.exp == -1:
                     #solves issue 1030
                     #As Mul always simplify 1/x to x**-1
                     #The objective is achieved with this hack
