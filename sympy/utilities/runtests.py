@@ -519,6 +519,7 @@ class SymPyTests(object):
                 self.test_file(f)
             except KeyboardInterrupt:
                 print " interrupted by user"
+                sys.exit(1)
                 break
         return self._reporter.finish()
 
@@ -641,6 +642,7 @@ class SymPyDocTests(object):
                 self.test_file(f)
             except KeyboardInterrupt:
                 print " interrupted by user"
+                sys.exit(1)
                 break
         return self._reporter.finish()
 
