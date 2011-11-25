@@ -495,6 +495,45 @@ class LatexPrinter(Printer):
 
         return self._do_exponent(tex, exp)
 
+    def _print_Not(self, e):
+        return r"\neg %s" % self._print(e.args[0])
+
+    def _print_And(self, e):
+        arg = e.args[0]
+        if arg.is_Boolean and not arg.is_Not:
+            tex = r"\left(%s\right)" % self._print(e.args[0]);
+        else:
+            tex = r"%s" % self._print(e.args[0]);
+
+        for arg in e.args[1:]:
+            if arg.is_Boolean and not arg.is_Not:
+                tex += r" \wedge \left(%s\right)" % (self._print(arg))
+            else:
+                tex += r" \wedge %s" % (self._print(arg))
+
+        return tex
+
+    def _print_Or(self, e):
+        arg = e.args[0]
+        if arg.is_Boolean and not arg.is_Not:
+            tex = r"\left(%s\right)" % self._print(e.args[0]);
+        else:
+            tex = r"%s" % self._print(e.args[0]);
+
+        for arg in e.args[1:]:
+            if arg.is_Boolean and not arg.is_Not:
+                tex += r" \vee \left(%s\right)" % (self._print(arg))
+            else:
+                tex += r" \vee %s" % (self._print(arg))
+
+        return tex
+
+    def _print_Implies(self, e):
+        return r"%s \Rightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
+
+    def _print_Equivalent(self, e):
+        return r"%s \Leftrightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
+
     def _print_conjugate(self, expr, exp=None):
         tex = r"\overline{%s}" % self._print(expr.args[0])
 
