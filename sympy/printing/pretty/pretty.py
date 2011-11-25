@@ -1298,6 +1298,19 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right(pform_arg))
         return pform
 
+    def _print_KroneckerDelta(self, e):
+        pform = self._print(e.args[0])
+        pform = prettyForm(*pform.right((prettyForm(','))))
+        pform = prettyForm(*pform.right((self._print(e.args[1]))))
+        if self._use_unicode:
+            a = stringPict(pretty_symbol('delta'))
+        else:
+            a = stringPict('d')
+        b = pform
+        top = stringPict(*b.left(' '*a.width()))
+        bot = stringPict(*a.right(' '*b.width()))
+        return prettyForm(binding=prettyForm.POW, *bot.below(top))
+
     def _print_atan2(self, e):
         pform = prettyForm(*self._print_seq(e.args).parens())
         pform = prettyForm(*pform.left('atan2'))
