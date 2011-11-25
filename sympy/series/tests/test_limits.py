@@ -73,7 +73,6 @@ def test_Limit():
     assert Limit(sin(x)/x, x, 0) != 1
     assert Limit(sin(x)/x, x, 0).doit() == 1
 
-@XFAIL
 def test_floor():
     assert limit(floor(x), x, -2, "+") == -2
     assert limit(floor(x), x, -2, "-") == -3
@@ -88,22 +87,18 @@ def test_floor():
     assert limit(floor(x), x, 248, "+") == 248
     assert limit(floor(x), x, 248, "-") == 247
 
-    # note: if any of the tests below fails, just comment it out. General fix
-    # needs better assumptions handling.
-
-    # this doesn't work, it requires robust assumptions:
+@XFAIL
+def test_floor_requires_robust_assumptions():
     assert limit(floor(sin(x)), x, 0, "+") == 0
     assert limit(floor(sin(x)), x, 0, "-") == -1
     assert limit(floor(cos(x)), x, 0, "+") == 0
     assert limit(floor(cos(x)), x, 0, "-") == 0
-
-    # this doesn't work, it requires robust assumptions:
     assert limit(floor(5+sin(x)), x, 0, "+") == 5
     assert limit(floor(5+sin(x)), x, 0, "-") == 4
     assert limit(floor(5+cos(x)), x, 0, "+") == 5
     assert limit(floor(5+cos(x)), x, 0, "-") == 5
 
-@XFAIL
+
 def test_ceiling():
     assert limit(ceiling(x), x, -2, "+") == -1
     assert limit(ceiling(x), x, -2, "-") == -2
@@ -118,20 +113,17 @@ def test_ceiling():
     assert limit(ceiling(x), x, 248, "+") == 249
     assert limit(ceiling(x), x, 248, "-") == 248
 
-    # note: if any of the tests below fails, just comment it out. General fix
-    # needs better assumptions handling.
-
-    # this doesn't work, it requires robust assumptions:
+@XFAIL
+def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(sin(x)), x, 0, "+") == 1
     assert limit(ceiling(sin(x)), x, 0, "-") == 0
     assert limit(ceiling(cos(x)), x, 0, "+") == 1
     assert limit(ceiling(cos(x)), x, 0, "-") == 1
-
-    # this doesn't work, it requires robust assumptions:
     assert limit(ceiling(5+sin(x)), x, 0, "+") == 6
     assert limit(ceiling(5+sin(x)), x, 0, "-") == 5
     assert limit(ceiling(5+cos(x)), x, 0, "+") == 6
     assert limit(ceiling(5+cos(x)), x, 0, "-") == 6
+
 
 def test_atan():
     x = Symbol("x", real=True)

@@ -17,7 +17,6 @@ def test_levicivita():
     assert LeviCivita(4, 5, 1, 2, 3) == 1
     assert LeviCivita(4, 5, 2, 1, 3) == -1
 
-@XFAIL
 def test_kronecker_delta():
     i, j = symbols('i,j')
     k = Symbol('k', nonzero=True)
@@ -30,7 +29,6 @@ def test_kronecker_delta():
     assert D(i, i + 1) == 0
     assert D(0, 0) == 1
     assert D(0, 1) == 0
-    assert D(i, i + k) == D(0, k)
     assert D(i + k, i + k) == 1
     assert D(i + k, i + 1 + k) == 0
     assert D(i, j).subs(dict(i=1, j=0)) == 0
@@ -83,3 +81,7 @@ def test_kronecker_delta():
     assert EV(D(p,j)*D(p,i)*F(i)) == F(j)
     assert EV(D(p,j)*D(p,i)*F(j)) == F(i)
     assert EV(D(p,q)*D(p,i))*F(i) == D(q,i)*F(i)
+
+@XFAIL
+def test_kronecker_delta_failing():
+    assert D(i, i + k) == D(0, k)

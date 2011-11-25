@@ -89,15 +89,18 @@ def test_gruntz_eval_special_slow():
     assert gruntz(gamma(x+1)/sqrt(2*pi)
                   - exp(-x)*(x**(x+S(1)/2) + x**(x-S(1)/2)/12), x, oo) == oo
     assert gruntz(exp(exp(exp(digamma(digamma(digamma(x))))))/x, x, oo) == 0
+
+@XFAIL
+def test_grunts_eval_special_slow_sometimes_fail():
+    sskip()
     # XXX This sometimes fails!!!
     assert gruntz(exp(gamma(x-exp(-x))*exp(1/x)) - exp(gamma(x)), x, oo) == oo
-
 
 @XFAIL
 def test_gruntz_eval_special_fail():
     # TODO exponential integral Ei
-    # assert gruntz((Ei(x-exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x,
-    #               x, oo) == -1
+    assert gruntz((Ei(x-exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x,
+                   x, oo) == -1
 
     # TODO zeta function series
     assert gruntz(exp((log(2)+1)*x) * (zeta(x+exp(-x)) - zeta(x)), x, oo) \

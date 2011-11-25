@@ -68,7 +68,6 @@ def test_python_relational():
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(1 + y) != y**2",
             "x = Symbol('x')\ny = Symbol('y')\ne = x/(y + 1) != y**2"]
 
-@XFAIL
 def test_python_functions():
     # Simple
     assert python((2*x + exp(x))) in "x = Symbol('x')\ne = 2*x + exp(x)"
@@ -102,7 +101,8 @@ def test_python_functions():
     # Function powers
     assert python(sin(x)**2) == "x = Symbol('x')\ne = sin(x)**2"
 
-    # Conjugates
+@XFAIL
+def test_python_functions_conjugates():
     a, b = map(Symbol, 'ab')
     assert python( conjugate(a+b*I) ) == '_     _\na - I*b'
     assert python( conjugate(exp(a+b*I)) ) == ' _     _\n a - I*b\ne       '

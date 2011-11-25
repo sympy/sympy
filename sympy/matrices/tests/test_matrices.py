@@ -1372,7 +1372,6 @@ def test_diagonal_symmetrical():
     assert not m.is_symmetric(simplify=False)
     assert m.expand().is_symmetric(simplify=False)
 
-@XFAIL
 def test_diagonalization():
     x, y, z = symbols('x y z')
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
@@ -1427,14 +1426,6 @@ def test_diagonalization():
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
 
-    m = Matrix(2,2,[1, 0, 0, I])
-    raises(NotImplementedError, 'm.is_diagonalizable(True)')
-    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
-    # see issue 2193
-    assert not m.is_diagonalizable(True)
-    raises(MatrixError, '(P, D) = m.diagonalize(True)')
-    (P, D) = m.diagonalize(True)
-
     # not diagonalizable
     m = Matrix(2,2,[0, 1, 0, 0])
     assert not m.is_diagonalizable()
@@ -1449,6 +1440,16 @@ def test_diagonalization():
     m = Matrix(2,2,[a, c, c, b])
     assert m.is_symmetric()
     assert m.is_diagonalizable()
+
+@XFAIL
+def test_eigen_vects():
+    m = Matrix(2,2,[1, 0, 0, I])
+    raises(NotImplementedError, 'm.is_diagonalizable(True)')
+    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
+    # see issue 2193
+    assert not m.is_diagonalizable(True)
+    raises(MatrixError, '(P, D) = m.diagonalize(True)')
+    (P, D) = m.diagonalize(True)
 
 def test_jordan_form():
 
@@ -1595,7 +1596,6 @@ def test_errors():
     raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
     raises(NotImplementedError, "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
 
-@XFAIL
 def test_len():
     assert len(Matrix()) == 0
     assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
@@ -1604,11 +1604,13 @@ def test_len():
     assert Matrix([1]) == Matrix([[1]])
     assert not Matrix()
     assert Matrix() == Matrix([])
-    # These two matrices have different shape
-    assert Matrix() == Matrix([[]])
     assert not SparseMatrix()
     assert SparseMatrix() == SparseMatrix([])
-    # These two matrices have different shape
+
+@XFAIL
+def test_len_different_shapes():
+
+    assert Matrix() == Matrix([[]])
     assert SparseMatrix() == SparseMatrix([[]])
 
 def test_integrate():

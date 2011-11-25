@@ -154,7 +154,6 @@ def test_bernpoly_eulerpoly():
     assert bernpoly(200,17.5).ae(3.8048418524583064909e244)
     assert eulerpoly(200,17.5).ae(-3.7309911582655785929e275)
 
-@XFAIL
 def test_gamma():
     mp.dps = 15
     assert gamma(0.25).ae(3.6256099082219083119)
@@ -162,8 +161,6 @@ def test_gamma():
     assert gamma(300).ae('1.0201917073881354535e612')
     assert gamma(-0.5).ae(-3.5449077018110320546)
     assert gamma(-7.43).ae(0.00026524416464197007186)
-    assert gamma(Rational(1,2)) == gamma(0.5)
-    assert gamma(Rational(-7,3)).ae(gamma(mpf(-7)/3))
     assert gamma(1+1j).ae(0.49801566811835604271 - 0.15494982830181068512j)
     assert gamma(-1+0.01j).ae(-0.422733904013474115 + 99.985883082635367436j)
     assert gamma(20+30j).ae(-1453876687.5534810 + 1163777777.8031573j)
@@ -193,6 +190,11 @@ def test_gamma():
     assert loggamma(2+8j).ae(-8.5205176753667636926 + 10.8569497125597429366j)
     assert loggamma('1e10000').ae('2.302485092994045684017991e10004')
     assert loggamma('1e10000j').ae(mpc('-1.570796326794896619231322e10000','2.302485092994045684017991e10004'))
+
+@XFAIL
+def test_gamma_failing():
+    assert gamma(Rational(1,2)) == gamma(0.5)
+    assert gamma(Rational(-7,3)).ae(gamma(mpf(-7)/3))
 
 def test_fac2():
     mp.dps = 15
@@ -326,14 +328,14 @@ def test_zeta_negative():
     assert str(zeta(a)) == '2.5588049270871154960875033337384432038436330847333e+1233536161668617575553892558646631323374078'
     mp.dps = 15
 
-@XFAIL
 def test_polygamma():
     mp.dps = 15
     psi0 = lambda z: psi(0,z)
     psi1 = lambda z: psi(1,z)
     assert psi0(3) == psi(0,3) == digamma(3)
-    assert psi2(3) == psi(2,3) == tetragamma(3)
-    assert psi3(3) == psi(3,3) == pentagamma(3)
+    # Not sure what this guy was doing, only place psi2, psi3, tetragamma used
+    # assert psi2(3) == psi(2,3) == tetragamma(3)
+    # assert psi3(3) == psi(3,3) == pentagamma(3)
     assert psi0(pi).ae(0.97721330794200673)
     assert psi0(-pi).ae(7.8859523853854902)
     assert psi0(-pi+1).ae(7.5676424992016996)
@@ -508,21 +510,22 @@ def test_gamma_huge_6():
         "5002j)")
     mp.dps = 15
 
-@XFAIL
 def test_gamma_huge_7():
     mp.dps = 100
     a = 3 + j/mpf(10)**1000
     mp.dps = 15
     y = gamma(a)
     assert str(y.real) == "2.0"
-    # wrong
-    assert str(y.imag) == "2.16735365342606e-1000"
     assert str(y.imag) == "1.84556867019693e-1000"
     mp.dps = 50
     y = gamma(a)
     assert str(y.real) == "2.0"
-    assert str(y.imag) == "2.1673536534260596065418805612488708028522563689298e-1000"
     assert str(y.imag) ==  "1.8455686701969342787869758198351951379156813281202e-1000"
+
+@XFAIL
+def test_gamma_huge_7_failing():
+    assert str(y.imag) == "2.16735365342606e-1000"
+    assert str(y.imag) == "2.1673536534260596065418805612488708028522563689298e-1000"
 
 def test_stieltjes():
     mp.dps = 15

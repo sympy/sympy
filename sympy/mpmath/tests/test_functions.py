@@ -462,7 +462,6 @@ def test_aliases():
     assert power(-1,0.5) == j
     assert fmod(25,7) == 4.0 and isinstance(fmod(25,7), mpf)
 
-@XFAIL
 def test_arg_sign():
     assert arg(3) == 0
     assert arg(-3).ae(pi)

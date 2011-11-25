@@ -2570,6 +2570,7 @@ def test_pretty_sum():
  /_,   \n\
 x = 0  \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2585,6 +2586,7 @@ x = 0  \
  /__,   \n\
 x = 0   \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2601,6 +2603,7 @@ x = 0   \
  /__,  \n\
 x = 0  \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2618,6 +2621,7 @@ ____    \n\
 /___,   \n\
 x = 0   \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2636,6 +2640,7 @@ ____          \n\
 /___,         \n\
 x = 0         \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2653,6 +2658,7 @@ ____    \n\
 /___,   \n\
 x = 0   \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2670,6 +2676,7 @@ ____     \n\
 /___,    \n\
 x = 0    \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2687,6 +2694,7 @@ ____  ____     \n\
 /___, /___,    \n\
 y = 1 x = 0    \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2711,6 +2719,7 @@ y = 1 x = 0    \
 k = -----                                \n\
     m + 1                                \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str

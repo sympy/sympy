@@ -83,7 +83,6 @@ def test_log3():
     e = 1/log(-1/x)
     assert e.nseries(x, n=4, logx=l) == 1/(-l + log(-1))
 
-@XFAIL
 def test_series1():
     x = Symbol("x")
     e = sin(x)
@@ -97,9 +96,12 @@ def test_series1():
     e = (exp(x)-1)/x
     assert e.nseries(x,0,3) == 1+x/2+O(x**2, x)
 
+    assert x.nseries(x,0,2) == x
+
+@XFAIL
+def test_series1_fail():
     assert x.nseries(x,0,0) == O(1, x)
     assert x.nseries(x,0,1) == O(x, x)
-    assert x.nseries(x,0,2) == x
 
 def test_seriesbug1():
     x = Symbol("x")
@@ -197,12 +199,14 @@ def test_seriesbug2c():
     assert e.series(w,0,3) == 2-Rational(4,3)*w**2+w**2*log(2)**2+2*w*log(2)+O(w**3, w)
     assert e.series(w,0,2).subs(w,0) == 2
 
-@XFAIL
 def test_expbug4():
     x = Symbol("x", real=True)
     assert (log(sin(2*x)/x)*(1+x)).series(x,0,2) == log(2) + x*log(2) + O(x**2, x)
-    assert exp(log(2)+O(x)).nseries(x,0,2) == 2 +O(x**2, x)
     assert exp(log(sin(2*x)/x)*(1+x)).series(x,0,2) == 2 + 2*x*log(2) + O(x**2)
+
+@XFAIL
+def test_expbug4_failing():
+    assert exp(log(2)+O(x)).nseries(x,0,2) == 2 +O(x**2, x)
     assert ((2+O(x))**(1+x)).nseries(x,0,2) == 2 + O(x**2, x)
 
 def test_logbug4():
