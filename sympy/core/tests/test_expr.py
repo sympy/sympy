@@ -9,7 +9,7 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import m, s
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 class DummyNumber(object):
     """
@@ -1221,6 +1221,13 @@ def test_is_constant():
     assert Pow(S(0), p, evaluate=False).is_constant() == True # == 1
     assert (2**x).is_constant() == False
     assert Pow(S(2), S(3), evaluate=False).is_constant() == True
+
+    z1, z2 = symbols('z1 z2', zero=True)
+    assert (z1+2*z2).is_constant
+
+@XFAIL
+def test_is_not_constant():
+    assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero != False
 
 def test_equals():
     a, x = symbols('a, x')

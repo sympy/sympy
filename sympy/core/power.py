@@ -947,7 +947,7 @@ class Pow(Expr):
         if bz: # recalculate with assumptions in case it's unevaluated
             new = b**e
             if new != self:
-                return new.is_constant
+                return new.is_constant()
         econ = e.is_constant(*wrt)
         bcon = b.is_constant(*wrt)
         if bcon:

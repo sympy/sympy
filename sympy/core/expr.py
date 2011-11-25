@@ -233,7 +233,7 @@ class Expr(Basic, EvalfMixin):
 
 
         Although it is tempting to use numerical methods to test
-        expessions that have free symbols, but results thus obtained
+        expessions that have free symbols, results thus obtained
         could only be probabalistic since for any tested values that
         returned 0, it is possible that these were simply roots of the
         expression.
@@ -277,7 +277,7 @@ class Expr(Basic, EvalfMixin):
         """
 
         free = self.free_symbols
-        # only one of these should be necessary since is something is
+        # only one of these should be necessary since if something is
         # known to be a number it should also know that there are no
         # free symbols. But is_number quits as soon as it hits a non-number
         # whereas free_symbols goes until all free symbols have been collected,
@@ -292,6 +292,11 @@ class Expr(Basic, EvalfMixin):
         # if we are only interested in some symbols and they are not in the
         # free symbols then this expression is constant wrt those symbols
         if wrt and not set(wrt) & free:
+            return True
+        # is_zero should be a quick assumptions check; it can be wrong for numbers
+        # (see test_is_not_constant test), giving False when it shouldn't, but hopefully
+        # it will never give True unless it is sure.
+        if self.is_zero:
             return True
         # now we will test each wrt symbol (or all free symbols) to see if the
         # expression depends on them or not using differentiation.
