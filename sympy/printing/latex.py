@@ -21,7 +21,7 @@ import re, warnings
 accepted_latex_functions = ['arcsin','arccos','arctan','sin','cos','tan',
                     'theta','beta','alpha','gamma','sinh','cosh','tanh','sqrt',
                     'ln','log','sec','csc','cot','coth','re','im','frac','root',
-                    'nthroot','arg','zeta','psi']
+                    'arg','zeta','psi']
 
 class LatexPrinter(Printer):
     printmethod = "_latex"
