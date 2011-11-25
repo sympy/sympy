@@ -390,6 +390,11 @@ def gcd_terms(terms, isprimitive=False):
 
     if terms.is_Atom:
         return terms
+
+    if terms.is_Mul:
+        c, args = terms.as_coeff_mul()
+        return _keep_coeff(c, Mul(*[gcd_terms(i) for i in args]))
+
     return terms.func(*[gcd_terms(i) for i in terms.args])
 
 
@@ -420,28 +425,16 @@ def factor_terms(expr):
     args = list(args)
     nc = [((Dummy(), Mul._from_args(i)) if i else None) for i in nc]
     ncreps = dict([i for i in nc if i is not None])
-    pows = dict()
     for i, a in enumerate(args):
         if nc[i] is not None:
            a.append(nc[i][0])
         m = Mul._from_args(a)
         d = defaultdict(list)
-        uargs = []
         for k, v in m.as_powers_dict().iteritems():
-            p = k**v
-            if v.is_Mul:
-                if p in pows:
-                    u = pows[p]
-                else:
-                    u = Dummy()
-                    pows[p] = u
-                uargs.append(u)
-            else:
-                d[k].append(v)
+            d[k].append(v)
         for k in d:
             d[k] = Add(*d[k])
-        args[i] = Mul._from_args(uargs + [b**p for b, p in d.iteritems()])
+        args[i] = Mul._from_args([b**e for b, e in d.iteritems()])
     p = Add._from_args(args)
-    pows = dict([(v, k) for k, v in pows.iteritems()])
-    p = gcd_terms(p, isprimitive=True).subs(pows).subs(ncreps) # needs subs with exact=True
+    p = gcd_terms(p, isprimitive=True).subs(ncreps) # exact subs could be used here
     return _keep_coeff(cont, p)
