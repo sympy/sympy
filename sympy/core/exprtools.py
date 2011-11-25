@@ -6,7 +6,7 @@ from sympy.core.power import Pow
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
@@ -47,10 +47,9 @@ def decompose_power(expr):
         exp, tail = exp.as_coeff_mul()
 
         if exp.is_Rational:
-            if not exp.is_Integer:
-                tail += (Rational(1, exp.q),)
+            tail = _keep_coeff(Rational(1, exp.q), Mul(*tail))
 
-            base, exp = Pow(base, Mul(*tail)), exp.p
+            base, exp = Pow(base, tail), exp.p
         else:
             base, exp = expr, 1
 
@@ -75,7 +74,15 @@ class Factors(object):
         return "Factors(%s)" % self.factors
 
     def as_expr(self):
-        return Mul(*[ factor**exp for factor, exp in self.factors.iteritems() ])
+        args = []
+        for factor, exp in self.factors.iteritems():
+            if exp != 1:
+                b, e = factor.as_base_exp()
+                e = _keep_coeff(Integer(exp), e)
+                args.append(b**e)
+            else:
+                args.append(factor)
+        return Mul(*args)
 
     def normal(self, other):
         self_factors = dict(self.factors)
@@ -362,7 +369,6 @@ def _gcd_terms(terms, isprimitive=False):
     cont = cont.as_expr()
     numer = Add(*numers)
     denom = denom.as_expr()
-
     if not isprimitive and numer.is_Add:
         _cont, numer = numer.primitive()
         cont *= _cont
