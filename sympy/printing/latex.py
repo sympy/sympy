@@ -431,9 +431,15 @@ class LatexPrinter(Printer):
                         can_fold_brackets = False
 
             if inv_trig_power_case:
-                name = r"\operatorname{%s}^{-1}" % func
+                if func in accepted_latex_functions:
+                    name = r"\%s^{-1}" % func
+                else:
+                    name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
-                name = r"\operatorname{%s}^{%s}" % (func, exp)
+                if func in accepted_latex_functions:
+                    name = r"\%s^{%s}" % (func,exp)
+                else:
+                    name = r"\operatorname{%s}^{%s}" % (func, exp)
             else:
                 if func in accepted_latex_functions:
                     name = r"\%s" % func
@@ -441,7 +447,11 @@ class LatexPrinter(Printer):
                     name = r"\operatorname{%s}" % func
 
             if can_fold_brackets:
-                name += r"%s"
+                if func in accepted_latex_functions:
+                    name += r" {%s}" # Wrap argument safely to avoid parse-time conflicts
+                                     # with the function name itself
+                else:
+                    name += r"%s"
             else:
                 name += r"\left(%s\right)"
 

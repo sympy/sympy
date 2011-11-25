@@ -75,7 +75,7 @@ def test_latex_functions():
 
     assert latex(beta(x)) == r"\beta\left(x\right)"
     assert latex(sin(x)) == r"\sin\left(x\right)"
-    assert latex(sin(x), fold_func_brackets=True) == r"\sinx"
+    assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
     r"\sin {2 x^{2}}"
     assert latex(sin(x**2), fold_func_brackets=True) == \
@@ -83,11 +83,11 @@ def test_latex_functions():
 
     assert latex(asin(x)**2) == r"\operatorname{asin}^{2}\left(x\right)"
     assert latex(asin(x)**2,inv_trig_style="full") == \
-        r"\operatorname{arcsin}^{2}\left(x\right)"
+        r"\arcsin^{2}\left(x\right)"
     assert latex(asin(x)**2,inv_trig_style="power") == \
-        r"\operatorname{sin}^{-1}\left(x\right)^{2}"
+        r"\sin^{-1}\left(x\right)^{2}"
     assert latex(asin(x**2),inv_trig_style="power",fold_func_brackets=True) == \
-        r"\operatorname{sin}^{-1}x^{2}"
+        r"\sin^{-1} {x^{2}}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"

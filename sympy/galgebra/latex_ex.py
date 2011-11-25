@@ -584,7 +584,10 @@ class LatexPrinter(Printer):
             if LatexPrinter.fmt_dict['fct'] == 1:
                 if func in LatexPrinter.fct_dict_keys:
                     if exp is not None:
-                        name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
+                        if func in accepted_latex_functions:
+                            name = r"\%s^{%s}" %  (LatexPrinter.fct_dict[func], exp)
+                        else:
+                            name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
                     else:
                         if LatexPrinter.fct_dict[func] in accepted_latex_functions:
                             name = r"\%s" % LatexPrinter.fct_dict[func]
@@ -601,9 +604,15 @@ class LatexPrinter(Printer):
                     return name
             else:
                 if exp is not None:
-                    name = r"\operatorname{%s}^{%s}" % (func, exp)
+                    if func in accepted_latex_functions:
+                        name = r"\%s^{%s}" % (func, exp)
+                    else:
+                        name = r"\operatorname{%s}^{%s}" % (func, exp)
                 else:
-                    name = r"\operatorname{%s}" % func
+                    if func in accepted_latex_functions:
+                        name = r"\%s" % func
+                    else:
+                        name = r"\operatorname{%s}" % func
                 return name + r"\left(%s\right)" % ",".join(args)
 
     def _print_floor(self, expr, exp=None):
