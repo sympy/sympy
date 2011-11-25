@@ -1372,10 +1372,6 @@ def test_diagonal_symmetrical():
     assert not m.is_symmetric(simplify=False)
     assert m.expand().is_symmetric(simplify=False)
 
-<<<<<<< HEAD
-=======
-@XFAIL
->>>>>>> Removed commented asserts in tests and put xfail tags
 def test_diagonalization():
     x, y, z = symbols('x y z')
     m = Matrix(3,2,[-3, 1, -3, 20, 3, 10])
@@ -1430,17 +1426,6 @@ def test_diagonalization():
     (P, D) = m.diagonalize()
     assert P.inv() * m * P == D
 
-<<<<<<< HEAD
-=======
-    m = Matrix(2,2,[1, 0, 0, I])
-    raises(NotImplementedError, 'm.is_diagonalizable(True)')
-    # !!! bug because of eigenvects() or roots(x**2 + (-1 - I)*x + I, x)
-    # see issue 2193
-    assert not m.is_diagonalizable(True)
-    raises(MatrixError, '(P, D) = m.diagonalize(True)')
-    (P, D) = m.diagonalize(True)
-
->>>>>>> Removed commented asserts in tests and put xfail tags
     # not diagonalizable
     m = Matrix(2,2,[0, 1, 0, 0])
     assert not m.is_diagonalizable()
@@ -1611,7 +1596,6 @@ def test_errors():
     raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
     raises(NotImplementedError, "Matrix([[1, 2, 3],[4, 5, 6],[7,  8, 9]])**(0.5)")
 
-@XFAIL
 def test_len():
     assert len(Matrix()) == 0
     assert len(Matrix([[1, 2]])) == len(Matrix([[1], [2]])) == 2
@@ -1620,21 +1604,12 @@ def test_len():
     assert Matrix([1]) == Matrix([[1]])
     assert not Matrix()
     assert Matrix() == Matrix([])
-<<<<<<< HEAD
     assert not SparseMatrix()
     assert SparseMatrix() == SparseMatrix([])
 
 @XFAIL
 def test_len_different_shapes():
-
     assert Matrix() == Matrix([[]])
-=======
-    # These two matrices have different shape
-    assert Matrix() == Matrix([[]])
-    assert not SparseMatrix()
-    assert SparseMatrix() == SparseMatrix([])
-    # These two matrices have different shape
->>>>>>> Removed commented asserts in tests and put xfail tags
     assert SparseMatrix() == SparseMatrix([[]])
 
 def test_integrate():
