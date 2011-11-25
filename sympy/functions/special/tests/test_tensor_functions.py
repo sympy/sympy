@@ -1,4 +1,4 @@
-from sympy import symbols, LeviCivita, KroneckerDelta, Dummy
+from sympy import symbols, Symbol, LeviCivita, KroneckerDelta, Dummy
 from sympy.physics.secondquant import evaluate_deltas, F
 
 x, y = symbols('x,y')
@@ -17,7 +17,8 @@ def test_levicivita():
     assert LeviCivita(4, 5, 2, 1, 3) == -1
 
 def test_kronecker_delta():
-    i, j, k = symbols('i,j,k')
+    i, j = symbols('i,j')
+    k = Symbol('k', nonzero=True)
     D = KroneckerDelta
     assert D(1, 1) == 1
     assert D(1, 2) == 0
@@ -27,7 +28,7 @@ def test_kronecker_delta():
     assert D(i, i + 1) == 0
     assert D(0, 0) == 1
     assert D(0, 1) == 0
-    # assert D(i, i + k) == D(0, k)
+    assert D(i, i + k) == D(0, k)
     assert D(i + k, i + k) == 1
     assert D(i + k, i + 1 + k) == 0
     assert D(i, j).subs(dict(i=1, j=0)) == 0
