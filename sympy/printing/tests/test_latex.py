@@ -44,8 +44,8 @@ def test_latex_basic():
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
 
-    assert latex(1/sin(x)) == r"\frac{1}{\sin\left(x\right)}"
-    assert latex(sin(x)**-1) == r"\frac{1}{\sin\left(x\right)}"
+    assert latex(1/sin(x)) == r"\frac{1}{\sin{\left (x \right )}}"
+    assert latex(sin(x)**-1) == r"\frac{1}{\sin{\left (x \right )}}"
 
     assert latex(~x) == r"\neg x"
     assert latex(x & y) == r"x \wedge y"
@@ -95,23 +95,23 @@ def test_latex_functions():
     assert latex(exp(1)+exp(2)) == "e + e^{2}"
 
     f = Function('f')
-    assert latex(f(x)) == '\\operatorname{f}\\left(x\\right)'
+    assert latex(f(x)) == '\\operatorname{f}{\\left (x \\right )}'
 
     beta = Function('beta')
 
-    assert latex(beta(x)) == r"\beta\left(x\right)"
-    assert latex(sin(x)) == r"\sin\left(x\right)"
+    assert latex(beta(x)) == r"\beta{\left (x \right )}"
+    assert latex(sin(x)) == r"\sin{\left (x \right )}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
     r"\sin {2 x^{2}}"
     assert latex(sin(x**2), fold_func_brackets=True) == \
     r"\sin {x^{2}}"
 
-    assert latex(asin(x)**2) == r"\operatorname{asin}^{2}\left(x\right)"
+    assert latex(asin(x)**2) == r"\operatorname{asin}^{2}{\left (x \right )}"
     assert latex(asin(x)**2,inv_trig_style="full") == \
-        r"\arcsin^{2}\left(x\right)"
+        r"\arcsin^{2}{\left (x \right )}"
     assert latex(asin(x)**2,inv_trig_style="power") == \
-        r"\sin^{-1}\left(x\right)^{2}"
+        r"\sin^{-1}{\left (x \right )}^{2}"
     assert latex(asin(x**2),inv_trig_style="power",fold_func_brackets=True) == \
         r"\sin^{-1} {x^{2}}"
 
@@ -129,13 +129,13 @@ def test_latex_functions():
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
 
-    assert latex(cot(x)) == r'\cot\left(x\right)'
-    assert latex(coth(x)) == r'\coth\left(x\right)'
+    assert latex(cot(x)) == r'\cot{\left (x \right )}'
+    assert latex(coth(x)) == r'\coth{\left (x \right )}'
     assert latex(re(x)) == r'\Re{x}'
     assert latex(im(x)) == r'\Im{x}'
     assert latex(root(x,y)) == r'x^{\frac{1}{y}}'
-    assert latex(arg(x)) == r'\arg\left(x\right)'
-    assert latex(zeta(x)) == r'\zeta\left(x\right)'
+    assert latex(arg(x)) == r'\arg{\left (x \right )}'
+    assert latex(zeta(x)) == r'\zeta{\left (x \right )}'
 
 def test_hyper_printing():
     from sympy import pi, Tuple
@@ -174,10 +174,10 @@ def test_latex_derivatives():
     assert latex(diff(x**3, x, evaluate=False)) == \
     r"\frac{\partial}{\partial x} x^{3}"
     assert latex(diff(sin(x)+x**2, x, evaluate=False)) == \
-    r"\frac{\partial}{\partial x}\left(x^{2} + \sin\left(x\right)\right)"
+    r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
 
 def test_latex_integrals():
-    assert latex(Integral(log(x), x)) == r"\int \log\left(x\right)\, dx"
+    assert latex(Integral(log(x), x)) == r"\int \log{\left (x \right )}\, dx"
     assert latex(Integral(x**2, (x,0,1))) == r"\int_{0}^{1} x^{2}\, dx"
     assert latex(Integral(x**2, (x,10,20))) == r"\int_{10}^{20} x^{2}\, dx"
     assert latex(Integral(y*x**2, (x,0,1), y)) == r"\int\int_{0}^{1} x^{2} y\, dx\, dy"
@@ -311,8 +311,8 @@ def test_latex_Poly():
 
 def test_latex_issue1282():
     y = 4*4**log(2)
-    assert latex(y) == '4 \\times 4^{\\log\\left(2\\right)}'
-    assert latex(1/y) == '\\frac{1}{4 \\times 4^{\\log\\left(2\\right)}}'
+    assert latex(y) == '4 \\times 4^{\\log{\\left (2 \\right )}}'
+    assert latex(1/y) == '\\frac{1}{4 \\times 4^{\\log{\\left (2 \\right )}}}'
 
 def test_latex_issue1477():
     assert latex(Symbol("beta_13_2")) == r"\beta_{13 2}"
@@ -363,23 +363,23 @@ def test_latex_order():
 
 def test_latex_Lambda():
     assert latex(Lambda(x, x + 1)) == \
-        r"\Lambda\left(x, x + 1\right)"
+        r"\Lambda {\left (x, x + 1 \right )}"
     assert latex(Lambda((x, y), x + 1)) == \
-        r"\Lambda\left(\begin{pmatrix}x, & y\end{pmatrix}, x + 1\right)"
+        r"\Lambda {\left (\begin{pmatrix}x, & y\end{pmatrix}, x + 1 \right )}"
 
 def test_latex_Poly():
     assert latex(Poly(x/y, x)) == \
-        r"\operatorname{Poly}\left(\frac{x}{y}, x, domain=\mathbb{Z}\left(y\right)\right)"
+        r"\operatorname{Poly}{\left( \frac{x}{y}, x, domain=\mathbb{Z}\left(y\right) \right)}"
     assert latex(Poly(2.0*x + y)) == \
-        r"\operatorname{Poly}\left(2.0 x + 1.0 y, x, y, domain=\mathbb{R}\right)"
+        r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
 
 def test_latex_RootOf():
     assert latex(RootOf(x**5 + x + 3, 0)) == \
-        r"\operatorname{RootOf}\left(x^{5} + x + 3, 0\right)"
+        r"\operatorname{RootOf} {\left(x^{5} + x + 3, 0\right)}"
 
 def test_latex_RootSum():
     assert latex(RootSum(x**5 + x + 3, sin)) == \
-        r"\operatorname{RootSum}\left(x^{5} + x + 3, \Lambda\left(x, \sin\left(x\right)\right)\right)"
+        r"\operatorname{RootSum} {\left(x^{5} + x + 3, \Lambda {\left (x, \sin{\left (x \right )} \right )}\right)}"
 
 def test_settings():
     raises(TypeError, 'latex(x*y, method="garbage")')

@@ -456,7 +456,7 @@ class LatexPrinter(Printer):
                 else:
                     name += r"%s"
             else:
-                name += r"\left(%s\right)"
+                name += r"{\left (%s \right )}"
 
             if inv_trig_power_case and exp is not None:
                 name += r"^{%s}" % exp
@@ -472,7 +472,7 @@ class LatexPrinter(Printer):
             symbols = self._print(tuple(symbols))
 
         args = (symbols, self._print(expr))
-        tex = r"\Lambda\left(%s\right)" % ", ".join(args)
+        tex = r"\Lambda {\left (%s \right )}" % ", ".join(args)
 
         return tex
 
@@ -502,7 +502,7 @@ class LatexPrinter(Printer):
 
     def _print_re(self, expr, exp=None):
         if self._needs_brackets(expr.args[0]):
-            tex = r"\Re\left(%s\right)" % self._print(expr.args[0])
+            tex = r"\Re {\left (%s \right )}" % self._print(expr.args[0])
         else:
             tex = r"\Re{%s}" % self._print(expr.args[0])
 
@@ -510,7 +510,7 @@ class LatexPrinter(Printer):
 
     def _print_im(self, expr, exp=None):
         if self._needs_brackets(expr.args[0]):
-            tex = r"\Im\left(%s\right)" % self._print(expr.args[0])
+            tex = r"\Im {\left ( %s \right )}" % self._print(expr.args[0])
         else:
             tex = r"\Im{%s}" % self._print(expr.args[0])
 
@@ -990,9 +990,9 @@ class LatexPrinter(Printer):
 
         args = ", ".join([expr] + gens + [domain])
         if cls in accepted_latex_functions:
-            tex = r"\%s\left(%s\right)" % (cls, args)
+            tex = r"\%s {\left (%s \right )}" % (cls, args)
         else:
-            tex = r"\operatorname{%s}\left(%s\right)" % (cls, args)
+            tex = r"\operatorname{%s}{\left( %s \right)}" % (cls, args)
 
         return tex
 
@@ -1001,9 +1001,9 @@ class LatexPrinter(Printer):
         expr = self._print(root.expr)
         index = root.index
         if cls in accepted_latex_functions:
-            return r"\%s\left(%s, %d\right)" % (cls, expr, index)
+            return r"\%s {\left(%s, %d\right)}" % (cls, expr, index)
         else:
-            return r"\operatorname{%s}\left(%s, %d\right)" % (cls, expr, index)
+            return r"\operatorname{%s} {\left(%s, %d\right)}" % (cls, expr, index)
 
 
     def _print_RootSum(self, expr):
@@ -1014,9 +1014,9 @@ class LatexPrinter(Printer):
             args.append(self._print(expr.fun))
 
         if cls in accepted_latex_functions:
-            return r"\%s\left(%s\right)" % (cls, ", ".join(args))
+            return r"\%s {\left(%s\right)}" % (cls, ", ".join(args))
         else:
-            return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
+            return r"\operatorname{%s} {\left(%s\right)}" % (cls, ", ".join(args))
 
     def _print_euler(self, expr):
         return r"E_{%s}" % self._print(expr.args[0])
