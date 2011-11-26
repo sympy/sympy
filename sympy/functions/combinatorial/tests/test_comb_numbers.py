@@ -1,4 +1,4 @@
-from sympy import bernoulli, Symbol, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
+from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
         fibonacci, lucas, euler, catalan, binomial, gamma, sqrt, hyper, log, polygamma, diff
 
 x = Symbol('x')
@@ -80,8 +80,12 @@ def test_euler():
 
     assert euler(n).rewrite(Sum) == euler(n)
     # XXX: Not sure what the guy who wrote this test was trying to do with the _j and _k stuff
-    # assert euler(2*n).rewrite(Sum) ==  I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
     assert euler(2*n+1).rewrite(Sum) == 0
+
+@XFAIL
+def test_euler_failing():
+    # depends on dummy variables being implemented http://code.google.com/p/sympy/issues/detail?id=2566
+    assert euler(2*n).rewrite(Sum) ==  I*Sum(Sum((-1)**_j*2**(-_k)*I**(-_k)*(-2*_j + _k)**(2*n + 1)*binomial(_k, _j)/_k, (_j, 0, _k)), (_k, 1, 2*n + 1))
 
 def test_catalan():
     assert catalan(1) == 1

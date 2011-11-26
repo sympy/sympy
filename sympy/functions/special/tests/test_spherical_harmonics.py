@@ -61,13 +61,11 @@ def test_Ylm():
             (3*cos(th)**2-1)).expand()
     assert Ylm(2, 1, th, ph).expand() == (-sympify(1)/2 * \
             sqrt(3)*sqrt(5/(2*pi)) * (sin(th)*cos(th)) * exp(I*ph)).expand()
-@XFAIL
-def test_Ylm_different_expressions():
-    # they return the right answer but with wrong expressions
-    assert Ylm(2, -2, th, ph).expand() == (sympify(1)/4 * sqrt(15/(2*pi)) * \
-            sin(th)**2 * exp(-2*I*ph)).expand()
-    assert Ylm(2, 2, th, ph).expand() == (sympify(1)/4 * sqrt(15/(2*pi)) * \
-            sin(th)**2 * exp(2*I*ph)).expand()
+
+    # These last 2 return the correct answer, but the answer can be simplified
+    assert Ylm(2, -2, th, ph).expand() == -sqrt(30)*exp(-2*I*ph)*cos(th)**S(2)/(8*sqrt(pi)) + \
+            S(sqrt(30)*exp(-2*I*ph))/(8*sqrt(pi))
+    assert Ylm(2, 2, th, ph).expand() == S(-sqrt(30)*exp(2*I*ph)*cos(th)**2)/(8*sqrt(pi)) + S(sqrt(30)*exp(2*I*ph))/(8*sqrt(pi))
 
 def test_Zlm():
     #http://en.wikipedia.org/wiki/Solid_harmonics#List_of_lowest_functions
