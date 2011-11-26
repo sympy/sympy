@@ -14,6 +14,14 @@ from sympy.utilities import default_sort_key
 
 import re, warnings
 
+# Hand-picked functions which can be used directly in both LaTeX and MathJax
+# Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
+# This variable only contains those functions which sympy uses.
+accepted_latex_functions = ['arcsin','arccos','arctan','sin','cos','tan',
+                    'theta','beta','alpha','gamma','sinh','cosh','tanh','sqrt',
+                    'ln','log','sec','csc','cot','coth','re','im','frac','root',
+                    'arg','zeta','psi']
+
 class LatexPrinter(Printer):
     printmethod = "_latex"
 
@@ -426,16 +434,29 @@ class LatexPrinter(Printer):
                         can_fold_brackets = False
 
             if inv_trig_power_case:
-                name = r"\operatorname{%s}^{-1}" % func
+                if func in accepted_latex_functions:
+                    name = r"\%s^{-1}" % func
+                else:
+                    name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
-                name = r"\operatorname{%s}^{%s}" % (func, exp)
+                if func in accepted_latex_functions:
+                    name = r"\%s^{%s}" % (func,exp)
+                else:
+                    name = r"\operatorname{%s}^{%s}" % (func, exp)
             else:
-                name = r"\operatorname{%s}" % func
+                if func in accepted_latex_functions:
+                    name = r"\%s" % func
+                else:
+                    name = r"\operatorname{%s}" % func
 
             if can_fold_brackets:
-                name += r"%s"
+                if func in accepted_latex_functions:
+                    name += r" {%s}" # Wrap argument safely to avoid parse-time conflicts
+                                     # with the function name itself
+                else:
+                    name += r"%s"
             else:
-                name += r"\left(%s\right)"
+                name += r"{\left (%s \right )}"
 
             if inv_trig_power_case and exp is not None:
                 name += r"^{%s}" % exp
@@ -451,7 +472,7 @@ class LatexPrinter(Printer):
             symbols = self._print(tuple(symbols))
 
         args = (symbols, self._print(expr))
-        tex = r"\operatorname{\Lambda}\left(%s\right)" % ", ".join(args)
+        tex = r"\Lambda {\left (%s \right )}" % ", ".join(args)
 
         return tex
 
@@ -481,7 +502,7 @@ class LatexPrinter(Printer):
 
     def _print_re(self, expr, exp=None):
         if self._needs_brackets(expr.args[0]):
-            tex = r"\Re\left(%s\right)" % self._print(expr.args[0])
+            tex = r"\Re {\left (%s \right )}" % self._print(expr.args[0])
         else:
             tex = r"\Re{%s}" % self._print(expr.args[0])
 
@@ -489,7 +510,7 @@ class LatexPrinter(Printer):
 
     def _print_im(self, expr, exp=None):
         if self._needs_brackets(expr.args[0]):
-            tex = r"\Im\left(%s\right)" % self._print(expr.args[0])
+            tex = r"\Im {\left ( %s \right )}" % self._print(expr.args[0])
         else:
             tex = r"\Im{%s}" % self._print(expr.args[0])
 
@@ -550,27 +571,27 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
+            return r"\Gamma^{%s}%s" % (exp, tex)
         else:
-            return r"\operatorname{\Gamma}%s" % tex
+            return r"\Gamma%s" % tex
 
     def _print_uppergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
                                         self._print(expr.args[1]))
 
         if exp is not None:
-            return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
+            return r"\Gamma^{%s}%s" % (exp, tex)
         else:
-            return r"\operatorname{\Gamma}%s" % tex
+            return r"\Gamma%s" % tex
 
     def _print_lowergamma(self, expr, exp=None):
         tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
                                         self._print(expr.args[1]))
 
         if exp is not None:
-            return r"\operatorname{\gamma}^{%s}%s" % (exp, tex)
+            return r"\gamma^{%s}%s" % (exp, tex)
         else:
-            return r"\operatorname{\gamma}%s" % tex
+            return r"\gamma%s" % tex
 
     def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
@@ -715,7 +736,7 @@ class LatexPrinter(Printer):
         return r"\gamma"
 
     def _print_Order(self, expr):
-        return r"\operatorname{\mathcal{O}}\left(%s\right)" % \
+        return r"\mathcal{O}\left(%s\right)" % \
             self._print(expr.args[0])
 
     def _print_Symbol(self, expr):
@@ -968,7 +989,10 @@ class LatexPrinter(Printer):
         domain = "domain=%s" % self._print(poly.get_domain())
 
         args = ", ".join([expr] + gens + [domain])
-        tex = r"\operatorname{%s}\left(%s\right)" % (cls, args)
+        if cls in accepted_latex_functions:
+            tex = r"\%s {\left (%s \right )}" % (cls, args)
+        else:
+            tex = r"\operatorname{%s}{\left( %s \right)}" % (cls, args)
 
         return tex
 
@@ -976,7 +1000,11 @@ class LatexPrinter(Printer):
         cls = root.__class__.__name__
         expr = self._print(root.expr)
         index = root.index
-        return r"\operatorname{%s}\left(%s, %d\right)" % (cls, expr, index)
+        if cls in accepted_latex_functions:
+            return r"\%s {\left(%s, %d\right)}" % (cls, expr, index)
+        else:
+            return r"\operatorname{%s} {\left(%s, %d\right)}" % (cls, expr, index)
+
 
     def _print_RootSum(self, expr):
         cls = expr.__class__.__name__
@@ -985,7 +1013,10 @@ class LatexPrinter(Printer):
         if expr.fun is not S.IdentityFunction:
             args.append(self._print(expr.fun))
 
-        return r"\operatorname{%s}\left(%s\right)" % (cls, ", ".join(args))
+        if cls in accepted_latex_functions:
+            return r"\%s {\left(%s\right)}" % (cls, ", ".join(args))
+        else:
+            return r"\operatorname{%s} {\left(%s\right)}" % (cls, ", ".join(args))
 
     def _print_euler(self, expr):
         return r"E_{%s}" % self._print(expr.args[0])
