@@ -2,7 +2,7 @@
 A MathML printer.
 """
 
-from sympy import Basic, sympify, S
+from sympy import sympify, S
 from sympy.simplify import fraction
 from printer import Printer
 from conventions import split_super_sub

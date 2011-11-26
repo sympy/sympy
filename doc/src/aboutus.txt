@@ -144,6 +144,13 @@ want to be mentioned here, so see our repository history for a full list).
 #. Gert-Ludwig Ingold: Correct derivative of coth
 #. Miha Marolt: Add numpydoc extension to the Sphinx docs, fix ode_order
 #. Luis Garcia: update examples in symarry
+#. Matt Rajca: Code quality fixes
+#. David Li: Documentation fixes
+#. David Ju: Increase test coverage, fixes to KroneckerDelta
+#. Alexandr Gudulin: Code quality fixes
+#. Bilal Akhtar: isympy man page
+#. Grzegorz Świrski: Fix to latex()
+#. Matt Habel: SymPy-wide pyflakes editing
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

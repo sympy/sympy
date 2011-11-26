@@ -1,9 +1,9 @@
 from sympy.core.evalf import PrecisionExhausted, complex_accuracy
 
 from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
-    fibonacci, Integral, oo, E, atan, log, integrate, floor, ceiling, \
-    factorial, binomial, Sum, zeta, Catalan, Pow, GoldenRatio, sympify, \
-    sstr, Function, Eq, Mul, Pow, Derivative
+    fibonacci, E, log, floor, ceiling, Sum, oo,\
+    factorial, GoldenRatio, sympify, \
+    sstr, Function, Eq, Mul, Pow
 
 from sympy.mpmath.libmp.libmpf import from_float
 
@@ -179,7 +179,6 @@ def test_evalf_trig_zero_detection():
     raises(PrecisionExhausted, "a.evalf(strict=True)")
 
 def test_evalf_divergent_series():
-    n = Symbol('n', integer=True)
     raises(ValueError, 'Sum(1/n, (n, 1, oo)).evalf()')
     raises(ValueError, 'Sum(n/(n**2+1), (n, 1, oo)).evalf()')
     raises(ValueError, 'Sum((-1)**n, (n, 1, oo)).evalf()')

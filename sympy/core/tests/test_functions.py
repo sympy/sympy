@@ -1,6 +1,6 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
-        oo, zoo, nan, E, expand, pi, O, Sum, S, polygamma, loggamma,
+        E, expand, pi, O, Sum, S, polygamma, loggamma,
         Tuple, Dummy, Eq, Expr)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import x, y, n
@@ -19,7 +19,6 @@ def test_f_expand_complex():
                                              I*sin(im(z))*exp(re(z))
 
 def test_bug1():
-    x = Symbol("x")
     w = Symbol("w")
 
     e = sqrt(-log(w))
@@ -30,8 +29,6 @@ def test_bug1():
 
 def test_general_function():
     nu = Function('nu')
-    x = Symbol("x")
-    y = Symbol("y")
 
     e = nu(x)
     edx = e.diff(x)
@@ -237,7 +234,7 @@ def test_function_comparable():
     assert cos(Rational(1,3)).is_comparable == True
 
 @XFAIL
-def test_function_comparable():
+def test_function_comparable_infinities():
     assert sin(oo).is_comparable    == False
     assert sin(-oo).is_comparable   == False
     assert sin(zoo).is_comparable   == False
@@ -247,7 +244,6 @@ def test_deriv1():
     # These all requre derivatives evaluated at a point (issue 1620) to work.
     # See issue 1525
     f = Function('f')
-    g = Function('g')
     x = Symbol('x')
 
     assert f(2*x).diff(x) == 2*Subs(Derivative(f(x), x), Tuple(x), Tuple(2*x))
@@ -329,7 +325,6 @@ def test_function__eval_nseries():
     raises(PoleError, 'acos(1+x)._eval_nseries(x,2,None)')
     assert loggamma(1/x)._eval_nseries(x,0,None) \
            == log(x)/2 - log(x)/x - 1/x + O(1, x)
-    l = Symbol('l')
     assert loggamma(log(1/x)).nseries(x,n=1,logx=y) == loggamma(-y)
 
 def test_doit():

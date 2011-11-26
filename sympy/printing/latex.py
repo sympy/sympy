@@ -2,11 +2,10 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from sympy.core import S, C, Basic, Add, Mul, Wild, var
+from sympy.core import S, C, Add
 from printer import Printer
 from conventions import split_super_sub
 from sympy.simplify import fraction
-from sympy import Interval
 
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
@@ -282,6 +281,10 @@ class LatexPrinter(Printer):
              and expr.exp.q != 1:
             base, p, q = self._print(expr.base), expr.exp.p, expr.exp.q
             return r"%s^{%s/%s}" % (base, p, q)
+        elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_Function:
+            # Things like 1/x
+            return r"\frac{%s}{%s}" % \
+                (1, self._print(C.Pow(expr.base, -expr.exp)))
         else:
             if expr.base.is_Function:
                 return self._print(expr.base, self._print(expr.exp))
@@ -512,6 +515,45 @@ class LatexPrinter(Printer):
             tex = r"\Im{%s}" % self._print(expr.args[0])
 
         return self._do_exponent(tex, exp)
+
+    def _print_Not(self, e):
+        return r"\neg %s" % self._print(e.args[0])
+
+    def _print_And(self, e):
+        arg = e.args[0]
+        if arg.is_Boolean and not arg.is_Not:
+            tex = r"\left(%s\right)" % self._print(e.args[0]);
+        else:
+            tex = r"%s" % self._print(e.args[0]);
+
+        for arg in e.args[1:]:
+            if arg.is_Boolean and not arg.is_Not:
+                tex += r" \wedge \left(%s\right)" % (self._print(arg))
+            else:
+                tex += r" \wedge %s" % (self._print(arg))
+
+        return tex
+
+    def _print_Or(self, e):
+        arg = e.args[0]
+        if arg.is_Boolean and not arg.is_Not:
+            tex = r"\left(%s\right)" % self._print(e.args[0]);
+        else:
+            tex = r"%s" % self._print(e.args[0]);
+
+        for arg in e.args[1:]:
+            if arg.is_Boolean and not arg.is_Not:
+                tex += r" \vee \left(%s\right)" % (self._print(arg))
+            else:
+                tex += r" \vee %s" % (self._print(arg))
+
+        return tex
+
+    def _print_Implies(self, e):
+        return r"%s \Rightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
+
+    def _print_Equivalent(self, e):
+        return r"%s \Leftrightarrow %s" % (self._print(e.args[0]), self._print(e.args[1]))
 
     def _print_conjugate(self, expr, exp=None):
         tex = r"\overline{%s}" % self._print(expr.args[0])

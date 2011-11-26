@@ -1,6 +1,6 @@
 import inspect
 from sympy.utilities.source import get_class
-from sympy.logic.boolalg import Boolean, Not
+from sympy.logic.boolalg import Boolean
 
 class AssumptionsContext(set):
     """Set representing assumptions.

@@ -65,10 +65,8 @@ Some more information how the single concepts work and who should use which:
     not defined in the Printer subclass this will be the same as str(expr)
 """
 
-from sympy import S, Basic, Mul, Add
+from sympy import Basic, Add
 
-from sympy.core.exprtools import decompose_power
-from sympy.polys.monomialtools import monomial_key
 from sympy.core.core import BasicMeta
 
 from sympy.core.compatibility import cmp_to_key

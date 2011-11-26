@@ -1,4 +1,4 @@
-from sympy import Symbol, sqrt, I, Integer, Rational, cos, atan, sin, im, re, \
+from sympy import Symbol, sqrt, I, Integer, Rational, cos, sin, im, re, \
         exp, sinh, cosh, tan, tanh, conjugate, sign, cot, coth, pi, expand_complex
 
 

@@ -116,8 +116,7 @@ this function to figure out the exact problem.
 
 """
 from sympy import SYMPY_DEBUG
-from sympy.core import Basic, S, oo, Symbol, C, I, Dummy, Wild
-from sympy.core.function import Function, UndefinedFunction
+from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp

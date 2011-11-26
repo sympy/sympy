@@ -15,6 +15,8 @@ This script is based on the sage-coverage script from Sage written by William
 Stein.
 """
 
+from __future__ import with_statement
+
 import os
 import re
 import sys
@@ -138,7 +140,8 @@ def go(file, verbose=False, exact=True):
     if not os.path.exists(file):
         print "File %s does not exist."%file
         sys.exit(1)
-    f = open(file).read()
+    with open(file) as fh:
+        f = fh.read()
     coverage(file, f, verbose)
 
 if __name__ == "__main__":

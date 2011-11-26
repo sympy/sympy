@@ -1,15 +1,16 @@
 """This module implements tools for integrating rational functions. """
 
 from sympy import S, Symbol, symbols, I, log, atan, \
-    resultant, roots, collect, solve, RootSum, Lambda, cancel, Dummy
+    roots, collect, solve, RootSum, Lambda, cancel, Dummy
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
 
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.
 
-       Given a field K and a rational function f = p/q, where p and q
-       are polynomials in K[x], returns a function g such that f = g'.
+       Given a field :math:`K` and a rational function :math:`f = p/q`,
+       where :math:`p` and :math:`q` are polynomials in :math:`K[x]`,
+       returns a function :math:`g` such that :math:`f = g'`.
 
        >>> from sympy.integrals.rationaltools import ratint
        >>> from sympy.abc import x
@@ -111,7 +112,6 @@ def ratint_ratpart(f, g, x):
 
     n = u.degree()
     m = v.degree()
-    d = g.degree()
 
     A_coeffs = [ Dummy('a' + str(n-i)) for i in xrange(0, n) ]
     B_coeffs = [ Dummy('b' + str(m-i)) for i in xrange(0, m) ]

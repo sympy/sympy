@@ -3,6 +3,8 @@
 www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT/satformat.ps
 
 """
+from __future__ import with_statement
+
 from sympy.core import Symbol
 from sympy.logic.boolalg import And, Or
 import re
@@ -15,21 +17,14 @@ def load(s):
     pComment = re.compile('c.*')
     pStats = re.compile('p\s*cnf\s*(\d*)\s*(\d*)')
 
-
-    numVars = 0
-    numClauses = 0
-
     while len(lines) > 0:
         line = lines.pop(0)
 
         # Only deal with lines that aren't comments
         if not pComment.match(line):
             m = pStats.match(line)
-            if m:
-                numVars = int(m.group(1))
-                numClauses = int(m.group(2))
 
-            else:
+            if not m:
                 nums = line.rstrip('\n').split(' ')
                 list = []
                 for lit in nums:
@@ -49,5 +44,7 @@ def load(s):
     return And(*clauses)
 
 def load_file(location):
-    s = open(location).read()
+    with open(location) as f:
+        s = f.read()
+
     return load(s)

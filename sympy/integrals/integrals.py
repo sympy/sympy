@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Dummy, Equality, Interval)
+                        oo, Tuple, Interval)
 
 from sympy.core.symbol import Dummy
 from sympy.core.compatibility import is_sequence
@@ -10,7 +10,7 @@ from sympy.integrals.risch import heurisch
 from sympy.utilities import xthreaded, flatten
 from sympy.polys import Poly, PolynomialError
 from sympy.solvers import solve
-from sympy.functions import Piecewise, sign, sqrt
+from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
@@ -127,10 +127,24 @@ class Integral(Expr):
 
     @property
     def function(self):
+        """Return the function to be integrated.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x
+        >>> Integral(x**2, (x,)).function
+        x**2
+        """
         return self._args[0]
 
     @property
     def limits(self):
+        """Return the limits of integration.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i
+        >>> Integral(x**i, (i, 1, 3)).limits
+        ((i, 1, 3),)
+        """
         return self._args[1:]
 
     @property
@@ -322,6 +336,14 @@ class Integral(Expr):
 
 
     def doit(self, **hints):
+        """
+        Perform the integration using any hints given.
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, i
+        >>> Integral(x**i, (i, 1, 3)).doit()
+        x**3/log(x) - x/log(x)
+        """
         if not hints.get('integrals', True):
             return self
 
