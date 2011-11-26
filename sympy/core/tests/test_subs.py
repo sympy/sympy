@@ -283,7 +283,7 @@ def test_subs_basic_funcs():
 @XFAIL
 def test_subs_basic_funcs_division_bug():
     # Fails because of division
-    a,b,c,K = symbols('a b c K', commutative=False)
+    a,b,c,K = symbols('a b c K', commutative=True)
     assert (a/(b*c)).subs(b*c,K) == a/K
 
 def test_subs_wild():
