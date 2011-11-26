@@ -18,8 +18,6 @@ import random
 
 from sympy.mpmath import *
 
-from sympy.utilities.pytest import XFAIL
-
 def mpc_ae(a, b, eps=eps):
     res = True
     res = res and a.real.ae(b.real, eps)

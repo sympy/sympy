@@ -1,5 +1,4 @@
 from sympy.utilities.pytest import raises, XFAIL
-from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.core import Symbol, symbols, S, Rational, Integer, I, pi, oo
 from sympy.functions import exp, log, sin, cos, sign, re, im, sqrt, Abs

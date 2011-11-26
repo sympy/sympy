@@ -1,6 +1,5 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, sin, expand_log, S, sign, nextprime)
-from sympy.utilities.pytest import XFAIL
 
 def test_exp_values():
 

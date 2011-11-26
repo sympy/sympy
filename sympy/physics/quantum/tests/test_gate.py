@@ -14,8 +14,6 @@ from sympy.physics.quantum.matrixutils import matrix_to_zero
 from sympy.physics.quantum.matrixcache import sqrt2_inv
 from sympy.physics.quantum import Dagger
 
-from sympy.utilities.pytest import XFAIL
-
 def test_gate():
     """Test a basic gate."""
     h = HadamardGate(1)

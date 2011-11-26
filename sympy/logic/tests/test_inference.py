@@ -7,7 +7,7 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 def test_find_pure_symbol():
     A, B, C = symbols('A,B,C')
