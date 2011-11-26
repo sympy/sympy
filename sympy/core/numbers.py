@@ -1426,9 +1426,6 @@ class One(IntegerConstant):
 
     __slots__ = []
 
-    def _eval_evalf(self, prec):
-        return self
-
     @staticmethod
     def __abs__():
         return S.One
@@ -1451,9 +1448,6 @@ class NegativeOne(IntegerConstant):
     q = 1
 
     __slots__ = []
-
-    def _eval_evalf(self, prec):
-        return self
 
     @staticmethod
     def __abs__():

@@ -153,6 +153,10 @@ def test_evalf_bugs():
     # because the order depends on the hashes of the terms.
     assert NS(20 - 5008329267844*n**25 - 477638700*n**37 - 19*n,
               subs={n:.01}) == '19.8100000000000'
+    assert NS(((x - 1)*((1 - x))**1000).n()) == '(-x + 1.00000000000000)**1000*(x - 1.00000000000000)'
+    assert NS((-x).n()) == '-x'
+    assert NS((-2*x).n()) == '-2.00000000000000*x'
+    assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
