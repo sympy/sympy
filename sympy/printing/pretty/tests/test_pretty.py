@@ -1472,22 +1472,30 @@ u"""\
 def test_pretty_product():
     n, k, l = symbols('n k l')
     f = symbols('f', cls=Function)
-    expr = Product(f(n), (n, k, l))
+    expr = Product(f((n/3)**2), (n, k**2, l))
 
     unicode_str = \
 u"""\
-  l       
-┬───┬     
-│   │ f(n)
-│   │     
-n = k     """
+    l           
+┬────────┬      
+│        │  ⎛ 2⎞
+│        │  ⎜n ⎟
+│        │ f⎜──⎟
+│        │  ⎝9 ⎠
+│        │      
+       2        
+  n = k         """
     ascii_str = \
 """\
-  l       
-_____     
-|   | f(n)
-|   |     
-n = k     """
+    l           
+__________      
+|        |  / 2\\
+|        |  |n |
+|        | f|--|
+|        |  \9 /
+|        |      
+       2        
+  n = k         """
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == unicode_str

@@ -346,7 +346,7 @@ class PrettyPrinter(Printer):
         vertical_chr = xobj('|', 1)
 
         if self._use_unicode:
-            # use unicode coreners
+            # use unicode corners
             horizontal_chr = xobj('-', 1)
             corner_chr = u'\u252c'
 
