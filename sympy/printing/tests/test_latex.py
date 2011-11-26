@@ -43,8 +43,8 @@ def test_latex_basic():
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
 
-    assert latex(1/sin(x)) == r"\frac{1}{\operatorname{sin}\left(x\right)}"
-    assert latex(sin(x)**-1) == r"\frac{1}{\operatorname{sin}\left(x\right)}"
+    assert latex(1/sin(x)) == r"\frac{1}{\sin\left(x\right)}"
+    assert latex(sin(x)**-1) == r"\frac{1}{\sin\left(x\right)}"
 
     assert latex(~x) == r"\neg x"
     assert latex(x & y) == r"x \wedge y"
