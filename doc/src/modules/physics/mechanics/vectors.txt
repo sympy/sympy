@@ -769,6 +769,6 @@ are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 Docstring
 =========
 
-.. autoclass:: sympy.physics.mechanics.Vector
+.. autoclass:: sympy.physics.mechanics.essential.Vector
    :members:
 

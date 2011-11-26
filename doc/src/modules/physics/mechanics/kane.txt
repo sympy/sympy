@@ -178,5 +178,5 @@ understanding of the ``Kane`` object.
 Docstrings
 ==========
 
-.. autoclass:: sympy.physics.mechanics.Kane
+.. automodule:: sympy.physics.mechanics.kane
    :members:

@@ -2,5 +2,5 @@
 Dagger
 ======
 
-.. autoclass:: sympy.physics.quantum.Dagger
+.. automodule:: sympy.physics.quantum.dagger
    :members:

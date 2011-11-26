@@ -2,5 +2,5 @@
 Anticommutator
 ==============
 
-.. autoclass:: sympy.physics.quantum.AntiCommutator
+.. automodule:: sympy.physics.quantum.anticommutator
    :members:

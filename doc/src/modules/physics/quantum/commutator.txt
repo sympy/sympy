@@ -2,5 +2,5 @@
 Commutator
 ==========
 
-.. autoclass:: sympy.physics.quantum.Commutator
+.. automodule:: sympy.physics.quantum.commutator
    :members:

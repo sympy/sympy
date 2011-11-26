@@ -2,5 +2,5 @@
 Inner Product
 =============
 
-.. autoclass:: sympy.physics.quantum.InnerProduct
+.. automodule:: sympy.physics.quantum.innerproduct
    :members:

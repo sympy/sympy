@@ -5,5 +5,5 @@ Point
 Docstrings
 ==========
 
-.. autoclass:: sympy.physics.mechanics.Point
+.. automodule:: sympy.physics.mechanics.point
    :members:

@@ -62,3 +62,9 @@ Common SI derived units.
     >>> joule
     kg*m**2/s**2
 
+Docstring
+=========
+
+.. automodule:: sympy.physics.units
+   :members:
+

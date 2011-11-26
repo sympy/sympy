@@ -1,0 +1,6 @@
+============
+Second Quant
+============
+
+.. automodule:: sympy.physics.secondquant
+   :members:

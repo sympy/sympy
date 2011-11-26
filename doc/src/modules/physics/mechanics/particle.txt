@@ -5,5 +5,5 @@ Particle
 Docstrings
 ==========
 
-.. autoclass:: sympy.physics.mechanics.Particle
+.. automodule:: sympy.physics.mechanics.particle
    :members:

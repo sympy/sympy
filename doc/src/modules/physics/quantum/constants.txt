@@ -2,8 +2,5 @@
 Constants
 =========
 
-Plank's Constant
-================
-
-.. autoclass:: sympy.physics.quantum.HBar
+.. automodule:: sympy.physics.quantum.constants
    :members:

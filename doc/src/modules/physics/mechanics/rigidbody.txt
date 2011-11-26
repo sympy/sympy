@@ -5,5 +5,5 @@ Rigid Body
 Docstrings
 ==========
 
-.. autoclass:: sympy.physics.mechanics.RigidBody
+.. automodule:: sympy.physics.mechanics.rigidbody
    :members:

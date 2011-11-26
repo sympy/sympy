@@ -1,0 +1,6 @@
+======
+Wigner
+======
+
+.. automodule:: sympy.physics.wigner
+   :members:

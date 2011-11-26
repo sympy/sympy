@@ -17,8 +17,11 @@ Contents
     dagger.txt
     hilbert.txt
     innerproduct.txt
-    kronecker.txt
     operator.txt
     state.txt
     tensorproduct.txt
     constants.txt
+    represent.txt
+    cg.txt
+    qapply.txt
+    spin.txt

@@ -2,5 +2,5 @@
 Tensor Product
 ==============
 
-.. autoclass:: sympy.physics.quantum.TensorProduct
+.. automodule:: sympy.physics.quantum.tensorproduct
    :members:

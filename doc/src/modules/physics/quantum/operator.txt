@@ -2,33 +2,5 @@
 Operator
 ========
 
-Operator
-========
-
-.. autoclass:: sympy.physics.quantum.Operator
+.. automodule:: sympy.physics.quantum.operator
    :members:
-
-Hermitian Operator
-==================
-
-.. autoclass:: sympy.physics.quantum.HermitianOperator
-   :members:
-
-Unitary Operator
-================
-
-.. autoclass:: sympy.physics.quantum.UnitaryOperator
-   :members:
-
-OuterProduct
-============
-
-.. autoclass:: sympy.physics.quantum.OuterProduct
-   :members:
-
-Differential Operator
-=====================
-
-.. autoclass:: sympy.physics.quantum.DifferentialOperator
-   :members:
-

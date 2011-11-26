@@ -35,7 +35,7 @@ Contents
     particle.txt
     point.txt
     rigidbody.txt
-    essentials.txt
+    essential.txt
     examples.txt
     advanced.txt
     reference.txt
