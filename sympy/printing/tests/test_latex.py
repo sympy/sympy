@@ -2,7 +2,8 @@ from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
     Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
-    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan)
+    Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan,
+    cot, coth, re, im, root, arg, zeta)
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
@@ -127,6 +128,14 @@ def test_latex_functions():
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
+
+    assert latex(cot(x)) == r'\cot\left(x\right)'
+    assert latex(coth(x)) == r'\coth\left(x\right)'
+    assert latex(re(x)) == r'\Re{x}'
+    assert latex(im(x)) == r'\Im{x}'
+    assert latex(root(x,y)) == r'x^{\frac{1}{y}}'
+    assert latex(arg(x)) == r'\arg\left(x\right)'
+    assert latex(zeta(x)) == r'\zeta\left(x\right)'
 
 def test_hyper_printing():
     from sympy import pi, Tuple
