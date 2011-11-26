@@ -1,15 +1,19 @@
 """Tools for manipulating of large commutative expressions. """
 
 from sympy.core.add import Add
+from sympy.core.compatibility import iterable
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, Integer
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple
+
+from collections import defaultdict
 
 def decompose_power(expr):
     """
@@ -44,10 +48,9 @@ def decompose_power(expr):
         exp, tail = exp.as_coeff_mul()
 
         if exp.is_Rational:
-            if not exp.is_Integer:
-                tail += (Rational(1, exp.q),)
+            tail = _keep_coeff(Rational(1, exp.q), Mul(*tail))
 
-            base, exp = Pow(base, Mul(*tail)), exp.p
+            base, exp = Pow(base, tail), exp.p
         else:
             base, exp = expr, 1
 
@@ -72,7 +75,15 @@ class Factors(object):
         return "Factors(%s)" % self.factors
 
     def as_expr(self):
-        return Mul(*[ factor**exp for factor, exp in self.factors.iteritems() ])
+        args = []
+        for factor, exp in self.factors.iteritems():
+            if exp != 1:
+                b, e = factor.as_base_exp()
+                e = _keep_coeff(Integer(exp), e)
+                args.append(b**e)
+            else:
+                args.append(factor)
+        return Mul(*args)
 
     def normal(self, other):
         self_factors = dict(self.factors)
@@ -323,8 +334,10 @@ class Term(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-def _gcd_terms(terms):
-    """Helper function for :func:`gcd_terms`. """
+def _gcd_terms(terms, isprimitive=False):
+    """Helper function for :func:`gcd_terms`. If `isprimitive` is True then the
+    call to primitive for an Add will be skipped. This is useful when the
+    content has already been extrated."""
     if isinstance(terms, Basic) and not isinstance(terms, Tuple):
         terms = Add.make_args(terms)
 
@@ -357,16 +370,16 @@ def _gcd_terms(terms):
     cont = cont.as_expr()
     numer = Add(*numers)
     denom = denom.as_expr()
-
-    if numer.is_Add:
+    if not isprimitive and numer.is_Add:
         _cont, numer = numer.primitive()
         cont *= _cont
 
     return cont, numer, denom
 
-def gcd_terms(terms):
+def gcd_terms(terms, isprimitive=False):
     """
-    Compute the GCD of ``terms`` and put them together.
+    Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
+    True the _gcd_terms will not run the primitive method on the terms.
 
     **Example**
 
@@ -377,7 +390,68 @@ def gcd_terms(terms):
     y*(x + 1)*(x + y + 1)
 
     """
+    terms = sympify(terms)
+    isexpr = isinstance(terms, Expr)
+    if not isexpr or terms.is_Add:
+        cont, numer, denom = _gcd_terms(terms, isprimitive)
+        coeff, factors = cont.as_coeff_Mul()
+        return _keep_coeff(coeff, factors*numer/denom)
 
-    cont, numer, denom = _gcd_terms(sympify(terms))
-    coeff, factors = cont.as_coeff_Mul()
-    return _keep_coeff(coeff, factors*numer/denom)
+    if terms.is_Atom:
+        return terms
+
+    if terms.is_Mul:
+        c, args = terms.as_coeff_mul()
+        return _keep_coeff(c, Mul(*[gcd_terms(i, isprimitive) for i in args]))
+
+    def handle(a):
+        if iterable(a):
+            if isinstance(a, Basic):
+                return a.func(*[gcd_terms(i, isprimitive) for i in a.args])
+            return type(a)([gcd_terms(i, isprimitive) for i in a])
+        return gcd_terms(a, isprimitive)
+    return terms.func(*[handle(i) for i in terms.args])
+
+
+def factor_terms(expr):
+    """Remove common factors from terms in all arguments without
+    changing the underlying structure of the expr. No expansion or
+    simplification (and no processing of non-commutative) is performed.
+
+    **Examples**
+
+    >>> from sympy import factor_terms, Symbol
+    >>> from sympy.abc import x, y
+    >>> factor_terms(x + x*(2 + 4*y)**3)
+    x*(8*(2*y + 1)**3 + 1)
+    >>> A = Symbol('A', commutative=False)
+    >>> factor_terms(x*A + x*A + x*y*A)
+    x*(y*A + 2*A)
+
+    """
+
+    expr = sympify(expr)
+
+    if iterable(expr):
+        return type(expr)([factor_terms(i) for i in expr])
+
+    if not isinstance(expr, Basic) or expr.is_Atom:
+        return expr
+
+    if expr.is_Function:
+        return expr.func(*[factor_terms(i) for i in expr.args])
+
+    cont, p = expr.as_content_primitive()
+    list_args, nc = zip(*[ai.args_cnc(clist=True) for ai in Add.make_args(p)])
+    list_args = list(list_args)
+    nc = [((Dummy(), Mul._from_args(i)) if i else None) for i in nc]
+    ncreps = dict([i for i in nc if i is not None])
+    for i, a in enumerate(list_args):
+        if nc[i] is not None:
+           a.append(nc[i][0])
+        a = Mul._from_args(a) # gcd_terms will fix up ordering
+        list_args[i] = gcd_terms(a, isprimitive=True)
+        # cancel terms that may not have cancelled
+    p = Add._from_args(list_args) # gcd_terms will fix up ordering
+    p = gcd_terms(p, isprimitive=True).subs(ncreps) # exact subs could be used here
+    return _keep_coeff(cont, p)

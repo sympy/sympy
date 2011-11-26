@@ -5,11 +5,11 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy)
+    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import m, s
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 class DummyNumber(object):
     """
@@ -983,6 +983,26 @@ def test_as_powers_dict():
     assert (x**y*z).as_powers_dict() == {x: y, z: 1}
     assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
 
+def test_as_coefficients_dict():
+    check = [S(1), x, y, x*y, 1]
+    assert [Add(3*x, 2*x, y, 3).as_coefficients_dict()[i] for i in check] == \
+    [3, 5, 1, 0, 0]
+    assert [(3*x*y).as_coefficients_dict()[i] for i in check] == \
+    [0, 0, 0, 3, 0]
+    assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
+
+def test_args_cnc():
+    a, x = symbols('a,x')
+    A = symbols('A', commutative=False)
+    assert (x+A).args_cnc() == \
+        [set([]), [x + A]]
+    assert (x+a).args_cnc() == \
+        [set([a + x]), []]
+    assert (x*a).args_cnc() == \
+        [set([x, a]), []]
+    assert (x*y*A*(A+1)).args_cnc(clist=True) == \
+        [[x, y], [A, 1 + A]]
+
 def test_new_rawargs():
     x, y = symbols('x,y')
     n = Symbol('n', commutative=False)
@@ -1176,3 +1196,41 @@ def test_issue_2744():
     assert (4*a).extract_multiplicatively(2*a) == 2
     assert ((3*a)*(2*a)).extract_multiplicatively(a) == 6*a
 
+def test_is_constant():
+    from sympy.abc import a, n, x, y
+    from sympy.solvers.solvers import checksol
+    Sum(x, (x, 1, 10)).is_constant() == True
+    Sum(x, (x, 1, n)).is_constant() == False
+    Sum(x, (x, 1, n)).is_constant(y) == True
+    Sum(x, (x, 1, n)).is_constant(n) == False
+    Sum(x, (x, 1, n)).is_constant(x) == True
+    eq = a*cos(x)**2 + a*sin(x)**2 - a
+    eq.is_constant() == True
+    assert eq.subs({x:pi, a:2}) == eq.subs({x:pi, a:3}) == 0
+    assert x.is_constant() is False
+    assert x.is_constant(y) is True
+
+    assert checksol(x, x, Sum(x, (x, 1, n))) == False
+    assert checksol(x, x, Sum(x, (x, 1, n))) == False
+    f = Function('f')
+    assert checksol(x, x, f(x)) == False
+
+    p = symbols('p', positive=True)
+    assert Pow(x, S(0), evaluate=False).is_constant() == True # == 1
+    assert Pow(S(0), x, evaluate=False).is_constant() == False # == 0 or 1
+    assert Pow(S(0), p, evaluate=False).is_constant() == True # == 1
+    assert (2**x).is_constant() == False
+    assert Pow(S(2), S(3), evaluate=False).is_constant() == True
+
+    z1, z2 = symbols('z1 z2', zero=True)
+    assert (z1+2*z2).is_constant
+
+@XFAIL
+def test_is_not_constant():
+    assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero != False
+
+def test_equals():
+    a, x = symbols('a, x')
+    assert (x**2 - 1).equals((x + 1)*(x - 1))
+    assert (cos(x)**2 + sin(x)**2).equals(1)
+    assert (a*cos(x)**2 + a*sin(x)**2).equals(a)

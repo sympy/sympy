@@ -399,6 +399,6 @@ from sympy.concrete.summations import Sum
 
 def test_concrete():
     x = Symbol("x")
-    for c in (Product, Product(1,2), Sum, Sum(x, (x, 2, 4))):
+    for c in (Product, Product(x, (x, 2, 4)), Sum, Sum(x, (x, 2, 4))):
         check(c)
 

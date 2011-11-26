@@ -15,7 +15,7 @@ from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
 from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
-        Derivative, Function, AppliedUndef)
+        Derivative, Function, AppliedUndef, UndefinedFunction)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -169,6 +169,8 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if val.free_symbols:
+                if not val.is_constant(*sol.keys()):
+                    return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
                 val = expand_mul(expand_multinomial(val))
@@ -185,7 +187,7 @@ def checksol(f, symbol, sol=None, **flags):
                 val = posify(val)[0]
                 # expansion may work now, so try again and check
                 exval = expand_mul(expand_multinomial(val))
-                if exval.is_number and not exval.free_symbols:
+                if not exval.free_symbols:
                     # we can decide now
                     val = exval
         elif attempt == 3:
@@ -199,6 +201,25 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 7:
             val = powsimp(val)
         else:
+            # if there are no radicals and no functions then this can't be
+            # zero anymore -- can it?
+            pot = preorder_traversal(expand_mul(val))
+            seen = set()
+            none = False
+            for p in pot:
+                if p in seen:
+                    continue
+                seen.add(p)
+                if p.is_Pow and not p.exp.is_Integer:
+                    none = True
+                elif p.is_Function:
+                    none = True
+                elif isinstance(p, UndefinedFunction):
+                    none = True
+                if none:
+                    break
+            if none is False:
+                return False
             try:
                 nz = val.is_nonzero
             except: # any problem at all: recursion, inconsistency of facts, etc...
