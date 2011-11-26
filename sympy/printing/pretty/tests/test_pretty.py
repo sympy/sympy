@@ -1474,8 +1474,20 @@ def test_pretty_product():
     f = symbols('f', cls=Function)
     expr = Product(f(n), (n, k, l))
 
-    unicode_str = u'  l       \n\u252c\u2500\u2500\u2500\u252c     \n\u2502   \u2502 f(n)\n\u2502   \u2502     \nn = k     '
-    ascii_str = '  l       \n-----     \n|   | f(n)\n|   |     \nn = k     '
+    unicode_str = \
+u"""\
+  l       
+┬───┬     
+│   │ f(n)
+│   │     
+n = k     """
+    ascii_str = \
+"""\
+  l       
+_____     
+|   | f(n)
+|   |     
+n = k     """
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == unicode_str

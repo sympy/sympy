@@ -341,12 +341,13 @@ class PrettyPrinter(Printer):
         func = expr.term
         pretty_func = self._print(func)
 
-        horizontal_chr = xobj('-', 1)
-        corner_chr = xobj('-', 1)
+        horizontal_chr = xobj('_', 1)
+        corner_chr = xobj('_', 1)
         vertical_chr = xobj('|', 1)
 
         if self._use_unicode:
             # use unicode coreners
+            horizontal_chr = xobj('-', 1)
             corner_chr = u'\u252c'
 
         func_height = pretty_func.height()
