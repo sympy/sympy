@@ -4,7 +4,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops, Expr)
+    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms)
 
 from sympy.core.mul import _keep_coeff
 from sympy.core.compatibility import iterable, reduce
@@ -1807,9 +1807,8 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     ::
 
-        >>> from sympy import S, simplify, count_ops, oo
-        >>> root = S("(1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3) + "
-        ... "1/((1/2 - sqrt(3)*I/2)*(sqrt(21)/2 + 5/2)**(1/3))")
+        >>> from sympy import sqrt, simplify, count_ops, oo
+        >>> root = 1/(sqrt(2)+3)
 
     Since ``simplify(root)`` would result in a slightly longer expression,
     root is returned unchanged instead::
@@ -1906,10 +1905,10 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         return min(choices, key=measure)
 
     if expr.is_commutative is False:
-        expr = powsimp(expr)
+        expr1 = factor_terms(together(powsimp(expr)))
         if ratio is S.Infinity:
-            return expr
-        return shorter(together(expr), expr)
+            return expr1
+        return shorter(expr1, expr)
 
     expr1 = cancel(powsimp(expr))
     expr2 = together(expr1.expand(), deep=True)

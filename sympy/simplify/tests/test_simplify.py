@@ -177,6 +177,8 @@ def test_simplify_other():
     assert simplify(gamma(x + 1)/gamma(x)) == x
     assert simplify(sin(x)**2 + cos(x)**2 + factorial(x)/gamma(x)) == 1 + x
     assert simplify(Eq(sin(x)**2 + cos(x)**2, factorial(x)/gamma(x))) == Eq(1, x)
+    nc = symbols('nc', commutative=False)
+    assert simplify(x + x*nc) == x*(1 + nc)
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
