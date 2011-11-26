@@ -27,7 +27,7 @@ from sympy.polys.domains import ZZ, QQ
 
 from sympy import S, Symbol, symbols
 
-from sympy.utilities.pytest import raises, skip
+from sympy.utilities.pytest import raises, skip, XFAIL
 
 def test_sdp_LC():
     assert sdp_LC([], QQ) == QQ(0)
