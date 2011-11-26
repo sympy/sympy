@@ -7,7 +7,7 @@ Todo:
 * Implement _represent_ZGate in OracleGate
 """
 
-from sympy import sqrt, pi, floor
+from sympy import sqrt, pi, floor, sympify
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.hilbert import ComplexSpace
@@ -188,7 +188,7 @@ class WGate(Gate):
         args = UnitaryOperator._eval_args(args)
         if not args[0].is_Integer:
            raise TypeError('Integer expected, got: %r' % args[0])
-        return tuple(reversed(range(args[0])))
+        return sympify(tuple(reversed(range(args[0]))))
 
     #-------------------------------------------------------------------------
     # Apply
