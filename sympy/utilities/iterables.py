@@ -421,7 +421,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
         if 'dummy' in assumptions and assumptions.pop('dummy'):
             import warnings
             warnings.warn("\nuse cls=Dummy to create dummy symbols",
-                          DeprecationWarning)
+                          SymPyDeprecationWarning)
             cls = C.Dummy
         else:
             cls = C.Symbol

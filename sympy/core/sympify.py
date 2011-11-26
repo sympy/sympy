@@ -5,6 +5,13 @@ from inspect import getmro
 from core import all_classes as sympy_classes
 from sympy.core.compatibility import iterable
 
+class SymPyDeprecationWarning(DeprecationWarning):
+    def __init__(self, value):
+        self.parameter = value
+
+    def __str__(self):
+        return repr(self.parameter)
+
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr
@@ -16,7 +23,6 @@ class SympifyError(ValueError):
         return ("Sympify of expression '%s' failed, because of exception being "
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
-
 
 converter = {}
 

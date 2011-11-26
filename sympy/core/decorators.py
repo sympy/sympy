@@ -4,8 +4,10 @@ SymPy core decorators.
 The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
+
 from sympify import SympifyError, sympify
 from functools import wraps
+from sympify import SymPyDeprecationWarning, SympifyError, sympify
 import warnings
 
 def deprecated(func):
@@ -15,7 +17,7 @@ def deprecated(func):
     @wraps(func)
     def new_func(*args, **kwargs):
         warnings.warn("Call to deprecated function %s." % func.__name__,
-                      category=DeprecationWarning)
+                      category=SymPyDeprecationWarning)
         return func(*args, **kwargs)
     return new_func
 

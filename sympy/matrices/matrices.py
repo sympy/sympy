@@ -1616,7 +1616,7 @@ class Matrix(object):
         """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
-            warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+            warnings.warn("pass row and column as zeros(%i, %i)" % r, SymPyDeprecationWarning)
             r, c = r
         else:
             c = r if c is None else c
@@ -2777,7 +2777,7 @@ def zeros(r, c=None, cls=Matrix):
     """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
     if ``c`` is omitted a square matrix will be returned."""
     if is_sequence(r):
-        warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+        warnings.warn("pass row and column as zeros(%i, %i)" % r, SymPyDeprecationWarning)
         r, c = r
     else:
         c = r if c is None else c
@@ -2789,7 +2789,7 @@ def ones(r, c=None):
     if ``c`` is omitted a square matrix will be returned."""
 
     if is_sequence(r):
-        warnings.warn("pass row and column as ones(%i, %i)" % r, DeprecationWarning)
+        warnings.warn("pass row and column as ones(%i, %i)" % r, SymPyDeprecationWarning)
         r, c = r
     else:
         c = r if c is None else c
@@ -3386,7 +3386,7 @@ class SparseMatrix(Matrix):
         """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
-            warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+            warnings.warn("pass row and column as zeros(%i, %i)" % r, SymPyDeprecationWarning)
             r, c = r
         else:
             c = r if c is None else c
