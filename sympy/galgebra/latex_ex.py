@@ -20,6 +20,8 @@ import numpy
 from sympy.core.compatibility import cmp_to_key
 from sympy.utilities import default_sort_key
 
+from sympy.printing.latex import accepted_latex_functions
+
 def debug(txt):
     sys.stderr.write(txt+'\n')
     return
@@ -581,9 +583,15 @@ class LatexPrinter(Printer):
             if LatexPrinter.fmt_dict['fct'] == 1:
                 if func in LatexPrinter.fct_dict_keys:
                     if exp is not None:
-                        name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
+                        if func in accepted_latex_functions:
+                            name = r"\%s^{%s}" %  (LatexPrinter.fct_dict[func], exp)
+                        else:
+                            name = r"\operatorname{%s}^{%s}" % (LatexPrinter.fct_dict[func], exp)
                     else:
-                        name = r"\operatorname{%s}" % LatexPrinter.fct_dict[func]
+                        if LatexPrinter.fct_dict[func] in accepted_latex_functions:
+                            name = r"\%s" % LatexPrinter.fct_dict[func]
+                        else:
+                            name = r"\operatorname{%s}" % LatexPrinter.fct_dict[func]
                     name += r"\left(%s\right)" % ",".join(args)
                     return name
                 else:
@@ -595,9 +603,15 @@ class LatexPrinter(Printer):
                     return name
             else:
                 if exp is not None:
-                    name = r"\operatorname{%s}^{%s}" % (func, exp)
+                    if func in accepted_latex_functions:
+                        name = r"\%s^{%s}" % (func, exp)
+                    else:
+                        name = r"\operatorname{%s}^{%s}" % (func, exp)
                 else:
-                    name = r"\operatorname{%s}" % func
+                    if func in accepted_latex_functions:
+                        name = r"\%s" % func
+                    else:
+                        name = r"\operatorname{%s}" % func
                 return name + r"\left(%s\right)" % ",".join(args)
 
     def _print_floor(self, expr, exp=None):
@@ -656,9 +670,9 @@ class LatexPrinter(Printer):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r"\operatorname{\Gamma}^{%s}%s" % (exp, tex)
+            return r"\Gamma^{%s}%s" % (exp, tex)
         else:
-            return r"\operatorname{\Gamma}%s" % tex
+            return r"\Gamma%s" % tex
 
     def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
@@ -729,7 +743,7 @@ class LatexPrinter(Printer):
         return r"\gamma"
 
     def _print_Order(self, expr):
-        return r"\operatorname{\mathcal{O}}\left(%s\right)" % \
+        return r"\\mathcal{O}\left(%s\right)" % \
             self._print(expr.args[0])
 
     @staticmethod
