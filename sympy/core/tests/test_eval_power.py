@@ -1,4 +1,4 @@
-from sympy.core import Rational, Symbol, S, Float, Integer
+from sympy.core import Rational, Symbol, S, Float, Integer, Number
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.pytest import XFAIL
 
@@ -35,7 +35,6 @@ def test_expand():
     x = Symbol('x')
     assert (2**(-1-x)).expand() == Rational(1,2)*2**(-x)
 
-@XFAIL
 def test_issue350():
     #test if powers are simplified correctly
     #see also issue 896
