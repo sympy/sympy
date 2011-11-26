@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, dsolve)
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL
 
@@ -99,6 +99,27 @@ def test_trigsimp_issue_2515():
     x = Symbol('x')
     assert trigsimp(x*cos(x)*tan(x)) == x*sin(x)
     assert trigsimp(-sin(x)+cos(x)*tan(x)) == 0
+
+def test_trigsimp_issues_1395_1526_1562():
+    # 1395
+    assert trigsimp(sin(a)**2*sin(b)**2 +
+                    cos(a)**2*cos(b)**2*tan(a)**2 +
+                    cos(a)**2) == 1
+    #1562
+    eq = -4*sin(x)**4 + 4*cos(x)**4 - 8*cos(x)**2
+    assert trigsimp(eq) == -4
+    n = sin(x)**6 + 4*sin(x)**4*cos(x)**2 + 5*sin(x)**2*cos(x)**4 + 2*cos(x)**6
+    d = -sin(x)**2 - 2*cos(x)**2
+    assert trigsimp(eq) == -4
+    assert trigsimp(-2*cos(x)**2 + cos(x)**4 - sin(x)**4) == -1
+    f = Function('f')
+    C1, C2, C3, C4, C5 = symbols('C1:6')
+    assert dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 1, f(x),
+    'nth_linear_constant_coeff_variation_of_parameters') == \
+    Eq(f(x), C1 + x + (C2 + C3*x - sin(x)**3/4)*cos(x) +
+            (C4 + C5*x + cos(x)**3/4)*sin(x) - sin(2*x)*cos(2*x)/8)
+    # 1526
+    assert trigsimp(sin(x)**3+cos(x)**2*sin(x)) == sin(x)
 
 @XFAIL
 def test_factorial_simplify():
