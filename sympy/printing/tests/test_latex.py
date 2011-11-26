@@ -122,6 +122,7 @@ def test_latex_functions():
     assert latex(ceiling(x)) == r"\lceil{x}\rceil"
     assert latex(Abs(x)) == r"\lvert{x}\rvert"
     assert latex(re(x)) == r"\Re{x}"
+    assert latex(re(x+y)) == r"\Re {\left (x + y \right )}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
     assert latex(gamma(x)) == r"\Gamma\left(x\right)"
