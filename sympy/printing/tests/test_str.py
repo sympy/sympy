@@ -228,6 +228,7 @@ def test_Pow():
     assert str(x**Rational(1, 3)) == "x**(1/3)"
     assert str(1/x**Rational(1, 3)) == "x**(-1/3)"
     assert str(sqrt(sqrt(x))) == "x**(1/4)"
+    assert str(x**-1.0) == '1/x'
 
 def test_sqrt():
     assert str(sqrt(x)) == "sqrt(x)"
