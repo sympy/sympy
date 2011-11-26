@@ -1,8 +1,22 @@
-from sympy.core import (Expr, S, C, sympify, Wild, Dummy, Derivative)
+from sympy.core import (Expr, S, C, sympify, Wild, Dummy, Derivative, Symbol, Add)
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.concrete.gosper import gosper_sum
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
+
+def _free_symbols(function, limits):
+    """Helper function to return the symbols that appear in a sum-like object
+    once it is evaluated.
+    """
+    isyms = function.free_symbols
+    for xab in limits:
+        # take out the target symbol
+        if xab[0] in isyms:
+            isyms.remove(xab[0])
+        # add in the new symbols
+        for i in xab[1:]:
+            isyms.update(i.free_symbols)
+    return isyms
 
 class Sum(Expr):
     """Represents unevaluated summation."""
@@ -59,24 +73,72 @@ class Sum(Expr):
         """
         This method returns the symbols that will exist when the
         summation is evaluated. This is useful if one is trying to
-        determine whether a sum is dependent on a certain
-        symbol or not.
+        determine whether a sum depends on a certain symbol or not.
 
         >>> from sympy import Sum
         >>> from sympy.abc import x, y
         >>> Sum(x, (x, y, 1)).free_symbols
         set([y])
         """
-        from sympy.integrals.integrals import _free_symbols
-
+        if self.function.is_zero:
+            return set()
         return _free_symbols(self.function, self.limits)
+
+    @property
+    def is_zero(self):
+        """A Sum is only zero if its function is zero or if all terms
+        cancel out. This only answers whether the summand zero."""
+
+        return self.function.is_zero
+
+    @property
+    def is_number(self):
+        """
+        Return True if the Sum will result in a number, else False.
+
+        sympy considers anything that will result in a number to have
+        is_number == True.
+
+        >>> from sympy import log
+        >>> log(2).is_number
+        True
+
+        Sums are a special case since they contain symbols that can
+        be replaced with numbers. Whether the integral can be done or not is
+        another issue. But answering whether the final result is a number is
+        not difficult.
+
+        >>> from sympy import Sum
+        >>> from sympy.abc import x, y
+        >>> Sum(x, (y, 1, x)).is_number
+        False
+        >>> Sum(1, (y, 1, x)).is_number
+        False
+        >>> Sum(0, (y, 1, x)).is_number
+        True
+        >>> Sum(x, (y, 1, 2)).is_number
+        False
+        >>> Sum(x, (y, 1, 1)).is_number
+        False
+        >>> Sum(x, (x, 1, 2)).is_number
+        True
+        >>> Sum(x*y, (x, 1, 2), (y, 1, 3)).is_number
+        True
+        """
+
+        return self.function.is_zero or not self.free_symbols
 
     def doit(self, **hints):
         #if not hints.get('sums', True):
         #    return self
         f = self.function
         for limit in self.limits:
-            f = eval_sum(f, limit)
+            i, a, b = limit
+            dif = b - a
+            if dif.is_Integer and dif < 0:
+                a, b = b, a
+
+            f = eval_sum(f, (i, a, b))
             if f is None:
                 return self
 
@@ -321,13 +383,15 @@ def eval_sum(f, limits):
     (i, a, b) = limits
     if f is S.Zero:
         return S.Zero
-
     if i not in f.free_symbols:
         return f*(b - a + 1)
+    if a == b:
+        return f.subs(i, a)
 
-    definite = a.is_Integer and b.is_Integer
+    dif = b - a
+    definite = dif.is_Integer
     # Doing it directly may be faster if there are very few terms.
-    if definite and (b-a < 100):
+    if definite and (dif < 100):
         return eval_sum_direct(f, (i, a, b))
     # Try to do it symbolically. Even when the number of terms is known,
     # this can save time when b-a is big.
@@ -338,6 +402,12 @@ def eval_sum(f, limits):
     # Do it directly
     if definite:
         return eval_sum_direct(f, (i, a, b))
+
+def eval_sum_direct(expr, limits):
+    (i, a, b) = limits
+
+    dif = b - a
+    return Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
 
 def eval_sum_symbolic(f, limits):
     (i, a, b) = limits
@@ -485,14 +555,3 @@ def eval_sum_hyper(f, (i, a, b)):
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
         return Piecewise(res, (Sum(f, (i, a, b)), True))
-
-def eval_sum_direct(expr, limits):
-    (i, a, b) = limits
-    s = S.Zero
-    if i in expr.free_symbols:
-        for j in xrange(a, b+1):
-            s += expr.subs(i, j)
-    else:
-        for j in xrange(a, b+1):
-            s += expr
-    return s
