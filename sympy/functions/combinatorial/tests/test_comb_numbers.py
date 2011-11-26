@@ -1,6 +1,8 @@
 from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, zoo, pi, I, bell, \
         fibonacci, lucas, euler, catalan, binomial, gamma, sqrt, hyper, log, polygamma, diff
 
+from sympy.utilities.pytest import XFAIL
+
 x = Symbol('x')
 
 def test_bernoulli():
