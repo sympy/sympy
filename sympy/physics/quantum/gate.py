@@ -316,7 +316,7 @@ class CGate(Gate):
             controls = (controls,)
         controls = UnitaryOperator._eval_args(controls)
         _validate_targets_controls(chain(controls,gate.targets))
-        return (controls, gate)
+        return (Tuple(*controls), gate)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
