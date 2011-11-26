@@ -3,12 +3,12 @@ Physical units and dimensions.
 
 The base class is Unit, where all here defined units (~200) inherit from.
 
-The find function can help you find units for a given quantity:
+The find_unit function can help you find units for a given quantity:
 
     >>> import sympy.physics.units as u
-    >>> u.find('coul')
+    >>> u.find_unit('coul')
     ['coulomb', 'coulombs']
-    >>> u.find(u.charge)
+    >>> u.find_unit(u.charge)
     ['C', 'charge', 'coulomb', 'coulombs']
     >>> u.coulomb
     A*s
@@ -24,14 +24,14 @@ an abbreviation:
 The generic name for a unit (like 'length', 'mass', etc...)
 can help you find units:
 
-    >>> u.find('magnet')
+    >>> u.find_unit('magnet')
     ['magnetic_flux', 'magnetic_constant', 'magnetic_flux_density']
-    >>> u.find(u.magnetic_flux)
+    >>> u.find_unit(u.magnetic_flux)
     ['Wb', 'wb', 'weber', 'webers', 'magnetic_flux']
 
 If, for a given session, you wish to add a unit you may do so:
 
-    >>> u.find('gal')
+    >>> u.find_unit('gal')
     []
     >>> u.gal = 4*u.quart
     >>> u.gal/u.inch**3
@@ -236,20 +236,20 @@ eV = 1.602176487e-19 * J
 ly = lightyear = lightyears = c*julian_year
 au = astronomical_unit = astronomical_units = 149597870691*m
 
-def find(quantity):
+def find_unit(quantity):
     """Return a list of matching units names.
         if quantity is a string -- units containing the string `quantity`
         if quantity is a unit -- units having matching base units
 
     Examples:
     >>> from sympy.physics import units as u
-    >>> u.find('charge')
+    >>> u.find_unit('charge')
     ['charge']
-    >>> u.find(u.charge)
+    >>> u.find_unit(u.charge)
     ['C', 'charge', 'coulomb', 'coulombs']
-    >>> u.find('volt')
+    >>> u.find_unit('volt')
     ['volt', 'volts', 'voltage']
-    >>> u.find(u.inch**3)[:5]
+    >>> u.find_unit(u.inch**3)[:5]
     ['l', 'cl', 'dl', 'ml', 'liter']
     """
     import sympy.physics.units as u
