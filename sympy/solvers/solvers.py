@@ -364,12 +364,13 @@ def solve(f, *symbols, **flags):
             >>> from sympy import solve, Poly, Eq, Function, exp
             >>> from sympy.abc import x, y, z, a, b
 
-            o boolean or univariate Relational
+            - boolean or univariate Relational::
 
                 >>> solve(x < 3)
                 And(im(x) == 0, re(x) < 3)
 
-            o single expression and single symbol that is in the expression
+            - single expression and single symbol that is in the
+              expression::
 
                 >>> solve(x - y, x)
                 [y]
@@ -384,19 +385,20 @@ def solve(f, *symbols, **flags):
                 >>> solve(x**4 - 1, x)
                 [-1, 1, -I, I]
 
-            o single expression with no symbol that is in the expression
+            - single expression with no symbol that is in the expression::
 
                 >>> solve(3, x)
                 []
                 >>> solve(x - 3, y)
                 []
 
-            o when no symbol is given (or are given as an unordered set) then
-              all free symbols will be used. A univariate equation will always
-              return a list of solutions; otherwise, a list of mappings will be
-              returned.
+            - when no symbol is given (or are given as an unordered set)
+              then all free symbols will be used. A univariate equation will
+              always return a list of solutions; otherwise, a list of
+              mappings will be returned.
 
-                for single equations
+                - for single equations::
+
                     >>> solve(x - 3)
                     [3]
                     >>> solve(x**2 - y**2)
@@ -406,70 +408,79 @@ def solve(f, *symbols, **flags):
                     >>> solve(z**2*x - z**2*y**2)
                     [{x: y**2}]
 
-                for systems of equations
+                - for systems of equations::
+
                     >>> solve([x - 2, x**2 + y])
                     [{x: 2, y: -4}]
                     >>> f = Function('f')
                     >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
                     [{x: 2, f(x): -4}]
 
-            o when a Function or Derivative is given as a symbol, it is
-              isolated algebraically and an implicit solution may be obtained;
-              to obtain the solution for a function within a derivative, use
-              dsolve.
+            - when a Function or Derivative is given as a symbol, it is
+              isolated algebraically and an implicit solution may be
+              obtained; to obtain the solution for a function within a
+              derivative, use dsolve.::
 
-                >>> solve(f(x) - x, f(x))
-                [x]
-                >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
-                [x + f(x)]
-                >>> solve(f(x).diff(x) - f(x) - x, f(x))
-                [-x + Derivative(f(x), x)]
-                >>> solve(x + exp(x)**2, exp(x))
-                [-sqrt(-x), sqrt(-x)]
+                  >>> solve(f(x) - x, f(x))
+                  [x]
+                  >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
+                  [x + f(x)]
+                  >>> solve(f(x).diff(x) - f(x) - x, f(x))
+                  [-x + Derivative(f(x), x)]
+                  >>> solve(x + exp(x)**2, exp(x))
+                  [-sqrt(-x), sqrt(-x)]
 
-                To solve for a *symbol* implicitly, use 'implict=True':
+              To solve for a *symbol* implicitly, use 'implict=True': ::
 
-                >>> solve(x + exp(x), x)
-                [-LambertW(1)]
-                >>> solve(x + exp(x), x, implicit=True)
-                [-exp(x)]
+                  >>> solve(x + exp(x), x)
+                  [-LambertW(1)]
+                  >>> solve(x + exp(x), x, implicit=True)
+                  [-exp(x)]
 
-            o single expression and more than 1 symbol
+            - single expression and more than 1 symbol
 
-                when there is a linear solution
+                - when there is a linear solution::
+
                     >>> solve(x - y**2, x, y)
                     [{x: y**2}]
                     >>> solve(x**2 - y, x, y)
                     [{y: x**2}]
 
-                when undetermined coefficients are identified
-                    that are linear
+                - when undetermined coefficients are identified...
+
+                    - ...that are linear::
+
                         >>> solve((a + b)*x - b + 2, a, b)
                         {a: -2, b: 2}
 
-                    that are nonlinear
+                    - ...that are nonlinear::
+
                         >>> solve((a + b)*x - b**2 + 2, a, b)
                         [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
 
-                if there is no linear solution then the first successful
-                attempt for a nonlinear solution will be returned
-                    >>> solve(x**2 - y**2, x, y)
-                    [{x: -y}, {x: y}]
-                    >>> solve(x**2 - y**2/exp(x), x, y)
-                    [{x: 2*LambertW(y/2)}]
-                    >>> solve(x**2 - y**2/exp(x), y, x)
-                    [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+                - if there is no linear solution then the first successful
+                  attempt for a nonlinear solution will be returned::
 
-            o iterable of one or more of the above
+                      >>> solve(x**2 - y**2, x, y)
+                      [{x: -y}, {x: y}]
+                      >>> solve(x**2 - y**2/exp(x), x, y)
+                      [{x: 2*LambertW(y/2)}]
+                      >>> solve(x**2 - y**2/exp(x), y, x)
+                      [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
-                involving relationals or bools
+            - iterable of one or more of the above...
+
+                - ...involving relationals or bools::
+
                     >>> solve([x < 3, x - 2])
                     And(re(x) == 2, im(x) == 0)
                     >>> solve([x > 3, x - 2])
                     False
 
-                when the system is linear
-                    with a solution
+                - ...when the system is linear...
+
+                    - ...with a solution::
+
                         >>> solve([x - 3], x)
                         {x: 3}
                         >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y)
@@ -479,15 +490,16 @@ def solve(f, *symbols, **flags):
                         >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
                         {x: -5*y + 2, z: 21*y - 6}
 
-                    without a solution
+                    - ...without a solution::
                         >>> solve([x + 3, x - 3])
 
-                when the system is not linear
+                - ...when the system is not linear::
+
                     >>> solve([x**2 + y -2, y**2 - 4], x, y)
                     [(-2, -2), (0, 2), (0, 2), (2, -2)]
 
-            Note: assumptions aren't checked when `solve()` input involves
-                  relationals or bools.
+            ..note :: assumptions aren't checked when `solve()` input
+                      involves relationals or bools.
 
        See also:
           rsolve() for solving recurrence relationships

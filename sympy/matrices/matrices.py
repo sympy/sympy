@@ -1077,19 +1077,18 @@ class Matrix(object):
 
             >>> from sympy import Matrix, matrices
             >>> m = Matrix(2,3,lambda i,j: i*3+j)
-            >>> m           #doctest: +NORMALIZE_WHITESPACE
+            >>> m   #doctest: +NORMALIZE_WHITESPACE
             [0, 1, 2]
             [3, 4, 5]
-            >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
+            >>> m.print_nonzero()  #doctest: +NORMALIZE_WHITESPACE
             [ XX]
             [XXX]
             >>> m = matrices.eye(4)
-            >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
+            >>> m.print_nonzero("x")  #doctest: +NORMALIZE_WHITESPACE
             [x   ]
             [ x  ]
             [  x ]
             [   x]
-
         """
         s = []
         for i in range(self.rows):
@@ -1309,35 +1308,36 @@ class Matrix(object):
         Return Q,R where A = Q*R, Q is orthogonal and R is upper triangular.
 
         Examples
+        --------
 
         This is the example from wikipedia::
 
-        >>> from sympy import Matrix, eye
-        >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
-        >>> Q, R = A.QRdecomposition()
-        >>> Q
-        [ 6/7, -69/175, -58/175]
-        [ 3/7, 158/175,   6/175]
-        [-2/7,    6/35,  -33/35]
-        >>> R
-        [14,  21, -14]
-        [ 0, 175, -70]
-        [ 0,   0,  35]
-        >>> A == Q*R
-        True
+            >>> from sympy import Matrix, eye
+            >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
+            >>> Q, R = A.QRdecomposition()
+            >>> Q
+            [ 6/7, -69/175, -58/175]
+            [ 3/7, 158/175,   6/175]
+            [-2/7,    6/35,  -33/35]
+            >>> R
+            [14,  21, -14]
+            [ 0, 175, -70]
+            [ 0,   0,  35]
+            >>> A == Q*R
+            True
 
-        QR factorization of an identity matrix
-        >>> A = Matrix([[1,0,0],[0,1,0],[0,0,1]])
-        >>> Q, R = A.QRdecomposition()
-        >>> Q
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
-        >>> R
-        [1, 0, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        QR factorization of an identity matrix::
 
+            >>> A = Matrix([[1,0,0],[0,1,0],[0,0,1]])
+            >>> Q, R = A.QRdecomposition()
+            >>> Q
+            [1, 0, 0]
+            [0, 1, 0]
+            [0, 0, 1]
+            >>> R
+            [1, 0, 0]
+            [0, 1, 0]
+            [0, 0, 1]
         """
 
         if not self.rows >= self.cols:

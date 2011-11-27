@@ -41,13 +41,16 @@ Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
 Other boolean functions
 -----------------------
 
-.. automethod:: sympy.logic.boolalg.Xor
+.. note:: Although these are implemented as classes, they should be used as
+          functions.
 
-.. automethod:: sympy.logic.boolalg.Nand
+.. autoclass:: sympy.logic.boolalg.Xor
 
-.. automethod:: sympy.logic.boolalg.Nor
+.. autoclass:: sympy.logic.boolalg.Nand
 
-.. automethod:: sympy.logic.boolalg.Equivalent
+.. autoclass:: sympy.logic.boolalg.Nor
+
+.. autoclass:: sympy.logic.boolalg.Equivalent
 
 Inference
 ---------
