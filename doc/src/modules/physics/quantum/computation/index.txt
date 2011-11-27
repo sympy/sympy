@@ -15,3 +15,6 @@ Contents
     circuitplot.txt
     gate.txt
     grover.txt
+    qft.txt
+    qubit.txt
+    shor.txt
