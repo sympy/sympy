@@ -22,7 +22,7 @@ class Point(GeometryEntity):
     coords : sequence of 2 coordinate values.
 
     Attributes
-    ----------
+
     coordinates : 2-tuple of numbers or sympy objects.
         Stored in `self`. That is self[0] is the first coordinate value, and
         self[1] is the second coordinate value.
@@ -35,8 +35,8 @@ class Point(GeometryEntity):
     TypeError
         When trying to add or subtract points with different dimensions.
 
-    Notes
-    -----
+    Note
+    ----
     Currently only 2-dimensional points are supported.
 
     Examples
@@ -51,6 +51,7 @@ class Point(GeometryEntity):
     Point(0, x)
 
     """
+
     def __new__(cls, *args, **kwargs):
         if iterable(args[0]):
             coords = tuple([sympify(x) for x in args[0]])
@@ -89,7 +90,7 @@ class Point(GeometryEntity):
         is_collinear : boolean
 
         Notes
-        --------------------------
+        -----
         Slope is preserved everywhere on a line, so the slope between
         any two points on the line should be the same. Take the first
         two points, p1 and p2, and create a translated point v1
@@ -98,10 +99,12 @@ class Point(GeometryEntity):
         these translations preserve slope since everything is
         consistently translated to a new origin of p1. Since slope
         is preserved then we have the following equality:
-                v1_slope = vi_slope
-          =>    v1.y/v1.x = vi.y/vi.x (due to translation)
-          =>    v1.y*vi.x = vi.y*v1.x
-          =>    v1.y*vi.x - vi.y*v1.x = 0           (*)
+
+              * v1_slope = vi_slope
+              * v1.y/v1.x = vi.y/vi.x (due to translation)
+              * v1.y*vi.x = vi.y*v1.x
+              * v1.y*vi.x - vi.y*v1.x = 0           (*)
+
         Hence, if we have a vi such that the equality in (*) is False
         then the points are not collinear. We do this test for every
         point in the list, and if all pass then they are collinear.
@@ -118,6 +121,7 @@ class Point(GeometryEntity):
         False
 
         """
+
         if len(points) == 0:
             return False
         if len(points) <= 2:
@@ -194,28 +198,29 @@ class Point(GeometryEntity):
             # Circle could not be created, because of collinearity of the
             # three points passed in, hence they are not concyclic.
             return False
-        """
-        # This code is from Maple
-        def f(u):
-            dd = u[0]**2 + u[1]**2 + 1
-            u1 = 2*u[0] / dd
-            u2 = 2*u[1] / dd
-            u3 = (dd - 2) / dd
-            return u1,u2,u3
 
-        u1,u2,u3 = f(points[0])
-        v1,v2,v3 = f(points[1])
-        w1,w2,w3 = f(points[2])
-        p = [v1 - u1, v2 - u2, v3 - u3]
-        q = [w1 - u1, w2 - u2, w3 - u3]
-        r = [p[1]*q[2] - p[2]*q[1], p[2]*q[0] - p[0]*q[2], p[0]*q[1] - p[1]*q[0]]
-        for ind in xrange(3, len(points)):
-            s1,s2,s3 = f(points[ind])
-            test = simplify(r[0]*(s1-u1) + r[1]*(s2-u2) + r[2]*(s3-u3))
-            if test != 0:
-                return False
-        return True
-        """
+#       """
+#       # This code is from Maple
+#       def f(u):
+#           dd = u[0]**2 + u[1]**2 + 1
+#           u1 = 2*u[0] / dd
+#           u2 = 2*u[1] / dd
+#           u3 = (dd - 2) / dd
+#           return u1,u2,u3
+
+#       u1,u2,u3 = f(points[0])
+#       v1,v2,v3 = f(points[1])
+#       w1,w2,w3 = f(points[2])
+#       p = [v1 - u1, v2 - u2, v3 - u3]
+#       q = [w1 - u1, w2 - u2, w3 - u3]
+#       r = [p[1]*q[2] - p[2]*q[1], p[2]*q[0] - p[0]*q[2], p[0]*q[1] - p[1]*q[0]]
+#       for ind in xrange(3, len(points)):
+#           s1,s2,s3 = f(points[ind])
+#           test = simplify(r[0]*(s1-u1) + r[1]*(s2-u2) + r[2]*(s3-u3))
+#           if test != 0:
+#               return False
+#       return True
+#       """
 
     def distance(self, p):
         """The Euclidean distance from self to point p.
