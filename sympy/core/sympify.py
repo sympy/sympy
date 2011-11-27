@@ -5,13 +5,6 @@ from inspect import getmro
 from core import all_classes as sympy_classes
 from sympy.core.compatibility import iterable
 
-class SymPyDeprecationWarning(DeprecationWarning):
-    def __init__(self, value):
-        self.parameter = value
-
-    def __str__(self):
-        return repr(self.parameter)
-
 class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr

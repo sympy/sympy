@@ -152,7 +152,7 @@ See also isympy --help.
 """
 
 import os, sys, warnings
-from sympy.core.sympify import SymPyDeprecationWarning
+
 
 # hook in-tree SymPy into Python path, if possible
 
@@ -165,8 +165,6 @@ if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
 def main():
-    warnings.simplefilter("always", SymPyDeprecationWarning)
-
     from optparse import OptionParser
 
     if '-h' in sys.argv or '--help' in sys.argv:
@@ -296,6 +294,9 @@ def main():
 
     args['quiet'] = options.quiet
     args['auto'] = options.auto
+
+    from sympy.core.compatibility import SymPyDeprecationWarning
+    warnings.simplefilter("always", SymPyDeprecationWarning)
 
     from sympy.interactive import init_session
     init_session(ipython, **args)
