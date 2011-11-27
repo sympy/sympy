@@ -164,10 +164,10 @@ class test_sympy(Command):
     def run(self):
         tests_successful = True
         try:
-            #if not sympy.test():
+            if not sympy.test():
                 # some regular test fails, so set the tests_successful
                 # flag to false and continue running the doctests
-                #tests_successful = False
+                tests_successful = False
 
             if not sympy.doctest():
                 tests_successful = False
