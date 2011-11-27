@@ -9,11 +9,11 @@ Tutorial
 Einführung
 ==========
 
-SymPy ist eine Python-Bibliothek für symbolische Mathematik. SymPy wurde
-geschaffen, um ein vollständiges Computer-Algebra-System (CAS) bereitzustellen
-und dabei den Programmcode so einfach zu halten, dass er
-nachvollziehbar und einfach erweiterbar bleibt. SymPy ist vollständig in 
-Python geschrieben und benötigt keine weiteren Bibliotheken.
+SymPy ist eine Python-Bibliothek für symbolische Mathematik. SymPy soll
+ein vollständiges Computer-Algebra-System (CAS) bereitstellen
+und dabei den Programmcode so einfach halten, dass er nachvollziehbar und 
+einfach erweiterbar bleibt. SymPy ist vollständig in Python geschrieben 
+und benötigt keine weiteren Bibliotheken.
 
 Dieses Tutorial schafft einen Überblick und gibt eine Einführung in SymPy.
 Wenn du wissen willst, was SymPy tun kann (und wie), lies diese Seite, und wenn
@@ -26,19 +26,19 @@ oder den `Quellcode
 Erste Schritte mit SymPy
 ========================
 
-Der einfachste Weg, SymPy zu installieren, ist
-http://code.google.com/p/sympy/ aufzurufen und die aktuellste
-.tar-Datei aus den Featured Downloads auszuwählen:
+Am einfachsten kannst du SymPy mit der aktuellsten .tar-Datei aus den
+"Featured Downloads" von 
+http://code.google.com/p/sympy/ installieren:
 
 .. image:: figures/featured-downloads.png
 
-Die Datei muss ausgepackt werden:
+Dann musst du die Datei auspacken:
 
 .. parsed-literal::
 
     $ :input:`tar xzf sympy-0.5.12.tar.gz`
 
-und kann mit einem Python-Interpreter ausprobiert werden:
+und kannst sie mit einem Python-Interpreter ausprobieren.
 
 .. parsed-literal::
 
@@ -52,11 +52,11 @@ und kann mit einem Python-Interpreter ausprobiert werden:
     >>> (1/cos(x)).series(x, 0, 10)
     1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
-SymPy kann wie im Beispiel gezeigt benutzt werden und tatsächlich ist dies
-der bevorzugte Weg, wenn es innerhalb eines anderen Programms benutzt werden
-soll. Es kann ebenfalls mithilfe von ``./setup.py install`` wie jedes andere
-Python-Modul installiert werden. Auch ist es natürlich möglich, einfach ein
-Paket der benutzten Linux-Distribution zu verwenden, wie zum Beispiel:
+SymPy kann wie im Beispiel gezeigt benutzt werden und dies ist auch
+der übliche Weg, es von einem anderen Programm aus zu verwenden.
+Du kannst es ebenfalls wie jedes andere Modul mithilfe von ``./setup.py install`` 
+installieren. Auch ist es natürlich möglich, einfach ein Paket deiner
+Linux-Distribution zu verwenden, zum Beispiel:
 
 .. topic:: Installation von SymPy unter Debian
 
@@ -78,8 +78,8 @@ Paket der benutzten Linux-Distribution zu verwenden, wie zum Beispiel:
     Entpacken von python-sympy (aus .../python-sympy_0.6.7-1.1_all.deb) ...
     python-sympy (0.6.7-1.1) wird eingerichtet ...
 
-Für andere Möglichkeiten, SymPy herunterzuladen, besuche den Tab Downloads_
-auf SymPy's Website.
+Weitere Installationsmöglichkeiten findest du unter Downloads_ auf der
+SymPy-Website.
 
 .. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
 
@@ -87,7 +87,7 @@ auf SymPy's Website.
 isympy-Konsole
 --------------
 
-Für Experimente mit neuen Funktionen oder zum Ausprobieren von Dingen kann
+Für Experimente mit neuen Funktionen und zum Ausprobieren kann
 die um IPython aufgebaute Umgebung namens ``isympy`` (im Quellverzeichnis
 unter ``bin/isympy``) benutzt werden. Es handelt sich hierbei nur um eine
 Standard-Python-Konsole, die allerdings bereits die wichtigen sympy-Module
@@ -117,16 +117,16 @@ importiert hat und unter anderem die Symbole x, y und z bereits definiert hat:
 
 .. note::
 
-    Benutzereingaben sind fettgedruckt. Was in einem normalen Python-Interpreter
+    Benutzereingaben sind fett dargestellt. Was in einem normalen Python-Interpreter
     drei Zeilen gebraucht hätte, kann mit isympy in nur eine Zeile ausgedrückt werden.
 
 
 Mit SymPy rechnen
 -----------------
 
-SymPy hat drei eingebaute Nummerntypen: Float, Rational und Integer.
+SymPy hat drei eingebaute Zahlentypen: Float, Rational und Integer.
 
-Die Klasse Rational stellt eine rationale Zahl als Gruppe von zwei Ganzzahlen
+Die Klasse Rational stellt eine rationale Zahl als Paar von zwei Ganzzahlen
 dar: dem Zähler und dem Nenner.
 Rational(1,2) repräsentiert also 1/2, Rational(5,2) repräsentiert 5/2 und so weiter.
 
@@ -145,7 +145,7 @@ Rational(1,2) repräsentiert also 1/2, Rational(5,2) repräsentiert 5/2 und so w
 
 Beim Arbeiten mit Pythons Ganzzahlen und Fließkommazahlen ist Vorsicht
 geboten, besonders bei Division, da eine Python-Zahl statt einer SymPy-Zahl
-das Ergebnis sein kann, Ein Bruch aus zwei Python-Ganzzahlen hat eine
+das Ergebnis sein kann. Ein Bruch aus zwei Python-Ganzzahlen hat eine
 Fließkommazahl zum Ergebnis -- die "echte Divison" von Python 3 und das
 Standardverhalten von ``isympy``, welches division aus __future__ importiert::
 
@@ -153,16 +153,16 @@ Standardverhalten von ``isympy``, welches division aus __future__ importiert::
     0.5
 
 In älteren Python-Versionen ohne den Import von division ist das Ergebnis
-hingegen eine gerundete Ganzzahl::
+hingegen eine abgerundete Ganzzahl::
 
     >>> 1/2 #doctest: +SKIP
     0
 
-In beiden Fällen handelt es sich jedoch nicht um eine SymPy-Nummer, weil
-Python seine eigenen Nummern zurückgegeben hat. Meistens werden aber
-Zahlen des Typs Rational gebraucht, also sollte sichergestellt werden,
-dass das Ergebnis vom Typ Rational ist. Oft wird zur besseren Lesbarkeit
-``R`` mit Rational gleichgesetzt::
+In beiden Fällen handelt es sich jedoch nicht um eine SymPy-Zahl, weil
+Python seine eigenen Zahl zurückgegeben hat. Meistens wirst du aber mit
+Zahlen des Typs Rational arbeiten wollen, also solltest du sicherstellen,
+dass solche bekommst. Oft wird zur besseren Lesbarkeit ``R`` mit Rational 
+gleichgesetzt::
 
     >>> R = Rational
     >>> R(1, 2)
@@ -170,9 +170,9 @@ dass das Ergebnis vom Typ Rational ist. Oft wird zur besseren Lesbarkeit
     >>> R(1)/2 # R(1) ist ein SymPy-Integer und Integer/int ergibt Rational
     1/2
 
-Es gibt ebenfalls einige spezielle Konstanten wie e oder pi, die als Symbole
-behandelt werden (1+pi wird nicht als Zahl berechnet sondern als 1+pi weiter
-behandelt) und sind in beliebiger Präzision verfügbar::
+Es gibt auch einige spezielle Konstanten wie e oder pi, die als Symbole
+behandelt werden (1+pi wird nicht als Zahl ausgerechnet sondern bleibt
+1+pi) und sind in beliebiger Präzision verfügbar::
 
     >>> pi**2
     pi**2
@@ -197,15 +197,15 @@ Symbole
 -------
 
 Im Gegensatz zu anderen Computer-Algebra-Systemen müssen in SymPy symbolische
-Variablen gesondert deklariert werden::
+Variablen ausdrücklich deklariert werden::
 
     >>> from sympy import *
     >>> x = Symbol('x')
     >>> y = Symbol('y')
 
-Links ist eine normale Python-Variable, der ein SymPy-Symbol-Objekt
-zugewiesen wird. Symbol-Objekte arbeiten gut zusammen und sind die Elemente
-für den Bau von Ausdrücken::
+Links steht eine normale Python-Variable, der ein SymPy-Symbol-Objekt
+zugewiesen wird. Aus Symbol-Objekten kann man bequem Ausdrücke
+zusammensetzen::
 
     >>> x+y+x-y
     2*x
@@ -228,19 +228,18 @@ ersetzt werden::
     >>> ((x+y)**2).subs(x, 1 - y)
     1
 
-Für den Rest des Tutorials, gehen wir davon aus, dass folgende Zeile ausgeführt
+Für den Rest des Tutorials gehen wir davon aus, dass folgende Zeile ausgeführt
 wurde::
 
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 Dies sorgt dafür, dass Ausdrücke bei der Ausgabe besser aussehen (siehe
-:ref:`printing-tutorial` weiterunten). Wenn eine Unicode-Schrift installiert
-ist, kann use_unicode=True für eine noch etwas schönere Ausgabe übergeben
-werden.
+:ref:`printing-tutorial` weiter unten). Wenn eine Unicode-Schrift installiert
+ist, erreichst du mit use_unicode=True eine noch hübschere Ausgabe.
 
 Algebra
 =======
-Für die teilweise Zerlegung von Brüchen kann ``apart(expr, x)`` benutzt werden::
+Für die Partialbruchzerlegung kannst du ``apart(expr, x)`` benutzen::
 
     >>> 1/( (x+2)*(x+1) )
            1
@@ -262,7 +261,7 @@ Für die teilweise Zerlegung von Brüchen kann ``apart(expr, x)`` benutzt werden
     1 + -----
         x - 1
 
-Um Dinge wieder zu kombinieren, wird ``together(expr, x)`` benutzt::
+Zum Kombinieren gibt es die Funktion ``together(expr, x)``::
 
     >>> together(1/x + 1/y + 1/z)
     x*y + x*z + y*z
@@ -282,8 +281,8 @@ Um Dinge wieder zu kombinieren, wird ``together(expr, x)`` benutzt::
 
 .. index:: calculus
 
-Rechnen
-=======
+Infinitesimalrechnung
+=====================
 
 .. index:: limits
 
@@ -400,8 +399,8 @@ Dies sollte folgendes ausgeben::
 Integralrechnung
 ----------------
 
-SymPy unterstützt unendliche und endliche Integration transzendenter
-Elemente und spezielle Funktionen durch ``integrate()``, welches den
+SymPy unterstützt unendliche und endliche Integration transzendenter elementarer 
+und spezieller Funktionen durch ``integrate()``, welches den
 starken Risch-Norman-Algorithmus nutzt sowie einige Heuristiken und
 Mustererkennungen::
 
@@ -429,7 +428,7 @@ Aber auch mit speziellen Funktionen kann einfach umgegangen werden::
     --------------
           4
 
-Es ist möglich, einen endlichen Integral zu berechnen::
+Es ist möglich, ein endlichen Integral zu berechnen::
 
     >>> integrate(x**3, (x, -1, 1))
     0
@@ -706,8 +705,8 @@ Wenn der Musterabgleich fehlschlägt, wird ``None`` zurückgegeben::
     >>> print (x+1).match(p**x)
     None
 
-Es können ebenfalls Parameter aus der ``Wild``-Klasse ausgeschlossen werden
-um sicherzustellen, dass manche Dinge nicht im Ergebnis auftauchen::
+Über den Parameter ``exclude`` kann man manches aus dem Ergebnis
+ausschließen:
 
     >>> x = Symbol('x')
     >>> p = Wild('p', exclude=[1,x])
@@ -727,7 +726,7 @@ Es existieren zahlreiche Wege, Ausdrücke auszugeben:
 
 **Standard**
 
-Dies wird von ``str(expression)`` zurückgegeben und sieht folgendermaßen aus:
+Dies ist die Ausgabe von ``str(expression)`` und sieht so aus:
 
     >>> from sympy import Integral
     >>> from sympy.abc import x
@@ -740,10 +739,9 @@ Dies wird von ``str(expression)`` zurückgegeben und sieht folgendermaßen aus:
     >>>
 
 
-**Hübsche Ausgabe**
+**ASCII-Art-Ausgabe**
 
-Dies ist eine hübsche ASCII-Art-Ausgabeform, die von einer ``pprint``-Funktion
-erzeugt wird.
+Eine ``pprint``-Funktion erzeugt diese hübschere ASCII-Art-Ausgabe.
 
     >>> from sympy import Integral, pprint
     >>> from sympy.abc import x
@@ -762,7 +760,7 @@ erzeugt wird.
      |
     /
 
-Wenn eine Unicode-Schriftart installiert ist, sollte die hübsche Ausgabe
+Wenn eine Unicode-Schriftart installiert ist, sollte die ASCII-Art-Ausgabe
 standardmäßig die Unicode-Fassung verwenden. Dies kann mit dem Parameter
 ``use_unicode`` erzwungen oder abgeschaltet werden.
 
@@ -777,8 +775,7 @@ Siehe auch die Wiki-Seite `Pretty Printing
 <https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ für mehr Beispiele
 von hübschen Unicode-Ausgabem.
 
-Tipp: Um die hübsche Ausgabe als Standard-Methode einzustellen, kann wie folgt
-vorgegangen werden::
+Tipp: Die ASCII-Art-Ausgabe kann auch als Standard-Methode gesetzt werden::
 
     $ python
     Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
@@ -853,8 +850,7 @@ vorgegangen werden::
     >>> from sympy.abc import x
     >>> preview(Integral(x**2, x)) #doctest:+SKIP
 
-und ein pyglet-Fenster mit dem in LaTeX gerenderten Ausdruck wird sich
-öffnen:
+Dies öffnet ein pyglet-Fenster mit dem in LaTeX gerenderten Ausdruck:
 
 .. image:: pics/pngview1.png
 
@@ -864,7 +860,7 @@ Hinweise
 ``isympy`` ruft ``pprint`` automatisch auf -- deswegen sind die Ausgaben
 standardmäßig hübsch.
 
-Es ist ebenfalls ein Ausgabemodul verfügbar, ``sympy.printing``. Andere
+Es ist gibt auch ein Ausgabemodul ``sympy.printing``. Andere
 Ausgabemethoden, die durch dieses Modul erreichbar sind:
 
 * ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, respectively, a pretty representation of ``expr``. This is the same as the second level of representation described above.
@@ -882,6 +878,6 @@ Nun ist Zeit, mehr über SymPy zu lernen.  Lies den
 :ref:`SymPy User's Guide <guide>` und die
 :ref:`SymPy Modules Reference <module-docs>`.
 
-Nutze ebenfalls unser öffentliches Wiki unter  `wiki.sympy.org <http://wiki.sympy.org/>`_,
-das einen Haufen nützlicher Beispiele und Anleitungen von uns und unseren
-Nutzern enthält (und fühle dich frei, dazu beizutragen und Dinge zu verändern!)
+Unser öffentliches Wiki unter  `wiki.sympy.org <http://wiki.sympy.org/>`_,
+enthält einen Haufen nützlicher Beispiele und Anleitungen von uns und unseren
+Nutzern. (Fühle dich frei, dazu beizutragen und Dinge zu verändern!)
