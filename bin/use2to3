@@ -63,6 +63,7 @@ for root, dirs, files in os.walk('./doc/src/modules'):
 
 # some files aren't in /doc/src/modules, add them explicitly
 relevant_txt_files.append('./doc/src/tutorial.txt')
+relevant_txt_files.append('./doc/src/tutorial.de.txt')
 relevant_txt_files.append('./doc/src/gotchas.txt')
 relevant_txt_files.append('./doc/src/guide.txt')
 relevant_txt_files.append('./doc/src/python-comparisons.txt')
