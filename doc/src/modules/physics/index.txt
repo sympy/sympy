@@ -21,6 +21,7 @@ Contents
     secondquant.txt
     sho.txt
     wigner.txt
+    gaussopt.txt
     mechanics/index.txt
     quantum/index.txt
     quantum/computation/index.txt
