@@ -13,7 +13,6 @@ Contents
     :maxdepth: 3
 
     units.txt
-    guassopt.txt
     hydrogen.txt
     matrices.txt
     paulialgebra.txt
