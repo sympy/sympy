@@ -52,7 +52,7 @@ und kannst sie mit einem Python-Interpreter ausprobieren.
     >>> (1/cos(x)).series(x, 0, 10)
     1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
-SymPy kann wie im Beispiel gezeigt benutzt werden und dies ist auch
+SymPy kann wie im Beispiel gezeigt benutzt werdeni, und dies ist auch
 der übliche Weg, es von einem anderen Programm aus zu verwenden.
 Du kannst es ebenfalls wie jedes andere Modul mithilfe von ``./setup.py install`` 
 installieren. Auch ist es natürlich möglich, einfach ein Paket deiner
@@ -137,7 +137,7 @@ Rational(1,2) repräsentiert also 1/2, Rational(5,2) repräsentiert 5/2 und so w
     1/2
 
     >>> a*2
-    1
+    <1
 
     >>> Rational(2)**50/Rational(10)**50
     1/88817841970012523233890533447265625
@@ -160,8 +160,8 @@ hingegen eine abgerundete Ganzzahl::
 
 In beiden Fällen handelt es sich jedoch nicht um eine SymPy-Zahl, weil
 Python seine eigenen Zahl zurückgegeben hat. Meistens wirst du aber mit
-Zahlen des Typs Rational arbeiten wollen, also solltest du sicherstellen,
-dass solche bekommst. Oft wird zur besseren Lesbarkeit ``R`` mit Rational 
+Zahlen des Typs Rational arbeiten wollen, also achte darauf, auch solche
+zu erhalten. Oft wird zur besseren Lesbarkeit ``R`` mit Rational 
 gleichgesetzt::
 
     >>> R = Rational
@@ -171,7 +171,7 @@ gleichgesetzt::
     1/2
 
 Es gibt auch einige spezielle Konstanten wie e oder pi, die als Symbole
-behandelt werden (1+pi wird nicht als Zahl ausgerechnet sondern bleibt
+behandelt werden (1+pi wird nicht als Zahl ausgerechnet, sondern bleibt
 1+pi) und sind in beliebiger Präzision verfügbar::
 
     >>> pi**2
@@ -428,7 +428,7 @@ Aber auch mit speziellen Funktionen kann einfach umgegangen werden::
     --------------
           4
 
-Es ist möglich, ein endlichen Integral zu berechnen::
+Es ist möglich, ein endliches Integral zu berechnen::
 
     >>> integrate(x**3, (x, -1, 1))
     0
@@ -722,7 +722,7 @@ ausschließen:
 Ausgabe
 =======
 
-Es existieren zahlreiche Wege, Ausdrücke auszugeben:
+Es existieren mehrere Wege, Ausdrücke auszugeben:
 
 **Standard**
 
