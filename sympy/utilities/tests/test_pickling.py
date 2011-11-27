@@ -23,9 +23,7 @@ from sympy.core.sets import Interval
 from sympy.core.multidimensional import vectorize
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
-from sympy.core.compatibility import callable
-
-from sympy.core.sympify import SymPyDeprecationWarning
+from sympy.core.compatibility import callable, SymPyDeprecationWarning
 
 from sympy import symbols
 

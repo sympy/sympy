@@ -2,6 +2,7 @@ from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
     sympify, symbols, Dummy, S, Function, flatten)
 
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import SymPyDeprecationWarning
 
 def test_Symbol():
     a = Symbol("a")

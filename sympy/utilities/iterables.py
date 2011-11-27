@@ -3,7 +3,7 @@ import random
 
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
-from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
+from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement, SymPyDeprecationWarning
 
 def flatten(iterable, levels=None, cls=None):
     """

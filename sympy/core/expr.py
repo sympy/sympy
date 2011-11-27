@@ -4,7 +4,7 @@ from singleton import S
 from evalf import EvalfMixin
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from compatibility import reduce
+from compatibility import reduce, SymPyDeprecationWarning
 
 from collections import defaultdict
 

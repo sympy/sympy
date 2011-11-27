@@ -14,7 +14,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.printing import sstr
 from sympy.functions.elementary.trigonometric import cos, sin
 
-from sympy.core.compatibility import callable, reduce
+from sympy.core.compatibility import callable, reduce, SymPyDeprecationWarning
 
 import random
 import warnings
