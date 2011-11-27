@@ -24,6 +24,7 @@ AUTHORS:
 - Jens Rasch (2009-03-24): initial version for Sage
 
 - Jens Rasch (2009-05-31): updated to sage-4.0
+
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 from sympy import Integer, pi, sqrt

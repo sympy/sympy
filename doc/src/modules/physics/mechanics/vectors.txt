@@ -766,9 +766,3 @@ orientation dictionary to include ``N`` and its ``Matrix``, but also you also
 are setting ``N``'s orientation dictionary to include ``A`` and its ``Matrix``
 (that DCM being the transpose of the other).
 
-Docstring
-=========
-
-.. autoclass:: sympy.physics.mechanics.essential.Vector
-   :members:
-
