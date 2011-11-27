@@ -163,18 +163,23 @@ class test_sympy(Command):
 
     def run(self):
         tests_successful = True
-        if not sympy.test():
-            # some regular test fails, so set the tests_successful
-            # flag to false and continue running the doctests
-            tests_successful = False
+        try:
+            #if not sympy.test():
+                # some regular test fails, so set the tests_successful
+                # flag to false and continue running the doctests
+                #tests_successful = False
 
-        if not sympy.doctest():
-            tests_successful = False
+            if not sympy.doctest():
+                tests_successful = False
 
-        if tests_successful:
-            return
-        else:
-            # Return nonzero exit code
+            if tests_successful:
+                return
+            else:
+                # Return nonzero exit code
+                sys.exit(1)
+        except KeyboardInterrupt:
+            print
+            print("DO *NOT* COMMIT!")
             sys.exit(1)
 
 
