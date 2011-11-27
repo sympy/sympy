@@ -946,7 +946,7 @@ def test_simplify():
                  ])
     M.simplify()
     assert M ==  Matrix([[(x + y)/(x * y),                 1 + y       ],
-                         [   1 + y,       2*((1 - 1*cos(pi*n))/(pi*n)) ]])
+                         [   1 + y,       2*((1 - cos(pi*n))/(pi*n)) ]])
     M = Matrix([[(1 + x)**2]])
     M.simplify()
     assert M == Matrix([[(1 + x)**2]])

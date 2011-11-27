@@ -636,7 +636,7 @@ def test_issue_1793a():
     P2 = -A/(c*t)*(sin(x)**2 + cos(y)**2)
 
     # TODO: make trigsimp() deterministic
-    h1 = -sin(x)**2 - cos(y)**2
+    h1 = (-sin(x)**2 - cos(y)**2)
     h2 = -sin(x)**2 + sin(y)**2 - 1
 
     assert integrate(c*(P2 - P1), t) in [

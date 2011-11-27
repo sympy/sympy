@@ -27,7 +27,7 @@ def laplace(f, g_inv, g_det, X):
                 f.diff(X[alpha]) / (2*g_det)
     return r
 
-def transform(name, X, Y, g_correct=None, recursive=False):
+def transform(name, X, Y, g_correct=None):
     """
     Transforms from cartesian coordinates X to any curvilinear coordinates Y.
 
@@ -41,8 +41,6 @@ def transform(name, X, Y, g_correct=None, recursive=False):
                   transform() prints is not simplified, you can help it by
                   specifying the correct one.
 
-    recursive ... apply recursive trigonometric simplification (use only when
-                  needed, as it is an expensive operation)
     """
     print "_"*80
     print "Transformation:", name
@@ -85,7 +83,6 @@ def main():
             Matrix([rho*sin(theta)*cos(phi), rho*sin(theta)*sin(phi),
                 rho*cos(theta)]),
             [rho, theta, phi],
-            recursive=True
             )
 
     transform("rotating disk",

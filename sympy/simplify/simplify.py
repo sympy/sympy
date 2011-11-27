@@ -732,7 +732,7 @@ def ratsimp(expr):
 
     return Add(*Q) + cancel(r/g)
 
-def trigsimp(expr, deep=False, recursive=False):
+def trigsimp(expr, deep=False):
     """
     == Usage ==
 
@@ -742,11 +742,6 @@ def trigsimp(expr, deep=False, recursive=False):
 
     deep:
     - Apply trigsimp inside functions
-
-    recursive:
-    - Use common subexpression elimination (cse()) and apply
-    trigsimp recursively (recursively==True is quite expensive
-    operation if the expression is large)
 
     == Examples ==
         >>> from sympy import trigsimp, sin, cos, log
@@ -760,59 +755,77 @@ def trigsimp(expr, deep=False, recursive=False):
         log(2)
 
     """
-    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
-    if not expr.has(sin, cos, tan, cot):
+    trigs = sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
+    if not expr.has(*trigs):
         return expr
 
+    if deep and not (expr.is_Add or expr.is_Mul) or expr.is_Pow:
+        return expr.func(*[trigsimp(a, deep) for a in expr.args])
+
     cont, expr = expr.as_content_primitive()
-    orig = expr
 
-    if recursive:
-        w, g = cse(expr)
-        g = _trigsimp(g[0])
+    d = separatevars(expr, dict=True)
+    if d:
+        margs = []
+        for v in d.values():
+            if v.is_Mul:
+                v = expand_mul(v)
+            margs.append(v)
+        expr = Mul(*margs)
+    new = factor_terms(expr)
+    if new.count_ops() < expr.count_ops():
+        expr = new
 
-        for sub in reversed(w):
-            g = g.subs(sub[0], sub[1])
-            g = _trigsimp(g)
-        result = g
-    else:
-        result = _trigsimp(expr, deep)
+    n, d = fraction(expr)
+    if d != 1:
+        expr = trigsimp(n, deep)/trigsimp(d, deep)
 
-    ocount = orig.count_ops()
-    if result.count_ops() > ocount:
-        result = orig
-    if orig == result:
-        new = factor_terms(orig)
-        if new != orig:
-            new = _trigsimp(new, deep)
-            if new.count_ops() < ocount:
-                result = new
-    if orig == result:
-        new = factor(result.rewrite(tan))
-        if new != orig:
-            new = _trigsimp(new, deep)
-            if new.count_ops() < ocount:
-                result = new
-    if orig == result:
-        new = factor(result.rewrite(exp))
-        if new != orig:
-            new = _trigsimp(new, deep)
-            if new.count_ops() < ocount:
-                result = new
+    if expr.is_Add and expr.is_commutative:
+        new = Add(*[trigsimp(a, deep) for a in expr.args])
+        if new != expr and new.count_ops() < expr.count_ops():
+            expr = new
+        if expr.is_Add:
+            new = factor(expr)
+            if new == expr:
+                new = factor(new.rewrite(exp))
+                if new.is_Mul:
+                    new = trigsimp(new, deep)
+            if new.count_ops() > expr.count_ops():
+                new = expr
+        expr = new
+
+    if expr.is_Mul:
+        margs = list(expr.args)
+        for i, m in enumerate(margs):
+            if not m.has(*trigs):
+                continue
+            if m.is_Add and m.is_commutative:
+                new = factor(m)
+                if new.is_Mul:
+                    new = trigsimp(new, deep)
+                elif new.is_Add:
+                    new = factor(new.rewrite(exp))
+                    if new.is_Mul:
+                        new = trigsimp(new, deep)
+            else:
+                new = trigsimp(m, deep)
+            if new.count_ops() < m.count_ops():
+                margs[i] = new
+        expr = Mul(*margs)
+    result = _trigsimp(expr, deep)
+
+    if result.count_ops() > expr.count_ops():
+        result = expr
     return _keep_coeff(cont, result)
 
 
 def _trigsimp(expr, deep=False):
     """
-    The nonrecursive helper for trigsimp.
+    The helper for trigsimp.
     """
-    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
-    orig = expr
+    trigs = sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
 
-    if expr.is_Function:
-        if deep:
-            return expr.func(_trigsimp(expr.args[0], deep))
-    elif expr.is_Mul:
+    if expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
         a,b,c = map(Wild, 'abc')
         matchers = (
@@ -837,10 +850,10 @@ def _trigsimp(expr, deep=False):
                 break
         if not expr.is_Mul:
             return _trigsimp(expr, deep)
-        ret = S.One
+        ret = []
         for x in expr.args:
-            ret *= _trigsimp(x, deep)
-        return ret
+            ret.append(_trigsimp(x, deep))
+        rv = Mul(*ret)
     elif expr.is_Pow:
         return Pow(_trigsimp(expr.base, deep),
                 _trigsimp(expr.exp, deep))
@@ -856,17 +869,18 @@ def _trigsimp(expr, deep=False):
         )
 
         # Scan for the terms we need
-        ret = S.Zero
+        ret = []
         for term in expr.args:
             term = _trigsimp(term, deep)
             res = None
             for pattern, result in matchers:
                 res = term.match(pattern)
                 if res is not None:
-                    ret += result.subs(res)
+                    ret.append(result.subs(res))
                     break
             if res is None:
-                ret += term
+                ret.append(term)
+        ret = Add(*ret)
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1-cos(x)**2 when sin(x)**2 was "simpler"
@@ -2083,9 +2097,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> from sympy import trigsimp, cancel
     >>> b = trigsimp(a)
     >>> b
-    (x**2 + x)/x
-    >>> c = cancel(b)
-    >>> c
     x + 1
 
     In some cases, applying :func:`simplify` may actually result in some more
@@ -2238,7 +2249,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         return expr
 
     if expr.has(C.TrigonometricFunction):
-        expr = trigsimp(expr)
+        expr = trigsimp(expr, deep=True)
 
     if expr.has(C.log):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
@@ -2247,6 +2258,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         expr = combsimp(expr)
 
     expr = powsimp(expr, combine='exp', deep=True)
+
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')

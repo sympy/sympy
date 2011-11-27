@@ -63,8 +63,6 @@ equation reduces to 0.
     >>> simplify((x + 1)**2 - (x**2 + 2*x + 1))
     0
     >>> simplify(sin(2*x) - 2*sin(x)*cos(x))
-    -2*sin(x)*cos(x) + sin(2*x)
-    >>> expand(sin(2*x) - 2*sin(x)*cos(x), trig=True)
     0
 
 .. note::

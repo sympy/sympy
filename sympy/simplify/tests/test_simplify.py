@@ -73,10 +73,8 @@ def test_trigsimp1():
 
 def test_trigsimp2():
     x, y = symbols('x,y')
-    assert trigsimp(cos(x)**2*sin(y)**2 + cos(x)**2*cos(y)**2 + sin(x)**2,
-            recursive=True) == 1
-    assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
-            recursive=True) == 1
+    assert trigsimp(cos(x)**2*sin(y)**2 + cos(x)**2*cos(y)**2 + sin(x)**2) == 1
+    assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2) == 1
 
 def test_issue1274():
     x = Symbol("x")
@@ -101,11 +99,9 @@ def test_trigsimp_issue_2515():
     assert trigsimp(-sin(x)+cos(x)*tan(x)) == 0
 
 def test_trigsimp_issues_1395_1526_1562():
-    # 1395
-    assert trigsimp(sin(a)**2*sin(b)**2 +
-                    cos(a)**2*cos(b)**2*tan(a)**2 +
-                    cos(a)**2) == 1
-    #1562
+    # 1526 - factor_terms works
+    assert trigsimp(sin(x)**3+cos(x)**2*sin(x)) == sin(x)
+    #1562 - factoring necessary
     eq = -4*sin(x)**4 + 4*cos(x)**4 - 8*cos(x)**2
     assert trigsimp(eq) == -4
     n = sin(x)**6 + 4*sin(x)**4*cos(x)**2 + 5*sin(x)**2*cos(x)**4 + 2*cos(x)**6
@@ -116,10 +112,11 @@ def test_trigsimp_issues_1395_1526_1562():
     C1, C2, C3, C4, C5 = symbols('C1:6')
     assert dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 1, f(x),
     'nth_linear_constant_coeff_variation_of_parameters') == \
-    Eq(f(x), C1 + x + (C2 + C3*x - sin(x)**3/4)*cos(x) +
-            (C4 + C5*x + cos(x)**3/4)*sin(x) - sin(2*x)*cos(2*x)/8)
-    # 1526
-    assert trigsimp(sin(x)**3+cos(x)**2*sin(x)) == sin(x)
+    Eq(f(x), C1 + x + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
+    # 1395 - factoring necessary
+    assert trigsimp(sin(a)**2*sin(b)**2 +
+                    cos(a)**2*cos(b)**2*tan(a)**2 +
+                    cos(a)**2) == 1
 
 @XFAIL
 def test_factorial_simplify():
@@ -158,7 +155,7 @@ def test_simplify():
     assert simplify(e) == 1 + y
 
     e = (2 * (1/n - cos(n * pi)/n))/pi
-    assert simplify(e) == 2*((1 - 1*cos(pi*n))/(pi*n))
+    assert simplify(e) == 2*((1 - cos(pi*n))/(pi*n))
 
     e = integrate(1/(x**3+1), x).diff(x)
     assert simplify(e) == 1/(x**3+1)
