@@ -1,5 +1,6 @@
 from sympy import Ylm, Zlm, Symbol, sympify, sqrt, pi, sin, cos, exp, I, S
 from sympy.functions.special.spherical_harmonics import Pl, Plm, Plmcos
+from sympy.utilities.pytest import XFAIL
 
 def test_Pl():
     x = Symbol("x")
@@ -56,16 +57,15 @@ def test_Ylm():
     assert Ylm(1, 0, th, ph) == sympify(1)/2 * sqrt(3/pi) * cos(th)
     assert Ylm(1, 1, th, ph) == -sympify(1)/2 * sqrt(3/(2*pi)) * sin(th) * \
             exp(I*ph)
-    #Ylm returns here a correct, but different expression:
-    #assert Ylm(2, -2, th, ph).expand() == (sympify(1)/4 * sqrt(15/(2*pi)) * \
-    #        sin(th)**2 * exp(-2*I*ph)).expand()
     assert Ylm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) * \
             (3*cos(th)**2-1)).expand()
     assert Ylm(2, 1, th, ph).expand() == (-sympify(1)/2 * \
             sqrt(3)*sqrt(5/(2*pi)) * (sin(th)*cos(th)) * exp(I*ph)).expand()
-    #Ylm returns here a correct, but different expression:
-    #assert Ylm(2, 2, th, ph).expand() == (sympify(1)/4 * sqrt(15/(2*pi)) * \
-    #        sin(th)**2 * exp(2*I*ph)).expand()
+
+    # These last 2 return the correct answer, but the answer can be simplified
+    assert Ylm(2, -2, th, ph).expand() == -sqrt(30)*exp(-2*I*ph)*cos(th)**S(2)/(8*sqrt(pi)) + \
+            S(sqrt(30)*exp(-2*I*ph))/(8*sqrt(pi))
+    assert Ylm(2, 2, th, ph).expand() == S(-sqrt(30)*exp(2*I*ph)*cos(th)**2)/(8*sqrt(pi)) + S(sqrt(30)*exp(2*I*ph))/(8*sqrt(pi))
 
 def test_Zlm():
     #http://en.wikipedia.org/wiki/Solid_harmonics#List_of_lowest_functions
@@ -79,4 +79,3 @@ def test_Zlm():
     assert Zlm(2, 0, th, ph).expand() == (sympify(1)/4 * sqrt(5/pi) * \
             (3*cos(th)**2-1)).expand()
     assert Zlm(2, 1, th, ph) == sqrt(15/(4*pi))*sin(th)*cos(th)*cos(ph)
-

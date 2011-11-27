@@ -10,7 +10,7 @@ from sympy.polys import Poly, RootOf, RootSum, groebner
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 

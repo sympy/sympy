@@ -1,5 +1,6 @@
-from sympy.core import Rational, Symbol, S, Float, Integer
+from sympy.core import Rational, Symbol, S, Float, Integer, Number
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.utilities.pytest import XFAIL
 
 def test_issue153():
     #test that is runs:
@@ -54,7 +55,7 @@ def test_issue350():
     k = Symbol('k',integer=True)
     m = Symbol('m',integer=True)
     assert (x**k)**m == x**(k*m)
-    #assert Number(5)**Rational(2,3)==Number(25)**Rational(1,3)
+    assert Number(5)**Rational(2,3)==Number(25)**Rational(1,3)
 
     assert (x**.5)**2 == x**1.0
     assert (x**2)**k == (x**k)**2 == x**(2*k)

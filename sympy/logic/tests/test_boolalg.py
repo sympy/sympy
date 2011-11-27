@@ -1,7 +1,7 @@
 from sympy.logic.boolalg import to_cnf, eliminate_implications, distribute_and_over_or, \
     compile_rule, conjuncts, disjuncts, to_int_repr, fuzzy_not, Boolean, is_cnf
 from sympy import symbols, And, Or, Xor, Not, Nand, Nor, Implies, Equivalent, ITE
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 def test_overloading():
     """Test that |, & are overloaded as expected"""

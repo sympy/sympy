@@ -1,5 +1,4 @@
 from sympy import S, symbols, exp, pi, sqrt, Rational, I, Q, refine, Abs
-from sympy.utilities.pytest import XFAIL
 
 def test_Abs():
     x = symbols('x')

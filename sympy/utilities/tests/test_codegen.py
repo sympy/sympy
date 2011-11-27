@@ -4,7 +4,7 @@ from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
     InOutArgument
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
 # import test:

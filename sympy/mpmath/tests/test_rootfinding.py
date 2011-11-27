@@ -2,6 +2,8 @@ from sympy.mpmath import *
 from sympy.mpmath.calculus.optimization import Secant, Muller, Bisection, Illinois, \
     Pegasus, Anderson, Ridder, ANewton, Newton, MNewton, MDNewton
 
+from sympy.utilities.pytest import XFAIL
+
 def test_findroot():
     # old tests, assuming secant
     mp.dps = 15
@@ -22,11 +24,15 @@ def test_findroot():
     # test types
     f = lambda x: (x - 2)**2
 
-    #assert isinstance(findroot(f, 1, force_type=mpf, tol=1e-10), mpf)
-    #assert isinstance(findroot(f, 1., force_type=None, tol=1e-10), float)
-    #assert isinstance(findroot(f, 1, force_type=complex, tol=1e-10), complex)
+    assert isinstance(findroot(f, 1, force_type=mpf, tol=1e-10), mpf)
     assert isinstance(fp.findroot(f, 1, tol=1e-10), float)
     assert isinstance(fp.findroot(f, 1+0j, tol=1e-10), complex)
+
+@XFAIL
+def test_findroot_bugs():
+    f = lambda x: (x - 2)**2
+    assert isinstance(findroot(f, 1., force_type=None, tol=1e-10), float)
+    assert isinstance(findroot(f, 1, force_type=complex, tol=1e-10), complex)
 
 def test_mnewton():
     f = lambda x: polyval([1,3,3,1],x)
@@ -70,6 +76,8 @@ def test_multidimensional():
 def test_trivial():
     assert findroot(lambda x: 0, 1) == 1
     assert findroot(lambda x: x, 0) == 0
-    #assert findroot(lambda x, y: x + y, (1, -1)) == (1, -1)
 
+@XFAIL
+def test_trivial_bugs():
+    assert findroot(lambda x, y: x + y, (1, -1)) == (1, -1)
 

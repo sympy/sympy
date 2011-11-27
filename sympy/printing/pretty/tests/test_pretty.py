@@ -12,7 +12,7 @@ from sympy.printing.pretty import pprint
 
 from sympy.physics.units import joule
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
 th = Symbol('theta')
@@ -2603,6 +2603,7 @@ def test_pretty_no_wrap_line():
 def test_settings():
     raises(TypeError, 'pretty(S(4), method="garbage")')
 
+@XFAIL
 def test_pretty_sum():
     from sympy.abc import x, a, b, k, m, n
 
@@ -2616,9 +2617,10 @@ def test_pretty_sum():
  /_,   \n\
 x = 0  \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
     expr = Sum(x**2, (x, 0, oo))
     ascii_str = \
@@ -2631,9 +2633,10 @@ x = 0  \
  /__,   \n\
 x = 0   \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
     expr = Sum(x/2, (x, 0, oo))
     ascii_str = \
@@ -2647,9 +2650,10 @@ x = 0   \
  /__,  \n\
 x = 0  \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
     expr = Sum(x**3/2, (x, 0, oo))
     ascii_str = \
@@ -2664,9 +2668,10 @@ ____    \n\
 /___,   \n\
 x = 0   \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
     expr = Sum((x**3*y**(x/2))**n, (x, 0, oo))
     ascii_str = \
@@ -2682,9 +2687,10 @@ ____          \n\
 /___,         \n\
 x = 0         \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
     expr = Sum(1/x**2, (x, 0, oo))
     ascii_str = \
@@ -2699,9 +2705,10 @@ ____    \n\
 /___,   \n\
 x = 0   \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
     expr = Sum(1/y**(a/b), (x, 0, oo))
     ascii_str = \
@@ -2716,9 +2723,10 @@ ____     \n\
 /___,    \n\
 x = 0    \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
     expr = Sum(1/y**(a/b), (x, 0, oo), (y,1,2))
     ascii_str = \
@@ -2733,9 +2741,10 @@ ____  ____     \n\
 /___, /___,    \n\
 y = 1 x = 0    \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
     expr = Sum(1/(1 + 1/(1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1+m), oo)) + 1/(1 + 1/k)
     ascii_str = \
@@ -2757,9 +2766,10 @@ y = 1 x = 0    \
 k = -----                                \n\
     m + 1                                \
 """
+    ucode_str = ascii_str
 
     assert  pretty(expr) == ascii_str
-    #assert upretty(expr) == ucode_str
+    assert upretty(expr) == ucode_str
 
 def test_units():
     # issue 2461

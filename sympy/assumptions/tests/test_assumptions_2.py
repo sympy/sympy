@@ -5,7 +5,6 @@ from sympy.assumptions.ask import _extract_facts
 from sympy.printing import pretty
 from sympy.assumptions.ask import Q
 from sympy.logic.boolalg import Or
-from sympy.utilities.pytest import XFAIL
 
 def test_equal():
     """Test for equality"""

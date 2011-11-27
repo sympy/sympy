@@ -501,7 +501,6 @@ def test_sympy__functions__elementary__miscellaneous__Min():
 def test_sympy__functions__elementary__miscellaneous__MinMaxBase():
     pass
 
-@XFAIL
 def test_sympy__functions__elementary__piecewise__ExprCondPair():
     from sympy.functions.elementary.piecewise import ExprCondPair
     assert _test_args(ExprCondPair(1, True))
