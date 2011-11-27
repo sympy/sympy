@@ -86,9 +86,11 @@ def test_latex_symbols():
     assert latex(Symbol('alpha_new')) == r"\alpha_{new}"
     assert latex(Symbol('C^orig')) == r"C^{orig}"
 
-    #assert latex(volume * rho == mass) == r"\rho \mathrm{volume} = \mathrm{mass}"
-    #assert latex(volume / mass * rho == 1) == r"\rho \mathrm{volume} {\mathrm{mass}}^{(-1)} = 1"
-    #assert latex(mass**3 * volume**3) == r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"
+@XFAIL
+def test_latex_symbols_failing():
+    assert latex(volume * rho == mass) == r"\rho \mathrm{volume} = \mathrm{mass}"
+    assert latex(volume / mass * rho == 1) == r"\rho \mathrm{volume} {\mathrm{mass}}^{(-1)} = 1"
+    assert latex(mass**3 * volume**3) == r"{\mathrm{mass}}^{3} \cdot {\mathrm{volume}}^{3}"
 
 def test_latex_functions():
     assert latex(exp(x)) == "e^{x}"

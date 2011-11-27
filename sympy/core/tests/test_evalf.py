@@ -7,7 +7,7 @@ from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
 
 from sympy.mpmath.libmp.libmpf import from_float
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x = Symbol('x')
 y = Symbol('y')
@@ -51,8 +51,10 @@ def test_evalf_complex():
     assert NS('E+pi*I',15) == '2.71828182845905 + 3.14159265358979*I'
     assert NS('pi * (3+4*I)',15) == '9.42477796076938 + 12.5663706143592*I'
     assert NS('I*(2+I)',15) == '-1.00000000000000 + 2.00000000000000*I'
-    #assert NS('(pi+E*I)*(E+pi*I)',15) in ('.0e-15 + 17.25866050002*I', '.0e-17 + 17.25866050002*I', '-.0e-17 + 17.25866050002*I')
-    assert NS('(pi+E*I)*(E+pi*I)',15,chop=True) == '17.2586605000200*I'
+
+@XFAIL
+def test_evalf_complex_bug():
+    assert NS('(pi+E*I)*(E+pi*I)',15) in ('.0e-15 + 17.25866050002*I', '.0e-17 + 17.25866050002*I', '-.0e-17 + 17.25866050002*I')
 
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
@@ -62,11 +64,14 @@ def test_evalf_complex_powers():
     assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
     assert NS('(pi + 1/10**8 + pi*I)**2') == '6.2831853e-8 + 19.7392088650106*I'
     assert NS('(pi + 1/10**12 + pi*I)**2') == '6.283e-12 + 19.7392088021850*I'
-    #assert NS('(pi + pi*I)**4') == '-389.63636413601 + .0e-14*I'
     assert NS('(pi + pi*I)**4', chop=True) == '-389.636364136010'
     assert NS('(pi + 1/10**8 + pi*I)**4') == '-389.636366616512 + 2.4805021e-6*I'
     assert NS('(pi + 1/10**12 + pi*I)**4') == '-389.636364136258 + 2.481e-10*I'
     assert NS('(10000*pi + 10000*pi*I)**4', chop=True) == '-3.89636364136010e+18'
+
+@XFAIL
+def test_evalf_complex_powers_bug():
+    assert NS('(pi + pi*I)**4') == '-389.63636413601 + .0e-14*I'
 
 def test_evalf_exponentiation():
     assert NS(sqrt(-pi)) == '1.77245385090552*I'

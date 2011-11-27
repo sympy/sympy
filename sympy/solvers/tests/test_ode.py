@@ -590,6 +590,7 @@ def test_1st_homogeneous_coeff_ode_check9():
         x/f(x))) + log(C1*f(x)), 0)
     assert checkodesol(eq9, sol9, order=1, solve_for_func=False)[0]
 
+@XFAIL
 def test_1st_homogeneous_coeff_ode2():
     eq1 = f(x).diff(x) - f(x)/x+1/sin(f(x)/x)
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
@@ -604,7 +605,7 @@ def test_1st_homogeneous_coeff_ode2():
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert all(i[0] for i in checkodesol(eq2, sol2, order=1, solve_for_func=False))
     # the solution doesn't check...perhaps there is something wrong with the routine or the solver?
-    # assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode2_check3():

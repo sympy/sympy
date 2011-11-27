@@ -1,6 +1,8 @@
 import math
 from sympy.mpmath import *
 
+from sympy.utilities.pytest import XFAIL
+
 def test_bessel():
     mp.dps = 15
     assert j0(1).ae(0.765197686557966551)
@@ -331,7 +333,9 @@ def test_expint():
     assert expint(1,3j).ae(-0.11962978600800032763 + 0.27785620120457163717j)
     assert expint(1,3).ae(0.013048381094197037413)
     assert expint(1,-3).ae(-ei(3)-pi*j)
-    #assert expint(3) == expint(1,3)
+    # Not sure what the writer of this test was trying to do not xfailing or
+    # putting in its own test because it's probably just written incorrectly
+    # assert expint(3) == expint(1,3)
     assert expint(1,-20).ae(-25615652.66405658882 - 3.1415926535897932385j)
     assert expint(1000000,0).ae(1./999999)
     assert expint(0,2+3j).ae(-0.025019798357114678171 + 0.027980439405104419040j)
@@ -601,10 +605,7 @@ def test_hyper_u():
     assert hyperu(2,6,pi).ae(0.55804439825913399130)
     assert (hyperu((3,2),8,100+201j)*10**4).ae(-0.3797318333856738798 - 2.9974928453561707782j)
     assert (hyperu((5,2),(-1,2),-5000)*10**10).ae(-5.6681877926881664678j)
-    # XXX: fails because of undetected cancellation in low level series code
-    # Alternatively: could use asymptotic series here, if convergence test
-    # tweaked back to recognize this one
-    #assert (hyperu((5,2),(-1,2),-500)*10**7).ae(-1.82526906001593252847j)
+    assert (hyperu((5,2),(-1,2),-500)*10**7).ae(-1.82526906001593252847j)
 
 def test_hyper_2f0():
     mp.dps = 15
@@ -690,7 +691,6 @@ def test_orthpoly():
     assert jacobi(1.5,5/6.,4,0).ae(-1.0851951434075508417)
     assert jacobi(-2, 1, 2, 4).ae(-0.16)
     assert jacobi(2, -1, 2.5, 4).ae(34.59375)
-    #assert jacobi(2, -1, 2, 4) == 28.5
     assert legendre(5, 7) == 129367
     assert legendre(0.5,0).ae(0.53935260118837935667)
     assert legendre(-1,-1) == 1
@@ -709,6 +709,10 @@ def test_orthpoly():
     assert legendre(4.5+1j,-1) == mpc(-inf,-inf)
     assert laguerre(4, -2, 3).ae(-1.125)
     assert laguerre(3, 1+j, 0.5).ae(0.2291666666666666667 + 2.5416666666666666667j)
+
+@XFAIL
+def test_orthpoly_bug():
+    assert jacobi(2, -1, 2, 4) == 28.5
 
 def test_hermite():
     mp.dps = 15
@@ -750,10 +754,13 @@ def test_gegenbauer():
     assert gegenbauer(-7, 0.5, 3).ae(8989)
     assert gegenbauer(1, -0.5, 3).ae(-3)
     assert gegenbauer(1, -1.5, 3).ae(-9)
-    assert gegenbauer(1, -0.5, 3).ae(-3)
     assert gegenbauer(-0.5, -0.5, 3).ae(-2.6383553159023906245)
     assert gegenbauer(2+3j, 1-j, 3+4j).ae(14.880536623203696780 + 20.022029711598032898j)
-    #assert gegenbauer(-2, -0.5, 3).ae(-12)
+
+@XFAIL
+def test_gegenbauer_unimplemented():
+    assert gegenbauer(1, -0.5, 3).ae(-3)
+    assert gegenbauer(-2, -0.5, 3).ae(-12)
 
 def test_legenp():
     mp.dps = 15

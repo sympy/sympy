@@ -1,7 +1,5 @@
 from sympy import symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log, \
         pi, arg, conjugate, expand, exp, sin, cos, Function, Abs
-from sympy.utilities.pytest import XFAIL
-
 
 def test_re():
     x, y = symbols('x,y')
