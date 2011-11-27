@@ -38,5 +38,6 @@ Contents
     essential.txt
     examples.txt
     advanced.txt
+    functions.txt
     reference.txt
 
