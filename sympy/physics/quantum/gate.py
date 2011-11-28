@@ -29,6 +29,7 @@ from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
                                             HermitianOperator)
 from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
+from sympy.physics.quantum.dagger import Dagger
 
 from sympy.matrices.matrices import MatrixBase
 
@@ -426,10 +427,7 @@ class CGate(Gate):
     #-------------------------------------------------------------------------
 
     def _eval_dagger(self):
-        if (self.gate == self.gate._eval_dagger()):
-            return self
-        else:
-            return self._eval_inverse()
+        return CGate(self.controls, Dagger(self.gate))
 
 class UGate(Gate):
     """General gate specified by a set of targets and a target matrix.
