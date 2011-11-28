@@ -8,7 +8,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 
 from sympy.core.mul import _keep_coeff
 from sympy.core.compatibility import iterable, reduce
-from sympy.core.numbers import igcd
+from sympy.core.numbers import igcd, Float
 from sympy.core.function import expand_log, count_ops
 from sympy.core.rules import Transform
 
@@ -1971,9 +1971,9 @@ def _real_to_rational(expr):
     sqrt(x)/10 + 19/25
 
     """
-    p = sympify(expr)
+    p = expr
     for r in p.atoms(C.Float):
-        newr = nsimplify(r)
+        newr = nsimplify(r, rational=False)
         if not newr.is_Rational or \
            r.is_finite and not newr.is_finite:
             newr = r
@@ -1987,21 +1987,23 @@ def _real_to_rational(expr):
         p = p.subs(r, newr)
     return p
 
-def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
+def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     """
-    Replace numbers with simple representations.
+    Find a simple representation for a number or, if there are free symbols or
+    if rational=True, then replace Floats with their Rational equivalents. If
+    no change is made and rational is not False then Floats will at least be
+    converted to Rationals.
 
-    If rational=True then numbers are simply replaced with their rational
-    equivalents.
-
-    If rational=False, a simple formula that numerically matches the
-    given expression is sought (and the input should be possible to evalf
-    to a precision of at least 30 digits).
+    For numerical expressions, a simple formula that numerically matches the
+    given numerical expression is sought (and the input should be possible
+    to evalf to a precision of at least 30 digits).
 
     Optionally, a list of (rationally independent) constants to
     include in the formula may be given.
 
-    A lower tolerance may be set to find less exact matches.
+    A lower tolerance may be set to find less exact matches. If no tolerance is
+    given then the least precise value will set the tolerance (e.g. Floats
+    default to 15 digits of precision, so would be tolerance=10**-15).
 
     With full=True, a more extensive search is performed
     (this is useful to find simpler numbers when the tolerance
@@ -2020,10 +2022,16 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
         22/7
 
     """
-    if rational:
+    expr = sympify(expr)
+    if rational or expr.free_symbols:
         return _real_to_rational(expr)
 
-    expr = sympify(expr)
+    # sympy's default tolarance for Rationals is 15; other numbers may have
+    # lower tolerances set, so use them to pick the largest tolerance if none
+    # was given
+    tolerance = tolerance or 10**-min([15] +
+                                     [mpmath.libmp.libmpf.prec_to_dps(n._prec)
+                                     for n in expr.atoms(Float)])
 
     prec = 30
     bprec = int(prec*3.33)
@@ -2060,16 +2068,29 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=False):
                 raise ValueError
             if full:
                 newexpr = newexpr[0]
-            return sympify(newexpr)
+            expr = sympify(newexpr)
+            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
+                raise ValueError
+            return expr
         finally:
+            # even though there are returns above, this is executed
+            # before leaving
             mpmath.mp.dps = orig
     try:
         if re: re = nsimplify_real(re)
         if im: im = nsimplify_real(im)
     except ValueError:
+        if rational is None:
+            return _real_to_rational(expr)
         return expr
 
-    return re + im*S.ImaginaryUnit
+    rv = re + im*S.ImaginaryUnit
+    # if there was a change or rational is explicitly not wanted
+    # return the value, else return the Rational representation
+    if rv != expr or rational is False:
+        return rv
+    return _real_to_rational(expr)
+
 
 
 def logcombine(expr, force=False):
