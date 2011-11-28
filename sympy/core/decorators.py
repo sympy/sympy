@@ -5,20 +5,8 @@ The purpose of this module is to expose decorators without any other
 dependencies, so that they can be easily imported anywhere in sympy/core.
 """
 from sympify import SympifyError, sympify
+from functools import wraps
 import warnings
-
-try:
-    from functools import wraps
-except ImportError:
-    def wraps(old_func):
-        """Copy private data from ``old_func`` to ``new_func``. """
-        def decorate(new_func):
-            new_func.__dict__.update(old_func.__dict__)
-            new_func.__module__ = old_func.__module__
-            new_func.__name__   = old_func.__name__
-            new_func.__doc__    = old_func.__doc__
-            return new_func
-        return decorate
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions
