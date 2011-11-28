@@ -2,7 +2,7 @@ from sympy import S
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.utilities.pytest import raises
-from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max, nth_root
+from sympy.functions.elementary.miscellaneous import sqrt, root, Min, Max, real_root
 from sympy import I, cos, sin, oo
 
 def test_Min():
@@ -156,11 +156,11 @@ def test_root():
     assert root(x, -n) == x**(-1/n)
 
 def test_nthroot():
-    assert nth_root(-8, 3) == -2
-    assert nth_root(-16, 4) == root(-16, 4)
+    assert real_root(-8, 3) == -2
+    assert real_root(-16, 4) == root(-16, 4)
     r = root(-7, 4)
-    assert nth_root(r) == r
+    assert real_root(r) == r
     r1 = root(-1, 3)
     r2 = r1**2
     r3 = root(-1, 4)
-    assert nth_root(r1 + r2 + r3) == -1 + r2 + r3
+    assert real_root(r1 + r2 + r3) == -1 + r2 + r3

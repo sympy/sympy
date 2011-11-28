@@ -143,34 +143,34 @@ def root(arg, n):
 
     See also
     ========
-       L{sqrt}, L{RootOf}, L{nth_root}, L{integer_nthroot}
+       L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
 
        External links
        --------------
 
        * http://en.wikipedia.org/wiki/Square_root
-       * http://en.wikipedia.org/wiki/Nth_root
+       * http://en.wikipedia.org/wiki/real_root
        * http://en.wikipedia.org/wiki/Root_of_unity
        * http://en.wikipedia.org/wiki/Principal_value
     """
     n = sympify(n)
     return C.Pow(arg, 1/n)
 
-def nth_root(arg, n=None):
+def real_root(arg, n=None):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of -1**(1/odd) will be changed to -1.
 
     Examples
     ========
 
-    >>> from sympy import root, nth_root, Rational
+    >>> from sympy import root, real_root, Rational
     >>> from sympy.abc import x, n
 
-    >>> nth_root(-8, 3)
+    >>> real_root(-8, 3)
     -2
     >>> root(-8, 3)
     2*(-1)**(1/3)
-    >>> nth_root(_)
+    >>> real_root(_)
     -2
 
 
