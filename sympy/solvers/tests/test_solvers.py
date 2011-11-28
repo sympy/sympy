@@ -396,8 +396,7 @@ def test_issue_1694():
     assert solve(x/sqrt(x**2 + 1),x) == [0]
     assert solve(exp(x) - y, x) == [log(y)]
     assert solve(exp(x)) == []
-    # XXX Fix
-    assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) not in [[0, -1], [-1, 0]]
+    assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
     eq = 4*3**(5*x + 2) - 7
     ans = solve(eq, x)
     assert len(ans) == 5 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)

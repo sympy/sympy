@@ -765,6 +765,9 @@ def trigsimp(expr, deep=False):
     cont, expr = expr.as_content_primitive()
 
     d = separatevars(expr, dict=True)
+    # remove hollow factoring from results, i.e. cos(x)**2 -1
+    # gets factored but then it is not recognized by the
+    # _trigsimp patterns
     if d:
         margs = []
         for v in d.values():
@@ -780,11 +783,11 @@ def trigsimp(expr, deep=False):
     if d != 1:
         expr = trigsimp(n, deep)/trigsimp(d, deep)
 
-    if expr.is_Add and expr.is_commutative:
+    if expr.is_Add:
         new = Add(*[trigsimp(a, deep) for a in expr.args])
         if new != expr and new.count_ops() < expr.count_ops():
             expr = new
-        if expr.is_Add:
+        if expr.is_Add and expr.is_commutative:
             new = factor(expr)
             if new == expr:
                 new = factor(new.rewrite(exp))
@@ -801,9 +804,7 @@ def trigsimp(expr, deep=False):
                 continue
             if m.is_Add and m.is_commutative:
                 new = factor(m)
-                if new.is_Mul:
-                    new = trigsimp(new, deep)
-                elif new.is_Add:
+                if new.is_Add:
                     new = factor(new.rewrite(exp))
                     if new.is_Mul:
                         new = trigsimp(new, deep)
@@ -812,12 +813,16 @@ def trigsimp(expr, deep=False):
             if new.count_ops() < m.count_ops():
                 margs[i] = new
         expr = Mul(*margs)
-    result = _trigsimp(expr, deep)
 
-    if result.count_ops() > expr.count_ops():
-        result = expr
-    return _keep_coeff(cont, result)
+    # iterate for multiple patterns
+    old = expr
+    while True:
+        new = _trigsimp(old, deep)
+        if old == new:
+            break
+        old = new
 
+    return _keep_coeff(cont, new)
 
 def _trigsimp(expr, deep=False):
     """

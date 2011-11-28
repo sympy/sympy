@@ -117,6 +117,17 @@ def test_trigsimp_issues_1395_1526_1562():
     assert trigsimp(sin(a)**2*sin(b)**2 +
                     cos(a)**2*cos(b)**2*tan(a)**2 +
                     cos(a)**2) == 1
+    # check for multiple patterns
+    assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
+            1/(tan(x)**2*tan(y)**2)
+
+@XFAIL
+def test_separatevars_hollow_factoring():
+    # if this passes then the portion of trigsimp undoing the
+    # factoring can be removed; then if that causes failures, the factoring
+    # can be done there instead by factoring the values returned
+    eq = cos(x)**2 - 1
+    assert separatevars(eq) == eq
 
 @XFAIL
 def test_factorial_simplify():
