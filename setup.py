@@ -105,7 +105,7 @@ class audit(Command):
         import os
         try:
             import pyflakes.scripts.pyflakes as flakes
-        except:
+        except ImportError:
             print """In order to run the audit, you need to have PyFlakes installed."""
             sys.exit(-1)
         # We don't want to audit external dependencies
@@ -162,25 +162,14 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        tests_successful = True
-        try:
-            if not sympy.test():
-                # some regular test fails, so set the tests_successful
-                # flag to false and continue running the doctests
-                tests_successful = False
-
-            if not sympy.doctest():
-                tests_successful = False
-
-            if tests_successful:
+        if sympy.test():
+            # all regular tests run successfuly, so let's also run doctests
+            # (if some regular test fails, the doctests are not run)
+            if sympy.doctest():
+                # All ok
                 return
-            else:
-                # Return nonzero exit code
-                sys.exit(1)
-        except KeyboardInterrupt:
-            print
-            print("DO *NOT* COMMIT!")
-            sys.exit(1)
+        # Return nonzero exit code
+        sys.exit(1)
 
 
 class run_benchmarks(Command):
