@@ -36,30 +36,36 @@ def test_generate_gate_rules():
 
 def test_is_scalar_matrix():
     numqubits = 2
+    id_only = False
 
     id_gate = (IdentityGate(1),)
-    assert is_scalar_matrix(id_gate, numqubits) == True
+    assert is_scalar_matrix(id_gate, numqubits, id_only) == True
 
     x0 = X(0)
     xx_circuit = (x0, x0)
-    assert is_scalar_matrix(xx_circuit, numqubits) == True
+    assert is_scalar_matrix(xx_circuit, numqubits, id_only) == True
 
     x1 = X(1)
     y1 = Y(1)
     xy_circuit = (x1, y1)
-    assert is_scalar_matrix(xy_circuit, numqubits) == False
+    assert is_scalar_matrix(xy_circuit, numqubits, id_only) == False
 
     z1 = Z(1)
     xyz_circuit = (x1, y1, z1)
-    assert is_scalar_matrix(xyz_circuit, numqubits) == True
+    assert is_scalar_matrix(xyz_circuit, numqubits, id_only) == True
 
     cnot = CNOT(1,0)
     cnot_circuit = (cnot, cnot)
-    assert is_scalar_matrix(cnot_circuit, numqubits) == True
+    assert is_scalar_matrix(cnot_circuit, numqubits, id_only) == True
 
     h = H(0)
     hh_circuit = (h, h)
-    assert is_scalar_matrix(hh_circuit, numqubits) == True
+    assert is_scalar_matrix(hh_circuit, numqubits, id_only) == True
+
+    id_only = True
+    assert is_scalar_matrix(xyz_circuit, numqubits, id_only) == False
+    assert is_scalar_matrix(cnot_circuit, numqubits, id_only) == True
+    assert is_scalar_matrix(hh_circuit, numqubits, id_only) == True
 
 def test_is_degenerate():
     x = X(0)
@@ -103,7 +109,7 @@ def test_bfs_identity_search():
 
     gate_list = [x]
     id_set = set([GateIdentity(x, x)])
-    assert bfs_identity_search(gate_list, 1, 2) == id_set
+    assert bfs_identity_search(gate_list, 1, max_depth=2) == id_set
 
     # Set should not contain degenerate quantum circuits
     gate_list = [x, y, z]
@@ -120,8 +126,8 @@ def test_bfs_identity_search():
                   GateIdentity(x, y, x, y),
                   GateIdentity(x, z, x, z),
                   GateIdentity(y, z, y, z)])
-    assert bfs_identity_search(gate_list, 1, 4) == id_set
-    assert bfs_identity_search(gate_list, 1, 5) == id_set
+    assert bfs_identity_search(gate_list, 1, max_depth=4) == id_set
+    assert bfs_identity_search(gate_list, 1, max_depth=5) == id_set
 
     h = H(0)
     gate_list = [x, y, z, h]
@@ -140,6 +146,13 @@ def test_bfs_identity_search():
     id_set = set([GateIdentity(x, x),
                   GateIdentity(y, y),
                   GateIdentity(z, z),
+                  GateIdentity(h, h)])
+    assert id_set == bfs_identity_search(gate_list, 1, max_depth=3,
+                                         identity_only=True)
+
+    id_set = set([GateIdentity(x, x),
+                  GateIdentity(y, y),
+                  GateIdentity(z, z),
                   GateIdentity(h, h),
                   GateIdentity(x, y, z),
                   GateIdentity(x, y, x, y),
@@ -150,18 +163,18 @@ def test_bfs_identity_search():
                   GateIdentity(x, y, h, x, h),
                   GateIdentity(x, z, h, y, h),
                   GateIdentity(y, z, h, z, h)])
-    assert bfs_identity_search(gate_list, 1, 5) == id_set
+    assert bfs_identity_search(gate_list, 1, max_depth=5) == id_set
 
     cnot = CNOT(1,0)
     gate_list = [x, cnot]
     id_set = set([GateIdentity(x, x),
                   GateIdentity(cnot, cnot),
                   GateIdentity(x, cnot, x, cnot)])
-    assert bfs_identity_search(gate_list, 2, 4) == id_set
+    assert bfs_identity_search(gate_list, 2, max_depth=4) == id_set
 
     cgate_x = CGate((1,), x)
     gate_list = [x, cgate_x]
     id_set = set([GateIdentity(x, x),
                   GateIdentity(cgate_x, cgate_x),
                   GateIdentity(x, cgate_x, x, cgate_x)])
-    assert bfs_identity_search(gate_list, 2, 4) == id_set
+    assert bfs_identity_search(gate_list, 2, max_depth=4) == id_set
