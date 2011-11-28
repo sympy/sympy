@@ -117,7 +117,7 @@ def test_jtheta():
             raised = True
             try:
                 r = jtheta(n, z, q)
-            except:
+            except ValueError:
                 pass
             else:
                 raised = False

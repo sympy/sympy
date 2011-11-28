@@ -108,7 +108,7 @@ class ivmpf(object):
         if not hasattr(t, "_mpi_"):
             try:
                 t = s.ctx.convert(t)
-            except:
+            except (ValueError, TypeError):
                 return NotImplemented
         return cmpfun(s._mpi_, t._mpi_)
 
@@ -192,7 +192,7 @@ class ivmpc(object):
         if not isinstance(t, s.ctx._types):
             try:
                 t = s.ctx.convert(t)
-            except:
+            except (ValueError, TypeError):
                 return NotImplemented
         if hasattr(t, '_mpi_'):
             tval = t._mpi_, mpi_zero

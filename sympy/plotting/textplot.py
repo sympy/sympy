@@ -23,7 +23,7 @@ def textplot(expr, a, b, W=55, H=18):
     for x in range(W):
         try:
             y[x] = f(a+(b-a)/float(W)*x)
-        except:
+        except TypeError:
             y[x] = 0
 
     # Normalize height to screen space

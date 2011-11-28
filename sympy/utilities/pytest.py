@@ -142,7 +142,7 @@ else:
                 func()
             except Outcome:
                 raise   # pass-through test outcome
-            except:
+            except XFail(Exception):
                 raise XFail(func.func_name)
             else:
                 raise XPass(func.func_name)

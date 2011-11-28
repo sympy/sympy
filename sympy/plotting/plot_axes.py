@@ -37,7 +37,7 @@ class PlotAxes(PlotObject):
         stride = kwargs.pop('stride', 0.25)
         try:
             stride = eval(stride)
-        except:
+        except TypeError:
             pass
         if is_sequence(stride):
             assert len(stride) == 3

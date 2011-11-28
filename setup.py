@@ -105,7 +105,7 @@ class audit(Command):
         import os
         try:
             import pyflakes.scripts.pyflakes as flakes
-        except:
+        except ImportError:
             print """In order to run the audit, you need to have PyFlakes installed."""
             sys.exit(-1)
         # We don't want to audit external dependencies

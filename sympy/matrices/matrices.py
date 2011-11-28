@@ -1539,7 +1539,7 @@ class Matrix(object):
             # Note that while useful this is not mathematically a norm
             try:
                 return Pow( Add(*(abs(i)**ord for i in self.mat)), S(1)/ord )
-            except:
+            except TypeError:
                 raise ValueError("Expected order to be Number, Symbol, oo")
 
         # Matrix Norms

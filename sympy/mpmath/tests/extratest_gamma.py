@@ -15,7 +15,7 @@ def check(name, func, z, y):
     global errcount
     try:
         x = func(z)
-    except:
+    except NotImplementedError:
         errcount += 1
         if raise_:
             raise
