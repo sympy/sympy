@@ -1073,7 +1073,7 @@ class Matrix(object):
 
     def print_nonzero (self, symb="X"):
         """
-        Shows location of non-zero entries for fast shape lookup ::
+        Shows location of non-zero entries for fast shape lookup
 
             >>> from sympy import Matrix, matrices
             >>> m = Matrix(2,3,lambda i,j: i*3+j)
