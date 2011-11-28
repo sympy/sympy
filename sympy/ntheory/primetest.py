@@ -79,6 +79,15 @@ def mr(n, bases):
     ==========
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 135-138
+
+    A list of thresholds and the bases they require are here:
+    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+
+    **Examples**
+    >>> mr(1373651, [2, 3])
+    False
+    >>> mr(479001599, [31, 73])
+    True
     """
     n = int(n)
     for base in bases:
@@ -180,7 +189,6 @@ def isprime(n):
     True
     >>> isprime(15)
     False
-
     """
     n = int(n)
     if n < 2:

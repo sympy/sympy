@@ -134,7 +134,14 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 def trailing(n):
     """Count the number of trailing zero digits in the binary
     representation of n, i.e. determine the largest power of 2
-    that divides n."""
+    that divides n.
+    **Examples**
+    >>> from sympy import trailing
+    >>> trailing(128)
+    7
+    >>> trailing(63)
+    0
+    """
     n = int(n)
     if not n:
         return 0
@@ -214,8 +221,14 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     since finding a factor indicates the only possible root for n. This
     is True by default since only a few small factors will be tested in
     the course of searching for the perfect power.
+    
+    **Examples**
+    >>> from sympy import perfect_power
+    >>> perfect_power(16)
+    (2, 4)
+    >>> perfect_power(16, big = False)
+    (4, 2)
     """
-
     n = int(n)
     if n < 3:
         return False

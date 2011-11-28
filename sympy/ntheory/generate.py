@@ -32,7 +32,14 @@ class Sieve:
             (len(self._list), self._list[-2], self._list[-1])
 
     def extend(self, N):
-        """Grow the sieve to cover all numbers <= N."""
+        """Grow the sieve to cover all numbers <= N.
+        
+        **Example**
+        >>> from sympy.ntheory import sieve
+        >>> sieve.extend(80) 
+        >>> sieve[-1] == 79
+        True
+        """
         if N <= self._list[-1]:
             return
 
@@ -57,12 +64,25 @@ class Sieve:
         self._list += _array('l', [x for x in newsieve if x])
 
     def extend_to_no(self, n):
-        """Extend to include (at least) the nth prime number"""
+        """Extend to include (at least) the nth prime numbers
+
+        **Example**
+        >>> from sympy import sieve
+        >>> sieve.extend_to_no(80)
+        >>> sieve[-1] == 421
+        True
+        """
         while len(self._list) < n:
             self.extend(int(self._list[-1] * 1.5))
 
     def primerange(self, a, b):
-        """Generate all prime numbers in the range [a, b)."""
+        """Generate all prime numbers in the range [a, b).
+        
+        **Example**
+        >>> from sympy import sieve
+        >>> print [i for i in sieve.primerange(7, 18)]
+        [7, 11, 13, 18]
+        """
         assert a <= b
         if b < 2:
             return
@@ -80,7 +100,13 @@ class Sieve:
 
     def search(self, n):
         """For n >= 2, return the tightest a, b such that
-        self[a] <= n <= self[b]"""
+        self[a] <= n <= self[b]
+        
+        **Example**
+        >>> from sympy import sieve
+        >>> sieve.search(25)
+        (9, 10)
+        """
         assert n >= 2
         if n > self._list[-1]:
             self.extend(n)
@@ -114,6 +140,13 @@ def prime(n):
         References
         ==========
         - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+
+        **Example**
+        >>> from sympy import prime
+        >>> prime(10)
+        20
+        >>> prime(1)
+        2
     """
 
     assert n > 0
@@ -123,6 +156,11 @@ def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n. The number n need not
         necessarily be an integer.
+
+        **Example**
+        >>> from sympy import prime
+        >>> primepi(25)
+        9
     """
 
     if n < 2:
@@ -235,6 +273,11 @@ def primerange(a, b):
         ==========
         1. http://en.wikipedia.org/wiki/Prime_number
         2. http://primes.utm.edu/notes/gaps.html
+
+        **Example**
+        >>> from sympy import primerange
+        >>> print [i for i in primerange(1, 30)]
+        [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
     """
     assert a <= b
     a -= 1
@@ -254,6 +297,13 @@ def randprime(a, b):
         References
         ==========
         - http://en.wikipedia.org/wiki/Bertrand's_postulate
+
+        **Example**
+        >>> from sympy import randprime, isprime
+        >>> a = randprime(1, 30) #doctest: +SKIP
+        13
+        >>> isprime(a)
+        True
     """
 
     n = random.randint(a-1, b)
