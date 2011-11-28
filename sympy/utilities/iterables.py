@@ -1163,3 +1163,164 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
+def manage_hints(hints, on=[], off=[], dkey='', strict=True, init=None):
+    """Populate hints given an initial hinting:
+    on = hint names which are on by default.
+    off = hint names which are off by default.
+    dkey = the key for the hint name controlling the default; this is the
+           way that you want external code to refer to the default value for
+           the function.
+
+           Using dkey is a convenience for using all but a few hints since
+           with it you can turn all hints on and then shut off the few that
+           you don't want. Shutting all off and turning only a few on is not
+           necessary since hints that are turned on automatically turn all
+           others off.
+
+    hints = the dictionary (possibly already populated) that will
+            be updated.
+
+    If strict=True then a check is done that all hints appear in
+    on, off or default.
+
+    If init=True then the hint names will just be expanded from abbreviated
+    form but will not be processed any further. If it is False, it is assumed
+    that all the names are fully expanded and ready for processing. Any other
+    value will pre- and post-process the hints.
+
+    hints are processed in two steps. First, a preprocessing takes place:
+        * If the dkey appears in the hints then all hints in on and off
+          are set to its value before processing other hints
+
+        * if dkey does not appear then any True hint will shut off all
+          others unless the hint starts with the underscore (in which
+          case it will be considered an addition to the default on hints),
+          e.g. foo=True selects only foo; _foo=True select foo *in addition*
+          to whatever default hints are on.
+
+        * any underscore can be used to join hint names together to give more
+          than one hint the same value, e.g. foo_bar=True sets foo and bar to
+          True; _foo_bar=True selects defaults *and* foo and bar are also set
+          to True.
+
+    After the hints are preconditioned, the values for hints given at the start
+    (which were recorded before the preconditioning was done) are applied.
+
+    Example:
+
+    Here is a function defined that uses hints;
+
+    >>> def foo(**hints):
+    ...     from sympy.utilities.iterables import manage_hints
+    ...     on=['base', 'exp']
+    ...     off=['mul', 'complex']
+    ...     dkey='all'
+    ...     manage_hints(hints, on, off, dkey)
+    ...     #
+    ...     # now do something using the hints
+    ...     #
+    ...     print sorted(hints.items())
+    >>>
+
+    Now the function is called with different hints:
+
+    (1) Sending no hins returns whatever defaults have been defined to be on:
+
+    >>> foo()
+    [('base', True), ('complex', False), ('exp', True), ('mul', False)]
+
+    (2) Sending a True value for a hint shuts all others off:
+
+    >>> foo(base=True)
+    [('base', True), ('complex', False), ('exp', False), ('mul', False)]
+
+    (3) Using the dkey (foo() defined it to be 'all') allows all hints to be
+    set to a given value; then the given key (here, 'base') is applied:
+
+    >>> foo(base=False, all=True)
+    [('base', False), ('complex', True), ('exp', True), ('mul', True)]
+
+    It's not necessary to shut all hints off if you only want to turn one
+    hint on: sending a True hint shuts all others off as was shown in (2).
+    If you want to take the default hints and turn on another one, prefix
+    the hint with an underscore. Here, all default *plus* 'and' are set True:
+
+    >>> foo(_mul=True)
+    [('base', True), ('complex', False), ('exp', True), ('mul', True)]
+
+    Two or more hints can be concatenated if they are taking on the same
+    value (and all other are shut off):
+
+    >>> foo(complex_exp=True)
+    [('base', False), ('complex', True), ('exp', True), ('mul', False)]
+    >>> foo(complex=True, exp=True)
+    [('base', False), ('complex', True), ('exp', True), ('mul', False)]
+
+    Hints can be given in abbreviated form as long as they are not ambiguous:
+
+    >>> foo(com=True)
+    [('base', False), ('complex', True), ('exp', False), ('mul', False)]
+    """
+
+    order = {}
+    if init != False:
+        known = on + off + [dkey]
+        for k, v in hints.items():
+            if "_" in k:
+                hints.pop(k)
+                if k.startswith("_"):
+                    for ki in on:
+                        hints[ki] = True
+                for i, ki in enumerate(k.split("_")):
+                    if not ki:
+                        continue
+                    order[ki] = i
+                    hints[ki] = v
+
+        if strict:
+            for hint in hints:
+                match = []
+                for h in known:
+                    if h == hint:
+                        match = [hint]
+                        break
+                    elif h.startswith(hint):
+                        match.append(h)
+                if not match:
+                    raise ValueError, 'Unknown keyword: %s.' % hint
+                elif len(match)==1:
+                    if match[0] != hint:
+                        hints[match[0]] = hints.pop(hint)
+                        if order:
+                            order[match[0]] = order.pop(hint)
+                else:
+                    raise ValueError, 'Ambiguous keyword: %s.' % hint
+
+    use_default=False
+    if dkey in hints:
+        default = hints.pop(dkey)
+        use_default=True
+    given = hints.items()
+
+    if any(h for k,h in hints.items()) and init:
+        return order
+    # populate all values
+    if use_default:
+        for o in on+off:
+            hints[o] = default
+    else:
+        for k in off:
+            hints[k]=False
+        if any(value for hint, value in given):
+            for hint in on:
+                hints[hint] = False
+        else:
+            for k in on:
+                hints[k] = True
+
+    # now override with given values
+    for hint, value in given:
+        hints[hint] = value
+
+    return order
