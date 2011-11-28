@@ -519,7 +519,8 @@ class SymPyTests(object):
                 self.test_file(f)
             except KeyboardInterrupt:
                 print " interrupted by user"
-                break
+                self._reporter.finish()
+                raise
         return self._reporter.finish()
 
     def test_file(self, filename):
@@ -641,7 +642,8 @@ class SymPyDocTests(object):
                 self.test_file(f)
             except KeyboardInterrupt:
                 print " interrupted by user"
-                break
+                self._reporter.finish()
+                raise
         return self._reporter.finish()
 
     def test_file(self, filename):
@@ -663,6 +665,8 @@ class SymPyDocTests(object):
         try:
             module = pdoctest._normalize_module(module)
             tests = SymPyDocTestFinder().find(module)
+        except (SystemExit, KeyboardInterrupt):
+            raise
         except:
             self._reporter.import_error(filename, sys.exc_info())
             return
@@ -701,6 +705,8 @@ class SymPyDocTests(object):
                 #exec('from sympy import *') in test.globs
             try:
                 f, t = runner.run(test, out=new.write, clear_globs=False)
+            except KeyboardInterrupt:
+                raise
             finally:
                 sys.stdout = old
             if f > 0:
@@ -797,6 +803,8 @@ class SymPyDocTestFinder(DocTestFinder):
                         try:
                             valname = '%s.%s' % (name, rawname)
                             self._find(tests, val, valname, module, source_lines, globs, seen)
+                        except KeyboardInterrupt:
+                            raise
                         except ValueError, msg:
                             raise
                         except:
