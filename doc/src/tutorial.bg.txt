@@ -218,9 +218,7 @@ Rational, за да получите очаквания резултат. Мож
 
 До края на този урок предполагаме, че сте изпълнили следния код::
 
-    >>> import sys
-    >>> oldhook = sys.displayhook
-    >>> sys.displayhook = pprint
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 Това ще направи нещата да изглеждат по-добре, когато се принтират (pretty printing). Погледнете секцията за принтиране по-нататък.
 Ако имате инсталиран някой unicode шрифт, може да подадете use_unicode=True за доста по-красив изход.
@@ -730,7 +728,6 @@ integrate(), който използва мощния разширен алго�
 
 Това е хубаво отпечатване тип ascii-art, направено от ``pprint`` функция:
 
-    >>> sys.displayhook = oldhook
     >>> from sympy import Integral, pprint
     >>> from sympy.abc import x
     >>> pprint(x**2)
@@ -768,8 +765,7 @@ integrate(), който използва мощния разширен алго�
     [GCC 4.3.1] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from sympy import *
-    >>> import sys
-    >>> sys.displayhook = pprint
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
     >>> var("x")
     x
     >>> x**3/3
