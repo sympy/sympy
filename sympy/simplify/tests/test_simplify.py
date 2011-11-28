@@ -125,6 +125,13 @@ def test_trigsimp_issues_1395_1526_1562():
             cos(x)/sin(x)**3
     assert trigsimp(diff(integrate(sin(x)/cos(x)**3, x), x)) == \
             sin(x)/cos(x)**3
+    # issue 1676
+    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)) == sin(x + y)
+    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)+3) == sin(x + y) + 3
+    # issue 1181
+    assert trigsimp(cos(x)**2 + cos(y)**2*sin(x)**2 + sin(y)**2*sin(x)**2) == 1
+    assert trigsimp(a**2*sin(x)**2 + a**2*cos(y)**2*cos(x)**2 + a**2*cos(x)**2*sin(y)**2) == a**2
+    assert trigsimp(a**2*cos(y)**2*sin(x)**2 + a**2*sin(y)**2*sin(x)**2) == a**2*sin(x)**2
 
 @XFAIL
 def test_separatevars_hollow_factoring():

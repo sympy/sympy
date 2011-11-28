@@ -860,7 +860,7 @@ def _trigsimp(expr, deep=False):
         ret = []
         for x in expr.args:
             ret.append(_trigsimp(x, deep))
-        rv = Mul(*ret)
+        expr = Mul(*ret)
     elif expr.is_Pow:
         return Pow(_trigsimp(expr.base, deep),
                 _trigsimp(expr.exp, deep))
@@ -872,10 +872,23 @@ def _trigsimp(expr, deep=False):
         matchers = (
             (a*sin(b)**2, a - a*cos(b)**2),
             (a*tan(b)**2, a*(1/cos(b))**2 - a),
-            (a*cot(b)**2, a*(1/sin(b))**2 - a)
+            (a*cot(b)**2, a*(1/sin(b))**2 - a),
+        )
+        fullmatchers = (
+            ((sin(a)*cos(b)+cos(a)*sin(b)), sin(a+b)),
+            ((cos(a)*cos(b)-sin(a)*sin(b)), cos(a+b)),
+            ((cos(a)*cos(b)+sin(a)*sin(b)), cos(a-b)),
+            ((sin(a)*cos(b)-cos(a)*sin(b)), sin(a-b)),
         )
 
         # Scan for the terms we need
+        indep, dexpr = expr.as_independent(*trigs)
+        if dexpr.is_Add:
+            for pattern, result in fullmatchers:
+                res = dexpr.match(pattern)
+                if res is not None:
+                    return indep + result.subs(res)
+
         ret = []
         for term in expr.args:
             term = _trigsimp(term, deep)
