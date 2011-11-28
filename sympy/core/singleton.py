@@ -28,6 +28,7 @@ class Singleton(WithAssumptions):
     the global registry object S as S.<class_name>.
 
     Example::
+
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
         >>> class MySingleton(Basic):
@@ -39,13 +40,15 @@ class Singleton(WithAssumptions):
         >>> S.MySingleton is MySingleton()
         True
 
-    ** Developer notes **
-        The class is instanciated immediately at the point where it is defined
-        by calling cls.__new__(cls). This instance is cached and cls.__new__ is
-        rebound to return it directly.
+    Developer notes
+    ---------------
 
-        The original constructor is also cached to allow subclasses to access it
-        and have their own instance.
+    The class is instanciated immediately at the point where it is defined
+    by calling cls.__new__(cls). This instance is cached and cls.__new__ is
+    rebound to return it directly.
+
+    The original constructor is also cached to allow subclasses to access it
+    and have their own instance.
 
     """
 

@@ -40,38 +40,40 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     nothing but return that value. This can be used at the beginning of a
     function to ensure you are working with the correct type.
 
-    >>> from sympy import sympify
+    ::
 
-    >>> sympify(2).is_integer
-    True
-    >>> sympify(2).is_real
-    True
+        >>> from sympy import sympify
 
-    >>> sympify(2.0).is_real
-    True
-    >>> sympify("2.0").is_real
-    True
-    >>> sympify("2e-45").is_real
-    True
+        >>> sympify(2).is_integer
+        True
+        >>> sympify(2).is_real
+        True
 
-    If the expression could not be converted, a SympifyError is raised.
+        >>> sympify(2.0).is_real
+        True
+        >>> sympify("2.0").is_real
+        True
+        >>> sympify("2e-45").is_real
+        True
 
-    >>> sympify("x***2")
-    Traceback (most recent call last):
-    ...
-    SympifyError: SympifyError: "could not parse u'x***2'"
+    If the expression could not be converted, a SympifyError is raised::
+
+        >>> sympify("x***2")
+        Traceback (most recent call last):
+        ...
+        SympifyError: SympifyError: "could not parse u'x***2'"
 
 
     If the option ``strict`` is set to ``True``, only the types for which an
     explicit conversion has been defined are converted. In the other
-    cases, a SympifyError is raised.
+    cases, a SympifyError is raised::
 
-    >>> sympify(True)
-    True
-    >>> sympify(True, strict=True)
-    Traceback (most recent call last):
-    ...
-    SympifyError: SympifyError: True
+        >>> sympify(True)
+        True
+        >>> sympify(True, strict=True)
+        Traceback (most recent call last):
+        ...
+        SympifyError: SympifyError: True
 
     To extend `sympify` to convert custom objects (not derived from `Basic`),
     the static dictionary `convert` is provided. The custom converters are
@@ -80,11 +82,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     For example, all geometry objects derive from `GeometryEntity` class, and
     should not be altered by the converter, so we add the following after
-    defining that class:
+    defining that class::
 
-    >>> from sympy.core.sympify import converter
-    >>> from sympy.geometry.entity import GeometryEntity
-    >>> converter[GeometryEntity] = lambda x: x
+        >>> from sympy.core.sympify import converter
+        >>> from sympy.geometry.entity import GeometryEntity
+        >>> converter[GeometryEntity] = lambda x: x
 
     """
     try:
@@ -165,10 +167,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     return expr
 
 def _sympify(a):
-    """Short version of sympify for internal usage for __add__ and __eq__
-       methods where it is ok to allow some things (like Python integers
-       and floats) in the expression. This excludes things (like strings)
-       that are unwise to allow into such an expression.
+    """
+    Short version of sympify for internal usage for __add__ and __eq__
+    methods where it is ok to allow some things (like Python integers
+    and floats) in the expression. This excludes things (like strings)
+    that are unwise to allow into such an expression.
+
+    ::
 
        >>> from sympy import Integer
        >>> Integer(1) == 1

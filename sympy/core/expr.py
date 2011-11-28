@@ -13,22 +13,25 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def _diff_wrt(self):
-        """Is it allowed to take derivative wrt to this instance.
+        """
+        Is it allowed to take derivative wrt to this instance.
 
-        This determines if it is allowed to take derivatives wrt this object.
-        Subclasses such as Symbol, Function and Derivative should return True
-        to enable derivatives wrt them. The implementation in Derivative
-        separates the Symbol and non-Symbol _diff_wrt=True variables and
-        temporarily converts the non-Symbol vars in Symbols when performing
-        the differentiation.
+        This determines if it is allowed to take derivatives wrt this
+        object.  Subclasses such as Symbol, Function and Derivative should
+        return True to enable derivatives wrt them. The implementation in
+        Derivative separates the Symbol and non-Symbol _diff_wrt=True
+        variables and temporarily converts the non-Symbol vars in Symbols
+        when performing the differentiation.
 
         Note, see the docstring of Derivative for how this should work
-        mathematically.  In particular, note that expr.subs(yourclass, Symbol)
-        should be well-defined on a structural level, or this will lead to
-        inconsistent results.
+        mathematically.  In particular, note that expr.subs(yourclass,
+        Symbol) should be well-defined on a structural level, or this will
+        lead to inconsistent results.
 
         Examples
         ========
+
+        ::
 
             >>> from sympy import Expr
             >>> e = Expr()
@@ -199,7 +202,10 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if 'self' is a number.
+        """
+        Returns True if 'self' is a number.
+
+        ::
 
            >>> from sympy import log, Integral
            >>> from sympy.abc import x, y
@@ -221,7 +227,8 @@ class Expr(Basic, EvalfMixin):
         return all(obj.is_number for obj in self.iter_basic_args())
 
     def is_constant(self, *wrt):
-        """Return True if self is constant, otherwise False.
+        """
+        Return True if self is constant, otherwise False.
 
         If an expression has no free symbols then it is a constant. If
         there are free symbols it is possible that the expression is a
@@ -239,41 +246,41 @@ class Expr(Basic, EvalfMixin):
         expression.
 
 
-        Examples:
+        Examples::
 
-        >>> from sympy import cos, sin, Sum, S, pi
-        >>> from sympy.abc import a, n, x, y
-        >>> x.is_constant()
-        False
-        >>> S(2).is_constant()
-        True
-        >>> Sum(x, (x, 1, 10)).is_constant()
-        True
-        >>> Sum(x, (x, 1, n)).is_constant()
-        False
-        >>> Sum(x, (x, 1, n)).is_constant(y)
-        True
-        >>> Sum(x, (x, 1, n)).is_constant(n)
-        False
-        >>> Sum(x, (x, 1, n)).is_constant(x)
-        True
-        >>> eq = a*cos(x)**2 + a*sin(x)**2 - a
-        >>> eq.is_constant()
-        True
-        >>> eq.subs({x:pi, a:2}) == eq.subs({x:pi, a:3}) == 0
-        True
+            >>> from sympy import cos, sin, Sum, S, pi
+            >>> from sympy.abc import a, n, x, y
+            >>> x.is_constant()
+            False
+            >>> S(2).is_constant()
+            True
+            >>> Sum(x, (x, 1, 10)).is_constant()
+            True
+            >>> Sum(x, (x, 1, n)).is_constant()
+            False
+            >>> Sum(x, (x, 1, n)).is_constant(y)
+            True
+            >>> Sum(x, (x, 1, n)).is_constant(n)
+            False
+            >>> Sum(x, (x, 1, n)).is_constant(x)
+            True
+            >>> eq = a*cos(x)**2 + a*sin(x)**2 - a
+            >>> eq.is_constant()
+            True
+            >>> eq.subs({x:pi, a:2}) == eq.subs({x:pi, a:3}) == 0
+            True
 
-        >>> (0**x).is_constant()
-        False
-        >>> x.is_constant()
-        False
-        >>> (x**x).is_constant()
-        False
-        >>> one = cos(x)**2+sin(x)**2
-        >>> one.is_constant()
-        True
-        >>> ((one-1)**(x+1)).is_constant() # could be 0 or 1
-        False
+            >>> (0**x).is_constant()
+            False
+            >>> x.is_constant()
+            False
+            >>> (x**x).is_constant()
+            False
+            >>> one = cos(x)**2+sin(x)**2
+            >>> one.is_constant()
+            True
+            >>> ((one-1)**(x+1)).is_constant() # could be 0 or 1
+            False
         """
 
         free = self.free_symbols
@@ -424,13 +431,13 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of factors.
 
-        **Examples**
+        Examples::
 
-        >>> from sympy import sin, cos
-        >>> from sympy.abc import x, y
+            >>> from sympy import sin, cos
+            >>> from sympy.abc import x, y
 
-        >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
-        [2, x, y, sin(x), cos(x)]
+            >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
+            [2, x, y, sin(x), cos(x)]
 
         """
         if not self.is_Mul:
@@ -442,13 +449,13 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of terms.
 
-        **Examples**
+        Examples::
 
-        >>> from sympy import sin, cos
-        >>> from sympy.abc import x, y
+            >>> from sympy import sin, cos
+            >>> from sympy.abc import x, y
 
-        >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
-        [sin(x)**2*cos(x), sin(x)**2, 1]
+            >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
+            [sin(x)**2*cos(x), sin(x)**2, 1]
 
         """
         key, reverse = self._parse_order(order)
@@ -545,13 +552,13 @@ class Expr(Basic, EvalfMixin):
         The order is determined either from the O(...) term. If there
         is no O(...) term, it returns None.
 
-        Example:
+        Example::
 
-        >>> from sympy import O
-        >>> from sympy.abc import x
-        >>> (1 + x + O(x**2)).getn()
-        2
-        >>> (1 + x).getn()
+            >>> from sympy import O
+            >>> from sympy.abc import x
+            >>> (1 + x + O(x**2)).getn()
+            2
+            >>> (1 + x).getn()
 
         """
         o = self.getO()
@@ -590,22 +597,22 @@ class Expr(Basic, EvalfMixin):
         will contain the commutative arguments in the same order as they
         appeared in self.
 
-        Note: -1 is always separated from a Rational.
+        Note: -1 is always separated from a Rational::
 
-        >>> from sympy import symbols
-        >>> A, B = symbols('A B', commutative=0)
-        >>> x, y = symbols('x y')
-        >>> (-2*x*y).args_cnc()
-        [set([-1, 2, x, y]), []]
-        >>> (-2*x*y).args_cnc(clist=True)
-        [[-1, 2, x, y], []]
-        >>> (-2*x*A*B*y).args_cnc()
-        [set([-1, 2, x, y]), [A, B]]
+            >>> from sympy import symbols
+            >>> A, B = symbols('A B', commutative=0)
+            >>> x, y = symbols('x y')
+            >>> (-2*x*y).args_cnc()
+            [set([-1, 2, x, y]), []]
+            >>> (-2*x*y).args_cnc(clist=True)
+            [[-1, 2, x, y], []]
+            >>> (-2*x*A*B*y).args_cnc()
+            [set([-1, 2, x, y]), [A, B]]
 
-        The arg is always treated as a Mul:
+        The arg is always treated as a Mul::
 
-        >>> (-2 + x + A).args_cnc()
-        [set(), [x - 2 + A]]
+            >>> (-2 + x + A).args_cnc()
+            [set(), [x - 2 + A]]
         """
 
         if self.is_Mul:
@@ -637,67 +644,68 @@ class Expr(Basic, EvalfMixin):
 
         Examples::
 
-        >>> from sympy import symbols
-        >>> from sympy.abc import x, y, z
+            >>> from sympy import symbols
+            >>> from sympy.abc import x, y, z
 
-        You can select terms that have an explicit negative in front of them:
+        You can select terms that have an explicit negative in front of
+        them::
 
-        >>> (-x+2*y).coeff(-1)
-        x
-        >>> (x-2*y).coeff(-1)
-        2*y
+            >>> (-x+2*y).coeff(-1)
+            x
+            >>> (x-2*y).coeff(-1)
+            2*y
 
-        You can select terms with no rational coefficient:
+        You can select terms with no rational coefficient::
 
-        >>> (x+2*y).coeff(1)
-        x
-        >>> (3+2*x+4*x**2).coeff(1)
+            >>> (x+2*y).coeff(1)
+            x
+            >>> (3+2*x+4*x**2).coeff(1)
 
-        You can select terms that have a numerical term in front of them:
+        You can select terms that have a numerical term in front of them::
 
-        >>> (-x-2*y).coeff(2)
-        -y
-        >>> from sympy import sqrt
-        >>> (x+sqrt(2)*x).coeff(sqrt(2))
-        x
+            >>> (-x-2*y).coeff(2)
+            -y
+            >>> from sympy import sqrt
+            >>> (x+sqrt(2)*x).coeff(sqrt(2))
+            x
 
-        The matching is exact:
+        The matching is exact::
 
-        >>> (3+2*x+4*x**2).coeff(x)
-        2
-        >>> (3+2*x+4*x**2).coeff(x**2)
-        4
-        >>> (3+2*x+4*x**2).coeff(x**3)
-        >>> (z*(x+y)**2).coeff((x+y)**2)
-        z
-        >>> (z*(x+y)**2).coeff(x+y)
+            >>> (3+2*x+4*x**2).coeff(x)
+            2
+            >>> (3+2*x+4*x**2).coeff(x**2)
+            4
+            >>> (3+2*x+4*x**2).coeff(x**3)
+            >>> (z*(x+y)**2).coeff((x+y)**2)
+            z
+            >>> (z*(x+y)**2).coeff(x+y)
 
         In addition, no factoring is done, so 2 + y is not obtained from the
-        following:
+        following::
 
-        >>> (2*x+2+(x+1)*y).coeff(x+1)
-        y
+            >>> (2*x+2+(x+1)*y).coeff(x+1)
+            y
 
-        >>> n, m, o = symbols('n m o', commutative=False)
-        >>> n.coeff(n)
-        1
-        >>> (3*n).coeff(n)
-        3
-        >>> (n*m + m*n*m).coeff(n) # = (1 + m)*n*m
-        1 + m
-        >>> (n*m + m*n*m).coeff(n, right=True) # = (1 + m)*n*m
-        m
+            >>> n, m, o = symbols('n m o', commutative=False)
+            >>> n.coeff(n)
+            1
+            >>> (3*n).coeff(n)
+            3
+            >>> (n*m + m*n*m).coeff(n) # = (1 + m)*n*m
+            1 + m
+            >>> (n*m + m*n*m).coeff(n, right=True) # = (1 + m)*n*m
+            m
 
-        If there is more than one possible coefficient None is returned:
+        If there is more than one possible coefficient None is returned::
 
-        >>> (n*m + m*n).coeff(n)
+            >>> (n*m + m*n).coeff(n)
 
-        If there is only one possible coefficient, it is returned:
+        If there is only one possible coefficient, it is returned::
 
-        >>> (n*m + o*m*n).coeff(m*n)
-        o
-        >>> (n*m + o*m*n).coeff(m*n, right=1)
-        1
+            >>> (n*m + o*m*n).coeff(m*n)
+            o
+            >>> (n*m + o*m*n).coeff(m*n, right=1)
+            1
         """
         x = sympify(x)
         if not x: # 0 or None
@@ -750,13 +758,15 @@ class Expr(Basic, EvalfMixin):
             the first occurance from the left is returned, else the last
             occurance is returned. Return None if sub is not in l.
 
-            >> l = range(5)*2
-            >> find(l, [2, 3])
-            2
-            >> find(l, [2, 3], first=0)
-            7
-            >> find(l, [2, 4])
-            None
+            Example::
+
+                >> l = range(5)*2
+                >> find(l, [2, 3])
+                2
+                >> find(l, [2, 3], first=0)
+                7
+                >> find(l, [2, 4])
+                None
 
             """
             if not sub or not l or len(sub) > len(l):
@@ -875,17 +885,17 @@ class Expr(Basic, EvalfMixin):
         """
         Convert a polynomial to a SymPy expression.
 
-        **Examples**
+        Examples::
 
-        >>> from sympy import sin
-        >>> from sympy.abc import x, y
+            >>> from sympy import sin
+            >>> from sympy.abc import x, y
 
-        >>> f = (x**2 + x*y).as_poly(x, y)
-        >>> f.as_expr()
-        x**2 + x*y
+            >>> f = (x**2 + x*y).as_poly(x, y)
+            >>> f.as_expr()
+            x**2 + x*y
 
-        >>> sin(x).as_expr()
-        sin(x)
+            >>> sin(x).as_expr()
+            sin(x)
 
         """
         return self
@@ -895,27 +905,22 @@ class Expr(Basic, EvalfMixin):
         Extracts symbolic coefficient at the given expression. In other
         words, this functions separates 'self' into product of 'expr' and
         'expr' - free coefficient. If such separation is not possible it
-        will return None. ::
+        will return None::
 
             >>> from sympy import E, pi, sin, I, symbols
             >>> from sympy.abc import x, y
-
             >>> E.as_coefficient(E)
             1
             >>> (2*E).as_coefficient(E)
             2
             >>> (2*sin(E)*E).as_coefficient(E)
-
             >>> (2*E + x*E).as_coefficient(E)
             x + 2
             >>> (2*E*x + x).as_coefficient(E)
-
             >>> (E*(x + 1) + x).as_coefficient(E)
-
             >>> (2*pi*I).as_coefficient(pi*I)
             2
             >>> (2*I).as_coefficient(pi*I)
-
         """
 
         r = self.extract_multiplicatively(expr)
@@ -939,113 +944,118 @@ class Expr(Basic, EvalfMixin):
 
         * i will has no variable that appears in deps
         * d will be 1 or else have terms that contain variables that are in deps
-        * if self is an Add then self = i + d
-        * if self is a Mul then self = i*d
+        * if self is an Add then ``self = i + d``
+        * if self is a Mul then ``self = i*d``
         * if self is anything else, either tuple (self, S.One) or (S.One, self)
           is returned.
 
         To force the expression to be treated as an Add, use the hint as_Add=True
 
-        Examples:
+        Examples
+        --------
 
-        -- self is an Add
+        - self is an Add::
 
-        >>> from sympy import sin, cos, exp
-        >>> from sympy.abc import x, y, z
+            >>> from sympy import sin, cos, exp
+            >>> from sympy.abc import x, y, z
 
-        >>> (x + x*y).as_independent(x)
-        (0, x*y + x)
-        >>> (x + x*y).as_independent(y)
-        (x, x*y)
-        >>> (2*x*sin(x) + y + x + z).as_independent(x)
-        (y + z, 2*x*sin(x) + x)
-        >>> (2*x*sin(x) + y + x + z).as_independent(x, y)
-        (z, 2*x*sin(x) + x + y)
+            >>> (x + x*y).as_independent(x)
+            (0, x*y + x)
+            >>> (x + x*y).as_independent(y)
+            (x, x*y)
+            >>> (2*x*sin(x) + y + x + z).as_independent(x)
+            (y + z, 2*x*sin(x) + x)
+            >>> (2*x*sin(x) + y + x + z).as_independent(x, y)
+            (z, 2*x*sin(x) + x + y)
 
-        -- self is a Mul
+        - self is a Mul::
 
-        >>> (x*sin(x)*cos(y)).as_independent(x)
-        (cos(y), x*sin(x))
+            >>> (x*sin(x)*cos(y)).as_independent(x)
+            (cos(y), x*sin(x))
 
-        non-commutative terms cannot always be separated out when self is a Mul
+        - non-commutative terms cannot always be separated out when self is
+          a Mul::
 
-        >>> from sympy import symbols
-        >>> n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
-        >>> (n1 + n1*n2).as_independent(n2)
-        (n1, n1*n2)
-        >>> (n2*n1 + n1*n2).as_independent(n2)
-        (0, n1*n2 + n2*n1)
-        >>> (n1*n2*n3).as_independent(n1)
-        (1, n1*n2*n3)
-        >>> (n1*n2*n3).as_independent(n2)
-        (n1, n2*n3)
-        >>> ((x-n1)*(x-y)).as_independent(x)
-        (1, (x - y)*(x - n1))
+              >>> from sympy import symbols
+              >>> n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
+              >>> (n1 + n1*n2).as_independent(n2)
+              (n1, n1*n2)
+              >>> (n2*n1 + n1*n2).as_independent(n2)
+              (0, n1*n2 + n2*n1)
+              >>> (n1*n2*n3).as_independent(n1)
+              (1, n1*n2*n3)
+              >>> (n1*n2*n3).as_independent(n2)
+              (n1, n2*n3)
+              >>> ((x-n1)*(x-y)).as_independent(x)
+              (1, (x - y)*(x - n1))
 
-        -- self is anything else:
+        - self is anything else::
 
-        >>> (sin(x)).as_independent(x)
-        (1, sin(x))
-        >>> (sin(x)).as_independent(y)
-        (sin(x), 1)
-        >>> exp(x+y).as_independent(x)
-        (1, exp(x + y))
+              >>> (sin(x)).as_independent(x)
+              (1, sin(x))
+              >>> (sin(x)).as_independent(y)
+              (sin(x), 1)
+              >>> exp(x+y).as_independent(x)
+              (1, exp(x + y))
 
-        -- force self to be treated as an Add:
+        - force self to be treated as an Add::
 
-        >>> (3*x).as_independent(x, as_Add=True)
-        (0, 3*x)
+              >>> (3*x).as_independent(x, as_Add=True)
+              (0, 3*x)
 
-        -- force self to be treated as a Mul:
+        - force self to be treated as a Mul::
 
-        >>> (3+x).as_independent(x, as_Add=False)
-        (1, x + 3)
-        >>> (-3+x).as_independent(x, as_Add=False)
-        (1, x - 3)
+              >>> (3+x).as_independent(x, as_Add=False)
+              (1, x + 3)
+              >>> (-3+x).as_independent(x, as_Add=False)
+              (1, x - 3)
 
-        Note how the below differs from the above in making the
-        constant on the dep term positive.
+           Note how the below differs from the above in making the constant
+           on the dep term positive::
 
-        >>> (y*(-3+x)).as_independent(x)
-        (y, x - 3)
+               >>> (y*(-3+x)).as_independent(x)
+               (y, x - 3)
 
-        -- use .as_independent() for true independence testing instead
-           of .has(). The former considers only symbols in the free
-           symbols while the latter considers all symbols
+        - use .as_independent() for true independence testing instead of
+          .has(). The former considers only symbols in the free symbols
+          while the latter considers all symbols::
 
-        >>> from sympy import Integral
-        >>> I = Integral(x, (x, 1, 2))
-        >>> I.has(x)
-        True
-        >>> x in I.free_symbols
-        False
-        >>> I.as_independent(x) == (I, 1)
-        True
-        >>> (I + x).as_independent(x) == (I, x)
-        True
+                >>> from sympy import Integral
+                >>> I = Integral(x, (x, 1, 2))
+                >>> I.has(x)
+                True
+                >>> x in I.free_symbols
+                False
+                >>> I.as_independent(x) == (I, 1)
+                True
+                >>> (I + x).as_independent(x) == (I, x)
+                True
 
-        Note: when trying to get independent terms, a separation method
-        might need to be used first. In this case, it is important to keep
-        track of what you send to this routine so you know how to interpret
-        the returned values
+        .. note::
+           when trying to get independent terms, a separation method
+           might need to be used first. In this case, it is important
+           to keep track of what you send to this routine so you know
+           how to interpret the returned values::
 
-        >>> from sympy import separatevars, log
-        >>> separatevars(exp(x+y)).as_independent(x)
-        (exp(y), exp(x))
-        >>> (x + x*y).as_independent(y)
-        (x, x*y)
-        >>> separatevars(x + x*y).as_independent(y)
-        (x, y + 1)
-        >>> (x*(1 + y)).as_independent(y)
-        (x, y + 1)
-        >>> (x*(1 + y)).expand(mul=True).as_independent(y)
-        (x, x*y)
-        >>> a, b=symbols('a b',positive=True)
-        >>> (log(a*b).expand(log=True)).as_independent(b)
-        (log(a), log(b))
+            >>> from sympy import separatevars, log
+            >>> separatevars(exp(x+y)).as_independent(x)
+            (exp(y), exp(x))
+            >>> (x + x*y).as_independent(y)
+            (x, x*y)
+            >>> separatevars(x + x*y).as_independent(y)
+            (x, y + 1)
+            >>> (x*(1 + y)).as_independent(y)
+            (x, y + 1)
+            >>> (x*(1 + y)).expand(mul=True).as_independent(y)
+            (x, x*y)
+            >>> a, b=symbols('a b',positive=True)
+            >>> (log(a*b).expand(log=True)).as_independent(b)
+            (log(a), log(b))
 
-        See also: .separatevars(), .expand(log=True),
-                  .as_two_terms(), .as_coeff_add(), .as_coeff_mul()
+        .. seealso::
+           :meth:`sympy.separatevars()`, :meth:`sympy.expand(log=True)`,
+           :meth:`Mul.as_two_terms()`, :meth:`.as_coeff_add()`,
+           :meth:`.as_coeff_mul()`
         """
         from sympy.utilities.iterables import sift
 
@@ -1098,14 +1108,16 @@ class Expr(Basic, EvalfMixin):
             return Mul(*indep), Mul(*depend)
 
     def as_real_imag(self, deep=True):
-        """Performs complex expansion on 'self' and returns a tuple
-           containing collected both real and imaginary parts. This
-           method can't be confused with re() and im() functions,
-           which does not perform complex expansion at evaluation.
+        """
+        Performs complex expansion on 'self' and returns a tuple containing
+        collected both real and imaginary parts. This method can't be
+        confused with re() and im() functions, which does not perform
+        complex expansion at evaluation.
 
-           However it is possible to expand both re() and im()
-           functions and get exactly the same results as with
-           a single call to this function.
+        However it is possible to expand both re() and im() functions and
+        get exactly the same results as with a single call to this function.
+
+        ::
 
            >>> from sympy import symbols, I
 
@@ -1128,19 +1140,21 @@ class Expr(Basic, EvalfMixin):
         return d
 
     def as_coefficients_dict(self):
-        """Return a dictionary mapping terms to their Rational coefficient.
+        """
+        Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
-        **Example**
-        >>> from sympy.abc import a, x
-        >>> (3*x + a*x + 4).as_coefficients_dict()
-        {1: 4, x: 3, a*x: 1}
-        >>> _[a]
-        0
-        >>> (3*a*x).as_coefficients_dict()
-        {a*x: 3}
+        Example::
+
+            >>> from sympy.abc import a, x
+            >>> (3*x + a*x + 4).as_coefficients_dict()
+            {1: 4, x: 3, a*x: 1}
+            >>> _[a]
+            0
+            >>> (3*a*x).as_coefficients_dict()
+            {a*x: 3}
 
         """
         c, m = self.as_coeff_Mul()
@@ -1174,7 +1188,8 @@ class Expr(Basic, EvalfMixin):
         return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
-        """Return the tuple (c, args) where self is written as a Mul, ``m``.
+        """
+        Return the tuple (c, args) where self is written as a Mul, ``m``.
 
         c should be a Rational multiplied by any terms of the Mul that are
         independent of deps.
@@ -1192,16 +1207,18 @@ class Expr(Basic, EvalfMixin):
         - if you want to split self into an independent and dependent parts
           use self.as_independent(\*deps)
 
-        >>> from sympy import S
-        >>> from sympy.abc import x, y
-        >>> (S(3)).as_coeff_mul()
-        (3, ())
-        >>> (3*x*y).as_coeff_mul()
-        (3, (x, y))
-        >>> (3*x*y).as_coeff_mul(x)
-        (3*y, (x,))
-        >>> (3*y).as_coeff_mul(x)
-        (3*y, ())
+        Example::
+
+            >>> from sympy import S
+            >>> from sympy.abc import x, y
+            >>> (S(3)).as_coeff_mul()
+            (3, ())
+            >>> (3*x*y).as_coeff_mul()
+            (3, (x, y))
+            >>> (3*x*y).as_coeff_mul(x)
+            (3*y, (x,))
+            >>> (3*y).as_coeff_mul(x)
+            (3*y, ())
         """
         if deps:
             if not self.has(*deps):
@@ -1209,7 +1226,8 @@ class Expr(Basic, EvalfMixin):
         return S.One, (self,)
 
     def as_coeff_add(self, *deps):
-        """Return the tuple (c, args) where self is written as an Add, ``a``.
+        """
+        Return the tuple (c, args) where self is written as an Add, ``a``.
 
         c should be a Rational added to any terms of the Add that are
         independent of deps.
@@ -1227,16 +1245,18 @@ class Expr(Basic, EvalfMixin):
         - if you want to split self into an independent and dependent parts
           use self.as_independent(\*deps)
 
-        >>> from sympy import S
-        >>> from sympy.abc import x, y
-        >>> (S(3)).as_coeff_add()
-        (3, ())
-        >>> (3 + x + y).as_coeff_add()
-        (3, (y, x))
-        >>> (3 + x +y).as_coeff_add(x)
-        (y + 3, (x,))
-        >>> (3 + y).as_coeff_add(x)
-        (y + 3, ())
+        Example::
+
+            >>> from sympy import S
+            >>> from sympy.abc import x, y
+            >>> (S(3)).as_coeff_add()
+            (3, ())
+            >>> (3 + x + y).as_coeff_add()
+            (3, (y, x))
+            >>> (3 + x +y).as_coeff_add(x)
+            (y + 3, (x,))
+            >>> (3 + y).as_coeff_add(x)
+            (y + 3, ())
 
         """
         if deps:
@@ -1245,21 +1265,23 @@ class Expr(Basic, EvalfMixin):
         return S.Zero, (self,)
 
     def primitive(self):
-        """Return the positive Rational that can be extracted non-recursively
+        """
+        Return the positive Rational that can be extracted non-recursively
         from every term of self (i.e., self is treated like an Add). This is
-        like the as_coeff_Mul() method but primitive always extracts a positive
-        Rational (never a negative or a Float).
+        like the as_coeff_Mul() method but primitive always extracts a
+        positive Rational (never a negative or a Float).
 
-        **Examples**
-        >>> from sympy.abc import x
-        >>> (3*(x + 1)**2).primitive()
-        (3, (x + 1)**2)
-        >>> a = (6*x + 2); a.primitive()
-        (2, 3*x + 1)
-        >>> b = (x/2 + 3); b.primitive()
-        (1/2, x + 6)
-        >>> (a*b).primitive() == (1, a*b)
-        True
+        Examples::
+
+            >>> from sympy.abc import x
+            >>> (3*(x + 1)**2).primitive()
+            (3, (x + 1)**2)
+            >>> a = (6*x + 2); a.primitive()
+            (2, 3*x + 1)
+            >>> b = (x/2 + 3); b.primitive()
+            (1/2, x + 6)
+            >>> (a*b).primitive() == (1, a*b)
+            True
         """
         c, r = self.as_coeff_mul()
         r = Mul._from_args(r)
@@ -1268,42 +1290,46 @@ class Expr(Basic, EvalfMixin):
         return c, r
 
     def as_content_primitive(self):
-        """This method should recursively remove a Rational from all arguments
+        """
+        This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
-        should always be positive and Mul(*foo.as_content_primitive()) == foo.
-        The primitive need no be in canonical form and should try to preserve
-        the underlying structure if possible (i.e. expand_mul should not be
-        applied to self).
+        should always be positive and Mul(*foo.as_content_primitive()) ==
+        foo.  The primitive need no be in canonical form and should try to
+        preserve the underlying structure if possible (i.e. expand_mul
+        should not be applied to self).
 
-        **Examples**
-        >>> from sympy.abc import x, y, z
+        Examples::
 
-        >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
+            >>> from sympy.abc import x, y, z
 
-        The as_content_primitive function is recursive and retains structure:
+            >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
 
-        >>> eq.as_content_primitive()
-        (2, x + 3*y*(y + 1) + 1)
+        The as_content_primitive function is recursive and retains
+        structure::
 
-        Integer powers will have Rationals extracted from the base:
+            >>> eq.as_content_primitive()
+            (2, x + 3*y*(y + 1) + 1)
 
-        >>> ((2 + 6*x)**2).as_content_primitive()
-        (4, (3*x + 1)**2)
-        >>> ((2 + 6*x)**(2*y)).as_content_primitive()
-        (1, (2*(3*x + 1))**(2*y))
+        Integer powers will have Rationals extracted from the base::
 
-        Terms may end up joining once their as_content_primitives are added:
+            >>> ((2 + 6*x)**2).as_content_primitive()
+            (4, (3*x + 1)**2)
+            >>> ((2 + 6*x)**(2*y)).as_content_primitive()
+            (1, (2*(3*x + 1))**(2*y))
 
-        >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
-        (11, x*(y + 1))
-        >>> ((3*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
-        (9, x*(y + 1))
-        >>> ((3*(z*(1 + y)) + 2.0*x*(3 + 3*y))).as_content_primitive()
-        (1, 6.0*x*(y + 1) + 3*z*(y + 1))
-        >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
-        (121, x**2*(y + 1)**2)
-        >>> ((5*(x*(1 + y)) + 2.0*x*(3 + 3*y))**2).as_content_primitive()
-        (1, 121.0*x**2*(y + 1)**2)
+        Terms may end up joining once their as_content_primitives are
+        added::
+
+            >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
+            (11, x*(y + 1))
+            >>> ((3*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
+            (9, x*(y + 1))
+            >>> ((3*(z*(1 + y)) + 2.0*x*(3 + 3*y))).as_content_primitive()
+            (1, 6.0*x*(y + 1) + 3*z*(y + 1))
+            >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
+            (121, x**2*(y + 1)**2)
+            >>> ((5*(x*(1 + y)) + 2.0*x*(3 + 3*y))**2).as_content_primitive()
+            (1, 121.0*x**2*(y + 1)**2)
         """
         return S.One, self
 
@@ -1322,26 +1348,29 @@ class Expr(Basic, EvalfMixin):
         return n/d
 
     def extract_multiplicatively(self, c):
-        """Return None if it's not possible to make self in the form
-           c * something in a nice way, i.e. preserving the properties
-           of arguments of self.
+        """
+        Return None if it's not possible to make self in the form
+        c \* something in a nice way, i.e. preserving the properties
+        of arguments of self.
 
-           >>> from sympy import symbols, Rational
+           Example::
 
-           >>> x, y = symbols('x,y', real=True)
+               >>> from sympy import symbols, Rational
 
-           >>> ((x*y)**3).extract_multiplicatively(x**2 * y)
-           x*y**2
+               >>> x, y = symbols('x,y', real=True)
 
-           >>> ((x*y)**3).extract_multiplicatively(x**4 * y)
+               >>> ((x*y)**3).extract_multiplicatively(x**2 * y)
+               x*y**2
 
-           >>> (2*x).extract_multiplicatively(2)
-           x
+               >>> ((x*y)**3).extract_multiplicatively(x**4 * y)
 
-           >>> (2*x).extract_multiplicatively(3)
+               >>> (2*x).extract_multiplicatively(2)
+               x
 
-           >>> (Rational(1,2)*x).extract_multiplicatively(3)
-           x/6
+               >>> (2*x).extract_multiplicatively(3)
+
+               >>> (Rational(1,2)*x).extract_multiplicatively(3)
+               x/6
 
         """
         c = sympify(c)
@@ -1430,26 +1459,29 @@ class Expr(Basic, EvalfMixin):
                     return self.base ** (new_exp)
 
     def extract_additively(self, c):
-        """Return None if it's not possible to make self in the form
-           something + c in a nice way, i.e. preserving the properties
-           of arguments of self.
+        """
+        Return None if it's not possible to make self in the form
+        something + c in a nice way, i.e. preserving the properties
+        of arguments of self.
 
-           >>> from sympy import symbols
+        Example::
 
-           >>> x, y = symbols('x,y', real=True)
+               >>> from sympy import symbols
 
-           >>> ((x*y)**3).extract_additively(1)
+               >>> x, y = symbols('x,y', real=True)
 
-           >>> (x+1).extract_additively(x)
-           1
+               >>> ((x*y)**3).extract_additively(1)
 
-           >>> (x+1).extract_additively(2*x)
+               >>> (x+1).extract_additively(x)
+               1
 
-           >>> (x+1).extract_additively(-x)
-           2*x + 1
+               >>> (x+1).extract_additively(2*x)
 
-           >>> (-x+1).extract_additively(2*x)
-           -3*x + 1
+               >>> (x+1).extract_additively(-x)
+               2*x + 1
+
+               >>> (-x+1).extract_additively(2*x)
+               -3*x + 1
 
         """
         c = sympify(c)
@@ -1515,17 +1547,20 @@ class Expr(Basic, EvalfMixin):
                     return new_coeff * c
 
     def could_extract_minus_sign(self):
-        """Canonical way to choose an element in the set {e, -e} where
-           e is any expression. If the canonical element is e, we have
-           e.could_extract_minus_sign() == True, else
-           e.could_extract_minus_sign() == False.
+        """
+        Canonical way to choose an element in the set ``{e, -e}`` where
+        e is any expression. If the canonical element is e, we have
+        e.could_extract_minus_sign() == True, else
+        e.could_extract_minus_sign() == False.
 
-           For any expression, the set ``{e.could_extract_minus_sign(),
-           (-e).could_extract_minus_sign()}`` must be ``{True, False}``.
+        For any expression, the set ``{e.could_extract_minus_sign(),
+        (-e).could_extract_minus_sign()}`` must be ``{True, False}``.
 
-           >>> from sympy.abc import x, y
-           >>> (x-y).could_extract_minus_sign() != (y-x).could_extract_minus_sign()
-           True
+        Example::
+
+               >>> from sympy.abc import x, y
+               >>> (x-y).could_extract_minus_sign() != (y-x).could_extract_minus_sign()
+               True
 
         """
         negative_self = -self
@@ -1565,54 +1600,55 @@ class Expr(Basic, EvalfMixin):
 
         This checks if self is an exact polynomial in syms.  This function
         returns False for expressions that are "polynomials" with symbolic
-        exponents.  Thus, you should be able to apply polynomial algorithms to
-        expressions for which this returns True, and Poly(expr, \*syms) should
-        work only if and only if expr.is_polynomial(\*syms) returns True. The
-        polynomial does not have to be in expanded form.  If no symbols are
-        given, all free symbols in the expression will be used.
+        exponents.  Thus, you should be able to apply polynomial algorithms
+        to expressions for which this returns True, and Poly(expr, \*syms)
+        should work only if and only if expr.is_polynomial(\*syms) returns
+        True. The polynomial does not have to be in expanded form.  If no
+        symbols are given, all free symbols in the expression will be used.
 
         This is not part of the assumptions system.  You cannot do
         Symbol('z', polynomial=True).
 
-        **Examples**
+        Examples::
 
-        >>> from sympy import Symbol
-        >>> x = Symbol('x')
-        >>> ((x**2 + 1)**4).is_polynomial(x)
-        True
-        >>> ((x**2 + 1)**4).is_polynomial()
-        True
-        >>> (2**x + 1).is_polynomial(x)
-        False
+            >>> from sympy import Symbol
+            >>> x = Symbol('x')
+            >>> ((x**2 + 1)**4).is_polynomial(x)
+            True
+            >>> ((x**2 + 1)**4).is_polynomial()
+            True
+            >>> (2**x + 1).is_polynomial(x)
+            False
 
 
-        >>> n = Symbol('n', nonnegative=True, integer=True)
-        >>> (x**n + 1).is_polynomial(x)
-        False
+            >>> n = Symbol('n', nonnegative=True, integer=True)
+            >>> (x**n + 1).is_polynomial(x)
+            False
 
-        This function does not attempt any nontrivial simplifications that may
-        result in an expression that does not appear to be a polynomial to
-        become one.
+        This function does not attempt any nontrivial simplifications that
+        may result in an expression that does not appear to be a polynomial
+        to become one::
 
-        >>> from sympy import sqrt, factor, cancel
-        >>> y = Symbol('y', positive=True)
-        >>> a = sqrt(y**2 + 2*y + 1)
-        >>> a.is_polynomial(y)
-        False
-        >>> factor(a)
-        y + 1
-        >>> factor(a).is_polynomial(y)
-        True
+            >>> from sympy import sqrt, factor, cancel
+            >>> y = Symbol('y', positive=True)
+            >>> a = sqrt(y**2 + 2*y + 1)
+            >>> a.is_polynomial(y)
+            False
+            >>> factor(a)
+            y + 1
+            >>> factor(a).is_polynomial(y)
+            True
 
-        >>> b = (y**2 + 2*y + 1)/(y + 1)
-        >>> b.is_polynomial(y)
-        False
-        >>> cancel(b)
-        y + 1
-        >>> cancel(b).is_polynomial(y)
-        True
+            >>> b = (y**2 + 2*y + 1)/(y + 1)
+            >>> b.is_polynomial(y)
+            False
+            >>> cancel(b)
+            y + 1
+            >>> cancel(b).is_polynomial(y)
+            True
 
-        See also .is_rational_function()
+        .. seealso:
+           :meth:`.is_rational_function()`
 
         """
         if syms:
@@ -1634,51 +1670,52 @@ class Expr(Basic, EvalfMixin):
     def is_rational_function(self, *syms):
         """
         Test whether function is a ratio of two polynomials in the given
-        symbols, syms. When syms is not given, all free symbols will be used.
-        The rational function does not have to be in expanded or in any kind of
-        canonical form.
+        symbols, syms. When syms is not given, all free symbols will be
+        used.  The rational function does not have to be in expanded or in
+        any kind of canonical form.
 
         This function returns False for expressions that are "rational
-        functions" with symbolic exponents.  Thus, you should be able to call
-        .as_numer_denom() and apply polynomial algorithms to the result for
-        expressions for which this returns True.
+        functions" with symbolic exponents.  Thus, you should be able to
+        call :meth:`.as_numer_denom()` and apply polynomial algorithms to
+        the result for expressions for which this returns True.
 
         This is not part of the assumptions system.  You cannot do
         Symbol('z', rational_function=True).
 
-        Example:
+        Example::
 
-        >>> from sympy import Symbol, sin
-        >>> from sympy.abc import x, y
+            >>> from sympy import Symbol, sin
+            >>> from sympy.abc import x, y
 
-        >>> (x/y).is_rational_function()
-        True
+            >>> (x/y).is_rational_function()
+            True
 
-        >>> (x**2).is_rational_function()
-        True
+            >>> (x**2).is_rational_function()
+            True
 
-        >>> (x/sin(y)).is_rational_function(y)
-        False
+            >>> (x/sin(y)).is_rational_function(y)
+            False
 
-        >>> n = Symbol('n', integer=True)
-        >>> (x**n + 1).is_rational_function(x)
-        False
+            >>> n = Symbol('n', integer=True)
+            >>> (x**n + 1).is_rational_function(x)
+            False
 
-        This function does not attempt any nontrivial simplifications that may
-        result in an expression that does not appear to be a rational function
-        to become one.
+        This function does not attempt any nontrivial simplifications that
+        may result in an expression that does not appear to be a rational
+        function to become one::
 
-        >>> from sympy import sqrt, factor, cancel
-        >>> y = Symbol('y', positive=True)
-        >>> a = sqrt(y**2 + 2*y + 1)/y
-        >>> a.is_rational_function(y)
-        False
-        >>> factor(a)
-        (y + 1)/y
-        >>> factor(a).is_rational_function(y)
-        True
+            >>> from sympy import sqrt, factor, cancel
+            >>> y = Symbol('y', positive=True)
+            >>> a = sqrt(y**2 + 2*y + 1)/y
+            >>> a.is_rational_function(y)
+            False
+            >>> factor(a)
+            (y + 1)/y
+            >>> factor(a).is_rational_function(y)
+            True
 
-        See also is_rational_function().
+        .. seealso::
+           :meth:`.is_rational_function()`.
 
         """
         if syms:
@@ -1698,17 +1735,17 @@ class Expr(Basic, EvalfMixin):
 
     def series(self, x=None, x0=0, n=6, dir="+"):
         """
-        Series expansion of "self" around ``x = x0`` yielding either terms of
-        the series one by one (the lazy series given when n=None), else
+        Series expansion of "self" around ``x = x0`` yielding either terms
+        of the series one by one (the lazy series given when n=None), else
         all the terms at once when n != None.
 
         Note: when n != None, if an O() term is returned then the x in the
         in it and the entire expression represents x - x0, the displacement
-        from x0. (If there is no O() term then the series was exact and x has
-        it's normal meaning.) This is currently necessary since sympy's O()
-        can only represent terms at x0=0. So instead of::
+        from x0. (If there is no O() term then the series was exact and x
+        has it's normal meaning.) This is currently necessary since sympy's
+        O() can only represent terms at x0=0. So instead of::
 
-          cos(x).series(x0=1, n=2) --> (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
+            cos(x).series(x0=1, n=2) --> (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
 
         which graphically looks like this::
 
@@ -1722,7 +1759,7 @@ class Expr(Basic, EvalfMixin):
 
         the following is returned instead::
 
-        -x*sin(1) + cos(1) + O(x**2)
+            x*sin(1) + cos(1) + O(x**2)
 
         whose graph is this::
 
@@ -1737,38 +1774,39 @@ class Expr(Basic, EvalfMixin):
         which is identical to ``cos(x + 1).series(n=2)``.
 
         Usage:
-            Returns the series expansion of "self" around the point ``x = x0``
-            with respect to ``x`` up to O(x**n) (default n is 6).
 
-            If ``x=None`` and ``self`` is univariate, the univariate symbol will
-            be supplied, otherwise an error will be raised.
+        Returns the series expansion of "self" around the point ``x = x0``
+        with respect to ``x`` up to O(x**n) (default n is 6).
 
-            >>> from sympy import cos, exp
-            >>> from sympy.abc import x, y
-            >>> cos(x).series()
-            1 - x**2/2 + x**4/24 + O(x**6)
-            >>> cos(x).series(n=4)
-            1 - x**2/2 + O(x**4)
-            >>> e = cos(x + exp(y))
-            >>> e.series(y, n=2)
-            cos(x + 1) - y*sin(x + 1) + O(y**2)
-            >>> e.series(x, n=2)
-            cos(exp(y)) - x*sin(exp(y)) + O(x**2)
+        If ``x=None`` and ``self`` is univariate, the univariate symbol will
+        be supplied, otherwise an error will be raised::
 
-            If ``n=None`` then an iterator of the series terms will be returned.
+                >>> from sympy import cos, exp
+                >>> from sympy.abc import x, y
+                >>> cos(x).series()
+                1 - x**2/2 + x**4/24 + O(x**6)
+                >>> cos(x).series(n=4)
+                1 - x**2/2 + O(x**4)
+                >>> e = cos(x + exp(y))
+                >>> e.series(y, n=2)
+                cos(x + 1) - y*sin(x + 1) + O(y**2)
+                >>> e.series(x, n=2)
+                cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
-            >>> term=cos(x).series(n=None)
-            >>> [term.next() for i in range(2)]
-            [1, -x**2/2]
+        If ``n=None`` then an iterator of the series terms will be returned.::
 
-            For ``dir=+`` (default) the series is calculated from the right and
-            for ``dir=-`` the series from the left. For smooth functions this
-            flag will not alter the results.
+                >>> term=cos(x).series(n=None)
+                >>> [term.next() for i in range(2)]
+                [1, -x**2/2]
 
-            >>> abs(x).series(dir="+")
-            x
-            >>> abs(x).series(dir="-")
-            -x
+        For ``dir=+`` (default) the series is calculated from the right and
+        for ``dir=-`` the series from the left. For smooth functions this
+        flag will not alter the results.::
+
+                >>> abs(x).series(dir="+")
+                x
+                >>> abs(x).series(dir="-")
+                -x
 
         """
         if x is None:
@@ -1899,19 +1937,20 @@ class Expr(Basic, EvalfMixin):
         """
         Wrapper for series yielding an iterator of the terms of the series.
 
-        Note: an infinite series will yield an infinite iterator. The following,
-        for exaxmple, will never terminate. It will just keep printing terms
-        of the sin(x) series::
+        Note: an infinite series will yield an infinite iterator. The
+        following, for exaxmple, will never terminate. It will just keep
+        printing terms of the sin(x) series::
 
           for term in sin(x).lseries(x):
               print term
 
         The advantage of lseries() over nseries() is that many times you are
-        just interested in the next term in the series (i.e. the first term for
-        example), but you don't know how many you should ask for in nseries()
-        using the "n" parameter.
+        just interested in the next term in the series (i.e. the first term
+        for example), but you don't know how many you should ask for in
+        nseries() using the "n" parameter.
 
-        See also nseries().
+        .. seealso::
+           :meth:`.nseries()`.
         """
         return self.series(x, x0, n=None, dir=dir)
 
@@ -1948,10 +1987,10 @@ class Expr(Basic, EvalfMixin):
         """
         Wrapper to _eval_nseries if assumptions allow, else to series.
 
-        If x is given, x0 is 0, dir='+', and self has x, then _eval_nseries is
-        called. This calculates "n" terms in the innermost expressions and
-        then builds up the final series just by "cross-multiplying" everything
-        out.
+        If x is given, x0 is 0, dir='+', and self has x, then _eval_nseries
+        is called. This calculates "n" terms in the innermost expressions
+        and then builds up the final series just by "cross-multiplying"
+        everything out.
 
         Advantage -- it's fast, because we don't have to determine how many
         terms we need to calculate in advance.
@@ -1964,7 +2003,7 @@ class Expr(Basic, EvalfMixin):
         wrapper to series which will try harder to return the correct
         number of terms.
 
-        See also lseries().
+        See also :meth:`.lseries()`.
         """
         if x and not self.has(x):
             return self
@@ -1976,12 +2015,12 @@ class Expr(Basic, EvalfMixin):
 
     def _eval_nseries(self, x, n, logx):
         """
-        Return terms of series for self up to O(x**n) at x=0
+        Return terms of series for self up to ``O(x**n)`` at ``x=0``
         from the positive direction.
 
-        This is a method that should be overridden in subclasses. Users should
-        never call this method directly (use .nseries() instead), so you don't
-        have to write docstrings for _eval_nseries().
+        This is a method that should be overridden in subclasses. Users
+        should never call this method directly (use .nseries() instead), so
+        you don't have to write docstrings for _eval_nseries().
         """
         raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
 
@@ -2023,17 +2062,17 @@ class Expr(Basic, EvalfMixin):
         """
         Returns the leading term.
 
-        Example:
+        Example::
 
-        >>> from sympy.abc import x
-        >>> (1+x+x**2).as_leading_term(x)
-        1
-        >>> (1/x**2+x+x**2).as_leading_term(x)
-        x**(-2)
+            >>> from sympy.abc import x
+            >>> (1+x+x**2).as_leading_term(x)
+            1
+            >>> (1/x**2+x+x**2).as_leading_term(x)
+            x**(-2)
 
-        Note:
-
-        self is assumed to be the result returned by Basic.series().
+        .. note::
+           self is assumed to be the result returned by
+           :meth:`Basic.series()`.
         """
         from sympy import powsimp
         if len(symbols)>1:
@@ -2056,7 +2095,7 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def as_coeff_exponent(self, x):
-        """ c*x**e -> c,e where x can be any symbolic expression.
+        """ :math:`c*x**e` -> c,e where x can be any symbolic expression.
         """
         x = sympify(x)
         wc = Wild('wc')
@@ -2071,19 +2110,19 @@ class Expr(Basic, EvalfMixin):
 
     def leadterm(self, x):
         """
-        Returns the leading term a*x**b as a tuple (a, b).
+        Returns the leading term :math:`a*x**b` as a tuple (a, b).
 
-        Example:
+        Example::
 
-        >>> from sympy.abc import x
-        >>> (1+x+x**2).leadterm(x)
-        (1, 0)
-        >>> (1/x**2+x+x**2).leadterm(x)
-        (1, -2)
+            >>> from sympy.abc import x
+            >>> (1+x+x**2).leadterm(x)
+            (1, 0)
+            >>> (1/x**2+x+x**2).leadterm(x)
+            (1, -2)
 
-        Note:
-
-        self is assumed to be the result returned by Basic.series().
+        .. note::
+           self is assumed to be the result returned by
+           :meth:`Basic.series()`.
         """
         from sympy import powsimp
         x = sympify(x)
