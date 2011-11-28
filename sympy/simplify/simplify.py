@@ -839,6 +839,8 @@ def _trigsimp(expr, deep=False):
                 (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
                 (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
                 (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
+                (a*(cos(b)+1)**c*(cos(b)-1)**c, a*sin(b)**(2*c)),
+                (a*(sin(b)+1)**c*(sin(b)-1)**c, a*cos(b)**(2*c)),
         )
         for pattern, simp in matchers:
             res = expr.match(pattern)

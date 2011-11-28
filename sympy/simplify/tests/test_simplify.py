@@ -120,6 +120,11 @@ def test_trigsimp_issues_1395_1526_1562():
     # check for multiple patterns
     assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
             1/(tan(x)**2*tan(y)**2)
+    # issue 2849
+    assert trigsimp(diff(integrate(cos(x)/sin(x)**3, x), x)) == \
+            cos(x)/sin(x)**3
+    assert trigsimp(diff(integrate(sin(x)/cos(x)**3, x), x)) == \
+            sin(x)/cos(x)**3
 
 @XFAIL
 def test_separatevars_hollow_factoring():
