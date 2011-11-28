@@ -1,0 +1,162 @@
+#!/usr/bin/env python
+
+"""
+This procedure test wiki pages against master or release repositories.
+
+Assuming that sympy.wiki and release version are placed near master repository.
+E.g.
+
+    ./sympy/
+    ./sympy.wiki/
+    ./sympy-0.7.1/
+
+If the directories are not the same, then they can be tuned by those options:
+
+    -a AGAINST, --against=AGAINST
+                    What do the tests must be relative [master | release |
+                    master,release] [default: master]
+    -w WIKI_DIR, --wiki-dir=WIKI_DIR
+                    The path to the wiki pages directory
+    -m MASTER_DIR, --master-dir=MASTER_DIR
+                    The path to the sympy master repository
+    -r RELEASE_DIR, --release-dir=RELEASE_DIR
+                    The path to the sympy release directory
+
+Wiki pages can contain the special directives. For reStructedText comments they
+are shaped as:
+
+    .. wikitest skip
+
+or for Markdown or Mediawiki the syntax is shaped as:
+
+    <!-- wikitest skip -->
+
+The directive "skip" means, that this page will not to be tested unless '--all'
+is used for ./wikitest script conrtol.
+
+If the directive is 'wikitest (pretty_print)' then test's
+output of this page will be expected as pretty print mode by default. See also
+#doctest: +/- PRETTY option.
+
+Additional #doctest:+<...> options, which applied for tested examples lines:
+
+    FUTURE_ONLY  - skip test if the release sympy's version is used
+        as interpreter.
+
+    RELEASE_ONLY - test only for release only. Usually when
+        deprecated syntax of sympy  is used or test has deprecated output.
+
+    PRETTY - for define that the output of test is expected, like sympy's pretty
+        printer do.
+
+    USE_UNICODE - use unicode in tests's output
+
+
+All those doctests options have their global analog:
+    <!-- wikitest (future_only, pretty_print) -->
+
+"""
+
+# files listed here can be in unix forward slash format with paths
+# listed relative to sympy (which contains bin, etc...)
+blacklist = []
+
+import sys
+from os import getcwd
+from os.path import normpath, abspath, isdir, dirname, join
+from optparse import OptionParser
+import imp
+
+parser = OptionParser()
+parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+        default=False)
+
+# if you don't see a -n `default=False`;
+# if you do see a -n `store_true` means to store a True value for it;
+# dest is where in options to put it, options.normal will hold the bool;
+# when the user enters -h or --help, print the `help` text
+parser.add_option("-n", "--normal", action="store_true", dest="normal",
+        help="run normal wikitests; do not require explicit imports", default=False)
+parser.add_option("--no-colors", action="store_false", dest="colors",
+        default=True, help="Do not report colored [OK] and [FAIL]")
+parser.add_option('-t', '--types', dest='types', action='store',
+        default=None, choices=['gmpy', 'python', 'sympy'],
+        help='setup ground types: gmpy | python | sympy')
+parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
+        default=True, help='disable caching mechanism')
+parser.add_option("-f", "--firstonly", action="store_true", dest="first_only",
+        help="Report details only about the first failure or exception [default: %default]",
+        default=False)
+
+
+parser.add_option("-a", "--against", type="string", dest="against",
+        help="SymPy version. What do the tests must be relative [master | release | master,release] [default: %default]",
+        default="master")
+parser.add_option("-s", "--skipped", action="store_true", dest="all_tests",
+        help="Test all tests in the pages, regardless of the directives FUTURE_ONLY | RELEASE_ONLY. [default: %default]",
+        default=False)
+parser.add_option("-A", "--all", action="store_true", dest="all_pages",
+        help="Test all the wiki pages, regardless if the <wikitest skip> directive in the page [default: %default]",
+        default=False)
+parser.add_option("-w", "--wiki-dir", type="string", dest="wiki_dir",
+        help="The path to the wiki pages directory", default=None)
+parser.add_option("-m", "--master-dir", type="string", dest="master_dir",
+        help="The path to the sympy master repository", default=None)
+parser.add_option("-r", "--release-dir", type="string", dest="release_dir",
+        help="The path to the sympy release directory", default=None)
+
+
+description = '"options" are any of the options below.  "files" are 0 or more glob strings of files to run wikitests on. If no file arguments are given, all wikitests will be run.'
+
+parser.set_usage("\n\n\t%prog [options ...] [files ...]\n\n" + description + "\n" + __doc__)
+
+
+options, args = parser.parse_args()
+
+if not options.cache:
+    os.environ['SYMPY_USE_CACHE'] = 'no'
+if options.types:
+    os.environ['SYMPY_GROUND_TYPES'] = options.types
+
+againstlist = options.against.split(",")
+dictargs = {"blacklist": blacklist, "againstlist": againstlist}
+dictargs.update(options.__dict__)
+
+# check paths
+
+def calcpath(path, default):
+    """
+    If path specified then it computes relative current directory
+    if no, then default path computes relative
+    """
+    if path:
+        res = join(getcwd(), normpath(path))
+    else:
+        res = join(dirname(__file__), normpath(default))
+    res = abspath(res)
+    return res
+
+dictargs["wiki_dir"] = calcpath(options.wiki_dir, "../../sympy.wiki")
+if not isdir(dictargs["wiki_dir"]):
+    parser.error("Directory of wiki pages '%s' is not found " % dictargs["wiki_dir"])
+for against in againstlist:
+    if not against in ["master", "release"]:
+        parser.error("The 'against' option must be in the set [master,release]")
+    elif against == "master":
+        dictargs["master_dir"] = calcpath(options.master_dir, "../")
+        if not isdir(dictargs["master_dir"]):
+            parser.error("Master repository '%s' is not found " % dictargs["master_dir"])
+    elif against == "release":
+        dictargs["release_dir"] = calcpath(options.release_dir, "../../sympy-0.7.1")
+        if not isdir(dictargs["release_dir"]):
+            parser.error("SymPy's release directory '%s' is not found " % dictargs["release_dir"])
+
+# Manually load modules, passing out sympy
+fn_runtests = join(dirname(__file__), "../sympy/utilities/runtests.py")
+runtests = imp.load_source("runtests", fn_runtests)
+
+ok = runtests.wikitest(*args, **dictargs)
+if ok:
+    sys.exit(0)
+else:
+    sys.exit(1)
