@@ -4,20 +4,25 @@ There are two types of functions:
    (in the sense that function can be evaluated).
     e = exp
 2) undefined function with a name but no body. Undefined
-   functions can be defined using a Function class as follows:
+   functions can be defined using a Function class as follows::
+
        f = Function('f')
+
    (the result will be a Function instance)
 3) this isn't implemented yet: anonymous function or lambda function that has
    no name but has body with dummy variables. Examples of anonymous function
-   creation:
+   creation::
+
        f = Lambda(x, exp(x)*x)
        f = Lambda(exp(x)*x)  # free symbols in the expression define the number of arguments
        f = exp * Lambda(x,x)
+
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
    works in sympy core, but needs to be ported back to SymPy.
 
 
-Example:
+Example::
+
     >>> import sympy
     >>> f = sympy.Function("f")
     >>> from sympy.abc import x
@@ -111,20 +116,19 @@ class Application(Basic):
         (possible of some other class), or if the class cls should be
         unmodified, return None.
 
-        Example of eval() for the function "sign"
-        ---------------------------------------------
+        Example of eval() for the function "sign"::
 
-        @classmethod
-        def eval(cls, arg):
-            if arg is S.NaN:
-                return S.NaN
-            if arg is S.Zero: return S.Zero
-            if arg.is_positive: return S.One
-            if arg.is_negative: return S.NegativeOne
-            if isinstance(arg, C.Mul):
-                coeff, terms = arg.as_coeff_mul()
-                if coeff is not S.One:
-                    return cls(coeff) * cls(arg._new_rawargs(*terms))
+            @classmethod
+            def eval(cls, arg):
+                if arg is S.NaN:
+                    return S.NaN
+                if arg is S.Zero: return S.Zero
+                if arg.is_positive: return S.One
+                if arg.is_negative: return S.NegativeOne
+                if isinstance(arg, C.Mul):
+                    coeff, terms = arg.as_coeff_mul()
+                    if coeff is not S.One:
+                        return cls(coeff) * cls(arg._new_rawargs(*terms))
 
         """
         return
@@ -164,6 +168,8 @@ class Function(Application, Expr):
 
         Examples
         ========
+
+        ::
 
             >>> from sympy import Function, Symbol
             >>> f = Function('f')
@@ -337,21 +343,22 @@ class Function(Application, Expr):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
-        Examples:
 
-        >>> from sympy import atan2, O
-        >>> from sympy.abc import x, y
-        >>> atan2(x, y).series(x, n=2)
-        atan2(0, y) + x/y + O(x**2)
-        >>> atan2(x, y).series(y, n=2)
-        -y/x + atan2(x, 0) + O(y**2)
+        Examples::
+
+            >>> from sympy import atan2, O
+            >>> from sympy.abc import x, y
+            >>> atan2(x, y).series(x, n=2)
+            atan2(0, y) + x/y + O(x**2)
+            >>> atan2(x, y).series(y, n=2)
+            -y/x + atan2(x, 0) + O(y**2)
 
         This function also computes asymptotic expansions, if necessary
-        and possible:
+        and possible::
 
-        >>> from sympy import loggamma
-        >>> loggamma(1/x)._eval_nseries(x,0,None)
-        -1/x - log(x)/x + log(x)/2 + O(1)
+            >>> from sympy import loggamma
+            >>> loggamma(1/x)._eval_nseries(x,0,None)
+            -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
         if self.func.nargs is None:
@@ -579,7 +586,8 @@ functions are not supported.')
 
 class AppliedUndef(Function):
     """
-    Base class for expressions resulting from the application of an undefined function.
+    Base class for expressions resulting from the application of an
+    undefined function.
     """
     def __new__(cls, *args, **options):
         args = map(sympify, args)
@@ -649,15 +657,15 @@ class Derivative(Expr):
     while the differentiation is performed.
 
     Note that this may seem strange, that Derivative allows things like
-    f(g(x)).diff(g(x)), or even f(cos(x)).diff(cos(x)).  The motivation for
-    allowing this syntax is to make it easier to work with variational calculus
-    (i.e., the Euler-Lagrange method).  The best way to understand this is that
-    the action of derivative with respect to a non-Symbol is defined by the
-    above description:  the object is substituted for a Symbol and the
-    derivative is taken with respect to that.  This action is only allowed for
-    objects for which this can be done unambiguously, for example Function and
-    Derivative objects.  Note that this leads to what may appear to be
-    mathematically inconsistent results.  For example::
+    `f(g(x)).diff(g(x))`, or even `f(cos(x)).diff(cos(x))`.  The motivation
+    for allowing this syntax is to make it easier to work with variational
+    calculus (i.e., the Euler-Lagrange method).  The best way to understand
+    this is that the action of derivative with respect to a non-Symbol is
+    defined by the above description: the object is substituted for a Symbol
+    and the derivative is taken with respect to that.  This action is only
+    allowed for objects for which this can be done unambiguously, for
+    example Function and Derivative objects.  Note that this leads to what
+    may appear to be mathematically inconsistent results.  For example::
 
         >>> from sympy import cos, sin, sqrt
         >>> from sympy.abc import x
@@ -666,9 +674,8 @@ class Derivative(Expr):
         >>> (2*sqrt(1 - sin(x)**2)).diff(cos(x))
         0
 
-    This appears wrong because in fact 2*cos(x) and 2*sqrt(1 - sin(x)**2) are
-    identically equal.  However this is the wrong way to think of this.  Think
-    of it instead as if we have something like this::
+    This appears wrong because in fact ``2*cos(x)`` and ``2*sqrt(1 - sin(x)**2)`` are identically equal.  However this is the wrong way to
+    think of this.  Think of it instead as if we have something like this::
 
         >>> from sympy.abc import c, s
         >>> def F(u):
@@ -690,14 +697,15 @@ class Derivative(Expr):
         >>> G(sin(x)).diff(cos(x))
         0
 
-    Here, the Symbols c and s act just like the functions cos(x) and sin(x),
-    respectively. Think of 2*cos(x) as f(c).subs(c, cos(x)) (or f(c) *at*
-    c = cos(x)) and 2*sqrt(1 - sin(x)**2) as g(s).subs(s, sin(x)) (or g(s) *at*
-    s = sin(x)), where f(u) == 2*u and g(u) == 2*sqrt(1 - u**2).  Here, we
-    define the function first and evaluate it at the function, but we can
-    actually unambiguously do this in reverse in SymPy, because
-    expr.subs(Function, Symbol) is well-defined:  just structurally replace the
-    function everywhere it appears in the expression.
+    Here, the Symbols c and s act just like the functions ``cos(x)`` and
+    ``sin(x)``, respectively. Think of ``2*cos(x)`` as `f(c).subs(c,
+    cos(x))` (or ``f(c)`` *at* ``c = cos(x)``) and ``2*sqrt(1 - sin(x)**2)``
+    as `g(s).subs(s, sin(x))` (or ``g(s)`` *at* s = sin(x)), where `f(u) ==
+    2*u` and `g(u) == 2*sqrt(1 - u**2)`.  Here, we define the function first
+    and evaluate it at the function, but we can actually unambiguously do
+    this in reverse in SymPy, because `expr.subs(Function, Symbol)` is
+    well-defined: just structurally replace the function everywhere it
+    appears in the expression.
 
     This is actually the same notational convenience used in the Euler-Lagrange
     method when one says F(t, f(t), f'(t)).diff(f(t)).  What is actually meant
@@ -706,10 +714,12 @@ class Derivative(Expr):
     F(t, u, v).diff(u) at u = f(t).
 
     We do not allow to take derivative with respect to expressions where this
-    is not so well defined.  For example, we do not allow expr.diff(x*y)
-    because there are multiple ways of structurally defining where x*y appears
+    is not so well defined.  For example, we do not allow `expr.diff(x*y)`
+    because there are multiple ways of structurally defining where `x*y` appears
     in an expression, some of which may surprise the reader (for example, a
-    very strict definition would have that (x*y*z).diff(x*y) == 0).
+    very strict definition would have that `(x*y*z).diff(x*y) == 0`).
+
+    ::
 
         >>> from sympy.abc import x, y, z
         >>> (x*y*z).diff(x*y)
@@ -726,13 +736,13 @@ class Derivative(Expr):
         >>> f(2*g(x)).diff(x)
         2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (2*g(x),))
 
-    This says that the derivative of f(2*g(x)) with respect to x is
-    2*g(x).diff(x) times f(u).diff(u) at u = 2*g(x).  Note that this last part
-    is exactly the same as our definition of a derivative with respect to a
-    function given above, except the derivative is at a non-Function 2*g(x).
-    If we instead computed f(g(x)).diff(x), we would be able to express the Subs
-    as simply f(g(x)).diff(g(x)).  Therefore, SymPy does this when it's
-    possible::
+    This says that the derivative of `f(2*g(x))` with respect to x is
+    `2*g(x).diff(x)` times `f(u).diff(u)` at `u = 2*g(x)`.  Note that this
+    last part is exactly the same as our definition of a derivative with
+    respect to a function given above, except the derivative is at a
+    non-Function `2*g(x)`.  If we instead computed `f(g(x)).diff(x)`, we would
+    be able to express the Subs as simply `f(g(x)).diff(g(x))`.  Therefore,
+    SymPy does this when it's possible::
 
         >>> f(g(x)).diff(x)
         Derivative(f(g(x)), g(x))*Derivative(g(x), x)

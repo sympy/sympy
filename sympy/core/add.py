@@ -21,7 +21,7 @@ class Add(AssocOp):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
 
-        Returns: (commutative_part, noncommutative_part, order_symbols)
+        :returns:(commutative_part, noncommutative_part, order_symbols)
 
         Applies associativity, all terms are commutable with respect to
         addition.
@@ -204,19 +204,22 @@ class Add(AssocOp):
         return 3, 1, cls.__name__
 
     def as_coefficients_dict(a):
-        """Return a dictionary mapping terms to their Rational coefficient.
+        """
+        Return a dictionary mapping terms to their Rational coefficient.
+
         Since the dictionary is a defaultdict, inquiries about terms which
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
-        **Example**
-        >>> from sympy.abc import a, x
-        >>> (3*x + a*x + 4).as_coefficients_dict()
-        {1: 4, x: 3, a*x: 1}
-        >>> _[a]
-        0
-        >>> (3*a*x).as_coefficients_dict()
-        {a*x: 3}
+        Example::
+
+            >>> from sympy.abc import a, x
+            >>> (3*x + a*x + 4).as_coefficients_dict()
+            {1: 4, x: 3, a*x: 1}
+            >>> _[a]
+            0
+            >>> (3*a*x).as_coefficients_dict()
+            {a*x: 3}
         """
 
         d = defaultdict(list)
@@ -238,12 +241,13 @@ class Add(AssocOp):
         Returns a tuple (coeff, args) where self is treated as an Add and coeff
         is the Number term and args is a tuple of all other terms.
 
-        **Examples**
-        >>> from sympy.abc import x, y
-        >>> (7 + 3*x).as_coeff_add()
-        (7, (3*x,))
-        >>> (7*x).as_coeff_add()
-        (0, (7*x,))
+        Examples::
+
+            >>> from sympy.abc import x, y
+            >>> (7 + 3*x).as_coeff_add()
+            (7, (3*x,))
+            >>> (7*x).as_coeff_add()
+            (0, (7*x,))
         """
         if deps:
             l1 = []
@@ -304,7 +308,8 @@ class Add(AssocOp):
 
     @cacheit
     def as_two_terms(self):
-        """Return head and tail of self.
+        """
+        Return head and tail of self.
 
         This is the most efficient way to get the head and tail of an
         expression.
@@ -316,9 +321,11 @@ class Add(AssocOp):
         - if you want the coefficient when self is treated as a Mul
           then use self.as_coeff_mul()[0]
 
-        >>> from sympy.abc import x, y
-        >>> (3*x*y).as_two_terms()
-        (3, x*y)
+        ::
+
+            >>> from sympy.abc import x, y
+            >>> (3*x*y).as_two_terms()
+            (3, x*y)
         """
         if len(self.args) == 1:
             return S.Zero, self
@@ -475,15 +482,15 @@ class Add(AssocOp):
         """
         Returns the leading term and it's order.
 
-        **Examples**
+        Examples::
 
-        >>> from sympy.abc import x
-        >>> (x+1+1/x**5).extract_leading_order(x)
-        ((x**(-5), O(x**(-5))),)
-        >>> (1+x).extract_leading_order(x)
-        ((1, O(1)),)
-        >>> (x+x**2).extract_leading_order(x)
-        ((x, O(x)),)
+            >>> from sympy.abc import x
+            >>> (x+1+1/x**5).extract_leading_order(x)
+            ((x**(-5), O(x**(-5))),)
+            >>> (1+x).extract_leading_order(x)
+            ((1, O(1)),)
+            >>> (x+x**2).extract_leading_order(x)
+            ((x, O(x)),)
 
         """
         lst = []
@@ -507,11 +514,11 @@ class Add(AssocOp):
         """
         returns a tuple represeting a complex numbers
 
-        **Examples**
+        Examples::
 
-        >>> from sympy import I
-        >>> (7 + 9*I).as_real_imag()
-        (7, 9)
+            >>> from sympy import I
+            >>> (7 + 9*I).as_real_imag()
+            (7, 9)
         """
         sargs, terms = self.args, []
         re_part, im_part = [], []
@@ -649,29 +656,29 @@ class Add(AssocOp):
 
         ``R`` is collected only from the leading coefficient of each term.
 
-        **Examples**
+        Examples::
 
-        >>> from sympy.abc import x, y
+            >>> from sympy.abc import x, y
 
-        >>> (2*x + 4*y).primitive()
-        (2, x + 2*y)
+            >>> (2*x + 4*y).primitive()
+            (2, x + 2*y)
 
-        >>> (2*x/3 + 4*y/9).primitive()
-        (2/9, 3*x + 2*y)
+            >>> (2*x/3 + 4*y/9).primitive()
+            (2/9, 3*x + 2*y)
 
-        >>> (2*x/3 + 4.2*y).primitive()
-        (1/3, 2*x + 12.6*y)
+            >>> (2*x/3 + 4.2*y).primitive()
+            (1/3, 2*x + 12.6*y)
 
-        No subprocessing of term factors is performed:
+        No subprocessing of term factors is performed::
 
-        >>> ((2 + 2*x)*x + 2).primitive()
-        (1, x*(2*x + 2) + 2)
+            >>> ((2 + 2*x)*x + 2).primitive()
+            (1, x*(2*x + 2) + 2)
 
         Recursive subprocessing can be done with the as_content_primitive()
-        method:
+        method::
 
-        >>> ((2 + 2*x)*x + 2).as_content_primitive()
-        (2, x*(x + 1) + 1)
+            >>> ((2 + 2*x)*x + 2).as_content_primitive()
+            (2, x*(x + 1) + 1)
 
         See also: primitive() function in polytools.py
 
@@ -723,14 +730,15 @@ class Add(AssocOp):
         return Rational(ngcd, dlcm), self._new_rawargs(*terms)
 
     def as_content_primitive(self):
-        """Return the tuple (R, self/R) where R is the positive Rational
+        """
+        Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Example**
+        Example::
 
-        >>> from sympy import sqrt
-        >>> (3 + 3*sqrt(2)).as_content_primitive()
-        (3, 1 + sqrt(2))
+            >>> from sympy import sqrt
+            >>> (3 + 3*sqrt(2)).as_content_primitive()
+            (3, 1 + sqrt(2))
 
         See docstring of Expr.as_content_primitive for more examples.
         """
