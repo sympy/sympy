@@ -80,14 +80,14 @@ class ColorScheme(object):
             fv = atoms[0]
             try:
                 f = lambdify(s, [fv, fv, fv])
-            except:
+            except TypeError:
                 raise f_error
 
         elif len(atoms) == 3:
             fr, fg, fb = atoms
             try:
                 f = lambdify(s, [fr, fg, fb])
-            except:
+            except TypeError:
                 raise f_error
 
         else:
@@ -104,7 +104,7 @@ class ColorScheme(object):
         elif len(lists) == 2:
             try:
                 (r1, g1, b1), (r2, g2, b2) = lists
-            except:
+            except TypeError:
                 raise ValueError("If two color arguments are given, "
                                  "they must be given in the format "
                                  "(r1, g1, b1), (r2, g2, b2).")

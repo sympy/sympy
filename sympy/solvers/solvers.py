@@ -223,7 +223,7 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
             try:
                 nz = val.is_nonzero
-            except: # any problem at all: recursion, inconsistency of facts, etc...
+            except Exception: # any problem at all: recursion, inconsistency of facts, etc...
                 nz = None
             if nz is not None:
                 if val.is_number and val.has(LambertW): # issue 2574: it may be True even when False
