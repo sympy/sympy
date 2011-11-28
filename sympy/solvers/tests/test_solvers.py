@@ -29,7 +29,7 @@ def guess_solve_strategy(eq, symbol):
     try:
         solve(eq, symbol)
         return True
-    except:
+    except (TypeError, NotImplementedError):
         return False
 
 def test_guess_poly():

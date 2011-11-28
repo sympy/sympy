@@ -532,7 +532,7 @@ class SymPyTests(object):
             execfile(filename, gl)
         except (SystemExit, KeyboardInterrupt):
             raise
-        except:
+        except ImportError:
             self._reporter.import_error(filename, sys.exc_info())
             return
         pytestfile = ""
@@ -578,7 +578,7 @@ class SymPyTests(object):
                 f()
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
                     self._reporter.test_fail((t, v, tr))
@@ -667,7 +667,7 @@ class SymPyDocTests(object):
             tests = SymPyDocTestFinder().find(module)
         except (SystemExit, KeyboardInterrupt):
             raise
-        except:
+        except ImportError:
             self._reporter.import_error(filename, sys.exc_info())
             return
         finally:
@@ -807,7 +807,7 @@ class SymPyDocTestFinder(DocTestFinder):
                             raise
                         except ValueError, msg:
                             raise
-                        except:
+                        except Exception:
                             pass
 
         # Look for tests in a module's __test__ dictionary.

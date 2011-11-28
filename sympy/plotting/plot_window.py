@@ -107,7 +107,7 @@ class PlotWindow(ManagedWindow):
                     if r.calculating_cverts:
                         calc_cverts_pos += r.calculating_cverts_pos
                         calc_cverts_len += r.calculating_cverts_len
-                except:
+                except ValueError:
                     pass
 
         for r in self.plot._pobjects:
