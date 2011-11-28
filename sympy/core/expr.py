@@ -624,9 +624,9 @@ class Expr(Basic, EvalfMixin):
         if c and c[0].is_Rational and c[0].is_negative and c[0] != S.NegativeOne:
             c[:1] = [S.NegativeOne, -c[0]]
 
-        if not clist:
-            return [set(c), nc]
-        return [c, nc]
+        if clist:
+            return [c, nc]
+        return [set(c), nc]
 
     def coeff(self, x, right=False):
         """

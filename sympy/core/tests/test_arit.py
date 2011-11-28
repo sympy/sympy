@@ -1194,6 +1194,7 @@ def test_Pow_as_content_primitive():
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)
     assert 2 + u == 4 + 2*x
+    # the Number is only suppose to distribute on a commutative Add
     n = Symbol('n', commutative=False)
     u = 2*(1 + n)
     assert u.is_Mul
