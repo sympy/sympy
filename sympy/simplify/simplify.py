@@ -759,63 +759,68 @@ def trigsimp(expr, deep=False):
     if not expr.has(*trigs):
         return expr
 
-    if deep and not (expr.is_Add or expr.is_Mul) or expr.is_Pow:
-        return expr.func(*[trigsimp(a, deep) for a in expr.args])
-
     cont, expr = expr.as_content_primitive()
 
-    d = separatevars(expr, dict=True)
-    # remove hollow factoring from results, i.e. cos(x)**2 -1
-    # gets factored but then it is not recognized by the
-    # _trigsimp patterns
-    if d:
-        margs = []
-        for v in d.values():
-            if v.is_Mul:
-                v = expand_mul(v)
-            margs.append(v)
-        expr = Mul(*margs)
-    new = factor_terms(expr)
-    if new.count_ops() < expr.count_ops():
-        expr = new
+    def prep(expr, deep):
+        if deep and not (expr.is_Add or expr.is_Mul) or expr.is_Pow:
+            if not expr.args:
+                return expr
+            return expr.func(*[prep(a, deep) for a in expr.args])
 
-    n, d = fraction(expr)
-    if d != 1:
-        expr = trigsimp(n, deep)/trigsimp(d, deep)
-
-    if expr.is_Add:
-        new = Add(*[trigsimp(a, deep) for a in expr.args])
-        if new != expr and new.count_ops() < expr.count_ops():
+        d = separatevars(expr, dict=True)
+        # remove hollow factoring from results, i.e. cos(x)**2 -1
+        # gets factored but then it is not recognized by the
+        # _trigsimp patterns
+        if d:
+            margs = []
+            for v in d.values():
+                if v.is_Mul:
+                    v = expand_mul(v)
+                margs.append(v)
+            expr = Mul(*margs)
+        new = factor_terms(expr)
+        if new.count_ops() < expr.count_ops():
             expr = new
-        if expr.is_Add and expr.is_commutative:
-            new = factor(expr)
-            if new == expr:
-                new = factor(new.rewrite(exp))
-                if new.is_Mul:
-                    new = trigsimp(new, deep)
-            if new.count_ops() > expr.count_ops():
-                new = expr
-        expr = new
 
-    if expr.is_Mul:
-        margs = list(expr.args)
-        for i, m in enumerate(margs):
-            if not m.has(*trigs):
-                continue
-            if m.is_Add and m.is_commutative:
-                new = factor(m)
-                if new.is_Add:
+        n, d = fraction(expr)
+        if d != 1:
+            expr = prep(n, deep)/prep(d, deep)
+
+        if expr.is_Add:
+            new = Add(*[prep(a, deep) for a in expr.args])
+            if new != expr and new.count_ops() < expr.count_ops():
+                expr = new
+            if expr.is_Add and expr.is_commutative:
+                new = factor(expr)
+                if new == expr:
                     new = factor(new.rewrite(exp))
                     if new.is_Mul:
-                        new = trigsimp(new, deep)
-            else:
-                new = trigsimp(m, deep)
-            if new.count_ops() < m.count_ops():
-                margs[i] = new
-        expr = Mul(*margs)
+                        new = prep(new, deep)
+                if new.count_ops() > expr.count_ops():
+                    new = expr
+            expr = new
+
+        if expr.is_Mul:
+            margs = list(expr.args)
+            for i, m in enumerate(margs):
+                if not m.has(*trigs):
+                    continue
+                if m.is_Add and m.is_commutative:
+                    new = factor(m)
+                    if new.is_Add:
+                        new = factor(new.rewrite(exp))
+                        if new.is_Mul:
+                            new = prep(new, deep)
+                else:
+                    new = prep(m, deep)
+                if new.count_ops() < m.count_ops():
+                    margs[i] = new
+            expr = Mul(*margs)
+
+        return _trigsimp(expr)
 
     # iterate for multiple patterns
-    old = expr
+    old = prep(expr, deep)
     while True:
         new = _trigsimp(old, deep)
         if old == new:
