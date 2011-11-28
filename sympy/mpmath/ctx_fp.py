@@ -110,7 +110,7 @@ class FPContext(StandardBaseContext):
     def convert(ctx, x):
         try:
             return float(x)
-        except:
+        except    TypeError:
             return complex(x)
 
     power = staticmethod(math2.pow)
@@ -166,7 +166,7 @@ class FPContext(StandardBaseContext):
             z = z.real
         try:
             return z == int(z)
-        except:
+        except TypeError:
             return False
 
     def nint_distance(ctx, z):
