@@ -22,6 +22,14 @@ to know more, read the
 or the `sources
 <https://github.com/sympy/sympy/>`_ directly.
 
+Translations
+============
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorial.bg.txt
+
 First Steps with SymPy
 ======================
 
