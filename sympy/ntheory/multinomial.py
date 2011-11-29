@@ -23,8 +23,7 @@ def binomial_coefficients_list(n):
 
 def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     """Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
-    where ``C_kn`` are multinomial coefficients such that
-    ``n=k1+k2+..+km``.
+    where ``C_kn`` are multinomial coefficients such that ``n=k1+k2+..+km``.
 
     For example:
 
@@ -103,12 +102,6 @@ def multinomial_coefficients(m, n):
     Code contributed to Sage by Yann Laigle-Chapuy, copied with permission
     of the author.
 
-    The following optimizations have been made:
-    for `m` large with respect to `n` the monomial tuples `t` have
-    many zeroes, and have the same coefficient as
-    in `monomial_coefficients(n,n)` for `t` stripped of its zeroes;
-    therefore by precomputing the latter coefficients, memory and time
-    are saved.
     """
     if not m:
         if n:
@@ -155,6 +148,17 @@ def multinomial_coefficients(m, n):
 
 def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     """multinomial coefficient iterator
+
+    This routine has been optimized for `m` large with respect to `n` by taking
+    advantage of the fact that when the monomial tuples `t` are stripped of
+    zeros, their coefficient is the same as that of the monomial tuples from
+    `multinomial_coefficients(n, n)`. Therefore, the latter coefficients are
+    precomputed to save memory and time.
+
+    >>> from sympy.ntheory.multinomial import multinomial_coefficients
+    >>> m53, m33 = multinomial_coefficients(5,3), multinomial_coefficients(3,3)
+    >>> m53[(0,0,0,1,2)] == m53[(0,0,1,0,2)] == m53[(1,0,2,0,0)] == m33[(0,1,2)]
+    True
 
     Examples:
     >>> from sympy.ntheory.multinomial import multinomial_coefficients_iterator
