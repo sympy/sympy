@@ -103,11 +103,11 @@ def multinomial_coefficients(m, n):
     Code contributed to Sage by Yann Laigle-Chapuy, copied with permission
     of the author.
 
-    The following optimizations has been made:
+    The following optimizations have been made:
     for `m` large with respect to `n` the monomial tuples `t` have
     many zeroes, and have the same coefficient as
     in `monomial_coefficients(n,n)` for `t` stripped of its zeroes;
-    therefore by precomputing the latter coefficients memory and time
+    therefore by precomputing the latter coefficients, memory and time
     are saved.
     """
     if not m:
