@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, C, sympify, oo, pi, Symbol
+from sympy.core import Basic, S, sympify, oo, pi, Symbol
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify import simplify
@@ -7,7 +7,7 @@ from sympy.solvers import solve
 from entity import GeometryEntity
 from point import Point
 from ellipse import Circle
-from line import Line, Segment, Ray
+from line import Line, Segment
 from util import _symbol
 
 import warnings
@@ -198,9 +198,9 @@ class Polygon(GeometryEntity):
         """
         area = 0
         for i in xrange(len(self)):
-            pi = self[i - 1]
-            pii = self[i]
-            area += pi[0]*pii[1] - pii[0]*pi[1]
+            pt1 = self[i - 1]
+            pt2 = self[i]
+            area += pt1[0]*pt2[1] - pt2[0]*pt1[1]
         return simplify(area) / 2
 
     @property
@@ -325,11 +325,11 @@ class Polygon(GeometryEntity):
         A = 1/(6*self.area)
         cx, cy = 0, 0
         for i in xrange(len(self)):
-            pi = self[i - 1]
-            pii = self[i]
-            v = pi[0]*pii[1] - pii[0]*pi[1]
-            cx += v*(pi[0] + pii[0])
-            cy += v*(pi[1] + pii[1])
+            pt1 = self[i - 1]
+            pt2 = self[i]
+            v = pt1[0]*pt2[1] - pt2[0]*pt1[1]
+            cx += v*(pt1[0] + pt2[0])
+            cy += v*(pt1[1] + pt2[1])
         return Point(simplify(A*cx), simplify(A*cy))
 
     @property
@@ -435,8 +435,6 @@ class Polygon(GeometryEntity):
         [1] http://www.ariel.com.au/a/python-point-int-poly.html
         [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
         """
-        from sympy import Symbol
-
         if p in self:
             return False
 

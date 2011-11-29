@@ -10,7 +10,6 @@ Segment
 """
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
-from sympy.core.numbers import Float, Rational
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -1102,7 +1101,6 @@ class Ray(LinearEntity):
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        m = self.slope
         x = simplify(self.p1[0] + t/(1 - t)*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t/(1 - t)*(self.p2[1] - self.p1[1]))
         return Point(x, y)
@@ -1148,7 +1146,6 @@ class Ray(LinearEntity):
     def __contains__(self, o):
         """Is other GeometryEntity contained in this Ray?"""
         if isinstance(o, Ray):
-            d = o.p2 - o.p1
             return (Point.is_collinear(self.p1, self.p2, o.p1, o.p2)
                     and (self.xdirection == o.xdirection)
                     and (self.ydirection == o.ydirection))
