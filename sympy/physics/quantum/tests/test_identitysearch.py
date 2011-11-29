@@ -34,6 +34,14 @@ def test_generate_gate_rules():
     gate_rules = [(y, cgate_y, y, cgate_y), (cgate_y, y, cgate_y, y)]
     assert generate_gate_rules(*gate_seq) == gate_rules
 
+    cnot = CNOT(1,0)
+    cgate_z = CGate((0,), Z(1))
+    gate_seq = (cnot, h, cgate_z, h)
+    gate_rules = [(cnot, h, cgate_z, h), (h, cgate_z, h, cnot),
+                  (h, cnot, h, cgate_z), (cgate_z, h, cnot, h)]
+    # Function returns more because Dagger(cnot) and cnot are not equal
+    #assert generate_gate_rules(*gate_seq) == gate_rules
+
 def test_is_scalar_matrix():
     numqubits = 2
     id_only = False

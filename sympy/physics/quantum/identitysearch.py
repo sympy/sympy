@@ -81,14 +81,31 @@ def generate_gate_rules(*gate_seq):
 
         if (len(left) > 0):
             ll_op = left[0]
+            ll_op_is_unitary = is_scalar_matrix(
+                                   (Dagger(ll_op), ll_op),
+                                   ll_op.min_qubits,
+                                   True)
+
             lr_op = left[len(left)-1]
+            lr_op_is_unitary = is_scalar_matrix(
+                                   (Dagger(lr_op), lr_op),
+                                   lr_op.min_qubits,
+                                   True)
 
         if (len(rite) > 0):
             rl_op = rite[0]
+            rl_op_is_unitary = is_scalar_matrix(
+                                   (Dagger(rl_op), rl_op),
+                                   rl_op.min_qubits,
+                                   True)
             rr_op = rite[len(rite)-1]
+            rr_op_is_unitary = is_scalar_matrix(
+                                   (Dagger(rr_op), rr_op),
+                                   rr_op.min_qubits,
+                                   True)
 
         # Do a LL, if possible
-        if (len(left) > 0 and Dagger(ll_op)*ll_op == 1):
+        if (len(left) > 0 and ll_op_is_unitary):
             # Get the new left side w/o the leftmost gate
             new_left = left[1:len(left)]
             # Add the leftmost gate to the left position on the right side
@@ -106,7 +123,7 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a LR, if possible
-        if (len(left) > 0 and Dagger(lr_op)*lr_op == 1):
+        if (len(left) > 0 and lr_op_is_unitary):
             # Get the new left side w/o the rightmost gate
             new_left = left[0:len(left)-1]
             # Add the rightmost gate to the right position on the right side
@@ -121,7 +138,7 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a RL, if possible
-        if (len(rite) > 0 and Dagger(rl_op)*rl_op == 1):
+        if (len(rite) > 0 and rl_op_is_unitary):
             # Get the new right side w/o the leftmost gate
             new_rite = rite[1:len(rite)]
             # Add the leftmost gate to the left position on the left side
@@ -136,7 +153,7 @@ def generate_gate_rules(*gate_seq):
             vis.append(new_rule)
 
         # Do a RR, if possible
-        if (len(rite) > 0 and Dagger(rr_op)*rr_op == 1):
+        if (len(rite) > 0 and rr_op_is_unitary):
             # Get the new right side w/o the rightmost gate
             new_rite = rite[0:len(rite)-1]
             # Add the rightmost gate to the right position on the right side
