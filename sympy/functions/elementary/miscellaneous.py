@@ -179,7 +179,7 @@ def real_root(arg, n=None):
        L{sqrt}, L{RootOf}, L{root}, L{integer_nthroot}
 
     """
-    if not n is None:
+    if n is not None:
         n = int_tested(n)
         rv = C.Pow(arg, Rational(1, n))
         if n % 2 == 0:

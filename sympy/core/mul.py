@@ -119,7 +119,7 @@ class Mul(AssocOp):
                 if b.is_Mul:
                     bargs, nc = b.args_cnc(clist=True)
                     rv = bargs, nc, None
-                    if not a is S.One:
+                    if a is not S.One:
                         bargs.insert(0, a)
 
                 elif b.is_Add and b.is_commutative:
@@ -344,7 +344,7 @@ class Mul(AssocOp):
                     coeff *= b
                 else:
                     c_part.append(b)
-            elif not e is S.Zero:
+            elif e is not S.Zero:
                 c_part.append(Pow(b, e))
 
         #  x    x     x
@@ -519,7 +519,7 @@ class Mul(AssocOp):
                     nonneg=[]
                     neg=[]
                     for bi in rest:
-                        if not bi.is_negative is None: #then we know the sign
+                        if bi.is_negative is not None: #then we know the sign
                             if bi.is_negative:
                                 neg.append(bi)
                             else:
@@ -636,7 +636,7 @@ class Mul(AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         coeff, notrat = self.args[0].as_coeff_mul()
-        if not coeff is S.One:
+        if coeff is not S.One:
             return coeff, notrat + self.args[1:]
         return S.One, self.args
 
@@ -1113,7 +1113,7 @@ class Mul(AssocOp):
             for (i, a) in enumerate(Mul.make_args(eq)):
                 a = powdenest(a)
                 (b, e) = a.as_base_exp()
-                if not e is S.One:
+                if e is not S.One:
                     (co, _) = e.as_coeff_mul()
                     b = Pow(b, e/co)
                     e = co

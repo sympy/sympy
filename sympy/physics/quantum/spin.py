@@ -966,7 +966,7 @@ class SpinState(State):
 
     def _eval_innerproduct_JxBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
-        if not bra.dual_class() is self.__class__:
+        if bra.dual_class() is not self.__class__:
             result *= self._represent_JxOp(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
@@ -974,7 +974,7 @@ class SpinState(State):
 
     def _eval_innerproduct_JyBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
-        if not bra.dual_class() is self.__class__:
+        if bra.dual_class() is not self.__class__:
             result *= self._represent_JyOp(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)
@@ -982,7 +982,7 @@ class SpinState(State):
 
     def _eval_innerproduct_JzBra(self, bra, **hints):
         result = KroneckerDelta(self.j, bra.j)
-        if not bra.dual_class() is self.__class__:
+        if bra.dual_class() is not self.__class__:
             result *= self._represent_JzOp(None)[bra.j-bra.m]
         else:
             result *= KroneckerDelta(self.j, bra.j) * KroneckerDelta(self.m, bra.m)

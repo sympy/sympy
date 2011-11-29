@@ -302,7 +302,7 @@ def is_cnf(expr):
         if not expr.args[0].is_Atom:
             return False
 
-    if not expr.func is And:
+    if expr.func is not And:
         return False
 
     for cls in expr.args:
@@ -311,7 +311,7 @@ def is_cnf(expr):
         if cls.func is Not:
             if not cls.args[0].is_Atom:
                 return False
-        elif not cls.func is Or:
+        elif cls.func is not Or:
             return False
         for lit in cls.args:
             if lit.func is Not:
