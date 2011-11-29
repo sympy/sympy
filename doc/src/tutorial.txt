@@ -1,43 +1,42 @@
 .. _tutorial:
 
 ========
-Tutorial
+Туторијал
 ========
 
 .. role:: input(strong)
 
-Introduction
+Увод
 ============
 
-SymPy is a Python library for symbolic mathematics. It aims to become a
-full-featured computer algebra system (CAS) while keeping the code as simple as
-possible in order to be comprehensible and easily extensible.  SymPy is written
-entirely in Python and does not require any external libraries.
+SymPy je Python библиотека за симболичку математику. Циља да постане потпуно садржани 
+алгебарски систем, чувајућим код једноставнијим колико је могуће 
+да би била разумљива и лакше проширива. SymPy комплетан је написан Python 
+и не захтева никакве екстерне библиотеке.
 
-This tutorial gives an overview and introduction to SymPy.
-Read this to have an idea what SymPy can do for you (and how) and if you want
-to know more, read the
+Овај туторијал даје вам преглед и увод у SymPy.
+Прочитајте ово да бисте имали идеју шта SymPy може урадити за вас  (и како) и ако хоћете да сазнате више, прочитајте ово
 :ref:`SymPy User's Guide <guide>`,
 :ref:`SymPy Modules Reference <module-docs>`.
 or the `sources
 <https://github.com/sympy/sympy/>`_ directly.
 
-First Steps with SymPy
+Први кораци SymPy
 ======================
 
-The easiest way to download it is to go to
+Најлакши начин да се преузме је да одете на 
 http://code.google.com/p/sympy/ and
-download the latest tarball from the Featured Downloads:
+и преузмeте последњу архиву из истакнутих преузимања:
 
 .. image:: figures/featured-downloads.png
 
-Unpack it:
+Отпакујте:
 
 .. parsed-literal::
 
     $ :input:`tar xzf sympy-0.5.12.tar.gz`
 
-and try it from a Python interpreter:
+И покушајте из Python интерпретера:
 
 .. parsed-literal::
 
@@ -51,12 +50,11 @@ and try it from a Python interpreter:
     >>> (1/cos(x)).series(x, 0, 10)
     1 + x**2/2 + 5*x**4/24 + 61*x**6/720 + 277*x**8/8064 + O(x**10)
 
-You can use SymPy as shown above and this is indeed the recommended way if you
-use it in your program. You can also install it using ``./setup.py install`` as
-any other Python module, or just install a package in your favourite Linux
-distribution, e.g.:
+Ви можете да користите SymPy како је погазано горе и то је препоручљив начин ако се користи
+у башем програму. Такође можете инсталирати га користећи ``./setup.py install`` као неки други Python модул,
+или само инсталирати пакет у ваш омиљени линукс пр.:
 
-.. topic:: Installing SymPy in Debian
+.. topic:: Инсталирање SymPy у Дебијану
 
   .. parsed-literal::
 
@@ -77,20 +75,20 @@ distribution, e.g.:
     Setting up python-sympy (0.5.12-1) ...
 
 
-For other means how to install SymPy, consult the  Downloads_ tab on the
-SymPy's webpage.
+За остале начине како инсталирати SymPy констултујете се  Downloads_ tab табу на
+SymPy страници.
 
 .. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
 
 
-isympy Console
+isympy конзола
 --------------
 
-For experimenting with new features, or when figuring out how to do things, you
-can use our special wrapper around IPython called ``isympy`` (located in
-``bin/isympy`` if you are running from the source directory) which is just a
-standard python shell that has already imported the relevant sympy modules and
-defined the symbols x, y, z and some other things:
+За експериментисање са новим могућностима или када сазнајете како да радите 
+неке  радње, можете користити специјални омот око IPythoн - звани  ``isympy`` (лоциран у 
+``bin/isympy`` ако покрећете из изворне изворног фолдера) који је само стандрдна
+python љуска која је је већ увежена релевантни sympy модули и дефинисани симболи 
+x, y, z и неке остале ствари:
 
 .. parsed-literal::
 
@@ -116,17 +114,17 @@ defined the symbols x, y, z and some other things:
 
 .. note::
 
-    Commands entered by you are bold. Thus what we did in 3 lines in a regular
-    Python interpreter can be done in 1 line in isympy.
+    Команде су подебљане.То што смо урадили 3 линије
+    у регуларном Python интерпретеру може бити урађено у једној линији у isympy.
 
 
-Using SymPy as a calculator
+Коришћење SymPy као дигитрона
 ---------------------------
 
-Sympy has three built-in numeric types: Float, Rational and Integer.
+Sympy има три уграђена типа бројева: промјенљиви, рационални and цели.
 
-The Rational class represents a rational number as a pair of two Integers: the numerator and the denominator.
-So Rational(1,2) represents 1/2, Rational(5,2) represents 5/2, and so on.
+Рационална класа представља рацоинални број као пар од два цела, именилац и садржилац, тако да рационални
+ број (1,2) представаља 1/2, рационални (5,2) представља 5/2 и тако даље.
 
 ::
 
@@ -171,9 +169,10 @@ Rational::
     >>> R(1)/2 # R(1) is a sympy Integer and Integer/int gives a Rational
     1/2
 
-We also have some special constants, like e and pi, that are treated as symbols
-(1+pi won't evaluate to something numeric, rather it will remain as 1+pi), and
-have arbitrary precision::
+Ми такође имамо неке специјалне константе 
+као e и pi, они се третирају као симболи
+(1+pi неће призвести у нешто нумеричко,
+највероватније ће остати као 1+pi), имаће произвољну прецизност :
 
     >>> pi**2
     pi**2
@@ -184,28 +183,28 @@ have arbitrary precision::
     >>> (pi+exp(1)).evalf()
     5.85987448204884
 
-as you see, evalf evaluates the expression to a floating-point number
+као што видите, evalf евалуира израз у реалан број 
 
-The symbol ``oo`` is used for a class defining mathematical infinity::
+Симбол ``oo`` која представља математичко бесконачно::
 
     >>> oo > 99999
     True
     >>> oo + 1
     oo
 
-Symbols
+Симболи
 -------
 
-In contrast to other Computer Algebra Systems, in SymPy you have to declare
-symbolic variables explicitly::
+У контрасту од осталих компјутерскиџ алгебарских система, у SymPy ви морате да декларишете
+симболичке променљиве експлицитно:
 
     >>> from sympy import *
     >>> x = Symbol('x')
     >>> y = Symbol('y')
 
-On the left is the normal Python variable which has been assigned to the
-SymPy Symbol class. Instances of the Symbol class "play well together"
-and are the building blocks of expresions::
+На левој је нормална Python променљива која је додељњна
+SymPy Symbol класи. Случајеви од Symbol класе "play well together"
+грађење симбола израза::
 
     >>> x+y+x-y
     2*x
@@ -216,7 +215,7 @@ and are the building blocks of expresions::
     >>> ((x+y)**2).expand()
     x**2 + 2*x*y + y**2
 
-They can be substituted with other numbers, symbols or expressions using ``subs(old, new)``::
+Они могу бити замењени са осталим бројевима , симболима и изразима користећи``subs(old, new)``::
 
     >>> ((x+y)**2).subs(x, 1)
     (y + 1)**2
@@ -227,18 +226,19 @@ They can be substituted with other numbers, symbols or expressions using ``subs(
     >>> ((x+y)**2).subs(x, 1 - y)
     1
 
-For the remainder of the tutorial, we assume that we have run::
+За подсетник за овај туторијал , ми претпостављамо да ми требамо покренути::
 
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
-This will make things look better when printed. See the :ref:`printing-tutorial`
-section below. If you have a unicode font installed, you can pass
-use_unicode=True for a slightly nicer output.
+Ово ће направити  код лепшим када је одштампан. Погледајте :ref:`printing-tutorial`
+секцију. Ако имате
+неки уникодни фонт инсталиран, можете 
+use_unicode=True за много љепши извод.
 
-Algebra
+Алгебра
 =======
 
-For partial fraction decomposition, use ``apart(expr, x)``::
+За дјелимични разломак , користите ``apart(expr, x)``::
 
     >>> 1/( (x+2)*(x+1) )
            1
@@ -260,7 +260,7 @@ For partial fraction decomposition, use ``apart(expr, x)``::
     1 + -----
         x - 1
 
-To combine things back together, use ``together(expr, x)``::
+Да бисте комбиновали ствари заједно, користите ``together(expr, x)``::
 
     >>> together(1/x + 1/y + 1/z)
     x*y + x*z + y*z
@@ -280,16 +280,16 @@ To combine things back together, use ``together(expr, x)``::
 
 .. index:: calculus
 
-Calculus
+Рачуни
 ========
 
 .. index:: limits
 
-Limits
+Лимити
 ------
 
-Limits are easy to use in sympy, they follow the syntax ``limit(function,
-variable, point)``, so to compute the limit of f(x) as x -> 0, you would issue
+Лако је користити лимите у sympy, они прате синтаксу ``limit(function,
+variable, point)``, тако да би израчунали лимит од f(x) as x -> 0,ви би издали
 ``limit(f, x, 0)``::
 
    >>> from sympy import *
@@ -297,7 +297,7 @@ variable, point)``, so to compute the limit of f(x) as x -> 0, you would issue
    >>> limit(sin(x)/x, x, 0)
    1
 
-you can also calculate the limit at infinity::
+Ви можете такође израчунати лимит бесконачности::
 
    >>> limit(x, x, oo)
    oo
@@ -308,16 +308,16 @@ you can also calculate the limit at infinity::
    >>> limit(x**x, x, 0)
    1
 
-for some non-trivial examples on limits, you can read the test file
+За неке не-безначајне примере на лимитима, ви моможете прочитати тест датотеку
 `test_demidovich.py
 <https://github.com/sympy/sympy/blob/master/sympy/series/tests/test_demidovich.py>`_
 
 .. index:: differentiation, diff
 
-Differentiation
+Извод
 ---------------
 
-You can differentiate any SymPy expression using ``diff(func, var)``. Examples::
+Ви можете извести сваки SymPy израз коритећи ``diff(func, var)``. Примери::
 
     >>> from sympy import *
     >>> x = Symbol('x')
@@ -330,13 +330,13 @@ You can differentiate any SymPy expression using ``diff(func, var)``. Examples::
        2
     tan (x) + 1
 
-You can check, that it is correct by::
+можете проверити да ли је то тачно са::
 
     >>> limit((tan(x+y)-tan(x))/y, y, 0)
        2
     tan (x) + 1
 
-Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
+Већи деривати могу бити израчунани користећи ``diff(func, var, n)`` метод::
 
     >>> diff(sin(2*x), x, 1)
     2*cos(2*x)
@@ -352,10 +352,10 @@ Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
     single: series expansion
     single: expansion; series
 
-Series expansion
+Проширење серија
 ----------------
 
-Use ``.series(var, point, order)``::
+Користите ``.series(var, point, order)``::
 
     >>> from sympy import *
     >>> x = Symbol('x')
@@ -370,7 +370,7 @@ Use ``.series(var, point, order)``::
     1 + -- + ---- + ----- + ------ + O\x  /
         2     24     720     8064
 
-Another simple example::
+Још један једноставан пример::
 
     from sympy import Integral, Symbol, pprint
 
@@ -383,7 +383,7 @@ Another simple example::
     print(s)
     pprint(s)
 
-That should print the following after the execution::
+То би требало да одштампа следеће после покретања::
 
     1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
          2    4         3
@@ -394,18 +394,18 @@ That should print the following after the execution::
 
 .. index:: integration
 
-Integration
+Интеграција
 -----------
 
-SymPy has support for indefinite and definite integration of transcendental
-elementary and special functions via ``integrate()`` facility, which uses
-powerful extended Risch-Norman algorithm and some heuristics and pattern
-matching::
+SymPy има подршку за одређену и неодређену интеграцију за трансцендентне елементарне и специјалне функције
+преко ``integrate()`` постројење, које користи
+моћни проширени Risch-Norman алгоритам и неке хеуристике и обрасце
+поклапања::
 
     >>> from sympy import *
     >>> x, y = symbols('x,y')
 
-You can integrate elementary functions::
+Ви можете интегрисати неке елементарне функције::
 
     >>> integrate(6*x**5, x)
      6
@@ -418,7 +418,7 @@ You can integrate elementary functions::
      2
     x  + cosh(x)
 
-Also special functions are handled easily::
+Такође и са специјалним функцијама се лако управља::
 
     >>> integrate(exp(-x**2)*erf(x), x)
       ____    2
@@ -426,7 +426,7 @@ Also special functions are handled easily::
     --------------
           4
 
-It is possible to compute definite integral::
+Могуће је да израчунате дефинисани интеграл::
 
     >>> integrate(x**3, (x, -1, 1))
     0
@@ -435,7 +435,7 @@ It is possible to compute definite integral::
     >>> integrate(cos(x), (x, -pi/2, pi/2))
     2
 
-Also improper integrals are supported as well::
+Такође неправилни интеграли су подржани::
 
     >>> integrate(exp(-x), (x, 0, oo))
     1
@@ -446,7 +446,7 @@ Also improper integrals are supported as well::
     single: complex numbers
     single: expansion; complex
 
-Complex numbers
+Комплексни бројеви
 ---------------
 
 ::
@@ -463,10 +463,10 @@ Complex numbers
     >>> exp(I*x).expand(complex=True)
     I*sin(x) + cos(x)
 
-Functions
+Функције
 ---------
 
-**trigonometric**::
+**тригонометричке**::
 
     >>> sin(x+y).expand(trig=True)
     sin(x)*cos(y) + sin(y)*cos(x)
@@ -512,7 +512,7 @@ Functions
     x - -- + ---- - ---- + ----- + O\x  /
         6     40    112     1152
 
-**spherical harmonics**::
+**Сферне хармонике**::
 
     >>> from sympy.abc import theta, phi
 
@@ -537,7 +537,7 @@ Functions
                       ____
                   4*\/ pi
 
-**factorials and gamma function**::
+**Факторијали и гама функције**::
 
     >>> x = Symbol("x")
 
@@ -555,7 +555,7 @@ Functions
     1 - EulerGamma*x + ------ + -------------- + O\x /
                          12           2
 
-**zeta function**::
+**Зета функције**::
 
     >>> zeta(4, x)
     zeta(4, x)
@@ -579,7 +579,7 @@ Functions
       16    90
 
 
-**polynomials**::
+**Полиноми**::
 
     >>> chebyshevt(2, x)
        2
@@ -616,7 +616,7 @@ Functions
 
 .. index:: equations; differential, diff, dsolve
 
-Differential Equations
+Диференцијална рачунања
 ----------------------
 
 In ``isympy``::
@@ -633,7 +633,7 @@ In ``isympy``::
 
 .. index:: equations; algebraic, solve
 
-Algebraic equations
+Алгебарска рачунања
 -------------------
 
 In ``isympy``::
@@ -646,15 +646,15 @@ In ``isympy``::
 
 .. index:: linear algebra
 
-Linear Algebra
+Линеарна алгебра
 ==============
 
 .. index:: Matrix
 
-Matrices
+Матрице
 --------
 
-Matrices are created as instances from the Matrix class::
+Матрице су направљене као случајевима из класе матрица::
 
     >>> from sympy import Matrix
     >>> Matrix([[1,0], [0,1]])
@@ -662,7 +662,7 @@ Matrices are created as instances from the Matrix class::
     [    ]
     [0  1]
 
-you can also put Symbols in it::
+ви можете такође ставити симболе::
 
     >>> x = Symbol('x')
     >>> y = Symbol('y')
@@ -677,16 +677,15 @@ you can also put Symbols in it::
     [                ]
     [  2*y    x*y + 1]
 
-For more information an examples with Matrices, see the LinearAlgebraTutorial.
+За више информација и примера са матрицама, погледајте LinearAlgebraTutorial.
 
 .. index:: pattern matching, match, Wild, WildFunction
 
-Pattern matching
+Поклапање образаца
 ================
 
-Use the ``.match()`` method, along with the ``Wild`` class, to perform pattern
-matching on expressions. The method will return a dictionary with the required
-substitutions, as follows::
+Користите ``.match()`` метод са ``Wild`` класом , да би извршили образац
+одговарајуће на изразе. Овај метод ће вратити речник са потребним изменама, као::
 
     >>> from sympy import *
     >>> x = Symbol('x')
@@ -698,13 +697,13 @@ substitutions, as follows::
     >>> (x**2).match(p*x**q)
     {p: 1, q: 2}
 
-If the match is unsuccessful, it returns ``None``::
+Ако је претрага неуспешна , оно враћа  ``None``::
 
     >>> print (x+1).match(p**x)
     None
 
-One can also use the exclude parameter of the ``Wild`` class to ensure that
-certain things do not show up in the result::
+едан такође може користити параметар искључења од ``Wild`` класе да би били сигурни да 
+се одређене ствари неће приказати у реѕултату::
 
     >>> x = Symbol('x')
     >>> p = Wild('p', exclude=[1,x])
@@ -717,14 +716,14 @@ certain things do not show up in the result::
 
 .. _printing-tutorial:
 
-Printing
+Штампање
 ========
 
-There are many ways how expressions can be printed.
+Постоји више начина како изрази могу бити одштампани.
 
-**Standard**
+**Стандардно**
 
-This is what ``str(expression)`` returns and it looks like this:
+Ово је шта  ``str(expression)`` враћа и изгледа као:
 
     >>> from sympy import Integral
     >>> from sympy.abc import x
@@ -737,9 +736,9 @@ This is what ``str(expression)`` returns and it looks like this:
     >>>
 
 
-**Pretty printing**
+**Лепше штампање**
 
-This is a nice ascii-art printing produced by a ``pprint`` function:
+Ово је добро ascii штампање направљено од  a ``pprint`` function:
 
     >>> from sympy import Integral, pprint
     >>> from sympy.abc import x
@@ -758,8 +757,8 @@ This is a nice ascii-art printing produced by a ``pprint`` function:
      |
     /
 
-If you have a unicode font installed, it should use unicode pretty printing by default.
-You can override this using the ``use_unicode`` option.:
+Ако имате неки уникодни font инсталиран, то би требало користити лепше штампање као подразумевано.
+Можете прескочити та подешавања користећи ``use_unicode`` option.:
 
     >>> pprint(Integral(x**2, x), use_unicode=True)
     ⌠
@@ -768,11 +767,11 @@ You can override this using the ``use_unicode`` option.:
     ⌡
 
 
-See also the wiki `Pretty Printing
-<https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ for more examples of a nice
-unicode printing.
+Погледајте и wiki `Pretty Printing
+<https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ за више примера 
+лепог уникодног штампања.
 
-Tip: To make the pretty printing default in the python interpreter, use::
+Савет: Да бисте направили лепо штампање направљено подразумеваним у python интерпретеру користите::
 
     $ python
     Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
@@ -795,7 +794,7 @@ Tip: To make the pretty printing default in the python interpreter, use::
      |
     /
 
-**Python printing**
+**Python штампање**
 
     >>> from sympy.printing.python import python
     >>> from sympy.printing.python import python
@@ -812,7 +811,7 @@ Tip: To make the pretty printing default in the python interpreter, use::
     e = Integral(x**2, x)
 
 
-**LaTeX printing**
+**LaTeX штампање**
 
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
@@ -847,18 +846,17 @@ Tip: To make the pretty printing default in the python interpreter, use::
     >>> from sympy.abc import x
     >>> preview(Integral(x**2, x)) #doctest:+SKIP
 
-And a pyglet window with the LaTeX rendered expression will popup:
+И  pyglet прозор са LaTeX приказаним изразом ће се приказати:
 
 .. image:: pics/pngview1.png
 
-Notes
+Забиљешке
 -----
 
-``isympy`` calls ``pprint`` automatically, so that's why you see pretty
-printing by default.
+``isympy`` позива ``pprint`` аутоматски , тако да зато ви ћете видети лео штампање подразумевано.
 
-Note that there is also a printing module available, ``sympy.printing``.  Other
-printing methods available through this module are:
+Видите да овде такође постоји модул за штампање, ``sympy.printing``.  Остали
+ методи штампања су доступни кроз ове модуле овде:
 
 * ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, respectively, a pretty representation of ``expr``. This is the same as the second level of representation described above.
 
@@ -868,13 +866,12 @@ printing methods available through this module are:
 
 * ``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ program is required.
 
-Further documentation
+Додатна документација
 =====================
 
-Now it's time to learn more about SymPy. Go through the
+Сада је време да се научи више о SymPy. Идите на
 :ref:`SymPy User's Guide <guide>` and
 :ref:`SymPy Modules Reference <module-docs>`.
 
-Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
-that contains a lot of useful examples, tutorials, cookbooks that we and our
-users contributed and we encourage you to edit it.
+Претражите и наш јавни `wiki.sympy.org <http://wiki.sympy.org/>`_,
+који садрже доста  корисних примера , туторијала, који су наши косници донитали и ми охрабрујемо вас да их уредите.
