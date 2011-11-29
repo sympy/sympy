@@ -83,7 +83,7 @@ isympy
 
     $ :input:`cd sympy`
     $ :input:`./bin/isympy`
-    IPython console for SymPy 0.7.1 (Python 2.7.1) (ground types: gmpy)
+    IPython console for SymPy 0.7.1-git (Python 2.7.1) (ground types: gmpy)
 
     These commands were executed:
     >>> from __future__ import division
@@ -97,8 +97,8 @@ isympy
     In [1]: :input:`(1/cos(x)).series(x, 0, 10)`
     Out[1]:
          2      4       6        8
-        x    5*x    61*x    277*x
-    1 + ── + ──── + ───── + ────── + O(x**10)
+        x    5*x    61*x    277*x     / 10\
+    1 + ── + ──── + ───── + ────── + O\x  /
         2     24     720     8064
 
 .. note::
@@ -111,7 +111,7 @@ SymPy jako kalkulator
 
 SymPy posiada trzy wbudowane typy liczbowe: Float (zmiennoprzecinkowy), Rational (wymierny) i Integer (całkowity).
 
-Klasa Rational reprezentuje liczbę wymierną jako parę dwóch liczb całkowitych - licznik i mianownik. Rational(1,2) reprezentuje więc 1/2, Rational(5,2) 5/2 itd.
+Klasa Rational reprezentuje liczbę wymierną jako parę dwóch liczb całkowitych - licznik i mianownik. Rational(1,2) reprezentuje więc 1/2, Rational(5,2) reprezentuje 5/2 itd.
 
 ::
 
@@ -128,22 +128,23 @@ Klasa Rational reprezentuje liczbę wymierną jako parę dwóch liczb całkowity
     1/88817841970012523233890533447265625
 
 
-Należy zachować ostrożność, pracując z intami w Pythonie, ponieważ ucina on iloraz do liczby całkowitej:
+Należy zachować ostrożność, pracując z liczbami całkowitymi i zmiennoprzecinkowymi w Pythonie, szczególnie podczas dzielenia. Można bowiem przypadkowo utworzyć liczbę obsługiwaną przez samego Pythona, a nie przez SymPy. Dzielenie przez siebie dwóch Pythonowych liczb całkowitych może dać w wyniku liczbę zmiennoprzecinkową -- jest to standard "prawidłowego dzielenia" z Pythona 3 i domyślne zachowanie ``isympy``, który importuje dzielenie z __future__::
 
-   >>> 1/2
-   0
-
-   >>> 1.0/2
+   >>> 1/2 #doctest: +SKIP
    0.5
 
-Możesz jednak zrobić tak::
+We wcześniejszych wersjach Pythona, gdzie takie dzielenie nie było zaimportowane, wynik był ucinany do liczby całkowitej::
 
-  >>> from __future__ import division
+   >>> 1/2 #doctest: +SKIP
+   0
 
-  >>> 1/2 #doctest: +SKIP
-  0.5
+Jednakże, w obu przypadkach, nie operowaliśmy na liczbach obsługiwanych przez SymPy, ponieważ Python stworzył swoją własną zmienną. Prawdopodobnie większość czasu będziesz operował na liczbach wymiernych -- dlatego upewnij się, że na pewno używasz klasy Rational, aby uzyskać prawidłowy wynik obsługiwany przez SymPy. Dla wygody możesz na przykład przyrównać ``R`` i Rational::
 
-Prawidłowe dzielenie stanie się standardem w python3k, ``isympy`` również ma zaimplementowaną tę funkcję.
+    >>> R = Rational
+    >>> R(1, 2)
+    1/2
+    >>> R(1)/2 # R(1) is a sympy Integer and Integer/int gives a Rational
+    1/2
 
 Możemy skorzystać też z kilku specjalnych stałych, takich jak e czy pi. Są one traktowane jako symbole (np. w przypadku 1+pi nie zostanie obliczona przybliżona wartość tego wyrażenia, lecz pozostanie ono jako 1+pi), i mają arbitralną precyzję::
 
@@ -158,7 +159,7 @@ Możemy skorzystać też z kilku specjalnych stałych, takich jak e czy pi. Są 
 
 Jak widzisz, evalf wylicza wartość wyrażenia jako liczbę zmiennoprzecinkową.
 
-Istnieje również klasa reprezentująca matematyczną nieskończoność, nazwana oo::
+Symbol ``oo`` jest używany jako klasa definiująca matematyczną nieskończoność::
 
     >>> oo > 99999
     True
@@ -174,7 +175,7 @@ W przeciwieństwie do innych systemów algebry komputerowej (CAS), w SymPy sam m
     >>> x = Symbol('x')
     >>> y = Symbol('y')
 
-Po zadeklarowaniu możesz już ich bezproblemowo używać::
+Po lewej jest zwykła zmienna z Pythona, która zostaje przypisana do klasy Symbol z SymPy. Obiekty klasy Symbol "dobrze ze sobą współgrają" i mogą budować całe bloki wyrażeń::
 
     >>> x+y+x-y
     2*x
@@ -185,21 +186,22 @@ Po zadeklarowaniu możesz już ich bezproblemowo używać::
     >>> ((x+y)**2).expand()
     x**2 + 2*x*y + y**2
 
-Oraz podstawiać w ich miejsce inne symbole i liczby używając ``subs(stary, nowy)``::
+Można podstawiać w ich miejsce inne symbole i liczby używając ``subs(stary, nowy)``::
 
     >>> ((x+y)**2).subs(x, 1)
     (y + 1)**2
 
     >>> ((x+y)**2).subs(x, y)
     4*y**2
+	
+	>>> ((x+y)**2).subs(x, 1 - y)
+    1
 
-W pozostałej części tutoriala zakładamy, że wykonaliśmy następujące polecenia::
+W pozostałej części tutoriala zakładamy, że wykonaliśmy następujące polecenie::
 
-    >>> import sys
-    >>> oldhook = sys.displayhook
-    >>> sys.displayhook = pprint
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
-Dzięki temu wszystko będzie się ładnie wyświetlało (zobacz sekcję :ref:`printing-tutorial` poniżej). Jeśli masz zainstalowaną czcionkę unicode, Twoje wyjście może wyglądać trochę inaczej (nieco lepiej).
+Dzięki temu wszystko będzie się ładnie wyświetlało (zobacz sekcję :ref:`printing-tutorial` poniżej). Jeśli masz zainstalowaną czcionkę unicode, możesz zamienić use_unicode=False na use_unicode=True, dzięki czemu uzyskasz nieco ładniejsze wyjście.
 
 Algebra
 =======
@@ -325,13 +327,13 @@ Użyj ``.series(var, point, order)``::
     >>> x = Symbol('x')
     >>> cos(x).series(x, 0, 10)
          2    4     6      8
-        x    x     x      x
-    1 - -- + -- - --- + ----- + O(x**10)
+        x    x     x      x      / 10\
+    1 - -- + -- - --- + ----- + O\x  /
         2    24   720   40320
     >>> (1/cos(x)).series(x, 0, 10)
          2      4       6        8
-        x    5*x    61*x    277*x
-    1 + -- + ---- + ----- + ------ + O(x**10)
+        x    5*x    61*x    277*x     / 10\
+    1 + -- + ---- + ----- + ------ + O\x  /
         2     24     720     8064
 
 Inny prosty przykład::
@@ -351,8 +353,8 @@ Po wykonaniu powinno wypisać::
 
     1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
          2    4         3
-    1   x    x    x    x
-    ─ + ── + ── - ── - ── + O(x**5)
+    1   x    x    x    x     / 5\
+    ─ + ── + ── - ── - ── + O\x /
     y    3    5    2    4
         y    y    y    y
 
@@ -451,26 +453,26 @@ Funkcje
 
     >>> sin(x).series(x, 0, 10)
          3     5     7       9
-        x     x     x       x
-    x - -- + --- - ---- + ------ + O(x**10)
+        x     x     x       x       / 10\
+    x - -- + --- - ---- + ------ + O\x  /
         6    120   5040   362880
 
     >>> sinh(x).series(x, 0, 10)
          3     5     7       9
-        x     x     x       x
-    x + -- + --- + ---- + ------ + O(x**10)
+        x     x     x       x       / 10\
+    x + -- + --- + ---- + ------ + O\x  /
         6    120   5040   362880
 
     >>> asin(x).series(x, 0, 10)
          3      5      7       9
-        x    3*x    5*x    35*x
-    x + -- + ---- + ---- + ----- + O(x**10)
+        x    3*x    5*x    35*x     / 10\
+    x + -- + ---- + ---- + ----- + O\x  /
         6     40    112     1152
 
     >>> asinh(x).series(x, 0, 10)
          3      5      7       9
-        x    3*x    5*x    35*x
-    x - -- + ---- - ---- + ----- + O(x**10)
+        x    3*x    5*x    35*x     / 10\
+    x - -- + ---- - ---- + ----- + O\x  /
         6     40    112     1152
 
 
@@ -513,8 +515,8 @@ Funkcje
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
                          2  2             2  2
-                       pi *x    EulerGamma *x
-    1 - EulerGamma*x + ------ + -------------- + O(x**3)
+                       pi *x    EulerGamma *x     / 3\
+    1 - EulerGamma*x + ------ + -------------- + O\x /
                          12           2
 
 **funkcja zeta**::
@@ -591,7 +593,7 @@ W ``isympy``::
            dx
 
     >>> dsolve(f(x).diff(x, x) + f(x), f(x))
-    f(x) = C1*cos(x) + C2*sin(x)
+    f(x) = C1*sin(x) + C2*cos(x)
 
 .. index:: equations; algebraic, solve
 
@@ -601,7 +603,7 @@ Równania algebraiczne
 W ``isympy``::
 
     >>> solve(x**4 - 1, x)
-    [1, -1, -I, I]
+    [-1, 1, -I, I]
 
     >>> solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
     {x: -3, y: 1}
@@ -701,7 +703,6 @@ Jest to to, co zwraca ``str(wyrażenie)`` i wygląda tak:
 
 Jest to wyświetlanie oparte na ascii-arcie. Zapewnia je funkcja ``pprint``:
 
-    >>> sys.displayhook = oldhook
     >>> from sympy import Integral, pprint
     >>> from sympy.abc import x
     >>> pprint(x**2)
@@ -738,8 +739,7 @@ Wskazówka: Aby ustawić ładne wyświetlanie w interpreterze Pythona jako domy�
     [GCC 4.3.1] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
     >>> from sympy import *
-    >>> import sys
-    >>> sys.displayhook = pprint
+    >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
     >>> var("x")
     x
     >>> x**3/3
@@ -758,6 +758,7 @@ Wskazówka: Aby ustawić ładne wyświetlanie w interpreterze Pythona jako domy�
 **Wyświetlanie w Pythonie**
 
     >>> from sympy.printing.python import python
+	>>> from sympy.printing.python import python
     >>> from sympy import Integral
     >>> from sympy.abc import x
     >>> print python(x**2)
@@ -786,7 +787,7 @@ Wskazówka: Aby ustawić ładne wyświetlanie w interpreterze Pythona jako domy�
     >>> latex(1/x)
     \frac{1}{x}
     >>> latex(Integral(x**2, x))
-    \int x^{2}\,dx
+    \int x^{2}\, dx
 
 **MathML**
 
