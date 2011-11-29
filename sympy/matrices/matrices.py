@@ -1502,7 +1502,7 @@ class Matrix(object):
         n = self.rows
         m = self.cols
         rank = n
-        row_reduced = self.rref()[0]
+        row_reduced = self.rref(invertible_check=False)[0]
         for i in range(row_reduced.rows):
             if Matrix(row_reduced[i*m:(i+1)*m]).norm() == 0:
                 rank -= 1
@@ -2265,11 +2265,9 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if self.det() == 0:
-            raise ValueError("A Matrix must have non-zero determinant to invert.")
-
         big = self.row_join(self.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc)
+        red = big.rref(iszerofunc=iszerofunc, invertible_check=True)
+
         return red[0][:,big.rows:]
 
     def inverse_ADJ(self):
@@ -2285,14 +2283,16 @@ class Matrix(object):
 
         return self.adjugate()/d
 
-    def rref(self,simplified=False, iszerofunc=_iszero, simplify=sympy_simplify):
+    def rref(self,simplified=False, iszerofunc=_iszero, simplify=sympy_simplify, invertible_check=False):
         """
         Take any matrix and return reduced row-echelon form and indices of pivot vars
 
         To simplify elements before finding nonzero pivots set simplified=True.
         To set a custom simplify function, use the simplify keyword argument.
+
+        When invertible_check is True, an error will be raised if the matrix is found to
+        not be invertible.
         """
-        # TODO: rewrite inverse_GE to use this
         pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
@@ -2307,6 +2307,8 @@ class Matrix(object):
                     if not iszerofunc(r[k,i]):
                         break
                 if k == r.rows - 1 and iszerofunc(r[k,i]):
+                    if invertible_check:
+                        raise ValueError("Matrix det == 0; not invertible.")
                     continue
                 r.row_swap(pivots,k)
             scale = r[pivots,i]
@@ -2325,6 +2327,7 @@ class Matrix(object):
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
         reduced, pivots = self.rref(simplified)
+
         basis = []
         # create a set of vectors for the basis
         for i in range(self.cols - len(pivots)):

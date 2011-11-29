@@ -1911,3 +1911,6 @@ def test_slice_issue_2884():
     assert m[:,-1] == Matrix([[1, 3]]).T
     raises(IndexError, 'm[2,:]')
     raises(IndexError, 'm[2,2]')
+
+def test_rref_invertible_check():
+    raises(ValueError, 'Matrix([[1, 2], [1, 2]]).rref(invertible_check=True)')
