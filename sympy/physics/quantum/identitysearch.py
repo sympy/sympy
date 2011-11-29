@@ -13,6 +13,7 @@ from sympy.physics.quantum.dagger import Dagger
 __all__ = [
     'generate_gate_rules',
     'GateIdentity',
+    'is_scalar_sparse_matrix',
     'is_scalar_matrix',
     'is_degenerate',
     'is_reducible',
@@ -59,7 +60,7 @@ def generate_gate_rules(*gate_seq):
 
     while (len(queue) > 0):
         rule = queue.popleft()
-
+        #print rule
         left = rule[0]
         rite = rule[1]
         ops = rule[2]
@@ -205,13 +206,26 @@ def construct_matrix_list(numqubits):
 
     return matrix_list
 
-def is_scalar_sparse_matrix(matrix):
+def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
     """Checks if a given scipy.sparse matrix is a scalar matrix."""
 
-    if (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1])):
+    matrix = represent(Mul(*circuit), nqubits=numqubits,
+                       format='scipy.sparse')
+
+    # In some cases, represent returns a 1D scalar value in place
+    # of a multi-dimensional scalar matrix
+    if (isinstance(matrix, int)):
+        return matrix == 1 if identity_only else True
+
+    # If represent returns a matrix, check if the matrix is diagonal
+    # and if every item along the diagonal is the same
+    elif (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1]) and
+        list(matrix.nonzero()[0]) == range(pow(2, numqubits))):
         diag = list(matrix.diagonal())
-        if (diag.count(diag[0]) == len(diag)):
-            return True
+        return (diag.count(diag[0]) == len(diag)
+                if not identity_only
+                else diag.count(diag[0]) == len(diag) and diag[0] == 1)
+
     return False
 
 def is_scalar_matrix(circuit, numqubits, identity_only):
@@ -221,26 +235,26 @@ def is_scalar_matrix(circuit, numqubits, identity_only):
     # A sparse matrix is faster but there's a few problems with it,
     # such as not being able to determine H(0)*H(0) is the identity matrix.
 
-    matrix_version = represent(Mul(*circuit), nqubits=numqubits)
+    matrix = represent(Mul(*circuit), nqubits=numqubits)
 
     # In some cases, represent returns a 1D scalar value in place
     # of a multi-dimensional scalar matrix
-    if (isinstance(matrix_version, Number)):
-        return matrix_version == 1 if identity_only else True
+    if (isinstance(matrix, Number)):
+        return matrix == 1 if identity_only else True
 
     # If represent returns a matrix, check if the matrix is diagonal
     # and if every item along the diagonal is the same
     else:
         # Added up the diagonal elements
-        matrix_trace = matrix_version.trace()
+        matrix_trace = matrix.trace()
         # Divide the trace by the first element in the matrix
         # if matrix is not required to be the identity matrix
-        adjusted_matrix_trace = (matrix_trace/matrix_version[0] 
+        adjusted_matrix_trace = (matrix_trace/matrix[0] 
                                  if not identity_only
                                  else matrix_trace)
         # The matrix is scalar if it's diagonal and the adjusted trace
         # value is equal to 2^numqubits
-        return (matrix_version.is_diagonal() and
+        return (matrix.is_diagonal() and
                 adjusted_matrix_trace == pow(2, numqubits))
 
 def is_degenerate(identity_set, gate_identity):
@@ -301,7 +315,7 @@ def bfs_identity_search(gate_list, numqubits, **kwargs):
     else:        
         max_depth = len(gate_list)
 
-    identity_only = (kwargs["identity_only"] if "identity_only" in kwargs else
+    eye_only = (kwargs["identity_only"] if "identity_only" in kwargs else
                      False)
 
     # Start with an empty sequence (implicitly contains an IdentityGate)
@@ -325,7 +339,7 @@ def bfs_identity_search(gate_list, numqubits, **kwargs):
 
             # In many cases when the matrix is a scalar value,
             # the evaluated matrix will actually be an integer          
-            if (is_scalar_matrix(new_circuit, numqubits, identity_only) and
+            if (is_scalar_matrix(new_circuit, numqubits, eye_only) and
                 not is_degenerate(ids, new_circuit) and
                 not circuit_reducible):
                 ids.add(GateIdentity(*new_circuit))
