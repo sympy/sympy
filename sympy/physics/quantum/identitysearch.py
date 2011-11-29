@@ -32,11 +32,25 @@ def generate_gate_rules(*gate_seq):
     in the sequence.
 
     Parameters
-    ----------
+    ==========
+    gate_seq : tuple, Gate
+        A variable length tuple of Gates.
 
     Examples
-    --------
+    ========
 
+    Find equivalent gate identities from the current circuit:
+
+        >>> from sympy.physics.quantum.identitysearch import \
+                    generate_gate_rules
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> generate_gate_rules(x, x)
+        [(X(0), X(0))]
+
+        >>> generate_gate_rules(x, y, z)
+        [(X(0), Y(0), Z(0)), (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)),
+         (Z(0), Y(0), X(0)), (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
     """
 
     # Each item in queue is a 3-tuple:
@@ -142,11 +156,29 @@ class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value.
 
     Parameters
-    ----------
+    ==========
+    args : tuple, Gate
+        A variable length tuple of Gates that form an identity.
 
     Examples
-    --------
+    ========
+
+    Create a GateIdentity and look at its attributes:
+
+        >>> from sympy.physics.quantum.identitysearch import \
+                    GateIdentity
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> an_identity = GateIdentity(x, y, z)
+        >>> an_identity.circuit
+        (X(0), Y(0), Z(0))
+
+        >>> an_identity.gate_rules
+        [(X(0), Y(0), Z(0)), (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)),
+         (Z(0), Y(0), X(0)), (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
+    
     """
+
     def __new__(cls, *args):
         # args should be a tuple - a variable length argument list
         obj = Basic.__new__(cls, *args)
@@ -261,10 +293,30 @@ def is_degenerate(identity_set, gate_identity):
     """Checks if a gate identity is a permutation of another identity.
 
     Parameters
-    ----------
+    ==========
+    identity_set : set
+        A Python set with GateIdentity objects.
+    gate_identity : GateIdentity
+        The GateIdentity to check for existence in the set.
 
     Examples
-    --------
+    ========
+
+    Check if the identity is a permutation of another identity:
+
+        >>> from sympy.physics.quantum.identitysearch import \
+                    GateIdentity, is_degenerate
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> an_identity = GateIdentity(x, y, z)
+        >>> id_set = set([an_identity])
+        >>> another_id = (y, z, x)
+        >>> is_degenerate(id_set, another_id)
+        True
+
+        >>> another_id = (x, x)
+        >>> is_degenerate(id_set, another_id)
+        False
     """
 
     # For now, just iteratively go through the set and check if the current
@@ -278,10 +330,32 @@ def is_reducible(circuit, numqubits, begin, end):
     """Determines if a subcircuit in circuit is reducible to a scalar value.
 
     Parameters
-    ----------
+    ==========
+    circuit : tuple, Gate
+        A tuple of Gates representing a circuit.  The circuit to check
+        if a gate identity is contained in a subcircuit.
+    numqubits : int
+        The number of qubits the circuit operates on.
+    begin : int
+        The leftmost gate in the circuit to include in a subcircuit.
+    end : int
+        The rightmost gate in the circuit to include in a subcircuit.
 
     Examples
-    --------
+    ========
+
+        >>> from sympy.physics.quantum.identitysearch import \
+                    GateIdentity, is_reducible
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> is_reducible((x, y, z), 1, 0, 3)
+        True
+
+        >>> is_reducible((x, y, z), 1, 1, 3)
+        False
+
+        >>> is_reducible((x, y, y), 1, 1, 3)
+        True
     """
 
     current_circuit = ()
@@ -303,10 +377,35 @@ def bfs_identity_search(gate_list, numqubits, **kwargs):
     This allows the finding of the shortest gate identities first.
 
     Parameters
-    ----------
+    ==========
+    gate_list : list, Gate
+        A list of Gates from which to search for gate identities.
+    numqubits : int
+        The number of qubits the quantum circuit operates on.
+    max_depth : int
+        The longest quantum circuit to construct from gate_list.
+    identity_only : bool
+        True to search for gate identities that reduce to identity;
+        False to search for gate identities that reduce to a scalar.
 
     Examples
-    --------
+    ========
+
+    Find a list of gate identities:
+        >>> from sympy.physics.quantum.identitysearch import \
+                    bfs_identity_search
+        >>> from sympy.physics.quantum.gate import X, Y, Z, H
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> bfs_identity_search([x], 1, max_depth=2)
+        set([GateIdentity(X(0), X(0))])
+
+        >>> bfs_identity_search([x, y, z], 1)
+        set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
+             GateIdentity(Z(0), Z(0)), GateIdentity(X(0), Y(0), Z(0))])
+
+        >>> bfs_identity_search([x, y, z], 1, identity_only=True)
+        set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
+             GateIdentity(Z(0), Z(0))])
     """
 
     # If max depth of a path isn't given, use the length of the gate_list
