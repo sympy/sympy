@@ -190,7 +190,7 @@ class Point(GeometryEntity):
                 if point not in c:
                     return False
             return True
-        except GeometryError, e:
+        except GeometryError:
             # Circle could not be created, because of collinearity of the
             # three points passed in, hence they are not concyclic.
             return False
