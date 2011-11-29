@@ -260,7 +260,7 @@ class LinearEntity(GeometryEntity):
         -----
         From the dot product of vectors v1 and v2 it is known that:
 
-            dot(v1, v2) = \|v1\|*\|v2\|*cos(A)
+            dot(v1, v2) = |v1|*|v2|*cos(A)
 
         where A is the angle formed between the two vectors. We can
         get the directional vectors of the two lines and readily
