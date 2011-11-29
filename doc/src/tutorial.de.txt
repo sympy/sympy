@@ -16,8 +16,8 @@ einfach erweiterbar bleibt. SymPy ist vollständig in Python geschrieben
 und benötigt keine weiteren Bibliotheken.
 
 Dieses Tutorial schafft einen Überblick und gibt eine Einführung in SymPy.
-Wenn du wissen willst, was SymPy tun kann (und wie), lies diese Seite, und wenn
-du mehr erfahren willst, lies den
+Wenn du wissen möchtest, was SymPy tun kann (und wie), lies diese Seite, und wenn
+du mehr erfahren möchtest, lies den
 :ref:`SymPy User's Guide <guide>` und die
 :ref:`SymPy Modules Reference <module-docs>`
 oder den `Quellcode
