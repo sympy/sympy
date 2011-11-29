@@ -155,6 +155,7 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     `multinomial_coefficients(n, n)`. Therefore, the latter coefficients are
     precomputed to save memory and time.
 
+    >>> from sympy.ntheory.multinomial import multinomial_coefficients
     >>> m53, m33 = multinomial_coefficients(5,3), multinomial_coefficients(3,3)
     >>> m53[(0,0,0,1,2)] == m53[(0,0,1,0,2)] == m53[(1,0,2,0,0)] == m33[(0,1,2)]
     True
