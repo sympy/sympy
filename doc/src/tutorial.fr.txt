@@ -16,12 +16,12 @@ soit compréhensible et facilement extensible.
 Sympy est entièrement écrit en Python et ne nécessite aucune bibliothèque
 externe.
 
-Ce tutoriel donne un aperçu et une introduciton à SymPy.
+Ce tutoriel donne un aperçu et une introduction à SymPy.
 Lisez-le pour vous faire une idée de ce que SymPy peut faire pour vous
 (et comment) et si vous voulez en savoir plus, lisez le
 :ref:`SymPy User's Guide <guide>`,
 :ref:`SymPy Modules Reference <module-docs>`.
-ou le `sources
+ou les `sources
 <https://github.com/sympy/sympy/>`_ directement.
 
 Premiers Pas avec SymPy
@@ -39,7 +39,7 @@ Décompressez-la :
 
     $ :input:`tar xzf sympy-0.5.12.tar.gz`
 
-et essayez-la dans un interprêteur Python :
+et essayez-la dans un interpréteur Python :
 
 .. parsed-literal::
 
@@ -91,9 +91,9 @@ La Console isympy
 
 Pour tester les nouvelles fonctionnalités, ou quand vous cherchez à savoir
 comment faire des choses, vous pouvez utiliser notre emballage (wrapper)
-spécial enrobbant IPython appelé ``isympy`` (situé dans ``bin/isympy``
+spécial enrobant IPython appelé ``isympy`` (situé dans ``bin/isympy``
 si vous vous trouvez dans le répertoire source) qui est juste un shell Python
-standard qui importe les modules SymPy les plus courrants et les
+standard qui importe les modules SymPy les plus courants et les
 symboles définis x, y, z et d'autres choses à l'avance :
 
 .. parsed-literal::
@@ -102,27 +102,27 @@ symboles définis x, y, z et d'autres choses à l'avance :
     $ :input:`./bin/isympy`
     IPython console for SymPy 0.7.1-git (Python 2.7.1) (ground types: gmpy)
 
-    Ces commandes ont été exécutées :
+    These commands were executed:
     >>> from __future__ import division
     >>> from sympy import *
     >>> x, y, z, t = symbols('x y z t')
     >>> k, m, n = symbols('k m n', integer=True)
     >>> f, g, h = symbols('f g h', cls=Function)
 
-    La Documentation se trouve sur http://www.sympy.org
+    Documentation can be found at http://www.sympy.org
 
     In [1]: :input:`(1/cos(x)).series(x, 0, 10)`
     Out[1]:
          2      4       6        8
         x    5*x    61*x    277*x     / 10\
-    1 + -- + ---- + ----- + ------ + O\x  /
+    1 + ── + ──── + ───── + ────── + O\x  /
         2     24     720     8064
 
 .. note::
 
     Les commandes que vous entrez sont en gras. Ainsi ce que nous avons fait
-    en 3 lignes dans un interprêteur Python habituel
-    peut être fait en 1 ligne avec isympy.
+    en 3 lignes dans un interpréteur Python habituel
+    peut être fait en une ligne avec isympy.
 
 
 Utiliser SymPy comme une calculatrice
@@ -153,9 +153,9 @@ et ainsi de suite.
 
 Procédez avec précaution lorsque vous travaillez avec les nombres entiers
 et à virgule flottante de Python, surtout dans des divisions, puisque
-vous pouriez créer un nombre Python, et pas un nombre SymPy.
+vous pourriez créer un nombre Python, et pas un nombre SymPy.
 Un ratio de deux entiers Python pourrait créer un flottant
--- la "vraie division" standarde de Python 3 et le comportement par défaut
+-- la "vraie division" standard de Python 3 et le comportement par défaut
 de ``isympy`` qui importe la division de __future__ ::
 
     >>> 1/2 #doctest: +SKIP
@@ -169,7 +169,7 @@ un int tronqué entraînera :
 
 Dans les deux cas, toutefois, vous n'avez pas à faire à un Nombre SymPy
 parce-que Python a créé son propre nombre. La plupart du temps vous travaillerez
-problablement avec des nombres Rational, alors prenez garde à utiliser Rational
+probablement avec des nombres Rational, alors prenez garde à utiliser Rational
 pour obtenir le résultat SymPy.
 On pourrait trouver pratique d'assimiler ``R`` à Rational ::
 
@@ -182,7 +182,7 @@ On pourrait trouver pratique d'assimiler ``R`` à Rational ::
 Nous avons également quelques constantes spéciales, comme e et pi,
 qui sont traitées comme des symboles (1+pi ne sera pas évalué
 comme quelque-chose de numérique, il restera plutôt sous la forme 1+pi),
-et et qui ont une précision arbitraire ::
+et qui ont une précision arbitraire ::
 
     >>> pi**2
     pi**2
@@ -204,8 +204,8 @@ définissant l'infinité mathématique ::
     >>> oo + 1
     oo
 
-Symbols
--------
+Symboles
+--------
 
 Contrairement à d'autres systèmes de calcul formel,
 SymPy vous oblige à déclarer les variables symboliques explicitement ::
@@ -408,7 +408,7 @@ Ceci devrait afficher ce qui suit après l'exécution ::
     1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
          2    4         3
     1   x    x    x    x     / 5\
-    - + -- + -- - -- - -- + O\x /
+    ─ + ── + ── - ── - ── + O\x /
     y    3    5    2    4
         y    y    y    y
 
@@ -682,7 +682,7 @@ Les matrices sont créées en instanciant la classe Matrix ::
     [    ]
     [0  1]
 
-vous pouvez aussi mettre des syboles à l'intérieur ::
+vous pouvez aussi mettre des symboles à l'intérieur ::
 
     >>> x = Symbol('x')
     >>> y = Symbol('y')
@@ -697,7 +697,7 @@ vous pouvez aussi mettre des syboles à l'intérieur ::
     [                ]
     [  2*y    x*y + 1]
 
-Pour plus d'informations et d'examples avec les Matrices,
+Pour plus d'informations et d'exemples avec les Matrices,
 voyez le TutorielAlgèbreLinéaire.
 
 .. index:: pattern matching, match, Wild, WildFunction
@@ -707,7 +707,7 @@ Filtrage de motifs
 
 Utilisez la méthode ``.match()``, accompagnée de la classe ``Wild``,
 pour effectuer un filtrage de motifs sur les expressions.
-La méthode retournera un dictionnaire avec les subsitutions requises,
+La méthode retournera un dictionnaire avec les substitutions requises,
 comme suit ::
 
     >>> from sympy import *
@@ -744,7 +744,7 @@ Afficher
 
 Il y a beaucoup de manières dont les expressions peuvent être affichées.
 
-**Standarde**
+**Standard**
 
 C'est ce que ``str(expression)`` retourne et ça ressemble à ça :
 
@@ -786,10 +786,10 @@ le joli affichage d'unicode par défaut.
 Vous pouvez outrepasser ce comportement en utilisant l'option ``use_unicode`` :
 
     >>> pprint(Integral(x**2, x), use_unicode=True)
-    (
-    ?  2
-    ? x  dx
-    )
+    ⌠
+    ⎮  2
+    ⎮ x  dx
+    ⌡
 
 
 Voir aussi le wiki `Pretty Printing
@@ -797,7 +797,7 @@ Voir aussi le wiki `Pretty Printing
 pour plus d'exemples d'un affichage unicode sympathique.
 
 Astuce : pour activer le joli affichage par défaut
-dans l'interprêteur Python, utilisez ::
+dans l'interpréteur Python, utilisez ::
 
     $ python
     Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
@@ -886,7 +886,7 @@ Notez qu'il y a aussi un module d'affichage disponible, ``sympy.printing``.
 D'autres méthodes d'affichage disponibles dans ce module sont :
 
 * ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``:
-Retourne ou affiche, respectivement, une jolie représentation of ``expr``.
+Retourne ou affiche, respectivement, une jolie représentation de ``expr``.
 C'est la même chose que le second niveau de représentation décrit au-dessus.
 
 * ``latex(expr)``, ``print_latex(expr)``: Retourne ou affiche, respectivement,
