@@ -396,8 +396,7 @@ def test_issue_1694():
     assert solve(x/sqrt(x**2 + 1),x) == [0]
     assert solve(exp(x) - y, x) == [log(y)]
     assert solve(exp(x)) == []
-    # XXX Fix (remove not)
-    assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) not in [[0, -1], [-1, 0]]
+    assert solve(x**2 + x + sin(y)**2 + cos(y)**2 - 1, x) in [[0, -1], [-1, 0]]
     eq = 4*3**(5*x + 2) - 7
     ans = solve(eq, x)
     assert len(ans) == 5 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
@@ -516,8 +515,7 @@ def test_issue_2033():
     assert solve([exp(x) - sin(y), y**2 - 4], [x, y]) == \
         [(log(-sin(2)), -2), (log(sin(2)), 2)]
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
-    # XXX Fix (!= -> ==)
-    assert solve(eqs) != \
+    assert solve(eqs) == \
         [
         {x: log(-sqrt(-z**2 - sin(log(3)))), y: -log(3)},
         {x: log(sqrt(-z**2 - sin(log(3)))), y: -log(3)}]
@@ -525,17 +523,15 @@ def test_issue_2033():
         [
         {x: log(-sqrt(-z**2 + sin(y)))},
         {x: log(sqrt(-z**2 + sin(y)))}]
-    # XXX Fix (!= -> ==)
-    assert solve(eqs, x, y) != \
+    assert solve(eqs, x, y) == \
         [
         (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
         (log(sqrt(-z**2 - sin(log(3)))), -log(3))]
     assert solve(eqs, y, z) == \
-        [(-log(3), -I*sqrt(exp(2*x) + sin(log(3)))),
+        [(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
          (-log(3), sqrt(-exp(2*x) - sin(log(3))))]
     eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
-    # XXX Fix (!= -> ==)
-    assert solve(eqs) != \
+    assert solve(eqs) == \
         [
         {x: log(-sqrt(-z - sin(log(3)))), y: -log(3)},
         {x: log(sqrt(-z - sin(log(3)))), y: -log(3)}]
@@ -543,8 +539,7 @@ def test_issue_2033():
         [
         {x: log(-sqrt(-z + sin(y)))},
         {x: log(sqrt(-z + sin(y)))}]
-    # XXX Fix (!= -> ==)
-    assert solve(eqs, x, y) != \
+    assert solve(eqs, x, y) == \
         [
         (log(-sqrt(-z - sin(log(3)))), -log(3)),
         (log(sqrt(-z - sin(log(3)))), -log(3))]
