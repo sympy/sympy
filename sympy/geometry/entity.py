@@ -164,7 +164,7 @@ class GeometryEntity(tuple):
         """
         from sympy.geometry.point import Point
         from sympy.geometry.line import Segment, Ray, Line
-        from sympy.geometry.ellipse import Circle, Ellipse
+        from sympy.geometry.ellipse import Ellipse
         from sympy.geometry.polygon import Polygon, RegularPolygon
 
         if isinstance(o, Point):

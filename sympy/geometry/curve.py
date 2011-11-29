@@ -6,12 +6,12 @@ Curve
 
 """
 
-from sympy.core import sympify, C, Symbol
+from sympy.core import sympify
 from sympy.core.compatibility import is_sequence
-from sympy.geometry.exceptions import GeometryError
+from sympy.geometry.entity import GeometryEntity
 from sympy.geometry.point import Point
-from entity import GeometryEntity
 from util import _symbol
+
 
 class Curve(GeometryEntity):
     """A curve in space.
