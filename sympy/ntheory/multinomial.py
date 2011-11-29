@@ -1,4 +1,5 @@
 from itertools import ifilter
+from collections import defaultdict
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs {(k1,k2) : C_kn} where
@@ -33,9 +34,9 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
 
     The algorithm is based on the following result:
 
-       Consider a polynomial and its ``m``-th exponent::
+       Consider a polynomial and its ``n``-th exponent::
 
-         P(x) = sum_{i=0}^m p_i x^k
+         P(x) = sum_{i=0}^m p_i x^i
          P(x)^n = sum_{k=0}^{m n} a(n,k) x^k
 
        The coefficients ``a(n,k)`` can be computed using the
@@ -48,39 +49,34 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
        where ``a(n,0) = p_0^n``.
     """
 
-    if m==2:
+    if not m:
+        if n:
+            return {}
+        else:
+            return {(): 1}
+    if m == 2:
         return binomial_coefficients(n)
     symbols = [(0,)*i + (1,) + (0,)*(m-i-1) for i in range(m)]
     s0 = symbols[0]
-    p0 = [_tuple(aa-bb for aa,bb in _zip(s,s0)) for s in symbols]
-    r = {_tuple(aa*n for aa in s0):1}
-    r_get = r.get
-    r_update = r.update
-    l = [0] * (n*(m-1)+1)
+    p0 = [_tuple(aa - bb for aa, bb in _zip(s, s0)) for s in symbols]
+    r = {_tuple(aa*n for aa in s0): 1}
+    l = [0] * (n*(m - 1) + 1)
     l[0] = r.items()
-    for k in xrange(1, n*(m-1)+1):
-        d = {}
-        d_get = d.get
-        for i in xrange(1, min(m,k+1)):
-            nn = (n+1)*i-k
+    for k in xrange(1, n*(m - 1) + 1):
+        d = defaultdict(int)
+        for i in xrange(1, min(m, k + 1)):
+            nn = (n + 1)*i - k
             if not nn:
                 continue
             t = p0[i]
-            for t2, c2 in l[k-i]:
-                tt = _tuple([aa+bb for aa,bb in _zip(t2,t)])
-                cc = nn * c2
-                b = d_get(tt)
-                if b is None:
-                    d[tt] = cc
-                else:
-                    cc = b + cc
-                    if cc:
-                        d[tt] = cc
-                    else:
-                        del d[tt]
+            for t2, c2 in l[k - i]:
+                tt = _tuple([aa + bb for aa, bb in _zip(t2, t)])
+                d[tt] += nn*c2
+                if not d[tt]:
+                    del d[tt]
         r1 = [(t, c//k) for (t, c) in d.iteritems()]
         l[k] = r1
-        r_update(r1)
+        r.update(r1)
     return r
 
 def multinomial_coefficients(m, n):
