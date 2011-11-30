@@ -28,7 +28,7 @@ class GMPYRationalField(RationalField):
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to `dtype`. """
-        if a.is_Rational and a.q != 0:
+        if a.is_Rational:
             return GMPYRationalType(a.p, a.q)
         elif a.is_Float:
             from sympy.polys.domains import RR
