@@ -643,7 +643,7 @@ def _hurwitz_reflection(ctx, s, a, d, atype):
     if atype == 'Q' or atype == 'Z':
         try:
             p, q = a._mpq_
-        except AttributeError:
+        except:
             assert a == int(a)
             p = int(a)
             q = 1
