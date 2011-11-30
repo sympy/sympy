@@ -178,6 +178,11 @@ def test(*paths, **kwargs):
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
 
+    # Show deprecation warnings
+    import warnings
+    from sympy.core.compatibility import SymPyDeprecationWarning
+    warnings.simplefilter("always", SymPyDeprecationWarning)
+
     test_files = t.get_test_files('sympy')
 
     if len(paths) == 0:
@@ -250,6 +255,11 @@ def doctest(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Show deprecation warnings
+    import warnings
+    from sympy.core.compatibility import SymPyDeprecationWarning
+    warnings.simplefilter("always", SymPyDeprecationWarning)
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
