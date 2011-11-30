@@ -769,7 +769,7 @@ class Derivative(Expr):
     Examples
     ========
 
-    Some basic examples:
+    Some basic examples::
 
         >>> from sympy import Derivative, Symbol, Function
         >>> f = Function('f')
@@ -786,7 +786,7 @@ class Derivative(Expr):
         >>> Derivative(f(x, y), y, x, evaluate=True)
         Derivative(f(x, y), x, y)
 
-    Now some derivatives wrt functions:
+    Now some derivatives wrt functions::
 
         >>> Derivative(f(x)**2, f(x), evaluate=True)
         2*f(x)
@@ -802,6 +802,8 @@ class Derivative(Expr):
 
         Examples
         ========
+
+        ::
 
             >>> from sympy import Function, Symbol, Derivative
             >>> f = Function('f')
@@ -956,7 +958,8 @@ class Derivative(Expr):
 
     @classmethod
     def _sort_variables(cls, vars):
-        """Sort variables, but disallow sorting of non-symbols.
+        """
+        Sort variables, but disallow sorting of non-symbols.
 
         When taking derivatives, the following rules usually hold:
 
@@ -967,31 +970,33 @@ class Derivative(Expr):
         Examples
         --------
 
-        >>> from sympy import Derivative, Function, symbols
-        >>> vsort = Derivative._sort_variables
-        >>> x, y, z = symbols('x y z')
-        >>> f, g, h = symbols('f g h', cls=Function)
+        ::
 
-        >>> vsort((x,y,z))
-        [x, y, z]
+            >>> from sympy import Derivative, Function, symbols
+            >>> vsort = Derivative._sort_variables
+            >>> x, y, z = symbols('x y z')
+            >>> f, g, h = symbols('f g h', cls=Function)
 
-        >>> vsort((h(x),g(x),f(x)))
-        [f(x), g(x), h(x)]
+            >>> vsort((x,y,z))
+            [x, y, z]
 
-        >>> vsort((z,y,x,h(x),g(x),f(x)))
-        [x, y, z, f(x), g(x), h(x)]
+            >>> vsort((h(x),g(x),f(x)))
+            [f(x), g(x), h(x)]
 
-        >>> vsort((x,f(x),y,f(y)))
-        [x, f(x), y, f(y)]
+            >>> vsort((z,y,x,h(x),g(x),f(x)))
+            [x, y, z, f(x), g(x), h(x)]
 
-        >>> vsort((y,x,g(x),f(x),z,h(x),y,x))
-        [x, y, f(x), g(x), z, h(x), x, y]
+            >>> vsort((x,f(x),y,f(y)))
+            [x, f(x), y, f(y)]
 
-        >>> vsort((z,y,f(x),x,f(x),g(x)))
-        [y, z, f(x), x, f(x), g(x)]
+            >>> vsort((y,x,g(x),f(x),z,h(x),y,x))
+            [x, y, f(x), g(x), z, h(x), x, y]
 
-        >>> vsort((z,y,f(x),x,f(x),g(x),z,z,y,x))
-        [y, z, f(x), x, f(x), g(x), x, y, z, z]
+            >>> vsort((z,y,f(x),x,f(x),g(x)))
+            [y, z, f(x), x, f(x), g(x)]
+
+            >>> vsort((z,y,f(x),x,f(x),g(x),z,z,y,x))
+            [y, z, f(x), x, f(x), g(x), x, y, z, z]
         """
 
         sorted_vars = []
@@ -1107,27 +1112,27 @@ class Lambda(Expr):
     'lambda x: expr'. A function of several variables is written as
     Lambda((x, y, ...), expr).
 
-    A simple example:
+    A simple example::
 
-    >>> from sympy import Lambda
-    >>> from sympy.abc import x
-    >>> f = Lambda(x, x**2)
-    >>> f(4)
-    16
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x
+        >>> f = Lambda(x, x**2)
+        >>> f(4)
+        16
 
-    For multivariate functions, use:
+    For multivariate functions, use::
 
-    >>> from sympy.abc import y, z, t
-    >>> f2 = Lambda((x, y, z, t), x + y**z + t**z)
-    >>> f2(1, 2, 3, 4)
-    73
+        >>> from sympy.abc import y, z, t
+        >>> f2 = Lambda((x, y, z, t), x + y**z + t**z)
+        >>> f2(1, 2, 3, 4)
+        73
 
-    A handy shortcut for lots of arguments:
+    A handy shortcut for lots of arguments::
 
-    >>> p = x, y, z
-    >>> f = Lambda(p, x + y*z)
-    >>> f(*p)
-    x + y*z
+        >>> p = x, y, z
+        >>> f = Lambda(p, x + y*z)
+        >>> f(*p)
+        x + y*z
 
     """
     is_Function = True
@@ -1224,23 +1229,23 @@ class Subs(Expr):
     this case the expression is always expanded (for the unevaluated form, use
     Derivative()).
 
-    A simple example:
+    A simple example::
 
-    >>> from sympy import Subs, Function, sin
-    >>> from sympy.abc import x, y, z
-    >>> f = Function('f')
-    >>> e = Subs(f(x).diff(x), x, y)
-    >>> e.subs(y, 0)
-    Subs(Derivative(f(_x), _x), (_x,), (0,))
-    >>> e.subs(f, sin).doit()
-    cos(y)
+        >>> from sympy import Subs, Function, sin
+        >>> from sympy.abc import x, y, z
+        >>> f = Function('f')
+        >>> e = Subs(f(x).diff(x), x, y)
+        >>> e.subs(y, 0)
+        Subs(Derivative(f(_x), _x), (_x,), (0,))
+        >>> e.subs(f, sin).doit()
+        cos(y)
 
-    An example with several variables:
+    An example with several variables::
 
-    >>> Subs(f(x)*sin(y)+z, (x, y), (0, 1))
-    Subs(z + f(_x)*sin(_y), (_x, _y), (0, 1))
-    >>> _.doit()
-    z + f(0)*sin(1)
+        >>> Subs(f(x)*sin(y)+z, (x, y), (0, 1))
+        Subs(z + f(_x)*sin(_y), (_x, _y), (0, 1))
+        >>> _.doit()
+        z + f(0)*sin(1)
 
     """
     def __new__(cls, expr, variables, point, **assumptions):
@@ -1369,37 +1374,39 @@ def diff(f, *symbols, **kwargs):
 
     **Examples**
 
-    >>> from sympy import sin, cos, Function, diff
-    >>> from sympy.abc import x, y
-    >>> f = Function('f')
+    ::
 
-    >>> diff(sin(x), x)
-    cos(x)
-    >>> diff(f(x), x, x, x)
-    Derivative(f(x), x, x, x)
-    >>> diff(f(x), x, 3)
-    Derivative(f(x), x, x, x)
-    >>> diff(sin(x)*cos(y), x, 2, y, 2)
-    sin(x)*cos(y)
+        >>> from sympy import sin, cos, Function, diff
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
 
-    >>> type(diff(sin(x), x))
-    cos
-    >>> type(diff(sin(x), x, evaluate=False))
-    <class 'sympy.core.function.Derivative'>
-    >>> type(diff(sin(x), x, 0))
-    sin
-    >>> type(diff(sin(x), x, 0, evaluate=False))
-    sin
+        >>> diff(sin(x), x)
+        cos(x)
+        >>> diff(f(x), x, x, x)
+        Derivative(f(x), x, x, x)
+        >>> diff(f(x), x, 3)
+        Derivative(f(x), x, x, x)
+        >>> diff(sin(x)*cos(y), x, 2, y, 2)
+        sin(x)*cos(y)
 
-    >>> diff(sin(x))
-    cos(x)
-    >>> diff(sin(x*y))
-    Traceback (most recent call last):
-    ...
-    ValueError: specify differentiation variables to differentiate sin(x*y)
+        >>> type(diff(sin(x), x))
+        cos
+        >>> type(diff(sin(x), x, evaluate=False))
+        <class 'sympy.core.function.Derivative'>
+        >>> type(diff(sin(x), x, 0))
+        sin
+        >>> type(diff(sin(x), x, 0, evaluate=False))
+        sin
 
-    Note that ``diff(sin(x))`` syntax is meant only for convenience
-    in interactive sessions and should be avoided in library code.
+        >>> diff(sin(x))
+        cos(x)
+        >>> diff(sin(x*y))
+        Traceback (most recent call last):
+        ...
+        ValueError: specify differentiation variables to differentiate sin(x*y)
+
+        Note that ``diff(sin(x))`` syntax is meant only for convenience
+        in interactive sessions and should be avoided in library code.
 
     **See Also**
 
@@ -1438,128 +1445,127 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     Also see expand_log, expand_mul, separate, expand_complex, expand_trig,
     and expand_func, which are wrappers around those expansion methods.
 
-    >>> from sympy import cos, exp
-    >>> from sympy.abc import x, y, z
-
-    mul - Distributes multiplication over addition:
-
-    >>> (y*(x + z)).expand(mul=True)
-    x*y + y*z
-
-    complex - Split an expression into real and imaginary parts:
-
-    >>> (x + y).expand(complex=True)
-    re(x) + re(y) + I*im(x) + I*im(y)
-    >>> cos(x).expand(complex=True)
-    -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
-
-    power_exp - Expand addition in exponents into multiplied bases:
-
-    >>> exp(x + y).expand(power_exp=True)
-    exp(x)*exp(y)
-    >>> (2**(x + y)).expand(power_exp=True)
-    2**x*2**y
-
-    power_base - Split powers of multiplied bases if assumptions allow
-    or if the 'force' hint is used:
-
-    >>> ((x*y)**z).expand(power_base=True)
-    (x*y)**z
-    >>> ((x*y)**z).expand(power_base=True, force=True)
-    x**z*y**z
-    >>> ((2*y)**z).expand(power_base=True)
-    2**z*y**z
-
-    log - Pull out power of an argument as a coefficient and split logs products
-    into sums of logs.  Note that these only work if the arguments of the log
-    function have the proper assumptions: the arguments must be positive and the
-    exponents must be real or else the force hint must be True:
-
-    >>> from sympy import log, symbols, oo
-    >>> log(x**2*y).expand(log=True)
-    log(x**2*y)
-    >>> log(x**2*y).expand(log=True, force=True)
-    2*log(x) + log(y)
-    >>> x, y = symbols('x,y', positive=True)
-    >>> log(x**2*y).expand(log=True)
-    2*log(x) + log(y)
-
-    trig - Do trigonometric expansions:
-
-    >>> cos(x + y).expand(trig=True)
-    -sin(x)*sin(y) + cos(x)*cos(y)
-
-    func - Expand other functions:
-
-    >>> from sympy import gamma
-    >>> gamma(x + 1).expand(func=True)
-    x*gamma(x)
-
-    multinomial - Expand (x + y + ...)**n where n is a positive integer:
-
-    >>> ((x + y + z)**2).expand(multinomial=True)
-    x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
-
-    You can shut off methods that you don't want:
-
-    >>> (exp(x + y)*(x + y)).expand()
-    x*exp(x)*exp(y) + y*exp(x)*exp(y)
-    >>> (exp(x + y)*(x + y)).expand(power_exp=False)
-    x*exp(x + y) + y*exp(x + y)
-    >>> (exp(x + y)*(x + y)).expand(mul=False)
-    (x + y)*exp(x)*exp(y)
-
-    Use deep=False to only expand on the top level:
-
-    >>> exp(x + exp(x + y)).expand()
-    exp(x)*exp(exp(x)*exp(y))
-    >>> exp(x + exp(x + y)).expand(deep=False)
-    exp(x)*exp(exp(x + y))
-
-    Note: because hints are applied in arbitrary order, some hints may
-    prevent expansion by other hints if they are applied first.  In
-    particular, mul may distribute multiplications and prevent log and
-    power_base from expanding them.  Also, if mul is applied before multinomial,
-    the expression might not be fully distributed.  The solution is to expand
-    with mul=False first, then run expand_mul if you need further expansion.
-
-    Examples:
-
-    >>> from sympy import expand_log, expand, expand_mul
-    >>> x, y, z = symbols('x,y,z', positive=True)
-
     ::
 
-      expand(log(x*(y + z))) # could be either one below
-      log(x*y + x*z)
-      log(x) + log(y + z)
+        >>> from sympy import cos, exp
+        >>> from sympy.abc import x, y, z
 
-    >>> expand_log(log(x*y + x*z))
-    log(x*y + x*z)
+    - mul - Distributes multiplication over addition::
 
-    >>> expand(log(x*(y + z)), mul=False)
-    log(x) + log(y + z)
+        >>> (y*(x + z)).expand(mul=True)
+        x*y + y*z
 
-    ::
+    - complex - Split an expression into real and imaginary parts::
 
-      expand((x*(y + z))**x) # could be either one below
-      (x*y + x*z)**x
-      x**x*(y + z)**x
+        >>> (x + y).expand(complex=True)
+        re(x) + re(y) + I*im(x) + I*im(y)
+        >>> cos(x).expand(complex=True)
+        -I*sin(re(x))*sinh(im(x)) + cos(re(x))*cosh(im(x))
 
-    >>> expand((x*(y + z))**x, mul=False)
-    x**x*(y + z)**x
+    - power_exp - Expand addition in exponents into multiplied bases::
 
-    ::
+        >>> exp(x + y).expand(power_exp=True)
+        exp(x)*exp(y)
+        >>> (2**(x + y)).expand(power_exp=True)
+        2**x*2**y
 
-      expand(x*(y + z)**2) # could be either one below
-      2*x*y*z + x*y**2 + x*z**2
-      x*(y + z)**2
+    - power_base - Split powers of multiplied bases if assumptions allow
+      or if the 'force' hint is used::
 
-    >>> expand(x*(y + z)**2, mul=False)
-    x*(y**2 + 2*y*z + z**2)
+        >>> ((x*y)**z).expand(power_base=True)
+        (x*y)**z
+        >>> ((x*y)**z).expand(power_base=True, force=True)
+        x**z*y**z
+        >>> ((2*y)**z).expand(power_base=True)
+        2**z*y**z
 
-    >>> expand_mul(_)
-    x*y**2 + 2*x*y*z + x*z**2
+    - log - Pull out power of an argument as a coefficient and split logs
+      products into sums of logs.  Note that these only work if the
+      arguments of the log function have the proper assumptions: the
+      arguments must be positive and the exponents must be real or else the
+      force hint must be True::
+
+        >>> from sympy import log, symbols, oo
+        >>> log(x**2*y).expand(log=True)
+        log(x**2*y)
+        >>> log(x**2*y).expand(log=True, force=True)
+        2*log(x) + log(y)
+        >>> x, y = symbols('x,y', positive=True)
+        >>> log(x**2*y).expand(log=True)
+        2*log(x) + log(y)
+
+    - trig - Do trigonometric expansions::
+
+        >>> cos(x + y).expand(trig=True)
+        -sin(x)*sin(y) + cos(x)*cos(y)
+
+    - func - Expand other functions::
+
+        >>> from sympy import gamma
+        >>> gamma(x + 1).expand(func=True)
+        x*gamma(x)
+
+    - multinomial - Expand (x + y + ...)**n where n is a positive integer::
+
+        >>> ((x + y + z)**2).expand(multinomial=True)
+        x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2
+
+    - You can shut off methods that you don't want::
+
+        >>> (exp(x + y)*(x + y)).expand()
+        x*exp(x)*exp(y) + y*exp(x)*exp(y)
+        >>> (exp(x + y)*(x + y)).expand(power_exp=False)
+        x*exp(x + y) + y*exp(x + y)
+        >>> (exp(x + y)*(x + y)).expand(mul=False)
+        (x + y)*exp(x)*exp(y)
+
+    - Use deep=False to only expand on the top level::
+
+        >>> exp(x + exp(x + y)).expand()
+        exp(x)*exp(exp(x)*exp(y))
+        >>> exp(x + exp(x + y)).expand(deep=False)
+        exp(x)*exp(exp(x + y))
+
+    .. note::
+       because hints are applied in arbitrary order, some hints may prevent
+       expansion by other hints if they are applied first.  In particular,
+       mul may distribute multiplications and prevent log and power_base
+       from expanding them.  Also, if mul is applied before multinomial, the
+       expression might not be fully distributed.  The solution is to expand
+       with mul=False first, then run expand_mul if you need further
+       expansion.
+
+    Examples::
+
+        >>> from sympy import expand_log, expand, expand_mul
+        >>> x, y, z = symbols('x,y,z', positive=True)
+
+        expand(log(x*(y + z))) # could be either one below
+        log(x*y + x*z)
+        log(x) + log(y + z)
+
+        >>> expand_log(log(x*y + x*z))
+        log(x*y + x*z)
+
+        >>> expand(log(x*(y + z)), mul=False)
+        log(x) + log(y + z)
+
+        >>> expand((x*(y + z))**x) # could be either one below
+        (x*y + x*z)**x
+        x**x*(y + z)**x
+
+        >>> expand((x*(y + z))**x, mul=False)
+        x**x*(y + z)**x
+
+        >>> expand(x*(y + z)**2) # could be either one below
+        2*x*y*z + x*y**2 + x*z**2
+        x*(y + z)**2
+
+        >>> expand(x*(y + z)**2, mul=False)
+        x*(y**2 + 2*y*z + z**2)
+
+        >>> expand_mul(_)
+        x*y**2 + 2*x*y*z + x*z**2
 
     """
     hints['power_base'] = power_base
@@ -1577,12 +1583,12 @@ def expand_mul(expr, deep=True):
     Wrapper around expand that only uses the mul hint.  See the expand
     docstring for more information.
 
-    Example:
+    Example::
 
-    >>> from sympy import symbols, expand_mul, exp, log
-    >>> x, y = symbols('x,y', positive=True)
-    >>> expand_mul(exp(x+y)*(x+y)*log(x*y**2))
-    x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
+        >>> from sympy import symbols, expand_mul, exp, log
+        >>> x, y = symbols('x,y', positive=True)
+        >>> expand_mul(exp(x+y)*(x+y)*log(x*y**2))
+        x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
 
     """
     return sympify(expr).expand(deep=deep, mul=True, power_exp=False,\
@@ -1593,12 +1599,12 @@ def expand_multinomial(expr, deep=True):
     Wrapper around expand that only uses the multinomial hint.  See the expand
     docstring for more information.
 
-    Example:
+    Example::
 
-    >>> from sympy import symbols, expand_multinomial, exp
-    >>> x, y = symbols('x y', positive=True)
-    >>> expand_multinomial((x + exp(x + 1))**2)
-    x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
+        >>> from sympy import symbols, expand_multinomial, exp
+        >>> x, y = symbols('x y', positive=True)
+        >>> expand_multinomial((x + exp(x + 1))**2)
+        x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
 
     """
     return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
@@ -1610,12 +1616,12 @@ def expand_log(expr, deep=True):
     Wrapper around expand that only uses the log hint.  See the expand
     docstring for more information.
 
-    Example:
+    Example::
 
-    >>> from sympy import symbols, expand_log, exp, log
-    >>> x, y = symbols('x,y', positive=True)
-    >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
-    (x + y)*(log(x) + 2*log(y))*exp(x + y)
+        >>> from sympy import symbols, expand_log, exp, log
+        >>> x, y = symbols('x,y', positive=True)
+        >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
+        (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
     return sympify(expr).expand(deep=deep, log=True, mul=False,\
@@ -1626,12 +1632,12 @@ def expand_func(expr, deep=True):
     Wrapper around expand that only uses the func hint.  See the expand
     docstring for more information.
 
-    Example:
+    Example::
 
-    >>> from sympy import expand_func, gamma
-    >>> from sympy.abc import x
-    >>> expand_func(gamma(x + 2))
-    x*(x + 1)*gamma(x)
+        >>> from sympy import expand_func, gamma
+        >>> from sympy.abc import x
+        >>> expand_func(gamma(x + 2))
+        x*(x + 1)*gamma(x)
 
     """
     return sympify(expr).expand(deep=deep, func=True, basic=False,\
@@ -1642,12 +1648,12 @@ def expand_trig(expr, deep=True):
     Wrapper around expand that only uses the trig hint.  See the expand
     docstring for more information.
 
-    Example:
+    Example::
 
-    >>> from sympy import expand_trig, sin, cos
-    >>> from sympy.abc import x, y
-    >>> expand_trig(sin(x+y)*(x+y))
-    (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
+        >>> from sympy import expand_trig, sin, cos
+        >>> from sympy.abc import x, y
+        >>> expand_trig(sin(x+y)*(x+y))
+        (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
 
     """
     return sympify(expr).expand(deep=deep, trig=True, basic=False,\
@@ -1658,12 +1664,12 @@ def expand_complex(expr, deep=True):
     Wrapper around expand that only uses the complex hint.  See the expand
     docstring for more information.
 
-    Example:
+    Example::
 
-    >>> from sympy import expand_complex, I, im, re
-    >>> from sympy.abc import z
-    >>> expand_complex(z**(2*I))
-    re(z**(2*I)) + I*im(z**(2*I))
+        >>> from sympy import expand_complex, I, im, re
+        >>> from sympy.abc import z
+        >>> expand_complex(z**(2*I))
+        re(z**(2*I)) + I*im(z**(2*I))
 
     """
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
@@ -1683,57 +1689,57 @@ def count_ops(expr, visual=False):
     If expr is an iterable, the sum of the op counts of the
     items will be returned.
 
-    Examples:
+    Examples::
 
-    >>> from sympy.abc import a, b, x, y
-    >>> from sympy import sin, count_ops
+        >>> from sympy.abc import a, b, x, y
+        >>> from sympy import sin, count_ops
 
     Although there isn't a SUB object, minus signs are interpreted as
-    either negations or subtractions:
+    either negations or subtractions::
 
-    >>> (x - y).count_ops(visual=True)
-    SUB
-    >>> (-x).count_ops(visual=True)
-    NEG
+        >>> (x - y).count_ops(visual=True)
+        SUB
+        >>> (-x).count_ops(visual=True)
+        NEG
 
-    Here, there are two Adds and a Pow:
+    Here, there are two Adds and a Pow::
 
-    >>> (1 + a + b**2).count_ops(visual=True)
-    2*ADD + POW
+        >>> (1 + a + b**2).count_ops(visual=True)
+        2*ADD + POW
 
-    In the following, an Add, Mul, Pow and two functions:
+    In the following, an Add, Mul, Pow and two functions::
 
-    >>> (sin(x)*x + sin(x)**2).count_ops(visual=True)
-    ADD + MUL + POW + 2*SIN
+        >>> (sin(x)*x + sin(x)**2).count_ops(visual=True)
+        ADD + MUL + POW + 2*SIN
 
-    for a total of 5:
+    for a total of 5::
 
-    >>> (sin(x)*x + sin(x)**2).count_ops(visual=False)
-    5
+        >>> (sin(x)*x + sin(x)**2).count_ops(visual=False)
+        5
 
     Note that "what you type" is not always what you get. The expression
     1/x/y is translated by sympy into 1/(x*y) so it gives a DIV and MUL rather
-    than two DIVs:
+    than two DIVs::
 
-    >>> (1/x/y).count_ops(visual=True)
-    DIV + MUL
+        >>> (1/x/y).count_ops(visual=True)
+        DIV + MUL
 
     The visual option can be used to demonstrate the difference in
     operations for expressions in different forms. Here, the Horner
-    representation is compared with the expanded form of a polynomial:
+    representation is compared with the expanded form of a polynomial::
 
-    >>> eq=x*(1 + x*(2 + x*(3 + x)))
-    >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
-    -MUL + 3*POW
+        >>> eq=x*(1 + x*(2 + x*(3 + x)))
+        >>> count_ops(eq.expand(), visual=True) - count_ops(eq, visual=True)
+        -MUL + 3*POW
 
-    The count_ops function also handles iterables:
+    The count_ops function also handles iterables::
 
-    >>> count_ops([x, sin(x), None, True, x + 2], visual=False)
-    2
-    >>> count_ops([x, sin(x), None, True, x + 2], visual=True)
-    ADD + SIN
-    >>> count_ops({x: sin(x), x + 2: y + 1}, visual=True)
-    2*ADD + SIN
+        >>> count_ops([x, sin(x), None, True, x + 2], visual=False)
+        2
+        >>> count_ops([x, sin(x), None, True, x + 2], visual=True)
+        ADD + SIN
+        >>> count_ops({x: sin(x), x + 2: y + 1}, visual=True)
+        2*ADD + SIN
 
     """
     from sympy.simplify.simplify import fraction
