@@ -13,16 +13,17 @@
 
 from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.sympify import sympify
-from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic
+from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic, Expr
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
-        Derivative, Function, AppliedUndef, UndefinedFunction)
+        Derivative, Function, AppliedUndef, UndefinedFunction, count_ops,
+        nfloat)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot,
                              cosh, sinh, tanh, coth, acos, asin, atan, acot,
-                             acosh, asinh, atanh, acoth, sqrt)
+                             acosh, asinh, atanh, acoth, sqrt, Abs)
 from sympy.simplify import (simplify, collect, powsimp, fraction, posify,
                             powdenest, nsimplify)
 from sympy.matrices import Matrix, zeros
@@ -187,7 +188,7 @@ def checksol(f, symbol, sol=None, **flags):
                 val = posify(val)[0]
                 # expansion may work now, so try again and check
                 exval = expand_mul(expand_multinomial(val))
-                if not exval.free_symbols:
+                if exval.is_number or not exval.free_symbols:
                     # we can decide now
                     val = exval
         elif attempt == 3:
@@ -285,7 +286,9 @@ def check_assumptions(expr, **assumptions):
     for key, expected in assumptions.iteritems():
         if expected is None:
             continue
-        if not(expected in [0, 1] or isinstance(expected, bool)):
+        if expected in [0, 1]:
+            expected = bool(expected)
+        if not isinstance(expected, bool):
             raise ValueError('A boolean is expected for %s but got %s.' % (key, expected))
         if hasattr(Q, key):
             test = ask(getattr(Q, key)(expr))
@@ -349,7 +352,9 @@ def solve(f, *symbols, **flags):
                'rational=True (default)'
                    recast Floats as Rational; if this option is not used, the
                    system containing floats may fail to solve because of issues
-                   with polys.
+                   with polys. If rational=None, Floats will be recast as
+                   rationals but the answer will be recast as Floats. If the
+                   flag is False then nothing will be done to the Floats.
                'manual=True (default is False)'
                    do not use the polys/matrix method to solve a system of
                    equations, solve them one at a time as you might "manually".
@@ -602,7 +607,7 @@ def solve(f, *symbols, **flags):
 
     # rationalize Floats
     floats = False
-    if flags.get('rational', True):
+    if flags.get('rational', True) is not False:
         for i, fi in enumerate(f):
             if fi.has(Float):
                 floats = True
@@ -678,18 +683,19 @@ def solve(f, *symbols, **flags):
     # Note that if assumptions about a solution can't be verified, it is still returned.
     check = flags.get('check', True)
 
+    # restore floats
+    if floats and flags.get('rational', None) is None:
+        solution = nfloat(solution, exponent=False)
+
     if not check or not solution:
         return solution
 
-    float = floats and bool(flags.get('rational', False)) is not True
     warning = flags.get('warn', False)
     got_None = [] # solutions for which one or more symbols gave None
     no_False = [] # solutions for which no symbols gave False
     if type(solution) is list:
         if type(solution[0]) is tuple:
             for sol in solution:
-                if float:
-                    sol = tuple([soli.n() for soli in sol])
                 for symb, val in zip(symbols, sol):
                     test = check_assumptions(val, **symb.assumptions0)
                     if test is False:
@@ -700,9 +706,6 @@ def solve(f, *symbols, **flags):
                     no_False.append(sol)
         elif type(solution[0]) is dict:
             for sol in solution:
-                if float:
-                    for k in sol:
-                        sol[k] = sol[k].n()
                 a_None = False
                 for symb, val in sol.iteritems():
                     test = check_assumptions(val, **symb.assumptions0)
@@ -717,8 +720,6 @@ def solve(f, *symbols, **flags):
                         got_None.append(sol)
         else: # list of expressions
             for sol in solution:
-                if float:
-                    sol = sol.n()
                 test = check_assumptions(sol, **symbols[0].assumptions0)
                 if test is False:
                     continue
@@ -728,9 +729,6 @@ def solve(f, *symbols, **flags):
 
     elif type(solution) is dict:
         a_None = False
-        if float:
-            for k in solution:
-                solution[k] = solution[k].n()
         for symb, val in solution.iteritems():
             test = check_assumptions(val, **symb.assumptions0)
             if test:
@@ -1831,13 +1829,14 @@ def _invert(eq, *symbols, **kwargs):
 
     inverses = {
     asin: sin,
-    acos:cos,
-    atan:tan,
-    acot:cot,
+    acos: cos,
+    atan: tan,
+    acot: cot,
     asinh: sinh,
-    acosh:cosh,
-    atanh:tanh,
-    acoth:coth,}
+    acosh: cosh,
+    atanh: tanh,
+    acoth: coth,
+    }
 
     lhs = eq
     rhs = S.Zero
@@ -1896,9 +1895,15 @@ def _invert(eq, *symbols, **kwargs):
 
         #                    -1
         # f(x) = g  ->  x = f  (g)
-        elif lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and (hasattr(lhs, 'inverse') or lhs.func in inverses):
+        elif lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and \
+                                 (hasattr(lhs, 'inverse') or
+                                  lhs.func in inverses or
+                                  lhs.func is Abs):
             if lhs.func in inverses:
                 inv = inverses[lhs.func]
+            elif lhs.func is Abs:
+                inv = lambda w: w**2
+                lhs = Basic(lhs.args[0]**2) # get it ready to remove the args
             else:
                 inv = lhs.inverse()
             rhs = inv(rhs)

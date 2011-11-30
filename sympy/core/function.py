@@ -37,9 +37,9 @@ from expr import Expr, AtomicExpr
 from decorators import _sympifyit, deprecated
 from compatibility import iterable,is_sequence
 from cache import cacheit
-from numbers import Rational
+from numbers import Rational, Float
 
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -1833,5 +1833,65 @@ def count_ops(expr, visual=False):
 
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
+def nfloat(expr, n=15, exponent=False):
+    """Make all Rationals in expr Floats except if they are exponents
+    (unless the exponents flag is set to True).
+
+    Examples:
+
+    >>> from sympy.core.function import nfloat
+    >>> from sympy.abc import x, y
+    >>> from sympy import cos, pi, S, sqrt
+    >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
+    x**4 + 0.5*x + sqrt(y) + 1.5
+    >>> nfloat(x**4 + sqrt(y), exponent=True)
+    x**4.0 + y**0.5
+
+    """
+
+    if iterable(expr, exclude=basestring):
+        if isinstance(expr, (dict, Dict)):
+            return type(expr)([(k, nfloat(v, n, exponent)) for k, v in expr.iteritems()])
+        return type(expr)([nfloat(a, n, exponent) for a in expr])
+    elif not isinstance(expr, Expr):
+        return float(expr)
+    elif expr.is_Float:
+        return expr.n(n)
+    elif expr.is_Integer:
+        return Float(float(expr)).n(n)
+    elif expr.is_Rational:
+        return Float(expr).n(n)
+
+    if not exponent:
+        pows = [p for p in expr.atoms(Pow) if p.exp.is_Rational and p.exp.q != 1]
+        pows.sort(key=count_ops)
+        pows.reverse()
+        rats = {}
+        for p in pows:
+            if p.exp not in rats:
+                e = Dummy()
+                rats[p.exp] = e
+        reps = [(p, Pow(p.base, rats[p.exp], evaluate=False)) for p in pows]
+        rv = expr.subs(reps).n(n).subs([(v, k) for k, v in rats.iteritems()])
+    else:
+        expr = expr.n(n)
+        pows = [p for p in expr.atoms(Pow) if p.exp.is_Integer]
+        pows.sort(key=count_ops)
+        pows.reverse()
+        ints = {}
+        for p in pows:
+            if p.exp not in ints:
+                ints[p.exp] = Float(float(p.exp))
+        reps = [(p, p.base**ints[p.exp]) for p in pows]
+        rv = expr.subs(reps)
+
+    funcs = [f for f in rv.atoms(Function)]
+    funcs.sort(key=count_ops)
+    funcs.reverse()
+    return rv.subs([(f, f.func(*[nfloat(a, n, exponent)
+                     for a in f.args])) for f in funcs])
+
 from sympify import sympify
-from add    import Add
+from add import Add
+from power import Pow
+from sympy.core.symbol import Dummy

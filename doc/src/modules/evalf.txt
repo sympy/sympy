@@ -125,13 +125,13 @@ where φ is the golden ratio. With ordinary floating-point arithmetic,
 subtracting these numbers from each other erroneously results in a complete
 cancellation:
 
-    >>> float(GoldenRatio**1000/sqrt(5)) #doctest: +SKIP
+    >>> a, b = GoldenRatio**1000/sqrt(5), fibonacci(1000)
+    >>> float(a) #doctest: +SKIP
     4.34665576869...e+208
-    >>> float(fibonacci(1000)) #doctest: +SKIP
+    >>> float(b) #doctest: +SKIP
     4.34665576869...e+208
-    >>> float(fibonacci(1000)) - float(GoldenRatio**1000/sqrt(5))
+    >>> float(a) - float(b)
     0.0
-
 
 ``N`` and ``evalf`` keep track of errors and automatically increase the
 precision used internally in order to obtain a correct result:
