@@ -140,27 +140,24 @@ SymPy има три уграђена типа бројева: променљив
     1/88817841970012523233890533447265625
 
 
-Proceed with caution while working with Python int's and floating
-point numbers, especially in division, since you may create a
-Python number, not a SymPy number. A ratio of two Python ints may
-create a float -- the "true division" standard of Python 3
-and the default behavior of ``isympy`` which imports division
-from __future__::
+Наставите са пажњом док радите са целим и променљивим бројевима, 
+посебно у делењу, јер можете креирати
+Python број, а не SymPy број. Однос два цела броја у Python може креирати променљливи -- 
+"истинито дељење" стандардно за Python 3
+у уобичајено понашање ``isympy`` који увози дељење од __future__::
 
     >>> 1/2 #doctest: +SKIP
     0.5
 
-But in earlier Python versions where division has not been imported, a
-truncated int will result::
+Али у ранијим Python верзијама где делење није увежено, скраћени цели број ће бити резултат::
 
     >>> 1/2 #doctest: +SKIP
     0
 
-In both cases, however, you are not dealing with a SymPy Number because
-Python created its own number. Most of the time you will probably be
-working with Rational numbers, so make sure to use Rational to get
-the SymPy result. One might find it convenient to equate ``R`` and
-Rational::
+У оба случаја, ипак не радите са SymPy бројевима јер је
+Python креирао своје посебне бројеве. Већину времена ћете вероватно радити са рационалним бројевима, 
+тако да будите сигурни да користите рационалне бројеве да бисте добили SymPy резултат.
+Могло би се сматрати да би се ``R`` и Rational могли изједначити::
 
     >>> R = Rational
     >>> R(1, 2)
