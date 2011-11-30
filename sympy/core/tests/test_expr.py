@@ -1,11 +1,12 @@
 from __future__ import division
 
 from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
-    sin, cos, tan, exp, log, oo, sqrt, symbols, Integral, sympify, WildFunction,
-    Poly, Function, Derivative, Number, pi, NumberSymbol, zoo, Piecewise, Mul,
-    Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
-    separate, collect, factorial, apart, combsimp, factor, refine, cancel,
-    Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
+    sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
+    WildFunction, Poly, Function, Derivative, Number, pi, var,
+    NumberSymbol, zoo, Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp,
+    radsimp, powsimp, simplify, together, separate, collect, factorial,
+    apart, combsimp, factor, refine, cancel, invert, Tuple, default_sort_key, DiracDelta,
+    gamma, Dummy, Sum)
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import m, s
 
@@ -393,8 +394,10 @@ def test_noncommutative_expand_issue658():
 
 def test_as_numer_denom():
     a, b, c = symbols('a, b, c')
-    assert oo.as_numer_denom() == (1, 0)
-    assert (-oo).as_numer_denom() == (-1, 0)
+
+    assert nan.as_numer_denom() == (nan, 1)
+    assert oo.as_numer_denom() == (oo, 1)
+    assert (-oo).as_numer_denom() == (-oo, 1)
     assert zoo.as_numer_denom() == (zoo, 1)
     assert (-zoo).as_numer_denom() == (zoo, 1)
 
@@ -1188,7 +1191,7 @@ def test_primitive():
         assert (i + x/3).primitive() == \
             (S(1)/3, i + x)
     assert (S.Infinity + 2*x/3 + 4*y/7).primitive() == \
-        (S(2)/21, 7*x + 6*y + oo)
+        (S(1)/21, 14*x + 12*y + oo)
 
 def test_issue_2744():
     a = 1 + x
