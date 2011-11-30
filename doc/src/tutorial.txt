@@ -861,12 +861,12 @@ SymPy има подршку за одређену и неодређену инт
 
 * ``mathml(expr)``, ``print_mathml(expr)``: Враћа или штампа `MathML <http://www.w3.org/Math/>`_ представљање од ``expr``.
 
-* ``print_gtk(expr)``: Штампа ``expr`` у `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, и GTK додатак који приказује  MathML код. The `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ програм је потребан.
+* ``print_gtk(expr)``: Штампа ``expr`` у `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, и GTK додатак који приказује  MathML код. `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ програм је потребан.
 
 Додатна документација
 =====================
 
-Сада ножете учити даље. Погледајте:
+Сада можете учити даље. Погледајте:
 :ref:`SymPy User's Guide <guide>` и
 :ref:`SymPy Modules Reference <module-docs>`.
 Напомена: Остатак документације је доступан само на енглеском језику.
