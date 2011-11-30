@@ -1,6 +1,38 @@
 from sympy.functions import sqrt, sign
-from sympy.core import S, Wild, Rational, sympify, Mul, Expr
+from sympy.core import S, Wild, Rational, sympify, Mul, Add, Expr
 from sympy.core.mul import prod
+
+
+def radsimp(expr):
+    """
+    Rationalize the denominator.
+    This is a simpler version than the one in simplify.py
+
+    Examples:
+        >>> from sympy import radsimp, sqrt, Symbol
+        >>> radsimp(1/(2+sqrt(2)))
+        -sqrt(2)/2 + 1
+        >>> x,y = map(Symbol, 'xy')
+        >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
+        >>> radsimp(e)
+        sqrt(2)*x + sqrt(2)*y
+
+    """
+    n, d = expr.as_numer_denom()
+    a, b, c = map(Wild, 'abc')
+    r = d.match(a+b*sqrt(c))
+    if r is not None:
+        a = r[a]
+        if r[b] == 0:
+            b, c = 0, 0
+        else:
+            b, c = r[b], r[c]
+
+        n = (n*(a-b*sqrt(c))).expand()
+        d = a**2 - c*b**2
+
+    return n/d
+
 
 def sqrtdenest(expr):
     """
@@ -23,19 +55,88 @@ def sqrtdenest(expr):
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         n, d = expr.as_numer_denom()
         if d is S.One:
-            return denester([expr])[0]
+            return _sqrtdenest(expr)
         else:
-            return sqrtdenest(n)/sqrtdenest(d)
+            return _sqrtdenest(n)/_sqrtdenest(d)
     elif isinstance(expr, Expr):
         args = expr.args
         if args:
             return expr.func(*[sqrtdenest(a) for a in args])
     return expr
 
-def denester(nested):
+def _sqrtdenest(expr):
+    expr = sympify(expr)
+    if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
+        val = sqrt_match(expr)
+        if val:
+            a, b, r = val
+            # try a quick denesting
+            d2 = (a**2 - b**2*r).expand()
+            if d2.is_Number and \
+                max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
+                d = sqrt(d2)
+                vad = a + d
+                vad1 = radsimp(1/vad)
+                return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
+
+        z = denester([expr], 0)[0]
+        if z is expr or not z.is_Add:
+            return z
+        else:
+            a = z.args
+            a = [sqrtdenest(x) for x in a]
+            expr = Add(*a)
+            return expr
+    return expr
+
+def sqrt_match(p):
+    if not p.is_Pow or p.args[1] != S.Half:
+        return None
+    else:
+        a = p.args[0]
+        if not a.args:
+            return (a, S.Zero, S.Zero)
+        return sqrt_match0(a)
+
+def sqrt_depth(p):
+    if p.is_Atom:
+        return 0
+    elif p.is_Add or p.is_Mul:
+        return max([sqrt_depth(x) for x in p.args])
+    elif p.is_Pow and p.exp == S.Half:
+        return sqrt_depth(p.base) + 1
+    else:
+        return 0
+
+def sqrt_match0(p):
+    """return (a, b, c) for match a + b*sqrt(r) where
+    sqrt(r) has maximal nested sqrt
+
+    Examples:
+    >>> sqrt_match0(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
+    (1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5))
+    """
+    p = p.expand()
+    if p.is_Number:
+        return (p, S.Zero, S.Zero)
+    pargs = list(p.args)
+    v = [(sqrt_depth(x), i) for i, x in enumerate(pargs)]
+    if not v:
+        return None
+    nmax = max(v)
+    if nmax[0] == 0:
+        return None
+    n = nmax[1]
+    p1 = pargs[n]
+    del pargs[n]
+    a = Add(*pargs)
+    b, r = p1.as_coeff_Mul()
+    return (a, b, r**2)
+
+def denester (nested, h):
     """
     Denests a list of expressions that contain nested square roots.
-    This method should not be called directly - use 'sqrtdenest' instead.
+    This method should not be called directly - use 'denest' instead.
     This algorithm is based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 
     It is assumed that all of the elements of 'nested' share the same
@@ -56,41 +157,45 @@ def denester(nested):
     if all((n**2).is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
             p = prod(nested[i]**2 for i in range(len(f)) if f[i]).expand()
-            if 1 in f and f.count(1) > 1 and f[-1]:
+            if 1 in f and f.count(1) > 1 and f[-1]: 
                 p = -p
             if sqrt(p).is_Number:
                 return sqrt(p), f #If we got a perfect square, return its square root.
         return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
     else:
-        a, b, r, R = Wild('a'), Wild('b'), Wild('r'), None
-        values = [expr.match(sqrt(a + b * sqrt(r))) for expr in nested]
-        if any(v is None for v in values): # this pattern is not recognized
-            return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
+        R = None
+        values = filter(None, [sqrt_match(expr) for expr in nested])
         for v in values:
-            if r in v: #Since if b=0, r is not defined
+            if v[2]: #Since if b=0, r is not defined
                 if R is not None:
-                    assert R == v[r] #All the 'r's should be the same.
+                    assert R == v[2] #All the 'r's should be the same.
                 else:
-                    R = v[r]
+                    R = v[2]
         if R is None:
-            return nested[-1], [0]*len(nested) #return the radicand from the previous invocation.
-        d, f = denester([sqrt((v[a]**2).expand()-(R*v[b]**2).expand()) for v in values] + [sqrt(R)])
-        if all(fi == 0 for fi in f):
+            return nested[-1], [0]*len(nested) # return the radicand from the pravious invocation
+        d, f = denester([sqrt((v[0]**2).expand()-(R*v[1]**2).expand()) for v in values] + [sqrt(R)], h+1)
+        if not any(f[i] for i in range(len(nested))):
+        #if all(fi == 0 for fi in f):
             v = values[-1]
-            return sqrt(v[a] + v[b]*d), f
+            return sqrt(v[0] + v[1]*d), f
         else:
-            v = prod(nested[i]**2 for i in range(len(nested)) if f[i]).expand().match(a+b*sqrt(r))
+            p = prod(nested[i]**2 for i in range(len(nested)) if f[i])
+            if p == 1:
+                p = S(p)
+            v = sqrt_match0(p.expand())
+            v = list(v)
             if 1 in f and f.index(1) < len(nested) - 1 and f[len(nested)-1]:
-                v[a] = -1 * v[a]
-                v[b] = -1 * v[b]
+                v[0] = -1 * v[0]
+                v[1] = -1 * v[1]
             if not f[len(nested)]: #Solution denests with square roots
-                vad = (v[a] + d).expand()
+                vad = (v[0] + d).expand()
                 if not vad:
                     return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
-                return (sqrt(vad/2) + sign(v[b])*sqrt((v[b]**2*R/(2*vad)).expand())).expand(), f
+                vad1 = radsimp(1/vad)
+                return (sqrt(vad/2) + sign(v[1])*sqrt((v[1]**2*R*vad1/2).expand())).expand(), f
             else: #Solution requires a fourth root
-                FR, s = (R.expand()**Rational(1,4)), sqrt((v[b]*R).expand()+d)
-                return (s/(sqrt(2)*FR) + v[a]*FR/(sqrt(2)*s)).expand(), f
+                FR, s = (R.expand()**Rational(1,4)), sqrt((v[1]*R).expand()+d)
+                return (s/(sqrt(2)*FR) + v[0]*FR/(sqrt(2)*s)).expand(), f
 
 def subsets(n):
     """
@@ -102,7 +207,18 @@ def subsets(n):
     >>> from sympy.simplify.sqrtdenest import subsets
     >>> subsets(3)
     [[0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]
+    listed in reversed lexicographical order so that the case of the fourth
+    root is treated last.
     """
-    binary = lambda x: x>0 and binary(x>>1) + [x&1] or []
-    pad = lambda l: [0]*(n-len(l)) + l #Always returns a list of length 'n'
-    return [pad(binary(i)) for i in range(1, 2**n)]
+    if n == 1:
+        a = [[1]]
+    elif n == 2:
+        a = [[1, 0], [0, 1], [1, 1]]
+    elif n == 3:
+        a = [[1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
+    else:
+        b = subsets(n-1)
+        a0 = [x+[0] for x in b]
+        a1 = [x+[1] for x in b]
+        a = a0 + [[0]*(n-1) + [1]] + a1
+    return a
