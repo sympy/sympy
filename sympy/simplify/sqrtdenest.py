@@ -113,6 +113,8 @@ def sqrt_match0(p):
     sqrt(r) has maximal nested sqrt
 
     Examples:
+    >>> from sympy.functions.elementary.miscellaneous import sqrt
+    >>> from sympy.simplify.sqrtdenest import sqrt_match0
     >>> sqrt_match0(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
     (1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5))
     """
