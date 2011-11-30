@@ -286,7 +286,9 @@ def check_assumptions(expr, **assumptions):
     for key, expected in assumptions.iteritems():
         if expected is None:
             continue
-        if not(expected in [0, 1] or isinstance(expected, bool)):
+        if expected in [0, 1]:
+            expected = bool(expected)
+        if not isinstance(expected, bool):
             raise ValueError('A boolean is expected for %s but got %s.' % (key, expected))
         if hasattr(Q, key):
             test = ask(getattr(Q, key)(expr))

@@ -917,3 +917,7 @@ def test_float_handling():
     assert test(nfloat(x/3), x/3.0)
     assert test(nfloat(x**4 + 2*x + cos(S(1)/3) + 1),
             x**4 + 2.0*x + 1.94495694631474)
+
+def test_check_assumptions():
+    x = symbols('x', positive=1)
+    assert solve(x**2 - 1) == [1]
