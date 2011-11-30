@@ -4528,8 +4528,11 @@ class SparseMatrix(MatrixBase):
     def __hash__(self):
         return super(Matrix, self).__hash__()
 
-def list2numpy(l):
+def list2numpy(l, use_sympy_array=False):
     """Converts python list of SymPy expressions to a NumPy array."""
+    if use_sympy_array:
+        from sympy.utilities.python_numpy import Array
+        return Array(l)
     try:
         from numpy import empty
         numpy_ok = True

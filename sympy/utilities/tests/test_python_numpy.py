@@ -116,7 +116,7 @@ def test_arrays():
 
 def test_conversion1():
     x = Symbol("x")
-    a = list2numpy([x**2, x])
+    a = list2numpy([x**2, x], use_sympy_array=True)
     #looks like an array?
     assert isinstance(a, ndarray)
     assert a[0] == x**2
