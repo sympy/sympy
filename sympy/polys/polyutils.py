@@ -127,6 +127,10 @@ def _sort_factors(factors, **args):
     else:
         return sorted(factors, key=order_no_multiple_key)
 
+def _not_a_coeff(expr):
+    """Do not treat NaN and infinities as valid polynomial coefficients. """
+    return expr in [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
+
 def _parallel_dict_from_expr_if_gens(exprs, opt):
     """Transform expressions into a multinomial form given generators. """
     k, indices = len(opt.gens), {}
@@ -146,7 +150,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
             coeff, monom = [], [0]*k
 
             for factor in Mul.make_args(term):
-                if factor.is_Number:
+                if not _not_a_coeff(factor) and factor.is_Number:
                     coeff.append(factor)
                 else:
                     try:
@@ -200,7 +204,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
             coeff, elements = [], {}
 
             for factor in Mul.make_args(term):
-                if factor.is_Number or _is_coeff(factor):
+                if not _not_a_coeff(factor) and (factor.is_Number or _is_coeff(factor)):
                     coeff.append(factor)
                 else:
                     base, exp = decompose_power(factor)

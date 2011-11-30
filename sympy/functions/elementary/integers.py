@@ -101,6 +101,8 @@ class floor(RoundFunction):
                 return C.Integer(arg.p // arg.q)
             elif arg.is_Float:
                 return C.Integer(int(arg.floor()))
+            else:
+                return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
 
@@ -150,6 +152,8 @@ class ceiling(RoundFunction):
                 return -C.Integer(-arg.p // arg.q)
             elif arg.is_Float:
                 return C.Integer(int(arg.ceiling()))
+            else:
+                return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]
 

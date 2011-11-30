@@ -103,11 +103,10 @@ def coverage(filename, file, verbose=False):
     num_functions = len(missing_docstring + missing_doctest + has_doctest)
     if num_functions == 0:
         print "No functions in %s" % filename
-        return 0, 0
+        return
     print '-'*70
     print filename
-    doctests = len(has_doctest)
-    score = 100 * float(doctests) / num_functions
+    score = 100 * float(len(has_doctest)) / num_functions
     score = int(score)
 
     if missing_docstring:
@@ -123,31 +122,27 @@ def coverage(filename, file, verbose=False):
         print 'Use "# indirect doctest" in the docstring to surpress this ' \
                 'warning'
 
-    print "SCORE %s: %s%% (%s of %s)" % (filename, score, doctests, num_functions)
+    print "SCORE %s: %s%% (%s of %s)" % (filename, score,
+            len(has_doctest), num_functions)
 
     print '-'*70
-
-    return len(has_doctest), num_functions
 
 
 
 def go(file, verbose=False, exact=True):
     if os.path.isdir(file):
-        doctests, num_functions = 0, 0
         for F in os.listdir(file):
-            _doctests, _num_functions = go('%s/%s'%(file,F), verbose, exact=False)
-            doctests += _doctests
-            num_functions += _num_functions
-        return doctests, num_functions
+            go('%s/%s'%(file,F), verbose, exact=False)
+        return
     if not (file.endswith('.py') or file.endswith('.pyx')) or \
         not exact and ('test_' in file or 'bench_' in file):
-            return 0, 0
+            return
     if not os.path.exists(file):
         print "File %s does not exist."%file
         sys.exit(1)
     with open(file) as fh:
         f = fh.read()
-    return coverage(file, f, verbose)
+    coverage(file, f, verbose)
 
 if __name__ == "__main__":
     bintest_dir = os.path.abspath(os.path.dirname(__file__))   # bin/cover...
@@ -166,14 +161,4 @@ if __name__ == "__main__":
         parser.print_help()
     else:
         for file in args:
-            doctests, num_functions = go(file, options.verbose)
-            if num_functions == 0:
-                score = 100
-            else:
-                score = 100 * float(doctests) / num_functions
-                score = int(score)
-            print
-            print '='*70
-            print "TOTAL SCORE for %s: %s%% (%s of %s)" % \
-                (file, score, doctests, num_functions)
-            print
+            go(file, options.verbose)

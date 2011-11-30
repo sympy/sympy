@@ -68,13 +68,13 @@ def check(a, check_attr = True):
 #================== core =========================
 
 def test_core_basic():
-    for c in (Atom, Atom(),
-              Basic, Basic(),
+    for c in (#Atom, Atom(),
+              #Basic, Basic(),
               # XXX: dynamically created types are not picklable
               # BasicMeta, BasicMeta("test", (), {}),
               # BasicType, BasicType("test", (), {}),
-              ClassRegistry, ClassRegistry(),
-              SingletonRegistry, SingletonRegistry()):
+              #ClassRegistry, ClassRegistry(),
+              #SingletonRegistry, SingletonRegistry()):
         check(c)
 
 def test_core_symbol():
