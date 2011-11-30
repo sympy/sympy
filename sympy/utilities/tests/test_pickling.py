@@ -23,7 +23,7 @@ from sympy.core.sets import Interval
 from sympy.core.multidimensional import vectorize
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
-from sympy.core.compatibility import callable
+from sympy.core.compatibility import callable, SymPyDeprecationWarning
 
 from sympy import symbols
 
@@ -33,7 +33,7 @@ def check(a, check_attr = True):
     """
     # The below hasattr() check will warn about is_Real in Python 2.5, so
     # disable this to keep the tests clean
-    warnings.filterwarnings("ignore", ".*is_Real.*", DeprecationWarning)
+    warnings.filterwarnings("ignore", ".*is_Real.*", SymPyDeprecationWarning)
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
     if sys.version_info[0] > 2:

@@ -2,6 +2,7 @@ from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
     sympify, symbols, Dummy, S, Function, flatten)
 
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import SymPyDeprecationWarning
 
 def test_Symbol():
     a = Symbol("a")
@@ -125,8 +126,8 @@ def test_symbols_each_char():
     # First, test the warning
     warnings.filterwarnings("error", "The each_char option to symbols\(\) and var\(\) is "
         "deprecated.  Separate symbol names by spaces or commas instead.")
-    raises(DeprecationWarning, "symbols('xyz', each_char=True)")
-    raises(DeprecationWarning, "symbols('xyz', each_char=False)")
+    raises(SymPyDeprecationWarning, "symbols('xyz', each_char=True)")
+    raises(SymPyDeprecationWarning, "symbols('xyz', each_char=False)")
     # now test the actual output
     warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
         "deprecated.  Separate symbol names by spaces or commas instead.")

@@ -3,7 +3,7 @@ import random
 
 from sympy.core import Basic, C
 from sympy.core.compatibility import is_sequence, iterable #logically, these belong here
-from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement
+from sympy.core.compatibility import product as cartes, combinations, combinations_with_replacement, SymPyDeprecationWarning
 
 def flatten(iterable, levels=None, cls=None):
     """
@@ -421,7 +421,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
         if 'dummy' in assumptions and assumptions.pop('dummy'):
             import warnings
             warnings.warn("\nuse cls=Dummy to create dummy symbols",
-                          DeprecationWarning)
+                          SymPyDeprecationWarning)
             cls = C.Dummy
         else:
             cls = C.Symbol
