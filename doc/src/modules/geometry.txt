@@ -188,3 +188,64 @@ Geometry Visualization
 The plotting module is capable of plotting geometric entities. See
 `Plotting Geometric Entities <https://github.com/sympy/sympy/wiki/Plotting-Module>`_ in
 the plotting module entry.
+
+API Reference
+-------------
+
+Utils
+~~~~~
+
+.. automethod:: sympy.geometry.util.intersection
+
+.. automethod:: sympy.geometry.util.convex_hull
+
+.. automethod:: sympy.geometry.util.are_similar
+
+Points
+~~~~~~
+
+.. autoclass:: Point
+   :members:
+
+Lines
+~~~~~
+
+.. autoclass:: sympy.geometry.line.LinearEntity
+   :members:
+
+.. autoclass:: Line
+   :members:
+
+.. autoclass:: Ray
+   :members:
+
+.. autoclass:: Segment
+   :members:
+
+Curves
+~~~~~~
+
+.. autoclass:: Curve
+   :members:
+
+Ellipses
+~~~~~~~~
+
+.. autoclass:: Ellipse
+   :members:
+
+.. autoclass:: Circle
+   :members:
+
+Polygons
+~~~~~~~~
+
+.. autoclass:: Polygon
+   :members:
+
+.. autoclass:: RegularPolygon
+   :members:
+
+.. autoclass:: Triangle
+   :members:
+

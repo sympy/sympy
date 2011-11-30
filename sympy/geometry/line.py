@@ -37,8 +37,9 @@ class LinearEntity(GeometryEntity):
     -----
     This is an abstract class and is not meant to be instantiated.
     Subclasses should implement the following methods:
-        __eq__
-        __contains__
+
+        * __eq__
+        * __contains__
 
     """
 
@@ -257,7 +258,9 @@ class LinearEntity(GeometryEntity):
         Notes
         -----
         From the dot product of vectors v1 and v2 it is known that:
+
             dot(v1, v2) = |v1|*|v2|*cos(A)
+
         where A is the angle formed between the two vectors. We can
         get the directional vectors of the two lines and readily
         find the angle between the two using the above formula.
@@ -1055,7 +1058,7 @@ class Ray(LinearEntity):
 
         Examples
         --------
-         >>> from sympy import Ray, Point, Segment, S, simplify, solve
+        >>> from sympy import Ray, Point, Segment, S, simplify, solve
         >>> from sympy.abc import t
         >>> r = Ray(Point(0, 0), Point(2, 3))
 
