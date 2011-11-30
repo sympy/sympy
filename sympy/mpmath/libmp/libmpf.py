@@ -418,7 +418,7 @@ def from_float(x, prec=53, rnd=round_fast):
     # in Python2.6 it returns (float infinity, 0)
     try:
         m, e = math.frexp(x)
-    except FloatingPointError:
+    except:
         if x == math_float_inf: return finf
         if x == -math_float_inf: return fninf
         return fnan
