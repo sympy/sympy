@@ -19,28 +19,31 @@ def iterable(i, exclude=(basestring, dict)):
 
     See also: is_sequence
 
-    Examples:
+    Examples
+    ========
 
-    >>> from sympy.utilities.iterables import iterable
-    >>> from sympy import Tuple
-    >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
-    >>> for i in things:
-    ...     print iterable(i), type(i)
-    True <... 'list'>
-    True <... 'tuple'>
-    True <... 'set'>
-    True <class 'sympy.core.containers.Tuple'>
-    True <... 'generator'>
-    False <... 'dict'>
-    False <... 'str'>
-    False <... 'int'>
+    ::
 
-    >>> iterable({}, exclude=None)
-    True
-    >>> iterable({}, exclude=str)
-    True
-    >>> iterable("no", exclude=str)
-    False
+        >>> from sympy.utilities.iterables import iterable
+        >>> from sympy import Tuple
+        >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
+        >>> for i in things:
+        ...     print iterable(i), type(i)
+        True <... 'list'>
+        True <... 'tuple'>
+        True <... 'set'>
+        True <class 'sympy.core.containers.Tuple'>
+        True <... 'generator'>
+        False <... 'dict'>
+        False <... 'str'>
+        False <... 'int'>
+
+        >>> iterable({}, exclude=None)
+        True
+        >>> iterable({}, exclude=str)
+        True
+        >>> iterable("no", exclude=str)
+        False
 
     """
     try:
@@ -65,23 +68,26 @@ def is_sequence(i, include=None):
 
     See also: iterable
 
-    Examples:
+    Examples
+    ========
 
-    >>> from sympy.utilities.iterables import is_sequence
-    >>> from types import GeneratorType
-    >>> is_sequence([])
-    True
-    >>> is_sequence(set())
-    False
-    >>> is_sequence('abc')
-    False
-    >>> is_sequence('abc', include=str)
-    True
-    >>> generator = (c for c in 'abc')
-    >>> is_sequence(generator)
-    False
-    >>> is_sequence(generator, include=(str, GeneratorType))
-    True
+    ::
+
+        >>> from sympy.utilities.iterables import is_sequence
+        >>> from types import GeneratorType
+        >>> is_sequence([])
+        True
+        >>> is_sequence(set())
+        False
+        >>> is_sequence('abc')
+        False
+        >>> is_sequence('abc', include=str)
+        True
+        >>> generator = (c for c in 'abc')
+        >>> is_sequence(generator)
+        False
+        >>> is_sequence(generator, include=(str, GeneratorType))
+        True
 
     """
     return (hasattr(i, '__getitem__') and
@@ -155,12 +161,17 @@ except ImportError: # Python 2.5
         of repetitions with the optional repeat keyword argument. For example,
         product(A, repeat=4) means the same as product(A, A, A, A).
 
-        Examples:
-        >>> from sympy.core.compatibility import product
-        >>> [''.join(p) for p in list(product('ABC', 'xy'))]
-        ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
-        >>> list(product(range(2), repeat=2))
-        [(0, 0), (0, 1), (1, 0), (1, 1)]
+        Examples
+        ========
+
+        ::
+
+            >>> from sympy.core.compatibility import product
+            >>> [''.join(p) for p in list(product('ABC', 'xy'))]
+            ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
+            >>> list(product(range(2), repeat=2))
+            [(0, 0), (0, 1), (1, 0), (1, 1)]
+
         """
         pools = map(tuple, args) * kwds.get('repeat', 1)
         result = [[]]
@@ -187,12 +198,17 @@ except ImportError: # Python 2.5
         value. So if the input elements are unique, there will be no repeat
         values in each permutation.
 
-        Examples;
-        >>> from sympy.core.compatibility import permutations
-        >>> [''.join(p) for p in list(permutations('ABC', 2))]
-        ['AB', 'AC', 'BA', 'BC', 'CA', 'CB']
-        >>> list(permutations(range(3)))
-        [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]
+        Examples
+        ========
+
+        ::
+
+            >>> from sympy.core.compatibility import permutations
+            >>> [''.join(p) for p in list(permutations('ABC', 2))]
+            ['AB', 'AC', 'BA', 'BC', 'CA', 'CB']
+            >>> list(permutations(range(3)))
+            [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]
+
         """
 
         pool = tuple(iterable)
@@ -234,12 +250,17 @@ except ImportError: # < python 2.6
 
         See also: combinations_with_replacements
 
-        Examples:
-        >>> from sympy.core.compatibility import combinations
-        >>> list(combinations('ABC', 2))
-        [('A', 'B'), ('A', 'C'), ('B', 'C')]
-        >>> list(combinations(range(4), 3))
-        [(0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3)]
+        Examples
+        ========
+
+        ::
+
+            >>> from sympy.core.compatibility import combinations
+            >>> list(combinations('ABC', 2))
+            [('A', 'B'), ('A', 'C'), ('B', 'C')]
+            >>> list(combinations(range(4), 3))
+            [(0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3)]
+
         """
         pool = tuple(iterable)
         n = len(pool)
@@ -272,10 +293,15 @@ except ImportError: # < python 2.6
 
         See also: combinations
 
-        Example:
-        >>> from sympy.core.compatibility import combinations_with_replacement
-        >>> list(combinations_with_replacement('AB', 2))
-        [('A', 'A'), ('A', 'B'), ('B', 'B')]
+        Example
+        =======
+
+        ::
+
+            >>> from sympy.core.compatibility import combinations_with_replacement
+            >>> list(combinations_with_replacement('AB', 2))
+            [('A', 'A'), ('A', 'B'), ('B', 'B')]
+
         """
         pool = tuple(iterable)
         n = len(pool)

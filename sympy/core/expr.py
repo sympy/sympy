@@ -246,7 +246,10 @@ class Expr(Basic, EvalfMixin):
         expression.
 
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy import cos, sin, Sum, S, pi
             >>> from sympy.abc import a, n, x, y
@@ -431,7 +434,10 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of factors.
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy import sin, cos
             >>> from sympy.abc import x, y
@@ -449,7 +455,10 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of terms.
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy import sin, cos
             >>> from sympy.abc import x, y
@@ -552,7 +561,10 @@ class Expr(Basic, EvalfMixin):
         The order is determined either from the O(...) term. If there
         is no O(...) term, it returns None.
 
-        Example::
+        Example
+        =======
+
+        ::
 
             >>> from sympy import O
             >>> from sympy.abc import x
@@ -642,7 +654,10 @@ class Expr(Basic, EvalfMixin):
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy import symbols
             >>> from sympy.abc import x, y, z
@@ -758,7 +773,10 @@ class Expr(Basic, EvalfMixin):
             the first occurance from the left is returned, else the last
             occurance is returned. Return None if sub is not in l.
 
-            Example::
+            Example
+            =======
+
+            ::
 
                 >> l = range(5)*2
                 >> find(l, [2, 3])
@@ -885,7 +903,10 @@ class Expr(Basic, EvalfMixin):
         """
         Convert a polynomial to a SymPy expression.
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy import sin
             >>> from sympy.abc import x, y
@@ -909,18 +930,23 @@ class Expr(Basic, EvalfMixin):
 
             >>> from sympy import E, pi, sin, I, symbols
             >>> from sympy.abc import x, y
+
             >>> E.as_coefficient(E)
             1
             >>> (2*E).as_coefficient(E)
             2
             >>> (2*sin(E)*E).as_coefficient(E)
+
             >>> (2*E + x*E).as_coefficient(E)
             x + 2
             >>> (2*E*x + x).as_coefficient(E)
+
             >>> (E*(x + 1) + x).as_coefficient(E)
+
             >>> (2*pi*I).as_coefficient(pi*I)
             2
             >>> (2*I).as_coefficient(pi*I)
+
         """
 
         r = self.extract_multiplicatively(expr)
@@ -952,7 +978,7 @@ class Expr(Basic, EvalfMixin):
         To force the expression to be treated as an Add, use the hint as_Add=True
 
         Examples
-        --------
+        ========
 
         - self is an Add::
 
@@ -1146,7 +1172,10 @@ class Expr(Basic, EvalfMixin):
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
-        Example::
+        Example
+        =======
+
+        ::
 
             >>> from sympy.abc import a, x
             >>> (3*x + a*x + 4).as_coefficients_dict()
@@ -1207,7 +1236,10 @@ class Expr(Basic, EvalfMixin):
         - if you want to split self into an independent and dependent parts
           use self.as_independent(\*deps)
 
-        Example::
+        Example
+        =======
+
+        ::
 
             >>> from sympy import S
             >>> from sympy.abc import x, y
@@ -1245,7 +1277,10 @@ class Expr(Basic, EvalfMixin):
         - if you want to split self into an independent and dependent parts
           use self.as_independent(\*deps)
 
-        Example::
+        Example
+        =======
+
+        ::
 
             >>> from sympy import S
             >>> from sympy.abc import x, y
@@ -1271,7 +1306,10 @@ class Expr(Basic, EvalfMixin):
         like the as_coeff_Mul() method but primitive always extracts a
         positive Rational (never a negative or a Float).
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy.abc import x
             >>> (3*(x + 1)**2).primitive()
@@ -1298,7 +1336,10 @@ class Expr(Basic, EvalfMixin):
         preserve the underlying structure if possible (i.e. expand_mul
         should not be applied to self).
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy.abc import x, y, z
 
@@ -1353,24 +1394,27 @@ class Expr(Basic, EvalfMixin):
         c \* something in a nice way, i.e. preserving the properties
         of arguments of self.
 
-           Example::
+        Example
+        =======
 
-               >>> from sympy import symbols, Rational
+        ::
 
-               >>> x, y = symbols('x,y', real=True)
+           >>> from sympy import symbols, Rational
 
-               >>> ((x*y)**3).extract_multiplicatively(x**2 * y)
-               x*y**2
+           >>> x, y = symbols('x,y', real=True)
 
-               >>> ((x*y)**3).extract_multiplicatively(x**4 * y)
+           >>> ((x*y)**3).extract_multiplicatively(x**2 * y)
+           x*y**2
 
-               >>> (2*x).extract_multiplicatively(2)
-               x
+           >>> ((x*y)**3).extract_multiplicatively(x**4 * y)
 
-               >>> (2*x).extract_multiplicatively(3)
+           >>> (2*x).extract_multiplicatively(2)
+           x
 
-               >>> (Rational(1,2)*x).extract_multiplicatively(3)
-               x/6
+           >>> (2*x).extract_multiplicatively(3)
+
+           >>> (Rational(1,2)*x).extract_multiplicatively(3)
+           x/6
 
         """
         c = sympify(c)
@@ -1464,7 +1508,10 @@ class Expr(Basic, EvalfMixin):
         something + c in a nice way, i.e. preserving the properties
         of arguments of self.
 
-        Example::
+        Example
+        =======
+
+        ::
 
                >>> from sympy import symbols
 
@@ -1556,7 +1603,10 @@ class Expr(Basic, EvalfMixin):
         For any expression, the set ``{e.could_extract_minus_sign(),
         (-e).could_extract_minus_sign()}`` must be ``{True, False}``.
 
-        Example::
+        Example
+        =======
+
+        ::
 
                >>> from sympy.abc import x, y
                >>> (x-y).could_extract_minus_sign() != (y-x).could_extract_minus_sign()
@@ -1609,7 +1659,10 @@ class Expr(Basic, EvalfMixin):
         This is not part of the assumptions system.  You cannot do
         Symbol('z', polynomial=True).
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy import Symbol
             >>> x = Symbol('x')
@@ -1682,7 +1735,10 @@ class Expr(Basic, EvalfMixin):
         This is not part of the assumptions system.  You cannot do
         Symbol('z', rational_function=True).
 
-        Example::
+        Example
+        =======
+
+        ::
 
             >>> from sympy import Symbol, sin
             >>> from sympy.abc import x, y
@@ -2062,7 +2118,10 @@ class Expr(Basic, EvalfMixin):
         """
         Returns the leading term.
 
-        Example::
+        Example
+        =======
+
+        ::
 
             >>> from sympy.abc import x
             >>> (1+x+x**2).as_leading_term(x)
@@ -2112,7 +2171,10 @@ class Expr(Basic, EvalfMixin):
         """
         Returns the leading term :math:`a*x**b` as a tuple (a, b).
 
-        Example::
+        Example
+        =======
+
+        ::
 
             >>> from sympy.abc import x
             >>> (1+x+x**2).leadterm(x)

@@ -21,7 +21,10 @@ There are two types of functions:
    works in sympy core, but needs to be ported back to SymPy.
 
 
-Example::
+Example
+=======
+
+::
 
     >>> import sympy
     >>> f = sympy.Function("f")
@@ -344,7 +347,10 @@ class Function(Application, Expr):
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
 
-        Examples::
+        Examples
+        ========
+
+        ::
 
             >>> from sympy import atan2, O
             >>> from sympy.abc import x, y
@@ -968,7 +974,7 @@ class Derivative(Expr):
         * Derivatives wrt symbols and non-symbols dont' commute.
 
         Examples
-        --------
+        ========
 
         ::
 
@@ -1372,7 +1378,8 @@ def diff(f, *symbols, **kwargs):
     that if there are 0 symbols (such as diff(f(x), x, 0), then the result will
     be the function (the zeroth derivative), even if evaluate=False.
 
-    **Examples**
+    Examples
+    ========
 
     ::
 
@@ -1535,7 +1542,10 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
        with mul=False first, then run expand_mul if you need further
        expansion.
 
-    Examples::
+    Examples
+    ========
+
+    ::
 
         >>> from sympy import expand_log, expand, expand_mul
         >>> x, y, z = symbols('x,y,z', positive=True)
@@ -1550,14 +1560,14 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
         >>> expand(log(x*(y + z)), mul=False)
         log(x) + log(y + z)
 
-        >>> expand((x*(y + z))**x) # could be either one below
+        expand((x*(y + z))**x) # could be either one below
         (x*y + x*z)**x
         x**x*(y + z)**x
 
         >>> expand((x*(y + z))**x, mul=False)
         x**x*(y + z)**x
 
-        >>> expand(x*(y + z)**2) # could be either one below
+        expand(x*(y + z)**2) # could be either one below
         2*x*y*z + x*y**2 + x*z**2
         x*(y + z)**2
 
@@ -1583,7 +1593,10 @@ def expand_mul(expr, deep=True):
     Wrapper around expand that only uses the mul hint.  See the expand
     docstring for more information.
 
-    Example::
+    Example
+    =======
+
+    ::
 
         >>> from sympy import symbols, expand_mul, exp, log
         >>> x, y = symbols('x,y', positive=True)
@@ -1599,7 +1612,10 @@ def expand_multinomial(expr, deep=True):
     Wrapper around expand that only uses the multinomial hint.  See the expand
     docstring for more information.
 
-    Example::
+    Example
+    =======
+
+    ::
 
         >>> from sympy import symbols, expand_multinomial, exp
         >>> x, y = symbols('x y', positive=True)
@@ -1616,7 +1632,10 @@ def expand_log(expr, deep=True):
     Wrapper around expand that only uses the log hint.  See the expand
     docstring for more information.
 
-    Example::
+    Example
+    =======
+
+    ::
 
         >>> from sympy import symbols, expand_log, exp, log
         >>> x, y = symbols('x,y', positive=True)
@@ -1632,7 +1651,10 @@ def expand_func(expr, deep=True):
     Wrapper around expand that only uses the func hint.  See the expand
     docstring for more information.
 
-    Example::
+    Example
+    =======
+
+    ::
 
         >>> from sympy import expand_func, gamma
         >>> from sympy.abc import x
@@ -1648,7 +1670,10 @@ def expand_trig(expr, deep=True):
     Wrapper around expand that only uses the trig hint.  See the expand
     docstring for more information.
 
-    Example::
+    Example
+    =======
+
+    ::
 
         >>> from sympy import expand_trig, sin, cos
         >>> from sympy.abc import x, y
@@ -1664,7 +1689,10 @@ def expand_complex(expr, deep=True):
     Wrapper around expand that only uses the complex hint.  See the expand
     docstring for more information.
 
-    Example::
+    Example
+    =======
+
+    ::
 
         >>> from sympy import expand_complex, I, im, re
         >>> from sympy.abc import z
@@ -1689,7 +1717,10 @@ def count_ops(expr, visual=False):
     If expr is an iterable, the sum of the op counts of the
     items will be returned.
 
-    Examples::
+    Examples
+    ========
+
+    ::
 
         >>> from sympy.abc import a, b, x, y
         >>> from sympy import sin, count_ops

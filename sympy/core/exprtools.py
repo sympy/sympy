@@ -19,7 +19,8 @@ def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
-    **Example**
+    Example
+    =======
 
     ::
 
@@ -383,7 +384,8 @@ def gcd_terms(terms, isprimitive=False):
     Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
     True the _gcd_terms will not run the primitive method on the terms.
 
-    **Example**
+    Example
+    =======
 
     ::
 
@@ -422,7 +424,8 @@ def factor_terms(expr):
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutative) is performed.
 
-    **Examples**
+    Examples
+    ========
 
     ::
 

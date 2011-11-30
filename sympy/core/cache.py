@@ -52,7 +52,10 @@ def __cacheit(func):
        important: the result of cached function must be *immutable*
 
 
-       Example::
+       Example
+       =======
+
+       ::
 
            >>> from sympy.core.cache import cacheit
            >>> @cacheit

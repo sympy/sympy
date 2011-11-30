@@ -264,7 +264,10 @@ class ProductSet(Set):
 
         Can use `*` operator on any sets for convenient shorthand.
 
-    Examples::
+    Examples
+    ========
+
+    ::
 
         >>> from sympy import Interval, FiniteSet, ProductSet
 
@@ -418,7 +421,10 @@ class Interval(RealSet):
         will be open on the left. Similarly, for right_open=True the interval
         will be open on the right.
 
-    Examples::
+    Examples
+    ========
+
+    ::
 
         >>> from sympy import Symbol, Interval, sets
 
@@ -665,7 +671,10 @@ class Union(Set):
     """
     Represents a union of sets as a Set.
 
-    Examples::
+    Examples
+    ========
+
+    ::
 
         >>> from sympy import Union, Interval
 
@@ -965,7 +974,10 @@ class EmptySet(Set):
     Represents the empty set. The empty set is available as a singleton
     as S.EmptySet.
 
-    Examples::
+    Examples
+    ========
+
+    ::
 
         >>> from sympy import S, Interval
 
@@ -1009,7 +1021,10 @@ class FiniteSet(CountableSet):
     """
     Represents a finite set of discrete numbers
 
-    Examples::
+    Examples
+    ========
+
+    ::
 
         >>> from sympy import Symbol, FiniteSet, sets
 

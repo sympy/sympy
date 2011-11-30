@@ -1316,7 +1316,10 @@ class Mul(AssocOp):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        Example::
+        Example
+        =======
+
+        ::
 
             >>> from sympy import sqrt
             >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
@@ -1342,7 +1345,10 @@ def prod(a, start=1):
     Return product of elements of a. Start with int 1 so if only ints are
     included then an int result is returned.
 
-    Example::
+    Example
+    =======
+
+    ::
 
         >>> from sympy import prod, S
         >>> prod(range(3))
