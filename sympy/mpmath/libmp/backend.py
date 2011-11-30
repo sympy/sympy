@@ -64,7 +64,7 @@ if 'MPMATH_NOGMPY' not in os.environ:
         if gmpy.version() >= '1.03':
             BACKEND = 'gmpy'
             MPZ = gmpy.mpz
-    except ImportError:
+    except:
         pass
 
 if 'MPMATH_NOSAGE' not in os.environ:
@@ -75,7 +75,7 @@ if 'MPMATH_NOSAGE' not in os.environ:
         sage_utils = _sage_utils
         BACKEND = 'sage'
         MPZ = sage.Integer
-    except ImportError:
+    except:
         pass
 
 if 'MPMATH_STRICT' in os.environ:
