@@ -3,6 +3,13 @@ Reimplementations of constructs introduced in later versions of Python than we
 support.
 """
 
+class SymPyDeprecationWarning(DeprecationWarning):
+    def __init__(self, value):
+        self.parameter = value
+
+    def __str__(self):
+        return repr(self.parameter)
+
 # These are in here because telling if something is an iterable just by calling
 # hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
