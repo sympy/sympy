@@ -124,7 +124,7 @@ def testit(importdir='', testdir=''):
                     t1 = clock()
                     try:
                         module.__dict__[f]()
-                    except (KeyboardInterrupt, SystemExit, AttributeError):
+                    except:
                         etype, evalue, trb = sys.exc_info()
                         if etype in (KeyboardInterrupt, SystemExit):
                             raise
