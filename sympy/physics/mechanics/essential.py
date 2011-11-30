@@ -916,7 +916,7 @@ class ReferenceFrame(object):
             wvec = thetad * amounts[1].express(parent).normalize()
         else:
             try:
-                from sympy.polys.polyerrors import CoercionFailed,FlagError
+                from sympy.polys.polyerrors import CoercionFailed
                 from sympy.physics.mechanics.functions import kinematic_equations
                 q1, q2, q3 = amounts
                 u1, u2, u3 = dynamicsymbols('u1, u2, u3')
@@ -928,7 +928,7 @@ class ReferenceFrame(object):
                 u2 = expand(td[u2])
                 u3 = expand(td[u3])
                 wvec = u1 * self.x + u2 * self.y + u3 * self.z
-            except (CoercionFailed,AssertionError):
+            except (CoercionFailed, AssertionError):
                 wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
