@@ -100,6 +100,14 @@ def sqrt_match(p):
         return sqrt_match0(a)
 
 def sqrt_depth(p):
+    """
+    >>> from sympy.functions.elementary.miscellaneous import sqrt
+    >>> from sympy.simplify.sqrtdenest import sqrt_depth
+    >>> sqrt_depth(1 + sqrt(2)*(1 + sqrt(3)))
+    1
+    >>> sqrt_depth(1 + sqrt(2)*sqrt(1 + sqrt(3)))
+    2
+    """
     if p.is_Atom:
         return 0
     elif p.is_Add or p.is_Mul:
@@ -202,8 +210,9 @@ def denester (nested, h):
 
 def subsets(n):
     """
-    Returns all possible subsets of the set (0, 1, ..., n-1) except the empty,
-    listed in numerical order according to binary representation.
+    Returns all possible subsets of the set (0, 1, ..., n-1) except the
+    empty set, listed in reversed lexicographical order according to binary
+    representation, so that the case of the fourth root is treated last.
 
     Examples
     ========
@@ -211,8 +220,7 @@ def subsets(n):
     >>> from sympy.simplify.sqrtdenest import subsets
     >>> subsets(3)
     [[0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]
-    listed in reversed lexicographical order so that the case of the fourth
-    root is treated last.
+
     """
     if n == 1:
         a = [[1]]
