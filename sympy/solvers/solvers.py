@@ -16,14 +16,14 @@ from sympy.core.sympify import sympify
 from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic, Expr
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
         Derivative, Function, AppliedUndef, UndefinedFunction, count_ops,
-	nfloat)
+        nfloat)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot,
                              cosh, sinh, tanh, coth, acos, asin, atan, acot,
-                             acosh, asinh, atanh, acoth, sqrt)
+                             acosh, asinh, atanh, acoth, sqrt, Abs)
 from sympy.simplify import (simplify, collect, powsimp, fraction, posify,
                             powdenest, nsimplify)
 from sympy.matrices import Matrix, zeros
@@ -1829,13 +1829,14 @@ def _invert(eq, *symbols, **kwargs):
 
     inverses = {
     asin: sin,
-    acos:cos,
-    atan:tan,
-    acot:cot,
+    acos: cos,
+    atan: tan,
+    acot: cot,
     asinh: sinh,
-    acosh:cosh,
-    atanh:tanh,
-    acoth:coth,}
+    acosh: cosh,
+    atanh: tanh,
+    acoth: coth,
+    }
 
     lhs = eq
     rhs = S.Zero
@@ -1894,9 +1895,15 @@ def _invert(eq, *symbols, **kwargs):
 
         #                    -1
         # f(x) = g  ->  x = f  (g)
-        elif lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and (hasattr(lhs, 'inverse') or lhs.func in inverses):
+        elif lhs.is_Function and (lhs.nargs==1 or len(lhs.args) == 1) and \
+                                 (hasattr(lhs, 'inverse') or
+                                  lhs.func in inverses or
+                                  lhs.func is Abs):
             if lhs.func in inverses:
                 inv = inverses[lhs.func]
+            elif lhs.func is Abs:
+                inv = lambda w: w**2
+                lhs = Basic(lhs.args[0]**2) # get it ready to remove the args
             else:
                 inv = lhs.inverse()
             rhs = inv(rhs)

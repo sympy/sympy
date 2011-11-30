@@ -921,3 +921,6 @@ def test_float_handling():
 def test_check_assumptions():
     x = symbols('x', positive=1)
     assert solve(x**2 - 1) == [1]
+
+def test_solve_abs():
+    assert solve(abs(x - 7) - 8) == [-1, 15]
