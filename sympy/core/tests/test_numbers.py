@@ -322,6 +322,8 @@ def test_Infinity():
     assert 2 - oo == -oo
     assert S(2) + oo == oo
     assert S(2) - oo == -oo
+    assert oo.is_Rational == False
+    assert isinstance(oo, Rational) == False
 
 def test_Infinity_2():
     x = Symbol('x')

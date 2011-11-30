@@ -393,7 +393,8 @@ def test_noncommutative_expand_issue658():
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
 
 def test_as_numer_denom():
-    
+    a, b, c = symbols('a, b, c')
+
     assert nan.as_numer_denom() == (nan, 1)
     assert oo.as_numer_denom() == (oo, 1)
     assert (-oo).as_numer_denom() == (-oo, 1)
@@ -1190,7 +1191,7 @@ def test_primitive():
         assert (i + x/3).primitive() == \
             (S(1)/3, i + x)
     assert (S.Infinity + 2*x/3 + 4*y/7).primitive() == \
-        (S(2)/21, 7*x + 6*y + oo)
+        (S(1)/21, 14*x + 12*y + oo)
 
 def test_issue_2744():
     a = 1 + x

@@ -36,7 +36,7 @@ class Add(AssocOp):
             if b.is_Rational:
                 a, b = b, a
             assert a
-            if a.is_Rational and a.q:
+            if a.is_Rational:
                 if b.is_Mul:
                     # if it's an unevaluated 2-arg, expand it
                     c, t = b.as_coeff_Mul()
@@ -718,7 +718,7 @@ class Add(AssocOp):
             if not c.is_Rational:
                 c = S.One
                 m = a
-            inf = inf or not c.q or m is S.ComplexInfinity
+            inf = inf or m is S.ComplexInfinity
             terms.append((c.p, c.q, m))
 
         if not inf:

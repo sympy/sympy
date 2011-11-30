@@ -1075,7 +1075,7 @@ class Rational(Number):
         See docstring of Expr.as_content_primitive for more examples.
         """
 
-        if self and self.q:
+        if self:
             if self.is_positive:
                 return self, S.One
             return -self, S.NegativeOne

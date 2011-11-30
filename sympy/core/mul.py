@@ -113,7 +113,7 @@ class Mul(AssocOp):
             if b.is_Rational:
                 a, b = b, a
             assert not a is S.One
-            if a and a.is_Rational and a.q:
+            if a and a.is_Rational:
                 r, b = b.as_coeff_Mul()
                 a *= r
                 if b.is_Mul:
