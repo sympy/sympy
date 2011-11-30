@@ -97,8 +97,8 @@ def multinomial_coefficients(m, n):
 
     For example:
 
-    >>> from sympy.ntheory import multinomial_coefficients
-    >>> multinomial_coefficients(2, 5)
+    >>> from sympy.ntheory import multinomial_coefficients 
+    >>> multinomial_coefficients(2, 5) # indirect doctest
     {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
 
     The algorithm is based on the following result:
