@@ -36,8 +36,8 @@ class Sieve:
         
         **Example**
         >>> from sympy.ntheory import sieve
-        >>> sieve.extend(80) 
-        >>> sieve[-1] == 79
+        >>> sieve.extend(30) 
+        >>> sieve[10] == 29
         True
         """
         if N <= self._list[-1]:
@@ -68,8 +68,8 @@ class Sieve:
 
         **Example**
         >>> from sympy import sieve
-        >>> sieve.extend_to_no(80)
-        >>> sieve[-1] == 421
+        >>> sieve.extend_to_no(9)
+        >>> sieve[10] == 29
         True
         """
         while len(self._list) < n:
@@ -81,7 +81,7 @@ class Sieve:
         **Example**
         >>> from sympy import sieve
         >>> print [i for i in sieve.primerange(7, 18)]
-        [7, 11, 13, 18]
+        [7, 11, 13, 17]
         """
         assert a <= b
         if b < 2:
@@ -144,7 +144,7 @@ def prime(n):
         **Example**
         >>> from sympy import prime
         >>> prime(10)
-        20
+        29
         >>> prime(1)
         2
     """
@@ -158,7 +158,7 @@ def primepi(n):
         necessarily be an integer.
 
         **Example**
-        >>> from sympy import prime
+        >>> from sympy import primepi
         >>> primepi(25)
         9
     """
@@ -300,9 +300,9 @@ def randprime(a, b):
 
         **Example**
         >>> from sympy import randprime, isprime
-        >>> a = randprime(1, 30) #doctest: +SKIP
+        >>> randprime(1, 30) #doctest: +SKIP
         13
-        >>> isprime(a)
+        >>> isprime(randprime(1, 30))
         True
     """
 

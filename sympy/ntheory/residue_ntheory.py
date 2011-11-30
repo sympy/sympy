@@ -22,9 +22,9 @@ def totient_(n):
     and relatively prime to n
 	**Examples**
 	>>> from sympy.ntheory import totient_
-	>>> totient(6)
+	>>> totient_(6)
 	2
-	>>> totient(67)
+	>>> totient_(67)
 	66
 	"""
     n = int_tested(n)
