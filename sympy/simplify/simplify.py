@@ -822,6 +822,9 @@ def trigsimp(expr, deep=False):
             break
         old = new
 
+    # final cleanup
+    new = new.subs([(t.base, 1/cot(t.base.args[0])) for t in new.atoms(Pow) if t.base.func is tan and t.exp.is_Integer and t.exp < 0])
+
     return _keep_coeff(cont, new)
 
 def _trigsimp(expr, deep=False):

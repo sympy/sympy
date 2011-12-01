@@ -87,9 +87,9 @@ def test_trigsimp3():
     assert trigsimp(sin(x)**3/cos(x)**3) == tan(x)**3
     assert trigsimp(sin(x)**10/cos(x)**10) == tan(x)**10
 
-    assert trigsimp(cos(x)/sin(x)) == 1/tan(x)
-    assert trigsimp(cos(x)**2/sin(x)**2) == 1/tan(x)**2
-    assert trigsimp(cos(x)**10/sin(x)**10) == 1/tan(x)**10
+    assert trigsimp(cos(x)/sin(x)) == cot(x)
+    assert trigsimp(cos(x)**2/sin(x)**2) == cot(x)**2
+    assert trigsimp(cos(x)**10/sin(x)**10) == cot(x)**10
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
@@ -119,7 +119,7 @@ def test_trigsimp_issues_1395_1526_1562():
                     cos(a)**2) == 1
     # check for multiple patterns
     assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
-            1/(tan(x)**2*tan(y)**2)
+            cot(x)**2*cot(y)**2
     # issue 2849
     assert trigsimp(diff(integrate(cos(x)/sin(x)**3, x), x)) == \
             cos(x)/sin(x)**3
