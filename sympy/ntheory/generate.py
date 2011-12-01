@@ -37,7 +37,7 @@ class Sieve:
         Examples
         ========
         >>> from sympy.ntheory import sieve
-        >>> sieve.extend(30) 
+        >>> sieve.extend(30)
         >>> sieve[10] == 29
         True
         """
