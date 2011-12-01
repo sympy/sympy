@@ -402,8 +402,7 @@ def my_trigsimp(input):
     In [10]: my_trigsimp(a)
     Out[10]: 
               2          4     
-     2 - 2⋅cos (50) + cos (100)
-
+     2 - 2*cos (50) + cos (100)
 
     """
     input = str(input)
