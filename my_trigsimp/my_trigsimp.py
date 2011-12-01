@@ -41,10 +41,10 @@ def TR2(input):
 
 def TR3(input):
     #Negative argument
-    returnString = re.sub("sin\(\-(\w*?)\)", "-sin(\g<1>)", input)
+    returnString = re.sub("sin\(\-(\w*?)\)", "(-sin(\g<1>))", input)
     returnString = re.sub("cos\(\-(\w*?)\)", "cos(\g<1>)", returnString)
-    returnString = re.sub("tan\(\-(\w*?)\)", "-tan(\g<1>)", returnString)
-    returnString = re.sub("cot\(\-(\w*?)\)", "-cot(\g<1>)", returnString)
+    returnString = re.sub("tan\(\-(\w*?)\)", "(-tan(\g<1>))", returnString)
+    returnString = re.sub("cot\(\-(\w*?)\)", "(-cot(\g<1>))", returnString)
 
     #Argument of type: pi/2 - angle
     returnString = re.sub("sin\(pi/2\-(\w*?)\)", "cos(\g<1>)", returnString) 
@@ -60,52 +60,52 @@ def TR3(input):
 
     #Argument of type: pi/2 + angle
     returnString = re.sub("sin\(pi/2\+(\w*?)\)", "cos(\g<1>)", returnString) 
-    returnString = re.sub("cos\(pi/2\+(\w*?)\)", "-sin(\g<1>)", returnString)
-    returnString = re.sub("tan\(pi/2\+(\w*?)\)", "-cot(\g<1>)", returnString)
-    returnString = re.sub("cot\(pi/2\+(\w*?)\)", "-tan(\g<1>)", returnString)
+    returnString = re.sub("cos\(pi/2\+(\w*?)\)", "(-sin(\g<1>))", returnString)
+    returnString = re.sub("tan\(pi/2\+(\w*?)\)", "(-cot(\g<1>))", returnString)
+    returnString = re.sub("cot\(pi/2\+(\w*?)\)", "(-tan(\g<1>))", returnString)
     
     #Argument of type: angle + pi/2
     returnString = re.sub("sin\((\w*?)\+pi/2\)", "cos(\g<1>)", returnString) 
-    returnString = re.sub("cos\((\w*?)\+pi/2\)", "-sin(\g<1>)", returnString)
-    returnString = re.sub("tan\((\w*?)\+pi/2\)", "-cot(\g<1>)", returnString)
-    returnString = re.sub("cot\((\w*?)\+pi/2\)", "-tan(\g<1>)", returnString)
+    returnString = re.sub("cos\((\w*?)\+pi/2\)", "(-sin(\g<1>))", returnString)
+    returnString = re.sub("tan\((\w*?)\+pi/2\)", "(-cot(\g<1>))", returnString)
+    returnString = re.sub("cot\((\w*?)\+pi/2\)", "(-tan(\g<1>))", returnString)
 
     #Argument of type: pi - angle
     returnString = re.sub("sin\(pi\-(\w*?)\)", "sin(\g<1>)", returnString)  
-    returnString = re.sub("cos\(pi\-(\w*?)\)", "-cos(\g<1>)", returnString)
-    returnString = re.sub("tan\(pi\-(\w*?)\)", "-tan(\g<1>)", returnString)
-    returnString = re.sub("cot\(pi\-(\w*?)\)", "-cot(\g<1>)", returnString)
+    returnString = re.sub("cos\(pi\-(\w*?)\)", "(-cos(\g<1>))", returnString)
+    returnString = re.sub("tan\(pi\-(\w*?)\)", "(-tan(\g<1>))", returnString)
+    returnString = re.sub("cot\(pi\-(\w*?)\)", "(-cot(\g<1>))", returnString)
 
     #Argument of type: -angle + pi
     returnString = re.sub("sin\(\-(\w*?)\+pi\)", "sin(\g<1>)", returnString)  
-    returnString = re.sub("cos\(\-(\w*?)\+pi\)", "-cos(\g<1>)", returnString)
-    returnString = re.sub("tan\(\-(\w*?)\+pi\)", "-tan(\g<1>)", returnString)
-    returnString = re.sub("cot\(\-(\w*?)\+pi\)", "-cot(\g<1>)", returnString)
+    returnString = re.sub("cos\(\-(\w*?)\+pi\)", "(-cos(\g<1>))", returnString)
+    returnString = re.sub("tan\(\-(\w*?)\+pi\)", "(-tan(\g<1>))", returnString)
+    returnString = re.sub("cot\(\-(\w*?)\+pi\)", "(-cot(\g<1>))", returnString)
 
     #Argument of type: pi + angle
-    returnString = re.sub("sin\(pi\+(\w*?)\)", "-sin(\g<1>)", returnString) 
-    returnString = re.sub("cos\(pi\+(\w*?)\)", "-cos(\g<1>)", returnString)
+    returnString = re.sub("sin\(pi\+(\w*?)\)", "(-sin(\g<1>))", returnString) 
+    returnString = re.sub("cos\(pi\+(\w*?)\)", "(-cos(\g<1>))", returnString)
     returnString = re.sub("tan\(pi\+(\w*?)\)", "tan(\g<1>)", returnString)
     returnString = re.sub("cot\(pi\+(\w*?)\)", "cot(\g<1>)", returnString)
 
     #Argument of type: angle + pi
-    returnString = re.sub("sin\((\w*?)\+pi\)", "-sin(\g<1>)", returnString) 
-    returnString = re.sub("cos\((\w*?)\+pi\)", "-cos(\g<1>)", returnString)
+    returnString = re.sub("sin\((\w*?)\+pi\)", "(-sin(\g<1>))", returnString) 
+    returnString = re.sub("cos\((\w*?)\+pi\)", "(-cos(\g<1>))", returnString)
     returnString = re.sub("tan\((\w*?)\+pi\)", "tan(\g<1>)", returnString)
     returnString = re.sub("cot\((\w*?)\+pi\)", "cot(\g<1>)", returnString)
 
     #Argument of type : 2k*pi - angle
     #2k*pi means that it matches every even number pi e.g. 2*pi, 4*pi, 6*pi ...
-    returnString = re.sub("sin\(\d*?(0|2|4|6|8)+?\*pi\s*\-\s*(\w*?)\)", "-sin(\g<2>)", returnString) 
+    returnString = re.sub("sin\(\d*?(0|2|4|6|8)+?\*pi\s*\-\s*(\w*?)\)", "(-sin(\g<2>))", returnString) 
     returnString = re.sub("cos\(\d*?(0|2|4|6|8)+?\*pi\s*\-\s*(\w*?)\)", "cos(\g<2>)", returnString)
-    returnString = re.sub("tan\(\d*?(0|2|4|6|8)+?\*pi\s*\-\s*(\w*?)\)", "-tan(\g<2>)", returnString)
-    returnString = re.sub("cot\(\d*?(0|2|4|6|8)+?\*pi\s*\-\s*(\w*?)\)", "-cot(\g<2>)", returnString)
+    returnString = re.sub("tan\(\d*?(0|2|4|6|8)+?\*pi\s*\-\s*(\w*?)\)", "(-tan(\g<2>))", returnString)
+    returnString = re.sub("cot\(\d*?(0|2|4|6|8)+?\*pi\s*\-\s*(\w*?)\)", "(-cot(\g<2>))", returnString)
 
     #Argument of type: -angle + 2k*pi
-    returnString = re.sub("sin\(\-(\w*?)\s*\+\s*\d*?(0|2|4|6|8)+?\*pi\)", "-sin(\g<1>)", returnString) 
+    returnString = re.sub("sin\(\-(\w*?)\s*\+\s*\d*?(0|2|4|6|8)+?\*pi\)", "(-sin(\g<1>))", returnString) 
     returnString = re.sub("cos\(\-(\w*?)\s*\+\s*\d*?(0|2|4|6|8)+?\*pi\)", "cos(\g<1>)", returnString)
-    returnString = re.sub("tan\(\-(\w*?)\s*\+\s*\d*?(0|2|4|6|8)+?\*pi\)", "-tan(\g<1>)", returnString)
-    returnString = re.sub("cot\(\-(\w*?)\s*\+\s*\d*?(0|2|4|6|8)+?\*pi\)", "-cot(\g<1>)", returnString)
+    returnString = re.sub("tan\(\-(\w*?)\s*\+\s*\d*?(0|2|4|6|8)+?\*pi\)", "(-tan(\g<1>))", returnString)
+    returnString = re.sub("cot\(\-(\w*?)\s*\+\s*\d*?(0|2|4|6|8)+?\*pi\)", "(-cot(\g<1>))", returnString)
 
 
     #Argument of type: 2k*pi + angle
@@ -382,8 +382,30 @@ def RL2(input):
     return returnString
    
 
-#---------------Main function----------------------
 def my_trigsimp(input):
+    """
+    ==Usage==
+    my_trigsimp(expression) -> reduces expression by using transformation rules given in the fu et al algorithm
+
+    ==Examples===
+    No.1
+    In [4]: execfile("my_trigsimp.py")
+
+    In [5]: a = sin(50)**2 + cos(50)**2 + sin(pi/6)
+
+    In [6]: my_trigsimp(a)
+    Out[6]: 3/2
+
+    No.2
+    In [9]: a = sin(100)**4 - cos(50)**2 + sin(50)**2 + 2*cos(100)**2 
+
+    In [10]: my_trigsimp(a)
+    Out[10]: 
+              2          4     
+     2 - 2⋅cos (50) + cos (100)
+
+
+    """
     input = str(input)
     returnString = TR0(input)
     returnString = TR1(input)
