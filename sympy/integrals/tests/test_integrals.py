@@ -5,6 +5,8 @@ from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Sy
         terms_gcd)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
+from sympy.solvers.ode import dsolve
+from timeit import Timer
 
 x,y,a,t,x_1,x_2,z = symbols('x,y,a,t,x_1,x_2,z')
 n = Symbol('n', integer=True)
@@ -668,3 +670,12 @@ def test_integrate_series():
     assert diff(integrate(f, x), x) == f
 
     assert integrate(O(x**5), x) == O(x**6)
+
+def test_integrate_with_dsolve():
+    epsilon = 0.5
+    prepare = """from sympy import (symbols, Function, sin, exp, integrate); from sympy.solvers.ode import dsolve; x = symbols("x"); f = Function("f") """
+    integrate_time = Timer("integrate(x**2*exp(x)*sin(x), x)", prepare).timeit(10)
+    dsolve_time = Timer("dsolve(f(x).diff(x) - x**2*exp(x)*sin(x), f(x), hint='nth_linear_constant_coeff_undetermined_coefficients')", prepare).timeit(10)
+    
+    assert abs(integrate_time - dsolve_time) < epsilon
+

@@ -2,6 +2,7 @@ from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
                         oo, Tuple, Interval)
 
 from sympy.core.symbol import Dummy
+from sympy.core.function import Function
 from sympy.core.compatibility import is_sequence
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -14,6 +15,7 @@ from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
+from sympy.solvers.ode import classify_ode, dsolve
 
 def _process_limits(*symbols):
     """Convert the symbols-related limits into propert limits,
@@ -829,7 +831,8 @@ def integrate(*args, **kwargs):
        using Risch-Norman algorithm and table lookup. This procedure is
        able to handle elementary algebraic and transcendental functions
        and also a huge class of special functions, including Airy,
-       Bessel, Whittaker and Lambert.
+       Bessel, Whittaker and Lambert. It is also able to speed up
+       computation of some integrals using differential equations.
 
        var can be:
 
@@ -872,12 +875,46 @@ def integrate(*args, **kwargs):
 
     """
     integral = Integral(*args, **kwargs)
+    f = Function('f')
 
-    if isinstance(integral, Integral):
-        return integral.doit(deep = False)
+    expr = args[0].expand()
+    is_indefinite = True
+    symbols = []
+    integrate_symbols = []
+    if len(args) > 1:
+        limits, sign = _process_limits(*args[1:])
+        for atom in expr.atoms():
+            if isinstance(atom, Symbol):
+                symbols.append(atom)
+
+        for limit in limits:
+            integrate_symbols.append(limit[0])
+            if len(limit) > 1: 
+                is_indefinite = False
+                break
+    
+    dsolve_hint = 'nth_linear_constant_coeff_undetermined_coefficients'
+    if is_indefinite and len(symbols) == 1 and not expr.getO() \
+            and dsolve_hint in classify_ode(f(*symbols).diff(*integrate_symbols) - expr, f(*symbols)):
+        sol = dsolve(f(*symbols).diff(*integrate_symbols) - expr, f(*symbols), hint=dsolve_hint)
+
+        sol_expr = sol.args[1]
+        Cdict = {}
+
+        for arg in sol_expr.args:
+            if repr(arg)[0] == 'C':
+                Cdict[arg] = 0
+        sol = sol_expr.subs(Cdict)
+
+        if isinstance(expr, Poly):
+            return Poly(sol)
+        else:
+            return sol
     else:
-        return integral
-
+        if isinstance(integral, Integral):
+            return integral.doit(deep = False)
+        else:
+            return integral
 
 @xthreaded
 def line_integrate(field, curve, vars):
