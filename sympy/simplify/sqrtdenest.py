@@ -1,38 +1,7 @@
 from sympy.functions import sqrt, sign
 from sympy.core import S, Wild, Rational, sympify, Mul, Add, Expr
 from sympy.core.mul import prod
-
-
-def radsimp(expr):
-    """
-    Rationalize the denominator.
-    This is a simpler version than the one in simplify.py
-
-    Examples:
-        >>> from sympy import radsimp, sqrt, Symbol
-        >>> radsimp(1/(2+sqrt(2)))
-        -sqrt(2)/2 + 1
-        >>> x,y = map(Symbol, 'xy')
-        >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
-        >>> radsimp(e)
-        sqrt(2)*x + sqrt(2)*y
-
-    """
-    n, d = expr.as_numer_denom()
-    a, b, c = map(Wild, 'abc')
-    r = d.match(a+b*sqrt(c))
-    if r is not None:
-        a = r[a]
-        if r[b] == 0:
-            b, c = 0, 0
-        else:
-            b, c = r[b], r[c]
-
-        n = (n*(a-b*sqrt(c))).expand()
-        d = a**2 - c*b**2
-
-    return n/d
-
+from sympy.core.function import expand_multinomial
 
 def sqrtdenest(expr):
     """
@@ -65,11 +34,12 @@ def sqrtdenest(expr):
     return expr
 
 def _sqrtdenest(expr):
+    from sympy.simplify.simplify import radsimp
     val = sqrt_match(expr)
     if val:
         a, b, r = val
         # try a quick denesting
-        d2 = (a**2 - b**2*r).expand()
+        d2 = expand_multinomial(a**2 - b**2*r)
         if d2.is_Number and \
             max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
             d = sqrt(d2)
@@ -161,6 +131,7 @@ def denester (nested, h):
 
     This is discussed in the paper in the middle paragraph of page 179.
     """
+    from sympy.simplify.simplify import radsimp
     if all((n**2).is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
             p = prod(nested[i]**2 for i in range(len(f)) if f[i]).expand()
