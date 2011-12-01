@@ -764,6 +764,9 @@ def trigsimp(expr, deep=False):
 
     expr = factor_terms(expr)
     cont, expr = expr.as_coeff_Mul()
+    if cont < 0:
+        cont = -cont
+        expr = -expr
     n, d = expr.as_numer_denom()
     if d != 1:
         expr = trigsimp(n, deep)/trigsimp(d, deep)
@@ -792,9 +795,8 @@ def trigsimp(expr, deep=False):
                     new = factor(new.rewrite(exp))
                     if new.is_Mul:
                         new = trigsimp(new, deep)
-                if new.count_ops() > expr.count_ops():
-                    new = expr
-            expr = new
+                if new.count_ops() <= expr.count_ops():
+                    expr = new
 
     if expr.is_Mul:
         margs = list(expr.args)
