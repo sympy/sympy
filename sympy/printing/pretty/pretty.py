@@ -414,9 +414,9 @@ class PrettyPrinter(Printer):
             else:
                 vsum = vobj('sum', 4)   # contains all characters necessary
                 lines.append("_"*(w + more))    
-                for i in range(0, d + more - 1): # only even number of lines
+                for i in range(0, d + more): # only even number of lines
                     lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i)))
-                for i in reversed(range(0, d + more - 1)):
+                for i in reversed(range(0, d + more)):
                     lines.append('%s%s%s' % (' '*i, vsum[4], ' '*(w - i)))
                 lines.append(vsum[8]*(w + more))
                 return d, h + 2*more, lines
@@ -461,9 +461,6 @@ class PrettyPrinter(Printer):
 
             # In UNICODE mode we need to modify vertical adjustment a bit
             unicode_shift = 0
-            
-            if not ascii_mode:
-                unicode_shift = 1 - (h % 2)
 
             if first:
                 # change F baseline so it centers on the sign
