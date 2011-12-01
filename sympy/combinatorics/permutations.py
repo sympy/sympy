@@ -181,6 +181,14 @@ class Permutation(Basic):
 
     @property
     def size(self):
+        """
+        Returns the number of numbers in the permutation
+
+        **Examples**
+        >>> from sympy import Permutation
+        >>> Permutation([[3, 2], [0, 1]]).size
+        4
+        """
         return len(self.array_form)
 
     def __new__(cls, *args, **kw_args):
@@ -442,6 +450,13 @@ don\'t match.")
     def atoms(self):
         """
         Returns all the elements of a permutation
+
+        **Examples**
+        >>> from sympy import Permutation
+        >>> Permutation([0, 1, 2, 3, 4, 5]).atoms()
+        set([0, 1, 2, 3, 4, 5])
+        >>> Permutation([[0, 1], [2, 3], [4, 5]]).atoms()
+        set([0, 1, 2, 3, 4, 5])
         """
         return set(self.array_form)
 
@@ -631,47 +646,67 @@ don\'t match.")
 
         return perm_af_parity(self.array_form)
 
-
+    @property
     def is_even(self):
         """
         Checks if a permutation is even.
 
-        Examples::
-
-            >>> from sympy.combinatorics.permutations import Permutation
-            >>> p = Permutation([0,1,2,3])
-            >>> p.is_even()
-            True
-            >>> p = Permutation([3,2,1,0])
-            >>> p.is_even()
-            True
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.is_even
+        True
+        >>> p = Permutation([3,2,1,0])
+        >>> p.is_even
+        True
         """
         return S(self.parity()).is_even
-
+    @property
     def is_odd(self):
         """
         Checks if a permutation is odd.
 
-        Examples::
-
-            >>> from sympy.combinatorics.permutations import Permutation
-            >>> p = Permutation([0,1,2,3])
-            >>> p.is_odd()
-            False
-            >>> p = Permutation([3,2,0,1])
-            >>> p.is_odd()
-            True
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> p = Permutation([0,1,2,3])
+        >>> p.is_odd
+        False
+        >>> p = Permutation([3,2,0,1])
+        >>> p.is_odd
+        True
+>>>>>>> Fixed up some documentations in combinatorics
         """
         return S(self.parity()).is_odd
 
     @property
     def is_Singleton(self):
+        """
+        Checks to see if the permutation contains only one number
+        Therefore there is only one possible permutation of this set of numbers
+
+        **Examples**
+        >>> from sympy import Permutation
+        >>> Permutation([0]).is_Singleton
+        True
+        >>> Permutation([0, 1]).is_Singleton
+        False
+        """
         return self.size == 1
 
     @property
     def is_Empty(self):
+        """
+        Checks to see if the permutation is a set with zero elements
+
+        **Examples**
+        >>> from sympy import Permutation
+        >>> Permutation([]).is_Empty
+        True
+        >>> Permutation([0]).is_Empty
+        False
+        """
         return self.size == 0
 
     @property
@@ -868,6 +903,13 @@ don\'t match.")
     def length(self):
         """
         Returns the number of integers moved by a permutation.
+
+        **Examples**
+        >>> from sympy import Permutation
+        >>> Permutation([0, 3, 2, 1]).length()
+        2
+        >>> Permutation([[0, 1], [2, 3]]).length()
+        4
         """
         length = 0
         a = self.array_form
@@ -876,10 +918,28 @@ don\'t match.")
                 length += 1
         return length
 
+    @property
     def is_Positive(self):
+        """
+        Checks if the permutation is positive
+
+        **Examples**
+        >>> from sympy import Permutation
+        >>> Permutation([0, 1, 2]).is_Positive
+        True
+        """
         return self.signature() > 0
 
+    @property
     def is_Negative(self):
+        """
+        Checks if the permutation is negative
+
+        **Examples**
+        >>> from sympy import Permutation
+        >>> Permutation([0, 1, 2]).is_Negative
+        False
+        """
         return self.signature() < 0
 
     @property
@@ -887,6 +947,13 @@ don\'t match.")
         """
         Returns the number of cycles that the permutation
         has been decomposed into.
+
+        **Examples**
+        >>> from sympy import Permutation
+        >>> Permutation([0, 1, 2]).cycles
+        3
+        >>> Permutation([[0, 1], [2, 3]]).cycles
+        2
         """
         return len(self.cyclic_form)
 

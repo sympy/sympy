@@ -123,14 +123,12 @@ class Prufer(Basic):
     def prufer_rank(self):
         """
         Computes the rank of a Prufer sequence.
-
-        Examples::
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
-            >>> a.rank
-            0
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a.prufer_rank()
+        0
         """
         r = 0
         p = 1

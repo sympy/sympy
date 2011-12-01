@@ -33,10 +33,10 @@ class Sieve:
 
     def extend(self, N):
         """Grow the sieve to cover all numbers <= N.
-        
+
         **Example**
         >>> from sympy.ntheory import sieve
-        >>> sieve.extend(30) 
+        >>> sieve.extend(30)
         >>> sieve[10] == 29
         True
         """
@@ -77,7 +77,7 @@ class Sieve:
 
     def primerange(self, a, b):
         """Generate all prime numbers in the range [a, b).
-        
+
         **Example**
         >>> from sympy import sieve
         >>> print [i for i in sieve.primerange(7, 18)]
@@ -101,7 +101,7 @@ class Sieve:
     def search(self, n):
         """For n >= 2, return the tightest a, b such that
         self[a] <= n <= self[b]
-        
+
         **Example**
         >>> from sympy import sieve
         >>> sieve.search(25)

@@ -66,7 +66,7 @@ def _series(j, n):
 
 def pi_hex_digits(n):
     """Returns a string containing 14 digits after the nth value of pi in hex
-       The decimal has been taken out of the number, so 
+       The decimal has been taken out of the number, so
        n = 0[0] = 3 # First digit of pi in hex, 3
 
     **Examples**

@@ -221,7 +221,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     since finding a factor indicates the only possible root for n. This
     is True by default since only a few small factors will be tested in
     the course of searching for the perfect power.
-    
+
     **Examples**
     >>> from sympy import perfect_power
     >>> perfect_power(16)
