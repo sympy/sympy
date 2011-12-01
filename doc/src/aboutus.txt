@@ -154,6 +154,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Nichita Utiu: Add pretty printing to Product()
 #. Imran Ahmed Manzoor: Fixes to the test runner
 #. Steve Anton: pyflakes cleanup of geometry
+#. Sam Sleight: Fixes to geometry documentation
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
