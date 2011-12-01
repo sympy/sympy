@@ -12,7 +12,7 @@ from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 
-from sympy.utilities import flatten, default_sort_key
+from sympy.utilities import flatten, default_sort_key, sift
 from sympy.functions import gamma, exp, sqrt, log, root
 
 from sympy.simplify.cse_main import cse
@@ -762,40 +762,39 @@ def trigsimp(expr, deep=False):
     if deep and not (expr.is_Add or expr.is_Mul) or expr.is_Pow:
         return expr.func(*[trigsimp(a, deep) for a in expr.args])
 
-    cont, expr = expr.as_content_primitive()
-
-    d = separatevars(expr, dict=True)
-    # remove hollow factoring from results, i.e. cos(x)**2 -1
-    # gets factored but then it is not recognized by the
-    # _trigsimp patterns
-    if d:
-        margs = []
-        for v in d.values():
-            if v.is_Mul:
-                v = expand_mul(v)
-            margs.append(v)
-        expr = Mul(*margs)
-    new = factor_terms(expr)
-    if new.count_ops() < expr.count_ops():
-        expr = new
-
-    n, d = fraction(expr)
+    expr = factor_terms(expr)
+    cont, expr = expr.as_coeff_Mul()
+    n, d = expr.as_numer_denom()
     if d != 1:
         expr = trigsimp(n, deep)/trigsimp(d, deep)
 
     if expr.is_Add:
-        new = Add(*[trigsimp(a, deep) for a in expr.args])
-        if new != expr and new.count_ops() < expr.count_ops():
+        if len(expr.free_symbols) > 1:
+            expr = separatevars(expr)
+        if expr.is_Add:
+            expr = expand_mul(expr)
+        if expr.is_Add:
+            # sift out terms that contain only trig functions or Rationals
+            sifted = sift([trigsimp(a, deep) for a in expr.args],
+                           lambda w: all(wf.is_Rational or wf.as_base_exp()[0].func in trigs for
+                                     wf in Mul.make_args(w)))
+            pure = Add(*sifted[True])
+            other = Add(*sifted[False])
+            if other:
+                pure = trigsimp(pure)
+            new = pure + other
+            if new != expr and new.count_ops() < expr.count_ops():
+                newcont, expr = new.primitive() # touch up in case constant was pulled out
+                cont *= newcont
+            if expr.is_Add and expr.is_commutative:
+                new = factor(expr)
+                if new == expr:
+                    new = factor(new.rewrite(exp))
+                    if new.is_Mul:
+                        new = trigsimp(new, deep)
+                if new.count_ops() > expr.count_ops():
+                    new = expr
             expr = new
-        if expr.is_Add and expr.is_commutative:
-            new = factor(expr)
-            if new == expr:
-                new = factor(new.rewrite(exp))
-                if new.is_Mul:
-                    new = trigsimp(new, deep)
-            if new.count_ops() > expr.count_ops():
-                new = expr
-        expr = new
 
     if expr.is_Mul:
         margs = list(expr.args)
@@ -930,7 +929,6 @@ def _trigsimp(expr, deep=False):
                     break
                 expr = result.subs(m)
                 m = expr.match(pattern)
-
     return expr
 
 def collect_sqrt(expr, evaluate=True):

@@ -109,10 +109,17 @@ def test_trigsimp_issues_1395_1526_1562():
     assert trigsimp(eq) == -4
     assert trigsimp(-2*cos(x)**2 + cos(x)**4 - sin(x)**4) == -1
     f = Function('f')
+    # just see that it doesn't hang
     C1, C2, C3, C4, C5 = symbols('C1:6')
-    assert dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 1, f(x),
-    'nth_linear_constant_coeff_variation_of_parameters') == \
-    Eq(f(x), C1 + x + (C2 + C3*x)*sin(x) + (C4 + C5*x)*cos(x))
+    ok = dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 1, f(x),
+    'nth_linear_constant_coeff_variation_of_parameters')
+    # here is its solution; it is not tested as the output since dsolve used to
+    # hang and now it doesn't; also the output of dsolve may change but the
+    # following equation should simplify as asserted
+    eq = C1 + x + (C2 + C3*x- sin(x)**3/4)*cos(x) + \
+                  (C4 + C5*x + cos(x)**3/4)*sin(x) - \
+                  sin(2*x)*cos(2*x)/8
+    assert trigsimp(eq) == C1 + C2*cos(x) + C3*x*cos(x) + C4*sin(x) + C5*x*sin(x) + x
     # 1395 - factoring necessary
     assert trigsimp(sin(a)**2*sin(b)**2 +
                     cos(a)**2*cos(b)**2*tan(a)**2 +
