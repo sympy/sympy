@@ -1078,7 +1078,7 @@ class PrettyPrinter(Printer):
             printset = s
         try:
             printset = sorted(printset)
-        except AttributeError:  pass
+        except:  pass
 
         return self._print_seq(printset, '{', '}', ', ' )
 

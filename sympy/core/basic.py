@@ -143,7 +143,7 @@ class Basic(object):
         for name, value in d.iteritems():
             try:
                 setattr(self, name, value)
-            except AttributeError:
+            except:
                 pass
 
     def compare(self, other):

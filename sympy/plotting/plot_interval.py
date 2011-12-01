@@ -21,7 +21,7 @@ class PlotInterval(object):
             elif isinstance(args[0], str):
                 try:
                     args = eval(args[0])
-                except TypeError:
+                except:
                     s_eval_error = "Could not interpret string %s."
                     raise ValueError(s_eval_error % (args[0]))
             elif isinstance(args[0], (tuple, list)):
@@ -63,7 +63,7 @@ class PlotInterval(object):
         try:
             self._v_min = sympify(v_min)
             float(self._v_min.evalf())
-        except TypeError:
+        except:
             raise ValueError("v_min could not be interpreted as a number.")
 
     def get_v_max(self):
@@ -75,7 +75,7 @@ class PlotInterval(object):
         try:
             self._v_max = sympify(v_max)
             float(self._v_max.evalf())
-        except TypeError:
+        except:
             raise ValueError("v_max could not be interpreted as a number.")
 
     def get_v_steps(self):
@@ -123,7 +123,7 @@ class PlotInterval(object):
             return args[0]
         try:
             return PlotInterval(*args)
-        except ValueError:
+        except:
             return None
 
     def _str_base(self):

@@ -5,14 +5,14 @@ try:
     ctypes_major = int(ctypes.__version__.split('.')[0])
     if ctypes_major < 1:
         disabled = True
-except ImportError:
+except:
     disabled = True
 
 try:
     # if pyglet.gl fails to import, e.g. opengl is missing, we disable the tests
     import pyglet.gl
     import pyglet.window
-except ImportError:
+except:
     disabled = True
 
 from sympy import symbols, sin, cos

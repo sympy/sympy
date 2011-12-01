@@ -930,7 +930,7 @@ class LatexPrinter(Printer):
             printset = s
         try:
             printset.sort()
-        except AttributeError:
+        except:
             pass
         return r"\left\{" + r", ".join(self._print(el) for el in printset) + r"\right\}"
     def _print_Interval(self, i):

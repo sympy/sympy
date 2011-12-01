@@ -1030,7 +1030,7 @@ class EvalfMixin(object):
             try:
                 # If the result is numerical, normalize it
                 result = evalf(v, prec, options)
-            except NotImplementedError:
+            except:
                 # Probably contains symbols or unknown functions
                 return v
         re, im, re_acc, im_acc = result

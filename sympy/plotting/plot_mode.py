@@ -121,7 +121,7 @@ class PlotMode(PlotObject):
             m = None
             if issubclass(mode_arg, PlotMode):
                 m = mode_arg
-        except TypeError:
+        except:
             pass
         if m:
             if not m._was_initialized:
@@ -165,7 +165,7 @@ class PlotMode(PlotObject):
             i_vars = i
         try:
             return PlotMode._mode_default_map[d][i]
-        except TypeError:
+        except:
             # Keep looking for modes in higher i var counts
             # which support the given d var count until we
             # reach the max i_var count.
@@ -186,7 +186,7 @@ class PlotMode(PlotObject):
                               % (alias, ", ".join(PlotMode._mode_alias_list)))
         try:
             return PlotMode._mode_map[d][i][alias]
-        except TypeError:
+        except:
             # Keep looking for modes in higher i var counts
             # which support the given d var count and alias
             # until we reach the max i_var count.
@@ -372,7 +372,7 @@ class PlotMode(PlotObject):
                     try:
                         f = sympify(a)
                         functions.append(f)
-                    except TypeError:
+                    except:
                         raise ValueError(interpret_error % str(a))
 
         return functions, intervals

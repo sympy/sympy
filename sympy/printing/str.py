@@ -122,7 +122,7 @@ class StrPrinter(Printer):
             printset = s
         try:
             printset = sorted(printset)
-        except AttributeError:  pass
+        except:  pass
         return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):

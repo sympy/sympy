@@ -133,7 +133,7 @@ def run_examples(windowed=False):
             mod = load_example_module(example)
             mod.main()
             success.append(example)
-        except ImportError:
+        except:
             traceback.print_exc()
             fail.append(example)
     if success:
