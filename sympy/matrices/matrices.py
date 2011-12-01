@@ -2036,7 +2036,7 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if self.det() == 0:
+        if len(self.rref()[1]) != self.rows:
             raise ValueError("A Matrix must have non-zero determinant to invert.")
 
         big = self.row_join(self.eye(self.rows))
@@ -2063,7 +2063,6 @@ class Matrix(object):
         To simplify elements before finding nonzero pivots set simplified=True.
         To set a custom simplify function, use the simplify keyword argument.
         """
-        # TODO: rewrite inverse_GE to use this
         pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
