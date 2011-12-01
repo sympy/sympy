@@ -39,7 +39,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
 
     For example:
 
-    >>> from sympy.ntheory import multinomial_coefficients
+    >>> from sympy import multinomial_coefficients
     >>> multinomial_coefficients(2, 5) # indirect doctest
     {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
 
