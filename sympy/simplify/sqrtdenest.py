@@ -65,29 +65,26 @@ def sqrtdenest(expr):
     return expr
 
 def _sqrtdenest(expr):
-    expr = sympify(expr)
-    if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
-        val = sqrt_match(expr)
-        if val:
-            a, b, r = val
-            # try a quick denesting
-            d2 = (a**2 - b**2*r).expand()
-            if d2.is_Number and \
-                max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
-                d = sqrt(d2)
-                vad = a + d
-                vad1 = radsimp(1/vad)
-                return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
+    val = sqrt_match(expr)
+    if val:
+        a, b, r = val
+        # try a quick denesting
+        d2 = (a**2 - b**2*r).expand()
+        if d2.is_Number and \
+            max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
+            d = sqrt(d2)
+            vad = a + d
+            vad1 = radsimp(1/vad)
+            return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
-        z = denester([expr], 0)[0]
-        if z is expr or not z.is_Add:
-            return z
-        else:
-            a = z.args
-            a = [sqrtdenest(x) for x in a]
-            expr = Add(*a)
-            return expr
-    return expr
+    z = denester([expr], 0)[0]
+    if z is expr or not z.is_Add:
+        return z
+    else:
+        a = z.args
+        a = [sqrtdenest(x) for x in a]
+        expr = Add(*a)
+        return expr
 
 def sqrt_match(p):
     if not p.is_Pow or p.args[1] != S.Half:
@@ -117,8 +114,8 @@ def sqrt_depth(p):
         return 0
 
 def sqrt_match0(p):
-    """return (a, b, c) for match a + b*sqrt(r) where
-    sqrt(r) has maximal nested sqrt
+    """return (a, b, r) for match a + b*sqrt(r) where
+    sqrt(r) has maximal nested sqrt among addends of p
 
     Examples:
     >>> from sympy.functions.elementary.miscellaneous import sqrt
@@ -210,7 +207,7 @@ def denester (nested, h):
 def subsets(n):
     """
     Returns all possible subsets of the set (0, 1, ..., n-1) except the empty,
-    listed in reversed lexicographical order according to binary 
+    listed in reversed lexicographical order according to binary
     representation, so that the case of the fourth root is treated last.
     """
     if n == 1:
