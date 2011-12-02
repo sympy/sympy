@@ -1028,7 +1028,7 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
       
-    >>> from sympy import latex, Rational
+    >>> from sympy import latex, sin, asin, Rational
     >>> from sympy.abc import x, y, mu, tau
     
     >>> latex((2*tau)**Rational(7,2))
@@ -1059,38 +1059,38 @@ def latex(expr, **settings):
     fold_frac_powers: Emit "^{p/q}" instead of "^{\frac{p}{q}}" for fractional powers.
     
     >>> latex((2*tau)**Rational(7,2), fold_frac_powers=True)
-    8 \sqrt{2} \tau^{7/2}
+    '8 \\sqrt{2} \\tau^{7/2}'
 
     fold_func_brackets: Fold function brackets where applicable.
     
     >>> latex((2*tau)**sin(Rational(7,2)))
-    \left(2 \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
+    '\\left(2 \\tau\\right)^{\\sin{\\left (\\frac{7}{2} \\right )}}'
     >>> latex((2*tau)**sin(Rational(7,2)), fold_func_brackets = True)
-    \left(2 \tau\right)^{\sin {\frac{7}{2}}}
+    '\\left(2 \\tau\\right)^{\\sin {\\frac{7}{2}}}'
 
     mul_symbol: The symbol to use for multiplication. Can be one of None, "ldot", "dot", or "times".
       
     >>> latex((2*tau)**sin(Rational(7,2)), mul_symbol="times")
-    \left(2 \times \tau\right)^{\sin{\left (\frac{7}{2} \right )}}
+    '\\left(2 \\times \\tau\\right)^{\\sin{\\left (\\frac{7}{2} \\right )}}'
 
     inv_trig_style: How inverse trig functions should be displayed. Can be one of "abbreviated", "full", or "power". Defaults to "abbreviated".
       
     >>> latex((2*tau)**asin(Rational(7,2)))
-    \left(2 \tau\right)^{\operatorname{asin}{\left (\frac{7}{2} \right )}}
+    '\\left(2 \\tau\\right)^{\\operatorname{asin}{\\left (\\frac{7}{2} \\right )}}'
     >>> latex((2*tau)**asin(Rational(7,2)), inv_trig_style="full")
-    \left(2 \tau\right)^{\arcsin{\left (\frac{7}{2} \right )}}
+    '\\left(2 \\tau\\right)^{\\arcsin{\\left (\\frac{7}{2} \\right )}}'
     >>> latex((2*tau)**asin(Rational(7,2)), inv_trig_style="power")
-    \left(2 \tau\right)^{\sin^{-1}{\left (\frac{7}{2} \right )}}
+  	'\\left(2 \\tau\\right)^{\\sin^{-1}{\\left (\\frac{7}{2} \\right )}}'
 
     mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix", etc. This paramater currently doesn't work. Defaults to "bmatrix".
       
     >>> latex([[1, 2], [3, 4]], mat_str = "bmatrix")
-    \begin{bmatrix}\begin{bmatrix}1, & 2\end{bmatrix}, & \begin{bmatrix}3, & 4\end{bmatrix}\end{bmatrix}
+    '\\begin{bmatrix}\\begin{bmatrix}1, & 2\\end{bmatrix}, & \\begin{bmatrix}3, & 4\\end{bmatrix}\\end{bmatrix}'
     
     mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(". # This doesn't currently work.
 
     >>> latex([[1, 2], [3, 4]], mat_delim = "(")
-    \begin{bmatrix}\begin{bmatrix}1, & 2\end{bmatrix}, & \begin{bmatrix}3, & 4\end{bmatrix}\end{bmatrix}
+    '\\begin{bmatrix}\\begin{bmatrix}1, & 2\\end{bmatrix}, & \\begin{bmatrix}3, & 4\\end{bmatrix}\\end{bmatrix}'
       
     symbol_names: Dictionary of symbols and the custom strings they should be emitted as.
     
