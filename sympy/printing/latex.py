@@ -1027,19 +1027,34 @@ class LatexPrinter(Printer):
 def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
+    
+    Valid setting keywords:
+      
+    	order: Any of the supported monomial orderings (currently "lex", "grlex", or "grevlex"), "old", and "none". This parameter does nothing for Mul objects. Setting order to "old" uses the compatibility ordering for Add defined in Printer. For very large expressions, set the 'order' keyword to 'none' if speed is a concern.
+      
+      mode: Specifies how the generated code will be delimited. 'mode' can be one of 'plain', 'inline', 'equation' or 'equation*'.  If 'mode' is set to 'plain', then the resulting code will not be delimited at all (this is the default). If 'mode' is set to 'inline' then inline LaTeX $ $ will be used.  If 'mode' is set to 'equation' or 'equation*', the resulting code will be enclosed in the 'equation' or 'equation*' environment (remember to import 'amsmath' for 'equation*'), unless the 'itex' option is set. In the latter case, the $$ $$ syntax is used. 
+      
+      itex: Specifies if itex-specific syntax is used, including emitting $$ $$.
+      
+      fold_frac_powers: Emit "^{p/q}" instead of "^{\frac{p}{q}}" for fractional powers.
+      
+      fold_func_brackets: Fold function brackets where applicable.
+      
+      mul_symbol: The symbol to use for multiplication. Can be one of None, "ldot", "dot", or "times".
+      
+      inv_trig_style: How inverse trig functions should be displayed. Can be one of "abbreviated", "full", or "power".
+      
+      mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix", etc. # This doesn't currently work
+      
+      mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(". # This doesn't currently work.
+      
+      symbol_names: Dictionary of symbols and the custom strings they should be emitted as. 
+      Example: 
+      >>> latex(x**2, symbol_names={x:'x_i'})
+      'x_i^{2}'
 
-    You can specify how the generated code will be delimited using
-    the 'mode' keyword. 'mode' can be one of 'plain', 'inline',
-    'equation' or 'equation*'.  If 'mode' is set to 'plain', then
-    the resulting code will not be delimited at all (this is the
-    default). If 'mode' is set to 'inline' then inline LaTeX $ $ will be
-    used.  If 'mode' is set to 'equation' or 'equation*', the resulting
-    code will be enclosed in the 'equation' or 'equation*' environment
-    (remember to import 'amsmath' for 'equation*'), unless the 'itex'
-    option is set. In the latter case, the $$ $$ syntax is used. For very
-    large expressions, set the 'order' keyword to 'none' if speed is a
-    concern.
-
+    Usage examples:
+      
     >>> from sympy import latex, Rational
     >>> from sympy.abc import x, y, mu, tau
 
