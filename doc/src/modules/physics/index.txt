@@ -4,7 +4,7 @@
 Physics Module
 ==============
 
-Various tools for solving physics problems go here.
+.. automodule:: sympy.physics
 
 Contents
 ========
@@ -13,4 +13,14 @@ Contents
     :maxdepth: 3
 
     units.txt
+    hydrogen.txt
+    matrices.txt
+    paulialgebra.txt
+    qho_1d.txt
+    secondquant.txt
+    sho.txt
+    wigner.txt
+    gaussopt.txt
     mechanics/index.txt
+    quantum/index.txt
+    quantum/computation/index.txt

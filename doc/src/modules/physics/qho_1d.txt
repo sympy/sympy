@@ -1,0 +1,6 @@
+======
+Qho_1d
+======
+
+.. automodule:: sympy.physics.qho_1d
+   :members:

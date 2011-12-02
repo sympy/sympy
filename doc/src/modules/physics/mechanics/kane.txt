@@ -174,3 +174,9 @@ equations, an error with be raised. ::
 
 Exploration of the provided examples is encouraged in order to gain more
 understanding of the ``Kane`` object.
+
+Docstrings
+==========
+
+.. automodule:: sympy.physics.mechanics.kane
+   :members:
