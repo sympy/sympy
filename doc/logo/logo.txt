@@ -1,0 +1,30 @@
+I created these logo's and permit their free use on the same terms as the rest of Sympy's code and documentation.
+
+Fredrik Johansson
+
+----------------
+
+This directory only contains the updated logos.
+All original files can be downloaded from:
+
+http://sympy.googlecode.com/svn/materials/logo/
+
+----------------
+
+The png and ico files in **this** directory are created
+by Chancellor Arkantos with Adobe Fireworks (formerly Macromedia Fireworks).
+
+Font Used : CMU Serif
+Favicon Generator Used : http://www.favicon.co.uk/
+--------------------
+
+
+I updated and reformat "sympy.svg" file of logo. This source is used for the 
+generating another variants of *.svg logos (with no tail or no text), which are
+produced by script 'sympy/bin/generate_logos.py', and output the result in 
+"generated" sub directory.
+
+FontUsed: FreeSerif
+
+Alexey Gudchenko
+----------------
