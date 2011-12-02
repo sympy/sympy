@@ -378,7 +378,9 @@ class PrettyPrinter(Printer):
         return pretty_func
 
     def _print_Sum(self, expr):
-        def asum(hrequired, lower, upper):
+        ascii_mode = not self._use_unicode
+        
+        def asum(hrequired, lower, upper, use_ascii):
             def adjust(s, wid=None, how='<^>'):
                 if not wid or len(s)>wid:
                     return s
@@ -398,16 +400,26 @@ class PrettyPrinter(Printer):
             more = hrequired % 2
 
             lines = []
-            lines.append("_"*(w) + ' ')
-            lines.append("\%s`" % (' '*(w - 1)))
-            for i in range(1, d):
-              lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
-            if more:
-                lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
-            for i in reversed(range(1, d)):
-              lines.append('%s/%s' % (' '*i, ' '*(w - i)))
-            lines.append("/" + "_"*(w - 1) + ',')
-            return d, h + more, lines
+            if use_ascii:
+                lines.append("_"*(w) + ' ')
+                lines.append("\%s`" % (' '*(w - 1)))
+                for i in range(1, d):
+                  lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
+                if more:
+                  lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
+                for i in reversed(range(1, d)):
+                  lines.append('%s/%s' % (' '*i, ' '*(w - i)))
+                lines.append("/" + "_"*(w - 1) + ',')
+                return d, h + more, lines
+            else:
+                vsum = vobj('sum', 4)   # contains all characters necessary
+                lines.append("_"*(w + more))    
+                for i in range(0, d + more): # only even number of lines
+                    lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i)))
+                for i in reversed(range(0, d + more)):
+                    lines.append('%s%s%s' % (' '*i, vsum[4], ' '*(w - i)))
+                lines.append(vsum[8]*(w + more))
+                return d, h + 2*more, lines
 
         f = expr.function
 
@@ -437,7 +449,7 @@ class PrettyPrinter(Printer):
             max_upper = max(max_upper, prettyUpper.height())
 
             # Create sum sign based on the height of the argument
-            d, h, slines = asum(H, prettyLower.width(), prettyUpper.width())
+            d, h, slines = asum(H, prettyLower.width(), prettyUpper.width(), ascii_mode)
             prettySign = stringPict('')
             prettySign = prettyForm(*prettySign.stack(*slines))
 
@@ -447,10 +459,13 @@ class PrettyPrinter(Printer):
             prettySign = prettyForm(*prettySign.above(prettyUpper))
             prettySign = prettyForm(*prettySign.below(prettyLower))
 
+            # In UNICODE mode we need to modify vertical adjustment a bit
+            unicode_shift = 0
+
             if first:
                 # change F baseline so it centers on the sign
                 prettyF.baseline -= d - (prettyF.height()//2 -
-                                         prettyF.baseline)
+                                         prettyF.baseline) - unicode_shift
                 first = False
 
             # put padding to the right
@@ -1352,4 +1367,4 @@ def pretty_print(expr, **settings):
     print pretty(expr, **settings)
 
 pprint = pretty_print
-
+    
