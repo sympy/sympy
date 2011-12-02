@@ -379,7 +379,7 @@ class PrettyPrinter(Printer):
 
     def _print_Sum(self, expr):
         ascii_mode = not self._use_unicode
-        
+
         def asum(hrequired, lower, upper, use_ascii):
             def adjust(s, wid=None, how='<^>'):
                 if not wid or len(s)>wid:
@@ -413,7 +413,7 @@ class PrettyPrinter(Printer):
                 return d, h + more, lines
             else:
                 vsum = vobj('sum', 4)   # contains all characters necessary
-                lines.append("_"*(w + more))    
+                lines.append("_"*(w + more))
                 for i in range(0, d + more): # only even number of lines
                     lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i)))
                 for i in reversed(range(0, d + more)):
@@ -1367,4 +1367,4 @@ def pretty_print(expr, **settings):
     print pretty(expr, **settings)
 
 pprint = pretty_print
-    
+

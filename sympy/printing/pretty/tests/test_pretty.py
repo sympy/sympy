@@ -2817,7 +2817,7 @@ n  + n + x  + x + ─ + ─          \n\
 """
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-    
+
     expr = Sum(x, (x, 0, oo))
     ascii_str = \
 """\
@@ -2830,7 +2830,7 @@ x = 0  \
 """
     ucode_str = \
 u"""\
-  ∞    
+  ∞
  ___   \n\
  ╲     \n\
   ╲   x\n\
@@ -3044,7 +3044,7 @@ u"""\
  ╱     ╱    y  \n\
 ╱     ╱        \n\
  ‾‾‾‾  ‾‾‾‾    \n\
-y = 1 x = 0    
+y = 1 x = 0
 """
     expr = Sum(1/(1 + 1/(1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1+m), oo)) + 1/(1 + 1/k)
     ascii_str = \
@@ -3087,10 +3087,10 @@ u"""\
 k = ─────                                \n\
     m + 1                                \
 """
-    
+
     assert  pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
-    
+
 def test_units():
     expr = joule
     ascii_str = \
