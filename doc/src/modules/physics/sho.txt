@@ -1,0 +1,6 @@
+===
+Sho
+===
+
+.. automodule:: sympy.physics.sho
+   :members:

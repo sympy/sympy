@@ -4,8 +4,7 @@ Todo:
 * Update docstrings.
 * Update tests.
 * Implement apply using decompose.
-* Implement represent using decompose or something smarter. For this to work
-  we first have to implement represent for SWAP.
+* Implement represent using decompose or something smarter. For this to work we first have to implement represent for SWAP.
 * Decide if we want upper index to be inclusive in the constructor.
 * Fix the printing of Rk gates in plotting.
 """

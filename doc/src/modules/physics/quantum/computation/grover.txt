@@ -1,0 +1,6 @@
+======
+Grover
+======
+
+.. automodule:: sympy.physics.quantum.grover
+   :members:
