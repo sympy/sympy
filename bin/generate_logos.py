@@ -52,7 +52,7 @@ parser.add_option("-3", "--ico", action="store_true", dest="generate_ico",
     help="Generate *.ico versions [default: %default]",
     default=False)
 
-parser.add_option("-4", "--cleare", action="store_true", dest="clear",
+parser.add_option("-4", "--clear", action="store_true", dest="clear",
     help="Remove temporary files [default: %default]",
     default=False)
 
@@ -66,7 +66,7 @@ parser.add_option("-s", "--sizes", type="string", dest="sizes",
 
 parser.add_option("--icon-sizes", type="string", dest="icon_sizes",
     help="Sizes of icons embedded in favicon file [default: %default]",
-    default="32,48,64")
+    default="16,32,48,64")
 
 parser.add_option("--output-dir", type="string", dest="output_dir",
     help="Outpu dir [default: %default]",
