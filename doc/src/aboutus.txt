@@ -155,6 +155,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Imran Ahmed Manzoor: Fixes to the test runner
 #. Steve Anton: pyflakes cleanup of geometry
 #. Sam Sleight: Fixes to geometry documentation
+#. tsmars15: Fixes to code quality
+#. Chancellor Arkantos: Fixes to the logo
+#. Stepan Simsa: Translation of the tutorial to Czech
+#. Tobias Lenz: Unicode pretty printer for Sum
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
