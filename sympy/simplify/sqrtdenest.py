@@ -48,7 +48,7 @@ def _sqrtdenest(expr):
             vad1 = radsimp(1/vad)
             return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
-    z = denester([expr], 0)[0]
+    z = denester([radsimp(expr**2)], 0)[0]
     if z is expr or not z.is_Add:
         return z
     else:
@@ -133,17 +133,17 @@ def denester (nested, h):
     This is discussed in the paper in the middle paragraph of page 179.
     """
     from sympy.simplify.simplify import radsimp
-    if all((n**2).is_Number for n in nested): #If none of the arguments are nested
+    if all(n.is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
-            p = prod(nested[i]**2 for i in range(len(f)) if f[i]).expand()
+            p = prod(nested[i] for i in range(len(f)) if f[i]).expand()
             if 1 in f and f.count(1) > 1 and f[-1]:
                 p = -p
             if sqrt(p).is_Number:
                 return sqrt(p), f #If we got a perfect square, return its square root.
-        return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
+        return sqrt(nested[-1]), [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
     else:
         R = None
-        values = filter(None, [sqrt_match(expr) for expr in nested])
+        values = filter(None, [sqrt_match0(expr) for expr in nested])
         for v in values:
             if v[2]: #Since if b=0, r is not defined
                 if R is not None:
@@ -151,14 +151,15 @@ def denester (nested, h):
                 else:
                     R = v[2]
         if R is None:
-            return nested[-1], [0]*len(nested) # return the radicand from the pravious invocation
-        d, f = denester([sqrt((v[0]**2).expand()-(R*v[1]**2).expand()) for v in values] + [sqrt(R)], h+1)
+            return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the pravious invocation
+        nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
+        d, f = denester(nested2, h+1)
         if not any(f[i] for i in range(len(nested))):
         #if all(fi == 0 for fi in f):
             v = values[-1]
             return sqrt(v[0] + v[1]*d), f
         else:
-            p = prod(nested[i]**2 for i in range(len(nested)) if f[i])
+            p = prod(nested[i] for i in range(len(nested)) if f[i])
             if p == 1:
                 p = S(p)
             v = sqrt_match0(p.expand())
@@ -169,7 +170,7 @@ def denester (nested, h):
             if not f[len(nested)]: #Solution denests with square roots
                 vad = (v[0] + d).expand()
                 if not vad:
-                    return nested[-1], [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
+                    return sqrt(nested[-1]), [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
                 vad1 = radsimp(1/vad)
                 return (sqrt(vad/2) + sign(v[1])*sqrt((v[1]**2*R*vad1/2).expand())).expand(), f
             else: #Solution requires a fourth root
