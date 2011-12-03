@@ -36,7 +36,14 @@ def sqrtdenest(expr):
 
 def _sqrtdenest(expr):
     from sympy.simplify.simplify import radsimp
-    val = sqrt_match(expr)
+    if not expr.is_Pow or expr.exp != S.Half:
+        val = None
+    else:
+        a = expr.base
+        if not a.args:
+            val = (a, S.Zero, S.Zero)
+        val = sqrt_match(a)
+
     if val:
         a, b, r = val
         # try a quick denesting
@@ -57,15 +64,6 @@ def _sqrtdenest(expr):
         expr = Add(*a)
         return expr
 
-def sqrt_match(p):
-    if not p.is_Pow or p.args[1] != S.Half:
-        return None
-    else:
-        a = p.args[0]
-        if not a.args:
-            return (a, S.Zero, S.Zero)
-        return sqrt_match0(a)
-
 def sqrt_depth(p):
     """
     >>> from sympy.functions.elementary.miscellaneous import sqrt
@@ -84,14 +82,14 @@ def sqrt_depth(p):
     else:
         return 0
 
-def sqrt_match0(p):
+def sqrt_match(p):
     """return (a, b, r) for match a + b*sqrt(r) where
     sqrt(r) has maximal nested sqrt among addends of p
 
     Examples:
     >>> from sympy.functions.elementary.miscellaneous import sqrt
-    >>> from sympy.simplify.sqrtdenest import sqrt_match0
-    >>> sqrt_match0(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
+    >>> from sympy.simplify.sqrtdenest import sqrt_match
+    >>> sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
     (1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5))
     """
     p = p.expand()
@@ -114,7 +112,7 @@ def sqrt_match0(p):
 def denester (nested, h):
     """
     Denests a list of expressions that contain nested square roots.
-    This method should not be called directly - use 'denest' instead.
+    This method should not be called directly - use 'sqrtdenest' instead.
     This algorithm is based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 
     It is assumed that all of the elements of 'nested' share the same
@@ -143,7 +141,7 @@ def denester (nested, h):
         return sqrt(nested[-1]), [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
     else:
         R = None
-        values = filter(None, [sqrt_match0(expr) for expr in nested])
+        values = filter(None, [sqrt_match(expr) for expr in nested])
         for v in values:
             if v[2]: #Since if b=0, r is not defined
                 if R is not None:
@@ -162,7 +160,7 @@ def denester (nested, h):
             p = prod(nested[i] for i in range(len(nested)) if f[i])
             if p == 1:
                 p = S(p)
-            v = sqrt_match0(p.expand())
+            v = sqrt_match(p.expand())
             v = list(v)
             if 1 in f and f.index(1) < len(nested) - 1 and f[len(nested)-1]:
                 v[0] = -1 * v[0]
