@@ -56,6 +56,8 @@ def _sqrtdenest(expr):
             return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
     z = denester([radsimp(expr**2)], 0)[0]
+    if z == None:
+        return expr
     if z is expr or not z.is_Add:
         return z
     else:
@@ -109,7 +111,7 @@ def sqrt_match(p):
     b, r = p1.as_coeff_Mul()
     return (a, b, r**2)
 
-def denester (nested, h):
+def denester (nested, h, max_depth_level=4):
     """
     Denests a list of expressions that contain nested square roots.
     This method should not be called directly - use 'sqrtdenest' instead.
@@ -131,6 +133,8 @@ def denester (nested, h):
     This is discussed in the paper in the middle paragraph of page 179.
     """
     from sympy.simplify.simplify import radsimp
+    if h > max_depth_level:
+        return None, None
     if all(n.is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
             p = prod(nested[i] for i in range(len(f)) if f[i]).expand()
@@ -152,6 +156,8 @@ def denester (nested, h):
             return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the pravious invocation
         nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
         d, f = denester(nested2, h+1)
+        if f == None:
+            return None, None
         if not any(f[i] for i in range(len(nested))):
         #if all(fi == 0 for fi in f):
             v = values[-1]
