@@ -758,7 +758,7 @@ Wskazówka: Aby ustawić ładne wyświetlanie w interpreterze Pythona jako domy�
 **Wyświetlanie w Pythonie**
 
     >>> from sympy.printing.python import python
-	>>> from sympy.printing.python import python
+    >>> from sympy.printing.python import python
     >>> from sympy import Integral
     >>> from sympy.abc import x
     >>> print python(x**2)
