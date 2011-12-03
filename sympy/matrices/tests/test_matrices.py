@@ -1912,7 +1912,7 @@ def test_slice_issue_2884():
     raises(IndexError, 'm[2,:]')
     raises(IndexError, 'm[2,2]')
 
-def test_rref_invertible_check():
+def test_invertible_check():
     x = symbols('x')
     raises(ValueError, 'Matrix([[1, 2], [1, 2]]).rref(invertible_check=True)')
     m = Matrix([
@@ -1926,3 +1926,6 @@ def test_rref_invertible_check():
     [ 0, -1,  0,  0, -1,  0, -1,  0, -1],
     [ 0,  0, -1,  0,  0, -1,  0, -1, x]])
     raises(ValueError, 'm.rref(invertible_check=True)')
+    raises(ValueError, 'm.inv(method="ADJ")')
+    raises(ValueError, 'm.inv(method="GE")')
+    raises(ValueError, 'm.inv(method="LU")')

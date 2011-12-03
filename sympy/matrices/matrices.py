@@ -781,6 +781,8 @@ class Matrix(object):
         elif method == "ADJ":
             return self.inverse_ADJ()
         else:
+            # make sure to add an invertibility check (as in inverse_LU)
+            # if a new method is added.
             raise ValueError("Inversion method unrecognized")
 
 
@@ -2256,6 +2258,11 @@ class Matrix(object):
         """
         Calculates the inverse using LU decomposition.
         """
+        if not self.is_square:
+            raise NonSquareMatrixError()
+
+        ok = self.rref(invertible_check=True) # raises error if not invertible
+
         return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
 
     def inverse_GE(self, iszerofunc=_iszero):
@@ -2278,7 +2285,11 @@ class Matrix(object):
             raise NonSquareMatrixError()
 
         d = self.berkowitz_det()
-        if d == 0:
+        zero = d.equals(0)
+        if zero is None:
+            # if equals() can't decide, will rref be able to?
+            ok = self.rref(invertible_check=True) # raises error if not invertible
+        elif zero:
             raise ValueError("A Matrix must have non-zero determinant to invert.")
 
         return self.adjugate()/d
