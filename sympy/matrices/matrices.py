@@ -1259,7 +1259,8 @@ class Matrix(object):
         """
         Returns the decomposition LU and the row swaps p.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> a = Matrix([[4, 3], [6, 3]])
@@ -1877,15 +1878,18 @@ class Matrix(object):
         A matrix B is nilpotent if for some integer k, B**k is
         a zero matrix.
 
-        Example:
-            >>> from sympy import Matrix
-            >>> a = Matrix([[0,0,0],[1,0,0],[1,1,0]])
-            >>> a.is_nilpotent()
-            True
+        Examples
+        ========
 
-            >>> a = Matrix([[1,0,1],[1,0,0],[1,1,0]])
-            >>> a.is_nilpotent()
-            False
+        >>> from sympy import Matrix
+        >>> a = Matrix([[0,0,0],[1,0,0],[1,1,0]])
+        >>> a.is_nilpotent()
+        True
+
+        >>> a = Matrix([[1,0,1],[1,0,0],[1,1,0]])
+        >>> a.is_nilpotent()
+        False
+
         """
         if not self.is_square:
             raise NonSquareMatrixError("Nilpotency is valid only for square matrices")
@@ -1898,7 +1902,8 @@ class Matrix(object):
         """
         Check if matrix is an upper triangular matrix.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
@@ -1934,7 +1939,8 @@ class Matrix(object):
         """
         Check if matrix is a lower triangular matrix.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
@@ -1974,7 +1980,8 @@ class Matrix(object):
         The upper hessenberg matrix has zero entries
         below the first subdiagonal.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
@@ -1999,7 +2006,8 @@ class Matrix(object):
         The lower hessenberg matrix has zero entries
         above the first superdiagonal.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
@@ -2042,7 +2050,8 @@ class Matrix(object):
         They can be skipped using 'simplify=False'; while speeding things a bit,
         this may however induce false negatives.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[0, 1, 1, 2])
@@ -2098,7 +2107,8 @@ class Matrix(object):
         Check if matrix is diagonal,
         that is matrix in which the entries outside the main diagonal are all zero.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix, diag
         >>> m = Matrix(2,2,[1, 0, 0, 2])
@@ -2679,7 +2689,8 @@ class Matrix(object):
         linear equations which may be decoupled by having a block diagonal
         structure.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix, symbols
         >>> from sympy.abc import x, y, z
@@ -2726,7 +2737,8 @@ class Matrix(object):
 
         where M is current matrix.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
@@ -2778,7 +2790,8 @@ class Matrix(object):
         Some subproducts could be used further in other methods to avoid double calculations,
         By default (if clear_subproducts==True) they will be deleted.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
@@ -2842,11 +2855,13 @@ class Matrix(object):
 
         will not be calculated.
 
-        Note:
+        Note
+        ====
 
         Calculation of transformation P is not implemented yet
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
@@ -2884,7 +2899,8 @@ class Matrix(object):
 
         Calculation of transformation P is not implemented yet
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
@@ -2936,7 +2952,8 @@ class Matrix(object):
         """
         Test whether any subexpression matches any of the patterns.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
@@ -2957,7 +2974,8 @@ def matrix_multiply(A, B):
     A and B must be of appropriate dimensions.  If A is an m x k matrix, and B
     is a k x n matrix, the product will be an m x n matrix.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Matrix
     >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
@@ -3062,7 +3080,8 @@ def diag(*values):
 
     Arguments might be matrices too, in case of it they are fitted in result matrix
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.matrices import diag, Matrix
     >>> diag(1, 2, 3)
@@ -3112,7 +3131,8 @@ def jordan_cell(eigenval, n):
     """
     Create matrix of Jordan cell kind:
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.matrices.matrices import jordan_cell
     >>> from sympy.abc import x
