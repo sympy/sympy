@@ -49,7 +49,7 @@ class And(LatticeOp, BooleanFunction):
     are False, and True if they are all True.
 
     Example:
-    
+
     >>> from sympy.core import symbols
     >>> from sympy.abc import x, y
     >>> x & y

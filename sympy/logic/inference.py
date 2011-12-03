@@ -7,7 +7,7 @@ from sympy.core.sympify import sympify
 def literal_symbol(literal):
     """
     The symbol in this literal (without the negation).
-    
+
     Examples:
 
     >>> from sympy import Symbol
@@ -152,4 +152,3 @@ class PropKB(KB):
         for c in conjuncts(to_cnf(sentence)):
             if c in self.clauses:
                 self.clauses.remove(c)
-
