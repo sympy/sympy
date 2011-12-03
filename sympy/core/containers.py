@@ -18,13 +18,15 @@ class Tuple(Basic):
     SymPy framework.  The wrapped tuple is available as self.args, but
     you can also access elements or slices with [:] syntax.
 
-    >>> from sympy import symbols
-    >>> from sympy.core.containers import Tuple
-    >>> a, b, c, d = symbols('a b c d')
-    >>> Tuple(a, b, c)[1:]
-    (b, c)
-    >>> Tuple(a, b, c).subs(a, d)
-    (d, b, c)
+    ::
+
+        >>> from sympy import symbols
+        >>> from sympy.core.containers import Tuple
+        >>> a, b, c, d = symbols('a b c d')
+        >>> Tuple(a, b, c)[1:]
+        (b, c)
+        >>> Tuple(a, b, c).subs(a, d)
+        (d, b, c)
 
     """
 
@@ -88,15 +90,17 @@ def tuple_wrapper(method):
     call a function with regular tuples in the argument, and the wrapper will
     convert them to Tuples before handing them to the function.
 
-    >>> from sympy.core.containers import tuple_wrapper, Tuple
-    >>> def f(*args):
-    ...    return args
-    >>> g = tuple_wrapper(f)
+    ::
 
-    The decorated function g sees only the Tuple argument:
+        >>> from sympy.core.containers import tuple_wrapper, Tuple
+        >>> def f(*args):
+        ...    return args
+        >>> g = tuple_wrapper(f)
 
-    >>> g(0, (1, 2), 3)
-    (0, (1, 2), 3)
+    The decorated function g sees only the Tuple argument::
+
+        >>> g(0, (1, 2), 3)
+        (0, (1, 2), 3)
 
     """
     def wrap_tuples(*args, **kw_args):
@@ -119,24 +123,27 @@ class Dict(Basic):
     cannot be changed afterwards.  Otherwise it behaves identically
     to the Python dict.
 
-    >>> from sympy import S
-    >>> from sympy.core.containers import Dict
+    ::
 
-    >>> D = Dict({1:'one', 2:'two'})
-    >>> for key in D: print key, D[key]
-    1 one
-    2 two
+        >>> from sympy import S
+        >>> from sympy.core.containers import Dict
+
+        >>> D = Dict({1:'one', 2:'two'})
+        >>> for key in D: print key, D[key]
+        1 one
+        2 two
 
     The args are sympified so the 1 and 2 are Integers and the values
-    are Symbols. Queries automatically sympify args so the following work:
-    >>> 1 in D
-    True
-    >>> D.has('one') # searches keys and values
-    True
-    >>> 'one' in D # not in the keys
-    False
-    >>> D[1]
-    one
+    are Symbols. Queries automatically sympify args so the following work::
+
+        >>> 1 in D
+        True
+        >>> D.has('one') # searches keys and values
+        True
+        >>> 'one' in D # not in the keys
+        False
+        >>> D[1]
+        one
 
     """
 

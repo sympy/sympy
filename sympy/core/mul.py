@@ -34,15 +34,19 @@ class Mul(AssocOp):
 
     @classmethod
     def flatten(cls, seq):
-        """Return commutative, noncommutative and order arguments by
-        combining related terms.
+        """
+        Return commutative, noncommutative and order arguments by combining
+        related terms.
 
-        ** Developer Notes **
-            * In an expression like ``a*b*c``, python process this through sympy
-              as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
+        Developer Notes
 
-              -  Sometimes terms are not combined as one would like:
-                 {c.f. http://code.google.com/p/sympy/issues/detail?id=1497}
+        * In an expression like ``a*b*c``, python process this through sympy
+          as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
+
+          - Sometimes terms are not combined as one would like:
+            {c.f. http://code.google.com/p/sympy/issues/detail?id=1497}
+
+            ::
 
                 >>> from sympy import Mul, sqrt
                 >>> from sympy.abc import x, y, z
@@ -57,10 +61,12 @@ class Mul(AssocOp):
                 >>> 2*((x + 1)*y) # parentheses can control this behavior
                 2*y*(x + 1)
 
-                Powers with compound bases may not find a single base to
-                combine with unless all arguments are processed at once.
-                Post-processing may be necessary in such cases.
-                {c.f. http://code.google.com/p/sympy/issues/detail?id=2629}
+            Powers with compound bases may not find a single base to
+            combine with unless all arguments are processed at once.
+            Post-processing may be necessary in such cases.
+            {c.f. http://code.google.com/p/sympy/issues/detail?id=2629}
+
+            ::
 
                 >>> a = sqrt(x*sqrt(y))
                 >>> a**3
@@ -72,35 +78,36 @@ class Mul(AssocOp):
                 >>> _.subs(a.base, z).subs(z, a.base)
                 (x*sqrt(y))**(3/2)
 
-              -  If more than two terms are being multiplied then all the
-                 previous terms will be re-processed for each new argument.
-                 So if each of ``a``, ``b`` and ``c`` were :class:`Mul`
-                 expression, then ``a*b*c`` (or building up the product
-                 with ``*=``) will process all the arguments of ``a`` and
-                 ``b`` twice: once when ``a*b`` is computed and again when
-                 ``c`` is multiplied.
+          -  If more than two terms are being multiplied then all the
+             previous terms will be re-processed for each new argument.
+             So if each of ``a``, ``b`` and ``c`` were :class:`Mul`
+             expression, then ``a*b*c`` (or building up the product
+             with ``*=``) will process all the arguments of ``a`` and
+             ``b`` twice: once when ``a*b`` is computed and again when
+             ``c`` is multiplied.
 
-                 Using ``Mul(a, b, c)`` will process all arguments once.
+             Using ``Mul(a, b, c)`` will process all arguments once.
 
-            * The results of Mul are cached according to arguments, so flatten
-              will only be called once for ``Mul(a, b, c)``. If you can
-              structure a calculation so the arguments are most likely to be
-              repeats then this can save time in computing the answer. For
-              example, say you had a Mul, M, that you wished to divide by ``d[i]``
-              and multiply by ``n[i]`` and you suspect there are many repeats
-              in ``n``. It would be better to compute ``M*n[i]/d[i]`` rather
-              than ``M/d[i]*n[i]`` since every time n[i] is a repeat, the
-              product, ``M*n[i]`` will be returned without flattening -- the
-              cached value will be returned. If you divide by the ``d[i]``
-              first (and those are more unique than the ``n[i]``) then that will
-              create a new Mul, ``M/d[i]`` the args of which will be traversed
-              again when it is multiplied by ``n[i]``.
+        * The results of Mul are cached according to arguments, so flatten
+          will only be called once for ``Mul(a, b, c)``. If you can
+          structure a calculation so the arguments are most likely to be
+          repeats then this can save time in computing the answer. For
+          example, say you had a Mul, M, that you wished to divide by ``d[i]``
+          and multiply by ``n[i]`` and you suspect there are many repeats
+          in ``n``. It would be better to compute ``M*n[i]/d[i]`` rather
+          than ``M/d[i]*n[i]`` since every time n[i] is a repeat, the
+          product, ``M*n[i]`` will be returned without flattening -- the
+          cached value will be returned. If you divide by the ``d[i]``
+          first (and those are more unique than the ``n[i]``) then that will
+          create a new Mul, ``M/d[i]`` the args of which will be traversed
+          again when it is multiplied by ``n[i]``.
 
-              {c.f. http://code.google.com/p/sympy/issues/detail?id=2607}
+          {c.f. http://code.google.com/p/sympy/issues/detail?id=2607}
 
-              This consideration is moot if the cache is turned off.
+          This consideration is moot if the cache is turned off.
 
-            NB
+          NB
+
               The validity of the above notes depends on the implementation
               details of Mul and flatten which may change at any time. Therefore,
               you should only consider them when your code is highly performance
@@ -598,7 +605,8 @@ class Mul(AssocOp):
 
     @cacheit
     def as_two_terms(self):
-        """Return head and tail of self.
+        """
+        Return head and tail of self.
 
         This is the most efficient way to get the head and tail of an
         expression.
@@ -610,9 +618,11 @@ class Mul(AssocOp):
         - if you want the coefficient when self is treated as an Add
           then use self.as_coeff_add()[0]
 
-        >>> from sympy.abc import x, y
-        >>> (3*x*y).as_two_terms()
-        (3, x*y)
+        ::
+
+            >>> from sympy.abc import x, y
+            >>> (3*x*y).as_two_terms()
+            (3, x*y)
         """
         args = self.args
 
@@ -1336,10 +1346,14 @@ class Mul(AssocOp):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Example**
-        >>> from sympy import sqrt
-        >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
-        (6, -sqrt(2)*(-sqrt(2) + 1))
+        Example
+        =======
+
+        ::
+
+            >>> from sympy import sqrt
+            >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
+            (6, -sqrt(2)*(-sqrt(2) + 1))
 
         See docstring of Expr.as_content_primitive for more examples.
         """
@@ -1357,23 +1371,29 @@ class Mul(AssocOp):
         return coef, Mul(*args)
 
 def prod(a, start=1):
-    """Return product of elements of a. Start with int 1 so if only
-       ints are included then an int result is returned.
+    """
+    Return product of elements of a. Start with int 1 so if only ints are
+    included then an int result is returned.
 
-    Example:
-    >>> from sympy import prod, S
-    >>> prod(range(3))
-    0
-    >>> type(_) is int
-    True
-    >>> prod([S(2), 3])
-    6
-    >>> _.is_Integer
-    True
+    Example
+    =======
 
-    You can start the product at something other than 1:
-    >>> prod([1, 2], 3)
-    6
+    ::
+
+        >>> from sympy import prod, S
+        >>> prod(range(3))
+        0
+        >>> type(_) is int
+        True
+        >>> prod([S(2), 3])
+        6
+        >>> _.is_Integer
+        True
+
+    You can start the product at something other than 1::
+
+        >>> prod([1, 2], 3)
+        6
 
     """
     return reduce(operator.mul, a, start)

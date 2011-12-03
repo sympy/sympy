@@ -20,25 +20,25 @@ class Set(Basic):
 
     def union(self, other):
         """
-        Returns the union of 'self' and 'other'. As a shortcut it is possible
-        to use the '+' operator:
+        Returns the union of 'self' and 'other'. As a shortcut it is
+        possible to use the '+' operator::
 
-        >>> from sympy import Interval, FiniteSet
+            >>> from sympy import Interval, FiniteSet
 
-        >>> Interval(0, 1).union(Interval(2, 3))
-        [0, 1] U [2, 3]
-        >>> Interval(0, 1) + Interval(2, 3)
-        [0, 1] U [2, 3]
-        >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        (1, 2] U {3}
+            >>> Interval(0, 1).union(Interval(2, 3))
+            [0, 1] U [2, 3]
+            >>> Interval(0, 1) + Interval(2, 3)
+            [0, 1] U [2, 3]
+            >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
+            (1, 2] U {3}
 
         Similarly it is possible to use the '-' operator for set
-        differences:
+        differences::
 
-        >>> Interval(0, 2) - Interval(0, 1)
-        (1, 2]
-        >>> Interval(1, 3) - FiniteSet(2)
-        [1, 2) U (2, 3]
+            >>> Interval(0, 2) - Interval(0, 1)
+            (1, 2]
+            >>> Interval(1, 3) - FiniteSet(2)
+            [1, 2) U (2, 3]
 
         """
         return Union(self, other)
@@ -47,10 +47,12 @@ class Set(Basic):
         """
         Returns the intersection of 'self' and 'other'.
 
-        >>> from sympy import Interval
+        ::
 
-        >>> Interval(1, 3).intersect(Interval(1, 2))
-        [1, 2]
+            >>> from sympy import Interval
+
+            >>> Interval(1, 3).intersect(Interval(1, 2))
+            [1, 2]
 
         """
         return self._intersect(other)
@@ -63,16 +65,16 @@ class Set(Basic):
         """
         The complement of 'self'.
 
-        As a shortcut it is possible to use the '~' or '-' operators:
+        As a shortcut it is possible to use the '~' or '-' operators::
 
-        >>> from sympy import Interval
+            >>> from sympy import Interval
 
-        >>> Interval(0, 1).complement
-        (-oo, 0) U (1, oo)
-        >>> ~Interval(0, 1)
-        (-oo, 0) U (1, oo)
-        >>> -Interval(0, 1)
-        (-oo, 0) U (1, oo)
+            >>> Interval(0, 1).complement
+            (-oo, 0) U (1, oo)
+            >>> ~Interval(0, 1)
+            (-oo, 0) U (1, oo)
+            >>> -Interval(0, 1)
+            (-oo, 0) U (1, oo)
 
         """
         return self._complement
@@ -86,12 +88,14 @@ class Set(Basic):
         """
         The infimum of 'self'.
 
-        >>> from sympy import Interval, Union
+        ::
 
-        >>> Interval(0, 1).inf
-        0
-        >>> Union(Interval(0, 1), Interval(2, 3)).inf
-        0
+            >>> from sympy import Interval, Union
+
+            >>> Interval(0, 1).inf
+            0
+            >>> Union(Interval(0, 1), Interval(2, 3)).inf
+            0
 
         """
         return self._inf
@@ -102,14 +106,17 @@ class Set(Basic):
 
     @property
     def sup(self):
-        """ The supremum of 'self'.
+        """
+        The supremum of 'self'.
 
-        >>> from sympy import Interval, Union
+        ::
 
-        >>> Interval(0, 1).sup
-        1
-        >>> Union(Interval(0, 1), Interval(2, 3)).sup
-        3
+            >>> from sympy import Interval, Union
+
+            >>> Interval(0, 1).sup
+            1
+            >>> Union(Interval(0, 1), Interval(2, 3)).sup
+            3
 
         """
         return self._sup
@@ -122,14 +129,14 @@ class Set(Basic):
         """
         Returns True if 'other' is contained in 'self' as an element.
 
-        As a shortcut it is possible to use the 'in' operator:
+        As a shortcut it is possible to use the 'in' operator::
 
-        >>> from sympy import Interval
+            >>> from sympy import Interval
 
-        >>> Interval(0, 1).contains(0.5)
-        True
-        >>> 0.5 in Interval(0, 1)
-        True
+            >>> Interval(0, 1).contains(0.5)
+            True
+            >>> 0.5 in Interval(0, 1)
+            True
 
         """
         return self._contains(other)
@@ -141,12 +148,14 @@ class Set(Basic):
         """
         Returns True if 'other' is a subset of 'self'.
 
-        >>> from sympy import Interval
+        ::
 
-        >>> Interval(0, 1).contains(0)
-        True
-        >>> Interval(0, 1, left_open=True).contains(0)
-        False
+            >>> from sympy import Interval
+
+            >>> Interval(0, 1).contains(0)
+            True
+            >>> Interval(0, 1, left_open=True).contains(0)
+            False
 
         """
         if isinstance(other, Set):
@@ -159,12 +168,14 @@ class Set(Basic):
         """
         The (Lebesgue) measure of 'self'.
 
-        >>> from sympy import Interval, Union
+        ::
 
-        >>> Interval(0, 1).measure
-        1
-        >>> Union(Interval(0, 1), Interval(2, 3)).measure
-        2
+            >>> from sympy import Interval, Union
+
+            >>> Interval(0, 1).measure
+            1
+            >>> Union(Interval(0, 1), Interval(2, 3)).measure
+            2
 
         """
         return self._measure
@@ -251,9 +262,13 @@ class ProductSet(Set):
         Returns a cartesian product given several sets as either an iterable
         or individual arguments.
 
-        Can use '*' operator on any sets for convenient shorthand.
+        Can use `*` operator on any sets for convenient shorthand.
 
-    Examples:
+    Examples
+    ========
+
+    ::
+
         >>> from sympy import Interval, FiniteSet, ProductSet
 
         >>> I = Interval(0, 5); S = FiniteSet(1, 2, 3)
@@ -300,13 +315,15 @@ class ProductSet(Set):
         """
         in operator for ProductSets
 
-        >>> from sympy import Interval
+        ::
 
-        >>> (2, 3) in Interval(0, 5) * Interval(0, 5)
-        True
+            >>> from sympy import Interval
 
-        >>> (10, 10) in Interval(0, 5) * Interval(0, 5)
-        False
+            >>> (2, 3) in Interval(0, 5) * Interval(0, 5)
+            True
+
+            >>> (10, 10) in Interval(0, 5) * Interval(0, 5)
+            False
 
         Passes operation on to constitent sets
         """
@@ -404,7 +421,11 @@ class Interval(RealSet):
         will be open on the left. Similarly, for right_open=True the interval
         will be open on the right.
 
-    Examples:
+    Examples
+    ========
+
+    ::
+
         >>> from sympy import Symbol, Interval, sets
 
         >>> Interval(0, 1)
@@ -456,10 +477,12 @@ class Interval(RealSet):
         The left end point of 'self'. This property takes the same value as the
         'inf' property.
 
-        >>> from sympy import Interval
+        ::
 
-        >>> Interval(0, 1).start
-        0
+            >>> from sympy import Interval
+
+            >>> Interval(0, 1).start
+            0
 
         """
         return self._args[0]
@@ -472,10 +495,12 @@ class Interval(RealSet):
         The right end point of 'self'. This property takes the same value as the
         'sup' property.
 
-        >>> from sympy import Interval
+        ::
 
-        >>> Interval(0, 1).end
-        1
+            >>> from sympy import Interval
+
+            >>> Interval(0, 1).end
+            1
 
         """
         return self._args[1]
@@ -487,12 +512,14 @@ class Interval(RealSet):
         """
         True if 'self' is left-open.
 
-        >>> from sympy import Interval
+        ::
 
-        >>> Interval(0, 1, left_open=True).left_open
-        True
-        >>> Interval(0, 1, left_open=False).left_open
-        False
+            >>> from sympy import Interval
+
+            >>> Interval(0, 1, left_open=True).left_open
+            True
+            >>> Interval(0, 1, left_open=False).left_open
+            False
 
         """
         return self._args[2]
@@ -502,12 +529,14 @@ class Interval(RealSet):
         """
         True if 'self' is right-open.
 
-        >>> from sympy import Interval
+        ::
 
-        >>> Interval(0, 1, right_open=True).right_open
-        True
-        >>> Interval(0, 1, right_open=False).right_open
-        False
+            >>> from sympy import Interval
+
+            >>> Interval(0, 1, right_open=True).right_open
+            True
+            >>> Interval(0, 1, right_open=False).right_open
+            False
 
         """
         return self._args[3]
@@ -642,7 +671,11 @@ class Union(Set):
     """
     Represents a union of sets as a Set.
 
-    Examples:
+    Examples
+    ========
+
+    ::
+
         >>> from sympy import Union, Interval
 
         >>> Union(Interval(1, 2), Interval(3, 4))
@@ -941,7 +974,11 @@ class EmptySet(Set):
     Represents the empty set. The empty set is available as a singleton
     as S.EmptySet.
 
-    Examples:
+    Examples
+    ========
+
+    ::
+
         >>> from sympy import S, Interval
 
         >>> S.EmptySet
@@ -984,7 +1021,11 @@ class FiniteSet(CountableSet):
     """
     Represents a finite set of discrete numbers
 
-    Examples:
+    Examples
+    ========
+
+    ::
+
         >>> from sympy import Symbol, FiniteSet, sets
 
         >>> FiniteSet(1, 2, 3, 4)
@@ -1031,24 +1072,24 @@ class FiniteSet(CountableSet):
     def union(self, other):
         """
         Returns the union of 'self' and 'other'. As a shortcut it is possible
-        to use the '+' operator:
+        to use the '+' operator::
 
-        >>> from sympy import FiniteSet, Interval, Symbol
+            >>> from sympy import FiniteSet, Interval, Symbol
 
-        >>> FiniteSet(0, 1).union(FiniteSet(2, 3))
-        {0, 1, 2, 3}
-        >>> FiniteSet(Symbol('x'), 1, 2) + FiniteSet(2, 3)
-        {1, 2, 3, x}
-        >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
-        (1, 2] U {3}
+            >>> FiniteSet(0, 1).union(FiniteSet(2, 3))
+            {0, 1, 2, 3}
+            >>> FiniteSet(Symbol('x'), 1, 2) + FiniteSet(2, 3)
+            {1, 2, 3, x}
+            >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
+            (1, 2] U {3}
 
-        Similarly it is possible to use the '-' operator for set
-        differences:
+            Similarly it is possible to use the '-' operator for set
+            differences:
 
-        >>> FiniteSet(Symbol('x'), 1, 2) - FiniteSet(2, 3)
-        {1, x}
-        >>> Interval(1, 2) - FiniteSet(2, 3)
-        [1, 2)
+            >>> FiniteSet(Symbol('x'), 1, 2) - FiniteSet(2, 3)
+            {1, x}
+            >>> Interval(1, 2) - FiniteSet(2, 3)
+            [1, 2)
 
 
         """
@@ -1065,12 +1106,14 @@ class FiniteSet(CountableSet):
         Relies on Python's set class. This tests for object equality
         All inputs are sympified
 
-        >>> from sympy import FiniteSet
+        ::
 
-        >>> 1 in FiniteSet(1, 2)
-        True
-        >>> 5 in FiniteSet(1, 2)
-        False
+            >>> from sympy import FiniteSet
+
+            >>> 1 in FiniteSet(1, 2)
+            True
+            >>> 5 in FiniteSet(1, 2)
+            False
 
         """
         return sympify(other) in self.elements
@@ -1125,9 +1168,11 @@ class RealFiniteSet(FiniteSet, RealSet):
         The complement of a real finite set is the Union of open Intervals
         between the elements of the set.
 
-        >>> from sympy import FiniteSet
-        >>> FiniteSet(1, 2, 3).complement
-        (-oo, 1) U (1, 2) U (2, 3) U (3, oo)
+        ::
+
+            >>> from sympy import FiniteSet
+            >>> FiniteSet(1, 2, 3).complement
+            (-oo, 1) U (1, 2) U (2, 3) U (3, oo)
 
 
         """

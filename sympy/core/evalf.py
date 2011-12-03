@@ -45,13 +45,13 @@ class PrecisionExhausted(ArithmeticError):
 
 """
 An mpf value tuple is a tuple of integers (sign, man, exp, bc)
-representing a floating-point number: (-1)**sign*man*2**exp where
+representing a floating-point number: `(-1)**sign*man*2**exp` where
 bc should correspond to the number of bits used to represent the
 mantissa (man) in binary notation, e.g. (0,5,1,3) represents 10::
 
->>> from sympy.core.evalf import bitcount
->>> n=(-1)**0 * 5 * 2**1; n, bitcount(5)
-(10, 3)
+    >>> from sympy.core.evalf import bitcount
+    >>> n=(-1)**0 * 5 * 2**1; n, bitcount(5)
+    (10, 3)
 
 A temporary result is a tuple (re, im, re_acc, im_acc) where
 re and im are nonzero mpf value tuples representing approximate
@@ -79,12 +79,15 @@ def fastlog(x):
     to see if the mantissa is a multiple of 2 (in which case the
     result would be too large by 1).
 
-    Example::
+    Example
+    =======
 
-    >>> from sympy import log
-    >>> from sympy.core.evalf import fastlog, bitcount
-    >>> n=(-1)**0*5*2**1; n, (log(n)/log(2)).evalf(), fastlog((0,5,1,bitcount(5)))
-    (10, 3.32192809488736, 4)
+    ::
+
+        >>> from sympy import log
+        >>> from sympy.core.evalf import fastlog, bitcount
+        >>> n=(-1)**0*5*2**1; n, (log(n)/log(2)).evalf(), fastlog((0,5,1,bitcount(5)))
+        (10, 3.32192809488736, 4)
     """
 
     if not x or x == fzero:
@@ -95,8 +98,8 @@ def complex_accuracy(result):
     """
     Returns relative accuracy of a complex number with given accuracies
     for the real and imaginary parts. The relative accuracy is defined
-    in the complex norm sense as ||z|+|error|| / |z| where error
-    is equal to (real absolute error) + (imag absolute error)*i.
+    in the complex norm sense as `||z|+|error|| / |z|` where error
+    is equal to `(real absolute error) + (imag absolute error)*i`.
 
     The full expression for the (logarithmic) error can be approximated
     easily by using the max norm to approximate the complex norm.
@@ -751,20 +754,20 @@ def check_convergence(numer, denom, n):
     """
     Returns (h, g, p) where
     -- h is:
-        > 0 for convergence of rate 1/factorial(n)**h
-        < 0 for divergence of rate factorial(n)**(-h)
+        > 0 for convergence of rate `1/factorial(n)**h`
+        < 0 for divergence of rate `factorial(n)**(-h)`
         = 0 for geometric or polynomial convergence or divergence
 
     -- abs(g) is:
-        > 1 for geometric convergence of rate 1/h**n
-        < 1 for geometric divergence of rate h**n
+        > 1 for geometric convergence of rate `1/h**n`
+        < 1 for geometric divergence of rate `h**n`
         = 1 for polynomial convergence or divergence
 
         (g < 0 indicates an alternating series)
 
     -- p is:
-        > 1 for polynomial convergence of rate 1/n**h
-        <= 1 for polynomial divergence of rate n**(-h)
+        > 1 for polynomial convergence of rate `1/n**h`
+        <= 1 for polynomial divergence of rate `n**(-h)`
 
     """
     npol = C.Poly(numer, n)
@@ -1103,14 +1106,17 @@ def N(x, n=15, **options):
     Both .evalf() and N() are equivalent, use the one that you like better.
     See also the docstring of .evalf() for information on the options.
 
-    Example:
+    Example
+    =======
 
-    >>> from sympy import Sum, Symbol, oo, N
-    >>> from sympy.abc import k
-    >>> Sum(1/k**k, (k, 1, oo))
-    Sum(k**(-k), (k, 1, oo))
-    >>> N(Sum(1/k**k, (k, 1, oo)), 4)
-    1.291
+    ::
+
+        >>> from sympy import Sum, Symbol, oo, N
+        >>> from sympy.abc import k
+        >>> Sum(1/k**k, (k, 1, oo))
+        Sum(k**(-k), (k, 1, oo))
+        >>> N(Sum(1/k**k, (k, 1, oo)), 4)
+        1.291
 
     """
     return sympify(x).evalf(n, **options)

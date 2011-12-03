@@ -154,15 +154,18 @@ class Basic(object):
         from the "other" then their classes are ordered according to
         the sorted_classes list.
 
-        Example:
+        Example
+        =======
 
-        >>> from sympy.abc import x, y
-        >>> x.compare(y)
-        -1
-        >>> x.compare(x)
-        0
-        >>> y.compare(x)
-        1
+        ::
+
+            >>> from sympy.abc import x, y
+            >>> x.compare(y)
+            -1
+            >>> x.compare(x)
+            0
+            >>> y.compare(x)
+            1
 
         """
         # all redefinitions of __cmp__ method should start with the
@@ -223,25 +226,28 @@ class Basic(object):
         Strategy:
 
         It uses Basic.compare as a fallback, but improves it in many cases,
-        like x**3, x**4, O(x**3) etc. In those simple cases, it just parses the
-        expression and returns the "sane" ordering such as::
+        like ``x**3``, ``x**4``, ``O(x**3)`` etc. In those simple cases, it
+        just parses the expression and returns the "sane" ordering such as::
 
-          1 < x < x**2 < x**3 < O(x**4) etc.
+            1 < x < x**2 < x**3 < O(x**4) etc.
 
-        Example:
+        Example
+        =======
 
-        >>> from sympy.abc import x
-        >>> from sympy import Basic, Number
-        >>> Basic._compare_pretty(x, x**2)
-        -1
-        >>> Basic._compare_pretty(x**2, x**2)
-        0
-        >>> Basic._compare_pretty(x**3, x**2)
-        1
-        >>> Basic._compare_pretty(Number(1, 2), Number(1, 3))
-        1
-        >>> Basic._compare_pretty(Number(0), Number(-1))
-        1
+        ::
+
+            >>> from sympy.abc import x
+            >>> from sympy import Basic, Number
+            >>> Basic._compare_pretty(x, x**2)
+            -1
+            >>> Basic._compare_pretty(x**2, x**2)
+            0
+            >>> Basic._compare_pretty(x**3, x**2)
+            1
+            >>> Basic._compare_pretty(Number(1, 2), Number(1, 3))
+            1
+            >>> Basic._compare_pretty(Number(0), Number(-1))
+            1
 
         """
         try:
@@ -275,11 +281,14 @@ class Basic(object):
         This is a convenience function that allows one to create objects from
         any iterable, without having to convert to a list or tuple first.
 
-        Example:
+        Example
+        =======
 
-        >>> from sympy import Tuple
-        >>> Tuple.fromiter(i for i in xrange(5))
-        (0, 1, 2, 3, 4)
+        ::
+
+            >>> from sympy import Tuple
+            >>> Tuple.fromiter(i for i in xrange(5))
+            (0, 1, 2, 3, 4)
 
         """
         return cls(*tuple(args), **assumptions)
@@ -294,18 +303,21 @@ class Basic(object):
         """
         Return a sort key.
 
-        **Examples**
+        Examples
+        ========
 
-        >>> from sympy.core import Basic, S, I
-        >>> from sympy.abc import x
+        ::
 
-        >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
-        [1/2, -I, I]
+            >>> from sympy.core import Basic, S, I
+            >>> from sympy.abc import x
 
-        >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
-        [x, 1/x, x**(-2), x**2, sqrt(x), x**(1/4), x**(3/2)]
-        >>> sorted(_, key=lambda x: x.sort_key())
-        [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]
+            >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
+            [1/2, -I, I]
+
+            >>> S("[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]")
+            [x, 1/x, x**(-2), x**2, sqrt(x), x**(1/4), x**(3/2)]
+            >>> sorted(_, key=lambda x: x.sort_key())
+            [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]
 
         """
 
@@ -373,22 +385,25 @@ class Basic(object):
         """
         Compare two expressions and handle dummy symbols.
 
-        **Examples**
+        Examples
+        ========
 
-        >>> from sympy import Dummy
-        >>> from sympy.abc import x, y
+        ::
 
-        >>> u = Dummy('u')
+            >>> from sympy import Dummy
+            >>> from sympy.abc import x, y
 
-        >>> (u**2 + 1).dummy_eq(x**2 + 1)
-        True
-        >>> (u**2 + 1) == (x**2 + 1)
-        False
+            >>> u = Dummy('u')
 
-        >>> (u**2 + y).dummy_eq(x**2 + y, x)
-        True
-        >>> (u**2 + y).dummy_eq(x**2 + y, y)
-        False
+            >>> (u**2 + 1).dummy_eq(x**2 + 1)
+            True
+            >>> (u**2 + 1) == (x**2 + 1)
+            False
+
+            >>> (u**2 + y).dummy_eq(x**2 + y, x)
+            True
+            >>> (u**2 + y).dummy_eq(x**2 + y, y)
+            False
 
         """
         dummy_symbols = [ s for s in self.free_symbols if s.is_Dummy ]
@@ -432,62 +447,68 @@ class Basic(object):
            and number symbols like I and pi. It is possible to request
            atoms of any type, however, as demonstrated below.
 
-           Examples:
+           Examples
+           ========
 
-           >>> from sympy import I, pi, sin
-           >>> from sympy.abc import x, y
-           >>> (1 + x + 2*sin(y + I*pi)).atoms()
-           set([1, 2, I, pi, x, y])
+           ::
+
+               >>> from sympy import I, pi, sin
+               >>> from sympy.abc import x, y
+               >>> (1 + x + 2*sin(y + I*pi)).atoms()
+               set([1, 2, I, pi, x, y])
 
            If one or more types are given, the results will contain only
            those types of atoms.
 
-           Examples:
+           Examples
+           ========
 
-           >>> from sympy import Number, NumberSymbol, Symbol
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
-           set([x, y])
+           ::
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number)
-           set([1, 2])
+               >>> from sympy import Number, NumberSymbol, Symbol
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
+               set([x, y])
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol)
-           set([1, 2, pi])
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(Number)
+               set([1, 2])
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
-           set([1, 2, I, pi])
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol)
+               set([1, 2, pi])
+
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)
+               set([1, 2, I, pi])
 
            Note that I (imaginary unit) and zoo (complex infinity) are special
            types of number symbols and are not part of the NumberSymbol class.
 
-           The type can be given implicitly, too:
+           The type can be given implicitly, too::
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
-           set([x, y])
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol
+               set([x, y])
 
            Be careful to check your assumptions when using the implicit option
            since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
            of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
-           integers in an expression:
+           integers in an expression::
 
-           >>> from sympy import S
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
-           set([1])
+               >>> from sympy import S
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(S(1))
+               set([1])
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(S(2))
-           set([1, 2])
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(S(2))
+               set([1, 2])
 
            Finally, arguments to atoms() can select more than atomic atoms: any
            sympy type (loaded in core/__init__.py) can be listed as an argument
            and those types of "atoms" as found in scanning the arguments of the
-           expression recursively:
+           expression recursively::
 
-           >>> from sympy import Function, Mul
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
-           set([sin(y + I*pi)])
+               >>> from sympy import Function, Mul
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(Function)
+               set([sin(y + I*pi)])
 
-           >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
-           set([I*pi, 2*sin(y + I*pi)])
+               >>> (1 + x + 2*sin(y + I*pi)).atoms(Mul)
+               set([I*pi, 2*sin(y + I*pi)])
 
         """
 
@@ -547,7 +568,10 @@ class Basic(object):
 
     @property
     def is_number(self):
-        """Returns ``True`` if 'self' is a number.
+        """
+        Returns ``True`` if 'self' is a number.
+
+        ::
 
            >>> from sympy import log, Integral
            >>> from sympy.abc import x, y
@@ -576,48 +600,56 @@ class Basic(object):
 
             >> x == x.func(*x.args)
 
-        Example:
+        Example
+        =======
 
-        >>> from sympy.abc import x
-        >>> a = 2*x
-        >>> a.func
-        <class 'sympy.core.mul.Mul'>
-        >>> a.args
-        (2, x)
-        >>> a.func(*a.args)
-        2*x
-        >>> a == a.func(*a.args)
-        True
+        ::
+
+            >>> from sympy.abc import x
+            >>> a = 2*x
+            >>> a.func
+            <class 'sympy.core.mul.Mul'>
+            >>> a.args
+            (2, x)
+            >>> a.func(*a.args)
+            2*x
+            >>> a == a.func(*a.args)
+            True
 
         """
         return self.__class__
 
     @property
     def args(self):
-        """Returns a tuple of arguments of 'self'.
+        """
+        Returns a tuple of arguments of 'self'.
 
-        Example:
+        Example
+        =======
 
-        >>> from sympy import symbols, cot
-        >>> from sympy.abc import x, y
+        ::
 
-        >>> cot(x).args
-        (x,)
+            >>> from sympy import symbols, cot
+            >>> from sympy.abc import x, y
 
-        >>> cot(x).args[0]
-        x
+            >>> cot(x).args
+            (x,)
 
-        >>> (x*y).args
-        (x, y)
+            >>> cot(x).args[0]
+            x
 
-        >>> (x*y).args[1]
-        y
+            >>> (x*y).args
+            (x, y)
 
-        ** Developer Notes **
-            Never use self._args, always use self.args.
-            Only use _args in __new__ when creating a new function.
-            Don't override .args() from Basic (so that it's easy to
-            change the interface in the future if needed).
+            >>> (x*y).args[1]
+            y
+
+        Developer Notes
+
+        Never use self._args, always use self.args.  Only use _args in
+        __new__ when creating a new function.  Don't override .args() from
+        Basic (so that it's easy to change the interface in the future if
+        needed).
         """
         return self._args
 
@@ -625,20 +657,26 @@ class Basic(object):
         """
         Iterates arguments of 'self'.
 
-        Example:
+        Example
+        =======
 
-        >>> from sympy.abc import x
-        >>> a = 2*x
-        >>> a.iter_basic_args()
-        <...iterator object at 0x...>
-        >>> list(a.iter_basic_args())
-        [2, x]
+        ::
+
+            >>> from sympy.abc import x
+            >>> a = 2*x
+            >>> a.iter_basic_args()
+            <...iterator object at 0x...>
+            >>> list(a.iter_basic_args())
+            [2, x]
 
         """
         return iter(self.args)
 
     def as_poly(self, *gens, **args):
-        """Converts ``self`` to a polynomial or returns ``None``.
+        """
+        Converts ``self`` to a polynomial or returns ``None``.
+
+        ::
 
            >>> from sympy import Poly, sin
            >>> from sympy.abc import x, y
@@ -669,7 +707,7 @@ class Basic(object):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
-        See docstring of Expr.as_content_primitive
+        See docstring of :meth:`Expr.as_content_primitive`
         """
         return S.One, self
 
@@ -680,21 +718,24 @@ class Basic(object):
         Calls either _subs_old_new, _subs_dict or _subs_list depending
         if you give it two arguments (old, new), a dictionary or a list.
 
-        Examples:
+        Examples
+        ========
 
-        >>> from sympy import pi
-        >>> from sympy.abc import x, y
-        >>> (1 + x*y).subs(x, pi)
-        pi*y + 1
-        >>> (1 + x*y).subs({x:pi, y:2})
-        1 + 2*pi
-        >>> (1 + x*y).subs([(x,pi), (y,2)])
-        1 + 2*pi
+        ::
 
-        >>> (x + y).subs([(y,x**2), (x,2)])
-        6
-        >>> (x + y).subs([(x,2), (y,x**2)])
-        x**2 + 2
+            >>> from sympy import pi
+            >>> from sympy.abc import x, y
+            >>> (1 + x*y).subs(x, pi)
+            pi*y + 1
+            >>> (1 + x*y).subs({x:pi, y:2})
+            1 + 2*pi
+            >>> (1 + x*y).subs([(x,pi), (y,2)])
+            1 + 2*pi
+
+            >>> (x + y).subs([(y,x**2), (x,2)])
+            6
+            >>> (x + y).subs([(x,2), (y,x**2)])
+            x**2 + 2
         """
         if len(args) == 1:
             sequence = args[0]
@@ -728,13 +769,16 @@ class Basic(object):
         Performs an order sensitive substitution from the
         input sequence list.
 
-        Examples:
+        Examples
+        ========
 
-        >>> from sympy.abc import x, y
-        >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
-        x**2 + 3
-        >>> (x+y)._subs_list( [(y, x**2),  (x, 3)   ] )
-        12
+        ::
+
+            >>> from sympy.abc import x, y
+            >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
+            x**2 + 3
+            >>> (x+y)._subs_list( [(y, x**2),  (x, 3)   ] )
+            12
 
         """
         result = self
@@ -751,25 +795,27 @@ class Basic(object):
            pairs handling properly all overlapping keys  (according to
            'in' relation).
 
-           We have to use naive O(n**2) sorting algorithm, as 'in'
+           We have to use naive :math:`O(n**2)` sorting algorithm, as 'in'
            gives only partial order and all asymptotically faster
            fail (depending on the initial order).
 
-           >>> from sympy import sqrt, sin, cos, exp
-           >>> from sympy.abc import x, y
+           ::
 
-           >>> from sympy.abc import a, b, c, d, e
+               >>> from sympy import sqrt, sin, cos, exp
+               >>> from sympy.abc import x, y
 
-           >>> A = (sqrt(sin(2*x)), a)
-           >>> B = (sin(2*x), b)
-           >>> C = (cos(2*x), c)
-           >>> D = (x, d)
-           >>> E = (exp(x), e)
+               >>> from sympy.abc import a, b, c, d, e
 
-           >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
+               >>> A = (sqrt(sin(2*x)), a)
+               >>> B = (sin(2*x), b)
+               >>> C = (cos(2*x), c)
+               >>> D = (x, d)
+               >>> E = (exp(x), e)
 
-           >>> expr._subs_dict([A,B,C,D,E])
-           a*c*sin(d*e) + b
+               >>> expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)
+
+               >>> expr._subs_dict([A,B,C,D,E])
+               a*c*sin(d*e) + b
 
         """
         sequence = sympify(sequence)
@@ -794,40 +840,40 @@ class Basic(object):
         """
         Replace occurrences of objects within the expression.
 
-        Parameters
-        ----------
-        rule : dict-like
-            Expresses a replacement rule
+        :type rule: dict-like
+        :param rule: Expresses a replacement rule
 
-        Returns
-        -------
-        xreplace : the result of the replacement
+        :returns: the result of the replacement
 
         Examples
-        --------
-        >>> from sympy import symbols, pi
-        >>> x,y, z = symbols('x y z')
-        >>> (1+x*y).xreplace({x: pi})
-        pi*y + 1
-        >>> (1+x*y).xreplace({x:pi, y:2})
-        1 + 2*pi
+        ========
+
+        ::
+
+            >>> from sympy import symbols, pi
+            >>> x,y, z = symbols('x y z')
+            >>> (1+x*y).xreplace({x: pi})
+            pi*y + 1
+            >>> (1+x*y).xreplace({x:pi, y:2})
+            1 + 2*pi
 
         Notes
-        -----
-        This method operates at a low level and considers only the objects that
-        appear explicitly as nodes in the expression tree. It is unaware of any
-        specific meaning attached to an object or its arguments. For instance,
-        a product of several factors will only be substituted if it matches
-        exactly a key of the dictionary:
+        =====
 
-        >>> (x*y + z).xreplace({x*y: pi})
-        z + pi
-        >>> (x*y*z).xreplace({x*y: pi})
-        x*y*z
-        >>> (2*x).xreplace({2*x: y, x: z})
-        y
-        >>> (2*2*x).xreplace({2*x: y, x: z})
-        4*z
+        This method operates at a low level and considers only the objects
+        that appear explicitly as nodes in the expression tree. It is
+        unaware of any specific meaning attached to an object or its
+        arguments. For instance, a product of several factors will only be
+        substituted if it matches exactly a key of the dictionary::
+
+            >>> (x*y + z).xreplace({x*y: pi})
+            z + pi
+            >>> (x*y*z).xreplace({x*y: pi})
+            x*y*z
+            >>> (2*x).xreplace({2*x: y, x: z})
+            y
+            >>> (2*2*x).xreplace({2*x: y, x: z})
+            4*z
         """
         if self in rule:
             return rule[self]
@@ -852,23 +898,26 @@ class Basic(object):
         """
         Test whether any subexpression matches any of the patterns.
 
-        Examples:
+        Examples
+        ========
 
-        >>> from sympy import sin, S
-        >>> from sympy.abc import x, y, z
-        >>> (x**2 + sin(x*y)).has(z)
-        False
-        >>> (x**2 + sin(x*y)).has(x, y, z)
-        True
-        >>> x.has(x)
-        True
+        ::
+
+            >>> from sympy import sin, S
+            >>> from sympy.abc import x, y, z
+            >>> (x**2 + sin(x*y)).has(z)
+            False
+            >>> (x**2 + sin(x*y)).has(x, y, z)
+            True
+            >>> x.has(x)
+            True
 
         Note that ``expr.has(*patterns)`` is exactly equivalent to
         ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is
-        returned when the list of patterns is empty.
+        returned when the list of patterns is empty.::
 
-        >>> x.has()
-        False
+            >>> x.has()
+            False
 
         """
         def _ncsplit(expr):
@@ -960,32 +1009,35 @@ class Basic(object):
         3.1. func -> func
              obj.replace(lambda expr: ..., lambda expr: ...)
 
-        Examples:
+        Examples
+        ========
 
-        >>> from sympy import log, sin, cos, tan, Wild
-        >>> from sympy.abc import x
+        ::
 
-        >>> f = log(sin(x)) + tan(sin(x**2))
+            >>> from sympy import log, sin, cos, tan, Wild
+            >>> from sympy.abc import x
 
-        >>> f.replace(sin, cos)
-        log(cos(x)) + tan(cos(x**2))
-        >>> f.replace(sin, lambda arg: sin(2*arg))
-        log(sin(2*x)) + tan(sin(2*x**2))
+            >>> f = log(sin(x)) + tan(sin(x**2))
 
-        >>> sin(x).replace(sin, cos, map=True)
-        (cos(x), {sin(x): cos(x)})
+            >>> f.replace(sin, cos)
+            log(cos(x)) + tan(cos(x**2))
+            >>> f.replace(sin, lambda arg: sin(2*arg))
+            log(sin(2*x)) + tan(sin(2*x**2))
 
-        >>> a = Wild('a')
+            >>> sin(x).replace(sin, cos, map=True)
+            (cos(x), {sin(x): cos(x)})
 
-        >>> f.replace(sin(a), cos(a))
-        log(cos(x)) + tan(cos(x**2))
-        >>> f.replace(sin(a), lambda a: sin(2*a))
-        log(sin(2*x)) + tan(sin(2*x**2))
+            >>> a = Wild('a')
 
-        >>> g = 2*sin(x**3)
+            >>> f.replace(sin(a), cos(a))
+            log(cos(x)) + tan(cos(x**2))
+            >>> f.replace(sin(a), lambda a: sin(2*a))
+            log(sin(2*x)) + tan(sin(2*x**2))
 
-        >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
-        4*sin(x**9)
+            >>> g = 2*sin(x**3)
+
+            >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
+            4*sin(x**9)
 
         """
         if isinstance(query, type):
@@ -1100,13 +1152,13 @@ class Basic(object):
         """
         Helper method for match() - switches the pattern and expr.
 
-        Can be used to solve linear equations:
+        Can be used to solve linear equations::
 
-        >>> from sympy import Symbol, Wild, Integer
-        >>> a,b = map(Symbol, 'ab')
-        >>> x = Wild('x')
-        >>> (a+b*x).matches(Integer(0))
-        {x_: -a/b}
+            >>> from sympy import Symbol, Wild, Integer
+            >>> a,b = map(Symbol, 'ab')
+            >>> x = Wild('x')
+            >>> (a+b*x).matches(Integer(0))
+            {x_: -a/b}
 
         """
         expr = sympify(expr)
@@ -1137,25 +1189,28 @@ class Basic(object):
         Return ``None`` when expression (self) does not match
         with pattern. Otherwise return a dictionary such that::
 
-          pattern.xreplace(self.match(pattern)) == self
+            pattern.xreplace(self.match(pattern)) == self
 
-        Example:
+        Example
+        =======
 
-        >>> from sympy import symbols, Wild
-        >>> from sympy.abc import x, y
-        >>> p = Wild("p")
-        >>> q = Wild("q")
-        >>> r = Wild("r")
-        >>> e = (x+y)**(x+y)
-        >>> e.match(p**p)
-        {p_: x + y}
-        >>> e.match(p**q)
-        {p_: x + y, q_: x + y}
-        >>> e = (2*x)**2
-        >>> e.match(p*q**r)
-        {p_: 4, q_: x, r_: 2}
-        >>> (p*q**r).xreplace(e.match(p*q**r))
-        4*x**2
+        ::
+
+            >>> from sympy import symbols, Wild
+            >>> from sympy.abc import x, y
+            >>> p = Wild("p")
+            >>> q = Wild("q")
+            >>> r = Wild("r")
+            >>> e = (x+y)**(x+y)
+            >>> e.match(p**p)
+            {p_: x + y}
+            >>> e.match(p**q)
+            {p_: x + y, q_: x + y}
+            >>> e = (2*x)**2
+            >>> e.match(p*q**r)
+            {p_: 4, q_: x, r_: 2}
+            >>> (p*q**r).xreplace(e.match(p*q**r))
+            4*x**2
 
         """
         pattern = sympify(pattern)
@@ -1168,10 +1223,13 @@ class Basic(object):
         return sum(a.count_ops(visual) for a in self.args)
 
     def doit(self, **hints):
-        """Evaluate objects that are not evaluated by default like limits,
-           integrals, sums and products. All objects of this kind will be
-           evaluated recursively, unless some species were excluded via 'hints'
-           or unless the 'deep' hint was set to 'False'.
+        """
+        Evaluate objects that are not evaluated by default like limits,
+        integrals, sums and products. All objects of this kind will be
+        evaluated recursively, unless some species were excluded via 'hints'
+        or unless the 'deep' hint was set to 'False'.
+
+        ::
 
            >>> from sympy import Integral
            >>> from sympy.abc import x, y
@@ -1200,20 +1258,23 @@ class Basic(object):
         return self.func(*terms)
 
     def rewrite(self, *args, **hints):
-        """Rewrites expression containing applications of functions
-           of one kind in terms of functions of different kind. For
-           example you can rewrite trigonometric functions as complex
-           exponentials or combinatorial functions as gamma function.
+        """
+        Rewrites expression containing applications of functions of one kind
+        in terms of functions of different kind. For example you can rewrite
+        trigonometric functions as complex exponentials or combinatorial
+        functions as gamma function.
 
-           As a pattern this function accepts a list of functions to
-           to rewrite (instances of DefinedFunction class). As rule
-           you can use string or a destination function instance (in
-           this case rewrite() will use the str() function).
+        As a pattern this function accepts a list of functions to to rewrite
+        (instances of DefinedFunction class). As rule you can use string or
+        a destination function instance (in this case rewrite() will use the
+        str() function).
 
-           There is also possibility to pass hints on how to rewrite
-           the given expressions. For now there is only one such hint
-           defined called 'deep'. When 'deep' is set to False it will
-           forbid functions to rewrite their contents.
+        There is also possibility to pass hints on how to rewrite the given
+        expressions. For now there is only one such hint defined called
+        'deep'. When 'deep' is set to False it will forbid functions to
+        rewrite their contents.
+
+        ::
 
            >>> from sympy import sin, exp, I
            >>> from sympy.abc import x, y
@@ -1246,7 +1307,8 @@ class Basic(object):
 
 class Atom(Basic):
     """
-    A parent class for atomic things. An atom is an expression with no subexpressions.
+    A parent class for atomic things. An atom is an expression with no
+    subexpressions.
 
     Examples: Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...

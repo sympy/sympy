@@ -104,6 +104,8 @@ class NumpyDocString(object):
             'Warnings': [],
             'References': '',
             'Examples': '',
+            'Example': '',
+            'External Links': [],
             'index': {}
             }
 

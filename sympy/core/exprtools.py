@@ -19,19 +19,22 @@ def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
-    **Example**
+    Example
+    =======
 
-    >>> from sympy.core.exprtools import decompose_power
-    >>> from sympy.abc import x, y
+    ::
 
-    >>> decompose_power(x)
-    (x, 1)
-    >>> decompose_power(x**2)
-    (x, 2)
-    >>> decompose_power(x**(2*y))
-    (x**y, 2)
-    >>> decompose_power(x**(2*y/3))
-    (x**(y/3), 2)
+        >>> from sympy.core.exprtools import decompose_power
+        >>> from sympy.abc import x, y
+
+        >>> decompose_power(x)
+        (x, 1)
+        >>> decompose_power(x**2)
+        (x, 2)
+        >>> decompose_power(x**(2*y))
+        (x**y, 2)
+        >>> decompose_power(x**(2*y/3))
+        (x**(y/3), 2)
 
     """
     base, exp = expr.as_base_exp()
@@ -381,13 +384,16 @@ def gcd_terms(terms, isprimitive=False):
     Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
     True the _gcd_terms will not run the primitive method on the terms.
 
-    **Example**
+    Example
+    =======
 
-    >>> from sympy.core import gcd_terms
-    >>> from sympy.abc import x, y
+    ::
 
-    >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
-    y*(x + 1)*(x + y + 1)
+        >>> from sympy.core import gcd_terms
+        >>> from sympy.abc import x, y
+
+        >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
+        y*(x + 1)*(x + y + 1)
 
     """
     terms = sympify(terms)
@@ -418,15 +424,18 @@ def factor_terms(expr):
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutative) is performed.
 
-    **Examples**
+    Examples
+    ========
 
-    >>> from sympy import factor_terms, Symbol
-    >>> from sympy.abc import x, y
-    >>> factor_terms(x + x*(2 + 4*y)**3)
-    x*(8*(2*y + 1)**3 + 1)
-    >>> A = Symbol('A', commutative=False)
-    >>> factor_terms(x*A + x*A + x*y*A)
-    x*(y*A + 2*A)
+    ::
+
+        >>> from sympy import factor_terms, Symbol
+        >>> from sympy.abc import x, y
+        >>> factor_terms(x + x*(2 + 4*y)**3)
+        x*(8*(2*y + 1)**3 + 1)
+        >>> A = Symbol('A', commutative=False)
+        >>> factor_terms(x*A + x*A + x*y*A)
+        x*(y*A + 2*A)
 
     """
 

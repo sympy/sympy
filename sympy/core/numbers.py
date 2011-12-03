@@ -34,10 +34,11 @@ _gcdcache = {}
 
 # TODO caching with decorator, but not to degrade performance
 def igcd(a, b):
-    """Computes positive, integer greatest common divisor of two numbers.
+    """
+    Computes positive, integer greatest common divisor of two numbers.
 
-       The algorithm is based on the well known Euclid's algorithm. To
-       improve speed, igcd() has its own caching mechanism implemented.
+    The algorithm is based on the well known Euclid's algorithm. To
+    improve speed, igcd() has its own caching mechanism implemented.
     """
     try:
         return _gcdcache[(a,b)]
@@ -62,7 +63,10 @@ def ilcm(a, b):
         return a * b // igcd(a, b)
 
 def igcdex(a, b):
-    """Returns x, y, g such that g = x*a + y*b = gcd(a, b).
+    """
+    Returns x, y, g such that :math:`g = x*a + y*b = gcd(a, b)`.
+
+    ::
 
        >>> from sympy.core.numbers import igcdex
        >>> igcdex(2, 3)
@@ -107,13 +111,13 @@ class Number(AtomicExpr):
     """
     Represents any kind of number in sympy.
 
-    Floating point numbers are represented by the Float class.
-    Integer numbers (of any size), together with rational numbers (again, there
-    is no limit on their size) are represented by the Rational class.
+    Floating point numbers are represented by the Float class.  Integer
+    numbers (of any size), together with rational numbers (again, there is
+    no limit on their size) are represented by the Rational class.
 
     If you want to represent, for example, ``1+sqrt(2)``, then you need to do::
 
-      Rational(1) + sqrt(Rational(2))
+        Rational(1) + sqrt(Rational(2))
     """
     is_commutative = True
     is_comparable = True
@@ -243,21 +247,23 @@ class Float(Number):
     Represents a floating point number. It is capable of representing
     arbitrary-precision floating-point numbers
 
-    **Usage**
+    Usage
+    -----
 
     ::
 
-      Float(3.5)
+      >>> from sympy import Float
+      >>> Float(3.5)
       3.5 # (the 3.5 was converted from a python float)
-      Float("3.0000000000000005")
+      >>> Float("3.0000000000000005")
+      >>> Float((1,3,0,2)) # mpmath tuple: (-1)**1 * 3 * 2**0; 3 has 2 bits
+      -3.00000000000000
 
-    >>> from sympy import Float
-    >>> Float((1,3,0,2)) # mpmath tuple: (-1)**1 * 3 * 2**0; 3 has 2 bits
-    -3.00000000000000
-
-    **Notes**
+    Notes
+    -----
 
     - Float(x) with x being a Python int/long will return Integer(x)
+
     """
     is_real = True
     is_irrational = False
@@ -484,49 +490,54 @@ def Real(*args, **kwargs):  # pragma: no cover
     return Float(*args, **kwargs)
 
 class Rational(Number):
-    """Represents integers and rational numbers (p/q) of any size.
+    """
+    Represents integers and rational numbers (p/q) of any size.
 
-    **Examples**
+    Examples
+    ========
 
-    >>> from sympy import Rational
-    >>> from sympy.abc import x, y
-    >>> Rational(3)
-    3
-    >>> Rational(1,2)
-    1/2
-    >>> Rational(1.5)
-    1
+    ::
 
-    Rational can also accept strings that are valid literals for reals:
+        >>> from sympy import Rational
+        >>> from sympy.abc import x, y
+        >>> Rational(3)
+        3
+        >>> Rational(1,2)
+        1/2
+        >>> Rational(1.5)
+        1
 
-    >>> Rational("1.23")
-    123/100
-    >>> Rational('1e-2')
-    1/100
-    >>> Rational(".1")
-    1/10
+    Rational can also accept strings that are valid literals for reals::
 
-    Parsing needs for any other type of string for which a Rational is desired
-    can be handled with the rational=True option in sympify() which produces
-    rationals from strings like '.[3]' (=1/3) and '3/10' (=3/10).
+        >>> Rational("1.23")
+        123/100
+        >>> Rational('1e-2')
+        1/100
+        >>> Rational(".1")
+        1/10
 
-    **Low-level**
+    Parsing needs for any other type of string for which a Rational is
+    desired can be handled with the rational=True option in sympify() which
+    produces rationals from strings like '.[3]' (=1/3) and '3/10' (=3/10).
 
-    Access numerator and denominator as .p and .q:
+    Low-level
+    ---------
 
-    >>> r = Rational(3,4)
-    >>> r
-    3/4
-    >>> r.p
-    3
-    >>> r.q
-    4
+    Access numerator and denominator as .p and .q::
+
+        >>> r = Rational(3,4)
+        >>> r
+        3/4
+        >>> r.p
+        3
+        >>> r.q
+        4
 
     Note that p and q return integers (not sympy Integers) so some care
-    is needed when using them in expressions:
+    is needed when using them in expressions::
 
-    >>> r.p//r.q
-    0
+        >>> r.p//r.q
+        0
 
     """
     is_real = True
@@ -596,13 +607,16 @@ class Rational(Number):
         return obj
 
     def limit_denominator(self, max_denominator=1000000):
-        """Closest Rational to self with denominator at most max_denominator.
+        """
+        Closest Rational to self with denominator at most max_denominator.
 
-        >>> from sympy import Rational
-        >>> Rational('3.141592653589793').limit_denominator(10)
-        22/7
-        >>> Rational('3.141592653589793').limit_denominator(100)
-        311/99
+        ::
+
+            >>> from sympy import Rational
+            >>> Rational('3.141592653589793').limit_denominator(10)
+            22/7
+            >>> Rational('3.141592653589793').limit_denominator(100)
+            311/99
 
         """
         # Algorithm notes: For any real number x, define a *best upper
@@ -840,9 +854,10 @@ class Rational(Number):
                                   use_rho=False,
                                   use_pm1=False,
                                   verbose=False):
-        """A wrapper to factorint which return factors of self that are
-        smaller than limit (or cheap to compute). Special methods of
-        factoring are disabled by default so that only trial division is used.
+        """
+        A wrapper to factorint which return factors of self that are smaller
+        than limit (or cheap to compute). Special methods of factoring are
+        disabled by default so that only trial division is used.
         """
         from sympy.ntheory import factorint
 
@@ -929,15 +944,20 @@ class Rational(Number):
         return sage.Integer(self.p)/sage.Integer(self.q)
 
     def as_content_primitive(self):
-        """Return the tuple (R, self/R) where R is the positive Rational
+        """
+        Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Example**
-        >>> from sympy import S
-        >>> (S(-3)/2).as_content_primitive()
-        (3/2, -1)
+        Example
+        =======
 
-        See docstring of Expr.as_content_primitive for more examples.
+        ::
+
+            >>> from sympy import S
+            >>> (S(-3)/2).as_content_primitive()
+            (3/2, -1)
+
+        See docstring of :meth:`Expr.as_content_primitive` for more examples.
         """
 
         if self and self.q:
@@ -1182,18 +1202,18 @@ class Integer(Rational):
 
     def _eval_power(b, e):
         """
-        Tries to do some simplifications on b ** e, where b is
+        Tries to do some simplifications on ``b ** e``, where b is
         an instance of Integer
 
         Returns None if no further simplifications can be done
 
         When exponent is a fraction (so we have for example a square root),
         we try to find a simpler representation by factoring the argument
-        up to factors of 2**15, e.g.
+        up to factors of ``2**15``, e.g.
 
           - sqrt(4) becomes 2
-          - sqrt(-4) becomes 2*I
-          - (2**(3+7)*3**(6+7))**Rational(1,7) becomes 6*18**(3/7)
+          - sqrt(-4) becomes 2\*I
+          - `(2**(3+7)*3**(6+7))**Rational(1,7)` becomes `6*18**(3/7)`
 
         Further simplification would require a special call to factorint on
         the argument which is not done here for sake of speed.
@@ -1359,8 +1379,8 @@ class RationalConstant(Rational):
     """
     Abstract base class for rationals with specific behaviors
 
-    Derived classes must define class attributes p and q and should probably all
-    be singletons.
+    Derived classes must define class attributes p and q and should probably
+    all be singletons.
     """
     __slots__ = []
 
@@ -1523,8 +1543,8 @@ class Infinity(RationalConstant):
         """
         e is symbolic object but not equal to 0, 1
 
-        oo ** nan -> nan
-        oo ** (-p) -> 0, p is number, oo
+        oo \*\* nan -> nan
+        oo \*\* (-p) -> 0, p is number, oo
         """
         if e.is_positive:
             return S.Infinity
@@ -1722,9 +1742,9 @@ class NumberSymbol(AtomicExpr):
         return AtomicExpr.__new__(cls)
 
     def approximation(self, number_cls):
-        """ Return an interval with number_cls endpoints
-        that contains the value of NumberSymbol.
-        If not implemented, then return None.
+        """
+        Return an interval with number_cls endpoints that contains the value
+        of NumberSymbol. If not implemented, then return None.
         """
 
     def _eval_evalf(self, prec):
@@ -1961,11 +1981,13 @@ class ImaginaryUnit(AtomicExpr):
         b is I = sqrt(-1)
         e is symbolic object but not equal to 0, 1
 
-        I ** r -> (-1)**(r/2) -> exp(r/2 * Pi * I) -> sin(Pi*r/2) + cos(Pi*r/2) * I, r is decimal
-        I ** 0 mod 4 -> 1
-        I ** 1 mod 4 -> I
-        I ** 2 mod 4 -> -1
-        I ** 3 mod 4 -> -I
+        ::
+
+            I ** r -> (-1)**(r/2) -> exp(r/2 * Pi * I) -> sin(Pi*r/2) + cos(Pi*r/2) * I, r is decimal
+            I ** 0 mod 4 -> 1
+            I ** 1 mod 4 -> I
+            I ** 2 mod 4 -> -1
+            I ** 3 mod 4 -> -I
         """
 
 

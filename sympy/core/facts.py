@@ -233,7 +233,7 @@ def split_rules_tt_tf_ft_ff(rules):
        and also rewrite them to be free of not-names
 
        Example
-       -------
+       =======
 
        'a' -> ['b', '!c']
 

@@ -11,15 +11,17 @@ from sympy.utilities.iterables import sift
 
 def integer_nthroot(y, n):
     """
-    Return a tuple containing x = floor(y**(1/n))
+    Return a tuple containing `x = floor(y**(1/n))`
     and a boolean indicating whether the result is exact (that is,
-    whether x**n == y).
+    whether `x**n == y`).
 
-    >>> from sympy import integer_nthroot
-    >>> integer_nthroot(16,2)
-    (4, True)
-    >>> integer_nthroot(26,2)
-    (5, False)
+    ::
+
+        >>> from sympy import integer_nthroot
+        >>> integer_nthroot(16,2)
+        (4, True)
+        >>> integer_nthroot(26,2)
+        (5, False)
 
     """
     y, n = int(y), int(n)
@@ -292,7 +294,7 @@ class Pow(Expr):
         return Pow(b, e)
 
     def _eval_expand_power_base(self, deep=True, **hints):
-        """(a*b)**n -> a**n * b**n"""
+        """`(a*b)**n` -> `a**n * b**n`"""
         force = hints.get('force', False)
         b, ewas = self.args
         if deep:
@@ -866,40 +868,43 @@ class Pow(Expr):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Examples**
+        Examples
+        ========
 
-        >>> from sympy import sqrt
-        >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
-        (2, sqrt(1 + sqrt(2)))
-        >>> sqrt(3 + 3*sqrt(2)).as_content_primitive()
-        (1, sqrt(3)*sqrt(1 + sqrt(2)))
+        ::
 
-        >>> from sympy import separate, powsimp, Mul
-        >>> from sympy.abc import x, y
+            >>> from sympy import sqrt
+            >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
+            (2, sqrt(1 + sqrt(2)))
+            >>> sqrt(3 + 3*sqrt(2)).as_content_primitive()
+            (1, sqrt(3)*sqrt(1 + sqrt(2)))
 
-        >>> ((2*x + 2)**2).as_content_primitive()
-        (4, (x + 1)**2)
-        >>> (4**((1 + y)/2)).as_content_primitive()
-        (2, 4**(y/2))
-        >>> (3**((1 + y)/2)).as_content_primitive()
-        (1, 3**((y + 1)/2))
-        >>> (3**((5 + y)/2)).as_content_primitive()
-        (9, 3**((y + 1)/2))
-        >>> eq = 3**(2 + 2*x)
-        >>> powsimp(eq) == eq
-        True
-        >>> eq.as_content_primitive()
-        (9, 3**(2*x))
-        >>> powsimp(Mul(*_))
-        9*9**x
+            >>> from sympy import separate, powsimp, Mul
+            >>> from sympy.abc import x, y
 
-        >>> eq = (2 + 2*x)**y
-        >>> s = separate(eq); s.is_Mul, s
-        (False, (2*x + 2)**y)
-        >>> eq.as_content_primitive()
-        (1, (2*(x + 1))**y)
-        >>> s = separate(_[1]); s.is_Mul, s
-        (True, 2**y*(x + 1)**y)
+            >>> ((2*x + 2)**2).as_content_primitive()
+            (4, (x + 1)**2)
+            >>> (4**((1 + y)/2)).as_content_primitive()
+            (2, 4**(y/2))
+            >>> (3**((1 + y)/2)).as_content_primitive()
+            (1, 3**((y + 1)/2))
+            >>> (3**((5 + y)/2)).as_content_primitive()
+            (9, 3**((y + 1)/2))
+            >>> eq = 3**(2 + 2*x)
+            >>> powsimp(eq) == eq
+            True
+            >>> eq.as_content_primitive()
+            (9, 3**(2*x))
+            >>> powsimp(Mul(*_))
+            9*9**x
+
+            >>> eq = (2 + 2*x)**y
+            >>> s = separate(eq); s.is_Mul, s
+            (False, (2*x + 2)**y)
+            >>> eq.as_content_primitive()
+            (1, (2*(x + 1))**y)
+            >>> s = separate(_[1]); s.is_Mul, s
+            (True, 2**y*(x + 1)**y)
 
         See docstring of Expr.as_content_primitive for more examples.
         """

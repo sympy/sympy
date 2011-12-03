@@ -52,16 +52,19 @@ def __cacheit(func):
        important: the result of cached function must be *immutable*
 
 
-       **Example**
+       Example
+       =======
 
-       >>> from sympy.core.cache import cacheit
-       >>> @cacheit
-       ... def f(a,b):
-       ...    return a+b
+       ::
 
-       >>> @cacheit
-       ... def f(a,b):
-       ...    return [a,b] # <-- WRONG, returns mutable object
+           >>> from sympy.core.cache import cacheit
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return a+b
+
+           >>> @cacheit
+           ... def f(a,b):
+           ...    return [a,b] # <-- WRONG, returns mutable object
 
        to force cacheit to check returned results mutability and consistency,
        set environment variable SYMPY_USE_CACHE to 'debug'
