@@ -410,16 +410,18 @@ class PrettyPrinter(Printer):
                 for i in reversed(range(1, d)):
                   lines.append('%s/%s' % (' '*i, ' '*(w - i)))
                 lines.append("/" + "_"*(w - 1) + ',')
-                return d, h + more, lines
+                return d, h + more, lines, 0
             else:
+                w = w + more
+                d = d + more    # only even number of lines
                 vsum = vobj('sum', 4)   # contains all characters necessary
-                lines.append("_"*(w + more))
-                for i in range(0, d + more): # only even number of lines
-                    lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i)))
-                for i in reversed(range(0, d + more)):
-                    lines.append('%s%s%s' % (' '*i, vsum[4], ' '*(w - i)))
-                lines.append(vsum[8]*(w + more))
-                return d, h + 2*more, lines
+                lines.append("_"*(w))
+                for i in range(0, d):
+                    lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i - 1)))
+                for i in reversed(range(0, d)):
+                    lines.append('%s%s%s' % (' '*i, vsum[4], ' '*(w - i - 1)))
+                lines.append(vsum[8]*(w))
+                return d, h + 2*more, lines, more
 
         f = expr.function
 
@@ -449,7 +451,7 @@ class PrettyPrinter(Printer):
             max_upper = max(max_upper, prettyUpper.height())
 
             # Create sum sign based on the height of the argument
-            d, h, slines = asum(H, prettyLower.width(), prettyUpper.width(), ascii_mode)
+            d, h, slines, adjustment = asum(H, prettyLower.width(), prettyUpper.width(), ascii_mode)
             prettySign = stringPict('')
             prettySign = prettyForm(*prettySign.stack(*slines))
 
@@ -459,13 +461,10 @@ class PrettyPrinter(Printer):
             prettySign = prettyForm(*prettySign.above(prettyUpper))
             prettySign = prettyForm(*prettySign.below(prettyLower))
 
-            # In UNICODE mode we need to modify vertical adjustment a bit
-            unicode_shift = 0
-
             if first:
                 # change F baseline so it centers on the sign
                 prettyF.baseline -= d - (prettyF.height()//2 -
-                                         prettyF.baseline) - unicode_shift
+                                         prettyF.baseline) - adjustment
                 first = False
 
             # put padding to the right
@@ -1367,4 +1366,3 @@ def pretty_print(expr, **settings):
     print pretty(expr, **settings)
 
 pprint = pretty_print
-
