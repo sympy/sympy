@@ -670,12 +670,3 @@ def test_integrate_series():
     assert diff(integrate(f, x), x) == f
 
     assert integrate(O(x**5), x) == O(x**6)
-
-def test_integrate_with_dsolve():
-    epsilon = 0.5
-    prepare = """from sympy import (symbols, Function, sin, exp, integrate); from sympy.solvers.ode import dsolve; x = symbols("x"); f = Function("f") """
-    integrate_time = Timer("integrate(x**2*exp(x)*sin(x), x)", prepare).timeit(10)
-    dsolve_time = Timer("dsolve(f(x).diff(x) - x**2*exp(x)*sin(x), f(x), hint='nth_linear_constant_coeff_undetermined_coefficients')", prepare).timeit(10)
-    
-    assert abs(integrate_time - dsolve_time) < epsilon
-
