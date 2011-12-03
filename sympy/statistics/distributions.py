@@ -108,8 +108,8 @@ class Normal(ContinuousProbability):
         p=0.95 gives a 95% confidence interval. Currently this function
         only handles numerical values except in the trivial case p=1.
 
-        Examples usage:
-            # One standard deviation
+        For example, one standard deviation:
+
             >>> from sympy.statistics import Normal
             >>> N = Normal(0, 1)
             >>> N.confidence(0.68)
@@ -117,7 +117,8 @@ class Normal(ContinuousProbability):
             >>> N.probability(*_).evalf()
             0.680000000000000
 
-            # Two standard deviations
+        Two standard deviations:
+
             >>> N = Normal(0, 1)
             >>> N.confidence(0.95)
             (-1.95996398454005, 1.95996398454005)
