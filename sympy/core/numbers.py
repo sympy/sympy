@@ -180,85 +180,39 @@ class Number(AtomicExpr):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number):
-            if self is S.NaN or other is S.NaN:
+            if other is S.NaN:
                 return S.NaN
-            elif self is S.Infinity:
-                if other is S.NegativeInfinity:
-                    return S.NaN
-                else:
-                    return S.Infinity
-            elif self is S.NegativeInfinity:
-                if other is S.Infinity:
-                    return S.NaN
-                else:
-                    return S.NegativeInfinity
             elif other is S.Infinity:
-                if self is S.NegativeInfinity:
-                    return S.NaN
-                else:
-                    return S.Infinity
+                return S.Infinity
             elif other is S.NegativeInfinity:
-                if self is S.Infinity:
-                    return S.NaN
-                else:
-                    return S.NegativeInfinity
+                return S.NegativeInfinity
         return AtomicExpr.__add__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number):
-            if self is S.NaN or other is S.NaN:
+            if other is S.NaN:
                 return S.NaN
-            elif self is S.Infinity:
-                if other is S.Infinity:
-                    return S.NaN
-                else:
-                    return S.Infinity
-            elif self is S.NegativeInfinity:
-                if other is S.NegativeInfinity:
-                    return S.NaN
-                else:
-                    return S.NegativeInfinity
             elif other is S.Infinity:
-                if self is S.Infinity:
-                    return S.NaN
-                else:
-                    return S.NegativeInfinity
+                return S.NegativeInfinity
             elif other is S.NegativeInfinity:
-                if self is S.NegativeInfinity:
-                    return S.NaN
-                else:
-                    return S.Infinity
+                return S.Infinity
         return AtomicExpr.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __mul__(self, other):
         if isinstance(other, Number):
-            if self is S.NaN or other is S.NaN:
+            if other is S.NaN:
                 return S.NaN
-            elif self is S.Infinity:
-                if other is S.Zero:
-                    return S.NaN
-                elif other > 0:
-                    return S.Infinity
-                else:
-                    return S.NegativeInfinity
-            elif self is S.NegativeInfinity:
-                if other is S.Zero:
-                    return S.NaN
-                elif other > 0:
-                    return S.NegativeInfinity
-                else:
-                    return S.Infinity
             elif other is S.Infinity:
-                if self is S.Zero:
+                if self == 0:
                     return S.NaN
                 elif self > 0:
                     return S.Infinity
                 else:
                     return S.NegativeInfinity
             elif other is S.NegativeInfinity:
-                if self is S.Zero:
+                if self == 0:
                     return S.NaN
                 elif self > 0:
                     return S.NegativeInfinity
@@ -269,33 +223,15 @@ class Number(AtomicExpr):
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
         if isinstance(other, Number):
-            if self is S.NaN or other is S.NaN:
+            if other is S.NaN:
                 return S.NaN
-            elif self is S.Infinity:
-                if other is S.Infinity or other is S.NegativeInfinity:
-                    return S.NaN
-                elif other >= 0:
-                    return S.Infinity
-                else:
-                    return S.NegativeInfinity
-            elif self is S.NegativeInfinity:
-                if other is S.Infinity or other is S.NegativeInfinity:
-                    return S.NaN
-                elif other >= 0:
-                    return S.NegativeInfinity
-                else:
-                    return S.Infinity
             elif other is S.Infinity:
-                if self is S.Infinity or self is S.NegativeInfinity:
-                    return S.NaN
-                elif self >= 0:
+                if self >= 0:
                     return S.Infinity
                 else:
                     return S.NegativeInfinity
             elif other is S.NegativeInfinity:
-                if self is S.Infinity or self is S.NegativeInfinity:
-                    return S.NaN
-                elif self >= 0:
+                if self >= 0:
                     return S.NegativeInfinity
                 else:
                     return S.Infinity
@@ -1533,6 +1469,12 @@ class Zero(IntegerConstant):
     def __neg__():
         return S.Zero
 
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        if other is S.NaN or other is S.NegativeInfinity or other is S.Infinity or other is S.ComplexInfinity:
+            return S.NaN
+        return S.Zero
+
     def _eval_power(b, e):
         if e.is_negative:
             return S.Infinity
@@ -1648,13 +1590,72 @@ class Infinity(Number):
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if isinstance(other, Number):
+            if other is S.NegativeInfinity or other is S.NaN:
+                return S.NaN
+            elif other.is_Float:
+                return Float('inf')
+            else:
+                return S.Infinity
+        return NotImplemented
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        if isinstance(other, Number):
+            if other is S.Infinity or other is S.NaN:
+                return S.NaN
+            elif other.is_Float:
+                return Float('inf')
+            else:
+                return S.Infinity
+        return NotImplemented
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            if other is S.Zero or other is S.NaN:
+                return S.NaN
+            elif other.is_Float:
+                if other > 0:
+                    return Float('inf')
+                else:
+                    return Float('-inf')
+            else:
+                if other > 0:
+                    return S.Infinity
+                else:
+                    return S.NegativeInfinity
+        return NotImplemented
+    __rmul__ = __mul__
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        if isinstance(other, Number):
+            if other is S.Infinity or other is S.NegativeInfinity or other is S.NaN:
+                return S.NaN
+            elif other.is_Float:
+                if other >= 0:
+                    return Float('inf')
+                else:
+                    return Float('-inf')
+            else:
+                if other >= 0:
+                    return S.Infinity
+                else:
+                    return S.NegativeInfinity
+        return NotImplemented
+
+    __truediv__ = __div__
+
     def __abs__(self):
         return S.Infinity
 
     def __neg__(self):
         return S.NegativeInfinity
 
-    def _eval_power(base, exp):
+    def _eval_power(self, exp):
         """
         ``exp`` is symbolic object but not equal to 0 or 1.
 
@@ -1676,7 +1677,7 @@ class Infinity(Number):
         n = exp.evalf()
 
         if isinstance(n, Number):
-            return base**n
+            return self**n
 
     def _as_mpf_val(self, prec):
         return mlib.finf
@@ -1729,6 +1730,64 @@ class NegativeInfinity(Number):
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if isinstance(other, Number):
+            if other is S.Infinity or other is S.NaN:
+                return S.NaN
+            elif other.is_Float:
+                return Float('-inf')
+            else:
+                return S.NegativeInfinity
+        return NotImplemented
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        if isinstance(other, Number):
+            if other is S.NegativeInfinity or other is S.NaN:
+                return S.NaN
+            elif other.is_Float:
+                return Float('-inf')
+            else:
+                return S.NegativeInfinity
+        return NotImplemented
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        if isinstance(other, Number):
+            if other is S.Zero or other is S.NaN:
+                return S.NaN
+            elif other.is_Float:
+                if other > 0:
+                    return Float('-inf')
+                else:
+                    return Float('inf')
+            else:
+                if other > 0:
+                    return S.NegativeInfinity
+                else:
+                    return S.Infinity
+        return NotImplemented
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        if isinstance(other, Number):
+            if other is S.Infinity or other is S.NegativeInfinity or other is S.NaN:
+                return S.NaN
+            elif other.is_Float:
+                if other >= 0:
+                    return Float('-inf')
+                else:
+                    return Float('inf')
+            else:
+                if other >= 0:
+                    return S.NegativeInfinity
+                else:
+                    return S.Infinity
+        return NotImplemented
+
+    __truediv__ = __div__
 
     def __abs__(self):
         return S.Infinity
@@ -1811,6 +1870,24 @@ class NaN(Number):
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        return self
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        return self
+
+    @_sympifyit('other', NotImplemented)
+    def __mul__(self, other):
+        return self
+
+    @_sympifyit('other', NotImplemented)
+    def __div__(self, other):
+        return self
+
+    __truediv__ = __div__
+
     def _as_mpf_val(self, prec):
         return mlib.fnan
 
@@ -1832,6 +1909,18 @@ class NaN(Number):
 
     def __ne__(self, other):
         return other is not S.NaN
+
+    def __gt__(self, other):
+        return False
+
+    def __ge__(self, other):
+        return False
+
+    def __lt__(self, other):
+        return False
+
+    def __le__(self, other):
+        return False
 
 nan = S.NaN
 
