@@ -889,7 +889,7 @@ def integrate(*args, **kwargs):
 
         for limit in limits:
             integrate_symbols.append(limit[0])
-            if len(limit) > 1: 
+            if len(limit) > 1:
                 is_indefinite = False
                 break
     
