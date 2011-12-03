@@ -193,8 +193,8 @@ Można podstawiać w ich miejsce inne symbole i liczby używając ``subs(stary, 
 
     >>> ((x+y)**2).subs(x, y)
     4*y**2
-	
-	>>> ((x+y)**2).subs(x, 1 - y)
+
+    >>> ((x+y)**2).subs(x, 1 - y)
     1
 
 W pozostałej części tutoriala zakładamy, że wykonaliśmy następujące polecenie::
