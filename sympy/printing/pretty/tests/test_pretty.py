@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from sympy import (Basic, Matrix, Piecewise, Ne, symbols, sqrt, Function,
     Rational, conjugate, Derivative, tan, Function, log, floor, Symbol, Tuple,
-    pprint, sqrt, factorial, binomial, pi, sin, ceiling, pprint_use_unicode,
+    pprint, sqrt, factorial, factorial2, binomial, pi, sin, ceiling, pprint_use_unicode,
     I, S, Limit, oo, cos, atan2, Pow, Integral, exp, Eq, Lt, Gt, Ge, Le, gamma, Abs,
     RootOf, RootSum, Lambda, Not, And, Or, Xor, Nand, Nor, Implies, Equivalent,
     Sum, Subs, FF, ZZ, QQ, RR, O, uppergamma, lowergamma, hyper, meijerg, Dict,
@@ -992,6 +992,65 @@ u"""\
 u"""\
 (n + 1)!\
 """
+
+    assert  pretty(expr) in [ascii_str_1, ascii_str_2]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2]
+
+    n = Symbol('n', integer=True)
+    expr = factorial2(n)
+    ascii_str = \
+"""\
+n!!\
+"""
+    ucode_str = \
+u"""\
+n!!\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = factorial2(2*n)
+    ascii_str = \
+"""\
+(2*n)!!\
+"""
+    ucode_str = \
+u"""\
+(2⋅n)!!\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = factorial2(factorial2(factorial2(n)))
+    ascii_str = \
+"""\
+((n!!)!!)!!\
+"""
+    ucode_str = \
+u"""\
+((n!!)!!)!!\
+"""
+    assert  pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = factorial2(n+1)
+    ascii_str_1 = \
+"""\
+(1 + n)!!\
+"""
+    ascii_str_2 = \
+"""\
+(n + 1)!!\
+"""
+    ucode_str_1 = \
+u"""\
+(1 + n)!!\
+"""
+    ucode_str_2 = \
+u"""\
+(n + 1)!!\
+"""
+
     assert  pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
