@@ -1406,7 +1406,8 @@ class Matrix(object):
         Both self and X can be a row or a column matrix in any order
         (jacobian() should always work).
 
-        Examples::
+        Examples
+        ========
 
             >>> from sympy import sin, cos, Matrix
             >>> from sympy.abc import rho, phi
@@ -1823,17 +1824,19 @@ class Matrix(object):
         The empty matrix is square by definition, since the number of rows and
         the number of columns are both zero.
 
-        Example::
-            >>> from sympy import Matrix
-            >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
-            >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-            >>> c = Matrix([])
-            >>> a.is_square
-            False
-            >>> b.is_square
-            True
-            >>> c.is_square
-            True
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> c = Matrix([])
+        >>> a.is_square
+        False
+        >>> b.is_square
+        True
+        >>> c.is_square
+        True
 
         """
         return self.rows == self.cols
@@ -1847,20 +1850,23 @@ class Matrix(object):
         to be considered zero.  The empty matrix is zero by the principle of
         vacuous truth.
 
-        Example::
-            >>> from sympy import Matrix, zeros
-            >>> a = Matrix([[0, 0], [0, 0]])
-            >>> b = zeros(3, 4)
-            >>> c = Matrix([[0, 1], [0, 0]])
-            >>> d = Matrix([])
-            >>> a.is_zero
-            True
-            >>> b.is_zero
-            True
-            >>> c.is_zero
-            False
-            >>> d.is_zero
-            True
+        Examples
+        ========
+
+        >>> from sympy import Matrix, zeros
+        >>> a = Matrix([[0, 0], [0, 0]])
+        >>> b = zeros(3, 4)
+        >>> c = Matrix([[0, 1], [0, 0]])
+        >>> d = Matrix([])
+        >>> a.is_zero
+        True
+        >>> b.is_zero
+        True
+        >>> c.is_zero
+        False
+        >>> d.is_zero
+        True
+
         """
         return all(i.is_zero for i in self)
 
@@ -3803,6 +3809,7 @@ def rot_axis3(theta):
     >>> from sympy.matrices import rot_axis3
 
     A rotation of pi/3 (60 degrees):
+
     >>> theta = pi/3
     >>> rot_axis3(theta)
     [       1/2, sqrt(3)/2, 0]
@@ -3810,7 +3817,8 @@ def rot_axis3(theta):
     [         0,         0, 1]
 
     If we rotate by pi/2 (90 degrees):
-    >> rot_axis3(pi/2)
+
+    >>> rot_axis3(pi/2)
     [ 0, 1, 0]
     [-1, 0, 0]
     [ 0, 0, 1]
@@ -3833,6 +3841,7 @@ def rot_axis2(theta):
     >>> from sympy.matrices import rot_axis2
 
     A rotation of pi/3 (60 degrees):
+
     >>> theta = pi/3
     >>> rot_axis2(theta)
     [      1/2, 0, -sqrt(3)/2]
@@ -3840,6 +3849,7 @@ def rot_axis2(theta):
     [sqrt(3)/2, 0,        1/2]
 
     If we rotate by pi/2 (90 degrees):
+
     >>> rot_axis2(pi/2)
     [0, 0, -1]
     [0, 1,  0]
@@ -3863,6 +3873,7 @@ def rot_axis1(theta):
     >>> from sympy.matrices import rot_axis1
 
     A rotation of pi/3 (60 degrees):
+
     >>> theta = pi/3
     >>> rot_axis1(theta)
     [1,          0,         0]
@@ -3870,6 +3881,7 @@ def rot_axis1(theta):
     [0, -sqrt(3)/2,       1/2]
 
     If we rotate by pi/2 (90 degrees):
+
     >>> rot_axis1(pi/2)
     [1,  0, 0]
     [0,  0, 1]
