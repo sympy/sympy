@@ -1636,10 +1636,10 @@ class Matrix(object):
     def multiply_elementwise(self, b):
         """Return the Hadamard product (elementwise product) of A and B
 
-        >>> import sympy
-        >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> print A.multiply_elementwise(B)
+        >>> from sympy.matrices.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
         [  0, 10, 200]
         [300, 40,   5]
         """
@@ -1668,16 +1668,16 @@ class Matrix(object):
         >>> from sympy import Matrix, Symbol, trigsimp, cos, sin
         >>> x = Symbol('x', real=True)
         >>> v = Matrix([cos(x), sin(x)])
-        >>> print trigsimp( v.norm() )
+        >>> trigsimp( v.norm() )
         1
-        >>> print v.norm(10)
+        >>> v.norm(10)
         (sin(x)**10 + cos(x)**10)**(1/10)
         >>> A = Matrix([[1,1], [1,1]])
-        >>> print A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
+        >>> A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
         2
-        >>> print A.norm(-2) # Inverse spectral norm (smallest singular value)
+        >>> A.norm(-2) # Inverse spectral norm (smallest singular value)
         0
-        >>> print A.norm() # Frobenius Norm
+        >>> A.norm() # Frobenius Norm
         2
         """
 
@@ -2293,16 +2293,16 @@ class Matrix(object):
         When invertible_check is True, an error will be raised if the matrix is found to
         not be invertible.
         """
-        pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
+        pivot, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
-            if pivots == r.rows:
+            if pivot == r.rows:
                 break
             if simplified:
-                r[pivots,i] = simplify(r[pivots,i])
-            if iszerofunc(r[pivots,i]):
-                for k in range(pivots, r.rows):
-                    if simplified and k > pivots:
+                r[pivot,i] = simplify(r[pivot,i])
+            if iszerofunc(r[pivot,i]):
+                for k in range(pivot, r.rows):
+                    if simplified and k > pivot:
                         r[k,i] = simplify(r[k,i])
                     if not iszerofunc(r[k,i]):
                         break
@@ -2310,16 +2310,18 @@ class Matrix(object):
                     if invertible_check:
                         raise ValueError("Matrix det == 0; not invertible.")
                     continue
-                r.row_swap(pivots,k)
-            scale = r[pivots,i]
-            r.row(pivots, lambda x, _: x/scale)
+                r.row_swap(pivot,k)
+            scale = r[pivot,i]
+            r.row(pivot, lambda x, _: x/scale)
             for j in range(r.rows):
-                if j == pivots:
+                if j == pivot:
                     continue
                 scale = r[j,i]
-                r.row(j, lambda x, k: x - scale*r[pivots,k])
+                r.row(j, lambda x, k: x - scale*r[pivot,k])
             pivotlist.append(i)
-            pivots += 1
+            pivot += 1
+        if invertible_check and any(iszerofunc(r[j, j]) for j in range(min(r.rows, r.cols))):
+            raise ValueError("Matrix det == 0; not invertible.")
         return r, pivotlist
 
     def nullspace(self, simplified=False):
@@ -2381,13 +2383,13 @@ class Matrix(object):
 
            >>> p, q, r = M.berkowitz()
 
-           >>> print p # 1 x 1 M's sub-matrix
+           >>> p # 1 x 1 M's sub-matrix
            (1, -x)
 
-           >>> print q # 2 x 2 M's sub-matrix
+           >>> q # 2 x 2 M's sub-matrix
            (1, -x, -y)
 
-           >>> print r # 3 x 3 M's sub-matrix
+           >>> r # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
@@ -2538,7 +2540,7 @@ class Matrix(object):
         >>> from sympy import Matrix, Symbol, eye
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
-        >>> print A.singular_values()
+        >>> A.singular_values()
         [1, sqrt(x**2 + 1), 0]
         """
         # Compute eigenvalues of A.H A
@@ -2563,7 +2565,7 @@ class Matrix(object):
 
         >>> from sympy import Matrix, S
         >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
-        >>> print A.condition_number()
+        >>> A.condition_number()
         100
         """
 
@@ -3034,10 +3036,10 @@ def matrix_multiply(A, B):
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
-    >>> import sympy
-    >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
-    >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
-    >>> print sympy.matrices.matrix_multiply_elementwise(A, B)
+    >>> from sympy.matrices.matrices import Matrix, matrix_multiply_elementwise
+    >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+    >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+    >>> matrix_multiply_elementwise(A, B)
     [  0, 10, 200]
     [300, 40,   5]
     """
@@ -3047,8 +3049,8 @@ def matrix_multiply_elementwise(A, B):
     return Matrix(shape[0], shape[1],
         lambda i, j: A[i,j] * B[i, j])
 
-def matrix_add(A,B):
-    """Return A+B"""
+def matrix_add(A, B):
+    """Return A + B"""
     if A.shape != B.shape:
         raise ShapeError()
     alst = A.tolist()
