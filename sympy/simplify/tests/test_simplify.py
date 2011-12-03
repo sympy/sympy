@@ -4,9 +4,9 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float)
+    factor, Mul, O, hyper, Add, Float, condense)
 from sympy.core.mul import _keep_coeff
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
 
@@ -808,3 +808,82 @@ def test_as_content_primitive():
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
             (S(1)/14, 7.0*x + 21*y + 10*z)
+
+condense_orig = condense
+def check_condense(expr, variable, constant_name='C', numbers=False, reps=False):
+    rv = condense_orig(expr, variable, constant_name)
+    if not reps:
+        rv = rv[0]
+    return rv
+
+def test_condense():
+    x,y,z,C,k = symbols('x y z C k')
+    C0, C1, C2, C3, C4 = symbols('C:5')
+    k0, k1, k2 = symbols('k:3')
+
+    assert check_condense(y + C, x) == C0
+    assert check_condense(y + C + C4, x) == C0
+    assert check_condense(y + z, x, 'C') == C0
+    assert check_condense(y + z, x) == C0
+    assert check_condense(k + z, k, 'k') == k + k0
+    raises(ValueError, 'check_condense(k2 + z, k2, "k")')
+    assert check_condense(Integral(x, (x, 1, 2)), x) == C0
+    assert check_condense(x**2*y*exp(x+z) + x*y + x*z, x, 'C') == C0*x + C1*x**2*exp(x)
+    assert check_condense(x**2*y*exp(x+z) + x*y + x*z, x, 'k') == k0*x + k1*x**2*exp(x)
+    assert check_condense(3 + y*x + x*z, x) == C0 + C1*x
+    assert check_condense(3 + y*x + x*z + x**2*z, x) == C0 + C1*x + C2*x**2
+    assert check_condense(x - y, x) == C0 + x
+    assert check_condense(-x + y, x) == C0 - x
+    assert check_condense(-2*x + y, x) == C0 + C1*x
+    assert check_condense(exp(x + 3) + exp(x + 4), x) == C0*exp(x)
+    assert check_condense(a*exp(x) + b*exp(x + 4), x) == C0*exp(x)
+    assert check_condense((x + C1)/(x + C2), x) == (C0 + x)/(C1 + x)
+    assert check_condense(exp(x + C1)/exp(x + C2), x) == C0
+    assert check_condense((x + 2 + C1)/(x + C2), x) != 1
+    assert check_condense(2*sqrt(a*x), x) == C0*sqrt(x) # XXX is it ok to pull out the constant?
+    assert check_condense((2 + x + 3*x**2 + a*x**2), x) == C0 + C1*x**2 + x
+    assert check_condense((2 + x + 3*x**2), x) == C0 + C1*x**2 + x
+    assert check_condense(a*x + b*x, x) == C0*x
+    assert check_condense(2*(a*x)**(1 + x), x, reps=True) == (C0*C1**x*x**(x + 1), {C0: 2*a, C1: a})
+    assert check_condense(2*(a*x)**(a + x), x, reps=True) == (C0*C1**x*x**(C1 + x), {C0: 2*a**a, C1: a})
+    assert check_condense(C1*exp(3 + x), x) == C0*exp(x)
+    assert check_condense(3*exp(C1 + x), x) == C0*exp(x)
+    assert check_condense(a*exp(4 + x)*exp(2*x + 3), x, reps=True) == (C0*exp(C1*x), {C0: a*exp(7), C1: 3})
+    assert check_condense(C4*(C0 + C1*x)/(C2 + C3*x), x) == (C0 + C1*x)/(C2 + C3*x)
+    assert check_condense(C4/(C2 + C3*x), x) == 1/(C0 + C1*x)
+    assert check_condense(C4/(C2 + C3*x)**2, x, reps=True) == \
+          ((C0 + C1*x)**(-2), {C0: C2/sqrt(C4), C1: C3/sqrt(C4)})
+    assert check_condense(C4/(C2 + C3*x)**a, x, reps=True) == \
+          ((C0 + C1*x)**C2, {C2: -a, C0: C2*C4**(-1/a), C1: C3*C4**(-1/a)})
+    assert check_condense(a*(y*x + z), x) == C0 + C1*x
+    assert check_condense(a*cos(x), x) == C0*cos(x)
+    assert check_condense(2*a*x, x) == C0*x
+
+    assert check_condense(1/(x + y + exp(x + 2 + y)), x, reps=True) == \
+        (1/(C0 + C1*exp(x) + x), {C0: y, C1: exp(2)*exp(y)})
+    e = exp(2 + y + x)
+    # keep the shorter representation if given the choice
+    # (so exp(2+y) is better than 1/exp(2+y)
+    assert check_condense(e - 1/e, x, reps=True) == \
+        (C0*exp(x) - exp(-x)/C0, {C0: exp(2)*exp(y)})
+    # but keep constants in the numerator if there is no alternate,
+    # so C0*exp(-x) instead of exp(-x)/C0 (with C0 = exp(3+y))
+    assert check_condense(e - 1/exp(3 + y + x), x, reps=True) == \
+        (C0*exp(-x) + C1*exp(x), {C0: -exp(-3)*exp(-y), C1: exp(2)*exp(y)})
+    assert check_condense(3*y*x, x, reps=True) == (C0*x, {C0: 3*y})
+    assert check_condense(x + a/(y + b + x), x, reps=True) ==(x + 1/(C0 + C1*x), {C0: b/a + y/a, C1: 1/a})
+    assert check_condense(x*(a + b) + sin(x)*(-a - b), x, reps=True) == (C0*x - C0*sin(x), {C0: a + b})
+    assert check_condense(x*(a+b)+sin(x)/(a+b),x, reps=True) == (C0*x + sin(x)/C0, {C0: a + b})
+    assert check_condense(log(3*x), x) == C0 + log(x)
+
+    p = a + b
+    m = -p
+    assert check_condense(x*p + sin(x)*m, x, reps=True) == (C0*x - C0*sin(x), {C0: a + b})
+    assert check_condense(sin(x)*p + exp(x)*m, x, reps=True) == (C0*sin(x) + exp(x)/C0, {C0: a + b})
+    m = 1/p
+    assert check_condense(x*p + sin(x)*m, x, reps=True) == (C0*x + sin(x)/C0, {C0: a + b})
+    assert check_condense(x*m + sin(x)*p, x, reps=True) == (C0*sin(x) + x/C0, {C0: a + b})
+    m = -1/p
+    assert check_condense(x*p + sin(x)*m, x, reps=True) == (C0*x + sin(x)/C0, {C0: a + b})
+    assert check_condense(x*m + sin(x)*p, x, reps=True) == (C0*sin(x) + x/C0, {C0: a + b})
+    assert check_condense(x*a + x*b - y, x, reps=True) == (C0 + C1*x, {C0: -y, C1: a + b})

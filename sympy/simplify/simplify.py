@@ -4,15 +4,15 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms)
+    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms, symbols)
 
 from sympy.core.compatibility import iterable, reduce
-from sympy.core.numbers import igcd, Float
+from sympy.core.numbers import igcd, Float, pi
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 
-from sympy.utilities import flatten, default_sort_key
+from sympy.utilities import flatten, default_sort_key, preorder_traversal
 from sympy.functions import gamma, exp, sqrt, log, root
 
 from sympy.simplify.cse_main import cse
@@ -21,6 +21,8 @@ from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, terms_gcd, lcm, gcd)
 
 import sympy.mpmath as mpmath
+
+from string import digits
 
 def fraction(expr, exact=False):
     """Returns a pair with expression's numerator and denominator.
@@ -1308,8 +1310,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             for b, e in be:
                 if b in skip:
                     continue
-                bpos = b.is_positive
-                if bpos:
+                if b.is_positive:
                     binv = 1/b
                     if b != binv and binv in c_powers:
                         if b.as_numer_denom()[0] is S.One:
@@ -2234,3 +2235,226 @@ def _logcombine(expr, force=False):
         _logcombine(expr.args[1], force)
 
     return expr
+
+def _condense(expr, var, _symbols={}):
+    """
+    Replaces subexpressions not containing var with symbols.
+    Returns the modified expression along with a dict of substitutions.
+    """
+    from sympy.utilities.iterables import sift
+    def collect(expr, var):
+        """A non-greedy collection of like var-containing terms in an Add expr.
+        the _symbols dictionary is modified in-place."""
+        if not expr.is_Add:
+            return expr
+        terms = {}
+        for m in expr.args:
+            i, d = m.as_independent(var)
+            terms.setdefault(d, []).append(i)
+        args = []
+        hit = False
+        for k, v in terms.iteritems():
+            if len(v) > 1:
+                c = Add(*v)
+                s = Symbol("C" + str(len(_symbols)))
+                _symbols[s] = c
+                hit = True
+            else:
+                s = v[0]
+            args.append(k*s)
+        if hit:
+            return Add(*args)
+        return expr
+
+    expr = sympify(expr)
+    var = sympify(var)
+    if not _symbols:
+        _symbols = {}
+    if expr is not S.NegativeOne and var not in expr.free_symbols:
+        s = Symbol("C" + str(len(_symbols)), positive=True)
+        _symbols[s] = expr
+        return s, _symbols
+    if expr.is_Atom:
+        return expr, _symbols
+    if expr.is_Mul:
+        # look for an Add to put the leading constant into
+        i, d = expr.as_independent(var)
+        hit = True
+        if i != 1:
+            args = list(Mul.make_args(d))
+            for _, a in enumerate(args):
+                b, e = a.as_base_exp()
+                if b.is_Add:
+                    ie = 1/e
+                    args[_] = Add(*[i**ie*ai for ai in b.args])**e
+                    break
+            else:
+                hit = False
+            if hit:
+                expr = Mul(*args)
+    if expr.is_Add:
+        expr = collect(expr, var)
+    if expr.is_Add or expr.is_Mul:
+        i, d = expr.as_independent(var)
+        if not i.is_Number or abs(i) != expr.identity:
+            s = Symbol("C" + str(len(_symbols)))
+            _symbols[s] = i
+            i = s
+            if expr.is_Add and d or expr.is_Mul and d != 1:
+                d, _symbols = _condense(d, var, _symbols)
+            if d.is_Mul:
+                d = powsimp(d)
+            return expr.func(i, d), _symbols
+    args = []
+    for a in expr.args:
+        a, _symbols = _condense(a, var, _symbols)
+        args.append(a)
+    rv = expr.func(*args)
+    if rv.is_Mul:
+        rv = powsimp(rv)
+    return rv, _symbols
+
+def condense(eq, x, constant_name='C'):
+    """Return ``expr`` with all symbols different than ``x``
+    absorbed into constant(s) with name ``constant_name`` having consecutive
+    numbers e.g. C0, C1, C2, .... The absorbing is done by combining added or
+    multiplied constants, and by expanding powers that have an added constant
+    in the exponent. Rational powers are not replaced..
+
+    Examples::
+
+    >>> from sympy import condense, exp
+    >>> from sympy.abc import x, y, z
+    >>> condense(y + 3, x)
+    (C0, {C0: y + 3})
+    >>> condense(y + 3, x, 'k')[0]
+    k0
+    >>> condense(x + 3, x)[0]
+    C0 + x
+    >>> condense(-x + 3, x)[0]
+    C0 - x
+    >>> condense(x + 3*y, x)[0]
+    C0 + x
+    >>> condense(x + 3*y, x, 'x')[0]
+    x + x0
+    >>> condense(exp(x + 3), x)[0]
+    C0*exp(x)
+    >>> condense(y*exp(x + 3), x)[0]
+    C0*exp(x)
+    """
+
+    def renum(eq, k=0, map={}, cons=[]):
+        """Number the constant symbols ``cons`` that have been introduced
+        starting from ``k`` and return ``map`` showing the replacements.
+        """
+        if eq in cons:
+            if eq not in map:
+                ss = Symbol(constant_name + str(k))
+                map[eq] = ss
+                k += 1
+            else:
+                ss = map[eq]
+            return ss, k, map
+        elif eq.is_Atom:
+            return eq, k, map
+        else:
+            # sort args without regard to u by using as a key the expression
+            # with the constants's replaced with 1's.
+            args = list(eq.args)
+            if eq.is_Add or eq.is_Mul:
+                unify = zip(cons, [S.One]*len(cons))
+                sargs = sorted([(e.subs(unify), e)
+                                      for e in eq.args], key=default_sort_key)
+                # put integer negative powers last
+                if eq.is_Mul:
+                    from sympy.utilities.iterables import sift
+                    d = sift(sargs, lambda w: w[0].is_Pow and w[0].exp.is_Integer and w[0].exp < 0)
+                    sargs = d.get(False, []) + d.get(True, [])
+                args = [i[1] for i in sargs]
+            for i, a in enumerate(args):
+                a, k, map = renum(a, k, map, cons)
+                args[i] = a
+            return eq.func(*args), k, map
+
+    # if x is a numbered symbol having the same root name as the
+    # constant name then we raise an error
+    def is_csym(x):
+        return x.is_Symbol and (x.name.startswith(constant_name) and
+            len(x.name) > len(constant_name) and
+            all(ch in digits for ch in x.name[len(constant_name):]))
+    if is_csym(x):
+        raise ValueError('Chosen constant name clashes with the variable %s' % x)
+
+    # expand any powers and logs
+    eq = eq.expand(power_base=True, power_exp=True, log=True, force=True,
+                   mul=False, multinomial=False, basic=False)
+
+    # identify constants
+    eq, d = _condense(eq, x)
+
+    # update rhs
+    free = eq.free_symbols
+    for k, v in d.items():
+        if v in d and v not in free:
+            d.pop(k)
+            eq  = eq.subs(k, v)
+
+    # restore Rational powers
+    reps = {}
+    for p in eq.atoms(Pow):
+        i = d.get(p.exp,pi)
+        if i.is_Rational:
+            reps[p] = p.base**i
+    eq = eq.subs(reps)
+
+    # unify duplicates
+    dups = {}
+    for k, v in d.items():
+        #k, v = C, expression
+        dups.setdefault(v, []).append(k)
+        # if this is shorter than any alternates, replace
+        # alternates with this
+        vv = -v
+        if vv in dups:
+            if count_ops(v) < count_ops(vv):
+                eq = eq.subs(dups[vv][0], -dups[v][0])
+                dups[v].extend(dups.pop(vv)[1:])
+            else:
+                eq = eq.subs(dups[v][0], 1/dups[vv][0])
+                dups[vv].extend(dups.pop(v)[1:])
+            continue
+        vv = 1/v
+        if vv in dups:
+            if count_ops(v) < count_ops(vv):
+                eq = eq.subs(dups[vv][0], 1/dups[v][0])
+                dups[v].extend(dups.pop(vv)[1:])
+            else:
+                eq = eq.subs(dups[v][0], 1/dups[vv][0])
+                dups[vv].extend(dups.pop(v)[1:])
+            continue
+        vv = -1/v
+        if vv in dups:
+            if count_ops(v) < count_ops(vv):
+                eq = eq.subs(dups[vv][0], -1/dups[v][0])
+                dups[v].extend(dups.pop(vv)[1:])
+            else:
+                eq = eq.subs(dups[v][0], 1/dups[vv][0])
+                dups[vv].extend(dups.pop(v)[1:])
+            continue
+    d = {}
+    for k, v in dups.iteritems():
+        if len(v) > 1:
+            for vi in v[1:]:
+                eq = eq.subs(vi, v[0])
+        d[v[0]] = k
+
+    # renumber constants
+    renumbered, _, map = renum(eq, cons=d.keys())
+    map = dict([(v, k) for k, v in map.items()])
+
+    # update the original mapping
+    for k, v in map.items():
+        map[k] = v.subs(d)
+
+    # done
+    return renumbered, map
