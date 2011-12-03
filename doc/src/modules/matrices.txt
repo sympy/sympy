@@ -489,7 +489,6 @@ Matrix Class Reference
 ----------------------
 .. autoclass:: Matrix
    :members:
-   :undoc-members:
 
 .. autoclass:: SparseMatrix
    :members:
