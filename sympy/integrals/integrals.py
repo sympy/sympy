@@ -892,7 +892,7 @@ def integrate(*args, **kwargs):
             if len(limit) > 1:
                 is_indefinite = False
                 break
-    
+
     dsolve_hint = 'nth_linear_constant_coeff_undetermined_coefficients'
     if is_indefinite and len(symbols) == 1 and not expr.getO() \
             and dsolve_hint in classify_ode(f(*symbols).diff(*integrate_symbols) - expr, f(*symbols)):
