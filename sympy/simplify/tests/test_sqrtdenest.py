@@ -1,6 +1,5 @@
-from sympy import (cse, expand_mul, I, Integral, Rational, solve, sqrt,
-                   sqrtdenest, symbols, radsimp, root)
-from sympy.simplify.sqrtdenest import denester
+from sympy import sqrt, Rational, sqrtdenest, Integral
+from sympy.simplify.sqrtdenest import _denester
 from sympy.utilities.pytest import XFAIL
 
 def test_sqrtdenest():
@@ -11,6 +10,9 @@ def test_sqrtdenest():
             sqrt(6+3*sqrt(7))/(sqrt(2)*(5+2*sqrt(7))**Rational(1,4)) +
             3*(5+2*sqrt(7))**Rational(1,4)/(sqrt(2)*sqrt(6+3*sqrt(7))),
         sqrt(3+2*sqrt(3)): 3**Rational(1,4)/sqrt(2)+3/(sqrt(2)*3**Rational(1,4))}
+    for i in d:
+        assert sqrtdenest(i) == d[i] or _denester([i])[0] == d[i]
+
 def test_sqrtdenest2():
     assert sqrtdenest(sqrt(16-2*sqrt(29)+2*sqrt(55-10*sqrt(29)))) == \
             sqrt(5) + sqrt(11-2*sqrt(29))
