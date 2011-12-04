@@ -941,7 +941,7 @@ def collect_sqrt(expr, evaluate=True):
         vars.reverse() # since it will be reversed below
     vars.sort(key=count_ops)
     vars.reverse()
-    d = collect_const(expr, *vars, first=False)
+    d = collect_const(expr, *vars, **dict(first=False))
     hit = expr != d
     d *= coeff
 
@@ -996,9 +996,9 @@ def collect_const(expr, *vars, **first):
         c, p = S.One, expr
     if c is not S.One:
         if not vars:
-            return _keep_coeff(c, collect_const(p, *vars, first=False))
+            return _keep_coeff(c, collect_const(p, *vars, **dict(first=False)))
         # else don't leave the Rational on the outside
-        return c*collect_const(p, *vars, first=False)
+        return c*collect_const(p, *vars, **dict(first=False))
 
     if not (expr.is_Add or expr.is_Mul):
         return expr
