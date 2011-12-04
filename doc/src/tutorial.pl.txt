@@ -89,7 +89,7 @@ isympy
     >>> from __future__ import division
     >>> from sympy import *
     >>> x, y, z, t = symbols('x y z t')
-    >>> k, m, n = symbols('k m n', integer=True) 
+    >>> k, m, n = symbols('k m n', integer=True)
     >>> f, g, h = symbols('f g h', cls=Function)
 
     Documentation can be found at http://www.sympy.org
@@ -130,13 +130,13 @@ Klasa Rational reprezentuje liczbę wymierną jako parę dwóch liczb całkowity
 
 Należy zachować ostrożność, pracując z liczbami całkowitymi i zmiennoprzecinkowymi w Pythonie, szczególnie podczas dzielenia. Można bowiem przypadkowo utworzyć liczbę obsługiwaną przez samego Pythona, a nie przez SymPy. Dzielenie przez siebie dwóch Pythonowych liczb całkowitych może dać w wyniku liczbę zmiennoprzecinkową -- jest to standard "prawidłowego dzielenia" z Pythona 3 i domyślne zachowanie ``isympy``, który importuje dzielenie z __future__::
 
-   >>> 1/2 #doctest: +SKIP
-   0.5
+    >>> 1/2 #doctest: +SKIP
+    0.5
 
 We wcześniejszych wersjach Pythona, gdzie takie dzielenie nie było zaimportowane, wynik był ucinany do liczby całkowitej::
 
-   >>> 1/2 #doctest: +SKIP
-   0
+    >>> 1/2 #doctest: +SKIP
+    0
 
 Jednakże, w obu przypadkach, nie operowaliśmy na liczbach obsługiwanych przez SymPy, ponieważ Python stworzył swoją własną zmienną. Prawdopodobnie większość czasu będziesz operował na liczbach wymiernych -- dlatego upewnij się, że na pewno używasz klasy Rational, aby uzyskać prawidłowy wynik obsługiwany przez SymPy. Dla wygody możesz na przykład przyrównać ``R`` i Rational::
 
@@ -475,7 +475,6 @@ Funkcje
     x - -- + ---- - ---- + ----- + O\x  /
         6     40    112     1152
 
-
 **harmoniki sferyczne**::
 
     >>> from sympy.abc import theta, phi
@@ -607,7 +606,6 @@ W ``isympy``::
 
     >>> solve([x + 5*y - 2, -3*x + 6*y - 15], [x, y])
     {x: -3, y: 1}
-
 
 .. index:: linear algebra
 
