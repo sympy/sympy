@@ -38,6 +38,9 @@ class re(Function):
 
     @classmethod
     def eval(cls, arg):
+        """
+        Helper method for implementing this class.
+        """
         if arg is S.NaN:
             return S.NaN
         elif arg.is_real:
@@ -69,6 +72,9 @@ class re(Function):
         return self
 
     def as_real_imag(self, deep=True):
+        """
+        Returns the real number with a zero complex part.
+        """
         return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):
@@ -81,26 +87,30 @@ class re(Function):
         return re(Derivative(self.args[0], x, **{'evaluate': True}))
 
 class im(Function):
-    """Returns imaginary part of expression. This function performs
-       only elementary analysis and so it will fail to decompose
-       properly more complicated expressions. If completely simplified
-       result is needed then use Basic.as_real_imag() or perform complex
-       expansion on instance of this function.
+    """
+    Returns imaginary part of expression. This function performs only
+    elementary analysis and so it will fail to decompose properly more
+    complicated expressions. If completely simplified result is needed then
+    use Basic.as_real_imag() or perform complex expansion on instance of
+    this function.
 
-       >>> from sympy import re, im, E, I
-       >>> from sympy.abc import x, y
+    Examples
+    ========
 
-       >>> im(2*E)
-       0
+    >>> from sympy import re, im, E, I
+    >>> from sympy.abc import x, y
 
-       >>> re(2*I + 17)
-       17
+    >>> im(2*E)
+    0
 
-       >>> im(x*I)
-       re(x)
+    >>> re(2*I + 17)
+    17
 
-       >>> im(re(x) + y)
-       im(y)
+    >>> im(x*I)
+    re(x)
+
+    >>> im(re(x) + y)
+    im(y)
 
     """
 
@@ -110,6 +120,9 @@ class im(Function):
 
     @classmethod
     def eval(cls, arg):
+        """
+        Helper method for implementing this class.
+        """
         if arg is S.NaN:
             return S.NaN
         elif arg.is_real:
@@ -140,6 +153,9 @@ class im(Function):
         return self
 
     def as_real_imag(self, deep=True):
+        """
+        Return the imaginary part with a zero real part.
+        """
         return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):

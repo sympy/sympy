@@ -63,6 +63,23 @@ Examples::
 
 .. autoclass:: sympy.functions.elementary.complexes.conjugate
 
+im
+--
+
+Returns the imaginary part of an expression.
+
+Examples::
+
+    >>> from sympy.functions import im
+    >>> from sympy import I
+    >>> im(2+3*I)
+    3
+
+.. autoclass: sympy.functions.elementary.re
+   :members:
+
+.. seealso::
+   re
 
 Min
 ---
@@ -98,12 +115,14 @@ re
 Return the real part of an expression
 
 Examples::
+
     >>> from sympy.functions import re
     >>> from sympy import I
     >>> re(2+3*I)
     2
 
 .. autoclass:: sympy.functions.elementary.complexes.re
+   :members:
 
 
 sqrt
