@@ -19,6 +19,7 @@ Queries are used to ask information about expressions. Main method for this
 is ask():
 
 .. automethod:: sympy.assumptions.ask
+   :noindex:
 
 Querying
 ========
