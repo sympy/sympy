@@ -1333,19 +1333,9 @@ class PrettyPrinter(Printer):
         return pform
 
 def pretty(expr, **settings):
-    """
-    Returns a string containing the prettified form of expr.
+    """Returns a string containing the prettified form of expr.
 
-    Arguments
-    ---------
-    expr: the expression to print
-    wrap_line: line wrapping enabled/disabled, should be a boolean value (default to True)
-    num_columns: number of columns before line breaking (default to None which reads the
-        terminal width), it is useful when using SymPy without terminal.
-    use_unicode: use unicode characters, such as the Greek letter pi instead of
-        the string pi. Values should be boolean or None
-    full_prec: use full precision. Default to "auto"
-    order: set to 'none' for long expressions if slow; default is None
+    For information on keyword arguments see pretty_print function.
     """
     pp = PrettyPrinter(settings)
 
@@ -1359,10 +1349,20 @@ def pretty(expr, **settings):
         pretty_use_unicode(uflag)
 
 def pretty_print(expr, **settings):
-    """
-    Prints expr in pretty form.
+    """Prints expr in pretty form.
 
-    pprint is just a shortcut for this function
+    Arguments
+    ---------
+    expr: the expression to print
+    wrap_line: line wrapping enabled/disabled, should be a boolean value (default to True)
+    num_columns: number of columns before line breaking (default to None which reads the
+        terminal width), it is useful when using SymPy without terminal.
+    use_unicode: use unicode characters, such as the Greek letter pi instead of
+        the string pi. Values should be boolean or None
+    full_prec: use full precision. Default to "auto"
+    order: set to 'none' for long expressions if slow; default is None
+
+    pprint is just a shortcut for this function.
     """
     print pretty(expr, **settings)
 
