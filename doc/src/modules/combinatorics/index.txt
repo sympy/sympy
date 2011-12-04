@@ -13,3 +13,4 @@ Contents
    permutations.txt
    prufer.txt
    subsets.txt
+   graycode.txt
