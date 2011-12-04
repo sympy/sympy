@@ -1,0 +1,16 @@
+.. _tensor_module:
+
+=============
+Tensor Module
+=============
+
+.. automodule:: sympy.tensor
+
+Contents
+========
+
+.. toctree::
+    :maxdepth: 3
+
+    indexed.txt
+    index_methods.txt
