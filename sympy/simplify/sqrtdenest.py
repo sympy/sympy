@@ -54,8 +54,9 @@ def _sqrtdenest(expr):
             vad = a + d
             vad1 = radsimp(1/vad)
             return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
-
-    z = denester([radsimp(expr**2)], 0)[0]
+    else:
+        return expr
+    z = _denester([radsimp(expr**2)], (a, b, r, d2), 0)[0]
     if z == None:
         return expr
     if z is expr or not z.is_Add:
@@ -111,7 +112,7 @@ def sqrt_match(p):
     b, r = p1.as_coeff_Mul()
     return (a, b, r**2)
 
-def denester (nested, h, max_depth_level=4):
+def _denester (nested, av0, h, max_depth_level=4):
     """
     Denests a list of expressions that contain nested square roots.
     This method should not be called directly - use 'sqrtdenest' instead.
@@ -123,8 +124,8 @@ def denester (nested, h, max_depth_level=4):
 
     When evaluating all of the arguments in parallel, the bottom-level
     radicand only needs to be denested once. This means that calling
-    denester with x arguments results in a recursive invocation with x+1
-    arguments; hence denester has polynomial complexity.
+    _denester with x arguments results in a recursive invocation with x+1
+    arguments; hence _denester has polynomial complexity.
 
     However, if the arguments were evaluated separately, each call would
     result in two recursive invocations, and the algorithm would have
@@ -135,7 +136,7 @@ def denester (nested, h, max_depth_level=4):
     from sympy.simplify.simplify import radsimp
     if h > max_depth_level:
         return None, None
-    if all(n.is_Number for n in nested): #If none of the arguments are nested
+    if not av0 and all(n.is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
             p = prod(nested[i] for i in range(len(f)) if f[i]).expand()
             if 1 in f and f.count(1) > 1 and f[-1]:
@@ -145,17 +146,23 @@ def denester (nested, h, max_depth_level=4):
         return sqrt(nested[-1]), [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
     else:
         R = None
-        values = filter(None, [sqrt_match(expr) for expr in nested])
-        for v in values:
-            if v[2]: #Since if b=0, r is not defined
-                if R is not None:
-                    assert R == v[2] #All the 'r's should be the same.
-                else:
-                    R = v[2]
-        if R is None:
-            return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the pravious invocation
-        nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
-        d, f = denester(nested2, h+1)
+        if av0:
+            values = [av0[:2]]
+            R = av0[2]
+            nested2 = [av0[3], R]
+        else:
+            av0 = False
+            values = filter(None, [sqrt_match(expr) for expr in nested])
+            for v in values:
+                if v[2]: #Since if b=0, r is not defined
+                    if R is not None:
+                        assert R == v[2] #All the 'r's should be the same.
+                    else:
+                        R = v[2]
+            if R is None:
+                return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the pravious invocation
+            nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
+        d, f = _denester(nested2, False, h+1)
         if f == None:
             return None, None
         if not any(f[i] for i in range(len(nested))):
