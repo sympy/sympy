@@ -122,7 +122,7 @@ class Subset(Basic):
         """
         Generates the next lexicographically ordered subset.
 
-        NOT YET IMPLEMENTED 
+        NOT YET IMPLEMENTED
         """
         raise NotImplementedError()
 
@@ -130,7 +130,7 @@ class Subset(Basic):
         """
         Generates the previous lexicographically ordered subset.
 
-        NOT YET IMPLEMENTED 
+        NOT YET IMPLEMENTED
         """
         raise NotImplementedError()
 

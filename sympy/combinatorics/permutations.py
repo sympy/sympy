@@ -265,7 +265,7 @@ class Permutation(Basic):
             >>> q = Permutation([2,1,3,0])
             >>> q-p==q
             True
-    
+
             >>> from sympy.combinatorics.permutations import Permutation
             >>> a = Permutation([0, 3, 1, 2])
             >>> b = Permutation([2, 3, 1, 0])
@@ -452,7 +452,7 @@ don\'t match.")
         it returns None.
         See [4] section 2.4.
 
-        Examples:: 
+        Examples::
 
             >>> from sympy.combinatorics.permutations import Permutation
             >>> p = Permutation([2, 3, 1, 0])
@@ -495,7 +495,7 @@ don\'t match.")
             Permutation([2, 0, 3, 1])
             >>> Permutation.unrank_nonlex(4, -1)
             Permutation([0, 1, 2, 3])
-    
+
             >>> Permutation.unrank_nonlex(6, 2)
             Permutation([1, 5, 3, 4, 0, 2])
 
@@ -677,7 +677,7 @@ don\'t match.")
     @property
     def is_Identity(self):
         """
-	Examples::
+        Examples::
 
             >>> from sympy.combinatorics.permutations import Permutation
             >>> p = Permutation([[0],[1],[2]])
@@ -854,7 +854,7 @@ don\'t match.")
         order it equals the identity permutation.
 
         Example::
-        
+
             >>> from sympy.combinatorics.permutations import Permutation
             >>> p = Permutation([3,1,5,2,4,0])
             >>> p.order()
@@ -1007,7 +1007,7 @@ don\'t match.")
             >>> p = Permutation([0,2,1,3])
             >>> p.rank_trotterjohnson()
             7
-    
+
             >>> p = Permutation([2, 3, 1, 0])
             >>> p.rank_trotterjohnson()
             13
@@ -1316,7 +1316,7 @@ don\'t match.")
             >>> from sympy.combinatorics.permutations import Permutation
             >>> Permutation.from_inversion_vector([3,2,1,0,0])
             Permutation([3, 2, 1, 0, 4, 5])
-    
+
             >>> from sympy.combinatorics.permutations import Permutation
             >>> a = Permutation([3,5,1,4,2,0,7,6])
             >>> Permutation.from_inversion_vector(a.inversion_vector()) == a

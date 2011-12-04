@@ -65,11 +65,11 @@ class GrayCode(Basic):
             GrayCode(3)
             >>> a.n
             3
-    
+
             >>> a = GrayCode(3, start='100')
             >>> a.current
             '100'
-    
+
             >>> a = GrayCode(4, rank=4)
             >>> a.current
             '0110'
@@ -239,8 +239,8 @@ class GrayCode(Basic):
     def current(self):
         """
         Returns the currently referenced Gray code as a bit string.
- 	
-	Example::
+
+        Examples::
 
             >>> from sympy.combinatorics.graycode import GrayCode
             >>> GrayCode(3, start='100').current
