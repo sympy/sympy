@@ -413,8 +413,8 @@ class PrettyPrinter(Printer):
                 return d, h + more, lines, 0
             else:
                 w = w + more
-                d = d + more    # only even number of lines
-                vsum = vobj('sum', 4)   # contains all characters necessary
+                d = d + more
+                vsum = vobj('sum', 4)
                 lines.append("_"*(w))
                 for i in range(0, d):
                     lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i - 1)))
