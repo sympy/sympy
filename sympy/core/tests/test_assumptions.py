@@ -474,3 +474,23 @@ def test_hash_vs_eq():
 
     assert a == b
     assert ha== hb
+
+
+def test_is_irrational_pow():
+    from sympy.core.power import Pow
+    from sympy.core.numbers import I, pi, E
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.miscellaneous import sqrt, root
+    from sympy.abc import x
+
+    assert (pi**2).is_irrational is True
+    assert root(3,3).is_irrational is True
+
+    assert Pow(3, 2).is_irrational is False
+    assert (Rational(3, 5)**2).is_irrational is False
+    assert (Rational(3, 5)**Rational(3, 5)).is_irrational is True
+
+    assert (S(2)**I).is_irrational is False
+    z = Symbol("z", positive=False, negative=False,real=True)
+    assert (2**z).is_irrational is False
+    assert Pow(x, 0, evaluate=False).is_irrational is False

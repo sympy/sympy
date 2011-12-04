@@ -1001,12 +1001,25 @@ class Mul(AssocOp):
 
 
     def _eval_is_irrational(self):
+        if self.is_number:
+            # collect those that are under a common exponent
+            apd = self.as_powers_dict()
+            if all(v.is_Rational for v in apd.values()):
+                common = defaultdict(list)
+                for b, e in apd.iteritems():
+                    if b.is_Rational and b.p == 1:
+                        e = -e
+                        b = 1/b
+                    common[e.q].append(b**e.p)
+                self = Mul(*[Pow(Mul(*b), Rational(1, eq), evaluate=False) for eq, b in common.iteritems()], evaluate=False)
+            if not self.is_Mul:
+                return self.is_irrational
         for t in self.args:
             a = t.is_irrational
             if a:
                 others = list(self.args)
                 others.remove(t)
-                if all(x.is_rational is True for x in others):
+                if all(x.is_irrational is False for x in others):
                     return True
                 return None
             if a is None:
