@@ -1288,14 +1288,14 @@ def manage_hints(hints, on=[], off=[], dkey='', strict=True, init=None):
                     elif h.startswith(hint):
                         match.append(h)
                 if not match:
-                    raise ValueError, 'Unknown keyword: %s.' % hint
+                    raise ValueError('Unknown keyword: %s.' % hint)
                 elif len(match)==1:
                     if match[0] != hint:
                         hints[match[0]] = hints.pop(hint)
                         if order:
                             order[match[0]] = order.pop(hint)
                 else:
-                    raise ValueError, 'Ambiguous keyword: %s.' % hint
+                    raise ValueError('Ambiguous keyword: %s.' % hint)
 
     use_default=False
     if dkey in hints:
