@@ -33,6 +33,20 @@ def sqrtdenest(expr):
             return expr.func(*[sqrtdenest(a) for a in args])
     return expr
 
+def normalize(s):
+    if s.is_Add:
+        a = list(s.args)
+        for i, x in enumerate(a):
+            if x.is_Number:
+                break
+        else:
+            return (1, s)
+        del a[i]
+        a = [y/x for y in a]
+        return x, 1 + Add(*a)
+    else:
+        return 1, s
+
 def _sqrtdenest(expr):
     from sympy.simplify.simplify import radsimp
     if not expr.is_Pow or expr.exp != S.Half:
@@ -53,6 +67,19 @@ def _sqrtdenest(expr):
             vad = a + d
             vad1 = radsimp(1/vad)
             return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
+        else:
+            d = sqrt(d2)
+            vad = a + d
+            vad1, vad2 = normalize(vad)
+            q = r/vad2
+            if q.is_Number:
+                c = (b**2 * q)/(2 * vad1)
+                #c1 = radsimp((b**2*r/(2*vad)).expand())
+                if sqrt_depth(r) > sqrt_depth(c):
+                    z = (sqrt(vad/2) + sign(b)*sqrt(c)).expand()
+                    return z
+
+
     else:
         return expr
     z = _denester([radsimp(expr**2)], (a, b, r, d2), 0)[0]
