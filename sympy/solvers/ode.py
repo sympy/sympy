@@ -1563,12 +1563,17 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     **Example**
         >>> from sympy import symbols, Eq, pprint
         >>> from sympy.solvers.ode import constant_renumber
-        >>> x, C1, C2, C3, C4 = symbols('x,C1,C2,C3,C4')
+        >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
 
-        Only constants in the given range are renumbered:
+        Only constants in the given range (inclusive) are renumbered;
+        the renumbering always starts from 1:
 
         >>> constant_renumber(C1 + C3 + C4, 'C', 1, 3)
         C1 + C2 + C4
+        >>> constant_renumber(C0 + C1 + C3 + C4, 'C', 2, 4)
+        C0 + 2*C1 + C2
+        >>> constant_renumber(C0 + 2*C1 + C2, 'C', 0, 1)
+        C1 + 3*C2
         >>> pprint(C2 + C1*x + C3*x**2)
                         2
         C1*x + C2 + C3*x
