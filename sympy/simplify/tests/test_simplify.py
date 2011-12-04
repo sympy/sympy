@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
 from sympy.core.mul import _keep_coeff
 from sympy.utilities.pytest import XFAIL
 
@@ -808,3 +808,74 @@ def test_as_content_primitive():
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
             (S(1)/14, 7.0*x + 21*y + 10*z)
+
+def test_radsimp():
+    r2=sqrt(2)
+    r3=sqrt(3)
+    r5=sqrt(5)
+    r7=sqrt(7)
+    assert radsimp(1/r2) == \
+        sqrt(2)/2
+    assert radsimp(1/(1 + r2)) == \
+        -1 + sqrt(2)
+    assert radsimp(1/(r2 + r3)) == \
+        -sqrt(2) + sqrt(3)
+    assert fraction(radsimp(1/(1 + r2 + r3))) == \
+        (-sqrt(6) + sqrt(2) + 2, 4)
+    assert fraction(radsimp(1/(r2 + r3 + r5))) == \
+        (-sqrt(30) + 2*sqrt(3) + 3*sqrt(2), 12)
+    assert fraction(radsimp(1/(1 + r2 + r3 + r5))) == \
+        (-34*sqrt(10) -
+        26*sqrt(15) -
+        55*sqrt(3) -
+        61*sqrt(2) +
+        14*sqrt(30) +
+        93 +
+        46*sqrt(6) +
+        53*sqrt(5), 71)
+    assert fraction(radsimp(1/(r2 + r3 + r5 + r7))) == \
+        (-50*sqrt(42) - 133*sqrt(5) - 34*sqrt(70) -
+        145*sqrt(3) + 22*sqrt(105) + 185*sqrt(2) +
+        62*sqrt(30) + 135*sqrt(7), 215)
+    assert radsimp(1/(r2*3)) == \
+        sqrt(2)/6
+    assert radsimp(1/(r2*a + r2*b + r3 + r7)) == \
+        ((sqrt(42)*(a + b) +
+        sqrt(3)*(-a**2 - 2*a*b - b**2 - 2)  +
+        sqrt(7)*(-a**2 - 2*a*b - b**2 + 2)  +
+        sqrt(2)*(a**3 + 3*a**2*b + 3*a*b**2 - 5*a + b**3 - 5*b))/
+        ((a**4 + 4*a**3*b + 6*a**2*b**2 - 10*a**2  +
+        4*a*b**3 - 20*a*b + b**4 - 10*b**2 + 4)))/2
+    assert radsimp(1/(r2*a + r2*b + r2*c + r2*d)) == \
+        (sqrt(2)/(a + b + c + d))/2
+    assert radsimp(1/(1 + r2*a + r2*b + r2*c + r2*d)) == \
+        ((sqrt(2)*(-a - b - c - d) + 1)/
+        (-2*a**2 - 4*a*b - 4*a*c - 4*a*d - 2*b**2 -
+        4*b*c - 4*b*d - 2*c**2 - 4*c*d - 2*d**2 + 1))
+    assert radsimp((y**2 - x)/(y - sqrt(x))) == \
+        sqrt(x) + y
+    assert radsimp(-(y**2 - x)/(y - sqrt(x))) == \
+        -(sqrt(x) + y)
+    assert radsimp(1/(1 - I + a*I)) == \
+        (I*(-a + 1) + 1)/(a**2 - 2*a + 2)
+    assert radsimp(1/((-x + y)*(x - sqrt(y)))) == (x + sqrt(y))/((-x + y)*(x**2 - y))
+    e = (3 + 3*sqrt(2))*x*(3*x - 3*sqrt(y))
+    assert radsimp(e) == 9*x*(1 + sqrt(2))*(x - sqrt(y))
+    assert radsimp(1/e) == (-1 + sqrt(2))*(x + sqrt(y))/(9*x*(x**2 - y))
+    assert radsimp(1 + 1/(1 + sqrt(3))) == Mul(S(1)/2, 1 + sqrt(3), evaluate=False)
+    A = symbols("A", commutative=False)
+    assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == x**2 + sqrt(2)*(x**2 - x*A)
+    assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
+    assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -11*sqrt(2) + 9*sqrt(3)
+
+    # coverage not provided by above tests
+    assert collect_const(2*sqrt(3) + 4*a*sqrt(5)) == Mul(2, (2*sqrt(5)*a + sqrt(3)), evaluate=False)
+    assert collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3)) == 2*(2*sqrt(5)*a + sqrt(3))
+    assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
+        sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
+
+def test_issue2834():
+    from sympy import Polygon, RegularPolygon, denom
+    x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
+    assert abs(denom(x).n()) > 1e-12
+    assert abs(denom(radsimp(x))) > 1e-12 # in case simplify didn't handle it
