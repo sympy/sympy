@@ -15,11 +15,7 @@ x,y,z = symbols('x,y,z')
 #================== Test different arguments ==============
 def test_no_args():
     f = lambdify([], 1)
-    try:
-        f(-1)
-        assert False
-    except TypeError:
-        pass
+    raises(TypeError,"f(-1)")
     assert f() == 1
 
 def test_single_arg():
@@ -35,11 +31,7 @@ def test_str_args():
     assert f(3,2,1) == (1,2,3)
     assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
     # make sure correct number of args required
-    try:
-        f(0)
-        assert False
-    except TypeError:
-        pass
+    raises(TypeError,"f(0)")
 
 def test_own_namespace():
     myfunc = lambda x:1
@@ -51,25 +43,13 @@ def test_own_module():
     f = lambdify(x, sin(x), math)
     assert f(0)==0.0
     f = lambdify(x, sympy.ceiling(x), math)
-    try:
-        f(4.5)
-        assert False
-    except NameError:
-        pass
+    raises(NameError,"f(4.5)")
 
 def test_bad_args():
-    try:
-        # no vargs given
-        f = lambdify(1)
-        assert False
-    except TypeError:
-        pass
-    try:
-        # same with vector exprs
-        f = lambdify([1,2])
-        assert False
-    except TypeError:
-        pass
+    # no vargs given
+    raises(TypeError,"f = lambdify(1)")
+    # same with vector exprs
+    raises(TypeError,"f = lambdify([1,2])")
 
 def test_atoms():
     # Non-Symbol atoms should not be pulled out from the expression namespace
@@ -91,12 +71,8 @@ def test_sympy_lambda():
         assert f(x) == sin(x)
         prec = 1e-15
         assert -prec < f(Rational(1,5)).evalf() - Float(str(sin02)) < prec
-        try:
-            # arctan is in numpy module and should not be available
-            f = lambdify(x, arctan(x), "sympy")
-            assert False
-        except NameError:
-            pass
+        # arctan is in numpy module and should not be available
+        raises(NameError,"f = lambdify(x, arctan(x), \"sympy\")")
     finally:
         mpmath.mp.dps = dps
 
@@ -108,11 +84,7 @@ def test_math_lambda():
         f = lambdify(x, sin(x), "math")
         prec = 1e-15
         assert -prec < f(0.2) - sin02 < prec
-        try:
-            f(x) # if this succeeds, it can't be a python math function
-            assert False
-        except ValueError:
-            pass
+        raises(ValueError,"f(x)") # if this succeeds, it can't be a python math function
     finally:
         mpmath.mp.dps = dps
 
@@ -124,11 +96,7 @@ def test_mpmath_lambda():
         f = lambdify(x, sin(x), "mpmath")
         prec = 1e-49 # mpmath precision is around 50 decimal places
         assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
-        try:
-            f(x) # if this succeeds, it can't be a mpmath function
-            assert False
-        except TypeError:
-            pass
+        raises(TypeError,"f(x)") # if this succeeds, it can't be a mpmath function
     finally:
         mpmath.mp.dps = dps
 
@@ -212,17 +180,11 @@ def test_vector_simple():
     assert f(3,2,1) == (1,2,3)
     assert f(1.0,2.0,3.0) == (3.0,2.0,1.0)
     # make sure correct number of args required
-    try:
-        f(0)
-        assert False
-    except TypeError: pass
+    raises(TypeError,"f(0)")
 
 def test_vector_discontinuous():
     f = lambdify(x, (-1/x, 1/x))
-    try:
-        f(0)
-        assert False
-    except ZeroDivisionError: pass
+    raises(ZeroDivisionError,"f(0)")
     assert f(1) == (-1.0, 1.0)
     assert f(2) == (-0.5, 0.5)
     assert f(-2) == (0.5, -0.5)
