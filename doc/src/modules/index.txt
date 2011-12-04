@@ -30,7 +30,7 @@ access any SymPy module, or use this contens:
    polys/index.txt
    printing.txt
    plotting.txt
-   assumptions.txt
+   assumptions/index.txt
    rewriting.txt
    series.txt
    simplify/simplify.txt
