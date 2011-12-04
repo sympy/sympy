@@ -820,23 +820,23 @@ def test_radsimp():
         -1 + sqrt(2)
     assert radsimp(1/(r2 + r3)) == \
         -sqrt(2) + sqrt(3)
-    assert radsimp(1/(1 + r2 + r3)) == \
-        Mul(S(1)/4, (-sqrt(6) + sqrt(2) + 2), evaluate=False)
-    assert radsimp(1/(r2 + r3 + r5)) == \
-        Mul(S(1)/12, (-sqrt(30) + 2*sqrt(3) + 3*sqrt(2)), evaluate=False)
-    assert radsimp(1/(1 + r2 + r3 + r5)) == \
-        Mul(S(1)/71, (-34*sqrt(10) -
+    assert fraction(radsimp(1/(1 + r2 + r3))) == \
+        (-sqrt(6) + sqrt(2) + 2, 4)
+    assert fraction(radsimp(1/(r2 + r3 + r5))) == \
+        (-sqrt(30) + 2*sqrt(3) + 3*sqrt(2), 12)
+    assert fraction(radsimp(1/(1 + r2 + r3 + r5))) == \
+        (-34*sqrt(10) -
         26*sqrt(15) -
         55*sqrt(3) -
         61*sqrt(2) +
         14*sqrt(30) +
         93 +
         46*sqrt(6) +
-        53*sqrt(5)), evaluate=False)
-    assert radsimp(1/(r2 + r3 + r5 + r7)) == \
-        Mul(S(1)/215, -50*sqrt(42) - 133*sqrt(5) - 34*sqrt(70) -
+        53*sqrt(5), 71)
+    assert fraction(radsimp(1/(r2 + r3 + r5 + r7))) == \
+        (-50*sqrt(42) - 133*sqrt(5) - 34*sqrt(70) -
         145*sqrt(3) + 22*sqrt(105) + 185*sqrt(2) +
-        62*sqrt(30) + 135*sqrt(7), evaluate=False)
+        62*sqrt(30) + 135*sqrt(7), 215)
     assert radsimp(1/(r2*3)) == \
         sqrt(2)/6
     assert radsimp(1/(r2*a + r2*b + r3 + r7)) == \

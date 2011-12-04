@@ -1057,8 +1057,8 @@ def radsimp(expr, symbolic=True):
     substitutions that violate the assumptions of the simplification process:
     that for a denominator matching a + b*sqrt(c), a != +/-b*sqrt(c). (If there
     are no symbols, this assumptions is made valid by collecting terms of
-    sqrt(c) so match variable ``a`` does not contain ``sqrt(c)``.) If you do
-    not want the simplification to occur for symbolic denominators, set
+    sqrt(c) so the match variable ``a`` does not contain ``sqrt(c)``.) If you
+    do not want the simplification to occur for symbolic denominators, set
     ``symbolic`` to False.
 
     Examples:
@@ -1086,16 +1086,9 @@ def radsimp(expr, symbolic=True):
          2               2      2              2
     - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
 
-    But if there are more than 3 terms with square roots then the removal
-    will in general only be partial:
-
-    >>> three_rads = sqrt(2) + sqrt(3) + sqrt(5)
-    >>> den = sqrt(2) + sqrt(three_rads)
-    >>> denom(radsimp(1/den)) == 2 - three_rads
-    True
-
-    At the very least, square roots in an expression with no denominator
-    will be collected:
+    If radicals in the denominator cannot be removed, the original expression
+    will be returned. If the denominator was 1 then any square roots will also
+    be collected:
 
     >>> radsimp(sqrt(2)*x + sqrt(2))
     sqrt(2)*(x + 1)
@@ -1145,9 +1138,6 @@ def radsimp(expr, symbolic=True):
 
             # check to see if we are done:
             # - no radical terms
-            # - don't continue if there are more than 3 radical terms
-            #   unless there are radicals with terms inside that might
-            #   cancel existing terms XXX not yet implemented
             # - don't continue if there are more than 4 radical
             #   terms and a constant term, too; in the case of 4 radical
             #   terms don't continue if they do not reduce after an
