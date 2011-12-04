@@ -4,7 +4,8 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
-    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms)
+    Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
+    expand_multinomial)
 
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd, Float
@@ -16,9 +17,11 @@ from sympy.utilities import flatten, default_sort_key
 from sympy.functions import gamma, exp, sqrt, log, root
 
 from sympy.simplify.cse_main import cse
+from sympy.simplify.sqrtdenest import sqrtdenest
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, terms_gcd, lcm, gcd)
+from sympy.polys.polytools import _keep_coeff
 
 import sympy.mpmath as mpmath
 
@@ -891,35 +894,327 @@ def trigsimp_nonrecursive(expr, deep=False):
         return expr
     return expr
 
-def radsimp(expr):
+def collect_sqrt(expr, evaluate=True):
+    """Return expr with terms having common square roots collected together.
+    If ``evaluate`` is False a count indicating the number of sqrt-containing
+    terms will be returned and the returned expression will be an unevaluated
+    Add with args ordered by default_sort_key.
+
+    Note: since I = sqrt(-1), it is collected, too.
+
+    **Examples**
+
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.simplify import collect_sqrt
+    >>> from sympy.abc import a, b
+
+    >>> r2, r3, r5 = [sqrt(i) for i in [2, 3, 5]]
+    >>> collect_sqrt(a*r2 + b*r2)
+    sqrt(2)*(a + b)
+    >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r3)
+    sqrt(2)*(a + b) + sqrt(3)*(a + b)
+    >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5)
+    sqrt(3)*a + sqrt(5)*b + sqrt(2)*(a + b)
+
+    If evaluate is False then the arguments will be sorted and
+    returned as a list and a count of the number of sqrt-containing
+    terms will be returned:
+
+    >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5, evaluate=False)
+    ((sqrt(2)*(a + b), sqrt(3)*a, sqrt(5)*b), 3)
+    >>> collect_sqrt(a*sqrt(2) + b, evaluate=False)
+    ((b, sqrt(2)*a), 1)
+    >>> collect_sqrt(a + b, evaluate=False)
+    ((a + b,), 0)
+
     """
-    Rationalize the denominator.
+    coeff, expr = expr.as_content_primitive()
+    vars = set()
+    for a in Add.make_args(expr):
+        for m in a.args_cnc()[0]:
+            if m.is_number and (m.is_Pow and m.exp.is_Rational and m.exp.q == 2 or \
+                m is S.ImaginaryUnit):
+                vars.add(m)
+    vars = list(vars)
+    if not evaluate:
+        vars.sort(key=default_sort_key)
+        vars.reverse() # since it will be reversed below
+    vars.sort(key=count_ops)
+    vars.reverse()
+    d = collect_const(expr, *vars, first=False)
+    hit = expr != d
+    d *= coeff
+
+    if not evaluate:
+        nrad = 0
+        args = list(Add.make_args(d))
+        for m in args:
+            cset, nc = m.args_cnc()
+            for ci in cset:
+                if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2 or \
+                   ci is S.ImaginaryUnit:
+                    nrad += 1
+                    break
+        if hit or nrad:
+            args.sort(key=default_sort_key)
+        else:
+            args = [Add(*args)]
+        return tuple(args), nrad
+
+    return d
+
+def collect_const(expr, *vars, **first):
+    """A non-greedy collection of terms with similar number coefficients in
+    an Add expr. If ``vars`` is given then only those constants will be
+    targeted.
+
+    **Examples**
+    >>> from sympy import sqrt
+    >>> from sympy.abc import a, s
+    >>> from sympy.simplify.simplify import collect_const
+    >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
+    sqrt(3)*(sqrt(2) + 2)
+    >>> collect_const(sqrt(3)*s + sqrt(7)*s + sqrt(3) + sqrt(7))
+    (sqrt(3) + sqrt(7))*(s + 1)
+    >>> s = sqrt(2) + 2
+    >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
+    (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
+    >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
+    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+
+    If no constants are provided then a leading Rational might be returned:
+
+    >>> collect_const(2*sqrt(3) + 4*a*sqrt(5))
+    2*(2*sqrt(5)*a + sqrt(3))
+    >>> collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3))
+    4*sqrt(5)*a + 2*sqrt(3)
+    """
+
+    if first.get('first', True):
+        c, p = sympify(expr).as_content_primitive()
+    else:
+        c, p = S.One, expr
+    if c is not S.One:
+        if not vars:
+            return _keep_coeff(c, collect_const(p, *vars, first=False))
+        # else don't leave the Rational on the outside
+        return c*collect_const(p, *vars, first=False)
+
+    if not (expr.is_Add or expr.is_Mul):
+        return expr
+    recurse = False
+    if not vars:
+        recurse = True
+        vars = set()
+        for a in Add.make_args(expr):
+            for m in Mul.make_args(a):
+                if m.is_number:
+                    vars.add(m)
+        vars = sorted(vars, key=count_ops)
+    # Rationals get autodistributed on Add so don't bother with them
+    vars = [v for v in vars if not v.is_Rational]
+
+    if not vars:
+        return expr
+
+    for v in vars:
+        terms = defaultdict(list)
+        for m in Add.make_args(expr):
+            i = []
+            d = []
+            for a in Mul.make_args(m):
+                if a == v:
+                    d.append(a)
+                else:
+                    i.append(a)
+            ai, ad = [Mul(*w) for w in [i, d]]
+            terms[ad].append(ai)
+        args = []
+        hit = False
+        for k, v in terms.iteritems():
+            if len(v) > 1:
+                v = Add(*v)
+                hit = True
+                if recurse and v != expr:
+                    vars.append(v)
+            else:
+                v = v[0]
+            args.append(k*v)
+        if hit:
+            expr = Add(*args)
+            if not expr.is_Add:
+                break
+    return expr
+
+def radsimp(expr, symbolic=True):
+    """
+    Rationalize the denominator by removing square roots. If there are more
+    than 3 terms (after collecting common square root terms) that have
+    square roots then the removal is in general only partial.
+
+    Note: the expression returned from radsimp must be used with caution
+    since if the denominator contains symbols, it will be possible to make
+    substitutions that violate the assumptions of the simplification process:
+    that for a denominator matching a + b*sqrt(c), a != +/-b*sqrt(c). (If there
+    are no symbols, this assumptions is made valid by collecting terms of
+    sqrt(c) so the match variable ``a`` does not contain ``sqrt(c)``.) If you
+    do not want the simplification to occur for symbolic denominators, set
+    ``symbolic`` to False.
 
     Examples:
-        >>> from sympy import radsimp, sqrt, Symbol
-        >>> radsimp(1/(2+sqrt(2)))
-        -sqrt(2)/2 + 1
-        >>> x,y = map(Symbol, 'xy')
-        >>> e = ((2+2*sqrt(2))*x+(2+sqrt(8))*y)/(2+sqrt(2))
-        >>> radsimp(e)
-        sqrt(2)*x + sqrt(2)*y
+
+    >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
+    >>> from sympy.abc import a, b, c
+
+    >>> radsimp(1/(I + 1))
+    (1 - I)/2
+    >>> radsimp(1/(2 + sqrt(2)))
+    (-sqrt(2) + 2)/2
+    >>> x,y = map(Symbol, 'xy')
+    >>> e = ((2 + 2*sqrt(2))*x + (2 + sqrt(8))*y)/(2 + sqrt(2))
+    >>> radsimp(e)
+    sqrt(2)*(x + y)
+
+    Terms are collected automatically:
+
+    >>> r2 = sqrt(2)
+    >>> r5 = sqrt(5)
+    >>> pprint(radsimp(1/(y*r2 + x*r2 + a*r5 + b*r5)))
+             ___              ___
+           \/ 5 *(-a - b) + \/ 2 *(x + y)
+    --------------------------------------------
+         2               2      2              2
+    - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
+
+    If radicals in the denominator cannot be removed, the original expression
+    will be returned. If the denominator was 1 then any square roots will also
+    be collected:
+
+    >>> radsimp(sqrt(2)*x + sqrt(2))
+    sqrt(2)*(x + 1)
+
+    Results with symbols will not always be valid for all substitutions:
+
+    >>> eq = 1/(a + b*sqrt(c))
+    >>> eq.subs(a, b*sqrt(c))
+    1/(2*b*sqrt(c))
+    >>> radsimp(eq).subs(a, b*sqrt(c))
+    nan
+
+    If symbolic=False, symbolic denominators will not be transformed (but
+    numeric denominators will still be processed):
+
+    >>> radsimp(eq, symbolic=False)
+    1/(a + b*sqrt(c))
 
     """
-    n,d = fraction(expr)
-    a,b,c = map(Wild, 'abc')
-    r = d.match(a+b*sqrt(c))
-    if r is not None:
-        a = r[a]
-        if r[b] == 0:
-            b,c = 0,0
-        else:
-            b,c = r[b],r[c]
 
-        syms = list(n.atoms(Symbol))
-        n = collect((n*(a-b*sqrt(c))).expand(), syms)
-        d = a**2 - c*b**2
+    def handle(expr):
+        if expr.is_Atom or not symbolic and expr.free_symbols:
+            return expr
+        n, d = fraction(expr)
+        if d is S.One:
+            nexpr = expr.func(*[handle(ai) for ai in expr.args])
+            return nexpr
+        elif d.is_Mul:
+            nargs = []
+            dargs = []
+            for di in d.args:
+                ni, di = fraction(handle(1/di))
+                nargs.append(ni)
+                dargs.append(di)
+            return n*Mul(*nargs)/Mul(*dargs)
+        elif d.is_Add:
+            d = radsimp(d)
+        elif d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
+            d = sqrtdenest(sqrt(d.base))**d.exp.p
 
-    return n/d
+        changed = False
+        nterms4 = False
+        while 1:
+            # collect similar terms
+            d, nterms = collect_sqrt(expand_mul(expand_multinomial(d)), evaluate=False)
+            d = Add._from_args(d)
+
+            # check to see if we are done:
+            # - no radical terms
+            # - don't continue if there are more than 4 radical
+            #   terms and a constant term, too; in the case of 4 radical
+            #   terms don't continue if they do not reduce after an
+            #   iteration
+            if not nterms:
+                break
+            elif nterms > 4 or nterms4 and nterms == 4 and len(d.args) > 5:
+                n, d = fraction(expr)
+                break
+            changed = True
+
+            # now match for a radical
+            if nterms == 4 and len(d.args) == 5:
+                r = d.match(a + b*sqrt(c) + D*sqrt(E) + F*sqrt(G))
+                va, vb, vc, vd, ve, vf, vg = \
+                    r[a], r[b], r[c], r[D], r[E], r[F], r[G]
+                nmul = va - vb*sqrt(vc) - vd*sqrt(ve) - vf*sqrt(vg)
+                d = va**2 - vc*vb**2 - ve*vd**2 - vg*vf**2 - \
+                2*vb*vd*sqrt(vc*ve) - 2*vb*vf*sqrt(vc*vg) - 2*vd*vf*sqrt(ve*vg)
+                nterms4 = True
+                n1 = n/d
+                if denom(n1) is not S.One:
+                    n = -(-n/d)
+                else:
+                    n = n1
+                n, d = fraction(n*nmul)
+
+            if len(d.args) == 4:
+                r = d.match(a + b*sqrt(c) + D*sqrt(E))
+                va, vb, vc, vd, ve = r[a], r[b], r[c], r[D], r[E]
+                nmul = va - vb*sqrt(vc) - vd*sqrt(ve)
+                d = va**2 - vc*vb**2 - ve*vd**2 - 2*vb*vd*sqrt(vc*ve)
+                n1 = n/d
+                if denom(n1) is not S.One:
+                    n = -(-n/d)
+                else:
+                    n = n1
+                n, d = fraction(n*nmul)
+
+            else:
+                r = d.match(a + b*sqrt(c))
+                if not r or r[b] == 0:
+                    r = d.match(b*sqrt(c))
+                    if r is None:
+                        break
+                    r[a] = S.Zero
+                va, vb, vc = r[a],r[b],r[c]
+
+                nmul = va - vb*sqrt(vc)
+                d = va**2 - vc*vb**2
+                n1 = n/d
+                if denom(n1) is not S.One:
+                    n = -(-n/d)
+                else:
+                    n = n1
+                n, d = fraction(n*nmul)
+
+        nexpr = collect_sqrt(expand_mul(n))/d
+        if changed or nexpr != expr:
+            expr = nexpr
+        return expr
+
+    a, b, c, D, E, F, G = map(Wild, 'abcDEFG')
+    # do this at the start in case no other change is made since
+    # it is done if a change is made
+    coeff, expr = expr.as_content_primitive()
+
+    newe = handle(expr)
+    if newe != expr:
+        co, expr = newe.as_content_primitive()
+        coeff *= co
+    else:
+        nexpr, hit = collect_sqrt(expand_mul(expr), evaluate=False)
+        nexpr = Add._from_args(nexpr)
+        if hit and expr.count_ops() >= nexpr.count_ops():
+            expr = Add(*Add.make_args(nexpr))
+    return _keep_coeff(coeff, expr)
 
 def posify(eq):
     """Return eq (with generic symbols made positive) and a restore dictionary.
@@ -1821,6 +2116,26 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         >>> count_ops(simplify(root, ratio=oo)) > count_ops(root)
         True
 
+    Another issue to be aware of if using ``ratio=oo`` is that simplification
+    of a denominator containing a sqrt may lead to an expression which is not
+    strictly valid. If ``ratio`` is not changed, this transformation doesn't
+    (usually) happen since it would lead to a longer expression:
+
+        >>> from sympy.abc import a, b, c
+        >>> from sympy import sqrt
+        >>> eq = 1/(a + b*sqrt(c))
+        >>> simplify(eq) == eq
+        True
+        >>> forced = simplify(eq, ratio=oo)
+        >>> forced == eq
+        False
+        >>> eq.subs(a, b*sqrt(c))
+        1/(2*b*sqrt(c))
+        >>> forced.subs(a, b*sqrt(c))
+        nan
+        >>> forced
+        (a - b*sqrt(c))/(a**2 - b**2*c)
+
     Note that the shortest expression is not necessary the simplest, so
     setting ``ratio`` to 1 may not be a good idea.
     Heuristically, the default value ``ratio=1.7`` seems like a reasonable
@@ -1931,13 +2246,22 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     expr = powsimp(expr, combine='exp', deep=True)
     numer, denom = expr.as_numer_denom()
-
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')
 
+        # cancel already took care of things like 1/sqrt(3) -> sqrt(3)/3
+        # so we don't have to worry about `a` matching with `b`=0 as we
+        # do in radsimp
         r = denom.match(a + b*sqrt(c))
 
         if r is not None and r[b]:
+            # be careful not to multiply by 0/0 when removing denom;
+            # this will happen in a = +/- b*sqrt(c), so collect c so
+            # it's not also in `a`
+            if r[c].is_number:
+                newdenom = collect_const(denom, sqrt(r[c]))
+                if newdenom != denom:
+                    r = newdenom.match(a + b*sqrt(c))
             a, b, c = r[a], r[b], r[c]
 
             numer *= a-b*sqrt(c)
