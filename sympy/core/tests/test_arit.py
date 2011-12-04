@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, I, log, S
+        sympify, Add, Mul, Pow, I, log, S, pi
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -1209,7 +1209,5 @@ def test_issue2361():
     assert 2 + u == 4 + 2*n
 
 def test_product_irrational():
-    from sympy import I, pi
     assert (I*pi).is_irrational is False
-    # The following used to be deduced from the above bug:
-    assert (I*pi).is_positive is False
+    assert I.is_positive == (I*pi).is_positive == False

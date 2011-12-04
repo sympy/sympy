@@ -1001,28 +1001,45 @@ class Mul(AssocOp):
 
 
     def _eval_is_irrational(self):
+        # if something is imaginary, it's not irrational (which is real)
+        # so we keep track of an isir flag and change it's value
+        # every time an imaginary is encountered.
+        isir = True
+        args = [] # all args that need to be processed
         if self.is_number:
-            # collect those that are under a common exponent
-            apd = self.as_powers_dict()
-            if all(v.is_Rational for v in apd.values()):
-                common = defaultdict(list)
-                for b, e in apd.iteritems():
-                    if b.is_Rational and b.p == 1:
-                        e = -e
-                        b = 1/b
-                    common[e.q].append(b**e.p)
-                self = Mul(*[Pow(Mul(*b), Rational(1, eq), evaluate=False) for eq, b in common.iteritems()], evaluate=False)
-            if not self.is_Mul:
-                return self.is_irrational
-        for t in self.args:
+            bases = defaultdict(list)
+            for a in self.args:
+                if a.is_Rational:
+                    continue
+                if a.is_imaginary:
+                    isir = not isir
+                    continue
+                b, e = a.as_base_exp()
+                if not b.is_Rational or not e.is_Rational:
+                    args.append(a)
+                    continue
+                if e.is_Integer:
+                    continue
+                # b and e are Rational, e is not an Integer
+                if b.is_negative:
+                    isir = not isir # it's complex
+                else:
+                    bases[b].append(e)
+            if not args:
+                if not isir:
+                    return False
+                if all(len(v) == 1 for v in bases.values()):
+                    return True
+                isir = True
+                for k, v in bases.iteritems():
+                    if k**Add(*v).is_Integer:
+                        isir = not isir
+                return isir
+        if not isir:
+            return False
+        for t in args:
             a = t.is_irrational
             if a:
-                others = list(self.args)
-                others.remove(t)
-                if all(x.is_irrational is False for x in others):
-                    return True
-                return None
-            if a is None:
                 return
         return False
 

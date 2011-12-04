@@ -243,7 +243,7 @@ class Pow(Expr):
                 return True
         elif b_irrat is False:
             if (e.is_integer is False) and (e.is_imaginary is False): # is_complex==True even for integers S(2)
-                return True
+                return b.is_positive
             elif b.is_integer:
                 if e.is_rational:
                     if e.is_integer:
