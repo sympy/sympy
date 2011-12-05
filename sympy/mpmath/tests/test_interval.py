@@ -379,6 +379,7 @@ def test_interval_nstr():
     assert iv.nstr(mpi('1e123', '1e129'), n, mode='diff') == '[1.0e+123, 1.0e+129]'
     exp = iv.exp
     assert iv.nstr(iv.exp(mpi('5000.1')), n, mode='diff') == '3.2797365856787867069110487[0926, 1191]e+2171'
+    iv.dps = 15
 
 def test_mpi_from_str():
     iv.dps = 15
