@@ -22,7 +22,7 @@ from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
 import sympy
 
 from sympy import mpmath
-from sympy.utilities.mpmathutils import CONSERVE_MPMATH_DPS
+from sympy.utilities.decorator import CONSERVE_MPMATH_DPS
 
 # first, systematically check, that all operations are implemented and don't
 # raise and exception

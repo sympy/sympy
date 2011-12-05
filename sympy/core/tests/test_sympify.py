@@ -4,7 +4,7 @@ from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.mpmathutils import CONSERVE_MPMATH_DPS
+from sympy.utilities.decorator import CONSERVE_MPMATH_DPS
 from sympy.geometry import Point, Line
 
 from sympy import mpmath
