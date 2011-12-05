@@ -442,6 +442,17 @@ Heaviside
 .. autoclass:: sympy.functions.special.delta_functions.Heaviside
    :members:
 
+beta
+----
+
+.. autofunction:: sympy.functions.special.gamma_functions.beta
+
+erf
+---
+
+.. autoclass:: sympy.functions.special.error_functions.erf
+   :members:
+
 gamma
 -----
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
@@ -456,6 +467,14 @@ polygamma
 ---------
 .. autoclass:: sympy.functions.special.gamma_functions.polygamma
    :members:
+
+digamma
+-------
+.. autofunction:: sympy.functions.special.gamma_functions.digamma
+
+trigamma
+--------
+.. autofunction:: sympy.functions.special.gamma_functions.trigamma
 
 uppergamma
 ----------
