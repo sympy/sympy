@@ -47,17 +47,19 @@ class chebyshevt(PolynomialSequence):
 
     Examples
     ========
-        >>> from sympy import chebyshevt
-        >>> from sympy.abc import x
-        >>> chebyshevt(0, x)
-        1
-        >>> chebyshevt(1, x)
-        x
-        >>> chebyshevt(2, x)
-        2*x**2 - 1
+
+    >>> from sympy import chebyshevt
+    >>> from sympy.abc import x
+    >>> chebyshevt(0, x)
+    1
+    >>> chebyshevt(1, x)
+    x
+    >>> chebyshevt(2, x)
+    2*x**2 - 1
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Chebyshev_polynomial
     """
 
@@ -77,14 +79,15 @@ class chebyshevu(PolynomialSequence):
 
     Examples
     ========
-        >>> from sympy import chebyshevu
-        >>> from sympy.abc import x
-        >>> chebyshevu(0, x)
-        1
-        >>> chebyshevu(1, x)
-        2*x
-        >>> chebyshevu(2, x)
-        4*x**2 - 1
+
+    >>> from sympy import chebyshevu
+    >>> from sympy.abc import x
+    >>> chebyshevu(0, x)
+    1
+    >>> chebyshevu(1, x)
+    2*x
+    >>> chebyshevu(2, x)
+    4*x**2 - 1
 
     """
 
@@ -124,11 +127,11 @@ class chebyshevu_root(Function):
     Examples
     ========
 
-        >>> from sympy import chebyshevu, chebyshevu_root
-        >>> chebyshevu_root(3, 2)
-        -sqrt(2)/2
-        >>> chebyshevu(3, chebyshevu_root(3, 2))
-        0
+    >>> from sympy import chebyshevu, chebyshevu_root
+    >>> chebyshevu_root(3, 2)
+    -sqrt(2)/2
+    >>> chebyshevu(3, chebyshevu_root(3, 2))
+    0
 
     """
 
@@ -154,18 +157,21 @@ class legendre(PolynomialSequence):
 
     Examples
     ========
-        >>> from sympy import legendre
-        >>> from sympy.abc import x
-        >>> legendre(0, x)
-        1
-        >>> legendre(1, x)
-        x
-        >>> legendre(2, x)
-        3*x**2/2 - 1/2
+
+    >>> from sympy import legendre
+    >>> from sympy.abc import x
+    >>> legendre(0, x)
+    1
+    >>> legendre(1, x)
+    x
+    >>> legendre(2, x)
+    3*x**2/2 - 1/2
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Legendre_polynomial
+
     """
 
     _ortho_poly = staticmethod(legendre_poly)
@@ -185,18 +191,21 @@ class assoc_legendre(Function):
 
     Examples
     ========
-        >>> from sympy import assoc_legendre
-        >>> from sympy.abc import x
-        >>> assoc_legendre(0,0, x)
-        1
-        >>> assoc_legendre(1,0, x)
-        x
-        >>> assoc_legendre(1,1, x)
-        -sqrt(-x**2 + 1)
+
+    >>> from sympy import assoc_legendre
+    >>> from sympy.abc import x
+    >>> assoc_legendre(0,0, x)
+    1
+    >>> assoc_legendre(1,0, x)
+    x
+    >>> assoc_legendre(1,1, x)
+    -sqrt(-x**2 + 1)
 
     References
     ==========
+
     * http://en.wikipedia.org/wiki/Associated_Legendre_polynomials
+
     """
 
     nargs = 3

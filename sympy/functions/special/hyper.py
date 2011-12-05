@@ -75,7 +75,8 @@ class hyper(TupleParametersBase):
     parameters actually yield a well-defined function.
 
 
-    **Examples**
+    Examples
+    ========
 
     The parameters :math:`a_p` and :math:`b_q` can be passed as arbitrary
     iterables, for example:
@@ -136,11 +137,13 @@ class hyper(TupleParametersBase):
     >>> hyperexpand(hyper([-a], [], x))
     (-x + 1)**a
 
-    See Also:
+    See Also
+    ========
 
     - :func:`sympy.simplify.hyperexpand`
 
-    **References**
+    References
+    ==========
 
     - Luke, Y. L. (1969), The Special Functions and Their Approximations,
       Volume 1
@@ -298,7 +301,8 @@ class meijerg(TupleParametersBase):
     convergence conditions.
 
 
-    **Examples**
+    Examples
+    ========
 
     You can pass the parameters either as four separate vectors:
 
@@ -365,15 +369,18 @@ class meijerg(TupleParametersBase):
     >>> hyperexpand(meijerg([[],[]], [[S(1)/2],[0]], (x/2)**2))
     sin(x)/sqrt(pi)
 
-    See Also:
+    See Also
+    ========
 
     - :func:`sympy.simplify.hyperexpand`
 
-    **References**
+    References
+    ==========
 
     - Luke, Y. L. (1969), The Special Functions and Their Approximations,
       Volume 1
     - http://en.wikipedia.org/wiki/Meijer_G-function
+
     """
 
     nargs = 3

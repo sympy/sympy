@@ -512,4 +512,80 @@ B-Splines
 Hypergeometric Functions
 ------------------------
 .. autoclass:: sympy.functions.special.hyper.hyper
+   :members:
+
 .. autoclass:: sympy.functions.special.hyper.meijerg
+   :members:
+
+Orthogonal Polynomials
+----------------------
+
+.. automodule:: sympy.functions.special.polynomials
+
+Chebyshev Polynomials
++++++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.chebyshevt
+   :members:
+
+.. autoclass:: sympy.functions.special.polynomials.chebyshevu
+   :members:
+
+.. autoclass:: sympy.functions.special.polynomials.chebyshevt_root
+   :members:
+
+.. autoclass:: sympy.functions.special.polynomials.chebyshevu_root
+   :members:
+
+Legendre Polynomials
+++++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.legendre
+   :members:
+
+.. autoclass:: sympy.functions.special.polynomials.assoc_legendre
+   :members:
+
+Hermite Polynomials
++++++++++++++++++++
+
+.. autoclass:: sympy.functions.special.polynomials.hermite
+   :members:
+
+Laguerre Polynomials
+++++++++++++++++++++
+
+.. autofunction:: sympy.functions.special.polynomials.laguerre_l
+
+Spherical Harmonics
+-------------------
+
+.. autofunction:: sympy.functions.special.spherical_harmonics.Plmcos
+
+.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm
+
+.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm_c
+
+.. autofunction:: sympy.functions.special.spherical_harmonics.Zlm
+
+Tensor Functions
+----------------
+
+.. autofunction:: sympy.functions.special.tensor_functions.Eijk
+
+.. autofunction:: sympy.functions.special.tensor_functions.eval_levicivita
+
+.. autoclass:: sympy.functions.special.tensor_functions.LeviCivita
+   :members:
+
+.. autoclass:: sympy.functions.special.tensor_functions.KroneckerDelta
+   :members:
+
+Zeta Functions
+--------------
+
+.. autoclass:: sympy.functions.special.zeta_functions.zeta
+   :members:
+
+.. autoclass:: sympy.functions.special.zeta_functions.dirichlet_eta
+   :members:
