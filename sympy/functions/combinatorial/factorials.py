@@ -156,7 +156,8 @@ class MultiFactorial(CombinatorialFunction):
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
 
-    The double factorial is defined for integers >= -1 as:
+    The double factorial is defined for integers >= -1 as::
+
                  ,
                 |  n*(n - 2)*(n - 4)* ... * 1    for n odd
         n!! =  -|  n*(n - 2)*(n - 4)* ... * 2    for n even

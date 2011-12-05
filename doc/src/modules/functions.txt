@@ -469,6 +469,10 @@ lowergamma
 
 Bessel Type Functions
 ---------------------
+
+.. autoclass:: sympy.functions.special.bessel.BesselBase
+   :members:
+
 .. autoclass:: sympy.functions.special.bessel.besselj
 .. autoclass:: sympy.functions.special.bessel.bessely
 .. autoclass:: sympy.functions.special.bessel.besseli
@@ -477,6 +481,8 @@ Bessel Type Functions
 .. autoclass:: sympy.functions.special.bessel.hankel2
 .. autoclass:: sympy.functions.special.bessel.jn
 .. autoclass:: sympy.functions.special.bessel.yn
+
+.. autofunction:: sympy.functions.special.bessel.jn_zeros
 
 Hypergeometric Functions
 ------------------------
