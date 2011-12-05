@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, I, log, S
+        sympify, Add, Mul, Pow, I, log, S, pi
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -1059,6 +1059,14 @@ def test_Add_is_irrational():
     assert (i+1).is_irrational  == True
     assert (i+1).is_rational    == False
 
+@XFAIL
+def test_Add_is_irrational2():
+    assert (sqrt(2) + sqrt(3)).is_irrational is True
+
+def test_Pow_is_irrational():
+    assert sqrt(2).is_irrational is True
+    assert sqrt(2 + sqrt(3)).is_irrational is True
+
 def test_issue432():
     class MightyNumeric(tuple):
         def __rdiv__(self, other):
@@ -1201,7 +1209,5 @@ def test_issue2361():
     assert 2 + u == 4 + 2*n
 
 def test_product_irrational():
-    from sympy import I, pi
     assert (I*pi).is_irrational is False
-    # The following used to be deduced from the above bug:
-    assert (I*pi).is_positive is False
+    assert I.is_positive == (I*pi).is_positive == False

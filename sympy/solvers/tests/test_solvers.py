@@ -427,7 +427,8 @@ def test_issue_1694():
     assert solve(Poly(sqrt(exp(x)) + sqrt(exp(-x)) - 4)) == \
             [2*log(-sqrt(3) + 2), 2*log(sqrt(3) + 2)]
     assert solve(Poly(exp(x) + exp(-x) - 4)) == [log(-sqrt(3) + 2), log(sqrt(3) + 2)]
-    assert solve(x**y + x**(2*y) - 1, x) == [(-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y)]
+    assert solve(x**y + x**(2*y) - 1, x) == \
+        [(-S.Half + sqrt(5)/2)**(1/y), (-S.Half - sqrt(5)/2)**(1/y)]
 
     assert solve(exp(x/y)*exp(-z/y) - 2, y) == [(x - z)/log(2)]
     assert solve(x**z*y**z - 2, z) in [[log(2)/(log(x) + log(y))], [log(2)/(log(x*y))]]
@@ -472,10 +473,12 @@ def test_checking():
 def test_issue_1572_1364_1368():
     assert solve((sqrt(x**2 - 1) - 2)) in ([sqrt(5), -sqrt(5)],
                                            [-sqrt(5), sqrt(5)])
-    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == \
+    assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) in [
         [-sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi)),
-          sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))]
-
+          sqrt(x)*sqrt(-log(log(2)) + log(log(2) + I*pi))],
+        [-sqrt(x)*sqrt(log((log(2) + I*pi)/log(2))),
+          sqrt(x)*sqrt(log((log(2) + I*pi)/log(2)))]
+        ]
     C1, C2 = symbols('C1 C2')
     f = Function('f')
     assert solve(C1 + C2/x**2 - exp(-f(x)), f(x)) == [log(x**2/(C1*x**2 + C2))]
