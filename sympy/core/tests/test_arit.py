@@ -1205,3 +1205,6 @@ def test_product_irrational():
     assert (I*pi).is_irrational is False
     # The following used to be deduced from the above bug:
     assert (I*pi).is_positive is False
+
+def test_issue_2820():
+    assert (x/(y*(1 + y))).expand() == x/(y**2 + y)

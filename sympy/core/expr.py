@@ -2083,7 +2083,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import powsimp
         x = sympify(x)
-        c, e = self.as_leading_term(x).as_coeff_exponent(x)
+        c, e = self.normal().as_leading_term(x).as_coeff_exponent(x)
         c = powsimp(c, deep=True, combine='exp')
         if not c.has(x):
             return c, e
@@ -2147,10 +2147,22 @@ class Expr(Basic, EvalfMixin):
 
         See the docstring in function.expand for more information.
         """
+        from sympy.simplify.simplify import fraction
+
         hints.update(power_base=power_base, power_exp=power_exp, mul=mul, \
            log=log, multinomial=multinomial, basic=basic)
 
         expr = self
+        if hints.pop('frac', False):
+            n, d = [a.expand(deep=deep, modulus=modulus, **hints)
+                    for a in fraction(self)]
+            return n/d
+        elif hints.pop('denom', False):
+            n, d = fraction(self)
+            return n/d.expand(deep=deep, modulus=modulus, **hints)
+        elif hints.pop('numer', False):
+            n, d = fraction(self)
+            return n.expand(deep=deep, modulus=modulus, **hints)/d
         for hint, use_hint in hints.iteritems():
             if use_hint:
                 func = getattr(expr, '_eval_expand_'+hint, None)
