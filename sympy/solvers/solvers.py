@@ -1363,7 +1363,8 @@ def solve_linear_system(system, *symbols, **flags):
                     nrows = matrix.rows
                     rowi = matrix.row(i)
                     ip = None
-                    for j in range(i + 1, matrix.rows):
+                    j = i + 1
+                    while j < matrix.rows:
                         # do we need to see if the rhs of j
                         # is a constant multiple of i's rhs?
                         rowj = matrix.row(j)
@@ -1375,6 +1376,9 @@ def solve_linear_system(system, *symbols, **flags):
                             _, jp = rowj[-1].as_content_primitive()
                             if not (simplify(jp - ip) or simplify(jp + ip)):
                                 matrix.row_del(j)
+
+                        j += 1
+
                     if nrows == matrix.rows:
                         # no solution
                         return None
