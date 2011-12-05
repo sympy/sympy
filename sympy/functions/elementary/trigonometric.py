@@ -582,6 +582,9 @@ class tan(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return atan
 
     @classmethod
@@ -760,6 +763,9 @@ class cot(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Return the inverse of this function.
+        """
         return acot
 
     @classmethod

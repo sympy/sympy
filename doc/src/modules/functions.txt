@@ -32,10 +32,22 @@ Examples::
 .. autoclass:: sympy.functions.elementary.complexes.Abs
    :members:
 
+acos
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.acos
+   :members:
+
 acosh
 -----
 
 .. autoclass:: sympy.functions.elementary.hyperbolic.acosh
+   :members:
+
+acot
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.acot
    :members:
 
 acoth
@@ -64,10 +76,31 @@ Examples::
 .. autoclass:: sympy.functions.elementary.complexes.arg
    :members:
 
+asin
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.asin
+   :members:
+
 asinh
 -----
 
 .. autoclass:: sympy.functions.elementary.hyperbolic.asinh
+   :members:
+
+atan
+----
+
+.. autoclass:: sympy.functions.elementary.trigonometric.atan
+   :members:
+
+atan2
+-----
+
+This function is like `atan`, but considers the sign of both arguments in
+order to correctly determine the quadrant of its result.
+
+.. autoclass:: sympy.functions.elementary.trigonometric.atan2
    :members:
 
 atanh
@@ -116,6 +149,12 @@ cos
 cosh
 ----
 .. autoclass:: sympy.functions.elementary.hyperbolic.cosh
+   :members:
+
+cot
+---
+
+.. autoclass:: sympy.functions.elementary.trigonometric.cot
    :members:
 
 coth
@@ -287,6 +326,12 @@ sign
 .. autoclass:: sympy.functions.elementary.complexes.sign
    :members:
 
+tan
+---
+
+.. autoclass:: sympy.functions.elementary.trigonometric.tan
+   :members:
+
 tanh
 ----
 
@@ -299,18 +344,48 @@ Combinatorial
 
 This module implements various combinatorial functions.
 
+bell
+----
 
-Binomial
+.. autoclass:: sympy.functions.combinatorial.numbers.bell
+   :members:
+
+bernoulli
+---------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.bernoulli
+   :members:
+
+binomial
 --------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.binomial
    :members:
 
+catalan
+-------
 
-Factorial
+.. autoclass:: sympy.functions.combinatorial.numbers.catalan
+   :members:
+
+
+euler
+-----
+
+.. autoclass:: sympy.functions.combinatorial.numbers.euler
+   :members:
+
+
+factorial
 ---------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.factorial
+   :members:
+
+factorial2 / double factorial
+-----------------------------
+
+.. autoclass:: sympy.functions.combinatorial.factorials.factorial2
    :members:
 
 
@@ -318,6 +393,25 @@ FallingFactorial
 ----------------
 
 .. autoclass:: sympy.functions.combinatorial.factorials.FallingFactorial
+   :members:
+
+fibonacci
+---------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.fibonacci
+   :members:
+
+harmonic
+--------
+
+.. autoclass:: sympy.functions.combinatorial.numbers.harmonic
+   :members:
+
+
+lucas
+-----
+
+.. autoclass:: sympy.functions.combinatorial.numbers.lucas
    :members:
 
 
