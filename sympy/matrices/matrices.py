@@ -535,27 +535,18 @@ class Matrix(object):
     def __hash__(self):
         return super(Matrix, self).__hash__()
 
-    def _format_str(self, strfunc, rowsep='\n'):
+    def _format_str(self, strfunc):
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
-            return '[]'
-        # Build table of string representations of the elements
+            return 'Matrix(%s, %s)' % (self.rows, self.cols)
+        # Build table of the elements
         res = []
-        # Track per-column max lengths for pretty alignment
-        maxlen = [0] * self.cols
         for i in range(self.rows):
             res.append([])
             for j in range(self.cols):
-                string = strfunc(self[i,j])
-                res[-1].append(string)
-                maxlen[j] = max(len(string), maxlen[j])
-        # Patch strings together
-        for i, row in enumerate(res):
-            for j, elem in enumerate(row):
-                # Pad each element up to maxlen so the columns line up
-                row[j] = elem.rjust(maxlen[j])
-            res[i] = "[" + ", ".join(row) + "]"
-        return rowsep.join(res)
+                elem = self[i,j]
+                res[-1].append(elem)
+        return 'Matrix(%s)' % res
 
     def __str__(self):
         return sstr(self)
