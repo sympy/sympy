@@ -153,7 +153,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
      - lists that contain a mix of the arguments above. (Entries that are first
         in the list have higher priority)
 
-    Examples:
+    Examples
+    ========
     (1) Use one of the provided modules:
         >> f = lambdify(x, sin(x), "math")
 

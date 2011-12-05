@@ -553,7 +553,7 @@ class LinearAlgebraMethods(object):
         Calculate the condition number of a matrix using a specified matrix norm.
 
         The condition number estimates the sensitivity of a matrix to errors.
-        Example: small input errors for ill-conditioned coefficient matrices
+        Examples: small input errors for ill-conditioned coefficient matrices
         alter the solution of the system dramatically.
 
         For ill-conditioned matrices it's recommended to use qr_solve() instead

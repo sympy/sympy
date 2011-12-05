@@ -91,7 +91,8 @@ def crt(m, v, symmetric=False, check=True):
 def crt1(m):
     """First part of Chinese Remainder Theorem, for multiple application.
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory.modular import crt1
     >>> crt1([18, 42, 6])
     (4536, [252, 108, 756], [0, 2, 0])
@@ -102,7 +103,8 @@ def crt1(m):
 def crt2(m, v, mm, e, s, symmetric=False):
     """Second part of Chinese Remainder Theorem, for multiple application.
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory.modular import crt1, crt2
     >>> mm, e, s = crt1([18, 42, 6])
     >>> crt2([18, 42, 6], [0, 0, 0], mm, e, s)

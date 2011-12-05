@@ -322,7 +322,8 @@ class Idx(Expr):
     converted to an integer symbol.  (Note that this conversion is not done for
     range or dimension arguments.)
 
-    :Examples:
+    :Examples
+    ========
 
     >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols, oo

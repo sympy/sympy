@@ -486,7 +486,7 @@ class Poly(Expr):
         """
         Remove unnecessary generators from ``f``.
 
-        **Example**
+        **Examples**
 
         >>> from sympy import Poly
         >>> from sympy.abc import a, b, c, d, x

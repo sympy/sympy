@@ -17,7 +17,7 @@ def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
-    **Example**
+    **Examples**
 
     >>> from sympy.core.exprtools import decompose_power
     >>> from sympy.abc import x, y
@@ -379,7 +379,7 @@ def gcd_terms(terms, isprimitive=False):
     Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
     True the _gcd_terms will not run the primitive method on the terms.
 
-    **Example**
+    **Examples**
 
     >>> from sympy.core import gcd_terms
     >>> from sympy.abc import x, y

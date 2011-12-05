@@ -4,7 +4,8 @@ from collections import defaultdict
 def binomial_coefficients(n):
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
     :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory import binomial_coefficients
     >>> binomial_coefficients(9)
     {(0, 9): 1, (1, 8): 9, (2, 7): 36, (3, 6): 84, (4, 5): 126, (5, 4): 126, (6, 3): 84, (7, 2): 36, (8, 1): 9, (9, 0): 1}
@@ -20,7 +21,8 @@ def binomial_coefficients_list(n):
     """ Return a list of binomial coefficients as rows of the Pascal's
     triangle.
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory import binomial_coefficients_list
     >>> binomial_coefficients_list(9)
     [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]

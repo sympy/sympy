@@ -1992,7 +1992,7 @@ def gf_value(f, a):
     """
     Value of polynomial 'f' at 'a' in field R.
 
-    **Example**
+    **Examples**
 
     >>> from sympy.polys.galoistools import gf_value
 
@@ -2042,7 +2042,7 @@ def _raise_mod_power(x, s, p, f):
     Used in gf_csolve to generate solutions of f(x) cong 0 mod(p**(s + 1))
     from the solutions of f(x) cong 0 mod(p**s).
 
-    **Example**
+    **Examples**
 
     >>> from sympy.polys.galoistools import _raise_mod_power
     >>> from sympy.polys.galoistools import csolve_prime
@@ -2079,7 +2079,7 @@ def csolve_prime(f, p, e=1):
     """
     Solutions of f(x) congruent 0 mod(p**e).
 
-    **Example**
+    **Examples**
 
     >>> from sympy.polys.galoistools import csolve_prime
 
@@ -2115,7 +2115,7 @@ def gf_csolve(f, n):
     solved for each factor. Applying the Chinese Remainder Theorem to the
     results returns the final answers.
 
-    **Example**
+    **Examples**
 
     >>> from sympy.polys.galoistools import gf_csolve
 

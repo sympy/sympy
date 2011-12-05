@@ -64,7 +64,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
     example, to import a submodule A.B, you must pass a nonempty fromlist option
     to __import__.  See the docstring of __import__().
 
-    **Example**
+    **Examples**
 
     >>> from sympy.external import import_module
 

@@ -13,15 +13,14 @@ class Subset(Basic):
     describes the intial subset to consider and the second
     describes the superset.
 
-    Examples::
-
-        >>> from sympy.combinatorics.subsets import Subset
-        >>> a = Subset(['c','d'], ['a','b','c','d'])
-        >>> a.next_binary().subset
-        ['b']
-        >>> a.prev_binary().subset
-        ['c']
-
+    Examples
+    ========
+    >>> from sympy.combinatorics.subsets import Subset
+    >>> a = Subset(['c','d'], ['a','b','c','d'])
+    >>> a.next_binary().subset
+    ['b']
+    >>> a.prev_binary().subset
+    ['c']
     """
 
     _rank_binary = None
@@ -36,17 +35,16 @@ class Subset(Basic):
 
         It takes the subset and its superset as its parameters.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.subset
-            ['c', 'd']
-            >>> a.superset
-            ['a', 'b', 'c', 'd']
-            >>> a.size
-            2
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.subset
+        ['c', 'd']
+        >>> a.superset
+        ['a', 'b', 'c', 'd']
+        >>> a.size
+        2
         """
         if len(subset) > len(superset):
             raise ValueError('Invalid arguments have been provided. The superset must be larger than the subset.')
@@ -64,16 +62,15 @@ class Subset(Basic):
         binary subsets by k steps. This variable can be
         both positive or negative.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.iterate_binary(-2).subset
-            ['d']
-            >>> a = Subset(['a','b','c'], ['a','b','c','d'])
-            >>> a.iterate_binary(2).subset
-            []
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.iterate_binary(-2).subset
+        ['d']
+        >>> a = Subset(['a','b','c'], ['a','b','c','d'])
+        >>> a.iterate_binary(2).subset
+        []
         """
         bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
         next_bin_list = list(bin((int(reduce(lambda x, y:
@@ -88,16 +85,15 @@ class Subset(Basic):
         """
         Generates the next binary ordered subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.next_binary().subset
-            ['b']
-            >>> a = Subset(['a','b','c','d'], ['a','b','c','d'])
-            >>> a.next_binary().subset
-            []
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.next_binary().subset
+        ['b']
+        >>> a = Subset(['a','b','c','d'], ['a','b','c','d'])
+        >>> a.next_binary().subset
+        []
         """
         return self.iterate_binary(1)
 
@@ -105,16 +101,15 @@ class Subset(Basic):
         """
         Generates the previous binary ordered subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset([], ['a','b','c','d'])
-            >>> a.prev_binary().subset
-            ['a', 'b', 'c', 'd']
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.prev_binary().subset
-            ['c']
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset([], ['a','b','c','d'])
+        >>> a.prev_binary().subset
+        ['a', 'b', 'c', 'd']
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.prev_binary().subset
+        ['c']
         """
         return self.iterate_binary(-1)
 
@@ -139,15 +134,14 @@ class Subset(Basic):
         Helper function used for prev_gray and next_gray.
         It performs k step overs to get the respective Gray codes.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset([1,2,3], [1,2,3,4])
-            >>> a.iterate_graycode(3).subset
-            [1, 4]
-            >>> a.iterate_graycode(-2).subset
-            [1, 2, 4]
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset([1,2,3], [1,2,3,4])
+        >>> a.iterate_graycode(3).subset
+        [1, 4]
+        >>> a.iterate_graycode(-2).subset
+        [1, 2, 4]
         """
         unranked_code = GrayCode.unrank(self.superset_size,
                                        (self.rank_gray + k) % self.cardinality)
@@ -158,13 +152,12 @@ class Subset(Basic):
         """
         Generates the next Gray code ordered subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset([1,2,3], [1,2,3,4])
-            >>> a.next_gray().subset
-            [1, 3]
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset([1,2,3], [1,2,3,4])
+        >>> a.next_gray().subset
+        [1, 3]
         """
         return self.iterate_graycode(1)
 
@@ -172,13 +165,12 @@ class Subset(Basic):
         """
         Generates the previous Gray code ordered subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset([2,3,4], [1,2,3,4,5])
-            >>> a.prev_gray().subset
-            [2, 3, 4, 5]
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset([2,3,4], [1,2,3,4,5])
+        >>> a.prev_gray().subset
+        [2, 3, 4, 5]
         """
         return self.iterate_graycode(-1)
 
@@ -187,16 +179,15 @@ class Subset(Basic):
         """
         Computes the binary ordered rank.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset([], ['a','b','c','d'])
-            >>> a.rank_binary
-            0
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.rank_binary
-            3
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset([], ['a','b','c','d'])
+        >>> a.rank_binary
+        0
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.rank_binary
+        3
         """
         if self._rank_binary == None:
             self._rank_binary = int("".join(
@@ -209,16 +200,15 @@ class Subset(Basic):
         """
         Computes the lexicographic ranking of the subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.rank_lexicographic
-            14
-            >>> a = Subset([2,4,5], [1,2,3,4,5,6])
-            >>> a.rank_lexicographic
-            43
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.rank_lexicographic
+        14
+        >>> a = Subset([2,4,5], [1,2,3,4,5,6])
+        >>> a.rank_lexicographic
+        43
         """
         if self._rank_lex == None:
             def ranklex(self, subset_index, i, n):
@@ -237,16 +227,15 @@ class Subset(Basic):
         """
         Computes the Gray code ranking of the subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.rank_gray
-            2
-            >>> a = Subset([2,4,5], [1,2,3,4,5,6])
-            >>> a.rank_gray
-            27
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.rank_gray
+        2
+        >>> a = Subset([2,4,5], [1,2,3,4,5,6])
+        >>> a.rank_gray
+        27
         """
         if self._rank_graycode == None:
             bits = Subset.bitlist_from_subset(self.subset, self.superset)
@@ -258,13 +247,12 @@ class Subset(Basic):
         """
         Gets the subset represented by the current instance.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.subset
-            ['c', 'd']
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.subset
+        ['c', 'd']
         """
         return self._subset
 
@@ -273,13 +261,12 @@ class Subset(Basic):
         """
         Gets the size of the subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.size
-            2
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.size
+        2
         """
         return len(self.subset)
 
@@ -288,13 +275,12 @@ class Subset(Basic):
         """
         Gets the superset of the subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.superset
-            ['a', 'b', 'c', 'd']
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.superset
+        ['a', 'b', 'c', 'd']
         """
         return self._superset
 
@@ -303,13 +289,12 @@ class Subset(Basic):
         """
         Returns the size of the superset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.superset_size
-            4
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.superset_size
+        4
         """
         return len(self.superset)
 
@@ -318,13 +303,12 @@ class Subset(Basic):
         """
         Returns the number of all possible subsets.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> a = Subset(['c','d'], ['a','b','c','d'])
-            >>> a.cardinality
-            16
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> a = Subset(['c','d'], ['a','b','c','d'])
+        >>> a.cardinality
+        16
         """
         return 2**(self.superset_size)
 
@@ -333,12 +317,11 @@ class Subset(Basic):
         """
         Gets the subset defined by the bitlist.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> Subset.subset_from_bitlist(['a','b','c','d'], '0011').subset
-            ['c', 'd']
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> Subset.subset_from_bitlist(['a','b','c','d'], '0011').subset
+        ['c', 'd']
         """
         if len(super_set) != len(bitlist):
             raise ValueError("The sizes of the lists are not equal")
@@ -353,12 +336,11 @@ class Subset(Basic):
         """
         Gets the bitlist corresponding to a subset.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> Subset.bitlist_from_subset(['c','d'], ['a','b','c','d'])
-            '0011'
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> Subset.bitlist_from_subset(['c','d'], ['a','b','c','d'])
+        '0011'
         """
         bitlist = ['0'] * len(superset)
         if type(subset) is Subset:
@@ -372,12 +354,11 @@ class Subset(Basic):
         """
         Gets the binary ordered subset of the specified rank.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> Subset.unrank_binary(4, ['a','b','c','d']).subset
-            ['b']
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> Subset.unrank_binary(4, ['a','b','c','d']).subset
+        ['b']
         """
         bin_list = list(bin(rank))[2:]
         bin_list = [0] * (len(superset) - len(bin_list)) + bin_list
@@ -388,14 +369,13 @@ class Subset(Basic):
         """
         Gets the Gray code ordered subset of the specified rank.
 
-        Examples::
-
-            >>> from sympy.combinatorics.subsets import Subset
-            >>> Subset.unrank_gray(4, ['a','b','c']).subset
-            ['a', 'b']
-            >>> Subset.unrank_gray(0, ['a','b','c']).subset
-            []
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.subsets import Subset
+        >>> Subset.unrank_gray(4, ['a','b','c']).subset
+        ['a', 'b']
+        >>> Subset.unrank_gray(0, ['a','b','c']).subset
+        []
         """
         graycode_bitlist = GrayCode.unrank(len(superset), rank)
         return Subset.subset_from_bitlist(superset, graycode_bitlist)
@@ -436,14 +416,13 @@ def ksubsets(superset, k):
 
     This uses the itertools generator.
 
-    Examples::
-
-        >>> from sympy.combinatorics.subsets import ksubsets
-        >>> list(ksubsets([1,2,3], 2))
-        [(1, 2), (1, 3), (2, 3)]
-        >>> list(ksubsets([1,2,3,4,5], 2))
-        [(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), \
-        (2, 5), (3, 4), (3, 5), (4, 5)]
-
+    Examples
+    ========
+    >>> from sympy.combinatorics.subsets import ksubsets
+    >>> list(ksubsets([1,2,3], 2))
+    [(1, 2), (1, 3), (2, 3)]
+    >>> list(ksubsets([1,2,3,4,5], 2))
+    [(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), \
+    (2, 5), (3, 4), (3, 5), (4, 5)]
     """
     return combinations(superset, k)

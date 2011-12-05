@@ -10,7 +10,8 @@ def sqrtdenest(expr):
     This algorithm is based on
     <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 
-    Example:
+    Examples
+    ========
     >>> from sympy.simplify.sqrtdenest import sqrtdenest
     >>> from sympy import sqrt
     >>> sqrtdenest(sqrt(5 + 2 * sqrt(6)))
@@ -96,7 +97,8 @@ def subsets(n):
     Returns all possible subsets of the set (0, 1, ..., n-1) except the empty,
     listed in numerical order according to binary representation.
 
-    Example:
+    Examples
+    ========
     >>> from sympy.simplify.sqrtdenest import subsets
     >>> subsets(3)
     [[0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]

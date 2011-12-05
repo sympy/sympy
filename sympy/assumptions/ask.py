@@ -55,7 +55,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
             where ``proposition`` is any boolean expression
 
-    **Examples**
+    Examples
+    ========
         >>> from sympy import ask, Q, pi
         >>> from sympy.abc import x, y
         >>> ask(Q.rational(pi))

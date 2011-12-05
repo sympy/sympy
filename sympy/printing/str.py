@@ -515,7 +515,8 @@ def sstr(expr, **settings):
     For large expressions where speed is a concern, use the setting
     order='none'.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, Eq, sstr
     >>> a, b = symbols('a b')

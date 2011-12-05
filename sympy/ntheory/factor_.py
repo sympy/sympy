@@ -135,7 +135,9 @@ def trailing(n):
     """Count the number of trailing zero digits in the binary
     representation of n, i.e. determine the largest power of 2
     that divides n.
-    **Examples**
+
+    Examples
+    ========
     >>> from sympy import trailing
     >>> trailing(128)
     7
@@ -169,7 +171,7 @@ def multiplicity(p, n):
     """
     Find the greatest integer m such that p**m divides n.
 
-    Example usage
+    Examples usage
     =============
         >>> from sympy.ntheory import multiplicity
         >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
@@ -222,7 +224,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     is True by default since only a few small factors will be tested in
     the course of searching for the perfect power.
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy import perfect_power
     >>> perfect_power(16)
     (2, 4)
@@ -485,7 +488,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     By trying more than one ``a`` it is possible that one of them
     will yield a factor.
 
-    Example usage
+    Examples usage
     =============
     With the default smoothness bound, this number can't be cracked:
 
@@ -1134,7 +1137,7 @@ def primefactors(n, limit=None, verbose=False):
     for complete factorization. Unlike factorint(), primefactors() does
     not return -1 or 0.
 
-    Example usage
+    Examples usage
     =============
 
         >>> from sympy.ntheory import primefactors, factorint, isprime

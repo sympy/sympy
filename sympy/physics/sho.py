@@ -17,7 +17,8 @@ def R_nl(n, l, nu, r):
         Radial coordinate
 
 
-    :Examples:
+    :Examples
+    ========
 
     >>> from sympy.physics.sho import R_nl
     >>> from sympy import var

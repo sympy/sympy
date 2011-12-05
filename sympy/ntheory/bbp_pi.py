@@ -69,7 +69,8 @@ def pi_hex_digits(n):
        The decimal has been taken out of the number, so
        n = 0[0] = 3 # First digit of pi in hex, 3
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory.bbp_pi import pi_hex_digits
     >>> pi_hex_digits(0)
     '3243f6a8885a30'

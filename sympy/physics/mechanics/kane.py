@@ -35,7 +35,7 @@ class Kane(object):
     A simple example for a one degree of freedom translational
     spring-mass-damper follows
 
-    Example
+    Examples
     =======
 
     In this example, we first need to do the kinematics.

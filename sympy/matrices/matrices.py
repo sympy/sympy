@@ -1854,7 +1854,6 @@ class Matrix(object):
         True
         >>> c.is_square
         True
-
         """
         return self.rows == self.cols
 
@@ -1883,7 +1882,6 @@ class Matrix(object):
         False
         >>> d.is_zero
         True
-
         """
         return all(i.is_zero for i in self)
 
@@ -1905,7 +1903,6 @@ class Matrix(object):
         >>> a = Matrix([[1,0,1],[1,0,0],[1,1,0]])
         >>> a.is_nilpotent()
         False
-
         """
         if not self.is_square:
             raise NonSquareMatrixError("Nilpotency is valid only for square matrices")

@@ -55,7 +55,8 @@ def npartitions(n, verbose=False):
     The correctness of this implementation has been tested for 10**n
     up to n = 8.
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory import npartitions
     >>> npartitions(25)
     1958

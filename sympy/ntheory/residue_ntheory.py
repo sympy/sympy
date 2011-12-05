@@ -5,7 +5,8 @@ from factor_ import factorint, trailing
 def int_tested(*j):
     """Return all args as integers after confirming that they are integers.
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory.residue_ntheory import int_tested
     >>> int_tested(8, 9, 110)
     (8, 9, 110)
@@ -20,7 +21,8 @@ def int_tested(*j):
 def totient_(n):
     """Returns the number of integers less than n
     and relatively prime to n
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory import totient_
     >>> totient_(6)
     2

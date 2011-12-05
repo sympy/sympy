@@ -346,7 +346,11 @@ class Max(MinMaxBase, Application, Basic):
     Also, only comparable arguments are permitted.
 
     Examples
+<<<<<<< HEAD
     ========
+=======
+    -------
+>>>>>>> Changed **Examples** and Examples: to Examples\n    ========
 
     >>> from sympy import Max, Symbol, oo
     >>> from sympy.abc import x, y
@@ -432,7 +436,11 @@ class Min(MinMaxBase, Application, Basic):
     Return, if possible, the minimum value of the list.
 
     Examples
+<<<<<<< HEAD
     ========
+=======
+    -------
+>>>>>>> Changed **Examples** and Examples: to Examples\n    ========
 
     >>> from sympy import Min, Symbol, oo
     >>> from sympy.abc import x, y

@@ -34,7 +34,8 @@ class Sieve:
     def extend(self, N):
         """Grow the sieve to cover all numbers <= N.
 
-        **Example**
+        Examples
+        ========
         >>> from sympy.ntheory import sieve
         >>> sieve.extend(30)
         >>> sieve[10] == 29
@@ -66,7 +67,8 @@ class Sieve:
     def extend_to_no(self, n):
         """Extend to include (at least) the nth prime numbers
 
-        **Example**
+        Examples
+        ========
         >>> from sympy import sieve
         >>> sieve.extend_to_no(9)
         >>> sieve[10] == 29
@@ -78,7 +80,8 @@ class Sieve:
     def primerange(self, a, b):
         """Generate all prime numbers in the range [a, b).
 
-        **Example**
+        Examples
+        ========
         >>> from sympy import sieve
         >>> print [i for i in sieve.primerange(7, 18)]
         [7, 11, 13, 17]
@@ -102,7 +105,8 @@ class Sieve:
         """For n >= 2, return the tightest a, b such that
         self[a] <= n <= self[b]
 
-        **Example**
+        Examples
+        ========
         >>> from sympy import sieve
         >>> sieve.search(25)
         (9, 10)
@@ -141,7 +145,8 @@ def prime(n):
         ==========
         - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
 
-        **Example**
+        Examples
+        ========
         >>> from sympy import prime
         >>> prime(10)
         29
@@ -157,7 +162,8 @@ def primepi(n):
         of prime numbers less than or equal to n. The number n need not
         necessarily be an integer.
 
-        **Example**
+        Examples
+        ========
         >>> from sympy import primepi
         >>> primepi(25)
         9
@@ -274,7 +280,8 @@ def primerange(a, b):
         1. http://en.wikipedia.org/wiki/Prime_number
         2. http://primes.utm.edu/notes/gaps.html
 
-        **Example**
+        Examples
+        ========
         >>> from sympy import primerange
         >>> print [i for i in primerange(1, 30)]
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
@@ -298,7 +305,8 @@ def randprime(a, b):
         ==========
         - http://en.wikipedia.org/wiki/Bertrand's_postulate
 
-        **Example**
+        Examples
+        ========
         >>> from sympy import randprime, isprime
         >>> randprime(1, 30) #doctest: +SKIP
         13

@@ -241,7 +241,8 @@ def find_unit(quantity):
         if quantity is a string -- units containing the string `quantity`
         if quantity is a unit -- units having matching base units
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
     ['charge']

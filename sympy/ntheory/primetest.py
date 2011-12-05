@@ -83,7 +83,8 @@ def mr(n, bases):
     A list of thresholds and the bases they require are here:
     http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy.ntheory.primetest import mr
     >>> mr(1373651, [2, 3])
     False
@@ -182,7 +183,7 @@ def isprime(n):
     pseudoprime as a prime with an error of about 4**-k. The current value
     of k is 46 so the error is about 2 x 10**-28.
 
-    Example usage
+    Examples usage
     =============
 
     >>> from sympy.ntheory import isprime

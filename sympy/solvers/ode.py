@@ -902,7 +902,7 @@ def odesimp(eq, func, order, hint):
     functions do not call odesimp (because the dsolve() wrapper does).
     Therefore, this function is designed for mainly internal use.
 
-    **Example**
+    **Examples**
         >>> from sympy import sin, symbols, dsolve, pprint, Function
         >>> from sympy.solvers.ode import odesimp
         >>> x , u2, C1= symbols('x,u2,C1')
@@ -1560,7 +1560,7 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     The structure of this function is very similar to that of
     constantsimp().
 
-    **Example**
+    **Examples**
         >>> from sympy import symbols, Eq, pprint
         >>> from sympy.solvers.ode import constant_renumber
         >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
@@ -1745,7 +1745,7 @@ def ode_1st_exact(eq, func, order, match):
     with dy.  This is supposed to represent the function that you are
     solving for.
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve, cos, sin
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -1788,7 +1788,7 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     information on these hints.  Note that there is no
     '1st_homogeneous_coeff_best_Integral' hint.
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -1872,7 +1872,7 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     See also the docstrings of ode_1st_homogeneous_coeff_best() and
     ode_1st_homogeneous_coeff_subs_indep_div_dep().
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -1954,7 +1954,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     See also the docstrings of ode_1st_homogeneous_coeff_best() and
     ode_1st_homogeneous_coeff_subs_dep_div_indep().
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2100,7 +2100,7 @@ def ode_1st_linear(eq, func, order, match):
                \     /                     /
 
 
-    **Example**
+    **Examples**
         >>> f = Function('f')
         >>> pprint(dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
         ... f(x), '1st_linear'))
@@ -2170,7 +2170,7 @@ def ode_Bernoulli(eq, func, order, match):
      /
 
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve, Eq, pprint, log
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2272,7 +2272,7 @@ def ode_Liouville(eq, func, order, match):
                  |                     |
                 /                     /
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2399,7 +2399,7 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     - returns = 'both', return a dictionary {'sol':solution to ODE,
       'list': list of linearly independent solutions}.
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2510,7 +2510,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     dependent on the solution to the homogeneous equation, they are
     multiplied by sufficient x to make them linearly independent.
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve, pprint, exp, cos
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2652,7 +2652,7 @@ def _undetermined_coefficients_match(expr, x):
     (1 + cos(2*x))/2 to properly apply the method of undetermined
     coefficients on it.
 
-    **Example**
+    **Examples**
         >>> from sympy import log, exp
         >>> from sympy.solvers.ode import _undetermined_coefficients_match
         >>> from sympy.abc import x
@@ -2812,7 +2812,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     this method, especially if the solution to the homogeneous
     equation has trigonometric functions in it.
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve, pprint, exp, log
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2919,7 +2919,7 @@ def ode_separable(eq, func, order, match):
           |                  |
          /                  /
 
-    **Example**
+    **Examples**
         >>> from sympy import Function, dsolve, Eq
         >>> from sympy.abc import x
         >>> f = Function('f')
