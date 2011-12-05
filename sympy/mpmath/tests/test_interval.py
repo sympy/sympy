@@ -303,6 +303,8 @@ def test_interval_complex():
     assert iv.sin(2+3j).ae(mp.sin(2+3j))
 
 def test_interval_complex_arg():
+    mp.dps = 15
+    iv.dps = 15
     assert iv.arg(3) == 0
     assert iv.arg(0) == 0
     assert iv.arg([0,3]) == 0
