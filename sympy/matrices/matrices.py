@@ -140,19 +140,6 @@ class Matrix(object):
         else:
             raise TypeError("Data type not understood")
 
-    def key2ij(self, key):
-        """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
-        indices are also supported and are remapped to positives provided they
-        are valid indices."""
-
-        if not (is_sequence(key) and len(key) == 2):
-            raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
-                    %repr(key))
-        i, j = [(k + n) if k < 0 else k for k, n in zip(key, (self.rows, self.cols))]
-        if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
-            raise IndexError("Index out of range: a[%s]"%repr(key))
-        return i,j
-
     def transpose(self):
         """
         Matrix transposition.
@@ -376,8 +363,8 @@ class Matrix(object):
         [0, 0, 0, 0, 1]
 
         """
-        rlo, rhi = self.slice2bounds(key[0], self.rows)
-        clo, chi = self.slice2bounds(key[1], self.cols)
+        rlo, rhi, clo, chi = self.key2bounds(key)
+
         if value.rows != rhi - rlo or value.cols != chi - clo:
             raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
                 "as the in sub-Matrix given by `key`.")
@@ -1076,13 +1063,7 @@ class Matrix(object):
         [5, 6]
 
         """
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("At least one element of `keys` must be a slice object.")
-
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        rlo, rhi, clo, chi = self.key2bounds(keys)
         outLines, outCols = rhi-rlo, chi-clo
         outMat = [0]*outLines*outCols
         for i in xrange(outLines):
@@ -1131,6 +1112,40 @@ class Matrix(object):
         colsList = [self.key2ij((0,k))[1] for k in colsList]
         return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]])
 
+    def key2bounds(self, keys):
+        """Converts a key with potentially mixed types of keys (integer and slice)
+        into a tuple of ranges and raises an error if any index is out of self's
+        range."""
+
+        islice, jslice = [isinstance(k, slice) for k in keys]
+        if islice:
+            rlo, rhi = self.slice2bounds(keys[0], self.rows)
+        else:
+            # assuming we don't have a
+            rlo, _ = self.slice2bounds((keys[0], 0), self.rows)
+            rhi  = rlo + 1
+        if jslice:
+            clo, chi = self.slice2bounds(keys[1], self.cols)
+        else:
+            _, clo = self.slice2bounds((0, keys[1]), self.cols)
+            chi = clo + 1
+        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
+            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        return rlo, rhi, clo, chi
+
+    def key2ij(self, key):
+        """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
+        indices are also supported and are remapped to positives provided they
+        are valid indices."""
+
+        if not (is_sequence(key) and len(key) == 2):
+            raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
+                    %repr(key))
+        i, j = [(k + n) if k < 0 else k for k, n in zip(key, (self.rows, self.cols))]
+        if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
+            raise IndexError("Index out of range: a[%s]"%repr(key))
+        return i,j
+
     def slice2bounds(self, key, defmax):
         """
         Takes slice or number and returns (min,max) for iteration
@@ -1138,10 +1153,9 @@ class Matrix(object):
         """
         if isinstance(key, slice):
             return key.indices(defmax)[:2]
-        elif isinstance(key, int):
-            if key == -1:
-                key = defmax - 1
-            return slice(key, key + 1).indices(defmax)[:2]
+        elif isinstance(key, tuple):
+            key = [defmax - 1 if i == -1 else i for i in key]
+            return self.key2ij(key)
         else:
             raise IndexError("Improper index type")
 
@@ -1536,7 +1550,7 @@ class Matrix(object):
         # only in the end.
         x = []
         n = R.rows
-        for j in range(n-1, -1, -1):
+        for j in range(n - 1, -1, -1):
             tmp = y[j,:]
             for k in range(j+1, n):
                 tmp -= R[j,k] * x[n-1-k]
@@ -3668,12 +3682,7 @@ class SparseMatrix(Matrix):
         return r
 
     def submatrix(self, keys):
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("Both elements of `keys` must be slice objects.")
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        rlo, rhi, clo, chi = self.key2bounds(keys)
         return SparseMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
 
     def reshape(self, _rows, _cols):
