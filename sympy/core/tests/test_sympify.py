@@ -4,7 +4,7 @@ from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.utilities.decorator import CONSERVE_MPMATH_DPS
+from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 
 from sympy import mpmath
@@ -74,7 +74,7 @@ def test_sympify_gmpy():
         value = sympify(gmpy.mpq(101, 127))
         assert value == Rational(101, 127) and type(value) is Rational
 
-@CONSERVE_MPMATH_DPS
+@conserve_mpmath_dps
 def test_sympify_mpmath():
     value = sympify(mpmath.mpf(1.0))
     assert value == Float(1.0) and type(value) is Float

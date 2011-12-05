@@ -64,7 +64,7 @@ def xthreaded(func):
     """
     return threaded_factory(func, False)
 
-def CONSERVE_MPMATH_DPS(func):
+def conserve_mpmath_dps(func):
     """After the function finishes, resets the value of mpmath.mp.dps to the value it had before the function was run."""
     import functools
     from sympy import mpmath

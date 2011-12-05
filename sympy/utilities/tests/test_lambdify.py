@@ -5,7 +5,7 @@ from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import skip
-from sympy.utilities.mpmathutils import CONSERVE_MPMATH_DPS
+from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
 import math, sympy
 
@@ -62,7 +62,7 @@ def test_atoms():
 #================== Test different modules ================
 
 # high precision output of sin(0.2*pi) is used to detect if precision is lost unwanted
-@CONSERVE_MPMATH_DPS
+@conserve_mpmath_dps
 def test_sympy_lambda():
     mpmath.mp.dps = 50
     sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
@@ -73,7 +73,7 @@ def test_sympy_lambda():
     # arctan is in numpy module and should not be available
     raises(NameError,"f = lambdify(x, arctan(x), \"sympy\")")
 
-@CONSERVE_MPMATH_DPS
+@conserve_mpmath_dps
 def test_math_lambda():
     mpmath.mp.dps = 50
     sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
@@ -82,7 +82,7 @@ def test_math_lambda():
     assert -prec < f(0.2) - sin02 < prec
     raises(ValueError,"f(x)") # if this succeeds, it can't be a python math function
 
-@CONSERVE_MPMATH_DPS
+@conserve_mpmath_dps
 def test_mpmath_lambda():
     mpmath.mp.dps = 50
     sin02 = mpmath.mpf("0.19866933079506121545941262711838975037020672954020")
@@ -91,7 +91,7 @@ def test_mpmath_lambda():
     assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
     raises(TypeError,"f(x)") # if this succeeds, it can't be a mpmath function
 
-@CONSERVE_MPMATH_DPS
+@conserve_mpmath_dps
 @XFAIL
 def test_number_precision():
     mpmath.mp.dps = 50

@@ -22,7 +22,7 @@ from sympy import (Rational, Symbol, list2numpy, sin, Float, Matrix, lambdify,
 import sympy
 
 from sympy import mpmath
-from sympy.utilities.decorator import CONSERVE_MPMATH_DPS
+from sympy.utilities.decorator import conserve_mpmath_dps
 
 # first, systematically check, that all operations are implemented and don't
 # raise and exception
@@ -196,7 +196,7 @@ def test_issue629():
     assert (Float("0.5")*array([2*x, 0]) == array([Float("1.0")*x, 0])).all()
     assert (Float("0.5") + array([2*x, 0]) == array([2*x + Float("0.5"), Float("0.5")])).all()
 
-@CONSERVE_MPMATH_DPS
+@conserve_mpmath_dps
 def test_lambdify():
     mpmath.mp.dps = 16
     sin02 = mpmath.mpf("0.198669330795061215459412627")
