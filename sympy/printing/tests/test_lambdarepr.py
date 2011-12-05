@@ -12,7 +12,7 @@ def test_basic():
 
 def test_matrix():
     A = Matrix([[x,y],[y*x,z**2]])
-    assert lambdarepr(A)=="Matrix([[  x,    y],[x*y, z**2]])"
+    assert lambdarepr(A)=="Matrix([[x, y], [x*y, z**2]])"
 
 def test_piecewise():
     # In each case, test eval() the lambdarepr() to make sure there are a
