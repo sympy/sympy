@@ -18,6 +18,9 @@ def test_sqrtdenest2():
             sqrt(5) + sqrt(11-2*sqrt(29))
     assert sqrtdenest(sqrt(13-2*sqrt(10)+2*sqrt(2)*sqrt(-2*sqrt(10)+11))) == \
             -1 + sqrt(2) + sqrt(10)
+    assert sqrtdenest(sqrt(1+sqrt(1+sqrt(7)))) == sqrt(1+sqrt(1+sqrt(7)))
+    assert sqrtdenest(sqrt(((1+sqrt(1+2*sqrt(3+sqrt(2)+sqrt(5))))**2).expand())) == \
+        1 + sqrt(1 + 2*sqrt(sqrt(2) + sqrt(5) + 3))
 
 def test_issue_2758():
     from sympy.abc import x, y
