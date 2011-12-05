@@ -19,6 +19,7 @@ def decompose_power(expr):
 
     Examples
     ========
+
     >>> from sympy.core.exprtools import decompose_power
     >>> from sympy.abc import x, y
 

@@ -447,7 +447,7 @@ class Basic(object):
            those types of atoms.
 
            Examples
-            ========
+           ========
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)

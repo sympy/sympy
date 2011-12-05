@@ -260,12 +260,8 @@ class KroneckerDelta(Function):
         """
         Returns True if indices are either both above or below fermi.
 
-<<<<<<< HEAD
         Examples
         ========
-=======
-        Examples:
->>>>>>> Changed **Examples** and Examples: to Examples\n    ========
 
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
