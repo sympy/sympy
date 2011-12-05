@@ -33,20 +33,6 @@ def sqrtdenest(expr):
             return expr.func(*[sqrtdenest(a) for a in args])
     return expr
 
-def normalize(s):
-    if s.is_Add:
-        a = list(s.args)
-        for i, x in enumerate(a):
-            if x.is_Number:
-                break
-        else:
-            return (1, s)
-        del a[i]
-        a = [y/x for y in a]
-        return x, 1 + Add(*a)
-    else:
-        return 1, s
-
 def _sqrtdenest(expr):
     from sympy.simplify.simplify import radsimp
     if not expr.is_Pow or expr.exp != S.Half:
@@ -61,24 +47,24 @@ def _sqrtdenest(expr):
         a, b, r = val
         # try a quick denesting
         d2 = expand_multinomial(a**2 - b**2*r)
-        if d2.is_Number and \
-            max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
+        if d2.is_Number and d2.is_positive and \
+           max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
             d = sqrt(d2)
             vad = a + d
-            vad1 = radsimp(1/vad)
-            return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
+            if sqrt_depth(vad) < sqrt_depth(a):
+                vad1 = radsimp(1/vad)
+                return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
         else:
             d = sqrt(d2)
             vad = a + d
-            vad1, vad2 = normalize(vad)
-            q = r/vad2
+            vp0, vp1 = vad.as_content_primitive()
+            rp0, rp1 = r.as_content_primitive()
+            q = rp1/vp1
             if q.is_Number:
-                c = (b**2 * q)/(2 * vad1)
-                #c1 = radsimp((b**2*r/(2*vad)).expand())
+                c = (b**2 * q * rp0)/(2 * vp0)
                 if sqrt_depth(r) > sqrt_depth(c):
-                    z = (sqrt(vad/2) + sign(b)*sqrt(c)).expand()
+                    z = (sqrt(vp0/2)*sqrt(vp1) + sign(b)*sqrt(c)).expand()
                     return z
-
 
     else:
         return expr
@@ -112,7 +98,7 @@ def sqrt_depth(p):
         return 0
 
 def sqrt_match(p):
-    """return (a, b, r) for match a + b*sqrt(r) where
+    """return (a, b, r) for match p = a + b*sqrt(r) where
     sqrt(r) has maximal nested sqrt among addends of p
 
     Examples:
@@ -124,19 +110,31 @@ def sqrt_match(p):
     p = p.expand()
     if p.is_Number:
         return (p, S.Zero, S.Zero)
-    pargs = list(p.args)
-    v = [(sqrt_depth(x), i) for i, x in enumerate(pargs)]
-    if not v:
-        return None
-    nmax = max(v)
-    if nmax[0] == 0:
-        return None
-    n = nmax[1]
-    p1 = pargs[n]
-    del pargs[n]
-    a = Add(*pargs)
-    b, r = p1.as_coeff_Mul()
-    return (a, b, r**2)
+    if p.is_Add:
+        pargs = list(p.args)
+        v = [(sqrt_depth(x), i) for i, x in enumerate(pargs)]
+        if not v:
+            return None
+        nmax = max(v)
+        if nmax[0] == 0:
+            b, r = p.as_coeff_Mul()
+            if p.is_Pow and p.exp == S.Half:
+                return (S.Zero, b, p.base)
+            else:
+                return None
+        n = nmax[1]
+        p1 = pargs[n]
+        del pargs[n]
+        a = Add(*pargs)
+        b, r = p1.as_coeff_Mul()
+        res = (a, b, r**2)
+    else:
+        b, r = p.as_coeff_Mul()
+        if r.is_Pow and r.exp == S.Half:
+            res = (S.Zero, b, r**2)
+        else:
+            return None
+    return res
 
 def _denester (nested, av0, h, max_depth_level=4):
     """
@@ -162,6 +160,7 @@ def _denester (nested, av0, h, max_depth_level=4):
     from sympy.simplify.simplify import radsimp
     if h > max_depth_level:
         return None, None
+    #if not av0 and all(n.is_Number and n.is_positive for n in nested): #If none of the arguments are nested
     if not av0 and all(n.is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
             p = prod(nested[i] for i in range(len(f)) if f[i]).expand()
@@ -212,6 +211,8 @@ def _denester (nested, av0, h, max_depth_level=4):
                 return (sqrt(vad/2) + sign(v[1])*sqrt((v[1]**2*R*vad1/2).expand())).expand(), f
             else: #Solution requires a fourth root
                 FR, s = (R.expand()**Rational(1,4)), sqrt((v[1]*R).expand()+d)
+                if s == 0:
+                    return sqrt(nested[-1]), [0]*len(nested)
                 return (s/(sqrt(2)*FR) + v[0]*FR/(sqrt(2)*s)).expand(), f
 
 def subsets(n):
