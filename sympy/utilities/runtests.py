@@ -572,7 +572,8 @@ class SymPyTests(object):
         if not funcs:
             return
         self._reporter.entering_filename(filename, len(funcs))
-        if not sort: random.shuffle(funcs)
+        if not sort:
+            random.shuffle(funcs)
         for f in funcs:
             self._reporter.entering_test(f)
             try:
