@@ -713,8 +713,16 @@ class Mul(AssocOp):
         return self.func(*terms)
 
     def _eval_expand_mul(self, deep=True, **hints):
+        from sympy import fraction
+        expr = self
+        n, d = fraction(expr)
+        if d is not S.One:
+            expr = n/d._eval_expand_mul(deep=deep, **hints)
+            if not expr.is_Mul:
+                return expr._eval_expand_mul(deep=deep, **hints)
+
         plain, sums, rewrite = [], [], False
-        for factor in self.args:
+        for factor in expr.args:
             if deep:
                 term = factor.expand(deep=deep, **hints)
                 if term != factor:
@@ -732,7 +740,7 @@ class Mul(AssocOp):
                     sums.append(Wrapper(factor))
 
         if not rewrite:
-            return self
+            return expr
         else:
             plain = Mul(*plain)
             if sums:

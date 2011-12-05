@@ -6,6 +6,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
     factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
 from sympy.core.mul import _keep_coeff
+from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -879,3 +880,8 @@ def test_issue2834():
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
     assert abs(denom(x).n()) > 1e-12
     assert abs(denom(radsimp(x))) > 1e-12 # in case simplify didn't handle it
+
+def test_fraction_expand():
+    eq = (x + y)*y/x
+    assert eq.expand(frac=True) == fraction_expand(eq) == (x*y + y**2)/x
+    assert eq.expand() == y + y**2/x

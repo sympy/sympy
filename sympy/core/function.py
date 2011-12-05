@@ -1551,7 +1551,19 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> expand_mul(_)
     x*y**2 + 2*x*y*z + x*z**2
 
+    >>> expand((x + y)*y/x)
+    y + y**2/x
+
+    The parts of a rational expression can be targeted, too:
+
+    >>> expand((x + y)*y/x/(x + 1), frac=True)
+    (x*y + y**2)/(x**2 + x)
+    >>> expand((x + y)*y/x/(x + 1), numer=True)
+    (x*y + y**2)/(x*(x + 1))
+    >>> expand((x + y)*y/x/(x + 1), denom=True)
+    y*(x + y)/(x**2 + x)
     """
+    # don't modify this; modify the Expr.expand method
     hints['power_base'] = power_base
     hints['power_exp'] = power_exp
     hints['mul'] = mul
