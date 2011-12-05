@@ -484,6 +484,12 @@ Bessel Type Functions
 
 .. autofunction:: sympy.functions.special.bessel.jn_zeros
 
+B-Splines
+---------
+
+.. autofunction:: sympy.functions.special.bsplines.bspline_basis
+.. autofunction:: sympy.functions.special.bsplines.bspline_basis_set
+
 Hypergeometric Functions
 ------------------------
 .. autoclass:: sympy.functions.special.hyper.hyper
