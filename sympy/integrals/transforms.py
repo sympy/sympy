@@ -785,7 +785,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     >>> inverse_mellin_transform(f, s, x, (-1, 1))
     -x*Heaviside(-x + 1)/2 - Heaviside(x - 1)/(2*x)
     >>> inverse_mellin_transform(f, s, x, (1, oo))
-    (-x**2 + 1)*Heaviside(-x + 1)/(2*x)
+    (-x**2/2 + 1/2)*Heaviside(-x + 1)/x
     """
     return InverseMellinTransform(F, s, x, strip[0], strip[1]).doit(**hints)
 
