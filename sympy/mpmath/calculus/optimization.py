@@ -1014,7 +1014,7 @@ def steffensen(f):
     Definition:
     F(x) = (x*f(f(x)) - f(x)**2) / (f(f(x)) - 2*f(x) + x)
 
-    Examples
+    Example
     .......
 
     You can use Steffensen's method to accelerate a fixpoint iteration of linear
