@@ -166,8 +166,9 @@ def _denester (nested, av0, h, max_depth_level=4):
             p = prod(nested[i] for i in range(len(f)) if f[i]).expand()
             if 1 in f and f.count(1) > 1 and f[-1]:
                 p = -p
-            if sqrt(p).is_Number:
-                return sqrt(p), f #If we got a perfect square, return its square root.
+            sqp = sqrt(p)
+            if sqp.is_Number:
+                return sqp, f #If we got a perfect square, return its square root.
         return sqrt(nested[-1]), [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
     else:
         R = None
@@ -185,13 +186,12 @@ def _denester (nested, av0, h, max_depth_level=4):
                     else:
                         R = v[2]
             if R is None:
-                return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the pravious invocation
+                return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the previous invocation
             nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
         d, f = _denester(nested2, False, h+1)
         if f == None:
             return None, None
-        if not any(f[i] for i in range(len(nested))):
-        #if all(fi == 0 for fi in f):
+        if all(fi == 0 for fi in f):
             v = values[-1]
             return sqrt(v[0] + v[1]*d), f
         else:
