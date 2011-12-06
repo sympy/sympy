@@ -185,7 +185,7 @@ def checksol(f, symbol, sol=None, **flags):
             # with a simplified solution
             val = f.subs(sol)
             if flags.get('force', True):
-                val = posify(val)[0]
+                val, reps = posify(val)
                 # expansion may work now, so try again and check
                 exval = expand_mul(expand_multinomial(val))
                 if exval.is_number or not exval.free_symbols:
@@ -206,25 +206,25 @@ def checksol(f, symbol, sol=None, **flags):
             # zero anymore -- can it?
             pot = preorder_traversal(expand_mul(val))
             seen = set()
-            none = False
+            saw_pow_func = False
             for p in pot:
                 if p in seen:
                     continue
                 seen.add(p)
                 if p.is_Pow and not p.exp.is_Integer:
-                    none = True
+                    saw_pow_func = True
                 elif p.is_Function:
-                    none = True
+                    saw_pow_func = True
                 elif isinstance(p, UndefinedFunction):
-                    none = True
-                if none:
+                    saw_pow_func = True
+                if saw_pow_func:
                     break
-            if none is False:
+            if saw_pow_func is False:
                 return False
-            try:
-                nz = val.is_nonzero
-            except Exception: # any problem at all: recursion, inconsistency of facts, etc...
-                nz = None
+            if flags.get('force', True):
+                # don't do a zero check with the positive assumptions in place
+                val = val.subs(reps)
+            nz = val.is_nonzero
             if nz is not None:
                 if val.is_number and val.has(LambertW): # issue 2574: it may be True even when False
                     evaled = abs(val.n())
