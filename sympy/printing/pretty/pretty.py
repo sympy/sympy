@@ -86,6 +86,15 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right('!'))
         return pform
 
+    def _print_factorial2(self, e):
+        x = e.args[0]
+        pform = self._print(x)
+        # Add parentheses if needed
+        if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right('!!'))
+        return pform
+
     def _print_binomial(self, e):
         n, k = e.args
 
