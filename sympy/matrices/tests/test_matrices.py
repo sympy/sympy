@@ -1914,7 +1914,12 @@ def test_slice_issue_2884():
 
 def test_invertible_check():
     x = symbols('x')
-    raises(ValueError, 'Matrix([[1, 2], [1, 2]]).rref(invertible_check=True)')
+    # sometimes a singular matrix will have a pivot vector shorter than
+    # the number of rows in a matrix...
+    assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
+    raises(ValueError, 'Matrix([[1, 2], [1, 2]]).inv()')
+    # ... but sometimes it won't, so that is an insufficient test of
+    # whether something is invertible.
     m = Matrix([
     [0, -1,  0,  0,  0,  0, -1,  0,  0],
     [-1, x, -1,  0,  0,  0,  0, -1,  0],
@@ -1925,7 +1930,7 @@ def test_invertible_check():
     [-1,  0,  0, -1,  0,  0, x, -1,  0],
     [ 0, -1,  0,  0, -1,  0, -1,  0, -1],
     [ 0,  0, -1,  0,  0, -1,  0, -1, x]])
-    raises(ValueError, 'm.rref(invertible_check=True)')
+    assert len(m.rref()[1]) == m.rows
     raises(ValueError, 'm.inv(method="ADJ")')
     raises(ValueError, 'm.inv(method="GE")')
     raises(ValueError, 'm.inv(method="LU")')

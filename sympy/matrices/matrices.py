@@ -779,7 +779,7 @@ class Matrix(object):
         elif method == "LU":
             return self.inverse_LU(iszerofunc=iszerofunc)
         elif method == "ADJ":
-            return self.inverse_ADJ()
+            return self.inverse_ADJ(iszerofunc=iszerofunc)
         else:
             # make sure to add an invertibility check (as in inverse_LU)
             # if a new method is added.
@@ -1504,7 +1504,7 @@ class Matrix(object):
         n = self.rows
         m = self.cols
         rank = n
-        row_reduced = self.rref(invertible_check=False)[0]
+        row_reduced = self.rref()[0]
         for i in range(row_reduced.rows):
             if Matrix(row_reduced[i*m:(i+1)*m]).norm() == 0:
                 rank -= 1
@@ -2261,7 +2261,9 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        ok = self.rref(invertible_check=True) # raises error if not invertible
+        ok = self.rref()[0]
+        if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
+            raise ValueError("Matrix det == 0; not invertible.")
 
         return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
 
@@ -2273,11 +2275,13 @@ class Matrix(object):
             raise NonSquareMatrixError()
 
         big = self.row_join(self.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc, invertible_check=True)
+        red = big.rref(iszerofunc=iszerofunc)[0]
+        if any(iszerofunc(red[j, j]) for j in range(red.rows)):
+            raise ValueError("Matrix det == 0; not invertible.")
 
-        return red[0][:,big.rows:]
+        return red[:,big.rows:]
 
-    def inverse_ADJ(self):
+    def inverse_ADJ(self, iszerofunc=_iszero):
         """
         Calculates the inverse using the adjugate matrix and a determinant.
         """
@@ -2288,22 +2292,21 @@ class Matrix(object):
         zero = d.equals(0)
         if zero is None:
             # if equals() can't decide, will rref be able to?
-            ok = self.rref(invertible_check=True) # raises error if not invertible
-        elif zero:
+            ok = self.rref()[0]
+            zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
+        if zero:
             raise ValueError("A Matrix must have non-zero determinant to invert.")
 
         return self.adjugate()/d
 
-    def rref(self,simplified=False, iszerofunc=_iszero, simplify=sympy_simplify, invertible_check=False):
+    def rref(self,simplified=False, iszerofunc=_iszero, simplify=sympy_simplify):
         """
         Take any matrix and return reduced row-echelon form and indices of pivot vars
 
         To simplify elements before finding nonzero pivots set simplified=True.
         To set a custom simplify function, use the simplify keyword argument.
-
-        When invertible_check is True, an error will be raised if the matrix is found to
-        not be invertible.
         """
+
         pivot, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
@@ -2318,8 +2321,6 @@ class Matrix(object):
                     if not iszerofunc(r[k,i]):
                         break
                 if k == r.rows - 1 and iszerofunc(r[k,i]):
-                    if invertible_check:
-                        raise ValueError("Matrix det == 0; not invertible.")
                     continue
                 r.row_swap(pivot,k)
             scale = r[pivot,i]
@@ -2331,8 +2332,6 @@ class Matrix(object):
                 r.row(j, lambda x, k: x - scale*r[pivot,k])
             pivotlist.append(i)
             pivot += 1
-        if invertible_check and any(iszerofunc(r[j, j]) for j in range(min(r.rows, r.cols))):
-            raise ValueError("Matrix det == 0; not invertible.")
         return r, pivotlist
 
     def nullspace(self, simplified=False):
