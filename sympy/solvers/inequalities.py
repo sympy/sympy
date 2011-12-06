@@ -1,11 +1,11 @@
 """Tools for solving inequalities and systems of inequalities. """
 
-from sympy.core import Symbol, Interval, Union
+from sympy.core import Symbol, Interval
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.core.singleton import S
 from sympy.assumptions import ask, AppliedPredicate, Q
 from sympy.functions import re, im, Abs
-from sympy.logic import And, Or
+from sympy.logic import And
 from sympy.polys import Poly
 
 def interval_evalf(interval):

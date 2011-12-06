@@ -1,7 +1,6 @@
 """Tests for solvers of systems of polynomial equations. """
 
-from sympy import S, symbols, Integer, Rational, sqrt, I, Poly, QQ, flatten
-
+from sympy import flatten, I, Integer, Poly, QQ, Rational, S, sqrt, symbols
 from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import solve_poly_system, solve_triangulated

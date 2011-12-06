@@ -205,17 +205,17 @@ anything is broken, one of those tests will surely fail.
 """
 from collections import defaultdict
 
-from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import iterable, cmp_to_key, is_sequence, set_union, SymPyDeprecationWarning
-from sympy.core.function import Derivative, Function, AppliedUndef, diff, expand_mul
+from sympy.core import Add, C, S, Mul, Pow, oo
+from sympy.core.compatibility import iterable, is_sequence, set_union, SymPyDeprecationWarning
+from sympy.core.function import Derivative, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, tan, sign, sqrt
+from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt
 from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf, terms_gcd
+from sympy.polys import Poly, RootOf
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp

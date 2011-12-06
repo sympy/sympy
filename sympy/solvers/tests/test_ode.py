@@ -1,13 +1,13 @@
 from __future__ import division
 
-from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
-    I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
-    erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
-    Equality, solve, O, LambertW, Dummy, acosh, Derivative)
+
+from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
+                   erf, exp, Function, I, Integral, LambertW, log, O, pi,
+                   Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan)
 from sympy.abc import x, y, z
-from sympy.solvers.ode import (ode_order, homogeneous_order,
-    _undetermined_coefficients_match, classify_ode, checkodesol,
-    constant_renumber, constantsimp)
+from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
+                               classify_ode, constant_renumber, constantsimp,
+                               homogeneous_order, ode_order)
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 C1 = Symbol('C1')
