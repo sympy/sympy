@@ -176,7 +176,7 @@ def test_solve_rational():
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
 
 def test_linear_system():
-    n, t = symbols('n,t')
+    x, y, z, t, n = symbols('x, y, z, t, n')
 
     assert solve([x - 1, x - y, x - 2*y, y - 1], [x,y]) is None
 
@@ -194,6 +194,8 @@ def test_linear_system():
 
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
+def test_linear_system_function():
+    a = Function('a')
     assert solve([a(0, 0) + a(0, 1) + a(1, 0) + a(1, 1), -a(1, 0) - a(1, 1)],
         a(0, 0), a(0, 1), a(1, 0), a(1, 1)) == {a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)}
 

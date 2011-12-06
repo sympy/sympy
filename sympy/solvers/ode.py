@@ -328,9 +328,10 @@ def sub_func_doit(eq, func, new):
     Examples
     ========
 
-    >>> from sympy import Derivative
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import Derivative, symbols, Function
     >>> from sympy.solvers.ode import sub_func_doit
+    >>> x, z = symbols('x, z')
+    >>> y = Function('y')
 
     >>> sub_func_doit(3*Derivative(y(x), x) - 1, y(x), x)
     2
