@@ -289,7 +289,7 @@ class Add(AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         coeff, notrat = self.args[0].as_coeff_add()
-        if not coeff is S.Zero:
+        if coeff is not S.Zero:
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 

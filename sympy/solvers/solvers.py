@@ -886,7 +886,7 @@ def _solve(f, *symbols, **flags):
                 if not e.is_Mul:
                     return x, 1
                 c, ee = e.as_coeff_Mul()
-                if c.is_Rational and not c is S.One: # c could be a Float
+                if c.is_Rational and c is not S.One: # c could be a Float
                     return b**ee, c.q
                 return x, 1
 

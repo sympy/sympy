@@ -825,7 +825,7 @@ class Expr(Basic, EvalfMixin):
                 return None
             if all(n == co[0][1] for r, n in co):
                 ii = find(co[0][1], nx, right)
-                if not ii is None:
+                if ii is not None:
                     if not right:
                         return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
                     else:
@@ -833,7 +833,7 @@ class Expr(Basic, EvalfMixin):
             beg = reduce(incommon, (n[1] for n in co))
             if beg:
                 ii = find(beg, nx, right)
-                if not ii is None:
+                if ii is not None:
                     if not right:
                         gcdc = co[0][0]
                         for i in xrange(1, len(co)):
@@ -847,7 +847,7 @@ class Expr(Basic, EvalfMixin):
             end = list(reversed(reduce(incommon, (list(reversed(n[1])) for n in co))))
             if end:
                 ii = find(end, nx, right)
-                if not ii is None:
+                if ii is not None:
                     if not right:
                         return Add(*[Mul(*(list(r) + n[:-len(end)+ii])) for r, n in co])
                     else:
@@ -856,7 +856,7 @@ class Expr(Basic, EvalfMixin):
             hit = None
             for i, (r, n) in enumerate(co):
                 ii = find(n, nx, right)
-                if not ii is None:
+                if ii is not None:
                     if not hit:
                         hit = ii, r, n
                     else:

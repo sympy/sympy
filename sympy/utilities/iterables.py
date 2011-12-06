@@ -716,7 +716,7 @@ def multiset_partitions(multiset, m):
     def f(m_arr, n_arr, sigma, n, a):
         if m_arr <= 2:
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
         else:
             for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
@@ -724,12 +724,12 @@ def multiset_partitions(multiset, m):
         if n_arr == m_arr + 1:
             a[m_arr] = m_arr - 1
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
             while a[n_arr] > 0:
                 a[n_arr] = a[n_arr] - 1
                 v = visit(n, a)
-                if not v is None:
+                if v is not None:
                     yield v
         elif n_arr > m_arr + 1:
             if (m_arr + sigma) % 2 == 1:
@@ -750,16 +750,16 @@ def multiset_partitions(multiset, m):
     def b(m_arr, n_arr, sigma, n, a):
         if n_arr == m_arr + 1:
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
             while a[n_arr] < m_arr - 1:
                 a[n_arr] = a[n_arr] + 1
                 v = visit(n, a)
-                if not v is None:
+                if v is not None:
                     yield v
             a[m_arr] = 0
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
         elif n_arr > m_arr + 1:
             func = [f, b][(a[n_arr] + sigma) % 2]
@@ -778,7 +778,7 @@ def multiset_partitions(multiset, m):
                 a[m_arr] = 0
         if m_arr <= 2:
             v = visit(n, a)
-            if not v is None:
+            if v is not None:
                 yield v
         else:
             for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
