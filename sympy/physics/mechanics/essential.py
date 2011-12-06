@@ -656,9 +656,9 @@ class ReferenceFrame(object):
         dcm2diff = self.dcm(otherframe)
         diffed = dcm2diff.diff(dynamicsymbols._t)
         angvelmat = diffed * dcm2diff.T
-        w1 = trigsimp(expand(angvelmat[7]), recursive=True)
-        w2 = trigsimp(expand(angvelmat[2]), recursive=True)
-        w3 = trigsimp(expand(angvelmat[3]), recursive=True)
+        w1 = trigsimp(expand(angvelmat[7]))
+        w2 = trigsimp(expand(angvelmat[2]))
+        w3 = trigsimp(expand(angvelmat[3]))
         return -Vector([(Matrix([w1, w2, w3]), self)])
 
     def ang_acc_in(self, otherframe):
@@ -1151,7 +1151,7 @@ class Vector(object):
                         * (v2[1].dcm(v1[1]))
                         * (v1[0]))[0]
         if Vector.simp == True:
-            return trigsimp(sympify(out), recursive=True)
+            return trigsimp(sympify(out))
         else:
             return sympify(out)
 
@@ -1612,7 +1612,7 @@ class Vector(object):
                 temp = otherframe.dcm(v[1]) * v[0]
                 for i2, v2 in enumerate(temp):
                     if Vector.simp == True:
-                        temp[i2] = trigsimp(v2, recursive=True)
+                        temp[i2] = trigsimp(v2)
                     else:
                         temp[i2] = v2
                 outvec += Vector([(temp, otherframe)])

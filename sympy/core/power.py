@@ -320,9 +320,9 @@ class Pow(Expr):
                 # that now we are doing it for an arbitrary exponent for which
                 # no automatic expansion is done
                 sifted = sift(b.args, lambda x: x.is_nonnegative)
-                nonneg = sifted.get(True, [])
-                other = sifted.get(None, [])
-                neg = sifted.get(False, [])
+                nonneg = sifted[True]
+                other = sifted[None]
+                neg = sifted[False]
 
                 # make sure the Number gets pulled out
                 if neg and neg[0].is_Number and neg[0] is not S.NegativeOne:

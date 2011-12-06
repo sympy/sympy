@@ -2233,10 +2233,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import ratsimp
         return ratsimp(self)
 
-    def trigsimp(self, deep=False, recursive=False):
+    def trigsimp(self, deep=False):
         """See the trigsimp function in sympy.simplify"""
         from sympy.simplify import trigsimp
-        return trigsimp(self, deep, recursive)
+        return trigsimp(self, deep)
 
     def radsimp(self):
         """See the radsimp function in sympy.simplify"""

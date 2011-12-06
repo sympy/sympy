@@ -6,14 +6,13 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
     expand_multinomial)
-
 from sympy.core.compatibility import iterable, reduce
 from sympy.core.numbers import igcd, Float
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 
-from sympy.utilities import flatten, default_sort_key
+from sympy.utilities import flatten, default_sort_key, sift
 from sympy.functions import gamma, exp, sqrt, log, root
 
 from sympy.simplify.cse_main import cse
@@ -736,7 +735,7 @@ def ratsimp(expr):
 
     return Add(*Q) + cancel(r/g)
 
-def trigsimp(expr, deep=False, recursive=False):
+def trigsimp(expr, deep=False):
     """
     == Usage ==
 
@@ -747,11 +746,6 @@ def trigsimp(expr, deep=False, recursive=False):
     deep:
     - Apply trigsimp inside functions
 
-    recursive:
-    - Use common subexpression elimination (cse()) and apply
-    trigsimp recursively (recursively==True is quite expensive
-    operation if the expression is large)
-
     == Examples ==
         >>> from sympy import trigsimp, sin, cos, log
         >>> from sympy.abc import x, y
@@ -759,60 +753,91 @@ def trigsimp(expr, deep=False, recursive=False):
         >>> trigsimp(e)
         2
         >>> trigsimp(log(e))
-        log(2*sin(x)**2 + 2*cos(x)**2)
+        log(2*(sin(x)**2 + cos(x)**2))
         >>> trigsimp(log(e), deep=True)
         log(2)
 
     """
-    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
-    if not expr.has(sin, cos, tan, cot):
+    trigs = sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
+    if not expr.has(*trigs):
         return expr
 
-    if recursive:
-        w, g = cse(expr)
-        g = trigsimp_nonrecursive(g[0])
+    if deep and not (expr.is_Add or expr.is_Mul) or expr.is_Pow:
+        return expr.func(*[trigsimp(a, deep) for a in expr.args])
 
-        for sub in reversed(w):
-            g = g.subs(sub[0], sub[1])
-            g = trigsimp_nonrecursive(g)
-        result = g
-    else:
-        result = trigsimp_nonrecursive(expr, deep)
+    expr = factor_terms(expr)
+    cont, expr = expr.as_coeff_Mul()
+    if cont < 0:
+        cont = -cont
+        expr = -expr
+    n, d = expr.as_numer_denom()
+    if d != 1:
+        expr = trigsimp(n, deep)/trigsimp(d, deep)
 
-    return result
+    if expr.is_Add:
+        if len(expr.free_symbols) > 1:
+            expr = separatevars(expr)
+        if expr.is_Add:
+            expr = expand_mul(expr)
+        if expr.is_Add:
+            # sift out terms that contain only trig functions or Rationals
+            sifted = sift([trigsimp(a, deep) for a in expr.args],
+                           lambda w: all(wf.is_Rational or wf.as_base_exp()[0].func in trigs for
+                                     wf in Mul.make_args(w)))
+            pure = Add(*sifted[True])
+            other = Add(*sifted[False])
+            if other:
+                pure = trigsimp(pure)
+            new = pure + other
+            if new != expr and new.count_ops() < expr.count_ops():
+                newcont, expr = new.primitive() # touch up in case constant was pulled out
+                cont *= newcont
+            if expr.is_Add and expr.is_commutative:
+                new = factor(expr)
+                if new == expr:
+                    new = factor(new.rewrite(exp))
+                    if new.is_Mul:
+                        new = trigsimp(new, deep)
+                if new.count_ops() <= expr.count_ops():
+                    expr = new
 
+    if expr.is_Mul:
+        margs = list(expr.args)
+        for i, m in enumerate(margs):
+            if not m.has(*trigs):
+                continue
+            if m.is_Add and m.is_commutative:
+                new = factor(m)
+                if new.is_Add:
+                    new = factor(new.rewrite(exp))
+                    if new.is_Mul:
+                        new = trigsimp(new, deep)
+            else:
+                new = trigsimp(m, deep)
+            if new.count_ops() < m.count_ops():
+                margs[i] = new
+        expr = Mul(*margs)
 
-def trigsimp_nonrecursive(expr, deep=False):
+    # iterate for multiple patterns
+    old = expr
+    while True:
+        new = _trigsimp(old, deep)
+        if old == new:
+            break
+        old = new
+
+    # final cleanup
+    new = new.subs([(t.base, 1/cot(t.base.args[0])) for t in new.atoms(Pow) if t.base.func is tan and t.exp.is_Integer and t.exp < 0])
+
+    return _keep_coeff(cont, new)
+
+def _trigsimp(expr, deep=False):
     """
-    A nonrecursive trig simplifier, used from trigsimp.
-
-    == Usage ==
-        trigsimp_nonrecursive(expr) -> reduces expression by using known trig
-                                       identities
-
-    == Notes ==
-
-    deep ........ apply trigsimp inside functions
-
-    == Examples ==
-        >>> from sympy import cos, sin, log
-        >>> from sympy.simplify.simplify import trigsimp, trigsimp_nonrecursive
-        >>> from sympy.abc import x, y
-        >>> e = 2*sin(x)**2 + 2*cos(x)**2
-        >>> trigsimp(e)
-        2
-        >>> trigsimp_nonrecursive(log(e))
-        log(2*sin(x)**2 + 2*cos(x)**2)
-        >>> trigsimp_nonrecursive(log(e), deep=True)
-        log(2)
-
+    The helper for trigsimp.
     """
-    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
+    trigs = sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
 
-    if expr.is_Function:
-        if deep:
-            return expr.func(trigsimp_nonrecursive(expr.args[0], deep))
-    elif expr.is_Mul:
+    if expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
         a,b,c = map(Wild, 'abc')
         matchers = (
@@ -821,6 +846,8 @@ def trigsimp_nonrecursive(expr, deep=False):
                 (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
                 (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
                 (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
+                (a*(cos(b)+1)**c*(cos(b)-1)**c, a*sin(b)**(2*c)),
+                (a*(sin(b)+1)**c*(sin(b)-1)**c, a*cos(b)**(2*c)),
         )
         for pattern, simp in matchers:
             res = expr.match(pattern)
@@ -836,14 +863,14 @@ def trigsimp_nonrecursive(expr, deep=False):
                 expr = simp.subs(res)
                 break
         if not expr.is_Mul:
-            return trigsimp_nonrecursive(expr, deep)
-        ret = S.One
+            return _trigsimp(expr, deep)
+        ret = []
         for x in expr.args:
-            ret *= trigsimp_nonrecursive(x, deep)
-        return ret
+            ret.append(_trigsimp(x, deep))
+        expr = Mul(*ret)
     elif expr.is_Pow:
-        return Pow(trigsimp_nonrecursive(expr.base, deep),
-                trigsimp_nonrecursive(expr.exp, deep))
+        return Pow(_trigsimp(expr.base, deep),
+                _trigsimp(expr.exp, deep))
     elif expr.is_Add:
         # TODO this needs to be faster
 
@@ -852,21 +879,35 @@ def trigsimp_nonrecursive(expr, deep=False):
         matchers = (
             (a*sin(b)**2, a - a*cos(b)**2),
             (a*tan(b)**2, a*(1/cos(b))**2 - a),
-            (a*cot(b)**2, a*(1/sin(b))**2 - a)
+            (a*cot(b)**2, a*(1/sin(b))**2 - a),
+        )
+        fullmatchers = (
+            ((sin(a)*cos(b)+cos(a)*sin(b)), sin(a+b)),
+            ((cos(a)*cos(b)-sin(a)*sin(b)), cos(a+b)),
+            ((cos(a)*cos(b)+sin(a)*sin(b)), cos(a-b)),
+            ((sin(a)*cos(b)-cos(a)*sin(b)), sin(a-b)),
         )
 
         # Scan for the terms we need
-        ret = S.Zero
+        indep, dexpr = expr.as_independent(*trigs)
+        if dexpr.is_Add:
+            for pattern, result in fullmatchers:
+                res = dexpr.match(pattern)
+                if res is not None:
+                    return indep + result.subs(res)
+
+        ret = []
         for term in expr.args:
-            term = trigsimp_nonrecursive(term, deep)
+            term = _trigsimp(term, deep)
             res = None
             for pattern, result in matchers:
                 res = term.match(pattern)
                 if res is not None:
-                    ret += result.subs(res)
+                    ret.append(result.subs(res))
                     break
             if res is None:
-                ret += term
+                ret.append(term)
+        ret = Add(*ret)
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1-cos(x)**2 when sin(x)**2 was "simpler"
@@ -893,8 +934,6 @@ def trigsimp_nonrecursive(expr, deep=False):
                     break
                 expr = result.subs(m)
                 m = expr.match(pattern)
-
-        return expr
     return expr
 
 def collect_sqrt(expr, evaluate=True):
@@ -2084,9 +2123,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> from sympy import trigsimp, cancel
     >>> b = trigsimp(a)
     >>> b
-    (x**2 + x)/x
-    >>> c = cancel(b)
-    >>> c
     x + 1
 
     In some cases, applying :func:`simplify` may actually result in some more
@@ -2239,7 +2275,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         return expr
 
     if expr.has(C.TrigonometricFunction):
-        expr = trigsimp(expr)
+        expr = trigsimp(expr, deep=True)
 
     if expr.has(C.log):
         expr = shorter(expand_log(expr, deep=True), logcombine(expr))
@@ -2248,6 +2284,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         expr = combsimp(expr)
 
     expr = powsimp(expr, combine='exp', deep=True)
+
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
         a, b, c = map(Wild, 'abc')

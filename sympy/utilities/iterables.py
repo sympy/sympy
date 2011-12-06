@@ -471,15 +471,19 @@ def sift(expr, keyfunc):
     >>> sift(range(5), lambda x: x%2)
     {0: [0, 2, 4], 1: [1, 3]}
 
-    It is possible that some keys are not present, in which case you should
-    used dict's .get() method:
+    If a key is not present, the index method will return an empty list;
+    if you use pop or get and the key is not present, an error will be
+    raised so a default value should be provided.
 
-    >>> sift(x+y, lambda x: x.is_commutative)
+    >>> d = sift(x+y, lambda x: x.is_commutative); d
     {True: [y, x]}
-    >>> _.get(False, [])
+    >>> d[False] # False is not there
+    []
+    >>> d.pop(False, []) # since it's not there a default is given
     []
 
-    Sometimes you won't know how many keys you will get:
+    Sometimes you won't know how many keys you will get, but you can check
+    which ones you got with the dict keys method:
     >>> sift(sqrt(x) + x**2 + exp(x) + (y**x)**2,
     ... lambda x: x.as_base_exp()[0])
     {E: [exp(x)], x: [sqrt(x), x**2], y: [y**(2*x)]}

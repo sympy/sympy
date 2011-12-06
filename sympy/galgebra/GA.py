@@ -295,7 +295,7 @@ def magnitude(vector):
     values are removed.
     """
     magsq = sympy.expand((vector|vector)())
-    magsq = sympy.trigsimp(magsq,deep=True,recursive=True)
+    magsq = sympy.trigsimp(magsq,deep=True)
     #print magsq
     magsq_str = sympy.galgebra.latex_ex.LatexPrinter()._print(magsq)
     if magsq_str[0] == '-':
@@ -1030,7 +1030,7 @@ class MV(object):
         for irow in MV.nrg:
             for icol in MV.nrg:
                 magsq = sympy.expand((nbases[irow]|nbases[icol])())
-                g[irow][icol]  = sympy.simplify(sympy.trigsimp(magsq,deep=True,recursive=True))
+                g[irow][icol]  = sympy.simplify(sympy.trigsimp(magsq,deep=True))
 
         if debug:
             print 'Metric $\\hat{g}_{ij} = \\hat{'+LaTeX_base+'}_{i}\\cdot \\hat{'+\
@@ -1089,7 +1089,7 @@ class MV(object):
         for irow in MV.nrg:
             for icol in MV.nrg:
                 magsq = sympy.expand((rnbases[irow]|rnbases[icol])())
-                gr[irow][icol] = sympy.simplify(sympy.trigsimp(magsq,deep=True,recursive=True))
+                gr[irow][icol] = sympy.simplify(sympy.trigsimp(magsq,deep=True))
 
         if debug:
             print 'Metric $\\hat{g}^{ij} = \\hat{'+LaTeX_base+'}^{i}\\cdot \\hat{'+\
@@ -1184,11 +1184,11 @@ class MV(object):
                         X = MV()
                     jbase = 0
                     while jbase < m1base:
-                        Cm1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade-1][jbase],C))(),deep=True,recursive=True)
+                        Cm1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade-1][jbase],C))(),deep=True)
                         jbase += 1
                     jbase = 0
                     while jbase < p1base:
-                        Cp1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade+1][jbase],C))(),deep=True,recursive=True)
+                        Cp1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade+1][jbase],C))(),deep=True)
                         jbase += 1
                     X += MV((igrade-1,Cm1),'grade')+MV((igrade+1,Cp1),'grade')
                     X.simplify()
@@ -1203,7 +1203,7 @@ class MV(object):
                     C = MV_connect[igrade][ibase]
                     jbase = 0
                     while jbase < m1base:
-                        Cm1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade-1][jbase],C))(),deep=True,recursive=True)
+                        Cm1[jbase] = sympy.trigsimp((MV.inner_product(MV_rbases[igrade-1][jbase],C))(),deep=True)
                         jbase += 1
                     X = MV()
                     X.mv[MV.n-1] = Cm1
@@ -2315,7 +2315,7 @@ class MV(object):
                 for ibase in range(MV.nbasis[igrade]):
                     if self.mv[igrade][ibase] != ZERO:
                         self.mv[igrade][ibase] = \
-                        sympy.trigsimp(self.mv[igrade][ibase],deep=True,recursive=True)
+                        sympy.trigsimp(self.mv[igrade][ibase],deep=True)
         return
 
     def cancel(self):
@@ -2533,7 +2533,7 @@ def reciprocal_frame(vlst,names=''):
                 tmp = tmp^vlst[j]
         tmp = tmp*E
         recp.append(tmp)
-    Esq = sympy.trigsimp(E.mag2(),deep=True,recursive=True)
+    Esq = sympy.trigsimp(E.mag2(),deep=True)
     print Esq
     print sympy.simplify(Esq)
     Esq_inv = ONE/Esq

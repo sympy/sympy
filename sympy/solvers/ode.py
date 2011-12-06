@@ -2866,7 +2866,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
                           # See issue 1563, for example.
 
         # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
-        wr = trigsimp(wr, deep=True, recursive=True)
+        wr = trigsimp(wr, deep=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly independent.
         raise NotImplementedError("Cannot find " + str(order) + \

@@ -4,7 +4,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     solve, nsimplify, GoldenRatio, sqrt, E, I, sympify, atan, Derivative,
     S, diff, oo, Eq, Integer, gamma, acos, Integral, logcombine, Wild,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
-    factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
+    factor, Mul, O, hyper, Add, Float, radsimp, collect_const, dsolve)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
@@ -74,10 +74,8 @@ def test_trigsimp1():
 
 def test_trigsimp2():
     x, y = symbols('x,y')
-    assert trigsimp(cos(x)**2*sin(y)**2 + cos(x)**2*cos(y)**2 + sin(x)**2,
-            recursive=True) == 1
-    assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
-            recursive=True) == 1
+    assert trigsimp(cos(x)**2*sin(y)**2 + cos(x)**2*cos(y)**2 + sin(x)**2) == 1
+    assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2) == 1
 
 def test_issue1274():
     x = Symbol("x")
@@ -90,9 +88,9 @@ def test_trigsimp3():
     assert trigsimp(sin(x)**3/cos(x)**3) == tan(x)**3
     assert trigsimp(sin(x)**10/cos(x)**10) == tan(x)**10
 
-    assert trigsimp(cos(x)/sin(x)) == 1/tan(x)
-    assert trigsimp(cos(x)**2/sin(x)**2) == 1/tan(x)**2
-    assert trigsimp(cos(x)**10/sin(x)**10) == 1/tan(x)**10
+    assert trigsimp(cos(x)/sin(x)) == cot(x)
+    assert trigsimp(cos(x)**2/sin(x)**2) == cot(x)**2
+    assert trigsimp(cos(x)**10/sin(x)**10) == cot(x)**10
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
@@ -100,6 +98,56 @@ def test_trigsimp_issue_2515():
     x = Symbol('x')
     assert trigsimp(x*cos(x)*tan(x)) == x*sin(x)
     assert trigsimp(-sin(x)+cos(x)*tan(x)) == 0
+
+def test_trigsimp_issues_1395_1526_1562():
+    # 1526 - factor_terms works
+    assert trigsimp(sin(x)**3+cos(x)**2*sin(x)) == sin(x)
+    #1562 - factoring necessary
+    eq = -4*sin(x)**4 + 4*cos(x)**4 - 8*cos(x)**2
+    assert trigsimp(eq) == -4
+    n = sin(x)**6 + 4*sin(x)**4*cos(x)**2 + 5*sin(x)**2*cos(x)**4 + 2*cos(x)**6
+    d = -sin(x)**2 - 2*cos(x)**2
+    assert trigsimp(eq) == -4
+    assert trigsimp(-2*cos(x)**2 + cos(x)**4 - sin(x)**4) == -1
+    f = Function('f')
+    # just see that it doesn't hang
+    C1, C2, C3, C4, C5 = symbols('C1:6')
+    ok = dsolve(f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 1, f(x),
+    'nth_linear_constant_coeff_variation_of_parameters')
+    # here is its solution; it is not tested as the output since dsolve used to
+    # hang and now it doesn't; also the output of dsolve may change but the
+    # following equation should simplify as asserted
+    eq = C1 + x + (C2 + C3*x- sin(x)**3/4)*cos(x) + \
+                  (C4 + C5*x + cos(x)**3/4)*sin(x) - \
+                  sin(2*x)*cos(2*x)/8
+    assert trigsimp(eq) == C1 + C2*cos(x) + C3*x*cos(x) + C4*sin(x) + C5*x*sin(x) + x
+    # 1395 - factoring necessary
+    assert trigsimp(sin(a)**2*sin(b)**2 +
+                    cos(a)**2*cos(b)**2*tan(a)**2 +
+                    cos(a)**2) == 1
+    # check for multiple patterns
+    assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
+            cot(x)**2*cot(y)**2
+    # issue 2849
+    assert trigsimp(diff(integrate(cos(x)/sin(x)**3, x), x)) == \
+            cos(x)/sin(x)**3
+    assert trigsimp(diff(integrate(sin(x)/cos(x)**3, x), x)) == \
+            sin(x)/cos(x)**3
+    # issue 1676
+    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)) == sin(x + y)
+    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)+3) == sin(x + y) + 3
+    # issue 1181
+    assert trigsimp(cos(x)**2 + cos(y)**2*sin(x)**2 + sin(y)**2*sin(x)**2) == 1
+    assert trigsimp(a**2*sin(x)**2 + a**2*cos(y)**2*cos(x)**2 + a**2*cos(x)**2*sin(y)**2) == a**2
+    assert trigsimp(a**2*cos(y)**2*sin(x)**2 + a**2*sin(y)**2*sin(x)**2) == a**2*sin(x)**2
+
+@XFAIL
+def test_separatevars_hollow_factoring():
+    # if this passes then the portion of trigsimp undoing the
+    # factoring can be removed; then if that causes failures, the factoring
+    # can be done there instead by factoring the values returned
+    eq = cos(x)**2 - 1
+    assert separatevars(eq) == eq
 
 @XFAIL
 def test_factorial_simplify():
@@ -138,7 +186,7 @@ def test_simplify():
     assert simplify(e) == 1 + y
 
     e = (2 * (1/n - cos(n * pi)/n))/pi
-    assert simplify(e) == 2*((1 - 1*cos(pi*n))/(pi*n))
+    assert simplify(e) == 2*((1 - cos(pi*n))/(pi*n))
 
     e = integrate(1/(x**3+1), x).diff(x)
     assert simplify(e) == 1/(x**3+1)
