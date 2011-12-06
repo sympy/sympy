@@ -171,8 +171,7 @@ Rational(5,2) является 5/2, и так далее.
     >>> R = Rational
     >>> R(1, 2)
     1/2
-    >>> R(1)/2 # R(1) - это Integer sympy, а результатом деления Integer на int
-                        является Rational
+    >>> R(1)/2 # R(1) - это Integer sympy, а результат деления Integer на int - Rational
     1/2
 
 Также в модуле Sympy зарезервированы особые константы, такие как e и pi,
