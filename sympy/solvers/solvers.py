@@ -91,7 +91,6 @@ def checksol(f, symbol, sol=None, **flags):
 
     Examples
     ========
-    ---------
 
        >>> from sympy import symbols
        >>> from sympy.solvers import checksol
@@ -255,7 +254,6 @@ def check_assumptions(expr, **assumptions):
 
     Examples
     ========
-    ---------
 
        >>> from sympy import Symbol, pi, I, exp
        >>> from sympy.solvers.solvers import check_assumptions

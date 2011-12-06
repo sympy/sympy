@@ -36,7 +36,8 @@ def minimal_polynomial(ex, x=None, **args):
     """
     Computes the minimal polynomial of an algebraic number.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import minimal_polynomial, sqrt
     >>> from sympy.abc import x

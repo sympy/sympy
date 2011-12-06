@@ -172,7 +172,7 @@ def get_indices(expr):
     and a dict.  The set contains outer indices and the dict contains
     information about index symmetries.
 
-    :Examples
+    Examples
     ========
 
     >>> from sympy.tensor.index_methods import get_indices
@@ -288,7 +288,7 @@ def get_contraction_structure(expr):
        calculated first so that the outer expression can access the resulting
        indexed object.
 
-    :Examples
+    Examples
     ========
 
     >>> from sympy.tensor.index_methods import get_contraction_structure

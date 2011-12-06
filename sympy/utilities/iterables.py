@@ -359,7 +359,7 @@ def subsets(seq, k=None, repetition=False):
        2**n subsets will be returned from shortest to longest.
 
        Examples
-    ========
+        ========
            >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
@@ -968,7 +968,6 @@ def uniq(seq):
 
     Examples
     ========
-    --------
     >>> from sympy.utilities.iterables import uniq
     >>> uniq([1,4,1,5,4,2,1,2])
     [1, 4, 5, 2]

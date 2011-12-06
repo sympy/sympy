@@ -759,7 +759,7 @@ class Integral(Expr):
         method). See [1] for more information.
 
         Examples
-    ========
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x
@@ -781,7 +781,7 @@ class Integral(Expr):
         interval.
 
         Examples
-    ========
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x

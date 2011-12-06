@@ -1344,7 +1344,8 @@ class Mul(AssocOp):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy import sqrt
         >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
         (6, -sqrt(2)*(-sqrt(2) + 1))

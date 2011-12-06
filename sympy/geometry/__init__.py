@@ -13,8 +13,7 @@ Notes:
     Euclidean space.
 
 Examples
-    ========
-=========
+========
 
 """
 from sympy.geometry.point import Point

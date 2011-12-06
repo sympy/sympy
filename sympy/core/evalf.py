@@ -80,7 +80,7 @@ def fastlog(x):
     result would be too large by 1).
 
     Examples
-    ========:
+    ========
 
     >>> from sympy import log
     >>> from sympy.core.evalf import fastlog, bitcount

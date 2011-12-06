@@ -40,7 +40,6 @@ class Order(Expr):
 
     Examples
     ========
-    =========
     >>> from sympy import O
     >>> from sympy.abc import x
     >>> O(x)

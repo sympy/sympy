@@ -11,7 +11,7 @@ def R_nl(n, l, r, Z=1):
     Everything is in Hartree atomic units.
 
     Examples
-    ========:
+    ========
 
     >>> from sympy.physics.hydrogen import R_nl
     >>> from sympy import var
@@ -83,7 +83,7 @@ def E_nl(n, Z=1):
     The energy doesn't depend on "l".
 
     Examples
-    ========:
+    ========
 
     >>> from sympy import var
     >>> from sympy.physics.hydrogen import E_nl
@@ -121,7 +121,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
                 taken from: http://arxiv.org/abs/1012.3627
 
     Examples
-    ========:
+    ========
 
     >>> from sympy.physics.hydrogen import E_nl_dirac
     >>> E_nl_dirac(1, 0)

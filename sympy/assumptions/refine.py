@@ -11,7 +11,7 @@ def refine(expr, assumptions=True):
     the assumptions.
 
     Examples
-    ========:
+    ========
 
         >>> from sympy import refine, sqrt, Q
         >>> from sympy.abc import x
@@ -38,7 +38,7 @@ def refine_abs(expr, assumptions):
     Handler for the absolute value.
 
     Examples
-    ========:
+    ========
 
     >>> from sympy import Symbol, Q, refine, Abs
     >>> from sympy.assumptions.refine import refine_abs

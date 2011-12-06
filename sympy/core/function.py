@@ -17,7 +17,7 @@ There are two types of functions:
    works in sympy core, but needs to be ported back to SymPy.
 
 
-Examples
+    Examples
     ========
     >>> import sympy
     >>> f = sympy.Function("f")
@@ -345,7 +345,7 @@ class Function(Application, Expr):
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
         Examples
-    ========
+        ========
 
         >>> from sympy import atan2, O
         >>> from sympy.abc import x, y

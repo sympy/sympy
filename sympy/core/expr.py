@@ -240,7 +240,7 @@ class Expr(Basic, EvalfMixin):
 
 
         Examples
-    ========
+        ========
 
         >>> from sympy import cos, sin, Sum, S, pi
         >>> from sympy.abc import a, n, x, y
@@ -547,7 +547,7 @@ class Expr(Basic, EvalfMixin):
         is no O(...) term, it returns None.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import O
         >>> from sympy.abc import x
@@ -638,7 +638,7 @@ class Expr(Basic, EvalfMixin):
         can be returned. The keyword 'right' is ignored when x is commutative.
 
         Examples
-    ========:
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
@@ -949,7 +949,7 @@ class Expr(Basic, EvalfMixin):
         To force the expression to be treated as an Add, use the hint as_Add=True
 
         Examples
-    ========
+        ========
 
         -- self is an Add
 
@@ -1650,7 +1650,7 @@ class Expr(Basic, EvalfMixin):
         Symbol('z', rational_function=True).
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Symbol, sin
         >>> from sympy.abc import x, y
@@ -2025,7 +2025,7 @@ class Expr(Basic, EvalfMixin):
         Returns the leading term.
 
         Examples
-    ========
+        ========
 
         >>> from sympy.abc import x
         >>> (1+x+x**2).as_leading_term(x)
@@ -2076,7 +2076,7 @@ class Expr(Basic, EvalfMixin):
         Returns the leading term a*x**b as a tuple (a, b).
 
         Examples
-    ========
+        ========
 
         >>> from sympy.abc import x
         >>> (1+x+x**2).leadterm(x)
@@ -2285,7 +2285,8 @@ class AtomicExpr(Atom, Expr):
     A parent class for object which are both atoms and Exprs.
 
     Examples
-    ======== Symbol, Number, Rational, Integer, ...
+    ======== 
+    Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 

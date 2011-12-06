@@ -40,7 +40,8 @@ def dup_sturm(f, K):
        f_0(x), f_1(x) = f(x), f'(x)
        f_n = -rem(f_{n-2}(x), f_{n-1}(x))
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rootisolation import dup_sturm

@@ -28,7 +28,7 @@ class Singleton(WithAssumptions):
     the global registry object S as S.<class_name>.
 
     Examples
-    ========:
+    ========
         >>> from sympy import S, Basic
         >>> from sympy.core.singleton import Singleton
         >>> class MySingleton(Basic):

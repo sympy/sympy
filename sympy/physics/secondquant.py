@@ -105,7 +105,7 @@ class Dagger(Expr):
         Evaluates the Dagger instance.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import I
         >>> from sympy.physics.secondquant import Dagger, B, Bd
@@ -232,7 +232,7 @@ class AntiSymmetricTensor(TensorSymbol):
         Returns the symbol of the tensor.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -252,7 +252,7 @@ class AntiSymmetricTensor(TensorSymbol):
         Returns the upper indices.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -273,7 +273,7 @@ class AntiSymmetricTensor(TensorSymbol):
         Returns the lower indices.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -1967,7 +1967,6 @@ def evaluate_deltas(e):
 
     Examples
     ========
-    =========
 
     We assume that
 

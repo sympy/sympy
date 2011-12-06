@@ -427,7 +427,6 @@ def get_basis(expr, **options):
 
     Examples
     ========
-    =========
 
     >>> from sympy.physics.quantum.represent import get_basis
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet

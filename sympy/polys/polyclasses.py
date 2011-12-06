@@ -349,7 +349,8 @@ class DMP(object):
 
         Returns the removed generators and the new excluded ``f``.
 
-        **Examples**
+        Examples
+    ========
 
         >>> from sympy.polys.polyclasses import DMP
         >>> from sympy.polys.domains import ZZ
@@ -365,7 +366,8 @@ class DMP(object):
         r"""
         Returns a polynomial in ``K[x_{P(1)}, ..., x_{P(n)}]``.
 
-        **Examples**
+        Examples
+    ========
 
         >>> from sympy.polys.polyclasses import DMP
         >>> from sympy.polys.domains import ZZ

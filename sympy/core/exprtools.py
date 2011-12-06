@@ -17,8 +17,8 @@ def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
-    **Examples**
-
+    Examples
+    ========
     >>> from sympy.core.exprtools import decompose_power
     >>> from sympy.abc import x, y
 
@@ -416,8 +416,8 @@ def factor_terms(expr):
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutative) is performed.
 
-    **Examples**
-
+    Examples
+    ========
     >>> from sympy import factor_terms, Symbol
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)

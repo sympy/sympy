@@ -52,8 +52,8 @@ def __cacheit(func):
        important: the result of cached function must be *immutable*
 
 
-       **Examples**
-
+       Examples
+       ========
        >>> from sympy.core.cache import cacheit
        >>> @cacheit
        ... def f(a,b):

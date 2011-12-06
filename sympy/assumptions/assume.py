@@ -56,7 +56,7 @@ class AppliedPredicate(Boolean):
         Return the expression used by this assumption.
 
         Examples
-    ========
+        ========
             >>> from sympy import Q, Symbol
             >>> x = Symbol('x')
             >>> a = Q.integer(x + 1)

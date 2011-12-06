@@ -20,8 +20,8 @@ class SymPyIntegerRing(IntegerRing):
         """
         Check if `a` is of type `dtype` (`sympy`).
 
-        **Examples**
-
+        Examples
+        ========
         >>> from sympy import S, Integer, Rational
         >>> from sympy.polys.domains import ZZ_sympy
 

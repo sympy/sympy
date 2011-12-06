@@ -165,7 +165,7 @@ except ImportError: # Python 2.5
         product(A, repeat=4) means the same as product(A, A, A, A).
 
         Examples
-    ========
+        ========
         >>> from sympy.core.compatibility import product
         >>> [''.join(p) for p in list(product('ABC', 'xy'))]
         ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
@@ -245,7 +245,7 @@ except ImportError: # < python 2.6
         See also: combinations_with_replacements
 
         Examples
-    ========
+        ========
         >>> from sympy.core.compatibility import combinations
         >>> list(combinations('ABC', 2))
         [('A', 'B'), ('A', 'C'), ('B', 'C')]
@@ -284,7 +284,7 @@ except ImportError: # < python 2.6
         See also: combinations
 
         Examples
-    ========
+        ========
         >>> from sympy.core.compatibility import combinations_with_replacement
         >>> list(combinations_with_replacement('AB', 2))
         [('A', 'A'), ('A', 'B'), ('B', 'B')]

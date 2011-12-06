@@ -7,7 +7,8 @@ def textplot(expr, a, b, W=55, H=18):
     interval [a, b].
 
     Examples
-    ======== textplot(sin(t)*t, 0, 15)
+    ========
+    textplot(sin(t)*t, 0, 15)
     """
 
     f = None
