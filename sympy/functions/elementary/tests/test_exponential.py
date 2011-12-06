@@ -1,5 +1,6 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
-        LambertW, sqrt, Rational, sin, expand_log, S, sign, nextprime)
+        LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
+        sin, cos, sinh, cosh)
 
 def test_exp_values():
 
@@ -34,10 +35,15 @@ def test_exp_values():
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
 
+    assert exp(3*log(x)+oo*x) == oo**x * x**3
+    assert exp(4*log(x)*log(y)+3*log(x)) == x**3 * exp(4*log(x)*log(y))
+
 def test_exp_log():
     x = Symbol("x", real=True)
     assert log(exp(x)) == x
     assert exp(log(x)) == x
+    assert log(x).inverse() == exp
+    assert exp(x).inverse() == log
 
 def test_exp_expand():
     x = Symbol("x")
@@ -71,11 +77,29 @@ def test_exp_infinity():
     assert exp(y*I*oo) == nan
 
 def test_exp_subs():
-    x = Symbol('x')
-    y = Symbol('y')
+    x,y = symbols('x,y')
     assert (exp(3*log(x), evaluate=False)).subs(x**3,y**3) == x**3
     assert (exp(3*log(x), evaluate=False)).subs(x**2,5) == x**3
+    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3,2) 
+    assert exp(5*x).subs(exp(7*x),y) == y**Rational(5,7)
+    assert exp(2*x+7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
+    assert exp(exp(x) + exp(x**2)).subs(exp(exp(x)), y) == y * exp(exp(x**2))
+    assert exp(x).subs(E,y) == y**x
 
+def test_exp_conjugate():
+    x = Symbol('x')
+    assert conjugate(exp(x)) == exp(conjugate(x))
+
+def test_exp_rewrite():
+    x = symbols('x')
+    assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
+    assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
+
+def test_exp_leading_term():
+    x = symbols('x')
+    assert exp(x).as_leading_term(x) == 1
+    assert exp(1/x).as_leading_term(x) == exp(1/x)
+    assert exp(2+x).as_leading_term(x) == exp(2)
 
 def test_log_values():
     assert log(nan) == nan
