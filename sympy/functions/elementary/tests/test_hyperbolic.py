@@ -33,7 +33,7 @@ def test_sinh():
     assert sinh(-pi*I) == 0
     assert sinh(2*pi*I) == 0
     assert sinh(-2*pi*I) == 0
-    assert sinh(-3*10**73*pi*I) == 0    
+    assert sinh(-3*10**73*pi*I) == 0
     assert sinh(7*10**103*pi*I) == 0
 
     assert sinh(pi*I/2) == I

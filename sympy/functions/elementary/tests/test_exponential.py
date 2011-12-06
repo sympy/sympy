@@ -80,7 +80,7 @@ def test_exp_subs():
     x,y = symbols('x,y')
     assert (exp(3*log(x), evaluate=False)).subs(x**3,y**3) == x**3
     assert (exp(3*log(x), evaluate=False)).subs(x**2,5) == x**3
-    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3,2) 
+    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3,2)
     assert exp(5*x).subs(exp(7*x),y) == y**Rational(5,7)
     assert exp(2*x+7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
     assert exp(exp(x) + exp(x**2)).subs(exp(exp(x)), y) == y * exp(exp(x**2))
