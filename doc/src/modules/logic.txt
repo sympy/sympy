@@ -75,7 +75,7 @@ is satisfiable with both x and y being True.
 As you see, when a sentence is satisfiable, it returns a model that makes that
 sentence True. If it is not satisfiable it will return False
 
-.. automethod:: sympy.logic.inference.satisfiable
+.. autofunction:: sympy.logic.inference.satisfiable
 
 .. TODO: write about CNF file format
 
@@ -85,27 +85,22 @@ API Reference
 Boolean Algebra
 ~~~~~~~~~~~~~~~
 
-.. autofunction:: to_cnf
+.. autofunction:: sympy.logic.inference.to_cnf
 
-.. autoclass:: And
+.. autoclass:: sympy.logic.And
 
-.. autoclass:: Or
+.. autoclass:: sympy.logic.Or
 
-.. autoclass:: Not 
+.. autoclass:: sympy.logic.Not
 
-.. autoclass:: Xor
+.. autoclass:: sympy.logic.Xor
 
-.. autoclass:: Nand
+.. autoclass:: sympy.logic.Nand
 
-.. autoclass:: Nor
+.. autoclass:: sympy.logic.Nor
 
-.. autoclass:: Implies
+.. autoclass:: sympy.logic.Implies
 
-.. autoclass:: Equivalent
+.. autoclass:: sympy.logic.Equivalent
 
-.. autoclass:: ITE
-
-Inference
-~~~~~~~~~
-
-.. autofunction:: satisfiable
+.. autoclass:: sympy.logic.ITE
