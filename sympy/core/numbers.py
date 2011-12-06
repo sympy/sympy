@@ -11,7 +11,7 @@ from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from sympy.mpmath.ctx_mp import mpnumeric
 
 import decimal
-
+from collections import defaultdict
 
 rnd = mlib.round_nearest
 
@@ -839,7 +839,8 @@ class Rational(Number):
     def factors(self, limit=None, use_trial=True,
                                   use_rho=False,
                                   use_pm1=False,
-                                  verbose=False):
+                                  verbose=False,
+                                  visual=False):
         """A wrapper to factorint which return factors of self that are
         smaller than limit (or cheap to compute). Special methods of
         factoring are disabled by default so that only trial division is used.
@@ -851,16 +852,24 @@ class Rational(Number):
                               use_rho=use_rho,
                               use_pm1=use_pm1,
                               verbose=verbose).copy()
+        f = defaultdict(int, f)
         for p, e in factorint(self.q, limit=limit,
                               use_trial=use_trial,
                               use_rho=use_rho,
                               use_pm1=use_pm1,
                               verbose=verbose).items():
-            try: f[p] += -e
-            except KeyError: f[p] = -e
+            f[p] += -e
 
-        if len(f)>1 and 1 in f: del f[1]
-        return f
+        if len(f) > 1 and 1 in f:
+            del f[1]
+        if not visual:
+            return dict(f)
+        elif not f:
+            return S.One
+        else:
+            return Mul(*[Pow(*i, **{'evaluate':False})
+                         for i in sorted(f.items())],
+                                 **{'evaluate':False})
 
     def gcd(self, other):
         """Compute greatest common divisor of input arguments. """
