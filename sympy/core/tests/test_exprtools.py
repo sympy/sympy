@@ -111,3 +111,7 @@ def test_factor_terms():
         x*(a + 2*b)*(y + 1)
     i = Integral(x, (x, 0, oo))
     assert factor_terms(i) == i
+
+def test_xreplace():
+    e = Mul(2, 1 + x, evaluate=False)
+    assert e.xreplace({}) == e

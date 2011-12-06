@@ -831,8 +831,9 @@ class Basic(object):
         """
         if self in rule:
             return rule[self]
-        else:
+        elif rule:
             return self.func(*[arg.xreplace(rule) for arg in self.args])
+        return self
 
     @deprecated
     def __contains__(self, obj):
