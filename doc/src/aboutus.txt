@@ -153,7 +153,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Matt Habel: SymPy-wide pyflakes editing
 #. Nichita Utiu: Add pretty printing to Product()
 #. Imran Ahmed Manzoor: Fixes to the test runner
-#. Steve Anton: pyflakes cleanup of geometry
+#. Steve Anton: pyflakes cleanup of geometry, documentation fixes for logic
 #. Sam Sleight: Fixes to geometry documentation
 #. tsmars15: Fixes to code quality
 #. Chancellor Arkantos: Fixes to the logo
