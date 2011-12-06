@@ -943,12 +943,12 @@ def test_subs():
 
 def test_simplify():
     x,y,f,n = symbols('x y f n')
-    M = Matrix([[    1/x + 1/y,               (x + x*y)/ x           ],
+    M = Matrix([[    1/x + 1/y,            (x + x*y)/ x           ],
                  [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
     M.simplify()
-    assert M ==  Matrix([[(x + y)/(x * y),                 1 + y       ],
-                         [   1 + y,       2*((1 - 1*cos(pi*n))/(pi*n)) ]])
+    assert M ==  Matrix([[(x + y)/(x * y),              1 + y       ],
+                         [   1 + y,    2*((1 - 1*cos(pi*n))/(pi*n)) ]])
     M = Matrix([[(1 + x)**2]])
     M.simplify()
     assert M == Matrix([[(1 + x)**2]])
@@ -1184,7 +1184,7 @@ def test_jacobian2():
     J = Matrix([
             [cos(phi), -rho*sin(phi)],
             [sin(phi),  rho*cos(phi)],
-            [   2*rho,             0],
+            [   2*rho,          0],
         ])
     assert X.jacobian(Y) == J
 
@@ -1511,7 +1511,7 @@ def test_jordan_form():
 def test_Matrix_berkowitz_charpoly():
     x, UA, K_i, K_w = symbols('x UA K_i K_w')
 
-    A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
+    A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),    K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
     charpoly = A.berkowitz_charpoly(x)
@@ -1911,3 +1911,26 @@ def test_slice_issue_2884():
     assert m[:,-1] == Matrix([[1, 3]]).T
     raises(IndexError, 'm[2,:]')
     raises(IndexError, 'm[2,2]')
+
+def test_invertible_check():
+    x = symbols('x')
+    # sometimes a singular matrix will have a pivot vector shorter than
+    # the number of rows in a matrix...
+    assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
+    raises(ValueError, 'Matrix([[1, 2], [1, 2]]).inv()')
+    # ... but sometimes it won't, so that is an insufficient test of
+    # whether something is invertible.
+    m = Matrix([
+    [0, -1,  0,  0,  0,  0, -1,  0,  0],
+    [-1, x, -1,  0,  0,  0,  0, -1,  0],
+    [ 0, -1, x,  0,  0,  0,  0,  0, -1],
+    [ 0,  0,  0, x, -1,  0, -1,  0,  0],
+    [ 0,  0,  0, -1, x, -1,  0, -1,  0],
+    [ 0,  0,  0,  0, -1,  0,  0,  0, -1],
+    [-1,  0,  0, -1,  0,  0, x, -1,  0],
+    [ 0, -1,  0,  0, -1,  0, -1,  0, -1],
+    [ 0,  0, -1,  0,  0, -1,  0, -1, x]])
+    assert len(m.rref()[1]) == m.rows
+    raises(ValueError, 'm.inv(method="ADJ")')
+    raises(ValueError, 'm.inv(method="GE")')
+    raises(ValueError, 'm.inv(method="LU")')
