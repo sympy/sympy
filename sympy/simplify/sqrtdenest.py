@@ -52,7 +52,9 @@ def _sqrtdenest(expr):
            max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
             d = sqrt(d2)
             vad = a + d
-            if sqrt_depth(vad) < sqrt_depth(a):
+            # if a = m1*sqrt(m) and d = m2*sqrt(m) then a*d is Number
+            # and vad = (m1 + m2)*sqrt(m)
+            if sqrt_depth(vad) < sqrt_depth(a) or (a*d).is_Number:
                 vad1 = radsimp(1/vad)
                 return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
         else:
