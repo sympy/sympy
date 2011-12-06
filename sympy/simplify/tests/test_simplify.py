@@ -809,6 +809,8 @@ def test_as_content_primitive():
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
             (S(1)/14, 7.0*x + 21*y + 10*z)
+    assert (2**(S(3)/4) + 2**(S(1)/4)*sqrt(3)).as_content_primitive() == \
+            (1, 2**(S(1)/4)*(sqrt(2) + sqrt(3)))
 
 def test_radsimp():
     r2=sqrt(2)

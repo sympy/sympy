@@ -2254,25 +2254,30 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
         # cancel already took care of things like 1/sqrt(3) -> sqrt(3)/3
         # so we don't have to worry about `a` matching with `b`=0 as we
-        # do in radsimp
+        # do in radsimp yet, but we do below...
         r = denom.match(a + b*sqrt(c))
 
         if r is not None and r[b]:
             # be careful not to multiply by 0/0 when removing denom;
             # this will happen in a = +/- b*sqrt(c), so collect c so
-            # it's not also in `a`
+            # it's not also in `a` but this may turn the denom into
+            # a Mul so we have to watch out for that.
             if r[c].is_number:
                 newdenom = collect_const(denom, sqrt(r[c]))
                 if newdenom != denom:
-                    r = newdenom.match(a + b*sqrt(c))
-            a, b, c = r[a], r[b], r[c]
+                    if newdenom.is_Add:
+                        r = newdenom.match(a + b*sqrt(c))
+                    else:
+                        r = None # Add turned into a Mul
+            if r:
+                a, b, c = r[a], r[b], r[c]
 
-            numer *= a-b*sqrt(c)
-            numer = numer.expand()
+                numer *= a-b*sqrt(c)
+                numer = numer.expand()
 
-            denom = a**2 - c*b**2
+                denom = a**2 - c*b**2
 
-            expr = numer/denom
+                expr = numer/denom
 
     if expr.could_extract_minus_sign():
         n, d = expr.as_numer_denom()
