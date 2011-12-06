@@ -436,7 +436,7 @@ class Basic(object):
            atoms of any type, however, as demonstrated below.
 
            Examples
-        ========
+           ========
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
@@ -447,11 +447,7 @@ class Basic(object):
            those types of atoms.
 
            Examples
-<<<<<<< HEAD
            ========
-=======
-            ========
->>>>>>> Fixed indentation / code issues
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -1269,11 +1265,7 @@ class Atom(Basic):
     A parent class for atomic things. An atom is an expression with no subexpressions.
 
     Examples
-<<<<<<< HEAD
     ========
-=======
-    ======== 
->>>>>>> Fixed indentation / code issues
     Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
