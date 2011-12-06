@@ -30,7 +30,7 @@ class GrayCode(Basic):
     Combinatorial Algorithms. Academic Press.
     [2] Knuth, D. (2011). The Art of Computer Programming, Vol 4
     Addison Wesley
-    
+
     Examples
     ========
     >>> from sympy.combinatorics.graycode import GrayCode

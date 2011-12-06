@@ -62,6 +62,7 @@ from utilities import *
 from integrals import *
 from tensor import *
 from parsing import *
+from combinatorics import *
 # This module is slow to import:
 #from physics import units
 from plotting import Plot, textplot

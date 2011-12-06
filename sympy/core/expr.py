@@ -2285,7 +2285,7 @@ class AtomicExpr(Atom, Expr):
     A parent class for object which are both atoms and Exprs.
 
     Examples
-    ======== 
+    ========
     Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
