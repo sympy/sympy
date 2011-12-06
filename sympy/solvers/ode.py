@@ -328,9 +328,10 @@ def sub_func_doit(eq, func, new):
     Examples
     ========
 
-    >>> from sympy import Derivative
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import Derivative, symbols, Function
     >>> from sympy.solvers.ode import sub_func_doit
+    >>> x, z = symbols('x, z')
+    >>> y = Function('y')
 
     >>> sub_func_doit(3*Derivative(y(x), x) - 1, y(x), x)
     2
@@ -2923,10 +2924,10 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     return _solve_variation_of_parameters(eq, func, order, match)
 
 def _solve_variation_of_parameters(eq, func, order, match):
-    """	  	
+    """
     Helper function for the method of variation of parameters.
 
-    See the ode_nth_linear_constant_coeff_variation_of_parameters() 	
+    See the ode_nth_linear_constant_coeff_variation_of_parameters()
     docstring for more information on this method.
 
     match should be a dictionary that has the following keys:
@@ -2950,7 +2951,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
         wr = simplify(wr) # We need much better simplification for some ODEs.
         #                   See issue 1563, for example.
 
-        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1  	
+        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly independent.
