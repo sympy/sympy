@@ -183,14 +183,15 @@ def _denester (nested, av0, h, max_depth_level=4):
             for v in values:
                 if v[2]: #Since if b=0, r is not defined
                     if R is not None:
-                        assert R == v[2] #All the 'r's should be the same.
+                        if R != v[2]:
+                            return None, False
                     else:
                         R = v[2]
             if R is None:
                 return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the previous invocation
             nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
         d, f = _denester(nested2, False, h+1)
-        if f == None:
+        if not f:
             return None, None
         if all(fi == 0 for fi in f):
             v = values[-1]
