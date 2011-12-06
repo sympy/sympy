@@ -1,5 +1,8 @@
 """
 Generating and counting primes.
+
+Functions that select primes accept ints, floats, or anything that
+has a defined int() function.
 """
 
 import random
@@ -33,11 +36,13 @@ class Sieve:
 
     def extend(self, N):
         """Grow the sieve to cover all numbers <= N."""
+        N = int(N)
         if N <= self._list[-1]:
             return
 
-        # We need to sieve against all bases up to sqrt(n). If there
-        # are too few, extend the list recursively.
+        # We need to sieve against all bases up to sqrt(n).
+        # This is a recursive call that will do nothing if there are
+        # enough known bases already.
         maxbase = int(N**0.5)+1
         self.extend(maxbase)
 
@@ -58,11 +63,14 @@ class Sieve:
 
     def extend_to_no(self, n):
         """Extend to include (at least) the nth prime number"""
+        n = int(n)
         while len(self._list) < n:
-            self.extend(int(self._list[-1] * 1.5))
+            self.extend(self._list[-1] * 1.5)
 
     def primerange(self, a, b):
         """Generate all prime numbers in the range [a, b)."""
+        a = float(a)
+        b = float(b)
         assert a <= b
         if b < 2:
             return
@@ -140,7 +148,8 @@ def nextprime(n, i=1):
         >>> nextprime(2, i=2) # the 2nd prime after 2
         5
     """
-
+    if i != int(i):
+        raise TypeError("i is " + str(i) + ", but it must be an integer.")
     if i > 1:
         pr = n
         j = 1
