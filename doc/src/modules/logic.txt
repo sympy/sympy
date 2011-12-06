@@ -38,8 +38,16 @@ Like most types in SymPy, Boolean expressions inherit from :class:`Basic`::
     >>> (x | y).atoms()
     set([x, y])
 
-Other boolean functions
+Boolean functions
 -----------------------
+
+.. autofunction:: sympy.logic.boolalg.to_cnf
+
+.. autoclass:: sympy.logic.boolalg.And
+
+.. autoclass:: sympy.logic.boolalg.Or
+
+.. autoclass:: sympy.logic.boolalg.Not
 
 .. autoclass:: sympy.logic.boolalg.Xor
 
@@ -47,7 +55,11 @@ Other boolean functions
 
 .. autoclass:: sympy.logic.boolalg.Nor
 
+.. autoclass:: sympy.logic.boolalg.Implies
+
 .. autoclass:: sympy.logic.boolalg.Equivalent
+
+.. autoclass:: sympy.logic.boolalg.ITE
 
 Inference
 ---------
@@ -78,29 +90,3 @@ sentence True. If it is not satisfiable it will return False
 .. autofunction:: sympy.logic.inference.satisfiable
 
 .. TODO: write about CNF file format
-
-API Reference
--------------
-
-Boolean Algebra
-~~~~~~~~~~~~~~~
-
-.. autofunction:: sympy.logic.inference.to_cnf
-
-.. autoclass:: sympy.logic.And
-
-.. autoclass:: sympy.logic.Or
-
-.. autoclass:: sympy.logic.Not
-
-.. autoclass:: sympy.logic.Xor
-
-.. autoclass:: sympy.logic.Nand
-
-.. autoclass:: sympy.logic.Nor
-
-.. autoclass:: sympy.logic.Implies
-
-.. autoclass:: sympy.logic.Equivalent
-
-.. autoclass:: sympy.logic.ITE
