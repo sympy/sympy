@@ -291,7 +291,7 @@ class sin(TrigonometricFunction):
             x, y = arg.as_two_terms()
         else:
             coeff, terms = arg.as_coeff_mul()
-            if not (coeff is S.One) and coeff.is_Integer and terms:
+            if coeff is not S.One and coeff.is_Integer and terms:
                 x = arg._new_rawargs(*terms)
                 y = (coeff-1)*x
         if x is not None:
@@ -510,7 +510,7 @@ class cos(TrigonometricFunction):
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
             coeff, terms = arg.as_coeff_mul()
-            if not (coeff is S.One) and coeff.is_Integer and terms:
+            if coeff is not S.One and coeff.is_Integer and terms:
                 x = arg._new_rawargs(*terms)
                 return C.chebyshevt(coeff, cos(x))
         return cos(arg)

@@ -1811,7 +1811,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if not (b.is_nonnegative or e.is_integer or force):
                     continue
                 exp_c, exp_t = e.as_coeff_mul()
-                if not (exp_c is S.One) and exp_t:
+                if exp_c is not S.One and exp_t:
                     c_powers[i] = [Pow(b, exp_c), e._new_rawargs(*exp_t)]
 
 
@@ -1842,7 +1842,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     nonneg=[]
                     neg=[]
                     for bi in bases:
-                        if not bi.is_negative is None: #then we know the sign
+                        if bi.is_negative is not None: #then we know the sign
                             if bi.is_negative:
                                 neg.append(bi)
                             else:
