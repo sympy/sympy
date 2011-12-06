@@ -5,7 +5,11 @@ from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
 def literal_symbol(literal):
-    """The symbol in this literal (without the negation).
+    """
+    The symbol in this literal (without the negation).
+
+    Examples:
+
     >>> from sympy import Symbol
     >>> from sympy.abc import A
     >>> from sympy.logic.inference import literal_symbol
@@ -15,16 +19,18 @@ def literal_symbol(literal):
     A
 
     """
+
     if literal.func is Not:
         return literal.args[0]
     else:
         return literal
 
 def satisfiable(expr, algorithm="dpll2"):
-    """Check satisfiability of a propositional sentence.
+    """
+    Check satisfiability of a propositional sentence.
     Returns a model when it succeeds
 
-    Examples
+    Examples:
 
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import satisfiable
@@ -44,7 +50,8 @@ def satisfiable(expr, algorithm="dpll2"):
     raise NotImplementedError
 
 def pl_true(expr, model={}):
-    """Return True if the propositional logic expression is true in the model,
+    """
+    Return True if the propositional logic expression is true in the model,
     and False if it is false. If the model does not specify the value for
     every proposition, this may return None to indicate 'not obvious';
     this may happen even when the expression is tautological.
@@ -52,6 +59,7 @@ def pl_true(expr, model={}):
     The model is implemented as a dict containing the pair symbol, boolean value.
 
     Examples:
+
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B : True})
@@ -121,7 +129,7 @@ class KB(object):
 
 
 class PropKB(KB):
-    "A KB for Propositional Logic.  Inefficient, with no indexing."
+    """A KB for Propositional Logic.  Inefficient, with no indexing."""
 
     def tell(self, sentence):
         "Add the sentence's clauses to the KB"
@@ -144,4 +152,3 @@ class PropKB(KB):
         for c in conjuncts(to_cnf(sentence)):
             if c in self.clauses:
                 self.clauses.remove(c)
-
