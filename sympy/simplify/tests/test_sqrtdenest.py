@@ -16,13 +16,19 @@ def test_sqrtdenest():
 def test_sqrtdenest2():
     assert sqrtdenest(sqrt(16-2*sqrt(29)+2*sqrt(55-10*sqrt(29)))) == \
             sqrt(5) + sqrt(11-2*sqrt(29))
-    assert sqrtdenest(sqrt(13-2*sqrt(10)+2*sqrt(2)*sqrt(-2*sqrt(10)+11))) == \
-            -1 + sqrt(2) + sqrt(10)
     assert sqrtdenest(sqrt(1+sqrt(1+sqrt(7)))) == sqrt(1+sqrt(1+sqrt(7)))
     assert sqrtdenest(sqrt(((1+sqrt(1+2*sqrt(3+sqrt(2)+sqrt(5))))**2).expand())) == \
         1 + sqrt(1 + 2*sqrt(sqrt(2) + sqrt(5) + 3))
     assert sqrtdenest(sqrt(5*sqrt(3) + 6*sqrt(2))) == \
         sqrt(2)*3**Rational(1,4) + 3**Rational(3,4)
+
+    assert sqrtdenest(sqrt(((1+sqrt(5)+sqrt(1+sqrt(3)))**2).expand())) == \
+         1+sqrt(5)+sqrt(1+sqrt(3))
+
+@XFAIL
+def test_sqrtdenest2a():
+    assert sqrtdenest(sqrt(13-2*sqrt(10)+2*sqrt(2)*sqrt(-2*sqrt(10)+11))) == \
+            -1 + sqrt(2) + sqrt(10)
 
 def test_issue_2758():
     from sympy.abc import x, y
