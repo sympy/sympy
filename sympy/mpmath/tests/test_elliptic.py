@@ -34,6 +34,7 @@ jdn = ellipfun('dn')
 calculate_nome = lambda k: qfrom(k=k)
 
 def test_ellipfun():
+    mp.dps = 15
     assert ellipfun('ss', 0, 0) == 1
     assert ellipfun('cc', 0, 0) == 1
     assert ellipfun('dd', 0, 0) == 1
