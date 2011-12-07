@@ -409,12 +409,11 @@ class Integral(Expr):
         return function
 
     def _eval_expand_basic(self, deep=True, **hints):
-        from sympy import flatten
         if not deep:
             return self
         else:
             return Integral(self.function.expand(deep=deep, **hints),\
-            flatten(*self.limits))
+            *self.limits)
 
     def _eval_derivative(self, sym):
         """Evaluate the derivative of the current Integral object by
