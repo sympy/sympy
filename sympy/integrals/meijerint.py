@@ -283,7 +283,7 @@ def _get_coeff_exp(expr, x):
 
 def _exponents(expr, x):
     """
-    Find the exponents of `x` (not including zero) in `expr`.
+    Find the exponents of ``x`` (not including zero) in ``expr``.
 
     >>> from sympy.integrals.meijerint import _exponents
     >>> from sympy.abc import x, y
@@ -378,7 +378,7 @@ def _split_mul(f, x):
 
 def _mul_args(f):
     """
-    Return a list `L` such that Mul(*L) == f.
+    Return a list ``L`` such that Mul(*L) == f.
     If f is not a Mul or Pow, L=[f].
     If f=g**n for an integer n, L=[g]*n.
     If f is a Mul, L comes from applying _mul_args to all factors of f.
@@ -459,7 +459,7 @@ def _flip_g(g):
 
 def _inflate_fox_h(g, a):
     r"""
-    Let d denote the integrand in the definition of the G function `g`.
+    Let d denote the integrand in the definition of the G function ``g``.
     Consider the function H which is defined in the same way, but with
     integrand d/Gamma(a*s) (contour conventions as usual).
 
@@ -511,7 +511,7 @@ def _is_analytic(f, x):
 
 def _condsimp(cond):
     """
-    Do naive simplifications on `cond`.
+    Do naive simplifications on ``cond``.
     Note that this routine is completely ad-hoc, simplification rules being
     added as need arises rather than following any logical pattern.
 
@@ -1168,7 +1168,7 @@ def _int0oo(g1, g2, x):
 
 
 def _rewrite_inversion(fac, po, g, x):
-    """ Absorb `po` == x**s into g. """
+    """ Absorb ``po`` == x**s into g. """
     _, s = _get_coeff_exp(po, x)
     a, b = _get_coeff_exp(g.argument, x)
     def tr(l): return [t + s/b for t in l]
@@ -1514,7 +1514,7 @@ def _meijerint_indefinite_1(f, x):
         #    which yields a well-defined function)
         # [R, section 5]
         # (Note that this dummy will immediately go away again, so we
-        #  can safely pass S(1) for `expr`.)
+        #  can safely pass S(1) for ``expr``.)
         t = _dummy('t', 'meijerint-indefinite', S(1))
         def tr(p): return [a + rho + 1 for a in p]
         if any(b.is_integer and b <= 0 for b in tr(g.bm)):
@@ -1795,7 +1795,7 @@ def meijerint_inversion(f, x, t):
     Compute the inverse laplace transform
     :math:\int_{c+i\infty}^{c-i\infty} f(x) e^{tx) dx,
     for real c larger than the real part of all singularities of f.
-    Note that `t` is always assumed real and positive.
+    Note that ``t`` is always assumed real and positive.
 
     Return None if the integral does not exist or could not be evaluated.
 

@@ -220,7 +220,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
 
     def process_conds(cond):
         """
-        Turn `cond` into a strip (a, b), and auxiliary conditions.
+        Turn ``cond`` into a strip (a, b), and auxiliary conditions.
         """
         a = -oo
         b = oo
@@ -822,7 +822,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
 def _simplifyconds(expr, s, a):
     """
-    Naively simplify some conditions occuring in `expr`, given that Re(s) > a.
+    Naively simplify some conditions occuring in ``expr``, given that Re(s) > a.
 
     >>> from sympy.integrals.transforms import _simplifyconds as simp
     >>> from sympy.abc import x
@@ -913,7 +913,7 @@ def _laplace_transform(f, t, s_, simplify=True):
         raise IntegralTransformError('Laplace', f, 'integral in unexpected form')
 
     def process_conds(conds):
-        """ Turn `conds` into a strip and auxiliary conditions. """
+        """ Turn ``conds`` into a strip and auxiliary conditions. """
         a = -oo
         aux = True
         conds = conjuncts(to_cnf(conds))

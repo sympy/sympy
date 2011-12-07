@@ -295,9 +295,9 @@ def add_meijerg_formulae(formulae):
 
 
 def make_simp(z):
-    """ Create a function that simplifies rational functions in `z`. """
+    """ Create a function that simplifies rational functions in ``z``. """
     def simp(expr):
-        """ Efficiently simplify the rational function `expr`. """
+        """ Efficiently simplify the rational function ``expr``. """
         from sympy import poly
         numer, denom = expr.as_numer_denom()
         c, numer, denom = poly(numer, z).cancel(poly(denom, z))
@@ -315,7 +315,7 @@ class Mod1Effective(object):
     """
     Represent an expression 'effectively mod 1'.
     This means that Mod1Effective(a) == Mod1Effective(b) if simplify() can
-    establish that a-b is an Integer (e.g. 5 or -7, not `k`).
+    establish that a-b is an Integer (e.g. 5 or -7, not ``k``).
 
     Beware: __eq__ and the hash are NOT compatible. (by design)
     This means that m1 == m2 does not imply hash(m1) == hash(m2).
@@ -367,7 +367,7 @@ class IndexPair(object):
 
     def compute_buckets(self, oabuckets=None, obbuckets=None):
         """
-        Partition parameters `ap`, `bq` into buckets, that is return two dicts
+        Partition parameters ``ap``, ``bq`` into buckets, that is return two dicts
         abuckets, bbuckets such that every key in [ab]buckets is a rational in
         range [0, 1) and the corresponding items are items of ap/bq congruent to
         the key mod 1.
@@ -425,7 +425,7 @@ class IndexPair(object):
 
     def build_invariants(self):
         """
-        Compute the invariant vector of (`ap`, `bq`), that is:
+        Compute the invariant vector of (``ap``, ``bq``), that is:
             (gamma, ((s1, n1), ..., (sk, nk)), ((t1, m1), ..., (tr, mr)))
         where gamma is the number of integer a < 0,
               s1 < ... < sk
@@ -465,7 +465,7 @@ class IndexPair(object):
         return (gamma, tr(abuckets), tr(bbuckets))
 
     def difficulty(self, ip):
-        """ Estimate how many steps it takes to reach `ip` from self.
+        """ Estimate how many steps it takes to reach ``ip`` from self.
             Return -1 if impossible. """
         oabuckets, obbuckets = self.compute_buckets()
         abuckets, bbuckets = ip.compute_buckets(oabuckets, obbuckets)
@@ -674,7 +674,7 @@ class Formula(object):
     def find_instantiations(self, ip):
         """
         Try to find instantiations of the free symbols that match
-        `ip.ap`, `ip.bq`. Return the instantiated formulae as a list.
+        ``ip.ap``, ``ip.bq``. Return the instantiated formulae as a list.
         Note that the returned instantiations need not actually match,
         or be valid!
         """
@@ -721,7 +721,7 @@ class Formula(object):
 
     def is_suitable(self):
         """
-        Decide if `self` is a suitable origin.
+        Decide if ``self`` is a suitable origin.
 
         >>> from sympy.simplify.hyperexpand import Formula
         >>> from sympy import S
@@ -800,7 +800,7 @@ class FormulaCollection(object):
 
     def lookup_origin(self, ip):
         """
-        Given the suitable parameters `ip.ap`, `ip.bq`, try to find an origin
+        Given the suitable parameters ``ip.ap``, ``ip.bq``, try to find an origin
         in our knowledge base.
 
         >>> from sympy.simplify.hyperexpand import FormulaCollection, IndexPair
@@ -932,7 +932,7 @@ class Operator(object):
 
     def apply(self, obj, op):
         """
-        Apply `self` to the object `obj`, where the generator is given by `op`.
+        Apply ``self`` to the object ``obj``, where the generator is given by ``op``.
 
         >>> from sympy.simplify.hyperexpand import Operator
         >>> from sympy.polys.polytools import Poly
@@ -1409,8 +1409,8 @@ def _reduce_order(ap, bq, gen, key):
 
 def reduce_order(ip):
     """
-    Given the hypergeometric parameters `ip.ap`, `ip.bq`, find a sequence of operators
-    to reduces order as much as possible.
+    Given the hypergeometric parameters ``ip.ap``, ``ip.bq``,
+    find a sequence of operators to reduces order as much as possible.
 
     Return (nip, [operators]), where applying the operators to the
     hypergeometric function specified by nip.ap, nip.bq yields ap, bq.
@@ -1432,8 +1432,8 @@ def reduce_order(ip):
 
 def reduce_order_meijer(iq):
     """
-    Given the Meijer G function parameters, `iq.am`, `iq.ap`, `iq.bm`,
-    `iq.bq`, find a sequence of operators that reduces order as much as possible.
+    Given the Meijer G function parameters, ``iq.am``, ``iq.ap``, ``iq.bm``,
+    ``iq.bq``, find a sequence of operators that reduces order as much as possible.
 
     Return niq, [operators].
 
@@ -1468,8 +1468,8 @@ def make_derivative_operator(M, z):
 
 def apply_operators(obj, ops, op):
     """
-    Apply the list of operators `ops` to object `obj`, substituting `op` for the
-    generator.
+    Apply the list of operators ``ops`` to object ``obj``, substituting
+    ``op`` for the generator.
     """
     res = obj
     for o in reversed(ops):
@@ -1479,8 +1479,8 @@ def apply_operators(obj, ops, op):
 def devise_plan(ip, nip, z):
     """
     Devise a plan (consisting of shift and un-shift operators) to be applied
-    to the hypergeometric function (`nip.ap`, `nip.bq`) to yield
-    (`ip.ap`, `ip.bq`).
+    to the hypergeometric function (``nip.ap``, ``nip.bq``) to yield
+    (``ip.ap``, ``ip.bq``).
     Returns a list of operators.
 
     >>> from sympy.simplify.hyperexpand import devise_plan, IndexPair
@@ -1687,7 +1687,7 @@ def try_polynomial(ip, z):
 
 def try_lerchphi(nip):
     """
-    Try to find an expression for IndexPair `nip` in terms of Lerch
+    Try to find an expression for IndexPair ``nip`` in terms of Lerch
     Transcendents.
 
     Return None if no such expression can be found.
@@ -1886,7 +1886,7 @@ def build_hypergeometric_formula(nip):
 
 def hyperexpand_special(ap, bq, z):
     """
-    Try to find a closed-form expression for hyper(ap, bq, z), where `z`
+    Try to find a closed-form expression for hyper(ap, bq, z), where ``z``
     is supposed to be a "special" value, e.g. 1.
 
     This function tries various of the classical summation formulae
@@ -1925,7 +1925,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
                  rewrite='default'):
     """
     Try to find an expression for the hypergeometric function
-    `ip.ap`, `ip.bq`.
+    ``ip.ap``, ``ip.bq``.
 
     The result is expressed in terms of a dummy variable z0. Then it
     is multiplied by premult. Then ops0 is applied.
@@ -2023,8 +2023,8 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
 def devise_plan_meijer(fro, to, z):
     """
-    Find a sequence of operators to convert index quadruple `fro` into
-    index quadruple `to`. It is assumed that fro and to have the same
+    Find a sequence of operators to convert index quadruple ``fro`` into
+    index quadruple ``to``. It is assumed that fro and to have the same
     signatures, and that in fact any corresponding pair of parameters differs
     by integers, and a direct path is possible. I.e. if there are parameters
        a1 b1 c1  and a2 b2 c2
@@ -2065,9 +2065,9 @@ def devise_plan_meijer(fro, to, z):
     # TODO for now, we use the following simple heuristic: inverse-shift
     #      when possible, shift otherwise. Give up if we cannot make progress.
     def try_shift(f, t, shifter, diff, counter):
-        """ Try to apply `shifter` in order to bring some element in `f` nearer
-            to its counterpart in `to`. `diff` is +/- 1 and determines the
-            effect of `shifter`. Counter is a list of elements blocking the
+        """ Try to apply ``shifter`` in order to bring some element in ``f`` nearer
+            to its counterpart in ``to``. ``diff`` is +/- 1 and determines the
+            effect of ``shifter``. Counter is a list of elements blocking the
             shift.
             Return an operator if change was possible, else None.
         """
@@ -2146,7 +2146,7 @@ meijercollection = None
 def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     """
     Try to find an expression for the Meijer G function specified
-    by the IndexQuadruple `iq`. If `allow_hyper` is True, then returning
+    by the IndexQuadruple ``iq``. If ``allow_hyper`` is True, then returning
     an expression in terms of hypergeometric functions is allowed.
 
     Currently this just does slater's theorem.
