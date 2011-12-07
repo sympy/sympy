@@ -477,8 +477,7 @@ def test_issue_1572_1364_1368():
     assert solve(atan(x) - 1) == [tan(1)]
 
 def test_issue_2033():
-    #r, t = symbols('r,t')
-    r, t, z = symbols('r,t,z')
+    r, t = symbols('r,t')
     assert solve([r - x**2 - y**2, tan(t) - y/x], [x, y]) == \
      [
      (-sqrt(r*sin(t)**2)/tan(t), -sqrt(r*sin(t)**2)),
