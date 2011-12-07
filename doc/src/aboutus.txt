@@ -161,6 +161,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tobias Lenz: Unicode pretty printer for Sum
 #. Siddhu: Documentation fixes for the Physics module
 #. Tiffany Zhu: Improved the latex() docstring
+#. Alexey Subach: Translation of the tutorial to Russian
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
