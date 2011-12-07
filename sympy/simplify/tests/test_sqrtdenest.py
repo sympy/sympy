@@ -2,6 +2,8 @@ from sympy import sqrt, Rational, sqrtdenest, Integral
 from sympy.simplify.sqrtdenest import _denester
 from sympy.utilities.pytest import XFAIL
 
+r2, r3, r5, r7 = sqrt(2), sqrt(3), sqrt(5), sqrt(7)
+
 def test_sqrtdenest():
     d = {sqrt(5 + 2 * sqrt(6)): sqrt(2) + sqrt(3),
         sqrt(sqrt(2)): sqrt(sqrt(2)),
@@ -24,6 +26,9 @@ def test_sqrtdenest2():
 
     assert sqrtdenest(sqrt(((1+sqrt(5)+sqrt(1+sqrt(3)))**2).expand())) == \
          1+sqrt(5)+sqrt(1+sqrt(3))
+
+    assert sqrtdenest(sqrt(((1+r5+r7+sqrt(1+r3))**2).expand())) == \
+        1+sqrt(1+r3)+r5+r7
 
 @XFAIL
 def test_sqrtdenest2a():
