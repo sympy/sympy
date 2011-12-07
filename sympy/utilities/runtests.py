@@ -516,14 +516,14 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f)
+                self.test_file(f, sort)
             except KeyboardInterrupt:
                 print " interrupted by user"
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename):
+    def test_file(self, filename, sort=True):
         clear_cache()
         self._count += 1
         gl = {'__file__':filename}
@@ -572,6 +572,8 @@ class SymPyTests(object):
         if not funcs:
             return
         self._reporter.entering_filename(filename, len(funcs))
+        if not sort:
+            random.shuffle(funcs)
         for f in funcs:
             self._reporter.entering_test(f)
             try:
