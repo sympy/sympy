@@ -115,3 +115,4 @@ def test_factor_terms():
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
     assert e.xreplace({}) == e
+    assert e.xreplace({y: x}) == e

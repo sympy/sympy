@@ -832,7 +832,9 @@ class Basic(object):
         if self in rule:
             return rule[self]
         elif rule:
-            return self.func(*[arg.xreplace(rule) for arg in self.args])
+            args = tuple([arg.xreplace(rule) for arg in self.args])
+            if args != self.args:
+                return self.func(*args)
         return self
 
     @deprecated
