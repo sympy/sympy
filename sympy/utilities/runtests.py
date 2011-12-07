@@ -25,6 +25,8 @@ from doctest import DocTestFinder, DocTestRunner
 import re as pre
 import random
 import subprocess
+import time
+from multiprocessing import Process, Queue
 
 from sympy.core.cache import clear_cache
 
@@ -170,6 +172,8 @@ def test(*paths, **kwargs):
     seed = kwargs.get("seed", None)
     if seed is None:
         seed = random.randrange(100000000)
+    timeout = kwargs.get("timeout", False)
+    slow = kwargs.get("slow", False)
     r = PyTestReporter(verbose, tb, colors)
     t = SymPyTests(r, kw, post_mortem, seed)
 
@@ -193,7 +197,7 @@ def test(*paths, **kwargs):
                     break
         t._testfiles.extend(matched)
 
-    return t.test(sort=sort)
+    return t.test(sort=sort, timeout=timeout, slow=slow)
 
 def doctest(*paths, **kwargs):
     """
@@ -501,7 +505,7 @@ class SymPyTests(object):
         self._testfiles = []
         self._seed = seed
 
-    def test(self, sort=False):
+    def test(self, sort=False, timeout=False, slow=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -516,14 +520,14 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort)
+                self.test_file(f, sort, timeout, slow)
             except KeyboardInterrupt:
                 print " interrupted by user"
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename, sort=True):
+    def test_file(self, filename, sort=True, timeout=False, slow=False):
         clear_cache()
         self._count += 1
         gl = {'__file__':filename}
@@ -538,6 +542,9 @@ class SymPyTests(object):
         pytestfile = ""
         if "XFAIL" in gl:
             pytestfile = inspect.getsourcefile(gl["XFAIL"])
+        pytestfile2 = ""
+        if "SLOW" in gl:
+            pytestfile2 = inspect.getsourcefile(gl["SLOW"])
         disabled = gl.get("disabled", False)
         if disabled:
             funcs = []
@@ -549,7 +556,8 @@ class SymPyTests(object):
                                                  (inspect.isfunction(gl[f])
                                                     or inspect.ismethod(gl[f])) and
                                                  (inspect.getsourcefile(gl[f]) == filename or
-                                                   inspect.getsourcefile(gl[f]) == pytestfile)]
+                                                   inspect.getsourcefile(gl[f]) == pytestfile or
+                                                   inspect.getsourcefile(gl[f]) == pytestfile2)]
             # Sorting of XFAILed functions isn't fixed yet :-(
             funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
             i = 0

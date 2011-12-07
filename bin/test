@@ -37,6 +37,10 @@ parser.add_option('-t', '--types', dest='types', action='store',
         help='setup ground types: gmpy | python | sympy')
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
+parser.add_option("--timeout", action="store", dest="timeout",
+        default=False, help="Set a timeout for the slow functions. 'none' for no timeout.")
+parser.add_option("--slow", action="store_true", dest="slow",
+        default=False, help="Run only the slow functions. The timeout is by default 30.")
 parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = """\
 "options" are any of the options above. "tests" are 0 or more glob strings of \
@@ -45,6 +49,11 @@ tests to run. If no test arguments are given, all tests will be run.\
 
 options, args = parser.parse_args()
 
+if options.timeout == False:
+    timeout = 30
+else:
+    timeout = options.timeout
+
 if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
 if options.types:
@@ -52,9 +61,20 @@ if options.types:
 
 import sympy
 
+with open("_tmp_timeout","w") as f:
+    if options.slow:
+        if timeout == "none":
+            f.write("slow")
+        else:
+            f.write(str(timeout))
+    else:
+        f.write("nothing")
+
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
-    "sort": options.sort, "seed": options.seed})
+    "sort": options.sort, "seed": options.seed, "slow": options.slow, "timeout": options.timeout})
+
+os.remove("_tmp_timeout")
 
 if ok:
     sys.exit(0)
