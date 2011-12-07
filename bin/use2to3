@@ -65,6 +65,7 @@ for root, dirs, files in os.walk('./doc/src/modules'):
 relevant_txt_files.append('./doc/src/tutorial.txt')
 relevant_txt_files.append('./doc/src/tutorial.bg.txt')
 relevant_txt_files.append('./doc/src/tutorial.cs.txt')
+relevant_txt_files.append('./doc/src/tutorial.ru.txt')
 relevant_txt_files.append('./doc/src/gotchas.txt')
 relevant_txt_files.append('./doc/src/guide.txt')
 relevant_txt_files.append('./doc/src/python-comparisons.txt')
