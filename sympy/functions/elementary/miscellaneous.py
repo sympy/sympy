@@ -148,12 +148,15 @@ def root(arg, n):
     See also
     ========
 
-    L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
+        L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
 
-    * http://en.wikipedia.org/wiki/Square_root
-    * http://en.wikipedia.org/wiki/real_root
-    * http://en.wikipedia.org/wiki/Root_of_unity
-    * http://en.wikipedia.org/wiki/Principal_value
+        External Links
+        --------------
+
+        * http://en.wikipedia.org/wiki/Square_root
+        * http://en.wikipedia.org/wiki/real_root
+        * http://en.wikipedia.org/wiki/Root_of_unity
+        * http://en.wikipedia.org/wiki/Principal_value
 
     """
     n = sympify(n)
