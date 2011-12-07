@@ -26,7 +26,6 @@ import re as pre
 import random
 import subprocess
 import time
-from multiprocessing import Process, Queue
 
 from sympy.core.cache import clear_cache
 
@@ -558,6 +557,9 @@ class SymPyTests(object):
                                                  (inspect.getsourcefile(gl[f]) == filename or
                                                    inspect.getsourcefile(gl[f]) == pytestfile or
                                                    inspect.getsourcefile(gl[f]) == pytestfile2)]
+            if slow:
+               funcs = [f for f in funcs if inspect.getsourcefile(f) == pytestfile2 and f.__doc__
+                                                                and f.__doc__.startswith("SLOW") ]
             # Sorting of XFAILed functions isn't fixed yet :-(
             funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
             i = 0

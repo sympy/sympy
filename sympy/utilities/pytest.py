@@ -162,9 +162,6 @@ def SKIP(reason):
 
     return wrapper
 
-class Slow(Exception):
-    pass
-
 def SLOW(func):
     timeout = 0
 
