@@ -24,10 +24,16 @@ class ExprCondPair(Function):
 
     @property
     def expr(self):
+        """
+        Returns the expression of this pair.
+        """
         return self.args[0]
 
     @property
     def cond(self):
+        """
+        Returns the condition of this pair.
+        """
         if self.args[1] == ExprCondPair.true_sentinel:
             return True
         return self.args[1]
@@ -38,6 +44,9 @@ class ExprCondPair(Function):
 
     @property
     def free_symbols(self):
+        """
+        Return the free symbols of this pair.
+        """
         # Overload Basic.free_symbols because self.args[1] may contain non-Basic
         result = self.expr.free_symbols
         if hasattr(self.cond, 'free_symbols'):
@@ -52,8 +61,8 @@ class Piecewise(Function):
     """
     Represents a piecewise function.
 
-    Usage
-    =====
+    Usage: .. XXX Not a heading since Numpydoc won't display it otherwise.
+
       Piecewise( (expr,cond), (expr,cond), ... )
         - Each argument is a 2-tuple defining a expression and condition
         - The conds are evaluated in turn returning the first that is True.
@@ -65,6 +74,7 @@ class Piecewise(Function):
 
     Examples
     ========
+
       >>> from sympy import Piecewise, log
       >>> from sympy.abc import x
       >>> f = x**2
@@ -150,6 +160,9 @@ class Piecewise(Function):
         return None
 
     def doit(self, **hints):
+        """
+        Evaluate this piecewise function.
+        """
         newargs = []
         for e, c in self.args:
             if hints.get('deep', True):
@@ -278,6 +291,9 @@ def piecewise_fold(expr):
     """
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form.
+
+    Examples
+    ========
 
     >>> from sympy import Piecewise, piecewise_fold
     >>> from sympy.abc import x

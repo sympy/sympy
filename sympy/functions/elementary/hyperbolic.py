@@ -12,19 +12,28 @@ class HyperbolicFunction(Function):
 
 class sinh(HyperbolicFunction):
     """
+    The hyperbolic sine function, :math:`\\frac{exp(x) - exp(-x)}{2}`.
+
     Usage
     =====
       sinh(x) -> Returns the hyperbolic sine of x
+
     """
     nargs = 1
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
         if argindex == 1:
             return cosh(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return asinh
 
     @classmethod
@@ -72,6 +81,9 @@ class sinh(HyperbolicFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
+        """
+        Returns the next term in the Taylor series expansion.
+        """
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -87,6 +99,9 @@ class sinh(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
+        """
+        Returns this function as a complex coordinate.
+        """
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -139,6 +154,8 @@ class sinh(HyperbolicFunction):
 
 class cosh(HyperbolicFunction):
     """
+    The hyperbolic cosine function, :math:`\\frac{exp(x) + exp(-x)}{2}`.
+
     Usage
     =====
       cosh(x) -> Returns the hyperbolic cosine of x
@@ -152,6 +169,9 @@ class cosh(HyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return acosh
 
     @classmethod
@@ -265,6 +285,8 @@ class cosh(HyperbolicFunction):
 
 class tanh(HyperbolicFunction):
     """
+    The hyperbolic tangent function, :math:`\\frac{sinh(x)}{cosh(x)}`.
+
     Usage
     =====
       tanh(x) -> Returns the hyperbolic tangent of x
@@ -278,6 +300,9 @@ class tanh(HyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return atanh
 
     @classmethod
@@ -394,6 +419,8 @@ class tanh(HyperbolicFunction):
 
 class coth(HyperbolicFunction):
     """
+    The hyperbolic tangent function, :math:`\\frac{cosh(x)}{sinh(x)}`.
+
     Usage
     =====
       coth(x) -> Returns the hyperbolic cotangent of x
@@ -407,6 +434,9 @@ class coth(HyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return acoth
 
     @classmethod
@@ -519,6 +549,8 @@ class coth(HyperbolicFunction):
 
 class asinh(Function):
     """
+    The inverse hyperbolic sine function.
+
     Usage
     =====
       asinh(x) -> Returns the inverse hyperbolic sine of x
@@ -592,6 +624,8 @@ class asinh(Function):
 
 class acosh(Function):
     """
+    The inverse hyperbolic cosine function.
+
     Usage
     =====
       acosh(x) -> Returns the inverse hyperbolic cosine of x
@@ -696,6 +730,8 @@ class acosh(Function):
 
 class atanh(Function):
     """
+    The inverse hyperbolic tangent function.
+
     Usage
     =====
       atanh(x) -> Returns the inverse hyperbolic tangent of x
@@ -762,6 +798,8 @@ class atanh(Function):
 
 class acoth(Function):
     """
+    The inverse hyperbolic cotangent function.
+
     Usage
     =====
       acoth(x) -> Returns the inverse hyperbolic cotangent of x

@@ -103,6 +103,8 @@ def _pi_coeff(arg, cycles=1):
 
 class sin(TrigonometricFunction):
     """
+    The sine function.
+
     Usage
     =====
       sin(x) -> Returns the sine of x (measured in radians)
@@ -146,6 +148,9 @@ class sin(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return asin
 
     @classmethod
@@ -320,6 +325,8 @@ class sin(TrigonometricFunction):
 
 class cos(TrigonometricFunction):
     """
+    The cosine function.
+
     Usage
     =====
       cos(x) -> Returns the cosine of x (measured in radians)

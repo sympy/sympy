@@ -11,7 +11,11 @@ from sympy.core.rules import Transform
 from sympy.ntheory.residue_ntheory import int_tested
 
 class IdentityFunction(Lambda):
-    """The identity function
+    """
+    The identity function
+
+    Examples
+    ========
 
     >>> from sympy import Id, Symbol
     >>> x = Symbol('x')
@@ -143,15 +147,14 @@ def root(arg, n):
 
     See also
     ========
-       L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
 
-       External links
-       --------------
+    L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
 
-       * http://en.wikipedia.org/wiki/Square_root
-       * http://en.wikipedia.org/wiki/real_root
-       * http://en.wikipedia.org/wiki/Root_of_unity
-       * http://en.wikipedia.org/wiki/Principal_value
+    * http://en.wikipedia.org/wiki/Square_root
+    * http://en.wikipedia.org/wiki/real_root
+    * http://en.wikipedia.org/wiki/Root_of_unity
+    * http://en.wikipedia.org/wiki/Principal_value
+
     """
     n = sympify(n)
     return C.Pow(arg, 1/n)
@@ -339,8 +342,8 @@ class Max(MinMaxBase, Application, Basic):
 
     Also, only comparable arguments are permitted.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Max, Symbol, oo
     >>> from sympy.abc import x, y
@@ -372,7 +375,9 @@ class Max(MinMaxBase, Application, Basic):
     oo
 
     Algorithm
-    ---------
+
+    .. Not a heading since Numpydoc does not display the text otherwise.
+
     The task can be considered as searching of supremums in the
     directed complete partial orders [1]_.
 
@@ -395,8 +400,8 @@ class Max(MinMaxBase, Application, Basic):
        - if A > B > C then A > C
        - if A==B then B can be removed
 
-    [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
-    [2] http://en.wikipedia.org/wiki/Lattice_(order)
+    .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
+    .. [2] http://en.wikipedia.org/wiki/Lattice_(order)
 
     See Also
     --------
@@ -425,8 +430,8 @@ class Min(MinMaxBase, Application, Basic):
     """
     Return, if possible, the minimum value of the list.
 
-    Example
-    -------
+    Examples
+    ========
 
     >>> from sympy import Min, Symbol, oo
     >>> from sympy.abc import x, y

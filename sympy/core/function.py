@@ -250,6 +250,9 @@ class Function(Application, Expr):
 
     @property
     def is_commutative(self):
+        """
+        Returns whether the functon is commutative.
+        """
         if all(getattr(t, 'is_commutative') for t in self.args):
             return True
         else:
@@ -321,6 +324,9 @@ class Function(Application, Expr):
         return r
 
     def as_base_exp(self):
+        """
+        Returns the method as the 2-tuple (base, exponent).
+        """
         return self, S.One
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -541,6 +547,9 @@ functions are not supported.')
         return self.func(*args)
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of the function.
+        """
         if self.nargs is not None:
             if isinstance(self.nargs, tuple):
                 nargs = self.nargs[-1]
