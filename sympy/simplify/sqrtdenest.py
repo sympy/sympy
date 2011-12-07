@@ -63,6 +63,7 @@ def _sqrtdenest(expr):
             ra, rb, rr = rval
             a2 = a.subs(sqrt(rr), (ry**2 - ra)/rb)
             ca, cb = S.Zero, S.Zero
+            cbv = []
             ccv = []
             for xx in a2.args:
                 cx, qx = xx.as_coeff_Mul()
@@ -70,7 +71,7 @@ def _sqrtdenest(expr):
                     qxa = list(qx.args)
                     if ry in qxa:
                         qxa.remove(ry)
-                        cb = prod(qxa+[cx])
+                        cbv.append( prod(qxa+[cx]) )
                     elif ry**2 in qxa:
                         qxa.remove(ry**2)
                         ca = prod(qxa+[cx])
@@ -80,11 +81,12 @@ def _sqrtdenest(expr):
                     ca = cx
                 else:
                     if ry == qx:
-                        cb = S.One
+                        cbv.append( S.One )
                     elif ry**2 == qx:
                         ca == S.One
                     else:
                         ccv.append(xx)
+            cb = Add(*cbv)
             cc = Add(*ccv)
             if ca != 0:
                 cb += b
