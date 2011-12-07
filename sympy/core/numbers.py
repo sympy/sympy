@@ -862,10 +862,10 @@ class Rational(Number):
 
         if len(f) > 1 and 1 in f:
             del f[1]
+        if not f:
+            f = {1: 1}
         if not visual:
             return dict(f)
-        elif not f:
-            return S.One
         else:
             return Mul(*[Pow(*i, **{'evaluate':False})
                          for i in sorted(f.items())],
@@ -1450,7 +1450,13 @@ class One(IntegerConstant):
         return
 
     @staticmethod
-    def factors():
+    def factors(limit=None, use_trial=True,
+                            use_rho=False,
+                            use_pm1=False,
+                            verbose=False,
+                            visual=False):
+        if visual:
+            return S.One
         return {1: 1}
 
 class NegativeOne(IntegerConstant):
