@@ -10,7 +10,7 @@ def func_equal(funcname, func, **args):
 
     >>> from sympy.utilities.misc import func_equal
     >>> func_equal("int", int, a = 3.0)
-    2
+    3
     >>> func_equal("float", float, a = 3, b = 4.0)
     (3.0, 4.0)
     >>> func_equal("int", int, a = 3, b = 4.1)
