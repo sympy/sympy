@@ -13,6 +13,7 @@ from sympy.core.compatibility import reduce
 from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts
+from sympy.core.compatibility import reduce
 
 __all__ = [
     'Dagger',
@@ -577,7 +578,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
             return state.down(element)
 
         elif isinstance(state, Mul):
-            c_part, nc_part = split_commutative_parts(state)
+            c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
                 return Mul(*(c_part+[nc_part[0].down(element)]+nc_part[1:]))
@@ -699,7 +700,7 @@ class CreateFermion(FermionicOperator, Creator):
 
 
         elif isinstance(state, Mul):
-            c_part, nc_part = split_commutative_parts(state)
+            c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
                 return Mul(*(c_part + [nc_part[0].up(element)] + nc_part[1:]))
@@ -1131,7 +1132,7 @@ def apply_Mul(m):
     """
     if not isinstance(m, Mul):
         return m
-    c_part, nc_part = split_commutative_parts(m)
+    c_part, nc_part = m.args_cnc()
     n_nc = len(nc_part)
     if n_nc == 0 or n_nc == 1:
         return m

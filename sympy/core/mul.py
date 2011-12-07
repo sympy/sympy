@@ -117,7 +117,7 @@ class Mul(AssocOp):
                 r, b = b.as_coeff_Mul()
                 a *= r
                 if b.is_Mul:
-                    bargs, nc = b.args_cnc(clist=True)
+                    bargs, nc = b.args_cnc()
                     rv = bargs, nc, None
                     if a is not S.One:
                         bargs.insert(0, a)

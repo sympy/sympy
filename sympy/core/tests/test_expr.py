@@ -974,13 +974,20 @@ def test_as_coefficients_dict():
 def test_args_cnc():
     A = symbols('A', commutative=False)
     assert (x+A).args_cnc() == \
-        [set([]), [x + A]]
+        [[], [x + A]]
     assert (x+a).args_cnc() == \
-        [set([a + x]), []]
+        [[a + x], []]
     assert (x*a).args_cnc() == \
-        [set([x, a]), []]
-    assert (x*y*A*(A+1)).args_cnc(clist=True) == \
-        [[x, y], [A, 1 + A]]
+        [[a, x], []]
+    assert (x*y*A*(A+1)).args_cnc(cset=True) == \
+        [set([x, y]), [A, 1 + A]]
+    assert Mul(x, x, evaluate=False).args_cnc(cset=True, warn=False) == \
+        [set([x]), []]
+    assert Mul(x, x**2, evaluate=False).args_cnc(cset=True, warn=False) == \
+        [set([x, x**2]), []]
+    raises(ValueError, 'Mul(x, x, evaluate=False).args_cnc(cset=True)')
+    assert Mul(x, y, x, evaluate=False).args_cnc() == \
+        [[x, y, x], []]
 
 def test_new_rawargs():
     n = Symbol('n', commutative=False)
