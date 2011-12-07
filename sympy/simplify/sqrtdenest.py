@@ -35,7 +35,7 @@ def sqrtdenest(expr):
     return expr
 
 def _sqrtdenest(expr):
-    from sympy.simplify.simplify import radsimp
+    from sympy.simplify.simplify import radsimp, simplify
     if not expr.is_Pow or expr.exp != S.Half:
         val = None
     else:
@@ -52,12 +52,46 @@ def _sqrtdenest(expr):
            max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
             d = sqrt(d2)
             vad = a + d
-            # if a = m1*sqrt(m) and d = m2*sqrt(m) then a*d is Number
-            # and vad = (m1 + m2)*sqrt(m)
             if sqrt_depth(vad) < sqrt_depth(a) or (a*d).is_Number:
                 vad1 = radsimp(1/vad)
                 return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
         else:
+            # attempt to factorize a + b*sqrt(r) as a square
+            # using r = ra + rb*sqrt(rr)
+            rval = sqrt_match(r)
+            ry = Wild('ry', positive=True)
+            ra, rb, rr = rval
+            a2 = a.subs(sqrt(rr), (ry**2 - ra)/rb)
+            ca, cb = S.Zero, S.Zero
+            ccv = []
+            for xx in a2.args:
+                cx, qx = xx.as_coeff_Mul()
+                if qx.is_Mul:
+                    qxa = list(qx.args)
+                    if ry in qxa:
+                        qxa.remove(ry)
+                        cb = prod(qxa+[cx])
+                    elif ry**2 in qxa:
+                        qxa.remove(ry**2)
+                        ca = prod(qxa+[cx])
+                    else:
+                        ccv.append(xx)
+                elif qx == ry**2:
+                    ca = cx
+                else:
+                    if ry == qx:
+                        cb = S.One
+                    elif ry**2 == qx:
+                        ca == S.One
+                    else:
+                        ccv.append(xx)
+            cc = Add(*ccv)
+            if ca != 0:
+                cb += b
+                discr = (cb**2 - 4*ca*cc).expand()
+                if discr == 0:
+                    z = sqrt(ca)*(sqrt(r) + cb/(2*ca))
+                    return simplify(z)
             d = sqrt(d2)
             vad = a + d
             vp0, vp1 = vad.as_content_primitive()
