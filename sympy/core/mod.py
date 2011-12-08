@@ -1,17 +1,16 @@
-from cache import cacheit
-from expr import Expr
-from sympify import sympify
+from function import Function
 
-class Mod(Expr):
+class Mod(Function):
     '''Represents a modulo operation on symbolic expressions.
 
-    Receives two arguments, dividend and divisor. If both are Numbers, the
-    result is evaluated immediately.
+    Receives two arguments, dividend p and divisor q.
 
     The convention used is the same as python's: the remainder always has the
     same sign as the divisor.
 
-    Examples:
+    Examples
+    --------
+
     >>> from sympy.abc import x, y
     >>> x**2 % y
     Mod(x**2, y)
@@ -19,12 +18,10 @@ class Mod(Expr):
     1
 
     '''
-    @cacheit
-    def __new__(cls, *args, **options):
-        if len(args) != 2:
-            raise TypeError("Mod receives two arguments, only %s passed" %
-                    len(args))
-        dividend, divisor = map(sympify, args)
-        if dividend.is_Number and divisor.is_Number:
-            return dividend % divisor
-        return Expr.__new__(cls, *args)
+    nargs = 2
+
+    @classmethod
+    def eval(cls, p, q):
+        if p.is_Number and q.is_Number:
+            return p % q
+        return Mod(p, q, evaluate=False)

@@ -1214,6 +1214,7 @@ def test_Mod():
     assert Mod(-5, 3) == 1
     assert Mod(5, -3) == -1
     assert Mod(-5, -3) == -2
+    assert type(Mod(3.2, 2, evaluate=False)) == Mod
     assert 5 % x == Mod(5, x)
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
