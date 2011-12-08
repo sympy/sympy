@@ -149,7 +149,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. David Ju: Increase test coverage, fixes to KroneckerDelta
 #. Alexandr Gudulin: Code quality fixes
 #. Bilal Akhtar: isympy man page
-#. Grzegorz Świrski: Fix to latex()
+#. Grzegorz Świrski: Fix to latex(), MacPorts portfile
 #. Matt Habel: SymPy-wide pyflakes editing
 #. Nichita Utiu: Add pretty printing to Product()
 #. Imran Ahmed Manzoor: Fixes to the test runner
