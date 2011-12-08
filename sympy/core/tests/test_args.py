@@ -1005,7 +1005,6 @@ def test_sympy__physics__quantum__operator__UnitaryOperator():
 
 def test_sympy__physics__quantum__piab__PIABBra():
     from sympy.physics.quantum.piab import PIABBra
-    from sympy.physics.quantum import Bra
     assert _test_args(PIABBra('B'))
 
 def test_sympy__physics__quantum__piab__PIABHamiltonian():
@@ -1053,7 +1052,7 @@ def test_sympy__physics__quantum__qubit__Qubit():
     assert _test_args(Qubit(0, 0, 0))
 
 def test_sympy__physics__quantum__qubit__QubitBra():
-    from sympy.physics.quantum.qubit import QubitBra, QubitState
+    from sympy.physics.quantum.qubit import QubitBra
     assert _test_args(QubitBra('1', 0))
 
 def test_sympy__physics__quantum__qubit__QubitState():
@@ -1152,7 +1151,6 @@ def test_sympy__physics__quantum__spin__SpinState():
 
 def test_sympy__physics__quantum__spin__WignerD():
     from sympy.physics.quantum.spin import WignerD
-    from sympy import sympify
     assert _test_args(WignerD(0, 1, 2, 3, 4, 5))
 
 def test_sympy__physics__quantum__state__Bra():
@@ -1193,7 +1191,7 @@ def test_sympy__physics__quantum__state__TimeDepState():
 
 def test_sympy__physics__quantum__state__Wavefunction():
     from sympy.physics.quantum.state import Wavefunction
-    from sympy.functions import sqrt, sin
+    from sympy.functions import sin
     from sympy import Piecewise, pi
     n = 1
     L = 1
@@ -1223,7 +1221,7 @@ def test_sympy__physics__secondquant__AntiSymmetricTensor():
     assert _test_args(AntiSymmetricTensor('v', (a, i), (b, j)))
 
 def test_sympy__physics__secondquant__BosonState():
-    from sympy.physics.secondquant import BosonState, FockState
+    from sympy.physics.secondquant import BosonState
     assert _test_args(BosonState((0, 1)))
 
 @SKIP("abstract class")
@@ -1289,7 +1287,7 @@ def test_sympy__physics__secondquant__FockStateKet():
 
 def test_sympy__physics__secondquant__InnerProduct():
     from sympy.physics.secondquant import InnerProduct
-    from sympy.physics.secondquant import NO, FockStateKet, FockStateBra
+    from sympy.physics.secondquant import FockStateKet, FockStateBra
     assert _test_args(InnerProduct(FockStateBra((0, 1)), FockStateKet((0, 1))))
 
 def test_sympy__physics__secondquant__NO():

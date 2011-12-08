@@ -1,17 +1,10 @@
-from sympy.core.evalf import PrecisionExhausted, complex_accuracy
-
-from sympy import pi, I, Symbol, Add, Rational, exp, sqrt, sin, cos, \
-    fibonacci, E, log, floor, ceiling, Sum, oo,\
-    factorial, GoldenRatio, sympify, \
-    sstr, Function, Eq, Mul, Pow
-
+from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
+                   Function, GoldenRatio, I, log, Mul, oo, pi, Pow, Rational,
+                   sin, sqrt, sstr, Sum, sympify)
+from sympy.core.evalf import complex_accuracy, PrecisionExhausted
+from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
-
 from sympy.utilities.pytest import raises, XFAIL
-
-x = Symbol('x')
-y = Symbol('y')
-n = Symbol('n')
 
 def NS(e, n=15, **options):
     return sstr(sympify(e).evalf(n, **options), full_prec=True)
@@ -221,7 +214,6 @@ def test_evalf_arguments():
 def test_implemented_function_evalf():
     from sympy.utilities.lambdify import implemented_function
     f = Function('f')
-    x = Symbol('x')
     f = implemented_function(f, lambda x: x + 1)
     assert str(f(x)) == "f(x)"
     assert str(f(2)) == "f(2)"

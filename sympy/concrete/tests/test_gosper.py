@@ -1,9 +1,8 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
-from sympy.concrete.gosper import gosper_normal, gosper_term, gosper_sum
-from sympy import S, Poly, symbols, factorial, binomial, gamma, sqrt, simplify
-
-a, b, n, m, k, i, j, r, x = symbols('a,b,n,m,k,i,j,r,x')
+from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt
+from sympy.abc import a, b, j, k, m, n, r, x
+from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
 def test_gosper_normal():
     assert gosper_normal(4*n + 5, 2*(4*n + 1)*(2*n + 3), n) == \
@@ -74,12 +73,6 @@ def test_gosper_sum_AeqB_part1():
 
     g1a = m*(m + 1)*(2*m + 1)*(3*m**2 + 3*m - 1)/30
     g1b = 26 + 2**(m + 1)*(m**3 - 3*m**2 + 9*m - 13)
-    g1c = (m + 1)*(m*(m**2 - 7*m + 3)*sqrt(5) - (3*m**3 - 7*m**2 + 19*m - 6))/(2*m**3*sqrt(5) + m**4 + m**2 - 1)/6
-    g1d = -S(2)/231 + 24**m*(m + 1)*(63*m**4 + 112*m**3 + 18*m**2 - 22*m + 3)/(693*binomial(2*m, m))
-    g1e = -S(9)/2 + (81*m**2 + 261*m + 200)*factorial(3*m + 2)/(40*27**m*factorial(m)*factorial(m + 1)*factorial(m + 2))
-    g1f = (2*m + 1)**2*binomial(2*m, m)**2/(4**(2*m)*(m + 1))
-    g1g = -binomial(2*m, m)**2/4**(2*m)
-    g1h = -(2*m + 1)**2*(3*m + 4)*factorial(m - S(1)/2)**2/factorial(m + 1)**2
 
     g = gosper_sum(f1a, (n, 0, m))
     assert g is not None and simplify(g - g1a) == 0
@@ -104,11 +97,6 @@ def test_gosper_sum_AeqB_part2():
     f2c = factorial(n - 1)**2/(factorial(n - x)*factorial(n + x))
     f2d = n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b))
 
-    g2a = -a*(a + 1)/(a - 1)**3 + a**(m + 1)*(a**2*m**2 - 2*a*m*22 + m**2 - 2*a*m + 2*m + a + 1)/(a - 1)**3
-    g2b = -((-m + r)*binomial(r, m))
-    g2c = 1/(factorial(1 - x)*factorial(1 + x)) - 1/(x**2*factorial(1 - x)*factorial(1 + x)) + factorial(m)**2/(x**2*factorial(1 - x)*factorial(1 + x))
-    g2d = 1/(factorial(a - 1)*factorial(b - 1)) - a**(m + 1)*b**(m + 1)/(factorial(a + m)*factorial(b + m))
-
     g = gosper_sum(f2a, (n, 0, m))
     assert g is not None # and simplify(g - g2a) == 0
     g = gosper_sum(f2b, (n, 0, m))
@@ -126,14 +114,6 @@ def test_gosper_sum_AeqB_part3():
     f3e = 2**n/(n + 1)
     f3f = 4*(n - 1)*(n**2 - 2*n - 1)/(n**2*(n + 1)**2*(n - 2)**2*(n - 3)**2)
     f3g = (n**4 - 14*n**2 - 24*n - 9)*2**n/(n**2*(n + 1)**2*(n + 2)**2*(n + 3)**2)
-
-    # g3a -> no closed form
-    g3b = m*(m + 2)/(2*m**2 + 4*m + 3)
-    g3c = 2**m/m**2 - 2
-    g3d = S(2)/3 + 4**(m + 1)*(m - 1)/(m + 2)/3
-    # g3e -> no closed form
-    g3f = -S(1)/16 + 1/((m - 2)**2*(m + 1)**2)
-    g3g = -S(2)/9 + 2**(m + 1)/((m + 1)**2*(m + 3)**2)
 
     g = gosper_sum(f3a, (n, 1, m))
     assert g is None

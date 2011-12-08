@@ -774,4 +774,3 @@ from function import FunctionClass
 from mul import Mul, _keep_coeff
 from power import Pow
 from sympy.core.numbers import Rational
-from sympy.core.symbol import Dummy
