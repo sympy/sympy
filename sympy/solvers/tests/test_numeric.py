@@ -1,12 +1,11 @@
+from sympy import Eq, Matrix, pi, sin, sqrt, Symbol
 from sympy.mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
-from sympy import Symbol, Matrix, sqrt, Eq
 from sympy.utilities.pytest import raises
 
 def test_nsolve():
     # onedimensional
-    from sympy import Symbol, sin, pi
     x = Symbol('x')
     assert nsolve(sin(x), 2) - pi.evalf() < 1e-16
     assert nsolve(Eq(2*x, 2), x, -10) == nsolve(2*x - 2, -10)

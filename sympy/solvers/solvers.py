@@ -13,19 +13,18 @@
 
 from sympy.core.compatibility import iterable, is_sequence, SymPyDeprecationWarning
 from sympy.core.sympify import sympify
-from sympy.core import C, S, Mul, Add, Pow, Symbol, Wild, Equality, Dummy, Basic, Expr
+from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
-        Derivative, Function, AppliedUndef, UndefinedFunction, count_ops,
-        nfloat)
+                          Derivative, AppliedUndef, UndefinedFunction, nfloat)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 
-from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot,
-                             cosh, sinh, tanh, coth, acos, asin, atan, acot,
-                             acosh, asinh, atanh, acoth, sqrt, Abs)
-from sympy.simplify import (simplify, collect, powsimp, fraction, posify,
-                            powdenest, nsimplify)
+from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
+                             sinh, tanh, coth, acos, asin, atan, acot, acosh,
+                             asinh, atanh, acoth, Abs)
+from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
+                            nsimplify)
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
@@ -548,7 +547,6 @@ def solve(f, *symbols, **flags):
     # with Dummy symbols or functions
     symbols_new = []
     symbol_swapped = False
-    symbols_passed = list(symbols)
     funcs = []
     for i, s in enumerate(symbols):
         if s.is_Symbol:
@@ -1068,12 +1066,12 @@ def _solve_system(exprs, symbols, **flags):
                 result = [dict(zip(solved_syms, r)) for r in result]
 
                 checked = []
-                warn = flags.get('warn', False)
+                warning = flags.get('warn', False)
                 for r in result:
                     check = checksol(polys, r, **flags)
                     if check is not False:
-                        if check is None and warn:
-                            print("\n\tWarning: could not verify solution %s." % sol)
+                        if check is None and warning:
+                            print("\n\tWarning: could not verify solution %s." % result)
                         if not dens or not checksol(dens, r, **flags): # if it's a solution to any denom then exclude
                             checked.append(r)
                 result = checked
@@ -1122,7 +1120,6 @@ def _solve_system(exprs, symbols, **flags):
                     # result in the new result list; use copy since the
                     # solution for s in being added in-place
                     if do_simplify:
-                        solutions = map(simplify, soln)
                         flags['simplify'] = False # for checksol's sake
                     for sol in soln:
                         # check that it satisfies *other* equations
@@ -1618,7 +1615,6 @@ def _tsolve(eq, sym, **flags):
         #      x    -x                   -1
         # UC: e  + e   = y      ->  t + t   = y
         t = Dummy('t')
-        terms = lhs.args
 
         # find first term which is a Function
         for f1 in lhs.args:
