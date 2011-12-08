@@ -1,10 +1,11 @@
-from sympy import (S, Symbol, Sum, oo, Float, Rational, summation, pi, cos,
-    zeta, exp, log, factorial, sqrt, E, sympify, binomial, harmonic, Catalan,
-    EulerGamma, Function, Integral, Product, product, nan, diff, Derivative)
+from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
+                   factorial, Function, harmonic, Integral, log, nan, oo, pi,
+                   Product, product, Rational, S, sqrt, Sum, summation, Symbol,
+                   sympify, zeta)
+from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
-a, b, c, d, m, k, x, y, z = map(Symbol, 'abcdmkxyz')
 n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():

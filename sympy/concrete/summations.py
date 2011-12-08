@@ -1,6 +1,6 @@
-from sympy.core import (Expr, S, C, sympify, Wild, Dummy, Derivative, Symbol, Add)
-from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.core import Add, C, Derivative, Dummy, Expr, S, sympify, Wild
 from sympy.concrete.gosper import gosper_sum
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 
@@ -158,7 +158,6 @@ class Sum(Expr):
         Sum(a*b*x, (x, 1, a)) can be differentiated wrt x or b but not `a`
         since the value of the sum is discontinuous in `a`. In a case
         involving a limit variable, the unevaluated derivative is returned.
-
         """
 
         # diff already confirmed that x is in the free symbols of self, but we
