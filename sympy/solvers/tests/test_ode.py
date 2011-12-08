@@ -8,7 +8,7 @@ from sympy.abc import x, y, z
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
                                homogeneous_order, ode_order)
-from sympy.utilities.pytest import XFAIL, skip, raises
+from sympy.utilities.pytest import XFAIL, skip, raises, SLOW
 
 C1 = Symbol('C1')
 C2 = Symbol('C2')
@@ -308,6 +308,7 @@ def test_1st_exact1():
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
 
+@SLOW
 @XFAIL
 def test_1st_exact2():
     """
@@ -319,7 +320,7 @@ def test_1st_exact2():
     equivalent, but it is so complex that checkodesol fails, and takes a long time
     to do so.
     """
-    skip("takes too much time")
+    #skip("takes too much time")
     eq = x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) - sqrt(x**2 + f(x)**2)))*f(x).diff(x)
     sol = dsolve(eq)
     assert sol == Eq(log(x),C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/(-27*f(x)/x + \
@@ -505,8 +506,9 @@ def test_1st_homogeneous_coeff_ode():
     assert dsolve(eq8, hint='1st_homogeneous_coeff_best') == sol8
     # checks are below
 
+@SLOW
 def test_1st_homogeneous_coeff_ode_check14568():
-    skip("This test passes, but it takes too long")
+    #skip("This test passes, but it takes too long")
     # These are the checkodesols from test_homogeneous_coeff_ode1.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq4 = 2*f(x)*exp(x/f(x)) + f(x)*f(x).diff(x) - 2*x*exp(x/f(x))*f(x).diff(x)
