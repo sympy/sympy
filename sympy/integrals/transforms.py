@@ -373,6 +373,13 @@ def _rewrite_sin((m, n), s, a, b):
     n = expand_mul(n/pi)
     r = ceiling(-m*a - n.as_real_imag()[0]) # Don't use re(n), does not expand
     return gamma(m*s + n + r), gamma(1 - n - r - m*s), (-1)**r*pi
+
+class MellinTransformStripError(ValueError):
+    """
+    Exception raised by _rewrite_gamma. Mainly for internal use.
+    """
+    pass
+
 def _rewrite_gamma(f, s, a, b):
     """
     Try to rewrite the product f(s) as a product of gamma functions,
@@ -382,7 +389,7 @@ def _rewrite_gamma(f, s, a, b):
     Return (an, ap), (bm, bq), arg, exp, fac such that
     G((an, ap), (bm, bq), arg/z**exp)*fac is the inverse mellin transform of f(s).
 
-    Raises IntegralTransformError or ValueError on failure.
+    Raises IntegralTransformError or MellinTransformStripError on failure.
 
     It is asserted that f has no poles in the fundamental strip designated by
     (a, b). One of a and b is allowed to be None. The fundamental strip is
@@ -455,7 +462,7 @@ def _rewrite_gamma(f, s, a, b):
             #raise IntegralTransformError('Inverse Mellin', f,
             #                     'Could not determine position of singularity %s'
             #                     ' relative to fundamental strip' % c)
-        raise ValueError('Pole inside critical strip?')
+        raise MellinTransformStripError('Pole inside critical strip?')
 
     # 1)
     s_multipliers = []

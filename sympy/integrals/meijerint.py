@@ -251,6 +251,12 @@ def _mytype(f, x):
         res.sort()
         return tuple(res)
 
+class _CoeffExpValueError(ValueError):
+    """
+    Exception raised by _get_coeff_exp, for internal use only.
+    """
+    pass
+
 def _get_coeff_exp(expr, x):
     """
     When expr is known to be of the form c*x**b, with c and/or b possibly 1,
@@ -274,12 +280,12 @@ def _get_coeff_exp(expr, x):
     [m] = m
     if m.is_Pow:
         if m.base != x:
-            raise ValueError('expr not of form a*x**b')
+            raise _CoeffExpValueError('expr not of form a*x**b')
         return c, m.exp
     elif m == x:
         return c, S(1)
     else:
-        raise ValueError('expr not of form a*x**b: %s' % expr)
+        raise _CoeffExpValueError('expr not of form a*x**b: %s' % expr)
 
 def _exponents(expr, x):
     """
@@ -1369,7 +1375,8 @@ def _rewrite_single(f, x, recursive=True):
         return None
     _debug('Trying recursive mellin transform method.')
     from sympy.integrals.transforms import (mellin_transform,
-                                    inverse_mellin_transform, IntegralTransformError)
+                                    inverse_mellin_transform, IntegralTransformError,
+                                    MellinTransformStripError)
     from sympy import oo, nan, zoo, simplify, cancel
     def my_imt(F, s, x, strip):
         """ Calling simplify() all the time is slow and not helpful, since
@@ -1379,7 +1386,7 @@ def _rewrite_single(f, x, recursive=True):
         try:
             return inverse_mellin_transform(F, s, x, strip,
                                             as_meijerg=True, needeval=True)
-        except ValueError:
+        except MellinTransformStripError:
             return inverse_mellin_transform(simplify(cancel(expand(F))), s, x, strip,
                                             as_meijerg=True, needeval=True)
     f = f_
@@ -1830,7 +1837,7 @@ def meijerint_inversion(f, x, t):
                     continue
                 try:
                     a, b = _get_coeff_exp(arg.args[0], x)
-                except ValueError:
+                except _CoeffExpValueError:
                     b = 0
                 if b == 1:
                     exponentials.append(a)
@@ -1844,7 +1851,7 @@ def meijerint_inversion(f, x, t):
                 if not arg.base.has(x):
                     try:
                         a, b = _get_coeff_exp(arg.exp, x)
-                    except ValueError:
+                    except _CoeffExpValueError:
                         b = 0
                     if b == 1:
                         exponentials.append(a*log(arg.base))
