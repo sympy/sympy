@@ -168,7 +168,7 @@ def SLOW(func):
     contents = os.environ['SYMPY_TEST_TIMEOUT']
     try:
         timeout = int(contents)
-    except:
+    except ValueError:
         timeout = contents
 
     if type(timeout) == int:
