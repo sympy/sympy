@@ -6,8 +6,8 @@ from sympy import (Add, Basic, S, Symbol, Wild,  Float, Integer, Rational, I,
     Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp, simplify, together,
     separate, collect, factorial, apart, combsimp, factor, refine, cancel,
     Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum)
+from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
-from sympy.physics.units import m, s
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -96,11 +96,8 @@ class F1_1(DummyNumber):
     def __float__(self):
         return self.number
 
-x,y,z,t,u,n = symbols('x,y,z,t,u,n')
-
 i5 = I5()
 f1_1 = F1_1()
-
 
 # basic sympy objects
 basic_objs = [
@@ -161,11 +158,11 @@ def test_relational():
 
 def test_relational_noncommutative():
     from sympy import Lt, Gt, Le, Ge
-    a, b = symbols('a b', commutative=False)
-    assert (a < b)  == Lt(a, b)
-    assert (a <= b) == Le(a, b)
-    assert (a > b)  == Gt(a, b)
-    assert (a >= b) == Ge(a, b)
+    A, B = symbols('A,B', commutative=False)
+    assert (A < B)  == Lt(A, B)
+    assert (A <= B) == Le(A, B)
+    assert (A > B)  == Gt(A, B)
+    assert (A >= B) == Ge(A, B)
 
 def test_basic_nostr():
     for obj in basic_objs:
@@ -235,7 +232,6 @@ def test_atoms():
     assert sorted(list(Poly(x + y, x, y, z).atoms())) == sorted([x, y])
     assert sorted(list(Poly(x + y*t, x, y, z).atoms())) == sorted([t, x, y])
 
-    I = S.ImaginaryUnit
     assert list((I*pi).atoms(NumberSymbol)) == [pi]
     assert sorted((I*pi).atoms(NumberSymbol, I)) == \
            sorted((I*pi).atoms(I,NumberSymbol)) == [pi, I]
@@ -248,8 +244,6 @@ def test_atoms():
                                                     3 + z])
 
 def test_is_polynomial():
-    z = Symbol('z')
-
     k = Symbol('k', nonnegative=True, integer=True)
 
     assert Rational(2).is_polynomial(x, y, z) == True
@@ -294,8 +288,6 @@ def test_is_polynomial():
     assert ((x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) == False
 
 def test_is_rational_function():
-    x,y = symbols('x y')
-
     assert Integer(1).is_rational_function() == True
     assert Integer(1).is_rational_function(x) == True
 
@@ -350,7 +342,6 @@ def test_SAGE3():
     assert e == ('mys', x, o)
 
 def test_len():
-    x, y, z = symbols("x y z")
     e = x*y
     assert len(e.args) == 2
     e = x+y+z
@@ -392,7 +383,6 @@ def test_noncommutative_expand_issue658():
     assert (A*(A+B+C)*B).expand() == A**2*B + A*B**2 + A*C*B
 
 def test_as_numer_denom():
-    a, b, c = symbols('a, b, c')
     assert oo.as_numer_denom() == (1, 0)
     assert (-oo).as_numer_denom() == (-1, 0)
     assert zoo.as_numer_denom() == (zoo, 1)
@@ -489,8 +479,6 @@ def test_as_independent():
            (Integral(x, (x, 1, 2)), x)
 
 def test_subs_dict():
-    a,b,c,d,e = symbols('a,b,c,d,e')
-
     assert (sin(x))._subs_dict({ x : 1, sin(x) : 2}) == 2
     assert (sin(x))._subs_dict([(x, 1), (sin(x), 2)]) == 2
 
@@ -503,7 +491,6 @@ def test_subs_dict():
     assert expr._subs_dict(seq) == c + a*b*sin(d*e)
 
 def test_subs_list():
-
     assert (sin(x))._subs_list([(sin(x), 2), (x, 1)]) == 2
     assert (sin(x))._subs_list([(x, 1), (sin(x), 2)]) == sin(1)
 
@@ -764,9 +751,6 @@ def test_is_number():
     assert a.is_number == False
 
 def test_as_coeff_add():
-    x = Symbol('x')
-    y = Symbol('y')
-
     assert S(2).as_coeff_add() == (2, ())
     assert S(3.0).as_coeff_add() == (0, (S(3.0),))
     assert S(-3.0).as_coeff_add() == (0, (S(-3.0),))
@@ -781,9 +765,6 @@ def test_as_coeff_add():
     assert e.as_coeff_add(y) == (0, (e,))
 
 def test_as_coeff_mul():
-    x = Symbol('x')
-    y = Symbol('y')
-
     assert S(2).as_coeff_mul() == (2, ())
     assert S(3.0).as_coeff_mul() == (1, (S(3.0),))
     assert S(-3.0).as_coeff_mul() == (-1, (S(3.0),))
@@ -855,9 +836,6 @@ def test_extractions():
     assert (-x + y).could_extract_minus_sign() == True
 
 def test_coeff():
-    from sympy.abc import x, y, z
-    from sympy import sqrt
-
     assert (x+1).coeff(x+1) == 1
     assert (3*x).coeff(0) == None
     assert (z*(1+x)*x**2).coeff(1+x) == z*x**2
@@ -962,7 +940,6 @@ def test_issue1864():
     assert hasattr(expr, "is_commutative")
 
 def test_action_verbs():
-    a,b,c,d = symbols('a,b,c,d')
     assert nsimplify((1/(exp(3*pi*x/5)+1))) == (1/(exp(3*pi*x/5)+1)).nsimplify()
     assert ratsimp(1/x + 1/y) == (1/x + 1/y).ratsimp()
     assert trigsimp(log(x), deep=True) == (log(x)).trigsimp(deep = True)
@@ -992,7 +969,6 @@ def test_as_coefficients_dict():
     assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 1
 
 def test_args_cnc():
-    a, x = symbols('a,x')
     A = symbols('A', commutative=False)
     assert (x+A).args_cnc() == \
         [set([]), [x + A]]
@@ -1004,7 +980,6 @@ def test_args_cnc():
         [[x, y], [A, 1 + A]]
 
 def test_new_rawargs():
-    x, y = symbols('x,y')
     n = Symbol('n', commutative=False)
     a = x + n
     assert a.is_commutative is False
@@ -1158,6 +1133,7 @@ def test_as_ordered_terms():
     assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
 def test_sort_key_atomic_expr():
+    from sympy.physics.units import m, s
     assert sorted([-m, s], key=lambda arg: arg.sort_key()) == [-m, s]
 
 def test_issue_1100():
@@ -1197,7 +1173,6 @@ def test_issue_2744():
     assert ((3*a)*(2*a)).extract_multiplicatively(a) == 6*a
 
 def test_is_constant():
-    from sympy.abc import a, n, x, y
     from sympy.solvers.solvers import checksol
     Sum(x, (x, 1, 10)).is_constant() == True
     Sum(x, (x, 1, n)).is_constant() == False
@@ -1230,7 +1205,6 @@ def test_is_not_constant():
     assert (-3 - sqrt(5) + (-sqrt(10)/2 - sqrt(2)/2)**2).is_zero != False
 
 def test_equals():
-    a, x = symbols('a, x')
     assert (x**2 - 1).equals((x + 1)*(x - 1))
     assert (cos(x)**2 + sin(x)**2).equals(1)
     assert (a*cos(x)**2 + a*sin(x)**2).equals(a)

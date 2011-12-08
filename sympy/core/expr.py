@@ -786,7 +786,7 @@ class Expr(Basic, EvalfMixin):
 
         if self_c:
             xargs = set(arglist(x))
-            for a in Add.make_args(self):
+            for a in args:
                 margs = set(arglist(a))
                 if len(xargs) > len(margs):
                     continue
@@ -799,7 +799,7 @@ class Expr(Basic, EvalfMixin):
                 return Add(*co)
         elif x_c:
             xargs = set(arglist(x))
-            for a in Add.make_args(self):
+            for a in args:
                 margs, nc = a.args_cnc()
                 if len(xargs) > len(margs):
                     continue
@@ -813,7 +813,7 @@ class Expr(Basic, EvalfMixin):
         else: # both nc
             xargs, nx = x.args_cnc()
             # find the parts that pass the commutative terms
-            for a in Add.make_args(self):
+            for a in args:
                 margs, nc = a.args_cnc()
                 if len(xargs) > len(margs):
                     continue
@@ -1982,7 +1982,7 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
+        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, n, logx))
 
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
@@ -2001,7 +2001,7 @@ class Expr(Basic, EvalfMixin):
             (This is needed for the gruntz algorithm.)
         """
         from sympy.series.gruntz import calculate_series
-        from sympy import cancel, expand_mul
+        from sympy import cancel
         if self.removeO() == 0:
             return self
         if logx is None:
@@ -2305,7 +2305,7 @@ class AtomicExpr(Atom, Expr):
 from mul import Mul
 from add import Add
 from power import Pow
-from function import Derivative, expand_mul, expand_multinomial, UndefinedFunction
+from function import Derivative, expand_mul
 from sympify import sympify
 from symbol import Wild
 from exprtools import factor_terms

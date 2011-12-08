@@ -360,7 +360,7 @@ functions are not supported.')
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded == False for t in args0):
-            from sympy import Dummy, oo, zoo, nan
+            from sympy import oo, zoo, nan
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any ([t.has(oo, -oo, zoo, nan) for t in a0]):

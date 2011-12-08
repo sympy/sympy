@@ -1,4 +1,4 @@
-from sympy.core import Expr, S, C, Mul, sympify, Symbol, Tuple
+from sympy.core import C, Expr, Mul, S, sympify, Tuple
 from sympy.core.compatibility import is_sequence
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
