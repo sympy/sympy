@@ -38,9 +38,9 @@ parser.add_option('-t', '--types', dest='types', action='store',
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
 parser.add_option("--timeout", action="store", dest="timeout",
-        default=False, help="Set a timeout for the slow functions. 'none' for no timeout.")
+        default=False, help="Set a timeout for the all functions. By default there is no timeout.")
 parser.add_option("--slow", action="store_true", dest="slow",
-        default=False, help="Run only the slow functions. The timeout is by default 30.")
+        default=False, help="Run only the slow functions.")
 parser.set_usage("test [options ...] [tests ...]")
 parser.epilog = """\
 "options" are any of the options above. "tests" are 0 or more glob strings of \
@@ -49,10 +49,14 @@ tests to run. If no test arguments are given, all tests will be run.\
 
 options, args = parser.parse_args()
 
-if options.timeout == False:
-    timeout = 30
+timeout = False
+if options.timeout:
+    timeout = int(options.timeout)
+
+if options.slow:
+    slow = True
 else:
-    timeout = options.timeout
+    slow = False
 
 if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
@@ -61,17 +65,9 @@ if options.types:
 
 import sympy
 
-if options.slow:
-    if timeout == "none":
-        os.environ['SYMPY_TEST_TIMEOUT'] = 'slow'
-    else:
-        os.environ['SYMPY_TEST_TIMEOUT'] = str(timeout)
-else:
-    os.environ['SYMPY_TEST_TIMEOUT'] = 'nothing'
-
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
-    "sort": options.sort, "seed": options.seed, "slow": options.slow, "timeout": options.timeout})
+    "sort": options.sort, "seed": options.seed, "slow": slow, "timeout": timeout})
 
 if ok:
     sys.exit(0)

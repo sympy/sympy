@@ -26,6 +26,7 @@ import re as pre
 import random
 import subprocess
 import time
+import signal
 
 from sympy.core.cache import clear_cache
 
@@ -33,6 +34,9 @@ from sympy.core.cache import clear_cache
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
 # it here to make utf8 files work in Python 2.5.
 pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
+
+class Skipped(Exception):
+        pass
 
 def _indent(s, indent=4):
     """
@@ -558,7 +562,7 @@ class SymPyTests(object):
                                                    inspect.getsourcefile(gl[f]) == pytestfile or
                                                    inspect.getsourcefile(gl[f]) == pytestfile2)]
             if slow:
-               funcs = [f for f in funcs if f.func_code.co_name == "slowwrapper"]
+               funcs = [f for f in funcs if getattr(f, '_slow', False)]
             # Sorting of XFAILed functions isn't fixed yet :-(
             funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
             i = 0
@@ -586,9 +590,15 @@ class SymPyTests(object):
         for f in funcs:
             self._reporter.entering_test(f)
             try:
-                f()
+                if timeout:
+                    self._timeout(f, timeout)
+                else:
+                    f()
             except KeyboardInterrupt:
-                raise
+                if getattr(f, '_slow', False):
+                    self._reporter.test_skip("KeyboardInterrupt")
+                else:
+                    raise
             except Exception:
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
@@ -608,6 +618,15 @@ class SymPyTests(object):
             else:
                 self._reporter.test_pass()
         self._reporter.leaving_filename()
+
+    def _timeout(self, function, timeout):
+        def callback(x,y):
+            raise Skipped("Timeout")
+        handler = signal.signal(signal.SIGALRM, callback)
+        signal.alarm(timeout)
+        function()
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(0)
 
     def matches(self, x):
         """

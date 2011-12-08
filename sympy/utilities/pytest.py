@@ -164,35 +164,9 @@ def SKIP(reason):
     return wrapper
 
 def SLOW(func):
-    timeout = 0
-    contents = os.environ['SYMPY_TEST_TIMEOUT']
-    try:
-        timeout = int(contents)
-    except ValueError:
-        timeout = contents
+    func._slow = True
+    def func_wrapper():
+        func()
 
-    if type(timeout) == int:
-        def slowwrapper():
-            def callback(x,y):
-                raise Skipped("Timeout")
-            handler = signal.signal(signal.SIGALRM, callback)
-            signal.alarm(timeout)
-            try:
-                func()
-                signal.signal(signal.SIGALRM, handler)
-                signal.alarm(0)
-            except KeyboardInterrupt:
-                signal.alarm(0)
-                raise Skipped("KeyboardInterrupt")
-    elif timeout == "slow":
-        def slowwrapper():
-            try:
-                func()
-            except KeyboardInterrupt:
-                raise Skipped("KeyboardInterrupt")
-    else:
-        def slowwrapper():
-            raise Skipped("Timeout")
-
-    slowwrapper = functools.update_wrapper(slowwrapper, func)
-    return slowwrapper
+    func_wrapper = functools.update_wrapper(func_wrapper, func)
+    return func_wrapper
