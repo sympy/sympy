@@ -1,7 +1,7 @@
 Utilities
 =========
 
-This module contains some general purpose utilities that are used across SymPy
+.. automodule:: sympy.utilities
 
 Contents:
 
@@ -9,5 +9,18 @@ Contents:
    :maxdepth: 2
 
    autowrap.txt
+   benchmarking.txt
    codegen.txt
+   compilef.txt
+   cythonutils.txt
+   decorator.txt
    iterables.txt
+   lambdify.txt
+   memoization.txt
+   misc.txt
+   pkgdata.txt
+   pytest.txt
+   randtest.txt
+   runtests.txt
+   source.txt
+   timeutils.txt

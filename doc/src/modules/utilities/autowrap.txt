@@ -84,3 +84,10 @@ backend-dependent details.
 
 .. autoclass:: CythonCodeWrapper
    :members:
+
+Docstring
+=========
+
+.. automodule:: sympy.utilities.autowrap
+   :members:
+   :noindex:
