@@ -309,6 +309,128 @@ def test_Infinity():
     assert 8/oo  == 0
     assert oo % 2 == nan
     assert 2 % oo == nan
+    assert oo/oo == nan
+    assert oo/-oo == nan
+    assert -oo/oo == nan
+    assert -oo/-oo == nan
+    assert oo - oo == nan
+    assert oo - -oo == oo
+    assert -oo - oo == -oo
+    assert -oo - -oo == nan
+    assert oo + -oo == nan
+    assert -oo + oo == nan
+    assert oo + oo == oo
+    assert -oo + oo == nan
+    assert oo + -oo == nan
+    assert -oo + -oo == -oo
+    assert oo*oo == oo
+    assert -oo*oo == -oo
+    assert oo*-oo == -oo
+    assert -oo*-oo == oo
+    assert oo/0 == oo
+    assert -oo/0 == -oo
+    assert 0/oo == 0
+    assert 0/-oo == 0
+    assert oo*0 == nan
+    assert -oo*0 == nan
+    assert 0*oo == nan
+    assert 0*-oo == nan
+    assert oo + 0 == oo
+    assert -oo + 0 == -oo
+    assert 0 + oo == oo
+    assert 0 + -oo == -oo
+    assert oo - 0 == oo
+    assert -oo - 0 == -oo
+    assert 0 - oo == -oo
+    assert 0 - -oo == oo
+    assert oo/2 == oo
+    assert -oo/2 == -oo
+    assert oo/-2 == -oo
+    assert -oo/-2 == oo
+    assert oo*2 == oo
+    assert -oo*2 == -oo
+    assert oo*-2 == -oo
+    assert 2/oo == 0
+    assert 2/-oo == 0
+    assert -2/oo == 0
+    assert -2/-oo == 0
+    assert 2*oo == oo
+    assert 2*-oo == -oo
+    assert -2*oo == -oo
+    assert -2*-oo == oo
+    assert 2 + oo == oo
+    assert 2 - oo == -oo
+    assert -2 + oo == oo
+    assert -2 - oo == -oo
+    assert 2 + -oo == -oo
+    assert 2 - -oo == oo
+    assert -2 + -oo == -oo
+    assert -2 - -oo == oo
+    assert S(2) + oo == oo
+    assert S(2) - oo == -oo
+    assert oo/I == -oo*I
+    assert -oo/I == oo*I
+    assert oo*float(1) == Float('inf') and (oo*float(1)).is_Float
+    assert -oo*float(1) == Float('-inf') and (-oo*float(1)).is_Float
+    assert oo/float(1) == Float('inf') and (oo/float(1)).is_Float
+    assert -oo/float(1) == Float('-inf') and (-oo/float(1)).is_Float
+    assert oo*float(-1) == Float('-inf') and (oo*float(-1)).is_Float
+    assert -oo*float(-1) == Float('inf') and (-oo*float(-1)).is_Float
+    assert oo/float(-1) == Float('-inf') and (oo/float(-1)).is_Float
+    assert -oo/float(-1) == Float('inf') and (-oo/float(-1)).is_Float
+    assert oo + float(1) == Float('inf') and (oo+float(1)).is_Float
+    assert -oo + float(1) == Float('-inf') and (-oo+float(1)).is_Float
+    assert oo - float(1) == Float('inf') and (oo-float(1)).is_Float
+    assert -oo - float(1) == Float('-inf') and (-oo-float(1)).is_Float
+    assert float(1)*oo == Float('inf') and (float(1)*oo).is_Float
+    assert float(1)*-oo == Float('-inf') and (float(1)*-oo).is_Float
+    assert float(1)/oo == 0
+    assert float(1)/-oo == 0
+    assert float(-1)*oo == Float('-inf') and (float(-1)*oo).is_Float
+    assert float(-1)*-oo == Float('inf') and (float(-1)*-oo).is_Float
+    assert float(-1)/oo == 0
+    assert float(-1)/-oo == 0
+    assert float(1) + oo == Float('inf')
+    assert float(1) + -oo == Float('-inf')
+    assert float(1) - oo == Float('-inf')
+    assert float(1) - -oo == Float('inf')
+
+    from sympy.mpmath.libmp.libmpf import fnan
+    assert (oo*Float('nan'))._mpf_ == fnan
+    assert (-oo*Float('nan'))._mpf_ == fnan
+    assert (oo/Float('nan'))._mpf_ == fnan
+    assert (-oo/Float('nan'))._mpf_ == fnan
+    assert (oo + Float('nan'))._mpf_ == fnan
+    assert (-oo + Float('nan'))._mpf_ == fnan
+    assert (oo - Float('nan'))._mpf_ == fnan
+    assert (-oo - Float('nan'))._mpf_ == fnan
+
+    assert oo*nan == nan
+    assert -oo*nan == nan
+    assert oo/nan == nan
+    assert -oo/nan == nan
+    assert oo + nan == nan
+    assert -oo + nan == nan
+    assert oo - nan == nan
+    assert -oo - nan == nan
+    assert S.Zero * oo == nan
+    assert oo.is_Rational == False
+    assert isinstance(oo, Rational) == False
+    assert S.One/oo == oo
+    assert -S.One/oo == -oo
+    assert S.One/-oo == -oo
+    assert -S.One/-oo == oo
+    assert S.One*oo == oo
+    assert -S.One*oo == -oo
+    assert S.One*-oo == -oo
+    assert -S.One*-oo == oo
+    assert S.One/nan == nan
+    assert S.One - -oo == oo
+    assert S.One + nan == nan
+    assert S.One - nan == nan
+    assert nan - S.One == nan
+    assert nan/S.One == nan
+    assert -oo - S.One == -oo
 
 def test_Infinity_2():
     x = Symbol('x')
@@ -341,6 +463,39 @@ def test_NaN():
     assert 1/nan  == nan
     assert 1/(-nan)  == nan
     assert 8/nan  == nan
+    assert not nan > 0
+    assert not nan < 0
+    assert not nan >= 0
+    assert not nan <= 0
+    assert not 0 < nan
+    assert not 0 > nan
+    assert not 0 <= nan
+    assert not 0 >= nan
+    assert S.One + nan == nan
+    assert S.One - nan == nan
+    assert S.One*nan == nan
+    assert S.One/nan == nan
+    assert nan - S.One == nan
+    assert nan*S.One == nan
+    assert nan + S.One == nan
+    assert nan/S.One == nan
+
+def test_special_numbers():
+    assert isinstance(S.NaN, Number) == True
+    assert isinstance(S.Infinity, Number) == True
+    assert isinstance(S.NegativeInfinity, Number) == True
+
+    assert S.NaN.is_number == True
+    assert S.Infinity.is_number == True
+    assert S.NegativeInfinity.is_number == True
+
+    assert isinstance(S.NaN, Rational) == False
+    assert isinstance(S.Infinity, Rational) == False
+    assert isinstance(S.NegativeInfinity, Rational) == False
+
+    assert S.NaN.is_rational != True
+    assert S.Infinity.is_rational != True
+    assert S.NegativeInfinity.is_rational != True
 
 def test_powers():
     assert integer_nthroot(1, 2) == (1, True)

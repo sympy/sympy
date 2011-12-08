@@ -46,7 +46,7 @@ class SymPyRationalField(RationalField):
 
     def from_sympy(self, a):
         """Convert SymPy's Rational to `dtype`. """
-        if a.is_Rational and a.q != 0:
+        if a.is_Rational:
             return a
         elif a.is_Float:
             from sympy.polys.domains import RR
