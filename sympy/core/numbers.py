@@ -9,6 +9,7 @@ import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from sympy.mpmath.ctx_mp import mpnumeric
+from sympy.mpmath.libmp.libmpf import fnan
 
 import decimal
 
@@ -1596,10 +1597,15 @@ class Infinity(Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                return Float('inf')
+                if other == Float('-inf') or other._mpf_ == fnan:
+                    #Used workaround because Float('nan') == Float('nan') return False
+                    return Float('nan')
+                else:
+                    return Float('inf')
             else:
                 return S.Infinity
         return NotImplemented
+    __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
@@ -1607,7 +1613,11 @@ class Infinity(Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                return Float('inf')
+                if other == Float('inf') or other._mpf_ == fnan:
+                    #Used workaround because Float('nan') == Float('nan') return False
+                    return Float('nan')
+                else:
+                    return Float('inf')
             else:
                 return S.Infinity
         return NotImplemented
@@ -1618,6 +1628,9 @@ class Infinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
+                if other._mpf_ == fnan or other == 0:
+                    #Used workaround because Float('nan') == Float('nan') return False
+                    return Float('nan')
                 if other > 0:
                     return Float('inf')
                 else:
@@ -1636,7 +1649,10 @@ class Infinity(Number):
             if other is S.Infinity or other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other >= 0:
+                if other == Float('-inf') or other == Float('inf') or other._mpf_ == fnan:
+                    #Used workaround because Float('nan') == Float('nan') return False
+                    return Float('nan')
+                elif other >= 0:
                     return Float('inf')
                 else:
                     return Float('-inf')
@@ -1737,10 +1753,15 @@ class NegativeInfinity(Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                return Float('-inf')
+                if other == Float('inf') or other._mpf_ == fnan:
+                    #Used workaround because Float('nan') == Float('nan') return False
+                    return Float('nan')
+                else:
+                    return Float('-inf')
             else:
                 return S.NegativeInfinity
         return NotImplemented
+    __radd__ = __add__
 
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
@@ -1748,7 +1769,11 @@ class NegativeInfinity(Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                return Float('-inf')
+                if other == Float('-inf') or other._mpf_ == fnan:
+                    #Used workaround because Float('nan') == Float('nan') return False
+                    return Float('nan')
+                else:
+                    return Float('-inf')
             else:
                 return S.NegativeInfinity
         return NotImplemented
@@ -1759,7 +1784,10 @@ class NegativeInfinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other > 0:
+                if other._mpf_ == fnan or other == 0:
+                    #Used workaround because Float('nan') == Float('nan') return False
+                    return Float('nan')
+                elif other > 0:
                     return Float('-inf')
                 else:
                     return Float('inf')
@@ -1769,6 +1797,7 @@ class NegativeInfinity(Number):
                 else:
                     return S.Infinity
         return NotImplemented
+    __rmul__ = __mul__
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
@@ -1776,7 +1805,10 @@ class NegativeInfinity(Number):
             if other is S.Infinity or other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other >= 0:
+                if other == Float('-inf') or other == Float('inf') or other == Float('nan') or other._mpf_ == fnan:
+                    #Used workaround because Float('nan') == Float('nan') return False
+                    return Float('nan')
+                elif other >= 0:
                     return Float('-inf')
                 else:
                     return Float('inf')

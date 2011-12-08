@@ -378,10 +378,33 @@ def test_Infinity():
     assert -oo*float(-1) == Float('inf') and (-oo*float(-1)).is_Float
     assert oo/float(-1) == Float('-inf') and (oo/float(-1)).is_Float
     assert -oo/float(-1) == Float('inf') and (-oo/float(-1)).is_Float
-    assert oo+float(1) == Float('inf') and (oo+float(1)).is_Float
-    assert -oo+float(1) == Float('-inf') and (-oo+float(1)).is_Float
-    assert oo-float(1) == Float('inf') and (oo-float(1)).is_Float
-    assert -oo-float(1) == Float('-inf') and (-oo-float(1)).is_Float
+    assert oo + float(1) == Float('inf') and (oo+float(1)).is_Float
+    assert -oo + float(1) == Float('-inf') and (-oo+float(1)).is_Float
+    assert oo - float(1) == Float('inf') and (oo-float(1)).is_Float
+    assert -oo - float(1) == Float('-inf') and (-oo-float(1)).is_Float
+    assert float(1)*oo == Float('inf') and (float(1)*oo).is_Float
+    assert float(1)*-oo == Float('-inf') and (float(1)*-oo).is_Float
+    assert float(1)/oo == 0
+    assert float(1)/-oo == 0
+    assert float(-1)*oo == Float('-inf') and (float(-1)*oo).is_Float
+    assert float(-1)*-oo == Float('inf') and (float(-1)*-oo).is_Float
+    assert float(-1)/oo == 0
+    assert float(-1)/-oo == 0
+    assert float(1) + oo == Float('inf')
+    assert float(1) + -oo == Float('-inf')
+    assert float(1) - oo == Float('-inf')
+    assert float(1) - -oo == Float('inf')
+
+    from sympy.mpmath.libmp.libmpf import fnan
+    assert (oo*Float('nan'))._mpf_ == fnan
+    assert (-oo*Float('nan'))._mpf_ == fnan
+    assert (oo/Float('nan'))._mpf_ == fnan
+    assert (-oo/Float('nan'))._mpf_ == fnan
+    assert (oo + Float('nan'))._mpf_ == fnan
+    assert (-oo + Float('nan'))._mpf_ == fnan
+    assert (oo - Float('nan'))._mpf_ == fnan
+    assert (-oo - Float('nan'))._mpf_ == fnan
+
     assert oo*nan == nan
     assert -oo*nan == nan
     assert oo/nan == nan
