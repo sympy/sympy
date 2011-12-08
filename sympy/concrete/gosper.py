@@ -166,10 +166,17 @@ def gosper_sum(f, k):
 
     >>> from sympy.concrete.gosper import gosper_sum
     >>> from sympy.functions import factorial
-    >>> from sympy.abc import n, k
+    >>> from sympy.abc import i, n, k
 
-    >>> gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n))
+    >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
+    >>> gosper_sum(f, (k, 0, n))
     (-n! + 2*(2*n + 1)!)/(2*n + 1)!
+    >>> _.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])
+    True
+    >>> gosper_sum(f, (k, 3, n))
+    (-60*n! + (2*n + 1)!)/(60*(2*n + 1)!)
+    >>> _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
+    True
 
     **References**
 
