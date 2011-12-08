@@ -11,7 +11,6 @@ from sympy import mpmath
 
 def test_439():
     v = sympify("exp(x)")
-    x = Symbol("x")
     assert v == exp(x)
     assert type(v) == type(exp(x))
     assert str(type(v)) == str(type(exp(x)))

@@ -13,8 +13,6 @@ from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple
 
-from collections import defaultdict
-
 def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.

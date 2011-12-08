@@ -1,6 +1,5 @@
 from sympy.core import Rational, Symbol, S, Float, Integer, Number
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.utilities.pytest import XFAIL
 
 def test_issue153():
     #test that is runs:
