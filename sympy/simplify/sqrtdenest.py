@@ -87,12 +87,16 @@ def _sqrtdenest(expr):
                         ccv.append(xx)
             cb = Add(*cbv)
             cc = Add(*ccv)
-            if ca != 0:
+            if ry not in cc.atoms() and ca != 0:
                 cb += b
                 discr = (cb**2 - 4*ca*cc).expand()
                 if discr == 0:
                     z = sqrt(ca)*(sqrt(r) + cb/(2*ca))
-                    return simplify(z)
+                    z = simplify(z)
+                    if z < 0:
+                        return -z
+                    else:
+                        return z
             d = sqrt(d2)
             vad = a + d
             vp0, vp1 = vad.as_content_primitive()
