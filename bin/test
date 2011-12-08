@@ -61,20 +61,17 @@ if options.types:
 
 import sympy
 
-with open("_tmp_timeout","w") as f:
-    if options.slow:
-        if timeout == "none":
-            f.write("slow")
-        else:
-            f.write(str(timeout))
+if options.slow:
+    if timeout == "none":
+        os.environ['SYMPY_TEST_TIMEOUT'] = 'slow'
     else:
-        f.write("nothing")
+        os.environ['SYMPY_TEST_TIMEOUT'] = str(timeout)
+else:
+    os.environ['SYMPY_TEST_TIMEOUT'] = 'nothing'
 
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
     "sort": options.sort, "seed": options.seed, "slow": options.slow, "timeout": options.timeout})
-
-os.remove("_tmp_timeout")
 
 if ok:
     sys.exit(0)

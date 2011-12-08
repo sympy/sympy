@@ -6,6 +6,7 @@
 import sys
 import functools
 import signal
+import os
 
 try:
     # tested with py-lib 0.9.0
@@ -164,16 +165,14 @@ def SKIP(reason):
 
 def SLOW(func):
     timeout = 0
-
-    with open("_tmp_timeout") as f:
-        contents = f.read()
-        try:
-            timeout = int(contents)
-        except:
-            timeout = contents
+    contents = os.environ['SYMPY_TEST_TIMEOUT']
+    try:
+        timeout = int(contents)
+    except:
+        timeout = contents
 
     if type(timeout) == int:
-        def wrapper():
+        def slowwrapper():
             def callback(x,y):
                 raise Skipped("Timeout")
             handler = signal.signal(signal.SIGALRM, callback)
@@ -186,14 +185,14 @@ def SLOW(func):
                 signal.alarm(0)
                 raise Skipped("KeyboardInterrupt")
     elif timeout == "slow":
-        def wrapper():
+        def slowwrapper():
             try:
                 func()
             except KeyboardInterrupt:
                 raise Skipped("KeyboardInterrupt")
     else:
-        def wrapper():
+        def slowwrapper():
             raise Skipped("Timeout")
 
-    wrapper = functools.update_wrapper(wrapper, func)
-    return wrapper
+    slowwrapper = functools.update_wrapper(slowwrapper, func)
+    return slowwrapper
