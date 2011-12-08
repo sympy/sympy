@@ -34,7 +34,7 @@ def sqrtdenest(expr):
     return expr
 
 def _sqrtdenest(expr):
-    from sympy.simplify.simplify import radsimp, simplify
+    from sympy.simplify.simplify import radsimp
     if not expr.is_Pow or expr.exp != S.Half:
         val = None
     else:
@@ -92,7 +92,8 @@ def _sqrtdenest(expr):
                 discr = (cb**2 - 4*ca*cc).expand()
                 if discr == 0:
                     z = sqrt(ca)*(sqrt(r) + cb/(2*ca))
-                    z = simplify(z)
+                    c, q = z.as_content_primitive()
+                    z = (c*q).expand()
                     if z < 0:
                         return -z
                     else:
