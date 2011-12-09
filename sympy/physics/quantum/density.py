@@ -1,166 +1,69 @@
-from sympy.physics.quantum.qexpr import QExpr, QuantumError
-from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.core.mul import Mul
-from sympy.core.add import Add
-from sympy.core.power import Pow
-from sympy.core.expr import Expr
-from sympy.printing.str import sstr
-from sympy.physics.quantum.hilbert import HilbertSpace
+from sympy import Tuple, Add, Matrix, log, expand
+from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import Operator, OuterProduct
+from sympy.physics.quantum.operator import HermitianOperator, OuterProduct
 from sympy.physics.quantum.represent import represent
-from sympy.functions.elementary.exponential import log
-from sympy.physics.quantum.qexpr import _qsympify_sequence
-from sympy.core import sympify
-from sympy.core.numbers import Number
-from sympy.matrices.matrices import Matrix
+from matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 
-class Density(QExpr):
-    """
-       Generic Density operator object
-       The calling convention will be densityOp([state1, prob1],... [staten, probn])
-    """
+class Density(HermitianOperator):
+    """Density operator for representing mixed states."""
 
-    _label_separator = u' + '
-    
-    @classmethod
-    def _eval_args(cls, args):
-        """
-            This will check to make sure that all of the pure state hilbert
-            spaces contained within it are contained in the same hilbert space?
-        """
-        for i in xrange(2):
-            if isinstance(args[-i-1], list):
-                args = args + (1,)
-        args = sympify(args)        
-        #do check to make sure first comes prob, then state
-        for item in args[:-2]:
-            assert isinstance(item[1], Number)
-                    
-        return args
-    
-    @classmethod
-    def _eval_hilbert_space(cls, args):
-        """
-            The hilbert space is determined by looking at the hilbert space of 
-            the internal pure states
-            
-            for now just return hilbertspace
-        """
-        return HilbertSpace()
-    
-    @property    
-    def label(self):
-        """
-            needs to create a tuple of matrix elements in density matrix
-            e.g (2*|00><00|, 3*|01><01|)
-        
-        """
-        ret_val = tuple()
-        for state in self.state_part:
-            ret_val = ret_val + (self.lhs*state[0]*Dagger(state[0])*state[1]*self.rhs,)
-        return ret_val
+    def states(self):
+        return Tuple(*[arg[0] for arg in self.args])
 
-    #Should I move the operators into the density at Mul, or on  
-    
-    def getstate(self, index):
-        #returns the state in place index
+    def probs(self):
+        return Tuple(*[arg[1] for arg in self.args])
+
+    def get_state(self, index):
         state = self.args[index][0]
         return state
-    
-    def getprob(self, index):
-        #returns the prob in place index
+
+    def get_prob(self, index):
         prob = self.args[index][1]
         return prob
+
+    def operate_on(self, op):
+        new_args = [(op*state, prob) for (state, prob) in self.args]
+        return Density(*new_args)
+
+    def doit(self, **hints):
+        terms = []
+        for (state, prob) in self.args:
+            terms.append(prob*state*Dagger(state))
+        return Add(*terms)
+
+    def _represent(self, **options):
+        return represent(self.doit(), **options)
+
+    def _print_operator_name_latex(self, printer, *args):
+        return printer._print(r'\rho', *args)
+
+    def _print_operator_name_pretty(self, printer, *args):
+        return prettyForm(u"\u03C1")
+
+
+def entropy(density):
+    """Compute the entropy of a density matrix.
     
-    @property
-    def state_part(self):
-        return self.args[:-2]
-    
-    @property
-    def lhs(self):
-        return self.args[-2]
-    
-    @property
-    def rhs(self):
-        return self.args[-1]
-        
-    def operate_on(self, operators):
-        args_list = list(self.args)
-        args_list[-1] = self.rhs*Dagger(operators)
-        args_list[-2] = operators*self.lhs
-        return Density(*args_list)
-    
-    #-------------------------------------------------------------------------
-    # Represent
-    #-------------------------------------------------------------------------
-
-    def _represent_default_basis(self, **options):
-        return self._represent_ZGate(None, **options)
-
-    def _represent_ZGate(self, basis, **options):
-        bits = options['nqubits']
-        state_m = represent(self.getstate(0), nqubits=bits)
-        m = state_m*state_m.H*self.getprob(0)
-
-        for i in xrange(len(self.args)-3):
-            state_m = represent(self.getstate(i+1), nqubits=bits)
-            m += state_m*state_m.H*self.getprob(i+1)
-        m = represent(self.lhs, nqubits=bits)*m*represent(self.rhs, nqubits=bits)
-        return m 
-
-    #-------------------------------------------------------------------------
-    # Apply
-    #-------------------------------------------------------------------------
-    def _apply_density(self, **options):
-        from sympy.physics.quantum.qapply import qapply
-        result = []
-        for state in self.state_part:
-            result.append([qapply(self.lhs*state[0], **options), state[1]])
-        result.append(1)
-        result.append(1)
-        return Density(*result)
-            
-
-    def entropy(self,nqubits):
-        """
-            Von Neumann entropy is defined to be sum(lambda*ln(lambda)) 
-            where lambda is the eigenvalue of a matrix
-        """
-        rho = represent(self, nqubits=nqubits)
-        from scipy.linalg import eigvals
-        return -sum([(eigen*log(eigen)).evalf() for eigen in eigvals(rho).tolist() if eigen != 0])
-        
-def matrix_to_density(mat):
+    This computes -Tr(density*ln(density)) using the eigenvalue decomposition
+    of density, which is given as either a Density instance or a matrix
+    (numpy.ndarray, sympy.Matrix or scipy.sparse).
     """
-       Works by finding the eigenvectors and eigenvalues of the matrix.
-       We know we can decompose rho by doing:
-           sum(EigenVal*|Eigenvect><Eigenvect|)
-    """
-    from sympy.physics.quantum.qubit import matrix_to_qubit
-    eigen = mat.eigenvects()
-    #pull out all the eigenvectors and values from the 
-    #poorly designed eigenvects method
-    return Density(*[[matrix_to_qubit(Matrix([vector,])),x[0]] for x in eigen for vector in x[2] if x[0] != 0])
-    
-def reduced_density(state, unobserved_qubit, **options):
-    def find_index_that_is_projected(j, k, unobserved_qubit):
-         bit_mask = 2**unobserved_qubit - 1
-         return ((j >> unobserved_qubit) << (1 + unobserved_qubit)) + (j & bit_mask) + (k << unobserved_qubit)
+    if isinstance(density, Density):
+        density = represent(density, format='numpy')
+        
+    if isinstance(density, scipy_sparse_matrix):
+        density = to_numpy(density)
 
-    old_density = represent(state, **options)
-    old_size = old_density.cols
-    new_size = old_size/2
-    new_density = Matrix().zeros(new_size)
-    for i in xrange(new_size):
-        for j in xrange(new_size):
-            for k in xrange(2):
-                col = find_index_that_is_projected(j,k,unobserved_qubit)
-                row = find_index_that_is_projected(i,k,unobserved_qubit)
-                new_density[i,j] += old_density[row, col]          
-    return Matrix(new_density)
-    
-def entropy_of_entanglement(state, unobserved_qubit, **options):
-    rho = reduced_density(state, unobserved_qubit, **options)
-    from scipy.linalg import eigvals
-    return -sum([(eigen*log(eigen)).evalf() for eigen in eigvals(rho).tolist() if eigen != 0])
+    if isinstance(density, Matrix):
+        eigvals = density.eigenvals().keys()
+        return expand(-sum(e*log(e) for e in eigvals))
+
+    elif isinstance(density, numpy_ndarray):
+        import numpy as np
+        eigvals = np.linalg.eigvals(density)
+        return -np.sum(eigvals*np.log(eigvals))
+
+    else:
+        raise ValueError("numpy.ndarray, scipy.sparse or sympy matrix expected")
+

@@ -6,16 +6,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 from sympy.functions import sqrt
 
-def test_matrix_to_density():
-    assert matrix_to_density(represent(Density([Qubit('00'),1]), nqubits=2)) ==\
-     Density([Qubit('00'),1])
-    
-    den = Density([Qubit('00'),1], [(Qubit('00')+Qubit('11'))/sqrt(2),1])
-    assert represent(matrix_to_density(represent(den), nqubits=2))\
-      == represent(den, nqubits=2)
 
-def test_densityOp():
-    assert Density([Qubit(0,0),1]) == Density([Qubit(0,0),1], 1, 1)
     
 def test_representDensity():
     mat = represent(Qubit('01'), nqubits=2)
