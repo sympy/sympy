@@ -320,7 +320,6 @@ def test_1st_exact2():
     equivalent, but it is so complex that checkodesol fails, and takes a long time
     to do so.
     """
-    #skip("takes too much time")
     eq = x*sqrt(x**2 + f(x)**2) - (x**2*f(x)/(f(x) - sqrt(x**2 + f(x)**2)))*f(x).diff(x)
     sol = dsolve(eq)
     assert sol == Eq(log(x),C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/(-27*f(x)/x + \
@@ -508,7 +507,6 @@ def test_1st_homogeneous_coeff_ode():
 
 @SLOW
 def test_1st_homogeneous_coeff_ode_check14568():
-    #skip("This test passes, but it takes too long")
     # These are the checkodesols from test_homogeneous_coeff_ode1.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)
     eq4 = 2*f(x)*exp(x/f(x)) + f(x)*f(x).diff(x) - 2*x*exp(x/f(x))*f(x).diff(x)
