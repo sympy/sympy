@@ -38,7 +38,7 @@ parser.add_option('-t', '--types', dest='types', action='store',
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
 parser.add_option("--timeout", action="store", dest="timeout",
-        default=False, help="Set a timeout for the all functions. By default there is no timeout.")
+        default=False, help="Set a timeout for the all functions. By default there is no timeout.",type='int')
 parser.add_option("--slow", action="store_true", dest="slow",
         default=False, help="Run only the slow functions.")
 parser.set_usage("test [options ...] [tests ...]")
@@ -48,10 +48,6 @@ tests to run. If no test arguments are given, all tests will be run.\
 """
 
 options, args = parser.parse_args()
-
-timeout = False
-if options.timeout:
-    timeout = int(options.timeout)
 
 if options.slow:
     slow = True
@@ -67,7 +63,7 @@ import sympy
 
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
-    "sort": options.sort, "seed": options.seed, "slow": slow, "timeout": timeout})
+    "sort": options.sort, "seed": options.seed, "slow": slow, "timeout": options.timeout})
 
 if ok:
     sys.exit(0)
