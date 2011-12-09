@@ -1,4 +1,4 @@
-from sympy import sqrt, Rational, sqrtdenest, Integral
+from sympy import sqrt, Rational, sqrtdenest, Integral, cos
 from sympy.simplify.sqrtdenest import _denester
 from sympy.utilities.pytest import XFAIL
 
@@ -29,6 +29,9 @@ def test_sqrtdenest2():
 
     assert sqrtdenest(sqrt(((1+r5+r7+sqrt(1+r3))**2).expand())) == \
         1+sqrt(1+r3)+r5+r7
+
+    assert sqrtdenest(sqrt(((1+cos(2)+cos(3)+sqrt(1+r3))**2).expand())) == \
+                cos(3)+cos(2)+1+sqrt(1+r3)
 
 @XFAIL
 def test_sqrtdenest2a():
