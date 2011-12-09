@@ -348,6 +348,7 @@ class PDF(ContinuousProbability):
         w = Dummy('w', real=True)
 
         from sympy import solve
+        from sympy import S
         inverse = solve(func-w, var)
         newPdf = S.Zero
         funcdiff = func.diff(var)
