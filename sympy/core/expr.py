@@ -2004,7 +2004,13 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, n, logx))
+        from sympy.solvers.solvers import _filldedent
+        raise NotImplementedError(_filldedent("""
+                     The _eval_nseries method should be added to
+                     %s to give terms up to O(x**n) at x=0
+                     from the positive direction so it is available when
+                     nseries calls it.""" % self.func)
+                     )
 
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
