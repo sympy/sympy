@@ -3,6 +3,68 @@ from sympy.core import S, Wild, Rational, sympify, Mul, Add, Expr
 from sympy.core.mul import prod
 from sympy.core.function import expand_multinomial
 
+def sqrt_symbolic_denest(a, b, r, d2=None):
+    """
+    denest symbolically sqrt(a + b*sqrt(r)),
+    with d2 = expand_multinomial(a**2 - b**2*r)
+    if denested return the denested sqrt(a + b*sqrt(r)) , else return None
+
+    Examples:
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.sqrtdenest import sqrt_symbolic_denest
+    >>> sqrt_symbolic_denest(16 - 2*sqrt(29), 2, -10*sqrt(29) + 55)
+    sqrt(-2*sqrt(29) + 11) + sqrt(5)
+    """
+    # attempt to factorize a + b*sqrt(r) as a square
+    # 1) using r = ra + rb*sqrt(rr)
+    a, b, r = S(a), S(b), S(r)
+    if d2 == None:
+        d2 = expand_multinomial(a**2 - b**2*r)
+    rval = sqrt_match(r)
+    ry = Wild('ry', positive=True)
+    ra, rb, rr = rval
+    if rb != 0:
+        a2 = a.subs(sqrt(rr), (ry**2 - ra)/rb)
+        ca, cb = S.Zero, S.Zero
+        cav = []
+        cbv = []
+        ccv = []
+        for xx in a2.args:
+            cx, qx = xx.as_coeff_Mul()
+            if qx.is_Mul:
+                qxa = list(qx.args)
+                if ry in qxa:
+                    qxa.remove(ry)
+                    cbv.append( prod(qxa+[cx]) )
+                elif ry**2 in qxa:
+                    qxa.remove(ry**2)
+                    ca = prod(qxa+[cx])
+                else:
+                    ccv.append(xx)
+            elif qx == ry**2:
+                cav.append(cx)
+            else:
+                if ry == qx:
+                    cbv.append( cx )
+                elif ry**2 == qx:
+                    cav.append(cx)
+                else:
+                    ccv.append(xx)
+        ca = Add(*cav)
+        cb = Add(*cbv)
+        cc = Add(*ccv)
+        if ry not in cc.atoms() and ca != 0:
+            cb += b
+            discr = (cb**2 - 4*ca*cc).expand()
+            if discr == 0:
+                z = sqrt(ca)*(sqrt(r) + cb/(2*ca))
+                c, q = z.as_content_primitive()
+                z = (c*q).expand()
+                if z < 0:
+                    return -z
+                else:
+                    return z
+
 def sqrtdenest(expr):
     """
     Denests sqrts in an expression that contain other square roots
@@ -59,53 +121,9 @@ def _sqrtdenest(expr):
                 vad1 = radsimp(1/vad)
                 return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
         else:
-            # attempt to factorize a + b*sqrt(r) as a square
-            # 1) using r = ra + rb*sqrt(rr)
-            rval = sqrt_match(r)
-            ry = Wild('ry', positive=True)
-            ra, rb, rr = rval
-            if rb != 0:
-                a2 = a.subs(sqrt(rr), (ry**2 - ra)/rb)
-                ca, cb = S.Zero, S.Zero
-                cav = []
-                cbv = []
-                ccv = []
-                for xx in a2.args:
-                    cx, qx = xx.as_coeff_Mul()
-                    if qx.is_Mul:
-                        qxa = list(qx.args)
-                        if ry in qxa:
-                            qxa.remove(ry)
-                            cbv.append( prod(qxa+[cx]) )
-                        elif ry**2 in qxa:
-                            qxa.remove(ry**2)
-                            ca = prod(qxa+[cx])
-                        else:
-                            ccv.append(xx)
-                    elif qx == ry**2:
-                        cav.append(cx)
-                    else:
-                        if ry == qx:
-                            cbv.append( cx )
-                        elif ry**2 == qx:
-                            cav.append(cx)
-                        else:
-                            ccv.append(xx)
-                ca = Add(*cav)
-                cb = Add(*cbv)
-                cc = Add(*ccv)
-                if ry not in cc.atoms() and ca != 0:
-                    cb += b
-                    discr = (cb**2 - 4*ca*cc).expand()
-                    if discr == 0:
-                        z = sqrt(ca)*(sqrt(r) + cb/(2*ca))
-                        c, q = z.as_content_primitive()
-                        z = (c*q).expand()
-                        if z < 0:
-                            return -z
-                        else:
-                            return z
-            # 2)
+            z = sqrt_symbolic_denest(a, b, r, d2)
+            if z:
+                return z
             if d2.is_Number:
                 if d2.is_positive:
                     # sqrtdenest(sqrt(5 + 2 * sqrt(6))) = sqrt(2) + sqrt(3)
