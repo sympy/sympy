@@ -91,6 +91,7 @@ def test_PDF():
     assert exponential.normalize() == exponential
     assert exponential._get_stddev() == sqrt(3)/6
     assert exponential._get_stddev() == sqrt(3)/6
+    #This test is intentionally repeated to test PDF._get_stddev() properly.
     exponential = exponential.transform(x, x)
     assert exponential.pdf(x) == 1
     assert exponential.cdf(x) == x - 1
