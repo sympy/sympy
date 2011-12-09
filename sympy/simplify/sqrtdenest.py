@@ -39,6 +39,9 @@ def _sqrtdenest(expr):
         val = None
     else:
         a = expr.base
+        if a.is_Number:
+            return expr
+        #    return (a, S.Zero, S.Zero)
         if not a.args:
             val = (a, S.Zero, S.Zero)
         val = sqrt_match(a)
@@ -47,67 +50,84 @@ def _sqrtdenest(expr):
         a, b, r = val
         # try a quick denesting
         d2 = expand_multinomial(a**2 - b**2*r)
+        deptha, depthb, depthr = sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)
         if d2.is_Number and d2.is_positive and \
-           max([sqrt_depth(a), sqrt_depth(b), sqrt_depth(r)]) >= 1:
+           max([deptha, depthb, depthr]) >= 1:
             d = sqrt(d2)
             vad = a + d
-            if sqrt_depth(vad) < sqrt_depth(a) or (a*d).is_Number:
+            if sqrt_depth(vad) < deptha or (a*d).is_Number:
                 vad1 = radsimp(1/vad)
                 return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
         else:
             # attempt to factorize a + b*sqrt(r) as a square
-            # using r = ra + rb*sqrt(rr)
+            # 1) using r = ra + rb*sqrt(rr)
             rval = sqrt_match(r)
             ry = Wild('ry', positive=True)
             ra, rb, rr = rval
-            a2 = a.subs(sqrt(rr), (ry**2 - ra)/rb)
-            ca, cb = S.Zero, S.Zero
-            cbv = []
-            ccv = []
-            for xx in a2.args:
-                cx, qx = xx.as_coeff_Mul()
-                if qx.is_Mul:
-                    qxa = list(qx.args)
-                    if ry in qxa:
-                        qxa.remove(ry)
-                        cbv.append( prod(qxa+[cx]) )
-                    elif ry**2 in qxa:
-                        qxa.remove(ry**2)
-                        ca = prod(qxa+[cx])
+            if rb != 0:
+                a2 = a.subs(sqrt(rr), (ry**2 - ra)/rb)
+                ca, cb = S.Zero, S.Zero
+                cbv = []
+                ccv = []
+                for xx in a2.args:
+                    cx, qx = xx.as_coeff_Mul()
+                    if qx.is_Mul:
+                        qxa = list(qx.args)
+                        if ry in qxa:
+                            qxa.remove(ry)
+                            cbv.append( prod(qxa+[cx]) )
+                        elif ry**2 in qxa:
+                            qxa.remove(ry**2)
+                            ca = prod(qxa+[cx])
+                        else:
+                            ccv.append(xx)
+                    elif qx == ry**2:
+                        ca = cx
                     else:
-                        ccv.append(xx)
-                elif qx == ry**2:
-                    ca = cx
+                        if ry == qx:
+                            cbv.append( S.One )
+                        elif ry**2 == qx:
+                            ca == S.One
+                        else:
+                            ccv.append(xx)
+                cb = Add(*cbv)
+                cc = Add(*ccv)
+                if ry not in cc.atoms() and ca != 0:
+                    cb += b
+                    discr = (cb**2 - 4*ca*cc).expand()
+                    if discr == 0:
+                        z = sqrt(ca)*(sqrt(r) + cb/(2*ca))
+                        c, q = z.as_content_primitive()
+                        z = (c*q).expand()
+                        if z < 0:
+                            return -z
+                        else:
+                            return z
+            # 2)
+            if d2.is_Number:
+                if d2.is_positive:
+                    # sqrtdenest(sqrt(5 + 2 * sqrt(6))) = sqrt(2) + sqrt(3)
+                    d = sqrt(d2)
+                    vad = a + d
+                    vp0, vp1 = vad.as_content_primitive()
+                    rp0, rp1 = r.as_content_primitive()
+                    q = rp1/vp1
+                    if q.is_Number:
+                        c = (b**2 * q * rp0)/(2 * vp0)
+                        depthc = sqrt_depth(c)
+                        if depthr > depthc or depthr == depthc == 0:
+                            z = (sqrt(vp0/2)*sqrt(vp1) + sign(b)*sqrt(c)).expand()
+                            return z
                 else:
-                    if ry == qx:
-                        cbv.append( S.One )
-                    elif ry**2 == qx:
-                        ca == S.One
-                    else:
-                        ccv.append(xx)
-            cb = Add(*cbv)
-            cc = Add(*ccv)
-            if ry not in cc.atoms() and ca != 0:
-                cb += b
-                discr = (cb**2 - 4*ca*cc).expand()
-                if discr == 0:
-                    z = sqrt(ca)*(sqrt(r) + cb/(2*ca))
-                    c, q = z.as_content_primitive()
-                    z = (c*q).expand()
-                    if z < 0:
-                        return -z
-                    else:
-                        return z
-            d = sqrt(d2)
-            vad = a + d
-            vp0, vp1 = vad.as_content_primitive()
-            rp0, rp1 = r.as_content_primitive()
-            q = rp1/vp1
-            if q.is_Number:
-                c = (b**2 * q * rp0)/(2 * vp0)
-                if sqrt_depth(r) > sqrt_depth(c):
-                    z = (sqrt(vp0/2)*sqrt(vp1) + sign(b)*sqrt(c)).expand()
-                    return z
+                    # fourth root case
+                    # sqrtdenest(sqrt(3 + 2*sqrt(3))) =
+                    # sqrt(2)*3**(1/4)/2 + sqrt(2)*3**(3/4)/2
+                    p = (a*r).expand()
+                    d = sqrt(p)
+                    if d.is_Number:
+                        FR, s = (r.expand()**Rational(1,4)), sqrt((b*r).expand()+d)
+                        if s != 0:
+                            return (s/(sqrt(2)*FR) + a*FR/(sqrt(2)*s)).expand()
 
     else:
         return expr
@@ -225,8 +245,7 @@ def _denester (nested, av0, h, max_depth_level=4):
             for v in values:
                 if v[2]: #Since if b=0, r is not defined
                     if R is not None:
-                        if R != v[2]:
-                            return None, False
+                        assert R == v[2] #All the 'r's should be the same.
                     else:
                         R = v[2]
             if R is None:
