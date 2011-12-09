@@ -42,7 +42,6 @@ def _sqrtdenest(expr):
         a = expr.base
         if a.is_Number:
             return expr
-        #    return (a, S.Zero, S.Zero)
         if not a.args:
             val = (a, S.Zero, S.Zero)
         val = sqrt_match(a)
@@ -68,6 +67,7 @@ def _sqrtdenest(expr):
             if rb != 0:
                 a2 = a.subs(sqrt(rr), (ry**2 - ra)/rb)
                 ca, cb = S.Zero, S.Zero
+                cav = []
                 cbv = []
                 ccv = []
                 for xx in a2.args:
@@ -83,14 +83,15 @@ def _sqrtdenest(expr):
                         else:
                             ccv.append(xx)
                     elif qx == ry**2:
-                        ca = cx
+                        cav.append(cx)
                     else:
                         if ry == qx:
-                            cbv.append( S.One )
+                            cbv.append( cx )
                         elif ry**2 == qx:
-                            ca == S.One
+                            cav.append(cx)
                         else:
                             ccv.append(xx)
+                ca = Add(*cav)
                 cb = Add(*cbv)
                 cc = Add(*ccv)
                 if ry not in cc.atoms() and ca != 0:
@@ -186,11 +187,25 @@ def sqrt_match(p):
                 return (S.Zero, b, p.base)
             else:
                 return None
+        depth = nmax[0]
         n = nmax[1]
         p1 = pargs[n]
         del pargs[n]
         a = Add(*pargs)
-        b, r = p1.as_coeff_Mul()
+        bv = []
+        rv = []
+        if p1.is_Mul:
+            for x in p1.args:
+                if sqrt_depth(x) < depth:
+                    bv.append(x)
+                else:
+                    rv.append(x)
+
+            b = prod(bv)
+            r = prod(rv)
+        else:
+            b = S.One
+            r = p1
         res = (a, b, r**2)
     else:
         b, r = p.as_coeff_Mul()
