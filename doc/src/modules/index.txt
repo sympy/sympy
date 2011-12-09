@@ -17,6 +17,7 @@ access any SymPy module, or use this contens:
    :maxdepth: 2
 
    core.txt
+   combinatorics/index.txt
    concrete.txt
    evalf.txt
    functions.txt
