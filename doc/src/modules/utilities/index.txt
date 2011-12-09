@@ -9,7 +9,6 @@ Contents:
    :maxdepth: 2
 
    autowrap.txt
-   benchmarking.txt
    codegen.txt
    compilef.txt
    cythonutils.txt
@@ -24,3 +23,4 @@ Contents:
    runtests.txt
    source.txt
    timeutils.txt
+
