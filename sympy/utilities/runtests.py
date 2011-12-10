@@ -563,6 +563,8 @@ class SymPyTests(object):
                                                    inspect.getsourcefile(gl[f]) == pytestfile2)]
             if slow:
                funcs = [f for f in funcs if getattr(f, '_slow', False)]
+            else:
+               funcs = [f for f in funcs if not getattr(f, '_slow', False)]
             # Sorting of XFAILed functions isn't fixed yet :-(
             funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
             i = 0
@@ -616,7 +618,10 @@ class SymPyTests(object):
                     if self._post_mortem:
                         pdb.post_mortem(tr)
             else:
-                self._reporter.test_pass()
+                if not getattr(f, '_slow', False):
+                    self._reporter.test_pass()
+                else:
+                    self._reporter.test_pass("W")
         self._reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
@@ -1328,12 +1333,12 @@ class PyTestReporter(Reporter):
         self.write("F", "Red")
         self._active_file_error = True
 
-    def test_pass(self):
+    def test_pass(self, char="."):
         self._passed += 1
         if self._verbose:
             self.write("ok", "Green")
         else:
-            self.write(".", "Green")
+            self.write(char, "Green")
 
     def test_skip(self, v):
         if sys.version_info[:2] < (2, 6):
@@ -1341,10 +1346,13 @@ class PyTestReporter(Reporter):
         else:
             message = str(v)
         self._skipped += 1
-        self.write("s", "Green")
+        char = "s"
+        if message == "KeyboardInterrupt": char = "K"
+        elif message == "Timeout": char = "T"
+        self.write(char, "Blue")
         if self._verbose:
-            self.write(" - ", "Green")
-            self.write(message, "Green")
+            self.write(" - ", "Blue")
+            self.write(message, "Blue")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
