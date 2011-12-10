@@ -61,7 +61,7 @@ class Piecewise(Function):
     """
     Represents a piecewise function.
 
-    Usage: .. XXX Not a heading since Numpydoc won't display it otherwise.
+    Usage:
 
       Piecewise( (expr,cond), (expr,cond), ... )
         - Each argument is a 2-tuple defining a expression and condition
@@ -318,4 +318,3 @@ def piecewise_fold(expr):
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
     return Piecewise(*new_args)
-
