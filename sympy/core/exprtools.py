@@ -451,5 +451,5 @@ def factor_terms(expr):
         list_args[i] = gcd_terms(a, isprimitive=True)
         # cancel terms that may not have cancelled
     p = Add._from_args(list_args) # gcd_terms will fix up ordering
-    p = gcd_terms(p, isprimitive=True).subs(ncreps) # exact subs could be used here
+    p = gcd_terms(p, isprimitive=True).xreplace(ncreps)
     return _keep_coeff(cont, p)

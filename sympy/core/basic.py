@@ -831,8 +831,11 @@ class Basic(object):
         """
         if self in rule:
             return rule[self]
-        else:
-            return self.func(*[arg.xreplace(rule) for arg in self.args])
+        elif rule:
+            args = tuple([arg.xreplace(rule) for arg in self.args])
+            if args != self.args:
+                return self.func(*args)
+        return self
 
     @deprecated
     def __contains__(self, obj):
