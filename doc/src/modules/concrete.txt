@@ -78,3 +78,19 @@ hypergeometric:
     4*n**2 + 6*n + 2
     >>> hypersimp(factorial(n**2), n)
 
+Concrete Class Reference
+------------------------
+.. autoclass:: sympy.concrete.summations.Sum
+   :members:
+
+.. autoclass:: sympy.concrete.products.Product
+   :members:
+
+Concrete Functions Reference
+----------------------------
+
+.. autofunction:: sympy.concrete.gosper.gosper_normal
+
+.. autofunction:: sympy.concrete.gosper.gosper_term
+
+.. autofunction:: sympy.concrete.gosper.gosper_sum
