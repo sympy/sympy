@@ -125,13 +125,16 @@ def is_quad_residue(a, p):
 
 def legendre_symbol(a, p):
     """
-    Returns 0 if a is multiple of p,
-            1 if a is a quadratic residue of p, else
-           -1
+    Returns:
+
+    a. 0 if a is multiple of p,
+    b. 1 if a is a quadratic residue of p, else
+    c. -1
 
     p should be an odd prime by definition
 
     **Examples**
+
     >>> from sympy.ntheory import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
@@ -151,9 +154,11 @@ def legendre_symbol(a, p):
 
 def jacobi_symbol(m, n):
     """
-    Returns 0 if m cong 0 mod(n),
-            1 if x**2 cong m mod(n) has a solution, else
-           -1.
+    Returns:
+
+    a. 0 if m cong 0 mod(n),
+    b. 1 if x**2 cong m mod(n) has a solution, else
+    c. -1.
 
     jacobi_symbol(m, n) is product of the legendre_symbol(m, p)
     for all the prime factors p of n.
@@ -169,6 +174,7 @@ def jacobi_symbol(m, n):
 
     The relationship between the jacobi_symbol and legendre_symbol can
     be demonstrated as follows:
+
         >>> L = legendre_symbol
         >>> S(45).factors()
         {3: 2, 5: 1}

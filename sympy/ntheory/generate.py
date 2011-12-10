@@ -260,33 +260,34 @@ def randprime(a, b):
     return p
 
 def primorial(n, nth=True):
-    """ Returns the product of either a) the first n primes (default) or
-        b) the primes less than or equal to n (when `nth`=False).
+    """
+    Returns the product of either 1. the first n primes (default) or
+    2. the primes less than or equal to n (when `nth=False`).
 
-        >>> from sympy.ntheory.generate import primorial, randprime, primerange
-        >>> from sympy import factorint, Mul, primefactors
-        >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
-        210
-        >>> primorial(4, nth=0) # primes <= 4 are 2 and 3
-        6
-        >>> primorial(1)
-        2
-        >>> primorial(1, nth=0)
-        1
+    >>> from sympy.ntheory.generate import primorial, randprime, primerange
+    >>> from sympy import factorint, Mul, primefactors
+    >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
+    210
+    >>> primorial(4, nth=0) # primes <= 4 are 2 and 3
+    6
+    >>> primorial(1)
+    2
+    >>> primorial(1, nth=0)
+    1
 
-        One can argue that the primes are infinite since if you take
-        a set of primes and multiply them together (e.g. the primorial) and
-        then add or subtract 1, the result cannot be divided by any of the
-        original factors, hence either 1 or more primes must divide this
-        product of primes.
+    One can argue that the primes are infinite since if you take
+    a set of primes and multiply them together (e.g. the primorial) and
+    then add or subtract 1, the result cannot be divided by any of the
+    original factors, hence either 1 or more primes must divide this
+    product of primes.
 
-        >>> factorint(primorial(4) + 1)
-        {211: 1}
-        >>> factorint(primorial(4) - 1)
-        {11: 1, 19: 1}
-        >>> p = list(primerange(10, 20))
-        >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
-        [2, 5, 31, 149]
+    >>> factorint(primorial(4) + 1)
+    {211: 1}
+    >>> factorint(primorial(4) - 1)
+    {11: 1, 19: 1}
+    >>> p = list(primerange(10, 20))
+    >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
+    [2, 5, 31, 149]
     """
 
     if n < 1:
