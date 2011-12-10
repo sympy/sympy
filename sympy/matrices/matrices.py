@@ -856,7 +856,9 @@ class Matrix(object):
         before it is inverted in order to properly detect zeros during
         pivoting. In difficult cases a custom zero detection function can
         be provided by setting the iszerosfunc argument to a function that
-        should return True if its argument is zero.
+        should return True if its argument is zero. The ADJ routine computes
+        the determinant and uses that to detect singular matrices in addition
+        to testing for zeros on the diagonal.
 
         See Also
         ========
@@ -2689,7 +2691,7 @@ class Matrix(object):
             ok = self.rref()[0]
             zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
         if zero:
-            raise ValueError("A Matrix must have non-zero determinant to invert.")
+            raise ValueError("Matrix det == 0; not invertible.")
 
         return self.adjugate()/d
 

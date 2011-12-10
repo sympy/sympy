@@ -1940,3 +1940,11 @@ def test_issue_860():
     x, y=symbols('x, y')
     e = x*y
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
+
+@XFAIL
+def test_symbolic_not_invertible():
+    m = Matrix([
+    [-1, -1,  0],
+    [ x,  1,  1],
+    [ 1,  x, -1],])
+    raises(ValueError, 'm.inv()')
