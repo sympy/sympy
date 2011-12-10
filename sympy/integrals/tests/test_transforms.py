@@ -5,6 +5,7 @@ from sympy import (gamma, exp, oo, Heaviside, symbols, re, factorial, pi,
                    cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
                    EulerGamma, erf, besselj, bessely, besseli, besselk,
                    exp_polar, polar_lift, unpolarify)
+from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, s, a, b
 nu, beta, rho = symbols('nu beta rho')
 
@@ -29,6 +30,37 @@ def test_as_integral():
     f = Function('f')
     assert mellin_transform(f(x), x, s).rewrite('Integral') == \
            Integral(x**(s - 1)*f(x), (x, 0, oo))
+
+@XFAIL
+def test_mellin_transform_fail():
+    from sympy import Max, Min
+    MT = mellin_transform
+
+    bpos = symbols('b', positive=True)
+    bneg = symbols('b', negative=True)
+
+    expr = (sqrt(x+b**2)+b)**a/sqrt(x+b**2)
+    # TODO this comes out messy now
+    assert MT(expr.subs(b, bpos), x, s) == \
+           (2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s) \
+                                         *gamma(1 - a - 2*s)/gamma(1 - a - s),
+            (0, -re(a)/2 + S(1)/2), True)
+    # TODO does not work with bneg, argument wrong. Needs changes to matching.
+    assert MT(expr.subs(b, -bpos), x, s) == \
+           ((-1)**(a+1)*2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(a + s) \
+                                          *gamma(1 - a - 2*s)/gamma(1 - s),
+            (-re(a), -re(a)/2 + S(1)/2), True)
+    expr = (sqrt(x+b**2)+b)**a
+    assert MT(expr.subs(b, bpos), x, s) == \
+           (-a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
+            (0, -re(a)/2), True)
+    assert MT(expr.subs(b, -bpos), x, s) == \
+           (2**(a + 2*s)*a*bpos**(a + 2*s)*gamma(-a - 2*s)*gamma(a + s)/gamma(-s + 1),
+            (-re(a), -re(a)/2), True)
+    # Test exponent 1:
+    assert MT(expr.subs({b: -bpos, a:1}), x, s) == \
+           (-bpos**(2*s + 1)*gamma(s)*gamma(-s - S(1)/2)/(2*sqrt(pi)),
+            (-1, -S(1)/2), True)
 
 def test_mellin_transform():
     from sympy import Max, Min
@@ -67,28 +99,6 @@ def test_mellin_transform():
            (pi*bpos**(a+s-1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))),
             (Max(-re(a), 0), Min(1 - re(a), 1)), True)
 
-    expr = (sqrt(x+b**2)+b)**a/sqrt(x+b**2)
-    # TODO this comes out messy now
-    #assert MT(expr.subs(b, bpos), x, s) == \
-    #       (2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(s) \
-    #                                     *gamma(1 - a - 2*s)/gamma(1 - a - s),
-    #        (0, -re(a)/2 + S(1)/2), True)
-    # TODO does not work with bneg, argument wrong. Needs changes to matching.
-    #assert MT(expr.subs(b, -bpos), x, s) == \
-    #       ((-1)**(a+1)*2**(a + 2*s)*bpos**(a + 2*s - 1)*gamma(a + s) \
-    #                                      *gamma(1 - a - 2*s)/gamma(1 - s),
-    #        (-re(a), -re(a)/2 + S(1)/2), True)
-    expr = (sqrt(x+b**2)+b)**a
-    #assert MT(expr.subs(b, bpos), x, s) == \
-    #       (-a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
-    #        (0, -re(a)/2), True)
-    #assert MT(expr.subs(b, -bpos), x, s) == \
-    #       (2**(a + 2*s)*a*bpos**(a + 2*s)*gamma(-a - 2*s)*gamma(a + s)/gamma(-s + 1),
-    #        (-re(a), -re(a)/2), True)
-    # Test exponent 1:
-    #assert MT(expr.subs({b: -bpos, a:1}), x, s) == \
-    #       (-bpos**(2*s + 1)*gamma(s)*gamma(-s - S(1)/2)/(2*sqrt(pi)),
-    #        (-1, -S(1)/2), True)
 
     # 8.4.2
     assert MT(exp(-x), x, s) == (gamma(s), (0, oo), True)
