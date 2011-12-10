@@ -287,7 +287,7 @@ def _denester (nested, av0, h, max_depth_level=4):
         d, f = _denester(nested2, False, h+1)
         if not f:
             return None, None
-        if all(fi == 0 for fi in f):
+        if not any(f[i] for i in range(len(nested))):
             v = values[-1]
             return sqrt(v[0] + v[1]*d), f
         else:

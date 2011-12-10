@@ -33,6 +33,9 @@ def test_sqrtdenest2():
     assert sqrtdenest(sqrt(((1+cos(2)+cos(3)+sqrt(1+r3))**2).expand())) == \
                 cos(3)+cos(2)+1+sqrt(1+r3)
 
+    assert sqrtdenest(sqrt(-2*sqrt(10)+2*r2*sqrt(-2*sqrt(10)+11)+14)) == \
+        sqrt(-2*sqrt(10)+2*r2*(-1+sqrt(10))+14)
+
 @XFAIL
 def test_sqrtdenest2a():
     assert sqrtdenest(sqrt(13-2*sqrt(10)+2*sqrt(2)*sqrt(-2*sqrt(10)+11))) == \
