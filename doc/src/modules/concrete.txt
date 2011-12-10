@@ -89,6 +89,10 @@ Concrete Class Reference
 Concrete Functions Reference
 ----------------------------
 
+.. autofunction:: sympy.concrete.summations.summation
+
+.. autofunction:: sympy.concrete.products.product
+
 .. autofunction:: sympy.concrete.gosper.gosper_normal
 
 .. autofunction:: sympy.concrete.gosper.gosper_term
