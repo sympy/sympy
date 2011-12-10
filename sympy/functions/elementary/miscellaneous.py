@@ -379,8 +379,6 @@ class Max(MinMaxBase, Application, Basic):
 
     Algorithm
 
-    .. Not a heading since Numpydoc does not display the text otherwise.
-
     The task can be considered as searching of supremums in the
     directed complete partial orders [1]_.
 
