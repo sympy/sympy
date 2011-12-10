@@ -355,10 +355,12 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     257
 
     Use the default setting with a bad value of ``a`` and no retries:
+
     >>> pollard_rho(n, a=n-2, retries=0)
 
     If retries is > 0 then perhaps the problem will correct itself when
     new values are generated for a:
+
     >>> pollard_rho(n, a=n-2, retries=1)
     257
 

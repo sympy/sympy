@@ -75,7 +75,9 @@ def mr(n, bases):
     """Perform a Miller-Rabin strong pseudoprime test on n using a
     given list of bases/witnesses.
 
-    Reference:
+    Reference
+    =========
+
     Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
     A Computational Perspective", Springer, 2nd edition, 135-138
     """
@@ -107,6 +109,8 @@ def _mr_safe(n):
     _mr_safe_helper can be used to generate this info-tag.
 
     References for the bounds:
+    ==========================
+
     [1] http://primes.utm.edu/prove/prove2_3.html
     [2] http://www.trnicely.net/misc/mpzspsp.html
     [3] http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
@@ -171,6 +175,7 @@ def isprime(n):
 
     Example usage
     =============
+
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True

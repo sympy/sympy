@@ -29,7 +29,9 @@ def n_order(a, n):
     Order of a modulo n is the smallest integer
     k such that a^k leaves a remainder of 1 with n.
 
-    **Examples**
+    Examples
+    ========
+
     >>> from sympy.ntheory import n_order
     >>> n_order(3, 7)
     6
@@ -63,7 +65,9 @@ def is_primitive_root(a, p):
 
         a**totient(n) cong 1 mod(n)
 
-    **Examples**
+    Examples
+    ========
+
     >>> from sympy.ntheory import is_primitive_root, n_order, totient
     >>> is_primitive_root(3, 10)
     True

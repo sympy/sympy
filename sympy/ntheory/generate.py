@@ -262,7 +262,7 @@ def randprime(a, b):
 def primorial(n, nth=True):
     """
     Returns the product of either 1. the first n primes (default) or
-    2. the primes less than or equal to n (when `nth=False`).
+    2. the primes less than or equal to n (when ``nth=False``).
 
     >>> from sympy.ntheory.generate import primorial, randprime, primerange
     >>> from sympy import factorint, Mul, primefactors
