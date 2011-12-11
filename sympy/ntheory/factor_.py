@@ -34,7 +34,7 @@ def smoothness(n):
     
     See Also
     ========
-    
+
     factorint, smoothness_p
     """
 
@@ -101,7 +101,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
         
     See Also
     ========
-    
+
     smoothness, factorint
     """
     from sympy.utilities import flatten
@@ -181,7 +181,7 @@ def multiplicity(p, n):
 
     See Also
     ========
-    
+
     divmod
     """
 
@@ -654,7 +654,7 @@ def _factorint_small(factors, n, limit, fail_max):
 
     See Also
     ========
-    
+
     factorint
     """
 
@@ -879,7 +879,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     
     See Also
     ========
-    
+
     _factorint_small
     """
     factordict = {}
@@ -1221,7 +1221,7 @@ def divisors(n, generator=False):
     
     See Also
     ========
-    
+
     factorint, divisor_count
     """
 
@@ -1251,7 +1251,7 @@ def divisor_count(n, modulus=1):
     
     See Also
     ========
-    
+
     divisors
     """
 
@@ -1276,7 +1276,7 @@ def totient(n):
     
     See Also
     ========
-    
+
     divisor_count
 
     """

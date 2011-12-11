@@ -115,7 +115,7 @@ def prime(n):
 
     See Also
     ========
-    
+
     isprime, primerange, primepi
     """
 
@@ -129,7 +129,7 @@ def primepi(n):
         
     See Also
     ========
-    
+
     prime, isprime, primerange
     """
 
@@ -152,7 +152,7 @@ def nextprime(n, i=1):
         
     See Also
     ========
-    
+
     primerange, prevprime
     """
 
@@ -252,7 +252,7 @@ def primerange(a, b):
             
     See Also
     ========
-    
+
     nextprime, prevprime, randprime
     """
     assert a <= b
@@ -274,7 +274,7 @@ def randprime(a, b):
     
     See Also
     ========
-    
+
     primerange
     """
 
@@ -317,7 +317,7 @@ def primorial(n, nth=True):
         
     See Also
     ========
-    
+
     primerange
     """
 

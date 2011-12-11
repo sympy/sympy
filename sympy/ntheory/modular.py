@@ -70,7 +70,7 @@ def crt(m, v, symmetric=False, check=True):
     
     See Also
     ========
-    
+
     solve_congruence
     """
     if check:

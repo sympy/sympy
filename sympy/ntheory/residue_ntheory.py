@@ -100,7 +100,7 @@ def is_quad_residue(a, p):
     
     See Also
     ========
-    
+
     jacobi_symbol
     """
     a, p = int_tested(a, p)
@@ -146,7 +146,7 @@ def legendre_symbol(a, p):
     
     See Also
     ========
-    
+
     jacobi_symbol
     """
     a, p = int_tested(a, p)
@@ -188,7 +188,7 @@ def jacobi_symbol(m, n):
         
     See Also
     ========
-    
+
     legendre_symbol
     """
     m, n = int_tested(m, n)
