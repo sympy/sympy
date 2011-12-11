@@ -160,18 +160,18 @@ class Heaviside(Function):
         integrate(DiracDelta(x),(x,-oo,oo)) = 1
 
     and since DiracDelta is a symmetric function,
-    `integrate(DiracDelta(x),(x,0,oo))` should be 1/2 in fact, that is what
+    ``integrate(DiracDelta(x),(x,0,oo))`` should be 1/2 in fact, that is what
     maple returns.
 
-    If we take `Heaviside(0)=1/2`, we would have
-    `integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0)=1-1/2= 1/2`
+    If we take ``Heaviside(0)=1/2``, we would have
+    ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0)=1-1/2= 1/2``
     and
-    `integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo)=1/2-0= 1/2`
+    ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo)=1/2-0= 1/2``
 
     If we consider, instead `Heaviside(0)=1`, we would have
-    `integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0) = 0`
+    ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0) = 0``
     and
-    `integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1`
+    ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1``
 
 
     For more information, see:
