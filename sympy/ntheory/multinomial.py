@@ -23,9 +23,9 @@ def binomial_coefficients_list(n):
     return d
 
 def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
-    """Return a dictionary containing pairs :math:`{(k1,k2,..,km) : C_kn}`
-    where :math:`C_kn` are multinomial coefficients such that
-    :math:`n=k1+k2+..+km`.
+    """Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
+    where ``C_kn`` are multinomial coefficients such that
+    ``n=k1+k2+..+km``.
 
     For example:
 
@@ -81,9 +81,9 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     return r
 
 def multinomial_coefficients(m, n):
-    r"""Return a dictionary containing pairs :math:`{(k1,k2,..,km) : C_kn}`
-    where :math:`C_kn` are multinomial coefficients such that
-    :math:`n=k1+k2+..+km`.
+    r"""Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
+    where ``C_kn`` are multinomial coefficients such that
+    ``n=k1+k2+..+km``.
 
     For example:
 
@@ -94,8 +94,8 @@ def multinomial_coefficients(m, n):
     The algorithm is based on the following result:
 
     .. math::
-        binom(n, k_1, ..., k_m) =
-        (k_1+1)/(n-k_1)*sum_{i=2}^m binom(n, k_1+1, ..., k_i-1, ...)
+        \binom{n}{k_1, \ldots, k_m} =
+        \frac{k_1 + 1}{n - k_1} \sum_{i=2}^m \binom{n}{k_1 + 1, \ldots, k_i - 1, \ldots}
 
     Code contributed to Sage by Yann Laigle-Chapuy, copied with permission
     of the author.
