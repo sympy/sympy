@@ -112,7 +112,7 @@ def prime(n):
         can never be larger than 2**n.
 
         Reference: http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
-		
+
 	See Also
 	========
 	
