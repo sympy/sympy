@@ -129,7 +129,8 @@ def is_quad_residue(a, p):
 
 def legendre_symbol(a, p):
     """
-    Returns:
+    Returns
+    =======
 
     1. 0 if a is multiple of p
     2. 1 if a is a quadratic residue of p
@@ -159,14 +160,15 @@ def legendre_symbol(a, p):
 
 def jacobi_symbol(m, n):
     """
-    Returns:
+    Returns the product of the legendre_symbol(m, p)
+    for all the prime factors p of n.
+
+    Returns
+    =======
 
     1. 0 if m cong 0 mod(n)
     2. 1 if x**2 cong m mod(n) has a solution
     3. -1 otherwise
-
-    jacobi_symbol(m, n) is product of the legendre_symbol(m, p)
-    for all the prime factors p of n.
 
     Examples
     ========
