@@ -31,6 +31,11 @@ def smoothness(n):
     (13, 16)
     >>> smoothness(2)
     (2, 2)
+	
+	See Also
+	========
+	
+	factorint, smoothness_p
     """
 
     if n == 1:
@@ -93,6 +98,11 @@ def smoothness_p(n, m=-1, power=0, visual=None):
         Note: recalculation of the input is done only for a Mul or dict, so
         smoothness_p({4: 2}, visual=False) == smoothness_p(16).
 
+		
+	See Also
+	========
+	
+	smoothness, factorint
     """
     from sympy.utilities import flatten
 
@@ -169,6 +179,10 @@ def multiplicity(p, n):
         >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
         [0, 1, 2, 3, 3]
 
+	See Also
+	========
+	
+	divmod
     """
 
     p, n = int(p), int(n)
@@ -638,6 +652,10 @@ def _factorint_small(factors, n, limit, fail_max):
     {factor: multiplicity} and the returned value of n will have had those
     factors removed. The factors dictionary is modified in-place.
 
+	See Also
+	========
+	
+	factorint
     """
 
     def done(n, d):
@@ -858,6 +876,11 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     =====================
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
+	
+	See Also
+	========
+	
+	_factorint_small
     """
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):
@@ -1195,6 +1218,11 @@ def divisors(n, generator=False):
 
     This is a slightly modified version of Tim Peters referenced at:
     http://stackoverflow.com/questions/1010381/python-factorization
+	
+	See Also
+	========
+	
+	factorint, divisor_count
     """
 
     n = abs(n)
@@ -1220,6 +1248,11 @@ def divisor_count(n, modulus=1):
     >>> from sympy import divisor_count
     >>> divisor_count(6)
     4
+	
+	See Also
+	========
+	
+	divisors
     """
 
     if not modulus:
@@ -1240,6 +1273,11 @@ def totient(n):
     1
     >>> totient(25)
     20
+	
+	See Also
+	========
+	
+	divisor_count
 
     """
     if n < 1:
