@@ -113,10 +113,10 @@ def prime(n):
 
         Reference: http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
 
-	See Also
-	========
-	
-	isprime, primerange, primepi
+    See Also
+    ========
+    
+    isprime, primerange, primepi
     """
 
     assert n > 0
@@ -126,11 +126,11 @@ def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n. The number n need not
         necessarily be an integer.
-		
-	See Also
-	========
-	
-	prime, isprime, primerange
+        
+    See Also
+    ========
+    
+    prime, isprime, primerange
     """
 
     if n < 2:
@@ -149,11 +149,11 @@ def nextprime(n, i=1):
         [(10, 11), (11, 13), (12, 13), (13, 17), (14, 17)]
         >>> nextprime(2, i=2) # the 2nd prime after 2
         5
-		
-	See Also
-	========
-	
-	primerange, prevprime
+        
+    See Also
+    ========
+    
+    primerange, prevprime
     """
 
     if i > 1:
@@ -200,8 +200,8 @@ def prevprime(n):
         >>> from sympy import prevprime
         >>> [(i, prevprime(i)) for i in range(10, 15)]
         [(10, 7), (11, 7), (12, 11), (13, 11), (14, 13)]
-		
-	primerange, nextprime
+        
+    primerange, nextprime
     """
 
     n = int(n)
@@ -249,11 +249,11 @@ def primerange(a, b):
         References:
             [1] http://en.wikipedia.org/wiki/Prime_number
             [2] http://primes.utm.edu/notes/gaps.html
-			
-	See Also
-	========
-	
-	nextprime, prevprime, randprime
+            
+    See Also
+    ========
+    
+    nextprime, prevprime, randprime
     """
     assert a <= b
     a -= 1
@@ -271,11 +271,11 @@ def randprime(a, b):
         randprime(a, 2*a) will always succeed for a > 1.
 
         Reference: http://en.wikipedia.org/wiki/Bertrand's_postulate
-	
-	See Also
-	========
-	
-	primerange
+    
+    See Also
+    ========
+    
+    primerange
     """
 
     n = random.randint(a-1, b)
@@ -314,11 +314,11 @@ def primorial(n, nth=True):
         >>> p = list(primerange(10, 20))
         >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
         [2, 5, 31, 149]
-		
-	See Also
-	========
-	
-	primerange
+        
+    See Also
+    ========
+    
+    primerange
     """
 
     if n < 1:

@@ -67,11 +67,11 @@ def crt(m, v, symmetric=False, check=True):
     no GCD (an O(n**2) test) and rather than factoring all moduli and seeing
     that there is no factor in common, a check that the result gives the
     indicated residuals is performed -- an O(n) operation.
-	
-	See Also
-	========
-	
-	solve_congruence
+    
+    See Also
+    ========
+    
+    solve_congruence
     """
     if check:
         m = int_tested(*m)
@@ -147,9 +147,9 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
     (-1, 6)
 
     See Also
-	========
+    ========
 
-	crt, sympy.polys.galoistools.gf_crt
+    crt, sympy.polys.galoistools.gf_crt
     """
     def combine(c1, c2):
         """Return the tuple (a, m) which satisfies the requirement
