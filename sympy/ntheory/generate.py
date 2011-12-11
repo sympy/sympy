@@ -111,7 +111,9 @@ def prime(n):
         prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
         can never be larger than 2**n.
 
-        Reference: http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+        References
+        ==========
+        - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
     """
 
     assert n > 0
@@ -229,7 +231,8 @@ def primerange(a, b):
         composite numbers are arbitrarily large, e.g. the numbers in the sequence
         n!+2, n!+3 ... n!+n are all composite.
 
-        References:
+        References
+        ==========
             [1] http://en.wikipedia.org/wiki/Prime_number
             [2] http://primes.utm.edu/notes/gaps.html
     """
@@ -248,7 +251,9 @@ def randprime(a, b):
         Bertrand's postulate assures that
         randprime(a, 2*a) will always succeed for a > 1.
 
-        Reference: http://en.wikipedia.org/wiki/Bertrand's_postulate
+        References
+        ==========
+        - http://en.wikipedia.org/wiki/Bertrand's_postulate
     """
 
     n = random.randint(a-1, b)

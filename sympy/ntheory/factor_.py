@@ -1180,7 +1180,8 @@ def divisors(n, generator=False):
     prime factors (counting repeated factors). If only the number of
     factors is desired use divisor_count(n).
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import divisors, divisor_count
     >>> divisors(24)
@@ -1212,8 +1213,9 @@ def divisor_count(n, modulus=1):
     """Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
        those that are divisible by ``modulus`` are counted.
 
-    Reference:
-    http://www.mayer.dial.pipex.com/maths/formulae.htm
+    References
+    ==========
+    - http://www.mayer.dial.pipex.com/maths/formulae.htm
 
     >>> from sympy import divisor_count
     >>> divisor_count(6)

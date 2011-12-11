@@ -116,7 +116,8 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
     If the hint ``symmetric`` is True (default is False), the value of ``n``
     will be within 1/2 of the modulus, possibly negative.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.ntheory.modular import solve_congruence
 
@@ -153,8 +154,9 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         """Return the tuple (a, m) which satisfies the requirement
         that n = a + i*m satisfy n = a1 + j*m1 and n = a2 = k*m2.
 
-        Reference:
-           http://en.wikipedia.org/wiki/Method_of_successive_substitution
+        References
+        ==========
+        - http://en.wikipedia.org/wiki/Method_of_successive_substitution
         """
         from sympy.core.numbers import igcdex
         a1, m1 = c1

@@ -137,7 +137,8 @@ def legendre_symbol(a, p):
 
     p should be an odd prime by definition
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.ntheory import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
@@ -167,7 +168,8 @@ def jacobi_symbol(m, n):
     jacobi_symbol(m, n) is product of the legendre_symbol(m, p)
     for all the prime factors p of n.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
     >>> from sympy import Mul, S

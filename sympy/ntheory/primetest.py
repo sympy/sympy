@@ -75,11 +75,10 @@ def mr(n, bases):
     """Perform a Miller-Rabin strong pseudoprime test on n using a
     given list of bases/witnesses.
 
-    Reference
-    =========
-
-    Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-    A Computational Perspective", Springer, 2nd edition, 135-138
+    References
+    ==========
+    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+      A Computational Perspective", Springer, 2nd edition, 135-138
     """
     n = int(n)
     for base in bases:
