@@ -344,9 +344,7 @@ def cycle_length(f, x0, nmax=None, values=False):
         >>> list(ni for ni in n)
         [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
 
-                  \_______________/
-                   6 values after
-                    the first 2
+    There are 6 repeating values after the first 2.
 
     If a sequence is suspected of being longer than you might wish, ``nmax``
     can be used to exit early (in which mu will be returned as None:

@@ -416,61 +416,61 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     depends on ``a`` and the power smoothness of the even mumber just less than
     the factor p (hence the name p - 1).
 
-        Although some discussion of what constitutes a good ``a`` some
-        descriptions are hard to interpret. At the modular.math site referenced
-        below it is stated that if gcd(a**M - 1, n) = N then a**M % q**r is 1
-        for every prime power divisor of N. But consider the following:
+    Although some discussion of what constitutes a good ``a`` some
+    descriptions are hard to interpret. At the modular.math site referenced
+    below it is stated that if gcd(a**M - 1, n) = N then a**M % q**r is 1
+    for every prime power divisor of N. But consider the following:
 
-            >>> from sympy.ntheory.factor_ import smoothness_p, pollard_pm1
-            >>> n=257*1009
-            >>> smoothness_p(n)
-            (-1, [(257, (1, 2, 256)), (1009, (1, 7, 16))])
+        >>> from sympy.ntheory.factor_ import smoothness_p, pollard_pm1
+        >>> n=257*1009
+        >>> smoothness_p(n)
+        (-1, [(257, (1, 2, 256)), (1009, (1, 7, 16))])
 
-            So we should (and can) find a root with B=16:
+    So we should (and can) find a root with B=16:
 
-            >>> pollard_pm1(n, B=16, a=3)
-            1009
+        >>> pollard_pm1(n, B=16, a=3)
+        1009
 
-            If we attempt to increase B to 256 we find that it doesn't work:
+    If we attempt to increase B to 256 we find that it doesn't work:
 
-            >>> pollard_pm1(n, B=256)
-            >>>
+        >>> pollard_pm1(n, B=256)
+        >>>
 
-            But if the value of ``a`` is changed we find that only multiples of
-            257 work, e.g.:
+    But if the value of ``a`` is changed we find that only multiples of
+    257 work, e.g.:
 
-            >>> pollard_pm1(n, B=256, a=257)
-            1009
+        >>> pollard_pm1(n, B=256, a=257)
+        1009
 
-            Checking different ``a`` values shows that all the ones that didn't
-            work had a gcd value not equal to ``n`` but equal to one of the
-            factors:
+    Checking different ``a`` values shows that all the ones that didn't
+    work had a gcd value not equal to ``n`` but equal to one of the
+    factors:
 
-            >>> from sympy.core.numbers import ilcm, igcd
-            >>> from sympy import factorint, Pow
-            >>> M = 1
-            >>> for i in range(2, 256):
-            ...     M = ilcm(M, i)
-            ...
-            >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
-            ...      igcd(pow(a, M, n) - 1, n) != n])
-            set([1009])
+        >>> from sympy.core.numbers import ilcm, igcd
+        >>> from sympy import factorint, Pow
+        >>> M = 1
+        >>> for i in range(2, 256):
+        ...     M = ilcm(M, i)
+        ...
+        >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
+        ...      igcd(pow(a, M, n) - 1, n) != n])
+        set([1009])
 
-            But does aM % d for every divisor of n give 1?
+    But does aM % d for every divisor of n give 1?
 
-            >>> aM = pow(255, M, n)
-            >>> [(d, aM%Pow(*d.args)) for d in factorint(n, visual=True).args]
-            [(257**1, 1), (1009**1, 1)]
+        >>> aM = pow(255, M, n)
+        >>> [(d, aM%Pow(*d.args)) for d in factorint(n, visual=True).args]
+        [(257**1, 1), (1009**1, 1)]
 
-            No, only one of them. So perhaps the principle is that a root will
-            be found for a given value of B provided that:
+    No, only one of them. So perhaps the principle is that a root will
+    be found for a given value of B provided that:
 
-                1) the power smoothness of the p - 1 value next to the root
-                   does not exceed B
-                2) a**M % p != 1 for any of the divisors of n.
+    1) the power smoothness of the p - 1 value next to the root
+        does not exceed B
+    2) a**M % p != 1 for any of the divisors of n.
 
-            By trying more than one ``a`` it is possible that one of them
-            will yield a factor.
+    By trying more than one ``a`` it is possible that one of them
+    will yield a factor.
 
     Example usage
     =============
