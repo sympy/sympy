@@ -42,6 +42,9 @@ def test_sqrtdenest2():
     z = sqrt(8 - sqrt(2)*sqrt(5-sqrt(5)) - 3*(1+sqrt(5)))
     assert (sqrtdenest(z) - z).evalf() < 1.0e-100
 
+    z= sqrt(-2*sqrt(29) + cos(2) + 2*sqrt(-10*sqrt(29) + 55) + 16)
+    assert sqrtdenest(z) == z
+
 @XFAIL
 def test_sqrtdenest2a():
     assert sqrtdenest(sqrt(13-2*sqrt(10)+2*sqrt(2)*sqrt(-2*sqrt(10)+11))) == \

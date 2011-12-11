@@ -143,8 +143,6 @@ def _sqrtdenest(expr):
                 z = sqrt_numeric_denest(a, b, r, d2)
                 if z != None:
                     return z
-                else:
-                    return expr
             else:
                 # d2 negative
                 # fourth root case
@@ -156,27 +154,23 @@ def _sqrtdenest(expr):
                     z = sqrt_numeric_denest((b*r).expand(), a, r, dr2)
                     if z != None:
                         return z/r**Rational(1,4)
-                    else:
-                        return expr
 
         else:
             z = sqrt_symbolic_denest(a, b, r, d2)
-            if z:
+            if z != None:
                 return z
 
     else:
         return expr
+    if not expr.is_number:
+        return expr
+    if not is_algebraic(expr):
+        return expr
     av0 = [a, b, r, d2]
     z = _denester([radsimp(expr**2)], av0, 0)[0]
-    if z == None:
-        return expr
-    if z is expr or not z.is_Add:
+    if z != None:
         return z
-    else:
-        a = z.args
-        a = [sqrtdenest(x) for x in a]
-        expr = Add(*a)
-        return expr
+    return expr
 
 def sqrt_depth(p):
     """
@@ -195,6 +189,27 @@ def sqrt_depth(p):
         return sqrt_depth(p.base) + 1
     else:
         return 0
+
+def is_algebraic(p):
+    """
+    >>> from sympy.functions.elementary.miscellaneous import sqrt
+    >>> from sympy.simplify.sqrtdenest import is_algebraic
+    >>> from sympy import cos
+    >>> is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*sqrt(2))))
+    True
+    >>> is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*cos(2))))
+    False
+    """
+    if p.is_Number:
+        return True
+    elif p.is_Atom:
+        return False
+    elif p.is_Pow and (p.exp == S.Half or p.exp == -1):
+        return is_algebraic(p.base)
+    elif p.is_Add or p.is_Mul:
+        return all([is_algebraic(x) for x in p.args])
+    else:
+        return False
 
 def sqrt_match(p):
     """return (a, b, r) for match p = a + b*sqrt(r) where
