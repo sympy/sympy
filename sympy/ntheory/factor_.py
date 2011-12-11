@@ -82,15 +82,15 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     The table of the output logic is:
 
     ====== ====== ======= =======
-    x                Visual      
+    x                Visual
     ------ ----------------------
-    Input  True   False   other  
+    Input  True   False   other
     ====== ====== ======= =======
-    dict    str    tuple   str   
-    str     str    tuple   dict  
-    tuple   str    tuple   str   
-    n       str    tuple   tuple 
-    mul     str    tuple   tuple 
+    dict    str    tuple   str
+    str     str    tuple   dict
+    tuple   str    tuple   str
+    n       str    tuple   tuple
+    mul     str    tuple   tuple
     ====== ====== ======= =======
     """
     from sympy.utilities import flatten
