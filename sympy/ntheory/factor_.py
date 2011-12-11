@@ -326,7 +326,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
         The first value in pair is the leader. The second is the loop.
 
     Here is an explicit example:
-        
+
         >>> x=2
         >>> for i in range(7):
         ...     x=(x**2+12)%17

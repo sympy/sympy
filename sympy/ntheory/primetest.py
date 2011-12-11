@@ -110,15 +110,15 @@ def _mr_safe(n):
     References for the bounds:
     ==========================
 
-    [1] http://primes.utm.edu/prove/prove2_3.html
-    [2] http://www.trnicely.net/misc/mpzspsp.html
-    [3] http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
+    1. http://primes.utm.edu/prove/prove2_3.html
+    2. http://www.trnicely.net/misc/mpzspsp.html
+    3. http://en.wikipedia.org/wiki/Miller-Rabin_primality_test#
         Accuracy_of_the_test
-    [4] http://zdu.spaces.live.com/?_c11_BlogPart_pagedir=
+    4. http://zdu.spaces.live.com/?_c11_BlogPart_pagedir=
         Next&_c11_BlogPart_handle=cns!C95152CB25EF2037!
         138&_c11_BlogPart_BlogPart=blogview&_c=BlogPart
-    [5] http://primes.utm.edu/glossary/xpage/Pseudoprime.html
-    [6] http://uucode.com/obf/dalbec/alg.html#sprp
+    5. http://primes.utm.edu/glossary/xpage/Pseudoprime.html
+    6. http://uucode.com/obf/dalbec/alg.html#sprp
     """
 
     if n < 1373653:
