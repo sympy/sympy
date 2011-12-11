@@ -233,8 +233,8 @@ def primerange(a, b):
 
         References
         ==========
-            [1] http://en.wikipedia.org/wiki/Prime_number
-            [2] http://primes.utm.edu/notes/gaps.html
+        [1] http://en.wikipedia.org/wiki/Prime_number
+        [2] http://primes.utm.edu/notes/gaps.html
     """
     assert a <= b
     a -= 1
