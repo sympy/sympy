@@ -76,7 +76,6 @@ def sqrt_numeric_denest(a, b, r, d2):
     # sqrt_depth(expr) = depthr + 2
     # there is denesting if sqrt_depth(vad)+1 < depthr + 2
     # if vad**2 is Number there is a fourth root
-    #
     if sqrt_depth(vad) < depthr + 1 or (vad**2).is_Number:
         vad1 = radsimp(1/vad)
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
