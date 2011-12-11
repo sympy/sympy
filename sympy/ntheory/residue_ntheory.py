@@ -12,7 +12,7 @@ def int_tested(*j):
     return i
 
 def totient_(n):
-    """returns the number of integers less than n
+    """Returns the number of integers less than n
     and relatively prime to n"""
     n = int_tested(n)
     if n < 1:
@@ -25,7 +25,7 @@ def totient_(n):
 
 
 def n_order(a, n):
-    """ returns the order of a modulo n
+    """Returns the order of a modulo n
     Order of a modulo n is the smallest integer
     k such that a^k leaves a remainder of 1 with n.
 
@@ -131,9 +131,9 @@ def legendre_symbol(a, p):
     """
     Returns:
 
-    a. 0 if a is multiple of p,
-    b. 1 if a is a quadratic residue of p, else
-    c. -1
+    1. 0 if a is multiple of p
+    2. 1 if a is a quadratic residue of p
+    3. -1 otherwise
 
     p should be an odd prime by definition
 
@@ -161,9 +161,9 @@ def jacobi_symbol(m, n):
     """
     Returns:
 
-    a. 0 if m cong 0 mod(n),
-    b. 1 if x**2 cong m mod(n) has a solution, else
-    c. -1.
+    1. 0 if m cong 0 mod(n)
+    2. 1 if x**2 cong m mod(n) has a solution
+    3. -1 otherwise
 
     jacobi_symbol(m, n) is product of the legendre_symbol(m, p)
     for all the prime factors p of n.
