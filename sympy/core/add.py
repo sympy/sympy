@@ -756,9 +756,11 @@ class Add(AssocOp):
             terms.insert(0, c)
         return Rational(ngcd, dlcm), self._new_rawargs(*terms)
 
-    def as_content_primitive(self):
+    def as_content_primitive(self, radical=False):
         """Return the tuple (R, self/R) where R is the positive Rational
-        extracted from self.
+        extracted from self. If radical is True (default is False) then
+        common radicals will be removed and included as a factor of the
+        primitive expression.
 
         **Example**
 
@@ -766,15 +768,15 @@ class Add(AssocOp):
         >>> (3 + 3*sqrt(2)).as_content_primitive()
         (3, 1 + sqrt(2))
 
-        Radical content is also factored out of the primitive:
+        Radical content can also be factored out of the primitive:
 
-        >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive()
+        >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
         (2, sqrt(2)*(1 + 2*sqrt(5)))
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        con, prim = Add(*[_keep_coeff(*a.as_content_primitive()) for a in self.args]).primitive()
-        if prim.is_Add:
+        con, prim = Add(*[_keep_coeff(*a.as_content_primitive(radical=radical)) for a in self.args]).primitive()
+        if radical and prim.is_Add:
             # look for common radicals that can be removed
             args = prim.args
             rads = []

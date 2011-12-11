@@ -1266,7 +1266,7 @@ class Expr(Basic, EvalfMixin):
             c, r = -c, -r
         return c, r
 
-    def as_content_primitive(self):
+    def as_content_primitive(self, radical=False):
         """This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
         should always be positive and Mul(*foo.as_content_primitive()) == foo.
@@ -1275,6 +1275,7 @@ class Expr(Basic, EvalfMixin):
         applied to self).
 
         **Examples**
+        >>> from sympy import sqrt
         >>> from sympy.abc import x, y, z
 
         >>> eq = 2 + 2*x + 2*y*(3 + 3*y)
@@ -1303,6 +1304,12 @@ class Expr(Basic, EvalfMixin):
         (121, x**2*(y + 1)**2)
         >>> ((5*(x*(1 + y)) + 2.0*x*(3 + 3*y))**2).as_content_primitive()
         (1, 121.0*x**2*(y + 1)**2)
+
+        Radical content can also be factored out of the primitive:
+
+        >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive(radical=True)
+        (2, sqrt(2)*(1 + 2*sqrt(5)))
+
         """
         return S.One, self
 

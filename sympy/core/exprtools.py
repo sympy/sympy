@@ -411,10 +411,13 @@ def gcd_terms(terms, isprimitive=False):
     return terms.func(*[handle(i) for i in terms.args])
 
 
-def factor_terms(expr):
+def factor_terms(expr, radical=False):
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
-    simplification (and no processing of non-commutative) is performed.
+    simplification (and no processing of non-commutatives) is performed.
+
+    If radical=True then a radical common to all terms will be factored
+    out of any Add sub-expressions of the expr.
 
     **Examples**
 
@@ -431,15 +434,15 @@ def factor_terms(expr):
     expr = sympify(expr)
 
     if iterable(expr):
-        return type(expr)([factor_terms(i) for i in expr])
+        return type(expr)([factor_terms(i, radical=radical) for i in expr])
 
     if not isinstance(expr, Basic) or expr.is_Atom:
         return expr
 
     if expr.is_Function:
-        return expr.func(*[factor_terms(i) for i in expr.args])
+        return expr.func(*[factor_terms(i, radical=radical) for i in expr.args])
 
-    cont, p = expr.as_content_primitive()
+    cont, p = expr.as_content_primitive(radical=radical)
     list_args, nc = zip(*[ai.args_cnc(clist=True) for ai in Add.make_args(p)])
     list_args = list(list_args)
     nc = [((Dummy(), Mul._from_args(i)) if i else None) for i in nc]

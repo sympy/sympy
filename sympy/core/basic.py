@@ -665,7 +665,7 @@ class Basic(object):
         except PolynomialError:
             return None
 
-    def as_content_primitive(self):
+    def as_content_primitive(self, radical=False):
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 

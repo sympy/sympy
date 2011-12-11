@@ -862,7 +862,7 @@ class Pow(Expr):
     def _sage_(self):
         return self.args[0]._sage_()**self.args[1]._sage_()
 
-    def as_content_primitive(self):
+    def as_content_primitive(self, radical=False):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -905,8 +905,8 @@ class Pow(Expr):
         """
 
         b, e = self.as_base_exp()
-        b = _keep_coeff(*b.as_content_primitive())
-        ce, pe = e.as_content_primitive()
+        b = _keep_coeff(*b.as_content_primitive(radical=radical))
+        ce, pe = e.as_content_primitive(radical=radical)
         if b.is_Rational:
             #e
             #= ce*pe
@@ -930,7 +930,7 @@ class Pow(Expr):
         e = _keep_coeff(ce, pe)
         # b**e = (h*t)**e = h**e*t**e = c*m*t**e
         if e.is_Rational and b.is_Mul:
-            h, t = b.as_content_primitive() # h is positive
+            h, t = b.as_content_primitive(radical=radical) # h is positive
             c, m = Pow(h, e).as_coeff_Mul() # so c is positive
             m, me = m.as_base_exp()
             if m is S.One or me == e: # probably always true
