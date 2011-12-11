@@ -126,7 +126,7 @@ def primepi(n):
     """ Return the value of the prime counting function pi(n) = the number
         of prime numbers less than or equal to n. The number n need not
         necessarily be an integer.
-        
+
     See Also
     ========
 
@@ -149,7 +149,7 @@ def nextprime(n, i=1):
         [(10, 11), (11, 13), (12, 13), (13, 17), (14, 17)]
         >>> nextprime(2, i=2) # the 2nd prime after 2
         5
-        
+
     See Also
     ========
 
@@ -200,7 +200,7 @@ def prevprime(n):
         >>> from sympy import prevprime
         >>> [(i, prevprime(i)) for i in range(10, 15)]
         [(10, 7), (11, 7), (12, 11), (13, 11), (14, 13)]
-        
+
     primerange, nextprime
     """
 
@@ -249,7 +249,7 @@ def primerange(a, b):
         References:
             [1] http://en.wikipedia.org/wiki/Prime_number
             [2] http://primes.utm.edu/notes/gaps.html
-            
+
     See Also
     ========
 
@@ -271,7 +271,7 @@ def randprime(a, b):
         randprime(a, 2*a) will always succeed for a > 1.
 
         Reference: http://en.wikipedia.org/wiki/Bertrand's_postulate
-    
+
     See Also
     ========
 
@@ -314,7 +314,7 @@ def primorial(n, nth=True):
         >>> p = list(primerange(10, 20))
         >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
         [2, 5, 31, 149]
-        
+
     See Also
     ========
 

@@ -67,7 +67,7 @@ def crt(m, v, symmetric=False, check=True):
     no GCD (an O(n**2) test) and rather than factoring all moduli and seeing
     that there is no factor in common, a check that the result gives the
     indicated residuals is performed -- an O(n) operation.
-    
+
     See Also
     ========
 

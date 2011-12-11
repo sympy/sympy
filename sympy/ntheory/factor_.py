@@ -31,7 +31,7 @@ def smoothness(n):
     (13, 16)
     >>> smoothness(2)
     (2, 2)
-    
+
     See Also
     ========
 
@@ -98,7 +98,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
         Note: recalculation of the input is done only for a Mul or dict, so
         smoothness_p({4: 2}, visual=False) == smoothness_p(16).
 
-        
+
     See Also
     ========
 
@@ -876,7 +876,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     =====================
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
-    
+
     See Also
     ========
 
@@ -1218,7 +1218,7 @@ def divisors(n, generator=False):
 
     This is a slightly modified version of Tim Peters referenced at:
     http://stackoverflow.com/questions/1010381/python-factorization
-    
+
     See Also
     ========
 
@@ -1248,7 +1248,7 @@ def divisor_count(n, modulus=1):
     >>> from sympy import divisor_count
     >>> divisor_count(6)
     4
-    
+
     See Also
     ========
 
@@ -1273,12 +1273,11 @@ def totient(n):
     1
     >>> totient(25)
     20
-    
+
     See Also
     ========
 
     divisor_count
-
     """
     if n < 1:
         raise ValueError("n must be a positive integer")

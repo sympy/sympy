@@ -4,12 +4,11 @@ from collections import defaultdict
 def binomial_coefficients(n):
     """Return a dictionary containing pairs {(k1,k2) : C_kn} where
     C_kn are binomial coefficients and n=k1+k2.
-    
+
     See Also
     ========
 
     binomial_coefficients_list, multinomial_coefficients
-    
     """
     d = {(0, n):1, (n, 0):1}
     a = 1
@@ -21,12 +20,11 @@ def binomial_coefficients(n):
 def binomial_coefficients_list(n):
     """ Return a list of binomial coefficients as rows of the Pascal's
     triangle.
-    
+
     See Also
     ========
 
     binomial_coefficients, multinomial_coefficients
-    
     """
     d = [1] * (n+1)
     a = 1
@@ -110,12 +108,11 @@ def multinomial_coefficients(m, n):
 
     Code contributed to Sage by Yann Laigle-Chapuy, copied with permission
     of the author.
-    
+
     See Also
     ========
 
     binomial_coefficients_list, binomial_coefficients
-
     """
     if not m:
         if n:
