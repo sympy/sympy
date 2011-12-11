@@ -311,32 +311,32 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     For a given function, very different leader-loop values can be obtained
     so it is a good idea to allow for retries:
 
-        >>> from sympy.ntheory.generate import cycle_length
-        >>> n=16843009
-        >>> F=lambda x:(2048*pow(x,2,n) + 32767) % n
-        >>> for s in range(5):
-        ...     cycle_length(F, s).next()
-        ...
-        (2489, 42)
-        (78, 120)
-        (1482, 99)
-        (1482, 285)
-        (1482, 100)
+    >>> from sympy.ntheory.generate import cycle_length
+    >>> n=16843009
+    >>> F=lambda x:(2048*pow(x,2,n) + 32767) % n
+    >>> for s in range(5):
+    ...     cycle_length(F, s).next()
+    ...
+    (2489, 42)
+    (78, 120)
+    (1482, 99)
+    (1482, 285)
+    (1482, 100)
 
-        The first value in pair is the leader. The second is the loop.
+    The first value in pair is the leader. The second is the loop.
 
     Here is an explicit example:
 
-        >>> x=2
-        >>> for i in range(7):
-        ...     x=(x**2+12)%17
-        ...     print x,
-        ...
-        16 13 11 14 4 11 14
-        >>> cycle_length(lambda x: (x**2+12)%17, 2).next()
-        (3, 2)
-        >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=1))
-        [16, 13, 11, 14, 4]
+    >>> x=2
+    >>> for i in range(7):
+    ...     x=(x**2+12)%17
+    ...     print x,
+    ...
+    16 13 11 14 4 11 14
+    >>> cycle_length(lambda x: (x**2+12)%17, 2).next()
+    (3, 2)
+    >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=1))
+    [16, 13, 11, 14, 4]
 
     Instead of checking the differences of all generated values for a gcd
     with n, only the kth and 2*kth numbers are checked, e.g. 1st and 2nd,
@@ -466,7 +466,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     be found for a given value of B provided that:
 
     1) the power smoothness of the p - 1 value next to the root
-        does not exceed B
+       does not exceed B
     2) a**M % p != 1 for any of the divisors of n.
 
     By trying more than one ``a`` it is possible that one of them
@@ -726,7 +726,7 @@ def _factorint_small(factors, n, limit, fail_max):
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     verbose=False, visual=None):
-    """
+    r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
     as values. For example:
@@ -739,9 +739,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     For input less than 2, factorint behaves as follows:
 
-      - ``factorint(1)`` returns the empty factorization, ``{}``
-      - ``factorint(0)`` returns ``{0:1}``
-      - ``factorint(-n)`` adds ``-1:1`` to the factors and then factors ``n``
+    - ``factorint(1)`` returns the empty factorization, ``{}``
+    - ``factorint(0)`` returns ``{0:1}``
+    - ``factorint(-n)`` adds ``-1:1`` to the factors and then factors ``n``
 
     Algorithm
     =========
@@ -764,9 +764,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     Any of these methods can optionally be disabled with the following
     boolean parameters:
 
-      - ``use_trial``: Toggle use of trial division
-      - ``use_rho``: Toggle use of Pollard's rho method
-      - ``use_pm1``: Toggle use of Pollard's p-1 method
+    - ``use_trial``: Toggle use of trial division
+    - ``use_rho``: Toggle use of Pollard's rho method
+    - ``use_pm1``: Toggle use of Pollard's p-1 method
 
     ``factorint`` also periodically checks if the remaining part is
     a prime number or a perfect power, and in those cases stops.
