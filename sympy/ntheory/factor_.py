@@ -19,7 +19,8 @@ small_trailing = [i and max(int(not i % 2**j) and j for j in range(1,8)) \
     for i in range(256)]
 
 def smoothness(n):
-    """Return the B-smooth and B-power smooth values of n.
+    """
+    Return the B-smooth and B-power smooth values of n.
 
     The smoothness of n is the largest prime factor of n; the power-
     smoothness is the largest divisor raised to its multiplicity.
@@ -39,11 +40,13 @@ def smoothness(n):
     return max(facs), max([m**facs[m] for m in facs])
 
 def smoothness_p(n, m=-1, power=0, visual=None):
-    """Return a list of [m, (p, (M, sm(p + m), psm(p + m)))...]
+    """
+    Return a list of [m, (p, (M, sm(p + m), psm(p + m)))...]
     where:
-        o p**M is the base-p divisor of n
-        o sm(p + m) is the smoothness of p + m (m = -1 by default)
-        o psm(p + n) is the power smoothness of p + m
+
+    1. p**M is the base-p divisor of n
+    2. sm(p + m) is the smoothness of p + m (m = -1 by default)
+    3. psm(p + n) is the power smoothness of p + m
 
     The list is sorted according to smoothness (default) or by power smoothness
     if power=1.
@@ -78,21 +81,17 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     The table of the output logic is:
 
-        _________________________________
-        |       |        visual=        |
-        | input + -----+--------+-------+
-        |       | True | False  | other |
-        +-------+------+--------+-------+
-        | dict  | str  |  tuple | str   |
-        | str   | str  |  tuple | dict  |
-        | tuple | str  |  tuple | str   |
-        | n     | str  |  tuple | tuple |
-        | mul   | str  |  tuple | tuple |
-        +-------+------+--------+-------+
-
-        Note: recalculation of the input is done only for a Mul or dict, so
-        smoothness_p({4: 2}, visual=False) == smoothness_p(16).
-
+    ====== ====== ======= =======
+    x                Visual
+    ------ ----------------------
+    Input  True   False   other
+    ====== ====== ======= =======
+    dict    str    tuple   str
+    str     str    tuple   dict
+    tuple   str    tuple   str
+    n       str    tuple   tuple
+    mul     str    tuple   tuple
+    ====== ====== ======= =======
     """
     from sympy.utilities import flatten
 
@@ -294,7 +293,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         return False
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
-    """Use Pollard's rho method to try to extract a nontrivial factor
+    r"""Use Pollard's rho method to try to extract a nontrivial factor
     of ``n``. The returned factor may be a composite number. If no
     factor is found, ``None`` is returned.
 
@@ -312,35 +311,32 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     For a given function, very different leader-loop values can be obtained
     so it is a good idea to allow for retries:
 
-        >>> from sympy.ntheory.generate import cycle_length
-        >>> n=16843009
-        >>> F=lambda x:(2048*pow(x,2,n) + 32767) % n
-        >>> for s in range(5):
-        ...     cycle_length(F, s).next()
-        ...
-        (2489, 42)
-        (78, 120)
-        (1482, 99)
-        (1482, 285)
-        (1482, 100)
+    >>> from sympy.ntheory.generate import cycle_length
+    >>> n=16843009
+    >>> F=lambda x:(2048*pow(x,2,n) + 32767) % n
+    >>> for s in range(5):
+    ...     cycle_length(F, s).next()
+    ...
+    (2489, 42)
+    (78, 120)
+    (1482, 99)
+    (1482, 285)
+    (1482, 100)
 
-           \    \___loop
-            \______________leader
+    The first value in pair is the leader. The second is the loop.
 
+    Here is an explicit example:
 
-        Here is an explicit example:
-
-            >>> x=2
-            >>> for i in range(7):
-            ...     x=(x**2+12)%17
-            ...     print x,
-            ...
-            16 13 11 14 4 11 14
-            >>> cycle_length(lambda x: (x**2+12)%17, 2).next()
-            (3, 2)
-            >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=1))
-            [16, 13, 11, 14, 4]
-
+    >>> x=2
+    >>> for i in range(7):
+    ...     x=(x**2+12)%17
+    ...     print x,
+    ...
+    16 13 11 14 4 11 14
+    >>> cycle_length(lambda x: (x**2+12)%17, 2).next()
+    (3, 2)
+    >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=1))
+    [16, 13, 11, 14, 4]
 
     Instead of checking the differences of all generated values for a gcd
     with n, only the kth and 2*kth numbers are checked, e.g. 1st and 2nd,
@@ -359,18 +355,20 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     257
 
     Use the default setting with a bad value of ``a`` and no retries:
+
     >>> pollard_rho(n, a=n-2, retries=0)
 
     If retries is > 0 then perhaps the problem will correct itself when
     new values are generated for a:
+
     >>> pollard_rho(n, a=n-2, retries=1)
     257
 
     References
     ==========
-      - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-        A Computational Perspective", Springer, 2nd edition, 229-231
-      - http://www.csh.rit.edu/~pat/math/quickies/rho/
+    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+      A Computational Perspective", Springer, 2nd edition, 229-231
+    - http://www.csh.rit.edu/~pat/math/quickies/rho/
 
     """
     n = int(n)
@@ -418,61 +416,61 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     depends on ``a`` and the power smoothness of the even mumber just less than
     the factor p (hence the name p - 1).
 
-        Although some discussion of what constitutes a good ``a`` some
-        descriptions are hard to interpret. At the modular.math site referenced
-        below it is stated that if gcd(a**M - 1, n) = N then a**M % q**r is 1
-        for every prime power divisor of N. But consider the following:
+    Although some discussion of what constitutes a good ``a`` some
+    descriptions are hard to interpret. At the modular.math site referenced
+    below it is stated that if gcd(a**M - 1, n) = N then a**M % q**r is 1
+    for every prime power divisor of N. But consider the following:
 
-            >>> from sympy.ntheory.factor_ import smoothness_p, pollard_pm1
-            >>> n=257*1009
-            >>> smoothness_p(n)
-            (-1, [(257, (1, 2, 256)), (1009, (1, 7, 16))])
+        >>> from sympy.ntheory.factor_ import smoothness_p, pollard_pm1
+        >>> n=257*1009
+        >>> smoothness_p(n)
+        (-1, [(257, (1, 2, 256)), (1009, (1, 7, 16))])
 
-            So we should (and can) find a root with B=16:
+    So we should (and can) find a root with B=16:
 
-            >>> pollard_pm1(n, B=16, a=3)
-            1009
+        >>> pollard_pm1(n, B=16, a=3)
+        1009
 
-            If we attempt to increase B to 256 we find that it doesn't work:
+    If we attempt to increase B to 256 we find that it doesn't work:
 
-            >>> pollard_pm1(n, B=256)
-            >>>
+        >>> pollard_pm1(n, B=256)
+        >>>
 
-            But if the value of ``a`` is changed we find that only multiples of
-            257 work, e.g.:
+    But if the value of ``a`` is changed we find that only multiples of
+    257 work, e.g.:
 
-            >>> pollard_pm1(n, B=256, a=257)
-            1009
+        >>> pollard_pm1(n, B=256, a=257)
+        1009
 
-            Checking different ``a`` values shows that all the ones that didn't
-            work had a gcd value not equal to ``n`` but equal to one of the
-            factors:
+    Checking different ``a`` values shows that all the ones that didn't
+    work had a gcd value not equal to ``n`` but equal to one of the
+    factors:
 
-            >>> from sympy.core.numbers import ilcm, igcd
-            >>> from sympy import factorint, Pow
-            >>> M = 1
-            >>> for i in range(2, 256):
-            ...     M = ilcm(M, i)
-            ...
-            >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
-            ...      igcd(pow(a, M, n) - 1, n) != n])
-            set([1009])
+        >>> from sympy.core.numbers import ilcm, igcd
+        >>> from sympy import factorint, Pow
+        >>> M = 1
+        >>> for i in range(2, 256):
+        ...     M = ilcm(M, i)
+        ...
+        >>> set([igcd(pow(a, M, n) - 1, n) for a in range(2, 256) if
+        ...      igcd(pow(a, M, n) - 1, n) != n])
+        set([1009])
 
-            But does aM % d for every divisor of n give 1?
+    But does aM % d for every divisor of n give 1?
 
-            >>> aM = pow(255, M, n)
-            >>> [(d, aM%Pow(*d.args)) for d in factorint(n, visual=True).args]
-            [(257**1, 1), (1009**1, 1)]
+        >>> aM = pow(255, M, n)
+        >>> [(d, aM%Pow(*d.args)) for d in factorint(n, visual=True).args]
+        [(257**1, 1), (1009**1, 1)]
 
-            No, only one of them. So perhaps the principle is that a root will
-            be found for a given value of B provided that:
+    No, only one of them. So perhaps the principle is that a root will
+    be found for a given value of B provided that:
 
-                1) the power smoothness of the p - 1 value next to the root
-                   does not exceed B
-                2) a**M % p != 1 for any of the divisors of n.
+    1) the power smoothness of the p - 1 value next to the root
+       does not exceed B
+    2) a**M % p != 1 for any of the divisors of n.
 
-            By trying more than one ``a`` it is possible that one of them
-            will yield a factor.
+    By trying more than one ``a`` it is possible that one of them
+    will yield a factor.
 
     Example usage
     =============
@@ -523,12 +521,12 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     References
     ==========
-      - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-        A Computational Perspective", Springer, 2nd edition, 236-238
-      - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/
-              node81.html
-      - http://www.math.mcgill.ca/darmon/courses/05-06/usra/charest.pdf
-      - http://www.cs.toronto.edu/~yuvalf/Factorization.pdf
+    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+      A Computational Perspective", Springer, 2nd edition, 236-238
+    - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/
+            node81.html
+    - http://www.math.mcgill.ca/darmon/courses/05-06/usra/charest.pdf
+    - http://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
     n = int(n)
@@ -728,7 +726,7 @@ def _factorint_small(factors, n, limit, fail_max):
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     verbose=False, visual=None):
-    """
+    r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
     as values. For example:
@@ -741,9 +739,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     For input less than 2, factorint behaves as follows:
 
-      - ``factorint(1)`` returns the empty factorization, ``{}``
-      - ``factorint(0)`` returns ``{0:1}``
-      - ``factorint(-n)`` adds ``-1:1`` to the factors and then factors ``n``
+    - ``factorint(1)`` returns the empty factorization, ``{}``
+    - ``factorint(0)`` returns ``{0:1}``
+    - ``factorint(-n)`` adds ``-1:1`` to the factors and then factors ``n``
 
     Algorithm
     =========
@@ -766,9 +764,9 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     Any of these methods can optionally be disabled with the following
     boolean parameters:
 
-      - ``use_trial``: Toggle use of trial division
-      - ``use_rho``: Toggle use of Pollard's rho method
-      - ``use_pm1``: Toggle use of Pollard's p-1 method
+    - ``use_trial``: Toggle use of trial division
+    - ``use_rho``: Toggle use of Pollard's rho method
+    - ``use_pm1``: Toggle use of Pollard's p-1 method
 
     ``factorint`` also periodically checks if the remaining part is
     a prime number or a perfect power, and in those cases stops.
@@ -1174,7 +1172,7 @@ def _divisors(n):
         yield p
 
 def divisors(n, generator=False):
-    """
+    r"""
     Return all divisors of n sorted from 1..n by default.
     If generator is True an unordered generator is returned.
 
@@ -1182,7 +1180,8 @@ def divisors(n, generator=False):
     prime factors (counting repeated factors). If only the number of
     factors is desired use divisor_count(n).
 
-    Examples::
+    Examples
+    ========
 
     >>> from sympy import divisors, divisor_count
     >>> divisors(24)
@@ -1214,8 +1213,9 @@ def divisor_count(n, modulus=1):
     """Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
        those that are divisible by ``modulus`` are counted.
 
-    Reference:
-    http://www.mayer.dial.pipex.com/maths/formulae.htm
+    References
+    ==========
+    - http://www.mayer.dial.pipex.com/maths/formulae.htm
 
     >>> from sympy import divisor_count
     >>> divisor_count(6)

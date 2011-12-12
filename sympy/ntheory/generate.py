@@ -111,7 +111,9 @@ def prime(n):
         prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
         can never be larger than 2**n.
 
-        Reference: http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
+        References
+        ==========
+        - http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html
     """
 
     assert n > 0
@@ -229,9 +231,10 @@ def primerange(a, b):
         composite numbers are arbitrarily large, e.g. the numbers in the sequence
         n!+2, n!+3 ... n!+n are all composite.
 
-        References:
-            [1] http://en.wikipedia.org/wiki/Prime_number
-            [2] http://primes.utm.edu/notes/gaps.html
+        References
+        ==========
+        1. http://en.wikipedia.org/wiki/Prime_number
+        2. http://primes.utm.edu/notes/gaps.html
     """
     assert a <= b
     a -= 1
@@ -248,7 +251,9 @@ def randprime(a, b):
         Bertrand's postulate assures that
         randprime(a, 2*a) will always succeed for a > 1.
 
-        Reference: http://en.wikipedia.org/wiki/Bertrand's_postulate
+        References
+        ==========
+        - http://en.wikipedia.org/wiki/Bertrand's_postulate
     """
 
     n = random.randint(a-1, b)
@@ -260,33 +265,34 @@ def randprime(a, b):
     return p
 
 def primorial(n, nth=True):
-    """ Returns the product of either a) the first n primes (default) or
-        b) the primes less than or equal to n (when `nth`=False).
+    """
+    Returns the product of either 1. the first n primes (default) or
+    2. the primes less than or equal to n (when ``nth=False``).
 
-        >>> from sympy.ntheory.generate import primorial, randprime, primerange
-        >>> from sympy import factorint, Mul, primefactors
-        >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
-        210
-        >>> primorial(4, nth=0) # primes <= 4 are 2 and 3
-        6
-        >>> primorial(1)
-        2
-        >>> primorial(1, nth=0)
-        1
+    >>> from sympy.ntheory.generate import primorial, randprime, primerange
+    >>> from sympy import factorint, Mul, primefactors
+    >>> primorial(4) # the first 4 primes are 2, 3, 5, 7
+    210
+    >>> primorial(4, nth=0) # primes <= 4 are 2 and 3
+    6
+    >>> primorial(1)
+    2
+    >>> primorial(1, nth=0)
+    1
 
-        One can argue that the primes are infinite since if you take
-        a set of primes and multiply them together (e.g. the primorial) and
-        then add or subtract 1, the result cannot be divided by any of the
-        original factors, hence either 1 or more primes must divide this
-        product of primes.
+    One can argue that the primes are infinite since if you take
+    a set of primes and multiply them together (e.g. the primorial) and
+    then add or subtract 1, the result cannot be divided by any of the
+    original factors, hence either 1 or more primes must divide this
+    product of primes.
 
-        >>> factorint(primorial(4) + 1)
-        {211: 1}
-        >>> factorint(primorial(4) - 1)
-        {11: 1, 19: 1}
-        >>> p = list(primerange(10, 20))
-        >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
-        [2, 5, 31, 149]
+    >>> factorint(primorial(4) + 1)
+    {211: 1}
+    >>> factorint(primorial(4) - 1)
+    {11: 1, 19: 1}
+    >>> p = list(primerange(10, 20))
+    >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
+    [2, 5, 31, 149]
     """
 
     if n < 1:
@@ -338,9 +344,7 @@ def cycle_length(f, x0, nmax=None, values=False):
         >>> list(ni for ni in n)
         [17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]
 
-                  \_______________/
-                   6 values after
-                    the first 2
+    There are 6 repeating values after the first 2.
 
     If a sequence is suspected of being longer than you might wish, ``nmax``
     can be used to exit early (in which mu will be returned as None:
