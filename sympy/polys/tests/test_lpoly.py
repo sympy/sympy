@@ -12,7 +12,7 @@ from sympy.series.order import O
 from sympy.polys.lpoly import monomial_from_sequence
 
 def test_str():
-    # str of a Poly object gives different output using QQ in python
+    # str of a LPolyElement object gives different output using QQ in python
     # or in gmpy mode, in one case giving n/1, in the other giving n
     # for QQ(n, 1); in this test these quantities do not appear
     lp = LPoly(list('xyz'), QQ, lex)

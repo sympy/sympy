@@ -637,7 +637,7 @@ def taylor_eval(p, prec, tev, typ):
           1 try the evaluation on SR
 
     output: (res, typ)
-      res LPoly.Poly object if successful, else None
+      res LPoly.LPolyElement object if successful, else None
       typ = 0 evaluation done in QQ
             1 evaluation done in SR
             2 evaluation failed

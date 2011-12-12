@@ -75,7 +75,7 @@ class BaseLPoly(object):
           with elements with more than one term
     NCPoly polynomial ring with noncommutative base ring
     The objects lp in one of these polynomial rings
-    construct elements of Poly, a multivariate polynomial ring with
+    construct elements of LPolyElement, a multivariate polynomial ring with
     monomial ordering.
     lp.K generates the elements in K
     K(0)  zero element in K
@@ -93,8 +93,8 @@ class BaseLPoly(object):
     (0, 0)
     >>> x, y = lp.gens()
     >>> p = (x + y)**2
-    >>> str(p)
-     ' +x^2 +2*x*y +y^2'
+    >>> print p
+     +x^2 +2*x*y +y^2
     """
 
     def __init__(self, pol_gens, ring, O, **kwds):
@@ -150,7 +150,7 @@ class BaseLPoly(object):
         a = []
         for i in range(ngens):
             expv = monomial_basis(i, ngens)
-            p = Poly(self)
+            p = LPolyElement(self)
             p[expv] = one
             a.append(p)
         return a
@@ -217,12 +217,12 @@ class BaseLPoly(object):
         the only exception is when s is a number.
         """
         s = s.strip()
-        p = Poly(self)
+        p = LPolyElement(self)
         lp = p.lp
         zm = lp.zero_mon
         lp1 = self.ring
         if '(' not in s:
-            p = Poly(p.lp)
+            p = LPolyElement(p.lp)
             cp = lp1(s)
             if cp:
                 p[zm] = cp
@@ -298,10 +298,10 @@ class BaseLPoly(object):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = lp('1/2 + 2/3*x^4 + 1/5*x*y^2')
-        >>> str(p)
-        ' +2/3*x^4 +1/5*x*y^2 +1/2'
+        >>> print p
+         +2/3*x^4 +1/5*x*y^2 +1/2
         """
-        if isinstance(s, Poly):
+        if isinstance(s, LPolyElement):
             if s.lp == self:
                 return s
             else:
@@ -309,7 +309,7 @@ class BaseLPoly(object):
         if not isinstance(s, str):
             try:
                 c = self.ring(s)
-                p = Poly(self)
+                p = LPolyElement(self)
                 if c:
                     p[self.zero_mon] = c
                 return p
@@ -337,7 +337,7 @@ class BaseLPoly(object):
             a.append((sgn, s[t[1]:]))
         else:
             a.append((sgn, s1))
-        p = Poly(self)
+        p = LPolyElement(self)
         for sgn, s1 in a:
             m = self.mon_eval(s1)
             if sgn == '-':
@@ -353,7 +353,7 @@ class BaseLPoly(object):
         """polynomial from the monomial coeff*x_i^j
            a = (i, j, coeff)
         """
-        p = Poly(self)
+        p = LPolyElement(self)
         ngens = self.ngens
         i = a[0]
         if i.__class__ == str:
@@ -368,7 +368,7 @@ class BaseLPoly(object):
 
     def from_expv(self, expv):
         "monomial from monomial tuple expv"
-        p = Poly(self)
+        p = LPolyElement(self)
         p[expv] = 1
         return p
 
@@ -420,8 +420,8 @@ def lgens(pol_gens, ring, order, **kwds):
     >>> from sympy.polys.lpoly import lgens
     >>> lp, x, y = lgens('x, y', QQ, lex)
     >>> p = (x + y)**2
-    >>> str(p)
-    ' +x^2 +2*x*y +y^2'
+    >>> print p
+     +x^2 +2*x*y +y^2
     """
     lp = BaseLPoly(pol_gens, ring, order, **kwds)
     if lp.parens:
@@ -449,19 +449,19 @@ def ncrgens(pol_gens, bits_exp, ring, **kwds):
 
 
 
-class Poly(dict):
+class LPolyElement(dict):
     """
     elements of a multivariate polynomial ring
 
     >>> from sympy.core.numbers import Rational as QQ
     >>> from sympy.polys.monomialtools import lex
-    >>> from sympy.polys.lpoly import lgens, Poly
+    >>> from sympy.polys.lpoly import lgens, LPolyElement
     >>> lp, x, y = lgens('x, y', QQ, lex)
-    >>> p = Poly(lp)
-    >>> str(p)
-    '0'
+    >>> p = LPolyElement(lp)
+    >>> print p
+    0
     >>> p1 = x + y**2
-    >>> isinstance(p1, Poly)
+    >>> isinstance(p1, LPolyElement)
     True
     """
     def __init__(self, lp, **kw):
@@ -477,8 +477,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x**2/3 + 2*x*y**2/5
-        >>> str(p)
-        ' +1/3*x^2 +2/5*x*y^2'
+        >>> print p
+         +1/3*x^2 +2/5*x*y^2
         """
         if not self:
             return '0'
@@ -594,7 +594,7 @@ class Poly(dict):
         if not p2 or p2 == 0:
             return not p1
         lp1 = p1.lp
-        if isinstance(p2, Poly):
+        if isinstance(p2, LPolyElement):
             if lp1 == p2.lp:
                 return dict.__eq__(p1, p2)
         else:
@@ -612,16 +612,16 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = (x+y)**2 + (x-y)**2
-        >>> str(p)
-        ' +2*x^2 +2*y^2'
+        >>> print p
+         +2*x^2 +2*y^2
         """
         if not p2:
             return p1.copy()
         lp1 = p1.lp
         zm = lp1.zero_mon
-        if isinstance(p2, Poly):
+        if isinstance(p2, LPolyElement):
             if lp1 == p2.lp:
-                p = Poly(p1.lp)
+                p = LPolyElement(p1.lp)
                 for k, v in p1.items():
                     if k in p2:
                         r = v + p2[k]
@@ -677,12 +677,12 @@ class Poly(dict):
         >>> p1 = p.copy()
         >>> p2 = p
         >>> p[lp.zero_mon] = 3
-        >>> str(p)
-        ' +x^2 +2*x*y +y^2 +3'
-        >>> str(p1)
-        ' +x^2 +2*x*y +y^2'
-        >>> str(p2)
-        ' +x^2 +2*x*y +y^2 +3'
+        >>> print p
+         +x^2 +2*x*y +y^2 +3
+        >>> print p1
+         +x^2 +2*x*y +y^2
+        >>> print p2
+         +x^2 +2*x*y +y^2 +3
         """
         return copy(self)
 
@@ -697,8 +697,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = (1 + x + y)**3
         >>> p1 = p.coefficient(y**2)
-        >>> str(p1)
-        ' +3*x +3'
+        >>> print p1
+         +3*x +3
         """
         lp = self.lp
         order = lp.order
@@ -708,7 +708,7 @@ class Poly(dict):
         expv1 = k[0]
         # mask1 used to select the exponents of the variables present in p1
         v1 = p1.variables()
-        p = Poly(lp)
+        p = LPolyElement(lp)
         zm = lp.zero_mon
         for expv in self:
             b = 1
@@ -748,8 +748,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x**2 + y**2
         >>> p1 = p.subs(x=x+y, y=x-y)
-        >>> str(p1)
-        ' +2*x^2 +2*y^2'
+        >>> print p1
+         +2*x^2 +2*y^2
         """
         lp = p.lp
         sb = LPolySubs(lp, lp, rules)
@@ -765,8 +765,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x**2 + y**2
         >>> p2 = p.subs_trunc('x', 3, y=(x+y)**2)
-        >>> str(p2)
-        ' +6*x^2*y^2 +x^2 +4*x*y^3 +y^4'
+        >>> print p2
+         +6*x^2*y^2 +x^2 +4*x*y^3 +y^4
         """
         lp = p.lp
         sb = LPolySubs(lp, lp, rules)
@@ -806,15 +806,15 @@ class Poly(dict):
         >>> p2 = x**2
         >>> p3 = p1
         >>> p1 += p2
-        >>> str(p1)
-        ' +x^2 +x +y^2'
+        >>> print p1
+         +x^2 +x +y^2
         >>> p1 == p3
         True
         """
         if not p2:
             return p1
         lp1 = p1.lp
-        if isinstance(p2, Poly):
+        if isinstance(p2, LPolyElement):
             if lp1 != p2.lp:
                 raise ValueError('p1 and p2 must have the same lp')
             dl = []
@@ -852,15 +852,15 @@ class Poly(dict):
         >>> p1 = x + y**2
         >>> p2 = x*y + y**2
         >>> p3 = p1 - p2
-        >>> str(p3)
-        ' -x*y +x'
+        >>> print p3
+         -x*y +x
         """
         if not p2:
             return p1.copy()
         lp1 = p1.lp
         mz = lp1.zero_mon
-        p = Poly(lp1)
-        if isinstance(p2, Poly):
+        p = LPolyElement(lp1)
+        if isinstance(p2, LPolyElement):
             if lp1 == p2.lp:
                 for k in p1:
                     if k in p2:
@@ -908,10 +908,10 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x + y
         >>> p1 = 4 - p
-        >>> str(p1)
-        ' -x -y +4'
+        >>> print p1
+         -x -y +4
         """
-        p = Poly(p1.lp)
+        p = LPolyElement(p1.lp)
         for expv in p1:
             p[expv] = -p1[expv]
         p += n
@@ -923,7 +923,7 @@ class Poly(dict):
         inplace subtraction of polynomials
         """
         lp1 = p1.lp
-        if isinstance(p2, Poly):
+        if isinstance(p2, LPolyElement):
             if lp1 != p2.lp:
                 raise ValueError('p1 and p2 must have the same lp')
             dl = []
@@ -960,14 +960,14 @@ class Poly(dict):
         >>> p1 = x + y
         >>> p2 = x - y
         >>> p3 = p1*p2
-        >>> str(p3)
-        ' +x^2 -y^2'
+        >>> print p3
+         +x^2 -y^2
         """
         lp1 = p1.lp
-        p = Poly(lp1)
+        p = LPolyElement(lp1)
         if not p2:
             return p
-        if isinstance(p2, Poly):
+        if isinstance(p2, LPolyElement):
             if lp1 == p2.lp:
                 get = p.get
                 p2it = list(p2.items())
@@ -979,7 +979,7 @@ class Poly(dict):
                 return p
             if p2.lp != lp1.ring:
                 if lp1 == p2.lp.ring:
-                    p = Poly(p2.lp)
+                    p = LPolyElement(p2.lp)
                     for exp2, v2 in p2.items():
                         p[exp2] = p1*v2
                     return p
@@ -1002,11 +1002,11 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x + y
         >>> p1 = 4 * p
-        >>> str(p1)
-        ' +4*x +4*y'
+        >>> print p1
+         +4*x +4*y
         """
-        p = Poly(p1.lp)
-        if not isinstance(p2, Poly):
+        p = LPolyElement(p1.lp)
+        if not isinstance(p2, LPolyElement):
             if not p2:
                 return p
         for exp1, v1 in p1.items():
@@ -1027,10 +1027,10 @@ class Poly(dict):
         >>> p1 = x + y
         >>> p2 = x - y
         >>> p.mul_iadd(p1, p2)
-        >>> str(p)
-        ' +2*x^2 -y^2'
+        >>> print p
+         +2*x^2 -y^2
         """
-        if isinstance(p1, Poly) and isinstance(p2, Poly):
+        if isinstance(p1, LPolyElement) and isinstance(p2, LPolyElement):
             if p1.lp != p2.lp:
                 raise ValueError('p1 and p2 must have the same lp')
             get = p.get
@@ -1052,8 +1052,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x + y**2
         >>> p.imul_num(3)
-        >>> str(p)
-        ' +3*x +3*y^2'
+        >>> print p
+         +3*x +3*y^2
         """
         if not c:
             p.clear()
@@ -1071,8 +1071,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x + y**2
         >>> p1 = p.mul_num(3)
-        >>> str(p1)
-        ' +3*x +3*y^2'
+        >>> print p1
+         +3*x +3*y^2
         """
         if not c:
             return p.lp(0)
@@ -1097,7 +1097,7 @@ class Poly(dict):
         True
         """
         lp1 = p1.lp
-        if isinstance(p2, Poly):
+        if isinstance(p2, LPolyElement):
             if lp1 == p2.lp:
                 q, r = p1.division([p2])
                 if r:
@@ -1105,7 +1105,7 @@ class Poly(dict):
                 return q[0]
             elif p2.lp == lp1.ring:
                 zm = p2.lp.zero_mon
-                p = Poly(lp1)
+                p = LPolyElement(lp1)
                 # if p is not a constant, not implemented
                 if list(p2.keys()) != [zm]:
                     raise NotImplementedError
@@ -1114,7 +1114,7 @@ class Poly(dict):
             else:
                 raise NotImplementedError('cannot divide p1 by p2')
         # assume p2 in a number
-        p = Poly(lp1)
+        p = LPolyElement(lp1)
         if not p2:
             raise ZeroDivisionError
         try:
@@ -1143,8 +1143,8 @@ class Poly(dict):
         >>> p = x**4 + 2*y
         >>> m = monomial_from_sequence((1, 2))
         >>> p.iadd_mon((m, 5))
-        >>> str(p)
-        ' +x^4 +5*x*y^2 +2*y'
+        >>> print p
+         +x^4 +5*x*y^2 +2*y
         """
         coeff = a[1]
         expv = a[0]
@@ -1169,8 +1169,8 @@ class Poly(dict):
         >>> p2 = y + z
         >>> m = monomial_from_sequence((1, 2, 3))
         >>> p3 = p1.iadd_m_mul_q(p2, (m, 3))
-        >>> str(p1)
-        ' +x^4 +3*x*y^3*z^3 +3*x*y^2*z^4 +2*y'
+        >>> print p1
+         +x^4 +3*x*y^3*z^3 +3*x*y^2*z^4 +2*y
         >>> p1 == p3
         True
         """
@@ -1209,10 +1209,10 @@ class Poly(dict):
        >>> lp, x, y = lgens('x, y', QQ, lex)
        >>> p = (x+y)**4
        >>> p1 = p.leading_term()
-       >>> str(p1)
-       ' +x^4'
+       >>> print p1
+        +x^4
        """
-        p = Poly(self.lp)
+        p = LPolyElement(self.lp)
         expv = self.leading_expv()
         if expv:
             p[expv] = self[expv]
@@ -1227,13 +1227,13 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x + y**2
         >>> p1 = p.square()
-        >>> str(p1)
-        ' +x^2 +2*x*y^2 +y^4'
+        >>> print p1
+         +x^2 +2*x*y^2 +y^4
         """
         lp = p1.lp
         if not lp.commuting:
             return p1*p1
-        p = Poly(lp)
+        p = LPolyElement(lp)
         get = p.get
         keys = list(p1.keys())
         for i in range(len(keys)):
@@ -1355,8 +1355,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x + y**2
         >>> p1 = p**3
-        >>> str(p1)
-        ' +x^3 +3*x^2*y^2 +3*x*y^4 +y^6'
+        >>> print p1
+         +x^3 +3*x^2*y^2 +3*x*y^4 +y^6
         """
         lp = self.lp
         # test if n is an integer
@@ -1371,7 +1371,7 @@ class Poly(dict):
             else:
                 raise ValueError
         elif len(self) == 1:
-            p = Poly(lp)
+            p = LPolyElement(lp)
             k, v = list(self.items())[0]
             # treat case abs(v) = 1 separately to deal with the case
             # in which n is too large to be allowed in v**n
@@ -1420,23 +1420,23 @@ class Poly(dict):
         >>> f0 = x-y**2
         >>> f1 = x-y
         >>> qv, r = f.division((f0, f1))
-        >>> str(qv[0])
-        ' +x^2 +x*y^2 +y^4'
-        >>> str(qv[1])
-        '0'
-        >>> str(r)
-        ' +y^6'
+        >>> print qv[0]
+         +x^2 +x*y^2 +y^4
+        >>> print qv[1]
+        0
+        >>> print r
+         +y^6
         """
         lp = self.lp
         if not self:
-            return [], Poly(lp)
+            return [], LPolyElement(lp)
         for f in fv:
             if f.lp != lp:
                 raise ValueError('self and f must have the same lp')
         s = len(fv)
-        qv = [Poly(lp) for i in range(s)]
+        qv = [LPolyElement(lp) for i in range(s)]
         p = self.copy()
-        r = Poly(lp)
+        r = LPolyElement(lp)
         order = self.lp.order
         expvs = [fx.leading_expv() for fx in fv]
         while p:
@@ -1467,10 +1467,10 @@ class Poly(dict):
         """
         lp = self.lp
         if not self:
-            return Poly(lp)
+            return LPolyElement(lp)
         s = len(fv)
         p = self.copy()
-        r = Poly(lp)
+        r = LPolyElement(lp)
         expvs = [fx[0] for fx in fv]
         fv = [fx[1] for fx in fv]
         expv = p.leading_expv()
@@ -1503,15 +1503,15 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = (x+y)**4
         >>> p1 = p.trunc('x', 3)
-        >>> str(p1)
-        ' +6*x^2*y^2 +4*x*y^3 +y^4'
+        >>> print p1
+         +6*x^2*y^2 +4*x*y^3 +y^4
         """
         lp = p1.lp
         if isinstance(h,int):
             h = int(h)
             if isinstance(i, str):
                 i = lp.gens_dict[i]
-            p = Poly(lp)
+            p = LPolyElement(lp)
             for exp1 in p1:
                 if exp1[i] >= h:
                     continue
@@ -1538,8 +1538,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p1 = (x + y)**2
         >>> p2 = p1.mul_trunc(x**2, 'x', 3)
-        >>> str(p2)
-        ' +x^2*y^2'
+        >>> print p2
+         +x^2*y^2
         """
         lp = p1.lp
         if p1.lp != p2.lp:
@@ -1550,7 +1550,7 @@ class Poly(dict):
                 iv = lp.gens_dict[i]
             else:
                 iv = i
-            p = Poly(p1.lp)
+            p = LPolyElement(p1.lp)
             get = p.get
             items2 = list(p2.items())
             items2.sort(key=lambda e: e[0][iv])
@@ -1581,8 +1581,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p1 = (x + y)**2
         >>> p2 = p1.square_trunc('x', 3)
-        >>> str(p2)
-        ' +6*x^2*y^2 +4*x*y^3 +y^4'
+        >>> print p2
+         +6*x^2*y^2 +4*x*y^3 +y^4
         """
         lp = p1.lp
         if not lp.commuting:
@@ -1593,7 +1593,7 @@ class Poly(dict):
                 iv = lp.gens_dict[i]
             else:
                 iv = i
-            p = Poly(lp)
+            p = LPolyElement(lp)
             get = p.get
             items = list(p1.items())
             items.sort(key=lambda e: e[0][iv])
@@ -1625,8 +1625,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p1 = 1 + x + y
         >>> p2 = p1.pow_trunc(3, 'y', 2)
-        >>> str(p2)
-        ' +x^3 +3*x^2*y +3*x^2 +6*x*y +3*x +3*y +1'
+        >>> print p2
+         +x^3 +3*x^2*y +3*x^2 +6*x*y +3*x +3*y +1
         """
         lp = self.lp
         if n != int(n):
@@ -1725,13 +1725,13 @@ class Poly(dict):
         >>> from sympy import Symbol
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = (1 + y*x).series_inversion('x', 6)
-        >>> str(p)
-        ' -x^5*y^5 +x^4*y^4 -x^3*y^3 +x^2*y^2 -x*y +1'
+        >>> print p
+         -x^5*y^5 +x^4*y^4 -x^3*y^3 +x^2*y^2 -x*y +1
         >>> a = Symbol('a')
         >>> lp, x = lgens('x', sympify, lex)
         >>> p1 = (1 + a + x).series_inversion('x', 3)
-        >>> str(p1)
-        ' +((a + 1)**(-3))*x^2 +(-1/(a + 1)**2)*x +(1/(a + 1))'
+        >>> print p1
+         +((a + 1)**(-3))*x^2 +(-1/(a + 1)**2)*x +(1/(a + 1))
         """
         lp = p.lp
         zm = lp.zero_mon
@@ -1756,8 +1756,8 @@ class Poly(dict):
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = x + x**2*y**3
         >>> p1 = p.derivative('x')
-        >>> str(p1)
-        ' +2*x*y^3 +1'
+        >>> print p1
+         +2*x*y^3 +1
         """
         lp = self.lp
         pol_gens = lp.pol_gens
@@ -1767,7 +1767,7 @@ class Poly(dict):
             n = int(n)
         if n.__class__ == str:
             n = lp.gens_dict[n]
-        p1 = Poly(lp)
+        p1 = LPolyElement(lp)
         mn = monomial_basis(n, lp.ngens)
         for expv in self:
             if expv[n]:
@@ -1794,7 +1794,7 @@ class Poly(dict):
         pol_gens = lp.pol_gens
         if n.__class__ == str:
             n = lp.gens_dict[n]
-        p1 = Poly(lp)
+        p1 = LPolyElement(lp)
         mn = monomial_basis(n, lp.ngens)
         for expv in self:
             e = monomial_mul(expv, mn)
@@ -1897,8 +1897,8 @@ class Poly(dict):
         compute (_x + p[0]).nth_root(n, '_x', sum(nv)), then substitute _x
         with p - p[0]
         example with f function:
-        f = Poly.exp_series0
-        p1 = p.fun(Poly.exp_series0, ['y', 'x'], [h, h])
+        f = LPolyElement.exp_series0
+        p1 = p.fun(LPolyElement.exp_series0, ['y', 'x'], [h, h])
         """
         lp = p.lp
         lp1 = LPoly(['_x'], lp.ring, lp.order)
@@ -1988,8 +1988,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = (1 + x + x*y).sqrt('x', 3)
-        >>> str(p)
-        ' -1/8*x^2*y^2 -1/4*x^2*y -1/8*x^2 +1/2*x*y +1/2*x +1'
+        >>> print p
+         -1/8*x^2*y^2 -1/4*x^2*y -1/8*x^2 +1/2*x*y +1/2*x +1
         """
         p1 = p.nth_root(-2, iv, nv)
         return p.mul_trunc(p1, iv, nv)
@@ -2013,8 +2013,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x, y = lgens('x, y', QQ, lex)
         >>> p = (1 + x + x*y).nth_root(-3, 'x', 3)
-        >>> str(p)
-        ' +2/9*x^2*y^2 +4/9*x^2*y +2/9*x^2 -1/3*x*y -1/3*x +1'
+        >>> print p
+         +2/9*x^2*y^2 +4/9*x^2*y +2/9*x^2 -1/3*x*y -1/3*x +1
         """
         lp = p.lp
         if (p-1).has_constant_term(iv):
@@ -2054,8 +2054,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.re_acoth('x', 8)
-        >>> str(p)
-        ' +1/7*x^7 +1/5*x^5 +1/3*x^3 +x'
+        >>> print p
+         +1/7*x^7 +1/5*x^5 +1/3*x^3 +x
         """
         if p.has_constant_term(iv):
             raise NotImplementedError('p must not have a constant term in the series variables')
@@ -2128,8 +2128,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = (1+x).log('x', 8)
-        >>> str(p)
-        ' +1/7*x^7 -1/6*x^6 +1/5*x^5 -1/4*x^4 +1/3*x^3 -1/2*x^2 +x'
+        >>> print p
+         +1/7*x^7 -1/6*x^6 +1/5*x^5 -1/4*x^4 +1/3*x^3 -1/2*x^2 +x
         """
         lp = p.lp
         if (p-1).has_constant_term(iv):
@@ -2192,8 +2192,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.atan('x', 8)
-        >>> str(p)
-        ' -1/7*x^7 +1/5*x^5 -1/3*x^3 +x'
+        >>> print p
+         -1/7*x^7 +1/5*x^5 -1/3*x^3 +x
         """
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
@@ -2216,8 +2216,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.lambert('x', 8)
-        >>> str(p)
-        ' +16807/720*x^7 -54/5*x^6 +125/24*x^5 -8/3*x^4 +3/2*x^3 -x^2 +x'
+        >>> print p
+         +16807/720*x^7 -54/5*x^6 +125/24*x^5 -8/3*x^4 +3/2*x^3 -x^2 +x
         """
         lp = p.lp
         p1 = lp(0)
@@ -2244,8 +2244,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.asin('x', 8)
-        >>> str(p)
-        ' +5/112*x^7 +3/40*x^5 +1/6*x^3 +x'
+        >>> print p
+         +5/112*x^7 +3/40*x^5 +1/6*x^3 +x
         """
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
@@ -2286,8 +2286,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.asinh('x', 8)
-        >>> str(p)
-        ' -5/112*x^7 +3/40*x^5 -1/6*x^3 +x'
+        >>> print p
+         -5/112*x^7 +3/40*x^5 -1/6*x^3 +x
         """
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
@@ -2341,8 +2341,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.atanh('x', 8)
-        >>> str(p)
-        ' +1/7*x^7 +1/5*x^5 +1/3*x^3 +x'
+        >>> print p
+         +1/7*x^7 +1/5*x^5 +1/3*x^3 +x
         """
         if p.has_constant_term(iv):
             raise NotImplementedError('polynomial must not have constant term in the series variables')
@@ -2373,8 +2373,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.tanh('x', 8)
-        >>> str(p)
-        ' -17/315*x^7 +2/15*x^5 -1/3*x^3 +x'
+        >>> print p
+         -17/315*x^7 +2/15*x^5 -1/3*x^3 +x
         """
         lp = p.lp
         if p.has_constant_term(iv):
@@ -2404,8 +2404,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.tan('x', 8)
-        >>> str(p)
-        ' +17/315*x^7 +2/15*x^5 +1/3*x^3 +x'
+        >>> print p
+         +17/315*x^7 +2/15*x^5 +1/3*x^3 +x
         """
         lp = p.lp
         if p.has_constant_term(iv):
@@ -2481,8 +2481,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.exp('x', 6)
-        >>> str(p)
-        ' +1/120*x^5 +1/24*x^4 +1/6*x^3 +1/2*x^2 +x +1'
+        >>> print p
+         +1/120*x^5 +1/24*x^4 +1/6*x^3 +1/2*x^2 +x +1
         """
         lp = p.lp
         if p.has_constant_term(iv):
@@ -2562,8 +2562,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.cos('x', 6)
-        >>> str(p)
-        ' +1/24*x^4 -1/2*x^2 +1'
+        >>> print p
+         +1/24*x^4 -1/2*x^2 +1
         """
         lp = p.lp
         if p.has_constant_term(iv):
@@ -2615,8 +2615,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.sinh('x', 8)
-        >>> str(p)
-        ' +1/5040*x^7 +1/120*x^5 +1/6*x^3 +x'
+        >>> print p
+         +1/5040*x^7 +1/120*x^5 +1/6*x^3 +x
         """
         t = p.exp(iv, nv)
         t1 = t.series_inversion(iv, nv)
@@ -2630,8 +2630,8 @@ class Poly(dict):
         >>> from sympy.polys.lpoly import lgens
         >>> lp, x = lgens('x', QQ, lex)
         >>> p = x.cosh('x', 8)
-        >>> str(p)
-        ' +1/720*x^6 +1/24*x^4 +1/2*x^2 +1'
+        >>> print p
+         +1/720*x^6 +1/24*x^4 +1/2*x^2 +1
         """
         t = p.exp(iv, nv)
         t1 = t.series_inversion(iv, nv)
@@ -2658,7 +2658,7 @@ class Poly(dict):
 
 
     def tobasic(p, *gens):
-        """Convert a Poly into a Sympy expression.
+        """Convert a LPolyElement into a Sympy expression.
         >>> from sympy.core.numbers import Rational as QQ
         >>> from sympy.polys.monomialtools import lex
         >>> from sympy.polys.lpoly import lgens
@@ -2666,8 +2666,8 @@ class Poly(dict):
         >>> lp, X = lgens('X', QQ, lex)
         >>> x = Symbol('x')
         >>> p = (1 + X)**3
-        >>> str(p)
-        ' +X^3 +3*X^2 +3*X +1'
+        >>> print p
+         +X^3 +3*X^2 +3*X +1
         >>> p1 = p.tobasic(x)
         >>> p1
         x**3 + 3*x**2 + 3*x + 1
@@ -2699,11 +2699,11 @@ class LPolySubs(object):
     >>> lp, x, y = lgens('x, y', QQ, lex)
     >>> sb = LPolySubs(lp, lp, {'y':y+1})
     >>> p1 = sb.subs((x + y)**2)
-    >>> str(p1)
-    ' +x^2 +2*x*y +2*x +y^2 +2*y +1'
+    >>> print p1
+     +x^2 +2*x*y +2*x +y^2 +2*y +1
     >>> p1 = sb.subs_trunc((x + y)**4, 'x', 2)
-    >>> str(p1)
-    ' +4*x*y^3 +12*x*y^2 +12*x*y +4*x +y^4 +4*y^3 +6*y^2 +4*y +1'
+    >>> print p1
+     +4*x*y^3 +12*x*y^2 +12*x*y +4*x +y^4 +4*y^3 +6*y^2 +4*y +1
     """
     def __init__(self, lp1, lp2, rules):
         self.lp1 = lp1
@@ -2725,7 +2725,7 @@ class LPolySubs(object):
         ngens = lp1.ngens
         assert p.lp == lp1
         d = self.d.copy()
-        p1 = Poly(lp2)
+        p1 = LPolyElement(lp2)
         for expv in p:
             p2 = lp2(1)
             for i in range(ngens):
