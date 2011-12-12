@@ -43,11 +43,66 @@ class Array(object):
 
     """
 
-    def __init__(self, data):
-        try:
-            self._data = list(data)
-        except TypeError:
-            self._data = [data]
+    def __new__(cls, data=None, _empty=False, shape=None):
+        """
+        Constructs a new Array.
+
+        If _empty == True, then it constructs an empty array of the shape
+            'shape'.
+        """
+        if _empty:
+            obj = object.__new__(cls)
+            if not isinstance(shape, (tuple, list)):
+                shape = (shape,)
+            s = 1
+            for x in shape:
+                s *= x
+            obj._shape = shape
+            obj._data = [0]*s
+            return obj
+        else:
+            assert data is not None
+        if hasattr(data, "__array__"):
+            a = empty(data.shape)
+            for i in range(data.shape[0]):
+                for j in range(data.shape[1]):
+                    a[i, j] = data[i, j]
+            return a
+        elif hasattr(data, "__iter__"):
+            assert len(data) > 0
+            if hasattr(data[0], "__iter__"):
+                return vstack([Array(x) for x in data])
+            else:
+                obj = object.__new__(cls)
+                obj._data = data
+                obj._shape = (len(data),)
+                return obj
+        else:
+            obj = object.__new__(cls)
+            obj._data = [data]
+            obj._shape = ()
+            return obj
+
+    @property
+    def shape(self):
+        return self._shape
+
+    def ravel(self):
+        return Array(self._data)
+
+    def tolist(self):
+        if len(self.shape) == 1:
+            return self._data
+        elif len(self.shape) == 2:
+            d = []
+            for n in range(self.shape[0]):
+                d.append(self._data[n*self.shape[1]:(n+1)*self.shape[1]])
+            return d
+        else:
+            raise NotImplementedError()
+
+    def __array__(self):
+        return self
 
     def __str__(self):
         return "array(%s)" % (str(self._data))
@@ -55,49 +110,65 @@ class Array(object):
     def __repr__(self):
         return "array(%s)" % (str(self._data))
 
-    def __pow__(self, i):
-        return Array([x**i for x in self._data])
+    def _op(self, i, op):
+        a = empty(self._shape)
+        if isinstance(i, Array):
+            assert self._shape == i.shape
+            a._data = [op(x, y) for x, y in zip(self._data, i._data)]
+        elif hasattr(i, "__array__"):
+            i = i.__array__()
+            assert self._shape == i.shape
+            a._data = [op(x, y) for x, y in zip(self._data, i.ravel().tolist())]
+        else:
+            a._data = [op(x, i) for x in self._data]
+        return a
 
     def __mul__(self, i):
-        return Array([x*i for x in self._data])
+        return self._op(i, lambda x, o: x*o)
 
     def __rmul__(self, i):
-        return Array([i*x for x in self._data])
+        return self._op(i, lambda x, o: o*x)
 
     def __div__(self, i):
-        return Array([x/i for x in self._data])
+        return self._op(i, lambda x, o: x/o)
 
     def __rdiv__(self, i):
-        return Array([i/x for x in self._data])
+        return self._op(i, lambda x, o: o/x)
 
     def __add__(self, i):
-        return Array([x+i for x in self._data])
+        return self._op(i, lambda x, o: x+o)
 
     def __radd__(self, i):
-        return Array([i+x for x in self._data])
+        return self._op(i, lambda x, o: o+x)
 
     def __sub__(self, i):
-        return Array([x-i for x in self._data])
+        return self._op(i, lambda x, o: x-o)
 
     def __rsub__(self, i):
-        return Array([i-x for x in self._data])
+        return self._op(i, lambda x, o: o-x)
 
     def __pow__(self, i):
-        return Array([x**i for x in self._data])
+        return self._op(i, lambda x, o: x**i)
 
     def __rpow__(self, i):
-        return Array([i**x for x in self._data])
+        return self._op(i, lambda x, o: o**x)
 
     def __eq__(self, o):
         if isinstance(o, Array):
-            return Array([x == y for x, y in zip(self._data, o._data)])
+            if self.shape == o.shape:
+                return Array([x == y for x, y in zip(self._data, o._data)])
+            else:
+                return False
         if len(self._data) == 1:
             return self._data[0] == o
         raise ValueError("Unsupported operation.")
 
     def __ne__(self, o):
         if isinstance(o, Array):
-            return Array([x != y for x, y in zip(self._data, o._data)])
+            if self.shape == o.shape:
+                return Array([x != y for x, y in zip(self._data, o._data)])
+            else:
+                return True
         if len(self._data) == 1:
             return self._data[0] != o
         raise ValueError("Unsupported operation.")
@@ -108,8 +179,29 @@ class Array(object):
     def __len__(self):
         return len(self._data)
 
+    def _key2index(self, key):
+        if not isinstance(key, (list, tuple)):
+            key = [key]
+        assert len(key) == len(self._shape)
+        for d, k, s in zip(range(len(key)), key, self._shape):
+            if not (k >= 0 and k < s):
+                msg = "index (%d) out of range (0<=index<%d) in dimension %d" \
+                        % (k, s, d)
+                raise IndexError(msg)
+        if len(key) == 3:
+            return key[0] * self._shape[1] + key[1] * self._shape[2] + key[2]
+        elif len(key) == 2:
+            return key[0] * self._shape[1] + key[1]
+        elif len(key) == 1:
+            return key[0]
+        else:
+            raise NotImplementedError("Not implemented yet")
+
     def __getitem__(self, key):
-        return self._data[key]
+        return self._data[self._key2index(key)]
+
+    def __setitem__(self, key, val):
+        self._data[self._key2index(key)] = val
 
     def all(self):
         """
@@ -155,3 +247,19 @@ class Array(object):
         if len(self._data) == 1:
             return self._data[0] == True
         raise ValueError("ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()")
+
+def empty(shape, dtype=None):
+    return Array(_empty=True, shape=shape)
+
+def vstack(tup):
+    h = len(tup)
+    assert h > 0
+    assert len(tup[0].shape) == 1
+    w = tup[0].shape[0]
+    a = empty((h, w))
+    for i, x in enumerate(tup):
+        assert len(x.shape) == 1
+        assert x.shape[0] == w
+        for j in range(w):
+            a[i, j] = x[j]
+    return a

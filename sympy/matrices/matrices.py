@@ -4555,7 +4555,10 @@ def matrix2numpy(m): # pragma: no cover
 
     list2numpy
     """
-    from numpy import empty
+    try:
+        from numpy import empty
+    except ImportError:
+        from sympy.utilities.python_numpy import empty
     a = empty(m.shape, dtype=object)
     for i in range(m.rows):
         for j in range(m.cols):
