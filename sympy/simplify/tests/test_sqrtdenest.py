@@ -42,7 +42,14 @@ def test_sqrtdenest2():
     z = sqrt(8 - sqrt(2)*sqrt(5-sqrt(5)) - 3*(1+sqrt(5)))
     assert (sqrtdenest(z) - z).evalf() < 1.0e-100
 
+    # check that the result is not more complicated than the input
     z= sqrt(-2*sqrt(29) + cos(2) + 2*sqrt(-10*sqrt(29) + 55) + 16)
+    assert sqrtdenest(z) == z
+
+    assert sqrtdenest(sqrt(sqrt(6) + sqrt(15))) == sqrt(sqrt(6) + sqrt(15))
+
+    # no assertion error when the 'r's are not the same in _denester
+    z = sqrt(15 - 2*sqrt(31) + 2*sqrt(55 - 10*sqrt(29)))
     assert sqrtdenest(z) == z
 
 @XFAIL
