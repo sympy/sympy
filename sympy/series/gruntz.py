@@ -425,15 +425,9 @@ def sign(e, x):
         return 1
     elif e.is_negative:
         return -1
+    elif e.is_zero:
+        return 0
 
-    if e.is_Rational or e.is_Float:
-        assert not e is S.NaN
-        if e == 0:
-            return 0
-        elif e.evalf() > 0:
-            return 1
-        else:
-            return -1
     elif not e.has(x):
         return _sign(e)
     elif e == x:

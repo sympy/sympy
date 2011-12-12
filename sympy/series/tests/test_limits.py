@@ -2,6 +2,8 @@ from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
                    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
                    tan, cot, integrate, Sum, sign)
 
+from sympy.series.limits import heuristics
+from sympy.series.order import Order
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.core.compatibility import product as cartes
@@ -29,6 +31,8 @@ def test_basic1():
     raises(NotImplementedError, 'limit(Sum(1/x, (x, 1, y)) - log(y), y, oo)')
     assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
+    assert limit(S.NaN, x, -oo) == S.NaN
+    assert limit(Order(2)*x, x, S.NaN) == S.NaN
 
     # approaching 0
     # from dir="+"
@@ -137,6 +141,7 @@ def test_abs():
 
 def test_heuristic():
     x = Symbol("x", real=True)
+    assert heuristics(sin(1/x) + atan(x), x, 0, '+') == sin(oo)
     assert limit(log(2+sqrt(atan(x))*sqrt(sin(1/x))), x, 0) == log(2)
 
 def test_issue772():
