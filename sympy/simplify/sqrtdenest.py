@@ -125,6 +125,8 @@ def sqrtdenest(expr):
 
 def _sqrtdenest(expr):
     from sympy.simplify.simplify import radsimp
+    # maximum denester level
+    max_den = 4
     if not expr.is_Pow or expr.exp != S.Half:
         val = None
     else:
@@ -168,7 +170,7 @@ def _sqrtdenest(expr):
     if not is_algebraic(expr):
         return expr
     av0 = [a, b, r, d2]
-    z = _denester([radsimp(expr**2)], av0, 0)[0]
+    z = _denester([radsimp(expr**2)], av0, 0, min(sqrt_depth(expr)-1, max_den))[0]
     if av0[1] == None:
         return expr
     if z != None:
@@ -269,7 +271,7 @@ def sqrt_match(p):
             return None
     return res
 
-def _denester (nested, av0, h, max_depth_level=4):
+def _denester (nested, av0, h, max_depth_level):
     """
     Denests a list of expressions that contain nested square roots.
     This method should not be called directly - use 'sqrtdenest' instead.
@@ -326,7 +328,7 @@ def _denester (nested, av0, h, max_depth_level=4):
             if R is None:
                 return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the previous invocation
             nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
-        d, f = _denester(nested2, av0, h+1)
+        d, f = _denester(nested2, av0, h+1, max_depth_level)
         if not f:
             return None, None
         if not any(f[i] for i in range(len(nested))):
