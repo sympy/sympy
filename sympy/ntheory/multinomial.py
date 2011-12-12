@@ -2,8 +2,8 @@ from itertools import ifilter
 from collections import defaultdict
 
 def binomial_coefficients(n):
-    """Return a dictionary containing pairs {(k1,k2) : C_kn} where
-    C_kn are binomial coefficients and n=k1+k2."""
+    """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
+    :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`."""
     d = {(0, n):1, (n, 0):1}
     a = 1
     for k in xrange(1, n//2+1):
@@ -24,7 +24,8 @@ def binomial_coefficients_list(n):
 
 def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     """Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
-    where ``C_kn`` are multinomial coefficients such that ``n=k1+k2+..+km``.
+    where ``C_kn`` are multinomial coefficients such that
+    ``n=k1+k2+..+km``.
 
     For example:
 
@@ -80,7 +81,7 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
     return r
 
 def multinomial_coefficients(m, n):
-    """Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
+    r"""Return a dictionary containing pairs ``{(k1,k2,..,km) : C_kn}``
     where ``C_kn`` are multinomial coefficients such that
     ``n=k1+k2+..+km``.
 
@@ -92,8 +93,9 @@ def multinomial_coefficients(m, n):
 
     The algorithm is based on the following result:
 
-        binom(n, k_1, ..., k_m) =
-        (k_1+1)/(n-k_1)*sum_{i=2}^m binom(n, k_1+1, ..., k_i-1, ...)
+    .. math::
+        \binom{n}{k_1, \ldots, k_m} =
+        \frac{k_1 + 1}{n - k_1} \sum_{i=2}^m \binom{n}{k_1 + 1, \ldots, k_i - 1, \ldots}
 
     Code contributed to Sage by Yann Laigle-Chapuy, copied with permission
     of the author.
@@ -148,7 +150,7 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     This routine has been optimized for `m` large with respect to `n` by taking
     advantage of the fact that when the monomial tuples `t` are stripped of
     zeros, their coefficient is the same as that of the monomial tuples from
-    `multinomial_coefficients(n, n)`. Therefore, the latter coefficients are
+    ``multinomial_coefficients(n, n)``. Therefore, the latter coefficients are
     precomputed to save memory and time.
 
     >>> from sympy.ntheory.multinomial import multinomial_coefficients
@@ -156,7 +158,9 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
     >>> m53[(0,0,0,1,2)] == m53[(0,0,1,0,2)] == m53[(1,0,2,0,0)] == m33[(0,1,2)]
     True
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.ntheory.multinomial import multinomial_coefficients_iterator
     >>> it = multinomial_coefficients_iterator(20,3)
     >>> it.next()
