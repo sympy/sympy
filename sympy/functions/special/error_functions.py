@@ -7,6 +7,30 @@ from sympy.functions.elementary.miscellaneous import sqrt
 ###############################################################################
 
 class erf(Function):
+    """
+    The Gauss error function.
+
+    This function is defined as:
+
+    :math:`\\mathrm{erf}(x)=\\frac{2}{\\sqrt{\\pi}} \\int_0^x e^{-t^2} \\, \\mathrm{d}x`
+
+    Or, in ASCII::
+
+                x
+            /
+           |
+           |     2
+           |   -t
+        2* |  e    dt
+           |
+          /
+          0
+        -------------
+              ____
+            \/ pi
+
+
+    """
 
     nargs = 1
 
