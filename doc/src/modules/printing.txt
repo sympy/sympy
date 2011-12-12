@@ -39,24 +39,6 @@ The module ``pretty_symbology`` provides primitives to construct 2D shapes
 (hline, vline, etc) together with a technique to use unicode automatically when
 possible.
 
-MathMLPrinter
--------------
-
-.. module:: sympy.printing.mathml
-
-This class is responsible for MathML printing. See ``sympy.printing.mathml``.
-
-More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
-
-LatexPrinter
-------------
-
-.. module:: sympy.printing.latex
-
-This class implements LaTeX printing. See ``sympy.printing.latex``.
-
-See also the extended LatexPrinter: :ref:`Extended LaTeXModule for Sympy <extended-latex>`
-
 Gtk
 ---
 
@@ -72,6 +54,25 @@ Usage::
 
     from sympy import *
     print_gtk(x**2 + 2*exp(x**3))
+
+LatexPrinter
+------------
+
+.. module:: sympy.printing.latex
+
+This class implements LaTeX printing. See ``sympy.printing.latex``.
+
+See also the extended LatexPrinter: :ref:`Extended LaTeXModule for Sympy <extended-latex>`
+
+MathMLPrinter
+-------------
+
+.. module:: sympy.printing.mathml
+
+This class is responsible for MathML printing. See ``sympy.printing.mathml``.
+
+More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
+
 
 PythonPrinter
 -------------
