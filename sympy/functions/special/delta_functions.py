@@ -154,7 +154,7 @@ class Heaviside(Function):
     .. [*] Regarding to the value at 0, Mathematica defines ``H(0)=1``,
            but Maple uses ``H(0)=undefined``
 
-    I think is better to have H(0)=1/2, due to the following:
+    I think is better to have H(0)=1/2, due to the following::
 
         integrate(DiracDelta(x),x) = Heaviside(x)
         integrate(DiracDelta(x),(x,-oo,oo)) = 1
@@ -168,7 +168,7 @@ class Heaviside(Function):
     and
     ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo)=1/2-0= 1/2``
 
-    If we consider, instead `Heaviside(0)=1`, we would have
+    If we consider, instead ``Heaviside(0)=1``, we would have
     ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0) = 0``
     and
     ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1``
@@ -198,4 +198,3 @@ class Heaviside(Function):
             return S.Half
         elif arg.is_positive:
             return S.One
-
