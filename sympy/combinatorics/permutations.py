@@ -183,7 +183,7 @@ class Permutation(Basic):
 
         Examples
         ========
-        >>> from sympy import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> Permutation([[3, 2], [0, 1]]).size
         4
         """
@@ -436,7 +436,7 @@ don\'t match.")
         Returns all the elements of a permutation
 
         **Examples**
-        >>> from sympy import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2, 3, 4, 5]).atoms()
         set([0, 1, 2, 3, 4, 5])
         >>> Permutation([[0, 1], [2, 3], [4, 5]]).atoms()
@@ -662,7 +662,7 @@ don\'t match.")
         Therefore there is only one possible permutation of this set of numbers
 
         **Examples**
-        >>> from sympy import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> Permutation([0]).is_Singleton
         True
         >>> Permutation([0, 1]).is_Singleton
@@ -676,7 +676,7 @@ don\'t match.")
         Checks to see if the permutation is a set with zero elements
 
         **Examples**
-        >>> from sympy import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> Permutation([]).is_Empty
         True
         >>> Permutation([0]).is_Empty
@@ -867,7 +867,7 @@ don\'t match.")
         Returns the number of integers moved by a permutation.
 
         **Examples**
-        >>> from sympy import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 3, 2, 1]).length()
         2
         >>> Permutation([[0, 1], [2, 3]]).length()
@@ -886,7 +886,7 @@ don\'t match.")
         Checks if the permutation is positive
 
         **Examples**
-        >>> from sympy import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).is_Positive
         True
         """
@@ -898,7 +898,7 @@ don\'t match.")
         Checks if the permutation is negative
 
         **Examples**
-        >>> from sympy import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).is_Negative
         False
         """
@@ -911,7 +911,7 @@ don\'t match.")
         has been decomposed into.
 
         **Examples**
-        >>> from sympy import Permutation
+        >>> from sympy.combinatorics import Permutation
         >>> Permutation([0, 1, 2]).cycles
         3
         >>> Permutation([[0, 1], [2, 3]]).cycles
