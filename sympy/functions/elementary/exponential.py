@@ -20,19 +20,40 @@ from sympy.ntheory import multiplicity, perfect_power
 # p.is_positive.]
 
 class exp(Function):
+    """
+    The exponential function, :math:`e^x`.
+    """
 
     nargs = 1
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of this function.
+        """
         if argindex == 1:
             return self
         else:
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse function of ``exp(x)``.
+        """
         return log
 
     def as_numer_denom(self):
+        """
+        Returns this with a positive exponent as a 2-tuple (a fraction).
+
+        Examples
+        ========
+        >>> from sympy.functions import exp
+        >>> from sympy.abc import x
+        >>> exp(-x).as_numer_denom()
+        (1, exp(x))
+        >>> exp(x).as_numer_denom()
+        (exp(x), 1)
+        """
         c, t = self.args[0].as_coeff_mul()
         if c.is_negative:
             return S.One, exp(-self.args[0])
@@ -108,15 +129,24 @@ class exp(Function):
 
     @property
     def base(self):
+        """
+        Returns the base of the exponential function.
+        """
         return S.Exp1
 
     @property
     def exp(self):
+        """
+        Returns the exponent of the function.
+        """
         return self.args[0]
 
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
+        """
+        Calculates the next term in the Taylor series expansion.
+        """
         if n<0: return S.Zero
         if n==0: return S.One
         x = sympify(x)
@@ -131,6 +161,24 @@ class exp(Function):
         return re_part + im_part*S.ImaginaryUnit
 
     def as_real_imag(self, deep=True, **hints):
+        """
+        Returns this function as a 2-tuple representing a complex number.
+
+        Examples
+        ========
+        >>> from sympy import I
+        >>> from sympy.abc import x
+        >>> from sympy.functions import exp
+        >>> exp(x).as_real_imag()
+        (exp(re(x))*cos(im(x)), exp(re(x))*sin(im(x)))
+        >>> exp(1).as_real_imag()
+        (E, 0)
+        >>> exp(I).as_real_imag()
+        (cos(1), sin(1))
+        >>> exp(1+I).as_real_imag()
+        (E*cos(1), E*sin(1))
+
+        """
         re, im = self.args[0].as_real_imag()
         if deep:
             re = re.expand(deep, **hints)
@@ -142,6 +190,9 @@ class exp(Function):
         return self.func(self.args[0].conjugate())
 
     def as_base_exp(self):
+        """
+        Returns the 2-tuple (base, exponent).
+        """
         return S.Exp1, Mul(*self.args)
 
     def _eval_subs(self, old, new):
@@ -280,10 +331,16 @@ class exp(Function):
         return sage.exp(self.args[0]._sage_())
 
 class log(Function):
+    """
+    The logarithmic function :math:`ln(x)` or :math:`log(x)`.
+    """
 
     nargs = (1,2)
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of the function.
+        """
         if argindex == 1:
             return 1/self.args[0]
             s = C.Dummy('x')
@@ -292,6 +349,9 @@ class log(Function):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse function, log(x) (or ln(x)).
+        """
         return exp
 
     @classmethod
@@ -354,11 +414,17 @@ class log(Function):
                         return -S.Pi * S.ImaginaryUnit * S.Half + cls(-coeff)
 
     def as_base_exp(self):
+        """
+        Returns this function in the form (base, exponent).
+        """
         return self, S.One
 
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms): # of log(1+x)
+        """
+        Returns the next term in the Taylor series expansion of log(1+x).
+        """
         from sympy import powsimp
         if n<0: return S.Zero
         x = sympify(x)
@@ -400,6 +466,24 @@ class log(Function):
         return self.func(arg)
 
     def as_real_imag(self, deep=True, **hints):
+        """
+        Returns this function as a complex coordinate.
+
+        Examples
+        ========
+        >>> from sympy import I
+        >>> from sympy.abc import x
+        >>> from sympy.functions import log
+        >>> log(x).as_real_imag()
+        (log(Abs(x)), arg(x))
+        >>> log(I).as_real_imag()
+        (0, pi/2)
+        >>> log(1+I).as_real_imag()
+        (log(sqrt(2)), pi/4)
+        >>> log(I*x).as_real_imag()
+        (log(Abs(I*x)), arg(I*x))
+
+        """
         if deep:
             abs = C.Abs(self.args[0].expand(deep, **hints))
             arg = C.arg(self.args[0].expand(deep, **hints))
@@ -508,6 +592,9 @@ class LambertW(Function):
         if x == S.Infinity: return S.Infinity
 
     def fdiff(self, argindex=1):
+        """
+        Return the first derivative of this function.
+        """
         if argindex == 1:
             x = self.args[0]
             return LambertW(x)/(x*(1+LambertW(x)))

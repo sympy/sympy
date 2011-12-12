@@ -5,6 +5,9 @@ from sympy.core import Function, S, C, sympify, pi
 ###############################################################################
 
 class zeta(Function):
+    """
+    The Riemann zeta function, :math:`\\zeta(s)`.
+    """
 
     nargs = (1, 2)
 
