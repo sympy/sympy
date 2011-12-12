@@ -1,6 +1,8 @@
 Utilities
 =========
 
+.. TODO: uncomment compilef.txt and benchmarking.txt when they're fixed
+
 .. automodule:: sympy.utilities
 
 Contents:
@@ -10,7 +12,6 @@ Contents:
 
    autowrap.txt
    codegen.txt
-   compilef.txt
    cythonutils.txt
    decorator.txt
    iterables.txt
@@ -23,4 +24,6 @@ Contents:
    runtests.txt
    source.txt
    timeutils.txt
+.. benchmarking.txt
+.. compilef.txt
 
