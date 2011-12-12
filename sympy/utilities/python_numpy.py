@@ -1,8 +1,10 @@
-def array(data):
+def array(data, use_sympy_array=False):
     """
     Constructs an Array object.
 
     If NumPy is present, it uses numpy.array, otherwise it uses sympy's Array.
+
+    use_sympy_array ... if True, always use SymPy Array
 
     Example::
 
@@ -11,11 +13,14 @@ def array(data):
     array([1, 2, 3])
 
     """
-    try:
-        import numpy
-        numpy_ok = True
-    except ImportError:
+    if use_sympy_array:
         numpy_ok = False
+    else:
+        try:
+            import numpy
+            numpy_ok = True
+        except ImportError:
+            numpy_ok = False
 
     if numpy_ok:
         return numpy.array(data)

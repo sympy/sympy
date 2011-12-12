@@ -10,7 +10,7 @@ sin02 = mpmath.mpf("0.198669330795061215459412627")
 # Test the basics:
 
 def test_array():
-    a = array([1, 2, 3])
+    a = array([1, 2, 3], use_sympy_array=True)
     assert a[0] == 1
     assert a[1] == 2
     assert a[2] == 3
@@ -28,7 +28,7 @@ def test_empty():
     assert a.shape == (4, 1, 2, 3)
 
 def test_array_2d():
-    a = array([[1, 2, 3], [4, 5, 6]])
+    a = array([[1, 2, 3], [4, 5, 6]], use_sympy_array=True)
     assert a.shape == (2, 3)
     assert a[0, 0] == 1
     assert a[0, 1] == 2
@@ -41,7 +41,7 @@ def test_array_2d():
     raises(IndexError, "a[2, 0]")
     raises(IndexError, "a[-1, 0]")
 
-    a = array([[1, 2], [4, 5]])
+    a = array([[1, 2], [4, 5]], use_sympy_array=True)
     assert a.shape == (2, 2)
     assert a[0, 0] == 1
     assert a[0, 1] == 2
@@ -50,7 +50,7 @@ def test_array_2d():
     raises(IndexError, "a[1, 2]")
     raises(IndexError, "a[0, 2]")
 
-    a = array([[1], [2]])
+    a = array([[1], [2]], use_sympy_array=True)
     assert a.shape == (2, 1)
     assert a[0, 0] == 1
     assert a[1, 0] == 2
@@ -58,9 +58,9 @@ def test_array_2d():
     raises(IndexError, "a[0, 1]")
 
 def test_array2():
-    a = array([1, 2, 3])
-    b = array([1, 2, 3])
-    c = array([1, 2, 4])
+    a = array([1, 2, 3], use_sympy_array=True)
+    b = array([1, 2, 3], use_sympy_array=True)
+    c = array([1, 2, 4], use_sympy_array=True)
     assert (a == b).all()
     assert (a == b).any()
     assert not (a != b).all()
@@ -74,11 +74,11 @@ def test_array2():
     raises(ValueError, "if a == b: pass")
 
 def test_array3():
-    a = array([1, 2, 3])
-    b = array([1, 2])
-    c = array([[1, 2, 3], [4, 5, 6]])
-    d = array([[1, 2, 3], [4, 5, 6]])
-    e = array([[2, 2, 3], [4, 5, 6]])
+    a = array([1, 2, 3], use_sympy_array=True)
+    b = array([1, 2], use_sympy_array=True)
+    c = array([[1, 2, 3], [4, 5, 6]], use_sympy_array=True)
+    d = array([[1, 2, 3], [4, 5, 6]], use_sympy_array=True)
+    e = array([[2, 2, 3], [4, 5, 6]], use_sympy_array=True)
     assert a != b
     assert not (a == b)
     assert a != c
@@ -88,23 +88,23 @@ def test_array3():
     assert (c==e).any()
 
 def test_add1():
-    a = array([1, 2, 3])
-    b = array([1+5, 2+5, 3+5])
+    a = array([1, 2, 3], use_sympy_array=True)
+    b = array([1+5, 2+5, 3+5], use_sympy_array=True)
     assert (a + 5 == b).all()
     assert (5 + a == b).all()
-    assert (a+a == array([2, 4, 6])).all()
+    assert (a+a == array([2, 4, 6], use_sympy_array=True)).all()
 
 def test_add2():
-    a = array([[1, 2, 3], [4, 5, 6]])
-    b = array([[1+5, 2+5, 3+5], [4+5, 5+5, 6+5]])
+    a = array([[1, 2, 3], [4, 5, 6]], use_sympy_array=True)
+    b = array([[1+5, 2+5, 3+5], [4+5, 5+5, 6+5]], use_sympy_array=True)
     assert (a + 5 == b).all()
     assert (5 + a == b).all()
-    assert (a+a == array([[2, 4, 6], [8, 10, 12]])).all()
+    assert (a+a == array([[2, 4, 6], [8, 10, 12]], use_sympy_array=True)).all()
 
 def test_tolist():
-    a = array([1, 2, 3])
+    a = array([1, 2, 3], use_sympy_array=True)
     assert a.tolist() == [1, 2, 3]
-    a = array([[1, 2, 3], [4, 5, 6]])
+    a = array([[1, 2, 3], [4, 5, 6]], use_sympy_array=True)
     assert a.tolist() == [[1, 2, 3], [4, 5, 6]]
 
 # The rest of this file is copied from test_numpy.py, that tests real numpy.
@@ -141,10 +141,10 @@ def test_systematic_basic():
             5.5,
             ]
     numpy_objs = [
-            array([1]),
-            array([3, 8, 1]),
-            array([x, x**2, Rational(5)]),
-            array([x/y*sin(y), 5, Rational(5)]),
+            array([1], use_sympy_array=True),
+            array([3, 8, 1], use_sympy_array=True),
+            array([x, x**2, Rational(5)], use_sympy_array=True),
+            array([x/y*sin(y), 5, Rational(5)], use_sympy_array=True),
             ]
     for x in sympy_objs:
         for y in numpy_objs:
@@ -158,31 +158,31 @@ def test_basics():
     one = Rational(1)
     zero = Rational(0)
     x = Symbol("x")
-    assert array(1) == array(one)
-    assert array([one]) == array([one])
-    assert array([x]) == array([x])
-    assert array(x) == array(Symbol("x"))
-    assert array(one+x) == array(1+x)
+    assert array(1, use_sympy_array=True) == array(one, use_sympy_array=True)
+    assert array([one], use_sympy_array=True) == array([one], use_sympy_array=True)
+    assert array([x], use_sympy_array=True) == array([x], use_sympy_array=True)
+    assert array(x, use_sympy_array=True) == array(Symbol("x"), use_sympy_array=True)
+    assert array(one+x, use_sympy_array=True) == array(1+x, use_sympy_array=True)
 
-    X = array([one, zero, zero])
-    assert (X == array([one, zero, zero])).all()
-    assert (X == array([one, 0, 0])).all()
+    X = array([one, zero, zero], use_sympy_array=True)
+    assert (X == array([one, zero, zero], use_sympy_array=True)).all()
+    assert (X == array([one, 0, 0], use_sympy_array=True)).all()
 
 def test_arrays():
     one = Rational(1)
     zero = Rational(0)
-    X = array([one, zero, zero])
+    X = array([one, zero, zero], use_sympy_array=True)
     Y = one*X
-    X = array([Symbol("a")+Rational(1,2)])
+    X = array([Symbol("a")+Rational(1,2)], use_sympy_array=True)
     Y = X+X
-    assert Y == array([1+2*Symbol("a")])
-    assert not Y != array([1+2*Symbol("a")])
+    assert Y == array([1+2*Symbol("a")], use_sympy_array=True)
+    assert not Y != array([1+2*Symbol("a")], use_sympy_array=True)
     Y = Y + 1
-    assert Y == array([2+2*Symbol("a")])
-    assert not Y != array([2+2*Symbol("a")])
+    assert Y == array([2+2*Symbol("a")], use_sympy_array=True)
+    assert not Y != array([2+2*Symbol("a")], use_sympy_array=True)
     Y = X-X
-    assert Y == array([0])
-    assert not Y != array([0])
+    assert Y == array([0], use_sympy_array=True)
+    assert not Y != array([0], use_sympy_array=True)
 
 def test_conversion1():
     x = Symbol("x")
@@ -196,51 +196,55 @@ def test_conversion1():
 
 def test_conversion2():
     x = Symbol("x")
-    a = 2*list2numpy([x**2, x])
-    b = list2numpy([2*x**2, 2*x])
+    a = 2*list2numpy([x**2, x], use_sympy_array=True)
+    b = list2numpy([2*x**2, 2*x], use_sympy_array=True)
     assert (a == b).all()
 
     one = Rational(1)
     zero = Rational(0)
-    X = list2numpy([one, zero, zero])
+    X = list2numpy([one, zero, zero], use_sympy_array=True)
     Y = one*X
-    X = list2numpy([Symbol("a")+Rational(1,2)])
+    X = list2numpy([Symbol("a")+Rational(1,2)], use_sympy_array=True)
     Y = X+X
-    assert Y == array([1+2*Symbol("a")])
+    assert Y == array([1+2*Symbol("a")], use_sympy_array=True)
     Y = Y + 1
-    assert Y == array([2+2*Symbol("a")])
+    assert Y == array([2+2*Symbol("a")], use_sympy_array=True)
     Y = X-X
-    assert Y == array([0])
+    assert Y == array([0], use_sympy_array=True)
 
 def test_list2numpy():
     x = Symbol("x")
-    assert (array([x**2, x]) == list2numpy([x**2, x])).all()
+    assert (array([x**2, x], use_sympy_array=True) == list2numpy([x**2, x],
+        use_sympy_array=True)).all()
 
 def test_Matrix1():
     x = Symbol("x")
     m = Matrix([[x, x**2], [5, 2/x]])
-    assert (array(m.subs(x, 2)) == array([[2, 4],[5, 1]])).all()
+    assert (array(m.subs(x, 2), use_sympy_array=True) == array([[2, 4],[5, 1]],
+        use_sympy_array=True)).all()
     m = Matrix([[sin(x), x**2], [5, 2/x]])
-    assert (array(m.subs(x, 2)) == array([[sin(2), 4],[5, 1]])).all()
+    assert (array(m.subs(x, 2), use_sympy_array=True) == array([[sin(2), 4],[5,
+        1]], use_sympy_array=True)).all()
 
 def test_Matrix3():
     x = Symbol("x")
-    a = array([[2, 4],[5, 1]])
+    a = array([[2, 4],[5, 1]], use_sympy_array=True)
     assert Matrix(a) == Matrix([[2, 4], [5, 1]])
     assert Matrix(a) != Matrix([[2, 4], [5, 2]])
-    a = array([[sin(2), 4], [5, 1]])
+    a = array([[sin(2), 4], [5, 1]], use_sympy_array=True)
     assert Matrix(a) == Matrix([[sin(2), 4],[5, 1]])
     assert Matrix(a) != Matrix([[sin(0), 4],[5, 1]])
 
 def test_Matrix_sum():
     x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
     M = Matrix([[1,2,3],[x,y,x],[2*y,-50,z*x]])
-    m = array([[2,3,4],[x,5,6],[x,y,z**2]])
+    m = array([[2,3,4],[x,5,6],[x,y,z**2]], use_sympy_array=True)
     assert M+m == Matrix([[3,5,7],[2*x,y+5,x+6],[2*y+x,y-50,z*x+z**2]])
     # This:
     #assert m+M == Matrix([[3,5,7],[2*x,y+5,x+6],[2*y+x,y-50,z*x+z**2]])
     # Was changed to:
-    assert (m+M == array([[3,5,7],[2*x,y+5,x+6],[2*y+x,y-50,z*x+z**2]])).all()
+    assert (m+M == array([[3,5,7],[2*x,y+5,x+6],[2*y+x,y-50,z*x+z**2]],
+        use_sympy_array=True)).all()
     assert M+m == M.add(m)
 
 def _test_Matrix_mul():
@@ -257,24 +261,27 @@ def _test_Matrix_mul():
                          [       7*x,    2*x + 6*y,          9*x],
                          [x + x*z**2, 2*x + y*z**2, 3*x + x*z**2],
                          ])
-    a = array([2])
+    a = array([2], use_sympy_array=True)
     assert a[0] * M == 2 * M
     assert M * a[0] == 2 * M
 
 def _test_Matrix_array():
     class matarray(object):
         def __array__(self):
-            from numpy import array
-            return array([[1,2,3],[4,5,6],[7,8,9]])
+            return array([[1,2,3],[4,5,6],[7,8,9]], use_sympy_array=True)
     matarr = matarray()
     assert Matrix(matarr) == Matrix([[1,2,3],[4,5,6],[7,8,9]])
 
 def _test_issue629():
     x = Symbol("x")
-    assert (Rational(1,2)*array([2*x, 0]) == array([x, 0])).all()
-    assert (Rational(1,2)+array([2*x, 0]) == array([2*x+Rational(1,2), Rational(1,2)])).all()
-    assert (Float("0.5")*array([2*x, 0]) == array([Float("1.0")*x, 0])).all()
-    assert (Float("0.5")+array([2*x, 0]) == array([2*x+Float("0.5"), Float("0.5")])).all()
+    assert (Rational(1,2)*array([2*x, 0], use_sympy_array=True) == array([x,
+        0], use_sympy_array=True)).all()
+    assert (Rational(1,2)+array([2*x, 0], use_sympy_array=True) ==
+            array([2*x+Rational(1,2), Rational(1,2)], use_sympy_array=True)).all()
+    assert (Float("0.5")*array([2*x, 0], use_sympy_array=True) ==
+            array([Float("1.0")*x, 0], use_sympy_array=True)).all()
+    assert (Float("0.5")+array([2*x, 0], use_sympy_array=True) ==
+            array([2*x+Float("0.5"), Float("0.5")], use_sympy_array=True)).all()
 
 def _test_lambdify():
     x = Symbol("x")
@@ -313,7 +320,7 @@ def _test_lambdify_matrix_vec_input():
               [X[2]*X[0], X[2]*X[1], X[2]**2]])
     f = lambdify(X, M, "numpy")
 
-    Xh = array([1.0, 2.0, 3.0])
+    Xh = array([1.0, 2.0, 3.0], use_sympy_array=True)
     expected = matrix([[Xh[0]**2, Xh[0]*Xh[1], Xh[0]*Xh[2]],
                        [Xh[1]*Xh[0], Xh[1]**2, Xh[1]*Xh[2]],
                        [Xh[2]*Xh[0], Xh[2]*Xh[1], Xh[2]**2]])
