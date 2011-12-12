@@ -244,7 +244,7 @@ class TableForm(Basic):
         _h = Integer(len(data))
         for line in data:
             assert len(line) == _w
-        _lines = Tuple(data)
+        _lines = Tuple(*data)
 
         if headings is None:
             _headings = [None, None]
