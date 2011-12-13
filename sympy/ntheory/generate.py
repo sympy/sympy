@@ -405,7 +405,7 @@ def cycle_length(f, x0, nmax=None, values=False):
     There are 6 repeating values after the first 2.
 
     If a sequence is suspected of being longer than you might wish, ``nmax``
-    can be used to exit early (in which mu will be returned as None:
+    can be used to exit early (in which mu will be returned as None):
 
         >>> cycle_length(func, 4, nmax = 4).next()
         (4, None)
