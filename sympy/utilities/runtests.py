@@ -563,8 +563,6 @@ class SymPyTests(object):
                                                    inspect.getsourcefile(gl[f]) == pytestfile2)]
             if slow:
                funcs = [f for f in funcs if getattr(f, '_slow', False)]
-            else:
-               funcs = [f for f in funcs if not getattr(f, '_slow', False)]
             # Sorting of XFAILed functions isn't fixed yet :-(
             funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
             i = 0
@@ -592,6 +590,8 @@ class SymPyTests(object):
         for f in funcs:
             self._reporter.entering_test(f)
             try:
+                if getattr(f, '_slow', False) and not slow:
+                    raise Skipped("Slow")
                 if timeout:
                     self._timeout(f, timeout)
                 else:
@@ -1349,6 +1349,7 @@ class PyTestReporter(Reporter):
         char = "s"
         if message == "KeyboardInterrupt": char = "K"
         elif message == "Timeout": char = "T"
+        elif message == "Slow": char = "W"
         self.write(char, "Blue")
         if self._verbose:
             self.write(" - ", "Blue")
