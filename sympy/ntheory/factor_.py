@@ -171,8 +171,8 @@ def multiplicity(p, n):
     """
     Find the greatest integer m such that p**m divides n.
 
-    Examples usage
-    =============
+    Examples
+    ========
         >>> from sympy.ntheory import multiplicity
         >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
         [0, 1, 2, 3, 3]
@@ -488,8 +488,8 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     By trying more than one ``a`` it is possible that one of them
     will yield a factor.
 
-    Examples usage
-    =============
+    Examples
+    ========
     With the default smoothness bound, this number can't be cracked:
 
         >>> from sympy.ntheory import pollard_pm1, primefactors
@@ -1137,8 +1137,8 @@ def primefactors(n, limit=None, verbose=False):
     for complete factorization. Unlike factorint(), primefactors() does
     not return -1 or 0.
 
-    Examples usage
-    =============
+    Examples
+    ========
 
         >>> from sympy.ntheory import primefactors, factorint, isprime
         >>> primefactors(6)

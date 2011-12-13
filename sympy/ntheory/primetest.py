@@ -183,8 +183,8 @@ def isprime(n):
     pseudoprime as a prime with an error of about 4**-k. The current value
     of k is 46 so the error is about 2 x 10**-28.
 
-    Examples usage
-    =============
+    Examples
+    ========
 
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
