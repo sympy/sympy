@@ -57,6 +57,8 @@ def test_sqrtdenest_four_terms():
       -sqrt(2) + sqrt(3) + 2*sqrt(7)
     assert sqrtdenest(sqrt(-28*sqrt(7)-14*sqrt(5)+4*sqrt(35) + 82)) == \
       -7 + sqrt(5) + 2*sqrt(7)
+    assert sqrtdenest(sqrt(6*sqrt(2)/11+2*sqrt(22)/11+6*sqrt(11)/11+2)) == \
+      sqrt(11)*(sqrt(2) + 3 + sqrt(11))/11
 
 @XFAIL
 def test_sqrtdenest2a():
