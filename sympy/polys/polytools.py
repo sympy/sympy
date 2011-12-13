@@ -203,10 +203,6 @@ class Poly(Expr):
         rep, opt = _dict_from_expr(rep, opt)
         return cls._from_dict(rep, opt)
 
-    def __getnewargs__(self):
-        """Data used by pickling protocol version 2. """
-        return (self.rep, self.gens)
-
     def _hashable_content(self):
         """Allow SymPy to hash Poly instances. """
         return (self.rep, self.gens)
@@ -320,7 +316,7 @@ class Poly(Expr):
         return self.new(self.rep.one(self.rep.lev, self.rep.dom), *self.gens)
 
     @property
-    def unit(f):
+    def unit(self):
         """Return unit polynomial with ``self``'s properties. """
         return self.new(self.rep.unit(self.rep.lev, self.rep.dom), *self.gens)
 

@@ -29,12 +29,6 @@ class SparsePoly(GenericPoly):
 
         return _hash
 
-    def __getstate__(self):
-        return (self.rep, self.lev, self.ord, self.dom, self._hash)
-
-    def __getnewargs__(self):
-        return (self.rep, self.lev, self.ord, self.dom, self._hash)
-
     def unify(f, g):
         """Unify representations of two sparse polynomials. """
         if not hasattr(g, '__iter__'):
