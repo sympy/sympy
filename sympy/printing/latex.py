@@ -1052,7 +1052,6 @@ def latex(expr, **settings):
     Printer. For very large expressions, set the 'order' keyword to 'none' if
     speed is a concern.
 
-
     mode: Specifies how the generated code will be delimited. 'mode' can be one
     of 'plain', 'inline', 'equation' or 'equation*'.  If 'mode' is set to
     'plain', then the resulting code will not be delimited at all (this is the
@@ -1060,7 +1059,7 @@ def latex(expr, **settings):
     If 'mode' is set to 'equation' or 'equation*', the resulting code will be
     enclosed in the 'equation' or 'equation*' environment (remember to import
     'amsmath' for 'equation*'), unless the 'itex' option is set. In the latter
-    case, the $$ $$ syntax is used.
+    case, the ``$$ $$`` syntax is used.
 
     >>> latex((2*mu)**Rational(7,2), mode='plain')
     '8 \\sqrt{2} \\mu^{\\frac{7}{2}}'
@@ -1074,7 +1073,7 @@ def latex(expr, **settings):
     >>> latex((2*mu)**Rational(7,2), mode='equation')
     '\\begin{equation}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation}'
 
-    itex: Specifies if itex-specific syntax is used, including emitting $$ $$.
+    itex: Specifies if itex-specific syntax is used, including emitting ``$$ $$``.
 
     >>> latex((2*mu)**Rational(7,2), mode='equation', itex=True)
     '$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$'

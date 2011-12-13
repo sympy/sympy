@@ -228,7 +228,7 @@ def ccode(expr, assign_to=None, **settings):
     r"""Converts an expr to a string of c code
 
         Parameters
-        ----------
+        ==========
         expr : sympy.core.Expr
             a sympy expression to be converted
         precision : optional
@@ -244,8 +244,8 @@ def ccode(expr, assign_to=None, **settings):
             same information is returned in a more programmer-friendly
             data structure.
 
-        Usage
-        -----
+        Examples
+        ========
 
         >>> from sympy import ccode, symbols, Rational, sin
         >>> x, tau = symbols(["x", "tau"])

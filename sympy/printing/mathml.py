@@ -27,6 +27,9 @@ class MathMLPrinter(Printer):
         self.dom = Document()
 
     def doprint(self, expr):
+        """
+        Prints the expression as MathML.
+        """
         mathML = Printer._print(self, expr)
         return mathML.toxml()
 
@@ -363,6 +366,9 @@ def mathml(expr, **settings):
 def print_mathml(expr, **settings):
     """
     Prints a pretty representation of the MathML code for expr
+
+    Examples
+    ========
 
     >>> ##
     >>> from sympy.printing.mathml import print_mathml

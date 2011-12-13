@@ -467,7 +467,7 @@ def pretty_symbol(symb_name):
 
 def annotated(letter):
     """
-    Return a stylised drawing of the letter `letter`, together with
+    Return a stylised drawing of the letter ``letter``, together with
     information on how to put annotations (super- and subscripts to the
     left and to the right) on it.
 
