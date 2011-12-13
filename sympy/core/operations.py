@@ -27,10 +27,11 @@ class AssocOp(Expr):
     @cacheit
     def __new__(cls, *args, **options):
         args = map(_sympify, args)
-        args = [a for a in args if a is not cls.identity]
 
         if not options.pop('evaluate', True):
             return cls._from_args(args)
+
+        args = [a for a in args if a is not cls.identity]
 
         if len(args) == 0:
             return cls.identity
