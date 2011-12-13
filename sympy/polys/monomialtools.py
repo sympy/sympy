@@ -1,6 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
 from sympy.core import S, C, Symbol, Mul, Tuple
+from sympy.core.basic import PicklableWithSlots
 from sympy.utilities import cythonized
 from sympy.polys.polyerrors import ExactQuotientFailed
 
@@ -287,7 +288,7 @@ def monomial_min(*monoms):
 
     return tuple(M)
 
-class Monomial(object):
+class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """
 
     __slots__ = ['exponents', 'gens']
