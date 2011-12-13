@@ -89,7 +89,8 @@ def pde_separate_add(eq, fun, sep):
 
     `w(x, y, z) = X(x) + y(y, z)`
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import E, Eq, Function, pde_separate_add, Derivative as D
     >>> from sympy.abc import x, t
@@ -112,7 +113,8 @@ def pde_separate_mul(eq, fun, sep):
 
     `w(x, y, z) = X(x)*u(y, z)`
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import Function, Eq, pde_separate_mul, Derivative as D
     >>> from sympy.abc import x, y

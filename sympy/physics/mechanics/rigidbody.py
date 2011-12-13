@@ -21,7 +21,7 @@ class RigidBody(object):
     frame : ReferenceFrame
         The ReferenceFrame which the rigid body is fixed in
 
-    Example
+    Examples
     =======
 
     >>> from sympy import Symbol

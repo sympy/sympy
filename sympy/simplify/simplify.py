@@ -552,7 +552,7 @@ def rcollect(expr, *vars):
     """
     Recursively collect sums in an expression.
 
-    Example
+    Examples
     =======
 
     >>> from sympy.simplify import rcollect
@@ -595,7 +595,8 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     Note: the order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.abc import x, y, z, alpha
     >>> from sympy import separatevars, sin
     >>> separatevars((x*y)**y)
@@ -1064,8 +1065,9 @@ def radsimp(expr, symbolic=True):
     do not want the simplification to occur for symbolic denominators, set
     ``symbolic`` to False.
 
-    Examples:
 
+    Examples
+    ========
     >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
     >>> from sympy.abc import a, b, c
 
@@ -1109,7 +1111,6 @@ def radsimp(expr, symbolic=True):
 
     >>> radsimp(eq, symbolic=False)
     1/(a + b*sqrt(c))
-
     """
 
     def handle(expr):
@@ -1392,7 +1393,8 @@ def powdenest(eq, force=False):
     When there are sums of logs in exp() then a product of powers may be
     obtained e.g. exp(3*(log(a) + 2*log(b))) - > a**3*b**6.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.abc import a, b, x, y, z
     >>> from sympy import Symbol, exp, log, sqrt, symbols, powdenest
@@ -2341,7 +2343,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     (this is useful to find simpler numbers when the tolerance
     is set low).
 
-    Examples:
+    Examples
+    ========
 
         >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
@@ -2441,7 +2444,8 @@ def logcombine(expr, force=False):
     negative, combine will still not combine the equations.  Change the
     assumptions on the variables to make them combine.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy import Symbol, symbols, log, logcombine
     >>> from sympy.abc import a, x, y, z
     >>> logcombine(a*log(x)+log(y)-log(z))
@@ -2467,7 +2471,8 @@ def _logcombine(expr, force=False):
     def _getlogargs(expr):
         """
         Returns the arguments of the logarithm in an expression.
-        Example:
+        Examples
+    ========
         _getlogargs(a*log(x*y))
         x*y
         """

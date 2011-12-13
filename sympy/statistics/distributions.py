@@ -59,7 +59,8 @@ class Normal(ContinuousProbability):
     Normal(mu, sigma) represents the normal or Gaussian distribution
     with mean value mu and standard deviation sigma.
 
-    Example usage:
+    Examples
+    ========
 
         >>> from sympy.statistics import Normal
         >>> from sympy import oo
@@ -230,7 +231,8 @@ class PDF(ContinuousProbability):
     If func is not normalized so that integrate(func, (x, a, b)) == 1,
     it can be normalized using PDF.normalize() method
 
-    Example usage:
+    Examples
+    ========
 
         >>> from sympy import Symbol, exp, oo
         >>> from sympy.statistics.distributions import PDF
@@ -268,7 +270,8 @@ class PDF(ContinuousProbability):
         Normalize the probability distribution function so that
         integrate(self.pdf(x), (x, a, b)) == 1
 
-        Example usage:
+        Examples
+        ========
 
             >>> from sympy import Symbol, exp, oo
             >>> from sympy.statistics.distributions import PDF

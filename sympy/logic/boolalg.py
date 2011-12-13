@@ -48,13 +48,12 @@ class And(LatticeOp, BooleanFunction):
     It evaluates its arguments in order, giving False immediately if any of them
     are False, and True if they are all True.
 
-    Example:
-
-    >>> from sympy.core import symbols
-    >>> from sympy.abc import x, y
-    >>> x & y
-    And(x, y)
-
+    Examples
+    ========
+        >>> from sympy.core import symbols
+        >>> from sympy.abc import x, y
+        >>> x & y
+        And(x, y)
     """
     zero = False
     identity = True
@@ -175,8 +174,8 @@ class ITE(BooleanFunction):
     ITE(A, B, C) evaluates and returns the result of B if A is true
     else it returns the result of C
 
-    Examples:
-
+    Examples
+    ========
     >>> from sympy.logic.boolalg import ITE, And, Xor, Or
     >>> from sympy.abc import x,y,z
     >>> x = True
@@ -273,7 +272,8 @@ def to_cnf(expr):
     Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.logic.boolalg import to_cnf
     >>> from sympy.abc import A, B, D
@@ -293,7 +293,8 @@ def is_cnf(expr):
     """
     Test whether or not an expression is in conjunctive normal form.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.logic.boolalg import is_cnf
     >>> from sympy.abc import A, B, C
@@ -380,12 +381,12 @@ def to_int_repr(clauses, symbols):
     """
     Takes clauses in CNF format and puts them into an integer representation.
 
-    Example:
-
-    >>> from sympy.logic.boolalg import to_int_repr
-    >>> from sympy.abc import x, y
-    >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
-    True
+    Examples
+    ========
+        >>> from sympy.logic.boolalg import to_int_repr
+        >>> from sympy.abc import x, y
+        >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]
+        True
 
     """
 

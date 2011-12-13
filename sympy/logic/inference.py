@@ -58,8 +58,8 @@ def pl_true(expr, model={}):
 
     The model is implemented as a dict containing the pair symbol, boolean value.
 
-    Examples:
-
+    Examples
+    ========
     >>> from sympy.abc import A, B
     >>> from sympy.logic.inference import pl_true
     >>> pl_true( A & B, {A: True, B : True})

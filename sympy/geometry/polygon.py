@@ -618,7 +618,7 @@ class Polygon(GeometryEntity):
               value will not be valid in such a case. For a more through test of
               intersection use intersection().
 
-        Example
+        Examples
         -------
             >>> from sympy.geometry import Point, Polygon
             >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))

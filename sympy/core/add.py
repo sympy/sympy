@@ -243,7 +243,7 @@ class Add(AssocOp):
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
-        **Example**
+        **Examples**
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -760,7 +760,7 @@ class Add(AssocOp):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Example**
+        **Examples**
 
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()

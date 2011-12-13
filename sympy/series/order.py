@@ -38,8 +38,8 @@ class Order(Expr):
     So intuitively O(x**3) means: all terms x**3, x**4 and
     higher. But not x**2, x or 1.
 
-    Examples:
-    =========
+    Examples
+    ========
     >>> from sympy import O
     >>> from sympy.abc import x
     >>> O(x)

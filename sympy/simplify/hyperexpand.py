@@ -979,7 +979,8 @@ def reduce_order(ip):
     Return (nip, [operators]), where applying the operators to the
     hypergeometric function specified by nip.ap, nip.bq yields ap, bq.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.simplify.hyperexpand import reduce_order, IndexPair
     >>> reduce_order(IndexPair((1, 2), (3, 4)))
@@ -1000,7 +1001,8 @@ def reduce_order_meijer(iq):
 
     Return niq, [operators].
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.simplify.hyperexpand import reduce_order_meijer, IndexQuadruple
     >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [3, 4], [1, 2]))[0]
@@ -1520,7 +1522,8 @@ def hyperexpand(f, allow_hyper=False):
     simplification (that is a result different from input,
     but still containing hypergeometric functions).
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.simplify.hyperexpand import hyperexpand
     >>> from sympy.functions import hyper

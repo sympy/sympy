@@ -281,7 +281,8 @@ def centroid(*args):
 
     If there are no objects (or a mixture of objects) then None is returned.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import Point, Segment, Polygon
     >>> from sympy.geometry.util import centroid

@@ -26,7 +26,7 @@ class SymPyRationalField(RationalField):
         """
         Check if ``a`` is of type ``Rational``.
 
-        Example
+        Examples
         =======
 
         >>> from sympy import Rational, Real

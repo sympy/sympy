@@ -154,7 +154,8 @@ class Basic(object):
         from the "other" then their classes are ordered according to
         the sorted_classes list.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x, y
         >>> x.compare(y)
@@ -228,7 +229,8 @@ class Basic(object):
 
           1 < x < x**2 < x**3 < O(x**4) etc.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> from sympy import Basic, Number
@@ -275,7 +277,8 @@ class Basic(object):
         This is a convenience function that allows one to create objects from
         any iterable, without having to convert to a list or tuple first.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Tuple
         >>> Tuple.fromiter(i for i in xrange(5))
@@ -432,7 +435,8 @@ class Basic(object):
            and number symbols like I and pi. It is possible to request
            atoms of any type, however, as demonstrated below.
 
-           Examples:
+           Examples
+           ========
 
            >>> from sympy import I, pi, sin
            >>> from sympy.abc import x, y
@@ -442,7 +446,8 @@ class Basic(object):
            If one or more types are given, the results will contain only
            those types of atoms.
 
-           Examples:
+           Examples
+           ========
 
            >>> from sympy import Number, NumberSymbol, Symbol
            >>> (1 + x + 2*sin(y + I*pi)).atoms(Symbol)
@@ -576,7 +581,8 @@ class Basic(object):
 
             >> x == x.func(*x.args)
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> a = 2*x
@@ -596,7 +602,8 @@ class Basic(object):
     def args(self):
         """Returns a tuple of arguments of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols, cot
         >>> from sympy.abc import x, y
@@ -625,7 +632,8 @@ class Basic(object):
         """
         Iterates arguments of 'self'.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> a = 2*x
@@ -680,7 +688,8 @@ class Basic(object):
         Calls either _subs_old_new, _subs_dict or _subs_list depending
         if you give it two arguments (old, new), a dictionary or a list.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import pi
         >>> from sympy.abc import x, y
@@ -728,7 +737,8 @@ class Basic(object):
         Performs an order sensitive substitution from the
         input sequence list.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy.abc import x, y
         >>> (x+y)._subs_list( [(x, 3),     (y, x**2)] )
@@ -855,7 +865,8 @@ class Basic(object):
         """
         Test whether any subexpression matches any of the patterns.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import sin, S
         >>> from sympy.abc import x, y, z
@@ -963,7 +974,8 @@ class Basic(object):
         3.1. func -> func
              obj.replace(lambda expr: ..., lambda expr: ...)
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import log, sin, cos, tan, Wild
         >>> from sympy.abc import x
@@ -1142,7 +1154,8 @@ class Basic(object):
 
           pattern.xreplace(self.match(pattern)) == self
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols, Wild
         >>> from sympy.abc import x, y
@@ -1251,7 +1264,9 @@ class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
 
-    Examples: Symbol, Number, Rational, Integer, ...
+    Examples
+    ========
+    Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 

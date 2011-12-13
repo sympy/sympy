@@ -33,7 +33,7 @@ class RayTransferMatrix(Matrix):
       or
     the parameters A, B, C and D
 
-    Example
+    Examples
     =======
 
     >>> from sympy.physics.gaussopt import RayTransferMatrix, ThinLens
@@ -122,7 +122,8 @@ class FreeSpace(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import FreeSpace
     >>> from sympy import symbols
     >>> d = symbols('d')
@@ -141,7 +142,8 @@ class FlatRefraction(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import FlatRefraction
     >>> from sympy import symbols
     >>> n1, n2 = symbols('n1 n2')
@@ -162,7 +164,8 @@ class CurvedRefraction(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import CurvedRefraction
     >>> from sympy import symbols
     >>> R, n1, n2 = symbols('R n1 n2')
@@ -180,7 +183,8 @@ class FlatMirror(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import FlatMirror
     >>> FlatMirror()
     [1, 0]
@@ -197,7 +201,8 @@ class CurvedMirror(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import CurvedMirror
     >>> from sympy import symbols
     >>> R = symbols('R')
@@ -217,7 +222,8 @@ class ThinLens(RayTransferMatrix):
 
     See Also: RayTransferMatrix
 
-    Example:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import ThinLens
     >>> from sympy import symbols
     >>> f = symbols('f')
@@ -244,7 +250,7 @@ class GeometricRay(Matrix):
       or
     the height followed by the angle of the ray
 
-    Example
+    Examples
     =======
 
     >>> from sympy.physics.gaussopt import GeometricRay, FreeSpace
@@ -413,7 +419,8 @@ def waist2rayleigh(w, wavelen):
 
     See Also: rayleigh2waist, BeamParameter
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import waist2rayleigh
     >>> from sympy import symbols
     >>> w, wavelen = symbols('w wavelen')
@@ -428,7 +435,8 @@ def rayleigh2waist(z_r, wavelen):
 
     See Also: waist2rayleigh, BeamParameter
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import rayleigh2waist
     >>> from sympy import symbols
     >>> z_r, wavelen = symbols('z_r wavelen')
@@ -449,7 +457,8 @@ def geometric_conj_ab(a,b):
     See Also:
     geometric_conj_af, geometric_conj_bf
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import geometric_conj_ab
     >>> from sympy import symbols
     >>> a, b = symbols('a b')
@@ -473,7 +482,8 @@ def geometric_conj_af(a,f):
     See Also:
     geometric_conj_ab
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.physics.gaussopt import geometric_conj_af, geometric_conj_bf
     >>> from sympy import symbols
     >>> a, b, f = symbols('a b f')

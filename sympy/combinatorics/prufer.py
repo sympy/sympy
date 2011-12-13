@@ -44,15 +44,14 @@ class Prufer(Basic):
         """
         Convert to Prufer code.
 
-        Examples::
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
-            >>> a.prufer_repr
-            [0, 0]
-            >>> Prufer.to_prufer([[0, 1], [0, 2], [0, 3]], 4)
-            [0, 0]
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a.prufer_repr
+        [0, 0]
+        >>> Prufer.to_prufer([[0, 1], [0, 2], [0, 3]], 4)
+        [0, 0]
         """
         n = int(n)
         d = [0]*n
@@ -90,15 +89,14 @@ class Prufer(Basic):
         """
         Converts to tree representation.
 
-        Examples::
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> a = Prufer([0, 2], 4)
-            >>> a.tree_repr
-            [[3, 0], [1, 2], [2, 0]]
-            >>> Prufer.to_tree([0, 2])
-            [[3, 0], [1, 2], [2, 0]]
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> a = Prufer([0, 2], 4)
+        >>> a.tree_repr
+        [[3, 0], [1, 2], [2, 0]]
+        >>> Prufer.to_tree([0, 2])
+        [[3, 0], [1, 2], [2, 0]]
         """
         tree = []
         prufer.append(0)
@@ -123,14 +121,12 @@ class Prufer(Basic):
     def prufer_rank(self):
         """
         Computes the rank of a Prufer sequence.
-
-        Examples::
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
-            >>> a.rank
-            0
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a.prufer_rank()
+        0
         """
         r = 0
         p = 1
@@ -144,12 +140,11 @@ class Prufer(Basic):
         """
         Finds the unranked Prufer sequence.
 
-        Examples::
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> Prufer.unrank(0, 4)
-            Prufer([0, 0])
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> Prufer.unrank(0, 4)
+        Prufer([0, 0])
         """
         n = int(n)
         rank = int(rank)
@@ -163,16 +158,15 @@ class Prufer(Basic):
         """
         The constructor for the Prufer object.
 
-        Examples::
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
-            >>> a.prufer_repr
-            [0, 0]
-            >>> b = Prufer([1, 3])
-            >>> b.tree_repr
-            [[2, 1], [1, 3], [3, 0]]
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a.prufer_repr
+        [0, 0]
+        >>> b = Prufer([1, 3])
+        >>> b.tree_repr
+        [[2, 1], [1, 3], [3, 0]]
         """
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         if isinstance(args[0][0], list):
@@ -187,16 +181,15 @@ class Prufer(Basic):
         """
         Generates the next Prufer sequence.
 
-        Examples::
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
-            >>> b = a.next()
-            >>> b.tree_repr
-            [[3, 0], [2, 1], [1, 0]]
-            >>> b.rank
-            1
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> b = a.next()
+        >>> b.tree_repr
+        [[3, 0], [2, 1], [1, 0]]
+        >>> b.rank
+        1
         """
         return Prufer.unrank(self.rank + 1, self.nodes)
 
@@ -204,17 +197,16 @@ class Prufer(Basic):
         """
         Generates the previous Prufer sequence.
 
-        Examples::
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> a = Prufer([[0, 1], [1, 2], [2, 3], [1, 4]], 5)
-            >>> a.rank
-            25
-            >>> b = a.prev()
-            >>> b
-            Prufer([0, 4, 4])
-            >>> b.rank
-            24
-
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> a = Prufer([[0, 1], [1, 2], [2, 3], [1, 4]], 5)
+        >>> a.rank
+        25
+        >>> b = a.prev()
+        >>> b
+        Prufer([0, 4, 4])
+        >>> b.rank
+        24
         """
         return Prufer.unrank(self.rank - 1, self.nodes)

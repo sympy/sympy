@@ -134,7 +134,16 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 def trailing(n):
     """Count the number of trailing zero digits in the binary
     representation of n, i.e. determine the largest power of 2
-    that divides n."""
+    that divides n.
+
+    Examples
+    ========
+    >>> from sympy import trailing
+    >>> trailing(128)
+    7
+    >>> trailing(63)
+    0
+    """
     n = int(n)
     if not n:
         return 0
@@ -162,8 +171,8 @@ def multiplicity(p, n):
     """
     Find the greatest integer m such that p**m divides n.
 
-    Example usage
-    =============
+    Examples
+    ========
         >>> from sympy.ntheory import multiplicity
         >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
         [0, 1, 2, 3, 3]
@@ -214,8 +223,15 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     since finding a factor indicates the only possible root for n. This
     is True by default since only a few small factors will be tested in
     the course of searching for the perfect power.
-    """
 
+    Examples
+    ========
+    >>> from sympy import perfect_power
+    >>> perfect_power(16)
+    (2, 4)
+    >>> perfect_power(16, big = False)
+    (4, 2)
+    """
     n = int(n)
     if n < 3:
         return False
@@ -472,8 +488,8 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     By trying more than one ``a`` it is possible that one of them
     will yield a factor.
 
-    Example usage
-    =============
+    Examples
+    ========
     With the default smoothness bound, this number can't be cracked:
 
         >>> from sympy.ntheory import pollard_pm1, primefactors
@@ -1121,8 +1137,8 @@ def primefactors(n, limit=None, verbose=False):
     for complete factorization. Unlike factorint(), primefactors() does
     not return -1 or 0.
 
-    Example usage
-    =============
+    Examples
+    ========
 
         >>> from sympy.ntheory import primefactors, factorint, isprime
         >>> primefactors(6)

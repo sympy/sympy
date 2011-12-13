@@ -758,7 +758,8 @@ class Integral(Expr):
         the curve exactly in the middle of each interval (thus midpoint
         method). See [1] for more information.
 
-        Examples:
+        Examples
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x
@@ -779,7 +780,8 @@ class Integral(Expr):
         interval the function value is taken at the left hand side of the
         interval.
 
-        Examples:
+        Examples
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x
