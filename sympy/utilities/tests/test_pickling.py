@@ -21,6 +21,7 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda,\
         WildFunction
 from sympy.core.sets import Interval
 from sympy.core.multidimensional import vectorize
+from sympy.functions import exp
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
 from sympy.core.compatibility import callable, SymPyDeprecationWarning
@@ -28,7 +29,7 @@ from sympy.core.compatibility import callable, SymPyDeprecationWarning
 from sympy import symbols
 
 
-def check(a, check_attr = True):
+def check(a, check_attr=True):
     """ Check that pickling and copying round-trips.
     """
     # The below hasattr() check will warn about is_Real in Python 2.5, so
@@ -295,7 +296,6 @@ from sympy.polys.domains import (
     ExpressionDomain,
 )
 
-@XFAIL
 def test_polys():
     x = Symbol("x")
 
@@ -305,11 +305,9 @@ def test_polys():
     for c in (Poly, Poly(x, x)):
         check(c)
 
-    for c in (GFP, GFP([ZZ(1),ZZ(2),ZZ(3)], ZZ(7), ZZ)):
+    for c in (DMP, DMP([[ZZ(1)],[ZZ(2)],[ZZ(3)]], ZZ)):
         check(c)
-    for c in (DMP, DMP([ZZ(1),ZZ(2),ZZ(3)], 0, ZZ)):
-        check(c)
-    for c in (DMF, DMF(([ZZ(1),ZZ(2)],[ZZ(1),ZZ(3)], ZZ))):
+    for c in (DMF, DMF(([ZZ(1),ZZ(2)], [ZZ(1),ZZ(3)]), ZZ)):
         check(c)
     for c in (ANP, ANP([QQ(1),QQ(2)], [QQ(1),QQ(2),QQ(3)], QQ)):
         check(c)
@@ -329,13 +327,12 @@ def test_polys():
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c)
 
-    from sympy.polys.domains import HAS_FRACTION, HAS_GMPY
+    from sympy.polys.domains import PythonRationalField
 
-    if HAS_FRACTION:
-        from sympy.polys.domains import PythonRationalField
+    for c in (PythonRationalField, PythonRationalField()):
+        check(c)
 
-        for c in (PythonRationalField, PythonRationalField()):
-            check(c)
+    from sympy.polys.domains import HAS_GMPY
 
     if HAS_GMPY:
         from sympy.polys.domains import GMPYIntegerRing, GMPYRationalField
@@ -346,7 +343,7 @@ def test_polys():
             check(c)
 
     f = x**3 + x + 3
-    g = lambda x: x
+    g = exp
 
     for c in (RootOf, RootOf(f, 0), RootSum, RootSum(f, g)):
         check(c)

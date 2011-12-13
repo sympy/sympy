@@ -605,6 +605,18 @@ class LatexPrinter(Printer):
         else:
             return tex
 
+    def _print_factorial2(self, expr, exp=None):
+        x = expr.args[0]
+        if self._needs_brackets(x):
+            tex = r"\left(%s\right)!!" % self._print(x)
+        else:
+            tex = self._print(x) + "!!"
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
     def _print_binomial(self, expr, exp=None):
         tex = r"{{%s}\choose{%s}}" % (self._print(expr[0]),
                                       self._print(expr[1]))

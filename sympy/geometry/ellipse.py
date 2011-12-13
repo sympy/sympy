@@ -809,7 +809,7 @@ class Ellipse(GeometryEntity):
         Currently supports intersections with Point, Line, Segment, Ray,
         Circle and Ellipse types.
 
-        Example
+        Examples
         -------
         >>> from sympy import Ellipse, Point, Line, sqrt
         >>> e = Ellipse(Point(0, 0), 5, 7)

@@ -750,6 +750,8 @@ def test_sparse_matrix():
     assert m2[:,-1] == SparseMatrix(4,1,[3,7,11,15])
     assert m2[-2:,:] == SparseMatrix([[8,9,10,11],[12,13,14,15]])
 
+    assert SparseMatrix([[1, 2], [3, 4]]).submatrix([1, 1]) == Matrix([[4]])
+
     # test_submatrix_assignment
     m = zeros(4)
     m[2:4, 2:4] = eye(2)
@@ -941,12 +943,12 @@ def test_subs():
 
 def test_simplify():
     x,y,f,n = symbols('x y f n')
-    M = Matrix([[    1/x + 1/y,               (x + x*y)/ x           ],
+    M = Matrix([[    1/x + 1/y,            (x + x*y)/ x           ],
                  [(f(x) + y*f(x))/f(x), 2 * (1/n - cos(n * pi)/n)/ pi ]
                  ])
     M.simplify()
-    assert M ==  Matrix([[(x + y)/(x * y),                 1 + y       ],
-                         [   1 + y,       2*((1 - 1*cos(pi*n))/(pi*n)) ]])
+    assert M ==  Matrix([[(x + y)/(x * y),              1 + y       ],
+                         [   1 + y,    2*((1 - 1*cos(pi*n))/(pi*n)) ]])
     M = Matrix([[(1 + x)**2]])
     M.simplify()
     assert M == Matrix([[(1 + x)**2]])
@@ -1182,7 +1184,7 @@ def test_jacobian2():
     J = Matrix([
             [cos(phi), -rho*sin(phi)],
             [sin(phi),  rho*cos(phi)],
-            [   2*rho,             0],
+            [   2*rho,          0],
         ])
     assert X.jacobian(Y) == J
 
@@ -1509,7 +1511,7 @@ def test_jordan_form():
 def test_Matrix_berkowitz_charpoly():
     x, UA, K_i, K_w = symbols('x UA K_i K_w')
 
-    A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),       K_i*K_w/(K_i + K_w)],
+    A = Matrix([[-K_i - UA + K_i**2/(K_i + K_w),    K_i*K_w/(K_i + K_w)],
                 [           K_i*K_w/(K_i + K_w), -K_w + K_w**2/(K_i + K_w)]])
 
     charpoly = A.berkowitz_charpoly(x)
@@ -1564,7 +1566,6 @@ def test_errors():
     raises(ShapeError, "Matrix([1]).row_insert(1, Matrix([[1, 2], [3, 4]]))")
     raises(ShapeError, "Matrix([1]).col_insert(1, Matrix([[1, 2], [3, 4]]))")
     raises(NonSquareMatrixError, "Matrix([1, 2]).trace()")
-    raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).submatrix([1, 1])")
     raises(TypeError, "Matrix([1]).applyfunc(1)")
     raises(ShapeError, "Matrix([1]).LUsolve(Matrix([[1, 2], [3, 4]]))")
     raises(MatrixError, "Matrix([[1,2,3],[4,5,6],[7,8,9]]).QRdecomposition()")
@@ -1590,7 +1591,7 @@ def test_errors():
     raises(ValueError, "SparseMatrix([[1, 2], [3, 4]]).rowdecomp(5)")
     raises(ValueError, "SparseMatrix([[1, 2], [3, 4]])[1, 2, 3] = 4")
     raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([]))")
-    raises(TypeError, "SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
+    raises(IndexError, "SparseMatrix([[1, 2], [3, 4]]).submatrix((1, 2))")
     raises(TypeError, "SparseMatrix([1, 2, 3]).cross(1)")
     raises(ValueError, "Matrix([[5, 10, 7],[0, -1, 2],[8,  3, 4]]).LUdecomposition_Simple(iszerofunc=lambda x:abs(x)<=4)")
     raises(NotImplementedError, "Matrix([[1, 0],[1, 1]])**(S(1)/2)")
@@ -1901,3 +1902,35 @@ def test_zero_dimension_multiply():
     assert (Matrix()*zeros(0, 3)).shape == (0, 3)
     assert zeros(3, 0)*zeros(0, 3) == zeros(3, 3)
     assert zeros(0, 3)*zeros(3, 0) == Matrix()
+
+def test_slice_issue_2884():
+    m = Matrix(2,2,range(4))
+    assert m[1,:] == Matrix([[2, 3]])
+    assert m[-1,:] == Matrix([[2, 3]])
+    assert m[:,1] == Matrix([[1, 3]]).T
+    assert m[:,-1] == Matrix([[1, 3]]).T
+    raises(IndexError, 'm[2,:]')
+    raises(IndexError, 'm[2,2]')
+
+def test_invertible_check():
+    x = symbols('x')
+    # sometimes a singular matrix will have a pivot vector shorter than
+    # the number of rows in a matrix...
+    assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
+    raises(ValueError, 'Matrix([[1, 2], [1, 2]]).inv()')
+    # ... but sometimes it won't, so that is an insufficient test of
+    # whether something is invertible.
+    m = Matrix([
+    [0, -1,  0,  0,  0,  0, -1,  0,  0],
+    [-1, x, -1,  0,  0,  0,  0, -1,  0],
+    [ 0, -1, x,  0,  0,  0,  0,  0, -1],
+    [ 0,  0,  0, x, -1,  0, -1,  0,  0],
+    [ 0,  0,  0, -1, x, -1,  0, -1,  0],
+    [ 0,  0,  0,  0, -1,  0,  0,  0, -1],
+    [-1,  0,  0, -1,  0,  0, x, -1,  0],
+    [ 0, -1,  0,  0, -1,  0, -1,  0, -1],
+    [ 0,  0, -1,  0,  0, -1,  0, -1, x]])
+    assert len(m.rref()[1]) == m.rows
+    raises(ValueError, 'm.inv(method="ADJ")')
+    raises(ValueError, 'm.inv(method="GE")')
+    raises(ValueError, 'm.inv(method="LU")')

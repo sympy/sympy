@@ -239,7 +239,8 @@ class Expr(Basic, EvalfMixin):
         expression.
 
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import cos, sin, Sum, S, pi
         >>> from sympy.abc import a, n, x, y
@@ -545,7 +546,8 @@ class Expr(Basic, EvalfMixin):
         The order is determined either from the O(...) term. If there
         is no O(...) term, it returns None.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import O
         >>> from sympy.abc import x
@@ -635,7 +637,8 @@ class Expr(Basic, EvalfMixin):
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
 
-        Examples::
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
@@ -786,7 +789,7 @@ class Expr(Basic, EvalfMixin):
 
         if self_c:
             xargs = set(arglist(x))
-            for a in Add.make_args(self):
+            for a in args:
                 margs = set(arglist(a))
                 if len(xargs) > len(margs):
                     continue
@@ -799,7 +802,7 @@ class Expr(Basic, EvalfMixin):
                 return Add(*co)
         elif x_c:
             xargs = set(arglist(x))
-            for a in Add.make_args(self):
+            for a in args:
                 margs, nc = a.args_cnc()
                 if len(xargs) > len(margs):
                     continue
@@ -813,7 +816,7 @@ class Expr(Basic, EvalfMixin):
         else: # both nc
             xargs, nx = x.args_cnc()
             # find the parts that pass the commutative terms
-            for a in Add.make_args(self):
+            for a in args:
                 margs, nc = a.args_cnc()
                 if len(xargs) > len(margs):
                     continue
@@ -825,7 +828,7 @@ class Expr(Basic, EvalfMixin):
                 return None
             if all(n == co[0][1] for r, n in co):
                 ii = find(co[0][1], nx, right)
-                if not ii is None:
+                if ii is not None:
                     if not right:
                         return Mul(Add(*[Mul(*r) for r, c in co]), Mul(*co[0][1][:ii]))
                     else:
@@ -833,7 +836,7 @@ class Expr(Basic, EvalfMixin):
             beg = reduce(incommon, (n[1] for n in co))
             if beg:
                 ii = find(beg, nx, right)
-                if not ii is None:
+                if ii is not None:
                     if not right:
                         gcdc = co[0][0]
                         for i in xrange(1, len(co)):
@@ -847,7 +850,7 @@ class Expr(Basic, EvalfMixin):
             end = list(reversed(reduce(incommon, (list(reversed(n[1])) for n in co))))
             if end:
                 ii = find(end, nx, right)
-                if not ii is None:
+                if ii is not None:
                     if not right:
                         return Add(*[Mul(*(list(r) + n[:-len(end)+ii])) for r, n in co])
                     else:
@@ -856,7 +859,7 @@ class Expr(Basic, EvalfMixin):
             hit = None
             for i, (r, n) in enumerate(co):
                 ii = find(n, nx, right)
-                if not ii is None:
+                if ii is not None:
                     if not hit:
                         hit = ii, r, n
                     else:
@@ -945,7 +948,8 @@ class Expr(Basic, EvalfMixin):
 
         To force the expression to be treated as an Add, use the hint as_Add=True
 
-        Examples:
+        Examples
+        ========
 
         -- self is an Add
 
@@ -1132,7 +1136,7 @@ class Expr(Basic, EvalfMixin):
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
-        **Example**
+        **Examples**
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -1645,7 +1649,8 @@ class Expr(Basic, EvalfMixin):
         This is not part of the assumptions system.  You cannot do
         Symbol('z', rational_function=True).
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Symbol, sin
         >>> from sympy.abc import x, y
@@ -1982,7 +1987,7 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, x0, n))
+        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, n, logx))
 
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
@@ -2001,7 +2006,7 @@ class Expr(Basic, EvalfMixin):
             (This is needed for the gruntz algorithm.)
         """
         from sympy.series.gruntz import calculate_series
-        from sympy import cancel, expand_mul
+        from sympy import cancel
         if self.removeO() == 0:
             return self
         if logx is None:
@@ -2019,7 +2024,8 @@ class Expr(Basic, EvalfMixin):
         """
         Returns the leading term.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> (1+x+x**2).as_leading_term(x)
@@ -2069,7 +2075,8 @@ class Expr(Basic, EvalfMixin):
         """
         Returns the leading term a*x**b as a tuple (a, b).
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> (1+x+x**2).leadterm(x)
@@ -2083,7 +2090,7 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import powsimp
         x = sympify(x)
-        c, e = self.as_leading_term(x).as_coeff_exponent(x)
+        c, e = self.normal().as_leading_term(x).as_coeff_exponent(x)
         c = powsimp(c, deep=True, combine='exp')
         if not c.has(x):
             return c, e
@@ -2147,10 +2154,22 @@ class Expr(Basic, EvalfMixin):
 
         See the docstring in function.expand for more information.
         """
+        from sympy.simplify.simplify import fraction
+
         hints.update(power_base=power_base, power_exp=power_exp, mul=mul, \
            log=log, multinomial=multinomial, basic=basic)
 
         expr = self
+        if hints.pop('frac', False):
+            n, d = [a.expand(deep=deep, modulus=modulus, **hints)
+                    for a in fraction(self)]
+            return n/d
+        elif hints.pop('denom', False):
+            n, d = fraction(self)
+            return n/d.expand(deep=deep, modulus=modulus, **hints)
+        elif hints.pop('numer', False):
+            n, d = fraction(self)
+            return n.expand(deep=deep, modulus=modulus, **hints)/d
         for hint, use_hint in hints.iteritems():
             if use_hint:
                 func = getattr(expr, '_eval_expand_'+hint, None)
@@ -2265,7 +2284,9 @@ class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
 
-    Examples: Symbol, Number, Rational, Integer, ...
+    Examples
+    ========
+    Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 
@@ -2293,7 +2314,7 @@ class AtomicExpr(Atom, Expr):
 from mul import Mul
 from add import Add
 from power import Pow
-from function import Derivative, expand_mul, expand_multinomial, UndefinedFunction
+from function import Derivative, expand_mul
 from sympify import sympify
 from symbol import Wild
 from exprtools import factor_terms

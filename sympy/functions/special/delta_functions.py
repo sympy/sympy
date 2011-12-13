@@ -6,7 +6,8 @@ from sympy.polys.polyerrors import PolynomialError
 ################################ DELTA FUNCTION ###############################
 ###############################################################################
 class DiracDelta(Function):
-    """**DiracDelta function and its derivatives**
+    """
+    The DiracDelta function and its derivatives.
 
     DiracDelta function has the following properties:
 
@@ -63,7 +64,7 @@ class DiracDelta(Function):
            - a symbol
 
            Examples
-           --------
+           ========
 
            >>> from sympy import DiracDelta
            >>> from sympy.abc import x, y
@@ -111,7 +112,7 @@ class DiracDelta(Function):
            - a symbol
 
            Examples
-           --------
+           ========
 
            >>> from sympy import DiracDelta, cos
            >>> from sympy.abc import x, y
@@ -141,39 +142,41 @@ class DiracDelta(Function):
 ###############################################################################
 
 class Heaviside(Function):
-    """**Heaviside Piecewise function**
+    """Heaviside Piecewise function
 
-    Heaviside function has the following properties:
+    Heaviside function has the following properties [*]_:
 
     1) ``diff(Heaviside(x),x) = DiracDelta(x)``
                         ``( 0, if x < 0``
     2) ``Heaviside(x) = < [*]  1/2 if x==0``
                         ``( 1, if x>0``
 
-    [*] Regarding to the value at 0, Mathematica defines ``H(0)=1``,
-    but Maple uses ``H(0)=undefined``
+    .. [*] Regarding to the value at 0, Mathematica defines ``H(0)=1``,
+           but Maple uses ``H(0)=undefined``
 
-    I think is better to have H(0)=1/2, due to the following:
-    integrate(DiracDelta(x),x) = Heaviside(x)
-    integrate(DiracDelta(x),(x,-oo,oo)) = 1
+    I think is better to have H(0)=1/2, due to the following::
+
+        integrate(DiracDelta(x),x) = Heaviside(x)
+        integrate(DiracDelta(x),(x,-oo,oo)) = 1
 
     and since DiracDelta is a symmetric function,
-    integrate(DiracDelta(x),(x,0,oo)) should be 1/2
-    in fact, that is what maple returns.
+    ``integrate(DiracDelta(x),(x,0,oo))`` should be 1/2 in fact, that is what
+    maple returns.
 
-    If we take Heaviside(0)=1/2, we would have
-    integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0)=1-1/2= 1/2
+    If we take ``Heaviside(0)=1/2``, we would have
+    ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0)=1-1/2= 1/2``
     and
-    integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo)=1/2-0= 1/2
+    ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo)=1/2-0= 1/2``
 
-    If we consider, instead Heaviside(0)=1, we would have
-    integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0) = 0
+    If we consider, instead ``Heaviside(0)=1``, we would have
+    ``integrate(DiracDelta(x),(x,0,oo)) = Heaviside(oo)-Heaviside(0) = 0``
     and
-    integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1
+    ``integrate(DiracDelta(x),(x,-oo,0)) = Heaviside(0)-Heaviside(-oo) = 1``
 
 
     For more information, see:
     http://mathworld.wolfram.com/HeavisideStepFunction.html
+
     """
     nargs = 1
 
@@ -195,4 +198,3 @@ class Heaviside(Function):
             return S.Half
         elif arg.is_positive:
             return S.One
-

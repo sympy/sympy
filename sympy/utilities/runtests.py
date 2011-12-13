@@ -122,7 +122,8 @@ def test(*paths, **kwargs):
        o paths can be entered in native system format or in unix,
          forward-slash format.
 
-    Examples:
+    Examples
+    ========
 
     >> import sympy
 
@@ -206,7 +207,8 @@ def doctest(*paths, **kwargs):
        o files that are on the blacklist can be tested by providing
          their path; they are only excluded if no paths are given.
 
-    Examples:
+    Examples
+    ========
 
     >> import sympy
 
@@ -516,14 +518,14 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f)
+                self.test_file(f, sort)
             except KeyboardInterrupt:
                 print " interrupted by user"
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename):
+    def test_file(self, filename, sort=True):
         clear_cache()
         self._count += 1
         gl = {'__file__':filename}
@@ -572,6 +574,8 @@ class SymPyTests(object):
         if not funcs:
             return
         self._reporter.entering_filename(filename, len(funcs))
+        if not sort:
+            random.shuffle(funcs)
         for f in funcs:
             self._reporter.entering_test(f)
             try:
@@ -657,7 +661,7 @@ class SymPyDocTests(object):
         module = rel_name.replace(os.sep, '.')[:-3]
 
         if rel_name.startswith("examples"):
-            # Example files do not have __init__.py files,
+            # Examples files do not have __init__.py files,
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
             module = file[:-3] # remove ".py"

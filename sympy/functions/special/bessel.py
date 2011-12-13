@@ -72,7 +72,8 @@ class besselj(BesselBase):
     .. math ::
         J_{-n}(z) = (-1)^n J_n(z).
 
-    **Examples**
+    Examples
+    ========
 
     Create a bessel function object:
 
@@ -97,7 +98,8 @@ class besselj(BesselBase):
     >>> b.argument
     z
 
-    **References**
+    References
+    ==========
 
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), "Chapter 9",
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
@@ -144,7 +146,8 @@ class bessely(BesselBase):
     It is a solution to Bessel's equation, and linearly independent from
     :math:`J_\nu`.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import bessely, yn
     >>> from sympy.abc import z, n
@@ -154,7 +157,10 @@ class bessely(BesselBase):
     >>> b.rewrite(yn)
     sqrt(2)*sqrt(z)*yn(n - 1/2, z)/sqrt(pi)
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    :class:`sympy.functions.special.bessel.besselj`
     """
 
     _a = S.One
@@ -191,14 +197,19 @@ class besseli(BesselBase):
 
     where :math:`J_\mu(z)` is the Bessel function of the first kind.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import besseli
     >>> from sympy.abc import z, n
     >>> besseli(n, z).diff(z)
     besseli(n - 1, z)/2 + besseli(n + 1, z)/2
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    :class:`sympy.functions.special.bessel.besselj`
+
     """
 
     _a = -S.One
@@ -226,14 +237,19 @@ class besselk(BesselBase):
     It is a solution of the modified Bessel equation, and linearly independent
     from :math:`Y_\nu`.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import besselk
     >>> from sympy.abc import z, n
     >>> besselk(n, z).diff(z)
     -besselk(n - 1, z)/2 - besselk(n + 1, z)/2
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    :class:`besselj`
+
     """
 
     _a = S.One
@@ -253,14 +269,19 @@ class hankel1(BesselBase):
 
     It is a solution to Bessel's equation.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import hankel1
     >>> from sympy.abc import z, n
     >>> hankel1(n, z).diff(z)
     hankel1(n - 1, z)/2 - hankel1(n + 1, z)/2
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    :class:`besselj`
+
     """
 
     _a = S.One
@@ -281,14 +302,19 @@ class hankel2(BesselBase):
     It is a solution to Bessel's equation, and linearly independent from
     :math:`H_\nu^{(1)}`.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import hankel2
     >>> from sympy.abc import z, n
     >>> hankel2(n, z).diff(z)
     hankel2(n - 1, z)/2 - hankel2(n + 1, z)/2
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    :class:`besselj`
+
     """
 
     _a = S.One
@@ -348,16 +374,17 @@ class jn(SphericalBesselBase):
 
     where :math:`J_\nu(z)` is the Bessel function of the first kind.
 
-    **Examples**
+    Examples
+    ========
 
-        >>> from sympy import Symbol, jn, sin, cos, expand_func
-        >>> z = Symbol("z")
-        >>> print jn(0, z).expand(func=True)
-        sin(z)/z
-        >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
-        True
-        >>> expand_func(jn(3, z))
-        (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
+    >>> from sympy import Symbol, jn, sin, cos, expand_func
+    >>> z = Symbol("z")
+    >>> print jn(0, z).expand(func=True)
+    sin(z)/z
+    >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
+    True
+    >>> expand_func(jn(3, z))
+    (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
 
     The spherical Bessel functions of integral order
     are calculated using the formula:
@@ -367,7 +394,11 @@ class jn(SphericalBesselBase):
     where the coefficients :math:`f_n(z)` are available as
     :func:`polys.orthopolys.spherical_bessel_fn`.
 
-    **See also:** :class:`besselj`
+    See Also
+    ========
+
+    :class:`besselj`
+
     """
 
     def _rewrite(self):
@@ -393,20 +424,25 @@ class yn(SphericalBesselBase):
 
     where :math:`Y_\nu(z)` is the Bessel function of the second kind.
 
-    **Examples**
+    Examples
+    ========
 
-        >>> from sympy import Symbol, yn, sin, cos, expand_func
-        >>> z = Symbol("z")
-        >>> print expand_func(yn(0, z))
-        -cos(z)/z
-        >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
-        True
+    >>> from sympy import Symbol, yn, sin, cos, expand_func
+    >>> z = Symbol("z")
+    >>> print expand_func(yn(0, z))
+    -cos(z)/z
+    >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
+    True
 
     For integral orders :math:`n`, :math:`y_n` is calculated using the formula:
 
     .. math:: y_n(z) = (-1)^{n+1} j_{-n-1}(z)
 
-    **See also:** :class:`besselj`, :class:`bessely`, :class:`jn`
+    See Also
+    ========
+
+    :class:`besselj`, :class:`bessely`, :class:`jn`
+
     """
 
     def _rewrite(self):
@@ -428,19 +464,20 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     This returns an array of zeros of jn up to the k-th zero.
 
-    method = "sympy": uses mpmath besseljzero
-    method = "scipy": uses the SciPy's sph_jn and newton to find all roots,
-            which is faster than computing the zeros using a general numerical
-            solver, but it requires SciPy and only
-            works with low precision floating point numbers.
-            [the function used with method="sympy" is a recent addition to
-             mpmath, before that a general solver was used]
+    * method = "sympy": uses mpmath besseljzero
+    * method = "scipy": uses the SciPy's sph_jn and newton to find all
+      roots, which is faster than computing the zeros using a general
+      numerical solver, but it requires SciPy and only works with low
+      precision floating point numbers.  [the function used with
+      method="sympy" is a recent addition to mpmath, before that a general
+      solver was used]
 
-    **Examples**
+    Examples
+    ========
 
-        >>> from sympy import jn_zeros
-        >>> jn_zeros(2, 4, dps=5)
-        [5.7635, 9.095, 12.323, 15.515]
+    >>> from sympy import jn_zeros
+    >>> jn_zeros(2, 4, dps=5)
+    [5.7635, 9.095, 12.323, 15.515]
 
     """
     from math import pi

@@ -80,7 +80,7 @@ class MathMLPrinter(Printer):
 
         numer, denom = fraction(expr)
 
-        if not denom is S.One:
+        if denom is not S.One:
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('divide'))
             x.appendChild(self._print(numer))

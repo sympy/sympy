@@ -22,7 +22,8 @@ def raises(ExpectedException, code):
     Does nothing if the right exception is raised, otherwise raises an
     AssertionError.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.utilities.pytest import raises
     >>> raises(ZeroDivisionError, "1/0")

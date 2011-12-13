@@ -9,6 +9,7 @@ from sympy.core.evalf import get_integer_part, PrecisionExhausted
 ###############################################################################
 
 class RoundFunction(Function):
+    """The base class for rounding functions."""
 
     nargs = 1
 

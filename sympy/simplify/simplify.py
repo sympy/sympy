@@ -106,17 +106,20 @@ def numer(expr):
 def denom(expr):
     return fraction(expr)[1]
 
-def fraction_expand(expr):
-    a, b = fraction(expr)
-    return a.expand() / b.expand()
+def fraction_expand(expr, **hints):
+    return expr.expand(frac=True, **hints)
 
-def numer_expand(expr):
+def numer_expand(expr, **hints):
     a, b = fraction(expr)
-    return a.expand() / b
+    return a.expand(numer=True, **hints) / b
 
-def denom_expand(expr):
+def denom_expand(expr, **hints):
     a, b = fraction(expr)
-    return a / b.expand()
+    return a / b.expand(denom=True, **hints)
+
+expand_numer = numer_expand
+expand_denom = denom_expand
+expand_fraction = fraction_expand
 
 def separate(expr, deep=False, force=False):
     """A wrapper to expand(power_base=True) which separates a power
@@ -549,7 +552,7 @@ def rcollect(expr, *vars):
     """
     Recursively collect sums in an expression.
 
-    Example
+    Examples
     =======
 
     >>> from sympy.simplify import rcollect
@@ -592,7 +595,8 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     Note: the order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.abc import x, y, z, alpha
     >>> from sympy import separatevars, sin
     >>> separatevars((x*y)**y)
@@ -1061,8 +1065,9 @@ def radsimp(expr, symbolic=True):
     do not want the simplification to occur for symbolic denominators, set
     ``symbolic`` to False.
 
-    Examples:
 
+    Examples
+    ========
     >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
     >>> from sympy.abc import a, b, c
 
@@ -1106,7 +1111,6 @@ def radsimp(expr, symbolic=True):
 
     >>> radsimp(eq, symbolic=False)
     1/(a + b*sqrt(c))
-
     """
 
     def handle(expr):
@@ -1389,7 +1393,8 @@ def powdenest(eq, force=False):
     When there are sums of logs in exp() then a product of powers may be
     obtained e.g. exp(3*(log(a) + 2*log(b))) - > a**3*b**6.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.abc import a, b, x, y, z
     >>> from sympy import Symbol, exp, log, sqrt, symbols, powdenest
@@ -1808,7 +1813,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if not (b.is_nonnegative or e.is_integer or force):
                     continue
                 exp_c, exp_t = e.as_coeff_mul()
-                if not (exp_c is S.One) and exp_t:
+                if exp_c is not S.One and exp_t:
                     c_powers[i] = [Pow(b, exp_c), e._new_rawargs(*exp_t)]
 
 
@@ -1839,7 +1844,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     nonneg=[]
                     neg=[]
                     for bi in bases:
-                        if not bi.is_negative is None: #then we know the sign
+                        if bi.is_negative is not None: #then we know the sign
                             if bi.is_negative:
                                 neg.append(bi)
                             else:
@@ -2251,25 +2256,30 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
         # cancel already took care of things like 1/sqrt(3) -> sqrt(3)/3
         # so we don't have to worry about `a` matching with `b`=0 as we
-        # do in radsimp
+        # do in radsimp yet, but we do below...
         r = denom.match(a + b*sqrt(c))
 
         if r is not None and r[b]:
             # be careful not to multiply by 0/0 when removing denom;
             # this will happen in a = +/- b*sqrt(c), so collect c so
-            # it's not also in `a`
+            # it's not also in `a` but this may turn the denom into
+            # a Mul so we have to watch out for that.
             if r[c].is_number:
                 newdenom = collect_const(denom, sqrt(r[c]))
                 if newdenom != denom:
-                    r = newdenom.match(a + b*sqrt(c))
-            a, b, c = r[a], r[b], r[c]
+                    if newdenom.is_Add:
+                        r = newdenom.match(a + b*sqrt(c))
+                    else:
+                        r = None # Add turned into a Mul
+            if r:
+                a, b, c = r[a], r[b], r[c]
 
-            numer *= a-b*sqrt(c)
-            numer = numer.expand()
+                numer *= a-b*sqrt(c)
+                numer = numer.expand()
 
-            denom = a**2 - c*b**2
+                denom = a**2 - c*b**2
 
-            expr = numer/denom
+                expr = numer/denom
 
     if expr.could_extract_minus_sign():
         n, d = expr.as_numer_denom()
@@ -2333,7 +2343,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     (this is useful to find simpler numbers when the tolerance
     is set low).
 
-    Examples:
+    Examples
+    ========
 
         >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
         >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
@@ -2433,7 +2444,8 @@ def logcombine(expr, force=False):
     negative, combine will still not combine the equations.  Change the
     assumptions on the variables to make them combine.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy import Symbol, symbols, log, logcombine
     >>> from sympy.abc import a, x, y, z
     >>> logcombine(a*log(x)+log(y)-log(z))
@@ -2459,7 +2471,8 @@ def _logcombine(expr, force=False):
     def _getlogargs(expr):
         """
         Returns the arguments of the logarithm in an expression.
-        Example:
+        Examples
+    ========
         _getlogargs(a*log(x*y))
         x*y
         """

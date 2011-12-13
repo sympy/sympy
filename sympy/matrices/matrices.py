@@ -140,19 +140,6 @@ class Matrix(object):
         else:
             raise TypeError("Data type not understood")
 
-    def key2ij(self, key):
-        """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
-        indices are also supported and are remapped to positives provided they
-        are valid indices."""
-
-        if not (is_sequence(key) and len(key) == 2):
-            raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
-                    %repr(key))
-        i, j = [(k + n) if k < 0 else k for k, n in zip(key, (self.rows, self.cols))]
-        if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
-            raise IndexError("Index out of range: a[%s]"%repr(key))
-        return i,j
-
     def transpose(self):
         """
         Matrix transposition.
@@ -234,13 +221,13 @@ class Matrix(object):
 
             else:
                 # a2idx inlined
-                if not type(i) is int:
+                if type(i) is not int:
                     try:
                         i = i.__index__()
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
                 # a2idx inlined
-                if not type(j) is int:
+                if type(j) is not int:
                     try:
                        j = j.__index__()
                     except AttributeError:
@@ -287,14 +274,14 @@ class Matrix(object):
                     return
             else:
                 # a2idx inlined
-                if not type(i) is int:
+                if type(i) is not int:
                     try:
                         i = i.__index__()
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
 
                 # a2idx inlined
-                if not type(j) is int:
+                if type(j) is not int:
                     try:
                         j = j.__index__()
                     except AttributeError:
@@ -376,8 +363,8 @@ class Matrix(object):
         [0, 0, 0, 0, 1]
 
         """
-        rlo, rhi = self.slice2bounds(key[0], self.rows)
-        clo, chi = self.slice2bounds(key[1], self.cols)
+        rlo, rhi, clo, chi = self.key2bounds(key)
+
         if value.rows != rhi - rlo or value.cols != chi - clo:
             raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
                 "as the in sub-Matrix given by `key`.")
@@ -792,8 +779,10 @@ class Matrix(object):
         elif method == "LU":
             return self.inverse_LU(iszerofunc=iszerofunc)
         elif method == "ADJ":
-            return self.inverse_ADJ()
+            return self.inverse_ADJ(iszerofunc=iszerofunc)
         else:
+            # make sure to add an invertibility check (as in inverse_LU)
+            # if a new method is added.
             raise ValueError("Inversion method unrecognized")
 
 
@@ -1076,13 +1065,7 @@ class Matrix(object):
         [5, 6]
 
         """
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("At least one element of `keys` must be a slice object.")
-
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        rlo, rhi, clo, chi = self.key2bounds(keys)
         outLines, outCols = rhi-rlo, chi-clo
         outMat = [0]*outLines*outCols
         for i in xrange(outLines):
@@ -1131,6 +1114,40 @@ class Matrix(object):
         colsList = [self.key2ij((0,k))[1] for k in colsList]
         return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]])
 
+    def key2bounds(self, keys):
+        """Converts a key with potentially mixed types of keys (integer and slice)
+        into a tuple of ranges and raises an error if any index is out of self's
+        range."""
+
+        islice, jslice = [isinstance(k, slice) for k in keys]
+        if islice:
+            rlo, rhi = self.slice2bounds(keys[0], self.rows)
+        else:
+            # assuming we don't have a
+            rlo, _ = self.slice2bounds((keys[0], 0), self.rows)
+            rhi  = rlo + 1
+        if jslice:
+            clo, chi = self.slice2bounds(keys[1], self.cols)
+        else:
+            _, clo = self.slice2bounds((0, keys[1]), self.cols)
+            chi = clo + 1
+        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
+            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        return rlo, rhi, clo, chi
+
+    def key2ij(self, key):
+        """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
+        indices are also supported and are remapped to positives provided they
+        are valid indices."""
+
+        if not (is_sequence(key) and len(key) == 2):
+            raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
+                    %repr(key))
+        i, j = [(k + n) if k < 0 else k for k, n in zip(key, (self.rows, self.cols))]
+        if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
+            raise IndexError("Index out of range: a[%s]"%repr(key))
+        return i,j
+
     def slice2bounds(self, key, defmax):
         """
         Takes slice or number and returns (min,max) for iteration
@@ -1138,10 +1155,9 @@ class Matrix(object):
         """
         if isinstance(key, slice):
             return key.indices(defmax)[:2]
-        elif isinstance(key, int):
-            if key == -1:
-                key = defmax - 1
-            return slice(key, key + 1).indices(defmax)[:2]
+        elif isinstance(key, tuple):
+            key = [defmax - 1 if i == -1 else i for i in key]
+            return self.key2ij(key)
         else:
             raise IndexError("Improper index type")
 
@@ -1536,7 +1552,7 @@ class Matrix(object):
         # only in the end.
         x = []
         n = R.rows
-        for j in range(n-1, -1, -1):
+        for j in range(n - 1, -1, -1):
             tmp = y[j,:]
             for k in range(j+1, n):
                 tmp -= R[j,k] * x[n-1-k]
@@ -1622,10 +1638,10 @@ class Matrix(object):
     def multiply_elementwise(self, b):
         """Return the Hadamard product (elementwise product) of A and B
 
-        >>> import sympy
-        >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> print A.multiply_elementwise(B)
+        >>> from sympy.matrices.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
         [  0, 10, 200]
         [300, 40,   5]
         """
@@ -1654,16 +1670,16 @@ class Matrix(object):
         >>> from sympy import Matrix, Symbol, trigsimp, cos, sin
         >>> x = Symbol('x', real=True)
         >>> v = Matrix([cos(x), sin(x)])
-        >>> print trigsimp( v.norm() )
+        >>> trigsimp( v.norm() )
         1
-        >>> print v.norm(10)
+        >>> v.norm(10)
         (sin(x)**10 + cos(x)**10)**(1/10)
         >>> A = Matrix([[1,1], [1,1]])
-        >>> print A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
+        >>> A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
         2
-        >>> print A.norm(-2) # Inverse spectral norm (smallest singular value)
+        >>> A.norm(-2) # Inverse spectral norm (smallest singular value)
         0
-        >>> print A.norm() # Frobenius Norm
+        >>> A.norm() # Frobenius Norm
         2
         """
 
@@ -1827,7 +1843,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -1838,7 +1853,6 @@ class Matrix(object):
         True
         >>> c.is_square
         True
-
         """
         return self.rows == self.cols
 
@@ -1867,7 +1881,6 @@ class Matrix(object):
         False
         >>> d.is_zero
         True
-
         """
         return all(i.is_zero for i in self)
 
@@ -1889,7 +1902,6 @@ class Matrix(object):
         >>> a = Matrix([[1,0,1],[1,0,0],[1,1,0]])
         >>> a.is_nilpotent()
         False
-
         """
         if not self.is_square:
             raise NonSquareMatrixError("Nilpotency is valid only for square matrices")
@@ -2242,6 +2254,13 @@ class Matrix(object):
         """
         Calculates the inverse using LU decomposition.
         """
+        if not self.is_square:
+            raise NonSquareMatrixError()
+
+        ok = self.rref()[0]
+        if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
+            raise ValueError("Matrix det == 0; not invertible.")
+
         return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
 
     def inverse_GE(self, iszerofunc=_iszero):
@@ -2251,14 +2270,14 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if self.det() == 0:
-            raise ValueError("A Matrix must have non-zero determinant to invert.")
-
         big = self.row_join(self.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc)
-        return red[0][:,big.rows:]
+        red = big.rref(iszerofunc=iszerofunc)[0]
+        if any(iszerofunc(red[j, j]) for j in range(red.rows)):
+            raise ValueError("Matrix det == 0; not invertible.")
 
-    def inverse_ADJ(self):
+        return red[:,big.rows:]
+
+    def inverse_ADJ(self, iszerofunc=_iszero):
         """
         Calculates the inverse using the adjugate matrix and a determinant.
         """
@@ -2266,7 +2285,12 @@ class Matrix(object):
             raise NonSquareMatrixError()
 
         d = self.berkowitz_det()
-        if d == 0:
+        zero = d.equals(0)
+        if zero is None:
+            # if equals() can't decide, will rref be able to?
+            ok = self.rref()[0]
+            zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
+        if zero:
             raise ValueError("A Matrix must have non-zero determinant to invert.")
 
         return self.adjugate()/d
@@ -2278,32 +2302,32 @@ class Matrix(object):
         To simplify elements before finding nonzero pivots set simplified=True.
         To set a custom simplify function, use the simplify keyword argument.
         """
-        # TODO: rewrite inverse_GE to use this
-        pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
+
+        pivot, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
-            if pivots == r.rows:
+            if pivot == r.rows:
                 break
             if simplified:
-                r[pivots,i] = simplify(r[pivots,i])
-            if iszerofunc(r[pivots,i]):
-                for k in range(pivots, r.rows):
-                    if simplified and k > pivots:
+                r[pivot,i] = simplify(r[pivot,i])
+            if iszerofunc(r[pivot,i]):
+                for k in range(pivot, r.rows):
+                    if simplified and k > pivot:
                         r[k,i] = simplify(r[k,i])
                     if not iszerofunc(r[k,i]):
                         break
                 if k == r.rows - 1 and iszerofunc(r[k,i]):
                     continue
-                r.row_swap(pivots,k)
-            scale = r[pivots,i]
-            r.row(pivots, lambda x, _: x/scale)
+                r.row_swap(pivot,k)
+            scale = r[pivot,i]
+            r.row(pivot, lambda x, _: x/scale)
             for j in range(r.rows):
-                if j == pivots:
+                if j == pivot:
                     continue
                 scale = r[j,i]
-                r.row(j, lambda x, k: x - scale*r[pivots,k])
+                r.row(j, lambda x, k: x - scale*r[pivot,k])
             pivotlist.append(i)
-            pivots += 1
+            pivot += 1
         return r, pivotlist
 
     def nullspace(self, simplified=False):
@@ -2311,6 +2335,7 @@ class Matrix(object):
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
         reduced, pivots = self.rref(simplified)
+
         basis = []
         # create a set of vectors for the basis
         for i in range(self.cols - len(pivots)):
@@ -2364,13 +2389,13 @@ class Matrix(object):
 
            >>> p, q, r = M.berkowitz()
 
-           >>> print p # 1 x 1 M's sub-matrix
+           >>> p # 1 x 1 M's sub-matrix
            (1, -x)
 
-           >>> print q # 2 x 2 M's sub-matrix
+           >>> q # 2 x 2 M's sub-matrix
            (1, -x, -y)
 
-           >>> print r # 3 x 3 M's sub-matrix
+           >>> r # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
@@ -2521,7 +2546,7 @@ class Matrix(object):
         >>> from sympy import Matrix, Symbol, eye
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
-        >>> print A.singular_values()
+        >>> A.singular_values()
         [1, sqrt(x**2 + 1), 0]
         """
         # Compute eigenvalues of A.H A
@@ -2546,7 +2571,7 @@ class Matrix(object):
 
         >>> from sympy import Matrix, S
         >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
-        >>> print A.condition_number()
+        >>> A.condition_number()
         100
         """
 
@@ -3017,10 +3042,10 @@ def matrix_multiply(A, B):
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
-    >>> import sympy
-    >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
-    >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
-    >>> print sympy.matrices.matrix_multiply_elementwise(A, B)
+    >>> from sympy.matrices.matrices import Matrix, matrix_multiply_elementwise
+    >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+    >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+    >>> matrix_multiply_elementwise(A, B)
     [  0, 10, 200]
     [300, 40,   5]
     """
@@ -3030,8 +3055,8 @@ def matrix_multiply_elementwise(A, B):
     return Matrix(shape[0], shape[1],
         lambda i, j: A[i,j] * B[i, j])
 
-def matrix_add(A,B):
-    """Return A+B"""
+def matrix_add(A, B):
+    """Return A + B"""
     if A.shape != B.shape:
         raise ShapeError()
     alst = A.tolist()
@@ -3668,12 +3693,7 @@ class SparseMatrix(Matrix):
         return r
 
     def submatrix(self, keys):
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("Both elements of `keys` must be slice objects.")
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        rlo, rhi, clo, chi = self.key2bounds(keys)
         return SparseMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
 
     def reshape(self, _rows, _cols):

@@ -1,5 +1,5 @@
 from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols, Dummy, S, Function, flatten)
+    sympify, symbols, Dummy, Function, flatten)
 
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import SymPyDeprecationWarning
@@ -66,9 +66,7 @@ def test_lt_gt():
 def test_no_len():
     # there should be no len for numbers
     x = Symbol('x')
-    xxl = Symbol('xxl')
     raises(TypeError, "len(x)")
-    raises(TypeError, "len(xxl)")
 
 def test_Wild_properties():
     # these tests only include Atoms
@@ -76,7 +74,6 @@ def test_Wild_properties():
     y   = Symbol("y")
     p   = Symbol("p", positive=True)
     k   = Symbol("k", integer=True)
-    r   = Symbol("r", real=True)
     n   = Symbol("n", integer=True, positive=True)
 
     given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3,2), I ]

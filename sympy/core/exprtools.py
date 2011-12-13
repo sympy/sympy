@@ -13,13 +13,12 @@ from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple
 
-from collections import defaultdict
-
 def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
 
-    **Example**
+    Examples
+    ========
 
     >>> from sympy.core.exprtools import decompose_power
     >>> from sympy.abc import x, y
@@ -381,7 +380,7 @@ def gcd_terms(terms, isprimitive=False):
     Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
     True the _gcd_terms will not run the primitive method on the terms.
 
-    **Example**
+    **Examples**
 
     >>> from sympy.core import gcd_terms
     >>> from sympy.abc import x, y
@@ -418,8 +417,8 @@ def factor_terms(expr):
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutative) is performed.
 
-    **Examples**
-
+    Examples
+    ========
     >>> from sympy import factor_terms, Symbol
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)
@@ -453,5 +452,5 @@ def factor_terms(expr):
         list_args[i] = gcd_terms(a, isprimitive=True)
         # cancel terms that may not have cancelled
     p = Add._from_args(list_args) # gcd_terms will fix up ordering
-    p = gcd_terms(p, isprimitive=True).subs(ncreps) # exact subs could be used here
+    p = gcd_terms(p, isprimitive=True).xreplace(ncreps)
     return _keep_coeff(cont, p)

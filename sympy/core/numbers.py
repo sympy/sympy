@@ -932,7 +932,7 @@ class Rational(Number):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Example**
+        **Examples**
         >>> from sympy import S
         >>> (S(-3)/2).as_content_primitive()
         (3/2, -1)

@@ -4,7 +4,8 @@ def pprint_nodes(subtrees):
     """
     Prettyprints systems of nodes.
 
-    Example:
+    Examples
+    ========
 
     >> print pprint_nodes(["a", "b1\nb2", "c"])
     +-a

@@ -119,7 +119,7 @@ class Mul(AssocOp):
                 if b.is_Mul:
                     bargs, nc = b.args_cnc(clist=True)
                     rv = bargs, nc, None
-                    if not a is S.One:
+                    if a is not S.One:
                         bargs.insert(0, a)
 
                 elif b.is_Add and b.is_commutative:
@@ -344,7 +344,7 @@ class Mul(AssocOp):
                     coeff *= b
                 else:
                     c_part.append(b)
-            elif not e is S.Zero:
+            elif e is not S.Zero:
                 c_part.append(Pow(b, e))
 
         #  x    x     x
@@ -519,7 +519,7 @@ class Mul(AssocOp):
                     nonneg=[]
                     neg=[]
                     for bi in rest:
-                        if not bi.is_negative is None: #then we know the sign
+                        if bi.is_negative is not None: #then we know the sign
                             if bi.is_negative:
                                 neg.append(bi)
                             else:
@@ -636,7 +636,7 @@ class Mul(AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         coeff, notrat = self.args[0].as_coeff_mul()
-        if not coeff is S.One:
+        if coeff is not S.One:
             return coeff, notrat + self.args[1:]
         return S.One, self.args
 
@@ -713,8 +713,16 @@ class Mul(AssocOp):
         return self.func(*terms)
 
     def _eval_expand_mul(self, deep=True, **hints):
+        from sympy import fraction
+        expr = self
+        n, d = fraction(expr)
+        if d is not S.One:
+            expr = n/d._eval_expand_mul(deep=deep, **hints)
+            if not expr.is_Mul:
+                return expr._eval_expand_mul(deep=deep, **hints)
+
         plain, sums, rewrite = [], [], False
-        for factor in self.args:
+        for factor in expr.args:
             if deep:
                 term = factor.expand(deep=deep, **hints)
                 if term != factor:
@@ -732,7 +740,7 @@ class Mul(AssocOp):
                     sums.append(Wrapper(factor))
 
         if not rewrite:
-            return self
+            return expr
         else:
             plain = Mul(*plain)
             if sums:
@@ -1113,7 +1121,7 @@ class Mul(AssocOp):
             for (i, a) in enumerate(Mul.make_args(eq)):
                 a = powdenest(a)
                 (b, e) = a.as_base_exp()
-                if not e is S.One:
+                if e is not S.One:
                     (co, _) = e.as_coeff_mul()
                     b = Pow(b, e/co)
                     e = co
@@ -1336,7 +1344,8 @@ class Mul(AssocOp):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Example**
+        Examples
+        ========
         >>> from sympy import sqrt
         >>> (-3*sqrt(2)*(2 - 2*sqrt(2))).as_content_primitive()
         (6, -sqrt(2)*(-sqrt(2) + 1))
@@ -1360,7 +1369,8 @@ def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only
        ints are included then an int result is returned.
 
-    Example:
+    Examples
+    ========
     >>> from sympy import prod, S
     >>> prod(range(3))
     0

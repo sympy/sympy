@@ -39,6 +39,11 @@ def test_re():
 
     assert re((2+I)**2).expand(complex=True) == 3
 
+    assert re(conjugate(x)) == re(x)
+    assert conjugate(re(x)) == re(x)
+
+    assert re(x).as_real_imag() == (re(x), 0)
+
 def test_im():
     x, y = symbols('x,y')
 
@@ -78,13 +83,21 @@ def test_im():
 
     assert im((2+I)**2).expand(complex=True) == 4
 
+    assert im(conjugate(x)) == -im(x)
+    assert conjugate(im(x)) == im(x)
+
+    assert im(x).as_real_imag() == (im(x), 0)
+
 def test_sign():
     assert sign(1.2) == 1
     assert sign(-1.2) == -1
     assert sign(0) == 0
+    assert sign(nan) == nan
     x = Symbol('x')
     assert sign(x).is_zero == False
     assert sign(2*x) == sign(x)
+    assert sign(x).diff(x) == 0
+    assert conjugate(sign(x)) == sign(x)
     p = Symbol('p', positive = True)
     n = Symbol('n', negative = True)
     m = Symbol('m', negative = True)
@@ -100,6 +113,7 @@ def test_Abs():
     assert Abs(0) == 0
     assert Abs(1) == 1
     assert Abs(-1)== 1
+    assert Abs(nan) == nan
     x = Symbol('x',real=True)
     n = Symbol('n',integer=True)
     assert x**(2*n) == Abs(x)**(2*n)
@@ -109,6 +123,8 @@ def test_Abs():
     assert (Abs(x)**(3*n)).args == (Abs(x), 3*n) # leave symbolic odd unchanged
     assert (1/Abs(x)).args == (Abs(x), -1)
     assert 1/Abs(x)**3 == 1/(x**2*Abs(x))
+    assert Abs(x).diff(x) == sign(x)
+    assert conjugate(Abs(x)) == Abs(x)
 
 def test_abs_real():
     # test some properties of abs that only apply
@@ -152,6 +168,9 @@ def test_arg():
 
     n = Symbol('n', negative=True)
     assert arg(n) == pi
+
+    x = Symbol('x')
+    assert conjugate(arg(x)) == arg(x)
 
 def test_conjugate():
     a = Symbol('a', real=True)

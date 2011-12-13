@@ -201,7 +201,8 @@ def spherical_bessel_fn(n, x=None, **args):
     fn(1, z) = 1/z**2
     fn(n-1, z) + fn(n+1, z) == (2*n+1)/z * fn(n, z)
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.polys.orthopolys import spherical_bessel_fn as fn
     >>> from sympy import Symbol

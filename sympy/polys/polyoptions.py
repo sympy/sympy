@@ -71,7 +71,8 @@ class Options(dict):
     """
     Options manager for polynomial manipulation module.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyoptions import Options
     >>> from sympy.polys.polyoptions import build_options
@@ -732,7 +733,8 @@ def allowed_flags(args, flags):
     """
     Allow specified flags to be used in the given context.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyoptions import allowed_flags
     >>> from sympy.polys.domains import ZZ

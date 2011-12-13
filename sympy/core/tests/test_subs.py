@@ -5,10 +5,7 @@ from sympy.utilities.pytest import XFAIL
 
 def test_subs():
     n3=Rational(3)
-    n2=Rational(2)
-    n6=Rational(6)
     x=Symbol("x")
-    c=Symbol("c")
     e=x
     e=e.subs(x,n3)
     assert e == Rational(3)

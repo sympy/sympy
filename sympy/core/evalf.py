@@ -79,7 +79,8 @@ def fastlog(x):
     to see if the mantissa is a multiple of 2 (in which case the
     result would be too large by 1).
 
-    Example::
+    Examples
+    ========
 
     >>> from sympy import log
     >>> from sympy.core.evalf import fastlog, bitcount
@@ -1103,7 +1104,8 @@ def N(x, n=15, **options):
     Both .evalf() and N() are equivalent, use the one that you like better.
     See also the docstring of .evalf() for information on the options.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Sum, Symbol, oo, N
     >>> from sympy.abc import k

@@ -1,5 +1,5 @@
 from sympy import (symbols, Rational, Symbol, Integral, log, diff, sin, exp,
-    Function, factorial, floor, ceiling, Abs, re, im, conjugate, gamma,
+    Function, factorial, factorial2, floor, ceiling, Abs, re, im, conjugate, gamma,
     Order, Piecewise, Matrix, asin, Interval, EmptySet, Union, S, Sum,
     Limit, oo, Poly, Float, lowergamma, uppergamma, hyper, meijerg,
     Lambda, Poly, RootOf, RootSum, sqrt, Dict, catalan,
@@ -119,6 +119,9 @@ def test_latex_functions():
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
+
+    assert latex(factorial2(k)) == r"k!!"
+    assert latex(factorial2(-k)) == r"\left(- k\right)!!"
 
     assert latex(floor(x)) == r"\lfloor{x}\rfloor"
     assert latex(ceiling(x)) == r"\lceil{x}\rceil"

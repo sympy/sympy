@@ -409,12 +409,11 @@ class Integral(Expr):
         return function
 
     def _eval_expand_basic(self, deep=True, **hints):
-        from sympy import flatten
         if not deep:
             return self
         else:
             return Integral(self.function.expand(deep=deep, **hints),\
-            flatten(*self.limits))
+            *self.limits)
 
     def _eval_derivative(self, sym):
         """Evaluate the derivative of the current Integral object by
@@ -759,7 +758,8 @@ class Integral(Expr):
         the curve exactly in the middle of each interval (thus midpoint
         method). See [1] for more information.
 
-        Examples:
+        Examples
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x
@@ -780,7 +780,8 @@ class Integral(Expr):
         interval the function value is taken at the left hand side of the
         interval.
 
-        Examples:
+        Examples
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x

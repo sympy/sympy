@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma
+    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL, skip
@@ -166,6 +166,7 @@ def test_sign1():
     assert sign(3-1/x, x) == 1
     assert sign(-3-1/x, x) == -1
     assert sign(sin(1/x), x) == 1
+    assert sign((x**Integer(2)), x) == 1
 
 def test_sign2():
     assert sign(x, x) == 1

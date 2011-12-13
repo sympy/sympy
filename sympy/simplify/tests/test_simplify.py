@@ -6,6 +6,7 @@ from sympy import (Symbol, symbols, hypersimp, factorial, binomial,
     separatevars, erf, rcollect, count_ops, combsimp, posify, expand,
     factor, Mul, O, hyper, Add, Float, radsimp, collect_const)
 from sympy.core.mul import _keep_coeff
+from sympy.simplify.simplify import fraction_expand
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
@@ -808,6 +809,8 @@ def test_as_content_primitive():
     assert (5**(S(7)/4)).as_content_primitive() == (5, 5**(S(3)/4))
     assert Add(5*z/7, 0.5*x, 3*y/2, evaluate=False).as_content_primitive() == \
             (S(1)/14, 7.0*x + 21*y + 10*z)
+    assert (2**(S(3)/4) + 2**(S(1)/4)*sqrt(3)).as_content_primitive() == \
+            (1, 2**(S(1)/4)*(sqrt(2) + sqrt(3)))
 
 def test_radsimp():
     r2=sqrt(2)
@@ -879,3 +882,8 @@ def test_issue2834():
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
     assert abs(denom(x).n()) > 1e-12
     assert abs(denom(radsimp(x))) > 1e-12 # in case simplify didn't handle it
+
+def test_fraction_expand():
+    eq = (x + y)*y/x
+    assert eq.expand(frac=True) == fraction_expand(eq) == (x*y + y**2)/x
+    assert eq.expand() == y + y**2/x

@@ -1,10 +1,11 @@
-from sympy import (S, Symbol, Sum, oo, Float, Rational, summation, pi, cos,
-    zeta, exp, log, factorial, sqrt, E, sympify, binomial, harmonic, Catalan,
-    EulerGamma, Function, Integral, Product, product, nan, diff, Derivative)
+from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
+                   factorial, Function, harmonic, Integral, log, nan, oo, pi,
+                   Product, product, Rational, S, sqrt, Sum, summation, Symbol,
+                   sympify, zeta)
+from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 
-a, b, c, d, m, k, x, y, z = map(Symbol, 'abcdmkxyz')
 n = Symbol('n', integer=True)
 
 def test_arithmetic_sums():
@@ -222,7 +223,7 @@ def test_telescopic_sums():
     assert telescopic(1/m, -m/(1+m),(m, n-1, n)) == \
            telescopic(1/k, -k/(1+k),(k, n-1, n))
 
-    assert Sum(1/x/(x - 1), (x, a, b)).doit() == 1/(-1 + a) - 1/b
+    assert Sum(1/x/(x - 1), (x, a, b)).doit() == -((a - b - 1)/(b*(a - 1)))
 
 def test_sum_reconstruct():
     s = Sum(n**2, (n, -1, 1))

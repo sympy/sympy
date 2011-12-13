@@ -17,7 +17,8 @@ There are two types of functions:
    works in sympy core, but needs to be ported back to SymPy.
 
 
-Example:
+    Examples
+    ========
     >>> import sympy
     >>> f = sympy.Function("f")
     >>> from sympy.abc import x
@@ -111,7 +112,7 @@ class Application(Basic):
         (possible of some other class), or if the class cls should be
         unmodified, return None.
 
-        Example of eval() for the function "sign"
+        Examples of eval() for the function "sign"
         ---------------------------------------------
 
         @classmethod
@@ -250,6 +251,9 @@ class Function(Application, Expr):
 
     @property
     def is_commutative(self):
+        """
+        Returns whether the functon is commutative.
+        """
         if all(getattr(t, 'is_commutative') for t in self.args):
             return True
         else:
@@ -321,6 +325,9 @@ class Function(Application, Expr):
         return r
 
     def as_base_exp(self):
+        """
+        Returns the method as the 2-tuple (base, exponent).
+        """
         return self, S.One
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -337,7 +344,8 @@ class Function(Application, Expr):
         """
         This function does compute series for multivariate functions,
         but the expansion is always in terms of *one* variable.
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import atan2, O
         >>> from sympy.abc import x, y
@@ -360,7 +368,7 @@ functions are not supported.')
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_bounded == False for t in args0):
-            from sympy import Dummy, oo, zoo, nan
+            from sympy import oo, zoo, nan
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any ([t.has(oo, -oo, zoo, nan) for t in a0]):
@@ -541,6 +549,9 @@ functions are not supported.')
         return self.func(*args)
 
     def fdiff(self, argindex=1):
+        """
+        Returns the first derivative of the function.
+        """
         if self.nargs is not None:
             if isinstance(self.nargs, tuple):
                 nargs = self.nargs[-1]
@@ -1513,7 +1524,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     the expression might not be fully distributed.  The solution is to expand
     with mul=False first, then run expand_mul if you need further expansion.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import expand_log, expand, expand_mul
     >>> x, y, z = symbols('x,y,z', positive=True)
@@ -1551,7 +1563,19 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     >>> expand_mul(_)
     x*y**2 + 2*x*y*z + x*z**2
 
+    >>> expand((x + y)*y/x)
+    y + y**2/x
+
+    The parts of a rational expression can be targeted, too:
+
+    >>> expand((x + y)*y/x/(x + 1), frac=True)
+    (x*y + y**2)/(x**2 + x)
+    >>> expand((x + y)*y/x/(x + 1), numer=True)
+    (x*y + y**2)/(x*(x + 1))
+    >>> expand((x + y)*y/x/(x + 1), denom=True)
+    y*(x + y)/(x**2 + x)
     """
+    # don't modify this; modify the Expr.expand method
     hints['power_base'] = power_base
     hints['power_exp'] = power_exp
     hints['mul'] = mul
@@ -1567,7 +1591,8 @@ def expand_mul(expr, deep=True):
     Wrapper around expand that only uses the mul hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, expand_mul, exp, log
     >>> x, y = symbols('x,y', positive=True)
@@ -1583,7 +1608,8 @@ def expand_multinomial(expr, deep=True):
     Wrapper around expand that only uses the multinomial hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, expand_multinomial, exp
     >>> x, y = symbols('x y', positive=True)
@@ -1600,7 +1626,8 @@ def expand_log(expr, deep=True):
     Wrapper around expand that only uses the log hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, expand_log, exp, log
     >>> x, y = symbols('x,y', positive=True)
@@ -1616,7 +1643,8 @@ def expand_func(expr, deep=True):
     Wrapper around expand that only uses the func hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import expand_func, gamma
     >>> from sympy.abc import x
@@ -1632,7 +1660,8 @@ def expand_trig(expr, deep=True):
     Wrapper around expand that only uses the trig hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import expand_trig, sin, cos
     >>> from sympy.abc import x, y
@@ -1648,7 +1677,8 @@ def expand_complex(expr, deep=True):
     Wrapper around expand that only uses the complex hint.  See the expand
     docstring for more information.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import expand_complex, I, im, re
     >>> from sympy.abc import z
@@ -1673,7 +1703,8 @@ def count_ops(expr, visual=False):
     If expr is an iterable, the sum of the op counts of the
     items will be returned.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.abc import a, b, x, y
     >>> from sympy import sin, count_ops
@@ -1837,7 +1868,8 @@ def nfloat(expr, n=15, exponent=False):
     """Make all Rationals in expr Floats except if they are exponents
     (unless the exponents flag is set to True).
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.core.function import nfloat
     >>> from sympy.abc import x, y
