@@ -19,6 +19,8 @@ def sqrt_symbolic_denest(a, b, r, d2=None):
     if d2 == None:
         d2 = expand_multinomial(a**2 - b**2*r)
     rval = sqrt_match(r)
+    if rval == None:
+        return None
     ry = Wild('ry', positive=True)
     ra, rb, rr = rval
     if rb != 0:
@@ -150,7 +152,7 @@ def sqrtdenest(expr):
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         n, d = expr.as_numer_denom()
         if d is S.One:
-            if len(n.base.args) == 4 and sqrt_depth(n.base) == 1:
+            if len(n.base.args) == 4 and sqrt_depth(n.base) == 1 and n.base.is_number:
                 return _four_terms(n)
             return _sqrtdenest(expr)
         else:
