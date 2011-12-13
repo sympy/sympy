@@ -68,17 +68,6 @@ Usage::
 
 .. autofunction:: sympy.printing.ccode.print_ccode
 
-CodePrinter
------------
-
-This class is a base class for other classes that implement code-printing
-functionality, and additionally lists a number of functions that cannot be
-easily translated to C or Fortran.
-
-.. autoclass:: sympy.printing.codeprinter.CodePrinter
-
-.. autoexception:: sympy.printing.codeprinter.AssignmentError
-
 Gtk
 ---
 
@@ -253,3 +242,22 @@ A useful function is ``preview``:
 
 .. autofunction:: preview
 
+Implementation - Helper Classes/Functions
+-----------------------------------------
+
+.. module:: sympy.printing.conventions
+
+.. autofunction:: split_super_sub
+
+CodePrinter
++++++++++++
+
+.. module:: sympy.printing.codeprinter
+
+This class is a base class for other classes that implement code-printing
+functionality, and additionally lists a number of functions that cannot be
+easily translated to C or Fortran.
+
+.. autoclass:: sympy.printing.codeprinter.CodePrinter
+
+.. autoexception:: sympy.printing.codeprinter.AssignmentError
