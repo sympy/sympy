@@ -10,14 +10,14 @@ internally.
 Printer Class
 -------------
 
-.. module:: sympy.printing.printer
+.. automodule:: sympy.printing.printer
 
 The main class responsible for printing is ``Printer`` (see also its
 `source code
 <https://github.com/sympy/sympy/blob/master/sympy/printing/printer.py>`_):
 
 .. autoclass:: Printer
-    :members: doprint, _print
+    :members: doprint, _print, set_global_settings, order
 
 PrettyPrinter Class
 -------------------
@@ -274,7 +274,46 @@ This class implements Python printing. Usage::
     x = Symbol('x')
     e = 5*x**3 + sin(x)
 
+ReprPrinter
+-----------
 
+.. module:: sympy.printing.repr
+
+This printer generates executable code. This code satisfies the identity
+``eval(srepr(expr))=expr``.
+
+.. autoclass:: ReprPrinter
+   :members:
+
+.. autofunction:: srepr
+
+StrPrinter
+----------
+
+.. module:: sympy.printing.str
+
+This module generates readable representations of SymPy expressions.
+
+.. autoclass:: StrPrinter
+   :members: parenthesize, stringify, emptyPrinter
+
+.. autofunction:: sstrrepr
+
+Tree Printing
+-------------
+
+.. module:: sympy.printing.tree
+
+The functions in this module create a representation of an expression as a
+tree.
+
+.. autofunction:: pprint_nodes
+
+.. autofunction:: print_node
+
+.. autofunction:: tree
+
+.. autofunction:: print_tree
 
 Preview
 -------

@@ -549,4 +549,3 @@ def sstrrepr(expr, **settings):
     s = p.doprint(expr)
 
     return s
-
