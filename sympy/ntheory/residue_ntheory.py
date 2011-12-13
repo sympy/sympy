@@ -115,6 +115,11 @@ def is_quad_residue(a, p):
     [0, 1, 2, 4]
     >>> [j for j in range(7) if is_quad_residue(j, 7)]
     [0, 1, 2, 4]
+
+    See Also
+    ========
+
+    legendre_symbol, jacobi_symbol
     """
     a, p = int_tested(a, p)
     if p < 1:
@@ -161,6 +166,11 @@ def legendre_symbol(a, p):
     [0, 1, 1, -1, 1, -1, -1]
     >>> list(set([i**2 % 7 for i in range(7)]))
     [0, 1, 2, 4]
+
+    See Also
+    ========
+
+    is_quad_residue, jacobi_symbol
     """
     a, p = int_tested(a, p)
     if not isprime(p) or p == 2:
@@ -203,6 +213,11 @@ def jacobi_symbol(m, n):
         {3: 2, 5: 1}
         >>> jacobi_symbol(7, 45) == L(7, 3)**2 * L(7, 5)**1
         True
+
+    See Also
+    ========
+
+    is_quad_residue, legendre_symbol
     """
     m, n = int_tested(m, n)
     if not n % 2:

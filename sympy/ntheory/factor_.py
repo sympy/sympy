@@ -32,6 +32,11 @@ def smoothness(n):
     (13, 16)
     >>> smoothness(2)
     (2, 2)
+
+    See Also
+    ========
+
+    factorint, smoothness_p
     """
 
     if n == 1:
@@ -92,6 +97,11 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     n       str    tuple   tuple
     mul     str    tuple   tuple
     ====== ====== ======= =======
+
+    See Also
+    ========
+
+    factorint, smoothness
     """
     from sympy.utilities import flatten
 
@@ -875,6 +885,11 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     =====================
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
+
+    See Also
+    ========
+
+    smoothness, smoothness_p, divisors
     """
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):
@@ -1161,6 +1176,10 @@ def primefactors(n, limit=None, verbose=False):
         >>> primefactors(10000000001, limit=300)
         [101]
 
+    See Also
+    ========
+
+    divisors
     """
     n = int(n)
     s = []
@@ -1213,6 +1232,11 @@ def divisors(n, generator=False):
 
     This is a slightly modified version of Tim Peters referenced at:
     http://stackoverflow.com/questions/1010381/python-factorization
+
+    See Also
+    ========
+
+    primefactors, factorint, divisor_count
     """
 
     n = abs(n)
@@ -1239,6 +1263,11 @@ def divisor_count(n, modulus=1):
     >>> from sympy import divisor_count
     >>> divisor_count(6)
     4
+
+    See Also
+    ========
+
+    factorint, divisors, totient
     """
 
     if not modulus:
@@ -1260,6 +1289,10 @@ def totient(n):
     >>> totient(25)
     20
 
+    See Also
+    ========
+
+    divisor_count
     """
     if n < 1:
         raise ValueError("n must be a positive integer")
