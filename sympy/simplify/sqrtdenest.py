@@ -149,11 +149,24 @@ def sqrtdenest(expr):
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         n, d = expr.as_numer_denom()
         if d is S.One:
-            if len(n.base.args) == 4 and sqrt_depth(n.base) == 1 and n.base.is_number:
+            if len(n.base.args) == 4 and sqrt_depth(n.base) == 1 and \
+                n.base.is_number:
                 return _four_terms(n)
             return _sqrtdenest(expr)
         else:
-            return _sqrtdenest(n)/_sqrtdenest(d)
+            if len(n.base.args) == 4 and sqrt_depth(n.base) == 1 and \
+                n.base.is_number:
+                n1 = _four_terms(n)
+            else:
+                n1 = _sqrtdenest(n)
+
+            if len(d.base.args) == 4 and sqrt_depth(d.base) == 1 and \
+                d.base.is_number:
+                d1 = _four_terms(d)
+            else:
+                d1 = _sqrtdenest(d)
+
+            return n1/d1
     elif isinstance(expr, Expr):
         args = expr.args
         if args:
