@@ -52,6 +52,12 @@ def test_sqrtdenest2():
     z = sqrt(15 - 2*sqrt(31) + 2*sqrt(55 - 10*sqrt(29)))
     assert sqrtdenest(z) == z
 
+def test_sqrtdenest_four_terms():
+    assert sqrtdenest(sqrt(-4*sqrt(14)-2*sqrt(6)+4*sqrt(21)+33)) == \
+      -sqrt(2) + sqrt(3) + 2*sqrt(7)
+    assert sqrtdenest(sqrt(-28*sqrt(7)-14*sqrt(5)+4*sqrt(35) + 82)) == \
+      -7 + sqrt(5) + 2*sqrt(7)
+
 @XFAIL
 def test_sqrtdenest2a():
     assert sqrtdenest(sqrt(13-2*sqrt(10)+2*sqrt(2)*sqrt(-2*sqrt(10)+11))) == \

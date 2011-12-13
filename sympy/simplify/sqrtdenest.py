@@ -9,7 +9,7 @@ def sqrt_symbolic_denest(a, b, r, d2=None):
     with d2 = expand_multinomial(a**2 - b**2*r)
     if denested return the denested sqrt(a + b*sqrt(r)) , else return None
 
-    Examples:
+    Examples
     >>> from sympy import sqrt
     >>> from sympy.simplify.sqrtdenest import sqrt_symbolic_denest
     >>> sqrt_symbolic_denest(16 - 2*sqrt(29), 2, -10*sqrt(29) + 55)
@@ -92,6 +92,41 @@ def sqrt_numeric_denest(a, b, r, d2):
                     z = (sqrt(vp0/2)*sqrt(vp1) + sign(b)*sqrt(c)).expand()
                     return z
 
+def _four_terms(expr):
+    """denest the square root of four terms
+
+    See D.J.Jeffrey and A.D.Rich
+    'Symplifying Square Roots of Square Roots by Denesting'
+
+    Examples
+    >>> from sympy import sqrt
+    >>> from sympy.simplify.sqrtdenest import sqrtdenest, _four_terms
+    >>> sqrtdenest(sqrt(12+2*sqrt(6)+2*sqrt(14)+2*sqrt(21)))
+    sqrt(2) + sqrt(3) + sqrt(7)
+    """
+    from sympy.simplify.simplify import radsimp
+    if not (expr.is_Pow and expr.exp == S.Half):
+        return expr
+    if expr.base < 0:
+        return sqrt(-1)*_four_terms(sqrt(-expr.base))
+    a = Add(*expr.base.args[:2])
+    b = Add(*expr.base.args[2:])
+    if a < 0:
+        a, b = b, a
+    d2 = expand_multinomial(a**2 - b**2)
+    if d2 < 0:
+        a, b = b, a
+        d2 = -d2
+    d = sqrtdenest(sqrt(d2))
+    if sqrt_depth(d) > 1:
+        return expr
+    vad = a + d
+    c = sqrtdenest(sqrt(vad))
+    if sqrt_depth(c) > 1:
+        return expr
+    return radsimp(c/sqrt(2) + b/(sqrt(2)*c)).expand()
+
+
 def sqrtdenest(expr):
     """
     Denests sqrts in an expression that contain other square roots
@@ -101,7 +136,6 @@ def sqrtdenest(expr):
     <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 
     Examples
-    ========
     >>> from sympy.simplify.sqrtdenest import sqrtdenest
     >>> from sympy import sqrt
     >>> sqrtdenest(sqrt(5 + 2 * sqrt(6)))
@@ -113,6 +147,8 @@ def sqrtdenest(expr):
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         n, d = expr.as_numer_denom()
         if d is S.One:
+            if len(n.base.args) == 4 and sqrt_depth(n.base) == 1:
+                return _four_terms(n)
             return _sqrtdenest(expr)
         else:
             return _sqrtdenest(n)/_sqrtdenest(d)
@@ -124,8 +160,6 @@ def sqrtdenest(expr):
 
 def _sqrtdenest(expr):
     from sympy.simplify.simplify import radsimp
-    # maximum denester level
-    max_den = 4
     if not expr.is_Pow or expr.exp != S.Half:
         val = None
     else:
@@ -169,7 +203,7 @@ def _sqrtdenest(expr):
     if not is_algebraic(expr):
         return expr
     av0 = [a, b, r, d2]
-    z = _denester([radsimp(expr**2)], av0, 0, min(sqrt_depth(expr)-1, max_den))[0]
+    z = _denester([radsimp(expr**2)], av0, 0)[0]
     if av0[1] == None:
         return expr
     if z != None:
@@ -270,7 +304,7 @@ def sqrt_match(p):
             return None
     return res
 
-def _denester (nested, av0, h, max_depth_level):
+def _denester (nested, av0, h, max_depth_level=4):
     """
     Denests a list of expressions that contain nested square roots.
     This method should not be called directly - use 'sqrtdenest' instead.
@@ -327,7 +361,7 @@ def _denester (nested, av0, h, max_depth_level):
             if R is None:
                 return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the previous invocation
             nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
-        d, f = _denester(nested2, av0, h+1, max_depth_level)
+        d, f = _denester(nested2, av0, h+1)
         if not f:
             return None, None
         if not any(f[i] for i in range(len(nested))):
