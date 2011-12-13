@@ -7,7 +7,7 @@ from sympy.assumptions.handlers import AskHandler
 from sympy.core import I, Integer, oo, pi, Rational, S, symbols
 from sympy.functions import Abs, cos, exp, im, log, re, sign, sin, sqrt
 from sympy.logic import Equivalent, Implies, Xor
-from sympy.utilities.pytest import raises, XFAIL, SLOW
+from sympy.utilities.pytest import raises, XFAIL, slow
 
 def test_int_1():
     z = 1
@@ -375,7 +375,7 @@ def test_I():
     assert ask(Q.prime(z))            == False
     assert ask(Q.composite(z))        == False
 
-@SLOW
+@slow
 def test_bounded():
     x, y, z = symbols('x,y,z')
     assert ask(Q.bounded(x)) == None

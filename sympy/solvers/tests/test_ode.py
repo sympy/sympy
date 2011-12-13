@@ -8,7 +8,7 @@ from sympy.abc import x, y, z
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
                                homogeneous_order, ode_order)
-from sympy.utilities.pytest import XFAIL, skip, raises, SLOW
+from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
 C1 = Symbol('C1')
 C2 = Symbol('C2')
@@ -308,7 +308,7 @@ def test_1st_exact1():
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]
 
-@SLOW
+@slow
 @XFAIL
 def test_1st_exact2():
     """
@@ -505,7 +505,7 @@ def test_1st_homogeneous_coeff_ode():
     assert dsolve(eq8, hint='1st_homogeneous_coeff_best') == sol8
     # checks are below
 
-@SLOW
+@slow
 def test_1st_homogeneous_coeff_ode_check14568():
     # These are the checkodesols from test_homogeneous_coeff_ode1.
     eq1 = f(x)/x*cos(f(x)/x) - (x/f(x)*sin(f(x)/x) + cos(f(x)/x))*f(x).diff(x)

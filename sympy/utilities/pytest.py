@@ -163,7 +163,7 @@ def SKIP(reason):
 
     return wrapper
 
-def SLOW(func):
+def slow(func):
     func._slow = True
     def func_wrapper():
         func()
