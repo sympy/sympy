@@ -246,7 +246,7 @@ def prevprime(n):
         >>> from sympy import prevprime
         >>> [(i, prevprime(i)) for i in range(10, 15)]
         [(10, 7), (11, 7), (12, 11), (13, 11), (14, 13)]
-        
+
         See Also
         ========
 
@@ -305,7 +305,7 @@ def primerange(a, b):
         >>> from sympy import primerange
         >>> print [i for i in primerange(1, 30)]
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
-        
+
         See Also
         ========
 
@@ -337,7 +337,7 @@ def randprime(a, b):
         13
         >>> isprime(randprime(1, 30))
         True
-        
+
         See Also
         ========
 

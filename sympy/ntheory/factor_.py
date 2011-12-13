@@ -31,6 +31,7 @@ def smoothness(n):
     >>> smoothness(2**4*13)
     (13, 16)
     >>> smoothness(2)
+    (2, 2)
 
     See Also
     ========
