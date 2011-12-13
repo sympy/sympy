@@ -129,7 +129,7 @@ def _four_terms(expr):
     return radsimp(c/sqrt(2) + b/(sqrt(2)*c)).expand()
 
 
-def sqrtdenest(expr):
+def sqrtdenest(expr, max_iter=3):
     """
     Denests sqrts in an expression that contain other square roots
     if possible, otherwise return the expr unchanged.
@@ -145,6 +145,15 @@ def sqrtdenest(expr):
 
     See also: unrad in sympy.solvers.solvers
     """
+    for i in range(max_iter):
+        z = sqrtdenest0(expr)
+        if expr == z:
+            return expr
+        expr = z
+    return expr
+
+
+def sqrtdenest0(expr):
     expr = sympify(expr)
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         n, d = expr.as_numer_denom()
@@ -167,10 +176,14 @@ def sqrtdenest(expr):
                 d1 = _sqrtdenest(d)
 
             return n1/d1
+    elif expr.is_Pow and expr.exp == -S.Half:
+        return 1/sqrtdenest0(sqrt(expr.base))
+    elif expr.is_Mul:
+        return prod([sqrtdenest0(x) for x in expr.args])
     elif isinstance(expr, Expr):
         args = expr.args
         if args:
-            return expr.func(*[sqrtdenest(a) for a in args])
+            return expr.func(*[sqrtdenest0(a) for a in args])
     return expr
 
 def _sqrtdenest(expr):

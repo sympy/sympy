@@ -2,7 +2,7 @@ from sympy import sqrt, Rational, S, sqrtdenest, Integral, cos
 from sympy.simplify.sqrtdenest import _denester
 from sympy.utilities.pytest import XFAIL
 
-r2, r3, r5, r7, r29 = sqrt(2), sqrt(3), sqrt(5), sqrt(7), sqrt(29)
+r2, r3, r5, r6, r7, r29 = sqrt(2), sqrt(3), sqrt(5), sqrt(6), sqrt(7), sqrt(29)
 
 def test_sqrtdenest():
     d = {sqrt(5 + 2 * sqrt(6)): sqrt(2) + sqrt(3),
@@ -60,10 +60,14 @@ def test_sqrtdenest_four_terms():
     assert sqrtdenest(sqrt(6*sqrt(2)/11+2*sqrt(22)/11+6*sqrt(11)/11+2)) == \
       sqrt(11)*(sqrt(2) + 3 + sqrt(11))/11
 
-@XFAIL
-def test_sqrtdenest2a():
+def test_sqrtdenest3():
     assert sqrtdenest(sqrt(13-2*sqrt(10)+2*sqrt(2)*sqrt(-2*sqrt(10)+11))) == \
             -1 + sqrt(2) + sqrt(10)
+
+    n = sqrt(2*sqrt(6)/7 + 2*sqrt(7)/7 + 2*sqrt(42)/7 + 2)
+    d = sqrt(16 - 2*sqrt(29) + 2*sqrt(55 - 10*sqrt(29)))
+    assert (sqrtdenest(n/d) - \
+      r7*(1+r6+r7)/(7*(sqrt(-2*sqrt(29)+ 11)+r5))).expand() == 0
 
 def test_issue_2758():
     from sympy.abc import x, y
