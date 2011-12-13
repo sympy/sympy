@@ -49,11 +49,6 @@ tests to run. If no test arguments are given, all tests will be run.\
 
 options, args = parser.parse_args()
 
-if options.slow:
-    slow = True
-else:
-    slow = False
-
 if not options.cache:
     os.environ['SYMPY_USE_CACHE'] = 'no'
 if options.types:
@@ -63,7 +58,7 @@ import sympy
 
 ok = sympy.test(*args, **{"verbose": options.verbose, "kw": options.kw,
     "tb": options.tb, "pdb": options.pdb, "colors": options.colors,
-    "sort": options.sort, "seed": options.seed, "slow": slow, "timeout": options.timeout})
+    "sort": options.sort, "seed": options.seed, "slow": options.slow, "timeout": options.timeout})
 
 if ok:
     sys.exit(0)
