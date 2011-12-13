@@ -37,7 +37,6 @@ def smoothness(n):
     ========
 
     factorint, smoothness_p
-    (2, 2)
     """
 
     if n == 1:
