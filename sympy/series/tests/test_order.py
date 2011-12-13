@@ -212,8 +212,8 @@ def test_leading_term():
 def test_eval():
     y = Symbol('y')
     from sympy import Basic
-    assert Order(x)._eval_subs(Order(x), 1) == 1
-    assert Order(x)._eval_subs(x, y) == Order(y)
+    assert Order(x).subs(Order(x), 1) == 1
+    assert Order(x).subs(x, y) == Order(y)
     assert Order(x)._eval_power(Basic()) == None
 
 def test_oseries():
