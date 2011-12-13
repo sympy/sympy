@@ -111,14 +111,14 @@ class Printer(object):
        This callable will be called to obtain printing result as a last resort,
        that is when no appropriate print method was found for an expression.
 
-    Example of overloading StrPrinter::
+    Examples of overloading StrPrinter::
 
         from sympy import Basic, Function, Symbol
         from sympy.printing.str import StrPrinter
 
         class CustomStrPrinter(StrPrinter):
             \"\"\"
-            Example of how to customize the StrPrinter for both a Sympy class and a
+            Examples of how to customize the StrPrinter for both a Sympy class and a
             user defined class subclassed from the Sympy Basic class.
             \"\"\"
 

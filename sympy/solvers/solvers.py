@@ -89,8 +89,8 @@ def checksol(f, symbol, sol=None, **flags):
     more checks are inconclusive (and none are False) then None
     is returned.
 
-    Examples:
-    ---------
+    Examples
+    ========
 
        >>> from sympy import symbols
        >>> from sympy.solvers import checksol
@@ -252,8 +252,8 @@ def check_assumptions(expr, **assumptions):
 
     `assumptions` is a dict of assumptions: {'assumption': True|False, ...}.
 
-    Examples:
-    ---------
+    Examples
+    ========
 
        >>> from sympy import Symbol, pi, I, exp
        >>> from sympy.solvers.solvers import check_assumptions
@@ -1175,7 +1175,8 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
         No simplification is done to ``f`` other than and mul=True expansion, so
         the solution will correspond strictly to a unique solution.
 
-    Examples:
+    Examples
+    ========
 
         >>> from sympy.solvers.solvers import solve_linear
         >>> from sympy.abc import x, y, z
@@ -1782,7 +1783,8 @@ def _invert(eq, *symbols, **kwargs):
     solutions to the expression ``i - d`` will be related the solutions of the
     original expression.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy.solvers.solvers import _invert as invert
     >>> from sympy import sqrt, cos
@@ -1968,7 +1970,8 @@ def unrad(eq, *syms, **flags):
         o   there are only 4 terms with sqrt() factors or there are less than
             four terms having sqrt() factors
 
-    Examples:
+    Examples
+    ========
 
         >>> from sympy.solvers.solvers import unrad
         >>> from sympy.abc import x

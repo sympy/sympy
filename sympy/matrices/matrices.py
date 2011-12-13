@@ -1843,7 +1843,6 @@ class Matrix(object):
 
         Examples
         ========
-
         >>> from sympy import Matrix
         >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -1854,7 +1853,6 @@ class Matrix(object):
         True
         >>> c.is_square
         True
-
         """
         return self.rows == self.cols
 
@@ -1883,7 +1881,6 @@ class Matrix(object):
         False
         >>> d.is_zero
         True
-
         """
         return all(i.is_zero for i in self)
 
@@ -1905,7 +1902,6 @@ class Matrix(object):
         >>> a = Matrix([[1,0,1],[1,0,0],[1,1,0]])
         >>> a.is_nilpotent()
         False
-
         """
         if not self.is_square:
             raise NonSquareMatrixError("Nilpotency is valid only for square matrices")

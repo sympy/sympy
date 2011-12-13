@@ -59,7 +59,8 @@ def dup_integrate(f, m, K):
     """
     Computes indefinite integral of ``f`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dup_integrate
@@ -90,7 +91,8 @@ def dmp_integrate(f, m, u, K):
     """
     Computes indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dmp_integrate
@@ -134,7 +136,8 @@ def dmp_integrate_in(f, m, j, u, K):
     """
     Computes indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dmp_integrate_in
@@ -155,7 +158,8 @@ def dup_diff(f, m, K):
     """
     ``m``-th order derivative of a polynomial in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_diff
@@ -197,7 +201,8 @@ def dmp_diff(f, m, u, K):
     """
     ``m``-th order derivative in ``x_0`` of a polynomial in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_diff
@@ -253,7 +258,8 @@ def dmp_diff_in(f, m, j, u, K):
     """
     ``m``-th order derivative in ``x_j`` of a polynomial in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_diff_in
@@ -275,7 +281,8 @@ def dup_eval(f, a, K):
     """
     Evaluate a polynomial at ``x = a`` in ``K[x]`` using Horner scheme.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_eval
@@ -300,7 +307,8 @@ def dmp_eval(f, a, u, K):
     """
     Evaluate a polynomial at ``x_0 = a`` in ``K[X]`` using the Horner scheme.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_eval
@@ -340,7 +348,8 @@ def dmp_eval_in(f, a, j, u, K):
     """
     Evaluate a polynomial at ``x_j = a`` in ``K[X]`` using the Horner scheme.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_eval_in
@@ -376,7 +385,8 @@ def dmp_eval_tail(f, A, u, K):
     """
     Evaluate a polynomial at ``x_j = a_j, ...`` in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_eval_tail
@@ -417,7 +427,8 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
     """
     Differentiate and evaluate a polynomial in ``x_j`` at ``a`` in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_diff_eval_in
@@ -441,7 +452,8 @@ def dup_trunc(f, p, K):
     """
     Reduce ``K[x]`` polynomial modulo a constant ``p`` in ``K``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_trunc
@@ -472,7 +484,8 @@ def dmp_trunc(f, p, u, K):
     """
     Reduce ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_trunc
@@ -491,7 +504,8 @@ def dmp_ground_trunc(f, p, u, K):
     """
     Reduce ``K[X]`` polynomial modulo a constant ``p`` in ``K``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_ground_trunc
@@ -513,7 +527,8 @@ def dup_monic(f, K):
     """
     Divides all coefficients by ``LC(f)`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dup_monic
@@ -540,7 +555,8 @@ def dmp_ground_monic(f, u, K):
     """
     Divides all coefficients by ``LC(f)`` in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dmp_ground_monic
@@ -572,7 +588,8 @@ def dup_content(f, K):
     """
     Compute the GCD of coefficients of ``f`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dup_content
@@ -604,7 +621,8 @@ def dmp_ground_content(f, u, K):
     """
     Compute the GCD of coefficients of ``f`` in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dmp_ground_content
@@ -638,7 +656,8 @@ def dup_primitive(f, K):
     """
     Compute content and the primitive form of ``f`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dup_primitive
@@ -667,7 +686,8 @@ def dmp_ground_primitive(f, u, K):
     """
     Compute content and the primitive form of ``f`` in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ, QQ
     >>> from sympy.polys.densetools import dmp_ground_primitive
@@ -698,7 +718,8 @@ def dup_extract(f, g, K):
     """
     Extract common content from a pair of polynomials in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_extract
@@ -726,7 +747,8 @@ def dmp_ground_extract(f, g, u, K):
     """
     Extract common content from a pair of polynomials in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_ground_extract
@@ -753,7 +775,8 @@ def dup_real_imag(f, K):
     """
     Return bivariate polynomials ``f1`` and ``f2``, such that ``f = f1 + f2*I``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_real_imag
@@ -799,7 +822,8 @@ def dup_mirror(f, K):
     """
     Evaluate efficiently the composition ``f(-x)`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_mirror
@@ -820,7 +844,8 @@ def dup_scale(f, a, K):
     """
     Evaluate efficiently composition ``f(a*x)`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_scale
@@ -841,7 +866,8 @@ def dup_shift(f, a, K):
     """
     Evaluate efficiently Taylor shift ``f(x + a)`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_shift
@@ -863,7 +889,8 @@ def dup_transform(f, p, q, K):
     """
     Evaluate functional transformation ``q**n * f(p/q)`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_transform
@@ -896,7 +923,8 @@ def dup_compose(f, g, K):
     """
     Evaluate functional composition ``f(g)`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_compose
@@ -927,7 +955,8 @@ def dmp_compose(f, g, u, K):
     """
     Evaluate functional composition ``f(g)`` in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dmp_compose
@@ -1037,7 +1066,8 @@ def dup_decompose(f, K):
 
     where ``T_n`` and ``T_m`` are Chebyshev polynomials.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_decompose
@@ -1070,7 +1100,8 @@ def dmp_lift(f, u, K):
     """
     Convert algebraic coefficients to integers in ``K[X]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import I
     >>> from sympy.polys.domains import QQ
@@ -1109,7 +1140,8 @@ def dup_sign_variations(f, K):
     """
     Compute the number of sign variations of ``f`` in ``K[x]``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densetools import dup_sign_variations
@@ -1135,7 +1167,8 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     """
     Clear denominators, i.e. transform ``K_0`` to ``K_1``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ, ZZ
     >>> from sympy.polys.densetools import dup_clear_denoms
@@ -1186,7 +1219,8 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
     """
     Clear denominators, i.e. transform ``K_0`` to ``K_1``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ, ZZ
     >>> from sympy.polys.densetools import dmp_clear_denoms
@@ -1225,7 +1259,8 @@ def dup_revert(f, n, K):
     is a result of inversion of a polynomial modulo ``x**n``. This is
     useful to efficiently compute series expansion of ``1/f``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dup_revert
@@ -1253,7 +1288,8 @@ def dmp_revert(f, g, u, K):
     """
     Compute ``f**(-1)`` mod ``x**n`` using Newton iteration.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densetools import dmp_revert

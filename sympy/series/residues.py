@@ -12,7 +12,8 @@ def residue(expr, x, x0):
     The residue is defined as the coefficient of 1/(x-x0) in the power series
     expansion about x=x0.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import Symbol, residue, sin
     >>> x = Symbol("x")

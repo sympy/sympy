@@ -1915,7 +1915,7 @@ def dynamicsymbols(names, level=0):
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
 
-    Example
+    Examples
     =======
 
     >>> from sympy.physics.mechanics import dynamicsymbols

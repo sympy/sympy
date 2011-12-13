@@ -122,7 +122,8 @@ def test(*paths, **kwargs):
        o paths can be entered in native system format or in unix,
          forward-slash format.
 
-    Examples:
+    Examples
+    ========
 
     >> import sympy
 
@@ -206,7 +207,8 @@ def doctest(*paths, **kwargs):
        o files that are on the blacklist can be tested by providing
          their path; they are only excluded if no paths are given.
 
-    Examples:
+    Examples
+    ========
 
     >> import sympy
 
@@ -659,7 +661,7 @@ class SymPyDocTests(object):
         module = rel_name.replace(os.sep, '.')[:-3]
 
         if rel_name.startswith("examples"):
-            # Example files do not have __init__.py files,
+            # Examples files do not have __init__.py files,
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
             module = file[:-3] # remove ".py"

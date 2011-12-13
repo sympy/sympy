@@ -425,8 +425,8 @@ def get_basis(expr, **options):
     expr : Operator or StateBase
         Expression whose basis is sought
 
-    Examples:
-    =========
+    Examples
+    ========
 
     >>> from sympy.physics.quantum.represent import get_basis
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet

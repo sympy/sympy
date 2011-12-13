@@ -239,7 +239,8 @@ class Expr(Basic, EvalfMixin):
         expression.
 
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import cos, sin, Sum, S, pi
         >>> from sympy.abc import a, n, x, y
@@ -545,7 +546,8 @@ class Expr(Basic, EvalfMixin):
         The order is determined either from the O(...) term. If there
         is no O(...) term, it returns None.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import O
         >>> from sympy.abc import x
@@ -635,7 +637,8 @@ class Expr(Basic, EvalfMixin):
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
 
-        Examples::
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
@@ -945,7 +948,8 @@ class Expr(Basic, EvalfMixin):
 
         To force the expression to be treated as an Add, use the hint as_Add=True
 
-        Examples:
+        Examples
+        ========
 
         -- self is an Add
 
@@ -1132,7 +1136,7 @@ class Expr(Basic, EvalfMixin):
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
-        **Example**
+        **Examples**
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -1645,7 +1649,8 @@ class Expr(Basic, EvalfMixin):
         This is not part of the assumptions system.  You cannot do
         Symbol('z', rational_function=True).
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Symbol, sin
         >>> from sympy.abc import x, y
@@ -2019,7 +2024,8 @@ class Expr(Basic, EvalfMixin):
         """
         Returns the leading term.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> (1+x+x**2).as_leading_term(x)
@@ -2069,7 +2075,8 @@ class Expr(Basic, EvalfMixin):
         """
         Returns the leading term a*x**b as a tuple (a, b).
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> (1+x+x**2).leadterm(x)
@@ -2277,7 +2284,9 @@ class AtomicExpr(Atom, Expr):
     """
     A parent class for object which are both atoms and Exprs.
 
-    Examples: Symbol, Number, Rational, Integer, ...
+    Examples
+    ========
+    Symbol, Number, Rational, Integer, ...
     But not: Add, Mul, Pow, ...
     """
 

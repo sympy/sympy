@@ -195,7 +195,7 @@ class AssumeMixin(object):
         - infinitesimal - object value is infinitesimal
 
 
-    Example rules:
+    Examples rules:
 
       positive=T            ->  nonpositive=F, real=T
       real=T & positive=F   ->  nonpositive=T
@@ -208,7 +208,8 @@ class AssumeMixin(object):
     ._assumption dictionary or are returned by getter methods (with
     property decorators) or are attributes of objects/classes.
 
-    Examples:
+    Examples
+    ========
 
         - True, when we are sure about a property. For example, when we are
         working only with real numbers:
@@ -270,7 +271,8 @@ class AssumeMixin(object):
         are different objects. In other words, besides Python type (Symbol in
         this case), the initial assumptions are also forming their typeinfo.
 
-        Example:
+        Examples
+    ========
 
         >>> from sympy import Symbol
         >>> from sympy.abc import x

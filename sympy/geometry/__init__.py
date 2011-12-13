@@ -12,8 +12,8 @@ Notes:
     Currently the geometry module is restricted to the 2-dimensional
     Euclidean space.
 
-Examples:
-=========
+Examples
+========
 
 """
 from sympy.geometry.point import Point

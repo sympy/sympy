@@ -3,7 +3,14 @@ from primetest import isprime
 from factor_ import factorint, trailing
 
 def int_tested(*j):
-    "Return all args as integers after confirming that they are integers."
+    """Return all args as integers after confirming that they are integers.
+
+    Examples
+    ========
+    >>> from sympy.ntheory.residue_ntheory import int_tested
+    >>> int_tested(8, 9, 110)
+    (8, 9, 110)
+    """
     i = tuple([int(i) for i in j])
     if i != j:
         raise ValueError('all arguments were not integers')
@@ -13,7 +20,15 @@ def int_tested(*j):
 
 def totient_(n):
     """Returns the number of integers less than n
-    and relatively prime to n"""
+    and relatively prime to n
+    Examples
+    ========
+    >>> from sympy.ntheory import totient_
+    >>> totient_(6)
+    2
+    >>> totient_(67)
+    66
+    """
     n = int_tested(n)
     if n < 1:
         raise ValueError("n must be a positive integer")

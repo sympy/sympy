@@ -311,7 +311,8 @@ def variations(seq, n=None, repetition=False):
     """Returns a generator of the variations (size n) of the list `seq` (size N).
     `repetition` controls whether items in seq can appear more than once;
 
-    Examples:
+    Examples
+    ========
 
     variations(seq, n) will return N! / (N - n)! permutations without
     repetition of seq's elements:
@@ -357,7 +358,8 @@ def subsets(seq, k=None, repetition=False):
        whereas there are 2**n subsets all together. If k is None then all
        2**n subsets will be returned from shortest to longest.
 
-       Examples:
+       Examples
+       ========
            >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
@@ -511,7 +513,7 @@ def prefixes(seq):
     """
     Generate all prefixes of a sequence.
 
-    Example
+    Examples
     =======
 
     >>> from sympy.utilities.iterables import prefixes
@@ -529,7 +531,7 @@ def postfixes(seq):
     """
     Generate all postfixes of a sequence.
 
-    Example
+    Examples
     =======
 
     >>> from sympy.utilities.iterables import postfixes
@@ -656,7 +658,8 @@ def rotate_left(x, y):
     Left rotates a list x by the number of steps specified
     in y.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import rotate_left
     >>> a = [0, 1, 2]
     >>> rotate_left(a, 1)
@@ -672,7 +675,8 @@ def rotate_right(x, y):
     Left rotates a list x by the number of steps specified
     in y.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import rotate_right
     >>> a = [0, 1, 2]
     >>> rotate_right(a, 1)
@@ -692,7 +696,8 @@ def multiset_partitions(multiset, m):
     m-partitions, that is, all partitions having exactly size m
     using auxiliary arrays as described in the book.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import multiset_partitions
     >>> list(multiset_partitions([1,2,3,4], 2))
     [[[1, 2, 3], [4]], [[1, 3], [2, 4]], [[1], [2, 3, 4]], [[1, 2], \
@@ -911,7 +916,8 @@ def binary_partitions(n):
 
     Reference: TAOCP 4, section 7.2.1.5, problem 64
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import binary_partitions
     >>> for i in binary_partitions(5):
     ...     print i
@@ -960,8 +966,8 @@ def uniq(seq):
     Returns a sequence of the same type of the input, or a list if the input
     was not a sequence.
 
-    Examples:
-    --------
+    Examples
+    ========
     >>> from sympy.utilities.iterables import uniq
     >>> uniq([1,4,1,5,4,2,1,2])
     [1, 4, 5, 2]
@@ -991,7 +997,8 @@ def generate_bell(n):
     [1] Generating involutions, derangements, and relatives by ECO
         Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import generate_bell
     >>> list(generate_bell(3))
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 0, 1), (2, 1, 0)]
@@ -1032,7 +1039,8 @@ def generate_involutions(n):
     Reference:
     http://mathworld.wolfram.com/PermutationInvolution.html
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import generate_involutions
     >>> generate_involutions(3)
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
@@ -1070,7 +1078,8 @@ def generate_derangements(perm):
     ECO operator approach once the permutations
     branch is in master.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import generate_derangements
     >>> list(generate_derangements([0,1,2]))
     [[1, 2, 0], [2, 0, 1]]
@@ -1100,7 +1109,8 @@ def unrestricted_necklace(n, k):
     Reference:
     http://mathworld.wolfram.com/Necklace.html
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import unrestricted_necklace
     >>> [i[:] for i in unrestricted_necklace(3, 2)]
     [[0, 0, 0], [0, 1, 1]]
@@ -1139,7 +1149,8 @@ def generate_oriented_forest(n):
     [2] http://stackoverflow.com/questions/1633833/
         oriented-forest-taocp-algorithm-in-python
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.utilities.iterables import generate_oriented_forest
     >>> list(generate_oriented_forest(4))
     [[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0], \

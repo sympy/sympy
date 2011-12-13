@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     # FIXME: currently broken
     """
-    print 'Example: non-euclidian distance calculation'
+    print 'Examples: non-euclidian distance calculation'
 
     metric = '0 # #,# 0 #,# # 1'
     MV.setup('X Y e',metric)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     C = (-b/(2*a)).expand()
     print 'C = cosh(alpha) = -b/(2*a) =',C
     """
-    print '\nExample: Conformal representations of circles, lines, spheres, and planes'
+    print '\nExamples: Conformal representations of circles, lines, spheres, and planes'
 
     metric = '1 0 0 0 0,0 1 0 0 0,0 0 1 0 0,0 0 0 0 2,0 0 0 2 0'
 
@@ -187,7 +187,7 @@ if __name__ == '__main__':
 
     MV.setup('e1 e2 e3',metric)
 
-    print 'Example: Reciprocal Frames e1, e2, and e3 unit vectors.\n\n'
+    print 'Examples: Reciprocal Frames e1, e2, and e3 unit vectors.\n\n'
 
     E = e1^e2^e3
     Esq = (E*E)()

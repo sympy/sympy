@@ -59,7 +59,7 @@ class AskBoundedHandler(CommonHandler):
 
     Test that an expression is bounded respect to all its variables.
 
-    Example of usage:
+    Examples of usage:
 
     >>> from sympy import Symbol, Q
     >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
@@ -77,7 +77,7 @@ class AskBoundedHandler(CommonHandler):
         """
         Handles Symbol.
 
-        Example:
+        Examples:
 
         >>> from sympy import Symbol, Q
         >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler

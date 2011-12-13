@@ -3,7 +3,13 @@ from collections import defaultdict
 
 def binomial_coefficients(n):
     """Return a dictionary containing pairs :math:`{(k1,k2) : C_kn}` where
-    :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`."""
+    :math:`C_kn` are binomial coefficients and :math:`n=k1+k2`.
+    Examples
+    ========
+    >>> from sympy.ntheory import binomial_coefficients
+    >>> binomial_coefficients(9)
+    {(0, 9): 1, (1, 8): 9, (2, 7): 36, (3, 6): 84, (4, 5): 126, (5, 4): 126, (6, 3): 84, (7, 2): 36, (8, 1): 9, (9, 0): 1}
+    """
     d = {(0, n):1, (n, 0):1}
     a = 1
     for k in xrange(1, n//2+1):
@@ -14,6 +20,12 @@ def binomial_coefficients(n):
 def binomial_coefficients_list(n):
     """ Return a list of binomial coefficients as rows of the Pascal's
     triangle.
+
+    Examples
+    ========
+    >>> from sympy.ntheory import binomial_coefficients_list
+    >>> binomial_coefficients_list(9)
+    [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]
     """
     d = [1] * (n+1)
     a = 1
@@ -29,8 +41,8 @@ def multinomial_coefficients0(m, n, _tuple=tuple, _zip=zip):
 
     For example:
 
-    >>> from sympy.ntheory import multinomial_coefficients
-    >>> multinomial_coefficients(2, 5)
+    >>> from sympy import multinomial_coefficients
+    >>> multinomial_coefficients(2, 5) # indirect doctest
     {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
 
     The algorithm is based on the following result:
@@ -88,7 +100,7 @@ def multinomial_coefficients(m, n):
     For example:
 
     >>> from sympy.ntheory import multinomial_coefficients
-    >>> multinomial_coefficients(2, 5)
+    >>> multinomial_coefficients(2, 5) # indirect doctest
     {(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}
 
     The algorithm is based on the following result:

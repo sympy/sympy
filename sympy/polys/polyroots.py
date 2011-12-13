@@ -141,7 +141,8 @@ def roots_quartic(f):
         a) `p == 0`
         b) `p != 0`
 
-    **Examples**
+    Examples
+    ========
 
         >>> from sympy import Poly, symbols, I
         >>> from sympy.polys.polyroots import roots_quartic
@@ -239,7 +240,8 @@ def _inv_totient_estimate(m):
     """
     Find ``(L, U)`` such that ``L <= phi^-1(m) <= U``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.polyroots import _inv_totient_estimate
 
@@ -459,7 +461,8 @@ def roots(f, *gens, **flags):
     case of multiple roots.  However to get a tuple containing all
     those roots set the ``multiple`` flag to True.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import Poly, roots
     >>> from sympy.abc import x, y
@@ -657,7 +660,8 @@ def root_factors(f, *gens, **args):
     """
     Returns all factors of a univariate polynomial.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.abc import x, y
     >>> from sympy.polys.polyroots import root_factors
