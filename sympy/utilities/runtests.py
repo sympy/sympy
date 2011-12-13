@@ -1349,7 +1349,7 @@ class PyTestReporter(Reporter):
         char = "s"
         if message == "KeyboardInterrupt": char = "K"
         elif message == "Timeout": char = "T"
-        elif message == "Slow": char = "W"
+        elif message == "Slow": char = "w"
         self.write(char, "Blue")
         if self._verbose:
             self.write(" - ", "Blue")
