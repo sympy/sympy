@@ -39,6 +39,46 @@ The module ``pretty_symbology`` provides primitives to construct 2D shapes
 (hline, vline, etc) together with a technique to use unicode automatically when
 possible.
 
+CCodePrinter
+------------
+
+.. module:: sympy.printing.ccode
+
+This class implements C code printing (i.e. it converts Python expressions
+to strings of C code).
+
+Usage::
+
+    >>> from sympy.printing import print_ccode
+    >>> from sympy.functions import sin, cos, Abs
+    >>> from sympy.abc import x
+    >>> print_ccode(sin(x)**2 + cos(x)**2)
+    pow(sin(x), 2) + pow(cos(x), 2)
+    >>> print_ccode(2*x + cos(x), assign_to="result")
+    result = 2*x + cos(x);
+    >>> print_ccode(Abs(x**2))
+    fabs(pow(x, 2))
+
+.. autodata:: sympy.printing.ccode.known_functions
+
+.. autoclass:: sympy.printing.ccode.CCodePrinter
+   :members:
+
+.. autofunction:: sympy.printing.ccode.ccode
+
+.. autofunction:: sympy.printing.ccode.print_ccode
+
+CodePrinter
+-----------
+
+This class is a base class for other classes that implement code-printing
+functionality, and additionally lists a number of functions that cannot be
+easily translated to C or Fortran.
+
+.. autoclass:: sympy.printing.codeprinter.CodePrinter
+
+.. autoexception:: sympy.printing.codeprinter.AssignmentError
+
 Gtk
 ---
 
@@ -72,7 +112,6 @@ MathMLPrinter
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
 More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
-
 
 PythonPrinter
 -------------
