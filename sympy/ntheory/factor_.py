@@ -101,7 +101,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     See Also
     ========
 
-    factorint, smoothness_p
+    factorint, smoothness
     """
     from sympy.utilities import flatten
 
