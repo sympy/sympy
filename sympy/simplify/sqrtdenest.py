@@ -9,11 +9,29 @@ def sqrt_symbolic_denest(a, b, r, d2=None):
     with d2 = expand_multinomial(a**2 - b**2*r)
     if denested return the denested sqrt(a + b*sqrt(r)) , else return None
 
+    Algorithm:
+    In the case in which r = ra + rb*sqrt(rr), attempt denesting by
+    replacing the occurrences of rr with ry**2;
+    if the result is a quadratic expression in ry,
+    if it is a square, write it in square form and take the square root
+
     Examples
-    >>> from sympy import sqrt
+    >>> from sympy import sqrt, Symbol
     >>> from sympy.simplify.sqrtdenest import sqrt_symbolic_denest
     >>> sqrt_symbolic_denest(16 - 2*sqrt(29), 2, -10*sqrt(29) + 55)
     sqrt(-2*sqrt(29) + 11) + sqrt(5)
+    >>> w = 1 + sqrt(2) + sqrt(1 + sqrt(1+sqrt(3)))
+
+    if sympy decides that sqrt and square can be simplified, it does,
+    otherwise it leaves it in that form
+
+    >>> from sympy.simplify.sqrtdenest import sqrtdenest
+    >>> sqrtdenest(sqrt((w**2).expand()))
+    1 + sqrt(2) + sqrt(1 + sqrt(1 + sqrt(3)))
+    >>> x = Symbol('x')
+    >>> w = 1 + sqrt(2) + sqrt(1 + sqrt(1+sqrt(3+x)))
+    >>> sqrtdenest(sqrt((w**2).expand()))
+    sqrt((sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2))**2)
     """
     a, b, r = S(a), S(b), S(r)
     if d2 == None:
@@ -55,13 +73,12 @@ def sqrt_symbolic_denest(a, b, r, d2=None):
             cb += b
             discr = (cb**2 - 4*ca*cc).expand()
             if discr == 0:
-                z = sqrt(ca)*(sqrt(r) + cb/(2*ca))
+                z = sqrt(ca*(sqrt(r) + cb/(2*ca))**2)
                 c, q = z.as_content_primitive()
-                z = (c*q).expand()
-                if z < 0:
-                    return -z
-                else:
-                    return z
+                z = c*q
+                if z.is_number:
+                    z = z.expand()
+                return z
 
 
 def sqrt_numeric_denest(a, b, r, d2):

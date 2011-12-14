@@ -1,4 +1,4 @@
-from sympy import sqrt, Rational, S, sqrtdenest, Integral, cos
+from sympy import sqrt, Rational, S, Symbol, sqrtdenest, Integral, cos
 from sympy.simplify.sqrtdenest import _denester
 from sympy.utilities.pytest import XFAIL
 
@@ -38,7 +38,7 @@ def test_sqrtdenest2():
     assert sqrtdenest(sqrt(-2*sqrt(10)+2*r2*sqrt(-2*sqrt(10)+11)+14)) == \
         sqrt(-2*sqrt(10)+2*r2*(-1+sqrt(10))+14)
 
-    # currencty cannot denest this; check one does not get a wrong answer
+    # currently cannot denest this; check one does not get a wrong answer
     z = sqrt(8 - sqrt(2)*sqrt(5-sqrt(5)) - 3*(1+sqrt(5)))
     assert (sqrtdenest(z) - z).evalf() < 1.0e-100
 
@@ -68,6 +68,13 @@ def test_sqrtdenest3():
     d = sqrt(16 - 2*sqrt(29) + 2*sqrt(55 - 10*sqrt(29)))
     assert (sqrtdenest(n/d) - \
       r7*(1+r6+r7)/(7*(sqrt(-2*sqrt(29)+ 11)+r5))).expand() == 0
+
+def test_sqrt_symbolic_denest():
+    x = Symbol('x')
+    z = sqrt( ((1 + sqrt(sqrt(2+x)+3))**2 ).expand())
+    assert sqrtdenest(z) == sqrt((1 + sqrt(sqrt(2+x)+3))**2)
+    z = sqrt( ((1 + sqrt(sqrt(2+cos(1))+3))**2 ).expand())
+    assert sqrtdenest(z) == 1 + sqrt(sqrt(2+cos(1))+3)
 
 def test_issue_2758():
     from sympy.abc import x, y
