@@ -1,7 +1,7 @@
 from __future__ import division
 
 from sympy import Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi, \
-        sympify, Add, Mul, Pow, I, log, S
+        sympify, Add, Mul, Pow, Mod, I, log, S
 from sympy.utilities.pytest import XFAIL
 
 x = Symbol('x')
@@ -1208,3 +1208,14 @@ def test_product_irrational():
 
 def test_issue_2820():
     assert (x/(y*(1 + y))).expand() == x/(y**2 + y)
+
+def test_Mod():
+    assert Mod(5, 3) == 2
+    assert Mod(-5, 3) == 1
+    assert Mod(5, -3) == -1
+    assert Mod(-5, -3) == -2
+    assert type(Mod(3.2, 2, evaluate=False)) == Mod
+    assert 5 % x == Mod(5, x)
+    assert x % 5 == Mod(x, 5)
+    assert x % y == Mod(x, y)
+    assert (x % y).subs({x: 5, y: 3}) == 2
