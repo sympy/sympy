@@ -100,7 +100,7 @@ def sqrt_numeric_denest(a, b, r, d2):
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
 
-def _four_terms(expr):
+def sqrt_four_terms_denest(expr):
     """denest the square root of four terms
 
     See D.J.Jeffrey and A.D.Rich
@@ -108,7 +108,7 @@ def _four_terms(expr):
 
     Examples
     >>> from sympy import sqrt
-    >>> from sympy.simplify.sqrtdenest import sqrtdenest, _four_terms
+    >>> from sympy.simplify.sqrtdenest import sqrtdenest, sqrt_four_terms_denest
     >>> sqrtdenest(sqrt(12+2*sqrt(6)+2*sqrt(14)+2*sqrt(21)))
     sqrt(2) + sqrt(3) + sqrt(7)
     """
@@ -116,7 +116,7 @@ def _four_terms(expr):
     if not (expr.is_Pow and expr.exp == S.Half):
         return expr
     if expr.base < 0:
-        return sqrt(-1)*_four_terms(sqrt(-expr.base))
+        return sqrt(-1)*sqrt_four_terms_denest(sqrt(-expr.base))
     a = Add(*expr.base.args[:2])
     b = Add(*expr.base.args[2:])
     if a < 0:
@@ -132,7 +132,7 @@ def _four_terms(expr):
     c = sqrtdenest(sqrt(vad))
     if sqrt_depth(c) > 1:
         return expr
-    return radsimp(c/sqrt(2) + b/(sqrt(2)*c)).expand()
+    return radsimp((c/sqrt(2) + b/(sqrt(2)*c))).expand()
 
 
 def sqrtdenest(expr, max_iter=3):
@@ -167,20 +167,17 @@ def sqrtdenest0(expr):
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         n, d = expr.as_numer_denom()
         if d is S.One:
-            if len(n.base.args) == 4 and sqrt_depth(n.base) == 1 and \
-                n.base.is_number:
-                return _four_terms(n)
+            if len(n.base.args) == 4 and all([x**2 for x in n.base.args]):
+                return sqrt_four_terms_denest(n)
             return _sqrtdenest(expr)
         else:
-            if len(n.base.args) == 4 and sqrt_depth(n.base) == 1 and \
-                n.base.is_number:
-                n1 = _four_terms(n)
+            if len(n.base.args) == 4 and all([x**2 for x in n.base.args]):
+                n1 = sqrt_four_terms_denest(n)
             else:
                 n1 = _sqrtdenest(n)
 
-            if len(d.base.args) == 4 and sqrt_depth(d.base) == 1 and \
-                d.base.is_number:
-                d1 = _four_terms(d)
+            if len(d.base.args) == 4 and all([x**2 for x in n.base.args]):
+                d1 = sqrt_four_terms_denest(d)
             else:
                 d1 = _sqrtdenest(d)
 
