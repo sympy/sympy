@@ -339,19 +339,22 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     (1482, 285)
     (1482, 100)
 
-    The first value in pair is the leader. The second is the loop.
+       \    \___leader
+        \______________loop
 
-    Here is an explicit example:
+
+    Here is an explicit example where there is a two element leadup to
+    a sequence of 3 numbers (11, 14, 4) that then repeat:
 
     >>> x=2
-    >>> for i in range(7):
+    >>> for i in range(9):
     ...     x=(x**2+12)%17
     ...     print x,
     ...
-    16 13 11 14 4 11 14
+    16 13 11 14 4 11 14 4 11
     >>> cycle_length(lambda x: (x**2+12)%17, 2).next()
     (3, 2)
-    >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=1))
+    >>> list(cycle_length(lambda x: (x**2+12)%17, 2, values=True))
     [16, 13, 11, 14, 4]
 
     Instead of checking the differences of all generated values for a gcd
