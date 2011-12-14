@@ -55,10 +55,16 @@ def test_sqrtdenest2():
 def test_sqrtdenest_four_terms():
     assert sqrtdenest(sqrt(-4*sqrt(14)-2*sqrt(6)+4*sqrt(21)+33)) == \
       -sqrt(2) + sqrt(3) + 2*sqrt(7)
+    assert sqrtdenest(sqrt(468*sqrt(3)+3024*r2+2912*r6+19735)) == \
+      9*sqrt(3) + 26 + 56*sqrt(6)
     assert sqrtdenest(sqrt(-28*sqrt(7)-14*sqrt(5)+4*sqrt(35) + 82)) == \
       -7 + sqrt(5) + 2*sqrt(7)
     assert sqrtdenest(sqrt(6*sqrt(2)/11+2*sqrt(22)/11+6*sqrt(11)/11+2)) == \
       sqrt(11)*(sqrt(2) + 3 + sqrt(11))/11
+    z = sqrt(-490*sqrt(3) - 98*sqrt(115) - 98*sqrt(345) - 2107)
+    assert sqrtdenest(z) == sqrt(-1)*(7*sqrt(5)+7*sqrt(15)+7*sqrt(23))
+    z = sqrt(-4*sqrt(14)-2*sqrt(6)+4*sqrt(21)+34)
+    assert sqrtdenest(z) == z
 
 def test_sqrtdenest3():
     assert sqrtdenest(sqrt(13-2*sqrt(10)+2*sqrt(2)*sqrt(-2*sqrt(10)+11))) == \
