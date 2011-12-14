@@ -3,8 +3,7 @@ This is our testing framework.
 
 Goals:
 
-* it should be compatible with py.test and operate very similarly (or 
-  identically)
+* it should be compatible with py.test and operate very similarly (or identically)
 * doesn't require any external dependencies
 * preferably all the functionality should be in this file only
 * no magic, just import the test file and execute the test functions, that's it
@@ -118,7 +117,7 @@ def test(*paths, **kwargs):
     strings in `paths` or all tests if paths=[].
 
     Notes:
-    
+
        * if sort=False, tests are run in random order (not default).
        * paths can be entered in native system format or in unix,
          forward-slash format.
@@ -225,9 +224,9 @@ def doctest(*paths, **kwargs):
 
     Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
     sympy\functions\special\polynomials.py, and sympy\polys\polynomial.py:
-    
+
     >> sympy.doctest("polynomial")
-    
+
     """
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)

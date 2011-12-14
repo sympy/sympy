@@ -316,20 +316,20 @@ def variations(seq, n=None, repetition=False):
 
     variations(seq, n) will return N! / (N - n)! permutations without
     repetition of seq's elements:
-    
+
         >>> from sympy.utilities.iterables import variations
         >>> list(variations([1, 2], 2))
         [(1, 2), (2, 1)]
 
     variations(seq, n, True) will return the N**n permutations obtained
     by allowing repetition of elements:
-    
+
         >>> list(variations([1, 2], 2, repetition=True))
         [(1, 1), (1, 2), (2, 1), (2, 2)]
 
     If you ask for more items than are in the set you get the empty set unless
     you allow repetitions:
-    
+
         >>> list(variations([0, 1], 3, repetition=False))
         []
         >>> list(variations([0, 1], 3, repetition=True))[:4]
@@ -363,13 +363,13 @@ def subsets(seq, k=None, repetition=False):
 
        Examples
        ========
-       
+
            >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
        without repetition, i.e. once an item has been removed, it can no
        longer be "taken":
-       
+
            >>> list(subsets([1, 2], 2))
            [(1, 2)]
            >>> list(subsets([1, 2]))
@@ -380,18 +380,18 @@ def subsets(seq, k=None, repetition=False):
 
        subsets(seq, k, repetition=True) will return the (n - 1 + k)!/k!/(n - 1)!
        combinations *with* repetition:
-       
+
            >>> list(subsets([1, 2], 2, repetition=True))
            [(1, 1), (1, 2), (2, 2)]
 
        If you ask for more items than are in the set you get the empty set unless
        you allow repetitions:
-       
+
            >>> list(subsets([0, 1], 3, repetition=False))
            []
            >>> list(subsets([0, 1], 3, repetition=True))
            [(0, 0, 0), (0, 0, 1), (0, 1, 1), (1, 1, 1)]
-       
+
        """
     if k is None:
         for k in range(len(seq) + 1):
