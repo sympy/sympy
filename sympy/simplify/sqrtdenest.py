@@ -99,17 +99,6 @@ def sqrt_numeric_denest(a, b, r, d2):
         vad1 = radsimp(1/vad)
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
-    else:
-            # sqrtdenest(sqrt(5 + 2 * sqrt(6))) = sqrt(2) + sqrt(3)
-            vp0, vp1 = vad.as_content_primitive()
-            rp0, rp1 = r.as_content_primitive()
-            q = rp1/vp1
-            if q.is_Number:
-                c = (b**2 * q * rp0)/(2 * vp0)
-                depthc = sqrt_depth(c)
-                if depthr > depthc or depthr == depthc == 0:
-                    z = (sqrt(vp0/2)*sqrt(vp1) + sign(b)*sqrt(c)).expand()
-                    return z
 
 def _four_terms(expr):
     """denest the square root of four terms
