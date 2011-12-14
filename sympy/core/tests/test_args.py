@@ -168,6 +168,10 @@ def test_sympy__core__function__WildFunction():
     from sympy.core.function import WildFunction
     assert _test_args(WildFunction('f'))
 
+def test_sympy__core__mod__Mod():
+    from sympy.core.mod import Mod
+    assert _test_args(Mod(x, 2))
+
 def test_sympy__core__mul__Mul():
     from sympy.core.mul import Mul
     assert _test_args(Mul(2, x, y, z))
