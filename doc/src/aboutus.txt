@@ -164,6 +164,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Alexey Subach: Translation of the tutorial to Russian
 #. Joan Creus: Improvements to the test runner
 #. Geoffry Song: Improve code coverage
+#. Puneeth Chaganti: Fix for the tutorial
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
