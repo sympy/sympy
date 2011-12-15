@@ -76,6 +76,8 @@ def test_sqrtdenest3():
     d = sqrt(16 - 2*sqrt(29) + 2*sqrt(55 - 10*sqrt(29)))
     assert (sqrtdenest(n/d) - \
       r7*(1+r6+r7)/(7*(sqrt(-2*sqrt(29)+ 11)+r5))).expand() == 0
+    z = sqrt(sqrt(sqrt(2) + 2) + 2)
+    assert sqrtdenest(z) == z
 
 def test_sqrt_symbolic_denest():
     x = Symbol('x')
@@ -83,6 +85,10 @@ def test_sqrt_symbolic_denest():
     assert sqrtdenest(z) == sqrt((1 + sqrt(sqrt(2+x)+3))**2)
     z = sqrt( ((1 + sqrt(sqrt(2+cos(1))+3))**2 ).expand())
     assert sqrtdenest(z) == 1 + sqrt(sqrt(2+cos(1))+3)
+    z = ((1 + cos(2))**4 + 1).expand()
+    assert sqrtdenest(z) == z
+    z= sqrt( ((1+sqrt(sqrt(2+cos(3*x))+3))**2+1).expand())
+    assert sqrtdenest(z) == z
 
 def test_issue_2758():
     from sympy.abc import x, y
