@@ -100,7 +100,7 @@ def sqrt_numeric_denest(a, b, r, d2):
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
 
-def sqrt_four_terms_denest(expr):
+def _sqrt_four_terms_denest(expr):
     """denest the square root of three or four square root of rationals
 
     See D.J.Jeffrey and A.D.Rich
@@ -108,17 +108,17 @@ def sqrt_four_terms_denest(expr):
 
     Examples
     >>> from sympy import sqrt
-    >>> from sympy.simplify.sqrtdenest import sqrt_four_terms_denest
-    >>> sqrt_four_terms_denest(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
+    >>> from sympy.simplify.sqrtdenest import _sqrt_four_terms_denest
+    >>> _sqrt_four_terms_denest(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
     -sqrt(10) + sqrt(2) + 9 + 9*sqrt(5)
-    >>> sqrt_four_terms_denest(sqrt(12+2*sqrt(6)+2*sqrt(14)+2*sqrt(21)))
+    >>> _sqrt_four_terms_denest(sqrt(12+2*sqrt(6)+2*sqrt(14)+2*sqrt(21)))
     sqrt(2) + sqrt(3) + sqrt(7)
     """
     from sympy.simplify.simplify import radsimp
     if not (expr.is_Pow and expr.exp == S.Half):
         return expr
     if expr.base < 0:
-        return sqrt(-1)*sqrt_four_terms_denest(sqrt(-expr.base))
+        return sqrt(-1)*_sqrt_four_terms_denest(sqrt(-expr.base))
     a = Add(*expr.base.args[:2])
     b = Add(*expr.base.args[2:])
     if a < 0:
@@ -156,6 +156,7 @@ def sqrtdenest(expr, max_iter=3):
     See also: unrad in sympy.solvers.solvers
 
     """
+    expr = sympify(expr)
     for i in range(max_iter):
         z = sqrtdenest0(expr)
         if expr == z:
@@ -165,24 +166,25 @@ def sqrtdenest(expr, max_iter=3):
 
 
 def sqrtdenest0(expr):
-    expr = sympify(expr)
+    if expr.is_Atom:
+        return expr
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         n, d = expr.as_numer_denom()
         if d is S.One:
             nn = len(n.base.args)
             if 3 <= nn <= 4 and all([(x**2).is_Number for x in n.base.args]):
-                return sqrt_four_terms_denest(n)
+                return _sqrt_four_terms_denest(n)
             return _sqrtdenest(expr)
         else:
             nn = len(n.base.args)
             if 3 <= nn <= 4 and all([(x**2).is_Number for x in n.base.args]):
-                n1 = sqrt_four_terms_denest(n)
+                n1 = _sqrt_four_terms_denest(n)
             else:
                 n1 = _sqrtdenest(n)
 
             if d.is_Pow and d.exp == S.Half and \
                 3 <= len(d.base.args) <= 4 and all([(x**2).is_Number for x in d.base.args]):
-                d1 = sqrt_four_terms_denest(d)
+                d1 = _sqrt_four_terms_denest(d)
             else:
                 d1 = _sqrtdenest(d)
             return n1/d1
@@ -306,8 +308,6 @@ def sqrt_match(p):
     if p.is_Add:
         pargs = list(p.args)
         v = [(sqrt_depth(x), i) for i, x in enumerate(pargs)]
-        if not v:
-            return None
         nmax = max(v)
         if nmax[0] == 0:
             b, r = p.as_coeff_Mul()
@@ -417,7 +417,7 @@ def _denester (nested, av0, h, max_depth_level):
                 v[1] = -1 * v[1]
             if not f[len(nested)]: #Solution denests with square roots
                 vad = (v[0] + d).expand()
-                if not vad:
+                if vad <= 0:
                     return sqrt(nested[-1]), [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
                 if not(sqrt_depth(vad) < sqrt_depth(R) + 1 or (vad**2).is_Number):
                     av0[1] = None
