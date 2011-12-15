@@ -101,15 +101,17 @@ def sqrt_numeric_denest(a, b, r, d2):
 
 
 def sqrt_four_terms_denest(expr):
-    """denest the square root of four terms
+    """denest the square root of three or four square root of rationals
 
     See D.J.Jeffrey and A.D.Rich
     'Symplifying Square Roots of Square Roots by Denesting'
 
     Examples
     >>> from sympy import sqrt
-    >>> from sympy.simplify.sqrtdenest import sqrtdenest, sqrt_four_terms_denest
-    >>> sqrtdenest(sqrt(12+2*sqrt(6)+2*sqrt(14)+2*sqrt(21)))
+    >>> from sympy.simplify.sqrtdenest import sqrt_four_terms_denest
+    >>> sqrt_four_terms_denest(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
+    -sqrt(10) + sqrt(2) + 9 + 9*sqrt(5)
+    >>> sqrt_four_terms_denest(sqrt(12+2*sqrt(6)+2*sqrt(14)+2*sqrt(21)))
     sqrt(2) + sqrt(3) + sqrt(7)
     """
     from sympy.simplify.simplify import radsimp
@@ -167,21 +169,24 @@ def sqrtdenest0(expr):
     if expr.is_Pow and expr.exp is S.Half: #If expr is a square root
         n, d = expr.as_numer_denom()
         if d is S.One:
-            if len(n.base.args) == 4 and all([x**2 for x in n.base.args]):
+            nn = len(n.base.args)
+            if 3 <= nn <= 4 and all([(x**2).is_Number for x in n.base.args]):
                 return sqrt_four_terms_denest(n)
             return _sqrtdenest(expr)
         else:
-            if len(n.base.args) == 4 and all([x**2 for x in n.base.args]):
+            nn = len(n.base.args)
+            if 3 <= nn <= 4 and all([(x**2).is_Number for x in n.base.args]):
                 n1 = sqrt_four_terms_denest(n)
             else:
                 n1 = _sqrtdenest(n)
 
-            if len(d.base.args) == 4 and all([x**2 for x in n.base.args]):
+            if d.is_Pow and d.exp == S.Half and \
+                3 <= len(d.base.args) <= 4 and all([(x**2).is_Number for x in d.base.args]):
                 d1 = sqrt_four_terms_denest(d)
             else:
                 d1 = _sqrtdenest(d)
-
             return n1/d1
+
     elif expr.is_Pow and expr.exp == -S.Half:
         return 1/sqrtdenest0(sqrt(expr.base))
     elif expr.is_Mul:
