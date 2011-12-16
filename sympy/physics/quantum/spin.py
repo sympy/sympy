@@ -76,14 +76,11 @@ def couple(tp, jcoupling_list=None):
         Elements of this list are sub-lists of length 2 specifying the order of
         the coupling of the spin spaces. The length of this must be N-2, where N
         is the number of states in the tensor product to be coupled. The
-        elements of the sub-list are integers corresponding n value to the
-        spaces, j_n, that are coupled, where the spin spaces are counted
-        starting at n=1. If two spaces are coupled, the new coupled space is
-        referenced with the smaller of the two n's, e.g. the space defined by
-        the coupling (1, 3) would be referenced in later couplings by n=1. If
-        this parameter is not specified, the default method is to couple the
-        first and second spaces, then this coupled space to the third space,
-        etc.
+        elements of this sublist are the same as the first two elements of each
+        sublist in *jcoupling as defined in JzKetCoupled. If this argument is
+        not specified, the default value is taken, which couples the first and
+        second product basis spaces, then couples this new coupled space to the
+        third product space, etc
 
     Examples
     ========
@@ -263,13 +260,15 @@ def uncouple(state, jn=None, jcoupling_list=None):
         state.
 
     jn : list or tuple
-        The list of the j-values that are coupled. Must be defined if state is
-        not a subclass of CoupledSpinState. See the jn parameter of the
-        JzKetCoupled class to see how this must be defined.
+        The list of the j-values that are coupled. If state is a
+        CoupledSpinState, this parameter is ignored. This must be defined if
+        state is not a subclass of CoupledSpinState. See the jn parameter of
+        the JzKetCoupled class to see how this must be defined.
 
     jcoupling_list : list or tuple
-        The list defining how the j-values are coupled together. Must be defined
-        if state is not a subclass of CoupledSpinState. See the jcoupling
+        The list defining how the j-values are coupled together. If state is a
+        CoupledSpinState, this parameter is ignored. This must be defined if
+        state is not a subclass of CoupledSpinState. See the jcoupling
         parameter of the JzKetCoupled class to see how this must be defined.
 
     Examples
@@ -1673,29 +1672,56 @@ class JzKetCoupled(CoupledSpinState, Ket):
     Spin state that is an eigenket of Jz which represents the coupling of
     separate spin spaces.
 
-    See uncouple and couple for coupling of states and JzKetCoupled for coupled
-    states.
+    The arguments for creating instances of JzKetCoupled are j, m, jn and an
+    optional jcoupling argument. The j and m options are the total angular
+    momentum quantum numbers, as used for normal states (e.g. JzKet).
+
+    The other required parameter in *jn, which is a tuple defining the j_n
+    angular momentum quantum numbers of the product spaces. So for example, if
+    a state represented the coupling of the product basis state |j1,m1>x|j2,m2>,
+    the *jn for this state would be (j1,j2).
+
+    The final option is *jcoupling, which is used to define how the spaces
+    specified by *jn are coupled, which includes both the order these spaces
+    are coupled together and the quantum numbers that arise from these
+    couplings. The *jcoupling parameter itself is a list of lists, such that
+    each of the sublists defines a single coupling between the spin spaces. If
+    there are N coupled angular momentum spaces, that is *jn has N elements,
+    then there must be N-2 sublists. Note this will leave two uncoupled spaces,
+    and these last two spaces are automatically coupled together. Each of these
+    sublists making up the *jcoupling parameter have length 3. The first two
+    elements are the indicies of the product spaces that are considered to be
+    coupled together. For example, if we want to couple j_1 and j_4, the
+    indicies would be 1 and 4. If a state has already been coupled, it is
+    referenced by the smallest index that is coupled, so if j_2 and j_4 has
+    already been coupled to some j24, then this value can be coupled by
+    referencing it with index 2. The final element of the sublist is the
+    quantum number of the new quantum number. So putting everything together,
+    into a valid sublist for *jcoupling, if j_1 and j_2 are coupled to an
+    angular momentum space with quantum number j12, the sublist would be
+    (1,2,j12), N-2 of these sublists are used in the list for *jcoupling.
+
+    Note the *jcoupling parameter is optional, if it is not specified, the
+    default coupling is taken. This default value is to coupled the spaces in
+    order and take the quantum number of the coupling to be the maximum value.
+    For example, if the spin spaces are j1,j2,j3,j4, then the default coupling
+    couples j1 and j2 to j12=j1+j2, then, j12 and j3 are coupled to
+    j123=j12+j3, and finally j123 and j4 to j1234=j123+j4. The jcoupling value
+    that would correspond to this is:
+    ((1,2,j1+j2),(1,3,j1+j2+j3))
+
+    See uncouple and couple for coupling and uncoupling of states.
 
     Parameters
     ==========
 
-    j : Number, Symbol
-        Total spin angular momentum
-    m : Number, Symbol
-        Eigenvalue of the Jz spin operator
-    *jn : tuple or list
-        The j values of the spaces that are coupled
-    jcoupling : tuple or list
-        Optional parameter defining the order and j values of the spaces that
-        are coupled together. This list is composed of sub-lists of length 3. In
-        the sub-list, the first two elements define the n values for the states
-        that are coupled, j_n, and the third element gives the j value of the
-        new coupled space. If a coupled space is to be referenced later, it is
-        done by referencing the smallest n of the j_n's that are coupled in that
-        space. If there are N elements of jn, the length of this parameter must
-        be N-2. If no value if given, the default coupling is used, which
-        couples the first space to the second with a j value j_12=j_1+j_2, then
-        j_12 is coupled to the third space with j value j_123=j_12+j3, etc.
+    *args : tuple
+        The arguments that must be passed are j, m, *jn, and *jcoupling. The j
+        value is the total angular momentum. The m value is the eigenvalue of
+        the Jz spin operator. The *jn list are the j values of argular momentum
+        spaces coupled together. The jcoupling parameter is an optional
+        parameter defining how the spaces are coupled together. See the above
+        description for how these coupling parameters are defined.
 
     Examples
     ========
