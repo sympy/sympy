@@ -85,8 +85,8 @@ backend-dependent details.
 .. autoclass:: CythonCodeWrapper
    :members:
 
-Docstring
-=========
+API Reference
+=============
 
 .. automodule:: sympy.utilities.autowrap
    :members:
