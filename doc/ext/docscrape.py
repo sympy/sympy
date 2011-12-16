@@ -492,7 +492,7 @@ class ClassDoc(NumpyDocString):
     def methods(self):
         if self._cls is None:
             return []
-        return [name for name,func in inspect.getmembers(self._cls)
+        return [name for name,func in inspect_getmembers(self._cls)
                 if ((not name.startswith('_')
                      or name in self.extra_public_methods)
                     and callable(func))]
@@ -501,5 +501,25 @@ class ClassDoc(NumpyDocString):
     def properties(self):
         if self._cls is None:
             return []
-        return [name for name,func in inspect.getmembers(self._cls)
+        return [name for name,func in inspect_getmembers(self._cls)
                 if not name.startswith('_') and func is None]
+
+
+
+# This function was taken verbatim from Python 2.7 inspect.getmembers() from
+# the standard library. The difference from Python < 2.7 is that there is the
+# try/except AttributeError clause added, which catches exceptions like this
+# one: https://gist.github.com/1471949
+def inspect_getmembers(object, predicate=None):
+    """Return all members of an object as (name, value) pairs sorted by name.
+    Optionally, only return members that satisfy a given predicate."""
+    results = []
+    for key in dir(object):
+        try:
+            value = getattr(object, key)
+        except AttributeError:
+            continue
+        if not predicate or predicate(value):
+            results.append((key, value))
+    results.sort()
+    return results
