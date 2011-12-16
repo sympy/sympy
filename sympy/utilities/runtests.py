@@ -223,7 +223,7 @@ def doctest(*paths, **kwargs):
     >> sympy.doctest("/functions", "basic.py")
 
     Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
-    sympy\\functions\special\polynomials.py, and sympy\polys\polynomial.py:
+    sympy/functions/special/polynomials.py, and sympy/polys/polynomial.py:
 
     >> sympy.doctest("polynomial")
 
