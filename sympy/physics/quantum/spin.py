@@ -97,13 +97,13 @@ def couple(tp, jcoupling_list=None):
     first and second spaces couple, then this couples to the third space:
 
         >>> couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)))
-        sqrt(6)*|2,2,j1=1,j2=1,j3=1,j1,2=2>/3 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j1,2=2>/3
+        sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,2)=2>/3 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,2)=2>/3
 
     Perform this same coupling, but we define the coupling to first couple
     the first and third spaces:
 
         >>> couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)), ((1,3),) )
-        sqrt(2)*|2,2,j1=1,j2=1,j3=1,j1,3=1>/2 - sqrt(6)*|2,2,j1=1,j2=1,j3=1,j1,3=2>/6 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j1,3=2>/3
+        sqrt(2)*|2,2,j1=1,j2=1,j3=1,j(1,3)=1>/2 - sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,3)=2>/6 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,3)=2>/3
 
     Couple a tensor product of symbolic states:
 
@@ -1516,7 +1516,7 @@ class CoupledSpinState(SpinState):
             label.append(u'j%d=%s' % (i, ji) )
             pass
         for jn, (n1,n2) in zip(self.coupled_jn, self.coupled_n):
-            label.append(u'j%s=%s' % (','.join(str(i) for i in sorted(n1+n2)), printer._print(jn)) )
+            label.append(u'j(%s)=%s' % (','.join(str(i) for i in sorted(n1+n2)), printer._print(jn)) )
         return self._print_sequence(
             label, self._label_separator, printer, *args
         )
@@ -1747,11 +1747,11 @@ class JzKetCoupled(CoupledSpinState, Ket):
     coupling parameters:
 
         >>> JzKetCoupled(2, 1, (1, 1, 1))
-        |2,1,j1=1,j2=1,j3=1,j1,2=2>
+        |2,1,j1=1,j2=1,j3=1,j(1,2)=2>
         >>> JzKetCoupled(2, 1, (1, 1, 1), jcoupling=((1,2,2),) )
-        |2,1,j1=1,j2=1,j3=1,j1,2=2>
+        |2,1,j1=1,j2=1,j3=1,j(1,2)=2>
         >>> JzKetCoupled(2, 1, (1, 1, 1), jcoupling=((2,3,1),) )
-        |2,1,j1=1,j2=1,j3=1,j2,3=1>
+        |2,1,j1=1,j2=1,j3=1,j(2,3)=1>
 
     Rewriting the JzKetCoupled in terms of eigenkets of the Jx operator:
     Note: that the resulting eigenstates are JxKetCoupled
