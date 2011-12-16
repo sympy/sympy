@@ -522,7 +522,7 @@ def prefixes(seq):
     Generate all prefixes of a sequence.
 
     Examples
-    =======
+    ========
 
     >>> from sympy.utilities.iterables import prefixes
 
@@ -540,7 +540,7 @@ def postfixes(seq):
     Generate all postfixes of a sequence.
 
     Examples
-    =======
+    ========
 
     >>> from sympy.utilities.iterables import postfixes
 

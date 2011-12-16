@@ -1,7 +1,8 @@
+=========
 Utilities
 =========
 
-.. TODO: uncomment compilef.txt and benchmarking.txt when they're fixed
+.. TODO: add compilef.txt and benchmarking.txt when they're fixed
 
 .. automodule:: sympy.utilities
 
@@ -24,6 +25,4 @@ Contents:
    runtests.txt
    source.txt
    timeutils.txt
-.. benchmarking.txt
-.. compilef.txt
 

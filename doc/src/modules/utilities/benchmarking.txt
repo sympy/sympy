@@ -1,6 +1,0 @@
-Benchmarking
-=================
-
-.. automodule:: sympy.utilities.benchmarking
-   :members:
-

@@ -1,3 +1,4 @@
+===============
 Autowrap module
 ===============
 
@@ -86,7 +87,7 @@ backend-dependent details.
    :members:
 
 API Reference
-=============
+-------------
 
 .. automodule:: sympy.utilities.autowrap
    :members:

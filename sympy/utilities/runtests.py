@@ -198,7 +198,7 @@ def test(*paths, **kwargs):
 
 def doctest(*paths, **kwargs):
     """
-    Runs doctests in all *py files in the sympy directory which match
+    Runs doctests in all \*py files in the sympy directory which match
     any of the given strings in `paths` or all tests if paths=[].
 
     Note:
@@ -223,7 +223,7 @@ def doctest(*paths, **kwargs):
     >> sympy.doctest("/functions", "basic.py")
 
     Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
-    sympy\functions\special\polynomials.py, and sympy\polys\polynomial.py:
+    sympy\\functions\special\polynomials.py, and sympy\polys\polynomial.py:
 
     >> sympy.doctest("polynomial")
 
@@ -1083,10 +1083,15 @@ class PyTestReporter(Reporter):
 
         It uses sys.stdout.write(), so no readline library is necessary.
 
-        color ... choose from the colors below, "" means default color
-        align ... left/right, left is a normal print, right is aligned on the
-                  right hand side of the screen, filled with " " if necessary
-        width ... the screen width
+        +--------------------------------------------------------------------+
+        |color | choose from the colors below, "" means default color        |
+        +------+-------------------------------------------------------------+
+        |align | left/right, left is a normal print, right is aligned on the |
+        |      | right hand side of the screen, filled with " " if necessary |
+        +------+-------------------------------------------------------------+
+        |width | the screen width                                            |
+        +--------------------------------------------------------------------+
+
         """
         color_templates = (
             ("Black"       , "0;30"),

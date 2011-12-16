@@ -1,6 +1,0 @@
-Compile Functions
-=================
-
-.. automodule:: sympy.utilities.compilef
-   :members:
-
