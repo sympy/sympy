@@ -79,7 +79,9 @@ def test_sqrtdenest3():
     z = sqrt(sqrt(sqrt(2) + 2) + 2)
     assert sqrtdenest(z) == z
     assert sqrtdenest(sqrt(-2*sqrt(10)+4*r2*sqrt(-2*sqrt(10)+11)+20)) == \
-    sqrt(-2*r5-sqrt(10)+r2+10)+sqrt(-sqrt(10)-r2+2*r5+10)
+      sqrt(-2*r5-sqrt(10)+r2+10)+sqrt(-sqrt(10)-r2+2*r5+10)
+    assert sqrtdenest(sqrt((112+70*r2)+(46+34*r2)*r5)) == \
+      sqrt(10) + 5 + 4*sqrt(2) + 3*sqrt(5)
 
 
 def test_sqrt_symbolic_denest():

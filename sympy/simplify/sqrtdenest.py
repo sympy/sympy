@@ -1,7 +1,7 @@
 from sympy.functions import sqrt, sign
 from sympy.core import S, Wild, Rational, sympify, Mul, Add, Expr
 from sympy.core.mul import prod
-from sympy.core.function import expand_multinomial
+from sympy.core.function import expand_multinomial, expand_mul
 
 def sqrt_symbolic_denest(a, b, r, d2=None):
     """
@@ -153,7 +153,7 @@ def sqrtdenest(expr, max_iter=3):
 
     See also: unrad in sympy.solvers.solvers
     """
-    expr = sympify(expr)
+    expr = expand_mul(sympify(expr))
     for i in range(max_iter):
         z = sqrtdenest0(expr)
         if expr == z:
