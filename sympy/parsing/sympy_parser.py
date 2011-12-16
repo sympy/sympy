@@ -91,7 +91,8 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import parse_expr
 
