@@ -9,7 +9,7 @@ from __future__ import with_statement
 import os
 import re
 
-from sympy import Basic, symbols, sqrt, sin
+from sympy import Basic, S, symbols, sqrt, sin
 from sympy.utilities.pytest import XFAIL, SKIP
 
 x, y, z = symbols('x,y,z')
@@ -1000,6 +1000,14 @@ def test_sympy__physics__quantum__cg__Wigner3j():
     from sympy.physics.quantum.cg import Wigner3j
     assert _test_args(Wigner3j(6,0,4,0,2,0))
 
+def test_sympy__physics__quantum__cg__Wigner6j():
+    from sympy.physics.quantum.cg import Wigner6j
+    assert _test_args(Wigner6j(1,2,3,2,1,2))
+
+def test_sympy__physics__quantum__cg__Wigner9j():
+    from sympy.physics.quantum.cg import Wigner9j
+    assert _test_args(Wigner9j(2,1,1,S(3)/2,S(1)/2,1,S(1)/2,S(1)/2,0))
+
 def test_sympy__physics__quantum__commutator__Commutator():
     from sympy.physics.quantum.commutator import Commutator
     A, B = symbols('A,B', commutative=False)
@@ -1208,19 +1216,19 @@ def test_sympy__physics__quantum__shor__CMod():
 
 def test_sympy__physics__quantum__spin__CoupledSpinState():
     from sympy.physics.quantum.spin import CoupledSpinState
-    assert _test_args(CoupledSpinState(0, 1))
+    assert _test_args(CoupledSpinState(1, 0, (1, 1)))
 
 def test_sympy__physics__quantum__spin__J2Op():
     from sympy.physics.quantum.spin import J2Op
-    assert _test_args(J2Op(0, 1))
+    assert _test_args(J2Op('J'))
 
 def test_sympy__physics__quantum__spin__JminusOp():
     from sympy.physics.quantum.spin import JminusOp
-    assert _test_args(JminusOp(0, 1))
+    assert _test_args(JminusOp('J'))
 
 def test_sympy__physics__quantum__spin__JplusOp():
     from sympy.physics.quantum.spin import JplusOp
-    assert _test_args(JplusOp(0, 1))
+    assert _test_args(JplusOp('J'))
 
 def test_sympy__physics__quantum__spin__JxBra():
     from sympy.physics.quantum.spin import JxBra
@@ -1228,7 +1236,7 @@ def test_sympy__physics__quantum__spin__JxBra():
 
 def test_sympy__physics__quantum__spin__JxBraCoupled():
     from sympy.physics.quantum.spin import JxBraCoupled
-    assert _test_args(JxBraCoupled(0, 1))
+    assert _test_args(JxBraCoupled(1, 0, (1, 1)))
 
 def test_sympy__physics__quantum__spin__JxKet():
     from sympy.physics.quantum.spin import JxKet
@@ -1236,11 +1244,11 @@ def test_sympy__physics__quantum__spin__JxKet():
 
 def test_sympy__physics__quantum__spin__JxKetCoupled():
     from sympy.physics.quantum.spin import JxKetCoupled
-    assert _test_args(JxKetCoupled(0, 1))
+    assert _test_args(JxKetCoupled(1, 0, (1, 1)))
 
 def test_sympy__physics__quantum__spin__JxOp():
     from sympy.physics.quantum.spin import JxOp
-    assert _test_args(JxOp(0, 1))
+    assert _test_args(JxOp('J'))
 
 def test_sympy__physics__quantum__spin__JyBra():
     from sympy.physics.quantum.spin import JyBra
@@ -1248,7 +1256,7 @@ def test_sympy__physics__quantum__spin__JyBra():
 
 def test_sympy__physics__quantum__spin__JyBraCoupled():
     from sympy.physics.quantum.spin import JyBraCoupled
-    assert _test_args(JyBraCoupled(0, 1))
+    assert _test_args(JyBraCoupled(1, 0, (1, 1)))
 
 def test_sympy__physics__quantum__spin__JyKet():
     from sympy.physics.quantum.spin import JyKet
@@ -1256,11 +1264,11 @@ def test_sympy__physics__quantum__spin__JyKet():
 
 def test_sympy__physics__quantum__spin__JyKetCoupled():
     from sympy.physics.quantum.spin import JyKetCoupled
-    assert _test_args(JyKetCoupled(0, 1))
+    assert _test_args(JyKetCoupled(1, 0, (1, 1)))
 
 def test_sympy__physics__quantum__spin__JyOp():
     from sympy.physics.quantum.spin import JyOp
-    assert _test_args(JyOp(0, 1))
+    assert _test_args(JyOp('J'))
 
 def test_sympy__physics__quantum__spin__JzBra():
     from sympy.physics.quantum.spin import JzBra
@@ -1268,7 +1276,7 @@ def test_sympy__physics__quantum__spin__JzBra():
 
 def test_sympy__physics__quantum__spin__JzBraCoupled():
     from sympy.physics.quantum.spin import JzBraCoupled
-    assert _test_args(JzBraCoupled(0, 1))
+    assert _test_args(JzBraCoupled(1, 0, (1, 1)))
 
 def test_sympy__physics__quantum__spin__JzKet():
     from sympy.physics.quantum.spin import JzKet
@@ -1276,11 +1284,11 @@ def test_sympy__physics__quantum__spin__JzKet():
 
 def test_sympy__physics__quantum__spin__JzKetCoupled():
     from sympy.physics.quantum.spin import JzKetCoupled
-    assert _test_args(JzKetCoupled(0, 1))
+    assert _test_args(JzKetCoupled(1, 0, (1, 1)))
 
 def test_sympy__physics__quantum__spin__JzOp():
     from sympy.physics.quantum.spin import JzOp
-    assert _test_args(JzOp(0, 1))
+    assert _test_args(JzOp('J'))
 
 def test_sympy__physics__quantum__spin__Rotation():
     from sympy.physics.quantum.spin import Rotation
