@@ -87,27 +87,27 @@ def couple(tp, jcoupling_list=None):
         >>> from sympy.physics.quantum.spin import JzKet, couple
         >>> from sympy.physics.quantum.tensorproduct import TensorProduct
         >>> couple(TensorProduct(JzKet(1,0), JzKet(1,1)))
-        -sqrt(2)*|1,1,j1=1,j2=1>/2 + sqrt(2)*|2,1,j1=1,j2=1>/2
+        -sqrt(2)*|1,1,'j1=1','j2=1'>/2 + sqrt(2)*|2,1,'j1=1','j2=1'>/2
 
 
     Numerical coupling of three spaces using the default coupling method, i.e.
     first and second spaces couple, then this couples to the third space:
 
         >>> couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)))
-        sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,2)=2>/3 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,2)=2>/3
+        sqrt(6)*|2,2,'j1=1','j2=1','j3=1','j(1,2)=2'>/3 + sqrt(3)*|3,2,'j1=1','j2=1','j3=1','j(1,2)=2'>/3
 
     Perform this same coupling, but we define the coupling to first couple
     the first and third spaces:
 
         >>> couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)), ((1,3),) )
-        sqrt(2)*|2,2,j1=1,j2=1,j3=1,j(1,3)=1>/2 - sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,3)=2>/6 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,3)=2>/3
+        sqrt(2)*|2,2,'j1=1','j2=1','j3=1','j(1,3)=1'>/2 - sqrt(6)*|2,2,'j1=1','j2=1','j3=1','j(1,3)=2'>/6 + sqrt(3)*|3,2,'j1=1','j2=1','j3=1','j(1,3)=2'>/3
 
     Couple a tensor product of symbolic states:
 
         >>> from sympy import symbols
         >>> j1,m1,j2,m2 = symbols('j1 m1 j2 m2')
         >>> couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2)))
-        Sum(CG(j1, m1, j2, m2, j, m1 + m2)*|j,m1 + m2,j1=j1,j2=j2>, (j, m1 + m2, j1 + j2))
+        Sum(CG(j1, m1, j2, m2, j, m1 + m2)*|j,m1 + m2,'j1=j1','j2=j2'>, (j, m1 + m2, j1 + j2))
 
     """
     if not isinstance(tp, TensorProduct):
@@ -775,16 +775,16 @@ class Rotation(UnitaryOperator):
         >>> from sympy import pi
         >>> from sympy.physics.quantum.spin import Rotation
         >>> Rotation(pi, 0, pi/2)
-        R(pi,0,pi/2)
+        'R'(pi,0,pi/2)
 
     With symbolic Euler angles and calculating the inverse rotation operator:
 
         >>> from sympy import symbols
         >>> a, b, c = symbols('a b c')
         >>> Rotation(a, b, c)
-        R(a,b,c)
+        'R'(a,b,c)
         >>> Rotation(a, b, c).inverse()
-        R(-c,-b,-a)
+        'R'(-c,-b,-a)
 
 
     References
@@ -1515,10 +1515,10 @@ class CoupledSpinState(SpinState):
     def _print_label(self, printer, *args):
         label = [self.j, self.m]
         for i, ji in enumerate(self.jn, start=1):
-            label.append(u'j%d=%s' % (i, ji) )
+            label.append('j%d=%s' % (i, ji) )
             pass
         for jn, (n1,n2) in zip(self.coupled_jn, self.coupled_n):
-            label.append(u'j(%s)=%s' % (','.join(str(i) for i in sorted(n1+n2)), printer._print(jn)) )
+            label.append('j(%s)=%s' % (','.join(str(i) for i in sorted(n1+n2)), printer._print(jn)) )
         return self._print_sequence(
             label, self._label_separator, printer, *args
         )
@@ -1767,26 +1767,26 @@ class JzKetCoupled(CoupledSpinState, Ket):
         >>> from sympy.physics.quantum.spin import JzKetCoupled
         >>> from sympy import symbols
         >>> JzKetCoupled(1, 0, (1, 1))
-        |1,0,j1=1,j2=1>
+        |1,0,'j1=1','j2=1'>
         >>> j, m, j1, j2 = symbols('j m j1 j2')
         >>> JzKetCoupled(j, m, (j1, j2))
-        |j,m,j1=j1,j2=j2>
+        |j,m,'j1=j1','j2=j2'>
 
     Defining coupled spin states for more than 2 coupled spaces with various
     coupling parameters:
 
         >>> JzKetCoupled(2, 1, (1, 1, 1))
-        |2,1,j1=1,j2=1,j3=1,j(1,2)=2>
+        |2,1,'j1=1','j2=1','j3=1','j(1,2)=2'>
         >>> JzKetCoupled(2, 1, (1, 1, 1), ((1,2,2),) )
-        |2,1,j1=1,j2=1,j3=1,j(1,2)=2>
+        |2,1,'j1=1','j2=1','j3=1','j(1,2)=2'>
         >>> JzKetCoupled(2, 1, (1, 1, 1), ((2,3,1),) )
-        |2,1,j1=1,j2=1,j3=1,j(2,3)=1>
+        |2,1,'j1=1','j2=1','j3=1','j(2,3)=1'>
 
     Rewriting the JzKetCoupled in terms of eigenkets of the Jx operator:
     Note: that the resulting eigenstates are JxKetCoupled
 
         >>> JzKetCoupled(1,1,(1,1)).rewrite("Jx")
-        |1,-1,j1=1,j2=1>/2 - sqrt(2)*|1,0,j1=1,j2=1>/2 + |1,1,j1=1,j2=1>/2
+        |1,-1,'j1=1','j2=1'>/2 - sqrt(2)*|1,0,'j1=1','j2=1'>/2 + |1,1,'j1=1','j2=1'>/2
 
     The rewrite method can be used to convert a coupled state to an uncoupled
     state. This is done by passing coupled=False to the rewrite function:
