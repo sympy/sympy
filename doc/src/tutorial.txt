@@ -375,24 +375,21 @@ Use ``.series(var, point, order)``::
 
 Another simple example::
 
-    from sympy import Integral, Symbol, pprint
+    >>> from sympy import Integral, Symbol, pprint
 
-    x = Symbol("x")
-    y = Symbol("y")
+    >>> x = Symbol("x")
+    >>> y = Symbol("y")
 
-    e = 1/(x + y)
-    s = e.series(x, 0, 5)
+    >>> e = 1/(x + y)
+    >>> s = e.series(x, 0, 5)
 
-    print(s)
-    pprint(s)
-
-That should print the following after the execution::
-
-    1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
-         2    4         3
+    >>> print(s)
+    1/y - x/y**2 + x**2/y**3 - x**3/y**4 + x**4/y**5 + O(x**5)
+    >>> pprint(s)
+              2    3    4
     1   x    x    x    x     / 5\
-    ─ + ── + ── - ── - ── + O\x /
-    y    3    5    2    4
+    - - -- + -- - -- + -- + O\x /
+    y    2    3    4    5
         y    y    y    y
 
 .. index:: integration
@@ -471,6 +468,9 @@ Functions
 
 **trigonometric**::
 
+    >>> from sympy import *
+    >>> x, y = symbols('x,y')
+
     >>> sin(x+y).expand(trig=True)
     sin(x)*cos(y) + sin(y)*cos(x)
 
@@ -517,7 +517,7 @@ Functions
 
 **spherical harmonics**::
 
-    >>> from sympy.abc import theta, phi
+    >>> from sympy.abc import theta, phi # predefined Symbols
 
     >>> Ylm(1, 0, theta, phi)
       ___
@@ -543,7 +543,6 @@ Functions
 **factorials and gamma function**::
 
     >>> x = Symbol("x")
-
     >>> y = Symbol("y", integer=True)
 
     >>> factorial(x)
@@ -624,6 +623,9 @@ Differential Equations
 
 In ``isympy``::
 
+    >>> from sympy import *
+    >>> f = Function('f')
+    >>> x = Symbol('x')
     >>> f(x).diff(x, x) + f(x)
             2
            d
@@ -641,6 +643,8 @@ Algebraic equations
 
 In ``isympy``::
 
+    >>> from sympy import *
+    >>> x, y = symbols('x,y')
     >>> solve(x**4 - 1, x)
     [-1, 1, -I, I]
 
