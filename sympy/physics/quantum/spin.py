@@ -1451,8 +1451,7 @@ class CoupledSpinState(SpinState):
             raise ValueError('jcoupling must have length of %d, got %d' % (len(jn)-1, len(jcoupling)))
         if not all(len(x) == 3 for x in jcoupling):
             raise ValueError('All elements of jcoupling must have length 3')
-        coupled_n, coupled_jn = _build_coupled(jcoupling, len(jn))
-        return State.__new__(cls, j, m, jn, coupled_jn, coupled_n)
+        return State.__new__(cls, j, m, jn, jcoupling)
 
     def _print_label(self, printer, *args):
         label = [self.j, self.m]
@@ -1504,11 +1503,11 @@ class CoupledSpinState(SpinState):
 
     @property
     def coupled_jn(self):
-        return self.label[3]
+        return _build_coupled(self.label[3], len(self.label[2]))[1]
 
     @property
     def coupled_n(self):
-        return self.label[4]
+        return _build_coupled(self.label[3], len(self.label[2]))[0]
 
     @classmethod
     def _eval_hilbert_space(cls, label):
