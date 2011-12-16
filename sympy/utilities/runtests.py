@@ -1083,14 +1083,14 @@ class PyTestReporter(Reporter):
 
         It uses sys.stdout.write(), so no readline library is necessary.
 
-        +--------------------------------------------------------------------+
-        |color | choose from the colors below, "" means default color        |
-        +------+-------------------------------------------------------------+
-        |align | left/right, left is a normal print, right is aligned on the |
-        |      | right hand side of the screen, filled with " " if necessary |
-        +------+-------------------------------------------------------------+
-        |width | the screen width                                            |
-        +--------------------------------------------------------------------+
+        +-------+-------------------------------------------------------------+
+        | color | choose from the colors below, "" means default color        |
+        +-------+-------------------------------------------------------------+
+        | align | left/right, left is a normal print, right is aligned on the |
+        |       | right hand side of the screen, filled with " " if necessary |
+        +-------+-------------------------------------------------------------+
+        | width | the screen width                                            |
+        +-------+-------------------------------------------------------------+
 
         """
         color_templates = (
