@@ -42,6 +42,7 @@ access any SymPy module, or use this contens:
    solvers/solvers.txt
    tensor/index.txt
    utilities/index.txt
+   parsing.txt
    physics/index.txt
 
 Contributions to docs
