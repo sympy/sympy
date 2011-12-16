@@ -209,7 +209,7 @@ def couple(tp, jcoupling_list=None):
                     cg_terms.append( (j1, m1, j2, m2, j3, m3) )
                     jcoupling.append( (min(j1_n), min(j2_n), j3) )
                 coeff = Mul( *[ CG(*term).doit() for term in cg_terms] )
-                state = coupled_evect(j3, m3, jn, jcoupling=jcoupling[:-1])
+                state = coupled_evect(j3, m3, jn, jcoupling[:-1])
                 result.append(coeff*state)
 
         return Add(*result).doit()
@@ -235,7 +235,7 @@ def couple(tp, jcoupling_list=None):
             jcoupling.append( (min(j1_n), min(j2_n), j3) )
             sum_terms.append((j3,m3,j1+j2))
         coeff = Mul( *[ CG(*term) for term in cg_terms] )
-        state = coupled_evect(j3, m3, jn, jcoupling=jcoupling[:-1])
+        state = coupled_evect(j3, m3, jn, jcoupling[:-1])
         return Sum(coeff*state, *sum_terms)
 
 
@@ -286,7 +286,7 @@ def uncouple(state, jn=None, jcoupling_list=None):
 
     Uncouple a numerical state of three coupled spaces using a CoupledSpinState state:
 
-        >>> uncouple(JzKetCoupled(1, 1, (1, 1, 1), jcoupling=((1,3,1),) ))
+        >>> uncouple(JzKetCoupled(1, 1, (1, 1, 1), ((1,3,1),) ))
         |1,-1>x|1,1>x|1,1>/2 - |1,0>x|1,0>x|1,1>/2 + |1,1>x|1,0>x|1,0>/2 - |1,1>x|1,1>x|1,-1>/2
 
     Perform the same calculation using a SpinState state:
@@ -1496,12 +1496,16 @@ def _build_coupled(jcoupling, length):
 class CoupledSpinState(SpinState):
     """Base class for coupled angular momentum states."""
 
-    def __new__(cls, j, m, jn, **options):
-        jcoupling = options.get('jcoupling')
-        if jcoupling is None:
+    def __new__(cls, *args):
+        if len(args) == 4:
+            j, m, jn, jcoupling = args
+        elif len(args) == 3:
+            j, m, jn = args
             jcoupling = []
             for n in range(2,len(jn)):
                 jcoupling.append((1,n,Add(*[jn[i] for i in range(n)])))
+        else:
+            raise ValueError("args must have length 3 or 4")
         if not len(jn)-2 == len(jcoupling):
             raise ValueError('jcoupling must have length of %d, got %d' % (len(jn)-1, len(jcoupling)))
         if not all(len(x) == 3 for x in jcoupling):
@@ -1774,9 +1778,9 @@ class JzKetCoupled(CoupledSpinState, Ket):
 
         >>> JzKetCoupled(2, 1, (1, 1, 1))
         |2,1,j1=1,j2=1,j3=1,j(1,2)=2>
-        >>> JzKetCoupled(2, 1, (1, 1, 1), jcoupling=((1,2,2),) )
+        >>> JzKetCoupled(2, 1, (1, 1, 1), ((1,2,2),) )
         |2,1,j1=1,j2=1,j3=1,j(1,2)=2>
-        >>> JzKetCoupled(2, 1, (1, 1, 1), jcoupling=((2,3,1),) )
+        >>> JzKetCoupled(2, 1, (1, 1, 1), ((2,3,1),) )
         |2,1,j1=1,j2=1,j3=1,j(2,3)=1>
 
     Rewriting the JzKetCoupled in terms of eigenkets of the Jx operator:
