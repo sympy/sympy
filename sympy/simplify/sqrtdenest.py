@@ -127,11 +127,11 @@ def _sqrt_four_terms_denest(expr):
     if d2 < 0:
         a, b = b, a
         d2 = -d2
-    d = sqrtdenest(sqrt(d2))
+    d = _sqrtdenest(sqrt(d2))
     if sqrt_depth(d) > 1:
         return expr
     vad = a + d
-    c = sqrtdenest(sqrt(vad))
+    c = _sqrtdenest(sqrt(vad))
     if sqrt_depth(c) > 1:
         return expr
     return radsimp((c/sqrt(2) + b/(sqrt(2)*c))).expand()

@@ -2,7 +2,7 @@ from sympy import sqrt, Rational, S, Symbol, sqrtdenest, Integral, cos
 from sympy.simplify.sqrtdenest import _denester
 from sympy.utilities.pytest import XFAIL
 
-r2, r3, r5, r6, r7, r29 = sqrt(2), sqrt(3), sqrt(5), sqrt(6), sqrt(7), sqrt(29)
+r2, r3, r5, r6, r7, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 29]]
 
 def test_sqrtdenest():
     d = {sqrt(5 + 2 * sqrt(6)): sqrt(2) + sqrt(3),
@@ -78,6 +78,9 @@ def test_sqrtdenest3():
       r7*(1+r6+r7)/(7*(sqrt(-2*sqrt(29)+ 11)+r5))).expand() == 0
     z = sqrt(sqrt(sqrt(2) + 2) + 2)
     assert sqrtdenest(z) == z
+    assert sqrtdenest(sqrt(-2*sqrt(10)+4*r2*sqrt(-2*sqrt(10)+11)+20)) == \
+    sqrt(-2*r5-sqrt(10)+r2+10)+sqrt(-sqrt(10)-r2+2*r5+10)
+
 
 def test_sqrt_symbolic_denest():
     x = Symbol('x')
