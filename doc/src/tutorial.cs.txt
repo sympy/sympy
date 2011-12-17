@@ -88,7 +88,7 @@ isympy konzole
 Při zkoušení nových funkcí nebo když se snažíte něčemu přijít na kloub, můžete
 použít na IPythonu založenou ``isympy`` (umístěnou v ``bin/isympy``, pokud jí
 spouštíte ze složky se zdrojovým kódem) což je prostě standardní Python shell,
-který má zapojené související sympy moduly a definoval symoboly x, y, z
+který má zapojené související SymPy moduly a definoval symoboly x, y, z
 a některé další věci:
 
 .. parsed-literal::
@@ -130,7 +130,7 @@ Takže Rational(1,2) reprezentuje 1/2, Ration(5,2) reprezentuje 5/2, a tak dále
 
 ::
 
-    >>> from sympy import *
+    >>> from sympy import Rational
     >>> a = Rational(1,2)
 
     >>> a
@@ -171,19 +171,21 @@ Také máme k dispozici několik konstant, jak e nebo pí, se kterými se pracuj
 jako se symboly (1+pi se nevypočítá jako numerická hodnota, ale ponechá se 1+pi)
 a mají libovolnou přesnost::
 
+    >>> from sympy import pi, E
     >>> pi**2
     pi**2
 
     >>> pi.evalf()
     3.14159265358979
 
-    >>> (pi+exp(1)).evalf()
+    >>> (pi + E).evalf()
     5.85987448204884
 
 jak vidíte, evalf vyhodnotí výraz na číslo s pohyblivou desetinnou čárkou.
 
 Symbol ``oo`` se používá pro třídu definující matematické nekonečno::
 
+    >>> from sympy import oo
     >>> oo > 99999
     True
     >>> oo + 1
@@ -195,7 +197,7 @@ Symboly
 Narozdíl od jiných počítačových algebraických systémů, v SymPy je třeba
 explicitně deklarovat symbolické proměnné::
 
-    >>> from sympy import *
+    >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> y = Symbol('y')
 
@@ -220,11 +222,12 @@ použitím ``subs(stary, novy)``::
     >>> ((x+y)**2).subs(x, y)
     4*y**2
 
-    >>> ((x+y)**2).subs(x, 1 - y)
+    >>> ((x+y)**2).subs(x, 1-y)
     1
 
 Pro celý zbytek tutoriálu předpokládejme, že jsme zadali::
 
+    >>> from sympy import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 To nám zajistí hezčí výstup. Koukněte do sekce níže :ref:`printing-tutorial`.
@@ -236,6 +239,8 @@ Algebra
 
 Pro rozklad na parciální zlomky, použijte ``apart(expr, x)``::
 
+    >>> from sympy import apart
+    >>> from sympy.abc import x, y, z
     >>> 1/( (x+2)*(x+1) )
            1
     ---------------
@@ -258,6 +263,7 @@ Pro rozklad na parciální zlomky, použijte ``apart(expr, x)``::
 
 Pro zpětné sdružení věcí dohromady, použijte ``together(expr, x)``::
 
+    >>> from sympy import together
     >>> together(1/x + 1/y + 1/z)
     x*y + x*z + y*z
     ---------------
@@ -288,8 +294,8 @@ Limity se používají v sympy jednoduše, pomocí syntaxe ``limit(function,
 variable, point)``, takže pro vypočtení limity f(x) pro x -> 0 byste dosadili
 ``limit(f, x, 0)``::
 
-   >>> from sympy import *
-   >>> x=Symbol("x")
+   >>> from sympy import limit, Symbol, sin, oo
+   >>> x = Symbol("x")
    >>> limit(sin(x)/x, x, 0)
    1
 
@@ -315,7 +321,7 @@ Derivace
 
 Můžete derivovat libovolný výraz v SymPy pomocí ``diff(func, var)``. Například::
 
-    >>> from sympy import *
+    >>> from sympy import diff, Symbol, sin, tan
     >>> x = Symbol('x')
     >>> diff(sin(x), x)
     cos(x)
@@ -328,7 +334,9 @@ Můžete derivovat libovolný výraz v SymPy pomocí ``diff(func, var)``. Např�
 
 Výsledek si můžete zkontrolovat::
 
-    >>> limit((tan(x+y)-tan(x))/y, y, 0)
+    >>> from sympy import limit
+    >>> from sympy.abc import delta
+    >>> limit((tan(x + delta) - tan(x))/delta, delta, 0)
        2
     tan (x) + 1
 
@@ -353,7 +361,7 @@ Rozvoj v řady
 
 Použijte ``.series(var, point, order)``::
 
-    >>> from sympy import *
+    >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
     >>> cos(x).series(x, 0, 10)
          2    4     6      8
@@ -368,25 +376,20 @@ Použijte ``.series(var, point, order)``::
 
 Další jednoduchý příklad::
 
-    from sympy import Integral, Symbol, pprint
+    >>> from sympy import Integral, pprint
 
-    x = Symbol("x")
-    y = Symbol("y")
+    >>> y = Symbol("y")
+    >>> e = 1/(x + y)
+    >>> s = e.series(x, 0, 5)
 
-    e = 1/(x + y)
-    s = e.series(x, 0, 5)
-
-    print(s)
-    pprint(s)
-
-To by mělo vypsat::
-
+    >>> print(s)
     1/y - x/y**2 + x**2/y**3 - x**3/y**4 + x**4/y**5 + O(x**5)
-              2    3    4        
+    >>> pprint(s)
+              2    3    4
     1   x    x    x    x     / 5\
     - - -- + -- - -- + -- + O\x /
-    y    2    3    4    5        
-        y    y    y    y 
+    y    2    3    4    5
+        y    y    y    y
 
 .. index:: integration
 
@@ -398,7 +401,7 @@ transcendentních funkcí pomocí fuknce ``integrate()``, která využívá siln
 rozšířeného Risch-Normanova algoritmu, některých heuristik a porovnávání
 vzorků::
 
-    >>> from sympy import *
+    >>> from sympy import integrate, erf, exp, sin, log, oo, pi, sinh, symbols
     >>> x, y = symbols('x,y')
 
 Můžete integrovat elementární funkce::
@@ -464,6 +467,9 @@ Funkce
 
 **trigonometrické**::
 
+    >>> from sympy import asin, asinh, cos, sin, sinh, symbols, I
+    >>> x, y = symbols('x,y')
+
     >>> sin(x+y).expand(trig=True)
     sin(x)*cos(y) + sin(y)*cos(x)
 
@@ -510,6 +516,7 @@ Funkce
 
 **Sférické funkce**::
 
+    >>> from sympy import Ylm
     >>> from sympy.abc import theta, phi
 
     >>> Ylm(1, 0, theta, phi)
@@ -535,15 +542,15 @@ Funkce
 
 **Faktoriály a gamma funkce**::
 
+    >>> from sympy import factorial, gamma, Symbol
     >>> x = Symbol("x")
-
-    >>> y = Symbol("y", integer=True)
+    >>> n = Symbol("n", integer=True)
 
     >>> factorial(x)
     x!
 
-    >>> factorial(y)
-    y!
+    >>> factorial(n)
+    n!
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
                          2  2             2  2
@@ -553,6 +560,7 @@ Funkce
 
 **Zeta funkce**::
 
+    >>> from sympy import zeta
     >>> zeta(4, x)
     zeta(4, x)
 
@@ -577,6 +585,7 @@ Funkce
 
 **Polynomy**::
 
+    >>> from sympy import assoc_legendre, chebyshevt, legendre, hermite
     >>> chebyshevt(2, x)
        2
     2*x  - 1
@@ -617,6 +626,9 @@ Diferenciální rovnice
 
 V ``isympy``::
 
+    >>> from sympy import Function, Symbol, dsolve
+    >>> f = Function('f')
+    >>> x = Symbol('x')
     >>> f(x).diff(x, x) + f(x)
             2
            d
@@ -634,6 +646,8 @@ Algebraické rovnice
 
 V ``isympy``::
 
+    >>> from sympy import solve, symbols
+    >>> x, y = symbols('x,y')
     >>> solve(x**4 - 1, x)
     [-1, 1, -I, I]
 
@@ -652,7 +666,7 @@ Matice
 
 Matice jsou vytvořeny jako instance třídy Matrix::
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, Symbol
     >>> Matrix([[1,0], [0,1]])
     [1  0]
     [    ]
@@ -673,7 +687,7 @@ Lze tam také vložit symboly::
     [                ]
     [  2*y    x*y + 1]
 
-Pro více informací a příkladů s maticemi se podívejte na LinearAlgebraTutorial.
+Pro více informací a příkladů s maticemi se podívejte na Linear Algebra tutorial.
 
 .. index:: pattern matching, match, Wild, WildFunction
 
@@ -683,7 +697,7 @@ Porovnávání vzorků
 Použijte metodu ``.match()`` spolu s třídou ``Wild`` pro porovnávání výrazů.
 Metoda vrátí slovník s požadovanými substitucemi, jako vidíme zde::
 
-    >>> from sympy import *
+    >>> from sympy import Symbol, Wild
     >>> x = Symbol('x')
     >>> p = Wild('p')
     >>> (5*x**2).match(p*x**2)
@@ -701,7 +715,6 @@ Pokud je porovnání neúspěšné, vrátí ``None``::
 Lze také použít parametr ``exclude`` třídy ``Wild``, aby se určité věci
 nezobrazily ve výsledku::
 
-    >>> x = Symbol('x')
     >>> p = Wild('p', exclude=[1,x])
     >>> print (x+1).match(x+p) # 1 je vyloučena
     None
@@ -729,7 +742,6 @@ To je to, co vrátí ``str(expression)`` a vypadá to takto::
     1/x
     >>> print Integral(x**2, x)
     Integral(x**2, x)
-    >>>
 
 
 **Pěkný výpis**
@@ -773,7 +785,7 @@ proveďte::
     Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
     [GCC 4.3.1] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
-    >>> from sympy import *
+    >>> from sympy import init_printing, var, Integral
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
     >>> var("x")
     x
@@ -792,7 +804,6 @@ proveďte::
 
 **Python výstup**::
 
-    >>> from sympy.printing.python import python
     >>> from sympy.printing.python import python
     >>> from sympy import Integral
     >>> from sympy.abc import x
@@ -825,6 +836,8 @@ proveďte::
     \int x^{2}\, dx
 
 **MathML**::
+
+::
 
     >>> from sympy.printing.mathml import mathml
     >>> from sympy import Integral, latex

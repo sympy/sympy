@@ -89,7 +89,7 @@ http://code.google.com/p/sympy/ и
 Для экспериментов с новыми функциями, или для обучения SymPy, вы можете
 использовать специальную оболочку IPython под названием  ``isympy``
 (она расположена в ``bin/isympy``, относительно директории с исходным кодом),
-которая является стандартным терминалом python, но с уже импортированными
+которая является стандартным терминалом Python, но с уже импортированными
 важными модулями SymPy, определенными переменными x, y, z и некоторыми
 другими надстройками:
 
@@ -133,7 +133,7 @@ Rational(5,2) является 5/2, и так далее.
 
 ::
 
-    >>> from sympy import *
+    >>> from sympy import Rational
     >>> a = Rational(1,2)
 
     >>> a
@@ -178,19 +178,21 @@ Rational(5,2) является 5/2, и так далее.
 которые ведут себя как переменные (то есть 1+pi не сконвертируется в число,
 а останется выражением 1+pi), и заданы с некоторой точностью::
 
+    >>> from sympy import pi, E
     >>> pi**2
     pi**2
 
     >>> pi.evalf()
     3.14159265358979
 
-    >>> (pi+exp(1)).evalf()
+    >>> (pi + E).evalf()
     5.85987448204884
 
 как вы видите, функция evalf переводит выражение в число с плавающей точкой
 
 Символ ``oo`` используется для работы с математической бесконечностью::
 
+    >>> from sympy import oo
     >>> oo > 99999
     True
     >>> oo + 1
@@ -202,7 +204,7 @@ Rational(5,2) является 5/2, и так далее.
 В отличие от многих других систем компьютерной алгебры, в SymPy вам нужно явно
 декларировать символьные переменные::
 
-    >>> from sympy import *
+    >>> from sympy import Symbol
     >>> x = Symbol('x')
     >>> y = Symbol('y')
 
@@ -229,12 +231,13 @@ Rational(5,2) является 5/2, и так далее.
     >>> ((x+y)**2).subs(x, y)
     4*y**2
 
-    >>> ((x+y)**2).subs(x, 1 - y)
+    >>> ((x+y)**2).subs(x, 1-y)
     1
 
 Далее, на всем протяжении теста, мы будем предполагать,
 что для всех примеров мы запустили команду::
 
+    >>> from sympy import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 Это придаст более качественное отображение выражений при печати.
@@ -247,6 +250,9 @@ Rational(5,2) является 5/2, и так далее.
 =======
 
 Чтобы разложить выражение на простейшие дроби, используйте ``apart(expr, x)``::
+
+    >>> from sympy import apart
+    >>> from sympy.abc import x, y, z
 
     >>> 1/( (x+2)*(x+1) )
            1
@@ -271,6 +277,7 @@ Rational(5,2) является 5/2, и так далее.
 Чтобы снова привести дроби к общему знаменателю,
 используйте ``together(expr, x)``::
 
+    >>> from sympy import together
     >>> together(1/x + 1/y + 1/z)
     x*y + x*z + y*z
     ---------------
@@ -302,8 +309,8 @@ Rational(5,2) является 5/2, и так далее.
 Например, чтобы вычислить предел f(x) при x -> 0, вам нужно ввести
 ``limit(f, x, 0)``::
 
-   >>> from sympy import *
-   >>> x=Symbol("x")
+   >>> from sympy import limit, Symbol, sin, oo
+   >>> x = Symbol("x")
    >>> limit(sin(x)/x, x, 0)
    1
 
@@ -331,7 +338,7 @@ Rational(5,2) является 5/2, и так далее.
 Вы можете продифференцировать любое выражение SymPy,
 используя ``diff(func, var)``. Примеры::
 
-    >>> from sympy import *
+    >>> from sympy import diff, Symbol, sin, tan
     >>> x = Symbol('x')
     >>> diff(sin(x), x)
     cos(x)
@@ -344,7 +351,9 @@ Rational(5,2) является 5/2, и так далее.
 
 Правильность производной вы можете проверить следующим способом::
 
-    >>> limit((tan(x+y)-tan(x))/y, y, 0)
+    >>> from sympy import limit
+    >>> from sympy.abc import delta
+    >>> limit((tan(x + delta) - tan(x))/delta, delta, 0)
        2
     tan (x) + 1
 
@@ -370,7 +379,7 @@ Rational(5,2) является 5/2, и так далее.
 
 Используйте ``.series(var, point, order)``::
 
-    >>> from sympy import *
+    >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
     >>> cos(x).series(x, 0, 10)
          2    4     6      8
@@ -385,24 +394,19 @@ Rational(5,2) является 5/2, и так далее.
 
 Еще один простой пример::
 
-    from sympy import Integral, Symbol, pprint
+    >>> from sympy import Integral, pprint
 
-    x = Symbol("x")
-    y = Symbol("y")
+    >>> y = Symbol("y")
+    >>> e = 1/(x + y)
+    >>> s = e.series(x, 0, 5)
 
-    e = 1/(x + y)
-    s = e.series(x, 0, 5)
-
-    print(s)
-    pprint(s)
-
-После выполнения на экране должно появиться следующее::
-
-    1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
-         2    4         3
+    >>> print(s)
+    1/y - x/y**2 + x**2/y**3 - x**3/y**4 + x**4/y**5 + O(x**5)
+    >>> pprint(s)
+              2    3    4
     1   x    x    x    x     / 5\
-    ─ + ── + ── - ── - ── + O\x /
-    y    3    5    2    4
+    - - -- + -- - -- + -- + O\x /
+    y    2    3    4    5
         y    y    y    y
 
 .. index:: integration
@@ -415,7 +419,7 @@ SymPy поддерживает вычисление определенных и 
 Risch-Norman, с некоторыми шаблонами и эвристиками.
 Можно вычислять интегралы трансцендентных, простых и специальных функций::
 
-    >>> from sympy import *
+    >>> from sympy import integrate, erf, exp, sin, log, oo, pi, sinh, symbols
     >>> x, y = symbols('x,y')
 
 Вы можете интегрировать простейшие функции::
@@ -481,6 +485,9 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 **тригонометрические**::
 
+    >>> from sympy import asin, asinh, cos, sin, sinh, symbols, I
+    >>> x, y = symbols('x,y')
+
     >>> sin(x+y).expand(trig=True)
     sin(x)*cos(y) + sin(y)*cos(x)
 
@@ -527,6 +534,7 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 **сферические**::
 
+    >>> from sympy import Ylm
     >>> from sympy.abc import theta, phi
 
     >>> Ylm(1, 0, theta, phi)
@@ -552,15 +560,15 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 **факториалы и гамма-функции**::
 
+    >>> from sympy import factorial, gamma, Symbol
     >>> x = Symbol("x")
-
-    >>> y = Symbol("y", integer=True)
+    >>> n = Symbol("n", integer=True)
 
     >>> factorial(x)
     x!
 
-    >>> factorial(y)
-    y!
+    >>> factorial(n)
+    n!
 
     >>> gamma(x + 1).series(x, 0, 3) # i.e. factorial(x)
                          2  2             2  2
@@ -570,6 +578,7 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 **дзета-функции**::
 
+    >>> from sympy import zeta
     >>> zeta(4, x)
     zeta(4, x)
 
@@ -594,6 +603,7 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 **многочлены**::
 
+    >>> from sympy import assoc_legendre, chebyshevt, legendre, hermite
     >>> chebyshevt(2, x)
        2
     2*x  - 1
@@ -634,6 +644,9 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 В ``isympy``::
 
+    >>> from sympy import Function, Symbol, dsolve
+    >>> f = Function('f')
+    >>> x = Symbol('x')
     >>> f(x).diff(x, x) + f(x)
             2
            d
@@ -651,6 +664,8 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 В ``isympy``::
 
+    >>> from sympy import solve, symbols
+    >>> x, y = symbols('x,y')
     >>> solve(x**4 - 1, x)
     [-1, 1, -I, I]
 
@@ -669,7 +684,7 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 Матрицы задаются с помощью конструктора Matrix::
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, Symbol
     >>> Matrix([[1,0], [0,1]])
     [1  0]
     [    ]
@@ -702,7 +717,7 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 в паре со вспомогательным классом ``Wild``.
 Функция вернет словарь с необходимыми заменами, например::
 
-    >>> from sympy import *
+    >>> from sympy import Symbol, Wild
     >>> x = Symbol('x')
     >>> p = Wild('p')
     >>> (5*x**2).match(p*x**2)
@@ -720,7 +735,6 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 Также можно использовать параметр exclude для исключения некоторых
 значений из результата::
 
-    >>> x = Symbol('x')
     >>> p = Wild('p', exclude=[1,x])
     >>> print (x+1).match(x+p) # 1 is excluded
     None
@@ -749,7 +763,6 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
     1/x
     >>> print Integral(x**2, x)
     Integral(x**2, x)
-    >>>
 
 
 **Красивая печать (Pretty-print)**
@@ -796,7 +809,7 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
     Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
     [GCC 4.3.1] on linux2
     Type "help", "copyright", "credits" or "license" for more information.
-    >>> from sympy import *
+    >>> from sympy import init_printing, var, Integral
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
     >>> var("x")
     x
@@ -815,7 +828,6 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 
 **Печать объектов Python**
 
-    >>> from sympy.printing.python import python
     >>> from sympy.printing.python import python
     >>> from sympy import Integral
     >>> from sympy.abc import x
