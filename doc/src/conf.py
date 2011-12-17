@@ -57,6 +57,9 @@ release = '0.7.1-git'
 # Else, today_fmt is used as the format for a strftime call.
 today_fmt = '%B %d, %Y'
 
+# Translations:
+locale_dirs = ["i18n/"]
+
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
 
