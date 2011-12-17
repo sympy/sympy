@@ -45,7 +45,6 @@ when possible.
 
 .. autofunction:: pretty
 .. autofunction:: pretty_print
-.. autofunction:: pprint
 
 CCodePrinter
 ------------

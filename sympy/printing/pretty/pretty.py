@@ -1360,6 +1360,9 @@ def pretty(expr, **settings):
 def pretty_print(expr, **settings):
     """Prints expr in pretty form.
 
+    pprint is just a shortcut for this function.
+
+
     Parameters
     ==========
     expr : expression
@@ -1376,9 +1379,6 @@ def pretty_print(expr, **settings):
         use full precision. Default to "auto"
     order : bool or string, optional
         set to 'none' for long expressions if slow; default is None
-
-<<<<<<< HEAD
-    pprint is just a shortcut for this function.
 
     """
     print pretty(expr, **settings)
