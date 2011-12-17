@@ -85,7 +85,7 @@ def sqrt_numeric_denest(a, b, r, d2):
     # sqrt_depth(expr) = depthr + 2
     # there is denesting if sqrt_depth(vad)+1 < depthr + 2
     # if vad**2 is Number there is a fourth root
-    if sqrt_depth(vad) < depthr + 1 or (vad**2).is_Number:
+    if sqrt_depth(vad) < depthr + 1 or (vad**2).is_Rational:
         vad1 = radsimp(1/vad)
         return (sqrt(vad/2) + sign(b)*sqrt((b**2*r*vad1/2).expand())).expand()
 
@@ -162,18 +162,20 @@ def sqrtdenest0(expr):
         n, d = expr.as_numer_denom()
         if d is S.One:
             nn = len(n.base.args)
-            if 3 <= nn <= 4 and all([(x**2).is_Number for x in n.base.args]):
+            if 3 <= nn <= 4 and all([(x**2).is_Rational for x in n.base.args]):
                 return _sqrt_four_terms_denest(n)
+            if n.base.is_Add:
+                expr = sqrt(_mexpand(Add(*[sqrtdenest0(x) for x in n.base.args])))
             return _sqrtdenest(expr)
         else:
             nn = len(n.base.args)
-            if 3 <= nn <= 4 and all([(x**2).is_Number for x in n.base.args]):
+            if 3 <= nn <= 4 and all([(x**2).is_Rational for x in n.base.args]):
                 n1 = _sqrt_four_terms_denest(n)
             else:
                 n1 = _sqrtdenest(n)
 
             if d.is_Pow and d.exp == S.Half and \
-                3 <= len(d.base.args) <= 4 and all([(x**2).is_Number for x in d.base.args]):
+                3 <= len(d.base.args) <= 4 and all([(x**2).is_Rational for x in d.base.args]):
                 d1 = _sqrt_four_terms_denest(d)
             else:
                 d1 = _sqrtdenest(d)
@@ -205,7 +207,7 @@ def _sqrtdenest(expr):
         a, b, r = val
         # try a quick numeric denesting
         d2 = _mexpand(a**2 - b**2*r)
-        if d2.is_Number:
+        if d2.is_Rational:
             if d2.is_positive:
                 z = sqrt_numeric_denest(a, b, r, d2)
                 if z != None:
@@ -217,7 +219,7 @@ def _sqrtdenest(expr):
                 # sqrt(2)*3**(1/4)/2 + sqrt(2)*3**(3/4)/2
                 dr2 = _mexpand(-d2*r)
                 dr = sqrt(dr2)
-                if dr.is_Number:
+                if dr.is_Rational:
                     z = sqrt_numeric_denest(_mexpand(b*r), a, r, dr2)
                     if z != None:
                         return z/r**Rational(1,4)
@@ -269,7 +271,7 @@ def is_algebraic(p):
     >>> is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*cos(2))))
     False
     """
-    if p.is_Number:
+    if p.is_Rational:
         return True
     elif p.is_Atom:
         return False

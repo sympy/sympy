@@ -6,6 +6,8 @@ r2, r3, r5, r6, r7, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 29]]
 
 def test_sqrtdenest():
     d = {sqrt(5 + 2 * sqrt(6)): sqrt(2) + sqrt(3),
+        sqrt(5. + 2 * sqrt(6)): sqrt(5. + 2 * sqrt(6)),
+        sqrt(5. + 4*sqrt(5 + 2 * sqrt(6))): sqrt(5.0 + 4*sqrt(2) + 4*sqrt(3)),
         sqrt(sqrt(2)): sqrt(sqrt(2)),
         sqrt(5+sqrt(7)): sqrt(5+sqrt(7)),
         sqrt(3+sqrt(5+2*sqrt(7))):
@@ -21,7 +23,7 @@ def test_sqrtdenest2():
     assert sqrtdenest(sqrt(-r5+sqrt(-2*r29+2*sqrt(-10*r29+55)+16))) == \
     (-2*sqrt(29) + 11)**Rational(1,4)
     assert sqrtdenest(sqrt(1+sqrt(1+sqrt(7)))) == sqrt(1+sqrt(1+sqrt(7)))
-    assert sqrtdenest(sqrt(((1+sqrt(1+2*sqrt(3+sqrt(2)+sqrt(5))))**2).expand())) == \
+    assert sqrtdenest(sqrt(((1+sqrt(1+2*sqrt(3+r2+r5)))**2).expand())) == \
         1 + sqrt(1 + 2*sqrt(sqrt(2) + sqrt(5) + 3))
     assert sqrtdenest(sqrt(5*sqrt(3) + 6*sqrt(2))) == \
         sqrt(2)*3**Rational(1,4) + 3**Rational(3,4)
@@ -36,7 +38,7 @@ def test_sqrtdenest2():
                 cos(3)+cos(2)+1+sqrt(1+r3)
 
     assert sqrtdenest(sqrt(-2*sqrt(10)+2*r2*sqrt(-2*sqrt(10)+11)+14)) == \
-        sqrt(-2*sqrt(10)+2*r2*(-1+sqrt(10))+14)
+        sqrt(-2*sqrt(10) - 2*sqrt(2) + 4*sqrt(5) + 14)
 
     # currently cannot denest this; check one does not get a wrong answer
     z = sqrt(8 - sqrt(2)*sqrt(5-sqrt(5)) - 3*(1+sqrt(5)))
@@ -79,9 +81,12 @@ def test_sqrtdenest3():
     z = sqrt(sqrt(sqrt(2) + 2) + 2)
     assert sqrtdenest(z) == z
     assert sqrtdenest(sqrt(-2*sqrt(10)+4*r2*sqrt(-2*sqrt(10)+11)+20)) == \
-      sqrt(-2*r5-sqrt(10)+r2+10)+sqrt(-sqrt(10)-r2+2*r5+10)
+      sqrt(-2*sqrt(10) - 4*sqrt(2) + 8*sqrt(5) + 20)
     assert sqrtdenest(sqrt((112+70*r2)+(46+34*r2)*r5)) == \
       sqrt(10) + 5 + 4*sqrt(2) + 3*sqrt(5)
+    z = sqrt(5+sqrt(2*r6+5)*sqrt(-2*r29+2*sqrt(-10*r29+55)+16))
+    assert sqrtdenest(z) == \
+      sqrt(r2*sqrt(-2*r29+11)+r3*sqrt(-2*r29+11)+sqrt(10)+sqrt(15)+5)
 
 
 def test_sqrt_symbolic_denest():
