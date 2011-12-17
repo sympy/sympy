@@ -161,8 +161,8 @@ for l in 'aeioruvx':
 for l in 'in':
     sup[l] = LSUP(l)
 
-for g in ['beta', 'gamma', 'rho', 'phi', 'chi']:
-    sub[g] = GSUB(g)
+for gl in ['beta', 'gamma', 'rho', 'phi', 'chi']:
+    sub[gl] = GSUB(gl)
 
 for d in [str(i) for i in range(10)]:
     sub[d] = DSUB(d)
@@ -246,7 +246,6 @@ _xobj_ascii = {
     '/' :   '/',
     '\\':   '\\',
 }
-
 
 def xobj(symb, length):
     """Construct spatial object of given length.
@@ -467,7 +466,7 @@ def pretty_symbol(symb_name):
 
 def annotated(letter):
     """
-    Return a stylised drawing of the letter `letter`, together with
+    Return a stylised drawing of the letter ``letter``, together with
     information on how to put annotations (super- and subscripts to the
     left and to the right) on it.
 
