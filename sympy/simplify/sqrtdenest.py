@@ -1,6 +1,5 @@
 from sympy.functions import sqrt, sign
 from sympy.core import S, Wild, Rational, sympify, Mul, Add, Expr
-from sympy.core.mul import prod
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.symbol import Dummy
 
@@ -42,10 +41,10 @@ def _sqrt_symbolic_denest(a, b, r, d2=None):
     rval = sqrt_match(r)
     if rval is None:
         return None
-    y = Dummy('y', positive=True)
-    y2 = y**2
     ra, rb, rr = rval
     if rb != 0:
+        y = Dummy('y', positive=True)
+        y2 = y**2
         cav, cbv, ccv = [], [], []
         for ai in Add.make_args(a.subs(sqrt(rr), (y2 - ra)/rb)):
             margs = list(Mul.make_args(ai))
@@ -113,7 +112,7 @@ def _sqrt_four_terms_denest(expr):
     b = Add(*expr.base.args[2:])
     if a < 0:
         a, b = b, a
-    d2 = expand_multinomial(a**2 - b**2)
+    d2 = _mexpand(a**2 - b**2)
     if d2 < 0:
         a, b = b, a
         d2 = -d2
@@ -181,7 +180,7 @@ def sqrtdenest0(expr):
     elif expr.is_Pow and expr.exp == -S.Half:
         return 1/sqrtdenest0(sqrt(expr.base))
     elif expr.is_Mul:
-        return prod([sqrtdenest0(x) for x in expr.args])
+        return Mul(*[sqrtdenest0(x) for x in expr.args])
     elif isinstance(expr, Expr):
         args = expr.args
         if args:
@@ -318,8 +317,8 @@ def sqrt_match(p):
                 else:
                     rv.append(x)
 
-            b = prod(bv)
-            r = prod(rv)
+            b = Mul(*bv)
+            r = Mul(*rv)
         else:
             b = S.One
             r = p1
@@ -361,7 +360,7 @@ def _denester (nested, av0, h, max_depth_level):
     #If none of the arguments are nested
     if av0[0] == None and all(n.is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
-            p = _mexpand(prod(nested[i] for i in range(len(f)) if f[i]))
+            p = _mexpand(Mul(*[nested[i] for i in range(len(f)) if f[i]]))
             if 1 in f and f.count(1) > 1 and f[-1]:
                 p = -p
             sqp = sqrt(p)
@@ -396,7 +395,7 @@ def _denester (nested, av0, h, max_depth_level):
             v = values[-1]
             return sqrt(v[0] + v[1]*d), f
         else:
-            p = prod(nested[i] for i in range(len(nested)) if f[i])
+            p = Mul(*[nested[i] for i in range(len(nested)) if f[i]])
             if p == 1:
                 p = S(p)
             v = sqrt_match(_mexpand(p))
@@ -423,7 +422,7 @@ def _denester (nested, av0, h, max_depth_level):
 
 def subsets(n):
     """
-    Returns all possible subsets of the set (0, 1, ..., n-1) except the empty,
+    Returns all possible subsets of the set of n elements except the empty,
     listed in reversed lexicographical order according to binary
     representation, so that the case of the fourth root is treated last.
     """
