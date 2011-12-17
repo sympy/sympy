@@ -38,8 +38,6 @@ when possible.
 
 .. module:: sympy.printing.pretty.pretty
 
-.. autodata:: pprint_use_unicode
-.. autodata:: pprint_try_use_unicode
 .. autoclass:: PrettyPrinter
    :members: _use_unicode, doprint
 
@@ -376,16 +374,12 @@ Pretty-Printing Implementation Helpers
 .. autofunction:: pretty_use_unicode
 .. autofunction:: pretty_try_use_unicode
 .. autofunction:: xstr
-.. autodata:: g
 
-   This function returns the Unicode version of the inputted lowercase Greek
-   letter.
+The following two functions return the Unicode version of the inputted Greek
+letter.
 
+.. autofunction:: g
 .. autofunction:: G
-
-   This function returns the Unicode version of the inputted uppercase Greek
-   letter.
-
 .. autodata:: greek_letters
 .. autodata:: greek
 .. autodata:: digit_2txt
@@ -394,26 +388,10 @@ Pretty-Printing Implementation Helpers
 The following functions return the Unicode subscript/superscript version of
 the character.
 
-.. autofunction:: LSUB
-.. autofunction:: GSUB
-.. autofunction:: DSUB
-.. autofunction:: SSUB
-.. autofunction:: LSUP
-.. autofunction:: DSUP
-.. autofunction:: SSUP
 .. autodata:: sub
 .. autodata:: sup
 
 The following functions return Unicode vertical objects.
-
-.. autofunction:: HUP
-.. autofunction:: CUP
-.. autofunction:: MID
-.. autofunction:: EXT
-.. autofunction:: HLO
-.. autofunction:: CLO
-.. autofunction:: TOP
-.. autofunction:: BOT
 
 .. autofunction:: xobj
 .. autofunction:: vobj
