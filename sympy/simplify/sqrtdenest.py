@@ -2,84 +2,74 @@ from sympy.functions import sqrt, sign
 from sympy.core import S, Wild, Rational, sympify, Mul, Add, Expr
 from sympy.core.mul import prod
 from sympy.core.function import expand_multinomial, expand_mul
+from sympy.core.symbol import Dummy
 
-def sqrt_symbolic_denest(a, b, r, d2=None):
+def _mexpand(expr):
+    return expand_mul(expand_multinomial(expr))
+
+def _sqrt_symbolic_denest(a, b, r, d2=None):
     """
-    denest symbolically sqrt(a + b*sqrt(r)),
-    with d2 = expand_multinomial(a**2 - b**2*r)
-    if denested return the denested sqrt(a + b*sqrt(r)) , else return None
+    Given an expression, sqrt(A + B*sqrt(R)), return the denested
+    expression or None. This is called by _sqrtdenest when A**2 - B**2*R is
+    not a Rational.
 
     Algorithm:
-    In the case in which r = ra + rb*sqrt(rr), attempt denesting by
-    replacing the occurrences of rr with ry**2;
-    if the result is a quadratic expression in ry,
-    if it is a square, write it in square form and take the square root
+    If r = ra + rb*sqrt(rr), try replacing sqrt(rr) in A with (y**2 - ra)/rb,
+    and if the result is a quadratic expression in y, see if it is a square,
+    in which case write it in square form and take the square root
 
     Examples
-    >>> from sympy import sqrt, Symbol
-    >>> from sympy.simplify.sqrtdenest import sqrt_symbolic_denest
-    >>> sqrt_symbolic_denest(16 - 2*sqrt(29), 2, -10*sqrt(29) + 55)
+    >>> from sympy.simplify.sqrtdenest import _sqrt_symbolic_denest, sqrtdenest
+    >>> from sympy import sqrt
+    >>> from sympy.abc import x
+
+    >>> _sqrt_symbolic_denest(16 - 2*sqrt(29), 2, -10*sqrt(29) + 55)
     sqrt(-2*sqrt(29) + 11) + sqrt(5)
-    >>> w = 1 + sqrt(2) + sqrt(1 + sqrt(1+sqrt(3)))
 
     if sympy decides that sqrt and square can be simplified, it does,
     otherwise it leaves it in that form
 
-    >>> from sympy.simplify.sqrtdenest import sqrtdenest
+    >>> w = 1 + sqrt(2) + sqrt(1 + sqrt(1+sqrt(3)))
     >>> sqrtdenest(sqrt((w**2).expand()))
     1 + sqrt(2) + sqrt(1 + sqrt(1 + sqrt(3)))
-    >>> x = Symbol('x')
     >>> w = 1 + sqrt(2) + sqrt(1 + sqrt(1+sqrt(3+x)))
     >>> sqrtdenest(sqrt((w**2).expand()))
     sqrt((sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2))**2)
     """
     a, b, r = S(a), S(b), S(r)
     if d2 == None:
-        d2 = expand_multinomial(a**2 - b**2*r)
+        d2 = _mexpand(a**2 - b**2*r)
     rval = sqrt_match(r)
-    if rval == None:
+    if rval is None:
         return None
-    ry = Wild('ry', positive=True)
+    y = Dummy('y', positive=True)
+    y2 = y**2
     ra, rb, rr = rval
     if rb != 0:
-        a2 = a.subs(sqrt(rr), (ry**2 - ra)/rb)
-        ca, cb = S.Zero, S.Zero
         cav, cbv, ccv = [], [], []
-        for xx in a2.args:
-            cx, qx = xx.as_coeff_Mul()
-            if qx.is_Mul:
-                qxa = list(qx.args)
-                if ry in qxa:
-                    qxa.remove(ry)
-                    cbv.append( prod(qxa+[cx]) )
-                elif ry**2 in qxa:
-                    qxa.remove(ry**2)
-                    ca = prod(qxa+[cx])
-                else:
-                    ccv.append(xx)
-            elif qx == ry**2:
-                cav.append(cx)
+        for ai in Add.make_args(a.subs(sqrt(rr), (y2 - ra)/rb)):
+            margs = list(Mul.make_args(ai))
+            if y in margs:
+                margs.remove(y)
+                cbv.append(Mul._from_args(margs))
+            elif y2 in margs:
+                margs.remove(y2)
+                cav.append(Mul._from_args(margs))
             else:
-                if ry == qx:
-                    cbv.append( cx )
-                elif ry**2 == qx:
-                    cav.append(cx)
-                else:
-                    ccv.append(xx)
+                ccv.append(ai)
         ca = Add(*cav)
         cb = Add(*cbv)
         cc = Add(*ccv)
-        if ry not in cc.atoms() and ca != 0:
+        if ca and not cc.has(y):
             cb += b
-            discr = (cb**2 - 4*ca*cc).expand()
-            if discr == 0:
+            discr = _mexpand(cb**2 - 4*ca*cc)
+            if not discr:
                 z = sqrt(ca*(sqrt(r) + cb/(2*ca))**2)
                 c, q = z.as_content_primitive()
                 z = c*q
                 if z.is_number:
-                    z = z.expand()
+                    z = _mexpand(z)
                 return z
-
 
 def sqrt_numeric_denest(a, b, r, d2):
     """
@@ -214,7 +204,7 @@ def _sqrtdenest(expr):
     if val:
         a, b, r = val
         # try a quick numeric denesting
-        d2 = expand_multinomial(a**2 - b**2*r)
+        d2 = _mexpand(a**2 - b**2*r)
         if d2.is_Number:
             if d2.is_positive:
                 z = sqrt_numeric_denest(a, b, r, d2)
@@ -225,15 +215,15 @@ def _sqrtdenest(expr):
                 # fourth root case
                 # sqrtdenest(sqrt(3 + 2*sqrt(3))) =
                 # sqrt(2)*3**(1/4)/2 + sqrt(2)*3**(3/4)/2
-                dr2 = (-d2*r).expand()
+                dr2 = _mexpand(-d2*r)
                 dr = sqrt(dr2)
                 if dr.is_Number:
-                    z = sqrt_numeric_denest((b*r).expand(), a, r, dr2)
+                    z = sqrt_numeric_denest(_mexpand(b*r), a, r, dr2)
                     if z != None:
                         return z/r**Rational(1,4)
 
         else:
-            z = sqrt_symbolic_denest(a, b, r, d2)
+            z = _sqrt_symbolic_denest(a, b, r, d2)
             if z != None:
                 return z
 
@@ -302,7 +292,7 @@ def sqrt_match(p):
     >>> sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
     (1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5))
     """
-    p = p.expand()
+    p = _mexpand(p)
     if p.is_Number:
         return (p, S.Zero, S.Zero)
     if p.is_Add:
@@ -372,7 +362,7 @@ def _denester (nested, av0, h, max_depth_level):
     #If none of the arguments are nested
     if av0[0] == None and all(n.is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
-            p = prod(nested[i] for i in range(len(f)) if f[i]).expand()
+            p = _mexpand(prod(nested[i] for i in range(len(f)) if f[i]))
             if 1 in f and f.count(1) > 1 and f[-1]:
                 p = -p
             sqp = sqrt(p)
@@ -399,7 +389,7 @@ def _denester (nested, av0, h, max_depth_level):
                         R = v[2]
             if R is None:
                 return sqrt(nested[-1]), [0]*len(nested) # return the radicand from the previous invocation
-            nested2 = [(v[0]**2).expand()-(R*v[1]**2).expand() for v in values] + [R]
+            nested2 = [_mexpand(v[0]**2) - _mexpand(R*v[1]**2) for v in values] + [R]
         d, f = _denester(nested2, av0, h+1, max_depth_level)
         if not f:
             return None, None
@@ -410,13 +400,13 @@ def _denester (nested, av0, h, max_depth_level):
             p = prod(nested[i] for i in range(len(nested)) if f[i])
             if p == 1:
                 p = S(p)
-            v = sqrt_match(p.expand())
+            v = sqrt_match(_mexpand(p))
             v = list(v)
             if 1 in f and f.index(1) < len(nested) - 1 and f[len(nested)-1]:
                 v[0] = -1 * v[0]
                 v[1] = -1 * v[1]
             if not f[len(nested)]: #Solution denests with square roots
-                vad = (v[0] + d).expand()
+                vad = _mexpand(v[0] + d)
                 if vad <= 0:
                     return sqrt(nested[-1]), [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
                 if not(sqrt_depth(vad) < sqrt_depth(R) + 1 or (vad**2).is_Number):
@@ -424,13 +414,13 @@ def _denester (nested, av0, h, max_depth_level):
                     return None, None
 
                 vad1 = radsimp(1/vad)
-                return (sqrt(vad/2) + sign(v[1])*sqrt((v[1]**2*R*vad1/2).expand())).expand(), f
+                return _mexpand(sqrt(vad/2) + sign(v[1])*sqrt(_mexpand(v[1]**2*R*vad1/2))), f
             else: #Solution requires a fourth root
-                s2 = (v[1]*R).expand()+d
+                s2 = _mexpand(v[1]*R) + d
                 if s2 <= 0:
                     return sqrt(nested[-1]), [0]*len(nested)
-                FR, s = (R.expand()**Rational(1,4)), sqrt(s2)
-                return (s/(sqrt(2)*FR) + v[0]*FR/(sqrt(2)*s)).expand(), f
+                FR, s = (_mexpand(R)**Rational(1,4)), sqrt(s2)
+                return _mexpand(s/(sqrt(2)*FR) + v[0]*FR/(sqrt(2)*s)), f
 
 def subsets(n):
     """
