@@ -2,6 +2,7 @@
 
 from sympy import S
 
+
 # Default precedence values for some basic types
 PRECEDENCE = {
     "Lambda":1,
