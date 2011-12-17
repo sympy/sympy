@@ -270,11 +270,13 @@ def tensor_product_simp(e, **hints):
 
     In general this will try to pull expressions inside of ``TensorProducts``.
     It currently only works for relatively simple cases where the products
-    have only scalars, raw ``TensorProduct``s, not ``Add``, ``Pow``,
-    ``Commutator``s of ``TensorProduct``s. It is best to see what it does by showing examples.
+    have only scalars, raw ``TensorProducts``, not ``Add``, ``Pow``,
+    ``Commutators`` of ``TensorProducts``. It is best to see what it does by showing examples.
 
     Examples
     ========
+
+    ::
 
         >>> from sympy.physics.quantum import tensor_product_simp
         >>> from sympy.physics.quantum import TensorProduct

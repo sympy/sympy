@@ -810,7 +810,7 @@ class Ellipse(GeometryEntity):
         Circle and Ellipse types.
 
         Examples
-        -------
+        --------
         >>> from sympy import Ellipse, Point, Line, sqrt
         >>> e = Ellipse(Point(0, 0), 5, 7)
         >>> e.intersection(Point(0, 0))

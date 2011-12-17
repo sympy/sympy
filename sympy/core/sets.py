@@ -407,6 +407,9 @@ class Interval(RealSet):
 
     Examples
     ========
+
+    ::
+
         >>> from sympy import Symbol, Interval, sets
 
         >>> Interval(0, 1)

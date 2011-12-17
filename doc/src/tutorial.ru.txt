@@ -1,4 +1,4 @@
-.. _tutorial:
+.. _tutorial-ru:
 
 ===================
 Краткое руководство
@@ -241,10 +241,10 @@ Rational(5,2) является 5/2, и так далее.
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
 Это придаст более качественное отображение выражений при печати.
-Смотрите раздел :ref:`printing-tutorial`
+Смотрите раздел :ref:`printing-tutorial-ru`
 ниже. Если же у вас установлен шрифт с юникодом, вы можете использовать
 опцию use_unicode=True для еще более красивого вывода данных.
-Подробнее о системе печати смотрите раздел :ref:`printing-tutorial` ниже.
+Подробнее о системе печати смотрите раздел :ref:`printing-tutorial-ru` ниже.
 
 Алгебра
 =======
@@ -743,7 +743,7 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
     >>> print (x+1).match(x+2+p) # -1 is not excluded
     {p_: -1}
 
-.. _printing-tutorial:
+.. _printing-tutorial-ru:
 
 Печать
 ======
@@ -891,22 +891,22 @@ Risch-Norman, с некоторыми шаблонами и эвристикам
 Через этот модуль доступны следующий функции печати:
 
 * ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: 
-Возвращает или выводит на экран, соответственно, Красивое представление
-выражения ``expr``. Это то же самое, что и второй уровень представления,
-описанный выше.
+  Возвращает или выводит на экран, соответственно, Красивое представление
+  выражения ``expr``. Это то же самое, что и второй уровень представления,
+  описанный выше.
 
 * ``latex(expr)``, ``print_latex(expr)``:
-Возвращает или выводит на экран, соответственно,
-`LaTeX<http://www.latex-project.org/>`_  -представление ``expr``
+  Возвращает или выводит на экран, соответственно,
+  `LaTeX <http://www.latex-project.org/>`_  -представление ``expr``
 
 * ``mathml(expr)``, ``print_mathml(expr)``:
-Возвращает или выводит на экран, соответственно,
-`MathML <http://www.w3.org/Math/>`_ -представление ``expr``.
+  Возвращает или выводит на экран, соответственно,
+  `MathML <http://www.w3.org/Math/>`_ -представление ``expr``.
 
 * ``print_gtk(expr)``: Вывод ``expr`` в
-`Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, виджет GTK,
-который отображает код MathML. Необходимо наличие пакета
-`Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ .
+  `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, виджет GTK,
+  который отображает код MathML. Необходимо наличие пакета
+  `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ .
 
 Другие справочники
 =====================

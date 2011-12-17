@@ -57,6 +57,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     Examples
     ========
+
+    ::
+
         >>> from sympy import ask, Q, pi
         >>> from sympy.abc import x, y
         >>> ask(Q.rational(pi))
@@ -138,8 +141,9 @@ def ask_full_inference(proposition, assumptions):
 
 
 def register_handler(key, handler):
-    """Register a handler in the ask system. key must be a string and handler a
-    class inheriting from AskHandler.
+    """
+    Register a handler in the ask system. key must be a string and handler a
+    class inheriting from AskHandler::
 
         >>> from sympy.assumptions import register_handler, ask, Q
         >>> from sympy.assumptions.handlers import AskHandler

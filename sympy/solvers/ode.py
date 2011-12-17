@@ -450,7 +450,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
 
     Examples
     ========
-
     >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -466,7 +465,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     ... hint='best')
     f(x) == acos(C1/cos(x))
     >>> # Note that even though separable is the default, 1st_exact produces
-    >>> # a simpler result in this case.
 
     """
     # TODO: Implement initial conditions
@@ -916,6 +914,30 @@ def odesimp(eq, func, order, hint):
     >>> from sympy.solvers.ode import odesimp
     >>> x , u2, C1= symbols('x,u2,C1')
     >>> f = Function('f')
+
+    >>> from sympy import sin, symbols, dsolve, pprint, Function
+    >>> from sympy.solvers.ode import odesimp
+    >>> x , u2, C1= symbols('x,u2,C1')
+    >>> f = Function('f')
+
+    >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
+    ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+    ... simplify=False)
+    >>> pprint(eq)
+                  x
+                 ----
+                 f(x)
+                   /
+                  |
+                  |   /      /1 \    \
+                  |  -|u2*sin|--| + 1|
+       /f(x)\     |   \      \u2/    /
+    log|----| -   |  ----------------- d(u2) = 0
+       \ C1 /     |       2    /1 \
+                  |     u2 *sin|--|
+                  |            \u2/
+                  |
+                 /
 
     >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
@@ -1912,6 +1934,14 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
 
     # indirect doctest
 
+    **References**
+        - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+          Dover 1963, pp. 59
+
+        # indirect doctest
+>>>>>>> Fixed most of the warnings in the documentation.
+
     """
     x = func.args[0]
     f = func.func
@@ -1994,6 +2024,14 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
       Dover 1963, pp. 59
 
     # indirect doctest
+
+    **References**
+        - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+          Dover 1963, pp. 59
+
+        # indirect doctest
+>>>>>>> Fixed most of the warnings in the documentation.
 
     """
     x = func.args[0]
@@ -2309,7 +2347,6 @@ def ode_Liouville(eq, func, order, match):
                ________________           ________________
     [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
 
-
     References
     ==========
     - Goldstein and Braun, "Advanced Methods for the Solution of
@@ -2348,6 +2385,9 @@ def _nth_linear_match(eq, func, order):
 
     Examples
     ========
+
+    ::
+
         >>> from sympy import Function, cos, sin
         >>> from sympy.abc import x
         >>> from sympy.solvers.ode import _nth_linear_match
@@ -2968,7 +3008,6 @@ def ode_separable(eq, func, order, match):
     log\3*f (x) - 1/        x
     ---------------- = C1 + --
            6                2
-
 
     References
     ==========

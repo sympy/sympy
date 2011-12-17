@@ -84,15 +84,18 @@ def is_primitive_root(a, p):
     Examples
     ========
 
-    >>> from sympy.ntheory import is_primitive_root, n_order, totient
-    >>> is_primitive_root(3, 10)
-    True
-    >>> is_primitive_root(9, 10)
-    False
-    >>> n_order(3, 10) == totient(10)
-    True
-    >>> n_order(9, 10) == totient(10)
-    False
+    ::
+
+        >>> from sympy.ntheory import is_primitive_root, n_order, totient
+        >>> is_primitive_root(3, 10)
+        True
+        >>> is_primitive_root(9, 10)
+        False
+        >>> n_order(3, 10) == totient(10)
+        True
+        >>> n_order(9, 10) == totient(10)
+        False
+
     """
     a, p = int_tested(a, p)
     if igcd(a, p) != 1:
@@ -109,13 +112,13 @@ def is_quad_residue(a, p):
     """
     Returns True if ``a`` (mod ``p``) is in the set of squares mod ``p``,
     i.e a % p in set([i**2 % p for i in range(p)]). If ``p`` is an odd
-    prime, an iterative method is used to make the determination.
+    prime, an iterative method is used to make the determination:
 
-    >>> from sympy.ntheory import is_quad_residue
-    >>> list(set([i**2 % 7 for i in range(7)]))
-    [0, 1, 2, 4]
-    >>> [j for j in range(7) if is_quad_residue(j, 7)]
-    [0, 1, 2, 4]
+        >>> from sympy.ntheory import is_quad_residue
+        >>> list(set([i**2 % 7 for i in range(7)]))
+        [0, 1, 2, 4]
+        >>> [j for j in range(7) if is_quad_residue(j, 7)]
+        [0, 1, 2, 4]
 
     See Also
     ========
@@ -160,7 +163,6 @@ def legendre_symbol(a, p):
 
     Examples
     ========
-
     >>> from sympy.ntheory import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
@@ -170,6 +172,7 @@ def legendre_symbol(a, p):
     See Also
     ========
     is_quad_residue, jacobi_symbol
+
     """
     a, p = int_tested(a, p)
     if not isprime(p) or p == 2:
@@ -196,7 +199,6 @@ def jacobi_symbol(m, n):
 
     Examples
     ========
-
     >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
     >>> from sympy import Mul, S
     >>> jacobi_symbol(45, 77)
@@ -205,7 +207,7 @@ def jacobi_symbol(m, n):
     1
 
     The relationship between the jacobi_symbol and legendre_symbol can
-    be demonstrated as follows:
+    be demonstrated as follows::
 
         >>> L = legendre_symbol
         >>> S(45).factors()

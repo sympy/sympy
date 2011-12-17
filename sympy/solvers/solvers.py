@@ -317,6 +317,7 @@ def solve(f, *symbols, **flags):
             - sytems containing relational expressions.
 
         Input is formed as:
+
             f
                 - a single Expr or Poly that must be zero,
                 - an Equality
@@ -396,9 +397,9 @@ def solve(f, *symbols, **flags):
                 []
 
             o when no symbol is given (or are given as an unordered set) then
-              all free symbols will be used. A univariate equation will always
-              return a list of solutions; otherwise, a list of mappings will be
-              returned.
+            all free symbols will be used. A univariate equation will always
+            return a list of solutions; otherwise, a list of mappings will be
+            returned.
 
                 for single equations
                     >>> solve(x - 3)
@@ -418,9 +419,9 @@ def solve(f, *symbols, **flags):
                     [{x: 2, f(x): -4}]
 
             o when a Function or Derivative is given as a symbol, it is
-              isolated algebraically and an implicit solution may be obtained;
-              to obtain the solution for a function within a derivative, use
-              dsolve.
+            isolated algebraically and an implicit solution may be obtained;
+            to obtain the solution for a function within a derivative, use
+            dsolve.
 
                 >>> solve(f(x) - x, f(x))
                 [x]
@@ -447,6 +448,7 @@ def solve(f, *symbols, **flags):
                     [{y: x**2}]
 
                 when undetermined coefficients are identified
+
                     that are linear
                         >>> solve((a + b)*x - b + 2, a, b)
                         {a: -2, b: 2}
@@ -473,6 +475,7 @@ def solve(f, *symbols, **flags):
                     False
 
                 when the system is linear
+
                     with a solution
                         >>> solve([x - 3], x)
                         {x: 3}
@@ -491,11 +494,11 @@ def solve(f, *symbols, **flags):
                     [(-2, -2), (0, 2), (0, 2), (2, -2)]
 
             Note: assumptions aren't checked when `solve()` input involves
-                  relationals or bools.
+            relationals or bools.
 
        See also:
-          rsolve() for solving recurrence relationships
-          dsolve() for solving differential equations
+          - rsolve() for solving recurrence relationships
+          - dsolve() for solving differential equations
 
     """
     # make f and symbols into lists of sympified quantities

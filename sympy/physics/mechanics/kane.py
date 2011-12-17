@@ -15,43 +15,46 @@ class Kane(object):
 
     The attributes are for equations in the form [M] udot = forcing
 
+    .. |auxdesc| replace:: If applicable, the set of auxiliary Kane's
+                           equations used to solve for non-contributing
+                           forces.
+
     Attributes
     ==========
     auxiliary : Matrix
-        If applicable, the set of auxiliary Kane's equations used to solve for
-        non-contributing forces.
+        |auxdesc|
     mass_matrix : Matrix
         The system's mass matrix
     forcing : Matrix
         The system's forcing vector
     simp : Boolean
-        Flag determining whether simplification of symbolic matrix inversion
-        can occur or not
+        Flag determining whether simplification of symbolic matrix
+        inversion can occur or not
     mass_matrix_full : Matrix
         The "mass matrix" for the u's and q's
     forcing_full : Matrix
         The "forcing vector" for the u's and q's
 
-    A simple example for a one degree of freedom translational
-    spring-mass-damper follows
-
     Examples
-    =======
+    ========
+
+    This is a simple example for a one defree of freedom translational
+    spring-mass-damper.
 
     In this example, we first need to do the kinematics.
     This involves creating generalized speeds and coordinates and their
     derivatives.
-    Then we create a point and set its velocity in a frame.
+    Then we create a point and set its velocity in a frame::
 
-    >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
-    >>> from sympy.physics.mechanics import Point, Particle, Kane
-    >>> q, u = dynamicsymbols('q u')
-    >>> qd, ud = dynamicsymbols('q u', 1)
-    >>> m, c, k = symbols('m c k')
-    >>> N = ReferenceFrame('N')
-    >>> P = Point('P')
-    >>> P.set_vel(N, u * N.x)
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+        >>> from sympy.physics.mechanics import Point, Particle, Kane
+        >>> q, u = dynamicsymbols('q u')
+        >>> qd, ud = dynamicsymbols('q u', 1)
+        >>> m, c, k = symbols('m c k')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> P.set_vel(N, u * N.x)
 
     Next we need to arrange/store information in the way the Kane requires.
     The kinematic differential equations need to be stored in a dict.
@@ -60,14 +63,14 @@ class Kane(object):
     represent the Force or Torque.
     Next a particle needs to be created, and it needs to have a point and mass
     assigned to it.
-    Finally, a list of all bodies and particles needs to be created.
+    Finally, a list of all bodies and particles needs to be created::
 
-    >>> kd = [qd - u]
-    >>> FL = [(P, (-k * q - c * u) * N.x)]
-    >>> pa = Particle()
-    >>> pa.mass = m
-    >>> pa.point = P
-    >>> BL = [pa]
+        >>> kd = [qd - u]
+        >>> FL = [(P, (-k * q - c * u) * N.x)]
+        >>> pa = Particle()
+        >>> pa.mass = m
+        >>> pa.point = P
+        >>> BL = [pa]
 
     Finally we can generate the equations of motion.
     First we create the Kane object and supply an inertial frame.
@@ -78,21 +81,21 @@ class Kane(object):
     It makes sense to rearrnge them though, so we calculate the mass matrix and
     the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is
     the mass matrix, udot is a vector of the time derivatives of the
-    generalized speeds, and forcing is a vector representing "forcing" terms.
+    generalized speeds, and forcing is a vector representing "forcing" terms::
 
-    >>> KM = Kane(N)
-    >>> KM.coords([q])
-    >>> KM.speeds([u])
-    >>> KM.kindiffeq(kd)
-    >>> (fr, frstar) = KM.kanes_equations(FL, BL)
-    >>> MM = KM.mass_matrix
-    >>> forcing = KM.forcing
-    >>> rhs = MM.inv() * forcing
-    >>> rhs
-    [-(c*u(t) + k*q(t))/m]
-    >>> KM.linearize()[0]
-    [0, 1]
-    [k, c]
+        >>> KM = Kane(N)
+        >>> KM.coords([q])
+        >>> KM.speeds([u])
+        >>> KM.kindiffeq(kd)
+        >>> (fr, frstar) = KM.kanes_equations(FL, BL)
+        >>> MM = KM.mass_matrix
+        >>> forcing = KM.forcing
+        >>> rhs = MM.inv() * forcing
+        >>> rhs
+        [-(c*u(t) + k*q(t))/m]
+        >>> KM.linearize()[0]
+        [0, 1]
+        [k, c]
 
     Please look at the documentation pages for more information on how to
     perform linearization and how to deal with dependent coordinates & speeds,

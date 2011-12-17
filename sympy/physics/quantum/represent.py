@@ -322,7 +322,7 @@ def rep_expectation(expr, **options):
 
 def integrate_result(orig_expr, result, **options):
     """
-    Returnst the result of integrating over any unities (|x><x|) in
+    Returns the result of integrating over any unities (|x><x|) in
     the given expression. Intended for integrating over the result of
     representations in continuous bases.
 

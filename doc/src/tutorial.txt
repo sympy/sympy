@@ -909,4 +909,18 @@ Now it's time to learn more about SymPy. Go through the
 
 Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
 that contains a lot of useful examples, tutorials, cookbooks that we and our
+<<<<<<< HEAD
 users contributed, and feel free to edit it.
+
+Translations
+============
+
+This tutorial is also available in other languages:
+
+.. toctree::
+   :maxdepth: 1
+
+   tutorial.bg.txt
+   tutorial.cs.txt
+   tutorial.ru.txt
+>>>>>>> 7eb96bb... Fixed most of the warnings in the documentation.

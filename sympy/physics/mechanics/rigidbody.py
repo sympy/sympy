@@ -12,6 +12,7 @@ class RigidBody(object):
 
     Attributes
     ==========
+
     mass : Sympifyable
         The body's mass
     inertia : (Dyadic, Point)
@@ -22,20 +23,22 @@ class RigidBody(object):
         The ReferenceFrame which the rigid body is fixed in
 
     Examples
-    =======
+    ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
-    >>> from sympy.physics.mechanics import outer
-    >>> m = Symbol('m')
-    >>> A = ReferenceFrame('A')
-    >>> P = Point('P')
-    >>> I = outer (A.x, A.x)
-    >>> B = RigidBody()
-    >>> B.mass = m
-    >>> B.frame = A
-    >>> B.mc = P
-    >>> B.inertia = (I, B.mc)
+    ::
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
+        >>> from sympy.physics.mechanics import outer
+        >>> m = Symbol('m')
+        >>> A = ReferenceFrame('A')
+        >>> P = Point('P')
+        >>> I = outer (A.x, A.x)
+        >>> B = RigidBody()
+        >>> B.mass = m
+        >>> B.frame = A
+        >>> B.mc = P
+        >>> B.inertia = (I, B.mc)
 
     """
 

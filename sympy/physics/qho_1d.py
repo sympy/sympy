@@ -16,15 +16,17 @@ def psi_n(n, x, m, omega):
     ``omega``
         angular frequency of the oscillator
 
-    :Examples
+    Examples
     ========
 
-    >>> from sympy.physics.qho_1d import psi_n
-    >>> from sympy import var
-    >>> var("x m omega")
-    (x, m, omega)
-    >>> psi_n(0, x, m, omega)
-    (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(hbar**(1/4)*pi**(1/4))
+    ::
+
+        >>> from sympy.physics.qho_1d import psi_n
+        >>> from sympy import var
+        >>> var("x m omega")
+        (x, m, omega)
+        >>> psi_n(0, x, m, omega)
+        (m*omega)**(1/4)*exp(-m*omega*x**2/(2*hbar))/(hbar**(1/4)*pi**(1/4))
 
     """
 

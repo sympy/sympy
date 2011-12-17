@@ -37,6 +37,8 @@ class Commutator(Expr):
     Examples
     ========
 
+    ::
+
         >>> from sympy import symbols
         >>> from sympy.physics.quantum import Commutator, Dagger
         >>> x, y = symbols('x,y')
