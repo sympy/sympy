@@ -53,7 +53,7 @@ def m_values(j):
     return size, [j-i for i in range(int(2*j+1))]
 
 
-def couple(tp, jcoupling_list=None):
+def couple(expr, jcoupling_list=None):
     """ Couple a tensor product of spin states
 
     This function can be used to couple an uncoupled tensor product of spin
@@ -65,13 +65,14 @@ def couple(tp, jcoupling_list=None):
     Parameters
     ==========
 
-    tp : TensorProduct
-        TensorProduct of spin states to be coupled. Each state must be a
-        subclass of SpinState and they all must be the same class.
+    expr : Expr
+        An expression involving TensorProducts of spin states to be coupled.
+        Each state must be a subclass of SpinState and they all must be the
+        same class.
 
     jcoupling_list : list or tuple
         Elements of this list are sub-lists of length 2 specifying the order of
-        the coupling of the spin spaces. The length of this must be N-2, where N
+        the coupling of the spin spaces. The length of this must be N-1, where N
         is the number of states in the tensor product to be coupled. The
         elements of this sublist are the same as the first two elements of each
         sublist in *jcoupling as defined in JzKetCoupled. If this argument is
@@ -99,7 +100,7 @@ def couple(tp, jcoupling_list=None):
     Perform this same coupling, but we define the coupling to first couple
     the first and third spaces:
 
-        >>> couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)), ((1,3),) )
+        >>> couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)), ((1,3),(1,2)) )
         sqrt(2)*|2,2,'j1=1','j2=1','j3=1','j(1,3)=1'>/2 - sqrt(6)*|2,2,'j1=1','j2=1','j3=1','j(1,3)=2'>/6 + sqrt(3)*|3,2,'j1=1','j2=1','j3=1','j(1,3)=2'>/3
 
     Couple a tensor product of symbolic states:
@@ -110,24 +111,30 @@ def couple(tp, jcoupling_list=None):
         Sum(CG(j1, m1, j2, m2, j, m1 + m2)*|j,m1 + m2,'j1=j1','j2=j2'>, (j, m1 + m2, j1 + j2))
 
     """
-    if not isinstance(tp, TensorProduct):
-        raise TypeError('tp must be a TensorProduct')
+    a = expr.atoms(TensorProduct)
+    for tp in a:
+        # Allow other tensor products to be in expression
+        if not all([ isinstance(state, SpinState) for state in tp.args]):
+            continue
+        # If tensor product has all spin states, raise error for invalid tensor product state
+        if not all([state.__class__ is tp.args[0].__class__ for state in tp.args]):
+            raise TypeError('All states must be the same basis')
+        expr = expr.subs(tp, _couple(tp, jcoupling_list))
+    return expr
+
+def _couple(tp, jcoupling_list):
     states = tp.args
-    if not all([ issubclass(state.__class__, SpinState) for state in states]):
-        raise TypeError('States in tensor product must be subclasses of SpinState')
-    if not all([state.__class__ is states[0].__class__ for state in states]):
-        raise TypeError('All states must be the same basis')
     coupled_evect = states[0].__class__.coupled_class()
 
     # Define default coupling if none is specified
     if jcoupling_list is None:
         jcoupling_list = []
-        for n in range(1, len(states)-1):
+        for n in range(1, len(states)):
             jcoupling_list.append( (1, n+1) )
 
     # Check jcoupling_list valid
-    if not len(jcoupling_list) == len(states)-2:
-        raise TypeError('jcoupling_list must be length %d, got %d' % (len(states)-2,len(j_coupling_list)))
+    if not len(jcoupling_list) == len(states)-1:
+        raise TypeError('jcoupling_list must be length %d, got %d' % (len(states)-1,len(jcoupling_list)))
     if not all( len(coupling) == 2 for coupling in jcoupling_list):
         raise ValueError('Each coupling must define 2 spaces')
     if any([n1 == n2 for n1, n2 in jcoupling_list]):
@@ -156,20 +163,12 @@ def couple(tp, jcoupling_list=None):
         # Set new j_n to be coupling of all j_n in both first and second spaces
         n_list[n1-1] = sorted(j1_n+j2_n)
         n_list[n2-1] = []
-    # Couple last two spaces together
-    n1 = [ x == [] for x in n_list].index(False)
-    n2 = [ x == [] for x in n_list][n1+1:].index(False)+n1+1
-    j1_n = list(n_list[n1])
-    j2_n = list(n_list[n2])
-    coupling_list.append( (j1_n, j2_n) )
 
     if all(state.j.is_number and state.m.is_number for state in states):
         # Numerical coupling
-
         # Iterate over difference between maximum possible j value of each coupling and the actual value
         diff_list = [0] * len(coupling_list)
         diff_max = [ Add( *[ states[n-1].j-states[n-1].m for n in coupling[0]+coupling[1] ] ) for coupling in coupling_list ]
-
         result = []
         for diff in range(diff_max[-1]+1):
             # Determine available configurations
@@ -179,15 +178,16 @@ def couple(tp, jcoupling_list=None):
 
             for config_num in range(tot):
                 # Find configuration given by i
-                m = diff
-                config_offset = 0
+                cur_diff = diff
                 for k in range(n):
-                    prev = m
-                    n1 = n-k-1
-                    while  config_num >= Mul(*range(n1,n1+m)) // Mul(*range(1,m+1)) + config_offset:
-                        config_offset += Mul(*range(n1,n1+m)) // Mul(*range(1,m+1))
-                        m -= 1
-                    diff_list[k] = prev - m
+                    prev_diff = cur_diff
+                    rem_spots = n-k-1
+                    # The number of configurations with diff_list[k]==prev_diff-cur_diff is:
+                    # (rem_spots+cur_diff-1)! / cur_diff!(rem_spots-1)!
+                    while  config_num >= Mul(*range(rem_spots,rem_spots+cur_diff)) // Mul(*range(1,cur_diff+1)):
+                        config_num -= Mul(*range(rem_spots,rem_spots+cur_diff)) // Mul(*range(1,cur_diff+1))
+                        cur_diff -= 1
+                    diff_list[k] = prev_diff - cur_diff
 
                 # Skip the configuration if non-physical
                 if any( [ d > m for d, m in zip(diff_list, diff_max) ] ):
@@ -197,11 +197,10 @@ def couple(tp, jcoupling_list=None):
                 cg_terms = []
                 coupled_j = list(jn)
                 jcoupling = []
-                for coupling, diff in zip(coupling_list, diff_list):
-                    j1_n, j2_n = coupling
+                for (j1_n,j2_n), coupling_diff in zip(coupling_list, diff_list):
                     j1 = coupled_j[ min(j1_n)-1 ]
                     j2 = coupled_j[ min(j2_n)-1 ]
-                    j3 = j1 + j2 - diff
+                    j3 = j1 + j2 - coupling_diff
                     coupled_j[ min(j1_n+j2_n) - 1 ] = j3
                     m1 = Add( *[ states[x-1].m for x in j1_n] )
                     m2 = Add( *[ states[x-1].m for x in j2_n] )
@@ -209,9 +208,8 @@ def couple(tp, jcoupling_list=None):
                     cg_terms.append( (j1, m1, j2, m2, j3, m3) )
                     jcoupling.append( (min(j1_n), min(j2_n), j3) )
                 coeff = Mul( *[ CG(*term).doit() for term in cg_terms] )
-                state = coupled_evect(j3, m3, jn, jcoupling[:-1])
+                state = coupled_evect(j3, m3, jn, jcoupling)
                 result.append(coeff*state)
-
         return Add(*result).doit()
     else:
         # Symbolic coupling
@@ -235,11 +233,11 @@ def couple(tp, jcoupling_list=None):
             jcoupling.append( (min(j1_n), min(j2_n), j3) )
             sum_terms.append((j3,m3,j1+j2))
         coeff = Mul( *[ CG(*term) for term in cg_terms] )
-        state = coupled_evect(j3, m3, jn, jcoupling[:-1])
+        state = coupled_evect(j3, m3, jn, jcoupling)
         return Sum(coeff*state, *sum_terms)
 
 
-def uncouple(state, jn=None, jcoupling_list=None):
+def uncouple(expr, jn=None, jcoupling_list=None):
     """ Uncouple a coupled spin state
 
     Gives the uncoupled representation of a coupled spin state. Arguments must
@@ -250,11 +248,11 @@ def uncouple(state, jn=None, jcoupling_list=None):
     Parameters
     ==========
 
-    state : CoupledSpinState or SpinState
-        The state that is to be coupled. If a subclass of SpinState is used,
-        the jn and jcoupling parameters must be defined. If a subclass of
-        CoupledSpinState is used, jn and jcoupling will be taken from the
-        state.
+    expr : Expr
+        The expression containing states that are to be coupled. If the states
+        are a subclass of SpinState, the jn and jcoupling parameters must be
+        defined. If the states are a subclass of CoupledSpinState, jn and
+        jcoupling will be taken from the state.
 
     jn : list or tuple
         The list of the j-values that are coupled. If state is a
@@ -286,12 +284,12 @@ def uncouple(state, jn=None, jcoupling_list=None):
 
     Uncouple a numerical state of three coupled spaces using a CoupledSpinState state:
 
-        >>> uncouple(JzKetCoupled(1, 1, (1, 1, 1), ((1,3,1),) ))
+        >>> uncouple(JzKetCoupled(1, 1, (1, 1, 1), ((1,3,1),(1,2,1)) ))
         |1,-1>x|1,1>x|1,1>/2 - |1,0>x|1,0>x|1,1>/2 + |1,1>x|1,0>x|1,0>/2 - |1,1>x|1,1>x|1,-1>/2
 
     Perform the same calculation using a SpinState state:
 
-        >>> uncouple(JzKet(1, 1), (1, 1, 1), ((1,3,1),) )
+        >>> uncouple(JzKet(1, 1), (1, 1, 1), ((1,3,1),(1,2,1)) )
         |1,-1>x|1,1>x|1,1>/2 - |1,0>x|1,0>x|1,1>/2 + |1,1>x|1,0>x|1,0>/2 - |1,1>x|1,1>x|1,-1>/2
 
     Uncouple a symbolic state using a CoupledSpinState state:
@@ -307,6 +305,13 @@ def uncouple(state, jn=None, jcoupling_list=None):
         Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>x|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
 
     """
+    a = expr.atoms(SpinState)
+    for state in a:
+        expr = expr.subs(state, _uncouple(state, jn, jcoupling_list))
+    return expr
+
+
+def _uncouple(state, jn, jcoupling_list):
     if isinstance(state, CoupledSpinState):
         jn = state.jn
         coupled_n = state.coupled_n
@@ -317,14 +322,14 @@ def uncouple(state, jn=None, jcoupling_list=None):
             raise ValueError("Must specify j-values for coupled state")
         if not (isinstance(jn,list) or isinstance(jn,tuple)):
             raise TypeError("jn must be list or tuple")
-        if len(jn) > 2:
-            if jcoupling_list is None:
-                raise ValueError("Must specify coupling between j's in jcoupling")
-            if not (isinstance(jcoupling_list,list) or isinstance(jcoupling_list,tuple)):
-                raise TypeError("jcoupling must be a list or tuple")
-        else:
+        if jcoupling_list is None:
+            # Use default
             jcoupling_list = []
-        if not len(jcoupling_list) == len(jn)-2:
+            for i in range(1,len(jn)):
+                jcoupling_list.append( (1,1+i,Add(*[jn[j] for j in range(i+1)])) )
+        if not (isinstance(jcoupling_list,list) or isinstance(jcoupling_list,tuple)):
+            raise TypeError("jcoupling must be a list or tuple")
+        if not len(jcoupling_list) == len(jn)-1:
             raise ValueError("Must specify 2 fewer coupling terms than the number of j values")
         coupled_n, coupled_jn = _build_coupled(jcoupling_list, len(jn))
         evect = state.__class__
@@ -345,18 +350,6 @@ def uncouple(state, jn=None, jcoupling_list=None):
         coupling_list.append( (n1, n2, j1, j2, j3) )
         # Set new value in j_list
         j_list[min(n1+n2)-1] = j3
-    # Couple last two spaces together
-    if len(jn) > 2:
-        n1 = sorted(coupled_n[-1][0]+coupled_n[-1][1])
-        j1 = coupled_jn[-1]
-        n2 = [ n for n in range(1,len(jn)+1) if n not in n1 ]
-        j2 = j_list[n2[0]-1]
-    else:
-        n1 = [1]
-        j1 = j_list[0]
-        n2 = [2]
-        j2 = j_list[1]
-    coupling_list.append( (n1, n2, j1, j2, j) )
 
     if j.is_number and m.is_number:
         diff_list = [0] * len(jn)
@@ -370,15 +363,16 @@ def uncouple(state, jn=None, jcoupling_list=None):
         result = []
         for config_num in range(tot):
             # Find configurations given by i
-            p = diff
-            config_offset = 0
+            cur_diff = diff
             for k in range(n):
-                prev = p
-                n1 = n-k-1
-                while config_num >= Mul(*range(n1,n1+p)) // Mul(*range(1,p+1)) + config_offset:
-                    config_offset += Mul(*range(n1,n1+p)) // Mul(*range(1,p+1))
-                    p -= 1
-                diff_list[k] = prev - p
+                prev_diff = cur_diff
+                rem_spots = n-k-1
+                # The number of configurations with diff_list[k]==prev_diff-cur_diff is:
+                # (rem_spots+cur_diff-1)! / cur_diff!(rem_spots-1)!
+                while config_num >= Mul(*range(rem_spots,rem_spots+cur_diff)) // Mul(*range(1,cur_diff+1)):
+                    config_num -= Mul(*range(rem_spots,rem_spots+cur_diff)) // Mul(*range(1,cur_diff+1))
+                    cur_diff -= 1
+                diff_list[k] = prev_diff - cur_diff
 
             if any( [ d > p for d, p in zip(diff_list, diff_max) ] ):
                 continue
@@ -388,7 +382,7 @@ def uncouple(state, jn=None, jcoupling_list=None):
                 j1_n, j2_n, j1, j2, j3 = coupling
                 m1 = Add( *[ jn[x-1] - diff_list[x-1] for x in j1_n ] )
                 m2 = Add( *[ jn[x-1] - diff_list[x-1] for x in j2_n ] )
-                m3 = Add( *[ jn[x-1] - diff_list[x-1] for x in j1_n+j2_n ] )
+                m3 = m1+m2
                 cg_terms.append( (j1, m1, j2, m2, j3, m3) )
             coeff = Mul( *[ CG(*term).doit() for term in cg_terms ] )
             state = TensorProduct( *[ evect(j, j - d) for j,d in zip(jn,diff_list) ] )
@@ -1047,10 +1041,8 @@ class WignerD(Expr):
             top = prettyForm(*top.right(' ' * (pad-top.width())))
         if pad > bot.width():
             bot = prettyForm(*bot.right(' ' * (pad-bot.width())))
-
         if self.alpha == 0 and self.gamma == 0:
             args = printer._print(self.beta)
-
             s = stringPict('d' + ' '*pad)
         else:
             args = printer._print(self.alpha)
@@ -1503,10 +1495,11 @@ class CoupledSpinState(SpinState):
             j, m, jn = args
             jcoupling = []
             for n in range(2,len(jn)):
-                jcoupling.append((1,n,Add(*[jn[i] for i in range(n)])))
+                jcoupling.append( (1,n,Add(*[jn[i] for i in range(n)])) )
+            jcoupling.append( (1,len(jn),j) )
         else:
             raise ValueError("args must have length 3 or 4")
-        if not len(jn)-2 == len(jcoupling):
+        if not len(jn)-1 == len(jcoupling):
             raise ValueError('jcoupling must have length of %d, got %d' % (len(jn)-1, len(jcoupling)))
         if not all(len(x) == 3 for x in jcoupling):
             raise ValueError('All elements of jcoupling must have length 3')
@@ -1516,8 +1509,7 @@ class CoupledSpinState(SpinState):
         label = [self.j, self.m]
         for i, ji in enumerate(self.jn, start=1):
             label.append('j%d=%s' % (i, ji) )
-            pass
-        for jn, (n1,n2) in zip(self.coupled_jn, self.coupled_n):
+        for jn, (n1,n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             label.append('j(%s)=%s' % (','.join(str(i) for i in sorted(n1+n2)), printer._print(jn)) )
         return self._print_sequence(
             label, self._label_separator, printer, *args
@@ -1533,7 +1525,7 @@ class CoupledSpinState(SpinState):
             item = prettyForm(*j.right(stringPict('=')))
             item = prettyForm(*item.right(printer._print(ji)))
             label.append(item)
-        for jn, (n1,n2) in zip(self.coupled_jn, self.coupled_n):
+        for jn, (n1,n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1+n2))
             j = self._print_subscript_pretty(
                 stringPict('j'), stringPict(n)
@@ -1549,7 +1541,7 @@ class CoupledSpinState(SpinState):
         label = [self.j, self.m]
         for i, ji in enumerate(self.jn, start=1):
             label.append('j_{%d}=%s' % (i, printer._print(ji)) )
-        for jn, (n1,n2) in zip(self.coupled_jn, self.coupled_n):
+        for jn, (n1,n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1+n2))
             label.append('j_{%s}=%s' % (n, printer._print(jn)) )
         return self._print_sequence(
@@ -1723,19 +1715,18 @@ class JzKetCoupled(CoupledSpinState, Ket):
     couplings. The *jcoupling parameter itself is a list of lists, such that
     each of the sublists defines a single coupling between the spin spaces. If
     there are N coupled angular momentum spaces, that is *jn has N elements,
-    then there must be N-2 sublists. Note this will leave two uncoupled spaces,
-    and these last two spaces are automatically coupled together. Each of these
-    sublists making up the *jcoupling parameter have length 3. The first two
-    elements are the indicies of the product spaces that are considered to be
-    coupled together. For example, if we want to couple j_1 and j_4, the
-    indicies would be 1 and 4. If a state has already been coupled, it is
-    referenced by the smallest index that is coupled, so if j_2 and j_4 has
-    already been coupled to some j24, then this value can be coupled by
-    referencing it with index 2. The final element of the sublist is the
-    quantum number of the new quantum number. So putting everything together,
-    into a valid sublist for *jcoupling, if j_1 and j_2 are coupled to an
-    angular momentum space with quantum number j12, the sublist would be
-    (1,2,j12), N-2 of these sublists are used in the list for *jcoupling.
+    then there must be N-1 sublists. Each of these sublists making up the
+    *jcoupling parameter have length 3. The first two elements are the indicies
+    of the product spaces that are considered to be coupled together. For
+    example, if we want to couple j_1 and j_4, the indicies would be 1 and 4. If
+    a state has already been coupled, it is referenced by the smallest index
+    that is coupled, so if j_2 and j_4 has already been coupled to some j24,
+    then this value can be coupled by referencing it with index 2. The final
+    element of the sublist is the quantum number of the new quantum number. So
+    putting everything together, into a valid sublist for *jcoupling, if j_1 and
+    j_2 are coupled to an angular momentum space with quantum number j12, the
+    sublist would be (1,2,j12), N-1 of these sublists are used in the list for
+    *jcoupling.
 
     Note the *jcoupling parameter is optional, if it is not specified, the
     default coupling is taken. This default value is to coupled the spaces in
@@ -1777,9 +1768,9 @@ class JzKetCoupled(CoupledSpinState, Ket):
 
         >>> JzKetCoupled(2, 1, (1, 1, 1))
         |2,1,'j1=1','j2=1','j3=1','j(1,2)=2'>
-        >>> JzKetCoupled(2, 1, (1, 1, 1), ((1,2,2),) )
+        >>> JzKetCoupled(2, 1, (1, 1, 1), ((1,2,2),(1,3,2)) )
         |2,1,'j1=1','j2=1','j3=1','j(1,2)=2'>
-        >>> JzKetCoupled(2, 1, (1, 1, 1), ((2,3,1),) )
+        >>> JzKetCoupled(2, 1, (1, 1, 1), ((2,3,1),(1,2,2)) )
         |2,1,'j1=1','j2=1','j3=1','j(2,3)=1'>
 
     Rewriting the JzKetCoupled in terms of eigenkets of the Jx operator:

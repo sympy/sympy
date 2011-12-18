@@ -1,5 +1,5 @@
 from __future__ import division
-from sympy import cos, exp, I, Matrix, pi, S, sin, sqrt, Sum, symbols
+from sympy import cos, exp, expand, I, Matrix, pi, S, sin, sqrt, Sum, symbols
 from sympy.abc import alpha, beta, gamma, j, m
 
 from sympy.physics.quantum import hbar, represent, Commutator, InnerProduct
@@ -457,6 +457,302 @@ def test_rewrite():
     assert qapply(JzBra(1,-1)*JzKet(1,0).rewrite('Jy')).doit() == 0
 
 def test_uncouple():
+    # Uncouple coupled state
+    # 2 coupled spaces
+    # j1=1/2, j2=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2)) )))
+    # j1=1/2, j2=1
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)) )))
+    # j1=1, j2=1
+    assert TensorProduct(JzKet(1,1), JzKet(1,1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,1), JzKet(1,1)) )))
+    assert TensorProduct(JzKet(1,1), JzKet(1,0)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,1), JzKet(1,0)) )))
+    assert TensorProduct(JzKet(1,1), JzKet(1,-1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,1), JzKet(1,-1)) )))
+    assert TensorProduct(JzKet(1,0), JzKet(1,1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,0), JzKet(1,1)) )))
+    assert TensorProduct(JzKet(1,0), JzKet(1,0)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,0), JzKet(1,0)) )))
+    assert TensorProduct(JzKet(1,0), JzKet(1,-1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,0), JzKet(1,-1)) )))
+    assert TensorProduct(JzKet(1,-1), JzKet(1,1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,-1), JzKet(1,1)) )))
+    assert TensorProduct(JzKet(1,-1), JzKet(1,0)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,-1), JzKet(1,0)) )))
+    assert TensorProduct(JzKet(1,-1), JzKet(1,-1)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(1,-1), JzKet(1,-1)) )))
+    # 3 coupled spaces
+    # Default coupling
+    # j1=1/2, j2=1/2, j3=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    # j1=1/2, j2=1, j3=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) )))
+    # Coupling j1+j3=j13, j13+j2=j
+    # j1=1/2, j2=1/2, j3=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    # j1=1/2, j2=1, j3=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) )))
+    # 4 coupled spaces
+    # j1=1/2, j2=1/2, j3=1/2, j4=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)) )))
+    # j1=1/2, j2=1/2, j3=1, j4=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)) )))
+    # Couple j1+j3=j13, j2+j4=j24, j13+j24=j
+    # j1=1/2, j2=1/2, j3=1/2, j4=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    # j1=1/2, j2=1/2, j3=1, j4=1/2
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(1)/2)), ((1,3),(2,4),(1,2)) )))
+    assert TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1),JzKet(S(1)/2,S(-1)/2)) == \
+        expand(uncouple(couple( TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(1)/2,S(-1)/2)), ((1,3),(2,4),(1,2)) )))
     # Numerical
     # 2 coupled spaces
     # j1=1/2, j2=1/2
@@ -702,69 +998,69 @@ def test_uncouple():
         sqrt(15)*TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1))/30
     # Defined j13
     # j1=1/2, j2=1/2, j3=1, j13=1/2
-    assert uncouple(JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )) == \
+    assert uncouple(JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )) == \
         -sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0))/3
-    assert uncouple(JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )) == \
+    assert uncouple(JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )) == \
         -sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1))/3 - \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0))/6 + \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0))/6 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1))/3
-    assert uncouple(JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )) == \
+    assert uncouple(JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )) == \
         -sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0))/3 + \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1))/3
     # j1=1/2, j2=1, j3=1, j13=1/2
-    assert uncouple(JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),))) == \
+    assert uncouple(JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)))) == \
         -sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,1))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/3
-    assert uncouple(JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),))) == \
+    assert uncouple(JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)))) == \
         -2*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/3 - \
         TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/3 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0))/3 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))/3
-    assert uncouple(JzKetCoupled(S(3)/2, -S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),))) == \
+    assert uncouple(JzKetCoupled(S(3)/2, -S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)))) == \
         -sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/3 - \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,0))/3 + \
         TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/3 + \
         2*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/3
-    assert uncouple(JzKetCoupled(S(3)/2, -S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),))) == \
+    assert uncouple(JzKetCoupled(S(3)/2, -S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)))) == \
         -sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/3 + \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))/3
     # j1=1, j2=1, j3=1, j13=1
-    assert uncouple(JzKetCoupled(2, 2, (1,1,1), ((1,3,1),))) == \
+    assert uncouple(JzKetCoupled(2, 2, (1,1,1), ((1,3,1),(1,2,2)))) == \
         -sqrt(2)*TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,1))/2 + \
         sqrt(2)*TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0))/2
-    assert uncouple(JzKetCoupled(2, 1, (1,1,1), ((1,3,1),))) == \
+    assert uncouple(JzKetCoupled(2, 1, (1,1,1), ((1,3,1),(1,2,2)))) == \
         -TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,1))/2 - \
         TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,1))/2 + \
         TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,0))/2 + \
         TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(2, 0, (1,1,1), ((1,3,1),))) == \
+    assert uncouple(JzKetCoupled(2, 0, (1,1,1), ((1,3,1),(1,2,2)))) == \
         -sqrt(3)*TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,1))/3 - \
         sqrt(3)*TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,0))/6 - \
         sqrt(3)*TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,1))/6 + \
         sqrt(3)*TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,-1))/6 + \
         sqrt(3)*TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,0))/6 + \
         sqrt(3)*TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,-1))/3
-    assert uncouple(JzKetCoupled(2, -1, (1,1,1), ((1,3,1),))) == \
+    assert uncouple(JzKetCoupled(2, -1, (1,1,1), ((1,3,1),(1,2,2)))) == \
         -TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,1))/2 - \
         TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0))/2 + \
         TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1))/2 + \
         TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(2, -2, (1,1,1), ((1,3,1),))) == \
+    assert uncouple(JzKetCoupled(2, -2, (1,1,1), ((1,3,1),(1,2,2)))) == \
         -sqrt(2)*TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,0))/2 + \
         sqrt(2)*TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(1, 1, (1,1,1), ((1,3,1),))) == \
+    assert uncouple(JzKetCoupled(1, 1, (1,1,1), ((1,3,1),(1,2,1)))) == \
         TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,1))/2 - \
         TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,1))/2 + \
         TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,0))/2 - \
         TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(1, 0, (1,1,1), ((1,3,1),))) == \
+    assert uncouple(JzKetCoupled(1, 0, (1,1,1), ((1,3,1),(1,2,1)))) == \
         TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,0))/2 - \
         TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,1))/2 - \
         TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,-1))/2 + \
         TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,0))/2
-    assert uncouple(JzKetCoupled(1, -1, (1,1,1), ((1,3,1),))) == \
+    assert uncouple(JzKetCoupled(1, -1, (1,1,1), ((1,3,1),(1,2,1)))) == \
         -TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,1))/2 + \
         TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0))/2 - \
         TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1))/2 + \
@@ -879,17 +1175,17 @@ def test_uncouple():
         sqrt(30)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/30 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))/30
     # j1=1/2, j2=1/2, j3=1, j4=1, j12=1, j34=1
-    assert uncouple(JzKetCoupled(2, 2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1)))) == \
+    assert uncouple(JzKetCoupled(2, 2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1),(1,3,2)))) == \
         -sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/2 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/2
-    assert uncouple(JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1)))) == \
+    assert uncouple(JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1),(1,3,2)))) == \
         -sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/4 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/4 - \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/4 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/4 - \
         TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/2 + \
         TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1)))) == \
+    assert uncouple(JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1),(1,3,2)))) == \
         -sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/6 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/6 - \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/6 + \
@@ -898,44 +1194,44 @@ def test_uncouple():
         sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/6 - \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/6 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/6
-    assert uncouple(JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1)))) == \
+    assert uncouple(JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1),(1,3,2)))) == \
         -TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/2 + \
         TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/2 - \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/4 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/4 - \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/4 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/4
-    assert uncouple(JzKetCoupled(2, -2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1)))) == \
+    assert uncouple(JzKetCoupled(2, -2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1),(1,3,2)))) == \
         -sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/2 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1)))) == \
-        -sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/4 - \
-        sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/4 + \
-        TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/2 - \
+    assert uncouple(JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1),(1,3,1)))) == \
+        sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/4 - \
+        TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/2 + \
         TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1)))) == \
-        -TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/2 + \
-        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/2 + \
-        TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/2 - \
+    assert uncouple(JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1),(1,3,1)))) == \
+        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/2 - \
+        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/2 - \
+        TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/2 + \
         TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1)))) == \
-        -TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/2 + \
-        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/2 + \
-        sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/4 - \
-        sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/4 + \
-        sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/4 - \
+    assert uncouple(JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,1),(1,3,1)))) == \
+        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/2 - \
+        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/2 - \
+        sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/4 + \
+        sqrt(2)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/4 - \
+        sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/4 + \
         sqrt(2)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/4
     # j1=1/2, j2=1/2, j3=1, j4=1, j12=1, j34=2
-    assert uncouple(JzKetCoupled(3, 3, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(3, 3, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,3)))) == \
         TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1))
-    assert uncouple(JzKetCoupled(3, 2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(3, 2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,3)))) == \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1))/6 + \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,1))/6 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/3
-    assert uncouple(JzKetCoupled(3, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(3, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,3)))) == \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,1))/15 + \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/15 + \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/15 + \
@@ -944,7 +1240,7 @@ def test_uncouple():
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/15 + \
         2*sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))/15
-    assert uncouple(JzKetCoupled(3, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(3, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,3)))) == \
         sqrt(10)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/10 + \
         sqrt(10)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/10 + \
         sqrt(5)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/10 + \
@@ -955,7 +1251,7 @@ def test_uncouple():
         sqrt(5)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/10 + \
         sqrt(10)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/10 + \
         sqrt(10)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/10
-    assert uncouple(JzKetCoupled(3, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(3, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,3)))) == \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/15 + \
         2*sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/15 + \
@@ -964,47 +1260,47 @@ def test_uncouple():
         sqrt(30)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/15 + \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/15 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))/15
-    assert uncouple(JzKetCoupled(3, -2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(3, -2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,3)))) == \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/3 + \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))/6 + \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,-1))/6
-    assert uncouple(JzKetCoupled(3, -3, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(3, -3, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,3)))) == \
         TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,-1))
-    assert uncouple(JzKetCoupled(2, 2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1))/3 + \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,1))/3 - \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/6 - \
+    assert uncouple(JzKetCoupled(2, 2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,2)))) == \
+        -sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1))/3 - \
+        sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,1))/3 + \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/6 + \
         sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/6
-    assert uncouple(JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,1))/3 + \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/12 + \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/12 + \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/12 + \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/12 - \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/6 - \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0))/3 - \
+    assert uncouple(JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,2)))) == \
+        -sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,1))/3 - \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/12 - \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/12 - \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/12 - \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/12 + \
+        sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))/6
-    assert uncouple(JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
-        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/2 + \
-        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/2 - \
-        TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/2 - \
+    assert uncouple(JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,2)))) == \
+        -TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/2 - \
+        TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/2 + \
+        TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/2 + \
         TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/2
-    assert uncouple(JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/6 + \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,0))/3 + \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/6 - \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/12 - \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/12 - \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/12 - \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/12 - \
+    assert uncouple(JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,2)))) == \
+        -sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/6 - \
+        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,0))/3 - \
+        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/6 + \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/12 + \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/12 + \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/12 + \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/12 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))/3
-    assert uncouple(JzKetCoupled(2, -2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/6 + \
-        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/6 - \
-        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))/3 - \
+    assert uncouple(JzKetCoupled(2, -2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,2)))) == \
+        -sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,0))/6 - \
+        sqrt(6)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,-1))/6 + \
+        sqrt(3)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))/3 + \
         sqrt(3)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,-1))/3
-    assert uncouple(JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,1)))) == \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,1))/5 - \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))/20 - \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))/20 - \
@@ -1013,7 +1309,7 @@ def test_uncouple():
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/30 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))/30
-    assert uncouple(JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,1)))) == \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,1))/10 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,0))/10 - \
         sqrt(30)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))/30 - \
@@ -1024,7 +1320,7 @@ def test_uncouple():
         sqrt(30)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/30 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))/10 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))/10
-    assert uncouple(JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2)))) == \
+    assert uncouple(JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(3,4,2),(1,3,1)))) == \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1), JzKet(1,1))/30 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0), JzKet(1,0))/15 + \
         sqrt(15)*TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1), JzKet(1,-1))/30 - \
@@ -1042,7 +1338,7 @@ def test_uncouple():
         Sum(CG(j1,m1,j2,m2,j1+j2,m1+m2) * CG(j1+j2,m1+m2,j3,m3,j,m) * \
             TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3)), \
             (m1,-j1,j1), (m2,-j2,j2), (m3,-j3,j3))
-    assert uncouple(JzKetCoupled(j, m, (j1,j2,j3), ((1,3,j13),) )) == \
+    assert uncouple(JzKetCoupled(j, m, (j1,j2,j3), ((1,3,j13),(1,2,j)) )) == \
         Sum(CG(j1,m1,j3,m3,j13,m1+m3) * CG(j13,m1+m3,j2,m2,j,m) * \
             TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3)), \
             (m1,-j1,j1), (m2,-j2,j2), (m3,-j3,j3))
@@ -1050,12 +1346,216 @@ def test_uncouple():
         Sum(CG(j1,m1,j2,m2,j1+j2,m1+m2) * CG(j1+j2,m1+m2,j3,m3,j1+j2+j3,m1+m2+m3) * CG(j1+j2+j3,m1+m2+m3,j4,m4,j,m) * \
             TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4)), \
             (m1,-j1,j1), (m2,-j2,j2), (m3,-j3,j3), (m4,-j4,j4))
-    assert uncouple(JzKetCoupled(j, m, (j1,j2,j3,j4), ((1,3,j13),(2,4,j24)) )) ==  \
-        Sum(CG(j1,m1,j3,m3,j13,m1+m3) * CG(j2,m2,j4,m4,j24,m2+m4) * CG(j24,m2+m4,j13,m1+m3,j,m) * \
+    assert uncouple(JzKetCoupled(j, m, (j1,j2,j3,j4), ((1,3,j13),(2,4,j24),(1,2,j)) )) ==  \
+        Sum(CG(j1,m1,j3,m3,j13,m1+m3) * CG(j2,m2,j4,m4,j24,m2+m4) * CG(j13,m1+m3,j24,m2+m4,j,m) * \
             TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4)), \
             (m1,-j1,j1), (m2,-j2,j2), (m3,-j3,j3), (m4,-j4,j4))
 
 def test_couple():
+    # Couple uncoupled state
+    # 2 coupled spaces
+    # j1=1/2, j2=1/2
+    assert JzKetCoupled(0, 0, (S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(0, 0, (S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(1, 1, (S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 1, (S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(1, 0, (S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 0, (S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(1, -1, (S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, -1, (S(1)/2,S(1)/2)) )))
+    # j1=1, j2=1/2
+    assert JzKetCoupled(S(1)/2, S(1)/2, (1, S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(1)/2, (1, S(1)/2)) )))
+    assert JzKetCoupled(S(1)/2, -S(1)/2, (1, S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, -S(1)/2, (1, S(1)/2)) )))
+    assert JzKetCoupled(S(3)/2, S(3)/2, (1, S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(3)/2, (1, S(1)/2)) )))
+    assert JzKetCoupled(S(3)/2, S(1)/2, (1, S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(1)/2, (1, S(1)/2)) )))
+    assert JzKetCoupled(S(3)/2, -S(1)/2, (1, S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, -S(1)/2, (1, S(1)/2)) )))
+    assert JzKetCoupled(S(3)/2, -S(3)/2, (1, S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, -S(3)/2, (1, S(1)/2)) )))
+    # j1=1, j2=1
+    assert JzKetCoupled(0, 0, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(0, 0, (1,1)) )))
+    assert JzKetCoupled(1, 1, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 1, (1,1)) )))
+    assert JzKetCoupled(1, 0, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 0, (1,1)) )))
+    assert JzKetCoupled(1, -1, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(1, -1, (1,1)) )))
+    assert JzKetCoupled(2, 2, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 2, (1,1)) )))
+    assert JzKetCoupled(2, 1, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 1, (1,1)) )))
+    assert JzKetCoupled(2, 0, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 0, (1,1)) )))
+    assert JzKetCoupled(2, -1, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, -1, (1,1)) )))
+    assert JzKetCoupled(2, -2, (1,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, -2, (1,1)) )))
+    # j1=1/2, j2=3/2
+    assert JzKetCoupled(1, 1, (S(1)/2,S(3)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 1, (S(1)/2,S(3)/2)) )))
+    assert JzKetCoupled(1, 0, (S(1)/2,S(3)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 0, (S(1)/2,S(3)/2)) )))
+    assert JzKetCoupled(1, -1, (S(1)/2,S(3)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, -1, (S(1)/2,S(3)/2)) )))
+    assert JzKetCoupled(2, 2, (S(1)/2,S(3)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 2, (S(1)/2,S(3)/2)) )))
+    assert JzKetCoupled(2, 1, (S(1)/2,S(3)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 1, (S(1)/2,S(3)/2)) )))
+    assert JzKetCoupled(2, 0, (S(1)/2,S(3)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 0, (S(1)/2,S(3)/2)) )))
+    assert JzKetCoupled(2, -1, (S(1)/2,S(3)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, -1, (S(1)/2,S(3)/2)) )))
+    assert JzKetCoupled(2, -2, (S(1)/2,S(3)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, -2, (S(1)/2,S(3)/2)) )))
+    # 3 coupled spaces
+    # Default coupling
+    # j1=1/2, j2=1/2, j3=1/2
+    assert JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(S(1)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(S(3)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(S(3)/2, S(-3)/2, (S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-3)/2, (S(1)/2,S(1)/2,S(1)/2)) )))
+    # j1=1/2, j2=1/2, j3=1
+    assert JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(2, 2, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 2, (S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(2, -2, (S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(2, -2, (S(1)/2,S(1)/2,1)) )))
+    # Couple j1+j3=j13, j13+j2=j
+    # j1=1/2, j2=1/2, j3=1/2, j13=0
+    assert JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),(1,2,S(1)/2))) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),(1,2,S(1)/2))) ), ((1,3),(1,2)) ))
+    assert JzKetCoupled(S(1)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),(1,2,S(1)/2))) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),(1,2,S(1)/2))) ), ((1,3),(1,2)) ))
+    # j1=1, j2=1/2, j3=1, j13=1
+    assert JzKetCoupled(S(1)/2, S(1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(1)/2))) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(1)/2))) ), ((1,3),(1,2)) ))
+    assert JzKetCoupled(S(1)/2, S(-1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(1)/2))) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(-1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(1)/2))) ), ((1,3),(1,2)) ))
+    assert JzKetCoupled(S(3)/2, S(3)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(3)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) ), ((1,3),(1,2)) ))
+    assert JzKetCoupled(S(3)/2, S(1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) ), ((1,3),(1,2)) ))
+    assert JzKetCoupled(S(3)/2, S(-1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-1)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) ), ((1,3),(1,2)) ))
+    assert JzKetCoupled(S(3)/2, S(-3)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-3)/2, (1,S(1)/2,1), ((1,3,1),(1,2,S(3)/2))) ), ((1,3),(1,2)) ))
+    # 4 coupled spaces
+    # Default coupling
+    # j1=1/2, j2=1/2, j3=1/2, j4=1/2
+    assert JzKetCoupled(1, 1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(1, 0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, 0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(1, -1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(1, -1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(2, 2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(2, 1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(2, 0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, 0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(2, -1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, -1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) )))
+    assert JzKetCoupled(2, -2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) == \
+        expand(couple(uncouple( JzKetCoupled(2, -2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2)) )))
+    # j1=1/2, j2=1/2, j3=1/2, j4=1
+    assert JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(1)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(3)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(3)/2, S(-3)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-3)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(5)/2, S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(5)/2, S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(5)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(5)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(5)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(5)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(5)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(5)/2, S(-3)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(5)/2, S(-3)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    assert JzKetCoupled(S(5)/2, S(-5)/2, (S(1)/2,S(1)/2,S(1)/2,1)) == \
+        expand(couple(uncouple( JzKetCoupled(S(5)/2, S(-5)/2, (S(1)/2,S(1)/2,S(1)/2,1)) )))
+    # Coupling j1+j3=j13, j2+j4=j24, j13+j24=j
+    # j1=1/2, j2=1/2, j3=1/2, j4=1/2, j13=1, j24=0
+    assert JzKetCoupled(1, 1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(2,4,0),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, 1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(2,4,0),(1,2,1)) ) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(1, 0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(2,4,0),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, 0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(2,4,0),(1,2,1)) ) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(1, -1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(2,4,0),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, -1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(2,4,0),(1,2,1)) ) ), ((1,3),(2,4),(1,2)) ))
+    # j1=1/2, j2=1/2, j3=1/2, j4=1, j13=1, j24=1/2
+    assert JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(1)/2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(1)/2)) )), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(S(1)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(1)/2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(S(1)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(1)/2)) ) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(3)/2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(3)/2)) ) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(3)/2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(3)/2)) ) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(S(3)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(3)/2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(3)/2)) ) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(S(3)/2, S(-3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(3)/2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(S(3)/2, S(-3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,3,1),(2,4,S(1)/2),(1,2,S(3)/2)) ) ), ((1,3),(2,4),(1,2)) ))
+    # j1=1/2, j2=1, j3=1/2, j4=1, j13=0, j24=1
+    assert JzKetCoupled(1, 1, (S(1)/2,1,S(1)/2,1), ((1,3,0),(2,4,1),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, 1, (S(1)/2,1,S(1)/2,1), ((1,3,0),(2,4,1),(1,2,1))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(1, 0, (S(1)/2,1,S(1)/2,1), ((1,3,0),(2,4,1),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, 0, (S(1)/2,1,S(1)/2,1), ((1,3,0),(2,4,1),(1,2,1))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(1, -1, (S(1)/2,1,S(1)/2,1), ((1,3,0),(2,4,1),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, -1, (S(1)/2,1,S(1)/2,1), ((1,3,0),(2,4,1),(1,2,1))) ), ((1,3),(2,4),(1,2)) ))
+    # j1=1/2, j2=1, j3=1/2, j4=1, j13=1, j24=1
+    assert JzKetCoupled(0, 0, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,0)) ) == \
+        expand(couple(uncouple( JzKetCoupled(0, 0, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,0))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(1, 1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, 1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,1))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(1, 0, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, 0, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,1))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(1, -1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,1)) ) == \
+        expand(couple(uncouple( JzKetCoupled(1, -1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,1))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(2, 2, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(2, 2, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(2, 1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(2, 1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(2, 0, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(2, 0, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(2, -1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(2, -1, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2))) ), ((1,3),(2,4),(1,2)) ))
+    assert JzKetCoupled(2, -2, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2)) ) == \
+        expand(couple(uncouple( JzKetCoupled(2, -2, (S(1)/2,1,S(1)/2,1), ((1,3,1),(2,4,1),(1,2,2))) ), ((1,3),(2,4),(1,2)) ))
     # Numerical
     # 2 coupled spaces
     # j1=1/2, j2=1/2
@@ -1120,2881 +1620,1167 @@ def test_couple():
     # Default coupling
     # j1=1/2,j2=1/2,j3=1/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )
+        JzKetCoupled(S(3)/2, S(3)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/3
+        sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/3 + \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,0),) )/2 - \
-        sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/3
+        sqrt(2)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 - \
+        sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,0),) )/2 + \
-        sqrt(6)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/3
+        sqrt(2)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
+        sqrt(6)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,0),) )/2 - \
-        sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/3
+        -sqrt(2)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 - \
+        sqrt(6)*JzKetCoupled(S(1)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2, S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,0),) )/2 + \
-        sqrt(6)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/3
+        -sqrt(2)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
+        sqrt(6)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )/3
+        -sqrt(6)*JzKetCoupled(S(1)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/3 + \
+        sqrt(3)*JzKetCoupled(S(3)/2, -S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        JzKetCoupled(S(3)/2, -S(3)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),) )
+        JzKetCoupled(S(3)/2, -S(3)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )
     # j1=S(1)/2, j2=S(1)/2, j3=1
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1))) == \
-        JzKetCoupled(2, 2, (S(1)/2,S(1)/2,1), ((1,2,1),) )
+        JzKetCoupled(2, 2, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0))) == \
-        sqrt(2)*JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2 + \
-        sqrt(2)*JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2
+        sqrt(2)*JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(2)*JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1))) == \
-        sqrt(3)*JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/3 + \
-        sqrt(2)*JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2 + \
-        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/6
+        sqrt(3)*JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,0)) )/3 + \
+        sqrt(2)*JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1))) == \
-        sqrt(2)*JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,0),) )/2 - \
-        JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2 + \
-        JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2
+        sqrt(2)*JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,0),(1,3,1)) )/2 - \
+        JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/6 + \
-        sqrt(2)*JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,2,0),) )/2 + \
-        sqrt(3)*JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/3
+        -sqrt(6)*JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,0)) )/6 + \
+        sqrt(2)*JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,2,0),(1,3,1)) )/2 + \
+        sqrt(3)*JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,0),) )/2 + \
-        JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2 + \
-        JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2
+        sqrt(2)*JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,0),(1,3,1)) )/2 + \
+        JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1))) == \
-        -sqrt(2)*JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,0),) )/2 - \
-        JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2 + \
-        JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2
+        -sqrt(2)*JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,0),(1,3,1)) )/2 - \
+        JzKetCoupled(1, 1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2, 1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/6 - \
-        sqrt(2)*JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,2,0),) )/2 + \
-        sqrt(3)*JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/3
+        -sqrt(6)*JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,0)) )/6 - \
+        sqrt(2)*JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,2,0),(1,3,1)) )/2 + \
+        sqrt(3)*JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/3
     assert couple(TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1))) == \
-        -sqrt(2)*JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,0),) )/2 + \
-        JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2 + \
-        JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2
+        -sqrt(2)*JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,0),(1,3,1)) )/2 + \
+        JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,1))) == \
-        sqrt(3)*JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/3 - \
-        sqrt(2)*JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2 + \
-        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1), ((1,2,1),) )/6
+        sqrt(3)*JzKetCoupled(0, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,0)) )/3 - \
+        sqrt(2)*JzKetCoupled(1, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(2, 0, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2 + \
-        sqrt(2)*JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1), ((1,2,1),) )/2
+        -sqrt(2)*JzKetCoupled(1, -1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(2)*JzKetCoupled(2, -1, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,-S(1)/2), JzKet(S(1)/2,-S(1)/2), JzKet(1,-1))) == \
-        JzKetCoupled(2, -2, (S(1)/2,S(1)/2,1), ((1,2,1),) )
+        JzKetCoupled(2, -2, (S(1)/2,S(1)/2,1), ((1,2,1),(1,3,2)) )
     # j1=S(1)/2, j2=1, j3=1
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1))) == \
-        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )
+        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/2 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/10
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/2 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        2*sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0))) == \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/3 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/3 + \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        4*sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        4*sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))) == \
-        -2*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/10
+        -2*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/3 + \
-        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 + \
+        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        -sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/3 - \
-        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 - \
+        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,-1))) == \
-        -2*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/10
+        -2*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/3 - \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        4*sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 - \
+        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        4*sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,0))) == \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/3 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(1)/2),) )/3 + \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        -sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        2*sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/2 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/10
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/2 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )/5
+        -sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,-1))) == \
-        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1), ((1,2,S(3)/2),) )
+        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )
     #  j1=1, j2=1, j3=1
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,1))) == \
-        JzKetCoupled(3,3, (1,1,1), ((1,2,2),) )
+        JzKetCoupled(3,3, (1,1,1), ((1,2,2),(1,3,3)) )
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,2,2),) )/3 + \
-        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,2,2),) )/3
+        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,2,2),(1,3,2)) )/3 + \
+        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,2,2),(1,3,3)) )/3
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),) )/5 + \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),) )/3 + \
-        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),) )/15
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),(1,3,1)) )/5 + \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),(1,3,2)) )/3 + \
+        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(2)*JzKetCoupled(2,2, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,2,2),) )/6 + \
-        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,2,2),) )/3
+        sqrt(2)*JzKetCoupled(2,2, (1,1,1), ((1,2,1),(1,3,2)) )/2 - \
+        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,2,2),(1,3,3)) )/3
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,0))) == \
-        JzKetCoupled(1,1, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),) )/10 + \
-        JzKetCoupled(2,1, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),) )/15
+        JzKetCoupled(1,1, (1,1,1), ((1,2,1),(1,3,1)) )/2 - \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),(1,3,1)) )/10 + \
+        JzKetCoupled(2,1, (1,1,1), ((1,2,1),(1,3,2)) )/2 + \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,-1))) == \
-        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),) )/6 + \
-        JzKetCoupled(1,0, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),) )/10 + \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),) )/6 + \
-        JzKetCoupled(2,0, (1,1,1), ((1,2,2),) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),) )/10
+        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),(1,3,0)) )/6 + \
+        JzKetCoupled(1,0, (1,1,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),(1,3,1)) )/10 + \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),(1,3,2)) )/6 + \
+        JzKetCoupled(2,0, (1,1,1), ((1,2,2),(1,3,2)) )/2 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),(1,3,3)) )/10
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,2,0),) )/3 - \
-        JzKetCoupled(1,1, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),) )/30 + \
-        JzKetCoupled(2,1, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),) )/15
+        sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,2,0),(1,3,1)) )/3 - \
+        JzKetCoupled(1,1, (1,1,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),(1,3,1)) )/30 + \
+        JzKetCoupled(2,1, (1,1,1), ((1,2,1),(1,3,2)) )/2 - \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),) )/6 + \
-        2*sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,2,0),) )/3 - \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),) )/15 + \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),) )/3 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),) )/10
+        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),(1,3,0)) )/6 + \
+        sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,2,0),(1,3,1)) )/3 - \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),(1,3,1)) )/15 + \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),(1,3,2)) )/3 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),(1,3,3)) )/10
     assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1))) == \
-        2*sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,2,0),) )/3 + \
-        JzKetCoupled(1,-1, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),) )/30 + \
-        JzKetCoupled(2,-1, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),) )/15
+        sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,2,0),(1,3,1)) )/3 + \
+        JzKetCoupled(1,-1, (1,1,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),(1,3,1)) )/30 + \
+        JzKetCoupled(2,-1, (1,1,1), ((1,2,1),(1,3,2)) )/2 + \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(2)*JzKetCoupled(2,2, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,2,2),) )/6 + \
-        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,2,2),) )/3
+        -sqrt(2)*JzKetCoupled(2,2, (1,1,1), ((1,2,1),(1,3,2)) )/2 - \
+        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,2,2),(1,3,3)) )/3
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,0))) == \
-        -JzKetCoupled(1,1, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),) )/10 - \
-        JzKetCoupled(2,1, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),) )/15
+        -JzKetCoupled(1,1, (1,1,1), ((1,2,1),(1,3,1)) )/2 - \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),(1,3,1)) )/10 - \
+        JzKetCoupled(2,1, (1,1,1), ((1,2,1),(1,3,2)) )/2 + \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,-1))) == \
-        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),) )/6 - \
-        JzKetCoupled(1,0, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),) )/10 - \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),) )/6 + \
-        JzKetCoupled(2,0, (1,1,1), ((1,2,2),) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),) )/10
+        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),(1,3,0)) )/6 - \
+        JzKetCoupled(1,0, (1,1,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),(1,3,1)) )/10 - \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),(1,3,2)) )/6 + \
+        JzKetCoupled(2,0, (1,1,1), ((1,2,2),(1,3,2)) )/2 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),(1,3,3)) )/10
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,2,0),) )/3 + \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),) )/15 - \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),) )/3 + \
-        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),) )/15
+        -sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,2,0),(1,3,1)) )/3 + \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),(1,3,1)) )/15 - \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),(1,3,2)) )/3 + \
+        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,0))) == \
-        -2*sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,2,0),) )/3 - \
-        2*sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),) )/15 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),) )/5
+        -sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,2,0),(1,3,1)) )/3 - \
+        2*sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),(1,3,1)) )/15 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),(1,3,3)) )/5
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1))) == \
-        -2*sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,2,0),) )/3 + \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),) )/15 + \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),) )/3 + \
-        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),) )/15
+        -sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,2,0),(1,3,1)) )/3 + \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),(1,3,1)) )/15 + \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),(1,3,2)) )/3 + \
+        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),) )/6 - \
-        JzKetCoupled(1,0, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),) )/10 + \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),) )/6 - \
-        JzKetCoupled(2,0, (1,1,1), ((1,2,2),) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),) )/10
+        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),(1,3,0)) )/6 - \
+        JzKetCoupled(1,0, (1,1,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),(1,3,1)) )/10 + \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),(1,3,2)) )/6 - \
+        JzKetCoupled(2,0, (1,1,1), ((1,2,2),(1,3,2)) )/2 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),(1,3,3)) )/10
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,0))) == \
-        -JzKetCoupled(1,-1, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),) )/10 + \
-        JzKetCoupled(2,-1, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),) )/15
+        -JzKetCoupled(1,-1, (1,1,1), ((1,2,1),(1,3,1)) )/2 - \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),(1,3,1)) )/10 + \
+        JzKetCoupled(2,-1, (1,1,1), ((1,2,1),(1,3,2)) )/2 - \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(2,-2, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,2,2),) )/6 + \
-        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,2,2),) )/3
+        sqrt(2)*JzKetCoupled(2,-2, (1,1,1), ((1,2,1),(1,3,2)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,2,2),(1,3,3)) )/3
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,1))) == \
-        sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,2,0),) )/3 + \
-        JzKetCoupled(1,1, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),) )/30 - \
-        JzKetCoupled(2,1, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),) )/15
+        sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,2,0),(1,3,1)) )/3 + \
+        JzKetCoupled(1,1, (1,1,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,2,2),(1,3,1)) )/30 - \
+        JzKetCoupled(2,1, (1,1,1), ((1,2,1),(1,3,2)) )/2 - \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),) )/6 + \
-        2*sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,2,0),) )/3 - \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),) )/15 - \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),) )/3 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),) )/10
+        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),(1,3,0)) )/6 + \
+        sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,2,0),(1,3,1)) )/3 - \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),(1,3,1)) )/15 - \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),(1,3,2)) )/3 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),(1,3,3)) )/10
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,-1))) == \
-        2*sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,2,0),) )/3 - \
-        JzKetCoupled(1,-1, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),) )/30 - \
-        JzKetCoupled(2,-1, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),) )/15
+        sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,2,0),(1,3,1)) )/3 - \
+        JzKetCoupled(1,-1, (1,1,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),(1,3,1)) )/30 - \
+        JzKetCoupled(2,-1, (1,1,1), ((1,2,1),(1,3,2)) )/2 + \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),) )/6 + \
-        JzKetCoupled(1,0, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),) )/10 - \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),) )/6 - \
-        JzKetCoupled(2,0, (1,1,1), ((1,2,2),) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),) )/10
+        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,2,1),(1,3,0)) )/6 + \
+        JzKetCoupled(1,0, (1,1,1), ((1,2,1),(1,3,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,2,2),(1,3,1)) )/10 - \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,2,1),(1,3,2)) )/6 - \
+        JzKetCoupled(2,0, (1,1,1), ((1,2,2),(1,3,2)) )/2 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,2,2),(1,3,3)) )/10
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0))) == \
-        JzKetCoupled(1,-1, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),) )/10 - \
-        JzKetCoupled(2,-1, (1,1,1), ((1,2,1),) )/2 - \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),) )/15
+        JzKetCoupled(1,-1, (1,1,1), ((1,2,1),(1,3,1)) )/2 - \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),(1,3,1)) )/10 - \
+        JzKetCoupled(2,-1, (1,1,1), ((1,2,1),(1,3,2)) )/2 - \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(2)*JzKetCoupled(2,-2, (1,1,1), ((1,2,1),) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,2,2),) )/6 + \
-        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,2,2),) )/3
+        -sqrt(2)*JzKetCoupled(2,-2, (1,1,1), ((1,2,1),(1,3,2)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,2,2),(1,3,2)) )/6 + \
+        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,2,2),(1,3,3)) )/3
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),) )/5 - \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),) )/3 + \
-        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),) )/15
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,2,2),(1,3,1)) )/5 - \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,2,2),(1,3,2)) )/3 + \
+        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,2,2),(1,3,3)) )/15
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,2,2),) )/3 + \
-        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,2,2),) )/3
+        -sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,2,2),(1,3,2)) )/3 + \
+        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,2,2),(1,3,3)) )/3
     assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,-1))) == \
-        JzKetCoupled(3,-3, (1,1,1), ((1,2,2),) )
+        JzKetCoupled(3,-3, (1,1,1), ((1,2,2),(1,3,3)) )
     # j1=S(1)/2, j2=S(1)/2, j3=S(3)/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )
+        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5
+        sqrt(10)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5 + \
+        sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/6 + \
-        2*sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/15 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10
+        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
+        2*sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/2 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/2 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),) )/2 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5
+        sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(3)/2)) )/2 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),) )/2 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/30 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10
+        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(3)/2)) )/2 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),) )/2 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/30 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10
+        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(3)/2)) )/2 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),) )/2 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(3)/2)) )/2 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        -sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),) )/2 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5
+        -sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(3)/2)) )/2 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),) )/2 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/30 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10
+        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(3)/2)) )/2 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),) )/2 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/30 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10
+        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(3)/2)) )/2 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        -sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),) )/2 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5
+        -sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(3)/2)) )/2 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/2 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/2 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/6 - \
-        2*sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/15 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/10
+        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
+        2*sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )/5
+        -sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5 + \
+        sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),) )
+        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(5)/2)) )
     # Couple j1 to j3
     # j1=1/2, j2=1/2, j3=1/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),) ) == \
-        JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),) ) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),) )/2 - \
-        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),) ) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),) )/2 + \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),) )/2 - \
-        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),) )/2 + \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),) ) == \
-        JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(3)/2)) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) ) == \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),(1,2,S(1)/2)) )/2 - \
+        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(3)/2)) )/3
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(1)/2)) )/3 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(3)/2)) )/3
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) ) == \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),(1,2,S(1)/2)) )/2 + \
+        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(3)/2)) )/3
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) ) == \
+        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),(1,2,S(1)/2)) )/2 - \
+        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(3)/2)) )/3
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(1)/2)) )/3 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(3)/2)) )/3
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,3),(1,2)) ) == \
+        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,0),(1,2,S(1)/2)) )/2 + \
+        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(3)/2)) )/3
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2), ((1,3,1),(1,2,S(3)/2)) )
     # j1=1/2, j2=1/2, j3=1
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,3),) ) == \
-        JzKetCoupled(2,2, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,3),) ) == \
-        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/6 + \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,3),) ) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,3),) ) == \
-        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/2 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/6 + \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/6 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/3 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/6 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/6 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/6 - \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/6 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/3 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,3),) ) == \
-        -sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/2 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,3),) ) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,3),) ) == \
-        -sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/6 + \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,3),) ) == \
-        JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(2,2, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )/3 - \
+        sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/6 + \
+        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,0)) )/3 + \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )/3 - \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/6
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/2 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,0)) )/6 + \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )/6 + \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/3 + \
+        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/3
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )/3 + \
+        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/6 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )/3 - \
+        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/6 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,0)) )/6 - \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )/6 - \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/3 + \
+        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/3
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/2 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,0)) )/3 - \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )/3 + \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/6
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(1)/2),(1,2,1)) )/3 + \
+        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,1)) )/6 + \
+        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1), ((1,3,S(3)/2),(1,2,2)) )
     # j 1=1/2, j 2=1, j 3=1
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1)), ((1,3),) ) == \
-        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0)), ((1,3),) ) == \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1)), ((1,3),) ) == \
-        -2*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1)), ((1,3),) ) == \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0)), ((1,3),) ) == \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/3 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1)), ((1,3),) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/3 + \
-        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1)), ((1,3),) ) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/2 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0)), ((1,3),) ) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/3 + \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        4*sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,1)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,0)), ((1,3),) ) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/3 - \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        4*sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,-1)), ((1,3),) ) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/2 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,1)), ((1,3),) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/3 - \
-        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,0)), ((1,3),) ) == \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/3 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,-1)), ((1,3),) ) == \
-        -sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,1)), ((1,3),) ) == \
-        -2*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,0)), ((1,3),) ) == \
-        -sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),) )/3 + \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,-1)), ((1,3),) ) == \
-        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1), ((1,3,S(3)/2),) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 - \
+        2*sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        -2*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 - \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/3 + \
+        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/2 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/3 + \
+        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 + \
+        4*sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/3 - \
+        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 - \
+        4*sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/2 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/3 - \
+        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        -sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        -2*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 + \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(1)/2),(1,2,S(3)/2)) )/3 + \
+        2*sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1), ((1,3,S(3)/2),(1,2,S(5)/2)) )
     # j1=1, 1, 1
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,1)), ((1,3),) ) == \
-        JzKetCoupled(3,3, (1,1,1), ((1,3,2),) )
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)), ((1,3),) ) == \
-        sqrt(2)*JzKetCoupled(2,2, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,3,2),) )/6 + \
-        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,3,2),) )/3
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,-1)), ((1,3),) ) == \
-        sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,3,0),) )/3 - \
-        JzKetCoupled(1,1, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),) )/30 + \
-        JzKetCoupled(2,1, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,1)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,3,2),) )/3 + \
-        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,3,2),) )/3
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,0)), ((1,3),) ) == \
-        JzKetCoupled(1,1, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),) )/10 + \
-        JzKetCoupled(2,1, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,-1)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),) )/6 + \
-        2*sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,3,0),) )/3 - \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),) )/15 + \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),) )/3 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,1)), ((1,3),) ) == \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),) )/5 + \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),) )/3 + \
-        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,0)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),) )/6 + \
-        JzKetCoupled(1,0, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),) )/10 + \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),) )/6 + \
-        JzKetCoupled(2,0, (1,1,1), ((1,3,2),) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1)), ((1,3),) ) == \
-        2*sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,3,0),) )/3 + \
-        JzKetCoupled(1,-1, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),) )/30 + \
-        JzKetCoupled(2,-1, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,1)), ((1,3),) ) == \
-        -sqrt(2)*JzKetCoupled(2,2, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,3,2),) )/6 + \
-        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,3,2),) )/3
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,0)), ((1,3),) ) == \
-        -sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,3,0),) )/3 + \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),) )/15 - \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),) )/3 + \
-        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,-1)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),) )/6 - \
-        JzKetCoupled(1,0, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),) )/10 + \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),) )/6 - \
-        JzKetCoupled(2,0, (1,1,1), ((1,3,2),) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,1)), ((1,3),) ) == \
-        -JzKetCoupled(1,1, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),) )/10 - \
-        JzKetCoupled(2,1, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,0)), ((1,3),) ) == \
-        -2*sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,3,0),) )/3 - \
-        2*sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),) )/15 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),) )/5
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1)), ((1,3),) ) == \
-        -JzKetCoupled(1,-1, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),) )/10 + \
-        JzKetCoupled(2,-1, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,1)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),) )/6 - \
-        JzKetCoupled(1,0, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),) )/10 - \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),) )/6 + \
-        JzKetCoupled(2,0, (1,1,1), ((1,3,2),) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,0)), ((1,3),) ) == \
-        -2*sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,3,0),) )/3 + \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),) )/15 + \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),) )/3 + \
-        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,-1)), ((1,3),) ) == \
-        sqrt(2)*JzKetCoupled(2,-2, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,3,2),) )/6 + \
-        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,3,2),) )/3
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,1)), ((1,3),) ) == \
-        sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,3,0),) )/3 + \
-        JzKetCoupled(1,1, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),) )/30 - \
-        JzKetCoupled(2,1, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,0)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),) )/6 + \
-        JzKetCoupled(1,0, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),) )/10 - \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),) )/6 - \
-        JzKetCoupled(2,0, (1,1,1), ((1,3,2),) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,-1)), ((1,3),) ) == \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),) )/5 - \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),) )/3 + \
-        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,1)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),) )/6 + \
-        2*sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,3,0),) )/3 - \
-        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),) )/15 - \
-        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),) )/3 + \
-        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0)), ((1,3),) ) == \
-        JzKetCoupled(1,-1, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),) )/10 - \
-        JzKetCoupled(2,-1, (1,1,1), ((1,3,1),) )/2 - \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,-1)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,3,2),) )/3 + \
-        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,3,2),) )/3
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,1)), ((1,3),) ) == \
-        2*sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,3,0),) )/3 - \
-        JzKetCoupled(1,-1, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),) )/30 - \
-        JzKetCoupled(2,-1, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),) )/15
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,0)), ((1,3),) ) == \
-        -sqrt(2)*JzKetCoupled(2,-2, (1,1,1), ((1,3,1),) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,3,2),) )/6 + \
-        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,3,2),) )/3
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,-1)), ((1,3),) ) == \
-        JzKetCoupled(3,-3, (1,1,1), ((1,3,2),) )
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(3,3, (1,1,1), ((1,3,2),(1,2,3)) )
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        sqrt(2)*JzKetCoupled(2,2, (1,1,1), ((1,3,1),(1,2,2)) )/2 - \
+        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,3,2),(1,2,3)) )/3
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,3,0),(1,2,1)) )/3 - \
+        JzKetCoupled(1,1, (1,1,1), ((1,3,1),(1,2,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),(1,2,1)) )/30 + \
+        JzKetCoupled(2,1, (1,1,1), ((1,3,1),(1,2,2)) )/2 - \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,3,2),(1,2,2)) )/3 + \
+        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,3,2),(1,2,3)) )/3
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(1,1, (1,1,1), ((1,3,1),(1,2,1)) )/2 - \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),(1,2,1)) )/10 + \
+        JzKetCoupled(2,1, (1,1,1), ((1,3,1),(1,2,2)) )/2 + \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),(1,2,0)) )/6 + \
+        sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,3,0),(1,2,1)) )/3 - \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),(1,2,1)) )/15 + \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),(1,2,2)) )/3 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),(1,2,3)) )/10
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),(1,2,1)) )/5 + \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),(1,2,2)) )/3 + \
+        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),(1,2,0)) )/6 + \
+        JzKetCoupled(1,0, (1,1,1), ((1,3,1),(1,2,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),(1,2,1)) )/10 + \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),(1,2,2)) )/6 + \
+        JzKetCoupled(2,0, (1,1,1), ((1,3,2),(1,2,2)) )/2 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),(1,2,3)) )/10
+    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,3,0),(1,2,1)) )/3 + \
+        JzKetCoupled(1,-1, (1,1,1), ((1,3,1),(1,2,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),(1,2,1)) )/30 + \
+        JzKetCoupled(2,-1, (1,1,1), ((1,3,1),(1,2,2)) )/2 + \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        -sqrt(2)*JzKetCoupled(2,2, (1,1,1), ((1,3,1),(1,2,2)) )/2 - \
+        sqrt(6)*JzKetCoupled(2,2, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        sqrt(3)*JzKetCoupled(3,2, (1,1,1), ((1,3,2),(1,2,3)) )/3
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,3,0),(1,2,1)) )/3 + \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),(1,2,1)) )/15 - \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),(1,2,2)) )/3 + \
+        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),(1,2,0)) )/6 - \
+        JzKetCoupled(1,0, (1,1,1), ((1,3,1),(1,2,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),(1,2,1)) )/10 + \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),(1,2,2)) )/6 - \
+        JzKetCoupled(2,0, (1,1,1), ((1,3,2),(1,2,2)) )/2 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),(1,2,3)) )/10
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        -JzKetCoupled(1,1, (1,1,1), ((1,3,1),(1,2,1)) )/2 - \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),(1,2,1)) )/10 - \
+        JzKetCoupled(2,1, (1,1,1), ((1,3,1),(1,2,2)) )/2 + \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        2*sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,3,0),(1,2,1)) )/3 - \
+        2*sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),(1,2,1)) )/15 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),(1,2,3)) )/5
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        -JzKetCoupled(1,-1, (1,1,1), ((1,3,1),(1,2,1)) )/2 - \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),(1,2,1)) )/10 + \
+        JzKetCoupled(2,-1, (1,1,1), ((1,3,1),(1,2,2)) )/2 - \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),(1,2,0)) )/6 - \
+        JzKetCoupled(1,0, (1,1,1), ((1,3,1),(1,2,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),(1,2,1)) )/10 - \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),(1,2,2)) )/6 + \
+        JzKetCoupled(2,0, (1,1,1), ((1,3,2),(1,2,2)) )/2 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),(1,2,3)) )/10
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,3,0),(1,2,1)) )/3 + \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),(1,2,1)) )/15 + \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),(1,2,2)) )/3 + \
+        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        sqrt(2)*JzKetCoupled(2,-2, (1,1,1), ((1,3,1),(1,2,2)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,3,2),(1,2,3)) )/3
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        sqrt(3)*JzKetCoupled(1,1, (1,1,1), ((1,3,0),(1,2,1)) )/3 + \
+        JzKetCoupled(1,1, (1,1,1), ((1,3,1),(1,2,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,1, (1,1,1), ((1,3,2),(1,2,1)) )/30 - \
+        JzKetCoupled(2,1, (1,1,1), ((1,3,1),(1,2,2)) )/2 - \
+        sqrt(3)*JzKetCoupled(2,1, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        sqrt(15)*JzKetCoupled(3,1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),(1,2,0)) )/6 + \
+        JzKetCoupled(1,0, (1,1,1), ((1,3,1),(1,2,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),(1,2,1)) )/10 - \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),(1,2,2)) )/6 - \
+        JzKetCoupled(2,0, (1,1,1), ((1,3,2),(1,2,2)) )/2 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),(1,2,3)) )/10
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),(1,2,1)) )/5 - \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),(1,2,2)) )/3 + \
+        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(0,0, (1,1,1), ((1,3,1),(1,2,0)) )/6 + \
+        sqrt(3)*JzKetCoupled(1,0, (1,1,1), ((1,3,0),(1,2,1)) )/3 - \
+        sqrt(15)*JzKetCoupled(1,0, (1,1,1), ((1,3,2),(1,2,1)) )/15 - \
+        sqrt(3)*JzKetCoupled(2,0, (1,1,1), ((1,3,1),(1,2,2)) )/3 + \
+        sqrt(10)*JzKetCoupled(3,0, (1,1,1), ((1,3,2),(1,2,3)) )/10
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(1,-1, (1,1,1), ((1,3,1),(1,2,1)) )/2 - \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),(1,2,1)) )/10 - \
+        JzKetCoupled(2,-1, (1,1,1), ((1,3,1),(1,2,2)) )/2 - \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        2*sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,3,2),(1,2,2)) )/3 + \
+        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,3,2),(1,2,3)) )/3
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,1)), ((1,3),(1,2)) ) == \
+        sqrt(3)*JzKetCoupled(1,-1, (1,1,1), ((1,3,0),(1,2,1)) )/3 - \
+        JzKetCoupled(1,-1, (1,1,1), ((1,3,1),(1,2,1)) )/2 + \
+        sqrt(15)*JzKetCoupled(1,-1, (1,1,1), ((1,3,2),(1,2,1)) )/30 - \
+        JzKetCoupled(2,-1, (1,1,1), ((1,3,1),(1,2,2)) )/2 + \
+        sqrt(3)*JzKetCoupled(2,-1, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        sqrt(15)*JzKetCoupled(3,-1, (1,1,1), ((1,3,2),(1,2,3)) )/15
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,0)), ((1,3),(1,2)) ) == \
+        -sqrt(2)*JzKetCoupled(2,-2, (1,1,1), ((1,3,1),(1,2,2)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,-2, (1,1,1), ((1,3,2),(1,2,2)) )/6 + \
+        sqrt(3)*JzKetCoupled(3,-2, (1,1,1), ((1,3,2),(1,2,3)) )/3
+    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,-1)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(3,-3, (1,1,1), ((1,3,2),(1,2,3)) )
     # j1=1/2, j2=1/2, j3=3/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2)), ((1,3),) ) == \
-        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2)), ((1,3),) ) == \
-        JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/2 + \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/2 - \
-        sqrt(15)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2)), ((1,3),) ) == \
-        2*sqrt(5)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/6 + \
-        3*sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/6 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),) ) == \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/2 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2)), ((1,3),) ) == \
-        -sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/2 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/6 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2)), ((1,3),) ) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/6 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/6 - \
-        3*sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),) ) == \
-        -2*sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2)), ((1,3),) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/2 - \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2)), ((1,3),) ) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/6 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2)), ((1,3),) ) == \
-        -JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),) )/2 + \
-        sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/10 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),) ) == \
-        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/2 - \
+        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/10 + \
+        sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/5 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),(1,2)) ) == \
+        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(1)/2)) )/2 + \
+        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/2 - \
+        sqrt(15)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/10 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2)), ((1,3),(1,2)) ) == \
+        2*sqrt(5)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/5 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/6 + \
+        3*sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/10 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(1)/2)) )/6 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/5 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),(1,2)) ) == \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/2 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2)), ((1,3),(1,2)) ) == \
+        -sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/2 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(1)/2)) )/6 - \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/5 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2)), ((1,3),(1,2)) ) == \
+        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(1)/2)) )/6 - \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/6 - \
+        3*sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/10 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),(1,2)) ) == \
+        -2*sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/5 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2)), ((1,3),(1,2)) ) == \
+        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(1)/2)) )/2 - \
+        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/2 + \
+        sqrt(15)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/10 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2)), ((1,3),(1,2)) ) == \
+        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(1)/2)) )/6 - \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/5 + \
+        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2)), ((1,3),(1,2)) ) == \
+        -JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,1),(1,2,S(3)/2)) )/2 + \
+        sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(3)/2)) )/10 + \
+        sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2)), ((1,3),(1,2)) ) == \
+        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(3)/2), ((1,3,2),(1,2,S(5)/2)) )
     # Couple 4 spaces
     # Default coupling
     # j1=1/2, j2=1/2, j3=1/2, j4=1/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )
+        JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2
+        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/2 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2
+        sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/3 - \
+        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,0)) )/3 + \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/3 + \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        -sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2
+        sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,1)) )/2 - \
+        sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/6 - \
+        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6
+        JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,1/2),(1,4,0)) )/2 - \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,0)) )/6 + \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,1)) )/2 - \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6
+        -JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,0)) )/2 - \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,0)) )/6 + \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,1)) )/2 + \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/6 - \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2
+        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/6 + \
+        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        -sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2
+        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,1)) )/2 - \
+        sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/6 - \
+        sqrt(3)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6
+        -JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,0)) )/2 - \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,0)) )/6 - \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,1)) )/2 - \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6
+        JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,0)) )/2 - \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,0)) )/6 - \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,1)) )/2 + \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/6 - \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        -sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2
+        -sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(1,3,S(1)/2),(1,4,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/6 + \
+        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,0)) )/3 - \
+        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/3 - \
+        sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/6
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        -sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2
+        -sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(1)/2),(1,4,1)) )/3 + \
+        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/6 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2))) == \
-        -sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )/2
+        -sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,1)) )/2 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )/2
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2))) == \
-        JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2)) )
+        JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(1,3,S(3)/2),(1,4,2)) )
     # j1=S(1)/2, S(1)/2, S(1)/2, 1
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1))) == \
-        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) );
+        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) );
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0))) == \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/10
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/2 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1))) == \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/3 + \
-        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/3 + \
+        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1))) == \
-        2*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/10
+        2*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 + \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1))) == \
-        -sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/2 - \
+        sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/3 - \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/6 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/3 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 - \
+        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1))) == \
-        sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/3 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/10
+        sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/6 + \
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 + \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1))) == \
-        -JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/10
+        -sqrt(3)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/6 + \
+        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 - \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/3 + \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/6 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/3 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 + \
+        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/2 + \
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1))) == \
-        -sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        -sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/2 - \
+        sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/3 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/3 - \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/6 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/3 - \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 - \
+        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1))) == \
-        -sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/3 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/10
+        -sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/6 - \
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 + \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1))) == \
-        -JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/10
+        sqrt(3)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/6 - \
+        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 - \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/3 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/3 + \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/6 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/3 - \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 + \
+        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1))) == \
-        -sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        -sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(1,3,S(1)/2),(1,4,S(3)/2)) )/2 + \
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/6 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1))) == \
-        2*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/10
+        2*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 - \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/3 - \
-        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(1)/2)) )/3 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/3 - \
+        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1))) == \
-        -sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        -sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(1)/2),(1,4,S(3)/2)) )/3 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/2 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/10
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(1)/2)) )/2 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/10
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0))) == \
-        -sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )/5
+        -sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )/5
     assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1))) == \
-        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2)) )
-    # j1=1/2, j2=1/2, j3=1, j4=1
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1))) == \
-        JzKetCoupled(3,3, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(6)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/3 + \
-        sqrt(3)*JzKetCoupled(3,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(15)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/5 + \
-        sqrt(3)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/3 + \
-        sqrt(15)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(2)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(6)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(3)*JzKetCoupled(3,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0))) == \
-        JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(15)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(3)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))) == \
-        sqrt(6)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 + \
-        JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))) == \
-        -JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(15)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(3)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,0)) )/3 - \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/3 + \
-        sqrt(10)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,0)) )/3 + \
-        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(15)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(3)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,1))) == \
-        -JzKetCoupled(2,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(3)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 - \
-        sqrt(30)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/20 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 - \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 + \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,-1))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 - \
-        sqrt(2)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 + \
-        sqrt(30)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/20 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/6 - \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/12 + \
-        sqrt(2)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/4 + \
-        sqrt(5)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(30)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 - \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(30)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,0)) )/6 - \
-        sqrt(30)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(5)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,0)) )/6 + \
-        sqrt(30)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(30)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 - \
-        sqrt(2)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 + \
-        sqrt(30)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/20 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/12 - \
-        sqrt(2)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/4 + \
-        sqrt(5)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 - \
-        sqrt(30)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/20 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 + \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 - \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 + \
-        JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(3)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1))) == \
-        -JzKetCoupled(2,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(3)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 - \
-        sqrt(30)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/20 - \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 - \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 + \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 - \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 - \
-        sqrt(2)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 + \
-        sqrt(30)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/20 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/6 - \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/12 + \
-        sqrt(2)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/4 + \
-        sqrt(5)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(30)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 - \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(30)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,0)) )/6 - \
-        sqrt(30)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(5)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,0)) )/6 + \
-        sqrt(30)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(30)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 - \
-        sqrt(2)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 + \
-        sqrt(30)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/20 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/12 - \
-        sqrt(2)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/4 + \
-        sqrt(5)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 - \
-        sqrt(30)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/20 - \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 + \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/4 - \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1))) == \
-        -sqrt(2)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,0),(1,3,1)) )/2 + \
-        JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(3)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,1))) == \
-        JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(15)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(3)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(6)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,0)) )/3 - \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/3 + \
-        sqrt(10)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(3)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,0)) )/3 - \
-        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(15)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(3)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(6)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/6 - \
-        JzKetCoupled(2,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/2 + \
-        sqrt(10)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,0))) == \
-        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(15)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/10 - \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(3)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        2*sqrt(15)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(2)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(3)*JzKetCoupled(3,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(15)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/5 - \
-        sqrt(3)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/3 + \
-        sqrt(15)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/3 + \
-        sqrt(3)*JzKetCoupled(3,-2, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )/3
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,-1))) == \
-        JzKetCoupled(3,-3, (S(1)/2,S(1)/2,1,1), ((1,2,1),(1,3,2)) )
-    # j1=S(1)/2, 1, 1, 1
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1), JzKet(1,1))) == \
-        JzKetCoupled(S(7)/2,S(7)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(35)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/3 + \
-        sqrt(14)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        2*sqrt(35)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0), JzKet(1,0))) == \
-        3*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        3*sqrt(14)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(21)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,0), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/10 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(6)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/10 + \
-        4*sqrt(14)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1), JzKet(1,1))) == \
-        -2*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/30 + \
-        sqrt(6)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        2*sqrt(14)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(6)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        sqrt(14)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/70 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 + \
-        sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/6 + \
-        4*sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/10 + \
-        sqrt(3)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        3*sqrt(7)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1), JzKet(1,1))) == \
-        -2*sqrt(15)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(35)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1), JzKet(1,0))) == \
-        -2*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(6)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        3*sqrt(14)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(21)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,1), JzKet(1,-1))) == \
-        -sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/30 - \
-        sqrt(6)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        4*sqrt(14)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0), JzKet(1,1))) == \
-        -2*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        4*sqrt(14)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(21)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0), JzKet(1,0))) == \
-        -sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        2*sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        2*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(14)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(70)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,0), JzKet(1,-1))) == \
-        -2*sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        4*sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        6*sqrt(7)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1), JzKet(1,1))) == \
-        2*sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        8*sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/30 + \
-        2*sqrt(6)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        3*sqrt(14)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        4*sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        4*sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        4*sqrt(3)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(7)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 + \
-        4*sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        4*sqrt(3)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        4*sqrt(7)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1), JzKet(1,1))) == \
-        4*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/30 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(6)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(14)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1), JzKet(1,0))) == \
-        2*sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(6)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(14)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/70 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        2*sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/18 - \
-        8*sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/10 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(3)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        3*sqrt(7)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/90 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(6)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/30 - \
-        3*sqrt(14)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0), JzKet(1,0))) == \
-        sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        2*sqrt(15)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(3)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(7)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,0), JzKet(1,-1))) == \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 + \
-        2*sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(3)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        4*sqrt(7)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        4*sqrt(7)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/5 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        2*sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 + \
-        2*sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        2*sqrt(3)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        3*sqrt(7)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(70)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(30)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(70)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,1), JzKet(1,0))) == \
-        -sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        2*sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 - \
-        2*sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(3)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        3*sqrt(7)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,1), JzKet(1,-1))) == \
-        -sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(3)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        4*sqrt(7)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 - \
-        2*sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        4*sqrt(7)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,0), JzKet(1,0))) == \
-        -sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        2*sqrt(15)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(7)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/90 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/30 + \
-        3*sqrt(14)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,-1), JzKet(1,1))) == \
-        2*sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/18 - \
-        8*sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/10 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        2*sqrt(3)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        3*sqrt(7)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/18 - \
-        2*sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        2*sqrt(6)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(14)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/70 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(1,-1), JzKet(1,-1))) == \
-        -2*sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/6 + \
-        4*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/30 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        2*sqrt(6)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        2*sqrt(14)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,1), JzKet(1,1))) == \
-        4*sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        4*sqrt(3)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        4*sqrt(7)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,1), JzKet(1,0))) == \
-        4*sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        4*sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        4*sqrt(3)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(7)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        2*sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 - \
-        8*sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/30 - \
-        2*sqrt(6)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        3*sqrt(14)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        4*sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(3)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        6*sqrt(7)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,0), JzKet(1,0))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        2*sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/9 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/45 - \
-        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(14)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(70)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,0), JzKet(1,-1))) == \
-        -2*sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 - \
-        2*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 - \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        4*sqrt(14)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(21)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/30 + \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        4*sqrt(14)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,-1), JzKet(1,0))) == \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/5 - \
-        2*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/15 + \
-        2*sqrt(6)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        3*sqrt(14)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(21)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(1,-1), JzKet(1,-1))) == \
-        -sqrt(3)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(1)/2),(1,3,S(3)/2)) )/3 + \
-        2*sqrt(15)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        2*sqrt(35)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/6 + \
-        4*sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/10 - \
-        sqrt(3)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        3*sqrt(7)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,1), JzKet(1,0))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/6 + \
-        sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/3 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/15 - \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        sqrt(14)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/70 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(1)/2)) )/2 - \
-        2*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/30 - \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        2*sqrt(14)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/10 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        2*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/5 - \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/10 - \
-        4*sqrt(14)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,0), JzKet(1,0))) == \
-        3*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        2*sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/15 - \
-        sqrt(6)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 - \
-        3*sqrt(14)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        2*sqrt(21)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(15)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(3)/2)) )/5 + \
-        2*sqrt(35)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/35 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/3 - \
-        sqrt(14)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(35)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,-S(5)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(1,-1), JzKet(1,-1))) == \
-        JzKetCoupled(S(7)/2,-S(7)/2, (S(1)/2,1,1,1), ((1,2,S(3)/2),(1,3,S(5)/2)) )
-    # j1=1, 1, 1, 1
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,1), JzKet(1,1))) == \
-        JzKetCoupled(4,4, (1,1,1,1), ((1,2,2),(1,3,3)) )
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(3)*JzKetCoupled(3,3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2 + \
-        JzKetCoupled(4,3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7 + \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/2 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(6)*JzKetCoupled(3,3, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        sqrt(3)*JzKetCoupled(3,3, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        JzKetCoupled(4,3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0), JzKet(1,0))) == \
-        2*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 + \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0), JzKet(1,-1))) == \
-        sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/5 + \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 + \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,-1), JzKet(1,1))) == \
-        -JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 + \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        2*sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        2*sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 + \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 + \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(6)*JzKetCoupled(3,3, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        sqrt(3)*JzKetCoupled(3,3, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        JzKetCoupled(4,3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,1), JzKet(1,0))) == \
-        -JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 + \
-        sqrt(6)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,1), JzKet(1,-1))) == \
-        -sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(6)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 + \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,0), JzKet(1,1))) == \
-        -JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        2*sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(6)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,0), JzKet(1,0))) == \
-        -sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 - \
-        4*sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 + \
-        2*sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 + \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 - \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/4 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 - \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,0), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/4 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,1), JzKet(1,1))) == \
-        sqrt(3)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(6)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,0),(1,3,1)) )/6 + \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 - \
-        2*sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 + \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 + \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(6)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,0),(1,3,1)) )/6 - \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,0), JzKet(1,0))) == \
-        2*sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 - \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/15 - \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/5 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1), JzKet(1,1))) == \
-        -sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 + \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 + \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 - \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 - \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 - \
-        2*sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,1), JzKet(1,-1), JzKet(1,-1), JzKet(1,-1))) == \
-        2*sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(15)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(6)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(6)*JzKetCoupled(3,3, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        sqrt(3)*JzKetCoupled(3,3, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        JzKetCoupled(4,3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,1), JzKet(1,0))) == \
-        -JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 - \
-        sqrt(6)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,1), JzKet(1,-1))) == \
-        -sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(6)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 - \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,0), JzKet(1,1))) == \
-        -JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        2*sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(6)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,0), JzKet(1,0))) == \
-        -sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 - \
-        4*sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 + \
-        2*sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 + \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 - \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/4 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 - \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,1), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/4 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(3)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        2*sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(6)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,0),(1,3,1)) )/6 + \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 - \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        4*sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        2*sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 - \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 - \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        2*sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(6)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,0),(1,3,1)) )/6 - \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/15 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/35 - \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/5 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,0), JzKet(1,0))) == \
-        -2*sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 - \
-        2*sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/15 - \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35 + \
-        2*sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/15 - \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 - \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/15 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/35 + \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/5 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1), JzKet(1,1))) == \
-        -sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 - \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        2*sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 - \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 - \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        4*sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        2*sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,0), JzKet(1,-1), JzKet(1,-1))) == \
-        -2*sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(15)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,1)) )/15 + \
-        JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        2*sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/4 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 - \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 - \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 - \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/4 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 + \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 - \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 + \
-        2*sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 - \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,0), JzKet(1,0))) == \
-        sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/12 - \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 - \
-        4*sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,0), JzKet(1,-1))) == \
-        sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(15)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 - \
-        JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        2*sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 + \
-        sqrt(6)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 + \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/3 - \
-        JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 + \
-        sqrt(6)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,0), JzKet(1,-1), JzKet(1,-1), JzKet(1,-1))) == \
-        sqrt(2)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,1),(1,3,2)) )/2 + \
-        sqrt(6)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(3)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        JzKetCoupled(4,-3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,1), JzKet(1,1))) == \
-        sqrt(3)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(35)*JzKetCoupled(2,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(6)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        JzKetCoupled(3,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,2, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,0),(1,3,1)) )/6 + \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 - \
-        2*sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 + \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 + \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(6)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,0),(1,3,1)) )/6 - \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,0), JzKet(1,0))) == \
-        2*sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 - \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/15 - \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/5 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 - \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,-1), JzKet(1,1))) == \
-        -sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 + \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 + \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 - \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/60 - \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 - \
-        2*sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,1), JzKet(1,-1), JzKet(1,-1))) == \
-        2*sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,0),(1,3,1)) )/3 - \
-        sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(15)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,1)) )/30 + \
-        JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(6)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(10)*JzKetCoupled(1,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(30)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/4 + \
-        sqrt(70)*JzKetCoupled(2,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(30)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(10)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 - \
-        sqrt(5)*JzKetCoupled(3,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,1), JzKet(1,0))) == \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 - \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 - \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/12 + \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 - \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/4 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/70 - \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/10 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0), JzKet(1,1))) == \
-        sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 - \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 - \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 + \
-        2*sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(5)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 - \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/35
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0), JzKet(1,0))) == \
-        sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/20 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/12 - \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/20 + \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/12 - \
-        4*sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/15 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(15)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 - \
-        JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        2*sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(6)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(6)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 - \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 - \
-        sqrt(30)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/30 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,-1), JzKet(1,0))) == \
-        sqrt(3)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/3 - \
-        JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 - \
-        sqrt(6)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,1),(1,3,2)) )/6 + \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,0), JzKet(1,-1), JzKet(1,-1))) == \
-        -sqrt(2)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,1),(1,3,2)) )/2 + \
-        sqrt(6)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(3)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        JzKetCoupled(4,-3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,1), JzKet(1,1))) == \
-        -sqrt(30)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 - \
-        sqrt(10)*JzKetCoupled(1,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(10)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 + \
-        sqrt(6)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 + \
-        sqrt(210)*JzKetCoupled(2,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(15)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(30)*JzKetCoupled(3,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(70)*JzKetCoupled(4,0, (1,1,1,1), ((1,2,2),(1,3,3)) )/70
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,1), JzKet(1,0))) == \
-        -sqrt(30)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 + \
-        sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/10 + \
-        sqrt(30)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,1)) )/10 + \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/6 - \
-        2*sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        2*sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/30 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,1), JzKet(1,-1))) == \
-        sqrt(15)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,1)) )/5 - \
-        JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/105 - \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,0), JzKet(1,1))) == \
-        -sqrt(10)*JzKetCoupled(1,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/5 + \
-        sqrt(2)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        sqrt(70)*JzKetCoupled(2,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 - \
-        sqrt(10)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(3,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        sqrt(7)*JzKetCoupled(4,-1, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,0), JzKet(1,0))) == \
-        2*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/21 - \
-        sqrt(2)*JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 - \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/3 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,0), JzKet(1,-1))) == \
-        -sqrt(6)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,2),(1,3,2)) )/3 + \
-        sqrt(3)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,2),(1,3,3)) )/6 + \
-        JzKetCoupled(4,-3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,-1), JzKet(1,1))) == \
-        sqrt(35)*JzKetCoupled(2,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/7 - \
-        JzKetCoupled(3,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/2 + \
-        sqrt(7)*JzKetCoupled(4,-2, (1,1,1,1), ((1,2,2),(1,3,3)) )/14
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,-1), JzKet(1,0))) == \
-        -sqrt(3)*JzKetCoupled(3,-3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2 + \
-        JzKetCoupled(4,-3, (1,1,1,1), ((1,2,2),(1,3,3)) )/2
-    assert couple(TensorProduct(JzKet(1,-1), JzKet(1,-1), JzKet(1,-1), JzKet(1,-1))) == \
-        JzKetCoupled(4,-4, (1,1,1,1), ((1,2,2),(1,3,3)) )
-    # j1=1/2, j2=1/2, j3=1/2, j4=3/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        JzKetCoupled(3,3, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(2)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        sqrt(2)*JzKetCoupled(3,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        sqrt(30)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        sqrt(5)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        3*sqrt(5)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
-        JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        sqrt(5)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(6)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(6)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(30)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/2 + \
-        sqrt(5)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/2 + \
-        sqrt(10)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        -sqrt(6)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        -sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/12 - \
-        sqrt(30)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 - \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/4 + \
-        sqrt(5)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/2 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 + \
-        JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/2 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 - \
-        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/4 + \
-        sqrt(10)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 - \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/12 + \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/4 + \
-        sqrt(10)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 + \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 + \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/12 - \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 + \
-        JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/12 - \
-        sqrt(30)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15 + \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 + \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/4 + \
-        sqrt(5)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(2)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        -sqrt(6)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        -sqrt(6)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/12 - \
-        sqrt(30)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15 - \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 - \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/4 + \
-        sqrt(5)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 - \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/2 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 - \
-        JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/2 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        -sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 - \
-        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/4 + \
-        sqrt(10)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 - \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 - \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/12 + \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/4 + \
-        sqrt(10)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 - \
-        sqrt(2)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 + \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/12 - \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 - \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 - \
-        JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/12 - \
-        sqrt(30)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15 - \
-        sqrt(6)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/4 + \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/4 + \
-        sqrt(5)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        -sqrt(2)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,0),(1,3,S(1)/2)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/2 + \
-        sqrt(10)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 - \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(3)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(15)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/30 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/3 - \
-        sqrt(3)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(15)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        sqrt(6)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/6 - \
-        sqrt(30)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/15 - \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/2 + \
-        sqrt(5)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        -sqrt(6)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(1)/2)) )/3 + \
-        sqrt(6)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(3,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(3)/2))) == \
-        -JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        3*sqrt(5)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 - \
-        JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        sqrt(5)*JzKetCoupled(3,0, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(30)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/10 - \
-        sqrt(2)*JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        sqrt(5)*JzKetCoupled(3,-1, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(2)*JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2 + \
-        sqrt(2)*JzKetCoupled(3,-2, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(3)/2,S(-3)/2))) == \
-        JzKetCoupled(3,-3, (S(1)/2,S(1)/2,S(1)/2,S(3)/2), ((1,2,1),(1,3,S(3)/2)) )
-    # j1=S(1)/2, S(1)/2, 1, S(3)/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(3)/2,S(3)/2))) == \
-        JzKetCoupled(S(7)/2,S(7)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(3)/2,S(1)/2))) == \
-        2*sqrt(7)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(3)/2,S(-1)/2))) == \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 + \
-        4*sqrt(35)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(10)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 + \
-        sqrt(210)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(2)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(42)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/14 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/5 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(70)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(3)/2,S(-1)/2))) == \
-        sqrt(3)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/6 - \
-        sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 + \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/15 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(35)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/14 + \
-        sqrt(210)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(3)/2,S(-3)/2))) == \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(5)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/5 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        3*sqrt(105)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(3)/2,S(3)/2))) == \
-        -sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/5 - \
-        sqrt(105)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(3)/2,S(1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/6 + \
-        sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/3 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/30 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(70)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(105)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/6 - \
-        sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/3 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/30 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(70)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(105)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/3 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/5 + \
-        sqrt(105)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(3)/2,S(3)/2))) == \
-        -JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(21)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/14 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(3)/2,S(1)/2))) == \
-        -sqrt(10)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(35)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/12 - \
-        sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/20 + \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/15 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/15 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/20 + \
-        sqrt(70)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/28 + \
-        sqrt(105)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(3)/2,S(-3)/2))) == \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/2 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/4 + \
-        sqrt(10)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/20 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/5 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/20 + \
-        3*sqrt(210)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/140 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/5 - \
-        sqrt(210)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/6 - \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(35)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(210)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/6 - \
-        sqrt(15)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 + \
-        sqrt(35)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(210)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/6 + \
-        sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/5 + \
-        sqrt(210)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/4 - \
-        sqrt(10)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/20 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/20 - \
-        3*sqrt(210)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/140 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/12 + \
-        sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/20 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/15 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/20 - \
-        sqrt(70)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/28 + \
-        sqrt(105)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/5 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(35)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(2)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/2 + \
-        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(21)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/14 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(3)/2,S(3)/2))) == \
-        -JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(21)*JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/14 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(3)/2,S(1)/2))) == \
-        -sqrt(10)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(35)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/12 - \
-        sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/20 - \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/15 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/15 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/20 + \
-        sqrt(70)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/28 + \
-        sqrt(105)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1), JzKet(S(3)/2,S(-3)/2))) == \
-        -JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/2 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/4 + \
-        sqrt(10)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/20 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/5 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/20 + \
-        3*sqrt(210)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/140 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/5 - \
-        sqrt(210)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(15)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/6 - \
-        sqrt(15)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(35)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(210)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(3)/2,S(-1)/2))) == \
-        -sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/6 - \
-        sqrt(15)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 + \
-        sqrt(35)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(210)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0), JzKet(S(3)/2,S(-3)/2))) == \
-        -sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/6 + \
-        sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/15 - \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/5 + \
-        sqrt(210)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(42)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/4 - \
-        sqrt(10)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/20 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/20 - \
-        3*sqrt(210)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/140 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/12 + \
-        sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/20 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/15 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 + \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/20 - \
-        sqrt(70)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/28 + \
-        sqrt(105)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(3)/2,S(-1)/2))) == \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/5 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/10 + \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(35)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1), JzKet(S(3)/2,S(-3)/2))) == \
-        -sqrt(2)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,0),(1,3,1)) )/2 + \
-        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(21)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/14 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(3)/2,S(3)/2))) == \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/5 - \
-        sqrt(105)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/6 + \
-        sqrt(30)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/3 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/30 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(70)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(105)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(3)/2,S(-1)/2))) == \
-        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/6 - \
-        sqrt(30)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/3 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/30 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(70)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(105)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1), JzKet(S(3)/2,S(-3)/2))) == \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,0)) )/3 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/30 - \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/5 + \
-        sqrt(105)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/21
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(3)/2,S(3)/2))) == \
-        -JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/2 - \
-        sqrt(5)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/5 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 - \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        3*sqrt(105)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(70)*JzKetCoupled(S(7)/2,S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(3)/2,S(1)/2))) == \
-        -sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/6 + \
-        sqrt(15)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/10 + \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/15 - \
-        sqrt(15)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(35)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/14 + \
-        sqrt(210)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(3)/2,S(-1)/2))) == \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/5 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 - \
-        sqrt(30)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/10 - \
-        sqrt(70)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/70 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0), JzKet(S(3)/2,S(-3)/2))) == \
-        -sqrt(2)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,1)) )/2 + \
-        sqrt(42)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/14 + \
-        sqrt(14)*JzKetCoupled(S(7)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(3)/2,S(3)/2))) == \
-        -sqrt(10)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 - \
-        sqrt(210)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(35)*JzKetCoupled(S(7)/2,-S(1)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(3)/2,S(1)/2))) == \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/5 - \
-        4*sqrt(35)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/35 + \
-        sqrt(7)*JzKetCoupled(S(7)/2,-S(3)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(3)/2,S(-1)/2))) == \
-        -2*sqrt(7)*JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7 + \
-        sqrt(21)*JzKetCoupled(S(7)/2,-S(5)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )/7
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1), JzKet(S(3)/2,S(-3)/2))) == \
-        JzKetCoupled(S(7)/2,-S(7)/2, (S(1)/2,S(1)/2,1,S(3)/2), ((1,2,1),(1,3,2)) )
+        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(1,3,S(3)/2),(1,4,S(5)/2)) )
     # Couple j1 to j2, j3 to j4
     # j1=1/2, j2=1/2, j3=1/2, j4=1/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4)) ) == \
-        JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4)) ) == \
-        sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0)) )/2 + \
-        JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0)) )/2 + \
-        JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4)) ) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/3 + \
-        sqrt(2)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4)) ) == \
-        sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1)) )/2 - \
-        JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4)) ) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1)) )/2 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4)) ) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1)) )/2 - \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4)) ) == \
-        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1)) )/2 + \
-        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1)) )/2 - \
-        JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4)) ) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6 - \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1)) )/2 + \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4)) ) == \
-        -sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6 - \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1)) )/2 - \
-        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1)) )/2 + \
-        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4)) ) == \
-        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/3 - \
-        sqrt(2)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/6
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4)) ) == \
-        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0)) )/2 - \
-        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0)) )/2 - \
-        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2 + \
-        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )/2
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4)) ) == \
-        JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1)) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        JzKetCoupled(2,2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0),(1,3,1)) )/2 + \
+        JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0),(1,3,1)) )/2 + \
+        JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,0)) )/3 + \
+        sqrt(2)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/6
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1),(1,3,1)) )/2 - \
+        JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,0),(1,3,0)) )/2 - \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,0)) )/6 + \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0),(1,3,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/6
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        -JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,0),(1,3,0)) )/2 - \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,0)) )/6 + \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1),(1,3,1)) )/2 - \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0),(1,3,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/6
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(2)*JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1),(1,3,1)) )/2 - \
+        JzKetCoupled(1,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2,1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        -JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,0),(1,3,0)) )/2 - \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,0)) )/6 - \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0),(1,3,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/6
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,0),(1,3,0)) )/2 - \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,0)) )/6 - \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1),(1,3,1)) )/2 - \
+        JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0),(1,3,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/6
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,0),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(3)*JzKetCoupled(0,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,0)) )/3 - \
+        sqrt(2)*JzKetCoupled(1,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        sqrt(6)*JzKetCoupled(2,0, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/6
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0),(1,3,1)) )/2 - \
+        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(2)*JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,0),(1,3,1)) )/2 - \
+        JzKetCoupled(1,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,1)) )/2 + \
+        JzKetCoupled(2,-1, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )/2
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2)), ((1,2),(3,4),(1,3)) ) == \
+        JzKetCoupled(2,-2, (S(1)/2,S(1)/2,S(1)/2,S(1)/2), ((1,2,1),(3,4,1),(1,3,2)) )
     # j1=S(1)/2, S(1)/2, S(1)/2, 1
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,2),(3,4)) ) == \
-        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,2),(3,4)) ) == \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,2),(3,4)) ) == \
-        2*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,2),(3,4)) ) == \
-        -sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/3 - \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        4*sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4)) ) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/2 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,2),(3,4)) ) == \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/2 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/6 - \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/3 + \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,2),(3,4)) ) == \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/30 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,2),(3,4)) ) == \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/6 + \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/30 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/6 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/3 + \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/3 - \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4)) ) == \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/2 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/2 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/6 - \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/3 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/3 + \
-        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,2),(3,4)) ) == \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/6 + \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/30 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,2),(3,4)) ) == \
-        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/6 - \
-        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/30 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/6 - \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/3 - \
-        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/3 - \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2)) )/2 + \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,2),(3,4)) ) == \
-        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/2 - \
-        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,2),(3,4)) ) == \
-        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/3 + \
-        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        4*sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,2),(3,4)) ) == \
-        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,2),(3,4)) ) == \
-        2*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 + \
-        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/6 - \
-        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/10
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,2),(3,4)) ) == \
-        -sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2)) )/3 - \
-        2*sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/15 + \
-        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )/5
-    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4)) ) == \
-        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2)) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,2),(3,4),(1,3)) ) == \
+        JzKetCoupled(S(5)/2,S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        2*sqrt(15)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
+        2*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(6)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/3 - \
+        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        4*sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/2 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/2 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(1)/2),(1,3,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/6 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/3 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/3 + \
+        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/6 + \
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/30 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(3)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/6 + \
+        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/30 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(1)/2),(1,3,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/6 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/3 + \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/3 - \
+        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/2 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(2)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/2 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(6)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(1)/2),(1,3,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/6 - \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(3)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/3 + \
+        JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        sqrt(5)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(3)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/6 - \
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/6 + \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/30 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(3)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/6 - \
+        sqrt(6)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/30 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(6)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(1)/2),(1,3,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/6 - \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/3 - \
+        sqrt(3)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/3 - \
+        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 + \
+        sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(2)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,0),(3,4,S(3)/2),(1,3,S(3)/2)) )/2 + \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/10 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,1)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(2)*JzKetCoupled(S(1)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/2 - \
+        sqrt(10)*JzKetCoupled(S(3)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/5 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,0)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/3 + \
+        JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        4*sqrt(5)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
+        sqrt(6)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        sqrt(30)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(5)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,1)), ((1,2),(3,4),(1,3)) ) == \
+        2*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(1)/2)) )/3 + \
+        sqrt(2)*JzKetCoupled(S(1)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(1)/2)) )/6 - \
+        sqrt(2)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        2*sqrt(10)*JzKetCoupled(S(3)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(1)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/10
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,0)), ((1,2),(3,4),(1,3)) ) == \
+        -sqrt(3)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(1)/2),(1,3,S(3)/2)) )/3 - \
+        2*sqrt(15)*JzKetCoupled(S(3)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(3)/2)) )/15 + \
+        sqrt(10)*JzKetCoupled(S(5)/2,-S(3)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )/5
+    assert couple(TensorProduct(JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(S(1)/2,S(-1)/2), JzKet(1,-1)), ((1,2),(3,4),(1,3)) ) == \
+        JzKetCoupled(S(5)/2,-S(5)/2, (S(1)/2,S(1)/2,S(1)/2,1), ((1,2,1),(3,4,S(3)/2),(1,3,S(5)/2)) )
     # Symbolic
     assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2))) == \
         Sum(CG(j1,m1,j2,m2,j,m1+m2) * JzKetCoupled(j, m1+m2, (j1,j2)), (j,m1+m2,j1+j2))
-    #assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3))) == \
-    #    Sum(CG(j1,m1,j2,m2,j12,m1+m2) * CG(j12,m1+m2,j3,m3,j,m1+m2+m3) * \
-    #        JzKetCoupled(j, m1+m2+m3, (j1,j2,j3)), \
-    #        (j12, m1 + m2, j1 + j2), (j, m1 + m2 + m3, j12 + j3))
-    assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3)), ((1,3),) ) == \
+    assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3))) == \
+        Sum(CG(j1,m1,j2,m2,j12,m1+m2) * CG(j12,m1+m2,j3,m3,j,m1+m2+m3) * \
+            JzKetCoupled(j, m1+m2+m3, (j1,j2,j3), ((1,2,j12),(1,3,j)) ), \
+            (j12, m1 + m2, j1 + j2), (j, m1 + m2 + m3, j12 + j3))
+    assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3)), ((1,3),(1,2)) ) == \
         Sum(CG(j1,m1,j3,m3,j13,m1+m3) * CG(j13,m1+m3,j2,m2,j,m1+m2+m3) * \
-            JzKetCoupled(j, m1+m2+m3, (j1,j2,j3), ((1,3,j13),) ), \
+            JzKetCoupled(j, m1+m2+m3, (j1,j2,j3), ((1,3,j13),(1,2,j)) ), \
             (j13, m1+m3, j1+j3), (j, m1+m2+m3, j13+j2))
-    #assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4))) == \
-    #    Sum(CG(j1,m1,j2,m2,j12,m1+m2) * CG(j12,m1+m2,j3,m3,j123,m1+m2+m3) * CG(j123,m1+m2+m3,j4,m4,j,m) * \
-    #        JzKetCoupled(j, m1+m2+m3+m4, (j1,j2,j3,j4)), \
-    #        (j12, m1+m2, j1+j2), (j123, m1+m2+m3, j1+j2+j3), (j, m1+m2+m3+m4, j123+j4))
-    #assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4)), ((1,2),(3,4)) ) == \
-    #    Sum(CG(j1,m1,j2,m2,j12,m1+m2) * CG(j3,m3,j4,m4,j34,m3+m4) * CG(j12,m1+m2,j34,m3+m4,j,m) * \
-    #        JzKetCoupled(j, m1+m2+m3+m4, (j1,j2,j3,j4), ((1,2,j12),(3,4,j34)) ), \
-    #        (j12, m1+m2, j1+j2), (j34, m4+m4, j3+j4), (j, m1+m2+m3+m4, j12+j34))
-    #assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4)), ((1,3),(1,4)) ) == \
-    #    Sum(CG(j1,m1,j3,m3,j13,m1+m3) * CG(j13,m1+m3,j4,m4,j134,m1+m3+m4) * CG(j134,m1+m3+m4,j2,m2,j,m) * \
-    #        JzKetCoupled(j, m1+m2+m3+m4, (j1,j2,j3,j4), ((1,3,j13),(1,4,j134)) ), \
-    #        (j13, m1+m3, j1+j3), (j134, m1+m3+m4, j1+j3+j4), (j, m1+m2+m3+m4, j134+j2))
+    assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4))) == \
+        Sum(CG(j1,m1,j2,m2,j12,m1+m2) * CG(j12,m1+m2,j3,m3,j123,m1+m2+m3) * CG(j123,m1+m2+m3,j4,m4,j,m1+m2+m3+m4) * \
+            JzKetCoupled(j, m1+m2+m3+m4, (j1,j2,j3,j4), ((1,2,j12),(1,3,j123),(1,4,j)) ), \
+            (j12, m1+m2, j1+j2), (j123, m1+m2+m3, j12+j3), (j, m1+m2+m3+m4, j123+j4))
+    assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4)), ((1,2),(3,4),(1,3)) ) == \
+        Sum(CG(j1,m1,j2,m2,j12,m1+m2) * CG(j3,m3,j4,m4,j34,m3+m4) * CG(j12,m1+m2,j34,m3+m4,j,m1+m2+m3+m4) * \
+            JzKetCoupled(j, m1+m2+m3+m4, (j1,j2,j3,j4), ((1,2,j12),(3,4,j34),(1,3,j)) ), \
+            (j12, m1+m2, j1+j2), (j34, m3+m4, j3+j4), (j, m1+m2+m3+m4, j12+j34))
+    assert couple(TensorProduct(JzKet(j1,m1), JzKet(j2,m2), JzKet(j3,m3), JzKet(j4,m4)), ((1,3),(1,4),(1,2)) ) == \
+        Sum(CG(j1,m1,j3,m3,j13,m1+m3) * CG(j13,m1+m3,j4,m4,j134,m1+m3+m4) * CG(j134,m1+m3+m4,j2,m2,j,m1+m2+m3+m4) * \
+            JzKetCoupled(j, m1+m2+m3+m4, (j1,j2,j3,j4), ((1,3,j13),(1,4,j134),(1,2,j)) ), \
+            (j13, m1+m3, j1+j3), (j134, m1+m3+m4, j13+j4), (j, m1+m2+m3+m4, j134+j2))
 
 def test_innerproduct():
     assert InnerProduct(JzBra(1,1), JzKet(1,1)).doit() == 1
