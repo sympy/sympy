@@ -13,6 +13,9 @@ The main purpose of this module is the computation of limits.
 
 .. autofunction:: sympy.series.limits.limit
 
+.. autoclass:: sympy.series.limits.Limit
+   :members:
+
 As is explained above, the workhorse for limit computations is the
 function gruntz() which implements Gruntz' algorithm for computing limits.
 
@@ -93,6 +96,34 @@ important points that have not been explained are:
 If you are interested, be sure to take a look at
 `Gruntz Thesis <http://www.cybertester.com/data/gruntz.pdf>`_.
 
+Reference
+"""""""""
+
+.. autofunction:: sympy.series.gruntz.gruntz
+
+.. autofunction:: sympy.series.gruntz.compare
+
+.. autofunction:: sympy.series.gruntz.rewrite
+
+.. autofunction:: sympy.series.gruntz.build_expression_tree
+
+.. autofunction:: sympy.series.gruntz.mrv_leadterm
+
+.. autofunction:: sympy.series.gruntz.calculate_series
+
+.. autofunction:: sympy.series.gruntz.limitinf
+
+.. autofunction:: sympy.series.gruntz.sign
+
+.. autofunction:: sympy.series.gruntz.mrv
+
+.. autofunction:: sympy.series.gruntz.mrv_max1
+
+.. autofunction:: sympy.series.gruntz.mrv_max3
+
+.. autoclass:: sympy.series.gruntz.SubsSet
+   :members:
+
 
 More Intuitive Series Expansion
 -------------------------------
@@ -107,6 +138,11 @@ Examples
     >>> x = Symbol('x')
     >>> series(cos(x),x)
     1 - x**2/2 + x**4/24 + O(x**6)
+
+Reference
+^^^^^^^^^
+
+.. autofunction:: sympy.series.series.series
 
 Order Terms
 -----------
@@ -123,12 +159,30 @@ Examples
      >>> Order(x) + 1
      1 + O(x)
 
+Reference
+^^^^^^^^^
+
+.. autoclass:: sympy.series.order.Order
+   :members:
+
 Series Acceleration
 -------------------
 
 TODO
 
+Reference
+^^^^^^^^^
+
+.. autofunction:: sympy.series.acceleration.richardson
+
+.. autofunction:: sympy.series.acceleration.shanks
+
 Residues
 --------
 
 TODO
+
+Reference
+^^^^^^^^^
+
+.. autofunction:: sympy.series.residues.residue
