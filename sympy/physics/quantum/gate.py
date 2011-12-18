@@ -427,7 +427,27 @@ class CGate(Gate):
     #-------------------------------------------------------------------------
 
     def _eval_dagger(self):
-        return CGate(self.controls, Dagger(self.gate))
+        if isinstance(self.gate, HermitianOperator):
+            return self
+        else:
+            return Gate._eval_dagger(self)
+
+    def _eval_inverse(self):
+        if isinstance(self.gate, HermitianOperator):
+            return self
+        else:
+            return Gate._eval_inverse(self)
+
+    def _eval_power(self, exp):
+        if isinstance(self.gate, HermitianOperator):
+            if exp == -1:
+                return Gate._eval_power(self, exp)
+            elif abs(exp) % 2 == 0:
+                return self*(Gate._eval_inverse(self))
+            else:
+                return self
+        else:
+            return Gate._eval_power(self, exp)
 
 class UGate(Gate):
     """General gate specified by a set of targets and a target matrix.
@@ -775,7 +795,7 @@ Phase = S = PhaseGate
 #-----------------------------------------------------------------------------
 
 
-class CNotGate(CGate, TwoQubitGate):
+class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     """Two qubit controlled-NOT.
 
     This gate performs the NOT or X gate on the target qubit if the control
