@@ -626,11 +626,11 @@ class SymPyTests(object):
 
     def _timeout(self, function, timeout):
         def callback(x,y):
+            signal.alarm(0)
             raise Skipped("Timeout")
         handler = signal.signal(signal.SIGALRM, callback)
         signal.alarm(timeout) # Set an alarm with a given timeout
         function()
-        signal.signal(signal.SIGALRM, handler)
         signal.alarm(0) # Disable the alarm
 
     def matches(self, x):
