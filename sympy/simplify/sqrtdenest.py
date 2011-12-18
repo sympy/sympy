@@ -216,8 +216,6 @@ def _sqrtdenest(expr):
         return expr
     av0 = [a, b, r, d2]
     z = _denester([radsimp(expr**2)], av0, 0, sqrt_depth(expr)-1)[0]
-    if av0[1] == None:
-        return expr
     if z != None:
         return z
     return expr
@@ -339,8 +337,6 @@ def _denester (nested, av0, h, max_depth_level):
     from sympy.simplify.simplify import radsimp
     if h > max_depth_level:
         return None, None
-    if av0[1] == None:
-        return None, None
     #If none of the arguments are nested
     if av0[0] == None and all(n.is_Number for n in nested): #If none of the arguments are nested
         for f in subsets(len(nested)): #Test subset 'f' of nested
@@ -364,7 +360,6 @@ def _denester (nested, av0, h, max_depth_level):
                 if v[2]: #Since if b=0, r is not defined
                     if R is not None:
                         if R != v[2]:
-                            av0[1] = None
                             return None, None
                         #assert R == v[2] #All the 'r's should be the same.
                     else:
@@ -389,7 +384,6 @@ def _denester (nested, av0, h, max_depth_level):
                 if vad <= 0:
                     return sqrt(nested[-1]), [0]*len(nested) #Otherwise, return the radicand from the previous invocation.
                 if not(sqrt_depth(vad) < sqrt_depth(R) + 1 or (vad**2).is_Number):
-                    av0[1] = None
                     return None, None
 
                 vad1 = radsimp(1/vad)

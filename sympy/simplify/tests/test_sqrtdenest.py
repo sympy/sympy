@@ -13,7 +13,8 @@ def test_sqrtdenest():
         sqrt(3+sqrt(5+2*sqrt(7))):
             3*sqrt(2)*(5 + 2*sqrt(7))**(S(1)/4)/(2*sqrt(6 + 3*sqrt(7))) +
             sqrt(2)*sqrt(6 + 3*sqrt(7))/(2*(5 + 2*sqrt(7))**(S(1)/4)),
-        sqrt(3+2*sqrt(3)): 3**(S(3)/4)*(sqrt(6)/2 + 3*sqrt(2)/2)/3}
+        sqrt(3+2*sqrt(3)): 3**(S(3)/4)*(sqrt(6)/2 + 3*sqrt(2)/2)/3,
+        sqrt(sqrt(5) + sqrt(14)): sqrt(sqrt(5) + sqrt(14))}
     for i in d:
         assert sqrtdenest(i) == d[i]
 
