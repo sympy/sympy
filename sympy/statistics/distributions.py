@@ -134,10 +134,9 @@ class Normal(ContinuousProbability):
         ========
 
             >>> from sympy.statistics import Normal
-            >>> from sympy import Symbol
             >>> Normal(1, 2).pdf(0)
             sqrt(2)*exp(-1/8)/(4*sqrt(pi))
-            >>> x = Symbol('x')
+            >>> from sympy.abc import x
             >>> Normal(1, 2).pdf(x)
             sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))
 
@@ -153,10 +152,9 @@ class Normal(ContinuousProbability):
         ========
 
             >>> from sympy.statistics import Normal
-            >>> from sympy import Symbol
             >>> Normal(1, 2).cdf(0)
             -erf(sqrt(2)/4)/2 + 1/2
-            >>> x = Symbol('x')
+            >>> from sympy.abc import x
             >>> Normal(1, 2).cdf(x)
             erf(sqrt(2)*(x - 1)/4)/2 + 1/2
 
@@ -218,10 +216,9 @@ class Normal(ContinuousProbability):
         ========
 
             >>> from sympy.statistics import Normal
-            >>> from sympy import symbols
             >>> Normal.fit([1,2,3,4,5])
             Normal(3, sqrt(2))
-            >>> x, y = symbols('x y')
+            >>> from sympy.abc import x, y
             >>> Normal.fit([x, y])
             Normal(x/2 + y/2, sqrt((-x/2 + y/2)**2/2 + (x/2 - y/2)**2/2))
 
@@ -420,8 +417,8 @@ class PDF(ContinuousProbability):
         ========
 
             >>> from sympy.statistics.distributions import PDF
-            >>> from sympy import symbols, exp, oo
-            >>> x, y = symbols('x y')
+            >>> from sympy import exp, oo
+            >>> from sympy.abc import x, y
             >>> PDF(exp(-x/y), (x,0,oo)).cdf(4)
             y - y*exp(-4/y)
             >>> PDF(2*x + y, (x, 10, oo)).cdf(0)
@@ -481,8 +478,8 @@ class PDF(ContinuousProbability):
         ========
 
             >>> from sympy.statistics.distributions import PDF
-            >>> from sympy import symbols, oo
-            >>> x, y = symbols('x y')
+            >>> from sympy import oo
+            >>> from sympy.abc import x, y
             >>> PDF(2*x + y, (x, 10, oo)).transform(x, y)
             PDF(0, ((_w,), x, x))
 
