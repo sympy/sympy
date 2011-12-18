@@ -10,6 +10,16 @@ class Sample(tuple):
     Sample parameters like mean, variance and stddev can be accessed as
     properties.
     The sample will be sorted.
+
+    Examples
+    ========
+
+        >>> from sympy.statistics.distributions import Sample
+        >>> Sample([0, 1, 2, 3])
+        Sample([0, 1, 2, 3])
+        >>> Sample([8, 3, 2, 4, 1, 6, 9, 2])
+        Sample([1, 2, 2, 3, 4, 6, 8, 9])
+
     """
     def __new__(cls, sample):
         s = tuple.__new__(cls, sorted(sample))
@@ -33,14 +43,39 @@ class ContinuousProbability(object):
     """Base class for continuous probability distributions"""
 
     def probability(s, a, b):
-        """Calculate the probability that a random number x generated
-        from the distribution satisfies a <= x <= b """
+        """
+        Calculate the probability that a random number x generated
+        from the distribution satisfies a <= x <= b
+
+        Examples
+        ========
+
+            >>> from sympy.statistics import Normal
+            >>> from sympy.core import oo
+            >>> Normal(0, 1).probability(-1, 1)
+            erf(sqrt(2)/2)
+            >>> Normal(0, 1).probability(1, oo)
+            -erf(sqrt(2)/2)/2 + 1/2
+
+        """
         return s.cdf(b) - s.cdf(a)
 
     def random(s, n=None):
         """
         random() -- generate a random number from the distribution.
         random(n) -- generate a Sample of n random numbers.
+
+        Examples
+        ========
+
+            >>> from sympy.statistics import Uniform
+            >>> x = Uniform(1, 5).random()
+            >>> x < 5 and x > 1
+            True
+            >>> x = Uniform(-4, 2).random()
+            >>> x < 2 and x > -4
+            True
+
         """
         if n is None:
             return s._random()
@@ -92,12 +127,40 @@ class Normal(ContinuousProbability):
     variance = property(lambda s: s.sigma**2)
 
     def pdf(s, x):
-        """Return the probability density function as an expression in x"""
+        """
+        Return the probability density function as an expression in x
+
+        Examples
+        ========
+
+            >>> from sympy.statistics import Normal
+            >>> from sympy import Symbol
+            >>> Normal(1, 2).pdf(0)
+            sqrt(2)*exp(-1/8)/(4*sqrt(pi))
+            >>> x = Symbol('x')
+            >>> Normal(1, 2).pdf(x)
+            sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))
+
+        """
         x = sympify(x)
         return 1/(s.sigma*sqrt(2*pi)) * exp(-(x-s.mu)**2 / (2*s.sigma**2))
 
     def cdf(s, x):
-        """Return the cumulative density function as an expression in x"""
+        """
+        Return the cumulative density function as an expression in x
+
+        Examples
+        ========
+
+            >>> from sympy.statistics import Normal
+            >>> from sympy import Symbol
+            >>> Normal(1, 2).cdf(0)
+            -erf(sqrt(2)/4)/2 + 1/2
+            >>> x = Symbol('x')
+            >>> Normal(1, 2).cdf(x)
+            erf(sqrt(2)*(x - 1)/4)/2 + 1/2
+
+        """
         x = sympify(x)
         return (1+erf((x-s.mu)/(s.sigma*sqrt(2))))/2
 
@@ -147,8 +210,22 @@ class Normal(ContinuousProbability):
 
     @staticmethod
     def fit(sample):
-        """Create a normal distribution fit to the mean and standard
-        deviation of the given distribution or sample."""
+        """
+        Create a normal distribution fit to the mean and standard
+        deviation of the given distribution or sample.
+
+        Examples
+        ========
+
+            >>> from sympy.statistics import Normal
+            >>> from sympy import symbols
+            >>> Normal.fit([1,2,3,4,5])
+            Normal(3, sqrt(2))
+            >>> x, y = symbols('x y')
+            >>> Normal.fit([x, y])
+            Normal(x/2 + y/2, sqrt((-x/2 + y/2)**2/2 + (x/2 - y/2)**2/2))
+
+        """
         if not hasattr(sample, "stddev"):
             sample = Sample(sample)
         return Normal(sample.mean, sample.stddev)
@@ -171,7 +248,19 @@ class Uniform(ContinuousProbability):
     stddev = property(lambda s: sqrt(s.variance))
 
     def pdf(s, x):
-        """Return the probability density function as an expression in x"""
+        """
+        Return the probability density function as an expression in x
+
+        Examples
+        ========
+
+            >>> from sympy.statistics import Uniform
+            >>> Uniform(1, 5).pdf(1)
+            1/4
+            >>> Uniform(2, 4).pdf(2)
+            1/2
+
+        """
         x = sympify(x)
         if not x.is_Number:
             raise NotImplementedError("SymPy does not yet support"
@@ -181,7 +270,19 @@ class Uniform(ContinuousProbability):
         return 1/(s.b-s.a)
 
     def cdf(s, x):
-        """Return the cumulative density function as an expression in x"""
+        """
+        Return the cumulative density function as an expression in x
+
+        Examples
+        ========
+
+            >>> from sympy.statistics import Uniform
+            >>> Uniform(1, 5).cdf(2)
+            1/4
+            >>> Uniform(1, 5).cdf(4)
+            3/4
+
+        """
         x = sympify(x)
         if not x.is_Number:
             raise NotImplementedError("SymPy does not yet support"
@@ -215,8 +316,20 @@ class Uniform(ContinuousProbability):
 
     @staticmethod
     def fit(sample):
-        """Create a uniform distribution fit to the mean and standard
-        deviation of the given distribution or sample."""
+        """
+        Create a uniform distribution fit to the mean and standard
+        deviation of the given distribution or sample.
+
+        Examples
+        ========
+
+            >>> from sympy.statistics import Uniform
+            >>> Uniform.fit([1, 2, 3, 4, 5])
+            Uniform(-sqrt(6) + 3, sqrt(6) + 3)
+            >>> Uniform.fit([1, 2])
+            Uniform(-sqrt(3)/2 + 3/2, sqrt(3)/2 + 3/2)
+
+        """
         if not hasattr(sample, "stddev"):
             sample = Sample(sample)
         m = sample.mean
@@ -300,6 +413,21 @@ class PDF(ContinuousProbability):
 
 
     def cdf(self, x):
+        """
+        Return the cumulative density function as an expression in x
+
+        Examples
+        ========
+
+            >>> from sympy.statistics.distributions import PDF
+            >>> from sympy import symbols, exp, oo
+            >>> x, y = symbols('x y')
+            >>> PDF(exp(-x/y), (x,0,oo)).cdf(4)
+            y - y*exp(-4/y)
+            >>> PDF(2*x + y, (x, 10, oo)).cdf(0)
+            -10*y - 100
+
+        """
         x = sympify(x)
         if self._cdf is not None:
             return self._cdf(x)
@@ -345,8 +473,20 @@ class PDF(ContinuousProbability):
         raise NotImplementedError
 
     def transform(self,func,var):
-        """Return a probability distribution of random variable func(x)
-        currently only some simple injective functions are supported"""
+        """
+        Return a probability distribution of random variable func(x)
+        currently only some simple injective functions are supported
+
+        Examples
+        ========
+
+            >>> from sympy.statistics.distributions import PDF
+            >>> from sympy import symbols, oo
+            >>> x, y = symbols('x y')
+            >>> PDF(2*x + y, (x, 10, oo)).transform(x, y)
+            PDF(0, ((_w,), x, x))
+
+        """
 
         w = Dummy('w', real=True)
 
