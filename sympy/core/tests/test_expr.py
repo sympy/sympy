@@ -1165,6 +1165,7 @@ def test_primitive():
             (S(1)/3, i + x)
     assert (S.Infinity + 2*x/3 + 4*y/7).primitive() == \
         (S(2)/21, 7*x + 6*y + oo)
+    assert S.Zero.primitive() == (S.One, S.Zero)
 
 def test_issue_2744():
     a = 1 + x
@@ -1208,3 +1209,5 @@ def test_equals():
     assert (x**2 - 1).equals((x + 1)*(x - 1))
     assert (cos(x)**2 + sin(x)**2).equals(1)
     assert (a*cos(x)**2 + a*sin(x)**2).equals(a)
+    r = sqrt(2)
+    assert (-1/(r + r*x) + 1/r/(1 + x)).equals(0)
