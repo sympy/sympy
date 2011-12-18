@@ -27,7 +27,7 @@ def _sqrt_symbolic_denest(a, b, r):
     >>> from sympy import sqrt
     >>> from sympy.abc import x
 
-    >>> _sqrt_symbolic_denest(16 - 2*sqrt(29), 2, -10*sqrt(29) + 55)
+    >>> _sqrt_symbolic_denest(16-2*sqrt(29), 2,-10*sqrt(29)+55,-24*sqrt(29)+152)
     sqrt(-2*sqrt(29) + 11) + sqrt(5)
 
     If sympy decides that sqrt and square can be simplified, it does,

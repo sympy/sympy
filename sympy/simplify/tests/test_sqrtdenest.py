@@ -120,3 +120,9 @@ def test_issue_2758():
     assert sqrtdenest(1 + z) == 1 + ans
     assert sqrtdenest(Integral(z + 1, (x, 1, 2))) == Integral(1 + ans, (x, 1, 2))
     assert sqrtdenest(x + sqrt(y)) == x + sqrt(y)
+
+def test_subsets():
+    assert subsets(1) == [[1]]
+    assert subsets(4) == [[1,0,0,0], [0,1,0,0], [1,1,0,0], [0,0,1,0], \
+      [1,0,1,0], [0,1,1,0], [1,1,1,0], [0,0,0,1], [1,0,0,1], [0,1,0,1], \
+      [1,1,0,1], [0,0,1,1], [1,0,1,1], [0,1,1,1], [1,1,1,1]]
