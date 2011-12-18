@@ -45,17 +45,29 @@ def _sqrt_symbolic_denest(a, b, r, d2=None):
     if rb != 0:
         y = Dummy('y', positive=True)
         y2 = y**2
+        a2 = a.subs(sqrt(rr), (y**2 - ra)/rb).expand()
         cav, cbv, ccv = [], [], []
-        for ai in Add.make_args(a.subs(sqrt(rr), (y2 - ra)/rb)):
-            margs = list(Mul.make_args(ai))
-            if y in margs:
-                margs.remove(y)
-                cbv.append(Mul._from_args(margs))
-            elif y2 in margs:
-                margs.remove(y2)
-                cav.append(Mul._from_args(margs))
+        for xx in a2.args:
+            cx, qx = xx.as_coeff_Mul()
+            if qx.is_Mul:
+                qxa = list(qx.args)
+                if y in qxa:
+                    qxa.remove(y)
+                    cbv.append( Mul(*(qxa+[cx])) )
+                elif y2 in qxa:
+                    qxa.remove(y2)
+                    cav.append(Mul(*(qxa+[cx])))
+                else:
+                    ccv.append(xx)
+            elif qx == y2:
+                cav.append(cx)
             else:
-                ccv.append(ai)
+                if y == qx:
+                    cbv.append( cx )
+                elif y2 == qx:
+                    cav.append(cx)
+                else:
+                    ccv.append(xx)
         ca = Add(*cav)
         cb = Add(*cbv)
         cc = Add(*ccv)
@@ -69,6 +81,7 @@ def _sqrt_symbolic_denest(a, b, r, d2=None):
                 if z.is_number:
                     z = _mexpand(z)
                 return z
+
 
 def sqrt_numeric_denest(a, b, r, d2):
     """
@@ -399,8 +412,6 @@ def _denester (nested, av0, h, max_depth_level):
             return sqrt(v[0] + v[1]*d), f
         else:
             p = Mul(*[nested[i] for i in range(len(nested)) if f[i]])
-            if p == 1:
-                p = S(p)
             v = sqrt_match(_mexpand(p))
             v = list(v)
             if 1 in f and f.index(1) < len(nested) - 1 and f[len(nested)-1]:
