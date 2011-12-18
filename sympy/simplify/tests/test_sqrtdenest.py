@@ -99,6 +99,8 @@ def test_sqrt_symbolic_denest():
     assert sqrtdenest(z) == z
     z= sqrt( ((1+sqrt(sqrt(2+cos(3*x))+3))**2+1).expand())
     assert sqrtdenest(z) == z
+    assert sqrtdenest(sqrt(2*sqrt(1+r3)*cos(3)+cos(3)**2+1+r3*cos(3)**2)) == \
+      -1 - sqrt(1 + sqrt(3))*cos(3)
 
 def test_issue_2758():
     from sympy.abc import x, y
