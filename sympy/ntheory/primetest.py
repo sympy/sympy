@@ -194,7 +194,6 @@ def isprime(n):
 
     See Also
     ========
-
     primerange, primepi, prime
     """
     n = int(n)

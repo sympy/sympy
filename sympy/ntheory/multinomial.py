@@ -12,7 +12,6 @@ def binomial_coefficients(n):
 
     See Also
     ========
-
     binomial_coefficients_list, multinomial_coefficients
     """
     d = {(0, n):1, (n, 0):1}
@@ -34,7 +33,6 @@ def binomial_coefficients_list(n):
 
     See Also
     ========
-
     binomial_coefficients, multinomial_coefficients
     """
     d = [1] * (n+1)
@@ -124,7 +122,6 @@ def multinomial_coefficients(m, n):
 
     See Also
     ========
-
     binomial_coefficients_list, binomial_coefficients
     """
     if not m:

@@ -62,7 +62,6 @@ class RayTransferMatrix(Matrix):
 
     See Also
     ========
-
     GeometricRay, BeamParameter,
     FreeSpace, FlatRefraction, CurvedRefraction,
     FlatMirror, CurvedMirror, ThinLens
@@ -271,7 +270,6 @@ class GeometricRay(Matrix):
 
     See Also
     ========
-
     RayTransferMatrix
     """
 

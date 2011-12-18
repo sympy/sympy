@@ -117,7 +117,6 @@ class lowergamma(Function):
 
     See Also
     ========
-
     :class:`sympy.functions.special.gamma_functions.gamma`
     :class:`sympy.functions.special.gamma_functions.uppergamma`
     :class:`sympy.functions.special.hyper.hyper`
@@ -221,7 +220,6 @@ class uppergamma(Function):
 
     See Also
     ========
-
     :class:`sympy.functions.special.gamma_functions.gamma`
     :class:`sympy.functions.special.gamma_functions.lowergamma`
     :class:`sympy.functions.special.hyper.hyper`.

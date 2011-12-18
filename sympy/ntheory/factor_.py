@@ -35,7 +35,6 @@ def smoothness(n):
 
     See Also
     ========
-
     factorint, smoothness_p
     """
 
@@ -86,21 +85,20 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     The table of the output logic is:
 
-    ====== ====== ======= =======
-    x                Visual
-    ------ ----------------------
-    Input  True   False   other
-    ====== ====== ======= =======
-    dict    str    tuple   str
-    str     str    tuple   dict
-    tuple   str    tuple   str
-    n       str    tuple   tuple
-    mul     str    tuple   tuple
-    ====== ====== ======= =======
+        _______________________________
+        |      |       visual=        |
+        |input + -----+-------+-------+
+        |      | True | False | other |
+        +------+------+-------+-------+
+        |dict  | str  | tuple | str   |
+        |str   | str  | tuple | dict  |
+        |tuple | str  | tuple | str   |
+        |n     | str  | tuple | tuple |
+        |mul   | str  | tuple | tuple |
+        +------+------+-------+-------+
 
     See Also
     ========
-
     factorint, smoothness
     """
     from sympy.utilities import flatten
@@ -888,7 +886,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     See Also
     ========
-
     smoothness, smoothness_p, divisors
     """
     factordict = {}
@@ -1178,7 +1175,6 @@ def primefactors(n, limit=None, verbose=False):
 
     See Also
     ========
-
     divisors
     """
     n = int(n)
@@ -1235,7 +1231,6 @@ def divisors(n, generator=False):
 
     See Also
     ========
-
     primefactors, factorint, divisor_count
     """
 
@@ -1266,7 +1261,6 @@ def divisor_count(n, modulus=1):
 
     See Also
     ========
-
     factorint, divisors, totient
     """
 
@@ -1291,7 +1285,6 @@ def totient(n):
 
     See Also
     ========
-
     divisor_count
     """
     if n < 1:

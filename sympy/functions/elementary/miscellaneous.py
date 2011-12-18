@@ -145,9 +145,8 @@ def root(arg, n):
     [-1, 1, -I, I]
 
 
-    See also
+    See Also
     ========
-
         L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
 
         External Links
