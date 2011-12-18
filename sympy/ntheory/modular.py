@@ -70,8 +70,8 @@ def crt(m, v, symmetric=False, check=True):
 
     See Also
     ========
-
     solve_congruence
+    sympy.polys.galoistools.gf_crt : low level crt routine used by this routine
     """
     if check:
         m = int_tested(*m)
@@ -170,8 +170,8 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
     See Also
     ========
+    crt : high level routine implementing the Chinese Remainder Theorem
 
-    crt, sympy.polys.galoistools.gf_crt
     """
     def combine(c1, c2):
         """Return the tuple (a, m) which satisfies the requirement

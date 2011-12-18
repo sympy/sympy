@@ -43,7 +43,11 @@ def gf_crt(U, M, K=None):
 
     Note: this is a low-level routine with no error checking.
 
-    See also: crt and solve_congruence in sympy.ntheory.modular.
+    See Also
+    --------
+    sympy.ntheory.modular.crt : a higher level crt routine
+    sympy.ntheory.modular.solve_congruence
+
     """
     p = prod(M, start=K.one)
     v = K.zero
