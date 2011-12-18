@@ -19,6 +19,15 @@ class Sample(tuple):
         Sample([0, 1, 2, 3])
         >>> Sample([8, 3, 2, 4, 1, 6, 9, 2])
         Sample([1, 2, 2, 3, 4, 6, 8, 9])
+        >>> s = Sample([1, 2, 3, 4, 5])
+        >>> s.mean
+        3
+        >>> s.stddev
+        sqrt(2)
+        >>> s.median
+        3
+        >>> s.variance
+        2
 
     """
     def __new__(cls, sample):
