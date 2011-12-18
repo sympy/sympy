@@ -146,28 +146,16 @@ def sqrtdenest(expr, max_iter=3):
 def sqrtdenest0(expr):
     if is_sqrt(expr):
         n, d = expr.as_numer_denom()
-        if n is S.One:
-            return 1/sqrtdenest0(sqrt(expr.base))
         if d is S.One:
-            nn = len(n.base.args)
-            if 3 <= nn <= 4 and all([(x**2).is_Rational for x in n.base.args]):
-                return _sqrt_four_terms_denest(n)
             if n.base.is_Add:
+                nn = len(n.base.args)
+                if 3 <= nn <= 4 and all([(x**2).is_Rational for x in n.base.args]):
+                    return _sqrt_four_terms_denest(n)
                 expr = sqrt(_mexpand(Add(*[sqrtdenest0(x) for x in n.base.args])))
             return _sqrtdenest(expr)
         else:
-            nn = len(n.base.args)
-            if 3 <= nn <= 4 and all([(x**2).is_Rational for x in n.base.args]):
-                n1 = _sqrt_four_terms_denest(n)
-            else:
-                n1 = _sqrtdenest(n)
-
-            if is_sqrt(d) and \
-                3 <= len(d.base.args) <= 4 and all([(x**2).is_Rational for x in d.base.args]):
-                d1 = _sqrt_four_terms_denest(d)
-            else:
-                d1 = _sqrtdenest(d)
-            return n1/d1
+            n, d = [sqrtdenest0(i) for i in (n, d)]
+            return n/d
     if isinstance(expr, Expr):
         args = expr.args
         if args:
