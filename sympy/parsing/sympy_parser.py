@@ -11,8 +11,34 @@ from sympy.core.basic import Basic
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
+def _add_factorial_tokens(name, result):
+    diff = 0
+
+    beginning = [(NAME, name), (OP, '(')]
+    end = [(OP, ')')]
+
+    length = len(result)
+
+    for index, token in enumerate(result[::-1]):
+        toknum, tokval = token
+        i = length-index-1
+
+        if tokval == ')':
+            diff += 1
+        elif tokval == '(':
+            diff -= 1
+
+        if diff == 0:
+            if i-1 >= 0 and result[i-1][0] == NAME:
+                return result[:i-1] + beginning + result[i-1:] + end
+            else:
+                return result[:i] + beginning + result[i:] + end
+
+    return result
+
 def _transform(s, local_dict, global_dict, rationalize, convert_xor):
     g = generate_tokens(StringIO(s).readline)
+
     result = []
 
     for toknum, tokval, _, _, _ in g:
@@ -80,6 +106,10 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
 
             if op == '^' and convert_xor:
                 result.append((OP, '**'))
+            elif op == '!!':
+                result = _add_factorial_tokens('factorial2', result)
+            elif op == '!':
+                result = _add_factorial_tokens('factorial', result)
             else:
                 result.append((OP, op))
         else:
