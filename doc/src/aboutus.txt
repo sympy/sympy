@@ -133,7 +133,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tomáš Bambas: prettier printing of examples
 #. Jeremias Yehdegho: fixes to the nthoery module
 #. Jack McCaffery: fixes to asin and acos
-#. rayman: Quantum work
+#. Raymond Wong: Quantum work
 #. Luca Weihs: improvements to the geometry module
 #. Shai 'Deshe' Wyborski: fix to numeric evaluation of hypergeometric sums
 #. Thomas Wiecki: Fix Sum.diff
