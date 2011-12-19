@@ -433,15 +433,19 @@ def factor_terms(expr, radical=False):
     """
 
     expr = sympify(expr)
-
-    if iterable(expr):
-        return type(expr)([factor_terms(i, radical=radical) for i in expr])
+    is_iterable = iterable(expr)
 
     if not isinstance(expr, Basic) or expr.is_Atom:
+        if is_iterable:
+            return type(expr)([factor_terms(i, radical=radical) for i in expr])
         return expr
 
-    if expr.is_Function:
-        return expr.func(*[factor_terms(i, radical=radical) for i in expr.args])
+    if expr.is_Function or is_iterable or not hasattr(expr, 'args_cnc'):
+        args = expr.args
+        newargs = tuple([factor_terms(i, radical=radical) for i in args])
+        if newargs == args:
+            return expr
+        return expr.func(*newargs)
 
     cont, p = expr.as_content_primitive(radical=radical)
     list_args, nc = zip(*[ai.args_cnc(clist=True) for ai in Add.make_args(p)])
