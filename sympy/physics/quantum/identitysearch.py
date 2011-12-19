@@ -1,5 +1,6 @@
 from collections import deque
 from random import randint
+import numpy
 
 from sympy import Mul, Basic, Number
 from sympy.matrices import Matrix, eye
@@ -81,25 +82,26 @@ def generate_gate_rules(*gate_seq):
 
         if (len(left) > 0):
             ll_op = left[0]
-            ll_op_is_unitary = is_scalar_matrix(
+            ll_op_is_unitary = is_scalar_sparse_matrix(
                                    (Dagger(ll_op), ll_op),
                                    ll_op.min_qubits,
                                    True)
 
             lr_op = left[len(left)-1]
-            lr_op_is_unitary = is_scalar_matrix(
+            lr_op_is_unitary = is_scalar_sparse_matrix(
                                    (Dagger(lr_op), lr_op),
                                    lr_op.min_qubits,
                                    True)
 
         if (len(rite) > 0):
             rl_op = rite[0]
-            rl_op_is_unitary = is_scalar_matrix(
+            rl_op_is_unitary = is_scalar_sparse_matrix(
                                    (Dagger(rl_op), rl_op),
                                    rl_op.min_qubits,
                                    True)
+
             rr_op = rite[len(rite)-1]
-            rr_op_is_unitary = is_scalar_matrix(
+            rr_op_is_unitary = is_scalar_sparse_matrix(
                                    (Dagger(rr_op), rr_op),
                                    rr_op.min_qubits,
                                    True)
@@ -114,7 +116,7 @@ def generate_gate_rules(*gate_seq):
             new_rule = (new_left, new_rite)
             # If the left side is empty (left side is scalar)
             if (len(new_left) == 0 and new_rite not in gate_rules):
-                gate_rules.append(new_rite)                
+                gate_rules.append(new_rite)
             # If the equality has not been seen and has not reached the
             # max limit on operations
             elif (new_rule not in vis and ops + 1 < max_ops):
@@ -193,7 +195,7 @@ class GateIdentity(Basic):
         >>> an_identity.gate_rules
         [(X(0), Y(0), Z(0)), (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)),
          (Z(0), Y(0), X(0)), (Y(0), X(0), Z(0)), (X(0), Z(0), Y(0))]
-    
+
     """
 
     def __new__(cls, *args):
@@ -227,7 +229,7 @@ def construct_gate_list(numqubits):
     Ts = [T(i) for i in xrange(numqubits)]
     CNOTs = [CNOT(i,j) for i in xrange(numqubits)
                            for j in xrange(numqubits) if i != j]
-   
+
     gate_list = Xs+Ys+Zs+Hs+Ss+Ts+CNOTs
 
     return gate_list
@@ -256,7 +258,31 @@ def construct_matrix_list(numqubits):
     return matrix_list
 
 def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
-    """Checks if a given scipy.sparse matrix is a scalar matrix."""
+    """Checks if a given scipy.sparse matrix is a scalar matrix.
+
+    Parameters
+    ==========
+    circuit : tuple, Gate
+        Sequence of quantum gates representing a quantum circuit
+    numqubits : int
+        Number of qubits in the circuit
+    identity_only : bool
+        Check for only identity matrices
+
+    Examples
+    ========
+
+        >>> from sympy.physics.quantum.identitysearch import \
+                    is_scalar_sparse_matrix
+        >>> from sympy.physics.quantum.gate import X, Y, Z
+        >>> x = X(0); y = Y(0); z = Z(0)
+        >>> numqubits = 2
+        >>> circuit = (x, y, z)
+        >>> is_scalar_sparse_matrix(circuit, numqubits, False)
+        True
+        >>> is_scalar_sparse_matrix(circuit, numqubits, True)
+        False
+    """
 
     matrix = represent(Mul(*circuit), nqubits=numqubits,
                        format='scipy.sparse')
@@ -268,18 +294,61 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
 
     # If represent returns a matrix, check if the matrix is diagonal
     # and if every item along the diagonal is the same
-    elif (list(matrix.nonzero()[0]) == list(matrix.nonzero()[1]) and
-        list(matrix.nonzero()[0]) == range(pow(2, numqubits))):
-        diag = list(matrix.diagonal())
-        return (diag.count(diag[0]) == len(diag)
-                if not identity_only
-                else diag.count(diag[0]) == len(diag) and diag[0] == 1)
+    else:
+        # CURRENTLY PASSES TESTS BUT THROWS A WARNING
+        # "invalid value encounted in divide" - investigate
 
-    return False
+        # Due to floating pointing operations, must zero out
+        # elements that are "very" small in the dense matrix
+        # Epsilon value
+        eps = 1e-11
+        # Get the ndarray version of the dense matrix
+        dense_matrix = matrix.todense().getA()
+        # Get the first element of the matrix
+        first_element = dense_matrix[0][0]
+        adj_ndarray = dense_matrix/first_element
+        # Find the values in between -eps and eps
+        bool_dense_matrix = numpy.logical_and(adj_ndarray > -eps,
+                                adj_ndarray < eps)
+        # Replaces values between -eps and eps with 0
+        corrected_dense = numpy.where(bool_dense_matrix, 0.0, adj_ndarray)
+
+        # Check if it's diagonal
+        row_indices = corrected_dense.nonzero()[0]
+        col_indices = corrected_dense.nonzero()[1]
+        # Check if the rows indices and columns indices are the same
+        # If they match, then matrix only contains elements along diagonal
+        bool_indices = row_indices == col_indices
+        is_diagonal = bool_indices.all()
+
+        # The dimensions of the dense matrix should still
+        # be 2^numqubits if there are elements all along the
+        # the main diagonal
+        trace_of_corrected = corrected_dense.trace()
+        expected_trace = pow(2, numqubits)
+        has_correct_trace = trace_of_corrected == expected_trace
+
+        # If only looking for identity matrices
+        # first element must be a 1
+        is_identity = first_element == 1.0 if identity_only else True
+
+        return is_diagonal and has_correct_trace and is_identity
 
 def is_scalar_matrix(circuit, numqubits, identity_only):
     """Checks if a given circuit, in matrix form, is equivalent to
-       a scalar value."""
+       a scalar value.
+
+    Parameters
+    ==========
+    circuit : tuple, Gate
+        Sequence of quantum gates representing a quantum circuit
+    numqubits : int
+        Number of qubits in the circuit
+    identity_only : bool
+        Check for only identity matrices
+
+    Note: Used in situations when is_scalar_sparse_matrix has bugs
+    """
 
     # A sparse matrix is faster but there's a few problems with it,
     # such as not being able to determine H(0)*H(0) is the identity matrix.
@@ -298,13 +367,19 @@ def is_scalar_matrix(circuit, numqubits, identity_only):
         matrix_trace = matrix.trace()
         # Divide the trace by the first element in the matrix
         # if matrix is not required to be the identity matrix
-        adjusted_matrix_trace = (matrix_trace/matrix[0] 
+        adjusted_matrix_trace = (matrix_trace/matrix[0]
                                  if not identity_only
                                  else matrix_trace)
+
+        is_identity = matrix[0] == 1.0 if identity_only else True
+
+        has_correct_trace = adjusted_matrix_trace == pow(2, numqubits)
+
         # The matrix is scalar if it's diagonal and the adjusted trace
         # value is equal to 2^numqubits
         return (matrix.is_diagonal() and
-                adjusted_matrix_trace == pow(2, numqubits))
+                has_correct_trace and
+                is_identity)
 
 def is_degenerate(identity_set, gate_identity):
     """Checks if a gate identity is a permutation of another identity.
@@ -382,7 +457,7 @@ def is_reducible(circuit, numqubits, begin, end):
         current_circuit = (next_gate,) + current_circuit
 
         # If a circuit as a matrix is equivalent to a scalar value
-        if (is_scalar_matrix(current_circuit, numqubits, False)):
+        if (is_scalar_sparse_matrix(current_circuit, numqubits, False)):
             return True
 
     return False
@@ -428,7 +503,7 @@ def bfs_identity_search(gate_list, numqubits, **kwargs):
     # If max depth of a path isn't given, use the length of the gate_list
     if ("max_depth" in kwargs and kwargs["max_depth"] > 0):
         max_depth = kwargs["max_depth"]
-    else:        
+    else:
         max_depth = len(gate_list)
 
     eye_only = (kwargs["identity_only"] if "identity_only" in kwargs else
@@ -450,12 +525,12 @@ def bfs_identity_search(gate_list, numqubits, **kwargs):
             #                           format='scipy.sparse')
 
             # Determines if a (strict) subcircuit is a scalar matrix
-            circuit_reducible = is_reducible(new_circuit, numqubits, 
+            circuit_reducible = is_reducible(new_circuit, numqubits,
                                              1, len(new_circuit))
 
             # In many cases when the matrix is a scalar value,
-            # the evaluated matrix will actually be an integer          
-            if (is_scalar_matrix(new_circuit, numqubits, eye_only) and
+            # the evaluated matrix will actually be an integer
+            if (is_scalar_sparse_matrix(new_circuit, numqubits, eye_only) and
                 not is_degenerate(ids, new_circuit) and
                 not circuit_reducible):
                 ids.add(GateIdentity(*new_circuit))
@@ -484,5 +559,6 @@ def random_identity_search(gate_list, numgates, numqubits):
     matrix_version = represent(circuit, nqubits=numqubits,
                                format='scipy.sparse')
 
-    return (circuit if is_scalar_matrix(matrix_version, numqubits, False)
+    return (circuit
+            if is_scalar_sparse_matrix(matrix_version, numqubits, False)
             else None)

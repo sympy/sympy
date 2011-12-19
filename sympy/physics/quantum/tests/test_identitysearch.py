@@ -47,32 +47,42 @@ def test_is_scalar_matrix():
 
     id_gate = (IdentityGate(1),)
     assert is_scalar_matrix(id_gate, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(id_gate, numqubits, id_only) == True
 
     x0 = X(0)
     xx_circuit = (x0, x0)
     assert is_scalar_matrix(xx_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(xx_circuit, numqubits, id_only) == True
 
     x1 = X(1)
     y1 = Y(1)
     xy_circuit = (x1, y1)
     assert is_scalar_matrix(xy_circuit, numqubits, id_only) == False
+    assert is_scalar_sparse_matrix(xy_circuit, numqubits, id_only) == False
 
     z1 = Z(1)
     xyz_circuit = (x1, y1, z1)
     assert is_scalar_matrix(xyz_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) == True
 
     cnot = CNOT(1,0)
     cnot_circuit = (cnot, cnot)
     assert is_scalar_matrix(cnot_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) == True
 
     h = H(0)
     hh_circuit = (h, h)
     assert is_scalar_matrix(hh_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) == True
 
     id_only = True
     assert is_scalar_matrix(xyz_circuit, numqubits, id_only) == False
     assert is_scalar_matrix(cnot_circuit, numqubits, id_only) == True
     assert is_scalar_matrix(hh_circuit, numqubits, id_only) == True
+
+    assert is_scalar_sparse_matrix(xyz_circuit, numqubits, id_only) == False
+    assert is_scalar_sparse_matrix(cnot_circuit, numqubits, id_only) == True
+    assert is_scalar_sparse_matrix(hh_circuit, numqubits, id_only) == True
 
 def test_is_degenerate():
     x = X(0)
