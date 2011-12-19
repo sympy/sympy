@@ -493,7 +493,7 @@ def test_visual_factorint():
     assert factorint(42**2, visual=True) == Mul(Pow(2, 2, **no),
                                                 Pow(3, 2, **no),
                                                 Pow(7, 2, **no), **no)
-    assert Pow(-1, 1, **no) in factorint(-42, visual=True).args
+    assert -1 in factorint(-42, visual=True).args
 
 def test_visual_io():
     sm = smoothness_p

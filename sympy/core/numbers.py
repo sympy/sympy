@@ -867,9 +867,14 @@ class Rational(Number):
         if not visual:
             return dict(f)
         else:
-            return Mul(*[Pow(*i, **{'evaluate':False})
-                         for i in sorted(f.items())],
-                                 **{'evaluate':False})
+            if -1 in f:
+                f.pop(-1)
+                args = [S.NegativeOne]
+            else:
+                args = []
+            args.extend([Pow(*i, **{'evaluate':False})
+                         for i in sorted(f.items())])
+            return Mul(*args, **{'evaluate':False})
 
     def gcd(self, other):
         """Compute greatest common divisor of input arguments. """
