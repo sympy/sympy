@@ -9,7 +9,7 @@ Tutoriel
 Introduction
 ============
 
-SymPy est une librairie Python pour les mathématiques symboliques. Elle prévoit
+SymPy est une bibliothèque Python pour les mathématiques symboliques. Elle prévoit
 de devenir un système complet de calcul formel ("CAS" en anglais : "Computer
 Algebra System") tout en gardant le code aussi simple que possible afin qu'il
 soit compréhensible et facilement extensible.
@@ -115,7 +115,7 @@ symboles définis x, y, z et d'autres choses à l'avance :
     Out[1]:
          2      4       6        8
         x    5*x    61*x    277*x     / 10\
-    1 + ── + ──── + ───── + ────── + O\x  /
+    1 + -- + ---- + ----- + ------ + O\x  /
         2     24     720     8064
 
 .. note::
@@ -151,7 +151,7 @@ et ainsi de suite.
     1/88817841970012523233890533447265625
 
 
-Procédez avec précaution lorsque vous travaillez avec les nombres entiers
+Faites attention lorsque vous travaillez avec les nombres entiers
 et à virgule flottante de Python, surtout dans des divisions, puisque
 vous pourriez créer un nombre Python, et pas un nombre SymPy.
 Un ratio de deux entiers Python pourrait créer un flottant
@@ -162,16 +162,16 @@ de ``isympy`` qui importe la division de __future__ ::
     0.5
 
 Mais dans les versions antérieures Python où la division n'a pas été importée,
-un int tronqué entraînera :
+une divison euclidienne entraînera :
 
     >>> 1/2 #doctest: +SKIP
     0
 
-Dans les deux cas, toutefois, vous n'avez pas à faire à un Nombre SymPy
-parce-que Python a créé son propre nombre. La plupart du temps vous travaillerez
-probablement avec des nombres Rational, alors prenez garde à utiliser Rational
-pour obtenir le résultat SymPy.
-On pourrait trouver pratique d'assimiler ``R`` à Rational ::
+Dans les deux cas, toutefois, vous n'avez pas affaire à un Nombre SymPy
+parce que Python a créé son propre nombre. La plupart du temps vous travaillerez
+probablement avec des nombres rationels, alors prenez garde à utiliser Rational
+pour obtenir le résultat en terme d'objets SymPy.
+On pourrait trouver pratique d'assigner``R`` à Rational ::
 
     >>> R = Rational
     >>> R(1, 2)
@@ -181,7 +181,7 @@ On pourrait trouver pratique d'assimiler ``R`` à Rational ::
 
 Nous avons également quelques constantes spéciales, comme e et pi,
 qui sont traitées comme des symboles (1+pi ne sera pas évalué
-comme quelque-chose de numérique, il restera plutôt sous la forme 1+pi),
+sous forme numérique, mais restera plutôt sous la forme 1+pi),
 et qui ont une précision arbitraire ::
 
     >>> pi**2
@@ -193,11 +193,11 @@ et qui ont une précision arbitraire ::
     >>> (pi+exp(1)).evalf()
     5.85987448204884
 
-comme vous le voyez, evalf évalue l'expression
-comme un nombre à virgule flottante
+comme vous le voyez, evalf convertit l'expression
+en un nombre à virgule flottante
 
 Le symbole ``oo`` est utilisé pour une classe
-définissant l'infinité mathématique ::
+définissant l'infini mathématique ::
 
     >>> oo > 99999
     True
@@ -214,7 +214,7 @@ SymPy vous oblige à déclarer les variables symboliques explicitement ::
     >>> x = Symbol('x')
     >>> y = Symbol('y')
 
-À gauche se trouve la variable Python normale à qui est assignée
+À gauche se trouve la variable Python normale à laquelle est assignée
 la classe Symbol de SymPy.
 Les instances de la classe Symbol "vont bien ensemble"
 et sont les fondements des expressions ::
@@ -228,7 +228,7 @@ et sont les fondements des expressions ::
     >>> ((x+y)**2).expand()
     x**2 + 2*x*y + y**2
 
-Elles peuvent être remplacées par d'autres nombres, symboles ou d'expressions
+Elles peuvent être remplacées par d'autres nombres, symboles ou expressions
 grâce à l'utilisation de ``subs(old, new)`` ::
 
     >>> ((x+y)**2).subs(x, 1)
@@ -252,7 +252,7 @@ pour un affichage un peu plus agréable.
 Algèbre
 =======
 
-Pour la décomposition partielle des fractions,
+Pour la décomposition en éléments simples des fractions,
 utilisez ``apart(expr, x)``::
 
     >>> 1/( (x+2)*(x+1) )
@@ -306,7 +306,7 @@ Limites
 
 Les limites sont simples à utiliser dans SymPy,
 elles suivent la syntaxe ``limit(function, variable, point)``,
-donc pour calculer la limite de f(x) de façon à ce que x -> 0,
+donc pour calculer la limite de f(x) pour x tendant vers 0,
 vous taperiez ``limit(f, x, 0)`` ::
 
    >>> from sympy import *
@@ -332,10 +332,10 @@ test_demidovich.py>`_
 
 .. index:: differentiation, diff
 
-Différenciation
----------------
+Dérivation
+----------
 
-Vous pouvez différencier n'importe-quelle expression SymPy
+Vous pouvez dériver n'importe quelle expression SymPy
 en utilisant ``diff(func, var)``. Exemples ::
 
     >>> from sympy import *
@@ -355,7 +355,7 @@ Vous pouvez vérifier que c'est correct avec ::
        2
     tan (x) + 1
 
-Des dérivées supérieures peuvent être calculées en utilisant la méthode
+Des dérivées d'ordre supérieur peuvent être calculées en utilisant la méthode
 ``diff(func, var, n)`` ::
 
     >>> diff(sin(2*x), x, 1)
@@ -408,7 +408,7 @@ Ceci devrait afficher ce qui suit après l'exécution ::
     1/y + x**2*y**(-3) + x**4*y**(-5) - x*y**(-2) - x**3*y**(-4) + O(x**5)
          2    4         3
     1   x    x    x    x     / 5\
-    ─ + ── + ── - ── - ── + O\x /
+    - + -- + -- - -- - -- + O\x /
     y    3    5    2    4
         y    y    y    y
 
@@ -417,8 +417,8 @@ Ceci devrait afficher ce qui suit après l'exécution ::
 Intégration
 -----------
 
-SymPy supporte l'intégration de fonctions élémentaires et spéciales
-indéfinies et définies par ``integrate()``, qui utilise le
+SymPy supporte l'intégration définie et indéfinie de fonctions
+élémentaires et spéciales avec ``integrate()``, qui utilise le
 puissant algorithme de Risch-Norman étendu et quelques heuristiques
 ainsi que le filtrage de motifs ::
 
@@ -438,7 +438,7 @@ Vous pouvez intégrer des fonctions élémentaires ::
      2
     x  + cosh(x)
 
-Les fonctions spéciales sont aussi facilement prises en main ::
+Les fonctions spéciales sont aussi facilement utilisées ::
 
     >>> integrate(exp(-x**2)*erf(x), x)
       ____    2
@@ -532,7 +532,7 @@ Fonctions
     x - -- + ---- - ---- + ----- + O\x  /
         6     40    112     1152
 
-**spherical harmonics**::
+**harmoniques sphériques**::
 
     >>> from sympy.abc import theta, phi
 
@@ -636,7 +636,7 @@ Fonctions
 
 .. index:: equations; differential, diff, dsolve
 
-Équations Différentielles
+Équations différentielles
 -------------------------
 
 Dans ``isympy`` ::
@@ -725,16 +725,16 @@ Si le filtrage est infructueux, il retourne ``None``::
     >>> print (x+1).match(p**x)
     None
 
-On peut aussi utiliser le paramètre exclu de la classe  ``Wild``
+On peut aussi utiliser le paramètre ``exclude`` de la classe  ``Wild``
 pour s'assurer que certaines choses ne figurent pas dans le résultat ::
 
     >>> x = Symbol('x')
     >>> p = Wild('p', exclude=[1,x])
-    >>> print (x+1).match(x+p) # 1 is excluded
+    >>> print (x+1).match(x+p) # 1 est exclu
     None
-    >>> print (x+1).match(p+1) # x is excluded
+    >>> print (x+1).match(p+1) # x est exclu
     None
-    >>> print (x+1).match(x+2+p) # -1 is not excluded
+    >>> print (x+1).match(x+2+p) # -1 n'est pas exclu
     {p_: -1}
 
 .. _printing-tutorial:
@@ -759,9 +759,9 @@ C'est ce que ``str(expression)`` retourne et ça ressemble à ça :
     >>>
 
 
-**Joli Affichage**
+**Affichage Amélioré**
 
-Ceci est un affichage sympathique en art ASCII
+Ceci est un affichage amélioré en art ASCII
 produit par la fonction ``pprint`` :
 
     >>> from sympy import Integral, pprint
@@ -786,10 +786,10 @@ le joli affichage d'unicode par défaut.
 Vous pouvez outrepasser ce comportement en utilisant l'option ``use_unicode`` :
 
     >>> pprint(Integral(x**2, x), use_unicode=True)
-    ⌠
-    ⎮  2
-    ⎮ x  dx
-    ⌡
+    (
+    ?  2
+    ? x  dx
+    )
 
 
 Voir aussi le wiki `Pretty Printing
@@ -820,7 +820,7 @@ dans l'interpréteur Python, utilisez ::
      |
     /
 
-**Affichage Python**
+**Code Python**
 
     >>> from sympy.printing.python import python
     >>> from sympy.printing.python import python
@@ -837,7 +837,7 @@ dans l'interpréteur Python, utilisez ::
     e = Integral(x**2, x)
 
 
-**Affichage LaTeX**
+**Code LaTeX**
 
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
@@ -872,7 +872,7 @@ dans l'interpréteur Python, utilisez ::
     >>> from sympy.abc import x
     >>> preview(Integral(x**2, x)) #doctest:+SKIP
 
-Et une fenêtre pyglet avec l'expression LaTeX rendue apparaîtra :
+Et une fenêtre pyglet apparaîtra avec l'expression composée par LaTeX apparaîtra :
 
 .. image:: pics/pngview1.png
 
