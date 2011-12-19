@@ -1093,8 +1093,7 @@ class JzKet(SpinState, Ket):
     Examples
     ========
 
-    Normal States
-    -------------
+    Normal States:
 
     Defining simple spin states, both numerical and symbolic:
 
@@ -1132,8 +1131,7 @@ class JzKet(SpinState, Ket):
         >>> i.doit()
         1/2
 
-    Uncoupled States
-    ---------------
+    Uncoupled States:
 
     Define an uncoupled state as a TensorProduct between two Jz eigenkets:
 

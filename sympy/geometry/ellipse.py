@@ -78,8 +78,8 @@ class Ellipse(GeometryEntity):
     >>> e2
     Ellipse(Point(3, 1), 3, 9/5)
 
-    Plotting example
-    ----------------
+    Plotting:
+
     >>> from sympy import Circle, Plot, Segment
     >>> c1 = Circle(Point(0,0), 1)
     >>> Plot(c1)                                # doctest: +SKIP
