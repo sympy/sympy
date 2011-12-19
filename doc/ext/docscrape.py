@@ -93,6 +93,7 @@ class NumpyDocString(object):
             'Summary': [''],
             'Extended Summary': [],
             'Parameters': [],
+            'Parameters:': [],
             'Returns': [],
             'Raises': [],
             'Warns': [],
@@ -101,10 +102,15 @@ class NumpyDocString(object):
             'Methods': [],
             'See Also': [],
             'Notes': [],
+            'Note': [],
             'Warnings': [],
             'References': '',
             'Examples': '',
-            'index': {}
+            'index': {},
+            'Usage': [],
+            'External Links': [],
+            'Implementation': [],
+            'Arguments': []
             }
 
         self._parse()
