@@ -1208,6 +1208,17 @@ class Mul(AssocOp):
                 return int(a/b)
             return 0
 
+        # give Muls in the denominator a chance to be changed (see issue 2552)
+        # rv will be the default return value
+        rv = None
+        n, d = self.as_numer_denom()
+        if d is not S.One:
+            was = self
+            self = n/d._subs(old, new)
+            if self != was:
+                rv = self
+        # Now continue with regular substitution.
+
         # handle the leading coefficient and use it to decide if anything
         # should even be started; we always know where to find the Rational
         # so it's a quick test
@@ -1222,7 +1233,7 @@ class Mul(AssocOp):
             co_xmul = True
 
         if not co_xmul:
-            return None
+            return rv
 
         (c, nc) = breakup(self)
         (old_c, old_nc) = breakup(old)
@@ -1258,7 +1269,7 @@ class Mul(AssocOp):
             any(sign(c[b]) != sign(old_c[b]) for b in old_c)):
             ok = False
         if not ok:
-            return None
+            return rv
 
         if not old_c:
             cdid = None
@@ -1268,7 +1279,7 @@ class Mul(AssocOp):
                 c_e = c[b]
                 rat.append(ndiv(c_e, old_e))
                 if not rat[-1]:
-                    return None
+                    return rv
             cdid = min(rat)
 
         if not old_nc:
@@ -1350,7 +1361,7 @@ class Mul(AssocOp):
             else:
 
                 if not ncdid:
-                    return None
+                    return rv
 
                 # although we didn't fail, certain nc terms may have
                 # failed so we rebuild them after attempting a partial

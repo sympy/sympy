@@ -260,12 +260,6 @@ def test_subs_basic_funcs():
     assert ((a-b)/(c*d-a*b)).subs(c*d-a*b,K) == (a-b)/K
     assert (w*exp(a*b-c)*x*y/4).subs(x*y,L) == w*exp(a*b-c)*L/4
 
-@XFAIL
-def test_subs_basic_funcs_division_bug():
-    # Fails because of division
-    a,b,c,K = symbols('a b c K', commutative=True)
-    assert (a/(b*c)).subs(b*c, K) == a/K
-
 def test_subs_wild():
     R, S, T, U = symbols('R, S, T, U', cls=Wild)
 
@@ -416,3 +410,13 @@ def test_no_arith_subs_on_floats():
 
     (x + y + 3.0).subs(x + 3.0, a) == a + y
     (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
+
+@XFAIL
+def test_issue_2261() :
+    x = Symbol("x")
+    assert (1/x).subs(x, 0) == 1/S(0)
+
+def test_issue_2552():
+    a,b,c,K = symbols('a b c K', commutative=True)
+    assert (a/(b*c)).subs(b*c, K) == a/K
+    assert (a/(b**2*c**3)).subs(b*c, K) == a/(c*K**2)
