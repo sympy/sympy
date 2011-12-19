@@ -2,7 +2,7 @@ from sympy.functions import sqrt, sign
 from sympy.core import S, Wild, Rational, sympify, Mul, Add, Expr
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.symbol import Dummy
-from sympy.polys import Poly
+from sympy.polys import Poly, PolynomialError
 
 def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
@@ -14,31 +14,39 @@ def is_sqrt(expr):
 def _sqrt_symbolic_denest(a, b, r):
     """
     Given an expression, sqrt(a + b*sqrt(b)), return the denested
-    expression or None. This is called by _sqrtdenest when a**2 - b**2*r is
-    not a Rational.
+    expression or None.
 
     Algorithm:
     If r = ra + rb*sqrt(rr), try replacing sqrt(rr) in a with (y**2 - ra)/rb,
-    and if the result is a quadratic expression in y that can be XXX?, write it
-    in square form and take the square root.
+    and if the result is a quadratic, ca*y**2 + cb*y + cc, and has a
+    discriminant of 0, then sqrt(a + b*sqrt(r)) can be rewritten as
+    sqrt(ca*(sqrt(r) + cb/(2*ca))**2). XXX a simple example would be nice
 
     Examples
     >>> from sympy.simplify.sqrtdenest import _sqrt_symbolic_denest, sqrtdenest
-    >>> from sympy import sqrt
+    >>> from sympy import sqrt, Symbol
     >>> from sympy.abc import x
 
     >>> _sqrt_symbolic_denest(16 - 2*sqrt(29), 2, -10*sqrt(29) + 55)
     sqrt(-2*sqrt(29) + 11) + sqrt(5)
 
-    If sympy decides that sqrt and square can be simplified, it does,
-    otherwise it leaves it in that form
+    If the expression is numeric, it will be simplified:
 
-    >>> w = 1 + sqrt(2) + sqrt(1 + sqrt(1+sqrt(3)))
+    >>> w = sqrt(sqrt(sqrt(3) + 1) + 1) + 1 + sqrt(2)
     >>> sqrtdenest(sqrt((w**2).expand()))
     1 + sqrt(2) + sqrt(1 + sqrt(1 + sqrt(3)))
-    >>> w = 1 + sqrt(2) + sqrt(1 + sqrt(1+sqrt(3+x)))
+
+    Otherwise, it will only be simplified if assumptions allow:
+
+    >>> w = w.subs(sqrt(3), sqrt(x + 3))
     >>> sqrtdenest(sqrt((w**2).expand()))
     sqrt((sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2))**2)
+
+    Notice that the argument of the sqrt is a square. If x is made positive
+    then the sqrt of the square is resolved:
+
+    >>> _.subs(x, Symbol('x', positive=True))
+    sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2)
     """
 
     a, b, r = S(a), S(b), S(r)
@@ -48,7 +56,10 @@ def _sqrt_symbolic_denest(a, b, r):
     ra, rb, rr = rval
     if rb:
         y = Dummy('y', positive=True)
-        newa = Poly(a.subs(sqrt(rr), (y**2 - ra)/rb), y)
+        try:
+            newa = Poly(a.subs(sqrt(rr), (y**2 - ra)/rb), y)
+        except PolynomialError:
+            return None
         if newa.degree() == 2:
             ca, cb, cc = newa.all_coeffs()
             cb += b
@@ -57,7 +68,6 @@ def _sqrt_symbolic_denest(a, b, r):
                 if z.is_number:
                     z = _mexpand(Mul._from_args(z.as_content_primitive()))
                 return z
-
 
 def sqrt_numeric_denest(a, b, r, d2):
     """
@@ -262,7 +272,7 @@ def sqrt_match(p):
     >>> from sympy.functions.elementary.miscellaneous import sqrt
     >>> from sympy.simplify.sqrtdenest import sqrt_match
     >>> sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
-    (1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5))
+    [1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5)]
     """
     p = _mexpand(p)
     if p.is_Number:
