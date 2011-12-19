@@ -44,7 +44,7 @@ def gf_crt(U, M, K=None):
     Note: this is a low-level routine with no error checking.
 
     See Also
-    --------
+    ========
     sympy.ntheory.modular.crt : a higher level crt routine
     sympy.ntheory.modular.solve_congruence
 

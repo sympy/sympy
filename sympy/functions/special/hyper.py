@@ -139,7 +139,7 @@ class hyper(TupleParametersBase):
 
     See Also
     ========
-    - :func:`sympy.simplify.hyperexpand`
+    sympy.simplify.hyperexpand
 
     References
     ==========
@@ -370,7 +370,7 @@ class meijerg(TupleParametersBase):
 
     See Also
     ========
-    - :func:`sympy.simplify.hyperexpand`
+    sympy.simplify.hyperexpand
 
     References
     ==========

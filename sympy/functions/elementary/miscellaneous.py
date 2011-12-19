@@ -90,15 +90,15 @@ def sqrt(arg):
     [-sqrt(3), sqrt(3)]
 
 
-    See also
+    See Also
     ========
-       L{root}, L{RootOf}
+    L{root}, L{RootOf}
 
-       External links
-       --------------
+    External links
+    --------------
 
-       * http://en.wikipedia.org/wiki/Square_root
-       * http://en.wikipedia.org/wiki/Principal_value
+    * http://en.wikipedia.org/wiki/Square_root
+    * http://en.wikipedia.org/wiki/Principal_value
     """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
@@ -147,7 +147,7 @@ def root(arg, n):
 
     See Also
     ========
-        L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
+    L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
 
         External Links
         --------------
@@ -179,9 +179,9 @@ def real_root(arg, n=None):
     -2
 
 
-    See also
+    See Also
     ========
-       L{sqrt}, L{RootOf}, L{root}, L{integer_nthroot}
+    L{sqrt}, L{RootOf}, L{root}, L{integer_nthroot}
 
     """
     if n is not None:
