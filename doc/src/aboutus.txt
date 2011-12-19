@@ -149,8 +149,23 @@ want to be mentioned here, so see our repository history for a full list).
 #. David Ju: Increase test coverage, fixes to KroneckerDelta
 #. Alexandr Gudulin: Code quality fixes
 #. Bilal Akhtar: isympy man page
-#. Grzegorz Świrski: Fix to latex()
+#. Grzegorz Świrski: Fix to latex(), MacPorts portfile
 #. Matt Habel: SymPy-wide pyflakes editing
+#. Nichita Utiu: Add pretty printing to Product()
+#. Imran Ahmed Manzoor: Fixes to the test runner
+#. Steve Anton: pyflakes cleanup of various modules, documentation fixes for logic
+#. Sam Sleight: Fixes to geometry documentation
+#. tsmars15: Fixes to code quality
+#. Chancellor Arkantos: Fixes to the logo
+#. Stepan Simsa: Translation of the tutorial to Czech
+#. Tobias Lenz: Unicode pretty printer for Sum
+#. Siddhu: Documentation fixes for the Physics module
+#. Tiffany Zhu: Improved the latex() docstring
+#. Alexey Subach: Translation of the tutorial to Russian
+#. Joan Creus: Improvements to the test runner
+#. Geoffry Song: Improve code coverage
+#. Puneeth Chaganti: Fix for the tutorial
+#. Marcin Kostrzewa: SymPy Cheatsheet
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

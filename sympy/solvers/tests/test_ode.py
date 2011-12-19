@@ -1,13 +1,13 @@
 from __future__ import division
 
-from sympy import (Function, dsolve, Symbol, sin, cos, sinh, acos, tan, cosh,
-    I, exp, log, simplify, together, powsimp, fraction, radsimp, Eq, sqrt, pi,
-    erf,  diff, Rational, asinh, trigsimp, S, RootOf, Poly, Integral, atan,
-    Equality, solve, O, LambertW, Dummy, acosh, Derivative)
+
+from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
+                   erf, exp, Function, I, Integral, LambertW, log, O, pi,
+                   Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan)
 from sympy.abc import x, y, z
-from sympy.solvers.ode import (ode_order, homogeneous_order,
-    _undetermined_coefficients_match, classify_ode, checkodesol,
-    constant_renumber, constantsimp)
+from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
+                               classify_ode, constant_renumber, constantsimp,
+                               homogeneous_order, ode_order)
 from sympy.utilities.pytest import XFAIL, skip, raises
 
 C1 = Symbol('C1')
@@ -590,6 +590,7 @@ def test_1st_homogeneous_coeff_ode_check9():
         x/f(x))) + log(C1*f(x)), 0)
     assert checkodesol(eq9, sol9, order=1, solve_for_func=False)[0]
 
+@XFAIL
 def test_1st_homogeneous_coeff_ode2():
     eq1 = f(x).diff(x) - f(x)/x+1/sin(f(x)/x)
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
@@ -604,7 +605,7 @@ def test_1st_homogeneous_coeff_ode2():
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert all(i[0] for i in checkodesol(eq2, sol2, order=1, solve_for_func=False))
     # the solution doesn't check...perhaps there is something wrong with the routine or the solver?
-    # assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
+    assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 @XFAIL
 def test_1st_homogeneous_coeff_ode2_check3():

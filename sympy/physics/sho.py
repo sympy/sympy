@@ -12,12 +12,13 @@ def R_nl(n, l, nu, r):
         the quantum number for orbital angular momentum
     ``nu``
         mass-scaled frequency: nu = m*omega/(2*hbar) where `m' is the mass and
-        `omega' the frequency of the oscillator.  (in atomic units nu == omega/2)
+        `omega` the frequency of the oscillator.  (in atomic units nu == omega/2)
     ``r``
         Radial coordinate
 
 
-    :Examples:
+    Examples
+    ========
 
     >>> from sympy.physics.sho import R_nl
     >>> from sympy import var

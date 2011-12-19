@@ -3,13 +3,11 @@
 Gates are unitary operators that act on the space of qubits.
 
 Medium Term Todo:
-* Optimize Gate._apply_operators_Qubit to remove the creation of many
-  intermediate Qubit objects.
+* Optimize Gate._apply_operators_Qubit to remove the creation of many intermediate Qubit objects.
 * Add commutation relationships to all operators and use this in gate_sort.
 * Fix gate_sort and gate_simp.
 * Get multi-target UGates plotting properly.
-* Get UGate to work with either sympy/numpy matrices and output either
-  format. This should also use the matrix slots.
+* Get UGate to work with either sympy/numpy matrices and output either format. This should also use the matrix slots.
 """
 
 from itertools import chain
@@ -316,7 +314,7 @@ class CGate(Gate):
             controls = (controls,)
         controls = UnitaryOperator._eval_args(controls)
         _validate_targets_controls(chain(controls,gate.targets))
-        return (controls, gate)
+        return (Tuple(*controls), gate)
 
     @classmethod
     def _eval_hilbert_space(cls, args):

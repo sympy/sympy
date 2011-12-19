@@ -1,5 +1,4 @@
 from sympy.combinatorics.graycode import GrayCode, bin_to_gray, random_bitstring, get_subset_from_bitstring, graycode_subsets
-import random
 
 def test_graycode():
     a = GrayCode(6)

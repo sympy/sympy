@@ -7,13 +7,13 @@ Circle
 
 """
 
-from sympy.core import S, C, sympify, symbol, Dummy
+from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
-from sympy.solvers import solve_poly_system, solve
+from sympy.solvers import solve
 from entity import GeometryEntity
 from point import Point
 from line import LinearEntity, Line
@@ -496,8 +496,6 @@ class Ellipse(GeometryEntity):
         >>> p[1] = t # doctest: +SKIP
 
         """
-        from sympy import solve
-
         if self.encloses_point(p):
             return []
 
@@ -811,7 +809,7 @@ class Ellipse(GeometryEntity):
         Currently supports intersections with Point, Line, Segment, Ray,
         Circle and Ellipse types.
 
-        Example
+        Examples
         -------
         >>> from sympy import Ellipse, Point, Line, sqrt
         >>> e = Ellipse(Point(0, 0), 5, 7)

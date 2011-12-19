@@ -1,4 +1,4 @@
-from sympy.core import S, C
+from sympy.core import S, C, Basic, Interval
 from sympy.utilities import group
 
 from sympy.printing.printer import Printer
@@ -6,7 +6,7 @@ from sympy.printing.str import sstr
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol,\
-        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, \
+        pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U, \
         annotated
 
 from sympy.utilities import default_sort_key
@@ -84,6 +84,15 @@ class PrettyPrinter(Printer):
         if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
             pform = prettyForm(*pform.parens())
         pform = prettyForm(*pform.right('!'))
+        return pform
+
+    def _print_factorial2(self, e):
+        x = e.args[0]
+        pform = self._print(x)
+        # Add parentheses if needed
+        if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.right('!!'))
         return pform
 
     def _print_binomial(self, e):
@@ -337,8 +346,50 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*arg.left(s))
         return pform
 
+    def _print_Product(self, expr):
+        func = expr.term
+        pretty_func = self._print(func)
+
+        horizontal_chr = xobj('_', 1)
+        corner_chr = xobj('_', 1)
+        vertical_chr = xobj('|', 1)
+
+        if self._use_unicode:
+            # use unicode corners
+            horizontal_chr = xobj('-', 1)
+            corner_chr = u'\u252c'
+
+        func_height = pretty_func.height()
+
+        width = (func_height + 2) * 5 // 3 - 2
+        sign_lines = []
+        sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
+        for i in range(func_height+1):
+            sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
+
+        pretty_sign = stringPict('')
+        pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
+
+        pretty_upper = self._print(expr.upper)
+        pretty_lower = self._print(C.Equality(expr.index, expr.lower))
+
+        pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
+        pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
+
+        height = pretty_sign.height()
+        padding = stringPict('')
+        padding = prettyForm(*padding.stack(*[' ']*(height-1)))
+        pretty_sign = prettyForm(*pretty_sign.right(padding))
+
+        pretty_func.baseline = 0
+
+        pretty_func = prettyForm(*pretty_sign.right(pretty_func))
+        return pretty_func
+
     def _print_Sum(self, expr):
-        def asum(hrequired, lower, upper):
+        ascii_mode = not self._use_unicode
+
+        def asum(hrequired, lower, upper, use_ascii):
             def adjust(s, wid=None, how='<^>'):
                 if not wid or len(s)>wid:
                     return s
@@ -353,20 +404,33 @@ class PrettyPrinter(Printer):
 
             h = max(hrequired, 2)
             d = h//2
+            wrequired = max(lower, upper)
             w = d + 1
             more = hrequired % 2
 
             lines = []
-            lines.append("_"*(w) + ' ')
-            lines.append("\%s`" % (' '*(w - 1)))
-            for i in range(1, d):
-              lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
-            if more:
-                lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
-            for i in reversed(range(1, d)):
-              lines.append('%s/%s' % (' '*i, ' '*(w - i)))
-            lines.append("/" + "_"*(w - 1) + ',')
-            return d, h + more, lines
+            if use_ascii:
+                lines.append("_"*(w) + ' ')
+                lines.append("\%s`" % (' '*(w - 1)))
+                for i in range(1, d):
+                  lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
+                if more:
+                  lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
+                for i in reversed(range(1, d)):
+                  lines.append('%s/%s' % (' '*i, ' '*(w - i)))
+                lines.append("/" + "_"*(w - 1) + ',')
+                return d, h + more, lines, 0
+            else:
+                w = w + more
+                d = d + more
+                vsum = vobj('sum', 4)
+                lines.append("_"*(w))
+                for i in range(0, d):
+                    lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i - 1)))
+                for i in reversed(range(0, d)):
+                    lines.append('%s%s%s' % (' '*i, vsum[4], ' '*(w - i - 1)))
+                lines.append(vsum[8]*(w))
+                return d, h + 2*more, lines, more
 
         f = expr.function
 
@@ -396,7 +460,7 @@ class PrettyPrinter(Printer):
             max_upper = max(max_upper, prettyUpper.height())
 
             # Create sum sign based on the height of the argument
-            d, h, slines = asum(H, prettyLower.width(), prettyUpper.width())
+            d, h, slines, adjustment = asum(H, prettyLower.width(), prettyUpper.width(), ascii_mode)
             prettySign = stringPict('')
             prettySign = prettyForm(*prettySign.stack(*slines))
 
@@ -409,7 +473,7 @@ class PrettyPrinter(Printer):
             if first:
                 # change F baseline so it centers on the sign
                 prettyF.baseline -= d - (prettyF.height()//2 -
-                                         prettyF.baseline)
+                                         prettyF.baseline) - adjustment
                 first = False
 
             # put padding to the right
@@ -657,6 +721,11 @@ class PrettyPrinter(Printer):
         above = D.height()//2 - 1
         below = D.height() - above - 1
 
+        if self._use_unicode:
+            pic = (2, 0, 2, u'\u250c\u2500\n\u251c\u2500\n\u2575')
+        else:
+            pic = (3, 0, 3, ' _\n|_\n|\n')
+
         sz, t, b, add, img = annotated('F')
         F = prettyForm('\n' * (above - t) + img + '\n' * (below - b),
                        baseline = above + sz)
@@ -762,6 +831,7 @@ class PrettyPrinter(Printer):
         # XXX works only for applied functions
         func = e.func
         args = e.args
+        n = len(args)
 
         func_name = func.__name__
 
@@ -1031,7 +1101,7 @@ class PrettyPrinter(Printer):
             printset = s
         try:
             printset = sorted(printset)
-        except:  pass
+        except AttributeError:  pass
 
         return self._print_seq(printset, '{', '}', ', ' )
 
@@ -1202,6 +1272,8 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_GroebnerBasis(self, basis):
+        cls = basis.__class__.__name__
+
         exprs = [ self._print_Add(arg, order=basis.order) for arg in basis.exprs ]
         exprs = prettyForm(*self.join(", ", exprs).parens(left="[", right="]"))
 
@@ -1263,20 +1335,16 @@ class PrettyPrinter(Printer):
         bot = stringPict(*a.right(' '*b.width()))
         return prettyForm(binding=prettyForm.POW, *bot.below(top))
 
-def pretty(expr, **settings):
-    """
-    Returns a string containing the prettified form of expr.
+    def _print_atan2(self, e):
+        pform = prettyForm(*self._print_seq(e.args).parens())
+        pform = prettyForm(*pform.left('atan2'))
+        return pform
 
-    Arguments
-    ---------
-    expr: the expression to print
-    wrap_line: line wrapping enabled/disabled, should be a boolean value (default to True)
-    num_columns: number of columns before line breaking (default to None which reads the
-        terminal width), it is useful when using SymPy without terminal.
-    use_unicode: use unicode characters, such as the Greek letter pi instead of
-        the string pi. Values should be boolean or None
-    full_prec: use full precision. Default to "auto"
-    order: set to 'none' for long expressions if slow; default is None
+def pretty(expr, **settings):
+    """Returns a string containing the prettified form of expr.
+
+    For information on keyword arguments see pretty_print function.
+
     """
     pp = PrettyPrinter(settings)
 
@@ -1290,12 +1358,29 @@ def pretty(expr, **settings):
         pretty_use_unicode(uflag)
 
 def pretty_print(expr, **settings):
-    """
-    Prints expr in pretty form.
+    """Prints expr in pretty form.
 
-    pprint is just a shortcut for this function
+    pprint is just a shortcut for this function.
+
+
+    Parameters
+    ==========
+    expr : expression
+        the expression to print
+    wrap_line : bool, optional
+        line wrapping enabled/disabled, defaults to True
+    num_columns : bool, optional
+        number of columns before line breaking (default to None which reads
+        the terminal width), useful when using SymPy without terminal.
+    use_unicode : bool or None, optional
+        use unicode characters, such as the Greek letter pi instead of
+        the string pi.
+    full_prec : bool or string, optional
+        use full precision. Default to "auto"
+    order : bool or string, optional
+        set to 'none' for long expressions if slow; default is None
+
     """
     print pretty(expr, **settings)
 
 pprint = pretty_print
-

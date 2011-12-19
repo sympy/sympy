@@ -116,6 +116,7 @@ def intersection(*entities):
 
     """
     from entity import GeometryEntity
+    from point import Point
 
     if len(entities) <= 1:
         return []
@@ -258,6 +259,8 @@ def are_similar(e1, e2):
     False
 
     """
+    from exceptions import GeometryError
+
     if e1 == e2:
         return True
     try:
@@ -278,7 +281,8 @@ def centroid(*args):
 
     If there are no objects (or a mixture of objects) then None is returned.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import Point, Segment, Polygon
     >>> from sympy.geometry.util import centroid

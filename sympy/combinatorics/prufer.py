@@ -10,7 +10,7 @@ class Prufer(Basic):
     proof of Cayley's formula.
 
     Reference:
-    [1] http://mathworld.wolfram.com/LabeledTree.html
+    (1) http://mathworld.wolfram.com/LabeledTree.html
     """
     _prufer_repr = None
     _tree_repr = None
@@ -44,7 +44,8 @@ class Prufer(Basic):
         """
         Convert to Prufer code.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
         >>> a.prufer_repr
@@ -88,7 +89,8 @@ class Prufer(Basic):
         """
         Converts to tree representation.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([0, 2], 4)
         >>> a.tree_repr
@@ -119,11 +121,11 @@ class Prufer(Basic):
     def prufer_rank(self):
         """
         Computes the rank of a Prufer sequence.
-
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
-        >>> a.rank
+        >>> a.prufer_rank()
         0
         """
         r = 0
@@ -138,7 +140,8 @@ class Prufer(Basic):
         """
         Finds the unranked Prufer sequence.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer.unrank(0, 4)
         Prufer([0, 0])
@@ -155,7 +158,8 @@ class Prufer(Basic):
         """
         The constructor for the Prufer object.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
         >>> a.prufer_repr
@@ -177,7 +181,8 @@ class Prufer(Basic):
         """
         Generates the next Prufer sequence.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
         >>> b = a.next()
@@ -192,7 +197,8 @@ class Prufer(Basic):
         """
         Generates the previous Prufer sequence.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [1, 2], [2, 3], [1, 4]], 5)
         >>> a.rank

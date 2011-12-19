@@ -1,9 +1,11 @@
-from sympy import symbols, LeviCivita, KroneckerDelta, Dummy
+from sympy import symbols, Symbol, Eijk, LeviCivita, KroneckerDelta, Dummy
 from sympy.physics.secondquant import evaluate_deltas, F
+from sympy.utilities.pytest import XFAIL
 
 x, y = symbols('x,y')
 
 def test_levicivita():
+    assert Eijk(1, 2, 3) == LeviCivita(1, 2, 3)
     assert LeviCivita(1, 2, 3) == 1
     assert LeviCivita(1, 3, 2) == -1
     assert LeviCivita(1, 2, 2) == 0
@@ -17,7 +19,8 @@ def test_levicivita():
     assert LeviCivita(4, 5, 2, 1, 3) == -1
 
 def test_kronecker_delta():
-    i, j, k = symbols('i,j,k')
+    i, j = symbols('i,j')
+    k = Symbol('k', nonzero=True)
     D = KroneckerDelta
     assert D(1, 1) == 1
     assert D(1, 2) == 0
@@ -27,23 +30,25 @@ def test_kronecker_delta():
     assert D(i, i + 1) == 0
     assert D(0, 0) == 1
     assert D(0, 1) == 0
-    # assert D(i, i + k) == D(0, k)
     assert D(i + k, i + k) == 1
     assert D(i + k, i + 1 + k) == 0
     assert D(i, j).subs(dict(i=1, j=0)) == 0
     assert D(i, j).subs(dict(i=3, j=3)) == 1
 
 
-    i,j,k,l = symbols('i j k l',below_fermi=True,cls=Dummy)
-    a,b,c,d = symbols('a b c d',above_fermi=True, cls=Dummy)
+    i,j,v,w = symbols('i j v w',below_fermi=True,cls=Dummy)
+    a,b,t,u = symbols('a b t u',above_fermi=True, cls=Dummy)
     p,q,r,s = symbols('p q r s',cls=Dummy)
 
     assert D(i,a) == 0
+    assert D(i,t) == 0
 
     assert D(i,j).is_above_fermi == False
     assert D(a,b).is_above_fermi == True
     assert D(p,q).is_above_fermi == True
     assert D(i,q).is_above_fermi == False
+    assert D(q,i).is_above_fermi == False
+    assert D(q,v).is_above_fermi == False
     assert D(a,q).is_above_fermi == True
 
     assert D(i,j).is_below_fermi == True
@@ -51,6 +56,19 @@ def test_kronecker_delta():
     assert D(p,q).is_below_fermi == True
     assert D(p,j).is_below_fermi == True
     assert D(q,b).is_below_fermi == False
+
+    assert D(i,j).is_only_above_fermi == False
+    assert D(a,b).is_only_above_fermi == True
+    assert D(p,q).is_only_above_fermi == False
+    assert D(i,q).is_only_above_fermi == False
+    assert D(q,i).is_only_above_fermi == False
+    assert D(a,q).is_only_above_fermi == True
+
+    assert D(i,j).is_only_below_fermi == True
+    assert D(a,b).is_only_below_fermi == False
+    assert D(p,q).is_only_below_fermi == False
+    assert D(p,j).is_only_below_fermi == True
+    assert D(q,b).is_only_below_fermi == False
 
     assert not D(i,q).indices_contain_equal_information
     assert not D(a,q).indices_contain_equal_information
@@ -60,8 +78,12 @@ def test_kronecker_delta():
 
     assert D(q,b).preferred_index == b
     assert D(q,b).killable_index == q
+    assert D(q,t).preferred_index == t
+    assert D(q,t).killable_index == q
     assert D(q,i).preferred_index == i
     assert D(q,i).killable_index == q
+    assert D(q,v).preferred_index == v
+    assert D(q,v).killable_index == q
     assert D(q,p).preferred_index == p
     assert D(q,p).killable_index == q
 
@@ -80,3 +102,7 @@ def test_kronecker_delta():
     assert EV(D(p,j)*D(p,i)*F(i)) == F(j)
     assert EV(D(p,j)*D(p,i)*F(j)) == F(i)
     assert EV(D(p,q)*D(p,i))*F(i) == D(q,i)*F(i)
+
+@XFAIL
+def test_kronecker_delta_failing():
+    assert D(i, i + k) == D(0, k)

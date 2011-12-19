@@ -122,7 +122,8 @@ def test(*paths, **kwargs):
        o paths can be entered in native system format or in unix,
          forward-slash format.
 
-    Examples:
+    Examples
+    ========
 
     >> import sympy
 
@@ -206,7 +207,8 @@ def doctest(*paths, **kwargs):
        o files that are on the blacklist can be tested by providing
          their path; they are only excluded if no paths are given.
 
-    Examples:
+    Examples
+    ========
 
     >> import sympy
 
@@ -516,13 +518,14 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f)
+                self.test_file(f, sort)
             except KeyboardInterrupt:
                 print " interrupted by user"
-                break
+                self._reporter.finish()
+                raise
         return self._reporter.finish()
 
-    def test_file(self, filename):
+    def test_file(self, filename, sort=True):
         clear_cache()
         self._count += 1
         gl = {'__file__':filename}
@@ -531,7 +534,7 @@ class SymPyTests(object):
             execfile(filename, gl)
         except (SystemExit, KeyboardInterrupt):
             raise
-        except:
+        except ImportError:
             self._reporter.import_error(filename, sys.exc_info())
             return
         pytestfile = ""
@@ -571,13 +574,15 @@ class SymPyTests(object):
         if not funcs:
             return
         self._reporter.entering_filename(filename, len(funcs))
+        if not sort:
+            random.shuffle(funcs)
         for f in funcs:
             self._reporter.entering_test(f)
             try:
                 f()
             except KeyboardInterrupt:
                 raise
-            except:
+            except Exception:
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
                     self._reporter.test_fail((t, v, tr))
@@ -641,7 +646,8 @@ class SymPyDocTests(object):
                 self.test_file(f)
             except KeyboardInterrupt:
                 print " interrupted by user"
-                break
+                self._reporter.finish()
+                raise
         return self._reporter.finish()
 
     def test_file(self, filename):
@@ -655,7 +661,7 @@ class SymPyDocTests(object):
         module = rel_name.replace(os.sep, '.')[:-3]
 
         if rel_name.startswith("examples"):
-            # Example files do not have __init__.py files,
+            # Examples files do not have __init__.py files,
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
             module = file[:-3] # remove ".py"
@@ -663,7 +669,9 @@ class SymPyDocTests(object):
         try:
             module = pdoctest._normalize_module(module)
             tests = SymPyDocTestFinder().find(module)
-        except:
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except ImportError:
             self._reporter.import_error(filename, sys.exc_info())
             return
         finally:
@@ -701,6 +709,8 @@ class SymPyDocTests(object):
                 #exec('from sympy import *') in test.globs
             try:
                 f, t = runner.run(test, out=new.write, clear_globs=False)
+            except KeyboardInterrupt:
+                raise
             finally:
                 sys.stdout = old
             if f > 0:
@@ -797,9 +807,11 @@ class SymPyDocTestFinder(DocTestFinder):
                         try:
                             valname = '%s.%s' % (name, rawname)
                             self._find(tests, val, valname, module, source_lines, globs, seen)
+                        except KeyboardInterrupt:
+                            raise
                         except ValueError, msg:
                             raise
-                        except:
+                        except Exception:
                             pass
 
         # Look for tests in a module's __test__ dictionary.

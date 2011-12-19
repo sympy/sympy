@@ -1,6 +1,8 @@
 """OO layer for several polynomial representations. """
 
-class GenericPoly(object):
+from sympy.core.basic import PicklableWithSlots
+
+class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
 
     def ground_to_ring(f):
@@ -136,7 +138,7 @@ from sympy.polys.polyerrors import (
 def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)
 
-class DMP(object):
+class DMP(PicklableWithSlots):
     """Dense Multivariate Polynomials over `K`. """
 
     __slots__ = ['rep', 'lev', 'dom']
@@ -159,12 +161,6 @@ class DMP(object):
 
     def __hash__(f):
         return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom))
-
-    def __getstate__(self):
-        return (self.rep, self.lev, self.dom)
-
-    def __getnewargs__(self):
-        return (self.rep, self.lev, self.dom)
 
     def unify(f, g):
         """Unify representations of two multivariate polynomials. """
@@ -349,7 +345,8 @@ class DMP(object):
 
         Returns the removed generators and the new excluded ``f``.
 
-        **Example**
+        Examples
+        ========
 
         >>> from sympy.polys.polyclasses import DMP
         >>> from sympy.polys.domains import ZZ
@@ -365,7 +362,8 @@ class DMP(object):
         r"""
         Returns a polynomial in ``K[x_{P(1)}, ..., x_{P(n)}]``.
 
-        **Example**
+        Examples
+        ========
 
         >>> from sympy.polys.polyclasses import DMP
         >>> from sympy.polys.domains import ZZ
@@ -934,7 +932,7 @@ def init_normal_DMF(num, den, lev, dom):
     return DMF(dmp_normal(num, lev, dom),
                dmp_normal(den, lev, dom), dom, lev)
 
-class DMF(object):
+class DMF(PicklableWithSlots):
     """Dense Multivariate Fractions over `K`. """
 
     __slots__ = ['num', 'den', 'lev', 'dom']
@@ -1011,12 +1009,6 @@ class DMF(object):
     def __hash__(f):
         return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
             dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
-
-    def __getstate__(self):
-        return (self.num, self.den, self.lev, self.dom)
-
-    def __getnewargs__(self):
-        return (self.num, self.den, self.lev, self.dom)
 
     def poly_unify(f, g):
         """Unify a multivariate fraction and a polynomial. """
@@ -1322,7 +1314,7 @@ def init_normal_ANP(rep, mod, dom):
     return ANP(dup_normal(rep, dom),
                dup_normal(mod, dom), dom)
 
-class ANP(object):
+class ANP(PicklableWithSlots):
     """Dense Algebraic Number Polynomials over a field. """
 
     __slots__ = ['rep', 'mod', 'dom']
@@ -1351,12 +1343,6 @@ class ANP(object):
 
     def __hash__(f):
         return hash((f.__class__.__name__, f.to_tuple(), dmp_to_tuple(f.mod, 0), f.dom))
-
-    def __getstate__(self):
-        return (self.rep, self.mod, self.dom)
-
-    def __getnewargs__(self):
-        return (self.rep, self.mod, self.dom)
 
     def unify(f, g):
         """Unify representations of two algebraic numbers. """

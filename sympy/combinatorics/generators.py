@@ -5,7 +5,8 @@ def symmetric(n):
     """
     Generates the symmetric group of order n, Sn.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.generators import symmetric
     >>> list(symmetric(3))
     [Permutation([0, 1, 2]), Permutation([0, 2, 1]), Permutation([1, 0, 2]), \
@@ -18,7 +19,8 @@ def cyclic(n):
     """
     Generates the cyclic group of order n, Cn.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.generators import cyclic
     >>> list(cyclic(5))
     [Permutation([0, 1, 2, 3, 4]), Permutation([1, 2, 3, 4, 0]), \
@@ -34,7 +36,8 @@ def alternating(n):
     """
     Generates the alternating group of order n, An.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.generators import alternating
     >>> list(alternating(4))
     [Permutation([0, 1, 2, 3]), Permutation([0, 2, 3, 1]), \
@@ -46,14 +49,15 @@ def alternating(n):
     """
     for perm in variations(range(n), n):
         p = Permutation(perm)
-        if p.is_even():
+        if p.is_even:
             yield p
 
 def dihedral(n):
     """
     Generates the dihedral group of order 2n, D2n.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.generators import dihedral
     >>> list(dihedral(4))
     [Permutation([0, 1, 2, 3]), Permutation([3, 2, 1, 0]), \

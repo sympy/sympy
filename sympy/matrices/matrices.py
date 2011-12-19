@@ -14,7 +14,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.printing import sstr
 from sympy.functions.elementary.trigonometric import cos, sin
 
-from sympy.core.compatibility import callable, reduce
+from sympy.core.compatibility import callable, reduce, SymPyDeprecationWarning
 
 import random
 import warnings
@@ -140,19 +140,6 @@ class Matrix(object):
         else:
             raise TypeError("Data type not understood")
 
-    def key2ij(self, key):
-        """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
-        indices are also supported and are remapped to positives provided they
-        are valid indices."""
-
-        if not (is_sequence(key) and len(key) == 2):
-            raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
-                    %repr(key))
-        i, j = [(k + n) if k < 0 else k for k, n in zip(key, (self.rows, self.cols))]
-        if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
-            raise IndexError("Index out of range: a[%s]"%repr(key))
-        return i,j
-
     def transpose(self):
         """
         Matrix transposition.
@@ -234,13 +221,13 @@ class Matrix(object):
 
             else:
                 # a2idx inlined
-                if not type(i) is int:
+                if type(i) is not int:
                     try:
                         i = i.__index__()
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
                 # a2idx inlined
-                if not type(j) is int:
+                if type(j) is not int:
                     try:
                        j = j.__index__()
                     except AttributeError:
@@ -287,14 +274,14 @@ class Matrix(object):
                     return
             else:
                 # a2idx inlined
-                if not type(i) is int:
+                if type(i) is not int:
                     try:
                         i = i.__index__()
                     except AttributeError:
                         raise IndexError("Invalid index a[%r]" % (key,))
 
                 # a2idx inlined
-                if not type(j) is int:
+                if type(j) is not int:
                     try:
                         j = j.__index__()
                     except AttributeError:
@@ -350,8 +337,34 @@ class Matrix(object):
         return ret
 
     def copyin_matrix(self, key, value):
-        rlo, rhi = self.slice2bounds(key[0], self.rows)
-        clo, chi = self.slice2bounds(key[1], self.cols)
+        """
+        Copy in values from a matrix into the given bounds.
+
+        Parameters
+        ==========
+
+        key : slice
+            The section of this matrix to replace.
+        value : Matrix
+            The matrix to copy values from.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> M = sympy.matrices.Matrix([[0,1],[2,3]])
+        >>> I = sympy.matrices.eye(5)
+        >>> I.copyin_matrix((slice(0,2), slice(0,2)),M)
+        >>> I
+        [0, 1, 0, 0, 0]
+        [2, 3, 0, 0, 0]
+        [0, 0, 1, 0, 0]
+        [0, 0, 0, 1, 0]
+        [0, 0, 0, 0, 1]
+
+        """
+        rlo, rhi, clo, chi = self.key2bounds(key)
+
         if value.rows != rhi - rlo or value.cols != chi - clo:
             raise ShapeError("The Matrix `value` doesn't have the same dimensions " +
                 "as the in sub-Matrix given by `key`.")
@@ -361,6 +374,31 @@ class Matrix(object):
                 self[i+rlo, j+clo] = sympify(value[i,j])
 
     def copyin_list(self, key, value):
+        """
+        Copy in elements from a list.
+
+        Parameters
+        ==========
+
+        key : slice
+            The section of this matrix to replace.
+        value : iterable
+            The iterable to copy values from.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> I = sympy.matrices.eye(5)
+        >>> I.copyin_list((slice(0,2), slice(0,1)), [1,2])
+        >>> I
+        [1, 0, 0, 0, 0]
+        [2, 1, 0, 0, 0]
+        [0, 0, 1, 0, 0]
+        [0, 0, 0, 1, 0]
+        [0, 0, 0, 0, 1]
+
+        """
         if not is_sequence(value):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
         return self.copyin_matrix(key, Matrix(value))
@@ -372,6 +410,7 @@ class Matrix(object):
 
     @property
     def shape(self):
+        """The shape (dimensions) of the matrix as the 2-tuple (rows, cols)."""
         return (self.rows, self.cols)
 
     def __rmul__(self,a):
@@ -381,14 +420,23 @@ class Matrix(object):
         return out
 
     def expand(self, **hints):
+        """
+        Expand each element of the matrix by calling `expand()`.
+        """
         out = Matrix(self.rows,self.cols,map(lambda i: i.expand(**hints), self.mat))
         return out
 
     def combine(self):
+        """
+        Combine each element of the matrix by calling `combine()`.
+        """
         out = Matrix(self.rows,self.cols,map(lambda i: i.combine(),self.mat))
         return out
 
     def subs(self, *args):
+        """
+        Create substituted expressions for each element with `Expr.subs`.
+        """
         out = Matrix(self.rows,self.cols,map(lambda i: i.subs(*args),self.mat))
         return out
 
@@ -731,8 +779,10 @@ class Matrix(object):
         elif method == "LU":
             return self.inverse_LU(iszerofunc=iszerofunc)
         elif method == "ADJ":
-            return self.inverse_ADJ()
+            return self.inverse_ADJ(iszerofunc=iszerofunc)
         else:
+            # make sure to add an invertibility check (as in inverse_LU)
+            # if a new method is added.
             raise ValueError("Inversion method unrecognized")
 
 
@@ -790,19 +840,59 @@ class Matrix(object):
             self[i, j] = f(self[i, j], i)
 
     def row_swap(self, i, j):
+        """
+        Swap the two given rows of the matrix in-place.
+
+        >>> from sympy.matrices import Matrix
+        >>> M = Matrix([[0,1],[1,0]])
+        >>> M
+        [0, 1]
+        [1, 0]
+        >>> M.row_swap(0, 1)
+        >>> M
+        [1, 0]
+        [0, 1]
+
+        """
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
     def col_swap(self, i, j):
+        """
+        Swap the two given columns of the matrix in-place.
+
+        >>> from sympy.matrices import Matrix
+        >>> M = Matrix([[1,0],[1,0]])
+        >>> M
+        [1, 0]
+        [1, 0]
+        >>> M.col_swap(0, 1)
+        >>> M
+        [0, 1]
+        [0, 1]
+
+        """
         for k in range(0, self.rows):
             self[k, i], self[k, j] = self[k, j], self[k, i]
 
     def row_del(self, i):
+        """
+        Delete the given row.
+
+        >>> import sympy
+        >>> M = sympy.matrices.eye(3)
+        >>> M.row_del(1)
+        >>> M   #doctest: +NORMALIZE_WHITESPACE
+        [1, 0, 0]
+        [0, 0, 1]
+        """
         self.mat = self.mat[:i*self.cols] + self.mat[(i+1)*self.cols:]
         self.rows -= 1
 
     def col_del(self, i):
         """
+        Delete the given column.
+
         >>> import sympy
         >>> M = sympy.matrices.eye(3)
         >>> M.col_del(1)
@@ -861,6 +951,8 @@ class Matrix(object):
 
     def row_insert(self, pos, mti):
         """
+        Insert a row at the given position.
+
         >>> from sympy import Matrix, zeros
         >>> M = Matrix(3,3,lambda i,j: i+j)
         >>> M
@@ -897,6 +989,8 @@ class Matrix(object):
 
     def col_insert(self, pos, mti):
         """
+        Insert a column at the given position.
+
         >>> from sympy import Matrix, zeros
         >>> M = Matrix(3,3,lambda i,j: i+j)
         >>> M
@@ -933,6 +1027,15 @@ class Matrix(object):
         return newmat
 
     def trace(self):
+        """
+        Calculate the trace of a (square) matrix.
+
+        >>> import sympy
+        >>> M = sympy.matrices.eye(3)
+        >>> M.trace()
+        3
+
+        """
         if not self.is_square:
             raise NonSquareMatrixError()
 
@@ -943,6 +1046,8 @@ class Matrix(object):
 
     def submatrix(self, keys):
         """
+        Get a slice/submatrix of the matrix using the given slice.
+
         >>> from sympy import Matrix
         >>> m = Matrix(4,4,lambda i,j: i+j)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
@@ -960,13 +1065,7 @@ class Matrix(object):
         [5, 6]
 
         """
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("At least one element of `keys` must be a slice object.")
-
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        rlo, rhi, clo, chi = self.key2bounds(keys)
         outLines, outCols = rhi-rlo, chi-clo
         outMat = [0]*outLines*outCols
         for i in xrange(outLines):
@@ -979,7 +1078,8 @@ class Matrix(object):
         Negative indices can be given. All indices must be in the range
         -n <= i < n where n is the number of rows or columns.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(4, 3, range(12))
@@ -1014,22 +1114,57 @@ class Matrix(object):
         colsList = [self.key2ij((0,k))[1] for k in colsList]
         return Matrix(len(rowsList), len(colsList), lambda i,j: mat[rowsList[i]*cols + colsList[j]])
 
+    def key2bounds(self, keys):
+        """Converts a key with potentially mixed types of keys (integer and slice)
+        into a tuple of ranges and raises an error if any index is out of self's
+        range."""
+
+        islice, jslice = [isinstance(k, slice) for k in keys]
+        if islice:
+            rlo, rhi = self.slice2bounds(keys[0], self.rows)
+        else:
+            # assuming we don't have a
+            rlo, _ = self.slice2bounds((keys[0], 0), self.rows)
+            rhi  = rlo + 1
+        if jslice:
+            clo, chi = self.slice2bounds(keys[1], self.cols)
+        else:
+            _, clo = self.slice2bounds((0, keys[1]), self.cols)
+            chi = clo + 1
+        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
+            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        return rlo, rhi, clo, chi
+
+    def key2ij(self, key):
+        """Converts key=(4,6) to 4,6 and ensures the key is correct. Negative
+        indices are also supported and are remapped to positives provided they
+        are valid indices."""
+
+        if not (is_sequence(key) and len(key) == 2):
+            raise TypeError("wrong syntax: a[%s]. Use a[i,j] or a[(i,j)]"
+                    %repr(key))
+        i, j = [(k + n) if k < 0 else k for k, n in zip(key, (self.rows, self.cols))]
+        if not (i>=0 and i<self.rows and j>=0 and j < self.cols):
+            raise IndexError("Index out of range: a[%s]"%repr(key))
+        return i,j
+
     def slice2bounds(self, key, defmax):
         """
-            Takes slice or number and returns (min,max) for iteration
-            Takes a default maxval to deal with the slice ':' which is (none, none)
+        Takes slice or number and returns (min,max) for iteration
+        Takes a default maxval to deal with the slice ':' which is (none, none)
         """
         if isinstance(key, slice):
             return key.indices(defmax)[:2]
-        elif isinstance(key, int):
-            if key == -1:
-                key = defmax - 1
-            return slice(key, key + 1).indices(defmax)[:2]
+        elif isinstance(key, tuple):
+            key = [defmax - 1 if i == -1 else i for i in key]
+            return self.key2ij(key)
         else:
             raise IndexError("Improper index type")
 
     def applyfunc(self, f):
         """
+        Apply a function to each element of the matrix.
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,lambda i,j: i*2+j)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
@@ -1047,6 +1182,9 @@ class Matrix(object):
         return out
 
     def evalf(self, prec=None, **options):
+        """
+        Evaluate each element of the matrix as a float.
+        """
         if prec is None:
             return self.applyfunc(lambda i: i.evalf(**options))
         else:
@@ -1054,6 +1192,8 @@ class Matrix(object):
 
     def reshape(self, _rows, _cols):
         """
+        Reshape the matrix. Total number of elements must remain the same.
+
         >>> from sympy import Matrix
         >>> m = Matrix(2,3,lambda i,j: 1)
         >>> m   #doctest: +NORMALIZE_WHITESPACE
@@ -1073,22 +1213,25 @@ class Matrix(object):
 
     def print_nonzero (self, symb="X"):
         """
-        Shows location of non-zero entries for fast shape lookup ::
+        Shows location of non-zero entries for fast shape lookup.
 
-            >>> from sympy import Matrix, matrices
-            >>> m = Matrix(2,3,lambda i,j: i*3+j)
-            >>> m           #doctest: +NORMALIZE_WHITESPACE
-            [0, 1, 2]
-            [3, 4, 5]
-            >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
-            [ XX]
-            [XXX]
-            >>> m = matrices.eye(4)
-            >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
-            [x   ]
-            [ x  ]
-            [  x ]
-            [   x]
+        Examples
+        ========
+
+        >>> from sympy import Matrix, matrices
+        >>> m = Matrix(2,3,lambda i,j: i*3+j)
+        >>> m           #doctest: +NORMALIZE_WHITESPACE
+        [0, 1, 2]
+        [3, 4, 5]
+        >>> m.print_nonzero()   #doctest: +NORMALIZE_WHITESPACE
+        [ XX]
+        [XXX]
+        >>> m = matrices.eye(4)
+        >>> m.print_nonzero("x")    #doctest: +NORMALIZE_WHITESPACE
+        [x   ]
+        [ x  ]
+        [  x ]
+        [   x]
 
         """
         s = []
@@ -1132,7 +1275,8 @@ class Matrix(object):
         """
         Returns the decomposition LU and the row swaps p.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> a = Matrix([[4, 3], [6, 3]])
@@ -1233,23 +1377,35 @@ class Matrix(object):
         return P, L, DD, U
 
     def cofactorMatrix(self, method="berkowitz"):
+        """
+        Return a matrix containing the cofactor of each element.
+        """
         out = Matrix(self.rows, self.cols, lambda i,j:
                 self.cofactor(i, j, method))
         return out
 
     def minorEntry(self, i, j, method="berkowitz"):
+        """
+        Calculate the minor of an element.
+        """
         if not 0 <= i < self.rows or not 0 <= j < self.cols:
             raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` " +
                 "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
         return self.minorMatrix(i,j).det(method)
 
     def minorMatrix(self, i, j):
+        """
+        Creates the minor matrix of a given element.
+        """
         if not 0 <= i < self.rows or not 0 <= j < self.cols:
             raise ValueError("`i` and `j` must satisfy 0 <= i < `self.rows` " +
                 "(%d)" % self.rows + "and 0 <= j < `self.cols` (%d)." % self.cols)
         return self.delRowCol(i,j)
 
     def cofactor(self, i, j, method="berkowitz"):
+        """
+        Calculate the cofactor of an element.
+        """
         if (i+j) % 2 == 0:
             return self.minorEntry(i, j, method)
         else:
@@ -1267,7 +1423,8 @@ class Matrix(object):
         Both self and X can be a row or a column matrix in any order
         (jacobian() should always work).
 
-        Examples::
+        Examples
+        ========
 
             >>> from sympy import sin, cos, Matrix
             >>> from sympy.abc import rho, phi
@@ -1309,8 +1466,9 @@ class Matrix(object):
         Return Q,R where A = Q*R, Q is orthogonal and R is upper triangular.
 
         Examples
+        ========
 
-        This is the example from wikipedia::
+        This is the example from wikipedia:
 
         >>> from sympy import Matrix, eye
         >>> A = Matrix([[12,-51,4],[6,167,-68],[-4,24,-41]])
@@ -1326,7 +1484,8 @@ class Matrix(object):
         >>> A == Q*R
         True
 
-        QR factorization of an identity matrix
+        QR factorization of an identity matrix:
+
         >>> A = Matrix([[1,0,0],[0,1,0],[0,0,1]])
         >>> Q, R = A.QRdecomposition()
         >>> Q
@@ -1393,7 +1552,7 @@ class Matrix(object):
         # only in the end.
         x = []
         n = R.rows
-        for j in range(n-1, -1, -1):
+        for j in range(n - 1, -1, -1):
             tmp = y[j,:]
             for k in range(j+1, n):
                 tmp -= R[j,k] * x[n-1-k]
@@ -1418,6 +1577,9 @@ class Matrix(object):
     #            self[i,j] = self[i,j].eval()
 
     def cross(self, b):
+        """
+        Calculate the cross product of `self` and `b`.
+        """
         if not is_sequence(b, include=Matrix):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
@@ -1476,10 +1638,10 @@ class Matrix(object):
     def multiply_elementwise(self, b):
         """Return the Hadamard product (elementwise product) of A and B
 
-        >>> import sympy
-        >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
-        >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
-        >>> print A.multiply_elementwise(B)
+        >>> from sympy.matrices.matrices import Matrix
+        >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+        >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+        >>> A.multiply_elementwise(B)
         [  0, 10, 200]
         [300, 40,   5]
         """
@@ -1508,16 +1670,16 @@ class Matrix(object):
         >>> from sympy import Matrix, Symbol, trigsimp, cos, sin
         >>> x = Symbol('x', real=True)
         >>> v = Matrix([cos(x), sin(x)])
-        >>> print trigsimp( v.norm() )
+        >>> trigsimp( v.norm() )
         1
-        >>> print v.norm(10)
+        >>> v.norm(10)
         (sin(x)**10 + cos(x)**10)**(1/10)
         >>> A = Matrix([[1,1], [1,1]])
-        >>> print A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
+        >>> A.norm(2)# Spectral norm (max of |Ax|/|x| under 2-vector-norm)
         2
-        >>> print A.norm(-2) # Inverse spectral norm (smallest singular value)
+        >>> A.norm(-2) # Inverse spectral norm (smallest singular value)
         0
-        >>> print A.norm() # Frobenius Norm
+        >>> A.norm() # Frobenius Norm
         2
         """
 
@@ -1539,7 +1701,7 @@ class Matrix(object):
             # Note that while useful this is not mathematically a norm
             try:
                 return Pow( Add(*(abs(i)**ord for i in self.mat)), S(1)/ord )
-            except:
+            except TypeError:
                 raise ValueError("Expected order to be Number, Symbol, oo")
 
         # Matrix Norms
@@ -1561,6 +1723,9 @@ class Matrix(object):
                 raise NotImplementedError("Matrix Norms under development")
 
     def normalized(self):
+        """
+        Return the normalized version of `self`.
+        """
         if self.rows != 1 and self.cols != 1:
             raise ShapeError("A Matrix must be a vector to normalize.")
         norm = self.norm()
@@ -1581,18 +1746,54 @@ class Matrix(object):
         return v * (self.dot(v) / v.dot(v))
 
     def permuteBkwd(self, perm):
+        """
+        Permute the rows of the matrix with the given permutation in reverse.
+
+        >>> import sympy
+        >>> M = sympy.matrices.eye(3)
+        >>> M.permuteBkwd([[0,1],[0,2]])
+        [0, 1, 0]
+        [0, 0, 1]
+        [1, 0, 0]
+
+        """
         copy = self[:,:]
         for i in range(len(perm)-1, -1, -1):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
 
     def permuteFwd(self, perm):
+        """
+        Permute the rows of the matrix with the given permutation.
+
+        >>> import sympy
+        >>> M = sympy.matrices.eye(3)
+        >>> M.permuteFwd([[0,1],[0,2]])
+        [0, 0, 1]
+        [1, 0, 0]
+        [0, 1, 0]
+
+        """
         copy = self[:,:]
         for i in range(len(perm)):
             copy.row_swap(perm[i][0], perm[i][1])
         return copy
 
     def delRowCol(self, i, j):
+        """
+        Creates a copy of the matrix with the given row and column deleted.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> I = sympy.matrices.eye(4)
+        >>> I.delRowCol(1,2)
+        [1, 0, 0]
+        [0, 0, 0]
+        [0, 0, 1]
+
+        """
         # used only for cofactors, makes a copy
         M = self[:,:]
         M.row_del(i)
@@ -1616,7 +1817,7 @@ class Matrix(object):
         """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
-            warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+            warnings.warn("pass row and column as zeros(%i, %i)" % r, SymPyDeprecationWarning)
             r, c = r
         else:
             c = r if c is None else c
@@ -1640,18 +1841,18 @@ class Matrix(object):
         The empty matrix is square by definition, since the number of rows and
         the number of columns are both zero.
 
-        Example::
-            >>> from sympy import Matrix
-            >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
-            >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-            >>> c = Matrix([])
-            >>> a.is_square
-            False
-            >>> b.is_square
-            True
-            >>> c.is_square
-            True
-
+        Examples
+        ========
+        >>> from sympy import Matrix
+        >>> a = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> b = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        >>> c = Matrix([])
+        >>> a.is_square
+        False
+        >>> b.is_square
+        True
+        >>> c.is_square
+        True
         """
         return self.rows == self.cols
 
@@ -1664,20 +1865,22 @@ class Matrix(object):
         to be considered zero.  The empty matrix is zero by the principle of
         vacuous truth.
 
-        Example::
-            >>> from sympy import Matrix, zeros
-            >>> a = Matrix([[0, 0], [0, 0]])
-            >>> b = zeros(3, 4)
-            >>> c = Matrix([[0, 1], [0, 0]])
-            >>> d = Matrix([])
-            >>> a.is_zero
-            True
-            >>> b.is_zero
-            True
-            >>> c.is_zero
-            False
-            >>> d.is_zero
-            True
+        Examples
+        ========
+
+        >>> from sympy import Matrix, zeros
+        >>> a = Matrix([[0, 0], [0, 0]])
+        >>> b = zeros(3, 4)
+        >>> c = Matrix([[0, 1], [0, 0]])
+        >>> d = Matrix([])
+        >>> a.is_zero
+        True
+        >>> b.is_zero
+        True
+        >>> c.is_zero
+        False
+        >>> d.is_zero
+        True
         """
         return all(i.is_zero for i in self)
 
@@ -1688,15 +1891,17 @@ class Matrix(object):
         A matrix B is nilpotent if for some integer k, B**k is
         a zero matrix.
 
-        Example:
-            >>> from sympy import Matrix
-            >>> a = Matrix([[0,0,0],[1,0,0],[1,1,0]])
-            >>> a.is_nilpotent()
-            True
+        Examples
+        ========
 
-            >>> a = Matrix([[1,0,1],[1,0,0],[1,1,0]])
-            >>> a.is_nilpotent()
-            False
+        >>> from sympy import Matrix
+        >>> a = Matrix([[0,0,0],[1,0,0],[1,1,0]])
+        >>> a.is_nilpotent()
+        True
+
+        >>> a = Matrix([[1,0,1],[1,0,0],[1,1,0]])
+        >>> a.is_nilpotent()
+        False
         """
         if not self.is_square:
             raise NonSquareMatrixError("Nilpotency is valid only for square matrices")
@@ -1709,7 +1914,8 @@ class Matrix(object):
         """
         Check if matrix is an upper triangular matrix.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
@@ -1745,7 +1951,8 @@ class Matrix(object):
         """
         Check if matrix is a lower triangular matrix.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[1, 0, 0, 1])
@@ -1785,7 +1992,8 @@ class Matrix(object):
         The upper hessenberg matrix has zero entries
         below the first subdiagonal.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,4,2,3],[3,4,1,7],[0,2,3,4],[0,0,1,3]])
@@ -1810,7 +2018,8 @@ class Matrix(object):
         The lower hessenberg matrix has zero entries
         above the first superdiagonal.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.matrices import Matrix
         >>> a = Matrix([[1,2,0,0],[5,2,3,0],[3,4,3,7],[5,6,1,1]])
@@ -1829,6 +2038,19 @@ class Matrix(object):
         return True
 
     def is_symbolic(self):
+        """
+        Checks if any elements are symbols.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> from sympy.abc import x, y
+        >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
+        >>> M.is_symbolic()
+        True
+
+        """
         return any(element.has(Symbol) for element in self.mat)
 
     def is_symmetric(self, simplify=True):
@@ -1840,7 +2062,8 @@ class Matrix(object):
         They can be skipped using 'simplify=False'; while speeding things a bit,
         this may however induce false negatives.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(2,2,[0, 1, 1, 2])
@@ -1896,7 +2119,8 @@ class Matrix(object):
         Check if matrix is diagonal,
         that is matrix in which the entries outside the main diagonal are all zero.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix, diag
         >>> m = Matrix(2,2,[1, 0, 0, 2])
@@ -1930,6 +2154,9 @@ class Matrix(object):
         return True
 
     def clone(self):
+        """
+        Create a shallow copy of this matrix.
+        """
         return Matrix(self.rows, self.cols, lambda i, j: self[i, j])
 
     def det(self, method="bareis"):
@@ -2027,6 +2254,13 @@ class Matrix(object):
         """
         Calculates the inverse using LU decomposition.
         """
+        if not self.is_square:
+            raise NonSquareMatrixError()
+
+        ok = self.rref()[0]
+        if any(iszerofunc(ok[j, j]) for j in range(ok.rows)):
+            raise ValueError("Matrix det == 0; not invertible.")
+
         return self.LUsolve(self.eye(self.rows), iszerofunc=_iszero)
 
     def inverse_GE(self, iszerofunc=_iszero):
@@ -2036,14 +2270,14 @@ class Matrix(object):
         if not self.is_square:
             raise NonSquareMatrixError()
 
-        if self.det() == 0:
-            raise ValueError("A Matrix must have non-zero determinant to invert.")
-
         big = self.row_join(self.eye(self.rows))
-        red = big.rref(iszerofunc=iszerofunc)
-        return red[0][:,big.rows:]
+        red = big.rref(iszerofunc=iszerofunc)[0]
+        if any(iszerofunc(red[j, j]) for j in range(red.rows)):
+            raise ValueError("Matrix det == 0; not invertible.")
 
-    def inverse_ADJ(self):
+        return red[:,big.rows:]
+
+    def inverse_ADJ(self, iszerofunc=_iszero):
         """
         Calculates the inverse using the adjugate matrix and a determinant.
         """
@@ -2051,7 +2285,12 @@ class Matrix(object):
             raise NonSquareMatrixError()
 
         d = self.berkowitz_det()
-        if d == 0:
+        zero = d.equals(0)
+        if zero is None:
+            # if equals() can't decide, will rref be able to?
+            ok = self.rref()[0]
+            zero = any(iszerofunc(ok[j, j]) for j in range(ok.rows))
+        if zero:
             raise ValueError("A Matrix must have non-zero determinant to invert.")
 
         return self.adjugate()/d
@@ -2063,32 +2302,32 @@ class Matrix(object):
         To simplify elements before finding nonzero pivots set simplified=True.
         To set a custom simplify function, use the simplify keyword argument.
         """
-        # TODO: rewrite inverse_GE to use this
-        pivots, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
+
+        pivot, r = 0, self[:,:]        # pivot: index of next row to contain a pivot
         pivotlist = []                  # indices of pivot variables (non-free)
         for i in range(r.cols):
-            if pivots == r.rows:
+            if pivot == r.rows:
                 break
             if simplified:
-                r[pivots,i] = simplify(r[pivots,i])
-            if iszerofunc(r[pivots,i]):
-                for k in range(pivots, r.rows):
-                    if simplified and k > pivots:
+                r[pivot,i] = simplify(r[pivot,i])
+            if iszerofunc(r[pivot,i]):
+                for k in range(pivot, r.rows):
+                    if simplified and k > pivot:
                         r[k,i] = simplify(r[k,i])
                     if not iszerofunc(r[k,i]):
                         break
                 if k == r.rows - 1 and iszerofunc(r[k,i]):
                     continue
-                r.row_swap(pivots,k)
-            scale = r[pivots,i]
-            r.row(pivots, lambda x, _: x/scale)
+                r.row_swap(pivot,k)
+            scale = r[pivot,i]
+            r.row(pivot, lambda x, _: x/scale)
             for j in range(r.rows):
-                if j == pivots:
+                if j == pivot:
                     continue
                 scale = r[j,i]
-                r.row(j, lambda x, k: x - scale*r[pivots,k])
+                r.row(j, lambda x, k: x - scale*r[pivot,k])
             pivotlist.append(i)
-            pivots += 1
+            pivot += 1
         return r, pivotlist
 
     def nullspace(self, simplified=False):
@@ -2096,6 +2335,7 @@ class Matrix(object):
         Returns list of vectors (Matrix objects) that span nullspace of self
         """
         reduced, pivots = self.rref(simplified)
+
         basis = []
         # create a set of vectors for the basis
         for i in range(self.cols - len(pivots)):
@@ -2149,13 +2389,13 @@ class Matrix(object):
 
            >>> p, q, r = M.berkowitz()
 
-           >>> print p # 1 x 1 M's sub-matrix
+           >>> p # 1 x 1 M's sub-matrix
            (1, -x)
 
-           >>> print q # 2 x 2 M's sub-matrix
+           >>> q # 2 x 2 M's sub-matrix
            (1, -x, -y)
 
-           >>> print r # 3 x 3 M's sub-matrix
+           >>> r # 3 x 3 M's sub-matrix
            (1, -2*x, x**2 - y*z - y, x*y - z**2)
 
            For more information on the implemented algorithm refer to:
@@ -2306,7 +2546,7 @@ class Matrix(object):
         >>> from sympy import Matrix, Symbol, eye
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
-        >>> print A.singular_values()
+        >>> A.singular_values()
         [1, sqrt(x**2 + 1), 0]
         """
         # Compute eigenvalues of A.H A
@@ -2331,7 +2571,7 @@ class Matrix(object):
 
         >>> from sympy import Matrix, S
         >>> A = Matrix([[1, 0, 0], [0, 10, 0], [0,0,S.One/10]])
-        >>> print A.condition_number()
+        >>> A.condition_number()
         100
         """
 
@@ -2352,12 +2592,57 @@ class Matrix(object):
             raise AttributeError("Matrix has no attribute %s." % attr)
 
     def integrate(self, *args):
+        """
+        Integrate each element of the matrix.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> from sympy.abc import x, y
+        >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
+        >>> M.integrate((x,))
+        [x**2/2, x*y]
+        [     x,   0]
+        >>> M.integrate((x, 0, 2))
+        [2, 2*y]
+        [2,   0]
+
+        """
         return Matrix(self.rows, self.cols, lambda i, j: self[i, j].integrate(*args))
 
     def limit(self, *args):
+        """
+        Calculate the limit of each element in the matrix.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> from sympy.abc import x, y
+        >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
+        >>> M.limit(x, 2)
+        [2, y]
+        [1, 0]
+
+        """
         return Matrix(self.rows, self.cols, lambda i, j: self[i, j].limit(*args))
 
     def diff(self, *args):
+        """
+        Calculate the derivative of each element in the matrix.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> from sympy.abc import x, y
+        >>> M = sympy.matrices.Matrix([[x, y], [1, 0]])
+        >>> M.diff(x)
+        [1, 0]
+        [0, 0]
+
+        """
         return Matrix(self.rows, self.cols, lambda i, j: self[i, j].diff(*args))
 
     def vec(self):
@@ -2429,7 +2714,8 @@ class Matrix(object):
         linear equations which may be decoupled by having a block diagonal
         structure.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix, symbols
         >>> from sympy.abc import x, y, z
@@ -2476,7 +2762,8 @@ class Matrix(object):
 
         where M is current matrix.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
@@ -2528,7 +2815,8 @@ class Matrix(object):
         Some subproducts could be used further in other methods to avoid double calculations,
         By default (if clear_subproducts==True) they will be deleted.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(3,3,[1, 2, 0, 0, 3, 0, 2, -4, 2])
@@ -2592,11 +2880,13 @@ class Matrix(object):
 
         will not be calculated.
 
-        Note:
+        Note
+        ====
 
         Calculation of transformation P is not implemented yet
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
@@ -2634,7 +2924,8 @@ class Matrix(object):
 
         Calculation of transformation P is not implemented yet
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import Matrix
         >>> m = Matrix(4, 4, [6, 5, -2, -3, -3, -1, 3, 3, 2, 1, -2, -3, -1, 1, 5, 5])
@@ -2686,7 +2977,8 @@ class Matrix(object):
         """
         Test whether any subexpression matches any of the patterns.
 
-        Examples:
+        Examples
+        ========
 
         >>> from sympy import Matrix, Float
         >>> from sympy.abc import x, y
@@ -2707,7 +2999,8 @@ def matrix_multiply(A, B):
     A and B must be of appropriate dimensions.  If A is an m x k matrix, and B
     is a k x n matrix, the product will be an m x n matrix.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import Matrix
     >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
@@ -2749,10 +3042,10 @@ def matrix_multiply(A, B):
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
-    >>> import sympy
-    >>> A = sympy.Matrix([[0, 1, 2], [3, 4, 5]])
-    >>> B = sympy.Matrix([[1, 10, 100], [100, 10, 1]])
-    >>> print sympy.matrices.matrix_multiply_elementwise(A, B)
+    >>> from sympy.matrices.matrices import Matrix, matrix_multiply_elementwise
+    >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
+    >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
+    >>> matrix_multiply_elementwise(A, B)
     [  0, 10, 200]
     [300, 40,   5]
     """
@@ -2762,8 +3055,8 @@ def matrix_multiply_elementwise(A, B):
     return Matrix(shape[0], shape[1],
         lambda i, j: A[i,j] * B[i, j])
 
-def matrix_add(A,B):
-    """Return A+B"""
+def matrix_add(A, B):
+    """Return A + B"""
     if A.shape != B.shape:
         raise ShapeError()
     alst = A.tolist()
@@ -2777,7 +3070,7 @@ def zeros(r, c=None, cls=Matrix):
     """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
     if ``c`` is omitted a square matrix will be returned."""
     if is_sequence(r):
-        warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+        warnings.warn("pass row and column as zeros(%i, %i)" % r, SymPyDeprecationWarning)
         r, c = r
     else:
         c = r if c is None else c
@@ -2789,7 +3082,7 @@ def ones(r, c=None):
     if ``c`` is omitted a square matrix will be returned."""
 
     if is_sequence(r):
-        warnings.warn("pass row and column as ones(%i, %i)" % r, DeprecationWarning)
+        warnings.warn("pass row and column as ones(%i, %i)" % r, SymPyDeprecationWarning)
         r, c = r
     else:
         c = r if c is None else c
@@ -2812,7 +3105,8 @@ def diag(*values):
 
     Arguments might be matrices too, in case of it they are fitted in result matrix
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.matrices import diag, Matrix
     >>> diag(1, 2, 3)
@@ -2862,7 +3156,8 @@ def jordan_cell(eigenval, n):
     """
     Create matrix of Jordan cell kind:
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy.matrices.matrices import jordan_cell
     >>> from sympy.abc import x
@@ -2885,7 +3180,9 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False):
     the matrix will be square. If ``symmetric`` is True the matrix must be
     square.
 
-    **Examples**
+    Examples
+    ========
+
     >>> from sympy.matrices import randMatrix
     >>> randMatrix(3) # doctest:+SKIP
     [25, 45, 27]
@@ -2960,6 +3257,11 @@ def hessian(f, varlist):
     return out
 
 def GramSchmidt(vlist, orthog=False):
+    """
+    Apply the Gram-Schmidt process to a set of vectors.
+
+    see: http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+    """
     out = []
     m = len(vlist)
     for i in range(m):
@@ -2975,15 +3277,18 @@ def GramSchmidt(vlist, orthog=False):
     return out
 
 def wronskian(functions, var, method='bareis'):
-    """Compute Wronskian for [] of functions
+    """
+    Compute Wronskian for [] of functions
 
-                   | f1       f2        ...   fn      |
-                   | f1'      f2'       ...   fn'     |
-                   |  .        .        .      .      |
-    W(f1,...,fn) = |  .        .         .     .      |
-                   |  .        .          .    .      |
-                   |  (n)      (n)            (n)     |
-                   | D   (f1) D   (f2)  ...  D   (fn) |
+    ::
+
+                       | f1       f2        ...   fn      |
+                       | f1'      f2'       ...   fn'     |
+                       |  .        .        .      .      |
+        W(f1,...,fn) = |  .        .         .     .      |
+                       |  .        .          .    .      |
+                       |  (n)      (n)            (n)     |
+                       | D   (f1) D   (f2)  ...  D   (fn) |
 
     see: http://en.wikipedia.org/wiki/Wronskian
     """
@@ -3004,7 +3309,7 @@ def casoratian(seqs, n, zero=True):
        Solutions of L are linearly independent iff their Casoratian,
        denoted as C(a, b, ..., z), do not vanish for n = 0.
 
-       Casoratian is defined by k x k determinant:
+       Casoratian is defined by k x k determinant::
 
                   +  a(n)     b(n)     . . . z(n)     +
                   |  a(n+1)   b(n+1)   . . . z(n+1)   |
@@ -3015,7 +3320,7 @@ def casoratian(seqs, n, zero=True):
 
        It proves very useful in rsolve_hyper() where it is applied
        to a generating set of a recurrence to factor out linearly
-       dependent solutions and return a basis.
+       dependent solutions and return a basis:
 
        >>> from sympy import Symbol, casoratian, factorial
        >>> n = Symbol('n', integer=True)
@@ -3045,7 +3350,9 @@ del _matrix_sympify
 
 
 class SparseMatrix(Matrix):
-    """Sparse matrix"""
+    """
+    A sparse matrix (a matrix with a large number of zero elements).
+    """
 
     def __init__(self, *args):
         if len(args) == 3 and callable(args[2]):
@@ -3130,6 +3437,9 @@ class SparseMatrix(Matrix):
             raise IndexError("Index out of range: a[%s]"%repr(key))
 
     def rowdecomp(self, num):
+        """
+        Perform a row decomposition on the matrix.
+        """
         nmax = len(self)
         if not (0 <= num < nmax) or not (0 <= -num < nmax):
             raise ValueError("`num` must satisfy 0 <= `num` < `self.rows*" +
@@ -3160,6 +3470,22 @@ class SparseMatrix(Matrix):
                 del self.mat[(i,j)]
 
     def row_del(self, k):
+        """
+        Delete the given row of the matrix.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> M = sympy.matrices.SparseMatrix([[0,0],[0,1]])
+        >>> M
+        [0, 0]
+        [0, 1]
+        >>> M.row_del(0)
+        >>> M
+        [0, 1]
+
+        """
         newD = {}
         k = self.key2ij((k,0))[0]
         for (i,j) in self.mat.keys():
@@ -3173,6 +3499,23 @@ class SparseMatrix(Matrix):
         self.rows -= 1
 
     def col_del(self, k):
+        """
+        Delete the given column of the matrix.
+
+        Examples
+        ========
+
+        >>> import sympy
+        >>> M = sympy.matrices.SparseMatrix([[0,0],[0,1]])
+        >>> M
+        [0, 0]
+        [0, 1]
+        >>> M.col_del(0)
+        >>> M
+        [0]
+        [1]
+
+        """
         newD = {}
         k = self.key2ij((0,k))[1]
         for (i,j) in self.mat.keys():
@@ -3186,6 +3529,9 @@ class SparseMatrix(Matrix):
         self.cols -= 1
 
     def toMatrix(self):
+        """
+        Convert this sparse matrix into a matrix.
+        """
         l = []
         for i in range(self.rows):
             c = []
@@ -3347,12 +3693,7 @@ class SparseMatrix(Matrix):
         return r
 
     def submatrix(self, keys):
-        if not isinstance(keys[0], slice) and not isinstance(keys[1], slice):
-            raise TypeError("Both elements of `keys` must be slice objects.")
-        rlo, rhi = self.slice2bounds(keys[0], self.rows)
-        clo, chi = self.slice2bounds(keys[1], self.cols)
-        if not ( 0<=rlo<=rhi and 0<=clo<=chi ):
-            raise IndexError("Slice indices out of range: a[%s]"%repr(keys))
+        rlo, rhi, clo, chi = self.key2bounds(keys)
         return SparseMatrix(rhi-rlo, chi-clo, lambda i,j: self[i+rlo, j+clo])
 
     def reshape(self, _rows, _cols):
@@ -3386,7 +3727,7 @@ class SparseMatrix(Matrix):
         """Returns a matrix of zeros with ``r`` rows and ``c`` columns;
         if ``c`` is omitted a square matrix will be returned."""
         if is_sequence(r):
-            warnings.warn("pass row and column as zeros(%i, %i)" % r, DeprecationWarning)
+            warnings.warn("pass row and column as zeros(%i, %i)" % r, SymPyDeprecationWarning)
             r, c = r
         else:
             c = r if c is None else c
@@ -3433,7 +3774,7 @@ def a2idx(a):
 def symarray(prefix, shape):
     """Create a numpy ndarray of symbols (as an object array).
 
-    The created symbols are named prefix_i1_i2_...  You should thus provide a
+    The created symbols are named `prefix_i1_i2_`...  You should thus provide a
     non-empty prefix if you want your symbols to be unique for different output
     arrays, as Sympy symbols with identical names are the same object.
 
@@ -3449,7 +3790,7 @@ def symarray(prefix, shape):
 
     Examples
     --------
-    These doctestst require numpy.
+    These doctests require numpy.
 
     >>> from sympy import symarray
     >>> symarray('', 3) #doctest: +SKIP
@@ -3468,10 +3809,12 @@ def symarray(prefix, shape):
     False
 
     Creating symarrays with a prefix:
+
     >>> symarray('a', 3) #doctest: +SKIP
     [a_0, a_1, a_2]
 
     For more than one dimension, the shape must be given as a tuple:
+
     >>> symarray('a', (2, 3)) #doctest: +SKIP
     [[a_0_0, a_0_1, a_0_2],
      [a_1_0, a_1_1, a_1_2]]
@@ -3506,6 +3849,7 @@ def rot_axis3(theta):
     >>> from sympy.matrices import rot_axis3
 
     A rotation of pi/3 (60 degrees):
+
     >>> theta = pi/3
     >>> rot_axis3(theta)
     [       1/2, sqrt(3)/2, 0]
@@ -3513,7 +3857,8 @@ def rot_axis3(theta):
     [         0,         0, 1]
 
     If we rotate by pi/2 (90 degrees):
-    >> rot_axis3(pi/2)
+
+    >>> rot_axis3(pi/2)
     [ 0, 1, 0]
     [-1, 0, 0]
     [ 0, 0, 1]
@@ -3536,6 +3881,7 @@ def rot_axis2(theta):
     >>> from sympy.matrices import rot_axis2
 
     A rotation of pi/3 (60 degrees):
+
     >>> theta = pi/3
     >>> rot_axis2(theta)
     [      1/2, 0, -sqrt(3)/2]
@@ -3543,6 +3889,7 @@ def rot_axis2(theta):
     [sqrt(3)/2, 0,        1/2]
 
     If we rotate by pi/2 (90 degrees):
+
     >>> rot_axis2(pi/2)
     [0, 0, -1]
     [0, 1,  0]
@@ -3566,6 +3913,7 @@ def rot_axis1(theta):
     >>> from sympy.matrices import rot_axis1
 
     A rotation of pi/3 (60 degrees):
+
     >>> theta = pi/3
     >>> rot_axis1(theta)
     [1,          0,         0]
@@ -3573,6 +3921,7 @@ def rot_axis1(theta):
     [0, -sqrt(3)/2,       1/2]
 
     If we rotate by pi/2 (90 degrees):
+
     >>> rot_axis1(pi/2)
     [1,  0, 0]
     [0,  0, 1]

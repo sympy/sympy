@@ -1,4 +1,4 @@
-from sympy.core.function import Function
+from sympy.core.function import Function, C
 from sympy.core import sympify, S, Integer
 from sympy.core.mul import prod
 
@@ -31,6 +31,9 @@ class LeviCivita(Function):
 
     Thus it represents an alternating pseudotensor.
 
+    Examples
+    ========
+
     >>> from sympy import LeviCivita, symbols
     >>> LeviCivita(1,2,3)
     1
@@ -43,6 +46,7 @@ class LeviCivita(Function):
     LeviCivita(i, j, k)
     >>> LeviCivita(i,j,i)
     0
+
     """
     @classmethod
     def eval(cls, *args):
@@ -62,6 +66,7 @@ class KroneckerDelta(Function):
 
     Parameters
     ==========
+
     i : Number, Symbol
         The first index of the delta function.
     j : Number, Symbol
@@ -105,6 +110,9 @@ class KroneckerDelta(Function):
         """
         Evaluates the discrete delta function.
 
+        Examples
+        ========
+
         >>> from sympy import symbols
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> i, j, k = symbols('i,j,k')
@@ -122,20 +130,28 @@ class KroneckerDelta(Function):
         """
         if i > j:
             return cls(j,i)
-        diff = i-j
+
+        diff = C.Abs(i - j)
         if diff == 0:
             return S.One
         elif diff.is_number:
             return S.Zero
+        elif i != 0 and diff.is_nonzero:
+            return KroneckerDelta(0, diff.args[0])
 
         if i.assumptions0.get("below_fermi") and j.assumptions0.get("above_fermi"):
             return S.Zero
         if j.assumptions0.get("below_fermi") and i.assumptions0.get("above_fermi"):
             return S.Zero
+
+
     @property
     def is_above_fermi(self):
         """
         True if Delta can be non-zero above fermi
+
+        Examples
+        ========
 
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
@@ -162,6 +178,9 @@ class KroneckerDelta(Function):
         """
         True if Delta can be non-zero below fermi
 
+        Examples
+        ========
+
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -187,6 +206,9 @@ class KroneckerDelta(Function):
         """
         True if Delta is restricted to above fermi
 
+        Examples
+        ========
+
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -210,6 +232,9 @@ class KroneckerDelta(Function):
     def is_only_below_fermi(self):
         """
         True if Delta is restricted to below fermi
+
+        Examples
+        ========
 
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
@@ -235,7 +260,8 @@ class KroneckerDelta(Function):
         """
         Returns True if indices are either both above or below fermi.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
@@ -271,6 +297,9 @@ class KroneckerDelta(Function):
         level.  If indices contain same information, 'a' is preferred before
         'b'.
 
+        Examples
+        ========
+
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol
         >>> a = Symbol('a',above_fermi=True)
@@ -298,6 +327,9 @@ class KroneckerDelta(Function):
         The index to substitute is the index with less information regarding fermi
         level.  If indices contain same information, 'a' is preferred before
         'b'.
+
+        Examples
+        ========
 
         >>> from sympy.functions.special.tensor_functions import KroneckerDelta
         >>> from sympy import Symbol

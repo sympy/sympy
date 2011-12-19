@@ -77,7 +77,8 @@ class Dagger(Expr):
     """
     Hermitian conjugate of creation/annihilation operators.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import I
     >>> from sympy.physics.secondquant import Dagger, B, Bd
@@ -103,7 +104,8 @@ class Dagger(Expr):
         """
         Evaluates the Dagger instance.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import I
         >>> from sympy.physics.secondquant import Dagger, B, Bd
@@ -119,7 +121,7 @@ class Dagger(Expr):
         """
         try:
             d = arg._dagger_()
-        except:
+        except AttributeError:
             if isinstance(arg, Basic):
                 if arg.is_Add:
                     return Add(*tuple(map(Dagger, arg.args)))
@@ -156,7 +158,8 @@ class AntiSymmetricTensor(TensorSymbol):
 
     Each group of indices is assumed to be antisymmetric.
 
-    Examples:
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -228,7 +231,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the symbol of the tensor.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -247,7 +251,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the upper indices.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -267,7 +272,8 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         Returns the lower indices.
 
-        Example:
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.secondquant import AntiSymmetricTensor
@@ -1959,8 +1965,8 @@ def evaluate_deltas(e):
     dependent, the literal expression resulting from this function may be hard to
     predict.
 
-    Examples:
-    =========
+    Examples
+    ========
 
     We assume that
 

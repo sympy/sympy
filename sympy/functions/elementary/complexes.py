@@ -69,6 +69,9 @@ class re(Function):
         return self
 
     def as_real_imag(self, deep=True):
+        """
+        Returns the real number with a zero complex part.
+        """
         return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):
@@ -81,26 +84,30 @@ class re(Function):
         return re(Derivative(self.args[0], x, **{'evaluate': True}))
 
 class im(Function):
-    """Returns imaginary part of expression. This function performs
-       only elementary analysis and so it will fail to decompose
-       properly more complicated expressions. If completely simplified
-       result is needed then use Basic.as_real_imag() or perform complex
-       expansion on instance of this function.
+    """
+    Returns imaginary part of expression. This function performs only
+    elementary analysis and so it will fail to decompose properly more
+    complicated expressions. If completely simplified result is needed then
+    use Basic.as_real_imag() or perform complex expansion on instance of
+    this function.
 
-       >>> from sympy import re, im, E, I
-       >>> from sympy.abc import x, y
+    Examples
+    ========
 
-       >>> im(2*E)
-       0
+    >>> from sympy import re, im, E, I
+    >>> from sympy.abc import x, y
 
-       >>> re(2*I + 17)
-       17
+    >>> im(2*E)
+    0
 
-       >>> im(x*I)
-       re(x)
+    >>> re(2*I + 17)
+    17
 
-       >>> im(re(x) + y)
-       im(y)
+    >>> im(x*I)
+    re(x)
+
+    >>> im(re(x) + y)
+    im(y)
 
     """
 
@@ -140,6 +147,17 @@ class im(Function):
         return self
 
     def as_real_imag(self, deep=True):
+        """
+        Return the imaginary part with a zero real part.
+
+        Examples
+        ========
+
+        >>> from sympy.functions import im
+        >>> from sympy import I
+        >>> im(2 + 3*I).as_real_imag()
+        (3, 0)
+        """
         return (self, S.Zero)
 
     def _eval_expand_complex(self, deep=True, **hints):
@@ -155,19 +173,21 @@ class im(Function):
 ###############################################################################
 
 class sign(Function):
-    """Returns the sign of an expression, that is:
+    """
+    Returns the sign of an expression, that is:
 
-       * 1 if expression is positive
-       * 0 if expression is equal to zero
-       * -1 if expression is negative
+    * 1 if expression is positive
+    * 0 if expression is equal to zero
+    * -1 if expression is negative
 
-       **Examples**
+    Examples
+    ========
 
-       >>> from sympy.functions import sign
-       >>> sign(-1)
-       -1
-       >>> sign(0)
-       0
+    >>> from sympy.functions import sign
+    >>> sign(-1)
+    -1
+    >>> sign(0)
+    0
 
     """
 
@@ -211,24 +231,26 @@ class sign(Function):
         return sage.sgn(self.args[0]._sage_())
 
 class Abs(Function):
-    """Return the absolute value of the argument.
+    """
+    Return the absolute value of the argument.
 
     This is an extension of the built-in function abs() to accept symbolic
     values.  If you pass a SymPy expression to the built-in abs(), it will
     pass it automatically to Abs().
 
     Examples
+    ========
 
-        >>> from sympy import Abs, Symbol, S
-        >>> Abs(-1)
-        1
-        >>> x = Symbol('x', real=True)
-        >>> Abs(-x)
-        Abs(x)
-        >>> Abs(x**2)
-        x**2
-        >>> abs(-x) # The Python built-in
-        Abs(x)
+    >>> from sympy import Abs, Symbol, S
+    >>> Abs(-1)
+    1
+    >>> x = Symbol('x', real=True)
+    >>> Abs(-x)
+    Abs(x)
+    >>> Abs(x**2)
+    x**2
+    >>> abs(-x) # The Python built-in
+    Abs(x)
 
     Note that the Python built-in will return either an Expr or int depending on
     the argument::
@@ -248,6 +270,17 @@ class Abs(Function):
     is_negative = False
 
     def fdiff(self, argindex=1):
+        """
+        Get the first derivative of the argument to Abs().
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x
+        >>> from sympy.functions import Abs
+        >>> Abs(-x).fdiff()
+        sign(x)
+        """
         if argindex == 1:
             return sign(self.args[0])
         else:
@@ -333,12 +366,16 @@ class arg(Function):
                 Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
 
 class conjugate(Function):
-    """Changes the sign of the imaginary part of a complex number.
+    """
+    Changes the sign of the imaginary part of a complex number.
 
-        >>> from sympy import conjugate, I
+    Examples
+    ========
 
-        >>> conjugate(1 + I)
-        1 - I
+    >>> from sympy import conjugate, I
+
+    >>> conjugate(1 + I)
+    1 - I
 
     """
 

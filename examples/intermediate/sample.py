@@ -19,11 +19,11 @@ def sample2d(f, x_args):
     """
     try:
         f = sympify(f)
-    except:
+    except SympifyError:
         raise ValueError("f could not be interpretted as a SymPy function")
     try:
         x, x_min, x_max, x_n = x_args
-    except:
+    except AttributeError:
         raise ValueError("x_args must be a tuple of the form (var, min, max, n)")
 
     x_l = float(x_max - x_min)
@@ -34,7 +34,7 @@ def sample2d(f, x_args):
     for i in range(len(X)):
         try:
             Y[i] = float(f.subs(x, X[i]))
-        except:
+        except TypeError:
             Y[i] = None
     return X, Y
 
@@ -51,12 +51,12 @@ def sample3d(f, x_args, y_args):
     y, y_min, y_max, y_n = None, None, None, None
     try:
         f = sympify(f)
-    except:
+    except SympifyError:
         raise ValueError("f could not be interpreted as a SymPy function")
     try:
         x, x_min, x_max, x_n = x_args
         y, y_min, y_max, y_n = y_args
-    except:
+    except AttributeError:
         raise ValueError("x_args and y_args must be tuples of the form (var, min, max, intervals)")
 
     x_l = float(x_max - x_min)
@@ -88,7 +88,7 @@ def sample3d(f, x_args, y_args):
         for k in range(len(X[0])):
             try:
                 Z[j][k] = float( f.subs(x, X[j][k]).subs(y, Y[j][k]) )
-            except:
+            except (TypeError, NotImplementedError):
                 Z[j][k] = 0
     return X, Y, Z
 

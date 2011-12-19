@@ -10,96 +10,84 @@ internally.
 Printer Class
 -------------
 
-.. module:: sympy.printing.printer
+.. automodule:: sympy.printing.printer
 
 The main class responsible for printing is ``Printer`` (see also its
 `source code
 <https://github.com/sympy/sympy/blob/master/sympy/printing/printer.py>`_):
 
 .. autoclass:: Printer
-    :members: doprint, _print
+    :members: doprint, _print, set_global_settings, order
 
 PrettyPrinter Class
 -------------------
 
-.. module:: sympy.printing.pretty.pretty
-.. module:: sympy.printing.pretty.pretty_symbology
-.. module:: sympy.printing.pretty.pretty_stringpict
-
-Pretty printing subsystem is implemented in ``sympy.printing.pretty.pretty`` by
-the ``PrettyPrinter`` class deriving from ``Printer``.  It relies on modules
-``sympy.printing.pretty.stringPict``, and
-``sympy.printing.pretty.pretty_symbology`` for rendering nice-looking formulas.
+Pretty printing subsystem is implemented in ``sympy.printing.pretty.pretty``
+by the ``PrettyPrinter`` class deriving from ``Printer``. It relies on
+modules ``sympy.printing.pretty.stringPict``, and
+``sympy.printing.pretty.pretty_symbology`` for rendering nice-looking
+formulas.
 
 The module ``stringPict`` provides a base class ``stringPict`` and a derived
-class ``prettyForm`` that ease the creation and manipulation of formulas that
-span across multiple lines.
+class ``prettyForm`` that ease the creation and manipulation of formulas
+that span across multiple lines.
 
 The module ``pretty_symbology`` provides primitives to construct 2D shapes
-(hline, vline, etc) together with a technique to use unicode automatically when
-possible.
+(hline, vline, etc) together with a technique to use unicode automatically
+when possible.
 
-MathMLPrinter
--------------
+.. module:: sympy.printing.pretty.pretty
 
-.. module:: sympy.printing.mathml
+.. autoclass:: PrettyPrinter
+   :members: _use_unicode, doprint
 
-This class is responsible for MathML printing. See ``sympy.printing.mathml``.
+.. autofunction:: pretty
+.. autofunction:: pretty_print
 
-More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
-
-LatexPrinter
+CCodePrinter
 ------------
 
-.. module:: sympy.printing.latex
+.. module:: sympy.printing.ccode
 
-This class implements LaTeX printing. See ``sympy.printing.latex``.
-
-See also the extended LatexPrinter: :ref:`Extended LaTeXModule for Sympy <extended-latex>`
-
-Gtk
----
-
-.. module:: sympy.printing.gtk
-
-You can print to a grkmathview widget using the function print_gtk located in
-sympy.printing.gtk (it requires to have installed gtkmatmatview and
-libgtkmathview-bin in some systems).
-
-GtkMathView accepts MathML, so this rendering depends on the mathml representation of the expression
+This class implements C code printing (i.e. it converts Python expressions
+to strings of C code).
 
 Usage::
 
-    from sympy import *
-    print_gtk(x**2 + 2*exp(x**3))
-
-PythonPrinter
--------------
-
-.. module:: sympy.printing.python
-
-This class implements Python printing. Usage::
-
-    >>> from sympy import print_python, sin
+    >>> from sympy.printing import print_ccode
+    >>> from sympy.functions import sin, cos, Abs
     >>> from sympy.abc import x
+    >>> print_ccode(sin(x)**2 + cos(x)**2)
+    pow(sin(x), 2) + pow(cos(x), 2)
+    >>> print_ccode(2*x + cos(x), assign_to="result")
+    result = 2*x + cos(x);
+    >>> print_ccode(Abs(x**2))
+    fabs(pow(x, 2))
 
-    >>> print_python(5*x**3 + sin(x))
-    x = Symbol('x')
-    e = 5*x**3 + sin(x)
+.. autodata:: sympy.printing.ccode.known_functions
 
-fcode
------
+.. autoclass:: sympy.printing.ccode.CCodePrinter
+   :members:
+
+.. autofunction:: sympy.printing.ccode.ccode
+
+.. autofunction:: sympy.printing.ccode.print_ccode
+
+Fortran Printing
+----------------
 
 The fcode function translates a sympy expression into Fortran code. The main
 purpose is to take away the burden of manually translating long mathematical
-expressions. Therefore the resulting expression should also require no (or very
-little) manual tweaking to make it compilable. The optional arguments of fcode
-can be used to fine-tune the behavior of fcode in such a way that manual changes
-in the result are no longer needed.
+expressions. Therefore the resulting expression should also require no (or
+very little) manual tweaking to make it compilable. The optional arguments
+of fcode can be used to fine-tune the behavior of fcode in such a way that
+manual changes in the result are no longer needed.
 
 .. module:: sympy.printing.fcode
 .. autofunction:: fcode
 .. autofunction:: print_fcode
+.. autoclass:: FCodePrinter
+   :members:
 
 Two basic examples:
 
@@ -204,6 +192,126 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     >>> fcode(x - pi**2, human=False)
     (set([(pi, '3.14159265358979d0')]), set(), '      x - pi**2')
 
+Gtk
+---
+
+.. module:: sympy.printing.gtk
+
+You can print to a grkmathview widget using the function ``print_gtk``
+located in ``sympy.printing.gtk`` (it requires to have installed
+gtkmatmatview and libgtkmathview-bin in some systems).
+
+GtkMathView accepts MathML, so this rendering depends on the MathML
+representation of the expression.
+
+Usage::
+
+    from sympy import *
+    print_gtk(x**2 + 2*exp(x**3))
+
+.. autofunction:: print_gtk
+
+LambdaPrinter
+-------------
+
+.. module:: sympy.printing.lambdarepr
+
+This classes implements printing to strings that can be used by the
+:py:func:`sympy.utilities.lambdify.lambdify` function.
+
+.. autoclass:: LambdaPrinter
+
+.. autofunction:: lambdarepr
+
+LatexPrinter
+------------
+
+.. module:: sympy.printing.latex
+
+This class implements LaTeX printing. See ``sympy.printing.latex``.
+
+See also the extended LatexPrinter: :ref:`Extended LaTeXModule for Sympy <extended-latex>`
+
+.. autodata:: accepted_latex_functions
+
+.. autoclass:: LatexPrinter
+   :members:
+
+.. autofunction:: latex
+
+.. autofunction:: print_latex
+
+MathMLPrinter
+-------------
+
+.. module:: sympy.printing.mathml
+
+This class is responsible for MathML printing. See ``sympy.printing.mathml``.
+
+More info on mathml content: http://www.w3.org/TR/MathML2/chapter4.html
+
+.. autoclass:: MathMLPrinter
+   :members:
+
+.. autofunction:: mathml
+
+.. autofunction:: print_mathml
+
+PythonPrinter
+-------------
+
+.. module:: sympy.printing.python
+
+This class implements Python printing. Usage::
+
+    >>> from sympy import print_python, sin
+    >>> from sympy.abc import x
+
+    >>> print_python(5*x**3 + sin(x))
+    x = Symbol('x')
+    e = 5*x**3 + sin(x)
+
+ReprPrinter
+-----------
+
+.. module:: sympy.printing.repr
+
+This printer generates executable code. This code satisfies the identity
+``eval(srepr(expr))=expr``.
+
+.. autoclass:: ReprPrinter
+   :members:
+
+.. autofunction:: srepr
+
+StrPrinter
+----------
+
+.. module:: sympy.printing.str
+
+This module generates readable representations of SymPy expressions.
+
+.. autoclass:: StrPrinter
+   :members: parenthesize, stringify, emptyPrinter
+
+.. autofunction:: sstrrepr
+
+Tree Printing
+-------------
+
+.. module:: sympy.printing.tree
+
+The functions in this module create a representation of an expression as a
+tree.
+
+.. autofunction:: pprint_nodes
+
+.. autofunction:: print_node
+
+.. autofunction:: tree
+
+.. autofunction:: print_tree
+
 Preview
 -------
 
@@ -213,3 +321,100 @@ A useful function is ``preview``:
 
 .. autofunction:: preview
 
+Implementation - Helper Classes/Functions
+-----------------------------------------
+
+.. module:: sympy.printing.conventions
+
+.. autofunction:: split_super_sub
+
+CodePrinter
++++++++++++
+
+.. module:: sympy.printing.codeprinter
+
+This class is a base class for other classes that implement code-printing
+functionality, and additionally lists a number of functions that cannot be
+easily translated to C or Fortran.
+
+.. autoclass:: sympy.printing.codeprinter.CodePrinter
+
+.. autoexception:: sympy.printing.codeprinter.AssignmentError
+
+Precedence
+++++++++++
+
+.. module:: sympy.printing.precedence
+
+.. autodata:: PRECEDENCE
+
+   Default precedence values for some basic types.
+
+.. autodata:: PRECEDENCE_VALUES
+
+   A dictionary assigning precedence values to certain classes. These values
+   are treated like they were inherited, so not every single class has to be
+   named here.
+
+.. autodata:: PRECEDENCE_FUNCTIONS
+
+   Sometimes it's not enough to assign a fixed precedence value to a
+   class. Then a function can be inserted in this dictionary that takes an
+   instance of this class as argument and returns the appropriate precedence
+   value.
+
+.. autofunction:: precedence
+
+Pretty-Printing Implementation Helpers
+--------------------------------------
+
+.. module:: sympy.printing.pretty.pretty_symbology
+
+.. autofunction:: U
+.. autofunction:: pretty_use_unicode
+.. autofunction:: pretty_try_use_unicode
+.. autofunction:: xstr
+
+The following two functions return the Unicode version of the inputted Greek
+letter.
+
+.. autofunction:: g
+.. autofunction:: G
+.. autodata:: greek_letters
+.. autodata:: greek
+.. autodata:: digit_2txt
+.. autodata:: symb_2txt
+
+The following functions return the Unicode subscript/superscript version of
+the character.
+
+.. autodata:: sub
+.. autodata:: sup
+
+The following functions return Unicode vertical objects.
+
+.. autofunction:: xobj
+.. autofunction:: vobj
+.. autofunction:: hobj
+
+The following constants are for rendering roots and fractions.
+
+.. autodata:: root
+.. autofunction:: VF
+.. autodata:: frac
+
+The following constants/functions are for rendering atoms and symbols.
+
+.. autofunction:: xsym
+.. autodata:: atoms_table
+.. autofunction:: pretty_atom
+.. autofunction:: pretty_symbol
+.. autofunction:: annotated
+
+.. automodule:: sympy.printing.pretty.stringpict
+
+.. autoclass:: stringPict
+   :members:
+
+.. autoclass:: prettyForm
+   :members:

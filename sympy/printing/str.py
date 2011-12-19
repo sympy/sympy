@@ -122,7 +122,7 @@ class StrPrinter(Printer):
             printset = s
         try:
             printset = sorted(printset)
-        except:  pass
+        except AttributeError:  pass
         return '{' + ', '.join(self._print(el) for el in printset) + '}'
 
     def _print_Function(self, expr):
@@ -351,7 +351,7 @@ class StrPrinter(Printer):
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
                 return "1/sqrt(%s)" % self._print(expr.base)
-            if expr.exp is S.NegativeOne:
+            if expr.exp == -1:
                 return '1/%s' % self.parenthesize(expr.base, PREC)
 
         e = self.parenthesize(expr.exp, PREC)
@@ -515,7 +515,8 @@ def sstr(expr, **settings):
     For large expressions where speed is a concern, use the setting
     order='none'.
 
-    Example:
+    Examples
+    ========
 
     >>> from sympy import symbols, Eq, sstr
     >>> a, b = symbols('a b')
@@ -548,4 +549,3 @@ def sstrrepr(expr, **settings):
     s = p.doprint(expr)
 
     return s
-

@@ -15,7 +15,7 @@ from sympy.functions.combinatorial.factorials import rf
 class gamma(Function):
     """The gamma function returns a function which passes through the integral
     values of the factorial function, i.e. though defined in the complex plane,
-    when n is an integer, gamma(n) = (n - 1)!
+    when n is an integer, `gamma(n) = (n - 1)!`
 
     Reference:
         http://en.wikipedia.org/wiki/Gamma_function
@@ -101,7 +101,7 @@ class gamma(Function):
 
 class lowergamma(Function):
     r"""
-    Lower incomplete gamma function
+    The lower incomplete gamma function.
 
     It can be defined as the meromorphic continuation of
 
@@ -115,9 +115,15 @@ class lowergamma(Function):
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
-    **See also:** :class:`gamma`, :class:`uppergamma`, :class:`hyper`.
+    See Also
+    ========
 
-    **Examples**
+    :class:`sympy.functions.special.gamma_functions.gamma`
+    :class:`sympy.functions.special.gamma_functions.uppergamma`
+    :class:`sympy.functions.special.hyper.hyper`
+
+    Examples
+    ========
 
     >>> from sympy import lowergamma, S
     >>> from sympy.abc import s, x
@@ -128,12 +134,14 @@ class lowergamma(Function):
     >>> lowergamma(-S(1)/2, x)
     -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
 
-    **References**
+    References
+    ==========
 
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
     - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+
     """
 
     nargs = 2
@@ -199,7 +207,8 @@ class uppergamma(Function):
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import uppergamma, S
     >>> from sympy.abc import s, x
@@ -210,14 +219,21 @@ class uppergamma(Function):
     >>> uppergamma(-S(1)/2, x)
     -2*sqrt(pi)*(-erf(sqrt(x)) + 1) + 2*exp(-x)/sqrt(x)
 
-    **See also:** :class:`gamma`, :class:`lowergamma`, :class:`hyper`.
+    See Also
+    ========
 
-    **References**
+    :class:`sympy.functions.special.gamma_functions.gamma`
+    :class:`sympy.functions.special.gamma_functions.lowergamma`
+    :class:`sympy.functions.special.hyper.hyper`.
+
+    References
+    ==========
 
     - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
     - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+
     """
 
     nargs = 2
@@ -278,7 +294,7 @@ class uppergamma(Function):
 ###############################################################################
 
 class polygamma(Function):
-    """The function polygamma(n, z) returns log(gamma(z)).diff(n + 1)
+    """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
 
     Reference:
         http://en.wikipedia.org/wiki/Polygamma_function
@@ -405,6 +421,15 @@ class polygamma(Function):
         return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z-1)
 
 class loggamma(Function):
+    """
+    The loggamma function is `ln(gamma(x))`.
+
+    References
+    ==========
+
+    http://mathworld.wolfram.com/LogGammaFunction.html
+
+    """
 
     nargs = 1
 
@@ -436,14 +461,29 @@ class loggamma(Function):
             raise ArgumentIndexError(self, argindex)
 
 def digamma(x):
+    """
+    The digamma function is the logarithmic derivative of the gamma function.
+
+    In this case, `digamma(x) = polygamma(0, x)`.
+
+    """
     return polygamma(0, x)
 
 def trigamma(x):
+    """
+    The trigamma function is the second of the polygamma functions.
+
+    In this case, `trigamma(x) = polygamma(1, x)`.
+
+    """
     return polygamma(1, x)
 
 def beta(x, y):
-    """ Euler Beta function
-    beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)
+    """
+    Euler Beta function
+
+    ``beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)``
+
     """
     return gamma(x)*gamma(y) / gamma(x+y)
 

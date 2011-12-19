@@ -1,0 +1,16 @@
+.. _combinatiorics-docs:
+
+====================
+Combinatorics Module
+====================
+
+Contents
+========
+
+.. toctree::
+   :maxdepth: 2
+
+   permutations.txt
+   prufer.txt
+   subsets.txt
+   graycode.txt

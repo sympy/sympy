@@ -33,7 +33,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
                     pre, post, repetend = match.groups()
 
                     zeros = '0'*len(post)
-                    repetends = repetend.lstrip('0')
+                    post, repetends = [w.lstrip('0') for w in [post, repetend]] # or else interpreted as octal
 
                     a = pre or '0'
                     b, c = post or '0', '1' + zeros
@@ -91,7 +91,8 @@ def parse_expr(s, local_dict=None, rationalize=False, convert_xor=False):
     """
     Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.parsing.sympy_parser import parse_expr
 

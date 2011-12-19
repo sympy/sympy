@@ -48,12 +48,12 @@ class And(LatticeOp, BooleanFunction):
     It evaluates its arguments in order, giving False immediately if any of them
     are False, and True if they are all True.
 
-    Examples:
+    Examples
+    ========
         >>> from sympy.core import symbols
         >>> from sympy.abc import x, y
         >>> x & y
         And(x, y)
-
     """
     zero = False
     identity = True
@@ -69,7 +69,9 @@ class Or(LatticeOp, BooleanFunction):
     identity = False
 
 class Xor(BooleanFunction):
-    """Logical XOR (exclusive OR) function.
+    """
+    Logical XOR (exclusive OR) function.
+
     returns True if an odd number of the arguments are True, and the rest are False.
     returns False if an even number of the arguments are True, and the rest are False.
     """
@@ -84,9 +86,11 @@ class Xor(BooleanFunction):
         return A
 
 class Not(BooleanFunction):
-    """Logical Not function (negation)
+    """
+    Logical Not function (negation)
 
-    Note: De Morgan rules applied automatically"""
+    Note: De Morgan rules applied automatically
+    """
 
     is_Not = True
 
@@ -106,7 +110,8 @@ class Not(BooleanFunction):
             return arg.args[0]
 
 class Nand(BooleanFunction):
-    """Logical NAND function.
+    """
+    Logical NAND function.
 
     It evaluates its arguments in order, giving True immediately if any
     of them are False, and False if they are all True.
@@ -116,7 +121,8 @@ class Nand(BooleanFunction):
         return Not(And(*args))
 
 class Nor(BooleanFunction):
-    """Logical NOR function.
+    """
+    Logical NOR function.
 
     It evaluates its arguments in order, giving False immediately if any
     of them are True, and True if they are all False.
@@ -126,7 +132,8 @@ class Nor(BooleanFunction):
         return Not(Or(*args))
 
 class Implies(BooleanFunction):
-    """Logical implication.
+    """
+    Logical implication.
 
     A implies B is equivalent to !A v B
     """
@@ -142,7 +149,8 @@ class Implies(BooleanFunction):
             return Basic.__new__(cls, *args)
 
 class Equivalent(BooleanFunction):
-    """Equivalence relation.
+    """
+    Equivalence relation.
 
     Equivalent(A, B) is True if and only if A and B are both True or both False
     """
@@ -166,7 +174,8 @@ class ITE(BooleanFunction):
     ITE(A, B, C) evaluates and returns the result of B if A is true
     else it returns the result of C
 
-    Example:
+    Examples
+    ========
     >>> from sympy.logic.boolalg import ITE, And, Xor, Or
     >>> from sympy.abc import x,y,z
     >>> x = True
@@ -176,6 +185,7 @@ class ITE(BooleanFunction):
     False
     >>> ITE(Or(x, y), And(x, z), Xor(z, x))
     True
+
     """
     @classmethod
     def eval(cls, *args):
@@ -190,8 +200,10 @@ def fuzzy_not(arg):
     """
     Not in fuzzy logic
 
-    will return Not if arg is a boolean value, and None if argument
-    is None
+    Will return Not if arg is a boolean value, and None if argument
+    is None.
+
+    Examples:
 
     >>> from sympy.logic.boolalg import fuzzy_not
     >>> fuzzy_not(True)
@@ -207,6 +219,9 @@ def fuzzy_not(arg):
 
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
+
+    Examples:
+
     >>> from sympy.logic.boolalg import conjuncts
     >>> from sympy.abc import A, B
     >>> conjuncts(A & B)
@@ -219,6 +234,9 @@ def conjuncts(expr):
 
 def disjuncts(expr):
     """Return a list of the disjuncts in the sentence s.
+
+    Examples:
+
     >>> from sympy.logic.boolalg import disjuncts
     >>> from sympy.abc import A, B
     >>> disjuncts(A | B)
@@ -250,15 +268,17 @@ def distribute_and_over_or(expr):
         return expr
 
 def to_cnf(expr):
-    """Convert a propositional logical sentence s to conjunctive normal form.
+    """
+    Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
 
-    Examples:
+    Examples
+    ========
 
-        >>> from sympy.logic.boolalg import to_cnf
-        >>> from sympy.abc import A, B, D
-        >>> to_cnf(~(A | B) | D)
-        And(Or(D, Not(A)), Or(D, Not(B)))
+    >>> from sympy.logic.boolalg import to_cnf
+    >>> from sympy.abc import A, B, D
+    >>> to_cnf(~(A | B) | D)
+    And(Or(D, Not(A)), Or(D, Not(B)))
 
     """
     # Don't convert unless we have to
@@ -270,18 +290,20 @@ def to_cnf(expr):
     return distribute_and_over_or(expr)
 
 def is_cnf(expr):
-    """Test whether or not an expression is in conjunctive normal form.
+    """
+    Test whether or not an expression is in conjunctive normal form.
 
-    Examples:
+    Examples
+    ========
 
-        >>> from sympy.logic.boolalg import is_cnf
-        >>> from sympy.abc import A, B, C
-        >>> is_cnf(A | B | C)
-        True
-        >>> is_cnf(A & B & C)
-        True
-        >>> is_cnf((A & B) | C)
-        False
+    >>> from sympy.logic.boolalg import is_cnf
+    >>> from sympy.abc import A, B, C
+    >>> is_cnf(A | B | C)
+    True
+    >>> is_cnf(A & B & C)
+    True
+    >>> is_cnf((A & B) | C)
+    False
 
     """
     expr = sympify(expr)
@@ -302,7 +324,7 @@ def is_cnf(expr):
         if not expr.args[0].is_Atom:
             return False
 
-    if not expr.func is And:
+    if expr.func is not And:
         return False
 
     for cls in expr.args:
@@ -311,7 +333,7 @@ def is_cnf(expr):
         if cls.func is Not:
             if not cls.args[0].is_Atom:
                 return False
-        elif not cls.func is Or:
+        elif cls.func is not Or:
             return False
         for lit in cls.args:
             if lit.func is Not:
@@ -324,7 +346,8 @@ def is_cnf(expr):
     return True
 
 def eliminate_implications(expr):
-    """Change >>, <<, and Equivalent into &, |, and ~. That is, return an
+    """
+    Change >>, <<, and Equivalent into &, |, and ~. That is, return an
     expression that is equivalent to s, but has only &, |, and ~ as logical
     operators.
     """
@@ -342,7 +365,8 @@ def eliminate_implications(expr):
         return expr.func(*args)
 
 def compile_rule(s):
-    """Transforms a rule into a sympy expression
+    """
+    Transforms a rule into a sympy expression
     A rule is a string of the form "symbol1 & symbol2 | ..."
     See sympy.assumptions.known_facts for examples of rules
 
@@ -355,9 +379,10 @@ def compile_rule(s):
 
 def to_int_repr(clauses, symbols):
     """
-    takes clauses in CNF puts them into integer representation
+    Takes clauses in CNF format and puts them into an integer representation.
 
-    Examples:
+    Examples
+    ========
         >>> from sympy.logic.boolalg import to_int_repr
         >>> from sympy.abc import x, y
         >>> to_int_repr([x | y, y], [x, y]) == [set([1, 2]), set([2])]

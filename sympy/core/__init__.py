@@ -12,17 +12,18 @@ from numbers import Number, Float, Rational, Integer, NumberSymbol,\
 from power import Pow, integer_nthroot
 from mul import Mul, prod
 from add import Add
+from mod import Mod
 from relational import Rel, Eq, Ne, Lt, Le, Gt, Ge, \
     Equality, Inequality, Unequality, StrictInequality
 from multidimensional import vectorize
 from function import Lambda, WildFunction, Derivative, diff, FunctionClass, \
     Function, Subs, expand, PoleError, count_ops, \
     expand_mul, expand_log, expand_func,\
-    expand_trig, expand_complex, expand_multinomial
+    expand_trig, expand_complex, expand_multinomial, nfloat
 from sets import Set, Interval, Union, EmptySet, FiniteSet, ProductSet
 from evalf import PrecisionExhausted, N
 from containers import Tuple, Dict
-from exprtools import gcd_terms
+from exprtools import gcd_terms, factor_terms
 
 # expose singletons
 Catalan = S.Catalan

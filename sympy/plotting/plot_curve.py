@@ -22,7 +22,7 @@ class PlotCurve(PlotModeBase):
         for t in self.t_set:
             try:
                 _e = evaluate(t)    # calculate vertex
-            except:
+            except (NameError, ZeroDivisionError):
                 _e = None
             if _e is not None:      # update bounding box
                 for axis in xrange(3):

@@ -1,0 +1,6 @@
+==============
+Clebsch-Gordan
+==============
+
+.. automodule:: sympy.physics.quantum.cg
+   :members:

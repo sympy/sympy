@@ -28,12 +28,6 @@ class DensePoly(GenericPoly):
 
         return _hash
 
-    def __getstate__(self):
-        return (self.rep, self.lev, self.dom, self._hash)
-
-    def __getnewargs__(self):
-        return (self.rep, self.lev, self.dom, self._hash)
-
     def unify(f, g):
         """Unify representations of two multivariate polynomials. """
         if not hasattr(g, '__iter__'):

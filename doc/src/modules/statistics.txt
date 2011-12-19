@@ -108,3 +108,29 @@ probability on the interval [a, b] and zero probability everywhere else. The
 ``Uniform`` class supports the same methods as the ``Normal`` class.
 
 Additional distributions, including support for arbitrary user-defined distributions, are planned for the future.
+
+API Reference
+-------------
+
+Sample
+^^^^^^
+
+.. autoclass:: sympy.statistics.distributions.Sample
+   :members:
+
+Continuous Probability Distributions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: sympy.statistics.distributions.ContinuousProbability
+   :members:
+
+.. autoclass:: sympy.statistics.distributions.Normal
+   :members:
+
+.. autoclass:: sympy.statistics.distributions.Uniform
+   :members:
+
+.. autoclass:: sympy.statistics.distributions.PDF
+   :members:
+
+

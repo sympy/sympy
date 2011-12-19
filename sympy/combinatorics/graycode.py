@@ -31,7 +31,8 @@ class GrayCode(Basic):
     [2] Knuth, D. (2011). The Art of Computer Programming, Vol 4
     Addison Wesley
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.graycode import GrayCode
     >>> a = GrayCode(3)
     >>> list(a.generate_gray())
@@ -54,7 +55,8 @@ class GrayCode(Basic):
         code. The starting Gray code string (``start``) or the starting ``rank``
         may also be given; the default is to start at rank = 0 ('0...0').
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> a
@@ -71,6 +73,7 @@ class GrayCode(Basic):
         '0110'
         >>> a.rank
         4
+
         """
         if n < 1 or int(n) != n:
             raise ValueError('Gray code dimension must be a positive integer, not %i' % n)
@@ -93,7 +96,9 @@ class GrayCode(Basic):
         Returns the Gray code a distance ``delta`` (default = 1) from the
         current value in canonical order.
 
-        Examples:
+
+        Examples
+        ========
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3, start='110')
         >>> a.next().current
@@ -108,7 +113,8 @@ class GrayCode(Basic):
         """
         Returns the number of bit vectors in the Gray code.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> a.selections
@@ -121,7 +127,8 @@ class GrayCode(Basic):
         """
         Returns the dimension of the Gray code.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(5)
         >>> a.n
@@ -136,7 +143,8 @@ class GrayCode(Basic):
         [1] Knuth, D. (2011). The Art of Computer Programming,
         Vol 4, Addison Wesley
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> list(a.generate_gray())
@@ -174,7 +182,8 @@ class GrayCode(Basic):
         """
         Skips the bit generation.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> for i in a.generate_gray():
@@ -207,7 +216,8 @@ class GrayCode(Basic):
         References:
         [1] http://www-stat.stanford.edu/~susan/courses/s208/node12.html
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> a = GrayCode(3)
         >>> list(a.generate_gray())
@@ -225,12 +235,16 @@ class GrayCode(Basic):
     def current(self):
         """
         Returns the currently referenced Gray code as a bit string.
-        >>> from sympy.combinatorics.graycode import GrayCode
-        >>> GrayCode(3, start='100').current
-        '100'
+
+        Examples::
+
+            >>> from sympy.combinatorics.graycode import GrayCode
+            >>> GrayCode(3, start='100').current
+            '100'
+
         """
         rv = self._current or '0'
-        if not type(rv) is str:
+        if type(rv) is not str:
             rv = bin(rv)[2:]
         return rv.rjust(self.n, '0')
 
@@ -244,7 +258,8 @@ class GrayCode(Basic):
         The string here is generated in reverse order to allow for tail-call
         optimization.
 
-        Examples:
+        Examples
+        ========
         >>> from sympy.combinatorics.graycode import GrayCode
         >>> GrayCode(5, rank=3).current
         '00010'
@@ -263,6 +278,12 @@ class GrayCode(Basic):
 def random_bitstring(n):
     """
     Generates a random bitlist of length n.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.graycode import random_bitstring
+    >>> random_bitstring(3) # doctest: +SKIP
+    100
     """
     return ''.join([random.choice('01') for i in xrange(n)])
 
@@ -272,7 +293,8 @@ def gray_to_bin(bin_list):
 
     We assume big endian encoding.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.graycode import gray_to_bin
     >>> gray_to_bin('100')
     '111'
@@ -288,7 +310,8 @@ def bin_to_gray(bin_list):
 
     We assume big endian encoding.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.graycode import bin_to_gray
     >>> bin_to_gray('111')
     '100'
@@ -302,7 +325,8 @@ def get_subset_from_bitstring(super_set, bitstring):
     """
     Gets the subset defined by the bitstring.
 
-    Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.graycode import get_subset_from_bitstring
     >>> get_subset_from_bitstring(['a','b','c','d'], '0011')
     ['c', 'd']
@@ -318,7 +342,8 @@ def graycode_subsets(gray_code_set):
     """
     Generates the subsets as enumerated by a Gray code.
 
-     Examples:
+    Examples
+    ========
     >>> from sympy.combinatorics.graycode import graycode_subsets
     >>> list(graycode_subsets(['a','b','c']))
     [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \

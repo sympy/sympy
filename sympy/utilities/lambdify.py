@@ -153,7 +153,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
      - lists that contain a mix of the arguments above. (Entries that are first
         in the list have higher priority)
 
-    Examples:
+    Examples
+    ========
     (1) Use one of the provided modules:
         >> f = lambdify(x, sin(x), "math")
 
@@ -349,7 +350,7 @@ def _imp_namespace(expr, namespace=None):
     func = getattr(expr, 'func', None)
     if isinstance(func, FunctionClass):
         imp = getattr(func, '_imp_', None)
-        if not imp is None:
+        if imp is not None:
             name = expr.func.__name__
             if name in namespace and namespace[name] != imp:
                 raise ValueError('We found more than one '

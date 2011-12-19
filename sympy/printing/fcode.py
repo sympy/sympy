@@ -18,7 +18,7 @@ responsibility for generating properly cased Fortran code to the user.
 """
 
 
-from sympy.core import S, C, Add
+from sympy.core import S, C, Add, Float
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
@@ -227,7 +227,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp is S.NegativeOne:
+        if expr.exp == -1:
             return '1.0/%s'%(self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             if expr.base.is_integer:
@@ -377,26 +377,31 @@ class FCodePrinter(CodePrinter):
 def fcode(expr, **settings):
     """Converts an expr to a string of Fortran 77 code
 
-       Arguments:
-         expr  --  a sympy expression to be converted
+       Parameters
+       ==========
 
-       Optional arguments:
-         assign_to  --  When given, the argument is used as the name of the
-                        variable to which the Fortran expression is assigned.
-                        (This is helpful in case of line-wrapping.)
+       expr : sympy.core.Expr
+           a sympy expression to be converted
+       assign_to : optional
+           When given, the argument is used as the name of the
+           variable to which the Fortran expression is assigned.
+           (This is helpful in case of line-wrapping.)
+       precision : optional
+           the precision for numbers such as pi [default=15]
+       user_functions : optional
+           A dictionary where keys are FunctionClass instances and values
+           are there string representations.
+       human : optional
+           If True, the result is a single string that may contain some
+           parameter statements for the number symbols. If False, the same
+           information is returned in a more programmer-friendly data
+           structure.
+       source_format : optional
+           The source format can be either 'fixed' or 'free'.
+           [default='fixed']
 
-         precision  --  the precision for numbers such as pi [default=15]
-
-         user_functions  --  A dictionary where keys are FunctionClass instances
-                             and values are there string representations.
-
-         human  --  If True, the result is a single string that may contain
-                    some parameter statements for the number symbols. If
-                    False, the same information is returned in a more
-                    programmer-friendly data structure.
-
-         source_format  --  The source format can be either 'fixed' or 'free'.
-                            [default='fixed']
+       Examples
+       ========
 
        >>> from sympy import fcode, symbols, Rational, pi, sin
        >>> x, tau = symbols('x,tau')

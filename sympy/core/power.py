@@ -602,10 +602,11 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if exp < 0 and not base.is_real:
+        if exp < 0 and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
-        return Pow(base, exp).expand()
+            return Pow(base, exp).expand()
+        return Pow(base, exp)
 
     def _eval_is_polynomial(self, syms):
         if self.exp.has(*syms):
@@ -940,6 +941,26 @@ class Pow(Expr):
                 # sqrt(2)*sqrt(1 + sqrt(5))
                 return c, Pow(_keep_coeff(m, t), e)
         return S.One, Pow(b, e)
+
+    def is_constant(self, *wrt):
+        b, e = self.as_base_exp()
+        bz = b.equals(0)
+        if bz: # recalculate with assumptions in case it's unevaluated
+            new = b**e
+            if new != self:
+                return new.is_constant()
+        econ = e.is_constant(*wrt)
+        bcon = b.is_constant(*wrt)
+        if bcon:
+            if econ:
+                return True
+            bz = b.equals(0)
+            if bz is False:
+                return False
+        elif bcon is None:
+            return None
+
+        return e.equals(0)
 
 from add import Add
 from numbers import Integer

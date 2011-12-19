@@ -1,5 +1,5 @@
 from sympy import Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi, S
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy.abc import w, x, y, z
 
 def test_caching_bug():
@@ -208,3 +208,13 @@ def test_getO():
 def test_leading_term():
     from sympy import digamma
     assert O(1/digamma(1/x)) == O(1/log(x))
+
+def test_eval():
+    y = Symbol('y')
+    from sympy import Basic
+    assert Order(x).subs(Order(x), 1) == 1
+    assert Order(x).subs(x, y) == Order(y)
+    assert (O(1)**x).is_Pow
+
+def test_oseries():
+    assert Order(x).oseries(x) == Order(x)

@@ -1,13 +1,11 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
         cse, cot, tan, S, Tuple)
+from sympy.utilities.pytest import XFAIL
 
 def test_subs():
     n3=Rational(3)
-    n2=Rational(2)
-    n6=Rational(6)
     x=Symbol("x")
-    c=Symbol("c")
     e=x
     e=e.subs(x,n3)
     assert e == Rational(3)
@@ -278,7 +276,12 @@ def test_subs_basic_funcs():
     assert (a*exp(x*y-w*z)+b*exp(x*y+w*z)).subs(z,0) == a*exp(x*y)+b*exp(x*y)
     assert ((a-b)/(c*d-a*b)).subs(c*d-a*b,K) == (a-b)/K
     assert (w*exp(a*b-c)*x*y/4).subs(x*y,L) == w*exp(a*b-c)*L/4
-    #assert (a/(b*c)).subs(b*c,K) == a/K,'Failed'; print '.' #FAILS DIVISION
+
+@XFAIL
+def test_subs_basic_funcs_division_bug():
+    # Fails because of division
+    a,b,c,K = symbols('a b c K', commutative=True)
+    assert (a/(b*c)).subs(b*c,K) == a/K
 
 def test_subs_wild():
     # Define symbols

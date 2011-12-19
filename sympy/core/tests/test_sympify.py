@@ -4,13 +4,13 @@ from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 
 from sympy import mpmath
 
 def test_439():
     v = sympify("exp(x)")
-    x = Symbol("x")
     assert v == exp(x)
     assert type(v) == type(exp(x))
     assert str(type(v)) == str(type(exp(x)))
@@ -30,6 +30,7 @@ def test_sympify1():
     assert sympify('+0.[3]*10**-2') == Rational(1, 300)
     assert sympify('.[052631578947368421]') == Rational(1, 19)
     assert sympify('.0[526315789473684210]') == Rational(1, 19)
+    assert sympify('.034[56]') == Rational(1711, 49500)
     # options to make reals into rationals
     assert sympify('1.22[345]', rational=1) == \
            1 + Rational(22, 100) + Rational(345, 99900)
@@ -73,22 +74,18 @@ def test_sympify_gmpy():
         value = sympify(gmpy.mpq(101, 127))
         assert value == Rational(101, 127) and type(value) is Rational
 
+@conserve_mpmath_dps
 def test_sympify_mpmath():
     value = sympify(mpmath.mpf(1.0))
     assert value == Float(1.0) and type(value) is Float
 
-    dps = mpmath.mp.dps
+    mpmath.mp.dps = 12
+    assert sympify(mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) is True
+    assert sympify(mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) is False
 
-    try:
-        mpmath.mp.dps = 12
-        assert sympify(mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-12")) is True
-        assert sympify(mpmath.pi).epsilon_eq(Float("3.14159265359"), Float("1e-13")) is False
-
-        mpmath.mp.dps = 6
-        assert sympify(mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) is True
-        assert sympify(mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
-    finally:
-        mpmath.mp.dps = dps
+    mpmath.mp.dps = 6
+    assert sympify(mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-5")) is True
+    assert sympify(mpmath.pi).epsilon_eq(Float("3.14159"), Float("1e-6")) is False
 
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
 

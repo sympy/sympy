@@ -4,7 +4,7 @@ from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
     Derivative)
 from sympy.abc import x, y, z
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 def test_simple_1():
     assert x.nseries(x, n=5) == x
@@ -96,9 +96,12 @@ def test_series1():
     e = (exp(x)-1)/x
     assert e.nseries(x,0,3) == 1+x/2+O(x**2, x)
 
-    #assert x.nseries(x,0,0) == O(1, x)
-    #assert x.nseries(x,0,1) == O(x, x)
     assert x.nseries(x,0,2) == x
+
+@XFAIL
+def test_series1_failing():
+    assert x.nseries(x,0,0) == O(1, x)
+    assert x.nseries(x,0,1) == O(x, x)
 
 def test_seriesbug1():
     x = Symbol("x")
@@ -199,9 +202,13 @@ def test_seriesbug2c():
 def test_expbug4():
     x = Symbol("x", real=True)
     assert (log(sin(2*x)/x)*(1+x)).series(x,0,2) == log(2) + x*log(2) + O(x**2, x)
-    #assert exp(log(2)+O(x)).nseries(x,0,2) == 2 +O(x**2, x)
     assert exp(log(sin(2*x)/x)*(1+x)).series(x,0,2) == 2 + 2*x*log(2) + O(x**2)
-    #assert ((2+O(x))**(1+x)).nseries(x,0,2) == 2 + O(x**2, x)
+
+@XFAIL
+def test_expbug4_failing():
+    x = Symbol("x", real=True)
+    assert exp(log(2)+O(x)).nseries(x,0,2) == 2 +O(x**2, x)
+    assert ((2+O(x))**(1+x)).nseries(x,0,2) == 2 + O(x**2, x)
 
 def test_logbug4():
     x = Symbol("x")
@@ -209,8 +216,11 @@ def test_logbug4():
 
 def test_expbug5():
     x = Symbol("x")
-    #assert exp(O(x)).nseries(x,0,2) == 1 + O(x**2, x)
     assert exp(log(1+x)/x).nseries(x, n=3) == exp(1) + -exp(1)*x/2 + O(x**2)
+
+@XFAIL
+def test_expbug5_failing():
+    assert exp(O(x)).nseries(x,0,2) == 1 + O(x**2, x)
 
 def test_sinsinbug():
     x = Symbol("x")

@@ -94,12 +94,12 @@ def test_Permutation():
     assert q.length() == 7
     assert r.length() == 4
 
-    assert not p.is_Positive()
-    assert p.is_Negative()
-    assert not q.is_Positive()
-    assert q.is_Negative()
-    assert r.is_Positive()
-    assert not r.is_Negative()
+    assert not p.is_Positive
+    assert p.is_Negative
+    assert not q.is_Positive
+    assert q.is_Negative
+    assert r.is_Positive
+    assert not r.is_Negative
 
     assert p.runs() == [[1, 5], [2], [0, 3, 6], [4]]
     assert q.runs() == [[4], [2, 3, 5], [0, 6], [1]]

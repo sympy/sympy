@@ -17,7 +17,8 @@ def apart(f, x=None, full=False, **options):
     coefficients method and the other is Bronstein's full partial fraction
     decomposition algorithm.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.partfrac import apart
     >>> from sympy.abc import x, y

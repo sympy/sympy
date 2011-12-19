@@ -15,34 +15,6 @@ from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
-def _free_symbols(function, limits):
-    """
-    Return the symbols that will exist when the function is evaluated as
-    an Integral or a Sum. This is useful if one is trying to determine
-    whether the result is dependent on a certain symbol or not.
-
-    This is written as a private function so it can be used from Sum as well
-    as from Integral.
-    """
-    if function.is_zero:
-        return set()
-    isyms = function.free_symbols
-    for xab in limits:
-        if len(xab) == 1:
-            isyms.add(xab[0])
-            continue
-        # take out the target symbol
-        if xab[0] in isyms:
-            isyms.remove(xab[0])
-        if len(xab) == 3 and xab[1] == xab[2]:
-            # if two limits are the same the integral is 0
-            # and there are no symbols
-            return set()
-        # add in the new symbols
-        for i in xab[1:]:
-            isyms.update(i.free_symbols)
-    return isyms
-
 def _process_limits(*symbols):
     """Convert the symbols-related limits into propert limits,
     storing them as Tuple(symbol, lower, upper). The sign of
@@ -163,7 +135,7 @@ class Integral(Expr):
         """
         This method returns the symbols that will exist when the
         integral is evaluated. This is useful if one is trying to
-        determine whether an integral is dependent on a certain
+        determine whether an integral depends on a certain
         symbol or not.
 
         >>> from sympy import Integral
@@ -171,7 +143,25 @@ class Integral(Expr):
         >>> Integral(x, (x, y, 1)).free_symbols
         set([y])
         """
-        return _free_symbols(self.function, self.limits)
+        function, limits = self.function, self.limits
+        if function.is_zero:
+            return set()
+        isyms = function.free_symbols
+        for xab in limits:
+            if len(xab) == 1:
+                isyms.add(xab[0])
+                continue
+            # take out the target symbol
+            if xab[0] in isyms:
+                isyms.remove(xab[0])
+            if len(xab) == 3 and xab[1] == xab[2]:
+                # if two limits are the same the integral is 0
+                # and there are no symbols
+                return set()
+            # add in the new symbols
+            for i in xab[1:]:
+                isyms.update(i.free_symbols)
+        return isyms
 
     @property
     def is_zero(self):
@@ -419,12 +409,11 @@ class Integral(Expr):
         return function
 
     def _eval_expand_basic(self, deep=True, **hints):
-        from sympy import flatten
         if not deep:
             return self
         else:
             return Integral(self.function.expand(deep=deep, **hints),\
-            flatten(*self.limits))
+            *self.limits)
 
     def _eval_derivative(self, sym):
         """Evaluate the derivative of the current Integral object by
@@ -769,7 +758,8 @@ class Integral(Expr):
         the curve exactly in the middle of each interval (thus midpoint
         method). See [1] for more information.
 
-        Examples:
+        Examples
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x
@@ -790,7 +780,8 @@ class Integral(Expr):
         interval the function value is taken at the left hand side of the
         interval.
 
-        Examples:
+        Examples
+        ========
 
             >>> from sympy import sqrt
             >>> from sympy.abc import x

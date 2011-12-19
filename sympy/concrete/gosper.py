@@ -11,10 +11,9 @@ def gosper_normal(f, g, n, polys=True):
     Compute the Gosper's normal form of ``f`` and ``g``.
 
     Given relatively prime univariate polynomials ``f`` and ``g``,
-    rewrite their quotient to a normal form defined as follows::
+    rewrite their quotient to a normal form defined as follows:
 
     .. math::
-
         \frac{f(n)}{g(n)} = Z \cdot \frac{A(n) C(n+1)}{B(n) C(n)}
 
     where ``Z`` is an arbitrary constant and ``A``, ``B``, ``C`` are
@@ -77,13 +76,12 @@ def gosper_normal(f, g, n, polys=True):
     return A, B, C
 
 def gosper_term(f, n):
-    """
+    r"""
     Compute Gosper's hypergeometric term for ``f``.
 
-    Suppose ``f`` is a hypergeometric term such that::
+    Suppose ``f`` is a hypergeometric term such that:
 
     .. math::
-
         s_n = \sum_{k=0}^{n-1} f_k
 
     and `f_k` doesn't depend on `n`. Returns a hypergeometric
@@ -152,13 +150,12 @@ def gosper_term(f, n):
         return B.as_expr()*x/C.as_expr()
 
 def gosper_sum(f, k):
-    """
+    r"""
     Gosper's hypergeometric summation algorithm.
 
-    Given a hypergeometric term ``f`` such that::
+    Given a hypergeometric term ``f`` such that:
 
-    .. math::
-
+    .. math ::
         s_n = \sum_{k=0}^{n-1} f_k
 
     and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where

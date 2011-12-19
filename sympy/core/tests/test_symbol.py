@@ -1,7 +1,8 @@
 from sympy import (Symbol, Wild, Inequality, StrictInequality, pi, I, Rational,
-    sympify, symbols, Dummy, S, Function, flatten)
+    sympify, symbols, Dummy, Function, flatten)
 
 from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import SymPyDeprecationWarning
 
 def test_Symbol():
     a = Symbol("a")
@@ -32,18 +33,16 @@ def test_Dummy():
     Dummy._count = 0
     assert d1 == Dummy()
 
-def test_as_dummy_nondummy():
+def test_as_dummy():
     x = Symbol('x')
     x1 = x.as_dummy()
     assert x1 != x
     assert x1 != x.as_dummy()
-    # assert x == x1.as_nondummy()
 
     x = Symbol('x', commutative = False)
     x1 = x.as_dummy()
     assert x1 != x
     assert x1.is_commutative == False
-    # assert x == x1.as_nondummy()
 
     # issue 2446
     x = Symbol('x', real=True, commutative=False)
@@ -67,9 +66,7 @@ def test_lt_gt():
 def test_no_len():
     # there should be no len for numbers
     x = Symbol('x')
-    xxl = Symbol('xxl')
     raises(TypeError, "len(x)")
-    raises(TypeError, "len(xxl)")
 
 def test_Wild_properties():
     # these tests only include Atoms
@@ -77,7 +74,6 @@ def test_Wild_properties():
     y   = Symbol("y")
     p   = Symbol("p", positive=True)
     k   = Symbol("k", integer=True)
-    r   = Symbol("r", real=True)
     n   = Symbol("n", integer=True, positive=True)
 
     given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3), pi, Rational(3,2), I ]
@@ -127,8 +123,8 @@ def test_symbols_each_char():
     # First, test the warning
     warnings.filterwarnings("error", "The each_char option to symbols\(\) and var\(\) is "
         "deprecated.  Separate symbol names by spaces or commas instead.")
-    raises(DeprecationWarning, "symbols('xyz', each_char=True)")
-    raises(DeprecationWarning, "symbols('xyz', each_char=False)")
+    raises(SymPyDeprecationWarning, "symbols('xyz', each_char=True)")
+    raises(SymPyDeprecationWarning, "symbols('xyz', each_char=False)")
     # now test the actual output
     warnings.filterwarnings("ignore",  "The each_char option to symbols\(\) and var\(\) is "
         "deprecated.  Separate symbol names by spaces or commas instead.")

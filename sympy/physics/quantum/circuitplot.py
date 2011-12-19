@@ -3,8 +3,7 @@
 Todo:
 * Optimize printing of large circuits.
 * Get this to work with single gates.
-* Do a better job checking the form of circuits to make sure it is a Mul of
-  Gates.
+* Do a better job checking the form of circuits to make sure it is a Mul of Gates.
 * Get multi-target gates plotting.
 * Get initial and final states to plot.
 * Get measurements to plot. Might need to rethink measurement as a gate issue.

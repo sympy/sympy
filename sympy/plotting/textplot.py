@@ -6,7 +6,9 @@ def textplot(expr, a, b, W=55, H=18):
     should contain a single symbol, e.g. x or something else) over the
     interval [a, b].
 
-    Example: textplot(sin(t)*t, 0, 15)
+    Examples
+    ========
+    textplot(sin(t)*t, 0, 15)
     """
 
     f = None
@@ -23,7 +25,7 @@ def textplot(expr, a, b, W=55, H=18):
     for x in range(W):
         try:
             y[x] = f(a+(b-a)/float(W)*x)
-        except:
+        except TypeError:
             y[x] = 0
 
     # Normalize height to screen space

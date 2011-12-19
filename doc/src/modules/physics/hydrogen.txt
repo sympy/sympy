@@ -1,0 +1,6 @@
+========
+Hydrogen
+========
+
+.. automodule:: sympy.physics.hydrogen
+   :members:

@@ -1,12 +1,25 @@
+==================
 Assumptions module
-******************
+==================
 
-.. module:: sympy.assumptions
+.. automodule:: sympy.assumptions
+
+Contents
+========
+
+.. toctree::
+    :maxdepth: 3
+
+    ask.txt
+    assume.txt
+    refine.txt
+    handlers/index.txt
 
 Queries are used to ask information about expressions. Main method for this
 is ask():
 
 .. automethod:: sympy.assumptions.ask
+   :noindex:
 
 Querying
 ========
@@ -386,3 +399,4 @@ sympy/assumptions/tests/
 .. [1] New type must inherit from Basic, otherwise an exception will be raised.
    This is a bug and should be fixed.
 
+ 

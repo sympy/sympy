@@ -3,7 +3,14 @@ from primetest import isprime
 from factor_ import factorint, trailing
 
 def int_tested(*j):
-    "Return all args as integers after confirming that they are integers."
+    """Return all args as integers after confirming that they are integers.
+
+    Examples
+    ========
+    >>> from sympy.ntheory.residue_ntheory import int_tested
+    >>> int_tested(8, 9, 110)
+    (8, 9, 110)
+    """
     i = tuple([int(i) for i in j])
     if i != j:
         raise ValueError('all arguments were not integers')
@@ -12,8 +19,16 @@ def int_tested(*j):
     return i
 
 def totient_(n):
-    """returns the number of integers less than n
-    and relatively prime to n"""
+    """Returns the number of integers less than n
+    and relatively prime to n
+    Examples
+    ========
+    >>> from sympy.ntheory import totient_
+    >>> totient_(6)
+    2
+    >>> totient_(67)
+    66
+    """
     n = int_tested(n)
     if n < 1:
         raise ValueError("n must be a positive integer")
@@ -25,11 +40,13 @@ def totient_(n):
 
 
 def n_order(a, n):
-    """ returns the order of a modulo n
+    """Returns the order of a modulo n
     Order of a modulo n is the smallest integer
     k such that a^k leaves a remainder of 1 with n.
 
-    **Examples**
+    Examples
+    ========
+
     >>> from sympy.ntheory import n_order
     >>> n_order(3, 7)
     6
@@ -63,7 +80,9 @@ def is_primitive_root(a, p):
 
         a**totient(n) cong 1 mod(n)
 
-    **Examples**
+    Examples
+    ========
+
     >>> from sympy.ntheory import is_primitive_root, n_order, totient
     >>> is_primitive_root(3, 10)
     True
@@ -125,13 +144,18 @@ def is_quad_residue(a, p):
 
 def legendre_symbol(a, p):
     """
-    Returns 0 if a is multiple of p,
-            1 if a is a quadratic residue of p, else
-           -1
+    Returns
+    =======
+
+    1. 0 if a is multiple of p
+    2. 1 if a is a quadratic residue of p
+    3. -1 otherwise
 
     p should be an odd prime by definition
 
-    **Examples**
+    Examples
+    ========
+
     >>> from sympy.ntheory import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
@@ -151,14 +175,18 @@ def legendre_symbol(a, p):
 
 def jacobi_symbol(m, n):
     """
-    Returns 0 if m cong 0 mod(n),
-            1 if x**2 cong m mod(n) has a solution, else
-           -1.
-
-    jacobi_symbol(m, n) is product of the legendre_symbol(m, p)
+    Returns the product of the legendre_symbol(m, p)
     for all the prime factors p of n.
 
-    **Examples**
+    Returns
+    =======
+
+    1. 0 if m cong 0 mod(n)
+    2. 1 if x**2 cong m mod(n) has a solution
+    3. -1 otherwise
+
+    Examples
+    ========
 
     >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
     >>> from sympy import Mul, S
@@ -169,6 +197,7 @@ def jacobi_symbol(m, n):
 
     The relationship between the jacobi_symbol and legendre_symbol can
     be demonstrated as follows:
+
         >>> L = legendre_symbol
         >>> S(45).factors()
         {3: 2, 5: 1}

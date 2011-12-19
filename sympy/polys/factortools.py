@@ -335,7 +335,8 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     """
     Efficiently test if ``f`` is a cyclotomic polnomial.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.polys.factortools import dup_cyclotomic_p
     >>> from sympy.polys.domains import ZZ

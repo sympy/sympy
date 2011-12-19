@@ -430,6 +430,8 @@ def test_integration_variable():
 def test_expand_integral():
     assert Integral(cos(x**2)*(sin(x**2)+1),(x, 0, 1)).expand() == Integral(cos(x**2)*sin(x**2) + cos(x**2), (x, 0, 1))
     assert Integral(cos(x**2)*(sin(x**2)+1),x).expand() == Integral(cos(x**2)*sin(x**2) + cos(x**2), x)
+    i = Integral(x, (x, 1, 2), (x, 1, 2))
+    assert i._eval_expand_basic() == i
 
 def test_as_sum_midpoint1():
     e = Integral(sqrt(x**3+1), (x, 2, 10))

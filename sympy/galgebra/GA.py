@@ -148,24 +148,23 @@ def comb(N,P):
         comb.sort()
     return(combs)
 
-def diagpq(p,q=0):
+def diagpq(p, q=0):
     """
-    Return string equivalent metric tensor for signature (p,q).
+    Return string equivalent metric tensor for signature (p, q).
     """
-    n = p+q
-    D = ''
+    n = p + q
+    D = []
     rn = range(n)
     for i in rn:
         for j in rn:
             if i ==j:
                 if i < p:
-                    D += '1 '
+                    D.append('1 ')
                 else:
-                    D += '-1 '
+                    D.append('-1 ')
             else:
-                D += '0 '
-        D = D[:-1]+','
-    return(D)
+                D.append('0 ')
+    return ','.join(D)
 
 def make_scalars(symnamelst):
     """

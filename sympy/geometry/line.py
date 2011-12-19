@@ -10,7 +10,6 @@ Segment
 """
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
-from sympy.core.numbers import Float, Rational
 from sympy.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
@@ -38,8 +37,9 @@ class LinearEntity(GeometryEntity):
     -----
     This is an abstract class and is not meant to be instantiated.
     Subclasses should implement the following methods:
-        __eq__
-        __contains__
+
+        * __eq__
+        * __contains__
 
     """
 
@@ -258,7 +258,9 @@ class LinearEntity(GeometryEntity):
         Notes
         -----
         From the dot product of vectors v1 and v2 it is known that:
+
             dot(v1, v2) = |v1|*|v2|*cos(A)
+
         where A is the angle formed between the two vectors. We can
         get the directional vectors of the two lines and readily
         find the angle between the two using the above formula.
@@ -1056,7 +1058,7 @@ class Ray(LinearEntity):
 
         Examples
         --------
-         >>> from sympy import Ray, Point, Segment, S, simplify, solve
+        >>> from sympy import Ray, Point, Segment, S, simplify, solve
         >>> from sympy.abc import t
         >>> r = Ray(Point(0, 0), Point(2, 3))
 
@@ -1102,7 +1104,6 @@ class Ray(LinearEntity):
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
             raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        m = self.slope
         x = simplify(self.p1[0] + t/(1 - t)*(self.p2[0] - self.p1[0]))
         y = simplify(self.p1[1] + t/(1 - t)*(self.p2[1] - self.p1[1]))
         return Point(x, y)
@@ -1148,7 +1149,6 @@ class Ray(LinearEntity):
     def __contains__(self, o):
         """Is other GeometryEntity contained in this Ray?"""
         if isinstance(o, Ray):
-            d = o.p2 - o.p1
             return (Point.is_collinear(self.p1, self.p2, o.p1, o.p2)
                     and (self.xdirection == o.xdirection)
                     and (self.ydirection == o.ydirection))

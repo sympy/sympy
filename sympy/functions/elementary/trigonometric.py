@@ -103,6 +103,8 @@ def _pi_coeff(arg, cycles=1):
 
 class sin(TrigonometricFunction):
     """
+    The sine function.
+
     Usage
     =====
       sin(x) -> Returns the sine of x (measured in radians)
@@ -146,6 +148,9 @@ class sin(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return asin
 
     @classmethod
@@ -291,7 +296,7 @@ class sin(TrigonometricFunction):
             x, y = arg.as_two_terms()
         else:
             coeff, terms = arg.as_coeff_mul()
-            if not (coeff is S.One) and coeff.is_Integer and terms:
+            if coeff is not S.One and coeff.is_Integer and terms:
                 x = arg._new_rawargs(*terms)
                 y = (coeff-1)*x
         if x is not None:
@@ -320,6 +325,8 @@ class sin(TrigonometricFunction):
 
 class cos(TrigonometricFunction):
     """
+    The cosine function.
+
     Usage
     =====
       cos(x) -> Returns the cosine of x (measured in radians)
@@ -510,7 +517,7 @@ class cos(TrigonometricFunction):
             return (cos(x)*cos(y) - sin(y)*sin(x)).expand(trig=True)
         else:
             coeff, terms = arg.as_coeff_mul()
-            if not (coeff is S.One) and coeff.is_Integer and terms:
+            if coeff is not S.One and coeff.is_Integer and terms:
                 x = arg._new_rawargs(*terms)
                 return C.chebyshevt(coeff, cos(x))
         return cos(arg)
@@ -575,6 +582,9 @@ class tan(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
         return atan
 
     @classmethod
@@ -753,6 +763,9 @@ class cot(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     def inverse(self, argindex=1):
+        """
+        Return the inverse of this function.
+        """
         return acot
 
     @classmethod

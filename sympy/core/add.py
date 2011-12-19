@@ -30,6 +30,38 @@ class Add(AssocOp):
             See Mul.flatten
 
         """
+        rv = None
+        if len(seq) == 2:
+            a, b = seq
+            if b.is_Rational:
+                a, b = b, a
+            assert a
+            if a.is_Rational and a.q:
+                if b.is_Mul:
+                    # if it's an unevaluated 2-arg, expand it
+                    c, t = b.as_coeff_Mul()
+                    if t.is_Add:
+                        h, t = t.as_coeff_Add()
+                        bargs = [c*ti for ti in Add.make_args(t)]
+                        bargs.sort(key=hash)
+                        ch = c*h
+                        if ch:
+                            bargs.insert(0, ch)
+                        b = Add._from_args(bargs)
+                if b.is_Add:
+                    bargs = list(b.args)
+                    if bargs[0].is_Number:
+                        bargs[0] += a
+                        if not bargs[0]:
+                            bargs.pop(0)
+                    else:
+                        bargs.insert(0, a)
+                    rv = bargs, [], None
+                elif b.is_Mul:
+                    rv = [a, b], [], None
+            if rv:
+                return rv
+
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
 
@@ -80,7 +112,9 @@ class Add(AssocOp):
                 c, s = o.as_coeff_Mul()
 
                 # 3*...
-                # unevaluated 2-arg Mul
+                # unevaluated 2-arg Mul, but we always unfold it so
+                # it can combine with other terms (just like is done
+                # with the Pow below)
                 if c.is_Number and s.is_Add:
                     seq.extend([c*a for a in s.args])
                     continue
@@ -203,6 +237,35 @@ class Add(AssocOp):
         """Nice order of classes"""
         return 3, 1, cls.__name__
 
+    def as_coefficients_dict(a):
+        """Return a dictionary mapping terms to their Rational coefficient.
+        Since the dictionary is a defaultdict, inquiries about terms which
+        were not present will return a coefficient of 0. If an expression is
+        not an Add it is considered to have a single term.
+
+        **Examples**
+        >>> from sympy.abc import a, x
+        >>> (3*x + a*x + 4).as_coefficients_dict()
+        {1: 4, x: 3, a*x: 1}
+        >>> _[a]
+        0
+        >>> (3*a*x).as_coefficients_dict()
+        {a*x: 3}
+        """
+
+        d = defaultdict(list)
+        for ai in a.args:
+            c, m = ai.as_coeff_Mul()
+            d[m].append(c)
+        for k, v in d.iteritems():
+            if len(v) == 1:
+                d[k] = v[0]
+            else:
+                d[k] = Add(*v)
+        di = defaultdict(int)
+        di.update(d)
+        return di
+
     @cacheit
     def as_coeff_add(self, *deps):
         """
@@ -226,7 +289,7 @@ class Add(AssocOp):
                     l1.append(f)
             return self._new_rawargs(*l1), tuple(l2)
         coeff, notrat = self.args[0].as_coeff_add()
-        if not coeff is S.Zero:
+        if coeff is not S.Zero:
             return coeff, notrat + self.args[1:]
         return S.Zero, self.args
 
@@ -697,17 +760,65 @@ class Add(AssocOp):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Example**
+        **Examples**
 
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()
         (3, 1 + sqrt(2))
 
+        Radical content is also factored out of the primitive:
+
+        >>> (2*sqrt(2) + 4*sqrt(10)).as_content_primitive()
+        (2, sqrt(2)*(1 + 2*sqrt(5)))
+
         See docstring of Expr.as_content_primitive for more examples.
         """
-        return Add(*[_keep_coeff(*a.as_content_primitive()) for a in self.args]).primitive()
+        con, prim = Add(*[_keep_coeff(*a.as_content_primitive()) for a in self.args]).primitive()
+        if prim.is_Add:
+            # look for common radicals that can be removed
+            args = prim.args
+            rads = []
+            common_q = None
+            for m in args:
+                term_rads = defaultdict(list)
+                for ai in Mul.make_args(m):
+                    if ai.is_Pow:
+                        b, e = ai.as_base_exp()
+                        if e.is_Rational and b.is_Integer and b > 0:
+                            term_rads[e.q].append(int(b)**e.p)
+                if not term_rads:
+                    break
+                if common_q is None:
+                    common_q = set(term_rads.keys())
+                else:
+                    common_q = common_q & set(term_rads.keys())
+                    if not common_q:
+                        break
+                rads.append(term_rads)
+            else:
+                # process rads
+                # keep only those in common_q
+                for r in rads:
+                    for q in r.keys():
+                        if q not in common_q:
+                            r.pop(q)
+                    for q in r:
+                        r[q] = prod(r[q])
+                # find the gcd of bases for each q
+                n = len(rads)
+                G = []
+                for q in common_q:
+                    g = reduce(igcd, [r[q] for r in rads], 0)
+                    if g != 1:
+                        G.append(Pow(g, Rational(1, q)))
+                if G:
+                    G = Mul(*G)
+                    args = [ai/G for ai in args]
+                    prim = G*Add(*args)
+
+        return con, prim
 
 from function import FunctionClass
-from mul import Mul, _keep_coeff
+from mul import Mul, _keep_coeff, prod
 from power import Pow
 from sympy.core.numbers import Rational

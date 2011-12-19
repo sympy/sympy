@@ -1,5 +1,5 @@
-from sympy import (Abs, C, Dummy, Max, Min, Rational, Float, S, Symbol, cos, oo,
-                   pi, simplify, sqrt, symbols)
+from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
+                   simplify, sqrt, symbols)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, centroid)
@@ -25,24 +25,24 @@ def test_curve():
     z = Symbol('z')
 
     # this curve is independent of the indicated parameter
-    C = Curve([2*s, s**2], (z, 0, 2))
+    c = Curve([2*s, s**2], (z, 0, 2))
 
-    assert C.parameter == z
-    assert C.functions == (2*s, s**2)
-    assert C.arbitrary_point() == Point(2*s, s**2)
-    assert C.arbitrary_point(z) == Point(2*s, s**2)
+    assert c.parameter == z
+    assert c.functions == (2*s, s**2)
+    assert c.arbitrary_point() == Point(2*s, s**2)
+    assert c.arbitrary_point(z) == Point(2*s, s**2)
 
     # this is how it is normally used
-    C = Curve([2*s, s**2], (s, 0, 2))
+    c = Curve([2*s, s**2], (s, 0, 2))
 
-    assert C.parameter == s
-    assert C.functions == (2*s, s**2)
+    assert c.parameter == s
+    assert c.functions == (2*s, s**2)
     t = Symbol('t')
-    assert C.arbitrary_point() != Point(2*t, t**2) # the t returned as assumptions
+    assert c.arbitrary_point() != Point(2*t, t**2) # the t returned as assumptions
     t = Symbol('t', real=True) # now t has the same assumptions so the test passes
-    assert C.arbitrary_point() == Point(2*t, t**2)
-    assert C.arbitrary_point(z) == Point(2*z, z**2)
-    assert C.arbitrary_point(C.parameter) == Point(2*s, s**2)
+    assert c.arbitrary_point() == Point(2*t, t**2)
+    assert c.arbitrary_point(z) == Point(2*z, z**2)
+    assert c.arbitrary_point(c.parameter) == Point(2*s, s**2)
 
     raises(ValueError, 'Curve((s, s + t), (s, 1, 2)).arbitrary_point()')
     raises(ValueError, 'Curve((s, s + t), (t, 1, 2)).arbitrary_point(s)')
@@ -264,9 +264,7 @@ def test_line():
 def test_ellipse():
     p1 = Point(0, 0)
     p2 = Point(1, 1)
-    p3 = Point(x1, x2)
     p4 = Point(0, 1)
-    p5 = Point(-1, 0)
 
     e1 = Ellipse(p1, 1, 1)
     e2 = Ellipse(p2, half, 1)
@@ -514,8 +512,6 @@ def test_polygon():
     t2 = Triangle(p1, p2, Point(Rational(5,2), sqrt(Rational(75,4))))
     t3 = Triangle(p1, Point(x1, 0), Point(0, x1))
     s1 = t1.sides
-    s2 = t2.sides
-    s3 = t3.sides
 
     # Basic stuff
     assert Triangle(p1, p1, p1) == p1
@@ -580,12 +576,6 @@ def test_polygon():
     p4 = Polygon(
         Point(1, 1), Point(Rational(6)/5, 1),
         Point(1, Rational(6)/5))
-    p5 = Polygon(
-        Point(half, 3**(half)/2), Point(-half, 3**(half)/2),
-        Point(-1, 0), Point(-half, -(3)**(half)/2),
-        Point(half, -(3)**(half)/2), Point(1, 0))
-    p6 = Polygon(Point(2, Rational(3)/10), Point(Rational(17)/10, 0),
-                 Point(2, -Rational(3)/10), Point(Rational(23)/10, 0))
     pt1 = Point(half, half)
     pt2 = Point(1, 1)
 

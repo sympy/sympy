@@ -14,7 +14,7 @@ def solve_poly_system(seq, *gens, **args):
     """
     Solve a system of polynomial equations.
 
-    Example
+    Examples
     =======
 
     >>> from sympy import solve_poly_system
@@ -190,7 +190,7 @@ def solve_triangulated(polys, *gens, **args):
     domain and then by iteratively computing polynomial factorizations in
     appropriately constructed algebraic extensions of the ground domain.
 
-    Example
+    Examples
     =======
 
     >>> from sympy.solvers.polysys import solve_triangulated

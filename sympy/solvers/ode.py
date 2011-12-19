@@ -205,17 +205,17 @@ anything is broken, one of those tests will surely fail.
 """
 from collections import defaultdict
 
-from sympy.core import Add, Basic, C, S, Mul, Pow, oo
-from sympy.core.compatibility import iterable, cmp_to_key, is_sequence, set_union
-from sympy.core.function import Derivative, Function, AppliedUndef, diff, expand_mul
+from sympy.core import Add, C, S, Mul, Pow, oo
+from sympy.core.compatibility import iterable, is_sequence, set_union, SymPyDeprecationWarning
+from sympy.core.function import Derivative, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
 
-from sympy.functions import cos, exp, im, log, re, sin, tan, sign, sqrt
+from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt
 from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf, terms_gcd
+from sympy.polys import Poly, RootOf
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp
@@ -443,7 +443,8 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
           specific hint, where hintname is the name of a hint without
           "_Integral".
 
-    **Examples**
+    Examples
+    ========
 
         >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
         >>> from sympy.abc import x
@@ -652,7 +653,8 @@ def classify_ode(eq, func=None, dict=False, prep=True):
         meta-hint.
 
 
-    **Examples**
+    Examples
+    ========
         >>> from sympy import Function, classify_ode, Eq
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -902,7 +904,8 @@ def odesimp(eq, func, order, hint):
     functions do not call odesimp (because the dsolve() wrapper does).
     Therefore, this function is designed for mainly internal use.
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import sin, symbols, dsolve, pprint, Function
         >>> from sympy.solvers.ode import odesimp
         >>> x , u2, C1= symbols('x,u2,C1')
@@ -1069,7 +1072,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
     To use this function to test, test the first item of the tuple.
 
-    **Examples**
+    Examples
+    ========
         >>> from sympy import Eq, Function, checkodesol, symbols
         >>> x, C1 = symbols('x,C1')
         >>> f = Function('f')
@@ -1104,7 +1108,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         msg = "sol appears to be a valid function. " +\
               "The order of sol and func will be reversed. " +\
               "If this is not desired, send sol as Eq(sol, 0)."
-        warnings.warn(msg, category=DeprecationWarning)
+        warnings.warn(msg, category=SymPyDeprecationWarning)
         sol, func = func, sol
     elif not (isinstance(func, AppliedUndef) and len(func.args) == 1):
         raise ValueError("func (or sol, during deprecation) must be a function of one variable. Got sol = %s, func = %s" % (sol, func))
@@ -1283,7 +1287,8 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     returns oo it returns that, otherwise it returns len(str(sol)), that
     is, the length of the string representation of the whole list.
 
-    **Examples**
+    Examples
+    ========
 
     This function is designed to be passed to min as the key argument,
     such as min(listofsolutions, key=lambda i: ode_sol_simplicity(i, f(x))).
@@ -1402,7 +1407,8 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     Use your discretion in such situations, and also take advantage of
     the ability to use hints in dsolve().
 
-    **Examples**
+    Examples
+    ========
         >>> from sympy import symbols
         >>> from sympy.solvers.ode import constantsimp
         >>> C1, C2, C3, x, y = symbols('C1,C2,C3,x,y')
@@ -1560,15 +1566,21 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
     The structure of this function is very similar to that of
     constantsimp().
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import symbols, Eq, pprint
         >>> from sympy.solvers.ode import constant_renumber
-        >>> x, C1, C2, C3, C4 = symbols('x,C1,C2,C3,C4')
+        >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
 
-        Only constants in the given range are renumbered:
+        Only constants in the given range (inclusive) are renumbered;
+        the renumbering always starts from 1:
 
         >>> constant_renumber(C1 + C3 + C4, 'C', 1, 3)
         C1 + C2 + C4
+        >>> constant_renumber(C0 + C1 + C3 + C4, 'C', 2, 4)
+        C0 + 2*C1 + C2
+        >>> constant_renumber(C0 + 2*C1 + C2, 'C', 0, 1)
+        C1 + 3*C2
         >>> pprint(C2 + C1*x + C3*x**2)
                         2
         C1*x + C2 + C3*x
@@ -1672,7 +1684,8 @@ def ode_order(expr, func):
 
     This function is implemented recursively.
 
-    **Examples**
+    Examples
+    ========
         >>> from sympy import Function, ode_order
         >>> from sympy.abc import x
         >>> f, g = map(Function, ['f', 'g'])
@@ -1740,7 +1753,8 @@ def ode_1st_exact(eq, func, order, match):
     with dy.  This is supposed to represent the function that you are
     solving for.
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve, cos, sin
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -1783,7 +1797,8 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     information on these hints.  Note that there is no
     '1st_homogeneous_coeff_best_Integral' hint.
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -1867,7 +1882,8 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     See also the docstrings of ode_1st_homogeneous_coeff_best() and
     ode_1st_homogeneous_coeff_subs_indep_div_dep().
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -1949,7 +1965,8 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     See also the docstrings of ode_1st_homogeneous_coeff_best() and
     ode_1st_homogeneous_coeff_subs_dep_div_indep().
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2004,7 +2021,8 @@ def homogeneous_order(eq, *symbols):
     declared function appears with different arguments than given in the
     list of symbols, None is returned.
 
-    **Examples**
+    Examples
+    ========
         >>> from sympy import Function, homogeneous_order, sqrt
         >>> from sympy.abc import x, y
         >>> f = Function('f')
@@ -2095,7 +2113,8 @@ def ode_1st_linear(eq, func, order, match):
                \     /                     /
 
 
-    **Example**
+    Examples
+    ========
         >>> f = Function('f')
         >>> pprint(dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
         ... f(x), '1st_linear'))
@@ -2165,7 +2184,8 @@ def ode_Bernoulli(eq, func, order, match):
      /
 
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve, Eq, pprint, log
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2267,7 +2287,8 @@ def ode_Liouville(eq, func, order, match):
                  |                     |
                 /                     /
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2312,7 +2333,8 @@ def _nth_linear_match(eq, func, order):
     the ode is not linear.  This function assumes that func has already
     been checked to be good.
 
-    **Examples**
+    Examples
+    ========
         >>> from sympy import Function, cos, sin
         >>> from sympy.abc import x
         >>> from sympy.solvers.ode import _nth_linear_match
@@ -2394,7 +2416,8 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     - returns = 'both', return a dictionary {'sol':solution to ODE,
       'list': list of linearly independent solutions}.
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve, pprint
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2505,7 +2528,8 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     dependent on the solution to the homogeneous equation, they are
     multiplied by sufficient x to make them linearly independent.
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve, pprint, exp, cos
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2647,7 +2671,8 @@ def _undetermined_coefficients_match(expr, x):
     (1 + cos(2*x))/2 to properly apply the method of undetermined
     coefficients on it.
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import log, exp
         >>> from sympy.solvers.ode import _undetermined_coefficients_match
         >>> from sympy.abc import x
@@ -2807,7 +2832,8 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     this method, especially if the solution to the homogeneous
     equation has trigonometric functions in it.
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve, pprint, exp, log
         >>> from sympy.abc import x
         >>> f = Function('f')
@@ -2914,7 +2940,8 @@ def ode_separable(eq, func, order, match):
           |                  |
          /                  /
 
-    **Example**
+    Examples
+    ========
         >>> from sympy import Function, dsolve, Eq
         >>> from sympy.abc import x
         >>> f = Function('f')
