@@ -782,7 +782,7 @@ produit par la fonction ``pprint`` :
     /
 
 Si vous avez une police unicode installée, elle devrait utiliser
-le joli affichage d'unicode par défaut.
+l'affichage amélioré d'unicode par défaut.
 Vous pouvez outrepasser ce comportement en utilisant l'option ``use_unicode`` :
 
     >>> pprint(Integral(x**2, x), use_unicode=True)
@@ -796,7 +796,7 @@ Voir aussi le wiki `Pretty Printing
 <https://github.com/sympy/sympy/wiki/Pretty-Printing>`_
 pour plus d'exemples d'un affichage unicode sympathique.
 
-Astuce : pour activer le joli affichage par défaut
+Astuce : pour activer l'affichage amélioré par défaut
 dans l'interpréteur Python, utilisez ::
 
     $ python
@@ -880,13 +880,13 @@ Notes
 -----
 
 ``isympy`` appelle ``pprint`` automatiquement, c'est donc pourquoi
-vous voyez du joli affichage par défaut.
+vous voyez un affichage amélioré par défaut.
 
 Notez qu'il y a aussi un module d'affichage disponible, ``sympy.printing``.
 D'autres méthodes d'affichage disponibles dans ce module sont :
 
 * ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``:
-Retourne ou affiche, respectivement, une jolie représentation de ``expr``.
+Retourne ou affiche, respectivement, une représentation améliorée de ``expr``.
 C'est la même chose que le second niveau de représentation décrit au-dessus.
 
 * ``latex(expr)``, ``print_latex(expr)``: Retourne ou affiche, respectivement,
