@@ -913,9 +913,14 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                   visual is not False):
         if factordict == {}:
             return S.One
-        return Mul(*[Pow(*i, **{'evaluate':False})
-                     for i in sorted(factordict.items())],
-                             **{'evaluate':False})
+        if -1 in factordict:
+            factordict.pop(-1)
+            args = [S.NegativeOne]
+        else:
+            args = []
+        args.extend([Pow(*i, **{'evaluate':False})
+                     for i in sorted(factordict.items())])
+        return Mul(*args, **{'evaluate':False})
     elif isinstance(n, dict) or isinstance(n, Mul):
         return factordict
 
