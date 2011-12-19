@@ -1272,6 +1272,8 @@ class Expr(Basic, EvalfMixin):
         >>> (a*b).primitive() == (1, a*b)
         True
         """
+        if not self:
+            return S.One, S.Zero
         c, r = self.as_coeff_mul()
         r = Mul._from_args(r)
         if c.is_negative:
