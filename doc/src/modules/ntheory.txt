@@ -27,9 +27,9 @@ Ntheory Functions Reference
 
 .. autofunction:: cycle_length
 
-.. autofunction:: smoothness
+.. autofunction:: sympy.ntheory.factor_.smoothness
 
-.. autofunction:: smoothness_p
+.. autofunction:: sympy.ntheory.factor_.smoothness_p
 
 .. autofunction:: trailing
 
