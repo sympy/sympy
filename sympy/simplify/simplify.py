@@ -200,7 +200,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
     else it will return a dictionary with expressions up to rational powers
     as keys and collected coefficients as values.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import S, collect, expand, factor, Wild
     >>> from sympy.abc import a, b, c, x, y, z
@@ -357,7 +358,8 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
         return expr, (sym, Rational(order))
 
     def parse_term(expr):
-        """Parses expression expr and outputs tuple (sexpr, rat_expo, sym_expo, deriv)
+        """Parses expression expr and outputs tuple (sexpr, rat_expo,
+        sym_expo, deriv)
         where:
          - sexpr is the base expression
          - rat_expo is the rational exponent that sexpr is raised to
@@ -553,7 +555,7 @@ def rcollect(expr, *vars):
     Recursively collect sums in an expression.
 
     Examples
-    =======
+    ========
 
     >>> from sympy.simplify import rcollect
     >>> from sympy.abc import x, y
@@ -590,7 +592,8 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     string 'coeff'. (Passing None for symbols will return the
     expression in a dictionary keyed to 'coeff'.)
 
-    If force=True, then power bases will only be separated if assumptions allow.
+    If force=True, then power bases will only be separated if assumptions
+    allow.
 
     Note: the order of the factors is determined by Mul, so that the
     separated expressions may not necessarily be grouped together.
@@ -720,13 +723,15 @@ def _separatevars_dict(expr, symbols):
     return ret
 
 def ratsimp(expr):
-    """Put an expression over a common denominator, cancel and reduce.
+    """
+    Put an expression over a common denominator, cancel and reduce.
 
-    == Examples ==
-        >>> from sympy import ratsimp
-        >>> from sympy.abc import x, y
-        >>> ratsimp(1/x + 1/y)
-        (x + y)/(x*y)
+    Examples
+    ========
+    >>> from sympy import ratsimp
+    >>> from sympy.abc import x, y
+    >>> ratsimp(1/x + 1/y)
+    (x + y)/(x*y)
     """
 
     f, g = cancel(expr).as_numer_denom()
@@ -739,11 +744,10 @@ def ratsimp(expr):
 
 def trigsimp(expr, deep=False, recursive=False):
     """
-    == Usage ==
+    reduces expression by using known trig identities
 
-    trigsimp(expr) -> reduces expression by using known trig identities
-
-    == Notes ==
+    Notes
+    =====
 
     deep:
     - Apply trigsimp inside functions
@@ -753,16 +757,17 @@ def trigsimp(expr, deep=False, recursive=False):
     trigsimp recursively (recursively==True is quite expensive
     operation if the expression is large)
 
-    == Examples ==
-        >>> from sympy import trigsimp, sin, cos, log
-        >>> from sympy.abc import x, y
-        >>> e = 2*sin(x)**2 + 2*cos(x)**2
-        >>> trigsimp(e)
-        2
-        >>> trigsimp(log(e))
-        log(2*sin(x)**2 + 2*cos(x)**2)
-        >>> trigsimp(log(e), deep=True)
-        log(2)
+    Examples
+    ========
+    >>> from sympy import trigsimp, sin, cos, log
+    >>> from sympy.abc import x, y
+    >>> e = 2*sin(x)**2 + 2*cos(x)**2
+    >>> trigsimp(e)
+    2
+    >>> trigsimp(log(e))
+    log(2*sin(x)**2 + 2*cos(x)**2)
+    >>> trigsimp(log(e), deep=True)
+    log(2)
 
     """
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
@@ -785,27 +790,26 @@ def trigsimp(expr, deep=False, recursive=False):
 
 def trigsimp_nonrecursive(expr, deep=False):
     """
-    A nonrecursive trig simplifier, used from trigsimp.
+    A nonrecursive trig simplifier, used from trigsimp. Reduces expression by
+    using known trig identities
 
-    == Usage ==
-        trigsimp_nonrecursive(expr) -> reduces expression by using known trig
-                                       identities
+    Notes
+    =====
 
-    == Notes ==
+    deep -> apply trigsimp inside functions
 
-    deep ........ apply trigsimp inside functions
-
-    == Examples ==
-        >>> from sympy import cos, sin, log
-        >>> from sympy.simplify.simplify import trigsimp, trigsimp_nonrecursive
-        >>> from sympy.abc import x, y
-        >>> e = 2*sin(x)**2 + 2*cos(x)**2
-        >>> trigsimp(e)
-        2
-        >>> trigsimp_nonrecursive(log(e))
-        log(2*sin(x)**2 + 2*cos(x)**2)
-        >>> trigsimp_nonrecursive(log(e), deep=True)
-        log(2)
+    Examples
+    ========
+    >>> from sympy import cos, sin, log
+    >>> from sympy.simplify.simplify import trigsimp, trigsimp_nonrecursive
+    >>> from sympy.abc import x, y
+    >>> e = 2*sin(x)**2 + 2*cos(x)**2
+    >>> trigsimp(e)
+    2
+    >>> trigsimp_nonrecursive(log(e))
+    log(2*sin(x)**2 + 2*cos(x)**2)
+    >>> trigsimp_nonrecursive(log(e), deep=True)
+    log(2)
 
     """
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
@@ -906,8 +910,8 @@ def collect_sqrt(expr, evaluate=True):
 
     Note: since I = sqrt(-1), it is collected, too.
 
-    **Examples**
-
+    Examples
+    ========
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import collect_sqrt
     >>> from sympy.abc import a, b
@@ -972,7 +976,8 @@ def collect_const(expr, *vars, **first):
     an Add expr. If ``vars`` is given then only those constants will be
     targeted.
 
-    **Examples**
+    Examples
+    ========
     >>> from sympy import sqrt
     >>> from sympy.abc import a, s
     >>> from sympy.simplify.simplify import collect_const
@@ -1059,10 +1064,10 @@ def radsimp(expr, symbolic=True):
     Note: the expression returned from radsimp must be used with caution
     since if the denominator contains symbols, it will be possible to make
     substitutions that violate the assumptions of the simplification process:
-    that for a denominator matching a + b*sqrt(c), a != +/-b*sqrt(c). (If there
-    are no symbols, this assumptions is made valid by collecting terms of
-    sqrt(c) so the match variable ``a`` does not contain ``sqrt(c)``.) If you
-    do not want the simplification to occur for symbolic denominators, set
+    that for a denominator matching a + b*sqrt(c), a != +/-b*sqrt(c). (If
+    there are no symbols, this assumptions is made valid by collecting terms
+    of sqrt(c) so the match variable ``a`` does not contain ``sqrt(c)``.) If
+    you do not want the simplification to occur for symbolic denominators, set
     ``symbolic`` to False.
 
 
@@ -1221,14 +1226,16 @@ def radsimp(expr, symbolic=True):
     return _keep_coeff(coeff, expr)
 
 def posify(eq):
-    """Return eq (with generic symbols made positive) and a restore dictionary.
+    """Return eq (with generic symbols made positive) and a restore
+    dictionary.
 
     Any symbol that has positive=None will be replaced with a positive dummy
     symbol having the same name. This replacement will allow more symbolic
-    processing of expressions, especially those involving powers and logarithms.
+    processing of expressions, especially those involving powers and
+    logarithms.
 
-    A dictionary that can be sent to subs to restore eq to its original symbols
-    is also returned.
+    A dictionary that can be sent to subs to restore eq to its original
+    symbols is also returned.
 
     >>> from sympy import posify, Symbol, log
     >>> from sympy.abc import x
@@ -1369,22 +1376,25 @@ def _denest_pow(eq):
     return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
 
 def powdenest(eq, force=False):
-    """
+    r"""
     Collect exponents on powers as assumptions allow.
 
     Given (bb**be)**e, this can be simplified as follows:
-        o if bb is positive or e is an integer, bb**(be*e)
-        o if be has an integer in the denominator, then
-          all integers from its numerator can be joined with e
+
+    - if bb is positive or e is an integer, bb**(be*e)
+    - if be has an integer in the denominator, then
+      all integers from its numerator can be joined with e
+
     Given a product of powers raised to a power, (bb1**be1 * bb2**be2...)**e,
     simplification can be done as follows:
-        o if e is positive, the gcd of all bei can be joined with e;
-        o all non-negative bb can be separated from those that are negative
-          and their gcd can be joined with e; autosimplification already
-          handles this separation.
-        o integer factors from powers that have integers in the denominator
-          of the exponent can be removed from any term and the gcd of such
-          integers can be joined with e
+
+    - if e is positive, the gcd of all bei can be joined with e;
+    - all non-negative bb can be separated from those that are negative
+      and their gcd can be joined with e; autosimplification already
+      handles this separation.
+    - integer factors from powers that have integers in the denominator
+      of the exponent can be removed from any term and the gcd of such
+      integers can be joined with e
 
     Setting ``force`` to True will make symbols that are not explicitly
     negative behave as though they are positive, resulting in more
@@ -1465,83 +1475,83 @@ def powdenest(eq, force=False):
 
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
-    == Usage ==
-        powsimp(expr, deep) -> reduces expression by combining powers with
-        similar bases and exponents.
+    reduces expression by combining powers with similar bases and exponents.
 
-    == Notes ==
-        If deep is True then powsimp() will also simplify arguments of
-        functions. By default deep is set to False.
+    Notes
+    =====
+    If deep is True then powsimp() will also simplify arguments of
+    functions. By default deep is set to False.
 
-        If force is True then bases will be combined without checking for
-        assumptions, e.g. sqrt(x)*sqrt(y) -> sqrt(x*y) which is not true
-        if x and y are both negative.
+    If force is True then bases will be combined without checking for
+    assumptions, e.g. sqrt(x)*sqrt(y) -> sqrt(x*y) which is not true
+    if x and y are both negative.
 
-        You can make powsimp() only combine bases or only combine exponents by
-        changing combine='base' or combine='exp'.  By default, combine='all',
-        which does both.  combine='base' will only combine::
+    You can make powsimp() only combine bases or only combine exponents by
+    changing combine='base' or combine='exp'.  By default, combine='all',
+    which does both.  combine='base' will only combine::
 
-             a   a          a                          2x      x
-            x * y  =>  (x*y)   as well as things like 2   =>  4
+         a   a          a                          2x      x
+        x * y  =>  (x*y)   as well as things like 2   =>  4
 
-        and combine='exp' will only combine
-        ::
+    and combine='exp' will only combine
+    ::
 
-             a   b      (a + b)
-            x * x  =>  x
+         a   b      (a + b)
+        x * x  =>  x
 
-        combine='exp' will strictly only combine exponents in the way that used
-        to be automatic.  Also use deep=True if you need the old behavior.
+    combine='exp' will strictly only combine exponents in the way that used
+    to be automatic.  Also use deep=True if you need the old behavior.
 
-        When combine='all', 'exp' is evaluated first.  Consider the first
-        example below for when there could be an ambiguity relating to this.
-        This is done so things like the second example can be completely
-        combined.  If you want 'base' combined first, do something like
-        powsimp(powsimp(expr, combine='base'), combine='exp').
+    When combine='all', 'exp' is evaluated first.  Consider the first
+    example below for when there could be an ambiguity relating to this.
+    This is done so things like the second example can be completely
+    combined.  If you want 'base' combined first, do something like
+    powsimp(powsimp(expr, combine='base'), combine='exp').
 
-    == Examples ==
-        >>> from sympy import powsimp, exp, log, symbols
-        >>> from sympy.abc import x, y, z, n
-        >>> powsimp(x**y*x**z*y**z, combine='all')
-        x**(y + z)*y**z
-        >>> powsimp(x**y*x**z*y**z, combine='exp')
-        x**(y + z)*y**z
-        >>> powsimp(x**y*x**z*y**z, combine='base', force=True)
-        x**y*(x*y)**z
+    Examples
+    ========
+    >>> from sympy import powsimp, exp, log, symbols
+    >>> from sympy.abc import x, y, z, n
+    >>> powsimp(x**y*x**z*y**z, combine='all')
+    x**(y + z)*y**z
+    >>> powsimp(x**y*x**z*y**z, combine='exp')
+    x**(y + z)*y**z
+    >>> powsimp(x**y*x**z*y**z, combine='base', force=True)
+    x**y*(x*y)**z
 
-        >>> powsimp(x**z*x**y*n**z*n**y, combine='all', force=True)
-        (n*x)**(y + z)
-        >>> powsimp(x**z*x**y*n**z*n**y, combine='exp')
-        n**(y + z)*x**(y + z)
-        >>> powsimp(x**z*x**y*n**z*n**y, combine='base', force=True)
-        (n*x)**y*(n*x)**z
+    >>> powsimp(x**z*x**y*n**z*n**y, combine='all', force=True)
+    (n*x)**(y + z)
+    >>> powsimp(x**z*x**y*n**z*n**y, combine='exp')
+    n**(y + z)*x**(y + z)
+    >>> powsimp(x**z*x**y*n**z*n**y, combine='base', force=True)
+    (n*x)**y*(n*x)**z
 
-        >>> x, y = symbols('x y', positive=True)
-        >>> powsimp(log(exp(x)*exp(y)))
-        log(exp(x)*exp(y))
-        >>> powsimp(log(exp(x)*exp(y)), deep=True)
-        x + y
+    >>> x, y = symbols('x y', positive=True)
+    >>> powsimp(log(exp(x)*exp(y)))
+    log(exp(x)*exp(y))
+    >>> powsimp(log(exp(x)*exp(y)), deep=True)
+    x + y
 
-        Radicals with Mul bases will be combined if combine='exp'
+    Radicals with Mul bases will be combined if combine='exp'
 
-            >>> from sympy import sqrt, Mul
-            >>> x, y = symbols('x y')
+    >>> from sympy import sqrt, Mul
+    >>> x, y = symbols('x y')
 
-            Two radicals are automatically joined through Mul:
-            >>> a=sqrt(x*sqrt(y))
-            >>> a*a**3 == a**4
-            True
+    Two radicals are automatically joined through Mul:
+    >>> a=sqrt(x*sqrt(y))
+    >>> a*a**3 == a**4
+    True
 
-            But if an integer power of that radical has been
-            autoexpanded then Mul does not join the resulting factors:
-            >>> a**4 # auto expands to a Mul, no longer a Pow
-            x**2*y
-            >>> _*a # so Mul doesn't combine them
-            x**2*y*sqrt(x*sqrt(y))
-            >>> powsimp(_) # but powsimp will
-            (x*sqrt(y))**(5/2)
-            >>> powsimp(x*y*a) # but won't when doing so would violate assumptions
-            x*y*sqrt(x*sqrt(y))
+    But if an integer power of that radical has been
+    autoexpanded then Mul does not join the resulting factors:
+    >>> a**4 # auto expands to a Mul, no longer a Pow
+    x**2*y
+    >>> _*a # so Mul doesn't combine them
+    x**2*y*sqrt(x*sqrt(y))
+    >>> powsimp(_) # but powsimp will
+    (x*sqrt(y))**(5/2)
+    >>> powsimp(x*y*a) # but won't when doing so would violate assumptions
+    x*y*sqrt(x*sqrt(y))
 
     """
     if combine not in ['all', 'exp', 'base']:
@@ -1895,15 +1905,15 @@ def hypersimp(f, k):
 
        The algorithm performs three basic steps:
 
-           (1) Rewrite all functions in terms of gamma, if possible.
+       1. Rewrite all functions in terms of gamma, if possible.
 
-           (2) Rewrite all occurrences of gamma in terms of products
-               of gamma and rising factorial with integer,  absolute
-               constant exponent.
+       2. Rewrite all occurrences of gamma in terms of products
+          of gamma and rising factorial with integer,  absolute
+          constant exponent.
 
-           (3) Perform simplification of nested fractions, powers
-               and if the resulting expression is a quotient of
-               polynomials, reduce their total degree.
+       3. Perform simplification of nested fractions, powers
+          and if the resulting expression is a quotient of
+          polynomials, reduce their total degree.
 
        If f(k) is hypergeometric then as result we arrive with a
        quotient of polynomials of minimal degree. Otherwise None
@@ -1911,8 +1921,8 @@ def hypersimp(f, k):
 
        For more information on the implemented algorithm refer to:
 
-       [1] W. Koepf, Algorithms for m-fold Hypergeometric Summation,
-           Journal of Symbolic Computation (1995) 20, 399-417
+       1. W. Koepf, Algorithms for m-fold Hypergeometric Summation,
+          Journal of Symbolic Computation (1995) 20, 399-417
     """
     f = sympify(f)
 
@@ -1968,7 +1978,8 @@ def combsimp(expr):
     1. http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
     2. http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.simplify import combsimp
     >>> from sympy import factorial, binomial
@@ -2195,9 +2206,9 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     -log(a)*log(b) + log(a) + log(b)
 
     Note that because ``simplify()`` internally tries many different
-    simplification strategies and then compares them using the measure function,
-    we get a completely different result that is still different from the input
-    expression by doing this.
+    simplification strategies and then compares them using the measure
+    function, we get a completely different result that is still different
+    from the input expression by doing this.
     """
     expr = sympify(expr)
 
@@ -2335,8 +2346,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     Optionally, a list of (rationally independent) constants to
     include in the formula may be given.
 
-    A lower tolerance may be set to find less exact matches. If no tolerance is
-    given then the least precise value will set the tolerance (e.g. Floats
+    A lower tolerance may be set to find less exact matches. If no tolerance
+    is given then the least precise value will set the tolerance (e.g. Floats
     default to 15 digits of precision, so would be tolerance=10**-15).
 
     With full=True, a more extensive search is performed
@@ -2435,9 +2446,9 @@ def logcombine(expr, force=False):
     - log(x)+log(y) == log(x*y)
     - a*log(x) == log(x**a)
 
-    These identities are only valid if x and y are positive and if a is real, so
-    the function will not combine the terms unless the arguments have the proper
-    assumptions on them.  Use logcombine(func, force=True) to
+    These identities are only valid if x and y are positive and if a is real,
+    so the function will not combine the terms unless the arguments have the
+    proper assumptions on them.  Use logcombine(func, force=True) to
     automatically assume that the arguments of logs are positive and that
     coefficients are real.  Note that this will not change any assumptions
     already in place, so if the coefficient is imaginary or the argument
@@ -2471,8 +2482,9 @@ def _logcombine(expr, force=False):
     def _getlogargs(expr):
         """
         Returns the arguments of the logarithm in an expression.
+
         Examples
-    ========
+        ========
         _getlogargs(a*log(x*y))
         x*y
         """

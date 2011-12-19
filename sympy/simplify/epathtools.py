@@ -3,7 +3,7 @@
 from sympy.core import Basic
 
 class EPath(object):
-    """
+    r"""
     Manipulate expressions using paths.
 
     EPath grammar in EBNF notation::
@@ -154,7 +154,8 @@ class EPath(object):
         """
         Modify parts of an expression selected by a path.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.simplify.epathtools import EPath
         >>> from sympy import sin, cos, E
@@ -223,7 +224,8 @@ class EPath(object):
         """
         Retrieve parts of an expression selected by a path.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.simplify.epathtools import EPath
         >>> from sympy import sin, cos, E
@@ -275,7 +277,7 @@ class EPath(object):
         return result
 
 def epath(path, expr=None, func=None, args=None, kwargs=None):
-    """
+    r"""
     Manipulate parts of an expression selected by a path.
 
     This function allows to manipulate large nested expressions in single
@@ -290,7 +292,8 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     only once.  This function should only be used as a convenient shortcut for
     interactive use.
 
-    **Syntax**
+    Syntax
+    ======
 
     select all : "/*"
         Equivalent of ``for arg in args:``.
@@ -301,7 +304,8 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     select by attribute : "/__iter__?"
         Emulates :func:`hasattr`.
 
-    **Parameters**
+    Parameters
+    ==========
 
     path : str | EPath
         A path as a string or a compiled EPath.
@@ -314,7 +318,8 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     kwargs : dict (optional)
         Additional keyword arguments to ``func``.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.simplify.epathtools import epath
     >>> from sympy import sin, cos, E
