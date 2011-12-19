@@ -54,8 +54,8 @@ class Order(Expr):
 
          U{Big O notation<http://en.wikipedia.org/wiki/Big_O_notation>}
 
-    Properties:
-    ===========
+    Properties
+    ==========
 
       g(x) = O(f(x)) as x->0  <->  |g(x)| <= M|f(x)| near x=0
                               <->  lim_{x->0}  |g(x)/f(x)| < oo
@@ -63,8 +63,8 @@ class Order(Expr):
       g(x,y) = O(f(x,y))  <->  lim_{x,y->0}  |g(x,y)/f(x,y)|  < oo;
                                it is assumed that limits commute.
 
-    Notes:
-    ======
+    Notes
+    =====
 
     In O(f(x), x) the expression f(x) is assumed to have a leading term.
     O(f(x), x) is automatically transformed to O(f(x).as_leading_term(x),x).
@@ -182,7 +182,7 @@ class Order(Expr):
     @cacheit
     def contains(self, expr):
         """
-        Return True if expr belongs to Order(self.expr, *self.variables).
+        Return True if expr belongs to Order(self.expr, \*self.variables).
         Return False if self belongs to expr.
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).

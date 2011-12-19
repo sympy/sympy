@@ -26,8 +26,9 @@ def residue(expr, x, x0):
 
     This function is essential for the Residue Theorem [1].
 
-    [1] http://en.wikipedia.org/wiki/Residue_theorem
-
+    References
+    ==========
+    1. http://en.wikipedia.org/wiki/Residue_theorem
     """
     # The current implementation uses series expansion to
     # calculate it. A more general implementation is explained in
@@ -40,7 +41,6 @@ def residue(expr, x, x0):
     # understand why the resultant works in the general algorithm.
     # For the definition of a resultant, see section 1.4 (and any
     # previous sections for more review).
-
 
     from sympy import collect
     expr = sympify(expr)
