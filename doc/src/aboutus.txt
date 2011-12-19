@@ -112,7 +112,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Cristóvão Sousa: implements _sage_ method for sign function.
 #. Andre de Fortier Smit: doctests in matrices improved
 #. Mark Dewing: Fixes to Integral/Sum, MathML work
-#. Alexey U. Goodchenko: various work in matrices
+#. Alexey U. Gudchenko: various work in matrices
 #. Gary Kerr: fix examples, docs
 #. Sherjil Ozair: fixes to SparseMatrix
 #. Oleksandr Gituliar: fixes to Matrix
