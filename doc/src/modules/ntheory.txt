@@ -1,6 +1,8 @@
 Number Theory
 ====================
 
+.. module:: sympy.ntheory
+
 Ntheory Class Reference
 -----------------------
 .. autoclass:: sympy.ntheory.generate.Sieve
@@ -9,80 +11,80 @@ Ntheory Class Reference
 Ntheory Functions Reference
 ---------------------------
 
-.. autofunction:: sympy.ntheory.generate.prime
+.. autofunction:: prime
 
-.. autofunction:: sympy.ntheory.generate.primepi
+.. autofunction:: primepi
 
-.. autofunction:: sympy.ntheory.generate.nextprime
+.. autofunction:: nextprime
 
-.. autofunction:: sympy.ntheory.generate.prevprime
+.. autofunction:: prevprime
 
-.. autofunction:: sympy.ntheory.generate.primerange
+.. autofunction:: primerange
 
-.. autofunction:: sympy.ntheory.generate.randprime
+.. autofunction:: randprime
 
-.. autofunction:: sympy.ntheory.generate.primorial
+.. autofunction:: primorial
 
-.. autofunction:: sympy.ntheory.generate.cycle_length
+.. autofunction:: cycle_length
 
 .. autofunction:: sympy.ntheory.factor_.smoothness
 
 .. autofunction:: sympy.ntheory.factor_.smoothness_p
 
-.. autofunction:: sympy.ntheory.factor_.trailing
+.. autofunction:: trailing
 
-.. autofunction:: sympy.ntheory.factor_.multiplicity
+.. autofunction:: multiplicity
 
-.. autofunction:: sympy.ntheory.factor_.perfect_power
+.. autofunction:: perfect_power
 
-.. autofunction:: sympy.ntheory.factor_.pollard_rho
+.. autofunction:: pollard_rho
 
-.. autofunction:: sympy.ntheory.factor_.pollard_pm1
+.. autofunction:: pollard_pm1
 
-.. autofunction:: sympy.ntheory.factor_.factorint
+.. autofunction:: factorint
 
-.. autofunction:: sympy.ntheory.factor_.primefactors
+.. autofunction:: primefactors
 
-.. autofunction:: sympy.ntheory.factor_.divisors
+.. autofunction:: divisors
 
-.. autofunction:: sympy.ntheory.factor_.divisor_count
+.. autofunction:: divisor_count
 
-.. autofunction:: sympy.ntheory.factor_.totient
+.. autofunction:: totient
 
-.. autofunction:: sympy.ntheory.modular.symmetric_residue
+.. autofunction:: symmetric_residue
 
-.. autofunction:: sympy.ntheory.modular.crt
+.. autofunction:: crt
 
-.. autofunction:: sympy.ntheory.modular.crt1
+.. autofunction:: crt1
 
-.. autofunction:: sympy.ntheory.modular.crt2
+.. autofunction:: crt2
 
-.. autofunction:: sympy.ntheory.modular.solve_congruence
+.. autofunction:: solve_congruence
 
-.. autofunction:: sympy.ntheory.multinomial.binomial_coefficients
+.. autofunction:: binomial_coefficients
 
-.. autofunction:: sympy.ntheory.multinomial.binomial_coefficients_list
+.. autofunction:: binomial_coefficients_list
 
-.. autofunction:: sympy.ntheory.multinomial.multinomial_coefficients
+.. autofunction:: multinomial_coefficients
 
-.. autofunction:: sympy.ntheory.multinomial.multinomial_coefficients_iterator
+.. autofunction:: multinomial_coefficients_iterator
 
-.. autofunction:: sympy.ntheory.partitions_.npartitions
+.. autofunction:: npartitions
 
-.. autofunction:: sympy.ntheory.primetest.mr
+.. autofunction:: mr
 
-.. autofunction:: sympy.ntheory.primetest.isprime
+.. autofunction:: isprime
 
-.. autofunction:: sympy.ntheory.residue_ntheory.int_tested
+.. autofunction:: int_tested
 
-.. autofunction:: sympy.ntheory.residue_ntheory.totient_
+.. autofunction:: totient_
 
-.. autofunction:: sympy.ntheory.residue_ntheory.n_order
+.. autofunction:: n_order
 
-.. autofunction:: sympy.ntheory.residue_ntheory.is_primitive_root
+.. autofunction:: is_primitive_root
 
-.. autofunction:: sympy.ntheory.residue_ntheory.is_quad_residue
+.. autofunction:: is_quad_residue
 
-.. autofunction:: sympy.ntheory.residue_ntheory.legendre_symbol
+.. autofunction:: legendre_symbol
 
-.. autofunction:: sympy.ntheory.residue_ntheory.jacobi_symbol
+.. autofunction:: jacobi_symbol
