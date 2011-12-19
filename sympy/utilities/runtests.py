@@ -602,6 +602,8 @@ class SymPyTests(object):
                 else:
                     raise
             except Exception:
+                if timeout:
+                    signal.alarm(0) # Disable the alarm. It could not be handled before.
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
                     self._reporter.test_fail((t, v, tr))
@@ -618,10 +620,7 @@ class SymPyTests(object):
                     if self._post_mortem:
                         pdb.post_mortem(tr)
             else:
-                if not getattr(f, '_slow', False):
-                    self._reporter.test_pass()
-                else:
-                    self._reporter.test_pass("W")
+                self._reporter.test_pass()
         self._reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
