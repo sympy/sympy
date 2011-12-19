@@ -68,6 +68,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Andrew Straw: lambdify() improvements
 #. Kaifeng Zhu: factorint() fix
 #. Ted Horst: Basic.__call__() fix, pretty printing fix
+#. Andrew Docherty: Fix to series
 #. Akshay Srinivasan: printing fix, improvements to integration
 #. Aaron Meurer: ODE solvers (GSoC 2009), The Risch Algorithm for integration (GSoC 2010), other fixes, project leader as of Jan 4, 2011
 #. Barry Wardell: implement series as function, several tests added
@@ -86,6 +87,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. James Abbatiello: fixes tests on windows
 #. Ryan Krauss: fixes could_extract_minus_sign(), latex fixes and improvements
 #. Bill Flynn: substitution fixes
+#. Kevin Goodsell: Fix to Integer/Rational
 #. Jorn Baayen: improvements to piecewise functions and latex printing, bug fixes
 #. Eh Tan: improve trigonometric simplification
 #. Renato Coutinho: derivative improvements
@@ -99,13 +101,17 @@ want to be mentioned here, so see our repository history for a full list).
 #. Christian Muise: fixes to logic module
 #. Matt Curry: GSoC 2010 project (symbolic quantum mechanics)
 #. Kazuo Thow: cleanup pretty printing tests
+#. Christian Schubert: Fix to sympify()
 #. Jezreel Ng: fix hyperbolic functions rewrite
+#. James Pearson: Py3k related fixes
 #. Matthew Brett: fixes to lambdify
 #. Addison Cugini: GSoC 2010 project (quantum computing)
 #. Nicholas J.S. Kinar: improved documentation about "Immutability of Expressions"
+#. Harold Erbin: Geometry related work
 #. Thomas Dixon: fix a limit bug
 #. Cristóvão Sousa: implements _sage_ method for sign function.
 #. Andre de Fortier Smit: doctests in matrices improved
+#. Mark Dewing: Fixes to Integral/Sum, MathML work
 #. Alexey U. Goodchenko: various work in matrices
 #. Gary Kerr: fix examples, docs
 #. Sherjil Ozair: fixes to SparseMatrix
@@ -127,6 +133,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tomáš Bambas: prettier printing of examples
 #. Jeremias Yehdegho: fixes to the nthoery module
 #. Jack McCaffery: fixes to asin and acos
+#. rayman: Quantum work
 #. Luca Weihs: improvements to the geometry module
 #. Shai 'Deshe' Wyborski: fix to numeric evaluation of hypergeometric sums
 #. Thomas Wiecki: Fix Sum.diff
@@ -137,12 +144,16 @@ want to be mentioned here, so see our repository history for a full list).
 #. Stefan Krastanov: Make Pyglet an external dependency
 #. Bradley Froehle: Fix shell command to generate modules in setup.py
 #. Min Ragan-Kelley: Fix isympy to work with IPython 0.11
+#. Nikhil Sarda: Fix to combinatorics/prufer
 #. Emma Hogan: Fixes to the documentation
+#. Jason Moore: Fixes to the mechanics module
 #. Julien Rioux: Fix behavior of some deprecated methods
 #. Roberto Colistete, Jr.: Add num_columns option to the pretty printer
 #. Raoul Bourquin: Implement Euler numbers
 #. Gert-Ludwig Ingold: Correct derivative of coth
+#. Srinivas Vasudevan: Implementation of Catalan numbers
 #. Miha Marolt: Add numpydoc extension to the Sphinx docs, fix ode_order
+#. Tim Lahey: Rotation matrices
 #. Luis Garcia: update examples in symarry
 #. Matt Rajca: Code quality fixes
 #. David Li: Documentation fixes
