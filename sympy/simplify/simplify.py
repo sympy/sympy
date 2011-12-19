@@ -1365,6 +1365,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
     if isinstance(eq, bool):
         return eq
 
+    eq = sympify(eq)
     if subs != {}:
         return unpolarify(eq.subs(subs))
     changed = True

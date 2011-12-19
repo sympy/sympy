@@ -943,6 +943,7 @@ def test_unpolarify():
     p = exp_polar(7*I) + 1
     u = exp(7*I) + 1
 
+    assert unpolarify(1) == 1
     assert unpolarify(p) == u
     assert unpolarify(p**2) == u**2
     assert unpolarify(p**x) == p**x
