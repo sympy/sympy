@@ -434,7 +434,7 @@ class yn(SphericalBesselBase):
 
     See Also
     ========
-    besselj, :class:`bessely`, :class:`jn`
+    besselj, bessely, jn
 
     """
 

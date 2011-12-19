@@ -95,7 +95,7 @@ def sqrt(arg):
     L{root}, L{RootOf}
 
     External links
-    --------------
+    ==============
 
     * http://en.wikipedia.org/wiki/Square_root
     * http://en.wikipedia.org/wiki/Principal_value

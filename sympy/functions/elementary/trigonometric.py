@@ -134,7 +134,7 @@ class sin(TrigonometricFunction):
     L{cos}, L{tan}
 
     External links
-    --------------
+    ==============
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
     """
@@ -356,7 +356,7 @@ class cos(TrigonometricFunction):
     L{sin}, L{tan}
 
     External links
-    --------------
+    ==============
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
     """
@@ -568,7 +568,7 @@ class tan(TrigonometricFunction):
     L{sin}, L{tan}
 
     External links
-    --------------
+    ==============
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
     """

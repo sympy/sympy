@@ -50,7 +50,7 @@ class Order(Expr):
     O(x)
 
     External links
-    --------------
+    ==============
 
     U{Big O notation<http://en.wikipedia.org/wiki/Big_O_notation>}
 
