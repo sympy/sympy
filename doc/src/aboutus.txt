@@ -153,7 +153,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Matt Habel: SymPy-wide pyflakes editing
 #. Nikolay Lazarov: Translation of the tutorial to Bulgarian
 #. Nichita Utiu: Add pretty printing to Product()
-#. Tristan Hume: 
+#. Tristan Hume: Fixes to test_lambdify.py
 #. Imran Ahmed Manzoor: Fixes to the test runner
 #. Steve Anton: pyflakes cleanup of various modules, documentation fixes for logic
 #. Sam Sleight: Fixes to geometry documentation
