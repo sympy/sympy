@@ -631,8 +631,9 @@ def test_Rational_factors():
     assert F(6,10)  == { 3:1, 5:-1}
     assert str(F(12,1, visual=True)) == '2**2*3**1'
     assert str(F(1,1, visual=True)) == '1'
-
-    # TODO write more Rational.factor() tests
+    assert str(F(25, 14, visual=True)) == '5**2/(2*7)'
+    assert str(F(-25, 14*9, visual=True)) == '(-1)**1*5**2/(2*9*7)' # XXX fix str to not evaluate 3**2
+    assert Rational(-25, 14*9).factors()[3] == -2 # XXX delete this when the str issue is fixed
 
 def test_issue1008():
     assert pi*(E + 10) + pi*(-E - 10)         != 0
