@@ -85,17 +85,17 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     The table of the output logic is:
 
-        _______________________________
-        |      |       visual=        |
-        |input + -----+-------+-------+
-        |      | True | False | other |
-        +------+------+-------+-------+
-        |dict  | str  | tuple | str   |
-        |str   | str  | tuple | dict  |
-        |tuple | str  | tuple | str   |
-        |n     | str  | tuple | tuple |
-        |mul   | str  | tuple | tuple |
-        +------+------+-------+-------+
+        ====== ====== ======= =======
+                       Visual
+        ------ ----------------------
+        Input  True   False   other
+        ====== ====== ======= =======
+        dict    str    tuple   str
+        str     str    tuple   dict
+        tuple   str    tuple   str
+        n       str    tuple   tuple
+        mul     str    tuple   tuple
+        ====== ====== ======= =======
 
     See Also
     ========
@@ -869,15 +869,16 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         {2: 4, 3: 1}
 
     The table of the output logic is:
-       _______________________________
-       |      |        visual=       |
-       |input + -----+--------+------+
-       |      | True |  False | other|
-       +------+------+--------+------+
-       |dict  | mul  |  dict  | mul  |
-       |n     | mul  |  dict  | dict |
-       |mul   | mul  |  dict  | dict |
-       +------+------+--------+------+
+
+        ====== ====== ======= =======
+                       Visual
+        ------ ----------------------
+        Input  True   False   other
+        ====== ====== ======= =======
+        dict    mul    dict    mul
+        n       mul    dict    dict
+        mul     mul    dict    dict
+        ====== ====== ======= =======
 
     Miscellaneous Options
     =====================
