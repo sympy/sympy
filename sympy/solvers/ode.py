@@ -465,6 +465,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     ... hint='best')
     f(x) == acos(C1/cos(x))
     >>> # Note that even though separable is the default, 1st_exact produces
+    >>> # a simpler result in this case.
 
     """
     # TODO: Implement initial conditions
@@ -914,30 +915,6 @@ def odesimp(eq, func, order, hint):
     >>> from sympy.solvers.ode import odesimp
     >>> x , u2, C1= symbols('x,u2,C1')
     >>> f = Function('f')
-
-    >>> from sympy import sin, symbols, dsolve, pprint, Function
-    >>> from sympy.solvers.ode import odesimp
-    >>> x , u2, C1= symbols('x,u2,C1')
-    >>> f = Function('f')
-
-    >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
-    ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-    ... simplify=False)
-    >>> pprint(eq)
-                  x
-                 ----
-                 f(x)
-                   /
-                  |
-                  |   /      /1 \    \
-                  |  -|u2*sin|--| + 1|
-       /f(x)\     |   \      \u2/    /
-    log|----| -   |  ----------------- d(u2) = 0
-       \ C1 /     |       2    /1 \
-                  |     u2 *sin|--|
-                  |            \u2/
-                  |
-                 /
 
     >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
@@ -1934,14 +1911,6 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
 
     # indirect doctest
 
-    **References**
-        - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 59
-
-        # indirect doctest
->>>>>>> Fixed most of the warnings in the documentation.
-
     """
     x = func.args[0]
     f = func.func
@@ -2024,14 +1993,6 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
       Dover 1963, pp. 59
 
     # indirect doctest
-
-    **References**
-        - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 59
-
-        # indirect doctest
->>>>>>> Fixed most of the warnings in the documentation.
 
     """
     x = func.args[0]
@@ -2385,21 +2346,18 @@ def _nth_linear_match(eq, func, order):
 
     Examples
     ========
-
-    ::
-
-        >>> from sympy import Function, cos, sin
-        >>> from sympy.abc import x
-        >>> from sympy.solvers.ode import _nth_linear_match
-        >>> f = Function('f')
-        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
-        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
-        ... sin(x), f(x), 3)
-        {-1: x - sin(x), 0: -1, 1: cos(x) + 2, 2: x, 3: 1}
-        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
-        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
-        ... sin(f(x)), f(x), 3) == None
-        True
+    >>> from sympy import Function, cos, sin
+    >>> from sympy.abc import x
+    >>> from sympy.solvers.ode import _nth_linear_match
+    >>> f = Function('f')
+    >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+    ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+    ... sin(x), f(x), 3)
+    {-1: x - sin(x), 0: -1, 1: cos(x) + 2, 2: x, 3: 1}
+    >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+    ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+    ... sin(f(x)), f(x), 3) == None
+    True
 
     """
     x = func.args[0]
@@ -2907,97 +2865,6 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
       Dover 1963, pp. 233
 
     # indirect doctest
-
-    """
-    gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
-        returns='both')
-    match.update(gensol)
-    return _solve_variation_of_parameters(eq, func, order, match)
-
-def _solve_variation_of_parameters(eq, func, order, match):
-    """
-    Helper function for the method of variation of parameters.
-
-    See the ode_nth_linear_constant_coeff_variation_of_parameters()
-    docstring for more information on this method.
-
-    match should be a dictionary that has the following keys:
-    'list' - A list of solutions to the homogeneous equation, such as
-         the list returned by
-         ode_nth_linear_constant_coeff_homogeneous(returns='list')
-    'sol' - The general solution, such as the solution returned by
-        ode_nth_linear_constant_coeff_homogeneous(returns='sol')
-
-
-    """
-    x = func.args[0]
-    f = func.func
-    r = match
-    psol = 0
-    gensols = r['list']
-    gsol = r['sol']
-    wr = wronskian(gensols, x)
-
-    if r.get('simplify', True):
-        wr = simplify(wr) # We need much better simplification for some ODEs.
-                          # See issue 1563, for example.
-
-        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
-        wr = trigsimp(wr, deep=True, recursive=True)
-    if not wr:
-        # The wronskian will be 0 iff the solutions are not linearly independent.
-        raise NotImplementedError("Cannot find " + str(order) + \
-        " solutions to the homogeneous equation nessesary to apply " + \
-        "variation of parameters to " + str(eq) + " (Wronskian == 0)")
-    if len(gensols) != order:
-        raise NotImplementedError("Cannot find " + str(order) + \
-        " solutions to the homogeneous equation nessesary to apply " + \
-        "variation of parameters to " + str(eq) + " (number of terms != order)")
-    negoneterm = (-1)**(order)
-    for i in gensols:
-        psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
-        gensols), x)*r[-1]/wr, x)*i/r[order]
-        negoneterm *= -1
-
-    if r.get('simplify', True):
-        psol = simplify(psol)
-        psol = trigsimp(psol, deep=True)
-    return Eq(f(x), gsol.rhs + psol)
-
-def ode_separable(eq, func, order, match):
-    r"""
-    Solves separable 1st order differential equations.
-
-    This is any differential equation that can be written as
-    P(y)*dy/dx = Q(x). The solution can then just be found by
-    rearranging terms and integrating:
-    Integral(P(y), y) = Integral(Q(x), x). This hint uses separatevars()
-    as its back end, so if a separable equation is not caught by this
-    solver, it is most likely the fault of that function. separatevars()
-    is smart enough to do most expansion and factoring necessary to
-    convert a separable equation F(x, y) into the proper form P(x)*Q(y).
-    The general solution is::
-
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x
-        >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
-        >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
-        >>> pprint(genform)
-                     d
-        a(x)*b(f(x))*--(f(x)) = c(x)*d(f(x))
-                     dx
-        >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
-             f(x)
-           /                  /
-          |                  |
-          |  b(y)            | c(x)
-          |  ---- dy = C1 +  | ---- dx
-          |  d(y)            | a(x)
-          |                  |
-         /                  /
-
-    Examples
-    ========
 
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x

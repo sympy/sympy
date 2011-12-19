@@ -913,26 +913,28 @@ class Expr(Basic, EvalfMixin):
         Extracts symbolic coefficient at the given expression. In
         other words, this functions separates 'self' into product
         of 'expr' and 'expr'-free coefficient. If such separation
-        is not possible it will return None::
+        is not possible it will return None.
 
-            >>> from sympy import E, pi, sin, I, symbols
-            >>> from sympy.abc import x, y
+        Examples
+        ========
+        >>> from sympy import E, pi, sin, I, symbols
+        >>> from sympy.abc import x, y
 
-            >>> E.as_coefficient(E)
-            1
-            >>> (2*E).as_coefficient(E)
-            2
-            >>> (2*sin(E)*E).as_coefficient(E)
+        >>> E.as_coefficient(E)
+        1
+        >>> (2*E).as_coefficient(E)
+        2
+        >>> (2*sin(E)*E).as_coefficient(E)
 
-            >>> (2*E + x*E).as_coefficient(E)
-            x + 2
-            >>> (2*E*x + x).as_coefficient(E)
+        >>> (2*E + x*E).as_coefficient(E)
+        x + 2
+        >>> (2*E*x + x).as_coefficient(E)
 
-            >>> (E*(x + 1) + x).as_coefficient(E)
+        >>> (E*(x + 1) + x).as_coefficient(E)
 
-            >>> (2*pi*I).as_coefficient(pi*I)
-            2
-            >>> (2*I).as_coefficient(pi*I)
+        >>> (2*pi*I).as_coefficient(pi*I)
+        2
+        >>> (2*I).as_coefficient(pi*I)
 
         """
 

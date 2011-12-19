@@ -57,17 +57,14 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     Examples
     ========
-
-    ::
-
-        >>> from sympy import ask, Q, pi
-        >>> from sympy.abc import x, y
-        >>> ask(Q.rational(pi))
-        False
-        >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
-        True
-        >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
-        False
+    >>> from sympy import ask, Q, pi
+    >>> from sympy.abc import x, y
+    >>> ask(Q.rational(pi))
+    False
+    >>> ask(Q.even(x*y), Q.even(x) & Q.integer(y))
+    True
+    >>> ask(Q.prime(x*y), Q.integer(x) &  Q.integer(y))
+    False
 
     **Remarks**
         Relations in assumptions are not implemented (yet), so the following

@@ -15,56 +15,53 @@ def R_nl(n, l, r, Z=1):
 
     Examples
     ========
+    >>> from sympy.physics.hydrogen import R_nl
+    >>> from sympy import var
+    >>> var("r Z")
+    (r, Z)
+    >>> R_nl(1, 0, r, Z)
+    2*sqrt(Z**3)*exp(-Z*r)
+    >>> R_nl(2, 0, r, Z)
+    sqrt(2)*(-Z*r + 2)*sqrt(Z**3)*exp(-Z*r/2)/4
+    >>> R_nl(2, 1, r, Z)
+    sqrt(6)*Z*r*sqrt(Z**3)*exp(-Z*r/2)/12
 
-    ::
+    For Hydrogen atom, you can just use the default value of Z=1:
 
-        >>> from sympy.physics.hydrogen import R_nl
-        >>> from sympy import var
-        >>> var("r Z")
-        (r, Z)
-        >>> R_nl(1, 0, r, Z)
-        2*sqrt(Z**3)*exp(-Z*r)
-        >>> R_nl(2, 0, r, Z)
-        sqrt(2)*(-Z*r + 2)*sqrt(Z**3)*exp(-Z*r/2)/4
-        >>> R_nl(2, 1, r, Z)
-        sqrt(6)*Z*r*sqrt(Z**3)*exp(-Z*r/2)/12
+    >>> R_nl(1, 0, r)
+    2*exp(-r)
+    >>> R_nl(2, 0, r)
+    sqrt(2)*(-r + 2)*exp(-r/2)/4
+    >>> R_nl(3, 0, r)
+    2*sqrt(3)*(2*r**2/9 - 2*r + 3)*exp(-r/3)/27
 
-    For Hydrogen atom, you can just use the default value of Z=1::
+    For Silver atom, you would use Z=47:
 
-        >>> R_nl(1, 0, r)
-        2*exp(-r)
-        >>> R_nl(2, 0, r)
-        sqrt(2)*(-r + 2)*exp(-r/2)/4
-        >>> R_nl(3, 0, r)
-        2*sqrt(3)*(2*r**2/9 - 2*r + 3)*exp(-r/3)/27
+    >>> R_nl(1, 0, r, Z=47)
+    94*sqrt(47)*exp(-47*r)
+    >>> R_nl(2, 0, r, Z=47)
+    47*sqrt(94)*(-47*r + 2)*exp(-47*r/2)/4
+    >>> R_nl(3, 0, r, Z=47)
+    94*sqrt(141)*(4418*r**2/9 - 94*r + 3)*exp(-47*r/3)/27
 
-    For Silver atom, you would use Z=47::
+    The normalization of the radial wavefunction is:
 
-        >>> R_nl(1, 0, r, Z=47)
-        94*sqrt(47)*exp(-47*r)
-        >>> R_nl(2, 0, r, Z=47)
-        47*sqrt(94)*(-47*r + 2)*exp(-47*r/2)/4
-        >>> R_nl(3, 0, r, Z=47)
-        94*sqrt(141)*(4418*r**2/9 - 94*r + 3)*exp(-47*r/3)/27
+    >>> from sympy import integrate, oo
+    >>> integrate(R_nl(1, 0, r)**2 * r**2, (r, 0, oo))
+    1
+    >>> integrate(R_nl(2, 0, r)**2 * r**2, (r, 0, oo))
+    1
+    >>> integrate(R_nl(2, 1, r)**2 * r**2, (r, 0, oo))
+    1
 
-    The normalization of the radial wavefunction is::
+    It holds for any atomic number:
 
-        >>> from sympy import integrate, oo
-        >>> integrate(R_nl(1, 0, r)**2 * r**2, (r, 0, oo))
-        1
-        >>> integrate(R_nl(2, 0, r)**2 * r**2, (r, 0, oo))
-        1
-        >>> integrate(R_nl(2, 1, r)**2 * r**2, (r, 0, oo))
-        1
-
-    It holds for any atomic number::
-
-        >>> integrate(R_nl(1, 0, r, Z=2)**2 * r**2, (r, 0, oo))
-        1
-        >>> integrate(R_nl(2, 0, r, Z=3)**2 * r**2, (r, 0, oo))
-        1
-        >>> integrate(R_nl(2, 1, r, Z=4)**2 * r**2, (r, 0, oo))
-        1
+    >>> integrate(R_nl(1, 0, r, Z=2)**2 * r**2, (r, 0, oo))
+    1
+    >>> integrate(R_nl(2, 0, r, Z=3)**2 * r**2, (r, 0, oo))
+    1
+    >>> integrate(R_nl(2, 1, r, Z=4)**2 * r**2, (r, 0, oo))
+    1
 
     """
     # sympify arguments
@@ -89,23 +86,20 @@ def E_nl(n, Z=1):
 
     Examples
     ========
-
-    ::
-
-        >>> from sympy import var
-        >>> from sympy.physics.hydrogen import E_nl
-        >>> var("n Z")
-        (n, Z)
-        >>> E_nl(n, Z)
-        -Z**2/(2*n**2)
-        >>> E_nl(1)
-        -1/2
-        >>> E_nl(2)
-        -1/8
-        >>> E_nl(3)
-        -1/18
-        >>> E_nl(3, 47)
-        -2209/18
+    >>> from sympy import var
+    >>> from sympy.physics.hydrogen import E_nl
+    >>> var("n Z")
+    (n, Z)
+    >>> E_nl(n, Z)
+    -Z**2/(2*n**2)
+    >>> E_nl(1)
+    -1/2
+    >>> E_nl(2)
+    -1/8
+    >>> E_nl(3)
+    -1/18
+    >>> E_nl(3, 47)
+    -2209/18
 
     """
     n, Z = S(n), S(Z)
@@ -133,30 +127,27 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
 
     Examples
     ========
+    >>> from sympy.physics.hydrogen import E_nl_dirac
+    >>> E_nl_dirac(1, 0)
+    -0.500006656595360
 
-    ::
+    >>> E_nl_dirac(2, 0)
+    -0.125002080189006
+    >>> E_nl_dirac(2, 1)
+    -0.125000416024704
+    >>> E_nl_dirac(2, 1, False)
+    -0.125002080189006
 
-        >>> from sympy.physics.hydrogen import E_nl_dirac
-        >>> E_nl_dirac(1, 0)
-        -0.500006656595360
-
-        >>> E_nl_dirac(2, 0)
-        -0.125002080189006
-        >>> E_nl_dirac(2, 1)
-        -0.125000416024704
-        >>> E_nl_dirac(2, 1, False)
-        -0.125002080189006
-
-        >>> E_nl_dirac(3, 0)
-        -0.0555562951740285
-        >>> E_nl_dirac(3, 1)
-        -0.0555558020932949
-        >>> E_nl_dirac(3, 1, False)
-        -0.0555562951740285
-        >>> E_nl_dirac(3, 2)
-        -0.0555556377366884
-        >>> E_nl_dirac(3, 2, False)
-        -0.0555558020932949
+    >>> E_nl_dirac(3, 0)
+    -0.0555562951740285
+    >>> E_nl_dirac(3, 1)
+    -0.0555558020932949
+    >>> E_nl_dirac(3, 1, False)
+    -0.0555562951740285
+    >>> E_nl_dirac(3, 2)
+    -0.0555556377366884
+    >>> E_nl_dirac(3, 2, False)
+    -0.0555558020932949
 
     """
     if not (l >= 0):

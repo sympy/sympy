@@ -36,47 +36,44 @@ class Commutator(Expr):
 
     Examples
     ========
-
-    ::
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.quantum import Commutator, Dagger
-        >>> x, y = symbols('x,y')
-        >>> A, B, C = symbols('A,B,C', commutative=False)
+    >>> from sympy import symbols
+    >>> from sympy.physics.quantum import Commutator, Dagger
+    >>> x, y = symbols('x,y')
+    >>> A, B, C = symbols('A,B,C', commutative=False)
 
     Create some commutators and use ``doit`` to multiply them out.
 
-        >>> comm = Commutator(A,B); comm
-        [A,B]
-        >>> comm.doit()
-        A*B - B*A
+    >>> comm = Commutator(A,B); comm
+    [A,B]
+    >>> comm.doit()
+    A*B - B*A
 
-    The commutator orders it arguments in canonical order::
+    The commutator orders it arguments in canonical order:
 
-        >>> comm = Commutator(B,A); comm
-        -[A,B]
+    >>> comm = Commutator(B,A); comm
+    -[A,B]
 
-    Scalar constants are factored out::
+    Scalar constants are factored out:
 
-        >>> Commutator(3*x*A,x*y*B)
-        3*x**2*y*[A,B]
+    >>> Commutator(3*x*A,x*y*B)
+    3*x**2*y*[A,B]
 
     Using ``expand(commutator=True)``, the standard commutator expansion rules
-    can be applied::
+    can be applied:
 
-        >>> Commutator(A+B,C).expand(commutator=True)
-        [A,C] + [B,C]
-        >>> Commutator(A,B+C).expand(commutator=True)
-        [A,B] + [A,C]
-        >>> Commutator(A*B,C).expand(commutator=True)
-        A*[B,C] + [A,C]*B
-        >>> Commutator(A,B*C).expand(commutator=True)
-        B*[A,C] + [A,B]*C
+    >>> Commutator(A+B,C).expand(commutator=True)
+    [A,C] + [B,C]
+    >>> Commutator(A,B+C).expand(commutator=True)
+    [A,B] + [A,C]
+    >>> Commutator(A*B,C).expand(commutator=True)
+    A*[B,C] + [A,C]*B
+    >>> Commutator(A,B*C).expand(commutator=True)
+    B*[A,C] + [A,B]*C
 
-    Commutator works with Dagger::
+    Commutator works with Dagger:
 
-        >>> Dagger(Commutator(A,B))
-        -[Dagger(A),Dagger(B)]
+    >>> Dagger(Commutator(A,B))
+    -[Dagger(A),Dagger(B)]
 
     References
     ==========

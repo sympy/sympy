@@ -407,19 +407,16 @@ class Interval(RealSet):
 
     Examples
     ========
+    >>> from sympy import Symbol, Interval, sets
 
-    ::
+    >>> Interval(0, 1)
+    [0, 1]
+    >>> Interval(0, 1, False, True)
+    [0, 1)
 
-        >>> from sympy import Symbol, Interval, sets
-
-        >>> Interval(0, 1)
-        [0, 1]
-        >>> Interval(0, 1, False, True)
-        [0, 1)
-
-        >>> a = Symbol('a', real=True)
-        >>> Interval(0, a)
-        [0, a]
+    >>> a = Symbol('a', real=True)
+    >>> Interval(0, a)
+    [0, a]
 
     Notes:
         - Only real end points are supported
