@@ -1,3 +1,5 @@
+People with a * next to their names are not found in the metadata of the git history.
+
 All people who contributed to SymPy by sending at least a patch or more (in
 the order of the date of their first contribution), except those who
 explicitly didn't want to be mentioned:
@@ -6,14 +8,14 @@ Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
 Jurjen N.E. Bos <jnebos@gmail.com>
 Mateusz Paprocki <mattpap@gmail.com>
-Marc-Etienne M.Leveille <protonyc@gmail.com>
+*Marc-Etienne M.Leveille <protonyc@gmail.com>
 Brian Jorgensen <brian.jorgensen@gmail.com>
 Jason Gedge <inferno1386@gmail.com>
 Robert Schwarz <lethargo@googlemail.com>
 Pearu Peterson <pearu.peterson@gmail.com>
 Fredrik Johansson <fredrik.johansson@gmail.com>
 Chris Wu <chris.wu@gmail.com>
-Ulrich Hecht <ulrich.hecht@gmail.com>
+*Ulrich Hecht <ulrich.hecht@gmail.com>
 Goutham Lakshminarayan <dl.goutham@gmail.com>
 David Lawrence <dmlawrence@gmail.com>
 Jaroslaw Tworek <dev.jrx@gmail.com>
@@ -37,7 +39,7 @@ David Roberts <dvdr18@gmail.com>
 Sebastian Krämer <basti.kr@gmail.com>
 Vinzent Steinberg <vinzent.steinberg@gmail.com>
 Riccardo Gori <goriccardo@gmail.com>
-Case Van Horsen <casevh@gmail.com>
+*Case Van Horsen <casevh@gmail.com>
 Stepan Roucka <stepan@roucka.eu>
 Ali Raza Syed <arsyed@gmail.com>
 Stefano Maggiolo <s.maggiolo@gmail.com>
@@ -45,7 +47,7 @@ Robert Cimrman <cimrman3@ntc.zcu.cz>
 Bastian Weber <bastian.weber@gmx-topmail.de>
 Sebastian Krause <sebastian.krause@gmx.de>
 Sebastian Kreft <skreft@gmail.com>
-Dan <coolg49964@gmail.com>
+*Dan <coolg49964@gmail.com>
 Alan Bromborsky <abrombo@verizon.net>
 Boris Timokhin <qoqenator@gmail.com>
 Robert <average.programmer@gmail.com>
@@ -86,7 +88,7 @@ Oscar Benjamin
 Øyvind Jensen <jensen.oyvind@gmail.com>
 Julio Idichekop Filho <idichekop@yahoo.com.br>
 Łukasz Pankowski <lukpank@o2.pl>
-Chu-Ching Huang <cchuang@mail.cgu.edu.tw>
+*Chu-Ching Huang <cchuang@mail.cgu.edu.tw>
 Fernando Perez <Fernando.Perez@berkeley.edu>
 Raffaele De Feo <alberthilbert@gmail.com>
 Christian Muise <christian.muise@gmail.com>
