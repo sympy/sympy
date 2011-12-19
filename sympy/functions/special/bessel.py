@@ -159,8 +159,7 @@ class bessely(BesselBase):
 
     See Also
     ========
-
-    :class:`sympy.functions.special.bessel.besselj`
+    besselj
     """
 
     _a = S.One
@@ -207,8 +206,7 @@ class besseli(BesselBase):
 
     See Also
     ========
-
-    :class:`sympy.functions.special.bessel.besselj`
+    besselj
 
     """
 
@@ -247,8 +245,7 @@ class besselk(BesselBase):
 
     See Also
     ========
-
-    :class:`besselj`
+    besselj
 
     """
 
@@ -279,8 +276,7 @@ class hankel1(BesselBase):
 
     See Also
     ========
-
-    :class:`besselj`
+    besselj
 
     """
 
@@ -312,8 +308,7 @@ class hankel2(BesselBase):
 
     See Also
     ========
-
-    :class:`besselj`
+    besselj
 
     """
 
@@ -396,8 +391,7 @@ class jn(SphericalBesselBase):
 
     See Also
     ========
-
-    :class:`besselj`
+    besselj
 
     """
 
@@ -440,8 +434,7 @@ class yn(SphericalBesselBase):
 
     See Also
     ========
-
-    :class:`besselj`, :class:`bessely`, :class:`jn`
+    besselj, bessely, jn
 
     """
 

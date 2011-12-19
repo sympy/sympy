@@ -9,6 +9,10 @@ def binomial_coefficients(n):
     >>> from sympy.ntheory import binomial_coefficients
     >>> binomial_coefficients(9)
     {(0, 9): 1, (1, 8): 9, (2, 7): 36, (3, 6): 84, (4, 5): 126, (5, 4): 126, (6, 3): 84, (7, 2): 36, (8, 1): 9, (9, 0): 1}
+
+    See Also
+    ========
+    binomial_coefficients_list, multinomial_coefficients
     """
     d = {(0, n):1, (n, 0):1}
     a = 1
@@ -26,6 +30,10 @@ def binomial_coefficients_list(n):
     >>> from sympy.ntheory import binomial_coefficients_list
     >>> binomial_coefficients_list(9)
     [1, 9, 36, 84, 126, 126, 84, 36, 9, 1]
+
+    See Also
+    ========
+    binomial_coefficients, multinomial_coefficients
     """
     d = [1] * (n+1)
     a = 1
@@ -112,6 +120,9 @@ def multinomial_coefficients(m, n):
     Code contributed to Sage by Yann Laigle-Chapuy, copied with permission
     of the author.
 
+    See Also
+    ========
+    binomial_coefficients_list, binomial_coefficients
     """
     if not m:
         if n:
