@@ -178,6 +178,8 @@ def test_sympify_factorial():
 
     raises(SympifyError, 'sympify("+!!")')
     raises(SympifyError, 'sympify(")!!")')
+    raises(SympifyError, 'sympify("!")')
+    raises(SympifyError, 'sympify("(!)")')
 
 def test_sage():
     # how to effectivelly test for the _sage_() method without having SAGE

@@ -12,11 +12,13 @@ from sympy.core.basic import Basic
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 
 def _add_factorial_tokens(name, result):
-    diff = 0
+    if result == [] or result[-1][1] == '(':
+        raise TokenError()
 
     beginning = [(NAME, name), (OP, '(')]
     end = [(OP, ')')]
 
+    diff = 0
     length = len(result)
 
     for index, token in enumerate(result[::-1]):
