@@ -1211,3 +1211,8 @@ def test_equals():
     assert (a*cos(x)**2 + a*sin(x)**2).equals(a)
     r = sqrt(2)
     assert (-1/(r + r*x) + 1/r/(1 + x)).equals(0)
+    assert factorial(x + 1).equals((x + 1)*factorial(x))
+
+@XFAIL
+def test_equals_factorial():
+    assert factorial(x + 1).diff(x).equals(((x + 1)*factorial(x)).diff(x))
