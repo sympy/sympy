@@ -155,7 +155,7 @@ def prime(n):
 
         See Also
         ========
-        isprime, primerange, primepi
+        sympy.ntheory.primetest.isprime, primerange, primepi
     """
 
     assert n > 0
@@ -174,7 +174,7 @@ def primepi(n):
 
         See Also
         ========
-        isprime, primerange, prime
+        sympy.ntheory.primetest.isprime, primerange, prime
     """
 
     if n < 2:

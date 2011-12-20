@@ -194,7 +194,9 @@ def isprime(n):
 
     See Also
     ========
-    primerange, primepi, prime
+    sympy.ntheory.generate.primerange
+    sympy.ntheory.generate.primepi
+    sympy.ntheory.generate.prime
     """
     n = int(n)
     if n < 2:

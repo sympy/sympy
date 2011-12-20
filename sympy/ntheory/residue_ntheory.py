@@ -19,8 +19,8 @@ def int_tested(*j):
     return i
 
 def totient_(n):
-    """Returns the number of integers less than n
-    and relatively prime to n
+    """Returns the number of integers less than n and relatively prime to n.
+
     Examples
     ========
     >>> from sympy.ntheory import totient_
@@ -28,6 +28,7 @@ def totient_(n):
     2
     >>> totient_(67)
     66
+
     """
     n = int_tested(n)
     if n < 1:
