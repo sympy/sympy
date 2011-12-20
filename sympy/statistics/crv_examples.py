@@ -18,7 +18,7 @@ class NormalPSpace(SingleContinuousPSpace):
         return obj
 
     def sample(self):
-        return random.normalvariate(self.mean, self.std)
+        return {self.value: random.normalvariate(self.mean, self.std)}
 
 def Normal(mean, std, symbol=None):
     """

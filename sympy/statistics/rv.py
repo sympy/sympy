@@ -405,7 +405,7 @@ def E(expr, given=None, **kwargs):
     return pspace(expr).integrate(expr, **kwargs)
 
 
-def P(condition, given=None, **kwargs):
+def P(condition, given=None, samples=None,  **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
 
@@ -421,6 +421,8 @@ def P(condition, given=None, **kwargs):
 
     """
 
+    if samples:
+        return sampling_P(condition, given, samples=samples, **kwargs)
     if given is not None: # If there is a condition
         # Recompute on new conditional expr
         return P(Given(condition, given, **kwargs), **kwargs)
@@ -528,3 +530,27 @@ def Sample(expr, given=None, **kwargs):
 
     d = ps.sample()
     return expr.subs(d)
+
+def sampling_P(condition, given=None, samples=1, **kwargs):
+    count_true = S.Zero
+    count_false = 0
+    #ps = pspace(Tuple(condition, given))
+    ps = pspace(condition)
+    while count_true + count_false < samples:
+        d = ps.sample()
+        if given:
+            gd = given.subs(d)
+            if not isinstance(gd, bool):
+                raise ValueError("Conditions must not contain free symbols")
+            if gd == False:
+                continue
+
+        cd = condition.subs(d)
+        if not isinstance(cd, bool):
+            raise ValueError("Conditions must not contain free symbols")
+        if cd == True:
+            count_true += 1
+        else:
+            count_false += 1
+
+    return count_true / samples
