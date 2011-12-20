@@ -267,7 +267,7 @@ def sqrt_match(p):
     >>> from sympy.functions.elementary.miscellaneous import sqrt
     >>> from sympy.simplify.sqrtdenest import sqrt_match
     >>> sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
-    [1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5)]
+    (1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5))
     """
     p = _mexpand(p)
     if p.is_Number:
