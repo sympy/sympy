@@ -1,3 +1,4 @@
+===============
 Autowrap module
 ===============
 
@@ -84,3 +85,11 @@ backend-dependent details.
 
 .. autoclass:: CythonCodeWrapper
    :members:
+
+API Reference
+-------------
+
+.. automodule:: sympy.utilities.autowrap
+   :members:
+   :noindex:
+

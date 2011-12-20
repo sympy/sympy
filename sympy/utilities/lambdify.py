@@ -126,6 +126,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     Returns a lambda function for fast calculation of numerical values.
 
     Usage:
+
     >>> from sympy import sqrt, sin
     >>> from sympy.utilities.lambdify import lambdify
     >>> from sympy.abc import x, y, z
@@ -147,6 +148,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     functions - exactly in this order.
     To change this behavior, the "modules" argument can be used.
     It accepts:
+
      - the strings "math", "mpmath", "numpy", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
@@ -156,14 +158,17 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     Examples
     ========
     (1) Use one of the provided modules:
+
         >> f = lambdify(x, sin(x), "math")
 
         Attention: Functions that are not in the math module will throw a name
                    error when the lambda function is evaluated! So this would
                    be better:
+
         >> f = lambdify(x, sin(x)*gamma(x), ("math", "mpmath", "sympy"))
 
     (2) Use some other module:
+
         >> import numpy
         >> f = lambdify((x,y), tan(x*y), numpy)
 
@@ -180,11 +185,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         [-2.18503986 -0.29100619 -0.8559934 ]
 
     (3) Use own dictionaries:
+
         >> def my_cool_function(x): ...
         >> dic = {"sin" : my_cool_function}
         >> f = lambdify(x, sin(x), dic)
 
         Now f would look like:
+
         >> lambda x: my_cool_function(x)
 
     Functions present in `expr` can also carry their own numerical
