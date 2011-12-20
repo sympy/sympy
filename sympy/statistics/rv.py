@@ -225,6 +225,10 @@ class ProductPSpace(PSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
+    def sample(self):
+        return dict([(k,v) for space in self.spaces
+            for k,v in space.sample().items()])
+
 class ProductDomain(Domain):
     """
     A domain resulting from the merger of two independent domains
@@ -516,3 +520,11 @@ def Where(condition, given=None, **kwargs):
 
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(condition).where(condition, **kwargs)
+
+def Sample(expr, given=None, **kwargs):
+
+    assert given == None
+    ps = pspace(expr)
+
+    d = ps.sample()
+    return expr.subs(d)

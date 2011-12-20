@@ -2,9 +2,10 @@ from rv import (Domain, SingleDomain, ConditionalDomain, ProductDomain, PSpace,
         random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
-        Piecewise)
+        Piecewise, solve, cacheit)
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy import integrate as sympy_integrate
+import random
 oo = S.Infinity
 
 def integrate(*args, **kwargs):
@@ -63,7 +64,6 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
 
-
     def integrate(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols
@@ -121,7 +121,6 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
         else:
             raise NotImplementedError(
                     "Set of Conditional Domain not Implemented")
-
 
 class ContinuousPSpace(PSpace):
     is_Continuous = True
@@ -210,11 +209,28 @@ class SingleContinuousPSpace(ContinuousPSpace):
     def __new__(cls, symbol, density, set=Interval(-oo, oo)):
         assert symbol.is_Symbol
         domain = SingleContinuousDomain(symbol, set)
-        return ContinuousPSpace.__new__(cls, domain, density)
+        obj = ContinuousPSpace.__new__(cls, domain, density)
+        obj._cdf = None
+        return obj
 
     @property
     def value(self):
         return tuple(self.values)[0]
+
+    @cacheit
+    def _inverse_cdf_expression(self):
+        x,d = self.compute_cdf(self.value)
+        z = Dummy('z', real=True, positive=True)
+        # Invert CDF
+        inverse_cdf = solve(d-z, x)
+        if len(inverse_cdf) != 1:
+            raise ValueError("Could not invert CDF")
+
+        return z, inverse_cdf[0]
+
+    def sample(self):
+        z, icdf = self._inverse_cdf_expression()
+        return {self.value: icdf.subs(z, random.uniform(0,1))}
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     @property

@@ -2,6 +2,7 @@ from sympy import exp, sqrt, pi, S, Dummy, Interval, S, sympify, gamma, Piecewis
 from sympy import beta as beta_fn
 from crv import SingleContinuousPSpace, integrate
 from sympy.core.decorators import _sympifyit
+import random
 
 oo = S.Infinity
 
@@ -15,6 +16,9 @@ class NormalPSpace(SingleContinuousPSpace):
         obj.std = std
         obj.variance = std**2
         return obj
+
+    def sample(self):
+        return random.normalvariate(self.mean, self.std)
 
 def Normal(mean, std, symbol=None):
     """
@@ -47,6 +51,9 @@ class ExponentialPSpace(SingleContinuousPSpace):
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
         obj.rate = rate
         return obj
+
+    def sample(self):
+        return {self.value: random.expovariate(self.rate)}
 
 def Exponential(rate, symbol=None):
     """
@@ -81,6 +88,9 @@ class ParetoPSpace(SingleContinuousPSpace):
         obj.alpha = alpha
         return obj
 
+    def sample(self):
+        return {self.value: random.paretovariate(self.alpha)}
+
 def Pareto(xm, alpha, symbol=None):
     return ParetoPSpace(xm, alpha, symbol).value
 
@@ -98,6 +108,9 @@ class BetaPSpace(SingleContinuousPSpace):
         obj.alpha = alpha
         obj.beta = beta
         return obj
+
+    def sample(self):
+        return {self.value: random.betavariate(self.alpha, self.beta)}
 
 def Beta(alpha, beta, symbol=None):
     return BetaPSpace(alpha, beta, symbol).value
@@ -130,6 +143,10 @@ class UniformPSpace(SingleContinuousPSpace):
         obj.left = left
         obj.right = right
         return obj
+
+    def sample(self):
+        return {self.value: random.uniform(self.left, self.right)}
+
 
 def Uniform(left, right, symbol=None):
     return UniformPSpace(left, right, symbol).value
