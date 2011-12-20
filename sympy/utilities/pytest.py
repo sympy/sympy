@@ -59,7 +59,11 @@ if not USE_PYTEST:
             try:
                 func()
             except Exception, e:
-                if e.message != "Timeout":
+                if sys.version_info[:2] < (2, 6):
+                    message = getattr(e, 'message', '')
+                else:
+                    message = str(e)
+                if message != "Timeout":
                     raise XFail(func.func_name)
                 else:
                     raise Skipped("Timeout")
