@@ -32,10 +32,7 @@ def _add_factorial_tokens(name, result):
 
         if diff == 0:
             if i-1 >= 0 and result[i-1][0] == NAME:
-                if result[i-1][1] == 'factorial' or result[i-1][1] == 'factorial2':
-                    raise TokenError
-                else:
-                    return result[:i-1] + beginning + result[i-1:] + end
+                return result[:i-1] + beginning + result[i-1:] + end
             else:
                 return result[:i] + beginning + result[i:] + end
 
@@ -45,6 +42,7 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
     g = generate_tokens(StringIO(s).readline)
 
     result = []
+    prevtoken = ''
 
     for toknum, tokval, _, _, _ in g:
         if toknum == NUMBER:
@@ -112,13 +110,19 @@ def _transform(s, local_dict, global_dict, rationalize, convert_xor):
             if op == '^' and convert_xor:
                 result.append((OP, '**'))
             elif op == '!!':
+                if prevtoken == '!' or prevtoken == '!!':
+                    raise TokenError
                 result = _add_factorial_tokens('factorial2', result)
             elif op == '!':
+                if prevtoken == '!' or prevtoken == '!!':
+                    raise TokenError
                 result = _add_factorial_tokens('factorial', result)
             else:
                 result.append((OP, op))
         else:
             result.append((toknum, tokval))
+
+        prevtoken = tokval
 
     return untokenize(result)
 

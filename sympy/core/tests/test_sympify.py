@@ -175,6 +175,7 @@ def test_sympify_factorial():
     assert sympify('(1 + y*(x + 1))!!') == factorial2(1 + y*(x + 1))
     assert sympify('(1 + y*(x + 1)!!)^2') == (1 + y*factorial2(x + 1))**2
     assert sympify('y*x!!') == y*factorial2(x)
+    assert sympify('factorial2(x)!') == factorial(factorial2(x))
 
     raises(SympifyError, 'sympify("+!!")')
     raises(SympifyError, 'sympify(")!!")')
