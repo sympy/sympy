@@ -152,6 +152,10 @@ def prime(n):
         29
         >>> prime(1)
         2
+
+        See Also
+        ========
+        isprime, primerange, primepi
     """
 
     assert n > 0
@@ -167,6 +171,10 @@ def primepi(n):
         >>> from sympy import primepi
         >>> primepi(25)
         9
+
+        See Also
+        ========
+        isprime, primerange, prime
     """
 
     if n < 2:
@@ -185,6 +193,10 @@ def nextprime(n, i=1):
         [(10, 11), (11, 13), (12, 13), (13, 17), (14, 17)]
         >>> nextprime(2, i=2) # the 2nd prime after 2
         5
+
+        See Also
+        ========
+        prevprime, primerange
     """
 
     if i > 1:
@@ -231,6 +243,10 @@ def prevprime(n):
         >>> from sympy import prevprime
         >>> [(i, prevprime(i)) for i in range(10, 15)]
         [(10, 7), (11, 7), (12, 11), (13, 11), (14, 13)]
+
+        See Also
+        ========
+        nextprime, primerange
     """
 
     n = int(n)
@@ -285,6 +301,10 @@ def primerange(a, b):
         >>> from sympy import primerange
         >>> print [i for i in primerange(1, 30)]
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+        See Also
+        ========
+        nextprime, prevprime, randprime, primorial
     """
     assert a <= b
     a -= 1
@@ -312,6 +332,10 @@ def randprime(a, b):
         13
         >>> isprime(randprime(1, 30))
         True
+
+        See Also
+        ========
+        primerange
     """
 
     n = random.randint(a-1, b)
@@ -351,6 +375,10 @@ def primorial(n, nth=True):
     >>> p = list(primerange(10, 20))
     >>> sorted(set(primefactors(Mul(*p) + 1)).difference(set(p)))
     [2, 5, 31, 149]
+
+    See Also
+    ========
+    primerange
     """
 
     if n < 1:
@@ -405,7 +433,7 @@ def cycle_length(f, x0, nmax=None, values=False):
     There are 6 repeating values after the first 2.
 
     If a sequence is suspected of being longer than you might wish, ``nmax``
-    can be used to exit early (in which mu will be returned as None):
+    can be used to exit early (and mu will be returned as None):
 
         >>> cycle_length(func, 4, nmax = 4).next()
         (4, None)

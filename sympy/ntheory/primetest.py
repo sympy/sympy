@@ -191,6 +191,10 @@ def isprime(n):
     True
     >>> isprime(15)
     False
+
+    See Also
+    ========
+    primerange, primepi, prime
     """
     n = int(n)
     if n < 2:
