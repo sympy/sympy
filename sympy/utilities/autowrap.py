@@ -429,7 +429,7 @@ def ufuncify(args, expr, **kwargs):
        See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
     :Examples
-    ========
+    =========
 
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y, z
