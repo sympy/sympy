@@ -1,0 +1,7 @@
+============
+Co ordinates
+============
+
+.. automodule:: sympy.galgebra.examples.coords
+   :members:
+
