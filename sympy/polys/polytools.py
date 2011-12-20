@@ -216,7 +216,7 @@ class Poly(Expr):
         Free symbols of a polynomial expression.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -242,7 +242,7 @@ class Poly(Expr):
         Free symbols of the domain of ``self``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -272,7 +272,7 @@ class Poly(Expr):
         Don't mess up with the core.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -289,7 +289,7 @@ class Poly(Expr):
         Return the principal generator.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -325,7 +325,7 @@ class Poly(Expr):
         Make ``f`` and ``g`` belong to the same domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -402,7 +402,7 @@ class Poly(Expr):
         Create a Poly out of the given representation.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, ZZ
         >>> from sympy.abc import x, y
@@ -440,7 +440,7 @@ class Poly(Expr):
         Set the modulus of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -457,7 +457,7 @@ class Poly(Expr):
         Get the modulus of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -514,7 +514,7 @@ class Poly(Expr):
         Replace ``x`` with ``y`` in generators list.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -547,7 +547,7 @@ class Poly(Expr):
         Efficiently apply new order of generators.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -572,7 +572,7 @@ class Poly(Expr):
         Remove dummy generators from the "left" of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y, z
@@ -602,7 +602,7 @@ class Poly(Expr):
         Return ``True`` if ``Poly(f, *gens)`` retains ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y, z
@@ -636,7 +636,7 @@ class Poly(Expr):
         Make the ground domain a ring.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, QQ
         >>> from sympy.abc import x
@@ -657,7 +657,7 @@ class Poly(Expr):
         Make the ground domain a field.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, ZZ
         >>> from sympy.abc import x
@@ -678,7 +678,7 @@ class Poly(Expr):
         Make the ground domain exact.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, RR
         >>> from sympy.abc import x
@@ -699,7 +699,7 @@ class Poly(Expr):
         Recalculate the ground domain of a polynomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -738,7 +738,7 @@ class Poly(Expr):
         Returns all non-zero coefficients from ``f`` in lex order.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -754,7 +754,7 @@ class Poly(Expr):
         Returns all non-zero monomials from ``f`` in lex order.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -770,7 +770,7 @@ class Poly(Expr):
         Returns all non-zero terms from ``f`` in lex order.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -786,7 +786,7 @@ class Poly(Expr):
         Returns all coefficients from a univariate polynomial ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -802,7 +802,7 @@ class Poly(Expr):
         Returns all monomials from a univariate polynomial ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -818,7 +818,7 @@ class Poly(Expr):
         Returns all terms from a univariate polynomial ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -834,7 +834,7 @@ class Poly(Expr):
         Apply a function to all terms of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -869,7 +869,7 @@ class Poly(Expr):
         Returns the number of non-zero terms in ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -885,7 +885,7 @@ class Poly(Expr):
         Switch to a ``dict`` representation.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -911,7 +911,7 @@ class Poly(Expr):
         Convert a polynomial an expression.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -947,7 +947,7 @@ class Poly(Expr):
         Convert algebraic coefficients to rationals.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, I
         >>> from sympy.abc import x
@@ -968,7 +968,7 @@ class Poly(Expr):
         Reduce degree of ``f`` by mapping ``x_i**m`` to ``y_i``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -989,7 +989,7 @@ class Poly(Expr):
         Inject ground domain generators into ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1026,7 +1026,7 @@ class Poly(Expr):
         Eject selected generators into the ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1067,7 +1067,7 @@ class Poly(Expr):
         Remove GCD of terms from the polynomial ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1088,7 +1088,7 @@ class Poly(Expr):
         Add an element of the ground domain to ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1109,7 +1109,7 @@ class Poly(Expr):
         Subtract an element of the ground domain from ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1130,7 +1130,7 @@ class Poly(Expr):
         Multiply ``f`` by a an element of the ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1151,7 +1151,7 @@ class Poly(Expr):
         Quotient of ``f`` by a an element of the ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1175,7 +1175,7 @@ class Poly(Expr):
         Exact quotient of ``f`` by a an element of the ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1201,7 +1201,7 @@ class Poly(Expr):
         Make all coefficients in ``f`` positive.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1222,7 +1222,7 @@ class Poly(Expr):
         Negate all coefficients in ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1246,7 +1246,7 @@ class Poly(Expr):
         Add two polynomials ``f`` and ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1277,7 +1277,7 @@ class Poly(Expr):
         Subtract two polynomials ``f`` and ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1308,7 +1308,7 @@ class Poly(Expr):
         Multiply two polynomials ``f`` and ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1339,7 +1339,7 @@ class Poly(Expr):
         Square a polynomial ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1363,7 +1363,7 @@ class Poly(Expr):
         Raise ``f`` to a non-negative power ``n``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1389,7 +1389,7 @@ class Poly(Expr):
         Polynomial pseudo-division of ``f`` by ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1412,7 +1412,7 @@ class Poly(Expr):
         Polynomial pseudo-remainder of ``f`` by ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1435,7 +1435,7 @@ class Poly(Expr):
         Polynomial pseudo-quotient of ``f`` by ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1461,7 +1461,7 @@ class Poly(Expr):
         Polynomial exact pseudo-quotient of ``f`` by ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1492,7 +1492,7 @@ class Poly(Expr):
         Polynomial division with remainder of ``f`` by ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1531,7 +1531,7 @@ class Poly(Expr):
         Computes the polynomial remainder of ``f`` by ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, ZZ, QQ
         >>> from sympy.abc import x
@@ -1568,7 +1568,7 @@ class Poly(Expr):
         Computes polynomial quotient of ``f`` by ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1605,7 +1605,7 @@ class Poly(Expr):
         Computes polynomial exact quotient of ``f`` by ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1665,7 +1665,7 @@ class Poly(Expr):
         Returns degree of ``f`` in ``x_j``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1688,7 +1688,7 @@ class Poly(Expr):
         Returns a list of degrees of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1707,7 +1707,7 @@ class Poly(Expr):
         Returns the total degree of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1733,7 +1733,7 @@ class Poly(Expr):
         polynomial is homogeneous, then use :func:`Poly.is_homogeneous`.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1753,7 +1753,7 @@ class Poly(Expr):
         Returns the leading coefficient of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1777,7 +1777,7 @@ class Poly(Expr):
         Returns the trailing coefficent of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1798,7 +1798,7 @@ class Poly(Expr):
         Returns the last non-zero coefficient of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1817,7 +1817,7 @@ class Poly(Expr):
         Returns the ``n``-th coefficient of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1840,7 +1840,7 @@ class Poly(Expr):
         Returns the leading monomial of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1856,7 +1856,7 @@ class Poly(Expr):
         Returns the last non-zero monomial of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1872,7 +1872,7 @@ class Poly(Expr):
         Returns the leading term of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1889,7 +1889,7 @@ class Poly(Expr):
         Returns the last non-zero term of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -1906,7 +1906,7 @@ class Poly(Expr):
         Returns maximum norm of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1927,7 +1927,7 @@ class Poly(Expr):
         Returns l1 norm of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -1948,7 +1948,7 @@ class Poly(Expr):
         Clear denominators, but keep the ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, S, QQ
         >>> from sympy.abc import x
@@ -1983,7 +1983,7 @@ class Poly(Expr):
         Clear denominators in a rational function ``f/g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -2020,7 +2020,7 @@ class Poly(Expr):
         Computes indefinite integral of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -2058,7 +2058,7 @@ class Poly(Expr):
         Computes partial derivative of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -2093,7 +2093,7 @@ class Poly(Expr):
         Evaluate ``f`` at ``a`` in the given variable.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y, z
@@ -2162,7 +2162,7 @@ class Poly(Expr):
         Evaluate ``f`` at the give values.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y, z
@@ -2186,7 +2186,7 @@ class Poly(Expr):
         Returns ``(s, h)`` such that ``h = gcd(f, g)`` and ``s*f = h (mod g)``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2217,7 +2217,7 @@ class Poly(Expr):
         Returns ``(s, t, h)`` such that ``h = gcd(f, g)`` and ``s*f + t*g = h``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2248,7 +2248,7 @@ class Poly(Expr):
         Invert ``f`` modulo ``g`` when possible.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2288,7 +2288,7 @@ class Poly(Expr):
         Computes the subresultant PRS sequence of ``f`` and ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2313,7 +2313,7 @@ class Poly(Expr):
         Computes the resultant of ``f`` and ``g`` via PRS.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2336,7 +2336,7 @@ class Poly(Expr):
         Computes the discriminant of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2361,7 +2361,7 @@ class Poly(Expr):
         of ``f`` and ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2386,7 +2386,7 @@ class Poly(Expr):
         Returns the polynomial GCD of ``f`` and ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2409,7 +2409,7 @@ class Poly(Expr):
         Returns polynomial LCM of ``f`` and ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2432,7 +2432,7 @@ class Poly(Expr):
         Reduce ``f`` modulo a constant ``p``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2455,7 +2455,7 @@ class Poly(Expr):
         Divides all coefficients by ``LC(f)``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, ZZ
         >>> from sympy.abc import x
@@ -2482,7 +2482,7 @@ class Poly(Expr):
         Returns the GCD of polynomial coefficients.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2503,7 +2503,7 @@ class Poly(Expr):
         Returns the content and a primitive form of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2524,7 +2524,7 @@ class Poly(Expr):
         Computes the functional composition of ``f`` and ``g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2547,7 +2547,7 @@ class Poly(Expr):
         Computes a functional decomposition of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2568,7 +2568,7 @@ class Poly(Expr):
         Efficiently compute Taylor shift ``f(x + a)``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2589,7 +2589,7 @@ class Poly(Expr):
         Computes the Sturm sequence of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2616,7 +2616,7 @@ class Poly(Expr):
         Computes greatest factorial factorization of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2643,7 +2643,7 @@ class Poly(Expr):
         where ``a`` is the algebraic extension of the ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, sqrt
         >>> from sympy.abc import x
@@ -2670,7 +2670,7 @@ class Poly(Expr):
         Computes square-free part of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2691,7 +2691,7 @@ class Poly(Expr):
         Returns a list of square-free factors of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2720,7 +2720,7 @@ class Poly(Expr):
         Returns a list of square-free factors of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, expand
         >>> from sympy.abc import x
@@ -2753,7 +2753,7 @@ class Poly(Expr):
         Returns a list of irreducible factors of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -2780,7 +2780,7 @@ class Poly(Expr):
         Returns a list of irreducible factors of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -2807,7 +2807,7 @@ class Poly(Expr):
         Compute isolating intervals for roots of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2872,7 +2872,7 @@ class Poly(Expr):
         Refine an isolating interval of a root to the given precision.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -2909,7 +2909,7 @@ class Poly(Expr):
         Return the number of roots of ``f`` in ``[inf, sup]`` interval.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly, I
         >>> from sympy.abc import x
@@ -2972,7 +2972,7 @@ class Poly(Expr):
         Get an indexed root of a polynomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3001,7 +3001,7 @@ class Poly(Expr):
         Return a list of real roots with multiplicities.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3024,7 +3024,7 @@ class Poly(Expr):
         Return a list of real and complex roots with multiplicities.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3047,7 +3047,7 @@ class Poly(Expr):
         Compute numerical approximations of roots of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3096,7 +3096,7 @@ class Poly(Expr):
         Compute roots of ``f`` by factorization in the ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3122,7 +3122,7 @@ class Poly(Expr):
         Construct a polynomial with n-th powers of roots of ``f``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3161,7 +3161,7 @@ class Poly(Expr):
         Cancel common factors in a rational function ``f/g``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3199,7 +3199,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is a zero polynomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3218,7 +3218,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is a unit polynomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3237,7 +3237,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is a square-free polynomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3256,7 +3256,7 @@ class Poly(Expr):
         Returns ``True`` if the leading coefficient of ``f`` is one.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3275,7 +3275,7 @@ class Poly(Expr):
         Returns ``True`` if GCD of the coefficients of ``f`` is one.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3294,7 +3294,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is an element of the ground domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -3315,7 +3315,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is linear in all its variables.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -3334,7 +3334,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is quadratic in all its variables.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -3353,7 +3353,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is zero or has only one term.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3377,7 +3377,7 @@ class Poly(Expr):
         homogeneous order, then use :func:`Poly.homogeneous_order`.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -3396,7 +3396,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` has no factors over its domain.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3415,7 +3415,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is a univariate polynomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -3438,7 +3438,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is a multivariate polynomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x, y
@@ -3461,7 +3461,7 @@ class Poly(Expr):
         Returns ``True`` if ``f`` is a cyclotomic polnomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
@@ -3662,7 +3662,7 @@ class PurePoly(Poly):
         Free symbols of a polynomial.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import PurePoly
         >>> from sympy.abc import x, y
@@ -5762,7 +5762,7 @@ class GroebnerBasis(Basic):
         ordering directly.
 
         Examples
-    ========
+        ========
 
         >>> from sympy.abc import x, y
         >>> from sympy import groebner
@@ -5829,7 +5829,7 @@ class GroebnerBasis(Basic):
         is a completely reduced polynomial with respect to ``G``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import groebner, expand
         >>> from sympy.abc import x, y
@@ -5888,7 +5888,7 @@ class GroebnerBasis(Basic):
         Check if ``poly`` belongs the ideal generated by ``self``.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import groebner
         >>> from sympy.abc import x, y
