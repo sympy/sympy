@@ -111,14 +111,14 @@ def ratint_ratpart(f, g, x):
         >>> from sympy.integrals.rationaltools import ratint_ratpart
         >>> from sympy.abc import x, y
         >>> from sympy import Poly
-        >>> ratint_ratpart(Poly(1, x, domain = 'ZZ'),Poly(x + 1, x,
-        ... domain = 'ZZ'),x)
+        >>> ratint_ratpart(Poly(1, x, domain='ZZ'),
+        ... Poly(x + 1, x, domain='ZZ'), x)
         (0, 1/(x + 1))
-        >>> ratint_ratpart(Poly(1, x, domain='EX'), Poly(x**2 + y**2, x,
-        ... domain='EX'), x)
+        >>> ratint_ratpart(Poly(1, x, domain='EX'),
+        ... Poly(x**2 + y**2, x, domain='EX'), x)
         (0, 1/(x**2 + y**2))
-        >>> ratint_ratpart(Poly(36, x, domain='ZZ'), Poly(x**5 - 2*x**4 -
-        ... 2*x**3 + 4*x**2 + x - 2, x, domain = 'ZZ'), x)
+        >>> ratint_ratpart(Poly(36, x, domain='ZZ'),
+        ... Poly(x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2, x, domain = 'ZZ'), x)
         ((12*x + 6)/(x**2 - 1), 12/(x**2 - x - 2))
 
     """
@@ -170,14 +170,14 @@ def ratint_logpart(f, g, x, t=None):
         >>> from sympy.integrals.rationaltools import ratint_logpart
         >>> from sympy.abc import x
         >>> from sympy import Poly
-        >>> ratint_logpart(Poly(1, x, domain='ZZ'), Poly(x**2 + x + 1, x,
-        ... domain='ZZ'), x)
-        [(Poly(x + 3*_t/2 + 1/2, x, domain='QQ[_t]'), Poly(3*_t**2 + 1, _t,
-        ...domain='ZZ'))]
-        >>> ratint_logpart(Poly(12, x, domain='ZZ'), Poly(x**2 - x - 2, x,
-        ... domain='ZZ'), x)
-        [(Poly(x - 3*_t/8 - 1/2, x, domain='QQ[_t]'), Poly(-_t**2 + 16, _t,
-        ...domain='ZZ'))]
+        >>> ratint_logpart(Poly(1, x, domain='ZZ'),
+        ... Poly(x**2 + x + 1, x, domain='ZZ'), x)
+        [(Poly(x + 3*_t/2 + 1/2, x, domain='QQ[_t]'),
+        ...Poly(3*_t**2 + 1, _t, domain='ZZ'))]
+        >>> ratint_logpart(Poly(12, x, domain='ZZ'),
+        ... Poly(x**2 - x - 2, x, domain='ZZ'), x)
+        [(Poly(x - 3*_t/8 - 1/2, x, domain='QQ[_t]'),
+        ...Poly(-_t**2 + 16, _t, domain='ZZ'))]
 
     """
     f, g = Poly(f, x), Poly(g, x)
@@ -248,8 +248,8 @@ def log_to_atan(f, g):
         >>> from sympy import Poly, sqrt
         >>> log_to_atan(Poly(x, x, domain='ZZ'), Poly(1, x, domain='ZZ'))
         2*atan(x)
-        >>> log_to_atan(Poly(x + 1/2, x, domain='QQ'), Poly(sqrt(3)/2, x,
-        ... domain='EX'))
+        >>> log_to_atan(Poly(x + 1/2, x, domain='QQ'),
+        ... Poly(sqrt(3)/2, x, domain='EX'))
         2*atan(2*sqrt(3)*x/3)
 
     """
@@ -288,11 +288,11 @@ def log_to_real(h, q, x, t):
         >>> from sympy.integrals.rationaltools import log_to_real
         >>> from sympy.abc import x, y
         >>> from sympy import Poly, sqrt
-        >>> log_to_real(Poly(x + 3*y/2 + 1/2, x, domain='QQ[y]'), Poly(3*y**2
-        ... + 1, y, domain='ZZ'), x, y)
+        >>> log_to_real(Poly(x + 3*y/2 + 1/2, x, domain='QQ[y]'),
+        ... Poly(3*y**2 + 1, y, domain='ZZ'), x, y)
         2*sqrt(3)*atan(2*sqrt(3)*x/3)/3
-        >>> log_to_real(Poly(x**2 - 1, x, domain='ZZ'), Poly(-2*y + 1, y,
-        ... domain='ZZ'), x, y)
+        >>> log_to_real(Poly(x**2 - 1, x, domain='ZZ'),
+        ... Poly(-2*y + 1, y, domain='ZZ'), x, y)
         log(x**2 - 1)/2
 
     """

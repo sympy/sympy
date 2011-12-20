@@ -304,9 +304,9 @@ class Integral(Expr):
 
             >>> from sympy.abc import a, b, c
             >>> from sympy import Integral
-            >>> Integral(a*b + 2+c, (c, -1, 1/2)).transform(a, c*2)
+            >>> Integral(a*b + 2 + c, (c, -1, 1/2)).transform(a, c*2)
             Integral(a*b + c + 2, (c, -1, 0))
-            >>> Integral(a**2+1, (a, -1, 2)).transform(a, 1+2*a)
+            >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1+2*a)
             Integral(2*(2*a + 1)**2 + 2, (a, -1, 1/2))
 
         """
@@ -323,7 +323,7 @@ class Integral(Expr):
             mapping, inverse_mapping = inverse_mapping, mapping
         function = function.subs(x, mapping) * mapping.diff(x)
 
-        def calc_limit(a, b):
+        def _calc_limit(a, b):
             """
             replace x with a, using subs if possible, otherwise limit
             where sign of b is considered
@@ -338,7 +338,7 @@ class Integral(Expr):
             sym = xab[0]
             if sym == x and len(xab) == 3:
                 a, b = xab[1:]
-                a, b = calc_limit(a, b), calc_limit(b, a)
+                a, b = _calc_limit(a, b), _calc_limit(b, a)
                 if a == b:
                     raise ValueError("The mapping must transform the "
                         "endpoints into separate points")
