@@ -295,8 +295,11 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
     # If represent returns a matrix, check if the matrix is diagonal
     # and if every item along the diagonal is the same
     else:
-        # CURRENTLY PASSES TESTS BUT THROWS A WARNING
-        # "invalid value encounted in divide" - investigate
+        # NEED TO INVESTIGATE:
+        # Elements with nonzero imaginaries in the matrix
+        # may be considered to be in between the epsilons if
+        # the real part is in between the epsilon - can result
+        # in falsely zeroing out elements
 
         # Due to floating pointing operations, must zero out
         # elements that are "very" small in the dense matrix
@@ -306,6 +309,11 @@ def is_scalar_sparse_matrix(circuit, numqubits, identity_only):
         dense_matrix = matrix.todense().getA()
         # Get the first element of the matrix
         first_element = dense_matrix[0][0]
+
+        # If element at top left of matrix is zero, then not diagonal
+        if (first_element == 0):
+            return False
+
         adj_ndarray = dense_matrix/first_element
         # Find the values in between -eps and eps
         bool_dense_matrix = numpy.logical_and(adj_ndarray > -eps,
