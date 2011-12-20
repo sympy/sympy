@@ -171,6 +171,19 @@ class Integral(Expr):
 
         This is a very naive and quick test, not intended to check for special
         patterns like Integral(sin(m*x)*cos(n*x), (x, 0, 2*pi)) == 0.
+
+        Examples
+        ========
+
+            >>> from sympy import Integral
+            >>> from sympy.abc import x, y, z
+            >>> Integral(1, (x, 1, 1)).is_zero
+            True
+            >>> Integral(0, (x, y, z)).is_zero
+            True
+            >>> Integral(1, (x, 1, 2)).is_zero
+            False
+
         """
         if (self.function.is_zero or
             any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
@@ -285,6 +298,17 @@ class Integral(Expr):
 
         The mapping must be uniquely invertible (e.g. a linear or linear
         fractional transformation).
+
+        Examples
+        ========
+
+            >>> from sympy.abc import a, b, c
+            >>> from sympy import Integral
+            >>> Integral(a*b + 2+c, (c, -1, 1/2)).transform(a, c*2)
+            Integral(a*b + c + 2, (c, -1, 0))
+            >>> Integral(a**2+1, (a, -1, 2)).transform(a, 1+2*a)
+            Integral(2*(2*a + 1)**2 + 2, (a, -1, 1/2))
+
         """
         if x not in self.variables:
             return self
@@ -300,8 +324,10 @@ class Integral(Expr):
         function = function.subs(x, mapping) * mapping.diff(x)
 
         def calc_limit(a, b):
-            """replace x with a, using subs if possible, otherwise limit
-            where sign of b is considered"""
+            """
+            replace x with a, using subs if possible, otherwise limit
+            where sign of b is considered
+            """
             wok = inverse_mapping.subs(x, a)
             if wok is S.NaN or wok.is_bounded is False and a.is_bounded:
                 return limit(sign(b)*inverse_mapping, x, a)
