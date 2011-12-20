@@ -303,9 +303,9 @@ class Integral(Expr):
         ========
 
             >>> from sympy.abc import a, b, c
-            >>> from sympy import Integral
-            >>> Integral(a*b + 2 + c, (c, -1, 1/2)).transform(a, c*2)
-            Integral(a*b + c + 2, (c, -1, 0))
+            >>> from sympy import Integral, S
+            >>> Integral(a*b + 2 + c, (c, -1, S(1)/2)).transform(a, c*2)
+            Integral(a*b + c + 2, (c, -1, 1/2))
             >>> Integral(a**2 + 1, (a, -1, 2)).transform(a, 1+2*a)
             Integral(2*(2*a + 1)**2 + 2, (a, -1, 1/2))
 
