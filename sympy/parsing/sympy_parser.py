@@ -32,7 +32,10 @@ def _add_factorial_tokens(name, result):
 
         if diff == 0:
             if i-1 >= 0 and result[i-1][0] == NAME:
-                return result[:i-1] + beginning + result[i-1:] + end
+                if result[i-1][1] == 'factorial' or result[i-1][1] == 'factorial2':
+                    raise TokenError
+                else:
+                    return result[:i-1] + beginning + result[i-1:] + end
             else:
                 return result[:i] + beginning + result[i:] + end
 
