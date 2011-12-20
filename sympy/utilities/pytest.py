@@ -58,8 +58,11 @@ if not USE_PYTEST:
         def wrapper():
             try:
                 func()
-            except Exception:
-                raise XFail(func.func_name)
+            except Exception, e:
+                if e.message != "Timeout":
+                    raise XFail(func.func_name)
+                else:
+                    raise Skipped("Timeout")
             raise XPass(func.func_name)
 
         wrapper = functools.update_wrapper(wrapper, func)
