@@ -91,7 +91,6 @@ def sqrt(arg):
 
     See Also
     ========
-<<<<<<< HEAD
     L{root}, L{RootOf}
 
     References
@@ -100,7 +99,6 @@ def sqrt(arg):
     * http://en.wikipedia.org/wiki/Square_root
     * http://en.wikipedia.org/wiki/Principal_value
 
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
     """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
@@ -148,9 +146,7 @@ def root(arg, n):
 
     See Also
     ========
-<<<<<<< HEAD
 
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
     L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
 
     References
@@ -184,10 +180,7 @@ def real_root(arg, n=None):
 
     See Also
     ========
-<<<<<<< HEAD
-=======
 
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
     L{sqrt}, L{RootOf}, L{root}, L{integer_nthroot}
 
     """

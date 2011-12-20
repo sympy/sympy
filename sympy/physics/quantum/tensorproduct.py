@@ -271,7 +271,7 @@ def tensor_product_simp(e, **hints):
     In general this will try to pull expressions inside of ``TensorProducts``.
     It currently only works for relatively simple cases where the products
     have only scalars, raw ``TensorProducts``, not ``Add``, ``Pow``,
-    ``Commutators`` of ``TensorProducts``. It is best to see what it does by 
+    ``Commutators`` of ``TensorProducts``. It is best to see what it does by
     showing examples.
 
     Examples

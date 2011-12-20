@@ -49,10 +49,8 @@ class Order(Expr):
     >>> O(x)-O(x)
     O(x)
 
-<<<<<<< HEAD
     References
     ==========
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
 
     U{Big O notation<http://en.wikipedia.org/wiki/Big_O_notation>}
 

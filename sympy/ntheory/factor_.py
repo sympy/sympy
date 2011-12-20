@@ -869,7 +869,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     The table of the output logic is:
 
-<<<<<<< HEAD
         ====== ====== ======= =======
                        Visual
         ------ ----------------------
@@ -890,7 +889,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     smoothness, smoothness_p, divisors
 
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
     """
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):

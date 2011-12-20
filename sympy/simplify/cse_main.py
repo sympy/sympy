@@ -72,9 +72,7 @@ def cse(exprs, symbols=None, optimizations=None):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
-<<<<<<< HEAD
     ==========
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
 
     exprs : list of sympy expressions, or a single sympy expression
         The expressions to reduce.
@@ -88,9 +86,7 @@ def cse(exprs, symbols=None, optimizations=None):
         ``sympy.simplify.cse.cse_optimizations`` is used.
 
     Returns
-<<<<<<< HEAD
     =======
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
 
     replacements : list of (Symbol, expression) pairs
         All of the common subexpressions that were replaced. Subexpressions

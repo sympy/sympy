@@ -3,7 +3,7 @@ from sympy.functions import laguerre_l, sqrt, exp, factorial, factorial2
 
 def R_nl(n, l, nu, r):
     """
-    Returns the radial wavefunction R_{nl} for a 3d isotropic harmonic 
+    Returns the radial wavefunction R_{nl} for a 3d isotropic harmonic
     oscillator.
 
     ``n``
@@ -13,7 +13,7 @@ def R_nl(n, l, nu, r):
         the quantum number for orbital angular momentum
     ``nu``
         mass-scaled frequency: nu = m*omega/(2*hbar) where `m' is the mass and
-        `omega` the frequency of the oscillator.  
+        `omega` the frequency of the oscillator.
         (in atomic units nu == omega/2)
     ``r``
         Radial coordinate

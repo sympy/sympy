@@ -115,7 +115,6 @@ class sin(TrigonometricFunction):
 
     Examples
     ========
-<<<<<<< HEAD
     >>> from sympy import sin, pi
     >>> from sympy.abc import x
     >>> sin(x**2).diff(x)
@@ -139,7 +138,6 @@ class sin(TrigonometricFunction):
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
     """
 
     nargs = 1
@@ -340,7 +338,6 @@ class cos(TrigonometricFunction):
 
     Examples
     ========
-<<<<<<< HEAD
     >>> from sympy import cos, pi
     >>> from sympy.abc import x
     >>> cos(x**2).diff(x)
@@ -364,7 +361,6 @@ class cos(TrigonometricFunction):
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
     """
 
     nargs = 1
@@ -561,7 +557,6 @@ class tan(TrigonometricFunction):
 
     Examples
     ========
-<<<<<<< HEAD
     >>> from sympy import tan
     >>> from sympy.abc import x
     >>> tan(x**2).diff(x)
@@ -579,7 +574,6 @@ class tan(TrigonometricFunction):
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
 
->>>>>>> 3a03795... Fixed most of the docscrape.py warnings.
     """
 
     nargs = 1
