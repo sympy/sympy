@@ -71,7 +71,8 @@ def postprocess_for_cse(expr, optimizations):
 def cse(exprs, symbols=None, optimizations=None):
     """ Perform common subexpression elimination on an expression.
 
-    Parameters:
+    Parameters
+    ==========
 
     exprs : list of sympy expressions, or a single sympy expression
         The expressions to reduce.
@@ -84,7 +85,8 @@ def cse(exprs, symbols=None, optimizations=None):
         The (preprocessor, postprocessor) pairs. If not provided,
         ``sympy.simplify.cse.cse_optimizations`` is used.
 
-    Returns:
+    Returns
+    =======
 
     replacements : list of (Symbol, expression) pairs
         All of the common subexpressions that were replaced. Subexpressions
