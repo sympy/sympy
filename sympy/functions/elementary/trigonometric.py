@@ -129,14 +129,14 @@ class sin(TrigonometricFunction):
         >>> sin(pi/6)
         1/2
 
-    See also
+    See Also
     ========
-       L{cos}, L{tan}
+    L{cos}, L{tan}
 
-       External links
-       --------------
+    External links
+    ==============
 
-         U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
     """
 
     nargs = 1
@@ -351,14 +351,14 @@ class cos(TrigonometricFunction):
         >>> cos(2*pi/3)
         -1/2
 
-    See also
+    See Also
     ========
-       L{sin}, L{tan}
+    L{sin}, L{tan}
 
-       External links
-       --------------
+    External links
+    ==============
 
-         U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
     """
 
     nargs = 1
@@ -563,14 +563,14 @@ class tan(TrigonometricFunction):
         >>> tan(1).diff(x)
         0
 
-    See also
+    See Also
     ========
-       L{sin}, L{tan}
+    L{sin}, L{tan}
 
-       External links
-       --------------
+    External links
+    ==============
 
-         U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+    U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
     """
 
     nargs = 1
