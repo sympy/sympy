@@ -604,14 +604,13 @@ class Expr(Basic, EvalfMixin):
         return count_ops(self, visual)
 
     def args_cnc(self, cset=False, warn=True):
-        """Treat self as a Mul and return the commutative and noncommutative
-        arguments as [c_list, nc_list] with items appearing in the same
-        order that they appeared in the expression; if ``cset`` is True the
-        commutative items will be returned in a set. If there were repeated
-        arguments (as may happen with an unevaluated Mul) then an error will be
-        raised unless it is explicitly supressed with ``warn`` set to False.
-        In such cases, the calling code should figure out what to do with the
-        arguments, i.e. rebuild them unevaluated term
+        """Return [commutative factors, non-commutative factors] of self.
+
+        self is treated as a Mul and the ordering of the factors is maintained.
+        If ``cset`` is True the commutative factors will be returned in a set.
+        If there were repeated factors (as may happen with an unevaluated Mul)
+        then an error will be raised unless it is explicitly supressed by
+        setting ``warn`` to False.
 
         Note: -1 is always separated from a Rational.
 
