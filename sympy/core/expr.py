@@ -228,7 +228,7 @@ class Expr(Basic, EvalfMixin):
             return False
         return all(obj.is_number for obj in self.iter_basic_args())
 
-    def is_constant(self, *wrt):
+    def is_constant(self, *wrt, **flags):
         """Return True if self is constant, otherwise False.
 
         If an expression has no free symbols then it is a constant. If
@@ -239,6 +239,8 @@ class Expr(Basic, EvalfMixin):
         differentiation with respect to variables in `wrt` (or all free
         symbols if omitted) to see if the expression is constant or not.
 
+        If flag simplify=False is passed, self will not be simplified;
+        the default is True since self should be simplified before testing.
 
         Although it is tempting to use numerical methods to test
         expessions that have free symbols, results thus obtained
@@ -285,6 +287,8 @@ class Expr(Basic, EvalfMixin):
         False
         """
 
+        simplify = flags.get('simplify', True)
+
         free = self.free_symbols
         # only one of these should be necessary since if something is
         # known to be a number it should also know that there are no
@@ -302,6 +306,9 @@ class Expr(Basic, EvalfMixin):
         # free symbols then this expression is constant wrt those symbols
         if wrt and not set(wrt) & free:
             return True
+        # simplify unless this has already been done
+        if simplify:
+            self = self.simplify()
         # is_zero should be a quick assumptions check; it can be wrong for numbers
         # (see test_is_not_constant test), giving False when it shouldn't, but hopefully
         # it will never give True unless it is sure.
@@ -329,15 +336,15 @@ class Expr(Basic, EvalfMixin):
             return True
 
         # they aren't the same so see if we can make the difference 0
-        diff = factor_terms((self - other).as_content_primitive()[1])
-        if not diff.is_constant():
+        diff = factor_terms((self - other).as_content_primitive()[1]).simplify()
+        if not diff.is_constant(simplify=False):
             return False
 
         # don't worry about doing these steps a little at a time: if there
         # is not going to be any control over what to try then just
         # try everything and know that if a 0 is obtained, the additional
         # step (e.g. factoring) is going to go quickly
-        diff = diff.simplify().factor()
+        diff = diff.factor()
         if diff.is_Number:
             return diff is S.Zero
 
@@ -1997,7 +2004,13 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you don't
         have to write docstrings for _eval_nseries().
         """
-        raise NotImplementedError("(%s).nseries(%s, %s, %s)" % (self, x, n, logx))
+        from sympy.solvers.solvers import _filldedent
+        raise NotImplementedError(_filldedent("""
+                     The _eval_nseries method should be added to
+                     %s to give terms up to O(x**n) at x=0
+                     from the positive direction so it is available when
+                     nseries calls it.""" % self.func)
+                     )
 
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.

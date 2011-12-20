@@ -942,7 +942,9 @@ class Pow(Expr):
                 return c, Pow(_keep_coeff(m, t), e)
         return S.One, Pow(b, e)
 
-    def is_constant(self, *wrt):
+    def is_constant(self, *wrt, **flags):
+        if flags.get('simplify', True):
+            self = self.simplify()
         b, e = self.as_base_exp()
         bz = b.equals(0)
         if bz: # recalculate with assumptions in case it's unevaluated
