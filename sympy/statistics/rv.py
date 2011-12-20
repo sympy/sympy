@@ -456,6 +456,41 @@ def Density(expr, given=None, **kwargs):
     # Otherwise pass work off to the ProbabilitySpace
     return pspace(expr).compute_density(expr, **kwargs)
 
+def CDF(expr, given=None, **kwargs):
+    """
+    Cumulative Distribution Function of a random expression,
+    optionally given a second condition
+
+    This density will take on different forms for different types of probability
+    spaces.
+    Discrete RV's produce list of tuples
+    Continuous RV's produce a Tuple with expression representing the PDF and
+    a symbol designating the active variable
+
+    >>> from sympy.statistics import Density, Die, Normal
+    >>> from sympy import Symbol
+
+    >>> D = Die(6)
+    >>> X = Normal(0, 1)
+
+    >>> Density(D)
+    {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
+    >>> CDF(D)
+    {1: 1/6, 2: 1/3, 3: 1/2, 4: 2/3, 5: 5/6, 6: 1}
+    >>> CDF(3*D, D>2)
+    {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}
+
+    >>> CDF(X)
+    (_z, erf(sqrt(2)*_z/2)/2 + 1/2)
+
+    """
+    if given is not None: # If there is a condition
+        # Recompute on new conditional expr
+        return CDF(Given(expr, given, **kwargs), **kwargs)
+
+    # Otherwise pass work off to the ProbabilitySpace
+    return pspace(expr).compute_cdf(expr, **kwargs)
+
 def Where(condition, given=None, **kwargs):
     """
     Returns the domain where a condition is True

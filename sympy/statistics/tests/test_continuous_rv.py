@@ -1,7 +1,9 @@
 from sympy.statistics import (Normal, Exponential, P, E, Where,
-        Density, var, covar, skewness, Gamma, Pareto, Beta, Given, pspace)
+        Density, var, covar, skewness, Gamma, Pareto, Beta, Given, pspace, CDF)
 from sympy import (Symbol, exp, S, pi, simplify, Interval, erf, Eq, symbols,
         sqrt, And, gamma, beta)
+from sympy.utilities.pytest import raises
+
 oo = S.Infinity
 
 def test_single_normal():
@@ -75,8 +77,24 @@ def test_symbolic():
     assert E(a*Z+b) == a*E(Z)+b
     assert E(X+a*Z+b) == mu1 + a/rate + b
 
+def test_CDF():
+    X = Normal(0,1)
+    x,d = CDF(X)
 
+    assert P(X<1) == d.subs(x,1)
+    assert d.subs(x,0) == S.Half
 
+    x,d = CDF(X, X>0) # given X>0
+
+    assert d.subs(x,0) == 0
+
+    Y = Exponential(10)
+    y,d = CDF(Y)
+
+    assert d.subs(y, -5) == 0
+    assert P(Y>3) == 1 - d.subs(y, 3)
+
+    raises(ValueError, "CDF(X+Y)")
 
 def test_exponential():
 

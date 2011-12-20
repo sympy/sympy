@@ -1,7 +1,7 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, Or, Dict)
+        symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify)
 from sympy.statistics import (Die, Bernoulli, Coin, P, E, var, covar, skewness,
-        Density, Given, independent, dependent, Where, FiniteRV, pspace)
+        Density, Given, independent, dependent, Where, FiniteRV, pspace, CDF)
 from sympy.utilities.pytest import raises
 
 oo = S.Infinity
@@ -104,6 +104,12 @@ def test_dependence():
 
     XX, YY = Given(Tuple(X, Y), X+Y>5) # Create a dependency
     assert dependent(XX, YY)
+
+def test_CDF():
+    D = Die(6)
+    o = S.One
+
+    assert CDF(D) == sympify({1:o/6, 2:o/3, 3:o/2, 4:2*o/3, 5:5*o/6, 6:o})
 
 def test_coins():
     C, D = Coin(), Coin()

@@ -127,6 +127,16 @@ class FinitePSpace(PSpace):
             d[val] = d.get(val, 0) + prob
         return d
 
+    def compute_cdf(self, expr):
+        d = self.compute_density(expr)
+        cum_prob = 0
+        cdf = []
+        for key, prob in sorted(d.items()):
+            cum_prob += prob
+            cdf.append((key, cum_prob))
+
+        return dict(cdf)
+
     def integrate(self, expr, rvs=None):
         rvs = rvs or self.values
         expr = expr.subs(dict((rs, rs.symbol) for rs in rvs))

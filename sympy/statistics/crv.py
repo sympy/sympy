@@ -1,7 +1,8 @@
 from rv import (Domain, SingleDomain, ConditionalDomain, ProductDomain, PSpace,
         random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or
+from sympy import (S, Interval, Dummy, FiniteSet, Mul, Integral, And, Or,
+        Piecewise)
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy import integrate as sympy_integrate
 oo = S.Infinity
@@ -149,6 +150,20 @@ class ContinuousPSpace(PSpace):
         z = Dummy('z', real=True, finite=True)
         return z, self.integrate(DiracDelta(expr - z), **kwargs)
 
+    def compute_cdf(self, expr, **kwargs):
+        if not self.domain.set.is_Interval:
+            raise ValueError("CDF not well defined on multivariate expressions")
+
+        x,d = self.compute_density(expr, **kwargs)
+        z = Dummy('z', real=True, finite=True)
+        left_bound = self.domain.set.start
+
+        # CDF is integral of PDF from left bound to z
+        cdf = integrate(d, (x, left_bound, z), **kwargs)
+        # CDF Ensure that CDF left of left_bound is zero
+        cdf = Piecewise((0, z<left_bound), (cdf, True))
+        return z, cdf
+
     def P(self, condition, **kwargs):
         # Univariate case can be handled by where
         try:
@@ -188,8 +203,6 @@ class ContinuousPSpace(PSpace):
             density = density / domain.integrate(density, **kwargs)
 
         return ContinuousPSpace(domain, density)
-
-
 
 class SingleContinuousPSpace(ContinuousPSpace):
     _count = 0
