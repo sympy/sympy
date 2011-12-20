@@ -1,11 +1,11 @@
 Number Theory
 ====================
 
-.. module:: sympy.ntheory
+.. module:: sympy.ntheory.generate
 
 Ntheory Class Reference
 -----------------------
-.. autoclass:: sympy.ntheory.generate.Sieve
+.. autoclass:: Sieve
    :members:
 
 Ntheory Functions Reference
@@ -27,9 +27,11 @@ Ntheory Functions Reference
 
 .. autofunction:: cycle_length
 
-.. autofunction:: sympy.ntheory.factor_.smoothness
+.. module:: sympy.ntheory.factor_
 
-.. autofunction:: sympy.ntheory.factor_.smoothness_p
+.. autofunction:: smoothness
+
+.. autofunction:: smoothness_p
 
 .. autofunction:: trailing
 
@@ -51,6 +53,8 @@ Ntheory Functions Reference
 
 .. autofunction:: totient
 
+.. module:: sympy.ntheory.modular
+
 .. autofunction:: symmetric_residue
 
 .. autofunction:: crt
@@ -61,6 +65,8 @@ Ntheory Functions Reference
 
 .. autofunction:: solve_congruence
 
+.. module:: sympy.ntheory.multinomial
+
 .. autofunction:: binomial_coefficients
 
 .. autofunction:: binomial_coefficients_list
@@ -69,11 +75,17 @@ Ntheory Functions Reference
 
 .. autofunction:: multinomial_coefficients_iterator
 
+.. module:: sympy.ntheory.partitions_
+
 .. autofunction:: npartitions
+
+.. module:: sympy.ntheory.primetest
 
 .. autofunction:: mr
 
 .. autofunction:: isprime
+
+.. module:: sympy.ntheory.residue_ntheory
 
 .. autofunction:: int_tested
 
