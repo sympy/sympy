@@ -425,7 +425,8 @@ def dup_to_tuple(f):
     Convert `f` into a tuple.
 
     This is needed for hashing. This is similar to dup_copy().
-        Examples
+
+    Examples
     ========
 
     >>> from sympy.polys.domains import ZZ
