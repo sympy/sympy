@@ -319,180 +319,193 @@ def solve(f, *symbols, **flags):
 
     Input is formed as:
 
-        f
-            - a single Expr or Poly that must be zero,
-            - an Equality
-            - a Relational expression or boolean
-            - iterable of one or more of the above
+    * f
+        - a single Expr or Poly that must be zero,
+        - an Equality
+        - a Relational expression or boolean
+        - iterable of one or more of the above
 
-        symbols (Symbol, Function or Derivative) specified as
-            - none given (all free symbols will be used)
-            - single symbol
-            - denested list of symbols
-              e.g. solve(f, x, y)
-            - ordered iterable of symbols
-              e.g. solve(f, [x, y])
+    * symbols (Symbol, Function or Derivative) specified as
+        - none given (all free symbols will be used)
+        - single symbol
+        - denested list of symbols
+          e.g. solve(f, x, y)
+        - ordered iterable of symbols
+          e.g. solve(f, [x, y])
 
-        flags
-           'check=True (default)'
-               if False, don't do any testing of solutions
-           'numerical=True (default)'
-               do a fast numerical check if ``f`` has only one symbol.
-           'minimal=True (default is False)'
-               a very fast, minimal testing.
-           'warning=True (default is False)'
-               print a warning if checksol() could not conclude.
-           'simplify=True (default)'
-               simplify all but cubic and quartic solutions before
-               returning them and (if check is not False) use the
-               general simplify function on the solutions and the
-               expression obtained when they are substituted into the
-               function which should be zero
-           'force=True (default is False)'
-               make positive all symbols without assumptions regarding sign.
-           'rational=True (default)'
-               recast Floats as Rational; if this option is not used, the
-               system containing floats may fail to solve because of issues
-               with polys. If rational=None, Floats will be recast as
-               rationals but the answer will be recast as Floats. If the
-               flag is False then nothing will be done to the Floats.
-           'manual=True (default is False)'
-               do not use the polys/matrix method to solve a system of
-               equations, solve them one at a time as you might "manually".
-           'implicit=True (default is False)'
-               allows solve to return a solution for a pattern in terms of
-               other functions that contain that pattern; this is only
-               needed if the pattern is inside of some invertible function
-               like cos, exp, ....
+    * flags
+        'check=True (default)'
+            if False, don't do any testing of solutions
+        'numerical=True (default)'
+            do a fast numerical check if ``f`` has only one symbol.
+        'minimal=True (default is False)'
+            a very fast, minimal testing.
+        'warning=True (default is False)'
+            print a warning if checksol() could not conclude.
+        'simplify=True (default)'
+            simplify all but cubic and quartic solutions before
+            returning them and (if check is not False) use the
+            general simplify function on the solutions and the
+            expression obtained when they are substituted into the
+            function which should be zero
+        'force=True (default is False)'
+            make positive all symbols without assumptions regarding sign.
+        'rational=True (default)'
+            recast Floats as Rational; if this option is not used, the
+            system containing floats may fail to solve because of issues
+            with polys. If rational=None, Floats will be recast as
+            rationals but the answer will be recast as Floats. If the
+            flag is False then nothing will be done to the Floats.
+        'manual=True (default is False)'
+            do not use the polys/matrix method to solve a system of
+            equations, solve them one at a time as you might "manually".
+        'implicit=True (default is False)'
+            allows solve to return a solution for a pattern in terms of
+            other functions that contain that pattern; this is only
+            needed if the pattern is inside of some invertible function
+            like cos, exp, ....
 
-    The output varies according to the input and can be seen by example:
+    Examples
+    ========
+
+    The output varies according to the input and can be seen by example::
 
         >>> from sympy import solve, Poly, Eq, Function, exp
         >>> from sympy.abc import x, y, z, a, b
 
-        * boolean or univariate Relational
+    * boolean or univariate Relational
 
-            >>> solve(x < 3)
-            And(im(x) == 0, re(x) < 3)
+        >>> solve(x < 3)
+        And(im(x) == 0, re(x) < 3)
 
-        * single expression and single symbol that is in the expression
+    * single expression and single symbol that is in the expression
 
-            >>> solve(x - y, x)
-            [y]
-            >>> solve(x - 3, x)
+        >>> solve(x - y, x)
+        [y]
+        >>> solve(x - 3, x)
+        [3]
+        >>> solve(Eq(x, 3), x)
+        [3]
+        >>> solve(Poly(x - 3), x)
+        [3]
+        >>> solve(x**2 - y**2, x)
+        [-y, y]
+        >>> solve(x**4 - 1, x)
+        [-1, 1, -I, I]
+
+    * single expression with no symbol that is in the expression
+
+        >>> solve(3, x)
+        []
+        >>> solve(x - 3, y)
+        []
+
+    * when no symbol is given (or are given as an unordered set) then
+      all free symbols will be used. A univariate equation will always
+      return a list of solutions; otherwise, a list of mappings will be
+      returned.
+
+        * for single equations
+
+            >>> solve(x - 3)
             [3]
-            >>> solve(Eq(x, 3), x)
-            [3]
-            >>> solve(Poly(x - 3), x)
-            [3]
-            >>> solve(x**2 - y**2, x)
-            [-y, y]
-            >>> solve(x**4 - 1, x)
-            [-1, 1, -I, I]
+            >>> solve(x**2 - y**2)
+            [{x: -y}, {x: y}]
+            >>> solve(z**2*x**2 - z**2*y**2)
+            [{x: -y}, {x: y}]
+            >>> solve(z**2*x - z**2*y**2)
+            [{x: y**2}]
 
-        * single expression with no symbol that is in the expression
+        * for systems of equations
 
-            >>> solve(3, x)
-            []
-            >>> solve(x - 3, y)
-            []
+            >>> solve([x - 2, x**2 + y])
+            [{x: 2, y: -4}]
+            >>> f = Function('f')
+            >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
+            [{x: 2, f(x): -4}]
 
-        * when no symbol is given (or are given as an unordered set) then
-          all free symbols will be used. A univariate equation will always
-          return a list of solutions; otherwise, a list of mappings will be
-          returned.
+    * when a Function or Derivative is given as a symbol, it is
+      isolated algebraically and an implicit solution may be obtained;
+      to obtain the solution for a function within a derivative, use
+      dsolve.
 
-            for single equations
-                >>> solve(x - 3)
-                [3]
-                >>> solve(x**2 - y**2)
-                [{x: -y}, {x: y}]
-                >>> solve(z**2*x**2 - z**2*y**2)
-                [{x: -y}, {x: y}]
-                >>> solve(z**2*x - z**2*y**2)
-                [{x: y**2}]
+          >>> solve(f(x) - x, f(x))
+          [x]
+          >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
+          [x + f(x)]
+          >>> solve(f(x).diff(x) - f(x) - x, f(x))
+          [-x + Derivative(f(x), x)]
+          >>> solve(x + exp(x)**2, exp(x))
+          [-sqrt(-x), sqrt(-x)]
 
-            for systems of equations
-                >>> solve([x - 2, x**2 + y])
-                [{x: 2, y: -4}]
-                >>> f = Function('f')
-                >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
-                [{x: 2, f(x): -4}]
-
-        * when a Function or Derivative is given as a symbol, it is
-          isolated algebraically and an implicit solution may be obtained;
-          to obtain the solution for a function within a derivative, use
-          dsolve.
-
-            >>> solve(f(x) - x, f(x))
-            [x]
-            >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
-            [x + f(x)]
-            >>> solve(f(x).diff(x) - f(x) - x, f(x))
-            [-x + Derivative(f(x), x)]
-            >>> solve(x + exp(x)**2, exp(x))
-            [-sqrt(-x), sqrt(-x)]
-
-            To solve for a *symbol* implicitly, use 'implict=True':
+        * To solve for a *symbol* implicitly, use 'implict=True':
 
             >>> solve(x + exp(x), x)
             [-LambertW(1)]
             >>> solve(x + exp(x), x, implicit=True)
             [-exp(x)]
 
-        * single expression and more than 1 symbol
+    * single expression and more than 1 symbol
 
-            when there is a linear solution
-                >>> solve(x - y**2, x, y)
-                [{x: y**2}]
-                >>> solve(x**2 - y, x, y)
-                [{y: x**2}]
+        * when there is a linear solution
 
-            when undetermined coefficients are identified
+            >>> solve(x - y**2, x, y)
+            [{x: y**2}]
+            >>> solve(x**2 - y, x, y)
+            [{y: x**2}]
 
-                that are linear
-                    >>> solve((a + b)*x - b + 2, a, b)
-                    {a: -2, b: 2}
+        * when undetermined coefficients are identified
 
-                that are nonlinear
-                    >>> solve((a + b)*x - b**2 + 2, a, b)
-                    [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
+            * that are linear
 
-            if there is no linear solution then the first successful
-            attempt for a nonlinear solution will be returned
-                >>> solve(x**2 - y**2, x, y)
-                [{x: -y}, {x: y}]
-                >>> solve(x**2 - y**2/exp(x), x, y)
-                [{x: 2*LambertW(y/2)}]
-                >>> solve(x**2 - y**2/exp(x), y, x)
-                [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+                >>> solve((a + b)*x - b + 2, a, b)
+                {a: -2, b: 2}
 
-        * iterable of one or more of the above
+            * that are nonlinear
 
-            involving relationals or bools
-                >>> solve([x < 3, x - 2])
-                And(re(x) == 2, im(x) == 0)
-                >>> solve([x > 3, x - 2])
-                False
+                >>> solve((a + b)*x - b**2 + 2, a, b)
+                [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
 
-            when the system is linear
+        * if there is no linear solution then the first successful
+          attempt for a nonlinear solution will be returned
 
-                with a solution
-                    >>> solve([x - 3], x)
-                    {x: 3}
-                    >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y)
-                    {x: -3, y: 1}
-                    >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
-                    {x: -3, y: 1}
-                    >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
-                    {x: -5*y + 2, z: 21*y - 6}
+            >>> solve(x**2 - y**2, x, y)
+            [{x: -y}, {x: y}]
+            >>> solve(x**2 - y**2/exp(x), x, y)
+            [{x: 2*LambertW(y/2)}]
+            >>> solve(x**2 - y**2/exp(x), y, x)
+            [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
-                without a solution
-                    >>> solve([x + 3, x - 3])
+    * iterable of one or more of the above
 
-            when the system is not linear
-                >>> solve([x**2 + y -2, y**2 - 4], x, y)
-                [(-2, -2), (0, 2), (0, 2), (2, -2)]
+        * involving relationals or bools
+
+            >>> solve([x < 3, x - 2])
+            And(re(x) == 2, im(x) == 0)
+            >>> solve([x > 3, x - 2])
+            False
+
+        * when the system is linear
+
+            * with a solution
+
+                >>> solve([x - 3], x)
+                {x: 3}
+                >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y)
+                {x: -3, y: 1}
+                >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
+                {x: -3, y: 1}
+                >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
+                {x: -5*y + 2, z: 21*y - 6}
+
+            * without a solution
+
+                >>> solve([x + 3, x - 3])
+
+        * when the system is not linear
+
+            >>> solve([x**2 + y -2, y**2 - 4], x, y)
+            [(-2, -2), (0, 2), (0, 2), (2, -2)]
 
     Notes
     =====
@@ -502,9 +515,8 @@ def solve(f, *symbols, **flags):
 
     See Also
     ========
-
-        * rsolve() for solving recurrence relationships
-        * dsolve() for solving differential equations
+        - rsolve() for solving recurrence relationships
+        - dsolve() for solving differential equations
 
     """
     # make f and symbols into lists of sympified quantities
