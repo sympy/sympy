@@ -1219,3 +1219,10 @@ def test_Mod():
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
     assert (x % y).subs({x: 5, y: 3}) == 2
+
+def test_issue_2902():
+    A = Symbol("A", commutative=False)
+    eq = A + A**2
+    # it doesn't matter whether it's True or False; they should
+    # just both be the same
+    assert eq.is_commutative == (eq + 1).is_commutative
