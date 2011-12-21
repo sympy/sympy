@@ -1,6 +1,6 @@
-========================
-Geometric Algebra Module
-========================
+==================================
+Geometric Algebra Module Docstring
+==================================
 
 .. automodule: sympy.galgebra
 

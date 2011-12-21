@@ -23,6 +23,7 @@ access any SymPy module, or use this contens:
    evalf.txt
    functions.txt
    geometry.txt
+   galgebra/index.txt
    galgebra/GA/GAsympy.txt
    galgebra/latex_ex/latex_ex.txt
    integrals.txt
