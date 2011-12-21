@@ -5,8 +5,6 @@ ODE
 
 .. module::sympy.solvers.ode
 
-zmiana
-
 User Functions
 --------------
 These are functions that are imported into the global namespace with ``from sympy import *``.  They are intended for user use.
