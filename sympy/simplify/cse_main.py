@@ -91,8 +91,8 @@ def cse(exprs, symbols=None, optimizations=None):
     replacements : list of (Symbol, expression) pairs
         All of the common subexpressions that were replaced. Subexpressions
         earlier in this list might show up in subexpressions later in this list.
-    reduced_exprs : list of sympy expressions
-        The reduced expressions with all of the replacements above.
+    reduced_exprs : list of sympy expressions if an iterable was input, else
+        a single expression, with all common subexpression replacements made.
     """
     if symbols is None:
         symbols = numbered_symbols()
@@ -114,6 +114,10 @@ def cse(exprs, symbols=None, optimizations=None):
     # Handle the case if just one expression was passed.
     if isinstance(exprs, Basic):
         exprs = [exprs]
+        single = True
+    else:
+        single = False
+
     # Preprocess the expressions to give us better optimization opportunities.
     exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
 
@@ -235,4 +239,6 @@ def cse(exprs, symbols=None, optimizations=None):
         replacements[i] = (sym, subtree)
     reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
 
+    if single:
+        reduced_exprs = reduced_exprs[0]
     return replacements, reduced_exprs

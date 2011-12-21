@@ -778,7 +778,7 @@ def trigsimp(expr, deep=False, recursive=False):
 
     if recursive:
         w, g = cse(expr)
-        g = trigsimp_nonrecursive(g[0])
+        g = trigsimp_nonrecursive(g)
 
         for sub in reversed(w):
             g = g.subs(sub[0], sub[1])

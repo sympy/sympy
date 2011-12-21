@@ -51,7 +51,7 @@ def test_cse_single2():
     e = Add(Pow(x+y,2), sqrt(x+y))
     substs, reduced = cse(e, optimizations=[])
     assert substs == [(x0, x+y)]
-    assert reduced == [sqrt(x0) + x0**2]
+    assert reduced == sqrt(x0) + x0**2
 
 def test_cse_not_possible():
     # No substitution possible.
