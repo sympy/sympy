@@ -57,13 +57,13 @@ Ntheory Functions Reference
 
 .. autofunction:: symmetric_residue
 
-.. autofunction:: sympy.ntheory.modular.crt
+.. autofunction:: crt
 
-.. autofunction:: sympy.ntheory.modular.crt1
+.. autofunction:: crt1
 
-.. autofunction:: sympy.ntheory.modular.crt2
+.. autofunction:: crt2
 
-.. autofunction:: sympy.ntheory.modular.solve_congruence
+.. autofunction:: solve_congruence
 
 .. module:: sympy.ntheory.multinomial
 
