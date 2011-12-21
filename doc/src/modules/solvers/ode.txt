@@ -51,10 +51,6 @@ These functions are intended for internal use by :func:`dsolve` and others.  Non
 ^^^^^^^^^^^^^^^^^^^
 .. automethod:: sympy.solvers.ode.constantsimp
 
-:obj:`Riccati_special_minus2`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: sympy.solvers.ode.ode_Riccati_special_minus2
-
 :obj:`sol_simplicity`
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: sympy.solvers.ode.ode_sol_simplicity
@@ -86,6 +82,10 @@ These functions are intended for internal use by :func:`dsolve` and others.  Non
 :obj:`Liouville`
 ^^^^^^^^^^^^^^^^
 .. automethod:: sympy.solvers.ode.ode_Liouville
+
+:obj:`Riccati_special_minus2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_Riccati_special_minus2
 
 :obj:`nth_linear_constant_coeff_homogeneous`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

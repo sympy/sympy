@@ -22,6 +22,22 @@ is the symbol that we want to solve the equation for.
 
 .. automethod:: sympy.solvers.solve
 
+.. automethod:: sympy.solvers.solve_linear
+
+.. automethod:: sympy.solvers.solve_linear_system
+
+.. automethod:: sympy.solvers.solve_linear_system_LU
+
+.. automethod:: sympy.solvers.solve_undetermined_coeffs
+
+.. automethod:: sympy.solvers.tsolve
+
+.. automethod:: sympy.solvers.nsolve
+
+.. automethod:: sympy.solvers.check_assumptions
+
+.. automethod:: sympy.solvers.checksol
+
 Ordinary Differential equations (ODEs)
 --------------------------------------
 
@@ -35,3 +51,22 @@ Partial Differential Equations (PDEs)
 .. automethod:: sympy.solvers.pde.pde_separate_add
 
 .. automethod:: sympy.solvers.pde.pde_separate_mul
+
+Recurrence Equtions
+-------------------
+
+.. automethod:: sympy.solvers.recurr.rsolve
+
+.. automethod:: sympy.solvers.recurr.rsolve_poly
+
+.. automethod:: sympy.solvers.recurr.rsolve_ratio
+
+.. automethod:: sympy.solvers.recurr.rsolve_hyper
+
+Systems of Polynomial Equations
+-------------------------------
+
+.. automethod:: sympy.solvers.polysys.solve_poly_system
+
+.. automethod:: sympy.solvers.polysys.solve_triangulated
+
