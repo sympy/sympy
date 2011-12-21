@@ -369,12 +369,12 @@ def solve(f, *symbols, **flags):
             >>> from sympy import solve, Poly, Eq, Function, exp
             >>> from sympy.abc import x, y, z, a, b
 
-            o boolean or univariate Relational
+            * boolean or univariate Relational
 
                 >>> solve(x < 3)
                 And(im(x) == 0, re(x) < 3)
 
-            o single expression and single symbol that is in the expression
+            * single expression and single symbol that is in the expression
 
                 >>> solve(x - y, x)
                 [y]
@@ -389,17 +389,17 @@ def solve(f, *symbols, **flags):
                 >>> solve(x**4 - 1, x)
                 [-1, 1, -I, I]
 
-            o single expression with no symbol that is in the expression
+            * single expression with no symbol that is in the expression
 
                 >>> solve(3, x)
                 []
                 >>> solve(x - 3, y)
                 []
 
-            o when no symbol is given (or are given as an unordered set) then
-            all free symbols will be used. A univariate equation will always
-            return a list of solutions; otherwise, a list of mappings will be
-            returned.
+            * when no symbol is given (or are given as an unordered set) then
+              all free symbols will be used. A univariate equation will always
+              return a list of solutions; otherwise, a list of mappings will be
+              returned.
 
                 for single equations
                     >>> solve(x - 3)
@@ -418,10 +418,10 @@ def solve(f, *symbols, **flags):
                     >>> solve([x - 2, x**2 + f(x)], set([f(x), x]))
                     [{x: 2, f(x): -4}]
 
-            o when a Function or Derivative is given as a symbol, it is
-            isolated algebraically and an implicit solution may be obtained;
-            to obtain the solution for a function within a derivative, use
-            dsolve.
+            * when a Function or Derivative is given as a symbol, it is
+              isolated algebraically and an implicit solution may be obtained;
+              to obtain the solution for a function within a derivative, use
+              dsolve.
 
                 >>> solve(f(x) - x, f(x))
                 [x]
@@ -439,7 +439,7 @@ def solve(f, *symbols, **flags):
                 >>> solve(x + exp(x), x, implicit=True)
                 [-exp(x)]
 
-            o single expression and more than 1 symbol
+            * single expression and more than 1 symbol
 
                 when there is a linear solution
                     >>> solve(x - y**2, x, y)
@@ -466,7 +466,7 @@ def solve(f, *symbols, **flags):
                     >>> solve(x**2 - y**2/exp(x), y, x)
                     [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
-            o iterable of one or more of the above
+            * iterable of one or more of the above
 
                 involving relationals or bools
                     >>> solve([x < 3, x - 2])
@@ -1971,10 +1971,10 @@ def unrad(eq, *syms, **flags):
     ``flags`` are used internally for communication during recursive calls.
 
     Radicals can be removed from an expression if:
-        o   all bases of the radicals are the same; a change of variables is
+        *   all bases of the radicals are the same; a change of variables is
             done in this case.
-        o   if all radicals appear in one term of the expression
-        o   there are only 4 terms with sqrt() factors or there are less than
+        *   if all radicals appear in one term of the expression
+        *   there are only 4 terms with sqrt() factors or there are less than
             four terms having sqrt() factors
 
     Examples

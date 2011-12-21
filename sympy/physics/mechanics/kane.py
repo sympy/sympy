@@ -15,14 +15,13 @@ class Kane(object):
 
     The attributes are for equations in the form [M] udot = forcing
 
-    .. |auxdesc| replace:: If applicable, the set of auxiliary Kane's
-                           equations used to solve for non-contributing
-                           forces.
 
     Attributes
     ==========
     auxiliary : Matrix
-        |auxdesc|
+        If applicable, the set of auxiliary Kane's
+        equations used to solve for non-contributing
+        forces.
     mass_matrix : Matrix
         The system's mass matrix
     forcing : Matrix

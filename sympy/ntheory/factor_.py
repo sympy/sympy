@@ -771,33 +771,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         - ``factorint(0)`` returns ``{0:1}``
         - ``factorint(-n)`` adds ``-1:1`` to the factors and then factors ``n``
 
-    Algorithm:
-
-    The function switches between multiple algorithms. Trial division
-    quickly finds small factors (of the order 1-5 digits), and finds
-    all large factors if given enough time. The Pollard rho and p-1
-    algorithms are used to find large factors ahead of time; they
-    will often find factors of the order of 10 digits within a few
-    seconds:
-
-    >>> factors = factorint(12345678910111213141516)
-    >>> for base, exp in sorted(factors.items()):
-    ...     print base, exp
-    ...
-    2 2
-    2507191691 1
-    1231026625769 1
-
-    Any of these methods can optionally be disabled with the following
-    boolean parameters:
-
-        - ``use_trial``: Toggle use of trial division
-        - ``use_rho``: Toggle use of Pollard's rho method
-        - ``use_pm1``: Toggle use of Pollard's p-1 method
-
-    ``factorint`` also periodically checks if the remaining part is
-    a prime number or a perfect power, and in those cases stops.
-
     Partial Factorization:
 
     If ``limit`` (> 3) is specified, the search is stopped after performing
@@ -881,6 +854,34 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     Notes
     =====
+
+    Algorithm:
+
+    The function switches between multiple algorithms. Trial division
+    quickly finds small factors (of the order 1-5 digits), and finds
+    all large factors if given enough time. The Pollard rho and p-1
+    algorithms are used to find large factors ahead of time; they
+    will often find factors of the order of 10 digits within a few
+    seconds:
+
+    >>> factors = factorint(12345678910111213141516)
+    >>> for base, exp in sorted(factors.items()):
+    ...     print base, exp
+    ...
+    2 2
+    2507191691 1
+    1231026625769 1
+
+    Any of these methods can optionally be disabled with the following
+    boolean parameters:
+
+        - ``use_trial``: Toggle use of trial division
+        - ``use_rho``: Toggle use of Pollard's rho method
+        - ``use_pm1``: Toggle use of Pollard's p-1 method
+
+    ``factorint`` also periodically checks if the remaining part is
+    a prime number or a perfect power, and in those cases stops.
+
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
 

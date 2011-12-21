@@ -128,46 +128,46 @@ class bernoulli(Function):
     Bernoulli numbers / Bernoulli polynomials
 
     The Bernoulli numbers are a sequence of rational numbers
-    defined by B_0 = 1 and the recursive relation (n > 0)
+    defined by B_0 = 1 and the recursive relation (n > 0)::
 
-            n
-           ___
-          \      / n + 1 \
-      0 =  )     |       | * B .
-          /___   \   k   /    k
-          k = 0
+                n
+               ___
+              \      / n + 1 \
+          0 =  )     |       | * B .
+              /___   \   k   /    k
+              k = 0
 
     They are also commonly defined by their exponential generating
     function, which is x/(exp(x) - 1). For odd indices > 1, the
     Bernoulli numbers are zero.
 
-    The Bernoulli polynomials satisfy the analogous formula
+    The Bernoulli polynomials satisfy the analogous formula::
 
-                n
-               ___
-              \      / n \         n-k
-      B (x) =  )     |   | * B  * x   .
-       n      /___   \ k /    k
-              k = 0
+                    n
+                   ___
+                  \      / n \         n-k
+          B (x) =  )     |   | * B  * x   .
+           n      /___   \ k /    k
+                  k = 0
 
     Bernoulli numbers and Bernoulli polynomials are related as
     B_n(0) = B_n.
 
-    We compute Bernoulli numbers using Ramanujan's formula
+    We compute Bernoulli numbers using Ramanujan's formula::
 
-                               / n + 3 \
-      B   =  (A(n) - S(n))  /  |       |
-       n                       \   n   /
+                                   / n + 3 \
+          B   =  (A(n) - S(n))  /  |       |
+           n                       \   n   /
 
     where A(n) = (n+3)/3 when n = 0 or 2 (mod 6), A(n) = -(n+3)/6
-    when n = 4 (mod 6), and
+    when n = 4 (mod 6), and::
 
-             [n/6]
-              ___
-             \      /  n + 3  \
-      S(n) =  )     |         | * B
-             /___   \ n - 6*k /    n-6*k
-             k = 1
+                 [n/6]
+                  ___
+                 \      /  n + 3  \
+          S(n) =  )     |         | * B
+                 /___   \ n - 6*k /    n-6*k
+                 k = 1
 
     This formula is similar to the sum given in the definition, but
     cuts 2/3 of the terms. For Bernoulli polynomials, we use the
@@ -265,32 +265,32 @@ class bell(Function):
     r"""
     Bell numbers / Bell polynomials
 
-    The Bell numbers satisfy B_0 = 1 and
+    The Bell numbers satisfy B_0 = 1 and::
 
-             n-1
-             ___
-            \      / n - 1 \
-      B   =  )     |       | * B .
-       n    /___   \   k   /    k
-            k = 0
-
-    They are also given by
-
-                  oo
-                 ___    n
-            1   \      k
-      B   = - *  )     --.
-       n    e   /___   k!
+                 n-1
+                 ___
+                \      / n - 1 \
+          B   =  )     |       | * B .
+           n    /___   \   k   /    k
                 k = 0
 
-    The Bell polynomials are given by B_0(x) = 1 and
+    They are also given by::
 
-                    n-1
-                    ___
-                   \      / n - 1 \
-      B (x)  = x *  )     |       | * B   (x).
-       n           /___   \ k - 1 /    k-1
-                   k = 1
+                      oo
+                     ___    n
+                1   \      k
+          B   = - *  )     --.
+           n    e   /___   k!
+                    k = 0
+
+    The Bell polynomials are given by B_0(x) = 1 and::
+
+                        n-1
+                        ___
+                       \      / n - 1 \
+          B (x)  = x *  )     |       | * B   (x).
+           n           /___   \ k - 1 /    k-1
+                       k = 1
 
     * bell(n) gives the nth Bell number, B_n
     * bell(n, x) gives the nth Bell polynomial, B_n(x)
@@ -361,14 +361,14 @@ class harmonic(Function):
 
     The nth harmonic number is given by 1 + 1/2 + 1/3 + ... + 1/n.
 
-    More generally,
+    More generally::
 
-               n
-              ___
-             \       -m
-      H    =  )     k   .
-       n,m   /___
-             k = 1
+                   n
+                  ___
+                 \       -m
+          H    =  )     k   .
+           n,m   /___
+                 k = 1
 
     As n -> oo, H_{n,m} -> zeta(m) (the Riemann zeta function)
 
@@ -427,17 +427,17 @@ class euler(Function):
     r"""
     Euler numbers
 
-    The euler numbers are given by
+    The euler numbers are given by::
 
-              2*n+1   k
-               ___   ___            j          2*n+1
-              \     \     / k \ (-1)  * (k-2*j)
-      E   = I  )     )    |   | --------------------
-       2n     /___  /___  \ j /      k    k
-              k = 1 j = 0           2  * I  * k
+                  2*n+1   k
+                   ___   ___            j          2*n+1
+                  \     \     / k \ (-1)  * (k-2*j)
+          E   = I  )     )    |   | --------------------
+           2n     /___  /___  \ j /      k    k
+                  k = 1 j = 0           2  * I  * k
 
-      E     = 0
-       2n+1
+          E     = 0
+           2n+1
 
     * euler(n) gives the n-th Euler number, E_n
 
@@ -509,11 +509,11 @@ class catalan(Function):
     r"""
     Catalan numbers
 
-    The n-th catalan number is given by
+    The n-th catalan number is given by::
 
-             1   / 2*n \
-      C  = ----- |     |
-       n   n + 1 \  n  /
+                 1   / 2*n \
+          C  = ----- |     |
+           n   n + 1 \  n  /
 
     * catalan(n) gives the n-th Catalan number, C_n
 
