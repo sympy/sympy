@@ -85,7 +85,6 @@ from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.ccode import ccode, CCodePrinter
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
-from sympy.utilities import flatten
 
 
 
