@@ -24,6 +24,8 @@ from doctest import DocTestFinder, DocTestRunner
 import re as pre
 import random
 import subprocess
+import time
+import signal
 
 from sympy.core.cache import clear_cache
 
@@ -31,6 +33,9 @@ from sympy.core.cache import clear_cache
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
 # it here to make utf8 files work in Python 2.5.
 pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
+
+class Skipped(Exception):
+        pass
 
 def _indent(s, indent=4):
     """
@@ -171,6 +176,8 @@ def test(*paths, **kwargs):
     seed = kwargs.get("seed", None)
     if seed is None:
         seed = random.randrange(100000000)
+    timeout = kwargs.get("timeout", False)
+    slow = kwargs.get("slow", False)
     r = PyTestReporter(verbose, tb, colors)
     t = SymPyTests(r, kw, post_mortem, seed)
 
@@ -194,7 +201,7 @@ def test(*paths, **kwargs):
                     break
         t._testfiles.extend(matched)
 
-    return t.test(sort=sort)
+    return t.test(sort=sort, timeout=timeout, slow=slow)
 
 def doctest(*paths, **kwargs):
     """
@@ -505,7 +512,7 @@ class SymPyTests(object):
         self._testfiles = []
         self._seed = seed
 
-    def test(self, sort=False):
+    def test(self, sort=False, timeout=False, slow=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -520,14 +527,14 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort)
+                self.test_file(f, sort, timeout, slow)
             except KeyboardInterrupt:
                 print " interrupted by user"
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename, sort=True):
+    def test_file(self, filename, sort=True, timeout=False, slow=False):
         clear_cache()
         self._count += 1
         gl = {'__file__':filename}
@@ -542,6 +549,9 @@ class SymPyTests(object):
         pytestfile = ""
         if "XFAIL" in gl:
             pytestfile = inspect.getsourcefile(gl["XFAIL"])
+        pytestfile2 = ""
+        if "SLOW" in gl:
+            pytestfile2 = inspect.getsourcefile(gl["SLOW"])
         disabled = gl.get("disabled", False)
         if disabled:
             funcs = []
@@ -553,7 +563,10 @@ class SymPyTests(object):
                                                  (inspect.isfunction(gl[f])
                                                     or inspect.ismethod(gl[f])) and
                                                  (inspect.getsourcefile(gl[f]) == filename or
-                                                   inspect.getsourcefile(gl[f]) == pytestfile)]
+                                                   inspect.getsourcefile(gl[f]) == pytestfile or
+                                                   inspect.getsourcefile(gl[f]) == pytestfile2)]
+            if slow:
+               funcs = [f for f in funcs if getattr(f, '_slow', False)]
             # Sorting of XFAILed functions isn't fixed yet :-(
             funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
             i = 0
@@ -581,10 +594,20 @@ class SymPyTests(object):
         for f in funcs:
             self._reporter.entering_test(f)
             try:
-                f()
+                if getattr(f, '_slow', False) and not slow:
+                    raise Skipped("Slow")
+                if timeout:
+                    self._timeout(f, timeout)
+                else:
+                    f()
             except KeyboardInterrupt:
-                raise
+                if getattr(f, '_slow', False):
+                    self._reporter.test_skip("KeyboardInterrupt")
+                else:
+                    raise
             except Exception:
+                if timeout:
+                    signal.alarm(0) # Disable the alarm. It could not be handled before.
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
                     self._reporter.test_fail((t, v, tr))
@@ -603,6 +626,15 @@ class SymPyTests(object):
             else:
                 self._reporter.test_pass()
         self._reporter.leaving_filename()
+
+    def _timeout(self, function, timeout):
+        def callback(x,y):
+            signal.alarm(0)
+            raise Skipped("Timeout")
+        handler = signal.signal(signal.SIGALRM, callback)
+        signal.alarm(timeout) # Set an alarm with a given timeout
+        function()
+        signal.alarm(0) # Disable the alarm
 
     def matches(self, x):
         """
@@ -1309,12 +1341,12 @@ class PyTestReporter(Reporter):
         self.write("F", "Red")
         self._active_file_error = True
 
-    def test_pass(self):
+    def test_pass(self, char="."):
         self._passed += 1
         if self._verbose:
             self.write("ok", "Green")
         else:
-            self.write(".", "Green")
+            self.write(char, "Green")
 
     def test_skip(self, v):
         if sys.version_info[:2] < (2, 6):
@@ -1322,10 +1354,14 @@ class PyTestReporter(Reporter):
         else:
             message = str(v)
         self._skipped += 1
-        self.write("s", "Green")
+        char = "s"
+        if message == "KeyboardInterrupt": char = "K"
+        elif message == "Timeout": char = "T"
+        elif message == "Slow": char = "w"
+        self.write(char, "Blue")
         if self._verbose:
-            self.write(" - ", "Green")
-            self.write(message, "Green")
+            self.write(" - ", "Blue")
+            self.write(message, "Blue")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))

@@ -5,6 +5,8 @@
 
 import sys
 import functools
+import signal
+import os
 
 try:
     # tested with py-lib 0.9.0
@@ -57,8 +59,15 @@ if not USE_PYTEST:
         def wrapper():
             try:
                 func()
-            except Exception:
-                raise XFail(func.func_name)
+            except Exception, e:
+                if sys.version_info[:2] < (2, 6):
+                    message = getattr(e, 'message', '')
+                else:
+                    message = str(e)
+                if message != "Timeout":
+                    raise XFail(func.func_name)
+                else:
+                    raise Skipped("Timeout")
             raise XPass(func.func_name)
 
         wrapper = functools.update_wrapper(wrapper, func)
@@ -161,3 +170,11 @@ def SKIP(reason):
         return func_wrapper
 
     return wrapper
+
+def slow(func):
+    func._slow = True
+    def func_wrapper():
+        func()
+
+    func_wrapper = functools.update_wrapper(func_wrapper, func)
+    return func_wrapper

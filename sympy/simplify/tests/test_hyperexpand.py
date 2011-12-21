@@ -7,15 +7,11 @@ from sympy import hyper, I, S, meijerg, Piecewise
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
 from sympy.utilities.randtest import test_numerically as tn
-from sympy.utilities.pytest import XFAIL, skip
+from sympy.utilities.pytest import XFAIL, skip, slow
 from random import randrange
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi)
-
-# whether to veryify that we can indeed do everything in the tables
-# beware: this takes a *long* time
-do_tables = False
 
 def test_hyperexpand():
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
@@ -27,15 +23,6 @@ def test_hyperexpand():
     assert hyperexpand(z*hyper([], [S('3/2')], -z**2/4)) == sin(z)
     assert hyperexpand(hyper([S('1/2'), S('1/2')], [S('3/2')], z**2)*z) \
            == asin(z)
-
-def tables(fn):
-    def wrapper():
-        skip("This is too slow.")
-    wrapper.__name__ = fn.__name__
-    if do_tables:
-        return fn
-    else:
-        return wrapper
 
 def can_do(ap, bq, numerical=True):
     r = hyperexpand(hyper(ap, bq, z))
@@ -403,7 +390,7 @@ def test_meijerg_confluence():
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0, 0])
     assert u([1, 1], [2, 2, 5], [1, 1, 6], [0])
 
-@tables
+@slow
 def test_prudnikov_misc():
     assert can_do([1, (3 + I)/2, (3 - I)/2], [S(3)/2, 2])
     assert can_do([S.Half, a - 1], [S(3)/2, a + 1])
@@ -423,7 +410,7 @@ def test_prudnikov_misc():
     assert can_do([a, a+S.Half], [2*a, b, 2*a - b + 1])
     assert can_do([a, a+S.Half], [S.Half, 2*a, 2*a + S.Half])
 
-@tables
+@slow
 def test_prudnikov_1():
     # A. P. Prudnikov, Yu. A. Brychkov and O. I. Marichev (1990).
     # Integrals and Series: More Special Functions, Vol. 3,.
@@ -448,7 +435,7 @@ def test_prudnikov_1():
     assert can_do([a], [2*a + 1])
     assert can_do([a], [2*a - 1])
 
-@tables
+@slow
 def test_prudnikov_2():
     h = S.Half
     assert can_do([-h, -h], [h])
@@ -465,7 +452,7 @@ def test_prudnikov_2():
           for m in [1, 2, 3, 4]:
               assert can_do([p, n], [m])
 
-@tables
+@slow
 def test_prudnikov_3():
     h = S.Half
     assert can_do([S(1)/4, S(3)/4], [h])
@@ -480,7 +467,7 @@ def test_prudnikov_3():
               assert can_do([p, m], [n])
 
 
-@tables
+@slow
 def test_prudnikov_4():
     h = S.Half
     for p in [3*h, 5*h, 7*h]:
@@ -491,7 +478,7 @@ def test_prudnikov_4():
           for m in [2, 3, 4]:
               assert can_do([p, m], [n])
 
-@tables
+@slow
 def test_prudnikov_5():
     h = S.Half
 
@@ -514,7 +501,7 @@ def test_prudnikov_5():
                 for s in [1, 2, 3]:
                     assert can_do([-h, p, q], [r, s])
 
-@tables
+@slow
 def test_prudnikov_6():
     h = S.Half
 
@@ -539,7 +526,7 @@ def test_prudnikov_6():
 
     # pages 435 to 457 contain more PFDD and stuff like this
 
-@tables
+@slow
 def test_prudnikov_7():
     assert can_do([3], [6])
 
@@ -550,7 +537,7 @@ def test_prudnikov_7():
         for n in [-h, h, 3*h, 5*h, 7*h, 1, 2, 3, 4]:
             assert can_do([m], [n])
 
-@tables
+@slow
 def test_prudnikov_8():
     h = S.Half
 
@@ -576,7 +563,7 @@ def test_prudnikov_8():
                     if c <= b:
                         assert can_do([a, b], [c, d])
 
-@tables
+@slow
 def test_prudnikov_9():
     # 7.13.1 [we have a general formula ... so this is a bit pointless]
     for i in range(9):
@@ -584,7 +571,7 @@ def test_prudnikov_9():
     for i in range(5):
         assert can_do([], [-(2*S(i) + 1)/2])
 
-@tables
+@slow
 def test_prudnikov_10():
     # 7.14.2
     h = S.Half
@@ -606,7 +593,7 @@ def test_prudnikov_10():
     for m in [h, 1, 2, 5*h, 3, 7*h, 4]:
        assert can_do([7*h], [5*h, m])
 
-@tables
+@slow
 def test_prudnikov_11():
     # 7.15
     assert can_do([a, a+S.Half], [2*a, b, 2*a - b])
@@ -617,7 +604,7 @@ def test_prudnikov_11():
     assert can_do([S(5)/4, S(3)/4], [S(3)/2, S(3)/2, 1])
     assert can_do([S(5)/4, S(7)/4], [S(3)/2, S(5)/2, 2])
 
-@tables
+@slow
 def test_prudnikov_12():
     # 7.16
     assert can_do([], [a, a + S.Half, 2*a], False) # branches only agree for some z!
