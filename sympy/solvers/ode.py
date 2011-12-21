@@ -264,34 +264,39 @@ def preprocess(expr, func=None, hint='_Integral'):
 
     Apply doit to derivatives that contain more than the function
     of interest:
-        >>> preprocess(Derivative(f(x) + x, x))
-        (Derivative(f(x), x) + 1, f(x))
+
+    >>> preprocess(Derivative(f(x) + x, x))
+    (Derivative(f(x), x) + 1, f(x))
 
     Do others if the differentiation variable(s) intersect with those
     of the function of interest or contain the function of interest:
-        >>> preprocess(Derivative(g(x), y, z), f(y))
-        (0, f(y))
-        >>> preprocess(Derivative(f(y), z), f(y))
-        (0, f(y))
+
+    >>> preprocess(Derivative(g(x), y, z), f(y))
+    (0, f(y))
+    >>> preprocess(Derivative(f(y), z), f(y))
+    (0, f(y))
 
     Do others if the hint doesn't end in '_Integral' (the default
     assumes that it does):
-        >>> preprocess(Derivative(g(x), y), f(x))
-        (Derivative(g(x), y), f(x))
-        >>> preprocess(Derivative(f(x), y), f(x), hint='')
-        (0, f(x))
+
+    >>> preprocess(Derivative(g(x), y), f(x))
+    (Derivative(g(x), y), f(x))
+    >>> preprocess(Derivative(f(x), y), f(x), hint='')
+    (0, f(x))
 
     Don't do any derivatives if hint is None:
-        >>> preprocess(Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x), hint=None)
-        (Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x))
+
+    >>> preprocess(Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x), hint=None)
+    (Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x))
 
     If it's not clear what the function of interest is, it must be given:
-        >>> eq = Derivative(f(x) + g(x), x)
-        >>> preprocess(eq, g(x))
-        (Derivative(f(x), x) + Derivative(g(x), x), g(x))
-        >>> try: preprocess(eq)
-        ... except ValueError: print "A ValueError was raised."
-        A ValueError was raised.
+
+    >>> eq = Derivative(f(x) + g(x), x)
+    >>> preprocess(eq, g(x))
+    (Derivative(f(x), x) + Derivative(g(x), x), g(x))
+    >>> try: preprocess(eq)
+    ... except ValueError: print "A ValueError was raised."
+    A ValueError was raised.
 
     """
 
@@ -446,22 +451,22 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     Examples
     ========
 
-        >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
-        f(x) == C1*sin(3*x) + C2*cos(3*x)
-        >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-        ...     hint='separable', simplify=False)
-        -log(sin(f(x))**2 - 1)/2 == C1 + log(sin(x)**2 - 1)/2
-        >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-        ...     hint='1st_exact')
-        f(x) == acos(C1/cos(x))
-        >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-        ... hint='best')
-        f(x) == acos(C1/cos(x))
-        >>> # Note that even though separable is the default, 1st_exact produces
-        >>> # a simpler result in this case.
+    >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
+    f(x) == C1*sin(3*x) + C2*cos(3*x)
+    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
+    ...     hint='separable', simplify=False)
+    -log(sin(f(x))**2 - 1)/2 == C1 + log(sin(x)**2 - 1)/2
+    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
+    ...     hint='1st_exact')
+    f(x) == acos(C1/cos(x))
+    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
+    ... hint='best')
+    f(x) == acos(C1/cos(x))
+    >>> # Note that even though separable is the default, 1st_exact produces
+    >>> # a simpler result in this case.
 
     """
     # TODO: Implement initial conditions
@@ -587,7 +592,8 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     See sympy.ode.allhints or the sympy.ode docstring for a list of all
     supported hints that can be returned from classify_ode.
 
-    **Notes on Hint Names**
+    Notes on Hint Names
+    ===================
 
     *"_Integral"*
 
@@ -655,21 +661,21 @@ def classify_ode(eq, func=None, dict=False, prep=True):
 
     Examples
     ========
-        >>> from sympy import Function, classify_ode, Eq
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-        ('separable', '1st_linear', '1st_homogeneous_coeff_best',
-        '1st_homogeneous_coeff_subs_indep_div_dep',
-        '1st_homogeneous_coeff_subs_dep_div_indep',
-        'nth_linear_constant_coeff_homogeneous', 'separable_Integral',
-        '1st_linear_Integral',
-        '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-        '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-        >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
-        ('nth_linear_constant_coeff_undetermined_coefficients',
-        'nth_linear_constant_coeff_variation_of_parameters',
-        'nth_linear_constant_coeff_variation_of_parameters_Integral')
+    >>> from sympy import Function, classify_ode, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
+    ('separable', '1st_linear', '1st_homogeneous_coeff_best',
+    '1st_homogeneous_coeff_subs_indep_div_dep',
+    '1st_homogeneous_coeff_subs_dep_div_indep',
+    'nth_linear_constant_coeff_homogeneous', 'separable_Integral',
+    '1st_linear_Integral',
+    '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+    '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
+    >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
+    ('nth_linear_constant_coeff_undetermined_coefficients',
+    'nth_linear_constant_coeff_variation_of_parameters',
+    'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
     """
     from sympy import expand
@@ -906,29 +912,31 @@ def odesimp(eq, func, order, hint):
 
     Examples
     ========
-        >>> from sympy import sin, symbols, dsolve, pprint, Function
-        >>> from sympy.solvers.ode import odesimp
-        >>> x , u2, C1= symbols('x,u2,C1')
-        >>> f = Function('f')
+    >>> from sympy import sin, symbols, dsolve, pprint, Function
+    >>> from sympy.solvers.ode import odesimp
+    >>> x , u2, C1= symbols('x,u2,C1')
+    >>> f = Function('f')
 
-        >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
-        ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-        ... simplify=False)
-        >>> pprint(eq)
-                      x
-                     ----
-                     f(x)
-                       /
-                      |
-                      |   /      /1 \    \
-                      |  -|u2*sin|--| + 1|
-           /f(x)\     |   \      \u2/    /
-        log|----| -   |  ----------------- d(u2) = 0
-           \ C1 /     |       2    /1 \
-                      |     u2 *sin|--|
-                      |            \u2/
-                      |
-                     /
+    >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
+    ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+    ... simplify=False)
+    >>> pprint(eq)
+                  x
+                 ----
+                 f(x)
+                   /
+                  |
+                  |   /      /1 \    \
+                  |  -|u2*sin|--| + 1|
+       /f(x)\     |   \      \u2/    /
+    log|----| -   |  ----------------- d(u2) = 0
+       \ C1 /     |       2    /1 \
+                  |     u2 *sin|--|
+                  |            \u2/
+                  |
+                 /
+
+    ::
 
         >>  pprint(odesimp(eq, f(x), 1,
         ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
@@ -1074,15 +1082,15 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
     Examples
     ========
-        >>> from sympy import Eq, Function, checkodesol, symbols
-        >>> x, C1 = symbols('x,C1')
-        >>> f = Function('f')
-        >>> checkodesol(f(x).diff(x), Eq(f(x), C1))
-        (True, 0)
-        >>> assert checkodesol(f(x).diff(x), C1)[0]
-        >>> assert not checkodesol(f(x).diff(x), x)[0]
-        >>> checkodesol(f(x).diff(x, 2), x**2)
-        (False, 2)
+    >>> from sympy import Eq, Function, checkodesol, symbols
+    >>> x, C1 = symbols('x,C1')
+    >>> f = Function('f')
+    >>> checkodesol(f(x).diff(x), Eq(f(x), C1))
+    (True, 0)
+    >>> assert checkodesol(f(x).diff(x), C1)[0]
+    >>> assert not checkodesol(f(x).diff(x), x)[0]
+    >>> checkodesol(f(x).diff(x, 2), x**2)
+    (False, 2)
 
     """
     if not isinstance(ode, Equality):
@@ -1293,23 +1301,23 @@ def ode_sol_simplicity(sol, func, trysolving=True):
     This function is designed to be passed to min as the key argument,
     such as min(listofsolutions, key=lambda i: ode_sol_simplicity(i, f(x))).
 
-        >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
-        >>> from sympy.solvers.ode import ode_sol_simplicity
-        >>> x, C1, C2 = symbols('x, C1, C2')
-        >>> f = Function('f')
+    >>> from sympy import symbols, Function, Eq, tan, cos, sqrt, Integral
+    >>> from sympy.solvers.ode import ode_sol_simplicity
+    >>> x, C1, C2 = symbols('x, C1, C2')
+    >>> f = Function('f')
 
-        >>> ode_sol_simplicity(Eq(f(x), C1*x**2), f(x))
-        -2
-        >>> ode_sol_simplicity(Eq(x**2 + f(x), C1), f(x))
-        -1
-        >>> ode_sol_simplicity(Eq(f(x), C1*Integral(2*x, x)), f(x))
-        oo
-        >>> eq1 = Eq(f(x)/tan(f(x)/(2*x)), C1)
-        >>> eq2 = Eq(f(x)/tan(f(x)/(2*x) + f(x)), C2)
-        >>> [ode_sol_simplicity(eq, f(x)) for eq in [eq1, eq2]]
-        [26, 33]
-        >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
-        f(x)/tan(f(x)/(2*x)) == C1
+    >>> ode_sol_simplicity(Eq(f(x), C1*x**2), f(x))
+    -2
+    >>> ode_sol_simplicity(Eq(x**2 + f(x), C1), f(x))
+    -1
+    >>> ode_sol_simplicity(Eq(f(x), C1*Integral(2*x, x)), f(x))
+    oo
+    >>> eq1 = Eq(f(x)/tan(f(x)/(2*x)), C1)
+    >>> eq2 = Eq(f(x)/tan(f(x)/(2*x) + f(x)), C2)
+    >>> [ode_sol_simplicity(eq, f(x)) for eq in [eq1, eq2]]
+    [26, 33]
+    >>> min([eq1, eq2], key=lambda i: ode_sol_simplicity(i, f(x)))
+    f(x)/tan(f(x)/(2*x)) == C1
 
     """
     #TODO: write examples
@@ -1409,15 +1417,15 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
 
     Examples
     ========
-        >>> from sympy import symbols
-        >>> from sympy.solvers.ode import constantsimp
-        >>> C1, C2, C3, x, y = symbols('C1,C2,C3,x,y')
-        >>> constantsimp(2*C1*x, x, 3)
-        C1*x
-        >>> constantsimp(C1 + 2 + x + y, x, 3)
-        C1 + x
-        >>> constantsimp(C1*C2 + 2 + x + y + C3*x, x, 3)
-        C1 + C3*x
+    >>> from sympy import symbols
+    >>> from sympy.solvers.ode import constantsimp
+    >>> C1, C2, C3, x, y = symbols('C1,C2,C3,x,y')
+    >>> constantsimp(2*C1*x, x, 3)
+    C1*x
+    >>> constantsimp(C1 + 2 + x + y, x, 3)
+    C1 + x
+    >>> constantsimp(C1*C2 + 2 + x + y + C3*x, x, 3)
+    C1 + C3*x
 
     """
     # This function works recursively.  The idea is that, for Mul,
@@ -1568,25 +1576,25 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
 
     Examples
     ========
-        >>> from sympy import symbols, Eq, pprint
-        >>> from sympy.solvers.ode import constant_renumber
-        >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
+    >>> from sympy import symbols, Eq, pprint
+    >>> from sympy.solvers.ode import constant_renumber
+    >>> x, C0, C1, C2, C3, C4 = symbols('x,C:5')
 
-        Only constants in the given range (inclusive) are renumbered;
-        the renumbering always starts from 1:
+    Only constants in the given range (inclusive) are renumbered;
+    the renumbering always starts from 1:
 
-        >>> constant_renumber(C1 + C3 + C4, 'C', 1, 3)
-        C1 + C2 + C4
-        >>> constant_renumber(C0 + C1 + C3 + C4, 'C', 2, 4)
-        C0 + 2*C1 + C2
-        >>> constant_renumber(C0 + 2*C1 + C2, 'C', 0, 1)
-        C1 + 3*C2
-        >>> pprint(C2 + C1*x + C3*x**2)
-                        2
-        C1*x + C2 + C3*x
-        >>> pprint(constant_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
-                        2
-        C1 + C2*x + C3*x
+    >>> constant_renumber(C1 + C3 + C4, 'C', 1, 3)
+    C1 + C2 + C4
+    >>> constant_renumber(C0 + C1 + C3 + C4, 'C', 2, 4)
+    C0 + 2*C1 + C2
+    >>> constant_renumber(C0 + 2*C1 + C2, 'C', 0, 1)
+    C1 + 3*C2
+    >>> pprint(C2 + C1*x + C3*x**2)
+                    2
+    C1*x + C2 + C3*x
+    >>> pprint(constant_renumber(C2 + C1*x + C3*x**2, 'C', 1, 3))
+                    2
+    C1 + C2*x + C3*x
 
     """
     if type(expr) in (set, list, tuple):
@@ -1686,16 +1694,16 @@ def ode_order(expr, func):
 
     Examples
     ========
-        >>> from sympy import Function, ode_order
-        >>> from sympy.abc import x
-        >>> f, g = map(Function, ['f', 'g'])
-        >>> ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
-        ... f(x).diff(x), f(x))
-        2
-        >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), f(x))
-        2
-        >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), g(x))
-        3
+    >>> from sympy import Function, ode_order
+    >>> from sympy.abc import x
+    >>> f, g = map(Function, ['f', 'g'])
+    >>> ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
+    ... f(x).diff(x), f(x))
+    2
+    >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), f(x))
+    2
+    >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), g(x))
+    3
 
     """
     a = Wild('a', exclude=[func])
@@ -1755,19 +1763,20 @@ def ode_1st_exact(eq, func, order, match):
 
     Examples
     ========
-        >>> from sympy import Function, dsolve, cos, sin
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
-        ... f(x), hint='1st_exact')
-        x*cos(f(x)) + f(x)**3/3 == C1
+    >>> from sympy import Function, dsolve, cos, sin
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
+    ... f(x), hint='1st_exact')
+    x*cos(f(x)) + f(x)**3/3 == C1
 
-    **References**
-        - http://en.wikipedia.org/wiki/Exact_differential_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 73
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Exact_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 73
 
-        # indirect doctest
+    # indirect doctest
 
     """
     x = func.args[0]
@@ -1799,18 +1808,18 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
 
     Examples
     ========
-        >>> from sympy import Function, dsolve, pprint
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-        ... hint='1st_homogeneous_coeff_best', simplify=False))
-                       /    2    \
-                       | 3*x     |
-                    log|----- + 1|
-                       | 2       |
-           /f(x)\      \f (x)    /
-        log|----| + -------------- = 0
-           \ C1 /         3
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
+    ... hint='1st_homogeneous_coeff_best', simplify=False))
+                   /    2    \
+                   | 3*x     |
+                log|----- + 1|
+                   | 2       |
+       /f(x)\      \f (x)    /
+    log|----| + -------------- = 0
+       \ C1 /         3
 
     **References**
         - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
@@ -1884,25 +1893,26 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
 
     Examples
     ========
-        >>> from sympy import Function, dsolve
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-        ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                     /          3   \
-                     |3*f(x)   f (x)|
-                  log|------ + -----|
-                     |  x         3 |
-           /x \      \           x  /
-        log|--| + ------------------- = 0
-           \C1/            3
+    >>> from sympy import Function, dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
+    ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
+                 /          3   \
+                 |3*f(x)   f (x)|
+              log|------ + -----|
+                 |  x         3 |
+       /x \      \           x  /
+    log|--| + ------------------- = 0
+       \C1/            3
 
-    **References**
-        - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 59
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 59
 
-        # indirect doctest
+    # indirect doctest
 
     """
     x = func.args[0]
@@ -1967,24 +1977,25 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
     Examples
     ========
-        >>> from sympy import Function, pprint
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-        ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
-              ___________
-             /     2
-            /   3*x
-           /   ----- + 1 *f(x) = C1
-        3 /     2
-        \/     f (x)
+    >>> from sympy import Function, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
+    ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
+          ___________
+         /     2
+        /   3*x
+       /   ----- + 1 *f(x) = C1
+    3 /     2
+    \/     f (x)
 
-    **References**
-        - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 59
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Homogeneous_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 59
 
-        # indirect doctest
+    # indirect doctest
 
     """
     x = func.args[0]
@@ -2023,19 +2034,19 @@ def homogeneous_order(eq, *symbols):
 
     Examples
     ========
-        >>> from sympy import Function, homogeneous_order, sqrt
-        >>> from sympy.abc import x, y
-        >>> f = Function('f')
-        >>> homogeneous_order(f(x), f(x)) is None
-        True
-        >>> homogeneous_order(f(x,y), f(y, x), x, y) is None
-        True
-        >>> homogeneous_order(f(x), f(x), x)
-        1
-        >>> homogeneous_order(x**2*f(x)/sqrt(x**2+f(x)**2), x, f(x))
-        2
-        >>> homogeneous_order(x**2+f(x), x, f(x)) is None
-        True
+    >>> from sympy import Function, homogeneous_order, sqrt
+    >>> from sympy.abc import x, y
+    >>> f = Function('f')
+    >>> homogeneous_order(f(x), f(x)) is None
+    True
+    >>> homogeneous_order(f(x,y), f(y, x), x, y) is None
+    True
+    >>> homogeneous_order(f(x), f(x), x)
+    1
+    >>> homogeneous_order(x**2*f(x)/sqrt(x**2+f(x)**2), x, f(x))
+    2
+    >>> homogeneous_order(x**2+f(x), x, f(x)) is None
+    True
 
     """
     from sympy.simplify.simplify import separatevars
@@ -2115,17 +2126,18 @@ def ode_1st_linear(eq, func, order, match):
 
     Examples
     ========
-        >>> f = Function('f')
-        >>> pprint(dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
-        ... f(x), '1st_linear'))
-        f(x) = x*(C1 - cos(x))
+    >>> f = Function('f')
+    >>> pprint(dsolve(Eq(x*diff(f(x), x) - f(x), x**2*sin(x)),
+    ... f(x), '1st_linear'))
+    f(x) = x*(C1 - cos(x))
 
-    **References**
-        - http://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 92
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 92
 
-        # indirect doctest
+    # indirect doctest
 
     """
     x = func.args[0]
@@ -2186,24 +2198,25 @@ def ode_Bernoulli(eq, func, order, match):
 
     Examples
     ========
-        >>> from sympy import Function, dsolve, Eq, pprint, log
-        >>> from sympy.abc import x
-        >>> f = Function('f')
+    >>> from sympy import Function, dsolve, Eq, pprint, log
+    >>> from sympy.abc import x
+    >>> f = Function('f')
 
-        >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
-        ... f(x), hint='Bernoulli'))
-                        1
-        f(x) = -------------------
-                 /     log(x)   1\
-               x*|C1 + ------ + -|
-                 \       x      x/
+    >>> pprint(dsolve(Eq(x*f(x).diff(x) + f(x), log(x)*f(x)**2),
+    ... f(x), hint='Bernoulli'))
+                    1
+    f(x) = -------------------
+             /     log(x)   1\
+           x*|C1 + ------ + -|
+             \       x      x/
 
-    **References**
-        - http://en.wikipedia.org/wiki/Bernoulli_differential_equation
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 95
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Bernoulli_differential_equation
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 95
 
-        # indirect doctest
+    # indirect doctest
 
     """
     x = func.args[0]
@@ -2242,10 +2255,11 @@ def ode_Riccati_special_minus2(eq, func, order, match):
     >>> checkodesol(genform, sol, order=1)[0]
     True
 
-    References:
-    [1] http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
-    [2] http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
-        http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
+    References
+    ==========
+    1. http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+    2. http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+       http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
     """
 
     x = func.args[0]
@@ -2289,21 +2303,22 @@ def ode_Liouville(eq, func, order, match):
 
     Examples
     ========
-        >>> from sympy import Function, dsolve, Eq, pprint
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
-        ... diff(f(x), x)/x, f(x), hint='Liouville'))
-                   ________________           ________________
-        [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
+    >>> from sympy import Function, dsolve, Eq, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(diff(f(x), x, x) + diff(f(x), x)**2/f(x) +
+    ... diff(f(x), x)/x, f(x), hint='Liouville'))
+               ________________           ________________
+    [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
 
 
-    **References**
-        - Goldstein and Braun, "Advanced Methods for the Solution of
-          Differential Equations", pp. 98
-        - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
+    References
+    ==========
+    - Goldstein and Braun, "Advanced Methods for the Solution of
+      Differential Equations", pp. 98
+    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
 
-        # indirect doctest
+    # indirect doctest
 
     """
     # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
@@ -2365,7 +2380,7 @@ def _nth_linear_match(eq, func, order):
     return terms
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
-    """
+    r"""
     Solves an nth order linear homogeneous differential equation with
     constant coefficients.
 
@@ -2394,10 +2409,10 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
     >>> dsolve(f(x).diff(x, 5) + 10*f(x).diff(x) - 2*f(x), f(x),
     ... hint='nth_linear_constant_coeff_homogeneous')
     ... # doctest: +NORMALIZE_WHITESPACE
-    f(x) == C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) + \
-    C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) + \
-    C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) + \
-    C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) + \
+    f(x) == C1*exp(x*RootOf(_x**5 + 10*_x - 2, 0)) +
+    C2*exp(x*RootOf(_x**5 + 10*_x - 2, 1)) +
+    C3*exp(x*RootOf(_x**5 + 10*_x - 2, 2)) +
+    C4*exp(x*RootOf(_x**5 + 10*_x - 2, 3)) +
     C5*exp(x*RootOf(_x**5 + 10*_x - 2, 4))
 
     Note that because this method does not involve integration, there is
@@ -2418,22 +2433,23 @@ def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='s
 
     Examples
     ========
-        >>> from sympy import Function, dsolve, pprint
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> pprint(dsolve(f(x).diff(x, 4) + 2*f(x).diff(x, 3) -
-        ... 2*f(x).diff(x, 2) - 6*f(x).diff(x) + 5*f(x), f(x),
-        ... hint='nth_linear_constant_coeff_homogeneous'))
-                            x                            -2*x
-        f(x) = (C1 + C2*x)*e  + (C3*sin(x) + C4*cos(x))*e
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(f(x).diff(x, 4) + 2*f(x).diff(x, 3) -
+    ... 2*f(x).diff(x, 2) - 6*f(x).diff(x) + 5*f(x), f(x),
+    ... hint='nth_linear_constant_coeff_homogeneous'))
+                        x                            -2*x
+    f(x) = (C1 + C2*x)*e  + (C3*sin(x) + C4*cos(x))*e
 
-    **References**
-        - http://en.wikipedia.org/wiki/Linear_differential_equation
-            section: Nonhomogeneous_equation_with_constant_coefficients
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 211
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Linear_differential_equation
+        section: Nonhomogeneous_equation_with_constant_coefficients
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 211
 
-        # indirect doctest
+    # indirect doctest
 
     """
     x = func.args[0]
@@ -2530,23 +2546,24 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
 
     Examples
     ========
-        >>> from sympy import Function, dsolve, pprint, exp, cos
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> pprint(dsolve(f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) -
-        ... 4*exp(-x)*x**2 + cos(2*x), f(x),
-        ... hint='nth_linear_constant_coeff_undetermined_coefficients'))
-               /             4\
-               |            x |  -x   4*sin(2*x)   3*cos(2*x)
-        f(x) = |C1 + C2*x + --|*e   - ---------- + ----------
-               \            3 /           25           25
+    >>> from sympy import Function, dsolve, pprint, exp, cos
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(f(x).diff(x, 2) + 2*f(x).diff(x) + f(x) -
+    ... 4*exp(-x)*x**2 + cos(2*x), f(x),
+    ... hint='nth_linear_constant_coeff_undetermined_coefficients'))
+           /             4\
+           |            x |  -x   4*sin(2*x)   3*cos(2*x)
+    f(x) = |C1 + C2*x + --|*e   - ---------- + ----------
+           \            3 /           25           25
 
-    **References**
-        - http://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 221
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Method_of_undetermined_coefficients
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 221
 
-        # indirect doctest
+    # indirect doctest
 
     """
     gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
@@ -2673,13 +2690,13 @@ def _undetermined_coefficients_match(expr, x):
 
     Examples
     ========
-        >>> from sympy import log, exp
-        >>> from sympy.solvers.ode import _undetermined_coefficients_match
-        >>> from sympy.abc import x
-        >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
-        {'test': True, 'trialset': set([x*exp(x), exp(-x), exp(x)])}
-        >>> _undetermined_coefficients_match(log(x), x)
-        {'test': False}
+    >>> from sympy import log, exp
+    >>> from sympy.solvers.ode import _undetermined_coefficients_match
+    >>> from sympy.abc import x
+    >>> _undetermined_coefficients_match(9*x*exp(x) + exp(-x), x)
+    {'test': True, 'trialset': set([x*exp(x), exp(-x), exp(x)])}
+    >>> _undetermined_coefficients_match(log(x), x)
+    {'test': False}
 
     """
     from sympy import S
@@ -2834,23 +2851,24 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
 
     Examples
     ========
-        >>> from sympy import Function, dsolve, pprint, exp, log
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
-        ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
-        ... hint='nth_linear_constant_coeff_variation_of_parameters'))
-               /                2    3 /log(x)   11\\  x
-        f(x) = |C1 + C2*x + C3*x  + x *|------ - --||*e
-               \                       \  6      36//
+    >>> from sympy import Function, dsolve, pprint, exp, log
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(f(x).diff(x, 3) - 3*f(x).diff(x, 2) +
+    ... 3*f(x).diff(x) - f(x) - exp(x)*log(x), f(x),
+    ... hint='nth_linear_constant_coeff_variation_of_parameters'))
+           /                2    3 /log(x)   11\\  x
+    f(x) = |C1 + C2*x + C3*x  + x *|------ - --||*e
+           \                       \  6      36//
 
-    **References**
-        - http://en.wikipedia.org/wiki/Variation_of_parameters
-        - http://planetmath.org/encyclopedia/VariationOfParameters.html
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 233
+    References
+    ==========
+    - http://en.wikipedia.org/wiki/Variation_of_parameters
+    - http://planetmath.org/encyclopedia/VariationOfParameters.html
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 233
 
-        # indirect doctest
+    # indirect doctest
 
     """
     gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
@@ -2942,22 +2960,24 @@ def ode_separable(eq, func, order, match):
 
     Examples
     ========
-        >>> from sympy import Function, dsolve, Eq
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
-        ... hint='separable', simplify=False))
-           /   2       \         2
-        log\3*f (x) - 1/        x
-        ---------------- = C1 + --
-               6                2
+
+    >>> from sympy import Function, dsolve, Eq
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
+    ... hint='separable', simplify=False))
+       /   2       \         2
+    log\3*f (x) - 1/        x
+    ---------------- = C1 + --
+           6                2
 
 
-    **Reference**
-        - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
-          Dover 1963, pp. 52
+    References
+    ==========
+    - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
+      Dover 1963, pp. 52
 
-        # indirect doctest
+    # indirect doctest
 
     """
     x = func.args[0]

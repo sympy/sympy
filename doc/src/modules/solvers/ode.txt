@@ -5,6 +5,8 @@ ODE
 
 .. module::sympy.solvers.ode
 
+zmiana
+
 User Functions
 --------------
 These are functions that are imported into the global namespace with ``from sympy import *``.  They are intended for user use.
@@ -32,6 +34,30 @@ These are functions that are imported into the global namespace with ``from symp
 Hint Methods
 ------------
 These functions are intended for internal use by :func:`dsolve` and others.  Nonetheless, they contain useful information in their docstrings on the various ODE solving methods.
+
+:obj:`preprocess`
+^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.preprocess
+
+:obj:`odesimp`
+^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.odesimp
+
+:obj:`constant_renumber`
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.constant_renumber
+
+:obj:`constantsimp`
+^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.constantsimp
+
+:obj:`Riccati_special_minus2`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_Riccati_special_minus2
+
+:obj:`sol_simplicity`
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: sympy.solvers.ode.ode_sol_simplicity
 
 :obj:`1st_exact`
 ^^^^^^^^^^^^^^^^
