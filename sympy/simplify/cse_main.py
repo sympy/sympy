@@ -121,13 +121,12 @@ def cse(exprs, symbols=None, optimizations=None):
 
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in reduced_exprs]
-
     # Find all of the repeated subexpressions.
     def insert(subtree):
         '''This helper will insert the subtree into to_eliminate while
         maintaining the ordering by op count and will skip the insertion
         if subtree is already present.'''
-        ops_count = subtree.count_ops()
+        ops_count = (subtree.count_ops(), subtree.is_Mul) # prefer non-Mul to Mul
         index_to_insert = bisect.bisect(to_eliminate_ops_count, ops_count)
         # all i up to this index have op count <= the current op count
         # so check that subtree is not yet present from this index down
@@ -140,7 +139,7 @@ def cse(exprs, symbols=None, optimizations=None):
         to_eliminate.insert(index_to_insert, subtree)
 
     for expr in reduced_exprs:
-        for e in expr.as_numer_denom():
+        for e in expr.as_numer_denom() if not expr.is_Add else [expr]:
             pt = preorder_traversal(e)
             for subtree in pt:
                 if subtree.is_Atom:
@@ -225,19 +224,27 @@ def cse(exprs, symbols=None, optimizations=None):
     # Substitute symbols for all of the repeated subexpressions.
     replacements = []
     reduced_exprs = list(reduced_exprs)
+    hit = True
     for i, subtree in enumerate(to_eliminate):
-        sym = symbols.next()
-        replacements.append((sym, subtree))
+        if hit:
+            sym = symbols.next()
+        hit = False
         if subtree.is_Pow and subtree.exp.is_Rational:
             update = lambda x: x.xreplace({subtree: sym})
         else:
             update = lambda x: x.subs(subtree, sym)
         # Make the substitution in all of the target expressions.
         for j, expr in enumerate(reduced_exprs):
+            old = reduced_exprs[j]
             reduced_exprs[j] = update(expr)
+            hit = hit or (old != reduced_exprs[j])
         # Make the substitution in all of the subsequent substitutions.
         for j in range(i+1, len(to_eliminate)):
+            old = to_eliminate[j]
             to_eliminate[j] = update(to_eliminate[j])
+            hit = hit or (old != to_eliminate[j])
+        if hit:
+            replacements.append((sym, subtree))
 
     # Postprocess the expressions to return the expressions to canonical form.
     for i, (sym, subtree) in enumerate(replacements):
