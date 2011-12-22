@@ -5,6 +5,8 @@ from sympy import (S, symbols, integrate, Integral, Derivative, exp, erf, oo, Sy
         terms_gcd)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
+from sympy.solvers.ode import dsolve
+from timeit import Timer
 
 x,y,a,t,x_1,x_2,z = symbols('x,y,a,t,x_1,x_2,z')
 n = Symbol('n', integer=True)
