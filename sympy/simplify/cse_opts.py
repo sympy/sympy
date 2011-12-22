@@ -2,6 +2,7 @@
 opportunities.
 """
 from sympy.core import Add, Mul, Expr
+from sympy.core.exprtools import factor_terms
 from sympy.utilities.iterables import preorder_traversal
 
 class Sub(Expr):
@@ -46,4 +47,5 @@ def sub_post(e):
 
 default_optimizations = [
     (sub_pre, sub_post),
+    (factor_terms, None),
 ]

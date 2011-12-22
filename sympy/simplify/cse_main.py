@@ -227,12 +227,16 @@ def cse(exprs, symbols=None, optimizations=None):
     for i, subtree in enumerate(to_eliminate):
         sym = symbols.next()
         replacements.append((sym, subtree))
+        if subtree.is_Pow:
+            update = lambda x: x.xreplace({subtree: sym})
+        else:
+            update = lambda x: x.subs(subtree, sym)
         # Make the substitution in all of the target expressions.
         for j, expr in enumerate(reduced_exprs):
-            reduced_exprs[j] = expr.subs(subtree, sym)
+            reduced_exprs[j] = update(expr)
         # Make the substitution in all of the subsequent substitutions.
         for j in range(i+1, len(to_eliminate)):
-            to_eliminate[j] = to_eliminate[j].subs(subtree, sym)
+            to_eliminate[j] = update(to_eliminate[j])
 
     # Postprocess the expressions to return the expressions to canonical form.
     for i, (sym, subtree) in enumerate(replacements):
