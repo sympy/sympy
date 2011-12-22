@@ -60,7 +60,9 @@ class Add(AssocOp):
                 elif b.is_Mul:
                     rv = [a, b], [], None
             if rv:
-                return rv
+                if all(s.is_commutative for s in rv[0]):
+                    return rv
+                return [], rv[0], None
 
         terms = {}      # term -> coeff
                         # e.g. x**2 -> 5   for ... + 5*x**2 + ...
