@@ -118,3 +118,5 @@ def test_multiple_expressions():
 def test_powers():
     assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
 
+def test_issue_1399():
+    assert cse(w/(x - y) + z/(y - x)) == ([(x0, 1/(x - y))], w*x0 - x0*z)
