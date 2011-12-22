@@ -73,8 +73,14 @@ def test_subtraction_opt():
     # Make sure subtraction is optimized.
     e = (x-y)*(z-y) + exp((x-y)*(z-y))
     substs, reduced = cse([e], optimizations=[(cse_opts.sub_pre,cse_opts.sub_post)])
-    assert substs == [(x0, (x - y)*(z - y))]
-    assert reduced == [x0 + exp(x0)]
+    assert substs == [(x0, x - y), (x1, y - z), (x2, x0*x1)]
+    assert reduced == [-x2 + exp(-x2)]
+    assert cse(-(x - y)*(z - y) + exp(-(x - y)*(z - y))) == \
+        ([(x0, (x - y)*(y - z))], x0 + exp(x0))
+    # issue 978
+    n = -1 + 1/x
+    e = n/x/(-n)**2 - 1/n/x
+    assert cse(e) == ([], 0)
 
 def test_multiple_expressions():
     e1 = (x+y)*z
@@ -119,7 +125,7 @@ def test_powers():
     assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
 
 def test_issues_1399():
-    assert cse(w/(x - y) + z/(y - x)) == ([(x0, x - y)], (w - z)/x0)
+    assert cse(w/(x - y) + z/(y - x)) == ([], (w - z)/(x - y))
 
 def test_issue_921():
     assert cse(x**5 + x**4 + x**3 + x**2) == ([(x0, x**2)], x0*(x**3 + x + x0 + 1))

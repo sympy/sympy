@@ -13,8 +13,15 @@ class Neg(Expr):
 def sub_pre(e):
     """ Replace Add(x, Mul(NegativeOne(-1), y)) with Sub(x, y).
     """
+    # make canonical, first
+    adds = {}
+    for a in e.atoms(Add):
+        adds[a] = a.could_extract_minus_sign()
+    e = e.subs([(a, Mul(-1, -a, evaluate=False)
+                    if adds[a] else a) for a in adds])
+    # now replace any persisting Adds, a, that can have -1 extracted with Neg(-a)
     reps = dict([(a, Neg(-a)) for a in e.atoms(Add)
-           if a.could_extract_minus_sign()])
+           if adds.get(a, a.could_extract_minus_sign())])
     e = e.xreplace(reps)
     return e
 
