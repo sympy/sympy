@@ -27,7 +27,7 @@ AUTHORS:
 
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
-from sympy import Integer, pi, sqrt
+from sympy import Integer, pi, sqrt, sympify
 #from sage.rings.complex_number import ComplexNumber
 #from sage.rings.finite_rings.integer_mod import Mod
 
@@ -262,7 +262,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    res = (-1) ** int(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
+    res = (-1) ** sympify(j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * \
         wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3, prec)
     return res
 
