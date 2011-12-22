@@ -19,22 +19,94 @@ class Prufer(Basic):
 
     @property
     def prufer_repr(self):
+        """
+        Returns the tree representation of the Prufer sequence.
+
+        Examples
+        ========
+
+            >>> from sympy.combinatorics.prufer import Prufer
+            >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).prufer_repr
+            [3, 3, 0, 0]
+            >>> Prufer([1, 0, 0]).prufer_repr
+            [1, 0, 0]
+
+        See Also
+        ========
+
+        :class: 'Prufer', :function:'to_prufer()'
+
+        """
         if self._prufer_repr is None:
             self._prufer_repr = self.to_prufer(self._tree_repr[:], self.nodes)
         return self._prufer_repr
 
     @property
     def tree_repr(self):
+        """
+        Returns the tree representation of the Prufer sequence.
+
+        Examples
+        ========
+
+            >>> from sympy.combinatorics.prufer import Prufer
+            >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).tree_repr
+            [[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]
+            >>> Prufer([1, 0, 0]).tree_repr
+            [[4, 1], [3, 0], [2, 0], [1, 0]]
+
+        See Also
+        ========
+
+        :class: 'Prufer', :function:'to_tree()'
+
+        """
         if self._tree_repr is None:
             self._tree_repr = self.to_tree(self._prufer_repr[:])
         return self._tree_repr
 
     @property
     def nodes(self):
+        """
+        Retunrs the number of nodes in the tree.
+
+        Examples
+        ======
+
+            >>> from sympy.combinatorics.prufer import Prufer
+            >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).nodes
+            6
+            >>> Prufer([1, 0, 0]).nodes
+            5
+
+        """
         return self._nodes
 
     @property
     def rank(self):
+        """
+        Returns the rank of the Prufer sequence.
+
+        Examples
+        ========
+
+            >>> from sympy.combinatorics.prufer import Prufer
+            >>> p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6)
+            >>> p.rank
+            756
+            >>> p.next().rank
+            757
+            >>> p.prev().rank
+            755
+
+        See Also
+        ========
+
+        :class: 'Prufer', :function:'prufer_rank()'
+        :class: 'Prufer', :function:'next()'
+        :class: 'Prufer', :function:'prev()'
+
+        """
         if self._rank is None:
             self._rank = self.prufer_rank()
         return self._rank
