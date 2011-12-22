@@ -1154,13 +1154,15 @@ def _solve_system(exprs, symbols, **flags):
     return result
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
-    """ Return a tuple containing derived from f = lhs - rhs that is either:
+    r""" Return a tuple containing derived from f = lhs - rhs that is either:
 
         (numerator, denominator) of ``f``
             If this comes back as (0, 1) it means
-            that ``f`` is independent of the symbols in ``symbols``, e.g.
+            that ``f`` is independent of the symbols in ``symbols``, e.g::
+
                 y*cos(x)**2 + y*sin(x)**2 - y = y*(0) = 0
                 cos(x)**2 + sin(x)**2 = 1
+
             If it comes back as (0, 0) there is no solution to the equation
             amongst the symbols given.
 
@@ -1169,56 +1171,57 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
 
         or
 
-        (symbol, solution) where symbol appears linearly in the numerator of ``f``,
+        (symbol, solution) where symbol appears linearly in the numerator of
+        ``f``,
             is in ``symbols`` (if given) and is not in ``exclude`` (if given).
 
-        No simplification is done to ``f`` other than and mul=True expansion, so
-        the solution will correspond strictly to a unique solution.
+        No simplification is done to ``f`` other than and mul=True expansion,
+        so the solution will correspond strictly to a unique solution.
 
     Examples
     ========
 
-        >>> from sympy.solvers.solvers import solve_linear
-        >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.solvers import solve_linear
+    >>> from sympy.abc import x, y, z
 
     These are linear in x and 1/x:
 
-        >>> solve_linear(x + y**2)
-        (x, -y**2)
-        >>> solve_linear(1/x - y**2)
-        (x, y**(-2))
+    >>> solve_linear(x + y**2)
+    (x, -y**2)
+    >>> solve_linear(1/x - y**2)
+    (x, y**(-2))
 
     When not linear in x or y then the numerator and denominator are returned.
 
-        >>> solve_linear(x**2/y**2 - 3)
-        (x**2 - 3*y**2, y**2)
+    >>> solve_linear(x**2/y**2 - 3)
+    (x**2 - 3*y**2, y**2)
 
     If the numerator is a symbol then (0, 0) is returned if the solution for
     that symbol would have set any denominator to 0:
 
-        >>> solve_linear(1/(1/x - 2))
-        (0, 0)
-        >>> 1/(1/x) # to SymPy, this looks like x ...
-        x
-        >>> solve_linear(1/(1/x)) # so a solution is given
-        (x, 0)
+    >>> solve_linear(1/(1/x - 2))
+    (0, 0)
+    >>> 1/(1/x) # to SymPy, this looks like x ...
+    x
+    >>> solve_linear(1/(1/x)) # so a solution is given
+    (x, 0)
 
     If x is allowed to cancel, then this appears linear, but this sort of
     cancellation is not done so the solution will always satisfy the original
     expression without causing a division by zero error.
 
-        >>> solve_linear(x**2*(1/x - z**2/x))
-        (x**2*(-z**2 + 1), x)
+    >>> solve_linear(x**2*(1/x - z**2/x))
+    (x**2*(-z**2 + 1), x)
 
     You can give a list of what you prefer for x candidates:
 
-        >>> solve_linear(x + y + z, symbols=[y])
-        (y, -x - z)
+    >>> solve_linear(x + y + z, symbols=[y])
+    (y, -x - z)
 
     You can also indicate what variables you don't want to consider:
 
-        >>> solve_linear(x + y + z, exclude=[x, z])
-        (y, -x - z)
+    >>> solve_linear(x + y + z, exclude=[x, z])
+    (y, -x - z)
 
     If only x was excluded then a solution for y or z might be obtained.
 
@@ -1291,36 +1294,37 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     return n, d # should we cancel now?
 
 def solve_linear_system(system, *symbols, **flags):
-    """Solve system of N linear equations with M variables, which means
-       both Cramer and over defined systems are supported. The possible
-       number of solutions is zero, one or infinite. Respectively, this
-       procedure will return None or dictionary with solutions. In the
-       case of over-defined systems all arbitrary parameters are skipped.
-       This may cause situation in which an empty dictionary is returned.
-       In this case it means all symbols can be assigned arbitrary values.
+    r"""
+    Solve system of N linear equations with M variables, which means
+    both Cramer and over defined systems are supported. The possible
+    number of solutions is zero, one or infinite. Respectively, this
+    procedure will return None or dictionary with solutions. In the
+    case of over-defined systems all arbitrary parameters are skipped.
+    This may cause situation in which an empty dictionary is returned.
+    In this case it means all symbols can be assigned arbitrary values.
 
-       Input to this functions is a Nx(M+1) matrix, which means it has
-       to be in augmented form. If you prefer to enter N equations and M
-       unknowns then use 'solve(Neqs, *Msymbols)' instead. Note: a local
-       copy of the matrix is made by this routine so the matrix that is
-       passed will not be modified.
+    Input to this functions is a Nx(M+1) matrix, which means it has
+    to be in augmented form. If you prefer to enter N equations and M
+    unknowns then use `solve(Neqs, *Msymbols)` instead. Note: a local
+    copy of the matrix is made by this routine so the matrix that is
+    passed will not be modified.
 
-       The algorithm used here is fraction-free Gaussian elimination,
-       which results, after elimination, in an upper-triangular matrix.
-       Then solutions are found using back-substitution. This approach
-       is more efficient and compact than the Gauss-Jordan method.
+    The algorithm used here is fraction-free Gaussian elimination,
+    which results, after elimination, in an upper-triangular matrix.
+    Then solutions are found using back-substitution. This approach
+    is more efficient and compact than the Gauss-Jordan method.
 
-       >>> from sympy import Matrix, solve_linear_system
-       >>> from sympy.abc import x, y
+    >>> from sympy import Matrix, solve_linear_system
+    >>> from sympy.abc import x, y
 
-       Solve the following system:
+    Solve the following system::
 
-              x + 4 y ==  2
-           -2 x +   y == 14
+           x + 4 y ==  2
+        -2 x +   y == 14
 
-       >>> system = Matrix(( (1, 4, 2), (-2, 1, 14)))
-       >>> solve_linear_system(system, x, y)
-       {x: -6, y: 2}
+    >>> system = Matrix(( (1, 4, 2), (-2, 1, 14)))
+    >>> solve_linear_system(system, x, y)
+    {x: -6, y: 2}
 
     """
     matrix = system[:,:]
@@ -1683,19 +1687,19 @@ def _tsolve(eq, sym, **flags):
 
 # TODO: option for calculating J numerically
 def nsolve(*args, **kwargs):
-    """
-    Solve a nonlinear equation system numerically.
+    r"""
+    Solve a nonlinear equation system numerically::
 
-    nsolve(f, [args,] x0, modules=['mpmath'], **kwargs)
+        nsolve(f, [args,] x0, modules=['mpmath'], **kwargs)
 
     f is a vector function of symbolic expressions representing the system.
-    args are the variables. If there is only one variable, this argument can be
-    omitted.
+    args are the variables. If there is only one variable, this argument can
+    be omitted.
     x0 is a starting vector close to a solution.
 
-    Use the modules keyword to specify which modules should be used to evaluate
-    the function and the Jacobian matrix. Make sure to use a module that
-    supports matrices. For more information on the syntax, please see the
+    Use the modules keyword to specify which modules should be used to
+    evaluate the function and the Jacobian matrix. Make sure to use a module
+    that supports matrices. For more information on the syntax, please see the
     docstring of lambdify.
 
     Overdetermined systems are supported.
