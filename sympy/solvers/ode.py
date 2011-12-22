@@ -936,16 +936,14 @@ def odesimp(eq, func, order, hint):
                   |
                  /
 
-    ::
-
-        >>  pprint(odesimp(eq, f(x), 1,
-        ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
-        ... )) # (this is slow, so we skip)
-            x
-        --------- = C1
-           /f(x)\
-        tan|----|
-           \2*x /
+    >>> pprint(odesimp(eq, f(x), 1,
+    ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
+    ... )) #doctest: +SKIP
+        x
+    --------- = C1
+       /f(x)\
+    tan|----|
+       \2*x /
 
     """
     x = func.args[0]
