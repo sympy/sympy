@@ -94,6 +94,8 @@ def cse(exprs, symbols=None, optimizations=None):
     reduced_exprs : list of sympy expressions if an iterable was input, else
         a single expression, with all common subexpression replacements made.
     """
+    from sympy.matrices import Matrix
+
     if symbols is None:
         symbols = numbered_symbols()
     else:
@@ -113,13 +115,12 @@ def cse(exprs, symbols=None, optimizations=None):
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, Basic):
-        exprs = [exprs]
-        single = True
+        reduced_exprs = [exprs]
     else:
-        single = False
+        reduced_exprs = exprs
 
     # Preprocess the expressions to give us better optimization opportunities.
-    exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
+    reduced_exprs = [preprocess_for_cse(e, optimizations) for e in reduced_exprs]
 
     # Find all of the repeated subexpressions.
     def insert(subtree):
@@ -138,7 +139,7 @@ def cse(exprs, symbols=None, optimizations=None):
         to_eliminate_ops_count.insert(index_to_insert, ops_count)
         to_eliminate.insert(index_to_insert, subtree)
 
-    for expr in exprs:
+    for expr in reduced_exprs:
         pt = preorder_traversal(expr)
         for subtree in pt:
             if subtree.is_Atom:
@@ -222,7 +223,7 @@ def cse(exprs, symbols=None, optimizations=None):
 
     # Substitute symbols for all of the repeated subexpressions.
     replacements = []
-    reduced_exprs = list(exprs)
+    reduced_exprs = list(reduced_exprs)
     for i, subtree in enumerate(to_eliminate):
         sym = symbols.next()
         replacements.append((sym, subtree))
@@ -239,6 +240,8 @@ def cse(exprs, symbols=None, optimizations=None):
         replacements[i] = (sym, subtree)
     reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
 
-    if single:
+    if isinstance(exprs, Basic):
         reduced_exprs = reduced_exprs[0]
+    elif isinstance(exprs, Matrix):
+        reduced_exprs = Matrix(exprs.rows, exprs.cols, reduced_exprs)
     return replacements, reduced_exprs

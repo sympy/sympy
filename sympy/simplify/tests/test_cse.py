@@ -1,6 +1,7 @@
 import itertools
 
-from sympy import Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse
+from sympy import (Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
+    Matrix)
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
@@ -52,6 +53,7 @@ def test_cse_single2():
     substs, reduced = cse(e, optimizations=[])
     assert substs == [(x0, x+y)]
     assert reduced == sqrt(x0) + x0**2
+    assert isinstance(cse(Matrix([[1]]))[1], Matrix)
 
 def test_cse_not_possible():
     # No substitution possible.
