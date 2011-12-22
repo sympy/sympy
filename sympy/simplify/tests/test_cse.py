@@ -1,7 +1,7 @@
 import itertools
 
 from sympy import (Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S)
+    Matrix, S, sin)
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
@@ -118,8 +118,11 @@ def test_multiple_expressions():
 def test_powers():
     assert cse(x*y**2 + x*y) == ([(x0, x*y)], [x0*y + x0])
 
-def test_issue_1399():
+def test_issues_1399():
     assert cse(w/(x - y) + z/(y - x)) == ([(x0, 1/(x - y))], w*x0 - x0*z)
 
 def test_issue_921():
     assert cse(x**5 + x**4 + x**3 + x**2) == ([(x0, x**2)], x0*(x**3 + x + x0 + 1))
+
+def test_issue_1104():
+    assert cse(sin(x**x)/x**x) == ([(x0, x**x)], sin(x0)/x0)

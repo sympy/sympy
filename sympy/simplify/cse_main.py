@@ -140,23 +140,24 @@ def cse(exprs, symbols=None, optimizations=None):
         to_eliminate.insert(index_to_insert, subtree)
 
     for expr in reduced_exprs:
-        pt = preorder_traversal(expr)
-        for subtree in pt:
-            if subtree.is_Atom:
-                # Exclude atoms, since there is no point in renaming them.
-                continue
+        for e in expr.as_numer_denom():
+            pt = preorder_traversal(e)
+            for subtree in pt:
+                if subtree.is_Atom:
+                    # Exclude atoms, since there is no point in renaming them.
+                    continue
 
-            if subtree in seen_subexp:
-                insert(subtree)
-                pt.skip()
-                continue
+                if subtree in seen_subexp:
+                    insert(subtree)
+                    pt.skip()
+                    continue
 
-            if subtree.is_Mul:
-                muls.add(subtree)
-            elif subtree.is_Add:
-                adds.add(subtree)
+                if subtree.is_Mul:
+                    muls.add(subtree)
+                elif subtree.is_Add:
+                    adds.add(subtree)
 
-            seen_subexp.add(subtree)
+                seen_subexp.add(subtree)
 
     # process adds - any adds that weren't repeated might contain
     # subpatterns that are repeated, e.g. x+y+z and x+y have x+y in common
@@ -227,7 +228,7 @@ def cse(exprs, symbols=None, optimizations=None):
     for i, subtree in enumerate(to_eliminate):
         sym = symbols.next()
         replacements.append((sym, subtree))
-        if subtree.is_Pow:
+        if subtree.is_Pow and subtree.exp.is_Rational:
             update = lambda x: x.xreplace({subtree: sym})
         else:
             update = lambda x: x.subs(subtree, sym)
