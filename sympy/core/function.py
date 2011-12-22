@@ -1689,6 +1689,21 @@ def expand_complex(expr, deep=True):
     return sympify(expr).expand(deep=deep, complex=True, basic=False,\
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
 
+def expand_power_base(expr, deep=True):
+    """
+    Wrapper around expand that only uses the power_base hint.
+    See the expand docstring for more information.
+
+    Example:
+    >>> from sympy import expand_power_base
+    >>> from sympy.abc import x, y
+    >>> expand_power_base((3*x)**y)
+    3**y*x**y
+    """
+    return expand(expr, deep=deep,
+                     power_base=True, mul=False, power_exp=False,
+                     basic=False, multinomial=False, log=False)
+
 def count_ops(expr, visual=False):
     """
     Return a representation (integer or expression) of the operations in expr.
