@@ -27,6 +27,8 @@ PRECEDENCE_VALUES = {
     "Relational" : PRECEDENCE["Relational"],
     "Sub" : PRECEDENCE["Add"],
     "Not": PRECEDENCE["Not"],
+    "factorial": PRECEDENCE["Pow"],
+    "factorial2": PRECEDENCE["Pow"],
 }
 
 # Sometimes it's not enough to assign a fixed precedence value to a

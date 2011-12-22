@@ -1,9 +1,9 @@
 from __future__ import division
-from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp, factorial,
-    Function, GoldenRatio, I, Integer, Integral, Interval, Lambda, Limit, log,
-    Matrix, nan, O, oo, pi, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
-    summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo,
-    Dummy, Dict)
+from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
+    factorial, factorial2, Function, GoldenRatio, I, Integer, Integral,
+    Interval, Lambda, Limit, log, Matrix, nan, O, oo, pi, Rational, Float, Rel,
+    S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
+    WildFunction, zeta, zoo, Dummy, Dict)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
@@ -86,6 +86,10 @@ def test_factorial():
     assert str(factorial(7)) == "5040"
     assert str(factorial(n)) == "n!"
     assert str(factorial(2*n)) == "(2*n)!"
+    assert str(factorial(factorial(n))) == '(n!)!'
+    assert str(factorial(factorial2(n))) == '(n!!)!'
+    assert str(factorial2(factorial(n))) == '(n!)!!'
+    assert str(factorial2(factorial2(n))) == '(n!!)!!'
 
 def test_Function():
     f = Function('f')
