@@ -105,7 +105,7 @@
 #      - Idx with stepsize != 1
 #      - Idx with step determined by function call
 
-from sympy.core import Expr, Basic, Tuple, Symbol, Integer, sympify, S
+from sympy.core import Expr, Tuple, Symbol, sympify, S
 from sympy.core.compatibility import is_sequence
 
 class IndexException(Exception):
