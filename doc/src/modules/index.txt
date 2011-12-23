@@ -25,7 +25,7 @@ access any SymPy module, or use this contens:
    geometry.txt
    galgebra/GA/GAsympy.txt
    galgebra/latex_ex/latex_ex.txt
-   integrals.txt
+   integrals/integrals.txt
    logic.txt
    matrices.txt
    mpmath/index.txt

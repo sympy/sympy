@@ -125,3 +125,7 @@ def test_reduce_inequalities_errors():
     raises(NotImplementedError, "reduce_inequalities(Ge(sin(x) + x, 1))")
     raises(NotImplementedError, "reduce_inequalities(Ge(x**2*y + y, 1))")
     raises(NotImplementedError, "reduce_inequalities(Ge(sqrt(2)*x, 1))")
+
+def test_hacky_inequalities():
+    assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
+    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= 1 - y)

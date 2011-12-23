@@ -523,7 +523,7 @@ def solve(f, *symbols, **flags):
         elif isinstance(fi, Poly):
             f[i] = fi.as_expr()
         elif isinstance(fi, bool) or fi.is_Relational:
-            return reduce_inequalities(f, assume=flags.get('assume'))
+            return reduce_inequalities(f, assume=flags.get('assume'), symbols=symbols)
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
         f[i] = piecewise_fold(f[i])

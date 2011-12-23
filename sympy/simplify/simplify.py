@@ -14,7 +14,7 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 
 from sympy.utilities import flatten, default_sort_key
-from sympy.functions import gamma, exp, sqrt, log, root
+from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
 
 from sympy.simplify.cse_main import cse
 from sympy.simplify.sqrtdenest import sqrtdenest
@@ -1272,6 +1272,116 @@ def posify(eq):
     eq = eq.subs(reps)
     return eq, dict([(r,s) for s, r in reps.iteritems()])
 
+def _polarify(eq, pause=False):
+    from sympy import polar_lift
+    if eq.is_polar:
+        return eq
+    if eq.is_number and not pause:
+        return polar_lift(eq)
+    elif eq.is_Atom:
+        return eq
+    elif eq.is_Add:
+        return eq.func(*[_polarify(arg, pause=True) for arg in eq.args])
+    elif eq.is_Function:
+        return eq.func(*[_polarify(arg, pause=False) for arg in eq.args])
+    else:
+        return eq.func(*[_polarify(arg, pause=pause) for arg in eq.args])
+
+def polarify(eq, subs=True):
+    """
+    Turn all numbers in eq into their polar equivalents (under the standard
+    choice of argument), and substitute all symbols for polar dummies.
+
+    Note that no attempt is made to guess a formal convention of adding
+    polar numbers, expressions like 1 + x will not be altered.
+
+    Note also that this function does not promote exp(x) to exp_polar(x).
+
+    >>> from sympy import polarify, sin, I
+    >>> from sympy.abc import x, y
+    >>> expr = (-x)**y
+    >>> expr.expand()
+    (-x)**y
+    >>> polarify(expr)
+    ((_x*exp_polar(I*pi))**_y, {_x: x, _y: y})
+    >>> polarify(expr)[0].expand()
+    _x**_y*exp_polar(_y*I*pi)
+
+    Adds are treated carefully:
+
+    >>> polarify(1 + sin((1 + I)*x))
+    (sin(_x*polar_lift(1 + I)) + 1, {_x: x})
+    """
+    eq = _polarify(sympify(eq))
+    if not subs:
+        return eq
+    reps = dict([(s, Dummy(s.name, polar=True)) for s in eq.atoms(Symbol)])
+    eq = eq.subs(reps)
+    return eq, dict([(r,s) for s, r in reps.iteritems()])
+
+def _unpolarify(eq, exponents_only, pause=False):
+    from sympy import polar_lift, exp, principal_branch, pi
+
+    if isinstance(eq, bool) or eq.is_Atom:
+        return eq
+
+    if eq.is_Pow:
+        expo = _unpolarify(eq.exp, exponents_only)
+        base = _unpolarify(eq.base, exponents_only, not (expo.is_integer and not pause))
+        return base**expo
+
+    if eq.func is exp_polar and not pause:
+        return exp(_unpolarify(eq.args[0], exponents_only))
+    if eq.is_Function and getattr(eq.func, 'unbranched', False):
+        return eq.func(*[_unpolarify(x, exponents_only, exponents_only) for x in eq.args])
+    if eq.func is principal_branch and eq.args[1] == 2*pi and not pause:
+        return _unpolarify(eq.args[0], exponents_only)
+
+    if (eq.is_Add or eq.is_Mul or eq.is_Boolean or \
+        (eq.is_Relational and eq.rel_op in ('==', '!=') \
+         and (eq.lhs == 0 or eq.rhs == 0)) or \
+        (eq.is_Relational and not eq.rel_op in ('==', '!='))) \
+       and not pause:
+        return eq.func(*[_unpolarify(x, exponents_only) for x in eq.args])
+    if eq.func is polar_lift and not pause:
+        return _unpolarify(eq.args[0], exponents_only)
+    return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
+
+def unpolarify(eq, subs={}, exponents_only=False):
+    """
+    If p denotes the projection from the riemann surface of the logarithm to
+    the complex line, return a simplified version eq' of `eq` such that
+    p(eq') == p(eq).
+    Also apply the substitution subs in the end. (This is a convenience, since
+    ``unpolarify`` in a certain sense undoes polarify.)
+
+    >>> from sympy import unpolarify, polar_lift, sin, I
+    >>> unpolarify(polar_lift(I + 2))
+    2 + I
+    >>> unpolarify(sin(polar_lift(I + 7)))
+    sin(7 + I)
+    """
+    from sympy import exp_polar, polar_lift
+    if isinstance(eq, bool):
+        return eq
+
+    if subs != {}:
+        return unpolarify(eq.subs(subs))
+    changed = True
+    pause = False
+    if exponents_only:
+        pause = True
+    while changed:
+        changed = False
+        res = _unpolarify(eq, exponents_only, pause)
+        if res != eq:
+            changed = True
+            eq = res
+        if isinstance(res, bool):
+            return res
+    # Finally, replacing Exp(0) by 1 is always correct.
+    # So is polar_lift(0) -> 0.
+    return res.subs({exp_polar(0): 1, polar_lift(0): 0})
 
 def _denest_pow(eq):
     """
@@ -1375,7 +1485,7 @@ def _denest_pow(eq):
             other.append(a)
     return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
 
-def powdenest(eq, force=False):
+def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
@@ -1399,6 +1509,9 @@ def powdenest(eq, force=False):
     Setting ``force`` to True will make symbols that are not explicitly
     negative behave as though they are positive, resulting in more
     denesting.
+
+    Setting `polar` to True will do simplifications on the riemann surface of
+    the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
     obtained e.g. exp(3*(log(a) + 2*log(b))) - > a**3*b**6.
@@ -1469,6 +1582,10 @@ def powdenest(eq, force=False):
     if force:
         eq, rep = posify(eq)
         return powdenest(eq, force=False).xreplace(rep)
+
+    if polar:
+        eq, rep = polarify(eq)
+        return unpolarify(powdenest(unpolarify(eq, exponents_only=True)), rep)
 
     new = powsimp(sympify(eq))
     return new.xreplace(Transform(_denest_pow, filter=lambda m: m.is_Pow or m.func is exp))
@@ -1563,11 +1680,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             expr.exp, deep, combine, force), deep, combine, force)/y
         else:
             return powsimp(y*expr, deep, combine, force)/y # Trick it into being a Mul
-    elif expr.is_Function:
-        if expr.func is exp and deep:
+    elif expr.is_Function and not expr == exp_polar(1) and not expr == exp_polar(0):
+        if (expr.func is exp or expr.func is exp_polar) and deep:
             # Exp should really be like Pow
-            return powsimp(y*exp(powsimp(expr.args[0], deep, combine, force)), deep, combine, force)/y
-        elif expr.func is exp and not deep:
+            return powsimp(y*expr.func(powsimp(expr.args[0], deep, combine, force)), deep, combine, force)/y
+        elif (expr.func is exp or expr.func is exp_polar) and not deep:
             return powsimp(y*expr, deep, combine, force)/y
         elif deep:
             return expr.func(*[powsimp(t, deep, combine, force) for t in expr.args])
@@ -1618,7 +1735,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             for b, e in be:
                 if b in skip:
                     continue
-                bpos = b.is_positive
+                bpos = b.is_positive or b.is_polar
                 if bpos:
                     binv = 1/b
                     if b != binv and binv in c_powers:
@@ -1820,7 +1937,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # e.g., 2**(2*x) => 4**x
             for i in xrange(len(c_powers)):
                 b, e = c_powers[i]
-                if not (b.is_nonnegative or e.is_integer or force):
+                if not (b.is_nonnegative or e.is_integer or force or b.is_polar):
                     continue
                 exp_c, exp_t = e.as_coeff_mul()
                 if exp_c is not S.One and exp_t:
@@ -1859,6 +1976,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                                 neg.append(bi)
                             else:
                                 nonneg.append(bi)
+                        elif bi.is_polar:
+                            nonneg.append(bi) # polar can be treated like non-negative
                         else:
                             unk.append(bi)
                     if len(unk) == 1 and not neg or len(neg) == 1 and not unk:
@@ -1971,7 +2090,21 @@ def combsimp(expr):
     the resulting rising factorial to cancel. Rising factorials with
     the second argument being an integer are expanded into polynomial
     forms and finally all other rising factorial are rewritten in terms
-    more familiar binomials and factorials.
+    more familiar functions. If the initial expression contained any
+    combinatorial functions, the result is expressed using binomial
+    coefficients and gamma functions. If the initial expression consisted
+    of gamma functions alone, the result is expressed in terms of gamma
+    functions.
+
+    If the result is expressed using gamma functions, the following three
+    additional steps are performed:
+
+    1. Reduce the number of gammas by applying the reflection theorem
+       gamma(x)*gamma(1-x) == pi/sin(pi*x).
+    2. Reduce the number of gammas by applying the multiplication theorem
+       gamma(x)*gamma(x+1/n)*...*gamma(x+(n-1)/n) == C*gamma(n*x).
+    3. Reduce the number of prefactors by absorbing them into gammas, where
+       possible.
 
     All transformation rules can be found (or was derived from) here:
 
@@ -1994,6 +2127,22 @@ def combsimp(expr):
     factorial = C.factorial
     binomial = C.binomial
     gamma = C.gamma
+
+    # as a rule of thumb, if the expression contained gammas initially, it
+    # probably makes sense to retain them
+    as_gamma = not expr.has(factorial, binomial)
+
+    def as_coeff_Add(expr):
+        if expr.is_Add:
+            coeff, args = expr.args[0], expr.args[1:]
+
+            if coeff.is_Number:
+                if len(args) == 1:
+                    return coeff, args[0]
+                else:
+                    return coeff, expr._new_rawargs(*args)
+
+        return S.Zero, expr
 
     class rf(Function):
         @classmethod
@@ -2040,8 +2189,12 @@ def combsimp(expr):
     expr = expr.replace(gamma,
         lambda n: rf(1, (n-1).expand()))
 
-    expr = expr.replace(rf,
-        lambda a, b: binomial(a+b-1, b)*factorial(b))
+    if as_gamma:
+        expr = expr.replace(rf,
+            lambda a, b: gamma(a + b)/gamma(a))
+    else:
+        expr = expr.replace(rf,
+            lambda a, b: binomial(a+b-1, b)*factorial(b))
 
     def rule(n, k):
         coeff, rewrite = S.One, False
@@ -2063,6 +2216,195 @@ def combsimp(expr):
             return coeff*binomial(n, k)
 
     expr = expr.replace(binomial, rule)
+
+    def rule_gamma(expr):
+        """ Simplify products of gamma functions further. """
+        from itertools import count
+        from sympy.core.compatibility import permutations
+        if expr.is_Atom:
+            return expr
+        args = [rule_gamma(x) for x in expr.args]
+        if not expr.is_Mul:
+            return expr.func(*args)
+        numer_gammas = []
+        denom_gammas = []
+        numer_others = []
+        denom_others = []
+        newargs = list(args[:])
+        while newargs:
+            arg = newargs.pop()
+            if arg.is_Pow and arg.exp.is_Integer:
+                if arg.exp == -1:
+                    if isinstance(arg.base, gamma):
+                        denom_gammas.append(arg.base.args[0])
+                    else:
+                        denom_others.append(arg.base)
+                    continue
+                n = abs(arg.exp)
+                if arg.exp < 0:
+                    arg = 1/arg.base
+                else:
+                    arg = arg.base
+                for _ in range(n):
+                    newargs.append(arg)
+            elif isinstance(arg, gamma):
+                numer_gammas.append(arg.args[0])
+            else:
+                numer_others.append(arg)
+
+        # Try to reduce the number of gamma factors by applying the
+        # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
+        for l, numer, denom in [(numer_gammas, numer_others, denom_others),
+                                (denom_gammas, denom_others, numer_others)]:
+            newl = []
+            while l:
+                t = l.pop()
+                append = True
+                for i in range(len(l)):
+                    g = l[i]
+                    n = simplify(t + g - 1)
+                    if not n.is_Integer or t.is_integer:
+                        continue
+                    append = False
+                    numer.append(S.Pi)
+                    denom.append(C.sin(S.Pi*t))
+                    l.pop(i)
+                    if n > 0:
+                        for k in range(n):
+                            numer.append(1 - t + k)
+                    else:
+                        for k in range(-n):
+                            denom.append(-t - k)
+                    break
+                if append:
+                    newl.append(t)
+            l += newl
+
+        # Try to reduce the number of gamma factors by applying the
+        # multiplication theorem.
+        for l, numer, denom in [(numer_gammas, numer_others, denom_others),
+                                (denom_gammas, denom_others, numer_others)]:
+            changed = True
+            while changed:
+                newl = []
+                changed = False
+                differences = {}
+                differences2 = {}
+                # differences maps pairs (g1, g2) of indices to their rational
+                # difference mod 1: l[g2] - l[g1] % 1
+                # (if difference is not rational, no entry)
+                # differences2 maps g1 to dicts rational -> g2, so that
+                # differences2[g1][r] is a list of g2 with g2-g1 % 1 = r
+                # (we store indices instead of arguments in order to have unique
+                #  tokens)
+                for g1, g2 in permutations(range(len(l)), 2):
+                    r = simplify(l[g2] - l[g1])
+                    if r.is_Rational:
+                        differences[(g1, g2)] = r % 1
+                        differences2.setdefault(g1, {}).setdefault(r % 1, []).append(g2)
+                diffs = differences.items()
+                diffs.sort(key=lambda x:x[1])
+                erased = set()
+                # erased keeps track of keys we erased ...
+                for (idx1, idx2), d in diffs:
+                    if d.p != 1 or d <= 0 or idx1 in erased:
+                        continue
+                    others = []
+                    for u in range(1, d.q):
+                        x = S(u)/d.q
+                        if not x in differences2[idx1]:
+                            break
+                        for idx2 in differences2[idx1][x]:
+                            if not idx2 in erased:
+                                others.append(idx2)
+                                break
+                    if len(others) != d.q - 1:
+                        continue
+                    erased.add(idx1)
+                    for o in others: erased.add(o)
+                    changed = True
+                    # If we arrive here, we found something to apply the theorem
+                    # to: idx1, *others.
+                    # We need to
+                    # 1) convert all the gamma functions to have the right
+                    #    argument (could be off by an integer)
+                    # 2) append the factors corresponding to the theorem
+                    # 3) append the new gamma function
+                    # (1)
+                    for u in others:
+                        n = simplify(l[u] - l[idx1] - differences[(idx1, u)])
+                        if n > 0:
+                            for k in range(n):
+                                numer.append(l[u] - k - 1)
+                        if n < 0:
+                            for k in range(-n):
+                                denom.append(l[u] - k)
+                    # (2)
+                    numer.append((2*S.Pi)**(S(d.q - 1)/2)*d.q**(S(1)/2-d.q*l[idx1]))
+                    # (3)
+                    newl.append(l[idx1]*d.q)
+                for idx in range(len(l)):
+                    if not idx in erased:
+                        newl.append(l[idx])
+                while l: l.pop()
+                l += newl # Note l is empty before this
+
+        # Try to absorb factors into the gammas
+        for to, numer, denom in [(numer_gammas, numer_others, denom_others),
+                                 (denom_gammas, denom_others, numer_others)]:
+            newl = []
+            while to:
+                g = to.pop()
+                cont = True
+                while cont:
+                    cont = False
+                    def find_fuzzy(l, x):
+                        for y in l:
+                            # XXX we want some simplification (e.g. cancel or
+                            # simplify) but no matter what it's slow.
+                            a = len(cancel(x/y).free_symbols)
+                            b = len(x.free_symbols)
+                            c = len(y.free_symbols)
+                            # TODO is there a better heuristic?
+                            if a == 0 and (b > 0 or c > 0):
+                                return y
+                    y = find_fuzzy(numer, g)
+                    if y is not None:
+                        numer.remove(y)
+                        if y != g:
+                            numer.append(y/g)
+                        g += 1
+                        cont = True
+                    y = find_fuzzy(numer, 1/(g-1))
+                    if y is not None:
+                        numer.remove(y)
+                        if y != 1/(g-1):
+                            numer.append((g-1)*y)
+                        g -= 1
+                        cont = True
+                    y = find_fuzzy(denom, 1/g)
+                    if y is not None:
+                        denom.remove(y)
+                        if y != 1/g:
+                            denom.append(y*g)
+                        g += 1
+                        cont = True
+                    y = find_fuzzy(denom, g - 1)
+                    if y is not None:
+                        denom.remove(y)
+                        if y != g - 1:
+                            numer.append((g-1)/y)
+                        g -= 1
+                        cont = True
+                newl.append(g)
+            to += newl
+
+        return C.Mul(*[gamma(g) for g in numer_gammas]) \
+             / C.Mul(*[gamma(g) for g in denom_gammas]) \
+             * C.Mul(*numer_others) / C.Mul(*denom_others)
+
+    # (for some reason we cannot use Basic.replace in this case)
+    expr = rule_gamma(expr)
 
     return factor(expr)
 

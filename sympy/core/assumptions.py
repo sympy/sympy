@@ -59,6 +59,7 @@ _assume_rules = FactRules([
 
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('comparable')
+_assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
 

@@ -12,6 +12,8 @@ from miscellaneous import sqrt
 class TrigonometricFunction(Function):
     """Base class for trigonometric functions. """
 
+    unbranched = True
+
 def _peeloff_pi(arg):
     """
     Split ARG into two parts, a "rest" and a multiple of pi/2.

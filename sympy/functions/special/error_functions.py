@@ -33,6 +33,7 @@ class erf(Function):
     """
 
     nargs = 1
+    unbranched = True
 
     def fdiff(self, argindex=1):
         if argindex == 1:

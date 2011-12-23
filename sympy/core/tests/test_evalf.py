@@ -237,3 +237,18 @@ def test_issue_2387():
 def test_issue_2387_bug():
     from sympy import I, Expr
     assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
+
+def test_bugs():
+    from sympy import polar_lift, re
+
+    assert abs(re((1+I)**2)) < 1e-15
+
+    # anything that evalf's to 0 will do in place of polar_lift
+    assert abs(polar_lift(0)).n() == 0
+
+def test_subs_bugs():
+    from sympy import besseli
+    assert NS('besseli(-x, y) - besseli(x, y)', subs={x:3.5, y:20.0}) == \
+           '-4.92535585957223e-10'
+    assert NS('Piecewise((x, x>0)) + Piecewise((1-x, x>0))', subs={x:0.1}) == \
+           '1.00000000000000'

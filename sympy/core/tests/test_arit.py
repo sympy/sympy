@@ -1226,3 +1226,22 @@ def test_issue_2902():
     # it doesn't matter whether it's True or False; they should
     # just both be the same
     assert eq.is_commutative == (eq + 1).is_commutative
+
+def test_polar():
+    from sympy import polar_lift
+    p = Symbol('p', polar=True)
+    x = Symbol('x')
+    assert p.is_polar
+    assert x.is_polar is None
+    assert S(1).is_polar is None
+    assert (p**x).is_polar is True
+    assert (x**p).is_polar is None
+    assert ((2*p)**x).is_polar is True
+    assert (2*p).is_polar is True
+    assert (-2*p).is_polar is not True
+    assert (polar_lift(-2)*p).is_polar is True
+
+    q = Symbol('q', polar=True)
+    assert (p*q)**2 == p**2 * q**2
+    assert (2*q)**2 == 4 * q**2
+    assert ((p*q)**x).expand() == p**x * q**x
