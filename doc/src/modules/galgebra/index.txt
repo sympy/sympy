@@ -12,5 +12,6 @@ Contents:
    :maxdepth: 2
 
    GA.txt
+   latex_ex.txt
    examples/index.txt
 
