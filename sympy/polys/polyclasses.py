@@ -35,89 +35,84 @@ from sympy.polys.densebasic import (
     dmp_validate,
     dup_normal, dmp_normal,
     dup_convert, dmp_convert,
-    dup_from_sympy, dmp_from_sympy,
-    dup_strip, dmp_strip,
+    dmp_from_sympy,
+    dup_strip,
     dup_degree, dmp_degree_in,
     dmp_degree_list,
-    dmp_negative_p, dmp_positive_p,
+    dmp_negative_p,
     dup_LC, dmp_ground_LC,
     dup_TC, dmp_ground_TC,
-    dup_nth, dmp_ground_nth,
-    dmp_zero, dmp_one, dmp_ground,
+    dmp_ground_nth,
+    dmp_one, dmp_ground,
     dmp_zero_p, dmp_one_p, dmp_ground_p,
     dup_from_dict, dmp_from_dict,
-    dup_to_raw_dict, dmp_to_dict,
-    dup_deflate, dmp_deflate,
+    dmp_to_dict,
+    dmp_deflate,
     dmp_inject, dmp_eject,
-    dup_terms_gcd, dmp_terms_gcd,
+    dmp_terms_gcd,
     dmp_list_terms, dmp_exclude,
     dmp_slice_in, dmp_permute,
     dmp_to_tuple,)
 
 from sympy.polys.densearith import (
-    dup_add_term, dmp_add_term,
-    dup_sub_term, dmp_sub_term,
-    dup_mul_term, dmp_mul_term,
-    dup_add_ground, dmp_add_ground,
-    dup_sub_ground, dmp_sub_ground,
-    dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground,
-    dup_exquo_ground, dmp_exquo_ground,
-    dup_abs, dmp_abs,
+    dmp_add_ground,
+    dmp_sub_ground,
+    dmp_mul_ground,
+    dmp_quo_ground,
+    dmp_exquo_ground,
+    dmp_abs,
     dup_neg, dmp_neg,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul,
-    dup_sqr, dmp_sqr,
+    dmp_sqr,
     dup_pow, dmp_pow,
-    dup_pdiv, dmp_pdiv,
-    dup_prem, dmp_prem,
-    dup_pquo, dmp_pquo,
-    dup_pexquo, dmp_pexquo,
-    dup_div, dmp_div,
+    dmp_pdiv,
+    dmp_prem,
+    dmp_pquo,
+    dmp_pexquo,
+    dmp_div,
     dup_rem, dmp_rem,
-    dup_quo, dmp_quo,
-    dup_exquo, dmp_exquo,
+    dmp_quo,
+    dmp_exquo,
     dmp_add_mul, dmp_sub_mul,
-    dup_max_norm, dmp_max_norm,
-    dup_l1_norm, dmp_l1_norm)
+    dmp_max_norm,
+    dmp_l1_norm)
 
 from sympy.polys.densetools import (
-    dup_clear_denoms, dmp_clear_denoms,
-    dup_integrate, dmp_integrate_in,
-    dup_diff, dmp_diff_in,
-    dup_eval, dmp_eval_in,
+    dmp_clear_denoms,
+    dmp_integrate_in,
+    dmp_diff_in,
+    dmp_eval_in,
     dup_revert,
-    dup_trunc, dmp_ground_trunc,
-    dup_content, dmp_ground_content,
-    dup_primitive, dmp_ground_primitive,
-    dup_monic, dmp_ground_monic,
-    dup_compose, dmp_compose,
+    dmp_ground_trunc,
+    dmp_ground_content,
+    dmp_ground_primitive,
+    dmp_ground_monic,
+    dmp_compose,
     dup_decompose,
     dup_shift,
     dmp_lift)
 
 from sympy.polys.euclidtools import (
     dup_half_gcdex, dup_gcdex, dup_invert,
-    dup_subresultants, dmp_subresultants,
-    dup_resultant, dmp_resultant,
-    dup_discriminant, dmp_discriminant,
-    dup_inner_gcd, dmp_inner_gcd,
-    dup_gcd, dmp_gcd,
-    dup_lcm, dmp_lcm,
-    dup_cancel, dmp_cancel)
+    dmp_subresultants,
+    dmp_resultant,
+    dmp_discriminant,
+    dmp_inner_gcd,
+    dmp_gcd,
+    dmp_lcm,
+    dmp_cancel)
 
 from sympy.polys.sqfreetools import (
     dup_gff_list,
-    dup_sqf_p, dmp_sqf_p,
-    dup_sqf_norm, dmp_sqf_norm,
-    dup_sqf_part, dmp_sqf_part,
-    dup_sqf_list, dup_sqf_list_include,
+    dmp_sqf_p,
+    dmp_sqf_norm,
+    dmp_sqf_part,
     dmp_sqf_list, dmp_sqf_list_include)
 
 from sympy.polys.factortools import (
     dup_cyclotomic_p, dmp_irreducible_p,
-    dup_factor_list, dup_factor_list_include,
     dmp_factor_list, dmp_factor_list_include)
 
 from sympy.polys.rootisolation import (
@@ -132,8 +127,7 @@ from sympy.polys.rootisolation import (
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
-    PolynomialError,
-    DomainError)
+    PolynomialError)
 
 def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)
@@ -1361,9 +1355,9 @@ class ANP(PicklableWithSlots):
                 mod = dup_convert(f.mod, f.dom, dom)
             else:
                 if dom == f.dom:
-                    H = f.mod
+                    mod = f.mod
                 else:
-                    H = g.mod
+                    mod = g.mod
 
             per = lambda rep: ANP(rep, mod, dom)
 

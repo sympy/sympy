@@ -14,16 +14,16 @@ from sympy.polys.densebasic import (
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
-    dup_add, dmp_add,
-    dup_sub, dmp_sub,
+    dmp_add,
+    dmp_sub,
     dup_mul, dmp_mul,
-    dup_pow, dmp_pow,
+    dmp_pow,
     dup_div, dmp_div,
-    dup_rem, dmp_rem,
+    dup_rem,
     dup_quo, dmp_quo,
     dup_prem, dmp_prem,
     dup_mul_ground, dmp_mul_ground,
-    dup_mul_term, dmp_mul_term,
+    dmp_mul_term,
     dup_quo_ground, dmp_quo_ground,
     dup_max_norm, dmp_max_norm)
 
@@ -1345,9 +1345,6 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     if result is not None:
         return result
-
-    df = dmp_degree(f, u)
-    dg = dmp_degree(g, u)
 
     gcd, f, g = dmp_ground_extract(f, g, u, K)
 

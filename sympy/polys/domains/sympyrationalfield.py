@@ -7,7 +7,6 @@ from sympy.polys.domains.groundtypes import SymPyRationalType
 from sympy.polys.polyerrors import CoercionFailed
 
 from sympy import (
-    Integer as sympy_int,
     Rational as sympy_rat,
 )
 

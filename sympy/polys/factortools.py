@@ -2,24 +2,23 @@
 
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
-    gf_degree, gf_from_dict,
     gf_lshift, gf_add_mul, gf_mul,
     gf_div, gf_rem,
-    gf_gcd, gf_gcdex,
+    gf_gcdex,
     gf_sqf_p,
     gf_factor_sqf, gf_factor)
 
 from sympy.polys.densebasic import (
     dup_LC, dmp_LC, dmp_ground_LC,
-    dup_TC, dmp_TC, dmp_ground_TC,
+    dup_TC,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
     dmp_degree_in, dmp_degree_list,
-    dup_from_dict, dmp_from_dict,
-    dmp_zero, dmp_zero_p,
-    dmp_one, dmp_one_p,
+    dmp_from_dict,
+    dmp_zero_p,
+    dmp_one,
     dmp_nest, dmp_raise,
-    dup_strip, dmp_strip,
+    dup_strip,
     dmp_ground,
     dup_inflate,
     dmp_exclude, dmp_include,
@@ -31,38 +30,36 @@ from sympy.polys.densearith import (
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul,
-    dup_sqr, dmp_sqr,
-    dup_pow, dmp_pow,
+    dup_sqr,
+    dmp_pow,
     dup_div, dmp_div,
-    dup_rem, dmp_rem,
     dup_quo, dmp_quo,
-    dup_expand, dmp_expand,
-    dup_add_mul, dmp_add_mul,
+    dmp_expand,
+    dmp_add_mul,
     dup_sub_mul, dmp_sub_mul,
-    dup_lshift, dup_rshift,
+    dup_lshift,
     dup_max_norm, dmp_max_norm,
-    dup_l1_norm, dmp_l1_norm,
+    dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dup_quo_ground, dmp_quo_ground)
+    dmp_quo_ground)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
     dup_trunc, dmp_ground_trunc,
-    dup_content, dmp_ground_content,
+    dup_content,
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive,
-    dup_eval, dmp_eval_tail,
+    dmp_eval_tail,
     dmp_eval_in, dmp_diff_eval_in,
-    dup_compose, dmp_compose,
+    dmp_compose,
     dup_shift, dup_mirror)
 
 from sympy.polys.euclidtools import (
     dmp_primitive,
-    dup_gcd, dmp_gcd,
     dup_inner_gcd, dmp_inner_gcd)
 
 from sympy.polys.sqfreetools import (
-    dup_sqf_p, dmp_sqf_p,
+    dup_sqf_p,
     dup_sqf_norm, dmp_sqf_norm,
     dup_sqf_part, dmp_sqf_part)
 
@@ -905,7 +902,6 @@ def dmp_zz_wang(f, u, K, mod=None):
         if r == 1:
             return [f]
 
-        bad_points = set([tuple(A)])
         configs = [(s, cs, E, H, A)]
     except EvaluationFailed:
         pass

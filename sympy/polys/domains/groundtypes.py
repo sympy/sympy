@@ -76,3 +76,4 @@ from sympy.mpmath.libmp.libmpf import isqrt
 
 def python_sqrt(a):
     return int(isqrt(a))
+

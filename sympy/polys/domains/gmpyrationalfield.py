@@ -5,7 +5,6 @@ from sympy.polys.domains.rationalfield import RationalField
 from sympy.polys.domains.groundtypes import (
     GMPYRationalType, SymPyRationalType,
     gmpy_numer, gmpy_denom, gmpy_factorial,
-    gmpy_gcdex, gmpy_gcd, gmpy_lcm, gmpy_sqrt,
 )
 
 from sympy.polys.polyerrors import CoercionFailed
