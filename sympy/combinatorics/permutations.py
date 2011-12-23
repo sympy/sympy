@@ -496,15 +496,15 @@ don\'t match.")
         Permutation([0, 1, 2, 3])
 
         """
-        def unrank1(n, r, a):
+        def _unrank1(n, r, a):
             if n > 0:
                 a[n - 1], a[r % n] = a[r % n], a[n - 1]
-                unrank1(n - 1, r//n, a)
+                _unrank1(n - 1, r//n, a)
 
         id_perm = range(n)
         n = int(n)
         r = r % ifac(n)
-        unrank1(n, r, id_perm)
+        _unrank1(n, r, id_perm)
         return _new_from_array_form(id_perm)
 
     def rank_nonlex(self, inv_perm = None):
@@ -520,21 +520,21 @@ don\'t match.")
         >>> p.rank_nonlex()
         23
         """
-        def rank1(n, perm, inv_perm):
+        def _rank1(n, perm, inv_perm):
             if n == 1:
                 return 0
             s = perm[n - 1]
             t = inv_perm[n - 1]
             perm[n - 1], perm[t] = perm[t], s
             inv_perm[n - 1], inv_perm[s] = inv_perm[s], t
-            return s + n*rank1(n - 1, perm, inv_perm)
+            return s + n*_rank1(n - 1, perm, inv_perm)
 
         if inv_perm is None:
             inv_perm = (~self).array_form
         if not inv_perm:
             return 0
         perm = self.array_form[:]
-        r = rank1(len(perm), perm, inv_perm)
+        r = _rank1(len(perm), perm, inv_perm)
         return r
 
     def next_nonlex(self):
