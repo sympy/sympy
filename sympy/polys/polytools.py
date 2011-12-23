@@ -180,7 +180,6 @@ class Poly(Expr):
             rep = cls.new(rep.rep, *rep.gens)
 
         gens = opt.gens
-        order = opt.order
         field = opt.field
         domain = opt.domain
 
