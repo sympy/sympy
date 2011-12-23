@@ -24,7 +24,6 @@ from doctest import DocTestFinder, DocTestRunner
 import re as pre
 import random
 import subprocess
-import time
 import signal
 
 from sympy.core.cache import clear_cache
@@ -631,7 +630,7 @@ class SymPyTests(object):
         def callback(x,y):
             signal.alarm(0)
             raise Skipped("Timeout")
-        handler = signal.signal(signal.SIGALRM, callback)
+        signal.signal(signal.SIGALRM, callback)
         signal.alarm(timeout) # Set an alarm with a given timeout
         function()
         signal.alarm(0) # Disable the alarm
@@ -687,7 +686,6 @@ class SymPyDocTests(object):
     def test_file(self, filename):
         clear_cache()
 
-        import unittest
         from StringIO import StringIO
 
         rel_name = filename[len(self._root_dir)+1:]

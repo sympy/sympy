@@ -218,10 +218,8 @@ def multinomial_coefficients_iterator(m, n, _tuple=tuple):
             if tj > 1:
                 t[j + 1] += 1
                 j = 0
-                start = 1
             else:
                 j += 1
-                start = j + 1
                 t[j] += 1
 
             t[0] -= 1

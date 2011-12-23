@@ -5,8 +5,6 @@ Generating and counting primes.
 import random
 from bisect import bisect
 from primetest import isprime
-from sympy.core.numbers import integer_nthroot
-
 
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption

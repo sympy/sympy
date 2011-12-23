@@ -5,8 +5,6 @@
 
 import sys
 import functools
-import signal
-import os
 
 try:
     # tested with py-lib 0.9.0
