@@ -524,6 +524,8 @@ class Mul(AssocOp):
                                 neg.append(bi)
                             else:
                                 nonneg.append(bi)
+                        elif bi.is_polar:
+                            nonneg.append(bi)
                         else:
                             unk.append(bi)
                     if len(unk) == len(rest) or len(neg) == len(rest) == 1:
@@ -960,6 +962,10 @@ class Mul(AssocOp):
     _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer')
     _eval_is_comparable = lambda self: self._eval_template_is_attr('is_comparable')
 
+    def _eval_is_polar(self):
+        has_polar = any(arg.is_polar for arg in self.args)
+        return has_polar and \
+               all(arg.is_polar or arg.is_positive for arg in self.args)
 
     # I*I -> R,  I*I*I -> -I
 

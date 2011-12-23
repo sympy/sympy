@@ -110,6 +110,8 @@ class Pow(Expr):
             return Pow(abs(b), e * other)
         if abs(e) < S.One and other.is_real:
             return Pow(b, e * other)
+        if b.is_polar:
+            return Pow(b, e * other)
 
     def _eval_is_comparable(self):
         c1 = self.base.is_comparable
@@ -229,6 +231,9 @@ class Pow(Expr):
             if self.exp.is_nonnegative or self.base.is_nonzero:
                 return True
 
+    def _eval_is_polar(self):
+        return self.base.is_polar
+
     def _eval_subs(self, old, new):
         if self == old:
             return new
@@ -319,7 +324,11 @@ class Pow(Expr):
                 # this is just like what is happening automatically, except
                 # that now we are doing it for an arbitrary exponent for which
                 # no automatic expansion is done
-                sifted = sift(b.args, lambda x: x.is_nonnegative)
+                def pred(x):
+                    if x.is_polar is None:
+                        return x.is_nonnegative
+                    return x.is_polar
+                sifted = sift(b.args, pred)
                 nonneg = sifted.get(True, [])
                 other = sifted.get(None, [])
                 neg = sifted.get(False, [])
@@ -659,7 +668,7 @@ class Pow(Expr):
         else:
             c, t = exp.as_coeff_mul()
             if c.is_negative:
-                return 1, base**-exp
+                return S.One, base**-exp
         # unprocessed Float and NumberSymbol
         return self, S.One
 

@@ -10,6 +10,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 class HyperbolicFunction(Function):
     """Base class for hyperbolic functions. """
 
+    unbranched = True
+
 class sinh(HyperbolicFunction):
     """
     The hyperbolic sine function, :math:`\\frac{exp(x) - exp(-x)}{2}`.
