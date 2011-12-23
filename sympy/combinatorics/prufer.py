@@ -20,7 +20,7 @@ class Prufer(Basic):
     @property
     def prufer_repr(self):
         """
-        Returns the tree representation of the Prufer sequence.
+        Returns Prufer sequence for the Prufer object.
 
         Examples
         ========
@@ -44,7 +44,7 @@ class Prufer(Basic):
     @property
     def tree_repr(self):
         """
-        Returns the tree representation of the Prufer sequence.
+        Returns the tree representation of the Prufer object.
 
         Examples
         ========
@@ -233,9 +233,16 @@ class Prufer(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
+
+        A Prufer object can be constructed from a list of node connections
+        and the number of nodes:
+
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
         >>> a.prufer_repr
         [0, 0]
+
+        A Prufer object can be constructed from a Prufer sequence:
+
         >>> b = Prufer([1, 3])
         >>> b.tree_repr
         [[2, 1], [1, 3], [3, 0]]
