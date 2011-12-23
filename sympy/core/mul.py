@@ -1346,7 +1346,7 @@ class Mul(AssocOp):
             s *= x._sage_()
         return s
 
-    def as_content_primitive(self):
+    def as_content_primitive(self, radical=False):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
@@ -1362,7 +1362,7 @@ class Mul(AssocOp):
         coef = S.One
         args = []
         for i, a in enumerate(self.args):
-            c, p = a.as_content_primitive()
+            c, p = a.as_content_primitive(radical=radical)
             coef *= c
             if p is not S.One:
                 args.append(p)
