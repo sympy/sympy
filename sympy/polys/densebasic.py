@@ -1685,8 +1685,10 @@ def _rec_list_terms(g, v, monom):
 
             terms.append((monom + (d-i,), c))
     else:
+        w = v-1
+
         for i, c in enumerate(g):
-            terms.extend(_rec_list_terms(c, v-1, monom + (d-i,)))
+            terms.extend(_rec_list_terms(c, w, monom + (d-i,)))
 
     return terms
 

@@ -549,7 +549,9 @@ def dmp_neg(f, u, K):
     if not u:
         return dup_neg(f, K)
 
-    return [ dmp_neg(cf, u-1, K) for cf in f ]
+    v = u-1
+
+    return [ dmp_neg(cf, v, K) for cf in f ]
 
 @cythonized("df,dg,k")
 def dup_add(f, g, K):
