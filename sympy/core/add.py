@@ -807,7 +807,6 @@ class Add(AssocOp):
                     for q in r:
                         r[q] = prod(r[q])
                 # find the gcd of bases for each q
-                n = len(rads)
                 G = []
                 for q in common_q:
                     g = reduce(igcd, [r[q] for r in rads], 0)

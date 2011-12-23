@@ -9,7 +9,7 @@
     objects instead.  When things stabilize this could be a useful refactoring.
 """
 
-from sympy.tensor.indexed import Idx, IndexedBase, Indexed
+from sympy.tensor.indexed import Idx, Indexed
 from sympy.functions import exp
 from sympy.core import C
 

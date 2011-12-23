@@ -71,7 +71,7 @@ import tempfile
 import subprocess
 
 from sympy.utilities.codegen import (
-        codegen, get_code_generator, Routine, OutputArgument, InOutArgument,
+        get_code_generator, Routine, OutputArgument, InOutArgument,
         CodeGenArgumentListError, Result
         )
 from sympy.utilities.lambdify import implemented_function

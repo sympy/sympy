@@ -78,7 +78,6 @@ to see the results of some benchmarks.
 
 """
 
-import os
 import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr

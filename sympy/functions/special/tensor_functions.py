@@ -1,5 +1,5 @@
 from sympy.core.function import Function, C
-from sympy.core import sympify, S, Integer
+from sympy.core import S, Integer
 from sympy.core.mul import prod
 
 ###############################################################################
