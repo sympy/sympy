@@ -273,7 +273,7 @@ class AssumeMixin(object):
         this case), the initial assumptions are also forming their typeinfo.
 
         Examples
-    ========
+        ========
 
         >>> from sympy import Symbol
         >>> from sympy.abc import x
