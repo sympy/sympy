@@ -334,3 +334,71 @@ class TableForm(Basic):
                 d = [self._headings[0][i]] + d
             s += format_str % tuple(d)
         return s
+
+    def as_latex(self):
+        """
+        Returns the string representation of 'self'.
+
+        Example:
+
+        >>> from sympy import TableForm
+        >>> t = TableForm([[5, 7], [4, 2], [10, 3]])
+        >>> s = t.as_latex()
+
+        """
+        column_widths = [0] * self._w
+        lines = []
+        for line in self._lines:
+            new_line = []
+            for i in range(self._w):
+                # Format the item somehow if needed:
+                s = str(line[i])
+                w = len(s)
+                if w > column_widths[i]:
+                    column_widths[i] = w
+                new_line.append(s)
+            lines.append(new_line)
+
+        # Check heading:
+        if self._headings[1]:
+            new_line = []
+            for i in range(self._w):
+                # Format the item somehow if needed:
+                s = str(self._headings[1][i])
+                w = len(s)
+                if w > column_widths[i]:
+                    column_widths[i] = w
+                new_line.append(s)
+            self._headings[1] = new_line
+
+        format_str = ""
+        for w in column_widths:
+            if self._alignment == "left":
+                align = "-"
+            elif self._alignment == "right":
+                align = ""
+            else:
+                raise NotImplementedError()
+            format_str += "%" + align + str(w) + "s "
+        format_str += "\n"
+
+        if self._headings[0]:
+            self._headings[0] = [str(x) for x in self._headings[0]]
+            heading_width = max([len(x) for x in self._headings[0]])
+            format_str = "%" + str(heading_width) + "s | " + format_str
+
+        s = r"\begin{tabular}{" + " ".join(["c" for x in lines[0]]) + "}\n"
+        if self._headings[1]:
+            d = self._headings[1]
+            if self._headings[0]:
+                d = [""] + d
+            first_line = " & ".join(d) + r" \\" + "\n"
+            s += first_line
+            s += r"\hline" + "\n"
+        for i, line in enumerate(lines):
+            d = line
+            if self._headings[0]:
+                d = [self._headings[0][i]] + d
+            s += " & ".join(d) + r" \\" + "\n"
+        s += r"\end{tabular}"
+        return s
