@@ -212,7 +212,8 @@ class TableForm(Basic):
 
     """
 
-    def __new__(cls, data, headings=None, alignment="left"):
+    def __new__(cls, data, headings=None, alignment="left",
+            column_formats=None):
         """
         Creates a TableForm.
 
@@ -253,6 +254,10 @@ class TableForm(Basic):
             _headings = [h1, h2]
 
         _alignment = alignment
+        if column_formats:
+            _column_formats = column_formats
+        else:
+            _column_formats = [None]*_w
 
         obj = Basic.__new__(cls, _w, _h, _lines)
         obj._w = _w
@@ -260,6 +265,7 @@ class TableForm(Basic):
         obj._lines = _lines
         obj._headings = _headings
         obj._alignment = _alignment
+        obj._column_formats = _column_formats
         return obj
 
     def as_str(self):
@@ -340,19 +346,6 @@ class TableForm(Basic):
         >>> s = t.as_latex()
 
         """
-        column_widths = [0] * self._w
-        lines = []
-        for line in self._lines:
-            new_line = []
-            for i in range(self._w):
-                # Format the item somehow if needed:
-                s = str(line[i])
-                w = len(s)
-                if w > column_widths[i]:
-                    column_widths[i] = w
-                new_line.append(s)
-            lines.append(new_line)
-
         # Check heading:
         if self._headings[1]:
             new_line = []
@@ -360,28 +353,13 @@ class TableForm(Basic):
                 # Format the item somehow if needed:
                 s = str(self._headings[1][i])
                 w = len(s)
-                if w > column_widths[i]:
-                    column_widths[i] = w
                 new_line.append(s)
             self._headings[1] = new_line
 
-        format_str = ""
-        for w in column_widths:
-            if self._alignment == "left":
-                align = "-"
-            elif self._alignment == "right":
-                align = ""
-            else:
-                raise NotImplementedError()
-            format_str += "%" + align + str(w) + "s "
-        format_str += "\n"
-
         if self._headings[0]:
             self._headings[0] = [str(x) for x in self._headings[0]]
-            heading_width = max([len(x) for x in self._headings[0]])
-            format_str = "%" + str(heading_width) + "s | " + format_str
 
-        s = r"\begin{tabular}{" + " ".join(["c" for x in lines[0]]) + "}\n"
+        s = r"\begin{tabular}{" + " ".join(["c" for x in self._lines[0]]) + "}\n"
         if self._headings[1]:
             d = self._headings[1]
             if self._headings[0]:
@@ -389,8 +367,13 @@ class TableForm(Basic):
             first_line = " & ".join(d) + r" \\" + "\n"
             s += first_line
             s += r"\hline" + "\n"
-        for i, line in enumerate(lines):
-            d = line
+        for i, line in enumerate(self._lines):
+            d = []
+            for j, x in enumerate(line):
+                if self._column_formats[j]:
+                    d.append(self._column_formats[j] % x)
+                else:
+                    d.append(str(x))
             if self._headings[0]:
                 d = [self._headings[0][i]] + d
             s += " & ".join(d) + r" \\" + "\n"
