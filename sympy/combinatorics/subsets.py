@@ -211,15 +211,15 @@ class Subset(Basic):
         43
         """
         if self._rank_lex == None:
-            def ranklex(self, subset_index, i, n):
+            def _ranklex(self, subset_index, i, n):
                 if subset_index == [] or i > n:
                     return 0
                 if i in subset_index:
                     subset_index.remove(i)
-                    return 1 + ranklex(self, subset_index, i + 1, n)
-                return 2**(n - i - 1) + ranklex(self, subset_index, i + 1, n)
+                    return 1 + _ranklex(self, subset_index, i + 1, n)
+                return 2**(n - i - 1) + _ranklex(self, subset_index, i + 1, n)
             indices = Subset.subset_indices(self.subset, self.superset)
-            self._rank_lex = ranklex(self, indices, 0, self.superset_size)
+            self._rank_lex = _ranklex(self, indices, 0, self.superset_size)
         return self._rank_lex
 
     @property
