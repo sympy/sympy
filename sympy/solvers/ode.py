@@ -2866,6 +2866,98 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
 
     # indirect doctest
 
+    """
+
+    gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
+        returns='both')
+    match.update(gensol)
+    return _solve_variation_of_parameters(eq, func, order, match)
+
+def _solve_variation_of_parameters(eq, func, order, match):
+    """	  	
+    Helper function for the method of variation of parameters.
+
+    See the ode_nth_linear_constant_coeff_variation_of_parameters() 	
+    docstring for more information on this method.
+
+    match should be a dictionary that has the following keys:
+    'list' - A list of solutions to the homogeneous equation, such as
+         the list returned by
+         ode_nth_linear_constant_coeff_homogeneous(returns='list')
+    'sol' - The general solution, such as the solution returned by
+        ode_nth_linear_constant_coeff_homogeneous(returns='sol')
+
+    """
+
+    x = func.args[0]
+    f = func.func
+    r = match
+    psol = 0
+    gensols = r['list']
+    gsol = r['sol']
+    wr = wronskian(gensols, x)
+
+    if r.get('simplify', True):
+        wr = simplify(wr) # We need much better simplification for some ODEs.
+                          # See issue 1563, for example.
+
+        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1  	
+        wr = trigsimp(wr, deep=True, recursive=True)
+    if not wr:
+        # The wronskian will be 0 iff the solutions are not linearly independent.
+        raise NotImplementedError("Cannot find " + str(order) + \
+        " solutions to the homogeneous equation nessesary to apply " + \
+        "variation of parameters to " + str(eq) + " (Wronskian == 0)")
+    if len(gensols) != order:
+        raise NotImplementedError("Cannot find " + str(order) + \
+        " solutions to the homogeneous equation nessesary to apply " + \
+        "variation of parameters to " + str(eq) + " (number of terms != order)")
+    negoneterm = (-1)**(order)
+    for i in gensols:
+        psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i, \
+        gensols), x)*r[-1]/wr, x)*i/r[order]
+        negoneterm *= -1
+
+    if r.get('simplify', True):
+        psol = simplify(psol)
+        psol = trigsimp(psol, deep=True)
+    return Eq(f(x), gsol.rhs + psol)
+
+def ode_separable(eq, func, order, match):
+    r"""
+
+    Solves separable 1st order differential equations.
+
+    This is any differential equation that can be written as
+    P(y)*dy/dx = Q(x). The solution can then just be found by
+    rearranging terms and integrating:
+    Integral(P(y), y) = Integral(Q(x), x). This hint uses separatevars()
+    as its back end, so if a separable equation is not caught by this
+    solver, it is most likely the fault of that function. separatevars()
+    is smart enough to do most expansion and factoring necessary to
+    convert a separable equation F(x, y) into the proper form P(x)*Q(y).
+    The general solution is::
+
+        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy.abc import x
+        >>> a, b, c, d, f = map(Function, ['a', 'b', 'c', 'd', 'f'])
+        >>> genform = Eq(a(x)*b(f(x))*f(x).diff(x), c(x)*d(f(x)))
+        >>> pprint(genform)
+                     d
+        a(x)*b(f(x))*--(f(x)) = c(x)*d(f(x))
+                     dx
+        >>> pprint(dsolve(genform, f(x), hint='separable_Integral'))
+             f(x)
+           /                  /
+          |                  |
+          |  b(y)            | c(x)
+          |  ---- dy = C1 +  | ---- dx
+          |  d(y)            | a(x)
+          |                  |
+         /                  /
+
+    Examples
+    ========
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
