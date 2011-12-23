@@ -1,4 +1,5 @@
 from sympy.core import Basic
+from sympy.utilities.iterables import flatten
 
 class Prufer(Basic):
     """
@@ -6,6 +7,7 @@ class Prufer(Basic):
     bijection between labeled trees and the Prufer code. A Prufer
     code of a labeled tree is unique up to isomorphism and has
     a length of n - 2.
+
     Prufer sequences were first used by Heinz Prufer to give a
     proof of Cayley's formula.
 
@@ -24,11 +26,15 @@ class Prufer(Basic):
     def prufer_repr(self):
         """Returns Prufer sequence for the Prufer object.
 
+        This sequence is found by removing the highest numbered vertex,
+        recording the node it was attached to, and continuuing until only
+        two verices remain. The Prufer sequence is the list of recorded nodes.
+
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
-        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).prufer_repr
-        [3, 3, 0, 0]
+        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).prufer_repr
+        [4, 3, 3, 3]
         >>> Prufer([1, 0, 0]).prufer_repr
         [1, 0, 0]
 
@@ -48,7 +54,7 @@ class Prufer(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
-        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).tree_repr
+        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).tree_repr
         [[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]
         >>> Prufer([1, 0, 0]).tree_repr
         [[4, 1], [3, 0], [2, 0], [1, 0]]
@@ -64,12 +70,12 @@ class Prufer(Basic):
 
     @property
     def nodes(self):
-        """Retunrs the number of nodes in the tree.
+        """Returns the number of nodes in the tree.
 
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
-        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).nodes
+        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).nodes
         6
         >>> Prufer([1, 0, 0]).nodes
         5
@@ -84,13 +90,13 @@ class Prufer(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
-        >>> p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6)
+        >>> p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]])
         >>> p.rank
-        756
+        993
         >>> p.next().rank
-        757
+        994
         >>> p.prev().rank
-        755
+        992
 
         See Also
         ========
@@ -108,7 +114,7 @@ class Prufer(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
-        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
         >>> a.prufer_repr
         [0, 0]
         >>> Prufer.to_prufer([[0, 1], [0, 2], [0, 3]], 4)
@@ -117,15 +123,16 @@ class Prufer(Basic):
         """
         n = int(n)
         d = [0]*n
-        L = [0]*n
+        L = [0]*(n-2)
         for edge in tree:
-            edge.sort()
+
             # Increment the value of the corresponding
             # node in the degree list as we encounter an
             # edge involving it.
             d[edge[0]] += 1
             d[edge[1]] += 1
-        for i in xrange(0, n - 2):
+        for i in xrange(n - 2):
+            # find first 1 from the right
             x = n - 1
             while d[x] != 1:
                 x -= 1
@@ -144,7 +151,7 @@ class Prufer(Basic):
             # into account while reducing the values in
             # the degree list.
             tree.remove(e)
-        return L[2:]
+        return L
 
     @staticmethod
     def to_tree(prufer):
@@ -164,9 +171,9 @@ class Prufer(Basic):
         prufer.append(0)
         n = len(prufer) + 1
         d = [1]*n
-        for i in xrange(0, n - 2):
+        for i in xrange(n - 2):
             d[prufer[i]] += 1
-        for i in xrange(0, n - 1):
+        for i in xrange(n - 1):
             x = n - 1
             # Find the node whose degree is one and
             # get the edge associated with it.
@@ -186,7 +193,7 @@ class Prufer(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
-        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
         >>> a.prufer_rank()
         0
 
@@ -224,10 +231,9 @@ class Prufer(Basic):
         ========
         >>> from sympy.combinatorics.prufer import Prufer
 
-        A Prufer object can be constructed from a list of node connections
-        and the number of nodes:
+        A Prufer object can be constructed from a list of edges:
 
-        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
         >>> a.prufer_repr
         [0, 0]
 
@@ -240,8 +246,17 @@ class Prufer(Basic):
         """
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         if isinstance(args[0][0], list):
+            nodes = set(flatten(args[0]))
+            nnodes = max(nodes) + 1
+            if nnodes != len(nodes):
+                missing = sorted(set(range(nnodes)) - nodes)
+                if len(missing) == 1:
+                    msg = 'Node %s is missing' % missing[0]
+                else:
+                    msg = 'Nodes %s are missing' % missing
+                raise ValueError(msg)
             ret_obj._tree_repr = args[0]
-            ret_obj._nodes = args[1]
+            ret_obj._nodes = nnodes
         else:
             ret_obj._prufer_repr = args[0]
             ret_obj._nodes = len(ret_obj._prufer_repr) + 2
@@ -253,7 +268,7 @@ class Prufer(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
-        >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
         >>> b = a.next()
         >>> b.tree_repr
         [[3, 0], [2, 1], [1, 0]]
@@ -269,14 +284,13 @@ class Prufer(Basic):
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
-        >>> a = Prufer([[0, 1], [1, 2], [2, 3], [1, 4]], 5)
+        >>> a = Prufer([[0, 1], [1, 2], [2, 3], [1, 4]])
         >>> a.rank
-        25
+        36
         >>> b = a.prev()
         >>> b
-        Prufer([0, 4, 4])
+        Prufer([1, 2, 0])
         >>> b.rank
-        24
-
+        35
         """
         return Prufer.unrank(self.rank - 1, self.nodes)
