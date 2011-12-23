@@ -686,7 +686,6 @@ class SymPyDocTests(object):
     def test_file(self, filename):
         clear_cache()
 
-        import unittest
         from StringIO import StringIO
 
         rel_name = filename[len(self._root_dir)+1:]
