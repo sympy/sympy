@@ -1,6 +1,6 @@
 """Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from sympy.core import igcd, ilcm
+from sympy.core import igcd
 
 from sympy.polys.monomialtools import (
     monomial_key, monomial_min, monomial_div

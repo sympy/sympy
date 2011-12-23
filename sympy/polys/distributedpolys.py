@@ -5,10 +5,8 @@ from sympy.polys.monomialtools import (
 )
 
 from sympy.polys.polyerrors import (
-    ExactQuotientFailed, DomainError,
+    ExactQuotientFailed,
 )
-
-from operator import itemgetter
 
 def sdp_LC(f, K):
     """Returns the leading coeffcient of `f`. """

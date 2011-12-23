@@ -132,8 +132,7 @@ from sympy.polys.rootisolation import (
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
-    PolynomialError,
-    DomainError)
+    PolynomialError)
 
 def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)

@@ -4,7 +4,7 @@ from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask, Q
-from sympy.core import S, sympify
+from sympy.core import sympify
 
 def _construct_simple(coeffs, opt):
     """Handle simple domains, e.g.: ZZ, QQ, RR and algebraic domains. """

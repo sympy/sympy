@@ -12,7 +12,7 @@ from sympy.polys.densebasic import (
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
+    dup_mul,
     dup_quo, dmp_quo,
     dup_mul_ground, dmp_mul_ground)
 
