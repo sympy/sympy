@@ -1,14 +1,12 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
 from sympy.core.symbol import Dummy
-from sympy.core.add import Add
-from sympy.core.mul import Mul
-from sympy.core import S, I, Basic
+from sympy.core import S, I
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im
+from sympy.functions import exp, sqrt
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list
 from sympy.polys.specialpolys import cyclotomic_poly

@@ -1353,11 +1353,6 @@ class ANP(PicklableWithSlots):
 
             if dom != f.dom and dom != g.dom:
                 mod = dup_convert(f.mod, f.dom, dom)
-            else:
-                if dom == f.dom:
-                    H = f.mod
-                else:
-                    H = g.mod
 
             per = lambda rep: ANP(rep, mod, dom)
 
