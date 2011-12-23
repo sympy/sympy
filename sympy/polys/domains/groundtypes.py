@@ -13,9 +13,29 @@ gmpy = import_module('gmpy', min_module_version='1.03',
 
 HAS_GMPY = bool(gmpy)
 
+from __builtin__ import (
+    int     as PythonIntegerType,
+    float   as PythonRealType,
+    complex as PythonComplexType,
+)
+
+from pythonrationaltype import PythonRationalType
+
 def python_factorial(n):
     from sympy.functions.combinatorial.factorials import factorial
     return int(factorial(n))
+
+from sympy.core.numbers import (
+    igcdex     as python_gcdex,
+    igcd       as python_gcd,
+    ilcm       as python_lcm,
+)
+
+from sympy import (
+    Float    as SymPyRealType,
+    Integer  as SymPyIntegerType,
+    Rational as SymPyRationalType,
+)
 
 if HAS_GMPY:
     from gmpy import (
@@ -46,7 +66,14 @@ else:
     gmpy_lcm         = None
     gmpy_sqrt        = None
 
+from sympy.mpmath import (
+    mpf as MPmathRealType,
+    mpc as MPmathComplexType,
+    mpi as MPmathIntervalType,
+)
+
 from sympy.mpmath.libmp.libmpf import isqrt
 
 def python_sqrt(a):
     return int(isqrt(a))
+
