@@ -492,25 +492,12 @@ class Float(Number):
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return False
             return other.__eq__(self)
-        if isinstance(other, FunctionClass): #cos as opposed to cos(x)
-            return False
         if isinstance(other, Number):
             return bool(mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
         return False    # Float != non-Number
 
     def __ne__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return True     # sympy != other
-        if isinstance(other, NumberSymbol):
-            if other.is_irrational: return True
-            return other.__ne__(self)
-        if isinstance(other, FunctionClass): #cos as opposed to cos(x)
-            return True
-        if isinstance(other, Number):
-            return bool(not mlib.mpf_eq(self._mpf_, other._as_mpf_val(self._prec)))
-        return True     # Float != non-Number
+        return not self.__eq__(other)
 
     def __lt__(self, other):
         try:
@@ -862,10 +849,6 @@ class Rational(Number):
         if isinstance(other, NumberSymbol):
             if other.is_irrational: return False
             return other.__eq__(self)
-        if isinstance(other, FunctionClass): #cos as opposed to cos(x)
-            return False
-        if other.is_comparable and not isinstance(other, Rational):
-            other = other.evalf()
         if isinstance(other, Number):
             if isinstance(other, Float):
                 return mlib.mpf_eq(self._as_mpf_val(other._prec), other._mpf_)
@@ -1224,11 +1207,7 @@ class Integer(Rational):
         return Rational.__eq__(a, b)
 
     def __ne__(a, b):
-        if isinstance(b, (int, long)):
-            return (a.p != b)
-        elif isinstance(b, Integer):
-            return (a.p != b.p)
-        return Rational.__ne__(a, b)
+        return not a.__eq__(b)
 
     def __gt__(a, b):
         if isinstance(b, (int, long)):
@@ -2054,16 +2033,7 @@ class NumberSymbol(AtomicExpr):
         return False    # NumberSymbol != non-(Number|self)
 
     def __ne__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return True     # sympy != other
-        if self is other:
-            return False
-        if isinstance(other, Number) and self.is_irrational:
-            return True
-
-        return True     # NumberSymbol != non(Number|self)
+        return not self.__eq__(other)
 
     def __lt__(self, other):
         try:
@@ -2342,7 +2312,6 @@ _intcache[0] = S.Zero
 _intcache[1] = S.One
 _intcache[-1]= S.NegativeOne
 
-from function import FunctionClass
 from power import Pow, integer_nthroot
 from mul import Mul
 Mul.identity = One()
