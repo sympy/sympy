@@ -180,7 +180,6 @@ class Poly(Expr):
             rep = cls.new(rep.rep, *rep.gens)
 
         gens = opt.gens
-        order = opt.order
         field = opt.field
         domain = opt.domain
 
@@ -3719,7 +3718,6 @@ class PurePoly(Poly):
 
         cls = f.__class__
         gens = f.gens
-        lev = len(gens)-1
 
         dom = f.rep.dom.unify(g.rep.dom, gens)
 
@@ -5490,7 +5488,7 @@ def cancel(f, *gens, **args):
 
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed:
         if not isinstance(f, (tuple, Tuple)):
             return f
         else:

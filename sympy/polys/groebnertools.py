@@ -12,13 +12,10 @@ from sympy.polys.distributedpolys import (
 )
 
 from sympy.polys.polyerrors import (
-    ExactQuotientFailed, DomainError,
+    DomainError,
 )
 
 from sympy.polys.polyconfig import query
-from sympy.core.compatibility import cmp
-
-from operator import itemgetter
 
 def sdp_groebner(f, u, O, K, gens='', verbose=False, method=None):
     """
@@ -264,7 +261,6 @@ def sdp_str(f, gens):
     if isinstance(gens, basestring):
         gens = gens.split(',')
     ngens = len(gens)
-    z = (0,) * ngens
     s = ''
     for expv, c in f:
         if c > 0:

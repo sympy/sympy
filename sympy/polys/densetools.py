@@ -3,48 +3,34 @@
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
     dup_convert, dmp_convert,
-    dup_degree, dmp_degree, dmp_degree_in,
-    dup_to_dict, dmp_to_dict,
-    dup_from_dict, dmp_from_dict,
+    dup_degree, dmp_degree,
+    dmp_to_dict,
+    dmp_from_dict,
     dup_LC, dmp_LC, dmp_ground_LC,
-    dup_TC, dmp_TC, dmp_ground_TC,
-    dmp_zero, dmp_one, dmp_ground,
-    dmp_zero_p, dmp_one_p,
-    dmp_multi_deflate, dmp_inflate,
+    dup_TC, dmp_TC,
+    dmp_zero, dmp_ground,
+    dmp_zero_p,
     dup_to_raw_dict, dup_from_raw_dict,
-    dmp_raise, dmp_apply_pairs,
-    dmp_inject, dmp_zeros,
-    dup_terms_gcd
+    dmp_zeros
 )
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
-    dup_mul_term, dmp_mul_term,
-    dup_lshift, dup_rshift,
-    dup_neg, dmp_neg,
+    dup_lshift,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul,
-    dup_sqr, dmp_sqr,
-    dup_pow, dmp_pow,
-    dup_div, dmp_div,
+    dup_sqr,
+    dup_div,
     dup_rem, dmp_rem,
-    dup_quo, dmp_quo,
-    dup_prem, dmp_prem,
-    dup_expand, dmp_expand,
-    dup_add_mul, dup_sub_mul,
+    dmp_expand,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
-    dup_max_norm, dmp_max_norm
 )
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
-    HeuristicGCDFailed,
-    HomomorphismFailed,
-    RefinementFailed,
-    NotInvertible,
     DomainError
 )
 

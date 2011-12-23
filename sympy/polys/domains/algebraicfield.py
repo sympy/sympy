@@ -1,7 +1,5 @@
 """Implementation of :class:`AlgebraicField` class. """
 
-from sympy.core import sympify
-
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero

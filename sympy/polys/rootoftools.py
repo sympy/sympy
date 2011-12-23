@@ -1,6 +1,6 @@
 """Implementation of RootOf class and related tools. """
 
-from sympy.core import S, Basic, Expr, Integer, Float, I, Add, Lambda, symbols, sympify
+from sympy.core import S, Expr, Integer, Float, I, Add, Lambda, symbols, sympify
 
 from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
@@ -26,8 +26,6 @@ from sympy.mpmath import mp, mpf, mpc, findroot
 from sympy.mpmath.libmp.libmpf import prec_to_dps
 
 from sympy.utilities import lambdify
-
-import operator
 
 def dup_minpoly_add(f, g, K):
     F = dmp_raise(f, 1, 0, K)

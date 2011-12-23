@@ -1,9 +1,9 @@
 """Arithmetics for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
 from sympy.polys.densebasic import (
-    dup_LC, dup_TC, dmp_LC,
+    dup_LC, dmp_LC,
     dup_degree, dmp_degree,
-    dup_normal, dmp_normal,
+    dup_normal,
     dup_strip, dmp_strip,
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
@@ -551,7 +551,7 @@ def dmp_neg(f, u, K):
 
     v = u-1
 
-    return [ dmp_neg(cf, u-1, K) for cf in f ]
+    return [ dmp_neg(cf, v, K) for cf in f ]
 
 @cythonized("df,dg,k")
 def dup_add(f, g, K):

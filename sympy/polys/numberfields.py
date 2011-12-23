@@ -1,16 +1,12 @@
 """Computational algebraic number field theory. """
 
 from sympy import (
-    S, Expr, I, Integer, Rational, Float,
+    S, Expr, Rational,
     Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple
 )
 
 from sympy.polys.polytools import (
     Poly, PurePoly, sqf_norm, invert, factor_list, groebner,
-)
-
-from sympy.polys.polyutils import (
-    basic_from_dict,
 )
 
 from sympy.polys.polyclasses import (

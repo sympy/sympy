@@ -3,7 +3,7 @@
 from sympy.polys.densebasic import (
     dup_LC, dup_TC, dup_degree,
     dup_strip, dup_reverse,
-    dup_convert, dmp_convert,
+    dup_convert,
     dup_terms_gcd)
 
 from sympy.polys.densearith import (
@@ -27,8 +27,6 @@ from sympy.polys.factortools import (
 from sympy.polys.polyerrors import (
     RefinementFailed,
     DomainError)
-
-import operator
 
 def dup_sturm(f, K):
     """
@@ -278,8 +276,6 @@ def dup_inner_isolate_real_roots(f, K, eps=None, fast=False):
         roots = [dup_inner_refine_real_root(f, (a, b, c, d), K, eps=eps, fast=fast, mobius=True)]
     else:
         roots, stack = [], [(a, b, c, d, f, k)]
-
-        F = K.get_field()
 
         while stack:
             a, b, c, d, f, k = stack.pop()
