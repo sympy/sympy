@@ -488,6 +488,17 @@ def test_ANP_arithmetics():
 
     assert a.quo(a) == a.mul(a.pow(-1)) == a*a**(-1) == ANP(1, mod, QQ)
 
+def test_ANP_unify():
+    mod = [QQ(1), QQ(0), QQ(-2)]
+
+    a = ANP([QQ(1)], mod, QQ)
+    b = ANP([ZZ(1)], mod, ZZ)
+
+    assert a.unify(b)[0] == QQ
+    assert b.unify(a)[0] == QQ
+    assert a.unify(a)[0] == QQ
+    assert b.unify(b)[0] == ZZ
+
 def test___hash__():
     # Issue 2472
     # Make sure int vs. long doesn't affect hashing with Python ground types
