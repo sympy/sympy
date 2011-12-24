@@ -18,6 +18,10 @@ def test_simple_products():
 
     assert isinstance(product(k**k, (k, 1, n)), Product)
 
+def test_multiple_products():
+    x, n, m, k = symbols('x n m k', integer=True)
+    assert product(x, (n, 1, k), (k, 1, m)) == x**(m**2/2 + m/2)
+
 def test_rational_products():
     assert product(1+1/k, (k, 1, n)) == rf(2, n)/factorial(n)
 
