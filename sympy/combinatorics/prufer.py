@@ -274,24 +274,24 @@ class Prufer(Basic):
             ret_obj._nodes = len(ret_obj._prufer_repr) + 2
         return ret_obj
 
-    def next(self):
-        """Generates the next Prufer sequence.
+    def next(self, delta=1):
+        """Generates the Prufer sequence that is delta beyond the current one.
 
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
-        >>> b = a.next()
+        >>> b = a.next(1)
         >>> b.tree_repr
         [[3, 0], [2, 1], [1, 0]]
         >>> b.rank
         1
 
         """
-        return Prufer.unrank(self.rank + 1, self.nodes)
+        return Prufer.unrank(self.rank + delta, self.nodes)
 
-    def prev(self):
-        """Generates the previous Prufer sequence.
+    def prev(self, delta=1):
+        """Generates the Prufer sequence that is -delta before the current one.
 
         Examples
         ========
@@ -305,4 +305,4 @@ class Prufer(Basic):
         >>> b.rank
         35
         """
-        return Prufer.unrank(self.rank - 1, self.nodes)
+        return Prufer.unrank(self.rank - delta, self.nodes)
