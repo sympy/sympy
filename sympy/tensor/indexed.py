@@ -239,7 +239,8 @@ class IndexedBase(Expr):
     @property
     def label(self):
         """
-        Returns the label of the IndexedBase object.
+        Returns the integer value of the label. Returns the label instead if the
+        integer value is unknown.
 
         Examples
         ========
@@ -285,15 +286,18 @@ class Indexed(Expr):
     @property
     def base(self):
         """
-        Returns the base/label of the Indexed object.
+        Returns the IndexedBase of the Indexed object.
 
         Examples
         ========
 
-            >>> from sympy.tensor import Indexed, Idx
+            >>> from sympy.tensor import Indexed, IndexedBase, Idx
             >>> i, j = map(Idx, ['i', 'j'])
             >>> Indexed('A', i, j).base
             A
+            >>> B = IndexedBase('B')
+            >>> B == B[i, j].base
+            True
 
         """
         return self.args[0]
@@ -498,15 +502,17 @@ class Idx(Expr):
     @property
     def label(self):
         """
-        Returns the name/label of the index or its integer value.
+        Returns the integer value of the label. Returns the label instead if the
+        integer value is unknown.
 
         Examples
         ========
 
-            >>> from sympy import Idx
+            >>> from sympy import Idx, Symbol
             >>> Idx(2).label
             2
-            >>> Idx('j', 2).label
+            >>> j = Symbol('j', integer=True)
+            >>> Idx(j, 2).label
             j
 
         """
