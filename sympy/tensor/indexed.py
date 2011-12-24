@@ -178,7 +178,7 @@ class IndexedBase(Expr):
     @property
     def args(self):
         """
-        Returns the arguements used to create this IndexedBase object.
+        Returns the arguments used to create this IndexedBase object.
 
         Examples
         ========
@@ -378,13 +378,13 @@ class Indexed(Expr):
         Examples
         ========
 
-            >>> from sympy import Indexed, IndexedBase, Idx, symbols
+            >>> from sympy import IndexedBase, Idx, symbols
             >>> A = IndexedBase('A')
             >>> A[Idx('i', 2), Idx('j', 4), Idx('k', 8)].ranges
             [(0, 1), (0, 3), (0, 7)]
             >>> A[Idx('i', 3), Idx('j', 3), Idx('k', 3)].ranges
             [(0, 2), (0, 2), (0, 2)]
-            >>> x, y, z = symbols('x y z', Integer=True)
+            >>> x, y, z = symbols('x y z', integer=True)
             >>> A[x, y, z].ranges
             [None, None, None]
 
@@ -502,7 +502,7 @@ class Idx(Expr):
     @property
     def label(self):
         """
-        Returns the name/label of the index, or it's integer value.
+        Returns the name/label of the index or its integer value.
 
         Examples
         ========
@@ -519,7 +519,7 @@ class Idx(Expr):
     @property
     def lower(self):
         """
-        Returns the lower bound of the index.
+        Returns the lower bound of the Index.
 
         Examples
         ========
@@ -539,7 +539,7 @@ class Idx(Expr):
     @property
     def upper(self):
         """
-        Returns the upper bound of the index
+        Returns the upper bound of the Index.
 
         Examples
         ========
