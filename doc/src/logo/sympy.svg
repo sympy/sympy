@@ -126,18 +126,16 @@ Fredrik Johansson
       <g style="display:inline">
         <text
            transform="matrix(0.8246541,-0.2574405,0,1.2126296,0,0)"
-           xml:space="preserve"
            style="font-size:10.5470562px;font-style:normal;font-weight:normal;fill:#897751;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Euclid">
            <tspan x="545" y="398.80972"
-             style="font-size:126.56466675px;fill:#897751;fill-opacity:1">d<tspan style="font-style:italic;font-family:Times New Roman">x</tspan></tspan>
+             style="font-size:126px;fill:#897751;fill-opacity:1">d<tspan style="font-size:126px;font-style:italic;font-family:Times New Roman">x</tspan></tspan>
         </text>
       </g>
       <!-- text "Σ" on the left edge -->
       <text
          transform="matrix(0.8385983,0.2552685,0,1.192466,0,0)"
-         xml:space="preserve"
-         style="font-size:244.3759613px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Times New Roman">
-         <tspan x="240.909" y="258.98959" style="fill:#9a8354;fill-opacity:1" >Σ</tspan>
+         style="font-size:244px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Times New Roman">
+         <tspan x="240.909" y="258.98959" style="font-size:244px;fill:#9a8354;fill-opacity:1" >Σ</tspan>
       </text>
       <!-- text "∫" on the left edge -->
       <text
