@@ -641,8 +641,7 @@ class Derivative(Expr):
     method internally (not _eval_derivative); Derivative should be the only
     one to call _eval_derivative.
 
-    Ordering of variables
-    ---------------------
+    Ordering of variables:
 
     If evaluate is set to True and the expression can not be evaluated, the
     list of differentiation symbols will be sorted, that is, the expression is
@@ -651,8 +650,7 @@ class Derivative(Expr):
     commute, but Symbol and non-Symbol derivatives don't commute with each
     other.
 
-    Derivative wrt non-Symbols
-    --------------------------
+    Derivative wrt non-Symbols:
 
     This class also allows derivatives wrt non-Symbols that have _diff_wrt
     set to True, such as Function and Derivative. When a derivative wrt a non-

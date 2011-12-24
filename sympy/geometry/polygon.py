@@ -430,10 +430,11 @@ class Polygon(GeometryEntity):
         >>> p.encloses_point(Point(5, 5))
         False
 
-        Adapted from
-        ------------
+        References
+        ----------
         [1] http://www.ariel.com.au/a/python-point-int-poly.html
         [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
+
         """
         if p in self:
             return False

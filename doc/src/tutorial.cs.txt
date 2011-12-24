@@ -1,4 +1,4 @@
-.. _tutorial:
+.. _tutorial-cs:
 
 ========
 Tutoriál
@@ -230,7 +230,7 @@ Pro celý zbytek tutoriálu předpokládejme, že jsme zadali::
     >>> from sympy import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
 
-To nám zajistí hezčí výstup. Koukněte do sekce níže :ref:`printing-tutorial`.
+To nám zajistí hezčí výstup. Koukněte do sekce níže :ref:`printing-tutorial-cs`.
 Pokud máte nainstalovaný font unicode, volbou ``use_unicode=True`` dostanete
 o něco hezčí výstup.
 
@@ -723,7 +723,7 @@ nezobrazily ve výsledku::
     >>> print (x+1).match(x+2+p) # -1 není vyloučeno
     {p_: -1}
 
-.. _printing-tutorial:
+.. _printing-tutorial-cs:
 
 Výpis
 =====
@@ -866,19 +866,19 @@ Všimněte si, že je přístupný modul pro výpisy, ``sympy.printing``. Dalš�
 dostupné díky tomuto modulu jsou:
 
 * ``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Vrací respektive
-vypisuje, pěknou reprezentaci ``expr``. Je to jako druhá úroveň reprezentace
-popsané výše.
+  vypisuje, pěknou reprezentaci ``expr``. Je to jako druhá úroveň reprezentace
+  popsané výše.
 
 * ``latex(expr)``, ``print_latex(expr)``: Vrací, respektive vypisuje,
-`LaTeX <http://www.latex-project.org/>`_  reprezentaci ``expr``
+  `LaTeX <http://www.latex-project.org/>`_  reprezentaci ``expr``
 
 * ``mathml(expr)``, ``print_mathml(expr)``: Vrací, respektive vypisuje,
-`MathML <http://www.w3.org/Math/>`_ reprezentaci ``expr``.
+  `MathML <http://www.w3.org/Math/>`_ reprezentaci ``expr``.
 
 * ``print_gtk(expr)``: Vypisuje ``expr`` do
-`Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, GTK widgetu, který
-zobrazuje MathML kód. Je vyžadován program
-`Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_.
+  `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, GTK widgetu, který
+  zobrazuje MathML kód. Je vyžadován program
+  `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_.
 
 Další dokumentace
 =================

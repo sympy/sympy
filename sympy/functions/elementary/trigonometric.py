@@ -107,38 +107,39 @@ class sin(TrigonometricFunction):
     """
     The sine function.
 
-    Usage
-    =====
-      sin(x) -> Returns the sine of x (measured in radians)
+    * sin(x) -> Returns the sine of x (measured in radians)
 
     Notes
     =====
-        sin(x) will evaluate automatically in the case x
-        is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+
+    * sin(x) will evaluate automatically in the case x
+      is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
     Examples
     ========
-        >>> from sympy import sin, pi
-        >>> from sympy.abc import x
-        >>> sin(x**2).diff(x)
-        2*x*cos(x**2)
-        >>> sin(1).diff(x)
-        0
-        >>> sin(pi)
-        0
-        >>> sin(pi/2)
-        1
-        >>> sin(pi/6)
-        1/2
+    >>> from sympy import sin, pi
+    >>> from sympy.abc import x
+    >>> sin(x**2).diff(x)
+    2*x*cos(x**2)
+    >>> sin(1).diff(x)
+    0
+    >>> sin(pi)
+    0
+    >>> sin(pi/2)
+    1
+    >>> sin(pi/6)
+    1/2
 
     See Also
     ========
+
     L{cos}, L{tan}
 
-    External links
-    ==============
+    References
+    ==========
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+
     """
 
     nargs = 1
@@ -329,38 +330,39 @@ class cos(TrigonometricFunction):
     """
     The cosine function.
 
-    Usage
-    =====
-      cos(x) -> Returns the cosine of x (measured in radians)
+    * cos(x) -> Returns the cosine of x (measured in radians)
 
     Notes
     =====
-        cos(x) will evaluate automatically in the case x
-        is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+
+    * cos(x) will evaluate automatically in the case x
+      is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
 
     Examples
     ========
-        >>> from sympy import cos, pi
-        >>> from sympy.abc import x
-        >>> cos(x**2).diff(x)
-        -2*x*sin(x**2)
-        >>> cos(1).diff(x)
-        0
-        >>> cos(pi)
-        -1
-        >>> cos(pi/2)
-        0
-        >>> cos(2*pi/3)
-        -1/2
+    >>> from sympy import cos, pi
+    >>> from sympy.abc import x
+    >>> cos(x**2).diff(x)
+    -2*x*sin(x**2)
+    >>> cos(1).diff(x)
+    0
+    >>> cos(pi)
+    -1
+    >>> cos(pi/2)
+    0
+    >>> cos(2*pi/3)
+    -1/2
 
     See Also
     ========
+
     L{sin}, L{tan}
 
-    External links
-    ==============
+    References
+    ==========
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+
     """
 
     nargs = 1
@@ -547,32 +549,33 @@ class cos(TrigonometricFunction):
 
 class tan(TrigonometricFunction):
     """
-    Usage
-    =====
-      tan(x) -> Returns the tangent of x (measured in radians)
+    tan(x) -> Returns the tangent of x (measured in radians)
 
     Notes
     =====
-        tan(x) will evaluate automatically in the case x is a
-        multiple of pi.
+
+    * tan(x) will evaluate automatically in the case x is a
+      multiple of pi.
 
     Examples
     ========
-        >>> from sympy import tan
-        >>> from sympy.abc import x
-        >>> tan(x**2).diff(x)
-        2*x*(tan(x**2)**2 + 1)
-        >>> tan(1).diff(x)
-        0
+    >>> from sympy import tan
+    >>> from sympy.abc import x
+    >>> tan(x**2).diff(x)
+    2*x*(tan(x**2)**2 + 1)
+    >>> tan(1).diff(x)
+    0
 
     See Also
     ========
+
     L{sin}, L{tan}
 
-    External links
-    ==============
+    References
+    ==========
 
     U{Definitions in trigonometry<http://planetmath.org/encyclopedia/DefinitionsInTrigonometry.html>}
+
     """
 
     nargs = 1
@@ -751,9 +754,7 @@ class tan(TrigonometricFunction):
 
 class cot(TrigonometricFunction):
     """
-    Usage
-    =====
-      cot(x) -> Returns the cotangent of x (measured in radians)
+    cot(x) -> Returns the cotangent of x (measured in radians)
     """
 
     nargs = 1
@@ -928,22 +929,21 @@ class cot(TrigonometricFunction):
 
 class asin(Function):
     """
-    Usage
-    =====
-      asin(x) -> Returns the arc sine of x (measured in radians)
+    asin(x) -> Returns the arc sine of x (measured in radians)
 
     Notes
-    ====
-        asin(x) will evaluate automatically in the cases
-        oo, -oo, 0, 1, -1
+    =====
+
+    * asin(x) will evaluate automatically in the cases
+      oo, -oo, 0, 1, -1
 
     Examples
     ========
-        >>> from sympy import asin, oo, pi
-        >>> asin(1)
-        pi/2
-        >>> asin(-1)
-        -pi/2
+    >>> from sympy import asin, oo, pi
+    >>> asin(1)
+    pi/2
+    >>> asin(-1)
+    -pi/2
 
     """
 
@@ -1045,24 +1045,24 @@ class asin(Function):
 
 class acos(Function):
     """
-    Usage
-    =====
-      acos(x) -> Returns the arc cosine of x (measured in radians)
+    acos(x) -> Returns the arc cosine of x (measured in radians)
 
     Notes
     =====
-        acos(x) will evaluate automatically in the cases
-        oo, -oo, 0, 1, -1
+
+    * acos(x) will evaluate automatically in the cases
+      oo, -oo, 0, 1, -1
 
     Examples
     ========
-        >>> from sympy import acos, oo, pi
-        >>> acos(1)
-        0
-        >>> acos(0)
-        pi/2
-        >>> acos(oo)
-        oo*I
+    >>> from sympy import acos, oo, pi
+    >>> acos(1)
+    0
+    >>> acos(0)
+    pi/2
+    >>> acos(oo)
+    oo*I
+
     """
 
     nargs = 1
@@ -1152,24 +1152,23 @@ class acos(Function):
 
 class atan(Function):
     """
-    Usage
-    =====
-      atan(x) -> Returns the arc tangent of x (measured in radians)
+    atan(x) -> Returns the arc tangent of x (measured in radians)
 
     Notes
     =====
-        atan(x) will evaluate automatically in the cases
-        oo, -oo, 0, 1, -1
+
+    * atan(x) will evaluate automatically in the cases
+      oo, -oo, 0, 1, -1
 
     Examples
     ========
-        >>> from sympy import atan, oo, pi
-        >>> atan(0)
-        0
-        >>> atan(1)
-        pi/4
-        >>> atan(oo)
-        pi/2
+    >>> from sympy import atan, oo, pi
+    >>> atan(0)
+    0
+    >>> atan(1)
+    pi/4
+    >>> atan(oo)
+    pi/2
 
     """
 
@@ -1264,9 +1263,7 @@ class atan(Function):
 
 class acot(Function):
     """
-    Usage
-    =====
-      acot(x) -> Returns the arc cotangent of x (measured in radians)
+    acot(x) -> Returns the arc cotangent of x (measured in radians)
     """
 
     nargs = 1

@@ -15,11 +15,11 @@ class IdentityFunction(Lambda):
 
     Examples
     ========
-
     >>> from sympy import Id, Symbol
     >>> x = Symbol('x')
     >>> Id(x)
     x
+
     """
     __metaclass__ = Singleton
     __slots__ = []
@@ -41,7 +41,6 @@ def sqrt(arg):
 
     Examples
     ========
-
     >>> from sympy import sqrt, Symbol
     >>> x = Symbol('x')
 
@@ -93,11 +92,12 @@ def sqrt(arg):
     ========
     L{root}, L{RootOf}
 
-    External links
-    ==============
+    References
+    ==========
 
     * http://en.wikipedia.org/wiki/Square_root
     * http://en.wikipedia.org/wiki/Principal_value
+
     """
     # arg = sympify(arg) is handled by Pow
     return C.Pow(arg, S.Half)
@@ -111,7 +111,6 @@ def root(arg, n):
 
     Examples
     ========
-
     >>> from sympy import root, Rational
     >>> from sympy.abc import x, n
 
@@ -146,15 +145,16 @@ def root(arg, n):
 
     See Also
     ========
+
     L{sqrt}, L{RootOf}, L{real_root}, L{integer_nthroot}
 
-        External Links
-        --------------
+    References
+    ==========
 
-        * http://en.wikipedia.org/wiki/Square_root
-        * http://en.wikipedia.org/wiki/real_root
-        * http://en.wikipedia.org/wiki/Root_of_unity
-        * http://en.wikipedia.org/wiki/Principal_value
+    * http://en.wikipedia.org/wiki/Square_root
+    * http://en.wikipedia.org/wiki/real_root
+    * http://en.wikipedia.org/wiki/Root_of_unity
+    * http://en.wikipedia.org/wiki/Principal_value
 
     """
     n = sympify(n)
@@ -166,7 +166,6 @@ def real_root(arg, n=None):
 
     Examples
     ========
-
     >>> from sympy import root, real_root, Rational
     >>> from sympy.abc import x, n
 
@@ -180,6 +179,7 @@ def real_root(arg, n=None):
 
     See Also
     ========
+
     L{sqrt}, L{RootOf}, L{root}, L{integer_nthroot}
 
     """
@@ -345,7 +345,6 @@ class Max(MinMaxBase, Application, Basic):
 
     Examples
     ========
-
     >>> from sympy import Max, Symbol, oo
     >>> from sympy.abc import x, y
     >>> p = Symbol('p', positive=True)
@@ -399,11 +398,15 @@ class Max(MinMaxBase, Application, Basic):
        - if A > B > C then A > C
        - if A==B then B can be removed
 
+    References
+    ==========
+
     .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
     .. [2] http://en.wikipedia.org/wiki/Lattice_(order)
 
     See Also
-    --------
+    ========
+
     Min() : find minimum values
 
     """
@@ -431,7 +434,6 @@ class Min(MinMaxBase, Application, Basic):
 
     Examples
     ========
-
     >>> from sympy import Min, Symbol, oo
     >>> from sympy.abc import x, y
     >>> p = Symbol('p', positive=True)
@@ -453,8 +455,10 @@ class Min(MinMaxBase, Application, Basic):
     Min(n, -7)
 
     See Also
-    --------
+    ========
+
     Max() : find maximum values
+
     """
     zero = S.NegativeInfinity
     identity = S.Infinity

@@ -16,9 +16,8 @@ def psi_n(n, x, m, omega):
     ``omega``
         angular frequency of the oscillator
 
-    :Examples
+    Examples
     ========
-
     >>> from sympy.physics.qho_1d import psi_n
     >>> from sympy import var
     >>> var("x m omega")
