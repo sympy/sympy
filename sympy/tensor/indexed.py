@@ -290,10 +290,9 @@ class Indexed(Expr):
         Examples
         ========
 
-            >>> from sympy.tensor import Indexed, IndexedBase, Idx
+            >>> from sympy.tensor import Indexed, Idx
             >>> i, j = map(Idx, ['i', 'j'])
-            >>> A = IndexedBase('A')
-            >>> A[i, j].base
+            >>> Indexed('A', i, j).base
             A
 
         """
@@ -307,10 +306,9 @@ class Indexed(Expr):
         Examples
         ========
 
-            >>> from sympy.tensor import Indexed, IndexedBase, Idx
+            >>> from sympy.tensor import Indexed, Idx
             >>> i, j = map(Idx, ['i', 'j'])
-            >>> A = IndexedBase('A')
-            >>> A[i, j].indices
+            >>> Indexed('A', i, j).indices
             (i, j)
 
         """
@@ -324,12 +322,11 @@ class Indexed(Expr):
         Examples
         ========
 
-            >>> from sympy.tensor import Indexed, IndexedBase, Idx
+            >>> from sympy.tensor import Indexed, Idx
             >>> i, j, k, l, m = map(Idx, ['i', 'j', 'k', 'l', 'm'])
-            >>> A = IndexedBase('A')
-            >>> A[i, j].rank
+            >>> Indexed('A', i, j).rank
             2
-            >>> q = A[i, j, k, l, m]
+            >>> q = Indexed('A', i, j, k, l, m)
             >>> q.rank
             5
             >>> q.rank == len(q.indices)
@@ -378,14 +375,13 @@ class Indexed(Expr):
         Examples
         ========
 
-            >>> from sympy import IndexedBase, Idx, symbols
-            >>> A = IndexedBase('A')
-            >>> A[Idx('i', 2), Idx('j', 4), Idx('k', 8)].ranges
+            >>> from sympy import Indexed,Idx, symbols
+            >>> Indexed('A', Idx('i', 2), Idx('j', 4), Idx('k', 8)).ranges
             [(0, 1), (0, 3), (0, 7)]
-            >>> A[Idx('i', 3), Idx('j', 3), Idx('k', 3)].ranges
+            >>> Indexed('A', Idx('i', 3), Idx('j', 3), Idx('k', 3)).ranges
             [(0, 2), (0, 2), (0, 2)]
             >>> x, y, z = symbols('x y z', integer=True)
-            >>> A[x, y, z].ranges
+            >>> Indexed('A', x, y, z).ranges
             [None, None, None]
 
         """
