@@ -30,7 +30,7 @@
 
     To express the above matrix element example you would write:
 
-    >>> from sympy.tensor import IndexedBase, Idx
+    >>> from sympy.tensor import IndexedBase,Idx
     >>> from sympy import symbols
     >>> M = IndexedBase('M')
     >>> i, j = map(Idx, ['i', 'j'])
@@ -177,6 +177,18 @@ class IndexedBase(Expr):
 
     @property
     def args(self):
+        """
+        Returns the arguements used to create this IndexedBase object.
+
+        Examples
+        ========
+
+            >>> from sympy import IndexedBase
+            >>> from sympy.abc import x, y
+            >>> IndexedBase('A', shape=(x, y)).args
+            (A, (x, y))
+
+        """
         if self._shape:
             return self._args + (self._shape,)
         else:
@@ -198,10 +210,46 @@ class IndexedBase(Expr):
 
     @property
     def shape(self):
+        """
+        Returns the shape of the IndexedBase object.
+
+        Examples
+        ========
+
+            >>> from sympy import IndexedBase, Idx, Symbol
+            >>> from sympy.abc import x, y
+            >>> IndexedBase('A', shape=(x, y)).shape
+            (x, y)
+
+            Note: If the shape of the IndexedBase is specified, it will override
+            any shape information given by the indices.
+
+            >>> A = IndexedBase('A', shape=(x, y))
+            >>> B = IndexedBase('B')
+            >>> i = Idx('i', 2)
+            >>> j = Idx('j', 1)
+            >>> A[i, j].shape
+            (x, y)
+            >>> B[i, j].shape
+            (2, 1)
+
+        """
         return self._shape
 
     @property
     def label(self):
+        """
+        Returns the label of the IndexedBase object.
+
+        Examples
+        ========
+
+            >>> from sympy import IndexedBase
+            >>> from sympy.abc import x, y
+            >>> IndexedBase('A', shape=(x, y)).label
+            A
+
+        """
         return self.args[0]
 
     def _sympystr(self, p):
@@ -236,15 +284,58 @@ class Indexed(Expr):
 
     @property
     def base(self):
+        """
+        Returns the base of the Indexed object.
+
+        Examples
+        ========
+
+            >>> from sympy.tensor import Indexed, IndexedBase, Idx
+            >>> i, j = map(Idx, ['i', 'j'])
+            >>> A = IndexedBase('A')
+            >>> A[i, j].base
+            A
+
+        """
         return self.args[0]
 
     @property
     def indices(self):
+        """
+        Returns the indices of the Indexed object.
+
+        Examples
+        ========
+
+            >>> from sympy.tensor import Indexed, IndexedBase, Idx
+            >>> i, j = map(Idx, ['i', 'j'])
+            >>> A = IndexedBase('A')
+            >>> A[i, j].indices
+            (i, j)
+
+        """
         return self.args[1:]
 
     @property
     def rank(self):
-        """returns the number of indices"""
+        """
+        Returns the indices of the Indexed object.
+
+        Examples
+        ========
+
+            >>> from sympy.tensor import Indexed, IndexedBase, Idx
+            >>> i, j, k, l, m = map(Idx, ['i', 'j', 'k', 'l', 'm'])
+            >>> A = IndexedBase('A')
+            >>> A[i, j].rank
+            2
+            >>> q = A[i, j, k, l, m]
+            >>> q.rank
+            5
+            >>> q.rank == len(q.indices)
+            True
+
+        """
         return len(self.args)-1
 
     @property
@@ -278,10 +369,25 @@ class Indexed(Expr):
 
     @property
     def ranges(self):
-        """Returns a list of tuples with lower and upper range of each index.
+        """
+        Returns a list of tuples with lower and upper range of each index.
 
         If an index does not define the data members upper and lower, the
         corresponding slot in the list contains ``None`` instead of a tuple.
+
+        Examples
+        ========
+
+            >>> from sympy import Indexed, IndexedBase, Idx, symbols
+            >>> A = IndexedBase('A')
+            >>> A[Idx('i', 2), Idx('j', 4), Idx('k', 8)].ranges
+            [(0, 1), (0, 3), (0, 7)]
+            >>> A[Idx('i', 3), Idx('j', 3), Idx('k', 3)].ranges
+            [(0, 2), (0, 2), (0, 2)]
+            >>> x, y, z = symbols('x y z', Integer=True)
+            >>> A[x, y, z].ranges
+            [None, None, None]
+
         """
         ranges = []
         for i in self.indices:
@@ -395,12 +501,36 @@ class Idx(Expr):
 
     @property
     def label(self):
-        """Returns the name/label of the index, or it's integer value"""
+        """
+        Returns the name/label of the index, or it's integer value.
+
+        Examples
+        ========
+
+            >>> from sympy import Idx
+            >>> Idx(2).label
+            2
+            >>> Idx('j', 2).label
+            j
+
+        """
         return self.args[0]
 
     @property
     def lower(self):
-        """Returns the lower bound of the index"""
+        """
+        Returns the lower bound of the index.
+
+        Examples
+        ========
+
+            >>> from sympy import Idx
+            >>> Idx('j', 2).lower
+            0
+            >>> Idx('j', 5).lower
+            0
+
+        """
         try:
             return self.args[1][0]
         except IndexError:
@@ -408,7 +538,19 @@ class Idx(Expr):
 
     @property
     def upper(self):
-        """Returns the upper bound of the index"""
+        """
+        Returns the upper bound of the index
+
+        Examples
+        ========
+
+            >>> from sympy import Idx
+            >>> Idx('j', 2).upper
+            1
+            >>> Idx('j', 5).upper
+            4
+
+        """
         try:
             return self.args[1][1]
         except IndexError:
