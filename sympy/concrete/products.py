@@ -202,6 +202,36 @@ class Product(Expr):
                 return f
 
 def product(*args, **kwargs):
+    r"""
+    Compute the product.
+
+    The notation for symbols is similiar to the notation used in Sum or
+    Integral. product(f, (i, a, b)) computes the product of f with
+    respect to i from a to b, i.e.,
+
+    ::
+
+                                     b
+                                   _____
+        product(f(n), (i, a, b)) = |   | f(n)
+                                   |   |
+                                   i = a
+
+    If it cannot compute the product, it returns an unevaluated Product object.
+    Repeated products can be computed by introducing additional symbols tuples::
+
+    >>> from sympy import product, oo, symbols
+    >>> i, n, m, k = symbols('i n m k', integer=True)
+
+    >>> product(i, (i, 1, k))
+    k!
+    >>> product(m, (i, 1, k))
+    m**k
+    >>> product(i, (i, 1, k), (k, 1, n))
+    Product(k!, (k, 1, n))
+
+    """
+
     prod = Product(*args, **kwargs)
 
     if isinstance(prod, Product):
