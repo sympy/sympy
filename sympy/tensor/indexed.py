@@ -165,9 +165,10 @@ class IndexedBase(Expr):
     is_commutative = False
 
     def __new__(cls, label, shape=None, **kw_args):
-        if isinstance(label, basestring):
-            label = Symbol(label)
+        if not isinstance(label, (basestring, Symbol)):
+            raise TypeError("Base label should be a string or Symbol.")
 
+        label = sympify(label)
         obj = Expr.__new__(cls, label, **kw_args)
         if is_sequence(shape):
             obj._shape = Tuple(*shape)
@@ -199,11 +200,11 @@ class IndexedBase(Expr):
         if is_sequence(indices):
             # Special case needed because M[*my_tuple] is a syntax error.
             if self.shape and len(self.shape) != len(indices):
-                raise IndexException("Rank mismatch")
+                raise IndexException("Rank mismatch.")
             return Indexed(self, *indices, **kw_args)
         else:
             if self.shape and len(self.shape) != 1:
-                raise IndexException("Rank mismatch")
+                raise IndexException("Rank mismatch.")
             return Indexed(self, indices, **kw_args)
 
     @property
@@ -234,7 +235,7 @@ class IndexedBase(Expr):
 
     @property
     def label(self):
-        """Returns the label of the IndexedBase.
+        """Returns the label of the IndexedBase object.
 
         Examples
         ========
@@ -269,11 +270,15 @@ class Indexed(Expr):
     is_commutative = False
 
     def __new__(cls, base, *args, **kw_args):
-        if not args: raise IndexException("Indexed needs at least one index")
+        from sympy.solvers.solvers import _filldedent
+
+        if not args:
+            raise IndexException("Indexed needs at least one index.")
         if isinstance(base, (basestring, Symbol)):
             base = IndexedBase(base)
         elif not isinstance(base, IndexedBase):
-            raise TypeError("Indexed expects string, Symbol or IndexedBase as base")
+            raise TypeError(_filldedent("""
+                Indexed expects string, Symbol or IndexedBase as base."""))
         return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
@@ -311,7 +316,7 @@ class Indexed(Expr):
     @property
     def rank(self):
         """
-        Returns the indices of the Indexed object.
+        Returns the rank of the Indexed object.
 
         Examples
         ========
@@ -330,7 +335,7 @@ class Indexed(Expr):
 
     @property
     def shape(self):
-        """returns a list with dimensions of each index.
+        """Returns a list with dimensions of each index.
 
         Dimensions is a property of the array, not of the indices.  Still, if
         the IndexedBase does not define a shape attribute, it is assumed that
@@ -348,14 +353,19 @@ class Indexed(Expr):
         >>> B[i, j].shape
         (m, m)
         """
+        from sympy.solvers.solvers import _filldedent
+
         if self.base.shape:
             return self.base.shape
         try:
             return Tuple(*[i.upper - i.lower + 1 for i in self.indices])
         except AttributeError:
-            raise IndexException("Range is not defined for all indices in: %s" % self)
+            raise IndexException(_filldedent("""
+                Range is not defined for all indices in: %s""" % self))
         except TypeError:
-            raise IndexException("Shape cannot be inferred from Idx with undefined range: %s"%self)
+            raise IndexException(_filldedent("""
+                Shape cannot be inferred from Idx with
+                undefined range: %s""" % self))
 
     @property
     def ranges(self):
@@ -422,20 +432,23 @@ class Idx(Expr):
     >>> from sympy import symbols, oo
     >>> n, i, L, U = symbols('n i L U', integer=True)
 
-    0) Construction from a string.  An integer symbol is created from the
-    string.
+    If a string is given for the label an integer Symbol is created and the
+    bounds are both None:
 
-    >>> Idx('qwerty')
+    >>> idx = Idx('qwerty'); idx
     qwerty
+    >>> idx.lower, idx.upper
+    (None, None)
 
-    1) Both upper and lower bound specified
+    Both upper and lower bounds can be specified:
 
     >>> idx = Idx(i, (L, U)); idx
     i
     >>> idx.lower, idx.upper
     (L, U)
 
-    2) Only dimension specified, lower bound defaults to 0
+    When only a single bound is given it is interpreted as the dimension
+    and the lower bound defaults to 0:
 
     >>> idx = Idx(i, n); idx.lower, idx.upper
     (0, n - 1)
@@ -444,42 +457,41 @@ class Idx(Expr):
     >>> idx = Idx(i, oo); idx.lower, idx.upper
     (0, oo)
 
-    3) No bounds given, interpretation of this depends on context.
-
-    >>> idx = Idx(i); idx.lower, idx.upper
-    (None, None)
-
-    4) for a literal integer instead of a symbolic label the bounds are still
-    there:
+    The label can be a literal integer instead of a string/Symbol:
 
     >>> idx = Idx(2, n); idx.lower, idx.upper
     (0, n - 1)
+    >>> idx.label
+    2
 
     """
 
     is_integer = True
 
     def __new__(cls, label, range=None, **kw_args):
+        from sympy.solvers.solvers import _filldedent
 
         if isinstance(label, basestring):
             label = Symbol(label, integer=True)
         label, range = map(sympify, (label, range))
 
         if not label.is_integer:
-            raise TypeError("Idx object requires an integer label")
+            raise TypeError("Idx object requires an integer label.")
 
         elif is_sequence(range):
             assert len(range) == 2, "Idx got range tuple with wrong length"
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):
-                    raise TypeError("Idx object requires integer bounds")
+                    raise TypeError("Idx object requires integer bounds.")
             args = label, Tuple(*range)
         elif isinstance(range, Expr):
             if not (range.is_integer or range is S.Infinity):
-                raise TypeError("Idx object requires an integer dimension")
-            args = label, Tuple(S.Zero, range-S.One)
+                raise TypeError("Idx object requires an integer dimension.")
+            args = label, Tuple(S.Zero, range - S.One)
         elif range:
-            raise TypeError("range must be ordered iterable or integer sympy expression")
+            raise TypeError(_filldedent("""
+                range must be ordered iterable or
+                integer sympy expression."""))
         else:
             args = label,
 
@@ -488,7 +500,7 @@ class Idx(Expr):
 
     @property
     def label(self):
-        """Returns the integer value of the label (if known) else the label's Symbol.
+        """Returns the label (Integer or Symbol) of the Idx object.
 
         Examples
         ========
