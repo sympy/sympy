@@ -33,7 +33,6 @@ class Prufer(Basic):
 
         See Also
         ========
-
         :class: 'Prufer', :function:'to_prufer()'
 
         """
@@ -57,7 +56,6 @@ class Prufer(Basic):
 
         See Also
         ========
-
         :class: 'Prufer', :function:'to_tree()'
 
         """
@@ -101,7 +99,6 @@ class Prufer(Basic):
 
         See Also
         ========
-
         :class: 'Prufer', :function:'prufer_rank()'
         :class: 'Prufer', :function:'next()'
         :class: 'Prufer', :function:'prev()'
