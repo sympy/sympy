@@ -35,7 +35,7 @@ def test_exp_values():
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
 
-    assert exp(3*log(x)+oo*x) == oo**x * x**3
+    assert exp(3*log(x)+oo*x) == exp(oo*x) * x**3
     assert exp(4*log(x)*log(y)+3*log(x)) == x**3 * exp(4*log(x)*log(y))
 
 def test_exp_log():

@@ -97,11 +97,11 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             if arg.is_Rational:
-                if not arg.q:
-                    return arg
                 return C.Integer(arg.p // arg.q)
             elif arg.is_Float:
                 return C.Integer(int(arg.floor()))
+            else:
+                return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
 
@@ -146,11 +146,11 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             if arg.is_Rational:
-                if not arg.q:
-                    return arg
                 return -C.Integer(-arg.p // arg.q)
             elif arg.is_Float:
                 return C.Integer(int(arg.ceiling()))
+            else:
+                return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]
 
