@@ -165,8 +165,9 @@ class IndexedBase(Expr):
     is_commutative = False
 
     def __new__(cls, label, shape=None, **kw_args):
-        if isinstance(label, basestring):
-            label = Symbol(label)
+        if not isinstance(label, (basestring, Symbol)):
+            raise TypeError('label must be a Symbol or string')
+        label = sympify(label)
 
         obj = Expr.__new__(cls, label, **kw_args)
         if is_sequence(shape):
