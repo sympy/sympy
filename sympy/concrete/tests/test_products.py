@@ -1,5 +1,6 @@
 from sympy import (symbols, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo)
+from sympy.utilities.pytest import raises
 
 a, k, n = symbols('a,k,n', integer=True)
 f = Function('f')
@@ -17,6 +18,12 @@ def test_simple_products():
     assert product(cos(k), (k, 1, Rational(5, 2))) != cos(1)*cos(2)
 
     assert isinstance(product(k**k, (k, 1, n)), Product)
+
+    raises(ValueError, 'Product(n)')
+    raises(ValueError, 'Product(n, k)')
+    raises(ValueError, 'Product(n, k, 1)')
+    raises(ValueError, 'Product(n, k, 1, 10)')
+    raises(ValueError, 'Product(n, (k, 1))')
 
 def test_multiple_products():
     x, n, m, k = symbols('x n m k', integer=True)
