@@ -9,8 +9,11 @@ class Prufer(Basic):
     Prufer sequences were first used by Heinz Prufer to give a
     proof of Cayley's formula.
 
-    Reference:
-    (1) http://mathworld.wolfram.com/LabeledTree.html
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/LabeledTree.html
+
     """
     _prufer_repr = None
     _tree_repr = None
@@ -19,21 +22,19 @@ class Prufer(Basic):
 
     @property
     def prufer_repr(self):
-        """
-        Returns Prufer sequence for the Prufer object.
+        """Returns Prufer sequence for the Prufer object.
 
         Examples
         ========
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).prufer_repr
-            [3, 3, 0, 0]
-            >>> Prufer([1, 0, 0]).prufer_repr
-            [1, 0, 0]
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).prufer_repr
+        [3, 3, 0, 0]
+        >>> Prufer([1, 0, 0]).prufer_repr
+        [1, 0, 0]
 
         See Also
         ========
-        :class: 'Prufer', :function:'to_prufer()'
+        to_prufer
 
         """
         if self._prufer_repr is None:
@@ -42,21 +43,19 @@ class Prufer(Basic):
 
     @property
     def tree_repr(self):
-        """
-        Returns the tree representation of the Prufer object.
+        """Returns the tree representation of the Prufer object.
 
         Examples
         ========
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).tree_repr
-            [[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]
-            >>> Prufer([1, 0, 0]).tree_repr
-            [[4, 1], [3, 0], [2, 0], [1, 0]]
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).tree_repr
+        [[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]
+        >>> Prufer([1, 0, 0]).tree_repr
+        [[4, 1], [3, 0], [2, 0], [1, 0]]
 
         See Also
         ========
-        :class: 'Prufer', :function:'to_tree()'
+        to_tree
 
         """
         if self._tree_repr is None:
@@ -65,43 +64,37 @@ class Prufer(Basic):
 
     @property
     def nodes(self):
-        """
-        Retunrs the number of nodes in the tree.
+        """Retunrs the number of nodes in the tree.
 
         Examples
-        ======
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).nodes
-            6
-            >>> Prufer([1, 0, 0]).nodes
-            5
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6).nodes
+        6
+        >>> Prufer([1, 0, 0]).nodes
+        5
 
         """
         return self._nodes
 
     @property
     def rank(self):
-        """
-        Returns the rank of the Prufer sequence.
+        """Returns the rank of the Prufer sequence.
 
         Examples
         ========
-
-            >>> from sympy.combinatorics.prufer import Prufer
-            >>> p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6)
-            >>> p.rank
-            756
-            >>> p.next().rank
-            757
-            >>> p.prev().rank
-            755
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]], 6)
+        >>> p.rank
+        756
+        >>> p.next().rank
+        757
+        >>> p.prev().rank
+        755
 
         See Also
         ========
-        :class: 'Prufer', :function:'prufer_rank()'
-        :class: 'Prufer', :function:'next()'
-        :class: 'Prufer', :function:'prev()'
+        prufer_rank, next, prev
 
         """
         if self._rank is None:
@@ -110,8 +103,7 @@ class Prufer(Basic):
 
     @staticmethod
     def to_prufer(tree, n):
-        """
-        Convert to Prufer code.
+        """Convert to Prufer code.
 
         Examples
         ========
@@ -121,6 +113,7 @@ class Prufer(Basic):
         [0, 0]
         >>> Prufer.to_prufer([[0, 1], [0, 2], [0, 3]], 4)
         [0, 0]
+
         """
         n = int(n)
         d = [0]*n
@@ -155,8 +148,7 @@ class Prufer(Basic):
 
     @staticmethod
     def to_tree(prufer):
-        """
-        Converts to tree representation.
+        """Converts to tree representation.
 
         Examples
         ========
@@ -166,6 +158,7 @@ class Prufer(Basic):
         [[3, 0], [1, 2], [2, 0]]
         >>> Prufer.to_tree([0, 2])
         [[3, 0], [1, 2], [2, 0]]
+
         """
         tree = []
         prufer.append(0)
@@ -188,14 +181,15 @@ class Prufer(Basic):
         return tree
 
     def prufer_rank(self):
-        """
-        Computes the rank of a Prufer sequence.
+        """Computes the rank of a Prufer sequence.
+
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]], 4)
         >>> a.prufer_rank()
         0
+
         """
         r = 0
         p = 1
@@ -206,14 +200,14 @@ class Prufer(Basic):
 
     @classmethod
     def unrank(self, rank, n):
-        """
-        Finds the unranked Prufer sequence.
+        """Finds the unranked Prufer sequence.
 
         Examples
         ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer.unrank(0, 4)
         Prufer([0, 0])
+
         """
         n = int(n)
         rank = int(rank)
@@ -224,8 +218,7 @@ class Prufer(Basic):
         return Prufer(map(lambda x: x - 1, L))
 
     def __new__(cls, *args, **kw_args):
-        """
-        The constructor for the Prufer object.
+        """The constructor for the Prufer object.
 
         Examples
         ========
@@ -243,6 +236,7 @@ class Prufer(Basic):
         >>> b = Prufer([1, 3])
         >>> b.tree_repr
         [[2, 1], [1, 3], [3, 0]]
+
         """
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         if isinstance(args[0][0], list):
@@ -254,8 +248,7 @@ class Prufer(Basic):
         return ret_obj
 
     def next(self):
-        """
-        Generates the next Prufer sequence.
+        """Generates the next Prufer sequence.
 
         Examples
         ========
@@ -266,12 +259,12 @@ class Prufer(Basic):
         [[3, 0], [2, 1], [1, 0]]
         >>> b.rank
         1
+
         """
         return Prufer.unrank(self.rank + 1, self.nodes)
 
     def prev(self):
-        """
-        Generates the previous Prufer sequence.
+        """Generates the previous Prufer sequence.
 
         Examples
         ========
@@ -284,5 +277,6 @@ class Prufer(Basic):
         Prufer([0, 4, 4])
         >>> b.rank
         24
+
         """
         return Prufer.unrank(self.rank - 1, self.nodes)
