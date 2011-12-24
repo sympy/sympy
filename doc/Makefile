@@ -17,7 +17,7 @@ ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
 ALLSPHINXOPTSapi = -d _build/doctreesapi -D latex_paper_size=$(PAPER) \
                 $(SPHINXOPTS) api
 
-.PHONY: help clean html web htmlhelp latex changes linkcheck cheatsheet
+.PHONY: help clean html web htmlhelp latex changes linkcheck cheatsheet logo
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -28,6 +28,7 @@ help:
 	@echo "  changes    to make an overview over all changed/added/deprecated items"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  cheatsheet to make the Cheatsheet"
+	@echo "  logo      generate logos from source/*.svg"
 
 clean:
 	-rm -rf _build
@@ -121,3 +122,10 @@ cheatsheet:
 	mkdir -p _build/cheatsheet
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
+
+logo:
+	rm -rf _build/logo
+	mkdir -p _build/logo
+	$(PYTHONPATH) ./generate_logos.py -d
+	@echo
+	@echo "Logo generated."
