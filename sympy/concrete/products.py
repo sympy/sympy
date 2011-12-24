@@ -105,16 +105,18 @@ class Product(Expr):
         return self.function.is_zero or self.function == 1 or not self.free_symbols
 
     def doit(self, **hints):
-        f = self.function
-        for limit in self.limits:
+        f = g = self.function
+        for index, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
             if dif.is_Integer and dif < 0:
                 a, b = b, a
 
-            f = self._eval_product(f, (i, a, b))
-            if f is None:
-                return self
+            g = self._eval_product(f, (i, a, b))
+            if g is None:
+                return Product(powsimp(f), *self.limits[index:])
+            else:
+                f = g
 
         if hints.get('deep', True):
             return f.doit(**hints)
@@ -190,6 +192,14 @@ class Product(Expr):
 
                 if p is not None:
                     return p**term.exp
+
+        elif isinstance(term, Product):
+            evaluated = term.doit()
+            f = self._eval_product(evaluated, limits)
+            if f is None:
+                return Product(evaluated, limits)
+            else:
+                return f
 
 def product(*args, **kwargs):
     prod = Product(*args, **kwargs)
