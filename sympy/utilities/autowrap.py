@@ -428,9 +428,8 @@ def ufuncify(args, expr, **kwargs):
 
        See http://docs.scipy.org/doc/numpy/reference/ufuncs.html
 
-    :Examples
-    =========
-
+    Examples
+    ========
     >>> from sympy.utilities.autowrap import ufuncify
     >>> from sympy.abc import x, y, z
     >>> f = ufuncify([x, y], y + x**2)             # doctest: +SKIP

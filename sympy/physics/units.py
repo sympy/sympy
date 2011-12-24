@@ -39,6 +39,7 @@ If, for a given session, you wish to add a unit you may do so:
 
 To see a given quantity in terms of some other unit, divide by the desired
 unit:
+
     >>> mph = u.miles/u.hours
     >>> (u.m/u.s/mph).n(2)
     2.2
@@ -237,9 +238,10 @@ ly = lightyear = lightyears = c*julian_year
 au = astronomical_unit = astronomical_units = 149597870691*m
 
 def find_unit(quantity):
-    """Return a list of matching units names.
-        if quantity is a string -- units containing the string `quantity`
-        if quantity is a unit -- units having matching base units
+    """
+    Return a list of matching units names.
+    if quantity is a string -- units containing the string `quantity`
+    if quantity is a unit -- units having matching base units
 
     Examples
     ========

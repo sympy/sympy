@@ -909,29 +909,32 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def as_coefficient(self, expr):
-        """Extracts symbolic coefficient at the given expression. In
-           other words, this functions separates 'self' into product
-           of 'expr' and 'expr'-free coefficient. If such separation
-           is not possible it will return None.
+        """
+        Extracts symbolic coefficient at the given expression. In
+        other words, this functions separates 'self' into product
+        of 'expr' and 'expr'-free coefficient. If such separation
+        is not possible it will return None.
 
-           >>> from sympy import E, pi, sin, I, symbols
-           >>> from sympy.abc import x, y
+        Examples
+        ========
+        >>> from sympy import E, pi, sin, I, symbols
+        >>> from sympy.abc import x, y
 
-           >>> E.as_coefficient(E)
-           1
-           >>> (2*E).as_coefficient(E)
-           2
-           >>> (2*sin(E)*E).as_coefficient(E)
+        >>> E.as_coefficient(E)
+        1
+        >>> (2*E).as_coefficient(E)
+        2
+        >>> (2*sin(E)*E).as_coefficient(E)
 
-           >>> (2*E + x*E).as_coefficient(E)
-           x + 2
-           >>> (2*E*x + x).as_coefficient(E)
+        >>> (2*E + x*E).as_coefficient(E)
+        x + 2
+        >>> (2*E*x + x).as_coefficient(E)
 
-           >>> (E*(x + 1) + x).as_coefficient(E)
+        >>> (E*(x + 1) + x).as_coefficient(E)
 
-           >>> (2*pi*I).as_coefficient(pi*I)
-           2
-           >>> (2*I).as_coefficient(pi*I)
+        >>> (2*pi*I).as_coefficient(pi*I)
+        2
+        >>> (2*I).as_coefficient(pi*I)
 
         """
 
@@ -2080,14 +2083,15 @@ class Expr(Basic, EvalfMixin):
         return limit(self, x, xlim, dir)
 
     def compute_leading_term(self, x, skip_abs=False, logx=None):
-        """ as_leading_term is only allowed for results of .series()
-            This is a wrapper to compute a series first.
-            If skip_abs is true, the absolute term is assumed to be zero.
-            (This is necessary because sometimes it cannot be simplified
-             to zero without a lot of work, but is still known to be zero.
-             See log._eval_nseries for an example.)
-            If skip_log is true, log(x) is treated as an independent symbol.
-            (This is needed for the gruntz algorithm.)
+        """
+        as_leading_term is only allowed for results of .series()
+        This is a wrapper to compute a series first.
+        If skip_abs is true, the absolute term is assumed to be zero.
+        (This is necessary because sometimes it cannot be simplified
+        to zero without a lot of work, but is still known to be zero.
+        See log._eval_nseries for an example.)
+        If skip_log is true, log(x) is treated as an independent symbol.
+        (This is needed for the gruntz algorithm.)
         """
         from sympy.series.gruntz import calculate_series
         from sympy import cancel

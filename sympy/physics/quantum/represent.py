@@ -93,40 +93,39 @@ def represent(expr, **options):
 
     Examples
     ========
-
     Here we subclass ``Operator`` and ``Ket`` to create the z-spin operator
     and its spin 1/2 up eigenstate. By definining the ``_represent_SzOp``
     method, the ket can be represented in the z-spin basis.
 
-        >>> from sympy.physics.quantum import Operator, represent, Ket
-        >>> from sympy import Matrix
+    >>> from sympy.physics.quantum import Operator, represent, Ket
+    >>> from sympy import Matrix
 
-        >>> class SzUpKet(Ket):
-        ...     def _represent_SzOp(self, basis, **options):
-        ...         return Matrix([1,0])
-        ...
-        >>> class SzOp(Operator):
-        ...     pass
-        ...
-        >>> sz = SzOp('Sz')
-        >>> up = SzUpKet('up')
-        >>> represent(up, basis=sz)
-        [1]
-        [0]
+    >>> class SzUpKet(Ket):
+    ...     def _represent_SzOp(self, basis, **options):
+    ...         return Matrix([1,0])
+    ...
+    >>> class SzOp(Operator):
+    ...     pass
+    ...
+    >>> sz = SzOp('Sz')
+    >>> up = SzUpKet('up')
+    >>> represent(up, basis=sz)
+    [1]
+    [0]
 
     Here we see an example of representations in a continuous
     basis. We see that the result of representing various combinations
     of cartesian position operators and kets give us continuous
     expressions involving DiracDelta functions.
 
-        >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
-        >>> X = XOp()
-        >>> x = XKet()
-        >>> y = XBra('y')
-        >>> represent(X*x)
-        x*DiracDelta(x - x_2)
-        >>> represent(X*x*y)
-        x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
+    >>> from sympy.physics.quantum.cartesian import XOp, XKet, XBra
+    >>> X = XOp()
+    >>> x = XKet()
+    >>> y = XBra('y')
+    >>> represent(X*x)
+    x*DiracDelta(x - x_2)
+    >>> represent(X*x*y)
+    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
 
     """
 
@@ -240,7 +239,6 @@ def rep_innerproduct(expr, **options):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.represent import rep_innerproduct
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
     >>> rep_innerproduct(XKet())
@@ -290,7 +288,6 @@ def rep_expectation(expr, **options):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
     >>> from sympy.physics.quantum.represent import rep_expectation
     >>> rep_expectation(XOp())
@@ -322,7 +319,7 @@ def rep_expectation(expr, **options):
 
 def integrate_result(orig_expr, result, **options):
     """
-    Returnst the result of integrating over any unities (|x><x|) in
+    Returns the result of integrating over any unities (|x><x|) in
     the given expression. Intended for integrating over the result of
     representations in continuous bases.
 
@@ -346,7 +343,7 @@ def integrate_result(orig_expr, result, **options):
         The resulting representation that we wish to integrate over
 
     Examples
-    ==========
+    ========
     >>> from sympy import symbols, DiracDelta
     >>> from sympy.physics.quantum.represent import integrate_result
     >>> from sympy.physics.quantum.cartesian import XOp, XKet
@@ -419,15 +416,14 @@ def get_basis(expr, **options):
 
     TODO (?): Support for Muls and other types of expressions?
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     expr : Operator or StateBase
         Expression whose basis is sought
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.represent import get_basis
     >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
     >>> x = XKet()
@@ -507,7 +503,6 @@ def enumerate_states(*args, **options):
 
     Examples
     ========
-
     >>> from sympy.physics.quantum.cartesian import XBra, XKet
     >>> from sympy.physics.quantum.represent import enumerate_states
     >>> test = XKet('foo')

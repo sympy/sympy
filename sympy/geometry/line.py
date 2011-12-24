@@ -880,9 +880,10 @@ class Line(LinearEntity):
 
 
 class Ray(LinearEntity):
-    """A Ray is a semi-line in the space with a source point and a direction.
+    """
+    A Ray is a semi-line in the space with a source point and a direction.
 
-    Paramaters
+    Parameters
     ----------
     p1 : Point
         The source of the Ray

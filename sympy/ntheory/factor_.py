@@ -181,9 +181,9 @@ def multiplicity(p, n):
 
     Examples
     ========
-        >>> from sympy.ntheory import multiplicity
-        >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
-        [0, 1, 2, 3, 3]
+    >>> from sympy.ntheory import multiplicity
+    >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
+    [0, 1, 2, 3, 3]
 
     """
 
@@ -317,7 +317,8 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         return False
 
 def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
-    r"""Use Pollard's rho method to try to extract a nontrivial factor
+    r"""
+    Use Pollard's rho method to try to extract a nontrivial factor
     of ``n``. The returned factor may be a composite number. If no
     factor is found, ``None`` is returned.
 
@@ -374,7 +375,6 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
 
     Examples
     ========
-
     >>> from sympy import pollard_rho
     >>> n=16843009
     >>> F=lambda x:(2048*pow(x,2,n) + 32767) % n
@@ -435,7 +435,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     first attempt, a new ``a`` will be generated randomly (using the ``seed``)
     and the process repeated.
 
-        Note: the value of M is lcm(1..B) = reduce(ilcm, range(2, B + 1)).
+    Note: the value of M is lcm(1..B) = reduce(ilcm, range(2, B + 1)).
 
     A search is made for factors next to even numbers having a power smoothness
     less than ``B``. Choosing a larger B increases the likelihood of finding a
@@ -548,6 +548,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     References
     ==========
+
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 236-238
     - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/
@@ -758,48 +759,19 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     the prime factors of ``n`` as keys and their respective multiplicities
     as values. For example:
 
-        >>> from sympy.ntheory import factorint
-        >>> factorint(2000)    # 2000 = (2**4) * (5**3)
-        {2: 4, 5: 3}
-        >>> factorint(65537)   # This number is prime
-        {65537: 1}
+    >>> from sympy.ntheory import factorint
+    >>> factorint(2000)    # 2000 = (2**4) * (5**3)
+    {2: 4, 5: 3}
+    >>> factorint(65537)   # This number is prime
+    {65537: 1}
 
     For input less than 2, factorint behaves as follows:
 
-    - ``factorint(1)`` returns the empty factorization, ``{}``
-    - ``factorint(0)`` returns ``{0:1}``
-    - ``factorint(-n)`` adds ``-1:1`` to the factors and then factors ``n``
+        - ``factorint(1)`` returns the empty factorization, ``{}``
+        - ``factorint(0)`` returns ``{0:1}``
+        - ``factorint(-n)`` adds ``-1:1`` to the factors and then factors ``n``
 
-    Algorithm
-    =========
-
-    The function switches between multiple algorithms. Trial division
-    quickly finds small factors (of the order 1-5 digits), and finds
-    all large factors if given enough time. The Pollard rho and p-1
-    algorithms are used to find large factors ahead of time; they
-    will often find factors of the order of 10 digits within a few
-    seconds:
-
-        >>> factors = factorint(12345678910111213141516)
-        >>> for base, exp in sorted(factors.items()):
-        ...     print base, exp
-        ...
-        2 2
-        2507191691 1
-        1231026625769 1
-
-    Any of these methods can optionally be disabled with the following
-    boolean parameters:
-
-    - ``use_trial``: Toggle use of trial division
-    - ``use_rho``: Toggle use of Pollard's rho method
-    - ``use_pm1``: Toggle use of Pollard's p-1 method
-
-    ``factorint`` also periodically checks if the remaining part is
-    a prime number or a perfect power, and in those cases stops.
-
-    Partial Factorization
-    =====================
+    Partial Factorization:
 
     If ``limit`` (> 3) is specified, the search is stopped after performing
     trial division up to (and including) the limit (or taking a
@@ -813,29 +785,29 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     This number, for example, has two small factors and a huge
     semi-prime factor that cannot be reduced easily:
 
-        >>> from sympy.ntheory import isprime
-        >>> a = 1407633717262338957430697921446883
-        >>> f = factorint(a, limit=10000)
-        >>> f == {991: 1, 202916782076162456022877024859L: 1, 7: 1}
-        True
-        >>> isprime(max(f))
-        False
+    >>> from sympy.ntheory import isprime
+    >>> a = 1407633717262338957430697921446883
+    >>> f = factorint(a, limit=10000)
+    >>> f == {991: 1, 202916782076162456022877024859L: 1, 7: 1}
+    True
+    >>> isprime(max(f))
+    False
 
     This number has a small factor and a residual perfect power whose
     base is greater than the limit:
 
-        >>> factorint(3*101**7, limit=5)
-        {3: 1, 101: 7}
+    >>> factorint(3*101**7, limit=5)
+    {3: 1, 101: 7}
 
-    Visual Factorization
-    ====================
+    Visual Factorization:
+
     If ``visual`` is set to ``True``, then it will return a visual
     factorization of the integer.  For example:
 
-        >>> from sympy import pprint
-        >>> pprint(factorint(4200, visual=True))
-         3  1  2  1
-        2 *3 *5 *7
+    >>> from sympy import pprint
+    >>> pprint(factorint(4200, visual=True))
+     3  1  2  1
+    2 *3 *5 *7
 
     Note that this is achieved by using the evaluate=False flag in Mul
     and Pow. If you do other manipulations with an expression where
@@ -847,26 +819,26 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     You can easily switch between the two forms by sending them back to
     factorint:
 
-        >>> from sympy import Mul, Pow
-        >>> regular = factorint(1764); regular
-        {2: 2, 3: 2, 7: 2}
-        >>> pprint(factorint(regular))
-         2  2  2
-        2 *3 *7
+    >>> from sympy import Mul, Pow
+    >>> regular = factorint(1764); regular
+    {2: 2, 3: 2, 7: 2}
+    >>> pprint(factorint(regular))
+     2  2  2
+    2 *3 *7
 
-        >>> visual = factorint(1764, visual=True); pprint(visual)
-         2  2  2
-        2 *3 *7
-        >>> print factorint(visual)
-        {2: 2, 3: 2, 7: 2}
+    >>> visual = factorint(1764, visual=True); pprint(visual)
+     2  2  2
+    2 *3 *7
+    >>> print factorint(visual)
+    {2: 2, 3: 2, 7: 2}
 
     If you want to send a number to be factored in a partially factored form
     you can do so with a dictionary or unevaluated expression:
 
-        >>> factorint(factorint({4: 2, 12: 3})) # twice to toggle to dict form
-        {2: 10, 3: 3}
-        >>> factorint(Mul(4, 12, **dict(evaluate=False)))
-        {2: 4, 3: 1}
+    >>> factorint(factorint({4: 2, 12: 3})) # twice to toggle to dict form
+    {2: 10, 3: 3}
+    >>> factorint(Mul(4, 12, **dict(evaluate=False)))
+    {2: 4, 3: 1}
 
     The table of the output logic is:
 
@@ -880,14 +852,44 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         mul     mul    dict    dict
         ====== ====== ======= =======
 
-    Miscellaneous Options
-    =====================
+    Notes
+    =====
+
+    Algorithm:
+
+    The function switches between multiple algorithms. Trial division
+    quickly finds small factors (of the order 1-5 digits), and finds
+    all large factors if given enough time. The Pollard rho and p-1
+    algorithms are used to find large factors ahead of time; they
+    will often find factors of the order of 10 digits within a few
+    seconds:
+
+    >>> factors = factorint(12345678910111213141516)
+    >>> for base, exp in sorted(factors.items()):
+    ...     print base, exp
+    ...
+    2 2
+    2507191691 1
+    1231026625769 1
+
+    Any of these methods can optionally be disabled with the following
+    boolean parameters:
+
+        - ``use_trial``: Toggle use of trial division
+        - ``use_rho``: Toggle use of Pollard's rho method
+        - ``use_pm1``: Toggle use of Pollard's p-1 method
+
+    ``factorint`` also periodically checks if the remaining part is
+    a prime number or a perfect power, and in those cases stops.
+
 
     If ``verbose`` is set to ``True``, detailed progress is printed.
 
     See Also
     ========
+
     smoothness, smoothness_p, divisors
+
     """
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):
@@ -1160,24 +1162,23 @@ def primefactors(n, limit=None, verbose=False):
 
     Examples
     ========
+    >>> from sympy.ntheory import primefactors, factorint, isprime
+    >>> primefactors(6)
+    [2, 3]
+    >>> primefactors(-5)
+    [5]
 
-        >>> from sympy.ntheory import primefactors, factorint, isprime
-        >>> primefactors(6)
-        [2, 3]
-        >>> primefactors(-5)
-        [5]
+    >>> sorted(factorint(123456).items())
+    [(2, 6), (3, 1), (643, 1)]
+    >>> primefactors(123456)
+    [2, 3, 643]
 
-        >>> sorted(factorint(123456).items())
-        [(2, 6), (3, 1), (643, 1)]
-        >>> primefactors(123456)
-        [2, 3, 643]
-
-        >>> sorted(factorint(10000000001, limit=200).items())
-        [(101, 1), (99009901, 1)]
-        >>> isprime(99009901)
-        False
-        >>> primefactors(10000000001, limit=300)
-        [101]
+    >>> sorted(factorint(10000000001, limit=200).items())
+    [(101, 1), (99009901, 1)]
+    >>> isprime(99009901)
+    False
+    >>> primefactors(10000000001, limit=300)
+    [101]
 
     See Also
     ========
@@ -1222,7 +1223,6 @@ def divisors(n, generator=False):
 
     Examples
     ========
-
     >>> from sympy import divisors, divisor_count
     >>> divisors(24)
     [1, 2, 3, 4, 6, 8, 12, 24]
@@ -1254,11 +1254,13 @@ def divisors(n, generator=False):
         return rv
 
 def divisor_count(n, modulus=1):
-    """Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
-       those that are divisible by ``modulus`` are counted.
+    """
+    Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
+    those that are divisible by ``modulus`` are counted.
 
     References
     ==========
+
     - http://www.mayer.dial.pipex.com/maths/formulae.htm
 
     >>> from sympy import divisor_count
@@ -1281,7 +1283,8 @@ def divisor_count(n, modulus=1):
     return Mul(*[v+1 for k, v in factorint(n).items() if k > 1])
 
 def totient(n):
-    """Calculate the Euler totient function phi(n)
+    """
+    Calculate the Euler totient function phi(n)
 
     >>> from sympy.ntheory import totient
     >>> totient(1)

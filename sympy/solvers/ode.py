@@ -450,7 +450,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
 
     Examples
     ========
-
     >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -2309,7 +2308,6 @@ def ode_Liouville(eq, func, order, match):
                ________________           ________________
     [f(x) = -\/ C1 + C2*log(x) , f(x) = \/ C1 + C2*log(x) ]
 
-
     References
     ==========
     - Goldstein and Braun, "Advanced Methods for the Solution of
@@ -2348,18 +2346,18 @@ def _nth_linear_match(eq, func, order):
 
     Examples
     ========
-        >>> from sympy import Function, cos, sin
-        >>> from sympy.abc import x
-        >>> from sympy.solvers.ode import _nth_linear_match
-        >>> f = Function('f')
-        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
-        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
-        ... sin(x), f(x), 3)
-        {-1: x - sin(x), 0: -1, 1: cos(x) + 2, 2: x, 3: 1}
-        >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
-        ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
-        ... sin(f(x)), f(x), 3) == None
-        True
+    >>> from sympy import Function, cos, sin
+    >>> from sympy.abc import x
+    >>> from sympy.solvers.ode import _nth_linear_match
+    >>> f = Function('f')
+    >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+    ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+    ... sin(x), f(x), 3)
+    {-1: x - sin(x), 0: -1, 1: cos(x) + 2, 2: x, 3: 1}
+    >>> _nth_linear_match(f(x).diff(x, 3) + 2*f(x).diff(x) +
+    ... x*f(x).diff(x, 2) + cos(x)*f(x).diff(x) + x - f(x) -
+    ... sin(f(x)), f(x), 3) == None
+    True
 
     """
     x = func.args[0]
@@ -2869,16 +2867,17 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     # indirect doctest
 
     """
+
     gensol = ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         returns='both')
     match.update(gensol)
     return _solve_variation_of_parameters(eq, func, order, match)
 
 def _solve_variation_of_parameters(eq, func, order, match):
-    """
+    """	  	
     Helper function for the method of variation of parameters.
 
-    See the ode_nth_linear_constant_coeff_variation_of_parameters()
+    See the ode_nth_linear_constant_coeff_variation_of_parameters() 	
     docstring for more information on this method.
 
     match should be a dictionary that has the following keys:
@@ -2888,8 +2887,8 @@ def _solve_variation_of_parameters(eq, func, order, match):
     'sol' - The general solution, such as the solution returned by
         ode_nth_linear_constant_coeff_homogeneous(returns='sol')
 
-
     """
+
     x = func.args[0]
     f = func.func
     r = match
@@ -2902,7 +2901,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
         wr = simplify(wr) # We need much better simplification for some ODEs.
                           # See issue 1563, for example.
 
-        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
+        # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1  	
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly independent.
@@ -2926,6 +2925,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
 
 def ode_separable(eq, func, order, match):
     r"""
+
     Solves separable 1st order differential equations.
 
     This is any differential equation that can be written as
@@ -2958,7 +2958,6 @@ def ode_separable(eq, func, order, match):
 
     Examples
     ========
-
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -2968,7 +2967,6 @@ def ode_separable(eq, func, order, match):
     log\3*f (x) - 1/        x
     ---------------- = C1 + --
            6                2
-
 
     References
     ==========

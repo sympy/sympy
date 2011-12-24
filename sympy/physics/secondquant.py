@@ -2087,8 +2087,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
     2*f(_a, _b)
 
 
-    Controlling output
-    ------------------
+    Controlling output:
 
     By default the dummy symbols that are already present in the expression
     will be reused in a different permuation.  However, if new_indices=True,

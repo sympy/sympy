@@ -34,35 +34,34 @@ class AntiCommutator(Expr):
 
     Examples
     ========
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.quantum import AntiCommutator
-        >>> from sympy.physics.quantum import Operator, Dagger
-        >>> x, y = symbols('x,y')
-        >>> A = Operator('A')
-        >>> B = Operator('B')
+    >>> from sympy import symbols
+    >>> from sympy.physics.quantum import AntiCommutator
+    >>> from sympy.physics.quantum import Operator, Dagger
+    >>> x, y = symbols('x,y')
+    >>> A = Operator('A')
+    >>> B = Operator('B')
 
     Create an anticommutator and use ``doit`` to multiply them out.
 
-        >>> ac = AntiCommutator(A,B); ac
-        {A,B}
-        >>> ac.doit()
-        A*B + B*A
+    >>> ac = AntiCommutator(A,B); ac
+    {A,B}
+    >>> ac.doit()
+    A*B + B*A
 
-    The commutator orders it arguments in canonical order::
+    The commutator orders it arguments in canonical order:
 
-        >>> ac = AntiCommutator(B,A); ac
-        {A,B}
+    >>> ac = AntiCommutator(B,A); ac
+    {A,B}
 
-    Scalar constants are factored out::
+    Scalar constants are factored out:
 
-        >>> AntiCommutator(3*x*A,x*y*B)
-        3*x**2*y*{A,B}
+    >>> AntiCommutator(3*x*A,x*y*B)
+    3*x**2*y*{A,B}
 
-    Dagger is alto handled::
+    Dagger is alto handled:
 
-        >>> Dagger(AntiCommutator(A,B))
-        {Dagger(A),Dagger(B)}
+    >>> Dagger(AntiCommutator(A,B))
+    {Dagger(A),Dagger(B)}
 
     References
     ==========

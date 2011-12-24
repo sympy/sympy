@@ -310,16 +310,16 @@ don\'t match.")
         """
         Checks if the elements are commuting.
 
-        Examples::
-
-            >>> from sympy.combinatorics.permutations import Permutation
-            >>> a = Permutation([1,4,3,0,2,5])
-            >>> b = Permutation([0,1,2,3,4,5])
-            >>> a.commutes_with(b)
-            True
-            >>> b = Permutation([2,3,5,4,1,0])
-            >>> a.commutes_with(b)
-            False
+        Examples
+        ========
+        >>> from sympy.combinatorics.permutations import Permutation
+        >>> a = Permutation([1,4,3,0,2,5])
+        >>> b = Permutation([0,1,2,3,4,5])
+        >>> a.commutes_with(b)
+        True
+        >>> b = Permutation([2,3,5,4,1,0])
+        >>> a.commutes_with(b)
+        False
 
         """
         a = self.array_form
