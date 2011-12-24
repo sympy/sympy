@@ -126,30 +126,29 @@ Fredrik Johansson
       <g style="display:inline">
         <text
            transform="matrix(0.8246541,-0.2574405,0,1.2126296,0,0)"
-           style="font-size:10.5470562px;font-style:normal;font-weight:normal;fill:#897751;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Euclid">
+           style="font-size:120px;font-style:normal;font-weight:normal;fill:#897751;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Computer Modern">
            <tspan x="545" y="398.80972"
-             style="font-size:126px;fill:#897751;fill-opacity:1">d<tspan style="font-size:126px;font-style:italic;font-family:Times New Roman">x</tspan></tspan>
+             style="font-family:Computer Modern;font-size:110px;fill:#897751;fill-opacity:1">d<tspan style="font-size:110px;font-style:italic;font-family:Computer Modern">x</tspan></tspan>
         </text>
       </g>
       <!-- text "Σ" on the left edge -->
       <text
          transform="matrix(0.8385983,0.2552685,0,1.192466,0,0)"
-         style="font-size:244px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Times New Roman">
+         style="font-size:244px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Computer Modern">
          <tspan x="240.909" y="258.98959" style="font-size:244px;fill:#9a8354;fill-opacity:1" >Σ</tspan>
       </text>
       <!-- text "∫" on the left edge -->
       <text
          transform="matrix(0.9140294,-0.3682282,-3.9409227e-2,1.1099332,0,0)"
-         style="font-size:317.0697937px;font-style:normal;font-weight:normal;fill:#897751;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Times New Roman">
-         <tspan x="475" y="500" style="font-size:186px;fill:#897751;fill-opacity:1;" text-anchor="middle">∫</tspan>
+         style="font-size:180px;font-style:normal;font-weight:normal;fill:#897751;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Computer Modern">
+         <tspan x="480" y="480" style="font-family:Computer Modern;font-size:180px;fill:#897751;fill-opacity:1;" text-anchor="middle">∫</tspan>
       </text>
         <!-- texts "1 0" and "0 1" at the top edge-->
         <text
-           style="font-size:23.98663521px;font-style:normal;font-weight:normal;opacity:1;fill:#9a8354;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;display:inline;font-family:Times New Roman"
-           xml:space="preserve"
+           style="font-size:50px;font-style:normal;font-weight:normal;opacity:1;fill:#9a8354;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;display:inline;font-family:Computer Modern"
            transform="matrix(1.4265625,-0.3736626,1.32988,0.3526474,0,0)">
-            <tspan y="292" x="-65" style="font-size:60px;font-style:normal;font-weight:bold">1 0</tspan>
-            <tspan y="366" x="-65" style="font-size:60px;font-style:normal;font-weight:bold">0 1</tspan>
+            <tspan y="292" x="-65" style="font-size:50px;font-style:normal;font-weight:normal">1 0</tspan>
+            <tspan y="366" x="-65" style="font-size:50px;font-style:normal;font-weight:normal">0 1</tspan>
         </text>
         <!--  brackets "[", "]" at the top edge-->
         <g
@@ -157,10 +156,9 @@ Fredrik Johansson
            transform="matrix(0.7152743,-0.2134016,0.6667979,0.2013996,-410.97556,263.60616)">
           <text
              transform="matrix(0.6991488,8.0592938e-3,1.4509379e-2,1.4304778,0,0)"
-             style="font-size:148.79566956px;font-style:normal;font-weight:normal;fill:#9a8354;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Times New Roman"
-             xml:space="preserve">
-             <tspan x="1090" y="198" style="font-size:191px;font-weight:bold;fill:#9a8354;fill-opacity:1">[</tspan>
-             <tspan x="1368" y="198" style="font-size:191px;font-weight:bold;fill:#9a8354;fill-opacity:1">]</tspan>
+             style="font-size:190px;font-style:normal;font-weight:normal;fill:#9a8354;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Computer Modern">
+             <tspan x="1090" y="210" style="font-size:191px;font-weight:normal;fill:#9a8354;fill-opacity:1">[</tspan>
+             <tspan x="1368" y="210" style="font-size:191px;font-weight:normal;fill:#9a8354;fill-opacity:1">]</tspan>
           </text>
         </g>
     </g>
