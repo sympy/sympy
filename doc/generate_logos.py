@@ -16,9 +16,9 @@ import logging
 import subprocess
 
 
-default_source_dir = os.path.join(os.path.dirname(__file__), "../doc/logo/")
+default_source_dir = os.path.join(os.path.dirname(__file__), "src/logo")
 default_source_svg = "sympy.svg"
-default_output_dir = os.path.join(default_source_dir, "generated")
+default_output_dir = os.path.join(os.path.dirname(__file__), "_build/logo")
 
 # those are the options for resizing versions without tail or text
 svg_sizes = {}
@@ -58,7 +58,7 @@ parser.add_option("-4", "--clear", action="store_true", dest="clear",
 
 parser.add_option("-a", "--all", action="store_true", dest="generate_all",
     help="Shorthand for '-1 -2 -3 -4' options [default: %default]",
-    default=False)
+    default=True)
 
 parser.add_option("-s", "--sizes", type="string", dest="sizes",
     help="Sizes of png pictures [default: %default]",

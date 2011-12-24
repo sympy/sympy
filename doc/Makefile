@@ -22,7 +22,7 @@ POFILES = $(foreach l,$(LANGUAGES),$(addprefix src/tutorial/tutorial.,$(addsuffi
 
 .PHONY: changes cheatsheet clean gettext help html html-errors \
         htmlapi htmlhelp htmli18n info latex linkcheck texinfo \
-        update-po web
+        update-po web logo
 
 .SUFFIXES: .pdf .svg
 
@@ -44,6 +44,7 @@ help:
 	@echo "  texinfo     to make Texinfo files"
 	@echo "  update-po   to update po files for translation"
 	@echo "  web         to make files usable by Sphinx.web"
+	@echo "  logo        generate logos from source/*.svg"
 
 clean:
 	-rm -rf _build
@@ -160,3 +161,10 @@ info:
 	@echo "Running Texinfo files through makeinfo..."
 	make -C _build/texinfo info
 	@echo "makeinfo finished; the Info files are in _build/texinfo."
+
+logo:
+	rm -rf _build/logo
+	mkdir -p _build/logo
+	$(PYTHONPATH) ./generate_logos.py -d
+	@echo
+	@echo "Logo generated."
