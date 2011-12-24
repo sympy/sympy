@@ -152,8 +152,8 @@ Fredrik Johansson
         <text
            style="font-size:50px;font-style:normal;font-weight:normal;opacity:1;fill:#9a8354;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;display:inline;font-family:LMRoman10, Times, FreeSerif"
            transform="matrix(1.4265625,-0.3736626,1.32988,0.3526474,0,0)">
-            <tspan y="292" x="-65" style="font-family:LMRoman10, Times, FreeSerif;font-size:50px;font-style:normal;font-weight:normal">1 0</tspan>
-            <tspan y="366" x="-65" style="font-family:LMRoman10, Times, FreeSerif;font-size:50px;font-style:normal;font-weight:normal">0 1</tspan>
+            <tspan y="292" x="-65" style="font-family:LMRoman10, Times, FreeSerif;font-size:50px;font-style:normal;font-weight:bold">1 0</tspan>
+            <tspan y="366" x="-65" style="font-family:LMRoman10, Times, FreeSerif;font-size:50px;font-style:normal;font-weight:bold">0 1</tspan>
         </text>
       </g>
         <!--  brackets "[", "]" at the top edge-->
