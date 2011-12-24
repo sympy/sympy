@@ -361,29 +361,31 @@ class PrettyPrinter(Printer):
 
         func_height = pretty_func.height()
 
-        width = (func_height + 2) * 5 // 3 - 2
-        sign_lines = []
-        sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
-        for i in range(func_height+1):
-            sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
+        for lim in expr.limits:
+            width = (func_height + 2) * 5 // 3 - 2
+            sign_lines = []
+            sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
+            for i in range(func_height+1):
+                sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
 
-        pretty_sign = stringPict('')
-        pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
+            pretty_sign = stringPict('')
+            pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
 
-        pretty_upper = self._print(expr.upper)
-        pretty_lower = self._print(C.Equality(expr.index, expr.lower))
+            pretty_upper = self._print(lim[2])
+            pretty_lower = self._print(C.Equality(lim[0], lim[1]))
 
-        pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
-        pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
+            pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
+            pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
 
-        height = pretty_sign.height()
-        padding = stringPict('')
-        padding = prettyForm(*padding.stack(*[' ']*(height-1)))
-        pretty_sign = prettyForm(*pretty_sign.right(padding))
+            height = pretty_sign.height()
+            padding = stringPict('')
+            padding = prettyForm(*padding.stack(*[' ']*(height-1)))
+            pretty_sign = prettyForm(*pretty_sign.right(padding))
+
+            pretty_func = prettyForm(*pretty_sign.right(pretty_func))
 
         pretty_func.baseline = 0
 
-        pretty_func = prettyForm(*pretty_sign.right(pretty_func))
         return pretty_func
 
     def _print_Sum(self, expr):
