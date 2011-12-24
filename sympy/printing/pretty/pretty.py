@@ -361,6 +361,10 @@ class PrettyPrinter(Printer):
 
         func_height = pretty_func.height()
 
+        first = True
+        max_upper = 0
+        sign_height = 0
+
         for lim in expr.limits:
             width = (func_height + 2) * 5 // 3 - 2
             sign_lines = []
@@ -374,8 +378,17 @@ class PrettyPrinter(Printer):
             pretty_upper = self._print(lim[2])
             pretty_lower = self._print(C.Equality(lim[0], lim[1]))
 
+            max_upper = max(max_upper, pretty_upper.height())
+
+            if first:
+              sign_height = pretty_sign.height()
+
             pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
             pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
+
+            if first:
+                pretty_func.baseline = 0
+                first = False
 
             height = pretty_sign.height()
             padding = stringPict('')
@@ -384,8 +397,9 @@ class PrettyPrinter(Printer):
 
             pretty_func = prettyForm(*pretty_sign.right(pretty_func))
 
-        pretty_func.baseline = 0
+        #pretty_func.baseline = 0
 
+        pretty_func.baseline = max_upper + sign_height//2
         return pretty_func
 
     def _print_Sum(self, expr):
