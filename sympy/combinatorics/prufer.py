@@ -237,6 +237,13 @@ class Prufer(Basic):
         >>> a.prufer_repr
         [0, 0]
 
+        If the number of nodes is given, no checking of the nodes will
+        be performed; it will be assumed that nodes 0 through n - 1 are
+        present:
+
+        >>> Prufer([[0, 1], [0, 2], [0, 3]], 4)
+        Prufer([[0, 1], [0, 2], [0, 3]], 4)
+
         A Prufer object can be constructed from a Prufer sequence:
 
         >>> b = Prufer([1, 3])
@@ -246,15 +253,18 @@ class Prufer(Basic):
         """
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         if isinstance(args[0][0], list):
-            nodes = set(flatten(args[0]))
-            nnodes = max(nodes) + 1
-            if nnodes != len(nodes):
-                missing = sorted(set(range(nnodes)) - nodes)
-                if len(missing) == 1:
-                    msg = 'Node %s is missing' % missing[0]
-                else:
-                    msg = 'Nodes %s are missing' % missing
-                raise ValueError(msg)
+            if len(args) > 1:
+                nnodes = args[1]
+            else:
+                nodes = set(flatten(args[0]))
+                nnodes = max(nodes) + 1
+                if nnodes != len(nodes):
+                    missing = sorted(set(range(nnodes)) - nodes)
+                    if len(missing) == 1:
+                        msg = 'Node %s is missing' % missing[0]
+                    else:
+                        msg = 'Nodes %s are missing' % missing
+                    raise ValueError(msg)
             ret_obj._tree_repr = args[0]
             ret_obj._nodes = nnodes
         else:

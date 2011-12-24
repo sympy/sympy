@@ -2,6 +2,10 @@ from sympy.combinatorics.prufer import Prufer
 from sympy.utilities.pytest import raises
 
 def test_prufer():
+    # number of nodes is optional
+    assert Prufer([[0, 1], [0, 2], [0, 3], [0, 4]], 5).nodes == 5
+    assert Prufer([[0, 1], [0, 2], [0, 3], [0, 4]]).nodes == 5
+
     a = Prufer([[0, 1], [0, 2], [0, 3], [0, 4]])
     assert a.rank == 0
     assert a.nodes == 5
