@@ -43,18 +43,6 @@ class Product(Expr):
     function = term
 
     @property
-    def index(self):
-        return self._args[1][0]
-
-    @property
-    def lower(self):
-        return self._args[1][1]
-
-    @property
-    def upper(self):
-        return self._args[1][2]
-
-    @property
     def limits(self):
         return self._args[1:]
 
