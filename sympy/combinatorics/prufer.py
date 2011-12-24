@@ -1,5 +1,8 @@
 from sympy.core import Basic
 from sympy.utilities.iterables import flatten
+from sympy.ntheory.residue_ntheory import int_tested
+
+from collections import defaultdict
 
 class Prufer(Basic):
     """
@@ -109,7 +112,7 @@ class Prufer(Basic):
 
     @staticmethod
     def to_prufer(tree, n):
-        """Convert to Prufer code.
+        """Return the Prufer sequence for a tree given as a list of edges.
 
         Examples
         ========
@@ -121,9 +124,8 @@ class Prufer(Basic):
         [0, 0]
 
         """
-        n = int(n)
-        d = [0]*n
-        L = [0]*(n-2)
+        d = defaultdict(int)
+        L = defaultdict(int)
         for edge in tree:
 
             # Increment the value of the corresponding
@@ -151,11 +153,11 @@ class Prufer(Basic):
             # into account while reducing the values in
             # the degree list.
             tree.remove(e)
-        return L
+        return [L[i] for i in xrange(len(L))]
 
     @staticmethod
     def to_tree(prufer):
-        """Converts to tree representation.
+        """Return the tree (as a list of edges) of the given Prufer sequence.
 
         Examples
         ========
@@ -169,12 +171,12 @@ class Prufer(Basic):
         """
         tree = []
         prufer.append(0)
-        n = len(prufer) + 1
-        d = [1]*n
-        for i in xrange(n - 2):
-            d[prufer[i]] += 1
+        n = len(prufer)
+        d = defaultdict(lambda : 1)
         for i in xrange(n - 1):
-            x = n - 1
+            d[prufer[i]] += 1
+        for i in xrange(n):
+            x = n
             # Find the node whose degree is one and
             # get the edge associated with it.
             while d[x] != 1:
@@ -216,13 +218,13 @@ class Prufer(Basic):
         Prufer([0, 0])
 
         """
-        n = int(n)
-        rank = int(rank)
-        L = [0]*(n - 2)
+        n = int_tested(n)
+        rank = int_tested(rank)
+        L = defaultdict(int)
         for i in xrange(n - 3, -1, -1):
-            L[i] = rank % n + 1
-            rank = (rank - L[i] + 1)//n
-        return Prufer(map(lambda x: x - 1, L))
+            L[i] = rank % n
+            rank = (rank - L[i])//n
+        return Prufer([L[i] for i in xrange(len(L))])
 
     def __new__(cls, *args, **kw_args):
         """The constructor for the Prufer object.
