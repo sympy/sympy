@@ -285,7 +285,7 @@ class Indexed(Expr):
     @property
     def base(self):
         """
-        Returns the base of the Indexed object.
+        Returns the base/label of the Indexed object.
 
         Examples
         ========
