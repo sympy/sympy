@@ -37,7 +37,7 @@
     >>> M[i, j]
     M[i, j]
 
-    Repreated indices in a product implies a summation, so to express a
+    Repeated indices in a product implies a summation, so to express a
     matrix-vector product in terms of Indexed objects:
 
     >>> x = IndexedBase('x')
@@ -400,7 +400,7 @@ class Indexed(Expr):
 
 
 class Idx(Expr):
-    """Represents an index, either symbolic or integer.
+    """Represents an integer index as an Integer or integer expression.
 
     There are a number of ways to create an Idx object.  The constructor
     takes two arguments:
@@ -410,19 +410,19 @@ class Idx(Expr):
     ``range``
         Optionally you can specify a range as either
 
-            - Symbol or integer: This is interpreted as dimension. lower and
-              upper ranges are set to 0 and range-1
-            - tuple: This is interpreted as the lower and upper bounds in the
-              range.
+            - Symbol or integer: This is interpreted as a dimension. Lower and
+              upper bounds are set to 0 and range - 1, respectively.
+            - tuple: The two elements are interpreted as the lower and upper
+            bounds of the range, respectively.
 
-    Note that the Idx constructor is rather pedantic, and will not accept
-    non-integer symbols.  The only exception is that you can use oo and -oo to
+    Note: the Idx constructor is rather pedantic in that it only accepts
+    integer arguments.  The only exception is that you can use oo and -oo to
     specify an unbounded range.  For all other cases, both label and bounds
-    must be declared as integers, in the sense that for a index label n,
+    must be declared as integers, e.g. if n is given as an argument then
     n.is_integer must return True.
 
-    For convenience, if the label is given as a string, it is automatically
-    converted to an integer symbol.  (Note that this conversion is not done for
+    For convenience, if the label is given as a string it is automatically
+    converted to an integer symbol.  (Note: this conversion is not done for
     range or dimension arguments.)
 
     Examples
@@ -479,7 +479,9 @@ class Idx(Expr):
             raise TypeError("Idx object requires an integer label.")
 
         elif is_sequence(range):
-            assert len(range) == 2, "Idx got range tuple with wrong length"
+            if len(range) != 2:
+                raise ValueError(_filldedent("""
+                    Idx range tuple must have length 2, but got %s""" % len(range)))
             for bound in range:
                 if not (bound.is_integer or abs(bound) is S.Infinity):
                     raise TypeError("Idx object requires integer bounds.")
@@ -487,11 +489,11 @@ class Idx(Expr):
         elif isinstance(range, Expr):
             if not (range.is_integer or range is S.Infinity):
                 raise TypeError("Idx object requires an integer dimension.")
-            args = label, Tuple(S.Zero, range - S.One)
+            args = label, Tuple(0, range - 1)
         elif range:
             raise TypeError(_filldedent("""
-                range must be ordered iterable or
-                integer sympy expression."""))
+                The range must be an ordered iterable or
+                integer SymPy expression."""))
         else:
             args = label,
 
@@ -500,7 +502,7 @@ class Idx(Expr):
 
     @property
     def label(self):
-        """Returns the label (Integer or Symbol) of the Idx object.
+        """Returns the label (Integer or integer expression) of the Idx object.
 
         Examples
         ========
@@ -508,8 +510,10 @@ class Idx(Expr):
         >>> Idx(2).label
         2
         >>> j = Symbol('j', integer=True)
-        >>> Idx(j, 2).label
+        >>> Idx(j).label
         j
+        >>> Idx(j + 1).label
+        j + 1
 
         """
         return self.args[0]
@@ -525,6 +529,8 @@ class Idx(Expr):
         0
         >>> Idx('j', 5).lower
         0
+        >>> Idx('j').lower is None
+        True
 
         """
         try:
@@ -543,6 +549,8 @@ class Idx(Expr):
         1
         >>> Idx('j', 5).upper
         4
+        >>> Idx('j').upper is None
+        True
 
         """
         try:
