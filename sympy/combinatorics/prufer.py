@@ -97,7 +97,7 @@ class Prufer(Basic):
         >>> p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]])
         >>> p.rank
         778
-        >>> p.next().rank
+        >>> p.next(1).rank
         779
         >>> p.prev().rank
         777
