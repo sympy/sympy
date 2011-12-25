@@ -28,6 +28,8 @@ def test_prufer():
 
     raises(ValueError, 'Prufer([[1, 2], [3, 4]])') # 0 is missing
     assert Prufer(*Prufer.edges([1, 2], [3, 4])).prufer_repr == [1, 3]
+    raises(ValueError, 'Prufer.edges([1, 3], [3, 4])') # a broken tree but edges doesn't care
+    raises(ValueError, 'Prufer.edges([1, 2], [5, 6])')
 
 def test_round_trip():
     def doit(t,b):

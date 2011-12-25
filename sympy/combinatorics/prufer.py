@@ -200,10 +200,11 @@ class Prufer(Basic):
             d[p] += 1
         for i in prufer:
             for j in xrange(n):
-            # Find the node whose degree is one and
-            # get the edge associated with it.
+            # find the smallest leaf (degree = 1)
                 if d[j] == 1:
                     break
+            # (i, j) is the new edge that we append to the tree
+            # and remove from the degree dictionary
             d[i] -= 1
             d[j] -= 1
             tree.append(sorted([i, j]))
@@ -219,7 +220,9 @@ class Prufer(Basic):
 
         All node numbers will be shifted so that the minimum node is 0. It is
         not a problem if edges are repeated in the runs; only unique edges are
-        returned.
+        returned. There is no assumption made about what the range of the node
+        labels should be, but all nodes from the smallest through the largest
+        must be present.
 
         Example
         =======
@@ -253,7 +256,12 @@ class Prufer(Basic):
             rv.append(list(ei))
         missing = set(range(nmin, nmax + 1)) - got
         if missing:
-            raise ValueError('missing nodes %s' % [i + nmin for i in sorted(missing)])
+            missing = [i + nmin for i in sorted(missing)]
+            if len(missing) == 1:
+                msg = 'Node %s is missing.' % missing[0]
+            else:
+                msg = 'Nodes %s are missing.' % missing
+            raise ValueError(msg)
         if nmin != 0:
             for i, ei in enumerate(rv):
                 rv[i] = [n - nmin for n in ei]
