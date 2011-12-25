@@ -1,4 +1,5 @@
 from sympy.core import Basic
+from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import flatten
 from sympy.ntheory.residue_ntheory import int_tested
 
@@ -112,7 +113,8 @@ class Prufer(Basic):
 
     @staticmethod
     def to_prufer(tree, n):
-        """Return the Prufer sequence for a tree given as a list of edges.
+        """Return the Prufer sequence for a tree given as a list of edges where
+        ``n`` is the number of nodes in the tree.
 
         Examples
         ========
@@ -189,6 +191,54 @@ class Prufer(Basic):
             tree.append([x, y])
         return tree
 
+    @staticmethod
+    def edges(*runs):
+        """Return a list of edges and the number of nodes from the given runs
+        that connect nodes in an integer-labelled tree.
+
+        All node numbers will be shifted so that the minimum node is 0. It is
+        not a problem if edges are repeated in the runs; only unique edges are
+        returned.
+
+        Example
+        =======
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> Prufer.edges([1, 2, 3], [2, 4, 5]) # a T
+        ([[0, 1], [3, 4], [1, 2], [1, 3]], 5)
+
+        Duplicate edges are removed:
+
+        >>> Prufer.edges([0, 1, 2, 3], [1, 4, 5], [1, 4, 6]) # a K
+        ([[0, 1], [1, 2], [4, 6], [4, 5], [1, 4], [2, 3]], 7)
+
+        """
+        e = set()
+        nmin = runs[0][0]
+        for r in runs:
+            for i in range(len(r)-1):
+                a, b = r[i: i + 2]
+                if b < a:
+                    a, b = b, a
+                e.add((a, b))
+        rv = []
+        got = set()
+        nmin = nmax = None
+        while e:
+            ei = e.pop()
+            for i in ei:
+                got.add(i)
+            nmin = min(ei[0], nmin) if nmin != None else ei[0]
+            nmax = max(ei[1], nmax) if nmax != None else ei[1]
+            rv.append(list(ei))
+        missing = set(range(nmin, nmax + 1)) - got
+        if missing:
+            raise ValueError('missing nodes %s' % [i + nmin for i in sorted(missing)])
+        if nmin != 0:
+            for i, ei in enumerate(rv):
+                rv[i] = [n - nmin for n in ei]
+            nmax -= nmin
+        return rv, nmax + 1
+
     def prufer_rank(self):
         """Computes the rank of a Prufer sequence.
 
@@ -254,7 +304,8 @@ class Prufer(Basic):
 
         """
         ret_obj = Basic.__new__(cls, *args, **kw_args)
-        if isinstance(args[0][0], list):
+        args = [list(args[0])]
+        if iterable(args[0][0]):
             if len(args) > 1:
                 nnodes = args[1]
             else:
@@ -267,7 +318,7 @@ class Prufer(Basic):
                     else:
                         msg = 'Nodes %s are missing' % missing
                     raise ValueError(msg)
-            ret_obj._tree_repr = args[0]
+            ret_obj._tree_repr = [list(i) for i in args[0]]
             ret_obj._nodes = nnodes
         else:
             ret_obj._prufer_repr = args[0]
