@@ -38,7 +38,7 @@ class Prufer(Basic):
         ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).prufer_repr
-        [4, 3, 3, 3]
+        [3, 3, 3, 4]
         >>> Prufer([1, 0, 0]).prufer_repr
         [1, 0, 0]
 
@@ -61,7 +61,7 @@ class Prufer(Basic):
         >>> Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).tree_repr
         [[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]
         >>> Prufer([1, 0, 0]).tree_repr
-        [[4, 1], [3, 0], [2, 0], [1, 0]]
+        [[1, 2], [0, 1], [0, 3], [0, 4]]
 
         See Also
         ========
@@ -96,20 +96,37 @@ class Prufer(Basic):
         >>> from sympy.combinatorics.prufer import Prufer
         >>> p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]])
         >>> p.rank
-        993
+        778
         >>> p.next().rank
-        994
+        779
         >>> p.prev().rank
-        992
+        777
 
         See Also
         ========
-        prufer_rank, next, prev
+        prufer_rank, next, prev, size
 
         """
         if self._rank is None:
             self._rank = self.prufer_rank()
         return self._rank
+
+    @property
+    def size(self):
+        """Return the number of possible trees of this Prufer object.
+
+        Examples
+        ========
+        >>> from sympy.combinatorics.prufer import Prufer
+        >>> Prufer([0]*4).size == Prufer([6]*4).size == 1296
+        True
+
+        See Also
+        ========
+        prufer_rank, rank, next, prev
+
+        """
+        return self.prev(self.rank).prev().rank + 1
 
     @staticmethod
     def to_prufer(tree, n):
@@ -127,35 +144,35 @@ class Prufer(Basic):
 
         """
         d = defaultdict(int)
-        L = defaultdict(int)
+        L = []
         for edge in tree:
-
             # Increment the value of the corresponding
             # node in the degree list as we encounter an
             # edge involving it.
             d[edge[0]] += 1
             d[edge[1]] += 1
         for i in xrange(n - 2):
-            # find first 1 from the right
-            x = n - 1
-            while d[x] != 1:
-                x -= 1
-            y = n - 1
-            while True:
-                # Keep reducing the index till we hit
-                # an edge that is in the tree.
-                e = sorted([x, y])
-                if e in tree:
+            # find the smallest leaf
+            for x in xrange(n):
+                if d[x] == 1:
                     break
-                y -= 1
-            L[i] = y
-            d[x] -= 1
-            d[y] -= 1
-            # Get rid of the edge that we just took
-            # into account while reducing the values in
-            # the degree list.
-            tree.remove(e)
-        return [L[i] for i in xrange(len(L))]
+            # find the node it was connected to
+            y = None
+            for edge in tree:
+                if x == edge[0]:
+                    y = edge[1]
+                elif x == edge[1]:
+                    y = edge[0]
+                if y is not None:
+                    break
+            # record and update
+            L.append(y)
+            for j in (x, y):
+                d[j] -= 1
+                if not d[j]:
+                    d.pop(j)
+            tree.remove(edge)
+        return L
 
     @staticmethod
     def to_tree(prufer):
@@ -166,29 +183,33 @@ class Prufer(Basic):
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([0, 2], 4)
         >>> a.tree_repr
-        [[3, 0], [1, 2], [2, 0]]
+        [[0, 1], [0, 2], [2, 3]]
         >>> Prufer.to_tree([0, 2])
-        [[3, 0], [1, 2], [2, 0]]
+        [[0, 1], [0, 2], [2, 3]]
+
+        References
+        ==========
+        - http://hamberg.no/erlend/2010/11/06/prufer-sequence/
 
         """
         tree = []
-        prufer.append(0)
-        n = len(prufer)
+        last = []
+        n = len(prufer) + 2
         d = defaultdict(lambda : 1)
-        for i in xrange(n - 1):
-            d[prufer[i]] += 1
-        for i in xrange(n):
-            x = n
+        for p in prufer:
+            d[p] += 1
+        for i in prufer:
+            for j in xrange(n):
             # Find the node whose degree is one and
             # get the edge associated with it.
-            while d[x] != 1:
-                x -= 1
-            y = prufer[i]
-            # Since the edge has been removed reduce
-            # the degree of all the nodes by one.
-            d[x] -= 1
-            d[y] -= 1
-            tree.append([x, y])
+                if d[j] == 1:
+                    break
+            d[i] -= 1
+            d[j] -= 1
+            tree.append(sorted([i, j]))
+        last = [i for i in xrange(n) if d[i] == 1] or [0, 1]
+        tree.append(last)
+
         return tree
 
     @staticmethod
@@ -249,6 +270,10 @@ class Prufer(Basic):
         >>> a.prufer_rank()
         0
 
+        See Also
+        ========
+        rank, next, prev, size
+
         """
         r = 0
         p = 1
@@ -300,12 +325,14 @@ class Prufer(Basic):
 
         >>> b = Prufer([1, 3])
         >>> b.tree_repr
-        [[2, 1], [1, 3], [3, 0]]
+        [[0, 1], [1, 3], [2, 3]]
 
         """
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         args = [list(args[0])]
-        if iterable(args[0][0]):
+        if args[0] and iterable(args[0][0]):
+            if not args[0][0]:
+                raise ValueError('Prufer expects at least one edge in the tree.')
             if len(args) > 1:
                 nnodes = args[1]
             else:
@@ -314,9 +341,9 @@ class Prufer(Basic):
                 if nnodes != len(nodes):
                     missing = sorted(set(range(nnodes)) - nodes)
                     if len(missing) == 1:
-                        msg = 'Node %s is missing' % missing[0]
+                        msg = 'Node %s is missing.' % missing[0]
                     else:
-                        msg = 'Nodes %s are missing' % missing
+                        msg = 'Nodes %s are missing.' % missing
                     raise ValueError(msg)
             ret_obj._tree_repr = [list(i) for i in args[0]]
             ret_obj._nodes = nnodes
@@ -332,11 +359,15 @@ class Prufer(Basic):
         ========
         >>> from sympy.combinatorics.prufer import Prufer
         >>> a = Prufer([[0, 1], [0, 2], [0, 3]])
-        >>> b = a.next(1)
+        >>> b = a.next(1) # == a.next()
         >>> b.tree_repr
-        [[3, 0], [2, 1], [1, 0]]
+        [[0, 2], [0, 1], [1, 3]]
         >>> b.rank
         1
+
+        See Also
+        ========
+        prufer_rank, rank, prev, size
 
         """
         return Prufer.unrank(self.rank + delta, self.nodes)
@@ -355,5 +386,10 @@ class Prufer(Basic):
         Prufer([1, 2, 0])
         >>> b.rank
         35
+
+        See Also
+        ========
+        prufer_rank, rank, next, size
+
         """
         return Prufer.unrank(self.rank - delta, self.nodes)
