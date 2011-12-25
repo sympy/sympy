@@ -111,146 +111,6 @@ from sympy.core.compatibility import is_sequence
 class IndexException(Exception):
     pass
 
-class IndexedBase(Expr):
-    """Represent the base or stem of an indexed object
-
-    The IndexedBase class represent an array that contains elements. The main purpose
-    of this class is to allow the convenient creation of objects of the Indexed
-    class.  The __getitem__ method of IndexedBase returns an instance of
-    Indexed.  Alone, without indices, the IndexedBase class can be used as a
-    notation for e.g. matrix equations, resembling what you could do with the
-    Symbol class.  But, the IndexedBase class adds functionality that is not
-    available for Symbol instances:
-
-      -  An IndexedBase object can optionally store shape information.  This can
-         be used in to check array conformance and conditions for numpy
-         broadcasting.  (TODO)
-      -  An IndexedBase object implements syntactic sugar that allows easy symbolic
-         representation of array operations, using implicit summation of
-         repeated indices.
-      -  The IndexedBase object symbolizes a mathematical structure equivalent
-         to arrays, and is recognized as such for code generation and automatic
-         compilation and wrapping.
-
-    >>> from sympy.tensor import IndexedBase, Idx
-    >>> from sympy import symbols
-    >>> A = IndexedBase('A'); A
-    A
-    >>> type(A)
-    <class 'sympy.tensor.indexed.IndexedBase'>
-
-    When an IndexedBase object recieves indices, it returns an array with named
-    axes, represented by an Indexed object:
-
-    >>> i, j = symbols('i j', integer=True)
-    >>> A[i, j, 2]
-    A[i, j, 2]
-    >>> type(A[i, j, 2])
-    <class 'sympy.tensor.indexed.Indexed'>
-
-    The IndexedBase constructor takes an optional shape argument.  If given,
-    it overrides any shape information in the indices. (But not the index
-    ranges!)
-
-    >>> m, n, o, p = symbols('m n o p', integer=True)
-    >>> i = Idx('i', m)
-    >>> j = Idx('j', n)
-    >>> A[i, j].shape
-    (m, n)
-    >>> B = IndexedBase('B', shape=(o, p))
-    >>> B[i, j].shape
-    (o, p)
-
-    """
-    is_commutative = False
-
-    def __new__(cls, label, shape=None, **kw_args):
-        if not isinstance(label, (basestring, Symbol)):
-            raise TypeError("Base label should be a string or Symbol.")
-
-        label = sympify(label)
-        obj = Expr.__new__(cls, label, **kw_args)
-        if is_sequence(shape):
-            obj._shape = Tuple(*shape)
-        else:
-            obj._shape = shape
-        return obj
-
-    @property
-    def args(self):
-        """Returns the arguments used to create this IndexedBase object.
-
-        Examples
-        ========
-        >>> from sympy import IndexedBase
-        >>> from sympy.abc import x, y
-        >>> IndexedBase('A', shape=(x, y)).args
-        (A, (x, y))
-
-        """
-        if self._shape:
-            return self._args + (self._shape,)
-        else:
-            return self._args
-
-    def _hashable_content(self):
-        return Expr._hashable_content(self) + (self._shape,)
-
-    def __getitem__(self, indices, **kw_args):
-        if is_sequence(indices):
-            # Special case needed because M[*my_tuple] is a syntax error.
-            if self.shape and len(self.shape) != len(indices):
-                raise IndexException("Rank mismatch.")
-            return Indexed(self, *indices, **kw_args)
-        else:
-            if self.shape and len(self.shape) != 1:
-                raise IndexException("Rank mismatch.")
-            return Indexed(self, indices, **kw_args)
-
-    @property
-    def shape(self):
-        """Returns the shape of the IndexedBase object.
-
-        Examples
-        ========
-        >>> from sympy import IndexedBase, Idx, Symbol
-        >>> from sympy.abc import x, y
-        >>> IndexedBase('A', shape=(x, y)).shape
-        (x, y)
-
-        Note: If the shape of the IndexedBase is specified, it will override
-        any shape information given by the indices.
-
-        >>> A = IndexedBase('A', shape=(x, y))
-        >>> B = IndexedBase('B')
-        >>> i = Idx('i', 2)
-        >>> j = Idx('j', 1)
-        >>> A[i, j].shape
-        (x, y)
-        >>> B[i, j].shape
-        (2, 1)
-
-        """
-        return self._shape
-
-    @property
-    def label(self):
-        """Returns the label of the IndexedBase object.
-
-        Examples
-        ========
-        >>> from sympy import IndexedBase
-        >>> from sympy.abc import x, y
-        >>> IndexedBase('A', shape=(x, y)).label
-        A
-
-        """
-        return self.args[0]
-
-    def _sympystr(self, p):
-        return p.doprint(self.label)
-
-
 class Indexed(Expr):
     """Represents a mathematical object with indices.
 
@@ -397,6 +257,146 @@ class Indexed(Expr):
     def _sympystr(self, p):
         indices = map(p.doprint, self.indices)
         return "%s[%s]" % (p.doprint(self.base), ", ".join(indices))
+
+
+class IndexedBase(Expr):
+    """Represent the base or stem of an indexed object
+
+    The IndexedBase class represent an array that contains elements. The main purpose
+    of this class is to allow the convenient creation of objects of the Indexed
+    class.  The __getitem__ method of IndexedBase returns an instance of
+    Indexed.  Alone, without indices, the IndexedBase class can be used as a
+    notation for e.g. matrix equations, resembling what you could do with the
+    Symbol class.  But, the IndexedBase class adds functionality that is not
+    available for Symbol instances:
+
+      -  An IndexedBase object can optionally store shape information.  This can
+         be used in to check array conformance and conditions for numpy
+         broadcasting.  (TODO)
+      -  An IndexedBase object implements syntactic sugar that allows easy symbolic
+         representation of array operations, using implicit summation of
+         repeated indices.
+      -  The IndexedBase object symbolizes a mathematical structure equivalent
+         to arrays, and is recognized as such for code generation and automatic
+         compilation and wrapping.
+
+    >>> from sympy.tensor import IndexedBase, Idx
+    >>> from sympy import symbols
+    >>> A = IndexedBase('A'); A
+    A
+    >>> type(A)
+    <class 'sympy.tensor.indexed.IndexedBase'>
+
+    When an IndexedBase object recieves indices, it returns an array with named
+    axes, represented by an Indexed object:
+
+    >>> i, j = symbols('i j', integer=True)
+    >>> A[i, j, 2]
+    A[i, j, 2]
+    >>> type(A[i, j, 2])
+    <class 'sympy.tensor.indexed.Indexed'>
+
+    The IndexedBase constructor takes an optional shape argument.  If given,
+    it overrides any shape information in the indices. (But not the index
+    ranges!)
+
+    >>> m, n, o, p = symbols('m n o p', integer=True)
+    >>> i = Idx('i', m)
+    >>> j = Idx('j', n)
+    >>> A[i, j].shape
+    (m, n)
+    >>> B = IndexedBase('B', shape=(o, p))
+    >>> B[i, j].shape
+    (o, p)
+
+    """
+    is_commutative = False
+
+    def __new__(cls, label, shape=None, **kw_args):
+        if not isinstance(label, (basestring, Symbol)):
+            raise TypeError("Base label should be a string or Symbol.")
+
+        label = sympify(label)
+        obj = Expr.__new__(cls, label, **kw_args)
+        if is_sequence(shape):
+            obj._shape = Tuple(*shape)
+        else:
+            obj._shape = shape
+        return obj
+
+    @property
+    def args(self):
+        """Returns the arguments used to create this IndexedBase object.
+
+        Examples
+        ========
+        >>> from sympy import IndexedBase
+        >>> from sympy.abc import x, y
+        >>> IndexedBase('A', shape=(x, y)).args
+        (A, (x, y))
+
+        """
+        if self._shape:
+            return self._args + (self._shape,)
+        else:
+            return self._args
+
+    def _hashable_content(self):
+        return Expr._hashable_content(self) + (self._shape,)
+
+    def __getitem__(self, indices, **kw_args):
+        if is_sequence(indices):
+            # Special case needed because M[*my_tuple] is a syntax error.
+            if self.shape and len(self.shape) != len(indices):
+                raise IndexException("Rank mismatch.")
+            return Indexed(self, *indices, **kw_args)
+        else:
+            if self.shape and len(self.shape) != 1:
+                raise IndexException("Rank mismatch.")
+            return Indexed(self, indices, **kw_args)
+
+    @property
+    def shape(self):
+        """Returns the shape of the IndexedBase object.
+
+        Examples
+        ========
+        >>> from sympy import IndexedBase, Idx, Symbol
+        >>> from sympy.abc import x, y
+        >>> IndexedBase('A', shape=(x, y)).shape
+        (x, y)
+
+        Note: If the shape of the IndexedBase is specified, it will override
+        any shape information given by the indices.
+
+        >>> A = IndexedBase('A', shape=(x, y))
+        >>> B = IndexedBase('B')
+        >>> i = Idx('i', 2)
+        >>> j = Idx('j', 1)
+        >>> A[i, j].shape
+        (x, y)
+        >>> B[i, j].shape
+        (2, 1)
+
+        """
+        return self._shape
+
+    @property
+    def label(self):
+        """Returns the label of the IndexedBase object.
+
+        Examples
+        ========
+        >>> from sympy import IndexedBase
+        >>> from sympy.abc import x, y
+        >>> IndexedBase('A', shape=(x, y)).label
+        A
+
+        """
+        return self.args[0]
+
+    def _sympystr(self, p):
+        return p.doprint(self.label)
 
 
 class Idx(Expr):
