@@ -220,7 +220,7 @@ def product(*args, **kwargs):
     If it cannot compute the product, it returns an unevaluated Product object.
     Repeated products can be computed by introducing additional symbols tuples::
 
-    >>> from sympy import product, oo, symbols
+    >>> from sympy import product, symbols
     >>> i, n, m, k = symbols('i n m k', integer=True)
 
     >>> product(i, (i, 1, k))
