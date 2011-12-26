@@ -1366,7 +1366,8 @@ def diff(f, *symbols, **kwargs):
     that if there are 0 symbols (such as diff(f(x), x, 0), then the result will
     be the function (the zeroth derivative), even if evaluate=False.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import sin, cos, Function, diff
     >>> from sympy.abc import x, y

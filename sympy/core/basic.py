@@ -338,7 +338,8 @@ class Basic(PicklableWithSlots):
         """
         Return a sort key.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.core import Basic, S, I
         >>> from sympy.abc import x
@@ -417,7 +418,8 @@ class Basic(PicklableWithSlots):
         """
         Compare two expressions and handle dummy symbols.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import Dummy
         >>> from sympy.abc import x, y
