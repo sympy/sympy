@@ -563,7 +563,8 @@ def Real(*args, **kwargs):  # pragma: no cover
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy import Rational
     >>> from sympy.abc import x, y
@@ -1018,7 +1019,8 @@ class Rational(Number):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy import S
         >>> (S(-3)/2).as_content_primitive()
         (3/2, -1)

@@ -875,7 +875,8 @@ class Pow(Expr):
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import sqrt
         >>> sqrt(4 + 4*sqrt(2)).as_content_primitive()
