@@ -347,7 +347,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         --------
-        apoapsis: Returns shortest distance between foci and contour
+        apoapsis : Returns shortest distance between foci and contour
 
         Examples
         --------
@@ -372,7 +372,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         --------
-        periapsis: Returns greatest distance between foci and contour
+        periapsis : Returns greatest distance between foci and contour
 
         Examples
         --------
