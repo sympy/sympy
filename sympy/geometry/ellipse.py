@@ -55,7 +55,7 @@ class Ellipse(GeometryEntity):
 
     See Also
     --------
-    Point
+    class:`Circle`
 
     Notes
     -----
@@ -130,6 +130,10 @@ class Ellipse(GeometryEntity):
         -------
         center : number
 
+        See Also
+        --------
+        class:`Point`
+
         Examples
         --------
         >>> from sympy import Point, Ellipse
@@ -148,6 +152,12 @@ class Ellipse(GeometryEntity):
         Returns
         -------
         hradius : number
+
+        See Also
+        --------
+        vradius : Returns vertical axis length
+        major : Returns semimajor axis length as number or expression
+        minor : Returns semiminor axis length as number or expression
 
         Examples
         --------
@@ -168,6 +178,12 @@ class Ellipse(GeometryEntity):
         -------
         vradius : number
 
+        See Also
+        --------
+        hradius : Returns horizontal axis length
+        major : Returns semimajor axis length as number or expression
+        minor : Returns semiminor axis length as number or expression
+
         Examples
         --------
         >>> from sympy import Point, Ellipse
@@ -186,6 +202,12 @@ class Ellipse(GeometryEntity):
         Returns
         -------
         minor : number or expression
+
+        See Also
+        --------
+        hradius : Returns horizontal axis length
+        vradius : Returns vertical axis length
+        major : Returns semimajor axis length as number or expression
 
         Examples
         --------
@@ -220,6 +242,12 @@ class Ellipse(GeometryEntity):
         Returns
         -------
         major : number or expression
+
+        See Also
+        --------
+        hradius : Returns horizontal axis length
+        vradius : Returns vertical axis length
+        minor : Returns semiminor axis length as number or expression
 
         Examples
         --------
@@ -317,6 +345,10 @@ class Ellipse(GeometryEntity):
         -------
         periapsis : number
 
+        See Also
+        --------
+        apoapsis: Returns shortest distance between foci and contour
+
         Examples
         --------
         >>> from sympy import Point, Ellipse
@@ -330,13 +362,17 @@ class Ellipse(GeometryEntity):
 
     @property
     def apoapsis(self):
-        """The periapsis of the ellipse.
+        """The apoapsis of the ellipse.
 
         The greatest distance between the focus and the contour.
 
         Returns
         -------
         apoapsis : number
+
+        See Also
+        --------
+        periapsis: Returns greatest distance between foci and contour
 
         Examples
         --------
@@ -358,6 +394,10 @@ class Ellipse(GeometryEntity):
         Returns
         -------
         focus_distance : number
+
+        See Also
+        --------
+        foci : Returns the location of all foci of ellipse
 
         Examples
         --------
@@ -385,7 +425,8 @@ class Ellipse(GeometryEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
+        focus_distance : Returns the distance between foci and center
 
         Examples
         --------
@@ -426,6 +467,10 @@ class Ellipse(GeometryEntity):
         Returns
         -------
         encloses_point : True, False or None
+
+        See Also
+        --------
+        class:`Point`
 
         Examples
         --------
@@ -477,8 +522,8 @@ class Ellipse(GeometryEntity):
 
         See Also
         --------
-        Point
-        Line
+        class:`Point`
+        class:`Line`
 
         Examples
         --------
@@ -551,6 +596,10 @@ class Ellipse(GeometryEntity):
         is_tangent: boolean
             True if o is tangent to the ellipse, False otherwise.
 
+        See Also
+        --------
+        tangent_lines : Returns tangent line on/from point to ellipse
+
         Examples
         --------
         >>> from sympy import Point, Ellipse, Line
@@ -600,7 +649,7 @@ class Ellipse(GeometryEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -649,7 +698,8 @@ class Ellipse(GeometryEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
+        arbitrary_point : Returns parameterized point on ellipse
 
         Note
         ----
@@ -693,6 +743,10 @@ class Ellipse(GeometryEntity):
         -------
         equation : sympy expression
 
+        See Also
+        --------
+        arbitrary_point : Returns parameterized point on ellipse
+
         Examples
         --------
         >>> from sympy import Point, Ellipse
@@ -713,6 +767,7 @@ class Ellipse(GeometryEntity):
 
         All LinearEntities are treated as a line and filtered at
         the end to see that they lie in o.
+
         """
         def dot(p1, p2):
             sum = 0
@@ -808,6 +863,10 @@ class Ellipse(GeometryEntity):
         -----
         Currently supports intersections with Point, Line, Segment, Ray,
         Circle and Ellipse types.
+
+        See Also
+        --------
+        class:`GeometryEntity`
 
         Examples
         --------
@@ -905,7 +964,8 @@ class Circle(Ellipse):
 
     See Also
     --------
-    Point
+    class:`Ellipse`
+    class:`Point`
 
     Examples
     --------
@@ -948,6 +1008,14 @@ class Circle(Ellipse):
         Returns
         -------
         radius : number or sympy expression
+
+        See Also
+        --------
+        class:`Circle`
+        sympy.geometry.Ellipse.major : Synonymous with radius
+        sympy.geometry.Ellipse.minor : Synonymous with radius
+        sympy.geometry.Ellipse.hradius : Synonymous with radius
+        sympy.geometry.Ellipse.vradius : Synonymous with radius
 
         Examples
         --------

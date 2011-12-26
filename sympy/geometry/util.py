@@ -23,6 +23,10 @@ def idiff(eq, y, x, dep=None):
     >>> idiff(x + a + y, y, x, [a])
     -Derivative(a, x) - 1
 
+    See Also
+    --------
+    class:`Derivative`
+
     """
     if not dep:
         dep = []
@@ -58,6 +62,10 @@ def _symbol(s, matching_symbol=None):
 
     NB: the symbol here may not be the same as a symbol with the same
     name defined elsewhere as a result of different assumptions.
+
+    See Also
+    --------
+    class:`Symbol`
 
     """
     if isinstance(s, basestring):
@@ -96,6 +104,10 @@ def intersection(*entities):
     simplified internally.
     Reals should be converted to Rationals, e.g. Rational(str(real_num))
     or else failures due to floating point issues may result.
+      
+    See Also
+    --------
+    sympy.geometry.GeometryEntity.intersection
 
     Examples
     --------
@@ -152,10 +164,6 @@ def convex_hull(*args):
     -----
     This can only be performed on a set of non-symbolic points.
 
-    See Also
-    --------
-    Point
-
     References
     ----------
     [1] http://en.wikipedia.org/wiki/Graham_scan
@@ -163,6 +171,11 @@ def convex_hull(*args):
     [2] Andrew's Monotone Chain Algorithm
     ( A.M. Andrew, "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
     http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm
+
+    See Also
+    --------
+    class:`Point`
+    class:`Polygon`
 
     Examples
     --------
@@ -246,6 +259,10 @@ def are_similar(e1, e2):
     -----
     If the two objects are equal then they are similar.
 
+    See Also
+    --------
+    sympy.geometry.GeometryEntity.is_similar
+
     Examples
     --------
     >>> from sympy import Point, Circle, Triangle, are_similar
@@ -281,6 +298,12 @@ def centroid(*args):
 
     If there are no objects (or a mixture of objects) then None is returned.
 
+    See Also
+    --------
+    class:`Point`
+    class:`Segment`
+    class:`Polygon`
+
     Examples
     ========
 
@@ -313,6 +336,7 @@ def centroid(*args):
 
         >>> centroid(p, p.translate(0, 1), p.translate(0, -1), q)
         Point(11/10, 1/2)
+
     """
 
     from sympy.geometry import Polygon, Segment, Point
