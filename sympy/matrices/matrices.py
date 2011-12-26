@@ -454,25 +454,8 @@ class Matrix(object):
     def expand(self, **hints):
         """
         Expand each element of the matrix by calling `expand()`.
-
-        See Also
-        ========
-
-        combine
         """
         out = Matrix(self.rows,self.cols,map(lambda i: i.expand(**hints), self.mat))
-        return out
-
-    def combine(self):
-        """
-        Combine each element of the matrix by calling `combine()`.
-
-        See Also
-        ========
-
-        expand
-        """
-        out = Matrix(self.rows,self.cols,map(lambda i: i.combine(),self.mat))
         return out
 
     def subs(self, *args):
