@@ -1569,7 +1569,7 @@ class Matrix(object):
         cofactor
         minorEntry
         minorMatrix
-        Adjugate
+        adjugate
         """
         out = Matrix(self.rows, self.cols, lambda i,j:
                 self.cofactor(i, j, method))
@@ -1795,6 +1795,9 @@ class Matrix(object):
         If (result length)/(input length) > ratio, then input is returned
         unmodified. If 'ratio=oo', then simplify() is applied anyway.
 
+        See Also
+        ========
+        sympy.simplify.simplify.simplify
         """
         for i in xrange(len(self.mat)):
             self.mat[i] = simplify(self.mat[i], ratio=ratio)
@@ -2488,13 +2491,13 @@ class Matrix(object):
 
     def det_bareis(self):
         """Compute matrix determinant using Bareis' fraction-free
-           algorithm which is an extension of the well known Gaussian
-           elimination method. This approach is best suited for dense
-           symbolic matrices and will result in a determinant with
-           minimal number of fractions. It means that less term
-           rewriting is needed on resulting formulae.
+        algorithm which is an extension of the well known Gaussian
+        elimination method. This approach is best suited for dense
+        symbolic matrices and will result in a determinant with
+        minimal number of fractions. It means that less term
+        rewriting is needed on resulting formulae.
 
-           TODO: Implement algorithm for sparse matrices (SFF).
+        TODO: Implement algorithm for sparse matrices (SFF).
 
         See Also
         ========
@@ -2557,6 +2560,7 @@ class Matrix(object):
         ========
         cofactorMatrix
         transpose
+        berkowitz
         """
 
         return self.cofactorMatrix(method).T
@@ -3667,7 +3671,7 @@ def hessian(f, varlist):
 
     See Also
     ========
-    jacobian
+    sympy.matrices.matrices.Matrix.jacobian
     wronskian
     """
     # f is the expression representing a function f, return regular matrix
@@ -3733,7 +3737,7 @@ def wronskian(functions, var, method='bareis'):
 
     See Also
     ========
-    jacobian
+    sympy.matrices.matrices.Matrix.jacobian
     hessian
     """
 
@@ -4346,10 +4350,8 @@ def rot_axis3(theta):
 
     See Also
     ========
-    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) about
-    the 1-axis
-    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) about
-    the 2-axis
+    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) about the 1-axis
+    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) about the 2-axis
     """
     ct = cos(theta)
     st = sin(theta)
@@ -4385,10 +4387,8 @@ def rot_axis2(theta):
 
     See Also
     ========
-    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) about
-    the 1-axis
-    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) about
-    the 3-axis
+    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) about the 1-axis
+    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) about the 3-axis
     """
     ct = cos(theta)
     st = sin(theta)
@@ -4424,10 +4424,8 @@ def rot_axis1(theta):
 
     See Also
     ========
-    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) about
-    the 2-axis
-    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) about
-    the 3-axis
+    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) about the 2-axis
+    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) about the 3-axis
     """
     ct = cos(theta)
     st = sin(theta)
