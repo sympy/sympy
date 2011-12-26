@@ -157,7 +157,6 @@ class Matrix(object):
 
         See Also
         ========
-
         conjugate: By-element conjugation
         """
         a = [0]*len(self)
@@ -172,7 +171,6 @@ class Matrix(object):
 
         See Also
         ========
-
         transpose: Matrix transposition
         H: Hermite conjugation
         D: Dirac conjugation
@@ -199,7 +197,6 @@ class Matrix(object):
 
         See Also
         ========
-
         conjugate: By-element conjugation
         D: Dirac conjugation
         """
@@ -212,7 +209,6 @@ class Matrix(object):
 
         See Also
         ========
-
         conjugate: By-element conjugation
         H: Hermite conjugation
         """
@@ -388,7 +384,6 @@ class Matrix(object):
 
         See Also
         ========
-
         copyin_list
         """
         rlo, rhi, clo, chi = self.key2bounds(key)
@@ -428,7 +423,6 @@ class Matrix(object):
 
         See Also
         ========
-
         copyin_matrix
         """
         if not is_sequence(value):
@@ -518,7 +512,6 @@ class Matrix(object):
 
         See Also
         ========
-
         dot
         cross
         multiply_elementwise
@@ -604,7 +597,6 @@ class Matrix(object):
 
         See Also
         ========
-
         LDLdecomposition
         LUdecomposition
         QRdecomposition
@@ -655,7 +647,6 @@ class Matrix(object):
 
         See Also
         ========
-
         cholesky
         LUdecomposition
         QRdecomposition
@@ -688,7 +679,6 @@ class Matrix(object):
 
         See Also
         ========
-
         upper_triangular_solve
         cholesky_solve
         diagonal_solve
@@ -725,7 +715,6 @@ class Matrix(object):
 
         See Also
         ========
-
         lower_triangular_solve
         cholesky_solve
         diagonal_solve
@@ -762,7 +751,6 @@ class Matrix(object):
 
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         diagonal_solve
@@ -787,7 +775,6 @@ class Matrix(object):
 
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         cholesky_solve
@@ -818,7 +805,6 @@ class Matrix(object):
 
         See Also
         ========
-
         LDLdecomposition
         lower_triangular_solve
         upper_triangular_solve
@@ -860,7 +846,6 @@ class Matrix(object):
 
         See Also
         ========
-
         inverse_LU
         inverse_GE
         inverse_ADJ
@@ -911,7 +896,6 @@ class Matrix(object):
 
         See Also
         ========
-
         col
         row_swap
         row_del
@@ -943,7 +927,6 @@ class Matrix(object):
 
         See Also
         ========
-
         row
         col_swap
         col_del
@@ -972,7 +955,6 @@ class Matrix(object):
 
         See Also
         ========
-
         row
         col_swap
         """
@@ -995,7 +977,6 @@ class Matrix(object):
 
         See Also
         ========
-
         col
         row_swap
         """
@@ -1015,7 +996,6 @@ class Matrix(object):
 
         See Also
         ========
-
         row
         col_del
         """
@@ -1036,7 +1016,6 @@ class Matrix(object):
 
         See Also
         ========
-
         col
         row_del
         """
@@ -1058,7 +1037,6 @@ class Matrix(object):
 
         See Also
         ========
-
         row
         col_join
         """
@@ -1085,7 +1063,6 @@ class Matrix(object):
 
         See Also
         ========
-
         col
         row_join
         """
@@ -1118,7 +1095,6 @@ class Matrix(object):
 
         See Also
         ========
-
         row
         col_insert
         """
@@ -1162,7 +1138,6 @@ class Matrix(object):
 
         See Also
         ========
-
         col
         row_insert
         """
@@ -1224,7 +1199,6 @@ class Matrix(object):
 
         See Also
         ========
-
         extract
         """
         rlo, rhi, clo, chi = self.key2bounds(keys)
@@ -1270,7 +1244,6 @@ class Matrix(object):
 
         See Also
         ========
-
         submatrix
         """
         cols = self.cols
@@ -1286,7 +1259,6 @@ class Matrix(object):
 
         See Also
         ========
-        
         key2ij
         slice2bounds
         """
@@ -1314,7 +1286,6 @@ class Matrix(object):
 
         See Also
         ========
-
         key2bounds
         slice2bounds
         """
@@ -1334,7 +1305,6 @@ class Matrix(object):
         
         See Also
         ========
-
         key2bounds
         key2ij
         """
@@ -1440,7 +1410,6 @@ class Matrix(object):
 
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         cholesky_solve
@@ -1485,7 +1454,6 @@ class Matrix(object):
 
         See Also
         ========
-
         cholesky
         LDLdecomposition
         QRdecomposition
@@ -1513,7 +1481,6 @@ class Matrix(object):
 
         See Also
         ========
-
         LUdecomposition
         LUdecompositionFF
         LUsolve
@@ -1563,7 +1530,6 @@ class Matrix(object):
 
         See Also
         ========
-
         LUdecomposition
         LUdecomposition_Simple
         LUsolve
@@ -1600,7 +1566,6 @@ class Matrix(object):
 
         See Also
         ========
-
         cofactor
         minorEntry
         minorMatrix
@@ -1616,7 +1581,6 @@ class Matrix(object):
 
         See Also
         ========
-
         minorMatrix
         cofactor
         cofactorMatrix
@@ -1632,7 +1596,6 @@ class Matrix(object):
 
         See Also
         ========
-
         minorEntry
         cofactor
         cofactorMatrix
@@ -1648,7 +1611,6 @@ class Matrix(object):
 
         See Also
         ========
-
         cofactorMatrix
         minorEntry
         minorMatrix
@@ -1688,7 +1650,6 @@ class Matrix(object):
 
         See Also
         ========
-
         hessian
         wronskian
         """
@@ -1751,7 +1712,6 @@ class Matrix(object):
 
         See Also
         ========
-
         cholesky
         LDLdecomposition
         LUdecomposition
@@ -1804,7 +1764,6 @@ class Matrix(object):
 
         See Also
         ========
-
         lower_triangular_solve
         upper_triangular_solve
         cholesky_solve
@@ -1851,7 +1810,6 @@ class Matrix(object):
 
         See Also
         ========
-
         dot
         multiply
         multiply_elementwise
@@ -1889,7 +1847,6 @@ class Matrix(object):
 
         See Also
         ========
-
         cross
         multiply
         multiply_elementwise
@@ -1929,7 +1886,6 @@ class Matrix(object):
 
         See Also
         ========
-
         cross
         dot
         multiply
@@ -1973,7 +1929,6 @@ class Matrix(object):
 
         See Also
         ========
-
         normalized
         """
 
@@ -2022,7 +1977,6 @@ class Matrix(object):
 
         See Also
         ========
-
         norm
         """
         if self.rows != 1 and self.cols != 1:
@@ -2057,7 +2011,6 @@ class Matrix(object):
 
         See Also
         ========
-
         permuteFwd
         """
         copy = self[:,:]
@@ -2078,7 +2031,6 @@ class Matrix(object):
 
         See Also
         ========
-
         permuteBkwd
         """
         copy = self[:,:]
@@ -2102,7 +2054,6 @@ class Matrix(object):
 
         See Also
         ========
-
         row_del
         col_del
         """
@@ -2113,11 +2064,10 @@ class Matrix(object):
         return M
 
     def exp(self):
-        """ Returns the exponent of a matrix 
+        """ Returns the exponentiation of a matrix 
 
         See Also
         ========
-
         matrix_multiply
         """
         if not self.is_square:
@@ -2137,7 +2087,6 @@ class Matrix(object):
 
         See Also
         ========
-
         ones
         fill
         """
@@ -2267,7 +2216,6 @@ class Matrix(object):
 
         See Also
         ========
-
         is_lower
         is_diagonal
         is_upper_hessenberg
@@ -2311,7 +2259,6 @@ class Matrix(object):
 
         See Also
         ========
-
         is_upper
         is_diagonal
         is_lower_hessenberg
@@ -2344,7 +2291,6 @@ class Matrix(object):
 
         See Also
         ========
-
         is_lower_hessenberg
         is_upper
         """
@@ -2376,7 +2322,6 @@ class Matrix(object):
 
         See Also
         ========
-
         is_upper_hessenberg
         is_lower
         """
@@ -2496,7 +2441,6 @@ class Matrix(object):
 
         See Also
         ========
-
         is_lower
         is_upper
         is_diagonalizable
@@ -2524,7 +2468,6 @@ class Matrix(object):
 
         See Also
         ========
-
         det_bareis
         berkowitz_det
         """
@@ -2555,7 +2498,6 @@ class Matrix(object):
 
         See Also
         ========
-
         det
         berkowitz_det
         """
@@ -2613,7 +2555,6 @@ class Matrix(object):
 
         See Also
         ========
-
         cofactorMatrix
         transpose
         """
@@ -2627,7 +2568,6 @@ class Matrix(object):
 
         See Also
         ========
-
         inv
         inverse_GE
         inverse_ADJ
@@ -2647,7 +2587,6 @@ class Matrix(object):
 
         See Also
         ========
-
         inv
         inverse_LU
         inverse_ADJ
@@ -2668,7 +2607,6 @@ class Matrix(object):
 
         See Also
         ========
-
         inv
         inverse_LU
         inverse_GE
@@ -2846,7 +2784,6 @@ class Matrix(object):
 
         See Also
         ========
-
         det
         berkowitz
         """
@@ -2863,7 +2800,6 @@ class Matrix(object):
 
         See Also
         ========
-
         berkowitz
         """
         sign, minors = S.NegativeOne, []
@@ -2904,7 +2840,6 @@ class Matrix(object):
 
         See Also
         ========
-
         berkowitz
         """
         return PurePoly(map(simplify, self.berkowitz()[-1]), x)
@@ -2916,7 +2851,6 @@ class Matrix(object):
 
         See Also
         ========
-
         berkowitz
         """
         return roots(self.berkowitz_charpoly(Dummy('x')), **flags)
@@ -2973,7 +2907,6 @@ class Matrix(object):
 
         See Also
         ========
-
         condition_number
         """
         # Compute eigenvalues of A.H A
@@ -3003,7 +2936,6 @@ class Matrix(object):
 
         See Also
         ========
-
         singular_values
         """
 
@@ -3015,7 +2947,6 @@ class Matrix(object):
 
         See Also
         ========
-
         zeros
         ones
         """
@@ -3049,7 +2980,6 @@ class Matrix(object):
 
         See Also
         ========
-
         limit
         diff
         """
@@ -3071,7 +3001,6 @@ class Matrix(object):
 
         See Also
         ========
-
         integrate
         diff
         """
@@ -3093,7 +3022,6 @@ class Matrix(object):
 
         See Also
         ========
-
         integrate
         limit
         """
@@ -3116,7 +3044,6 @@ class Matrix(object):
 
         See Also
         ========
-
         vech
         """
         return Matrix(len(self), 1, self.transpose().mat)
@@ -3144,7 +3071,6 @@ class Matrix(object):
 
         See Also
         ========
-
         vec
         """
         c = self.cols
@@ -3249,7 +3175,6 @@ class Matrix(object):
 
         See Also
         ========
-
         is_diagonal
         is_diagonalizable 
         """
@@ -3309,7 +3234,6 @@ class Matrix(object):
 
         See Also
         ========
-
         is_diagonal
         diagonalize
         """
@@ -3376,7 +3300,6 @@ class Matrix(object):
 
         See Also
         ========
-
         jordan_cells
         """
         (P, Jcells) = self.jordan_cells(calc_transformation)
@@ -3419,8 +3342,6 @@ class Matrix(object):
 
         See Also
         ========
-
-
         jordan_form
         """
         if not self.is_square:
@@ -3494,7 +3415,6 @@ def matrix_multiply(A, B):
 
     See Also
     ========
-
     matrix_multiply_elementwise
     matrix_add
     """
@@ -3534,7 +3454,6 @@ def matrix_multiply_elementwise(A, B):
 
     See Also
     ========
-
     matrix_multiply
     matrix_add
     """
@@ -3549,7 +3468,6 @@ def matrix_add(A, B):
 
     See Also
     ========
-
     matrix_multiply
     matrix_multiply_elementwise
     """
@@ -3568,7 +3486,6 @@ def zeros(r, c=None, cls=Matrix):
 
     See Also
     ========
-
     ones
     eye
     diag
@@ -3587,7 +3504,6 @@ def ones(r, c=None):
 
     See Also
     ========
-
     zeros
     eye
     diag
@@ -3606,8 +3522,6 @@ def eye(n, cls=Matrix):
 
     See Also
     ========
-
-
     diag
     zeros
     ones
@@ -3647,7 +3561,6 @@ def diag(*values):
 
     See Also
     ========
-
     eye
     """
     rows = 0
@@ -3754,7 +3667,6 @@ def hessian(f, varlist):
 
     See Also
     ========
-
     jacobian
     wronskian
     """
@@ -3821,7 +3733,6 @@ def wronskian(functions, var, method='bareis'):
 
     See Also
     ========
-
     jacobian
     hessian
     """
@@ -3888,7 +3799,6 @@ class SparseMatrix(Matrix):
 
     See Also
     ========
-
     :class:`Matrix`
     """
 
@@ -4025,7 +3935,6 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
-
         col_del
         """
         newD = {}
@@ -4059,7 +3968,6 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
-
         row_del
         """
         newD = {}
@@ -4103,7 +4011,6 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
-
         col_list
         """
 
@@ -4130,7 +4037,6 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
-
         row_list
         """
         new=[]
@@ -4203,7 +4109,6 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
-
         multiply
         """
         if self.shape != other.shape:
@@ -4242,7 +4147,6 @@ class SparseMatrix(Matrix):
 
         See Also
         ========
-
         add
         """
 
@@ -4314,7 +4218,6 @@ def list2numpy(l):
 
     See Also
     ========
-
     matrix2numpy
     """
     from numpy import empty
@@ -4328,7 +4231,6 @@ def matrix2numpy(m):
 
     See Also
     ========
-
     list2numpy
     """
     from numpy import empty
@@ -4444,7 +4346,6 @@ def rot_axis3(theta):
 
     See Also
     ========
-
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) about
     the 1-axis
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) about
@@ -4484,7 +4385,6 @@ def rot_axis2(theta):
 
     See Also
     ========
-
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians) about
     the 1-axis
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) about
@@ -4524,7 +4424,6 @@ def rot_axis1(theta):
 
     See Also
     ========
-
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians) about
     the 2-axis
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians) about
