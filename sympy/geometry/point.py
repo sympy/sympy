@@ -39,6 +39,10 @@ class Point(GeometryEntity):
     ----
     Currently only 2-dimensional points are supported.
 
+    See Also
+    --------
+    class:`Segment` : Connects two Points
+
     Examples
     --------
     >>> from sympy.geometry import Point
@@ -109,6 +113,10 @@ class Point(GeometryEntity):
         then the points are not collinear. We do this test for every
         point in the list, and if all pass then they are collinear.
 
+        See Also
+        --------
+        class:`Line`
+
         Examples
         --------
         >>> from sympy import Point
@@ -155,6 +163,10 @@ class Point(GeometryEntity):
         -------
         is_concyclic : boolean
             True if points are concyclic, False otherwise.
+
+        See Also
+        --------
+        class:`Circle`
 
         Notes
         -----
@@ -233,6 +245,10 @@ class Point(GeometryEntity):
         -------
         distance : number or symbolic expression.
 
+        See Also
+        --------
+        sympy.geometry.Segment.length : Returns length of a Segment
+
         Examples
         --------
         >>> from sympy.geometry import Point
@@ -258,6 +274,10 @@ class Point(GeometryEntity):
         Returns
         -------
         midpoint : Point
+
+        See Also
+        --------
+        sympy.geometry.Segment.midpoint : Returns midpoint of a Segment
 
         Examples
         --------

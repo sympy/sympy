@@ -41,6 +41,10 @@ class LinearEntity(GeometryEntity):
         * __eq__
         * __contains__
 
+    See Also
+    --------
+    class:`GeometryEntity`
+
     """
 
     def __new__(cls, p1, p2, **kwargs):
@@ -58,7 +62,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -77,7 +81,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -94,6 +98,10 @@ class LinearEntity(GeometryEntity):
     def coefficients(self):
         """The coefficients (a, b, c) for the linear equation
         ax + by + c = 0.
+
+        See Also
+        --------
+        sympy.geometry.Line.equation : Returns equation of a Line
 
         Examples
         --------
@@ -143,6 +151,10 @@ class LinearEntity(GeometryEntity):
         intersection point of the first two lines is a member on
         the rest of the lines. If so, the lines are concurrent.
 
+        See Also
+        --------
+        intersection : Returns intersection of two entities
+
         Examples
         --------
         >>> from sympy import Point, Line
@@ -188,6 +200,10 @@ class LinearEntity(GeometryEntity):
         -------
         True if l1 and l2 are parallel, False otherwise.
 
+        See Also
+        --------
+        coefficients : Returns equation coefficients of line
+
         Examples
         --------
         >>> from sympy import Point, Line
@@ -221,6 +237,10 @@ class LinearEntity(GeometryEntity):
         Returns
         -------
         True if l1 and l2 are perpendicular, False otherwise.
+
+        See Also
+        --------
+        coefficients : Returns equation coefficients of line
 
         Examples
         --------
@@ -265,6 +285,10 @@ class LinearEntity(GeometryEntity):
         get the directional vectors of the two lines and readily
         find the angle between the two using the above formula.
 
+        See Also
+        --------
+        is_perpendicular : Returns true if angle is equal to 90 degrees
+
         Examples
         --------
         >>> from sympy import Point, Line
@@ -289,6 +313,10 @@ class LinearEntity(GeometryEntity):
         Returns
         -------
         line : Line
+
+        See Also
+        --------
+        is_parallel : Returns true if two lines are parallel
 
         Examples
         --------
@@ -316,6 +344,11 @@ class LinearEntity(GeometryEntity):
         Returns
         -------
         line : Line
+
+        See Also
+        --------
+        is_perpendicular : Returns true if two lines are perpendicular. In other words, angle equal to 90 degrees or pi/2
+        perpendicular_segment : Creates a segment from point to line perpendicular to line
 
         Examples
         --------
@@ -356,6 +389,10 @@ class LinearEntity(GeometryEntity):
         -----
         Returns `p` itself if `p` is on this linear entity.
 
+        See Also
+        --------
+        perpendicular_line : Creates a new line from point to line perpendicular to original line
+
         Examples
         --------
         >>> from sympy import Point, Line
@@ -386,6 +423,10 @@ class LinearEntity(GeometryEntity):
         -------
         slope : number or sympy expression
 
+        See Also
+        --------
+        coefficients : Returns equation coefficients of line.
+
         Examples
         --------
         >>> from sympy import Point, Line
@@ -415,7 +456,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -445,10 +486,6 @@ class LinearEntity(GeometryEntity):
         GeometryError
             When method is unable to perform projection.
 
-        See Also
-        --------
-        Point
-
         Notes
         -----
         A projection involves taking the two points that define
@@ -459,6 +496,11 @@ class LinearEntity(GeometryEntity):
         on L that is closest to P. This is done by creating a
         perpendicular line through P and L and finding its
         intersection with L.
+
+        See Also
+        --------
+        class:`Point`
+        perpendicular_line : Creates a new line from point to line perpendicular to original line
 
         Examples
         --------
@@ -512,6 +554,10 @@ class LinearEntity(GeometryEntity):
         Returns
         -------
         intersection : list of geometrical entities
+
+        See Also
+        --------
+        class:`Point`
 
         Examples
         --------
@@ -627,7 +673,7 @@ class LinearEntity(GeometryEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -713,7 +759,7 @@ class Line(LinearEntity):
 
     See Also
     --------
-    Point
+    class:`Point`
 
     Examples
     --------
@@ -780,7 +826,7 @@ class Line(LinearEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -836,6 +882,10 @@ class Line(LinearEntity):
         Returns
         -------
         equation : sympy expression
+
+        See Also
+        --------
+        coefficients : Returns equation coefficients of line.
 
         Examples
         --------
@@ -900,7 +950,8 @@ class Ray(LinearEntity):
 
     See Also
     --------
-    Point
+    class:`Point`
+    class:`Line`
 
     Notes
     -----
@@ -972,6 +1023,10 @@ class Ray(LinearEntity):
     def source(self):
         """The point from which the ray emanates.
 
+        See Also
+        --------
+        class:`Point`
+
         Examples
         --------
         >>> from sympy import Point, Ray
@@ -990,6 +1045,10 @@ class Ray(LinearEntity):
         Positive infinity if the ray points in the positive x direction,
         negative infinity if the ray points in the negative x direction,
         or 0 if the ray is vertical.
+
+        See Also
+        --------
+        ydirection : Vertical direction of ray
 
         Examples
         --------
@@ -1016,6 +1075,10 @@ class Ray(LinearEntity):
         Positive infinity if the ray points in the positive y direction,
         negative infinity if the ray points in the negative y direction,
         or 0 if the ray is horizontal.
+
+        See Also
+        --------
+        xdirection : Horizontal direction of ray
 
         Examples
         --------
@@ -1055,7 +1118,7 @@ class Ray(LinearEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -1194,7 +1257,8 @@ class Segment(LinearEntity):
 
     See Also
     --------
-    Point
+    class:`Point`
+    class:`Line`
 
     Notes
     -----
@@ -1268,7 +1332,7 @@ class Segment(LinearEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -1327,6 +1391,10 @@ class Segment(LinearEntity):
         -------
         bisector : Line or Segment
 
+        See Also
+        --------
+        perpendicular_segment : Creates a segment from point to line perpendicular to line
+
         Examples
         --------
         >>> from sympy import Point, Segment
@@ -1349,6 +1417,10 @@ class Segment(LinearEntity):
     def length(self):
         """The length of the line segment.
 
+        See Also
+        --------
+        sympy.geometry.Point.distance
+
         Examples
         --------
         >>> from sympy import Point, Segment
@@ -1363,6 +1435,10 @@ class Segment(LinearEntity):
     @property
     def midpoint(self):
         """The midpoint of the line segment.
+
+        See Also
+        --------
+        sympy.geometry.Point.midpoint
 
         Examples
         --------

@@ -37,6 +37,9 @@ class Curve(GeometryEntity):
         When `functions` are specified incorrectly.
         When `limits` are specified incorrectly.
 
+    See Also
+    --------
+    class:`Function`
 
     Examples
     --------
@@ -77,6 +80,10 @@ class Curve(GeometryEntity):
         -------
         functions : list of parameterized coordinate functions.
 
+        See Also
+        --------
+        parameter : Variable serving as parameter of functions
+
         Examples
         --------
         >>> from sympy.abc import t
@@ -95,6 +102,10 @@ class Curve(GeometryEntity):
         Returns
         -------
         parameter : sympy symbol
+
+        See Also
+        --------
+        functions : Functions using parameter to generate curve
 
         Examples
         --------
@@ -115,6 +126,10 @@ class Curve(GeometryEntity):
         -------
         limits : tuple
             Contains parameter and lower and upper limits.
+
+        See Also
+        --------
+        plot_interval : Returns interval of a parameter
 
         Examples
         --------
@@ -149,7 +164,7 @@ class Curve(GeometryEntity):
 
         See Also
         --------
-        Point
+        class:`Point`
 
         Examples
         --------
@@ -189,6 +204,10 @@ class Curve(GeometryEntity):
         -------
         plot_interval : list (plot interval)
             [parameter, lower_bound, upper_bound]
+
+        See Also
+        --------
+        limits : Returns limits of the parameter interval
 
         Examples
         --------
