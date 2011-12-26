@@ -26,9 +26,9 @@ class Add(AssocOp):
         Applies associativity, all terms are commutable with respect to
         addition.
 
-        Developer Notes
-        ===============
-            See Mul.flatten
+        See also
+        ========
+        sympy.core.mul.Mul.flatten
 
         """
         rv = None

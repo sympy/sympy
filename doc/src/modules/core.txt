@@ -1,7 +1,7 @@
 SymPy Core
 ==========
 
-Sympify
+sympify
 -------
 .. module:: sympy.core.sympify
 
@@ -9,7 +9,7 @@ sympify
 ^^^^^^^
 .. autofunction:: sympify
 
-Cache
+cache
 -------
 .. module:: sympy.core.cache
 
@@ -17,7 +17,7 @@ cacheit
 ^^^^^^^
 .. autofunction:: cacheit
 
-Basic
+basic
 -----
 .. module:: sympy.core.basic
 
@@ -36,7 +36,7 @@ C
 .. autoclass:: C
    :members:
 
-Singleton
+singleton
 ---------
 .. module:: sympy.core.singleton
 
@@ -45,7 +45,7 @@ S
 .. autoclass:: S
    :members:
 
-Expr
+expr
 ----
 .. module:: sympy.core.expr
 
@@ -59,7 +59,7 @@ AtomicExpr
 .. autoclass:: AtomicExpr
    :members:
 
-Symbol
+symbol
 ------
 .. module:: sympy.core.symbol
 
@@ -86,7 +86,7 @@ var
 ^^^
 .. autofunction:: var
 
-Numbers
+numbers
 -------
 .. module:: sympy.core.numbers
 
@@ -163,7 +163,7 @@ zoo
 ^^^
 .. autofunction:: zoo
 
-Power
+power
 -----
 .. module:: sympy.core.power
 
@@ -176,7 +176,7 @@ integer_nthroot
 ^^^^^^^^^^^^^^^
 .. autofunction:: integer_nthroot
 
-Mul
+mul
 ---
 .. module:: sympy.core.mul
 
@@ -189,7 +189,7 @@ prod
 ^^^^
 .. autofunction:: prod
 
-Add
+add
 ---
 .. module:: sympy.core.add
 
@@ -198,7 +198,7 @@ Add
 .. autoclass:: Add
    :members:
 
-Mod
+mod
 ---
 .. module:: sympy.core.mod
 
@@ -207,7 +207,7 @@ Mod
 .. autoclass:: Mod
    :members:
 
-Relational
+relational
 ----------
 .. module:: sympy.core.relational
 
@@ -266,7 +266,7 @@ StrictInequality
 .. autoclass:: StrictInequality
    :members:
 
-Multidimensional
+multidimensional
 ----------------
 .. module:: sympy.core.multidimensional
 
@@ -275,7 +275,7 @@ vectorize
 .. autoclass:: vectorize
    :members:
 
-Function
+function
 --------
 .. module:: sympy.core.function
 
@@ -354,7 +354,7 @@ nfloat
 ^^^^^^
 .. autofunction:: nfloat
 
-Sets
+sets
 ----
 .. module:: sympy.core.sets
 
@@ -388,7 +388,7 @@ ProductSet
 .. autoclass: ProductSet
    :members:
 
-Evalf
+evalf
 -----
 .. module:: sympy.core.evalf
 
@@ -402,7 +402,7 @@ N
 .. autoclass:: N
    :members:
 
-Containers
+containers
 ----------
 .. module:: sympy.core.containers
 
@@ -416,7 +416,7 @@ Dict
 .. autoclass:: Dict
    :members:
 
-ExprTools
+exprtools
 ---------
 .. module:: sympy.core.exprtools
 
