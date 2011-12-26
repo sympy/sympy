@@ -3626,6 +3626,8 @@ def eye(n, cls=Matrix):
 
 
     diag
+    zeros
+    ones
     """
     n = int(n)
     out = cls.zeros(n)
