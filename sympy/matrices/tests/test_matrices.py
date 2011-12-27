@@ -1936,6 +1936,6 @@ def test_invertible_check():
     raises(ValueError, 'm.inv(method="LU")')
     
 @XFAIL
-def test_issue_860 ( ) :
+def test_issue_860():
     e = x*y
     assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
