@@ -380,7 +380,8 @@ def gcd_terms(terms, isprimitive=False):
     Compute the GCD of ``terms`` and put them together. If ``isprimitive`` is
     True the _gcd_terms will not run the primitive method on the terms.
 
-    **Examples**
+    Examples
+    ========
 
     >>> from sympy.core import gcd_terms
     >>> from sympy.abc import x, y

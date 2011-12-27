@@ -26,8 +26,9 @@ class Add(AssocOp):
         Applies associativity, all terms are commutable with respect to
         addition.
 
-        ** Developer Notes **
-            See Mul.flatten
+        See also
+        ========
+        sympy.core.mul.Mul.flatten
 
         """
         rv = None
@@ -245,7 +246,8 @@ class Add(AssocOp):
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -274,7 +276,8 @@ class Add(AssocOp):
         Returns a tuple (coeff, args) where self is treated as an Add and coeff
         is the Number term and args is a tuple of all other terms.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.abc import x, y
         >>> (7 + 3*x).as_coeff_add()
         (7, (3*x,))
@@ -511,7 +514,8 @@ class Add(AssocOp):
         """
         Returns the leading term and it's order.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.abc import x
         >>> (x+1+1/x**5).extract_leading_order(x)
@@ -543,7 +547,8 @@ class Add(AssocOp):
         """
         returns a tuple represeting a complex numbers
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import I
         >>> (7 + 9*I).as_real_imag()
@@ -685,7 +690,8 @@ class Add(AssocOp):
 
         ``R`` is collected only from the leading coefficient of each term.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy.abc import x, y
 
@@ -764,7 +770,8 @@ class Add(AssocOp):
         common radicals will be removed and included as a factor of the
         primitive expression.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import sqrt
         >>> (3 + 3*sqrt(2)).as_content_primitive()

@@ -440,7 +440,8 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of factors.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import sin, cos
         >>> from sympy.abc import x, y
@@ -458,7 +459,8 @@ class Expr(Basic, EvalfMixin):
         """
         Transform an expression to an ordered list of terms.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import sin, cos
         >>> from sympy.abc import x, y
@@ -893,7 +895,8 @@ class Expr(Basic, EvalfMixin):
         """
         Convert a polynomial to a SymPy expression.
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import sin
         >>> from sympy.abc import x, y
@@ -1154,7 +1157,8 @@ class Expr(Basic, EvalfMixin):
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -1271,7 +1275,8 @@ class Expr(Basic, EvalfMixin):
         like the as_coeff_Mul() method but primitive always extracts a positive
         Rational (never a negative or a Float).
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy.abc import x
         >>> (3*(x + 1)**2).primitive()
         (3, (x + 1)**2)
@@ -1291,14 +1296,15 @@ class Expr(Basic, EvalfMixin):
         return c, r
 
     def as_content_primitive(self, radical=False):
-        """This method should recursively remove a Rational from all arguments
+        r"""This method should recursively remove a Rational from all arguments
         and return that (content) and the new self (primitive). The content
         should always be positive and Mul(*foo.as_content_primitive()) == foo.
         The primitive need no be in canonical form and should try to preserve
         the underlying structure if possible (i.e. expand_mul should not be
         applied to self).
 
-        **Examples**
+        Examples
+        ========
         >>> from sympy import sqrt
         >>> from sympy.abc import x, y, z
 
@@ -1658,7 +1664,8 @@ class Expr(Basic, EvalfMixin):
         This is not part of the assumptions system.  You cannot do
         Symbol('z', polynomial=True).
 
-        **Examples**
+        Examples
+        ========
 
         >>> from sympy import Symbol
         >>> x = Symbol('x')
