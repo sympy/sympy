@@ -10,11 +10,12 @@ attempting to perform operations on the aforementioned singletons, because the
 default protocol when pickling is 0, and a regular simplification will not
 evaluate the result with sufficient accuracy.
 
-Example:
+For example:
+
 >>> from sympy import sin, pi
 >>> from pickle import loads, dumps
 
->>> picklepi = loads(dumps(pi))
+>>> picklepi = loads(dumps(pi))  # Uses default protocol 0
 
 >>> sin(pi)
 0
@@ -35,7 +36,8 @@ False
 The optimal solution to this problem is to specify a protocol of 2 or higher
 when pickling the singleton.
 
-Example:
+For example:
+
 >>> picklepi = loads(dumps(pi,-1))   # Defaults to highest protocol, i.e. 2
 
 >>> pi is picklepi
