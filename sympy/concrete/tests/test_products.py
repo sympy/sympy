@@ -1,7 +1,8 @@
 from sympy import (symbols, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo)
+from sympy.utilities.pytest import raises
 
-a, k, n = symbols('a,k,n', integer=True)
+a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
 
 def test_simple_products():
@@ -17,6 +18,22 @@ def test_simple_products():
     assert product(cos(k), (k, 1, Rational(5, 2))) != cos(1)*cos(2)
 
     assert isinstance(product(k**k, (k, 1, n)), Product)
+
+    raises(ValueError, 'Product(n)')
+    raises(ValueError, 'Product(n, k)')
+    raises(ValueError, 'Product(n, k, 1)')
+    raises(ValueError, 'Product(n, k, 1, 10)')
+    raises(ValueError, 'Product(n, (k, 1))')
+
+def test_multiple_products():
+    assert product(x, (n, 1, k), (k, 1, m)) == x**(m**2/2 + m/2)
+    assert product(f(n), (n, 1, m), (m, 1, k)) == Product(f(n), (n, 1, m), (m, 1, k)).doit()
+    assert Product(f(n), (m, 1, k), (n, 1, k)).doit() == \
+        Product(Product(f(n), (m, 1, k)), (n, 1, k)).doit() == \
+        product(f(n), (m, 1, k), (n, 1, k)) == \
+        product(product(f(n), (m, 1, k)), (n, 1, k)) == \
+        Product(f(n)**k, (n, 1, k))
+    assert Product(x, (x, 1, k), (k, 1, n)).doit() == Product(factorial(k), (k, 1, n))
 
 def test_rational_products():
     assert product(1+1/k, (k, 1, n)) == rf(2, n)/factorial(n)
