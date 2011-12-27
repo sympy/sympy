@@ -39,7 +39,15 @@ In order to update translations, you first need to generate the
 
     make gettext
 
-Then you need to translate it (or update the translation) into
-``tutorial.cs.po``, etc. You can use gettext utilities to merge the
-translations if needed. Then just build it using ``make htmli18n`` (see the
+Then you need to translate it if you are creating a new language
+translation. If you are just updating a translation, for example the
+``tutorial.cs.po``, just do::
+
+    msgmerge -U tutorial.cs.po tutorial.pot
+
+This will create a new ``tutorial.cs.po`` by using the template
+``tutorial.pot`` and reusing the old translations from old ``tutorial.cs.po``
+(if they still work) and leaving the rest untranslated.
+
+Then just build it using ``make htmli18n`` (see the
 previous section).
