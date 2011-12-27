@@ -11,7 +11,7 @@ from sympy.physics.quantum.operator import (HermitianOperator, Operator,
 from sympy.physics.quantum.state import Bra, Ket, State
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.constants import hbar
-from sympy.physics.quantum.hilbert import ComplexSpace
+from sympy.physics.quantum.hilbert import ComplexSpace, DirectSumHilbertSpace
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.cg import CG
 from sympy.physics.quantum.qapply import qapply
@@ -338,7 +338,6 @@ def _uncouple(state, jn, jcoupling_list):
     j = state.j
     m = state.m
     coupling_list = []
-    n_list = [ [i+1] for i in range(len(jn)) ]
     j_list = list(jn)
 
     # Create coupling, which defines all the couplings between all the spaces
@@ -1563,17 +1562,10 @@ class CoupledSpinState(SpinState):
     @classmethod
     def _eval_hilbert_space(cls, label):
         j = Add(*label[2])
-        # TODO: Need hilbert space fix, see issue 2633
         if j.is_number:
-            # Desired behavior:
-            #return Add( *[ComplexSpace(jn) for jn in range(1,2*j+1,2)] )
-            # Temporary fix
-            ret = ComplexSpace(2*j+1)
-            while j >= 1:
-                j -= 1
-                ret += ComplexSpace(2*j+1)
-            return ret
+            return DirectSumHilbertSpace(*[ ComplexSpace(2*x+1) for x in range(j+1)])
         else:
+            # TODO: Need hilbert space fix, see issue 2633
             # Desired behavior:
             #ji = symbols('ji')
             #ret = Sum(ComplexSpace(2*ji + 1), (ji, 0, j))
