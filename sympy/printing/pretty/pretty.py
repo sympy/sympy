@@ -361,29 +361,45 @@ class PrettyPrinter(Printer):
 
         func_height = pretty_func.height()
 
-        width = (func_height + 2) * 5 // 3 - 2
-        sign_lines = []
-        sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
-        for i in range(func_height+1):
-            sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
+        first = True
+        max_upper = 0
+        sign_height = 0
 
-        pretty_sign = stringPict('')
-        pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
+        for lim in expr.limits:
+            width = (func_height + 2) * 5 // 3 - 2
+            sign_lines = []
+            sign_lines.append(corner_chr+(horizontal_chr*width)+corner_chr)
+            for i in range(func_height+1):
+                sign_lines.append(vertical_chr+(' '*width)+vertical_chr)
 
-        pretty_upper = self._print(expr.upper)
-        pretty_lower = self._print(C.Equality(expr.index, expr.lower))
+            pretty_sign = stringPict('')
+            pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
 
-        pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
-        pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
+            pretty_upper = self._print(lim[2])
+            pretty_lower = self._print(C.Equality(lim[0], lim[1]))
 
-        height = pretty_sign.height()
-        padding = stringPict('')
-        padding = prettyForm(*padding.stack(*[' ']*(height-1)))
-        pretty_sign = prettyForm(*pretty_sign.right(padding))
+            max_upper = max(max_upper, pretty_upper.height())
 
-        pretty_func.baseline = 0
+            if first:
+              sign_height = pretty_sign.height()
 
-        pretty_func = prettyForm(*pretty_sign.right(pretty_func))
+            pretty_sign = prettyForm(*pretty_sign.above(pretty_upper))
+            pretty_sign = prettyForm(*pretty_sign.below(pretty_lower))
+
+            if first:
+                pretty_func.baseline = 0
+                first = False
+
+            height = pretty_sign.height()
+            padding = stringPict('')
+            padding = prettyForm(*padding.stack(*[' ']*(height-1)))
+            pretty_sign = prettyForm(*pretty_sign.right(padding))
+
+            pretty_func = prettyForm(*pretty_sign.right(pretty_func))
+
+        #pretty_func.baseline = 0
+
+        pretty_func.baseline = max_upper + sign_height//2
         return pretty_func
 
     def _print_Sum(self, expr):
